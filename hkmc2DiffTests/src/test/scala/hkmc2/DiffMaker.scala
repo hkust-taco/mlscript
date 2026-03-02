@@ -126,10 +126,12 @@ abstract class DiffMaker:
   val debug = NullaryCommand("d")
   
   val expectParseErrors = NullaryCommand("pe")
-  val expectTypeErrors = NullaryCommand("e")
+  val expectTypeErrors = NullaryCommand("te")
+  val expectTypeOrCodeGenErrors = NullaryCommand("e")
   val expectRuntimeErrors = NullaryCommand("re")
   val expectCodeGenErrors = NullaryCommand("ge")
-  def expectRuntimeOrCodeGenErrors = expectRuntimeErrors.isSet || expectCodeGenErrors.isSet
+  def expectRuntimeOrCodeGenErrors =
+    expectRuntimeErrors.isSet || expectCodeGenErrors.isSet || expectTypeOrCodeGenErrors.isSet
   val allowRuntimeErrors = NullaryCommand("allowRuntimeErrors")
   val expectWarnings = NullaryCommand("w")
   val showRelativeLineNums = NullaryCommand("showRelativeLineNums")
@@ -204,7 +206,7 @@ abstract class DiffMaker:
             unexpected("type error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
         case Diagnostic.Source.Compilation =>
           compilationErrors += 1
-          if expectCodeGenErrors.isUnset && !tolerateErrors then
+          if expectCodeGenErrors.isUnset && expectTypeOrCodeGenErrors.isUnset && !tolerateErrors then
             failures += globalStartLineNum
             unexpected("compilation error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
         case Diagnostic.Source.Runtime =>
@@ -237,6 +239,9 @@ abstract class DiffMaker:
     if expectCodeGenErrors.isSet && compilationErrors === 0 && todo.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of compilation error", blockLineNum, N, () => N)
+    else if expectTypeOrCodeGenErrors.isSet && (compilationErrors + typeErrors) === 0 && todo.isUnset && breakme.isUnset then
+      failures += globalStartLineNum
+      unexpected("lack of compilation or type error", blockLineNum, N, () => N)
     if expectRuntimeErrors.isSet && runtimeErrors === 0 && todo.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of runtime error", blockLineNum, N, () => N)

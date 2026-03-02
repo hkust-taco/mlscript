@@ -47,6 +47,7 @@ rcd
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.39: 	rcd
 //│ ╙──      	^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 let rcd =

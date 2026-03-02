@@ -3,21 +3,22 @@
 
 :e
 mut "oops"
-//│ ╔══[ERROR] Illegal position for 'mut' modifier.
+//│ ╔══[COMPILATION ERROR] Illegal position for 'mut' modifier.
 //│ ║  l.5: 	mut "oops"
 //│ ╙──     	^^^
 //│ = "oops"
 
 :e
 mut a: 1
-//│ ╔══[ERROR] Unexpected record key shape.
+//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
 //│ ║  l.12: 	mut a: 1
 //│ ╙──      	    ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 mut {"oops"}
-//│ ╔══[ERROR] Expected a record after 'mut' keyword; found a block
-//│ ║  l.18: 	mut {"oops"}
+//│ ╔══[COMPILATION ERROR] Expected a record after 'mut' keyword; found a block
+//│ ║  l.19: 	mut {"oops"}
 //│ ╙──      	     ^^^^^^
 //│ = "oops"
 

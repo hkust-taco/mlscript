@@ -47,7 +47,7 @@ case class Scope
     die
   
   def addToBindings(symbol: Local, name: String, shadow: Bool) =
-    if !shadow then assert(lookup(symbol).isEmpty, s"$symbol is already in ${this.showAsTree}")
+    if !shadow then assert(lookup(symbol).isEmpty, s"'$symbol' is already in ${this.showAsTree}")
     bindings += symbol -> name
     existingNames += name -> symbol
   

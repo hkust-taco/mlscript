@@ -785,7 +785,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         msg"Unexpected term form in expression position (${t.describe})" ->
           t.toLoc :: Nil,
         source = Diagnostic.Source.Compilation)
-    case Error => End("error")
+    case Error => Throw(Value.Lit(Tree.StrLit("This code cannot be run as its compilation yielded an error.")))
     
     // case _ =>
     //   subTerm(t)(k)
@@ -928,7 +928,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           .assign(arrSym, Tuple(mut = false, (l4 :: l5 :: Nil).map(s => Value.Ref(s).asArg)))
           .rest(setupTerm("Blk", Value.Ref(arrSym) :: Value.Ref(l3) :: Nil)(k))
       }
-    case IfLike(syntax.Keyword.`if`, split) => quoteSplit(split.getExpandedSplit): r =>
+    case IfLike(_, IfLikeForm.ReturningIf, split) => quoteSplit(split.getExpandedSplit): r =>
       val l = loweringCtx.registerTempSymbol(N)
       Assign(l, r, setupTerm("IfLike", setupQuotedKeyword("If") :: Value.Ref(l) :: Nil)(k))
     case Unquoted(body) => term(body)(k)

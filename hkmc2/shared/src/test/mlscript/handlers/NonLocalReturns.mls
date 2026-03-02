@@ -66,23 +66,24 @@ f()()
 
 :e
 return 100
-//│ ╔══[ERROR] Return statements are not allowed outside of functions.
+//│ ╔══[COMPILATION ERROR] Return statements are not allowed outside of functions.
 //│ ║  l.68: 	return 100
 //│ ╙──      	^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 if true do
   while false do
     let f = () => return 100
-//│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.76: 	    let f = () => return 100
+//│ ╔══[COMPILATION ERROR] Return statements are not allowed outside of functions.
+//│ ║  l.77: 	    let f = () => return 100
 //│ ╙──      	                  ^^^^^^^^^^
 
 :e
 fun f() =
   type A = return "lol"
-//│ ╔══[ERROR] Return statements are not allowed in this context.
-//│ ║  l.83: 	  type A = return "lol"
+//│ ╔══[COMPILATION ERROR] Return statements are not allowed in this context.
+//│ ║  l.84: 	  type A = return "lol"
 //│ ╙──      	           ^^^^^^^^^^^^
 
 
@@ -109,7 +110,7 @@ fun f() =
   4
 f()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.107: 	  object A with
+//│ ║  l.108: 	  object A with
 //│ ╙──       	         ^
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
 
@@ -132,7 +133,7 @@ fun f() =
   4
 f()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.130: 	  object A with
+//│ ║  l.131: 	  object A with
 //│ ╙──       	         ^
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
 

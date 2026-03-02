@@ -11,9 +11,10 @@ let rcd =
 
 :e
 (...rcd)
-//│ ╔══[ERROR] Illegal position for '...' spread operator.
+//│ ╔══[COMPILATION ERROR] Illegal position for '...' spread operator.
 //│ ║  l.13: 	(...rcd)
 //│ ╙──      	 ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 ...rcd
 c: 123

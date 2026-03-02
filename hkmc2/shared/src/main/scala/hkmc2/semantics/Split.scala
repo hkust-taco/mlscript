@@ -184,7 +184,7 @@ object Split:
       def term(t: Statement): Lines = t match
         case Term.Blk(stmts, term) =>
           stmts.iterator.concat(Iterator.single(term)).flatMap:
-            case DefineVar(sym, Term.IfLike(kw, splt)) =>
+            case DefineVar(sym, Term.IfLike(kw, IfLikeForm.ReturningIf, splt)) =>
               s"$sym = ${kw.name}" #: SimpleSplit.prettyPrint.split(splt, true, true)
             case DefineVar(sym, Term.SynthIf(splt)) =>
               s"$sym = if" #: split(splt, true, true)

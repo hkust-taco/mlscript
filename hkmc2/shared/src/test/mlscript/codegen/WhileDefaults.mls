@@ -17,7 +17,6 @@
 //│       Predef.print(1);
 //│       continue lbl
 //│     } else { Predef.print(2); continue lbl }
-//│     break;
 //│   }
 //│   return runtime.Unit
 //│ });

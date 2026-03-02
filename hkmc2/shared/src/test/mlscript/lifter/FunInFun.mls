@@ -388,13 +388,11 @@ f(0)
 //│   return x1
 //│ };
 //│ f24 = function f(x1) {
-//│   let scrut, tmp8, tmp9;
+//│   let scrut, tmp8;
 //│   scrut = true;
-//│   if (scrut === true) {
-//│     return g18(x1)
-//│   } else { tmp8 = runtime.Unit; }
-//│   tmp9 = x1 + 1;
-//│   x1 = tmp9;
+//│   if (scrut === true) { return g18(x1) }
+//│   tmp8 = x1 + 1;
+//│   x1 = tmp8;
 //│   return x1
 //│ };
 //│ f24(0)

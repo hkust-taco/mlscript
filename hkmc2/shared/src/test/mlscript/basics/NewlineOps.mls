@@ -166,15 +166,17 @@ let x
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
 
 :pe
+:re
 2
   |> (a: _)
 .a
 //│ ╔══[PARSE ERROR] Expected an expression; found static selector instead
-//│ ║  l.171: 	.a
+//│ ║  l.172: 	.a
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found static selector instead
-//│ ║  l.171: 	.a
+//│ ║  l.172: 	.a
 //│ ╙──       	^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // :dp
@@ -318,10 +320,10 @@ let incr = _ + 1
 :w
 2, * 3
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.319: 	2, * 3
+//│ ║  l.321: 	2, * 3
 //│ ╙──       	     ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.319: 	2, * 3
+//│ ║  l.321: 	2, * 3
 //│ ╙──       	^
 //│ = fun
 
@@ -370,28 +372,32 @@ xs |> Arr.len ,+, ys |> Arr.len
 //│ = 5
 
 :pe
+:re
 xs |> Arr.len
 ,+
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.374: 	,+
+//│ ║  l.377: 	,+
 //│ ║         	  ^
-//│ ║  l.375: 	ys |> Arr.len
+//│ ║  l.378: 	ys |> Arr.len
 //│ ╙──       	
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 xs |> Arr.len
 ,+ 1
 //│ = 1
 
 :pe
+:re
 xs |> Arr.len
 +,
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.388: 	+,
+//│ ║  l.393: 	+,
 //│ ║         	  ^
-//│ ║  l.389: 	ys |> Arr.len
+//│ ║  l.394: 	ys |> Arr.len
 //│ ╙──       	
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 xs |> Arr.len
 +, ys |> Arr.len
@@ -420,21 +426,23 @@ new Foo(1) is Foo
 :fixme // ?
 new Foo(1) ,is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.421: 	new Foo(1) ,is Foo
+//│ ║  l.427: 	new Foo(1) ,is Foo
 //│ ╙──       	            ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.421: 	new Foo(1) ,is Foo
+//│ ║  l.427: 	new Foo(1) ,is Foo
 //│ ╙──       	               ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :fixme // ?
 new Foo(1)
 is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.431: 	is Foo
+//│ ║  l.438: 	is Foo
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.431: 	is Foo
+//│ ║  l.438: 	is Foo
 //│ ╙──       	   ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 

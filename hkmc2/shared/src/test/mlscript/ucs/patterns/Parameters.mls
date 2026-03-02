@@ -8,7 +8,7 @@ class Foo(a: Int, val b: Int)
 
 :e
 fun foo(x) = if x is Foo(p, q) then p + q
-//│ ╔══[ERROR] This pattern cannot be matched
+//│ ╔══[COMPILATION ERROR] This pattern cannot be matched
 //│ ║  l.10: 	fun foo(x) = if x is Foo(p, q) then p + q
 //│ ║        	                         ^
 //│ ╟── because the corresponding parameter `a` is not publicly accessible
@@ -32,7 +32,7 @@ fun test(x) = if x is Test then "ok"
 
 :e
 fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
-//│ ╔══[ERROR] This pattern cannot be matched
+//│ ╔══[COMPILATION ERROR] This pattern cannot be matched
 //│ ║  l.34: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                           ^
 //│ ╟── because the corresponding parameter `a` is not publicly accessible
@@ -40,7 +40,7 @@ fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	           ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
-//│ ╔══[ERROR] This pattern cannot be matched
+//│ ╔══[COMPILATION ERROR] This pattern cannot be matched
 //│ ║  l.34: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                              ^
 //│ ╟── because the corresponding parameter `b` is not publicly accessible
@@ -48,7 +48,7 @@ fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	              ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
-//│ ╔══[ERROR] This pattern cannot be matched
+//│ ╔══[COMPILATION ERROR] This pattern cannot be matched
 //│ ║  l.34: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                                 ^
 //│ ╟── because the corresponding parameter `c` is not publicly accessible
@@ -56,7 +56,7 @@ fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                 ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
-//│ ╔══[ERROR] This pattern cannot be matched
+//│ ╔══[COMPILATION ERROR] This pattern cannot be matched
 //│ ║  l.34: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                                    ^
 //│ ╟── because the corresponding parameter `d` is not publicly accessible
@@ -64,7 +64,7 @@ fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                    ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
-//│ ╔══[ERROR] This pattern cannot be matched
+//│ ╔══[COMPILATION ERROR] This pattern cannot be matched
 //│ ║  l.34: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                                       ^
 //│ ╟── because the corresponding parameter `e` is not publicly accessible
@@ -72,7 +72,7 @@ fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                       ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
-//│ ╔══[ERROR] This pattern cannot be matched
+//│ ╔══[COMPILATION ERROR] This pattern cannot be matched
 //│ ║  l.34: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                                          ^
 //│ ╟── because the corresponding parameter `f` is not publicly accessible
@@ -83,7 +83,7 @@ fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 
 :e
 fun test(x) = if x is Test(_, _, _) then "ok"
-//│ ╔══[ERROR] Expected six arguments, but found only three arguments.
+//│ ╔══[COMPILATION ERROR] Expected six arguments, but found only three arguments.
 //│ ║  l.85: 	fun test(x) = if x is Test(_, _, _) then "ok"
 //│ ╙──      	                           ^^^^^^^
 
@@ -91,7 +91,7 @@ fun test(x) = if x is Test(_, _, _, _, _, _) then "ok"
 
 :e
 fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
-//│ ╔══[ERROR] This pattern cannot be matched
+//│ ╔══[COMPILATION ERROR] This pattern cannot be matched
 //│ ║  l.93: 	fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
 //│ ║        	                                    ^
 //│ ╟── because the corresponding parameter `d` is not publicly accessible
@@ -117,7 +117,7 @@ object A
 
 :e
 fun foo(x) = if x is A() then 0
-//│ ╔══[ERROR] `A` is an object.
+//│ ╔══[COMPILATION ERROR] `A` is an object.
 //│ ║  l.116: 	object A
 //│ ║         	       ^
 //│ ╟── Its pattern cannot have an argument list.
@@ -126,7 +126,7 @@ fun foo(x) = if x is A() then 0
 
 :e
 fun foo(x) = if x is A(y) then y
-//│ ╔══[ERROR] `A` is an object.
+//│ ╔══[COMPILATION ERROR] `A` is an object.
 //│ ║  l.116: 	object A
 //│ ║         	       ^
 //│ ╟── Its pattern cannot have arguments.
@@ -184,7 +184,7 @@ if p is Crazy(a, b, c, d, e, f, g) then
 :e
 :re
 if p is Crazy(a, b, c, d, e, f) then 42
-//│ ╔══[ERROR] Expected seven extraction arguments, but found only six arguments.
+//│ ╔══[COMPILATION ERROR] Expected seven extraction arguments, but found only six arguments.
 //│ ║  l.186: 	if p is Crazy(a, b, c, d, e, f) then 42
 //│ ╙──       	              ^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -192,7 +192,7 @@ if p is Crazy(a, b, c, d, e, f) then 42
 :e
 :re
 if p is Crazy(all) then 42
-//│ ╔══[ERROR] Expected seven extraction arguments, but found only one argument.
+//│ ╔══[COMPILATION ERROR] Expected seven extraction arguments, but found only one argument.
 //│ ║  l.194: 	if p is Crazy(all) then 42
 //│ ╙──       	              ^^^
 //│ ═══[RUNTIME ERROR] Error: match error

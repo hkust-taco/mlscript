@@ -129,3 +129,19 @@ if
 // >    $j
 
 
+// * Contemplate this absolutely horrendous code:
+:sjs
+if false do ()
+123
+//│ JS (unsanitized):
+//│ let scrut;
+//│ split_root$2: {
+//│   split_1$2: {
+//│     scrut = false;
+//│     if (scrut === true) { break split_1$2 } else { break split_1$2 }
+//│   }
+//│ }
+//│ 123
+//│ = 123
+
+

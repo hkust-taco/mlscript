@@ -41,7 +41,7 @@ final case class ErrorReport(
   val kind: Kind = Kind.Error
 object ErrorReport:
   def apply(using Line, FileName)
-      (msgs: Ls[Message -> Opt[Loc]], extraInfo: => Opt[Any] = N, source: Source = Source.Typing)
+      (msgs: Ls[Message -> Opt[Loc]], extraInfo: => Opt[Any] = N, source: Source = Source.Compilation)
       (using Name): ErrorReport =
     ErrorReport(msgs.head._1.show, msgs, () => extraInfo, source)
 
@@ -54,7 +54,7 @@ final case class WarningReport(
   val kind: Kind = Kind.Warning
 object WarningReport:
   def apply(using Line, FileName)
-      (msgs: Ls[Message -> Opt[Loc]], extraInfo: => Opt[Any] = N, source: Source = Source.Typing)
+      (msgs: Ls[Message -> Opt[Loc]], extraInfo: => Opt[Any] = N, source: Source = Source.Compilation)
       (using Name): WarningReport =
     WarningReport(msgs.head._1.show, msgs, () => extraInfo, source)
 
@@ -67,7 +67,7 @@ final case class InternalError(
   val mkExtraInfo: () => Opt[Any] = () => N
 object InternalError:
   def apply(using Line, FileName)
-      (msgs: Ls[Message -> Opt[Loc]], source: Source = Source.Typing)
+      (msgs: Ls[Message -> Opt[Loc]], source: Source = Source.Compilation)
       (using Name): InternalError =
     InternalError(msgs.head._1.show, msgs, source)
 

@@ -3,14 +3,14 @@
 
 :fixme
 true or true
-//│ ╔══[ERROR] Logical `or` is not yet supported.
+//│ ╔══[COMPILATION ERROR] Logical `or` is not yet supported.
 //│ ║  l.5: 	true or true
 //│ ╙──     	^^^^^^^^^^^^
 //│ = true
 
 :fixme
 while false or false do print("ok")
-//│ ╔══[ERROR] Logical `or` is not yet supported.
+//│ ╔══[COMPILATION ERROR] Logical `or` is not yet supported.
 //│ ║  l.12: 	while false or false do print("ok")
 //│ ╙──      	      ^^^^^^^^^^^^^^
 
@@ -45,7 +45,7 @@ true and test(42)
 
 :fixme
 true or test(42)
-//│ ╔══[ERROR] Logical `or` is not yet supported.
+//│ ╔══[COMPILATION ERROR] Logical `or` is not yet supported.
 //│ ║  l.47: 	true or test(42)
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ > 42

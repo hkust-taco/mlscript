@@ -46,9 +46,10 @@ if r is
 :e
 if r is
   a: x then x
-//│ ╔══[ERROR] Unrecognized pattern split (infix operator ':').
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (infix operator ':').
 //│ ║  l.48: 	  a: x then x
 //│ ╙──      	  ^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 if 1 is
   (((1))) then true
@@ -88,14 +89,17 @@ foo(:a)
 :todo // would mean `val a = ‹the old a›`?
 val =a
 //│ ╔══[PARSE ERROR] Expected expression after 'val' binding keyword; found '=' keyword instead
-//│ ║  l.89: 	val =a
+//│ ║  l.90: 	val =a
 //│ ╙──      	    ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :pe
+:re
 let =a
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found '=' keyword instead
-//│ ║  l.95: 	let =a
+//│ ║  l.98: 	let =a
 //│ ╙──      	    ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 import "../../mlscript-compile/LazyArray.mls"

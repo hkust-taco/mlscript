@@ -17,9 +17,10 @@ let x = 123
 
 :e
 x
-//│ ╔══[ERROR] Name not found: x
+//│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.19: 	x
 //│ ╙──      	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 handle h = Effect with
@@ -31,9 +32,10 @@ x + 1
 
 :e
 x
-//│ ╔══[ERROR] Name not found: x
-//│ ║  l.33: 	x
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.34: 	x
 //│ ╙──      	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 handle h = Effect with
@@ -43,8 +45,9 @@ val y = 123
 
 :e
 y
-//│ ╔══[ERROR] Name not found: y
-//│ ║  l.45: 	y
+//│ ╔══[COMPILATION ERROR] Name not found: y
+//│ ║  l.47: 	y
 //│ ╙──      	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

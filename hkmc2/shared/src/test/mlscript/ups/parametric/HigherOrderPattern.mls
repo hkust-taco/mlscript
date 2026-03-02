@@ -8,7 +8,7 @@ object A
 
 :e
 null is @compile Nullable
-//│ ╔══[ERROR] Pattern `Nullable` has one pattern parameter.
+//│ ╔══[COMPILATION ERROR] Pattern `Nullable` has one pattern parameter.
 //│ ║  l.5: 	pattern Nullable(pattern T) = null | T
 //│ ║       	                         ^
 //│ ╟── But zero pattern arguments were provided.
@@ -18,7 +18,7 @@ null is @compile Nullable
 
 :e
 null is @compile Nullable(A, A)
-//│ ╔══[ERROR] Pattern `Nullable` has one pattern parameter.
+//│ ╔══[COMPILATION ERROR] Pattern `Nullable` has one pattern parameter.
 //│ ║  l.5: 	pattern Nullable(pattern T) = null | T
 //│ ║       	                         ^
 //│ ╟── But two pattern arguments were provided.

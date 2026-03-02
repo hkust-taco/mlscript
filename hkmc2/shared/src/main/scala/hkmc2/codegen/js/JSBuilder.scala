@@ -523,9 +523,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       val t = tl.foldLeft(h)((acc, arm) =>
         acc :: doc" else if (${ cond(arm._1) }) ${ braced(nonNestedScoped(arm._2)(res => returningTerm(res, endSemi = false))) }")
       val e = els match
-      case S(el) =>
-        doc" else ${ braced(nonNestedScoped(el)(res => returningTerm(res, endSemi = false))) }"
-      case N  => doc""
+        case S(End(_)) => doc""
+        case S(el) =>
+          doc" else ${ braced(nonNestedScoped(el)(res => returningTerm(res, endSemi = false))) }"
+        case N  => doc""
       t :: e :: returningTerm(rest, endSemi)
     
     case Begin(sub, thn) =>
@@ -550,7 +551,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       // [fixme:0] TODO check scope and allocate local variables here (see: https://github.com/hkust-taco/mlscript/pull/293#issuecomment-2792229849)
       
       doc" # ${getVar(lbl, lbl.toLoc)}:${if loop then doc" while (true)" else ""} " :: braced {
-          nonNestedScoped(bod)(bd => returningTerm(bd, endSemi = true)) :: (if loop then doc" # break;" else doc"")
+          nonNestedScoped(bod)(bd => returningTerm(bd, endSemi = true)) :: (if loop && !bod.isAbortive then doc" # break;" else doc"")
       } :: returningTerm(rst, endSemi)
       
     case TryBlock(sub, fin, rst) =>

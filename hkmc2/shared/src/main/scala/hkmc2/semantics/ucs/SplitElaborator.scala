@@ -54,28 +54,33 @@ trait SplitElaborator:
         S((lhs, R((new Keywrd(kw).withLocOf(kwTree), rhs))))
       case _ => N
   
-  private def withScopedConnectives(kw: Keywrd[Keyword.SplitLike])(evaluate: => SimpleSplit): SimpleSplit =
+  private def withScopedConnectives
+      (kw: Keywrd[Keyword.SplitLike])(evaluate: => SimpleSplit): (IfLikeForm, SimpleSplit) =
     val savedKwLocSets = kwLocSets
-    kwLocSets = (SortedSet.empty[Loc], SortedSet.empty[Loc])
+    kwLocSets = (SortedSet.empty, SortedSet.empty)
     val split = evaluate
-    val result = kw.kw match
-      case `if` | `case` => split ~~: topmostDefault
-      case `while` => split //~~: End
+    val (result, form) = kw.kw match
+      case `if` | `case` =>
+        (split ~~: topmostDefault,
+          if kwLocSets._1.nonEmpty then IfLikeForm.ImperativeIf else IfLikeForm.ReturningIf)
+      case `while` => (split, IfLikeForm.While)
     reportInconsistentConnectives(kw)
     kwLocSets = savedKwLocSets
-    result
+    (form, result)
   
   /** Transform trees into a UCS split. */
-  protected def split(t: IfLike): Ctxl[SimpleSplit] =
-    withScopedConnectives(t.kw):
+  protected def split(t: IfLike): Ctxl[Term.IfLike] =
+    val (form, split) = withScopedConnectives(t.kw):
       t.split match
-        case block: Block => termSplit(block.desugStmts, identity)
-        case other: Tree => termSplit(Ls(other), identity)
+      case block: Block => termSplit(block.desugStmts, identity)
+      case other: Tree => termSplit(Ls(other), identity)
+    new Term.IfLike(t.kw.kw, form, split).withLocOf(t)
   
   /** Elaborate `case` expressions */
-  protected def caseSplit(scrut: VarSymbol, tree: Case): Ctxl[SimpleSplit] =
-    withScopedConnectives(tree.kw):
+  protected def caseSplit(scrut: VarSymbol, tree: Case): Ctxl[Term.IfLike] =
+    val (form, split) = withScopedConnectives(tree.kw):
       patternBranch(() => scrut.ref(), tree.branches, identity)
+    new Term.IfLike(tree.kw.kw, form, split).withLocOf(tree)
   
   /** Elaborate shorthand expressions. */
   protected def shorthandSplit(tree: Tree)(using UnderCtx): Ctxl[SimpleSplit] =

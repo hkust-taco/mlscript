@@ -152,11 +152,7 @@ fun f(x) =
 //│ f6 = function f(x1) {
 //│   lbl: while (true) {
 //│     let y1;
-//│     if (x1 === true) {
-//│       y1 = x1;
-//│       Predef.print(x1);
-//│       continue lbl
-//│     } else {}
+//│     if (x1 === true) { y1 = x1; Predef.print(x1); continue lbl }
 //│     break;
 //│   }
 //│   return runtime.Unit
@@ -181,7 +177,7 @@ fun f(x) =
 //│       y1 = x1;
 //│       Predef.print(x1);
 //│       return while1()
-//│     } else {}
+//│     }
 //│     return runtime.LoopEnd
 //│   });
 //│   tmp2 = while1();

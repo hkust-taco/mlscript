@@ -37,7 +37,7 @@ val f = case
   do print(res)
   _ then res
 //│ Split with nested patterns:
-//│ >  if
+//│ >  case
 //│ >    caseScrut is 0 then "null"
 //│ >    let $unused = member:console.log‹member:log›("non-null")
 //│ >    caseScrut is 1 then "unit"
