@@ -254,6 +254,20 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     if expr.resultTypes.exists(_ is UnreachableType) then Seq.empty
     else expr.resultTypes.map(ty => Result(ty.asValType_!))
 
+  /**
+   * Validates an IntLit value fits signed 32-bit and delegates codegen to `onValid`.
+   */
+  private def withValidIntLit(
+      value: BigInt,
+      loc: Opt[Loc]
+  )(onValid: Int => Expr)(using Ctx, Raise, Line): Expr =
+    if value.isValidInt then onValid(value.toInt)
+    else
+      errExpr(
+        Ls(msg"WatBuilder::IntLit lowering with value outside signed 32-bit range not implemented yet" -> loc),
+        extraInfo = S(value.toString)
+      )
+
   /** 
    * Emits a tuple element load that works for both mutable and immutable tuple arrays. 
    */
@@ -448,7 +462,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case Value.Lit(BoolLit(value)) =>
       ref.i31(i32.const(if value then 1 else 0))
     case Value.Lit(IntLit(value)) =>
-      ref.i31(i32.const(value.toInt))
+      withValidIntLit(value, r.toLoc)(intVal => ref.i31(i32.const(intVal)))
     case Value.Ref(l, _) =>
       singletonInfoFor(l) match
         case S(info) => singletonGlobalGet(info)
@@ -585,7 +599,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           return as.headOption match
             case S(arg) => arg.value match
                 case Value.Lit(BoolLit(value)) => ref.i31(i32.const(if value then 1 else 0))
-                case Value.Lit(IntLit(value)) => ref.i31(i32.const(value.toInt))
+                case Value.Lit(IntLit(value)) =>
+                  withValidIntLit(value, arg.value.toLoc)(intVal => ref.i31(i32.const(intVal)))
                 case unsupported => 
                   raise(WarningReport(
                     msg"WatBuilder::result for Instantiate(...) of `globalThis.Error(...)` with payload `${unsupported.toString}` not implemented yet" -> unsupported.toLoc :: Nil,
@@ -1113,7 +1128,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 case IntLit(value) =>
                   val scrutAsI31 = ref.cast(getScrutExpr, RefType.i31ref)
                   val scrutValue = i31.get(scrutAsI31, signed = true)
-                  i32.eq(scrutValue, i32.const(value.toInt))
+                  i32.eq(scrutValue, withValidIntLit(value, lit.toLoc)(i32.const))
                 case _ =>
                   break(errExpr(Ls(msg"Pattern matching for unit literals not implemented yet" -> lit.toLoc)))
 
