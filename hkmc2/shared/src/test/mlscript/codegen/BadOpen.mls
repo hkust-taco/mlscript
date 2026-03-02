@@ -7,26 +7,29 @@ module Foo with
 
 :e
 (open Foo { x })
-//│ ╔══[ERROR] Illegal position for 'open' statement.
+//│ ╔══[COMPILATION ERROR] Illegal position for 'open' statement.
 //│ ║  l.9: 	(open Foo { x })
 //│ ╙──     	 ^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 (((open Foo { x })))
-//│ ╔══[ERROR] Illegal position for 'open' statement.
-//│ ║  l.15: 	(((open Foo { x })))
+//│ ╔══[COMPILATION ERROR] Illegal position for 'open' statement.
+//│ ║  l.16: 	(((open Foo { x })))
 //│ ╙──      	   ^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 (open Foo { x }) + 1
-//│ ╔══[ERROR] Illegal position for 'open' statement.
-//│ ║  l.21: 	(open Foo { x }) + 1
+//│ ╔══[COMPILATION ERROR] Illegal position for 'open' statement.
+//│ ║  l.23: 	(open Foo { x }) + 1
 //│ ╙──      	 ^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 open Foo { y }
-//│ ╔══[ERROR] Module 'Foo' does not contain member 'y'
-//│ ║  l.27: 	open Foo { y }
+//│ ╔══[COMPILATION ERROR] Module 'Foo' does not contain member 'y'
+//│ ║  l.30: 	open Foo { y }
 //│ ╙──      	           ^
 
 :sjs
@@ -40,8 +43,8 @@ val Oops = "oops"
 
 :e
 open Oops
-//│ ╔══[ERROR] Wildcard 'open' not supported for this kind of symbol.
-//│ ║  l.42: 	open Oops
+//│ ╔══[COMPILATION ERROR] Wildcard 'open' not supported for this kind of symbol.
+//│ ║  l.45: 	open Oops
 //│ ╙──      	     ^^^^
 
 

@@ -150,7 +150,7 @@ fun (::) cons(head, tail) = Pair(head, tail)
 
 :e
 pattern List(a) = null | Pair(a, List)
-//│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
+//│ ╔══[COMPILATION ERROR] Found an inconsistent variable in disjunction patterns.
 //│ ║  l.152: 	pattern List(a) = null | Pair(a, List)
 //│ ║         	                              ^
 //│ ╟── The variable is missing from this sub-pattern.

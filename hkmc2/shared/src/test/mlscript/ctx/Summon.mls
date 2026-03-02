@@ -15,14 +15,14 @@ use[Str]
 :e
 :re
 use[Num]
-//│ ╔══[ERROR] Cannot query instance of type Num (type parameter T) for call: 
+//│ ╔══[COMPILATION ERROR] Cannot query instance of type Num (type parameter T) for call: 
 //│ ║  l.17: 	use[Num]
 //│ ║        	^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.117: 	fun use[T](using instance: T) = instance
 //│ ║         	                 ^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Num (type parameter T); Available: Int, Str
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect 42
 let x = use[Int]
@@ -51,7 +51,7 @@ f
 
 :e
 fun f(using Int) = use[Num]
-//│ ╔══[ERROR] Cannot query instance of type Num (type parameter T) for call: 
+//│ ╔══[COMPILATION ERROR] Cannot query instance of type Num (type parameter T) for call: 
 //│ ║  l.53: 	fun f(using Int) = use[Num]
 //│ ║        	                   ^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
@@ -72,29 +72,29 @@ f
 :e
 :re
 use{[Some[Int]].value}
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (selection).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (selection).
 //│ ║  l.74: 	use{[Some[Int]].value}
 //│ ╙──      	    ^^^^^^^^^^^
-//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
+//│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
 //│ ║  l.74: 	use{[Some[Int]].value}
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.117: 	fun use[T](using instance: T) = instance
 //│ ║         	                 ^^^^^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable T.
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 :re
 use([Some[Int]].value)
-//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
+//│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
 //│ ║  l.89: 	use([Some[Int]].value)
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.117: 	fun use[T](using instance: T) = instance
 //│ ║         	                 ^^^^^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable T.
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :expect 42
@@ -106,13 +106,13 @@ f[Int]
 :e
 :re
 f
-//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
+//│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
 //│ ║  l.108: 	f
 //│ ║         	^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.101: 	fun f[T](using T) = use[T]
 //│ ║         	               ^
 //│ ╙── Illegal query for an unspecified type variable T.
-//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

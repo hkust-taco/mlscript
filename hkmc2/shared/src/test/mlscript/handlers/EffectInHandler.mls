@@ -17,12 +17,13 @@ handle h = PrintEffect with
     k(())
     h.p(x)
 h.aux(3)
-//│ ╔══[ERROR] Name not found: h
+//│ ╔══[COMPILATION ERROR] Name not found: h
 //│ ║  l.16: 	    h.p(x)
 //│ ╙──      	    ^
-//│ ╔══[ERROR] Name not found: h
+//│ ╔══[COMPILATION ERROR] Name not found: h
 //│ ║  l.18: 	    h.p(x)
 //│ ╙──      	    ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 handle h1 = PrintEffect with
   fun p(x)(k) =

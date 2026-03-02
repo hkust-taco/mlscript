@@ -37,7 +37,7 @@ fun bmi(record) = if record is MatchOrNone(RoundedBMI) as value then value
 :e
 // alternatively?
 fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
-//│ ╔══[ERROR] Unrecognized pattern (application).
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern (application).
 //│ ║  l.39: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
 //│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -50,7 +50,7 @@ bmi of height: 1.75
 
 :todo // Make it happen!
 fun bmi'(record) = if record is (@compile MatchOrNone(RoundedBMI)) as value then value
-//│ ╔══[ERROR] Pattern chaining is not supported in pattern compilation.
+//│ ╔══[COMPILATION ERROR] Pattern chaining is not supported in pattern compilation.
 //│ ║  l.20: 	pattern RoundedBMI = CalculateBMI as Rounded
 //│ ╙──      	                     ^^^^^^^^^^^^^^^^^^^^^^^
 

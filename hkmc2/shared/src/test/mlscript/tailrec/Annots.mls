@@ -45,7 +45,7 @@ class A with
   @tailrec
   fun f() = g()
   fun g() = f()
-//│ ╔══[ERROR] Class methods may not yet be marked @tailrec.
+//│ ╔══[COMPILATION ERROR] Class methods may not yet be marked @tailrec.
 //│ ║  l.46: 	  fun f() = g()
 //│ ╙──      	      ^
 

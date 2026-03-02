@@ -73,9 +73,10 @@ scope.locally of scope.locally of (
 
 :e
 x
-//│ ╔══[ERROR] Name not found: x
+//│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.75: 	x
 //│ ╙──      	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 fun foo(x) =
@@ -164,25 +165,25 @@ fun foo(x, y) =
 :ge
 scope.locally()
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.165: 	scope.locally()
+//│ ║  l.166: 	scope.locally()
 //│ ╙──       	^^^^^^^^^^^^^
 
 
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.172: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
+//│ ║  l.173: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╙──       	^^^^^^^^^^^^^
 
 
 :e
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in x)
-//│ ╔══[ERROR] Name not found: x
-//│ ║  l.180: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.181: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	                                                 ^
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.180: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.181: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	^^^^^^^^^^^^^
 
 

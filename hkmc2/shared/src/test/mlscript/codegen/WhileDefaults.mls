@@ -4,48 +4,72 @@
 // * Note that the following
 
 :sjs
-while
-  false do 1
-  _ do 2
-//│ JS (unsanitized):
-//│ let tmp;
-//│ lbl: while (true) {
-//│   let scrut;
-//│   scrut = false;
-//│   if (scrut === true) { tmp = 1; continue lbl } else { tmp = 2; }
-//│   break;
-//│ }
-//│ tmp
-//│ = 2
-
-// * ...is currently interpreted the same as the loop below, which exists the loop through `else`!
-
-while
-  false do 1
-  else 2
-//│ = 2
-
-// * On the other hand, since the `true` here is not treated as a default branch, this loops infinitely
-
 () => while
-  false do 1
-  true do 2
+  false do print(1)
+  _ do print(2)
+//│ JS (unsanitized):
+//│ let lambda;
+//│ lambda = (undefined, function () {
+//│   lbl: while (true) {
+//│     let scrut;
+//│     scrut = false;
+//│     if (scrut === true) {
+//│       Predef.print(1);
+//│       continue lbl
+//│     } else { Predef.print(2); continue lbl }
+//│   }
+//│   return runtime.Unit
+//│ });
+//│ lambda
 //│ = fun
 
-// * Now, this semantics for `else`/default branches is still super confusing:
-// * 1. default branches like `_ do ...` should not stop the loop
-// * 2. `while ... else ...` has surprising semantics:
-// *  2.a. it is notably not aligned with Python's while/else
-// *  2.b. it looks too similar the use of non-top-level `else`s in splits, which do not stop the loop!
+// * ...is currently interpreted the same as the loop below
 
-let x = 1 in
+() => while
+  false do print(1)
+  else print(2)
+//│ = fun
+
+// * ...and so is this one
+
+() => while
+  false do print(1)
+  true do print(2)
+//│ = fun
+
+// * This semantics for `else` branches is confusing,
+// * as the semantics of `while ... else ...` is notably not aligned with Python's own `while`/`else` form
+
+// * Some legitimate uses of `else` branches in `while`:
+
+// * This is a valid, but silly use (could have inserted the `else` part _after_ the `while`!)
+fun f = let x = 1 in
   while x is
-    1 do set x = 0
-    else print("stopping (`else` at the top level)")
-  x
-//│ > stopping (`else` at the top level)
+    1 do
+      print("`x` was `1`")
+      set x = 0
+    else
+      print("stopping at the `else`")
+      return x
+f
+//│ > `x` was `1`
+//│ > stopping at the `else`
 //│ = 0
 
+// * Less silly: we still want to see what's in scope
+// * (here, the result of the `expensive` computation)
+// * upon stopping the loop
+fun f = let x = 5 in
+  while
+    let expensive = x - 1 - 1 - 1
+    expensive < 0 do set x += 2
+    else
+      print("the result of the expensive upon stopping the loop computation was", expensive)
+      return
+f
+//│ > the result of the expensive upon stopping the loop computation was 2
+
+// * An `else` not at the top level of the `while`
 let x = 3 in
   while x >
     0 and
@@ -53,15 +77,10 @@ let x = 3 in
       else
         set x -= 1
         print("inner `else` split reached")
-  x
 //│ > inner `else` split reached
 //│ > inner `else` split reached
 //│ > inner `else` split reached
-//│ = 0
-
-
-// * Note: this weird edge case
-:fixme // nto sure what's happening here
+// * (A weird variation of the above:)
 let x = 3 in
   while x >
     0 and
@@ -71,6 +90,29 @@ let x = 3 in
 //│ > inner `else` split reached
 //│ > inner `else` split reached
 //│ > inner `else` split reached
-//│ ═══[RUNTIME ERROR] Error: match error
+
+// * Similar: we might want to use the extracted value of `x` upon stopping the loop
+fun f(xs) =
+  while xs is
+    [y, ..ys] and
+      y > 0 do
+        print("still positive:", y)
+        set xs = ys
+      else
+        return print("no longer positive (" + y + "); stopping...")
+  print("all were positive!")
+
+f of [3, 1, 2, -1, 0, -2]
+//│ > still positive: 3
+//│ > still positive: 1
+//│ > still positive: 2
+//│ > no longer positive (-1); stopping...
+
+f of [3, 1, 2, 5]
+//│ > still positive: 3
+//│ > still positive: 1
+//│ > still positive: 2
+//│ > still positive: 5
+//│ > all were positive!
 
 

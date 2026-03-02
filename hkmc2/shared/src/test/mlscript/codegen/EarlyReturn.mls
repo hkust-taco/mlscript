@@ -20,12 +20,9 @@ fun f(x) =
 //│ JS (unsanitized):
 //│ let f1;
 //│ f1 = function f(x) {
-//│   let scrut, tmp;
+//│   let scrut;
 //│   scrut = x < 0;
-//│   if (scrut === true) {
-//│     Predef.print("whoops");
-//│     return 0
-//│   } else { tmp = runtime.Unit; }
+//│   if (scrut === true) { Predef.print("whoops"); return 0 }
 //│   return x + 1
 //│ };
 

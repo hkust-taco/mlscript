@@ -57,7 +57,7 @@ id(Example) .!. oops(2)
 data class Example2(val a) with
   val a = 1
   fun f(inc) = Example2(a + inc)
-//│ ╔══[ERROR] Duplicate definition of member named 'a'.
+//│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'a'.
 //│ ╟── Defined at: 
 //│ ║  l.57: 	data class Example2(val a) with
 //│ ║        	                        ^

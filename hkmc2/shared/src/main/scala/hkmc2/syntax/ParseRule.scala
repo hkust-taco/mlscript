@@ -178,7 +178,7 @@ class ParseRules(using State):
       case (kw, (lhs, rhs, body)) => LetLike(kw, lhs, rhs, body)
     }
   
-  def ifLike(kw: `if`.type | `while`.type): Alt[Tree] =
+  def ifLike(kw: Keyword.IfLike): Alt[Tree] =
     Kw(kw)(
       ParseRule(s"'${kw.name}' keyword")(
         Expr(

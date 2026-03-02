@@ -268,8 +268,8 @@ handle h = Effect with
   fun perform(arg)(k) = arg
 if true do
   fun f() = 3
-  f()
-//│ = 3
+  print(f())
+//│ > 3
 
 module A with
   data class Effect(x) with
