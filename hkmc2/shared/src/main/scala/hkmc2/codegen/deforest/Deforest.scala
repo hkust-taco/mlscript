@@ -17,6 +17,9 @@ type InstantiationId = Ls[ResultId]
 type CtorCls = ClassLikeSymbol | Int
 type SelField = TermSymbol | Int
 type BranchId = CtorDtorId -> Opt[CtorCls]
+type LabelId = LabelSymbol -> InstantiationId
+type MatchOrLabelId = ResultId | LabelSymbol
+type RestFunId = CtorDtorId | LabelId
 
 object DeforestableSelect:
   // TermSymbol:

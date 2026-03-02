@@ -173,6 +173,29 @@ class DeforestPreAnalyzer(
         case InCtx.MtchBody(m, cse) => m.rest
         case InCtx.BegnBody(b) => b.rest
       .foldLeft(labelSymToLabelBlk(label).rest)(Begin.apply)
+    def getParentLabelOrMatchesAndRestBefore(matchOrLabelId: MatchOrLabelId): (Iterator[Label | Match], () => Block) =
+      val ctx = matchOrLabelId match
+        case label: Symbol => labelSymToCtxOfLabel(label)
+        case dtorId => matchScrutToCtxOfMatch(dtorId.asInstanceOf[ResultId])
+      val simpleRest = matchOrLabelId match
+        case label: Symbol => labelSymToLabelBlk(label).rest
+        case dtorId => matchScrutToMatchBlock(dtorId.asInstanceOf[ResultId]).rest
+      def it = ctx.iterator
+        .takeWhile:
+          case _: (InCtx.Fn | InCtx.Mod | InCtx.TopLvl) => false
+          case _ => true
+        .collect:
+          case InCtx.LblBody(l) => l
+          case InCtx.MtchBody(m, cse) => m
+          case InCtx.BegnBody(b) => b
+      def blockUntilParent(): Block = it
+        .takeWhile(_.isInstanceOf[Begin])
+        .map(_.asInstanceOf[Begin].rest)
+        .foldLeft(simpleRest)(Begin.apply)
+      it.filterNot(_.isInstanceOf[Begin]).asInstanceOf[Iterator[Label | Match]]
+      -> blockUntilParent
+    
+    // NOTE: maybe not needed anymore
     def getNearestFusingParentMatch(dtorId: CtorDtorId, solver: DeforestConstrainSolver): Opt[BranchId] =
       matchScrutToCtxOfMatch(dtorId._1)
         .collectFirst:
@@ -286,7 +309,7 @@ class DeforestPreAnalyzer(
     
     def markAsNonHandleable() =
       ctx.head.handleable = false
-    
+      
   
   override def applyBlock(b: Block): Unit = b match
     case scpd@Scoped(syms, body) =>
