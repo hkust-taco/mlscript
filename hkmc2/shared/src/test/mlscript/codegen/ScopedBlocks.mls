@@ -181,7 +181,8 @@ fun f(x) =
 //│   });
 //│   tmp2 = while1();
 //│   tmp3 = tmp2 !== runtime.LoopEnd;
-//│   if (tmp3 === true) { return tmp2 } else { return runtime.Unit }
+//│   if (tmp3 === true) { return tmp2 }
+//│   return runtime.Unit
 //│ };
 
 

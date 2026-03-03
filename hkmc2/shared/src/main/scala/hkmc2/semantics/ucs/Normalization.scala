@@ -462,9 +462,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                   loopResult.asPath.asArg :: loopEnd.asArg :: Nil)(true, false, false))
                 .ifthen(Value.Ref(isReturned), Case.Lit(Tree.BoolLit(true)),
                   Return(Value.Ref(loopResult), false),
-                  S(rest)
+                  N
                 )
-                .end
+                .rest(rest)
             else
               blk.rest(rest)
           else
