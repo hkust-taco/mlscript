@@ -359,11 +359,10 @@ while
 
 
 // * https://github.com/hkust-taco/mlscript/issues/401
-:fixme
 // :sjs
 :rewriteWhile
 fun f = while false do ()
 print(f)
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ > ()
 
 

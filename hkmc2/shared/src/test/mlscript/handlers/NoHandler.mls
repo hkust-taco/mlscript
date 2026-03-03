@@ -14,3 +14,4 @@ h.perform("k")
 //│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.9: 	h.perform("k")
 //│ ╙──     	^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
