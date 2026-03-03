@@ -202,7 +202,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       createDefnTypes(rst)
     case HandleBlock(_, _, _, _, _, _, _, rst) =>
       createDefnTypes(rst)
-    case Label(_, _, _, rst) =>
+    case Label(_, _, body, rst) =>
+      createDefnTypes(body)
       createDefnTypes(rst)
     case Scoped(_, body) =>
       createDefnTypes(body)
@@ -720,7 +721,19 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def getI32FromAnyref(name: Str): Expr =
     i31.get(ref.cast(getLocalAnyref(name), RefType.i31ref), true)
 
-  def returningTerm(t: Block)(using Ctx, Raise, Scope): Expr = t match
+  def returningTerm(t: Block)(using Ctx, Raise, Scope): Expr =
+    def asStatement(expr: Expr): Expr =
+      expr.resultType match
+        case S(UnreachableType) => expr
+        case S(_) => FoldedInstr(
+            mnemonic = "drop",
+            instrargs = Seq.empty,
+            stackargs = Seq(expr),
+            resultTypes = Seq.empty
+          )
+        case N => expr
+
+    t match
     case _: HandleBlock =>
       errExpr(
         Ls(msg"This code requires effect handler instrumentation but was compiled without it." -> N)
@@ -747,7 +760,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Instructions.block(
         label = N,
         children = Seq(assignExpr, rstBlk),
-        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
+        resultTypes = rstBlk.resultTypes.flatMap(r => r.asValType.map(Result(_)))
       )
 
     case assign @ AssignField(lhs, nme, rhs, rst) =>
@@ -780,7 +793,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Instructions.block(
         label = N,
         children = Seq(assignInstr, rstBlk),
-        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
+        resultTypes = rstBlk.resultTypes.flatMap(r => r.asValType.map(Result(_)))
       )
 
     case assign @ AssignDynField(lhs, fld, arrayIdx, rhs, rst) =>
@@ -808,7 +821,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Instructions.block(
         label = N,
         children = Seq(assignInstr, rstBlk),
-        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
+        resultTypes = rstBlk.resultTypes.flatMap(r => r.asValType.map(Result(_)))
       )
 
     case Define(defn, rst) =>
@@ -839,7 +852,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   ),
                   rstWat
                 ),
-                resultTypes = rstWat.resultTypes.map(r => Result(r.asValType_!))
+                resultTypes = rstWat.resultTypes.flatMap(r => r.asValType.map(Result(_)))
               )
 
         case defn: (FunDefn | ClsLikeDefn) =>
@@ -1033,7 +1046,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             case _ => Instructions.block(
                 label = N,
                 children = Seq(res, rstBlk),
-                resultTypes = rstBlk.resultTypes.map(ty => Result(ty.asValType_!))
+                resultTypes = rstBlk.resultTypes.flatMap(ty => ty.asValType.map(Result(_)))
               )
 
     case Return(res, true) =>
@@ -1064,6 +1077,75 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       `return`(S(resWat))
 
     case Scoped(_, body) => returningTerm(body)
+    case Break(label) =>
+      ctx.lookupLabel(label) match
+        case S(target) => br(target.breakLabel)
+        case N =>
+          errExpr(
+            Ls(
+              msg"WatBuilder::returningTerm for Break(...) to unknown label `${label.nme}`" -> label.toLoc
+            ),
+            extraInfo = S(t.showAsTree)
+          )
+    case Continue(label) =>
+      ctx.lookupLabel(label) match
+        case S(target) =>
+          target.continueLabel match
+            case S(continueLabel) => br(continueLabel)
+            case N =>
+              errExpr(
+                Ls(
+                  msg"WatBuilder::returningTerm for Continue(...) to non-loop label `${label.nme}`" -> label.toLoc
+                ),
+                extraInfo = S(t.showAsTree)
+              )
+        case N =>
+          errExpr(
+            Ls(
+              msg"WatBuilder::returningTerm for Continue(...) to unknown label `${label.nme}`" -> label.toLoc
+            ),
+            extraInfo = S(t.showAsTree)
+          )
+    case Label(label, loop, body, rst) =>
+      val breakLabel = scope.allocateName(label)
+      val continueLabel =
+        if loop then S(scope.allocateName(TempSymbol(N, s"${label.nme}_cont")))
+        else N
+
+      val bodyExpr = ctx.withLabel(
+        label,
+        Ctx.LabelTarget(breakLabel, continueLabel)
+      ):
+        returningTerm(body)
+      val bodyStmt = asStatement(bodyExpr)
+
+      val labeledRegion =
+        if loop then
+          Instructions.block(
+            label = S(breakLabel),
+            children = Seq(
+              Instructions.loop(
+                label = continueLabel,
+                children = Seq(bodyStmt),
+                resultTypes = Seq.empty
+              )
+            ),
+            resultTypes = Seq.empty
+          )
+        else
+          Instructions.block(
+            label = S(breakLabel),
+            children = Seq(bodyStmt),
+            resultTypes = Seq.empty
+          )
+
+      val rstExpr = returningTerm(rst)
+      val rstResultTypes = rstExpr.resultTypes.flatMap(ty => ty.asValType.map(Result(_)))
+      Instructions.block(
+        label = N,
+        children = Seq(labeledRegion, rstExpr),
+        resultTypes = rstResultTypes
+      )
     case Match(scrut, arms, dflt, rst) =>
       val matchLabelSym = TempSymbol(N, "match")
       val matchLabel = scope.allocateName(matchLabelSym)
@@ -1073,17 +1155,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         else N
       
       def getScrutExpr: Expr = result(scrut)
-
-      def asStatement(expr: Expr): Expr =
-        expr.resultType match
-          case S(UnreachableType) => expr
-          case S(_) => FoldedInstr(
-              mnemonic = "drop",
-              instrargs = Seq.empty,
-              stackargs = Seq(expr),
-              resultTypes = Seq.empty
-            )
-          case N => expr
 
       def assignTailResult(target: LocalIdx, expr: Expr): Expr =
         expr.resultType match
@@ -1238,7 +1309,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           Instructions.block(
             label = N,
             children = Seq(matchBlock, rstExpr),
-            resultTypes = rstExpr.resultTypes.map(ty => Result(ty.asValType_!))
+            resultTypes = rstExpr.resultTypes.flatMap(ty => ty.asValType.map(Result(_)))
           )
 
     // TODO: Implement proper WASM exception throwing
