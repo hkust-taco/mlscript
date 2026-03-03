@@ -222,8 +222,10 @@ abstract class DiffMaker:
       case Diagnostic.Kind.Internal =>
         if !tolerateErrors then
           failures += globalStartLineNum
-        // unexpected("internal error", blockLineNum)
-        throw d
+          unexpected("internal error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
+        // throw d
+      if fullExceptionStack.isSet then
+        d.printStackTrace()
       report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
     
     processOrigin(origin)(using raise)

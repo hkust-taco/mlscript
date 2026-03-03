@@ -224,7 +224,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   /** 
    * Allocates a fresh temp local (typed `anyref`) and returns its `LocalIdx`. 
    */
-  private def mkTempLocal(base: Str)(using Ctx, Scope): LocalIdx =
+  private def mkTempLocal(base: Str)(using Ctx, Scope, Raise): LocalIdx =
     val sym = TempSymbol(N, base)
     val nme = scope.allocateName(sym)
     ctx.addLocal(sym)
