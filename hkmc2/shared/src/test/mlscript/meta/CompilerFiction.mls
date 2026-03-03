@@ -6,29 +6,33 @@ source
 //│ ╔══[COMPILATION ERROR] Module 'source' is virtual (i.e., "compiler fiction"); cannot be used directly
 //│ ║  l.5: 	source
 //│ ╙──     	^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :ge
 js
 //│ ╔══[COMPILATION ERROR] Module 'js' is virtual (i.e., "compiler fiction"); cannot be used directly
-//│ ║  l.12: 	js
+//│ ║  l.13: 	js
 //│ ╙──      	^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 :ge
 js.oops
 //│ ╔══[COMPILATION ERROR] Module 'js' does not contain member 'oops'
-//│ ║  l.19: 	js.oops
+//│ ║  l.21: 	js.oops
 //│ ╙──      	  ^^^^^
 //│ ╔══[COMPILATION ERROR] Module 'js' is virtual (i.e., "compiler fiction"); cannot be used directly
-//│ ║  l.19: 	js.oops
+//│ ║  l.21: 	js.oops
 //│ ╙──      	^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :ge
 js.try_catch
 //│ ╔══[COMPILATION ERROR] Module 'js' is virtual (i.e., "compiler fiction"); cannot be used directly
-//│ ║  l.28: 	js.try_catch
+//│ ║  l.31: 	js.try_catch
 //│ ╙──      	^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :re
 js.try_catch()
