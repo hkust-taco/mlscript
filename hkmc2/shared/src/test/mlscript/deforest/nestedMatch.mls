@@ -598,3 +598,40 @@ test(p) + f(p)
 //│ p = AA(AA(fun tmp101))
 
 
+fun test(a, b) =
+  let x
+  if a is
+    A then print("A")
+    B then
+      x = 1
+  if b is
+    A then
+      x = 2
+    B then print("B")
+  print(x)
+test(B, B) + test(A, A)
+//│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:b,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:b,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:b,None):
+//│ deforest > 	List($tmp, var:x)
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List($tmp, var:b, var:x, $tmp)
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List(var:x, $tmp, var:b, var:x, $tmp)
+//│ deforest > free vars of Ref(var:b,None):
+//│ deforest > 	List(var:x, $tmp, var:x)
+//│ > B
+//│ > 1
+//│ > A
+//│ > 2
+//│ = "()()"
+
+

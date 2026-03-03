@@ -36,7 +36,17 @@ object DeforestableSelect:
       val tSym = sSym.asTrm.get
       tSym.k match
         case (Ins | HandlerBind | MutVal) => None
-        case (ImmutVal | ParamBind) => Some(tSym)
+        case ParamBind => Some(tSym)
+        case ImmutVal =>
+          // this can be a selection from module or a class
+          tSym.owner.flatMap:
+            // if selecting from a class, it is only
+            // handleable if the selected field is
+            // one of the cls params, because in deforestation
+            // the known field information of a ctor is only its args
+            case cls: ClassSymbol => cls.tree.clsParams.find(_.id == tSym.id)
+            case mod: ModuleOrObjectSymbol => Some(tSym)
+            case _ => None
         case LetBind =>
           if tSym.owner.exists(c => c.asMod.isDefined) then None
           else Some(tSym)

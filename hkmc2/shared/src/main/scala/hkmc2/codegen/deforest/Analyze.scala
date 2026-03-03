@@ -194,14 +194,6 @@ class DeforestPreAnalyzer(
         .foldLeft(simpleRest)(Begin.apply)
       it.filterNot(_.isInstanceOf[Begin]).asInstanceOf[Iterator[Label | Match]]
       -> blockUntilParent
-    
-    // NOTE: maybe not needed anymore
-    def getNearestFusingParentMatch(dtorId: CtorDtorId, solver: DeforestConstrainSolver): Opt[BranchId] =
-      matchScrutToCtxOfMatch(dtorId._1)
-        .collectFirst:
-          case InCtx.MtchBody(m, cse)
-            if solver.finalDtorSrcs.isDefinedAt(CtorDtorId(m.scrut.uid, dtorId._2))
-            => CtorDtorId(m.scrut.uid, dtorId.instId) -> cse
   end res
   
   
@@ -342,9 +334,6 @@ class DeforestPreAnalyzer(
       ctxTracker.inCtxOf(bgn):
         applyBlock(sub)
       applyBlock(rest)
-      // applyBlock(sub)
-      // ctxTracker.inCtxOf(bgn):
-      //   applyBlock(rest)
     case Assign(lhs, rhs, rest) =>
       applyResult(rhs)
       applyBlock(rest)
