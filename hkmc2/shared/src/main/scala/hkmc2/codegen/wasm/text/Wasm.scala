@@ -207,9 +207,9 @@ case class FuncImport(
     doc"""(import "${module}" "${name}" (func ${id.fold(doc"")(_.toWat)} (type ${typeIdx.toWat})))"""
 
 /** A data segment entry. */
-case class DataSegment(offset: Int, bytes: Str) extends ToWat:
+case class DataSegment(offsetExpr: Expr, bytes: Str) extends ToWat:
   def toWat: Document =
-    doc"""(data (i32.const ${offset}) "${bytes}")"""
+    doc"""(data ${offsetExpr.toWat} "${bytes}")"""
 
 /**
  * An abstraction over a generic WebAssembly instructions.

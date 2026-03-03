@@ -2,26 +2,70 @@
 :global
 :wasm
 
-:wat
 "Hello World!"
+//│ Wasm result:
+//│ = "Hello World!"
+
+""
+//│ Wasm result:
+//│ = ""
+
+:wat
+let dup1 = "dup"
+let dup2 = "dup"
+[dup1, dup2].[1]
 //│ Wat:
 //│ (module
-//│   (type (func (param (ref null any)) (param (ref null any)) (result (ref null any))))
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type (func (param (ref null any)) (param (ref null any)) (result (ref null any))))
+//│   (type $TupleArray (array (ref null any)))
+//│   (type $TupleArrayMut (array (mut (ref null any))))
 //│   (type (func (result (ref null any))))
 //│   (import "system" "mem" (memory 1))
-//│   (import "system" "mlx_str_from_utf16" (func $mlx_str_from_utf16 (type 0)))
-//│   (data (i32.const 0) "\48\00\65\00\6c\00\6c\00\6f\00\20\00\57\00\6f\00\72\00\6c\00\64\00\21\00")
-//│   (func $entry (type 2) (result (ref null any))
-//│     (call $mlx_str_from_utf16
-//│       (ref.i31
-//│         (i32.const 0))
-//│       (ref.i31
-//│         (i32.const 24))))
+//│   (import "system" "mlx_str_from_utf16" (func $mlx_str_from_utf16 (type 1)))
+//│   (data (i32.const 0) "\64\00\75\00\70\00")
+//│   (func $entry (type 4) (result (ref null any))
+//│     (local $dup1 (ref null any))
+//│     (local $dup2 (ref null any))
+//│     (local $tmp (ref null any))
+//│     (local $tuple (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $dup1
+//│         (call $mlx_str_from_utf16
+//│           (ref.i31
+//│             (i32.const 0))
+//│           (ref.i31
+//│             (i32.const 6))))
+//│       (block (result (ref null any))
+//│         (local.set $dup2
+//│           (call $mlx_str_from_utf16
+//│             (ref.i31
+//│               (i32.const 0))
+//│             (ref.i31
+//│               (i32.const 6))))
+//│         (block (result (ref null any))
+//│           (local.set $tmp
+//│             (array.new_fixed $TupleArray 2
+//│               (local.get $dup1)
+//│               (local.get $dup2)))
+//│           (if (result (ref null any))
+//│             (ref.test (ref null $TupleArrayMut)
+//│               (local.tee $tuple
+//│                 (local.get $tmp)))
+//│             (then
+//│               (array.get $TupleArrayMut
+//│                 (ref.cast (ref $TupleArrayMut)
+//│                   (local.get $tuple))
+//│                 (i32.const 1)))
+//│             (else
+//│               (array.get $TupleArray
+//│                 (ref.cast (ref $TupleArray)
+//│                   (local.get $tuple))
+//│                 (i32.const 1))))))))
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))
 //│ Wasm result:
-//│ = "Hello World!"
+//│ = "dup"
 
 let s = "mlx"
 s
@@ -34,57 +78,8 @@ t.[1]
 //│ = "b"
 
 // For testing that function indices are stable
-:wat
 fun id(x) = x
 let s2 = "hello"
 if true then id(1) else s2
-//│ Wat:
-//│ (module
-//│   (type (func (param (ref null any)) (param (ref null any)) (result (ref null any))))
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type (func (param $x (ref null any)) (result (ref null any))))
-//│   (type (func (result (ref null any))))
-//│   (import "system" "mem" (memory 1))
-//│   (import "system" "mlx_str_from_utf16" (func $mlx_str_from_utf16 (type 0)))
-//│   (data (i32.const 0) "\68\00\65\00\6c\00\6c\00\6f\00")
-//│   (func $id (type 2) (param $x (ref null any)) (result (ref null any))
-//│     (return
-//│       (local.get $x)))
-//│   (export "id" (func $id))
-//│   (elem declare func $id)
-//│   (func $entry (type 3) (result (ref null any))
-//│     (local $id (ref null any))
-//│     (local $s2 (ref null any))
-//│     (local $scrut (ref null any))
-//│     (block (result (ref null any))
-//│       (nop)
-//│       (block (result (ref null any))
-//│         (local.set $s2
-//│           (call $mlx_str_from_utf16
-//│             (ref.i31
-//│               (i32.const 0))
-//│             (ref.i31
-//│               (i32.const 10))))
-//│         (block (result (ref null any))
-//│           (local.set $scrut
-//│             (ref.i31
-//│               (i32.const 1)))
-//│           (block $match (result (ref null any))
-//│             (if
-//│               (i32.eq
-//│                 (i31.get_s
-//│                   (ref.cast (ref null i31)
-//│                     (local.get $scrut)))
-//│                 (i32.const 1))
-//│               (then
-//│                 (block $arm
-//│                   (call_ref 2
-//│                     (ref.i31
-//│                       (i32.const 1))
-//│                     (ref.func $id))
-//│                   (br $match))))
-//│             (local.get $s2))))))
-//│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
 //│ Wasm result:
 //│ = 1

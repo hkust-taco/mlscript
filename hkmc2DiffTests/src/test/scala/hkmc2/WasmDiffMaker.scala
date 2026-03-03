@@ -2,11 +2,11 @@ package hkmc2
 
 import mlscript.utils.*, shorthands.*
 
+import codegen.js.JSBuilder
 import codegen.wasm.*
 import document.*
 import semantics.Elaborator
 import semantics.Term.Blk
-import syntax.Tree
 import text.WatBuilder
 import Diagnostic.Source
 import Message.MessageContext
@@ -70,7 +70,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
       val (modWat, mainFnNme, systemMemMinPages) = ltl.givenIn:
         baseScp.nest.givenIn:
           WatBuilder().program(le, N, wd)
-      val modWatJsLit = Tree.StrLit(modWat.mkString()).idStr
+      val modWatJsLit = JSBuilder.makeStringLiteral(modWat.mkString())
 
       if wat.isSet then
         output("Wat:")
@@ -134,34 +134,36 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
         if stderr.nonEmpty then output(s"// Standard Error:\n${stderr}")
       end mkQuery
 
+      val importObj =
+        doc"""
+          {
+            "system": {
+              "mem": mem,
+              "mlx_str_from_utf16": (ptr, byteLen) =>
+                decodeUtf16.decode(new Uint8Array(mem.buffer, ptr, byteLen))
+            }
+          }
+        """
+          .stripBreaks
+          .mkString(100)
       val jsStr =
         doc"""
           await (() => {
             # const watSrc = $modWatJsLit;
             # const mem = new WebAssembly.Memory({ initial: $systemMemMinPages });
             # const decodeUtf16 = new TextDecoder("utf-16le");
-            # const imports = {
-                "system": {
-                  "mem": mem,
-                  "mlx_str_from_utf16": (ptr, byteLen) =>
-                    decodeUtf16.decode(new Uint8Array(mem.buffer, ptr, byteLen))
-                }
-              };
-            # return wasm.binaryenPrintFuncRes(watSrc, imports, exports => exports.${mainFnNme}());
+            # const importObj = $importObj;
+            # return wasm.binaryenPrintFuncRes(watSrc, importObj, exports => exports.${mainFnNme}());
             # })();
         """
           .stripBreaks
           .mkString(100)
       output("Wasm result:")
       mkQuery("", jsStr): out =>
-        // Omit the REPL tail only when it is explicitly "undefined" or unit.
-        val lines = out.linesIterator.toList
-        val result =
-          lines.lastOption match
-            case S(last) if last.trim === "undefined" || last.trim === "()" =>
-              lines.dropRight(1).mkString("\n")
-            case _ =>
-              lines.mkString("\n")
+        // Omit the last line which is always "undefined" or the unit.
+        val result = out.lastIndexOf('\n') match
+          case n if n >= 0 => out.substring(0, n)
+          case _ => ""
         output(s"= $result")
     end if
   end processTerm

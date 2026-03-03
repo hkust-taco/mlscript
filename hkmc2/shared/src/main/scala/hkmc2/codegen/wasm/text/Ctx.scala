@@ -197,6 +197,7 @@ object Ctx:
     functionImports = ArrayBuf.empty,
     dataSegments = ArrayBuf.empty,
     funcs = ArrayBuf.empty,
+    funcInfosByIndex = MutMap.empty,
     globals = ArrayBuf.empty,
     namedFuncs = MutMap.empty,
     namedGlobals = MutMap.empty,
@@ -243,6 +244,7 @@ class Ctx(
     functionImports: ArrayBuf[FuncImport],
     dataSegments: ArrayBuf[DataSegment],
     funcs: ArrayBuf[FuncInfo],
+    funcInfosByIndex: MutMap[NumIdx, FuncInfo],
     globals: ArrayBuf[GlobalInfo],
     namedFuncs: MutMap[Symbol, NumIdx],
     namedGlobals: MutMap[Symbol, NumIdx],
@@ -305,6 +307,7 @@ class Ctx(
   def addFunc(sym: Opt[Symbol], funcInfo: FuncInfo): FuncIdx =
     val numIdx = NumIdx(functionImports.size + funcs.size)
     funcs += funcInfo
+    funcInfosByIndex(numIdx) = funcInfo
     sym.foreach:
       namedFuncs(_) = numIdx
     FuncIdx(funcInfo.id.getOrElse(numIdx))
@@ -315,7 +318,7 @@ class Ctx(
    * Returns the function index in the global function index space.
    */
   def addFunctionImport(sym: Opt[Symbol], funcImport: FuncImport): FuncIdx =
-    val numIdx = NumIdx(functionImports.size)
+    val numIdx = NumIdx(functionImports.size + funcs.size)
     functionImports += funcImport
     sym.foreach:
       namedFuncs(_) = numIdx
@@ -328,8 +331,7 @@ class Ctx(
   def getOrCreateFunctionImport(
       module: Str,
       name: Str,
-      createImport: => FuncImport
-  ): FuncIdx =
+  )(createImport: => FuncImport): FuncIdx =
     cachedFunctionImports.getOrElseUpdate(
       (module, name),
       addFunctionImport(N, createImport)
@@ -354,7 +356,7 @@ class Ctx(
 
   /** Returns the minimum page requirement of memory import (`module`, `name`) if present. */
   def getMemoryImportMinPages(module: Str, name: Str): Opt[Int] =
-    memoryImports.find(m => m.module == module && m.name == name).map(_.minPages)
+    memoryImports.find(m => m.module === module && m.name === name).map(_.minPages)
 
   /** Adds a data segment into this context. */
   def addDataSegment(seg: DataSegment): Unit =
@@ -380,9 +382,10 @@ class Ctx(
 
   /** Returns the [[FuncInfo]] instance associated with the given `funcref`. */
   def getFuncInfo(funcref: FuncIdx | Symbol): Opt[FuncInfo] = funcref match
-    case FuncIdx(NumIdx(idx)) =>
-      val localIdx = idx.toInt - functionImports.size
-      if localIdx < 0 then N else funcs.unapply(localIdx)
+    case FuncIdx(numIdx @ NumIdx(idx)) =>
+      funcInfosByIndex.get(numIdx).orElse:
+        val localIdx = idx.toInt - functionImports.size
+        if localIdx < 0 then N else funcs.unapply(localIdx)
     case funcref => getFunc(funcref, resolveSymIdx = true).flatMap(getFuncInfo(_))
 
   /** Same as [[getFuncInfo]] but throws an exception when the `funcref` is not found. */
@@ -493,7 +496,16 @@ class Ctx(
     wasmIntrinsicTypes.getOrElseUpdate(key, createType)
 
   def toWat: Document =
-    val startDef = startFunc.toSeq.map(funcIdx => doc"(start ${funcIdx.toWat})")
-    doc"(module #{  # ${(types.toSeq.map(_.toWat) ++ memoryImports.toSeq.map(_.toWat) ++ functionImports.toSeq.map(_.toWat) ++ dataSegments.toSeq.map(_.toWat) ++ globals.toSeq.map(_.toWat) ++ startDef ++ funcs.toSeq.map(_.toWat)).mkDocument(doc" # ")}) #} "
+    doc"(module #{  # ${
+        (
+          types.toSeq.map(_.toWat)
+            ++ memoryImports.toSeq.map(_.toWat)
+            ++ functionImports.toSeq.map(_.toWat)
+            ++ dataSegments.toSeq.map(_.toWat)
+            ++ globals.toSeq.map(_.toWat)
+            ++ startFunc.toSeq.map(funcIdx => doc"(start ${funcIdx.toWat})")
+            ++ funcs.toSeq.map(_.toWat)
+        ).mkDocument(doc" # ")
+      } #} )"
 
 end Ctx

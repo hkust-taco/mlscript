@@ -14,7 +14,6 @@ import syntax.Tree.{BoolLit, IntLit, StrLit, Ident}
 import text.Param as WasmParam
 import Message.MessageContext
 import Scope.scope
-import hkmc2.codegen.BlockTraverser
 
 import scala.collection.mutable.{ArrayBuffer as ArrayBuf, LinkedHashMap}
 import scala.util.boundary, boundary.break
@@ -29,10 +28,18 @@ extension (instr: FoldedInstr)
   private def mnemonicPrefix: Opt[Str] =
     instr.mnemonic.split('.').optionUnless(_.size == 1).map(_.head)
 
+object WatBuilder:
+  object ExternIntrinsics:
+    val SystemModule = "system"
+    val SystemMemoryImportName = "mem"
+    val StringFromUtf16ImportName = "mlx_str_from_utf16"
+    val WasmPageSizeBytes = 65536
+
 class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   import Ctx.ctx
   import Ctx.{SingletonInfo, binaryOps, unaryOps, wasmIntrinsicArities, wasmIntrinsicNameSet}
   import Instructions.*
+  import WatBuilder.ExternIntrinsics
 
   type Context = Ctx
 
@@ -229,36 +236,40 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   /**
    * Ensures imports required for string materialization exist and returns the constructor function.
    */
-  private def ensureStringImports(using Ctx): FuncIdx =
-    val minBytes = nextStringDataOffset max 1
-    val minPages = (minBytes + 65535) / 65536
-    val systemImportMod = "system"
-    val stringFromUtf16ImportNme = "mlx_str_from_utf16"
-    ctx.ensureMemoryImport(systemImportMod, "mem", minPages)
+  private def getOrLoadStrCtorFunction(using Ctx): FuncIdx =
+    val minBytes = nextStringDataOffset
+    val pageSize = ExternIntrinsics.WasmPageSizeBytes
+    val minPages =
+      if minBytes <= 0 then 0
+      else (minBytes + pageSize - 1) / pageSize
+    ctx.ensureMemoryImport(
+      ExternIntrinsics.SystemModule,
+      ExternIntrinsics.SystemMemoryImportName,
+      minPages
+    )
     ctx.getOrCreateFunctionImport(
-      module = systemImportMod,
-      name = stringFromUtf16ImportNme,
-      createImport =
-        val importTy = ctx.addType(
-          sym = N,
-          TypeInfo(
-            id = N,
-            FunctionType(
-              params = Seq(
-                WasmParam(N, RefType.anyref),
-                WasmParam(N, RefType.anyref)
-              ),
-              results = Seq(Result(RefType.anyref))
-            )
+      module = ExternIntrinsics.SystemModule,
+      name = ExternIntrinsics.StringFromUtf16ImportName,
+    ):
+      val importTy = ctx.addType(
+        sym = N,
+        TypeInfo(
+          id = N,
+          FunctionType(
+            params = Seq(
+              WasmParam(N, RefType.anyref),
+              WasmParam(N, RefType.anyref)
+            ),
+            results = Seq(Result(RefType.anyref))
           )
         )
-        FuncImport(
-          module = systemImportMod,
-          name = stringFromUtf16ImportNme,
-          id = S(SymIdx(stringFromUtf16ImportNme)),
-          typeIdx = importTy
-        )
-    )
+      )
+      FuncImport(
+        module = ExternIntrinsics.SystemModule,
+        name = ExternIntrinsics.StringFromUtf16ImportName,
+        id = S(SymIdx(ExternIntrinsics.StringFromUtf16ImportName)),
+        typeIdx = importTy
+      )
 
   /** 
    * Gets (and caches) the Wasm GC array type used for tuples (`mut` selects mutability). 
@@ -491,7 +502,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ref.i31(i32.const(value.toInt))
     case Value.Lit(StrLit(value)) =>
       val lit = internStringLiteral(value)
-      val stringCtor = ensureStringImports
+      val stringCtor = getOrLoadStrCtorFunction
       call(
         funcidx = stringCtor,
         operands = Seq(
@@ -1283,9 +1294,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Raise,
       Scope
   ): (Document, Str, Int) =
-    stringLits.clear()
-    nextStringDataOffset = 0
-
     for imprt <- p.imports do
       raise(
         ErrorReport(
@@ -1306,18 +1314,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val ctx = Ctx.empty
     given Ctx = ctx
 
-    // Check whether there is strigns in block because function imports
-    // must be declared before function definitions to keep indices stable.
-    var hasStringLiteral = false
-    val traverser = new BlockTraverser:
-      override def applyValue(v: Value): Unit =
-        v match
-          case Value.Lit(StrLit(_)) => hasStringLiteral = true
-          case _ => ()
-    traverser.applyBlock(p.main)
-    if hasStringLiteral then
-      ensureStringImports
-    
     // Create base Object struct with tag field that all other structs will inherit
     ctx.addType(
       sym = S(baseObjectSym),
@@ -1366,7 +1362,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     if stringLits.nonEmpty then
       stringLits.valuesIterator.foreach: lit =>
         if lit.byteLen > 0 then
-          ctx.addDataSegment(DataSegment(offset = lit.offset, bytes = lit.watBytes))
+          ctx.addDataSegment(DataSegment(Instructions.i32.const(lit.offset), lit.watBytes))
 
     val singletonInitActions = ctx.getSingletonInitActions
     if singletonInitActions.nonEmpty then
@@ -1400,7 +1396,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     ctx.addFunc(S(entrySym), entryFnInfo)
 
-    val systemMemMinPages = ctx.getMemoryImportMinPages("system", "mem").getOrElse(1)
+    val systemMemMinPages =
+      ctx.getMemoryImportMinPages(
+        ExternIntrinsics.SystemModule,
+        ExternIntrinsics.SystemMemoryImportName
+      ).getOrElse(0)
     (ctx.toWat, entryNme, systemMemMinPages)
   end program
 
