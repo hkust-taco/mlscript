@@ -21,9 +21,9 @@ M.f(M.p())
 //│ deforest > 	Select(Ref($arg$XX$0$,None),Ident(b))
 //│ deforest > ========
 //│ deforest > free vars of Ref($arg$XX$0$,None):
-//│ deforest > 	List(var:y, $arg$YY$0$, $tmp)
+//│ deforest > 	List(var:y, $arg$YY$0$, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y, $arg$XX$0$, $arg$YY$0$, $tmp)
+//│ deforest > 	List(var:y, $arg$XX$0$, $arg$YY$0$, $tmp, $tmp)
 //│ = 123
 
 
@@ -47,7 +47,7 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
 //│ JS (unsanitized):
-//│ let Nil1, Cons1, map, enum1, lambda, lambda1, tmp1, tmp2, tmp3, map_11$map, map_13$map, map_13$ls_Cons, map_13$ls_Nil; /* scoped */
+//│ let Nil1, Cons1, map, enum1, lambda, lambda1, tmp1, tmp2, tmp3, map_11$map, map_13$map, map_13$ls_Cons, map_13$ls_rest, map_13$ls_Nil; /* scoped */
 //│ map_11$map = function map_11$map(f, ls) {
 //│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp4, tmp5; /* scoped */
 //│   if (ls instanceof Nil1.class) {
@@ -87,6 +87,7 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ map_13$ls_Nil = function map_13$ls_Nil(fv_f, fv_t, fv_h, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_tmp, fv_tmp1) {
 //│   return Nil1
 //│ };
+//│ map_13$ls_rest = function map_13$ls_rest() {};
 //│ map = function map(f, ls) {
 //│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp4, tmp5; /* scoped */
 //│   if (ls instanceof Nil1.class) {

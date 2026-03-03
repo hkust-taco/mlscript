@@ -267,7 +267,7 @@ f(A(4))
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:res, var:x, $scrut, $arg$A$0$, $tmp, $tmp, $tmp)
+//│ deforest > 	List(var:x, $arg$A$0$, $tmp, var:res, $scrut, $tmp, $tmp, $tmp)
 //│ = 0
 
 
@@ -381,7 +381,7 @@ test()
 //│ deforest > 	Ref($scrut,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref($scrut,None):
-//│ deforest > 	List(var:x, var:f, $tmp)
+//│ deforest > 	List($tmp, var:x, var:f, $tmp)
 //│ = 1
 
 
@@ -398,7 +398,7 @@ if [1, 2] is
 //│ deforest > free vars of Ref($scrut,None):
 //│ deforest > 	List()
 //│ JS (unsanitized):
-//│ let scrut1, a1, b, element1$, element0$, tup2_0, tup2_1, $scrut_2; /* scoped */
+//│ let scrut1, a1, b, element1$, element0$, tup2_0, tup2_1, $scrut_2, $scrut_rest1; /* scoped */
 //│ $scrut_2 = function $scrut_2(tup2_01, tup2_11) {
 //│   element0$ = tup2_01;
 //│   element1$ = tup2_11;
@@ -406,6 +406,7 @@ if [1, 2] is
 //│   a1 = element0$;
 //│   return a1 + b
 //│ };
+//│ $scrut_rest1 = function $scrut_rest() {};
 //│ tup2_0 = 1;
 //│ tup2_1 = 2;
 //│ scrut1 = () => { return $scrut_2(tup2_0, tup2_1) };

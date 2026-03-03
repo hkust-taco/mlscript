@@ -109,7 +109,7 @@ map(x => x + 4, enumFromTo(1, 4))
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
+//│ deforest > 	List(var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, var:f, $tmp)
 //│ = Cons(5, Cons(6, Cons(7, Nil)))
 
 
@@ -351,7 +351,7 @@ c(T(A, T(B, L, L), T(A, L, L)))
 //│ deforest > 	Ref(var:n,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:n,None):
-//│ deforest > 	List(var:l, var:r, $tmp, $tmp, $tmp)
+//│ deforest > 	List($tmp, var:l, var:r, $tmp, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List(var:n, var:l, var:r, $arg$T$0$, $arg$T$1$, $arg$T$2$, $tmp, $tmp, $tmp)
 //│ = T(0, T(1, L, L), T(0, L, L))

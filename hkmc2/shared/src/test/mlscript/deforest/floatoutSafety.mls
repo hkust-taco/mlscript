@@ -46,7 +46,7 @@ consumer of
 //│ deforest > 	Select(Ref($arg$Many$0$,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref($arg$Many$0$,None):
-//│ deforest > 	List(var:v, $arg$Once$0$, $tmp)
+//│ deforest > 	List(var:v, $arg$Once$0$, $tmp, $tmp)
 //│ = 13
 
 

@@ -82,23 +82,23 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > 	Ref($arg$AA$0$,None)
 //│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
 //│ deforest > ========
-//│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List(var:t, var:a, $arg$AA$0$, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:t, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > 	List(var:t, var:a, $arg$AA$0$, $arg$AA$0$, $arg$AA$0$, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List(var:t, var:a, $arg$AA$0$, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > 	List(var:a, $arg$AA$0$, $tmp, $tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List(var:t, var:a, $arg$AA$0$, $arg$AA$0$, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List(var:a, $arg$AA$0$, $tmp, $tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:t, var:a, $arg$AA$0$, $arg$AA$0$, $arg$AA$0$, $tmp, $tmp, $tmp, $tmp, $tmp)
-//│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List(var:t, var:a, $arg$AA$0$, $arg$AA$0$, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > 	List($tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ JS (unsanitized):
-//│ let test, f1, p, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, test_19$test, test_19$x_dflt, AA_x, test_18$test, test_18$x_AA, AA_x1, test_18$arg$AA$0$_AA, AA_x2, test_18$arg$AA$0$_AA1, AA_x3, test_13$test, test_13$arg$AA$0$_AA, deforest$lam; /* scoped */
+//│ let test, f1, p, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, test_19$test, test_19$x_dflt, test_19$x_rest, test_19$split_1$_rest, test_19$split_root$_rest, AA_x, test_18$test, test_18$x_AA, test_18$x_rest, test_18$split_1$_rest, test_18$split_root$_rest, AA_x1, test_18$arg$AA$0$_AA, test_18$arg$AA$0$_rest, AA_x2, test_18$arg$AA$0$_AA1, test_18$arg$AA$0$_rest1, AA_x3, test_13$test, test_13$arg$AA$0$_AA, test_13$arg$AA$0$_rest, test_13$arg$AA$0$_rest1, test_13$x_rest, test_13$split_1$_rest, test_13$split_root$_rest, deforest$lam; /* scoped */
 //│ test_19$test = function test_19$test(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp13, tmp14, tmp15, tmp16, tmp17; /* scoped */
 //│   split_root$: {
 //│     split_1$: {
-//│       return x(t, tmp13, tmp14, tmp15, tmp16, tmp17);
+//│       return x(tmp13, t, tmp13, tmp14, tmp15, tmp16, tmp17);
 //│     }
 //│     tmp13 = 4;
 //│   }
@@ -113,7 +113,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp13, tmp14, tmp15, tmp16, tmp17; /* scoped */
 //│   split_root$: {
 //│     split_1$: {
-//│       return x(t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp13, tmp14, tmp15, tmp16, tmp17);
+//│       return x(t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp13, tmp14, tmp15, tmp16, tmp17, tmp13, t, tmp13, tmp14, tmp15, tmp16, tmp17);
 //│     }
 //│     tmp13 = 4;
 //│   }
@@ -132,12 +132,12 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│         arg$AA$0$ = x.x;
 //│         if (arg$AA$0$ instanceof AA1.class) {
 //│           arg$AA$0$1 = arg$AA$0$.x;
-//│           return arg$AA$0$1(t, a, arg$AA$0$2, tmp13, tmp14, tmp15, tmp16, tmp17)
+//│           return arg$AA$0$1(a, arg$AA$0$2, tmp13, tmp13, t, tmp13, tmp14, tmp15, tmp16, tmp17)
 //│         } else {
-//│           break split_1$
+//│           return test_13$split_1$_rest(tmp13, t, tmp13, tmp14, tmp15, tmp16, tmp17)
 //│         }
 //│       } else {
-//│         break split_1$
+//│         return test_13$split_1$_rest(tmp13, t, tmp13, tmp14, tmp15, tmp16, tmp17)
 //│       }
 //│     }
 //│     tmp13 = 4;
@@ -149,8 +149,37 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   tmp17 = tmp16 + 2;
 //│   return tmp17 - 1
 //│ };
-//│ test_19$x_dflt = function test_19$x_dflt(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
-//│   fv_tmp = 4;
+//│ test_19$x_dflt = function test_19$x_dflt(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│   return test_19$split_1$_rest(fv_tmp1, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
+//│ };
+//│ test_18$x_AA = function test_18$x_AA(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, fv_t1, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_tmp10, AA_x4) {
+//│   fv_arg$AA$0$ = AA_x4;
+//│   return fv_arg$AA$0$(fv_t1, fv_a, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_tmp10, fv_tmp6, fv_t1, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_tmp10)
+//│ };
+//│ test_18$arg$AA$0$_AA = function test_18$arg$AA$0$_AA(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, fv_t1, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_tmp10, AA_x4) {
+//│   fv_arg$AA$0$ = AA_x4;
+//│   return fv_arg$AA$0$(fv_a, fv_arg$AA$0$1, fv_tmp6, fv_tmp6, fv_t1, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_tmp10)
+//│ };
+//│ test_18$arg$AA$0$_AA1 = function test_18$arg$AA$0$_AA(fv_a, fv_arg$AA$0$, fv_tmp, fv_tmp1, fv_t, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, fv_tmp6, AA_x4) {
+//│   fv_arg$AA$0$ = AA_x4;
+//│   fv_a = fv_arg$AA$0$;
+//│   fv_tmp2 = fv_a;
+//│   return test_18$split_root$_rest(fv_t, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, fv_tmp6)
+//│ };
+//│ test_13$arg$AA$0$_AA = function test_13$arg$AA$0$_AA(fv_a, fv_arg$AA$0$, fv_tmp, fv_tmp1, fv_t, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, fv_tmp6, AA_x4) {
+//│   fv_arg$AA$0$ = AA_x4;
+//│   fv_a = fv_arg$AA$0$;
+//│   fv_tmp2 = fv_a;
+//│   return test_13$split_root$_rest(fv_t, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, fv_tmp6)
+//│ };
+//│ test_19$x_rest = function test_19$x_rest(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│   return test_19$split_1$_rest(fv_tmp1, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
+//│ };
+//│ test_19$split_1$_rest = function test_19$split_1$_rest(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│   fv_tmp1 = 4;
+//│   return test_19$split_root$_rest(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
+//│ };
+//│ test_19$split_root$_rest = function test_19$split_root$_rest(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
 //│   fv_t = fv_tmp;
 //│   fv_tmp1 = 5 * 4;
 //│   fv_tmp2 = fv_t + fv_tmp1;
@@ -158,18 +187,14 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   fv_tmp4 = fv_tmp3 + 2;
 //│   return fv_tmp4 - 1
 //│ };
-//│ test_18$x_AA = function test_18$x_AA(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, AA_x4) {
-//│   fv_arg$AA$0$ = AA_x4;
-//│   return fv_arg$AA$0$(fv_t, fv_a, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
+//│ test_18$x_rest = function test_18$x_rest(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│   return test_18$split_1$_rest(fv_tmp1, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
 //│ };
-//│ test_18$arg$AA$0$_AA = function test_18$arg$AA$0$_AA(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, AA_x4) {
-//│   fv_arg$AA$0$ = AA_x4;
-//│   return fv_arg$AA$0$(fv_t, fv_a, fv_arg$AA$0$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
+//│ test_18$split_1$_rest = function test_18$split_1$_rest(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│   fv_tmp1 = 4;
+//│   return test_18$split_root$_rest(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
 //│ };
-//│ test_18$arg$AA$0$_AA1 = function test_18$arg$AA$0$_AA(fv_t, fv_a, fv_arg$AA$0$, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, AA_x4) {
-//│   fv_arg$AA$0$ = AA_x4;
-//│   fv_a = fv_arg$AA$0$;
-//│   fv_tmp = fv_a;
+//│ test_18$split_root$_rest = function test_18$split_root$_rest(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
 //│   fv_t = fv_tmp;
 //│   fv_tmp1 = 5 * 4;
 //│   fv_tmp2 = fv_t + fv_tmp1;
@@ -177,10 +202,26 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   fv_tmp4 = fv_tmp3 + 2;
 //│   return fv_tmp4 - 1
 //│ };
-//│ test_13$arg$AA$0$_AA = function test_13$arg$AA$0$_AA(fv_t, fv_a, fv_arg$AA$0$, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, AA_x4) {
-//│   fv_arg$AA$0$ = AA_x4;
-//│   fv_a = fv_arg$AA$0$;
-//│   fv_tmp = fv_a;
+//│ test_18$arg$AA$0$_rest = function test_18$arg$AA$0$_rest(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│   return test_18$x_rest(fv_tmp1, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
+//│ };
+//│ const proxy$test_18$arg$AA$0$_rest = test_18$arg$AA$0$_rest; test_18$arg$AA$0$_rest1 = function test_18$arg$AA$0$_rest(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│   return proxy$test_18$arg$AA$0$_rest(fv_tmp1, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
+//│ };
+//│ test_13$arg$AA$0$_rest = function test_13$arg$AA$0$_rest(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│   return test_13$arg$AA$0$_rest1(fv_tmp1, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
+//│ };
+//│ test_13$arg$AA$0$_rest1 = function test_13$arg$AA$0$_rest(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│   return test_13$x_rest(fv_tmp1, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
+//│ };
+//│ test_13$x_rest = function test_13$x_rest(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│   return test_13$split_1$_rest(fv_tmp1, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
+//│ };
+//│ test_13$split_1$_rest = function test_13$split_1$_rest(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│   fv_tmp1 = 4;
+//│   return test_13$split_root$_rest(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
+//│ };
+//│ test_13$split_root$_rest = function test_13$split_root$_rest(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
 //│   fv_t = fv_tmp;
 //│   fv_tmp1 = 5 * 4;
 //│   fv_tmp2 = fv_t + fv_tmp1;
@@ -241,8 +282,8 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   return tmp13
 //│ };
 //│ AA_x3 = 10;
-//│ tmp2 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4) => {
-//│   return test_13$arg$AA$0$_AA(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, AA_x3)
+//│ tmp2 = (fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_t, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6) => {
+//│   return test_13$arg$AA$0$_AA(fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_t, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6, AA_x3)
 //│ };
 //│ tmp3 = AA1(tmp2);
 //│ p = AA1(tmp3);
@@ -250,21 +291,21 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ tmp5 = f1(p);
 //│ tmp6 = tmp4 + tmp5;
 //│ AA_x2 = 10;
-//│ tmp7 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4) => {
-//│   return test_18$arg$AA$0$_AA1(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, AA_x2)
+//│ tmp7 = (fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_t, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6) => {
+//│   return test_18$arg$AA$0$_AA1(fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_t, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6, AA_x2)
 //│ };
 //│ AA_x1 = tmp7;
-//│ tmp8 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4) => {
-//│   return test_18$arg$AA$0$_AA(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, AA_x1)
+//│ tmp8 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10) => {
+//│   return test_18$arg$AA$0$_AA(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, AA_x1)
 //│ };
 //│ AA_x = tmp8;
-//│ tmp9 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_arg$AA$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4) => {
-//│   return test_18$x_AA(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_arg$AA$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, AA_x)
+//│ tmp9 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_arg$AA$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10) => {
+//│   return test_18$x_AA(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_arg$AA$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, AA_x)
 //│ };
 //│ tmp10 = test_18$test(tmp9);
 //│ tmp11 = tmp6 + tmp10;
-//│ deforest$lam = (fv_ctorLam_t, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4) => {
-//│   return test_19$x_dflt(fv_ctorLam_t, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4)
+//│ deforest$lam = (fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5) => {
+//│   return test_19$x_dflt(fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5)
 //│ };
 //│ tmp12 = test_19$test(deforest$lam);
 //│ tmp11 + tmp12
@@ -284,16 +325,16 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > 	Ref($arg$AA$0$,None)
 //│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
 //│ deforest > ========
-//│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List(var:t, var:a, $arg$AA$0$, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:t, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > 	List(var:t, var:a, $arg$AA$0$, $arg$AA$0$, $arg$AA$0$, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List(var:t, var:a, $arg$AA$0$, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > 	List(var:a, $arg$AA$0$, $tmp, $tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List(var:t, var:a, $arg$AA$0$, $arg$AA$0$, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List(var:a, $arg$AA$0$, $tmp, $tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:t, var:a, $arg$AA$0$, $arg$AA$0$, $arg$AA$0$, $tmp, $tmp, $tmp, $tmp, $tmp)
-//│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List(var:t, var:a, $arg$AA$0$, $arg$AA$0$, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > 	List($tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ = 78
 //│ p = AA(AA(fun tmp2))
 

@@ -78,7 +78,7 @@ modSome(Some(17), 3)
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List(var:m, var:n, $scrut, $arg$Some$0$, $tmp, $tmp)
 //│ JS (unsanitized):
-//│ let modSome, tmp4, modSome_8$modSome, modSome_8$x_Some, Some_x; /* scoped */
+//│ let modSome, tmp4, modSome_8$modSome, modSome_8$x_Some, modSome_8$x_rest, Some_x; /* scoped */
 //│ modSome_8$modSome = function modSome_8$modSome(x, m) {
 //│   let n, scrut, arg$Some$0$, tmp5, tmp6; /* scoped */
 //│   return x(m, n, scrut, arg$Some$0$, tmp5, tmp6)
@@ -98,7 +98,9 @@ modSome(Some(17), 3)
 //│   } else {
 //│     return Some1(fv_n)
 //│   }
+//│   /* unreachable */
 //│ };
+//│ modSome_8$x_rest = function modSome_8$x_rest() {};
 //│ modSome = function modSome(x, m) {
 //│   loopLabel: while (true) {
 //│     let n, scrut, arg$Some$0$, tmp5, tmp6; /* scoped */
@@ -168,20 +170,20 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(0)))))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:xsys,None):
-//│ deforest > 	List(var:f, var:hy, var:ty, var:hx, var:tx, $element1$, $element0$, $arg$Cons$0$, $arg$Cons$1$, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > 	List(var:f, var:hy, var:ty, var:hx, var:tx, $element1$, $element0$, $arg$Cons$0$, $arg$Cons$1$, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ JS (unsanitized):
-//│ let zipWith, tmp5, tmp6, tmp7, lambda, zipWith_19$zipWith, zipWith_19$xsys_2, tup2_0, tup2_1; /* scoped */
+//│ let zipWith, tmp5, tmp6, tmp7, lambda, zipWith_19$zipWith, zipWith_19$xsys_2, zipWith_19$xsys_rest, zipWith_19$split_default$_rest, zipWith_19$split_root$_rest, tup2_0, tup2_1; /* scoped */
 //│ zipWith_19$zipWith = function zipWith_19$zipWith(xsys, f) {
 //│   let hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp8, tmp9, tmp10, tmp11; /* scoped */
 //│   split_root$: {
 //│     split_default$: {
-//│       return xsys(f, hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp8, tmp9, tmp10, tmp11);
+//│       return xsys(f, hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp8, tmp9, tmp10, tmp11, tmp11);
 //│     }
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   }
 //│   return tmp11
 //│ };
-//│ zipWith_19$xsys_2 = function zipWith_19$xsys_2(fv_f, fv_hy, fv_ty, fv_hx, fv_tx, fv_element1$, fv_element0$, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_arg$Cons$0$1, fv_arg$Cons$1$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, tup2_01, tup2_11) {
+//│ zipWith_19$xsys_2 = function zipWith_19$xsys_2(fv_f, fv_hy, fv_ty, fv_hx, fv_tx, fv_element1$, fv_element0$, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_arg$Cons$0$1, fv_arg$Cons$1$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, tup2_01, tup2_11) {
 //│   fv_element0$ = tup2_01;
 //│   fv_element1$ = tup2_11;
 //│   if (fv_element0$ instanceof Cons1.class) {
@@ -198,26 +200,35 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│       fv_tmp = runtime.safeCall(fv_f(fv_hx, fv_hy));
 //│       tup2_02 = fv_tx;
 //│       tup2_12 = fv_ty;
-//│       fv_tmp1 = (fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3) => {
-//│         return zipWith_19$xsys_2(fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, tup2_02, tup2_12)
+//│       fv_tmp1 = (fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4) => {
+//│         return zipWith_19$xsys_2(fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, tup2_02, tup2_12)
 //│       };
 //│       fv_tmp2 = zipWith_19$zipWith(fv_tmp1, fv_f);
-//│       fv_tmp3 = Cons1(fv_tmp, fv_tmp2);
-//│       return fv_tmp3
+//│       fv_tmp4 = Cons1(fv_tmp, fv_tmp2);
+//│       return zipWith_19$split_root$_rest(fv_tmp4)
 //│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│       return zipWith_19$split_default$_rest(fv_tmp4)
 //│     }
 //│   } else if (fv_element0$ instanceof Nil1.class) {
 //│     if (fv_element1$ instanceof Nil1.class) {
-//│       fv_tmp3 = Nil1;
-//│       return fv_tmp3
+//│       fv_tmp4 = Nil1;
+//│       return zipWith_19$split_root$_rest(fv_tmp4)
 //│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│       return zipWith_19$split_default$_rest(fv_tmp4)
 //│     }
 //│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│     return zipWith_19$split_default$_rest(fv_tmp4)
 //│   }
+//│   return zipWith_19$xsys_rest(fv_tmp4)
+//│ };
+//│ zipWith_19$xsys_rest = function zipWith_19$xsys_rest(fv_tmp) {
+//│   return zipWith_19$split_default$_rest(fv_tmp)
+//│ };
+//│ zipWith_19$split_default$_rest = function zipWith_19$split_default$_rest(fv_tmp) {
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│ };
+//│ zipWith_19$split_root$_rest = function zipWith_19$split_root$_rest(fv_tmp) {
+//│   return fv_tmp
 //│ };
 //│ zipWith = function zipWith(xsys, f) {
 //│   let hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp8, tmp9, tmp10, tmp11; /* scoped */
@@ -269,8 +280,8 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ tmp6 = Predef.id(Nil1);
 //│ tup2_0 = tmp5;
 //│ tup2_1 = tmp6;
-//│ tmp7 = (fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3) => {
-//│   return zipWith_19$xsys_2(fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, tup2_0, tup2_1)
+//│ tmp7 = (fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4) => {
+//│   return zipWith_19$xsys_2(fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, tup2_0, tup2_1)
 //│ };
 //│ lambda = (undefined, function (x, y) { return x });
 //│ zipWith_19$zipWith(tmp7, lambda)
@@ -285,5 +296,5 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(0)))))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:xsys,None):
-//│ deforest > 	List(var:f, var:hy, var:ty, var:hx, var:tx, $element1$, $element0$, $arg$Cons$0$, $arg$Cons$1$, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > 	List(var:f, var:hy, var:ty, var:hx, var:tx, $element1$, $element0$, $arg$Cons$0$, $arg$Cons$1$, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ = Nil

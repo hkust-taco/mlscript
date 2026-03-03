@@ -70,7 +70,7 @@ f(A) + f(A)
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List()
 //│ JS (unsanitized):
-//│ let f1, tmp, tmp1, f_4$f, f_4$x_A, f_2$f, f_2$x_A, deforest$lam, deforest$lam1; /* scoped */
+//│ let f1, tmp, tmp1, f_4$f, f_4$x_A, f_4$x_rest, f_2$f, f_2$x_A, f_2$x_rest, deforest$lam, deforest$lam1; /* scoped */
 //│ f_4$f = function f_4$f(x) {
 //│   return x()
 //│ };
@@ -83,6 +83,8 @@ f(A) + f(A)
 //│ f_2$x_A = function f_2$x_A() {
 //│   return 1
 //│ };
+//│ f_4$x_rest = function f_4$x_rest() {};
+//│ f_2$x_rest = function f_2$x_rest() {};
 //│ f1 = function f(x) {
 //│   if (x instanceof A1.class) {
 //│     return 1
