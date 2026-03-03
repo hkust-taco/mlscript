@@ -46,8 +46,7 @@ x
 //│ ║        	^^^^^^^^^^
 //│ ║  l.36: 	... (more lines omitted) ...
 //│ ╙──      	^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Try finally are not supported with effect handlers enabled.
-//│ ═══[RUNTIME ERROR] Error: Try finally are not supported with effect handlers enabled.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ x = 1
 
 
