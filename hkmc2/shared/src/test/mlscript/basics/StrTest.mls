@@ -44,25 +44,28 @@ concat of
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
 //│ ║  l.43: 	~"a"
 //│ ╙──      	 ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :ge
 ~("a", "b")
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
-//│ ║  l.50: 	~("a", "b")
+//│ ║  l.51: 	~("a", "b")
 //│ ╙──      	       ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :pe
 :ge
 ~ of "a", "b"
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'of' keyword instead
-//│ ║  l.58: 	~ of "a", "b"
+//│ ║  l.60: 	~ of "a", "b"
 //│ ╙──      	  ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.58: 	~ of "a", "b"
+//│ ║  l.60: 	~ of "a", "b"
 //│ ╙──      	     ^^^
 //│ ═══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 (~) of "a", "b"
 //│ = "ab"
