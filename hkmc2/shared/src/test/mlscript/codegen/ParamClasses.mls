@@ -194,7 +194,7 @@ class Foo(x, val y, z, val z, z) with
 //│     Foo7.class = this
 //│   }
 //│   constructor(x, y, z, z1, z2) {
-//│     let tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
+//│     let tmp3, tmp4, tmp5, tmp6, tmp7;
 //│     this.#x = x;
 //│     this.y = y;
 //│     this.#z = z;
@@ -203,15 +203,15 @@ class Foo(x, val y, z, val z, z) with
 //│     this.#x1 = 1;
 //│     this.#y = this.y + 1;
 //│     tmp3 = "x = " + this.#x1;
-//│     tmp4 = Predef.print(tmp3);
-//│     tmp5 = "y = " + this.#y;
-//│     tmp6 = Predef.print(tmp5);
-//│     tmp7 = "this.y = " + this.y;
-//│     tmp8 = Predef.print(tmp7);
-//│     tmp9 = "z = " + this.#z1;
-//│     tmp10 = Predef.print(tmp9);
-//│     tmp11 = "this.z = " + this.z;
-//│     Predef.print(tmp11);
+//│     Predef.print(tmp3);
+//│     tmp4 = "y = " + this.#y;
+//│     Predef.print(tmp4);
+//│     tmp5 = "this.y = " + this.y;
+//│     Predef.print(tmp5);
+//│     tmp6 = "z = " + this.#z1;
+//│     Predef.print(tmp6);
+//│     tmp7 = "this.z = " + this.z;
+//│     Predef.print(tmp7);
 //│   }
 //│   #x;
 //│   #z;
@@ -235,7 +235,7 @@ Foo(10, 20, 30, 40, 50)
 
 :e
 class Foo(val z, val z)
-//│ ╔══[ERROR] Duplicate definition of member named 'z'.
+//│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'z'.
 //│ ╟── Defined at: 
 //│ ║  l.237: 	class Foo(val z, val z)
 //│ ║         	              ^

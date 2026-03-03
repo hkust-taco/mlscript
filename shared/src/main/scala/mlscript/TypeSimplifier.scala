@@ -1057,7 +1057,7 @@ trait TypeSimplifier { self: Typer =>
                 }
                 poltv match {
                   case polo @ S(p)
-                    if coOccurrences.get(!p -> tv).isEmpty // * If tv is polar...
+                    if !coOccurrences.contains(!p -> tv) // * If tv is polar...
                     && tv.assignedTo.isEmpty // TODO handle?
                   =>
                     val bounds = if (p) tv.lowerBounds else tv.upperBounds

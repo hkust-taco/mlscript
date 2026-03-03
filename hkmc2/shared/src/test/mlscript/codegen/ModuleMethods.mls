@@ -23,7 +23,7 @@ s(123)
 
 :e
 Example |>. s(123)
-//│ ╔══[ERROR] Unexpected moduleful reference of type Example.
+//│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type Example.
 //│ ║  l.25: 	Example |>. s(123)
 //│ ║        	^^^^^^^
 //│ ╙── Module argument passed to a non-module parameter.
@@ -47,9 +47,8 @@ module Test with
 //│   }
 //│   static #s;
 //│   static {
-//│     let tmp1;
 //│     Test.#s = 1;
-//│     tmp1 = Predef.print(Test.#s);
+//│     Predef.print(Test.#s);
 //│   }
 //│   static foo() {
 //│     return Predef.print(Test.#s)

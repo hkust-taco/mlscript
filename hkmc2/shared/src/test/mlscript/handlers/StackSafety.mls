@@ -26,7 +26,6 @@ hi(0)
 //│   if (scrut === true) {
 //│     return 0
 //│   } else {
-//│     let res;
 //│     tmp1 = n - 1;
 //│     return hi(tmp1)
 //│   }
@@ -55,12 +54,11 @@ sum(10000)
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
-//│     return runtime.unwind(sum, -1, "StackSafety.mls:45:1", null, null, 1, 1, n, 0)
+//│     return runtime.unwind(sum, -1, "StackSafety.mls:44:1", null, null, 1, 1, n, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
-//│     let saveOffset;
 //│     pc = runtime.resumePc;
 //│     runtime.resumePc = -1;
 //│   }
@@ -77,8 +75,7 @@ sum(10000)
 //│           runtime.stackDepth = curDepth;
 //│           runtime.resumeValue = res;
 //│           if (runtime.curEffect !== null) {
-//│             let res1;
-//│             return runtime.unwind(sum, 1, "StackSafety.mls:48:9", null, null, 1, 1, n, 0)
+//│             return runtime.unwind(sum, 1, "StackSafety.mls:47:9", null, null, 1, 1, n, 0)
 //│           }
 //│           pc = 1;
 //│           continue main

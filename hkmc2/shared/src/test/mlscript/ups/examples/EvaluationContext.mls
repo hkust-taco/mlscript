@@ -37,7 +37,7 @@ data class Term with
     if freeVars.has(baseName) is false then baseName else...
     while (baseName + "_" + nameIndex) is currentName and
       freeVars.has(currentName) then set nameIndex += 1
-      else currentName
+      else return currentName
   
   fun freshVar(baseName) = Var of freshName(baseName)
   
@@ -259,7 +259,7 @@ fun evalByValue(term) =
   while term is
     ByValue.Context(ByValue.Redex) as [subterm, remake] then
       set term = remake(subterm)
-    else term
+  term
 
 evalByValue(App(id_x, App(id_x, App(id_x, App(id_x, id_y))))).show
 //│ = "λy. y"
@@ -277,10 +277,10 @@ fun evalByValue'(term) =
     (@compile ByValue.Context(ByValue.Redex)) as [subterm, remake] then
       set term = remake(subterm)
     else term
-//│ ╔══[ERROR] Pattern chaining is not supported in pattern compilation.
+//│ ╔══[COMPILATION ERROR] Pattern chaining is not supported in pattern compilation.
 //│ ║  l.211: 	      App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
 //│ ╙──       	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Pattern chaining is not supported in pattern compilation.
+//│ ╔══[COMPILATION ERROR] Pattern chaining is not supported in pattern compilation.
 //│ ║  l.214: 	      App(Context(Hole) as [lhs, remake], Term as rhs) =>
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

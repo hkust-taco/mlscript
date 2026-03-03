@@ -146,21 +146,16 @@ module M with
 fun f(x) =
   while x do
     let y = x
-    x
+    print(x)
 //│ JS (unsanitized):
 //│ let f6;
 //│ f6 = function f(x1) {
-//│   let tmp2;
 //│   lbl: while (true) {
 //│     let y1;
-//│     if (x1 === true) {
-//│       y1 = x1;
-//│       tmp2 = x1;
-//│       continue lbl
-//│     } else { tmp2 = runtime.Unit; }
+//│     if (x1 === true) { y1 = x1; Predef.print(x1); continue lbl }
 //│     break;
 //│   }
-//│   return tmp2
+//│   return runtime.Unit
 //│ };
 
 
@@ -170,26 +165,24 @@ fun f(x) =
 fun f(x) =
   while x do
     let y = x
-    x
+    print(x)
 //│ JS (unsanitized):
 //│ let f7;
 //│ f7 = function f(x1) {
-//│   let tmp2, while1, tmp3, tmp4;
-//│   tmp2 = undefined;
+//│   let while1, tmp2, tmp3, tmp4;
+//│   tmp4 = undefined;
 //│   while1 = (undefined, function () {
 //│     let y1;
 //│     if (x1 === true) {
 //│       y1 = x1;
-//│       tmp2 = x1;
+//│       Predef.print(x1);
 //│       return while1()
-//│     } else {
-//│       tmp2 = runtime.Unit;
 //│     }
 //│     return runtime.LoopEnd
 //│   });
-//│   tmp3 = while1();
-//│   tmp4 = tmp3 !== runtime.LoopEnd;
-//│   if (tmp4 === true) { return tmp3 } else { return tmp2 }
+//│   tmp2 = while1();
+//│   tmp3 = tmp2 !== runtime.LoopEnd;
+//│   if (tmp3 === true) { return tmp2 } else { return tmp4 }
 //│ };
 
 

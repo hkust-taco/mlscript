@@ -96,6 +96,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
         case node @ _ => node |> unexpectedNode
       }
       case Tup(Nil) => Nil |> result |> k
+      case _ => ???
       
   private def bindingPatternVariables(scrut: Str, tup: Tup, cls: ClassInfoPartial, rhs: Term): Term =
     val params = tup |> getTupleFields

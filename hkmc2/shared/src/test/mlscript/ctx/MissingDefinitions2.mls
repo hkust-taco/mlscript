@@ -4,9 +4,10 @@
 
 :fixme
 let x: Int
-//│ ╔══[ERROR] Unsupported let binding shape
+//│ ╔══[COMPILATION ERROR] Unsupported let binding shape
 //│ ║  l.6: 	let x: Int
 //│ ╙──     	    ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 let x
 //│ x = undefined

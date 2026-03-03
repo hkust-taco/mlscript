@@ -14,7 +14,7 @@ fun f(x) =
 //│ >    $scrut is true then 0
 //│ >    else 1
 //│ Expanded split with flattened patterns:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    let $scrut = 1
 //│ >    let $scrut = (member:Predef.)equals‹member:equals›(x, builtin:+($scrut, 2))
 //│ >    $scrut is true then 0

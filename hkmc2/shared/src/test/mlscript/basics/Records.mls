@@ -72,12 +72,13 @@ let rcd =
   foo = 1
   bar =
     "..."
-//│ ╔══[ERROR] Name not found: foo
+//│ ╔══[COMPILATION ERROR] Name not found: foo
 //│ ║  l.72: 	  foo = 1
 //│ ╙──      	  ^^^
-//│ ╔══[ERROR] Name not found: bar
+//│ ╔══[COMPILATION ERROR] Name not found: bar
 //│ ║  l.73: 	  bar =
 //│ ╙──      	  ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ rcd = undefined
 
 
@@ -88,13 +89,14 @@ let rcd = new with
   foo = 1
   bar =
     "..."
-//│ ╔══[ERROR] Name not found: foo
-//│ ║  l.88: 	  foo = 1
+//│ ╔══[COMPILATION ERROR] Name not found: foo
+//│ ║  l.89: 	  foo = 1
 //│ ╙──      	  ^^^
-//│ ╔══[ERROR] Name not found: bar
-//│ ║  l.89: 	  bar =
+//│ ╔══[COMPILATION ERROR] Name not found: bar
+//│ ║  l.90: 	  bar =
 //│ ╙──      	  ^^^
-//│ rcd = $anon
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ rcd = undefined
 
 
 id of (x: 1)
@@ -133,8 +135,8 @@ m0.get(41)
 
 :e
 {get(k): _}
-//│ ╔══[ERROR] Unexpected record key shape.
-//│ ║  l.135: 	{get(k): _}
+//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
+//│ ║  l.137: 	{get(k): _}
 //│ ╙──       	 ^^^^^^
 //│ = fun
 
@@ -188,15 +190,15 @@ display(x: 88, y: 99, i: 0)
 
 :todo
 t("group")
-//│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.190: 	t("group")
+//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
+//│ ║  l.192: 	t("group")
 //│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
 :todo
 t("group")
-//│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.197: 	t("group")
+//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
+//│ ║  l.199: 	t("group")
 //│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 

@@ -37,7 +37,7 @@ pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
 :e
 :todo
 let res = "1" is @compile ManyZero
-//│ ╔══[ERROR] String concatenation is not supported in pattern compilation.
+//│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
 //│ ║  l.35: 	pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
 //│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^
 //│ res = false

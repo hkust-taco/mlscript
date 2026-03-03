@@ -199,6 +199,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     t match
     case _: HandleBlock =>
       errStmt(msg"This code requires effect handler instrumentation but was compiled without it.")
+    case Assign(l, r, rst) if l is State.noSymbol =>
+      doc" # ${result(r)};${returningTerm(rst, endSemi)}"
     case Assign(l, r, rst) =>
       doc" # ${getVar(l, l.toLoc // TODO: improve location
         )} = ${result(r)};${returningTerm(rst, endSemi)}"
@@ -521,9 +523,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       val t = tl.foldLeft(h)((acc, arm) =>
         acc :: doc" else if (${ cond(arm._1) }) ${ braced(nonNestedScoped(arm._2)(res => returningTerm(res, endSemi = false))) }")
       val e = els match
-      case S(el) =>
-        doc" else ${ braced(nonNestedScoped(el)(res => returningTerm(res, endSemi = false))) }"
-      case N  => doc""
+        case S(End(_)) => doc""
+        case S(el) =>
+          doc" else ${ braced(nonNestedScoped(el)(res => returningTerm(res, endSemi = false))) }"
+        case N  => doc""
       t :: e :: returningTerm(rest, endSemi)
     
     case Begin(sub, thn) =>
@@ -548,7 +551,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       // [fixme:0] TODO check scope and allocate local variables here (see: https://github.com/hkust-taco/mlscript/pull/293#issuecomment-2792229849)
       
       doc" # ${getVar(lbl, lbl.toLoc)}:${if loop then doc" while (true)" else ""} " :: braced {
-          nonNestedScoped(bod)(bd => returningTerm(bd, endSemi = true)) :: (if loop then doc" # break;" else doc"")
+          nonNestedScoped(bod)(bd => returningTerm(bd, endSemi = true)) :: (if loop && !bod.isAbortive then doc" # break;" else doc"")
       } :: returningTerm(rst, endSemi)
       
     case TryBlock(sub, fin, rst) =>
@@ -593,7 +596,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     *     `foo1 = function foo() { return foo1(); }`
     *   but the result has the same semantics.
     *  */
-  def reserveNames(p: Program)(using Scope): Unit =
+  def reserveNames(p: Program)(using Scope, Raise): Unit =
     def go(blk: Block): Unit = tl.trace(s"avoidNames ${blk.toString.take(100)}..."):
       blk match
       case Define(defn, rest) =>
@@ -645,7 +648,11 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       doc"""${getVar(i._1, N)} = await import("${i._2.toString}").then(m => m.default ?? m);"""
     p.main match
     case Scoped(syms, body) =>
-      blockPreamble(p.imports.map(_._1) ++ syms) ->
+      val fvs = body.freeVars
+      blockPreamble(p.imports.map(_._1) ++ syms.view.filter(s =>
+          !s.isInstanceOf[TempSymbol]
+          // ^ VarSymbols and TermSymbols should be kept as their value will be acessed and printed by the worksheet
+          || fvs(s))) ->
         (imps.mkDocument(doc" # ") :/: block(body, endSemi = false).stripBreaks)
     case body =>
       blockPreamble(p.imports.map(_._1)) ->
@@ -665,8 +672,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
 
   // Only handle non-nested Scoped nodes: we output the bindings, but do not add another pair of braces
   def nonNestedScoped(blk: Block)(k: Block => Document)(using Raise, Scope): Document = blk match
-    case Scoped(syms, body) => 
-      blockPreamble(syms) :: k(body)
+    case Scoped(syms, body) =>
+      blockPreamble(syms.view.filter(body.freeVars)) :: k(body)
     case _ => k(blk)
   
   

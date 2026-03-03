@@ -2,33 +2,37 @@
 
 
 :pe
+:re
 .
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.5: 	.
+//│ ║  l.6: 	.
 //│ ╙──     	^
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.5: 	.
+//│ ║  l.6: 	.
 //│ ╙──     	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :pe
+:re
 . //
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.14: 	. //
+//│ ║  l.17: 	. //
 //│ ╙──      	^
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.14: 	. //
+//│ ║  l.17: 	. //
 //│ ╙──      	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :fixme
 id(.)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.24: 	id(.)
+//│ ║  l.28: 	id(.)
 //│ ╙──      	   ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.24: 	id(.)
+//│ ║  l.28: 	id(.)
 //│ ╙──      	   ^
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 fun incr = _ + 1
@@ -48,12 +52,12 @@ passTo(2, incr @ _)()
 :fixme
 passTo(2, incr(.) @ _)()
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.49: 	passTo(2, incr(.) @ _)()
+//│ ║  l.53: 	passTo(2, incr(.) @ _)()
 //│ ╙──      	               ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.49: 	passTo(2, incr(.) @ _)()
+//│ ║  l.53: 	passTo(2, incr(.) @ _)()
 //│ ╙──      	               ^
-//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :breakme
 passTo(2, (incr(_)) @ _)()
@@ -66,12 +70,12 @@ passTo(2, add(_, 2))()
 :fixme
 passTo(2, add(., 2))()
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.67: 	passTo(2, add(., 2))()
+//│ ║  l.71: 	passTo(2, add(., 2))()
 //│ ╙──      	              ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.67: 	passTo(2, add(., 2))()
+//│ ║  l.71: 	passTo(2, add(., 2))()
 //│ ╙──      	              ^
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 0
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :breakme
 passTo(1, incr(_) + _)(2)
@@ -87,40 +91,40 @@ passTo(1, (add(_, 1)) @ _ + _)(2)
 :fixme
 passTo(1, incr(.) @ _ + _)(2)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.88: 	passTo(1, incr(.) @ _ + _)(2)
+//│ ║  l.92: 	passTo(1, incr(.) @ _ + _)(2)
 //│ ╙──      	               ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.88: 	passTo(1, incr(.) @ _ + _)(2)
+//│ ║  l.92: 	passTo(1, incr(.) @ _ + _)(2)
 //│ ╙──      	               ^
-//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :fixme
 passTo(1, add(., 1) @ _ + _)(2)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.98: 	passTo(1, add(., 1) @ _ + _)(2)
-//│ ╙──      	              ^
+//│ ║  l.102: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ╙──       	              ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.98: 	passTo(1, add(., 1) @ _ + _)(2)
-//│ ╙──      	              ^
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 0
+//│ ║  l.102: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ╙──       	              ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :breakme
 :sjs
 let f = add(_, 1)
 //│ JS (unsanitized):
-//│ let f, f1; f1 = function f(_0) { let tmp15; tmp15 = add(); return tmp15(_0, 1) }; f = f1;
+//│ let f, f1; f1 = function f(_0) { let tmp13; tmp13 = add(); return tmp13(_0, 1) }; f = f1;
 //│ f = fun f
 
 :fixme
 let f = add(., 1)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.116: 	let f = add(., 1)
+//│ ║  l.120: 	let f = add(., 1)
 //│ ╙──       	            ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.116: 	let f = add(., 1)
+//│ ║  l.120: 	let f = add(., 1)
 //│ ╙──       	            ^
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 0
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ f = undefined
 
 :fixme

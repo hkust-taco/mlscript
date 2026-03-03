@@ -27,12 +27,13 @@ Mod.|>>
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
 //│ ║  l.26: 	Mod.|>>
 //│ ╙──      	       ^
-//│ ╔══[ERROR] Name not found: .|>>
+//│ ╔══[COMPILATION ERROR] Name not found: .|>>
 //│ ║  l.26: 	Mod.|>>
 //│ ╙──      	   ^^^^
-//│ ╔══[ERROR] Unexpected moduleful reference of type Mod.
+//│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type Mod.
 //│ ║  l.26: 	Mod.|>>
 //│ ╙──      	^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 1 |>> x => printt(x)
@@ -43,17 +44,17 @@ Mod.|>>
 :e
 open Mod { |>> }
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.44: 	open Mod { |>> }
+//│ ║  l.45: 	open Mod { |>> }
 //│ ╙──      	                ^
-//│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.44: 	open Mod { |>> }
+//│ ╔══[COMPILATION ERROR] Illegal 'open' statement shape.
+//│ ║  l.45: 	open Mod { |>> }
 //│ ╙──      	     ^^^^^^^^^^^
 
 
 :e
 open Mod { (|>>) }
-//│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.54: 	open Mod { (|>>) }
+//│ ╔══[COMPILATION ERROR] Illegal 'open' statement element.
+//│ ║  l.55: 	open Mod { (|>>) }
 //│ ╙──      	           ^^^^^
 
 12 |>> print
@@ -64,8 +65,8 @@ open Mod { printt, |>> }
 
 :fixme
 12 |>> printt
-//│ ╔══[ERROR] Module 'Mod' does not contain member '|>>'
-//│ ║  l.66: 	12 |>> printt
+//│ ╔══[COMPILATION ERROR] Module 'Mod' does not contain member '|>>'
+//│ ║  l.67: 	12 |>> printt
 //│ ╙──      	   ^^^
 //│ ═══[RUNTIME ERROR] TypeError: Mod1.|>> is not a function
 

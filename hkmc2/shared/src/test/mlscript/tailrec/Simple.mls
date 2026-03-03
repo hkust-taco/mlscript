@@ -5,7 +5,7 @@
 @tailrec
 fun f = f
 //│ JS (unsanitized):
-//│ let f; f = function f() { loopLabel: while (true) { let tmp; continue loopLabel; break; } };
+//│ let f; f = function f() { loopLabel: while (true) { continue loopLabel; } };
 
 :fixme
 module Foo with
@@ -35,7 +35,6 @@ fun f(x) = f(f(x) + 1)
 //│     tmp1 = tmp + 1;
 //│     x = tmp1;
 //│     continue loopLabel;
-//│     break;
 //│   }
 //│ };
 
@@ -50,7 +49,7 @@ module A with
 module B with
   fun g(x) = A.f(x * 2)
 //│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
-//│ ║  l.49: 	  fun f(x) = B.g(x + 1)
+//│ ║  l.48: 	  fun f(x) = B.g(x + 1)
 //│ ╙──      	      ^
 
 

@@ -84,6 +84,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       if liftDefns.isUnset then
         output(s"$errMarker Option ':effectHandlers' requires ':lift'")
     Config(
+      baseDir = wd,
       sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true)),
       effectHandlers = Opt.when(effectHandlers.isSet)(EffectHandlers(
         debug = effectHandlers.get.contains("debug"),
@@ -113,6 +114,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     given Config = mkConfig
     importFile(file.up / io.RelPath(ln.trim), verbose = silent.isUnset)
   
+  // eg: `:ucs desugared normalized lowered`
   val showUCS = Command("ucs"): ln =>
     ln.split(" ").iterator.map(x => "ucs:" + x.trim).toSet
   

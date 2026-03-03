@@ -35,7 +35,7 @@ fun mapi = s => f =>
     map(s) of x =>
       i := !(i) + 1
       f(!(i), x)
-//│ ╔══[ERROR] Type error in region expression with expected type Seq[out A, out E]
+//│ ╔══[COMPILATION ERROR] Type error in region expression with expected type Seq[out A, out E]
 //│ ║  l.34: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.35: 	    map(s) of x =>
@@ -52,7 +52,7 @@ fun mapi = s => f =>
 //│ ╟── because: cannot constrain  'r ∧ ¬outer  <:  E
 //│ ╟── because: cannot constrain  'r  <:  E ∨ outer
 //│ ╙── because: cannot constrain  ¬outer  <:  E ∨ outer
-//│ ╔══[ERROR] Type error in region expression with expected type Seq[out A, out E]
+//│ ╔══[COMPILATION ERROR] Type error in region expression with expected type Seq[out A, out E]
 //│ ║  l.34: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.35: 	    map(s) of x =>
@@ -69,7 +69,7 @@ fun mapi = s => f =>
 //│ ╟── because: cannot constrain  'r ∧ ¬outer  <:  E
 //│ ╟── because: cannot constrain  'r  <:  E ∨ outer
 //│ ╙── because: cannot constrain  ¬outer  <:  E ∨ outer
-//│ ╔══[ERROR] Type error in region expression with expected type Seq[out A, out E]
+//│ ╔══[COMPILATION ERROR] Type error in region expression with expected type Seq[out A, out E]
 //│ ║  l.34: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.35: 	    map(s) of x =>
@@ -153,7 +153,7 @@ r := 1
 :e
 r := 1
 ! r // because of the space, this is a NL-op
-//│ ╔══[ERROR] Variable not found: !
+//│ ╔══[COMPILATION ERROR] Variable not found: !
 //│ ║  l.155: 	! r // because of the space, this is a NL-op
 //│ ╙──       	^
 //│ Type: ⊥
