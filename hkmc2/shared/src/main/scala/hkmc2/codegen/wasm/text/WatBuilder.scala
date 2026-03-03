@@ -15,7 +15,7 @@ import text.Param as WasmParam
 import Message.MessageContext
 import Scope.scope
 
-import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
+import scala.collection.mutable.{ArrayBuffer as ArrayBuf}
 import scala.util.boundary, boundary.break
 import sourcecode.Line
 
@@ -37,14 +37,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   private val baseObjectSym: BlockMemberSymbol = BlockMemberSymbol("Object", Nil)
   private val tagFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$tag"))
-  private case class SingletonInfo(
-      globalSym: BlockMemberSymbol,
-      globalName: Str,
-      globalTy: RefType
-  )
-  private val singletonByBms: MutMap[BlockMemberSymbol, SingletonInfo] = MutMap.empty
-  private val singletonByIsym: MutMap[ModuleOrObjectSymbol, SingletonInfo] = MutMap.empty
-  private val singletonInitActions: ArrayBuf[Expr] = ArrayBuf.empty
 
   private def baseObjectTypeIdx(using Ctx): TypeIdx =
     ctx.getType_!(baseObjectSym)
@@ -60,7 +52,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   /** True if this top-level class can be declared as a Wasm struct type. */
   private def isSupportedTopLevelClass(defn: ClsLikeDefn): Bool =
     defn.owner.isEmpty
-      && ((defn.k is syntax.Cls) || (defn.k is syntax.Obj))
+      && (defn.k is syntax.Cls)
       && defn.auxParams.isEmpty
       && defn.parentPath.isEmpty
       && defn.methods.isEmpty
@@ -68,50 +60,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       && (defn.preCtor match
         case End(_) => true
         case _ => false)
-
-  private def singletonInfoFor(sym: Local): Opt[SingletonInfo] = sym match
-    case bms: BlockMemberSymbol => singletonByBms.get(bms)
-    case isym: ModuleOrObjectSymbol => singletonByIsym.get(isym)
-    case _ => N
-
-  private def singletonGlobalGet(info: SingletonInfo): Expr =
-    global.get(GlobalIdx(SymIdx(info.globalName)), info.globalTy)
-
-  private def registerSingletonInit(clsLikeDefn: ClsLikeDefn, typeref: TypeIdx)(using
-      Ctx,
-      Raise,
-      Scope
-  ): Unit =
-    if singletonByBms.contains(clsLikeDefn.sym) then return
-
-    val globalSym = BlockMemberSymbol(s"${clsLikeDefn.sym.nme}$$inst", Nil, nameIsMeaningful = false)
-    val globalName = scope.allocateName(globalSym)
-    val globalTy = RefType(typeref, nullable = true)
-    val info = SingletonInfo(globalSym, globalName, globalTy)
-    singletonByBms(clsLikeDefn.sym) = info
-    clsLikeDefn.isym match
-      case mos: ModuleOrObjectSymbol => singletonByIsym(mos) = info
-      case _ => ()
-
-    ctx.addGlobal(
-      globalSym,
-      GlobalInfo(
-        id = S(SymIdx(globalName)),
-        valType = globalTy,
-        mutable = true,
-        init = ref.null_(typeref)
-      )
-    )
-
-    val ctorCall = call(
-      funcidx = ctx.getFunc_!(clsLikeDefn.sym, resolveSymIdx = true),
-      operands = Seq.empty,
-      returnTypes = Seq(Result(RefType.anyref))
-    )
-    singletonInitActions += global.set(
-      GlobalIdx(SymIdx(globalName)),
-      ref.cast(ctorCall, globalTy)
-    )
 
   /** Recursively declares supported top-level class types (needed for nested function codegen). */
   private def createDefnTypes(b: Block)(using Ctx): Unit = b match
@@ -300,47 +248,44 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     raise(ErrorReport(errMsgs, source = Diagnostic.Source.Compilation, extraInfo = extraInfo))
     unreachable
 
-  def getVar(l: Local, loc: Opt[Loc])(using Ctx, Raise, Scope): Expr =
-    singletonInfoFor(l) match
-      case S(info) => singletonGlobalGet(info)
-      case N => l match
-        case ts: semantics.TermSymbol =>
-          errExpr(
-            Ls(msg"WatBuilder::getVar for TermSymbol not implemented yet" -> l.toLoc),
-            extraInfo = S(ts.toString)
+  def getVar(l: Local, loc: Opt[Loc])(using Ctx, Raise, Scope): Expr = l match
+    case ts: semantics.TermSymbol =>
+      errExpr(
+        Ls(msg"WatBuilder::getVar for TermSymbol not implemented yet" -> l.toLoc),
+        extraInfo = S(ts.toString)
+      )
+    case ts: semantics.ModuleOrObjectSymbol if ts.asMod.isDefined =>
+      errExpr(
+        Ls(
+          msg"WatBuilder::getVar for ModuleOrObjectSymbol (`ts.asMod.isDefined`) not implemented yet" -> l.toLoc
+        ),
+        extraInfo = S(ts.toString)
+      )
+    case ts: semantics.InnerSymbol =>
+      if !ctx.containsLocal(l) then
+        return errExpr(
+          Ls(
+            msg"WatBuilder::getVar for InnerSymbol (symbol not in top-level scope) not implemented yet" -> ts.toLoc
+          ),
+          extraInfo = S(
+            s"Block IR: `${ts.toString}`\nScope: ${scope.toString}\nWasm Locals: ${ctx.getAllWasmLocals.toString}"
           )
-        case ts: semantics.ModuleOrObjectSymbol if ts.asMod.isDefined =>
-          errExpr(
-            Ls(
-              msg"WatBuilder::getVar for ModuleOrObjectSymbol (`ts.asMod.isDefined`) not implemented yet" -> l.toLoc
-            ),
-            extraInfo = S(ts.toString)
+        )
+      local.get(LocalIdx(SymIdx(scope.findThis_!(ts))), RefType.anyref)
+    case l =>
+      if ctx.containsLocal(l) then
+        local.get(LocalIdx(SymIdx(scope.lookup_!(l, l.toLoc))), RefType.anyref)
+      else if ctx.containsGlobal(l) then
+        global.get(GlobalIdx(SymIdx(scope.lookup_!(l, l.toLoc))), RefType.anyref)
+      else
+        errExpr(
+          Ls(
+            msg"WatBuilder::getVar for ${l.getClass.getSimpleName} (symbol not in top-level scope) not implemented yet" -> l.toLoc
+          ),
+          extraInfo = S(
+            s"Block IR: `${l.toString}`\nScope: ${scope.toString}\nWasm Locals: ${ctx.getAllWasmLocals.toString}"
           )
-        case ts: semantics.InnerSymbol =>
-          if !ctx.containsLocal(l) then
-            return errExpr(
-              Ls(
-                msg"WatBuilder::getVar for InnerSymbol (symbol not in top-level scope) not implemented yet" -> ts.toLoc
-              ),
-              extraInfo = S(
-                s"Block IR: `${ts.toString}`\nScope: ${scope.toString}\nWasm Locals: ${ctx.getAllWasmLocals.toString}"
-              )
-            )
-          local.get(LocalIdx(SymIdx(scope.findThis_!(ts))), RefType.anyref)
-        case l =>
-          if ctx.containsLocal(l) then
-            local.get(LocalIdx(SymIdx(scope.lookup_!(l, l.toLoc))), RefType.anyref)
-          else if ctx.containsGlobal(l) then
-            global.get(GlobalIdx(SymIdx(scope.lookup_!(l, l.toLoc))), RefType.anyref)
-          else
-            errExpr(
-              Ls(
-                msg"WatBuilder::getVar for ${l.getClass.getSimpleName} (symbol not in top-level scope) not implemented yet" -> l.toLoc
-              ),
-              extraInfo = S(
-                s"Block IR: `${l.toString}`\nScope: ${scope.toString}\nWasm Locals: ${ctx.getAllWasmLocals.toString}"
-              )
-            )
+        )
   end getVar
 
   def argument(a: Arg)(using Ctx, Raise, Scope): Expr =
@@ -398,13 +343,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case Value.Lit(IntLit(value)) =>
       ref.i31(i32.const(value.toInt))
     case Value.Ref(l, _) =>
-      singletonInfoFor(l) match
-        case S(info) => singletonGlobalGet(info)
-        case N =>
-          ctx.getFunc(l) match
-            case S(funcIdx) =>
-              ref.func(funcIdx, RefType(ctx.getFuncInfo_!(l).typeIdx, nullable = false))
-            case N => getVar(l, r.toLoc)
+      ctx.getFunc(l) match
+        case S(funcIdx) =>
+          ref.func(funcIdx, RefType(ctx.getFuncInfo_!(l).typeIdx, nullable = false))
+        case N => getVar(l, r.toLoc)
 
     case Call(Value.Ref(l: BuiltinSymbol, _), lhs :: rhs :: Nil) if !l.functionLike =>
       if l.binary then
@@ -856,13 +798,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     ),
                     extraInfo = S(defn.showAsTree)
                   ))
-                  val isSingletonObj = clsLikeDefn.k is syntax.Obj
                   if clsLikeDefn.owner.nonEmpty then
                     break(errUnimplExpr("owner.nonEmpty"))
-                  if !(clsLikeDefn.k is syntax.Cls) && !isSingletonObj then
-                    break(errUnimplExpr("unsupported ClsLikeDefn kind"))
-                  if isSingletonObj && clsLikeDefn.paramsOpt.nonEmpty then
-                    break(errUnimplExpr("paramsOpt.nonEmpty for object"))
+                  if !(clsLikeDefn.k is syntax.Cls) then
+                    break(errUnimplExpr("!(k is Cls)"))
                   if clsLikeDefn.auxParams.nonEmpty then
                     break(errUnimplExpr("auxParams.nonEmpty"))
                   if clsLikeDefn.parentPath.nonEmpty then
@@ -949,8 +888,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       body = ctorAux
                     )
                   )
-                  if isSingletonObj then
-                    registerSingletonInit(clsLikeDefn, typeref)
 
                   nop
 
@@ -1163,10 +1100,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Raise,
       Scope
   ): (Document, Str) =
-    singletonByBms.clear()
-    singletonByIsym.clear()
-    singletonInitActions.clear()
-
     for imprt <- p.imports do
       raise(
         ErrorReport(
@@ -1231,35 +1164,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ctx.addFunc(S(entrySym), entryFnInfo)
 
     ctx.popLocal()
-
-    if singletonInitActions.nonEmpty then
-      val initTy = ctx.addType(
-        sym = N,
-        TypeInfo(
-          id = N,
-          FunctionType(
-            params = Seq.empty,
-            results = Seq.empty
-          )
-        )
-      )
-      val initBody = Instructions.block(
-        label = N,
-        children = singletonInitActions.toSeq,
-        resultTypes = Seq.empty
-      )
-      val initFn = ctx.addFunc(
-        sym = N,
-        FuncInfo(
-          id = N,
-          typeIdx = initTy,
-          params = Seq.empty,
-          nResults = 0,
-          locals = Seq.empty,
-          body = initBody
-        )
-      )
-      ctx.setStartFunc(initFn)
 
     (ctx.toWat, entryNme)
   end program
