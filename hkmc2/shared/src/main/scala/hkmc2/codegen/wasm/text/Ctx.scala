@@ -201,8 +201,6 @@ object Ctx:
       case idx: CtxIdx => s"type index `${idx.toWat.mkString()}`"
       case sym: Symbol => s"symbol `${sym.toString}`"
 
-case class LabelTarget(breakLabel: Str, continueLabel: Opt[Str])
-
 /**
  * Context for [[WatBuilder]].
  *
@@ -234,16 +232,6 @@ class Ctx(
 
   private val wasmIntrinsicFuncs: MutMap[Str, FuncIdx] = MutMap.empty
   private val wasmIntrinsicTypes: MutMap[WasmIntrinsicType, TypeIdx] = MutMap.empty
-  private var labelTargets: List[(LabelSymbol, LabelTarget)] = Nil
-
-  def withLabel[T](label: LabelSymbol, target: LabelTarget)(body: => T): T =
-    labelTargets = (label, target) :: labelTargets
-    try body
-    finally labelTargets = labelTargets.tail
-
-  def lookupLabel(label: LabelSymbol): Opt[LabelTarget] =
-    labelTargets.collectFirst:
-      case (sym, target) if sym eq label => target
 
   /** Adds a type into this context. */
   def addType(sym: Opt[BlockMemberSymbol], typeInfo: TypeInfo): TypeIdx =

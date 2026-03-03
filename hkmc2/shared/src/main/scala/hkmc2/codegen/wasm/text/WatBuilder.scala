@@ -716,31 +716,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def getI32FromAnyref(name: Str): Expr =
     i31.get(ref.cast(getLocalAnyref(name), RefType.i31ref), true)
 
-  private def deriveBlockResults(expr: Expr): Seq[Result] =
-    expr.resultTypes match
-      case Seq() | Seq(UnreachableType) => Seq.empty
-      case Seq(ty) =>
-        ty.asValType match
-          case S(valTy) => Seq(Result(valTy))
-          case N =>
-            lastWords(
-              s"Expected a ValType or UnreachableType when deriving block result types, but got `${ty.getClass.getSimpleName}`"
-            )
-      case tys =>
-        lastWords(
-          s"Multi-value block results are not supported yet while deriving result types: `${tys.toString}`"
-        )
-
-  private def statementExpr(expr: Expr, ctxMsg: Str, loc: Opt[Loc])(using Ctx, Raise): Expr =
-    expr.resultTypes match
-      case Seq() | Seq(UnreachableType) => expr
-      case Seq(_) => Instructions.drop(expr)
-      case _ =>
-        errExpr(
-          Ls(msg"$ctxMsg does not support multi-value expressions yet" -> loc),
-          extraInfo = S(expr.toWat.mkString())
-        )
-  
   def returningTerm(t: Block)(using Ctx, Raise, Scope): Expr = t match
     case _: HandleBlock =>
       errExpr(
@@ -768,7 +743,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Instructions.block(
         label = N,
         children = Seq(assignExpr, rstBlk),
-        resultTypes = deriveBlockResults(rstBlk)
+        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
       )
 
     case assign @ AssignField(lhs, nme, rhs, rst) =>
@@ -801,7 +776,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Instructions.block(
         label = N,
         children = Seq(assignInstr, rstBlk),
-        resultTypes = deriveBlockResults(rstBlk)
+        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
       )
 
     case assign @ AssignDynField(lhs, fld, arrayIdx, rhs, rst) =>
@@ -829,7 +804,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Instructions.block(
         label = N,
         children = Seq(assignInstr, rstBlk),
-        resultTypes = deriveBlockResults(rstBlk)
+        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
       )
 
     case Define(defn, rst) =>
@@ -860,7 +835,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   ),
                   rstWat
                 ),
-                resultTypes = deriveBlockResults(rstWat)
+                resultTypes = rstWat.resultTypes.map(r => Result(r.asValType_!))
               )
 
         case defn: (FunDefn | ClsLikeDefn) =>
@@ -1048,7 +1023,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             case _ => Instructions.block(
                 label = N,
                 children = Seq(res, rstBlk),
-                resultTypes = deriveBlockResults(rstBlk)
+                resultTypes = rstBlk.resultTypes.map(ty => Result(ty.asValType_!))
               )
 
     case Return(res, true) =>
@@ -1078,74 +1053,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
       `return`(S(resWat))
 
-    case Break(label) =>
-      ctx.lookupLabel(label) match
-        case S(target) => br(target.breakLabel)
-        case N =>
-          errExpr(
-            Ls(msg"WatBuilder::returningTerm for Break(...) with unknown label" -> label.toLoc),
-            extraInfo = S(label.toString)
-          )
-
-    case Continue(label) =>
-      ctx.lookupLabel(label) match
-        case S(target) =>
-          target.continueLabel match
-            case S(loopLabel) => br(loopLabel)
-            case N =>
-              errExpr(
-                Ls(msg"WatBuilder::returningTerm for Continue(...) with non-loop label" -> label.toLoc),
-                extraInfo = S(label.toString)
-              )
-        case N =>
-          errExpr(
-            Ls(msg"WatBuilder::returningTerm for Continue(...) with unknown label" -> label.toLoc),
-            extraInfo = S(label.toString)
-          )
-
-    case Label(label, loop, body, rest) =>
-      val breakLabel = scope.allocateName(label)
-      val continueLabel =
-        if loop then
-          val contSym = TempSymbol(label.trm, s"${label.nme}_cont")
-          S(scope.allocateName(contSym))
-        else N
-      val target = LabelTarget(breakLabel, continueLabel)
-      val bodyExpr = ctx.withLabel(label, target)(returningTerm(body))
-      val bodyExprNoRes =
-        if body.isAbortive then bodyExpr
-        else
-          statementExpr(
-            expr = bodyExpr,
-            ctxMsg = "WatBuilder::returningTerm for Label(...) body",
-            loc = label.toLoc
-          )
-      val labelExpr =
-        if loop then
-          val loopExpr = Instructions.loop(
-            label = continueLabel,
-            children = Seq(bodyExprNoRes, br(breakLabel)),
-            resultTypes = Seq.empty
-          )
-          Instructions.block(
-            label = S(breakLabel),
-            children = Seq(loopExpr),
-            resultTypes = Seq.empty
-          )
-        else
-          Instructions.block(
-            label = S(breakLabel),
-            children = Seq(bodyExprNoRes),
-            resultTypes = Seq.empty
-          )
-
-      val rstExpr = returningTerm(rest)
-      Instructions.block(
-        label = N,
-        children = Seq(labelExpr, rstExpr),
-        resultTypes = deriveBlockResults(rstExpr)
-      )
-
     case Scoped(_, body) => returningTerm(body)
     case Match(scrut, arms, dflt, rst) =>
       val matchLabelSym = TempSymbol(N, "match")
@@ -1155,25 +1062,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       
       // Compile each match arm
       boundary:
-        val armBodies: Ls[(Case, Bool, Expr)] = arms.map:
-          case (cse, body) =>
-            (cse, body.isAbortive, returningTerm(body))
-
-        val defaultBodyExprOpt: Opt[Block -> Expr] = dflt.map: defaultBody =>
-          defaultBody -> returningTerm(defaultBody)
-
-        val isValueMode =
-          (rst match
-            case End(_) => true
-            case _ => false)
-            && armBodies.forall:
-              case (_, bodyIsAbortive, bodyExpr) =>
-                bodyIsAbortive || deriveBlockResults(bodyExpr).nonEmpty
-            && defaultBodyExprOpt.forall:
-              case (defaultBody, defaultExpr) =>
-                defaultBody.isAbortive || deriveBlockResults(defaultExpr).nonEmpty
-
-        def mkArmExpr(cse: Case, bodyExpr: Expr): Opt[Expr] =
+        val armExprs = arms.zipWithIndex.flatMap: (caseAndBody, armIdx) =>
+          val (cse, body) = caseAndBody
           cse match
             case Case.Lit(lit) =>
               val testExpr: FoldedInstr = lit match
@@ -1188,6 +1078,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 case _ =>
                   break(errExpr(Ls(msg"Pattern matching for unit literals not implemented yet" -> lit.toLoc)))
 
+              val bodyExpr = returningTerm(body)
               val armLabelSym = TempSymbol(N, "arm")
               val armLabel = scope.allocateName(armLabelSym)
               S(Instructions.`if`(
@@ -1219,6 +1110,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               val scrutExpr = getScrutExpr
               val isStructCompatible = ref.test(scrutExpr, baseObjectRefType(nullable = true))
               
+              val bodyExpr = returningTerm(body)
               val armLabelSym = TempSymbol(N, "arm")
               val armLabel = scope.allocateName(armLabelSym)
               
@@ -1255,6 +1147,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 i32.eq(arrayLength, i32.const(len))
               
               val testExpr = i32.and(isArrayTest, lengthTest)
+              val bodyExpr = returningTerm(body)
               val armLabelSym = TempSymbol(N, "arm")
               val armLabel = scope.allocateName(armLabelSym)
               S(Instructions.`if`(
@@ -1275,39 +1168,19 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 extraInfo = S(cse.toString)
               ))
         
-        val armExprs = armBodies.flatMap:
-          case (cse, bodyIsAbortive, rawBodyExpr) =>
-            val bodyExpr =
-              if isValueMode || bodyIsAbortive then rawBodyExpr
-              else statementExpr(
-                expr = rawBodyExpr,
-                ctxMsg = "WatBuilder::returningTerm for Match(...) arm body",
-                loc = N
-              )
-            mkArmExpr(cse, bodyExpr)
 
-        val defaultExpr =
-          if isValueMode then
-            defaultBodyExprOpt.fold(unreachable)(_._2)
-          else
-            defaultBodyExprOpt match
-              case S((defaultBody, expr)) =>
-                if defaultBody.isAbortive then expr
-                else
-                  statementExpr(
-                    expr = expr,
-                    ctxMsg = "WatBuilder::returningTerm for Match(...) default body",
-                    loc = N
-                  )
-              case N => unreachable
+        val defaultExpr = dflt match
+          case S(defaultBody) => returningTerm(defaultBody)
+          case N => unreachable
         
         val rstExpr = returningTerm(rst)
+        val matchResultTypes = Seq(Result(RefType.anyref))
         
         // Generate the match block
         val matchBlock = Instructions.block(
           label = S(matchLabel),
           children = armExprs :+ defaultExpr,
-          resultTypes = if isValueMode then Seq(Result(RefType.anyref)) else Seq.empty
+          resultTypes = matchResultTypes
         )
         
         // If rst is End (produces no value), the match block is the final result
@@ -1318,7 +1191,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             Instructions.block(
               label = N,
               children = Seq(matchBlock, rstExpr),
-              resultTypes = deriveBlockResults(rstExpr)
+              resultTypes = rstExpr.resultTypes.map(ty => Result(ty.asValType_!))
             )
 
     // TODO: Implement proper WASM exception throwing
