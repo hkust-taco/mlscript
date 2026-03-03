@@ -54,10 +54,10 @@ bar(Pair(4, 3))
 :e
 fun baz(p) = p is
   (Pair(a, b) | Int) where a > b
-//│ ╔══[ERROR] Name not found: a
+//│ ╔══[COMPILATION ERROR] Name not found: a
 //│ ║  l.56: 	  (Pair(a, b) | Int) where a > b
 //│ ╙──      	                           ^
-//│ ╔══[ERROR] Name not found: b
+//│ ╔══[COMPILATION ERROR] Name not found: b
 //│ ║  l.56: 	  (Pair(a, b) | Int) where a > b
 //│ ╙──      	                               ^
 
@@ -107,21 +107,21 @@ tuple of
 fun get(p, m) = if p is
   Pair(k, v) where m.get(k) is w then v === w
   else false
-//│ ╔══[ERROR] Name not found: w
+//│ ╔══[COMPILATION ERROR] Name not found: w
 //│ ║  l.108: 	  Pair(k, v) where m.get(k) is w then v === w
 //│ ╙──       	                                            ^
 
 :fixme // TODO?
 fun get(p, m) =
   p is Pair(k, v) where m.get(k) is w and v === w
-//│ ╔══[ERROR] Unexpected infix use of keyword 'where' here
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'where' here
 //│ ║  l.116: 	  p is Pair(k, v) where m.get(k) is w and v === w
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :fixme // TODO?
 fun get(p, m) =
   p is Pair(k, v) where m.get(k) is w where v === w
-//│ ╔══[ERROR] Unexpected infix use of keyword 'where' here
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'where' here
 //│ ║  l.123: 	  p is Pair(k, v) where m.get(k) is w where v === w
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -150,7 +150,7 @@ C1(m0).P.unapply(Pair(3, 5))
 :fixme // incorrect warning
 class C2(m) with
   pattern P = Pair(k, v) where m.get(k) is w where v === w
-//│ ╔══[ERROR] Name not found: w
+//│ ╔══[COMPILATION ERROR] Name not found: w
 //│ ║  l.152: 	  pattern P = Pair(k, v) where m.get(k) is w where v === w
 //│ ╙──       	                                                         ^
 //│ ╔══[WARNING] Useless pattern binding: v.
@@ -160,21 +160,23 @@ class C2(m) with
 //│ ║  l.152: 	  pattern P = Pair(k, v) where m.get(k) is w where v === w
 //│ ╙──       	                   ^
 
+:re
 C2(m0).P.unapply(Pair(3, 4))
-//│ = MatchFailure(null)
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+:re
 C2(m0).P.unapply(Pair(3, 5))
-//│ = MatchFailure(null)
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :fixme // incorrect warning
 class C3(m) with
   pattern P = Pair(k, v) where m.get(k) is (w where v === w)
 //│ ╔══[WARNING] Useless pattern binding: v.
-//│ ║  l.172: 	  pattern P = Pair(k, v) where m.get(k) is (w where v === w)
+//│ ║  l.174: 	  pattern P = Pair(k, v) where m.get(k) is (w where v === w)
 //│ ╙──       	                      ^
 //│ ╔══[WARNING] Useless pattern binding: k.
-//│ ║  l.172: 	  pattern P = Pair(k, v) where m.get(k) is (w where v === w)
+//│ ║  l.174: 	  pattern P = Pair(k, v) where m.get(k) is (w where v === w)
 //│ ╙──       	                   ^
 
 C3(m0).P.unapply(Pair(3, 4))

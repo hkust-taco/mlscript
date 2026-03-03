@@ -29,13 +29,15 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   
   private val baseScp: utils.Scope =
     utils.Scope.empty
+  private lazy val dbgScp: utils.Scope = // for IR printing only
+    utils.Scope.empty
   
-  val runtimeNme = baseScp.allocateName(Elaborator.State.runtimeSymbol)
-  val termNme = baseScp.allocateName(Elaborator.State.termSymbol)
-  val blockNme = baseScp.allocateName(Elaborator.State.blockSymbol)
-  val shapeNme = baseScp.allocateName(Elaborator.State.shapeSymbol)
-  val definitionMetadataNme = baseScp.allocateName(Elaborator.State.definitionMetadataSymbol)
-  val prettyPrintNme = baseScp.allocateName(Elaborator.State.prettyPrintSymbol)
+  val runtimeNme = baseScp.allocateName(Elaborator.State.runtimeSymbol)(using throw _)
+  val termNme = baseScp.allocateName(Elaborator.State.termSymbol)(using throw _)
+  val blockNme = baseScp.allocateName(Elaborator.State.blockSymbol)(using throw _)
+  val shapeNme = baseScp.allocateName(Elaborator.State.shapeSymbol)(using throw _)
+  val definitionMetadataNme = baseScp.allocateName(Elaborator.State.definitionMetadataSymbol)(using throw _)
+  val prettyPrintNme = baseScp.allocateName(Elaborator.State.prettyPrintSymbol)(using throw _)
   
   val ltl = new TraceLogger:
     override def doTrace = debugLowering.isSet || scope.exists:
@@ -130,7 +132,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       if ppLoweredTree.isSet then
         output(s"Pretty Lowered:")
-        output(Printer.mkDocument(le)(using summon[Raise], nestedScp).mkString())
+        output(Printer.mkDocument(le)(using raise, dbgScp.nest).mkString())
       
       val (pre, js) = nestedScp.givenIn:
         jsb.worksheet(le)

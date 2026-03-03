@@ -32,7 +32,7 @@ handle 1 = 1 with
   fun f()(r) = r(0)
 in
   foo(h)
-//│ ╔══[ERROR] Unsupported handle binding shape
+//│ ╔══[COMPILATION ERROR] Unsupported handle binding shape
 //│ ║  l.31: 	handle 1 = 1 with
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.32: 	  fun f()(r) = r(0)
@@ -58,7 +58,7 @@ in
     fun f()(r) = r(0)
     fun g(a)()(r) = r(1)
 ) + 1
-//│ ╔══[ERROR] Unsupported handle binding shape
+//│ ╔══[COMPILATION ERROR] Unsupported handle binding shape
 //│ ║  l.57: 	  handle h = Eff with
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^
 //│ ║  l.58: 	    fun f()(r) = r(0)
@@ -84,10 +84,10 @@ handle h = Eff with
   class Test with
     fun x() = x
 foo(h)
-//│ ╔══[ERROR] Only function definitions are allowed in handler blocks
+//│ ╔══[COMPILATION ERROR] Only function definitions are allowed in handler blocks
 //│ ║  l.83: 	  val x = 24
 //│ ╙──      	  ^^^^^^^^^^
-//│ ╔══[ERROR] Only function definitions are allowed in handler blocks
+//│ ╔══[COMPILATION ERROR] Only function definitions are allowed in handler blocks
 //│ ║  l.85: 	    fun x() = x
 //│ ╙──      	              ^
 
@@ -102,19 +102,19 @@ handle h = Eff with
       fun h2()(a, b) = r(1)
     foo(h)
 foo(h)
-//│ ╔══[ERROR] Handler function is missing resumption parameter
+//│ ╔══[COMPILATION ERROR] Handler function is missing resumption parameter
 //│ ║  l.99: 	      fun f = r(0)
 //│ ╙──      	      ^^^^^^^^^^^^
-//│ ╔══[ERROR] Handler function is missing resumption parameter
+//│ ╔══[COMPILATION ERROR] Handler function is missing resumption parameter
 //│ ║  l.100: 	      fun g() = r(0)
 //│ ╙──       	      ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Handler function is missing resumption parameter
+//│ ╔══[COMPILATION ERROR] Handler function is missing resumption parameter
 //│ ║  l.101: 	      fun h()() = r(1)
 //│ ╙──       	      ^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Handler function is missing resumption parameter
+//│ ╔══[COMPILATION ERROR] Handler function is missing resumption parameter
 //│ ║  l.102: 	      fun h2()(a, b) = r(1)
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Name not found: h
+//│ ╔══[COMPILATION ERROR] Name not found: h
 //│ ║  l.103: 	    foo(h)
 //│ ╙──       	        ^
 

@@ -26,7 +26,7 @@ concat of
 
 :e
 (~)("a", "b", "c")
-//│ ╔══[ERROR] Expected 2 arguments, got 3
+//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 3
 //│ ║  l.28: 	(~)("a", "b", "c")
 //│ ╙──      	   ^^^^^^^^^^^^^^^
 //│ = "ab"
@@ -34,7 +34,7 @@ concat of
 
 :e
 (~)("a")
-//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
 //│ ║  l.36: 	(~)("a")
 //│ ╙──      	   ^^^^^
 //│ = "aundefined"

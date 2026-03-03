@@ -65,14 +65,14 @@ None == Option.None
 :e
 :re
 Option.oops
-//│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
+//│ ╔══[COMPILATION ERROR] Module 'Option' does not contain member 'oops'
 //│ ║  l.67: 	Option.oops
 //│ ╙──      	      ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 :e
 open Option { oops }
-//│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
+//│ ╔══[COMPILATION ERROR] Module 'Option' does not contain member 'oops'
 //│ ║  l.74: 	open Option { oops }
 //│ ╙──      	              ^^^^
 
@@ -81,7 +81,7 @@ oops
 :e
 :re
 Option.None.oops
-//│ ╔══[ERROR] Object 'None' does not contain member 'oops'
+//│ ╔══[COMPILATION ERROR] Object 'None' does not contain member 'oops'
 //│ ║  l.83: 	Option.None.oops
 //│ ╙──      	           ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'

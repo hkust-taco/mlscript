@@ -74,7 +74,7 @@ fun test() =
 //│ JS (unsanitized):
 //│ let test;
 //│ test = function test() {
-//│   let Foo5, tmp;
+//│   let Foo5;
 //│   (class Foo4 {
 //│     static {
 //│       Foo5 = this
@@ -85,7 +85,7 @@ fun test() =
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Foo"]; 
 //│   });
-//│   tmp = Predef.print("ok");
+//│   Predef.print("ok");
 //│   return Foo5
 //│ };
 
@@ -97,7 +97,7 @@ let t = test()
 
 :e
 new t
-//│ ╔══[ERROR] Expected a statically known class; found reference.
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference.
 //│ ║  l.99: 	new t
 //│ ║        	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
@@ -114,7 +114,7 @@ new! t
 
 :e
 new t()
-//│ ╔══[ERROR] Expected a statically known class; found reference.
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference.
 //│ ║  l.116: 	new t()
 //│ ║         	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
@@ -217,13 +217,13 @@ print(a.x)
 print(a.foo(1))
 print(a.bar(1))
 //│ JS (unsanitized):
-//│ let a, tmp, tmp1, tmp2, tmp3;
+//│ let a, tmp, tmp1;
 //│ a = globalThis.Object.freeze(new Foo10());
-//│ tmp = Predef.print(a.x);
-//│ tmp1 = runtime.safeCall(a.foo(1));
-//│ tmp2 = Predef.print(tmp1);
-//│ tmp3 = runtime.safeCall(a.bar(1));
-//│ Predef.print(tmp3)
+//│ Predef.print(a.x);
+//│ tmp = runtime.safeCall(a.foo(1));
+//│ Predef.print(tmp);
+//│ tmp1 = runtime.safeCall(a.bar(1));
+//│ Predef.print(tmp1)
 //│ > 1
 //│ > 2
 //│ > 3
@@ -235,7 +235,7 @@ print(a.bar(1))
 class Foo with
   val x = 1
   val x = 2
-//│ ╔══[ERROR] Multiple definitions of symbol 'x'
+//│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
 //│ ║  l.236: 	  val x = 1
 //│ ║         	  ^^^^^^^^^
@@ -260,7 +260,7 @@ class Foo with
 class Foo with
   val x = 1
   let x = 2
-//│ ╔══[ERROR] Name 'x' is already used
+//│ ╔══[COMPILATION ERROR] Name 'x' is already used
 //│ ║  l.262: 	  let x = 2
 //│ ║         	      ^^^^^
 //│ ╟── by a member declared in the same block
@@ -290,7 +290,7 @@ class Foo with
 
 :e
 class Foo with val x = 1
-//│ ╔══[ERROR] Illegal body of class definition (should be a block; found term definition).
+//│ ╔══[COMPILATION ERROR] Illegal body of class definition (should be a block; found term definition).
 //│ ║  l.292: 	class Foo with val x = 1
 //│ ╙──       	               ^^^^^^^^^
 //│ JS (unsanitized):

@@ -69,7 +69,8 @@ case
 //│           modulefulness = Modulefulness of N
 //│       restParam = N
 //│     body = IfLike:
-//│       kw = keyword 'if'
+//│       kw = keyword 'case'
+//│       form = ReturningIf
 //│       split = Cons:
 //│         branch = Match:
 //│           scrutinee = Ref{sym=caseScrut} of caseScrut

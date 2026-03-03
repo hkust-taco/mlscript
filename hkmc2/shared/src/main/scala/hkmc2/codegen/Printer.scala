@@ -11,6 +11,7 @@ import hkmc2.semantics._
 import hkmc2.syntax._
 import hkmc2.semantics.Elaborator.State
 import hkmc2.utils.Scope
+import hkmc2.utils.Scope.scope
 
 object Printer:
   def getVar(l: Local)(using Raise, Scope): String = l match
@@ -21,7 +22,7 @@ object Printer:
       // ts.trmTree
     case ts: semantics.InnerSymbol => ts.nme
     case ts: semantics.BuiltinSymbol => ts.nme
-    case _ => summon[Scope].lookup(l) match
+    case _ => scope.lookup(l) match
       case S(str) => str
       case N => s"‹not in scope: ${l}›"
 
@@ -35,13 +36,13 @@ object Printer:
       val docCases = arms
         .map{ case (c, b) => doc"${case_doc(c)} => #{  # ${mkDocument(b)} #} " }
         .mkDocument(sep = doc" # ")
-      val docDefault = dflt.map(mkDocument).getOrElse(doc"")
-      doc"match ${mkDocument(scrut)} #{  # ${docCases} # else #{  # ${docDefault} #}  #}  # in # ${mkDocument(rest)}"
+      val docDefault = dflt.fold(doc"")(e => doc" # else #{  # ${mkDocument(e)} #} ")
+      doc"match ${mkDocument(scrut)} #{  # ${docCases}$docDefault #}  # ${mkDocument(rest)}"
     case Return(res, implct) => doc"return ${mkDocument(res)}"
     case Throw(exc) => doc"throw ${mkDocument(exc)}"
     case Label(label, loop, body, rest) =>
-      val l2 = summon[Scope].allocateName(label)
-      doc"labelled ${if loop then "loop" else "block"} $l2 = ${mkDocument(body)} in # ${mkDocument(rest)}"
+      val l2 = scope.allocateName(label)
+      doc"labelled ${if loop then "loop" else "block"} $l2 = ${mkDocument(body)}; # ${mkDocument(rest)}"
     case Break(label) =>
       doc"break ${getVar(label)}"
     case Continue(label) =>
@@ -49,17 +50,17 @@ object Printer:
     case Begin(sub, rest) =>
       doc"begin #{  # ${mkDocument(sub)}; # ${mkDocument(rest)} #} "
     case TryBlock(sub, finallyDo, rest) =>
-      doc"try #{  # ${mkDocument(sub)} #  #} finally #  #{ ${mkDocument(finallyDo)} in #  #} ${mkDocument(rest)}"
+      doc"try #{  # ${mkDocument(sub)} #  #} finally #  #{ ${mkDocument(finallyDo)}; #  #} ${mkDocument(rest)}"
     case Assign(lhs, rhs, rest) =>
-      val docLhs = summon[Scope].lookup(lhs).getOrElse(summon[Scope].allocateName(lhs))
-      doc"set $docLhs = ${mkDocument(rhs)} in # ${mkDocument(rest)}"
+      val docLhs = scope.lookup(lhs).getOrElse(scope.allocateName(lhs))
+      doc"set $docLhs = ${mkDocument(rhs)}; # ${mkDocument(rest)}"
     case AssignField(lhs, nme, rhs, rest) =>
-      doc"set ${mkDocument(lhs)}.${nme.name} = ${mkDocument(rhs)} in # ${mkDocument(rest)}"
+      doc"set ${mkDocument(lhs)}.${nme.name} = ${mkDocument(rhs)}; # ${mkDocument(rest)}"
     case Define(defn, rest) =>
-      doc"define ${mkDocument(defn)} in # ${mkDocument(rest)}"
+      doc"define ${mkDocument(defn)}; # ${mkDocument(rest)}"
     case Scoped(_, body) => mkDocument(body)
     case End("") => doc"end"
-    case End(msg) => doc"end ${msg}"
+    case End(msg) => doc"end /* ${msg} */"
     case _ => TODO(blk)
   
   def mkDocument(c: ClsLikeBody)(using Raise, Scope): Document =
@@ -72,8 +73,8 @@ object Printer:
       preCtor: Opt[Block],
       ctor: Block
   )(using Raise, Scope): Document =
-    val privFields = privateFields.map(x => doc"let ${x.id.name} = ...").mkDocument(sep = doc" # ")
-    val pubFields = publicFields.map(x => doc"${x._1.nme}").mkDocument(sep = doc" # ")
+    val privFields = privateFields.map(x => doc"private val ${x.id.name}").mkDocument(sep = doc" # ")
+    val pubFields = publicFields.map(x => doc"val ${x._1.nme}").mkDocument(sep = doc" # ")
     val docPrivFlds = if privateFields.isEmpty then doc"" else doc" # ${privFields}"
     val docPubFlds = if publicFields.isEmpty then doc"" else doc" # ${pubFields}"
     val docPreCtor = preCtor match
@@ -91,7 +92,8 @@ object Printer:
 
   def mkDocument(defn: Defn)(using Raise, Scope): Document = defn match
     case FunDefn(own, sym, dSym, params, body) =>
-      val docParams = doc"${own.fold("")(_.toString + "::")}${sym.nme}${params.map(_.params.map(x => summon[Scope].allocateName(x.sym)).mkDocument("(", ", ", ")")).mkDocument("")}"
+      val docParams = doc"${own.fold("")(_.toString + "::")}${sym.nme}${
+        params.map(_.params.map(x => scope.allocateName(x.sym)).mkDocument("(", ", ", ")")).mkDocument("")}"
       val docBody = mkDocument(body)
       doc"fun ${docParams} { #{  # ${docBody} #}  # }"
     case ValDefn(tsym, sym, rhs) =>
@@ -99,18 +101,13 @@ object Printer:
     case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable)
     =>
-      def optFldBody(t: semantics.TermDefinition) =
-        t.body match
-          case Some(x) => doc" = ..."
-          case None => doc""
       val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
       val auxClsParams = auxParams.flatMap(_.paramSyms)
-      val ctorParams = (clsParams ++ auxClsParams).map(p => summon[Scope].allocateName(p))
+      val ctorParams = (clsParams ++ auxClsParams).map(p => scope.allocateName(p))
       val docCtorParams = if clsParams.isEmpty then doc"" else doc"(${ctorParams.mkDocument(", ")})"
       val docStaged = if isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
       val docBody = mkDocument(privateFields, publicFields, methods, S(preCtor), ctor)
       val docPreCtor = mkDocument(preCtor)
-      val docCtor = mkDocument(ctor)
       val clsType = k match
         case Cls => "class"
         case Pat => "pattern"
@@ -148,7 +145,7 @@ object Printer:
     case Instantiate(mut, cls, args) =>
       doc"new ${if mut then "mut " else ""}${mkDocument(cls)}(${args.map(mkDocument).mkDocument(", ")})"
     case Lambda(params, body) =>
-      val docParams = params.params.map(x => summon[Scope].allocateName(x.sym)).mkDocument(", ")
+      val docParams = params.params.map(x => scope.allocateName(x.sym)).mkDocument(", ")
       doc"(${docParams}) => ${mkDocument(body)}"
     case Tuple(mut, elems) =>
       val docElems = elems.map(x => mkDocument(x)).mkDocument(", ")
@@ -161,10 +158,10 @@ object Printer:
       doc"${mkDocument(qual)}${if arrayIdx then "." else "!"}${mkDocument(fld)}"
     case x: Path => mkDocument(x)
   
-  def mkDocument(prog: Program)(using Raise, Scope): Document = summon[Scope].nest.givenIn:
+  def mkDocument(prog: Program)(using Raise, Scope): Document = scope.nest.givenIn:
     val docImports = prog.imports.map:
       case (local, path) =>
-        val docLocal = summon[Scope].allocateName(local)
-        doc"import ${docLocal}"
+        val docLocal = scope.allocateName(local)
+        doc"import ${docLocal};"
     doc" ${docImports.mkDocument(sep = doc" # ")} # ${mkDocument(prog.main)}"
   

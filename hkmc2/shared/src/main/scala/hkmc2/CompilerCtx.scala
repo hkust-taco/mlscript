@@ -35,10 +35,25 @@ class CompilerCtx(
   
   def getElaboratedBlock
         (file: io.Path, prelude: Ctx)
-        (using TL, State, Raise, Config)
+        (using TL, Raise, Config)
         : Artifact =
     
     // println(s"Cache has: ${cache.elabCache.contains(file)} ${cache.elabCache.keys}")
+    
+    // * FIXME:
+    // * This is not quite correct, but might be good enough for now
+    // * (to be fixed when we overhaul the symbol and elaboration systems).
+    // * The problem is that different modules will see different builtin symbols
+    // * for things like `unitSymbol` and `termSymbol`, which could in theory cause problems
+    // * if the compiler later wants to compare them as part of the type checking/compilation/optimization logic.
+    // * Technically, we should also have the same problem with the symbols loaded from the prelude,
+    // * which are passed on to imported modules from the first importer
+    // * (and the "first importer" is nondeterministic, due to concurrent tests),
+    // * and since the imported modules are cached,
+    // * this means subsequent importers will not have see same prelude symbols.
+    // * The correct approach should be to only cache a *single* State and prelude Ctx at the start,
+    // * and reuse it for every compilation unit (each compilation unit duplicating the root State).
+    given Elaborator.State = new Elaborator.State
     
     val lastMod = fs.getLastChangedTimestamp(file)
     

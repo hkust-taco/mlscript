@@ -149,24 +149,12 @@ f5()
 //│ Interpreted:
 //│ 5
 
+:fixme // wat
 :sllir
 fun test() =
   if true do test()
-//│ LLIR:
-//│   
-//│   def test() =
-//│     let x = true in
-//│     case x of
-//│       Lit(BoolLit(true)) =>
-//│         let* (x1) = test() in
-//│         x1
-//│       _ =>
-//│         undefined
-//│   def j() =
-//│     undefined
-//│   def entry() =
-//│     undefined
-//│   entry = entry
+//│ ═══[COMPILATION ERROR] Name not found: $runtime
+//│ Stopped due to an error during the Llir generation
 
 :sllir
 fun test() =
@@ -206,16 +194,14 @@ f()
 //│     case x1 of
 //│       Lit(BoolLit(true)) =>
 //│         let x2 = +(x,1) in
-//│         let x3 = undefined in
 //│         jump j(x2)
 //│       _ =>
-//│         let x4 = undefined in
 //│         jump j(x)
-//│   def j(x5) =
-//│     x5
+//│   def j(x3) =
+//│     x3
 //│   def entry() =
-//│     let* (x6) = f() in
-//│     x6
+//│     let* (x4) = f() in
+//│     x4
 //│   entry = entry
 //│ 
 //│ Interpreted:

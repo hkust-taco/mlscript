@@ -2,6 +2,7 @@ package hkmc2
 package utils
 
 import scala.collection.mutable.{Map => MutMap, Set => MutSet}
+import sourcecode.{Name, Line, FileName}
 
 import mlscript.utils.*, shorthands.*
 import utils.*
@@ -36,20 +37,30 @@ case class Scope
     case S(S(State.globalThisSymbol)) => "globalThis"
     case S(S(thisSym)) => 
       thisProxyAccessed = true
+      given Raise = throw _
       allocateName(thisSym.thisProxy)
   
   /** Whether the code generator has produced a binding for `thisProxy` yet. */
   var thisProxyDefined: Bool = false
   
-  private def thisError(thisSym: InnerSymbol)(using Raise): Nothing =
-    raise(InternalError(msg"`this` not in scope: ${thisSym.toString}" -> N :: Nil,
-      source = Diagnostic.Source.Compilation))
-    die
+  private def thisError(thisSym: InnerSymbol)(using Raise): Str =
+    raise:
+      InternalError(msg"`this` not in scope: ${thisSym.toString}" -> N :: Nil,
+        extraInfo = Some(this),
+        source = Diagnostic.Source.Compilation)
+    "‹MISSING_THIS›"
   
-  def addToBindings(symbol: Local, name: String, shadow: Bool) =
-    if !shadow then assert(lookup(symbol).isEmpty, s"$symbol is already in ${this.showAsTree}")
-    bindings += symbol -> name
-    existingNames += name -> symbol
+  def addToBindings(symbol: Local, name: String, shadow: Bool)(using Raise, Line, Name, FileName) =
+    val fullName =
+      if !shadow && lookup(symbol).nonEmpty
+      then
+        raise:
+          InternalError(msg"`${symbol.toString}` is already in scope" -> symbol.toLoc :: Nil, extraInfo = Some(this))
+        name + "‹BAD_SHADOW›"
+      else name
+    bindings += symbol -> fullName
+    existingNames += fullName -> symbol
+    fullName
   
   def findThis_!(thisSym: InnerSymbol)(using Raise): Str =
     // println(s"findThis_! $thisSym")
@@ -118,10 +129,10 @@ case class Scope
       l.nme
   
   // * Note: it is sound for an existing name to have been allocated with a different prefix (which is only cosmetic)
-  def allocateOrGetName(l: Local, prefix: Str = ""): Str =
+  def allocateOrGetName(l: Local, prefix: Str = "")(using Raise): Str =
     lookup(l).getOrElse(allocateName(l, prefix = prefix))
   
-  def allocateName(l: Local, prefix: Str = "", shadow: Bool = false): Str =
+  def allocateName(l: Local, prefix: Str = "", shadow: Bool = false)(using Raise, Line, Name, FileName): Str =
     
     // * May be useful later?
     /* 
@@ -141,9 +152,9 @@ case class Scope
         // Try realBase with an integer.
         (1 to Int.MaxValue).iterator.map(i => s"$realBase$i").filterNot(inScope).next
     
-    addToBindings(l, name, shadow = shadow)
+    val fullName = addToBindings(l, name, shadow = shadow)
     
-    name
+    fullName
 
 
 object Scope:

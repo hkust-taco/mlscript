@@ -30,9 +30,8 @@ fun test(a) =
 //│       Inner1.class = this
 //│     }
 //│     constructor(b) {
-//│       let tmp;
 //│       this.b = b;
-//│       tmp = Predef.print(a);
+//│       Predef.print(a);
 //│     }
 //│     f(c) {
 //│       return globalThis.Object.freeze([
@@ -154,7 +153,7 @@ Foo(123)
 //│     this.foo();
 //│   }
 //│   foo() {
-//│     let bar, baz, tmp;
+//│     let bar, baz;
 //│     const this$Foo = this;
 //│     bar = function bar() {
 //│       return this$Foo.a
@@ -162,7 +161,7 @@ Foo(123)
 //│     baz = function baz() {
 //│       return this$Foo.a
 //│     };
-//│     tmp = bar();
+//│     bar();
 //│     return baz()
 //│   }
 //│   toString() { return runtime.render(this); }

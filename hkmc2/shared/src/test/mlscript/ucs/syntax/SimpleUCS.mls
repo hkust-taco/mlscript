@@ -198,7 +198,7 @@ fun f(x) =
   if x is
     0 ::
       Nil() then "oh"
-//│ ╔══[ERROR] Unrecognized pattern split (operator application).
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (operator application).
 //│ ║  l.199: 	    0 ::
 //│ ║         	    ^^^^
 //│ ║  l.200: 	      Nil() then "oh"

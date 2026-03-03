@@ -59,7 +59,7 @@ if
   x and z then 1
   y is [b] then let x = 1 in x + b
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    x is true and
 //│ >      z is true then 1
 //│ >      y is []=1 and
@@ -127,5 +127,21 @@ if
 // >      z is true then 1
 // >      $j
 // >    $j
+
+
+// * Contemplate this absolutely horrendous code:
+:sjs
+if false do ()
+123
+//│ JS (unsanitized):
+//│ let scrut;
+//│ split_root$2: {
+//│   split_1$2: {
+//│     scrut = false;
+//│     if (scrut === true) { break split_1$2 } else { break split_1$2 }
+//│   }
+//│ }
+//│ 123
+//│ = 123
 
 

@@ -4,9 +4,10 @@
 
 
 get foo = 123
-//│ ╔══[ERROR] Unrecognized definitional assignment left-hand side: juxtaposition
+//│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: juxtaposition
 //│ ║  l.6: 	get foo = 123
 //│ ╙──     	^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // * These two should be equivalent and should *not* be getters: 

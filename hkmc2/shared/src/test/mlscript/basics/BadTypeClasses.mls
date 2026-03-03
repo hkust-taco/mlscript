@@ -2,7 +2,7 @@
 :e
 module M with
   fun f(foo: Int, using bar: Int)
-//│ ╔══[ERROR] Keyword `using` must occur before all parameters.
+//│ ╔══[COMPILATION ERROR] Keyword `using` must occur before all parameters.
 //│ ║  l.4: 	  fun f(foo: Int, using bar: Int)
 //│ ╙──     	                  ^^^^^^^^^^^^^^
 
@@ -11,7 +11,7 @@ module M with
 
 :e
 M.f
-//│ ╔══[ERROR] Cannot query instance of type Int for call: 
+//│ ╔══[COMPILATION ERROR] Cannot query instance of type Int for call: 
 //│ ║  l.13: 	M.f
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
@@ -28,20 +28,20 @@ val someInt = 42
 
 :e
 using someInt = 42
-//│ ╔══[ERROR] Expected a non-module type; found reference.
+//│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference.
 //│ ║  l.30: 	using someInt = 42
 //│ ║        	      ^^^^^^^
 //│ ╙── Implicit instance must be marked as returning a 'module' in order to have a module return type.
-//│ ╔══[ERROR] Expected a type, got reference
+//│ ╔══[COMPILATION ERROR] Expected a type, got reference
 //│ ║  l.30: 	using someInt = 42
 //│ ╙──      	      ^^^^^^^
 
 :e
 using someInt: Int = 42
-//│ ╔══[ERROR] Expected a type, got block
+//│ ╔══[COMPILATION ERROR] Expected a type, got block
 //│ ║  l.40: 	using someInt: Int = 42
 //│ ╙──      	      ^^^^^^^^^^^^
-//│ ╔══[ERROR] Expected a type, got a non-type block
+//│ ╔══[COMPILATION ERROR] Expected a type, got a non-type block
 //│ ║  l.40: 	using someInt: Int = 42
 //│ ╙──      	      ^^^^^^^^^^^^
 
@@ -50,13 +50,13 @@ module M with
 
 :e
 M.bar[](1, 2)
-//│ ╔══[ERROR] Expected 2 type arguments, got 0
+//│ ╔══[COMPILATION ERROR] Expected 2 type arguments, got 0
 //│ ║  l.52: 	M.bar[](1, 2)
 //│ ╙──      	^^^^^^^
 
 :e
 M.bar[Int](1, 2)
-//│ ╔══[ERROR] Expected 2 type arguments, got 1
+//│ ╔══[COMPILATION ERROR] Expected 2 type arguments, got 1
 //│ ║  l.58: 	M.bar[Int](1, 2)
 //│ ╙──      	^^^^^^^^^^
 
@@ -73,7 +73,7 @@ M.foo()
 :e
 fun f[T](using t: T) = t
 f
-//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
+//│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
 //│ ║  l.75: 	f
 //│ ║        	^
 //│ ╟── Required by contextual parameter declaration: 
@@ -83,9 +83,9 @@ f
 
 :e
 fun f(using t: Int = 42) = t
-//│ ╔══[ERROR] Expected a valid parameter, found term definition
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found term definition
 //│ ║  l.85: 	fun f(using t: Int = 42) = t
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Name not found: t
+//│ ╔══[COMPILATION ERROR] Name not found: t
 //│ ║  l.85: 	fun f(using t: Int = 42) = t
 //│ ╙──      	                           ^

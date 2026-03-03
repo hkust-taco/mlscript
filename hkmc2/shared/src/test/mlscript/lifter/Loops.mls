@@ -64,22 +64,22 @@ fun foo() =
 //│   static [definitionMetadata] = ["class", "Capture$scope0"]; 
 //│ });
 //│ foo2 = function foo() {
-//│   let x, tmp2, scope0$cap;
+//│   let x, scope0$cap;
 //│   scope0$cap = new Capture$scope03(x);
 //│   scope0$cap.x$0 = 1;
 //│   lbl: while (true) {
-//│     let scrut, tmp3;
+//│     let scrut, tmp;
 //│     scrut = true;
 //│     if (scrut === true) {
 //│       let lambda$here;
-//│       tmp3 = scope0$cap.x$0 + 1;
-//│       scope0$cap.x$0 = tmp3;
+//│       tmp = scope0$cap.x$0 + 1;
+//│       scope0$cap.x$0 = tmp;
 //│       lambda$here = lambda$2(scope0$cap);
 //│       return lambda$here
-//│     } else { tmp2 = runtime.Unit; }
+//│     }
 //│     break;
 //│   }
-//│   return tmp2
+//│   return runtime.Unit
 //│ };
 
 :expect 2

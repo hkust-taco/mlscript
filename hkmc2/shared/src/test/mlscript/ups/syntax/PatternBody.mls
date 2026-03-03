@@ -2,7 +2,7 @@
 
 :todo // Patterns at parameter position are not supported yet.
 0 => false
-//│ ╔══[ERROR] Expected a valid parameter, found integer literal
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
 //│ ║  l.4: 	0 => false
 //│ ╙──     	^
 //│ = fun
@@ -62,19 +62,19 @@ pattern Consistent = ((Int as x) | (Str as x)) => x.toString()
 
 :e
 pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
-//│ ╔══[ERROR] This pattern cannot be bound.
+//│ ╔══[COMPILATION ERROR] This pattern cannot be bound.
 //│ ║  l.64: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
 //│ ║        	                           ^^^
 //│ ╟── Because the pattern it belongs to is negated.
 //│ ║  l.64: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
 //│ ╙──      	                           ^^^^^^^^
-//│ ╔══[ERROR] Name not found: x
+//│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.64: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
 //│ ╙──      	                                               ^
 
 :e
 pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
-//│ ╔══[ERROR] Name not found: x
+//│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.76: 	pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
 //│ ╙──      	                                                        ^
 
@@ -104,13 +104,13 @@ pattern BadNegated = ~(Int as x) => x
 :ucs ups
 :e
 pattern BadNegated = (~(Int as x)) => x
-//│ ╔══[ERROR] This pattern cannot be bound.
+//│ ╔══[COMPILATION ERROR] This pattern cannot be bound.
 //│ ║  l.106: 	pattern BadNegated = (~(Int as x)) => x
 //│ ║         	                        ^^^
 //│ ╟── Because the pattern it belongs to is negated.
 //│ ║  l.106: 	pattern BadNegated = (~(Int as x)) => x
 //│ ╙──       	                        ^^^^^^^^
-//│ ╔══[ERROR] Name not found: x
+//│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.106: 	pattern BadNegated = (~(Int as x)) => x
 //│ ╙──       	                                      ^
 //│ elaborated pattern body: ¬(Int as x) => <error>
@@ -118,13 +118,13 @@ pattern BadNegated = (~(Int as x)) => x
 :ucs ups
 :e
 pattern BadNegated = (~Pair(Int, x)) => x
-//│ ╔══[ERROR] This variable cannot be accessed.
+//│ ╔══[COMPILATION ERROR] This variable cannot be accessed.
 //│ ║  l.120: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ║         	                                 ^
 //│ ╟── Because the pattern it belongs to is negated.
 //│ ║  l.120: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╙──       	                       ^^^^^^^^^^^
-//│ ╔══[ERROR] Name not found: x
+//│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.120: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╙──       	                                        ^
 //│ elaborated pattern body: ¬Pair(Int, x) => <error>
@@ -173,7 +173,7 @@ module HiddenCorner with
   class YouCantSeeMe(wow: Int)
   class CantYouSeeMe(val wow: Int)
   val k = 0
-//│ ╔══[ERROR] This pattern cannot be matched
+//│ ╔══[COMPILATION ERROR] This pattern cannot be matched
 //│ ║  l.169: 	pattern Naughty = HiddenCorner.m.m.YouCantSeeMe(n) => n + HiddenCorner.m.m.k
 //│ ║         	                                                ^
 //│ ╟── because the corresponding parameter `wow` is not publicly accessible

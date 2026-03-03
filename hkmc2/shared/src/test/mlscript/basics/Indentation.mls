@@ -47,7 +47,7 @@ tuple(
       tuple()
     tuple()
   tuple()
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (juxtaposition).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (juxtaposition).
 //│ ║  l.47: 	      tuple()
 //│ ║        	      ^^^^^^^
 //│ ║  l.48: 	    tuple()
@@ -138,7 +138,7 @@ id
 //│ ┊id┊→⟨┊1┊⟩←┊
 //│ Parsed:
 //│ 	Jux(Ident(id),Block(List(IntLit(1))))
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (integer literal).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (integer literal).
 //│ ║  l.137: 	  1
 //│ ╙──       	  ^
 //│ = fun id
@@ -151,10 +151,10 @@ id(0
 //│ ┊id┊(⟨┊0┊→⟨┊id┊⟩←┊⟩)┊(⟨┊1┊⟩)┊
 //│ Parsed:
 //│ 	App(App(Ident(id),Tup(List(Jux(IntLit(0),Block(List(Ident(id))))))),Tup(List(IntLit(1))))
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
 //│ ║  l.150: 	  id)(1)
 //│ ╙──       	  ^^
-//│ ═══[RUNTIME ERROR] TypeError: tmp25 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: tmp23 is not a function
 
 
 fun test2() =

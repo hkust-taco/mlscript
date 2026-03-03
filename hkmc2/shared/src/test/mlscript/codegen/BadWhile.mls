@@ -4,10 +4,21 @@
 :e
 :sjs
 while {} do()
-//│ ╔══[ERROR] Unexpected infix use of keyword 'do' here
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'do' here
 //│ ║  l.6: 	while {} do()
 //│ ╙──     	         ^^^^
 //│ JS (unsanitized):
-//│ /* error */
+//│ throw "This code cannot be run as its compilation yielded an error."
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
+// * Warn about pure expressions in statement position in `while` branches
+:w
+fun f() =
+  let i = 10
+  while i > 0 do
+    set i -= 1
+    i
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.21: 	    i
+//│ ╙──      	    ^

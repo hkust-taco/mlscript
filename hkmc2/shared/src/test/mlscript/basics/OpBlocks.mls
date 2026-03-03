@@ -358,7 +358,7 @@ f(1)
 fun f(x) = if x
   foo(A) then a
   bar(B) then b
-//│ ╔══[ERROR] Unrecognized term split (juxtaposition)
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (juxtaposition)
 //│ ║  l.358: 	fun f(x) = if x
 //│ ║         	              ^
 //│ ║  l.359: 	  foo(A) then a

@@ -21,19 +21,38 @@ fun main() =
   print("—")
   print(g.perform("c"))
 main()
-while xs.pop() is
-  null then "Done."
-  f then
+while
+  do print(xs)
+  let f = xs.pop()
+  f !== () then
     set count += 1
     f(count)
     print("?")
 //│ > B a
+//│ > [fun]
 //│ > 1
 //│ > —
 //│ > B b
 //│ > ?
-//│ count = 1
-//│ xs = [fun]
+//│ > [fun]
+//│ > 2
+//│ > —
+//│ > B c
+//│ > ?
+//│ > [fun]
+//│ > 3
+//│ > ?
+//│ > []
+//│ count = 3
+//│ xs = []
+
+// * Notes:
+(mut []).pop() === undefined
+//│ = false
+(mut []).pop() === null
+//│ = false
+(mut []).pop() === ()
+//│ = true
 
 
 // g is non-resumptive, which means g.perform("a") does not resume
@@ -51,7 +70,7 @@ handle h = Effect with
         xs.push(k1)
     k(g)
     while xs.pop() is
-      null then "Done."
+      null then print("Done.")
       f then
         set count += 1
         f(count)

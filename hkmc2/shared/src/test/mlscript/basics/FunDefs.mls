@@ -35,13 +35,13 @@ fun (>>) foo(a, b) = a * b
 
 :e
 fun ~ concat(a, b) = a + b
-//│ ╔══[ERROR] Expected a valid parameter, found application
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found application
 //│ ║  l.37: 	fun ~ concat(a, b) = a + b
 //│ ╙──      	      ^^^^^^^^^^^^
-//│ ╔══[ERROR] Name not found: a
+//│ ╔══[COMPILATION ERROR] Name not found: a
 //│ ║  l.37: 	fun ~ concat(a, b) = a + b
 //│ ╙──      	                     ^
-//│ ╔══[ERROR] Name not found: b
+//│ ╔══[COMPILATION ERROR] Name not found: b
 //│ ║  l.37: 	fun ~ concat(a, b) = a + b
 //│ ╙──      	                         ^
 
@@ -63,7 +63,7 @@ fun not(b) = !b
 //│         inner = Ident of "b"
 //│     rhs = S of Error
 //│   fld = Ident of "b"
-//│ ╔══[ERROR] Illegal definition in term position.
+//│ ╔══[COMPILATION ERROR] Illegal definition in term position.
 //│ ║  l.51: 	fun not(b) = !b
 //│ ╙──      	^^^^^^^^^^^^^^^
 

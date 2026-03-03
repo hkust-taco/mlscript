@@ -23,11 +23,10 @@ fun g() =
 //│ JS (unsanitized):
 //│ let g;
 //│ g = function g() {
-//│   let a, scrut, tmp, tmp1, pc;
+//│   let a, scrut, tmp, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
-//│     let saveOffset;
 //│     pc = runtime.resumePc;
 //│     runtime.resumePc = -1;
 //│   }
@@ -42,12 +41,12 @@ fun g() =
 //│         continue main;
 //│         break;
 //│       case 1:
-//│         a = tmp1;
+//│         a = tmp;
 //│         return a;
 //│         break;
 //│       case 2:
-//│         tmp = runtime.resumeValue;
-//│         tmp1 = 1;
+//│         runtime.resumeValue;
+//│         tmp = 1;
 //│         pc = 1;
 //│         continue main;
 //│         break;
@@ -60,7 +59,7 @@ fun g() =
 //│           }
 //│           pc = 2;
 //│           continue main
-//│         } else { tmp1 = 2; pc = 1; continue main }
+//│         } else { tmp = 2; pc = 1; continue main }
 //│         /* unreachable */
 //│         break;
 //│     }

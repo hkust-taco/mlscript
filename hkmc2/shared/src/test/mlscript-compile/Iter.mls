@@ -149,8 +149,7 @@ fun filtering(xs, op) =
       set next = iterator.next()
     if next.done then
       Result.Done
-    else
-      Result.Next of next.value
+    else Result.Next of next.value
 
 fun withFilter(op) = _ filtering(op)
 

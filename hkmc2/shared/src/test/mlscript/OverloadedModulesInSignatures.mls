@@ -14,7 +14,7 @@ module TypMod with
 fun TrmMod = 42
 module TrmMod with
   val whoami = "module"
-//│ ╔══[ERROR] Not yet supported: overloading of function 'TrmMod'
+//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'TrmMod'
 //│ ║  l.14: 	fun TrmMod = 42
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── with module of the same name
@@ -73,7 +73,7 @@ f
 
 :e
 fun f: TrmMod = 42
-//│ ╔══[ERROR] Expected a non-module type; found reference of type TrmMod denoting module 'TrmMod'.
+//│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference of type TrmMod denoting module 'TrmMod'.
 //│ ║  l.75: 	fun f: TrmMod = 42
 //│ ║        	       ^^^^^^
 //│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
@@ -132,10 +132,10 @@ module Foo
 
 :e
 fun f(x: Foo): Foo = x
-//│ ╔══[ERROR] Expected 1 type arguments, got none
+//│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
 //│ ║  l.134: 	fun f(x: Foo): Foo = x
 //│ ╙──       	         ^^^
-//│ ╔══[ERROR] Expected 1 type arguments, got none
+//│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
 //│ ║  l.134: 	fun f(x: Foo): Foo = x
 //│ ╙──       	               ^^^
 
@@ -145,10 +145,10 @@ fun f(module x: Foo): module Foo = x
 
 :e
 fun f(module x: Foo[Int]): module Foo[Int] = x
-//│ ╔══[ERROR] Expected no type arguments, got 1
+//│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
 //│ ║  l.147: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                ^^^^^^^^
-//│ ╔══[ERROR] Expected no type arguments, got 1
+//│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
 //│ ║  l.147: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                                  ^^^^^^^^
 
