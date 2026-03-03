@@ -132,7 +132,7 @@ object Deforest:
       def getResult = resultIdToResult(resultId)
       def getReferredSym: Symbol =
         resultId.getResult match
-        case Value.Ref(s, N) => s
+        case Value.Ref(s, _) => s
         case e => lastWords(s"assumption failed: $e is not a Value.Ref")
       def getReferredFun(using Elaborator.State): Option[TermSymbol] =
         resultId.getResult match

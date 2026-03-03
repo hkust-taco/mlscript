@@ -27,20 +27,38 @@ data class Some(x)
 fun c(x) = if x is
   AA then
     if A is
-      A then x.x
+      A then x.AA#x
 c(AA(2))
 //│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(member:A,Some(object:A)):
+//│ deforest > 	List(var:AA_x)
 //│ = 2
 
 
 fun c(x, y) = if x is
   AA then
     if y is
-      A then x.x
+      A then x.AA#x
 c(AA(2), A)
 //│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:y,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y)
+//│ deforest > free vars of Ref(var:y,None):
+//│ deforest > 	List(var:AA_x)
 //│ = 2
 
 
@@ -48,11 +66,20 @@ c(AA(2), A)
 fun c(x, y) = if x is
   AA then
     if y is
-      A then x.x
+      A then x.AA#x
 fun p() = AA(2)
 c(p(), A)
 //│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:y,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y)
+//│ deforest > free vars of Ref(var:y,None):
+//│ deforest > 	List(var:AA_x)
 //│ = 2
 
 
@@ -62,11 +89,20 @@ fun c(x, y) = if x is
   AA then
     let a = if y is
       A then 1
-    a + x.x
+    a + x.AA#x
 fun p() = AA(2)
 c(p(), A)
 //│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:y,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ deforest > ========
+//│ deforest > free vars of Ref(var:y,None):
+//│ deforest > 	List($tmp, var:a, $tmp, var:AA_x)
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, var:a, $tmp)
 //│ = 3
 
 
@@ -146,9 +182,18 @@ fun c(x, y) =
   let t = if x is
     AA then
       if A is
-        A then x.x
+        A then x.AA#x
   t + y
 c(AA(2), 10)
 //│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, var:t, $tmp, $tmp, var:y, var:t, $tmp)
+//│ deforest > free vars of Ref(member:A,Some(object:A)):
+//│ deforest > 	List($tmp, var:AA_x, $tmp, $tmp, var:y, var:t, $tmp)
 //│ = 12

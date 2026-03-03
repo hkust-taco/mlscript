@@ -478,7 +478,11 @@ fun test() =
   k + 2
 test()
 //│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
 //│ deforest > ========
+//│ deforest > free vars of Ref(member:A,Some(object:A)):
+//│ deforest > 	List(var:k, $tmp, var:k)
 //│ = 5
 
 fun test(a) = if a is
@@ -721,7 +725,23 @@ fun c(x) = if x is
 print(c(p(true)) + c(p(false)))
 c(B)
 //│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
 //│ deforest > ========
+//│ deforest > free vars of Ref(member:A,Some(object:A)):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(member:A,Some(object:A)):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(member:A,Some(object:A)):
+//│ deforest > 	List()
 //│ > 5
 //│ ═══[RUNTIME ERROR] Error: e1
 

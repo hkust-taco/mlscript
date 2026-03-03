@@ -159,7 +159,15 @@ fun f() =
   if A is A then y
 MMM.f()
 //│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
 //│ deforest > ========
+//│ deforest > free vars of Ref(member:A,Some(object:A)):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(member:A,Some(object:A)):
+//│ deforest > 	List()
 
 
 object C

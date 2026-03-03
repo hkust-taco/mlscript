@@ -78,7 +78,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   locally {
     for (ctor, FinalDest(dest, sels)) <- solver.finalCtorDests do
       // create ctor field syms
-      val ctorInfo = solver.fusingIdInfo(ctor).asInstanceOf[Ctor]
+      val ctorInfo = solver.fusingCtorInfo(ctor)
       ctorFieldSyms(ctor) =
         val clsNme = ctorInfo.ctor match
           case n: Int => s"tup$n"
@@ -108,7 +108,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
         branchSelSyms.getOrElseUpdate(
           sel,
           locally:
-            val selInfo = solver.fusingIdInfo(sel).asInstanceOf[FieldSel]
+            val selInfo = solver.fusingDtorInfo(sel).asInstanceOf[FieldSel]
             val clsNme = selInfo.isSelFromCls match
               case cls: ClassSymbol => cls.name
               case n: Int => s"tup$n"
@@ -154,7 +154,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
           val selsInfos: Map[SelField, CtorDtorId] = sels
             .iterator
             .map: sel =>
-              solver.fusingIdInfo(sel).asInstanceOf[FieldSel].field -> sel
+              solver.fusingDtorInfo(sel).asInstanceOf[FieldSel].field -> sel
             .toMap
           completeArgs.map: selField =>
             selsInfos.get(selField) match
@@ -239,10 +239,8 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       override def applyResult(r: Result): Unit =
         r match
         case s@DeforestTupSelect(_, _) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
-          // FIXME: this is only safe when there is no selection
-          // from parent matches in child matches
-          // refedVars.add(branchSelSyms(s.uid.toCtorDtorId))
-          ()
+          val toBeSubstSymbol = branchSelSyms(s.uid.toCtorDtorId)
+          if !inCtx(toBeSubstSymbol) then freeVars.add(toBeSubstSymbol)
         case Lambda(params, body) =>
           for p <- params.allParams do inCtx.add(p.sym)
           applyBlock(body)
@@ -252,11 +250,8 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       override def applyPath(p: Path): Unit =
         p match
         case s@DeforestableSelect(sym: TermSymbol) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
-          // FIXME: this is only safe when there is no selection
-          // from parent matches in child matches
-          // assert(sym.k is ParamBind)
-          // refedVars.add(branchSelSyms(s.uid.toCtorDtorId))
-          ()
+          val toBeSubstSymbol = branchSelSyms(s.uid.toCtorDtorId)
+          if !inCtx(toBeSubstSymbol) then freeVars.add(toBeSubstSymbol)
         case _ => super.applyPath(p)
       
       override def applyBlock(b: Block): Unit =

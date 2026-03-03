@@ -308,11 +308,6 @@ class DeforestPreAnalyzer(
       ctxTracker.inCtxOf(scpd):
         applyBlock(body)
     case m@Match(scrut, arms, dflt, rest) =>
-      // TODO: pre transform the block so that
-      // scrut is never a ctor call
-      scrut match
-        case CtorCall(_, _) => ctxTracker.markAsNonHandleable()
-        case _ => ()
       applyPath(scrut)
       for (cse, body) <- arms do
         val cseCls = cse match
@@ -822,9 +817,8 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
   
   val finalCtorDests = LinkedHashMap.empty[CtorDtorId, FinalDest]
   val finalDtorSrcs = LinkedHashMap.empty[CtorDtorId, Set[CtorDtorId]]
-  // NOTE: fix this so that we don't run into the problem of ctor being a data object and thus a Value.Ref
-  val fusingIdInfo = MutMap.empty[CtorDtorId, ConcreteConsumer | ConcreteProducer]
-  
+  val fusingCtorInfo = MutMap.empty[CtorDtorId, ConcreteProducer]
+  val fusingDtorInfo = MutMap.empty[CtorDtorId, ConcreteConsumer]
   // propagate
   locally {
     val upperBounds = MutMap.empty[StratVarId, Ls[ConsStrat]].withDefaultValue(Nil)
@@ -920,10 +914,10 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
     
     for (ctor, dests) <- ctorDests do
       finalCtorDests(ctor.toCtorDtorId) = mergeDests(dests).get
-      fusingIdInfo(ctor.toCtorDtorId) = ctor
+      fusingCtorInfo(ctor.toCtorDtorId) = ctor
     for (dtor, srcs) <- dtorSrcs do
       finalDtorSrcs(dtor.toCtorDtorId) = srcs.map(_.asInstanceOf[ConcreteProducer].toCtorDtorId)
-      fusingIdInfo(dtor.toCtorDtorId) = dtor
+      fusingDtorInfo(dtor.toCtorDtorId) = dtor
     
     assert:
       finalCtorDests.forall:
