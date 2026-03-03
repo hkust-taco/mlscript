@@ -204,7 +204,13 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   
   // blk: the block of code within this state
   private case class BlockPartition(blk: Block, resumable: Bool)
-  private case class PartitionedBlock(entry: StateId, states: Map[StateId, BlockPartition], allocId: IdAllocator, containsCall: Bool)
+  private case class PartitionedBlock(
+    entry: StateId,
+    states: Map[StateId, BlockPartition],
+    allocId: IdAllocator,
+    containsCall: Bool,
+    containsError: Bool
+  )
 
   object EffectfulResult:
     def unapply(r: Result) = r match
@@ -217,6 +223,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val labelIds = mutable.HashMap.empty[LabelSymbol, (LazyId, LazyId)]
     val allocId = new IdAllocator()
     var containsCall = false
+    var containsError = false
 
     // * blk: The block to transform
     // * partitioned: whether we are already in a partitioned state
@@ -348,7 +355,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
       // ignored cases
       case TryBlock(sub, finallyDo, rest) =>
-        lastWords("try-finally is not supported in the presence of effect handlers")
+        raise(ErrorReport(
+          msg"Try finally are not supported with effect handlers enabled." ->
+          N :: Nil,
+          source = Diagnostic.Source.Compilation))
+        containsError = true
+        rtThrowMsg("Try finally are not supported with effect handlers enabled.")
       case Throw(_) => blk
       case Scoped(_, body) => go(body) // PreHandlerLowering
       case _: HandleBlock => lastWords("unexpected handleBlock") // already translated at this point
@@ -365,7 +377,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         case _ => super.applyBlock(b)
     val newMap = Map.from(result.map: (id, part) =>
       id -> BlockPartition(replaceStaleLabels.applyBlock(part.blk), part.resumable))
-    PartitionedBlock(initId, newMap, allocId, containsCall)
+    PartitionedBlock(initId, newMap, allocId, containsCall, containsError)
 
   private def computeRestoreList(parts: PartitionedBlock)(using ctx: FunctionCtx): List[Local] =
     // We compute the restore list by taking the union of live variables at each resumption point
@@ -570,7 +582,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         1,
         ctx.doUnwind(ctx.resumeInfo.currentStackSafetySym.fold(_.toLoc, _.toLoc).fold(unit)(locToStr(_)), -1, Nil)(using paths)
       )
-    if parts.states.size <= 1 then
+    if parts.states.size <= 1 && !parts.containsError then
       return b
     val vars = if opt.debug then ctx.resumeInfo.currentLocals else computeRestoreList(parts)
 

@@ -46,6 +46,8 @@ x
 //│ ║        	^^^^^^^^^^
 //│ ║  l.36: 	... (more lines omitted) ...
 //│ ╙──      	^^^^^^^^^^^^^^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: try-finally is not supported in the presence of effect handlers
+//│ ═══[COMPILATION ERROR] Try finally are not supported with effect handlers enabled.
+//│ ═══[RUNTIME ERROR] Error: Try finally are not supported with effect handlers enabled.
+//│ x = 1
 
 
