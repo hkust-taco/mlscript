@@ -1073,9 +1073,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       `return`(S(resWat))
 
     case Scoped(syms, body) =>
-      scope.nest givenIn:
-        blockPreamble(syms)
-        returningTerm(body)
+      blockPreamble(syms)
+      returningTerm(body)
     case Match(scrut, arms, dflt, rst) =>
       val matchLabelSym = TempSymbol(N, "match")
       val matchLabel = scope.allocateName(matchLabelSym)
@@ -1378,7 +1377,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         val param = WasmParam(S(paramNme), RefType.anyref)
         ctx.addLocal(p.sym)
         param -> paramNme
-      val (wasmBody, locals) = this.body(body)
+      val (wasmBody, locals) = block(body)
       val paramSyms: Set[Local] = params.params.map(p => (p.sym: Local)).toSet
       val extraLocals = getExtraLocals.filterNot((locals.toSet ++ paramSyms).contains)
       val localsWithNames = (locals ++ extraLocals).map(l => l -> scope.allocateOrGetName(l))
