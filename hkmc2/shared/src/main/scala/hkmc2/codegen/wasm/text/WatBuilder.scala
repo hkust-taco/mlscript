@@ -1248,6 +1248,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               resultTypes = resultClauses(rstExpr)
             )
 
+    // * Try/finally lowering is intentionally rejected for now: the previous implementation required `exnref` support
+    // * which can only be enabled with the `--experimental-wasm-exnref` flag. 
+    // * Later, it will be implemented using intrinsic function.
     case TryBlock(sub, _, _) =>
       errExpr(
         Ls(
@@ -1325,7 +1328,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     val entryFnTy = ctx.addType(
       sym = N,
-      TypeInfo(id = N, FunctionType(params = Seq.empty, results = Seq(Result(RefType.anyref.asValType_!))))
+      TypeInfo(id = N, FunctionType(params = Seq.empty, results = Seq(Result(RefType.anyref))))
     )
     val entryFnInfo = FuncInfo(
       id = S(SymIdx(entryNme)),
@@ -1403,7 +1406,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val result = scope.nest givenIn:
       val wasmParams = params.params.map: p =>
         val paramNme = scope.allocateName(p.sym)
-        val param = WasmParam(S(paramNme), RefType.anyref.asValType_!)
+        val param = WasmParam(S(paramNme), RefType.anyref)
         ctx.addLocal(p.sym)
         param -> paramNme
       val (wasmBody, locals) = block(body)

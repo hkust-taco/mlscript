@@ -6,14 +6,6 @@ import mlscript.utils.*, shorthands.*
 import document.*
 
 object Instructions:
-  /**
-   * NOTE:
-   * `try_table`/custom catch clause helpers were removed from codegen because the previous
-   * implementation required `exnref` support which can only be enabled with the `--experimental-wasm-exnref`
-   * flag. Try/finally is currently rejected at compile time by `WatBuilder`. Later, it will be implemented
-   * using intrinsic function.
-   */
-
   /** Creates a `block` instruction. */
   def block(
       label: Opt[Str],
