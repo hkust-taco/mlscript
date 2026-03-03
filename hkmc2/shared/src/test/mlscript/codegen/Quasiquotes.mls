@@ -125,13 +125,15 @@ x `=> `if x `== `0.0 then `1.0 else x
 //│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.equals is only allowed in compiled files due to the lack of `import.meta` in REPL mode.
 //│ ║  l.124: 	x `=> `if x `== `0.0 then `1.0 else x
 //│ ╙──       	             ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // We cannot quote a symbol from another file here due to the lack of `import.meta` in REPL mode.
 :ge
 `id`(`42)
 //│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.id is only allowed in compiled files due to the lack of `import.meta` in REPL mode.
-//│ ║  l.131: 	`id`(`42)
+//│ ║  l.132: 	`id`(`42)
 //│ ╙──       	 ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 fun id(x) = x

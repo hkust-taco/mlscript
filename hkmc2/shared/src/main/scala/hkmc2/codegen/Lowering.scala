@@ -128,9 +128,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   def unit: Path =
     Select(Value.Ref(State.runtimeSymbol), Tree.Ident("Unit"))(S(State.unitSymbol))
   
+  
+  def compError: Block =
+    Throw(Value.Lit(Tree.StrLit("This code cannot be run as its compilation yielded an error.")))
+  
   def fail(err: ErrorReport): Block =
     raise(err)
-    End("error")
+    compError
   
   
   // type Rcd = (mut: Bool, args: List[RcdArg]) // * Better, but Scala's patmat exhaustiveness chokes on it
@@ -785,7 +789,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         msg"Unexpected term form in expression position (${t.describe})" ->
           t.toLoc :: Nil,
         source = Diagnostic.Source.Compilation)
-    case Error => Throw(Value.Lit(Tree.StrLit("This code cannot be run as its compilation yielded an error.")))
+    case Error => compError
     
     // case _ =>
     //   subTerm(t)(k)
