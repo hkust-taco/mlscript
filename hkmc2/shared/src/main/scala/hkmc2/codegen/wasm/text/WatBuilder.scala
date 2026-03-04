@@ -69,52 +69,39 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def singletonGlobalGet(info: SingletonInfo): Expr =
     global.get(GlobalIdx(SymIdx(info.globalName)), info.globalTy)
 
-  /** True when the lowered main block references `Unit` and needs synthesized singleton definition. */
-  private def requiresUnitSingleton(main: Block): Bool =
-    var required = false
-    val traverser = new BlockTraverser:
-      override def applyBlock(b: Block): Unit =
-        if required then ()
-        else b match
-          case Match(_, _, _, _: End) =>
-            required = true
-          case _ =>
-            super.applyBlock(b)
+  /** The runtime representation of Unit as a singleton object. */
+  private lazy val syntheticUnitDefn: ClsLikeDefn =
+    ClsLikeDefn(
+      owner = N,
+      isym = State.unitSymbol,
+      sym = BlockMemberSymbol("Unit", Nil),
+      ctorSym = N,
+      k = syntax.Obj,
+      paramsOpt = N,
+      auxParams = Nil,
+      parentPath = N,
+      methods = Nil,
+      privateFields = Nil,
+      publicFields = Nil,
+      preCtor = End(""),
+      ctor = End(""),
+      companion = N,
+      bufferable = N
+    )
 
-      override def applyPath(p: Path): Unit =
-        if required then ()
-        else p match
-          case sel: Select if sel.symbol.contains(State.unitSymbol) =>
-            required = true
-          case Value.Ref(l, disamb)
-              if (l is State.unitSymbol) || disamb.contains(State.unitSymbol) =>
-            required = true
-          case _ => super.applyPath(p)
-    traverser.applyBlock(main)
-    required
+  /** Registration path for synthetic Unit runtime state. */
+  private def RegisterUnitSingleton()(using Ctx, Raise, Scope): Unit =
+    val unitDefn = syntheticUnitDefn
+    if ctx.containsSingleton(unitDefn.sym) then return
 
-  /** Prepends a synthetic `object Unit` definition only when the main block requires it. */
-  private def synthesizeUnitObject(main: Block): Block =
-    if !requiresUnitSingleton(main) then main
-    else
-      val unitDefn = ClsLikeDefn(
-        owner = N,
-        isym = State.unitSymbol,
-        sym = BlockMemberSymbol("Unit", Nil),
-        ctorSym = N,
-        k = syntax.Obj,
-        paramsOpt = N,
-        auxParams = Nil,
-        parentPath = N,
-        methods = Nil,
-        privateFields = Nil,
-        publicFields = Nil,
-        preCtor = End(""),
-        ctor = End(""),
-        companion = N,
-        bufferable = N
-      )
-      Define(unitDefn, main)
+    if ctx.getType(unitDefn.sym).isEmpty then
+      createDefnTypes(Define(unitDefn, End("")))
+
+    ctx.pushLocal()
+    try
+      returningTerm(Define(unitDefn, End("")))
+      ()
+    finally ctx.popLocal()
 
   /** Registers eager singleton runtime state by creating its global and start-init action. */
   private def registerSingletonInit(clsLikeDefn: ClsLikeDefn, typeref: TypeIdx)(using
@@ -438,7 +425,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ref.i31(i32.const(if value then 1 else 0))
     case Value.Lit(IntLit(value)) =>
       ref.i31(i32.const(value.toInt))
-    case Value.Ref(l, _) =>
+    case Value.Ref(l, disamb) =>
+      if (l is State.unitSymbol) || disamb.contains(State.unitSymbol) then
+        RegisterUnitSingleton()
       singletonInfoFor(l) match
         case S(info) => singletonGlobalGet(info)
         case N =>
@@ -514,6 +503,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case sel @ Select(qual, id) =>
       sel.symbol match
         case S(selObj: ModuleOrObjectSymbol) =>
+          if selObj is State.unitSymbol then
+            RegisterUnitSingleton()
           singletonInfoFor(selObj) match
             case S(info) => singletonGlobalGet(info)
             case N =>
@@ -722,16 +713,20 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     i31.get(ref.cast(getLocalAnyref(name), RefType.i31ref), true)
 
   def returningTerm(t: Block)(using Ctx, Raise, Scope): Expr =
+    def isControlTransfer(expr: Expr): Bool =
+      expr.resultType.contains(UnreachableType) || expr.mnemonic == "return"
+
     def asStatement(expr: Expr): Expr =
-      expr.resultType match
-        case S(UnreachableType) => expr
-        case S(_) => FoldedInstr(
-            mnemonic = "drop",
-            instrargs = Seq.empty,
-            stackargs = Seq(expr),
-            resultTypes = Seq.empty
-          )
-        case N => expr
+      if isControlTransfer(expr) then expr
+      else
+        expr.resultType match
+          case S(_) => FoldedInstr(
+              mnemonic = "drop",
+              instrargs = Seq.empty,
+              stackargs = Seq(expr),
+              resultTypes = Seq.empty
+            )
+          case N => expr
 
     t match
     case _: HandleBlock =>
@@ -1157,10 +1152,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       def getScrutExpr: Expr = result(scrut)
 
       def assignTailResult(target: LocalIdx, expr: Expr): Expr =
-        expr.resultType match
-          case S(UnreachableType) => expr
-          case S(_) => local.set(target, expr)
-          case N => expr
+        if isControlTransfer(expr) then expr
+        else
+          expr.resultType match
+            case S(_) => local.set(target, expr)
+            case N => expr
 
       def lowerMatchBody(expr: Expr): Expr =
         matchResLocal match
@@ -1361,18 +1357,16 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         )
       )
     )
-    
-    val main = synthesizeUnitObject(p.main)
 
     // Two-pass scheme: register all supported top-level class struct types before compiling any
     // functions, so all class types are available during nested function codegen.
-    createDefnTypes(main)
+    createDefnTypes(p.main)
 
     // Compile the entry function under a dedicated local scope so that any temp locals introduced
     // during codegen (e.g., via `local.tee`) are declared in the entry function.
     ctx.pushLocal()
     val (entryFnExpr, entryFnLocals) =
-      block(main)(using ctx, summon[Raise], summon[Scope])
+      block(p.main)(using ctx, summon[Raise], summon[Scope])
     val entryExtraLocals = getExtraLocals(using ctx).filterNot(entryFnLocals.toSet.contains)
 
     val entrySym = BlockMemberSymbol("entry", Nil)

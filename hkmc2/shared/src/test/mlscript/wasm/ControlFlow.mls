@@ -10,27 +10,15 @@ let i = 0 in
 //│ Wat:
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $Unit (sub $Object (struct (field $$tag (mut i32)))))
 //│   (type $Unit_ctor (func (result (ref null any))))
-//│   (type (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type (func (result (ref null any))))
 //│   (type $start (func))
 //│   (global $Unit$inst (mut (ref null $Unit)) (ref.null $Unit))
 //│   (start 3)
-//│   (func  (type $Unit_ctor) (result (ref null any))
-//│     (local $this (ref null any))
-//│     (block (result (ref null any))
-//│       (local.set $this
-//│         (struct.new_default $Unit))
-//│       (struct.set $Unit 0
-//│         (ref.cast (ref $Unit)
-//│           (local.get $this))
-//│         (i32.const 1))
-//│       (nop)
-//│       (return
-//│         (local.get $this))))
-//│   (func  (type 3) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│   (func  (type 1) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
 //│     (if (result (ref null any))
 //│       (i32.and
 //│         (ref.test (ref null i31)
@@ -48,6 +36,18 @@ let i = 0 in
 //│                 (local.get $rhs))))))
 //│       (else
 //│         (unreachable))))
+//│   (func  (type $Unit_ctor) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Unit))
+//│       (struct.set $Unit 0
+//│         (ref.cast (ref $Unit)
+//│           (local.get $this))
+//│         (i32.const 2))
+//│       (nop)
+//│       (return
+//│         (local.get $this))))
 //│   (func  (type 4) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
 //│     (if (result (ref null any))
 //│       (i32.and
@@ -70,56 +70,52 @@ let i = 0 in
 //│     (block
 //│       (global.set $Unit$inst
 //│         (ref.cast (ref null $Unit)
-//│           (call 0)))))
+//│           (call 1)))))
 //│   (func $entry (type 5) (result (ref null any))
 //│     (local $i (ref null any))
 //│     (local $scrut (ref null any))
 //│     (local $tmp (ref null any))
-//│     (local $Unit (ref null any))
-//│     (local $Unit1 (ref null any))
 //│     (local $matchRes (ref null any))
 //│     (block (result (ref null any))
-//│       (nop)
+//│       (local.set $i
+//│         (ref.i31
+//│           (i32.const 0)))
 //│       (block (result (ref null any))
-//│         (local.set $i
-//│           (ref.i31
-//│             (i32.const 0)))
-//│         (block (result (ref null any))
-//│           (block $lbl
-//│             (loop $lbl_cont
-//│               (drop
+//│         (block $lbl
+//│           (loop $lbl_cont
+//│             (drop
+//│               (block (result (ref null any))
+//│                 (local.set $scrut
+//│                   (call 0
+//│                     (local.get $i)
+//│                     (ref.i31
+//│                       (i32.const 10))))
 //│                 (block (result (ref null any))
-//│                   (local.set $scrut
-//│                     (call 1
-//│                       (local.get $i)
-//│                       (ref.i31
-//│                         (i32.const 10))))
-//│                   (block (result (ref null any))
-//│                     (block $match
-//│                       (local.set $matchRes
-//│                         (global.get $Unit$inst))
-//│                       (if
-//│                         (i32.eq
-//│                           (i31.get_s
-//│                             (ref.cast (ref null i31)
-//│                               (local.get $scrut)))
-//│                           (i32.const 1))
-//│                         (then
-//│                           (block $arm
+//│                   (block $match
+//│                     (local.set $matchRes
+//│                       (global.get $Unit$inst))
+//│                     (if
+//│                       (i32.eq
+//│                         (i31.get_s
+//│                           (ref.cast (ref null i31)
+//│                             (local.get $scrut)))
+//│                         (i32.const 1))
+//│                       (then
+//│                         (block $arm
+//│                           (block
+//│                             (local.set $tmp
+//│                               (call 2
+//│                                 (local.get $i)
+//│                                 (ref.i31
+//│                                   (i32.const 1))))
 //│                             (block
-//│                               (local.set $tmp
-//│                                 (call 2
-//│                                   (local.get $i)
-//│                                   (ref.i31
-//│                                     (i32.const 1))))
-//│                               (block
-//│                                 (local.set $i
-//│                                   (local.get $tmp))
-//│                                 (br $lbl_cont)))
-//│                             (br $match))))
-//│                       (nop))
-//│                     (local.get $matchRes))))))
-//│           (local.get $i)))))
+//│                               (local.set $i
+//│                                 (local.get $tmp))
+//│                               (br $lbl_cont)))
+//│                           (br $match))))
+//│                     (nop))
+//│                   (local.get $matchRes))))))
+//│         (local.get $i))))
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))
 //│ Wasm result:
@@ -159,3 +155,35 @@ while x < 5 do
 c
 //│ Wasm result:
 //│ = 25
+
+
+fun nonTailMatchReturn(x) =
+  if x is
+    0 then return 100
+    1 then 10
+    else 20
+  x + 1
+nonTailMatchReturn(0)
+//│ Wasm result:
+//│ = 100
+
+
+fun tailMatchReturn(x) =
+  if x is
+    0 then return 7
+    1 then x + 41
+    else 99
+tailMatchReturn(0)
+//│ Wasm result:
+//│ = 7
+
+
+fun loopMatchReturn() =
+  let i = 0 in
+    while true do
+      if i is
+        3 then return i
+        else set i += 1
+loopMatchReturn()
+//│ Wasm result:
+//│ = 3
