@@ -245,6 +245,19 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ctx.addLocal(sym)
     LocalIdx(SymIdx(nme))
 
+  /**
+   * Binds constructor self (`thisSym`) to the Wasm local name `this` in the current scope/context.
+   */
+  private def bindCtorThis(thisSym: Local)(using Ctx, Raise, Scope): LocalIdx -> Str =
+    val thisName = "this"
+    scope.lookup(thisSym) match
+      case S(`thisName`) => ()
+      case _ =>
+        scope.addToBindings(thisSym, thisName, shadow = true)
+    if !ctx.containsLocal(thisSym) then
+      ctx.addLocal(thisSym)
+    LocalIdx(SymIdx(thisName)) -> thisName
+
   /** Returns locals allocated during codegen (e.g., temp locals). */
   private def getExtraLocals(using Ctx): Seq[Local] =
     ctx.getWasmLocals._2.getOrElse(Seq.empty)
@@ -392,7 +405,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 s"Block IR: `${ts.toString}`\nScope: ${scope.toString}\nWasm Locals: ${ctx.getAllWasmLocals.toString}"
               )
             )
-          local.get(LocalIdx(SymIdx(scope.findThis_!(ts))), RefType.anyref)
+          local.get(LocalIdx(SymIdx(scope.lookup_!(ts, ts.toLoc))), RefType.anyref)
         case l =>
           if ctx.containsLocal(l) then
             local.get(LocalIdx(SymIdx(scope.lookup_!(l, l.toLoc))), RefType.anyref)
@@ -453,7 +466,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case Value.This(sym) =>
       // TODO(Derppening): Add type tracking and refinement for locals, remove the `ref.cast`
       ref.cast(
-        local.get(LocalIdx(SymIdx(scope.findThis_!(sym))), RefType.anyref),
+        local.get(LocalIdx(SymIdx(scope.lookup_!(sym, sym.toLoc))), RefType.anyref),
         RefType(
           sym.asBlkMember.fold(baseObjectTypeIdx)(ctx.getType_!(_)),
           nullable = false
@@ -904,13 +917,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               )
 
         case defn: (FunDefn | ClsLikeDefn) =>
-          val outerScope = scope
-          val (thisProxy, res) = scope.nestRebindThis(
-            // * Either this is an InnerSymbol or this is a Fun,
-            // * and we need to rebind `this` to None to shadow it.
-            defn.innerSym.collectFirst:
-              case s: InnerSymbol => s
-          ):
+          val res = scope.nest givenIn:
             boundary:
               defn match
                 case FunDefn(params = Nil) =>
@@ -927,8 +934,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   val result = pss.foldRight(bod):
                     case (ps, block) =>
                       Return(Lambda(ps, block), false)
-                  val name = if sym.nameIsMeaningful then S(sym.nme) else N
-                  val (params, bodyWat, locals) = setupFunction(name, ps, result)
+                  val (params, bodyWat, locals) = setupFunction(ps, result)
                   if sym.nameIsMeaningful then
                     val funcTy = ctx.addType(
                       sym = N,
@@ -1007,8 +1013,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         case Nil => (ctorAuxParams, Nil)
                     case Some(_) => (ctorAuxParams, ctorParams)
 
-                  ctx.addLocal(clsLikeDefn.isym)
-                  val thisVar = getVar(clsLikeDefn.isym, N).instrargs(0).asInstanceOf[LocalIdx]
+                  val (thisVar, thisVarName) = bindCtorThis(clsLikeDefn.isym)
                   val (ctorWat, ctorLocals) = block(clsLikeDefn.ctor)
                   
                   val tagValue = ctx.getType_!(clsLikeDefn.sym, resolveSymIdx = true) match
@@ -1060,7 +1065,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       params = ctorParams,
                       nResults = ctorCode.resultTypes.length,
                       locals =
-                        (clsLikeDefn.isym -> scope.findThis_!(clsLikeDefn.isym)) +: ctorLocals.map:
+                        (clsLikeDefn.isym -> thisVarName) +: ctorLocals.map:
                           l =>
                             l -> scope.lookup_!(l, l.toLoc)
                       ,
@@ -1079,23 +1084,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     ),
                     extraInfo = S(defn.showAsTree)
                   )
-          end val
 
           val rstBlk = returningTerm(rst)
-          thisProxy match
-            case S(proxy) if !scope.thisProxyDefined =>
-              scope.thisProxyDefined = true
-              errExpr(
-                Ls(
-                  msg"WatBuilder::returningTerm for Define(...) where `!scope.thisProxyDefined` not implemented yet" -> defn.sym.toLoc
-                ),
-                extraInfo = S(defn.showAsTree)
-              )
-            case _ => Instructions.block(
-                label = N,
-                children = Seq(res, rstBlk),
-                resultTypes = resultClauses(rstBlk)
-              )
+          Instructions.block(
+            label = N,
+            children = Seq(res, rstBlk),
+            resultTypes = resultClauses(rstBlk)
+          )
 
     case Return(res, true) =>
       val resWat = result(res)
@@ -1423,11 +1418,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     withLocalDelta:
       nonNestedScoped(t)(returningTerm)
 
-  def body(t: Block)(using Ctx, Raise, Scope): (Expr, Seq[Local]) =
-    scope.nest givenIn:
-      block(t)
-
-  def setupFunction(name: Option[Str], params: ParamList, body: Block)(using
+  def setupFunction(params: ParamList, body: Block)(using
       Ctx,
       Raise,
       Scope
