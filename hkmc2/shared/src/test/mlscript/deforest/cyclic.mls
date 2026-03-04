@@ -24,9 +24,9 @@ test
 //│ deforest > ==============
 //│ deforest > Ref(member:C,Some(object:C)) ->
 //│ deforest > 	Ref(var:a,None)
-//│ deforest > Ref(member:C,Some(object:C)) ->
-//│ deforest > 	Ref(var:a,None)
 //│ deforest > Ref(member:D,Some(object:D)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > Ref(member:C,Some(object:C)) ->
 //│ deforest > 	Ref(var:a,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:a,None):
@@ -41,22 +41,10 @@ fun maxOpt(ls) = if ls is
     if maxOpt(t) is
       None then Some(h)
       Some(m) then if m > h then Some(m) else Some(h)
-drop maxOpt(id(1 :: 2 :: Nil))
+maxOpt(id(1 :: 2 :: Nil))
 //│ deforest > ==============
-//│ deforest > Call(Ref(member:Some,Some((Fun)term:class:Some.Some)),List(Arg(None,Ref(var:m,None)))) ->
-//│ deforest > 	Ref($scrut,None)
-//│ deforest > 	Select(Ref($scrut,None),Ident(x))
-//│ deforest > Call(Ref(member:Some,Some((Fun)term:class:Some.Some)),List(Arg(None,Ref(var:h,None)))) ->
-//│ deforest > 	Ref($scrut,None)
-//│ deforest > 	Select(Ref($scrut,None),Ident(x))
-//│ deforest > Call(Ref(member:Some,Some((Fun)term:class:Some.Some)),List(Arg(None,Ref(var:h,None)))) ->
-//│ deforest > 	Ref($scrut,None)
-//│ deforest > 	Select(Ref($scrut,None),Ident(x))
-//│ deforest > Ref(member:None,Some(object:None)) ->
-//│ deforest > 	Ref($scrut,None)
 //│ deforest > ========
-//│ deforest > free vars of Ref($scrut,None):
-//│ deforest > 	List(var:h, var:m, $scrut, $arg$Some$0$)
+//│ = Some(2)
 
 
 :deforest
@@ -78,10 +66,10 @@ modSome(Some(17), 3)
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List(var:m, var:n, $scrut, $arg$Some$0$, $tmp, $tmp)
 //│ JS (unsanitized):
-//│ let modSome, tmp4, modSome_8$modSome, modSome_8$x_Some, modSome_8$x_rest, Some_x; /* scoped */
+//│ let modSome, tmp3, modSome_8$modSome, modSome_8$x_Some, modSome_8$x_rest, Some_x; /* scoped */
 //│ modSome_8$modSome = function modSome_8$modSome(x, m) {
-//│   let n, scrut, arg$Some$0$, tmp5, tmp6; /* scoped */
-//│   return x(m, n, scrut, arg$Some$0$, tmp5, tmp6)
+//│   let n, scrut, arg$Some$0$, tmp4, tmp5; /* scoped */
+//│   return x(m, n, scrut, arg$Some$0$, tmp4, tmp5)
 //│ };
 //│ modSome_8$x_Some = function modSome_8$x_Some(fv_m, fv_n, fv_scrut, fv_arg$Some$0$, fv_tmp, fv_tmp1, Some_x1) {
 //│   fv_arg$Some$0$ = Some_x1;
@@ -103,15 +91,15 @@ modSome(Some(17), 3)
 //│ modSome_8$x_rest = function modSome_8$x_rest() {};
 //│ modSome = function modSome(x, m) {
 //│   loopLabel: while (true) {
-//│     let n, scrut, arg$Some$0$, tmp5, tmp6; /* scoped */
+//│     let n, scrut, arg$Some$0$, tmp4, tmp5; /* scoped */
 //│     if (x instanceof Some1.class) {
 //│       arg$Some$0$ = x.x;
 //│       n = arg$Some$0$;
 //│       scrut = n >= m;
 //│       if (scrut === true) {
-//│         tmp5 = n - m;
-//│         tmp6 = Some1(tmp5);
-//│         x = tmp6;
+//│         tmp4 = n - m;
+//│         tmp5 = Some1(tmp4);
+//│         x = tmp5;
 //│         continue loopLabel
 //│       } else {
 //│         return Some1(n)
@@ -125,10 +113,10 @@ modSome(Some(17), 3)
 //│   }
 //│ };
 //│ Some_x = 17;
-//│ tmp4 = (fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
+//│ tmp3 = (fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
 //│   return modSome_8$x_Some(fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, Some_x)
 //│ };
-//│ modSome_8$modSome(tmp4, 3)
+//│ modSome_8$modSome(tmp3, 3)
 //│ deforest > ==============
 //│ deforest > Call(Ref(member:Some,Some((Fun)term:class:Some.Some)),List(Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:x,None)
@@ -150,8 +138,10 @@ fun maxOpt2(ls, x) = if ls is
     Some(m) and
       h > m then maxOpt2(t, Some(h))
       else maxOpt2(t, Some(m))
+maxOpt2(id(1 :: 2 :: 3 :: Nil), None)
 //│ deforest > ==============
 //│ deforest > ========
+//│ = Some(3)
 
 :deforest
 :sjs
@@ -172,16 +162,16 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ deforest > free vars of Ref(var:xsys,None):
 //│ deforest > 	List(var:f, var:hy, var:ty, var:hx, var:tx, $element1$, $element0$, $arg$Cons$0$, $arg$Cons$1$, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ JS (unsanitized):
-//│ let zipWith, tmp5, tmp6, tmp7, lambda, zipWith_19$zipWith, zipWith_19$xsys_2, zipWith_19$xsys_rest, zipWith_19$split_default$_rest, zipWith_19$split_root$_rest, tup2_0, tup2_1; /* scoped */
+//│ let zipWith, tmp8, tmp9, tmp10, lambda, zipWith_19$zipWith, zipWith_19$xsys_2, zipWith_19$xsys_rest, zipWith_19$split_default$_rest, zipWith_19$split_root$_rest, tup2_0, tup2_1; /* scoped */
 //│ zipWith_19$zipWith = function zipWith_19$zipWith(xsys, f) {
-//│   let hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp8, tmp9, tmp10, tmp11; /* scoped */
+//│   let hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp11, tmp12, tmp13, tmp14; /* scoped */
 //│   split_root$: {
 //│     split_default$: {
-//│       return xsys(f, hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp8, tmp9, tmp10, tmp11, tmp11);
+//│       return xsys(f, hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp11, tmp12, tmp13, tmp14, tmp14);
 //│     }
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   }
-//│   return tmp11
+//│   return tmp14
 //│ };
 //│ zipWith_19$xsys_2 = function zipWith_19$xsys_2(fv_f, fv_hy, fv_ty, fv_hx, fv_tx, fv_element1$, fv_element0$, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_arg$Cons$0$1, fv_arg$Cons$1$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, tup2_01, tup2_11) {
 //│   fv_element0$ = tup2_01;
@@ -231,7 +221,7 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│   return fv_tmp
 //│ };
 //│ zipWith = function zipWith(xsys, f) {
-//│   let hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp8, tmp9, tmp10, tmp11; /* scoped */
+//│   let hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp11, tmp12, tmp13, tmp14; /* scoped */
 //│   split_root$: {
 //│     split_default$: {
 //│       if (runtime.Tuple.isArrayLike(xsys) && xsys.length === 2) {
@@ -247,20 +237,20 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│             hy = arg$Cons$0$1;
 //│             tx = arg$Cons$1$;
 //│             hx = arg$Cons$0$;
-//│             tmp8 = runtime.safeCall(f(hx, hy));
-//│             tmp9 = globalThis.Object.freeze([
+//│             tmp11 = runtime.safeCall(f(hx, hy));
+//│             tmp12 = globalThis.Object.freeze([
 //│               tx,
 //│               ty
 //│             ]);
-//│             tmp10 = zipWith(tmp9, f);
-//│             tmp11 = Cons1(tmp8, tmp10);
+//│             tmp13 = zipWith(tmp12, f);
+//│             tmp14 = Cons1(tmp11, tmp13);
 //│             break split_root$
 //│           } else {
 //│             break split_default$
 //│           }
 //│         } else if (element0$ instanceof Nil1.class) {
 //│           if (element1$ instanceof Nil1.class) {
-//│             tmp11 = Nil1;
+//│             tmp14 = Nil1;
 //│             break split_root$
 //│           } else {
 //│             break split_default$
@@ -274,17 +264,17 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│     }
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   }
-//│   return tmp11
+//│   return tmp14
 //│ };
-//│ tmp5 = Predef.id(Nil1);
-//│ tmp6 = Predef.id(Nil1);
-//│ tup2_0 = tmp5;
-//│ tup2_1 = tmp6;
-//│ tmp7 = (fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4) => {
+//│ tmp8 = Predef.id(Nil1);
+//│ tmp9 = Predef.id(Nil1);
+//│ tup2_0 = tmp8;
+//│ tup2_1 = tmp9;
+//│ tmp10 = (fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4) => {
 //│   return zipWith_19$xsys_2(fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, tup2_0, tup2_1)
 //│ };
 //│ lambda = (undefined, function (x, y) { return x });
-//│ zipWith_19$zipWith(tmp7, lambda)
+//│ zipWith_19$zipWith(tmp10, lambda)
 //│ deforest > ==============
 //│ deforest > Tuple(false,List(Arg(None,Ref(var:tx,None)), Arg(None,Ref(var:ty,None)))) ->
 //│ deforest > 	Ref(var:xsys,None)

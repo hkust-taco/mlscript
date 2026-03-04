@@ -47,12 +47,12 @@ fun map(ls) = if ls is
   h :: t then (h + 4) :: map(t)
 map(enumFromTo(1, 4))
 //│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List(var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
@@ -64,12 +64,12 @@ fun sum(ls) = if ls is
   h :: t then h + sum(t)
 sum(enumFromTo(1,10))
 //│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List(var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
@@ -82,12 +82,12 @@ fun map(f, ls) =
     h :: t then f(h) :: map(f, t)
 map(x => x + 4, enumFromTo(1, 4))
 //│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
@@ -101,12 +101,12 @@ fun map(f, ls) =
   )(f)
 map(x => x + 4, enumFromTo(1, 4))
 //│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List(var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, var:f, $tmp)
@@ -120,12 +120,12 @@ fun sum(ls, a) = if ls is
   h :: t then sum(t, h + a)
 sum(enumFromTo(1, 10), 0)
 //│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List(var:a, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
@@ -225,12 +225,12 @@ fun flatten(ls_flatten) = if ls_flatten is
 fun test(ls) = sum(flatten(ls))
 test(id(mk2d(4)))
 //│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls_sum,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:x,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls_sum,None)
 //│ deforest > 	Select(Ref(var:ls_sum,None),Ident(h))
 //│ deforest > 	Select(Ref(var:ls_sum,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(var:ls_sum,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls_sum,None):
 //│ deforest > 	List(var:x, var:xs, $arg$Cons$0$, $arg$Cons$1$, $tmp)

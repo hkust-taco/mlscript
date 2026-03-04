@@ -126,12 +126,12 @@ fun test() =
   c(g(true))
 test()
 //│ deforest > ==============
-//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(11))))) ->
-//│ deforest > 	Ref(var:x,None)
-//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
 //│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Lit(IntLit(22))))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(bb))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(11))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List(var:x, var:x, $arg$BB$0$, $arg$AA$0$)
@@ -892,9 +892,9 @@ c(B)
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(member:A,Some(object:A))
 //│ deforest > ========
-//│ deforest > free vars of Ref(member:A,Some(object:A)):
-//│ deforest > 	List()
 //│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(member:A,Some(object:A)):
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(member:A,Some(object:A)):
 //│ deforest > 	List()

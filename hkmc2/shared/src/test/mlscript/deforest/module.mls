@@ -183,12 +183,12 @@ module DeforestList with
 DeforestList.res + DeforestList.main()
 // DeforestList.main()
 //│ deforest > ==============
+//│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Select(Ref(module:DeforestList,None),Ident(Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
-//│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
-//│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Select(Ref(module:DeforestList,None),Ident(Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
@@ -220,12 +220,12 @@ module DeforestList with
   val res = DeforestList.sum(DeforestList.enum(100))
 DeforestList.res + DeforestList.main()
 //│ deforest > ==============
+//│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Select(Ref(module:DeforestList,None),Ident(Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
-//│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
-//│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Select(Ref(module:DeforestList,None),Ident(Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))

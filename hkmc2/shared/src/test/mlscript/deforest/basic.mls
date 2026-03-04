@@ -203,12 +203,12 @@ fun sum(ls) = if ls is
 fun enum(n) = if n > 0 then n :: enum(n - 1) else Nil
 sum(enum(3))
 //│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List(var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)

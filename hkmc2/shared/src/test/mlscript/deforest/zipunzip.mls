@@ -21,8 +21,6 @@ fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
 fun testUnzipZip(n) = unzip(zip(id(enumFromTo(1, n)), id(enumFromTo(2, n + 3))))
 testUnzipZip(3)
 //│ deforest > ==============
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(var:ls_unzip,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls_unzip,None)
 //│ deforest > 	Select(Ref(var:ls_unzip,None),Ident(h))
@@ -31,6 +29,8 @@ testUnzipZip(3)
 //│ deforest > 	Ref($arg$Cons$0$,None)
 //│ deforest > 	Select(Ref($arg$Cons$0$,None),Ident(a))
 //│ deforest > 	Select(Ref($arg$Cons$0$,None),Ident(b))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls_unzip,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls_unzip,None):
 //│ deforest > 	List(var:t, var:a, var:b, var:atail, var:btail, $scrut, $arg$Cons$0$, $arg$Cons$1$, $arg$Pair$0$, $arg$Pair$1$, $arg$Pair$0$, $arg$Pair$1$, $tmp, $tmp, $tmp, $tmp)
@@ -51,7 +51,23 @@ fun testZipUnzip(n) = if unzip(id(makeZippedList(n))) is
   Pair(xs, ys) then zip(xs, ys)
 testZipUnzip(3)
 //│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:xs_zip,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref(var:atail,None)))) ->
+//│ deforest > 	Ref(var:xs_zip,None)
+//│ deforest > 	Select(Ref(var:xs_zip,None),Ident(h))
+//│ deforest > 	Select(Ref(var:xs_zip,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ys_zip,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:b,None)), Arg(None,Ref(var:btail,None)))) ->
+//│ deforest > 	Ref(var:ys_zip,None)
+//│ deforest > 	Select(Ref(var:ys_zip,None),Ident(h))
+//│ deforest > 	Select(Ref(var:ys_zip,None),Ident(t))
 //│ deforest > ========
+//│ deforest > free vars of Ref(var:ys_zip,None):
+//│ deforest > 	List(var:x, var:xt, var:y, var:yt, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > free vars of Ref(var:xs_zip,None):
+//│ deforest > 	List(var:ys_zip, var:x, var:xt, var:y, var:yt, $arg$Cons$0$, $arg$Cons$1$, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ = Cons(Pair(3, 4), Cons(Pair(2, 3), Cons(Pair(1, 2), Nil)))
 
 
@@ -73,6 +89,18 @@ fun testZipMapBothUnzip(n) = if unzip(id(makeZippedList(n))) is
   )
 testZipMapBothUnzip(4)
 //│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls_map,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref(var:atail,None)))) ->
+//│ deforest > 	Ref(var:ls_map,None)
+//│ deforest > 	Select(Ref(var:ls_map,None),Ident(h))
+//│ deforest > 	Select(Ref(var:ls_map,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls_map,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:b,None)), Arg(None,Ref(var:btail,None)))) ->
+//│ deforest > 	Ref(var:ls_map,None)
+//│ deforest > 	Select(Ref(var:ls_map,None),Ident(h))
+//│ deforest > 	Select(Ref(var:ls_map,None),Ident(t))
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:xs_zip,None)
 //│ deforest > 	Select(Ref(var:xs_zip,None),Ident(h))
@@ -86,6 +114,10 @@ testZipMapBothUnzip(4)
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ys_zip,None)
 //│ deforest > ========
+//│ deforest > free vars of Ref(var:ls_map,None):
+//│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
+//│ deforest > free vars of Ref(var:ls_map,None):
+//│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:ys_zip,None):
 //│ deforest > 	List(var:x, var:xt, var:y, var:yt, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:xs_zip,None):

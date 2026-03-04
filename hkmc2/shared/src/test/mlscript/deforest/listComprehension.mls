@@ -42,12 +42,12 @@ test()
 //│ deforest > 	Select(Ref(var:ys_zip,None),Ident(t))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ys_zip,None)
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(var:ls2,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls2,None)
 //│ deforest > 	Select(Ref(var:ls2,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls2,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls2,None)
 //│ deforest > Call(Ref(member:Pair,Some((Fun)term:class:Pair.Pair)),List(Arg(None,Ref(var:x,None)), Arg(None,Ref(var:y,None)))) ->
 //│ deforest > 	Ref($arg$Cons$0$,None)
 //│ deforest > 	Select(Ref($arg$Cons$0$,None),Ident(b))
@@ -64,12 +64,12 @@ test()
 //│ deforest > 	Select(Ref(var:ys_zip,None),Ident(t))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ys_zip,None)
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Ref(member:Pair,Some((Fun)term:class:Pair.Pair)),List(Arg(None,Ref(var:x,None)), Arg(None,Ref(var:y,None)))) ->
 //│ deforest > 	Ref($arg$Cons$0$,None)
 //│ deforest > 	Select(Ref($arg$Cons$0$,None),Ident(b))
@@ -77,14 +77,14 @@ test()
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:xs_zip,None):
 //│ deforest > 	List(var:ys_zip, var:x, var:xt, var:y, var:yt, $arg$Cons$0$, $arg$Cons$1$, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:xs_zip,None):
-//│ deforest > 	List(var:ys_zip, var:x, var:xt, var:y, var:yt, $arg$Cons$0$, $arg$Cons$1$, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > free vars of Ref(var:ys_zip,None):
+//│ deforest > 	List(var:x, var:xt, var:y, var:yt, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ deforest > free vars of Ref($arg$Cons$0$,None):
 //│ deforest > 	List(member:lscomp2, var:x, var:y1, var:t2, var:y2, var:z, $scrut, $arg$Cons$1$, $arg$Pair$0$, $arg$Pair$1$, $tmp, $tmp, $tmp, member:lscomp1, var:t, $tmp, $tmp)
 //│ deforest > free vars of Ref($arg$Cons$0$,None):
 //│ deforest > 	List(member:lscomp1, var:x, var:t, var:y1, $arg$Cons$1$, $arg$Pair$0$, $arg$Pair$1$, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:ys_zip,None):
-//│ deforest > 	List(var:x, var:xt, var:y, var:yt, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > free vars of Ref(var:xs_zip,None):
+//│ deforest > 	List(var:ys_zip, var:x, var:xt, var:y, var:yt, $arg$Cons$0$, $arg$Cons$1$, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List(member:lscomp1, var:x, var:t, var:y1, $arg$Cons$0$, $arg$Cons$1$, $arg$Pair$0$, $arg$Pair$1$, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:ls2,None):
@@ -109,12 +109,12 @@ fun test() =
   concatMap(f1, Pair(5, 10) :: Nil)
 test()
 //│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:xs,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
 //│ deforest > 	Ref(var:xs,None)
 //│ deforest > 	Select(Ref(var:xs,None),Ident(t))
 //│ deforest > 	Select(Ref(var:xs,None),Ident(h))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(var:xs,None)
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:xs,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
