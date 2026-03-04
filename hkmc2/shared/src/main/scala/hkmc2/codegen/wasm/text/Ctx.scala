@@ -159,6 +159,21 @@ class TypeInfo(
       doc"(type${idDoc.surroundUnlessEmpty(doc" ")} ${compType.toWat})"
 end TypeInfo
 
+/**
+ * A WebAssembly exception tag declaration.
+ *
+ * In Wasm, a `tag` names an exception kind and points to a function type that describes the
+ * payload values carried by `throw tag ...` and extracted by matching `catch tag ...`.
+ */
+class TagInfo(
+    val id: SymIdx,
+    val typeIdx: TypeIdx
+) extends ToWat:
+
+  def toWat: Document =
+    doc"""(tag ${id.toWat} (type ${typeIdx.toWat})) # (export "${id.id}" (tag ${id.toWat}))"""
+end TagInfo
+
 enum WasmIntrinsicType:
   case TupleArray(mutable: Bool)
 
@@ -200,6 +215,7 @@ object Ctx:
     funcInfosByIndex = MutMap.empty,
     globals = ArrayBuf.empty,
     namedFuncs = MutMap.empty,
+    tags = ArrayBuf.empty,
     namedGlobals = MutMap.empty,
     locals = MutMap() :: Nil,
     startFunc = N
@@ -247,6 +263,7 @@ class Ctx(
     funcInfosByIndex: MutMap[NumIdx, FuncInfo],
     globals: ArrayBuf[GlobalInfo],
     namedFuncs: MutMap[Symbol, NumIdx],
+    tags: ArrayBuf[TagInfo],
     namedGlobals: MutMap[Symbol, NumIdx],
     var locals: Ls[MutMap[Local, NumIdx]],
     private var startFunc: Opt[FuncIdx]
@@ -256,6 +273,7 @@ class Ctx(
 
   private val wasmIntrinsicFuncs: MutMap[Str, FuncIdx] = MutMap.empty
   private val wasmIntrinsicTypes: MutMap[WasmIntrinsicType, TypeIdx] = MutMap.empty
+  private val wasmIntrinsicTags: MutMap[Str, TagIdx] = MutMap.empty
 
   private val cachedMemoryImport: MutMap[(Str, Str), Int] = MutMap.empty
   private val cachedFunctionImports: MutMap[(Str, Str), FuncIdx] = MutMap.empty
@@ -361,6 +379,11 @@ class Ctx(
   /** Adds a data segment into this context. */
   def addDataSegment(seg: DataSegment): Unit =
     dataSegments += seg
+
+  /** Adds a tag into this context. */
+  def addTag(tagInfo: TagInfo): TagIdx =
+    tags += tagInfo
+    TagIdx(tagInfo.id)
 
   /**
    * Returns the [[FuncIdx]] of the given `funcref`, optionally resolving the symbolic index into a
@@ -495,6 +518,10 @@ class Ctx(
   def getOrCreateWasmIntrinsicType(key: WasmIntrinsicType, createType: => TypeIdx): TypeIdx =
     wasmIntrinsicTypes.getOrElseUpdate(key, createType)
 
+  /** Returns the cached [[TagIdx]] for the intrinsic tag named `name`, creating it if absent. */
+  def getOrCreateWasmIntrinsicTag(name: Str, createTag: => TagIdx): TagIdx =
+    wasmIntrinsicTags.getOrElseUpdate(name, createTag)
+
   def toWat: Document =
     doc"(module #{  # ${
         (
@@ -503,6 +530,7 @@ class Ctx(
             ++ functionImports.toSeq.map(_.toWat)
             ++ dataSegments.toSeq.map(_.toWat)
             ++ globals.toSeq.map(_.toWat)
+            ++ tags.toSeq.map(_.toWat)
             ++ startFunc.toSeq.map(funcIdx => doc"(start ${funcIdx.toWat})")
             ++ funcs.toSeq.map(_.toWat)
         ).mkDocument(doc" # ")

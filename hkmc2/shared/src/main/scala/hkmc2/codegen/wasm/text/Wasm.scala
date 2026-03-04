@@ -191,6 +191,9 @@ case class LocalIdx(idx: Index) extends CtxIdx(idx)
 /** An index bound to the ''fields'' index space. */
 case class FieldIdx(idx: Index) extends CtxIdx(idx)
 
+/** An index bound to the ''tags'' index space. */
+case class TagIdx(idx: Index) extends CtxIdx(idx)
+
 /** A memory import entry. */
 case class MemoryImport(module: Str, name: Str, minPages: Int) extends ToWat:
   def toWat: Document =
