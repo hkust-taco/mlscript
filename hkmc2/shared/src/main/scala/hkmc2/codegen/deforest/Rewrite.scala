@@ -104,6 +104,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
             .toMap)
       
       // create branch sel syms
+      val fieldSym = MutMap.empty[SelField, VarSymbol]
       for sel <- sels.toList.sortBy(_._1) do
         branchSelSyms.getOrElseUpdate(
           sel,
@@ -112,9 +113,11 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
             val clsNme = selInfo.isSelFromCls match
               case cls: ClassSymbol => cls.name
               case n: Int => s"tup$n"
-            selInfo.field match
-              case termSym: TermSymbol => new VarSymbol(Tree.Ident(s"${clsNme}_${termSym.nme}"))
-              case ith: Int => new VarSymbol(Tree.Ident(s"${clsNme}_$ith"))
+            fieldSym.getOrElseUpdate(
+              selInfo.field,  
+              selInfo.field match
+                case termSym: TermSymbol => new VarSymbol(Tree.Ident(s"${clsNme}_${termSym.nme}"))
+                case ith: Int => new VarSymbol(Tree.Ident(s"${clsNme}_$ith")))
         )
       
       // ctor dest branch function computations
@@ -275,8 +278,6 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       override def applyDefn(defn: Defn): Unit =
         defn match
         case fDef: FunDefn =>
-          // if !inCtx(fDef.sym) then freeVars.add(fDef.sym)
-          // NOTE: this fDef.sym is not treated as a free variable in block.freeVars either
           inCtx.add(fDef.sym)
           for p <- fDef.params.flatMap(_.allParams) do inCtx.add(p.sym)
           applyBlock(fDef.body)

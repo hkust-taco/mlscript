@@ -94,11 +94,27 @@ fun f2(a) = if a is
 fun test() =
   let x = if true then AA(A) else BB(B)
   if x is
-    AA then f1(x.aa)
-    BB then f2(x.bb)
+    AA then f1(x.AA#aa)
+    BB then f2(x.BB#bb)
 test()
 //│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Ref(member:B,Some(object:B))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(bb))
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:a,None)
 //│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List()
 //│ = 1
 
 
@@ -183,15 +199,10 @@ c(A) + c(B)
 
 
 
-// simple free var example
-
-
-
-
 
 :expect 5
 fun c(x) =
-  let t = x.aa
+  let t = x.AA#aa
   let n = if x is
     AA then 2
   n + t
@@ -204,7 +215,7 @@ c(AA(3))
 
 fun f(a, b) = if a is
   A then if b is
-     B then 3
+    B then 3
 f(A, B)
 //│ deforest > ==============
 //│ deforest > Ref(member:A,Some(object:A)) ->
@@ -220,10 +231,20 @@ f(A, B)
 
 
 fun f(x) = if x is
-  Some then if x.value > 1 then f(Some(x.value - 1)) else 0
+  Some then if x.Some#value > 1 then f(Some(x.Some#value - 1)) else 0
 f(Some(2))
 //│ deforest > ==============
+//│ deforest > Call(Ref(member:Some,Some((Fun)term:class:Some.Some)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(value))
+//│ deforest > 	Select(Ref(var:x,None),Ident(value))
+//│ deforest > Call(Ref(member:Some,Some((Fun)term:class:Some.Some)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(value))
+//│ deforest > 	Select(Ref(var:x,None),Ident(value))
 //│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List($scrut, $tmp, $tmp)
 //│ = 0
 
 
@@ -310,13 +331,17 @@ f(AAA(1, 3), 1) + f(BBB(2, 3), 2) + f(AAA(3, 2), 4) + f(BBB(4, 6), 0)
 fun c1(x) = if x is
   AA then
     if A is
-      A then x.aa
+      A then x.AA#aa
 fun c2(x) = if x is
-  AA then x.aa
+  AA then x.AA#aa
 fun p(a) = c1(a) + c2(a)
 p(AA(1))
 //│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
 //│ deforest > ========
+//│ deforest > free vars of Ref(member:A,Some(object:A)):
+//│ deforest > 	List(var:x)
 //│ = 2
 
 
@@ -377,12 +402,27 @@ f(AAA(1, 3), 1) + f(CCC(2), 2) + f(AAA(3, 2), 4) + f(CCC(4), 0)
 
 fun f(x, y) =
   let a = if x is
-    AAA then y + x.y
+    AAA then y + x.AAA#y
     CCC(n) then n + 1
   a + 3
 f(AAA(1, 3), 1) + f(CCC(2), 2) + f(AAA(3, 2), 4)
 //│ deforest > ==============
+//│ deforest > Call(Ref(member:AAA,Some((Fun)term:class:AAA.AAA)),List(Arg(None,Lit(IntLit(3))), Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(y))
+//│ deforest > Call(Ref(member:CCC,Some((Fun)term:class:CCC.CCC)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(c))
+//│ deforest > Call(Ref(member:AAA,Some((Fun)term:class:AAA.AAA)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(y))
 //│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, $tmp, var:a, $tmp)
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:n, $arg$CCC$0$, $tmp, var:a, $tmp)
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, $tmp, var:a, $tmp)
 //│ = 22
 
 
@@ -422,7 +462,7 @@ f(AA(AA(0)))
 
 
 
-fun f(x) = x.aa.aa
+fun f(x) = x.AA#aa.AA#aa
 f(AA(AA(3)))
 //│ deforest > ==============
 //│ deforest > ========
@@ -532,13 +572,88 @@ fun test(x) =
     if x is
       AA(CCC(a)) then a
       BB(CCC(a)) then a
-  t(123).aa + 5 * 4 - 3 + 2 - 1
+  t(123).AA#aa + 5 * 4 - 3 + 2 - 1
 let p = if true then AA(CCC(AA)) else BB(CCC(AA))
 test(p)
 //│ deforest > ==============
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(bb))
+//│ deforest > Call(Ref(member:CCC,Some((Fun)term:class:CCC.CCC)),List(Arg(None,Ref(member:AA,Some((Fun)term:class:AA.AA))))) ->
+//│ deforest > 	Ref($arg$BB$0$,None)
+//│ deforest > 	Select(Ref($arg$BB$0$,None),Ident(c))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
+//│ deforest > Call(Ref(member:CCC,Some((Fun)term:class:CCC.CCC)),List(Arg(None,Ref(member:AA,Some((Fun)term:class:AA.AA))))) ->
+//│ deforest > 	Ref($arg$AA$0$,None)
+//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(c))
 //│ deforest > ========
+//│ deforest > free vars of Ref($arg$BB$0$,None):
+//│ deforest > 	List(var:a, $arg$CCC$0$, $tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:t, var:a, var:a, $arg$BB$0$, $arg$CCC$0$, $arg$AA$0$, $arg$CCC$0$, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List(var:a, $arg$CCC$0$, $tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ JS (unsanitized):
-//│ let test11, p2, scrut, tmp52, tmp53, tmp54; /* scoped */
+//│ let test11, p2, scrut, tmp52, tmp53, tmp54, test_15$test1, test_15$x_BB1, test_15$x_rest1, test_15$split_default$_rest, test_15$split_root$_rest, test_15$arg$BB$0$_CCC, test_15$arg$BB$0$_rest, test_15$x_AA1, test_15$arg$AA$0$_CCC, test_15$arg$AA$0$_rest; /* scoped */
+//│ test_15$test1 = function test_15$test(x1) {
+//│   let t, a, a1, arg$BB$0$, arg$CCC$0$, arg$AA$0$, arg$CCC$0$1, tmp55, tmp56, tmp57, tmp58, tmp59, tmp60; /* scoped */
+//│   split_root$: {
+//│     split_default$: {
+//│       return x1(t, a, a1, arg$BB$0$, arg$CCC$0$, arg$AA$0$, arg$CCC$0$1, tmp55, tmp56, tmp57, tmp58, tmp59, tmp60, t, tmp55, tmp56, tmp57, tmp58, tmp59, tmp60);
+//│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   }
+//│   t = Predef.id(tmp55);
+//│   tmp56 = runtime.safeCall(t(123));
+//│   tmp57 = 5 * 4;
+//│   tmp58 = tmp56.aa + tmp57;
+//│   tmp59 = tmp58 - 3;
+//│   tmp60 = tmp59 + 2;
+//│   return tmp60 - 1
+//│ };
+//│ test_15$x_BB1 = function test_15$x_BB(fv_t, fv_a, fv_a1, fv_arg$BB$0$, fv_arg$CCC$0$, fv_arg$AA$0$, fv_arg$CCC$0$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, fv_t1, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_tmp10, fv_tmp11, BB_bb1) {
+//│   fv_arg$BB$0$ = BB_bb1;
+//│   return fv_arg$BB$0$(fv_a1, fv_arg$CCC$0$, fv_tmp6, fv_t1, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_tmp10, fv_tmp11)
+//│ };
+//│ test_15$arg$BB$0$_CCC = function test_15$arg$BB$0$_CCC(fv_a, fv_arg$CCC$0$, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, fv_tmp6, CCC_c3) {
+//│   fv_arg$CCC$0$ = CCC_c3;
+//│   fv_a = fv_arg$CCC$0$;
+//│   fv_tmp1 = fv_a;
+//│   return test_15$split_root$_rest(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, fv_tmp6)
+//│ };
+//│ test_15$x_AA1 = function test_15$x_AA(fv_t, fv_a, fv_a1, fv_arg$BB$0$, fv_arg$CCC$0$, fv_arg$AA$0$, fv_arg$CCC$0$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, fv_t1, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_tmp10, fv_tmp11, AA_aa6) {
+//│   fv_arg$AA$0$ = AA_aa6;
+//│   return fv_arg$AA$0$(fv_a, fv_arg$CCC$0$1, fv_tmp6, fv_t1, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_tmp10, fv_tmp11)
+//│ };
+//│ test_15$arg$AA$0$_CCC = function test_15$arg$AA$0$_CCC(fv_a, fv_arg$CCC$0$, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, fv_tmp6, CCC_c3) {
+//│   fv_arg$CCC$0$ = CCC_c3;
+//│   fv_a = fv_arg$CCC$0$;
+//│   fv_tmp1 = fv_a;
+//│   return test_15$split_root$_rest(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, fv_tmp6)
+//│ };
+//│ test_15$x_rest1 = function test_15$x_rest(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│   return test_15$split_default$_rest(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
+//│ };
+//│ test_15$split_default$_rest = function test_15$split_default$_rest(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│ };
+//│ test_15$split_root$_rest = function test_15$split_root$_rest(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│   fv_t = Predef.id(fv_tmp);
+//│   fv_tmp1 = runtime.safeCall(fv_t(123));
+//│   fv_tmp2 = 5 * 4;
+//│   fv_tmp3 = fv_tmp1.aa + fv_tmp2;
+//│   fv_tmp4 = fv_tmp3 - 3;
+//│   fv_tmp5 = fv_tmp4 + 2;
+//│   return fv_tmp5 - 1
+//│ };
+//│ test_15$arg$BB$0$_rest = function test_15$arg$BB$0$_rest(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│   return test_15$x_rest1(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
+//│ };
+//│ test_15$arg$AA$0$_rest = function test_15$arg$AA$0$_rest(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
+//│   return test_15$x_rest1(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
+//│ };
 //│ test11 = function test(x1) {
 //│   let t, a, a1, arg$BB$0$, arg$CCC$0$, arg$AA$0$, arg$CCC$0$1, tmp55, tmp56, tmp57, tmp58, tmp59, tmp60; /* scoped */
 //│   split_root$: {
@@ -579,15 +694,50 @@ test(p)
 //│ };
 //│ scrut = true;
 //│ if (scrut === true) {
-//│   tmp52 = CCC1(AA1);
-//│   tmp53 = AA1(tmp52);
-//│ } else { tmp54 = CCC1(AA1); tmp53 = BB1(tmp54); }
+//│   let AA_aa6, CCC_c3; /* scoped */
+//│   CCC_c3 = AA1;
+//│   tmp52 = (fv_ctorLam_a, fv_ctorLam_arg$CCC$0$, fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6) => {
+//│     return test_15$arg$AA$0$_CCC(fv_ctorLam_a, fv_ctorLam_arg$CCC$0$, fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6, CCC_c3)
+//│   };
+//│   AA_aa6 = tmp52;
+//│   tmp53 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_a1, fv_ctorLam_arg$BB$0$, fv_ctorLam_arg$CCC$0$, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$CCC$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, fv_ctorLam_tmp11) => {
+//│     return test_15$x_AA1(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_a1, fv_ctorLam_arg$BB$0$, fv_ctorLam_arg$CCC$0$, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$CCC$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, fv_ctorLam_tmp11, AA_aa6)
+//│   };
+//│ } else {
+//│   let BB_bb1, CCC_c4; /* scoped */
+//│   CCC_c4 = AA1;
+//│   tmp54 = (fv_ctorLam_a, fv_ctorLam_arg$CCC$0$, fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6) => {
+//│     return test_15$arg$BB$0$_CCC(fv_ctorLam_a, fv_ctorLam_arg$CCC$0$, fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6, CCC_c4)
+//│   };
+//│   BB_bb1 = tmp54;
+//│   tmp53 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_a1, fv_ctorLam_arg$BB$0$, fv_ctorLam_arg$CCC$0$, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$CCC$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, fv_ctorLam_tmp11) => {
+//│     return test_15$x_BB1(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_a1, fv_ctorLam_arg$BB$0$, fv_ctorLam_arg$CCC$0$, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$CCC$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, fv_ctorLam_tmp11, BB_bb1)
+//│   };
+//│ }
 //│ p2 = tmp53;
-//│ test11(p2)
+//│ test_15$test1(p2)
 //│ deforest > ==============
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(bb))
+//│ deforest > Call(Ref(member:CCC,Some((Fun)term:class:CCC.CCC)),List(Arg(None,Ref(member:AA,Some((Fun)term:class:AA.AA))))) ->
+//│ deforest > 	Ref($arg$BB$0$,None)
+//│ deforest > 	Select(Ref($arg$BB$0$,None),Ident(c))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
+//│ deforest > Call(Ref(member:CCC,Some((Fun)term:class:CCC.CCC)),List(Arg(None,Ref(member:AA,Some((Fun)term:class:AA.AA))))) ->
+//│ deforest > 	Ref($arg$AA$0$,None)
+//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(c))
 //│ deforest > ========
+//│ deforest > free vars of Ref($arg$BB$0$,None):
+//│ deforest > 	List(var:a, $arg$CCC$0$, $tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:t, var:a, var:a, $arg$BB$0$, $arg$CCC$0$, $arg$AA$0$, $arg$CCC$0$, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp)
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List(var:a, $arg$CCC$0$, $tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ = 141
-//│ p = AA(CCC(fun AA { class: class AA }))
+//│ p = fun tmp53
 
 
 fun test(x, y) =
@@ -596,13 +746,21 @@ fun test(x, y) =
       if x is
         AA(a) then a
         BB(a) then a
-  t(123).c + 5 * 4 - 3 + 2 - 1
+  t(123).CCC#c + 5 * 4 - 3 + 2 - 1
 let p = if true then AA(CCC) else BB(CCC)
 test(p, id(CCC(123)))
 //│ deforest > ==============
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Ref(member:CCC,Some((Fun)term:class:CCC.CCC))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(bb))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(member:CCC,Some((Fun)term:class:CCC.CCC))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
 //│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:a, var:a, $arg$BB$0$, $arg$AA$0$, $tmp, $tmp, $tmp, var:t, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ = 141
-//│ p = AA(fun CCC { class: class CCC })
+//│ p = fun tmp55
 
 
 :sjs
@@ -616,14 +774,14 @@ f(id(A)) + f(A)
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List()
 //│ JS (unsanitized):
-//│ let f10, tmp58, tmp59, tmp60, f_5$f, f_5$x_A, f_5$x_rest, deforest$lam7; /* scoped */
-//│ f_5$f = function f_5$f(x1) {
+//│ let f10, tmp58, tmp59, tmp60, f_5$f1, f_5$x_A, f_5$x_rest1, deforest$lam7; /* scoped */
+//│ f_5$f1 = function f_5$f(x1) {
 //│   return x1()
 //│ };
 //│ f_5$x_A = function f_5$x_A() {
 //│   return 1
 //│ };
-//│ f_5$x_rest = function f_5$x_rest() {};
+//│ f_5$x_rest1 = function f_5$x_rest() {};
 //│ f10 = function f(x1) {
 //│   if (x1 instanceof A1.class) {
 //│     return 1
@@ -634,7 +792,7 @@ f(id(A)) + f(A)
 //│ tmp58 = Predef.id(A1);
 //│ tmp59 = f10(tmp58);
 //│ deforest$lam7 = () => { return f_5$x_A() };
-//│ tmp60 = f_5$f(deforest$lam7);
+//│ tmp60 = f_5$f1(deforest$lam7);
 //│ tmp59 + tmp60
 //│ deforest > ==============
 //│ deforest > Ref(member:A,Some(object:A)) ->
@@ -747,8 +905,13 @@ c(B)
 
 
 fun f(a, b) = if a is
-  AA(x) then x + b.bb
+  AA(x) then x + b.BB#bb
 f(AA(1), BB(2))
 //│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Select(Ref(var:a,None),Ident(aa))
 //│ deforest > ========
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List(var:b, var:x, $arg$AA$0$)
 //│ = 3

@@ -873,8 +873,8 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
   
   // remove clashes
   locally {
-    val toRemoveCtor = LinkedHashSet.empty[ConcreteProducer]
-    val toRemoveDtor = LinkedHashSet.empty[ConcreteConsumer]
+    val toRemoveCtor = MutSet.empty[ConcreteProducer]
+    val toRemoveDtor = MutSet.empty[ConcreteConsumer]
     def markCtorToBeRemoved(rm: ConcreteProducer): Unit = if toRemoveCtor.add(rm) then
       for case dtor: ConcreteConsumer <- ctorDests(rm) do markDtorToBeRemoved(dtor)
     def markDtorToBeRemoved(rm: ConcreteConsumer): Unit = if toRemoveDtor.add(rm) then

@@ -235,13 +235,6 @@ main
 //│ = fun main_6$main
 
 
-
-// :lot
-// module MM with
-//   fun c(x) = x
-//   fun b() = c(1)
-// MM.c(2)
-
 :deforest
 fun a() = O
 fun b() = a()
