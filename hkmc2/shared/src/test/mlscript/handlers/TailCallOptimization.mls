@@ -21,3 +21,41 @@ fun foobar(z) =
   3
 foobar(0)
 //│ = 3
+
+
+// Check that tail call optimization is applied in presence of effect handlers: there should be no function calls in the body.
+:sjs
+:expect 0
+:stackSafe
+:sjs
+fun hi(n) =
+  if n === 0 then 0
+  else hi(n - 1)
+hi(0)
+//│ JS (unsanitized):
+//│ let hi, tmp1, $_stack$_safe$_body$_;
+//│ hi = function hi(n) {
+//│   loopLabel: while (true) {
+//│     let scrut, tmp2, stackDelayRes;
+//│     runtime.stackDepth = runtime.stackDepth + 1;
+//│     stackDelayRes = runtime.checkDepth();
+//│     if (runtime.curEffect !== null) {
+//│       return runtime.unwind(hi, -1, "TailCallOptimization.mls:31:1", null, null, 1, 1, n, 0)
+//│     }
+//│     scrut = n === 0;
+//│     if (scrut === true) {
+//│       return 0
+//│     } else {
+//│       tmp2 = n - 1;
+//│       n = tmp2;
+//│       continue loopLabel
+//│     }
+//│   }
+//│ };
+//│ $_stack$_safe$_body$_ = (undefined, function () {
+//│   return hi(0)
+//│ });
+//│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_);
+//│ if (runtime.curEffect !== null) { tmp1 = runtime.topLevelEffect(false); }
+//│ tmp1
+//│ = 0

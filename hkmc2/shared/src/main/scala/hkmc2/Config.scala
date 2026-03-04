@@ -68,13 +68,18 @@ object Config:
     // Whether we check `Instantiate` nodes for effects. Currently, effects cannot be raised in constructors.
     checkInstantiateEffect: Bool = false,
     // A debug option that allows codegen to continue even if an unlifted definition is encountered.
-    softLifterError: Bool = false
+    softLifterError: Bool = false,
+    // Skips instrumenting module constructors, this can be used when the file is statically known to not
+    // raise any effect and cannot use the Runtime.mls module during module construction due to cyclic dependency.
+    // One specific scenario is Rendering.mls, which Runtime.mls depends on, and hence using stack safety will
+    // reference Runtime.mls during construction of the Rendering module, causing a cyclic dependency error.
+    doNotInstrumentTopLevelModCtor: Bool = false,
   )
   
   case class StackSafety(stackLimit: Int)
   object StackSafety:
     val default: StackSafety = StackSafety(
-      stackLimit = 500,
+      stackLimit = 1000,
     )
 
   case class LiftDefns() // there may be other settings in the future, having it as a case class now

@@ -9,7 +9,7 @@ import hkmc2.semantics.*
 import hkmc2.syntax.Tree
 import hkmc2.codegen.HandlerLowering.FnOrCls
 
-class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: StackSafetyMap)(using State):
+class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: StackSafetyMap)(using State, Config):
   private val STACK_DEPTH_IDENT: Tree.Ident = Tree.Ident("stackDepth")
 
   private val runtimePath: Path = State.runtimeSymbol.asPath
@@ -78,7 +78,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
         
         case _ => super.applyBlock(b)
         
-        override def applyHandler(hdr: Handler): Handler = lastWords("HandleBlock in stack safe transformation")
+      override def applyHandler(hdr: Handler): Handler = lastWords("HandleBlock in stack safe transformation")
       
       override def applyResult(r: Result)(k: Result => Block): Block =
         if usesStack(r) then
@@ -111,8 +111,8 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
         methods.map(rewriteFn),
         privateFields,
         publicFields, 
-        rewriteBlk(preCtor, L(BlockMemberSymbol("TODO", Nil)), 1), // TODO: preCtor is not translated in handler lowering
-        if isTopLevel && (defn.k is syntax.Mod) then transformTopLevel(ctor) else rewriteBlk(ctor, R(isym), 1),
+        preCtor,
+        ctor,
         mod.map(rewriteObjBody(_, isTopLevel)),
         bufferable,
       )
@@ -123,13 +123,15 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
       defn.methods.map(rewriteFn),
       defn.privateFields,
       defn.publicFields,
-      if isTopLevel then transformTopLevel(defn.ctor) else rewriteBlk(defn.ctor, R(defn.isym), 1),
+      if isTopLevel then
+        if config.effectHandlers.exists(_.doNotInstrumentTopLevelModCtor) then defn.ctor else transformTopLevel(defn.ctor)
+      else rewriteBlk(defn.ctor, R(defn.isym)),
     )
 
   // fnOrCls points us to the doUnwind function
-  def rewriteBlk(blk: Block, fnOrCls: FnOrCls, increment: Int) =
+  def rewriteBlk(blk: Block, fnOrCls: FnOrCls) =
     (stackSafetyMap.get(fnOrCls), isTrivial(blk)) match
-    case (S(doUnwindBlk), false) =>
+    case (S((increment, doUnwindBlk)), false) =>
       var usedDepth = false
       lazy val curDepth =
         usedDepth = true
@@ -153,6 +155,6 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
 
 
   def rewriteFn(defn: FunDefn) = 
-    FunDefn(defn.owner, defn.sym, defn.dSym, defn.params, rewriteBlk(defn.body, L(defn.sym), 1))(defn.forceTailRec)
+    FunDefn(defn.owner, defn.sym, defn.dSym, defn.params, rewriteBlk(defn.body, L(defn.sym)))(defn.forceTailRec)
 
   def transformTopLevel(b: Block) = transform(b, TempSymbol(N), true)
