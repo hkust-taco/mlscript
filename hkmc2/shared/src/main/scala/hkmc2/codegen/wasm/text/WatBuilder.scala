@@ -98,10 +98,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       createDefnTypes(Define(unitDefn, End("")))
 
     ctx.pushLocal()
-    try
-      returningTerm(Define(unitDefn, End("")))
-      ()
-    finally ctx.popLocal()
+    returningTerm(Define(unitDefn, End("")))
+    ctx.popLocal()
 
   /** Registers eager singleton runtime state by creating its global and start-init action. */
   private def registerSingletonInit(clsLikeDefn: ClsLikeDefn, typeref: TypeIdx)(using
