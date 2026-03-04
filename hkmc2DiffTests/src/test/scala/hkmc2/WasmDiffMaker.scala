@@ -2,6 +2,7 @@ package hkmc2
 
 import mlscript.utils.*, shorthands.*
 
+import codegen.js.JSBuilder
 import codegen.wasm.*
 import document.*
 import semantics.Elaborator
@@ -66,9 +67,10 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
       val low = ltl.givenIn:
         codegen.Lowering()
       val le = low.program(trm)
-      val (modWat, mainFnNme) = ltl.givenIn:
+      val (modWat, mainFnNme, systemMemMinPages) = ltl.givenIn:
         baseScp.nest.givenIn:
           WatBuilder().program(le, N, wd)
+      val modWatJsLit = JSBuilder.makeStringLiteral(modWat.mkString())
 
       if wat.isSet then
         output("Wat:")
@@ -80,7 +82,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
 
       if fwat.isSet then
         output("Formatted Wat (Folded):")
-        doc"JSON.stringify(wasm.binaryenFmtWat(`$modWat`, true));"
+        doc"JSON.stringify(wasm.binaryenFmtWat($modWatJsLit, true));"
           .stripBreaks
           .mkString(100)
           .replace('\n', ' ') |> host.execute match
@@ -91,7 +93,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
             return
       if swat.isSet then
         output("Formatted Wat (Stack):")
-        doc"JSON.stringify(wasm.binaryenFmtWat(`$modWat`, false));"
+        doc"JSON.stringify(wasm.binaryenFmtWat($modWatJsLit, false));"
           .stripBreaks
           .mkString(100)
           .replace('\n', ' ') |> host.execute match
@@ -133,9 +135,27 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
       end mkQuery
 
       val importObj =
-        doc"""{ #{  # "system": { #{  # "mem": new WebAssembly.Memory({initial: 100}) #}  # } #}  # }"""
+        doc"""
+          {
+            "system": {
+              "mem": mem,
+              "mlx_str_from_utf16": (ptr, byteLen) =>
+                decodeUtf16.decode(new Uint8Array(mem.buffer, ptr, byteLen))
+            }
+          }
+        """
+          .stripBreaks
+          .mkString(100)
       val jsStr =
-        doc"""await wasm.binaryenPrintFuncRes( #  #{ `$modWat # `, # $importObj, # exports => exports.${mainFnNme}(), #}  # );"""
+        doc"""
+          await (() => {
+            # const watSrc = $modWatJsLit;
+            # const mem = new WebAssembly.Memory({ initial: $systemMemMinPages });
+            # const decodeUtf16 = new TextDecoder("utf-16le");
+            # const importObj = $importObj;
+            # return wasm.binaryenPrintFuncRes(watSrc, importObj, exports => exports.${mainFnNme}());
+            # })();
+        """
           .stripBreaks
           .mkString(100)
       output("Wasm result:")

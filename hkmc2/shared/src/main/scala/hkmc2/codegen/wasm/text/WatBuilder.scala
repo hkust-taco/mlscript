@@ -10,12 +10,12 @@ import document.*
 import document.Document
 import js.CodeBuilder
 import semantics.*, Elaborator.State
-import syntax.Tree.{BoolLit, IntLit, Ident}
+import syntax.Tree.{BoolLit, IntLit, StrLit, Ident}
 import text.Param as WasmParam
 import Message.MessageContext
 import Scope.scope
 
-import scala.collection.mutable.{ArrayBuffer as ArrayBuf}
+import scala.collection.mutable.{ArrayBuffer as ArrayBuf, LinkedHashMap}
 import scala.util.boundary, boundary.break
 import sourcecode.Line
 
@@ -28,15 +28,27 @@ extension (instr: FoldedInstr)
   private def mnemonicPrefix: Opt[Str] =
     instr.mnemonic.split('.').optionUnless(_.size == 1).map(_.head)
 
+object WatBuilder:
+  object ExternIntrinsics:
+    val SystemModule = "system"
+    val SystemMemoryImportName = "mem"
+    val StringFromUtf16ImportName = "mlx_str_from_utf16"
+    val WasmPageSizeBytes = 65536
+
 class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   import Ctx.ctx
   import Ctx.{SingletonInfo, binaryOps, unaryOps, wasmIntrinsicArities, wasmIntrinsicNameSet}
   import Instructions.*
+  import WatBuilder.ExternIntrinsics
 
   type Context = Ctx
 
   private val baseObjectSym: BlockMemberSymbol = BlockMemberSymbol("Object", Nil)
   private val tagFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$tag"))
+
+  private case class StringLitInfo(offset: Int, byteLen: Int, watBytes: Str)
+  private val stringLits: LinkedHashMap[Str, StringLitInfo] = LinkedHashMap.empty
+  private var nextStringDataOffset: Int = 0
 
   private def baseObjectTypeIdx(using Ctx): TypeIdx =
     ctx.getType_!(baseObjectSym)
@@ -214,6 +226,65 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         )
       )))
     )
+
+  /**
+   * Returns (and caches) string literal data metadata, allocating data-segment space on first use.
+   */
+  private def internStringLiteral(value: Str): StringLitInfo =
+    stringLits.getOrElseUpdate(
+      value,
+      if value.isEmpty then
+        StringLitInfo(offset = 0, byteLen = 0, watBytes = "")
+      else
+        val sb = new StringBuilder(value.length * 6)
+        value.foreach: ch =>
+          val codeUnit = ch.toInt
+          sb.append(f"\\${codeUnit & 0xff}%02x")
+          sb.append(f"\\${(codeUnit >>> 8) & 0xff}%02x")
+        val watBytes = sb.toString
+        val offset = (nextStringDataOffset + 1) & ~1
+        val byteLen = value.length * 2
+        nextStringDataOffset = offset + byteLen
+        StringLitInfo(offset = offset, byteLen = byteLen, watBytes = watBytes)
+    )
+
+  /**
+   * Ensures imports required for string materialization exist and returns the constructor function.
+   */
+  private def getOrLoadStrCtorFunction(using Ctx): FuncIdx =
+    val minBytes = nextStringDataOffset
+    val pageSize = ExternIntrinsics.WasmPageSizeBytes
+    val minPages =
+      if minBytes <= 0 then 0
+      else (minBytes + pageSize - 1) / pageSize
+    ctx.ensureMemoryImport(
+      ExternIntrinsics.SystemModule,
+      ExternIntrinsics.SystemMemoryImportName,
+      minPages
+    )
+    ctx.getOrCreateFunctionImport(
+      module = ExternIntrinsics.SystemModule,
+      name = ExternIntrinsics.StringFromUtf16ImportName,
+    ):
+      val importTy = ctx.addType(
+        sym = N,
+        TypeInfo(
+          id = N,
+          FunctionType(
+            params = Seq(
+              WasmParam(N, RefType.anyref),
+              WasmParam(N, RefType.anyref)
+            ),
+            results = Seq(Result(RefType.anyref))
+          )
+        )
+      )
+      FuncImport(
+        module = ExternIntrinsics.SystemModule,
+        name = ExternIntrinsics.StringFromUtf16ImportName,
+        id = S(SymIdx(ExternIntrinsics.StringFromUtf16ImportName)),
+        typeIdx = importTy
+      )
 
   /** 
    * Gets (and caches) the Wasm GC array type used for tuples (`mut` selects mutability). 
@@ -476,6 +547,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ref.i31(i32.const(if value then 1 else 0))
     case Value.Lit(IntLit(value)) =>
       withValidIntLit(value, r.toLoc)(intVal => ref.i31(i32.const(intVal)))
+    case Value.Lit(StrLit(value)) =>
+      val lit = internStringLiteral(value)
+      val stringCtor = getOrLoadStrCtorFunction
+      call(
+        funcidx = stringCtor,
+        operands = Seq(
+          ref.i31(i32.const(lit.offset)),
+          ref.i31(i32.const(lit.byteLen))
+        ),
+        returnTypes = Seq(Result(RefType.anyref))
+      )
     case Value.Ref(l, _) =>
       singletonInfoFor(l) match
         case S(info) => singletonGlobalGet(info)
@@ -1289,7 +1371,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using
       Raise,
       Scope
-  ): (Document, Str) =
+  ): (Document, Str, Int) =
     for imprt <- p.imports do
       raise(
         ErrorReport(
@@ -1309,7 +1391,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     val ctx = Ctx.empty
     given Ctx = ctx
-    
+
     // Create base Object struct with tag field that all other structs will inherit
     ctx.addType(
       sym = S(baseObjectSym),
@@ -1355,6 +1437,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     )
 
     ctx.popLocal()
+    if stringLits.nonEmpty then
+      stringLits.valuesIterator.foreach: lit =>
+        if lit.byteLen > 0 then
+          ctx.addDataSegment(DataSegment(Instructions.i32.const(lit.offset), lit.watBytes))
 
     val singletonInitActions = ctx.getSingletonInitActions
     if singletonInitActions.nonEmpty then
@@ -1388,7 +1474,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     ctx.addFunc(S(entrySym), entryFnInfo)
 
-    (ctx.toWat, entryNme)
+    val systemMemMinPages =
+      ctx.getMemoryImportMinPages(
+        ExternIntrinsics.SystemModule,
+        ExternIntrinsics.SystemMemoryImportName
+      ).getOrElse(0)
+    (ctx.toWat, entryNme, systemMemMinPages)
   end program
 
   /**
