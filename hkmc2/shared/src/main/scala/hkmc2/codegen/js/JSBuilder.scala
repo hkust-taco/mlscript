@@ -596,7 +596,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     *     `foo1 = function foo() { return foo1(); }`
     *   but the result has the same semantics.
     *  */
-  def reserveNames(p: Program)(using Scope): Unit =
+  def reserveNames(p: Program)(using Scope, Raise): Unit =
     def go(blk: Block): Unit = tl.trace(s"avoidNames ${blk.toString.take(100)}..."):
       blk match
       case Define(defn, rest) =>

@@ -8,18 +8,21 @@ Int
 //│ ╔══[COMPILATION ERROR] Symbol 'Int' is virtual (i.e., "compiler fiction"); cannot be used as a term
 //│ ║  l.7: 	Int
 //│ ╙──     	^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :ge
 Str
 //│ ╔══[COMPILATION ERROR] Symbol 'Str' is virtual (i.e., "compiler fiction"); cannot be used as a term
-//│ ║  l.13: 	Str
+//│ ║  l.14: 	Str
 //│ ╙──      	^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :ge
 Bool
 //│ ╔══[COMPILATION ERROR] Symbol 'Bool' is virtual (i.e., "compiler fiction"); cannot be used as a term
-//│ ║  l.19: 	Bool
+//│ ║  l.21: 	Bool
 //│ ╙──      	^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 (case Bool then 1)(true)
 //│ = 1

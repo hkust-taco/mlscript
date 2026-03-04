@@ -61,15 +61,15 @@ object WarningReport:
 final case class InternalError(
     mainMsg: Str,
     allMsgs: Ls[Message -> Opt[Loc]],
+    mkExtraInfo: () => Opt[Any],
     source: Source
 )(using Line, Name, FileName) extends Diagnostic(mainMsg):
   val kind: Kind = Kind.Internal
-  val mkExtraInfo: () => Opt[Any] = () => N
 object InternalError:
   def apply(using Line, FileName)
-      (msgs: Ls[Message -> Opt[Loc]], source: Source = Source.Compilation)
+      (msgs: Ls[Message -> Opt[Loc]], extraInfo: => Opt[Any] = N, source: Source = Source.Compilation)
       (using Name): InternalError =
-    InternalError(msgs.head._1.show, msgs, source)
+    InternalError(msgs.head._1.show, msgs, () => extraInfo, source)
 
 
 final case class Loc(spanStart: Int, spanEnd: Int, origin: Origin):

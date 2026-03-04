@@ -167,24 +167,27 @@ scope.locally()
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
 //│ ║  l.166: 	scope.locally()
 //│ ╙──       	^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.173: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
+//│ ║  l.174: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╙──       	^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :e
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.181: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.183: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	                                                 ^
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.181: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.183: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 let z = 114
