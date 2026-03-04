@@ -70,6 +70,17 @@ end LoweringCtx
 import LoweringCtx.loweringCtx
 
 
+object Lowering:
+  
+  def compError: Block =
+    Throw(Value.Lit(Tree.StrLit("This code cannot be run as its compilation yielded an error.")))
+  
+  def fail(err: ErrorReport)(using Raise): Block =
+    raise(err)
+    compError
+  
+import Lowering.*
+
 class Lowering()(using Config, TL, Raise, State, Ctx):
   
   extension (t: Term)
@@ -127,14 +138,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   
   def unit: Path =
     Select(Value.Ref(State.runtimeSymbol), Tree.Ident("Unit"))(S(State.unitSymbol))
-  
-  
-  def compError: Block =
-    Throw(Value.Lit(Tree.StrLit("This code cannot be run as its compilation yielded an error.")))
-  
-  def fail(err: ErrorReport): Block =
-    raise(err)
-    compError
   
   
   // type Rcd = (mut: Bool, args: List[RcdArg]) // * Better, but Scala's patmat exhaustiveness chokes on it

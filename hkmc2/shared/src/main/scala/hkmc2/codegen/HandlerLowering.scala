@@ -355,12 +355,11 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
       // ignored cases
       case TryBlock(sub, finallyDo, rest) =>
-        raise(ErrorReport(
-          msg"Try finally are not supported with effect handlers enabled." ->
+        containsError = true
+        Lowering.fail(ErrorReport(
+          msg"`try`-`finally` blocks are not currently supported with effect handlers enabled." ->
           N :: Nil,
           source = Diagnostic.Source.Compilation))
-        containsError = true
-        rtThrowMsg("Try finally are not supported with effect handlers enabled.")
       case Throw(_) => blk
       case Scoped(_, body) => go(body) // PreHandlerLowering
       case _: HandleBlock => lastWords("unexpected handleBlock") // already translated at this point
