@@ -12,40 +12,24 @@ import collection.mutable.HashMap
 
 
 class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Raise) extends BlockTransformer(new SymbolSubst):
-  class CheckNestedFunctions extends BlockTraverser:
-    override def applyFunDefn(fun: FunDefn) =
-      raise(ErrorReport(msg"Nested function ${fun.sym.nme} is not supported by lambda rewriting. Lambda lifting must be performed first." -> fun.sym.toLoc :: Nil,
-        source = Diagnostic.Source.Compilation))
-
   // Anonymous lambdas' parameter lists cannot be retrieved from the term symbol
   private val funDefns = HashMap.empty[BlockMemberSymbol, FunDefn] 
   class CollectFunDefns extends BlockTraverser:
-    override def applyFunDefn(fun: FunDefn) = funDefns += (fun.sym -> fun)
+    override def applyFunDefn(fun: FunDefn) =
+      funDefns += (fun.sym -> fun)
+      super.applyFunDefn(fun)
 
-  private def generateFCFunctionClass(callFunc: FunDefn, capturedVariables: List[VarSymbol]) =
+  private def generateFCFunctionClass(p: Path, params: ParamList) =
     val clsSym = ClassSymbol(
       syntax.Tree.DummyTypeDef(syntax.Cls),
-      syntax.Tree.Ident("Lambda$")
+      syntax.Tree.Ident("Function$")
     )
-    val defSym = new BlockMemberSymbol("Lambda$", Nil, false)
-    val ctorParams = capturedVariables.map(v => new VarSymbol(v.id))
-    val cvMems = capturedVariables.map(v => TermSymbol(syntax.MutVal, Some(clsSym), Tree.Ident(v.nme)))
-    val ctor = ctorParams.zip(cvMems).foldRight[Block](End())((p, res) => Assign(p._2, Value.Ref(p._1), res))
-    val body = new UpdateReference(using capturedVariables.zip(cvMems).toMap).applyBlock(callFunc.body)
-    ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls,
-      None, PlainParamList(ctorParams.map(Param.simple)) :: Nil,
-      Some(Select(Value.Ref(State.globalThisSymbol, Some(State.globalThisSymbol)), Tree.Ident("Function"))(Some(ctx.builtins.Function))),
-      FunDefn.withFreshSymbol(Some(clsSym), callFunc.sym, callFunc.params, body)(callFunc.forceTailRec) :: Nil,
-      Nil, Nil, Return(Call(Value.Ref(State.builtinOpsMap("super")), Nil)(false, false, false), true), ctor, None, None)
-
-  private def generateCallAndClass(p: Path, params: ParamList) =
-    val callDef = FunDefn.withFreshSymbol(None, new BlockMemberSymbol("call", Nil, true), params :: Nil,
+    val defSym = new BlockMemberSymbol("Function$", Nil, false)
+    val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), params :: Nil,
       Return(Call(p, params.params.map(_.sym.asPath.asArg))(true, false, false), false))(false)
-    generateFCFunctionClass(callDef, Nil)
-
-  private def generateCallAndClass(params: List[ParamList], body: Block, fvs: List[VarSymbol]) =
-    val callDef = FunDefn.withFreshSymbol(None, new BlockMemberSymbol("call", Nil, true), params, body)(false)
-    generateFCFunctionClass(callDef, fvs)
+    ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
+      Some(Select(Value.Ref(State.globalThisSymbol, Some(State.globalThisSymbol)), Tree.Ident("Function"))(Some(ctx.builtins.Function))),
+      callDef :: Nil, Nil, Nil, Return(Call(Value.Ref(State.builtinOpsMap("super")), Nil)(false, false, false), true), End(), None, None)
 
   private def getParamList(l: BlockMemberSymbol): Option[ParamList] = funDefns.get(l) match
     case Some(fd) => fd.params.headOption
@@ -57,17 +41,17 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
     case ref @ Value.Ref(l: BlockMemberSymbol, disamb) => l.tsym match
       case Some(s: TermSymbol) if s.k is syntax.Fun =>
         val params = getParamList(l).getOrElse(lastWords(s"Cannot get ${l.nme}'s parameter list."))
-        val clsDef = generateCallAndClass(ref, params)
+        val clsDef = generateFCFunctionClass(ref, params)
         val tmp = new TempSymbol(None)
-        val cls = Value.Ref(clsDef.sym, disamb)
+        val cls = Value.Ref(clsDef.sym, Some(clsDef.isym))
         Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil), k(Value.Ref(tmp, None)))))
       case Some(_) => k(p)
       case None => disamb match
           case Some(t: TermSymbol) if t.k is syntax.Fun =>
             val params = getParamList(l).getOrElse(lastWords(s"Cannot get ${t.nme}'s parameter list."))
-            val clsDef = generateCallAndClass(ref, params)
+            val clsDef = generateFCFunctionClass(ref, params)
             val tmp = new TempSymbol(None)
-            val cls = Value.Ref(clsDef.sym, disamb)
+            val cls = Value.Ref(clsDef.sym, Some(clsDef.isym))
             Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil), k(Value.Ref(tmp, None)))))
           case Some(_) => k(p)
           case _ =>
@@ -77,9 +61,9 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
     case sel: Select => sel.symbol match
       case Some(s: TermSymbol) if (s.k is syntax.Fun) =>
         val params = getParamList(s).getOrElse(lastWords(s"Cannot get ${s.nme}'s parameter list."))
-        val clsDef = generateCallAndClass(sel, params)
+        val clsDef = generateFCFunctionClass(sel, params)
         val tmp = new TempSymbol(None)
-        val cls = Value.Ref(clsDef.sym, None)
+        val cls = Value.Ref(clsDef.sym, Some(clsDef.isym))
         Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil), k(Value.Ref(tmp, None)))))
       case Some(_) => k(p)
       case _ =>
@@ -112,49 +96,25 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
     case _: Lambda => lastWords("Lambda functions should be rewritten into function definitions first.")
     case _ => super.applyResult(r)(k)
 
-  private def desugarMultipleParamList(fd: FunDefn, rest: Block) = fd.params match
-    case Nil => Define(fd, rest)
-    case _ :: Nil => Define(fd, rest)
-    case head :: tail =>
-      def rec(params: List[ParamList]): (Block, List[VarSymbol]) = params match
-        case head :: Nil =>
-          val fv: List[VarSymbol] = (fd.body.freeVars -- head.params.map(_.sym)).toList.collect {
-            case v: VarSymbol => v
-          }
-          val clsDef = generateCallAndClass(head :: Nil, fd.body, fv)
-          val cls = Value.Ref(clsDef.sym, Some(clsDef.isym))
-          (Scoped(Set(clsDef.sym), Define(clsDef, Return(Instantiate(false, cls, fv.map(_.asPath.asArg)), false))), fv)
-        case head :: rest =>
-          val (newBody, fv) = rec(rest)
-          val newFv = (fv.toSet -- head.params.map(_.sym)).toList
-          val clsDef = generateCallAndClass(head :: Nil, newBody, newFv)
-          val cls = Value.Ref(clsDef.sym, Some(clsDef.isym))
-          (Scoped(Set(clsDef.sym), Define(clsDef, Return(Instantiate(false, cls, newFv.map(_.asPath.asArg)), false))), newFv)
-        case Nil => lastWords("impossible because the length of parameter list must be more than 1.")
-      val newFd = FunDefn.withFreshSymbol(fd.owner, fd.sym, head :: Nil, rec(tail)._1)(fd.forceTailRec)
-      Define(newFd, rest)
-
-  private def checkNestedFunctions(body: Block) =
-    new CheckNestedFunctions().applyBlock(body)
-
-  override def applyBlock(b: Block): Block = b match
-    case Define(fd: FunDefn, rest) =>
-      checkNestedFunctions(fd.body)
-      super.applyBlock(desugarMultipleParamList(fd, rest))
-    case _ => super.applyBlock(b)
+  class DesugarMultipleParamList extends BlockTransformer(new SymbolSubst):
+    override def applyFunDefn(fd: FunDefn): FunDefn = fd.params match
+      case Nil => fd
+      case _ :: Nil => fd
+      case head :: tail =>
+        def rec(params: List[ParamList]): Block = params match
+          case head :: Nil => 
+            val funSym = new BlockMemberSymbol("lambda$", Nil, false)
+            val funDef = FunDefn.withFreshSymbol(None, funSym, head :: Nil, fd.body)(false)
+            Scoped(Set(funSym), Define(funDef, Return(Value.Ref(funDef.sym, Some(funDef.dSym)), false)))
+          case head :: rest =>
+            val newBody = rec(rest)
+            val funSym = new BlockMemberSymbol("lambda$", Nil, false)
+            val funDef = FunDefn.withFreshSymbol(None, funSym, head :: Nil, newBody)(false)
+            Scoped(Set(funSym), Define(funDef, Return(Value.Ref(funDef.sym, Some(funDef.dSym)), false)))
+          case Nil => lastWords("impossible because the length of parameter list must be more than 1.")
+        FunDefn.withFreshSymbol(fd.owner, fd.sym, head :: Nil, rec(tail))(fd.forceTailRec)
 
   def transform(b: Block): Block =
-    new CollectFunDefns().applyBlock(b)
-    applyBlock(b)
-
-  // Substitute captured symbols in anonymous lambda bodies with corresponding class fields
-  class UpdateReference(using subst: Map[Symbol, Symbol]) extends BlockTransformer(new SymbolSubst):
-    override def applyLocal(sym: Symbol): Symbol = subst.get(sym) match
-      case Some(r) => r
-      case _ => sym
-
-    override def applyValue(v: Value)(k: Value => Block) = v match
-      case Value.Ref(l, disamb) =>
-        val l2 = applyLocal(l)
-        k(Value.Ref(l2, disamb))
-      case _ => super.applyValue(v)(k)
+    val desugared = new DesugarMultipleParamList().applyBlock(b)
+    new CollectFunDefns().applyBlock(desugared)
+    applyBlock(desugared)

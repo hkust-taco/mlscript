@@ -102,7 +102,7 @@ abstract class MLsDiffMaker extends DiffMaker:
                 S(StackSafety(stackLimit = value))
         ,
       )),
-      liftDefns = Opt.when(liftDefns.isSet || funcToCls.isSet)(LiftDefns()),
+      liftDefns = Opt.when(liftDefns.isSet)(LiftDefns()),
       stageCode = stageCode.isSet,
       target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
       rewriteWhileLoops = rewriteWhile.isSet,
