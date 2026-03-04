@@ -200,6 +200,21 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       createDefnTypes(body)
     case _: BlockTail => ()
 
+  /** Gets (and caches) the exception tag used for MLX `throw`. */
+  private def exnTagIdx(using Ctx): TagIdx =
+    ctx.getOrCreateWasmIntrinsicTag("mlx_exn",
+      ctx.addTag(TagInfo(id = SymIdx("mlx_exn"), typeIdx = ctx.addType(
+        sym = N,
+        TypeInfo(
+          id = N,
+          FunctionType(
+            params = Seq(WasmParam(N, RefType.anyref)),
+            results = Seq.empty
+          )
+        )
+      )))
+    )
+
   /** 
    * Gets (and caches) the Wasm GC array type used for tuples (`mut` selects mutability). 
    */
@@ -234,6 +249,25 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def getExtraLocals(using Ctx): Seq[Local] =
     ctx.getWasmLocals._2.getOrElse(Seq.empty)
 
+  /** Converts expression result types to WAT result clauses, dropping unreachable types. */
+  private def resultClauses(expr: Expr): Seq[Result] =
+    if expr.resultTypes.exists(_ is UnreachableType) then Seq.empty
+    else expr.resultTypes.map(ty => Result(ty.asValType_!))
+
+  /**
+   * Validates an IntLit value fits signed 32-bit and delegates codegen to `onValid`.
+   */
+  private def withValidIntLit(
+      value: BigInt,
+      loc: Opt[Loc]
+  )(onValid: Int => Expr)(using Ctx, Raise, Line): Expr =
+    if value.isValidInt then onValid(value.toInt)
+    else
+      errExpr(
+        Ls(msg"WatBuilder::IntLit lowering with value outside signed 32-bit range not implemented yet" -> loc),
+        extraInfo = S(value.toString)
+      )
+
   /** 
    * Emits a tuple element load that works for both mutable and immutable tuple arrays. 
    */
@@ -253,7 +287,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val immutableBranch =
       val tupleRef = ref.cast(tupleValue, RefType(immArrayType, nullable = false))
       array.get(immArrayType, tupleRef, idxBuilder(tupleRef), elemType)
-    Instructions.`if`(
+    `if`(
       condition = tupleIsMutable,
       ifTrue = mutableBranch,
       ifFalse = S(immutableBranch),
@@ -297,7 +331,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           def idxVal: Expr =
             i31.get(ref.cast(local.get(idxTmp, RefType.anyref), RefType.i31ref), signed = true)
 
-          val normalizedIdx = Instructions.`if`(
+          val normalizedIdx = `if`(
             condition = i32.lt_s(idxVal, i32.const(0)),
             ifTrue = i32.add(idxVal, array.len(tupleRef)),
             ifFalse = S(idxVal),
@@ -428,7 +462,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case Value.Lit(BoolLit(value)) =>
       ref.i31(i32.const(if value then 1 else 0))
     case Value.Lit(IntLit(value)) =>
-      ref.i31(i32.const(value.toInt))
+      withValidIntLit(value, r.toLoc)(intVal => ref.i31(i32.const(intVal)))
     case Value.Ref(l, _) =>
       singletonInfoFor(l) match
         case S(info) => singletonGlobalGet(info)
@@ -558,6 +592,24 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         )
 
     case Instantiate(_, cls, as) =>
+      cls match
+        // TODO: Implement proper lowering for Errors with string and unit payloads.
+        // Currently exceptions are encoded as i31 payloads; unsupported payloads are lossy.
+        case Select(Value.Ref(sym, _), id) if (sym eq State.globalThisSymbol) && id.name == "Error" =>
+          return as.headOption match
+            case S(arg) => arg.value match
+                case Value.Lit(BoolLit(value)) => ref.i31(i32.const(if value then 1 else 0))
+                case Value.Lit(IntLit(value)) =>
+                  withValidIntLit(value, arg.value.toLoc)(intVal => ref.i31(i32.const(intVal)))
+                case unsupported => 
+                  raise(WarningReport(
+                    msg"WatBuilder::result for Instantiate(...) of `globalThis.Error(...)` with payload `${unsupported.toString}` not implemented yet" -> unsupported.toLoc :: Nil,
+                    source = Diagnostic.Source.Compilation,
+                    extraInfo = S(unsupported.toString)
+                  ))
+                  ref.i31(i32.const(0))
+            case N => ref.i31(i32.const(0))
+        case _ => ()
       val ctorClsSymOpt = cls match
         case ref: Value.Ref => ref.disamb
         case sel: Select => sel.symbol
@@ -756,7 +808,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Instructions.block(
         label = N,
         children = Seq(assignExpr, rstBlk),
-        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
+        resultTypes = resultClauses(rstBlk)
       )
 
     case assign @ AssignField(lhs, nme, rhs, rst) =>
@@ -789,7 +841,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Instructions.block(
         label = N,
         children = Seq(assignInstr, rstBlk),
-        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
+        resultTypes = resultClauses(rstBlk)
       )
 
     case assign @ AssignDynField(lhs, fld, arrayIdx, rhs, rst) =>
@@ -817,7 +869,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Instructions.block(
         label = N,
         children = Seq(assignInstr, rstBlk),
-        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
+        resultTypes = resultClauses(rstBlk)
       )
 
     case Define(defn, rst) =>
@@ -848,7 +900,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   ),
                   rstWat
                 ),
-                resultTypes = rstWat.resultTypes.map(r => Result(r.asValType_!))
+                resultTypes = resultClauses(rstWat)
               )
 
         case defn: (FunDefn | ClsLikeDefn) =>
@@ -1042,7 +1094,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             case _ => Instructions.block(
                 label = N,
                 children = Seq(res, rstBlk),
-                resultTypes = rstBlk.resultTypes.map(ty => Result(ty.asValType_!))
+                resultTypes = resultClauses(rstBlk)
               )
 
     case Return(res, true) =>
@@ -1095,14 +1147,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 case IntLit(value) =>
                   val scrutAsI31 = ref.cast(getScrutExpr, RefType.i31ref)
                   val scrutValue = i31.get(scrutAsI31, signed = true)
-                  i32.eq(scrutValue, i32.const(value.toInt))
+                  i32.eq(scrutValue, withValidIntLit(value, lit.toLoc)(i32.const))
                 case _ =>
                   break(errExpr(Ls(msg"Pattern matching for unit literals not implemented yet" -> lit.toLoc)))
 
               val bodyExpr = returningTerm(body)
               val armLabelSym = TempSymbol(N, "arm")
               val armLabel = scope.allocateName(armLabelSym)
-              S(Instructions.`if`(
+              S(`if`(
                 condition = testExpr,
                 ifTrue = Instructions.block(
                   label = S(armLabel),
@@ -1140,9 +1192,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               val scrutTag = struct.get(FieldIdx(NumIdx(0)), scrutAsObject, I32Type)
               val tagMatches = i32.eq(scrutTag, i32.const(expectedTag))
               
-              S(Instructions.`if`(
+              S(`if`(
                 condition = isStructCompatible,
-                ifTrue = Instructions.`if`(
+                ifTrue = `if`(
                   condition = tagMatches,
                   ifTrue = Instructions.block(
                     label = S(armLabel),
@@ -1171,7 +1223,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               val bodyExpr = returningTerm(body)
               val armLabelSym = TempSymbol(N, "arm")
               val armLabel = scope.allocateName(armLabelSym)
-              S(Instructions.`if`(
+              S(`if`(
                 condition = testExpr,
                 ifTrue = Instructions.block(
                   label = S(armLabel),
@@ -1212,11 +1264,23 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             Instructions.block(
               label = N,
               children = Seq(matchBlock, rstExpr),
-              resultTypes = rstExpr.resultTypes.map(ty => Result(ty.asValType_!))
+              resultTypes = resultClauses(rstExpr)
             )
 
-    // TODO: Implement proper WASM exception throwing
-    case Throw(res) => unreachable
+    // * Try/finally lowering is intentionally rejected for now: the previous implementation required `exnref` support
+    // * which can only be enabled with the `--experimental-wasm-exnref` flag. 
+    // * Later, it will be implemented using intrinsic function.
+    case TryBlock(sub, _, _) =>
+      errExpr(
+        Ls(
+          msg"WatBuilder::returningTerm for TryBlock(...) not implemented yet" -> N
+        ),
+        extraInfo = S(sub.showAsTree)
+      )
+
+    case Throw(res) =>
+      val excWat = result(res)
+      `throw`(exnTagIdx, Seq(excWat))
 
     case End(_) => nop
 
@@ -1275,8 +1339,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     // during codegen (e.g., via `local.tee`) are declared in the entry function.
     ctx.pushLocal()
     val (entryFnExpr, entryFnLocals) =
-      block(main)(using ctx, summon[Raise], summon[Scope])
-    val entryExtraLocals = getExtraLocals(using ctx).filterNot(entryFnLocals.toSet.contains)
+      block(main)
+    val entryExtraLocals = getExtraLocals.filterNot(entryFnLocals.toSet.contains)
 
     val entrySym = BlockMemberSymbol("entry", Nil)
     val entryNme = scope.allocateName(entrySym)

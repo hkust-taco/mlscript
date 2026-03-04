@@ -169,8 +169,7 @@ fun f(x) =
 //│ JS (unsanitized):
 //│ let f7;
 //│ f7 = function f(x1) {
-//│   let while1, tmp2, tmp3, tmp4;
-//│   tmp4 = undefined;
+//│   let while1, tmp2, tmp3;
 //│   while1 = (undefined, function () {
 //│     let y1;
 //│     if (x1 === true) {
@@ -182,7 +181,8 @@ fun f(x) =
 //│   });
 //│   tmp2 = while1();
 //│   tmp3 = tmp2 !== runtime.LoopEnd;
-//│   if (tmp3 === true) { return tmp2 } else { return tmp4 }
+//│   if (tmp3 === true) { return tmp2 }
+//│   return runtime.Unit
 //│ };
 
 

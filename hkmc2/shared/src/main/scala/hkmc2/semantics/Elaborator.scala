@@ -259,7 +259,6 @@ object Elaborator:
     val blockSymbol = TempSymbol(N, "Block")
     val shapeSymbol = TempSymbol(N, "Shape")
     val wasmSymbol = TempSymbol(N, "wasm")
-    val effectSigSymbol = ClassSymbol(DummyTypeDef(syntax.Cls), Ident("EffectSig"))
     val nonLocalRetHandlerTrm =
       val id = new Ident("NonLocalReturn")
       val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)
@@ -325,7 +324,7 @@ import Elaborator.*
 
 
 class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
-(using val raise: Raise, val state: State, val cctx: CompilerCtx)
+(using val raise: Raise, val state: State, val cctx: CompilerCtx, val config: Config)
 extends Importer with ucs.SplitElaborator:
   import tl.*
   
@@ -417,13 +416,19 @@ extends Importer with ucs.SplitElaborator:
       Term.Error
     case LetLike(Keywrd(`set`), lhs, S(rhs), S(bod)) =>
       // * Backtracking assignment
-      val lt = subterm(lhs)
-      val sym = TempSymbol(S(lt), "old")
-      Blk(
-        LetDecl(sym, Nil) :: DefineVar(sym, lt) :: Nil, Term.Try(Blk(
-          Term.Assgn(lt, subterm(rhs)) :: Nil,
-          subterm(bod),
-      ), Term.Assgn(lt, sym.ref())))
+      if config.effectHandlers.isDefined then
+        raise(ErrorReport(
+          msg"Backtracking assignment is not supported with effect handlers enabled" ->
+            tree.toLoc :: Nil))
+        Term.Error
+      else
+        val lt = subterm(lhs)
+        val sym = TempSymbol(S(lt), "old")
+        Blk(
+          LetDecl(sym, Nil) :: DefineVar(sym, lt) :: Nil, Term.Try(Blk(
+            Term.Assgn(lt, subterm(rhs)) :: Nil,
+            subterm(bod),
+        ), Term.Assgn(lt, sym.ref())))
     case (hd @ Hndl(id: Ident, c, Block(sts_), S(bod))) => ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
       
       val sym = fieldOrVarSym(HandlerBind, id)

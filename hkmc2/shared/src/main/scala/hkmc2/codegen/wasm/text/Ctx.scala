@@ -159,6 +159,21 @@ class TypeInfo(
       doc"(type${idDoc.surroundUnlessEmpty(doc" ")} ${compType.toWat})"
 end TypeInfo
 
+/**
+ * A WebAssembly exception tag declaration.
+ *
+ * In Wasm, a `tag` names an exception kind and points to a function type that describes the
+ * payload values carried by `throw tag ...` and extracted by matching `catch tag ...`.
+ */
+class TagInfo(
+    val id: SymIdx,
+    val typeIdx: TypeIdx
+) extends ToWat:
+
+  def toWat: Document =
+    doc"""(tag ${id.toWat} (type ${typeIdx.toWat})) # (export "${id.id}" (tag ${id.toWat}))"""
+end TagInfo
+
 enum WasmIntrinsicType:
   case TupleArray(mutable: Bool)
 
@@ -196,6 +211,7 @@ object Ctx:
     funcs = ArrayBuf.empty,
     globals = ArrayBuf.empty,
     namedFuncs = MutMap.empty,
+    tags = ArrayBuf.empty,
     namedGlobals = MutMap.empty,
     locals = MutMap() :: Nil,
     startFunc = N
@@ -233,6 +249,7 @@ class Ctx(
     funcs: ArrayBuf[FuncInfo],
     globals: ArrayBuf[GlobalInfo],
     namedFuncs: MutMap[Symbol, NumIdx],
+    tags: ArrayBuf[TagInfo],
     namedGlobals: MutMap[Symbol, NumIdx],
     var locals: Ls[MutMap[Local, NumIdx]],
     private var startFunc: Opt[FuncIdx]
@@ -242,6 +259,7 @@ class Ctx(
 
   private val wasmIntrinsicFuncs: MutMap[Str, FuncIdx] = MutMap.empty
   private val wasmIntrinsicTypes: MutMap[WasmIntrinsicType, TypeIdx] = MutMap.empty
+  private val wasmIntrinsicTags: MutMap[Str, TagIdx] = MutMap.empty
   private val singletonByBms: MutMap[BlockMemberSymbol, Ctx.SingletonInfo] = MutMap.empty
   private val singletonByIsym: MutMap[ModuleOrObjectSymbol, Ctx.SingletonInfo] = MutMap.empty
   private val singletonInitActions: ArrayBuf[Expr] = ArrayBuf.empty
@@ -292,6 +310,11 @@ class Ctx(
     sym.foreach:
       namedFuncs(_) = numIdx
     FuncIdx(funcInfo.id.getOrElse(numIdx))
+
+  /** Adds a tag into this context. */
+  def addTag(tagInfo: TagInfo): TagIdx =
+    tags += tagInfo
+    TagIdx(tagInfo.id)
 
   /**
    * Returns the [[FuncIdx]] of the given `funcref`, optionally resolving the symbolic index into a
@@ -423,8 +446,12 @@ class Ctx(
   def getOrCreateWasmIntrinsicType(key: WasmIntrinsicType, createType: => TypeIdx): TypeIdx =
     wasmIntrinsicTypes.getOrElseUpdate(key, createType)
 
+  /** Returns the cached [[TagIdx]] for the intrinsic tag named `name`, creating it if absent. */
+  def getOrCreateWasmIntrinsicTag(name: Str, createTag: => TagIdx): TagIdx =
+    wasmIntrinsicTags.getOrElseUpdate(name, createTag)
+
   def toWat: Document =
     val startDef = startFunc.toSeq.map(funcIdx => doc"(start ${funcIdx.toWat})")
-    doc"(module #{  # ${(types.toSeq.map(_.toWat) ++ globals.toSeq.map(_.toWat) ++ startDef ++ funcs.toSeq.map(_.toWat)).mkDocument(doc" # ")}) #} "
+    doc"(module #{  # ${(types.toSeq.map(_.toWat) ++ globals.toSeq.map(_.toWat) ++ tags.toSeq.map(_.toWat) ++ startDef ++ funcs.toSeq.map(_.toWat)).mkDocument(doc" # ")}) #} "
 
 end Ctx
