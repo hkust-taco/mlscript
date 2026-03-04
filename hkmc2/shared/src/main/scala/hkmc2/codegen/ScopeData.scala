@@ -107,7 +107,7 @@ object ScopeData:
           clsBody.privateFields.toSet + clsBody.isym
         case _: ClassCtor => Set.empty
         case Func(fun, _) => fun.params.flatMap: p =>
-            p.params.map(_.sym)
+            p.restParam.map(_.sym) ++ p.params.map(_.sym)
           .toSet
         case ScopedBlock(_, block) => block.syms.toSet
         case _: Loop => Set.empty

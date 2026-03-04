@@ -505,6 +505,17 @@ f(2)
 //│ > 2
 //│ = [1]
 
+fun f(...args) =
+  () =>
+    print("test")
+    f(...args)
+f(100)()()()
+//│ > test
+//│ > test
+//│ > test
+//│ = fun
+
+
 data class Some(x)
 
 // This test generates a function that is not defined directly within the scoped block introducing its symbol,
@@ -519,3 +530,29 @@ let _refChoice = () => if
 _refChoice
 //│ = fun
 //│ _refChoice = fun
+
+:expect 2
+fun f =
+  fun g(x) = x()
+  fun h() = 2
+  g(h)
+f
+//│ = 2
+
+:expect 2
+fun f =
+  class A(x) with
+    fun foo = x()
+  fun h() = 2
+  new A(h)
+f.foo
+//│ = 2
+
+:expect 2
+fun f =
+  class A(x) with
+    fun foo = x()
+  fun h() = 2
+  A(h)
+f.foo
+//│ = 2

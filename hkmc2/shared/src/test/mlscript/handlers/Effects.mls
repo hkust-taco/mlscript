@@ -195,6 +195,21 @@ h.perform("t")
 //│ > t
 //│ = "b"
 
+:expect 3
+handle h = Effect with
+  fun perform(arg)(k) =
+    print(arg)
+    let r = k(true)
+    print(arg)
+    r
+if false || h.perform("hello") then
+  3
+else
+  0
+//│ > hello
+//│ > hello
+//│ = 3
+
 :expect "Hello World!"
 fun foo(h) =
   print("Entering foo")
@@ -441,28 +456,28 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.436: 	    module A with
+//│ ║  l.451: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.432: 	    module A with
+//│ ║  l.447: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.428: 	    module A with
+//│ ║  l.443: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.424: 	    module A with
+//│ ║  l.439: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.424: 	    module A with
+//│ ║  l.439: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.428: 	    module A with
+//│ ║  l.443: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.432: 	    module A with
+//│ ║  l.447: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.436: 	    module A with
+//│ ║  l.451: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 
