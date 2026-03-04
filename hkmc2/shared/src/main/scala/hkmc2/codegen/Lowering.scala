@@ -70,6 +70,17 @@ end LoweringCtx
 import LoweringCtx.loweringCtx
 
 
+object Lowering:
+  
+  def compError: Block =
+    Throw(Value.Lit(Tree.StrLit("This code cannot be run as its compilation yielded an error.")))
+  
+  def fail(err: ErrorReport)(using Raise): Block =
+    raise(err)
+    compError
+  
+import Lowering.*
+
 class Lowering()(using Config, TL, Raise, State, Ctx):
   
   extension (t: Term)
@@ -127,14 +138,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   
   def unit: Path =
     Select(Value.Ref(State.runtimeSymbol), Tree.Ident("Unit"))(S(State.unitSymbol))
-  
-  
-  def compError: Block =
-    Throw(Value.Lit(Tree.StrLit("This code cannot be run as its compilation yielded an error.")))
-  
-  def fail(err: ErrorReport): Block =
-    raise(err)
-    compError
   
   
   // type Rcd = (mut: Bool, args: List[RcdArg]) // * Better, but Scala's patmat exhaustiveness chokes on it
@@ -538,7 +541,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               k(Call(
                 Value.Ref(State.runtimeSymbol).selN(Tree.Ident(if isAnd then "short_and" else "short_or")),
                 Arg(N, ar1) :: Arg(N, lamDef.asPath) :: Nil
-              )(true, false, false)))
+              )(true, true, false)))
           else
             subTerm_nonTail(arg2): ar2 =>
               val target = wasmIntrinsicPath(sym, unary = false)
