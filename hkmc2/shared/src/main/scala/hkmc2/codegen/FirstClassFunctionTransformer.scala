@@ -92,7 +92,6 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
               source = Diagnostic.Source.Compilation))
             k(call(fun))
         case _ => k(call(fun))
-    case path: Path => applyPath(path)(k)
     case _: Lambda => lastWords("Lambda functions should be rewritten into function definitions first.")
     case _ => super.applyResult(r)(k)
 
@@ -102,12 +101,8 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
       case _ :: Nil => fd
       case head :: tail =>
         def rec(params: List[ParamList]): Block = params match
-          case head :: Nil => 
-            val funSym = new BlockMemberSymbol("lambda$", Nil, false)
-            val funDef = FunDefn.withFreshSymbol(None, funSym, head :: Nil, fd.body)(false)
-            Scoped(Set(funSym), Define(funDef, Return(Value.Ref(funDef.sym, Some(funDef.dSym)), false)))
           case head :: rest =>
-            val newBody = rec(rest)
+            val newBody = if rest.isEmpty then fd.body else rec(rest)
             val funSym = new BlockMemberSymbol("lambda$", Nil, false)
             val funDef = FunDefn.withFreshSymbol(None, funSym, head :: Nil, newBody)(false)
             Scoped(Set(funSym), Define(funDef, Return(Value.Ref(funDef.sym, Some(funDef.dSym)), false)))
