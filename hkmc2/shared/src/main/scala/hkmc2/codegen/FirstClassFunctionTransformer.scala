@@ -102,11 +102,11 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
       case head :: tail =>
         def rec(params: List[ParamList]): Block = params match
           case head :: rest =>
-            val newBody = if rest.isEmpty then fd.body else rec(rest)
+            val newBody = rec(rest)
             val funSym = new BlockMemberSymbol("lambda$", Nil, false)
             val funDef = FunDefn.withFreshSymbol(None, funSym, head :: Nil, newBody)(false)
             Scoped(Set(funSym), Define(funDef, Return(Value.Ref(funDef.sym, Some(funDef.dSym)), false)))
-          case Nil => lastWords("impossible because the length of parameter list must be more than 1.")
+          case Nil => fd.body
         FunDefn.withFreshSymbol(fd.owner, fd.sym, head :: Nil, rec(tail))(fd.forceTailRec)
 
   def transform(b: Block): Block =
