@@ -762,14 +762,14 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
         selExpr.getResult.matches:
           case Select(p, _) => p === dtor.exprId.getResult
           case DeforestTupSelect(s, _) => s === dtor.exprId.getReferredSym
-  private def selAndDtorIsSameConsumer(dtor: Dtor, sel: FieldSel): Boolean =
-    selAndDtorIsSameConsumer(dtor.toCtorDtorId, sel.toCtorDtorId :: Nil)
+  // private def selAndDtorIsSameConsumer(dtor: Dtor, sel: FieldSel): Boolean =
+  //   selAndDtorIsSameConsumer(dtor.toCtorDtorId, sel.toCtorDtorId :: Nil)
   
-  
-  case class FinalDest(dtor: CtorDtorId, sels: Set[CtorDtorId]):
-    assert(selAndDtorIsSameConsumer(dtor, sels))
-  val ctorDests = LinkedHashMap.empty[ConcreteProducer, Set[ConcreteConsumer | NoCons.type]].withDefaultValue(Set.empty)
-  val dtorSrcs = LinkedHashMap.empty[ConcreteConsumer, Set[ConcreteProducer | NoProd.type]].withDefaultValue(Set.empty)
+  sealed abstract class FinalDest
+  case class FinalDestMatch(dtor: CtorDtorId, sels: Set[CtorDtorId]) extends FinalDest
+  case class FinalDestSel(dtors: Set[CtorDtorId], field: SelField) extends FinalDest
+  private val ctorDests = LinkedHashMap.empty[ConcreteProducer, Set[ConcreteConsumer | NoCons.type]].withDefaultValue(Set.empty)
+  private val dtorSrcs = LinkedHashMap.empty[ConcreteConsumer, Set[ConcreteProducer | NoProd.type]].withDefaultValue(Set.empty)
   
   val finalCtorDests = LinkedHashMap.empty[CtorDtorId, FinalDest]
   val finalDtorSrcs = LinkedHashMap.empty[CtorDtorId, Set[CtorDtorId]]
@@ -836,17 +836,27 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
     def markDtorToBeRemoved(rm: ConcreteConsumer): Unit = if toRemoveDtor.add(rm) then
       for case ctor: ConcreteProducer <- dtorSrcs(rm) do markCtorToBeRemoved(ctor)
     def mergeDests(dests: Set[ConcreteConsumer | NoCons.type]): Opt[FinalDest] =
+      def selsSelectingTheSameSymbol(sels: Set[FieldSel]) =
+        sels.map(s => s.field).size == 1
       if dests.contains(NoCons) then N
       else
         val (dtors, sels) = dests.partitionMap:
           case d: Dtor => Left(d)
           case fs: FieldSel => Right(fs)
           case _ => die
-        if dtors.size != 1 then N
+        if dtors.size == 0 && selsSelectingTheSameSymbol(sels) then
+          S(FinalDestSel(
+            sels.map(_.toCtorDtorId),
+            sels.head.field
+          ))
+        else if dtors.size != 1 then N
         else
           val dtor = dtors.head
-          if sels.forall(s => selAndDtorIsSameConsumer(dtor, s)) then
-            S(FinalDest(
+          if selAndDtorIsSameConsumer(
+            dtor.toCtorDtorId,
+            sels.map(s => s.toCtorDtorId)
+          ) then
+            S(FinalDestMatch(
               CtorDtorId(dtor.scrutExprId, dtor.instantiationId.get),
               sels.map: s =>
                 CtorDtorId(s.exprId, s.instantiationId.get)
@@ -875,17 +885,15 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
       finalDtorSrcs(dtor.toCtorDtorId) = srcs.map(_.asInstanceOf[ConcreteProducer].toCtorDtorId)
       fusingDtorInfo(dtor.toCtorDtorId) = dtor
     
-    assert:
-      finalCtorDests.forall:
-        case (c, FinalDest(dtor, sels)) =>
-          finalDtorSrcs(dtor).contains(c) &&
-          sels.forall(sel => finalDtorSrcs(sel).contains(c))
   }
   
   tl.log("==============")
-  for (c, FinalDest(dtor, sels)) <- finalCtorDests do
+  for case (c, FinalDestMatch(dtor, sels)) <- finalCtorDests do
     tl.log(s"${c.pp} ->")
     tl.log(s"\t${dtor.pp}")
     for s <- sels do tl.log(s"\t${s.pp}")
+  for case (c, FinalDestSel(_, f)) <- finalCtorDests do
+    tl.log(s"${c.pp} ->")
+    tl.log(s"\t${f}")
   
 end DeforestConstrainSolver

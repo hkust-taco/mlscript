@@ -465,6 +465,10 @@ f(AA(AA(0)))
 fun f(x) = x.AA#aa.AA#aa
 f(AA(AA(3)))
 //│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	(ParamBind)term:class:AA.aa
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	(ParamBind)term:class:AA.aa
 //│ deforest > ========
 //│ = 3
 
@@ -623,8 +627,8 @@ test(p)
 //│   fv_tmp1 = fv_a;
 //│   return test_15$split_root$_rest(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, fv_tmp6)
 //│ };
-//│ test_15$x_AA1 = function test_15$x_AA(fv_t, fv_a, fv_a1, fv_arg$BB$0$, fv_arg$CCC$0$, fv_arg$AA$0$, fv_arg$CCC$0$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, fv_t1, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_tmp10, fv_tmp11, AA_aa6) {
-//│   fv_arg$AA$0$ = AA_aa6;
+//│ test_15$x_AA1 = function test_15$x_AA(fv_t, fv_a, fv_a1, fv_arg$BB$0$, fv_arg$CCC$0$, fv_arg$AA$0$, fv_arg$CCC$0$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, fv_t1, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_tmp10, fv_tmp11, AA_aa8) {
+//│   fv_arg$AA$0$ = AA_aa8;
 //│   return fv_arg$AA$0$(fv_a, fv_arg$CCC$0$1, fv_tmp6, fv_t1, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_tmp10, fv_tmp11)
 //│ };
 //│ test_15$arg$AA$0$_CCC = function test_15$arg$AA$0$_CCC(fv_a, fv_arg$CCC$0$, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, fv_tmp6, CCC_c3) {
@@ -694,14 +698,14 @@ test(p)
 //│ };
 //│ scrut = true;
 //│ if (scrut === true) {
-//│   let AA_aa6, CCC_c3; /* scoped */
+//│   let AA_aa8, CCC_c3; /* scoped */
 //│   CCC_c3 = AA1;
 //│   tmp52 = (fv_ctorLam_a, fv_ctorLam_arg$CCC$0$, fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6) => {
 //│     return test_15$arg$AA$0$_CCC(fv_ctorLam_a, fv_ctorLam_arg$CCC$0$, fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6, CCC_c3)
 //│   };
-//│   AA_aa6 = tmp52;
+//│   AA_aa8 = tmp52;
 //│   tmp53 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_a1, fv_ctorLam_arg$BB$0$, fv_ctorLam_arg$CCC$0$, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$CCC$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, fv_ctorLam_tmp11) => {
-//│     return test_15$x_AA1(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_a1, fv_ctorLam_arg$BB$0$, fv_ctorLam_arg$CCC$0$, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$CCC$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, fv_ctorLam_tmp11, AA_aa6)
+//│     return test_15$x_AA1(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_a1, fv_ctorLam_arg$BB$0$, fv_ctorLam_arg$CCC$0$, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$CCC$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, fv_ctorLam_tmp11, AA_aa8)
 //│   };
 //│ } else {
 //│   let BB_bb1, CCC_c4; /* scoped */
@@ -911,7 +915,56 @@ f(AA(1), BB(2))
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(1))))) ->
 //│ deforest > 	Ref(var:a,None)
 //│ deforest > 	Select(Ref(var:a,None),Ident(aa))
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	(ParamBind)term:class:BB.bb
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:a,None):
 //│ deforest > 	List(var:b, var:x, $arg$AA$0$)
 //│ = 3
+
+
+:deforest
+fun g(k, x) = if k is
+  A then x.AA#aa + x.AA#aa + x.AA#aa
+g(A, AA(3))
+//│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:k,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	(ParamBind)term:class:AA.aa
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:k,None):
+//│ deforest > 	List(var:x, $tmp)
+//│ = 9
+
+
+// multi parameter list
+fun inner(x)(y) =
+  let t = if x is
+    AA(a) then a + y
+    BB(b) then b - y
+  t * y
+fun outer1(x)(y, z) =
+  let t = if x is
+    AA(a) then inner(a)(y)
+    BB(b) then inner(b)(y)
+  t + z
+fun outer2(x, y)(z) =
+  let t = if x is
+    AA(a) then inner(a)(z)
+    BB(b) then inner(b)(y)
+  t + y
+let p = AA(AA(3))
+outer1(p)(1, 2) + outer2(p, 3)(4) + inner(AA(5))(6)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(5))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, var:a, $arg$AA$0$, $tmp, var:y, var:t, $tmp)
+//│ = 103
+//│ p = AA(AA(3))
+
+
+
