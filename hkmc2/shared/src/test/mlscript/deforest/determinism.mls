@@ -15,9 +15,6 @@ if B(1,2,3,4,5) is
 //│ deforest > 	Select(Ref($scrut,None),Ident(a))
 //│ deforest > 	Select(Ref($scrut,None),Ident(c))
 //│ deforest > 	Select(Ref($scrut,None),Ident(b))
-//│ deforest > ========
-//│ deforest > free vars of Ref($scrut,None):
-//│ deforest > 	List()
 //│ JS (unsanitized):
 //│ let scrut, e, a, b, c, d, arg$B$0$, arg$B$1$, arg$B$2$, arg$B$3$, arg$B$4$, B_a, B_b, B_c, B_d, B_e, $scrut_B, $scrut_rest; /* scoped */
 //│ $scrut_B = function $scrut_B(B_a1, B_b1, B_c1, B_d1, B_e1) {
@@ -49,9 +46,6 @@ if B(1,2,3,4,5) is
 //│ deforest > 	Select(Ref($scrut,None),Ident(a))
 //│ deforest > 	Select(Ref($scrut,None),Ident(c))
 //│ deforest > 	Select(Ref($scrut,None),Ident(b))
-//│ deforest > ========
-//│ deforest > free vars of Ref($scrut,None):
-//│ deforest > 	List()
 //│ = 0
 
 
@@ -79,19 +73,6 @@ c2 of A(A(A(A(A(A(1))))))
 //│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Lit(IntLit(1))))) ->
 //│ deforest > 	Ref($arg$A$0$,None)
 //│ deforest > 	Select(Ref($arg$A$0$,None),Ident(a))
-//│ deforest > ========
-//│ deforest > free vars of Ref($arg$A$0$,None):
-//│ deforest > 	List(var:a, $arg$A$0$, $arg$A$0$, $arg$A$0$, $arg$A$0$, $arg$A$0$, $tmp, $tmp)
-//│ deforest > free vars of Ref($arg$A$0$,None):
-//│ deforest > 	List(var:a, $arg$A$0$, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:a, $arg$A$0$, $arg$A$0$, $arg$A$0$, $arg$A$0$, $arg$A$0$, $arg$A$0$, $tmp, $tmp)
-//│ deforest > free vars of Ref($arg$A$0$,None):
-//│ deforest > 	List(var:a, $arg$A$0$, $arg$A$0$, $arg$A$0$, $tmp, $tmp)
-//│ deforest > free vars of Ref($arg$A$0$,None):
-//│ deforest > 	List(var:a, $arg$A$0$, $arg$A$0$, $tmp, $tmp)
-//│ deforest > free vars of Ref($arg$A$0$,None):
-//│ deforest > 	List(var:a, $arg$A$0$, $arg$A$0$, $arg$A$0$, $arg$A$0$, $tmp, $tmp)
 //│ JS (unsanitized):
 //│ let c2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, A_a, c2_19$c2, c2_19$x_A, c2_19$x_rest, c2_19$split_default$_rest, c2_19$split_root$_rest, A_a1, c2_19$arg$A$0$_A, c2_19$arg$A$0$_rest, A_a2, c2_19$arg$A$0$_A1, c2_19$arg$A$0$_rest1, A_a3, c2_19$arg$A$0$_A2, c2_19$arg$A$0$_rest2, A_a4, c2_19$arg$A$0$_A3, c2_19$arg$A$0$_rest3, A_a5, c2_19$arg$A$0$_A4, c2_19$arg$A$0$_rest4; /* scoped */
 //│ c2_19$c2 = function c2_19$c2(x) {
@@ -240,17 +221,4 @@ c2 of A(A(A(A(A(A(1))))))
 //│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Lit(IntLit(1))))) ->
 //│ deforest > 	Ref($arg$A$0$,None)
 //│ deforest > 	Select(Ref($arg$A$0$,None),Ident(a))
-//│ deforest > ========
-//│ deforest > free vars of Ref($arg$A$0$,None):
-//│ deforest > 	List(var:a, $arg$A$0$, $arg$A$0$, $arg$A$0$, $arg$A$0$, $arg$A$0$, $tmp, $tmp)
-//│ deforest > free vars of Ref($arg$A$0$,None):
-//│ deforest > 	List(var:a, $arg$A$0$, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:a, $arg$A$0$, $arg$A$0$, $arg$A$0$, $arg$A$0$, $arg$A$0$, $arg$A$0$, $tmp, $tmp)
-//│ deforest > free vars of Ref($arg$A$0$,None):
-//│ deforest > 	List(var:a, $arg$A$0$, $arg$A$0$, $arg$A$0$, $tmp, $tmp)
-//│ deforest > free vars of Ref($arg$A$0$,None):
-//│ deforest > 	List(var:a, $arg$A$0$, $arg$A$0$, $tmp, $tmp)
-//│ deforest > free vars of Ref($arg$A$0$,None):
-//│ deforest > 	List(var:a, $arg$A$0$, $arg$A$0$, $arg$A$0$, $arg$A$0$, $tmp, $tmp)
 //│ = 1

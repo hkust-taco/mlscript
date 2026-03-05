@@ -681,11 +681,11 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   // for (instId, bms) <- newPolyFnSyms do
   //   tl.log(bms)
   
-  tl.log("========")
-  for (dtorId, fvs) <- dtorBranchFnFvs do
-    tl.log(s"free vars of ${dtorId.pp}:")
-    // tl.log(s"\t${fvs.map(s => (s, s.uid))}")
-    tl.log(s"\t$fvs")
+  // tl.log("========")
+  // for (dtorId, fvs) <- dtorBranchFnFvs do
+  //   tl.log(s"free vars of ${dtorId.pp}:")
+  //   // tl.log(s"\t${fvs.map(s => (s, s.uid))}")
+  //   tl.log(s"\t$fvs")
   // for (dtorId, callFvs) <- callDtorFvs do
   //   tl.log(s"call dtor ${dtorId.pp} with:")
   //   tl.log(s"\t$callFvs")

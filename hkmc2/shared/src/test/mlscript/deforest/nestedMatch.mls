@@ -2,7 +2,6 @@
 :deforest
 
 //│ deforest > ==============
-//│ deforest > ========
 object A
 object B
 object C
@@ -10,17 +9,14 @@ data class AA(x)
 data class BB(x)
 data class CC(x)
 //│ deforest > ==============
-//│ deforest > ========
 
 object Nil
 data class Cons(h, t)
 //│ deforest > ==============
-//│ deforest > ========
 
 object None
 data class Some(x)
 //│ deforest > ==============
-//│ deforest > ========
 
 
 fun f(x, y) =
@@ -48,15 +44,6 @@ f(a, 2) + g(a) + f(BB(3), 2) + f(AA(AA(4)), 5)
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(3))))) ->
 //│ deforest > 	Ref(var:a,None)
 //│ deforest > 	Select(Ref(var:a,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y, var:t, var:a, var:m, var:x, $arg$AA$0$, $arg$AA$0$, $tmp, $tmp, var:y, var:t, $tmp)
-//│ deforest > free vars of Ref(var:a,None):
-//│ deforest > 	List(var:x, $arg$AA$0$, $tmp, var:m, $tmp, $tmp, var:y, var:t, $tmp)
-//│ deforest > free vars of Ref(var:a,None):
-//│ deforest > 	List(var:x, $arg$AA$0$, $tmp, var:m, $tmp, $tmp, var:y, var:t, $tmp)
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:b, $arg$BB$0$, $tmp, var:y, var:t, $tmp)
 //│ = 37
 //│ a = AA(fun tmp)
 
@@ -82,15 +69,6 @@ f(AA(AA(3)), 9) + f(AA(AA(4)), 10)
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(3))))) ->
 //│ deforest > 	Ref(var:a,None)
 //│ deforest > 	Select(Ref(var:a,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:a,None):
-//│ deforest > 	List(var:m, $arg$AA$0$, $tmp, $tmp, $tmp, var:y, var:n, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y, var:n, var:a, var:m, $arg$AA$0$, $arg$AA$0$, $tmp, $tmp, $tmp, var:y, var:n, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:a,None):
-//│ deforest > 	List(var:m, $arg$AA$0$, $tmp, $tmp, $tmp, var:y, var:n, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y, var:n, var:a, var:m, $arg$AA$0$, $arg$AA$0$, $tmp, $tmp, $tmp, var:y, var:n, $tmp, $tmp)
 //│ = 30
 
 
@@ -109,11 +87,6 @@ f(AA(AA(3)))
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(3))))) ->
 //│ deforest > 	Ref(var:a,None)
 //│ deforest > 	Select(Ref(var:a,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:a,None):
-//│ deforest > 	List(var:m, $arg$AA$0$, $tmp, $tmp, $tmp, var:n, $tmp)
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:n, var:a, var:m, $arg$AA$0$, $arg$AA$0$, $tmp, $tmp, var:n, $tmp)
 //│ = 5
 
 
@@ -136,15 +109,6 @@ f(AA(AA(A))) + f(AA(AA(A)))
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
 //│ deforest > 	Ref($arg$AA$0$,None)
 //│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:t, var:a, $arg$AA$0$, $arg$AA$0$, $tmp, var:t, $tmp)
-//│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List(var:a, $arg$AA$0$, $tmp, var:t, $tmp)
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:t, var:a, $arg$AA$0$, $arg$AA$0$, $tmp, var:t, $tmp)
-//│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List(var:a, $arg$AA$0$, $tmp, var:t, $tmp)
 //│ = "A3A3"
 
 
@@ -159,11 +123,6 @@ c2(AA(AA(0)))
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(0))))) ->
 //│ deforest > 	Ref($arg$AA$0$,None)
 //│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:a, $arg$AA$0$, $arg$AA$0$, $tmp, $tmp)
-//│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List(var:a, $arg$AA$0$, $tmp, $tmp)
 //│ = 0
 
 
@@ -180,13 +139,6 @@ f(AA(BB(B)))
 //│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref($arg$BB$0$,None)
-//│ deforest > ========
-//│ deforest > free vars of Ref($arg$BB$0$,None):
-//│ deforest > 	List($tmp, $tmp)
-//│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List($arg$BB$0$, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:a,None):
-//│ deforest > 	List($arg$AA$0$, $arg$BB$0$, $tmp, $tmp)
 //│ = 3
 
 
@@ -217,19 +169,6 @@ test(AA(1), AA(2), BB(3), 4) + test(AA(1), AA(2), BB(3), 4)
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(1))))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y, var:z, var:i, var:a, var:m, var:a1, var:n, var:a2, $arg$AA$0$, $arg$AA$0$, $tmp, $arg$BB$0$, $tmp)
-//│ deforest > free vars of Ref(var:y,None):
-//│ deforest > 	List(var:i, var:a1, $arg$AA$0$, $tmp, var:z, var:i, var:m, var:n, var:a2, $tmp, $arg$BB$0$, $tmp)
-//│ deforest > free vars of Ref(var:y,None):
-//│ deforest > 	List(var:i, var:a1, $arg$AA$0$, $tmp, var:z, var:i, var:m, var:n, var:a2, $tmp, $arg$BB$0$, $tmp)
-//│ deforest > free vars of Ref(var:z,None):
-//│ deforest > 	List(var:i, var:a2, $arg$BB$0$, $tmp, var:m, var:n, $tmp)
-//│ deforest > free vars of Ref(var:z,None):
-//│ deforest > 	List(var:i, var:a2, $arg$BB$0$, $tmp, var:m, var:n, $tmp)
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y, var:z, var:i, var:a, var:m, var:a1, var:n, var:a2, $arg$AA$0$, $arg$AA$0$, $tmp, $arg$BB$0$, $tmp)
 //│ = 10
 
 
@@ -254,13 +193,6 @@ f1(aa(BB(cc))) + f2(aa(BB(CC(0)))) + f3(cc)
 //│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Ref(var:cc,None)))) ->
 //│ deforest > 	Ref(var:x1,None)
 //│ deforest > 	Select(Ref(var:x1,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:x1, var:x2, var:x3, $arg$AA$0$, $arg$BB$0$, $arg$CC$0$)
-//│ deforest > free vars of Ref(var:x1,None):
-//│ deforest > 	List(var:x2, var:x3, $arg$BB$0$, $arg$CC$0$)
 //│ = "ccf2f3cc"
 //│ cc = CC("cc")
 
@@ -274,7 +206,6 @@ fun c(x, y) = if x is
 let y = A
 c(AA(2), y)
 //│ deforest > ==============
-//│ deforest > ========
 //│ = 4
 //│ y = A
 
@@ -288,7 +219,6 @@ fun c2(y) = if y is A then 3
 let y = A
 c(AA(2), y) + c2(y)
 //│ deforest > ==============
-//│ deforest > ========
 //│ = 9
 //│ y = A
 
@@ -312,13 +242,6 @@ test(p) + f(p) + test(AA(A))
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(StrLit(10))))) ->
 //│ deforest > 	Ref($arg$AA$0$,None)
 //│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:t, $arg$AA$0$, $tmp, $tmp, var:t, $tmp)
-//│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List($tmp, var:t, $tmp)
-//│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List(var:a, $arg$AA$0$, $tmp, $tmp, var:t, $tmp)
 //│ = "105035"
 //│ p = AA(AA(fun tmp49))
 
@@ -338,7 +261,6 @@ fun f(x, y) =
 let aa = AA(3)
 f(aa, 3) + f(aa, 4)
 //│ deforest > ==============
-//│ deforest > ========
 //│ = 13
 //│ aa = AA(3)
 
@@ -370,19 +292,6 @@ test(3, AA(2), AA(3)) + test(3, AA(2), AA(3))
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
 //│ deforest > 	Ref(var:p,None)
 //│ deforest > 	Select(Ref(var:p,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref($scrut,None):
-//│ deforest > 	List(var:n, var:p, var:q, var:k, var:x, var:y, $arg$AA$0$, $tmp, $arg$AA$0$, $tmp, $tmp, var:n, $tmp)
-//│ deforest > free vars of Ref(var:q,None):
-//│ deforest > 	List(var:k, var:y, $arg$AA$0$, $tmp, $tmp, $tmp, var:n, $tmp)
-//│ deforest > free vars of Ref(var:p,None):
-//│ deforest > 	List(var:x, $arg$AA$0$, $tmp, var:n, var:q, var:k, var:y, $tmp, $arg$AA$0$, $tmp, $tmp, var:n, $tmp)
-//│ deforest > free vars of Ref(var:p,None):
-//│ deforest > 	List(var:x, $arg$AA$0$, $tmp, var:n, var:q, var:k, var:y, $tmp, $arg$AA$0$, $tmp, $tmp, var:n, $tmp)
-//│ deforest > free vars of Ref($scrut,None):
-//│ deforest > 	List(var:n, var:p, var:q, var:k, var:x, var:y, $arg$AA$0$, $tmp, $arg$AA$0$, $tmp, $tmp, var:n, $tmp)
-//│ deforest > free vars of Ref(var:q,None):
-//│ deforest > 	List(var:k, var:y, $arg$AA$0$, $tmp, $tmp, $tmp, var:n, $tmp)
 //│ = 16
 
 
@@ -415,15 +324,6 @@ test(1, AA(2), AA(3), a) + test(2, AA(2), AA(3), a) + c(a)
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
 //│ deforest > 	Ref(var:p,None)
 //│ deforest > 	Select(Ref(var:p,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:p,None):
-//│ deforest > 	List(var:k, var:x, $arg$AA$0$, $tmp, var:n, var:q, var:o, var:k, var:y, $arg$AA$0$, $tmp, $tmp, var:n, var:o)
-//│ deforest > free vars of Ref(var:q,None):
-//│ deforest > 	List(var:o, var:k, var:y, $arg$AA$0$, $tmp, $tmp, $tmp, var:n, var:o)
-//│ deforest > free vars of Ref(var:q,None):
-//│ deforest > 	List(var:o, var:k, var:y, $arg$AA$0$, $tmp, $tmp, $tmp, var:n, var:o)
-//│ deforest > free vars of Ref(var:p,None):
-//│ deforest > 	List(var:k, var:x, $arg$AA$0$, $tmp, var:n, var:q, var:o, var:k, var:y, $arg$AA$0$, $tmp, $tmp, var:n, var:o)
 //│ = 13
 //│ a = A
 
@@ -458,19 +358,6 @@ test(AA(1), AA(2), BB(3), 4) + test(AA(1), AA(2), BB(3), 4)
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(1))))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y, var:z, var:i, var:k, var:a, var:m, var:a1, var:n, var:a2, $arg$AA$0$, $arg$AA$0$, $tmp, $arg$BB$0$, $tmp, $tmp, var:i, var:k, $tmp)
-//│ deforest > free vars of Ref(var:y,None):
-//│ deforest > 	List(var:i, var:a1, $arg$AA$0$, $tmp, var:z, var:i, var:k, var:m, var:n, var:a2, $tmp, $arg$BB$0$, $tmp, $tmp, var:i, var:k, $tmp)
-//│ deforest > free vars of Ref(var:y,None):
-//│ deforest > 	List(var:i, var:a1, $arg$AA$0$, $tmp, var:z, var:i, var:k, var:m, var:n, var:a2, $tmp, $arg$BB$0$, $tmp, $tmp, var:i, var:k, $tmp)
-//│ deforest > free vars of Ref(var:z,None):
-//│ deforest > 	List(var:i, var:a2, $arg$BB$0$, $tmp, var:m, var:n, $tmp, $tmp, var:i, var:k, $tmp)
-//│ deforest > free vars of Ref(var:z,None):
-//│ deforest > 	List(var:i, var:a2, $arg$BB$0$, $tmp, var:m, var:n, $tmp, $tmp, var:i, var:k, $tmp)
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y, var:z, var:i, var:k, var:a, var:m, var:a1, var:n, var:a2, $arg$AA$0$, $arg$AA$0$, $tmp, $arg$BB$0$, $tmp, $tmp, var:i, var:k, $tmp)
 //│ = 18
 
 
@@ -504,19 +391,6 @@ test(AA(1), AA(2), BB(3), 4) + test(AA(1), BB(2), BB(3), 4)
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(1))))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:y,None):
-//│ deforest > 	List(var:i, var:a1, $arg$AA$0$, $tmp, var:z, var:i, var:k, var:m, var:n, var:a2, $tmp, $arg$BB$0$, $tmp, $tmp, var:i, var:k, $tmp)
-//│ deforest > free vars of Ref(var:z,None):
-//│ deforest > 	List(var:i, var:a2, $arg$BB$0$, $tmp, var:m, var:n, $tmp, $tmp, var:i, var:k, $tmp)
-//│ deforest > free vars of Ref(var:z,None):
-//│ deforest > 	List(var:i, var:a2, $arg$BB$0$, $tmp, var:m, var:n, $tmp, $tmp, var:i, var:k, $tmp)
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y, var:z, var:i, var:k, var:a, var:m, var:b2, var:n, var:a2, $arg$AA$0$, $arg$BB$0$, $tmp, $arg$BB$0$, $tmp, $tmp, var:i, var:k, $tmp)
-//│ deforest > free vars of Ref(var:y,None):
-//│ deforest > 	List(var:i, var:b2, $arg$BB$0$, $tmp, var:z, var:i, var:k, var:m, var:n, var:a2, $tmp, $arg$BB$0$, $tmp, $tmp, var:i, var:k, $tmp)
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y, var:z, var:i, var:k, var:a, var:m, var:a1, var:n, var:a2, $arg$AA$0$, $arg$AA$0$, $tmp, $arg$BB$0$, $tmp, $tmp, var:i, var:k, $tmp)
 //│ = 10
 
 
@@ -544,17 +418,6 @@ test(p(BB(3))) + test(p(CC(3))) + c(p(A))
 //│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Lit(IntLit(3))))) ->
 //│ deforest > 	Ref($arg$AA$0$,None)
 //│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List(var:b, $arg$BB$0$, $tmp, $tmp, var:n, $tmp)
-//│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List(var:c, $arg$CC$0$, $tmp, $tmp, var:n, $tmp)
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:n, var:b, $arg$AA$0$, $arg$BB$0$, $tmp, $tmp, var:n, $tmp)
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:n, var:c, $arg$AA$0$, $arg$CC$0$, $tmp, $tmp, var:n, $tmp)
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
 //│ = 12
 
 
@@ -574,7 +437,6 @@ fun f(x, y, z, k) =
         AA then m + k
 f(AA(3), 3, true, 10) + f(AA(5), 4, false, 20)
 //│ deforest > ==============
-//│ deforest > ========
 //│ = 41
 
 
@@ -591,9 +453,6 @@ test(p) + f(p)
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(10))))) ->
 //│ deforest > 	Ref($arg$AA$0$,None)
 //│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List(var:a, $arg$AA$0$, $tmp, var:t, $tmp)
 //│ = 15
 //│ p = AA(AA(fun tmp101))
 
@@ -619,15 +478,6 @@ test(B, B) + test(A, A)
 //│ deforest > 	Ref(var:a,None)
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(var:b,None)
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:b,None):
-//│ deforest > 	List($tmp, var:x)
-//│ deforest > free vars of Ref(var:a,None):
-//│ deforest > 	List($tmp, var:b, var:x, $tmp)
-//│ deforest > free vars of Ref(var:a,None):
-//│ deforest > 	List(var:x, $tmp, var:b, var:x, $tmp)
-//│ deforest > free vars of Ref(var:b,None):
-//│ deforest > 	List(var:x, $tmp, var:x)
 //│ > B
 //│ > 1
 //│ > A

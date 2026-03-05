@@ -27,7 +27,6 @@ fun main() =
   let f = () => sum(p)
   f() + f()
 //│ deforest > ==============
-//│ deforest > ========
 
 
 
@@ -44,9 +43,6 @@ consumer of
 //│ deforest > Call(Ref(member:Once,Some((Fun)term:class:Once.Once)),List(Arg(None,Lit(IntLit(10))))) ->
 //│ deforest > 	Ref($arg$Many$0$,None)
 //│ deforest > 	Select(Ref($arg$Many$0$,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref($arg$Many$0$,None):
-//│ deforest > 	List(var:v, $arg$Once$0$, $tmp, $tmp)
 //│ = 13
 
 
@@ -70,9 +66,6 @@ consume(sum, enumFrom(3))
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(t))
 //│ deforest > 	Select(Ref(var:x,None),Ident(h))
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ = 12
 
 
@@ -104,11 +97,6 @@ cons of
 //│ deforest > Call(Ref(member:Inner,Some((Fun)term:class:Inner.Inner)),List(Arg(None,Ref(var:x,None)))) ->
 //│ deforest > 	Ref(var:caseScrut,None)
 //│ deforest > 	Select(Ref(var:caseScrut,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:caseScrut,None):
-//│ deforest > 	List(var:a, $arg$Inner$0$)
-//│ deforest > free vars of Ref(var:p,None):
-//│ deforest > 	List(var:f, var:i, $arg$Outter$0$, $tmp, $tmp)
 //│ = 22
 
 
@@ -139,9 +127,6 @@ sum(prodDouble(4))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ = 20
 
 
@@ -156,5 +141,4 @@ fun cons(ls) = if ls is
   _ then 0
 cons(prod(4))
 //│ deforest > ==============
-//│ deforest > ========
 //│ = 10

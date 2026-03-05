@@ -2,14 +2,12 @@
 :deforest
 
 //│ deforest > ==============
-//│ deforest > ========
 object Nil
 data class (::) Cons(h, t)
 data class Pair(a, b)
 object A
 object B
 //│ deforest > ==============
-//│ deforest > ========
 
 
 
@@ -74,23 +72,6 @@ test()
 //│ deforest > 	Ref($arg$Cons$0$,None)
 //│ deforest > 	Select(Ref($arg$Cons$0$,None),Ident(b))
 //│ deforest > 	Select(Ref($arg$Cons$0$,None),Ident(a))
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:xs_zip,None):
-//│ deforest > 	List(var:ys_zip, var:x, var:xt, var:y, var:yt, $arg$Cons$0$, $arg$Cons$1$, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:ys_zip,None):
-//│ deforest > 	List(var:x, var:xt, var:y, var:yt, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp, $tmp)
-//│ deforest > free vars of Ref($arg$Cons$0$,None):
-//│ deforest > 	List(member:lscomp2, var:x, var:y1, var:t2, var:y2, var:z, $scrut, $arg$Cons$1$, $arg$Pair$0$, $arg$Pair$1$, $tmp, $tmp, $tmp, member:lscomp1, var:t, $tmp, $tmp)
-//│ deforest > free vars of Ref($arg$Cons$0$,None):
-//│ deforest > 	List(member:lscomp1, var:x, var:t, var:y1, $arg$Cons$1$, $arg$Pair$0$, $arg$Pair$1$, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:xs_zip,None):
-//│ deforest > 	List(var:ys_zip, var:x, var:xt, var:y, var:yt, $arg$Cons$0$, $arg$Cons$1$, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(member:lscomp1, var:x, var:t, var:y1, $arg$Cons$0$, $arg$Cons$1$, $arg$Pair$0$, $arg$Pair$1$, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:ls2,None):
-//│ deforest > 	List(member:lscomp2, member:lscomp1, var:x, var:t, var:y1, var:t2, var:y2, var:z, $scrut, $arg$Cons$0$, $arg$Cons$1$, $arg$Pair$0$, $arg$Pair$1$, $tmp, $tmp, $tmp, member:lscomp1, var:t, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:ys_zip,None):
-//│ deforest > 	List(var:x, var:xt, var:y, var:yt, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ = Cons(Pair(1, 3), Cons(Pair(2, 4), Cons(Pair(3, 5), Nil)))
 
 
@@ -161,19 +142,6 @@ test()
 //│ deforest > 	Select(Ref(var:a1,None),Ident(a))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:a2,None):
-//│ deforest > 	List(var:a, var:c, var:d, $arg$Pair$0$, $arg$Pair$1$, $tmp)
-//│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:xs,None):
-//│ deforest > 	List(var:ys, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
-//│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:xs,None):
-//│ deforest > 	List(var:ys, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
-//│ deforest > free vars of Ref(var:a1,None):
-//│ deforest > 	List(var:a, var:b, $arg$Pair$0$, $arg$Pair$1$, $tmp, $tmp, $tmp, $tmp, $tmp, $tmp)
 //│ = Cons(Pair(5, 1), Cons(Pair(5, 2), Cons(Pair(5, 5), Nil)))
 
 
@@ -206,11 +174,6 @@ lscomp1(1 :: 2 :: Nil, 3 :: 4 :: Nil)
 //│ deforest > 	Select(Ref(var:ls1,None),Ident(h))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls1,None)
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:ls2,None):
-//│ deforest > 	List(var:ls2, var:h1, var:t1, var:h2, var:t2, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:ls1,None):
-//│ deforest > 	List(var:ls2, var:h1, var:t1, $arg$Cons$0$, $arg$Cons$1$)
 //│ = Cons(Pair(1, 3), Cons(Pair(1, 4), Nil))
 
 
@@ -239,11 +202,6 @@ test(A, 1 :: 2 :: 3 :: Nil)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(member:lscomp, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:k,None):
-//│ deforest > 	List(member:lscomp, var:ls)
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
 
@@ -289,11 +247,6 @@ main()
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(member:lscomp2, member:lscomp1, var:x, var:xs, var:ys, var:y, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(member:lscomp1, var:x, var:xs, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp)
 //│ = Cons(
 //│   [1, 1],
 //│   Cons(

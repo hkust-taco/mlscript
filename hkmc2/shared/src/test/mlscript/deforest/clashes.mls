@@ -2,16 +2,13 @@
 :deforest
 
 //│ deforest > ==============
-//│ deforest > ========
 
 data class A(x)
 //│ deforest > ==============
-//│ deforest > ========
 
 data class (::) Cons(h, t)
 object Nil
 //│ deforest > ==============
-//│ deforest > ========
 
 
 
@@ -28,7 +25,6 @@ fun badWrap(n) =
   x
 f1(badWrap(4)) + f2(badWrap(5))
 //│ deforest > ==============
-//│ deforest > ========
 //│ = 10
 
 
@@ -44,9 +40,6 @@ f1(one) + f2(one) + f2(two)
 //│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Ref(var:x,None)))) ->
 //│ deforest > 	Ref(var:p,None)
 //│ deforest > 	Select(Ref(var:p,None),Ident(x))
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:p,None):
-//│ deforest > 	List(var:b, $arg$A$0$)
 //│ = 9
 //│ one = A(1)
 //│ two = fun
@@ -66,7 +59,6 @@ fun test() =
   f1(res1) + f1(res2) + f2(res3)
 test()
 //│ deforest > ==============
-//│ deforest > ========
 //│ = 5
 
 
@@ -79,7 +71,6 @@ fun p(x, clashedCtor) =
 let clashed = A(3)
 f1(p(1, clashed)) + f2(p(2, clashed))
 //│ deforest > ==============
-//│ deforest > ========
 //│ = 4
 //│ clashed = A(3)
 

@@ -19,11 +19,6 @@ M.f(M.p())
 //│ deforest > Call(Select(Ref(module:M,None),Ident(YY)),List(Arg(None,Select(Ref(module:M,None),Ident(OO))))) ->
 //│ deforest > 	Ref($arg$XX$0$,None)
 //│ deforest > 	Select(Ref($arg$XX$0$,None),Ident(b))
-//│ deforest > ========
-//│ deforest > free vars of Ref($arg$XX$0$,None):
-//│ deforest > 	List(var:y, $arg$YY$0$, $tmp, $tmp)
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y, $arg$XX$0$, $arg$YY$0$, $tmp, $tmp)
 //│ = 123
 
 
@@ -43,9 +38,6 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
 //│ JS (unsanitized):
 //│ let Nil1, Cons1, map, enum1, lambda, lambda1, tmp1, tmp2, tmp3, map_11$map, map_13$map, map_13$ls_Cons, map_13$ls_rest, map_13$ls_Nil; /* scoped */
 //│ map_11$map = function map_11$map(f, ls) {
@@ -160,9 +152,6 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
 //│ = Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
 
 
@@ -195,11 +184,6 @@ DeforestList.res + DeforestList.main()
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
-//│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ = 5056
 
 
@@ -232,9 +216,4 @@ DeforestList.res + DeforestList.main()
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(member:helper, var:acc, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
-//│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(member:helper, var:acc, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ = 5056

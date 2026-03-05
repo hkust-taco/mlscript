@@ -29,11 +29,6 @@ test()
 //│ deforest > 	Select(Ref(var:prod,None),Ident(x))
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(var:x,None)
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
-//│ deforest > free vars of Ref(var:prod,None):
-//│ deforest > 	List(var:x, var:x, $arg$BB$0$, $arg$AA$0$, $tmp, $tmp)
 //│ = 1
 
 
@@ -50,7 +45,6 @@ fun test() =
   outter1(x) + outter2(x)
 test()
 //│ deforest > ==============
-//│ deforest > ========
 //│ = 0
 
 
@@ -64,11 +58,6 @@ f(A) + f(A)
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(var:x,None)
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
 //│ JS (unsanitized):
 //│ let f1, tmp, tmp1, f_4$f, f_4$x_A, f_4$x_rest, f_2$f, f_2$x_A, f_2$x_rest, deforest$lam, deforest$lam1; /* scoped */
 //│ f_4$f = function f_4$f(x) {
@@ -104,11 +93,6 @@ f(A) + f(A)
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(var:x,None)
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
 //│ = 2
 
 
@@ -123,9 +107,6 @@ f()
 //│ deforest > ==============
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(var:x,None)
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
 //│ = 0
 //│ x = fun x
 
@@ -141,9 +122,6 @@ let useless = if lsit is [a, b] then 0
 //│ deforest > 	Ref(var:lsit,None)
 //│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:lsit,None)), Arg(None,Lit(IntLit(0)))))
 //│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:lsit,None)), Arg(None,Lit(IntLit(1)))))
-//│ deforest > ========
-//│ deforest > free vars of Ref(var:lsit,None):
-//│ deforest > 	List()
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 //│ lsit = fun lsit
 //│ useless = 0
@@ -163,11 +141,6 @@ MMM.f()
 //│ deforest > 	Ref(member:A,Some(object:A))
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(member:A,Some(object:A))
-//│ deforest > ========
-//│ deforest > free vars of Ref(member:A,Some(object:A)):
-//│ deforest > 	List()
-//│ deforest > free vars of Ref(member:A,Some(object:A)):
-//│ deforest > 	List()
 
 
 object C
@@ -189,7 +162,6 @@ fun g(b) =
   else
     C
 //│ deforest > ==============
-//│ deforest > ========
 
 
 [M.f(3), M.g(true)]
