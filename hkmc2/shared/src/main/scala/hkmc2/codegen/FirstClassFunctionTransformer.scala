@@ -72,6 +72,12 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
         k(p)
     case _ => k(p)  
 
+  private def pathStartsWith(p: Path, symbol: Local): Bool = p match
+    case Value.Ref(l, _) => l is symbol
+    case Select(p, _) => pathStartsWith(p, symbol)
+    case DynSelect(p, _, _) => pathStartsWith(p, symbol)
+    case _ => false
+
   override def applyResult(r: Result)(k: Result => Block): Block = r match
     case c @ Call(fun, args) => applyArgs(args): args2 =>
       def call(f: Path) = Call(f, args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall)
@@ -84,8 +90,9 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
             if s.k is syntax.Fun then k(call(fun))
             else k(call(sel.selSN("call")))
           case _ =>
-            raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function object." -> fun.toLoc :: Nil,
-              source = Diagnostic.Source.Compilation))
+            if !pathStartsWith(sel, State.globalThisSymbol) && !pathStartsWith(sel, State.runtimeSymbol) then
+              raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function object." -> fun.toLoc :: Nil,
+                source = Diagnostic.Source.Compilation))
             k(call(fun))
         case s: DynSelect =>
           raise(ErrorReport(msg"Cannot determine if the dynamic selection is a function object." -> s.toLoc :: Nil,
@@ -93,6 +100,8 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
             k(call(fun))
         case _ => k(call(fun))
     case _: Lambda => lastWords("Lambda functions should be rewritten into function definitions first.")
+    case Instantiate(mut, cls, args) => applyArgs(args): args2 =>
+      k(if args2 is args then r else Instantiate(mut, cls, args2).withLocOf(r))
     case _ => super.applyResult(r)(k)
 
   class DesugarMultipleParamList extends BlockTransformer(new SymbolSubst):
