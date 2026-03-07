@@ -116,6 +116,11 @@ class DeforestPreAnalyzer(
   given stratVarUidState: Uid.StratVar.State = new Uid.StratVar.State
   import StratVarState.freshVar
   
+  extension (s: Symbol) def isPrivateMem =
+    s.asTrm.exists: tSym =>
+      (tSym.k is LetBind) && tSym.owner.exists(_.asMod.isDefined)
+  
+  
   ctxTracker.inTopLvl(b):
     applyBlock(b)
   
@@ -330,6 +335,7 @@ class DeforestPreAnalyzer(
         applyBlock(sub)
       applyBlock(rest)
     case Assign(lhs, rhs, rest) =>
+      if lhs.isPrivateMem then ctxTracker.markAsNonHandleable()
       applyResult(rhs)
       applyBlock(rest)
     case Define(defn, rest) =>
@@ -377,9 +383,7 @@ class DeforestPreAnalyzer(
   
   override def applyValue(v: Value): Unit = v match
     case Value.Ref(l, disamb) =>
-      val isModPrivateField = l.asTrm.exists: tSym =>
-        (tSym.k is LetBind) && tSym.owner.exists(_.asMod.isDefined)
-      if isModPrivateField then ctxTracker.markAsNonHandleable() else ()
+      if l.isPrivateMem then ctxTracker.markAsNonHandleable()
     case Value.This(sym) => ctxTracker.markAsNonHandleable()
     case Value.Lit(lit) => ()
   

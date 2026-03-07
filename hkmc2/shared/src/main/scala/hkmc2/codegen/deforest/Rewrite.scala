@@ -566,17 +566,6 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
           k(ValDefn(tsym2, sym2, rhs2))
       case _ => super.applyDefn(defn)(k)
     
-    
-    override def applyValDefn(defn: ValDefn)(k: ValDefn => Block): Block =
-      val ValDefn(tsym, sym, rhs) = defn
-      val tsym2 = tsym.subst
-      val sym2 = sym.subst
-      applyPath(rhs): rhs2 =>
-        k(ValDefn(
-          mapping.getOrElse(sym, sym).asBlkMember.get.tsym.get,
-          mapping.getOrElse(sym, sym).asBlkMember.get,
-          rhs2))
-    
     override def applyValue(v: Value)(k: Value => Block): Block = v match
       case Value.Ref(l, x) =>
         pre.res.modSymToBms.get(l) match
