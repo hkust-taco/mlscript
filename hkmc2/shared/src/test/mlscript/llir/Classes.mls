@@ -1,5 +1,6 @@
 :llir
 :cpp
+:noTailRec // The LLIR lowering does not yet support Label blocks
 
 :intl
 abstract class Callable

@@ -10,8 +10,10 @@ C()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App:
-//│     lhs = Ref{sym=member:C,typ=module:C} of member:C
+//│   res = App{typ=class:C⁰}:
+//│     lhs = Resolved{sym=term:C⁰.C¹}:
+//│       t = Ref{sym=member:C²} of member:C²
+//│       sym = term:C⁰.C¹
 //│     rhs = Tup of Nil
 //│ = C()
 
@@ -20,10 +22,10 @@ new C
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = New:
-//│     cls = SynthSel{sym=class:C,typ=class:C}:
-//│       prefix = Ref{sym=member:C} of member:C
-//│       nme = Ident of "class"
+//│   res = New{typ=class:C⁰}:
+//│     cls = Resolved{sym=class:C⁰}:
+//│       t = Ref{sym=member:C²} of member:C²
+//│       sym = class:C⁰
 //│     args = Nil
 //│     rft = N
 //│ = C()
@@ -36,11 +38,13 @@ C.empty
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Sel{sym=member:empty}:
-//│     prefix = SynthSel{sym=module:C,typ=module:C}:
-//│       prefix = Ref{sym=member:C,typ=module:C} of member:C
-//│       nme = Ident of "class"
-//│     nme = Ident of "empty"
+//│   res = Resolved{sym=term:C³.empty¹}:
+//│     t = Sel{sym=member:empty⁰}:
+//│       prefix = Resolved{sym=module:C³,typ=module:C³}:
+//│         t = Ref{sym=member:C²} of member:C²
+//│         sym = module:C³
+//│       nme = Ident of "empty"
+//│     sym = term:C³.empty¹
 //│ = 1
 
 :breakme // TODO: should be an error, down the line, when we resolve all selections statically
@@ -59,9 +63,13 @@ C.empty
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Sel{sym=member:empty}:
-//│     prefix = Ref{sym=member:C,typ=module:C} of member:C
-//│     nme = Ident of "empty"
+//│   res = Resolved{sym=term:C⁴.empty³}:
+//│     t = Sel{sym=member:empty²}:
+//│       prefix = Resolved{sym=module:C⁴,typ=module:C⁴}:
+//│         t = Ref{sym=member:C⁵} of member:C⁵
+//│         sym = module:C⁴
+//│       nme = Ident of "empty"
+//│     sym = term:C⁴.empty³
 //│ = 1
 
 
@@ -93,7 +101,7 @@ module Foo with
 //│ Foo1 = function Foo() {
 //│   return globalThis.Object.freeze(new Foo.class());
 //│ };
-//│ globalThis.Object.freeze(class Foo {
+//│ (class Foo {
 //│   static {
 //│     Foo1.class = this
 //│   }

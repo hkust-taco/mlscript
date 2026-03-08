@@ -10,7 +10,7 @@ final case class Branch(scrutinee: Term.Ref, pattern: FlatPattern, continuation:
         (Tree.Ident(scrutinee.tree.name), scrutinee.refNum, scrutinee.typ)
     Branch(scrutineeClone, pattern.mkClone, continuation.mkClone)
   
-  override def children: List[Located] = scrutinee :: pattern :: continuation :: Nil
+  override def children: Vector[Located] = Vector.triple(scrutinee, pattern, continuation)
   
   def showDbg: String = s"${scrutinee.sym.nme} is ${pattern.showDbg} -> { ${continuation.showDbg} }"
 
@@ -60,18 +60,18 @@ enum Split extends AutoLocated with ProductWithTail:
     case Split.Else(_) | Split.Cons(_, _) => false
     case Split.End => true
   
-  final override def children: Ls[Located] = this match
-    case Split.Cons(head, tail) => List(head, tail)
-    case Split.Let(name, term, tail) => List(name, term, tail)
-    case Split.Else(default) => List(default)
-    case Split.End => Nil
+  final override def children: Vector[Located] = this match
+    case Split.Cons(head, tail) => Vector.double(head, tail)
+    case Split.Let(name, term, tail) => Vector.triple(name, term, tail)
+    case Split.Else(default) => Vector.single(default)
+    case Split.End => Vector.empty
   
-  def subTerms: Ls[Term] = this match
+  def subTerms: Vector[Term] = this match
     case Split.Cons(Branch(scrutinee, pattern, continuation), tail) => 
-      scrutinee :: pattern.subTerms ++ continuation.subTerms ++ tail.subTerms
-    case Split.Let(_, term, tail) => term :: tail.subTerms
-    case Split.Else(term) => term :: Nil
-    case Split.End => Nil
+      scrutinee +: (pattern.subTerms ++ continuation.subTerms ++ tail.subTerms)
+    case Split.Let(_, term, tail) => term +: tail.subTerms
+    case Split.Else(term) => Vector.single(term)
+    case Split.End => Vector.empty
   
   final def showDbg: String = this match
     case Split.Cons(head, tail) => s"${head.showDbg}; ${tail.showDbg}"
@@ -95,12 +95,13 @@ end Split
 
 extension (split: Split)
   def ~~:(fallback: Split): Split =
-    if fallback == Split.End || split.isFull then
-      split
-    else (split match
+    if fallback == Split.End || split.isFull
+    then split
+    else split match
       case Split.Cons(head, tail) => Split.Cons(head, tail ~~: fallback)
       case Split.Let(name, term, tail) => Split.Let(name, term, tail ~~: fallback)
-      case Split.Else(_) /* impossible */ | Split.End => fallback)
+      case Split.Else(_) => lastWords("impossible since split is not full")
+      case Split.End => fallback
 
 object Split:
   def default(term: Term): Split = Split.Else(term)
@@ -157,7 +158,7 @@ object Split:
           if prefix.isEmpty then all else (0, s"$prefix $line") :: lines
         case lines => (0, prefix) :: lines.indent
     
-    inline def apply(s: Split): Str = showSplit("if", s)
+    inline def apply(s: Split): Str = showSplit("‹if|while›", s)
     
     private def showSplit(prefix: Str, s: Split): Str =
       /** Show a split as a list of lines.
@@ -183,7 +184,7 @@ object Split:
       def term(t: Statement): Lines = t match
         case Term.Blk(stmts, term) =>
           stmts.iterator.concat(Iterator.single(term)).flatMap:
-            case DefineVar(sym, Term.IfLike(kw, splt)) =>
+            case DefineVar(sym, Term.IfLike(kw, IfLikeForm.ReturningIf, splt)) =>
               s"$sym = ${kw.name}" #: SimpleSplit.prettyPrint.split(splt, true, true)
             case DefineVar(sym, Term.SynthIf(splt)) =>
               s"$sym = if" #: split(splt, true, true)

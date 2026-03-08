@@ -5,18 +5,18 @@ package text
 import mlscript.utils.*, shorthands.*
 
 import document.*
-import semantics.FieldSymbol
+import semantics.DefinitionSymbol
 
 import scala.collection.Map
 
 extension (doc: Document)
   /** Surrounds a document by the given `prefix` and `suffix`, unless the document is empty. */
   private def surroundUnlessEmpty(
-      prefix: Document = Document.empty,
-      postfix: Document = Document.empty
+      prefix: => Document = Document.empty,
+      postfix: => Document = Document.empty
   ): Document =
-    doc.optionUnless(_.isEmpty).fold(doc):
-      prefix :: _ :: postfix
+    doc.optionUnless(_.isEmpty).fold(doc): doc =>
+      doc"$prefix$doc$postfix"
 
 /** Trait indicating a WAT representation is available. */
 trait ToWat:
@@ -124,15 +124,30 @@ case class Field(
       })"
 
 /** A type representing a structure type. */
-case class StructType(fields: Map[FieldSymbol, NumIdx -> Field]) extends ToWat:
+case class StructType(
+    fields: Map[DefinitionSymbol[?], NumIdx -> Field],
+    parents: Seq[TypeIdx] = Seq.empty,
+    isSubtype: Bool = false
+) extends ToWat:
 
   def fieldSeq: Seq[Field] = fields.values.toSeq.sortBy(_._1.index).map(_._2)
 
   def toWat: Document =
     doc"(struct${fieldSeq.map(_.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
 
+/** A type representing an array type. */
+case class ArrayType(
+    elemType: Type,
+    mutable: Bool,
+) extends ToWat:
+  private def elemDoc: Document =
+    if mutable then doc"(mut ${elemType.toWat})" else elemType.toWat
+
+  def toWat: Document =
+    doc"(array ${elemDoc})"
+
 /** A composite type. */
-type CompType = StructType | FunctionType
+type CompType = StructType | FunctionType | ArrayType
 
 type AbsHeapType =
   HeapType.Func.type
@@ -175,6 +190,29 @@ case class LocalIdx(idx: Index) extends CtxIdx(idx)
 
 /** An index bound to the ''fields'' index space. */
 case class FieldIdx(idx: Index) extends CtxIdx(idx)
+
+/** An index bound to the ''tags'' index space. */
+case class TagIdx(idx: Index) extends CtxIdx(idx)
+
+/** A memory import entry. */
+case class MemoryImport(module: Str, name: Str, minPages: Int) extends ToWat:
+  def toWat: Document =
+    doc"""(import "${module}" "${name}" (memory ${minPages}))"""
+
+/** A function import entry. */
+case class FuncImport(
+    module: Str,
+    name: Str,
+    id: Opt[SymIdx],
+    typeIdx: TypeIdx,
+) extends ToWat:
+  def toWat: Document =
+    doc"""(import "${module}" "${name}" (func ${id.fold(doc"")(_.toWat)} (type ${typeIdx.toWat})))"""
+
+/** A data segment entry. */
+case class DataSegment(offsetExpr: Expr, bytes: Str) extends ToWat:
+  def toWat: Document =
+    doc"""(data ${offsetExpr.toWat} "${bytes}")"""
 
 /**
  * An abstraction over a generic WebAssembly instructions.
@@ -230,10 +268,9 @@ case class FoldedInstr(
           case a: ToWat => a.toWat
           case a: Document => a
       .mkDocument(doc" ").surroundUnlessEmpty(doc" ")
-    }${
-      stackargs.map(_.toWat).optionIf(_.nonEmpty).map(_.mkDocument(doc" # ")).fold(doc""): args =>
-        doc" #{  # $args #} "
-    })"
+    } #{ ${
+      stackargs.map(_.toWat).mkDocument(doc" # ").surroundUnlessEmpty(doc" # ")
+    } #} )"
 end FoldedInstr
 
 /**

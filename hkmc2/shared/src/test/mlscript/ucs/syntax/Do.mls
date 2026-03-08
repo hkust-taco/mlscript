@@ -67,7 +67,7 @@ fun g(y) =
     Some(0) do set x = None
     Some(v) and v % 2 == 0 then set x = Some(v / 2)
   x
-//│ ╔══[ERROR] Mixed use of `do` and `then` in the `if` expression.
+//│ ╔══[COMPILATION ERROR] Mixed use of `do` and `then` in the `if` expression.
 //│ ║  l.66: 	  if x is
 //│ ║        	  ^^
 //│ ╟── Keyword `then` is used here.

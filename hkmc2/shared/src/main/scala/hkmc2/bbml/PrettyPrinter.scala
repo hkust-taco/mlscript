@@ -4,7 +4,7 @@ import scala.collection.mutable.{Set => MutSet, ListBuffer}
 import utils.Scope
 
 class PrettyPrinter(output: String => Unit)(using Scope):
-  def print(ty: GeneralType): Unit =
+  def print(ty: GeneralType)(using Raise): Unit =
     output(s"Type: ${ty.show}")
     val bounds = PrettyPrinter.collectBounds(ty).distinct
     if !bounds.isEmpty then

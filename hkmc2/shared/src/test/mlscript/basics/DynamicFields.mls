@@ -59,3 +59,13 @@ foo.["x"]
 //│ ═══[RUNTIME ERROR] TypeError: foo.at is not a function
 
 
+class DynCtor() with
+  set this.("dynField") = 42
+
+DynCtor().dynField
+//│ = 42
+
+new DynCtor().dynField
+//│ = 42
+
+

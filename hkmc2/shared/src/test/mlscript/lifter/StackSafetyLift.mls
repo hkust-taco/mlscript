@@ -1,192 +1,124 @@
 :js
 :lift
+:noTailRec
+
+// * FIXME: Why doesn't the following work when using Predef function `(==) equals`?
 
 // sanity check
 :expect 5050
 fun sum(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else
     n + sum(n - 1)
 sum(100)
 //│ = 5050
 
 // preserve tail calls
-// MUST see "return hi1(tmp)" in the output
-:stackSafe 5
+// MUST see "return hi(tmp1)" in the output
+:stackSafe 6
 :effectHandlers
 :expect 0
 :sjs
 fun hi(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi, Cont$func$hi$1, res, $_stack$_safe$_body$_, doUnwind$, Cont$func$hi$$;
-//│ Cont$func$hi$$ = function Cont$func$hi$$(isMut, n, pc) {
-//│   let tmp, tmp1;
-//│   if (isMut === true) {
-//│     tmp = new Cont$func$hi$1(pc);
-//│   } else {
-//│     tmp = globalThis.Object.freeze(new Cont$func$hi$1(pc));
-//│   }
-//│   tmp1 = tmp(n);
-//│   return tmp1
-//│ };
-//│ globalThis.Object.freeze(class Cont$func$hi$ extends runtime.FunctionContFrame.class {
-//│   static {
-//│     Cont$func$hi$1 = this
-//│   }
-//│   constructor(pc) {
-//│     return (n) => {
-//│       let tmp;
-//│       tmp = super(null);
-//│       this.n = n;
-//│       this.pc = pc;
-//│       return this;
-//│     }
-//│   }
-//│   #n;
-//│   get n() { return this.#n; }
-//│   set n(value) { this.#n = value; }
-//│   resume(value$) {
-//│     return hi(this.n)
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Cont$func$hi$"]; 
-//│ });
-//│ doUnwind$ = function doUnwind$(n, res1, pc) {
-//│   res1.contTrace.last.next = Cont$func$hi$$(true, n, pc);
-//│   res1.contTrace.last = res1.contTrace.last.next;
-//│   return res1
-//│ };
+//│ let hi, tmp, $_stack$_safe$_body$_;
 //│ hi = function hi(n) {
-//│   let scrut, tmp, stackDelayRes;
+//│   let scrut, tmp1, stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
-//│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return doUnwind$(n, stackDelayRes, 0)
+//│   if (runtime.curEffect !== null) {
+//│     return runtime.unwind(hi, -1, "StackSafetyLift.mls:22:1", null, null, 1, 1, n, 0)
 //│   }
-//│   scrut = n == 0;
+//│   scrut = n === 0;
 //│   if (scrut === true) {
 //│     return 0
 //│   } else {
-//│     tmp = n - 1;
-//│     return hi(tmp)
+//│     tmp1 = n - 1;
+//│     return hi(tmp1)
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {
 //│   return hi(0)
 //│ });
-//│ res = runtime.runStackSafe(5, $_stack$_safe$_body$_);
-//│ if (res instanceof runtime.EffectSig.class) { res = runtime.topLevelEffect(res, false); }
-//│ res
+//│ tmp = runtime.runStackSafe(6, $_stack$_safe$_body$_);
+//│ if (runtime.curEffect !== null) { tmp = runtime.topLevelEffect(false); }
+//│ tmp
 //│ = 0
 
 :sjs
-:stackSafe 1000
+:stackSafe
 :effectHandlers
 :expect 50005000
 fun sum(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1, Cont$func$sum$1, res1, $_stack$_safe$_body$_1, doUnwind$1, Cont$func$sum$$;
-//│ Cont$func$sum$$ = function Cont$func$sum$$(isMut, n, tmp, pc) {
-//│   let tmp1, tmp2;
-//│   if (isMut === true) {
-//│     tmp1 = new Cont$func$sum$1(pc);
-//│   } else {
-//│     tmp1 = globalThis.Object.freeze(new Cont$func$sum$1(pc));
-//│   }
-//│   tmp2 = tmp1(n, tmp);
-//│   return tmp2
-//│ };
-//│ globalThis.Object.freeze(class Cont$func$sum$ extends runtime.FunctionContFrame.class {
-//│   static {
-//│     Cont$func$sum$1 = this
-//│   }
-//│   constructor(pc) {
-//│     return (n, tmp) => {
-//│       let tmp1;
-//│       tmp1 = super(null);
-//│       this.n = n;
-//│       this.tmp = tmp;
-//│       this.pc = pc;
-//│       return this;
-//│     }
-//│   }
-//│   #n;
-//│   #tmp;
-//│   get n() { return this.#n; }
-//│   set n(value) { this.#n = value; }
-//│   get tmp() { return this.#tmp; }
-//│   set tmp(value) { this.#tmp = value; }
-//│   resume(value$) {
-//│     let curDepth;
-//│     curDepth = runtime.stackDepth;
-//│     if (this.pc === 1) {
-//│       this.tmp = value$;
-//│     }
-//│     contLoop: while (true) {
-//│       runtime.stackDepth = curDepth;
-//│       if (this.pc === 0) {
-//│         return sum1(this.n)
-//│       } else if (this.pc === 1) {
-//│         return this.n + this.tmp
-//│       }
-//│       break;
-//│     }
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Cont$func$sum$"]; 
-//│ });
-//│ doUnwind$1 = function doUnwind$(n, tmp, res2, pc) {
-//│   res2.contTrace.last.next = Cont$func$sum$$(true, n, tmp, pc);
-//│   res2.contTrace.last = res2.contTrace.last.next;
-//│   return res2
-//│ };
+//│ let sum1, tmp1, $_stack$_safe$_body$_1;
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, curDepth, stackDelayRes;
-//│   curDepth = runtime.stackDepth;
+//│   let scrut, tmp2, tmp3, pc, curDepth, stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
+//│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
-//│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return doUnwind$1(n, tmp1, stackDelayRes, 0)
+//│   if (runtime.curEffect !== null) {
+//│     return runtime.unwind(sum1, -1, "StackSafetyLift.mls:55:1", null, null, 1, 1, n, 0)
 //│   }
-//│   scrut = n == 0;
-//│   if (scrut === true) {
-//│     return 0
+//│   if (runtime.resumePc === -1) {
+//│     pc = 0;
 //│   } else {
-//│     tmp = n - 1;
-//│     tmp1 = sum1(tmp);
-//│     runtime.stackDepth = curDepth;
-//│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       return doUnwind$1(n, tmp1, tmp1, 1)
+//│     pc = runtime.resumePc;
+//│     runtime.resumePc = -1;
+//│   }
+//│   main: while (true) {
+//│     switch (pc) {
+//│       case 0:
+//│         scrut = n === 0;
+//│         if (scrut === true) {
+//│           return 0
+//│         } else {
+//│           let res;
+//│           tmp2 = n - 1;
+//│           res = sum1(tmp2);
+//│           runtime.stackDepth = curDepth;
+//│           runtime.resumeValue = res;
+//│           if (runtime.curEffect !== null) {
+//│             return runtime.unwind(sum1, 1, "StackSafetyLift.mls:58:9", null, null, 1, 1, n, 0)
+//│           }
+//│           pc = 1;
+//│           continue main
+//│         }
+//│         break;
+//│       case 1:
+//│         tmp3 = runtime.resumeValue;
+//│         return n + tmp3;
+//│         break;
 //│     }
-//│     return n + tmp1
+//│     break;
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_1 = (undefined, function () {
 //│   return sum1(10000)
 //│ });
-//│ res1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
-//│ if (res1 instanceof runtime.EffectSig.class) { res1 = runtime.topLevelEffect(res1, false); }
-//│ res1
+//│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
+//│ if (runtime.curEffect !== null) { tmp1 = runtime.topLevelEffect(false); }
+//│ tmp1
 //│ = 50005000
 
 // stack-overflows without :stackSafe
 :re
 fun sum(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else
     n + sum(n - 1)
 sum(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
 :effectHandlers
-:stackSafe 100
+:stackSafe 6
 mut val ctr = 0
 fun dummy(x) = x
 fun foo(f) = 
@@ -198,7 +130,7 @@ foo(foo)
 //│ = 0
 //│ ctr = 10001
 
-:stackSafe 1000
+:stackSafe
 :effectHandlers
 :expect 50005000
 val foo =
@@ -225,11 +157,11 @@ abstract class Eff with
 
 // functions and lambdas inside handlers
 :effectHandlers
-:stackSafe 100
+:stackSafe 6
 :expect 50005000
-fun foo(h) = h.perform
+fun foo(h) = h.perform()
 handle h = Eff with
-  fun perform(resume) =
+  fun perform()(resume) =
     let f = ()
     set f = n =>
       if n <= 0 then 0
@@ -240,17 +172,17 @@ foo(h)
 
 // function call and defn inside handler
 :effectHandlers
-:stackSafe 100
+:stackSafe 6
 :expect 50005000
 handle h = Eff with
-  fun perform(resume) =
+  fun perform()(resume) =
     let f = ()
     set f = n =>
       if n <= 0 then 0
       else n + f(n-1)
     resume(f(10000))
 in
-  fun foo(h) = h.perform
+  fun foo(h) = h.perform()
   foo(h)
 //│ = 50005000
 
@@ -295,11 +227,11 @@ hi(0)
 //│ = 0
 
 
-:stackSafe 1000
+:stackSafe
 :effectHandlers
 :expect 100010000
 fun sum(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else
     n + sum(n - 1)
 fun bad() = sum(10000) + sum(10000)

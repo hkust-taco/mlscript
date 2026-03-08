@@ -52,14 +52,14 @@ pattern UnsignedByte = 0..< 256
 //│ ╔══[LEXICAL ERROR] Expected at least one digit after the  decimal point
 //│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^
-//│ ╔══[ERROR] Name not found: .<
+//│ ╔══[COMPILATION ERROR] Name not found: .<
 //│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^^
-//│ ═══[ERROR] Cannot use this ‹error› as a pattern.
+//│ ═══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
 
 :e
 pattern BadRange = "s"..=0
-//│ ╔══[ERROR] The upper and lower bounds of range patterns should be literals of the same type.
+//│ ╔══[COMPILATION ERROR] The upper and lower bounds of range patterns should be literals of the same type.
 //│ ║  l.61: 	pattern BadRange = "s"..=0
 //│ ╙──      	                   ^^^^^^^
 
@@ -69,13 +69,13 @@ pattern BadRange = "s"..=0
 
 :e
 pattern BadRange = 0 ..= "s"
-//│ ╔══[ERROR] The upper and lower bounds of range patterns should be literals of the same type.
+//│ ╔══[COMPILATION ERROR] The upper and lower bounds of range patterns should be literals of the same type.
 //│ ║  l.71: 	pattern BadRange = 0 ..= "s"
 //│ ╙──      	                   ^^^^^^^^^
 
 :e
 pattern BadRange = "yolo" ..= "swag"
-//│ ╔══[ERROR] The lower bound of character ranges must be a single character.
+//│ ╔══[COMPILATION ERROR] The lower bound of character ranges must be a single character.
 //│ ║  l.77: 	pattern BadRange = "yolo" ..= "swag"
 //│ ║        	                   ^^^^^^
 //│ ╟── The upper bound of character ranges must be a single character.

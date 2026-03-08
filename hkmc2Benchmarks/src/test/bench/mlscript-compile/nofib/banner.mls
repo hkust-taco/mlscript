@@ -1,0 +1,121 @@
+import "./NofibPrelude.mls"
+open NofibPrelude
+
+module banner with ...
+
+
+
+val blank =
+  nofibStringToList("     ") ::
+  nofibStringToList("     ") ::
+  nofibStringToList("     ") ::
+  nofibStringToList("     ") ::
+  nofibStringToList("     ") :: Nil
+//│ blank = [[" "," "," "," "," "],[" "," "," "," "," "],[" "," "," "," "," "],[" "," "," "," "," "],[" "," "," "," "," "]]
+
+val alphas =
+  (nofibStringToList("  A  ") :: nofibStringToList(" A A ") :: nofibStringToList("AAAAA") :: nofibStringToList("A   A") :: nofibStringToList("A   A") :: Nil) ::
+  (nofibStringToList("BBBB ") :: nofibStringToList("B   B") :: nofibStringToList("BBBB ") :: nofibStringToList("B   B") :: nofibStringToList("BBBB ") :: Nil) ::
+  (nofibStringToList(" CCCC") :: nofibStringToList("C    ") :: nofibStringToList("C    ") :: nofibStringToList("C    ") :: nofibStringToList(" CCCC") :: Nil) ::
+  (nofibStringToList("DDDD ") :: nofibStringToList("D   D") :: nofibStringToList("D   D") :: nofibStringToList("D   D") :: nofibStringToList("DDDD ") :: Nil) ::
+  (nofibStringToList("EEEEE") :: nofibStringToList("E    ") :: nofibStringToList("EEEEE") :: nofibStringToList("E    ") :: nofibStringToList("EEEEE") :: Nil) ::
+  (nofibStringToList("FFFFF") :: nofibStringToList("F    ") :: nofibStringToList("FFFF ") :: nofibStringToList("F    ") :: nofibStringToList("F    ") :: Nil) ::
+  (nofibStringToList(" GGGG") :: nofibStringToList("G    ") :: nofibStringToList("G  GG") :: nofibStringToList("G   G") :: nofibStringToList(" GGG ") :: Nil) ::
+  (nofibStringToList("H   H") :: nofibStringToList("H   H") :: nofibStringToList("HHHHH") :: nofibStringToList("H   H") :: nofibStringToList("H   H") :: Nil) ::
+  (nofibStringToList("IIIII") :: nofibStringToList("  I  ") :: nofibStringToList("  I  ") :: nofibStringToList("  I  ") :: nofibStringToList("IIIII") :: Nil) ::
+  (nofibStringToList("JJJJJ") :: nofibStringToList("   J ") :: nofibStringToList("   J ") :: nofibStringToList("J  J ") :: nofibStringToList(" JJ  ") :: Nil) ::
+  (nofibStringToList("K   K") :: nofibStringToList("K  K ") :: nofibStringToList("KKK  ") :: nofibStringToList("K  K ") :: nofibStringToList("K   K") :: Nil) ::
+  (nofibStringToList("L    ") :: nofibStringToList("L    ") :: nofibStringToList("L    ") :: nofibStringToList("L    ") :: nofibStringToList("LLLLL") :: Nil) ::
+  (nofibStringToList("M   M") :: nofibStringToList("MM MM") :: nofibStringToList("M M M") :: nofibStringToList("M   M") :: nofibStringToList("M   M") :: Nil) ::
+  (nofibStringToList("N   N") :: nofibStringToList("NN  N") :: nofibStringToList("N N N") :: nofibStringToList("N  NN") :: nofibStringToList("N   N") :: Nil) ::
+  (nofibStringToList(" OOO ") :: nofibStringToList("O   O") :: nofibStringToList("O   O") :: nofibStringToList("O   O") :: nofibStringToList(" OOO ") :: Nil) ::
+  (nofibStringToList("PPPP ") :: nofibStringToList("P   P") :: nofibStringToList("PPPP ") :: nofibStringToList("P    ") :: nofibStringToList("P    ") :: Nil) ::
+  (nofibStringToList(" QQQ ") :: nofibStringToList("Q   Q") :: nofibStringToList("Q Q Q") :: nofibStringToList("Q  Q ") :: nofibStringToList(" QQ Q") :: Nil) ::
+  (nofibStringToList("RRRR ") :: nofibStringToList("R   R") :: nofibStringToList("RRRR ") :: nofibStringToList("R  R ") :: nofibStringToList("R   R") :: Nil) ::
+  (nofibStringToList(" SSSS") :: nofibStringToList("S    ") :: nofibStringToList(" SSS ") :: nofibStringToList("    S") :: nofibStringToList("SSSS ") :: Nil) ::
+  (nofibStringToList("TTTTT") :: nofibStringToList("  T  ") :: nofibStringToList("  T  ") :: nofibStringToList("  T  ") :: nofibStringToList("  T  ") :: Nil) ::
+  (nofibStringToList("U   U") :: nofibStringToList("U   U") :: nofibStringToList("U   U") :: nofibStringToList("U   U") :: nofibStringToList(" UUU ") :: Nil) ::
+  (nofibStringToList("V   V") :: nofibStringToList("V   V") :: nofibStringToList("V   V") :: nofibStringToList(" V V ") :: nofibStringToList("  V  ") :: Nil) ::
+  (nofibStringToList("W   W") :: nofibStringToList("W   W") :: nofibStringToList("W   W") :: nofibStringToList("W W W") :: nofibStringToList(" W W ") :: Nil) ::
+  (nofibStringToList("X   X") :: nofibStringToList(" X X ") :: nofibStringToList("  X  ") :: nofibStringToList(" X X ") :: nofibStringToList("X   X") :: Nil) ::
+  (nofibStringToList("Y   Y") :: nofibStringToList(" Y Y ") :: nofibStringToList("  Y  ") :: nofibStringToList("  Y  ") :: nofibStringToList("  Y  ") :: Nil) ::
+  (nofibStringToList("ZZZZZ") :: nofibStringToList("   Z ") :: nofibStringToList("  Z  ") :: nofibStringToList(" Z   ") :: nofibStringToList("ZZZZZ") :: Nil) :: Nil
+//│ alphas = [[[" "," ","A"," "," "],[" ","A"," ","A"," "],["A","A","A","A","A"],["A"," "," "," ","A"],["A"," "," "," ","A"]],[["B","B","B","B"," "],["B"," "," "," ","B"],["B","B","B","B"," "],["B"," "," "," ","B"],["B","B","B","B"," "]],[[" ","C","C","C","C"],["C"," "," "," "," "],["C"," "," "," "," "],["C"," "," "," "," "],[" ","C","C","C","C"]],[["D","D","D","D"," "],["D"," "," "," ","D"],["D"," "," "," ","D"],["D"," "," "," ","D"],["D","D","D","D"," "]],[["E","E","E","E","E"],["E"," "," "," "," "],["E","E","E","E","E"],["E"," "," "," "," "],["E","E","E","E","E"]],[["F","F","F","F","F"],["F"," "," "," "," "],["F","F","F","F"," "],["F"," "," "," "," "],["F"," "," "," "," "]],[[" ","G","G","G","G"],["G"," "," "," "," "],["G"," "," ","G","G"],["G"," "," "," ","G"],[" ","G","G","G"," "]],[["H"," "," "," ","H"],["H"," "," "," ","H"],["H","H","H","H","H"],["H"," "," "," ","H"],["H"," "," "," ","H"]],[["I","I","I","I","I"],[" "," ","I"," "," "],[" "," ","I"," "," "],[" "," ","I"," "," "],["I","I","I","I","I"]],[["J","J","J","J","J"],[" "," "," ","J"," "],[" "," "," ","J"," "],["J"," "," ","J"," "],[" ","J","J"," "," "]],[["K"," "," "," ","K"],["K"," "," ","K"," "],["K","K","K"," "," "],["K"," "," ","K"," "],["K"," "," "," ","K"]],[["L"," "," "," "," "],["L"," "," "," "," "],["L"," "," "," "," "],["L"," "," "," "," "],["L","L","L","L","L"]],[["M"," "," "," ","M"],["M","M"," ","M","M"],["M"," ","M"," ","M"],["M"," "," "," ","M"],["M"," "," "," ","M"]],[["N"," "," "," ","N"],["N","N"," "," ","N"],["N"," ","N"," ","N"],["N"," "," ","N","N"],["N"," "," "," ","N"]],[[" ","O","O","O"," "],["O"," "," "," ","O"],["O"," "," "," ","O"],["O"," "," "," ","O"],[" ","O","O","O"," "]],[["P","P","P","P"," "],["P"," "," "," ","P"],["P","P","P","P"," "],["P"," "," "," "," "],["P"," "," "," "," "]],[[" ","Q","Q","Q"," "],["Q"," "," "," ","Q"],["Q"," ","Q"," ","Q"],["Q"," "," ","Q"," "],[" ","Q","Q"," ","Q"]],[["R","R","R","R"," "],["R"," "," "," ","R"],["R","R","R","R"," "],["R"," "," ","R"," "],["R"," "," "," ","R"]],[[" ","S","S","S","S"],["S"," "," "," "," "],[" ","S","S","S"," "],[" "," "," "," ","S"],["S","S","S","S"," "]],[["T","T","T","T","T"],[" "," ","T"," "," "],[" "," ","T"," "," "],[" "," ","T"," "," "],[" "," ","T"," "," "]],[["U"," "," "," ","U"],["U"," "," "," ","U"],["U"," "," "," ","U"],["U"," "," "," ","U"],[" ","U","U","U"," "]],[["V"," "," "," ","V"],["V"," "," "," ","V"],["V"," "," "," ","V"],[" ","V"," ","V"," "],[" "," ","V"," "," "]],[["W"," "," "," ","W"],["W"," "," "," ","W"],["W"," "," "," ","W"],["W"," ","W"," ","W"],[" ","W"," ","W"," "]],[["X"," "," "," ","X"],[" ","X"," ","X"," "],[" "," ","X"," "," "],[" ","X"," ","X"," "],["X"," "," "," ","X"]],[["Y"," "," "," ","Y"],[" ","Y"," ","Y"," "],[" "," ","Y"," "," "],[" "," ","Y"," "," "],[" "," ","Y"," "," "]],[["Z","Z","Z","Z","Z"],[" "," "," ","Z"," "],[" "," ","Z"," "," "],[" ","Z"," "," "," "],["Z","Z","Z","Z","Z"]]]
+
+val slant =
+  nofibStringToList("    ") ::
+  nofibStringToList("   ") ::
+  nofibStringToList("  ") ::
+  nofibStringToList(" ") ::
+  nofibStringToList("") :: Nil
+//│ slant = [[" "," "," "," "],[" "," "," "],[" "," "],[" "],[]]
+
+val punct =
+  [".", nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("  .. ") :: nofibStringToList("  .. ") :: Nil] ::
+  ["?", nofibStringToList(" ??? ") :: nofibStringToList("?   ?") :: nofibStringToList("   ? ") :: nofibStringToList("  ?  ") :: nofibStringToList("  .  ") :: Nil] ::
+  ["!", nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  .  ") :: Nil] ::
+  ["-", nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("-----") :: nofibStringToList("     ") :: nofibStringToList("     ") :: Nil] ::
+  ["+", nofibStringToList("  +  ") :: nofibStringToList("  +  ") :: nofibStringToList("+++++") :: nofibStringToList("  +  ") :: nofibStringToList("  +  ") :: Nil] ::
+  [":", nofibStringToList("     ") :: nofibStringToList("  :: ") :: nofibStringToList("     ") :: nofibStringToList("  :: ") :: nofibStringToList("     ") :: Nil] ::
+  [";", nofibStringToList("     ") :: nofibStringToList("  ;; ") :: nofibStringToList("     ") :: nofibStringToList("  ;; ") :: nofibStringToList(" ;;  ") :: Nil] :: Nil
+//│ punct = [[".", [[" "," "," "," "," "],[" "," "," "," "," "],[" "," "," "," "," "],[" "," ",".","."," "],[" "," ",".","."," "]]],["?", [[" ","?","?","?"," "],["?"," "," "," ","?"],[" "," "," ","?"," "],[" "," ","?"," "," "],[" "," ","."," "," "]]],["!", [[" "," ","!"," "," "],[" "," ","!"," "," "],[" "," ","!"," "," "],[" "," ","!"," "," "],[" "," ","."," "," "]]],["-", [[" "," "," "," "," "],[" "," "," "," "," "],["-","-","-","-","-"],[" "," "," "," "," "],[" "," "," "," "," "]]],["+", [[" "," ","+"," "," "],[" "," ","+"," "," "],["+","+","+","+","+"],[" "," ","+"," "," "],[" "," ","+"," "," "]]],[":", [[" "," "," "," "," "],[" "," ",":",":"," "],[" "," "," "," "," "],[" "," ",":",":"," "],[" "," "," "," "," "]]],[";", [[" "," "," "," "," "],[" "," ",";",";"," "],[" "," "," "," "," "],[" "," ",";",";"," "],[" ",";",";"," "," "]]]]
+
+val digits =
+  (nofibStringToList(" OOO ") :: nofibStringToList("0  00") :: nofibStringToList("0 0 0") :: nofibStringToList("00  0") :: nofibStringToList(" 000 ") :: Nil) ::
+  (nofibStringToList("  1  ") :: nofibStringToList(" 11  ") :: nofibStringToList("  1  ") :: nofibStringToList("  1  ") :: nofibStringToList("11111") :: Nil) ::
+  (nofibStringToList(" 222 ") :: nofibStringToList("2   2") :: nofibStringToList("   2 ") :: nofibStringToList("  2  ") :: nofibStringToList("22222") :: Nil) ::
+  (nofibStringToList("3333 ") :: nofibStringToList("    3") :: nofibStringToList(" 333 ") :: nofibStringToList("    3") :: nofibStringToList("3333 ") :: Nil) ::
+  (nofibStringToList("   4 ") :: nofibStringToList("  44 ") :: nofibStringToList(" 4 4 ") :: nofibStringToList("44444") :: nofibStringToList("   4 ") :: Nil) ::
+  (nofibStringToList("55555") :: nofibStringToList("5    ") :: nofibStringToList("5555 ") :: nofibStringToList("    5") :: nofibStringToList("5555 ") :: Nil) ::
+  (nofibStringToList("   66") :: nofibStringToList("  6  ") :: nofibStringToList(" 666 ") :: nofibStringToList("6   6") :: nofibStringToList(" 666 ") :: Nil) ::
+  (nofibStringToList("77777") :: nofibStringToList("    7") :: nofibStringToList("   7 ") :: nofibStringToList("   7 ") :: nofibStringToList("  7  ") :: Nil) ::
+  (nofibStringToList(" 888 ") :: nofibStringToList("8   8") :: nofibStringToList(" 888 ") :: nofibStringToList("8   8") :: nofibStringToList(" 888 ") :: Nil) ::
+  (nofibStringToList(" 999 ") :: nofibStringToList("9   9") :: nofibStringToList(" 999 ") :: nofibStringToList("  9  ") :: nofibStringToList("99   ") :: Nil) :: Nil
+//│ digits = [[[" ","O","O","O"," "],["0"," "," ","0","0"],["0"," ","0"," ","0"],["0","0"," "," ","0"],[" ","0","0","0"," "]],[[" "," ","1"," "," "],[" ","1","1"," "," "],[" "," ","1"," "," "],[" "," ","1"," "," "],["1","1","1","1","1"]],[[" ","2","2","2"," "],["2"," "," "," ","2"],[" "," "," ","2"," "],[" "," ","2"," "," "],["2","2","2","2","2"]],[["3","3","3","3"," "],[" "," "," "," ","3"],[" ","3","3","3"," "],[" "," "," "," ","3"],["3","3","3","3"," "]],[[" "," "," ","4"," "],[" "," ","4","4"," "],[" ","4"," ","4"," "],["4","4","4","4","4"],[" "," "," ","4"," "]],[["5","5","5","5","5"],["5"," "," "," "," "],["5","5","5","5"," "],[" "," "," "," ","5"],["5","5","5","5"," "]],[[" "," "," ","6","6"],[" "," ","6"," "," "],[" ","6","6","6"," "],["6"," "," "," ","6"],[" ","6","6","6"," "]],[["7","7","7","7","7"],[" "," "," "," ","7"],[" "," "," ","7"," "],[" "," "," ","7"," "],[" "," ","7"," "," "]],[[" ","8","8","8"," "],["8"," "," "," ","8"],[" ","8","8","8"," "],["8"," "," "," ","8"],[" ","8","8","8"," "]],[[" ","9","9","9"," "],["9"," "," "," ","9"],[" ","9","9","9"," "],[" "," ","9"," "," "],["9","9"," "," "," "]]]
+
+fun unlines(ls) = concat(map(x => x +: ("\n" :: Nil), ls))
+
+fun join(ls) = foldr1((xs, ys) => xs +: (" " :: " " :: Nil) +: ys, ls)
+
+fun isUpper(c) =
+  let n = int_of_char(c)
+  (n >= 65) and (n <= 90)
+
+fun isLower(c) =
+  let n = int_of_char(c)
+  (n >= 97) and (n <= 122)
+
+fun isDigit(c) =
+  let n = int_of_char(c)
+  (n >= 48) and (n <= 57)
+
+fun isSpace(c) =
+  let n = int_of_char(c)
+  (n == 32)
+
+fun picChar(c) =
+
+  fun lscomp(ls) = if ls is
+    Nil then Nil
+    h :: t and
+      h is [c_, letter] and c_ === c then letter :: lscomp(t)
+      else lscomp(t)
+
+  if
+    isUpper(c) then atIndex(int_of_char(c) - int_of_char("A"), alphas)
+    isLower(c) then atIndex(int_of_char(c) - int_of_char("a"), alphas)
+    isSpace(c) then blank
+    isDigit(c) then atIndex(int_of_char(c) - int_of_char("0"), digits)
+    c === "/" then slant
+    c === "=" then reverse(slant)
+    else head(lscomp(punct) +: Nil :: Nil :: Nil)
+
+fun say(s) = "\n" :: (unlines(map(join, transpose(map(picChar, s)))))
+
+fun testBanner_nofib(n) =
+  let x = nofibStringToList("Is this not a great banner?")
+  say(concat(replicate(n, x)))
+
+
+fun main() = nofibListToString(testBanner_nofib(1))
+

@@ -34,7 +34,7 @@ letreg of r =>
     write(r)
     read(r)
   write(r)
-//│ ╔══[ERROR] Type error in block
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.31: 	letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^
 //│ ║  l.32: 	  read(r)
@@ -43,10 +43,8 @@ letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.34: 	    write(r)
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.35: 	    read(r)
-//│ ║        	^^^^^^^^^^^
-//│ ║  l.36: 	  write(r)
-//│ ║        	^^^^^^^^^^
+//│ ║  l.35: 	... (more lines omitted) ...
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'E  <:  ⊥
 //│ ╟── because: cannot constrain  'E  <:  ⊥
 //│ ╟── because: cannot constrain  'Rg  <:  ⊥
@@ -73,19 +71,17 @@ letreg of r =>
     write(r)
     read(r)
   write(r)
-//│ ╔══[ERROR] Type error in block
-//│ ║  l.70: 	letreg of r =>
+//│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.68: 	letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.71: 	  read(r)
+//│ ║  l.69: 	  read(r)
 //│ ║        	^^^^^^^^^
-//│ ║  l.72: 	  borrow(r) of () =>
+//│ ║  l.70: 	  borrow(r) of () =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.73: 	    write(r)
+//│ ║  l.71: 	    write(r)
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.74: 	    read(r)
-//│ ║        	^^^^^^^^^^^
-//│ ║  l.75: 	  write(r)
-//│ ║        	^^^^^^^^^^
+//│ ║  l.72: 	... (more lines omitted) ...
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'E  <:  ⊥
 //│ ╟── because: cannot constrain  'E  <:  ⊥
 //│ ╟── because: cannot constrain  'Rg  <:  ⊥

@@ -69,14 +69,13 @@ data class Term with
   // For example, `this through ShowTerm`?
   fun show = if this is ShowTerm as result then result
 
-// Note: missing type arguments for `Set`.
-data class Scheme(vars: Set, typ: Type) with
+data class Scheme(vars: Set[Str], typ: Type) with
   fun show =
     if vars.size === 0 then typ.show
     else "∀" + vars Iter.joined(", ") + ". " + typ.show
 
 // Substitution for types
-data class Subst(map: Map) with
+data class Subst(map: Map[Str, Type]) with
   
   fun apply(typ) = if typ is
     TVar(name) and this is Subst(map) and
@@ -179,7 +178,7 @@ unify'(TVar("t1"), TFun(TVar("t1"), TInt)).show
 //│ ═══[RUNTIME ERROR] Error: match error
 
 // Note: missing type arguments for `Map`.
-data class Env(bindings: Map) with
+data class Env(bindings: Map[Str, Scheme]) with
   fun lookup(name) =
     if bindings.has(name) then bindings.get(name)
     else throw new Error("Unbound variable: " + name)

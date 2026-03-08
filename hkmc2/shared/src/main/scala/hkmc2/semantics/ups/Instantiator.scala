@@ -159,7 +159,7 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
       val shouldCompile = annotations.foldLeft(true): (acc, termOrLoc) =>
         val res = termOrLoc match
           case R(term) => term.resolvedSym match
-            case S(symbol) if symbol is ctx.builtins.annotations.compile => N
+            case S(symbol) if symbol.asBlkMember.exists(_ is ctx.builtins.annotations.compile) => N
             case S(_) | N => S(term.toLoc)
           case L(loc) => S(loc)
         res match

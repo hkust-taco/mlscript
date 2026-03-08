@@ -29,24 +29,24 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
       case els: Else => els
       case End => this
   
-  protected def children: List[Located] = this match
-    case Cons(branch, tail) => List(branch, tail)
+  protected def children: Vector[Located] = this match
+    case Cons(branch, tail) => Vector.double(branch, tail)
     case els @ Else(default) => els.kw match
-      case N => default :: Nil
-      case S(kw) => kw :: default :: Nil
-    case End => Nil
+      case N => Vector.single(default)
+      case S(kw) => Vector.double(kw, default)
+    case End => Vector.empty
   
-  def subTerms: Ls[Term] = this match
-    case Cons(branch, tail) => branch.subTerms ::: tail.subTerms
-    case Else(default) => default :: Nil
-    case End => Nil
+  def subTerms: Vector[Term] = this match
+    case Cons(branch, tail) => branch.subTerms.toVector ++ tail.subTerms
+    case Else(default) => Vector.single(default)
+    case End => Vector.empty
   
   def showDbg: Str = this match
     case Cons(branch, tail) => s"${branch.showDbg}; ${tail.showDbg}"
     case Else(default) => s"else ${default.showDbg}"
     case End => ""
   
-  def prettyPrint: Str = SimpleSplit.prettyPrint(this)
+  def prettyPrint(kw: Keyword.SplitLike): Str = SimpleSplit.prettyPrint(this, kw)
   
   /** Get the results of all branches. */
   def results: Ls[Term] =
@@ -66,8 +66,20 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
     val split = Split.from(this)
     _expandedSplit = S(split)
     split
+  
+  def mkClone(using State): SimpleSplit = this match
+    case Cons(head, tail) => Cons(head match
+      case Head.Match(scrutinee, pattern, consequent) =>
+        Head.Match(scrutinee.mkClone.asInstanceOf, pattern, consequent.mkClone) // TODO: clone `pattern`?
+      case Head.Let(binding, term) => Head.Let(binding, term.mkClone)
+    , tail.mkClone)
+    case e @ Else(default) => Else(default.mkClone)(e.kw)
+    case End => End
+  
+end SimpleSplit
 
 object SimpleSplit:
+  
   object IfThenElse:
     def unapply(split: SimpleSplit): Opt[(Term, Term, Term)] = split match
       case Cons(
@@ -84,10 +96,10 @@ object SimpleSplit:
     case Match(scrutinee: Term.Ref, pattern: Pattern, consequent: SimpleSplit)
     case Let(binding: BlockLocalSymbol, term: Term)
     
-    def subTerms: Ls[Term] = this match
+    def subTerms: Vector[Term] = this match
       case Match(scrutinee, pattern, consequent) =>
-        scrutinee :: pattern.subTerms ::: consequent.subTerms
-      case Let(_, term) => term :: Nil
+        scrutinee +: (pattern.subTerms ++ consequent.subTerms)
+      case Let(_, term) => Vector.single(term)
     
     def showDbg: Str = this match
       case Match(scrutinee, pattern, consequent) =>
@@ -98,10 +110,10 @@ object SimpleSplit:
         s"${scrutinee.showDbg} is ${pattern.showDbg} ${consequentStr}"
       case Let(binding, term) => s"let ${binding.nme} = ${term.showDbg}"
     
-    protected def children: List[Located] = this match
+    protected def children: Vector[Located] = this match
       case Match(scrutinee, pattern, consequent) =>
-        List(scrutinee, pattern, consequent)
-      case Let(binding, term) => List(binding, term)
+        Vector.triple(scrutinee, pattern, consequent)
+      case Let(binding, term) => Vector.double(binding, term)
   
   private[semantics] object prettyPrint:
     /** Represents lines with indentations. */
@@ -130,7 +142,7 @@ object SimpleSplit:
           if prefix.isEmpty then all else (0, s"$prefix $line") :: lines
         case lines => (0, prefix) :: lines.indent
     
-    inline def apply(s: SimpleSplit): Str = showSplit("if", s)
+    inline def apply(s: SimpleSplit, kw: Keyword.SplitLike): Str = showSplit(kw.name, s)
     
     /** Show a split as a list of lines.
      *  @param isFirst whether this is the first and frontmost branch

@@ -6,11 +6,12 @@
 :e
 fun test(x) =
   [this.a, x]
-//│ ╔══[ERROR] Cannot use 'this' outside of an object scope.
+//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope.
 //│ ║  l.8: 	  [this.a, x]
 //│ ╙──     	   ^^^^
 //│ JS (unsanitized):
-//│ let test; test = function test(x) { return globalThis.Object.freeze([]) };
+//│ let test;
+//│ test = function test(x) { throw "This code cannot be run as its compilation yielded an error." };
 
 :sjs
 fun test(x) =
@@ -43,7 +44,7 @@ module Test with
     [this.a, x]
 //│ JS (unsanitized):
 //│ let Test1;
-//│ globalThis.Object.freeze(class Test {
+//│ (class Test {
 //│   static {
 //│     Test1 = this
 //│   }

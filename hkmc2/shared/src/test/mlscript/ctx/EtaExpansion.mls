@@ -11,7 +11,7 @@ fun baz(x)(using Int)(y)(using Num) = [x, use[Int], y, use[Num]]
 
 :e
 baz
-//│ ╔══[ERROR] Cannot query instance of type Num for call: 
+//│ ╔══[COMPILATION ERROR] Cannot query instance of type Num for call: 
 //│ ║  l.13: 	baz
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
@@ -113,7 +113,7 @@ module Test with
   fun main(using Int) = test
 //│ JS (unsanitized):
 //│ let Test1;
-//│ globalThis.Object.freeze(class Test {
+//│ (class Test {
 //│   static {
 //│     Test1 = this
 //│   }

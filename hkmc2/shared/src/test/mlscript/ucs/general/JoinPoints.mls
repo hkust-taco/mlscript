@@ -59,22 +59,22 @@ fun crazy(v) =
 //│ JS (unsanitized):
 //│ let crazy;
 //│ crazy = function crazy(v) {
-//│   let argument0$, argument0$1, argument0$2, argument0$3, argument0$4, argument0$5, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│   let arg$S$0$, arg$S$0$1, arg$S$0$2, arg$S$0$3, arg$S$0$4, arg$S$0$5, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
 //│   split_root$: {
 //│     split_1$: {
 //│       if (v instanceof S1.class) {
-//│         argument0$ = v.value;
-//│         if (argument0$ instanceof S1.class) {
-//│           argument0$1 = argument0$.value;
-//│           if (argument0$1 instanceof S1.class) {
-//│             argument0$2 = argument0$1.value;
-//│             if (argument0$2 instanceof S1.class) {
-//│               argument0$3 = argument0$2.value;
-//│               if (argument0$3 instanceof S1.class) {
-//│                 argument0$4 = argument0$3.value;
-//│                 if (argument0$4 instanceof S1.class) {
-//│                   argument0$5 = argument0$4.value;
-//│                   if (argument0$5 === 0) {
+//│         arg$S$0$ = v.value;
+//│         if (arg$S$0$ instanceof S1.class) {
+//│           arg$S$0$1 = arg$S$0$.value;
+//│           if (arg$S$0$1 instanceof S1.class) {
+//│             arg$S$0$2 = arg$S$0$1.value;
+//│             if (arg$S$0$2 instanceof S1.class) {
+//│               arg$S$0$3 = arg$S$0$2.value;
+//│               if (arg$S$0$3 instanceof S1.class) {
+//│                 arg$S$0$4 = arg$S$0$3.value;
+//│                 if (arg$S$0$4 instanceof S1.class) {
+//│                   arg$S$0$5 = arg$S$0$4.value;
+//│                   if (arg$S$0$5 === 0) {
 //│                     tmp = "bruh!";
 //│                     break split_root$
 //│                   } else {

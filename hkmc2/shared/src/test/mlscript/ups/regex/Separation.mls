@@ -46,7 +46,7 @@ parseIntegers of "123\n456\n789"
 // We may need a shorthand syntax to obtain the result of pattern matching.
 // `t through P` means match `t` against `P` and returns the result.
 "123\n456\n789" through Lines(Integer) // ==> [123, 456, 789]
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
 //│ ║  l.48: 	"123\n456\n789" through Lines(Integer) // ==> [123, 456, 789]
 //│ ╙──      	                ^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: Lines1 is not a function

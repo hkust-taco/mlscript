@@ -1,5 +1,6 @@
 :js
 :effectHandlers
+:lift
 
 abstract class Generator with
   fun produce(result): ()

@@ -19,7 +19,7 @@ import semantics.{Term => st}
 import semantics.Term.{Throw => _, *}
 import semantics.Elaborator.{State, Ctx, ctx}
 
-import syntax.{Literal, Tree}
+import syntax.{Literal, Tree, SpreadKind}
 import hkmc2.syntax.Fun
 
 
@@ -36,8 +36,19 @@ object Thrw extends TailOp:
 
 
 // * No longer in meaningful use and could be removed if we don't find a use for it:
-class Subst(initMap: Map[Local, Value]):
+class LoweringCtx(
+  initMap: Map[Local, Value],
+  val mayRet: Bool,
+  private val definedSymsDuringLowering: collection.mutable.Set[Symbol]
+):
   val map = initMap
+  def collectScopedSym(s: Symbol) = definedSymsDuringLowering.add(s)
+  def collectScopedSyms(s: Symbol*) = definedSymsDuringLowering.addAll(s)
+  def registerTempSymbol(trm: Option[Term], dbgNme: Str = "tmp")(using State) =
+    val tmp = new TempSymbol(trm, dbgNme)
+    definedSymsDuringLowering.add(tmp)
+    tmp
+  def getCollectedSym: collection.Set[Symbol] = definedSymsDuringLowering
   /*
   def +(kv: (Local, Value)): Subst =
     kv match
@@ -47,15 +58,28 @@ class Subst(initMap: Map[Local, Value]):
     Subst(map + kv)
   */
   def apply(v: Value): Value = v match
-    case Value.Ref(l) => map.getOrElse(l, v)
+    case Value.Ref(l, _) => map.getOrElse(l, v)
     case _ => v
-object Subst:
-  val empty = Subst(Map.empty)
-  def subst(using sub: Subst): Subst = sub
-end Subst
+object LoweringCtx:
+  val empty = LoweringCtx(Map.empty, false, collection.mutable.Set.empty)
+  def loweringCtx(using sub: LoweringCtx): LoweringCtx = sub
+  def nestFunc(using sub: LoweringCtx): LoweringCtx = LoweringCtx(sub.map, true, sub.definedSymsDuringLowering)
+  def nestScoped(using sub: LoweringCtx): LoweringCtx = LoweringCtx(sub.map, sub.mayRet, collection.mutable.Set.empty)
+end LoweringCtx
 
-import Subst.subst
+import LoweringCtx.loweringCtx
 
+
+object Lowering:
+  
+  def compError: Block =
+    Throw(Value.Lit(Tree.StrLit("This code cannot be run as its compilation yielded an error.")))
+  
+  def fail(err: ErrorReport)(using Raise): Block =
+    raise(err)
+    compError
+  
+import Lowering.*
 
 class Lowering()(using Config, TL, Raise, State, Ctx):
   
@@ -69,6 +93,46 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   val lowerHandlers: Bool = config.effectHandlers.isDefined
   val lift: Bool = config.liftDefns.isDefined
 
+  private lazy val wasmBinaryIntrinsicMap: Map[Str, Str] = Map(
+    "+" -> "plus_impl",
+    "-" -> "minus_impl",
+    "*" -> "times_impl",
+    "/" -> "div_impl",
+    "%" -> "mod_impl",
+    "===" -> "eq_impl",
+    "!==" -> "neq_impl",
+    "<" -> "lt_impl",
+    "<=" -> "le_impl",
+    ">" -> "gt_impl",
+    ">=" -> "ge_impl"
+  )
+  private lazy val wasmUnaryIntrinsicMap: Map[Str, Str] = Map(
+    "-" -> "neg_impl",
+    "+" -> "pos_impl",
+    "!" -> "not_impl"
+  )
+  private def wasmIntrinsicPath(sym: BuiltinSymbol, unary: Bool): Opt[Path] =
+    if config.target is CompilationTarget.Wasm then
+      val map = if unary then wasmUnaryIntrinsicMap else wasmBinaryIntrinsicMap
+      map.get(sym.nme).map(name => Value.Ref(State.wasmSymbol).selN(Tree.Ident(name)))
+    else N
+  private lazy val wasmIntrinsicSymbols: Set[BlockMemberSymbol] = Set(
+    ctx.builtins.wasm.plus_impl,
+    ctx.builtins.wasm.minus_impl,
+    ctx.builtins.wasm.times_impl,
+    ctx.builtins.wasm.div_impl,
+    ctx.builtins.wasm.mod_impl,
+    ctx.builtins.wasm.eq_impl,
+    ctx.builtins.wasm.neq_impl,
+    ctx.builtins.wasm.lt_impl,
+    ctx.builtins.wasm.le_impl,
+    ctx.builtins.wasm.gt_impl,
+    ctx.builtins.wasm.ge_impl,
+    ctx.builtins.wasm.neg_impl,
+    ctx.builtins.wasm.pos_impl,
+    ctx.builtins.wasm.not_impl
+  )
+
   lazy val unreachableFn =
     Select(Value.Ref(State.runtimeSymbol), Tree.Ident("unreachable"))(N)
   
@@ -76,17 +140,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     Select(Value.Ref(State.runtimeSymbol), Tree.Ident("Unit"))(S(State.unitSymbol))
   
   
-  def fail(err: ErrorReport): Block =
-    raise(err)
-    End("error")
-  
-  
   // type Rcd = (mut: Bool, args: List[RcdArg]) // * Better, but Scala's patmat exhaustiveness chokes on it
   type Rcd = (Bool, List[RcdArg])
   
-  def returnedTerm(t: st)(using Subst): Block = term(t)(Ret)
+  def returnedTerm(t: st)(using LoweringCtx): Block = term(t)(Ret)(using LoweringCtx.nestFunc)
   
-  def parentConstructor(cls: Term, args: Ls[Term])(using Subst) = 
+  def parentConstructor(cls: Term, args: Ls[Term])(using LoweringCtx) = 
     if args.length > 1 then 
       raise:
         ErrorReport(
@@ -96,13 +155,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     lowerCall(
       Value.Ref(State.builtinOpsMap("super")),
       isMlsFun = true,
+      isTailCall = false,
       args.headOption,
       N, // TODO: location?
     )(c => Return(c, implct = true))
   
   // * Used to work around Scala's @tailrec annotation for those few calls that are not in tail position.
-  final def term_nonTail(t: st, inStmtPos: Bool = false)(k: Result => Block)(using Subst): Block =
-    term(t: st, inStmtPos: Bool)(k)
+  final def term_nonTail(t: st, inStmtPos: Bool = false)(k: Result => Block)(using LoweringCtx): Block =
+    term(t, inStmtPos = inStmtPos)(k)
   
 
   @tailrec
@@ -120,203 +180,203 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       (imps.reverse, funs.reverse, rest.reverse)
   
   
-  def block(stats: Ls[Statement], res: Rcd \/ Term)(k: Result => Block)(using Subst): Block =
+  def block(stats: Ls[Statement], res: Rcd \/ Term, inStmtPos: Bool = false)(k: Result => Block)(using LoweringCtx): Block =
     // TODO we should also isolate and reorder classes by inheritance topological sort
     val (imps, funs, rest) = splitBlock(stats, Nil, Nil, Nil)
-    blockImpl(imps ::: funs ::: rest, res)(k)
   
-  def blockImpl(stats: Ls[Statement], res: Rcd \/ Term)(k: Result => Block)(using Subst): Block =
-    stats match
-    case (t: sem.Term) :: stats =>
-      subTerm(t, inStmtPos = true): r =>
-        blockImpl(stats, res)(r => k(r))
-    case Nil =>
-      res match
-      case R(res) => term(res)(k)
-      case L((mut, flds)) =>
-        k(Record(mut, flds.reverse))
-    case RcdSpread(bod) :: stats =>
-      res match
-      case R(_) => wat("RcdField in non-Rcd context", res)
-      case L((mut, flds)) =>
-        subTerm(bod): l =>
-          blockImpl(stats, L((mut, RcdArg(N, l) :: flds)))(k)
-    case RcdField(lhs, rhs) :: stats =>
-      res match
-      case R(_) => wat("RcdField in non-Rcd context", res)
-      case L((mut, flds)) =>
-        subTerm(lhs): l =>
-          subTerm_nonTail(rhs): r =>
-            blockImpl(stats, L((mut, RcdArg(S(l), r) :: flds)))(k)
-    case (decl @ LetDecl(sym, annotations)) :: (stats @ ((_: DefineVar) :: _)) =>
-      reportAnnotations(decl, annotations)
-      blockImpl(stats, res)(k)
-    case (decl @ LetDecl(sym, annotations)) :: stats =>
-      reportAnnotations(decl, annotations)
-      blockImpl(DefineVar(sym, Term.Lit(Tree.UnitLit(false))) :: stats, res)(k)
-    case DefineVar(sym, rhs) :: stats =>
-      term(rhs): r =>
-        Assign(sym, r, blockImpl(stats, res)(k))
-    case (imp: Import) :: stats =>
-      raise(ErrorReport(
-        msg"Imports must be at the top level" ->
-        imp.toLoc :: Nil,
-        source = Diagnostic.Source.Compilation))
-      blockImpl(stats, res)(k)
-    case (d: Declaration) :: stats =>
-      d match
-      case td: TermDefinition =>
-        reportAnnotations(td, td.extraAnnotations)
-        td.body match
-        case N => // abstract declarations have no lowering
-          blockImpl(stats, res)(k)
-        case S(bod) =>
-          td.k match
-          case knd: syntax.Val =>
-            assert(td.params.isEmpty)
-            subTerm_nonTail(bod)(r =>
-              // Assign(td.sym, r,
-              //   term(st.Blk(stats, res))(k)))
-              Define(ValDefn(td.tsym, td.sym, r),
-                blockImpl(stats, res)(k)))
-          case syntax.Fun =>
-            val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme))
-            Define(FunDefn(td.owner, td.sym, paramLists, bodyBlock),
-              blockImpl(stats, res)(k))
-          case syntax.Ins =>
-            // Implicit instances are not parameterized for now.
-            assert(td.params.isEmpty)
-            subTerm(bod)(r =>
-              Define(ValDefn(td.tsym, td.sym, r),
-                blockImpl(stats, res)(k)))
-          case syntax.LetBind | syntax.ParamBind | syntax.HandlerBind => fail:
-            ErrorReport(
-              msg"Unexpected declaration kind '${td.k.str}' in lowering" -> td.toLoc :: Nil,
-              source = Diagnostic.Source.Compilation)
-      case cls: ClassLikeDef if cls.sym.defn.exists(_.hasDeclareModifier.isDefined) =>
-        // * Declarations have no lowering
-        blockImpl(stats, res)(k)
-      case cls: ClassDef if cls.moduleCompanion.isDefined =>
-        // * Class definitions are pure, but their companions might not be,
-        // * as they may contain static initialization code;
-        // * therefore, we lower classes at the point where the companion is defined,
-        // * if it is defined, rather than at the point where the class is defined.
-        reportAnnotations(cls, cls.extraAnnotations)
-        blockImpl(stats, res)(k)
-      case _defn: ClassLikeDef =>
-        val defn = _defn match
-          case cls: ClassDef => cls
-          case mod: ModuleOrObjectDef if mod.kind is syntax.Mod => // * Currently, both objects and modules are represented as `ModuleOrObjectDef`s
-            mod.classCompanion match
-            case S(comp) => comp.defn.getOrElse(wat("Module companion without definition", mod.companion))
-            case N =>
-              ClassDef.Plain(mod.owner, syntax.Cls, new ClassSymbol(Tree.DummyTypeDef(syntax.Cls), mod.sym.id),
-                mod.bsym,
-                Nil,
-                N,
-                ObjBody(Blk(Nil, UnitVal())),
-                S(mod.sym),
-                Nil,
-              )
-          case _ => _defn
-        reportAnnotations(defn, defn.extraAnnotations)
-        val bufferableAnnots = defn.annotations.flatMap:
-          case Annot.Trm(trm: SynthSel) =>
-            if trm.sym.contains(ctx.builtins.annotations.buffered) then
-              S(false)
-            else if trm.sym.contains(ctx.builtins.annotations.bufferable) then
-              S(true)
-            else
-              N
-          case _ => N
-        if bufferableAnnots.length > 1 then
-          raise(ErrorReport(
-            msg"Only one of bufferable annotation is allowed." -> defn.toLoc :: Nil,
-            source = Diagnostic.Source.Compilation
-          ))
-        if bufferableAnnots.length >= 1 then
-          if defn.companion.isDefined then
+    def blockImpl(stats: Ls[Statement], res: Rcd \/ Term)(using LoweringCtx): Block =
+      stats match
+      case (t: sem.Term) :: stats =>
+        term(t, inStmtPos = true)(Assign.discard(_, blockImpl(stats, res)))
+      case Nil =>
+        res match
+        case R(res) => term(res, inStmtPos = inStmtPos)(k)
+        case L((mut, flds)) =>
+          k(Record(mut, flds.reverse))
+      case RcdSpread(bod) :: stats =>
+        res match
+        case R(_) => wat("RcdField in non-Rcd context", res)
+        case L((mut, flds)) =>
+          subTerm(bod): l =>
+            blockImpl(stats, L((mut, RcdArg(N, l) :: flds)))
+      case RcdField(lhs, rhs) :: stats =>
+        res match
+        case R(_) => wat("RcdField in non-Rcd context", res)
+        case L((mut, flds)) =>
+          subTerm(lhs): l =>
+            subTerm_nonTail(rhs): r =>
+              blockImpl(stats, L((mut, RcdArg(S(l), r) :: flds)))
+      case (decl @ LetDecl(sym, annotations)) :: stats =>
+        reportAnnotations(decl, annotations)
+        if sym.asTrm.forall(_.owner.isEmpty) then loweringCtx.collectScopedSym(sym)
+        blockImpl(stats, res)
+      case DefineVar(sym, rhs) :: stats =>
+        term(rhs): r =>
+          Assign(sym, r, blockImpl(stats, res))
+      case (imp: Import) :: stats =>
+        raise(ErrorReport(
+          msg"Imports must be at the top level" ->
+          imp.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation))
+        blockImpl(stats, res)
+      case (d: Declaration) :: stats =>
+        d match
+        case td: TermDefinition =>
+          reportAnnotations(td, td.extraAnnotations)
+          if td.owner.isEmpty && td.hasDeclareModifier.isEmpty then
+            loweringCtx.collectScopedSym(td.sym)
+          td.body match
+          case N => // abstract declarations have no lowering
+            blockImpl(stats, res)
+          case S(bod) =>
+            td.k match
+            case knd: syntax.Val =>
+              assert(td.params.isEmpty)
+              subTerm_nonTail(bod)(r =>
+                // Assign(td.sym, r,
+                //   term(st.Blk(stats, res))(k)))
+                Define(ValDefn(td.tsym, td.sym, r),
+                  blockImpl(stats, res)))(using LoweringCtx.nestFunc)
+            case syntax.Fun =>
+              val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme))
+              Define(FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(td.extraAnnotations.contains(Annot.TailRec)),
+                blockImpl(stats, res))
+            case syntax.Ins =>
+              // Implicit instances are not parameterized for now.
+              assert(td.params.isEmpty)
+              subTerm(bod)(r =>
+                Define(ValDefn(td.tsym, td.sym, r),
+                  blockImpl(stats, res)))
+            case syntax.LetBind | syntax.ParamBind | syntax.HandlerBind => fail:
+              ErrorReport(
+                msg"Unexpected declaration kind '${td.k.str}' in lowering" -> td.toLoc :: Nil,
+                source = Diagnostic.Source.Compilation)
+        case cls: ClassLikeDef if cls.sym.defn.exists(_.hasDeclareModifier.isDefined) =>
+          // * Declarations have no lowering
+          blockImpl(stats, res)
+        case cls: ClassDef if cls.moduleCompanion.isDefined =>
+          // * Class definitions are pure, but their companions might not be,
+          // * as they may contain static initialization code;
+          // * therefore, we lower classes at the point where the companion is defined,
+          // * if it is defined, rather than at the point where the class is defined.
+          reportAnnotations(cls, cls.extraAnnotations)
+          blockImpl(stats, res)
+        case _defn: ClassLikeDef =>
+          if _defn.owner.isEmpty then loweringCtx.collectScopedSym(_defn.bsym)
+          val defn = _defn match
+            case cls: ClassDef => cls
+            case mod: ModuleOrObjectDef if mod.kind is syntax.Mod => // * Currently, both objects and modules are represented as `ModuleOrObjectDef`s
+              mod.classCompanion match
+              case S(comp) => comp.defn.getOrElse(wat("Module companion without definition", mod.companion))
+              case N =>
+                ClassDef.Plain(mod.owner, syntax.Cls, new ClassSymbol(Tree.DummyTypeDef(syntax.Cls), mod.sym.id),
+                  mod.bsym,
+                  Nil,
+                  N,
+                  ObjBody(Blk(Nil, UnitVal())),
+                  S(mod.sym),
+                  Nil,
+                )
+            case _ => _defn
+          reportAnnotations(defn, defn.extraAnnotations)
+          val bufferableAnnots = defn.annotations.flatMap:
+            case Annot.Trm(trm: SynthSel) =>
+              if trm.sym.contains(ctx.builtins.annotations.buffered) then
+                S(false)
+              else if trm.sym.contains(ctx.builtins.annotations.bufferable) then
+                S(true)
+              else
+                N
+            case _ => N
+          if bufferableAnnots.length > 1 then
             raise(ErrorReport(
-              msg"No companion class is allowed with @buffered or @bufferable." -> defn.toLoc :: Nil,
+              msg"Only one of bufferable annotation is allowed." -> defn.toLoc :: Nil,
               source = Diagnostic.Source.Compilation
             ))
-        val bufferable = bufferableAnnots.headOption
-        val (mtds, publicFlds, privateFlds, ctor) = defn match
-          case pd: PatternDef =>
-            // Compile the pattern definition into `unapply` and `unapplyStringPrefix`
-            // methods using the `SplitCompiler`, which transliterate the pattern into
-            // UCS splits that backtrack without any optimizations.
-            val compiler = new ups.SplitCompiler
-            val methods = compiler.compilePattern(pd)
-            // We only need `owner`, `sym`, `params` and `body`
-            val mtds = methods.map:
-              case (sym, params, split) =>
-                val paramLists = params :: Nil
-                val bodyBlock = ucs.Normalization(this)(split)(Ret)
-                FunDefn(N, sym, paramLists, bodyBlock)
-            // The return type is intended to be consistent with `gatherMembers`
-            (mtds, Nil, Nil, End())
-          case _ => gatherMembers(defn.body)
-        val mod = defn.companion match
-          case S(sym) =>
-            sym.defn match
-            case S(mod: ModuleOrObjectDef) =>
-              reportAnnotations(mod, mod.extraAnnotations)
-              mod.ext match
-              case S(ext) => fail:
-                ErrorReport(
-                  msg"Modules cannot have an extension clause." -> ext.toLoc :: Nil,
-                  source = Diagnostic.Source.Compilation
-                )
-              case N =>
-              val (mtds, publicFlds, privateFlds, ctor) =
-                gatherMembers(mod.body)
-              S(ClsLikeBody(mod.sym, mtds, privateFlds, publicFlds, ctor))
+          if bufferableAnnots.length >= 1 then
+            if defn.companion.isDefined then
+              raise(ErrorReport(
+                msg"No companion class is allowed with @buffered or @bufferable." -> defn.toLoc :: Nil,
+                source = Diagnostic.Source.Compilation
+              ))
+          val bufferable = bufferableAnnots.headOption
+          val (mtds, publicFlds, privateFlds, ctor) = defn match
+            case pd: PatternDef =>
+              // Compile the pattern definition into `unapply` and `unapplyStringPrefix`
+              // methods using the `SplitCompiler`, which transliterate the pattern into
+              // UCS splits that backtrack without any optimizations.
+              val compiler = new ups.SplitCompiler
+              val methods = compiler.compilePattern(pd)
+              // We only need `owner`, `sym`, `params` and `body`
+              val mtds = methods.map:
+                case (sym, params, split) =>
+                  val paramLists = params :: Nil
+                  val bodyBlock = inScopedBlock(ucs.Normalization(this)(split)(Ret))
+                  FunDefn.withFreshSymbol(N, sym, paramLists, bodyBlock)(forceTailRec = false)
+              // The return type is intended to be consistent with `gatherMembers`
+              (mtds, Nil, Nil, End())
+            case _ => gatherMembers(defn.body)
+          val mod = defn.companion match
+            case S(sym) =>
+              sym.defn match
+              case S(mod: ModuleOrObjectDef) =>
+                reportAnnotations(mod, mod.extraAnnotations)
+                mod.ext match
+                case S(ext) => fail:
+                  ErrorReport(
+                    msg"Modules cannot have an extension clause." -> ext.toLoc :: Nil,
+                    source = Diagnostic.Source.Compilation
+                  )
+                case N =>
+                val (mtds, publicFlds, privateFlds, ctor) =
+                  gatherMembers(mod.body)
+                S(ClsLikeBody(mod.sym, mtds, privateFlds, publicFlds, ctor))
+              case _ => N
             case _ => N
-          case _ => N
-        defn.ext match
-        case N =>
-          Define(
-            ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.kind, defn.paramsOpt, defn.auxParams, N,
-              mtds,
-              privateFlds,
-              publicFlds,
-              End(),
-              ctor,
-              mod,
-              bufferable,
-            ),
-            blockImpl(stats, res)(k))
-        case S(ext) =>
-          assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
-          subTerm(ext.cls): clsp =>
-            val pctor = parentConstructor(ext.cls, ext.args)
+          defn.ext match
+          case N =>
             Define(
-              ClsLikeDefn(
-                defn.owner, defn.sym, defn.bsym, defn.kind, defn.paramsOpt, defn.auxParams, S(clsp),
-                mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable,
+              ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, N,
+                mtds,
+                privateFlds,
+                publicFlds,
+                End(),
+                ctor,
+                mod,
+                bufferable,
               ),
-              blockImpl(stats, res)(k)
-            )
-      case td: TypeDef => // * Type definitions are erased
-        blockImpl(stats, res)(k)
+              blockImpl(stats, res))
+          case S(ext) =>
+            assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
+            subTerm(ext.cls): clsp =>
+              val pctor = inScopedBlock(parentConstructor(ext.cls, ext.args))
+              Define(
+                ClsLikeDefn(
+                  defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, S(clsp),
+                  mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable,
+                ),
+                blockImpl(stats, res)
+              )
+        case td: TypeDef => // * Type definitions are erased
+          blockImpl(stats, res)
+    
+    blockImpl(imps ::: funs ::: rest, res)
   
-  
-  def lowerCall(fr: Path, isMlsFun: Bool, arg: Opt[Term], loc: Opt[Loc])(k: Result => Block)(using Subst): Block =
+  def lowerCall(fr: Path, isMlsFun: Bool, isTailCall: Bool, arg: Opt[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
     arg match
     case S(a) =>
-      lowerCall(fr, isMlsFun, a, loc)(k)
+      lowerCall(fr, isMlsFun, isTailCall, a, loc)(k)
     case N =>
       // * No arguments means a nullary call, e.g., `f()`
-      k(Call(fr, Nil)(isMlsFun, true).withLoc(loc))
-  def lowerCall(fr: Path, isMlsFun: Bool, arg: Term, loc: Opt[Loc])(k: Result => Block)(using Subst): Block =
-    lowerArg(arg)(as => k(Call(fr, as)(isMlsFun, true).withLoc(loc)))
+      k(Call(fr, Nil)(isMlsFun, true, isTailCall).withLoc(loc))
+  def lowerCall(fr: Path, isMlsFun: Bool, isTailCall: Bool, arg: Term, loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+    lowerArg(arg)(as => k(Call(fr, as)(isMlsFun, true, isTailCall).withLoc(loc)))
   
-  def lowerArg(arg: Term)(k: Ls[Arg] => Block)(using Subst): Block =
+  def lowerArg(arg: Term)(k: Ls[Arg] => Block)(using LoweringCtx): Block =
     arg match
     case Tup(fs) =>
       if fs.exists(e => e match
-        case Spd(false, _) => true // is lazy spread
+        case Spd(SpreadKind.Lazy, _) => true // is lazy spread
         case _ => false)
       then
         raise(ErrorReport(
@@ -326,10 +386,87 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case _ =>
       // Application arguments that are not tuples represent spreads, as in `f(...arg)`
       subTerm_nonTail(arg): ar =>
-        k(Arg(spread = S(true), ar) :: Nil)
+        k(Arg(spread = S(SpreadKind.Eager), ar) :: Nil)
+  
+  def ref(ref: st.Ref, annots: List[Annot], disamb: Opt[DefinitionSymbol[?]], inStmtPos: Bool)(k: Result => Block)(using LoweringCtx): Block =
+    def warnStmt = if inStmtPos then
+      raise:
+        WarningReport(msg"Pure expression in statement position" -> ref.toLoc :: Nil, S(ref))
+    
+    val sym = ref.sym
+    sym match
+      case ctx.builtins.source.bms | ctx.builtins.js.bms | ctx.builtins.wasm.bms | ctx.builtins.debug.bms | ctx.builtins.annotations.bms =>
+        return fail:
+          ErrorReport(
+            msg"Module '${sym.nme}' is virtual (i.e., \"compiler fiction\"); cannot be used directly" -> ref.toLoc ::
+            Nil, S(ref), source = Diagnostic.Source.Compilation)
+      case sym if sym.asCls.exists(ctx.builtins.virtualClasses) =>
+        return fail:
+          ErrorReport(
+            msg"Symbol '${sym.nme}' is virtual (i.e., \"compiler fiction\"); cannot be used as a term" -> ref.toLoc ::
+            Nil, S(ref), source = Diagnostic.Source.Compilation)
+      case _ => ()
+    
+    sym match
+    case sym: BuiltinSymbol =>
+      warnStmt
+      if sym.binary then
+        val t1 = new Tree.Ident("arg1")
+        val t2 = new Tree.Ident("arg2")
+        val p1 = Param(FldFlags.empty, VarSymbol(t1), N, Modulefulness.none)
+        val p2 = Param(FldFlags.empty, VarSymbol(t2), N, Modulefulness.none)
+        val ps = PlainParamList(p1 :: p2 :: Nil)
+        val bod = st.App(ref, st.Tup(List(st.Ref(p1.sym)(t1, 666, N).resolve, st.Ref(p2.sym)(t2, 666, N).resolve))
+          (Tree.Tup(Nil // FIXME should not be required (using dummy value)
+            )))(
+            Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
+            N,
+            FlowSymbol(sym.nme)
+          ).resolve
+        val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
+        tl.log(s"Ref builtin $sym")
+        assert(paramLists.length === 1)
+        return k(Lambda(paramLists.head, bodyBlock).withLocOf(ref))
+      if sym.unary then
+        val t1 = new Tree.Ident("arg")
+        val p1 = Param(FldFlags.empty, VarSymbol(t1), N, Modulefulness.none)
+        val ps = PlainParamList(p1 :: Nil)
+        val bod = st.App(ref, st.Tup(List(st.Ref(p1.sym)(t1, 666, N).resolve))
+          (Tree.Tup(Nil // FIXME should not be required (using dummy value)
+            )))(
+            Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
+            N,
+            FlowSymbol(sym.nme)
+          ).resolve
+        val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
+        tl.log(s"Ref builtin $sym")
+        assert(paramLists.length === 1)
+        return k(Lambda(paramLists.head, bodyBlock).withLocOf(ref))
+    case bs: BlockMemberSymbol =>
+      disamb.flatMap(_.defn) match
+      case S(d) if d.hasDeclareModifier.isDefined =>
+        val sel = SynthSel(State.globalThisSymbol.ref().resolve, ref.tree)(S(bs), FlowSymbol.synthSel(ref.tree.name), N, N).withLocOf(ref).resolve
+        return disamb.fold(term(sel)(k))(d => term(st.Resolved(sel, d)(N))(k))
+        // * Note: the alternative below, which might seem more appealing,
+        // * works but does not instrument the selection to check for `undefined`!
+        // return k(Value.Ref(State.globalThisSymbol).sel(ref.tree, bs).withLocOf(ref))
+      case S(td: TermDefinition) if td.k is syntax.Fun =>
+        // * Local functions with no parameter lists are getters
+        // * and are lowered to functions with an empty parameter list
+        // * (non-local functions are compiled into getter methods selected on some prefix)
+        if td.params.isEmpty then
+          val l = loweringCtx.registerTempSymbol(S(ref))
+          return Assign(l, Call(
+              Value.Ref(bs, disamb).withLocOf(ref), Nil
+            )(isMlsFun = true, true, annots.contains(Annot.TailCall)), k(Value.Ref(l, disamb)))
+      case S(_) => ()
+      case N => () // TODO panic here; can only lower refs to elab'd symbols
+    case _ => ()
+    warnStmt
+    k(loweringCtx(Value.Ref(sym, disamb).withLocOf(ref)))
   
   @tailrec
-  final def term(t: st, inStmtPos: Bool = false)(k: Result => Block)(using Subst): Block =
+  final def term(t: st, inStmtPos: Bool = false)(k: Result => Block)(using LoweringCtx): Block =
     tl.log(s"Lowering.term ${t.showDbg.truncate(100, "[...]")}${
       if inStmtPos then " (in stmt)" else ""}${
       t.resolvedSym.fold("")(" – symbol " + _)}")
@@ -338,10 +475,19 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       raise:
         WarningReport(msg"Pure expression in statement position" -> t.toLoc :: Nil, S(t))
     
-    t.instantiated match
+    @tailrec
+    def extractAnnots(t: st, acc: List[Annot]): (List[Annot], st) = t match
+      case st.Annotated(annot, trm) => extractAnnots(trm.instantiated, annot :: acc)
+      case _ => (acc, t)
+    
+    val insted = t.instantiated
+    val (annots, trm) = extractAnnots(insted, Nil)
+    reportAnnotations(trm, annots)
+    
+    trm match
     case st.UnitVal() => k(unit)
     case st.Lit(lit) =>
-      warnStmt
+      if lit =/= Tree.UnitLit(false) then warnStmt
       k(Value.Lit(lit))
     case st.Ret(res) =>
       returnedTerm(res)
@@ -356,73 +502,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case st.CtxTup(fs) =>
       // * This case is currently triggered for code such as `f(using 42)`
       args(fs)(args => k(Tuple(mut = false, args)))
-    case ref @ st.Ref(sym) =>
-      sym match
-      case ctx.builtins.source.bms | ctx.builtins.js.bms | ctx.builtins.wasm.bms | ctx.builtins.debug.bms | ctx.builtins.annotations.bms =>
-        return fail:
-          ErrorReport(
-            msg"Module '${sym.nme}' is virtual (i.e., \"compiler fiction\"); cannot be used directly" -> t.toLoc ::
-            Nil, S(t), source = Diagnostic.Source.Compilation)
-      case sym if sym.asCls.exists(ctx.builtins.virtualClasses) =>
-        return fail:
-          ErrorReport(
-            msg"Symbol '${sym.nme}' is virtual (i.e., \"compiler fiction\"); cannot be used as a term" -> t.toLoc ::
-            Nil, S(t), source = Diagnostic.Source.Compilation)
-      case _ => ()
-      
-      sym match
-      case sym: BuiltinSymbol =>
-        warnStmt
-        if sym.binary then
-          val t1 = new Tree.Ident("arg1")
-          val t2 = new Tree.Ident("arg2")
-          val p1 = Param(FldFlags.empty, VarSymbol(t1), N, Modulefulness.none)
-          val p2 = Param(FldFlags.empty, VarSymbol(t2), N, Modulefulness.none)
-          val ps = PlainParamList(p1 :: p2 :: Nil)
-          val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666, N).resolve, st.Ref(p2.sym)(t2, 666, N).resolve))
-            (Tree.Tup(Nil // FIXME should not be required (using dummy value)
-              )))(
-              Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
-              N,
-              FlowSymbol(sym.nme)
-            ).resolve
-          val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
-          tl.log(s"Ref builtin $sym")
-          assert(paramLists.length === 1)
-          return k(Lambda(paramLists.head, bodyBlock).withLocOf(ref))
-        if sym.unary then
-          val t1 = new Tree.Ident("arg")
-          val p1 = Param(FldFlags.empty, VarSymbol(t1), N, Modulefulness.none)
-          val ps = PlainParamList(p1 :: Nil)
-          val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666, N).resolve))
-            (Tree.Tup(Nil // FIXME should not be required (using dummy value)
-              )))(
-              Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
-              N,
-              FlowSymbol(sym.nme)
-            ).resolve
-          val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
-          tl.log(s"Ref builtin $sym")
-          assert(paramLists.length === 1)
-          return k(Lambda(paramLists.head, bodyBlock).withLocOf(ref))
-      case bs: BlockMemberSymbol =>
-        bs.defn match
-        case S(_) if bs.asCls.exists(_ is ctx.builtins.Int31) =>
-          return term(Sel(State.runtimeSymbol.ref().resolve, ref.tree)(S(bs), N).withLocOf(ref).resolve)(k)
-        case S(d) if d.hasDeclareModifier.isDefined =>
-          return term(Sel(State.globalThisSymbol.ref().resolve, ref.tree)(S(bs), N).withLocOf(ref).resolve)(k)
-        case S(td: TermDefinition) if td.k is syntax.Fun =>
-          // * Local functions with no parameter lists are getters
-          // * and are lowered to functions with an empty parameter list
-          // * (non-local functions are compiled into getter methods selected on some prefix)
-          if td.params.isEmpty then
-            val l = new TempSymbol(S(t))
-            return Assign(l, Call(Value.Ref(bs).withLocOf(ref), Nil)(true, true), k(Value.Ref(l)))
-        case S(_) => ()
-        case N => () // TODO panic here; can only lower refs to elab'd symbols
-      case _ => ()
-      warnStmt
-      k(subst(Value.Ref(sym).withLocOf(ref)))
+    case t @ st.Ref(sym) =>
+      ref(t, annots, N, inStmtPos = inStmtPos)(k)
+    case st.Resolved(t @ st.Ref(bsym), sym) =>
+      ref(t, annots, S(sym), inStmtPos = inStmtPos)(k)
     case st.App(ref @ Ref(sym: BuiltinSymbol), arg) =>
       arg match
       case st.Tup(Nil) =>
@@ -437,7 +520,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             msg"Builtin '${sym.nme}' is not a unary operator" -> t.toLoc :: Nil, S(arg),
             source = Diagnostic.Source.Compilation)
         subTerm(arg): ar =>
-          k(Call(Value.Ref(sym).withLocOf(ref), Arg(N, ar) :: Nil)(true, false))
+          val target = wasmIntrinsicPath(sym, unary = true)
+            .getOrElse(Value.Ref(sym).withLocOf(ref))
+          k(Call(target, Arg(N, ar) :: Nil)(true, false, false))
       case st.Tup(Fld(FldFlags.benign(), arg1, N) :: Fld(FldFlags.benign(), arg2, N) :: Nil) =>
         if !sym.binary then raise:
           ErrorReport(
@@ -448,16 +533,23 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val isOr = sym is State.orSymbol
           if isAnd || isOr then
             val lamSym = BlockMemberSymbol("lambda", Nil, false)
-            val lamDef = FunDefn(N, lamSym, PlainParamList(Nil) :: Nil, returnedTerm(arg2))
+            loweringCtx.collectScopedSym(lamSym)
+            val lamDef = FunDefn.withFreshSymbol(
+              N,
+              lamSym,
+              PlainParamList(Nil) :: Nil,
+              inScopedBlock(returnedTerm(arg2)))(forceTailRec = false)
             Define(
               lamDef,
               k(Call(
                 Value.Ref(State.runtimeSymbol).selN(Tree.Ident(if isAnd then "short_and" else "short_or")),
-                Arg(N, ar1) :: Arg(N, Value.Ref(lamSym)) :: Nil
-              )(true, false)))
+                Arg(N, ar1) :: Arg(N, lamDef.asPath) :: Nil
+              )(true, true, false)))
           else
             subTerm_nonTail(arg2): ar2 =>
-              k(Call(Value.Ref(sym).withLocOf(ref), Arg(N, ar1) :: Arg(N, ar2) :: Nil)(true, false))
+              val target = wasmIntrinsicPath(sym, unary = false)
+                .getOrElse(Value.Ref(sym).withLocOf(ref))
+              k(Call(target, Arg(N, ar1) :: Arg(N, ar2) :: Nil)(true, false, false))
       case _ => fail:
         ErrorReport(
           msg"Unexpected arguments for builtin symbol '${sym.nme}'" -> arg.toLoc :: Nil, S(arg),
@@ -468,28 +560,35 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         case _: sem.BuiltinSymbol => true
         case sym: sem.BlockMemberSymbol =>
           sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun)
+        case sym: sem.TermSymbol => (sym.k is syntax.Fun) && sym.defn.forall(!_.hasDeclareModifier.isDefined)
         // Do not perform safety check on `MatchSuccess` and `MatchFailure`.
         case sym => (sym is State.matchSuccessClsSymbol) ||
           (sym is State.matchFailureClsSymbol)
-      def conclude(fr: Path) = lowerCall(fr, isMlsFun, arg, t.toLoc)(k)
+      def conclude(fr: Path) = lowerCall(fr, isMlsFun, annots.contains(Annot.TailCall), arg, t.toLoc)(k)
+      
+      val instantiated = f.instantiated
+      val instantiatedResolvedBms = instantiated.resolvedSym.flatMap(_.asBlkMember)
+      
       // * We have to instantiate `f` again because, if `f` is a Sel, the `term`
       // * function is not called again with f. See below `Sel` and `SelProj` cases.
-      f.instantiated match
-      case t if t.resolvedSym.exists(_ is ctx.builtins.js.bitand) =>
+      instantiated match
+      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.js.bitand) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("bitand")))
-      case t if t.resolvedSym.exists(_ is ctx.builtins.js.bitnot) =>
+      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.js.bitnot) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("bitnot")))
-      case t if t.resolvedSym.exists(_ is ctx.builtins.js.bitor) =>
+      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.js.bitor) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("bitor")))
-      case t if t.resolvedSym.exists(_ is ctx.builtins.js.shl) =>
+      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.js.shl) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("shl")))
-      case t if t.resolvedSym.isDefined && (t.resolvedSym.get is ctx.builtins.js.try_catch) =>
+      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.js.try_catch) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("try_catch")))
-      case t if t.resolvedSym.exists(_ is ctx.builtins.wasm.plus_impl) =>
-        conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("plus_impl")))
-      case t if t.resolvedSym.exists(_ is ctx.builtins.Int31) =>
-        conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("Int31")))
-      case t if t.resolvedSym.isDefined && (t.resolvedSym.get is ctx.builtins.debug.printStack) =>
+      case t if t.resolvedSym.exists {
+        case sym: BlockMemberSymbol => wasmIntrinsicSymbols.contains(sym)
+        case _ => false
+      } =>
+        val sym = t.resolvedSym.get.asInstanceOf[BlockMemberSymbol]
+        conclude(Value.Ref(State.wasmSymbol).selN(Tree.Ident(sym.nme)))
+      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.debug.printStack) =>
         if !config.effectHandlers.exists(_.debug) then
           return fail:
             ErrorReport(
@@ -497,22 +596,33 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               t.toLoc :: Nil,
               source = Diagnostic.Source.Compilation)
         conclude(Value.Ref(State.runtimeSymbol).selSN("raisePrintStackEffect").withLocOf(f))
-      case t if t.resolvedSym.isDefined && (t.resolvedSym.get is ctx.builtins.debug.getLocals) =>
-        if !config.effectHandlers.exists(_.debug) then
-          return fail:
-            ErrorReport(
-              msg"Debugging functions are not enabled" ->
-              t.toLoc :: Nil,
-              source = Diagnostic.Source.Compilation)
-        conclude(Value.Ref(ctx.builtins.debug.getLocals).withLocOf(f))
+      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.scope.locally) =>
+        arg match
+        case Tup(Fld(FldFlags.benign(), body, N) :: Nil) =>
+          LoweringCtx.nestScoped.givenIn:
+            val res = block(Nil, R(body))(k)
+            val scopedSyms = loweringCtx.getCollectedSym
+            // Put the Scoped in the rest, so that the returned result can be found correctly
+            new Scoped(scopedSyms, res)
+        case _ => return fail:
+          ErrorReport(
+            msg"Unsupported form for scope.locally." ->
+            t.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation)
       // * Due to whacky JS semantics, we need to make sure that selections leading to a call
       // * are preserved in the call and not moved to a temporary variable.
       case sel @ Sel(prefix, nme) =>
         subTerm(prefix): p =>
-          conclude(Select(p, nme)(sel.sym).withLocOf(sel))
+          conclude(Select(p, nme)(N).withLocOf(sel))
+      case Resolved(sel @ Sel(prefix, nme), sym) =>
+        subTerm(prefix): p =>
+          conclude(Select(p, nme)(S(sym)).withLocOf(sel))
       case sel @ SelProj(prefix, _, nme) =>
         subTerm(prefix): p =>
-          conclude(Select(p, nme)(sel.sym).withLocOf(sel))
+          conclude(Select(p, nme)(N).withLocOf(sel))
+      case Resolved(sel @ SelProj(prefix, _, nme), sym) =>
+        subTerm(prefix): p =>
+          conclude(Select(p, nme)(S(sym)).withLocOf(sel))
       case _ => subTerm(f)(conclude)
     case h @ Handle(lhs, rhs, as, cls, defs, bod) =>
       if !lowerHandlers then
@@ -527,16 +637,18 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             raise(ErrorReport(msg"Handler function definitions cannot be empty" -> td.toLoc :: Nil))
             N
           case Some(bod) =>
+            reportAnnotations(td, td.annotations)
             val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))      
             S(Handler(td.sym, resumeSym, paramLists, bodyBlock))
       }.collect{ case Some(v) => v }
-      val resSym = TempSymbol(S(t))
+      loweringCtx.collectScopedSym(lhs)
+      val resSym = loweringCtx.registerTempSymbol(S(t))
       subTerm(rhs): par =>
         subTerms(as): asr =>
           HandleBlock(lhs, resSym, par, asr, cls, handlers,
-            term_nonTail(bod)(Ret),
+            inScopedBlock(returnedTerm(bod)),
             k(Value.Ref(resSym)))
-    case st.Blk(sts, res) => block(sts, R(res))(k)
+    case st.Blk(sts, res) => block(sts, R(res), inStmtPos = inStmtPos)(k)
     case Assgn(lhs, rhs) =>
       lhs match
       case Ref(sym) =>
@@ -567,10 +679,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       then k(Lambda(paramLists.head, bodyBlock))
       else
         val lamSym = new BlockMemberSymbol("lambda", Nil, false)
-        val lamDef = FunDefn(N, lamSym, paramLists, bodyBlock)
+        loweringCtx.collectScopedSym(lamSym)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyBlock)(forceTailRec = false)
         Define(
           lamDef,
-          k(lamSym |> Value.Ref.apply))
+          k(lamDef.asPath))
     
     
     case iftrm: st.IfLike => ucs.Normalization(this)(iftrm)(k)
@@ -578,13 +691,21 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case iftrm: st.SynthIf => ucs.Normalization(this)(iftrm)(k)
       
     case sel @ Sel(prefix, nme) =>
-      setupSelection(prefix, nme, sel.sym)(k)
-        
+      setupSelection(prefix, nme, N)(k)
+    case Resolved(sel @ Sel(prefix, nme), sym) =>
+      setupSelection(prefix, nme, S(sym))(k)
+    
     case sel @ SynthSel(prefix, nme) =>
       // * Not using `setupSelection` as these selections are not meant to be sanity-checked
       subTerm(prefix): p =>
-        k(Select(p, nme)(sel.sym))
-        
+        k(Select(p, nme)(sel.sym.collect:
+          case s: DefinitionSymbol[?] => s
+        ))
+    case Resolved(sel @ SynthSel(prefix, nme), sym) =>
+      // * Not using `setupSelection` as these selections are not meant to be sanity-checked
+      subTerm(prefix): p =>
+        k(Select(p, nme)(S(sym)))
+    
     case DynSel(prefix, fld, ai) =>
       subTerm(prefix): p =>
         subTerm_nonTail(fld): f =>
@@ -610,21 +731,22 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             val z = as.foldLeft[Path => Block](k): (acc, arg) => 
               inner =>
                 lowerArg(arg): asr2 =>
-                  val ts = TempSymbol(N)
-                  Assign(ts, Call(inner, asr2)(true, true), acc(Value.Ref(ts)))
-            val ts = TempSymbol(N)
+                  val ts = loweringCtx.registerTempSymbol(N)
+                  Assign(ts, Call(inner, asr2)(true, true, false), acc(Value.Ref(ts)))
+            val ts = loweringCtx.registerTempSymbol(N)
             Assign(ts, Instantiate(mut, sr, asr), z(Value.Ref(ts)))
         case S((isym, rft)) =>
           val sym = new BlockMemberSymbol(isym.name, Nil)
+          loweringCtx.collectScopedSym(sym)
           val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
           val pctor = parentConstructor(cls, as)
-          val clsDef = ClsLikeDefn(N, isym, sym, syntax.Cls, N, Nil, S(sr),
+          val clsDef = ClsLikeDefn(N, isym, sym, N, syntax.Cls, N, Nil, S(sr),
             mtds, privateFlds, publicFlds, pctor, ctor, N, N)
-          val inner = new New(sym.ref().resolve, Nil, N)
+          val inner = new New(sym.ref().resolved(isym), Nil, N)(N)
           Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k))
       
     case Try(sub, finallyDo) =>
-      val l = new TempSymbol(S(sub))
+      val l = loweringCtx.registerTempSymbol(S(sub))
       TryBlock(
         subTerm_nonTail(sub)(p => Assign(l, p, End())),
         subTerm_nonTail(finallyDo)(_ => End()),
@@ -635,8 +757,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     
     // * BbML-specific cases: t.Cls#field and mutable operations
     case sp @ SelProj(prefix, _, proj) =>
-      setupSelection(prefix, proj, sp.sym)(k)
+      setupSelection(prefix, proj, N)(k)
+    case Resolved(sp @ SelProj(prefix, _, proj), sym) =>
+      setupSelection(prefix, proj, S(sym))(k)
     case Region(reg, body) =>
+      loweringCtx.collectScopedSym(reg)
       Assign(reg, Instantiate(mut = false, Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Region"))(N), Nil),
         term_nonTail(body)(k))
     case RegRef(reg, value) =>
@@ -653,46 +778,39 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         subTerm_nonTail(rhs): value =>
           AssignField(ref, Tree.Ident("value"), value, k(value))(N)
     
-    case Mut(Rcd(mut, stats)) =>
+    case Mut(Rcd(mut, stats)) => // TODO: warn when in statement position
       // * Note: I don't think this is supposed to happen...
       block(stats, L(mut -> Nil))(k)
-    case Rcd(mut, stats) =>
+    case Rcd(mut, stats) => // TODO: warn when in statement position
       block(stats, L(mut -> Nil))(k)
     
-    case Annotated(Annot.Untyped, receiver) =>
-      term(receiver)(k)
-    case Annotated(ann, receiver) =>
-      raise(WarningReport(
-        msg"This annotation has no effect." -> ann.toLoc ::
-        msg"Such annotations are not supported on ${receiver.describe} terms." -> receiver.toLoc :: Nil))
-      term(receiver)(k)
     case Missing => fail:
       ErrorReport(
         msg"Cannot compile ${t.describe} term that was not elaborated (maybe elaboration was one in 'lightweight' mode?)" ->
           t.toLoc :: Nil,
         source = Diagnostic.Source.Compilation)
-    case _: CompType | _: Neg | _: Term.FunTy | _: Term.Forall | _: Term.WildcardTy | _: Term.Unquoted
+    case _: CompType | _: Neg | _: Term.FunTy | _: Term.Forall | _: Term.WildcardTy | _: Term.Unquoted | _: LeadingDotSel
     => fail:
       ErrorReport(
         msg"Unexpected term form in expression position (${t.describe})" ->
           t.toLoc :: Nil,
         source = Diagnostic.Source.Compilation)
-    case Error => End("error")
+    case Error => compError
     
     // case _ =>
     //   subTerm(t)(k)
   
-  def setupTerm(name: Str, args: Ls[Path])(k: Result => Block)(using Subst): Block =
+  def setupTerm(name: Str, args: Ls[Path])(k: Result => Block)(using LoweringCtx): Block =
     k(Instantiate(mut = false, Value.Ref(State.termSymbol).selSN(name), args.map(_.asArg)))
 
   def setupQuotedKeyword(kw: Str): Path =
     Value.Ref(State.termSymbol).selSN("Keyword").selSN(kw)
 
-  def setupSymbol(symbol: Local)(k: Result => Block)(using Subst): Block =
+  def setupSymbol(symbol: Local)(k: Result => Block)(using LoweringCtx): Block =
     k(Instantiate(mut = false, Value.Ref(State.termSymbol).selSN("Symbol"),
       Value.Lit(Tree.StrLit(symbol.nme)).asArg :: Nil))
 
-  def quotePattern(p: FlatPattern)(k: Result => Block)(using Subst): Block = p match
+  def quotePattern(p: FlatPattern)(k: Result => Block)(using LoweringCtx): Block = p match
     case FlatPattern.Lit(lit) => setupTerm("LitPattern", Value.Lit(lit) :: Nil)(k)
     case _ => // TODO
       fail:
@@ -702,9 +820,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           source = Diagnostic.Source.Compilation
         )
   
-  def quoteSplit(split: Split)(k: Result => Block)(using Subst): Block = split match
+  def quoteSplit(split: Split)(k: Result => Block)(using LoweringCtx): Block = split match
     case Split.Cons(Branch(scrutinee, pattern, continuation), tail) => quote(scrutinee): r1 =>
-      val l1, l2, l3, l4, l5 = new TempSymbol(N)
+      val l1, l2, l3, l4, l5 = loweringCtx.registerTempSymbol(N)
       blockBuilder.assign(l1, r1)
         .chain(b => quotePattern(pattern)(r2 => Assign(l2, r2, b)))
         .chain(b => quoteSplit(continuation)(r3 => Assign(l3, r3, b)))
@@ -712,14 +830,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         .chain(b => quoteSplit(tail)(r5 => Assign(l5, r5, b)))
         .rest(setupTerm("Cons", (l4 :: l5 :: Nil).map(s => Value.Ref(s)))(k))
     case Split.Let(sym, term, tail) => setupSymbol(sym): r1 =>
-      val l1, l2, l3 = new TempSymbol(N)
+      loweringCtx.collectScopedSym(sym)
+      val l1, l2, l3 = loweringCtx.registerTempSymbol(N)
       blockBuilder.assign(l1, r1)
         .chain(b => setupTerm("Ref", Value.Ref(l1) :: Nil)(r => Assign(sym, r, b)))
         .chain(b => quote(term)(r2 => Assign(l2, r2, b)))
         .chain(b => quoteSplit(tail)(r3 => Assign(l3, r3, b)))
         .rest(setupTerm("Let", (l1 :: l2 :: l3 :: Nil).map(s => Value.Ref(s)))(k))
     case Split.Else(default) => quote(default): r =>
-      val l = new TempSymbol(N)
+      val l = loweringCtx.registerTempSymbol(N)
       Assign(l, r, setupTerm("Else", Value.Ref(l) :: Nil)(k))
     case Split.End => setupTerm("End", Nil)(k)
 
@@ -727,27 +846,35 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val state = summon[State]
     Value.Ref(state.importSymbol).selSN("meta").selSN("url")
 
-  def quote(t: st)(k: Result => Block)(using Subst): Block = t match
+  def quote(t: st)(k: Result => Block)(using LoweringCtx): Block = t match
     case Lit(lit) =>
       setupTerm("Lit", Value.Lit(lit) :: Nil)(k)
     case Ref(sym) if Elaborator.binaryOps.contains(sym.nme) => // builtin symbols
-      val l = new TempSymbol(N)
+      val l = loweringCtx.registerTempSymbol(N)
       setupTerm("Builtin", Value.Lit(Tree.StrLit(sym.nme)) :: Nil)(k)
+    case Resolved(Ref(sym), disamb) =>
+      k(Value.Ref(sym, S(disamb)))
     case Ref(sym) =>
-      k(Value.Ref(sym))
+      k(Value.Ref(sym, N))
     case SynthSel(Ref(sym: ModuleOrObjectSymbol), name) => // Local cross-stage references
       setupSymbol(sym): r1 =>
-        val l1, l2 = new TempSymbol(N)
+        val l1, l2 = loweringCtx.registerTempSymbol(N)
         Assign(l1, r1, setupTerm("CSRef", Value.Ref(l1) :: setupFilename :: Value.Lit(syntax.Tree.UnitLit(false)) :: Nil)(r2 =>
           Assign(l2, r2, setupTerm("Sel", Value.Ref(l2) :: Value.Lit(syntax.Tree.StrLit(name.name)) :: Nil)(k))
         ))
     case SynthSel(Ref(sym: BlockMemberSymbol), name) => // Multi-file cross-stage references
-      (t.toLoc, sym.toLoc) match
+      if config.qqEnabled then fail:
+        ErrorReport(
+            msg"Cross-stage reference to ${sym.nme}.${name.name} is only allowed in compiled files due to the lack of `import.meta` in REPL mode." ->
+            t.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation
+          )
+      else (t.toLoc, sym.toLoc) match
         case (S(Loc(_, _, Origin(base, _, _))), S(Loc(_, _, Origin(filename, _, _)))) => setupSymbol(sym): r1 =>
-          val l1, l2 = new TempSymbol(N)
-          val basePath = base / os.up
+          val l1, l2 = loweringCtx.registerTempSymbol(N)
+          val basePath = base.up
           val targetPath = filename
-          val relPath = targetPath.relativeTo(basePath).toString
+          val relPath = targetPath.relativeTo(basePath).map(_.toString).getOrElse(targetPath.toString)
           Assign(l1, r1, setupTerm("CSRef", Value.Ref(l1) :: setupFilename :: Value.Lit(syntax.Tree.StrLit(relPath)) :: Nil)(r2 =>
             Assign(l2, r2, setupTerm("Sel", Value.Ref(l2) :: Value.Lit(syntax.Tree.StrLit(name.name)) :: Nil)(k))
           ))
@@ -758,34 +885,35 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             source = Diagnostic.Source.Compilation
           )
     case Lam(params, body) =>
-      def rec(ps: Ls[LocalSymbol & NamedSymbol], ds: Ls[Path])(k: Result => Block)(using Subst): Block = ps match
+      def rec(ps: Ls[LocalSymbol & NamedSymbol], ds: Ls[Path])(k: Result => Block)(using LoweringCtx): Block = ps match
         case Nil => quote(body): r =>
-          val l = new TempSymbol(N)
-          val arr = new TempSymbol(N, "arr")
+          val l = loweringCtx.registerTempSymbol(N)
+          val arr = loweringCtx.registerTempSymbol(N, "arr")
           Assign(
             arr,
             Tuple(mut = false, ds.reverse.map(_.asArg)),
             Assign(l, r, setupTerm("Lam", Value.Ref(arr) :: Value.Ref(l) :: Nil)(k)))
         case sym :: rest =>
+          loweringCtx.collectScopedSym(sym)
           setupSymbol(sym): r =>
-            val l = new TempSymbol(N)
+            val l = loweringCtx.registerTempSymbol(N)
             Assign(l, r, setupTerm("Ref", Value.Ref(l) :: Nil): r1 =>
               Assign(sym, r1, rec(rest, Value.Ref(l) :: ds)(k)))
       rec(params.params.map(_.sym), Nil)(k) // TODO: restParam?
     case App(lhs, Tup(rhs)) => quote(lhs): r1 =>
       def rec(es: Ls[Elem], xs: Ls[Path])(k: Result => Block): Block = es match
         case Nil =>
-          val arrSym = new TempSymbol(N, "arr")
+          val arrSym = loweringCtx.registerTempSymbol(N, "arr")
           Assign(
             arrSym,
             Tuple(mut = false, xs.reverse.map(_.asArg)),
             setupTerm("Tup", Value.Ref(arrSym) :: Nil): r2 =>
-              val l1 = new TempSymbol(N)
-              val l2 = new TempSymbol(N)
+              val l1 = loweringCtx.registerTempSymbol(N)
+              val l2 = loweringCtx.registerTempSymbol(N)
               Assign(l1, r1, Assign(l2, r2, setupTerm("App", Value.Ref(l1) :: Value.Ref(l2) :: Nil)(k)))
           )
         case Fld(_, t, _) :: rest => quote(t): r2 =>
-          val l = new TempSymbol(N)
+          val l = loweringCtx.registerTempSymbol(N)
           Assign(l, r2, rec(rest, Value.Ref(l) :: xs)(k))
         case Spd(eager, term) :: rest =>
           fail:
@@ -797,9 +925,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       rec(rhs, Nil)(k)
     case Blk(LetDecl(sym, _) :: DefineVar(sym2, rhs) :: Nil, res) => // Let bindings
       require(sym2 is sym)
+      loweringCtx.collectScopedSyms(sym)
       setupSymbol(sym){r1 =>
-        val l1, l2, l3, l4, l5 = new TempSymbol(N)
-        val arrSym = new TempSymbol(N, "arr")
+        val l1, l2, l3, l4, l5 = loweringCtx.registerTempSymbol(N)
+        val arrSym = loweringCtx.registerTempSymbol(N, "arr")
         blockBuilder.assign(l1, r1)
           .chain(b => setupTerm("Ref", Value.Ref(l1) :: Nil)(r => Assign(sym, r, b)))
           .chain(b => quote(rhs)(r2 => Assign(l2, r2, b)))
@@ -809,8 +938,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           .assign(arrSym, Tuple(mut = false, (l4 :: l5 :: Nil).map(s => Value.Ref(s).asArg)))
           .rest(setupTerm("Blk", Value.Ref(arrSym) :: Value.Ref(l3) :: Nil)(k))
       }
-    case IfLike(syntax.Keyword.`if`, split) => quoteSplit(split.getExpandedSplit): r =>
-      val l = new TempSymbol(N)
+    case IfLike(_, IfLikeForm.ReturningIf, split) => quoteSplit(split.getExpandedSplit): r =>
+      val l = loweringCtx.registerTempSymbol(N)
       Assign(l, r, setupTerm("IfLike", setupQuotedKeyword("If") :: Value.Ref(l) :: Nil)(k))
     case Unquoted(body) => term(body)(k)
     case _ => fail:
@@ -820,32 +949,34 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         source = Diagnostic.Source.Compilation
       )
   
-  def gatherMembers(clsBody: ObjBody)(using Subst)
+  def gatherMembers(clsBody: ObjBody)(using LoweringCtx)
   : (Ls[FunDefn], Ls[BlockMemberSymbol -> TermSymbol], Ls[TermSymbol], Block) =
     val mtds = clsBody.methods
       .flatMap: td =>
         td.body.map: bod =>
           val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))
-          FunDefn(td.owner, td.sym, paramLists, bodyBlock)
+          reportAnnotations(td, td.extraAnnotations)
+          FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(td.extraAnnotations.contains(Annot.TailRec))
     val publicFlds = clsBody.publicFlds.map(f => f.sym -> f.tsym)
     val privateFlds = clsBody.nonMethods.collect:
       case decl @ LetDecl(sym: TermSymbol, annotations) =>
         reportAnnotations(decl, annotations)
         sym
     val ctor =
-      term_nonTail(Blk(clsBody.nonMethods, clsBody.blk.res))(ImplctRet)
-        // * This is just a minor improvement to get `constructor() {}` instead of `constructor() { null }`
-        .mapTail:
-          case Return(Value.Lit(syntax.Tree.UnitLit(true)), true) => End()
-          case t => t
+      inScopedBlock:
+        term_nonTail(Blk(clsBody.nonMethods, clsBody.blk.res))(ImplctRet)
+          // * This is just a minor improvement to get `constructor() {}` instead of `constructor() { null }`
+          .mapTail:
+            case Return(Value.Lit(syntax.Tree.UnitLit(true)), true) => End()
+            case t => t
     (mtds, publicFlds, privateFlds, ctor)
   
-  def args(elems: Ls[Elem])(k: Ls[Arg] => Block)(using Subst): Block =
+  def args(elems: Ls[Elem])(k: Ls[Arg] => Block)(using LoweringCtx): Block =
     val as = elems.map:
       case sem.Fld(sem.FldFlags.benign(), value, N) => R(N -> value)
       case sem.Fld(sem.FldFlags.benign(), idx, S(rhs)) => L(idx -> rhs)
       case arg @ sem.Fld(flags, value, asc) => TODO(s"Other argument forms: $arg")
-      case spd: Spd => R(S(spd.eager) -> spd.term)
+      case spd: Spd => R(S(spd.k) -> spd.term)
     // * The straightforward way to lower arguments creates too much recursion depth
     // * and makes Lowering stack overflow when lowering functions with lots of arguments.
     /* 
@@ -858,7 +989,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     */
     var asr: Ls[Arg] = Nil
     var fsr: Ls[RcdArg] = Nil
-    def rec(as: Ls[(Term -> Term) \/ (Opt[Bool] -> st)]): Block = as match
+    def rec(as: Ls[(Term -> Term) \/ (Opt[SpreadKind] -> st)]): Block = as match
       case Nil => End()
       case R((spd, a)) :: as =>
         subTerm_nonTail(a): ar =>
@@ -873,7 +1004,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     if fsr.isEmpty then
       Begin(b, k(asr.reverse))
     else
-      val rcdSym = new TempSymbol(N, "rcd")
+      val rcdSym = loweringCtx.registerTempSymbol(N, "rcd")
       Begin(
         b,
         Assign(
@@ -882,10 +1013,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           k((Arg(N, Value.Ref(rcdSym)) :: asr).reverse)))
       
   
-  inline def plainArgs(ts: Ls[st])(k: Ls[Arg] => Block)(using Subst): Block =
+  inline def plainArgs(ts: Ls[st])(k: Ls[Arg] => Block)(using LoweringCtx): Block =
     subTerms(ts)(asr => k(asr.map(Arg(N, _))))
   
-  inline def subTerms(ts: Ls[st])(k: Ls[Path] => Block)(using Subst): Block =
+  inline def subTerms(ts: Ls[st])(k: Ls[Path] => Block)(using LoweringCtx): Block =
     // @tailrec // TODO
     def rec(as: Ls[st], asr: Ls[Path]): Block = as match
       case Nil => k(asr.reverse)
@@ -894,19 +1025,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           rec(as, ar :: asr)
     rec(ts, Nil)
   
-  def subTerm_nonTail(t: st, inStmtPos: Bool = false)(k: Path => Block)(using Subst): Block =
-    subTerm(t: st, inStmtPos: Bool)(k)
+  def subTerm_nonTail(t: st, inStmtPos: Bool = false)(k: Path => Block)(using LoweringCtx): Block =
+    subTerm(t, inStmtPos = inStmtPos)(k)
   
-  inline def subTerm(t: st, inStmtPos: Bool = false)(k: Path => Block)(using Subst): Block =
+  inline def subTerm(t: st, inStmtPos: Bool = false)(k: Path => Block)(using LoweringCtx): Block =
     term(t, inStmtPos = inStmtPos):
       case v: Value => k(v)
       case p: Path => k(p)
       case Lambda(params, body) =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
-        val lamDef = FunDefn(N, lamSym, params :: Nil, body)
-        Define(lamDef, k(lamSym |> Value.Ref.apply))
+        loweringCtx.collectScopedSym(lamSym)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(forceTailRec = false)
+        Define(lamDef, k(lamDef.asPath))
       case r =>
-        val l = new TempSymbol(N)
+        val l = loweringCtx.registerTempSymbol(N)
         Assign(l, r, k(l |> Value.Ref.apply))
   
   
@@ -914,32 +1046,51 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
     
-    val blk = block(funs ::: rest, R(main.res))(ImplctRet)(using Subst.empty)
+    val blk =
+      inScopedBlock(using LoweringCtx.empty):
+        block(funs ::: rest, R(main.res))(ImplctRet)
     
     val desug = LambdaRewriter.desugar(blk)
     
     val handlerPaths = new HandlerPaths
+
+    val withHandlers1 = config.effectHandlers.fold(desug): opt =>
+      HandlerLowering(handlerPaths, opt).translateHandleBlocks(desug)
     
-    val (withHandlers, doUnwindPaths) = config.effectHandlers.fold((desug, Map.empty)): opt =>
-      HandlerLowering(handlerPaths, opt).translateTopLevel(desug)
+    val shouldFlattenScopes = config.effectHandlers.isDefined
+    
+    val scopeFlattened =
+      if shouldFlattenScopes then ScopeFlattener().applyBlock(withHandlers1)
+      else withHandlers1
+    
+    val lifted =
+      if lift then Lifter(scopeFlattened).transform
+      else scopeFlattened
+    
+    val (withHandlers2, stackSafetyInfo) = config.effectHandlers.fold((lifted, Map.empty)): opt =>
+      HandlerLowering(handlerPaths, opt).translateTopLevel(lifted)
       
     val stackSafe = config.stackSafety match
-      case N => withHandlers
-      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths, doUnwindPaths).transformTopLevel(withHandlers)
+      case N => withHandlers2
+      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths, stackSafetyInfo).transformTopLevel(withHandlers2)
     
     val flattened = stackSafe.flattened
     
-    val lifted = 
-      if lift then Lifter(S(handlerPaths)).transform(flattened)
-      else flattened
-    
-    val bufferable = BufferableTransform().transform(lifted)
+    val bufferable = BufferableTransform().transform(flattened)
     
     val merged = MergeMatchArmTransformer.applyBlock(bufferable)
 
-    val res = 
-      if config.stageCode then Instrumentation(using summon).applyBlock(merged)
+    val funcToCls =
+      if config.funcToCls then Lifter(FirstClassFunctionTransformer().transform(merged)).transform
       else merged
+
+    val staged = 
+      if config.stageCode then Instrumentation(using summon).applyBlock(funcToCls)
+      else funcToCls
+    
+    val res =
+      if config.tailRecOpt then TailRecOpt().transform(staged)
+      else staged
     
     Program(
       imps.map(imp => imp.sym -> imp.str),
@@ -947,54 +1098,89 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     )
   
   
-  def setupSelection(prefix: Term, nme: Tree.Ident, sym: Opt[FieldSymbol])(k: Result => Block)(using Subst): Block =
+  def setupSelection(prefix: Term, nme: Tree.Ident, disamb: Opt[DefinitionSymbol[?]])(k: Result => Block)(using LoweringCtx): Block =
     subTerm(prefix): p =>
-      val selRes = TempSymbol(N, "selRes")
-      k(Select(p, nme)(sym))
+      k(Select(p, nme)(disamb))
   
   final def setupFunctionOrByNameDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
-      (using Subst): (List[ParamList], Block) =
+      (using LoweringCtx): (List[ParamList], Block) =
     val physicalParams = paramLists match
       case Nil => ParamList(ParamListFlags.empty, Nil, N) :: Nil
       case ps => ps
     setupFunctionDef(physicalParams, bodyTerm, name)
   
+  def inScopedBlock(using LoweringCtx)(mkBlock: LoweringCtx ?=> Block): Block =
+    LoweringCtx.nestScoped.givenIn:
+      val body = mkBlock
+      val scopedSyms = loweringCtx.getCollectedSym
+      Scoped(scopedSyms, body)
+  
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
-      (using Subst): (List[ParamList], Block) =
-    (paramLists, returnedTerm(bodyTerm))
+      (using LoweringCtx): (List[ParamList], Block) =
+    val scopedBody = inScopedBlock(returnedTerm(bodyTerm))
+    (paramLists, scopedBody)
   
   def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit =
+    def warn(annot: Annot, msg: Opt[Message] = N) = raise:
+      msg match
+        case S(value) => WarningReport(value -> annot.toLoc :: Nil)
+        case N =>  WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
     annotations.foreach:
       case Annot.Untyped => ()
+      case a @ Annot.TailRec =>
+        target match
+          case TermDefinition(body = S(bod), k = syntax.Fun) => ()
+          case TermDefinition(k = syntax.Fun) => warn(a, S(msg"Only functions with a body may be marked as @tailrec."))
+          case _ => warn(a)
+        
       case Annot.Modifier(syntax.Keyword("staged")) => ()
-      case annot => raise:
-        WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
+      case annot => warn(annot)
 
+  def reportAnnotations(receiver: Term, annotations: Ls[Annot]): Unit =
+    def warn(annot: Annot, msg: Opt[Message] = N) =
+      val message = msg match
+        case None => msg"This annotation is not supported on ${receiver.describe} terms."
+        case Some(value) => value
+      raise:
+        WarningReport(
+          msg"This annotation has no effect." -> annot.toLoc ::
+          message -> receiver.toLoc :: Nil)
+    
+    annotations.foreach:
+      case Annot.Untyped => ()
+      case a @ Annot.TailCall => receiver match
+        case st.App(Ref(_: BuiltinSymbol), _) => warn(a, S(msg"The @tailcall annotation has no effect on calls to built-in symbols."))
+        case st.App(_, _) => ()
+        case st.Resolved(_, defnSym) => defnSym.defn match
+          case S(td: TermDefinition) if (td.k is syntax.Fun) && td.params.isEmpty => ()
+          case _ => warn(a)
+        case _ => warn(a)
+      case annot => warn(annot)
 
 trait LoweringSelSanityChecks(using Config, TL, Raise, State)
     extends Lowering:
   
   private val instrument: Bool = config.sanityChecks.isDefined
   
-  override def setupSelection(prefix: st, nme: Tree.Ident, sym: Opt[FieldSymbol])(k: Result => Block)(using Subst): Block =
-    if !instrument then return super.setupSelection(prefix, nme, sym)(k)
-    subTerm(prefix): p =>
-      val selRes = TempSymbol(N, "selRes")
+  override def setupSelection(prefix: st, nme: Tree.Ident, disamb: Opt[DefinitionSymbol[?]])(k: Result => Block)(using LoweringCtx): Block =
+    if !instrument
+    // || disamb.exists(_.defn.exists(_.hasDeclareModifier.isEmpty)) // * This checks `declare` members, which is normally unwanted
+    || disamb.isDefined
+    // * ^ We assume that resolved selections are well-behaved (will not yield undefined or debind a method)
+    then super.setupSelection(prefix, nme, disamb)(k)
+    else subTerm(prefix): p =>
+      val selRes = loweringCtx.registerTempSymbol(N, "selRes")
       // * We are careful to access `x.f` before `x.f$__checkNotMethod` in case `x` is, eg, `undefined` and
       // * the access should throw an error like `TypeError: Cannot read property 'f' of undefined`.
-      val b0 = blockBuilder
-        .assign(selRes, Select(p, nme)(sym))
-      (if sym.isDefined then
-        // * If the symbol is known, the elaborator will have already checked the access [invariant:1]
-        b0
-      else b0
-        .assign(TempSymbol(N, "discarded"), Select(p, Tree.Ident(nme.name+"$__checkNotMethod"))(N)))
-        .ifthen(selRes.asPath,
-          Case.Lit(syntax.Tree.UnitLit(false)),
-          Throw(Instantiate(mut = false, Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error"))(N),
-            Value.Lit(syntax.Tree.StrLit(s"Access to required field '${nme.name}' yielded 'undefined'")).asArg :: Nil))
-        )
-        .rest(k(selRes.asPath))
+      blockBuilder
+        .assign(selRes, Select(p, nme)(disamb))
+        .assign(State.noSymbol, Select(p, Tree.Ident(nme.name+"$__checkNotMethod"))(N))
+          .ifthen(selRes.asPath,
+            Case.Lit(syntax.Tree.UnitLit(false)),
+            Throw(Instantiate(mut = false, Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error"))(N),
+              Value.Lit(syntax.Tree.StrLit(s"Access to required field '${nme.name}' yielded 'undefined'")).asArg :: Nil))
+          )
+          .rest(k(selRes.asPath))
 
 
 
@@ -1010,7 +1196,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
       case ((sym, res), acc) => Assign(sym, res, acc)
   
   private def pureCall(fn: Path, args: Ls[Arg]): Call =
-    Call(fn, args)(true, false)
+    Call(fn, args)(true, false, false)
   
   extension (k: Block => Block)
     def |>: (b: Block): Block = k(b)
@@ -1023,7 +1209,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
   
 
   override def setupFunctionDef(paramLists: List[ParamList], bodyTerm: st, name: Option[Str])
-      (using Subst): (List[ParamList], Block) =
+      (using LoweringCtx): (List[ParamList], Block) =
     if instrument then
       val (ps, bod) = handleMultipleParamLists(paramLists, bodyTerm)
       val instrumentedBody = setupFunctionBody(ps, bod, name)
@@ -1039,18 +1225,21 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
         case h :: t => go(t, Term.Lam(h, bod))
     go(paramLists.reverse, bod)
   
-  def setupFunctionBody(params: ParamList, bod: Term, name: Option[Str])(using Subst): Block =
-    val enterMsgSym = TempSymbol(N, dbgNme = "traceLogEnterMsg")
-    val prevIndentLvlSym = TempSymbol(N, dbgNme = "traceLogPrevIndent")
-    val resSym = TempSymbol(N, dbgNme = "traceLogRes")
-    val retMsgSym = TempSymbol(N, dbgNme = "traceLogRetMsg")
-    val psInspectedSyms = params.params.map(p => TempSymbol(N, dbgNme = s"traceLogParam_${p.sym.nme}") -> p.sym)
-    val resInspectedSym = TempSymbol(N, dbgNme = "traceLogResInspected")
+  def setupFunctionBody(params: ParamList, bod: Term, name: Option[Str])(using LoweringCtx): Block = inScopedBlock:
+    val enterMsgSym = loweringCtx.registerTempSymbol(N, dbgNme = "traceLogEnterMsg")
+    val prevIndentLvlSym = loweringCtx.registerTempSymbol(N, dbgNme = "traceLogPrevIndent")
+    val resSym = loweringCtx.registerTempSymbol(N, dbgNme = "traceLogRes")
+    val retMsgSym = loweringCtx.registerTempSymbol(N, dbgNme = "traceLogRetMsg")
+    val psInspectedSyms = params.params.map(p => loweringCtx.registerTempSymbol(N, dbgNme = s"traceLogParam_${p.sym.nme}") -> p.sym)
+    val resInspectedSym = loweringCtx.registerTempSymbol(N, dbgNme = "traceLogResInspected")
+    
     
     val psSymArgs = psInspectedSyms.zipWithIndex.foldRight[Ls[Arg]](Arg(N, Value.Lit(Tree.StrLit(")"))) :: Nil):
       case (((s, p), i), acc) => if i == psInspectedSyms.length - 1
         then Arg(N, Value.Ref(s)) :: acc
         else Arg(N, Value.Ref(s)) :: Arg(N, Value.Lit(Tree.StrLit(", "))) :: acc
+    
+    val tmp1, tmp2, tmp3 = loweringCtx.registerTempSymbol(N)
     
     assignStmts(psInspectedSyms.map: (pInspectedSym, pSym) =>
       pInspectedSym -> pureCall(inspectFn, Arg(N, Value.Ref(pSym)) :: Nil)
@@ -1060,7 +1249,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
         strConcatFn,
         Arg(N, Value.Lit(Tree.StrLit(s"CALL ${name.getOrElse("[arrow function]")}("))) :: psSymArgs
       ),
-      TempSymbol(N) -> pureCall(traceLogFn, Arg(N, Value.Ref(enterMsgSym)) :: Nil),
+      tmp1 -> pureCall(traceLogFn, Arg(N, Value.Ref(enterMsgSym)) :: Nil),
       prevIndentLvlSym -> pureCall(traceLogIndentFn, Nil)
     ) |>: 
     term(bod)(r =>
@@ -1071,8 +1260,8 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
         strConcatFn,
         Arg(N, Value.Lit(Tree.StrLit("=> "))) :: Arg(N, Value.Ref(resInspectedSym)) :: Nil
       ),
-      TempSymbol(N) -> pureCall(traceLogResetFn, Arg(N, Value.Ref(prevIndentLvlSym)) :: Nil),
-      TempSymbol(N) -> pureCall(traceLogFn, Arg(N, Value.Ref(retMsgSym)) :: Nil)
+      tmp2 -> pureCall(traceLogResetFn, Arg(N, Value.Ref(prevIndentLvlSym)) :: Nil),
+      tmp3 -> pureCall(traceLogFn, Arg(N, Value.Ref(retMsgSym)) :: Nil)
     ) |>:
       Ret(Value.Ref(resSym))
     )

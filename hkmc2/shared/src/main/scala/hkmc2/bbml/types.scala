@@ -23,14 +23,14 @@ sealed abstract class GeneralType:
   protected type ThisType <: GeneralType
   def map(f: ThisType => ThisType): ThisType
   def subst(using map: Map[Uid[InfVar], InfVar]): ThisType
-  def show(using Scope): Str
+  def show(using Scope, Raise): Str
   def showDbg: Str
 
 // * Types that can be used as class type arguments
 sealed trait TypeArg:
   def lvl: Int
   def mapArg(f: Type => Type): TypeArg
-  def show(using Scope): Str
+  def show(using Scope, Raise): Str
   def showDbg: Str
   def & (that: TypeArg): TypeArg = (this, that) match
     case (Wildcard(in1, out1), Wildcard(in2, out2)) => Wildcard(in1 | in2, out1 & out2)
@@ -52,7 +52,7 @@ sealed trait TypeArg:
 case class Wildcard(in: Type, out: Type) extends TypeArg {
   def mapArg(f: Type => Type): Wildcard = Wildcard(f(in), f(out))
 
-  override def show(using Scope): Str = in match
+  override def show(using Scope, Raise): Str = in match
     case `out` => in.show
     case Bot =>
       out match
@@ -130,7 +130,7 @@ sealed abstract class Type extends GeneralType with TypeArg:
     case ComposedType(l, r, false) => l.! | r.!
     case _ => NegType(this)
   
-  protected[bbml] def paren(using Scope): Str = toBasic match
+  protected[bbml] def paren(using Scope, Raise): Str = toBasic match
     case _: InfVar | _: ClassLikeType | _: NegType | Top | Bot => show
     case _: ComposedType | _: FunType => s"($show)"
 
@@ -158,7 +158,7 @@ sealed abstract class BasicType extends Type:
     case NegType(ty) => Type.mkNegType(f(ty))
     case Top | Bot | _: InfVar => this
     
-  override def show(using scope: Scope): Str =
+  override def show(using scope: Scope, raise: Raise): Str =
     def printEff(eff: Type) = eff match
       case Bot => ""
       // case ty if ty == allocSkolem => ""
@@ -286,7 +286,7 @@ case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], body: GeneralType) exte
 
   override lazy val isPoly: Bool = true
   override lazy val lvl: Int = (body :: tvs).map(_.lvl).max
-  override def show(using scope: Scope): Str =
+  override def show(using scope: Scope, raise: Raise): Str =
     given Scope = scope.nest
     val lst = (outer match {
       case S(outer) =>
@@ -364,7 +364,7 @@ case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type) exten
 
   lazy val isPoly: Bool = (ret :: args).exists(_.isPoly)
   lazy val lvl: Int = (ret :: eff :: args).map(_.lvl).max
-  override def show(using Scope): Str = s"(${args.map(_.show).mkString(", ")}) ->{${eff.show}} ${ret.show}"
+  override def show(using Scope, Raise): Str = s"(${args.map(_.show).mkString(", ")}) ->{${eff.show}} ${ret.show}"
   override def showDbg: Str = s"(${args.map(_.showDbg).mkString(", ")}) ->{${eff.showDbg}} ${ret.showDbg}"
   private lazy val mono: Opt[FunType] = if isPoly then N else
     Some(FunType(args.map {

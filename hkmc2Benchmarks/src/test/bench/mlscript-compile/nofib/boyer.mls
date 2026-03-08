@@ -1,0 +1,312 @@
+import "./NofibPrelude.mls"
+open NofibPrelude
+
+
+
+
+module boyer with ...
+
+
+
+abstract class Id: A | B | C | D | X | Y | Z | U | W | ADD1 | AND | APPEND | CONS | CONSP | DIFFERENCE | DIVIDES | EQUAL | EVEN | EXP | F | FALSE | FOUR | GCD | GREATEREQP | GREATERP | IF | IFF | IMPLIES | LENGTH | LESSEQP | LESSP | LISTP | MEMBER | NIL | NILP | NLISTP | NOT | ODD | ONE | OR | PLUS | QUOTIENT | REMAINDER | REVERSE | SUB1 | TIMES | TRUE | TWO | ZERO | ZEROP
+
+object
+  A extends Id
+  B extends Id
+  C extends Id
+  D extends Id
+  X extends Id
+  Y extends Id
+  Z extends Id
+  U extends Id
+  W extends Id
+  ADD1 extends Id
+  AND extends Id
+  APPEND extends Id
+  CONS extends Id
+  CONSP extends Id
+  DIFFERENCE extends Id
+  DIVIDES extends Id
+  EQUAL extends Id
+  EVEN extends Id
+  EXP extends Id
+  F extends Id
+  FALSE extends Id
+  FOUR extends Id
+  GCD extends Id
+  GREATEREQP extends Id
+  GREATERP extends Id
+  IF extends Id
+  IFF extends Id
+  IMPLIES extends Id
+  LENGTH extends Id
+  LESSEQP extends Id
+  LESSP extends Id
+  LISTP extends Id
+  MEMBER extends Id
+  NIL extends Id
+  NILP extends Id
+  NLISTP extends Id
+  NOT extends Id
+  ODD extends Id
+  ONE extends Id
+  OR extends Id
+  PLUS extends Id
+  QUOTIENT extends Id
+  REMAINDER extends Id
+  REVERSE extends Id
+  SUB1 extends Id
+  TIMES extends Id
+  TRUE extends Id
+  TWO extends Id
+  ZERO extends Id
+  ZEROP extends Id
+
+abstract class Term: Var | Fun | ERROR
+
+data
+  class
+    Var(i: Id) extends Term
+    Fun(i: Id, t: List[Term], l: [Term, Term]) extends Term
+object ERROR extends Term
+
+
+//│ ————————————————————————————————————————————————————————————————————————————————
+fun termLsEq(h1t1, h2t2) = if
+  h1t1 is h1 :: t1 and h2t2 is h2 :: t2 and
+    termEq(h1, h2) then termLsEq(t1, t2)
+    else false
+  else true
+
+fun termEq(t1, t2) = if
+  t1 is Var(i1) and t2 is Var(i2) then i1 === i2
+  t1 is Fun(f1, ts1, _) and t2 is Fun(f2, ts2, _) then (f1 === f2) and termLsEq(ts1, ts2)
+  else false
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+fun termInList(term, ht) = if ht is
+  h :: t and
+    termEq(term, h) then true
+    else termInList(term, t)
+  Nil then false
+
+fun find(vid, ls) = if ls is
+  Nil then [false, ERROR]
+  [vid2, val2] :: bs and
+    vid === vid2 then [true, val2]
+    else find(vid, bs)
+
+//│ ————————————————————————————————————————————————————————————————————————————————
+fun one_way_unify1(term1, term2, subst) = if
+  term2 is Var(vid2) and find(vid2, subst) is [found, v2] and
+    found then [termEq(term1, v2), subst]
+    else [true, [vid2, term1] :: subst]
+  term1 is Fun(f1, as1, _) and term2 is Fun(f2, as2, _) and
+    f1 === f2 then one_way_unify1_lst(as1, as2, subst)
+    else [false, Nil]
+  else [false, Nil]
+
+fun one_way_unify1_lst(tts1, tts2, subst) = if
+  tts1 is Nil and tts2 is Nil then [true, subst]
+  tts1 is t1 :: ts1 and tts2 is t2 :: ts2 and one_way_unify1(t1, t2, subst) is [hd_ok, subst_] and one_way_unify1_lst(ts1, ts2, subst_) is [tl_ok, subst__] then [hd_ok and tl_ok, subst__]
+  else [false, Nil]
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+fun one_way_unify(term1, term2) = one_way_unify1(term1, term2, Nil)
+
+fun apply_subst(subst, t) = if t is
+  Var(vid) and find(vid, subst) is [found, value] and
+    found then value
+    else Var(vid)
+  Fun(f, args, ls) then Fun(f, map(x => apply_subst(subst, x), args), ls)
+
+//│ ————————————————————————————————————————————————————————————————————————————————
+fun rewrite_with_lemmas_helper(term, lss) = if lss is
+  Nil then term
+  [lhs, rhs] :: ls and one_way_unify(term, lhs) is [unified, subst] and
+    unified then rewrite(apply_subst(subst, rhs))
+    else rewrite_with_lemmas_helper(term, ls)
+
+fun rewrite_with_lemmas(term, lss) = rewrite_with_lemmas_helper(term, force(lss))
+
+fun rewrite(t) = if t is
+  Var(v) then Var(v)
+  Fun(f, args, lemmas) then rewrite_with_lemmas(Fun(f, map(rewrite, args), lemmas), lemmas)
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+fun truep(x, l) = if x is
+  Fun(TRUE, _, _) then true
+  else termInList(x, l)
+
+fun falsep(x, l) = if x is
+  Fun(FALSE, _, _) then true
+  else termInList(x, l)
+
+fun tautologyp(x, true_lst, false_lst) = if
+  truep(x, true_lst) then true
+  falsep(x, false_lst) then false
+  x is
+    Fun(IF, cond :: t :: e :: Nil, _) and
+      truep(cond, true_lst) then tautologyp(t, true_lst, false_lst)
+      falsep(cond, false_lst) then tautologyp(e, true_lst, false_lst)
+      else tautologyp(t, cond :: true_lst, false_lst) and tautologyp(e, true_lst, cond :: false_lst)
+    else false
+
+fun tautp(x) = tautologyp(rewrite(x), Nil, Nil)
+
+fun test0(xxxx) =
+  let a       =    Var(A)
+  let b       =    Var(B)
+  let c       =    Var(C)
+  let d       =    Var(D)
+  let u       =    Var(U)
+  let w       =    Var(W)
+  let x       =    Var(X)
+  let y       =    Var(Y)
+  let z       =    Var(Z)
+  let boyerFalse = Fun(FALSE, Nil, lazy of () => Nil)
+  let nil =        Fun(NIL  , Nil, lazy of () => Nil)
+  let boyerTrue =  Fun(TRUE , Nil, lazy of () => Nil)
+  let zero    =    Fun(ZERO , Nil, lazy of () => Nil)
+
+  fun one()   =    Fun(ONE, Nil, lazy of () => [one(), add1(zero)] :: Nil)
+
+  fun two()   =    Fun(TWO, Nil, lazy of () => [two(), add1(one())] :: Nil)
+
+  fun four()  =   Fun(FOUR, Nil, lazy of () => [four(), add1(add1(two()))] :: Nil)
+
+  fun add1(a) =   Fun(ADD1, a :: Nil, lazy of () => Nil)
+
+  fun if_(a, b, c) = Fun(IF, a :: b :: c :: Nil, lazy of () => [if_(if_(x, y, z), u, w), if_(x, if_(y, u, w), if_(z, u, w))] :: Nil)
+
+  fun not_(a) = Fun(NOT, a :: Nil, lazy of () => [not_(x), if_(x, boyerFalse, boyerTrue)] :: Nil)
+
+  fun and_(a, b) =
+    Fun(AND, a :: b :: Nil, lazy of () => [and_(x, y), if_(x, if_(y, boyerTrue, boyerFalse), boyerFalse)] :: Nil)
+
+  fun append_(a, b) =
+    Fun(APPEND, a :: b :: Nil, lazy of () => [append_(append_(x, y), z), append_(x, append_(y, z))] :: Nil)
+
+  fun cons(a, b) =
+    Fun(CONS, a :: b :: Nil, lazy of () => Nil)
+
+  fun consp(a) =
+    Fun(CONSP, a :: Nil, lazy of () => [consp(cons(x, y)), boyerTrue] :: Nil)
+
+  fun difference(a, b) =
+    Fun(DIFFERENCE, a :: b :: Nil, lazy of () => [difference(x, x), zero] :: [difference(plus(x, y), x), y] :: [difference(plus(y, x), x), y] :: [difference(plus(x, y), plus(x, z)), difference(y, z)] :: [difference(plus(y, plus(x, z)), x), plus(y, z)] :: [difference(add1(plus(y, z)), z), add1(y)] :: [difference(add1(add1(x)), two()), x] :: Nil)
+
+  fun divides(a, b) =
+    Fun(DIVIDES, a :: b :: Nil, lazy of () => [divides(x, y), zerop(remainder(y, x))] :: Nil)
+
+  fun equal(a, b) =
+    Fun(
+      EQUAL,
+      a :: b :: Nil,
+      lazy of () =>
+        [equal(plus(x, y), zero), and_(zerop(x), zerop(y))] ::
+        [equal(plus(x, y), plus(x, z)), equal(y, z)] ::
+        [equal(zero, difference(x, y)), not_(lessp(y, x))] ::
+        [equal(x, difference(x, y)), or_(equal(x, zero), zerop(y))] ::
+        [equal(times(x, y), zero), or_(zerop(x), zerop(y))] ::
+        [equal(append_(x, y), append_(x, z)), equal(y, z)] ::
+        [equal(y, times(x, y)), or_(equal(y, zero), equal(x, one()))] ::
+        [equal(x, times(x, y)), or_(equal(x, zero), equal(y, one()))] ::
+        [equal(times(x, y), one()), and_(equal(x, one()), equal(y, one()))] ::
+        [equal(difference(x, y), difference(z, y)), if_(lessp(x, y), not_(lessp(y, z)), if_(lessp(z, y), not_(lessp(y, x)), equal(x, z)))] ::
+        [equal(lessp(x, y), z), if_(lessp(x, y), equal(boyerTrue, z), equal(boyerFalse, z))] ::
+        Nil
+    )
+
+  fun even_(a) =
+    Fun(EVEN, a :: Nil, lazy of () => [even_(x), if_(zerop(x), boyerTrue, odd_(sub1(x)))] :: Nil)
+
+  fun exp_(a, b) =
+    Fun(EXP, a :: b :: Nil, lazy of () => [exp_(x, plus(y, z)), times(exp_(x, y), exp_(x, z))] :: [exp_(x, times(y, z)), exp_(exp_(x, y), z)] :: Nil)
+
+  fun f(a) =
+    Fun(F, a :: Nil, lazy of () => Nil)
+
+  fun gcd_(a, b) =
+    Fun(GCD, a :: b :: Nil, lazy of () => [gcd_(x, y), gcd_(y, x)] :: [gcd_(times(x, z), times(y, z)), times(z, gcd_(x, y))] :: Nil)
+
+  fun greatereqp(a, b) =
+    Fun(GREATEREQP, a :: b :: Nil, lazy of () => [greatereqp(x, y), not_(lessp(x, y))] :: Nil)
+
+  fun greaterp(a, b) =
+    Fun(GREATERP, a :: b :: Nil, lazy of () => [greaterp(x, y), lessp(y, x)] :: Nil)
+
+  fun implies(a, b) =
+    Fun(IMPLIES, a :: b :: Nil, lazy of () => [implies(x, y), if_(x, if_(y, boyerTrue, boyerFalse), boyerTrue)] :: Nil)
+
+  fun iff(a, b) =
+    Fun(IFF, a :: b :: Nil, lazy of () => [iff(x, y), and_(implies(x, y), implies(y, x))] :: Nil)
+
+  fun length_(a) =
+    Fun(LENGTH, a :: Nil, lazy of () => [length_(reverse_(x)), length_(x)] :: [length_(cons(x, cons(y, cons(z, cons(u, w))))), plus(four(), length_(w))] :: Nil)
+
+  fun lesseqp(a, b) =
+    Fun(LESSEQP, a :: b :: Nil, lazy of () => [lesseqp(x, y), not_(lessp(y, x))] :: Nil)
+
+  fun lessp(a, b) =
+    Fun(
+      LESSP,
+      a :: b :: Nil,
+      lazy of () =>
+        [lessp(remainder(x, y), y), not_(zerop(y))] ::
+        [lessp(quotient(x, y), x), and_(not_(zerop(x)), lessp(one(), y))] ::
+        [lessp(plus(x, y), plus(x, z)), lessp(y, z)] ::
+        [lessp(times(x, z), times(y, z)), and_(not_(zerop(z)), lessp(x, y))] ::
+        [lessp(y, plus(x, y)), not_(zerop(x))] ::
+        Nil
+    )
+
+  fun nilp(a) =
+    Fun(NILP, a :: Nil, lazy of () => [nilp(x), equal(x, nil)] :: Nil)
+
+  fun listp(a) =
+    Fun(LISTP, a :: Nil, lazy of () => [listp(x), or_(nilp(x), consp(x))] :: Nil)
+
+  fun member(a, b) =
+    Fun(MEMBER, a :: b :: Nil, lazy of () => [member(x, append_(y, z)), or_(member(x, y), member(x, z))] :: [member(x, reverse_(y)), member(x, y)] :: Nil)
+
+  fun nlistp(a) =
+    Fun(NLISTP, a :: Nil, lazy of () => [nlistp(x), not_(listp(x))] :: Nil)
+
+  fun odd_(a) =
+    Fun(ODD, a :: Nil, lazy of () => [odd_(x), even_(sub1(x))] :: Nil)
+
+  fun or_(a, b) =
+    Fun(OR, a :: b :: Nil, lazy of () => [or_(x, y), if_(x, boyerTrue, if_(y, boyerTrue, boyerFalse))] :: Nil)
+
+  fun plus(a, b) =
+    Fun(PLUS, a :: b :: Nil, lazy of () => [plus(plus(x, y), z), plus(x, plus(y, z))] :: [plus(remainder(x, y), times(y, quotient(x, y))), x] :: [plus(x, add1(y)), add1(plus(x, y))] :: Nil)
+
+  fun quotient(a, b) =
+    Fun(QUOTIENT, a :: b :: Nil, lazy of () => [quotient(plus(x, plus(x, y)), two()), plus(x, quotient(y, two()))] :: [quotient(times(y, x), y), if_(zerop(y), zero, x)] :: Nil)
+
+  fun remainder(a, b) =
+    Fun(REMAINDER, a :: b :: Nil, lazy of () => [remainder(x, one()), zero] :: [remainder(x, x), zero] :: [remainder(times(x, y), x), zero] :: [remainder(times(x, y), y), zero] :: Nil)
+
+  fun reverse_(a) =
+    Fun(REVERSE, a :: Nil, lazy of () => [reverse_(append_(x, y)), append_(reverse_(y), reverse_(x))] :: Nil)
+
+  fun sub1(a) =
+    Fun(SUB1, a :: Nil, lazy of () => [sub1(add1(x)), x] :: Nil)
+
+  fun times(a, b) =
+    Fun(TIMES, a :: b :: Nil, lazy of () => [times(x, plus(y, z)), plus(times(x, y), times(x, z))] :: [times(times(x, y), z), times(x, times(y, z))] :: [times(x, difference(y, z)), difference(times(y, x), times(z, x))] :: [times(x, add1(y)), plus(x, times(x, y))] :: Nil)
+
+  fun zerop(a) =
+    Fun(ZEROP, a :: Nil, lazy of () => [zerop(x), equal(x, zero)] :: Nil)
+
+  let subst0 = [X, f(plus(plus(a, b), plus(c, zero)))] :: [Y, f(times(times(a, b), plus(c, d)))] :: [Z, f(reverse_(append_(append_(a, b), nil)))] :: [U, equal(plus(a, b), difference(x, y))] :: [W, lessp(remainder(a, b), member(a, length_(b)))] :: Nil
+
+  let theorem = implies(and_(implies(xxxx, y), and_(implies(y, z), and_(implies(z, u), implies(u, w)))), implies(x, w))
+
+  tautp(apply_subst(subst0, theorem))
+
+fun testBoyer_nofib(n) = all(test0, replicate(n, Var(X)))
+
+fun main() = testBoyer_nofib(5)
+

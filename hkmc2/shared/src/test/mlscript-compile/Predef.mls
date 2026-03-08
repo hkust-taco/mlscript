@@ -5,6 +5,7 @@ import "./RuntimeJS.mjs"
 // * TODO: proper caching of parsed/elaborated files
 import "./Runtime.mjs"
 import "./Rendering.mjs"
+import "./Term.mjs"
 // import "./Runtime.mls"
 // import "./Rendering.mls"
 
@@ -42,8 +43,31 @@ fun (|.) passToLo(receiver, f)(...args) = f(receiver, ...args)
 // x |>. foo(a, b, c) == foo.call(x, a, b, c)
 fun (|>.) call(receiver, f)(...args) = f.call(receiver, ...args)
 
+
 object Symbols with
   val prettyPrint = RuntimeJS.symbols.prettyPrint
+  val definitionMetadata = RuntimeJS.symbols.definitionMetadata
+  // val definitionMetadata = Symbol.for("mlscript.definitionMetadata")
+
+
+// * A generic equality comparison.
+// * Returns true for:
+// * - values that compare equal according to strict equality (===), which includes reference equality;
+// * - arrays of values that are pairwise recursively equal;
+// * - instances of the same parameterized MLscript class when all fields are public and recursively equal.
+// TODO: compare lazy arrays and other sequences and collections
+fun (==) equals(a, b) = if
+  a === b then true
+  a is Array and b is Array and a.length === b.length then a.every((a, i) => a == b.at(i))
+  else a !== undefined and a !== null and b !== undefined and b !== null and 
+    let ac = a.constructor
+    ac !== undefined and ac === b.constructor and
+      let md = ac.(Symbols.definitionMetadata)
+      md !== undefined and
+        md.2.every(field => field !== null and a.(field) == b.(field))
+
+fun (!=) nequals(a, b) = not a == b
+
 
 val pass1 = Rendering.pass1
 val pass2 = Rendering.pass2
@@ -60,7 +84,8 @@ fun print(...xs) =
 fun renderAsStr(arg) =
   if arg is Str then arg else render(arg)
 
-val assert = console.assert
+val js_assert = globalThis.console.("assert") // `console.("assert")` gives "Unexpected moduleful reference of type console."
+fun check(...args) = js_assert(...args)
 
 fun (??) notImplemented(msg) = throw Error("Not implemented: " + msg)
 fun (???) notImplementedError = throw Error("Not implemented")
@@ -74,7 +99,7 @@ val foldl = fold
 // fun foldr(f)(...rest, init) = // TODO allow this syntax
 fun foldr(f)(first, ...rest) =
   let len = rest.length
-  if len == 0 then first else...
+  if len === 0 then first else...
   let
     i = len - 1
     init = rest.at(i)
@@ -85,7 +110,7 @@ fun foldr(f)(first, ...rest) =
   f(first, init)
 
 fun mkStr(...xs) =
-  fold((acc, x) => assert(x is Str); acc + x) of ...xs
+  fold((acc, x) => check(x is Str); acc + x) of ...xs
 
 
 // Return the implicit instance of type T from the current scope.
@@ -103,3 +128,6 @@ fun raiseUnhandledEffect() =
   Runtime.mkEffect(Runtime.FatalEffect, null)
 
 
+module meta with
+  fun codegen(t, file) = Term.codegen(t, file)
+  fun print(t) = Term.print(t)

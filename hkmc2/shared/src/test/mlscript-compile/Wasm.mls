@@ -7,7 +7,7 @@ module Wasm with ...
 
 // WebAssembly utilities
 fun loadWasmBinary(modBuf, importObject): Promise =
-  console.assert of WebAssembly.validate of modBuf
+  assert WebAssembly.validate of modBuf
 
   WebAssembly.instantiate of modBuf, importObject
 
@@ -19,7 +19,9 @@ fun dumpWasmImpExp(wasmMod) =
 fun binaryenFmtWat(wat, foldExprs): String =
   val mod = binaryen.parseText of wat
   mod.setFeatures(binaryen.Features.All)
-  console.assert of mod.validate of mod
+  
+  // Note: it seems `mod.validate()` sometimes returns `1` instead of `true`; so we don't use `assert` here
+  Predef.js_assert of mod.validate()
 
   val fmtWat = if foldExprs then mod.emitText() else mod.emitStackIR()
 
@@ -30,7 +32,8 @@ fun binaryenCompileToModule(wat, importObject): Promise =
   val mod = binaryen.parseText of wat
   mod.setFeatures(binaryen.Features.All)
 
-  console.assert of mod.validate of mod
+  // Note: it seems `mod.validate()` sometimes returns `1` instead of `true`; so we don't use `assert` here
+  Predef.js_assert of mod.validate()
 
   val modBuf = mod.emitBinary()
   mod.dispose()
@@ -39,10 +42,24 @@ fun binaryenCompileToModule(wat, importObject): Promise =
     loadWasmBinary of modBuf, importObject
   )
 
+fun unwrapWasmException(err, tag) =
+  if (
+    err !== null &&
+    err !== undefined &&
+    typeof(err.is) === "function" &&
+    typeof(err.getArg) === "function" &&
+    err.is(tag)
+  )
+  then err.getArg(tag, 0)
+  else err
+
 fun binaryenRunFunc(wat, importObject, func): Promise =
   binaryenCompileToModule(wat, importObject)
     .then(wasmMod =>
-      func(wasmMod.instance.exports)
+      let exnTag = wasmMod.instance.exports.mlx_exn
+      Runtime.try_catch of
+        () => func(wasmMod.instance.exports)
+        err => throw unwrapWasmException(err, exnTag)
     )
 
 fun binaryenPrintFuncRes(wat, importObject, func): Promise = 

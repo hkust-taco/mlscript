@@ -14,7 +14,7 @@ final case class Disj(conjs: Ls[Conj]) extends NormalForm with CachedBasicType:
   def mkBasic: BasicType =
     BasicType.union(conjs.map(_.toBasic))
   def toDnf(using TL): Disj = this
-  override def show(using Scope): Str =
+  override def show(using Scope, Raise): Str =
     if conjs.isEmpty then "⊥"
     else conjs.map(_.show).mkString(" ∨ ")
 
@@ -53,7 +53,7 @@ extends NormalForm with CachedBasicType:
       case (tv, false) => NegType(tv)
     })
   def toDnf(using TL): Disj = Disj(this :: Nil)
-  override def show(using Scope): Str =
+  override def show(using Scope, Raise): Str =
     val s = ((i :: Nil).filterNot(_.isTop).map(_.show) :::
       (u :: Nil).filterNot(_.isBot).map("¬{"+_.show+"}") :::
       vars.map:
@@ -100,7 +100,7 @@ final case class Inter(v: Opt[ClassLikeType | FunType]) extends NormalForm:
     case _ => N
   def toBasic: BasicType = v.getOrElse(Top)
   def toDnf(using TL): Disj = Disj(Conj(this, Union(N, Nil), Nil) :: Nil)
-  override def show(using Scope): Str =
+  override def show(using Scope, Raise): Str =
     toBasic.show
 
   override def showDbg: Str = toBasic.showDbg
@@ -130,7 +130,7 @@ extends NormalForm with CachedBasicType:
   def mkBasic: BasicType =
     BasicType.union(fun.toList ::: cls)
   def toDnf(using TL): Disj = NormalForm.neg(this)
-  override def show(using Scope): Str =
+  override def show(using Scope, Raise): Str =
     toType.show
 
   override def showDbg: Str = toType.showDbg
@@ -145,7 +145,7 @@ sealed abstract class NormalForm extends TypeExt:
   def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
     toBasic.subst
 
-  def show(using Scope): Str
+  def show(using Scope, Raise): Str
   def showDbg: Str
 
 object NormalForm:

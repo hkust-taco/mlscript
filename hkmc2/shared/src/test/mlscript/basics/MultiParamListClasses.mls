@@ -26,10 +26,10 @@ data class Foo with
 //│ ╔══[PARSE ERROR] Expected block after constructor keyword; found parenthesis section instead
 //│ ║  l.25: 	  constructor(x, y)
 //│ ╙──      	             ^^^^^^
-//│ ╔══[ERROR] Name not found: x
+//│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.25: 	  constructor(x, y)
 //│ ╙──      	              ^
-//│ ╔══[ERROR] Name not found: y
+//│ ╔══[COMPILATION ERROR] Name not found: y
 //│ ║  l.25: 	  constructor(x, y)
 //│ ╙──      	                 ^
 
@@ -39,13 +39,13 @@ data class Foo with
 //│ ╔══[PARSE ERROR] Expected block after constructor keyword; found parenthesis section instead
 //│ ║  l.38: 	  constructor(x, y)(z)
 //│ ╙──      	             ^^^^^^
-//│ ╔══[ERROR] Name not found: x
+//│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.38: 	  constructor(x, y)(z)
 //│ ╙──      	              ^
-//│ ╔══[ERROR] Name not found: y
+//│ ╔══[COMPILATION ERROR] Name not found: y
 //│ ║  l.38: 	  constructor(x, y)(z)
 //│ ╙──      	                 ^
-//│ ╔══[ERROR] Name not found: z
+//│ ╔══[COMPILATION ERROR] Name not found: z
 //│ ║  l.38: 	  constructor(x, y)(z)
 //│ ╙──      	                    ^
 

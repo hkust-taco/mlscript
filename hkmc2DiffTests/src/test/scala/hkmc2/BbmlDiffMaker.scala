@@ -9,7 +9,7 @@ import utils.Scope
 
 abstract class BbmlDiffMaker extends JSBackendDiffMaker:
   
-  val bbPreludeFile = file / os.up / os.RelPath("bbPrelude.mls")
+  val bbPreludeFile = file.up / "bbPrelude.mls"
   
   val bbmlOpt = new NullaryCommand("bbml"):
     override def onSet(): Unit =
@@ -35,7 +35,7 @@ abstract class BbmlDiffMaker extends JSBackendDiffMaker:
   override def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     super.processTerm(trm, inImport)
     if bbmlOpt.isSet then
-      given Scope = Scope.empty
+      given Scope = Scope.empty(Scope.Cfg.default)
       if bbmlTyper.isEmpty then
         given Elaborator.Ctx = curCtx
         bbmlTyper = S(BBTyper())

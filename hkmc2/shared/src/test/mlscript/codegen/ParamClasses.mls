@@ -10,7 +10,7 @@ data class Foo()
 //│ Foo1 = function Foo() {
 //│   return globalThis.Object.freeze(new Foo.class());
 //│ };
-//│ globalThis.Object.freeze(class Foo {
+//│ (class Foo {
 //│   static {
 //│     Foo1.class = this
 //│   }
@@ -41,7 +41,7 @@ data class Foo(a)
 //│ Foo3 = function Foo(a) {
 //│   return globalThis.Object.freeze(new Foo.class(a));
 //│ };
-//│ globalThis.Object.freeze(class Foo2 {
+//│ (class Foo2 {
 //│   static {
 //│     Foo3.class = this
 //│   }
@@ -80,7 +80,7 @@ data class Foo(a, b)
 //│ Foo5 = function Foo(a, b) {
 //│   return globalThis.Object.freeze(new Foo.class(a, b));
 //│ };
-//│ globalThis.Object.freeze(class Foo4 {
+//│ (class Foo4 {
 //│   static {
 //│     Foo5.class = this
 //│   }
@@ -148,7 +148,7 @@ data class Inner(c) with
 //│ Inner1 = function Inner(c) {
 //│   return globalThis.Object.freeze(new Inner.class(c));
 //│ };
-//│ globalThis.Object.freeze(class Inner {
+//│ (class Inner {
 //│   static {
 //│     Inner1.class = this
 //│   }
@@ -189,12 +189,12 @@ class Foo(x, val y, z, val z, z) with
 //│ Foo7 = function Foo(x, y, z, z1, z2) {
 //│   return globalThis.Object.freeze(new Foo.class(x, y, z, z1, z2));
 //│ };
-//│ globalThis.Object.freeze(class Foo6 {
+//│ (class Foo6 {
 //│   static {
 //│     Foo7.class = this
 //│   }
 //│   constructor(x, y, z, z1, z2) {
-//│     let tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
+//│     let tmp3, tmp4, tmp5, tmp6, tmp7;
 //│     this.#x = x;
 //│     this.y = y;
 //│     this.#z = z;
@@ -203,15 +203,15 @@ class Foo(x, val y, z, val z, z) with
 //│     this.#x1 = 1;
 //│     this.#y = this.y + 1;
 //│     tmp3 = "x = " + this.#x1;
-//│     tmp4 = Predef.print(tmp3);
-//│     tmp5 = "y = " + this.#y;
-//│     tmp6 = Predef.print(tmp5);
-//│     tmp7 = "this.y = " + this.y;
-//│     tmp8 = Predef.print(tmp7);
-//│     tmp9 = "z = " + this.#z1;
-//│     tmp10 = Predef.print(tmp9);
-//│     tmp11 = "this.z = " + this.z;
-//│     Predef.print(tmp11);
+//│     Predef.print(tmp3);
+//│     tmp4 = "y = " + this.#y;
+//│     Predef.print(tmp4);
+//│     tmp5 = "this.y = " + this.y;
+//│     Predef.print(tmp5);
+//│     tmp6 = "z = " + this.#z1;
+//│     Predef.print(tmp6);
+//│     tmp7 = "this.z = " + this.z;
+//│     Predef.print(tmp7);
 //│   }
 //│   #x;
 //│   #z;
@@ -233,22 +233,25 @@ Foo(10, 20, 30, 40, 50)
 //│ = Foo(_, 20, _, 40, _)
 
 
-:todo // * This should be an error
 :e
 class Foo(val z, val z)
+//│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'z'.
+//│ ╟── Defined at: 
+//│ ║  l.237: 	class Foo(val z, val z)
+//│ ║         	              ^
+//│ ╟── Defined at: 
+//│ ║  l.237: 	class Foo(val z, val z)
+//│ ╙──       	                     ^
 //│ JS (unsanitized):
 //│ let Foo9;
 //│ Foo9 = function Foo(z, z1) {
 //│   return globalThis.Object.freeze(new Foo.class(z, z1));
 //│ };
-//│ globalThis.Object.freeze(class Foo8 {
+//│ (class Foo8 {
 //│   static {
 //│     Foo9.class = this
 //│   }
-//│   constructor(z, z1) {
-//│     this.z = z;
-//│     this.z = z1;
-//│   }
+//│   constructor(z, z1) {}
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", ["z", "z"]]; 
 //│ });
@@ -256,6 +259,6 @@ class Foo(val z, val z)
 Foo(1, 2)
 //│ JS (unsanitized):
 //│ Foo9(1, 2)
-//│ = Foo(2, 2)
+//│ = Foo(undefined, undefined)
 
 
