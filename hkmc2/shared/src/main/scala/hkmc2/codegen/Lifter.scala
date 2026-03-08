@@ -3,6 +3,7 @@ package hkmc2
 import mlscript.utils.*, shorthands.*
 import utils.*
 
+import syntax.{SpreadKind}
 import hkmc2.codegen.*
 import hkmc2.semantics.*
 import hkmc2.Message.*
@@ -70,10 +71,10 @@ object Lifter:
     val empty = AccessInfo(Set.empty, Set.empty, Set.empty)
 
   object RefOfBms:
-    def unapply(p: Path): Opt[(BlockMemberSymbol, Opt[DefinitionSymbol[?]])] = p match
-      case Value.Ref(l: BlockMemberSymbol, disamb) => S((l, disamb))
+    def unapply(p: Path): Opt[(BlockMemberSymbol, Opt[DefinitionSymbol[?]], Bool)] = p match
+      case Value.Ref(l: BlockMemberSymbol, disamb) => S((l, disamb, false))
       case s @ Select(_, _) => s.symbol match
-        case Some(value) => value.asBlkMember.map((_, S(value)))
+        case Some(value) => value.asBlkMember.map((_, S(value), true))
         case _ => N
       case _ => N
   
@@ -188,10 +189,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       override def applyResult(r: Result): Unit = r match
         // do not search the ref to the class
-        case Instantiate(mut, RefOfBms(_, S(d)), args) =>
+        case Instantiate(mut, RefOfBms(_, S(d), _), args) =>
           args.foreach(applyArg)
         // for class constructors
-        case Call(RefOfBms(_, S(d)), args) =>
+        case Call(RefOfBms(_, S(d), _), args) =>
           args.foreach(applyArg)
         case _ => super.applyResult(r)
       
@@ -212,7 +213,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           // If B extends A, then A -> B is an edge
           parentPath match
             case None => ()
-            case Some(RefOfBms(_, S(s: (ClassSymbol | ModuleOrObjectSymbol)))) =>
+            case Some(RefOfBms(_, S(s: (ClassSymbol | ModuleOrObjectSymbol)), _)) =>
               if nestedScopes.contains(s) then inheritanceTree += (s -> isym)
             case _ if !ignored.contains(isym) =>
               raise(WarningReport(
@@ -236,7 +237,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         case _ => false
       
       override def applyValue(v: Value): Unit = v match
-        case RefOfBms(_, S(l)) if nestedScopes.contains(l) => data.getNode(l).obj match
+        case RefOfBms(_, S(l), _) if nestedScopes.contains(l) => data.getNode(l).obj match
           case c: ScopedObject.Class if c.isObj => ()
           case c: (ScopedObject.Class | ScopedObject.ClassCtor) =>
             if !c.node.get.inModOrTopLevel then
@@ -318,7 +319,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         override def applyResult(r: Result)(k: Result => Block): Block =
           r match
           // if possible, directly rewrite the call using the efficient version
-          case c @ Call(RefOfBms(l, S(d)), args) =>
+          case c @ Call(RefOfBms(l, S(d), _), args) =>
             ctx.rewrittenScopes.get(d) match
               case N => super.applyResult(r)(k) // external call, or have not yet traversed that function
               case S(r) =>
@@ -326,7 +327,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                   def join2: Block =
                     resolveDefnRef(l, d, r) match
                       case Some(value) => k(c.copy(fun = value, args = newArgs)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLoc(c.toLoc))
-                      case None => super.applyResult(c)(k)
+                      case None => super.applyPath(c.fun): fun2 =>
+                        if (fun2 is c.fun) && (args is newArgs) then k(c)
+                        else k(c.copy(fun = fun2, args = newArgs)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLoc(c.toLoc))
                   r match
                     // function call
                     case f: LiftedFunc => k(f.rewriteCall(c, newArgs))
@@ -336,7 +339,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                         k(cls.rewriteCall(c, newArgs))
                       case _ => join2
                     case _ => join2
-          case inst @ Instantiate(mut, RefOfBms(l, S(d)), args) =>
+          case inst @ Instantiate(mut, RefOfBms(l, S(d), _), args) =>
             applyArgs(args): newArgs =>
               def join =
                 if args is newArgs then inst
@@ -352,7 +355,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         
         // extract the call
         override def applyPath(p: Path)(k: Path => Block): Block = p match
-          case r @ RefOfBms(l, S(d)) => ctx.rewrittenScopes.get(d) match
+          case r @ RefOfBms(l, S(d), isSel) => ctx.rewrittenScopes.get(d) match
             case S(f: LiftedFunc) =>
               if f.isTrivial then k(r)
               else
@@ -373,7 +376,18 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                 k(Value.Ref(newSym, N))
             
             // Other naked references to BlockMemberSymbols.
-            case S(r) =>
+            // 
+            // For now, do not immediately rewrite selections if they are not referencing
+            // a lifted function, and instead rewrite `qual`. This is so that, when we reference
+            // a nested object or class using a selection `A.B`, we just rewrite the reference to `A`
+            // instead of trying to rewrite the whole reference to `B`. The variable analyzer is
+            // written so that a reference to `A` is available (in the case that `A` is a module or object),
+            // as a passed parameter if needed.
+            //
+            // Once we properly support lifting objects, which involves putting the object instance in
+            // a new public field belonging to its owner, we will need to replace the selection's 
+            // disambiguation with that public field's symbol.
+            case S(r) if !isSel =>
               resolveDefnRef(l, d, r) match
               case Some(value) => k(value)
               case None => super.applyPath(p)(k)
@@ -816,7 +830,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val rewriter = new BlockRewriter
       
       // Remove symbols belonging to lifted scopes
-      val liftedChildSyms = node.children.collect:
+      val liftedChildSyms = node.allChildNodes.collect:
         case s @ ScopeNode(obj = l: ScopedObject.Liftable[?]) if s.isLifted => l.defn.sym
       
       val (syms, rewritten) = (obj.block.syms.toSet -- liftedChildSyms, rewriter.rewrite(obj.block.body))
@@ -948,7 +962,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         case Nil => lastWords("tried to make an aux defn for a function with no parameter list")
       val args = restSym match
         case Some(value) =>
-          val tail = Arg(S(true), value.asPath) :: Nil
+          val tail = Arg(S(SpreadKind.Eager), value.asPath) :: Nil
           syms.foldLeft(tail):
             case (acc, sym) => Arg(N, sym.asPath) :: acc
         case None => syms.map(s => Arg(N, s.asPath))
@@ -967,7 +981,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     private val aux = Lazy[Defn](mkAuxDefn)
     
     def rewriteCall(c: Call, args: List[Arg])(using ctx: LifterCtxNew): Call =
-      if isTrivial then c
+      if isTrivial then
+        if args is c.args then c
+        else c.copy(args = args)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLocOf(c)
       else
         Call(
           Value.Ref(mainSym, S(mainDsym)),
@@ -1101,7 +1117,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       if isTrivial then
         val path = Value.Ref(cls.sym, S(cls.isym))
         if (inst.cls === path) && (inst.args is args) then inst
-        else inst.copy(cls = path, args = args)
+        else inst.copy(cls = path, args = args).withLocOf(inst)
       else
         flat.force // force computation
         Call(
@@ -1113,7 +1129,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")
       if isTrivial then
         if c.args is args then c
-        else c.copy(args = args)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall)
+        else c.copy(args = args)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLocOf(c)
       else
         flat.force // force computation
         Call(

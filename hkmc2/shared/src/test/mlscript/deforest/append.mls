@@ -64,13 +64,13 @@ appendThree of
   id(3 :: 4 :: Nil)
   id(5 :: 6 :: Nil)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:h,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:h,None)), Arg(None,Ref(tmp:tmp⁰,None)))) ->
 //│ deforest > 	Ref(var:xs,None)
 //│ deforest > 	Select(Ref(var:xs,None),Ident(h))
 //│ deforest > 	Select(Ref(var:xs,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
 //│ deforest > 	Ref(var:xs,None)
-//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:h,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:h,None)), Arg(None,Ref(tmp:tmp¹,None)))) ->
 //│ deforest > 	Ref(var:xs,None)
 //│ deforest > 	Select(Ref(var:xs,None),Ident(h))
 //│ deforest > 	Select(Ref(var:xs,None),Ident(t))

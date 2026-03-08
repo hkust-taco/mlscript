@@ -36,25 +36,25 @@ fun f(a) = if a is
 let p = AA(AA(AA(10)))
 test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > Ref(member:B⁰,Some(object:B¹)) ->
 //│ deforest > 	Ref(var:x,None)
-//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Ref(tmp:tmp⁰,None)))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
-//│ deforest > 	Ref($arg$AA$0$,None)
-//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(10))))) ->
-//│ deforest > 	Ref($arg$AA$0$,None)
-//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(10))))) ->
-//│ deforest > 	Ref($arg$AA$0$,None)
-//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
+//│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Ref(tmp:tmp¹,None)))) ->
+//│ deforest > 	Ref(tmp:arg$AA$0$⁰,None)
+//│ deforest > 	Select(Ref(tmp:arg$AA$0$⁰,None),Ident(x))
+//│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Lit(IntLit(10))))) ->
+//│ deforest > 	Ref(tmp:arg$AA$0$¹,None)
+//│ deforest > 	Select(Ref(tmp:arg$AA$0$¹,None),Ident(x))
+//│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Lit(IntLit(10))))) ->
+//│ deforest > 	Ref(tmp:arg$AA$0$¹,None)
+//│ deforest > 	Select(Ref(tmp:arg$AA$0$¹,None),Ident(x))
 //│ deforest > <<< fusing <<<
 //│ JS (unsanitized):
-//│ let test, f, p, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_19$test, test_19$x_dflt, test_19$x_rest, test_19$split_1$_rest, test_19$split_root$_rest, test_18$test, test_18$x_AA, test_18$x_rest, test_18$split_1$_rest, test_18$split_root$_rest, test_18$arg$AA$0$_AA, test_18$arg$AA$0$_rest, test_18$arg$AA$0$_AA1, test_18$arg$AA$0$_rest1, test_13$test, test_13$arg$AA$0$_AA, test_13$arg$AA$0$_rest, test_13$arg$AA$0$_rest1, test_13$x_rest, test_13$split_1$_rest, test_13$split_root$_rest, AA_x, AA_x1, AA_x2, AA_x3, deforest$lam; /* scoped */
+//│ let test, f, p, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_19$test, test_19$x_dflt, test_19$x_rest, test_19$split_1$_rest, test_19$split_root$_rest, test_18$test, test_18$x_AA, test_18$x_rest, test_18$split_1$_rest, test_18$split_root$_rest, test_18$arg$AA$0$_AA, test_18$arg$AA$0$_rest, test_18$arg$AA$0$_AA1, test_18$arg$AA$0$_rest1, test_13$test, test_13$arg$AA$0$_AA, test_13$arg$AA$0$_rest, test_13$arg$AA$0$_rest1, test_13$x_rest, test_13$split_1$_rest, test_13$split_root$_rest, AA_x, AA_x1, AA_x2, AA_x3, deforest$lam;
 //│ test_19$test = function test_19$test(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15; /* scoped */
+//│   let t, tmp11, tmp12, tmp13, tmp14, tmp15;
 //│   split_root$: {
 //│     split_1$: {
 //│       return x(tmp11, t, tmp11, tmp12, tmp13, tmp14, tmp15);
@@ -69,7 +69,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   return tmp15 - 1
 //│ };
 //│ test_18$test = function test_18$test(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15; /* scoped */
+//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
 //│   split_root$: {
 //│     split_1$: {
 //│       return x(t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15, tmp11, t, tmp11, tmp12, tmp13, tmp14, tmp15);
@@ -84,7 +84,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   return tmp15 - 1
 //│ };
 //│ test_13$test = function test_13$test(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15; /* scoped */
+//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
 //│   split_root$: {
 //│     split_1$: {
 //│       if (x instanceof AA1.class) {
@@ -189,7 +189,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   return fv_tmp4 - 1
 //│ };
 //│ test = function test(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15; /* scoped */
+//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
 //│   split_root$: {
 //│     split_1$: {
 //│       if (x instanceof AA1.class) {
@@ -221,7 +221,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   return tmp15 - 1
 //│ };
 //│ f = function f(a) {
-//│   let arg$AA$0$, tmp11; /* scoped */
+//│   let arg$AA$0$, tmp11;
 //│   split_root$: {
 //│     split_default$: {
 //│       if (a instanceof AA1.class) {
@@ -269,20 +269,20 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ tmp10 = test_19$test(deforest$lam);
 //│ tmp9 + tmp10
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > Ref(member:B⁰,Some(object:B¹)) ->
 //│ deforest > 	Ref(var:x,None)
-//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Ref(tmp:tmp²,None)))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
-//│ deforest > 	Ref($arg$AA$0$,None)
-//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(10))))) ->
-//│ deforest > 	Ref($arg$AA$0$,None)
-//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(10))))) ->
-//│ deforest > 	Ref($arg$AA$0$,None)
-//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
+//│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Ref(tmp:tmp³,None)))) ->
+//│ deforest > 	Ref(tmp:arg$AA$0$⁰,None)
+//│ deforest > 	Select(Ref(tmp:arg$AA$0$⁰,None),Ident(x))
+//│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Lit(IntLit(10))))) ->
+//│ deforest > 	Ref(tmp:arg$AA$0$¹,None)
+//│ deforest > 	Select(Ref(tmp:arg$AA$0$¹,None),Ident(x))
+//│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Lit(IntLit(10))))) ->
+//│ deforest > 	Ref(tmp:arg$AA$0$¹,None)
+//│ deforest > 	Select(Ref(tmp:arg$AA$0$¹,None),Ident(x))
 //│ deforest > <<< fusing <<<
 //│ = 78
 //│ p = AA(AA(fun tmp))
@@ -321,9 +321,9 @@ test()
 fun f(x) = if x is A then 1
 f(A) + f(A)
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > Ref(member:A⁰,Some(object:A¹)) ->
 //│ deforest > 	Ref(var:x,None)
-//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > Ref(member:A⁰,Some(object:A¹)) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > <<< fusing <<<
 //│ = 2
@@ -337,8 +337,8 @@ let useless = if lsit is [a, b] then 0
 //│ deforest > >>> fusing >>>
 //│ deforest > Tuple(false,List(Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(1))))) ->
 //│ deforest > 	Ref(var:lsit,None)
-//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:lsit,None)), Arg(None,Lit(IntLit(0)))))
-//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:lsit,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:lsit,None)), Arg(None,Lit(IntLit(0)))))
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:lsit,None)), Arg(None,Lit(IntLit(1)))))
 //│ deforest > <<< fusing <<<
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 //│ lsit = fun lsit

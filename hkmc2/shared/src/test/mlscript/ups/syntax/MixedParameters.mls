@@ -22,7 +22,7 @@ pattern P'(pattern Q) = [Q as a, Q as b] => [a, b]
 // However, we cannot provide only part of the extraction parameters. The rule
 // is that we either provide all of them or none at all.
 if [0, 0] is P(Bit, a) then a
-//│ ╔══[ERROR] Expected two extraction arguments, but found only one argument.
+//│ ╔══[COMPILATION ERROR] Expected two extraction arguments, but found only one argument.
 //│ ║  l.24: 	if [0, 0] is P(Bit, a) then a
 //│ ╙──      	               ^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -32,7 +32,7 @@ if [0, 0] is P(Bit, a) then a
 // But `P` is not equivalent to `P'`! If no extraction parameters are declared,
 // then none can be provided.
 if [0, 0] is P'(Bit, a, b) then "values: " + a + ", " + b
-//│ ╔══[ERROR] Expected zero extraction arguments, but found two arguments.
+//│ ╔══[COMPILATION ERROR] Expected zero extraction arguments, but found two arguments.
 //│ ║  l.34: 	if [0, 0] is P'(Bit, a, b) then "values: " + a + ", " + b
 //│ ╙──      	                ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -83,7 +83,7 @@ if 0 is Q'(Bit) as y then y
 :re
 // Similarly, it cannot be written like this:
 if 0 is Q'(Bit, y) then y
-//│ ╔══[ERROR] Expected zero extraction arguments, but found one argument.
+//│ ╔══[COMPILATION ERROR] Expected zero extraction arguments, but found one argument.
 //│ ║  l.85: 	if 0 is Q'(Bit, y) then y
 //│ ╙──      	           ^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error

@@ -82,7 +82,6 @@ result
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
-//│     let saveOffset;
 //│     pc = runtime.resumePc;
 //│     runtime.resumePc = -1;
 //│   }
@@ -129,11 +128,10 @@ result
 //│ });
 //│ h7 = new Handler$h$15();
 //│ handleBlock$7 = (undefined, function () {
-//│   let tmp8, tmp9, tmp10, tmp11, pc;
+//│   let pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
-//│     let saveOffset;
 //│     pc = runtime.resumePc;
 //│     runtime.resumePc = -1;
 //│   }
@@ -148,11 +146,11 @@ result
 //│         continue main;
 //│         break;
 //│       case 1:
-//│         tmp11 = runtime.resumeValue;
+//│         runtime.resumeValue;
 //│         return runtime.safeCall(h7.perform("5"));
 //│         break;
 //│       case 2:
-//│         tmp10 = runtime.resumeValue;
+//│         runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("4"));
 //│         if (runtime.curEffect !== null) {
 //│           return runtime.unwind(handleBlock$7, 1, "Effects.mls:70:3", null, null, 1, 0, 0)
@@ -161,7 +159,7 @@ result
 //│         continue main;
 //│         break;
 //│       case 3:
-//│         tmp9 = runtime.resumeValue;
+//│         runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("3"));
 //│         if (runtime.curEffect !== null) {
 //│           return runtime.unwind(handleBlock$7, 2, "Effects.mls:69:3", null, null, 1, 0, 0)
@@ -170,7 +168,7 @@ result
 //│         continue main;
 //│         break;
 //│       case 4:
-//│         tmp8 = runtime.resumeValue;
+//│         runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("2"));
 //│         if (runtime.curEffect !== null) {
 //│           return runtime.unwind(handleBlock$7, 3, "Effects.mls:68:3", null, null, 1, 0, 0)
@@ -196,6 +194,21 @@ handle h = Effect with
 h.perform("t")
 //│ > t
 //│ = "b"
+
+:expect 3
+handle h = Effect with
+  fun perform(arg)(k) =
+    print(arg)
+    let r = k(true)
+    print(arg)
+    r
+if false || h.perform("hello") then
+  3
+else
+  0
+//│ > hello
+//│ > hello
+//│ = 3
 
 :expect "Hello World!"
 fun foo(h) =
@@ -270,8 +283,8 @@ handle h = Effect with
   fun perform(arg)(k) = arg
 if true do
   fun f() = 3
-  f()
-//│ = 3
+  print(f())
+//│ > 3
 
 module A with
   data class Effect(x) with
@@ -443,18 +456,30 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.438: 	    module A with
+//│ ║  l.451: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.434: 	    module A with
+//│ ║  l.447: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.430: 	    module A with
+//│ ║  l.443: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.426: 	    module A with
+//│ ║  l.439: 	    module A with
 //│ ╙──       	           ^
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
+//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.439: 	    module A with
+//│ ╙──       	           ^
+//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.443: 	    module A with
+//│ ╙──       	           ^
+//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.447: 	    module A with
+//│ ╙──       	           ^
+//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.451: 	    module A with
+//│ ╙──       	           ^
+//│ = 123
 
 // Access superclass fields
 handle h1 = Object with

@@ -11,7 +11,7 @@ import hkmc2.utils.*
 class ReplHost(rootPath: Str)(using TL) {
   
   private val builder = new java.lang.ProcessBuilder()
-  // `--interactive` always enters the REPL even if stdin is not a terminal
+  // `--interactive` always enters the REPL even if stdin is not a terminal.
   builder.command("node", "--interactive")
   private val proc = builder.start()
 
@@ -104,7 +104,7 @@ class ReplHost(rootPath: Str)(using TL) {
   def query(prelude: Str, code: Str, showStackTrace: Bool): (ReplHost.Reply, Str) =
     // Wrap the code with `try`-`catch` block.
     val wrapped =
-      s"${prelude}try { $code } catch (e) { console.log('\\u200B' + ${if showStackTrace then "e.stack" else "e"} + '\\u200B'); }"
+      s"${prelude}try { $code } catch (e) { console.log('\\u200B' + ${if showStackTrace then "(e.stack ?? e)" else "e"} + '\\u200B'); }"
     // Send the code
     send(wrapped)
     (parseQueryResult() match

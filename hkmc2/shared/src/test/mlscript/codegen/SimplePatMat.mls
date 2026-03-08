@@ -6,8 +6,9 @@ data class Some[out A](value: A)
 
 :todo
 let Some(x) = Some(42)
-//│ ╔══[ERROR] Unsupported let binding shape
+//│ ╔══[COMPILATION ERROR] Unsupported let binding shape
 //│ ║  l.8: 	let Some(x) = Some(42)
 //│ ╙──     	    ^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

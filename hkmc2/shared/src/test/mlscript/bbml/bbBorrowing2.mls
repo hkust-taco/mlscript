@@ -34,7 +34,7 @@ letreg of r =>
     write(r)
     read(r)
   write(r)
-//│ ╔══[ERROR] Type error in block
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.31: 	letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^
 //│ ║  l.32: 	  read(r)
@@ -71,7 +71,7 @@ letreg of r =>
     write(r)
     read(r)
   write(r)
-//│ ╔══[ERROR] Type error in block
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.68: 	letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^
 //│ ║  l.69: 	  read(r)

@@ -613,7 +613,7 @@ abstract class Parser(
             case Round => Tup(ps)
             case Curly => ???
             case Square => TyTup(ps)
-          val res = InfixApp(lhs, new Keywrd(kw).withLoc(S(l0)), rhs).withLoc(S(loc))
+          val res = InfixApp(lhs.withLoc(S(loc)), new Keywrd(kw).withLoc(S(l0)), rhs)
           exprCont(res, prec, allowNewlines = allowNewlines)
         case _ =>
           val sts = ps
@@ -693,6 +693,9 @@ abstract class Parser(
     //   raise(WarningReport(msg"???" -> S(loc) :: Nil))
     //   consume
     //   simpleExprImpl(prec)
+    case (SELECT(name = nme, dynamic = false), loc) :: _ =>
+      consume
+      exprCont(Tree.Sel(Tree.Empty(), new Ident(nme).withLoc(S(loc))), prec, allowNewlines = false) // TODO: use a new tree ctor
     case (tok, loc) :: _ =>
       err(msg"Expected an expression; found ${tok.describe} instead" -> S(loc) :: Nil)
       errExpr
@@ -862,13 +865,18 @@ abstract class Parser(
         consume
         consume
         val inner = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0, allowNewlines = true))
-        exprCont(DynAccess(acc, Bra(bk, inner)), prec, allowNewlines = allowNewlines)
+        exprCont(DynAccess(acc, Bra(bk, inner)).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
       
       case (PERIOD, l0) :: (br @ BRACKETS(Curly, toks), l1) :: _ =>
         consume
         consume
         val inner = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
         exprCont(OpenIn(acc, Block(inner)), prec, allowNewlines = allowNewlines)
+        
+      case (PERIOD, l0) :: (LITVAL(lit: (Tree & Literal)), l1) :: _ =>
+        consume
+        consume
+        exprCont(DynAccess(acc, lit.withLoc(S(l1))).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
         
         /* 
       case (PERIOD, l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>

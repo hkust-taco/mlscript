@@ -42,6 +42,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val dbgElab = NullaryCommand("de")
   val dbgParsing = NullaryCommand("dp")
   val dbgResolving = NullaryCommand("dr")
+  val dbgFlow = NullaryCommand("df")
   
   val showParse = NullaryCommand("p")
   val showParsedTree = DebugTreeCommand("pt")
@@ -49,12 +50,21 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showElaboratedTree = DebugTreeCommand("elt")
   val showResolve = NullaryCommand("r")
   val showResolvedTree = DebugTreeCommand("rt")
+  val showFlows = FlagCommand(false, "sf")
   val showLoweredTree = NullaryCommand("lot")
-  val ppLoweredTree = NullaryCommand("slot")
+  val ppLoweredTreeOld = NullaryCommand("slot", () => output("Option ':slot' is deprecated, use ':sir' instead."))
+  val ppLoweredTree = NullaryCommand("sir")
   val showContext = NullaryCommand("ctx")
   val parseOnly = NullaryCommand("parseOnly")
+  val funcToCls = NullaryCommand("ftc")
   
-  val typeCheck = FlagCommand(false, "typeCheck")
+  val flow = FlagCommand(false, "flow")
+  private val flowScp: utils.Scope =
+    utils.Scope.empty(utils.Scope.Cfg.default.copy(
+      escapeChars = false,
+      useSuperscripts = true,
+      includeZero = true,
+    ))
   
   /**
    * Enables Wasm support. All options in [[WasmDiffMaker]] are no-op if this option is not set.
@@ -85,6 +95,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       if liftDefns.isUnset then
         output(s"$errMarker Option ':effectHandlers' requires ':lift'")
     Config(
+      baseDir = wd,
       sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true)),
       effectHandlers = Opt.when(effectHandlers.isSet)(EffectHandlers(
         debug = effectHandlers.get.contains("debug"),
@@ -97,6 +108,12 @@ abstract class MLsDiffMaker extends DiffMaker:
                 failures += 1
                 output("/!\\ Stack limit must be positive, but the stack limit here is set to " + value)
                 S(StackSafety.default)
+              // Minimum: 1 for initial depth, 3 for resuming in the trampoline, 1 for function entry.
+              // The limit needs to be strictly greater than 1 + 3 + 1 = 5.
+              else if value < 6 then
+                failures += 1
+                output("/!\\ Stack limit is too low, the minimum supported is 6.")
+                S(StackSafety.default)
               else
                 S(StackSafety(stackLimit = value))
         ,
@@ -108,6 +125,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       tailRecOpt = !noTailRecOpt.isSet,
       deforest = Opt.when(deforest.isSet)(Deforest.default),
       qqEnabled = importQQ.isSet,
+      funcToCls = funcToCls.isSet,
     )
   
   
@@ -115,6 +133,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     given Config = mkConfig
     importFile(file.up / io.RelPath(ln.trim), verbose = silent.isUnset)
   
+  // eg: `:ucs desugared normalized lowered`
   val showUCS = Command("ucs"): ln =>
     ln.split(" ").iterator.map(x => "ucs:" + x.trim).toSet
   
@@ -138,6 +157,10 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   val rtl = new TraceLogger:
     override def doTrace = dbgResolving.isSet
+    override def emitDbg(str: String): Unit = output(str)
+  
+  val ftl = new TraceLogger:
+    override def doTrace = dbgFlow.isSet
     override def emitDbg(str: String): Unit = output(str)
   
   var curCtx = Elaborator.State.init
@@ -293,9 +316,22 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"Resolved tree:")
       output(trm.showAsTree(inTailPos = false, pre = pre)(using post))
     
-    if typeCheck.isSet then
-      val typer = typing.TypeChecker()
-      val ty = typer.typeProd(trm)
-      output(s"Type: ${ty}")
+    if flow.isSet then
+      val floan = semantics.flow.FlowAnalysis(using ftl)
+      val flo = floan.typeProd(trm)
+      floan.solveConstraints()
+      floan.expandTerms()
+      if showFlows.isSet then
+        import semantics.ShowCfg
+        given ShowCfg = ShowCfg(
+          showExpansionMappings = true,
+          showFlowSymbols = true,
+          debug = debug.isSet,
+        )
+        output(s"Flowed:\n${
+          import document.*
+          doc" #{ ${trm.showTopLevel(using flowScp)} #} \nwhere #{ ${floan.showFlows(using flowScp)} #} ".mkString()
+        }")
+    
   
 

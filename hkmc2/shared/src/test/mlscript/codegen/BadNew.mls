@@ -2,16 +2,18 @@
 
 
 :pe
+:re
 new
 //│ ╔══[PARSE ERROR] Expected 'with' keyword, expression, or block after `new` keyword; found end of input instead
-//│ ║  l.5: 	new
+//│ ║  l.6: 	new
 //│ ╙──     	   ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 :re
 new 2
-//│ ╔══[ERROR] Expected a statically known class; found integer literal.
-//│ ║  l.12: 	new 2
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found integer literal.
+//│ ║  l.14: 	new 2
 //│ ║        	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
@@ -19,8 +21,8 @@ new 2
 :e
 :re
 new 2 + 2
-//│ ╔══[ERROR] Expected a statically known class; found integer literal.
-//│ ║  l.21: 	new 2 + 2
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found integer literal.
+//│ ║  l.23: 	new 2 + 2
 //│ ║        	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
@@ -35,8 +37,8 @@ new! 2 + 2
 :e
 :re
 new()
-//│ ╔══[ERROR] Expected a statically known class; found unit value.
-//│ ║  l.37: 	new()
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found unit value.
+//│ ║  l.39: 	new()
 //│ ║        	   ^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
@@ -48,14 +50,14 @@ new!()
 :e
 :re
 new {}
-//│ ╔══[ERROR] Expected a statically known class; found unit value.
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found unit value.
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
 
 :pe
 new! {}
 //│ ╔══[PARSE ERROR] Expected expression after prefix keyword 'new!'; found end of block instead
-//│ ║  l.56: 	new! {}
+//│ ║  l.58: 	new! {}
 //│ ╙──      	     ^^
 
 
@@ -72,16 +74,18 @@ new { x = 1 }
 //│       lhs = Ident of "x"
 //│       rhs = IntLit of 1
 //│   rft = N
-//│ ╔══[ERROR] Name not found: x
-//│ ║  l.67: 	new { x = 1 }
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.69: 	new { x = 1 }
 //│ ╙──      	      ^
-//│ ╔══[ERROR] Expected a statically known class; found block.
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found block.
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 new! { x = 1 }
-//│ ╔══[ERROR] Unrecognized definitional assignment left-hand side: prefix operator 'new!'
-//│ ║  l.82: 	new! { x = 1 }
+//│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: prefix operator 'new!'
+//│ ║  l.85: 	new! { x = 1 }
 //│ ╙──      	^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

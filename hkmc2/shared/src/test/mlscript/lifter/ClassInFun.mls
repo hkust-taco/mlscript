@@ -138,8 +138,8 @@ f().foo()
 //│     }
 //│   }
 //│   #Good$cap;
-//│   #y;
 //│   #x;
+//│   #y;
 //│   #scope0$cap;
 //│   foo() {
 //│     let tmp6, tmp7;
@@ -176,14 +176,14 @@ f().foo()
 //│   static [definitionMetadata] = ["class", "Bad", []]; 
 //│ });
 //│ f6 = function f() {
-//│   let x, y, z, w, tmp6, tmp7, scope0$cap;
+//│   let x, y, z, w, tmp6, scope0$cap;
 //│   scope0$cap = new Capture$scope01(z, w);
 //│   x = 1;
 //│   y = 10;
 //│   scope0$cap.z$0 = 10;
 //│   scope0$cap.w$1 = 1000;
 //│   tmp6 = Bad$(false, scope0$cap);
-//│   tmp7 = tmp6.foo();
+//│   tmp6.foo();
 //│   return Good$(false, scope0$cap, x, y)
 //│ };
 //│ tmp5 = f6();
@@ -210,7 +210,7 @@ a.getX()
 
 // handler
 
-:stackSafe 10
+:stackSafe 6
 :effectHandlers
 fun sum(n) =
   if n == 0 then 0

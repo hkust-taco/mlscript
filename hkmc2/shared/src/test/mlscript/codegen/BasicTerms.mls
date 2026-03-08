@@ -21,7 +21,7 @@
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.14: 	1
 //│ ╙──      	^
-//│ Lowered:
+//│ Lowered IR:
 //│ Program:
 //│   imports = Nil
 //│   main = Return:
@@ -39,26 +39,25 @@ print("Hi")
 print("Hi")
 2
 //│ JS (unsanitized):
-//│ let tmp; tmp = Predef.print("Hi"); 2
-//│ Lowered:
+//│ Predef.print("Hi"); 2
+//│ Lowered IR:
 //│ Program:
 //│   imports = Nil
-//│   main = Scoped(syms = {$tmp}): 
-//│     body = Assign:
-//│       lhs = $tmp
-//│       rhs = Call:
-//│         fun = Select{sym=term:module:Predef.print}:
-//│           qual = Ref{disamb=module:Predef}:
-//│             l = member:Predef
-//│             disamb = S of module:Predef
-//│           name = Ident of "print"
-//│         args = Ls of 
-//│           Arg:
-//│             spread = N
-//│             value = Lit of StrLit of "Hi"
-//│       rest = Return: \
-//│       res = Lit of IntLit of 2
-//│       implct = true
+//│   main = Assign:
+//│     lhs = ‹no symbol›
+//│     rhs = Call:
+//│       fun = Select{sym=term:Predef¹.print²}:
+//│         qual = Ref{disamb=module:Predef¹}:
+//│           l = member:Predef⁰
+//│           disamb = S of module:Predef¹
+//│         name = Ident of "print"
+//│       args = Ls of 
+//│         Arg:
+//│           spread = N
+//│           value = Lit of StrLit of "Hi"
+//│     rest = Return: \
+//│     res = Lit of IntLit of 2
+//│     implct = true
 //│ > Hi
 //│ = 2
 

@@ -178,7 +178,7 @@ class ParseRules(using State):
       case (kw, (lhs, rhs, body)) => LetLike(kw, lhs, rhs, body)
     }
   
-  def ifLike(kw: `if`.type | `while`.type): Alt[Tree] =
+  def ifLike(kw: Keyword.IfLike): Alt[Tree] =
     Kw(kw)(
       ParseRule(s"'${kw.name}' keyword")(
         Expr(
@@ -289,6 +289,24 @@ class ParseRules(using State):
     },
     ifLike(`if`),
     ifLike(`while`),
+    Kw(`assert`)(
+      ParseRule(s"'assert' keyword")(
+        exprOrBlk(
+          ParseRule(s"'assert' expression")(
+            end(N),
+            Kw(`else`)(
+              ParseRule(s"`else` keyword")(
+                exprOrBlk(ParseRule(s"`else` expression")(end(()))):
+                  discard
+                *
+              )
+            ) {  case (elsKw, default) => S((elsKw, default)) }
+          )
+        )(_ -> _)*
+      )
+    ):
+      case (kw, (rhs, els)) => Assert(kw, rhs, N, els)
+    ,
     Kw(`else`)(
       ParseRule("`else` clause")(
         Expr(ParseRule("`else` expression")(end(())))(discard),
@@ -361,7 +379,7 @@ class ParseRules(using State):
         // *   >   print("returning...")
         // *   >   x
         // * is terated as a keyword stutter: { return print("returning..."); return x }
-        exprOrBlk(ParseRule(s"'return' body")(end(()))):
+        end(Unt()) :: exprOrBlk(ParseRule(s"'return' body")(end(()))):
           discard
         *)
     ) { case (kw, body) => Tree.PrefixApp(kw, body) },

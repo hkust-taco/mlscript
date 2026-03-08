@@ -81,9 +81,9 @@ id(fix(Nil, 1000))
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ JS (unsanitized):
-//│ let dlHelper1, fix3, tmp; /* scoped */
+//│ let dlHelper1, fix3, tmp;
 //│ dlHelper1 = function dlHelper(prev, rest) {
-//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp1; /* scoped */
+//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp1;
 //│   if (rest instanceof Nil1.class) {
 //│     return Nil1
 //│   } else if (rest instanceof Cons1.class) {
@@ -99,7 +99,7 @@ id(fix(Nil, 1000))
 //│ };
 //│ fix3 = function fix(x, fuel) {
 //│   loopLabel: while (true) {
-//│     let res, scrut, tmp1, tmp2; /* scoped */
+//│     let res, scrut, tmp1, tmp2;
 //│     tmp1 = - 1;
 //│     res = dlHelper1(tmp1, x);
 //│     scrut = Predef.equals(fuel, 0);
@@ -111,7 +111,6 @@ id(fix(Nil, 1000))
 //│       fuel = tmp2;
 //│       continue loopLabel
 //│     }
-//│     break;
 //│   }
 //│ };
 //│ tmp = fix3(Nil1, 1000);
@@ -138,9 +137,9 @@ fix(2 :: 3 :: Nil)
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ JS (unsanitized):
-//│ let dlHelper2, fix4, tmp1, tmp2; /* scoped */
+//│ let dlHelper2, fix4, tmp1, tmp2;
 //│ dlHelper2 = function dlHelper(prev, rest) {
-//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp3; /* scoped */
+//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp3;
 //│   if (rest instanceof Nil1.class) {
 //│     return Nil1
 //│   } else if (rest instanceof Cons1.class) {
@@ -156,7 +155,7 @@ fix(2 :: 3 :: Nil)
 //│ };
 //│ fix4 = function fix(x) {
 //│   loopLabel: while (true) {
-//│     let x1, xs, arg$Cons$0$, arg$Cons$1$, tmp3; /* scoped */
+//│     let x1, xs, arg$Cons$0$, arg$Cons$1$, tmp3;
 //│     if (x instanceof Nil1.class) {
 //│       return Nil1
 //│     } else if (x instanceof Cons1.class) {
@@ -170,7 +169,6 @@ fix(2 :: 3 :: Nil)
 //│     } else {
 //│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
-//│     break;
 //│   }
 //│ };
 //│ tmp1 = Cons1(3, Nil1);
@@ -196,7 +194,7 @@ id(loop(Nil, 2))
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ JS (unsanitized):
-//│ let f, loop, tmp3; /* scoped */
+//│ let f, loop, tmp3;
 //│ f = function f(x) {
 //│   if (x instanceof Nil1.class) {
 //│     return Nil1
@@ -206,7 +204,7 @@ id(loop(Nil, 2))
 //│ };
 //│ loop = function loop(l, n) {
 //│   loopLabel: while (true) {
-//│     let scrut, tmp4, tmp5; /* scoped */
+//│     let scrut, tmp4, tmp5;
 //│     scrut = n > 0;
 //│     if (scrut === true) {
 //│       tmp4 = f(l);
@@ -215,7 +213,6 @@ id(loop(Nil, 2))
 //│       n = tmp5;
 //│       continue loopLabel
 //│     } else { return l }
-//│     break;
 //│   }
 //│ };
 //│ tmp3 = loop(Nil1, 2);

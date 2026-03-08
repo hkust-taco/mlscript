@@ -35,7 +35,7 @@ abstract class BbmlDiffMaker extends JSBackendDiffMaker:
   override def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     super.processTerm(trm, inImport)
     if bbmlOpt.isSet then
-      given Scope = Scope.empty
+      given Scope = Scope.empty(Scope.Cfg.default)
       if bbmlTyper.isEmpty then
         given Elaborator.Ctx = curCtx
         bbmlTyper = S(BBTyper())

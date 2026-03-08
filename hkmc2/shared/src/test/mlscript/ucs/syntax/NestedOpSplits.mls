@@ -9,14 +9,14 @@ fun f(x) =
       _ then 1
 //│ Split with nested patterns:
 //│ >  if
-//│ >    let $scrut = 1
-//│ >    let $scrut = (member:Predef.)equals‹member:equals›(x, builtin:+($scrut, 2))
-//│ >    $scrut is true then 0
+//│ >    let tmp:scrut⁰ = 1
+//│ >    let tmp:scrut¹ = (member:Predef⁰.)equals‹member:equals⁰›(x⁰, builtin:+⁰(tmp:scrut⁰, 2))
+//│ >    tmp:scrut¹ is true then 0
 //│ >    else 1
 //│ Expanded split with flattened patterns:
-//│ >  if
-//│ >    let $scrut = 1
-//│ >    let $scrut = (member:Predef.)equals‹member:equals›(x, builtin:+($scrut, 2))
-//│ >    $scrut is true then 0
+//│ >  ‹if|while›
+//│ >    let tmp:scrut⁰ = 1
+//│ >    let tmp:scrut¹ = (member:Predef⁰.)equals‹member:equals⁰›(x⁰, builtin:+⁰(tmp:scrut⁰, 2))
+//│ >    tmp:scrut¹ is true then 0
 //│ >    else 1
 

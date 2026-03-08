@@ -1,6 +1,15 @@
 :js
 
 
+fun f =
+  print("reachable")
+  return
+  print("unreachable")
+
+f
+//│ > reachable
+
+
 fun foo(x) =
   if x do
     print("true")
@@ -29,38 +38,41 @@ foo(123)
 
 :e
 return "whoops"
-//│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.31: 	return "whoops"
+//│ ╔══[COMPILATION ERROR] Return statements are not allowed outside of functions.
+//│ ║  l.40: 	return "whoops"
 //│ ╙──      	^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 x => return "whoops"
-//│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.37: 	x => return "whoops"
+//│ ╔══[COMPILATION ERROR] Return statements are not allowed outside of functions.
+//│ ║  l.47: 	x => return "whoops"
 //│ ╙──      	     ^^^^^^^^^^^^^^^
 //│ = fun
 
 :e
 fun foo() =
   x => return "whoops"
-//│ ╔══[ERROR] Non-local return statements are only supported with effect handlers enabled.
-//│ ║  l.45: 	  x => return "whoops"
+//│ ╔══[COMPILATION ERROR] Non-local return statements are only supported with effect handlers enabled.
+//│ ║  l.55: 	  x => return "whoops"
 //│ ╙──      	       ^^^^^^^^^^^^^^^
 
 :e
 fun foo(x: return "whoops") = 1
-//│ ╔══[ERROR] Return statements are not allowed in this context.
-//│ ║  l.51: 	fun foo(x: return "whoops") = 1
+//│ ╔══[COMPILATION ERROR] Return statements are not allowed in this context.
+//│ ║  l.61: 	fun foo(x: return "whoops") = 1
 //│ ╙──      	           ^^^^^^^^^^^^^^^
-//│ ═══[ERROR] Expected a type, got ‹error›
+//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
 
 :e
 fun foo() =
   fun bar(x: return "whoops") = 1
   bar(123)
-//│ ╔══[ERROR] Return statements are not allowed in this context.
-//│ ║  l.59: 	  fun bar(x: return "whoops") = 1
+//│ ╔══[COMPILATION ERROR] Return statements are not allowed in this context.
+//│ ║  l.70: 	  fun bar(x: return "whoops") = 1
 //│ ╙──      	             ^^^^^^^^^^^^^^^
-//│ ═══[ERROR] Expected a type, got ‹error›
+//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
 
 

@@ -91,6 +91,37 @@ class FuncInfo(
 end FuncInfo
 
 /**
+ * A Wasm global and its associated information.
+ *
+ * Each instance of [[GlobalInfo]] represents a single global definition in a WebAssembly module.
+ *
+ * @param id
+ *   Symbolic identifier for the global.
+ * @param valType
+ *   The value type of the global.
+ * @param mutable
+ *   Whether the global is mutable.
+ * @param init
+ *   The initializer expression for the global.
+ */
+class GlobalInfo(
+    val id: SymIdx,
+    val valType: ValType,
+    val mutable: Bool,
+    val init: Expr
+) extends ToWat:
+
+  /** Returns the symbolic identifier document used in global declarations. */
+  private def idDoc: Document = id.toWat
+
+  def toWat: Document =
+    val typeDoc =
+      if mutable then doc"(mut ${valType.toWat})"
+      else valType.toWat
+    doc"(global${idDoc.surroundUnlessEmpty(doc" ")} ${typeDoc} ${init.toWat})"
+end GlobalInfo
+
+/**
  * A Wasm type and its associated information.
  *
  * Each instance of [[FuncInfo]] represents a single type defintion in a WebAssembly module.
@@ -128,10 +159,30 @@ class TypeInfo(
       doc"(type${idDoc.surroundUnlessEmpty(doc" ")} ${compType.toWat})"
 end TypeInfo
 
+/**
+ * A WebAssembly exception tag declaration.
+ *
+ * In Wasm, a `tag` names an exception kind and points to a function type that describes the
+ * payload values carried by `throw tag ...` and extracted by matching `catch tag ...`.
+ */
+class TagInfo(
+    val id: SymIdx,
+    val typeIdx: TypeIdx
+) extends ToWat:
+
+  def toWat: Document =
+    doc"""(tag ${id.toWat} (type ${typeIdx.toWat})) # (export "${id.id}" (tag ${id.toWat}))"""
+end TagInfo
+
 enum WasmIntrinsicType:
   case TupleArray(mutable: Bool)
 
 object Ctx:
+  case class SingletonInfo(
+      globalName: Str,
+      globalTy: RefType
+  )
+
   val binaryOps: Map[Str, (Expr, Expr) => Expr] = Map(
     "plus_impl" -> i32.add,
     "minus_impl" -> i32.sub,
@@ -157,9 +208,17 @@ object Ctx:
   def empty: Ctx = Ctx(
     types = ArrayBuf.empty,
     namedTypes = MutMap.empty,
+    memoryImports = ArrayBuf.empty,
+    functionImports = ArrayBuf.empty,
+    dataSegments = ArrayBuf.empty,
     funcs = ArrayBuf.empty,
+    funcInfosByIndex = MutMap.empty,
+    globals = ArrayBuf.empty,
     namedFuncs = MutMap.empty,
-    locals = MutMap() :: Nil
+    tags = ArrayBuf.empty,
+    namedGlobals = MutMap.empty,
+    locals = MutMap() :: Nil,
+    startFunc = N
   )
 
   def ctx(using ctx: Ctx): Ctx = ctx
@@ -176,10 +235,20 @@ object Ctx:
  *   [[ArrayBuf]] containing all type definitions in the module.
  * @param namedTypes
  *   [[MutMap]] containing type symbols mapped to their corresponding Wasm type indices.
+ * @param memoryImports
+ *   [[ArrayBuf]] containing all memory imports in the module.
+ * @param functionImports
+ *   [[ArrayBuf]] containing all function imports in the module.
+ * @param dataSegments
+ *   [[ArrayBuf]] containing all data segments in the module.
  * @param funcs
  *   [[ArrayBuf]] containing all function definitions in the module.
+ * @param globals
+ *   [[ArrayBuf]] containing all global definitions in the module.
  * @param namedFuncs
  *   [[MutMap]] containing function symbols mapped to their corresponding Wasm function indices.
+ * @param namedGlobals
+ *   [[MutMap]] containing global symbols mapped to their corresponding Wasm global indices.
  * @param locals
  *   Stack of [[MutMap]] from local variable symbols to their numeric indices within the current
  *   function scope.
@@ -187,15 +256,31 @@ object Ctx:
 class Ctx(
     types: ArrayBuf[TypeInfo],
     namedTypes: MutMap[BlockMemberSymbol, NumIdx],
+    memoryImports: ArrayBuf[MemoryImport],
+    functionImports: ArrayBuf[FuncImport],
+    dataSegments: ArrayBuf[DataSegment],
     funcs: ArrayBuf[FuncInfo],
+    funcInfosByIndex: MutMap[NumIdx, FuncInfo],
+    globals: ArrayBuf[GlobalInfo],
     namedFuncs: MutMap[Symbol, NumIdx],
-    var locals: Ls[MutMap[Local, NumIdx]]
+    tags: ArrayBuf[TagInfo],
+    namedGlobals: MutMap[Symbol, NumIdx],
+    var locals: Ls[MutMap[Local, NumIdx]],
+    private var startFunc: Opt[FuncIdx]
 ) extends ToWat:
 
   import Ctx.prettyString
 
   private val wasmIntrinsicFuncs: MutMap[Str, FuncIdx] = MutMap.empty
   private val wasmIntrinsicTypes: MutMap[WasmIntrinsicType, TypeIdx] = MutMap.empty
+  private val wasmIntrinsicTags: MutMap[Str, TagIdx] = MutMap.empty
+
+  private val cachedMemoryImport: MutMap[(Str, Str), Int] = MutMap.empty
+  private val cachedFunctionImports: MutMap[(Str, Str), FuncIdx] = MutMap.empty
+
+  private val singletonByBms: MutMap[BlockMemberSymbol, Ctx.SingletonInfo] = MutMap.empty
+  private val singletonByIsym: MutMap[ModuleOrObjectSymbol, Ctx.SingletonInfo] = MutMap.empty
+  private val singletonInitActions: ArrayBuf[Expr] = ArrayBuf.empty
 
   /** Adds a type into this context. */
   def addType(sym: Opt[BlockMemberSymbol], typeInfo: TypeInfo): TypeIdx =
@@ -238,11 +323,67 @@ class Ctx(
 
   /** Adds a function into this context. */
   def addFunc(sym: Opt[Symbol], funcInfo: FuncInfo): FuncIdx =
-    val numIdx = NumIdx(funcs.size)
+    val numIdx = NumIdx(functionImports.size + funcs.size)
     funcs += funcInfo
+    funcInfosByIndex(numIdx) = funcInfo
     sym.foreach:
       namedFuncs(_) = numIdx
     FuncIdx(funcInfo.id.getOrElse(numIdx))
+
+  /**
+   * Adds a function import into this context.
+   *
+   * Returns the function index in the global function index space.
+   */
+  def addFunctionImport(sym: Opt[Symbol], funcImport: FuncImport): FuncIdx =
+    val numIdx = NumIdx(functionImports.size + funcs.size)
+    functionImports += funcImport
+    sym.foreach:
+      namedFuncs(_) = numIdx
+    FuncIdx(funcImport.id.getOrElse(numIdx))
+
+  /**
+   * Returns the cached function import for (`module`, `name`), creating it with `createImport`
+   * if needed.
+   */
+  def getOrCreateFunctionImport(
+      module: Str,
+      name: Str,
+  )(createImport: => FuncImport): FuncIdx =
+    cachedFunctionImports.getOrElseUpdate(
+      (module, name),
+      addFunctionImport(N, createImport)
+    )
+
+  /**
+   * Adds or updates a memory import. If the import already exists, its minimum pages are increased
+   * to at least `minPages`.
+   */
+  def ensureMemoryImport(module: Str, name: Str, minPages: Int): Unit =
+    val key = module -> name
+    cachedMemoryImport.get(key) match
+      case S(idx) =>
+        val existing = memoryImports(idx)
+        val newMin = existing.minPages max minPages
+        if newMin =/= existing.minPages then
+          memoryImports(idx) = existing.copy(minPages = newMin)
+      case N =>
+        val idx = memoryImports.size
+        memoryImports += MemoryImport(module, name, minPages)
+        cachedMemoryImport(key) = idx
+
+  /** Returns the minimum page requirement of memory import (`module`, `name`) if present. */
+  def getMemoryImportMinPages(module: Str, name: Str): Opt[Int] =
+    memoryImports.find(m => m.module === module && m.name === name).map(_.minPages)
+
+  /** Adds a data segment into this context. */
+  def addDataSegment(seg: DataSegment): Unit =
+    dataSegments += seg
+
+  /** Adds a tag into this context. */
+  def addTag(tagInfo: TagInfo): TagIdx =
+    tags += tagInfo
+    TagIdx(tagInfo.id)
 
   /**
    * Returns the [[FuncIdx]] of the given `funcref`, optionally resolving the symbolic index into a
@@ -264,7 +405,10 @@ class Ctx(
 
   /** Returns the [[FuncInfo]] instance associated with the given `funcref`. */
   def getFuncInfo(funcref: FuncIdx | Symbol): Opt[FuncInfo] = funcref match
-    case FuncIdx(NumIdx(idx)) => funcs.unapply(idx.toInt)
+    case FuncIdx(numIdx @ NumIdx(idx)) =>
+      funcInfosByIndex.get(numIdx).orElse:
+        val localIdx = idx.toInt - functionImports.size
+        if localIdx < 0 then N else funcs.unapply(localIdx)
     case funcref => getFunc(funcref, resolveSymIdx = true).flatMap(getFuncInfo(_))
 
   /** Same as [[getFuncInfo]] but throws an exception when the `funcref` is not found. */
@@ -292,17 +436,53 @@ class Ctx(
   def containsLocal(sym: Local): Bool = locals.head.contains(sym)
 
   /** Adds a new variable into the global variable scope. */
-  def addGlobal(sym: Symbol): GlobalIdx =
-    val numIdx = NumIdx(locals.last.size)
-    locals.last(sym) = numIdx
-    GlobalIdx(numIdx)
+  def addGlobal(sym: Symbol, globalInfo: GlobalInfo): GlobalIdx =
+    val numIdx = NumIdx(globals.size)
+    globals += globalInfo
+    namedGlobals(sym) = numIdx
+    GlobalIdx(globalInfo.id)
 
   /** Adds a [[Seq]] of variables into the global variable scope. */
-  def addGlobals(syms: Seq[Symbol]): Seq[GlobalIdx] =
-    syms.map(addGlobal)
+  def addGlobals(globalDefs: Seq[Symbol -> GlobalInfo]): Seq[GlobalIdx] =
+    globalDefs.map(addGlobal.tupled)
 
-    /** Checks whether the global variable scope contains the variable `sym`. */
-  def containsGlobal(sym: Symbol): Bool = locals.last.contains(sym)
+  /** Checks whether the global variable scope contains the variable `sym`. */
+  def containsGlobal(sym: Symbol): Bool = namedGlobals.contains(sym)
+
+  /** Checks whether singleton metadata has been registered for class symbol `sym`. */
+  def containsSingleton(sym: BlockMemberSymbol): Bool = singletonByBms.contains(sym)
+
+  /**
+   * Returns singleton metadata for `sym` when it resolves to either the block-member symbol or
+   * module/object symbol used during singleton registration.
+   */
+  def getSingletonInfo(sym: Local): Opt[Ctx.SingletonInfo] = sym match
+    case bms: BlockMemberSymbol => singletonByBms.get(bms)
+    case isym: ModuleOrObjectSymbol => singletonByIsym.get(isym)
+    case _ => N
+
+  /**
+   * Registers singleton metadata under both its block-member symbol and optional module/object
+   * symbol alias.
+   */
+  def registerSingleton(
+      bms: BlockMemberSymbol,
+      isym: Opt[ModuleOrObjectSymbol],
+      info: Ctx.SingletonInfo
+  ): Unit =
+    singletonByBms(bms) = info
+    isym.foreach(singletonByIsym(_) = info)
+
+  /** Appends one eager singleton initialization action for synthesized module start code. */
+  def addSingletonInitAction(action: Expr): Unit =
+    singletonInitActions += action
+
+  /** Returns the singleton initialization actions in deterministic insertion order. */
+  def getSingletonInitActions: Seq[Expr] = singletonInitActions.toSeq
+
+  /** Configures the module start function. */
+  def setStartFunc(funcIdx: FuncIdx): Unit =
+    startFunc = S(funcIdx)
 
   /**
    * Converts a [[Map]] of symbols and their respective numeric identifiers into a [[Seq]] of
@@ -316,10 +496,13 @@ class Ctx(
    * respectively.
    */
   def getWasmLocals: Seq[Symbol] -> Opt[Seq[Local]] =
-    wasmLocalsToSeq(locals.last.toMap) -> locals.headOption.map(l => wasmLocalsToSeq(l.toMap))
+    wasmLocalsToSeq(namedGlobals.toMap) -> locals.headOption.map(l => wasmLocalsToSeq(l.toMap))
 
   /** Returns all local variable scopes and their variables. */
-  def getAllWasmLocals: Ls[Seq[Local]] = locals.map(l => wasmLocalsToSeq(l.toMap))
+  def getAllWasmLocals: Ls[Seq[Local]] = locals match
+    case Nil => wasmLocalsToSeq(namedGlobals.toMap) :: Nil
+    case _ =>
+      locals.init.map(l => wasmLocalsToSeq(l.toMap)) :+ wasmLocalsToSeq(namedGlobals.toMap)
 
   /**
    * Returns the cached [[FuncIdx]] for the intrinsic named `name`, creating it with
@@ -335,7 +518,22 @@ class Ctx(
   def getOrCreateWasmIntrinsicType(key: WasmIntrinsicType, createType: => TypeIdx): TypeIdx =
     wasmIntrinsicTypes.getOrElseUpdate(key, createType)
 
+  /** Returns the cached [[TagIdx]] for the intrinsic tag named `name`, creating it if absent. */
+  def getOrCreateWasmIntrinsicTag(name: Str, createTag: => TagIdx): TagIdx =
+    wasmIntrinsicTags.getOrElseUpdate(name, createTag)
+
   def toWat: Document =
-    doc"(module #{  # ${(types.toSeq ++ funcs.toSeq).map(_.toWat).mkDocument(doc" # ")}) #} "
+    doc"(module #{  # ${
+        (
+          types.toSeq.map(_.toWat)
+            ++ memoryImports.toSeq.map(_.toWat)
+            ++ functionImports.toSeq.map(_.toWat)
+            ++ dataSegments.toSeq.map(_.toWat)
+            ++ globals.toSeq.map(_.toWat)
+            ++ tags.toSeq.map(_.toWat)
+            ++ startFunc.toSeq.map(funcIdx => doc"(start ${funcIdx.toWat})")
+            ++ funcs.toSeq.map(_.toWat)
+        ).mkDocument(doc" # ")
+      } #} )"
 
 end Ctx

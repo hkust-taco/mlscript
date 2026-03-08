@@ -1,6 +1,4 @@
 :js
-:effectHandlers
-:lift
 
 
 // * This feature relies on `finally`
@@ -12,15 +10,7 @@ x
 //│ let x, old, tmp, tmp1, tmp2;
 //│ x = 1;
 //│ old = x;
-//│ try {
-//│   tmp1 = x + 1;
-//│   x = tmp1;
-//│   tmp2 = Predef.print(x);
-//│   if (runtime.curEffect !== null) {
-//│     tmp2 = runtime.topLevelEffect(false);
-//│   }
-//│   tmp = tmp2;
-//│ } finally { x = old; }
+//│ try { tmp1 = x + 1; x = tmp1; tmp2 = Predef.print(x); tmp = tmp2; } finally { x = old; }
 //│ x
 //│ > 2
 //│ = 1
@@ -30,6 +20,8 @@ x
 // * But `finally` is not yet supported by effect handlers
 
 :todo
+:effectHandlers
+:lift
 let x = 1
 handle h = Object with
   fun test()(k) =
@@ -43,6 +35,18 @@ set x += 1 in
   print(x)
   print("end")
 x
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[COMPILATION ERROR] Backtracking assignment is not supported with effect handlers enabled
+//│ ║  l.32: 	set x += 1 in
+//│ ║        	    ^^^^^^^^^
+//│ ║  l.33: 	  print("init")
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.34: 	  print(h.test())
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║  l.35: 	  print(x)
+//│ ║        	^^^^^^^^^^
+//│ ║  l.36: 	... (more lines omitted) ...
+//│ ╙──      	^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ x = 1
 
 

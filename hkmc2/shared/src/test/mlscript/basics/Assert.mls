@@ -1,0 +1,114 @@
+:js
+
+
+let xs = [1, 2, 3]
+//│ xs = [1, 2, 3]
+
+:sjs
+assert true
+//│ JS (unsanitized):
+//│ let scrut;
+//│ scrut = true;
+//│ if (scrut === true) { runtime.Unit } else { runtime.assertFail("Assert.mls", "9") }
+
+:re
+assert false
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:16)
+
+assert xs is Array
+
+
+// * FIXME: Error-prone!!
+:sjs
+:fixme
+assert(true); 123
+//│ JS (unsanitized):
+//│ let scrut2;
+//│ scrut2 = (true , 123);
+//│ if (scrut2 === true) { runtime.Unit } else { runtime.assertFail("Assert.mls", "25") }
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:25)
+
+// * FIXME: the `else` is parsed as part of the `assert`!
+:sjs
+:fixme
+if 1 is
+  2 then assert true
+  else 3
+//│ JS (unsanitized):
+//│ let scrut3, scrut4;
+//│ scrut3 = 1;
+//│ if (scrut3 === 2) {
+//│   scrut4 = true;
+//│   if (scrut4 === true) {
+//│     runtime.Unit
+//│   } else { 3 }
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ ═══[RUNTIME ERROR] Error: match error
+
+
+assert true else 0
+1
+//│ = 1
+
+assert false else 0
+1
+//│ = 0
+
+
+assert xs is [1, ...ys] else []
+ys
+//│ = [2, 3]
+
+assert xs is [2, ...ys] else []
+ys
+//│ = []
+
+
+(assert true else 2) + 3
+//│ = "()3"
+
+(assert true else 2, 1) + 3
+//│ = 4
+
+(assert false else 2, 1) + 3
+//│ = 5
+
+:re
+(assert false else throw Error("whoops")) + 3
+//│ ═══[RUNTIME ERROR] Error: whoops
+
+
+fun test(arg) =
+  assert arg is [l, r] else arg
+  [l + r]
+
+test([2, 3])
+//│ = [5]
+
+test([1])
+//│ = [1]
+
+
+import "../../mlscript-compile/Option.mls"
+open Option
+
+
+fun sumOpts(arg1, arg2) =
+  assert arg1 is Some(arg1) and arg2 is Some(arg2) else None
+  print("Both args are Some!")
+  Some(arg1 + arg2)
+
+sumOpts(Some(2), Some(3))
+//│ > Both args are Some!
+//│ = Some(5)
+
+sumOpts(Some(2), None)
+//│ = None
+
+sumOpts(None, Some(3))
+//│ = None
+
+sumOpts(None, None)
+//│ = None
+
+

@@ -8,10 +8,10 @@ type List = Nil | Cons
 object Nil
 data class (::) Cons(head: Int, tail: List)
 //│ Env:
-//│   :: -> RefElem(member:Cons)
-//│   Cons -> RefElem(member:Cons)
-//│   List -> RefElem(member:List)
-//│   Nil -> RefElem(member:Nil)
+//│   :: -> RefElem(member:Cons⁰)
+//│   Cons -> RefElem(member:Cons⁰)
+//│   List -> RefElem(member:List⁰)
+//│   Nil -> RefElem(member:Nil⁰)
 
 Cons(1, Nil)
 //│ = Cons(1, Nil)
@@ -29,7 +29,7 @@ fun map(f, xs) = if xs is
 :re
 :sjs
 new 1 :: 2
-//│ ╔══[ERROR] Expected a statically known class; found integer literal.
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found integer literal.
 //│ ║  l.31: 	new 1 :: 2
 //│ ║        	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
@@ -42,7 +42,7 @@ new 1 :: 2
 :re
 :sjs
 new (1 :: 2)
-//│ ╔══[ERROR] Expected a statically known class; found application of type Cons.
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found application of type Cons.
 //│ ║  l.44: 	new (1 :: 2)
 //│ ║        	     ^^^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.

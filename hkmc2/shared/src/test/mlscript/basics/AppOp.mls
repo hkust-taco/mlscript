@@ -100,7 +100,7 @@ pipeInto(1, _) @ inc
 :e
 :re
 1 pipeInto @ inc
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
 //│ ║  l.102: 	1 pipeInto @ inc
 //│ ╙──       	  ^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function

@@ -24,8 +24,7 @@ object Test with
 //│     globalThis.Object.freeze(this);
 //│   }
 //│   foo() {
-//│     let tmp;
-//│     tmp = Predef.print(Test1);
+//│     Predef.print(Test1);
 //│     return Test1.x
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -73,11 +72,11 @@ f()
 module Test with
   val x = 1
   let x = 2
-//│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.75: 	  let x = 2
+//│ ╔══[COMPILATION ERROR] Name 'x' is already used
+//│ ║  l.74: 	  let x = 2
 //│ ║        	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.74: 	  val x = 1
+//│ ║  l.73: 	  val x = 1
 //│ ╙──      	  ^^^^^^^^^
 //│ JS:
 //│ let Test4;
@@ -228,8 +227,50 @@ Whoops.Whoops.g()
 
 :e
 Runtime
-//│ ╔══[ERROR] Name not found: Runtime
-//│ ║  l.230: 	Runtime
+//│ ╔══[COMPILATION ERROR] Name not found: Runtime
+//│ ║  l.229: 	Runtime
 //│ ╙──       	^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+:sjs
+module AA with
+  module BB with
+    val y = 2
+    fun test =
+      let BB = "oops"
+      y
+//│ JS (unsanitized):
+//│ let AA1;
+//│ (class AA {
+//│   static {
+//│     AA1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
+//│     (class BB {
+//│       static {
+//│         AA.BB = this
+//│       }
+//│       constructor() {
+//│         runtime.Unit;
+//│       }
+//│       static {
+//│         this.y = 2;
+//│       }
+//│       static get test() {
+//│         let BB1;
+//│         BB1 = "oops";
+//│         return BB.y;
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "BB"]; 
+//│     });
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "AA"]; 
+//│ });
 
 

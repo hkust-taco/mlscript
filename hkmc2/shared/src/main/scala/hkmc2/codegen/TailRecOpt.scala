@@ -9,7 +9,7 @@ import hkmc2.codegen.*
 import hkmc2.semantics.*
 import hkmc2.Message.*
 import hkmc2.semantics.Elaborator.State
-import hkmc2.syntax.Tree
+import hkmc2.syntax.{Tree, SpreadKind}
 import scala.collection.mutable.ArrayBuffer
 import java.lang.instrument.ClassDefinition
 
@@ -53,10 +53,10 @@ fun bar() =
   foo()
 
 it is still invalid, since the following sequence of calls from foo to foo would incur extra stack space:
-   foo
--> bar (tail call)
--> bar (not a tail call)
--> foo (tail call)
+      foo
+  ->  bar (tail call)
+  ->  bar (not a tail call)
+  ->  foo (tail call)
 
 Equivalently, if fun foo() is annotated with @tailrec, let S be the largest strongly
 connected component in the call-graph of the program that contains foo. Then an error
@@ -197,7 +197,7 @@ class TailRecOpt(using State, TL, Raise):
         
         var bad = false
         val hd = for a <- headArgs yield a.spread match
-          case Some(true) =>
+          case Some(SpreadKind.Eager) =>
             if c.explicitTailCall then
               raise(ErrorReport(msg"Spreads are not yet fully supported in calls marked @tailcall." -> a.value.toLoc :: Nil))
             bad = true
@@ -208,7 +208,7 @@ class TailRecOpt(using State, TL, Raise):
         if head.restParam.isDefined then
           val rest =
             restArgs match
-              case Arg(S(true), value) :: Nil => value
+              case Arg(S(SpreadKind.Eager), value) :: Nil => value
               case _ => Tuple(true, restArgs)
           hd.appended(rest)
         else
