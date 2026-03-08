@@ -571,10 +571,10 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
       def updateInstantiationId(instId: Opt[InstantiationId]) =
         S(instId.fold(referSite :: Nil)(referSite :: _))
       def duplicateVarState(s: StratVarState) =
-        if s.generatedForFun.fold(false)(_ is groupRep) then
-          stratVarMap.getOrElseUpdate(s, freshVar(s.name, cc.forFunGroup))
-        else
-          s
+        if s.generatedForFun.fold(false):
+          forFun => funToSccRep(forFun).fold(false)(_ is groupRep)
+        then stratVarMap.getOrElseUpdate(s, freshVar(s.name, cc.forFunGroup))
+        else s
       def duplicateProdStrat(s: ProdStrat): ProdStrat = s match
         case ProdVar(s) => duplicateVarState(s).asProdStrat
         case ProdFun(params, res) => ProdFun(params.map(duplicateConsStrat), duplicateProdStrat(res))
