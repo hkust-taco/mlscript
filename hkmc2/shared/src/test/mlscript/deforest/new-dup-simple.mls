@@ -79,6 +79,30 @@ fun cons1(a1) = if a1 is
   h :: t then h + cons1(t)
 cons(f(0)) + cons1(f(1))
 //│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:x,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:a1,None)
+//│ deforest > 	Select(Ref(var:a1,None),Ident(t))
+//│ deforest > 	Select(Ref(var:a1,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:a1,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:y,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:a1,None)
+//│ deforest > 	Select(Ref(var:a1,None),Ident(t))
+//│ deforest > 	Select(Ref(var:a1,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:a1,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:x,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Select(Ref(var:a,None),Ident(t))
+//│ deforest > 	Select(Ref(var:a,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:y,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Select(Ref(var:a,None),Ident(t))
+//│ deforest > 	Select(Ref(var:a,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:a,None)
 //│ = 2
 
 

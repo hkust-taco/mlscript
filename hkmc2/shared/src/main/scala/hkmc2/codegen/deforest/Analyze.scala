@@ -132,17 +132,10 @@ class DeforestPreAnalyzer(
     //     - does not contain nested class/modules (but nested functions are allowed)
     // - blocks
     //     - toplvl block if it does not contain unsupported forms
-    //     - lone-module ctors that does not contain unsupported forms
-    // - modules
-    //     - that are not nested in functions
-    //     - that are lone modules
     // when traversing
     // - fundefs in the set: nothing should be ignored
-    // - blocks in the set:
-    //    - toplvl block: ignore all class/module/fun defs
-    //    - module ctor blocks: ignore everything other than functions
-    // - modules: they are only traversed for collecting the symbols of their public fields
-    val toplvlFunAndBlkToAnalyze = MutSet.empty[FunDefn | Block | ClsLikeBody]
+    // - toplvl block in the set: ignore all class/module/fun defs
+    val toplvlFunAndBlkToAnalyze = MutSet.empty[FunDefn | Block]
     val matchScrutToMatchBlock = MutMap.empty[ResultId, Match]
     val labelSymToLabelBlk = MutMap.empty[Symbol, Label]
     val matchScrutToCtxOfMatch = MutMap.empty[ResultId, Ls[InCtx]]
@@ -266,8 +259,6 @@ class DeforestPreAnalyzer(
       ctx = ctx.tail
       
       c match
-        case c: ClsLikeBody =>
-          res.toplvlFunAndBlkToAnalyze.add(c)
         case f: FunDefn =>
           if newCtx.handleable && (isToplvl || ctx.head.isInstanceOf[InCtx.Mod]) then
             res.toplvlFunAndBlkToAnalyze.add(f)
@@ -280,6 +271,7 @@ class DeforestPreAnalyzer(
             res.matchScrutToMatchBlock.addOne(m._1.scrut.uid -> m._1)
             res.matchScrutToCtxOfMatch.addOne(m._1.scrut.uid -> ctx)
         case b: Begin => ()
+        case c: ClsLikeBody => ()
         case s: Scoped => ()
       if isToplvl && c.matches { case _: (ClsLikeBody | FunDefn) => true } then ()
       else ctx.head.handleable &&= newCtx.handleable
@@ -496,37 +488,6 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
               applyBlock(body)
             case _ => super.applyBlock(b)
         AddStratForTopLvlSymbols.applyBlock(preAnalyzer.b)
-      // for module public fields and mod ctors
-      for case mod: ClsLikeBody <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do
-        for (_, pub) <- mod.publicFields do store(pub) = freshVar(pub.name)
-        // mod.ctor can nest functions and class/module defs
-        // among which only nested functions needs to be handled here
-        if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(mod.ctor) then
-          object AddStratForModCtorSymbols extends BlockTraverser:
-            override def applyBlock(b: Block): Unit = b match
-              case Scoped(syms, body) => for s <- syms do
-                s match
-                // local fun and vals
-                case bms: BlockMemberSymbol if bms.tsym.exists(tsym => (tsym.k is Fun) || (tsym.k is ImmutVal)) =>
-                  val tsym = bms.tsym.get
-                  store(tsym) = freshVar(tsym.nme)
-                // varsymbols for let binding
-                case s: VarSymbol => store(s) = freshVar(s.nme)
-                case s: TempSymbol => store(s) = freshVar(s.nme)
-                case _ => ()
-                applyBlock(body)
-              case _ => super.applyBlock(b)
-            override def applyClsLikeBody(b: ClsLikeBody): Unit = ()
-            override def applyDefn(defn: Defn): Unit =
-              defn match
-                case _: ClsLikeDefn => ()
-                case _ => super.applyDefn(defn)
-                // case FunDefn(forceTailRec) => 
-                // case ValDefn(tsym, sym, rhs) =>
-              
-            override def applyParamList(pl: ParamList): Unit =
-              for p <- pl.params do store(p.sym) = freshVar(p.sym.nme)
-          AddStratForModCtorSymbols.applyBlock(mod.ctor)
       // for toplvl fundefns
       for case f: FunDefn <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do
         val forFun = f.dSym
@@ -598,13 +559,6 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
         given ProcessMode = ProcessMode.ToplvlBlk(topLvlRes)
         processBlock(preAnalyzer.b)
         cc.constrain(topLvlRes.asProdStrat, NoCons)
-      // collect for module ctor
-      for
-        case (mod: ClsLikeBody) <- preAnalyzer.res.toplvlFunAndBlkToAnalyze
-        if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(mod.ctor)
-      do
-        given ProcessMode = ProcessMode.ModCtor(freshVar("modCtor_res").asConsStrat)
-        processBlock(mod.ctor)
   
     // ===================================================
     

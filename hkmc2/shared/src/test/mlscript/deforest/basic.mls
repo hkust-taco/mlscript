@@ -290,3 +290,17 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ = Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
+
+
+
+:deforest
+let x = O
+fun f() =
+  if x is
+    O then 0
+f()
+//│ deforest > ==============
+//│ deforest > Ref(member:O,Some(object:O)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ = 0
+//│ x = fun x

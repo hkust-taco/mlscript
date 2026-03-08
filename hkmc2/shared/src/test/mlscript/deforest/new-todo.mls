@@ -33,16 +33,12 @@ test()
 
 
 // TODO: fusion opportunity is lost
-// when instantiation ids of dtors are also tracked:
-// two call sites to `inner` leads to two `inner`s
-// to be called, causing a clashing consumer.
+// because there are two consumers due to two call sites of `inner`s.
 :deforest
 fun inner(x) = if x is A then 0 else 1
-fun outter1(x) = inner(x)
-fun outter2(x) = inner(x)
 fun test() =
   let x = A
-  outter1(x) + outter2(x)
+  inner(x) + inner(x)
 test()
 //│ deforest > ==============
 //│ = 0
@@ -96,19 +92,6 @@ f(A) + f(A)
 //│ = 2
 
 
-// NOTE: after trying to fuse both the original body and the instance's body,
-// the `A` in this program is not fused anymore
-:deforest
-let x = A
-fun f() =
-  if x is
-    A then 0
-f()
-//│ deforest > ==============
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(var:x,None)
-//│ = 0
-//│ x = fun x
 
 
 // TODO: the assignment of `useless` is moved inside the lambda body
@@ -127,42 +110,5 @@ let useless = if lsit is [a, b] then 0
 //│ useless = 0
 
 
-// TODO: to workaround this one can write `MMM.y` instead of `y`
-:deforest
-module MMM with ...
-val y = 3
-val x = MMM.f()
-fun f() =
-  // if A is A then MMM.y
-  if A is A then y
-MMM.f()
-//│ deforest > ==============
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(member:A,Some(object:A))
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(member:A,Some(object:A))
 
 
-object C
-object D
-
-// TODO: it's fine only when using `M.g` and `M.f` instead of `g` and `f`
-:deforest
-module M with ...
-fun f(x) = if M.g(false) is
-  A and
-    x < 1 then B(0)
-    else M.f(x - 1)
-  C then D
-fun g(b) =
-  if b then
-    if M.f(0) is
-      B then A
-      D then A
-  else
-    C
-//│ deforest > ==============
-
-
-[M.f(3), M.g(true)]
-//│ = [D, A]
