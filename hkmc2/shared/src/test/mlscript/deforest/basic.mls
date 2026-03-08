@@ -124,14 +124,6 @@ f(p())
 //│ = O
 
 
-// fun p() =
-//   let b = O
-//   let a = (tmp, res) => branchBodyY(tmp, res, b)
-//   in (res) => branchBodyX(res, a)
-// fun branchBodyY(res, tmp, b) = res + tmp
-// fun branchBodyX(res, a) = let tmp = 12 in a(res, tmp)
-// fun f(x, res) = x(res)
-// f(p(), 2)
 :expect 14
 fun p() = X(Y(O))
 fun f(x, res) = if x is
@@ -275,9 +267,13 @@ f(A(1))
 
 :expect 2
 fun f(x) = if x is
-  A(a) then x.x + a
+  A(a) then x.A#x + a
 f(A(1))
 //│ deforest > ==============
+//│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ = 2
 
 
@@ -314,7 +310,6 @@ localFuse(4)
 //│ = B(4)
 
 
-// for cyclic strategies removal
 :expect 0
 fun f(x) = if x is
   A(_) then f(A(2))
@@ -329,7 +324,6 @@ f(Nil)
 //│ = 0
 
 
-// cyclic strategy, shouldn't fuse
 :expect 0
 fun f(x) =
   let res = if x is
@@ -349,16 +343,14 @@ f(A(4))
 :expect 3
 fun g(x) = if x is
   A(a) then a
-fun f(x) = x.x
+fun f(x) = x.A#x
 let o = A(1)
-g(o) + f(o) + o.x
+g(o) + f(o) + o.A#x
 //│ deforest > ==============
 //│ = 3
 //│ o = A(1)
 
 
-// using `let` to declare local functions helps to avoid the problem
-// caused by reordering nested `fun` functions.
 :expect 1
 fun test() =
   let x = if A(0) is
@@ -376,9 +368,14 @@ test()
 fun inner(y, z) = if y is
   B then z
 fun dtor(x) = if x is
-  A then inner(B(4), x.x)
+  A then inner(B(4), x.A#x)
 dtor(A(B(0)))
 //│ deforest > ==============
+//│ deforest > Call(Ref(member:B,Some((Fun)term:class:B.B)),List(Arg(None,Lit(IntLit(4))))) ->
+//│ deforest > 	Ref(var:y,None)
+//│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ = B(0)
 
 
