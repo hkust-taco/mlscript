@@ -28,8 +28,7 @@ object DeforestableSelect:
   // (ClassSymbol | ModuleOrObjectSymbol): class/object defined in a module.
   // ModuleOrObjectSymbols returned will always be an object symbol,
   // e.g., `_.tree.k is Obj`.
-  // TopLevelSymbol: selecting `globalThis.Error` is fine...
-  // and this selection gets a bot strategy
+  // TopLevelSymbol: selecting from `globalThis`is fine
   def unapply(s: Select)(using eState: Elaborator.State): Opt[TermSymbol | ClassSymbol | ModuleOrObjectSymbol | TopLevelSymbol] =
     s.symbol match
     case S(sSym) if sSym.asTrm.isDefined =>
@@ -59,10 +58,7 @@ object DeforestableSelect:
     case S(s) if s.asCls.isDefined || s.asObj.isDefined =>
       s.asCls orElse s.asObj
     case _ => s match
-      case Select(
-        Value.Ref(eState.globalThisSymbol, _),
-        Tree.Ident("Error")
-      ) => Some(eState.globalThisSymbol)
+      case Select(Value.Ref(eState.globalThisSymbol, _), _) => Some(eState.globalThisSymbol)
       case _ => None
 
 object PossibleDeforestTupSelect:
@@ -113,10 +109,6 @@ object FunRef:
         tSym
     case _ => None
 
-extension (b: Block)
-  def pp(using Raise, Elaborator.State): String =
-    Printer.mkDocument(b)(using summon[Raise], Scope.empty).mkString()
-
 object Deforest:
   class State:
     val resultToResultId = new java.util.IdentityHashMap[Result, Uid[Result]].asScala
@@ -161,12 +153,3 @@ object Deforest:
     val constrSol = new DeforestConstrainSolver(constrCol)
     val rewrite = new DeforestRewriter(constrSol)
     Program(p.imports, rewrite.newBody)
-    // val defns = p.main.gatherDefns()
-    // val (funs, clses) = defns.partitionMap:
-    //   case f: FunDefn => L(f)
-    //   case c: ClsLikeDefn => R(c)
-    //   case _: ValDefn => die
-    // ???
-    
-
-

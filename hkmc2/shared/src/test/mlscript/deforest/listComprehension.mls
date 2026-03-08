@@ -1,13 +1,15 @@
 :js
 :deforest
 
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 object Nil
 data class (::) Cons(h, t)
 data class Pair(a, b)
 object A
 object B
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 
 
@@ -28,7 +30,7 @@ fun test() =
     else Nil
   lscomp1(zip(enumFromTo(1, 3), enumFromTo(2, 4)))
 test()
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:xs_zip,None)
 //│ deforest > 	Select(Ref(var:xs_zip,None),Ident(h))
@@ -73,6 +75,7 @@ test()
 //│ deforest > 	Ref($arg$Cons$0$,None)
 //│ deforest > 	Select(Ref($arg$Cons$0$,None),Ident(b))
 //│ deforest > 	Select(Ref($arg$Cons$0$,None),Ident(a))
+//│ deforest > <<< fusing <<<
 //│ = Cons(Pair(1, 3), Cons(Pair(2, 4), Cons(Pair(3, 5), Nil)))
 
 
@@ -91,7 +94,7 @@ fun test() =
     else Nil
   concatMap(f1, Pair(5, 10) :: Nil)
 test()
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:xs,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
@@ -144,6 +147,7 @@ test()
 //│ deforest > 	Select(Ref(var:a1,None),Ident(a))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
+//│ deforest > <<< fusing <<<
 //│ = Cons(Pair(5, 1), Cons(Pair(5, 2), Cons(Pair(5, 5), Nil)))
 
 
@@ -156,7 +160,7 @@ fun lscomp2(ls2, h1, t1) = if ls2 is
   h2 :: t2 then Pair(h1, h2) :: lscomp2(t2, h1, t1)
   Nil then lscomp1(t1, ls2)
 lscomp1(1 :: 2 :: Nil, 3 :: 4 :: Nil)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(3))), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls2,None)
 //│ deforest > 	Select(Ref(var:ls2,None),Ident(t))
@@ -177,6 +181,7 @@ lscomp1(1 :: 2 :: Nil, 3 :: 4 :: Nil)
 //│ deforest > 	Select(Ref(var:ls1,None),Ident(h))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls1,None)
+//│ deforest > <<< fusing <<<
 //│ = Cons(Pair(1, 3), Cons(Pair(1, 4), Nil))
 
 
@@ -189,7 +194,7 @@ fun test(k, ls) =
     A then lscomp(ls)
     B then Nil
 test(A, 1 :: 2 :: 3 :: Nil)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(var:k,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref($tmp,None)))) ->
@@ -206,6 +211,7 @@ test(A, 1 :: 2 :: 3 :: Nil)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
+//│ deforest > <<< fusing <<<
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
 
@@ -222,7 +228,7 @@ fun h() =
   lscomp1(1 :: 2 :: 3 :: Nil)
 fun main() = h()
 main()
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
@@ -251,6 +257,7 @@ main()
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
+//│ deforest > <<< fusing <<<
 //│ = Cons(
 //│   [1, 1],
 //│   Cons(

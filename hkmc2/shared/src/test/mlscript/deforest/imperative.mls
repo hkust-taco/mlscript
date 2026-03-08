@@ -1,7 +1,8 @@
 :js
 :deforest
 
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 object A
 object B
@@ -10,7 +11,8 @@ object B
 // class BB(bb)
 // object None
 // class Some(value)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 // * Not fused: two `x is A` consumers
 let x = if true then A else B
@@ -19,7 +21,8 @@ fun foo(x) =
   if x is
     A then 1
     B then 2
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ x = A
 
 // * We could make it work. But it's a special case that's probably not very important
@@ -27,7 +30,8 @@ let x = if true then A else B
 fun foo(x) =
   if x is A do print(123)
   if x is B do print(456)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ x = A
 
 :expect 1
@@ -41,13 +45,14 @@ fun bar(v) = if v is
   A then 1
   B then 2
 foo(bar, 123)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(var:v,None)
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(var:v,None)
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(var:v,None)
+//│ deforest > <<< fusing <<<
 //│ = 1
 
 

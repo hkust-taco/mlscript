@@ -22,7 +22,8 @@ fun fix(x) =
   else
     fix(res)
 fix
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = fun fix
 
 
@@ -39,7 +40,8 @@ fun fix(x, fuel) =
   else
     fix(res, fuel - 1)
 fix
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = fun fix
 
 
@@ -57,7 +59,8 @@ fun fix(x, fuel) =
   else
     fix(res, fuel - 1)
 fix
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = fun fix
 
 
@@ -75,7 +78,8 @@ fun fix(x, fuel) =
   else
     fix(res, fuel - 1)
 id(fix(Nil, 1000))
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ JS (unsanitized):
 //│ let dlHelper1, fix3, tmp; /* scoped */
 //│ dlHelper1 = function dlHelper(prev, rest) {
@@ -112,7 +116,8 @@ id(fix(Nil, 1000))
 //│ };
 //│ tmp = fix3(Nil1, 1000);
 //│ Predef.id(tmp)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = Nil
 
 
@@ -130,7 +135,8 @@ fun fix(x) =
     Nil then Nil
     x :: xs then fix(dlHelper(x, xs))
 fix(2 :: 3 :: Nil)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ JS (unsanitized):
 //│ let dlHelper2, fix4, tmp1, tmp2; /* scoped */
 //│ dlHelper2 = function dlHelper(prev, rest) {
@@ -170,7 +176,8 @@ fix(2 :: 3 :: Nil)
 //│ tmp1 = Cons1(3, Nil1);
 //│ tmp2 = Cons1(2, tmp1);
 //│ fix4(tmp2)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = Nil
 
 
@@ -186,7 +193,8 @@ fun f(x) = if x is
   Nil then Nil
 fun loop(l, n) = if n > 0 then loop(f(l), n - 1) else l
 id(loop(Nil, 2))
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ JS (unsanitized):
 //│ let f, loop, tmp3; /* scoped */
 //│ f = function f(x) {
@@ -212,5 +220,6 @@ id(loop(Nil, 2))
 //│ };
 //│ tmp3 = loop(Nil1, 2);
 //│ Predef.id(tmp3)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = Nil

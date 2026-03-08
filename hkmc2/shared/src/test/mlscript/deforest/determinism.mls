@@ -8,7 +8,7 @@ data class B(a, b, c, d, e)
 :expect 0
 if B(1,2,3,4,5) is
   B(a,b,c,d,e) then 0
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:B,Some((Fun)term:class:B.B)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(3))), Arg(None,Lit(IntLit(4))), Arg(None,Lit(IntLit(5))))) ->
 //│ deforest > 	Ref($scrut,None)
 //│ deforest > 	Select(Ref($scrut,None),Ident(e))
@@ -16,8 +16,9 @@ if B(1,2,3,4,5) is
 //│ deforest > 	Select(Ref($scrut,None),Ident(a))
 //│ deforest > 	Select(Ref($scrut,None),Ident(c))
 //│ deforest > 	Select(Ref($scrut,None),Ident(b))
+//│ deforest > <<< fusing <<<
 //│ JS (unsanitized):
-//│ let scrut, e, a, b, c, d, arg$B$0$, arg$B$1$, arg$B$2$, arg$B$3$, arg$B$4$, B_a, B_b, B_c, B_d, B_e, $scrut_B, $scrut_rest; /* scoped */
+//│ let scrut, e, a, b, c, d, arg$B$0$, arg$B$1$, arg$B$2$, arg$B$3$, arg$B$4$, $scrut_B, $scrut_rest, B_a, B_b, B_c, B_d, B_e; /* scoped */
 //│ $scrut_B = function $scrut_B(B_a1, B_b1, B_c1, B_d1, B_e1) {
 //│   arg$B$0$ = B_a1;
 //│   arg$B$1$ = B_b1;
@@ -39,7 +40,7 @@ if B(1,2,3,4,5) is
 //│ B_e = 5;
 //│ scrut = () => { return $scrut_B(B_a, B_b, B_c, B_d, B_e) };
 //│ scrut()
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:B,Some((Fun)term:class:B.B)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(3))), Arg(None,Lit(IntLit(4))), Arg(None,Lit(IntLit(5))))) ->
 //│ deforest > 	Ref($scrut,None)
 //│ deforest > 	Select(Ref($scrut,None),Ident(e))
@@ -47,6 +48,7 @@ if B(1,2,3,4,5) is
 //│ deforest > 	Select(Ref($scrut,None),Ident(a))
 //│ deforest > 	Select(Ref($scrut,None),Ident(c))
 //│ deforest > 	Select(Ref($scrut,None),Ident(b))
+//│ deforest > <<< fusing <<<
 //│ = 0
 
 
@@ -56,7 +58,7 @@ if B(1,2,3,4,5) is
 fun c2(x) = if x is
   A(A(A(A(A(A(a)))))) then a
 c2 of A(A(A(A(A(A(1))))))
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(a))
@@ -75,8 +77,9 @@ c2 of A(A(A(A(A(A(1))))))
 //│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Lit(IntLit(1))))) ->
 //│ deforest > 	Ref($arg$A$0$,None)
 //│ deforest > 	Select(Ref($arg$A$0$,None),Ident(a))
+//│ deforest > <<< fusing <<<
 //│ JS (unsanitized):
-//│ let c2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, A_a, c2_19$c2, c2_19$x_A, c2_19$x_rest, c2_19$split_default$_rest, c2_19$split_root$_rest, A_a1, c2_19$arg$A$0$_A, c2_19$arg$A$0$_rest, A_a2, c2_19$arg$A$0$_A1, c2_19$arg$A$0$_rest1, A_a3, c2_19$arg$A$0$_A2, c2_19$arg$A$0$_rest2, A_a4, c2_19$arg$A$0$_A3, c2_19$arg$A$0$_rest3, A_a5, c2_19$arg$A$0$_A4, c2_19$arg$A$0$_rest4; /* scoped */
+//│ let c2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, c2_19$c2, c2_19$x_A, c2_19$x_rest, c2_19$split_default$_rest, c2_19$split_root$_rest, c2_19$arg$A$0$_A, c2_19$arg$A$0$_rest, c2_19$arg$A$0$_A1, c2_19$arg$A$0$_rest1, c2_19$arg$A$0$_A2, c2_19$arg$A$0$_rest2, c2_19$arg$A$0$_A3, c2_19$arg$A$0$_rest3, c2_19$arg$A$0$_A4, c2_19$arg$A$0$_rest4, A_a, A_a1, A_a2, A_a3, A_a4, A_a5; /* scoped */
 //│ c2_19$c2 = function c2_19$c2(x) {
 //│   let a1, arg$A$0$, arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5, tmp6; /* scoped */
 //│   split_root$: {
@@ -179,32 +182,32 @@ c2 of A(A(A(A(A(A(1))))))
 //│   }
 //│   return tmp6
 //│ };
-//│ A_a5 = 1;
+//│ A_a = 1;
 //│ tmp = (fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
-//│   return c2_19$arg$A$0$_A4(fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, A_a5)
+//│   return c2_19$arg$A$0$_A4(fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, A_a)
 //│ };
-//│ A_a4 = tmp;
+//│ A_a1 = tmp;
 //│ tmp1 = (fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_arg$A$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
-//│   return c2_19$arg$A$0$_A3(fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_arg$A$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, A_a4)
+//│   return c2_19$arg$A$0$_A3(fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_arg$A$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, A_a1)
 //│ };
-//│ A_a3 = tmp1;
+//│ A_a2 = tmp1;
 //│ tmp2 = (fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_arg$A$0$1, fv_ctorLam_arg$A$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
-//│   return c2_19$arg$A$0$_A2(fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_arg$A$0$1, fv_ctorLam_arg$A$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, A_a3)
+//│   return c2_19$arg$A$0$_A2(fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_arg$A$0$1, fv_ctorLam_arg$A$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, A_a2)
 //│ };
-//│ A_a2 = tmp2;
+//│ A_a3 = tmp2;
 //│ tmp3 = (fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_arg$A$0$1, fv_ctorLam_arg$A$0$2, fv_ctorLam_arg$A$0$3, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
-//│   return c2_19$arg$A$0$_A1(fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_arg$A$0$1, fv_ctorLam_arg$A$0$2, fv_ctorLam_arg$A$0$3, fv_ctorLam_tmp, fv_ctorLam_tmp1, A_a2)
+//│   return c2_19$arg$A$0$_A1(fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_arg$A$0$1, fv_ctorLam_arg$A$0$2, fv_ctorLam_arg$A$0$3, fv_ctorLam_tmp, fv_ctorLam_tmp1, A_a3)
 //│ };
-//│ A_a1 = tmp3;
+//│ A_a4 = tmp3;
 //│ tmp4 = (fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_arg$A$0$1, fv_ctorLam_arg$A$0$2, fv_ctorLam_arg$A$0$3, fv_ctorLam_arg$A$0$4, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
-//│   return c2_19$arg$A$0$_A(fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_arg$A$0$1, fv_ctorLam_arg$A$0$2, fv_ctorLam_arg$A$0$3, fv_ctorLam_arg$A$0$4, fv_ctorLam_tmp, fv_ctorLam_tmp1, A_a1)
+//│   return c2_19$arg$A$0$_A(fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_arg$A$0$1, fv_ctorLam_arg$A$0$2, fv_ctorLam_arg$A$0$3, fv_ctorLam_arg$A$0$4, fv_ctorLam_tmp, fv_ctorLam_tmp1, A_a4)
 //│ };
-//│ A_a = tmp4;
+//│ A_a5 = tmp4;
 //│ tmp5 = (fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_arg$A$0$1, fv_ctorLam_arg$A$0$2, fv_ctorLam_arg$A$0$3, fv_ctorLam_arg$A$0$4, fv_ctorLam_arg$A$0$5, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
-//│   return c2_19$x_A(fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_arg$A$0$1, fv_ctorLam_arg$A$0$2, fv_ctorLam_arg$A$0$3, fv_ctorLam_arg$A$0$4, fv_ctorLam_arg$A$0$5, fv_ctorLam_tmp, fv_ctorLam_tmp1, A_a)
+//│   return c2_19$x_A(fv_ctorLam_a, fv_ctorLam_arg$A$0$, fv_ctorLam_arg$A$0$1, fv_ctorLam_arg$A$0$2, fv_ctorLam_arg$A$0$3, fv_ctorLam_arg$A$0$4, fv_ctorLam_arg$A$0$5, fv_ctorLam_tmp, fv_ctorLam_tmp1, A_a5)
 //│ };
 //│ c2_19$c2(tmp5)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(a))
@@ -223,4 +226,5 @@ c2 of A(A(A(A(A(A(1))))))
 //│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Lit(IntLit(1))))) ->
 //│ deforest > 	Ref($arg$A$0$,None)
 //│ deforest > 	Select(Ref($arg$A$0$,None),Ident(a))
+//│ deforest > <<< fusing <<<
 //│ = 1

@@ -43,11 +43,7 @@ class Ctor(
 )(
   val ctor: CtorCls,
   val args: Ls[SelField -> ProdStrat]
-) extends ProdStrat with ToCtorDtorId(exprId, instantiationId):
-  assert:
-    ctor match
-      case _: Int => args.unzip._1.forall(_.isInstanceOf[Int])
-      case _ => args.unzip._1.forall(_.isInstanceOf[TermSymbol])
+) extends ProdStrat with ToCtorDtorId(exprId, instantiationId)
     
 
 sealed abstract class ConsStrat
@@ -68,13 +64,6 @@ class FieldSel(
       exprId.getResult match
       case DeforestTupSelect(_, (_, size)) => size
       case _die => lastWords(_die.toString())
-  assert:
-    field match
-    case tSym: TermSymbol =>
-      tSym.owner.exists:
-        _.matches:
-          case c: ClassSymbol => c.tree.clsParams.contains(field)
-    case _ => true
 
 class Dtor(
   val scrutExprId: ResultId,
@@ -96,15 +85,6 @@ class ProdStratScheme(val s: StratVarState, val constraints: Ls[ProdStrat -> Con
 
 
 
-
-
-
-
-/**
- * PreAnalyzer:
- * - find out what's handleable
- * - collect information about ir: the context of various ir constructs, prodvars for strategies, ...
- */
 class DeforestPreAnalyzer(
   val importedInfo: ImportedInfo,
   val b: Block
@@ -133,8 +113,8 @@ class DeforestPreAnalyzer(
     // - blocks
     //     - toplvl block if it does not contain unsupported forms
     // when traversing
-    // - fundefs in the set: nothing should be ignored
-    // - toplvl block in the set: ignore all class/module/fun defs
+    // - fundefs in the set: nothing should be skipped
+    // - toplvl block in the set: skip all class/module/fun defs
     val toplvlFunAndBlkToAnalyze = MutSet.empty[FunDefn | Block]
     val matchScrutToMatchBlock = MutMap.empty[ResultId, Match]
     val labelSymToLabelBlk = MutMap.empty[Symbol, Label]
@@ -171,7 +151,7 @@ class DeforestPreAnalyzer(
         case InCtx.MtchBody(m, cse) => m.rest
         case InCtx.BegnBody(b) => b.rest
       .foldLeft(labelSymToLabelBlk(label).rest)(Begin.apply)
-    def getParentLabelOrMatchesAndRestBefore(matchOrLabelId: MatchOrLabelId): (Iterator[Label | Match], () => Block) =
+    def getParentLabelOrMatchesAndRestBefore(matchOrLabelId: MatchOrLabelId): (Iterator[Label | Match], Block) =
       val ctx = matchOrLabelId match
         case label: Symbol => labelSymToCtxOfLabel(label)
         case dtorId => matchScrutToCtxOfMatch(dtorId.asInstanceOf[ResultId])
@@ -186,7 +166,7 @@ class DeforestPreAnalyzer(
           case InCtx.LblBody(l) => l
           case InCtx.MtchBody(m, cse) => m
           case InCtx.BegnBody(b) => b
-      def blockUntilParent(): Block = it
+      val blockUntilParent = it
         .takeWhile(_.isInstanceOf[Begin])
         .map(_.asInstanceOf[Begin].rest)
         .foldLeft(simpleRest)(Begin.apply)
@@ -204,8 +184,7 @@ class DeforestPreAnalyzer(
     case MtchBody(m: Match, cse: Opt[CtorCls])
     case BegnBody(b: Begin)
     case Scped(s: Scoped)
-    // non-handleable cases:
-    // - TODO: detect mutable reassignment and its affected variables and objects
+    // non-handleable cases for now:
     // - while loop
     // - nested defined class/module in functions
     // - handler and other unsupported forms
@@ -218,15 +197,6 @@ class DeforestPreAnalyzer(
     private var ctx: Ls[InCtx] = Nil
     
     def getAllCtx = ctx
-    def getUntilFnOrCls: Iterator[InCtx] = ctx.iterator.takeWhile:
-      case _: (InCtx.Fn | InCtx.Mod) => false
-      case _ => true
-    def getImmediateCtxFn: Opt[FunDefn] = ctx.collectFirst:
-      case f: InCtx.Fn => f.f
-    def getTopLvlFn: Opt[FunDefn] = ctx.collectLast:
-      case f: InCtx.Fn => f.f
-    def getAllMod: Ls[InCtx.Mod] = ctx.collect:
-      case c: InCtx.Mod => c
     def isToplvl = ctx.matches:
       case init :+ InCtx.TopLvl() =>
         init.forall: i =>
@@ -236,8 +206,8 @@ class DeforestPreAnalyzer(
       ctx.forall: c =>
         c match
           case InCtx.TopLvl() => true
-          case InCtx.ModCtor(b) => true
           case InCtx.Mod(m) => true
+          case InCtx.ModCtor(b) => true
           case InCtx.BegnBody(b) => true
           case InCtx.Scped(s) => true
           case _ => false
@@ -401,7 +371,6 @@ class DeforestPreAnalyzer(
     =>
       if ctxTracker.canHaveCls then
         if locally:
-          // own.isDefined does not matter
           ctorSym.isDefined
           || paramsOpt.isDefined
           || auxParams.nonEmpty
@@ -414,7 +383,7 @@ class DeforestPreAnalyzer(
           || !ctor.matches:
             case Return(Select(Value.Ref(runtimeSym, None), Tree.Ident("Unit")), true) =>
               runtimeSym is elabState.runtimeSymbol
-        then () // skip non-lone modules
+        then ()
         else
           mod.foreach(applyClsLikeBody)
       else
@@ -440,9 +409,8 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   
   private enum ProcessMode:
     val blkRes: ConsVar
-    case Fun(blkRes: ConsVar) // ignore nothing, but only expect nested functions
-    case ModCtor(blkRes: ConsVar) // ignore module/class but not fun, expect everything
-    case ToplvlBlk(blkRes: ConsVar) // ignore everything, expect everything
+    case Fun(blkRes: ConsVar) // only expect nested functions
+    case ToplvlBlk(blkRes: ConsVar) // skip functions/classes
   private class ConstraintsCollector(val forFunGroup: Opt[TermSymbol]):
     var constraints = Ls.empty[ProdStrat -> ConsStrat]
     def constrain(p: ProdStrat, c: ConsStrat) = constraints ::= p -> c
@@ -456,20 +424,12 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   // ===================================================
   
   locally {
-    // generate prod vars for symbols that we care,
-    // default to NoProd for unknown symbols
     val generatedProdVars: Map[Symbol, StratVarState] =
-      // generating strat vars for
-      //   - let/val bindings in top level blocks
-      //   - let/val bindings in top level lone-modules with
-      // top level fun bindings 
-      // other class/modules do not need to have a prodstrat
-      //
       // the keys could possibly be one of the following kinds:
       // - TermSymbol:
       //   - functions, let and val definitions in an module (with an owner)
       //   - functions and val definitions in top level or nested in function body (without an owner)
-      // - TempSymbol: generated during codegen for intermediate results or pattern matching `$argN`
+      // - TempSymbol
       // - VarSymbol: let bindings without an owner, function parameters, user declared pattern variables
       val store = MutMap.empty[Symbol, StratVarState]
       // for top level block
@@ -516,7 +476,6 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
       store.toMap.withDefaultValue(preAnalyzer.res.primitiveStratVar)
     end generatedProdVars
     
-    // just compute the scc first...
     val sccInOrder: Ls[Ls[TermSymbol]] =
       import algorithms.partitionScc
       var edges = Ls.empty[(TermSymbol, TermSymbol)]
@@ -537,24 +496,24 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
     
     val funsToProdStratScheme = MutMap.empty[TermSymbol, ProdStratScheme]
     for groupedFuns <- sccInOrder do
-      given cc: ConstraintsCollector = new ConstraintsCollector(Some(funToSccRep(groupedFuns.head).get))
-      for funSym <- groupedFuns do
-        val fun = preAnalyzer.res.funSymToFunDefn(funSym)
-        val thisFunVar = generatedProdVars(fun.dSym)
-        val res = freshVar(s"${funSym.nme}_res", cc.forFunGroup)
-        val funProdStrat = fun.params.foldRight[ProdStrat](res.asProdStrat): (ps, acc) =>
-          assert(ps.restParam.isEmpty)
-          ProdFun(ps.params.map(p => generatedProdVars(p.sym).asConsStrat), acc)
-        given ProcessMode = ProcessMode.Fun(res.asConsStrat)
-        processBlock(fun.body)
-        cc.constrain(funProdStrat, thisFunVar.asConsStrat)
-      for funSym <- groupedFuns do
-        funsToProdStratScheme(funSym) = ProdStratScheme(generatedProdVars(funSym), cc.constraints)
+      (new ConstraintsCollector(Some(funToSccRep(groupedFuns.head).get))).givenIn: cc ?=>
+        for funSym <- groupedFuns do
+          val fun = preAnalyzer.res.funSymToFunDefn(funSym)
+          val thisFunVar = generatedProdVars(fun.dSym)
+          val res = freshVar(s"${funSym.nme}_res", cc.forFunGroup)
+          val funProdStrat = fun.params.foldRight[ProdStrat](res.asProdStrat): (ps, acc) =>
+            assert(ps.restParam.isEmpty)
+            ProdFun(ps.params.map(p => generatedProdVars(p.sym).asConsStrat), acc)
+          given ProcessMode = ProcessMode.Fun(res.asConsStrat)
+          processBlock(fun.body)
+          cc.constrain(funProdStrat, thisFunVar.asConsStrat)
+        for funSym <- groupedFuns do
+          funsToProdStratScheme(funSym) = ProdStratScheme(generatedProdVars(funSym), cc.constraints)
     
     globalCollector.givenIn: cc ?=>
       cc.constrain(preAnalyzer.res.primitiveStratVar.asProdStrat, NoCons)
       cc.constrain(NoProd, preAnalyzer.res.primitiveStratVar.asConsStrat)
-      // collect for toplvl block
+      // collect from toplvl block
       if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(preAnalyzer.b) then
         val topLvlRes = freshVar("toplvl_res").asConsStrat
         given ProcessMode = ProcessMode.ToplvlBlk(topLvlRes)
@@ -626,7 +585,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
         case ValDefn(tsym, sym, rhs) =>
           cc.constrain(processResult(rhs), generatedProdVars(tsym).asConsStrat)
         case FunDefn(_, _, dSym, params, body) =>
-          if im.matches { case _: (ProcessMode.Fun | ProcessMode.ModCtor) => true } then
+          if im.matches { case _: ProcessMode.Fun => true } then
             val funRes = freshVar(s"${dSym.nme}_res", cc.forFunGroup)
             val funProdStrat = params.foldRight[ProdStrat](funRes.asProdStrat): (ps, acc) =>
               assert(ps.restParam.isEmpty)
@@ -698,12 +657,6 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
         case _die => lastWords(_die.toString())
       case _ => die
   }
-  
-  // for x <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do tl.log(x.toString())
-  // for x <- generateProdVars do tl.log(s"${x._1} -> ${x._2}")
-  // tl.log(scc)
-  // allConstraints.foreach: 
-  //   case p -> c => tl.log(s"$p --> $c")
 end DeforestConstraintsCollector
 
 
@@ -844,13 +797,15 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
     
   }
   
-  tl.log("==============")
-  for case (c, FinalDestMatch(dtor, sels)) <- finalCtorDests do
+  tl.log(">>> fusing >>>")
+  for case (c, dest) <- finalCtorDests do
     tl.log(s"${c.pp} ->")
-    tl.log(s"\t${dtor.pp}")
-    for s <- sels do tl.log(s"\t${s.pp}")
-  for case (c, FinalDestSel(_, f)) <- finalCtorDests do
-    tl.log(s"${c.pp} ->")
-    tl.log(s"\t${f}")
+    dest match
+    case FinalDestMatch(dtor, sels) =>
+      tl.log(s"\t${dtor.pp}")
+      for s <- sels do tl.log(s"\t${s.pp}")
+    case FinalDestSel(dtors, field) =>
+      tl.log(s"\t${field}")
+  tl.log("<<< fusing <<<")
   
 end DeforestConstrainSolver

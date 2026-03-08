@@ -27,7 +27,8 @@ fun main() =
   let p = enumFrom(3)
   let f = () => sum(p)
   f() + f()
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 
 
@@ -41,10 +42,11 @@ consumer of
   case Many(_) then 3
   case Many(Once(v)) then v
   Many(Once(10))
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:Once,Some((Fun)term:class:Once.Once)),List(Arg(None,Lit(IntLit(10))))) ->
 //│ deforest > 	Ref($arg$Many$0$,None)
 //│ deforest > 	Select(Ref($arg$Many$0$,None),Ident(x))
+//│ deforest > <<< fusing <<<
 //│ = 13
 
 
@@ -61,13 +63,14 @@ fun sum(x) = if x is
   Nil then 0
 fun consume(f, ls) = f(ls) + f(ls)
 consume(sum, enumFrom(3))
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(t))
 //│ deforest > 	Select(Ref(var:x,None),Ident(h))
+//│ deforest > <<< fusing <<<
 //│ = 12
 
 
@@ -89,13 +92,14 @@ fun cons(f, p) = if p is
 cons of
   case Inner(a) then a + 1
   prod(10)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:Outter,Some((Fun)term:class:Outter.Outter)),List(Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:p,None)
 //│ deforest > 	Select(Ref(var:p,None),Ident(x))
 //│ deforest > Call(Ref(member:Inner,Some((Fun)term:class:Inner.Inner)),List(Arg(None,Ref(var:x,None)))) ->
 //│ deforest > 	Ref(var:caseScrut,None)
 //│ deforest > 	Select(Ref(var:caseScrut,None),Ident(x))
+//│ deforest > <<< fusing <<<
 //│ = 22
 
 
@@ -104,5 +108,3 @@ cons of
 
 
 
-//│ deforest > ==============
-//│ = 10

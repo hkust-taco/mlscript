@@ -1,22 +1,26 @@
 :js
 :deforest
 
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 object A
 object B
 object C
 data class AA(x)
 data class BB(x)
 data class CC(x)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 object Nil
 data class Cons(h, t)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 object None
 data class Some(x)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 
 // TODO: many dead code contain duplicated `t + 5 * 4 - 3 + 2 - 1`
@@ -31,7 +35,7 @@ fun f(a) = if a is
   AA(AA) then 0
 let p = AA(AA(AA(10)))
 test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
@@ -46,8 +50,9 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(10))))) ->
 //│ deforest > 	Ref($arg$AA$0$,None)
 //│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
+//│ deforest > <<< fusing <<<
 //│ JS (unsanitized):
-//│ let test, f, p, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_19$test, test_19$x_dflt, test_19$x_rest, test_19$split_1$_rest, test_19$split_root$_rest, AA_x, test_18$test, test_18$x_AA, test_18$x_rest, test_18$split_1$_rest, test_18$split_root$_rest, AA_x1, test_18$arg$AA$0$_AA, test_18$arg$AA$0$_rest, AA_x2, test_18$arg$AA$0$_AA1, test_18$arg$AA$0$_rest1, AA_x3, test_13$test, test_13$arg$AA$0$_AA, test_13$arg$AA$0$_rest, test_13$arg$AA$0$_rest1, test_13$x_rest, test_13$split_1$_rest, test_13$split_root$_rest, deforest$lam; /* scoped */
+//│ let test, f, p, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_19$test, test_19$x_dflt, test_19$x_rest, test_19$split_1$_rest, test_19$split_root$_rest, test_18$test, test_18$x_AA, test_18$x_rest, test_18$split_1$_rest, test_18$split_root$_rest, test_18$arg$AA$0$_AA, test_18$arg$AA$0$_rest, test_18$arg$AA$0$_AA1, test_18$arg$AA$0$_rest1, test_13$test, test_13$arg$AA$0$_AA, test_13$arg$AA$0$_rest, test_13$arg$AA$0$_rest1, test_13$x_rest, test_13$split_1$_rest, test_13$split_root$_rest, AA_x, AA_x1, AA_x2, AA_x3, deforest$lam; /* scoped */
 //│ test_19$test = function test_19$test(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15; /* scoped */
 //│   split_root$: {
@@ -235,26 +240,26 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   }
 //│   return tmp11
 //│ };
-//│ AA_x3 = 10;
+//│ AA_x = 10;
 //│ tmp = (fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_t, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6) => {
-//│   return test_13$arg$AA$0$_AA(fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_t, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6, AA_x3)
+//│   return test_13$arg$AA$0$_AA(fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_t, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6, AA_x)
 //│ };
 //│ tmp1 = AA1(tmp);
 //│ p = AA1(tmp1);
 //│ tmp2 = test_13$test(p);
 //│ tmp3 = f(p);
 //│ tmp4 = tmp2 + tmp3;
-//│ AA_x2 = 10;
+//│ AA_x1 = 10;
 //│ tmp5 = (fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_t, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6) => {
-//│   return test_18$arg$AA$0$_AA1(fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_t, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6, AA_x2)
+//│   return test_18$arg$AA$0$_AA1(fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_t, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6, AA_x1)
 //│ };
-//│ AA_x1 = tmp5;
+//│ AA_x2 = tmp5;
 //│ tmp6 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10) => {
-//│   return test_18$arg$AA$0$_AA(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, AA_x1)
+//│   return test_18$arg$AA$0$_AA(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, AA_x2)
 //│ };
-//│ AA_x = tmp6;
+//│ AA_x3 = tmp6;
 //│ tmp7 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_arg$AA$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10) => {
-//│   return test_18$x_AA(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_arg$AA$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, AA_x)
+//│   return test_18$x_AA(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_arg$AA$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, AA_x3)
 //│ };
 //│ tmp8 = test_18$test(tmp7);
 //│ tmp9 = tmp4 + tmp8;
@@ -263,7 +268,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ };
 //│ tmp10 = test_19$test(deforest$lam);
 //│ tmp9 + tmp10
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
@@ -278,6 +283,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(10))))) ->
 //│ deforest > 	Ref($arg$AA$0$,None)
 //│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
+//│ deforest > <<< fusing <<<
 //│ = 78
 //│ p = AA(AA(fun tmp))
 
@@ -292,7 +298,8 @@ fun test() =
   if Global(1) is
     Global(x) then Local(x + 1)
 test()
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = Local(2)
 
 
@@ -304,7 +311,8 @@ fun test() =
   let x = A
   inner(x) + inner(x)
 test()
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = 0
 
 
@@ -312,11 +320,12 @@ test()
 :expect 2
 fun f(x) = if x is A then 1
 f(A) + f(A)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(var:x,None)
+//│ deforest > <<< fusing <<<
 //│ = 2
 
 
@@ -325,11 +334,12 @@ f(A) + f(A)
 :fixme
 let lsit = [2, 1]
 let useless = if lsit is [a, b] then 0
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Tuple(false,List(Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(1))))) ->
 //│ deforest > 	Ref(var:lsit,None)
 //│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:lsit,None)), Arg(None,Lit(IntLit(0)))))
 //│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:lsit,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > <<< fusing <<<
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 //│ lsit = fun lsit
 //│ useless = 0

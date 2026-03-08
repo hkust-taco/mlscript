@@ -1,7 +1,8 @@
 :js
 :deforest
 
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 
 object Nil
@@ -12,7 +13,8 @@ object A
 object B
 data class T(n, l, r)
 object L
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 :expect Cons(11, Cons(9, Cons(7, Cons(5, Cons(3, Cons(1, Nil))))))
 fun mk(n) = if n < 0 then Nil else n :: mk(n - 1)
@@ -26,13 +28,14 @@ fun incr(x) = x + 1
 fun double(x) = x * 2
 fun test(ls) = map1(incr, map(double, ls))
 test(id(mk(5)))
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls_map1,None)
 //│ deforest > 	Select(Ref(var:ls_map1,None),Ident(h))
 //│ deforest > 	Select(Ref(var:ls_map1,None),Ident(t))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls_map1,None)
+//│ deforest > <<< fusing <<<
 //│ = Cons(11, Cons(9, Cons(7, Cons(5, Cons(3, Cons(1, Nil))))))
 
 
@@ -43,13 +46,14 @@ fun map(ls) = if ls is
   Nil then Nil
   h :: t then (h + 4) :: map(t)
 map(enumFromTo(1, 4))
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > <<< fusing <<<
 //│ = Cons(5, Cons(6, Cons(7, Nil)))
 
 :expect 45
@@ -58,13 +62,14 @@ fun sum(ls) = if ls is
   Nil then 0
   h :: t then h + sum(t)
 sum(enumFromTo(1,10))
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > <<< fusing <<<
 //│ = 45
 
 :expect Cons(5, Cons(6, Cons(7, Nil)))
@@ -74,13 +79,14 @@ fun map(f, ls) =
     Nil then Nil
     h :: t then f(h) :: map(f, t)
 map(x => x + 4, enumFromTo(1, 4))
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > <<< fusing <<<
 //│ = Cons(5, Cons(6, Cons(7, Nil)))
 
 :expect Cons(5, Cons(6, Cons(7, Nil)))
@@ -91,13 +97,14 @@ fun map(f, ls) =
     h :: t then f => f(h) :: map(f, t)
   )(f)
 map(x => x + 4, enumFromTo(1, 4))
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > <<< fusing <<<
 //│ = Cons(5, Cons(6, Cons(7, Nil)))
 
 
@@ -108,13 +115,14 @@ fun sum(ls, a) = if ls is
   Nil then a
   h :: t then sum(t, h + a)
 sum(enumFromTo(1, 10), 0)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > <<< fusing <<<
 //│ = 45
 
 
@@ -130,13 +138,14 @@ fun rev(xs_rev, acc) = if xs_rev is
   Nil then acc
 fun test(xs) = map(incr, rev(xs, Nil))
 test(id(mk(5)))
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:xs_map,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:x,None)), Arg(None,Ref(var:acc,None)))) ->
 //│ deforest > 	Ref(var:xs_map,None)
 //│ deforest > 	Select(Ref(var:xs_map,None),Ident(h))
 //│ deforest > 	Select(Ref(var:xs_map,None),Ident(t))
+//│ deforest > <<< fusing <<<
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 
 
@@ -152,19 +161,21 @@ fun rev(xs_rev, acc) = if xs_rev is
   Nil then acc
 fun test(xs) = rev(map(incr, xs), Nil)
 test(id(mk(3)))
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:xs_rev,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:xs_rev,None)
 //│ deforest > 	Select(Ref(var:xs_rev,None),Ident(h))
 //│ deforest > 	Select(Ref(var:xs_rev,None),Ident(t))
+//│ deforest > <<< fusing <<<
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Nil))))
 
 
 
 data class Pair(a, b)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 
 fun pair_up(xs) =
@@ -177,7 +188,8 @@ fun pair_up(xs) =
 fun mk(n) = if n > 0 then (n - 1) :: n :: (n + 1) :: mk(n - 1) else Nil
 fun test(x) = pair_up(mk(x))
 test(4)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = Cons(
 //│   Pair(3, 4),
 //│   Cons(
@@ -205,13 +217,14 @@ fun flatten(ls_flatten) = if ls_flatten is
   x :: xs then append(x, flatten(xs))
 fun test(ls) = sum(flatten(ls))
 test(id(mk2d(4)))
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls_sum,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:x,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls_sum,None)
 //│ deforest > 	Select(Ref(var:ls_sum,None),Ident(h))
 //│ deforest > 	Select(Ref(var:ls_sum,None),Ident(t))
+//│ deforest > <<< fusing <<<
 //│ = 20
 
 
@@ -223,7 +236,7 @@ fun rev(a, ys) = if ys is
   h :: t then rev(h :: a, t)
   Nil then a
 count(0, rev(Nil, 1 :: 2 :: Nil))
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:xs,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:h,None)), Arg(None,Ref(var:a,None)))) ->
@@ -240,6 +253,7 @@ count(0, rev(Nil, 1 :: 2 :: Nil))
 //│ deforest > 	Select(Ref(var:ys,None),Ident(h))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ys,None)
+//│ deforest > <<< fusing <<<
 //│ = 2
 
 
@@ -251,7 +265,8 @@ fun last(ls) = if ls is
   Nil then None
 let p = 1 :: 2 :: Nil
 last(p)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = Some(2)
 //│ p = Cons(1, Cons(2, Nil))
 
@@ -262,7 +277,7 @@ fun map(f, xs_map) = if xs_map is
   Nil then Nil
   x :: xs then f(x) :: map(f, xs)
 map(x => if x is A then 1 else 0, A :: B :: Nil)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(member:A,Some(object:A))), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:xs_map,None)
 //│ deforest > 	Select(Ref(var:xs_map,None),Ident(t))
@@ -277,6 +292,7 @@ map(x => if x is A then 1 else 0, A :: B :: Nil)
 //│ deforest > 	Ref(var:xs_map,None)
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(var:x,None)
+//│ deforest > <<< fusing <<<
 //│ = Cons(1, Cons(0, Nil))
 
 
@@ -290,7 +306,7 @@ fun c(x) = if x is
     c(r)
   L then L
 c(T(A, T(B, L, L), T(A, L, L)))
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:T,Some((Fun)term:class:T.T)),List(Arg(None,Ref(member:A,Some(object:A))), Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(r))
@@ -320,6 +336,7 @@ c(T(A, T(B, L, L), T(A, L, L)))
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(var:n,None)
+//│ deforest > <<< fusing <<<
 //│ = T(0, T(1, L, L), T(0, L, L))
 
 
@@ -330,7 +347,7 @@ fun max(ms, m) = if ms is
     else max(t, m)
   Nil then m
 max(3 :: 2 :: 4 :: 1 :: 0 :: Nil, 0)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(3))), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ms,None)
 //│ deforest > 	Select(Ref(var:ms,None),Ident(t))
@@ -353,6 +370,7 @@ max(3 :: 2 :: 4 :: 1 :: 0 :: Nil, 0)
 //│ deforest > 	Select(Ref(var:ms,None),Ident(h))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ms,None)
+//│ deforest > <<< fusing <<<
 //│ = 4
 
 
@@ -371,7 +389,8 @@ fun last(ls_last) =
     Nil then None
 fun lastFilter(ls, f) = last(filter(ls, f))
 lastFilter(id(1 :: 2 :: 3 :: 4 :: 5 :: Nil), x => (x % 2 == 0))
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = Some(4)
 
 // should prevent processing a function body more than once
@@ -379,7 +398,8 @@ lastFilter(id(1 :: 2 :: 3 :: 4 :: 5 :: Nil), x => (x % 2 == 0))
 fun g() = f()
 fun f() = g() + g()
 [f, g]
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = [fun f, fun g]
 
 
@@ -390,7 +410,8 @@ fun h2() = g()
 fun g() = f()
 fun f() = h1() + h2()
 [h1, h2, g, f]
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = [fun h1, fun h2, fun g, fun f]
 
 
@@ -402,7 +423,8 @@ fun h2() = g() + h1()
 fun g() = f()
 fun f() = h1() + h2()
 [h1, h2, g, f]
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = [fun h1, fun h2, fun g, fun f]
 
 
@@ -421,7 +443,8 @@ fun g() = if
   false then h() + main()
   else 0
 main
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = fun main
 
 
@@ -438,9 +461,10 @@ fun h2() = g2()
 fun g2() = f()
 fun main() = f()
 main
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(member:B,Some(object:B))
+//│ deforest > <<< fusing <<<
 //│ = fun main_3$main
 
 
@@ -450,14 +474,16 @@ fun h2() = g() + h2()
 fun g() = f()
 fun f() = h1() + h2()
 [h1, h2, g, f]
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = [fun h1, fun h2, fun g, fun f]
 
 :deforest
 fun g() = f()
 fun f() = g()
 [g, f]
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = [fun g, fun f]
 
 
@@ -466,7 +492,8 @@ fun f() = g()
 fun g() = 0
 fun f() = f() + g()
 [f, g]
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = [fun f, fun g]
 
 
@@ -481,7 +508,7 @@ fun g4() = h(B)
 fun f() =
   [g1(), g2(), g3(), g4(), h(B)]
 f
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > Ref(member:B,Some(object:B)) ->
@@ -492,6 +519,7 @@ f
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(var:x,None)
+//│ deforest > <<< fusing <<<
 //│ = fun f_7$f
 
 
@@ -504,11 +532,12 @@ fun g2() = h(B)
 fun f() =
   [g1(), g2()]
 f
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(var:x,None)
+//│ deforest > <<< fusing <<<
 //│ = fun f_4$f
 
 
@@ -522,7 +551,7 @@ fun f() =
     else f()
   [() => h(B), () => h(B), () => h(B), () => h(B), h(B)]
 f
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > Ref(member:B,Some(object:B)) ->
@@ -533,4 +562,5 @@ f
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(var:x,None)
+//│ deforest > <<< fusing <<<
 //│ = fun f_7$f

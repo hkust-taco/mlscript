@@ -1,13 +1,15 @@
 :js
 :deforest
 
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 
 object Nil
 data class (::) Cons(h, t)
 data class Pair(a, b)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 :expect Pair(Cons(1, Cons(2, Nil)), Cons(2, Cons(3, Nil)))
 fun zip(xs_zip, ys_zip) = if
@@ -19,7 +21,7 @@ fun unzip(ls_unzip) = if ls_unzip is
 fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
 fun testUnzipZip(n) = unzip(zip(id(enumFromTo(1, n)), id(enumFromTo(2, n + 3))))
 testUnzipZip(3)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls_unzip,None)
 //│ deforest > 	Select(Ref(var:ls_unzip,None),Ident(h))
@@ -30,6 +32,7 @@ testUnzipZip(3)
 //│ deforest > 	Select(Ref($arg$Cons$0$,None),Ident(b))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls_unzip,None)
+//│ deforest > <<< fusing <<<
 //│ = Pair(Cons(1, Cons(2, Nil)), Cons(2, Cons(3, Nil)))
 
 
@@ -45,7 +48,7 @@ fun makeZippedList(n) = if n > 0 then Pair(n, n + 1) :: makeZippedList(n - 1) el
 fun testZipUnzip(n) = if unzip(id(makeZippedList(n))) is
   Pair(xs, ys) then zip(xs, ys)
 testZipUnzip(3)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:xs_zip,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref(var:atail,None)))) ->
@@ -58,6 +61,7 @@ testZipUnzip(3)
 //│ deforest > 	Ref(var:ys_zip,None)
 //│ deforest > 	Select(Ref(var:ys_zip,None),Ident(h))
 //│ deforest > 	Select(Ref(var:ys_zip,None),Ident(t))
+//│ deforest > <<< fusing <<<
 //│ = Cons(Pair(3, 4), Cons(Pair(2, 3), Cons(Pair(1, 2), Nil)))
 
 
@@ -78,7 +82,7 @@ fun testZipMapBothUnzip(n) = if unzip(id(makeZippedList(n))) is
     map(x => x * x, ys)
   )
 testZipMapBothUnzip(4)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ls_map,None)
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref(var:atail,None)))) ->
@@ -103,6 +107,7 @@ testZipMapBothUnzip(4)
 //│ deforest > 	Select(Ref(var:ys_zip,None),Ident(t))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:ys_zip,None)
+//│ deforest > <<< fusing <<<
 //│ = Cons(
 //│   Pair(5, 25),
 //│   Cons(Pair(4, 16), Cons(Pair(3, 9), Cons(Pair(2, 4), Nil)))

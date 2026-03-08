@@ -1,12 +1,14 @@
 :js
 :deforest
 
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 
 object Nil
 data class (::) Cons(h, t)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 
 
@@ -23,7 +25,8 @@ appendThree of
   id(1 :: 2 :: Nil)
   id(3 :: 4 :: Nil)
   id(5 :: 6 :: Nil)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 
 // maybe the fusion target for the previous program
@@ -42,7 +45,8 @@ test of
   id(1 :: 2 :: Nil)
   id(3 :: 4 :: Nil)
   id(5 :: 6 :: Nil)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 
 
@@ -59,7 +63,7 @@ appendThree of
   id(1 :: 2 :: Nil)
   id(3 :: 4 :: Nil)
   id(5 :: 6 :: Nil)
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:h,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:xs,None)
 //│ deforest > 	Select(Ref(var:xs,None),Ident(h))
@@ -70,6 +74,7 @@ appendThree of
 //│ deforest > 	Ref(var:xs,None)
 //│ deforest > 	Select(Ref(var:xs,None),Ident(h))
 //│ deforest > 	Select(Ref(var:xs,None),Ident(t))
+//│ deforest > <<< fusing <<<
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 
 
@@ -85,5 +90,6 @@ concat of id of
   (1 :: 2 :: Nil) ::
   (3 :: 4 :: Nil) ::
   (5 :: 6 :: Nil) :: Nil
-//│ deforest > ==============
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
