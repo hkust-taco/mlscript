@@ -24,7 +24,7 @@ abstract class TraceLogger:
   inline def enter() = indent += 1
   inline def exit() = indent -= 1
   
-  protected def emitDbg(str: Str): Unit = scala.Predef.println(str)
+  def emitDbg(str: Str): Unit = scala.Predef.println(str)
   
   inline def log(msg: => Any): Unit = log(msg, noIndent = false)
 
