@@ -194,10 +194,13 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
     val allBranchesOfDtor = branchFunSyms.keys.groupBy(_._1)
     extension (b: Block)
       // ctx should be the branch fun parameters corresponding to ctor fields 
-      def deforestFreeVars(ctx: collection.Set[Symbol], instId: InstantiationId) =
+      def deforestFreeVars(
+        ctx: collection.Set[Symbol],
+        instId: InstantiationId
+      ): collection.Set[Symbol] =
         val traverser = new FreeVarTraverser(ctx, instId)
         traverser.applyBlock(b)
-        traverser.freeVars.toSet.filter(s => s.asClsLike.isEmpty)
+        traverser.freeVars
         
     class FreeVarTraverser(ctx: collection.Set[Symbol], instId: InstantiationId) extends BlockTraverser:
       extension (resId: ResultId) def toCtorDtorId = CtorDtorId(resId, instId)
@@ -208,14 +211,14 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
             ++ newPolyFnSyms.values.flatMap(_.values.unzip._1)
             ++ branchFunSyms.values.unzip._1
             ++ eState.builtinOpsMap.values
-            ++ (eState.globalThisSymbol :: eState.runtimeSymbol :: Nil)
+            ++ (eState.globalThisSymbol :: eState.runtimeSymbol :: eState.noSymbol :: Nil)
             ++ syms
           case _ => die
       val freeVars = MutSet.empty[Symbol]
       
       override def applyValue(v: Value): Unit =
         v match
-        case Value.Ref(l, disamb) if !inCtx(l) => freeVars.add(l)
+        case Value.Ref(l, disamb) if !inCtx(l) && l.asClsLike.isEmpty => freeVars.add(l)
         case _ => super.applyValue(v)
       
       override def applyResult(r: Result): Unit =

@@ -178,53 +178,9 @@ c(A) + c(B)
 //│ deforest > Ref(member:A⁰,Some(object:A¹)) ->
 //│ deforest > 	Ref(var:a,None)
 //│ deforest > <<< fusing <<<
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:131)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = ‹no symbol›
-//│     _2 = class hkmc2.semantics.NoSymbol
-//│   _2 = Scope:
-//│     parentOrCfg = Right of Scope:
-//│       parentOrCfg = Right of Scope:
-//│         parentOrCfg = Left of Cfg:
-//│           escapeChars = true
-//│           useSuperscripts = false
-//│           includeZero = false
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(tmp:block$res⁰ -> block$res2, member:test_5$test⁰ -> test_5$test, member:test_5$x_A⁰ -> test_5$x_A, member:test_5$x_rest⁰ -> test_5$x_rest, tmp:runtime⁰ -> runtime, tmp:definitionMetadata⁰ -> definitionMetadata, member:test_5$x_B⁰ -> test_5$x_B, tmp:prettyPrint⁰ -> prettyPrint, tmp:Term⁰ -> Term, tmp:Block⁰ -> Block, tmp:Shape⁰ -> Shape, member:test¹ -> test1, member:test⁵ -> test5, tmp:block$res¹ -> block$res3, tmp:block$res² -> block$res7, member:test⁶ -> test6, member:test_9$test⁰ -> test_9$test, member:test_9$x_AA⁰ -> test_9$x_AA, member:test_9$x_rest⁰ -> test_9$x_rest, tmp:block$res³ -> block$res8, member:test_9$x_BB⁰ -> test_9$x_BB, member:test_6$test⁰ -> test_6$test, member:test_6$x_A⁰ -> test_6$x_A, member:test_6$x_rest⁰ -> test_6$x_rest, member:test_6$y_B⁰ -> test_6$y_B, member:test_6$y_rest⁰ -> test_6$y_rest, member:c¹ -> c, member:test² -> test2, member:f⁰ -> f, tmp:block$res⁴ -> block$res9, tmp:tmp⁰ -> tmp, tmp:tmp¹ -> tmp1, member:c_5$c⁰ -> c_5$c, member:c_5$a_B⁰ -> c_5$a_B, member:c_5$a_rest⁰ -> c_5$a_rest, member:c_3$c⁰ -> c_3$c, member:c_3$a_A⁰ -> c_3$a_A, member:c_3$a_rest⁰ -> c_3$a_rest, tmp:block$res⁵ -> block$res4, member:test_13$test⁰ -> test_13$test, member:test_13$x_AA⁰ -> test_13$x_AA, member:Predef⁰ -> Predef, member:test_13$x_rest⁰ -> test_13$x_rest, member:test_13$x_BB⁰ -> test_13$x_BB, member:test_13_f_11$f⁰ -> test_13_f_11$f, member:test_13_f_11$a_A⁰ -> test_13_f_11$a_A, member:test_13_f_11$a_rest⁰ -> test_13_f_11$a_rest, member:test_13_f_12$f⁰ -> test_13_f_12$f, member:test_13_f_12$a_B⁰ -> test_13_f_12$a_B, tmp:deforest$lam⁰ -> deforest$lam, member:test_13_f_12$a_rest⁰ -> test_13_f_12$a_rest, tmp:deforest$lam¹ -> deforest$lam1, member:test³ -> test3, member:f1⁰ -> f1, member:f2⁰ -> f2, tmp:block$res⁶ -> block$res, member:Nil⁰ -> Nil1, tmp:block$res⁷ -> block$res5, member:AA⁰ -> AA1, member:Cons⁰ -> Cons1, member:test_15$test⁰ -> test_15$test, member:Some⁰ -> Some1, member:AAA⁰ -> AAA1, member:CCC⁰ -> CCC1, member:test_15$x_AA⁰ -> test_15$x_AA, member:D⁰ -> D1, member:A⁰ -> A1, member:test_15$x_rest⁰ -> test_15$x_rest, member:BB⁰ -> BB1, member:BBB⁰ -> BBB1, member:B⁰ -> B1, member:test_15$x_BB⁰ -> test_15$x_BB, member:C⁰ -> C1, member:None⁰ -> None1, member:test_15_f1_13$f1⁰ -> test_15_f1_13$f1, object:A¹ -> A, member:test_15_f1_13$a_A⁰ -> test_15_f1_13$a_A, object:B¹ -> B, member:test_15_f1_13$a_rest⁰ -> test_15_f1_13$a_rest, object:C¹ -> C, member:test_15_f2_14$f2⁰ -> test_15_f2_14$f2, object:D¹ -> D, member:test_15_f2_14$a_B⁰ -> test_15_f2_14$a_B, class:AA¹ -> AA, member:test_15_f2_14$a_rest⁰ -> test_15_f2_14$a_rest, class:BB¹ -> BB, class:AAA¹ -> AAA, member:test⁴ -> test4, class:BBB¹ -> BBB, class:CCC¹ -> CCC, object:None¹ -> None, class:Some¹ -> Some, tmp:block$res⁸ -> block$res6, member:test_7$test⁰ -> test_7$test, object:Nil¹ -> Nil, class:Cons¹ -> Cons, member:test_7$x_BB⁰ -> test_7$x_BB, member:test_7$x_rest⁰ -> test_7$x_rest, member:test_7$x_AA⁰ -> test_7$x_AA, tmp:block$res⁹ -> block$res1, member:test⁰ -> test)
-//│       curThis = S of N
-//│       bindings = HashMap(var:a -> a)
-//│     curThis = N
-//│     bindings = HashMap(var:x -> x, tmp:tmp² -> tmp2)
-//│ ═══[COMPILATION ERROR] No definition found in scope for member '‹no symbol›'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:131)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = ‹no symbol›
-//│     _2 = class hkmc2.semantics.NoSymbol
-//│   _2 = Scope:
-//│     parentOrCfg = Right of Scope:
-//│       parentOrCfg = Right of Scope:
-//│         parentOrCfg = Left of Cfg:
-//│           escapeChars = true
-//│           useSuperscripts = false
-//│           includeZero = false
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(tmp:block$res⁰ -> block$res2, member:test_5$test⁰ -> test_5$test, member:test_5$x_A⁰ -> test_5$x_A, member:test_5$x_rest⁰ -> test_5$x_rest, tmp:runtime⁰ -> runtime, tmp:definitionMetadata⁰ -> definitionMetadata, member:test_5$x_B⁰ -> test_5$x_B, tmp:prettyPrint⁰ -> prettyPrint, tmp:Term⁰ -> Term, tmp:Block⁰ -> Block, tmp:Shape⁰ -> Shape, member:test¹ -> test1, member:test⁵ -> test5, tmp:block$res¹ -> block$res3, tmp:block$res² -> block$res7, member:test⁶ -> test6, member:test_9$test⁰ -> test_9$test, member:test_9$x_AA⁰ -> test_9$x_AA, member:test_9$x_rest⁰ -> test_9$x_rest, tmp:block$res³ -> block$res8, member:test_9$x_BB⁰ -> test_9$x_BB, member:test_6$test⁰ -> test_6$test, member:test_6$x_A⁰ -> test_6$x_A, member:test_6$x_rest⁰ -> test_6$x_rest, member:test_6$y_B⁰ -> test_6$y_B, member:test_6$y_rest⁰ -> test_6$y_rest, member:c¹ -> c, member:test² -> test2, member:f⁰ -> f, tmp:block$res⁴ -> block$res9, tmp:tmp⁰ -> tmp, tmp:tmp¹ -> tmp1, member:c_5$c⁰ -> c_5$c, member:c_5$a_B⁰ -> c_5$a_B, member:c_5$a_rest⁰ -> c_5$a_rest, member:c_3$c⁰ -> c_3$c, member:c_3$a_A⁰ -> c_3$a_A, member:c_3$a_rest⁰ -> c_3$a_rest, tmp:block$res⁵ -> block$res4, member:test_13$test⁰ -> test_13$test, member:test_13$x_AA⁰ -> test_13$x_AA, member:Predef⁰ -> Predef, member:test_13$x_rest⁰ -> test_13$x_rest, member:test_13$x_BB⁰ -> test_13$x_BB, member:test_13_f_11$f⁰ -> test_13_f_11$f, member:test_13_f_11$a_A⁰ -> test_13_f_11$a_A, member:test_13_f_11$a_rest⁰ -> test_13_f_11$a_rest, member:test_13_f_12$f⁰ -> test_13_f_12$f, member:test_13_f_12$a_B⁰ -> test_13_f_12$a_B, tmp:deforest$lam⁰ -> deforest$lam, member:test_13_f_12$a_rest⁰ -> test_13_f_12$a_rest, tmp:deforest$lam¹ -> deforest$lam1, member:test³ -> test3, member:f1⁰ -> f1, member:f2⁰ -> f2, tmp:block$res⁶ -> block$res, member:Nil⁰ -> Nil1, tmp:block$res⁷ -> block$res5, member:AA⁰ -> AA1, member:Cons⁰ -> Cons1, member:test_15$test⁰ -> test_15$test, member:Some⁰ -> Some1, member:AAA⁰ -> AAA1, member:CCC⁰ -> CCC1, member:test_15$x_AA⁰ -> test_15$x_AA, member:D⁰ -> D1, member:A⁰ -> A1, member:test_15$x_rest⁰ -> test_15$x_rest, member:BB⁰ -> BB1, member:BBB⁰ -> BBB1, member:B⁰ -> B1, member:test_15$x_BB⁰ -> test_15$x_BB, member:C⁰ -> C1, member:None⁰ -> None1, member:test_15_f1_13$f1⁰ -> test_15_f1_13$f1, object:A¹ -> A, member:test_15_f1_13$a_A⁰ -> test_15_f1_13$a_A, object:B¹ -> B, member:test_15_f1_13$a_rest⁰ -> test_15_f1_13$a_rest, object:C¹ -> C, member:test_15_f2_14$f2⁰ -> test_15_f2_14$f2, object:D¹ -> D, member:test_15_f2_14$a_B⁰ -> test_15_f2_14$a_B, class:AA¹ -> AA, member:test_15_f2_14$a_rest⁰ -> test_15_f2_14$a_rest, class:BB¹ -> BB, class:AAA¹ -> AAA, member:test⁴ -> test4, class:BBB¹ -> BBB, class:CCC¹ -> CCC, object:None¹ -> None, class:Some¹ -> Some, tmp:block$res⁸ -> block$res6, member:test_7$test⁰ -> test_7$test, object:Nil¹ -> Nil, class:Cons¹ -> Cons, member:test_7$x_BB⁰ -> test_7$x_BB, member:test_7$x_rest⁰ -> test_7$x_rest, member:test_7$x_AA⁰ -> test_7$x_AA, tmp:block$res⁹ -> block$res1, member:test⁰ -> test)
-//│       curThis = S of N
-//│       bindings = HashMap(var:a -> a)
-//│     curThis = N
-//│     bindings = HashMap(var:x -> x, tmp:tmp³ -> tmp2)
-//│ ═══[COMPILATION ERROR] No definition found in scope for member '‹no symbol›'
-//│ > let c, tmp, tmp1, c_5$c, c_5$a_B, c_5$a_rest, c_3$c, c_3$a_A, c_3$a_rest, deforest$lam, deforest$lam1;try { c_5$c = function c_5$c(a) {   runtime.checkArgs("c_5$c", 1, true, arguments.length);   let x, tmp2;   return runtime.checkCall(a(tmp2, ‹no symbol›, x, tmp2)) }; c_3$c = function c_3$c(a) {   runtime.checkArgs("c_3$c", 1, true, arguments.length);   let x, tmp2;   return runtime.checkCall(a(tmp2, ‹no symbol›, x, tmp2)) }; c_5$a_B = function c_5$a_B(fv_tmp, fv_$_no$_symbol$_, fv_x, fv_tmp1) {   runtime.checkArgs("c_5$a_B", 4, true, arguments.length);   fv_tmp1 = 2;   return runtime.checkCall(c_5$a_rest(fv_$_no$_symbol$_, fv_x, fv_tmp1)) }; c_3$a_A = function c_3$a_A(fv_tmp, fv_$_no$_symbol$_, fv_x, fv_tmp1) {   runtime.checkArgs("c_3$a_A", 4, true, arguments.length);   fv_tmp1 = 1;   return runtime.checkCall(c_3$a_rest(fv_$_no$_symbol$_, fv_x, fv_tmp1)) }; c_5$a_rest = function c_5$a_rest(fv_$_no$_symbol$_, fv_x, fv_tmp) {   runtime.checkArgs("c_5$a_rest", 3, true, arguments.length);   fv_x = fv_tmp;   fv_$_no$_symbol$_ = runtime.checkCall(Predef.print(fv_x));   return fv_x }; c_3$a_rest = function c_3$a_rest(fv_$_no$_symbol$_, fv_x, fv_tmp) {   runtime.checkArgs("c_3$a_rest", 3, true, arguments.length);   fv_x = fv_tmp;   fv_$_no$_symbol$_ = runtime.checkCall(Predef.print(fv_x));   return fv_x }; c = function c(a) {   runtime.checkArgs("c", 1, true, arguments.length);   let x, tmp2;   if (a instanceof A1.class) {     tmp2 = 1;   } else if (a instanceof B1.class) {     tmp2 = 2;   } else {     throw globalThis.Object.freeze(new globalThis.Error("match error"))   }   x = tmp2;   runtime.checkCall(Predef.print(x));   return x }; deforest$lam = (fv_ctorLam_tmp, fv_ctorLam_$_no$_symbol$_, fv_ctorLam_x, fv_ctorLam_tmp1) => {   return runtime.checkCall(c_3$a_A(fv_ctorLam_tmp, fv_ctorLam_$_no$_symbol$_, fv_ctorLam_x, fv_ctorLam_tmp1)) }; tmp = runtime.checkCall(c_3$c(deforest$lam)); deforest$lam1 = (fv_ctorLam_tmp, fv_ctorLam_$_no$_symbol$_, fv_ctorLam_x, fv_ctorLam_tmp1) => {   return runtime.checkCall(c_5$a_B(fv_ctorLam_tmp, fv_ctorLam_$_no$_symbol$_, fv_ctorLam_x, fv_ctorLam_tmp1)) }; tmp1 = runtime.checkCall(c_5$c(deforest$lam1)); block$res9 = tmp + tmp1; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:168)
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:221)
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+//│ > 1
+//│ > 2
+//│ = 3
 
 
 
@@ -261,7 +217,7 @@ fun f(x) = if x is
   Some then if x.Some#value > 1 then f(Some(x.Some#value - 1)) else 0
 f(Some(2))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Some⁰,Some(term:Some¹.Some²)),List(Arg(None,Ref(tmp:tmp⁴,None)))) ->
+//│ deforest > Call(Ref(member:Some⁰,Some(term:Some¹.Some²)),List(Arg(None,Ref(tmp:tmp⁰,None)))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(value))
 //│ deforest > 	Select(Ref(var:x,None),Ident(value))
@@ -443,7 +399,7 @@ fun g(b) = if b is
   AA(a) then a + 1
 f(AA(AA(0)))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Ref(tmp:tmp⁵,None)))) ->
+//│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Ref(tmp:tmp¹,None)))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(aa))
 //│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Lit(IntLit(0))))) ->
@@ -458,7 +414,7 @@ f(AA(AA(0)))
 fun f(x) = x.AA#aa.AA#aa
 f(AA(AA(3)))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Ref(tmp:tmp⁶,None)))) ->
+//│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Ref(tmp:tmp²,None)))) ->
 //│ deforest > 	term:AA¹.aa⁰
 //│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Lit(IntLit(3))))) ->
 //│ deforest > 	term:AA¹.aa⁰
@@ -497,7 +453,7 @@ fun mapHead(f, x) = if x is
   AAA(h, t) then f(h)
 mapHead(x => x, AAA(1, AAA(2, None)))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AAA⁰,Some(term:AAA¹.AAA²)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp⁷,None)))) ->
+//│ deforest > Call(Ref(member:AAA⁰,Some(term:AAA¹.AAA²)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp³,None)))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(y))
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
@@ -565,13 +521,13 @@ fun test(x) =
 let p = if true then AA(CCC(AA)) else BB(CCC(AA))
 test(p)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:BB⁰,Some(term:BB¹.BB²)),List(Arg(None,Ref(tmp:tmp⁸,None)))) ->
+//│ deforest > Call(Ref(member:BB⁰,Some(term:BB¹.BB²)),List(Arg(None,Ref(tmp:tmp⁴,None)))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(bb))
 //│ deforest > Call(Ref(member:CCC⁰,Some(term:CCC¹.CCC²)),List(Arg(None,Ref(member:AA⁰,Some(term:AA¹.AA²))))) ->
 //│ deforest > 	Ref(tmp:arg$BB$0$⁰,None)
 //│ deforest > 	Select(Ref(tmp:arg$BB$0$⁰,None),Ident(c))
-//│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Ref(tmp:tmp⁹,None)))) ->
+//│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Ref(tmp:tmp⁵,None)))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(aa))
 //│ deforest > Call(Ref(member:CCC⁰,Some(term:CCC¹.CCC²)),List(Arg(None,Ref(member:AA⁰,Some(term:AA¹.AA²))))) ->
@@ -786,7 +742,7 @@ fun f(x) = if x is
     AA then x.AA#aa.AA#aa
 f(AA(AA(3)))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Ref(tmp:tmp¹⁰,None)))) ->
+//│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Ref(tmp:tmp⁶,None)))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(aa))
 //│ deforest > 	Select(Ref(var:x,None),Ident(aa))
@@ -803,7 +759,7 @@ sum(enum(3))
 //│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
 //│ deforest > 	Ref(var:ls,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp¹¹,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp⁷,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
@@ -818,7 +774,7 @@ fun map(f, ls) = if ls is
 fun enum(a) = if a < 0 then Nil else a :: enum(a - 1)
 map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp¹²,None)), Arg(None,Ref(tmp:tmp¹³,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp⁸,None)), Arg(None,Ref(tmp:tmp⁹,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
@@ -853,25 +809,25 @@ fun cons1(a1) = if a1 is
   h :: t then h + cons1(t)
 cons(f(0)) + cons1(f(1))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:x,None)), Arg(None,Ref(tmp:tmp¹⁴,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:x,None)), Arg(None,Ref(tmp:tmp¹⁰,None)))) ->
 //│ deforest > 	Ref(var:a1,None)
 //│ deforest > 	Select(Ref(var:a1,None),Ident(t))
 //│ deforest > 	Select(Ref(var:a1,None),Ident(h))
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
 //│ deforest > 	Ref(var:a1,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:y,None)), Arg(None,Ref(tmp:tmp¹⁵,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:y,None)), Arg(None,Ref(tmp:tmp¹¹,None)))) ->
 //│ deforest > 	Ref(var:a1,None)
 //│ deforest > 	Select(Ref(var:a1,None),Ident(t))
 //│ deforest > 	Select(Ref(var:a1,None),Ident(h))
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
 //│ deforest > 	Ref(var:a1,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:x,None)), Arg(None,Ref(tmp:tmp¹⁴,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:x,None)), Arg(None,Ref(tmp:tmp¹⁰,None)))) ->
 //│ deforest > 	Ref(var:a,None)
 //│ deforest > 	Select(Ref(var:a,None),Ident(t))
 //│ deforest > 	Select(Ref(var:a,None),Ident(h))
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
 //│ deforest > 	Ref(var:a,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:y,None)), Arg(None,Ref(tmp:tmp¹⁵,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:y,None)), Arg(None,Ref(tmp:tmp¹¹,None)))) ->
 //│ deforest > 	Ref(var:a,None)
 //│ deforest > 	Select(Ref(var:a,None),Ident(t))
 //│ deforest > 	Select(Ref(var:a,None),Ident(h))
@@ -887,13 +843,13 @@ fun map(ls, f) = if ls is
   h :: t then f(h) :: map(t, f)
 map(map(1 :: 2 :: Nil, x => x + 1), x => x * 2)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp¹⁶,None)), Arg(None,Ref(tmp:tmp¹⁷,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp¹²,None)), Arg(None,Ref(tmp:tmp¹³,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
 //│ deforest > 	Ref(var:ls,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp¹⁸,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp¹⁴,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
@@ -913,7 +869,7 @@ fun map(ls, f) = if ls is
   h :: t then f(h) :: map(t, f)
 map(1 :: 2 :: Nil, x => x + 1)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp¹⁹,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp¹⁵,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
@@ -1135,25 +1091,25 @@ f1(to(4)) + f2(to(5)) + f3(to(6)) + f4(to(7))
 //│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
 //│ deforest > 	Ref(var:ls4,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp²⁰,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp¹⁶,None)))) ->
 //│ deforest > 	Ref(var:ls4,None)
 //│ deforest > 	Select(Ref(var:ls4,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls4,None),Ident(h))
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
 //│ deforest > 	Ref(var:ls3,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp²⁰,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp¹⁶,None)))) ->
 //│ deforest > 	Ref(var:ls3,None)
 //│ deforest > 	Select(Ref(var:ls3,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls3,None),Ident(h))
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
 //│ deforest > 	Ref(var:ls2,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp²⁰,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp¹⁶,None)))) ->
 //│ deforest > 	Ref(var:ls2,None)
 //│ deforest > 	Select(Ref(var:ls2,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls2,None),Ident(h))
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
 //│ deforest > 	Ref(var:ls1,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp²⁰,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp¹⁶,None)))) ->
 //│ deforest > 	Ref(var:ls1,None)
 //│ deforest > 	Select(Ref(var:ls1,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls1,None),Ident(h))
@@ -1175,7 +1131,7 @@ f1(to(4))
 //│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
 //│ deforest > 	Ref(var:ls1,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp²¹,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp¹⁷,None)))) ->
 //│ deforest > 	Ref(var:ls1,None)
 //│ deforest > 	Select(Ref(var:ls1,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls1,None),Ident(h))
@@ -1193,7 +1149,7 @@ fun test() =
   map(map(1 :: 2 :: Nil, succ), double)
 test()
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp²²,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp¹⁸,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
@@ -1205,7 +1161,7 @@ test()
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
 //│ deforest > 	Ref(var:ls,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp²³,None)), Arg(None,Ref(tmp:tmp²⁴,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp¹⁹,None)), Arg(None,Ref(tmp:tmp²⁰,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
@@ -1283,13 +1239,13 @@ fun f2(ls) = if ls is
 fun wrap(n) = to(n)
 f1(wrap(4)) + f2(wrap(5))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp²⁵,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp²¹,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
 //│ deforest > 	Ref(var:ls,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp²⁵,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp²¹,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
@@ -1342,7 +1298,7 @@ fun test() =
   map(map(map(1 :: 2 :: Nil, succ), double), triple)
 test()
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp²⁶,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp²²,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
@@ -1354,13 +1310,13 @@ test()
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
 //│ deforest > 	Ref(var:ls,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp²⁷,None)), Arg(None,Ref(tmp:tmp²⁸,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp²³,None)), Arg(None,Ref(tmp:tmp²⁴,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
 //│ deforest > 	Ref(var:ls,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp²⁷,None)), Arg(None,Ref(tmp:tmp²⁸,None)))) ->
+//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp²³,None)), Arg(None,Ref(tmp:tmp²⁴,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(t))
