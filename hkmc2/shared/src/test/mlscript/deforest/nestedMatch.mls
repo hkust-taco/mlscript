@@ -19,6 +19,7 @@ data class Some(x)
 //│ deforest > ==============
 
 
+:expect 37
 fun f(x, y) =
   let t = if x is
     AA(a) then
@@ -49,6 +50,7 @@ f(a, 2) + g(a) + f(BB(3), 2) + f(AA(AA(4)), 5)
 
 
 
+:expect 30
 fun f(x, y) =
   let n = if x is
     AA(a) then
@@ -73,6 +75,7 @@ f(AA(AA(3)), 9) + f(AA(AA(4)), 10)
 
 
 
+:expect 5
 fun f(x) =
   let n = if x is
     AA(a) then
@@ -91,6 +94,7 @@ f(AA(AA(3)))
 
 
 
+:expect "A3A3"
 fun f(x) =
   let t = if x is
     AA(AA(a)) then a
@@ -113,6 +117,7 @@ f(AA(AA(A))) + f(AA(AA(A)))
 
 
 
+:expect 0
 fun c2(x) = if x is
   AA(AA(a)) then a
 c2(AA(AA(0)))
@@ -127,6 +132,7 @@ c2(AA(AA(0)))
 
 
 
+:expect 3
 fun f(a) = if a is
   AA(BB(B)) then 3
 f(AA(BB(B)))
@@ -142,6 +148,7 @@ f(AA(BB(B)))
 //│ = 3
 
 
+:expect 10
 fun test(x, y, z, i) = if x is
   AA(a) then
     let m = if y is
@@ -173,6 +180,7 @@ test(AA(1), AA(2), BB(3), 4) + test(AA(1), AA(2), BB(3), 4)
 
 
 // only the match in the middle is fused
+:expect "ccf2f3cc"
 fun f1(x) = if x is
   AA(x1) then
     if x1 is
@@ -198,6 +206,7 @@ f1(aa(BB(cc))) + f2(aa(BB(CC(0)))) + f3(cc)
 
 
 
+:expect 4
 fun c(x, y) = if x is
   AA then
     let t = if y is
@@ -210,6 +219,7 @@ c(AA(2), y)
 //│ y = A
 
 
+:expect 9
 fun c(x, y) = if x is
   AA then
     let t = if y is
@@ -224,6 +234,7 @@ c(AA(2), y) + c2(y)
 
 
 // need to include computations of `rest` from more than one levels of parent matches
+:expect "105035"
 fun test(x) =
   let t = if x is
     AA(AA(AA(a))) then a
@@ -248,6 +259,7 @@ test(p) + f(p) + test(AA(A))
 
 
 
+:expect 13
 fun f(x, y) =
   let tmp = BB(y + 1)
   if tmp is
@@ -266,6 +278,7 @@ f(aa, 3) + f(aa, 4)
 
 
 
+:expect 16
 fun test(n, p, q) =
   n +
   if AA(0) is
@@ -296,6 +309,7 @@ test(3, AA(2), AA(3)) + test(3, AA(2), AA(3))
 
 
 
+:expect 13
 fun test(n, p, q, a) =
   let o
   if a is
@@ -329,6 +343,7 @@ test(1, AA(2), AA(3), a) + test(2, AA(2), AA(3), a) + c(a)
 
 
 
+:expect 18
 fun test(x, y, z, i) =
   let k = if x is
     AA(a) then
@@ -361,6 +376,7 @@ test(AA(1), AA(2), BB(3), 4) + test(AA(1), AA(2), BB(3), 4)
 //│ = 18
 
 
+:expect 10
 fun test(x, y, z, i) =
   let k = if x is
     AA(a) then
@@ -394,6 +410,7 @@ test(AA(1), AA(2), BB(3), 4) + test(AA(1), BB(2), BB(3), 4)
 //│ = 10
 
 
+:expect 12
 fun test(x) =
   let n = if x is
     AA(BB(b)) then b
@@ -424,6 +441,7 @@ test(p(BB(3))) + test(p(CC(3))) + c(p(A))
 
 
 
+:expect 41
 fun f(x, y, z, k) =
   let tmp = if z then BB(y + 1) else BB(y - 1)
   tmp.x + 
@@ -441,6 +459,7 @@ f(AA(3), 3, true, 10) + f(AA(5), 4, false, 20)
 
 
 
+:expect 15
 fun test(x) =
   let t = if x is
     AA(AA(AA(a))) then a
@@ -457,6 +476,7 @@ test(p) + f(p)
 //│ p = AA(AA(fun tmp101))
 
 
+:expect "()()"
 fun test(a, b) =
   let x
   if a is

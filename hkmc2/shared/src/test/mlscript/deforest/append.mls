@@ -10,6 +10,7 @@ data class (::) Cons(h, t)
 
 
 
+:expect Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 fun append1(xs1, ys) = if xs1 is
   h :: t then h :: append1(t, ys)
   Nil then ys
@@ -26,6 +27,7 @@ appendThree of
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 
 // maybe the fusion target for the previous program
+:expect Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 fun appendReified(ys, zs) = if ys is
   h :: t then h :: appendReified(t, zs)
   Nil then zs
@@ -44,6 +46,7 @@ test of
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 
 
+:expect Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 fun idList(l) = if l is
   h :: t then h :: idList(t)
   Nil then Nil
@@ -71,6 +74,7 @@ appendThree of
 
 
 
+:expect Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 fun append(xs, ys) = if xs is
   h :: t then h :: append(t, ys)
   Nil then idList(ys)

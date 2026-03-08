@@ -30,6 +30,7 @@ fun foo(x) =
 //│ deforest > ==============
 //│ x = A
 
+:expect 1
 fun foo(k, x) =
   if x === 0 do k(A)
   k of

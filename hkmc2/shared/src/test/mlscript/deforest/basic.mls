@@ -2,6 +2,7 @@
 
 
 :deforest
+:expect O
 data class X(a)
 data class Y(b)
 data class Z(c)
@@ -26,6 +27,7 @@ c(p())
 // fun f(x) = x()
 :deforest
 :sjs
+:expect O
 fun p() = X(Y(O))
 fun f(x) = if x is
   X(Y(y)) then y
@@ -130,6 +132,7 @@ f(p())
 // fun f(x, res) = x(res)
 // f(p(), 2)
 :deforest
+:expect 14
 fun p() = X(Y(O))
 fun f(x, res) = if x is
   X(a) then
@@ -151,6 +154,7 @@ f(p(), 2)
 
 
 :deforest
+:expect 16
 fun f(x, y, res) = if x is
   X(a) then
     let tmp = 12
@@ -172,6 +176,7 @@ f(X(1), Y(2), 3)
 
 
 :deforest
+:expect 6
 data object Nil
 data class (::) Cons(h, t)
 fun sum(ls) = if ls is
@@ -207,6 +212,7 @@ main
 
 
 :deforest
+:expect 2
 fun a() = O
 fun b() = a()
 fun c() = b()
@@ -223,6 +229,7 @@ p(c())
 
 :deforest
 :sjs
+:expect 3
 if [1, 2] is
   [a, b] then a + b
 //│ deforest > ==============
@@ -253,6 +260,7 @@ if [1, 2] is
 
 
 :deforest
+:expect 3
 fun f(x) = if x is
   [a,b] then a + b
 f([1,2])
@@ -269,6 +277,7 @@ f([1,2])
 
 
 :deforest
+:expect 2
 fun f(x) = if x is
   O then 2
 f(id(O))
@@ -277,6 +286,7 @@ f(id(O))
 
 
 :deforest
+:expect Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
 fun map(f, ls) = if ls is
   Nil then Nil
   h :: t then f(h) :: map(f, t)
@@ -294,6 +304,7 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 
 
 :deforest
+:expect 0
 let x = O
 fun f() =
   if x is

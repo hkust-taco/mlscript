@@ -12,6 +12,7 @@ object Nil
 
 
 
+:expect 10
 fun to(n) = if n > 0 then n :: to(n - 1) else Nil
 fun f1(ls) = if ls is
   h :: t then h
@@ -30,6 +31,7 @@ f1(badWrap(4)) + f2(badWrap(5))
 
 
 
+:expect 9
 fun p(x) = A(x)
 let one = p(1)
 let two = p(2)
@@ -46,6 +48,7 @@ f1(one) + f2(one) + f2(two)
 
 
 
+:expect 5
 fun p(a) = a
 fun f1(a1) = if a1 is A(x1) then x1
 fun f2(a2) = if a2 is A(x2) then x2 + 1
@@ -63,6 +66,7 @@ test()
 
 
 
+:expect 4
 fun f1(a1) = if a1 is A(x1) then x1
 fun f2(a2) = if a2 is A(x2) then x2 + 1
 fun p(x, clashedCtor) =

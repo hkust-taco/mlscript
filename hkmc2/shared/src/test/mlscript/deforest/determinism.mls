@@ -5,6 +5,7 @@ data class B(a, b, c, d, e)
 
 :deforest
 :sjs
+:expect 0
 if B(1,2,3,4,5) is
   B(a,b,c,d,e) then 0
 //│ deforest > ==============
@@ -51,6 +52,7 @@ if B(1,2,3,4,5) is
 
 :sjs
 :deforest
+:expect 1
 fun c2(x) = if x is
   A(A(A(A(A(A(a)))))) then a
 c2 of A(A(A(A(A(A(1))))))

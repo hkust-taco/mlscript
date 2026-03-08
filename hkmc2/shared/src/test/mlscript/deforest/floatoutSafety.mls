@@ -34,6 +34,7 @@ fun main() =
 // - it's not one-shot
 // - it has a clash
 :deforest
+:expect 13
 fun consumer(f, g, p) = f(p) + g(p)
 consumer of
   case Many(_) then 3
@@ -51,6 +52,7 @@ consumer of
 // be expensive: can be more expensive than `enumFrom`
 // and linearity can prevent this issue
 :deforest
+:expect 12
 fun enumFrom(a) =
   if a > 0 then expensive(a) :: enumFrom(a - 1)
   else Nil
@@ -84,6 +86,7 @@ data class Inner(x)
 // - in tail modulo fusion position
 // - is "one-shot"
 :deforest
+:expect 22
 fun prod(x) = Outter(Inner(x))
 fun cons(f, p) = if p is
   Outter(i) then f(i) + f(i)
@@ -109,6 +112,7 @@ cons of
 
 // this misalign is fine
 :deforest
+:expect 20
 fun prodDouble(x) = if x is
   0 then Nil
   n then n :: n :: prodDouble(n - 1)
@@ -133,6 +137,7 @@ sum(prodDouble(4))
 
 // this misalign is not fine
 :deforest
+:expect 10
 fun prod(x) = if x is
   0 then Nil
   n then n :: prod(n - 1)

@@ -11,6 +11,7 @@ object B
 
 
 
+:expect Cons(Pair(1, 3), Cons(Pair(2, 4), Cons(Pair(3, 5), Nil)))
 fun zip(xs_zip, ys_zip) = if
   xs_zip is x :: xt and ys_zip is y :: yt then Pair(x, y) :: zip(xt, yt)
   else Nil
@@ -75,6 +76,7 @@ test()
 //│ = Cons(Pair(1, 3), Cons(Pair(2, 4), Cons(Pair(3, 5), Nil)))
 
 
+:expect Cons(Pair(5, 1), Cons(Pair(5, 2), Cons(Pair(5, 5), Nil)))
 fun append(xs, ys) = if xs is
   h :: t then h :: append(t, ys)
   Nil then ys
@@ -146,6 +148,7 @@ test()
 
 
 
+:expect Cons(Pair(1, 3), Cons(Pair(1, 4), Nil))
 fun lscomp1(ls1, ls2) = if ls1 is
   h1 :: t1 then lscomp2(ls2, h1, t1)
   Nil then Nil
@@ -177,6 +180,7 @@ lscomp1(1 :: 2 :: Nil, 3 :: 4 :: Nil)
 //│ = Cons(Pair(1, 3), Cons(Pair(1, 4), Nil))
 
 
+:expect Cons(2, Cons(3, Cons(4, Nil)))
 fun test(k, ls) =
   fun lscomp(ls) = if ls is
     h :: t then (h + 1) :: lscomp(t)

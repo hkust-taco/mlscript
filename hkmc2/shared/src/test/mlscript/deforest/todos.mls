@@ -19,38 +19,9 @@ data class Some(x)
 //│ deforest > ==============
 
 
-// since `x.x` is considered as being consumed
-// at two places,the inner match is not fused
+// TODO: many dead code contain duplicated `t + 5 * 4 - 3 + 2 - 1`
 :sjs
-fun f(x) = if x is
-  AA then if x.x is
-    AA then x.x.x
-f(AA(AA(3)))
-//│ deforest > ==============
-//│ JS (unsanitized):
-//│ let f, tmp, tmp1; /* scoped */
-//│ f = function f(x) {
-//│   let scrut; /* scoped */
-//│   if (x instanceof AA1.class) {
-//│     scrut = x.x;
-//│     if (scrut instanceof AA1.class) {
-//│       return x.x.x
-//│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│     }
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
-//│ };
-//│ tmp = AA1(3);
-//│ tmp1 = AA1(tmp);
-//│ f(tmp1)
-//│ deforest > ==============
-//│ = 3
-
-
-// TODO: the computation of `t + 5 * 4 - 3 + 2 - 1` is still duplicated...
-:sjs
+:expect 78
 fun test(x) =
   let t = if x is
     AA(AA(AA(a))) then a
@@ -76,61 +47,61 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > 	Ref($arg$AA$0$,None)
 //│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
 //│ JS (unsanitized):
-//│ let test, f1, p, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, test_19$test, test_19$x_dflt, test_19$x_rest, test_19$split_1$_rest, test_19$split_root$_rest, AA_x, test_18$test, test_18$x_AA, test_18$x_rest, test_18$split_1$_rest, test_18$split_root$_rest, AA_x1, test_18$arg$AA$0$_AA, test_18$arg$AA$0$_rest, AA_x2, test_18$arg$AA$0$_AA1, test_18$arg$AA$0$_rest1, AA_x3, test_13$test, test_13$arg$AA$0$_AA, test_13$arg$AA$0$_rest, test_13$arg$AA$0$_rest1, test_13$x_rest, test_13$split_1$_rest, test_13$split_root$_rest, deforest$lam; /* scoped */
+//│ let test, f, p, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_19$test, test_19$x_dflt, test_19$x_rest, test_19$split_1$_rest, test_19$split_root$_rest, AA_x, test_18$test, test_18$x_AA, test_18$x_rest, test_18$split_1$_rest, test_18$split_root$_rest, AA_x1, test_18$arg$AA$0$_AA, test_18$arg$AA$0$_rest, AA_x2, test_18$arg$AA$0$_AA1, test_18$arg$AA$0$_rest1, AA_x3, test_13$test, test_13$arg$AA$0$_AA, test_13$arg$AA$0$_rest, test_13$arg$AA$0$_rest1, test_13$x_rest, test_13$split_1$_rest, test_13$split_root$_rest, deforest$lam; /* scoped */
 //│ test_19$test = function test_19$test(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp13, tmp14, tmp15, tmp16, tmp17; /* scoped */
+//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15; /* scoped */
 //│   split_root$: {
 //│     split_1$: {
-//│       return x(tmp13, t, tmp13, tmp14, tmp15, tmp16, tmp17);
+//│       return x(tmp11, t, tmp11, tmp12, tmp13, tmp14, tmp15);
 //│     }
-//│     tmp13 = 4;
+//│     tmp11 = 4;
 //│   }
-//│   t = tmp13;
-//│   tmp14 = 5 * 4;
-//│   tmp15 = t + tmp14;
-//│   tmp16 = tmp15 - 3;
-//│   tmp17 = tmp16 + 2;
-//│   return tmp17 - 1
+//│   t = tmp11;
+//│   tmp12 = 5 * 4;
+//│   tmp13 = t + tmp12;
+//│   tmp14 = tmp13 - 3;
+//│   tmp15 = tmp14 + 2;
+//│   return tmp15 - 1
 //│ };
 //│ test_18$test = function test_18$test(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp13, tmp14, tmp15, tmp16, tmp17; /* scoped */
+//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15; /* scoped */
 //│   split_root$: {
 //│     split_1$: {
-//│       return x(t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp13, tmp14, tmp15, tmp16, tmp17, tmp13, t, tmp13, tmp14, tmp15, tmp16, tmp17);
+//│       return x(t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15, tmp11, t, tmp11, tmp12, tmp13, tmp14, tmp15);
 //│     }
-//│     tmp13 = 4;
+//│     tmp11 = 4;
 //│   }
-//│   t = tmp13;
-//│   tmp14 = 5 * 4;
-//│   tmp15 = t + tmp14;
-//│   tmp16 = tmp15 - 3;
-//│   tmp17 = tmp16 + 2;
-//│   return tmp17 - 1
+//│   t = tmp11;
+//│   tmp12 = 5 * 4;
+//│   tmp13 = t + tmp12;
+//│   tmp14 = tmp13 - 3;
+//│   tmp15 = tmp14 + 2;
+//│   return tmp15 - 1
 //│ };
 //│ test_13$test = function test_13$test(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp13, tmp14, tmp15, tmp16, tmp17; /* scoped */
+//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15; /* scoped */
 //│   split_root$: {
 //│     split_1$: {
 //│       if (x instanceof AA1.class) {
 //│         arg$AA$0$ = x.x;
 //│         if (arg$AA$0$ instanceof AA1.class) {
 //│           arg$AA$0$1 = arg$AA$0$.x;
-//│           return arg$AA$0$1(a, arg$AA$0$2, tmp13, tmp13, t, tmp13, tmp14, tmp15, tmp16, tmp17)
+//│           return arg$AA$0$1(a, arg$AA$0$2, tmp11, tmp11, t, tmp11, tmp12, tmp13, tmp14, tmp15)
 //│         } else {
-//│           return test_13$split_1$_rest(tmp13, t, tmp13, tmp14, tmp15, tmp16, tmp17)
+//│           return test_13$split_1$_rest(tmp11, t, tmp11, tmp12, tmp13, tmp14, tmp15)
 //│         }
 //│       } else {
-//│         return test_13$split_1$_rest(tmp13, t, tmp13, tmp14, tmp15, tmp16, tmp17)
+//│         return test_13$split_1$_rest(tmp11, t, tmp11, tmp12, tmp13, tmp14, tmp15)
 //│       }
 //│     }
-//│     tmp13 = 4;
+//│     tmp11 = 4;
 //│   }
-//│   t = tmp13;
-//│   tmp14 = 5 * 4;
-//│   tmp15 = t + tmp14;
-//│   tmp16 = tmp15 - 3;
-//│   tmp17 = tmp16 + 2;
-//│   return tmp17 - 1
+//│   t = tmp11;
+//│   tmp12 = 5 * 4;
+//│   tmp13 = t + tmp12;
+//│   tmp14 = tmp13 - 3;
+//│   tmp15 = tmp14 + 2;
+//│   return tmp15 - 1
 //│ };
 //│ test_19$x_dflt = function test_19$x_dflt(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
 //│   return test_19$split_1$_rest(fv_tmp1, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
@@ -213,7 +184,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   return fv_tmp4 - 1
 //│ };
 //│ test = function test(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp13, tmp14, tmp15, tmp16, tmp17; /* scoped */
+//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15; /* scoped */
 //│   split_root$: {
 //│     split_1$: {
 //│       if (x instanceof AA1.class) {
@@ -223,7 +194,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│           if (arg$AA$0$1 instanceof AA1.class) {
 //│             arg$AA$0$2 = arg$AA$0$1.x;
 //│             a = arg$AA$0$2;
-//│             tmp13 = a;
+//│             tmp11 = a;
 //│             break split_root$
 //│           } else {
 //│             break split_1$
@@ -235,23 +206,23 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│         break split_1$
 //│       }
 //│     }
-//│     tmp13 = 4;
+//│     tmp11 = 4;
 //│   }
-//│   t = tmp13;
-//│   tmp14 = 5 * 4;
-//│   tmp15 = t + tmp14;
-//│   tmp16 = tmp15 - 3;
-//│   tmp17 = tmp16 + 2;
-//│   return tmp17 - 1
+//│   t = tmp11;
+//│   tmp12 = 5 * 4;
+//│   tmp13 = t + tmp12;
+//│   tmp14 = tmp13 - 3;
+//│   tmp15 = tmp14 + 2;
+//│   return tmp15 - 1
 //│ };
-//│ f1 = function f(a) {
-//│   let arg$AA$0$, tmp13; /* scoped */
+//│ f = function f(a) {
+//│   let arg$AA$0$, tmp11; /* scoped */
 //│   split_root$: {
 //│     split_default$: {
 //│       if (a instanceof AA1.class) {
 //│         arg$AA$0$ = a.x;
 //│         if (arg$AA$0$ instanceof AA1.class) {
-//│           tmp13 = 0;
+//│           tmp11 = 0;
 //│           break split_root$
 //│         } else {
 //│           break split_default$
@@ -262,36 +233,36 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│     }
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   }
-//│   return tmp13
+//│   return tmp11
 //│ };
 //│ AA_x3 = 10;
-//│ tmp2 = (fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_t, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6) => {
+//│ tmp = (fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_t, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6) => {
 //│   return test_13$arg$AA$0$_AA(fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_t, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6, AA_x3)
 //│ };
-//│ tmp3 = AA1(tmp2);
-//│ p = AA1(tmp3);
-//│ tmp4 = test_13$test(p);
-//│ tmp5 = f1(p);
-//│ tmp6 = tmp4 + tmp5;
+//│ tmp1 = AA1(tmp);
+//│ p = AA1(tmp1);
+//│ tmp2 = test_13$test(p);
+//│ tmp3 = f(p);
+//│ tmp4 = tmp2 + tmp3;
 //│ AA_x2 = 10;
-//│ tmp7 = (fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_t, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6) => {
+//│ tmp5 = (fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_t, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6) => {
 //│   return test_18$arg$AA$0$_AA1(fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_t, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_tmp6, AA_x2)
 //│ };
-//│ AA_x1 = tmp7;
-//│ tmp8 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10) => {
+//│ AA_x1 = tmp5;
+//│ tmp6 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10) => {
 //│   return test_18$arg$AA$0$_AA(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, AA_x1)
 //│ };
-//│ AA_x = tmp8;
-//│ tmp9 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_arg$AA$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10) => {
+//│ AA_x = tmp6;
+//│ tmp7 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_arg$AA$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10) => {
 //│   return test_18$x_AA(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_arg$AA$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, fv_ctorLam_t1, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, AA_x)
 //│ };
-//│ tmp10 = test_18$test(tmp9);
-//│ tmp11 = tmp6 + tmp10;
+//│ tmp8 = test_18$test(tmp7);
+//│ tmp9 = tmp4 + tmp8;
 //│ deforest$lam = (fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5) => {
 //│   return test_19$x_dflt(fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5)
 //│ };
-//│ tmp12 = test_19$test(deforest$lam);
-//│ tmp11 + tmp12
+//│ tmp10 = test_19$test(deforest$lam);
+//│ tmp9 + tmp10
 //│ deforest > ==============
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(var:x,None)
@@ -308,12 +279,13 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > 	Ref($arg$AA$0$,None)
 //│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
 //│ = 78
-//│ p = AA(AA(fun tmp2))
+//│ p = AA(AA(fun tmp))
 
 
 // TODO: currently nothing is done at all when seeing
 // `Define` blocks defining things other than functions
 :todo
+:expect Local(2)
 data class Global(x)
 fun test() =
   data class Local(x)
@@ -322,3 +294,42 @@ fun test() =
 test()
 //│ deforest > ==============
 //│ = Local(2)
+
+
+// TODO: fusion opportunity is lost
+// because there are two consumers due to two call sites of `inner`s.
+:expect 0
+fun inner(x) = if x is A then 0 else 1
+fun test() =
+  let x = A
+  inner(x) + inner(x)
+test()
+//│ deforest > ==============
+//│ = 0
+
+
+// TODO: duplicated instantiations of the consumer `f`
+:expect 2
+fun f(x) = if x is A then 1
+f(A) + f(A)
+//│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ = 2
+
+
+// TODO: the assignment of `useless` is moved inside the lambda body
+// so on the toplevel `useless` is not assigned after transformation
+:fixme
+let lsit = [2, 1]
+let useless = if lsit is [a, b] then 0
+//│ deforest > ==============
+//│ deforest > Tuple(false,List(Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(var:lsit,None)
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:lsit,None)), Arg(None,Lit(IntLit(0)))))
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:lsit,None)), Arg(None,Lit(IntLit(1)))))
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ lsit = fun lsit
+//│ useless = 0

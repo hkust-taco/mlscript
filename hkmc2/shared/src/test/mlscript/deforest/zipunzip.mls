@@ -9,6 +9,7 @@ data class (::) Cons(h, t)
 data class Pair(a, b)
 //│ deforest > ==============
 
+:expect Pair(Cons(1, Cons(2, Nil)), Cons(2, Cons(3, Nil)))
 fun zip(xs_zip, ys_zip) = if
   xs_zip is x :: xt and ys_zip is y :: yt then Pair(x, y) :: zip(xt, yt)
   else Nil
@@ -33,6 +34,7 @@ testUnzipZip(3)
 
 
 
+:expect Cons(Pair(3, 4), Cons(Pair(2, 3), Cons(Pair(1, 2), Nil)))
 fun zip(xs_zip, ys_zip) = if
   xs_zip is x :: xt and ys_zip is y :: yt then Pair(x, y) :: zip(xt, yt)
   else Nil

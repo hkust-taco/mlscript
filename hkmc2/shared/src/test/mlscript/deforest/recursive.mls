@@ -14,6 +14,7 @@ data class T(n, l, r)
 object L
 //│ deforest > ==============
 
+:expect Cons(11, Cons(9, Cons(7, Cons(5, Cons(3, Cons(1, Nil))))))
 fun mk(n) = if n < 0 then Nil else n :: mk(n - 1)
 fun map(f, ls_map) = if ls_map is
   h :: t then f(h) :: map(f, t)
@@ -36,6 +37,7 @@ test(id(mk(5)))
 
 
 
+:expect Cons(5, Cons(6, Cons(7, Nil)))
 fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
 fun map(ls) = if ls is
   Nil then Nil
@@ -50,6 +52,7 @@ map(enumFromTo(1, 4))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ = Cons(5, Cons(6, Cons(7, Nil)))
 
+:expect 45
 fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
 fun sum(ls) = if ls is
   Nil then 0
@@ -64,6 +67,7 @@ sum(enumFromTo(1,10))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ = 45
 
+:expect Cons(5, Cons(6, Cons(7, Nil)))
 fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
 fun map(f, ls) =
   if ls is
@@ -79,6 +83,7 @@ map(x => x + 4, enumFromTo(1, 4))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ = Cons(5, Cons(6, Cons(7, Nil)))
 
+:expect Cons(5, Cons(6, Cons(7, Nil)))
 fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
 fun map(f, ls) =
   (if ls is
@@ -97,6 +102,7 @@ map(x => x + 4, enumFromTo(1, 4))
 
 
 
+:expect 45
 fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
 fun sum(ls, a) = if ls is
   Nil then a
@@ -113,6 +119,7 @@ sum(enumFromTo(1, 10), 0)
 
 
 
+:expect Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 fun mk(n) = if n < 0 then Nil else n :: mk(n - 1)
 fun incr(x) = x + 1
 fun map(f, xs_map) = if xs_map is
@@ -134,6 +141,7 @@ test(id(mk(5)))
 
 
 
+:expect Cons(1, Cons(2, Cons(3, Cons(4, Nil))))
 fun mk(n) = if n < 0 then Nil else n :: mk(n - 1)
 fun incr(x) = x + 1
 fun map(f, xs_map) = if xs_map is
@@ -183,6 +191,7 @@ test(4)
 
 
 
+:expect 20
 fun mk(n) = if n > 0 then n :: mk(n - 1) else Nil
 fun mk2d(n) = if n > 0 then mk(n) :: mk2d(n - 1) else Nil
 fun append(xs, ys) = if xs is
@@ -206,6 +215,7 @@ test(id(mk2d(4)))
 //│ = 20
 
 
+:expect 2
 fun count(c, xs) = if xs is
   h :: t then count(c + 1, t)
   Nil then c
@@ -233,6 +243,7 @@ count(0, rev(Nil, 1 :: 2 :: Nil))
 //│ = 2
 
 
+:expect Some(2)
 fun last(ls) = if ls is
   h :: t and t is
     Nil then Some(h)
@@ -246,6 +257,7 @@ last(p)
 
 
 
+:expect Cons(1, Cons(0, Nil))
 fun map(f, xs_map) = if xs_map is
   Nil then Nil
   x :: xs then f(x) :: map(f, xs)
@@ -268,6 +280,7 @@ map(x => if x is A then 1 else 0, A :: B :: Nil)
 //│ = Cons(1, Cons(0, Nil))
 
 
+:expect T(0, T(1, L, L), T(0, L, L))
 fun c(x) = if x is
   T(n, l, r) then T of
     if n is
@@ -310,6 +323,7 @@ c(T(A, T(B, L, L), T(A, L, L)))
 //│ = T(0, T(1, L, L), T(0, L, L))
 
 
+:expect 4
 fun max(ms, m) = if ms is
   h :: t and
     h > m then max(t, h)
@@ -342,6 +356,7 @@ max(3 :: 2 :: 4 :: 1 :: 0 :: Nil, 0)
 //│ = 4
 
 
+:expect Some(4)
 fun filter(ls, f) = if ls is
   h :: t and
     f(h) then h :: filter(t, f)
@@ -363,7 +378,9 @@ lastFilter(id(1 :: 2 :: 3 :: 4 :: 5 :: Nil), x => (x % 2 == 0))
 :deforest
 fun g() = f()
 fun f() = g() + g()
+[f, g]
 //│ deforest > ==============
+//│ = [fun f, fun g]
 
 
 // should prevent processing a function body more than once
@@ -372,7 +389,9 @@ fun h1() = g()
 fun h2() = g()
 fun g() = f()
 fun f() = h1() + h2()
+[h1, h2, g, f]
 //│ deforest > ==============
+//│ = [fun h1, fun h2, fun g, fun f]
 
 
 
@@ -382,7 +401,9 @@ fun h1() = g()
 fun h2() = g() + h1()
 fun g() = f()
 fun f() = h1() + h2()
+[h1, h2, g, f]
 //│ deforest > ==============
+//│ = [fun h1, fun h2, fun g, fun f]
 
 
 // should prevent processing a function body more than once
@@ -399,7 +420,9 @@ fun h() = if
 fun g() = if
   false then h() + main()
   else 0
+main
 //│ deforest > ==============
+//│ = fun main
 
 
 
@@ -414,7 +437,11 @@ fun g1() = f()
 fun h2() = g2()
 fun g2() = f()
 fun main() = f()
+main
 //│ deforest > ==============
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(member:B,Some(object:B))
+//│ = fun main_3$main
 
 
 :deforest
@@ -422,28 +449,25 @@ fun h1() = g()
 fun h2() = g() + h2()
 fun g() = f()
 fun f() = h1() + h2()
+[h1, h2, g, f]
 //│ deforest > ==============
+//│ = [fun h1, fun h2, fun g, fun f]
 
 :deforest
 fun g() = f()
 fun f() = g()
+[g, f]
 //│ deforest > ==============
-
-
-:deforest
-fun h1() = g()
-fun h2() = g() + h1()
-fun g() = f()
-fun f() = h1() + h2()
-//│ deforest > ==============
-
+//│ = [fun g, fun f]
 
 
 
 :deforest
 fun g() = 0
 fun f() = f() + g()
+[f, g]
 //│ deforest > ==============
+//│ = [fun f, fun g]
 
 
 :deforest
@@ -456,7 +480,19 @@ fun g3() = h(B)
 fun g4() = h(B)
 fun f() =
   [g1(), g2(), g3(), g4(), h(B)]
+f
 //│ deforest > ==============
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ = fun f_7$f
 
 
 :deforest
@@ -467,7 +503,13 @@ fun g1() = h(B)
 fun g2() = h(B)
 fun f() =
   [g1(), g2()]
+f
 //│ deforest > ==============
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ = fun f_4$f
 
 
 
@@ -479,4 +521,16 @@ fun f() =
     A then 0
     else f()
   [() => h(B), () => h(B), () => h(B), () => h(B), h(B)]
+f
 //│ deforest > ==============
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ = fun f_7$f

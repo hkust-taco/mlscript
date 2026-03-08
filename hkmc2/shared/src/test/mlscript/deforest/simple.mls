@@ -15,6 +15,7 @@ object None
 data class Some(value)
 //│ deforest > ==============
 
+:expect 1
 fun test() =
   let x = if true then A else B
   if x is
@@ -28,6 +29,7 @@ test()
 //│ deforest > 	Ref(var:x,None)
 //│ = 1
 
+:expect A
 fun test() =
   let x = if true then AA(A) else BB(B)
   if x is
@@ -44,6 +46,7 @@ test()
 //│ = A
 
 
+:expect 1
 fun f(a) = if a is
   A then 1
   B then 2
@@ -68,6 +71,7 @@ test()
 
 
 // `x.x` is successfully fused
+:expect 1
 fun f1(a) = if a is
   A then 1
   B then 2
@@ -96,6 +100,7 @@ test()
 //│ = 1
 
 
+:expect 11
 fun test() =
   fun g(x) = if true then AA(11) else BB(22)
   fun c(x) = if x is
@@ -116,6 +121,7 @@ test()
 
 
 // multiple match, no fusion
+:expect 2
 fun test() =
   let x = B
   if x is
@@ -129,6 +135,7 @@ test()
 
 
 
+:expect 2
 fun test() =
   let x = A
   let y = B
@@ -145,6 +152,7 @@ test()
 //│ = 2
 
 
+:expect 3
 fun c(a) =
   let x = if a is
     A then 1
@@ -176,6 +184,7 @@ c(AA(3))
 
 
 
+:expect 3
 fun f(a, b) = if a is
   A then if b is
     B then 3
@@ -188,6 +197,7 @@ f(A, B)
 //│ = 3
 
 
+:expect 0
 fun f(x) = if x is
   Some then if x.Some#value > 1 then f(Some(x.Some#value - 1)) else 0
 f(Some(2))
@@ -204,6 +214,7 @@ f(Some(2))
 
 
 
+:expect 2
 let x = A
 let y = B
 if x is
@@ -221,6 +232,7 @@ if y is
 
 
 
+:expect 2
 fun test() =
   let x = A
   let y = B
@@ -238,6 +250,7 @@ test()
 
 
 
+:expect 21
 fun f(x, y) =
   let a = if x is
     AAA(n, m) then y + n - m
@@ -264,6 +277,7 @@ f(AAA(1, 3), 1) + f(BBB(2, 3), 2) + f(AAA(3, 2), 4) + f(BBB(4, 6), 0)
 //│ = 21
 
 
+:expect 2
 fun c1(x) = if x is
   AA then
     if A is
@@ -279,6 +293,7 @@ p(AA(1))
 
 
 
+:expect 2
 fun c(x, y) = if x is
   AA(a) then
     if y is
@@ -293,6 +308,7 @@ c(AA(2), A)
 //│ = 2
 
 
+:expect 24
 fun f(x, y) =
   let a = if x is
     AAA(n, m) then y + n - m
@@ -319,6 +335,7 @@ f(AAA(1, 3), 1) + f(CCC(2), 2) + f(AAA(3, 2), 4) + f(CCC(4), 0)
 
 
 
+:expect 22
 fun f(x, y) =
   let a = if x is
     AAA then y + x.AAA#y
@@ -338,6 +355,7 @@ f(AAA(1, 3), 1) + f(CCC(2), 2) + f(AAA(3, 2), 4)
 //│ = 22
 
 
+:expect 0
 fun c(x, m) = if x is
   AA(n) then n + 1
   else m
@@ -350,6 +368,7 @@ c(BB(3), 0)
 
 
 
+:expect 1
 fun f(x) = if x is
   AA(b) then g(b)
 fun g(b) = if b is
@@ -366,6 +385,7 @@ f(AA(AA(0)))
 
 
 
+:expect 3
 fun f(x) = x.AA#aa.AA#aa
 f(AA(AA(3)))
 //│ deforest > ==============
@@ -375,6 +395,7 @@ f(AA(AA(3)))
 //│ deforest > 	(ParamBind)term:class:AA.aa
 //│ = 3
 
+:expect 103
 fun inner(x, y) =
   let t = if x is
     AA(a) then a + y
@@ -400,6 +421,7 @@ outer1(p, 1, 2) + outer2(p, 3, 4) + inner(AA(5), 6)
 //│ p = AA(AA(3))
 
 
+:expect 1
 fun mapHead(f, x) = if x is
   AAA(h, t) then f(h)
 mapHead(x => x, AAA(1, AAA(2, None)))
@@ -411,6 +433,7 @@ mapHead(x => x, AAA(1, AAA(2, None)))
 //│ = 1
 
 
+:expect 5
 fun test() =
   let k
   if A is
@@ -423,6 +446,7 @@ test()
 //│ deforest > 	Ref(member:A,Some(object:A))
 //│ = 5
 
+:expect 4
 fun test(a) = if a is
   AA then 1
   else 2
@@ -437,6 +461,7 @@ test(B) + test(C)
 
 
 // technically ill-typed, so `AA(3)` (which flows to `z`) is not fused
+:expect "2AA(3)NaN"
 fun test(x, y, z) = if x is
   AA(a) then
     let m = if y is
@@ -455,6 +480,7 @@ test(AA(1), AA(2), AA(3))
 //│ = "2AA(3)NaN"
 
 :sjs
+:expect 141
 fun test(x) =
   let t = id of
     if x is
@@ -614,6 +640,7 @@ test(p)
 //│ p = fun tmp53
 
 
+:expect 141
 fun test(x, y) =
   let t =
     if y is CCC then
@@ -635,6 +662,7 @@ test(p, id(CCC(123)))
 
 
 :sjs
+:expect 2
 fun f(x) = if x is
   A then 1
 f(id(A)) + f(A)
@@ -669,6 +697,7 @@ f(id(A)) + f(A)
 
 
 
+:expect 0
 fun f(x) = if x is
   A then 0
   B then 1
@@ -686,6 +715,7 @@ f(g(AA(1)))
 //│ = 0
 
 
+:expect 1
 fun f(a, b) = if a is
   A and b is B then 1
   else 0
@@ -701,6 +731,7 @@ f(A, B)
 // cannot fuse intermediate values created by
 // calling data constructors passed around like functions,
 // so `c1` is not fused.
+:expect 6
 fun app(f) = f(1)
 fun identity(x) = x
 fun c1(x) = if x is
@@ -743,6 +774,7 @@ c(B)
 //│ ═══[RUNTIME ERROR] Error: e1
 
 
+:expect 3
 fun f(a, b) = if a is
   AA(x) then x + b.BB#bb
 f(AA(1), BB(2))
@@ -756,6 +788,7 @@ f(AA(1), BB(2))
 
 
 :deforest
+:expect 9
 fun g(k, x) = if k is
   A then x.AA#aa + x.AA#aa + x.AA#aa
 g(A, AA(3))
@@ -768,6 +801,7 @@ g(A, AA(3))
 
 
 // multi parameter list
+:expect 103
 fun inner(x)(y) =
   let t = if x is
     AA(a) then a + y
@@ -793,4 +827,18 @@ outer1(p)(1, 2) + outer2(p, 3)(4) + inner(AA(5))(6)
 //│ p = AA(AA(3))
 
 
+// `x.AA#aa` is used both as the scrutinee of the inner match
+// and as the base of a field selection (`x.AA#aa.AA#aa`),
+// giving it two consumer destinations, so the inner match is not fused
+:expect 3
+fun f(x) = if x is
+  AA then if x.AA#aa is
+    AA then x.AA#aa.AA#aa
+f(AA(AA(3)))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
+//│ = 3
 

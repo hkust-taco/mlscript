@@ -2,6 +2,7 @@
 
 
 :deforest
+:expect 123
 module M with
   data class XX(a)
   data class YY(b)
@@ -24,6 +25,7 @@ M.f(M.p())
 
 :deforest
 :sjs
+:expect Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
 data object Nil
 data class (::) Cons(h, t)
 fun map(f, ls) = if ls is
@@ -160,6 +162,7 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 
 
 :deforest
+:expect 5056
 module DeforestList with
   data object Nil
   data class (::) Cons(h, t)
@@ -185,6 +188,7 @@ DeforestList.res + DeforestList.main()
 
 
 :deforest
+:expect 5056
 module DeforestList with
   data object Nil
   data class (::) Cons(h, t)
@@ -209,6 +213,7 @@ DeforestList.res + DeforestList.main()
 
 
 :deforest
+:expect 3
 module MMM with
   data object A
   val y = 3
@@ -225,6 +230,7 @@ MMM.f()
 
 
 :deforest
+:expect X
 module M with
   data object X
   data object Y
@@ -242,6 +248,7 @@ M.f(M.X)
 
 
 :deforest
+:expect [D, A]
 data object A
 data class B(b)
 data object C

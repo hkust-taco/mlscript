@@ -32,6 +32,7 @@ test
 
 
 :deforest
+:expect Some(2)
 fun maxOpt(ls) = if ls is
   Nil then None
   h :: t then
@@ -45,6 +46,7 @@ maxOpt(id(1 :: 2 :: Nil))
 
 :deforest
 :sjs
+:expect Some(2)
 fun modSome(x, m) = if x is
   Some(n) and
     n >= m then modSome(Some(n - m), m)
@@ -121,6 +123,7 @@ modSome(Some(17), 3)
 
 
 :deforest
+:expect Some(3)
 fun maxOpt2(ls, x) = if ls is
   Nil then x
   h :: t and x is
@@ -134,6 +137,7 @@ maxOpt2(id(1 :: 2 :: 3 :: Nil), None)
 
 :deforest
 :sjs
+:expect Nil
 fun zipWith(xsys, f) = if xsys is
   [hx :: tx, hy :: ty] then f(hx, hy) :: zipWith([tx, ty], f)
   [Nil, Nil] then Nil

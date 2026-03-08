@@ -21,7 +21,9 @@ fun fix(x) =
   if lseq(res, x) then res
   else
     fix(res)
+fix
 //│ deforest > ==============
+//│ = fun fix
 
 
 
@@ -36,7 +38,9 @@ fun fix(x, fuel) =
   if fuel == 0 then res
   else
     fix(res, fuel - 1)
+fix
 //│ deforest > ==============
+//│ = fun fix
 
 
 
@@ -52,13 +56,16 @@ fun fix(x, fuel) =
   if fuel == 0 then res
   else
     fix(res, fuel - 1)
+fix
 //│ deforest > ==============
+//│ = fun fix
 
 
 
 
 :sjs
 :deforest
+:expect Nil
 fun dlHelper(prev, rest) = if rest is
   Nil then Nil
   h :: t then prev :: dlHelper(h, t)
@@ -114,6 +121,7 @@ id(fix(Nil, 1000))
 
 :sjs
 :deforest
+:expect Nil
 fun dlHelper(prev, rest) = if rest is
   Nil then Nil
   h :: t then prev :: dlHelper(h, t)
@@ -173,6 +181,7 @@ fix(2 :: 3 :: Nil)
 
 :sjs
 :deforest
+:expect Nil
 fun f(x) = if x is
   Nil then Nil
 fun loop(l, n) = if n > 0 then loop(f(l), n - 1) else l

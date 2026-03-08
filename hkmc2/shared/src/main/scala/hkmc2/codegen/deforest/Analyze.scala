@@ -368,6 +368,7 @@ class DeforestPreAnalyzer(
     case p@Select(qual, name) => p match
       case DeforestableSelect(_) =>
         res.selToCtxOfSel.addOne(p.uid -> ctxTracker.getAllCtx)
+        applyPath(qual)
       case _ =>
         ctxTracker.markAsNonHandleable()
         super.applyPath(p)
@@ -720,8 +721,6 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
         selExpr.getResult.matches:
           case Select(p, _) => p === dtor.exprId.getResult
           case DeforestTupSelect(s, _) => s === dtor.exprId.getReferredSym
-  // private def selAndDtorIsSameConsumer(dtor: Dtor, sel: FieldSel): Boolean =
-  //   selAndDtorIsSameConsumer(dtor.toCtorDtorId, sel.toCtorDtorId :: Nil)
   
   sealed abstract class FinalDest
   case class FinalDestMatch(dtor: CtorDtorId, sels: Set[CtorDtorId]) extends FinalDest
