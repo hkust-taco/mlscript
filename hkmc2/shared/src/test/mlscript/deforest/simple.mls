@@ -6,6 +6,7 @@
 object A
 object B
 object C
+object D
 data class AA(aa)
 data class BB(bb)
 data class AAA(x, y)
@@ -13,6 +14,8 @@ data class BBB(x, y)
 data class CCC(c)
 object None
 data class Some(value)
+data object Nil
+data class (::) Cons(h, t)
 //│ deforest > ==============
 
 :expect 1
@@ -842,3 +845,572 @@ f(AA(AA(3)))
 //│ deforest > 	Select(Ref(var:x,None),Ident(aa))
 //│ = 3
 
+
+:expect 6
+fun sum(ls) = if ls is
+  Nil then 0
+  h :: t then h + sum(t)
+fun enum(n) = if n > 0 then n :: enum(n - 1) else Nil
+sum(enum(3))
+//│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ = 6
+
+
+:expect Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
+fun map(f, ls) = if ls is
+  Nil then Nil
+  h :: t then f(h) :: map(f, t)
+fun enum(a) = if a < 0 then Nil else a :: enum(a - 1)
+map(x => x + 1, map(x => x * 2, id(enum(3))))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ = Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
+
+
+:expect 3
+fun id(x) = x
+fun f1(a1) = if a1 is AA then 1
+fun f2(a2) = if a2 is AA then 2
+f1(id(AA(1))) + f2(id(AA(2)))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:a2,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(var:a1,None)
+//│ = 3
+
+
+:expect 2
+fun f(x) = if x == 0 then Nil else x :: g(x - 1)
+fun g(y) = if y == 0 then Nil else y :: f(y - 1)
+fun cons(a) = if a is
+  Nil then 0
+  h :: t then h + cons(t)
+fun cons1(a1) = if a1 is
+  Nil then 1
+  h :: t then h + cons1(t)
+cons(f(0)) + cons1(f(1))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:x,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:a1,None)
+//│ deforest > 	Select(Ref(var:a1,None),Ident(t))
+//│ deforest > 	Select(Ref(var:a1,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:a1,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:y,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:a1,None)
+//│ deforest > 	Select(Ref(var:a1,None),Ident(t))
+//│ deforest > 	Select(Ref(var:a1,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:a1,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:x,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Select(Ref(var:a,None),Ident(t))
+//│ deforest > 	Select(Ref(var:a,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:y,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Select(Ref(var:a,None),Ident(t))
+//│ deforest > 	Select(Ref(var:a,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ = 2
+
+
+:expect Cons(4, Cons(6, Nil))
+fun map(ls, f) = if ls is
+  Nil then Nil
+  h :: t then f(h) :: map(t, f)
+map(map(1 :: 2 :: Nil, x => x + 1), x => x * 2)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(2))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ = Cons(4, Cons(6, Nil))
+
+
+// for selection
+:expect Cons(2, Cons(3, Nil))
+fun map(ls, f) = if ls is
+  Nil then Nil
+  h :: t then f(h) :: map(t, f)
+map(1 :: 2 :: Nil, x => x + 1)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(2))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ = Cons(2, Cons(3, Nil))
+
+
+// for selection filter
+:expect 0
+fun c1(x) = if x is
+  h :: t then
+    if t is
+      Nil then 0
+c1(1 :: Nil)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(t))
+//│ deforest > 	Select(Ref(var:x,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:t,None)
+//│ = 0
+
+
+// for selection filter
+:expect 0
+fun f(x) = if x is
+  AA then g1(x.AA#aa)
+  BB then g2(x.BB#bb)
+fun g1(y1) = if y1 is
+  AA then 0
+fun g2(y2) = if y2 is
+  AA then 1
+fun apply(f) =
+  let inner = AA(0)
+  f(AA(inner))
+apply(f)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:inner,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > 	Ref(var:y1,None)
+//│ = 0
+
+
+:expect 3
+fun p(x) = AA(x)
+fun wrap1(x) = p(x)
+fun wrap(x) = wrap1(x)
+fun f1(a1) = if a1 is AA then 1
+fun f2(a2) = if a2 is AA then 2
+f1(wrap(1)) + f2(wrap(2))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:a2,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:a1,None)
+//│ = 3
+
+
+:expect 0
+fun p1(x) = p2(x)
+fun p2(x) = if x == 0 then AA(x) else p1(x - 1)
+fun c(a) = if a is AA(x) then x
+c(p1(3))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Select(Ref(var:a,None),Ident(aa))
+//│ = 0
+
+
+:expect [D, AA(1)]
+fun f(x) = if g(false) is
+  AA and
+    x < 1 then BB(0)
+    else f(x - 1)
+  C then D
+fun g(b) =
+  if b then
+    if f(0) is
+      BB then AA(0)
+      D then AA(1)
+  else
+    C
+[f(3), g(true)]
+//│ deforest > ==============
+//│ deforest > Ref(member:D,Some(object:D)) ->
+//│ deforest > 	Ref($scrut,None)
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > 	Ref($scrut,None)
+//│ deforest > Ref(member:C,Some(object:C)) ->
+//│ deforest > 	Ref($scrut,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref($scrut,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > 	Ref($scrut,None)
+//│ = [D, AA(1)]
+
+
+
+
+// `y` should not be considered as a free var for the branch
+:expect 4
+fun f(ls) = if ls is [] then
+  let y = 4
+  fun h(z) = if z > 0 then h(z - 1) else y
+  h(3)
+f([])
+//│ deforest > ==============
+//│ deforest > Tuple(false,List()) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ = 4
+
+
+:expect 0
+fun f(x, b) = if x is
+  Nil then if b then f(Nil, false) else 0
+f(Nil, false)
+//│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ = 0
+
+
+:expect 4
+fun test() =
+  let p = AA(1)
+  let a = if p is
+    AA(x) then x
+  let b = if p is
+    AA(x) then x
+  a + b
+test() + test()
+//│ deforest > ==============
+//│ = 4
+
+
+:expect 3
+fun p(d) = AA(3)
+fun c1(x) = if x is AA then 1
+fun c2(x) = if x is AA then 2
+fun test() =
+  c1(p(1)) + c2(p(2))
+test()
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ = 3
+
+
+:expect 15
+fun p(x) = AA(x)
+fun f1(a1) = if a1 is AA(aa) then aa
+fun f2(a2) = if a2 is AA(aa) then aa
+fun f3(a3) = if a3 is AA(aa) then aa
+fun f4(a4) = if a4 is AA(aa) then aa
+fun f5(a5) = if a5 is AA(aa) then aa
+f1(p(1)) + f2(p(2)) + f3(p(3)) + f4(p(4)) + f5(p(5))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:a5,None)
+//│ deforest > 	Select(Ref(var:a5,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:a4,None)
+//│ deforest > 	Select(Ref(var:a4,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:a3,None)
+//│ deforest > 	Select(Ref(var:a3,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:a2,None)
+//│ deforest > 	Select(Ref(var:a2,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:a1,None)
+//│ deforest > 	Select(Ref(var:a1,None),Ident(aa))
+//│ = 15
+
+
+// calls to `to` should be able to be duplicated
+:expect 88
+fun to(n) =
+  if n > 0 then
+    let m = n - 1
+    n :: to(m)
+  else
+    Nil
+fun f1(ls1) = if ls1 is
+  h :: t then h + f1(t)
+  Nil then 2
+fun f2(ls2) = if ls2 is
+  h :: t then h + f2(t)
+  Nil then 3
+fun f3(ls3) = if ls3 is
+  h :: t then h + f3(t)
+  Nil then 4
+fun f4(ls4) = if ls4 is
+  h :: t then h + f4(t)
+  Nil then 5
+f1(to(4)) + f2(to(5)) + f3(to(6)) + f4(to(7))
+//│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls4,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls4,None)
+//│ deforest > 	Select(Ref(var:ls4,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls4,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls3,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls3,None)
+//│ deforest > 	Select(Ref(var:ls3,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls3,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls2,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls2,None)
+//│ deforest > 	Select(Ref(var:ls2,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls2,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls1,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls1,None)
+//│ deforest > 	Select(Ref(var:ls1,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls1,None),Ident(h))
+//│ = 88
+
+
+:expect 12
+fun to(n) =
+  if n > 0 then
+    let m = n - 1
+    n :: to(m)
+  else
+    Nil
+fun f1(ls1) = if ls1 is
+  h :: t then h + f1(t)
+  Nil then 2
+f1(to(4))
+//│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls1,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls1,None)
+//│ deforest > 	Select(Ref(var:ls1,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls1,None),Ident(h))
+//│ = 12
+
+
+:expect Cons(4, Cons(6, Nil))
+fun map(ls, f) = if ls is
+  Nil then Nil
+  h :: t then f(h) :: map(t, f)
+fun succ(x) = x + 1
+fun double(x) = x * 2
+fun test() =
+  map(map(1 :: 2 :: Nil, succ), double)
+test()
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(2))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ = Cons(4, Cons(6, Nil))
+
+
+:expect 8
+fun p(x) = AA(x)
+fun g1(b) = if b then p(1) else p(2)
+fun wrap(b) = g1(b)
+fun g2(b) = if b then p(3) else p(4)
+fun f1(p) = if p is AA(a) then a + 1
+fun f2(p) = if p is AA(b) then b + 2
+f1(wrap(true)) + f2(g2(false))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:p,None)
+//│ deforest > 	Select(Ref(var:p,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:p,None)
+//│ deforest > 	Select(Ref(var:p,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:p,None)
+//│ deforest > 	Select(Ref(var:p,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:p,None)
+//│ deforest > 	Select(Ref(var:p,None),Ident(aa))
+//│ = 8
+
+
+:expect 10
+fun p(x) = AA(x)
+let one = p(1)
+let two = p(2)
+fun f1(p) = if p is AA(a) then a + 1
+fun f2(p) = if p is AA(b) then b + 2
+fun f3(p) = if p is AA(c) then c + 3
+f1(one) + f2(one) + f3(two)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:p,None)
+//│ deforest > 	Select(Ref(var:p,None),Ident(aa))
+//│ = 10
+//│ one = AA(1)
+//│ two = fun
+
+
+:expect 4
+fun id(x) = x
+fun f1(a) = if a is AA(i) then i
+fun f2(a) = if a is AA(i) then i + 1
+f1(id(AA(1))) + f2(id(AA(2)))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Select(Ref(var:a,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Select(Ref(var:a,None),Ident(aa))
+//│ = 4
+
+
+:expect 10
+fun to(n) = if n > 0 then n :: to(n - 1) else Nil
+fun f1(ls) = if ls is
+  h :: t then h
+  Nil then 2
+fun f2(ls) = if ls is
+  h :: t then h + 1
+  Nil then 3
+fun wrap(n) = to(n)
+f1(wrap(4)) + f2(wrap(5))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ = 10
+
+
+:expect 51
+fun to(n, acc) = if n == 0 then acc else to(n - 1, n :: acc)
+fun f1(ls, acc) = if ls is
+  Nil then acc
+  h :: t then f1(t, acc + h)
+fun f2(ls, acc) = if ls is
+  Nil then acc
+  h :: t then f2(t, acc + h + 1)
+f1(to(4, Nil), 0) + f2(to(5, Nil), 0) + f1(to(6, Nil), 0)
+//│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(var:acc,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(var:acc,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(var:acc,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ = 51
+
+
+:expect Cons(12, Cons(18, Nil))
+fun map(ls, f) = if ls is
+  Nil then Nil
+  h :: t then f(h) :: map(t, f)
+fun succ(x) = x + 1
+fun double(x) = x * 2
+fun triple(x) = x * 3
+fun test() =
+  map(map(map(1 :: 2 :: Nil, succ), double), triple)
+test()
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(2))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ = Cons(12, Cons(18, Nil))
+
+
+:expect 6
+fun p(x) = AA(x)
+fun f1(a1) = if a1 is AA(a) then a + 1
+fun f2(a2) = if a2 is AA(a) then a + 2
+fun wrap(a) = a
+fun test() =
+  f1(wrap(p(2))) + f2(p(1))
+test()
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:a1,None)
+//│ deforest > 	Select(Ref(var:a1,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:a2,None)
+//│ deforest > 	Select(Ref(var:a2,None),Ident(aa))
+//│ = 6

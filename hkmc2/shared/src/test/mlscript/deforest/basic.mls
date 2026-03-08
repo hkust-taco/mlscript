@@ -1,12 +1,21 @@
 :js
-
-
 :deforest
-:expect O
+
+//│ deforest > ==============
 data class X(a)
 data class Y(b)
 data class Z(c)
 data object O
+data class A(x)
+data class B(x)
+data object C
+data object D
+data object Nil
+data class (::) Cons(h, t)
+//│ deforest > ==============
+
+
+:expect O
 fun p() = X(O)
 fun c(x) = if x is
   X(x) then x
@@ -18,14 +27,6 @@ c(p())
 //│ = O
 
 
-// fun p() =
-//   let b = O
-//   let a = () => branchBody1(b)
-//   in () => branchBody2(a)
-// fun branchBody1(b) = b
-// fun branchBody2(a) = a()
-// fun f(x) = x()
-:deforest
 :sjs
 :expect O
 fun p() = X(Y(O))
@@ -131,7 +132,6 @@ f(p())
 // fun branchBodyX(res, a) = let tmp = 12 in a(res, tmp)
 // fun f(x, res) = x(res)
 // f(p(), 2)
-:deforest
 :expect 14
 fun p() = X(Y(O))
 fun f(x, res) = if x is
@@ -151,9 +151,6 @@ f(p(), 2)
 
 
 
-
-
-:deforest
 :expect 16
 fun f(x, y, res) = if x is
   X(a) then
@@ -174,29 +171,6 @@ f(X(1), Y(2), 3)
 
 
 
-
-:deforest
-:expect 6
-data object Nil
-data class (::) Cons(h, t)
-fun sum(ls) = if ls is
-  Nil then 0
-  h :: t then h + sum(t)
-fun enum(n) = if n > 0 then n :: enum(n - 1) else Nil
-sum(enum(3))
-//│ deforest > ==============
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(var:ls,None)
-//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
-//│ deforest > 	Ref(var:ls,None)
-//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
-//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
-//│ = 6
-
-
-
-
-:deforest
 fun c(x, d) = if x is
   X(a) then c(X(a), d)
 fun main() = () => c(X(3), 2)
@@ -211,7 +185,6 @@ main
 //│ = fun main_6$main
 
 
-:deforest
 :expect 2
 fun a() = O
 fun b() = a()
@@ -225,9 +198,6 @@ p(c())
 //│ = 2
 
 
-
-
-:deforest
 :sjs
 :expect 3
 if [1, 2] is
@@ -259,7 +229,6 @@ if [1, 2] is
 //│ = 3
 
 
-:deforest
 :expect 3
 fun f(x) = if x is
   [a,b] then a + b
@@ -272,11 +241,6 @@ f([1,2])
 //│ = 3
 
 
-
-
-
-
-:deforest
 :expect 2
 fun f(x) = if x is
   O then 2
@@ -285,25 +249,6 @@ f(id(O))
 //│ = 2
 
 
-:deforest
-:expect Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
-fun map(f, ls) = if ls is
-  Nil then Nil
-  h :: t then f(h) :: map(f, t)
-fun enum(a) = if a < 0 then Nil else a :: enum(a - 1)
-map(x => x + 1, map(x => x * 2, id(enum(3))))
-//│ deforest > ==============
-//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
-//│ deforest > 	Ref(var:ls,None)
-//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
-//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(var:ls,None)
-//│ = Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
-
-
-
-:deforest
 :expect 0
 let x = O
 fun f() =
@@ -315,3 +260,135 @@ f()
 //│ deforest > 	Ref(var:x,None)
 //│ = 0
 //│ x = fun x
+
+
+:expect 1
+fun f(x) = if x is
+  A(x) then x
+f(A(1))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ = 1
+
+
+:expect 2
+fun f(x) = if x is
+  A(a) then x.x + a
+f(A(1))
+//│ deforest > ==============
+//│ = 2
+
+
+:expect 4
+fun f(x) = if x is
+  A(x) then 2
+f(A(2)) + f(A(3))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ = 4
+
+
+:expect B(4)
+fun localFuse(x) = if A(x) is
+  A(y) then B(y)
+if localFuse(3) is
+  B(a) then a
+localFuse(4)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref($scrut,None)
+//│ deforest > 	Select(Ref($scrut,None),Ident(x))
+//│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref($scrut,None)
+//│ deforest > 	Select(Ref($scrut,None),Ident(x))
+//│ deforest > Call(Ref(member:B,Some((Fun)term:class:B.B)),List(Arg(None,Ref(var:y,None)))) ->
+//│ deforest > 	Ref($scrut,None)
+//│ deforest > 	Select(Ref($scrut,None),Ident(x))
+//│ = B(4)
+
+
+// for cyclic strategies removal
+:expect 0
+fun f(x) = if x is
+  A(_) then f(A(2))
+  else 0
+f(Nil)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ = 0
+
+
+// cyclic strategy, shouldn't fuse
+:expect 0
+fun f(x) =
+  let res = if x is
+    A(x) then x
+  if res > 0 then f(A(res - 1)) else 0
+f(A(4))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Lit(IntLit(4))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ = 0
+
+
+:expect 3
+fun g(x) = if x is
+  A(a) then a
+fun f(x) = x.x
+let o = A(1)
+g(o) + f(o) + o.x
+//│ deforest > ==============
+//│ = 3
+//│ o = A(1)
+
+
+// using `let` to declare local functions helps to avoid the problem
+// caused by reordering nested `fun` functions.
+:expect 1
+fun test() =
+  let x = if A(0) is
+    A then 1
+  let f() = x
+  f()
+test()
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > 	Ref($scrut,None)
+//│ = 1
+
+
+:expect B(0)
+fun inner(y, z) = if y is
+  B then z
+fun dtor(x) = if x is
+  A then inner(B(4), x.x)
+dtor(A(B(0)))
+//│ deforest > ==============
+//│ = B(0)
+
+
+:expect 0
+fun f(x, b) = if x is
+  Nil then if b then f(Nil, false) else 0
+f(Nil, false)
+//│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ = 0
