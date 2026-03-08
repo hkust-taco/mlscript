@@ -127,30 +127,10 @@ class DeforestPreAnalyzer(
       .collect:
         case f: FunDefn => f.dSym -> f
       .toMap
-    def getFullRestOfMatch(scrut: ResultId) = matchScrutToCtxOfMatch(scrut)
-      .iterator
-      .takeWhile:
-        case _: (InCtx.Fn | InCtx.Mod | InCtx.TopLvl) => false
-        case _ => true
-      .collect:
-        case InCtx.LblBody(l) => l.rest
-        case InCtx.MtchBody(m, cse) => m.rest
-        case InCtx.BegnBody(b) => b.rest
-      .foldLeft(matchScrutToMatchBlock(scrut).rest)(Begin.apply)
     def getEnclosingMatchesForSel(selExprId: ResultId) = selToCtxOfSel(selExprId)
       .iterator
       .collect:
         case InCtx.MtchBody(m, cse) => m.scrut.uid -> cse
-    def getFullRestOfLabel(label: Symbol) = labelSymToCtxOfLabel(label)
-      .iterator
-      .takeWhile:
-        case _: (InCtx.Fn | InCtx.Mod | InCtx.TopLvl) => false
-        case _ => true
-      .collect:
-        case InCtx.LblBody(l) => l.rest
-        case InCtx.MtchBody(m, cse) => m.rest
-        case InCtx.BegnBody(b) => b.rest
-      .foldLeft(labelSymToLabelBlk(label).rest)(Begin.apply)
     def getParentLabelOrMatchesAndRestBefore(matchOrLabelId: MatchOrLabelId): (Iterator[Label | Match], Block) =
       val ctx = matchOrLabelId match
         case label: Symbol => labelSymToCtxOfLabel(label)
@@ -407,10 +387,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   given DeforestPreAnalyzer = preAnalyzer
   import StratVarState.freshVar
   
-  private enum ProcessMode:
-    val blkRes: ConsVar
-    case Fun(blkRes: ConsVar) // only expect nested functions
-    case ToplvlBlk(blkRes: ConsVar) // skip functions/classes
+  
   private class ConstraintsCollector(val forFunGroup: Opt[TermSymbol]):
     var constraints = Ls.empty[ProdStrat -> ConsStrat]
     def constrain(p: ProdStrat, c: ConsStrat) = constraints ::= p -> c
@@ -424,6 +401,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   // ===================================================
   
   locally {
+    // generate strat vars needed
     val generatedProdVars: Map[Symbol, StratVarState] =
       // the keys could possibly be one of the following kinds:
       // - TermSymbol:
@@ -476,6 +454,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
       store.toMap.withDefaultValue(preAnalyzer.res.primitiveStratVar)
     end generatedProdVars
     
+    // compute scc
     val sccInOrder: Ls[Ls[TermSymbol]] =
       import algorithms.partitionScc
       var edges = Ls.empty[(TermSymbol, TermSymbol)]
@@ -494,6 +473,13 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
       f <- group
     do funToSccGroups(f) = group
     
+    
+    enum ProcessMode:
+      val blkRes: ConsVar
+      case Fun(blkRes: ConsVar) // only expect nested functions
+      case ToplvlBlk(blkRes: ConsVar) // skip functions/classes
+    
+    // compute strat scheme for each scc group
     val funsToProdStratScheme = MutMap.empty[TermSymbol, ProdStratScheme]
     for groupedFuns <- sccInOrder do
       (new ConstraintsCollector(Some(funToSccRep(groupedFuns.head).get))).givenIn: cc ?=>
@@ -510,10 +496,10 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
         for funSym <- groupedFuns do
           funsToProdStratScheme(funSym) = ProdStratScheme(generatedProdVars(funSym), cc.constraints)
     
+    // collect constraints from toplvl block
     globalCollector.givenIn: cc ?=>
       cc.constrain(preAnalyzer.res.primitiveStratVar.asProdStrat, NoCons)
       cc.constrain(NoProd, preAnalyzer.res.primitiveStratVar.asConsStrat)
-      // collect from toplvl block
       if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(preAnalyzer.b) then
         val topLvlRes = freshVar("toplvl_res").asConsStrat
         given ProcessMode = ProcessMode.ToplvlBlk(topLvlRes)
