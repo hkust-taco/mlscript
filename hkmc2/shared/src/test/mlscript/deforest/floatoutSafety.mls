@@ -65,11 +65,11 @@ fun consume(f, ls) = f(ls) + f(ls)
 consume(sum, enumFrom(3))
 //│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
-//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Ref(x⁰,None)
 //│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp⁰,None)), Arg(None,Ref(tmp:tmp¹,None)))) ->
-//│ deforest > 	Ref(var:x,None)
-//│ deforest > 	Select(Ref(var:x,None),Ident(t))
-//│ deforest > 	Select(Ref(var:x,None),Ident(h))
+//│ deforest > 	Ref(x⁰,None)
+//│ deforest > 	Select(Ref(x⁰,None),Ident(t))
+//│ deforest > 	Select(Ref(x⁰,None),Ident(h))
 //│ deforest > <<< fusing <<<
 //│ = 12
 
@@ -94,11 +94,11 @@ cons of
   prod(10)
 //│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:Outter⁰,Some(term:Outter¹.Outter²)),List(Arg(None,Ref(tmp:tmp²,None)))) ->
-//│ deforest > 	Ref(var:p,None)
-//│ deforest > 	Select(Ref(var:p,None),Ident(x))
-//│ deforest > Call(Ref(member:Inner⁰,Some(term:Inner¹.Inner²)),List(Arg(None,Ref(var:x,None)))) ->
-//│ deforest > 	Ref(var:caseScrut,None)
-//│ deforest > 	Select(Ref(var:caseScrut,None),Ident(x))
+//│ deforest > 	Ref(p⁰,None)
+//│ deforest > 	Select(Ref(p⁰,None),Ident(x))
+//│ deforest > Call(Ref(member:Inner⁰,Some(term:Inner¹.Inner²)),List(Arg(None,Ref(x¹,None)))) ->
+//│ deforest > 	Ref(caseScrut⁰,None)
+//│ deforest > 	Select(Ref(caseScrut⁰,None),Ident(x))
 //│ deforest > <<< fusing <<<
 //│ = 22
 

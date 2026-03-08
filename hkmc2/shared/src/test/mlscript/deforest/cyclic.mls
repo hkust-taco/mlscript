@@ -23,11 +23,11 @@ fun test() =
 test
 //│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:C⁰,Some(object:C¹)) ->
-//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Ref(a⁰,None)
 //│ deforest > Ref(member:D⁰,Some(object:D¹)) ->
-//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Ref(a⁰,None)
 //│ deforest > Ref(member:C⁰,Some(object:C¹)) ->
-//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Ref(a⁰,None)
 //│ deforest > <<< fusing <<<
 //│ = fun test_4$test
 
@@ -57,11 +57,11 @@ fun modSome(x, m) = if x is
 modSome(Some(17), 3)
 //│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:Some⁰,Some(term:Some¹.Some²)),List(Arg(None,Ref(tmp:tmp⁰,None)))) ->
-//│ deforest > 	Ref(var:x,None)
-//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > 	Ref(x⁰,None)
+//│ deforest > 	Select(Ref(x⁰,None),Ident(x))
 //│ deforest > Call(Ref(member:Some⁰,Some(term:Some¹.Some²)),List(Arg(None,Lit(IntLit(17))))) ->
-//│ deforest > 	Ref(var:x,None)
-//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > 	Ref(x⁰,None)
+//│ deforest > 	Select(Ref(x⁰,None),Ident(x))
 //│ deforest > <<< fusing <<<
 //│ JS (unsanitized):
 //│ let modSome, tmp3, modSome_8$modSome, modSome_8$x_Some, modSome_8$x_rest, Some_x;
@@ -115,11 +115,11 @@ modSome(Some(17), 3)
 //│ modSome_8$modSome(tmp3, 3)
 //│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:Some⁰,Some(term:Some¹.Some²)),List(Arg(None,Ref(tmp:tmp¹,None)))) ->
-//│ deforest > 	Ref(var:x,None)
-//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > 	Ref(x⁰,None)
+//│ deforest > 	Select(Ref(x⁰,None),Ident(x))
 //│ deforest > Call(Ref(member:Some⁰,Some(term:Some¹.Some²)),List(Arg(None,Lit(IntLit(17))))) ->
-//│ deforest > 	Ref(var:x,None)
-//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > 	Ref(x⁰,None)
+//│ deforest > 	Select(Ref(x⁰,None),Ident(x))
 //│ deforest > <<< fusing <<<
 //│ = Some(2)
 
@@ -146,14 +146,14 @@ fun zipWith(xsys, f) = if xsys is
   [Nil, Nil] then Nil
 zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ deforest > >>> fusing >>>
-//│ deforest > Tuple(false,List(Arg(None,Ref(var:tx,None)), Arg(None,Ref(var:ty,None)))) ->
-//│ deforest > 	Ref(var:xsys,None)
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(1)))))
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(0)))))
+//│ deforest > Tuple(false,List(Arg(None,Ref(tx⁰,None)), Arg(None,Ref(ty⁰,None)))) ->
+//│ deforest > 	Ref(xsys⁰,None)
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys⁰,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys⁰,None)), Arg(None,Lit(IntLit(0)))))
 //│ deforest > Tuple(false,List(Arg(None,Ref(tmp:tmp²,None)), Arg(None,Ref(tmp:tmp³,None)))) ->
-//│ deforest > 	Ref(var:xsys,None)
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(1)))))
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(0)))))
+//│ deforest > 	Ref(xsys⁰,None)
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys⁰,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys⁰,None)), Arg(None,Lit(IntLit(0)))))
 //│ deforest > <<< fusing <<<
 //│ JS (unsanitized):
 //│ let zipWith, tmp8, tmp9, tmp10, lambda, zipWith_19$zipWith, zipWith_19$xsys_2, zipWith_19$xsys_rest, zipWith_19$split_default$_rest, zipWith_19$split_root$_rest, tup2_0, tup2_1;
@@ -269,13 +269,13 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ lambda = (undefined, function (x, y) { return x });
 //│ zipWith_19$zipWith(tmp10, lambda)
 //│ deforest > >>> fusing >>>
-//│ deforest > Tuple(false,List(Arg(None,Ref(var:tx,None)), Arg(None,Ref(var:ty,None)))) ->
-//│ deforest > 	Ref(var:xsys,None)
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(1)))))
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(0)))))
+//│ deforest > Tuple(false,List(Arg(None,Ref(tx⁰,None)), Arg(None,Ref(ty⁰,None)))) ->
+//│ deforest > 	Ref(xsys⁰,None)
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys⁰,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys⁰,None)), Arg(None,Lit(IntLit(0)))))
 //│ deforest > Tuple(false,List(Arg(None,Ref(tmp:tmp⁴,None)), Arg(None,Ref(tmp:tmp⁵,None)))) ->
-//│ deforest > 	Ref(var:xsys,None)
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(1)))))
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(0)))))
+//│ deforest > 	Ref(xsys⁰,None)
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys⁰,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys⁰,None)), Arg(None,Lit(IntLit(0)))))
 //│ deforest > <<< fusing <<<
 //│ = Nil

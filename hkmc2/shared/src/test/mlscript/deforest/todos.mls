@@ -37,10 +37,10 @@ let p = AA(AA(AA(10)))
 test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:B⁰,Some(object:B¹)) ->
-//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Ref(x⁰,None)
 //│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Ref(tmp:tmp⁰,None)))) ->
-//│ deforest > 	Ref(var:x,None)
-//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > 	Ref(x⁰,None)
+//│ deforest > 	Select(Ref(x⁰,None),Ident(x))
 //│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Ref(tmp:tmp¹,None)))) ->
 //│ deforest > 	Ref(tmp:arg$AA$0$⁰,None)
 //│ deforest > 	Select(Ref(tmp:arg$AA$0$⁰,None),Ident(x))
@@ -270,10 +270,10 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ tmp9 + tmp10
 //│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:B⁰,Some(object:B¹)) ->
-//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Ref(x⁰,None)
 //│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Ref(tmp:tmp²,None)))) ->
-//│ deforest > 	Ref(var:x,None)
-//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > 	Ref(x⁰,None)
+//│ deforest > 	Select(Ref(x⁰,None),Ident(x))
 //│ deforest > Call(Ref(member:AA⁰,Some(term:AA¹.AA²)),List(Arg(None,Ref(tmp:tmp³,None)))) ->
 //│ deforest > 	Ref(tmp:arg$AA$0$⁰,None)
 //│ deforest > 	Select(Ref(tmp:arg$AA$0$⁰,None),Ident(x))
@@ -322,9 +322,9 @@ fun f(x) = if x is A then 1
 f(A) + f(A)
 //│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:A⁰,Some(object:A¹)) ->
-//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Ref(x¹,None)
 //│ deforest > Ref(member:A⁰,Some(object:A¹)) ->
-//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Ref(x¹,None)
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -336,9 +336,9 @@ let lsit = [2, 1]
 let useless = if lsit is [a, b] then 0
 //│ deforest > >>> fusing >>>
 //│ deforest > Tuple(false,List(Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(var:lsit,None)
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:lsit,None)), Arg(None,Lit(IntLit(0)))))
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:lsit,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > 	Ref(lsit⁰,None)
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(lsit⁰,None)), Arg(None,Lit(IntLit(0)))))
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime⁰,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(lsit⁰,None)), Arg(None,Lit(IntLit(1)))))
 //│ deforest > <<< fusing <<<
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 //│ lsit = fun lsit

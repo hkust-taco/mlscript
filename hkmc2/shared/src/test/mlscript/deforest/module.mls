@@ -15,8 +15,8 @@ module M with
 M.f(M.p())
 //│ deforest > >>> fusing >>>
 //│ deforest > Call(Select(Ref(module:M⁰,None),Ident(XX)),List(Arg(None,Ref(tmp:tmp⁰,None)))) ->
-//│ deforest > 	Ref(var:x,None)
-//│ deforest > 	Select(Ref(var:x,None),Ident(a))
+//│ deforest > 	Ref(x⁰,None)
+//│ deforest > 	Select(Ref(x⁰,None),Ident(a))
 //│ deforest > Call(Select(Ref(module:M⁰,None),Ident(YY)),List(Arg(None,Select(Ref(module:M⁰,None),Ident(OO))))) ->
 //│ deforest > 	Ref(tmp:arg$XX$0$⁰,None)
 //│ deforest > 	Select(Ref(tmp:arg$XX$0$⁰,None),Ident(b))
@@ -36,11 +36,11 @@ fun enum(a) = if a < 0 then Nil else a :: enum(a - 1)
 map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp¹,None)), Arg(None,Ref(tmp:tmp²,None)))) ->
-//│ deforest > 	Ref(var:ls,None)
-//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
-//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > 	Ref(ls⁰,None)
+//│ deforest > 	Select(Ref(ls⁰,None),Ident(t))
+//│ deforest > 	Select(Ref(ls⁰,None),Ident(h))
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
-//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Ref(ls⁰,None)
 //│ deforest > <<< fusing <<<
 //│ JS (unsanitized):
 //│ let Nil1, Cons1, map, enum1, lambda, lambda1, tmp1, tmp2, tmp3, map_11$map, map_13$map, map_13$ls_Cons, map_13$ls_rest, map_13$ls_Nil;
@@ -151,11 +151,11 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ map_13$map(lambda, tmp3)
 //│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp³,None)), Arg(None,Ref(tmp:tmp⁴,None)))) ->
-//│ deforest > 	Ref(var:ls,None)
-//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
-//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > 	Ref(ls⁰,None)
+//│ deforest > 	Select(Ref(ls⁰,None),Ident(t))
+//│ deforest > 	Select(Ref(ls⁰,None),Ident(h))
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
-//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Ref(ls⁰,None)
 //│ deforest > <<< fusing <<<
 //│ = Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
 
@@ -177,12 +177,12 @@ module DeforestList with
   val res = DeforestList.sum(DeforestList.enum(100))
 DeforestList.res + DeforestList.main()
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Select(Ref(module:DeforestList⁰,None),Ident(Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp⁵,None)))) ->
-//│ deforest > 	Ref(var:ls,None)
-//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
-//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > Call(Select(Ref(module:DeforestList⁰,None),Ident(Cons)),List(Arg(None,Ref(n⁰,None)), Arg(None,Ref(tmp:tmp⁵,None)))) ->
+//│ deforest > 	Ref(ls¹,None)
+//│ deforest > 	Select(Ref(ls¹,None),Ident(h))
+//│ deforest > 	Select(Ref(ls¹,None),Ident(t))
 //│ deforest > Select(Ref(module:DeforestList⁰,None),Ident(Nil)) ->
-//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Ref(ls¹,None)
 //│ deforest > <<< fusing <<<
 //│ = 5056
 
@@ -205,12 +205,12 @@ module DeforestList with
   val res = DeforestList.sum(DeforestList.enum(100))
 DeforestList.res + DeforestList.main()
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Select(Ref(module:DeforestList¹,None),Ident(Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref(tmp:tmp⁶,None)))) ->
-//│ deforest > 	Ref(var:ls,None)
-//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
-//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > Call(Select(Ref(module:DeforestList¹,None),Ident(Cons)),List(Arg(None,Ref(n¹,None)), Arg(None,Ref(tmp:tmp⁶,None)))) ->
+//│ deforest > 	Ref(ls²,None)
+//│ deforest > 	Select(Ref(ls²,None),Ident(h))
+//│ deforest > 	Select(Ref(ls²,None),Ident(t))
 //│ deforest > Select(Ref(module:DeforestList¹,None),Ident(Nil)) ->
-//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Ref(ls²,None)
 //│ deforest > <<< fusing <<<
 //│ = 5056
 
@@ -247,7 +247,7 @@ module M with
 M.f(M.X)
 //│ deforest > >>> fusing >>>
 //│ deforest > Select(Ref(member:M¹,Some(module:M²)),Ident(X)) ->
-//│ deforest > 	Ref(var:k,None)
+//│ deforest > 	Ref(k⁰,None)
 //│ deforest > <<< fusing <<<
 //│ = X
 

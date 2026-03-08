@@ -60,8 +60,8 @@ fun c2(x) = if x is
 c2 of A(A(A(A(A(A(1))))))
 //│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Ref(tmp:tmp⁰,None)))) ->
-//│ deforest > 	Ref(var:x,None)
-//│ deforest > 	Select(Ref(var:x,None),Ident(a))
+//│ deforest > 	Ref(x⁰,None)
+//│ deforest > 	Select(Ref(x⁰,None),Ident(a))
 //│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Ref(tmp:tmp¹,None)))) ->
 //│ deforest > 	Ref(tmp:arg$A$0$⁰,None)
 //│ deforest > 	Select(Ref(tmp:arg$A$0$⁰,None),Ident(a))
@@ -209,8 +209,8 @@ c2 of A(A(A(A(A(A(1))))))
 //│ c2_19$c2(tmp5)
 //│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Ref(tmp:tmp⁵,None)))) ->
-//│ deforest > 	Ref(var:x,None)
-//│ deforest > 	Select(Ref(var:x,None),Ident(a))
+//│ deforest > 	Ref(x⁰,None)
+//│ deforest > 	Select(Ref(x⁰,None),Ident(a))
 //│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Ref(tmp:tmp⁶,None)))) ->
 //│ deforest > 	Ref(tmp:arg$A$0$⁰,None)
 //│ deforest > 	Select(Ref(tmp:arg$A$0$⁰,None),Ident(a))

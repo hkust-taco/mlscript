@@ -43,9 +43,9 @@ fun f1(p) = if p is A(a) then a + 1
 fun f2(p) = if p is A(b) then b + 2
 f1(one) + f2(one) + f2(two)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Ref(var:x,None)))) ->
-//│ deforest > 	Ref(var:p,None)
-//│ deforest > 	Select(Ref(var:p,None),Ident(x))
+//│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Ref(x⁰,None)))) ->
+//│ deforest > 	Ref(p¹,None)
+//│ deforest > 	Select(Ref(p¹,None),Ident(x))
 //│ deforest > <<< fusing <<<
 //│ = 9
 //│ one = A(1)

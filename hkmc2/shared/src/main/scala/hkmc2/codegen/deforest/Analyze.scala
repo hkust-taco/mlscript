@@ -63,7 +63,7 @@ class FieldSel(
     case _: Int =>
       exprId.getResult match
       case DeforestTupSelect(_, (_, size)) => size
-      case _die => lastWords(_die.toString())
+      case other => lastWords(other.toString())
 
 class Dtor(
   val scrutExprId: ResultId,
@@ -134,10 +134,10 @@ class DeforestPreAnalyzer(
     def getParentLabelOrMatchesAndRestBefore(matchOrLabelId: MatchOrLabelId): (Iterator[Label | Match], Block) =
       val ctx = matchOrLabelId match
         case label: Symbol => labelSymToCtxOfLabel(label)
-        case dtorId => matchScrutToCtxOfMatch(dtorId.asInstanceOf[ResultId])
+        case dtorId: ResultId => matchScrutToCtxOfMatch(dtorId)
       val simpleRest = matchOrLabelId match
         case label: Symbol => labelSymToLabelBlk(label).rest
-        case dtorId => matchScrutToMatchBlock(dtorId.asInstanceOf[ResultId]).rest
+        case dtorId: ResultId => matchScrutToMatchBlock(dtorId).rest
       def it = ctx.iterator
         .takeWhile:
           case _: (InCtx.Fn | InCtx.Mod | InCtx.TopLvl) => false
@@ -148,10 +148,15 @@ class DeforestPreAnalyzer(
           case InCtx.BegnBody(b) => b
       val blockUntilParent = it
         .takeWhile(_.isInstanceOf[Begin])
-        .map(_.asInstanceOf[Begin].rest)
+        .collect:
+          case b: Begin => b.rest
         .foldLeft(simpleRest)(Begin.apply)
-      it.filterNot(_.isInstanceOf[Begin]).asInstanceOf[Iterator[Label | Match]]
-      -> blockUntilParent
+      val parents = it
+        .collect:
+          case l: Label => l
+          case m: Match => m
+        .asInstanceOf[Iterator[Label | Match]]
+      parents -> blockUntilParent
   end res
   
   
@@ -640,7 +645,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
         case Value.Ref(l, disamb) =>
           disamb.fold(generatedProdVars(l))(generatedProdVars.apply).asProdStrat
         case Value.Lit(lit) => NoProd
-        case _die => lastWords(_die.toString())
+        case other => lastWords(other.toString())
       case _ => die
   }
 end DeforestConstraintsCollector
@@ -678,8 +683,7 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
     val cache = MutSet.empty[ProdStrat -> ConsStrat]
     def handle(constraint: ProdStrat -> ConsStrat): Unit = if cache.add(constraint) then
       assert:
-        val prod = constraint._1
-        val cons = constraint._2
+        val (prod, cons) = constraint
         (!prod.isInstanceOf[Ctor] || prod.asInstanceOf[Ctor].instantiationId.isDefined) &&
         (!cons.isInstanceOf[Dtor] || cons.asInstanceOf[Dtor].instantiationId.isDefined) &&
         (!cons.isInstanceOf[FieldSel] || cons.asInstanceOf[FieldSel].instantiationId.isDefined)
@@ -778,7 +782,9 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
       finalCtorDests(ctor.toCtorDtorId) = mergeDests(dests).get
       fusingCtorInfo(ctor.toCtorDtorId) = ctor
     for (dtor, srcs) <- dtorSrcs do
-      finalDtorSrcs(dtor.toCtorDtorId) = srcs.map(_.asInstanceOf[ConcreteProducer].toCtorDtorId)
+      finalDtorSrcs(dtor.toCtorDtorId) =
+        // srcs are always ConcreteProducers after constraint solving
+        srcs.map(_.asInstanceOf[ConcreteProducer].toCtorDtorId)
       fusingDtorInfo(dtor.toCtorDtorId) = dtor
     
   }
