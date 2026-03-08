@@ -13,7 +13,8 @@ fun expensive(x) = x
 
 
 
-// don't want to fuse `p = enumFrom(3)`, because the `expensive` computation
+// we don't want to fuse `p = enumFrom(3)`,
+// because the `expensive` computation would be duplicated
 // btw, should `p` be considered as being in the correct position here?
 :deforest
 fun sum(x) = if x is
@@ -30,7 +31,7 @@ fun main() =
 
 
 
-// many cannot be fused because:
+// `Many` cannot be fused because:
 // - it's not one-shot
 // - it has a clash
 :deforest
@@ -48,9 +49,8 @@ consumer of
 
 
 
-// we don't want to fuse it, because the logic of the creation of the list may
-// be expensive: can be more expensive than `enumFrom`
-// and linearity can prevent this issue
+// we don't actually want to fuse it, because the logic of
+// the creation of the list may be expensive
 :deforest
 :expect 12
 fun enumFrom(a) =
@@ -75,16 +75,12 @@ consume(sum, enumFrom(3))
 data class Outter(x)
 data class Inner(x)
 
-// > I just realized something: nested ctors may or may not be fusible actually,
-// it depends on what the consumer does with the corresponding field I think
-// > it may be possible that the outer ctor does not have a strategy clash, but the nested ctors have;
-// or the outer ctor is used linearly, but nested ctors are not.
-// > these are not the only cases I am thinking about
-// maybe a mix match between different causes?
-// 3 causes
-// - strategy clash
-// - in tail modulo fusion position
-// - is "one-shot"
+// nested ctors may or may not be fusible. it depends on what the consumer
+// does with the corresponding field. The outer and inner ctors can differ in:
+// - strategy clash (outer has none, but inner does)
+// - linearity (outer is one-shot, but inner is not)
+// - tail-modulo-fusion position
+// these causes can also interact (between different levels of ctors).
 :deforest
 :expect 22
 fun prod(x) = Outter(Inner(x))
@@ -108,42 +104,5 @@ cons of
 
 
 
-
-
-// this misalign is fine
-:deforest
-:expect 20
-fun prodDouble(x) = if x is
-  0 then Nil
-  n then n :: n :: prodDouble(n - 1)
-fun sum(ls) = if ls is
-  Nil then 0
-  h :: t then h + sum(t)
-sum(prodDouble(4))
-//│ deforest > ==============
-//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
-//│ deforest > 	Ref(var:ls,None)
-//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
-//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
-//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
-//│ deforest > 	Ref(var:ls,None)
-//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
-//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(var:ls,None)
-//│ = 20
-
-
-
-// this misalign is not fine
-:deforest
-:expect 10
-fun prod(x) = if x is
-  0 then Nil
-  n then n :: prod(n - 1)
-fun cons(ls) = if ls is
-  h1 :: h2 :: t then h1 + h2 + cons(t)
-  _ then 0
-cons(prod(4))
 //│ deforest > ==============
 //│ = 10

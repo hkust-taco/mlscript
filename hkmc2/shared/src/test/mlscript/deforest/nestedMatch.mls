@@ -11,7 +11,7 @@ data class CC(x)
 //│ deforest > ==============
 
 object Nil
-data class Cons(h, t)
+data class (::) Cons(h, t)
 //│ deforest > ==============
 
 object None
@@ -544,3 +544,39 @@ test(B, B) + test(A, A)
 //│ = "()()"
 
 
+// this misalign is fine
+:deforest
+:expect 20
+fun prodDouble(x) = if x is
+  0 then Nil
+  n then n :: n :: prodDouble(n - 1)
+fun sum(ls) = if ls is
+  Nil then 0
+  h :: t then h + sum(t)
+sum(prodDouble(4))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ = 20
+
+
+// this misalign prevents fusion (consumer destructures 2 elements per step, producer emits 1)
+:deforest
+:expect 10
+fun prod(x) = if x is
+  0 then Nil
+  n then n :: prod(n - 1)
+fun cons(ls) = if ls is
+  h1 :: h2 :: t then h1 + h2 + cons(t)
+  _ then 0
+cons(prod(4))
+//│ deforest > ==============
+//│ = 10

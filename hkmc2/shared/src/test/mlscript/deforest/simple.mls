@@ -818,7 +818,6 @@ map(map(1 :: 2 :: Nil, x => x + 1), x => x * 2)
 //│ = Cons(4, Cons(6, Nil))
 
 
-// for selection
 :expect Cons(2, Cons(3, Nil))
 fun map(ls, f) = if ls is
   Nil then Nil

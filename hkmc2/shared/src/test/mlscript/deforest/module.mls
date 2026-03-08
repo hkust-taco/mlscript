@@ -173,7 +173,6 @@ module DeforestList with
   fun main() = DeforestList.sum(DeforestList.enum(3))
   val res = DeforestList.sum(DeforestList.enum(100))
 DeforestList.res + DeforestList.main()
-// DeforestList.main()
 //│ deforest > ==============
 //│ deforest > Call(Select(Ref(module:DeforestList,None),Ident(Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
@@ -219,7 +218,6 @@ module MMM with
   val y = 3
   val x = MMM.f()
   fun f() =
-    // if A is A then MMM.y
     if A is A then y
 MMM.f()
 //│ deforest > ==============

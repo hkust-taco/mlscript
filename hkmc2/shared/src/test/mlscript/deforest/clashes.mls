@@ -55,9 +55,9 @@ fun f2(a2) = if a2 is A(x2) then x2 + 1
 fun test() =
   let x = A(1)
   let y = A(2)
-  let res1 = p(if true then x else y) // both x and y flows into this callsiteres
-  let res2 = p(x) // x flows into this callsiteres
-  let res3 = p(y) // y flows into this callsiteres
+  let res1 = p(if true then x else y) // both x and y flow into this call-site result
+  let res2 = p(x) // x flows into this call-site result
+  let res3 = p(y) // y flows into this call-site result
   // f1(res1) + f2(res1) + f1(res2) + f2(res3)
   f1(res1) + f1(res2) + f2(res3)
 test()
