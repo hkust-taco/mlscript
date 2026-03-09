@@ -9,7 +9,7 @@ import hkmc2.Message.MessageContext
 import hkmc2.{semantics => sem}
 import hkmc2.semantics.{Term => st}
 
-import syntax.{Literal, Tree}
+import syntax.{Literal, Tree, SpreadKind}
 import semantics.*
 import semantics.Term.*
 import sem.Elaborator.State
@@ -737,7 +737,7 @@ object Value:
     // * If the ref is a symbol that does not refer to a definition, then there is no disambiguation.
     def apply(l: TempSymbol | VarSymbol | BuiltinSymbol): Ref = Ref(l, N)
 
-case class Arg(spread: Opt[Bool], value: Path)
+case class Arg(spread: Opt[SpreadKind], value: Path)
 
 // * `IndxdArg(S(idx), value)` represents a key-value pair in a record `(idx): value`
 // * `IndxdArg(N, value)` represents a spread element in a record `...value`

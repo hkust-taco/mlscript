@@ -44,6 +44,9 @@ sealed trait Literal extends AutoLocated:
 
 enum SpreadKind:
   case Eager, Lazy
+  def isEager: Bool = this match
+    case Eager => true
+    case Lazy => false
   def str: Str = this match
     case Eager => "..."
     case Lazy => ".."
@@ -151,7 +154,7 @@ enum Tree extends AutoLocated:
     case Effectful(eff, body) => Vector.double(eff, body)
     case Outer(name) => name.toVector
     case TyTup(tys) => tys.toVector
-    case Sel(prefix, name) => Vector.single(prefix)
+    case Sel(prefix, name) => Vector.double(prefix, name)
     case SynthSel(prefix, name) => Vector.single(prefix)
     case DynAccess(prefix, fld) => Vector.double(prefix, fld)
     case Open(bod) => Vector.single(bod)
@@ -415,8 +418,8 @@ object OuterKind:
 
 // Please don't put any of these on the same line...
 case object BlockKind extends OuterKind("block")
-sealed abstract class DeclKind(desc: Str)(using Line) extends OuterKind(desc)
-sealed abstract class TermDefKind(val str: Str, desc: Str)(using Line) extends DeclKind(desc)
+sealed abstract class DeclKind(val str: Str, desc: Str)(using Line) extends OuterKind(desc)
+sealed abstract class TermDefKind(str: Str, desc: Str)(using Line) extends DeclKind(str, desc)
 sealed abstract class ValLike(str: Str, desc: Str)(using Line) extends TermDefKind(str, desc)
 sealed abstract class Val(str: Str, desc: Str)(using Line) extends ValLike(str, desc)
 case object ImmutVal extends Val("val", "value")
@@ -426,17 +429,18 @@ case object HandlerBind extends TermDefKind("handler", "handler binding")
 case object ParamBind extends ValLike("", "parameter")
 case object Fun extends TermDefKind("fun", "function")
 case object Ins extends TermDefKind("using", "implicit instance")
-sealed abstract class TypeDefKind(desc: Str)(using Line) extends DeclKind(desc)
+sealed abstract class TypeDefKind(str: Str, desc: Str)(using Line) extends DeclKind(str, desc)
 sealed trait ObjDefKind
 sealed trait ClsLikeKind extends ObjDefKind:
+  val str: Str
   val desc: Str
-case object Cls extends TypeDefKind("class") with ClsLikeKind
-case object Trt extends TypeDefKind("trait") with ObjDefKind
-case object Mxn extends TypeDefKind("mixin")
-case object Als extends TypeDefKind("type alias")
-case object Pat extends TypeDefKind("pattern") with ClsLikeKind
-case object Obj extends TypeDefKind("object") with ClsLikeKind
-case object Mod extends TypeDefKind("module") with ClsLikeKind
+case object Cls extends TypeDefKind("class", "class") with ClsLikeKind
+case object Trt extends TypeDefKind("trait", "trait") with ObjDefKind
+case object Mxn extends TypeDefKind("mixin", "mixin") with ObjDefKind
+case object Als extends TypeDefKind("type", "type alias") with ObjDefKind
+case object Pat extends TypeDefKind("pattern", "pattern") with ClsLikeKind
+case object Obj extends TypeDefKind("object", "object") with ClsLikeKind
+case object Mod extends TypeDefKind("module", "module") with ClsLikeKind
 
 
 

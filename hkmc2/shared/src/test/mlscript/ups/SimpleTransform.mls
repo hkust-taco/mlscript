@@ -8,40 +8,31 @@ open annotations
 
 data class Pair[A, B](first: A, second: B)
 
-:sjs
+:sir
 pattern SumPair = Pair(a, b) => a + b
-//│ JS (unsanitized):
-//│ let SumPair1;
-//│ (class SumPair {
-//│   static {
-//│     new this
-//│   }
-//│   constructor() {
-//│     SumPair1 = this;
-//│     globalThis.Object.freeze(this);
-//│   }
-//│   unapply(input) {
+//│ Lowered:
+//│ let SumPair⁰;
+//│ define pattern SumPair⁰ {
+//│   fun unapply⁰(input) {
 //│     let transform, arg$Pair$0$, arg$Pair$1$, transformResult, tmp, lambda;
-//│     lambda = (undefined, function (a, b) {
-//│       return a + b
-//│     });
-//│     transform = lambda;
-//│     if (input instanceof Pair1.class) {
-//│       arg$Pair$0$ = input.first;
-//│       arg$Pair$1$ = input.second;
-//│       transformResult = runtime.safeCall(transform(arg$Pair$0$, arg$Pair$1$));
-//│       tmp = globalThis.Object.freeze({});
-//│       return globalThis.Object.freeze(new runtime.MatchSuccess.class(transformResult, tmp))
-//│     } else {
-//│       return globalThis.Object.freeze(new runtime.MatchFailure.class(null))
-//│     }
-//│   } 
-//│   unapplyStringPrefix(input) {
-//│     return globalThis.Object.freeze(new runtime.MatchFailure.class(null))
+//│     define fun lambda(a, b) {
+//│       return +⁰(a, b)
+//│     };
+//│     set transform = lambda;
+//│     match input
+//│       Pair⁰ =>
+//│         set arg$Pair$0$ = input.first⁰;
+//│         set arg$Pair$1$ = input.second⁰;
+//│         set transformResult = transform(arg$Pair$0$, arg$Pair$1$);
+//│         set tmp = {  };
+//│         return new runtime⁰.MatchSuccess⁰(transformResult, tmp)
+//│       else
+//│         return new runtime⁰.MatchFailure⁰(null)
+//│     end
 //│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["pattern", "SumPair"]; 
-//│ });
+//│   fun unapplyStringPrefix⁰(input1) { return new runtime⁰.MatchFailure⁰(null) }
+//│ };
+//│ end
 
 fun foo(value) = if value is
   SumPair as sum then print("sum: " + sum)

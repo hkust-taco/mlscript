@@ -11,9 +11,9 @@ import syntax.Tree, Tree.*, Elaborator.{Ctx, State, ctx}
   * `Normalization`, `Compiler`, and `SplitCompiler`. */
 trait TermSynthesizer(using State):
   protected final def sel(p: Term, k: Ident): Term.SynthSel =
-    (Term.SynthSel(p, k)(N, N): Term.SynthSel).resolve
+    (Term.SynthSel(p, k)(N, FlowSymbol.synthSel(k.name), N, N): Term.SynthSel).resolve
   protected final def sel(p: Term, k: Ident, s: MemberSymbol): Term.SynthSel =
-    (Term.SynthSel(p, k)(S(s), N): Term.SynthSel).resolve
+    (Term.SynthSel(p, k)(S(s), FlowSymbol.synthSel(k.name), N, N): Term.SynthSel).resolve
   protected final def sel(p: Term, k: Str): Term.SynthSel = sel(p, Ident(k): Ident)
   protected final def sel(p: Term, k: Str, s: MemberSymbol): Term.SynthSel = sel(p, Ident(k): Ident, s)
   protected final def int(i: Int) = Term.Lit(IntLit(BigInt(i)))

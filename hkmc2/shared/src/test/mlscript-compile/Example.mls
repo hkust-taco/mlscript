@@ -27,3 +27,11 @@ fun assertFail() =
   assert false
 
 
+class Test(val field: Int)
+
+module Test with
+  fun next(self: Test) = Test(self.field + 1)
+
+val t = new Test(123)
+
+

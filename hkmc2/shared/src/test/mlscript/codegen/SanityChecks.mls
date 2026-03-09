@@ -8,10 +8,8 @@ fun f(x, y) = x + y
 f(2, 3)
 //│ JS:
 //│ let f;
-//│ f = function f(...args) {
-//│   runtime.checkArgs("f", 2, true, args.length);
-//│   let x = args[0];
-//│   let y = args[1];
+//│ f = function f(x, y) {
+//│   runtime.checkArgs("f", 2, true, arguments.length);
 //│   return x + y
 //│ };
 //│ block$res1 = runtime.checkCall(f(2, 3));
@@ -19,18 +17,42 @@ f(2, 3)
 //│ = 5
 
 
-:expect NaN
 :ssjs
+let f = (x, y) => x + y
+f(2, 3)
+//│ JS:
+//│ let f1, f2;
+//│ f2 = function f(x, y) {
+//│   runtime.checkArgs("f", 2, true, arguments.length);
+//│   return x + y
+//│ };
+//│ f1 = f2;
+//│ block$res2 = runtime.safeCall(f1(2, 3));
+//│ undefined
+//│ = 5
+//│ f = fun f
+
+:re
+f(2)
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
+
+:re
+f(2, 3, 4)
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 3
+
+
+:ssjs
+:expect NaN
 :noSanityCheck
 fun f2(x, y) = x + y
 id(f2)(2)
 //│ JS:
-//│ let f2, tmp;
-//│ f2 = function f2(x, y) {
+//│ let f21, tmp;
+//│ f21 = function f2(x, y) {
 //│   return x + y
 //│ };
-//│ tmp = Predef.id(f2);
-//│ block$res2 = runtime.safeCall(tmp(2));
+//│ tmp = Predef.id(f21);
+//│ block$res5 = runtime.safeCall(tmp(2));
 //│ undefined
 //│ = NaN
 
@@ -39,144 +61,71 @@ id(f2)(2)
 id(f)(2)
 //│ JS:
 //│ let tmp1;
-//│ tmp1 = runtime.checkCall(Predef.id(f)); block$res3 = runtime.safeCall(tmp1(2)); undefined
+//│ tmp1 = runtime.checkCall(Predef.id(f1)); block$res6 = runtime.safeCall(tmp1(2)); undefined
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
 :ssjs
-:re
+// :re // Argument numbers are no longer checked for lambdas, including extra parameter lists
 fun f(x)(y, z) = x + y + z
 id(f)(3)(4)
 //│ JS:
-//│ let f1, tmp2, tmp3;
-//│ f1 = function f(...args) {
-//│   runtime.checkArgs("f", 1, true, args.length);
-//│   let x = args[0];
-//│   return (...args1) => {
-//│     runtime.checkArgs("", 2, true, args1.length);
-//│     let y = args1[0];
-//│     let z = args1[1];
+//│ let f3, tmp2, tmp3;
+//│ f3 = function f(x) {
+//│   runtime.checkArgs("f", 1, true, arguments.length);
+//│   return (y, z) => {
 //│     let tmp4;
 //│     tmp4 = x + y;
 //│     return tmp4 + z
 //│   }
 //│ };
-//│ tmp2 = runtime.checkCall(Predef.id(f1));
+//│ tmp2 = runtime.checkCall(Predef.id(f3));
 //│ tmp3 = runtime.safeCall(tmp2(3));
-//│ block$res4 = runtime.safeCall(tmp3(4));
+//│ block$res7 = runtime.safeCall(tmp3(4));
 //│ undefined
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
-
-
-:expect NaN
-:ssjs
-:noSanityCheck
-let f = (x, y) => x + y in f(2)
-//│ JS:
-//│ let f3, f4;
-//│ f4 = function f(x, y) { return x + y }; f3 = f4; block$res5 = runtime.safeCall(f3(2)); undefined
 //│ = NaN
 
-:ssjs
+
+// :ssjs
+:expect NaN
+:noSanityCheck
+let f = (x, y) => x + y in f(2)
+//│ = NaN
+
+// :ssjs
 :re
 let f = (x, y) => x + y
 f(2)
-//│ JS:
-//│ let f5, f6;
-//│ f6 = function f(...args) {
-//│   runtime.checkArgs("f", 2, true, args.length);
-//│   let x = args[0];
-//│   let y = args[1];
-//│   return x + y
-//│ };
-//│ f5 = f6;
-//│ block$res6 = runtime.safeCall(f5(2));
-//│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 //│ f = fun f
 
 
+// :ssjs
 :expect NaN
-:ssjs
 :noSanityCheck
 data class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 id(Cls(1, 2)).f(3)
-//│ JS:
-//│ let Cls1, tmp4, tmp5;
-//│ Cls1 = function Cls(x, y) {
-//│   return globalThis.Object.freeze(new Cls.class(x, y));
-//│ };
-//│ (class Cls {
-//│   static {
-//│     Cls1.class = this
-//│   }
-//│   constructor(x, y) {
-//│     this.x = x;
-//│     this.y = y;
-//│   }
-//│   f(z, p) {
-//│     let tmp6, tmp7;
-//│     tmp6 = this.x + this.y;
-//│     tmp7 = tmp6 + z;
-//│     return tmp7 + p
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Cls", ["x", "y"]]; 
-//│ });
-//│ tmp4 = Cls1(1, 2);
-//│ tmp5 = Predef.id(tmp4);
-//│ block$res7 = runtime.safeCall(tmp5.f(3));
-//│ undefined
 //│ = NaN
 
-:ssjs
+// :ssjs
 :re
 data class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 id(Cls(1, 2)).f(3)
-//│ JS:
-//│ let Cls3, tmp6, tmp7;
-//│ Cls3 = function Cls(...args) {
-//│   return globalThis.Object.freeze(new Cls.class(...args));
-//│ };
-//│ globalThis.Object.freeze(class Cls2 {
-//│   static {
-//│     Cls3.class = this
-//│   }
-//│   constructor(x, y) {
-//│     this.x = x;
-//│     this.y = y;
-//│   }
-//│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
-//│   f(...args) {
-//│     runtime.checkArgs("f", 2, true, args.length);
-//│     let z = args[0];
-//│     let p = args[1];
-//│     let tmp8, tmp9;
-//│     tmp8 = this.x + this.y;
-//│     tmp9 = tmp8 + z;
-//│     return tmp9 + p
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Cls", ["x", "y"]]; 
-//│ });
-//│ tmp6 = runtime.checkCall(Cls3(1, 2));
-//│ tmp7 = runtime.checkCall(Predef.id(tmp6));
-//│ block$res8 = runtime.safeCall(tmp7.f(3));
-//│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
 :ssjs
-:re
+:expect NaN
+// :re // Argument numbers are no longer checked for lambdas, including extra parameter lists
 data class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
 id(Cls(1, 2)).f(3, 4)(5)
 //│ JS:
 //│ let Cls5, tmp8, tmp9, tmp10;
-//│ Cls5 = function Cls(...args) {
-//│   return globalThis.Object.freeze(new Cls.class(...args));
+//│ Cls5 = function Cls(x, y) {
+//│   return globalThis.Object.freeze(new Cls.class(x, y));
 //│ };
 //│ globalThis.Object.freeze(class Cls4 {
 //│   static {
@@ -187,14 +136,9 @@ id(Cls(1, 2)).f(3, 4)(5)
 //│     this.y = y;
 //│   }
 //│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
-//│   f(...args) {
-//│     runtime.checkArgs("f", 2, true, args.length);
-//│     let z = args[0];
-//│     let p = args[1];
-//│     return (...args1) => {
-//│       runtime.checkArgs("", 2, true, args1.length);
-//│       let q = args1[0];
-//│       let s = args1[1];
+//│   f(z, p) {
+//│     runtime.checkArgs("f", 2, true, arguments.length);
+//│     return (q, s) => {
 //│       let tmp11, tmp12, tmp13, tmp14;
 //│       tmp11 = this.x + this.y;
 //│       tmp12 = tmp11 + z;
@@ -209,122 +153,66 @@ id(Cls(1, 2)).f(3, 4)(5)
 //│ tmp8 = runtime.checkCall(Cls5(1, 2));
 //│ tmp9 = runtime.checkCall(Predef.id(tmp8));
 //│ tmp10 = tmp9.f(3, 4);
-//│ block$res9 = runtime.safeCall(tmp10(5));
+//│ block$res12 = runtime.safeCall(tmp10(5));
 //│ undefined
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
+//│ = NaN
 
 
-:ssjs
+// :ssjs
 console.log(1)
-//│ JS:
-//│ block$res10 = runtime.safeCall(globalThis.console.log(1)); undefined
 //│ > 1
 
 
+// :ssjs
 :re
-:ssjs
 globalThis.x
-//│ JS:
-//│ let selRes, discarded;
-//│ selRes = globalThis.x;
-//│ discarded = globalThis.x$__checkNotMethod;
-//│ if (selRes === undefined) {
-//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'x' yielded 'undefined'"))
-//│ }
-//│ block$res11 = selRes;
-//│ undefined
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
+// :ssjs
 :re
-:ssjs
 globalThis.x()
-//│ JS:
-//│ block$res12 = runtime.safeCall(globalThis.x()); undefined
 //│ ═══[RUNTIME ERROR] TypeError: globalThis.x is not a function
 
 
 
 
-:re
-:ssjs
 module M with
   data class A(x) with
     fun f(y) = x + y
+
+:ssjs
+:re
 if M.A(1).y is
   x and x == 1 then x
   else 0
 //│ JS:
-//│ let M1, scrut, x, scrut1, tmp11, selRes1, discarded1;
-//│ globalThis.Object.freeze(class M {
-//│   static {
-//│     M1 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
-//│   static {
-//│     this.A = function A(...args) {
-//│       return globalThis.Object.freeze(new A.class(...args));
-//│     };
-//│     globalThis.Object.freeze(class A {
-//│       static {
-//│         M.A.class = this
-//│       }
-//│       constructor(x1) {
-//│         this.x = x1;
-//│       }
-//│       get f$__checkNotMethod() { runtime.deboundMethod("f", "A"); }
-//│       f(...args) {
-//│         runtime.checkArgs("f", 1, true, args.length);
-//│         let y = args[0];
-//│         return this.x + y
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "A", ["x"]]; 
-//│     });
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "M"]; 
-//│ });
+//│ let scrut, x, scrut1, tmp11, selRes1;
 //│ tmp11 = runtime.checkCall(M1.A(1));
 //│ selRes1 = tmp11.y;
-//│ discarded1 = tmp11.y$__checkNotMethod;
+//│ tmp11.y$__checkNotMethod;
 //│ if (selRes1 === undefined) {
 //│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"))
 //│ }
 //│ scrut = selRes1;
 //│ x = scrut;
 //│ scrut1 = Predef.equals(x, 1);
-//│ if (scrut1 === true) { block$res13 = x; undefined } else { block$res13 = 0; undefined }
+//│ if (scrut1 === true) { block$res17 = x; undefined } else { block$res17 = 0; undefined }
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
 
 
-:ssjs
+// :ssjs
 :re
 M.A(1).y
   console.log()
-//│ JS:
-//│ let tmp12, selRes2, discarded2;
-//│ tmp12 = runtime.checkCall(M1.A(1));
-//│ selRes2 = tmp12.y;
-//│ discarded2 = tmp12.y$__checkNotMethod;
-//│ if (selRes2 === undefined) {
-//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"))
-//│ }
-//│ block$res14 = runtime.safeCall(globalThis.console.log(selRes2));
-//│ undefined
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
 
 
-:ssjs
+// :ssjs
 :noSanityCheck
 M.A(1).y
   console.log()
-//│ JS:
-//│ let tmp13;
-//│ tmp13 = M1.A(1); block$res15 = runtime.safeCall(globalThis.console.log(tmp13.y)); undefined
 //│ > undefined
 
 :noSanityCheck
@@ -336,21 +224,15 @@ M.A(2).y > 1
 M.A(2).y > 1
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
+// :ssjs
 :re
-:ssjs
 M.A(1).g(0)
-//│ JS:
-//│ let tmp16;
-//│ tmp16 = runtime.checkCall(M1.A(1)); block$res18 = runtime.safeCall(tmp16.g(0)); undefined
 //│ ═══[RUNTIME ERROR] TypeError: tmp16.g is not a function
 
 
 
-:ssjs
+// :ssjs
 M.A(1).f(0)
-//│ JS:
-//│ let tmp17;
-//│ tmp17 = runtime.checkCall(M1.A(1)); block$res19 = runtime.checkCall(tmp17.f(0)); undefined
 //│ = 1
 
 

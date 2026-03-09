@@ -54,8 +54,8 @@ z = 1
 fun f() = 1
 //│ JS:
 //│ let f;
-//│ f = function f(...args) {
-//│   runtime.checkArgs("f", 0, true, args.length);
+//│ f = function f() {
+//│   runtime.checkArgs("f", 0, true, arguments.length);
 //│   return 1
 //│ };
 //│ block$res9 = undefined;
@@ -70,9 +70,8 @@ let f
 f(x) = x + 1
 //│ JS:
 //│ let f1, f2;
-//│ f2 = function f(...args) {
-//│   runtime.checkArgs("f", 1, true, args.length);
-//│   let x1 = args[0];
+//│ f2 = function f(x1) {
+//│   runtime.checkArgs("f", 1, true, arguments.length);
 //│   return x1 + 1
 //│ };
 //│ f1 = f2;
@@ -98,7 +97,7 @@ if true
 then foo = 0
 else foo = 1
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.98: 	then foo = 0
+//│ ║  l.97: 	then foo = 0
 //│ ╙──      	         ^
 //│ JS:
 //│ let foo1, scrut;
@@ -130,8 +129,8 @@ fun f() =
   foo = 42
 //│ JS:
 //│ let f3;
-//│ f3 = function f(...args) {
-//│   runtime.checkArgs("f", 0, true, args.length);
+//│ f3 = function f() {
+//│   runtime.checkArgs("f", 0, true, arguments.length);
 //│   foo2 = 42;
 //│   return runtime.Unit
 //│ };
@@ -150,12 +149,12 @@ foo
 :fixme
 fun f() = foo = 0
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.151: 	fun f() = foo = 0
+//│ ║  l.150: 	fun f() = foo = 0
 //│ ╙──       	              ^
 //│ JS:
 //│ let f4;
-//│ f4 = function f(...args) {
-//│   runtime.checkArgs("f", 0, true, args.length);
+//│ f4 = function f() {
+//│   runtime.checkArgs("f", 0, true, arguments.length);
 //│   return foo2
 //│ };
 //│ block$res19 = undefined;
