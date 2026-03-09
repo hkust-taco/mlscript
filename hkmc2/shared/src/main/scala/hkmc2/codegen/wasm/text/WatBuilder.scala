@@ -329,6 +329,26 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ctx.addLocal(thisSym)
     LocalIdx(SymIdx(thisName)) -> thisName
 
+  /**
+   * Compiles a class/object constructor body under its own Wasm-local frame.
+   */
+  private def setupCtorLocals(clsLikeDefn: ClsLikeDefn)(using
+      Ctx,
+      Raise,
+      Scope
+  ): (Seq[Local -> Str], LocalIdx, Expr, Seq[Local -> Str]) =
+    ctx.pushLocal()
+    val clsParams = clsLikeDefn.paramsOpt.fold(Nil)(_.paramSyms)
+    val ctorParams = clsParams.map: p =>
+      ctx.addLocal(p)
+      p -> scope.allocateName(p)
+    val (thisVar, thisVarName) = bindCtorThis(clsLikeDefn.isym)
+    val (ctorWat, ctorLocals) = block(clsLikeDefn.ctor)
+    val localsWithNames =
+      (clsLikeDefn.isym -> thisVarName) +: ctorLocals.map(l => l -> scope.lookup_!(l, l.toLoc))
+    ctx.popLocal()
+    (ctorParams, thisVar, ctorWat, localsWithNames)
+
   /** Returns locals allocated during codegen (e.g., temp locals). */
   private def getExtraLocals(using Ctx): Seq[Local] =
     ctx.getWasmLocals._2.getOrElse(Seq.empty)
@@ -1075,18 +1095,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   if clsLikeDefn.companion.isDefined then
                     break(errUnimplExpr("companion.isDefined"))
 
-                  val clsParams = clsLikeDefn.paramsOpt.fold(Nil)(_.paramSyms)
-                  val ctorParams = clsParams.map: p =>
-                    ctx.addLocal(p)
-                    p -> scope.allocateName(p)
                   val ctorAuxParams = clsLikeDefn.auxParams.map: ps =>
                     ps.params.map: p =>
-                      ctx.addLocal(p.sym)
                       p -> scope.allocateName(p.sym)
 
                   // Use the symbolic type reference (e.g. `$Foo`) in emitted WAT for readability. 
                   // Numeric indices are only needed for `$tag` values.
                   val typeref = ctx.getType_!(clsLikeDefn.sym)
+
+                  val (ctorParams, thisVar, ctorWat, ctorLocals) = setupCtorLocals(clsLikeDefn)
 
                   // * If there are no ctor params, pop one param list off the aux params
                   val (newCtorAuxParams, initialCtorParams) = clsLikeDefn.paramsOpt match
@@ -1094,9 +1111,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         case head :: next => (next, head)
                         case Nil => (ctorAuxParams, Nil)
                     case Some(_) => (ctorAuxParams, ctorParams)
-
-                  val (thisVar, thisVarName) = bindCtorThis(clsLikeDefn.isym)
-                  val (ctorWat, ctorLocals) = block(clsLikeDefn.ctor)
                   
                   val tagValue = ctx.getType_!(clsLikeDefn.sym, resolveSymIdx = true) match
                     case TypeIdx(NumIdx(idx)) => idx
@@ -1146,11 +1160,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       typeIdx = funcTy,
                       params = ctorParams,
                       nResults = ctorCode.resultTypes.length,
-                      locals =
-                        (clsLikeDefn.isym -> thisVarName) +: ctorLocals.map:
-                          l =>
-                            l -> scope.lookup_!(l, l.toLoc)
-                      ,
+                      locals = ctorLocals,
                       body = ctorAux
                     )
                   )

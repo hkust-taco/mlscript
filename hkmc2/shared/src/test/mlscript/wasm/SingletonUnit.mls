@@ -31,7 +31,6 @@
 //│         (ref.cast (ref null $Unit)
 //│           (call 0)))))
 //│   (func $entry (type 3) (result (ref null any))
-//│     (local $Unit (ref null any))
 //│     (block (result (ref null $Unit))
 //│       (nop)
 //│       (global.get $Unit$inst)))
