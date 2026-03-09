@@ -10,10 +10,10 @@ C()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{typ=class:C⁰}:
-//│     lhs = Resolved{sym=term:C⁰.C¹}:
-//│       t = Ref{sym=member:C²} of member:C²
-//│       sym = term:C⁰.C¹
+//│   res = App{typ=class:C}:
+//│     lhs = Resolved{sym=term:C⁰.C}:
+//│       t = Ref{sym=member:C} of member:C
+//│       sym = term:C⁰.C
 //│     rhs = Tup of Nil
 //│ = C()
 
@@ -22,10 +22,10 @@ new C
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = New{typ=class:C⁰}:
-//│     cls = Resolved{sym=class:C⁰}:
-//│       t = Ref{sym=member:C²} of member:C²
-//│       sym = class:C⁰
+//│   res = New{typ=class:C}:
+//│     cls = Resolved{sym=class:C}:
+//│       t = Ref{sym=member:C} of member:C
+//│       sym = class:C
 //│     args = Nil
 //│     rft = N
 //│ = C()
@@ -38,13 +38,13 @@ C.empty
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=term:C³.empty¹}:
-//│     t = Sel{sym=member:empty⁰}:
-//│       prefix = Resolved{sym=module:C³,typ=module:C³}:
-//│         t = Ref{sym=member:C²} of member:C²
-//│         sym = module:C³
+//│   res = Resolved{sym=term:C¹.empty}:
+//│     t = Sel{sym=member:empty}:
+//│       prefix = Resolved{sym=module:C,typ=module:C}:
+//│         t = Ref{sym=member:C} of member:C
+//│         sym = module:C
 //│       nme = Ident of "empty"
-//│     sym = term:C³.empty¹
+//│     sym = term:C¹.empty
 //│ = 1
 
 :breakme // TODO: should be an error, down the line, when we resolve all selections statically
@@ -63,13 +63,13 @@ C.empty
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=term:C⁴.empty³}:
-//│     t = Sel{sym=member:empty²}:
-//│       prefix = Resolved{sym=module:C⁴,typ=module:C⁴}:
-//│         t = Ref{sym=member:C⁵} of member:C⁵
-//│         sym = module:C⁴
+//│   res = Resolved{sym=term:C².empty}:
+//│     t = Sel{sym=member:empty}:
+//│       prefix = Resolved{sym=module:C,typ=module:C}:
+//│         t = Ref{sym=member:C} of member:C
+//│         sym = module:C
 //│       nme = Ident of "empty"
-//│     sym = term:C⁴.empty³
+//│     sym = term:C².empty
 //│ = 1
 
 

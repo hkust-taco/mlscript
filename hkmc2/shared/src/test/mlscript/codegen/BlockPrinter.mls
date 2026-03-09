@@ -17,20 +17,20 @@ x + 1
 //│ Lowered IR:
 //│ Program:
 //│   imports = Nil
-//│   main = Scoped(syms = {x⁰}): 
+//│   main = Scoped(syms = {x}): 
 //│     body = Assign:
-//│       lhs = x⁰
+//│       lhs = x
 //│       rhs = Lit of IntLit of 1
 //│       rest = Return: \
 //│       res = Call:
 //│         fun = Ref:
-//│           l = builtin:+⁰
+//│           l = builtin:+
 //│           disamb = N
 //│         args = Ls of 
 //│           Arg:
 //│             spread = N
 //│             value = Ref:
-//│               l = x⁰
+//│               l = x
 //│               disamb = N
 //│           Arg:
 //│             spread = N
@@ -63,13 +63,13 @@ case
 //│   let x, xs, middleElements, element0$;
 //│   match caseScrut
 //│     Array(0) =>
-//│       return Predef.print²("empty")
+//│       return Predef.print⁰("empty")
 //│     Array(1+) =>
 //│       set element0$ = runtime⁰.Tuple﹖.get﹖(caseScrut, 0);
 //│       set middleElements = runtime⁰.Tuple﹖.slice﹖(caseScrut, 1, 0);
 //│       set xs = middleElements;
 //│       set x = element0$;
-//│       return Predef.print²("non-empty", x)
+//│       return Predef.print⁰("non-empty", x)
 //│     else
 //│       throw new globalThis⁰.Error﹖("match error")
 //│   end
@@ -100,7 +100,7 @@ let x = x + 1
 //│ Lowered:
 //│ let x², x³, scrut, x⁴, tmp;
 //│ set x² = 1;
-//│ set scrut = Predef.equals¹(x², 0);
+//│ set scrut = Predef.equals⁰(x², 0);
 //│ match scrut
 //│   true =>
 //│     set tmp = 1;

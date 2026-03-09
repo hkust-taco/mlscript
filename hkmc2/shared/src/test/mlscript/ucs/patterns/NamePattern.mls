@@ -6,11 +6,11 @@ fun id(x) = x
 if id(0) is t then t
 //│ Split with nested patterns:
 //│ >  if
-//│ >    let tmp:scrut⁰ = member:id⁰(0)
-//│ >    tmp:scrut⁰ is t then t⁰
+//│ >    let tmp:scrut = member:id(0)
+//│ >    tmp:scrut is t then t
 //│ Expanded split with flattened patterns:
 //│ >  ‹if|while›
-//│ >    let tmp:scrut⁰ = member:id⁰(0)
-//│ >    let t⁰ = tmp:scrut⁰
-//│ >    else t⁰
+//│ >    let tmp:scrut = member:id(0)
+//│ >    let t = tmp:scrut
+//│ >    else t
 //│ = 0

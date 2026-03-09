@@ -153,7 +153,7 @@ f5()
 :sllir
 fun test() =
   if true do test()
-//│ ═══[COMPILATION ERROR] Name not found: tmp:runtime⁰
+//│ ═══[COMPILATION ERROR] Name not found: tmp:runtime
 //│ Stopped due to an error during the Llir generation
 
 :sllir
@@ -223,11 +223,11 @@ f(A(1))
 //│   class B(y)
 //│   def f(a) =
 //│     case a of
-//│       Class(class:A⁰) =>
+//│       Class(class:A) =>
 //│         let x = a.<A:x> in
 //│         let x1 = 1 in
 //│         jump j(x1)
-//│       Class(class:B⁰) =>
+//│       Class(class:B) =>
 //│         let x2 = a.<B:y> in
 //│         let x3 = 2 in
 //│         jump j(x3)
