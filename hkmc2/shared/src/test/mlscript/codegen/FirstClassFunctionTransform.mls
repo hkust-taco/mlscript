@@ -72,8 +72,8 @@ fun f(x, y, b) =
 //│     this.#b = b;
 //│   }
 //│   #Function$$cap;
-//│   #y;
 //│   #b;
+//│   #y;
 //│   call(z) {
 //│     return lambda1(this.#y, this.#b, z)
 //│   }

@@ -157,6 +157,7 @@ object Document {
     else group(doc"$pre #{ ${if insertBreak then break :: d else d} #}  # $post")
   
   def braced(d: Document): Document = bracketed("{", "}")(d)
+  def bracedbk(d: Document): Document = bracketed("{", "}", insertBreak = true)(d)
   
 }
 

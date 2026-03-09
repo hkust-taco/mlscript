@@ -5,39 +5,28 @@
 
 
 // * Flattened
-:lot
+:sir
 :sjs
 scope.locally of 42
 //│ JS (unsanitized):
 //│ 42
 //│ Lowered:
-//│ Program:
-//│   imports = Nil
-//│   main = Return:
-//│     res = Lit of IntLit of 42
-//│     implct = true
+//│ 42
 //│ = 42
 
 
+:sir
+let x = 42 in x
+//│ Lowered:
+//│ let x⁰; set x⁰ = 42; x⁰
+//│ = 42
+
 // * Flattened
-:lot
-:sjs
+:sir
 scope.locally of
   let x = 42 in x
-//│ JS (unsanitized):
-//│ let x; x = 42; x
 //│ Lowered:
-//│ Program:
-//│   imports = Nil
-//│   main = Scoped(syms = {x}): 
-//│     body = Assign:
-//│       lhs = x
-//│       rhs = Lit of IntLit of 42
-//│       rest = Return: \
-//│       res = Ref:
-//│         l = x
-//│         disamb = N
-//│       implct = true
+//│ let x¹; set x¹ = 42; x¹
 //│ = 42
 
 
@@ -49,24 +38,14 @@ scope.locally of (
 //│ = 42
 
 
-:lot
+:sir
 // :sjs
 scope.locally of scope.locally of (
   let x = 42
   x
 )
 //│ Lowered:
-//│ Program:
-//│   imports = Nil
-//│   main = Scoped(syms = {x}): 
-//│     body = Assign:
-//│       lhs = x
-//│       rhs = Lit of IntLit of 42
-//│       rest = Return: \
-//│       res = Ref:
-//│         l = x
-//│         disamb = N
-//│       implct = true
+//│ let x²; set x² = 42; x²
 //│ = 42
 
 
@@ -74,7 +53,7 @@ scope.locally of scope.locally of (
 :e
 x
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.75: 	x
+//│ ║  l.54: 	x
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -165,7 +144,7 @@ fun foo(x, y) =
 :ge
 scope.locally()
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.166: 	scope.locally()
+//│ ║  l.145: 	scope.locally()
 //│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -173,7 +152,7 @@ scope.locally()
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.174: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
+//│ ║  l.153: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -182,10 +161,10 @@ scope.locally of (let x = 1 in x), (let y = 2 in y)
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.183: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.162: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	                                                 ^
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.183: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.162: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -221,9 +200,9 @@ fun f(x) =
     )
 //│ JS (unsanitized):
 //│ let f2;
-//│ f2 = function f(x3) {
+//│ f2 = function f(x4) {
 //│   let y3;
-//│   if (x3 === true) {
+//│   if (x4 === true) {
 //│     let z2, z3;
 //│     y3 = 2;
 //│     z3 = function z() {
@@ -258,8 +237,8 @@ fun f(x) =
     () => 4
 //│ JS (unsanitized):
 //│ let f4;
-//│ f4 = function f(x4) {
-//│   if (x4 === true) {
+//│ f4 = function f(x5) {
+//│   if (x5 === true) {
 //│     let lambda1;
 //│     lambda1 = (undefined, function () {
 //│       return 4

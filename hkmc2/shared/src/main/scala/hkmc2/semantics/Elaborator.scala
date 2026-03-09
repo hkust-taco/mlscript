@@ -16,12 +16,13 @@ import Term.{ Blk, Rcd }
 import hkmc2.Message.MessageContext
 
 import Keyword.{`let`, `set`}
+import hkmc2.utils.Scope
 
 
 object Elaborator:
   
   val binaryOps = Set(
-    ",",
+    ",", // * Not currently used directly; but `;` (below) maps to it
     "+", "-", "*", "/", "%",
     "==", "!=", "<", "<=", ">", ">=",
     "===", "!==",
@@ -77,6 +78,8 @@ object Elaborator:
   ):
     
     override def toString: Str = s"${parent.fold("")(_.toString+"/")}${outer.showDbg}"
+    
+    lazy val scope: SrcScope = SrcScope(outer, parent.map(_.scope))
     
     def +(local: Str -> Symbol): Ctx = copy(outer, env = env + local.mapSecond(Ctx.RefElem(_)))
     def ++(locals: IterableOnce[Str -> Symbol]): Ctx =
@@ -215,22 +218,22 @@ object Elaborator:
   object Ctx:
     abstract class Elem:
       def nme: Str
-      def ref(id: Ident)(using Elaborator.State): Resolvable
+      def ref(id: Ident)(using Elaborator.State, Ctx): Resolvable
       def symbol: Opt[Symbol]
       def isImport: Bool
     final case class RefElem(sym: Symbol) extends Elem:
       val nme = sym.nme
-      def ref(id: Ident)(using Elaborator.State): Resolvable =
+      def ref(id: Ident)(using Elaborator.State, Ctx): Resolvable =
         // * Note: due to symbolic ops, we may have `id.name =/= nme`;
         // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
         Term.Ref(sym)(id, 666, N) // FIXME: 666 is a temporary placeholder
       def symbol = S(sym)
       def isImport: Bool = false
     final case class SelElem(base: Elem, nme: Str, symOpt: Opt[MemberSymbol], isImport: Bool) extends Elem:
-      def ref(id: Ident)(using Elaborator.State): Resolvable =
+      def ref(id: Ident)(using Elaborator.State, Ctx): Resolvable =
         // * Same remark as in RefElem#ref
         Term.SynthSel(base.ref(Ident(base.nme)),
-          new Ident(nme).withLocOf(id))(symOpt, N)
+          new Ident(nme).withLocOf(id))(symOpt, FlowSymbol.synthSel(nme), N, S(summon))
       def symbol = symOpt
     given Conversion[Symbol, Elem] = RefElem(_)
     val empty: Ctx = Ctx(OuterCtx.LocalScope("top-level"), N, Map.empty, Mode.Full)
@@ -246,6 +249,11 @@ object Elaborator:
   class State:
     val suid = new Uid.Symbol.State
     given State = this
+    val dbgScope = Scope.empty(Scope.Cfg.default.copy(
+      escapeChars = false,
+      useSuperscripts = true,
+      includeZero = true,
+    ))
     val globalThisSymbol = TopLevelSymbol("globalThis")
     val unitSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Obj), Ident("Unit"))
     val loopEndSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Obj), Ident("LoopEnd"))
@@ -265,7 +273,7 @@ object Elaborator:
       val bsym = BlockMemberSymbol("ret", Nil, true)
       val defn = ClassDef(N, syntax.Cls, sym, bsym, N, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N)
       sym.defn = S(defn)
-      Term.SynthSel(runtimeSymbol.ref(), id)(S(sym), N)
+      Term.SynthSel(runtimeSymbol.ref(), id)(S(sym), FlowSymbol.synthSel(id.name), N, N)
     val nonLocalRet =
       val id = new Ident("ret")
       BlockMemberSymbol(id.name, Nil, true)
@@ -448,12 +456,12 @@ extends Importer with ucs.SplitElaborator:
       case trm => raise(WarningReport(msg"Terms in handler block do nothing" -> trm.toLoc :: Nil))
       
       val tds = elabed.stats.map {
-          case td @ TermDefinition(Fun, sym, tsym, params, tparams, sign, body, resSym, flags, mf, annotations, comp) =>
+          case td @ TermDefinition(Fun, sym, tsym, params, tparams, sign, body, flags, mf, annotations, comp) =>
             params.reverse match
               case ParamList(_, value :: Nil, _) :: newParams =>
                 if newParams.isEmpty then
                   raise(ErrorReport(msg"Handler function cannot be a getter" -> td.toLoc :: Nil))
-                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, resSym, flags, mf, annotations, comp)
+                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, annotations, comp)
                 S(HandlerTermDefinition(value.sym, newTd))
               case _ => 
                 raise(ErrorReport(msg"Handler function is missing resumption parameter" -> td.toLoc :: Nil))
@@ -565,7 +573,7 @@ extends Importer with ucs.SplitElaborator:
         case _ =>
           raise(ErrorReport(msg"Identifier `${idn.name}` does not name a known class symbol." -> idn.toLoc :: Nil))
           N
-      Term.SelProj(subterm(pre), c, idp)(f, N)
+      Term.SelProj(subterm(pre), c, idp)(f, FlowSymbol.selProj(idp.name), N, S(summon))
     case App(Ident("#"), Tup(Sel(pre, Ident(name)) :: App(Ident(proj), args) :: Nil)) =>
       subterm(App(App(Ident("#"), Tup(Sel(pre, Ident(name)) :: Ident(proj) :: Nil)), args))
     case App(Ident("!"), Tup(rhs :: Nil)) =>
@@ -592,7 +600,9 @@ extends Importer with ucs.SplitElaborator:
     case SynthSel(pre, nme) =>
       val preTrm = subterm(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
-      Term.SynthSel(preTrm, nme)(sym, N)
+      Term.SynthSel(preTrm, nme)(sym, FlowSymbol.synthSel(nme.name), N, S(summon)).withLocOf(tree)
+    case Sel(Empty(), nme) =>
+      Term.LeadingDotSel(nme)(S(summon)).withLocOf(tree)
     case Sel(pre, nme) =>
       val preTrm = subterm(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
@@ -619,7 +629,7 @@ extends Importer with ucs.SplitElaborator:
         val loc = tree.toLoc.getOrElse(???)
         Term.Lit(StrLit(loc.origin.fileName.toString))
       else
-        Term.Sel(preTrm, nme)(sym, N)
+        Term.Sel(preTrm, nme)(sym, FlowSymbol.sel(nme.name), N, S(summon))
     case MemberProj(ct, nme) =>
       val c = subterm(ct)
       val f = c.symbol.flatMap(_.asCls) match
@@ -646,7 +656,7 @@ extends Importer with ucs.SplitElaborator:
       )
       val rs = FlowSymbol.app()
       Term.Lam(ps,
-        Term.App(Term.SelProj(self.ref(), c, nme)(f, N), args.ref())(
+        Term.App(Term.SelProj(self.ref(), c, nme)(f, FlowSymbol.selProj(nme.name), N, S(summon)), args.ref())(
           App(nme, Tup(Nil)) // FIXME
           , N, rs)
       )
@@ -729,7 +739,7 @@ extends Importer with ucs.SplitElaborator:
           val argTree = new Tup(body :: Nil)
           val dummyIdent = new Ident("return").withLocOf(kw)
           Term.App(
-            Term.Sel(sym.ref(dummyIdent), retMtdTree)(S(state.nonLocalRet), N),
+            Term.Sel(sym.ref(dummyIdent), retMtdTree)(S(state.nonLocalRet), FlowSymbol.sel(dummyIdent.name), N, S(summon)),
             Term.Tup(PlainFld(subterm(body)) :: Nil)(argTree)
           )(App(Sel(dummyIdent, retMtdTree), argTree), N, rs)
       case ReturnHandler.NotInFunction =>
@@ -859,9 +869,9 @@ extends Importer with ucs.SplitElaborator:
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
       Fld(FldFlags.empty, term(lhs), S(arg(rhs)))
     case Spread(Keywrd(Keyword.`..`), S(trm)) =>
-      Spd(false, arg(trm))
+      Spd(SpreadKind.Lazy, arg(trm))
     case Spread(Keywrd(Keyword.`...`), S(trm)) =>
-      Spd(true, arg(trm))
+      Spd(SpreadKind.Eager, arg(trm))
     case _ =>
       val t = arg(tree)
       var flags = FldFlags.empty
@@ -1168,7 +1178,7 @@ extends Importer with ucs.SplitElaborator:
                       val tsym = TermSymbol(Fun, N, Ident("ret"))
                       val td = TermDefinition(
                         Fun, mtdSym, tsym, PlainParamList(Param(FldFlags.empty, valueSym, N, Modulefulness.none) :: Nil) :: Nil,
-                        N, N, S(valueSym.ref(Ident("value"))), FlowSymbol(s"‹result of non-local return›"), TermDefFlags.empty, Modulefulness.none, Nil, N)
+                        N, N, S(valueSym.ref(Ident("value"))), TermDefFlags.empty, Modulefulness.none, Nil, N)
                       tsym.defn = S(td)
                       mtdSym.tsym = S(tsym)
                       val htd = HandlerTermDefinition(resumeSym, td)
@@ -1185,7 +1195,7 @@ extends Importer with ucs.SplitElaborator:
                   Modulefulness.none
               
               val tsym = TermSymbol(k, owner, id) // TODO?
-              val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, r, 
+              val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, 
                 TermDefFlags.empty.copy(isMethod = isMethod), mfn, annotations, N).withLocOf(td)
               tsym.defn = S(tdf)
               sym.tsym = S(tsym)
@@ -1219,6 +1229,8 @@ extends Importer with ucs.SplitElaborator:
           return go(sts, Nil, acc)
         
         val sym = members.getOrElse(nme.name, lastWords(s"Symbol not found: ${nme.name}"))
+        
+        val outerCtx = ctx
         
         var newCtx = S(td.symbol).collectFirst:
             case s: InnerSymbol => s
@@ -1275,7 +1287,6 @@ extends Importer with ucs.SplitElaborator:
                   tsym,
                   Nil, N, N,
                   S(p.sym.ref()),
-                  FlowSymbol("‹class-param-res›"),
                   TermDefFlags.empty.copy(isMethod = (k is Cls)),
                   p.modulefulness,
                   Nil,
@@ -1395,7 +1406,7 @@ extends Importer with ucs.SplitElaborator:
               val md =
                 val (bod, c) = mkBody
                 ModuleOrObjectDef(owner, modSym, sym,
-                  tps, pss.headOption, pss.tailOr(Nil), newOf(td), k, ObjBody(bod), comp, annotations)
+                  tps, pss.headOption, pss.tailOr(Nil), newOf(td), k, ObjBody(bod), comp, annotations)(outerCtx.scope)
               modSym.defn = S(md)
               md
         case Cls =>
@@ -1415,7 +1426,6 @@ extends Importer with ucs.SplitElaborator:
                     S(tps.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none))),
                     S(clsSym.ref()),
                     N,
-                    FlowSymbol(s"‹constructor›"),
                     TermDefFlags.empty,
                     Modulefulness.none,
                     annotations.collect: 
@@ -1741,7 +1751,7 @@ extends Importer with ucs.SplitElaborator:
   def computeVariances(s: Statement): Unit =
     val trav = VarianceTraverser()
     def go(s: Statement): Unit = s match
-      case TermDefinition(k, sym, tsym, pss, _, sign, body, r, _, _, _, _) =>
+      case TermDefinition(k, sym, tsym, pss, _, sign, body, r, _, _, _) =>
         pss.foreach(ps => ps.params.foreach(trav.traverseType(S(false))))
         sign.foreach(trav.traverseType(S(true)))
         body match

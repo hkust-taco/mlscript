@@ -74,7 +74,7 @@ f
 use{[Some[Int]].value}
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (selection).
 //│ ║  l.74: 	use{[Some[Int]].value}
-//│ ╙──      	    ^^^^^^^^^^^
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
 //│ ║  l.74: 	use{[Some[Int]].value}
 //│ ║        	^^^

@@ -25,8 +25,11 @@ import hkmc2.codegen.js.JSBuilder
   * to an inner symbol (e.g., class or module).
   * Note: I made `Scope` a case class just so that it can benefit from `printAsTree`. */
 case class Scope
-    (val parent: Opt[Scope], val curThis: Opt[Opt[InnerSymbol]], private val bindings: MutMap[Local, Str])
+    (val parentOrCfg: Cfg \/ Scope, val curThis: Opt[Opt[InnerSymbol]], private val bindings: MutMap[Local, Str])
     (using State):
+  
+  lazy val parent: Opt[Scope] = parentOrCfg.toOption
+  lazy val cfg: Cfg = parentOrCfg.fold(identity, _.cfg)
   
   private val existingNames = MutMap.empty[Str, Local]
   
@@ -62,6 +65,9 @@ case class Scope
     existingNames += fullName -> symbol
     fullName
   
+  def getBindings: Iterator[(Local, String)] =
+    bindings.iterator
+  
   def findThis_!(thisSym: InnerSymbol)(using Raise): Str =
     // println(s"findThis_! $thisSym")
     def getParent = parent.fold(
@@ -89,14 +95,14 @@ case class Scope
       case S(S(`thisSym`)) => thisProxy
       case _ => parent.fold(thisError(thisSym))(_.findThisProxy_!(thisSym))
   
-  def nest: Scope = Scope(Some(this), N, MutMap.empty)
+  def nest: Scope = Scope(R(this), N, MutMap.empty)
   
   def getThisScope: Opt[Scope] = curThis.fold(parent.flatMap(_.getThisScope))(_ => S(this))
   
   def getOuterThisScope: Opt[Scope] = parent.flatMap(_.getThisScope)
   
   def nestRebindThis[R](thisSym: Opt[InnerSymbol])(k: Scope ?=> R): (Opt[Str], R) =
-    val nested = Scope(Some(this), S(thisSym), MutMap.empty)
+    val nested = Scope(R(this), S(thisSym), MutMap.empty)
     val res = k(using nested)
     getOuterThisScope match
     case N => (N, res)
@@ -143,14 +149,35 @@ case class Scope
     */
     val base = if l.nme.isEmpty && prefix.isEmpty then "tmp" else prefix + l.nme
     
-    val realBase = Scope.replaceInvalidCharacters(base)
+    val realBase = if cfg.escapeChars
+      then Scope.replaceInvalidCharacters(base)
+      else base
     
     val name =
+      val c = cfg
       // Try just realBase.
-      if !inScope(realBase) && !JSBuilder.keywords.contains(realBase) then realBase
+      if !c.includeZero && !inScope(realBase) && !JSBuilder.keywords.contains(realBase) then realBase
       else
         // Try realBase with an integer.
-        (1 to Int.MaxValue).iterator.map(i => s"$realBase$i").filterNot(inScope).next
+        ((if c.includeZero then 0 else 1) to Int.MaxValue).iterator
+          .map: i =>
+            val idx =
+              if c.useSuperscripts
+              then i.toString.map:
+                case '0' => '⁰'
+                case '1' => '¹'
+                case '2' => '²'
+                case '3' => '³'
+                case '4' => '⁴'
+                case '5' => '⁵'
+                case '6' => '⁶'
+                case '7' => '⁷'
+                case '8' => '⁸'
+                case '9' => '⁹'
+                case _ => die
+              else i.toString
+            s"$realBase$idx"
+          .filterNot(inScope).next
     
     val fullName = addToBindings(l, name, shadow = shadow)
     
@@ -159,10 +186,15 @@ case class Scope
 
 object Scope:
   
+  case class Cfg(escapeChars: Bool, useSuperscripts: Bool, includeZero: Bool)
+  object Cfg:
+    val default = Cfg(escapeChars = true, useSuperscripts = false, includeZero = false)
+  end Cfg
+  
   def scope(using scp: Scope): Scope = scp
   
-  def empty(using State): Scope =
-    Scope(N, S(S(State.globalThisSymbol)), MutMap.empty)
+  def empty(cfg: Cfg)(using State): Scope =
+    Scope(L(cfg), S(S(State.globalThisSymbol)), MutMap.empty)
   
   def replaceInvalidCharacters(str: Str): Str =
     str.iterator.map:

@@ -19,7 +19,7 @@ import semantics.{Term => st}
 import semantics.Term.{Throw => _, *}
 import semantics.Elaborator.{State, Ctx, ctx}
 
-import syntax.{Literal, Tree}
+import syntax.{Literal, Tree, SpreadKind}
 import hkmc2.syntax.Fun
 
 
@@ -376,7 +376,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     arg match
     case Tup(fs) =>
       if fs.exists(e => e match
-        case Spd(false, _) => true // is lazy spread
+        case Spd(SpreadKind.Lazy, _) => true // is lazy spread
         case _ => false)
       then
         raise(ErrorReport(
@@ -386,7 +386,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case _ =>
       // Application arguments that are not tuples represent spreads, as in `f(...arg)`
       subTerm_nonTail(arg): ar =>
-        k(Arg(spread = S(true), ar) :: Nil)
+        k(Arg(spread = S(SpreadKind.Eager), ar) :: Nil)
   
   def ref(ref: st.Ref, annots: List[Annot], disamb: Opt[DefinitionSymbol[?]], inStmtPos: Bool)(k: Result => Block)(using LoweringCtx): Block =
     def warnStmt = if inStmtPos then
@@ -445,8 +445,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case bs: BlockMemberSymbol =>
       disamb.flatMap(_.defn) match
       case S(d) if d.hasDeclareModifier.isDefined =>
-        val sel = Sel(State.globalThisSymbol.ref().resolve, ref.tree)(S(bs), N).withLocOf(ref).resolve
+        val sel = SynthSel(State.globalThisSymbol.ref().resolve, ref.tree)(S(bs), FlowSymbol.synthSel(ref.tree.name), N, N).withLocOf(ref).resolve
         return disamb.fold(term(sel)(k))(d => term(st.Resolved(sel, d)(N))(k))
+        // * Note: the alternative below, which might seem more appealing,
+        // * works but does not instrument the selection to check for `undefined`!
+        // return k(Value.Ref(State.globalThisSymbol).sel(ref.tree, bs).withLocOf(ref))
       case S(td: TermDefinition) if td.k is syntax.Fun =>
         // * Local functions with no parameter lists are getters
         // * and are lowered to functions with an empty parameter list
@@ -786,7 +789,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         msg"Cannot compile ${t.describe} term that was not elaborated (maybe elaboration was one in 'lightweight' mode?)" ->
           t.toLoc :: Nil,
         source = Diagnostic.Source.Compilation)
-    case _: CompType | _: Neg | _: Term.FunTy | _: Term.Forall | _: Term.WildcardTy | _: Term.Unquoted
+    case _: CompType | _: Neg | _: Term.FunTy | _: Term.Forall | _: Term.WildcardTy | _: Term.Unquoted | _: LeadingDotSel
     => fail:
       ErrorReport(
         msg"Unexpected term form in expression position (${t.describe})" ->
@@ -973,7 +976,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case sem.Fld(sem.FldFlags.benign(), value, N) => R(N -> value)
       case sem.Fld(sem.FldFlags.benign(), idx, S(rhs)) => L(idx -> rhs)
       case arg @ sem.Fld(flags, value, asc) => TODO(s"Other argument forms: $arg")
-      case spd: Spd => R(S(spd.eager) -> spd.term)
+      case spd: Spd => R(S(spd.k) -> spd.term)
     // * The straightforward way to lower arguments creates too much recursion depth
     // * and makes Lowering stack overflow when lowering functions with lots of arguments.
     /* 
@@ -986,7 +989,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     */
     var asr: Ls[Arg] = Nil
     var fsr: Ls[RcdArg] = Nil
-    def rec(as: Ls[(Term -> Term) \/ (Opt[Bool] -> st)]): Block = as match
+    def rec(as: Ls[(Term -> Term) \/ (Opt[SpreadKind] -> st)]): Block = as match
       case Nil => End()
       case R((spd, a)) :: as =>
         subTerm_nonTail(a): ar =>
@@ -1169,10 +1172,9 @@ trait LoweringSelSanityChecks(using Config, TL, Raise, State)
       val selRes = loweringCtx.registerTempSymbol(N, "selRes")
       // * We are careful to access `x.f` before `x.f$__checkNotMethod` in case `x` is, eg, `undefined` and
       // * the access should throw an error like `TypeError: Cannot read property 'f' of undefined`.
-      val discardedSym = loweringCtx.registerTempSymbol(N, "discarded")
       blockBuilder
         .assign(selRes, Select(p, nme)(disamb))
-        .assign(discardedSym, Select(p, Tree.Ident(nme.name+"$__checkNotMethod"))(N))
+        .assign(State.noSymbol, Select(p, Tree.Ident(nme.name+"$__checkNotMethod"))(N))
           .ifthen(selRes.asPath,
             Case.Lit(syntax.Tree.UnitLit(false)),
             Throw(Instantiate(mut = false, Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error"))(N),

@@ -28,9 +28,8 @@ fun foo(h): module M =
 //│ ╙──      	           ^
 //│ JS:
 //│ let foo;
-//│ foo = function foo(...args) {
-//│   runtime.checkArgs("foo", 1, true, args.length);
-//│   let h = args[0];
+//│ foo = function foo(h) {
+//│   runtime.checkArgs("foo", 1, true, arguments.length);
 //│   let A2, A3, scrut;
 //│   scrut = false;
 //│   if (scrut === true) {

@@ -9,7 +9,7 @@ import hkmc2.codegen.*
 import hkmc2.semantics.*
 import hkmc2.Message.*
 import hkmc2.semantics.Elaborator.State
-import hkmc2.syntax.Tree
+import hkmc2.syntax.{Tree, SpreadKind}
 import scala.collection.mutable.ArrayBuffer
 import java.lang.instrument.ClassDefinition
 
@@ -197,7 +197,7 @@ class TailRecOpt(using State, TL, Raise):
         
         var bad = false
         val hd = for a <- headArgs yield a.spread match
-          case Some(true) =>
+          case Some(SpreadKind.Eager) =>
             if c.explicitTailCall then
               raise(ErrorReport(msg"Spreads are not yet fully supported in calls marked @tailcall." -> a.value.toLoc :: Nil))
             bad = true
@@ -208,7 +208,7 @@ class TailRecOpt(using State, TL, Raise):
         if head.restParam.isDefined then
           val rest =
             restArgs match
-              case Arg(S(true), value) :: Nil => value
+              case Arg(S(SpreadKind.Eager), value) :: Nil => value
               case _ => Tuple(true, restArgs)
           hd.appended(rest)
         else

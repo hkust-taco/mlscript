@@ -1,0 +1,145 @@
+:js
+:flow
+// :df
+
+:global
+:sf
+
+
+import "../../mlscript-compile/Example.mls"
+//│ Flowed:
+//│   import ".../Example.mjs" as Example⁰
+//│ where
+//│     
+
+
+let e = new Example.Test(123)
+//│ Flowed:
+//│   let e⁰,
+//│   e⁰ = new Example⁰.Test⁰(123)
+//│ where
+//│     e⁰  <~  Test(123)
+//│ e = Test(123)
+
+e.field
+//│ Flowed:
+//│   e⁰.field⁰
+//│ where
+//│     
+//│ = 123
+
+// TODO: support
+:e
+:re
+e.next
+//│ ╔══[COMPILATION ERROR] Cannot access companion Test from the context of this selection
+//│ ║  l.34: 	e.next
+//│ ╙──      	^^^^^^
+//│ Flowed:
+//│   e⁰.next‹?›
+//│ where
+//│     e⁰  <~  Test(123)
+//│     e⁰  ~>  {field: ⋅field⁰}  {next: ⋅next⁰}
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'next' yielded 'undefined'
+
+
+open Example
+//│ Flowed:
+//│   
+//│ where
+//│     
+
+let e = new Test(123)
+//│ Flowed:
+//│   let e¹,
+//│   e¹ = new ⟨Example⁰.⟩Test⁰(123)
+//│ where
+//│     e¹  <~  Test(123)
+//│ e = Test(123)
+
+// TODO: support
+:e
+:re
+e.next
+//│ ╔══[COMPILATION ERROR] Cannot access companion Test from the context of this selection
+//│ ║  l.63: 	e.next
+//│ ╙──      	^^^^^^
+//│ Flowed:
+//│   e¹.next‹?›
+//│ where
+//│     e¹  <~  Test(123)
+//│     e¹  ~>  {next: ⋅next¹}
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'next' yielded 'undefined'
+
+
+
+// * TODO: better error!
+:e
+let e = Example.Test(123)
+//│ ╔══[COMPILATION ERROR] Cannot use non-term member Example in term position
+//│ ║  l.78: 	let e = Example.Test(123)
+//│ ╙──      	        ^^^^^^^
+//│ Flowed:
+//│   let e²,
+//│   e² = Example⁰.Test⁰(123)‹app⁰›
+//│ where
+//│     
+//│ e = Test(123)
+
+// * TODO: better error! (with location)
+:e
+let e = Test(123)
+//│ ═══[COMPILATION ERROR] Cannot use non-term member Example in term position
+//│ Flowed:
+//│   let e³,
+//│   e³ = ⟨Example⁰.⟩Test⁰(123)‹app¹›
+//│ where
+//│     
+//│ e = Test(123)
+
+
+:fixme // FIXME: error is probably due to some `bms.asTrm` weirdness (guess: due to lightweight elab?)
+Example.t
+//│ ╔══[COMPILATION ERROR] Cannot use non-term member Example in term position
+//│ ║  l.102: 	Example.t
+//│ ╙──       	^^^^^^^
+//│ Flowed:
+//│   Example⁰{ ~> Example⁰ }.t⁰{ ~> Example⁰.t⁰ }
+//│ where
+//│     
+//│ = Test(123)
+
+// * Note that here, it's important that we don't get the flow symbol attached to BlockMemberSymbol `t`
+// * (which should be internal to Example.mls, otherwise we'd mutate it nondeterministically across different imports),
+// * but rather some inferred Type view of it, which we can then use to resolve the selection.
+:fixme // TODO: should get an inferred Type view of the field
+Example.t.field
+//│ ╔══[COMPILATION ERROR] Cannot use non-term member Example in term position
+//│ ║  l.116: 	Example.t.field
+//│ ╙──       	^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unresolved selection:
+//│ ║  l.116: 	Example.t.field
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ╙── Type `type ⊤` does not contain member 'field'
+//│ Flowed:
+//│   Example⁰{ ~> Example⁰ }.t⁰{ ~> Example⁰.t⁰ }.field‹?›
+//│ where
+//│     
+//│ = 123
+
+:fixme // Same
+Example.t.next
+//│ ╔══[COMPILATION ERROR] Cannot use non-term member Example in term position
+//│ ║  l.131: 	Example.t.next
+//│ ╙──       	^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unresolved selection:
+//│ ║  l.131: 	Example.t.next
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╙── Type `type ⊤` does not contain member 'next'
+//│ Flowed:
+//│   Example⁰{ ~> Example⁰ }.t⁰{ ~> Example⁰.t⁰ }.next‹?›
+//│ where
+//│     
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'next' yielded 'undefined'
+
+

@@ -28,9 +28,13 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     ln.trim
   
   private val baseScp: utils.Scope =
-    utils.Scope.empty
+    utils.Scope.empty(utils.Scope.Cfg.default)
   private lazy val dbgScp: utils.Scope = // for IR printing only
-    utils.Scope.empty
+    utils.Scope.empty(utils.Scope.Cfg.default.copy(
+      escapeChars = false,
+      useSuperscripts = false,
+      includeZero = false,
+    ))
   
   val runtimeNme = baseScp.allocateName(Elaborator.State.runtimeSymbol)(using throw _)
   val termNme = baseScp.allocateName(Elaborator.State.termSymbol)(using throw _)
@@ -109,8 +113,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         new JSBuilder
           with JSBuilderArgNumSanityChecks
       val resSym = new TempSymbol(S(blk), "block$res")
-      val lowered0 = low.program(blk)
-      val le = lowered0.copy(main = lowered0.main.mapTail:
+      val lowered = low.program(blk)
+      val loweredMapped = lowered.copy(main = lowered.main.mapTail:
         case e: End =>
           Assign(resSym, Value.Lit(syntax.Tree.UnitLit(false)), e)
         case Return(res, implct) =>
@@ -120,8 +124,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         case tl: (Throw | Break | Continue) => tl
       )
       if showLoweredTree.isSet then
-        output(s"Lowered:")
-        output(lowered0.showAsTree)
+        output(s"Lowered IR:")
+        output(lowered.showAsTree)
       
       // * We used to do this to avoid needlessly generating new variable names in separate blocks:
       // val nestedScp = baseScp.nest
@@ -131,11 +135,16 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val resNme = nestedScp.allocateName(resSym)
       
       if ppLoweredTree.isSet then
-        output(s"Pretty Lowered:")
-        output(Printer.mkDocument(le)(using raise, dbgScp.nest).mkString())
+        output(s"Lowered:")
+        given ShowCfg = ShowCfg(
+          showExpansionMappings = false,
+          showFlowSymbols = true,
+          debug = debug.isSet,
+        )
+        output(Printer.worksheet(lowered)(using raise, dbgScp).mkString())
       
       val (pre, js) = nestedScp.givenIn:
-        jsb.worksheet(le)
+        jsb.worksheet(loweredMapped)
       val preStr = pre.stripBreaks.mkString(100)
       val jsStr = js.stripBreaks.mkString(100)
       if showSanitizedJS.isSet then

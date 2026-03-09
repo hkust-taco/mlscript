@@ -60,22 +60,22 @@ if
   y is [b] then let x = 1 in x + b
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    x is true and
-//│ >      z is true then 1
-//│ >      y is []=1 and
-//│ >        let $element0$ = (($runtime.)Tuple.)get(y, 0)
-//│ >        let b = $element0$
+//│ >    x¹ is true and
+//│ >      z⁰ is true then 1
+//│ >      y⁰ is []=1 and
+//│ >        let tmp:element0$⁰ = ((tmp:runtime⁰.)Tuple.)get(y⁰, 0)
+//│ >        let b⁰ = tmp:element0$⁰
 //│ >        else
-//│ >          let x
-//│ >          x = 1
-//│ >          builtin:+(x, b)
-//│ >    y is []=1 and
-//│ >      let $element0$ = (($runtime.)Tuple.)get(y, 0)
-//│ >      let b = $element0$
+//│ >          let x⁰
+//│ >          x⁰ = 1
+//│ >          builtin:+⁰(x⁰, b⁰)
+//│ >    y⁰ is []=1 and
+//│ >      let tmp:element0$⁰ = ((tmp:runtime⁰.)Tuple.)get(y⁰, 0)
+//│ >      let b⁰ = tmp:element0$⁰
 //│ >      else
-//│ >        let x
-//│ >        x = 1
-//│ >        builtin:+(x, b)
+//│ >        let x⁰
+//│ >        x⁰ = 1
+//│ >        builtin:+⁰(x⁰, b⁰)
 //│ JS:
 //│ let b, x1, element0$, tmp1;
 //│ split_root$1: {

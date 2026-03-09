@@ -1,0 +1,43 @@
+:js
+:flow
+
+:global
+:sf
+
+
+:e
+:ge
+Int
+//│ ╔══[COMPILATION ERROR] Cannot use non-term member Int in term position
+//│ ║  l.10: 	Int
+//│ ╙──      	^^^
+//│ Flowed:
+//│   Int⁰{ ~> Int⁰ }
+//│ where
+//│     
+//│ ╔══[COMPILATION ERROR] Symbol 'Int' is virtual (i.e., "compiler fiction"); cannot be used as a term
+//│ ║  l.10: 	Int
+//│ ╙──      	^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+class C
+//│ Flowed:
+//│   class C {
+//│     
+//│   }
+//│ where
+//│     
+
+:e
+C
+//│ ╔══[COMPILATION ERROR] Cannot use non-term member C in term position
+//│ ║  l.33: 	C
+//│ ╙──      	^
+//│ Flowed:
+//│   C⁰{ ~> C⁰ }
+//│ where
+//│     
+//│ = class C
+
+

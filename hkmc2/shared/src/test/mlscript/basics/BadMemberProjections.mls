@@ -32,10 +32,8 @@
 //│ ╙──      	^
 //│ JS:
 //│ let lambda1;
-//│ lambda1 = (undefined, function (...args1) {
-//│   runtime.checkArgs("", 1, false, args1.length);
-//│   let self = args1[0];
-//│   let args = runtime.Tuple.slice(args1, 1, 0);
+//│ lambda1 = (undefined, function (self, ...args) {
+//│   runtime.checkArgs("", 1, false, arguments.length);
 //│   return runtime.safeCall(self.x(...args))
 //│ });
 //│ block$res2 = runtime.checkCall(lambda1());
@@ -57,24 +55,24 @@ let x = 1
 :e
 "A"::x
 //│ ╔══[COMPILATION ERROR] String literal is not a known class.
-//│ ║  l.58: 	"A"::x
+//│ ║  l.56: 	"A"::x
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found string literal.
-//│ ║  l.58: 	"A"::x
+//│ ║  l.56: 	"A"::x
 //│ ╙──      	^^^
 //│ = fun
 
 :e
 "A" ::x
 //│ ╔══[COMPILATION ERROR] String literal is not a known class.
-//│ ║  l.70: 	"A" ::x
+//│ ║  l.68: 	"A" ::x
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found string literal.
-//│ ║  l.70: 	"A" ::x
+//│ ║  l.68: 	"A" ::x
 //│ ╙──      	^^^
 //│ = fun
 
