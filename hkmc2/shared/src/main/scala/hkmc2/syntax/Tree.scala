@@ -22,7 +22,7 @@ sealed trait Literal extends AutoLocated:
   val idStr: Str = this match
     case IntLit(value) => value.toString
     case DecLit(value) => value.toString
-    case StrLit(value) => value.iterator.map: // TODO dedup logi with `JSBuilder.makeStringLiteral`?
+    case StrLit(value) => value.iterator.map: // TODO dedup logic with `JSBuilder.makeStringLiteral`?
         case '\b' => "\\b" case '\t' => "\\t" case '\n' => "\\n" case '\r' => "\\r"
         case '\f' => "\\f" case '"' => "\\\"" case '\\' => "\\\\"
         case c if c.isControl => f"\\u${c.toInt}%04x"
