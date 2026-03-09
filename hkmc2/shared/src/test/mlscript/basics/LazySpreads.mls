@@ -57,7 +57,7 @@ fun sum2 = case
 //│       return 0
 //│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 2) {
 //│       element0$ = runtime.Tuple.get(caseScrut, 0);
-//│       middleElements3 = runtime.safeCall(runtime.Tuple.slice(caseScrut, 1, 1));
+//│       middleElements3 = runtime.Tuple.slice(caseScrut, 1, 1);
 //│       lastElement0$3 = runtime.Tuple.get(caseScrut, -1);
 //│       y = lastElement0$3;
 //│       xs = middleElements3;

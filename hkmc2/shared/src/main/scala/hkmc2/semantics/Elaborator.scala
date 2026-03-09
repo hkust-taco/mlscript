@@ -249,6 +249,8 @@ object Elaborator:
     val globalThisSymbol = TopLevelSymbol("globalThis")
     val unitSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Obj), Ident("Unit"))
     val loopEndSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Obj), Ident("LoopEnd"))
+    val tupleSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Mod), Ident("Tuple"))
+    val strSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Mod), Ident("Str"))
     // In JavaScript, `import` can be used for getting current file path, as `import.meta`
     val importSymbol = new VarSymbol(Ident("import"))
     val noSymbol = NoSymbol()
@@ -269,6 +271,63 @@ object Elaborator:
     val nonLocalRet =
       val id = new Ident("ret")
       BlockMemberSymbol(id.name, Nil, true)
+    val unreachableSymbol = TermSymbol(syntax.ImmutVal, N, new Ident("unreachable"))
+    val tupleGetSymbol =
+      val sym = TermSymbol(syntax.Fun, N, Ident("get"))
+      val bsym = BlockMemberSymbol("get", Nil, true)
+      val ps = PlainParamList(
+        Param.simple(VarSymbol(Ident("xs"))) :: Param.simple(VarSymbol(Ident("i"))) :: Nil)
+      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N, FlowSymbol("get-app"),
+        TermDefFlags(true), Modulefulness(S(tupleSymbol))(false), Nil, N))
+      sym
+    val tupleSliceSymbol =
+      val sym = TermSymbol(syntax.Fun, N, Ident("slice"))
+      val bsym = BlockMemberSymbol("slice", Nil, true)
+      val ps = PlainParamList(
+        Param.simple(VarSymbol(Ident("xs"))) :: Param.simple(VarSymbol(Ident("i"))) :: Param.simple(VarSymbol(Ident("j"))) :: Nil)
+      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N, FlowSymbol("slice-app"),
+        TermDefFlags(true), Modulefulness(S(tupleSymbol))(false), Nil, N))
+      sym
+    val tupleLazySliceSymbol =
+      val sym = TermSymbol(syntax.Fun, N, Ident("lazySlice"))
+      val bsym = BlockMemberSymbol("lazySlice", Nil, true)
+      val ps = PlainParamList(
+        Param.simple(VarSymbol(Ident("xs"))) :: Param.simple(VarSymbol(Ident("i"))) :: Param.simple(VarSymbol(Ident("j"))) :: Nil)
+      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N, FlowSymbol("lazySlice-app"),
+        TermDefFlags(true), Modulefulness(S(tupleSymbol))(false), Nil, N))
+      sym
+    val strStartsWithSymbol =
+      val sym = TermSymbol(syntax.Fun, N, Ident("startsWith"))
+      val bsym = BlockMemberSymbol("startsWith", Nil, true)
+      val ps = PlainParamList(
+        Param.simple(VarSymbol(Ident("string"))) :: Param.simple(VarSymbol(Ident("prefix"))) :: Nil)
+      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N, FlowSymbol("startsWith-app"),
+        TermDefFlags(true), Modulefulness(S(strSymbol))(false), Nil, N))
+      sym
+    val strGetSymbol =
+      val sym = TermSymbol(syntax.Fun, N, Ident("get"))
+      val bsym = BlockMemberSymbol("get", Nil, true)
+      val ps = PlainParamList(
+        Param.simple(VarSymbol(Ident("string"))) :: Param.simple(VarSymbol(Ident("i"))) :: Nil)
+      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N, FlowSymbol("get-app"),
+        TermDefFlags(true), Modulefulness(S(strSymbol))(false), Nil, N))
+      sym
+    val strTakeSymbol =
+      val sym = TermSymbol(syntax.Fun, N, Ident("take"))
+      val bsym = BlockMemberSymbol("take", Nil, true)
+      val ps = PlainParamList(
+        Param.simple(VarSymbol(Ident("string"))) :: Param.simple(VarSymbol(Ident("n"))) :: Nil)
+      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N, FlowSymbol("take-app"),
+        TermDefFlags(true), Modulefulness(S(strSymbol))(false), Nil, N))
+      sym
+    val strLeaveSymbol =
+      val sym = TermSymbol(syntax.Fun, N, Ident("leave"))
+      val bsym = BlockMemberSymbol("leave", Nil, true)
+      val ps = PlainParamList(
+        Param.simple(VarSymbol(Ident("string"))) :: Param.simple(VarSymbol(Ident("n"))) :: Nil)
+      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N, FlowSymbol("leave-app"),
+        TermDefFlags(true), Modulefulness(S(strSymbol))(false), Nil, N))
+      sym
     val (matchSuccessClsSymbol, matchSuccessTrmSymbol) =
       val id = new Ident("MatchSuccess")
       val td = TypeDef(syntax.Cls, App(id, Tup(Ident("output") :: Ident("bindings") :: Nil)), N)

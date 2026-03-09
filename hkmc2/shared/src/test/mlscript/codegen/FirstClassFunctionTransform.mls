@@ -1109,6 +1109,23 @@ if true is true then print("true")
 //│ > true
 
 
+if 0 is
+  Bool then 1
+  Str then 1
+  0 then 0
+  else 2
+//│ = 0
+  
+
+class Foo(val x)
+
+
+if Foo(1) is
+  Foo(x) then x
+  else 0
+//│ = 0
+
+
 if [1, 2, 3] is
   [x, y] then x + y
   [x, y, z] then x + y + z

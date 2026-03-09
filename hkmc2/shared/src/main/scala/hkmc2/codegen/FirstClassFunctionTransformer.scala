@@ -90,8 +90,7 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
             if s.k is syntax.Fun then k(call(fun))
             else k(call(sel.selSN("call")))
           case _ =>
-            if !pathStartsWith(sel, State.globalThisSymbol) && !pathStartsWith(sel, State.runtimeSymbol) then
-              raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function object." -> fun.toLoc :: Nil,
+            raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function object." -> fun.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation))
             k(call(fun))
         case s: DynSelect =>
