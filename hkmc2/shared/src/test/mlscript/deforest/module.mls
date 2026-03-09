@@ -24,11 +24,12 @@ M.f(M.p())
 //│ = 123
 
 
-:deforest
-:sjs
-:expect Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
 data object Nil
 data class (::) Cons(h, t)
+
+:deforest
+:sir
+:expect Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
 fun map(f, ls) = if ls is
   Nil then Nil
   h :: t then f(h) :: map(f, t)
@@ -42,121 +43,86 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
 //│ deforest > 	Ref(ls⁰,None)
 //│ deforest > <<< fusing <<<
-//│ JS (unsanitized):
-//│ let Nil1, Cons1, map, enum1, lambda, lambda1, tmp1, tmp2, tmp3, map_11$map, map_13$map, map_13$ls_Cons, map_13$ls_rest, map_13$ls_Nil;
-//│ map_11$map = function map_11$map(f, ls) {
-//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp4, tmp5;
-//│   if (ls instanceof Nil1.class) {
-//│     return (fv_ctorLam_f, fv_ctorLam_t, fv_ctorLam_h, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
-//│       return map_13$ls_Nil(fv_ctorLam_f, fv_ctorLam_t, fv_ctorLam_h, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_tmp, fv_ctorLam_tmp1)
-//│     }
-//│   } else if (ls instanceof Cons1.class) {
-//│     let Cons_h, Cons_t;
-//│     arg$Cons$0$ = ls.h;
-//│     arg$Cons$1$ = ls.t;
-//│     t = arg$Cons$1$;
-//│     h = arg$Cons$0$;
-//│     tmp4 = runtime.safeCall(f(h));
-//│     tmp5 = map_11$map(f, t);
-//│     Cons_h = tmp4;
-//│     Cons_t = tmp5;
-//│     return (fv_ctorLam_f, fv_ctorLam_t, fv_ctorLam_h, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
-//│       return map_13$ls_Cons(fv_ctorLam_f, fv_ctorLam_t, fv_ctorLam_h, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_tmp, fv_ctorLam_tmp1, Cons_h, Cons_t)
-//│     }
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│ Lowered:
+//│ let map⁰, enum⁰, lambda⁰, lambda¹, tmp, tmp1, tmp2, map_11$map⁰, map_13$map⁰, map_13$ls_Cons⁰, map_13$ls_rest⁰, map_13$ls_Nil⁰;
+//│ define fun map_11$map⁰(f, ls) {
+//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp3, tmp4;
+//│   match ls
+//│     Nil¹ =>
+//│       return (fv_ctorLam_f, fv_ctorLam_t, fv_ctorLam_h, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => return map_13$ls_Nil⁰(fv_ctorLam_f, fv_ctorLam_t, fv_ctorLam_h, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_tmp, fv_ctorLam_tmp1)
+//│     Cons¹ =>
+//│       let Cons_h, Cons_t;
+//│       set arg$Cons$0$ = ls.h¹;
+//│       set arg$Cons$1$ = ls.t⁰;
+//│       set t = arg$Cons$1$;
+//│       set h = arg$Cons$0$;
+//│       set tmp3 = f(h);
+//│       set tmp4 = map_11$map⁰(f, t);
+//│       set Cons_h = tmp3;
+//│       set Cons_t = tmp4;
+//│       return (fv_ctorLam_f1, fv_ctorLam_t1, fv_ctorLam_h1, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp2, fv_ctorLam_tmp3) => return map_13$ls_Cons⁰(fv_ctorLam_f1, fv_ctorLam_t1, fv_ctorLam_h1, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, Cons_h, Cons_t)
+//│     else
+//│       throw new globalThis⁰.Error﹖("match error")
+//│   end
 //│ };
-//│ map_13$map = function map_13$map(f, ls) {
-//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp4, tmp5;
-//│   return ls(f, t, h, arg$Cons$0$, arg$Cons$1$, tmp4, tmp5)
+//│ define fun map_13$map⁰(f1, ls1) {
+//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp3, tmp4;
+//│   return ls1(f1, t, h, arg$Cons$0$, arg$Cons$1$, tmp3, tmp4)
 //│ };
-//│ map_13$ls_Cons = function map_13$ls_Cons(fv_f, fv_t, fv_h, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_tmp, fv_tmp1, Cons_h, Cons_t) {
-//│   fv_arg$Cons$0$ = Cons_h;
-//│   fv_arg$Cons$1$ = Cons_t;
-//│   fv_t = fv_arg$Cons$1$;
-//│   fv_h = fv_arg$Cons$0$;
-//│   fv_tmp = runtime.safeCall(fv_f(fv_h));
-//│   fv_tmp1 = map_13$map(fv_f, fv_t);
-//│   return Cons1(fv_tmp, fv_tmp1)
+//│ define fun map_13$ls_Cons⁰(fv_f, fv_t, fv_h, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_tmp, fv_tmp1, Cons_h, Cons_t) {
+//│   set fv_arg$Cons$0$ = Cons_h;
+//│   set fv_arg$Cons$1$ = Cons_t;
+//│   set fv_t = fv_arg$Cons$1$;
+//│   set fv_h = fv_arg$Cons$0$;
+//│   set fv_tmp = fv_f(fv_h);
+//│   set fv_tmp1 = map_13$map⁰(fv_f, fv_t);
+//│   return Cons⁰(fv_tmp, fv_tmp1)
 //│ };
-//│ map_13$ls_Nil = function map_13$ls_Nil(fv_f, fv_t, fv_h, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_tmp, fv_tmp1) {
-//│   return Nil1
+//│ define fun map_13$ls_Nil⁰(fv_f1, fv_t1, fv_h1, fv_arg$Cons$0$1, fv_arg$Cons$1$1, fv_tmp2, fv_tmp3) {
+//│   return Nil⁰
 //│ };
-//│ map_13$ls_rest = function map_13$ls_rest() {};
-//│ map = function map(f, ls) {
-//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp4, tmp5;
-//│   if (ls instanceof Nil1.class) {
-//│     return Nil1
-//│   } else if (ls instanceof Cons1.class) {
-//│     arg$Cons$0$ = ls.h;
-//│     arg$Cons$1$ = ls.t;
-//│     t = arg$Cons$1$;
-//│     h = arg$Cons$0$;
-//│     tmp4 = runtime.safeCall(f(h));
-//│     tmp5 = map(f, t);
-//│     return Cons1(tmp4, tmp5)
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│ define fun map_13$ls_rest⁰() {
+//│   end
 //│ };
-//│ enum1 = (undefined, function (a) {
-//│   let scrut, tmp4, tmp5;
-//│   scrut = a < 0;
-//│   if (scrut === true) {
-//│     return Nil1
-//│   } else {
-//│     tmp4 = a - 1;
-//│     tmp5 = enum1(tmp4);
-//│     return Cons1(a, tmp5)
-//│   }
-//│ });
-//│ (class Nil {
-//│   static {
-//│     new this
-//│   }
-//│   constructor() {
-//│     Nil1 = this;
-//│     Object.defineProperty(this, "class", {
-//│       value: Nil
-//│     });
-//│     globalThis.Object.freeze(this);
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["object", "Nil"]; 
-//│ });
-//│ Cons1 = function Cons(h, t) {
-//│   return globalThis.Object.freeze(new Cons.class(h, t));
+//│ define fun map⁰(f2, ls2) {
+//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp3, tmp4;
+//│   match ls2
+//│     Nil¹ =>
+//│       return Nil⁰
+//│     Cons¹ =>
+//│       set arg$Cons$0$ = ls2.h¹;
+//│       set arg$Cons$1$ = ls2.t⁰;
+//│       set t = arg$Cons$1$;
+//│       set h = arg$Cons$0$;
+//│       set tmp3 = f2(h);
+//│       set tmp4 = map⁰(f2, t);
+//│       return Cons⁰(tmp3, tmp4)
+//│     else
+//│       throw new globalThis⁰.Error﹖("match error")
+//│   end
 //│ };
-//│ (class Cons {
-//│   static {
-//│     Cons1.class = this
-//│   }
-//│   constructor(h, t) {
-//│     this.h = h;
-//│     this.t = t;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Cons", ["h", "t"]]; 
-//│ });
-//│ lambda = (undefined, function (x) {
-//│   return x + 1
-//│ });
-//│ lambda1 = (undefined, function (x) {
-//│   return x * 2
-//│ });
-//│ tmp1 = enum1(3);
-//│ tmp2 = Predef.id(tmp1);
-//│ tmp3 = map_11$map(lambda1, tmp2);
-//│ map_13$map(lambda, tmp3)
-//│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp³,None)), Arg(None,Ref(tmp:tmp⁴,None)))) ->
-//│ deforest > 	Ref(ls⁰,None)
-//│ deforest > 	Select(Ref(ls⁰,None),Ident(t))
-//│ deforest > 	Select(Ref(ls⁰,None),Ident(h))
-//│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
-//│ deforest > 	Ref(ls⁰,None)
-//│ deforest > <<< fusing <<<
+//│ define fun enum⁰(a) {
+//│   let scrut, tmp3, tmp4;
+//│   set scrut = <⁰(a, 0);
+//│   match scrut
+//│     true =>
+//│       return Nil⁰
+//│     else
+//│       set tmp3 = -⁰(a, 1);
+//│       set tmp4 = enum⁰(tmp3);
+//│       return Cons⁰(a, tmp4)
+//│   end
+//│ };
+//│ define fun lambda⁰(x) {
+//│   return +⁰(x, 1)
+//│ };
+//│ define fun lambda¹(x1) {
+//│   return *⁰(x1, 2)
+//│ };
+//│ set tmp = enum⁰(3);
+//│ set tmp1 = Predef⁰.id¹(tmp);
+//│ set tmp2 = map_11$map⁰(lambda¹, tmp1);
+//│ map_13$map⁰(lambda⁰, tmp2)
 //│ = Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
 
 
@@ -177,7 +143,7 @@ module DeforestList with
   val res = DeforestList.sum(DeforestList.enum(100))
 DeforestList.res + DeforestList.main()
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Select(Ref(module:DeforestList⁰,None),Ident(Cons)),List(Arg(None,Ref(n⁰,None)), Arg(None,Ref(tmp:tmp⁵,None)))) ->
+//│ deforest > Call(Select(Ref(module:DeforestList⁰,None),Ident(Cons)),List(Arg(None,Ref(n⁰,None)), Arg(None,Ref(tmp:tmp³,None)))) ->
 //│ deforest > 	Ref(ls¹,None)
 //│ deforest > 	Select(Ref(ls¹,None),Ident(h))
 //│ deforest > 	Select(Ref(ls¹,None),Ident(t))
@@ -205,7 +171,7 @@ module DeforestList with
   val res = DeforestList.sum(DeforestList.enum(100))
 DeforestList.res + DeforestList.main()
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Select(Ref(module:DeforestList¹,None),Ident(Cons)),List(Arg(None,Ref(n¹,None)), Arg(None,Ref(tmp:tmp⁶,None)))) ->
+//│ deforest > Call(Select(Ref(module:DeforestList¹,None),Ident(Cons)),List(Arg(None,Ref(n¹,None)), Arg(None,Ref(tmp:tmp⁴,None)))) ->
 //│ deforest > 	Ref(ls²,None)
 //│ deforest > 	Select(Ref(ls²,None),Ident(h))
 //│ deforest > 	Select(Ref(ls²,None),Ident(t))
