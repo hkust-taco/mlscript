@@ -468,7 +468,7 @@ class ParseRules(using State):
     makeInfixRule(`where`),
     makeInfixRule(`with`),
     makeInfixRule(`<:`),
-    makeInfixRule(`>:`),
+    makeInfixRule(`:>`),
   )
 
 end ParseRules

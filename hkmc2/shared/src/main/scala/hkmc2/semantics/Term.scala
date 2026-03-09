@@ -1270,6 +1270,7 @@ final case class SubConstraint(lhs: Term, rhs: Term, dir: SubDir) extends AutoLo
 object ParamListFlags:
   val empty = ParamListFlags(false)
 
+
 trait FldImpl extends AutoLocated:
   self: Fld =>
   def children: Vector[Located] = self.term +: self.asc.toVector

@@ -1517,12 +1517,12 @@ extends Importer with ucs.SplitElaborator:
   /** Elaborate a subtyping constraint. */
   def constraint(t: Tree): Ctxl[Option[SubConstraint]] =
     t match
-      case InfixApp(lhs, op @ (Keywrd(Keyword.`<:`) | Keywrd(Keyword.`>:`)), rhs) =>
+      case InfixApp(lhs, op @ (Keywrd(Keyword.`<:`) | Keywrd(Keyword.`:>`)), rhs) =>
         val l = term(lhs)
         val r = term(rhs)
         val dir = op match
           case Keywrd(Keyword.`<:`) => SubDir.Sub
-          case Keywrd(Keyword.`>:`) => SubDir.Sup
+          case Keywrd(Keyword.`:>`) => SubDir.Sup
         S(SubConstraint(l, r, dir))
       case _ =>
         raise(ErrorReport(msg"Illegal constraint syntax." -> t.toLoc :: Nil))
@@ -1878,3 +1878,4 @@ end Elaborator
 
 type Pol = Opt[Bool]
 extension (p: Pol) def ! : Pol = p.map(!_)
+
