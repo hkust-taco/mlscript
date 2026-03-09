@@ -139,6 +139,11 @@ object Keyword:
   // * so we need to start the precedence of `=>` to account for that.
   val `=>` = Keyword("=>", S(maxPrec.get + charPrecList.length), eqPrec)
   
+  /** The subtyping operator. */
+  val `<:` = Keyword("<:", nextPrec, curPrec)
+  /** The supertyping operator. */
+  val `>:` = Keyword(">:", nextPrec, curPrec)
+
   // * `new` is a strange keyword:
   // * it has a very high precedence that sits between that of selection and that of application.
   // * Indeed, `new Foo().bar` should parse as `(new Foo()).bar`, not `new (Foo().bar)`,
@@ -158,12 +163,12 @@ object Keyword:
     `do`.type | `drop`.type | `not`.type | `new!`.type | `else`.type | `return`.type | `throw`.type | `import`.type
   
   type Infix =
-    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type | `where`.type | `with`.type |
-    `and`.type | `or`.type | `then`.type | `else`.type
+    `is`.type | `:`.type | `->`.type | `=>`.type | `<:`.type | `>:`.type | `extends`.type | `restricts`.type |
+    `as`.type | `do`.type | `where`.type | `with`.type | `and`.type | `or`.type | `then`.type | `else`.type
   
   type InfixSplittable =
-    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type | `where`.type | `with`.type |
-    `of`.type
+    `is`.type | `:`.type | `->`.type | `=>`.type | `<:`.type | `>:`.type | `extends`.type | `restricts`.type |
+    `as`.type | `do`.type | `where`.type | `with`.type | `of`.type
   
   type Ellipsis = `...`.type | `..`.type
   
@@ -174,4 +179,3 @@ object Keyword:
   
   type Modifier = `in`.type | `out`.type | `mut`.type | `abstract`.type | `declare`.type | `data`.type | `virtual`.type | `override`.type |
     `public`.type | `private`.type | `staged`.type
-

@@ -3,26 +3,38 @@
 
 
 [a, b] => [b, a]
-//│ /!!!\ Uncaught error: scala.MatchError: TyTup(List(Ident(a), Ident(b))) (of class hkmc2.syntax.Tree$TyTup)
+//│ ╔══[COMPILATION ERROR] Illegal constraint syntax.
+//│ ║  l.5: 	[a, b] => [b, a]
+//│ ╙──     	 ^
+//│ ╔══[COMPILATION ERROR] Illegal constraint syntax.
+//│ ║  l.5: 	[a, b] => [b, a]
+//│ ╙──     	    ^
+//│ ╔══[COMPILATION ERROR] Name not found: b
+//│ ║  l.5: 	[a, b] => [b, a]
+//│ ╙──     	           ^
+//│ ╔══[COMPILATION ERROR] Name not found: a
+//│ ║  l.5: 	[a, b] => [b, a]
+//│ ╙──     	              ^
+//│ /!!!\ Uncaught error: scala.MatchError: Constrained(List(),Tup(List(Fld(‹›,Error,None), Fld(‹›,Error,None)))) (of class hkmc2.semantics.Term$Constrained)
 
 fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found tuple
-//│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
-//│ ╙──     	           ^^^^^^
+//│ ║  l.20: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ╙──      	           ^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found tuple
-//│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
-//│ ╙──     	                   ^^^^^^
+//│ ║  l.20: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ╙──      	                   ^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: a
-//│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
-//│ ╙──     	                             ^
+//│ ║  l.20: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ╙──      	                             ^
 //│ ╔══[COMPILATION ERROR] Name not found: c
-//│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
-//│ ╙──     	                                  ^
+//│ ║  l.20: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ╙──      	                                  ^
 //│ ╔══[COMPILATION ERROR] Name not found: b
-//│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
-//│ ╙──     	                                        ^
+//│ ║  l.20: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ╙──      	                                        ^
 //│ ╔══[COMPILATION ERROR] Name not found: d
-//│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
-//│ ╙──     	                                             ^
+//│ ║  l.20: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ╙──      	                                             ^
 
 
