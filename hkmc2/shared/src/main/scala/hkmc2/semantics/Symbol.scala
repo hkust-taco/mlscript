@@ -40,7 +40,8 @@ abstract class Symbol(using State) extends Located:
     .mkString(Int.MaxValue)
   
   override def toString: Str =
-    dbgName
+    // dbgName
+    nme + State.dbgUid(uid)
   
   val directRefs: mutable.Buffer[Term.Ref] = mutable.Buffer.empty
   def ref(id: Tree.Ident =

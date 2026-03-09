@@ -16,10 +16,10 @@ class Foo[A]
 
 :fixme
 fun f(x: Foo[Int]) = x.foo
-//│ /!!!\ Uncaught error: scala.NotImplementedError: List(Ref(class:Int⁰,List())) (of class $colon$colon)
+//│ /!!!\ Uncaught error: scala.NotImplementedError: List(Ref(class:Int,List())) (of class $colon$colon)
 
 :fixme
 fun f[A](x: Foo[A]) = x.foo
-//│ /!!!\ Uncaught error: scala.NotImplementedError: List(Ref(A⁰,List())) (of class $colon$colon)
+//│ /!!!\ Uncaught error: scala.NotImplementedError: List(Ref(A,List())) (of class $colon$colon)
 
 

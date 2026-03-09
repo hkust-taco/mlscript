@@ -40,16 +40,16 @@ fun h1(a) =
     a is None then 0
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    a⁰ is Option.Some(arg$Some$0$) and
-//│ >      let x⁰ = tmp:arg$Some$0$⁰
-//│ >      x⁰ is Left(arg$Left$0$) and
-//│ >        let y⁰ = tmp:arg$Left$0$⁰
-//│ >        else y⁰
-//│ >      let y¹ = tmp:arg$Some$0$⁰
-//│ >      y¹ is Right(arg$Right$0$) and
-//│ >        let z⁰ = tmp:arg$Right$0$⁰
-//│ >        else z⁰
-//│ >    a⁰ is Option.None then 0
+//│ >    a is Option.Some(arg$Some$0$) and
+//│ >      let x = tmp:arg$Some$0$
+//│ >      x is Left(arg$Left$0$) and
+//│ >        let y = tmp:arg$Left$0$
+//│ >        else y
+//│ >      let y = tmp:arg$Some$0$
+//│ >      y is Right(arg$Right$0$) and
+//│ >        let z = tmp:arg$Right$0$
+//│ >        else z
+//│ >    a is Option.None then 0
 
 h1(Some(Left(42)))
 //│ = 42
@@ -72,18 +72,18 @@ fun h2(a) =
     a is None then 0
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    a¹ is Option.Some(arg$Some$0$) and
-//│ >      let x¹ = tmp:arg$Some$0$¹
-//│ >      let x'⁰ = x¹
-//│ >      x'⁰ is Left(arg$Left$0$) and
-//│ >        let y² = tmp:arg$Left$0$¹
-//│ >        else y²
-//│ >      let y³ = tmp:arg$Some$0$¹
-//│ >      let y'⁰ = y³
-//│ >      y'⁰ is Right(arg$Right$0$) and
-//│ >        let z¹ = tmp:arg$Right$0$¹
-//│ >        else z¹
-//│ >    a¹ is Option.None then 0
+//│ >    a is Option.Some(arg$Some$0$) and
+//│ >      let x = tmp:arg$Some$0$
+//│ >      let x' = x
+//│ >      x' is Left(arg$Left$0$) and
+//│ >        let y = tmp:arg$Left$0$
+//│ >        else y
+//│ >      let y = tmp:arg$Some$0$
+//│ >      let y' = y
+//│ >      y' is Right(arg$Right$0$) and
+//│ >        let z = tmp:arg$Right$0$
+//│ >        else z
+//│ >    a is Option.None then 0
 
 // :w
 fun h3(x, y, f, p) =

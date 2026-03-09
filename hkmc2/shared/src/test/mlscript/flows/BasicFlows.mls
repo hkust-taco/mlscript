@@ -100,7 +100,7 @@ f(1, 2)
 
 :fixme
 f(...a)
-//│ /!!!\ Uncaught error: scala.MatchError: Spd(Eager,Ref(a⁰)) (of class hkmc2.semantics.Spd)
+//│ /!!!\ Uncaught error: scala.MatchError: Spd(Eager,Ref(a)) (of class hkmc2.semantics.Spd)
 
 
 fun przd[A, B](x: A) = x

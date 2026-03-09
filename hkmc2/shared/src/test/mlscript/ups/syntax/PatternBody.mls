@@ -19,28 +19,28 @@ class Pair[A, B](val fst: A, val snd: B)
 
 :ucs ups
 pattern PlainList(pattern T) = (null => Nil) | (Pair(T as hd, PlainList(T) as tl) => hd :: tl)
-//│ elaborated pattern body: null => (member:Stack⁰.)Nil‹member:Nil⁰› ∨ Pair(T as hd, PlainList(T) as tl) => (member:Stack⁰.)Cons‹member:Cons⁰›(hd⁰, tl⁰)
+//│ elaborated pattern body: null => (member:Stack.)Nil‹member:Nil› ∨ Pair(T as hd, PlainList(T) as tl) => (member:Stack.)Cons‹member:Cons›(hd, tl)
 
 :todo
 :ucs ups
 // Decide the operator precedence between `as` and `=>`.
 // This is elaborated into `T as (x => x)`, which might not be what we want.
 pattern Identity(pattern T) = T as x => x
-//│ elaborated pattern body: T as (x => x⁰)
+//│ elaborated pattern body: T as (x => x)
 
 :ucs ups
 pattern Identity(pattern T) = (T as x) => x
-//│ elaborated pattern body: (T as x) => x¹
+//│ elaborated pattern body: (T as x) => x
 
 pattern Identity = x => x
 
 :ucs ups
 pattern Sick = (0 as a as b as c as d as e as f) => a + b + c + d + e + f
-//│ elaborated pattern body: ((((((0 as a) as b) as c) as d) as e) as f) => builtin:+⁰(builtin:+⁰(builtin:+⁰(builtin:+⁰(builtin:+⁰(a⁰, b⁰), c⁰), d⁰), e⁰), f⁰)
+//│ elaborated pattern body: ((((((0 as a) as b) as c) as d) as e) as f) => builtin:+(builtin:+(builtin:+(builtin:+(builtin:+(a, b), c), d), e), f)
 
 :ucs ups
 pattern PairLike = [fst, snd] => Pair(fst, snd)
-//│ elaborated pattern body: [fst, snd] => member:Pair⁰(fst⁰, snd⁰)
+//│ elaborated pattern body: [fst, snd] => member:Pair(fst, snd)
 
 :ucs ups
 pattern PairLike(fst, snd) = Pair(fst, snd) | [fst, snd]
@@ -54,11 +54,11 @@ pattern UselessParameter = x
 
 :ucs ups
 pattern PlainList(pattern T) = (null => Nil) | ([T as hd, PlainList(T) as tl] => hd :: tl)
-//│ elaborated pattern body: null => (member:Stack⁰.)Nil‹member:Nil⁰› ∨ [T as hd, PlainList(T) as tl] => (member:Stack⁰.)Cons‹member:Cons⁰›(hd¹, tl¹)
+//│ elaborated pattern body: null => (member:Stack.)Nil‹member:Nil› ∨ [T as hd, PlainList(T) as tl] => (member:Stack.)Cons‹member:Cons›(hd, tl)
 
 :ucs ups
 pattern Consistent = ((Int as x) | (Str as x)) => x.toString()
-//│ elaborated pattern body: (Int as x ∨ Str as x) => x².toString()
+//│ elaborated pattern body: (Int as x ∨ Str as x) => x.toString()
 
 :e
 pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
@@ -147,11 +147,11 @@ pattern Origin = (x: 0, y: 0, z: 0)
 
 :ucs ups
 pattern PointLike = ((x: x, y: y)) => x + y
-//│ elaborated pattern body: {x: x, y: y} => builtin:+⁰(x³, y⁰)
+//│ elaborated pattern body: {x: x, y: y} => builtin:+(x, y)
 
 :ucs ups
 pattern PointLike = ((:x, :y, :z)) => x + y
-//│ elaborated pattern body: {x: x, y: y, z: z} => builtin:+⁰(x⁴, y¹)
+//│ elaborated pattern body: {x: x, y: y, z: z} => builtin:+(x, y)
 
 :ucs ups
 pattern NestedTuple = [[[]]]
