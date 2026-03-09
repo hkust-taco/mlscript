@@ -111,7 +111,7 @@ fun h: [C] -> ([A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B
 
 :e
 bazbaz as [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
-//│ ╔══[COMPILATION ERROR] Cannot type non-function term Ref(member:bazbaz¹) as (A) ->{⊥} ([outer, 'B] -> 'B) ->{⊥} A
+//│ ╔══[COMPILATION ERROR] Cannot type non-function term Ref(member:bazbaz) as (A) ->{⊥} ([outer, 'B] -> 'B) ->{⊥} A
 //│ ║  l.113: 	bazbaz as [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
 //│ ╙──       	^^^^^^
 //│ Type: ['A] -> ('A) ->{⊥} ('A -> 'A) ->{⊥} 'A

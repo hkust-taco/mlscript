@@ -8,9 +8,9 @@ module Mod with
 :ctx
 open Mod
 //│ Env:
-//│   pipee -> SelElem(RefElem(member:Mod⁰),pipee,Some(member:pipee⁰),true)
-//│   printt -> SelElem(RefElem(member:Mod⁰),printt,Some(member:printt⁰),true)
-//│   |>> -> SelElem(RefElem(member:Mod⁰),pipee,Some(member:pipee⁰),true)
+//│   pipee -> SelElem(RefElem(member:Mod),pipee,Some(member:pipee),true)
+//│   printt -> SelElem(RefElem(member:Mod),printt,Some(member:printt),true)
+//│   |>> -> SelElem(RefElem(member:Mod),pipee,Some(member:pipee),true)
 
 pipee
 //│ = fun pipee

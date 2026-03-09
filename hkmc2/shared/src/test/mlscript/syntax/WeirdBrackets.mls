@@ -67,12 +67,12 @@ fun interesting(x) =
   if x is Box( Int then 1, Bool then 2 )
 //│ Split with nested patterns:
 //│ >  if
-//│ >    x⁰ is Box(Int) then 1
-//│ >    x⁰ is Box(Bool) then 2
+//│ >    x is Box(Int) then 1
+//│ >    x is Box(Bool) then 2
 //│ Expanded split with flattened patterns:
 //│ >  ‹if|while›
-//│ >    x⁰ is Box(arg$Box$0$) and tmp:arg$Box$0$⁰ is Int then 1
-//│ >    x⁰ is Box(arg$Box$0$) and tmp:arg$Box$0$⁰ is Bool then 2
+//│ >    x is Box(arg$Box$0$) and tmp:arg$Box$0$ is Int then 1
+//│ >    x is Box(arg$Box$0$) and tmp:arg$Box$0$ is Bool then 2
 
 interesting of Box(42)
 //│ = 1

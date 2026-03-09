@@ -36,8 +36,8 @@ id(a: 0)
 //│ Blk:
 //│   stats = Nil
 //│   res = App:
-//│     lhs = SynthSel{sym=member:id⁰}:
-//│       prefix = Ref{sym=member:Predef⁰} of member:Predef⁰
+//│     lhs = SynthSel{sym=member:id}:
+//│       prefix = Ref{sym=member:Predef} of member:Predef
 //│       nme = Ident of "id"
 //│     rhs = Tup of Ls of 
 //│       Fld:

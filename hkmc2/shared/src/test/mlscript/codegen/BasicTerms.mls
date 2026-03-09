@@ -46,10 +46,10 @@ print("Hi")
 //│   main = Assign:
 //│     lhs = ‹no symbol›
 //│     rhs = Call:
-//│       fun = Select{sym=term:Predef¹.print²}:
-//│         qual = Ref{disamb=module:Predef¹}:
-//│           l = member:Predef⁰
-//│           disamb = S of module:Predef¹
+//│       fun = Select{sym=term:Predef⁰.print}:
+//│         qual = Ref{disamb=module:Predef}:
+//│           l = member:Predef
+//│           disamb = S of module:Predef
 //│         name = Ident of "print"
 //│       args = Ls of 
 //│         Arg:
