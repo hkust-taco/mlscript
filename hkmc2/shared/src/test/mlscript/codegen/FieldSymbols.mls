@@ -132,7 +132,7 @@ case
 //│                   implct = false
 //│             dflt = S of Throw of Instantiate:
 //│               mut = false
-//│               cls = Select:
+//│               cls = Select{sym=class:Error}:
 //│                 qual = Ref{disamb=globalThis:globalThis}:
 //│                   l = globalThis:globalThis
 //│                   disamb = S of globalThis:globalThis

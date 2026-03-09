@@ -155,6 +155,7 @@ object Elaborator:
       val Str = assumeBuiltinCls("Str")
       val BigInt = assumeBuiltinCls("BigInt")
       val Function = assumeBuiltinCls("Function")
+      val Error = assumeBuiltinCls("Error")
       val Bool = assumeBuiltinCls("Bool")
       val Object = assumeBuiltinCls("Object")
       val Array = assumeBuiltinCls("Array")

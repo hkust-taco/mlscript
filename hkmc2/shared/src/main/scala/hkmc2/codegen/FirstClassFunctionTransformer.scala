@@ -39,7 +39,10 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
 
   override def applyPath(p: Path)(k: Path => Block): Block = p match
     case ref @ Value.Ref(l: BlockMemberSymbol, disamb) => l.tsym match
-      case Some(s: TermSymbol) if s.k is syntax.Fun =>
+      case Some(s: TermSymbol) if (s.k is syntax.Fun) && !disamb.exists {
+        case t: TermSymbol => t.k isnt syntax.Fun
+        case _ => true
+      } => // A term symbol with `syntax.Fun` is a constructor function, if what `disamb` indicates is not a function
         val params = getParamList(l).getOrElse(lastWords(s"Cannot get ${l.nme}'s parameter list."))
         val clsDef = generateFCFunctionClass(ref, params)
         val tmp = new TempSymbol(None)
@@ -99,8 +102,6 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
             k(call(fun))
         case _ => k(call(fun))
     case _: Lambda => lastWords("Lambda functions should be rewritten into function definitions first.")
-    case Instantiate(mut, cls, args) => applyArgs(args): args2 =>
-      k(if args2 is args then r else Instantiate(mut, cls, args2).withLocOf(r))
     case _ => super.applyResult(r)(k)
 
   class DesugarMultipleParamList extends BlockTransformer(new SymbolSubst):
