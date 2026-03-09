@@ -24,161 +24,161 @@ M.foo
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=term:M⁰.foo³,typ=module:M⁰}:
-//│     t = Sel{sym=member:foo⁰}:
-//│       prefix = Resolved{sym=module:M⁰,typ=module:M⁰}:
-//│         t = Ref{sym=member:M¹} of member:M¹
-//│         sym = module:M⁰
+//│   res = Resolved{sym=term:M⁰.foo,typ=module:M}:
+//│     t = Sel{sym=member:foo}:
+//│       prefix = Resolved{sym=module:M,typ=module:M}:
+//│         t = Ref{sym=member:M} of member:M
+//│         sym = module:M
 //│       nme = Ident of "foo"
-//│     sym = term:M⁰.foo³
+//│     sym = term:M⁰.foo
 
 M.bar
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=term:M⁰.bar²,typ=module:M⁰}:
-//│     t = Sel{sym=member:bar⁰}:
-//│       prefix = Resolved{sym=module:M⁰,typ=module:M⁰}:
-//│         t = Ref{sym=member:M¹} of member:M¹
-//│         sym = module:M⁰
+//│   res = Resolved{sym=term:M⁰.bar,typ=module:M}:
+//│     t = Sel{sym=member:bar}:
+//│       prefix = Resolved{sym=module:M,typ=module:M}:
+//│         t = Ref{sym=member:M} of member:M
+//│         sym = module:M
 //│       nme = Ident of "bar"
-//│     sym = term:M⁰.bar²
+//│     sym = term:M⁰.bar
 
 M.baz
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=term:M⁰.baz¹}:
-//│     t = Sel{sym=member:baz⁰}:
-//│       prefix = Resolved{sym=module:M⁰,typ=module:M⁰}:
-//│         t = Ref{sym=member:M¹} of member:M¹
-//│         sym = module:M⁰
+//│   res = Resolved{sym=term:M⁰.baz}:
+//│     t = Sel{sym=member:baz}:
+//│       prefix = Resolved{sym=module:M,typ=module:M}:
+//│         t = Ref{sym=member:M} of member:M
+//│         sym = module:M
 //│       nme = Ident of "baz"
-//│     sym = term:M⁰.baz¹
+//│     sym = term:M⁰.baz
 
 M.baz()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{typ=module:M⁰}:
-//│     lhs = Resolved{sym=term:M⁰.baz¹}:
-//│       t = Sel{sym=member:baz⁰}:
-//│         prefix = Resolved{sym=module:M⁰,typ=module:M⁰}:
-//│           t = Ref{sym=member:M¹} of member:M¹
-//│           sym = module:M⁰
+//│   res = App{typ=module:M}:
+//│     lhs = Resolved{sym=term:M⁰.baz}:
+//│       t = Sel{sym=member:baz}:
+//│         prefix = Resolved{sym=module:M,typ=module:M}:
+//│           t = Ref{sym=member:M} of member:M
+//│           sym = module:M
 //│         nme = Ident of "baz"
-//│       sym = term:M⁰.baz¹
+//│       sym = term:M⁰.baz
 //│     rhs = Tup of Nil
 
 M.foo.bar.baz()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{typ=module:M⁰}:
-//│     lhs = Resolved{sym=term:M⁰.baz¹}:
-//│       t = Sel{sym=member:baz⁰}:
-//│         prefix = Resolved{sym=term:M⁰.bar²,typ=module:M⁰}:
-//│           t = Sel{sym=member:bar⁰}:
-//│             prefix = Resolved{sym=term:M⁰.foo³,typ=module:M⁰}:
-//│               t = Sel{sym=member:foo⁰}:
-//│                 prefix = Resolved{sym=module:M⁰,typ=module:M⁰}:
-//│                   t = Ref{sym=member:M¹} of member:M¹
-//│                   sym = module:M⁰
+//│   res = App{typ=module:M}:
+//│     lhs = Resolved{sym=term:M⁰.baz}:
+//│       t = Sel{sym=member:baz}:
+//│         prefix = Resolved{sym=term:M⁰.bar,typ=module:M}:
+//│           t = Sel{sym=member:bar}:
+//│             prefix = Resolved{sym=term:M⁰.foo,typ=module:M}:
+//│               t = Sel{sym=member:foo}:
+//│                 prefix = Resolved{sym=module:M,typ=module:M}:
+//│                   t = Ref{sym=member:M} of member:M
+//│                   sym = module:M
 //│                 nme = Ident of "foo"
-//│               sym = term:M⁰.foo³
+//│               sym = term:M⁰.foo
 //│             nme = Ident of "bar"
-//│           sym = term:M⁰.bar²
+//│           sym = term:M⁰.bar
 //│         nme = Ident of "baz"
-//│       sym = term:M⁰.baz¹
+//│       sym = term:M⁰.baz
 //│     rhs = Tup of Nil
 
 M.that.that
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=term:N⁰.that²,typ=module:M⁰}:
-//│     t = Sel{sym=member:that¹}:
-//│       prefix = Resolved{sym=term:M⁰.that³,typ=module:N⁰}:
-//│         t = Sel{sym=member:that⁰}:
-//│           prefix = Resolved{sym=module:M⁰,typ=module:M⁰}:
-//│             t = Ref{sym=member:M¹} of member:M¹
-//│             sym = module:M⁰
+//│   res = Resolved{sym=term:N⁰.that,typ=module:M}:
+//│     t = Sel{sym=member:that}:
+//│       prefix = Resolved{sym=term:M⁰.that,typ=module:N}:
+//│         t = Sel{sym=member:that}:
+//│           prefix = Resolved{sym=module:M,typ=module:M}:
+//│             t = Ref{sym=member:M} of member:M
+//│             sym = module:M
 //│           nme = Ident of "that"
-//│         sym = term:M⁰.that³
+//│         sym = term:M⁰.that
 //│       nme = Ident of "that"
-//│     sym = term:N⁰.that²
+//│     sym = term:N⁰.that
 
 M.that.that.that.that.that.that
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=term:N⁰.that²,typ=module:M⁰}:
-//│     t = Sel{sym=member:that¹}:
-//│       prefix = Resolved{sym=term:M⁰.that³,typ=module:N⁰}:
-//│         t = Sel{sym=member:that⁰}:
-//│           prefix = Resolved{sym=term:N⁰.that²,typ=module:M⁰}:
-//│             t = Sel{sym=member:that¹}:
-//│               prefix = Resolved{sym=term:M⁰.that³,typ=module:N⁰}:
-//│                 t = Sel{sym=member:that⁰}:
-//│                   prefix = Resolved{sym=term:N⁰.that²,typ=module:M⁰}:
-//│                     t = Sel{sym=member:that¹}:
-//│                       prefix = Resolved{sym=term:M⁰.that³,typ=module:N⁰}:
-//│                         t = Sel{sym=member:that⁰}:
-//│                           prefix = Resolved{sym=module:M⁰,typ=module:M⁰}:
-//│                             t = Ref{sym=member:M¹} of member:M¹
-//│                             sym = module:M⁰
+//│   res = Resolved{sym=term:N⁰.that,typ=module:M}:
+//│     t = Sel{sym=member:that}:
+//│       prefix = Resolved{sym=term:M⁰.that,typ=module:N}:
+//│         t = Sel{sym=member:that}:
+//│           prefix = Resolved{sym=term:N⁰.that,typ=module:M}:
+//│             t = Sel{sym=member:that}:
+//│               prefix = Resolved{sym=term:M⁰.that,typ=module:N}:
+//│                 t = Sel{sym=member:that}:
+//│                   prefix = Resolved{sym=term:N⁰.that,typ=module:M}:
+//│                     t = Sel{sym=member:that}:
+//│                       prefix = Resolved{sym=term:M⁰.that,typ=module:N}:
+//│                         t = Sel{sym=member:that}:
+//│                           prefix = Resolved{sym=module:M,typ=module:M}:
+//│                             t = Ref{sym=member:M} of member:M
+//│                             sym = module:M
 //│                           nme = Ident of "that"
-//│                         sym = term:M⁰.that³
+//│                         sym = term:M⁰.that
 //│                       nme = Ident of "that"
-//│                     sym = term:N⁰.that²
+//│                     sym = term:N⁰.that
 //│                   nme = Ident of "that"
-//│                 sym = term:M⁰.that³
+//│                 sym = term:M⁰.that
 //│               nme = Ident of "that"
-//│             sym = term:N⁰.that²
+//│             sym = term:N⁰.that
 //│           nme = Ident of "that"
-//│         sym = term:M⁰.that³
+//│         sym = term:M⁰.that
 //│       nme = Ident of "that"
-//│     sym = term:N⁰.that²
+//│     sym = term:N⁰.that
 
 R.foo
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=term:R⁰.foo⁴}:
-//│     t = Sel{sym=member:foo¹}:
-//│       prefix = Resolved{sym=module:R⁰,typ=module:R⁰}:
-//│         t = Ref{sym=member:R¹} of member:R¹
-//│         sym = module:R⁰
+//│   res = Resolved{sym=term:R⁰.foo}:
+//│     t = Sel{sym=member:foo}:
+//│       prefix = Resolved{sym=module:R,typ=module:R}:
+//│         t = Ref{sym=member:R} of member:R
+//│         sym = module:R
 //│       nme = Ident of "foo"
-//│     sym = term:R⁰.foo⁴
+//│     sym = term:R⁰.foo
 
 R.foo()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
 //│   res = App:
-//│     lhs = Resolved{sym=term:R⁰.foo⁴}:
-//│       t = Sel{sym=member:foo¹}:
-//│         prefix = Resolved{sym=module:R⁰,typ=module:R⁰}:
-//│           t = Ref{sym=member:R¹} of member:R¹
-//│           sym = module:R⁰
+//│     lhs = Resolved{sym=term:R⁰.foo}:
+//│       t = Sel{sym=member:foo}:
+//│         prefix = Resolved{sym=module:R,typ=module:R}:
+//│           t = Ref{sym=member:R} of member:R
+//│           sym = module:R
 //│         nme = Ident of "foo"
-//│       sym = term:R⁰.foo⁴
+//│       sym = term:R⁰.foo
 //│     rhs = Tup of Nil
 
 R.foo()()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{typ=module:N⁰}:
+//│   res = App{typ=module:N}:
 //│     lhs = App:
-//│       lhs = Resolved{sym=term:R⁰.foo⁴}:
-//│         t = Sel{sym=member:foo¹}:
-//│           prefix = Resolved{sym=module:R⁰,typ=module:R⁰}:
-//│             t = Ref{sym=member:R¹} of member:R¹
-//│             sym = module:R⁰
+//│       lhs = Resolved{sym=term:R⁰.foo}:
+//│         t = Sel{sym=member:foo}:
+//│           prefix = Resolved{sym=module:R,typ=module:R}:
+//│             t = Ref{sym=member:R} of member:R
+//│             sym = module:R
 //│           nme = Ident of "foo"
-//│         sym = term:R⁰.foo⁴
+//│         sym = term:R⁰.foo
 //│       rhs = Tup of Nil
 //│     rhs = Tup of Nil
 
@@ -187,15 +187,15 @@ R.foo()()()
 //│ Blk:
 //│   stats = Nil
 //│   res = App:
-//│     lhs = App{typ=module:N⁰}:
+//│     lhs = App{typ=module:N}:
 //│       lhs = App:
-//│         lhs = Resolved{sym=term:R⁰.foo⁴}:
-//│           t = Sel{sym=member:foo¹}:
-//│             prefix = Resolved{sym=module:R⁰,typ=module:R⁰}:
-//│               t = Ref{sym=member:R¹} of member:R¹
-//│               sym = module:R⁰
+//│         lhs = Resolved{sym=term:R⁰.foo}:
+//│           t = Sel{sym=member:foo}:
+//│             prefix = Resolved{sym=module:R,typ=module:R}:
+//│               t = Ref{sym=member:R} of member:R
+//│               sym = module:R
 //│             nme = Ident of "foo"
-//│           sym = term:R⁰.foo⁴
+//│           sym = term:R⁰.foo
 //│         rhs = Tup of Nil
 //│       rhs = Tup of Nil
 //│     rhs = Tup of Nil
@@ -208,36 +208,36 @@ R.bar
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{typ=module:M⁰}:
+//│   res = App{typ=module:M}:
 //│     lhs = App:
 //│       lhs = App:
-//│         lhs = Resolved{sym=term:R⁰.bar³}:
-//│           t = Sel{sym=member:bar¹}:
-//│             prefix = Resolved{sym=module:R⁰,typ=module:R⁰}:
-//│               t = Ref{sym=member:R¹} of member:R¹
-//│               sym = module:R⁰
+//│         lhs = Resolved{sym=term:R⁰.bar}:
+//│           t = Sel{sym=member:bar}:
+//│             prefix = Resolved{sym=module:R,typ=module:R}:
+//│               t = Ref{sym=member:R} of member:R
+//│               sym = module:R
 //│             nme = Ident of "bar"
-//│           sym = term:R⁰.bar³
+//│           sym = term:R⁰.bar
 //│         rhs = Tup of Ls of 
 //│           Fld:
 //│             flags = ()
-//│             term = Resolved{sym=term:instance$Ident(Int)¹,typ=class:Int⁰}:
-//│               t = Ref{sym=member:instance$Ident(Int)⁰} of member:instance$Ident(Int)⁰
-//│               sym = term:instance$Ident(Int)¹
+//│             term = Resolved{sym=term:instance$Ident(Int),typ=class:Int}:
+//│               t = Ref{sym=member:instance$Ident(Int)} of member:instance$Ident(Int)
+//│               sym = term:instance$Ident(Int)
 //│             asc = N
 //│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
-//│           term = Resolved{sym=term:instance$Ident(Num)¹,typ=class:Num⁰}:
-//│             t = Ref{sym=member:instance$Ident(Num)⁰} of member:instance$Ident(Num)⁰
-//│             sym = term:instance$Ident(Num)¹
+//│           term = Resolved{sym=term:instance$Ident(Num),typ=class:Num}:
+//│             t = Ref{sym=member:instance$Ident(Num)} of member:instance$Ident(Num)
+//│             sym = term:instance$Ident(Num)
 //│           asc = N
 //│     rhs = Tup of Ls of 
 //│       Fld:
 //│         flags = ()
-//│         term = Resolved{sym=term:instance$Ident(Str)¹,typ=class:Str⁰}:
-//│           t = Ref{sym=member:instance$Ident(Str)⁰} of member:instance$Ident(Str)⁰
-//│           sym = term:instance$Ident(Str)¹
+//│         term = Resolved{sym=term:instance$Ident(Str),typ=class:Str}:
+//│           t = Ref{sym=member:instance$Ident(Str)} of member:instance$Ident(Str)
+//│           sym = term:instance$Ident(Str)
 //│         asc = N
 
 // the symbol of this Ref should be M because of the implicit application
@@ -245,32 +245,32 @@ foo
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{typ=module:M⁰}:
+//│   res = App{typ=module:M}:
 //│     lhs = App:
 //│       lhs = App:
-//│         lhs = Resolved{sym=term:foo⁵}:
-//│           t = Ref{sym=member:foo²} of member:foo²
-//│           sym = term:foo⁵
+//│         lhs = Resolved{sym=term:foo}:
+//│           t = Ref{sym=member:foo} of member:foo
+//│           sym = term:foo
 //│         rhs = Tup of Ls of 
 //│           Fld:
 //│             flags = ()
-//│             term = Resolved{sym=term:instance$Ident(Int)¹,typ=class:Int⁰}:
-//│               t = Ref{sym=member:instance$Ident(Int)⁰} of member:instance$Ident(Int)⁰
-//│               sym = term:instance$Ident(Int)¹
+//│             term = Resolved{sym=term:instance$Ident(Int),typ=class:Int}:
+//│               t = Ref{sym=member:instance$Ident(Int)} of member:instance$Ident(Int)
+//│               sym = term:instance$Ident(Int)
 //│             asc = N
 //│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
-//│           term = Resolved{sym=term:instance$Ident(Num)¹,typ=class:Num⁰}:
-//│             t = Ref{sym=member:instance$Ident(Num)⁰} of member:instance$Ident(Num)⁰
-//│             sym = term:instance$Ident(Num)¹
+//│           term = Resolved{sym=term:instance$Ident(Num),typ=class:Num}:
+//│             t = Ref{sym=member:instance$Ident(Num)} of member:instance$Ident(Num)
+//│             sym = term:instance$Ident(Num)
 //│           asc = N
 //│     rhs = Tup of Ls of 
 //│       Fld:
 //│         flags = ()
-//│         term = Resolved{sym=term:instance$Ident(Str)¹,typ=class:Str⁰}:
-//│           t = Ref{sym=member:instance$Ident(Str)⁰} of member:instance$Ident(Str)⁰
-//│           sym = term:instance$Ident(Str)¹
+//│         term = Resolved{sym=term:instance$Ident(Str),typ=class:Str}:
+//│           t = Ref{sym=member:instance$Ident(Str)} of member:instance$Ident(Str)
+//│           sym = term:instance$Ident(Str)
 //│         asc = N
 
 // the symbol of this TyApp should be M because of the implicit application
@@ -279,41 +279,41 @@ R.bar[Int]
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{typ=module:M⁰}:
+//│   res = App{typ=module:M}:
 //│     lhs = App:
 //│       lhs = App:
-//│         lhs = TyApp{sym=term:R⁰.bar³}:
-//│           lhs = Resolved{sym=term:R⁰.bar³}:
-//│             t = Sel{sym=member:bar¹}:
-//│               prefix = Resolved{sym=module:R⁰,typ=module:R⁰}:
-//│                 t = Ref{sym=member:R¹} of member:R¹
-//│                 sym = module:R⁰
+//│         lhs = TyApp{sym=term:R⁰.bar}:
+//│           lhs = Resolved{sym=term:R⁰.bar}:
+//│             t = Sel{sym=member:bar}:
+//│               prefix = Resolved{sym=module:R,typ=module:R}:
+//│                 t = Ref{sym=member:R} of member:R
+//│                 sym = module:R
 //│               nme = Ident of "bar"
-//│             sym = term:R⁰.bar³
+//│             sym = term:R⁰.bar
 //│           targs = Ls of 
-//│             Resolved{sym=class:Int⁰}:
-//│               t = Ref{sym=member:Int¹} of member:Int¹
-//│               sym = class:Int⁰
+//│             Resolved{sym=class:Int}:
+//│               t = Ref{sym=member:Int} of member:Int
+//│               sym = class:Int
 //│         rhs = Tup of Ls of 
 //│           Fld:
 //│             flags = ()
-//│             term = Resolved{sym=term:instance$Ident(Int)¹,typ=class:Int⁰}:
-//│               t = Ref{sym=member:instance$Ident(Int)⁰} of member:instance$Ident(Int)⁰
-//│               sym = term:instance$Ident(Int)¹
+//│             term = Resolved{sym=term:instance$Ident(Int),typ=class:Int}:
+//│               t = Ref{sym=member:instance$Ident(Int)} of member:instance$Ident(Int)
+//│               sym = term:instance$Ident(Int)
 //│             asc = N
 //│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
-//│           term = Resolved{sym=term:instance$Ident(Num)¹,typ=class:Num⁰}:
-//│             t = Ref{sym=member:instance$Ident(Num)⁰} of member:instance$Ident(Num)⁰
-//│             sym = term:instance$Ident(Num)¹
+//│           term = Resolved{sym=term:instance$Ident(Num),typ=class:Num}:
+//│             t = Ref{sym=member:instance$Ident(Num)} of member:instance$Ident(Num)
+//│             sym = term:instance$Ident(Num)
 //│           asc = N
 //│     rhs = Tup of Ls of 
 //│       Fld:
 //│         flags = ()
-//│         term = Resolved{sym=term:instance$Ident(Str)¹,typ=class:Str⁰}:
-//│           t = Ref{sym=member:instance$Ident(Str)⁰} of member:instance$Ident(Str)⁰
-//│           sym = term:instance$Ident(Str)¹
+//│         term = Resolved{sym=term:instance$Ident(Str),typ=class:Str}:
+//│           t = Ref{sym=member:instance$Ident(Str)} of member:instance$Ident(Str)
+//│           sym = term:instance$Ident(Str)
 //│         asc = N
 
 // the symbol of this TyApp should be M because of the implicit application
@@ -322,35 +322,35 @@ foo[Int]
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{typ=module:M⁰}:
+//│   res = App{typ=module:M}:
 //│     lhs = App:
 //│       lhs = App:
-//│         lhs = TyApp{sym=term:foo⁵}:
-//│           lhs = Resolved{sym=term:foo⁵}:
-//│             t = Ref{sym=member:foo²} of member:foo²
-//│             sym = term:foo⁵
+//│         lhs = TyApp{sym=term:foo}:
+//│           lhs = Resolved{sym=term:foo}:
+//│             t = Ref{sym=member:foo} of member:foo
+//│             sym = term:foo
 //│           targs = Ls of 
-//│             Resolved{sym=class:Int⁰}:
-//│               t = Ref{sym=member:Int¹} of member:Int¹
-//│               sym = class:Int⁰
+//│             Resolved{sym=class:Int}:
+//│               t = Ref{sym=member:Int} of member:Int
+//│               sym = class:Int
 //│         rhs = Tup of Ls of 
 //│           Fld:
 //│             flags = ()
-//│             term = Resolved{sym=term:instance$Ident(Int)¹,typ=class:Int⁰}:
-//│               t = Ref{sym=member:instance$Ident(Int)⁰} of member:instance$Ident(Int)⁰
-//│               sym = term:instance$Ident(Int)¹
+//│             term = Resolved{sym=term:instance$Ident(Int),typ=class:Int}:
+//│               t = Ref{sym=member:instance$Ident(Int)} of member:instance$Ident(Int)
+//│               sym = term:instance$Ident(Int)
 //│             asc = N
 //│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
-//│           term = Resolved{sym=term:instance$Ident(Num)¹,typ=class:Num⁰}:
-//│             t = Ref{sym=member:instance$Ident(Num)⁰} of member:instance$Ident(Num)⁰
-//│             sym = term:instance$Ident(Num)¹
+//│           term = Resolved{sym=term:instance$Ident(Num),typ=class:Num}:
+//│             t = Ref{sym=member:instance$Ident(Num)} of member:instance$Ident(Num)
+//│             sym = term:instance$Ident(Num)
 //│           asc = N
 //│     rhs = Tup of Ls of 
 //│       Fld:
 //│         flags = ()
-//│         term = Resolved{sym=term:instance$Ident(Str)¹,typ=class:Str⁰}:
-//│           t = Ref{sym=member:instance$Ident(Str)⁰} of member:instance$Ident(Str)⁰
-//│           sym = term:instance$Ident(Str)¹
+//│         term = Resolved{sym=term:instance$Ident(Str),typ=class:Str}:
+//│           t = Ref{sym=member:instance$Ident(Str)} of member:instance$Ident(Str)
+//│           sym = term:instance$Ident(Str)
 //│         asc = N

@@ -50,7 +50,7 @@ handle h = Eff with
   fun f()(r) = r(0)
 in
   foo(h)
-//│ Elab: { handle h⁰ = Ref(member:Eff⁰)() List(HandlerTermDefinition(r⁰,TermDefinition(Fun,member:f⁰,term:Handler$h$⁰.f¹,List(ParamList(‹›,List(),None)),None,None,Some(App(Ref(r⁰),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹method ›,Modulefulness(None),List(),None))) in App(Ref(member:foo⁰),Tup(List(Fld(‹›,Ref(h⁰),None)))) }
+//│ Elab: { handle h = Ref(member:Eff)() List(HandlerTermDefinition(r,TermDefinition(Fun,member:f,term:Handler$h$⁰.f,List(ParamList(‹›,List(),None)),None,None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹method ›,Modulefulness(None),List(),None))) in App(Ref(member:foo),Tup(List(Fld(‹›,Ref(h),None)))) }
 
 :e
 (
@@ -74,7 +74,7 @@ handle h = Mod.Eff(3) with
   fun f()(r) = r(0)
   fun g(a)()()(r) = r(1)
 foo(h)
-//│ Elab: { handle h¹ = Sel(Ref(member:Mod⁰),Ident(Eff))(Lit(IntLit(3))) List(HandlerTermDefinition(r¹,TermDefinition(Fun,member:f²,term:Handler$h$¹.f³,List(ParamList(‹›,List(),None)),None,None,Some(App(Ref(r¹),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹method ›,Modulefulness(None),List(),None)), HandlerTermDefinition(r²,TermDefinition(Fun,member:g⁰,term:Handler$h$¹.g¹,List(ParamList(‹›,List(Param(‹›,a⁰,None,Modulefulness(None))),None), ParamList(‹›,List(),None), ParamList(‹›,List(),None)),None,None,Some(App(Ref(r²),Tup(List(Fld(‹›,Lit(IntLit(1)),None))))),‹method ›,Modulefulness(None),List(),None))) in App(Ref(member:foo⁰),Tup(List(Fld(‹›,Ref(h¹),None)))) }
+//│ Elab: { handle h = Sel(Ref(member:Mod),Ident(Eff))(Lit(IntLit(3))) List(HandlerTermDefinition(r,TermDefinition(Fun,member:f,term:Handler$h$¹.f,List(ParamList(‹›,List(),None)),None,None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹method ›,Modulefulness(None),List(),None)), HandlerTermDefinition(r,TermDefinition(Fun,member:g,term:Handler$h$¹.g,List(ParamList(‹›,List(Param(‹›,a,None,Modulefulness(None))),None), ParamList(‹›,List(),None), ParamList(‹›,List(),None)),None,None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(1)),None))))),‹method ›,Modulefulness(None),List(),None))) in App(Ref(member:foo),Tup(List(Fld(‹›,Ref(h),None)))) }
 
 :e
 handle h = Eff with
@@ -128,4 +128,4 @@ foo(h)
 //│ ╔══[WARNING] Terms in handler block do nothing
 //│ ║  l.126: 	  12345
 //│ ╙──       	  ^^^^^
-//│ Elab: { handle h³ = Ref(member:Eff⁰)() List(HandlerTermDefinition(r³,TermDefinition(Fun,member:f⁷,term:Handler$h$².f⁸,List(ParamList(‹›,List(),None)),None,None,Some(App(Ref(r³),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹method ›,Modulefulness(None),List(),None)), HandlerTermDefinition(r⁴,TermDefinition(Fun,member:g⁵,term:Handler$h$².g⁶,List(ParamList(‹›,List(Param(‹›,a¹,None,Modulefulness(None))),None)),None,None,Some(App(Ref(r⁴),Tup(List(Fld(‹›,Lit(IntLit(1)),None))))),‹method ›,Modulefulness(None),List(),None))) in App(Ref(member:foo⁰),Tup(List(Fld(‹›,Ref(h³),None)))) }
+//│ Elab: { handle h = Ref(member:Eff)() List(HandlerTermDefinition(r,TermDefinition(Fun,member:f,term:Handler$h$².f,List(ParamList(‹›,List(),None)),None,None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹method ›,Modulefulness(None),List(),None)), HandlerTermDefinition(r,TermDefinition(Fun,member:g,term:Handler$h$².g,List(ParamList(‹›,List(Param(‹›,a,None,Modulefulness(None))),None)),None,None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(1)),None))))),‹method ›,Modulefulness(None),List(),None))) in App(Ref(member:foo),Tup(List(Fld(‹›,Ref(h),None)))) }

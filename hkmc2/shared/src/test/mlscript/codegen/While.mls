@@ -159,8 +159,8 @@ if x
   else 42
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    x⁰ is true and
-//│ >      y⁰ is true then 0
+//│ >    x is true and
+//│ >      y is true then 0
 //│ >      else 1
 //│ >    else 42
 //│ = 42
@@ -173,8 +173,8 @@ if x
   else 42
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    x⁰ is true and
-//│ >      y⁰ is true then 0
+//│ >    x is true and
+//│ >      y is true then 0
 //│ >      else 1
 //│ >    else 42
 //│ = 42
