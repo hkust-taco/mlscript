@@ -65,13 +65,13 @@ case
 //│     Array(0) =>
 //│       return Predef.print⁰("empty")
 //│     Array(1+) =>
-//│       set element0$ = runtime⁰.Tuple﹖.get﹖(caseScrut, 0);
-//│       set middleElements = runtime⁰.Tuple﹖.slice﹖(caseScrut, 1, 0);
+//│       set element0$ = runtime⁰.Tuple﹖.get⁰(caseScrut, 0);
+//│       set middleElements = runtime⁰.Tuple﹖.slice⁰(caseScrut, 1, 0);
 //│       set xs = middleElements;
 //│       set x = element0$;
 //│       return Predef.print⁰("non-empty", x)
 //│     else
-//│       throw new globalThis⁰.Error﹖("match error")
+//│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
 //│ lambda⁰

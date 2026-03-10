@@ -72,8 +72,8 @@ fun f(x, y, b) =
 //│     this.#b = b;
 //│   }
 //│   #Function$$cap;
-//│   #b;
 //│   #y;
+//│   #b;
 //│   call(z) {
 //│     return lambda1(this.#y, this.#b, z)
 //│   }
@@ -1105,3 +1105,41 @@ foo(print)
 //│ tmp40 = globalThis.Object.freeze(new Function$77());
 //│ foo14(tmp40)
 //│ > 
+
+
+if true is true then print("true")
+//│ > true
+
+
+if 0 is
+  Bool then 1
+  Str then 1
+  0 then 0
+  else 2
+//│ = 0
+  
+
+class Foo(val x)
+
+
+if Foo(1) is
+  Foo(x) then x
+  else 0
+//│ = 1
+
+
+if [1, 2, 3] is
+  [x, y] then x + y
+  [x, y, z] then x + y + z
+  [x, ...y] then x
+  else 0
+//│ = 6
+
+
+class Foo(val x)
+
+let foo = Foo(1) in foo.Foo#x
+//│ = 1
+
+let foo = new Foo(1) in foo.Foo#x
+//│ = 1

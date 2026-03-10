@@ -102,7 +102,7 @@ if xs is
 //│ let ls, a, middleElements, element0$;
 //│ if (runtime.Tuple.isArrayLike(xs1) && xs1.length >= 1) {
 //│   element0$ = runtime.Tuple.get(xs1, 0);
-//│   middleElements = runtime.safeCall(runtime.Tuple.slice(xs1, 1, 0));
+//│   middleElements = runtime.Tuple.slice(xs1, 1, 0);
 //│   ls = middleElements;
 //│   a = element0$;
 //│   globalThis.Object.freeze([

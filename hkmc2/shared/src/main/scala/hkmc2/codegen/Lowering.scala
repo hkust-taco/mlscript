@@ -134,7 +134,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   )
 
   lazy val unreachableFn =
-    Select(Value.Ref(State.runtimeSymbol), Tree.Ident("unreachable"))(N)
+    Select(Value.Ref(State.runtimeSymbol), Tree.Ident("unreachable"))(S(State.unreachableSymbol))
   
   def unit: Path =
     Select(Value.Ref(State.runtimeSymbol), Tree.Ident("Unit"))(S(State.unitSymbol))

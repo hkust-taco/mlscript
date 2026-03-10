@@ -158,6 +158,7 @@ object Elaborator:
       val Str = assumeBuiltinCls("Str")
       val BigInt = assumeBuiltinCls("BigInt")
       val Function = assumeBuiltinCls("Function")
+      val Error = assumeBuiltinCls("Error")
       val Bool = assumeBuiltinCls("Bool")
       val Object = assumeBuiltinCls("Object")
       val Array = assumeBuiltinCls("Array")
@@ -257,6 +258,8 @@ object Elaborator:
     val globalThisSymbol = TopLevelSymbol("globalThis")
     val unitSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Obj), Ident("Unit"))
     val loopEndSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Obj), Ident("LoopEnd"))
+    val tupleSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Mod), Ident("Tuple"))
+    val strSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Mod), Ident("Str"))
     // In JavaScript, `import` can be used for getting current file path, as `import.meta`
     val importSymbol = new VarSymbol(Ident("import"))
     val noSymbol = NoSymbol()
@@ -277,6 +280,14 @@ object Elaborator:
     val nonLocalRet =
       val id = new Ident("ret")
       BlockMemberSymbol(id.name, Nil, true)
+    val unreachableSymbol = TermSymbol(syntax.ImmutVal, N, new Ident("unreachable"))
+    val tupleGetSymbol = createFunSymbolInMod("get", "xs" :: "i" :: Nil, tupleSymbol)
+    val tupleSliceSymbol = createFunSymbolInMod("slice", "xs" :: "i" :: "j" :: Nil, tupleSymbol)
+    val tupleLazySliceSymbol = createFunSymbolInMod("lazySlice", "xs" :: "i" :: "j" :: Nil, tupleSymbol)
+    val strStartsWithSymbol = createFunSymbolInMod("startsWith", "string" :: "prefix" :: Nil, strSymbol)
+    val strGetSymbol = createFunSymbolInMod("get", "string" :: "i" :: Nil, strSymbol)
+    val strTakeSymbol = createFunSymbolInMod("take", "string" :: "n" :: Nil, strSymbol)
+    val strLeaveSymbol = createFunSymbolInMod("leave", "string" :: "n" :: Nil, strSymbol)
     val (matchSuccessClsSymbol, matchSuccessTrmSymbol) =
       val id = new Ident("MatchSuccess")
       val td = TypeDef(syntax.Cls, App(id, Tup(Ident("output") :: Ident("bindings") :: Nil)), N)
@@ -323,6 +334,14 @@ object Elaborator:
     def dbgUid(uid: Uid[Symbol]): Str =
       if dbg then s"‹$uid›" else ""
       // ^ we do not display the uid by default to avoid polluting diff-test outputs
+    // Create a term symbol for a function defined in the given module
+    private def createFunSymbolInMod(name: Str, paramNames: List[Str], mod: ModuleOrObjectSymbol) =
+      val sym = TermSymbol(syntax.Fun, N, Ident(name))
+      val bsym = BlockMemberSymbol(name, Nil, true)
+      val ps = PlainParamList(paramNames.map(s => Param.simple(VarSymbol(Ident(s)))))
+      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N,
+        TermDefFlags(true), Modulefulness(S(mod))(false), Nil, N))
+      sym
   transparent inline def State(using state: State): State = state
   
 end Elaborator

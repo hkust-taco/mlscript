@@ -92,7 +92,7 @@ case
 //│       set a = arg$Foo$0$;
 //│       return a
 //│     else
-//│       throw new globalThis⁰.Error﹖("match error")
+//│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
 //│ lambda⁰

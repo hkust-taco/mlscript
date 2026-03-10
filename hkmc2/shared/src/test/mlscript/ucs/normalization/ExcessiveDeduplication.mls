@@ -63,14 +63,14 @@ if
 //│ >    x is true and
 //│ >      z is true then 1
 //│ >      y is []=1 and
-//│ >        let tmp:element0$ = ((tmp:runtime.)Tuple.)get(y, 0)
+//│ >        let tmp:element0$ = ((tmp:runtime.)Tuple.)get‹term:get›(y, 0)
 //│ >        let b = tmp:element0$
 //│ >        else
 //│ >          let x
 //│ >          x = 1
 //│ >          builtin:+(x, b)
 //│ >    y is []=1 and
-//│ >      let tmp:element0$ = ((tmp:runtime.)Tuple.)get(y, 0)
+//│ >      let tmp:element0$ = ((tmp:runtime.)Tuple.)get‹term:get›(y, 0)
 //│ >      let b = tmp:element0$
 //│ >      else
 //│ >        let x

@@ -38,7 +38,7 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
   private def getParamList(ts: TermSymbol): Option[ParamList] = ts.defn.flatMap(_.params.headOption)
 
   override def applyPath(p: Path)(k: Path => Block): Block = p match
-    case ref @ Value.Ref(l: BlockMemberSymbol, disamb) => l.tsym match
+    case ref @ Value.Ref(l: BlockMemberSymbol, disamb) => disamb match
       case Some(s: TermSymbol) if s.k is syntax.Fun =>
         val params = getParamList(l).getOrElse(lastWords(s"Cannot get ${l.nme}'s parameter list."))
         val clsDef = generateFCFunctionClass(ref, params)
@@ -46,18 +46,7 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
         val cls = Value.Ref(clsDef.sym, Some(clsDef.isym))
         Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil), k(Value.Ref(tmp, None)))))
       case Some(_) => k(p)
-      case None => disamb match
-          case Some(t: TermSymbol) if t.k is syntax.Fun =>
-            val params = getParamList(l).getOrElse(lastWords(s"Cannot get ${t.nme}'s parameter list."))
-            val clsDef = generateFCFunctionClass(ref, params)
-            val tmp = new TempSymbol(None)
-            val cls = Value.Ref(clsDef.sym, Some(clsDef.isym))
-            Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil), k(Value.Ref(tmp, None)))))
-          case Some(_) => k(p)
-          case _ =>
-            raise(ErrorReport(msg"Cannot determine if ${l.nme} is a function." -> ref.toLoc :: Nil,
-              source = Diagnostic.Source.Compilation))
-            k(p)
+      case None => lastWords(s"${l.nme}'s disamb cannot be empty.")
     case sel: Select => sel.symbol match
       case Some(s: TermSymbol) if (s.k is syntax.Fun) =>
         val params = getParamList(s).getOrElse(lastWords(s"Cannot get ${s.nme}'s parameter list."))
@@ -72,6 +61,12 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
         k(p)
     case _ => k(p)  
 
+  private def pathStartsWith(p: Path, symbol: Local): Bool = p match
+    case Value.Ref(l, _) => l is symbol
+    case Select(p, _) => pathStartsWith(p, symbol)
+    case DynSelect(p, _, _) => pathStartsWith(p, symbol)
+    case _ => false
+
   override def applyResult(r: Result)(k: Result => Block): Block = r match
     case c @ Call(fun, args) => applyArgs(args): args2 =>
       def call(f: Path) = Call(f, args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall)
@@ -85,7 +80,7 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
             else k(call(sel.selSN("call")))
           case _ =>
             raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function object." -> fun.toLoc :: Nil,
-              source = Diagnostic.Source.Compilation))
+                source = Diagnostic.Source.Compilation))
             k(call(fun))
         case s: DynSelect =>
           raise(ErrorReport(msg"Cannot determine if the dynamic selection is a function object." -> s.toLoc :: Nil,
