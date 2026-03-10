@@ -281,62 +281,13 @@ object Elaborator:
       val id = new Ident("ret")
       BlockMemberSymbol(id.name, Nil, true)
     val unreachableSymbol = TermSymbol(syntax.ImmutVal, N, new Ident("unreachable"))
-    val tupleGetSymbol =
-      val sym = TermSymbol(syntax.Fun, N, Ident("get"))
-      val bsym = BlockMemberSymbol("get", Nil, true)
-      val ps = PlainParamList(
-        Param.simple(VarSymbol(Ident("xs"))) :: Param.simple(VarSymbol(Ident("i"))) :: Nil)
-      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N,
-        TermDefFlags(true), Modulefulness(S(tupleSymbol))(false), Nil, N))
-      sym
-    val tupleSliceSymbol =
-      val sym = TermSymbol(syntax.Fun, N, Ident("slice"))
-      val bsym = BlockMemberSymbol("slice", Nil, true)
-      val ps = PlainParamList(
-        Param.simple(VarSymbol(Ident("xs"))) :: Param.simple(VarSymbol(Ident("i"))) :: Param.simple(VarSymbol(Ident("j"))) :: Nil)
-      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N,
-        TermDefFlags(true), Modulefulness(S(tupleSymbol))(false), Nil, N))
-      sym
-    val tupleLazySliceSymbol =
-      val sym = TermSymbol(syntax.Fun, N, Ident("lazySlice"))
-      val bsym = BlockMemberSymbol("lazySlice", Nil, true)
-      val ps = PlainParamList(
-        Param.simple(VarSymbol(Ident("xs"))) :: Param.simple(VarSymbol(Ident("i"))) :: Param.simple(VarSymbol(Ident("j"))) :: Nil)
-      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N,
-        TermDefFlags(true), Modulefulness(S(tupleSymbol))(false), Nil, N))
-      sym
-    val strStartsWithSymbol =
-      val sym = TermSymbol(syntax.Fun, N, Ident("startsWith"))
-      val bsym = BlockMemberSymbol("startsWith", Nil, true)
-      val ps = PlainParamList(
-        Param.simple(VarSymbol(Ident("string"))) :: Param.simple(VarSymbol(Ident("prefix"))) :: Nil)
-      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N,
-        TermDefFlags(true), Modulefulness(S(strSymbol))(false), Nil, N))
-      sym
-    val strGetSymbol =
-      val sym = TermSymbol(syntax.Fun, N, Ident("get"))
-      val bsym = BlockMemberSymbol("get", Nil, true)
-      val ps = PlainParamList(
-        Param.simple(VarSymbol(Ident("string"))) :: Param.simple(VarSymbol(Ident("i"))) :: Nil)
-      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N,
-        TermDefFlags(true), Modulefulness(S(strSymbol))(false), Nil, N))
-      sym
-    val strTakeSymbol =
-      val sym = TermSymbol(syntax.Fun, N, Ident("take"))
-      val bsym = BlockMemberSymbol("take", Nil, true)
-      val ps = PlainParamList(
-        Param.simple(VarSymbol(Ident("string"))) :: Param.simple(VarSymbol(Ident("n"))) :: Nil)
-      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N,
-        TermDefFlags(true), Modulefulness(S(strSymbol))(false), Nil, N))
-      sym
-    val strLeaveSymbol =
-      val sym = TermSymbol(syntax.Fun, N, Ident("leave"))
-      val bsym = BlockMemberSymbol("leave", Nil, true)
-      val ps = PlainParamList(
-        Param.simple(VarSymbol(Ident("string"))) :: Param.simple(VarSymbol(Ident("n"))) :: Nil)
-      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N,
-        TermDefFlags(true), Modulefulness(S(strSymbol))(false), Nil, N))
-      sym
+    val tupleGetSymbol = createFunSymbolInMod("get", "xs" :: "i" :: Nil, tupleSymbol)
+    val tupleSliceSymbol = createFunSymbolInMod("slice", "xs" :: "i" :: "j" :: Nil, tupleSymbol)
+    val tupleLazySliceSymbol = createFunSymbolInMod("lazySlice", "xs" :: "i" :: "j" :: Nil, tupleSymbol)
+    val strStartsWithSymbol = createFunSymbolInMod("startsWith", "string" :: "prefix" :: Nil, strSymbol)
+    val strGetSymbol = createFunSymbolInMod("get", "string" :: "i" :: Nil, strSymbol)
+    val strTakeSymbol = createFunSymbolInMod("take", "string" :: "n" :: Nil, strSymbol)
+    val strLeaveSymbol = createFunSymbolInMod("leave", "string" :: "n" :: Nil, strSymbol)
     val (matchSuccessClsSymbol, matchSuccessTrmSymbol) =
       val id = new Ident("MatchSuccess")
       val td = TypeDef(syntax.Cls, App(id, Tup(Ident("output") :: Ident("bindings") :: Nil)), N)
@@ -383,6 +334,14 @@ object Elaborator:
     def dbgUid(uid: Uid[Symbol]): Str =
       if dbg then s"‹$uid›" else ""
       // ^ we do not display the uid by default to avoid polluting diff-test outputs
+    // Create a term symbol for a function defined in the given module
+    private def createFunSymbolInMod(name: Str, paramNames: List[Str], mod: ModuleOrObjectSymbol) =
+      val sym = TermSymbol(syntax.Fun, N, Ident(name))
+      val bsym = BlockMemberSymbol(name, Nil, true)
+      val ps = PlainParamList(paramNames.map(s => Param.simple(VarSymbol(Ident(s)))))
+      sym.defn = S(TermDefinition(syntax.Fun, bsym, sym, ps :: Nil, N, N, N,
+        TermDefFlags(true), Modulefulness(S(mod))(false), Nil, N))
+      sym
   transparent inline def State(using state: State): State = state
   
 end Elaborator
