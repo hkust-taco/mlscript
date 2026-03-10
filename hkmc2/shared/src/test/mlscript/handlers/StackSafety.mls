@@ -278,7 +278,7 @@ fun shift_stack(n, f) =
 fun handler_stack(n) =
   handle h = Eff with
     fun raise()(k) =
-      shift_stack(50, k)
+      shift_stack(20, k)
   h.raise()
   if n >= 0 do
     handler_stack(n - 1)
