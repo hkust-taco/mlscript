@@ -56,6 +56,11 @@ object Keyword:
   
   val `val` = Keyword("val", N, curPrec)
   
+  /** The subtyping operator. */
+  val `<:` = Keyword("<:", curPrec, curPrec)
+  /** The supertyping operator. */
+  val `:>` = Keyword(":>", curPrec, curPrec)
+
   val eqPrec = nextPrec
   val ascPrec = nextPrec // * `x => x : T` should parsed as `x => (x : T)`
   val `=` = Keyword("=", eqPrec, eqPrec)
@@ -138,11 +143,6 @@ object Keyword:
   // * Currently, the precedence of normal operators starts at the maximum precedence of keywords,
   // * so we need to start the precedence of `=>` to account for that.
   val `=>` = Keyword("=>", S(maxPrec.get + charPrecList.length), eqPrec)
-  
-  /** The subtyping operator. */
-  val `<:` = Keyword("<:", nextPrec, curPrec)
-  /** The supertyping operator. */
-  val `:>` = Keyword(":>", nextPrec, curPrec)
 
   // * `new` is a strange keyword:
   // * it has a very high precedence that sits between that of selection and that of application.

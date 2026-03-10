@@ -276,6 +276,9 @@ enum Term extends Statement:
   case Error
   case UnitVal()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
+  /** A subtyping constraint. This term is mostly useful at the top-level for testing purposes and
+   *  is not meant to be used in a real program. */
+  case SubConstr(constraint: SubConstraint) extends Term
   case Lit(lit: Literal)
   /** A term that wraps another term, indicating that the symbol of the inner term is resolved.
     * This is mainly used to disambiguate overloaded definitions. */
@@ -512,6 +515,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
   def describe: Str =
     val desc = this match
       case Error => "‹error›"
+      case SubConstr(_) => "subtyping constraint"
       case UnitVal() => "unit value"
       case Lit(lit) => lit.describeLit
       case Ref(sym) => "reference"
@@ -572,6 +576,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case _ => subTerms
   def subTerms: Vector[Term] = this match
     case Error | Missing | _: Lit | _: Ref | _: UnitVal => Vector.empty
+    case SubConstr(constraint) => Vector.double(constraint.lhs, constraint.rhs)
     case Resolved(t, sym) => Vector.single(t)
     case App(lhs, rhs) => Vector.double(lhs, rhs)
     case RcdField(lhs, rhs) => Vector.double(lhs, rhs)
