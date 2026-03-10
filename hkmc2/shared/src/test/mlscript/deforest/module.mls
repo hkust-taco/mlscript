@@ -14,12 +14,12 @@ module M with
     XX(YY(y)) then h()
 M.f(M.p())
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Select(Ref(module:M⁰,None),Ident(XX)),List(Arg(None,Ref(tmp:tmp⁰,None)))) ->
-//│ deforest > 	Ref(x⁰,None)
-//│ deforest > 	Select(Ref(x⁰,None),Ident(a))
-//│ deforest > Call(Select(Ref(module:M⁰,None),Ident(YY)),List(Arg(None,Select(Ref(module:M⁰,None),Ident(OO))))) ->
-//│ deforest > 	Ref(tmp:arg$XX$0$⁰,None)
-//│ deforest > 	Select(Ref(tmp:arg$XX$0$⁰,None),Ident(b))
+//│ deforest > Call(Select(Ref(module:M,None),Ident(XX)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(a))
+//│ deforest > Call(Select(Ref(module:M,None),Ident(YY)),List(Arg(None,Select(Ref(module:M,None),Ident(OO))))) ->
+//│ deforest > 	Ref(tmp:arg$XX$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$XX$0$,None),Ident(b))
 //│ deforest > <<< fusing <<<
 //│ = 123
 
@@ -36,23 +36,23 @@ fun map(f, ls) = if ls is
 fun enum(a) = if a < 0 then Nil else a :: enum(a - 1)
 map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp¹,None)), Arg(None,Ref(tmp:tmp²,None)))) ->
-//│ deforest > 	Ref(ls⁰,None)
-//│ deforest > 	Select(Ref(ls⁰,None),Ident(t))
-//│ deforest > 	Select(Ref(ls⁰,None),Ident(h))
-//│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
-//│ deforest > 	Ref(ls⁰,None)
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons⁰.Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(ls,None)
+//│ deforest > 	Select(Ref(ls,None),Ident(t))
+//│ deforest > 	Select(Ref(ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(ls,None)
 //│ deforest > <<< fusing <<<
 //│ Lowered:
 //│ let map⁰, enum⁰, lambda⁰, lambda¹, tmp, tmp1, tmp2, map_11$map⁰, map_13$map⁰, map_13$ls_Cons⁰, map_13$ls_rest⁰, map_13$ls_Nil⁰;
 //│ define fun map_11$map⁰(f, ls) {
 //│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp3, tmp4;
 //│   match ls
-//│     Nil¹ =>
+//│     Nil⁰ =>
 //│       return (fv_ctorLam_f, fv_ctorLam_t, fv_ctorLam_h, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => return map_13$ls_Nil⁰(fv_ctorLam_f, fv_ctorLam_t, fv_ctorLam_h, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_tmp, fv_ctorLam_tmp1)
-//│     Cons¹ =>
+//│     Cons⁰ =>
 //│       let Cons_h, Cons_t;
-//│       set arg$Cons$0$ = ls.h¹;
+//│       set arg$Cons$0$ = ls.h⁰;
 //│       set arg$Cons$1$ = ls.t⁰;
 //│       set t = arg$Cons$1$;
 //│       set h = arg$Cons$0$;
@@ -62,7 +62,7 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│       set Cons_t = tmp4;
 //│       return (fv_ctorLam_f1, fv_ctorLam_t1, fv_ctorLam_h1, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp2, fv_ctorLam_tmp3) => return map_13$ls_Cons⁰(fv_ctorLam_f1, fv_ctorLam_t1, fv_ctorLam_h1, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, Cons_h, Cons_t)
 //│     else
-//│       throw new globalThis⁰.Error﹖("match error")
+//│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
 //│ define fun map_13$map⁰(f1, ls1) {
@@ -76,10 +76,10 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│   set fv_h = fv_arg$Cons$0$;
 //│   set fv_tmp = fv_f(fv_h);
 //│   set fv_tmp1 = map_13$map⁰(fv_f, fv_t);
-//│   return Cons⁰(fv_tmp, fv_tmp1)
+//│   return Cons¹(fv_tmp, fv_tmp1)
 //│ };
 //│ define fun map_13$ls_Nil⁰(fv_f1, fv_t1, fv_h1, fv_arg$Cons$0$1, fv_arg$Cons$1$1, fv_tmp2, fv_tmp3) {
-//│   return Nil⁰
+//│   return Nil¹
 //│ };
 //│ define fun map_13$ls_rest⁰() {
 //│   end
@@ -87,18 +87,18 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ define fun map⁰(f2, ls2) {
 //│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp3, tmp4;
 //│   match ls2
-//│     Nil¹ =>
-//│       return Nil⁰
-//│     Cons¹ =>
-//│       set arg$Cons$0$ = ls2.h¹;
+//│     Nil⁰ =>
+//│       return Nil¹
+//│     Cons⁰ =>
+//│       set arg$Cons$0$ = ls2.h⁰;
 //│       set arg$Cons$1$ = ls2.t⁰;
 //│       set t = arg$Cons$1$;
 //│       set h = arg$Cons$0$;
 //│       set tmp3 = f2(h);
 //│       set tmp4 = map⁰(f2, t);
-//│       return Cons⁰(tmp3, tmp4)
+//│       return Cons¹(tmp3, tmp4)
 //│     else
-//│       throw new globalThis⁰.Error﹖("match error")
+//│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
 //│ define fun enum⁰(a) {
@@ -106,11 +106,11 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│   set scrut = <⁰(a, 0);
 //│   match scrut
 //│     true =>
-//│       return Nil⁰
+//│       return Nil¹
 //│     else
 //│       set tmp3 = -⁰(a, 1);
 //│       set tmp4 = enum⁰(tmp3);
-//│       return Cons⁰(a, tmp4)
+//│       return Cons¹(a, tmp4)
 //│   end
 //│ };
 //│ define fun lambda⁰(x) {
@@ -120,7 +120,7 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│   return *⁰(x1, 2)
 //│ };
 //│ set tmp = enum⁰(3);
-//│ set tmp1 = Predef⁰.id¹(tmp);
+//│ set tmp1 = Predef¹.id⁰(tmp);
 //│ set tmp2 = map_11$map⁰(lambda¹, tmp1);
 //│ map_13$map⁰(lambda⁰, tmp2)
 //│ = Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
@@ -143,12 +143,12 @@ module DeforestList with
   val res = DeforestList.sum(DeforestList.enum(100))
 DeforestList.res + DeforestList.main()
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Select(Ref(module:DeforestList⁰,None),Ident(Cons)),List(Arg(None,Ref(n⁰,None)), Arg(None,Ref(tmp:tmp³,None)))) ->
-//│ deforest > 	Ref(ls¹,None)
-//│ deforest > 	Select(Ref(ls¹,None),Ident(h))
-//│ deforest > 	Select(Ref(ls¹,None),Ident(t))
-//│ deforest > Select(Ref(module:DeforestList⁰,None),Ident(Nil)) ->
-//│ deforest > 	Ref(ls¹,None)
+//│ deforest > Call(Select(Ref(module:DeforestList,None),Ident(Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(ls,None)
+//│ deforest > 	Select(Ref(ls,None),Ident(h))
+//│ deforest > 	Select(Ref(ls,None),Ident(t))
+//│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
+//│ deforest > 	Ref(ls,None)
 //│ deforest > <<< fusing <<<
 //│ = 5056
 
@@ -171,12 +171,12 @@ module DeforestList with
   val res = DeforestList.sum(DeforestList.enum(100))
 DeforestList.res + DeforestList.main()
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Select(Ref(module:DeforestList¹,None),Ident(Cons)),List(Arg(None,Ref(n¹,None)), Arg(None,Ref(tmp:tmp⁴,None)))) ->
-//│ deforest > 	Ref(ls²,None)
-//│ deforest > 	Select(Ref(ls²,None),Ident(h))
-//│ deforest > 	Select(Ref(ls²,None),Ident(t))
-//│ deforest > Select(Ref(module:DeforestList¹,None),Ident(Nil)) ->
-//│ deforest > 	Ref(ls²,None)
+//│ deforest > Call(Select(Ref(module:DeforestList,None),Ident(Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(ls,None)
+//│ deforest > 	Select(Ref(ls,None),Ident(h))
+//│ deforest > 	Select(Ref(ls,None),Ident(t))
+//│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
+//│ deforest > 	Ref(ls,None)
 //│ deforest > <<< fusing <<<
 //│ = 5056
 
@@ -192,8 +192,8 @@ module MMM with
     if A is A then y
 MMM.f()
 //│ deforest > >>> fusing >>>
-//│ deforest > Select(Ref(module:MMM⁰,None),Ident(A)) ->
-//│ deforest > 	Ref(tmp:scrut⁰,None)
+//│ deforest > Select(Ref(module:MMM,None),Ident(A)) ->
+//│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > <<< fusing <<<
 //│ = 3
 
@@ -212,8 +212,8 @@ module M with
         Y then x
 M.f(M.X)
 //│ deforest > >>> fusing >>>
-//│ deforest > Select(Ref(member:M¹,Some(module:M²)),Ident(X)) ->
-//│ deforest > 	Ref(k⁰,None)
+//│ deforest > Select(Ref(member:M,Some(module:M)),Ident(X)) ->
+//│ deforest > 	Ref(k,None)
 //│ deforest > <<< fusing <<<
 //│ = X
 
@@ -239,13 +239,13 @@ module M with
       C
 [M.f(3), M.g(true)]
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:D⁰,Some(object:D¹)) ->
-//│ deforest > 	Ref(tmp:scrut¹,None)
-//│ deforest > Call(Ref(member:B⁰,Some(term:B¹.B²)),List(Arg(None,Lit(IntLit(0))))) ->
-//│ deforest > 	Ref(tmp:scrut¹,None)
-//│ deforest > Ref(member:C⁰,Some(object:C¹)) ->
-//│ deforest > 	Ref(tmp:scrut²,None)
-//│ deforest > Ref(member:A⁰,Some(object:A¹)) ->
-//│ deforest > 	Ref(tmp:scrut²,None)
+//│ deforest > Ref(member:D,Some(object:D)) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Call(Ref(member:B,Some(term:B⁰.B)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Ref(member:C,Some(object:C)) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > <<< fusing <<<
 //│ = [D, A]

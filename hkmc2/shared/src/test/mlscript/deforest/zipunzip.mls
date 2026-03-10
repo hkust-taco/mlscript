@@ -22,16 +22,16 @@ fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
 fun testUnzipZip(n) = unzip(zip(id(enumFromTo(1, n)), id(enumFromTo(2, n + 3))))
 testUnzipZip(3)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp⁰,None)), Arg(None,Ref(tmp:tmp¹,None)))) ->
-//│ deforest > 	Ref(ls_unzip⁰,None)
-//│ deforest > 	Select(Ref(ls_unzip⁰,None),Ident(h))
-//│ deforest > 	Select(Ref(ls_unzip⁰,None),Ident(t))
-//│ deforest > Call(Ref(member:Pair⁰,Some(term:Pair¹.Pair²)),List(Arg(None,Ref(x⁰,None)), Arg(None,Ref(y⁰,None)))) ->
-//│ deforest > 	Ref(tmp:arg$Cons$0$⁰,None)
-//│ deforest > 	Select(Ref(tmp:arg$Cons$0$⁰,None),Ident(a))
-//│ deforest > 	Select(Ref(tmp:arg$Cons$0$⁰,None),Ident(b))
-//│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
-//│ deforest > 	Ref(ls_unzip⁰,None)
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons⁰.Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(ls_unzip,None)
+//│ deforest > 	Select(Ref(ls_unzip,None),Ident(h))
+//│ deforest > 	Select(Ref(ls_unzip,None),Ident(t))
+//│ deforest > Call(Ref(member:Pair,Some(term:Pair⁰.Pair)),List(Arg(None,Ref(x,None)), Arg(None,Ref(y,None)))) ->
+//│ deforest > 	Ref(tmp:arg$Cons$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$Cons$0$,None),Ident(a))
+//│ deforest > 	Select(Ref(tmp:arg$Cons$0$,None),Ident(b))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(ls_unzip,None)
 //│ deforest > <<< fusing <<<
 //│ = Pair(Cons(1, Cons(2, Nil)), Cons(2, Cons(3, Nil)))
 
@@ -49,18 +49,18 @@ fun testZipUnzip(n) = if unzip(id(makeZippedList(n))) is
   Pair(xs, ys) then zip(xs, ys)
 testZipUnzip(3)
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
-//│ deforest > 	Ref(xs_zip⁰,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(a⁰,None)), Arg(None,Ref(atail⁰,None)))) ->
-//│ deforest > 	Ref(xs_zip⁰,None)
-//│ deforest > 	Select(Ref(xs_zip⁰,None),Ident(h))
-//│ deforest > 	Select(Ref(xs_zip⁰,None),Ident(t))
-//│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
-//│ deforest > 	Ref(ys_zip⁰,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(b⁰,None)), Arg(None,Ref(btail⁰,None)))) ->
-//│ deforest > 	Ref(ys_zip⁰,None)
-//│ deforest > 	Select(Ref(ys_zip⁰,None),Ident(h))
-//│ deforest > 	Select(Ref(ys_zip⁰,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(xs_zip,None)
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons⁰.Cons)),List(Arg(None,Ref(a,None)), Arg(None,Ref(atail,None)))) ->
+//│ deforest > 	Ref(xs_zip,None)
+//│ deforest > 	Select(Ref(xs_zip,None),Ident(h))
+//│ deforest > 	Select(Ref(xs_zip,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(ys_zip,None)
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons⁰.Cons)),List(Arg(None,Ref(b,None)), Arg(None,Ref(btail,None)))) ->
+//│ deforest > 	Ref(ys_zip,None)
+//│ deforest > 	Select(Ref(ys_zip,None),Ident(h))
+//│ deforest > 	Select(Ref(ys_zip,None),Ident(t))
 //│ deforest > <<< fusing <<<
 //│ = Cons(Pair(3, 4), Cons(Pair(2, 3), Cons(Pair(1, 2), Nil)))
 
@@ -83,30 +83,30 @@ fun testZipMapBothUnzip(n) = if unzip(id(makeZippedList(n))) is
   )
 testZipMapBothUnzip(4)
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
-//│ deforest > 	Ref(ls_map⁰,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(a¹,None)), Arg(None,Ref(atail¹,None)))) ->
-//│ deforest > 	Ref(ls_map⁰,None)
-//│ deforest > 	Select(Ref(ls_map⁰,None),Ident(h))
-//│ deforest > 	Select(Ref(ls_map⁰,None),Ident(t))
-//│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
-//│ deforest > 	Ref(ls_map⁰,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(b¹,None)), Arg(None,Ref(btail¹,None)))) ->
-//│ deforest > 	Ref(ls_map⁰,None)
-//│ deforest > 	Select(Ref(ls_map⁰,None),Ident(h))
-//│ deforest > 	Select(Ref(ls_map⁰,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp²,None)), Arg(None,Ref(tmp:tmp³,None)))) ->
-//│ deforest > 	Ref(xs_zip¹,None)
-//│ deforest > 	Select(Ref(xs_zip¹,None),Ident(h))
-//│ deforest > 	Select(Ref(xs_zip¹,None),Ident(t))
-//│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
-//│ deforest > 	Ref(xs_zip¹,None)
-//│ deforest > Call(Ref(member:Cons⁰,Some(term:Cons¹.Cons²)),List(Arg(None,Ref(tmp:tmp²,None)), Arg(None,Ref(tmp:tmp³,None)))) ->
-//│ deforest > 	Ref(ys_zip¹,None)
-//│ deforest > 	Select(Ref(ys_zip¹,None),Ident(h))
-//│ deforest > 	Select(Ref(ys_zip¹,None),Ident(t))
-//│ deforest > Ref(member:Nil⁰,Some(object:Nil¹)) ->
-//│ deforest > 	Ref(ys_zip¹,None)
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(ls_map,None)
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons⁰.Cons)),List(Arg(None,Ref(a,None)), Arg(None,Ref(atail,None)))) ->
+//│ deforest > 	Ref(ls_map,None)
+//│ deforest > 	Select(Ref(ls_map,None),Ident(h))
+//│ deforest > 	Select(Ref(ls_map,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(ls_map,None)
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons⁰.Cons)),List(Arg(None,Ref(b,None)), Arg(None,Ref(btail,None)))) ->
+//│ deforest > 	Ref(ls_map,None)
+//│ deforest > 	Select(Ref(ls_map,None),Ident(h))
+//│ deforest > 	Select(Ref(ls_map,None),Ident(t))
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons⁰.Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(xs_zip,None)
+//│ deforest > 	Select(Ref(xs_zip,None),Ident(h))
+//│ deforest > 	Select(Ref(xs_zip,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(xs_zip,None)
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons⁰.Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(ys_zip,None)
+//│ deforest > 	Select(Ref(ys_zip,None),Ident(h))
+//│ deforest > 	Select(Ref(ys_zip,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(ys_zip,None)
 //│ deforest > <<< fusing <<<
 //│ = Cons(
 //│   Pair(5, 25),

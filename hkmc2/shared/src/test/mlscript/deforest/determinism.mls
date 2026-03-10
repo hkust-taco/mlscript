@@ -9,13 +9,13 @@ data class B(a, b, c, d, e)
 if B(1,2,3,4,5) is
   B(a,b,c,d,e) then 0
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:B⁰,Some(term:B¹.B²)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(3))), Arg(None,Lit(IntLit(4))), Arg(None,Lit(IntLit(5))))) ->
-//│ deforest > 	Ref(tmp:scrut⁰,None)
-//│ deforest > 	Select(Ref(tmp:scrut⁰,None),Ident(e))
-//│ deforest > 	Select(Ref(tmp:scrut⁰,None),Ident(d))
-//│ deforest > 	Select(Ref(tmp:scrut⁰,None),Ident(a))
-//│ deforest > 	Select(Ref(tmp:scrut⁰,None),Ident(c))
-//│ deforest > 	Select(Ref(tmp:scrut⁰,None),Ident(b))
+//│ deforest > Call(Ref(member:B,Some(term:B⁰.B)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(3))), Arg(None,Lit(IntLit(4))), Arg(None,Lit(IntLit(5))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(e))
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(d))
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(a))
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(c))
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(b))
 //│ deforest > <<< fusing <<<
 //│ JS (unsanitized):
 //│ let scrut, e, a, b, c, d, arg$B$0$, arg$B$1$, arg$B$2$, arg$B$3$, arg$B$4$, $scrut_B, $scrut_rest, B_a, B_b, B_c, B_d, B_e;
@@ -41,13 +41,13 @@ if B(1,2,3,4,5) is
 //│ scrut = () => { return $scrut_B(B_a, B_b, B_c, B_d, B_e) };
 //│ scrut()
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:B⁰,Some(term:B¹.B²)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(3))), Arg(None,Lit(IntLit(4))), Arg(None,Lit(IntLit(5))))) ->
-//│ deforest > 	Ref(tmp:scrut⁰,None)
-//│ deforest > 	Select(Ref(tmp:scrut⁰,None),Ident(e))
-//│ deforest > 	Select(Ref(tmp:scrut⁰,None),Ident(d))
-//│ deforest > 	Select(Ref(tmp:scrut⁰,None),Ident(a))
-//│ deforest > 	Select(Ref(tmp:scrut⁰,None),Ident(c))
-//│ deforest > 	Select(Ref(tmp:scrut⁰,None),Ident(b))
+//│ deforest > Call(Ref(member:B,Some(term:B⁰.B)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(3))), Arg(None,Lit(IntLit(4))), Arg(None,Lit(IntLit(5))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(e))
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(d))
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(a))
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(c))
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(b))
 //│ deforest > <<< fusing <<<
 //│ = 0
 
@@ -59,24 +59,24 @@ fun c2(x) = if x is
   A(A(A(A(A(A(a)))))) then a
 c2 of A(A(A(A(A(A(1))))))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Ref(tmp:tmp⁰,None)))) ->
-//│ deforest > 	Ref(x⁰,None)
-//│ deforest > 	Select(Ref(x⁰,None),Ident(a))
-//│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Ref(tmp:tmp¹,None)))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$⁰,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$⁰,None),Ident(a))
-//│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Ref(tmp:tmp²,None)))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$¹,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$¹,None),Ident(a))
-//│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Ref(tmp:tmp³,None)))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$²,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$²,None),Ident(a))
-//│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Ref(tmp:tmp⁴,None)))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$³,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$³,None),Ident(a))
-//│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$⁴,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$⁴,None),Ident(a))
+//│ deforest > Call(Ref(member:A,Some(term:A⁰.A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(a))
+//│ deforest > Call(Ref(member:A,Some(term:A⁰.A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(tmp:arg$A$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
+//│ deforest > Call(Ref(member:A,Some(term:A⁰.A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(tmp:arg$A$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
+//│ deforest > Call(Ref(member:A,Some(term:A⁰.A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(tmp:arg$A$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
+//│ deforest > Call(Ref(member:A,Some(term:A⁰.A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(tmp:arg$A$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
+//│ deforest > Call(Ref(member:A,Some(term:A⁰.A)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(tmp:arg$A$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
 //│ deforest > <<< fusing <<<
 //│ JS (unsanitized):
 //│ let c2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, c2_19$c2, c2_19$x_A, c2_19$x_rest, c2_19$split_default$_rest, c2_19$split_root$_rest, c2_19$arg$A$0$_A, c2_19$arg$A$0$_rest, c2_19$arg$A$0$_A1, c2_19$arg$A$0$_rest1, c2_19$arg$A$0$_A2, c2_19$arg$A$0$_rest2, c2_19$arg$A$0$_A3, c2_19$arg$A$0$_rest3, c2_19$arg$A$0$_A4, c2_19$arg$A$0$_rest4, A_a, A_a1, A_a2, A_a3, A_a4, A_a5;
@@ -208,23 +208,23 @@ c2 of A(A(A(A(A(A(1))))))
 //│ };
 //│ c2_19$c2(tmp5)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Ref(tmp:tmp⁵,None)))) ->
-//│ deforest > 	Ref(x⁰,None)
-//│ deforest > 	Select(Ref(x⁰,None),Ident(a))
-//│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Ref(tmp:tmp⁶,None)))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$⁰,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$⁰,None),Ident(a))
-//│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Ref(tmp:tmp⁷,None)))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$¹,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$¹,None),Ident(a))
-//│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Ref(tmp:tmp⁸,None)))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$²,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$²,None),Ident(a))
-//│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Ref(tmp:tmp⁹,None)))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$³,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$³,None),Ident(a))
-//│ deforest > Call(Ref(member:A⁰,Some(term:A¹.A²)),List(Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$⁴,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$⁴,None),Ident(a))
+//│ deforest > Call(Ref(member:A,Some(term:A⁰.A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(a))
+//│ deforest > Call(Ref(member:A,Some(term:A⁰.A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(tmp:arg$A$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
+//│ deforest > Call(Ref(member:A,Some(term:A⁰.A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(tmp:arg$A$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
+//│ deforest > Call(Ref(member:A,Some(term:A⁰.A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(tmp:arg$A$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
+//│ deforest > Call(Ref(member:A,Some(term:A⁰.A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(tmp:arg$A$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
+//│ deforest > Call(Ref(member:A,Some(term:A⁰.A)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(tmp:arg$A$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
 //│ deforest > <<< fusing <<<
 //│ = 1
