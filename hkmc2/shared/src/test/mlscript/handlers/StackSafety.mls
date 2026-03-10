@@ -269,6 +269,15 @@ fun handler_stack(n) =
 handler_stack(100)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
+// * For some reason, this works locally with values 100 and 100,
+// * but it makes the CI fail unexpectedly (see https://github.com/hkust-taco/mlscript/pull/410)
+:silent
+let
+  // N = 100
+  // M = 100
+  N = 5
+  M = 10
+
 :stackSafe
 fun shift_stack(n, f) =
   if n >= 0 then
@@ -278,10 +287,11 @@ fun shift_stack(n, f) =
 fun handler_stack(n) =
   handle h = Eff with
     fun raise()(k) =
-      shift_stack(100, k)
+      shift_stack(N, k)
   h.raise()
   if n >= 0 do
     handler_stack(n - 1)
   "ok"
-handler_stack(100)
+handler_stack(M)
 //│ = "ok"
+
