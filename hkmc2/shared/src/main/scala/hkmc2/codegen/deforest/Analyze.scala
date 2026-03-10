@@ -395,6 +395,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   
   private class ConstraintsCollector(val forFunGroup: Opt[TermSymbol]):
     var constraints = Ls.empty[ProdStrat -> ConsStrat]
+    val instId: Opt[InstantiationId] = forFunGroup.fold(S(Nil))(_ => N)
     def constrain(p: ProdStrat, c: ConsStrat) = constraints ::= p -> c
     def constrain(cs: Iterable[ProdStrat -> ConsStrat]) = constraints :::= cs.toList
   
@@ -548,7 +549,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
       newProd
     
     def processBlock(b: Block)(using cc: ConstraintsCollector, im: ProcessMode): Unit =
-      val instId = cc.forFunGroup.fold(S(Nil))(_ => N)
+      val instId = cc.instId
       b match
       case Return(res, implct) => cc.constrain(processResult(res), im.blkRes)
       case Throw(exc) => processResult(exc)
@@ -591,7 +592,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
       case _ => die
     
     def processResult(r: Result)(using cc: ConstraintsCollector, im: ProcessMode): ProdStrat =
-      val instId = cc.forFunGroup.fold(S(Nil))(_ => N)
+      val instId = cc.instId
       def handleCallLike(f: Path, args: List[Arg]): ProdStrat =
         val fStrat = processResult(f)
         val argsStrat = args.map(a => processResult(a.value))

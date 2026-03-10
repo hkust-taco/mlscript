@@ -88,15 +88,10 @@ object Config:
 
   case class LiftDefns() // there may be other settings in the future, having it as a case class now
   
-  case class Deforest(
-    val seeThroughModules: Set[os.Path],
-    val seeThroughLazySymbolsNames: Set[String],
-    val seeThroughForceSymbolsNames: Set[String],
-    val debug: Boolean
-  )
+  case class Deforest(val debug: Boolean)
 
   object Deforest:
-    val default = Deforest(Set.empty, Set.empty, Set.empty, true)
+    val default = Deforest(true)
 
 end Config
 

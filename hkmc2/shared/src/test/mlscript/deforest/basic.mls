@@ -26,8 +26,8 @@ let useless = if lsit is [a, b] then 0
 //│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(lsit,None)), Arg(None,Lit(IntLit(1)))))
 //│ deforest > <<< fusing <<<
 //│ Lowered:
-//│ let lsit⁰, useless⁰, a⁰, b⁰, element1$, element0$, tmp, $lsit_2⁰, $lsit_rest⁰, tup2_0, tup2_1;
-//│ define fun $lsit_2⁰(tup2_01, tup2_11) {
+//│ let lsit⁰, useless⁰, a⁰, b⁰, element1$, element0$, tmp, $lsit_tup2⁰, $lsit_rest⁰, tup2_0, tup2_1;
+//│ define fun $lsit_tup2⁰(tup2_01, tup2_11) {
 //│   set element0$ = tup2_01;
 //│   set element1$ = tup2_11;
 //│   set b⁰ = element1$;
@@ -41,7 +41,7 @@ let useless = if lsit is [a, b] then 0
 //│ };
 //│ set tup2_0 = 2;
 //│ set tup2_1 = 1;
-//│ set lsit⁰ = () => return $lsit_2⁰(tup2_0, tup2_1);
+//│ set lsit⁰ = () => return $lsit_tup2⁰(tup2_0, tup2_1);
 //│ lsit⁰()
 //│ = null
 //│ lsit = fun lsit
@@ -222,8 +222,8 @@ if [1, 2] is
 //│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(tmp:scrut,None)), Arg(None,Lit(IntLit(1)))))
 //│ deforest > <<< fusing <<<
 //│ Lowered:
-//│ let scrut, a², b², element1$, element0$, $scrut_2⁰, $scrut_rest⁰, tup2_0, tup2_1;
-//│ define fun $scrut_2⁰(tup2_01, tup2_11) {
+//│ let scrut, a², b², element1$, element0$, $scrut_tup2⁰, $scrut_rest⁰, tup2_0, tup2_1;
+//│ define fun $scrut_tup2⁰(tup2_01, tup2_11) {
 //│   set element0$ = tup2_01;
 //│   set element1$ = tup2_11;
 //│   set b² = element1$;
@@ -235,7 +235,7 @@ if [1, 2] is
 //│ };
 //│ set tup2_0 = 1;
 //│ set tup2_1 = 2;
-//│ set scrut = () => return $scrut_2⁰(tup2_0, tup2_1);
+//│ set scrut = () => return $scrut_tup2⁰(tup2_0, tup2_1);
 //│ scrut()
 //│ = 3
 
