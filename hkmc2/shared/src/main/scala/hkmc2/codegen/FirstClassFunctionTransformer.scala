@@ -38,29 +38,15 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
   private def getParamList(ts: TermSymbol): Option[ParamList] = ts.defn.flatMap(_.params.headOption)
 
   override def applyPath(p: Path)(k: Path => Block): Block = p match
-    case ref @ Value.Ref(l: BlockMemberSymbol, disamb) => l.tsym match
-      case Some(s: TermSymbol) if (s.k is syntax.Fun) && !disamb.exists {
-        case t: TermSymbol => t.k isnt syntax.Fun
-        case _ => true
-      } => // A term symbol with `syntax.Fun` is a constructor function, if what `disamb` indicates is not a function
+    case ref @ Value.Ref(l: BlockMemberSymbol, disamb) => disamb match
+      case Some(s: TermSymbol) if s.k is syntax.Fun =>
         val params = getParamList(l).getOrElse(lastWords(s"Cannot get ${l.nme}'s parameter list."))
         val clsDef = generateFCFunctionClass(ref, params)
         val tmp = new TempSymbol(None)
         val cls = Value.Ref(clsDef.sym, Some(clsDef.isym))
         Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil), k(Value.Ref(tmp, None)))))
       case Some(_) => k(p)
-      case None => disamb match
-          case Some(t: TermSymbol) if t.k is syntax.Fun =>
-            val params = getParamList(l).getOrElse(lastWords(s"Cannot get ${t.nme}'s parameter list."))
-            val clsDef = generateFCFunctionClass(ref, params)
-            val tmp = new TempSymbol(None)
-            val cls = Value.Ref(clsDef.sym, Some(clsDef.isym))
-            Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil), k(Value.Ref(tmp, None)))))
-          case Some(_) => k(p)
-          case _ =>
-            raise(ErrorReport(msg"Cannot determine if ${l.nme} is a function." -> ref.toLoc :: Nil,
-              source = Diagnostic.Source.Compilation))
-            k(p)
+      case None => lastWords(s"${l.nme}'s disamb cannot be empty.")
     case sel: Select => sel.symbol match
       case Some(s: TermSymbol) if (s.k is syntax.Fun) =>
         val params = getParamList(s).getOrElse(lastWords(s"Cannot get ${s.nme}'s parameter list."))
