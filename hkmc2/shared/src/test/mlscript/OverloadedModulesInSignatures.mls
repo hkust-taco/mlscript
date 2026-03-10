@@ -30,9 +30,9 @@ f
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=term:f¹,typ=class:ClsMod⁰}:
-//│     t = Ref{sym=member:f⁰} of member:f⁰
-//│     sym = term:f¹
+//│   res = Resolved{sym=term:f,typ=class:ClsMod}:
+//│     t = Ref{sym=member:f} of member:f
+//│     sym = term:f
 //│ = 42
 
 fun f: module ClsMod = ClsMod
@@ -42,9 +42,9 @@ f
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=term:f³,typ=module:ClsMod¹}:
-//│     t = Ref{sym=member:f²} of member:f²
-//│     sym = term:f³
+//│   res = Resolved{sym=term:f,typ=module:ClsMod}:
+//│     t = Ref{sym=member:f} of member:f
+//│     sym = term:f
 //│ = class ClsMod { whoami: "module" }
 
 fun f: TypMod = 42
@@ -54,9 +54,9 @@ f
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=term:f⁵,typ=type:TypMod⁰}:
-//│     t = Ref{sym=member:f⁴} of member:f⁴
-//│     sym = term:f⁵
+//│   res = Resolved{sym=term:f,typ=type:TypMod}:
+//│     t = Ref{sym=member:f} of member:f
+//│     sym = term:f
 //│ = 42
 
 fun f: module TypMod = TypMod
@@ -66,9 +66,9 @@ f
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=term:f⁷,typ=module:TypMod¹}:
-//│     t = Ref{sym=member:f⁶} of member:f⁶
-//│     sym = term:f⁷
+//│   res = Resolved{sym=term:f,typ=module:TypMod}:
+//│     t = Ref{sym=member:f} of member:f
+//│     sym = term:f
 //│ = class TypMod { whoami: "module" }
 
 :e

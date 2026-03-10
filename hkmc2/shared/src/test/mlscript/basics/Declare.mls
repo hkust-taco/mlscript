@@ -44,21 +44,21 @@ C
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=class:C⁰}:
-//│     t = Ref{sym=member:C¹} of member:C¹
-//│     sym = class:C⁰
+//│   res = Resolved{sym=class:C}:
+//│     t = Ref{sym=member:C} of member:C
+//│     sym = class:C
 // * whereas this is:
 M.D
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=class:D⁰}:
-//│     t = Sel{sym=member:D¹}:
-//│       prefix = Resolved{sym=module:M⁰,typ=module:M⁰}:
-//│         t = Ref{sym=member:M¹} of member:M¹
-//│         sym = module:M⁰
+//│   res = Resolved{sym=class:D}:
+//│     t = Sel{sym=member:D}:
+//│       prefix = Resolved{sym=module:M,typ=module:M}:
+//│         t = Ref{sym=member:M} of member:M
+//│         sym = module:M
 //│       nme = Ident of "D"
-//│     sym = class:D⁰
+//│     sym = class:D
 
 :fixme // FIXME: Should report a proper error about lack of declared C companion module
 C.oops
