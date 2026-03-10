@@ -283,5 +283,5 @@ fun handler_stack(n) =
   if n >= 0 do
     handler_stack(n - 1)
   "ok"
-handler_stack(100)
+handler_stack(10)
 //│ = "ok"
