@@ -578,7 +578,7 @@ f(id(A)) + f(A)
 //│   return 1
 //│ };
 //│ define fun f_5$x_rest⁰() {
-//│   end
+//│   return null
 //│ };
 //│ define fun f⁰(x1) {
 //│   match x1

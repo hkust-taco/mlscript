@@ -85,7 +85,7 @@ modSome(Some(17), 3)
 //│   end
 //│ };
 //│ define fun modSome_8$x_rest⁰() {
-//│   end
+//│   return null
 //│ };
 //│ define fun modSome⁰(x1, m1) {
 //│   labelled loop loopLabel = let n, scrut, arg$Some$0$, tmp1, tmp2;

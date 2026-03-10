@@ -33,7 +33,7 @@ if B(1,2,3,4,5) is
 //│   return 0
 //│ };
 //│ define fun $scrut_rest⁰() {
-//│   end
+//│   return null
 //│ };
 //│ set B_a = 1;
 //│ set B_b = 2;

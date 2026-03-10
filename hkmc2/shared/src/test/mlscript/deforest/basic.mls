@@ -16,6 +16,36 @@ data class (::) Cons(h, t)
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 
+:sir
+let lsit = [2, 1]
+let useless = if lsit is [a, b] then 0
+//│ deforest > >>> fusing >>>
+//│ deforest > Tuple(false,List(Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(lsit,None)
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(lsit,None)), Arg(None,Lit(IntLit(0)))))
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(lsit,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > <<< fusing <<<
+//│ Lowered:
+//│ let lsit⁰, useless⁰, a⁰, b⁰, element1$, element0$, tmp, $lsit_2⁰, $lsit_rest⁰, tup2_0, tup2_1;
+//│ define fun $lsit_2⁰(tup2_01, tup2_11) {
+//│   set element0$ = tup2_01;
+//│   set element1$ = tup2_11;
+//│   set b⁰ = element1$;
+//│   set a⁰ = element0$;
+//│   set tmp = 0;
+//│   return $lsit_rest⁰()
+//│ };
+//│ define fun $lsit_rest⁰() {
+//│   set useless⁰ = tmp;
+//│   return null
+//│ };
+//│ set tup2_0 = 2;
+//│ set tup2_1 = 1;
+//│ set lsit⁰ = () => return $lsit_2⁰(tup2_0, tup2_1);
+//│ lsit⁰()
+//│ = null
+//│ lsit = fun lsit
+//│ useless = 0
 
 :expect O
 fun p() = X(O)
@@ -90,10 +120,10 @@ f(p())
 //│   let y, arg$X$0$, arg$Y$0$, tmp1;
 //│   labelled block split_root$ = labelled block split_default$ = match x1
 //│     X⁰ =>
-//│       set arg$X$0$ = x1.a⁰;
+//│       set arg$X$0$ = x1.a¹;
 //│       match arg$X$0$
 //│         Y⁰ =>
-//│           set arg$Y$0$ = arg$X$0$.b⁰;
+//│           set arg$Y$0$ = arg$X$0$.b¹;
 //│           set y = arg$Y$0$;
 //│           set tmp1 = y;
 //│           break split_root$
@@ -192,16 +222,16 @@ if [1, 2] is
 //│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(tmp:scrut,None)), Arg(None,Lit(IntLit(1)))))
 //│ deforest > <<< fusing <<<
 //│ Lowered:
-//│ let scrut, a¹, b¹, element1$, element0$, $scrut_2⁰, $scrut_rest⁰, tup2_0, tup2_1;
+//│ let scrut, a², b², element1$, element0$, $scrut_2⁰, $scrut_rest⁰, tup2_0, tup2_1;
 //│ define fun $scrut_2⁰(tup2_01, tup2_11) {
 //│   set element0$ = tup2_01;
 //│   set element1$ = tup2_11;
-//│   set b¹ = element1$;
-//│   set a¹ = element0$;
-//│   return +⁰(a¹, b¹)
+//│   set b² = element1$;
+//│   set a² = element0$;
+//│   return +⁰(a², b²)
 //│ };
 //│ define fun $scrut_rest⁰() {
-//│   end
+//│   return null
 //│ };
 //│ set tup2_0 = 1;
 //│ set tup2_1 = 2;

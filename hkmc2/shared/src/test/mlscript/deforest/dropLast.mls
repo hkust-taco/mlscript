@@ -66,7 +66,6 @@ fix
 
 
 
-:sir
 :deforest
 :expect Nil
 fun dlHelper(prev, rest) = if rest is
@@ -80,49 +79,12 @@ fun fix(x, fuel) =
 id(fix(Nil, 1000))
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
-//│ Lowered:
-//│ let dlHelper⁰, fix⁰, tmp;
-//│ define fun dlHelper⁰(prev, rest) {
-//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp1;
-//│   match rest
-//│     Nil⁰ =>
-//│       return Nil¹
-//│     Cons⁰ =>
-//│       set arg$Cons$0$ = rest.h⁰;
-//│       set arg$Cons$1$ = rest.t⁰;
-//│       set t = arg$Cons$1$;
-//│       set h = arg$Cons$0$;
-//│       set tmp1 = dlHelper⁰(h, t);
-//│       return Cons¹(prev, tmp1)
-//│     else
-//│       throw new globalThis⁰.Error⁰("match error")
-//│   end
-//│ };
-//│ define fun fix⁰(x, fuel) {
-//│   labelled loop loopLabel = let res, scrut, tmp1, tmp2;
-//│   set tmp1 = -⁰(1);
-//│   set res = dlHelper⁰(tmp1, x);
-//│   set scrut = Predef¹.equals⁰(fuel, 0);
-//│   match scrut
-//│     true =>
-//│       return res
-//│     else
-//│       set tmp2 = -⁰(fuel, 1);
-//│       set x = res;
-//│       set fuel = tmp2;
-//│       continue loopLabel
-//│   end;
-//│   end
-//│ };
-//│ set tmp = fix⁰(Nil¹, 1000);
-//│ Predef¹.id⁰(tmp)
 //│ = Nil
 
 
 
 
 
-:sir
 :deforest
 :expect Nil
 fun dlHelper(prev, rest) = if rest is
@@ -135,45 +97,6 @@ fun fix(x) =
 fix(2 :: 3 :: Nil)
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
-//│ Lowered:
-//│ let dlHelper¹, fix¹, tmp, tmp1;
-//│ define fun dlHelper¹(prev, rest) {
-//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp2;
-//│   match rest
-//│     Nil⁰ =>
-//│       return Nil¹
-//│     Cons⁰ =>
-//│       set arg$Cons$0$ = rest.h⁰;
-//│       set arg$Cons$1$ = rest.t⁰;
-//│       set t = arg$Cons$1$;
-//│       set h = arg$Cons$0$;
-//│       set tmp2 = dlHelper¹(h, t);
-//│       return Cons¹(prev, tmp2)
-//│     else
-//│       throw new globalThis⁰.Error⁰("match error")
-//│   end
-//│ };
-//│ define fun fix¹(x) {
-//│   labelled loop loopLabel = let x1, xs, arg$Cons$0$, arg$Cons$1$, tmp2;
-//│   match x
-//│     Nil⁰ =>
-//│       return Nil¹
-//│     Cons⁰ =>
-//│       set arg$Cons$0$ = x.h⁰;
-//│       set arg$Cons$1$ = x.t⁰;
-//│       set xs = arg$Cons$1$;
-//│       set x1 = arg$Cons$0$;
-//│       set tmp2 = dlHelper¹(x1, xs);
-//│       set x = tmp2;
-//│       continue loopLabel
-//│     else
-//│       throw new globalThis⁰.Error⁰("match error")
-//│   end;
-//│   end
-//│ };
-//│ set tmp = Cons¹(3, Nil¹);
-//│ set tmp1 = Cons¹(2, tmp);
-//│ fix¹(tmp1)
 //│ = Nil
 
 
@@ -182,7 +105,6 @@ fix(2 :: 3 :: Nil)
 
 
 
-:sir
 :deforest
 :expect Nil
 fun f(x) = if x is
@@ -191,31 +113,4 @@ fun loop(l, n) = if n > 0 then loop(f(l), n - 1) else l
 id(loop(Nil, 2))
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
-//│ Lowered:
-//│ let f⁰, loop⁰, tmp;
-//│ define fun f⁰(x) {
-//│   match x
-//│     Nil⁰ =>
-//│       return Nil¹
-//│     else
-//│       throw new globalThis⁰.Error⁰("match error")
-//│   end
-//│ };
-//│ define fun loop⁰(l, n) {
-//│   labelled loop loopLabel = let scrut, tmp1, tmp2;
-//│   set scrut = >⁰(n, 0);
-//│   match scrut
-//│     true =>
-//│       set tmp1 = f⁰(l);
-//│       set tmp2 = -⁰(n, 1);
-//│       set l = tmp1;
-//│       set n = tmp2;
-//│       continue loopLabel
-//│     else
-//│       return l
-//│   end;
-//│   end
-//│ };
-//│ set tmp = loop⁰(Nil¹, 2);
-//│ Predef¹.id⁰(tmp)
 //│ = Nil

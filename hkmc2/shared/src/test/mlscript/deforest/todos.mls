@@ -23,7 +23,12 @@ data class Some(x)
 //│ deforest > <<< fusing <<<
 
 
-// TODO: many dead code contain duplicated `t + 5 * 4 - 3 + 2 - 1`
+// TODO: many dead code contain duplicated `t + 5 * 4 - 3 + 2 - 1`.
+// `t + 5 * 4 - 3 + 2 - 1` is the "rest" of a fusing match;
+// Deforestation makes programs early return at fusing matches,
+// and after deforestation, the "rest" of fusing matches would appear both
+// in "rest function"s and after the early return (and becomes dead code).
+// A dead code elimination that detects early return would solve this problem.
 :sir
 :expect 78
 fun test(x) =
@@ -293,18 +298,3 @@ f(A) + f(A)
 //│ deforest > <<< fusing <<<
 //│ = 2
 
-
-// TODO: the assignment of `useless` is moved inside the lambda body
-// so on the toplevel `useless` is not assigned after transformation
-:fixme
-let lsit = [2, 1]
-let useless = if lsit is [a, b] then 0
-//│ deforest > >>> fusing >>>
-//│ deforest > Tuple(false,List(Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(lsit,None)
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(lsit,None)), Arg(None,Lit(IntLit(0)))))
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(lsit,None)), Arg(None,Lit(IntLit(1)))))
-//│ deforest > <<< fusing <<<
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
-//│ lsit = fun lsit
-//│ useless = 0
