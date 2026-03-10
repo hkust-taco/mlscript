@@ -560,7 +560,7 @@ test(p, id(CCC(123)))
 //│ p = fun tmp55
 
 
-:sjs
+:sir
 :expect 2
 fun f(x) = if x is
   A then 1
@@ -569,31 +569,30 @@ f(id(A)) + f(A)
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > <<< fusing <<<
-//│ JS (unsanitized):
-//│ let f10, tmp58, tmp59, tmp60, f_5$f1, f_5$x_A, f_5$x_rest1, deforest$lam7;
-//│ f_5$f1 = function f_5$f(x1) {
-//│   return x1()
+//│ Lowered:
+//│ let f⁰, tmp, tmp1, tmp2, f_5$f⁰, f_5$x_A⁰, f_5$x_rest⁰, deforest$lam;
+//│ define fun f_5$f⁰(x) {
+//│   return x()
 //│ };
-//│ f_5$x_A = function f_5$x_A() {
+//│ define fun f_5$x_A⁰() {
 //│   return 1
 //│ };
-//│ f_5$x_rest1 = function f_5$x_rest() {};
-//│ f10 = function f(x1) {
-//│   if (x1 instanceof A1.class) {
-//│     return 1
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│ define fun f_5$x_rest⁰() {
+//│   end
 //│ };
-//│ tmp58 = Predef.id(A1);
-//│ tmp59 = f10(tmp58);
-//│ deforest$lam7 = () => { return f_5$x_A() };
-//│ tmp60 = f_5$f1(deforest$lam7);
-//│ tmp59 + tmp60
-//│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > <<< fusing <<<
+//│ define fun f⁰(x1) {
+//│   match x1
+//│     A⁰ =>
+//│       return 1
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ set tmp = Predef¹.id⁰(A¹);
+//│ set tmp1 = f⁰(tmp);
+//│ set deforest$lam = () => return f_5$x_A⁰();
+//│ set tmp2 = f_5$f⁰(deforest$lam);
+//│ +⁰(tmp1, tmp2)
 //│ = 2
 
 

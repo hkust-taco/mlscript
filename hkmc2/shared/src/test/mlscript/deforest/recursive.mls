@@ -16,6 +16,27 @@ object L
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 
+
+
+// :sir
+fun map(f, ls_map) = if ls_map is
+  h :: t then f(h) :: map(f, t)
+  Nil then Nil
+let c = Cons(1, Nil)
+map(x => x + 1, c)
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons⁰.Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
+//│ deforest > 	Ref(ls_map,None)
+//│ deforest > 	Select(Ref(ls_map,None),Ident(t))
+//│ deforest > 	Select(Ref(ls_map,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(ls_map,None)
+//│ deforest > <<< fusing <<<
+//│ = Cons(2, Nil)
+//│ c = fun c
+
+
+
 :expect Cons(11, Cons(9, Cons(7, Cons(5, Cons(3, Cons(1, Nil))))))
 fun mk(n) = if n < 0 then Nil else n :: mk(n - 1)
 fun map(f, ls_map) = if ls_map is

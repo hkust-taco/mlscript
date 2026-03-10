@@ -47,7 +47,7 @@ maxOpt(id(1 :: 2 :: Nil))
 
 
 :deforest
-:sjs
+:sir
 :expect Some(2)
 fun modSome(x, m) = if x is
   Some(n) and
@@ -63,64 +63,56 @@ modSome(Some(17), 3)
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(x))
 //│ deforest > <<< fusing <<<
-//│ JS (unsanitized):
-//│ let modSome, tmp3, modSome_8$modSome, modSome_8$x_Some, modSome_8$x_rest, Some_x;
-//│ modSome_8$modSome = function modSome_8$modSome(x, m) {
-//│   let n, scrut, arg$Some$0$, tmp4, tmp5;
-//│   return x(m, n, scrut, arg$Some$0$, tmp4, tmp5)
+//│ Lowered:
+//│ let modSome⁰, tmp, modSome_8$modSome⁰, modSome_8$x_Some⁰, modSome_8$x_rest⁰, Some_x;
+//│ define fun modSome_8$modSome⁰(x, m) {
+//│   let n, scrut, arg$Some$0$, tmp1, tmp2;
+//│   return x(m, n, scrut, arg$Some$0$, tmp1, tmp2)
 //│ };
-//│ modSome_8$x_Some = function modSome_8$x_Some(fv_m, fv_n, fv_scrut, fv_arg$Some$0$, fv_tmp, fv_tmp1, Some_x1) {
-//│   fv_arg$Some$0$ = Some_x1;
-//│   fv_n = fv_arg$Some$0$;
-//│   fv_scrut = fv_n >= fv_m;
-//│   if (fv_scrut === true) {
-//│     let Some_x2;
-//│     fv_tmp = fv_n - fv_m;
-//│     Some_x2 = fv_tmp;
-//│     fv_tmp1 = (fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
-//│       return modSome_8$x_Some(fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, Some_x2)
-//│     };
-//│     return modSome_8$modSome(fv_tmp1, fv_m)
-//│   } else {
-//│     return Some1(fv_n)
-//│   }
+//│ define fun modSome_8$x_Some⁰(fv_m, fv_n, fv_scrut, fv_arg$Some$0$, fv_tmp, fv_tmp1, Some_x1) {
+//│   set fv_arg$Some$0$ = Some_x1;
+//│   set fv_n = fv_arg$Some$0$;
+//│   set fv_scrut = >=⁰(fv_n, fv_m);
+//│   match fv_scrut
+//│     true =>
+//│       let Some_x2;
+//│       set fv_tmp = -⁰(fv_n, fv_m);
+//│       set Some_x2 = fv_tmp;
+//│       set fv_tmp1 = (fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => return modSome_8$x_Some⁰(fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, Some_x2);
+//│       return modSome_8$modSome⁰(fv_tmp1, fv_m)
+//│     else
+//│       return Some¹(fv_n)
+//│   end
 //│ };
-//│ modSome_8$x_rest = function modSome_8$x_rest() {};
-//│ modSome = function modSome(x, m) {
-//│   loopLabel: while (true) {
-//│     let n, scrut, arg$Some$0$, tmp4, tmp5;
-//│     if (x instanceof Some1.class) {
-//│       arg$Some$0$ = x.x;
-//│       n = arg$Some$0$;
-//│       scrut = n >= m;
-//│       if (scrut === true) {
-//│         tmp4 = n - m;
-//│         tmp5 = Some1(tmp4);
-//│         x = tmp5;
-//│         continue loopLabel
-//│       } else {
-//│         return Some1(n)
-//│       }
-//│     } else if (x instanceof None1.class) {
-//│       return None1
-//│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│     }
-//│   }
+//│ define fun modSome_8$x_rest⁰() {
+//│   end
 //│ };
-//│ Some_x = 17;
-//│ tmp3 = (fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
-//│   return modSome_8$x_Some(fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, Some_x)
+//│ define fun modSome⁰(x1, m1) {
+//│   labelled loop loopLabel = let n, scrut, arg$Some$0$, tmp1, tmp2;
+//│   match x1
+//│     Some⁰ =>
+//│       set arg$Some$0$ = x1.x⁰;
+//│       set n = arg$Some$0$;
+//│       set scrut = >=⁰(n, m1);
+//│       match scrut
+//│         true =>
+//│           set tmp1 = -⁰(n, m1);
+//│           set tmp2 = Some¹(tmp1);
+//│           set x1 = tmp2;
+//│           continue loopLabel
+//│         else
+//│           return Some¹(n)
+//│       end
+//│     None⁰ =>
+//│       return None¹
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end;
+//│   end
 //│ };
-//│ modSome_8$modSome(tmp3, 3)
-//│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Some,Some(term:Some⁰.Some)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:Some,Some(term:Some⁰.Some)),List(Arg(None,Lit(IntLit(17))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > <<< fusing <<<
+//│ set Some_x = 17;
+//│ set tmp = (fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => return modSome_8$x_Some⁰(fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, Some_x);
+//│ modSome_8$modSome⁰(tmp, 3)
 //│ = Some(2)
 
 
@@ -139,7 +131,7 @@ maxOpt2(id(1 :: 2 :: 3 :: Nil), None)
 //│ = Some(3)
 
 :deforest
-:sjs
+:sir
 :expect Nil
 fun zipWith(xsys, f) = if xsys is
   [hx :: tx, hy :: ty] then f(hx, hy) :: zipWith([tx, ty], f)
@@ -155,127 +147,109 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys,None)), Arg(None,Lit(IntLit(1)))))
 //│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys,None)), Arg(None,Lit(IntLit(0)))))
 //│ deforest > <<< fusing <<<
-//│ JS (unsanitized):
-//│ let zipWith, tmp8, tmp9, tmp10, lambda, zipWith_19$zipWith, zipWith_19$xsys_2, zipWith_19$xsys_rest, zipWith_19$split_default$_rest, zipWith_19$split_root$_rest, tup2_0, tup2_1;
-//│ zipWith_19$zipWith = function zipWith_19$zipWith(xsys, f) {
-//│   let hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp11, tmp12, tmp13, tmp14;
-//│   split_root$: {
-//│     split_default$: {
-//│       return xsys(f, hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp11, tmp12, tmp13, tmp14, tmp14);
-//│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
-//│   }
-//│   return tmp14
+//│ Lowered:
+//│ let zipWith⁰, tmp, tmp1, tmp2, lambda⁰, zipWith_19$zipWith⁰, zipWith_19$xsys_2⁰, zipWith_19$xsys_rest⁰, zipWith_19$split_default$_rest⁰, zipWith_19$split_root$_rest⁰, tup2_0, tup2_1;
+//│ define fun zipWith_19$zipWith⁰(xsys, f) {
+//│   let hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp3, tmp4, tmp5, tmp6;
+//│   labelled block split_root$ = labelled block split_default$ = return xsys(f, hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp3, tmp4, tmp5, tmp6, tmp6);
+//│   throw new globalThis⁰.Error⁰("match error");
+//│   return tmp6
 //│ };
-//│ zipWith_19$xsys_2 = function zipWith_19$xsys_2(fv_f, fv_hy, fv_ty, fv_hx, fv_tx, fv_element1$, fv_element0$, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_arg$Cons$0$1, fv_arg$Cons$1$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, tup2_01, tup2_11) {
-//│   fv_element0$ = tup2_01;
-//│   fv_element1$ = tup2_11;
-//│   if (fv_element0$ instanceof Cons1.class) {
-//│     fv_arg$Cons$0$ = fv_element0$.h;
-//│     fv_arg$Cons$1$ = fv_element0$.t;
-//│     if (fv_element1$ instanceof Cons1.class) {
-//│       let tup2_02, tup2_12;
-//│       fv_arg$Cons$0$1 = fv_element1$.h;
-//│       fv_arg$Cons$1$1 = fv_element1$.t;
-//│       fv_ty = fv_arg$Cons$1$1;
-//│       fv_hy = fv_arg$Cons$0$1;
-//│       fv_tx = fv_arg$Cons$1$;
-//│       fv_hx = fv_arg$Cons$0$;
-//│       fv_tmp = runtime.safeCall(fv_f(fv_hx, fv_hy));
-//│       tup2_02 = fv_tx;
-//│       tup2_12 = fv_ty;
-//│       fv_tmp1 = (fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4) => {
-//│         return zipWith_19$xsys_2(fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, tup2_02, tup2_12)
-//│       };
-//│       fv_tmp2 = zipWith_19$zipWith(fv_tmp1, fv_f);
-//│       fv_tmp4 = Cons1(fv_tmp, fv_tmp2);
-//│       return zipWith_19$split_root$_rest(fv_tmp4)
-//│     } else {
-//│       return zipWith_19$split_default$_rest(fv_tmp4)
-//│     }
-//│   } else if (fv_element0$ instanceof Nil1.class) {
-//│     if (fv_element1$ instanceof Nil1.class) {
-//│       fv_tmp4 = Nil1;
-//│       return zipWith_19$split_root$_rest(fv_tmp4)
-//│     } else {
-//│       return zipWith_19$split_default$_rest(fv_tmp4)
-//│     }
-//│   } else {
-//│     return zipWith_19$split_default$_rest(fv_tmp4)
-//│   }
+//│ define fun zipWith_19$xsys_2⁰(fv_f, fv_hy, fv_ty, fv_hx, fv_tx, fv_element1$, fv_element0$, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_arg$Cons$0$1, fv_arg$Cons$1$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, tup2_01, tup2_11) {
+//│   set fv_element0$ = tup2_01;
+//│   set fv_element1$ = tup2_11;
+//│   match fv_element0$
+//│     Cons⁰ =>
+//│       set fv_arg$Cons$0$ = fv_element0$.h⁰;
+//│       set fv_arg$Cons$1$ = fv_element0$.t⁰;
+//│       match fv_element1$
+//│         Cons⁰ =>
+//│           let tup2_02, tup2_12;
+//│           set fv_arg$Cons$0$1 = fv_element1$.h⁰;
+//│           set fv_arg$Cons$1$1 = fv_element1$.t⁰;
+//│           set fv_ty = fv_arg$Cons$1$1;
+//│           set fv_hy = fv_arg$Cons$0$1;
+//│           set fv_tx = fv_arg$Cons$1$;
+//│           set fv_hx = fv_arg$Cons$0$;
+//│           set fv_tmp = fv_f(fv_hx, fv_hy);
+//│           set tup2_02 = fv_tx;
+//│           set tup2_12 = fv_ty;
+//│           set fv_tmp1 = (fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4) => return zipWith_19$xsys_2⁰(fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, tup2_02, tup2_12);
+//│           set fv_tmp2 = zipWith_19$zipWith⁰(fv_tmp1, fv_f);
+//│           set fv_tmp4 = Cons¹(fv_tmp, fv_tmp2);
+//│           return zipWith_19$split_root$_rest⁰(fv_tmp4)
+//│         else
+//│           return zipWith_19$split_default$_rest⁰(fv_tmp4)
+//│       end
+//│     Nil⁰ =>
+//│       match fv_element1$
+//│         Nil⁰ =>
+//│           set fv_tmp4 = Nil¹;
+//│           return zipWith_19$split_root$_rest⁰(fv_tmp4)
+//│         else
+//│           return zipWith_19$split_default$_rest⁰(fv_tmp4)
+//│       end
+//│     else
+//│       return zipWith_19$split_default$_rest⁰(fv_tmp4)
+//│   end
 //│ };
-//│ zipWith_19$xsys_rest = function zipWith_19$xsys_rest(fv_tmp) {
-//│   return zipWith_19$split_default$_rest(fv_tmp)
+//│ define fun zipWith_19$xsys_rest⁰(fv_tmp5) {
+//│   return zipWith_19$split_default$_rest⁰(fv_tmp5)
 //│ };
-//│ zipWith_19$split_default$_rest = function zipWith_19$split_default$_rest(fv_tmp) {
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│ define fun zipWith_19$split_default$_rest⁰(fv_tmp6) {
+//│   throw new globalThis⁰.Error⁰("match error")
 //│ };
-//│ zipWith_19$split_root$_rest = function zipWith_19$split_root$_rest(fv_tmp) {
-//│   return fv_tmp
+//│ define fun zipWith_19$split_root$_rest⁰(fv_tmp7) {
+//│   return fv_tmp7
 //│ };
-//│ zipWith = function zipWith(xsys, f) {
-//│   let hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp11, tmp12, tmp13, tmp14;
-//│   split_root$: {
-//│     split_default$: {
-//│       if (runtime.Tuple.isArrayLike(xsys) && xsys.length === 2) {
-//│         element0$ = runtime.Tuple.get(xsys, 0);
-//│         element1$ = runtime.Tuple.get(xsys, 1);
-//│         if (element0$ instanceof Cons1.class) {
-//│           arg$Cons$0$ = element0$.h;
-//│           arg$Cons$1$ = element0$.t;
-//│           if (element1$ instanceof Cons1.class) {
-//│             arg$Cons$0$1 = element1$.h;
-//│             arg$Cons$1$1 = element1$.t;
-//│             ty = arg$Cons$1$1;
-//│             hy = arg$Cons$0$1;
-//│             tx = arg$Cons$1$;
-//│             hx = arg$Cons$0$;
-//│             tmp11 = runtime.safeCall(f(hx, hy));
-//│             tmp12 = globalThis.Object.freeze([
-//│               tx,
-//│               ty
-//│             ]);
-//│             tmp13 = zipWith(tmp12, f);
-//│             tmp14 = Cons1(tmp11, tmp13);
-//│             break split_root$
-//│           } else {
-//│             break split_default$
-//│           }
-//│         } else if (element0$ instanceof Nil1.class) {
-//│           if (element1$ instanceof Nil1.class) {
-//│             tmp14 = Nil1;
-//│             break split_root$
-//│           } else {
-//│             break split_default$
-//│           }
-//│         } else {
+//│ define fun zipWith⁰(xsys1, f1) {
+//│   let hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp3, tmp4, tmp5, tmp6;
+//│   labelled block split_root$ = labelled block split_default$ = match xsys1
+//│     Array(2) =>
+//│       set element0$ = runtime⁰.Tuple﹖.get⁰(xsys1, 0);
+//│       set element1$ = runtime⁰.Tuple﹖.get⁰(xsys1, 1);
+//│       match element0$
+//│         Cons⁰ =>
+//│           set arg$Cons$0$ = element0$.h⁰;
+//│           set arg$Cons$1$ = element0$.t⁰;
+//│           match element1$
+//│             Cons⁰ =>
+//│               set arg$Cons$0$1 = element1$.h⁰;
+//│               set arg$Cons$1$1 = element1$.t⁰;
+//│               set ty = arg$Cons$1$1;
+//│               set hy = arg$Cons$0$1;
+//│               set tx = arg$Cons$1$;
+//│               set hx = arg$Cons$0$;
+//│               set tmp3 = f1(hx, hy);
+//│               set tmp4 = [tx, ty];
+//│               set tmp5 = zipWith⁰(tmp4, f1);
+//│               set tmp6 = Cons¹(tmp3, tmp5);
+//│               break split_root$
+//│             else
+//│               break split_default$
+//│           end
+//│         Nil⁰ =>
+//│           match element1$
+//│             Nil⁰ =>
+//│               set tmp6 = Nil¹;
+//│               break split_root$
+//│             else
+//│               break split_default$
+//│           end
+//│         else
 //│           break split_default$
-//│         }
-//│       } else {
-//│         break split_default$
-//│       }
-//│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
-//│   }
-//│   return tmp14
+//│       end
+//│     else
+//│       break split_default$
+//│   end;
+//│   throw new globalThis⁰.Error⁰("match error");
+//│   return tmp6
 //│ };
-//│ tmp8 = Predef.id(Nil1);
-//│ tmp9 = Predef.id(Nil1);
-//│ tup2_0 = tmp8;
-//│ tup2_1 = tmp9;
-//│ tmp10 = (fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4) => {
-//│   return zipWith_19$xsys_2(fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, tup2_0, tup2_1)
-//│ };
-//│ lambda = (undefined, function (x, y) { return x });
-//│ zipWith_19$zipWith(tmp10, lambda)
-//│ deforest > >>> fusing >>>
-//│ deforest > Tuple(false,List(Arg(None,Ref(tx,None)), Arg(None,Ref(ty,None)))) ->
-//│ deforest > 	Ref(xsys,None)
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys,None)), Arg(None,Lit(IntLit(1)))))
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys,None)), Arg(None,Lit(IntLit(0)))))
-//│ deforest > Tuple(false,List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(xsys,None)
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys,None)), Arg(None,Lit(IntLit(1)))))
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys,None)), Arg(None,Lit(IntLit(0)))))
-//│ deforest > <<< fusing <<<
+//│ set tmp = Predef¹.id⁰(Nil¹);
+//│ set tmp1 = Predef¹.id⁰(Nil¹);
+//│ set tup2_0 = tmp;
+//│ set tup2_1 = tmp1;
+//│ set tmp2 = (fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4) => return zipWith_19$xsys_2⁰(fv_ctorLam_f, fv_ctorLam_hy, fv_ctorLam_ty, fv_ctorLam_hx, fv_ctorLam_tx, fv_ctorLam_element1$, fv_ctorLam_element0$, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_arg$Cons$0$1, fv_ctorLam_arg$Cons$1$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, tup2_0, tup2_1);
+//│ define fun lambda⁰(x, y) { return x };
+//│ zipWith_19$zipWith⁰(tmp2, lambda⁰)
 //│ = Nil

@@ -30,7 +30,7 @@ c(p())
 //│ = O
 
 
-:sjs
+:sir
 :expect O
 fun p() = X(Y(O))
 fun f(x) = if x is
@@ -44,88 +44,70 @@ f(p())
 //│ deforest > 	Ref(tmp:arg$X$0$,None)
 //│ deforest > 	Select(Ref(tmp:arg$X$0$,None),Ident(b))
 //│ deforest > <<< fusing <<<
-//│ JS (unsanitized):
-//│ let p1, f, tmp1, p_8$p, f_9$f, f_9$x_X, f_9$x_rest, f_9$split_default$_rest, f_9$split_root$_rest, f_9$arg$X$0$_Y, f_9$arg$X$0$_rest;
-//│ p_8$p = function p_8$p() {
-//│   let tmp2, Y_b, X_a;
-//│   Y_b = O1;
-//│   tmp2 = (fv_ctorLam_y, fv_ctorLam_arg$Y$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
-//│     return f_9$arg$X$0$_Y(fv_ctorLam_y, fv_ctorLam_arg$Y$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, Y_b)
-//│   };
-//│   X_a = tmp2;
-//│   return (fv_ctorLam_y, fv_ctorLam_arg$X$0$, fv_ctorLam_arg$Y$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
-//│     return f_9$x_X(fv_ctorLam_y, fv_ctorLam_arg$X$0$, fv_ctorLam_arg$Y$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, X_a)
-//│   }
+//│ Lowered:
+//│ let p⁰, f⁰, tmp, p_8$p⁰, f_9$f⁰, f_9$x_X⁰, f_9$x_rest⁰, f_9$split_default$_rest⁰, f_9$split_root$_rest⁰, f_9$arg$X$0$_Y⁰, f_9$arg$X$0$_rest⁰;
+//│ define fun p_8$p⁰() {
+//│   let tmp1, Y_b, X_a;
+//│   set Y_b = O⁰;
+//│   set tmp1 = (fv_ctorLam_y, fv_ctorLam_arg$Y$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => return f_9$arg$X$0$_Y⁰(fv_ctorLam_y, fv_ctorLam_arg$Y$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, Y_b);
+//│   set X_a = tmp1;
+//│   return (fv_ctorLam_y1, fv_ctorLam_arg$X$0$, fv_ctorLam_arg$Y$0$1, fv_ctorLam_tmp2, fv_ctorLam_tmp3) => return f_9$x_X⁰(fv_ctorLam_y1, fv_ctorLam_arg$X$0$, fv_ctorLam_arg$Y$0$1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, X_a)
 //│ };
-//│ f_9$f = function f_9$f(x) {
-//│   let y, arg$X$0$, arg$Y$0$, tmp2;
-//│   split_root$: {
-//│     split_default$: {
-//│       return x(y, arg$X$0$, arg$Y$0$, tmp2, tmp2);
-//│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
-//│   }
-//│   return tmp2
+//│ define fun f_9$f⁰(x) {
+//│   let y, arg$X$0$, arg$Y$0$, tmp1;
+//│   labelled block split_root$ = labelled block split_default$ = return x(y, arg$X$0$, arg$Y$0$, tmp1, tmp1);
+//│   throw new globalThis⁰.Error⁰("match error");
+//│   return tmp1
 //│ };
-//│ f_9$x_X = function f_9$x_X(fv_y, fv_arg$X$0$, fv_arg$Y$0$, fv_tmp, fv_tmp1, X_a) {
-//│   fv_arg$X$0$ = X_a;
+//│ define fun f_9$x_X⁰(fv_y, fv_arg$X$0$, fv_arg$Y$0$, fv_tmp, fv_tmp1, X_a) {
+//│   set fv_arg$X$0$ = X_a;
 //│   return fv_arg$X$0$(fv_y, fv_arg$Y$0$, fv_tmp1, fv_tmp1)
 //│ };
-//│ f_9$arg$X$0$_Y = function f_9$arg$X$0$_Y(fv_y, fv_arg$Y$0$, fv_tmp, fv_tmp1, Y_b) {
-//│   fv_arg$Y$0$ = Y_b;
-//│   fv_y = fv_arg$Y$0$;
-//│   fv_tmp1 = fv_y;
-//│   return f_9$split_root$_rest(fv_tmp1)
+//│ define fun f_9$arg$X$0$_Y⁰(fv_y1, fv_arg$Y$0$1, fv_tmp2, fv_tmp3, Y_b) {
+//│   set fv_arg$Y$0$1 = Y_b;
+//│   set fv_y1 = fv_arg$Y$0$1;
+//│   set fv_tmp3 = fv_y1;
+//│   return f_9$split_root$_rest⁰(fv_tmp3)
 //│ };
-//│ f_9$x_rest = function f_9$x_rest(fv_tmp) {
-//│   return f_9$split_default$_rest(fv_tmp)
+//│ define fun f_9$x_rest⁰(fv_tmp4) {
+//│   return f_9$split_default$_rest⁰(fv_tmp4)
 //│ };
-//│ f_9$split_default$_rest = function f_9$split_default$_rest(fv_tmp) {
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│ define fun f_9$split_default$_rest⁰(fv_tmp5) {
+//│   throw new globalThis⁰.Error⁰("match error")
 //│ };
-//│ f_9$split_root$_rest = function f_9$split_root$_rest(fv_tmp) {
-//│   return fv_tmp
+//│ define fun f_9$split_root$_rest⁰(fv_tmp6) {
+//│   return fv_tmp6
 //│ };
-//│ f_9$arg$X$0$_rest = function f_9$arg$X$0$_rest(fv_tmp) {
-//│   return f_9$x_rest(fv_tmp)
+//│ define fun f_9$arg$X$0$_rest⁰(fv_tmp7) {
+//│   return f_9$x_rest⁰(fv_tmp7)
 //│ };
-//│ p1 = function p() {
-//│   let tmp2;
-//│   tmp2 = Y1(O1);
-//│   return X1(tmp2)
+//│ define fun p⁰() {
+//│   let tmp1;
+//│   set tmp1 = Y¹(O⁰);
+//│   return X¹(tmp1)
 //│ };
-//│ f = function f(x) {
-//│   let y, arg$X$0$, arg$Y$0$, tmp2;
-//│   split_root$: {
-//│     split_default$: {
-//│       if (x instanceof X1.class) {
-//│         arg$X$0$ = x.a;
-//│         if (arg$X$0$ instanceof Y1.class) {
-//│           arg$Y$0$ = arg$X$0$.b;
-//│           y = arg$Y$0$;
-//│           tmp2 = y;
+//│ define fun f⁰(x1) {
+//│   let y, arg$X$0$, arg$Y$0$, tmp1;
+//│   labelled block split_root$ = labelled block split_default$ = match x1
+//│     X⁰ =>
+//│       set arg$X$0$ = x1.a⁰;
+//│       match arg$X$0$
+//│         Y⁰ =>
+//│           set arg$Y$0$ = arg$X$0$.b⁰;
+//│           set y = arg$Y$0$;
+//│           set tmp1 = y;
 //│           break split_root$
-//│         } else {
+//│         else
 //│           break split_default$
-//│         }
-//│       } else {
-//│         break split_default$
-//│       }
-//│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
-//│   }
-//│   return tmp2
+//│       end
+//│     else
+//│       break split_default$
+//│   end;
+//│   throw new globalThis⁰.Error⁰("match error");
+//│   return tmp1
 //│ };
-//│ tmp1 = p_8$p();
-//│ f_9$f(tmp1)
-//│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:X,Some(term:X⁰.X)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(a))
-//│ deforest > Call(Ref(member:Y,Some(term:Y⁰.Y)),List(Arg(None,Ref(member:O,Some(object:O))))) ->
-//│ deforest > 	Ref(tmp:arg$X$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$X$0$,None),Ident(b))
-//│ deforest > <<< fusing <<<
+//│ set tmp = p_8$p⁰();
+//│ f_9$f⁰(tmp)
 //│ = O
 
 
@@ -199,7 +181,7 @@ p(c())
 //│ = 2
 
 
-:sjs
+:sir
 :expect 3
 if [1, 2] is
   [a, b] then a + b
@@ -209,26 +191,22 @@ if [1, 2] is
 //│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(tmp:scrut,None)), Arg(None,Lit(IntLit(0)))))
 //│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(tmp:scrut,None)), Arg(None,Lit(IntLit(1)))))
 //│ deforest > <<< fusing <<<
-//│ JS (unsanitized):
-//│ let scrut, a1, b1, element1$, element0$, $scrut_2, $scrut_rest, tup2_0, tup2_1;
-//│ $scrut_2 = function $scrut_2(tup2_01, tup2_11) {
-//│   element0$ = tup2_01;
-//│   element1$ = tup2_11;
-//│   b1 = element1$;
-//│   a1 = element0$;
-//│   return a1 + b1
+//│ Lowered:
+//│ let scrut, a¹, b¹, element1$, element0$, $scrut_2⁰, $scrut_rest⁰, tup2_0, tup2_1;
+//│ define fun $scrut_2⁰(tup2_01, tup2_11) {
+//│   set element0$ = tup2_01;
+//│   set element1$ = tup2_11;
+//│   set b¹ = element1$;
+//│   set a¹ = element0$;
+//│   return +⁰(a¹, b¹)
 //│ };
-//│ $scrut_rest = function $scrut_rest() {};
-//│ tup2_0 = 1;
-//│ tup2_1 = 2;
-//│ scrut = () => { return $scrut_2(tup2_0, tup2_1) };
+//│ define fun $scrut_rest⁰() {
+//│   end
+//│ };
+//│ set tup2_0 = 1;
+//│ set tup2_1 = 2;
+//│ set scrut = () => return $scrut_2⁰(tup2_0, tup2_1);
 //│ scrut()
-//│ deforest > >>> fusing >>>
-//│ deforest > Tuple(false,List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(tmp:scrut,None)), Arg(None,Lit(IntLit(0)))))
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(tmp:scrut,None)), Arg(None,Lit(IntLit(1)))))
-//│ deforest > <<< fusing <<<
 //│ = 3
 
 

@@ -66,7 +66,7 @@ fix
 
 
 
-:sjs
+:sir
 :deforest
 :expect Nil
 fun dlHelper(prev, rest) = if rest is
@@ -80,50 +80,49 @@ fun fix(x, fuel) =
 id(fix(Nil, 1000))
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
-//│ JS (unsanitized):
-//│ let dlHelper1, fix3, tmp;
-//│ dlHelper1 = function dlHelper(prev, rest) {
+//│ Lowered:
+//│ let dlHelper⁰, fix⁰, tmp;
+//│ define fun dlHelper⁰(prev, rest) {
 //│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp1;
-//│   if (rest instanceof Nil1.class) {
-//│     return Nil1
-//│   } else if (rest instanceof Cons1.class) {
-//│     arg$Cons$0$ = rest.h;
-//│     arg$Cons$1$ = rest.t;
-//│     t = arg$Cons$1$;
-//│     h = arg$Cons$0$;
-//│     tmp1 = dlHelper1(h, t);
-//│     return Cons1(prev, tmp1)
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│   match rest
+//│     Nil⁰ =>
+//│       return Nil¹
+//│     Cons⁰ =>
+//│       set arg$Cons$0$ = rest.h⁰;
+//│       set arg$Cons$1$ = rest.t⁰;
+//│       set t = arg$Cons$1$;
+//│       set h = arg$Cons$0$;
+//│       set tmp1 = dlHelper⁰(h, t);
+//│       return Cons¹(prev, tmp1)
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
 //│ };
-//│ fix3 = function fix(x, fuel) {
-//│   loopLabel: while (true) {
-//│     let res, scrut, tmp1, tmp2;
-//│     tmp1 = - 1;
-//│     res = dlHelper1(tmp1, x);
-//│     scrut = Predef.equals(fuel, 0);
-//│     if (scrut === true) {
+//│ define fun fix⁰(x, fuel) {
+//│   labelled loop loopLabel = let res, scrut, tmp1, tmp2;
+//│   set tmp1 = -⁰(1);
+//│   set res = dlHelper⁰(tmp1, x);
+//│   set scrut = Predef¹.equals⁰(fuel, 0);
+//│   match scrut
+//│     true =>
 //│       return res
-//│     } else {
-//│       tmp2 = fuel - 1;
-//│       x = res;
-//│       fuel = tmp2;
+//│     else
+//│       set tmp2 = -⁰(fuel, 1);
+//│       set x = res;
+//│       set fuel = tmp2;
 //│       continue loopLabel
-//│     }
-//│   }
+//│   end;
+//│   end
 //│ };
-//│ tmp = fix3(Nil1, 1000);
-//│ Predef.id(tmp)
-//│ deforest > >>> fusing >>>
-//│ deforest > <<< fusing <<<
+//│ set tmp = fix⁰(Nil¹, 1000);
+//│ Predef¹.id⁰(tmp)
 //│ = Nil
 
 
 
 
 
-:sjs
+:sir
 :deforest
 :expect Nil
 fun dlHelper(prev, rest) = if rest is
@@ -136,46 +135,45 @@ fun fix(x) =
 fix(2 :: 3 :: Nil)
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
-//│ JS (unsanitized):
-//│ let dlHelper2, fix4, tmp1, tmp2;
-//│ dlHelper2 = function dlHelper(prev, rest) {
-//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp3;
-//│   if (rest instanceof Nil1.class) {
-//│     return Nil1
-//│   } else if (rest instanceof Cons1.class) {
-//│     arg$Cons$0$ = rest.h;
-//│     arg$Cons$1$ = rest.t;
-//│     t = arg$Cons$1$;
-//│     h = arg$Cons$0$;
-//│     tmp3 = dlHelper2(h, t);
-//│     return Cons1(prev, tmp3)
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│ Lowered:
+//│ let dlHelper¹, fix¹, tmp, tmp1;
+//│ define fun dlHelper¹(prev, rest) {
+//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp2;
+//│   match rest
+//│     Nil⁰ =>
+//│       return Nil¹
+//│     Cons⁰ =>
+//│       set arg$Cons$0$ = rest.h⁰;
+//│       set arg$Cons$1$ = rest.t⁰;
+//│       set t = arg$Cons$1$;
+//│       set h = arg$Cons$0$;
+//│       set tmp2 = dlHelper¹(h, t);
+//│       return Cons¹(prev, tmp2)
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
 //│ };
-//│ fix4 = function fix(x) {
-//│   loopLabel: while (true) {
-//│     let x1, xs, arg$Cons$0$, arg$Cons$1$, tmp3;
-//│     if (x instanceof Nil1.class) {
-//│       return Nil1
-//│     } else if (x instanceof Cons1.class) {
-//│       arg$Cons$0$ = x.h;
-//│       arg$Cons$1$ = x.t;
-//│       xs = arg$Cons$1$;
-//│       x1 = arg$Cons$0$;
-//│       tmp3 = dlHelper2(x1, xs);
-//│       x = tmp3;
+//│ define fun fix¹(x) {
+//│   labelled loop loopLabel = let x1, xs, arg$Cons$0$, arg$Cons$1$, tmp2;
+//│   match x
+//│     Nil⁰ =>
+//│       return Nil¹
+//│     Cons⁰ =>
+//│       set arg$Cons$0$ = x.h⁰;
+//│       set arg$Cons$1$ = x.t⁰;
+//│       set xs = arg$Cons$1$;
+//│       set x1 = arg$Cons$0$;
+//│       set tmp2 = dlHelper¹(x1, xs);
+//│       set x = tmp2;
 //│       continue loopLabel
-//│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│     }
-//│   }
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end;
+//│   end
 //│ };
-//│ tmp1 = Cons1(3, Nil1);
-//│ tmp2 = Cons1(2, tmp1);
-//│ fix4(tmp2)
-//│ deforest > >>> fusing >>>
-//│ deforest > <<< fusing <<<
+//│ set tmp = Cons¹(3, Nil¹);
+//│ set tmp1 = Cons¹(2, tmp);
+//│ fix¹(tmp1)
 //│ = Nil
 
 
@@ -184,7 +182,7 @@ fix(2 :: 3 :: Nil)
 
 
 
-:sjs
+:sir
 :deforest
 :expect Nil
 fun f(x) = if x is
@@ -193,30 +191,31 @@ fun loop(l, n) = if n > 0 then loop(f(l), n - 1) else l
 id(loop(Nil, 2))
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
-//│ JS (unsanitized):
-//│ let f, loop, tmp3;
-//│ f = function f(x) {
-//│   if (x instanceof Nil1.class) {
-//│     return Nil1
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│ Lowered:
+//│ let f⁰, loop⁰, tmp;
+//│ define fun f⁰(x) {
+//│   match x
+//│     Nil⁰ =>
+//│       return Nil¹
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
 //│ };
-//│ loop = function loop(l, n) {
-//│   loopLabel: while (true) {
-//│     let scrut, tmp4, tmp5;
-//│     scrut = n > 0;
-//│     if (scrut === true) {
-//│       tmp4 = f(l);
-//│       tmp5 = n - 1;
-//│       l = tmp4;
-//│       n = tmp5;
+//│ define fun loop⁰(l, n) {
+//│   labelled loop loopLabel = let scrut, tmp1, tmp2;
+//│   set scrut = >⁰(n, 0);
+//│   match scrut
+//│     true =>
+//│       set tmp1 = f⁰(l);
+//│       set tmp2 = -⁰(n, 1);
+//│       set l = tmp1;
+//│       set n = tmp2;
 //│       continue loopLabel
-//│     } else { return l }
-//│   }
+//│     else
+//│       return l
+//│   end;
+//│   end
 //│ };
-//│ tmp3 = loop(Nil1, 2);
-//│ Predef.id(tmp3)
-//│ deforest > >>> fusing >>>
-//│ deforest > <<< fusing <<<
+//│ set tmp = loop⁰(Nil¹, 2);
+//│ Predef¹.id⁰(tmp)
 //│ = Nil
