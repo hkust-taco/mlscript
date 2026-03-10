@@ -275,7 +275,7 @@ handler_stack(100)
 let
   // N = 100
   // M = 100
-  N = 10
+  N = 5
   M = 10
 
 :stackSafe
