@@ -539,9 +539,15 @@ extends Importer with ucs.SplitElaborator:
     case InfixApp(lhs, Keywrd(Keyword.`->`), rhs) =>
       Term.FunTy(subterm(lhs), subterm(rhs), N)
     case InfixApp(lhs, Keywrd(Keyword.`=>`), rhs) =>
-      ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
-        val (syms, nestCtx) = funParams(lhs)
-        Term.Lam(syms, term(rhs)(using nestCtx))
+      lhs match
+      case Tup(_) =>
+        ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
+          val (syms, nestCtx) = funParams(lhs)
+          Term.Lam(syms, term(rhs)(using nestCtx))
+      case TyTup(tys) =>
+        val constraints = tys.flatMap(constraint)
+        val body = term(rhs)
+        Term.Constrained(constraints, body)
     case InfixApp(lhs, Keywrd(Keyword.`as`), rhs) =>
       Term.Asc(subterm(lhs), subterm(rhs))
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
@@ -1508,6 +1514,20 @@ extends Importer with ucs.SplitElaborator:
     ps_ctx._1.restParam.foreach(checkFlags)
     ps_ctx
   
+  /** Elaborate a subtyping constraint. */
+  def constraint(t: Tree): Ctxl[Option[SubConstraint]] =
+    t match
+    case InfixApp(lhs, op @ (Keywrd(Keyword.`<:`) | Keywrd(Keyword.`:>`)), rhs) =>
+      val l = term(lhs)
+      val r = term(rhs)
+      val dir = op match
+        case Keywrd(Keyword.`<:`) => SubDir.Sub
+        case Keywrd(Keyword.`:>`) => SubDir.Sup
+      S(SubConstraint(l, r, dir))
+    case _ =>
+      raise(ErrorReport(msg"Illegal constraint syntax." -> t.toLoc :: Nil))
+      N
+
   /** Elaborate a parameter list of a term or a definition.
    * @param inDataClass Whether the parameter list belongs to a data class.
    * @param inPattern Whether the parameter list belongs to a pattern definition.

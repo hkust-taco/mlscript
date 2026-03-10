@@ -309,6 +309,7 @@ enum Term extends Statement:
   case Lam(params: ParamList, body: Term)
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[QuantVar], outer: Opt[VarSymbol], body: Term)
+  case Constrained(constraints: Ls[SubConstraint], body: Term)
   case WildcardTy(in: Opt[Term], out: Opt[Term])
   case Blk(stats: Ls[Statement], res: Term) extends Term, BlkImpl
   case Rcd(mut: Bool, stats: Ls[Statement])
@@ -435,6 +436,7 @@ enum Term extends Statement:
       case Lam(params, body) => Lam(params, body.mkClone)
       case FunTy(lhs, rhs, eff) => FunTy(lhs.mkClone, rhs.mkClone, eff.map(_.mkClone))
       case Forall(tvs, outer, body) => Forall(tvs, outer, body.mkClone)
+      case Constrained(constraints, body) => Constrained(constraints, body.mkClone)
       case WildcardTy(in, out) => WildcardTy(in.map(_.mkClone), out.map(_.mkClone))
       case blk: Blk => blk.mkBlkClone
       case Rcd(mut, stats) => Rcd(mut, stats.map(_.mkClone))
@@ -527,6 +529,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case Lam(params, body) => "function literal"
       case FunTy(lhs, rhs, eff) => "function type"
       case Forall(tvs, outer, body) => "universal quantification"
+      case Constrained(constraints, body) => "constrained type"
       case WildcardTy(in, out) => "wildcard type"
       case Blk(stats, res) => "block"
       case Quoted(term) => "quoted term"
@@ -595,6 +598,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Ret(res) => Vector.single(res)
     case Throw(res) => Vector.single(res)
     case Forall(_, _, body) => Vector.single(body)
+    case Constrained(constraints, body) => constraints.flatMap(_.subTerms).toVector :+ body
     case WildcardTy(in, out) => in.toVector ++ out.toVector
     case CompType(lhs, rhs, _) => Vector.double(lhs, rhs)
     case LetDecl(sym, annotations) => annotations.flatMap(_.subTerms).toVector
@@ -751,6 +755,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       s"(...${lhs.showDbg}) ->${eff.map(e => s"{${e.showDbg}}").getOrElse("")} ${rhs.showDbg}"
     case TyApp(lhs, targs) => s"${lhs.showDbg}[${targs.mkString(", ")}]"
     case Forall(tvs, outer, body) => s"forall ${tvs.mkString(", ")}${outer.map(v => s", outer $v").mkString}: ${body.toString}"
+    case Constrained(constraints, body) => s"[${constraints.map(_.showDbg).mkString(", ")}] => ${body.showDbg}"
     case WildcardTy(in, out) => s"in ${in.map(_.toString).getOrElse("⊥")} out ${out.map(_.toString).getOrElse("⊤")}"
     case Sel(pre, nme) => s"${pre.showDbg}.${nme.name}"
     case SynthSel(pre, nme) => s"(${pre.showDbg}.)${nme.name}"
@@ -1248,6 +1253,19 @@ final case class ParamListFlags(ctx: Bool):
   def show: Str = (if ctx then "ctx " else "")
   def showDbg: Str = (if ctx then "ctx " else "")
   override def toString: String = "‹" + showDbg + "›"
+
+/** A subtyping direction. */
+enum SubDir:
+  case Sub, Sup
+  def showDbg: Str = this match
+    case Sub => "<:"
+    case Sup => ":>"
+
+/** A subtyping constraint. */
+final case class SubConstraint(lhs: Term, rhs: Term, dir: SubDir) extends AutoLocated:
+  override protected def children: Vector[Located] = Vector(lhs, rhs)
+  def showDbg: Str = s"${lhs.showDbg} ${dir.showDbg} ${rhs.showDbg}"
+  def subTerms: Ls[Term] = List(lhs, rhs)
 
 object ParamListFlags:
   val empty = ParamListFlags(false)
