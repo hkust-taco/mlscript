@@ -11,6 +11,28 @@ data class Some(x)
 
 
 
+:expect 0
+fun f(x) = if x is
+  A(_) then f(A(2))
+  else 0
+f(Nil)
+//│ = 0
+
+
+:expect 0
+fun f(x) =
+  let res = if x is
+    A(x) then x
+  if res > 0 then f(A(res - 1)) else 0
+f(A(4))
+//│ = 0
+
+
+:expect 0
+fun f(x, b) = if x is
+  Nil then if b then f(Nil, false) else 0
+f(Nil, false)
+//│ = 0
 
 
 

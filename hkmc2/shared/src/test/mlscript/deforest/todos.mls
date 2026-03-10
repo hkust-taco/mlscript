@@ -28,7 +28,7 @@ data class Some(x)
 // Deforestation makes programs early return at fusing matches,
 // and after deforestation, the "rest" of fusing matches would appear both
 // in "rest function"s and after the early return (and becomes dead code).
-// A dead code elimination that detects early return would solve this problem.
+// A dead code elimination pass that detects code after early return would solve this problem.
 :sir
 :expect 78
 fun test(x) =

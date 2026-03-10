@@ -336,36 +336,6 @@ localFuse(4)
 //│ = B(4)
 
 
-:expect 0
-fun f(x) = if x is
-  A(_) then f(A(2))
-  else 0
-f(Nil)
-//│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:A,Some(term:A⁰.A)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > <<< fusing <<<
-//│ = 0
-
-
-:expect 0
-fun f(x) =
-  let res = if x is
-    A(x) then x
-  if res > 0 then f(A(res - 1)) else 0
-f(A(4))
-//│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:A,Some(term:A⁰.A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:A,Some(term:A⁰.A)),List(Arg(None,Lit(IntLit(4))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > <<< fusing <<<
-//│ = 0
 
 
 :expect 3
@@ -409,15 +379,3 @@ dtor(A(B(0)))
 //│ deforest > <<< fusing <<<
 //│ = B(0)
 
-
-:expect 0
-fun f(x, b) = if x is
-  Nil then if b then f(Nil, false) else 0
-f(Nil, false)
-//│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > <<< fusing <<<
-//│ = 0
