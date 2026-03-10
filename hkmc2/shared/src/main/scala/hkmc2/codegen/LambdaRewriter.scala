@@ -13,14 +13,11 @@ object LambdaRewriter:
   def desugar(b: Block)(using State) =
     val transformer = new BlockTransformer(SymbolSubst()):
       override def applyResult(r: Result)(k: Result => Block): Block = r match
-        case lam: Lambda => 
+        case lam: Lambda =>
           val sym = BlockMemberSymbol("lambda", Nil, nameIsMeaningful = false)
-          val tSym = TermSymbol.fromFunBms(sym, N)
-          sym.tsym = S(tSym)
-          val lamDefn =
-            val Lambda(params, body) = super.applyLam(lam)
-            FunDefn(N, sym, tSym, params :: Nil, body)(false)
-          Scoped(Set(sym), Define(lamDefn, k(Value.Ref(sym, S(tSym)))))
+          val Lambda(params, body) = super.applyLam(lam)
+          val lamDefn = FunDefn.withFreshSymbol(N, sym, params :: Nil, body)(false)
+          Scoped(Set(sym), Define(lamDefn, k(lamDefn.asPath)))
         case _ => super.applyResult(r)(k)
       
       override def applyBlock(b: Block): Block = b match
@@ -29,7 +26,6 @@ object LambdaRewriter:
             nameIsMeaningful = true // TODO: lhs.nme is not always meaningful
           )
           val defn = FunDefn.withFreshSymbol(N, newSym, params :: Nil, applyBlock(body))(false)
-          newSym.tsym = S(defn.dSym)
           val blk = blockBuilder
             .define(defn)
             .assign(lhs, defn.asPath)
