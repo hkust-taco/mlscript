@@ -540,14 +540,14 @@ extends Importer with ucs.SplitElaborator:
       Term.FunTy(subterm(lhs), subterm(rhs), N)
     case InfixApp(lhs, Keywrd(Keyword.`=>`), rhs) =>
       lhs match
-        case Tup(_) =>
-          ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
-            val (syms, nestCtx) = funParams(lhs)
-            Term.Lam(syms, term(rhs)(using nestCtx))
-        case TyTup(tys) =>
-          val constraints = tys.flatMap(constraint)
-          val body = term(rhs)
-          Term.Constrained(constraints, body)
+      case Tup(_) =>
+        ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
+          val (syms, nestCtx) = funParams(lhs)
+          Term.Lam(syms, term(rhs)(using nestCtx))
+      case TyTup(tys) =>
+        val constraints = tys.flatMap(constraint)
+        val body = term(rhs)
+        Term.Constrained(constraints, body)
     case InfixApp(lhs, Keywrd(Keyword.`as`), rhs) =>
       Term.Asc(subterm(lhs), subterm(rhs))
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
