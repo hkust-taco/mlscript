@@ -1,0 +1,93 @@
+import "./Block.mls"
+import "./Option.mls"
+
+open Block { Literal, Symbol, ClassSymbol, showSymbol }
+open Option
+
+type Shape = Shape.Shape
+
+fun isPrimitiveType(sym: Symbol) = 
+  if sym.name is
+    "Str" then true
+    "Int" then true
+    "Num" then true
+    "Bool" then true
+    else false
+
+fun isPrimitiveTypeOf(sym: Symbol, l: Literal) =
+  if [sym.name, l] is
+    ["Str", l] and l is Str then true
+    ["Int", i] and i is Int then true
+    ["Num", n] and n is Num then true
+    ["Bool", b] and b is Bool then true
+    else false
+
+module Shape with...
+
+class Shape with
+  constructor
+    Dyn()
+    Lit(val l: Literal)
+    Arr(val shapes: Array[Shape])
+    Class(val sym: ClassSymbol, val params: Array[Shape])
+
+fun show(s: Shape) =
+  if s is
+    Dyn then "Dyn"
+    Lit(lit) then "Lit(" + Block.showLiteral(lit) + ")"
+    Arr(shapes) then "Arr(" + shapes.map(show).join(", ") + ")"
+    Class(sym, params) then "Class(" + showSymbol(sym) + ", [" + params.map(show).join(", ") + "])"
+
+fun sel(s1: Shape, s2: Shape): Array[Shape] = 
+  if [s1, s2] is
+    [Class(sym, params), Lit(n)] and n is Str
+      and sym.args is Some(args)
+      and args.find(_ == n)
+        == () then []
+        is i then [params.(i)]
+    [Dyn, Lit(n)] and n is Str
+      then [Dyn()]
+    [Arr(shapes), Lit(n)] and n is Int
+      then [shapes.(n)]
+    [Arr(shapes), Dyn] then
+      shapes
+    [Dyn, Lit(n)] and n is Int
+      then [Dyn()]
+    [Dyn, Dyn]
+      then [Dyn()]
+    else [] // TODO: return no possibility instead of err?
+
+fun static(s: Shape) = 
+  if s is
+    Dyn then false
+    Lit(l) then not (l is Str and isPrimitiveType(l)) // redundant bracket?
+    Class(_, params) then params.every(static)
+    Arr(shapes) then shapes.every(static)
+
+open Block { Case }
+
+fun silh(p: Case): Shape = if p is
+  Block.Lit(l) then Lit(l)
+  Block.Cls(sym, path) then
+    val size = if sym.args is Some(i) then i else 0
+    Class(sym, Array(size).fill(Dyn))
+  Block.Tup(n) then Arr(Array(n).fill(Dyn))
+
+// TODO: use Option instead, since all of them return at most one shape
+fun filter(s: Shape, p: Case): Array[Shape] =
+  if [s, p] is
+    [Lit(l1), Block.Lit(l2)] and l1 == l2 then [s]
+    [Lit(l), Block.Cls(c, _)] and isPrimitiveTypeOf(c, l) then [s]
+    [Arr(ls), Block.Tup(n)] and ls.length == n then [s]
+    [Class(c1, _), Block.Cls(c2, _)] and c1.name == c2.name then [s]
+    [Dyn, _] then [silh(p)]
+    else []
+
+fun rest(s: Shape, p: Case): Array[Shape] =
+  if [s, p] is
+    [Lit(l1), Block.Lit(l2)] and l1 == l2 then []
+    [Lit(l), Block.Cls(c, _)] and isPrimitiveTypeOf(c, l) then []
+    [Arr(ls), Block.Tup(n)] and ls.length == n then []
+    [Class(c1, _), Block.Cls(c2, _)] and c1.name == c2.name then []
+    [Dyn, _] then [s]
+    else [s]

@@ -20,7 +20,7 @@ import semantics.Term.{Throw => _, *}
 import semantics.Elaborator.{State, Ctx, ctx}
 
 import syntax.{Literal, Tree, SpreadKind}
-import hkmc2.syntax.Fun
+import hkmc2.syntax.{Fun, Keyword}
 
 
 abstract class TailOp extends (Result => Block)
@@ -269,13 +269,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               mod.classCompanion match
               case S(comp) => comp.defn.getOrElse(wat("Module companion without definition", mod.companion))
               case N =>
+                // val clsSymb = new ClassSymbol(Tree.DummyTypeDef(syntax.Cls), mod.sym.id)
+                val stagedAnnots = mod.annotations.collect { 
+                  case Annot.Modifier(Keyword.`staged`) => Annot.Modifier(Keyword.`staged`) 
+                }
                 ClassDef.Plain(mod.owner, syntax.Cls, new ClassSymbol(Tree.DummyTypeDef(syntax.Cls), mod.sym.id),
                   mod.bsym,
                   Nil,
                   N,
                   ObjBody(Blk(Nil, UnitVal())),
                   S(mod.sym),
-                  Nil,
+                  stagedAnnots,
                 )
             case _ => _defn
           reportAnnotations(defn, defn.extraAnnotations)
@@ -1094,9 +1098,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       if config.funcToCls then Lifter(FirstClassFunctionTransformer().transform(merged)).transform
       else merged
 
-    val staged = 
-      if config.stageCode then Instrumentation(using summon).applyBlock(funcToCls)
-      else funcToCls
+    val staged = Instrumentation(using summon).applyBlock(funcToCls)
     
     val res =
       if config.tailRecOpt then TailRecOpt().transform(staged)
