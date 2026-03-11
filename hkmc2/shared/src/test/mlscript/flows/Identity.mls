@@ -1,23 +1,49 @@
-// :typeCheck
-:todo
+:flow
+
+:global
+:sf
 
 
 fun id(x) = x
+//│ Flowed:
+//│   fun id⁰(x⁰) ‹flow:id⁰› = x⁰
+//│ where
+//│     flow:id⁰  <~  ((x⁰) -> x⁰)
 
 id(1)
+//│ Flowed:
+//│   id⁰{ ~> id⁰ }(1)‹app⁰›
+//│ where
+//│     app⁰  <~  1
 
 id(true)
+//│ Flowed:
+//│   id⁰{ ~> id⁰ }(true)‹app¹›
+//│ where
+//│     app¹  <~  1  true
 
 
 fun foo(x) = x + x
+//│ Flowed:
+//│   fun foo⁰(x¹) ‹flow:foo⁰› = +(x¹, x¹)‹app²›
+//│ where
+//│     flow:foo⁰  <~  ((x¹) -> app²)
 
 
 
 
 
 (x, x) => x
+//│ Flowed:
+//│   (x², x³) => x³
+//│ where
+//│     
 
 (x, y) => x
+//│ Flowed:
+//│   (x⁴, y⁰) => x⁴
+//│ where
+//│     
 
 
 

@@ -68,8 +68,6 @@ Bar.y
 //│   (func $entry (type 5) (result (ref null any))
 //│     (local $Bar (ref null any))
 //│     (local $Foo (ref null any))
-//│     (local $Foo1 (ref null any))
-//│     (local $Bar1 (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
 //│       (block (result (ref null any))

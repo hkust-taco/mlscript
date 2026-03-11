@@ -142,8 +142,6 @@ class Foo(val a)
 //│   (func $entry (type 3) (result (ref null any))
 //│     (local $Foo (ref null any))
 //│     (local $tmp (ref null any))
-//│     (local $a (ref null any))
-//│     (local $Foo1 (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
 //│       (block (result (ref null any))
@@ -164,3 +162,115 @@ fun getX(f: Foo) = f.x
 getX(Foo(42))
 //│ Wasm result:
 //│ = 42
+
+
+:wat
+class Foo(val x) with
+  val y = this.x
+(new Foo(42)).Foo#y
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
+//│   (type (func (param $x (ref null any)) (result (ref null any))))
+//│   (type (func (result (ref null any))))
+//│   (func $Foo (type 2) (param $x (ref null any)) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Foo))
+//│       (struct.set $Foo 0
+//│         (ref.cast (ref $Foo)
+//│           (local.get $this))
+//│         (i32.const 1))
+//│       (block
+//│         (struct.set $Foo 1
+//│           (ref.cast (ref $Foo)
+//│             (local.get $this))
+//│           (local.get $x))
+//│         (block
+//│           (struct.set $Foo 2
+//│             (ref.cast (ref $Foo)
+//│               (local.get $this))
+//│             (struct.get $Foo 1
+//│               (ref.cast (ref $Foo)
+//│                 (local.get $this))))
+//│           (nop)))
+//│       (return
+//│         (local.get $this))))
+//│   (export "Foo" (func $Foo))
+//│   (elem declare func $Foo)
+//│   (func $entry (type 3) (result (ref null any))
+//│     (local $Foo (ref null any))
+//│     (local $tmp (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (block (result (ref null any))
+//│         (local.set $tmp
+//│           (call $Foo
+//│             (ref.i31
+//│               (i32.const 42))))
+//│         (struct.get $Foo 2
+//│           (ref.cast (ref $Foo)
+//│             (local.get $tmp))))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 42
+
+
+:wat
+object O with
+  val x = 1
+  val y = this.x
+O.y
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $O (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
+//│   (type $O_ctor (func (result (ref null any))))
+//│   (type (func (result (ref null any))))
+//│   (type $start (func))
+//│   (global $O$inst (mut (ref null $O)) (ref.null $O))
+//│   (start 1)
+//│   (func  (type $O_ctor) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $O))
+//│       (struct.set $O 0
+//│         (ref.cast (ref $O)
+//│           (local.get $this))
+//│         (i32.const 1))
+//│       (block
+//│         (struct.set $O 1
+//│           (ref.cast (ref $O)
+//│             (local.get $this))
+//│           (ref.i31
+//│             (i32.const 1)))
+//│         (block
+//│           (struct.set $O 2
+//│             (ref.cast (ref $O)
+//│               (local.get $this))
+//│             (struct.get $O 1
+//│               (ref.cast (ref $O)
+//│                 (local.get $this))))
+//│           (nop)))
+//│       (return
+//│         (local.get $this))))
+//│   (func  (type $start)
+//│     (block
+//│       (global.set $O$inst
+//│         (ref.cast (ref null $O)
+//│           (call 0)))))
+//│   (func $entry (type 3) (result (ref null any))
+//│     (local $O (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (struct.get $O 2
+//│         (ref.cast (ref $O)
+//│           (global.get $O$inst)))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 1

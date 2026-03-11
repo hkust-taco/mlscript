@@ -21,7 +21,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val runtimeFile: io.Path = predefFile.up / "Runtime.mjs" // * Contains MLscript runtime definitions
   val termFile: io.Path = predefFile.up / "Term.mjs" // * Contains MLscript runtime term definitions
   val blockFile: io.Path = predefFile.up / "Block.mjs" // * Contains MLscript runtime block definitions
-  val shapeFile: io.Path = predefFile.up / "Shape.mjs" // * Contains MLscript runtime shape definitions
+  val optionFile: io.Path = predefFile.up / "Option.mjs" // * Contains MLscipt runtime option definition
   
   val wd = file.up
   
@@ -42,6 +42,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val dbgElab = NullaryCommand("de")
   val dbgParsing = NullaryCommand("dp")
   val dbgResolving = NullaryCommand("dr")
+  val dbgFlow = NullaryCommand("df")
   
   val showParse = NullaryCommand("p")
   val showParsedTree = DebugTreeCommand("pt")
@@ -49,12 +50,21 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showElaboratedTree = DebugTreeCommand("elt")
   val showResolve = NullaryCommand("r")
   val showResolvedTree = DebugTreeCommand("rt")
+  val showFlows = FlagCommand(false, "sf")
   val showLoweredTree = NullaryCommand("lot")
-  val ppLoweredTree = NullaryCommand("slot")
+  val ppLoweredTreeOld = NullaryCommand("slot", () => output("Option ':slot' is deprecated, use ':sir' instead."))
+  val ppLoweredTree = NullaryCommand("sir")
   val showContext = NullaryCommand("ctx")
   val parseOnly = NullaryCommand("parseOnly")
+  val funcToCls = NullaryCommand("ftc")
   
-  val typeCheck = FlagCommand(false, "typeCheck")
+  val flow = FlagCommand(false, "flow")
+  private val flowScp: utils.Scope =
+    utils.Scope.empty(utils.Scope.Cfg.default.copy(
+      escapeChars = false,
+      useSuperscripts = true,
+      includeZero = true,
+    ))
   
   /**
    * Enables Wasm support. All options in [[WasmDiffMaker]] are no-op if this option is not set.
@@ -73,6 +83,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val stageCode = NullaryCommand("staging")
   val rewriteWhile = NullaryCommand("rewriteWhile")
   val noTailRecOpt = NullaryCommand("noTailRec")
+  val patMatConsequentSharingThreshold = Command("patMatConsequentSharingThreshold")(_.trim.toInt)
   
   def mkConfig: Config =
     import Config.*
@@ -108,11 +119,14 @@ abstract class MLsDiffMaker extends DiffMaker:
         ,
       )),
       liftDefns = Opt.when(liftDefns.isSet)(LiftDefns()),
+      patMatConsequentSharingThreshold = patMatConsequentSharingThreshold.get
+        .orElse(Config.default.patMatConsequentSharingThreshold),
       stageCode = stageCode.isSet,
       target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
       rewriteWhileLoops = rewriteWhile.isSet,
       tailRecOpt = !noTailRecOpt.isSet,
       qqEnabled = importQQ.isSet,
+      funcToCls = funcToCls.isSet,
     )
   
   
@@ -146,6 +160,10 @@ abstract class MLsDiffMaker extends DiffMaker:
     override def doTrace = dbgResolving.isSet
     override def emitDbg(str: String): Unit = output(str)
   
+  val ftl = new TraceLogger:
+    override def doTrace = dbgFlow.isSet
+    override def emitDbg(str: String): Unit = output(str)
+  
   var curCtx = Elaborator.State.init
   var curICtx = Resolver.ICtx.empty
   
@@ -171,12 +189,6 @@ abstract class MLsDiffMaker extends DiffMaker:
       processTrees(
         PrefixApp(Keywrd(`import`), StrLit(predefFile.toString))
         :: Open(Ident("Predef"))
-        :: Nil)
-    if stageCode.isSet then
-      given Config = mkConfig
-      processTrees(
-        PrefixApp(Keywrd(`import`), StrLit(blockFile.toString))
-        :: PrefixApp(Keywrd(`import`), StrLit(shapeFile.toString))
         :: Nil)
     super.init()
   
@@ -299,9 +311,22 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"Resolved tree:")
       output(trm.showAsTree(inTailPos = false, pre = pre)(using post))
     
-    if typeCheck.isSet then
-      val typer = typing.TypeChecker()
-      val ty = typer.typeProd(trm)
-      output(s"Type: ${ty}")
+    if flow.isSet then
+      val floan = semantics.flow.FlowAnalysis(using ftl)
+      val flo = floan.typeProd(trm)
+      floan.solveConstraints()
+      floan.expandTerms()
+      if showFlows.isSet then
+        import semantics.ShowCfg
+        given ShowCfg = ShowCfg(
+          showExpansionMappings = true,
+          showFlowSymbols = true,
+          debug = debug.isSet,
+        )
+        output(s"Flowed:\n${
+          import document.*
+          doc" #{ ${trm.showTopLevel(using flowScp)} #} \nwhere #{ ${floan.showFlows(using flowScp)} #} ".mkString()
+        }")
+    
   
 

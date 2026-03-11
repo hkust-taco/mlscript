@@ -714,28 +714,22 @@ let Runtime1;
             if (scrut2 === true) {
               curLocals = cur.getLocals;
               loc = cur.getLoc;
-              split_root$: {
-                split_1$: {
-                  if (showLocals === true) {
-                    scrut3 = curLocals.length > 0;
-                    if (scrut3 === true) {
-                      lambda = (undefined, function (l) {
-                        let tmp12, tmp13;
-                        tmp12 = l.localName + "=";
-                        tmp13 = Rendering.render(l.value);
-                        return tmp12 + tmp13
-                      });
-                      tmp3 = runtime.safeCall(curLocals.map(lambda));
-                      tmp4 = runtime.safeCall(tmp3.join(", "));
-                      tmp5 = " with locals: " + tmp4;
-                      break split_root$
-                    } else {
-                      break split_1$
-                    }
-                  } else {
-                    break split_1$
-                  }
+              if (showLocals === true) {
+                scrut3 = curLocals.length > 0;
+                if (scrut3 === true) {
+                  lambda = (undefined, function (l) {
+                    let tmp12, tmp13;
+                    tmp12 = l.localName + "=";
+                    tmp13 = Rendering.render(l.value);
+                    return tmp12 + tmp13
+                  });
+                  tmp3 = runtime.safeCall(curLocals.map(lambda));
+                  tmp4 = runtime.safeCall(tmp3.join(", "));
+                  tmp5 = " with locals: " + tmp4;
+                } else {
+                  tmp5 = "";
                 }
+              } else {
                 tmp5 = "";
               }
               localsMsg = tmp5;
@@ -1159,23 +1153,15 @@ let Runtime1;
     return tmp
   } 
   static plus_impl(lhs, rhs) {
-    let tmp;
-    split_root$: {
-      split_1$: {
-        if (lhs instanceof Runtime.Int31.class) {
-          if (rhs instanceof Runtime.Int31.class) {
-            tmp = lhs + rhs;
-            break split_root$
-          } else {
-            break split_1$
-          }
-        } else {
-          break split_1$
-        }
+    if (lhs instanceof Runtime.Int31.class) {
+      if (rhs instanceof Runtime.Int31.class) {
+        return lhs + rhs
+      } else {
+        return Runtime.unreachable()
       }
-      tmp = Runtime.unreachable();
+    } else {
+      return Runtime.unreachable()
     }
-    return tmp
   }
   toString() { return runtime.render(this); }
   static [definitionMetadata] = ["class", "Runtime"]; 

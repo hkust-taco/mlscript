@@ -1,0 +1,405 @@
+:js
+:flow
+// :df
+
+:global
+:sf
+
+
+class Foo with
+  val a = 123
+module Foo with
+  fun foo(x: Foo) = x.a
+//│ Flowed:
+//│   class Foo {
+//│     val a⁰ ‹flow:a⁰› = 123
+//│   },
+//│   module Foo {
+//│     fun foo⁰(x⁰: Foo⁰{ ~> Foo⁰ }) ‹flow:foo⁰› = x⁰.a‹?›{ ~> x⁰.a⁰ }
+//│   }
+//│ where
+//│     x⁰  <~  type Foo
+//│     flow:a⁰  <~  123
+//│     flow:foo⁰  <~  ((type Foo) -> flow:a⁰)
+
+let f = new Foo()
+//│ Flowed:
+//│   let f⁰,
+//│   f⁰ = new Foo⁰()
+//│ where
+//│     f⁰  <~  Foo()
+//│ f = Foo { a: 123 }
+
+f.a
+//│ Flowed:
+//│   f⁰.a⁰
+//│ where
+//│     
+//│ = 123
+
+:e
+:re
+f.a.b
+//│ ╔══[COMPILATION ERROR] Unresolved selection:
+//│ ║  l.42: 	f.a.b
+//│ ║        	^^^^^
+//│ ╟── Type `123` does not contain member 'b'
+//│ ║  l.10: 	  val a = 123
+//│ ╙──      	          ^^^
+//│ Flowed:
+//│   f⁰.a⁰.b‹?›
+//│ where
+//│     
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'b' yielded 'undefined'
+
+:sjs
+f.foo
+//│ Flowed:
+//│   f⁰.foo‹?›{ ~> Foo⁰.foo⁰(f⁰)‹app⁰› }
+//│ where
+//│     f⁰  <~  Foo()
+//│     f⁰  ~>  {a: ⋅a⁰}  {a: ⋅a¹}  {foo: ⋅foo⁰}
+//│ JS (unsanitized):
+//│ Foo1.foo(f)
+//│ = 123
+
+
+fun id(x) = x
+//│ Flowed:
+//│   fun id⁰(x¹) ‹flow:id⁰› = x¹
+//│ where
+//│     flow:id⁰  <~  ((x¹) -> x¹)
+
+id(f).foo
+//│ Flowed:
+//│   id⁰{ ~> id⁰ }(f⁰)‹app¹›.foo‹?›{ ~> Foo⁰.foo⁰(id⁰(f⁰)‹app¹›)‹app²› }
+//│ where
+//│     f⁰  <~  Foo()
+//│     f⁰  ~>  {a: ⋅a⁰}  {a: ⋅a¹}  {foo: ⋅foo⁰}
+//│     f⁰  ->  x¹
+//│     app¹  <~  Foo()
+//│     app¹  ~>  {foo: ⋅foo¹}
+//│ = 123
+
+
+let id(x) = x
+//│ Flowed:
+//│   let id¹,
+//│   id¹ = (x²) => x²
+//│ where
+//│     id¹  <~  ((x²) -> x²)
+//│ id = fun id
+
+id(f).foo
+//│ Flowed:
+//│   id¹(f⁰)‹app³›.foo‹?›{ ~> Foo⁰.foo⁰(id¹(f⁰)‹app³›)‹app⁴› }
+//│ where
+//│     f⁰  <~  Foo()
+//│     f⁰  ~>  {a: ⋅a⁰}  {a: ⋅a¹}  {foo: ⋅foo⁰}
+//│     f⁰  ->  x¹  x²
+//│     id¹  <~  ((x²) -> x²)
+//│     id¹  ~>  ((f⁰) -> app³)
+//│     app³  <~  Foo()
+//│     app³  ~>  {foo: ⋅foo²}
+//│ = 123
+
+
+fun id(x) = x
+//│ Flowed:
+//│   fun id²(x³) ‹flow:id¹› = x³
+//│ where
+//│     flow:id¹  <~  ((x³) -> x³)
+
+id(0)
+//│ Flowed:
+//│   id²{ ~> id² }(0)‹app⁵›
+//│ where
+//│     app⁵  <~  0
+//│ = 0
+
+// * Note the flow confusion due to lack of polymorphism:
+:e
+id(f).foo
+//│ ╔══[COMPILATION ERROR] Unresolved selection:
+//│ ║  l.122: 	id(f).foo
+//│ ║         	^^^^^^^^^
+//│ ╟── Type `0` does not contain member 'foo'
+//│ ║  l.113: 	id(0)
+//│ ╙──       	   ^
+//│ Flowed:
+//│   id²{ ~> id² }(f⁰)‹app⁶›.foo‹?›{ ~> Foo⁰.foo⁰(id²(f⁰)‹app⁶›)‹app⁷› }
+//│ where
+//│     f⁰  <~  Foo()
+//│     f⁰  ~>  {a: ⋅a⁰}  {a: ⋅a¹}  {foo: ⋅foo⁰}
+//│     f⁰  ->  x¹  x²  x³
+//│     app⁶  <~  0  Foo()
+//│     app⁶  ~>  {foo: ⋅foo³}
+//│ = 123
+
+
+:e
+fun test(g) = g.foo
+//│ ╔══[COMPILATION ERROR] Cannot resolve selection
+//│ ║  l.141: 	fun test(g) = g.foo
+//│ ╙──       	              ^^^^^
+//│ Flowed:
+//│   fun test⁰(g⁰) ‹flow:test⁰› = g⁰.foo‹?›
+//│ where
+//│     g⁰  ~>  {foo: ⋅foo⁴}
+//│     flow:test⁰  <~  ((g⁰) -> ⋅foo⁴)
+
+:re
+test(f)
+//│ Flowed:
+//│   test⁰{ ~> test⁰ }(f⁰)‹app⁸›
+//│ where
+//│     f⁰  <~  Foo()
+//│     f⁰  ~>  {a: ⋅a⁰}  {a: ⋅a¹}  {foo: ⋅foo⁰}
+//│     f⁰  ->  x¹  x²  x³  g⁰
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
+
+
+fun test(g) = g.foo
+test(f)
+//│ Flowed:
+//│   fun test¹(g¹) ‹flow:test¹› = g¹.foo‹?›{ ~> Foo⁰.foo⁰(g¹)‹app⁹› },
+//│   test¹{ ~> test¹ }(f⁰)‹app¹⁰›
+//│ where
+//│     f⁰  <~  Foo()
+//│     f⁰  ~>  {a: ⋅a⁰}  {a: ⋅a¹}  {foo: ⋅foo⁰}
+//│     f⁰  ->  x¹  x²  x³  g⁰  g¹
+//│     g¹  <~  Foo()
+//│     g¹  ~>  {foo: ⋅foo⁵}
+//│     flow:test¹  <~  ((g¹) -> ⋅foo⁵)
+//│     flow:test¹  ~>  ((f⁰) -> app¹⁰)
+//│ = 123
+
+module AA with
+  module BB with
+    class CC with
+      val x: Int = 1
+    module CC with
+      fun getX(self: CC) = self.x
+//│ Flowed:
+//│   module AA {
+//│     module BB {
+//│       class CC {
+//│         val x⁴: Int⁰{ ~> Int⁰ } ‹flow:x⁰› = 1
+//│       },
+//│       module CC {
+//│         fun getX⁰(self⁰: ⟨BB⁰.⟩CC⁰) ‹flow:getX⁰› = self⁰.x‹?›{ ~> self⁰.x⁴ }
+//│       }
+//│     }
+//│   }
+//│ where
+//│     self⁰  <~  type CC
+//│     flow:x⁰  <~  1
+//│     flow:getX⁰  <~  ((type CC) -> flow:x⁰)
+
+:sjs
+new AA.BB.CC().x
+//│ Flowed:
+//│   new AA⁰.BB¹.CC⁰().x‹?›{ ~> new AA⁰.BB¹.CC⁰().x⁴ }
+//│ where
+//│     
+//│ JS (unsanitized):
+//│ let tmp3; tmp3 = globalThis.Object.freeze(new AA1.BB.CC()); tmp3.x
+//│ = 1
+
+:sjs
+new AA.BB.CC().getX
+//│ Flowed:
+//│   new AA⁰.BB¹.CC⁰().getX‹?›{ ~> AA⁰.BB¹.CC⁰.getX⁰(new AA⁰.BB¹.CC⁰())‹app¹¹› }
+//│ where
+//│     
+//│ JS (unsanitized):
+//│ let tmp4; tmp4 = globalThis.Object.freeze(new AA1.BB.CC()); AA1.BB.CC.getX(tmp4)
+//│ = 1
+
+
+let foo =
+  class A
+  module A with
+    fun test(a) = 1
+  new A
+//│ Flowed:
+//│   let foo¹,
+//│   foo¹ = {
+//│     class A {
+//│       
+//│     },
+//│     module A {
+//│       fun test²(a¹) ‹flow:test²› = 1
+//│     },
+//│     new A⁰
+//│   }
+//│ where
+//│     foo¹  <~  A
+//│     flow:test²  <~  ((a¹) -> 1)
+//│ foo = A
+
+:e
+:re
+foo.test
+//│ ╔══[COMPILATION ERROR] Cannot access companion A from the context of this selection
+//│ ║  l.243: 	foo.test
+//│ ╙──       	^^^^^^^^
+//│ Flowed:
+//│   foo¹.test‹?›
+//│ where
+//│     foo¹  <~  A
+//│     foo¹  ~>  {test: ⋅test⁰}
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'test' yielded 'undefined'
+
+
+let foo =
+  class A
+  module A with
+    fun test(a) = new A
+  (new A).test
+//│ Flowed:
+//│   let foo²,
+//│   foo² = {
+//│     class A {
+//│       
+//│     },
+//│     module A {
+//│       fun test³(a²) ‹flow:test³› = new A¹
+//│     },
+//│     new A¹.test‹?›{ ~> A¹.test³(new A¹)‹app¹²› }
+//│   }
+//│ where
+//│     foo²  <~  A
+//│     a²  <~  A
+//│     flow:test³  <~  ((a²) -> A)
+//│     flow:test³  ~>  ((A) -> ⋅test¹)
+//│ foo = A
+
+:e
+:re
+foo.test
+//│ ╔══[COMPILATION ERROR] Cannot access companion A from the context of this selection
+//│ ║  l.280: 	foo.test
+//│ ╙──       	^^^^^^^^
+//│ Flowed:
+//│   foo².test‹?›
+//│ where
+//│     foo²  <~  A
+//│     foo²  ~>  {test: ⋅test²}
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'test' yielded 'undefined'
+
+
+class CC(val x: Int)
+module CC with
+  fun getX(self: CC) = self.x
+//│ Flowed:
+//│   class CC(valx⁵: Int⁰{ ~> Int⁰ }) {
+//│     val x⁶ ‹flow:x¹› = x⁵
+//│   },
+//│   module CC {
+//│     fun getX¹(self¹: CC¹{ ~> CC¹ }) ‹flow:getX¹› = self¹.x‹?›{ ~> self¹.x⁶ }
+//│   }
+//│ where
+//│     x⁵  <~  type Int
+//│     x⁵  ->  flow:x¹
+//│     self¹  <~  type CC
+//│     flow:x¹  <~  type Int
+//│     flow:getX¹  <~  ((type CC) -> flow:x¹)
+
+:fixme // TODO: handle lifted class defs: the JS is missing the `.class` access to get the static member `CC2.class.getX`
+CC(123).getX
+//│ Flowed:
+//│   CC¹(123)‹app¹³›.getX‹?›{ ~> CC¹.getX¹(CC¹(123)‹app¹³›)‹app¹⁴› }
+//│ where
+//│     
+//│ ═══[RUNTIME ERROR] TypeError: CC2.getX is not a function
+
+
+:breakme // TODO: warn when this happens (accidental infinite recursion)
+class CC
+module CC with
+  fun oops(x: CC) = x.oops
+//│ Flowed:
+//│   class CC {
+//│     
+//│   },
+//│   module CC {
+//│     fun oops⁰(x⁷: CC²{ ~> CC² }) ‹flow:oops⁰› = x⁷.oops‹?›{ ~> CC².oops⁰(x⁷)‹app¹⁵› }
+//│   }
+//│ where
+//│     x⁷  <~  type CC
+//│     x⁷  ~>  {oops: ⋅oops⁰}
+//│     flow:oops⁰  <~  ((type CC) -> ⋅oops⁰)
+//│     flow:oops⁰  ~>  ((CC) -> ⋅oops⁰)
+
+:re
+new CC().oops
+//│ Flowed:
+//│   new CC²().oops‹?›{ ~> CC².oops⁰(new CC²())‹app¹⁶› }
+//│ where
+//│     
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+
+class CC with
+  val okay = 123
+module CC with
+  fun okay(x: CC) = x.okay
+//│ Flowed:
+//│   class CC {
+//│     val okay⁰ ‹flow:okay⁰› = 123
+//│   },
+//│   module CC {
+//│     fun okay¹(x⁸: CC³{ ~> CC³ }) ‹flow:okay¹› = x⁸.okay‹?›{ ~> x⁸.okay⁰ }
+//│   }
+//│ where
+//│     x⁸  <~  type CC
+//│     flow:okay⁰  <~  123
+//│     flow:okay¹  <~  ((type CC) -> flow:okay⁰)
+
+new CC().okay
+//│ Flowed:
+//│   new CC³().okay‹?›{ ~> new CC³().okay⁰ }
+//│ where
+//│     
+//│ = 123
+
+
+module Example with
+  class Test(val field: Int)
+  module Test with
+    fun next(self: Test) = Test(self.field + 1)
+//│ Flowed:
+//│   module Example {
+//│     class Test(valfield⁰: Int⁰{ ~> Int⁰ }) {
+//│       val field¹ ‹flow:field⁰› = field⁰
+//│     },
+//│     module Test {
+//│       fun next⁰(self²: ⟨Example⁰.⟩Test⁰) ‹flow:next⁰› = ⟨Example⁰.⟩Test⁰(+(self².field¹, 1)‹app¹⁷›)‹app¹⁸›
+//│     }
+//│   }
+//│ where
+//│     field⁰  <~  type Int
+//│     field⁰  ->  flow:field⁰
+//│     self²  <~  type Test
+//│     flow:field⁰  <~  type Int
+//│     flow:next⁰  <~  ((type Test) -> app¹⁸)
+
+let e = new Example.Test(123)
+//│ Flowed:
+//│   let e⁰,
+//│   e⁰ = new Example¹.Test⁰(123)
+//│ where
+//│     e⁰  <~  Test(123)
+//│ e = Test(123)
+
+:fixme // Same as test case above (missing `.class` access)
+e.next
+//│ Flowed:
+//│   e⁰.next‹?›{ ~> Example¹.Test⁰.next⁰(e⁰)‹app¹⁹› }
+//│ where
+//│     e⁰  <~  Test(123)
+//│     e⁰  ~>  {next: ⋅next⁰}
+//│ ═══[RUNTIME ERROR] TypeError: selRes7.next is not a function
+
+

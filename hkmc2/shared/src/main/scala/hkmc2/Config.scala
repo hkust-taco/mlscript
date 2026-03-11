@@ -21,11 +21,13 @@ case class Config(
   sanityChecks: Opt[SanityChecks],
   effectHandlers: Opt[EffectHandlers],
   liftDefns: Opt[LiftDefns],
+  patMatConsequentSharingThreshold: Opt[Int],
   stageCode: Bool,
   target: CompilationTarget,
   rewriteWhileLoops: Bool,
   tailRecOpt: Bool,
   qqEnabled: Bool,
+  funcToCls: Bool
 ):
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
@@ -53,12 +55,16 @@ object Config:
     // sanityChecks = S(SanityChecks(light = true)),
     effectHandlers = N,
     liftDefns = N,
+    patMatConsequentSharingThreshold = default.patMatConsequentSharingThreshold, // minimum: 1
     target = CompilationTarget.JS,
     rewriteWhileLoops = false,
     stageCode = false,
     tailRecOpt = true,
     qqEnabled = false,
+    funcToCls = false,
   )
+  object default:
+    val patMatConsequentSharingThreshold = S(10)
   
   case class SanityChecks(light: Bool)
   

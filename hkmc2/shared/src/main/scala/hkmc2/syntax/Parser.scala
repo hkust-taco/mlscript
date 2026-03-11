@@ -693,6 +693,9 @@ abstract class Parser(
     //   raise(WarningReport(msg"???" -> S(loc) :: Nil))
     //   consume
     //   simpleExprImpl(prec)
+    case (SELECT(name = nme, dynamic = false), loc) :: _ =>
+      consume
+      exprCont(Tree.Sel(Tree.Empty(), new Ident(nme).withLoc(S(loc))), prec, allowNewlines = false) // TODO: use a new tree ctor
     case (tok, loc) :: _ =>
       err(msg"Expected an expression; found ${tok.describe} instead" -> S(loc) :: Nil)
       errExpr

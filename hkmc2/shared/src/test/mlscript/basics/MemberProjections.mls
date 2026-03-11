@@ -90,7 +90,7 @@ foo.Foo#m()
 foo.M.Foo::m()
 //│ ╔══[COMPILATION ERROR] Selection is not a known class.
 //│ ║  l.90: 	foo.M.Foo::m()
-//│ ║        	^^^
+//│ ║        	^^^^^^^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 1 argument but got 0

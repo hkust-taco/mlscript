@@ -17,8 +17,8 @@ fun test(x, p) = if x is
 //│ Normalized:
 //│ >  ‹if|while›
 //│ >    x is refined Int and
-//│ >      let $scrut = p(x)
-//│ >      $scrut is true then "foo"
+//│ >      let tmp:scrut = p(x)
+//│ >      tmp:scrut is true then "foo"
 //│ >      x is 0 then "bar"
 //│ >      else "qax"
 //│ >    else "qax"
@@ -30,8 +30,8 @@ fun test(x, p) = if x is
 //│ Normalized:
 //│ >  ‹if|while›
 //│ >    x is refined Str and
-//│ >      let $scrut = p(x)
-//│ >      $scrut is true then "foo"
+//│ >      let tmp:scrut = p(x)
+//│ >      tmp:scrut is true then "foo"
 //│ >      x is "lol" then "bar"
 //│ >      else "qax"
 //│ >    else "qax"
@@ -56,8 +56,8 @@ fun test(x, p) = if x is
 //│ Normalized:
 //│ >  ‹if|while›
 //│ >    x is refined Num and
-//│ >      let $scrut = p(x)
-//│ >      $scrut is true then "great"
+//│ >      let tmp:scrut = p(x)
+//│ >      tmp:scrut is true then "great"
 //│ >      x is 2.71828 then "E"
 //│ >      x is 3.14159 then "PI"
 //│ >      else "other"
@@ -69,8 +69,8 @@ fun test(x, p) = if x is
   false then "true"
 //│ Normalized:
 //│ >  ‹if|while› x is refined Bool and
-//│ >    let $scrut = p(x)
-//│ >    $scrut is true then "great"
+//│ >    let tmp:scrut = p(x)
+//│ >    tmp:scrut is true then "great"
 //│ >    x is true then "false"
 //│ >    x is false then "true"
 
@@ -82,11 +82,11 @@ fun test(x, p) = if x is
 //│ Normalized:
 //│ >  ‹if|while›
 //│ >    x is Object and
-//│ >      let $scrut = p(x)
-//│ >      $scrut is true then "great"
+//│ >      let tmp:scrut = p(x)
+//│ >      tmp:scrut is true then "great"
 //│ >    x is refined Bool and
-//│ >      let $scrut = p(x)
-//│ >      $scrut is true then "great, again"
+//│ >      let tmp:scrut = p(x)
+//│ >      tmp:scrut is true then "great, again"
 //│ >      x is true then "false"
 //│ >      x is false then "true"
 

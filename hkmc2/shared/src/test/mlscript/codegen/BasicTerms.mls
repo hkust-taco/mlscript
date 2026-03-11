@@ -21,7 +21,7 @@
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.14: 	1
 //│ ╙──      	^
-//│ Lowered:
+//│ Lowered IR:
 //│ Program:
 //│   imports = Nil
 //│   main = Return:
@@ -40,13 +40,13 @@ print("Hi")
 2
 //│ JS (unsanitized):
 //│ Predef.print("Hi"); 2
-//│ Lowered:
+//│ Lowered IR:
 //│ Program:
 //│   imports = Nil
 //│   main = Assign:
 //│     lhs = ‹no symbol›
 //│     rhs = Call:
-//│       fun = Select{sym=term:module:Predef.print}:
+//│       fun = Select{sym=term:Predef⁰.print}:
 //│         qual = Ref{disamb=module:Predef}:
 //│           l = member:Predef
 //│           disamb = S of module:Predef
