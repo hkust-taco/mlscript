@@ -15,9 +15,8 @@ import scala.collection.mutable
 
 abstract class WasmDiffMaker extends LlirDiffMaker:
 
-  /**
-   * Outputs the compiled module as [[WasmGenerator]] implementation-defined text.
-   */
+  /** Outputs the compiled module as [[WasmGenerator]] implementation-defined text.
+    */
   val wat = NullaryCommand("wat")
 
   /** Outputs the compiled module as stack-based text. */
@@ -33,7 +32,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
   final lazy val wasmSuppNme = baseScp.allocateName(Elaborator.State.wasmSymbol)(using throw _)
   final lazy val loadWasm: Unit =
     host.execute(
-      s"const $wasmSuppNme = (await import(\"${wasmSuppFile}\")).default;"
+      s"const $wasmSuppNme = (await import(\"${wasmSuppFile}\")).default;",
     ) match
       case ReplHost.Result(msg) =>
         if msg.startsWith(ReplHost.uncaughtErrorHead) then
@@ -45,10 +44,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
   lazy val prettifyBinaryenWat = (content: Str) =>
     content.substring(2, content.length() - 2).replace("\\\\n", "\n").replace("\\\\\"", "\"")
 
-  override def processTerm(trm: Blk, inImport: Bool)(using
-      Config,
-      Raise
-  ): Unit =
+  override def processTerm(trm: Blk, inImport: Bool)(using Config, Raise): Unit =
     super.processTerm(trm, inImport)
 
     val outerRaise: Raise = summon
@@ -108,7 +104,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
         val (reply, stderr) = host.query(
           preStr,
           queryStr,
-          !expectRuntimeOrCodeGenErrors && fixme.isUnset && todo.isUnset
+          !expectRuntimeOrCodeGenErrors && fixme.isUnset && todo.isUnset,
         )
         reply match
           case ReplHost.Result(content) => k(content)
@@ -123,14 +119,15 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
               // it should be a code generation error.
               raise(ErrorReport(
                 msg"[Uncaught SyntaxError] ${message}" -> N :: Nil,
-                source = Diagnostic.Source.Compilation
+                source = Diagnostic.Source.Compilation,
               ))
             else
               // Otherwise, it is considered a simple runtime error.
               raise(ErrorReport(
                 msg"${message}" -> N :: Nil,
-                source = Diagnostic.Source.Runtime
+                source = Diagnostic.Source.Runtime,
               ))
+        end match
         if stderr.nonEmpty then output(s"// Standard Error:\n${stderr}")
       end mkQuery
 
