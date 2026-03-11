@@ -95,6 +95,8 @@ if Bar(true) is
 //│     (local $b (ref null any))
 //│     (local $arg$Baz$0$ (ref null any))
 //│     (local $arg$Bar$0$ (ref null any))
+//│     (local $matchRes (ref null any))
+//│     (local $matchRes1 (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
 //│       (block (result (ref null any))
@@ -105,66 +107,79 @@ if Bar(true) is
 //│               (ref.i31
 //│                 (i32.const 1))
 //│               (ref.func $Bar)))
-//│           (block $match (result (ref null any))
-//│             (if
-//│               (ref.test (ref null $Object)
-//│                 (local.get $scrut))
-//│               (then
-//│                 (if
-//│                   (i32.eq
-//│                     (struct.get $Object 0
-//│                       (ref.cast (ref $Object)
-//│                         (local.get $scrut)))
-//│                     (i32.const 1))
-//│                   (then
-//│                     (block $arm1
-//│                       (block (result (ref null any))
-//│                         (local.set $arg$Bar$0$
-//│                           (struct.get $Bar 1
-//│                             (ref.cast (ref $Bar)
-//│                               (local.get $scrut))))
-//│                         (block (result (ref null any))
-//│                           (local.set $a
-//│                             (local.get $arg$Bar$0$))
-//│                           (block $match1 (result (ref null any))
-//│                             (if
-//│                               (i32.eq
-//│                                 (i31.get_s
-//│                                   (ref.cast (ref null i31)
-//│                                     (local.get $a)))
-//│                                 (i32.const 1))
-//│                               (then
-//│                                 (block $arm
-//│                                   (ref.i31
-//│                                     (i32.const 3))
-//│                                   (br $match1))))
-//│                             (ref.i31
-//│                               (i32.const 4)))))
-//│                       (br $match))))))
-//│             (if
-//│               (ref.test (ref null $Object)
-//│                 (local.get $scrut))
-//│               (then
-//│                 (if
-//│                   (i32.eq
-//│                     (struct.get $Object 0
-//│                       (ref.cast (ref $Object)
-//│                         (local.get $scrut)))
-//│                     (i32.const 2))
-//│                   (then
-//│                     (block $arm2
-//│                       (block (result (ref null any))
-//│                         (local.set $arg$Baz$0$
-//│                           (struct.get $Baz 1
-//│                             (ref.cast (ref $Baz)
-//│                               (local.get $scrut))))
-//│                         (block (result (ref null any))
-//│                           (local.set $b
-//│                             (local.get $arg$Baz$0$))
-//│                           (local.get $b)))
-//│                       (br $match))))))
-//│             (ref.i31
-//│               (i32.const 2)))))))
+//│           (block (result (ref null any))
+//│             (block $match
+//│               (local.set $matchRes
+//│                 (ref.null any))
+//│               (if
+//│                 (ref.test (ref null $Object)
+//│                   (local.get $scrut))
+//│                 (then
+//│                   (if
+//│                     (i32.eq
+//│                       (struct.get $Object 0
+//│                         (ref.cast (ref $Object)
+//│                           (local.get $scrut)))
+//│                       (i32.const 1))
+//│                     (then
+//│                       (block $arm1
+//│                         (local.set $matchRes
+//│                           (block (result (ref null any))
+//│                             (local.set $arg$Bar$0$
+//│                               (struct.get $Bar 1
+//│                                 (ref.cast (ref $Bar)
+//│                                   (local.get $scrut))))
+//│                             (block (result (ref null any))
+//│                               (local.set $a
+//│                                 (local.get $arg$Bar$0$))
+//│                               (block (result (ref null any))
+//│                                 (block $match1
+//│                                   (local.set $matchRes1
+//│                                     (ref.null any))
+//│                                   (if
+//│                                     (i32.eq
+//│                                       (i31.get_s
+//│                                         (ref.cast (ref null i31)
+//│                                           (local.get $a)))
+//│                                       (i32.const 1))
+//│                                     (then
+//│                                       (block $arm
+//│                                         (local.set $matchRes1
+//│                                           (ref.i31
+//│                                             (i32.const 3)))
+//│                                         (br $match1))))
+//│                                   (local.set $matchRes1
+//│                                     (ref.i31
+//│                                       (i32.const 4))))
+//│                                 (local.get $matchRes1)))))
+//│                         (br $match))))))
+//│               (if
+//│                 (ref.test (ref null $Object)
+//│                   (local.get $scrut))
+//│                 (then
+//│                   (if
+//│                     (i32.eq
+//│                       (struct.get $Object 0
+//│                         (ref.cast (ref $Object)
+//│                           (local.get $scrut)))
+//│                       (i32.const 2))
+//│                     (then
+//│                       (block $arm2
+//│                         (local.set $matchRes
+//│                           (block (result (ref null any))
+//│                             (local.set $arg$Baz$0$
+//│                               (struct.get $Baz 1
+//│                                 (ref.cast (ref $Baz)
+//│                                   (local.get $scrut))))
+//│                             (block (result (ref null any))
+//│                               (local.set $b
+//│                                 (local.get $arg$Baz$0$))
+//│                               (local.get $b))))
+//│                         (br $match))))))
+//│               (local.set $matchRes
+//│                 (ref.i31
+//│                   (i32.const 2))))
+//│             (local.get $matchRes))))))
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))
 //│ Wasm result:

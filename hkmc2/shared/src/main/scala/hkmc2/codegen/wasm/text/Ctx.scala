@@ -165,6 +165,11 @@ object Ctx:
       globalName: Str,
       globalTy: RefType,
   )
+  
+  case class LabelTarget(
+      breakLabel: Str,
+      continueLabel: Opt[Str]
+  )
 
   val binaryOps: Map[Str, (Expr, Expr) => Expr] = Map(
     "plus_impl" -> i32.add,
@@ -259,9 +264,22 @@ class Ctx(
   private val cachedMemoryImport: MutMap[(Str, Str), Int] = MutMap.empty
   private val cachedFunctionImports: MutMap[(Str, Str), FuncIdx] = MutMap.empty
 
+  private var labelTargets: List[(LabelSymbol, Ctx.LabelTarget)] = Nil
   private val singletonByBms: MutMap[BlockMemberSymbol, Ctx.SingletonInfo] = MutMap.empty
   private val singletonByIsym: MutMap[ModuleOrObjectSymbol, Ctx.SingletonInfo] = MutMap.empty
   private val singletonInitActions: ArrayBuf[Expr] = ArrayBuf.empty
+
+  /** Pushes a label target for the dynamic extent of `body` and pops it afterwards. */
+  def withLabel[T](label: LabelSymbol, target: Ctx.LabelTarget)(body: => T): T =
+    labelTargets = (label, target) :: labelTargets
+    val res = body
+    labelTargets = labelTargets.tail
+    res
+
+  /** Looks up the nearest in-scope target for `label`. */
+  def lookupLabel(label: LabelSymbol): Opt[Ctx.LabelTarget] =
+    labelTargets.collectFirst:
+      case (sym, target) if sym eq label => target
 
   /** Adds a type into this context. */
   def addType(sym: Opt[BlockMemberSymbol], typeInfo: TypeInfo): TypeIdx =

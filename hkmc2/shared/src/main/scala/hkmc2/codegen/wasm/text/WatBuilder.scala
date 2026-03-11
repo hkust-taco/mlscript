@@ -80,45 +80,37 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def singletonGlobalGet(info: SingletonInfo): Expr =
     global.get(GlobalIdx(SymIdx(info.globalName)), info.globalTy)
 
-  /** True when the lowered main block references `Unit` and needs synthesized singleton definition.
-    */
-  private def requiresUnitSingleton(main: Block): Bool =
-    var required = false
-    val traverser = new BlockTraverser:
-      override def applyPath(p: Path): Unit =
-        if required then ()
-        else
-          p match
-            case sel: Select if sel.symbol.contains(State.unitSymbol) =>
-              required = true
-            case Value.Ref(l, disamb) if (l is State.unitSymbol) || disamb.contains(State.unitSymbol) =>
-              required = true
-            case _ => super.applyPath(p)
-    traverser.applyBlock(main)
-    required
+  /** The runtime representation of Unit as a singleton object. */
+  private lazy val syntheticUnitDefn: ClsLikeDefn =
+    ClsLikeDefn(
+      owner = N,
+      isym = State.unitSymbol,
+      sym = BlockMemberSymbol("Unit", Nil),
+      ctorSym = N,
+      k = syntax.Obj,
+      paramsOpt = N,
+      auxParams = Nil,
+      parentPath = N,
+      methods = Nil,
+      privateFields = Nil,
+      publicFields = Nil,
+      preCtor = End(""),
+      ctor = End(""),
+      companion = N,
+      bufferable = N
+    )
 
-  /** Prepends a synthetic `object Unit` definition only when the main block requires it. */
-  private def synthesizeUnitObject(main: Block): Block =
-    if !requiresUnitSingleton(main) then main
-    else
-      val unitDefn = ClsLikeDefn(
-        owner = N,
-        isym = State.unitSymbol,
-        sym = BlockMemberSymbol("Unit", Nil),
-        ctorSym = N,
-        k = syntax.Obj,
-        paramsOpt = N,
-        auxParams = Nil,
-        parentPath = N,
-        methods = Nil,
-        privateFields = Nil,
-        publicFields = Nil,
-        preCtor = End(""),
-        ctor = End(""),
-        companion = N,
-        bufferable = N,
-      )
-      Define(unitDefn, main)
+  /** Registers the synthetic `Unit` singleton. */
+  private def RegisterUnitSingleton()(using Ctx, Raise, Scope): Unit =
+    val unitDefn = syntheticUnitDefn
+    if ctx.containsSingleton(unitDefn.sym) then return
+
+    if ctx.getType(unitDefn.sym).isEmpty then
+      createDefnTypes(Define(unitDefn, End("")))
+
+    ctx.pushLocal()
+    returningTerm(Define(unitDefn, End("")))
+    ctx.popLocal()
 
   /** Registers eager singleton runtime state by creating its global and start-init action. */
   private def registerSingletonInit(clsLikeDefn: ClsLikeDefn, typeref: TypeIdx)(using Ctx, Raise, Scope): Unit =
@@ -178,7 +170,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       createDefnTypes(rst)
     case Define(_, rst) =>
       createDefnTypes(rst)
-    case Match(_, _, _, rst) =>
+    case Match(_, arms, dflt, rst) =>
+      arms.foreach((_, body) => createDefnTypes(body))
+      dflt.foreach(createDefnTypes)
       createDefnTypes(rst)
     case Begin(_, rst) =>
       createDefnTypes(rst)
@@ -192,7 +186,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       createDefnTypes(rst)
     case HandleBlock(_, _, _, _, _, _, _, rst) =>
       createDefnTypes(rst)
-    case Label(_, _, _, rst) =>
+    case Label(_, _, body, rst) =>
+      createDefnTypes(body)
       createDefnTypes(rst)
     case Scoped(_, body) =>
       createDefnTypes(body)
@@ -540,7 +535,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         operands = Seq(ref.i31(i32.const(lit.offset)), ref.i31(i32.const(lit.byteLen))),
         returnTypes = Seq(Result(RefType.anyref)),
       )
-    case Value.Ref(l, _) =>
+    case Value.Ref(l, disamb) =>
+      if (l is State.unitSymbol) || disamb.contains(State.unitSymbol) then
+        RegisterUnitSingleton()
       singletonInfoFor(l) match
         case S(info) => singletonGlobalGet(info)
         case N =>
@@ -609,6 +606,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case sel @ Select(qual, id) =>
       sel.symbol match
         case S(selObj: ModuleOrObjectSymbol) =>
+          if selObj is State.unitSymbol then
+            RegisterUnitSingleton()
           singletonInfoFor(selObj) match
             case S(info) => singletonGlobalGet(info)
             case N =>
@@ -845,7 +844,18 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def getI32FromAnyref(name: Str): Expr =
     i31.get(ref.cast(getLocalAnyref(name), RefType.i31ref), true)
 
-  def returningTerm(t: Block)(using Ctx, Raise, Scope): Expr = t match
+  def returningTerm(t: Block)(using Ctx, Raise, Scope): Expr =
+    def isControlTransfer(expr: Expr): Bool =
+      expr.resultType.contains(UnreachableType) || expr.mnemonic == "return"
+
+    def asStatement(expr: Expr): Expr =
+      if isControlTransfer(expr) then expr
+      else
+        expr.resultType match
+          case S(_) => drop(expr)
+          case N => expr
+
+    t match
     case _: HandleBlock =>
       errExpr(Ls(msg"This code requires effect handler instrumentation but was compiled without it." -> N))
     case Assign(l, r, rst) if l is State.noSymbol =>
@@ -1183,11 +1193,106 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case Scoped(syms, body) =>
       blockPreamble(syms)
       returningTerm(body)
+    case Break(label) =>
+      ctx.lookupLabel(label) match
+        case S(target) => br(target.breakLabel)
+        case N =>
+          errExpr(
+            Ls(
+              msg"WatBuilder::returningTerm for Break(...) to unknown label `${label.nme}`" -> label.toLoc
+            ),
+            extraInfo = S(t.showAsTree)
+          )
+    case Continue(label) =>
+      ctx.lookupLabel(label) match
+        case S(target) =>
+          target.continueLabel match
+            case S(continueLabel) => br(continueLabel)
+            case N =>
+              errExpr(
+                Ls(
+                  msg"WatBuilder::returningTerm for Continue(...) to non-loop label `${label.nme}`" -> label.toLoc
+                ),
+                extraInfo = S(t.showAsTree)
+              )
+        case N =>
+          errExpr(
+            Ls(
+              msg"WatBuilder::returningTerm for Continue(...) to unknown label `${label.nme}`" -> label.toLoc
+            ),
+            extraInfo = S(t.showAsTree)
+          )
+    case Label(label, loop, body, rst) =>
+      val breakLabel = scope.allocateName(label)
+      val continueLabel =
+        if loop then S(scope.allocateName(TempSymbol(N, s"${label.nme}_cont")))
+        else N
+
+      val bodyExpr = ctx.withLabel(
+        label,
+        Ctx.LabelTarget(breakLabel, continueLabel)
+      ):
+        returningTerm(body)
+      val bodyStmt = asStatement(bodyExpr)
+
+      val labeledRegion =
+        if loop then
+          Instructions.block(
+            label = S(breakLabel),
+            children = Seq(
+              Instructions.loop(
+                label = continueLabel,
+                children = Seq(bodyStmt),
+                resultTypes = Seq.empty
+              )
+            ),
+            resultTypes = Seq.empty
+          )
+        else
+          Instructions.block(
+            label = S(breakLabel),
+            children = Seq(bodyStmt),
+            resultTypes = Seq.empty
+          )
+
+      val rstExpr = returningTerm(rst)
+      val rstResultTypes = rstExpr.resultTypes.flatMap(ty => ty.asValType.map(Result(_)))
+      Instructions.block(
+        label = N,
+        children = Seq(labeledRegion, rstExpr),
+        resultTypes = rstResultTypes
+      )
     case Match(scrut, arms, dflt, rst) =>
       val matchLabelSym = TempSymbol(N, "match")
       val matchLabel = scope.allocateName(matchLabelSym)
-      
+      val tailMode = rst.isInstanceOf[End]
+      val matchResLocal =
+        if tailMode then S(mkTempLocal("matchRes"))
+        else N
+
       def getScrutExpr: Expr = result(scrut)
+
+      def assignTailResult(target: LocalIdx, expr: Expr): Expr =
+        if isControlTransfer(expr) then expr
+        else
+          expr.resultType match
+            case S(_) => local.set(target, expr)
+            case N => Instructions.block(
+                label = N,
+                children = Seq(
+                  expr,
+                  local.set(target, result(Value.Ref(State.unitSymbol)))
+                ),
+                resultTypes = Seq.empty
+              )
+
+      def lowerMatchBody(expr: Expr): Expr =
+        matchResLocal match
+          case S(localIdx) => assignTailResult(localIdx, expr)
+          case N => asStatement(expr)
+
+      val matchResInitExpr = matchResLocal.map: localIdx =>
+        local.set(localIdx, ref.`null`(HeapType.Any))
       
       // Compile each match arm
       boundary:
@@ -1208,14 +1313,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   break(errExpr(Ls(msg"Pattern matching for unit literals not implemented yet" -> lit.toLoc)))
 
               val bodyExpr = returningTerm(body)
+              val armBodyExpr = lowerMatchBody(bodyExpr)
               val armLabelSym = TempSymbol(N, "arm")
               val armLabel = scope.allocateName(armLabelSym)
               S(`if`(
                 condition = testExpr,
                 ifTrue = blockInstr(
                   label = S(armLabel),
-                  children = Seq(bodyExpr, br(matchLabel)),
-                  resultTypes = Seq.empty,
+                  children = Seq(armBodyExpr, br(matchLabel)),
+                  resultTypes = Seq.empty
                 ),
                 ifFalse = N,
                 resultTypes = Seq.empty,
@@ -1240,11 +1346,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               val isStructCompatible = ref.test(scrutExpr, baseObjectRefType(nullable = true))
               
               val bodyExpr = returningTerm(body)
+              val armBodyExpr = lowerMatchBody(bodyExpr)
               val armLabelSym = TempSymbol(N, "arm")
               val armLabel = scope.allocateName(armLabelSym)
               
               // Safe to cast and extract tag since ref.test passed
-              val scrutAsObject = ref.cast(getScrutExpr, baseObjectRefType(nullable = false))
+              val scrutAsObject = ref.cast(scrutExpr, baseObjectRefType(nullable = false))
               val scrutTag = struct.get(FieldIdx(NumIdx(0)), scrutAsObject, I32Type)
               val tagMatches = i32.eq(scrutTag, i32.const(expectedTag))
               
@@ -1254,8 +1361,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   condition = tagMatches,
                   ifTrue = blockInstr(
                     label = S(armLabel),
-                    children = Seq(bodyExpr, br(matchLabel)),
-                    resultTypes = Seq.empty,
+                    children = Seq(armBodyExpr, br(matchLabel)),
+                    resultTypes = Seq.empty
                   ),
                   ifFalse = N,
                   resultTypes = Seq.empty,
@@ -1277,14 +1384,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               
               val testExpr = i32.and(isArrayTest, lengthTest)
               val bodyExpr = returningTerm(body)
+              val armBodyExpr = lowerMatchBody(bodyExpr)
               val armLabelSym = TempSymbol(N, "arm")
               val armLabel = scope.allocateName(armLabelSym)
               S(`if`(
                 condition = testExpr,
                 ifTrue = blockInstr(
                   label = S(armLabel),
-                  children = Seq(bodyExpr, br(matchLabel)),
-                  resultTypes = Seq.empty,
+                  children = Seq(armBodyExpr, br(matchLabel)),
+                  resultTypes = Seq.empty
                 ),
                 ifFalse = N,
                 resultTypes = Seq.empty,
@@ -1294,32 +1402,37 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 Ls(msg"WatBuilder::returningTerm for Match(...) with case `${cse.toString}` not implemented yet" -> N),
                 extraInfo = S(cse.toString),
               ))
-          end match
         
-        val defaultExpr = dflt match
-          case S(defaultBody) => returningTerm(defaultBody)
-          case N => unreachable
-        
-        val rstExpr = returningTerm(rst)
-        val matchResultTypes = Seq(Result(RefType.anyref))
+
+        val defaultExpr =
+          val rawDefaultExpr = dflt match
+            case S(defaultBody) => returningTerm(defaultBody)
+            case N => unreachable
+          lowerMatchBody(rawDefaultExpr)
         
         // Generate the match block
         val matchBlock = blockInstr(
           label = S(matchLabel),
-          children = armExprs :+ defaultExpr,
-          resultTypes = matchResultTypes,
+          children = matchResInitExpr.toSeq ++ armExprs :+ defaultExpr,
+          resultTypes = Seq.empty
         )
-        
-        // If rst is End (produces no value), the match block is the final result
-        rst match
-          case End(_) =>
-            matchBlock
-          case _ =>
-            blockInstr(
-              label = N,
-              children = Seq(matchBlock, rstExpr),
-              resultTypes = resultClauses(rstExpr),
-            )
+
+        if tailMode then
+          Instructions.block(
+            label = N,
+            children = Seq(
+              matchBlock,
+              local.get(matchResLocal.get, RefType.anyref)
+            ),
+            resultTypes = Seq(Result(RefType.anyref))
+          )
+        else
+          val rstExpr = returningTerm(rst)
+          Instructions.block(
+            label = N,
+            children = Seq(matchBlock, rstExpr),
+            resultTypes = rstExpr.resultTypes.flatMap(ty => ty.asValType.map(Result(_)))
+          )
 
     // * Try/finally lowering is intentionally rejected for now: the previous implementation required `exnref` support
     // * which can only be enabled with the `--experimental-wasm-exnref` flag.
@@ -1379,18 +1492,16 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         ),
       ),
     )
-    
-    val main = synthesizeUnitObject(p.main)
 
     // Two-pass scheme: register all supported top-level class struct types before compiling any
     // functions, so all class types are available during nested function codegen.
-    createDefnTypes(main)
+    createDefnTypes(p.main)
 
     // Compile the entry function under a dedicated local scope so that any temp locals introduced
     // during codegen (e.g., via `local.tee`) are declared in the entry function.
     ctx.pushLocal()
     val (entryFnExpr, entryFnLocals) =
-      block(main)
+      block(p.main)
     val entryExtraLocals = getExtraLocals.filterNot(entryFnLocals.toSet.contains)
 
     val entrySym = BlockMemberSymbol("entry", Nil)

@@ -21,6 +21,21 @@ object Instructions:
       resultTypes = resultTypes.map(_.valtype),
     )
 
+  /** Creates a `loop` instruction. */
+  def loop(
+      label: Opt[Str],
+      children: Seq[Expr],
+      resultTypes: Seq[Result]
+  ): FoldedInstr =
+    val labelWat = label.map(lbl => doc"$$$lbl")
+
+    FoldedInstr(
+      mnemonic = "loop",
+      instrargs = labelWat.toSeq ++ resultTypes,
+      stackargs = children,
+      resultTypes = resultTypes.map(_.valtype)
+    )
+
   /** Creates an `if` instruction. */
   def `if`(
       condition: Expr,
