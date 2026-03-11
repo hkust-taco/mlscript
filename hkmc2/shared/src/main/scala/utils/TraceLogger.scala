@@ -1,11 +1,14 @@
-package hkmc2.utils
+package hkmc2
+package utils
 
 import mlscript.utils.*, shorthands.*
+
 
 type TL = TraceLogger
 def tl(using TL): TL = summon
 
-abstract class TraceLogger:
+
+abstract class TraceLogger(using val debugPrinter: DebugPrinter):
   def doTrace: Bool = true
   
   protected val noPostTrace: Any => Str = _ => ""
@@ -41,4 +44,5 @@ abstract class TraceLogger:
     var oldScope = scope
     scope = S(flag)
     try thunk finally scope = oldScope
+
 

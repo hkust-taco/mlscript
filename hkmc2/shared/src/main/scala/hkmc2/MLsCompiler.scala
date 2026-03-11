@@ -56,6 +56,7 @@ class MLsCompiler
   
   
   // TODO adapt logic
+  given DebugPrinter = new DebugPrinter
   val etl = new TraceLogger{override def doTrace: Bool = false}
   val ltl = new TraceLogger{override def doTrace: Bool = false}
   // val ltl = new TraceLogger{override def doTrace: Bool = true}

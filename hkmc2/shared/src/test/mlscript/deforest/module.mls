@@ -139,9 +139,11 @@ module M with
 //│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:D,Some(object:D)) ->
 //│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > Call(Ref(member:B,Some(term:B⁰.B)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > Call(Ref(member:B,Some(term:B/B)),List(Arg(None,Lit(IntLit(0))))) ->
 //│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > Ref(member:C,Some(object:C)) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(tmp:scrut,None)

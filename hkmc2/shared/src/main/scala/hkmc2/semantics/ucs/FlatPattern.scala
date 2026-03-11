@@ -57,7 +57,7 @@ enum FlatPattern extends AutoLocated:
         case (nme, als) => Vector(nme, als)
       .toVector
   
-  def showDbg: Str =
+  def showDbg(using DebugPrinter): Str =
     (this match
     case Lit(literal) => literal.idStr
     case ClassLike(ctor, symbol, args, rfd) =>
