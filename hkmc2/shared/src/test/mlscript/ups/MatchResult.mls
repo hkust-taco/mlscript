@@ -22,7 +22,11 @@ data class MatchSuccess(x)
 MatchSuccess(0)
 //│ = MatchSuccess(0)
 
+open annotations { compile }
+
 pattern Cross = "X"
+
+pattern Id(x) = _
 
 Cross.unapply("X")
 //│ = MatchSuccess("X", {})
@@ -40,6 +44,95 @@ fun foo(x) = x is Cross
 //│   if (unapplyResult instanceof runtime.MatchSuccess.class) {
 //│     output = unapplyResult.output;
 //│     bindings = unapplyResult.bindings;
+//│     return true
+//│   } else { return false }
+//│ };
+
+:sjs
+fun isCompiledCross(x) = x is @compile Cross
+//│ JS (unsanitized):
+//│ let isCompiledCross;
+//│ isCompiledCross = function isCompiledCross(x2) {
+//│   let matcher__Cross$, matchRecord, matchSuccess, lambda;
+//│   lambda = (undefined, function (input) {
+//│     let p_0$, p_0$1, tmp2, tmp3;
+//│     if (input === "X") {
+//│       tmp2 = true;
+//│       p_0$ = tmp2;
+//│       return globalThis.Object.freeze({
+//│         p_0: p_0$
+//│       })
+//│     } else {
+//│       tmp3 = false;
+//│       p_0$1 = tmp3;
+//│       return globalThis.Object.freeze({
+//│         p_0: p_0$1
+//│       })
+//│     }
+//│   });
+//│   matcher__Cross$ = lambda;
+//│   matchRecord = runtime.safeCall(matcher__Cross$(x2));
+//│   matchSuccess = matchRecord.p_0;
+//│   if (matchSuccess === true) { return true } else { return false }
+//│ };
+
+:sjs
+fun getCompiledCross(x) = if x is
+  (@compile Cross) as result then result
+  else "nope"
+//│ JS (unsanitized):
+//│ let getCompiledCross;
+//│ getCompiledCross = function getCompiledCross(x2) {
+//│   let result, matcher__Cross$, matchRecord, matchSuccess, patternOutput, bindings, lambda;
+//│   lambda = (undefined, function (input) {
+//│     let p_0$, p_0$1, tmp2, tmp3, tmp4;
+//│     if (input === "X") {
+//│       tmp2 = globalThis.Object.freeze({});
+//│       tmp3 = globalThis.Object.freeze(new runtime.MatchSuccess.class(input, tmp2));
+//│       p_0$ = tmp3;
+//│       return globalThis.Object.freeze({
+//│         p_0: p_0$
+//│       })
+//│     } else {
+//│       tmp4 = globalThis.Object.freeze(new runtime.MatchFailure.class("never"));
+//│       p_0$1 = tmp4;
+//│       return globalThis.Object.freeze({
+//│         p_0: p_0$1
+//│       })
+//│     }
+//│   });
+//│   matcher__Cross$ = lambda;
+//│   matchRecord = runtime.safeCall(matcher__Cross$(x2));
+//│   matchSuccess = matchRecord.p_0;
+//│   if (matchSuccess instanceof runtime.MatchSuccess.class) {
+//│     patternOutput = matchSuccess.output;
+//│     bindings = matchSuccess.bindings;
+//│     result = patternOutput;
+//│     return result
+//│   } else { return "nope" }
+//│ };
+
+:sjs
+fun isCompiledId(x) = x is @compile Id
+//│ JS (unsanitized):
+//│ let isCompiledId;
+//│ isCompiledId = function isCompiledId(x2) {
+//│   let matcher__Id$, matchRecord, matchSuccess, patternOutput, bindings, lambda;
+//│   lambda = (undefined, function (input) {
+//│     let p_0$, tmp2, tmp3;
+//│     tmp2 = globalThis.Object.freeze({});
+//│     tmp3 = globalThis.Object.freeze(new runtime.MatchSuccess.class(input, tmp2));
+//│     p_0$ = tmp3;
+//│     return globalThis.Object.freeze({
+//│       p_0: p_0$
+//│     })
+//│   });
+//│   matcher__Id$ = lambda;
+//│   matchRecord = runtime.safeCall(matcher__Id$(x2));
+//│   matchSuccess = matchRecord.p_0;
+//│   if (matchSuccess instanceof runtime.MatchSuccess.class) {
+//│     patternOutput = matchSuccess.output;
+//│     bindings = matchSuccess.bindings;
 //│     return true
 //│   } else { return false }
 //│ };

@@ -119,6 +119,20 @@ true is TrueLike
 42 is TrueLike
 //│ = true
 
+fun observeInt(x) =
+  print("observe " + x)
+  x + 1
+
+pattern LoggedInt = (Int as x) => observeInt(x)
+
+print of 42 is @compile LoggedInt
+//│ > true
+
+if 42 is (@compile LoggedInt) as value then
+  print("logged value: " + value)
+//│ > observe 42
+//│ > logged value: 43
+
 class Term with
   constructor
     Literal(val value: Int)
