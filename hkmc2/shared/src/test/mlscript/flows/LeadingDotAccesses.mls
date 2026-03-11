@@ -32,7 +32,7 @@ f(z)
 //│   z⁰ = _?_.a{ ~> A⁰.a⁰ },
 //│   f⁰{ ~> f⁰ }(z⁰)‹app²›
 //│ where
-//│     z⁰  <~  _?_.a
+//│     z⁰  <~  _?_.A⁰.a⁰
 //│     z⁰  ~>  type A
 //│     app²  <~  type A
 //│ = A
@@ -46,7 +46,7 @@ f(z).c(4).b
 //│   z¹ = A⁰.a⁰.b⁰.c⁰(3)‹app³›,
 //│   f⁰(z¹)‹app⁴›.c⁰(4)‹app⁵›.b⁰
 //│ where
-//│     z¹  <~  _?_.a
+//│     z¹  <~  _?_.A⁰.a⁰
 //│     z¹  ~>  type A
 //│     app³  <~  A
 //│     app³  ->  bind⁰
@@ -91,7 +91,7 @@ g(d)
 //│ where
 //│     x⁰  <~  type C
 //│     x⁰  ->  app¹⁰
-//│     d⁰  <~  _?_.a
+//│     d⁰  <~  _?_.‹error›
 //│     d⁰  ~>  type A  type C
 //│     app⁹  <~  type A
 //│     app¹⁰  <~  type C

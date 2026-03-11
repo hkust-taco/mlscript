@@ -111,7 +111,7 @@ sealed trait ResolvableImpl:
     .withLocOf(this)
     .asInstanceOf
   
-  def withTyp(typ: Type): this.type = 
+  def withTyp(typ: Type)(using DebugPrinter): this.type = 
     this.match
       case t: Term.Resolved => t.copy()(S(typ))
       case t: Term.Ref => t.copy()(t.tree, t.refNum, S(typ))
@@ -128,7 +128,7 @@ sealed trait ResolvableImpl:
   def expandedIn[T](in: Term => T): T =
     in(expanded)
   
-  def expandedResolvableIn[T](in: Resolvable => T): T =
+  def expandedResolvableIn[T](in: Resolvable => T)(using DebugPrinter): T =
     expanded match
       case r: Resolvable => in(r)
       case t => lastWords(s"Expected a resolvable term, but got ${t.showDbg}.")
@@ -153,7 +153,7 @@ sealed trait ResolvableImpl:
     // `expansion.get =/= newExpansion`: Waiting for @Luyu to revamp the
     // desugaring stage so that no same term occurs in different places.
     if this.expansion.isDefined && this.expansion.get =/= expansion then
-      lastWords(s"Cannot expand the term ${this.showDbg} multiple times (to different expansions ${expansion.get.showDbg}).")
+      lastWords(s"Cannot expand the term ${this} multiple times (to different expansions ${expansion.get}).")
     
     this.expansion = S(expansion)
     this
@@ -559,9 +559,9 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
         case N => desc
       case _ => desc
   
-  def extraInfo: Str = this match
+  def extraInfo(using DebugPrinter): Str = this match
     case r: Resolvable if r.resolvedSym.isDefined || r.resolvedTyp.isDefined => (
-        r.resolvedSym.map(s => s"sym=${s}") ::
+        r.resolvedSym.map(s => s"sym=${s.showAsPlain}") ::
         r.resolvedTyp.map(s => s"typ=${s.showDbg}") :: Nil
       ).flatten.mkString(",")
     case r: SelProj => r.symbol.mkString
@@ -704,10 +704,10 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
           :: doc" ${cld.body.blk.show}"
       case imp: Import =>
         doc"import ${"\""}.../${imp.file.last}${"\""} as ${imp.sym.showName}"
-      case LeadingDotSel(name) => doc"${this.showDbg}"
+      case LeadingDotSel(name) => doc"_?_.${name.name}"
       case Error => doc"‹error›"
       case _ =>
-        doc"TODO[show:${getClass.getSimpleName}]($showDbg)"
+        doc"TODO[show:${getClass.getSimpleName}](${toString})"
     this match
     case t: Resolvable => t.expansion match
       case S(S(exp)) =>
@@ -725,9 +725,8 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Lit(Tree.StrLit(str)) => str.size / 4 + 1
     case _ => children.size + 1
   
-  def showDbg: Str = this match
-    case r: Ref =>
-      showPlain
+  def showDbg(using DebugPrinter): Str = this match
+    case r: Ref => r.sym.showAsPlain
     case r: Resolved =>
       s"${r.showPlain}‹${r.sym}›"
     case trm: Term =>
@@ -740,11 +739,11 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case tup: Tup => doc"(${tup.fields.map(_.show).mkDocument(", ")})"
     case _ => doc"(...$show)"
   
-  def showDbgAsParams: Str = this match
+  def showDbgAsParams(using DebugPrinter): Str = this match
     case tup: Tup => s"(${tup.fields.map(_.showDbg).mkString(", ")})"
     case _ => s"(...$showDbg)"
   
-  def showPlain: Str = this match
+  def showPlain(using DebugPrinter): Str = this match
     case Term.UnitVal() => "()"
     case Lit(lit) => lit.idStr
     case Resolved(t, sym) => t.showPlain
@@ -939,7 +938,7 @@ case class ObjBody(blk: Term.Blk):
     case td: TermDefinition if td.k.isInstanceOf[syntax.Val] => td
   
   // override def toString: String = statmts.mkString("{ ", "; ", " }")
-  override def toString: String = blk.showDbg
+  // override def toString: String = blk.showDbg
 
 
 /** `sym` is a `MemberSymbol` when the import is made by the user and can be referred to by name,
@@ -1175,7 +1174,7 @@ sealed abstract class Elem:
     case Fld(_, term, asc) => term :: asc.toList
     case Spd(_, term) => term :: Nil
   def show(using Scope, ShowCfg, Raise): Document
-  def showDbg: Str
+  def showDbg(using DebugPrinter): Str
 object Elem:
   given Conversion[Term, Elem] = PlainFld(_)
 final case class Fld(flags: FldFlags, term: Term, asc: Opt[Term]) extends Elem, FldImpl
@@ -1184,7 +1183,7 @@ object PlainFld:
   def unapply(fld: Fld): Opt[Term] = S(fld.term)
 final case class Spd(k: SpreadKind, term: Term) extends Elem:
   def show(using Scope, ShowCfg, Raise): Document = k.str :: term.show
-  def showDbg: Str = k.str + term.showDbg
+  def showDbg(using DebugPrinter): Str = k.str + term.showDbg
 
 final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extends Declaration:
   
@@ -1225,7 +1224,7 @@ extends Declaration, AutoLocated:
   def show(using Scope, ShowCfg, Raise): Document =
     doc"${flags.show}${sym.showName}${sign.fold(doc"")(": " :: _.show)}"
   
-  def showDbg: Str = flags.show + sym + sign.fold("")(": " + _.showDbg)
+  def showDbg(using DebugPrinter): Str = flags.show + sym + sign.fold("")(": " + _.showDbg)
 
 final case class ParamList(flags: ParamListFlags, params: Ls[Param], restParam: Opt[Param])
 extends AutoLocated:
@@ -1244,7 +1243,7 @@ extends AutoLocated:
       restParam.map(p => doc"...${p.show}").toList
     ).mkDocument(", ")
     :: doc")"
-  def showDbg: Str = flags.showDbg
+  def showDbg(using DebugPrinter): Str = flags.showDbg
     + (params.map(_.showDbg) ++ restParam.toList.map("..." + _.showDbg)).mkString("(", ", ", ")")
 object PlainParamList:
   def apply(params: Ls[Param]) =
@@ -1268,7 +1267,7 @@ enum SubDir:
 /** A subtyping constraint. */
 final case class SubConstraint(lhs: Term, rhs: Term, dir: SubDir) extends AutoLocated:
   override protected def children: Vector[Located] = Vector(lhs, rhs)
-  def showDbg: Str = s"${lhs.showDbg} ${dir.showDbg} ${rhs.showDbg}"
+  def showDbg(using DebugPrinter): Str = s"${lhs.showDbg} ${dir.showDbg} ${rhs.showDbg}"
   def subTerms: Ls[Term] = List(lhs, rhs)
 
 object ParamListFlags:
@@ -1279,7 +1278,7 @@ trait FldImpl extends AutoLocated:
   self: Fld =>
   def children: Vector[Located] = self.term +: self.asc.toVector
   def show(using Scope, ShowCfg, Raise): Document = flags.show :: self.term.show
-  def showDbg: Str = flags.show + self.term.showDbg
+  def showDbg(using DebugPrinter): Str = flags.show + self.term.showDbg
   def describe: Str =
     (if self.flags.spec then "specialized " else "") +
     (if self.flags.mut then "mutable " else "") +

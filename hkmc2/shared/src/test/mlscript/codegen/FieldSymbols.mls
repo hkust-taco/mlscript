@@ -13,7 +13,7 @@ Foo(42).x
 //│   stats = Nil
 //│   res = Sel:
 //│     prefix = App:
-//│       lhs = Ref{sym=member:Foo} of member:Foo
+//│       lhs = Ref{sym=member:Foo⁰} of member:Foo⁰
 //│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
@@ -33,7 +33,7 @@ foo.x
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
-//│     prefix = Ref{sym=foo} of foo
+//│     prefix = Ref{sym=foo⁰} of foo⁰
 //│     nme = Ident of "x"
 //│ = 42
 
@@ -45,7 +45,7 @@ foo.y
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
-//│     prefix = Ref{sym=foo} of foo
+//│     prefix = Ref{sym=foo⁰} of foo⁰
 //│     nme = Ident of "y"
 //│ = 42
 
@@ -64,7 +64,7 @@ case
 //│       params = Ls of 
 //│         Param:
 //│           flags = ()
-//│           sym = caseScrut
+//│           sym = caseScrut⁰
 //│           sign = N
 //│           modulefulness = Modulefulness of N
 //│       restParam = N
@@ -73,21 +73,21 @@ case
 //│       form = ReturningIf
 //│       split = Cons:
 //│         branch = Match:
-//│           scrutinee = Ref{sym=caseScrut} of caseScrut
+//│           scrutinee = Ref{sym=caseScrut⁰} of caseScrut⁰
 //│           pattern = Constructor:
-//│             target = Ref{sym=member:Foo} of member:Foo
+//│             target = Ref{sym=member:Foo⁰} of member:Foo⁰
 //│             arguments = S of Ls of 
 //│               Alias:
 //│                 pattern = Wildcard
 //│                 id = Ident of "a"
-//│           consequent = Else of Ref{sym=a} of a
+//│           consequent = Else of Ref{sym=a⁰} of a⁰
 //│         tail = End
 //│ Lowered:
 //│ let lambda⁰;
-//│ define fun lambda⁰(caseScrut) {
+//│ define lambda⁰ as fun (caseScrut) {
 //│   let a, arg$Foo$0$;
 //│   match caseScrut
-//│     Foo⁰ =>
+//│     Foo¹ =>
 //│       set arg$Foo$0$ = caseScrut.x⁰;
 //│       set a = arg$Foo$0$;
 //│       return a
@@ -95,7 +95,7 @@ case
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ lambda⁰
+//│ lambda¹
 //│ = fun
 
 

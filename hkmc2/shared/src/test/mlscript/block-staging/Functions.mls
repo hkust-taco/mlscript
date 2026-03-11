@@ -119,7 +119,7 @@ staged module A with
   let x = C(1)
   fun f() = set x.a = 0
   fun g() = {1 : 2}
-//│ ═══[COMPILATION ERROR] Other Blocks not supprted in staged module: AssignField(Ref(term:A⁰.x,None),Ident(a),Lit(IntLit(0)),Return(Select(Ref(tmp:runtime,None),Ident(Unit)),false))
+//│ ═══[COMPILATION ERROR] Other Blocks not supprted in staged module: AssignField(Ref(term:A/x,None),Ident(a),Lit(IntLit(0)),Return(Select(Ref(tmp:runtime,None),Ident(Unit)),false))
 //│ ╔══[COMPILATION ERROR] Other Results not supported in staged module: Record(false,List(RcdArg(Some(Lit(IntLit(1))),Lit(IntLit(2)))))
 //│ ║  l.121: 	  fun g() = {1 : 2}
 //│ ╙──       	                 ^

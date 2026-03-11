@@ -44,12 +44,12 @@ print("Hi")
 //│ Program:
 //│   imports = Nil
 //│   main = Assign:
-//│     lhs = ‹no symbol›
+//│     lhs = ‹no symbol›⁰
 //│     rhs = Call:
-//│       fun = Select{sym=term:Predef⁰.print}:
-//│         qual = Ref{disamb=module:Predef}:
-//│           l = member:Predef
-//│           disamb = S of module:Predef
+//│       fun = Select{sym=term:Predef⁰/print⁰}:
+//│         qual = Ref{disamb=module:Predef⁰}:
+//│           l = member:Predef¹
+//│           disamb = S of module:Predef⁰
 //│         name = Ident of "print"
 //│       args = Ls of 
 //│         Arg:

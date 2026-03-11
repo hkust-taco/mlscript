@@ -250,11 +250,6 @@ object Elaborator:
   class State:
     val suid = new Uid.Symbol.State
     given State = this
-    val dbgScope = Scope.empty(Scope.Cfg.default.copy(
-      escapeChars = false,
-      useSuperscripts = true,
-      includeZero = true,
-    ))
     val globalThisSymbol = TopLevelSymbol("globalThis")
     val unitSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Obj), Ident("Unit"))
     val loopEndSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Obj), Ident("LoopEnd"))
@@ -354,6 +349,7 @@ class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
 (using val raise: Raise, val state: State, val cctx: CompilerCtx, val config: Config)
 extends Importer with ucs.SplitElaborator:
   import tl.*
+  given TraceLogger = tl
   
   lazy val illegalMemberNameTail =
     msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N

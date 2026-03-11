@@ -118,7 +118,7 @@ sealed abstract class Document {
     
   end format
   
-  def mkString(columns: Int = 120): Str =
+  def mkString(columns: Int = Int.MaxValue): Str =
     val w = new StringWriter()
     format(columns, w)
     w.toString

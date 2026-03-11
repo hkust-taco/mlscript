@@ -17,7 +17,7 @@ import hkmc2.semantics.AnySelTerm
 
 
 case class Constraint(lhs: Producer, rhs: Consumer):
-  def showDbg: Str =
+  def showDbg(using DebugPrinter): Str =
     s"${lhs.showDbg} <: ${rhs.showDbg}"
 
 
@@ -44,13 +44,17 @@ enum Producer:
     case tup: Tup => Document.bracketed("[", "]")(showTupElems(tup))
     case Ctor(LitSymbol(UnitLit(false)), Nil) => "()"
     case Ctor(sym, args) => doc"${sym.nme}${args.map(_.showAsParams).mkDocument()}"
-    case LeadingDotSel(trm) => doc"${trm.showDbg}"
+    case LeadingDotSel(trm) =>
+      given ShowCfg = ShowCfg.internal
+      doc"_?_.${trm.show}"
     case Typ(typ) => doc"type ${typ.show}"
-    case Unknown(t) => doc"¿${t.showDbg}?"
+    case Unknown(t) =>
+      given ShowCfg = ShowCfg.internal
+      doc"¿${t.show}?"
   
   def showAsParams(using Scope, Raise): Document = this match
     case tup: Tup => "(" :: showTupElems(tup) :: doc")"
-    case _ => Document.text(s"...$showDbg")
+    case _ => Document.text(s"...$show")
   
   private def showTupElems(tup: Tup)(using Scope, Raise): Document =
     tup.elems.map:
@@ -59,7 +63,7 @@ enum Producer:
     .mkDocument(", ")
   
   
-  def showDbg: Str = this match
+  def showDbg(using DebugPrinter): Str = this match
     case Flow(sym) => sym.showDbg
     case Fun(lhs, rhs, caps) => s"(${lhs.showDbgAsParams} -> ${rhs.showDbg})"
     case Ctor(LitSymbol(UnitLit(false)), Nil) => "()"
@@ -70,7 +74,7 @@ enum Producer:
     case Typ(typ) => s"type ${typ.showDbg}"
     case Unknown(t) => s"¿${t.showDbg}?"
   
-  def showDbgAsParams: Str = this match
+  def showDbgAsParams(using DebugPrinter): Str = this match
     case Tup(args) => args.map:
         case (None, c) => c.showDbg
         case (Some(spd), c) => s"${spd.str} ${c.showDbg}"
@@ -109,7 +113,7 @@ enum Consumer:
     ).toSeq.mkDocument(", ")
   
   
-  def showDbg: Str = this match
+  def showDbg(using DebugPrinter): Str = this match
     case Flow(sym) => sym.showDbg
     case Fun(lhs, rhs) => s"(${lhs.showDbgAsParams} -> ${rhs.showDbg})"
     case Ctor(sym, Nil) => sym.nme
@@ -118,13 +122,13 @@ enum Consumer:
     case Sel(id, res) => s"{${id.name}: ${res.showDbg}}"
     case Typ(typ) => s"type ${typ.showDbg}"
   
-  private def showDbgTupElems(tup: Tup): Str = (
+  private def showDbgTupElems(tup: Tup)(using DebugPrinter): Str = (
       tup.init.iterator.map(_.showDbg) ++ tup.rest.iterator.flatMap:
         case (spd, c, post) =>
           s"${spd.str}${c.showDbg}" :: post.map(_.showDbg)
     ).mkString(", ")
   
-  def showDbgAsParams: Str = this match
+  def showDbgAsParams(using DebugPrinter): Str = this match
     case tup: Tup => "(" + showDbgTupElems(tup) + ")"
     case _ => s"(...$showDbg)"
   

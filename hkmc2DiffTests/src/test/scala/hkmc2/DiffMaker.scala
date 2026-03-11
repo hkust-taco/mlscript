@@ -2,6 +2,7 @@ package hkmc2
 
 import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*
 
 
 
@@ -15,7 +16,8 @@ class Outputter(val out: java.io.PrintWriter):
   val diff3MidMarker = "|||||||" // * Appears under `git config merge.conflictstyle diff3` (https://stackoverflow.com/a/18131595/1518588)
   val diffEndMarker = ">>>>>>>"
 
-  val exitMarker = "=" * 100
+  val ColWidth = 100
+  val exitMarker = "=" * ColWidth
   val blockSeparator = "—" * 80
   
   val fullBlockSeparator = outputMarker + blockSeparator
@@ -46,6 +48,9 @@ abstract class DiffMaker:
   
   def processOrigin(origin: Origin)(using Raise): Unit
   
+  
+  val dbgPrinter: DebugPrinter
+  given dbgPrinter.type = dbgPrinter
   
   
   def doFail(blockLineNum: Int, msg: String): Unit =
@@ -93,7 +98,9 @@ abstract class DiffMaker:
     line =>
       val commentIndex = line.indexOf("//")
       val body = if commentIndex == -1 then line else line.take(commentIndex)
-      assert(body.forall(_.isWhitespace))
+      // assert(body.forall(_.isWhitespace))
+      if !body.forall(_.isWhitespace) then
+        output(s"/!\\ Warning: non-empty body for command '$name' is ignored: '$body'")
       k()
     ):
     def set: Unit = setCurrentValue(k())
