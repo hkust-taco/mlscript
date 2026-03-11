@@ -250,7 +250,9 @@ class Resolver(tl: TraceLogger)
   import Resolver.*
   import Expect.*
   import ModuleChecker.*
-
+  
+  given TraceLogger = tl
+  
   /**
     * Traverse a block and resolve any resolvable sub-terms. This is
     * usually the entry point for the resolver.

@@ -9,7 +9,7 @@ import semantics.{TypeSymbol, VarSymbol}
 sealed trait TypeArg:
   def subst(f: PartialFunction[Type.Ref, Type]): this.type
   def show: Str
-  def showDbg: Str
+  def showDbg(using DebugPrinter): Str
   
   def ub = this match
     case Wildcard(_, out) => out
@@ -57,14 +57,19 @@ enum Type extends TypeArg:
     case Inter(l, r) =>
       s"(${l.show} ∧ ${r.show})"
     case NotImplemented => "‹not implemented›"
+    case Tup(fields) =>
+      val fieldStrs = fields.map:
+        case ty: Type => ty.show
+        case (spd, ty) => s"${spd.str}${ty.show}"
+      s"[${fieldStrs.mkString(", ")}]"
   
-  override def showDbg: Str = this match
+  override def showDbg(using DebugPrinter): Str = this match
     case Error => "‹error›"
     case Top => "⊤"
     case Bot => "⊥"
-    case Ref(sym, Nil) => s"${sym}"
+    case Ref(sym, Nil) => s"${sym.showAsPlain}"
     case Ref(sym, args) =>
-      s"${sym}[${args.map(_.showDbg).mkString(", ")}]"
+      s"${sym.showAsPlain}[${args.map(_.showDbg).mkString(", ")}]"
     case Fun(args, ret, eff) =>
       val effStr = eff.map(e => s" ! ${e.showDbg}").getOrElse("")
       s"(${args.showDbg}) -> ${ret.showDbg}$effStr" // TODO improve
@@ -78,7 +83,7 @@ enum Type extends TypeArg:
     case Tup(fields) =>
       val fieldStrs = fields.map:
         case ty: Type => ty.showDbg
-        case (spd, ty) => s"${spd.str} ${ty.showDbg}"
+        case (spd, ty) => s"${spd.str}${ty.showDbg}"
       s"[${fieldStrs.mkString(", ")}]"
   
   override def subst(f: PartialFunction[Ref, Type]): this.type =
@@ -120,7 +125,7 @@ case class Wildcard(in: Type, out: Type) extends TypeArg:
   override def show: Str =
     s"? <: ${out.show} >: ${in.show}"
   
-  override def showDbg: Str =
+  override def showDbg(using DebugPrinter): Str =
     s"? <: ${out.showDbg} >: ${in.showDbg}"
   
 end Wildcard

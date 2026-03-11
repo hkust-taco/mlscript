@@ -66,11 +66,11 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
       val (modWat, mainFnNme, systemMemMinPages) = ltl.givenIn:
         baseScp.nest.givenIn:
           WatBuilder().program(le, N, wd)
-      val modWatJsLit = JSBuilder.makeStringLiteral(modWat.mkString())
+      val modWatJsLit = JSBuilder.makeStringLiteral(modWat.mkString(output.ColWidth))
 
       if wat.isSet then
         output("Wat:")
-        output(modWat.mkString())
+        output(modWat.mkString(output.ColWidth))
 
       // A program with errors may have a WAT that is worth inspecting, but anything that involves
       // using Binaryen requires a valid WAT
@@ -80,7 +80,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
         output("Formatted Wat (Folded):")
         doc"JSON.stringify(wasm.binaryenFmtWat($modWatJsLit, true));"
           .stripBreaks
-          .mkString(100)
+          .mkString(output.ColWidth)
           .replace('\n', ' ') |> host.execute match
           case ReplHost.Result(content) =>
             output(prettifyBinaryenWat(content))
@@ -91,7 +91,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
         output("Formatted Wat (Stack):")
         doc"JSON.stringify(wasm.binaryenFmtWat($modWatJsLit, false));"
           .stripBreaks
-          .mkString(100)
+          .mkString(output.ColWidth)
           .replace('\n', ' ') |> host.execute match
           case ReplHost.Result(content) =>
             output(prettifyBinaryenWat(content))
@@ -142,7 +142,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
           }
         """
           .stripBreaks
-          .mkString(100)
+          .mkString(output.ColWidth)
       val jsStr =
         doc"""
           await (() => {
@@ -154,7 +154,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
             # })();
         """
           .stripBreaks
-          .mkString(100)
+          .mkString(output.ColWidth)
       output("Wasm result:")
       mkQuery("", jsStr): out =>
         // Omit the last line which is always "undefined" or the unit.

@@ -1,4 +1,5 @@
 :js
+:patMatConsequentSharingThreshold 5
 
 let x = 0
 let y = 0
@@ -38,50 +39,40 @@ if x is
   1 then "1"
   else ""
 //│ JS (unsanitized):
-//│ let tmp2;
-//│ split_root$: {
-//│   split_1$: {
-//│     switch (x) {
+//│ switch (x) {
+//│   case 0:
+//│     switch (y) {
 //│       case 0:
-//│         switch (y) {
+//│         switch (z) {
 //│           case 0:
-//│             switch (z) {
-//│               case 0:
-//│                 tmp2 = "000";
-//│                 break split_root$;
-//│                 break;
-//│               case 1:
-//│                 tmp2 = "001";
-//│                 break split_root$;
-//│                 break;
-//│               default:
-//│                 break split_1$;
-//│                 break;
-//│             }
+//│             "000";
 //│             break;
 //│           case 1:
-//│             tmp2 = "01";
-//│             break split_root$;
+//│             "001";
 //│             break;
 //│           default:
-//│             break split_1$;
+//│             "";
 //│             break;
 //│         }
 //│         break;
 //│       case 1:
-//│         tmp2 = "1";
-//│         break split_root$;
+//│         "01";
 //│         break;
 //│       default:
-//│         break split_1$;
+//│         "";
 //│         break;
 //│     }
-//│   }
-//│   tmp2 = "";
+//│     break;
+//│   case 1:
+//│     "1";
+//│     break;
+//│   default:
+//│     "";
+//│     break;
 //│ }
-//│ tmp2
 //│ = "000"
 
+// * Making the terms artificially big to force sharing of consequents
 :sjs
 if x is
   0 and y is
@@ -92,7 +83,61 @@ if x is
   1 then "1-------------------------------------------------------------------------"
   else "-------------------------------------------------------------------------"
 //│ JS (unsanitized):
-//│ let tmp3;
+//│ let tmp2;
+//│ split_root$: {
+//│   split_1$: {
+//│     switch (x) {
+//│       case 0:
+//│         switch (y) {
+//│           case 0:
+//│             switch (z) {
+//│               case 0:
+//│                 tmp2 = "000-------------------------------------------------------------------------";
+//│                 break split_root$;
+//│                 break;
+//│               case 1:
+//│                 tmp2 = "001-------------------------------------------------------------------------";
+//│                 break split_root$;
+//│                 break;
+//│               default:
+//│                 break split_1$;
+//│                 break;
+//│             }
+//│             break;
+//│           case 1:
+//│             tmp2 = "01-------------------------------------------------------------------------";
+//│             break split_root$;
+//│             break;
+//│           default:
+//│             break split_1$;
+//│             break;
+//│         }
+//│         break;
+//│       case 1:
+//│         tmp2 = "1-------------------------------------------------------------------------";
+//│         break split_root$;
+//│         break;
+//│       default:
+//│         break split_1$;
+//│         break;
+//│     }
+//│   }
+//│   tmp2 = "-------------------------------------------------------------------------";
+//│ }
+//│ tmp2
+//│ = "000-------------------------------------------------------------------------"
+
+:sjs
+let qqq = if x is
+  0 and y is
+    0 and z is
+      0 then "000-------------------------------------------------------------------------"
+      1 then "001-------------------------------------------------------------------------"
+    1 then "01-------------------------------------------------------------------------"
+  1 then "1-------------------------------------------------------------------------"
+  else "-------------------------------------------------------------------------"
+//│ JS (unsanitized):
+//│ let qqq, tmp3;
 //│ split_root$1: {
 //│   split_1$1: {
 //│     switch (x) {
@@ -133,11 +178,11 @@ if x is
 //│   }
 //│   tmp3 = "-------------------------------------------------------------------------";
 //│ }
-//│ tmp3
-//│ = "000-------------------------------------------------------------------------"
+//│ qqq = tmp3;
+//│ qqq = "000-------------------------------------------------------------------------"
 
 :sjs
-let qqq = if x is
+print of if x is
   0 and y is
     0 and z is
       0 then "000"
@@ -146,49 +191,40 @@ let qqq = if x is
   1 then "1"
   else ""
 //│ JS (unsanitized):
-//│ let qqq, tmp4;
-//│ split_root$2: {
-//│   split_1$2: {
-//│     switch (x) {
+//│ let tmp4;
+//│ switch (x) {
+//│   case 0:
+//│     switch (y) {
 //│       case 0:
-//│         switch (y) {
+//│         switch (z) {
 //│           case 0:
-//│             switch (z) {
-//│               case 0:
-//│                 tmp4 = "000";
-//│                 break split_root$2;
-//│                 break;
-//│               case 1:
-//│                 tmp4 = "001";
-//│                 break split_root$2;
-//│                 break;
-//│               default:
-//│                 break split_1$2;
-//│                 break;
-//│             }
+//│             tmp4 = "000";
 //│             break;
 //│           case 1:
-//│             tmp4 = "01";
-//│             break split_root$2;
+//│             tmp4 = "001";
 //│             break;
 //│           default:
-//│             break split_1$2;
+//│             tmp4 = "";
 //│             break;
 //│         }
 //│         break;
 //│       case 1:
-//│         tmp4 = "1";
-//│         break split_root$2;
+//│         tmp4 = "01";
 //│         break;
 //│       default:
-//│         break split_1$2;
+//│         tmp4 = "";
 //│         break;
 //│     }
-//│   }
-//│   tmp4 = "";
+//│     break;
+//│   case 1:
+//│     tmp4 = "1";
+//│     break;
+//│   default:
+//│     tmp4 = "";
+//│     break;
 //│ }
-//│ qqq = tmp4;
-//│ qqq = "000"
+//│ Predef.print(tmp4)
+//│ > 000
 
 :sjs
 print of if x is
@@ -201,45 +237,36 @@ print of if x is
   else ""
 //│ JS (unsanitized):
 //│ let tmp5;
-//│ split_root$3: {
-//│   split_1$3: {
-//│     switch (x) {
+//│ switch (x) {
+//│   case 0:
+//│     switch (y) {
 //│       case 0:
-//│         switch (y) {
+//│         switch (z) {
 //│           case 0:
-//│             switch (z) {
-//│               case 0:
-//│                 tmp5 = "000";
-//│                 break split_root$3;
-//│                 break;
-//│               case 1:
-//│                 tmp5 = "001";
-//│                 break split_root$3;
-//│                 break;
-//│               default:
-//│                 break split_1$3;
-//│                 break;
-//│             }
+//│             tmp5 = "000";
 //│             break;
 //│           case 1:
-//│             tmp5 = "01";
-//│             break split_root$3;
+//│             tmp5 = "001";
 //│             break;
 //│           default:
-//│             break split_1$3;
+//│             tmp5 = "";
 //│             break;
 //│         }
 //│         break;
 //│       case 1:
-//│         tmp5 = "1";
-//│         break split_root$3;
+//│         tmp5 = "01";
 //│         break;
 //│       default:
-//│         break split_1$3;
+//│         tmp5 = "";
 //│         break;
 //│     }
-//│   }
-//│   tmp5 = "";
+//│     break;
+//│   case 1:
+//│     tmp5 = "1";
+//│     break;
+//│   default:
+//│     tmp5 = "";
+//│     break;
 //│ }
 //│ Predef.print(tmp5)
 //│ > 000
@@ -257,48 +284,37 @@ fun foo(x, y, z) =
 //│ JS (unsanitized):
 //│ let foo;
 //│ foo = function foo(x1, y1, z1) {
-//│   let tmp6;
-//│   split_root$4: {
-//│     split_1$4: {
-//│       switch (x1) {
+//│   switch (x1) {
+//│     case 0:
+//│       switch (y1) {
 //│         case 0:
-//│           switch (y1) {
+//│           switch (z1) {
 //│             case 0:
-//│               switch (z1) {
-//│                 case 0:
-//│                   tmp6 = "000";
-//│                   break split_root$4;
-//│                   break;
-//│                 case 1:
-//│                   tmp6 = "001";
-//│                   break split_root$4;
-//│                   break;
-//│                 default:
-//│                   break split_1$4;
-//│                   break;
-//│               }
+//│               return "000";
 //│               break;
 //│             case 1:
-//│               tmp6 = "01";
-//│               break split_root$4;
+//│               return "001";
 //│               break;
 //│             default:
-//│               break split_1$4;
+//│               return "";
 //│               break;
 //│           }
 //│           break;
 //│         case 1:
-//│           tmp6 = "1";
-//│           break split_root$4;
+//│           return "01";
 //│           break;
 //│         default:
-//│           break split_1$4;
+//│           return "";
 //│           break;
 //│       }
-//│     }
-//│     tmp6 = "";
+//│       break;
+//│     case 1:
+//│       return "1";
+//│       break;
+//│     default:
+//│       return "";
+//│       break;
 //│   }
-//│   return tmp6
 //│ };
 
 foo(0, 0, 0)
@@ -316,64 +332,44 @@ print of if
   else "___"
 //│ JS (unsanitized):
 //│ let tmp6;
-//│ split_root$4: {
-//│   split_1$4: {
-//│     split_2$: {
-//│       split_3$: {
-//│         switch (x) {
+//│ switch (x) {
+//│   case 0:
+//│     switch (y) {
+//│       case 0:
+//│         switch (z) {
 //│           case 0:
-//│             switch (y) {
-//│               case 0:
-//│                 switch (z) {
-//│                   case 0:
-//│                     tmp6 = "000";
-//│                     break split_root$4;
-//│                     break;
-//│                   case 1:
-//│                     break split_1$4;
-//│                     break;
-//│                   default:
-//│                     break split_2$;
-//│                     break;
-//│                 }
-//│                 break;
-//│               case 1:
-//│                 tmp6 = "01_";
-//│                 break split_root$4;
-//│                 break;
-//│               default:
-//│                 if (z === 1) {
-//│                   break split_1$4
-//│                 } else {
-//│                   if (y === 2) {
-//│                     break split_3$
-//│                   } else {
-//│                     break split_2$
-//│                   }
-//│                 }
-//│                 break;
-//│             }
+//│             tmp6 = "000";
 //│             break;
 //│           case 1:
-//│             tmp6 = "1__";
-//│             break split_root$4;
+//│             tmp6 = "0_1";
 //│             break;
 //│           default:
-//│             if (y === 2) {
-//│               break split_3$
-//│             } else {
-//│               break split_2$
-//│             }
+//│             tmp6 = "___";
 //│             break;
 //│         }
-//│       }
-//│       tmp6 = "_2_";
-//│       break split_root$4;
+//│         break;
+//│       case 1:
+//│         tmp6 = "01_";
+//│         break;
+//│       default:
+//│         if (z === 1) {
+//│           tmp6 = "0_1";
+//│         } else {
+//│           if (y === 2) {
+//│             tmp6 = "_2_";
+//│           } else {
+//│             tmp6 = "___";
+//│           }
+//│         }
+//│         break;
 //│     }
-//│     tmp6 = "___";
-//│     break split_root$4;
-//│   }
-//│   tmp6 = "0_1";
+//│     break;
+//│   case 1:
+//│     tmp6 = "1__";
+//│     break;
+//│   default:
+//│     if (y === 2) { tmp6 = "_2_"; } else { tmp6 = "___"; }
+//│     break;
 //│ }
 //│ Predef.print(tmp6)
 //│ > 000
@@ -391,67 +387,45 @@ fun foo(x, y, z) = if
 //│ JS (unsanitized):
 //│ let foo1;
 //│ foo1 = function foo(x1, y1, z1) {
-//│   let tmp7;
-//│   split_root$5: {
-//│     split_1$5: {
-//│       split_2$1: {
-//│         split_3$1: {
-//│           switch (x1) {
+//│   switch (x1) {
+//│     case 0:
+//│       switch (y1) {
+//│         case 0:
+//│           switch (z1) {
 //│             case 0:
-//│               switch (y1) {
-//│                 case 0:
-//│                   switch (z1) {
-//│                     case 0:
-//│                       tmp7 = "000";
-//│                       break split_root$5;
-//│                       break;
-//│                     case 1:
-//│                       break split_1$5;
-//│                       break;
-//│                     default:
-//│                       break split_2$1;
-//│                       break;
-//│                   }
-//│                   break;
-//│                 case 1:
-//│                   tmp7 = "01_";
-//│                   break split_root$5;
-//│                   break;
-//│                 default:
-//│                   if (z1 === 1) {
-//│                     break split_1$5
-//│                   } else {
-//│                     if (y1 === 2) {
-//│                       break split_3$1
-//│                     } else {
-//│                       break split_2$1
-//│                     }
-//│                   }
-//│                   break;
-//│               }
+//│               return "000";
 //│               break;
 //│             case 1:
-//│               tmp7 = "1__";
-//│               break split_root$5;
+//│               return "0_1";
 //│               break;
 //│             default:
-//│               if (y1 === 2) {
-//│                 break split_3$1
-//│               } else {
-//│                 break split_2$1
-//│               }
+//│               return "___";
 //│               break;
 //│           }
-//│         }
-//│         tmp7 = "_2_";
-//│         break split_root$5;
+//│           break;
+//│         case 1:
+//│           return "01_";
+//│           break;
+//│         default:
+//│           if (z1 === 1) {
+//│             return "0_1"
+//│           } else {
+//│             if (y1 === 2) {
+//│               return "_2_"
+//│             } else {
+//│               return "___"
+//│             }
+//│           }
+//│           break;
 //│       }
-//│       tmp7 = "___";
-//│       break split_root$5;
-//│     }
-//│     tmp7 = "0_1";
+//│       break;
+//│     case 1:
+//│       return "1__";
+//│       break;
+//│     default:
+//│       if (y1 === 2) { return "_2_" } else { return "___" }
+//│       break;
 //│   }
-//│   return tmp7
 //│ };
 
 fun expensive_call(str) = Math.pow(2, str.length)
@@ -471,8 +445,8 @@ fun foo(x, y, z) = if x is
 //│ let foo2;
 //│ foo2 = function foo(x1, y1, z1) {
 //│   let value, tmp7;
-//│   split_root$5: {
-//│     split_1$5: {
+//│   split_root$2: {
+//│     split_1$2: {
 //│       switch (x1) {
 //│         case 0:
 //│           switch (y1) {
@@ -480,32 +454,32 @@ fun foo(x, y, z) = if x is
 //│               switch (z1) {
 //│                 case 0:
 //│                   tmp7 = "000";
-//│                   break split_root$5;
+//│                   break split_root$2;
 //│                   break;
 //│                 case 1:
 //│                   tmp7 = "001";
-//│                   break split_root$5;
+//│                   break split_root$2;
 //│                   break;
 //│                 default:
-//│                   break split_1$5;
+//│                   break split_1$2;
 //│                   break;
 //│               }
 //│               break;
 //│             case 1:
 //│               tmp7 = "01";
-//│               break split_root$5;
+//│               break split_root$2;
 //│               break;
 //│             default:
-//│               break split_1$5;
+//│               break split_1$2;
 //│               break;
 //│           }
 //│           break;
 //│         case 1:
 //│           tmp7 = "1";
-//│           break split_root$5;
+//│           break split_root$2;
 //│           break;
 //│         default:
-//│           break split_1$5;
+//│           break split_1$2;
 //│           break;
 //│       }
 //│     }
@@ -515,6 +489,10 @@ fun foo(x, y, z) = if x is
 //│   return tmp7
 //│ };
 
+foo(0, 0, 0)
+//│ = "000"
+
+
 object A
 object B
 object C
@@ -522,12 +500,16 @@ object C
 :sjs
 // Since no branch is duplicated, there is no label or `break`.
 fun foo(x, y, z) =
-  if x is A then "Hello"
-  else "Goodbye"
+  if x is A then "Hello-------------------------------------------------------------------------"
+  else "Goodbye-------------------------------------------------------------------------"
 //│ JS (unsanitized):
 //│ let foo3;
 //│ foo3 = function foo(x1, y1, z1) {
-//│   if (x1 instanceof A1.class) { return "Hello" } else { return "Goodbye" }
+//│   if (x1 instanceof A1.class) {
+//│     return "Hello-------------------------------------------------------------------------"
+//│   } else {
+//│     return "Goodbye-------------------------------------------------------------------------"
+//│   }
 //│ };
 
 :sjs
@@ -549,18 +531,18 @@ fun foo(x, y, z) =
 //│ let foo4;
 //│ foo4 = function foo(x1, y1, z1) {
 //│   let tmp7;
-//│   split_root$5: {
-//│     split_1$5: {
+//│   split_root$2: {
+//│     split_1$2: {
 //│       if (x1 instanceof A1.class) {
 //│         if (y1 instanceof B1.class) {
 //│           if (z1 instanceof C1.class) {
 //│             tmp7 = "Hello";
-//│             break split_root$5
+//│             break split_root$2
 //│           } else {
-//│             break split_1$5
+//│             break split_1$2
 //│           }
-//│         } else { break split_1$5 }
-//│       } else { break split_1$5 }
+//│         } else { break split_1$2 }
+//│       } else { break split_1$2 }
 //│     }
 //│     tmp7 = "Goodbye";
 //│   }
@@ -575,13 +557,13 @@ fun foo(x, y, z) =
 //│ let foo5;
 //│ foo5 = function foo(x1, y1, z1) {
 //│   let tmp7;
-//│   split_root$5: {
+//│   split_root$2: {
 //│     split_default$: {
 //│       if (x1 instanceof A1.class) {
 //│         if (y1 instanceof B1.class) {
 //│           if (z1 instanceof C1.class) {
 //│             tmp7 = "Hello";
-//│             break split_root$5
+//│             break split_root$2
 //│           } else {
 //│             break split_default$
 //│           }
@@ -617,3 +599,5 @@ let y = if true then 1 else 2
 //│ if (scrut3 === true) { tmp7 = 1; } else { tmp7 = 2; }
 //│ y1 = tmp7;
 //│ y = 1
+
+

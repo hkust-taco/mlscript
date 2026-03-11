@@ -213,7 +213,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
   
   /** Collect terms that appear in multiple `Split.Else` branches. We will share
    *  the corresponding blocks to avoid code duplication. */
-  private def createLabelsForDuplicatedBranches(split: Split): Labels =
+  private def createLabelsForDuplicatedBranches(split: Split)(using config: Config): Labels =
     val counts: MutMap[Term, (order: Int, count: Int)] = MutMap.empty
     var fallThroughCount = 0
     def rec(s: Split): Unit = s match
@@ -224,10 +224,13 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       case Split.Let(_, _, tail) => rec(tail)
       case Split.Cons(Branch(_, _, cons), tail) => rec(cons); rec(tail)
     rec(split)
-    val consequents =
-      counts.iterator.filter(_._2.count > 1).toSeq.sortBy(_._2.order).zipWithIndex.map:
-        case ((term, _), i) => (term, LabelSymbol(S(term), s"split_${i + 1}$$"))
-      .toList
+    val consequents = config.patMatConsequentSharingThreshold match
+      case S(threshold) =>
+        counts.iterator.filter(kv =>
+          kv._2.count > 1 && kv._2.count * kv._1.size > threshold).toSeq.sortBy(_._2.order).zipWithIndex.map:
+          case ((term, _), i) => (term, LabelSymbol(S(term), s"split_${i + 1}$$"))
+        .toList
+      case N => Nil
     val matchError = if fallThroughCount > 1 then S(LabelSymbol(N, s"split_default$$")) else N
     Labels(consequents, matchError)
   

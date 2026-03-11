@@ -22,19 +22,19 @@ staged fun f() = 0
 staged module A
 //│ Lowered:
 //│ let A⁰;
-//│ define class A⁰ {
+//│ define A⁰ as class A¹ {
 //│   staged 
 //│ }
-//│ module A⁰ {
-//│   ctor {
+//│ module A² {
+//│   constructor {
 //│     let tmp, tmp1;
 //│     begin
-//│       set tmp = A¹.ctor$_instr﹖();
+//│       set tmp = A².ctor$_instr﹖();
 //│       set tmp1 = Block⁰.printCode﹖(tmp);
 //│       runtime⁰.Unit﹖;
 //│       end
 //│   }
-//│   fun ctor$_instr⁰() {
+//│   method ctor$_instr⁰ = fun () {
 //│     let end, tmp, tmp1, tmp2, tmp3;
 //│     set end = new Block⁰.End﹖();
 //│     set tmp = new Block⁰.Symbol﹖("ctor$");

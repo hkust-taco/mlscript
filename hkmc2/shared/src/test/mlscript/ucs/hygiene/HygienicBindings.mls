@@ -41,14 +41,14 @@ fun h1(a) =
 //│ Normalized:
 //│ >  ‹if|while›
 //│ >    a is Option.Some(arg$Some$0$) and
-//│ >      let x = tmp:arg$Some$0$
+//│ >      let x = tmp:arg$Some$0$⁰
 //│ >      x is Left(arg$Left$0$) and
-//│ >        let y = tmp:arg$Left$0$
-//│ >        else y
-//│ >      let y = tmp:arg$Some$0$
+//│ >        let y = tmp:arg$Left$0$⁰
+//│ >        else y⁰
+//│ >      let y = tmp:arg$Some$0$⁰
 //│ >      y is Right(arg$Right$0$) and
-//│ >        let z = tmp:arg$Right$0$
-//│ >        else z
+//│ >        let z = tmp:arg$Right$0$⁰
+//│ >        else z⁰
 //│ >    a is Option.None then 0
 
 h1(Some(Left(42)))
@@ -73,16 +73,16 @@ fun h2(a) =
 //│ Normalized:
 //│ >  ‹if|while›
 //│ >    a is Option.Some(arg$Some$0$) and
-//│ >      let x = tmp:arg$Some$0$
-//│ >      let x' = x
+//│ >      let x = tmp:arg$Some$0$¹
+//│ >      let x' = x⁰
 //│ >      x' is Left(arg$Left$0$) and
-//│ >        let y = tmp:arg$Left$0$
-//│ >        else y
-//│ >      let y = tmp:arg$Some$0$
-//│ >      let y' = y
+//│ >        let y = tmp:arg$Left$0$¹
+//│ >        else y¹
+//│ >      let y = tmp:arg$Some$0$¹
+//│ >      let y' = y²
 //│ >      y' is Right(arg$Right$0$) and
-//│ >        let z = tmp:arg$Right$0$
-//│ >        else z
+//│ >        let z = tmp:arg$Right$0$¹
+//│ >        else z¹
 //│ >    a is Option.None then 0
 
 // :w

@@ -61,27 +61,25 @@ if a is
 //│ let tmp;
 //│ split_root$: {
 //│   split_default$: {
-//│     split_1$: {
-//│       if (a instanceof A1.class) {
-//│         if (b instanceof A1.class) {
-//│           tmp = 1;
-//│           break split_root$
-//│         } else if (b instanceof B1.class) {
-//│           break split_1$
-//│         } else {
-//│           break split_default$
-//│         }
-//│       } else if (a instanceof B1.class) {
-//│         break split_1$
-//│       } else if (a instanceof C1.class) {
-//│         tmp = 3;
+//│     if (a instanceof A1.class) {
+//│       if (b instanceof A1.class) {
+//│         tmp = 1;
+//│         break split_root$
+//│       } else if (b instanceof B1.class) {
+//│         tmp = 2;
 //│         break split_root$
 //│       } else {
 //│         break split_default$
 //│       }
+//│     } else if (a instanceof B1.class) {
+//│       tmp = 2;
+//│       break split_root$
+//│     } else if (a instanceof C1.class) {
+//│       tmp = 3;
+//│       break split_root$
+//│     } else {
+//│       break split_default$
 //│     }
-//│     tmp = 2;
-//│     break split_root$;
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ }

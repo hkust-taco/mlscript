@@ -5,9 +5,7 @@ import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
 import utils.*
 
-import hkmc2.semantics.Elaborator
-import hkmc2.semantics.Resolver
-import hkmc2.semantics.Resolvable
+import hkmc2.semantics.{Elaborator, Resolver, Resolvable, Symbol, SymbolPrinter}
 
 import semantics.Elaborator.Ctx
 
@@ -25,31 +23,19 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   val wd = file.up
   
-  class DebugTreeCommand(name: Str) extends Command[Product => Str](name)(
-    line => if line.contains("loc") then
-      (t: Product) => t match
-        case t: Located => t.toLoc.fold("(no loc)"): loc =>
-          val (sl, _, sc) = loc.origin.fph.getLineColAt(loc.spanStart)
-          val (el, _, ec) = loc.origin.fph.getLineColAt(loc.spanEnd)
-          s"$sl:$sc-$el:$ec"
-        case _ => ""
-    else 
-      Function.const("")
-  ):
-    def post: Product => Str = get.getOrElse(Function.const(""))
-  
   val silent = NullaryCommand("silent")
   val dbgElab = NullaryCommand("de")
   val dbgParsing = NullaryCommand("dp")
   val dbgResolving = NullaryCommand("dr")
   val dbgFlow = NullaryCommand("df")
   
+  val showLocations = NullaryCommand("loc")
   val showParse = NullaryCommand("p")
-  val showParsedTree = DebugTreeCommand("pt")
+  val showParsedTree = NullaryCommand("pt")
   val showElab = NullaryCommand("el")
-  val showElaboratedTree = DebugTreeCommand("elt")
+  val showElaboratedTree = NullaryCommand("elt")
   val showResolve = NullaryCommand("r")
-  val showResolvedTree = DebugTreeCommand("rt")
+  val showResolvedTree = NullaryCommand("rt")
   val showFlows = FlagCommand(false, "sf")
   val showLoweredTree = NullaryCommand("lot")
   val ppLoweredTreeOld = NullaryCommand("slot", () => output("Option ':slot' is deprecated, use ':sir' instead."))
@@ -83,6 +69,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val stageCode = NullaryCommand("staging")
   val rewriteWhile = NullaryCommand("rewriteWhile")
   val noTailRecOpt = NullaryCommand("noTailRec")
+  val patMatConsequentSharingThreshold = Command("patMatConsequentSharingThreshold")(_.trim.toInt)
   
   def mkConfig: Config =
     import Config.*
@@ -118,6 +105,8 @@ abstract class MLsDiffMaker extends DiffMaker:
         ,
       )),
       liftDefns = Opt.when(liftDefns.isSet)(LiftDefns()),
+      patMatConsequentSharingThreshold = patMatConsequentSharingThreshold.get
+        .orElse(Config.default.patMatConsequentSharingThreshold),
       stageCode = stageCode.isSet,
       target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
       rewriteWhileLoops = rewriteWhile.isSet,
@@ -135,12 +124,41 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showUCS = Command("ucs"): ln =>
     ln.split(" ").iterator.map(x => "ucs:" + x.trim).toSet
   
+  
   given Elaborator.State = new Elaborator.State:
     override def dbg: Bool =
       dbgParsing.isSet
       || dbgElab.isSet
       || dbgResolving.isSet
       || debug.isSet
+  
+  
+  protected lazy val dbgScp: utils.Scope = // for unique symbol debug-printing only
+    Scope.empty(Scope.Cfg.default.copy(
+      escapeChars = false,
+      useSuperscripts = true,
+      includeZero = true,
+    ))
+  
+  
+  val dbgPrinter: SymbolPrinter = new SymbolPrinter(dbgScp):
+    override def preProcess(t: Product): Product = super.preProcess:
+      case class Unexpanded(origin: Resolvable)
+      t match
+      case t: Resolvable if t.hasExpansion => t.expanded
+      case t: Resolvable if dbgResolving.isSet => Unexpanded(t.duplicate.resolve)
+      case t => t
+    override def postProcess(t: Product): Str =
+      super.postProcess(t) + (
+        if showLocations.isSet then
+          t match
+          case t: Located => t.toLoc.fold(" loc[none]"): loc =>
+            val (sl, _, sc) = loc.origin.fph.getLineColAt(loc.spanStart)
+            val (el, _, ec) = loc.origin.fph.getLineColAt(loc.spanEnd)
+            s" loc[$sl:$sc-$el:$ec]"
+        else ""
+      )
+  
   
   val etl = new TraceLogger:
     override def doTrace = dbgElab.isSet || scope.exists:
@@ -252,9 +270,9 @@ abstract class MLsDiffMaker extends DiffMaker:
     if (parseOnly.isSet || showParse.isSet) && !showParsedTree.isSet then
       output(s"Parsed:${res.map("\n\t"+_.showDbg).mkString}")
 
-    showParsedTree.get.foreach: post =>
+    if showParsedTree.isSet then
       output(s"Parsed tree:")
-      res.foreach(t => output(t.showAsTree(using post)))  
+      res.foreach(t => output(t.showAsTree))
     
     // if showParse.isSet then
     //   output(s"AST: $res")
@@ -286,7 +304,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"Elab: ${e.showDbg}")
     showElaboratedTree.get.foreach: post =>
       output(s"Elaborated tree:")
-      output(e.showAsTree(using post))
+      output(e.showAsTree)
       
     processTerm(e, inImport = false)
       
@@ -300,13 +318,8 @@ abstract class MLsDiffMaker extends DiffMaker:
     if showResolve.isSet then
       output(s"Resolved: ${trm.showDbg}")
     showResolvedTree.get.foreach: post =>
-      case class Unexpanded(origin: Resolvable)
-      val pre: PartialFunction[Product, Product] = 
-        case t: Resolvable if t.hasExpansion => t.expanded
-        case t: Resolvable if dbgResolving.isSet => Unexpanded(t.duplicate.resolve)
-        case t => t
       output(s"Resolved tree:")
-      output(trm.showAsTree(inTailPos = false, pre = pre)(using post))
+      output(trm.showAsTree)
     
     if flow.isSet then
       val floan = semantics.flow.FlowAnalysis(using ftl)
