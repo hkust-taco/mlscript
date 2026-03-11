@@ -31,9 +31,7 @@
 //│         (ref.cast (ref null $Unit)
 //│           (call 0)))))
 //│   (func $entry (type 3) (result (ref null any))
-//│     (block (result (ref null $Unit))
-//│       (nop)
-//│       (global.get $Unit$inst)))
+//│     (global.get $Unit$inst))
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))
 //│ Wasm result:
