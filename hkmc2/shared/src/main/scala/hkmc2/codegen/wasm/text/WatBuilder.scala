@@ -89,7 +89,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       bufferable = N
     )
 
-  /** Registration path for synthetic Unit runtime state. */
+  /** Registers the synthetic `Unit` singleton. */
   private def RegisterUnitSingleton()(using Ctx, Raise, Scope): Unit =
     val unitDefn = syntheticUnitDefn
     if ctx.containsSingleton(unitDefn.sym) then return
@@ -173,7 +173,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       createDefnTypes(rst)
     case Define(_, rst) =>
       createDefnTypes(rst)
-    case Match(_, _, _, rst) =>
+    case Match(_, arms, dflt, rst) =>
+      arms.foreach((_, body) => createDefnTypes(body))
+      dflt.foreach(createDefnTypes)
       createDefnTypes(rst)
     case Begin(_, rst) =>
       createDefnTypes(rst)
@@ -770,12 +772,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       if isControlTransfer(expr) then expr
       else
         expr.resultType match
-          case S(_) => FoldedInstr(
-              mnemonic = "drop",
-              instrargs = Seq.empty,
-              stackargs = Seq(expr),
-              resultTypes = Seq.empty
-            )
+          case S(_) => drop(expr)
           case N => expr
 
     t match
@@ -1198,7 +1195,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       val matchResLocal =
         if tailMode then S(mkTempLocal("matchRes"))
         else N
-      
+
       def getScrutExpr: Expr = result(scrut)
 
       def assignTailResult(target: LocalIdx, expr: Expr): Expr =
@@ -1206,7 +1203,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         else
           expr.resultType match
             case S(_) => local.set(target, expr)
-            case N => expr
+            case N => Instructions.block(
+                label = N,
+                children = Seq(
+                  expr,
+                  local.set(target, result(Value.Ref(State.unitSymbol)))
+                ),
+                resultTypes = Seq.empty
+              )
 
       def lowerMatchBody(expr: Expr): Expr =
         matchResLocal match
@@ -1214,7 +1218,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           case N => asStatement(expr)
 
       val matchResInitExpr = matchResLocal.map: localIdx =>
-        local.set(localIdx, result(Value.Ref(State.unitSymbol)))
+        local.set(localIdx, ref.`null`(HeapType.Any))
       
       // Compile each match arm
       boundary:
@@ -1273,7 +1277,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               val armLabel = scope.allocateName(armLabelSym)
               
               // Safe to cast and extract tag since ref.test passed
-              val scrutAsObject = ref.cast(getScrutExpr, baseObjectRefType(nullable = false))
+              val scrutAsObject = ref.cast(scrutExpr, baseObjectRefType(nullable = false))
               val scrutTag = struct.get(FieldIdx(NumIdx(0)), scrutAsObject, I32Type)
               val tagMatches = i32.eq(scrutTag, i32.const(expectedTag))
               

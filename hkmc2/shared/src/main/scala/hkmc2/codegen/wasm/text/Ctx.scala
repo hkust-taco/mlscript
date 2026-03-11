@@ -272,8 +272,9 @@ class Ctx(
   /** Pushes a label target for the dynamic extent of `body` and pops it afterwards. */
   def withLabel[T](label: LabelSymbol, target: Ctx.LabelTarget)(body: => T): T =
     labelTargets = (label, target) :: labelTargets
-    try body
-    finally labelTargets = labelTargets.tail
+    val res = body
+    labelTargets = labelTargets.tail
+    res
 
   /** Looks up the nearest in-scope target for `label`. */
   def lookupLabel(label: LabelSymbol): Opt[Ctx.LabelTarget] =
