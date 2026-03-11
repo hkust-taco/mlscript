@@ -140,6 +140,8 @@ case class Scope
   
   def allocateName(l: Local, prefix: Str = "", shadow: Bool = false)(using Raise, Line, Name, FileName): Str =
     
+    val c = cfg
+    
     // * May be useful later?
     /* 
     val base: Str = l match
@@ -147,16 +149,16 @@ case class Scope
         prefix + tmp.nameHints.head
       case _ => if l.nme.isEmpty && prefix.isEmpty then "tmp" else prefix + l.nme
     */
-    val base = if l.nme.isEmpty && prefix.isEmpty then "tmp" else prefix + l.nme
+    val base = if l.nme.isEmpty && prefix.isEmpty then c.defaultName else prefix + l.nme
     
     val realBase = if cfg.escapeChars
       then Scope.replaceInvalidCharacters(base)
       else base
     
     val name =
-      val c = cfg
       // Try just realBase.
-      if !c.includeZero && !inScope(realBase) && !JSBuilder.keywords.contains(realBase) then realBase
+      if !c.includeZero && !inScope(realBase) && !JSBuilder.keywords.contains(realBase) && realBase.nonEmpty
+      then realBase
       else
         // Try realBase with an integer.
         ((if c.includeZero then 0 else 1) to Int.MaxValue).iterator
@@ -186,9 +188,9 @@ case class Scope
 
 object Scope:
   
-  case class Cfg(escapeChars: Bool, useSuperscripts: Bool, includeZero: Bool)
+  case class Cfg(escapeChars: Bool, useSuperscripts: Bool, includeZero: Bool, defaultName: Str)
   object Cfg:
-    val default = Cfg(escapeChars = true, useSuperscripts = false, includeZero = false)
+    val default = Cfg(escapeChars = true, useSuperscripts = false, includeZero = false, defaultName = "tmp")
   end Cfg
   
   def scope(using scp: Scope): Scope = scp
