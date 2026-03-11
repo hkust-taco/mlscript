@@ -2,7 +2,41 @@
 :effectHandlers
 :lift
 :noTailRec
+:showRepl
 
+//│ REPL> Collected:
+//│ >  Welcome to Node.js v22.11.0.
+//│ >  Type ".help" for more information.
+//│ REPL> Sending: console.info = console.error
+//│ REPL> Collected:
+//│ >  [Function: error]
+//│ REPL> Sending: process.chdir('/Users/parreaux/work/Research/code/mlscript')
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: const runtime = (await import("/Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs")).default;
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: const definitionMetadata = Symbol.for("mlscript.definitionMetadata");
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: const prettyPrint = Symbol.for("mlscript.prettyPrint");
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: block$res = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let Predef;try { Predef = await import("/Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs").then(m => m.default ?? m); block$res = undefined; } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  undefined
+//│ >  Unit {}
 
 // preserve tail calls
 // MUST see "return hi(tmp1)" in the output
@@ -20,7 +54,7 @@ hi(0)
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
-//│     return runtime.unwind(hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0)
+//│     return runtime.unwind(hi, -1, "StackSafety.mls:46:1", null, null, 1, 1, n, 0)
 //│   }
 //│   scrut = n === 0;
 //│   if (scrut === true) {
@@ -36,6 +70,21 @@ hi(0)
 //│ tmp = runtime.runStackSafe(6, $_stack$_safe$_body$_);
 //│ if (runtime.curEffect !== null) { tmp = runtime.topLevelEffect(false); }
 //│ tmp
+//│ REPL> Sending: block$res1 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let hi, tmp, $_stack$_safe$_body$_;try { hi = function hi(n) {   runtime.checkArgs("hi", 1, true, arguments.length);   let scrut, tmp1, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(hi, -1, "StackSafety.mls:46:1", null, null, 1, 1, n, 0))   }   scrut = n === 0;   if (scrut === true) {     return 0   } else {     tmp1 = n - 1;     return runtime.checkCall(hi(tmp1))   } }; $_stack$_safe$_body$_ = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return runtime.checkCall(hi(0)) }); tmp = runtime.runStackSafe(6, $_stack$_safe$_body$_); if (runtime.curEffect !== null) {   tmp = runtime.checkCall(runtime.topLevelEffect(false)); } block$res1 = tmp; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res1)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  0
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  0
+//│ >  Unit {}
 //│ = 0
 
 :stackSafe
@@ -54,7 +103,7 @@ sum(10000)
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
-//│     return runtime.unwind(sum, -1, "StackSafety.mls:44:1", null, null, 1, 1, n, 0)
+//│     return runtime.unwind(sum, -1, "StackSafety.mls:93:1", null, null, 1, 1, n, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -75,7 +124,7 @@ sum(10000)
 //│           runtime.stackDepth = curDepth;
 //│           runtime.resumeValue = res;
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(sum, 1, "StackSafety.mls:47:9", null, null, 1, 1, n, 0)
+//│             return runtime.unwind(sum, 1, "StackSafety.mls:96:9", null, null, 1, 1, n, 0)
 //│           }
 //│           pc = 1;
 //│           continue main
@@ -95,6 +144,21 @@ sum(10000)
 //│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
 //│ if (runtime.curEffect !== null) { tmp1 = runtime.topLevelEffect(false); }
 //│ tmp1
+//│ REPL> Sending: block$res2 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let sum, tmp1, $_stack$_safe$_body$_1;try { sum = function sum(n) {   runtime.checkArgs("sum", 1, true, arguments.length);   let scrut, tmp2, tmp3, pc, curDepth, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   curDepth = runtime.stackDepth;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(sum, -1, "StackSafety.mls:93:1", null, null, 1, 1, n, 0))   }   if (runtime.resumePc === -1) {     pc = 0;   } else {     pc = runtime.resumePc;     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         scrut = n === 0;         if (scrut === true) {           return 0         } else {           let res;           tmp2 = n - 1;           res = runtime.checkCall(sum(tmp2));           runtime.stackDepth = curDepth;           runtime.resumeValue = res;           if (runtime.curEffect !== null) {             return runtime.checkCall(runtime.unwind(sum, 1, "StackSafety.mls:96:9", null, null, 1, 1, n, 0))           }           pc = 1;           continue main         }         break;       case 1:         tmp3 = runtime.resumeValue;         return n + tmp3;         break;     }     break;   } }; $_stack$_safe$_body$_1 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return runtime.checkCall(sum(10000)) }); tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1); if (runtime.curEffect !== null) {   tmp1 = runtime.checkCall(runtime.topLevelEffect(false)); } block$res2 = tmp1; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res2)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  50005000
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  50005000
+//│ >  Unit {}
 //│ = 50005000
 
 
@@ -107,7 +171,29 @@ fun foo(f) =
     set ctr += 1
     dummy(f(f))
 foo(foo)
+//│ REPL> Sending: block$res3 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let ctr, dummy, foo, tmp2, $_stack$_safe$_body$_2;try { dummy = function dummy(x) {   runtime.checkArgs("dummy", 1, true, arguments.length);   return x }; foo = function foo(f) {   runtime.checkArgs("foo", 1, true, arguments.length);   let scrut, tmp3, tmp4, pc, curDepth, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   curDepth = runtime.stackDepth;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(foo, -1, "StackSafety.mls:168:1", null, null, 1, 1, f, 0))   }   if (runtime.resumePc === -1) {     pc = 0;   } else {     pc = runtime.resumePc;     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         scrut = ctr > 10000;         if (scrut === true) {           return 0         } else {           let res;           tmp3 = ctr + 1;           ctr = tmp3;           res = runtime.safeCall(f(f));           runtime.stackDepth = curDepth;           runtime.resumeValue = res;           if (runtime.curEffect !== null) {             return runtime.checkCall(runtime.unwind(foo, 2, "StackSafety.mls:172:11", null, null, 1, 1, f, 0))           }           pc = 2;           continue main         }         break;       case 1:         return runtime.checkCall(dummy(tmp4));         break;       case 2:         tmp4 = runtime.resumeValue;         pc = 1;         continue main;         break;     }     break;   } }; ctr = 0; $_stack$_safe$_body$_2 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return runtime.checkCall(foo(foo)) }); tmp2 = runtime.runStackSafe(1000, $_stack$_safe$_body$_2); if (runtime.curEffect !== null) {   tmp2 = runtime.checkCall(runtime.topLevelEffect(false)); } block$res3 = tmp2; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res3)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  0
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  0
+//│ >  Unit {}
 //│ = 0
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(ctr)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  10001
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  10001
+//│ >  Unit {}
 //│ ctr = 10001
 
 :stackSafe
@@ -118,7 +204,29 @@ val foo =
     else n + f(n-1)
   f(10000)
 foo
+//│ REPL> Sending: block$res4 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let f, foo1, lambda, tmp3, $_stack$_safe$_body$_3;try { lambda = (undefined, function (n) {   runtime.checkArgs("", 1, true, arguments.length);   let scrut, tmp4, tmp5, pc, curDepth, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   curDepth = runtime.stackDepth;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(lambda, -1, null, null, null, 1, 1, n, 0))   }   if (runtime.resumePc === -1) {     pc = 0;   } else {     pc = runtime.resumePc;     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         scrut = n <= 0;         if (scrut === true) {           return 0         } else {           let res;           tmp4 = n - 1;           res = runtime.safeCall(f(tmp4));           runtime.stackDepth = curDepth;           runtime.resumeValue = res;           if (runtime.curEffect !== null) {             return runtime.checkCall(runtime.unwind(lambda, 1, "StackSafety.mls:204:14", null, null, 1, 1, n, 0))           }           pc = 1;           continue main         }         break;       case 1:         tmp5 = runtime.resumeValue;         return n + tmp5;         break;     }     break;   } }); f = lambda; $_stack$_safe$_body$_3 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return runtime.safeCall(f(10000)) }); tmp3 = runtime.runStackSafe(1000, $_stack$_safe$_body$_3); if (runtime.curEffect !== null) {   tmp3 = runtime.checkCall(runtime.topLevelEffect(false)); } foo1 = tmp3; block$res4 = foo1; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res4)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  50005000
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  50005000
+//│ >  Unit {}
 //│ = 50005000
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(foo1)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  50005000
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  50005000
+//│ >  Unit {}
 //│ foo = 50005000
 
 :stackSafe 100
@@ -129,11 +237,48 @@ val foo =
     else n + f(n-1)
   f(10000)
 foo
+//│ REPL> Sending: block$res5 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let f1, foo2, lambda1, tmp4, $_stack$_safe$_body$_4;try { lambda1 = (undefined, function (n) {   runtime.checkArgs("", 1, true, arguments.length);   let scrut, tmp5, tmp6, pc, curDepth, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   curDepth = runtime.stackDepth;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(lambda1, -1, null, null, null, 1, 1, n, 0))   }   if (runtime.resumePc === -1) {     pc = 0;   } else {     pc = runtime.resumePc;     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         scrut = n <= 0;         if (scrut === true) {           return 0         } else {           let res;           tmp5 = n - 1;           res = runtime.safeCall(f1(tmp5));           runtime.stackDepth = curDepth;           runtime.resumeValue = res;           if (runtime.curEffect !== null) {             return runtime.checkCall(runtime.unwind(lambda1, 1, "StackSafety.mls:237:14", null, null, 1, 1, n, 0))           }           pc = 1;           continue main         }         break;       case 1:         tmp6 = runtime.resumeValue;         return n + tmp6;         break;     }     break;   } }); f1 = lambda1; $_stack$_safe$_body$_4 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return runtime.safeCall(f1(10000)) }); tmp4 = runtime.runStackSafe(100, $_stack$_safe$_body$_4); if (runtime.curEffect !== null) {   tmp4 = runtime.checkCall(runtime.topLevelEffect(false)); } foo2 = tmp4; block$res5 = foo2; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res5)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  50005000
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  50005000
+//│ >  Unit {}
 //│ = 50005000
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(foo2)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  50005000
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  50005000
+//│ >  Unit {}
 //│ foo = 50005000
 
 abstract class Eff with
   fun perform(a): ()
+//│ REPL> Sending: block$res6 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let Eff1;try { globalThis.Object.freeze(class Eff {   static {     Eff1 = this   }   constructor() {}   #Eff$cap;   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Eff"];  }); block$res6 = undefined; } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res6)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  undefined
+//│ >  Unit {}
 
 // functions and lambdas inside handlers
 :stackSafe 100
@@ -147,6 +292,21 @@ handle h = Eff with
       else n + f(n-1)
     resume(f(10000))
 foo(h)
+//│ REPL> Sending: block$res7 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let foo3, h, lambda2, tmp5, handleBlock$, Handler$h$perform, Handler$h$1, Capture$scope11, lambda$, $_stack$_safe$_body$_5, $_stack$_safe$_body$_6;try { globalThis.Object.freeze(class Capture$scope1 {   static {     Capture$scope11 = this   }   constructor(f$0) {     this.f$0 = f$0;   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Capture$scope1"];  }); lambda$ = (undefined, function (scope1$cap) {   runtime.checkArgs("", 1, true, arguments.length);   return (n) => {     let stackDelayRes;     runtime.stackDepth = runtime.stackDepth + 1;     stackDelayRes = runtime.checkCall(runtime.checkDepth());     if (runtime.curEffect !== null) {       return runtime.checkCall(runtime.unwind(lambda$, -1, null, null, null, 2, 1, scope1$cap, 1, n, 0))     }     return runtime.checkCall(lambda2(scope1$cap, n))   } }); lambda2 = (undefined, function (scope1$cap, n) {   runtime.checkArgs("", 2, true, arguments.length);   let scrut, tmp6, tmp7, pc, curDepth, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   curDepth = runtime.stackDepth;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(lambda2, -1, null, null, null, 1, 2, scope1$cap, n, 0))   }   if (runtime.resumePc === -1) {     pc = 0;   } else {     pc = runtime.resumePc;     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         scrut = n <= 0;         if (scrut === true) {           return 0         } else {           let res;           tmp6 = n - 1;           res = runtime.safeCall(scope1$cap.f$0(tmp6));           runtime.stackDepth = curDepth;           runtime.resumeValue = res;           if (runtime.curEffect !== null) {             return runtime.checkCall(runtime.unwind(lambda2, 1, "StackSafety.mls:292:16", null, null, 1, 2, scope1$cap, n, 0))           }           pc = 1;           continue main         }         break;       case 1:         tmp7 = runtime.resumeValue;         return n + tmp7;         break;     }     break;   } }); Handler$h$perform = function Handler$h$perform(resume) {   runtime.checkArgs("Handler$h$perform", 1, true, arguments.length);   let f2, tmp6, scope1$cap, lambda$here, pc, curDepth, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   curDepth = runtime.stackDepth;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(Handler$h$perform, -1, null, null, null, 1, 1, resume, 0))   }   if (runtime.resumePc === -1) {     pc = 0;   } else {     let saveOffset;     pc = runtime.resumePc;     saveOffset = runtime.resumeIdx;     f2 = runtime.resumeArr.at(saveOffset);     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         let res;         scope1$cap = new Capture$scope11(f2);         runtime.stackDepth = curDepth;         scope1$cap.f$0 = runtime.Unit;         lambda$here = runtime.checkCall(lambda$(scope1$cap));         scope1$cap.f$0 = lambda$here;         res = runtime.safeCall(scope1$cap.f$0(10000));         runtime.stackDepth = curDepth;         runtime.resumeValue = res;         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.unwind(Handler$h$perform, 2, "StackSafety.mls:293:12", null, null, 1, 1, resume, 1, f2))         }         pc = 2;         continue main;         break;       case 1:         return runtime.safeCall(resume(tmp6));         break;       case 2:         tmp6 = runtime.resumeValue;         pc = 1;         continue main;         break;     }     break;   } }; foo3 = function foo(h1) {   runtime.checkArgs("foo", 1, true, arguments.length);   let stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(foo3, -1, "StackSafety.mls:286:1", null, null, 1, 1, h1, 0))   }   return runtime.safeCall(h1.perform()) }; globalThis.Object.freeze(class Handler$h$ extends Eff1 {   static {     Handler$h$1 = this   }   constructor() {     let tmp6;     tmp6 = super();     if (runtime.curEffect !== null) {       tmp6 = runtime.checkCall(runtime.illegalEffect("in a constructor"));     }     tmp6;   }   #Handler$h$$cap;   get perform$__checkNotMethod() { runtime.deboundMethod("perform", "Handler$h$"); }   perform() {     runtime.checkArgs("perform", 0, true, arguments.length);     let stackDelayRes;     runtime.stackDepth = runtime.stackDepth + 1;     stackDelayRes = runtime.checkCall(runtime.checkDepth());     if (runtime.curEffect !== null) {       return runtime.checkCall(runtime.unwind(this.perform, -1, "StackSafety.mls:288:3", null, this, 1, 0, 0))     }     return runtime.mkEffect(this, Handler$h$perform)   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Handler$h$"];  }); $_stack$_safe$_body$_6 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return new Handler$h$1() }); h = runtime.runStackSafe(100, $_stack$_safe$_body$_6); handleBlock$ = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   let stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(handleBlock$, -1, null, null, null, 1, 0, 0))   }   return runtime.checkCall(foo3(h)) }); $_stack$_safe$_body$_5 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return runtime.enterHandleBlock(h, handleBlock$) }); tmp5 = runtime.runStackSafe(100, $_stack$_safe$_body$_5); if (runtime.curEffect !== null) {   tmp5 = runtime.checkCall(runtime.topLevelEffect(false)); } block$res7 = tmp5; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res7)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  50005000
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  50005000
+//│ >  Unit {}
 //│ = 50005000
 
 // function call and defn inside handler
@@ -162,6 +322,21 @@ handle h = Eff with
 in
   fun foo(h) = h.perform()
   foo(h)
+//│ REPL> Sending: block$res8 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let foo4, h1, lambda3, tmp6, handleBlock$1, Handler$h$perform1, Handler$h$3, Capture$scope21, lambda$1, $_stack$_safe$_body$_7, $_stack$_safe$_body$_8;try { foo4 = function foo(h2) {   runtime.checkArgs("foo", 1, true, arguments.length);   let stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(foo4, -1, "StackSafety.mls:323:3", null, null, 1, 1, h2, 0))   }   return runtime.safeCall(h2.perform()) }; globalThis.Object.freeze(class Capture$scope2 {   static {     Capture$scope21 = this   }   constructor(f$0) {     this.f$0 = f$0;   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Capture$scope2"];  }); lambda$1 = (undefined, function (scope2$cap) {   runtime.checkArgs("", 1, true, arguments.length);   return (n) => {     let stackDelayRes;     runtime.stackDepth = runtime.stackDepth + 1;     stackDelayRes = runtime.checkCall(runtime.checkDepth());     if (runtime.curEffect !== null) {       return runtime.checkCall(runtime.unwind(lambda$1, -1, null, null, null, 2, 1, scope2$cap, 1, n, 0))     }     return runtime.checkCall(lambda3(scope2$cap, n))   } }); lambda3 = (undefined, function (scope2$cap, n) {   runtime.checkArgs("", 2, true, arguments.length);   let scrut, tmp7, tmp8, pc, curDepth, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   curDepth = runtime.stackDepth;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(lambda3, -1, null, null, null, 1, 2, scope2$cap, n, 0))   }   if (runtime.resumePc === -1) {     pc = 0;   } else {     pc = runtime.resumePc;     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         scrut = n <= 0;         if (scrut === true) {           return 0         } else {           let res;           tmp7 = n - 1;           res = runtime.safeCall(scope2$cap.f$0(tmp7));           runtime.stackDepth = curDepth;           runtime.resumeValue = res;           if (runtime.curEffect !== null) {             return runtime.checkCall(runtime.unwind(lambda3, 1, "StackSafety.mls:320:16", null, null, 1, 2, scope2$cap, n, 0))           }           pc = 1;           continue main         }         break;       case 1:         tmp8 = runtime.resumeValue;         return n + tmp8;         break;     }     break;   } }); Handler$h$perform1 = function Handler$h$perform(resume) {   runtime.checkArgs("Handler$h$perform", 1, true, arguments.length);   let f2, tmp7, scope2$cap, lambda$here, pc, curDepth, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   curDepth = runtime.stackDepth;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(Handler$h$perform1, -1, null, null, null, 1, 1, resume, 0))   }   if (runtime.resumePc === -1) {     pc = 0;   } else {     let saveOffset;     pc = runtime.resumePc;     saveOffset = runtime.resumeIdx;     f2 = runtime.resumeArr.at(saveOffset);     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         let res;         scope2$cap = new Capture$scope21(f2);         runtime.stackDepth = curDepth;         scope2$cap.f$0 = runtime.Unit;         lambda$here = runtime.checkCall(lambda$1(scope2$cap));         scope2$cap.f$0 = lambda$here;         res = runtime.safeCall(scope2$cap.f$0(10000));         runtime.stackDepth = curDepth;         runtime.resumeValue = res;         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.unwind(Handler$h$perform1, 2, "StackSafety.mls:321:12", null, null, 1, 1, resume, 1, f2))         }         pc = 2;         continue main;         break;       case 1:         return runtime.safeCall(resume(tmp7));         break;       case 2:         tmp7 = runtime.resumeValue;         pc = 1;         continue main;         break;     }     break;   } }; globalThis.Object.freeze(class Handler$h$2 extends Eff1 {   static {     Handler$h$3 = this   }   constructor() {     let tmp7;     tmp7 = super();     if (runtime.curEffect !== null) {       tmp7 = runtime.checkCall(runtime.illegalEffect("in a constructor"));     }     tmp7;   }   #Handler$h$$cap;   get perform$__checkNotMethod() { runtime.deboundMethod("perform", "Handler$h$"); }   perform() {     runtime.checkArgs("perform", 0, true, arguments.length);     let stackDelayRes;     runtime.stackDepth = runtime.stackDepth + 1;     stackDelayRes = runtime.checkCall(runtime.checkDepth());     if (runtime.curEffect !== null) {       return runtime.checkCall(runtime.unwind(this.perform, -1, "StackSafety.mls:316:3", null, this, 1, 0, 0))     }     return runtime.mkEffect(this, Handler$h$perform1)   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Handler$h$"];  }); $_stack$_safe$_body$_8 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return new Handler$h$3() }); h1 = runtime.runStackSafe(100, $_stack$_safe$_body$_8); handleBlock$1 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   let stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(handleBlock$1, -1, null, null, null, 1, 0, 0))   }   return runtime.checkCall(foo4(h1)) }); $_stack$_safe$_body$_7 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return runtime.enterHandleBlock(h1, handleBlock$1) }); tmp6 = runtime.runStackSafe(100, $_stack$_safe$_body$_7); if (runtime.curEffect !== null) {   tmp6 = runtime.checkCall(runtime.topLevelEffect(false)); } block$res8 = tmp6; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res8)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  50005000
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  50005000
+//│ >  Unit {}
 //│ = 50005000
 
 :stackSafe 100
@@ -172,6 +347,21 @@ module A with
     else n + f(n-1)
   val x = f(10000)
 A.x
+//│ REPL> Sending: block$res9 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let A1, lambda4, lambda$2;try { lambda$2 = (undefined, function (A2) {   runtime.checkArgs("", 1, true, arguments.length);   return (n) => {     let stackDelayRes;     runtime.stackDepth = runtime.stackDepth + 1;     stackDelayRes = runtime.checkCall(runtime.checkDepth());     if (runtime.curEffect !== null) {       return runtime.checkCall(runtime.unwind(lambda$2, -1, null, null, null, 2, 1, A2, 1, n, 0))     }     return runtime.checkCall(lambda4(A2, n))   } }); lambda4 = (undefined, function (A2, n) {   runtime.checkArgs("", 2, true, arguments.length);   let scrut, tmp7, tmp8, pc, curDepth, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   curDepth = runtime.stackDepth;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(lambda4, -1, null, null, null, 1, 2, A2, n, 0))   }   if (runtime.resumePc === -1) {     pc = 0;   } else {     pc = runtime.resumePc;     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         scrut = n <= 0;         if (scrut === true) {           return 0         } else {           let res;           tmp7 = n - 1;           res = runtime.safeCall(A2.f(tmp7));           runtime.stackDepth = curDepth;           runtime.resumeValue = res;           if (runtime.curEffect !== null) {             return runtime.checkCall(runtime.unwind(lambda4, 1, "StackSafety.mls:347:14", null, null, 1, 2, A2, n, 0))           }           pc = 1;           continue main         }         break;       case 1:         tmp8 = runtime.resumeValue;         return n + tmp8;         break;     }     break;   } }); globalThis.Object.freeze(class A {   static {     A1 = this   }   constructor() {     runtime.Unit;   }   static #A_mod$cap;   static {     let tmp7, lambda$here, $_stack$_safe$_body$_9;     lambda$here = runtime.checkCall(lambda$2(A));     this.f = lambda$here;     $_stack$_safe$_body$_9 = (undefined, function () {       runtime.checkArgs("", 0, true, arguments.length);       return runtime.safeCall(A.f(10000))     });     tmp7 = runtime.runStackSafe(100, $_stack$_safe$_body$_9);     if (runtime.curEffect !== null) {       let $_stack$_safe$_body$_10;       $_stack$_safe$_body$_10 = (undefined, function () {         runtime.checkArgs("", 0, true, arguments.length);         return runtime.checkCall(runtime.illegalEffect("in a constructor"))       });       tmp7 = runtime.runStackSafe(100, $_stack$_safe$_body$_10);     }     this.x = tmp7;   }   #A$cap;   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "A"];  }); block$res9 = A1.x; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res9)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  50005000
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  50005000
+//│ >  Unit {}
 //│ = 50005000
 
 :re
@@ -184,7 +374,23 @@ handle h = Eff with
       else n + f(n-1)
     resume(f(10000))
 foo(h)
+//│ REPL> Sending: block$res10 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let foo5, h2, lambda5, tmp7, handleBlock$2, Handler$h$perform2, Handler$h$5, Capture$scope13, lambda$3;try { globalThis.Object.freeze(class Capture$scope12 {   static {     Capture$scope13 = this   }   constructor(f$0) {     this.f$0 = f$0;   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Capture$scope1"];  }); lambda$3 = (undefined, function (scope1$cap) {   runtime.checkArgs("", 1, true, arguments.length);   return (n) => {     return runtime.checkCall(lambda5(scope1$cap, n))   } }); lambda5 = (undefined, function (scope1$cap, n) {   runtime.checkArgs("", 2, true, arguments.length);   let scrut, tmp8, tmp9, pc;   if (runtime.resumePc === -1) {     pc = 0;   } else {     pc = runtime.resumePc;     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         scrut = n <= 0;         if (scrut === true) {           return 0         } else {           tmp8 = n - 1;           runtime.resumeValue = runtime.safeCall(scope1$cap.f$0(tmp8));           if (runtime.curEffect !== null) {             return runtime.checkCall(runtime.unwind(lambda5, 1, "StackSafety.mls:374:16", null, null, 1, 2, scope1$cap, n, 0))           }           pc = 1;           continue main         }         break;       case 1:         tmp9 = runtime.resumeValue;         return n + tmp9;         break;     }     break;   } }); Handler$h$perform2 = function Handler$h$perform(resume) {   runtime.checkArgs("Handler$h$perform", 1, true, arguments.length);   let f2, tmp8, scope1$cap, lambda$here, pc;   if (runtime.resumePc === -1) {     pc = 0;   } else {     pc = runtime.resumePc;     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         scope1$cap = new Capture$scope13(f2);         scope1$cap.f$0 = runtime.Unit;         lambda$here = runtime.checkCall(lambda$3(scope1$cap));         scope1$cap.f$0 = lambda$here;         runtime.resumeValue = runtime.safeCall(scope1$cap.f$0(10000));         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.unwind(Handler$h$perform2, 2, "StackSafety.mls:375:12", null, null, 1, 1, resume, 0))         }         pc = 2;         continue main;         break;       case 1:         return runtime.safeCall(resume(tmp8));         break;       case 2:         tmp8 = runtime.resumeValue;         pc = 1;         continue main;         break;     }     break;   } }; foo5 = function foo(h3) {   runtime.checkArgs("foo", 1, true, arguments.length);   return runtime.safeCall(h3.perform(2)) }; globalThis.Object.freeze(class Handler$h$4 extends Eff1 {   static {     Handler$h$5 = this   }   constructor() {     let tmp8;     tmp8 = super();     if (runtime.curEffect !== null) {       tmp8 = runtime.checkCall(runtime.illegalEffect("in a constructor"));     }     tmp8;   }   #Handler$h$$cap;   get perform$__checkNotMethod() { runtime.deboundMethod("perform", "Handler$h$"); }   perform(a) {     runtime.checkArgs("perform", 1, true, arguments.length);     return runtime.mkEffect(this, Handler$h$perform2)   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Handler$h$"];  }); h2 = new Handler$h$5(); handleBlock$2 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return runtime.checkCall(foo5(h2)) }); tmp7 = runtime.enterHandleBlock(h2, handleBlock$2); if (runtime.curEffect !== null) {   tmp7 = runtime.checkCall(runtime.topLevelEffect(false)); } block$res10 = tmp7; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Collected:
+//│ >  ​RangeError: Maximum call stack size exceeded​
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  [runtime error] RangeError: Maximum call stack size exceeded
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res10)) } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  undefined
+//│ >  Unit {}
 
 :stackSafe
 :sjs
@@ -196,6 +402,21 @@ fun max(a, b) = if a < b then b else a
 //│   scrut = a < b;
 //│   if (scrut === true) { return b } else { return a }
 //│ };
+//│ REPL> Sending: block$res11 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let max;try { max = function max(a, b) {   runtime.checkArgs("max", 2, true, arguments.length);   let scrut;   scrut = a < b;   if (scrut === true) { return b } else { return a } }; block$res11 = undefined; } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res11)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  undefined
+//│ >  Unit {}
 
 
 :stackSafe
@@ -206,6 +427,21 @@ fun sum(n) =
     n + sum(n - 1)
 fun bad() = sum(10000) + sum(10000)
 bad()
+//│ REPL> Sending: block$res12 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let bad, sum1, tmp8, $_stack$_safe$_body$_9;try { sum1 = function sum(n) {   runtime.checkArgs("sum", 1, true, arguments.length);   let scrut, tmp9, tmp10, pc, curDepth, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   curDepth = runtime.stackDepth;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(sum1, -1, "StackSafety.mls:424:1", null, null, 1, 1, n, 0))   }   if (runtime.resumePc === -1) {     pc = 0;   } else {     pc = runtime.resumePc;     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         scrut = n === 0;         if (scrut === true) {           return 0         } else {           let res;           tmp9 = n - 1;           res = runtime.checkCall(sum1(tmp9));           runtime.stackDepth = curDepth;           runtime.resumeValue = res;           if (runtime.curEffect !== null) {             return runtime.checkCall(runtime.unwind(sum1, 1, "StackSafety.mls:427:9", null, null, 1, 1, n, 0))           }           pc = 1;           continue main         }         break;       case 1:         tmp10 = runtime.resumeValue;         return n + tmp10;         break;     }     break;   } }; bad = function bad() {   runtime.checkArgs("bad", 0, true, arguments.length);   let tmp9, tmp10, pc, curDepth, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   curDepth = runtime.stackDepth;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(bad, -1, "StackSafety.mls:428:1", null, null, 1, 0, 0))   }   if (runtime.resumePc === -1) {     pc = 0;   } else {     let saveOffset;     pc = runtime.resumePc;     saveOffset = runtime.resumeIdx;     tmp9 = runtime.resumeArr.at(saveOffset);     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         let res;         res = runtime.checkCall(sum1(10000));         runtime.stackDepth = curDepth;         runtime.resumeValue = res;         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.unwind(bad, 2, "StackSafety.mls:428:13", null, null, 1, 0, 1, tmp9))         }         pc = 2;         continue main;         break;       case 1:         tmp10 = runtime.resumeValue;         return tmp9 + tmp10;         break;       case 2:         let res1;         tmp9 = runtime.resumeValue;         res1 = runtime.checkCall(sum1(10000));         runtime.stackDepth = curDepth;         runtime.resumeValue = res1;         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.unwind(bad, 1, "StackSafety.mls:428:26", null, null, 1, 0, 1, tmp9))         }         pc = 1;         continue main;         break;     }     break;   } }; $_stack$_safe$_body$_9 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return runtime.checkCall(bad()) }); tmp8 = runtime.runStackSafe(1000, $_stack$_safe$_body$_9); if (runtime.curEffect !== null) {   tmp8 = runtime.checkCall(runtime.topLevelEffect(false)); } block$res12 = tmp8; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res12)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  100010000
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  100010000
+//│ >  Unit {}
 //│ = 100010000
 
 
@@ -220,7 +456,29 @@ handle h = Object with
       set depth += 1
       enterHandleBlock(this, () => whoops())
 h.whoops()
+//│ REPL> Sending: block$res13 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let depth, h3, lambda6, tmp9, handleBlock$3, Handler$h$whoops, Handler$h$7, Handler$h$whoops$, lambda$4, $_stack$_safe$_body$_10, $_stack$_safe$_body$_11;try { lambda$4 = (undefined, function (Handler$h$8) {   runtime.checkArgs("", 1, true, arguments.length);   return () => {     let stackDelayRes;     runtime.stackDepth = runtime.stackDepth + 1;     stackDelayRes = runtime.checkCall(runtime.checkDepth());     if (runtime.curEffect !== null) {       return runtime.checkCall(runtime.unwind(lambda$4, -1, null, null, null, 2, 1, Handler$h$8, 0, 0))     }     return runtime.checkCall(lambda6(Handler$h$8))   } }); lambda6 = (undefined, function (Handler$h$8) {   runtime.checkArgs("", 1, true, arguments.length);   let stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(lambda6, -1, null, null, null, 1, 1, Handler$h$8, 0))   }   return runtime.checkCall(Handler$h$8.whoops()) }); Handler$h$whoops$ = function Handler$h$whoops$(Handler$h$8) {   runtime.checkArgs("Handler$h$whoops$", 1, true, arguments.length);   return (k) => {     let stackDelayRes;     runtime.stackDepth = runtime.stackDepth + 1;     stackDelayRes = runtime.checkCall(runtime.checkDepth());     if (runtime.curEffect !== null) {       return runtime.checkCall(runtime.unwind(Handler$h$whoops$, -1, null, null, null, 2, 1, Handler$h$8, 1, k, 0))     }     return runtime.checkCall(Handler$h$whoops(Handler$h$8, k))   } }; Handler$h$whoops = function Handler$h$whoops(Handler$h$8, k) {   runtime.checkArgs("Handler$h$whoops", 2, true, arguments.length);   let scrut, tmp10, lambda$here, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(Handler$h$whoops, -1, null, null, null, 1, 2, Handler$h$8, k, 0))   }   scrut = depth >= 50000;   if (scrut === true) {     return 0   } else {     tmp10 = depth + 1;     depth = tmp10;     lambda$here = runtime.checkCall(lambda$4(Handler$h$8));     return Predef.enterHandleBlock(Handler$h$8, lambda$here)   } }; depth = 0; globalThis.Object.freeze(class Handler$h$6 extends globalThis.Object {   static {     Handler$h$7 = this   }   constructor() {     let tmp10;     tmp10 = super();     if (runtime.curEffect !== null) {       tmp10 = runtime.checkCall(runtime.illegalEffect("in a constructor"));     }     tmp10;   }   #Handler$h$$cap;   get whoops$__checkNotMethod() { runtime.deboundMethod("whoops", "Handler$h$"); }   whoops() {     runtime.checkArgs("whoops", 0, true, arguments.length);     let Handler$h$whoops$here, stackDelayRes;     runtime.stackDepth = runtime.stackDepth + 1;     stackDelayRes = runtime.checkCall(runtime.checkDepth());     if (runtime.curEffect !== null) {       return runtime.checkCall(runtime.unwind(this.whoops, -1, "StackSafety.mls:453:3", null, this, 1, 0, 0))     }     Handler$h$whoops$here = runtime.checkCall(Handler$h$whoops$(this));     return runtime.mkEffect(this, Handler$h$whoops$here)   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Handler$h$"];  }); $_stack$_safe$_body$_11 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return new Handler$h$7() }); h3 = runtime.runStackSafe(100, $_stack$_safe$_body$_11); handleBlock$3 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   let stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(handleBlock$3, -1, null, null, null, 1, 0, 0))   }   return runtime.safeCall(h3.whoops()) }); $_stack$_safe$_body$_10 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return runtime.enterHandleBlock(h3, handleBlock$3) }); tmp9 = runtime.runStackSafe(100, $_stack$_safe$_body$_10); if (runtime.curEffect !== null) {   tmp9 = runtime.checkCall(runtime.topLevelEffect(false)); } block$res13 = tmp9; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res13)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  0
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  0
+//│ >  Unit {}
 //│ = 0
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(depth)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  50000
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  50000
+//│ >  Unit {}
 //│ depth = 50000
 
 // TODO: the stack depth is not accurately tracked in the runtime functions
@@ -238,6 +496,21 @@ handle h = Object with
   fun perform()(k) = 
     k()
 f(h)
+//│ REPL> Sending: block$res14 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let dummy1, f2, h4, while1, tmp10, handleBlock$4, Handler$h$perform3, Handler$h$9, Capture$scope15, $_stack$_safe$_body$_12, $_stack$_safe$_body$_13;try { Handler$h$perform3 = function Handler$h$perform(k) {   runtime.checkArgs("Handler$h$perform", 1, true, arguments.length);   let stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(Handler$h$perform3, -1, null, null, null, 1, 1, k, 0))   }   return runtime.safeCall(k()) }; globalThis.Object.freeze(class Capture$scope14 {   static {     Capture$scope15 = this   }   constructor(n$0) {     this.n$0 = n$0;   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Capture$scope1"];  }); while1 = (undefined, function (scope1$cap, h5) {   runtime.checkArgs("", 2, true, arguments.length);   let scrut, tmp11, pc, curDepth, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   curDepth = runtime.stackDepth;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(while1, -1, null, null, null, 1, 2, scope1$cap, h5, 0))   }   if (runtime.resumePc === -1) {     pc = 0;   } else {     pc = runtime.resumePc;     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         scrut = scope1$cap.n$0 < 10000;         if (scrut === true) {           let res;           res = runtime.safeCall(h5.perform());           runtime.stackDepth = curDepth;           runtime.resumeValue = res;           if (runtime.curEffect !== null) {             return runtime.checkCall(runtime.unwind(while1, 1, "StackSafety.mls:492:5", null, null, 1, 2, scope1$cap, h5, 0))           }           pc = 1;           continue main         }         return runtime.LoopEnd;         break;       case 1:         runtime.resumeValue;         tmp11 = scope1$cap.n$0 + 1;         scope1$cap.n$0 = tmp11;         return runtime.checkCall(while1(scope1$cap, h5));         break;     }     break;   } }); dummy1 = function dummy() {   runtime.checkArgs("dummy", 0, true, arguments.length);   return runtime.Unit }; f2 = function f(h5) {   runtime.checkArgs("f", 1, true, arguments.length);   let n, tmp11, tmp12, scope1$cap, pc, curDepth, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   curDepth = runtime.stackDepth;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(f2, -1, "StackSafety.mls:489:1", null, null, 1, 1, h5, 0))   }   if (runtime.resumePc === -1) {     pc = 0;   } else {     let saveOffset;     pc = runtime.resumePc;     saveOffset = runtime.resumeIdx;     n = runtime.resumeArr.at(saveOffset);     saveOffset = saveOffset + 1;     scope1$cap = runtime.resumeArr.at(saveOffset);     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         let res;         scope1$cap = new Capture$scope15(n);         runtime.stackDepth = curDepth;         scope1$cap.n$0 = 0;         res = runtime.checkCall(while1(scope1$cap, h5));         runtime.stackDepth = curDepth;         runtime.resumeValue = res;         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.unwind(f2, 1, null, null, null, 1, 1, h5, 2, n, scope1$cap))         }         pc = 1;         continue main;         break;       case 1:         tmp11 = runtime.resumeValue;         tmp12 = tmp11 !== runtime.LoopEnd;         if (tmp12 === true) {           return tmp11         }         return scope1$cap.n$0;         break;     }     break;   } }; globalThis.Object.freeze(class Handler$h$8 extends globalThis.Object {   static {     Handler$h$9 = this   }   constructor() {     let tmp11;     tmp11 = super();     if (runtime.curEffect !== null) {       tmp11 = runtime.checkCall(runtime.illegalEffect("in a constructor"));     }     tmp11;   }   #Handler$h$$cap;   get perform$__checkNotMethod() { runtime.deboundMethod("perform", "Handler$h$"); }   perform() {     runtime.checkArgs("perform", 0, true, arguments.length);     let stackDelayRes;     runtime.stackDepth = runtime.stackDepth + 1;     stackDelayRes = runtime.checkCall(runtime.checkDepth());     if (runtime.curEffect !== null) {       return runtime.checkCall(runtime.unwind(this.perform, -1, "StackSafety.mls:496:3", null, this, 1, 0, 0))     }     return runtime.mkEffect(this, Handler$h$perform3)   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Handler$h$"];  }); $_stack$_safe$_body$_13 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return new Handler$h$9() }); h4 = runtime.runStackSafe(1000, $_stack$_safe$_body$_13); handleBlock$4 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   let stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(handleBlock$4, -1, null, null, null, 1, 0, 0))   }   return runtime.checkCall(f2(h4)) }); $_stack$_safe$_body$_12 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return runtime.enterHandleBlock(h4, handleBlock$4) }); tmp10 = runtime.runStackSafe(1000, $_stack$_safe$_body$_12); if (runtime.curEffect !== null) {   tmp10 = runtime.checkCall(runtime.topLevelEffect(false)); } block$res14 = tmp10; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res14)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  10000
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  10000
+//│ >  Unit {}
 //│ = 10000
 
 :stackSafe
@@ -248,9 +521,39 @@ fun f(n) =
     f(n-1)
   trivial()
 f(10000)
+//│ REPL> Sending: block$res15 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let trivial, f3, tmp11, $_stack$_safe$_body$_14;try { trivial = function trivial() {   runtime.checkArgs("trivial", 0, true, arguments.length);   return runtime.Unit }; f3 = function f(n) {   runtime.checkArgs("f", 1, true, arguments.length);   let scrut, tmp12, pc, curDepth, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   curDepth = runtime.stackDepth;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(f3, -1, "StackSafety.mls:518:1", null, null, 1, 1, n, 0))   }   if (runtime.resumePc === -1) {     pc = 0;   } else {     pc = runtime.resumePc;     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         let res;         res = runtime.checkCall(trivial());         runtime.stackDepth = curDepth;         runtime.resumeValue = res;         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.unwind(f3, 4, "StackSafety.mls:519:3", null, null, 1, 1, n, 0))         }         pc = 4;         continue main;         break;       case 1:         return runtime.checkCall(trivial());         break;       case 2:         runtime.resumeValue;         pc = 1;         continue main;         break;       case 3:         let res1;         res1 = runtime.checkCall(f3(tmp12));         runtime.stackDepth = curDepth;         runtime.resumeValue = res1;         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.unwind(f3, 2, "StackSafety.mls:521:5", null, null, 1, 1, n, 0))         }         pc = 2;         continue main;         break;       case 4:         runtime.resumeValue;         scrut = n >= 0;         if (scrut === true) {           tmp12 = n - 1;           pc = 3;           continue main         } else {           pc = 1;           continue main         }         /* unreachable */         break;     }     break;   } }; $_stack$_safe$_body$_14 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return runtime.checkCall(f3(10000)) }); tmp11 = runtime.runStackSafe(1000, $_stack$_safe$_body$_14); if (runtime.curEffect !== null) {   tmp11 = runtime.checkCall(runtime.topLevelEffect(false)); } block$res15 = tmp11; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res15)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  ()
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  ()
+//│ >  Unit {}
 
 abstract class Eff with
   fun raise()
+//│ REPL> Sending: block$res16 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let Eff3;try { globalThis.Object.freeze(class Eff2 {   static {     Eff3 = this   }   constructor() {}   #Eff$cap;   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Eff"];  }); block$res16 = undefined; } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res16)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  undefined
+//│ >  Unit {}
 
 :re
 fun shift_stack(n, f) =
@@ -267,7 +570,23 @@ fun handler_stack(n) =
     handler_stack(n - 1)
   "ok"
 handler_stack(100)
+//│ REPL> Sending: block$res17 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let handler_stack, shift_stack, handleBlock$5, Handler$h$raise, Handler$h$11, handleBlock$$, tmp12;try { Handler$h$raise = function Handler$h$raise(k) {   runtime.checkArgs("Handler$h$raise", 1, true, arguments.length);   return runtime.checkCall(shift_stack(100, k)) }; handleBlock$$ = (undefined, function (n, h5) {   runtime.checkArgs("", 2, true, arguments.length);   return () => {     return runtime.checkCall(handleBlock$5(n, h5))   } }); globalThis.Object.freeze(class Handler$h$10 extends Eff3 {   static {     Handler$h$11 = this   }   constructor() {     let tmp13;     tmp13 = super();     if (runtime.curEffect !== null) {       tmp13 = runtime.checkCall(runtime.illegalEffect("in a constructor"));     }     tmp13;   }   #Handler$h$$cap;   get raise$__checkNotMethod() { runtime.deboundMethod("raise", "Handler$h$"); }   raise() {     runtime.checkArgs("raise", 0, true, arguments.length);     return runtime.mkEffect(this, Handler$h$raise)   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Handler$h$"];  }); handleBlock$5 = (undefined, function (n, h5) {   runtime.checkArgs("", 2, true, arguments.length);   let scrut, tmp13, pc;   if (runtime.resumePc === -1) {     pc = 0;   } else {     pc = runtime.resumePc;     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         runtime.resumeValue = runtime.safeCall(h5.raise());         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.unwind(handleBlock$5, 4, "StackSafety.mls:568:3", null, null, 1, 2, n, h5, 0))         }         pc = 4;         continue main;         break;       case 1:         return "ok";         break;       case 2:         runtime.resumeValue;         pc = 1;         continue main;         break;       case 3:         runtime.resumeValue = runtime.checkCall(handler_stack(tmp13));         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.unwind(handleBlock$5, 2, "StackSafety.mls:570:5", null, null, 1, 2, n, h5, 0))         }         pc = 2;         continue main;         break;       case 4:         runtime.resumeValue;         scrut = n >= 0;         if (scrut === true) {           tmp13 = n - 1;           pc = 3;           continue main         } else {           pc = 1;           continue main         }         /* unreachable */         break;     }     break;   } }); shift_stack = function shift_stack(n, f4) {   runtime.checkArgs("shift_stack", 2, true, arguments.length);   let scrut, tmp13;   scrut = n >= 0;   if (scrut === true) {     tmp13 = n - 1;     return runtime.checkCall(shift_stack(tmp13, f4))   } else {     return runtime.safeCall(f4())   } }; handler_stack = function handler_stack(n) {   runtime.checkArgs("handler_stack", 1, true, arguments.length);   let h5, tmp13, handleBlock$$here, pc;   if (runtime.resumePc === -1) {     pc = 0;   } else {     pc = runtime.resumePc;     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         h5 = new Handler$h$11();         handleBlock$$here = runtime.checkCall(handleBlock$$(n, h5));         runtime.resumeValue = runtime.enterHandleBlock(h5, handleBlock$$here);         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.unwind(handler_stack, 1, null, null, null, 1, 1, n, 0))         }         pc = 1;         continue main;         break;       case 1:         tmp13 = runtime.resumeValue;         return tmp13;         break;     }     break;   } }; tmp12 = runtime.checkCall(handler_stack(100)); if (runtime.curEffect !== null) {   tmp12 = runtime.checkCall(runtime.topLevelEffect(false)); } block$res17 = tmp12; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Collected:
+//│ >  ​RangeError: Maximum call stack size exceeded​
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  [runtime error] RangeError: Maximum call stack size exceeded
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res17)) } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  undefined
+//│ >  Unit {}
 
 // * For some reason, this works locally with values 100 and 100,
 // * but it makes the CI fail unexpectedly (see https://github.com/hkust-taco/mlscript/pull/410)
@@ -277,6 +596,14 @@ let
   // M = 100
   N = 5
   M = 10
+//│ REPL> Sending: block$res18 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let N, M;try { N = 5; M = 10; block$res18 = undefined; } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
 
 :stackSafe
 fun shift_stack(n, f) =
@@ -293,5 +620,20 @@ fun handler_stack(n) =
     handler_stack(n - 1)
   "ok"
 handler_stack(M)
+//│ REPL> Sending: block$res19 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let handler_stack1, shift_stack1, handleBlock$6, Handler$h$raise1, Handler$h$13, handleBlock$$1, tmp13, $_stack$_safe$_body$_15;try { Handler$h$raise1 = function Handler$h$raise(k) {   runtime.checkArgs("Handler$h$raise", 1, true, arguments.length);   let stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(Handler$h$raise1, -1, null, null, null, 1, 1, k, 0))   }   return runtime.checkCall(shift_stack1(N, k)) }; handleBlock$$1 = (undefined, function (n, h5) {   runtime.checkArgs("", 2, true, arguments.length);   return () => {     let stackDelayRes;     runtime.stackDepth = runtime.stackDepth + 1;     stackDelayRes = runtime.checkCall(runtime.checkDepth());     if (runtime.curEffect !== null) {       return runtime.checkCall(runtime.unwind(handleBlock$$1, -1, null, null, null, 2, 2, n, h5, 0, 0))     }     return runtime.checkCall(handleBlock$6(n, h5))   } }); globalThis.Object.freeze(class Handler$h$12 extends Eff3 {   static {     Handler$h$13 = this   }   constructor() {     let tmp14;     tmp14 = super();     if (runtime.curEffect !== null) {       tmp14 = runtime.checkCall(runtime.illegalEffect("in a constructor"));     }     tmp14;   }   #Handler$h$$cap;   get raise$__checkNotMethod() { runtime.deboundMethod("raise", "Handler$h$"); }   raise() {     runtime.checkArgs("raise", 0, true, arguments.length);     let stackDelayRes;     runtime.stackDepth = runtime.stackDepth + 1;     stackDelayRes = runtime.checkCall(runtime.checkDepth());     if (runtime.curEffect !== null) {       return runtime.checkCall(runtime.unwind(this.raise, -1, "StackSafety.mls:616:5", null, this, 1, 0, 0))     }     return runtime.mkEffect(this, Handler$h$raise1)   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Handler$h$"];  }); handleBlock$6 = (undefined, function (n, h5) {   runtime.checkArgs("", 2, true, arguments.length);   let scrut, tmp14, pc, curDepth, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   curDepth = runtime.stackDepth;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(handleBlock$6, -1, null, null, null, 1, 2, n, h5, 0))   }   if (runtime.resumePc === -1) {     pc = 0;   } else {     pc = runtime.resumePc;     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         let res;         res = runtime.safeCall(h5.raise());         runtime.stackDepth = curDepth;         runtime.resumeValue = res;         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.unwind(handleBlock$6, 4, "StackSafety.mls:618:3", null, null, 1, 2, n, h5, 0))         }         pc = 4;         continue main;         break;       case 1:         return "ok";         break;       case 2:         runtime.resumeValue;         pc = 1;         continue main;         break;       case 3:         let res1;         res1 = runtime.checkCall(handler_stack1(tmp14));         runtime.stackDepth = curDepth;         runtime.resumeValue = res1;         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.unwind(handleBlock$6, 2, "StackSafety.mls:620:5", null, null, 1, 2, n, h5, 0))         }         pc = 2;         continue main;         break;       case 4:         runtime.resumeValue;         scrut = n >= 0;         if (scrut === true) {           tmp14 = n - 1;           pc = 3;           continue main         } else {           pc = 1;           continue main         }         /* unreachable */         break;     }     break;   } }); shift_stack1 = function shift_stack(n, f4) {   runtime.checkArgs("shift_stack", 2, true, arguments.length);   let scrut, tmp14, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(shift_stack1, -1, "StackSafety.mls:609:1", null, null, 1, 2, n, f4, 0))   }   scrut = n >= 0;   if (scrut === true) {     tmp14 = n - 1;     return runtime.checkCall(shift_stack1(tmp14, f4))   } else {     return runtime.safeCall(f4())   } }; handler_stack1 = function handler_stack(n) {   runtime.checkArgs("handler_stack", 1, true, arguments.length);   let h5, tmp14, handleBlock$$here, pc, curDepth, stackDelayRes;   runtime.stackDepth = runtime.stackDepth + 1;   curDepth = runtime.stackDepth;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (runtime.curEffect !== null) {     return runtime.checkCall(runtime.unwind(handler_stack1, -1, "StackSafety.mls:614:1", null, null, 1, 1, n, 0))   }   if (runtime.resumePc === -1) {     pc = 0;   } else {     pc = runtime.resumePc;     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         let res;         h5 = new Handler$h$13();         runtime.stackDepth = curDepth;         handleBlock$$here = runtime.checkCall(handleBlock$$1(n, h5));         res = runtime.enterHandleBlock(h5, handleBlock$$here);         runtime.stackDepth = curDepth;         runtime.resumeValue = res;         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.unwind(handler_stack1, 1, null, null, null, 1, 1, n, 0))         }         pc = 1;         continue main;         break;       case 1:         tmp14 = runtime.resumeValue;         return tmp14;         break;     }     break;   } }; $_stack$_safe$_body$_15 = (undefined, function () {   runtime.checkArgs("", 0, true, arguments.length);   return runtime.checkCall(handler_stack1(M)) }); tmp13 = runtime.runStackSafe(1000, $_stack$_safe$_body$_15); if (runtime.curEffect !== null) {   tmp13 = runtime.checkCall(runtime.topLevelEffect(false)); } block$res19 = tmp13; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res19)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Collected:
+//│ >  "ok"
+//│ >  Unit {}
+//│ REPL> Parsed:
+//│ >  "ok"
+//│ >  Unit {}
 //│ = "ok"
 
