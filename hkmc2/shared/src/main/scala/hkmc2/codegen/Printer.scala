@@ -42,7 +42,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
     case Throw(exc) => doc"throw ${print(exc)}"
     case Label(label, loop, body, rest) =>
       val l2 = scope.allocateName(label)
-      doc"labelled ${if loop then "loop" else "block"} $l2 = ${print(body)}; # ${print(rest)}"
+      doc"${if loop then "loop" else "block"} $l2: #{  # ${print(body)} #}  # ${print(rest)}"
     case Break(label) =>
       doc"break ${print(label)}"
     case Continue(label) =>
