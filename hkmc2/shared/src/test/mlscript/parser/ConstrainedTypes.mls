@@ -5,10 +5,10 @@
 //│ Parsed:
 //│ 	InfixApp(TyTup(List()),Keywrd(keyword '=>'),Ident(Int))
 
-[Bot <: Top] => Int
+[Bot <:< Top] => Int
 //│ Parsed:
-//│ 	InfixApp(TyTup(List(InfixApp(Ident(Bot),Keywrd(keyword '<:'),Ident(Top)))),Keywrd(keyword '=>'),Ident(Int))
+//│ 	InfixApp(TyTup(List(OpApp(Ident(Bot),Ident(<:<),List(Ident(Top))))),Keywrd(keyword '=>'),Ident(Int))
 
-[Int & Str <: Int | Str] => Int
+[(Int & Str) <:< (Int | Str)] => Int
 //│ Parsed:
-//│ 	InfixApp(TyTup(List(InfixApp(OpApp(Ident(Int),Ident(&),List(Ident(Str))),Keywrd(keyword '<:'),OpApp(Ident(Int),Ident(|),List(Ident(Str)))))),Keywrd(keyword '=>'),Ident(Int))
+//│ 	InfixApp(TyTup(List(OpApp(Bra(Round,OpApp(Ident(Int),Ident(&),List(Ident(Str)))),Ident(<:<),List(Bra(Round,OpApp(Ident(Int),Ident(|),List(Ident(Str)))))))),Keywrd(keyword '=>'),Ident(Int))
