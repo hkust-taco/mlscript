@@ -572,8 +572,6 @@ extends Importer with ucs.SplitElaborator:
         PlainFld(subterm(rhs, inAppPrefix = true)) :: Nil)(DummyTup))(DummyApp, N, FlowSymbol("not-app"))
     case tree @ InfixApp(lhs, Keywrd(Keyword.`is` | Keyword.`and` | Keyword.`or`), rhs) =>
       Term.IfLike(Keyword.`if`, IfLikeForm.ReturningIf, shorthandSplit(tree))
-    case InfixApp(lhs, Keywrd(op : (Keyword.`<:`.type | Keyword.`:>`.type)), rhs) =>
-      Term.SubConstr(constraint(lhs, op, rhs))
     case InfixApp(lhs, kw, rhs) =>
       raise:
         ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
@@ -1532,18 +1530,18 @@ extends Importer with ucs.SplitElaborator:
     ps_ctx
   
   /** Elaborate a subtyping constraint. */
-  def constraint(lhs: Tree, op: Keyword.`<:`.type | Keyword.`:>`.type, rhs: Tree): Ctxl[SubConstraint] =
+  def constraint(lhs: Tree, op: "<:<" | ">:>", rhs: Tree): Ctxl[SubConstraint] =
     val l = term(lhs)
     val r = term(rhs)
     val dir = op match
-      case Keyword.`<:` => SubDir.Sub
-      case Keyword.`:>` => SubDir.Sup
+      case "<:<" => SubDir.Sub
+      case ">:>" => SubDir.Sup
     SubConstraint(l, r, dir)
  
   /** Elaborate a subtyping constraint that may be malformed. */
   def maybeConstraint(t: Tree): Ctxl[Option[SubConstraint]] =
     t match
-    case InfixApp(lhs, Keywrd(op : (Keyword.`<:`.type | Keyword.`:>`.type)), rhs) =>
+    case OpApp(lhs, Ident(op : ("<:<" | ">:>")), rhs :: Nil) =>
       S(constraint(lhs, op, rhs))
     case _ =>
       raise(ErrorReport(msg"Illegal constraint syntax." -> t.toLoc :: Nil))

@@ -55,11 +55,6 @@ object Keyword:
   val `with` = Keyword("with", curPrec, curPrec)
   
   val `val` = Keyword("val", N, curPrec)
-  
-  /** The subtyping operator. */
-  val `<:` = Keyword("<:", curPrec, curPrec)
-  /** The supertyping operator. */
-  val `:>` = Keyword(":>", curPrec, curPrec)
 
   val eqPrec = nextPrec
   val ascPrec = nextPrec // * `x => x : T` should parsed as `x => (x : T)`
@@ -163,12 +158,12 @@ object Keyword:
     `do`.type | `drop`.type | `not`.type | `new!`.type | `else`.type | `return`.type | `throw`.type | `import`.type
   
   type Infix =
-    `is`.type | `:`.type | `->`.type | `=>`.type | `<:`.type | `:>`.type | `extends`.type | `restricts`.type |
-    `as`.type | `do`.type | `where`.type | `with`.type | `and`.type | `or`.type | `then`.type | `else`.type
+    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type |
+    `where`.type | `with`.type | `and`.type | `or`.type | `then`.type | `else`.type
   
   type InfixSplittable =
-    `is`.type | `:`.type | `->`.type | `=>`.type | `<:`.type | `:>`.type | `extends`.type | `restricts`.type |
-    `as`.type | `do`.type | `where`.type | `with`.type | `of`.type
+    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type |
+    `where`.type | `with`.type | `of`.type
   
   type Ellipsis = `...`.type | `..`.type
   
