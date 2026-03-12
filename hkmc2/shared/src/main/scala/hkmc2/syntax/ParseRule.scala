@@ -214,7 +214,6 @@ class ParseRules(using State):
           ParseRule(s"${kind.desc} head")(
             discardKw(`=`):
               ParseRule(s"${kind.desc} declaration equals sign")(
-                // Expr(
                 exprOrBlk(
                   ParseRule(s"${kind.desc} declaration right-hand side")(
                     end(())

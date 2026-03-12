@@ -1,0 +1,53 @@
+:js
+
+
+import "../../mlscript-compile/Stack.mls"
+open Stack
+
+
+// * Wrong parse – could we make it parse the expected result instead?
+:e
+:w
+pattern P = x :: xs => [x, xs]
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.11: 	pattern P = x :: xs => [x, xs]
+//│ ╙──      	                        ^
+//│ ╔══[WARNING] Useless pattern binding: x.
+//│ ║  l.11: 	pattern P = x :: xs => [x, xs]
+//│ ╙──      	            ^
+
+pattern P = (x :: xs) => [x, xs]
+
+1 :: Nil is P
+//│ = true
+
+let f = case
+  P as extr then extr
+//│ f = fun
+f(1 :: 2 :: 3 :: Nil)
+//│ = [1, Cons(2, Cons(3, Nil))]
+
+
+pattern P(x, xs) = x :: xs
+
+
+1 :: Nil is P
+//│ = true
+
+1 :: Nil is P(a, b)
+//│ = true
+
+
+let f = case
+  P(x, xs) then [x, xs]
+//│ f = fun
+f(1 :: 2 :: 3 :: Nil)
+//│ = [1, Cons(2, Cons(3, Nil))]
+
+let f = case
+  P as extracted then extracted
+//│ f = fun
+f(1 :: 2 :: 3 :: Nil)
+//│ = [1, Cons(2, Cons(3, Nil))]
+
+

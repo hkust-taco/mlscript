@@ -1,0 +1,13 @@
+:js
+
+
+assert [""] is [..stack, Str as id], [stack, id]
+//│ = [[], ""]
+
+assert [..[], ""] is [..stack, Str as id], [stack, id]
+//│ = [[], ""]
+
+assert [..[..[""]], ""] is [..stack, Str as id], [stack, id]
+//│ = [[], ""]
+
+

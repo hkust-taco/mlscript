@@ -1,12 +1,14 @@
 :js
 
 // This is an interesting experiment in evaluation context.
+// Author: Lionel Parreaux
+
 
 import "../../../mlscript-compile/Option.mls"
-import "../../../mlscript-compile/MutMap.mls"
 
 open annotations
 open Option { Some, None }
+
 
 class Ident(val name: Str)
 
@@ -26,19 +28,11 @@ data class Term with
     Some(fv) then fv
     None then
       let fv = if this is
-        Var(name) then new Set([name])
+        Var(name) then mkSet of name
         App(lhs, rhs) then lhs.freeVars.union(rhs.freeVars)
-        Abs(name, body) then body.freeVars.difference(new Set([name]))
+        Abs(name, body) then body.freeVars.difference(mkSet of name)
       set _freeVars = Some(fv)
       fv
-  
-  fun equals(that) = if this is
-    Var(name) and that is Var(name') then name === name'
-    App(lhs, rhs) and that is App(lhs', rhs') then
-      lhs.equals(lhs') && rhs.equals(rhs')
-    Abs(name, body) and that is Abs(name', body') then
-      name === name' && body.equals(body')
-    else false
   
   // Pretty-print the term.
   fun show =
@@ -57,18 +51,6 @@ data class Term with
 
 App(Var(Ident of "a"), Var(Ident of "a_1")).show
 //│ = "a a_1"
-
-fun subst(term, name, target) = if term is
-  Var(name') and
-    name === name' then target
-    else term
-  Abs(Var(name'), body) and
-    name === name' then term
-    let target' = if target.freeVars.has(name')
-      then subst(target, name', target.freshVar(name'))
-      else target
-    else Abs(Var(name'), subst(body, name, target'))
-  App(lhs, rhs) then App(subst(lhs, name, target), subst(rhs, name, target))
 
 
 pattern Value = Abs | Lit
@@ -132,6 +114,9 @@ eval(Add(t, a))
 //│ > Evaluating: 9 + a
 //│ > Stuck!
 
+assert Add(t, t) is CBV.Steps(res), res
+//│ = Lit(18)
+
 
 CBV.Step.unapply(x)
 //│ = MatchFailure(null)
@@ -142,7 +127,5 @@ CBV.Step.unapply(t)
 eval(x)
 //│ > Evaluating: 2
 //│ > Done.
-
-
 
 

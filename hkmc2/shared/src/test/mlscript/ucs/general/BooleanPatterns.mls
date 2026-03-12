@@ -1,0 +1,39 @@
+:js
+
+
+// * It's neat how the complicated pattern matching logic is desugared into a simple `switch`
+:sjs
+fun test(x) = if x is
+  0 then "0"
+  ~2 & ~3 then "not 2 and not 3"
+  ~3 then "not 3"
+  _ then "other"
+//│ JS (unsanitized):
+//│ let test;
+//│ test = function test(x) {
+//│   switch (x) {
+//│     case 0:
+//│       return "0";
+//│       break;
+//│     case 2:
+//│       return "not 3";
+//│       break;
+//│     case 3:
+//│       return "other";
+//│       break;
+//│     default:
+//│       return "not 2 and not 3";
+//│       break;
+//│   }
+//│ };
+
+test(0)
+//│ = "0"
+test(1)
+//│ = "not 2 and not 3"
+test(2)
+//│ = "not 3"
+test(3)
+//│ = "other"
+
+

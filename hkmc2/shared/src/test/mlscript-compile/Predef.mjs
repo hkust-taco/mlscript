@@ -380,6 +380,9 @@ let Predef1;
   static tuple(...xs) {
     return xs
   } 
+  static mkSet(...xs) {
+    return globalThis.Object.freeze(new globalThis.Set(xs))
+  } 
   static foldr(f) {
     return (first, ...rest) => {
       let len, scrut, i, init;

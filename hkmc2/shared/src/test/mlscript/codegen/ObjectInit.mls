@@ -7,7 +7,7 @@ object A with
   val x = 1
 //│ > A {}
 
-// By contrast:
+// * By contrast:
 fun f = print(A)
 class Acls with
   f // A is not accessible at all here
@@ -16,7 +16,7 @@ val A = new Acls
 //│ > undefined
 //│ A = Acls { x: 1 }
 
-// We still need an initialization checker to catch things like this:
+// * We still need an initialization checker to catch things like this:
 fun f = print(A.x)
 object A with
   f

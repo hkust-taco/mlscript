@@ -573,7 +573,7 @@ abstract class Parser(
     case (IDENT(nme, sym), loc) :: _ =>
       Keyword.all.get(nme) match
       case S(kw) => // * Expressions starting with keywords should be handled in parseRule
-        // * I guess this case is not really supposed to be ever reached (?)
+        // * I guess this case is not really supposed to ever be reached (?)
         err(msg"Unexpected ${kw.toString} in this position" -> S(loc) :: Nil)
         errExpr
       case N =>
@@ -591,7 +591,6 @@ abstract class Parser(
               else
                 opCharPrec(nme.head)
             val rhs = expr(newPrec, allowNewlines = allowNewlines)
-            // val c = 
             exprCont(App(id, PlainTup(rhs)), prec, allowNewlines = allowNewlines)
         else exprCont(id, prec, allowNewlines = allowNewlines)
     case (LITVAL(lit), loc) :: _ =>

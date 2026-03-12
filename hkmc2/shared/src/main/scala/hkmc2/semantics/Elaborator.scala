@@ -1759,9 +1759,6 @@ extends Importer with ucs.SplitElaborator:
       // Constructor patterns can be written in the infix form.
       case OpApp(lhs, op, rhs :: Nil) => Pattern.Constructor(term(op), S(Ls(go(lhs), go(rhs))))
       // Constructor patterns without arguments
-      // case id @ Ident(name) => ident(id) match
-      //   case S(target) => Constructor(target, N)
-      //   case N => Variable(id) // Fallback to variable pattern.
       case id @ Ident(name) if name.isUncapitalized => Variable(id)
       case id @ Ident(name) => ident(id) match
         case S(target) => Constructor(target, N)

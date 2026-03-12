@@ -121,3 +121,106 @@ pattern Email(name, domain) = ...
 //│       Ident of "domain"
 //│   rhs = S of Block of Ls of 
 //│     UnitLit of false
+
+
+// * Future: `as`-splits
+
+:fixme // TODO
+x => if x as
+  0 then false
+  1 then true
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (infix operator 'as')
+//│ ║  l.129: 	x => if x as
+//│ ║         	        ^^^^
+//│ ║  l.130: 	  0 then false
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.131: 	  1 then true
+//│ ╙──       	^^^^^^^^^^^^^
+//│ = fun
+
+:fixme // TODO
+pattern Test = (0 => false) | (1 => true)
+fun test(x) = if x is
+  Test as
+    true  then "T"
+    false then "F"
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (infix operator 'as').
+//│ ║  l.144: 	  Test as
+//│ ║         	  ^^^^^^^
+//│ ║  l.145: 	    true  then "T"
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.146: 	    false then "F"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^
+
+
+:fixme // TODO This should work!
+pattern Test = (0 => false) | (1 => true)
+if 0 is ((Test as r) where (r is x)) then print(x)
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.158: 	if 0 is ((Test as r) where (r is x)) then print(x)
+//│ ╙──       	                                                ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+:fixme // TODO This should work!
+pattern Test = 0 | 1
+class Id(name: Test)
+//│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference.
+//│ ║  l.167: 	class Id(name: Test)
+//│ ╙──       	               ^^^^
+//│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference.
+//│ ║  l.167: 	class Id(name: Test)
+//│ ║         	               ^^^^
+//│ ╙── Non-module parameter must have a non-module type.
+//│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference.
+//│ ║  l.167: 	class Id(name: Test)
+//│ ╙──       	               ^^^^
+
+
+// * TODO: maybe we could allow this more lightweight alternative syntax?
+
+:todo
+pattern StatementBased =
+  0 => "zero"
+  1 => "one"
+  _ => "many"
+//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
+//│ ║  l.184: 	  0 => "zero"
+//│ ╙──       	  ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
+//│ ║  l.185: 	  1 => "one"
+//│ ╙──       	  ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
+//│ ║  l.186: 	  _ => "many"
+//│ ╙──       	  ^^^^^^^^^^^
+
+
+| x => 1
+//│ = fun
+
+// :de
+:fixme // TODO: support lambdas with patterns defined this way?
+| 0 => 1
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
+//│ ║  l.203: 	| 0 => 1
+//│ ╙──       	  ^
+//│ = fun
+
+:fixme // TODO
+| [x] => 1
+//│ ╔══[COMPILATION ERROR] Illegal constraint syntax.
+//│ ║  l.210: 	| [x] => 1
+//│ ╙──       	   ^
+//│ /!!!\ Uncaught error: scala.MatchError: Constrained(List(),Lit(IntLit(1))) (of class hkmc2.semantics.Term$Constrained)
+
+| (x, y) => 1
+//│ = fun
+
+:fixme // TODO
+| (x, 0) => 1
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
+//│ ║  l.220: 	| (x, 0) => 1
+//│ ╙──       	      ^
+//│ = fun
+
+
