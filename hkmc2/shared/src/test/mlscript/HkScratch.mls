@@ -16,7 +16,7 @@ open Stack
 :e
 :w
 pattern P = x :: xs => [x, xs]
-//│ ╔══[ERROR] Name not found: x
+//│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.18: 	pattern P = x :: xs => [x, xs]
 //│ ╙──      	                        ^
 //│ ╔══[WARNING] Useless pattern binding: x.
@@ -63,13 +63,13 @@ pattern StatementBased =
   0 => "zero"
   1 => "one"
   _ => "many"
-//│ ╔══[ERROR] Unexpected record property pattern.
+//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
 //│ ║  l.63: 	  0 => "zero"
 //│ ╙──      	  ^^^^^^^^^^^
-//│ ╔══[ERROR] Unexpected record property pattern.
+//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
 //│ ║  l.64: 	  1 => "one"
 //│ ╙──      	  ^^^^^^^^^^
-//│ ╔══[ERROR] Unexpected record property pattern.
+//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
 //│ ║  l.65: 	  _ => "many"
 //│ ╙──      	  ^^^^^^^^^^^
 

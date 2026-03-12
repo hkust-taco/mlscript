@@ -66,23 +66,24 @@ f()()
 
 :e
 return 100
-//│ ╔══[ERROR] Return statements are not allowed outside of functions.
+//│ ╔══[COMPILATION ERROR] Return statements are not allowed outside of functions.
 //│ ║  l.68: 	return 100
 //│ ╙──      	^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 if true do
   while false do
     let f = () => return 100
-//│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.76: 	    let f = () => return 100
+//│ ╔══[COMPILATION ERROR] Return statements are not allowed outside of functions.
+//│ ║  l.77: 	    let f = () => return 100
 //│ ╙──      	                  ^^^^^^^^^^
 
 :e
 fun f() =
   type A = return "lol"
-//│ ╔══[ERROR] Return statements are not allowed in this context.
-//│ ║  l.83: 	  type A = return "lol"
+//│ ╔══[COMPILATION ERROR] Return statements are not allowed in this context.
+//│ ║  l.84: 	  type A = return "lol"
 //│ ╙──      	           ^^^^^^^^^^^^
 
 
@@ -108,8 +109,13 @@ fun f() =
     return 100
   4
 f()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'nonLocalRetHandler$f'
-//│ ═══[RUNTIME ERROR] ReferenceError: nonLocalRetHandler$f is not defined
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.108: 	  object A with
+//│ ╙──       	         ^
+//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.108: 	  object A with
+//│ ╙──       	         ^
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_18 is raised in a constructor
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 // ctor cannot raise effect, so error is expected.
@@ -130,8 +136,13 @@ fun f() =
     (() => return 100)()
   4
 f()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'nonLocalRetHandler$f'
-//│ ═══[RUNTIME ERROR] ReferenceError: nonLocalRetHandler$f is not defined
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.135: 	  object A with
+//│ ╙──       	         ^
+//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.135: 	  object A with
+//│ ╙──       	         ^
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_22 is raised in a constructor
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 :fixme

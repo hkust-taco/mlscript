@@ -5,30 +5,30 @@
 
 :todo
 let id: [A] -> A -> A = x => x
-//│ ╔══[ERROR] Unsupported let binding shape
+//│ ╔══[COMPILATION ERROR] Unsupported let binding shape
 //│ ║  l.7: 	let id: [A] -> A -> A = x => x
 //│ ╙──     	    ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
 :todo
 fun id[A](x: A) = x
-//│ ╔══[ERROR] Variable not found: A
+//│ ╔══[COMPILATION ERROR] Variable not found: A
 //│ ║  l.14: 	fun id[A](x: A) = x
 //│ ╙──      	             ^
 //│ Type: ⊤
 
 :fixme
 fun id: [A] -> A -> A => x = x
-//│ ╔══[ERROR] Name not found: x
+//│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.21: 	fun id: [A] -> A -> A => x = x
 //│ ╙──      	                         ^
-//│ ╔══[ERROR] Name not found: x
+//│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.21: 	fun id: [A] -> A -> A => x = x
 //│ ╙──      	                             ^
-//│ ╔══[ERROR] Expected a type, got function literal
+//│ ╔══[COMPILATION ERROR] Expected a type, got function literal
 //│ ║  l.21: 	fun id: [A] -> A -> A => x = x
 //│ ╙──      	                    ^
-//│ ═══[ERROR] Function definition shape not yet supported for id
+//│ ═══[COMPILATION ERROR] Function definition shape not yet supported for id
 //│ Type: ⊤
 
 

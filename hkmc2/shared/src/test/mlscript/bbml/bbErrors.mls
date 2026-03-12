@@ -5,14 +5,14 @@
 //│ Type: ⊤
 
 2(2)
-//│ ╔══[ERROR] Type error in application
+//│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.7: 	2(2)
 //│ ║       	^^^^
 //│ ╙── because: cannot constrain  Int  <:  (Int) ->{'eff} ('app)
 //│ Type: ⊥
 
 (x => x(0))(1)
-//│ ╔══[ERROR] Type error in integer literal with expected type 'x
+//│ ╔══[COMPILATION ERROR] Type error in integer literal with expected type 'x
 //│ ║  l.14: 	(x => x(0))(1)
 //│ ║        	            ^
 //│ ╟── because: cannot constrain  Int  <:  'x
@@ -21,33 +21,33 @@
 //│ Type: ⊥
 
 (1).Foo#a()
-//│ ╔══[ERROR] Name not found: Foo
+//│ ╔══[COMPILATION ERROR] Name not found: Foo
 //│ ║  l.23: 	(1).Foo#a()
 //│ ╙──      	   ^^^^
-//│ ╔══[ERROR] Identifier `Foo` does not name a known class symbol.
+//│ ╔══[COMPILATION ERROR] Identifier `Foo` does not name a known class symbol.
 //│ ║  l.23: 	(1).Foo#a()
 //│ ╙──      	   ^^^^
-//│ ═══[ERROR] Expected a statically known class; found ‹error›.
-//│ ═══[ERROR] Not a valid class: ‹error›
+//│ ═══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
+//│ ═══[COMPILATION ERROR] Not a valid class: ‹error›
 //│ Type: ⊥
 
 
 fun Oops() = 1
 Oops().Oops#a()
-//│ ╔══[ERROR] Identifier `Oops` does not name a known class symbol.
+//│ ╔══[COMPILATION ERROR] Identifier `Oops` does not name a known class symbol.
 //│ ║  l.36: 	Oops().Oops#a()
 //│ ╙──      	      ^^^^^
-//│ ╔══[ERROR] Not a valid class: reference
+//│ ╔══[COMPILATION ERROR] Not a valid class: reference
 //│ ║  l.36: 	Oops().Oops#a()
 //│ ╙──      	      ^^^^^
 //│ Type: ⊥
 
 data class Oops2()
 (new Oops2()).Oops2#a()
-//│ ╔══[ERROR] Class 'Oops2' does not contain member 'a'.
+//│ ╔══[COMPILATION ERROR] Class 'Oops2' does not contain member 'a'.
 //│ ║  l.46: 	(new Oops2()).Oops2#a()
 //│ ╙──      	                    ^
-//│ ╔══[ERROR] a is not a valid member in class Oops2
+//│ ╔══[COMPILATION ERROR] a is not a valid member in class Oops2
 //│ ║  l.46: 	(new Oops2()).Oops2#a()
 //│ ╙──      	 ^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊥
@@ -56,7 +56,7 @@ data class Oops2()
 
 fun inc(x) = x + 1
 inc("oops")
-//│ ╔══[ERROR] Type error in string literal with expected type 'x
+//│ ╔══[COMPILATION ERROR] Type error in string literal with expected type 'x
 //│ ║  l.58: 	inc("oops")
 //│ ║        	    ^^^^^^
 //│ ╟── because: cannot constrain  Str  <:  'x
@@ -66,7 +66,7 @@ inc("oops")
 
 fun inc(x) = x + 1
 inc as Int
-//│ ╔══[ERROR] Type error in reference with expected type Int
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type Int
 //│ ║  l.68: 	inc as Int
 //│ ║        	^^^
 //│ ╙── because: cannot constrain  ('x) ->{⊥} (Int)  <:  Int

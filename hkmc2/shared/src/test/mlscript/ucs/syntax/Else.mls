@@ -89,8 +89,8 @@ let audits = new Set()
 if audits.has(1) === true do
   print("ok")
 else
-  1
-//│ = 1
+  print(1)
+//│ > 1
 
 
 (if true then

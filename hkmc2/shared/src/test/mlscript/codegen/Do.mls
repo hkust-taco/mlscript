@@ -37,21 +37,21 @@ val f = case
   do print(res)
   _ then res
 //│ Split with nested patterns:
-//│ >  if
+//│ >  case
 //│ >    caseScrut is 0 then "null"
-//│ >    let $unused = member:console.log‹member:log›("non-null")
+//│ >    let tmp:unused = member:console⁰.log‹member:log›("non-null")
 //│ >    caseScrut is 1 then "unit"
 //│ >    let res = "other"
-//│ >    let $unused = (member:Predef.)print‹member:print›(res)
-//│ >    caseScrut is _ then res
+//│ >    let tmp:unused = (member:Predef⁰.)print‹member:print›(res⁰)
+//│ >    caseScrut is _ then res⁰
 //│ Expanded split with flattened patterns:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    caseScrut is 0 then "null"
-//│ >    let $unused = member:console.log‹member:log›("non-null")
+//│ >    let tmp:unused = member:console⁰.log‹member:log›("non-null")
 //│ >    caseScrut is 1 then "unit"
 //│ >    let res = "other"
-//│ >    let $unused = (member:Predef.)print‹member:print›(res)
-//│ >    else res
+//│ >    let tmp:unused = (member:Predef⁰.)print‹member:print›(res⁰)
+//│ >    else res⁰
 //│ f = fun
 
 f(0)

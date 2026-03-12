@@ -16,7 +16,7 @@
 //│ | Elab term App(Ident(|),Tup(List(InfixApp(Tup(List(IntLit(0))),Keywrd(keyword '=>'),IntLit(1)))))
 //│ | | Elab subterm App(Ident(|),Tup(List(InfixApp(Tup(List(IntLit(0))),Keywrd(keyword '=>'),IntLit(1)))))
 //│ | | | Elab subterm InfixApp(Tup(List(IntLit(0))),Keywrd(keyword '=>'),IntLit(1))
-//│ ╔══[ERROR] Expected a valid parameter, found integer literal
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
 //│ ║  l.14: 	| 0 => 1
 //│ ╙──      	  ^
 //│ | | | | Elab term IntLit(1)
@@ -35,15 +35,18 @@
 
 :fixme // TODO
 | [x] => 1
-//│ /!!!\ Uncaught error: scala.MatchError: TyTup(List(Ident(x))) (of class hkmc2.syntax.Tree$TyTup)
+//│ ╔══[COMPILATION ERROR] Illegal constraint syntax.
+//│ ║  l.37: 	| [x] => 1
+//│ ╙──      	   ^
+//│ /!!!\ Uncaught error: scala.MatchError: Constrained(List(),Lit(IntLit(1))) (of class hkmc2.semantics.Term$Constrained)
 
 | (x, y) => 1
 //│ = fun
 
 :fixme // TODO
 | (x, 0) => 1
-//│ ╔══[ERROR] Expected a valid parameter, found integer literal
-//│ ║  l.44: 	| (x, 0) => 1
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
+//│ ║  l.47: 	| (x, 0) => 1
 //│ ╙──      	      ^
 //│ = fun
 

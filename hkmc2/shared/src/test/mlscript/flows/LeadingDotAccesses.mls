@@ -1,0 +1,137 @@
+:js
+:flow
+
+class A with
+  fun b = new A
+  fun c = (x) => new A
+module A with
+  fun a = new A
+fun f(x : A) = x
+
+:sf
+f(.a)
+//│ Flowed:
+//│   f⁰{ ~> f⁰ }(_?_.a{ ~> A⁰.a⁰ })‹app⁰›
+//│ where
+//│     app⁰  <~  type A
+//│ = A
+
+:sf
+f(.a.b)
+//│ Flowed:
+//│   f⁰{ ~> f⁰ }(A⁰.a⁰.b⁰)‹app¹›
+//│ where
+//│     app¹  <~  type A
+//│ = A
+
+:sf
+let z = .a
+f(z)
+//│ Flowed:
+//│   let z⁰,
+//│   z⁰ = _?_.a{ ~> A⁰.a⁰ },
+//│   f⁰{ ~> f⁰ }(z⁰)‹app²›
+//│ where
+//│     z⁰  <~  _?_.A⁰.a⁰
+//│     z⁰  ~>  type A
+//│     app²  <~  type A
+//│ = A
+//│ z = A
+
+:sf
+let z = .a.b.c(3)
+f(z).c(4).b
+//│ Flowed:
+//│   let z¹,
+//│   z¹ = A⁰.a⁰.b⁰.c⁰(3)‹app³›,
+//│   f⁰(z¹)‹app⁴›.c⁰(4)‹app⁵›.b⁰
+//│ where
+//│     z¹  <~  _?_.A⁰.a⁰
+//│     z¹  ~>  type A
+//│     app³  <~  A
+//│     app³  ->  bind⁰
+//│ = A
+//│ z = A
+
+:sf
+f(.a.c(1).b.c(4))
+//│ Flowed:
+//│   f⁰{ ~> f⁰ }(A⁰.a⁰.c⁰(1)‹app⁶›.b⁰.c⁰(4)‹app⁷›)‹app⁸›
+//│ where
+//│     app⁸  <~  type A
+//│     app⁷  <~  A
+//│     app⁷  ->  bind¹
+//│ = A
+
+class C
+module C with
+  fun a = new C
+
+:sf
+:e
+fun g(x : C) = x
+let d = .a
+f(d)
+g(d)
+//│ ╔══[COMPILATION ERROR] Ambiguous selection with multiple apparent targets:
+//│ ║  l.73: 	let d = .a
+//│ ║        	        ^^
+//│ ╟── companion member a
+//│ ║  l.68: 	  fun a = new C
+//│ ║        	  ^^^^^^^^^^^^^
+//│ ╟── companion member a
+//│ ║  l.8: 	  fun a = new A
+//│ ╙──     	  ^^^^^^^^^^^^^
+//│ Flowed:
+//│   fun g⁰(x⁰: C⁰{ ~> C⁰ }) ‹flow:g⁰› = x⁰,
+//│   let d⁰,
+//│   d⁰ = _?_.a{ ~> ‹error› },
+//│   f⁰{ ~> f⁰ }(d⁰)‹app⁹›,
+//│   g⁰{ ~> g⁰ }(d⁰)‹app¹⁰›
+//│ where
+//│     x⁰  <~  type C
+//│     x⁰  ->  app¹⁰
+//│     d⁰  <~  _?_.‹error›
+//│     d⁰  ~>  type A  type C
+//│     app⁹  <~  type A
+//│     app¹⁰  <~  type C
+//│     flow:g⁰  <~  ((type C) -> x⁰)
+//│     flow:g⁰  ~>  ((d⁰) -> app¹⁰)
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ d = undefined
+
+:sf
+f(.a)
+g(.a)
+//│ Flowed:
+//│   f⁰{ ~> f⁰ }(_?_.a{ ~> A⁰.a⁰ })‹app¹¹›,
+//│   g⁰{ ~> g⁰ }(_?_.a{ ~> C⁰.a¹ })‹app¹²›
+//│ where
+//│     app¹¹  <~  type A
+//│     app¹²  <~  type C
+//│ = C
+
+:sf
+:re
+:e
+f(.w)
+//│ ╔══[COMPILATION ERROR] Cannot resolve leading dot selection
+//│ ║  l.117: 	f(.w)
+//│ ╙──       	  ^^
+//│ Flowed:
+//│   f⁰{ ~> f⁰ }(_?_.w{ ~> ‹error› })‹app¹³›
+//│ where
+//│     app¹³  <~  type A
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:sf
+:e
+.b(new A)
+//│ ╔══[COMPILATION ERROR] Cannot resolve leading dot selection
+//│ ║  l.129: 	.b(new A)
+//│ ╙──       	^^
+//│ Flowed:
+//│   _?_.b{ ~> ‹error› }(new A⁰)‹app¹⁴›
+//│ where
+//│     app¹⁴  ->  bind²
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

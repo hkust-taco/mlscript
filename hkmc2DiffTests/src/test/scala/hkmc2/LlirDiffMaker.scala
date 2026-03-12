@@ -45,7 +45,7 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
   object Llir: // Avoid polluting the namespace
     val freshId = FreshInt()
     var ctx = codegen.llir.Ctx.empty
-    val scope = Scope.empty
+    val scope = Scope.empty(Scope.Cfg.default)
     val wholeProg = ListBuffer.empty[Program]
   import Llir.*
   
@@ -78,26 +78,27 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
           if debug.isSet then
             output(LlirDebugPrinter.mkDocument(llirProg).toString)
           else
-            output(LlirPrinter(using summon[Raise], Scope.empty).mkDocument(llirProg).mkString())
+            output(LlirPrinter(using summon[Raise], Scope.empty(Scope.Cfg.default))
+              .mkDocument(llirProg).mkString(output.ColWidth))
         def cppGen(name: String, prog: Program, gen: Bool, show: Bool, run: Bool, write: Opt[Str]): Unit =
           tl.log(s"Generating $name")
           if gen || show || run || write.isDefined then
             val cpp = CppCodeGen(ctx.builtinSym.hiddenClasses, tl).codegen(prog)
             if show then
               output(s"\n$name:")
-              output(cpp.toDocument.mkString())
+              output(cpp.toDocument.mkString(output.ColWidth))
             val rPath = os.Path(rootPath)
             val auxPath = rPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"cpp"
             if write.isDefined then
               printToFile(java.io.File((auxPath / s"${write.get}").toString)):
-                p => p.println(cpp.toDocument.mkString())
+                p => p.println(cpp.toDocument.mkString(output.ColWidth))
             if run then 
               val cppHost = CppCompilerHost(auxPath.toString, output.apply)
               if !cppHost.ready then
                 output("\nCpp Compilation Failed: Cpp compiler or GNU Make not found")
               else if !silent.isSet then
                 output("\n")
-                cppHost.compileAndRun(cpp.toDocument.mkString())
+                cppHost.compileAndRun(cpp.toDocument.mkString(output.ColWidth))
         cppGen("Cpp", llirProg, 
           cpp.isSet, scpp.isSet, rcpp.isSet, wcpp.get)
         cppGen("WholeProgramCpp", mkWholeProgram,

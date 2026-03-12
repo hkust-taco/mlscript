@@ -4,13 +4,13 @@
 
 :e
 class Foo { log("hi") }
-//│ ╔══[ERROR] Invalid class definition head: unexpected block in this position
+//│ ╔══[COMPILATION ERROR] Invalid class definition head: unexpected block in this position
 //│ ║  l.6: 	class Foo { log("hi") }
 //│ ╙──     	          ^^^^^^^^^^^^^
 
 :e
 class Foo { 1 }
-//│ ╔══[ERROR] Invalid class definition head: unexpected block in this position
+//│ ╔══[COMPILATION ERROR] Invalid class definition head: unexpected block in this position
 //│ ║  l.12: 	class Foo { 1 }
 //│ ╙──      	          ^^^^^
 

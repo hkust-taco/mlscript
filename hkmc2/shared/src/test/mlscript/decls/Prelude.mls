@@ -192,7 +192,7 @@ declare module console with
       info
       warn
       error
-      assert
+      // assert
       clear
       count
       countReset

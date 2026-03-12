@@ -11,9 +11,9 @@ import syntax.Tree, Tree.*, Elaborator.{Ctx, State, ctx}
   * `Normalization`, `Compiler`, and `SplitCompiler`. */
 trait TermSynthesizer(using State):
   protected final def sel(p: Term, k: Ident): Term.SynthSel =
-    (Term.SynthSel(p, k)(N, N): Term.SynthSel).resolve
+    (Term.SynthSel(p, k)(N, FlowSymbol.synthSel(k.name), N, N): Term.SynthSel).resolve
   protected final def sel(p: Term, k: Ident, s: MemberSymbol): Term.SynthSel =
-    (Term.SynthSel(p, k)(S(s), N): Term.SynthSel).resolve
+    (Term.SynthSel(p, k)(S(s), FlowSymbol.synthSel(k.name), N, N): Term.SynthSel).resolve
   protected final def sel(p: Term, k: Str): Term.SynthSel = sel(p, Ident(k): Ident)
   protected final def sel(p: Term, k: Str, s: MemberSymbol): Term.SynthSel = sel(p, Ident(k): Ident, s)
   protected final def int(i: Int) = Term.Lit(IntLit(BigInt(i)))
@@ -56,13 +56,13 @@ trait TermSynthesizer(using State):
     val parameters = parametersOpt.map(_.map(_ -> N))
     FlatPattern.ClassLike(matchFailureClass, State.matchFailureClsSymbol, parameters, false)(Tree.Dummy)
 
-  protected lazy val tupleSlice = sel(sel(runtimeRef, "Tuple"), "slice")
-  protected lazy val tupleLazySlice = sel(sel(runtimeRef, "Tuple"), "lazySlice")
-  protected lazy val tupleGet = sel(sel(runtimeRef, "Tuple"), "get")
-  protected lazy val stringStartsWith = sel(sel(runtimeRef, "Str"), "startsWith")
-  protected lazy val stringGet = sel(sel(runtimeRef, "Str"), "get")
-  protected lazy val stringTake = sel(sel(runtimeRef, "Str"), "take")
-  protected lazy val stringLeave = sel(sel(runtimeRef, "Str"), "leave")
+  protected lazy val tupleSlice = sel(sel(runtimeRef, "Tuple"), "slice", State.tupleSliceSymbol)
+  protected lazy val tupleLazySlice = sel(sel(runtimeRef, "Tuple"), "lazySlice", State.tupleLazySliceSymbol)
+  protected lazy val tupleGet = sel(sel(runtimeRef, "Tuple"), "get", State.tupleGetSymbol)
+  protected lazy val stringStartsWith = sel(sel(runtimeRef, "Str"), "startsWith", State.strStartsWithSymbol)
+  protected lazy val stringGet = sel(sel(runtimeRef, "Str"), "get", State.strGetSymbol)
+  protected lazy val stringTake = sel(sel(runtimeRef, "Str"), "take", State.strTakeSymbol)
+  protected lazy val stringLeave = sel(sel(runtimeRef, "Str"), "leave", State.strLeaveSymbol)
 
   /** Make a term that looks like `runtime.Tuple.get(t, i)`. */
   protected final def callTupleGet(t: Term, i: Int, label: Str): Term =

@@ -6,7 +6,7 @@ import utils.TraceLogger
 
 import syntax.Tree
 import syntax.Tree.{DummyTup, DummyApp}
-import syntax.{Fun, Ins, Mod, ImmutVal, MutVal}
+import syntax.{Fun, Ins, Mod, ImmutVal, MutVal, SpreadKind}
 import syntax.Keyword.{`if`}
 import Elaborator.State
 import Resolvable.*
@@ -76,13 +76,10 @@ object Resolver:
         
         case (lhs: Type.Ref, rhs: Type.Ref) =>
           lhs.sym === rhs.sym // TODO: subtyping for Ref
-          && (lhs.args.length == rhs.args.length)
+          && (lhs.args.sizeCompare(rhs.args.length) === 0)
           && (lhs.args zip rhs.args).forall((a, b) => a.lb =:= b.lb && a.ub =:= b.ub) // suppose invariant
         case (lhs: Type.Fun, rhs: Type.Fun) =>
-          (lhs.args.length == rhs.args.length)
-          && (lhs.args zip rhs.args).forall((a, b) => b <:< a) // contravariant
-          && (lhs.ret <:< rhs.ret) // covariant
-          && (lhs.eff, rhs.eff).match
+          rhs.args <:< lhs.args && lhs.ret <:< rhs.ret && (lhs.eff, rhs.eff).match
             case (N, N) => true
             case (S(le), S(re)) => le <:< re // covariant
             case _ => false
@@ -253,7 +250,9 @@ class Resolver(tl: TraceLogger)
   import Resolver.*
   import Expect.*
   import ModuleChecker.*
-
+  
+  given TraceLogger = tl
+  
   /**
     * Traverse a block and resolve any resolvable sub-terms. This is
     * usually the entry point for the resolver.
@@ -318,6 +317,10 @@ class Resolver(tl: TraceLogger)
         defs.foreach(d => traverseDefn(d.td))
         traverse(body, expect = NonModule(N))
       
+      case t: Term.Lam =>
+        t.params.foreach(traverseParam)
+        traverse(t.body, expect = NonModule(N))
+        
       case t: Resolvable =>
         resolve(t, prefer = expect, inAppPrefix = false, inTyPrefix = false, inCtxPrefix = false)
       
@@ -356,8 +359,7 @@ class Resolver(tl: TraceLogger)
   trace(s"Resolving definition: $defn"):
     def traverseTermDef(tdf: TermDefinition) =
       val TermDefinition(_k, _sym, _tsym, 
-        pss, tps, sign, body, 
-        _resSym, TermDefFlags(isMethod), modulefulness, annotations, comp
+        pss, tps, sign, body, TermDefFlags(isMethod), modulefulness, annotations, comp
       ) = tdf
       /** 
        * Add the contextual parameters in pss to the ICtx so that they
@@ -574,6 +576,8 @@ class Resolver(tl: TraceLogger)
         resolveType(t, prefer = prefer)
         (t.callableDefn, ictx)
       
+      case Term.LeadingDotSel(nme) => (N, ictx)
+
       case Term.Ref(_: BlockMemberSymbol) =>
         resolveSymbol(t, prefer = prefer, sign = false)
         resolveType(t, prefer = prefer)
@@ -714,7 +718,7 @@ class Resolver(tl: TraceLogger)
               val args = as match
                 case Term.Tup(args) => args
                 case Term.CtxTup(args) => args
-                case spd => Spd(true, spd) :: Nil
+                case spd => Spd(SpreadKind.Eager, spd) :: Nil
               
               // The lhs of the App is already traversed by the recursive
               // `traverse` or `resolve` at the beginning.
@@ -1007,6 +1011,9 @@ class Resolver(tl: TraceLogger)
   
   def traverseParam(p: Param)(using ictx: ICtx): Unit =
     log(s"Resolving parameter ${p.showDbg}")
+    val ty = p.sign.map(sign =>
+      resolveSign(sign, expect = if p.modulefulness.modified then Module(N) else NonModule(N)))
+    p.signType = ty
     if p.modulefulness.modified then
       if p.sign.isEmpty then
         raise(ErrorReport(msg"Module parameter must have explicit type." -> p.sym.toLoc :: Nil))
@@ -1053,7 +1060,7 @@ class Resolver(tl: TraceLogger)
     
     // Complex type: Function type, Wildcard type, Composed type,
     // Negation type, Forall type, 
-    case t: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Tup) =>
+    case t: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup) =>
       t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
     
     // t is not a type.
@@ -1139,7 +1146,8 @@ class Resolver(tl: TraceLogger)
       case Term.App(Term.Ref(_: BuiltinSymbol), Term.Tup(Fld(term = Term.Lit(_)) :: Nil)) => if expect.module
         then raiseError()
         else Type.NotImplemented // TODO: Support Lit with operator
-      case _: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Tup | Term.Lit) => if expect.module
+      case _: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup | Term.Lit) =>
+        if expect.module
         then raiseError()
         else Type.NotImplemented // TODO: Support complex types
       
@@ -1165,11 +1173,6 @@ class Resolver(tl: TraceLogger)
 
 end Resolver
 
-object AnySel:
-  def unapply(t: (Term.Sel | Term.SynthSel | Term.SelProj)): S[(Term, Tree.Ident, Opt[Term])] = t match
-    case Term.Sel(lhs, id) => S((lhs, id, N))
-    case Term.SynthSel(lhs, id) => S((lhs, id, N))
-    case Term.SelProj(lhs, cls, proj) => S((lhs, proj, S(cls)))
 
 object ModuleChecker:
   
@@ -1213,11 +1216,14 @@ object ModuleChecker:
       case sym => lastWords(s"unsupported symbol type ${sym.getClass} (${sym})")
     
     t match
-      case Term.Blk(_, res) => evalsToModule(res, prefer = prefer)
-      case Term.IfLike(`if`, split) => split.results.exists(evalsToModule(_, prefer = prefer))
-      case t: Resolvable => t.resolvedTyp match
-        case S(ty) => ty.symbol.map(checkSym(_)).getOrElse(false)
-        case N => false
-      case _ => false
+    case Term.Blk(_, res) => evalsToModule(res, prefer = prefer)
+    case Term.IfLike(`if`, IfLikeForm.ReturningIf, split) => split.results.exists(evalsToModule(_, prefer = prefer))
+    case t: Resolvable => t.resolvedTyp match
+      case S(ty) => ty.symbol.map(checkSym(_)).getOrElse(false)
+      case N => false
+    case _ => false
   
   def isStaticClass(t: Term): Bool = t.resolvedSym.exists(_.asCls.isDefined)
+
+end ModuleChecker
+

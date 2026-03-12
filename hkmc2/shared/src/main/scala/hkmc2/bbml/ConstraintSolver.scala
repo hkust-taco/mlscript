@@ -9,7 +9,7 @@ import mlscript.utils.*, shorthands.*
 import utils.*
 import utils.Scope
 
-// * TODO use mutabnle cache instead for correct asymptotic complexity
+// * TODO use mutable cache instead for correct asymptotic complexity
 type Cache = Set[(Type, Type)]
 type ExtrudeCache = mutable.HashMap[(Uid[InfVar], Bool), InfVar]
 

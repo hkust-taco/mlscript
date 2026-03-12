@@ -30,29 +30,23 @@ fun g(x, y, z) =
 //│ let g;
 //│ g = function g(x1, y1, z) {
 //│   let a, tmp1, tmp2;
-//│   split_root$: {
-//│     split_1$: {
-//│       if (x1 === true) {
-//│         break split_1$
+//│   if (x1 === true) {
+//│     tmp1 = 0;
+//│   } else {
+//│     if (y1 === true) {
+//│       tmp1 = 0;
+//│     } else {
+//│       if (z === true) {
+//│         let lambda;
+//│         a = 1;
+//│         lambda = (undefined, function (_0) {
+//│           return _0 + a
+//│         });
+//│         tmp1 = lambda;
 //│       } else {
-//│         if (y1 === true) {
-//│           break split_1$
-//│         } else {
-//│           if (z === true) {
-//│             let lambda;
-//│             a = 1;
-//│             lambda = (undefined, function (_0) {
-//│               return _0 + a
-//│             });
-//│             tmp1 = lambda;
-//│             break split_root$
-//│           } else {
-//│             throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│           }
-//│         }
+//│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│       }
 //│     }
-//│     tmp1 = 0;
 //│   }
 //│   tmp2 = 4 * tmp1;
 //│   return 3 + tmp2
@@ -146,21 +140,16 @@ module M with
 fun f(x) =
   while x do
     let y = x
-    x
+    print(x)
 //│ JS (unsanitized):
 //│ let f6;
 //│ f6 = function f(x1) {
-//│   let tmp2;
 //│   lbl: while (true) {
 //│     let y1;
-//│     if (x1 === true) {
-//│       y1 = x1;
-//│       tmp2 = x1;
-//│       continue lbl
-//│     } else { tmp2 = runtime.Unit; }
+//│     if (x1 === true) { y1 = x1; Predef.print(x1); continue lbl }
 //│     break;
 //│   }
-//│   return tmp2
+//│   return runtime.Unit
 //│ };
 
 
@@ -170,26 +159,24 @@ fun f(x) =
 fun f(x) =
   while x do
     let y = x
-    x
+    print(x)
 //│ JS (unsanitized):
 //│ let f7;
 //│ f7 = function f(x1) {
-//│   let tmp2, while1, tmp3, tmp4;
-//│   tmp2 = undefined;
+//│   let while1, tmp2, tmp3;
 //│   while1 = (undefined, function () {
 //│     let y1;
 //│     if (x1 === true) {
 //│       y1 = x1;
-//│       tmp2 = x1;
+//│       Predef.print(x1);
 //│       return while1()
-//│     } else {
-//│       tmp2 = runtime.Unit;
 //│     }
 //│     return runtime.LoopEnd
 //│   });
-//│   tmp3 = while1();
-//│   tmp4 = tmp3 !== runtime.LoopEnd;
-//│   if (tmp4 === true) { return tmp3 } else { return tmp2 }
+//│   tmp2 = while1();
+//│   tmp3 = tmp2 !== runtime.LoopEnd;
+//│   if (tmp3 === true) { return tmp2 }
+//│   return runtime.Unit
 //│ };
 
 

@@ -35,15 +35,15 @@ x `=>
   print(x)
   x
 //│ JS (unsanitized):
-//│ let x1, tmp8, tmp9, tmp10, arr2;
-//│ tmp8 = globalThis.Object.freeze(new Term.Symbol("x"));
-//│ x1 = globalThis.Object.freeze(new Term.Ref(tmp8));
-//│ tmp9 = Predef.print(x1);
+//│ let x1, tmp6, tmp7, arr2;
+//│ tmp6 = globalThis.Object.freeze(new Term.Symbol("x"));
+//│ x1 = globalThis.Object.freeze(new Term.Ref(tmp6));
+//│ Predef.print(x1);
 //│ arr2 = globalThis.Object.freeze([
-//│   tmp8
+//│   tmp6
 //│ ]);
-//│ tmp10 = x1;
-//│ globalThis.Object.freeze(new Term.Lam(arr2, tmp10))
+//│ tmp7 = x1;
+//│ globalThis.Object.freeze(new Term.Lam(arr2, tmp7))
 //│ > Ref(Symbol("x"))
 //│ = Lam([Symbol("x")], Ref(Symbol("x")))
 
@@ -77,20 +77,20 @@ f`(`0)
 :sjs
 `if `true then `true else `false
 //│ JS (unsanitized):
-//│ let scrut, tmp32, tmp33, tmp34, tmp35, tmp36, tmp37, tmp38, tmp39, tmp40, tmp41, tmp42;
-//│ tmp32 = globalThis.Object.freeze(new Term.Symbol("scrut"));
-//│ scrut = globalThis.Object.freeze(new Term.Ref(tmp32));
-//│ tmp33 = globalThis.Object.freeze(new Term.Lit(true));
-//│ tmp36 = scrut;
-//│ tmp37 = globalThis.Object.freeze(new Term.LitPattern(true));
-//│ tmp42 = globalThis.Object.freeze(new Term.Lit(true));
-//│ tmp38 = globalThis.Object.freeze(new Term.Else(tmp42));
-//│ tmp39 = globalThis.Object.freeze(new Term.Branch(tmp36, tmp37, tmp38));
-//│ tmp41 = globalThis.Object.freeze(new Term.Lit(false));
-//│ tmp40 = globalThis.Object.freeze(new Term.Else(tmp41));
-//│ tmp34 = globalThis.Object.freeze(new Term.Cons(tmp39, tmp40));
-//│ tmp35 = globalThis.Object.freeze(new Term.Let(tmp32, tmp33, tmp34));
-//│ globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp35))
+//│ let scrut, tmp28, tmp29, tmp30, tmp31, tmp32, tmp33, tmp34, tmp35, tmp36, tmp37, tmp38;
+//│ tmp28 = globalThis.Object.freeze(new Term.Symbol("scrut"));
+//│ scrut = globalThis.Object.freeze(new Term.Ref(tmp28));
+//│ tmp29 = globalThis.Object.freeze(new Term.Lit(true));
+//│ tmp32 = scrut;
+//│ tmp33 = globalThis.Object.freeze(new Term.LitPattern(true));
+//│ tmp38 = globalThis.Object.freeze(new Term.Lit(true));
+//│ tmp34 = globalThis.Object.freeze(new Term.Else(tmp38));
+//│ tmp35 = globalThis.Object.freeze(new Term.Branch(tmp32, tmp33, tmp34));
+//│ tmp37 = globalThis.Object.freeze(new Term.Lit(false));
+//│ tmp36 = globalThis.Object.freeze(new Term.Else(tmp37));
+//│ tmp30 = globalThis.Object.freeze(new Term.Cons(tmp35, tmp36));
+//│ tmp31 = globalThis.Object.freeze(new Term.Let(tmp28, tmp29, tmp30));
+//│ globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp31))
 //│ = IfLike(
 //│   If,
 //│   Let(
@@ -125,13 +125,15 @@ x `=> `if x `== `0.0 then `1.0 else x
 //│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.equals is only allowed in compiled files due to the lack of `import.meta` in REPL mode.
 //│ ║  l.124: 	x `=> `if x `== `0.0 then `1.0 else x
 //│ ╙──       	             ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // We cannot quote a symbol from another file here due to the lack of `import.meta` in REPL mode.
 :ge
 `id`(`42)
 //│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.id is only allowed in compiled files due to the lack of `import.meta` in REPL mode.
-//│ ║  l.131: 	`id`(`42)
+//│ ║  l.132: 	`id`(`42)
 //│ ╙──       	 ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 fun id(x) = x

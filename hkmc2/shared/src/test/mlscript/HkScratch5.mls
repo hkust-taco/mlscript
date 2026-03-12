@@ -106,7 +106,7 @@ arr is
 pattern MultiSet(pattern Head, pattern Rest) =
   | ((Head as h) :: (Rest as r)) => h :: r
   | ((h0 :: (Head as h) :: r) where ((h0 :: r) is (Rest as rst))) => h :: rst
-//│ ╔══[ERROR] Name not found: rst
+//│ ╔══[COMPILATION ERROR] Name not found: rst
 //│ ║  l.108: 	  | ((h0 :: (Head as h) :: r) where ((h0 :: r) is (Rest as rst))) => h :: rst
 //│ ╙──       	                                                                          ^^^
 

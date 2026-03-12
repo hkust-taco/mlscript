@@ -3,10 +3,10 @@
 :e
 // Hypothetical syntax: parameterized patterns declared by type parameters.
 pattern Rep0[A] = "" | A ~ Rep0[A]
-//│ ╔══[ERROR] Pattern name not found: A.
+//│ ╔══[COMPILATION ERROR] Pattern name not found: A.
 //│ ║  l.5: 	pattern Rep0[A] = "" | A ~ Rep0[A]
 //│ ╙──     	                       ^
-//│ ╔══[ERROR] Unrecognized pattern (application).
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern (application).
 //│ ║  l.5: 	pattern Rep0[A] = "" | A ~ Rep0[A]
 //│ ╙──     	                           ^^^^^^^
 
@@ -20,15 +20,15 @@ pattern Rep0[pattern A] = "" | A ~ Rep0[A]
 // Hypothetical syntax: separate parameter list for the extraction.
 pattern Rep0(pattern A, B, C)(head) =
   "" | (A as head) ~ Rep0[A]
-//│ ╔══[ERROR] Multiple parameter lists are not supported for this definition.
+//│ ╔══[COMPILATION ERROR] Multiple parameter lists are not supported for this definition.
 //│ ║  l.21: 	pattern Rep0(pattern A, B, C)(head) =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.22: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unrecognized pattern (application).
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern (application).
 //│ ║  l.22: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	                     ^^^^^^^
-//│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
+//│ ╔══[COMPILATION ERROR] Found an inconsistent variable in disjunction patterns.
 //│ ║  l.22: 	  "" | (A as head) ~ Rep0[A]
 //│ ║        	             ^^^^
 //│ ╟── The variable is missing from this sub-pattern.
@@ -45,7 +45,7 @@ pattern Email(name, domain) =
 // Hypothetical syntax (very unlikely to implement): view patterns
 pattern GreaterThan(value) = case
   n and n > value then n
-//│ ╔══[ERROR] Unrecognized pattern (case).
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern (case).
 //│ ║  l.47: 	  n and n > value then n
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -58,7 +58,7 @@ fun foo(x) = if x is
   view as
     Unit then ....
     Arrow(...) then ....
-//│ ╔══[ERROR] Unrecognized pattern split (infix operator 'as').
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (infix operator 'as').
 //│ ║  l.58: 	  view as
 //│ ║        	  ^^^^^^^
 //│ ║  l.59: 	    Unit then ....
@@ -83,7 +83,7 @@ pattern Email(name, domains) =
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
 //│ ║  l.78: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	                      ^^^
-//│ ╔══[ERROR] Unrecognized pattern (juxtaposition).
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern (juxtaposition).
 //│ ║  l.78: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	               ^^^^^^
 
@@ -94,7 +94,7 @@ pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
 //│ ║  l.93: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──      	                        ^^^
-//│ ╔══[ERROR] Unrecognized pattern (juxtaposition).
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern (juxtaposition).
 //│ ║  l.93: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──      	                 ^^^^^^
 

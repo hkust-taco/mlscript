@@ -1,0 +1,14 @@
+:parseOnly
+
+
+[] => Int
+//│ Parsed:
+//│ 	InfixApp(TyTup(List()),Keywrd(keyword '=>'),Ident(Int))
+
+[Bot <: Top] => Int
+//│ Parsed:
+//│ 	InfixApp(TyTup(List(InfixApp(Ident(Bot),Keywrd(keyword '<:'),Ident(Top)))),Keywrd(keyword '=>'),Ident(Int))
+
+[Int & Str <: Int | Str] => Int
+//│ Parsed:
+//│ 	InfixApp(TyTup(List(InfixApp(OpApp(Ident(Int),Ident(&),List(Ident(Str))),Keywrd(keyword '<:'),OpApp(Ident(Int),Ident(|),List(Ident(Str)))))),Keywrd(keyword '=>'),Ident(Int))

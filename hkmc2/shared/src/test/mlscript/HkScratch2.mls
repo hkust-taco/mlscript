@@ -113,6 +113,7 @@ let res =
 //│ ║         	    ^
 //│ ║  l.110: 	  | 2
 //│ ╙──       	^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ res = undefined
 
 
@@ -150,11 +151,11 @@ pattern Bin =
   | 0
   // oops
   | 1
-//│ ╔══[ERROR] Unexpected record property pattern.
-//│ ║  l.150: 	  | 0
+//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
+//│ ║  l.151: 	  | 0
 //│ ╙──       	  ^^^
-//│ ╔══[ERROR] Unexpected record property pattern.
-//│ ║  l.152: 	  | 1
+//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
+//│ ║  l.153: 	  | 1
 //│ ╙──       	  ^^^
 
 
@@ -196,28 +197,28 @@ fun test(x) = if x is
 //│       break;
 //│   }
 //│ };
-//│ Lowered:
+//│ Lowered IR:
 //│ Program:
 //│   imports = Nil
-//│   main = Scoped(syms = {member:test}): 
+//│   main = Scoped(syms = {member:test⁰}): 
 //│     body = Define:
 //│       defn = FunDefn:
 //│         owner = N
-//│         sym = member:test
-//│         dSym = term:test
+//│         sym = member:test⁰
+//│         dSym = term:test¹
 //│         params = Ls of 
 //│           ParamList:
 //│             flags = ()
 //│             params = Ls of 
 //│               Param:
 //│                 flags = ()
-//│                 sym = x
+//│                 sym = x⁰
 //│                 sign = N
 //│                 modulefulness = Modulefulness of N
 //│             restParam = N
 //│         body = Match:
 //│           scrut = Ref:
-//│             l = x
+//│             l = x⁰
 //│             disamb = N
 //│           arms = Ls of 
 //│             Tuple2:

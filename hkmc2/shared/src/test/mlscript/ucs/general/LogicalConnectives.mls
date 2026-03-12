@@ -3,14 +3,14 @@
 
 :fixme
 true or true
-//│ ╔══[ERROR] Logical `or` is not yet supported.
+//│ ╔══[COMPILATION ERROR] Logical `or` is not yet supported.
 //│ ║  l.5: 	true or true
 //│ ╙──     	^^^^^^^^^^^^
 //│ = true
 
 :fixme
 while false or false do print("ok")
-//│ ╔══[ERROR] Logical `or` is not yet supported.
+//│ ╔══[COMPILATION ERROR] Logical `or` is not yet supported.
 //│ ║  l.12: 	while false or false do print("ok")
 //│ ╙──      	      ^^^^^^^^^^^^^^
 
@@ -25,28 +25,19 @@ fun test(x) =
 :sjs
 true and test(42)
 //│ JS (unsanitized):
-//│ let scrut6, scrut7, tmp3;
-//│ split_root$3: {
-//│   split_1$3: {
-//│     scrut6 = true;
-//│     if (scrut6 === true) {
-//│       scrut7 = test(42);
-//│       if (scrut7 === true) {
-//│         tmp3 = true;
-//│         break split_root$3
-//│       } else { break split_1$3 }
-//│     } else { break split_1$3 }
-//│   }
-//│   tmp3 = false;
-//│ }
-//│ tmp3
+//│ let scrut6, scrut7;
+//│ scrut6 = true;
+//│ if (scrut6 === true) {
+//│   scrut7 = test(42);
+//│   if (scrut7 === true) { true } else { false }
+//│ } else { false }
 //│ > 42
 //│ = false
 
 :fixme
 true or test(42)
-//│ ╔══[ERROR] Logical `or` is not yet supported.
-//│ ║  l.47: 	true or test(42)
+//│ ╔══[COMPILATION ERROR] Logical `or` is not yet supported.
+//│ ║  l.38: 	true or test(42)
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ > 42
 //│ = false

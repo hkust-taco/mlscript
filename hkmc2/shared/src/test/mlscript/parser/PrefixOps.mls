@@ -20,7 +20,7 @@
 //│ ║  l.16: 	1
 //│ ╙──      	^
 //│ JS (unsanitized):
-//│ let tmp2; tmp2 = + 2; + 3
+//│ + 2; + 3
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.16: 	1
 //│ ╙──      	^
@@ -31,7 +31,7 @@
 + 2
 + 3
 //│ JS (unsanitized):
-//│ let tmp3; tmp3 = 1 + 2; tmp3 + 3
+//│ let tmp2; tmp2 = 1 + 2; tmp2 + 3
 //│ = 6
 
 1
@@ -55,11 +55,13 @@
 //│ = fun
 
 :pe
+:re
 1
 *
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.59: 	*
+//│ ║  l.60: 	*
 //│ ╙──      	 ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 fun (??) foo(x, y) = x + y
@@ -86,7 +88,7 @@ fun (??) foo(x, y) = x + y
 :pe
 ?? 1
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.87: 	?? 1
+//│ ║  l.89: 	?? 1
 //│ ╙──      	   ^
 //│ = fun foo
 

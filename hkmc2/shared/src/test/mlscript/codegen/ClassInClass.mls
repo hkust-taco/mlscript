@@ -23,7 +23,7 @@ data class Outer(a, b) with
 //│     Outer1.class = this
 //│   }
 //│   constructor(a, b) {
-//│     let tmp, tmp1, tmp2;
+//│     let tmp, tmp1;
 //│     this.a = a;
 //│     this.b = b;
 //│     const this$Outer = this;
@@ -35,12 +35,12 @@ data class Outer(a, b) with
 //│         this$Outer.Inner.class = this
 //│       }
 //│       constructor(c) {
-//│         let tmp3, tmp4, tmp5;
+//│         let tmp2;
 //│         this.c = c;
-//│         tmp3 = Predef.print(this$Outer.a);
-//│         tmp4 = Predef.print(this.c);
-//│         tmp5 = this.i1(this$Outer.a);
-//│         Predef.print(tmp5);
+//│         Predef.print(this$Outer.a);
+//│         Predef.print(this.c);
+//│         tmp2 = this.i1(this$Outer.a);
+//│         Predef.print(tmp2);
 //│       }
 //│       i1(d) {
 //│         return globalThis.Object.freeze([
@@ -54,9 +54,9 @@ data class Outer(a, b) with
 //│     });
 //│     tmp = this.Inner(this.a);
 //│     this.i = tmp;
-//│     tmp1 = Predef.print(this.i.c);
-//│     tmp2 = runtime.safeCall(this.i.i1(1));
-//│     Predef.print(tmp2);
+//│     Predef.print(this.i.c);
+//│     tmp1 = runtime.safeCall(this.i.i1(1));
+//│     Predef.print(tmp1);
 //│   }
 //│   o1(c) {
 //│     return this.Inner(c)

@@ -1,74 +1,94 @@
 :js
 
 :global
-:sjs
+:ssjs
 
 
 let x
-//│ JS (unsanitized):
+//│ JS:
 //│ let x;
+//│ block$res1 = undefined;
 //│ x = undefined
 
+print(x)
+//│ JS:
+//│ block$res2 = runtime.checkCall(Predef.print(x)); undefined
+//│ > undefined
+
 x = 1
-//│ JS (unsanitized):
-//│ x = 1;
+//│ JS:
+//│ x = 1; block$res3 = undefined;
 
 x
-//│ JS (unsanitized):
-//│ x
+//│ JS:
+//│ block$res4 = x; undefined
 //│ = 1
 
 // TODO forbid redefining a let
 x = 2
-//│ JS (unsanitized):
-//│ x = 2;
+//│ JS:
+//│ x = 2; block$res5 = undefined;
 
 x
-//│ JS (unsanitized):
-//│ x
+//│ JS:
+//│ block$res6 = x; undefined
 //│ = 2
 
 
 let y = 1
-//│ JS (unsanitized):
-//│ let y; y = 1;
+//│ JS:
+//│ let y;
+//│ y = 1; block$res7 = undefined;
 //│ y = 1
 
 :e
 z = 1
-//│ ╔══[ERROR] Name not found: z
-//│ ║  l.38: 	z = 1
+//│ ╔══[COMPILATION ERROR] Name not found: z
+//│ ║  l.45: 	z = 1
 //│ ╙──      	^
-//│ JS (unsanitized):
-//│ /* error */
+//│ JS:
+//│ throw "This code cannot be run as its compilation yielded an error."
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 fun f() = 1
-//│ JS (unsanitized):
-//│ let f; f = function f() { return 1 };
+//│ JS:
+//│ let f;
+//│ f = function f() {
+//│   runtime.checkArgs("f", 0, true, arguments.length);
+//│   return 1
+//│ };
+//│ block$res9 = undefined;
 
 f
-//│ JS (unsanitized):
-//│ f
+//│ JS:
+//│ block$res10 = f; undefined
 //│ = fun f
 
 
 let f
 f(x) = x + 1
-//│ JS (unsanitized):
-//│ let f1, f2; f2 = function f(x1) { return x1 + 1 }; f1 = f2;
+//│ JS:
+//│ let f1, f2;
+//│ f2 = function f(x1) {
+//│   runtime.checkArgs("f", 1, true, arguments.length);
+//│   return x1 + 1
+//│ };
+//│ f1 = f2;
+//│ block$res11 = undefined;
 //│ f = fun f
 
 f(1)
-//│ JS (unsanitized):
-//│ runtime.safeCall(f1(1))
+//│ JS:
+//│ block$res12 = runtime.safeCall(f1(1)); undefined
 //│ = 2
 
 
 let foo
 foo = 0
-//│ JS (unsanitized):
-//│ let foo; foo = 0;
+//│ JS:
+//│ let foo;
+//│ foo = 0; block$res13 = undefined;
 //│ foo = 0
 
 :fixme
@@ -77,13 +97,14 @@ if true
 then foo = 0
 else foo = 1
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.77: 	then foo = 0
+//│ ║  l.97: 	then foo = 0
 //│ ╙──      	         ^
-//│ JS (unsanitized):
+//│ JS:
 //│ let foo1, scrut;
 //│ scrut = true;
 //│ if (scrut === true) {
-//│   foo1
+//│   block$res14 = foo1;
+//│   undefined
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ foo = undefined
 
@@ -93,34 +114,49 @@ then
   foo = 0
 else
   foo = 1
-//│ JS (unsanitized):
+//│ JS:
 //│ let foo2, scrut1;
 //│ scrut1 = true;
-//│ if (scrut1 === true) { foo2 = 0; runtime.Unit } else { foo2 = 1; runtime.Unit }
+//│ if (scrut1 === true) {
+//│   foo2 = 0;
+//│   block$res15 = runtime.Unit;
+//│   undefined
+//│ } else { foo2 = 1; block$res15 = runtime.Unit; undefined }
 //│ foo = 0
 
 
 fun f() =
   foo = 42
-//│ JS (unsanitized):
-//│ let f3; f3 = function f() { foo2 = 42; return runtime.Unit };
+//│ JS:
+//│ let f3;
+//│ f3 = function f() {
+//│   runtime.checkArgs("f", 0, true, arguments.length);
+//│   foo2 = 42;
+//│   return runtime.Unit
+//│ };
+//│ block$res16 = undefined;
 
 f()
-//│ JS (unsanitized):
-//│ f3()
+//│ JS:
+//│ block$res17 = runtime.checkCall(f3()); undefined
 
 foo
-//│ JS (unsanitized):
-//│ foo2
+//│ JS:
+//│ block$res18 = foo2; undefined
 //│ = 42
 
 
 :fixme
 fun f() = foo = 0
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.119: 	fun f() = foo = 0
+//│ ║  l.150: 	fun f() = foo = 0
 //│ ╙──       	              ^
-//│ JS (unsanitized):
-//│ let f4; f4 = function f() { return foo2 };
+//│ JS:
+//│ let f4;
+//│ f4 = function f() {
+//│   runtime.checkArgs("f", 0, true, arguments.length);
+//│   return foo2
+//│ };
+//│ block$res19 = undefined;
 
 

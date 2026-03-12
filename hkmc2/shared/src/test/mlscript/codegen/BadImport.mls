@@ -3,7 +3,7 @@
 
 :e
 import 123
-//│ ╔══[ERROR] Expected string literal after 'import' keyword
+//│ ╔══[COMPILATION ERROR] Expected string literal after 'import' keyword
 //│ ║  l.5: 	import 123
 //│ ╙──     	       ^^^
 

@@ -2,10 +2,10 @@
 
 :e
 pattern Foo(val T) = null | T
-//│ ╔══[ERROR] Unexpected pattern parameter T with modifiers: val
+//│ ╔══[COMPILATION ERROR] Unexpected pattern parameter T with modifiers: val
 //│ ║  l.4: 	pattern Foo(val T) = null | T
 //│ ╙──     	                ^
-//│ ╔══[ERROR] Pattern name not found: T.
+//│ ╔══[COMPILATION ERROR] Pattern name not found: T.
 //│ ║  l.4: 	pattern Foo(val T) = null | T
 //│ ╙──     	                            ^
 

@@ -9,7 +9,7 @@ import hkmc2.Message.MessageContext
 import hkmc2.{semantics => sem}
 import hkmc2.semantics.{Term => st}
 
-import syntax.{Literal, Tree}
+import syntax.{Literal, Tree, SpreadKind}
 import semantics.*
 import semantics.Term.*
 import sem.Elaborator.State
@@ -37,10 +37,13 @@ sealed abstract class Block extends Product:
     case Assign(_, _, rst) => rst.isAbortive
     case AssignField(_, _, _, rst) => rst.isAbortive
     case AssignDynField(_, _, _, _, rst) => rst.isAbortive
-    case Match(_, arms, dflt, rst) => rst.isAbortive
+    case Match(_, arms, dflt, rst) => rst.isAbortive || arms.forall(_._2.isAbortive) && dflt.exists(_.isAbortive)
     case Define(_, rst) => rst.isAbortive
     case TryBlock(sub, fin, rst) => rst.isAbortive || sub.isAbortive || fin.isAbortive
-    case Label(_, _, bod, rst) => rst.isAbortive
+    case Label(sym, loop, bod, rst) =>
+      // * Note: the body may be abortive for the reason of breaking to the rest!
+      // * So we can't really use the result of bod.isAbortive even when `loop` is false.
+      rst.isAbortive
     case HandleBlock(_, _, _, _, _, handlers, body, rst) => rst.isAbortive
     case Scoped(_, body) => body.isAbortive
   
@@ -96,7 +99,7 @@ sealed abstract class Block extends Product:
       Match(scrut, arms.map(_ -> _.mapTail(f)), dflt.map(_.mapTail(f)), rst)
     case Match(scrut, arms, dflt, rst) =>
       Match(scrut, arms, dflt, rst.mapTail(f))
-    case Label(label, loop, body, rest) => Label(label, loop, body.mapTail(f), rest.mapTail(f))
+    case Label(label, loop, body, rest) => Label(label, loop, body, rest.mapTail(f))
     case af @ AssignField(lhs, nme, rhs, rest) =>
       AssignField(lhs, nme, rhs, rest.mapTail(f))(af.symbol)
     case adf @ AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
@@ -112,11 +115,11 @@ sealed abstract class Block extends Product:
     case Return(res, implct) => res.freeVars
     case Throw(exc) => exc.freeVars
     case Label(label, _, body, rest) => (body.freeVars - label) ++ rest.freeVars 
-    case Break(label) => Set(label)
-    case Continue(label) => Set(label)
+    case Break(label) => Set.single(label)
+    case Continue(label) => Set.single(label)
     case Begin(sub, rest) => sub.freeVars ++ rest.freeVars
     case TryBlock(sub, finallyDo, rest) => sub.freeVars ++ finallyDo.freeVars ++ rest.freeVars
-    case Assign(lhs, rhs, rest) => Set(lhs) ++ rhs.freeVars ++ rest.freeVars
+    case Assign(lhs, rhs, rest) => Set.single(lhs) ++ rhs.freeVars ++ rest.freeVars
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVars ++ rhs.freeVars ++ rest.freeVars
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVars ++ fld.freeVars ++ rhs.freeVars ++ rest.freeVars
     case Define(defn, rest) => defn.freeVars ++ rest.freeVars
@@ -350,6 +353,10 @@ object Assign:
   def apply(lhs: Local, rhs: Result, rest: Block): Block = rest match
     case Scoped(syms, body) => Scoped(syms, Assign(lhs, rhs, body))
     case _ => new Assign(lhs, rhs, rest)
+  def discard(res: Result, rest: Block)(using State): Block =
+    res match
+    case _: Value | _: Path | _: Lambda => rest
+    case r => Assign(State.noSymbol, r, rest)
 object AssignField:
   def apply(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(symbol: Opt[MemberSymbol]): Block = rest match
     case Scoped(syms, body) => Scoped(syms, AssignField(lhs, nme, rhs, body)(symbol))
@@ -436,13 +443,16 @@ sealed abstract class Defn:
   // * At some point we'll want to make `Local` more specific than `Symbol` to express this
   // * in the type system.
   lazy val freeVars: Set[Local] = this match
-    case FunDefn(own, sym, dSym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
-    case ValDefn(tsym, sym, rhs) => rhs.freeVars
+    case FunDefn(own, sym, dSym, params, body) =>
+      body.freeVars -- params.flatMap(_.paramSyms) ++ sym.optionIf(own.isEmpty)
+    case ValDefn(tsym, sym, rhs) => rhs.freeVars ++ sym.optionIf(tsym.owner.isEmpty)
     case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, 
         methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
       preCtor.freeVars
-        ++ ctor.freeVars ++ methods.flatMap(_.freeVars) ++ stat.iterator.flatMap(_.freeVars)
+        ++ ctor.freeVars ++ methods.flatMap(_.freeVars)
         -- auxParams.flatMap(_.paramSyms)
+        ++ stat.iterator.flatMap(_.freeVars)
+        ++ sym.optionIf(own.isEmpty)
   
   lazy val freeVarsLLIR: Set[Local] = this match
     case FunDefn(own, sym, dSym, params, body) => body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym
@@ -702,7 +712,7 @@ sealed abstract class Path extends TrivialResult:
  * @param symbol The symbol representing the definition that the selection refers to, if known.
  */
 case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol[?]]) extends Path with ProductWithExtraInfo:
-  def extraInfo: Str = symbol.map(s => s"sym=${s}").mkString
+  def extraInfo(using DebugPrinter): Str = symbol.map(s => s"sym=${s.showAsPlain}").mkString
 
 case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool) extends Path
 
@@ -715,8 +725,8 @@ enum Value extends Path with ProductWithExtraInfo:
   case This(sym: InnerSymbol) // TODO rm – just use Ref
   case Lit(lit: Literal)
   
-  override def extraInfo: Str = this match
-    case Ref(l, disamb) => disamb.map(s => s"disamb=${s}").mkString
+  override def extraInfo(using DebugPrinter): Str = this match
+    case Ref(l, disamb) => disamb.map(s => s"disamb=${s.showAsPlain}").mkString
     case _ => ""
 
 object Value:
@@ -727,7 +737,7 @@ object Value:
     // * If the ref is a symbol that does not refer to a definition, then there is no disambiguation.
     def apply(l: TempSymbol | VarSymbol | BuiltinSymbol): Ref = Ref(l, N)
 
-case class Arg(spread: Opt[Bool], value: Path)
+case class Arg(spread: Opt[SpreadKind], value: Path)
 
 // * `IndxdArg(S(idx), value)` represents a key-value pair in a record `(idx): value`
 // * `IndxdArg(N, value)` represents a spread element in a record `...value`

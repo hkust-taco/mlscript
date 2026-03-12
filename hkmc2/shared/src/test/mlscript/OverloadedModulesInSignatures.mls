@@ -14,7 +14,7 @@ module TypMod with
 fun TrmMod = 42
 module TrmMod with
   val whoami = "module"
-//│ ╔══[ERROR] Not yet supported: overloading of function 'TrmMod'
+//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'TrmMod'
 //│ ║  l.14: 	fun TrmMod = 42
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── with module of the same name
@@ -30,9 +30,9 @@ f
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=term:f,typ=class:ClsMod}:
-//│     t = Ref{sym=member:f} of member:f
-//│     sym = term:f
+//│   res = Resolved{sym=term:f⁰,typ=class:ClsMod⁰}:
+//│     t = Ref{sym=member:f¹} of member:f¹
+//│     sym = term:f⁰
 //│ = 42
 
 fun f: module ClsMod = ClsMod
@@ -42,9 +42,9 @@ f
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=term:f,typ=module:ClsMod}:
-//│     t = Ref{sym=member:f} of member:f
-//│     sym = term:f
+//│   res = Resolved{sym=term:f²,typ=module:ClsMod¹}:
+//│     t = Ref{sym=member:f³} of member:f³
+//│     sym = term:f²
 //│ = class ClsMod { whoami: "module" }
 
 fun f: TypMod = 42
@@ -54,9 +54,9 @@ f
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=term:f,typ=type:TypMod}:
-//│     t = Ref{sym=member:f} of member:f
-//│     sym = term:f
+//│   res = Resolved{sym=term:f⁴,typ=type:TypMod⁰}:
+//│     t = Ref{sym=member:f⁵} of member:f⁵
+//│     sym = term:f⁴
 //│ = 42
 
 fun f: module TypMod = TypMod
@@ -66,14 +66,14 @@ f
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Resolved{sym=term:f,typ=module:TypMod}:
-//│     t = Ref{sym=member:f} of member:f
-//│     sym = term:f
+//│   res = Resolved{sym=term:f⁶,typ=module:TypMod¹}:
+//│     t = Ref{sym=member:f⁷} of member:f⁷
+//│     sym = term:f⁶
 //│ = class TypMod { whoami: "module" }
 
 :e
 fun f: TrmMod = 42
-//│ ╔══[ERROR] Expected a non-module type; found reference of type TrmMod denoting module 'TrmMod'.
+//│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference of type TrmMod denoting module 'TrmMod'.
 //│ ║  l.75: 	fun f: TrmMod = 42
 //│ ║        	       ^^^^^^
 //│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
@@ -132,10 +132,10 @@ module Foo
 
 :e
 fun f(x: Foo): Foo = x
-//│ ╔══[ERROR] Expected 1 type arguments, got none
+//│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
 //│ ║  l.134: 	fun f(x: Foo): Foo = x
 //│ ╙──       	         ^^^
-//│ ╔══[ERROR] Expected 1 type arguments, got none
+//│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
 //│ ║  l.134: 	fun f(x: Foo): Foo = x
 //│ ╙──       	               ^^^
 
@@ -145,10 +145,10 @@ fun f(module x: Foo): module Foo = x
 
 :e
 fun f(module x: Foo[Int]): module Foo[Int] = x
-//│ ╔══[ERROR] Expected no type arguments, got 1
+//│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
 //│ ║  l.147: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                ^^^^^^^^
-//│ ╔══[ERROR] Expected no type arguments, got 1
+//│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
 //│ ║  l.147: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                                  ^^^^^^^^
 

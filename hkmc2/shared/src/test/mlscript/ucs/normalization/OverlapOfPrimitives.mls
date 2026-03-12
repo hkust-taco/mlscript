@@ -5,7 +5,7 @@ fun test(x) = if x is
   Int then "Int"
   0 then "Zero"
 //│ Normalized:
-//│ >  if x is Int then "Int"
+//│ >  ‹if|while› x is Int then "Int"
 
 test(0)
 //│ = "Int"
@@ -15,10 +15,10 @@ fun test(x, p) = if x is
   0 then "bar"
   else "qax"
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    x is refined Int and
-//│ >      let $scrut = p(x)
-//│ >      $scrut is true then "foo"
+//│ >      let tmp:scrut = p⁰(x⁰)
+//│ >      tmp:scrut is true then "foo"
 //│ >      x is 0 then "bar"
 //│ >      else "qax"
 //│ >    else "qax"
@@ -28,10 +28,10 @@ fun test(x, p) = if x is
   "lol" then "bar"
   else "qax"
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    x is refined Str and
-//│ >      let $scrut = p(x)
-//│ >      $scrut is true then "foo"
+//│ >      let tmp:scrut = p¹(x¹)
+//│ >      tmp:scrut is true then "foo"
 //│ >      x is "lol" then "bar"
 //│ >      else "qax"
 //│ >    else "qax"
@@ -54,10 +54,10 @@ fun test(x, p) = if x is
   3.14159 then "PI"
   else "other"
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    x is refined Num and
-//│ >      let $scrut = p(x)
-//│ >      $scrut is true then "great"
+//│ >      let tmp:scrut = p²(x²)
+//│ >      tmp:scrut is true then "great"
 //│ >      x is 2.71828 then "E"
 //│ >      x is 3.14159 then "PI"
 //│ >      else "other"
@@ -68,9 +68,9 @@ fun test(x, p) = if x is
   true then "false"
   false then "true"
 //│ Normalized:
-//│ >  if x is refined Bool and
-//│ >    let $scrut = p(x)
-//│ >    $scrut is true then "great"
+//│ >  ‹if|while› x is refined Bool and
+//│ >    let tmp:scrut = p³(x³)
+//│ >    tmp:scrut is true then "great"
 //│ >    x is true then "false"
 //│ >    x is false then "true"
 
@@ -80,13 +80,13 @@ fun test(x, p) = if x is
   true then "false"
   false then "true"
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    x is Object and
-//│ >      let $scrut = p(x)
-//│ >      $scrut is true then "great"
+//│ >      let tmp:scrut = p⁴(x⁴)
+//│ >      tmp:scrut is true then "great"
 //│ >    x is refined Bool and
-//│ >      let $scrut = p(x)
-//│ >      $scrut is true then "great, again"
+//│ >      let tmp:scrut = p⁴(x⁴)
+//│ >      tmp:scrut is true then "great, again"
 //│ >      x is true then "false"
 //│ >      x is false then "true"
 
@@ -98,10 +98,10 @@ fun f(arg) = if
     null      then "null"
     Object    then String(arg)
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    arg is undefined then "undefined"
 //│ >    arg is null then "null"
-//│ >    arg is Object then member:String(arg)
+//│ >    arg is Object then member:String⁰(arg⁰)
 
 f of undefined
 //│ = "undefined"
@@ -118,8 +118,8 @@ fun f(arg) = if
     undefined then "undefined"
     null      then "null"
 //│ Normalized:
-//│ >  if
-//│ >    arg is Object then member:String(arg)
+//│ >  ‹if|while›
+//│ >    arg is Object then member:String⁰(arg¹)
 //│ >    arg is undefined then "undefined"
 //│ >    arg is null then "null"
 
@@ -136,7 +136,7 @@ fun f(arg) = if arg is
   Object then String(arg)
   Foo then "just Foo"
 //│ Normalized:
-//│ >  if arg is Object then member:String(arg)
+//│ >  ‹if|while› arg is Object then member:String⁰(arg²)
 
 import "../../../mlscript-compile/Runtime.mls"
 
@@ -144,28 +144,28 @@ fun f(arg) = if arg is
   Object then String(arg)
   Runtime.MatchSuccess then "just Foo"
 //│ Normalized:
-//│ >  if arg is Object then member:String(arg)
+//│ >  ‹if|while› arg is Object then member:String⁰(arg³)
 
 fun f(arg) = if arg is
   Foo then "just Foo"
   Object then String(arg)
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    arg is Foo then "just Foo"
-//│ >    arg is Object then member:String(arg)
+//│ >    arg is Object then member:String⁰(arg⁴)
 
 fun f(arg) = if arg is
   Int then "Int"
   Object then String(arg)
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    arg is Int then "Int"
-//│ >    arg is Object then member:String(arg)
+//│ >    arg is Object then member:String⁰(arg⁵)
 
 fun f(arg) = if arg is
   Object then String(arg)
   Int then "Int"
 //│ Normalized:
-//│ >  if
-//│ >    arg is Object then member:String(arg)
+//│ >  ‹if|while›
+//│ >    arg is Object then member:String⁰(arg⁶)
 //│ >    arg is Int then "Int"

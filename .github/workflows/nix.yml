@@ -20,6 +20,8 @@ jobs:
       - name: Run test
         # Not running all tests because those outside of hkmc2 are obsolete (will be removed)
         run: sbt -J-Xmx4096M -J-Xss8M hkmc2AllTests/test
+        # It's useful to see how the tests fail by seeing the through the next step
+        continue-on-error: true
       - name: Check no changes
         run: |
           git update-index -q --refresh

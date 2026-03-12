@@ -57,11 +57,11 @@ class ReportFormatter(
               s"$headChar══[COMPILATION ERROR] "
             case Diagnostic.Source.Runtime =>
               s"$headChar══[RUNTIME ERROR] "
-            case _ => // TODO customize too
-              s"$headChar══[ERROR] "
+            case Diagnostic.Source.Typing =>
+              s"$headChar══[TYPE ERROR] "
         case WarningReport(msg, loco, mkei, src) =>
           s"$headChar══[WARNING] "
-        case InternalError(msg, loco, src) =>
+        case InternalError(msg, loco, mkei, src) =>
           s"$headChar══[INTERNAL ERROR] "
       val lastMsgNum = diag.allMsgs.size - 1
       var globalLineNum = blockLineNum

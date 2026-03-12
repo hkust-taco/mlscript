@@ -1,4 +1,6 @@
 :js
+:patMatConsequentSharingThreshold 1
+// ^ force dedup even for small consequents
 
 
 let
@@ -59,23 +61,23 @@ if
   x and z then 1
   y is [b] then let x = 1 in x + b
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    x is true and
 //│ >      z is true then 1
 //│ >      y is []=1 and
-//│ >        let $element0$ = (($runtime.)Tuple.)get(y, 0)
-//│ >        let b = $element0$
+//│ >        let tmp:element0$ = ((tmp:runtime⁰.)Tuple.)get‹term:get›(y⁰, 0)
+//│ >        let b = tmp:element0$⁰
 //│ >        else
 //│ >          let x
 //│ >          x = 1
-//│ >          builtin:+(x, b)
+//│ >          builtin:+⁰(x⁰, b⁰)
 //│ >    y is []=1 and
-//│ >      let $element0$ = (($runtime.)Tuple.)get(y, 0)
-//│ >      let b = $element0$
+//│ >      let tmp:element0$ = ((tmp:runtime⁰.)Tuple.)get‹term:get›(y⁰, 0)
+//│ >      let b = tmp:element0$⁰
 //│ >      else
 //│ >        let x
 //│ >        x = 1
-//│ >        builtin:+(x, b)
+//│ >        builtin:+⁰(x⁰, b⁰)
 //│ JS:
 //│ let b, x1, element0$, tmp1;
 //│ split_root$1: {
@@ -127,5 +129,31 @@ if
 // >      z is true then 1
 // >      $j
 // >    $j
+
+
+// * Contemplate this absolutely horrendous code:
+:sjs
+if false do ()
+123
+//│ JS (unsanitized):
+//│ let scrut;
+//│ split_root$2: {
+//│   split_1$2: {
+//│     scrut = false;
+//│     if (scrut === true) { break split_1$2 } else { break split_1$2 }
+//│   }
+//│ }
+//│ 123
+//│ = 123
+
+:patMatConsequentSharingThreshold 10
+
+// * How it ought to be:
+:sjs
+if false do ()
+123
+//│ JS (unsanitized):
+//│ let scrut1; scrut1 = false; if (scrut1 !== true) {} 123
+//│ = 123
 
 

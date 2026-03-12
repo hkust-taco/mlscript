@@ -10,14 +10,14 @@
 
 :e
 \{ Int }
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
 //│ ║  l.12: 	\{ Int }
 //│ ╙──      	   ^^^
 //│ = fun passTo
 
 :e
 \(0)
-//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
 //│ ║  l.19: 	\(0)
 //│ ╙──      	 ^^^
 //│ = fun
@@ -32,7 +32,7 @@ fun (\) huh(x) = x
 // the logic from two methods happened to work together and supported this
 // syntax. In the new `Desugarer`, we chose not to support this syntax.
 fun f(x) = if x is {( Int then 1, Bool then 2 )}
-//│ ╔══[ERROR] Unrecognized pattern split (parenthesis section).
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (parenthesis section).
 //│ ║  l.34: 	fun f(x) = if x is {( Int then 1, Bool then 2 )}
 //│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -41,22 +41,22 @@ fun f(x) = if x is {( Int then 1, Bool then 2 )}
 
 :e
 fun f(x) = if x is ( Int then 1, Bool then 2 )
-//│ ╔══[ERROR] Unrecognized pattern split (parenthesis section).
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (parenthesis section).
 //│ ║  l.43: 	fun f(x) = if x is ( Int then 1, Bool then 2 )
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 fun f(x) = if x is \{ Int then 1, Bool then 2 }
-//│ ╔══[ERROR] Unrecognized pattern split (juxtaposition).
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (juxtaposition).
 //│ ║  l.49: 	fun f(x) = if x is \{ Int then 1, Bool then 2 }
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 fun f(x) = if x is \( Int then 1, Bool then 2 )
-//│ ╔══[ERROR] Cannot use this reference as a pattern.
+//│ ╔══[COMPILATION ERROR] Cannot use this reference as a pattern.
 //│ ║  l.55: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
 //│ ╙──      	                   ^
-//│ ╔══[ERROR] Cannot use this reference as a pattern.
+//│ ╔══[COMPILATION ERROR] Cannot use this reference as a pattern.
 //│ ║  l.55: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
 //│ ╙──      	                   ^
 
@@ -70,9 +70,9 @@ fun interesting(x) =
 //│ >    x is Box(Int) then 1
 //│ >    x is Box(Bool) then 2
 //│ Expanded split with flattened patterns:
-//│ >  if
-//│ >    x is Box(arg$Box$0$) and $arg$Box$0$ is Int then 1
-//│ >    x is Box(arg$Box$0$) and $arg$Box$0$ is Bool then 2
+//│ >  ‹if|while›
+//│ >    x is Box(arg$Box$0$) and tmp:arg$Box$0$ is Int then 1
+//│ >    x is Box(arg$Box$0$) and tmp:arg$Box$0$ is Bool then 2
 
 interesting of Box(42)
 //│ = 1

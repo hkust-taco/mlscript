@@ -39,7 +39,7 @@ fun add(x, y) = x + y
 :w
 42
 add(2)
-//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
 //│ ║  l.41: 	add(2)
 //│ ╙──      	   ^^^
 //│ ╔══[WARNING] Pure expression in statement position
@@ -83,14 +83,14 @@ add(2)
 
 :e
 42 { add(2) inc() }
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (juxtaposition).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (juxtaposition).
 //│ ║  l.85: 	42 { add(2) inc() }
 //│ ╙──      	     ^^^^^^^^^^^^
 //│ = 42
 
 :e
 42 { add(2) { inc() } }
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (juxtaposition).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (juxtaposition).
 //│ ║  l.92: 	42 { add(2) { inc() } }
 //│ ╙──      	     ^^^^^^^^^^^^^^^^
 //│ = 42
@@ -125,7 +125,7 @@ inc(2) * 2
 42
   inc() * 1
     add(2)
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (operator application).
 //│ ║  l.126: 	  inc() * 1
 //│ ║         	  ^^^^^^^^^
 //│ ║  l.127: 	    add(2)
@@ -136,7 +136,7 @@ inc(2) * 2
 42
   inc()
     add(2)
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (juxtaposition).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (juxtaposition).
 //│ ║  l.137: 	  inc()
 //│ ║         	  ^^^^^
 //│ ║  l.138: 	    add(2)
@@ -148,7 +148,7 @@ inc(2) * 2
 :todo // ? do we really want to support this
 42
   inc() + 1
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (operator application).
 //│ ║  l.150: 	  inc() + 1
 //│ ╙──       	  ^^^^^^^^^
 //│ = 42
@@ -157,7 +157,7 @@ inc(2) * 2
 42
   add(2) + 1
   inc()
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (operator application).
 //│ ║  l.158: 	  add(2) + 1
 //│ ╙──       	  ^^^^^^^^^^
 //│ = 43
@@ -166,7 +166,7 @@ inc(2) * 2
 42
   add(2)
   inc() + 1
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (operator application).
 //│ ║  l.168: 	  inc() + 1
 //│ ╙──       	  ^^^^^^^^^
 //│ = 44
@@ -201,7 +201,7 @@ inc(2) * 2
 (2 * 2
   inc())
 inc()
-//│ ╔══[ERROR] Expected 1 arguments, got 0
+//│ ╔══[COMPILATION ERROR] Expected 1 arguments, got 0
 //│ ║  l.203: 	inc()
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'inc' expected 1 argument but got 0
@@ -212,7 +212,7 @@ inc()
   inc()
 )
 inc()
-//│ ╔══[ERROR] Expected 1 arguments, got 0
+//│ ╔══[COMPILATION ERROR] Expected 1 arguments, got 0
 //│ ║  l.214: 	inc()
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'inc' expected 1 argument but got 0
@@ -229,9 +229,9 @@ inc()
 
 :e
 42 console.log
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (selection).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (selection).
 //│ ║  l.231: 	42 console.log
-//│ ╙──       	   ^^^^^^^
+//│ ╙──       	   ^^^^^^^^^^^
 //│ = 42
 
 

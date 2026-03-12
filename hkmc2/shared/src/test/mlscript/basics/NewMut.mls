@@ -58,7 +58,7 @@ f.y
 
 :e
 let f = mut new Foo
-//│ ╔══[ERROR] Illegal position for 'mut' modifier.
+//│ ╔══[COMPILATION ERROR] Illegal position for 'mut' modifier.
 //│ ║  l.60: 	let f = mut new Foo
 //│ ╙──      	        ^^^
 //│ f = Foo { x: 0 }
@@ -66,7 +66,7 @@ let f = mut new Foo
 :e
 :re
 new mut Foo.x
-//│ ╔══[ERROR] Expected a statically known class; found selection.
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found selection.
 //│ ║  l.68: 	new mut Foo.x
 //│ ║        	        ^^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.

@@ -15,24 +15,25 @@
 // :sjs
 :e
 if 0 is P then P
-//│ ╔══[ERROR] Pattern name not found: P.
+//│ ╔══[COMPILATION ERROR] Pattern name not found: P.
 //│ ║  l.17: 	if 0 is P then P
 //│ ╙──      	        ^
-//│ ╔══[ERROR] Name not found: P
+//│ ╔══[COMPILATION ERROR] Name not found: P
 //│ ║  l.17: 	if 0 is P then P
 //│ ╙──      	               ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :fixme // TODO
 x => if x as
   0 then false
   1 then true
-//│ ╔══[ERROR] Unrecognized term split (infix operator 'as')
-//│ ║  l.27: 	x => if x as
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (infix operator 'as')
+//│ ║  l.28: 	x => if x as
 //│ ║        	        ^^^^
-//│ ║  l.28: 	  0 then false
+//│ ║  l.29: 	  0 then false
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.29: 	  1 then true
+//│ ║  l.30: 	  1 then true
 //│ ╙──      	^^^^^^^^^^^^^
 //│ = fun
 

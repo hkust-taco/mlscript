@@ -86,19 +86,22 @@ pattern Parse =
     ((Str as name) :: rest) => Id(name) :: rest
     ((Expr as e) :: "+" :: (Expr as e) :: rest) => Op(e, "+", e) :: rest
   )
-//│ ╔══[ERROR] Unexpected record property pattern.
+//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
 //│ ║  l.86: 	    ((Str as name) :: rest) => Id(name) :: rest
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unexpected record property pattern.
-//│ ║  l.87: 	    ((Expr as e) :: "+" :: (Expr as e) :: rest) => Op(e, "+", e) :: rest
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
+//│ ║  l.87: 	    ((Expr as e) :: "+" :: (Expr as e) :: rest) => Op(e, "+", e) :: rest
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :fixme
 class Id(name: Ident)
-//│ ╔══[ERROR] Expected a non-module type; found reference.
+//│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference.
+//│ ║  l.97: 	class Id(name: Ident)
+//│ ╙──      	               ^^^^^
+//│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference.
 //│ ║  l.97: 	class Id(name: Ident)
 //│ ║        	               ^^^^^
 //│ ╙── Non-module parameter must have a non-module type.
-//│ ╔══[ERROR] Expected a non-module type; found reference.
+//│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference.
 //│ ║  l.97: 	class Id(name: Ident)
 //│ ╙──      	               ^^^^^

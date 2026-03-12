@@ -31,7 +31,7 @@ fun foo(x) = if x is @do_not_compile Box then "yes" else "no"
 :w
 :e
 fun foo(x) = if x is @name_not_found Box then "yes" else "no"
-//│ ╔══[ERROR] Name not found: name_not_found
+//│ ╔══[COMPILATION ERROR] Name not found: name_not_found
 //│ ║  l.33: 	fun foo(x) = if x is @name_not_found Box then "yes" else "no"
 //│ ╙──      	                      ^^^^^^^^^^^^^^
 //│ ╔══[WARNING] This annotation is not supported here.

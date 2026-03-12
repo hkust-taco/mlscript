@@ -184,7 +184,7 @@ fun nott = case
 //│         return true;
 //│         break;
 //│       default:
-//│         throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│         throw globalThis.Object.freeze(new globalThis.Error.class("match error"));
 //│         break;
 //│     }
 //│   });

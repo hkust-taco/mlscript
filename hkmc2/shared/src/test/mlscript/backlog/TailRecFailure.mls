@@ -20,7 +20,6 @@ fun go(x) = if x is
 //│       arg$Cons$1$ = x.tail;
 //│       return "Z"
 //│     } else { n = x; tmp = globalThis.Object.freeze([]); x = tmp; continue loopLabel }
-//│     break;
 //│   }
 //│ };
 
@@ -32,28 +31,21 @@ fun go(x) = if x is
 //│ JS (unsanitized):
 //│ let go1;
 //│ go1 = function go(x) {
-//│   let n, arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
-//│   split_root$: {
-//│     split_1$: {
-//│       if (x instanceof Stack.Cons.class) {
-//│         arg$Cons$0$ = x.head;
-//│         arg$Cons$1$ = x.tail;
-//│         if (arg$Cons$1$ instanceof Stack.Nil.class) {
-//│           tmp = "Z";
-//│           break split_root$
-//│         } else {
-//│           n = x;
-//│           break split_1$
-//│         }
+//│   loopLabel: while (true) {
+//│     let n, arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
+//│     if (x instanceof Stack.Cons.class) {
+//│       arg$Cons$0$ = x.head;
+//│       arg$Cons$1$ = x.tail;
+//│       if (arg$Cons$1$ instanceof Stack.Nil.class) {
+//│         return "Z"
 //│       } else {
 //│         n = x;
-//│         break split_1$
+//│         tmp = globalThis.Object.freeze([]);
+//│         x = tmp;
+//│         continue loopLabel
 //│       }
-//│     }
-//│     tmp1 = globalThis.Object.freeze([]);
-//│     tmp = go1(tmp1);
+//│     } else { n = x; tmp1 = globalThis.Object.freeze([]); x = tmp1; continue loopLabel }
 //│   }
-//│   return tmp
 //│ };
 
 

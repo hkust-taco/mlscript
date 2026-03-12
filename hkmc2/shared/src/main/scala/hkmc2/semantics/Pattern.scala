@@ -126,9 +126,10 @@ object Pattern:
         msg"The variable is missing from this sub-pattern." -> (
           if missingOnTheLeft then disjunction.left else disjunction.right
         ).toLoc)
-      case (Alias(pattern, id), Negated(negation)) => error(pattern match
-        case Wildcard() => msg"This variable cannot be accessed." -> id.toLoc
-        case _: Pattern => msg"This pattern cannot be bound." -> pattern.toLoc,
+      case (Alias(pattern, id), Negated(negation)) => error(
+        pattern match
+          case Wildcard() => msg"This variable cannot be accessed." -> id.toLoc
+          case _: Pattern => msg"This pattern cannot be bound." -> pattern.toLoc,
         msg"Because the pattern it belongs to is negated." -> negation.toLoc)
     
   object Variables:
@@ -149,7 +150,7 @@ object Pattern:
     
     /** Expect the `symbol` to be set. */
     def symbol_! : Symbol = symbol.getOrElse:
-      lastWords(s"target term `${self.target.showDbg}` does not resolve to a symbol")
+      lastWords(s"target term `${self.target}` does not resolve to a symbol")
   
   /** Add a mutable field to the `Alias` pattern to store the symbol for the
    *  variable. Note that NOT every `Alias` pattern has a symbol. */
@@ -336,14 +337,14 @@ enum Pattern extends AutoLocated:
     case Annotated(_, _) => "annotated pattern"
     case Guarded(_, _) => "guarded pattern"
   
-  private def showDbgWithPar =
+  private def showDbgWithPar(using DebugPrinter): Str =
     val addPar = this match
       case _: (Constructor | Wildcard | Literal | Tuple | Record | Negation | Annotated) => false
       case Alias(Wildcard(), _) => false
       case _: (Alias | Composition | Transform | Range | Concatenation | Chain | Guarded) => true
     if addPar then s"(${showDbg})" else showDbg
   
-  def showDbg: Str = this match
+  def showDbg(using DebugPrinter): Str = this match
     case Constructor(target, arguments) =>
       target.symbol.fold(target.showDbg)(_.nme) + arguments.fold(""):
         args => s"(${args.map(_.showDbg).mkString(", ")})"
