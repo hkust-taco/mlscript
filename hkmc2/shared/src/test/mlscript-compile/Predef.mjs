@@ -30,6 +30,42 @@ let Predef1;
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "Symbols"]; 
     });
+    (class Sub {
+      static {
+        Predef.Sub = this
+      }
+      constructor() {}
+      toString() { return runtime.render(this); }
+      static [definitionMetadata] = ["class", "Sub"]; 
+    });
+    (class Eq extends Predef.Sub {
+      static {
+        Predef.Eq = this
+      }
+      constructor() {
+        super();
+      }
+      toString() { return runtime.render(this); }
+      static [definitionMetadata] = ["class", "Eq"]; 
+    });
+    (class Refl extends Predef.Eq {
+      static {
+        new this
+      }
+      constructor() {
+        super();
+        Predef.Refl = this;
+        Object.defineProperty(this, "class", {
+          value: Refl
+        });
+        globalThis.Object.freeze(this);
+      }
+      apply(x) {
+        return x
+      }
+      toString() { return runtime.render(this); }
+      static [definitionMetadata] = ["object", "Refl"]; 
+    });
     this.pass1 = Rendering.pass1;
     this.pass2 = Rendering.pass2;
     this.pass3 = Rendering.pass3;
