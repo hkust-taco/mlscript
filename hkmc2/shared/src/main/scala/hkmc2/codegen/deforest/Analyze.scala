@@ -115,7 +115,7 @@ class DeforestPreAnalyzer(
     // when traversing
     // - fundefs in the set: nothing should be skipped
     // - toplvl block in the set: skip all class/module/fun defs
-    val toplvlFunAndBlkToAnalyze = MutSet.empty[FunDefn | Block]
+    val toplvlFunAndBlkToAnalyze = LinkedHashSet.empty[FunDefn | Block]
     val matchScrutToMatchBlock = MutMap.empty[ResultId, Match]
     val labelSymToLabelBlk = MutMap.empty[Symbol, Label]
     val matchScrutToCtxOfMatch = MutMap.empty[ResultId, Ls[InCtx]]
@@ -472,7 +472,10 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
                 edges ::= f.dSym -> callee
             case _ => ()
         CollectAllReferredFun.applyBlock(f.body)
-      partitionScc(edges, preAnalyzer.res.funSymToFunDefn.keys).reverse
+      partitionScc(
+        edges,
+        preAnalyzer.res.toplvlFunAndBlkToAnalyze.collect { case f: FunDefn => f.dSym }
+      ).reverse
     end sccInOrder
     for
       group <- sccInOrder

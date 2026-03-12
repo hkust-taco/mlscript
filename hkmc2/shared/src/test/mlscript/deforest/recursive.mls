@@ -137,24 +137,24 @@ cons(f(0)) + cons1(f(1))
 //│ deforest > 	Ref(a1,None)
 //│ deforest > 	Select(Ref(a1,None),Ident(t))
 //│ deforest > 	Select(Ref(a1,None),Ident(h))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(a1,None)
 //│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(y,None)), Arg(None,Ref(tmp:tmp,None)))) ->
 //│ deforest > 	Ref(a1,None)
 //│ deforest > 	Select(Ref(a1,None),Ident(t))
 //│ deforest > 	Select(Ref(a1,None),Ident(h))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(a1,None)
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(a1,None)
 //│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(x,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > 	Select(Ref(a,None),Ident(t))
+//│ deforest > 	Select(Ref(a,None),Ident(h))
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(y,None)), Arg(None,Ref(tmp:tmp,None)))) ->
 //│ deforest > 	Ref(a,None)
 //│ deforest > 	Select(Ref(a,None),Ident(t))
 //│ deforest > 	Select(Ref(a,None),Ident(h))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(a,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(y,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(a,None)
-//│ deforest > 	Select(Ref(a,None),Ident(t))
-//│ deforest > 	Select(Ref(a,None),Ident(h))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(a,None)
 //│ deforest > <<< fusing <<<
