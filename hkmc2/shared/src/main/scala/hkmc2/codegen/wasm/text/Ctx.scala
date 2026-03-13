@@ -168,7 +168,7 @@ object Ctx:
   
   case class LabelTarget(
       breakLabel: Str,
-      continueLabel: Opt[Str]
+      continueLabel: Opt[Str],
   )
 
   val binaryOps: Map[Str, (Expr, Expr) => Expr] = Map(

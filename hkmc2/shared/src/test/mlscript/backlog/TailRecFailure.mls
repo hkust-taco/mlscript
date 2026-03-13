@@ -1,0 +1,102 @@
+:js
+
+
+import "../../mlscript-compile/Stack.mls"
+open Stack
+
+
+// Note: tail-rec optimized
+:sir
+fun go(x) = if x is
+  Cons(_, _) then "Z"
+  n then go([])
+//│ Lowered:
+//│ let go⁰;
+//│ define go⁰ as fun (x) {
+//│   loop loopLabel:
+//│     let n, arg$Cons$0$, arg$Cons$1$, tmp;
+//│     match x
+//│       Cons⁰ =>
+//│         set arg$Cons$0$ = x.head⁰;
+//│         set arg$Cons$1$ = x.tail⁰;
+//│         return "Z"
+//│       else
+//│         set n = x;
+//│         set tmp = [];
+//│         set x = tmp;
+//│         continue loopLabel
+//│     end
+//│   end
+//│ };
+//│ end
+
+// Note: tail-rec optimized
+:sir
+fun go(x) = if x is
+  Cons(_, Nil) then "Z"
+  n then go([])
+//│ Lowered:
+//│ let go¹;
+//│ define go¹ as fun (x) {
+//│   loop loopLabel:
+//│     let n, arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
+//│     match x
+//│       Cons⁰ =>
+//│         set arg$Cons$0$ = x.head⁰;
+//│         set arg$Cons$1$ = x.tail⁰;
+//│         match arg$Cons$1$
+//│           Nil⁰ =>
+//│             return "Z"
+//│           else
+//│             set n = x;
+//│             set tmp = [];
+//│             set x = tmp;
+//│             continue loopLabel
+//│         end
+//│       else
+//│         set n = x;
+//│         set tmp1 = [];
+//│         set x = tmp1;
+//│         continue loopLabel
+//│     end
+//│   end
+//│ };
+//│ end
+
+// FIXME: not tail-rec optimized due to consequent-sharing
+:sir
+:patMatConsequentSharingThreshold 1
+ // ^ The default value allowed duplicating "Z" in the above version
+fun go(x) = if x is
+  Cons(_, Nil) then "Z"
+  n then go([])
+//│ Lowered:
+//│ let go²;
+//│ define go² as fun (x) {
+//│   let n, arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
+//│   block split_root$:
+//│     block split_1$:
+//│       match x
+//│         Cons⁰ =>
+//│           set arg$Cons$0$ = x.head⁰;
+//│           set arg$Cons$1$ = x.tail⁰;
+//│           match arg$Cons$1$
+//│             Nil⁰ =>
+//│               set tmp = "Z";
+//│               break split_root$
+//│             else
+//│               set n = x;
+//│               break split_1$
+//│           end
+//│         else
+//│           set n = x;
+//│           break split_1$
+//│       end
+//│     set tmp1 = [];
+//│     set tmp = go³(tmp1);
+//│     end
+//│   return tmp
+//│ };
+//│ end
+
+

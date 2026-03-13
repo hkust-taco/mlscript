@@ -1,0 +1,150 @@
+:js
+
+
+// * There are currently bugs in tuple matching,
+// * preventing most of these definitions from working.
+// * See also: `ups/UpsBugsBacklog.mls`
+
+
+import "../../../mlscript-compile/Iter.mls"
+import "../../../mlscript-compile/Char.mls"
+open Iter
+
+
+
+pattern Ident = ("a" ..= "z") ~ (Ident | "")
+
+data class Expr with
+  constructor
+    Id(name: Str)
+    Op(lhs: Expr, op: Str, rhs: Expr)
+
+
+fun go(stack, input) = if stack is
+  [..rest, Expr as e1, "+", Expr as e2] then
+    go([..rest, Op(e1, "+", e2)], input)
+  [..rest, Ident as id] then
+    go([..rest, Id(id)], input)
+  do print("not Ident", stack)
+  do print("not Ident??", stack is [..stack, Ident as id])
+  do print("Str?", stack.at(-1), stack.at(-1) is Str)
+  do print("Str??", stack is [..stack, Str as id])
+  [Expr as res] and input is [] then
+    Success: res
+  _ and input is
+    [tok, ..input] then
+      go([..stack, tok], input)
+    [] then
+      Error: stack
+
+let Space = new RegExp of "(\\s+)"
+fun parse(input) =
+  let input = input.split(Space)
+    \filtering of (_ !== "")
+    \filtering of (_ \every of (_ !== " "))
+    \toArray()
+  go([], input)
+//│ Space = /(\s+)/
+
+
+// FIXME: the results below seem to indicate miscompilation:
+
+
+parse("")
+//│ > not Ident []
+//│ > not Ident?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ = {Error: []}
+
+parse("x")
+//│ > not Ident []
+//│ > not Ident?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ > not Ident [Id("x")]
+//│ > not Ident?? false
+//│ > Str? Id("x") false
+//│ > Str?? false
+//│ = {Success: Id("x")}
+
+parse("x y")
+//│ > not Ident []
+//│ > not Ident?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ > not Ident [Id("x")]
+//│ > not Ident?? false
+//│ > Str? Id("x") false
+//│ > Str?? false
+//│ > not Ident [Id("x"), Id("y")]
+//│ > not Ident?? false
+//│ > Str? Id("y") false
+//│ > Str?? false
+//│ = {Error: [Id("x"), Id("y")]}
+
+parse("x y z")
+//│ > not Ident []
+//│ > not Ident?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ > not Ident [Id("x")]
+//│ > not Ident?? false
+//│ > Str? Id("x") false
+//│ > Str?? false
+//│ > not Ident [Id("x"), Id("y")]
+//│ > not Ident?? false
+//│ > Str? Id("y") false
+//│ > Str?? false
+//│ > not Ident [Id("x"), Id("y"), z]
+//│ > not Ident?? true
+//│ > Str? z true
+//│ > Str?? true
+//│ = {Error: [Id("x"), Id("y"), z]}
+
+go([], ["x", "y", "z"])
+//│ > not Ident []
+//│ > not Ident?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ > not Ident [Id("x")]
+//│ > not Ident?? false
+//│ > Str? Id("x") false
+//│ > Str?? false
+//│ > not Ident [Id("x"), Id("y")]
+//│ > not Ident?? false
+//│ > Str? Id("y") false
+//│ > Str?? false
+//│ > not Ident [Id("x"), Id("y"), z]
+//│ > not Ident?? true
+//│ > Str? z true
+//│ > Str?? true
+//│ = {Error: [Id("x"), Id("y"), z]}
+
+go([Id("x"), Id("y"), "z"], [])
+//│ > not Ident [Id("x"), Id("y"), "z"]
+//│ > not Ident?? true
+//│ > Str? z true
+//│ > Str?? true
+//│ = {Error: [Id("x"), Id("y"), "z"]}
+
+parse("x + y")
+//│ > not Ident []
+//│ > not Ident?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ > not Ident [Id("x")]
+//│ > not Ident?? false
+//│ > Str? Id("x") false
+//│ > Str?? false
+//│ > not Ident [Id("x"), +]
+//│ > not Ident?? false
+//│ > Str? + true
+//│ > Str?? true
+//│ > not Ident [Id("x"), +, y]
+//│ > not Ident?? true
+//│ > Str? y true
+//│ > Str?? true
+//│ = {Error: [Id("x"), +, y]}
+
+

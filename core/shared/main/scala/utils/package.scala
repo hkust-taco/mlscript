@@ -60,6 +60,7 @@ package object utils {
       else newStr
     }
     def isCapitalized: Bool = self.nonEmpty && self.head.isUpper
+    def isUncapitalized: Bool = self.nonEmpty && self.head.isLower
     def decapitalize: String =
       if (self.length === 0 || !self.charAt(0).isUpper) self
       else self.updated(0, self.charAt(0).toLower)

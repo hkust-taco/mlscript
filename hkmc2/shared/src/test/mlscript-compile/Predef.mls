@@ -100,6 +100,7 @@ fun (???) notImplementedError = throw Error("Not implemented")
 
 
 fun tuple(...xs) = xs
+fun mkSet(...xs) = new Set(xs)
 
 
 val foldl = fold
