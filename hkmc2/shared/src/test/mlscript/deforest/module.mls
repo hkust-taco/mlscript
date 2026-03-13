@@ -47,6 +47,12 @@ DeforestList.res + DeforestList.main()
 //│ deforest > 	Select(Ref(ls,None),Ident(t))
 //│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
 //│ deforest > 	Ref(ls,None)
+//│ deforest > Call(Select(Ref(module:DeforestList,None),Ident(Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(ls,None)
+//│ deforest > 	Select(Ref(ls,None),Ident(h))
+//│ deforest > 	Select(Ref(ls,None),Ident(t))
+//│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
+//│ deforest > 	Ref(ls,None)
 //│ deforest > <<< fusing <<<
 //│ = 5056
 
@@ -75,6 +81,12 @@ DeforestList.res + DeforestList.main()
 //│ deforest > 	Select(Ref(ls,None),Ident(t))
 //│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
 //│ deforest > 	Ref(ls,None)
+//│ deforest > Call(Select(Ref(module:DeforestList,None),Ident(Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(ls,None)
+//│ deforest > 	Select(Ref(ls,None),Ident(h))
+//│ deforest > 	Select(Ref(ls,None),Ident(t))
+//│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
+//│ deforest > 	Ref(ls,None)
 //│ deforest > <<< fusing <<<
 //│ = 5056
 
@@ -90,6 +102,8 @@ module MMM with
     if A is A then y
 MMM.f()
 //│ deforest > >>> fusing >>>
+//│ deforest > Select(Ref(module:MMM,None),Ident(A)) ->
+//│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > Select(Ref(module:MMM,None),Ident(A)) ->
 //│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > <<< fusing <<<
@@ -137,6 +151,16 @@ module M with
       C
 [M.f(3), M.g(true)]
 //│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:D,Some(object:D)) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Call(Ref(member:B,Some(term:B/B)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Ref(member:C,Some(object:C)) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > Ref(member:D,Some(object:D)) ->
 //│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > Call(Ref(member:B,Some(term:B/B)),List(Arg(None,Lit(IntLit(0))))) ->

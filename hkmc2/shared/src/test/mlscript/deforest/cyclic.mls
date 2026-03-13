@@ -50,6 +50,12 @@ test
 //│ deforest > 	Ref(a,None)
 //│ deforest > Ref(member:C,Some(object:C)) ->
 //│ deforest > 	Ref(a,None)
+//│ deforest > Ref(member:C,Some(object:C)) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > Ref(member:D,Some(object:D)) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > Ref(member:C,Some(object:C)) ->
+//│ deforest > 	Ref(a,None)
 //│ deforest > <<< fusing <<<
 //│ = fun test_4$test
 

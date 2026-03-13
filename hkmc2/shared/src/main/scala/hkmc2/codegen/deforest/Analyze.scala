@@ -403,6 +403,9 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   def allConstraints = globalCollector.constraints
   val funToSccGroups = MutMap.empty[TermSymbol, Ls[TermSymbol]]
   def funToSccRep(tSym: TermSymbol): Option[TermSymbol] = funToSccGroups.get(tSym).map(_.head)
+
+  // for fusing strictly internal parts of functions
+  val synthesizedInstIdToFunSym = LinkedHashMap.empty[InstantiationId, TermSymbol]
   
   // ===================================================
   
@@ -514,7 +517,17 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
         given ProcessMode = ProcessMode.ToplvlBlk(topLvlRes)
         processBlock(preAnalyzer.b)
         cc.constrain(topLvlRes.asProdStrat, NoCons)
-  
+
+      for case fun: FunDefn <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do
+        val funSym = fun.dSym
+        val pScheme = funsToProdStratScheme(funSym)
+        val synthesizedRefUid =
+          Value.Ref(preAnalyzer.res.funSymToFunDefn(funSym).sym, S(funSym)).uid
+        val selfProd = pScheme.instantiate(synthesizedRefUid, funSym)
+        cc.constrain(selfProd, NoCons)
+        val selfInstId = synthesizedRefUid :: Nil
+        synthesizedInstIdToFunSym(selfInstId) = funSym
+
     // ===================================================
     
     extension (pScheme: ProdStratScheme) def instantiate(

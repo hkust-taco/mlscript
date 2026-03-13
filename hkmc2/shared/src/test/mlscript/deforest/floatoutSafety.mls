@@ -28,6 +28,12 @@ fun main() =
   let f = () => sum(p)
   f() + f()
 //│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(h))
+//│ deforest > 	Select(Ref(x,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(x,None)
 //│ deforest > <<< fusing <<<
 
 
