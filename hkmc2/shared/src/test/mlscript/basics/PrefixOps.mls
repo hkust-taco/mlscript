@@ -15,6 +15,12 @@ x =>
 //│ = fun
 
 
+| 1
+//│ = 1
+
+& 1
+//│ = 1
+
 let res =
   | 1
 //│ res = 1
@@ -63,9 +69,9 @@ let res =
 | 1
 | 2
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (composed type)
-//│ ║  l.63: 	| 1
+//│ ║  l.69: 	| 1
 //│ ║        	  ^
-//│ ║  l.64: 	| 2
+//│ ║  l.70: 	| 2
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -114,5 +120,40 @@ let x =
 
 x(2, 3)
 //│ = 5
+
+
+:e
+let x = |
+//│ ╔══[COMPILATION ERROR] Unexpected use of special operator '|'
+//│ ║  l.126: 	let x = |
+//│ ╙──       	        ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ x = undefined
+
+:e
+let x = (|)
+//│ ╔══[COMPILATION ERROR] Unexpected use of special operator '|'
+//│ ║  l.134: 	let x = (|)
+//│ ╙──       	         ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ x = undefined
+
+:e
+&
+//│ ╔══[COMPILATION ERROR] Unexpected use of special operator '&'
+//│ ║  l.142: 	&
+//│ ╙──       	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+fun (|) test = 1
+
+:e
+let x = |
+//│ ╔══[COMPILATION ERROR] Unexpected use of special operator '|'
+//│ ║  l.152: 	let x = |
+//│ ╙──       	        ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ x = undefined
 
 

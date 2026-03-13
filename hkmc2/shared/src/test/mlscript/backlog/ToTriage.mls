@@ -427,10 +427,10 @@ class Foo
 set this.pc = 0
 set
   (this).pc = 0
-//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope.
+//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
 //│ ║  l.427: 	set this.pc = 0
 //│ ╙──       	    ^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope.
+//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
 //│ ║  l.429: 	  (this).pc = 0
 //│ ╙──       	   ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

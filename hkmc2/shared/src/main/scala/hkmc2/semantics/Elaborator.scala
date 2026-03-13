@@ -504,9 +504,13 @@ extends Importer with ucs.SplitElaborator:
       ctx.getOuter match
       case S(sym) => sym.ref(id)
       case N =>
-        raise(ErrorReport(msg"Cannot use 'this' outside of an object scope." -> tree.toLoc :: Nil))
+        raise:
+          ErrorReport(msg"Cannot use 'this' outside of an object scope" -> tree.toLoc :: Nil)
         Term.Error
-    case id @ Ident("|") => ???
+    case id @ Ident("|" | "&") =>
+      raise:
+        ErrorReport(msg"Unexpected use of special operator '${id.name}'" -> id.toLoc :: Nil)
+      Term.Error
     case id @ Ident(name) => ident(id).getOrElse:
       raise(ErrorReport(msg"Name not found: $name" -> id.toLoc :: Nil))
       Term.Error
@@ -602,7 +606,7 @@ extends Importer with ucs.SplitElaborator:
       Term.Deref(subterm(rhs))
     case App(Ident("~"), Tup(rhs :: Nil)) =>
       Term.Neg(subterm(rhs))
-    case App(Ident("|"), Tup(rhs :: Nil)) =>
+    case App(Ident("|" | "&"), Tup(rhs :: Nil)) =>
       subterm(rhs)
     case tree @ OpSplit(lhs, rhss) =>
       val tree = rhss.foldLeft(lhs):
