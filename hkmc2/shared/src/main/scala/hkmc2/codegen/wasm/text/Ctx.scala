@@ -414,7 +414,7 @@ class Ctx(
   def addLocal(sym: Local): LocalIdx =
     val numIdx = locals.head.size
     locals.head(sym) = numIdx
-    LocalIdx(NumIdx(numIdx))
+    LocalIdx(SymIdx(sym.nme))
 
   /** Adds a [[Seq]] of local variables into the top-most variable scope. */
   def addLocals(syms: Seq[Local]): Seq[LocalIdx] =
