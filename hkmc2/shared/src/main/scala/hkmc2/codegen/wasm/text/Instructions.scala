@@ -25,7 +25,7 @@ object Instructions:
   def loop(
       label: Opt[Str],
       children: Seq[Expr],
-      resultTypes: Seq[Result]
+      resultTypes: Seq[Result],
   ): FoldedInstr =
     val labelWat = label.map(lbl => doc"$$$lbl")
 
@@ -33,7 +33,7 @@ object Instructions:
       mnemonic = "loop",
       instrargs = labelWat.toSeq ++ resultTypes,
       stackargs = children,
-      resultTypes = resultTypes.map(_.valtype)
+      resultTypes = resultTypes.map(_.valtype),
     )
 
   /** Creates an `if` instruction. */
