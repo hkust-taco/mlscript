@@ -17,8 +17,8 @@ let i = 0 in
 //│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
 //│   (global $Unit$inst (mut (ref null $Unit)) (ref.null $Unit))
-//│   (start 3)
-//│   (func  (type $lt_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│   (start $start1)
+//│   (func $lt_impl1 (type $lt_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
 //│     (if (result (ref null any))
 //│       (i32.and
 //│         (ref.test (ref null i31)
@@ -36,7 +36,8 @@ let i = 0 in
 //│                 (local.get $rhs))))))
 //│       (else
 //│         (unreachable))))
-//│   (func  (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│   (elem declare func $lt_impl1)
+//│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
 //│     (if (result (ref null any))
 //│       (i32.and
 //│         (ref.test (ref null i31)
@@ -54,7 +55,8 @@ let i = 0 in
 //│                 (local.get $rhs))))))
 //│       (else
 //│         (unreachable))))
-//│   (func  (type $Unit_ctor) (result (ref null any))
+//│   (elem declare func $plus_impl1)
+//│   (func $Unit_ctor1 (type $Unit_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -66,11 +68,13 @@ let i = 0 in
 //│       (nop)
 //│       (return
 //│         (local.get $this))))
-//│   (func  (type $start)
+//│   (elem declare func $Unit_ctor1)
+//│   (func $start1 (type $start)
 //│     (block
 //│       (global.set $Unit$inst
 //│         (ref.cast (ref null $Unit)
 //│           (call 2)))))
+//│   (elem declare func $start1)
 //│   (func $entry (type $entry1) (result (ref null any))
 //│     (local $i (ref null any))
 //│     (local $scrut (ref null any))
@@ -86,7 +90,7 @@ let i = 0 in
 //│             (drop
 //│               (block (result (ref null any))
 //│                 (local.set $scrut
-//│                   (call 0
+//│                   (call $lt_impl1
 //│                     (local.get $i)
 //│                     (ref.i31
 //│                       (i32.const 10))))
@@ -105,7 +109,7 @@ let i = 0 in
 //│                           (block
 //│                             (block
 //│                               (local.set $tmp
-//│                                 (call 1
+//│                                 (call $plus_impl1
 //│                                   (local.get $i)
 //│                                   (ref.i31
 //│                                     (i32.const 1))))

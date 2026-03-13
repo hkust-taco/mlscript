@@ -30,14 +30,17 @@ import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
   *   [[Seq]] of local variables (excluding parameters) and their names.
   * @param body
   *   The expression of the function body.
+  * @param exports
+  *   [[Seq]] of export names for the function.
   */
 class FuncInfo(
-    val id: Opt[SymIdx],
+    val id: SymIdx,
     val typeIdx: TypeIdx,
     params: Seq[Local -> Str],
     nResults: Int,
     locals: Seq[Local -> Str],
     val body: Expr,
+    val exports: Seq[Str],
 ) extends ToWat:
 
   /** @param sym
@@ -60,13 +63,33 @@ class FuncInfo(
       nResults: Int,
       locals: Seq[Local -> Str],
       body: Expr,
-  ) = this(
-    sym.optionIf(_.nameIsMeaningful).map(sym => SymIdx(sym.nme)),
+  )(using Raise, Scope) = this(
+    SymIdx(sym.optionIf(_.nameIsMeaningful).fold(summon[Scope].allocateName(sym))(_.nme)),
     typeIdx,
     params,
     nResults,
     locals,
     body,
+    sym.optionIf(_.nameIsMeaningful).map(_.nme).toSeq,
+  )
+
+  @deprecated("Consider providing a symbolic identifier by using `Scope.allocateName` with a `TempSymbol`.")
+  def this(
+      id: Opt[SymIdx],
+      typeIdx: TypeIdx,
+      params: Seq[Local -> Str],
+      nResults: Int,
+      locals: Seq[Local -> Str],
+      body: Expr,
+      exports: Seq[Str],
+  )(using Raise, Scope, State) = this(
+    id.getOrElse(SymIdx(summon[Scope].allocateName(TempSymbol(N, "")))),
+    typeIdx,
+    params,
+    nResults,
+    locals,
+    body,
+    exports,
   )
 
   /** Returns the type of this function as a [[SignatureType]]. */
@@ -76,16 +99,19 @@ class FuncInfo(
   )
 
   def toWat: Document =
-    doc"""(func ${id.fold(doc"")(_.toWat)} (type ${typeIdx.toWat})${
+    // TODO(Derppening): Make exports configurable
+    doc"""(func ${id.toWat} (type ${typeIdx.toWat})${
         getSignatureType.toWat.surroundUnlessEmpty(doc" ")
       } #{ ${
         locals.map: p =>
           doc"(local $$${p._2} ${RefType.anyref.toWat})"
         .mkDocument(doc" # ").surroundUnlessEmpty(doc" # ")
       } # ${body.toWat} #} )${
-        id.fold(doc""): id =>
-          doc""" # (export "${id.id}" (func ${id.toWat})) # (elem declare func ${id.toWat})"""
-      }"""
+        exports
+          .map: e =>
+            doc""" # (export "${e}" (func ${id.toWat}))"""
+          .mkDocument(doc"")
+      } # (elem declare func ${id.toWat})"""
 end FuncInfo
 
 /** A Wasm global and its associated information.
@@ -337,7 +363,7 @@ class Ctx(
     funcInfosByIndex(numIdx) = funcInfo
     sym.foreach:
       namedFuncs(_) = numIdx
-    FuncIdx(funcInfo.id.getOrElse(NumIdx(numIdx)))
+    FuncIdx(funcInfo.id)
 
   /** Adds a function import into this context.
     *
@@ -387,20 +413,30 @@ class Ctx(
     tags += tagInfo
     TagIdx(tagInfo.id)
 
+  @deprecated("Use the overload without `resolveSymIdx` instead.")
+  def getFunc(funcref: FuncIdx | Symbol, resolveSymIdx: Bool): Opt[FuncIdx] =
+    if resolveSymIdx then
+      funcref match
+        case FuncIdx(SymIdx(nme)) if resolveSymIdx =>
+          namedFuncs.find(_._1.nme == nme).map(f => FuncIdx(NumIdx(f._2)))
+        case funcidx: FuncIdx => S(funcidx)
+        case sym: Symbol => namedFuncs.get(sym).map(idx => FuncIdx(NumIdx(idx)))
+    else getFunc(funcref)
+
   /** Returns the [[FuncIdx]] of the given `funcref`, optionally resolving the symbolic index into a numeric index.
     */
-  def getFunc(funcref: FuncIdx | Symbol, resolveSymIdx: Bool = false): Opt[FuncIdx] = funcref match
-    case FuncIdx(SymIdx(nme)) if resolveSymIdx =>
-      namedFuncs.find(_._1.nme == nme).map(f => FuncIdx(NumIdx(f._2)))
+  def getFunc(funcref: FuncIdx | Symbol): Opt[FuncIdx] = funcref match
     case funcidx: FuncIdx => S(funcidx)
-    case sym: Symbol if resolveSymIdx => namedFuncs.get(sym).map(idx => FuncIdx(NumIdx(idx)))
-    case sym: Symbol =>
-      getFunc(sym, resolveSymIdx = true).map: numIdx =>
-        getFuncInfo(numIdx).flatMap(_.id).fold(numIdx)(FuncIdx(_))
+    case sym: Symbol => getFuncInfo(funcref).map(fi => FuncIdx(fi.id))
+
+  @deprecated("Use the overload without `resolveSymIdx` instead.")
+  def getFunc_!(funcref: FuncIdx | Symbol, resolveSymIdx: Bool): FuncIdx =
+    getFunc(funcref, resolveSymIdx).getOrElse:
+      lastWords(s"Missing function definition for ${funcref.prettyString}")
 
   /** Same as [[getFunc]] but throws an exception when the `funcref` is not found. */
-  def getFunc_!(funcref: FuncIdx | Symbol, resolveSymIdx: Bool = false): FuncIdx =
-    getFunc(funcref, resolveSymIdx).getOrElse:
+  def getFunc_!(funcref: FuncIdx | Symbol): FuncIdx =
+    getFunc(funcref).getOrElse:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
   /** Returns the [[FuncInfo]] instance associated with the given `funcref`. */
@@ -409,7 +445,10 @@ class Ctx(
       funcInfosByIndex.get(idx).orElse:
         val localIdx = idx.toInt - functionImports.size
         if localIdx < 0 then N else funcs.unapply(localIdx)
-    case funcref => getFunc(funcref, resolveSymIdx = true).flatMap(getFuncInfo(_))
+    case FuncIdx(SymIdx(nme)) =>
+      // TODO(Derppening): Consider adding a `Map[SymIdx, TypeInfo]` for faster lookup
+      funcs.find(_.id.id == nme)
+    case funcref: Symbol => namedFuncs.get(funcref).map(idx => funcs(idx))
 
   /** Same as [[getFuncInfo]] but throws an exception when the `funcref` is not found. */
   def getFuncInfo_!(funcref: FuncIdx | Symbol): FuncInfo =

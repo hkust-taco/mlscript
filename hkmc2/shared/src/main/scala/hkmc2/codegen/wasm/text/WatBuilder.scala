@@ -786,12 +786,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ),
     )
     val funcInfo = FuncInfo(
-      id = N,
+      id = SymIdx(scope.allocateName(TempSymbol(N, name))),
       typeIdx = funcTy,
       params = params,
       nResults = 1,
       locals = Seq.empty,
       body = body,
+      exports = Seq.empty,
     )
     ctx.addFunc(N, funcInfo)
   end createIntrinsicFunc
@@ -1117,9 +1118,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     else
                       break(errUnimplExpr("newCtorAuxParams.nonEmpty"))
 
-                    val funcTyId =
-                      if isSingletonObj then s"${clsLikeDefn.sym.nme}_ctor"
-                      else scope.allocateName(TempSymbol(N, s"${clsLikeDefn.sym.nme}_ctor"))
+                    val funcTyId = clsLikeDefn.sym
+                      .optionIf: sym =>
+                        !isSingletonObj && sym.nameIsMeaningful
+                      .map: sym =>
+                        s"${sym.nme}_ctor"
+                      .getOrElse:
+                        scope.allocateName(TempSymbol(N, s"${clsLikeDefn.sym.nme}_ctor"))
                     val funcTy = ctx.addType(
                       sym = N,
                       TypeInfo(
@@ -1131,18 +1136,22 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       ),
                     )
 
-                    val ctorId =
-                      if isSingletonObj then N
-                      else clsLikeDefn.sym.optionIf(_.nameIsMeaningful).map(sym => SymIdx(sym.nme))
+                    val ctorId = clsLikeDefn.sym
+                      .optionIf: sym =>
+                        !isSingletonObj && sym.nameIsMeaningful
+                      .map: sym =>
+                        s"${sym.nme}_ctor"
                     ctx.addFunc(
                       S(clsLikeDefn.sym),
                       FuncInfo(
-                        id = ctorId,
+                        id =
+                          SymIdx(ctorId.getOrElse(scope.allocateName(TempSymbol(N, s"${clsLikeDefn.sym.nme}_ctor")))),
                         typeIdx = funcTy,
                         params = ctorParams,
                         nResults = ctorCode.resultTypes.length,
                         locals = ctorLocals,
                         body = ctorAux,
+                        exports = ctorId.toSeq,
                       ),
                     )
                     if isSingletonObj then
@@ -1517,13 +1526,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ),
     )
     val entryFnInfo = FuncInfo(
-      id = S(SymIdx(entryNme)),
+      id = SymIdx(entryNme),
       typeIdx = entryFnTy,
       params = Seq.empty,
       nResults = 1,
       // TODO(Derppening): Should we place top-level scope variables in the global section?
       locals = (entryFnLocals ++ entryExtraLocals).map(l => l -> scope.allocateOrGetName(l)),
       body = entryFnExpr,
+      exports = Seq(entryNme),
     )
 
     ctx.popLocal()
@@ -1549,12 +1559,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       val initFn = ctx.addFunc(
         sym = N,
         FuncInfo(
-          id = N,
+          id = SymIdx(scope.allocateName(TempSymbol(N, "start"))),
           typeIdx = initTy,
           params = Seq.empty,
           nResults = 0,
           locals = Seq.empty,
           body = initBody,
+          exports = Seq.empty,
         ),
       )
       ctx.setStartFunc(initFn)
