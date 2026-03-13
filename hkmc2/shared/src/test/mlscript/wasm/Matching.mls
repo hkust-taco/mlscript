@@ -54,7 +54,7 @@ if Bar(true) is
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $Bar))
-//│       (struct.set $Bar 0
+//│       (struct.set $Bar $$tag
 //│         (ref.cast (ref $Bar)
 //│           (local.get $this))
 //│         (i32.const 1))
@@ -73,7 +73,7 @@ if Bar(true) is
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $Baz))
-//│       (struct.set $Baz 0
+//│       (struct.set $Baz $$tag
 //│         (ref.cast (ref $Baz)
 //│           (local.get $this))
 //│         (i32.const 2))

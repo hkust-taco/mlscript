@@ -1100,7 +1100,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       Seq(
                         local.set(thisVar, struct.new_default(typeref)),
                         struct.set(
-                          FieldIdx(NumIdx(0)),
+                          FieldIdx(ctx.getTypeInfo_!(typeref).compType.asInstanceOf[StructType].fields(0)._2.id),
                           ref.cast(
                             local.get(thisVar, RefType.anyref),
                             RefType(typeref, nullable = false),

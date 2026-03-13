@@ -26,7 +26,7 @@ Bar.y
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $Foo))
-//│       (struct.set $Foo 0
+//│       (struct.set $Foo $$tag
 //│         (ref.cast (ref $Foo)
 //│           (local.get $this))
 //│         (i32.const 1))
@@ -45,7 +45,7 @@ Bar.y
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $Bar))
-//│       (struct.set $Bar 0
+//│       (struct.set $Bar $$tag
 //│         (ref.cast (ref $Bar)
 //│           (local.get $this))
 //│         (i32.const 2))

@@ -18,7 +18,7 @@
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $Unit))
-//│       (struct.set $Unit 0
+//│       (struct.set $Unit $$tag
 //│         (ref.cast (ref $Unit)
 //│           (local.get $this))
 //│         (i32.const 1))

@@ -126,7 +126,7 @@ class Foo(val a)
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $Foo))
-//│       (struct.set $Foo 0
+//│       (struct.set $Foo $$tag
 //│         (ref.cast (ref $Foo)
 //│           (local.get $this))
 //│         (i32.const 1))
@@ -180,7 +180,7 @@ class Foo(val x) with
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $Foo))
-//│       (struct.set $Foo 0
+//│       (struct.set $Foo $$tag
 //│         (ref.cast (ref $Foo)
 //│           (local.get $this))
 //│         (i32.const 1))
@@ -239,7 +239,7 @@ O.y
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $O))
-//│       (struct.set $O 0
+//│       (struct.set $O $$tag
 //│         (ref.cast (ref $O)
 //│           (local.get $this))
 //│         (i32.const 1))
