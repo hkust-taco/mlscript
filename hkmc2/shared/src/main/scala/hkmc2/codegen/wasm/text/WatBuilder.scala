@@ -147,16 +147,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def createDefnTypes(b: Block)(using Ctx): Unit = b match
     case Define(defn: ClsLikeDefn, rst) =>
       if isSupportedTopLevelClass(defn) then
-        val inheritedFields = baseObjectStruct.fields.toMap
+        val inheritedFields = baseObjectStruct.fields
         val inheritedSize = inheritedFields.size
 
-        val classFields: Map[DefinitionSymbol[?], NumIdx -> Field] = (defn.publicFields.map(_._2) ++ defn.privateFields)
-          .zipWithIndex
-          .map: (f, index) =>
-            f -> (NumIdx(index + inheritedSize) -> Field(RefType.anyref, mutable = true, id = S(f.nme)))
-          .toMap
+        val classFields = (defn.publicFields.map(_._2) ++ defn.privateFields)
+          .map: f =>
+            f -> Field(RefType.anyref, mutable = true, id = SymIdx(f.nme))
 
-        val allFields: Map[DefinitionSymbol[?], NumIdx -> Field] = inheritedFields ++ classFields
+        val allFields = inheritedFields ++ classFields
 
         // Only parent is base Object for now. For general inheritance add other parents.
         ctx.addType(
@@ -495,7 +493,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   )(using Ctx, Raise): FieldIdx =
     val structInfo = ctx.getTypeInfo_!(thisSym)
     val symToField = structInfo.compType match
-      case ty: StructType => ty.fields
+      case ty: StructType => ty.fieldsBySym
       case _ => lastWords(s"Cannot select field from non-struct type: ${structInfo.compType.toWat}")
     val fieldIdx = symToField.get(sym)
       .orElse:
@@ -504,7 +502,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           case trmSym: TermSymbol if trmSym.owner.flatMap(_.asBlkMember).exists(_ == thisSym) =>
             symToField.find((fieldSym, _) => fieldSym.nme == sym.nme).map((_, v) => v)
           case _ => N
-      .map((fieldidx, _) => fieldidx)
+      .map(_.id)
     FieldIdx(
       fieldIdx getOrElse:
         lastWords(
@@ -1489,7 +1487,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       TypeInfo(
         id = S(SymIdx("Object")),
         StructType(
-          Map(tagFieldSym -> (NumIdx(0) -> Field(I32Type, mutable = true, id = S("$tag")))),
+          Seq(tagFieldSym -> Field(I32Type, mutable = true, id = SymIdx("$tag"))),
           isSubtype = true,
         ),
       ),

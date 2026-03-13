@@ -181,12 +181,12 @@ class Foo(val a, val b)
 //│           (local.get $this))
 //│         (i32.const 1))
 //│       (block
-//│         (struct.set $Foo 1
+//│         (struct.set $Foo $a
 //│           (ref.cast (ref $Foo)
 //│             (local.get $this))
 //│           (local.get $a))
 //│         (block
-//│           (struct.set $Foo 2
+//│           (struct.set $Foo $b
 //│             (ref.cast (ref $Foo)
 //│               (local.get $this))
 //│             (local.get $b))
@@ -207,7 +207,7 @@ class Foo(val a, val b)
 //│               (i32.const 42))
 //│             (ref.i31
 //│               (i32.const 1))))
-//│         (struct.get $Foo 1
+//│         (struct.get $Foo $a
 //│           (ref.cast (ref $Foo)
 //│             (local.get $tmp))))))
 //│   (export "entry" (func $entry))

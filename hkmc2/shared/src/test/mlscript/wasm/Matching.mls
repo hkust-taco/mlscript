@@ -59,7 +59,7 @@ if Bar(true) is
 //│           (local.get $this))
 //│         (i32.const 1))
 //│       (block
-//│         (struct.set $Bar 1
+//│         (struct.set $Bar $y
 //│           (ref.cast (ref $Bar)
 //│             (local.get $this))
 //│           (local.get $y))
@@ -78,7 +78,7 @@ if Bar(true) is
 //│           (local.get $this))
 //│         (i32.const 2))
 //│       (block
-//│         (struct.set $Baz 1
+//│         (struct.set $Baz $z
 //│           (ref.cast (ref $Baz)
 //│             (local.get $this))
 //│           (local.get $z))
@@ -126,7 +126,7 @@ if Bar(true) is
 //│                         (local.set $matchRes
 //│                           (block (result (ref null any))
 //│                             (local.set $arg$Bar$0$
-//│                               (struct.get $Bar 1
+//│                               (struct.get $Bar $y
 //│                                 (ref.cast (ref $Bar)
 //│                                   (local.get $scrut))))
 //│                             (block (result (ref null any))
@@ -168,7 +168,7 @@ if Bar(true) is
 //│                         (local.set $matchRes
 //│                           (block (result (ref null any))
 //│                             (local.set $arg$Baz$0$
-//│                               (struct.get $Baz 1
+//│                               (struct.get $Baz $z
 //│                                 (ref.cast (ref $Baz)
 //│                                   (local.get $scrut))))
 //│                             (block (result (ref null any))

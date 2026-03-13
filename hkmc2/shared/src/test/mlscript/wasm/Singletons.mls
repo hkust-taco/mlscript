@@ -31,7 +31,7 @@ Bar.y
 //│           (local.get $this))
 //│         (i32.const 1))
 //│       (block
-//│         (struct.set $Foo 1
+//│         (struct.set $Foo $x
 //│           (ref.cast (ref $Foo)
 //│             (local.get $this))
 //│           (ref.i31
@@ -49,7 +49,7 @@ Bar.y
 //│           (local.get $this))
 //│         (i32.const 2))
 //│       (block
-//│         (struct.set $Bar 1
+//│         (struct.set $Bar $y
 //│           (ref.cast (ref $Bar)
 //│             (local.get $this))
 //│           (ref.i31
@@ -72,7 +72,7 @@ Bar.y
 //│       (nop)
 //│       (block (result (ref null any))
 //│         (nop)
-//│         (struct.get $Bar 1
+//│         (struct.get $Bar $y
 //│           (ref.cast (ref $Bar)
 //│             (global.get $Bar$inst))))))
 //│   (export "entry" (func $entry))
