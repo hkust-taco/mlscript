@@ -158,6 +158,9 @@ type HeapType = AbsHeapType | TypeIdx
 sealed abstract class Index extends ToWat
 
 /** A numeric index. */
+@deprecated(
+  "NumIdx is only used for internal bookkeeping and should not be used in WAT generation; Use SymIdx instead.",
+)
 case class NumIdx(val index: Int) extends Index:
   def toWat: Document = doc"${index.toString}"
 
