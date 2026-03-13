@@ -241,17 +241,17 @@ end Ctx
   */
 class Ctx(
     types: ArrayBuf[TypeInfo],
-    namedTypes: MutMap[BlockMemberSymbol, NumIdx],
+    namedTypes: MutMap[BlockMemberSymbol, Int],
     memoryImports: ArrayBuf[MemoryImport],
     functionImports: ArrayBuf[FuncImport],
     dataSegments: ArrayBuf[DataSegment],
     funcs: ArrayBuf[FuncInfo],
-    funcInfosByIndex: MutMap[NumIdx, FuncInfo],
+    funcInfosByIndex: MutMap[Int, FuncInfo],
     globals: ArrayBuf[GlobalInfo],
-    namedFuncs: MutMap[Symbol, NumIdx],
+    namedFuncs: MutMap[Symbol, Int],
     tags: ArrayBuf[TagInfo],
-    namedGlobals: MutMap[Symbol, NumIdx],
-    var locals: Ls[MutMap[Local, NumIdx]],
+    namedGlobals: MutMap[Symbol, Int],
+    var locals: Ls[MutMap[Local, Int]],
     private var startFunc: Opt[FuncIdx],
 ) extends ToWat:
 
@@ -283,20 +283,20 @@ class Ctx(
 
   /** Adds a type into this context. */
   def addType(sym: Opt[BlockMemberSymbol], typeInfo: TypeInfo): TypeIdx =
-    val numIdx = NumIdx(types.size)
+    val numIdx = types.size
     types += typeInfo
     sym.foreach:
       namedTypes(_) = numIdx
-    TypeIdx(typeInfo.id.getOrElse(numIdx))
+    TypeIdx(typeInfo.id.getOrElse(NumIdx(numIdx)))
 
   /** Returns the [[TypeIdx]] of the given `typeref`, optionally resolving the symbolic index into a numeric index.
     */
   def getType(typeref: TypeIdx | BlockMemberSymbol, resolveSymIdx: Bool = false): Opt[TypeIdx] =
     typeref match
       case TypeIdx(SymIdx(nme)) if resolveSymIdx =>
-        namedTypes.find(_._1.nme == nme).map(t => TypeIdx(t._2))
+        namedTypes.find(_._1.nme == nme).map(t => TypeIdx(NumIdx(t._2)))
       case typeidx: TypeIdx => S(typeidx)
-      case sym: BlockMemberSymbol if resolveSymIdx => namedTypes.get(sym).map(TypeIdx(_))
+      case sym: BlockMemberSymbol if resolveSymIdx => namedTypes.get(sym).map(idx => TypeIdx(NumIdx(idx)))
       case sym: BlockMemberSymbol =>
         getType(sym, resolveSymIdx = true).map: numIdx =>
           getTypeInfo(numIdx).flatMap(_.id).fold(numIdx)(TypeIdx(_))
@@ -310,8 +310,8 @@ class Ctx(
   def getTypeInfo(typeref: TypeIdx | BlockMemberSymbol): Opt[TypeInfo] = typeref match
     case TypeIdx(NumIdx(idx)) => types.unapply(idx.toInt)
     case TypeIdx(SymIdx(nme)) =>
-      namedTypes.find(_._1.nme == nme).flatMap(t => getTypeInfo(TypeIdx(t._2)))
-    case sym: BlockMemberSymbol => namedTypes.get(sym).flatMap(idx => getTypeInfo(TypeIdx(idx)))
+      namedTypes.find(_._1.nme == nme).flatMap(t => getTypeInfo(TypeIdx(NumIdx(t._2))))
+    case sym: BlockMemberSymbol => namedTypes.get(sym).flatMap(idx => getTypeInfo(TypeIdx(NumIdx(idx))))
 
   /** Same as [[getTypeInfo]] but throws an exception when the `typeref` is not found. */
   def getTypeInfo_!(typeref: TypeIdx | BlockMemberSymbol): TypeInfo =
@@ -320,23 +320,23 @@ class Ctx(
 
   /** Adds a function into this context. */
   def addFunc(sym: Opt[Symbol], funcInfo: FuncInfo): FuncIdx =
-    val numIdx = NumIdx(functionImports.size + funcs.size)
+    val numIdx = functionImports.size + funcs.size
     funcs += funcInfo
     funcInfosByIndex(numIdx) = funcInfo
     sym.foreach:
       namedFuncs(_) = numIdx
-    FuncIdx(funcInfo.id.getOrElse(numIdx))
+    FuncIdx(funcInfo.id.getOrElse(NumIdx(numIdx)))
 
   /** Adds a function import into this context.
     *
     * Returns the function index in the global function index space.
     */
   def addFunctionImport(sym: Opt[Symbol], funcImport: FuncImport): FuncIdx =
-    val numIdx = NumIdx(functionImports.size + funcs.size)
+    val numIdx = functionImports.size + funcs.size
     functionImports += funcImport
     sym.foreach:
       namedFuncs(_) = numIdx
-    FuncIdx(funcImport.id.getOrElse(numIdx))
+    FuncIdx(funcImport.id.getOrElse(NumIdx(numIdx)))
 
   /** Returns the cached function import for (`module`, `name`), creating it with `createImport` if needed.
     */
@@ -379,9 +379,9 @@ class Ctx(
     */
   def getFunc(funcref: FuncIdx | Symbol, resolveSymIdx: Bool = false): Opt[FuncIdx] = funcref match
     case FuncIdx(SymIdx(nme)) if resolveSymIdx =>
-      namedFuncs.find(_._1.nme == nme).map(f => FuncIdx(f._2))
+      namedFuncs.find(_._1.nme == nme).map(f => FuncIdx(NumIdx(f._2)))
     case funcidx: FuncIdx => S(funcidx)
-    case sym: Symbol if resolveSymIdx => namedFuncs.get(sym).map(FuncIdx(_))
+    case sym: Symbol if resolveSymIdx => namedFuncs.get(sym).map(idx => FuncIdx(NumIdx(idx)))
     case sym: Symbol =>
       getFunc(sym, resolveSymIdx = true).map: numIdx =>
         getFuncInfo(numIdx).flatMap(_.id).fold(numIdx)(FuncIdx(_))
@@ -393,8 +393,8 @@ class Ctx(
 
   /** Returns the [[FuncInfo]] instance associated with the given `funcref`. */
   def getFuncInfo(funcref: FuncIdx | Symbol): Opt[FuncInfo] = funcref match
-    case FuncIdx(numIdx @ NumIdx(idx)) =>
-      funcInfosByIndex.get(numIdx).orElse:
+    case FuncIdx(NumIdx(idx)) =>
+      funcInfosByIndex.get(idx).orElse:
         val localIdx = idx.toInt - functionImports.size
         if localIdx < 0 then N else funcs.unapply(localIdx)
     case funcref => getFunc(funcref, resolveSymIdx = true).flatMap(getFuncInfo(_))
@@ -412,9 +412,9 @@ class Ctx(
 
   /** Adds a new local variable into the top-most variable scope. */
   def addLocal(sym: Local): LocalIdx =
-    val numIdx = NumIdx(locals.head.size)
+    val numIdx = locals.head.size
     locals.head(sym) = numIdx
-    LocalIdx(numIdx)
+    LocalIdx(NumIdx(numIdx))
 
   /** Adds a [[Seq]] of local variables into the top-most variable scope. */
   def addLocals(syms: Seq[Local]): Seq[LocalIdx] =
@@ -425,7 +425,7 @@ class Ctx(
 
   /** Adds a new variable into the global variable scope. */
   def addGlobal(sym: Symbol, globalInfo: GlobalInfo): GlobalIdx =
-    val numIdx = NumIdx(globals.size)
+    val numIdx = globals.size
     globals += globalInfo
     namedGlobals(sym) = numIdx
     GlobalIdx(globalInfo.id)
@@ -472,8 +472,8 @@ class Ctx(
   /** Converts a [[Map]] of symbols and their respective numeric identifiers into a [[Seq]] of symbols sorted by its
     * numeric index.
     */
-  private def wasmLocalsToSeq(scope: Map[Symbol, NumIdx]): Seq[Local] =
-    scope.toSeq.sortBy(_._2.index).map(_._1)
+  private def wasmLocalsToSeq(scope: Map[Symbol, Int]): Seq[Local] =
+    scope.toSeq.sortBy(_._2).map(_._1)
 
   /** Returns a tuple containing the variables in the current `global` and `local` scopes respectively.
     */
