@@ -28,6 +28,8 @@ fun foo(h): module M =
 //│ ╙──      	           ^
 //│ JS:
 //│ let foo;
+//│ runtime.curEffect = null;
+//│ runtime.resumePc = -1;
 //│ foo = function foo(h) {
 //│   runtime.checkArgs("foo", 1, true, arguments.length);
 //│   let A2, A3, scrut;

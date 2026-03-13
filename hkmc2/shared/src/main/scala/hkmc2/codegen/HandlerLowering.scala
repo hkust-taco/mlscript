@@ -721,5 +721,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val preTransformed = new PreHandlerLowering().applyBlock(b)
     val ctx = HandlerCtx.TopLevel
     val transformed = translateBlock(preTransformed, ctx, Set.empty)
-    (transformed, stackSafetyMap)
+    val blk = blockBuilder
+      .assignFieldN(paths.runtimePath, Tree.Ident("curEffect"), unit)
+      .assignFieldN(paths.runtimePath, Tree.Ident("resumePc"), intLit(-1))
+      .rest(transformed)
+    (blk, stackSafetyMap)
     

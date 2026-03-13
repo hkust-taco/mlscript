@@ -15,6 +15,8 @@ fun hi(n) =
 hi(0)
 //│ JS (unsanitized):
 //│ let hi, tmp, $_stack$_safe$_body$_;
+//│ runtime.curEffect = null;
+//│ runtime.resumePc = -1;
 //│ hi = function hi(n) {
 //│   let scrut, tmp1, stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
@@ -48,13 +50,15 @@ fun sum(n) =
 sum(10000)
 //│ JS (unsanitized):
 //│ let sum, tmp1, $_stack$_safe$_body$_1;
+//│ runtime.curEffect = null;
+//│ runtime.resumePc = -1;
 //│ sum = function sum(n) {
 //│   let scrut, tmp2, tmp3, pc, curDepth, stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
-//│     return runtime.unwind(sum, -1, "StackSafety.mls:44:1", null, null, 1, 1, n, 0)
+//│     return runtime.unwind(sum, -1, "StackSafety.mls:46:1", null, null, 1, 1, n, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -75,7 +79,7 @@ sum(10000)
 //│           runtime.stackDepth = curDepth;
 //│           runtime.resumeValue = res;
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(sum, 1, "StackSafety.mls:47:9", null, null, 1, 1, n, 0)
+//│             return runtime.unwind(sum, 1, "StackSafety.mls:49:9", null, null, 1, 1, n, 0)
 //│           }
 //│           pc = 1;
 //│           continue main
@@ -191,6 +195,8 @@ foo(h)
 fun max(a, b) = if a < b then b else a
 //│ JS (unsanitized):
 //│ let max;
+//│ runtime.curEffect = null;
+//│ runtime.resumePc = -1;
 //│ max = function max(a, b) {
 //│   let scrut;
 //│   scrut = a < b;
@@ -269,19 +275,10 @@ fun handler_stack(n) =
 handler_stack(100)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
-
-// * For some reason, this works locally with values 100 and 100,
-// * but it makes the CI sometimes fail unexpectedly (see https://github.com/hkust-taco/mlscript/pull/410).
-// * Since the test is flaky, I'll disable it for now
-:exit
-====================================================================================================
-
 :silent
 let
-  // N = 100
-  // M = 100
-  N = 5
-  M = 10
+  N = 100
+  M = 100
 
 :stackSafe
 fun shift_stack(n, f) =
