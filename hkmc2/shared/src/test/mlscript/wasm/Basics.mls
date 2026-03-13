@@ -49,16 +49,16 @@ foo() + foo()
 //│ Wat:
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type (func (result (ref null any))))
-//│   (type (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type (func (result (ref null any))))
-//│   (func $foo (type 1) (result (ref null any))
+//│   (type $foo1 (func (result (ref null any))))
+//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $foo (type $foo1) (result (ref null any))
 //│     (return
 //│       (ref.i31
 //│         (i32.const 42))))
 //│   (export "foo" (func $foo))
 //│   (elem declare func $foo)
-//│   (func  (type 2) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│   (func  (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
 //│     (if (result (ref null any))
 //│       (i32.and
 //│         (ref.test (ref null i31)
@@ -76,7 +76,7 @@ foo() + foo()
 //│                 (local.get $rhs))))))
 //│       (else
 //│         (unreachable))))
-//│   (func $entry (type 3) (result (ref null any))
+//│   (func $entry (type $entry1) (result (ref null any))
 //│     (local $foo (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $tmp1 (ref null any))
@@ -84,11 +84,11 @@ foo() + foo()
 //│       (nop)
 //│       (block (result (ref null any))
 //│         (local.set $tmp
-//│           (call_ref 1
+//│           (call_ref $foo1
 //│             (ref.func $foo)))
 //│         (block (result (ref null any))
 //│           (local.set $tmp1
-//│             (call_ref 1
+//│             (call_ref $foo1
 //│               (ref.func $foo)))
 //│           (call 1
 //│             (local.get $tmp)
@@ -118,9 +118,9 @@ class Foo(val a)
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $a (mut (ref null any))))))
-//│   (type (func (param $a (ref null any)) (result (ref null any))))
-//│   (type (func (result (ref null any))))
-//│   (func $Foo (type 2) (param $a (ref null any)) (result (ref null any))
+//│   (type $Foo_ctor (func (param $a (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $Foo (type $Foo_ctor) (param $a (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -139,7 +139,7 @@ class Foo(val a)
 //│         (local.get $this))))
 //│   (export "Foo" (func $Foo))
 //│   (elem declare func $Foo)
-//│   (func $entry (type 3) (result (ref null any))
+//│   (func $entry (type $entry1) (result (ref null any))
 //│     (local $Foo (ref null any))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null any))
@@ -172,9 +172,9 @@ class Foo(val x) with
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
-//│   (type (func (param $x (ref null any)) (result (ref null any))))
-//│   (type (func (result (ref null any))))
-//│   (func $Foo (type 2) (param $x (ref null any)) (result (ref null any))
+//│   (type $Foo_ctor (func (param $x (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $Foo (type $Foo_ctor) (param $x (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -200,7 +200,7 @@ class Foo(val x) with
 //│         (local.get $this))))
 //│   (export "Foo" (func $Foo))
 //│   (elem declare func $Foo)
-//│   (func $entry (type 3) (result (ref null any))
+//│   (func $entry (type $entry1) (result (ref null any))
 //│     (local $Foo (ref null any))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null any))
@@ -229,7 +229,7 @@ O.y
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $O (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
 //│   (type $O_ctor (func (result (ref null any))))
-//│   (type (func (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
 //│   (global $O$inst (mut (ref null $O)) (ref.null $O))
 //│   (start 1)
@@ -263,7 +263,7 @@ O.y
 //│       (global.set $O$inst
 //│         (ref.cast (ref null $O)
 //│           (call 0)))))
-//│   (func $entry (type 3) (result (ref null any))
+//│   (func $entry (type $entry1) (result (ref null any))
 //│     (local $O (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)

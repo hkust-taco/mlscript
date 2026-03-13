@@ -8,7 +8,7 @@ import hkmc2.utils.*
 
 import document.*
 import document.Document
-import semantics.*
+import semantics.*, Elaborator.State
 import text.Param as WasmParam
 import Instructions.*
 
@@ -122,28 +122,30 @@ end GlobalInfo
   * @param compType
   *   The composite type this type definition represents.
   */
-class TypeInfo(val id: Opt[SymIdx], val compType: CompType) extends ToWat:
+class TypeInfo(val id: SymIdx, val compType: CompType) extends ToWat:
 
   /** @param sym
     *   The source [[BlockMemberSymbol]] which this type is generated from.
     * @param compType
     *   The composite type this type definition represents.
     */
-  def this(sym: BlockMemberSymbol, compType: CompType) = this(
-    sym.optionIf(_.nameIsMeaningful).map(sym => SymIdx(sym.nme)),
+  def this(sym: BlockMemberSymbol, compType: CompType)(using Raise, Scope) = this(
+    SymIdx(sym.optionIf(_.nameIsMeaningful).fold(summon[Scope].allocateName(sym))(_.nme)),
     compType,
   )
 
-  private def idDoc: Document = id.fold(doc"")(_.toWat)
+  @deprecated("Consider providing a symbolic identifier by using `Scope.allocateName` with a `TempSymbol`.")
+  def this(id: Opt[SymIdx], compType: CompType)(using Raise, Scope, State) =
+    this(id.getOrElse(SymIdx(summon[Scope].allocateName(TempSymbol(N, "")))), compType)
 
   def toWat: Document = compType match
     case struct: StructType if struct.isSubtype =>
       val parentsDoc = struct.parents.optionIf(_.nonEmpty).fold(doc""): parents =>
         parents.map(_.toWat).mkDocument(doc" ")
       val structDoc = struct.copy(isSubtype = false).toWat
-      doc"(type${idDoc.surroundUnlessEmpty(doc" ")} (sub${parentsDoc.surroundUnlessEmpty(doc" ")} ${structDoc}))"
+      doc"(type ${id.toWat} (sub${parentsDoc.surroundUnlessEmpty(doc" ")} ${structDoc}))"
     case _ =>
-      doc"(type${idDoc.surroundUnlessEmpty(doc" ")} ${compType.toWat})"
+      doc"(type ${id.toWat} ${compType.toWat})"
 end TypeInfo
 
 /** A WebAssembly exception tag declaration.
@@ -287,31 +289,41 @@ class Ctx(
     types += typeInfo
     sym.foreach:
       namedTypes(_) = numIdx
-    TypeIdx(typeInfo.id.getOrElse(NumIdx(numIdx)))
+    TypeIdx(typeInfo.id)
+
+  @deprecated("Use the overload without `resolveSymIdx` instead.")
+  def getType(typeref: TypeIdx | BlockMemberSymbol, resolveSymIdx: Bool): Opt[TypeIdx] =
+    if resolveSymIdx then
+      typeref match
+        case TypeIdx(SymIdx(nme)) =>
+          namedTypes.find(_._1.nme == nme).map(t => TypeIdx(NumIdx(t._2)))
+        case typeidx: TypeIdx => S(typeidx)
+        case sym: BlockMemberSymbol => namedTypes.get(sym).map(idx => TypeIdx(NumIdx(idx)))
+    else getType(typeref)
 
   /** Returns the [[TypeIdx]] of the given `typeref`, optionally resolving the symbolic index into a numeric index.
     */
-  def getType(typeref: TypeIdx | BlockMemberSymbol, resolveSymIdx: Bool = false): Opt[TypeIdx] =
-    typeref match
-      case TypeIdx(SymIdx(nme)) if resolveSymIdx =>
-        namedTypes.find(_._1.nme == nme).map(t => TypeIdx(NumIdx(t._2)))
-      case typeidx: TypeIdx => S(typeidx)
-      case sym: BlockMemberSymbol if resolveSymIdx => namedTypes.get(sym).map(idx => TypeIdx(NumIdx(idx)))
-      case sym: BlockMemberSymbol =>
-        getType(sym, resolveSymIdx = true).map: numIdx =>
-          getTypeInfo(numIdx).flatMap(_.id).fold(numIdx)(TypeIdx(_))
+  def getType(typeref: TypeIdx | BlockMemberSymbol): Opt[TypeIdx] = typeref match
+    case typeidx: TypeIdx => S(typeidx)
+    case sym: BlockMemberSymbol => getTypeInfo(typeref).map(ti => TypeIdx(ti.id))
+
+  @deprecated("Use the overload without `resolveSymIdx` instead.")
+  def getType_!(typeref: TypeIdx | BlockMemberSymbol, resolveSymIdx: Bool): TypeIdx =
+    getType(typeref, resolveSymIdx).getOrElse:
+      lastWords(s"Missing type definition for ${typeref.prettyString}")
 
   /** Same as [[getType]] but throws an exception when the `typeref` is not found. */
-  def getType_!(typeref: TypeIdx | BlockMemberSymbol, resolveSymIdx: Bool = false): TypeIdx =
-    getType(typeref, resolveSymIdx).getOrElse:
+  def getType_!(typeref: TypeIdx | BlockMemberSymbol): TypeIdx =
+    getType(typeref).getOrElse:
       lastWords(s"Missing type definition for ${typeref.prettyString}")
 
   /** Returns the [[TypeInfo]] instance associated with the given `typeref`. */
   def getTypeInfo(typeref: TypeIdx | BlockMemberSymbol): Opt[TypeInfo] = typeref match
     case TypeIdx(NumIdx(idx)) => types.unapply(idx.toInt)
     case TypeIdx(SymIdx(nme)) =>
-      namedTypes.find(_._1.nme == nme).flatMap(t => getTypeInfo(TypeIdx(NumIdx(t._2))))
-    case sym: BlockMemberSymbol => namedTypes.get(sym).flatMap(idx => getTypeInfo(TypeIdx(NumIdx(idx))))
+      // TODO(Derppening): Consider adding a `Map[SymIdx, TypeInfo]` for faster lookup
+      types.find(_.id.id == nme)
+    case sym: BlockMemberSymbol => namedTypes.get(sym).map(idx => types(idx))
 
   /** Same as [[getTypeInfo]] but throws an exception when the `typeref` is not found. */
   def getTypeInfo_!(typeref: TypeIdx | BlockMemberSymbol): TypeInfo =

@@ -16,7 +16,7 @@ Bar.y
 //│   (type $Bar (sub $Object (struct (field $$tag (mut i32)) (field $y (mut (ref null any))))))
 //│   (type $Foo_ctor (func (result (ref null any))))
 //│   (type $Bar_ctor (func (result (ref null any))))
-//│   (type (func (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
 //│   (global $Foo$inst (mut (ref null $Foo)) (ref.null $Foo))
 //│   (global $Bar$inst (mut (ref null $Bar)) (ref.null $Bar))
@@ -65,7 +65,7 @@ Bar.y
 //│       (global.set $Bar$inst
 //│         (ref.cast (ref null $Bar)
 //│           (call 1)))))
-//│   (func $entry (type 5) (result (ref null any))
+//│   (func $entry (type $entry1) (result (ref null any))
 //│     (local $Bar (ref null any))
 //│     (local $Foo (ref null any))
 //│     (block (result (ref null any))
