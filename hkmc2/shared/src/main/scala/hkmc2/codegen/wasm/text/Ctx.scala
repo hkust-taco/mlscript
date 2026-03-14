@@ -148,22 +148,25 @@ end GlobalInfo
   *   Symbolic identifier for the function, or `N` if the function is anonymous.
   * @param compType
   *   The composite type this type definition represents.
+  * @param objectTag
+  *   An optional object tag number associated with this type.
   */
-class TypeInfo(val id: SymIdx, val compType: CompType) extends ToWat:
+class TypeInfo(val id: SymIdx, val compType: CompType, val objectTag: Opt[Int]) extends ToWat:
 
   /** @param sym
     *   The source [[BlockMemberSymbol]] which this type is generated from.
     * @param compType
     *   The composite type this type definition represents.
     */
-  def this(sym: BlockMemberSymbol, compType: CompType)(using Raise, Scope) = this(
+  def this(sym: BlockMemberSymbol, compType: CompType, objectTag: Opt[Int])(using Raise, Scope) = this(
     SymIdx(sym.optionIf(_.nameIsMeaningful).fold(summon[Scope].allocateName(sym))(_.nme)),
     compType,
+    objectTag,
   )
 
   @deprecated("Consider providing a symbolic identifier by using `Scope.allocateName` with a `TempSymbol`.")
   def this(id: Opt[SymIdx], compType: CompType)(using Raise, Scope, State) =
-    this(id.getOrElse(SymIdx(summon[Scope].allocateName(TempSymbol(N, "")))), compType)
+    this(id.getOrElse(SymIdx(summon[Scope].allocateName(TempSymbol(N, "")))), compType, N)
 
   def toWat: Document = compType match
     case struct: StructType if struct.isSubtype =>
@@ -286,6 +289,9 @@ class Ctx(
 
   import Ctx.prettyString
 
+  /** Monotonically increasing counter for generating object tags. */
+  private var objectTagNum = 0
+
   private val wasmIntrinsicFuncs: MutMap[Str, FuncIdx] = MutMap.empty
   private val wasmIntrinsicTypes: MutMap[WasmIntrinsicType, TypeIdx] = MutMap.empty
   private val wasmIntrinsicTags: MutMap[Str, TagIdx] = MutMap.empty
@@ -309,6 +315,12 @@ class Ctx(
   def lookupLabel(label: LabelSymbol): Opt[Ctx.LabelTarget] =
     labelTargets.collectFirst:
       case (sym, target) if sym eq label => target
+
+  /** Returns a new number to be used as an object tag. */
+  def getFreshObjectTag(): Int =
+    val tag = objectTagNum
+    objectTagNum += 1
+    tag ensuring objectTagNum > tag
 
   /** Adds a type into this context. */
   def addType(sym: Opt[BlockMemberSymbol], typeInfo: TypeInfo): TypeIdx =

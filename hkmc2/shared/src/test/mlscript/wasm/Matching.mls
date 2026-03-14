@@ -117,7 +117,7 @@ if Bar(true) is
 //│                 (then
 //│                   (if
 //│                     (i32.eq
-//│                       (struct.get $Object 0
+//│                       (struct.get $Object $$tag
 //│                         (ref.cast (ref $Object)
 //│                           (local.get $scrut)))
 //│                       (i32.const 1))
@@ -159,7 +159,7 @@ if Bar(true) is
 //│                 (then
 //│                   (if
 //│                     (i32.eq
-//│                       (struct.get $Object 0
+//│                       (struct.get $Object $$tag
 //│                         (ref.cast (ref $Object)
 //│                           (local.get $scrut)))
 //│                       (i32.const 2))

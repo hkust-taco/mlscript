@@ -162,6 +162,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           typeInfo = TypeInfo(
             sym = defn.sym,
             compType = StructType(fields = allFields, parents = Seq(baseObjectTypeIdx), isSubtype = true),
+            objectTag = S(ctx.getFreshObjectTag()),
           ),
         )
       end if
@@ -203,6 +204,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           TypeInfo(
             id = SymIdx(symNme),
             FunctionType(params = Seq(WasmParam(N, RefType.anyref)), results = Seq.empty),
+            objectTag = S(ctx.getFreshObjectTag()),
           ),
         ),
       )),
@@ -254,6 +256,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             params = Seq(WasmParam(N, RefType.anyref), WasmParam(N, RefType.anyref)),
             results = Seq(Result(RefType.anyref)),
           ),
+          objectTag = N,
         ),
       )
       FuncImport(
@@ -275,6 +278,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         TypeInfo(
           sym,
           ArrayType(elemType = RefType.anyref, mutable = mut),
+          objectTag = N,
         ),
       )
 
@@ -783,6 +787,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           params = params.map((_, nme) => WasmParam(S(nme), RefType.anyref)),
           results = Seq(Result(RefType.anyref)),
         ),
+        objectTag = N,
       ),
     )
     val funcInfo = FuncInfo(
@@ -1022,6 +1027,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                             params = params.map(_._1),
                             results = Seq.fill(bodyWat.resultTypes.length)(Result(RefType.anyref)),
                           ),
+                          objectTag = N,
                         ),
                       )
 
@@ -1081,6 +1087,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     // Use the symbolic type reference (e.g. `$Foo`) in emitted WAT for readability.
                     // Numeric indices are only needed for `$tag` values.
                     val typeref = ctx.getType_!(clsLikeDefn.sym)
+                    val typeinfo = ctx.getTypeInfo_!(typeref)
 
                     val (ctorParams, thisVar, ctorWat, ctorLocals) = setupCtorLocals(clsLikeDefn)
 
@@ -1091,16 +1098,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                           case Nil => (ctorAuxParams, Nil)
                       case Some(_) => (ctorAuxParams, ctorParams)
 
-                    val tagValue = ctx.getType_!(clsLikeDefn.sym, resolveSymIdx = true) match
-                      case TypeIdx(NumIdx(idx)) => idx
-                      case _ => lastWords(s"Expected numeric type index for class ${clsLikeDefn.sym}")
+                    val tagValue = typeinfo.objectTag.getOrElse:
+                      lastWords(s"Expected class ${clsLikeDefn.sym} to have an object tag")
 
                     val ctorCode = blockInstr(
                       label = N,
                       Seq(
                         local.set(thisVar, struct.new_default(typeref)),
                         struct.set(
-                          FieldIdx(ctx.getTypeInfo_!(typeref).compType.asInstanceOf[StructType].fields(0)._2.id),
+                          FieldIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id),
                           ref.cast(
                             local.get(thisVar, RefType.anyref),
                             RefType(typeref, nullable = false),
@@ -1133,6 +1139,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                           params = ctorParams.map(p => WasmParam(S(p._2), RefType.anyref)),
                           results = Seq(Result(RefType.anyref)),
                         ),
+                        objectTag = N,
                       ),
                     )
 
@@ -1342,14 +1349,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     Ls(msg"Could not resolve BlockMemberSymbol for class pattern" -> cls.toLoc),
                     extraInfo = S(s"ClassLikeSymbol: ${cls.toString}"),
                   ))
-                val clsTypeIdx = ctx.getType_!(clsBlkMemberSym, resolveSymIdx = true)
+                val clsTypeIdx = ctx.getType_!(clsBlkMemberSym)
+                val typeinfo = ctx.getTypeInfo_!(clsTypeIdx)
 
-                val expectedTag = clsTypeIdx match
-                  case TypeIdx(NumIdx(idx)) => idx
-                  case _ => break(errExpr(
-                      Ls(msg"Expected numeric type index for class pattern" -> cls.toLoc),
-                      extraInfo = S(s"TypeIdx: ${clsTypeIdx}"),
-                    ))
+                val expectedTag = typeinfo.objectTag.getOrElse:
+                  lastWords(s"Expected class $clsBlkMemberSym to have an object tag")
 
                 val scrutExpr = getScrutExpr
                 val isStructCompatible = ref.test(scrutExpr, baseObjectRefType(nullable = true))
@@ -1361,7 +1365,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
                 // Safe to cast and extract tag since ref.test passed
                 val scrutAsObject = ref.cast(scrutExpr, baseObjectRefType(nullable = false))
-                val scrutTag = struct.get(FieldIdx(NumIdx(0)), scrutAsObject, I32Type)
+                val scrutTag = struct.get(
+                  FieldIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id),
+                  scrutAsObject,
+                  I32Type,
+                )
                 val tagMatches = i32.eq(scrutTag, i32.const(expectedTag))
 
                 S(`if`(
@@ -1501,6 +1509,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           Seq(tagFieldSym -> Field(I32Type, mutable = true, id = SymIdx("$tag"))),
           isSubtype = true,
         ),
+        objectTag = S(ctx.getFreshObjectTag() ensuring (_ == 0)),
       ),
     )
 
@@ -1523,6 +1532,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       TypeInfo(
         id = SymIdx(scope.allocateName(TempSymbol(N, entryNme))),
         FunctionType(params = Seq.empty, results = Seq(Result(RefType.anyref))),
+        objectTag = N,
       ),
     )
     val entryFnInfo = FuncInfo(
@@ -1549,6 +1559,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         TypeInfo(
           id = SymIdx(scope.allocateName(TempSymbol(N, "start"))),
           FunctionType(params = Seq.empty, results = Seq.empty),
+          objectTag = N,
         ),
       )
       val initBody = blockInstr(

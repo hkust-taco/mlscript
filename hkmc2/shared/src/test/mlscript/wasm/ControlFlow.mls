@@ -64,7 +64,7 @@ let i = 0 in
 //│       (struct.set $Unit $$tag
 //│         (ref.cast (ref $Unit)
 //│           (local.get $this))
-//│         (i32.const 3))
+//│         (i32.const 1))
 //│       (nop)
 //│       (return
 //│         (local.get $this))))
