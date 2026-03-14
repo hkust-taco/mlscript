@@ -259,7 +259,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       FuncImport(
         module = ExternIntrinsics.SystemModule,
         name = ExternIntrinsics.StringFromUtf16ImportName,
-        id = S(SymIdx(ExternIntrinsics.StringFromUtf16ImportName)),
+        id = SymIdx(ExternIntrinsics.StringFromUtf16ImportName),
         typeIdx = importTy,
       )
   end getOrLoadStrCtorFunction

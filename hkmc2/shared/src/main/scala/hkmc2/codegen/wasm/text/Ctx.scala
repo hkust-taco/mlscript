@@ -374,7 +374,7 @@ class Ctx(
     functionImports += funcImport
     sym.foreach:
       namedFuncs(_) = numIdx
-    FuncIdx(funcImport.id.getOrElse(NumIdx(numIdx)))
+    FuncIdx(funcImport.id)
 
   /** Returns the cached function import for (`module`, `name`), creating it with `createImport` if needed.
     */

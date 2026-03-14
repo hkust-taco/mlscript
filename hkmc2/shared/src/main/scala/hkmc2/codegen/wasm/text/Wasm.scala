@@ -196,11 +196,9 @@ case class MemoryImport(module: Str, name: Str, minPages: Int) extends ToWat:
     doc"""(import "$module" "$name" (memory $minPages))"""
 
 /** A function import entry. */
-case class FuncImport(module: Str, name: Str, id: Opt[SymIdx], typeIdx: TypeIdx) extends ToWat:
+case class FuncImport(module: Str, name: Str, id: SymIdx, typeIdx: TypeIdx) extends ToWat:
   def toWat: Document =
-    doc"""(import "$module" "$name" (func ${
-        id.fold(doc"")(_.toWat)
-      } (type ${typeIdx.toWat})))"""
+    doc"""(import "$module" "$name" (func ${id.toWat} (type ${typeIdx.toWat})))"""
 
 /** A data segment entry. */
 case class DataSegment(offsetExpr: Expr, bytes: Str) extends ToWat:
