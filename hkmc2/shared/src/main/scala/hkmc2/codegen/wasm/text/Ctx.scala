@@ -193,7 +193,7 @@ object Ctx:
       globalName: Str,
       globalTy: RefType,
   )
-  
+
   case class LabelTarget(
       breakLabel: Str,
       continueLabel: Opt[Str],
@@ -220,21 +220,7 @@ object Ctx:
   val wasmIntrinsicArities: Map[Str, Int] = (binaryOps.keys.map(_ -> 2) ++ unaryOps.keys.map(_ -> 1)).toMap
   val wasmIntrinsicNameSet: Set[Str] = wasmIntrinsicArities.keySet
 
-  def empty: Ctx = Ctx(
-    types = ArrayBuf.empty,
-    namedTypes = MutMap.empty,
-    memoryImports = ArrayBuf.empty,
-    functionImports = ArrayBuf.empty,
-    dataSegments = ArrayBuf.empty,
-    funcs = ArrayBuf.empty,
-    funcInfosByIndex = MutMap.empty,
-    globals = ArrayBuf.empty,
-    namedFuncs = MutMap.empty,
-    tags = ArrayBuf.empty,
-    namedGlobals = MutMap.empty,
-    locals = MutMap() :: Nil,
-    startFunc = N,
-  )
+  def empty: Ctx = Ctx()
 
   def ctx(using ctx: Ctx): Ctx = ctx
 
@@ -244,46 +230,43 @@ object Ctx:
       case sym: Symbol => s"symbol `${sym.toString}`"
 end Ctx
 
-/** Context for [[WatBuilder]].
-  *
-  * @param types
-  *   [[ArrayBuf]] containing all type definitions in the module.
-  * @param namedTypes
-  *   [[MutMap]] containing type symbols mapped to their corresponding Wasm type indices.
-  * @param memoryImports
-  *   [[ArrayBuf]] containing all memory imports in the module.
-  * @param functionImports
-  *   [[ArrayBuf]] containing all function imports in the module.
-  * @param dataSegments
-  *   [[ArrayBuf]] containing all data segments in the module.
-  * @param funcs
-  *   [[ArrayBuf]] containing all function definitions in the module.
-  * @param globals
-  *   [[ArrayBuf]] containing all global definitions in the module.
-  * @param namedFuncs
-  *   [[MutMap]] containing function symbols mapped to their corresponding Wasm function indices.
-  * @param namedGlobals
-  *   [[MutMap]] containing global symbols mapped to their corresponding Wasm global indices.
-  * @param locals
-  *   Stack of [[MutMap]] from local variable symbols to their numeric indices within the current function scope.
-  */
-class Ctx(
-    types: ArrayBuf[TypeInfo],
-    namedTypes: MutMap[BlockMemberSymbol, Int],
-    memoryImports: ArrayBuf[MemoryImport],
-    functionImports: ArrayBuf[FuncImport],
-    dataSegments: ArrayBuf[DataSegment],
-    funcs: ArrayBuf[FuncInfo],
-    funcInfosByIndex: MutMap[Int, FuncInfo],
-    globals: ArrayBuf[GlobalInfo],
-    namedFuncs: MutMap[Symbol, Int],
-    tags: ArrayBuf[TagInfo],
-    namedGlobals: MutMap[Symbol, Int],
-    var locals: Ls[MutMap[Local, Int]],
-    private var startFunc: Opt[FuncIdx],
-) extends ToWat:
+/** Context for [[WatBuilder]]. */
+class Ctx extends ToWat:
 
   import Ctx.prettyString
+
+  /** [[ArrayBuf]] containing all type definitions in the module. */
+  private val types = ArrayBuf.empty[TypeInfo]
+
+  /** [[MutMap]] containing type symbols mapped to their corresponding Wasm type indices. */
+  private val namedTypes = MutMap.empty[BlockMemberSymbol, Int]
+
+  /** [[ArrayBuf]] containing all memory imports in the module. */
+  private val memoryImports = ArrayBuf.empty[MemoryImport]
+
+  /** [[ArrayBuf]] containing all function imports in the module. */
+  private val functionImports = ArrayBuf.empty[FuncImport]
+
+  /** [[ArrayBuf]] containing all data segments in the module. */
+  private val dataSegments = ArrayBuf.empty[DataSegment]
+
+  /** [[ArrayBuf]] containing all function definitions in the module. */
+  private val funcs = ArrayBuf.empty[FuncInfo]
+  private val funcInfosByIndex = MutMap.empty[Int, FuncInfo]
+
+  /** [[ArrayBuf]] containing all global definitions in the module. */
+  private val globals = ArrayBuf.empty[GlobalInfo]
+
+  /** [[MutMap]] containing function symbols mapped to their corresponding Wasm function indices. */
+  private val namedFuncs = MutMap.empty[Symbol, Int]
+  private val tags = ArrayBuf.empty[TagInfo]
+
+  /** [[MutMap]] containing global symbols mapped to their corresponding Wasm global indices. */
+  private val namedGlobals = MutMap.empty[Symbol, Int]
+
+  /** Stack of [[MutMap]] from local variable symbols to their numeric indices within the current function scope. */
+  private var locals = MutMap.empty[Local, Int] :: Nil
+  private var startFunc = N: Opt[FuncIdx]
 
   /** Counter for generating object tags. */
   private var objectTagNum = 0
