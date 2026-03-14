@@ -285,7 +285,7 @@ class Ctx(
 
   import Ctx.prettyString
 
-  /** Monotonically increasing counter for generating object tags. */
+  /** Counter for generating object tags. */
   private var objectTagNum = 0
 
   private val wasmIntrinsicFuncs: MutMap[Str, FuncIdx] = MutMap.empty
