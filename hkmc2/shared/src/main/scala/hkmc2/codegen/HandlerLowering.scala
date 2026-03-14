@@ -144,6 +144,7 @@ class HandlerPaths(using Elaborator.State):
   val localVarInfoPath: Path = runtimePath.selSN("LocalVarInfo").selSN("class")
   val curEffect: Path = runtimePath.selSN("curEffect")
   val unwindPath: Path = runtimePath.selSN("unwind")
+  val resetEffects: Path = runtimePath.selSN("resetEffects")
   val resumePc: Path = runtimePath.selSN("resumePc")
   val resumeIdx: Path = runtimePath.selSN("resumeIdx")
   val resumeValueIdent = new Tree.Ident("resumeValue")
@@ -722,8 +723,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val ctx = HandlerCtx.TopLevel
     val transformed = translateBlock(preTransformed, ctx, Set.empty)
     val blk = blockBuilder
-      .assignFieldN(paths.runtimePath, Tree.Ident("curEffect"), unit)
-      .assignFieldN(paths.runtimePath, Tree.Ident("resumePc"), intLit(-1))
+      .assign(State.noSymbol, Call(paths.resetEffects, Nil)(true, false, false))
       .rest(transformed)
     (blk, stackSafetyMap)
     

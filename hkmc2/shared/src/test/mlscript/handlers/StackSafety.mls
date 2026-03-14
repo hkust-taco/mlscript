@@ -15,8 +15,7 @@ fun hi(n) =
 hi(0)
 //│ JS (unsanitized):
 //│ let hi, tmp, $_stack$_safe$_body$_;
-//│ runtime.curEffect = null;
-//│ runtime.resumePc = -1;
+//│ runtime.resetEffects();
 //│ hi = function hi(n) {
 //│   let scrut, tmp1, stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
@@ -50,15 +49,14 @@ fun sum(n) =
 sum(10000)
 //│ JS (unsanitized):
 //│ let sum, tmp1, $_stack$_safe$_body$_1;
-//│ runtime.curEffect = null;
-//│ runtime.resumePc = -1;
+//│ runtime.resetEffects();
 //│ sum = function sum(n) {
 //│   let scrut, tmp2, tmp3, pc, curDepth, stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
-//│     return runtime.unwind(sum, -1, "StackSafety.mls:46:1", null, null, 1, 1, n, 0)
+//│     return runtime.unwind(sum, -1, "StackSafety.mls:45:1", null, null, 1, 1, n, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -79,7 +77,7 @@ sum(10000)
 //│           runtime.stackDepth = curDepth;
 //│           runtime.resumeValue = res;
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(sum, 1, "StackSafety.mls:49:9", null, null, 1, 1, n, 0)
+//│             return runtime.unwind(sum, 1, "StackSafety.mls:48:9", null, null, 1, 1, n, 0)
 //│           }
 //│           pc = 1;
 //│           continue main
@@ -195,8 +193,7 @@ foo(h)
 fun max(a, b) = if a < b then b else a
 //│ JS (unsanitized):
 //│ let max;
-//│ runtime.curEffect = null;
-//│ runtime.resumePc = -1;
+//│ runtime.resetEffects();
 //│ max = function max(a, b) {
 //│   let scrut;
 //│   scrut = a < b;
@@ -275,6 +272,9 @@ fun handler_stack(n) =
 handler_stack(100)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
+
+// See https://github.com/hkust-taco/mlscript/pull/410
+// This test was failing non-deterministically due to handler state not being properly reset.
 :silent
 let
   N = 100

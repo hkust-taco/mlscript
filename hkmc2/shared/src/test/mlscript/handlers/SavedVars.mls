@@ -22,8 +22,7 @@ fun g() =
   a
 //│ JS (unsanitized):
 //│ let g;
-//│ runtime.curEffect = null;
-//│ runtime.resumePc = -1;
+//│ runtime.resetEffects();
 //│ g = function g() {
 //│   let a, scrut, tmp, pc;
 //│   if (runtime.resumePc === -1) {
