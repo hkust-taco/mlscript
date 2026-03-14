@@ -1,0 +1,66 @@
+:js
+
+
+import "../../../mlscript-compile/Stack.mls"
+open Stack
+
+
+// * Just a note that it does *not* work to try and do everything recursively;
+// * the parser needs an opportunity to zoom out and make progress elsewhere.
+
+
+pattern Ident = ("a" ..= "z") ~ (Ident | "")
+
+data class Expr with
+  constructor
+    Id(name: Str)
+    Op(lhs: Expr, op: Str, rhs: Expr)
+
+
+fun go(stack) =
+  // print(stack)
+  if stack is...
+  ((Ident as name) :: rest)
+    then go of Id(name) :: rest
+  ((Expr as e1) :: "+" :: (Expr as e2) :: rest)
+    then go of Op(e1, "+", e2) :: rest
+  ((Expr as e1) :: "+" :: rest)
+    then go of e1 :: "+" :: go of rest
+  ("(" :: (Expr as e) :: ")" :: rest) then
+    go of e :: rest
+  ("(" :: rest) then
+    go of "(" :: go of rest
+  _ then
+    stack
+
+fun parse(tokens) =
+  if go(tokens) is
+    (Expr as res) :: Nil then
+      Success: res
+    toks then
+      Failure: toks
+
+
+parse(Nil)
+//│ = {Failure: Nil}
+
+parse("x" :: Nil)
+//│ = {Success: Id("x")}
+
+parse("x" :: "+" :: "y" :: Nil)
+//│ = {Success: Op(Id("x"), "+", Id("y"))}
+
+parse("(" :: "x" :: ")" :: Nil)
+//│ = {Success: Id("x")}
+
+parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ = {Success: Op(Id("a"), "+", Op(Id("x"), "+", Id("y")))}
+
+// * Notice: wrong assoc.
+parse("a" :: "+" :: "(" :: "b" :: "+" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ = {Success: Op(Id("a"), "+", Op(Id("b"), "+", Op(Id("x"), "+", Id("y"))))}
+// * It parses the same as:
+parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ = {Success: Op(Id("a"), "+", Op(Id("b"), "+", Op(Id("x"), "+", Id("y"))))}
+
+
