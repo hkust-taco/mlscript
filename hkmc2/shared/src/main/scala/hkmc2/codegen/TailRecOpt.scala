@@ -10,6 +10,8 @@ import hkmc2.semantics.*
 import hkmc2.Message.*
 import hkmc2.semantics.Elaborator.State
 import hkmc2.syntax.{Tree, SpreadKind}
+import hkmc2.ScopeData.*
+import hkmc2.Lifter.AccessInfo
 import scala.collection.mutable.ArrayBuffer
 import java.lang.instrument.ClassDefinition
 
@@ -66,7 +68,9 @@ connected component are tail calls.
 */
 
 // This optimization assumes the lifter has been run.
-class TailRecOpt(using State, TL, Raise):
+class TailRecOpt(using State, TL, Raise, Config):
+  
+  type AccessMap = Map[ScopedInfo, AccessInfo]
   
   object CallToFun:
     def unapply(c: Call): Opt[TermSymbol] = c match
@@ -217,7 +221,7 @@ class TailRecOpt(using State, TL, Raise):
       case _ => return N
     S(ret)
     
-  def optScc(scc: SccOfCalls, owner: Opt[InnerSymbol]): (Opt[FunDefn], List[FunDefn]) =
+  def optScc(scc: SccOfCalls, owner: Opt[InnerSymbol])(using accessInfo: Opt[(ScopeData, AccessMap)]): (Opt[FunDefn], List[FunDefn]) =
     // sort the functions so the order is more predictable
     val funs = scc.funs.sortBy(f => f.dSym.uid)
     // remove calls which don't flow into this scc
@@ -225,9 +229,8 @@ class TailRecOpt(using State, TL, Raise):
     
     val calls = scc.calls.filter(c => fSyms.contains(c.f2)) 
     
-    val nonTailCallsLs = calls
-      .collect:
-        case c: CallEdge.NormalCall => c.f2 -> c.call
+    val nonTailCallsLs = calls.collect:
+      case c: CallEdge.NormalCall => c.f2 -> c.call
     val nonTailCalls = nonTailCallsLs.toMap
     
     if nonTailCallsLs.sizeCompare(calls) === 0 then
@@ -269,10 +272,35 @@ class TailRecOpt(using State, TL, Raise):
       val paramsSet = f.params.toSet
       val paramsIdxes = params.zipWithIndex.toMap
       
+      val copiedParams: Set[VarSymbol] = accessInfo match
+        case Some((scopeData, accessMap)) =>
+          val node = scopeData.getNode(f)
+          val (_, childDefNodes) = 
+            node.partitionTree2:
+              case _: ScopedObject.Class => true
+              case _: ScopedObject.Func => true
+              case _ => false 
+          childDefNodes.map(_.obj)
+            .collect:
+              case r: ScopedObject.Referencable[?] => r.sym
+            .toSet
+            .flatMap(s => accessMap(s).accessed)
+            .collect:
+              case x: VarSymbol => x 
+            .intersect(params.toSet)
+        case None => Set.empty
+      
+      val copiedParamSyms = copiedParams.map:
+          case x => x -> VarSymbol(x.id)
+        .toMap
+      
       val symRewriter = new BlockTransformer(SymbolSubst()):
-        def applyVarSym(l: VarSymbol): VarSymbol = paramsIdxes.get(l) match
-          case Some(idx) => paramSymsArr(idx)
-          case _ => l
+        def applyVarSym(l: VarSymbol): VarSymbol = copiedParamSyms.getOrElse(
+          l,
+          paramsIdxes.get(l) match
+            case Some(idx) => paramSymsArr(idx)
+            case _ => l
+        )
         
         override def applyValue(v: Value)(k: Value => Block): Block = v match
           case Value.Ref(l: VarSymbol, d) => 
@@ -331,9 +359,12 @@ class TailRecOpt(using State, TL, Raise):
           case None => super.applyBlock(b)
         case _ => super.applyBlock(b)
       
-      def rewrite(b: Block) =
-        applyBlock(symRewriter.applyBlock(b))
-    
+      def rewrite(b: Block): Block =
+        val blk = applyBlock(symRewriter.applyBlock(b))
+        val withCopied = copiedParamSyms.toList.sortBy(_._1.uid).foldRight(blk):
+          case ((ogParam, copiedParam), accBlk) => Assign(copiedParam, paramSymsArr(paramsIdxes(ogParam)).asPath, accBlk)
+        Scoped(copiedParamSyms.map(_._2).toSet, withCopied)
+        
     val arms = funs.map: f =>
       Case.Lit(Tree.IntLit(dSymIds(f.dSym))) -> FunRewriter(f).rewrite(f.body)
     
@@ -374,7 +405,7 @@ class TailRecOpt(using State, TL, Raise):
     if funs.size === 1 then (N, loopDefn :: Nil)
     else (S(loopDefn), rewrittenFuns)
   
-  def optFunctions(fs: List[FunDefn], owner: Opt[InnerSymbol]) =
+  def optFunctions(fs: List[FunDefn], owner: Opt[InnerSymbol])(using Opt[(ScopeData, AccessMap)]) =
     val (newFsOpt, fsOpt) = partFns(fs).map(optScc(_, owner)).foldLeft[(List[FunDefn], List[FunDefn])](Nil, Nil):
       case ((newFns, fns), (newFnOpt, fns_)) => newFnOpt match
         case Some(value) => (value :: newFns, fns_ ::: fns)
@@ -395,11 +426,11 @@ class TailRecOpt(using State, TL, Raise):
           raise(ErrorReport(msg"Calls from class methods cannot yet be marked @tailcall." -> c.toLoc :: Nil))
         case _ => super.applyResult(r)
   
-  def optFunctionsFlat(fs: List[FunDefn], owner: Opt[InnerSymbol]) =
+  def optFunctionsFlat(fs: List[FunDefn], owner: Opt[InnerSymbol])(using Opt[(ScopeData, AccessMap)]) =
     val (a, b) = optFunctions(fs, owner)
     a ::: b
     
-  def optClasses(cs: List[ClsLikeDefn]) = cs.map: c =>
+  def optClasses(cs: List[ClsLikeDefn])(using Opt[(ScopeData, AccessMap)]) = cs.map: c =>
     // Class methods cannot yet be optimized as they cannot yet be marked final.
     
     if c.k is syntax.Cls then
@@ -416,6 +447,26 @@ class TailRecOpt(using State, TL, Raise):
       c.copy(methods = mtds, companion = companion)
   
   def transform(b: Block) =
+    /* To avoid `x` being overridden in the following when the lifter is not run:
+     * 
+     * let lam
+     * fun f(x) =
+     *   set lam = () => x
+     *   f(x + 1)
+     * 
+     * we need to do some analysis on what nested functions use what variables. We
+     * re-use the analysis from the lifter to do this.
+     */
+    
+    given Opt[(ScopeData, AccessMap)] = 
+      if config.liftDefns.isDefined then N
+      else
+        // IgnoredScoes can be an empty set, since that information is only relevant for lifting
+        given IgnoredScopes = IgnoredScopes(S(Set.empty))
+        val scopeData = ScopeData(b)
+        val analyzer = new UsedVarAnalyzer(b, scopeData)
+        S((scopeData, analyzer.accessMapWithIgnored))
+    
     val defns = b.gatherDefns()
     val (funs, clses) = defns.partitionMap:
       case f: FunDefn => L(f)
