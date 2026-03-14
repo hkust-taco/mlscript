@@ -188,8 +188,7 @@ f(X(1), Y(2), 3)
 
 fun c(x, d) = if x is
   X(a) then c(X(a), d)
-fun main() = () => c(X(3), 2)
-main
+() => c(X(3), 2)
 //│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:X,Some(term:X/X)),List(Arg(None,Ref(a,None)))) ->
 //│ deforest > 	Ref(x,None)
@@ -204,7 +203,7 @@ main
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(a))
 //│ deforest > <<< fusing <<<
-//│ = fun main_6$main
+//│ = fun lambda_6$lambda
 
 
 :expect 2
@@ -362,19 +361,17 @@ g(o) + f(o) + o.A#x
 
 
 :expect 1
-fun test() =
-  let x = if A(0) is
-    A then 1
-  let f() = x
-  f()
-test()
+let x = if A(0) is
+  A then 1
+let f() = x
+f()
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Lit(IntLit(0))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Lit(IntLit(0))))) ->
 //│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > <<< fusing <<<
 //│ = 1
+//│ f = fun f
+//│ x = 1
 
 
 :expect B(0)
