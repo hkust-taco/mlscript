@@ -271,7 +271,7 @@ object ScopeData:
       
       /**
         * Partitions the nodes of the scope tree into two lists `as` and `bs`, where:
-        * - `bs` contains the the highest children of the curent node such that `f(b)` is `true` for `b` in `bs`, and
+        * - `bs` contains the the highest children of the curent node such that `f(b.obj)` is `true` for `b` in `bs`, and
         * - `as` contains the parents of all nodes in `bs`.
         * 
         * @param f The predicicate used to partition the tree.
