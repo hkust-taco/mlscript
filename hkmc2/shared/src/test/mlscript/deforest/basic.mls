@@ -85,8 +85,10 @@ f(p())
 //│ };
 //│ define f_9$f⁰ as fun (x) {
 //│   let y, arg$X$0$, arg$Y$0$, tmp1;
-//│   labelled block split_root$ = labelled block split_default$ = return x(y, arg$X$0$, arg$Y$0$, tmp1, tmp1);
-//│   throw new globalThis⁰.Error⁰("match error");
+//│   block split_root$:
+//│     block split_default$:
+//│       return x(y, arg$X$0$, arg$Y$0$, tmp1, tmp1)
+//│     throw new globalThis⁰.Error⁰("match error")
 //│   return tmp1
 //│ };
 //│ define f_9$x_X⁰ as fun (fv_y, fv_arg$X$0$, fv_arg$Y$0$, fv_tmp, fv_tmp1, X_a) {
@@ -118,22 +120,24 @@ f(p())
 //│ };
 //│ define f⁰ as fun (x1) {
 //│   let y, arg$X$0$, arg$Y$0$, tmp1;
-//│   labelled block split_root$ = labelled block split_default$ = match x1
-//│     X¹ =>
-//│       set arg$X$0$ = x1.a¹;
-//│       match arg$X$0$
-//│         Y¹ =>
-//│           set arg$Y$0$ = arg$X$0$.b¹;
-//│           set y = arg$Y$0$;
-//│           set tmp1 = y;
-//│           break split_root$
+//│   block split_root$:
+//│     block split_default$:
+//│       match x1
+//│         X¹ =>
+//│           set arg$X$0$ = x1.a¹;
+//│           match arg$X$0$
+//│             Y¹ =>
+//│               set arg$Y$0$ = arg$X$0$.b¹;
+//│               set y = arg$Y$0$;
+//│               set tmp1 = y;
+//│               break split_root$
+//│             else
+//│               break split_default$
+//│           end
 //│         else
 //│           break split_default$
 //│       end
-//│     else
-//│       break split_default$
-//│   end;
-//│   throw new globalThis⁰.Error⁰("match error");
+//│     throw new globalThis⁰.Error⁰("match error")
 //│   return tmp1
 //│ };
 //│ set tmp = p_8$p¹();

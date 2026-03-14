@@ -116,26 +116,27 @@ modSome(Some(17), 3)
 //│   return null
 //│ };
 //│ define modSome⁰ as fun (x1, m1) {
-//│   labelled loop loopLabel = let n, scrut, arg$Some$0$, tmp1, tmp2;
-//│   match x1
-//│     Some¹ =>
-//│       set arg$Some$0$ = x1.x⁰;
-//│       set n = arg$Some$0$;
-//│       set scrut = >=⁰(n, m1);
-//│       match scrut
-//│         true =>
-//│           set tmp1 = -⁰(n, m1);
-//│           set tmp2 = Some⁰(tmp1);
-//│           set x1 = tmp2;
-//│           continue loopLabel
-//│         else
-//│           return Some⁰(n)
-//│       end
-//│     None⁰ =>
-//│       return None⁰
-//│     else
-//│       throw new globalThis⁰.Error⁰("match error")
-//│   end;
+//│   loop loopLabel:
+//│     let n, scrut, arg$Some$0$, tmp1, tmp2;
+//│     match x1
+//│       Some¹ =>
+//│         set arg$Some$0$ = x1.x⁰;
+//│         set n = arg$Some$0$;
+//│         set scrut = >=⁰(n, m1);
+//│         match scrut
+//│           true =>
+//│             set tmp1 = -⁰(n, m1);
+//│             set tmp2 = Some⁰(tmp1);
+//│             set x1 = tmp2;
+//│             continue loopLabel
+//│           else
+//│             return Some⁰(n)
+//│         end
+//│       None⁰ =>
+//│         return None⁰
+//│       else
+//│         throw new globalThis⁰.Error⁰("match error")
+//│     end
 //│   end
 //│ };
 //│ set Some_x = 17;
@@ -179,8 +180,10 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ let zipWith⁰, tmp, tmp1, tmp2, lambda⁰, zipWith_19$zipWith⁰, zipWith_19$xsys_tup2⁰, zipWith_19$xsys_rest⁰, zipWith_19$split_default$_rest⁰, zipWith_19$split_root$_rest⁰, tup2_0, tup2_1;
 //│ define zipWith_19$zipWith⁰ as fun (xsys, f) {
 //│   let hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp3, tmp4, tmp5, tmp6;
-//│   labelled block split_root$ = labelled block split_default$ = return xsys(f, hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp3, tmp4, tmp5, tmp6, tmp6);
-//│   throw new globalThis⁰.Error⁰("match error");
+//│   block split_root$:
+//│     block split_default$:
+//│       return xsys(f, hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp3, tmp4, tmp5, tmp6, tmp6)
+//│     throw new globalThis⁰.Error⁰("match error")
 //│   return tmp6
 //│ };
 //│ define zipWith_19$xsys_tup2⁰ as fun (fv_f, fv_hy, fv_ty, fv_hx, fv_tx, fv_element1$, fv_element0$, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_arg$Cons$0$1, fv_arg$Cons$1$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, tup2_01, tup2_11) {
@@ -232,45 +235,47 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ };
 //│ define zipWith⁰ as fun (xsys1, f1) {
 //│   let hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp3, tmp4, tmp5, tmp6;
-//│   labelled block split_root$ = labelled block split_default$ = match xsys1
-//│     Array(2) =>
-//│       set element0$ = runtime⁰.Tuple﹖.get⁰(xsys1, 0);
-//│       set element1$ = runtime⁰.Tuple﹖.get⁰(xsys1, 1);
-//│       match element0$
-//│         Cons⁰ =>
-//│           set arg$Cons$0$ = element0$.h⁰;
-//│           set arg$Cons$1$ = element0$.t⁰;
-//│           match element1$
+//│   block split_root$:
+//│     block split_default$:
+//│       match xsys1
+//│         Array(2) =>
+//│           set element0$ = runtime⁰.Tuple﹖.get⁰(xsys1, 0);
+//│           set element1$ = runtime⁰.Tuple﹖.get⁰(xsys1, 1);
+//│           match element0$
 //│             Cons⁰ =>
-//│               set arg$Cons$0$1 = element1$.h⁰;
-//│               set arg$Cons$1$1 = element1$.t⁰;
-//│               set ty = arg$Cons$1$1;
-//│               set hy = arg$Cons$0$1;
-//│               set tx = arg$Cons$1$;
-//│               set hx = arg$Cons$0$;
-//│               set tmp3 = f1(hx, hy);
-//│               set tmp4 = [tx, ty];
-//│               set tmp5 = zipWith¹(tmp4, f1);
-//│               set tmp6 = Cons¹(tmp3, tmp5);
-//│               break split_root$
-//│             else
-//│               break split_default$
-//│           end
-//│         Nil⁰ =>
-//│           match element1$
+//│               set arg$Cons$0$ = element0$.h⁰;
+//│               set arg$Cons$1$ = element0$.t⁰;
+//│               match element1$
+//│                 Cons⁰ =>
+//│                   set arg$Cons$0$1 = element1$.h⁰;
+//│                   set arg$Cons$1$1 = element1$.t⁰;
+//│                   set ty = arg$Cons$1$1;
+//│                   set hy = arg$Cons$0$1;
+//│                   set tx = arg$Cons$1$;
+//│                   set hx = arg$Cons$0$;
+//│                   set tmp3 = f1(hx, hy);
+//│                   set tmp4 = [tx, ty];
+//│                   set tmp5 = zipWith¹(tmp4, f1);
+//│                   set tmp6 = Cons¹(tmp3, tmp5);
+//│                   break split_root$
+//│                 else
+//│                   break split_default$
+//│               end
 //│             Nil⁰ =>
-//│               set tmp6 = Nil⁰;
-//│               break split_root$
+//│               match element1$
+//│                 Nil⁰ =>
+//│                   set tmp6 = Nil⁰;
+//│                   break split_root$
+//│                 else
+//│                   break split_default$
+//│               end
 //│             else
 //│               break split_default$
 //│           end
 //│         else
 //│           break split_default$
 //│       end
-//│     else
-//│       break split_default$
-//│   end;
-//│   throw new globalThis⁰.Error⁰("match error");
+//│     throw new globalThis⁰.Error⁰("match error")
 //│   return tmp6
 //│ };
 //│ set tmp = Predef⁰.id⁰(Nil⁰);

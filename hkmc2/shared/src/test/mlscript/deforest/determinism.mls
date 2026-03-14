@@ -75,8 +75,10 @@ c2 of A(A(A(A(A(A(1))))))
 //│ let c2⁰, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, c2_19$c2⁰, c2_19$x_A⁰, c2_19$x_rest⁰, c2_19$split_default$_rest⁰, c2_19$split_root$_rest⁰, c2_19$arg$A$0$_A⁰, c2_19$arg$A$0$_rest⁰, c2_19$arg$A$0$_A¹, c2_19$arg$A$0$_rest¹, c2_19$arg$A$0$_A², c2_19$arg$A$0$_rest², c2_19$arg$A$0$_A³, c2_19$arg$A$0$_rest³, c2_19$arg$A$0$_A⁴, c2_19$arg$A$0$_rest⁴, A_a, A_a1, A_a2, A_a3, A_a4, A_a5;
 //│ define c2_19$c2⁰ as fun (x) {
 //│   let a, arg$A$0$, arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5, tmp6;
-//│   labelled block split_root$ = labelled block split_default$ = return x(a, arg$A$0$, arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5, tmp6, tmp6);
-//│   throw new globalThis⁰.Error⁰("match error");
+//│   block split_root$:
+//│     block split_default$:
+//│       return x(a, arg$A$0$, arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5, tmp6, tmp6)
+//│     throw new globalThis⁰.Error⁰("match error")
 //│   return tmp6
 //│ };
 //│ define c2_19$x_A⁰ as fun (fv_a, fv_arg$A$0$, fv_arg$A$0$1, fv_arg$A$0$2, fv_arg$A$0$3, fv_arg$A$0$4, fv_arg$A$0$5, fv_tmp, fv_tmp1, A_a6) {
@@ -131,27 +133,32 @@ c2 of A(A(A(A(A(A(1))))))
 //│ };
 //│ define c2⁰ as fun (x1) {
 //│   let a, arg$A$0$, arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5, tmp6;
-//│   labelled block split_root$ = labelled block split_default$ = match x1
-//│     A⁰ =>
-//│       set arg$A$0$ = x1.a¹;
-//│       match arg$A$0$
+//│   block split_root$:
+//│     block split_default$:
+//│       match x1
 //│         A⁰ =>
-//│           set arg$A$0$1 = arg$A$0$.a¹;
-//│           match arg$A$0$1
+//│           set arg$A$0$ = x1.a¹;
+//│           match arg$A$0$
 //│             A⁰ =>
-//│               set arg$A$0$2 = arg$A$0$1.a¹;
-//│               match arg$A$0$2
+//│               set arg$A$0$1 = arg$A$0$.a¹;
+//│               match arg$A$0$1
 //│                 A⁰ =>
-//│                   set arg$A$0$3 = arg$A$0$2.a¹;
-//│                   match arg$A$0$3
+//│                   set arg$A$0$2 = arg$A$0$1.a¹;
+//│                   match arg$A$0$2
 //│                     A⁰ =>
-//│                       set arg$A$0$4 = arg$A$0$3.a¹;
-//│                       match arg$A$0$4
+//│                       set arg$A$0$3 = arg$A$0$2.a¹;
+//│                       match arg$A$0$3
 //│                         A⁰ =>
-//│                           set arg$A$0$5 = arg$A$0$4.a¹;
-//│                           set a = arg$A$0$5;
-//│                           set tmp6 = a;
-//│                           break split_root$
+//│                           set arg$A$0$4 = arg$A$0$3.a¹;
+//│                           match arg$A$0$4
+//│                             A⁰ =>
+//│                               set arg$A$0$5 = arg$A$0$4.a¹;
+//│                               set a = arg$A$0$5;
+//│                               set tmp6 = a;
+//│                               break split_root$
+//│                             else
+//│                               break split_default$
+//│                           end
 //│                         else
 //│                           break split_default$
 //│                       end
@@ -167,10 +174,7 @@ c2 of A(A(A(A(A(A(1))))))
 //│         else
 //│           break split_default$
 //│       end
-//│     else
-//│       break split_default$
-//│   end;
-//│   throw new globalThis⁰.Error⁰("match error");
+//│     throw new globalThis⁰.Error⁰("match error")
 //│   return tmp6
 //│ };
 //│ set A_a = 1;

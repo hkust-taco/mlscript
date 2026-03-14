@@ -183,20 +183,22 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ };
 //│ define f⁰ as fun (a) {
 //│   let arg$AA$0$, tmp11;
-//│   labelled block split_root$ = labelled block split_default$ = match a
-//│     AA⁰ =>
-//│       set arg$AA$0$ = a.x⁰;
-//│       match arg$AA$0$
+//│   block split_root$:
+//│     block split_default$:
+//│       match a
 //│         AA⁰ =>
-//│           set tmp11 = 0;
-//│           break split_root$
+//│           set arg$AA$0$ = a.x⁰;
+//│           match arg$AA$0$
+//│             AA⁰ =>
+//│               set tmp11 = 0;
+//│               break split_root$
+//│             else
+//│               break split_default$
+//│           end
 //│         else
 //│           break split_default$
 //│       end
-//│     else
-//│       break split_default$
-//│   end;
-//│   throw new globalThis⁰.Error⁰("match error");
+//│     throw new globalThis⁰.Error⁰("match error")
 //│   return tmp11
 //│ };
 //│ set AA_x = 10;
