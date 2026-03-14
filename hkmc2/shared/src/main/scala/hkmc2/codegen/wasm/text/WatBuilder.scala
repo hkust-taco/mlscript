@@ -797,7 +797,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       nResults = 1,
       locals = Seq.empty,
       body = body,
-      exports = Seq.empty,
+      `export` = N,
     )
     ctx.addFunc(N, funcInfo)
   end createIntrinsicFunc
@@ -1158,7 +1158,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         nResults = ctorCode.resultTypes.length,
                         locals = ctorLocals,
                         body = ctorAux,
-                        exports = ctorId.toSeq,
+                        `export` = ctorId,
                       ),
                     )
                     if isSingletonObj then
@@ -1543,7 +1543,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       // TODO(Derppening): Should we place top-level scope variables in the global section?
       locals = (entryFnLocals ++ entryExtraLocals).map(l => l -> scope.allocateOrGetName(l)),
       body = entryFnExpr,
-      exports = Seq(entryNme),
+      `export` = S(entryNme),
     )
 
     ctx.popLocal()
@@ -1576,7 +1576,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           nResults = 0,
           locals = Seq.empty,
           body = initBody,
-          exports = Seq.empty,
+          `export` = N,
         ),
       )
       ctx.setStartFunc(initFn)

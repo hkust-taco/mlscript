@@ -32,7 +32,7 @@ import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
   * @param body
   *   The expression of the function body.
   * @param exports
-  *   [[Seq]] of export names for the function.
+  *   Optional export name for the function.
   */
 class FuncInfo(
     val id: SymIdx,
@@ -41,7 +41,7 @@ class FuncInfo(
     nResults: Int,
     locals: Seq[Local -> Str],
     val body: Expr,
-    val exports: Seq[Str],
+    val `export`: Opt[Str],
 ) extends ToWat:
 
   /** @param sym
@@ -71,7 +71,7 @@ class FuncInfo(
     nResults,
     locals,
     body,
-    sym.optionIf(_.nameIsMeaningful).map(_.nme).toSeq,
+    sym.optionIf(_.nameIsMeaningful).map(_.nme),
   )
 
   @deprecated("Consider providing a symbolic identifier by using `Scope.allocateName` with a `TempSymbol`.")
@@ -82,7 +82,7 @@ class FuncInfo(
       nResults: Int,
       locals: Seq[Local -> Str],
       body: Expr,
-      exports: Seq[Str],
+      `export`: Opt[Str],
   )(using Raise, Scope, State) = this(
     id.getOrElse(SymIdx(summon[Scope].allocateName(TempSymbol(N, "")))),
     typeIdx,
@@ -90,7 +90,7 @@ class FuncInfo(
     nResults,
     locals,
     body,
-    exports,
+    `export`,
   )
 
   /** Returns the type of this function as a [[SignatureType]]. */
@@ -100,7 +100,6 @@ class FuncInfo(
   )
 
   def toWat: Document =
-    // TODO(Derppening): Make exports configurable
     doc"""(func ${id.toWat} (type ${typeIdx.toWat})${
         getSignatureType.toWat.surroundUnlessEmpty(doc" ")
       } #{ ${
@@ -108,10 +107,8 @@ class FuncInfo(
           doc"(local $$${p._2} ${RefType.anyref.toWat})"
         .mkDocument(doc" # ").surroundUnlessEmpty(doc" # ")
       } # ${body.toWat} #} )${
-        exports
-          .map: e =>
-            doc""" # (export "${e}" (func ${id.toWat}))"""
-          .mkDocument(doc"")
+        `export`.fold(doc""): e =>
+          doc""" # (export "${e}" (func ${id.toWat}))"""
       } # (elem declare func ${id.toWat})"""
 end FuncInfo
 
