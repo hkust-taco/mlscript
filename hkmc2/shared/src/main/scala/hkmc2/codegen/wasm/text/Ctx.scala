@@ -161,7 +161,6 @@ class TypeInfo(val id: SymIdx, val compType: CompType, val objectTag: Opt[Int]) 
     objectTag,
   )
 
-  @deprecated("Consider providing a symbolic identifier by using `Scope.allocateName` with a `TempSymbol`.")
   def this(id: Opt[SymIdx], compType: CompType)(using Raise, Scope, State) =
     this(id.getOrElse(SymIdx(summon[Scope].allocateName(TempSymbol(N, "")))), compType, N)
 
