@@ -462,7 +462,7 @@ class Ctx(
         val localIdx = idx.toInt - functionImports.size
         if localIdx < 0 then N else funcs.unapply(localIdx)
     case FuncIdx(SymIdx(nme)) =>
-      // TODO(Derppening): Consider adding a `Map[SymIdx, TypeInfo]` for faster lookup
+      // TODO(Derppening): Consider adding a `Map[SymIdx, FuncInfo]` for faster lookup
       funcs.find(_.id.id == nme)
     case funcref: Symbol => namedFuncs.get(funcref).map(idx => funcs(idx))
 
