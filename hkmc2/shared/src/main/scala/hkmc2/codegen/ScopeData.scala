@@ -242,20 +242,6 @@ object ScopeData:
           case n @ ScopeNode(obj = c: ScopedObject.Class) if c.isObj && n.isLifted => c.cls.isym
         .toSet
       
-      // Finds the nearest module or object M in the ownership tree such that, at any site where this scoped object
-      // is accessed, M is accessible without a field selection.
-      lazy val bestModOrObjOwner: Opt[DefinitionSymbol[?]] =
-        def join = obj match
-          case c: ScopedObject.Companion => S(c.clsBody.isym)
-          case c: ScopedObject.Class if c.isObj => S(c.cls.isym)
-          case _ => N
-        ancestor match
-          case N => join
-          case S(p) => p.obj match
-            case _: ScopedObject.Companion => p.bestModOrObjOwner
-            case c: ScopedObject.Class if c.isObj => p.bestModOrObjOwner
-            case _ => join
-
       lazy val inScopeISyms: Set[Local] =
         val parVals = ancestor match
           case Some(value) => value.inScopeISyms
@@ -265,6 +251,33 @@ object ScopeData:
         case c: ScopedObject.Class => parVals + c.cls.isym
         case c: ScopedObject.Companion => parVals + c.clsBody.isym
         case _ => parVals
+      
+      /**
+        * Partitions the nodes of the scope tree into two lists `as` and `bs`, where:
+        * - `bs` contains the the highest children of the curent node such that `f(b)` is `true` for `b` in `bs`, and
+        * - `as` contains the parents of all nodes in `bs`.
+        * 
+        * @param f The predicicate used to partition the tree.
+        * @return The partitioned tree.
+        */
+      def partitionTree(f: ScopeNode[?] => Bool): (List[ScopeNode[?]], List[ScopeNode[?]]) =
+        val (as, bs) = children.foldLeft((List.empty[ScopeNode[?]], List.empty[ScopeNode[?]])):
+          case ((l1, l2), child) =>
+            if f(child) then (l1, child :: l2)
+            else 
+              val (l1_, l2_) = child.partitionTree(f)
+              (l1_ ::: l1, l2_ ::: l2)
+        (this :: as, bs)
+      
+      /**
+        * Partitions the nodes of the scope tree into two lists `as` and `bs`, where:
+        * - `bs` contains the the highest children of the curent node such that `f(b.obj)` is `true` for `b` in `bs`, and
+        * - `as` contains the parents of all nodes in `bs`.
+        * 
+        * @param f The predicicate used to partition the tree.
+        * @return The partitioned tree.
+        */
+      def partitionTree2(f: ScopedObject => Bool): (List[ScopeNode[?]], List[ScopeNode[?]]) = partitionTree(x => f(x.obj))
       
       // All of the following must not be called until ignoredScopes is populated with the relevant data.
       
