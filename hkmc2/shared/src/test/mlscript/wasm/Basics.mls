@@ -264,7 +264,7 @@ O.y
 //│     (block
 //│       (global.set $O$inst
 //│         (ref.cast (ref null $O)
-//│           (call 0)))))
+//│           (call $O_ctor1)))))
 //│   (elem declare func $start1)
 //│   (func $entry (type $entry1) (result (ref null any))
 //│     (local $O (ref null any))

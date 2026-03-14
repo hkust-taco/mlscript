@@ -63,10 +63,10 @@ Bar.y
 //│     (block
 //│       (global.set $Foo$inst
 //│         (ref.cast (ref null $Foo)
-//│           (call 0)))
+//│           (call $Foo_ctor1)))
 //│       (global.set $Bar$inst
 //│         (ref.cast (ref null $Bar)
-//│           (call 1)))))
+//│           (call $Bar_ctor1)))))
 //│   (elem declare func $start1)
 //│   (func $entry (type $entry1) (result (ref null any))
 //│     (local $Bar (ref null any))

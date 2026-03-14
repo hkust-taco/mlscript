@@ -30,7 +30,7 @@
 //│     (block
 //│       (global.set $Unit$inst
 //│         (ref.cast (ref null $Unit)
-//│           (call 0)))))
+//│           (call $Unit_ctor1)))))
 //│   (elem declare func $start1)
 //│   (func $entry (type $entry1) (result (ref null any))
 //│     (global.get $Unit$inst))

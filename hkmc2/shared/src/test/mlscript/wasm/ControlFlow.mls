@@ -73,7 +73,7 @@ let i = 0 in
 //│     (block
 //│       (global.set $Unit$inst
 //│         (ref.cast (ref null $Unit)
-//│           (call 2)))))
+//│           (call $Unit_ctor1)))))
 //│   (elem declare func $start1)
 //│   (func $entry (type $entry1) (result (ref null any))
 //│     (local $i (ref null any))

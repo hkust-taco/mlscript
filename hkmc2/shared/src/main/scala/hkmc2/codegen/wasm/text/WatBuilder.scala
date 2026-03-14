@@ -136,7 +136,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     )
 
     val ctorCall = call(
-      funcidx = ctx.getFunc_!(clsLikeDefn.sym, resolveSymIdx = true),
+      funcidx = ctx.getFunc_!(clsLikeDefn.sym),
       operands = Seq.empty,
       returnTypes = Seq(Result(RefType.anyref)),
     )
