@@ -291,8 +291,8 @@ class TailRecOpt(using State, TL, Raise):
           .flatMap(s => accessMap(s).accessed) // All local variables that each nested class/function could access.
           .collect:
             case x: VarSymbol => x 
+          .filter(params.toSet)
           .toSet
-          .intersect(params.toSet)
       
       val copiedParamSyms = copiedParams.map:
           case x => x -> VarSymbol(x.id)
