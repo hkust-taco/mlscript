@@ -202,6 +202,11 @@ data class CustomStackError(stack) with
   fun toString() = stack
 
 
+fun resetEffects() =
+  set
+    curEffect = null
+    resumePc = -1
+
 fun raisePrintStackEffect(showLocals) =
   mkEffect(PrintStackEffect, showLocals)
 

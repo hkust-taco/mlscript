@@ -1,0 +1,11 @@
+:js
+:effectHandlers
+:lift
+
+import "../../mlscript-compile/Runtime.mls"
+
+set Runtime.resumePc = 100
+
+:expect -1
+Runtime.resumePc
+//│ = -1
