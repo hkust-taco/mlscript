@@ -273,8 +273,9 @@ handler_stack(100)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
 
-// See https://github.com/hkust-taco/mlscript/pull/410
 // This test was failing non-deterministically due to handler state not being properly reset.
+// The flakiness was due to the stack overflow in the previous block not always interrupting the code in the same place,
+// sometimes leaving the effect handlers runtime in an inconsistent state.
 :silent
 let
   N = 100
