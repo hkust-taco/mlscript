@@ -316,7 +316,7 @@ class Ctx(
   def getFreshObjectTag(): Int =
     val tag = objectTagNum
     objectTagNum += 1
-    tag ensuring objectTagNum > tag
+    tag
 
   /** Adds a type into this context. */
   def addType(sym: Opt[BlockMemberSymbol], typeInfo: TypeInfo): TypeIdx =
