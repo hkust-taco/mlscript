@@ -579,33 +579,54 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             returnTypes = Seq(Result(RefType.anyref)),
           )
         case N =>
-          val base = subexpression(fun)
-          if base.resultTypes.exists(_ is UnreachableType) then return base
-          val wasmArgs = args.map(argument)
+          fun match
+            case Value.Ref(l, _) =>
+              val base = fun match
+                case Value.Ref(l, _) => ctx.getFunc(l)
+                case _ => N
+              val baseFuncIdx = base match
+                case S(idx) => idx
+                case N => return errExpr(
+                    Ls(msg"Expected function reference in Call(...) expression, but found non-function value" ->
+                      fun.toLoc),
+                    extraInfo = S(fun.toString),
+                  )
+              val baseTypeInfo = ctx.getTypeInfo_!(ctx.getFuncInfo_!(baseFuncIdx).typeIdx)
+              val wasmArgs = args.map(argument)
 
-          val baseTypeIdx = base.resultType match
-            case S(RefType(idx: TypeIdx, _)) => idx
-            case ty =>
-              return errExpr(
-                Ls(msg"Expected WAT of `fun` expression in Call(...) to have a `(ref <typeidx>)` type" -> r.toLoc),
-                extraInfo = S(
-                  s"Block IR: `${
-                      fun.toString
-                    }`\nCompiled WAT: `${
-                      base.toWat.toString
-                    }`\n... which has type `${
-                      ty.fold("(none)")(_.toWat.toString)
-                    }`",
-                ),
+              call(
+                funcidx = baseFuncIdx,
+                operands = wasmArgs.toSeq,
+                returnTypes = baseTypeInfo.compType.asInstanceOf[FunctionType].sigType.results,
               )
-          val baseTypeInfo = ctx.getTypeInfo_!(baseTypeIdx)
+            case _ =>
+              val base = subexpression(fun)
+              if base.resultTypes.exists(_ is UnreachableType) then return base
+              val wasmArgs = args.map(argument)
 
-          call_ref(
-            target = base,
-            operands = wasmArgs.toSeq,
-            typeIdx = baseTypeIdx,
-            funcType = baseTypeInfo.compType.asInstanceOf[FunctionType],
-          )
+              val baseTypeIdx = base.resultType match
+                case S(RefType(idx: TypeIdx, _)) => idx
+                case ty =>
+                  return errExpr(
+                    Ls(msg"Expected WAT of `fun` expression in Call(...) to have a `(ref <typeidx>)` type" -> r.toLoc),
+                    extraInfo = S(
+                      s"Block IR: `${
+                          fun.toString
+                        }`\nCompiled WAT: `${
+                          base.toWat.toString
+                        }`\n... which has type `${
+                          ty.fold("(none)")(_.toWat.toString)
+                        }`",
+                    ),
+                  )
+              val baseTypeInfo = ctx.getTypeInfo_!(baseTypeIdx)
+
+              call_ref(
+                target = base,
+                operands = wasmArgs.toSeq,
+                typeIdx = baseTypeIdx,
+                funcType = baseTypeInfo.compType.asInstanceOf[FunctionType],
+              )
 
     case sel @ Select(qual, id) =>
       sel.symbol match

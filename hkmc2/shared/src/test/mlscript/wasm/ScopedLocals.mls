@@ -107,10 +107,9 @@ chain(1)
 //│     (local $chain (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
-//│       (call_ref $chain1
+//│       (call $chain
 //│         (ref.i31
-//│           (i32.const 1))
-//│         (ref.func $chain))))
+//│           (i32.const 1)))))
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))
 //│ Wasm result:
