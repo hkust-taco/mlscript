@@ -20,6 +20,7 @@ fun f(x) =
       fun g() = z
 //│ JS (unsanitized):
 //│ let g, f;
+//│ runtime.resetEffects();
 //│ g = function g(z) {
 //│   return z
 //│ };
@@ -103,6 +104,7 @@ fun f(x) =
       fun g() = z )
 //│ JS (unsanitized):
 //│ let g5, f4;
+//│ runtime.resetEffects();
 //│ g5 = function g(z) {
 //│   return z
 //│ };

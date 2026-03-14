@@ -72,6 +72,7 @@ in
 result
 //│ JS (unsanitized):
 //│ let result, h7, tmp7, handleBlock$7, Handler$h$perform7, Handler$h$15, Handler$h$perform$4;
+//│ runtime.resetEffects();
 //│ Handler$h$perform$4 = function Handler$h$perform$(arg) {
 //│   return (k) => {
 //│     return Handler$h$perform7(arg, k)
@@ -456,28 +457,28 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.451: 	    module A with
+//│ ║  l.452: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.447: 	    module A with
+//│ ║  l.448: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.443: 	    module A with
+//│ ║  l.444: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.439: 	    module A with
+//│ ║  l.440: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.439: 	    module A with
+//│ ║  l.440: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.443: 	    module A with
+//│ ║  l.444: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.447: 	    module A with
+//│ ║  l.448: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.451: 	    module A with
+//│ ║  l.452: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 
