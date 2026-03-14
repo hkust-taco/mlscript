@@ -12,6 +12,7 @@ import semantics.*, Elaborator.State
 import text.Param as WasmParam
 import Instructions.*
 
+import scala.annotation.nowarn
 import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
 
 /** A Wasm function and its associated information.
@@ -344,6 +345,7 @@ class Ctx(
       lastWords(s"Missing type definition for ${typeref.prettyString}")
 
   /** Returns the [[TypeInfo]] instance associated with the given `typeref`. */
+  @nowarn("cat=deprecation")
   def getTypeInfo(typeref: TypeIdx | BlockMemberSymbol): Opt[TypeInfo] = typeref match
     case TypeIdx(NumIdx(idx)) => types.unapply(idx.toInt)
     case TypeIdx(SymIdx(nme)) =>
@@ -397,12 +399,17 @@ class Ctx(
           memoryImports(idx) = existing.copy(minPages = newMin)
       case N =>
         val idx = memoryImports.size
-        memoryImports += MemoryImport(module, name, minPages)
+        memoryImports += MemoryImport(module, name, SymIdx(name), minPages)
         cachedMemoryImport(key) = idx
 
   /** Returns the minimum page requirement of memory import (`module`, `name`) if present. */
+  @deprecated("Use `getMemoryImport` instead to get the full `MemoryImport` information.")
   def getMemoryImportMinPages(module: Str, name: Str): Opt[Int] =
     memoryImports.find(m => m.module === module && m.name === name).map(_.minPages)
+
+  /** Returns the memory import information for the given (`module`, `name`) tuple if present. */
+  def getMemoryImport(module: Str, name: Str): Opt[MemoryImport] =
+    memoryImports.find(m => m.module === module && m.name === name)
 
   /** Adds a data segment into this context. */
   def addDataSegment(seg: DataSegment): Unit =
@@ -440,6 +447,7 @@ class Ctx(
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
   /** Returns the [[FuncInfo]] instance associated with the given `funcref`. */
+  @nowarn("cat=deprecation")
   def getFuncInfo(funcref: FuncIdx | Symbol): Opt[FuncInfo] = funcref match
     case FuncIdx(NumIdx(idx)) =>
       funcInfosByIndex.get(idx).orElse:

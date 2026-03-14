@@ -191,9 +191,9 @@ case class FieldIdx(idx: Index) extends CtxIdx(idx)
 case class TagIdx(idx: Index) extends CtxIdx(idx)
 
 /** A memory import entry. */
-case class MemoryImport(module: Str, name: Str, minPages: Int) extends ToWat:
+case class MemoryImport(module: Str, name: Str, id: SymIdx, minPages: Int) extends ToWat:
   def toWat: Document =
-    doc"""(import "$module" "$name" (memory $minPages))"""
+    doc"""(import "$module" "$name" (memory ${id.toWat} $minPages))"""
 
 /** A function import entry. */
 case class FuncImport(module: Str, name: Str, id: SymIdx, typeIdx: TypeIdx) extends ToWat:
