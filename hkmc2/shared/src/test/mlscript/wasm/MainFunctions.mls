@@ -31,7 +31,7 @@ throw x
 //│ Wat:
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type $mlx_exn (func (param (ref null any))))
+//│   (type $mlx_exn (func (param $ex (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (tag $mlx_exn (type $mlx_exn))
 //│   (export "mlx_exn" (tag $mlx_exn))
