@@ -1,0 +1,58 @@
+:js
+:deforest
+
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+
+object A
+object B
+// object C
+// class AA(aa)
+// class BB(bb)
+// object None
+// class Some(value)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+
+// * Not fused: two `x is A` consumers
+let x = if true then A else B
+fun foo(x) =
+  if x is A do print(123)
+  if x is
+    A then 1
+    B then 2
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ x = A
+
+// * We could make it work. But it's a special case that's probably not very important
+let x = if true then A else B
+fun foo(x) =
+  if x is A do print(123)
+  if x is B do print(456)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ x = A
+
+:expect 1
+fun foo(k, x) =
+  if x === 0 do k(A)
+  k of
+    if x > 0
+      then A
+      else B
+fun bar(v) = if v is
+  A then 1
+  B then 2
+foo(bar, 123)
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(v,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(v,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(v,None)
+//│ deforest > <<< fusing <<<
+//│ = 1
+
+

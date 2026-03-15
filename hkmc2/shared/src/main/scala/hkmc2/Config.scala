@@ -26,6 +26,7 @@ case class Config(
   target: CompilationTarget,
   rewriteWhileLoops: Bool,
   tailRecOpt: Bool,
+  deforest: Opt[Deforest],
   qqEnabled: Bool,
   funcToCls: Bool
 ):
@@ -60,6 +61,7 @@ object Config:
     rewriteWhileLoops = false,
     stageCode = false,
     tailRecOpt = true,
+    deforest = N,
     qqEnabled = false,
     funcToCls = false,
   )
@@ -90,6 +92,11 @@ object Config:
 
   case class LiftDefns() // there may be other settings in the future, having it as a case class now
   
+  case class Deforest(val debug: Boolean)
+
+  object Deforest:
+    val default = Deforest(true)
+
 end Config
 
 

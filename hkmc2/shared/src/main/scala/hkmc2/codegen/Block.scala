@@ -479,7 +479,9 @@ final case class FunDefn(
   val asPath = Value.Ref(sym, S(dSym))
 object FunDefn:
   def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(forceTailRec: Bool)(using State) =
-    FunDefn(owner, sym, TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme)), params, body)(forceTailRec)
+    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
+    sym.tsym = S(tSym)
+    FunDefn(owner, sym, tSym, params, body)(forceTailRec)
 
 final case class ValDefn(
     tsym: TermSymbol,
