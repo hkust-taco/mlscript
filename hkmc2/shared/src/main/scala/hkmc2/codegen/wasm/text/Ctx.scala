@@ -8,12 +8,14 @@ import hkmc2.utils.*
 
 import document.*
 import document.Document
-import semantics.*, Elaborator.State
+import semantics.{BlockMemberSymbol, Elaborator, LabelSymbol, ModuleOrObjectSymbol, Symbol, TempSymbol},
+  Elaborator.State
 import text.Param as WasmParam
 import Instructions.*
 
-import scala.annotation.nowarn
+import scala.annotation.{nowarn, targetName}
 import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
+import scala.reflect.ClassTag
 
 /** A Wasm function and its associated information.
   *
@@ -241,11 +243,8 @@ class Ctx extends ToWat:
   /** [[MutMap]] containing type symbols mapped to their corresponding Wasm type indices. */
   private val namedTypes = MutMap.empty[BlockMemberSymbol, Int]
 
-  /** [[ArrayBuf]] containing all memory imports in the module. */
-  private val memoryImports = ArrayBuf.empty[MemoryImport]
-
-  /** [[ArrayBuf]] containing all function imports in the module. */
-  private val functionImports = ArrayBuf.empty[FuncImport]
+  /** [[ArrayBuf]] containing all imports in the module. */
+  private val imports = ArrayBuf.empty[Import[?]]
 
   /** [[ArrayBuf]] containing all data segments in the module. */
   private val dataSegments = ArrayBuf.empty[DataSegment]
@@ -257,7 +256,11 @@ class Ctx extends ToWat:
   /** [[ArrayBuf]] containing all global definitions in the module. */
   private val globals = ArrayBuf.empty[GlobalInfo]
 
-  /** [[MutMap]] containing function symbols mapped to their corresponding Wasm function indices. */
+  /** [[MutMap]] containing function symbols mapped to the index of the corresponding [[FuncInfo]] in the `funcs` or
+    * `imports` field.
+    *
+    * Note that for import functions, the index is bitwise-negated to distinguish them from defined functions.
+    */
   private val namedFuncs = MutMap.empty[Symbol, Int]
   private val tags = ArrayBuf.empty[TagInfo]
 
@@ -351,30 +354,50 @@ class Ctx extends ToWat:
 
   /** Adds a function into this context. */
   def addFunc(sym: Opt[Symbol], funcInfo: FuncInfo): FuncIdx =
-    val numIdx = functionImports.size + funcs.size
+    val numIdx = filterImportsByType[ExternType.Func].size + funcs.size
     funcs += funcInfo
     funcInfosByIndex(numIdx) = funcInfo
     sym.foreach:
       namedFuncs(_) = numIdx
     FuncIdx(funcInfo.id)
 
+  /** Filters all imports by a given [[ExternType]]. */
+  private def filterImportsByType[ET <: ExternType](implicit ct: ClassTag[ET]): Seq[Import[ET]] = imports.collect:
+    case i if ct.runtimeClass.isInstance(i.externType) => i.asInstanceOf[Import[ET]]
+  .toSeq
+
+  @deprecated("Use the `Import[ExternType.Func]` overload instead.")
+  def addFunctionImport(sym: Opt[Symbol], funcImport: FuncImport): FuncIdx =
+    addFunctionImport(
+      sym,
+      Import(funcImport.module, funcImport.name, ExternType.Func(funcImport.id, funcImport.typeIdx)),
+    )
+
   /** Adds a function import into this context.
     *
     * Returns the function index in the global function index space.
     */
-  def addFunctionImport(sym: Opt[Symbol], funcImport: FuncImport): FuncIdx =
-    val numIdx = functionImports.size + funcs.size
-    functionImports += funcImport
+  def addFunctionImport(sym: Opt[Symbol], funcImport: Import[ExternType.Func]): FuncIdx =
+    val numIdx = filterImportsByType[ExternType.Func].size
+    imports += funcImport
     sym.foreach:
-      namedFuncs(_) = numIdx
-    FuncIdx(funcImport.id)
+      namedFuncs(_) = ~numIdx
+    FuncIdx(funcImport.externType.id)
+
+  @deprecated("Use the `Import[ExternType.Func]` overload instead.")
+  @targetName("getOrCreateFuncImport")
+  def getOrCreateFunctionImport(
+      module: Str,
+      name: Str,
+  )(createImport: => FuncImport): FuncIdx =
+    cachedFunctionImports.getOrElseUpdate((module, name), addFunctionImport(N, createImport))
 
   /** Returns the cached function import for (`module`, `name`), creating it with `createImport` if needed.
     */
   def getOrCreateFunctionImport(
       module: Str,
       name: Str,
-  )(createImport: => FuncImport): FuncIdx =
+  )(createImport: => Import[ExternType.Func]): FuncIdx =
     cachedFunctionImports.getOrElseUpdate((module, name), addFunctionImport(N, createImport))
 
   /** Adds or updates a memory import. If the import already exists, its minimum pages are increased to at least
@@ -384,23 +407,30 @@ class Ctx extends ToWat:
     val key = module -> name
     cachedMemoryImport.get(key) match
       case S(idx) =>
-        val existing = memoryImports(idx)
-        val newMin = existing.minPages max minPages
-        if newMin =/= existing.minPages then
-          memoryImports(idx) = existing.copy(minPages = newMin)
+        val existing = filterImportsByType[ExternType.Mem].apply(idx)
+        val newMin = existing.externType.memType.lim.min max minPages
+        if newMin > existing.externType.memType.lim.min then
+          imports.update(
+            idx,
+            Import(
+              module,
+              name,
+              ExternType.Mem(SymIdx(name), MemType(existing.externType.memType.lim.copy(min = minPages))),
+            ),
+          )
       case N =>
-        val idx = memoryImports.size
-        memoryImports += MemoryImport(module, name, SymIdx(name), minPages)
+        val idx = filterImportsByType[ExternType.Mem].size
+        imports += Import(module, name, ExternType.Mem(SymIdx(name), MemType(Limits(minPages))))
         cachedMemoryImport(key) = idx
 
   /** Returns the minimum page requirement of memory import (`module`, `name`) if present. */
-  @deprecated("Use `getMemoryImport` instead to get the full `MemoryImport` information.")
+  @deprecated("Use `getMemoryImport` instead to get the full memory import information.")
   def getMemoryImportMinPages(module: Str, name: Str): Opt[Int] =
-    memoryImports.find(m => m.module === module && m.name === name).map(_.minPages)
+    getMemoryImport(module, name).map(_.memType.lim.min)
 
   /** Returns the memory import information for the given (`module`, `name`) tuple if present. */
-  def getMemoryImport(module: Str, name: Str): Opt[MemoryImport] =
-    memoryImports.find(m => m.module === module && m.name === name)
+  def getMemoryImport(module: Str, name: Str): Opt[ExternType.Mem] =
+    filterImportsByType[ExternType.Mem].find(m => m.module === module && m.name === name).map(_.externType)
 
   /** Adds a data segment into this context. */
   def addDataSegment(seg: DataSegment): Unit =
@@ -425,7 +455,13 @@ class Ctx extends ToWat:
     */
   def getFunc(funcref: FuncIdx | Symbol): Opt[FuncIdx] = funcref match
     case funcidx: FuncIdx => S(funcidx)
-    case sym: Symbol => getFuncInfo(funcref).map(fi => FuncIdx(fi.id))
+    case sym: Symbol => namedFuncs.unapply(sym).map: numIdx =>
+      FuncIdx(
+        if numIdx < 0 then
+          filterImportsByType[ExternType.Func].apply(~numIdx).externType.id
+        else
+          funcs(numIdx).id,
+      )
 
   @deprecated("Use the overload without `resolveSymIdx` instead.")
   def getFunc_!(funcref: FuncIdx | Symbol, resolveSymIdx: Bool): FuncIdx =
@@ -440,14 +476,11 @@ class Ctx extends ToWat:
   /** Returns the [[FuncInfo]] instance associated with the given `funcref`. */
   @nowarn("cat=deprecation")
   def getFuncInfo(funcref: FuncIdx | Symbol): Opt[FuncInfo] = funcref match
-    case FuncIdx(NumIdx(idx)) =>
-      funcInfosByIndex.get(idx).orElse:
-        val localIdx = idx.toInt - functionImports.size
-        if localIdx < 0 then N else funcs.unapply(localIdx)
+    case FuncIdx(NumIdx(idx)) => funcs.unapply(idx)
     case FuncIdx(SymIdx(nme)) =>
       // TODO(Derppening): Consider adding a `Map[SymIdx, FuncInfo]` for faster lookup
       funcs.find(_.id.id == nme)
-    case funcref: Symbol => namedFuncs.get(funcref).map(idx => funcs(idx))
+    case funcref: Symbol => namedFuncs.get(funcref).flatMap(idx => funcs.unapply(idx))
 
   /** Same as [[getFuncInfo]] but throws an exception when the `funcref` is not found. */
   def getFuncInfo_!(funcref: FuncIdx | Symbol): FuncInfo =
@@ -555,8 +588,7 @@ class Ctx extends ToWat:
     doc"(module #{  # ${
         (
           types.toSeq.map(_.toWat)
-            ++ memoryImports.toSeq.map(_.toWat)
-            ++ functionImports.toSeq.map(_.toWat)
+            ++ imports.toSeq.map(_.toWat)
             ++ dataSegments.toSeq.map(_.toWat)
             ++ globals.toSeq.map(_.toWat)
             ++ tags.toSeq.map(_.toWat)
