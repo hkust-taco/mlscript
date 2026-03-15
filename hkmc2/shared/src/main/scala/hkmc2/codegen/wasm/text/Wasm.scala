@@ -114,7 +114,7 @@ case class FunctionType(sigType: SignatureType) extends ToWat:
     doc"(func${sigType.toWat.surroundUnlessEmpty(doc" ")})"
 
 /** A type representing a struct field. */
-case class Field(ty: Type, mutable: Bool, id: SymIdx) extends ToWat:
+case class Field(ty: ValType, mutable: Bool, id: SymIdx) extends ToWat:
   def toWat: Document =
     doc"(field ${id.toWat} ${
         if mutable then doc"(mut ${ty.toWat})" else ty.toWat
@@ -141,7 +141,7 @@ case class StructType(
         } $structWat)"
 
 /** A type representing an array type. */
-case class ArrayType(elemType: Type, mutable: Bool) extends ToWat:
+case class ArrayType(elemType: ValType, mutable: Bool) extends ToWat:
   def toWat: Document =
     val elemDoc = if mutable then doc"(mut ${elemType.toWat})" else elemType.toWat
     doc"(array ${elemDoc})"
@@ -161,6 +161,12 @@ type AbsHeapType =
     | HeapType.NoExt.type
     | HeapType.NoFunc.type
 type HeapType = AbsHeapType | TypeIdx
+
+case class TypeUse(typeIdx: TypeIdx) extends ToWat:
+  def toWat: Document = doc"(type ${typeIdx.toWat})"
+
+given Conversion[TypeIdx, TypeUse] with
+  def apply(typeIdx: TypeIdx): TypeUse = TypeUse(typeIdx)
 
 sealed abstract class Index extends ToWat
 
@@ -229,8 +235,8 @@ object ExternType:
     def toWat: Document = doc"""(memory ${id.toWat} ${memType.toWat})"""
 
   /** An function entry that is externally addressable. */
-  case class Func(id: SymIdx, typeIdx: TypeIdx) extends ExternType:
-    def toWat: Document = doc"""(func ${id.toWat} (type ${typeIdx.toWat}))"""
+  case class Func(id: SymIdx, typeUse: TypeUse) extends ExternType:
+    def toWat: Document = doc"""(func ${id.toWat} ${typeUse.toWat})"""
 
 sealed abstract class ExternType extends ToWat
 
@@ -246,6 +252,13 @@ case class FuncImport(module: Str, name: Str, id: SymIdx, typeIdx: TypeIdx) exte
   def toWat: Document =
     doc"""(import "$module" "$name" (func ${id.toWat} (type ${typeIdx.toWat})))"""
 
+/** A memory use entry. */
+case class MemUse(memidx: MemIdx) extends ToWat:
+  def toWat: Document = doc"(memory ${memidx.toWat})"
+
+given Conversion[MemIdx, MemUse] with
+  def apply(memidx: MemIdx): MemUse = MemUse(memidx)
+
 object DataSegment:
   object Passive:
     def apply(id: SymIdx, bytes: Str): Passive = new Passive(id, Seq(bytes))
@@ -254,12 +267,12 @@ object DataSegment:
       doc"(data ${id.toWat}${bytes.map(s => s"\"$s\"").mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
 
   object Active:
-    def apply(id: SymIdx, offset: Expr, bytes: Str, memuse: Opt[MemIdx]): Active =
+    def apply(id: SymIdx, offset: Expr, bytes: Str, memuse: Opt[MemUse]): Active =
       new Active(id, offset, Seq(bytes), memuse)
-  case class Active(id: SymIdx, offset: Expr, bytes: Seq[Str], memuse: Opt[MemIdx]) extends DataSegment(id, bytes):
+  case class Active(id: SymIdx, offset: Expr, bytes: Seq[Str], memuse: Opt[MemUse]) extends DataSegment(id, bytes):
     def toWat: Document =
       doc"(data ${id.toWat}${
-          memuse.fold(doc"")(memuse => doc" (memory ${memuse.toWat})")
+          memuse.fold(doc"")(memuse => doc" ${memuse.toWat}")
         } ${offset.toWat}${
           bytes.map(s => s"\"$s\"").mkDocument(doc" ").surroundUnlessEmpty(doc" ")
         })"

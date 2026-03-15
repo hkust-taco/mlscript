@@ -199,7 +199,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       "mlx_exn",
       ctx.addTag(TagInfo(
         id = SymIdx("mlx_exn"),
-        typeIdx = ctx.addType(
+        typeUse = ctx.addType(
           sym = N,
           TypeInfo(
             id = SymIdx(symNme),
@@ -264,7 +264,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         name = ExternIntrinsics.StringFromUtf16ImportName,
         externType = ExternType.Func(
           id = SymIdx(ExternIntrinsics.StringFromUtf16ImportName),
-          typeIdx = importTy,
+          typeUse = importTy,
         ),
       )
   end getOrLoadStrCtorFunction
@@ -548,7 +548,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         case S(info) => singletonGlobalGet(info)
         case N =>
           ctx.getFunc(l) match
-            case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncInfo_!(l).typeIdx, nullable = false))
+            case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncInfo_!(l).typeUse.typeIdx, nullable = false))
             case N => getVar(l, r.toLoc)
 
     case Call(Value.Ref(l: BuiltinSymbol, _), lhs :: rhs :: Nil) if !l.functionLike =>
@@ -593,7 +593,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       fun.toLoc),
                     extraInfo = S(fun.toString),
                   )
-              val baseTypeInfo = ctx.getTypeInfo_!(ctx.getFuncInfo_!(baseFuncIdx).typeIdx)
+              val baseTypeInfo = ctx.getTypeInfo_!(ctx.getFuncInfo_!(baseFuncIdx).typeUse.typeIdx)
               val wasmArgs = args.map(argument)
 
               call(
@@ -815,7 +815,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     )
     val funcInfo = FuncInfo(
       id = SymIdx(scope.allocateName(TempSymbol(N, name))),
-      typeIdx = funcTy,
+      typeUse = funcTy,
       params = params,
       nResults = 1,
       locals = Seq.empty,
@@ -1057,7 +1057,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       val funcInfo =
                         FuncInfo(
                           sym,
-                          typeIdx = funcTy,
+                          typeUse = funcTy,
                           params = ps.params.zip(params.map(_._2)).map((p, nme) => p.sym -> nme),
                           nResults = bodyWat.resultTypes.length,
                           locals = locals,
@@ -1176,7 +1176,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       FuncInfo(
                         id =
                           SymIdx(ctorId.getOrElse(scope.allocateName(TempSymbol(N, s"${clsLikeDefn.sym.nme}_ctor")))),
-                        typeIdx = funcTy,
+                        typeUse = funcTy,
                         params = ctorParams,
                         nResults = ctorCode.resultTypes.length,
                         locals = ctorLocals,
@@ -1557,7 +1557,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     )
     val entryFnInfo = FuncInfo(
       id = SymIdx(entryNme),
-      typeIdx = entryFnTy,
+      typeUse = entryFnTy,
       params = Seq.empty,
       nResults = 1,
       // TODO(Derppening): Should we place top-level scope variables in the global section?
@@ -1596,7 +1596,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         sym = N,
         FuncInfo(
           id = SymIdx(scope.allocateName(TempSymbol(N, "start"))),
-          typeIdx = initTy,
+          typeUse = initTy,
           params = Seq.empty,
           nResults = 0,
           locals = Seq.empty,

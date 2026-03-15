@@ -23,8 +23,8 @@ import scala.reflect.ClassTag
   *
   * @param id
   *   Symbolic identifier for the function, or `N` if the function is anonymous.
-  * @param typeIdx
-  *   Index of the function's type in the module's type section.
+  * @param typeUse
+  *   [[TypeUse]] of the function's type in the module's type section.
   * @param params
   *   [[Seq]] of parameter local variables and their names.
   * @param nResults
@@ -38,7 +38,7 @@ import scala.reflect.ClassTag
   */
 class FuncInfo(
     val id: SymIdx,
-    val typeIdx: TypeIdx,
+    val typeUse: TypeUse,
     params: Seq[Local -> Str],
     nResults: Int,
     locals: Seq[Local -> Str],
@@ -61,14 +61,14 @@ class FuncInfo(
     */
   def this(
       sym: BlockMemberSymbol,
-      typeIdx: TypeIdx,
+      typeUse: TypeUse,
       params: Seq[Local -> Str],
       nResults: Int,
       locals: Seq[Local -> Str],
       body: Expr,
   )(using Raise, Scope) = this(
     SymIdx(sym.optionIf(_.nameIsMeaningful).fold(summon[Scope].allocateName(sym))(_.nme)),
-    typeIdx,
+    typeUse,
     params,
     nResults,
     locals,
@@ -76,10 +76,9 @@ class FuncInfo(
     sym.optionIf(_.nameIsMeaningful).map(_.nme),
   )
 
-  @deprecated("Consider providing a symbolic identifier by using `Scope.allocateName` with a `TempSymbol`.")
   def this(
       id: Opt[SymIdx],
-      typeIdx: TypeIdx,
+      typeUse: TypeUse,
       params: Seq[Local -> Str],
       nResults: Int,
       locals: Seq[Local -> Str],
@@ -87,7 +86,7 @@ class FuncInfo(
       `export`: Opt[Str],
   )(using Raise, Scope, State) = this(
     id.getOrElse(SymIdx(summon[Scope].allocateName(TempSymbol(N, "")))),
-    typeIdx,
+    typeUse,
     params,
     nResults,
     locals,
@@ -102,7 +101,7 @@ class FuncInfo(
   )
 
   def toWat: Document =
-    doc"""(func ${id.toWat} (type ${typeIdx.toWat})${
+    doc"""(func ${id.toWat} ${typeUse.toWat}${
         getSignatureType.toWat.surroundUnlessEmpty(doc" ")
       } #{ ${
         locals.map: p =>
@@ -173,10 +172,10 @@ class TypeInfo(val id: SymIdx, val compType: CompType, val objectTag: Opt[Int]) 
   * In Wasm, a `tag` names an exception kind and points to a function type that describes the payload values carried by
   * `throw tag ...` and extracted by matching `catch tag ...`.
   */
-class TagInfo(val id: SymIdx, val typeIdx: TypeIdx) extends ToWat:
+class TagInfo(val id: SymIdx, val typeUse: TypeUse) extends ToWat:
 
   def toWat: Document =
-    doc"""(tag ${id.toWat} (type ${typeIdx.toWat})) # (export "${id.id}" (tag ${id.toWat}))"""
+    doc"""(tag ${id.toWat} ${typeUse.toWat}) # (export "${id.id}" (tag ${id.toWat}))"""
 end TagInfo
 
 enum WasmIntrinsicType:
