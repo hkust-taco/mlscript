@@ -152,7 +152,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
         val classFields = (defn.publicFields.map(_._2) ++ defn.privateFields)
           .map: f =>
-            f -> Field(RefType.anyref, mutable = true, id = SymIdx(f.nme))
+            f -> Field(RefType.anyref, mutable = true, id = f.nme)
 
         val allFields = inheritedFields ++ classFields
 
@@ -1528,7 +1528,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       sym = S(baseObjectSym),
       TypeInfo(
         id = SymIdx("Object"),
-        StructType(Seq(tagFieldSym -> Field(I32Type, mutable = true, id = SymIdx("$tag")))),
+        StructType(Seq(tagFieldSym -> Field(I32Type, mutable = true, id = "$tag"))),
         objectTag = S(ctx.getFreshObjectTag() ensuring (_ == 0)),
       ),
     )

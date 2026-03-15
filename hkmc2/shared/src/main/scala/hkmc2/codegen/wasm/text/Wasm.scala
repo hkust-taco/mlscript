@@ -114,9 +114,9 @@ case class FunctionType(sigType: SignatureType) extends ToWat:
     doc"(func${sigType.toWat.surroundUnlessEmpty(doc" ")})"
 
 /** A type representing a struct field. */
-case class Field(ty: ValType, mutable: Bool, id: SymIdx) extends ToWat:
+case class Field(ty: ValType, mutable: Bool, id: Str) extends ToWat:
   def toWat: Document =
-    doc"(field ${id.toWat} ${
+    doc"(field $$$id ${
         if mutable then doc"(mut ${ty.toWat})" else ty.toWat
       })"
 
@@ -177,9 +177,15 @@ sealed abstract class Index extends ToWat
 case class NumIdx(val index: Int) extends Index:
   def toWat: Document = doc"${index.toString}"
 
+given Conversion[Int, NumIdx] with
+  def apply(index: Int): NumIdx = NumIdx(index)
+
 /** A symbolic identifier. */
 case class SymIdx(val id: Str) extends Index:
   def toWat: Document = doc"$$$id"
+
+given Conversion[Str, SymIdx] with
+  def apply(id: Str): SymIdx = SymIdx(id)
 
 /** An index that is bound to an index space. */
 sealed abstract class CtxIdx(idx: Index) extends ToWat:
