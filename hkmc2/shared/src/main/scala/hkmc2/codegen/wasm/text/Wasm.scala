@@ -123,13 +123,21 @@ case class Field(ty: Type, mutable: Bool, id: SymIdx) extends ToWat:
 case class StructType(
     fields: Seq[DefinitionSymbol[?] -> Field],
     parents: Seq[TypeIdx] = Seq.empty,
-    isSubtype: Bool = false,
+    isFinal: Bool = false,
 ) extends ToWat:
 
   lazy val fieldsBySym: Map[DefinitionSymbol[?], Field] = fields.toMap
 
   def toWat: Document =
-    doc"(struct${fields.map(_._2.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
+    val structWat = doc"(struct${fields.map(_._2.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
+    if parents.isEmpty && isFinal then
+      structWat
+    else
+      doc"(sub${
+          if isFinal then doc" final" else doc""
+        }${
+          parents.map(_.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")
+        } $structWat)"
 
 /** A type representing an array type. */
 case class ArrayType(elemType: Type, mutable: Bool) extends ToWat:

@@ -161,7 +161,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           sym = S(defn.sym),
           typeInfo = TypeInfo(
             sym = defn.sym,
-            compType = StructType(fields = allFields, parents = Seq(baseObjectTypeIdx), isSubtype = true),
+            compType = StructType(fields = allFields, parents = Seq(baseObjectTypeIdx)),
             objectTag = S(ctx.getFreshObjectTag()),
           ),
         )
@@ -1528,10 +1528,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       sym = S(baseObjectSym),
       TypeInfo(
         id = SymIdx("Object"),
-        StructType(
-          Seq(tagFieldSym -> Field(I32Type, mutable = true, id = SymIdx("$tag"))),
-          isSubtype = true,
-        ),
+        StructType(Seq(tagFieldSym -> Field(I32Type, mutable = true, id = SymIdx("$tag")))),
         objectTag = S(ctx.getFreshObjectTag() ensuring (_ == 0)),
       ),
     )

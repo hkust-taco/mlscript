@@ -166,15 +166,7 @@ class TypeInfo(val id: SymIdx, val compType: CompType, val objectTag: Opt[Int]) 
   def this(id: Opt[SymIdx], compType: CompType)(using Raise, Scope, State) =
     this(id.getOrElse(SymIdx(summon[Scope].allocateName(TempSymbol(N, "")))), compType, N)
 
-  def toWat: Document = compType match
-    case struct: StructType if struct.isSubtype =>
-      val parentsDoc = struct.parents.optionIf(_.nonEmpty).fold(doc""): parents =>
-        parents.map(_.toWat).mkDocument(doc" ")
-      val structDoc = struct.copy(isSubtype = false).toWat
-      doc"(type ${id.toWat} (sub${parentsDoc.surroundUnlessEmpty(doc" ")} ${structDoc}))"
-    case _ =>
-      doc"(type ${id.toWat} ${compType.toWat})"
-end TypeInfo
+  def toWat: Document = doc"(type ${id.toWat} ${compType.toWat})"
 
 /** A WebAssembly exception tag declaration.
   *
@@ -456,12 +448,12 @@ class Ctx extends ToWat:
   def getFunc(funcref: FuncIdx | Symbol): Opt[FuncIdx] = funcref match
     case funcidx: FuncIdx => S(funcidx)
     case sym: Symbol => namedFuncs.unapply(sym).map: numIdx =>
-      FuncIdx(
-        if numIdx < 0 then
-          filterImportsByType[ExternType.Func].apply(~numIdx).externType.id
-        else
-          funcs(numIdx).id,
-      )
+        FuncIdx(
+          if numIdx < 0 then
+            filterImportsByType[ExternType.Func].apply(~numIdx).externType.id
+          else
+            funcs(numIdx).id,
+        )
 
   @deprecated("Use the overload without `resolveSymIdx` instead.")
   def getFunc_!(funcref: FuncIdx | Symbol, resolveSymIdx: Bool): FuncIdx =
