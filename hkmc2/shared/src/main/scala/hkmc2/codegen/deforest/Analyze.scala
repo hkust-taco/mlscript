@@ -355,22 +355,19 @@ class DeforestPreAnalyzer(
         privateFields, publicFields, preCtor, ctor, mod, bufferable)
     =>
       if ctxTracker.canHaveCls then
-        if locally:
-          ctorSym.isDefined
-          || paramsOpt.isDefined
-          || auxParams.nonEmpty
-          || parentPath.isDefined
-          || methods.nonEmpty
-          || privateFields.nonEmpty
-          || publicFields.nonEmpty
-          || !preCtor.matches:
+        if ctorSym.isEmpty
+          && paramsOpt.isEmpty
+          && auxParams.isEmpty
+          && parentPath.isEmpty
+          && methods.isEmpty
+          && privateFields.isEmpty
+          && publicFields.isEmpty
+          && preCtor.matches:
             case End("") => true
-          || !ctor.matches:
+          && ctor.matches {
             case Return(Select(Value.Ref(runtimeSym, None), Tree.Ident("Unit")), true) =>
-              runtimeSym is elabState.runtimeSymbol
-        then ()
-        else
-          mod.foreach(applyClsLikeBody)
+              runtimeSym is elabState.runtimeSymbol }
+        then mod.foreach(applyClsLikeBody)
       else
         ctxTracker.markAsNonHandleable()
   
@@ -409,7 +406,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   
   // ===================================================
   
-  locally {
+  locally:
     // generate strat vars needed
     val generatedProdVars: Map[Symbol, StratVarState] =
       // the keys could possibly be one of the following kinds:
@@ -664,7 +661,6 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
         case Value.Lit(lit) => NoProd
         case other => lastWords(other.toString())
       case _ => die
-  }
 end DeforestConstraintsCollector
 
 
@@ -693,6 +689,7 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
   val finalDtorSrcs = LinkedHashMap.empty[CtorDtorId, Set[CtorDtorId]]
   val fusingCtorInfo = MutMap.empty[CtorDtorId, ConcreteProducer]
   val fusingDtorInfo = MutMap.empty[CtorDtorId, ConcreteConsumer]
+  
   // propagate
   locally {
     val upperBounds = MutMap.empty[StratVarId, Ls[ConsStrat]].withDefaultValue(Nil)

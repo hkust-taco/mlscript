@@ -207,15 +207,15 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
     class FreeVarTraverser(ctx: collection.Set[Symbol], instId: InstantiationId) extends BlockTraverser:
       extension (resId: ResultId) def toCtorDtorId = CtorDtorId(resId, instId)
       val inCtx = MutSet.from[Symbol]:
-        pre.b match
-          case Scoped(syms, body) =>
-            ctx
-            ++ newPolyFnSyms.values.flatMap(_.values.unzip._1)
-            ++ branchFunSyms.values.unzip._1
-            ++ eState.builtinOpsMap.values
-            ++ (eState.globalThisSymbol :: eState.runtimeSymbol :: eState.noSymbol :: Nil)
-            ++ syms
-          case _ => die
+        ctx
+        ++ newPolyFnSyms.values.flatMap(_.values.unzip._1)
+        ++ branchFunSyms.values.unzip._1
+        ++ eState.builtinOpsMap.values
+        ++ (eState.globalThisSymbol :: eState.runtimeSymbol :: eState.noSymbol :: Nil)
+        ++ locally:
+          pre.b match
+          case Scoped(syms, _) => syms
+          case _ => Nil
       val freeVars = MutSet.empty[Symbol]
       
       override def applyValue(v: Value): Unit =
@@ -266,7 +266,12 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
           for p <- fDef.params.flatMap(_.allParams) do inCtx.add(p.sym)
           applyBlock(fDef.body)
           for p <- fDef.params.flatMap(_.allParams) do inCtx.remove(p.sym)
-        case _: ClsLikeDefn => die
+        case cDef: ClsLikeDefn =>
+          inCtx.add(cDef.sym)
+          val ps = (cDef.auxParams ++ cDef.paramsOpt).flatMap(_.params).map(_.sym)
+          for p <- ps do inCtx.add(p)
+          super.applyDefn(cDef)
+          for p <- ps do inCtx.remove(p)
         case vDef: ValDefn =>
           inCtx.add(vDef.sym)
           super.applyDefn(defn)
@@ -356,7 +361,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
               case (Arg(N, a) -> s, rest) =>
                 applyPath(a): fusedField =>
                   Scoped(Set.single(s), Assign(s, fusedField, rest))
-              case _ => die
+              case _ => TODO("spread args are not supported")
           case Some(_: FinalDestMatch) =>
             val fieldSyms = mkCtorFieldSyms(ctor.uid.toCtorDtorId)
             val (branchBms, branchTermSym) = branchFunSyms(ctorWhichBranch(ctor.uid.toCtorDtorId))
@@ -369,7 +374,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
               case (Arg(N, a) -> fieldSym, rest) =>
                 applyPath(a): fusedField =>
                   Scoped(Set.single(fieldSym), Assign(fieldSym, fusedField, rest))
-              case _ => die
+              case _ => TODO("spread args are not supported")
         case _ => super.applyResult(r)(k)
       
       override def applyPath(p: Path)(k: Path => Block): Block =
@@ -459,7 +464,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
           val newRest = applyBlock(rest)
           Label(newLabel, loop, newBody, newRest)
         case Break(label) => Break(mapping.getOrElse(label, label).asInstanceOf[LabelSymbol])
-        case Continue(label) => die
+        case Continue(label) => TODO("unsupported `continue` instruction during rewriting")
         case _ => super.applyBlock(b)
       
       override def applyDefn(defn: Defn)(k: Defn => Block): Block =
@@ -493,7 +498,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
                     mapping(sym) = newSym
                     Param(flags, newSym, sign, modulefulness),
                 N)
-            case _ => die
+            case _ => TODO("rest params are not supported")
           val body2 = applyFunBodyLikeBlock(fun.body)
           for s <- oldParamSyms do mapping.remove(s)
           if newlyCreated then
