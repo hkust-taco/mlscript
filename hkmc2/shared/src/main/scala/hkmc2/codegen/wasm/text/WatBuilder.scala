@@ -1568,9 +1568,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     ctx.popLocal()
     if stringLits.nonEmpty then
-      stringLits.valuesIterator.foreach: lit =>
+      stringLits.foreach: (s, lit) =>
         if lit.byteLen > 0 then
-          ctx.addDataSegment(DataSegment(i32.const(lit.offset), lit.watBytes))
+          ctx.addDataSegment(DataSegment.Active(
+            id = SymIdx(scope.allocateName(TempSymbol(N, s))),
+            offset = i32.const(lit.offset),
+            bytes = lit.watBytes,
+            memuse = N,
+          ))
 
     val singletonInitActions = ctx.getSingletonInitActions
     if singletonInitActions.nonEmpty then

@@ -5,7 +5,8 @@ package text
 import mlscript.utils.*, shorthands.*
 
 import document.*
-import semantics.DefinitionSymbol
+import semantics.{DefinitionSymbol, Elaborator, TempSymbol}, Elaborator.State
+import utils.Scope
 
 import scala.collection.Map
 
@@ -184,6 +185,9 @@ case class TypeIdx(idx: Index) extends CtxIdx(idx)
 /** An index bound to the ''global'' index space. */
 case class GlobalIdx(idx: Index) extends CtxIdx(idx)
 
+/** An index bound to the ''memory'' index space. */
+case class MemIdx(idx: Index) extends CtxIdx(idx)
+
 /** An index bound to the ''funcs'' index space. */
 case class FuncIdx(idx: Index) extends CtxIdx(idx)
 
@@ -242,10 +246,30 @@ case class FuncImport(module: Str, name: Str, id: SymIdx, typeIdx: TypeIdx) exte
   def toWat: Document =
     doc"""(import "$module" "$name" (func ${id.toWat} (type ${typeIdx.toWat})))"""
 
+object DataSegment:
+  object Passive:
+    def apply(id: SymIdx, bytes: Str): Passive = new Passive(id, Seq(bytes))
+  case class Passive(id: SymIdx, bytes: Seq[Str]) extends DataSegment(id, bytes):
+    def toWat: Document =
+      doc"(data ${id.toWat}${bytes.map(s => s"\"$s\"").mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
+
+  object Active:
+    def apply(id: SymIdx, offset: Expr, bytes: Str, memuse: Opt[MemIdx]): Active =
+      new Active(id, offset, Seq(bytes), memuse)
+  case class Active(id: SymIdx, offset: Expr, bytes: Seq[Str], memuse: Opt[MemIdx]) extends DataSegment(id, bytes):
+    def toWat: Document =
+      doc"(data ${id.toWat}${
+          memuse.fold(doc"")(memuse => doc" (memory ${memuse.toWat})")
+        } ${offset.toWat}${
+          bytes.map(s => s"\"$s\"").mkDocument(doc" ").surroundUnlessEmpty(doc" ")
+        })"
+
+  def apply(offsetExpr: Expr, bytes: Str)(using Raise, Scope, State): Active =
+    new Active(SymIdx(summon[Scope].allocateName(TempSymbol(N, ""))), offsetExpr, Seq(bytes), N)
+end DataSegment
+
 /** A data segment entry. */
-case class DataSegment(offsetExpr: Expr, bytes: Str) extends ToWat:
-  def toWat: Document =
-    doc"""(data ${offsetExpr.toWat} "$bytes")"""
+sealed abstract class DataSegment(id: SymIdx, bytes: Seq[Str]) extends ToWat
 
 /** An abstraction over a generic WebAssembly instructions.
   */

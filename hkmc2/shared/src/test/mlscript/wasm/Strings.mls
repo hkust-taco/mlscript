@@ -23,7 +23,7 @@ let dup2 = "dup"
 //│   (type $entry1 (func (result (ref null any))))
 //│   (import "system" "mem" (memory $mem 1))
 //│   (import "system" "mlx_str_from_utf16" (func $mlx_str_from_utf16 (type $mlx_str_from_utf16)))
-//│   (data (i32.const 0) "\64\00\75\00\70\00")
+//│   (data $dup (i32.const 0) "\64\00\75\00\70\00")
 //│   (func $entry (type $entry1) (result (ref null any))
 //│     (local $dup1 (ref null any))
 //│     (local $dup2 (ref null any))
