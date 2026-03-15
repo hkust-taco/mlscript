@@ -141,10 +141,8 @@ case class StructType(
 
 /** A type representing an array type. */
 case class ArrayType(elemType: Type, mutable: Bool) extends ToWat:
-  private def elemDoc: Document =
-    if mutable then doc"(mut ${elemType.toWat})" else elemType.toWat
-
   def toWat: Document =
+    val elemDoc = if mutable then doc"(mut ${elemType.toWat})" else elemType.toWat
     doc"(array ${elemDoc})"
 
 /** A composite type. */
