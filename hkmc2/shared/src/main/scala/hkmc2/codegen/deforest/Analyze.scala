@@ -364,9 +364,10 @@ class DeforestPreAnalyzer(
           && publicFields.isEmpty
           && preCtor.matches:
             case End("") => true
-          && ctor.matches {
-            case Return(Select(Value.Ref(runtimeSym, None), Tree.Ident("Unit")), true) =>
-              runtimeSym is elabState.runtimeSymbol }
+          && ctor
+            .matches:
+              case Return(Select(Value.Ref(runtimeSym, None), Tree.Ident("Unit")), true) =>
+                runtimeSym is elabState.runtimeSymbol
         then mod.foreach(applyClsLikeBody)
       else
         ctxTracker.markAsNonHandleable()
@@ -406,7 +407,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   
   // ===================================================
   
-  locally:
+  locally {
     // generate strat vars needed
     val generatedProdVars: Map[Symbol, StratVarState] =
       // the keys could possibly be one of the following kinds:
@@ -661,6 +662,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
         case Value.Lit(lit) => NoProd
         case other => lastWords(other.toString())
       case _ => die
+  }
 end DeforestConstraintsCollector
 
 
