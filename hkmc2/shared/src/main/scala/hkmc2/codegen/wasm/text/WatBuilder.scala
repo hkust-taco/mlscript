@@ -326,6 +326,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     if expr.resultTypes.exists(_ is UnreachableType) then Seq.empty
     else expr.resultTypes.map(ty => Result(ty.asValType_!))
 
+  /** Normalizes the exported `entry` body so it always returns single result. */
+  private def normalizeEntryExpr(expr: Expr, isAbortive: Bool)(using Ctx, Raise, Scope): Expr =
+    if expr.resultTypes.isEmpty && !isAbortive then
+      blockInstr(
+        label = N,
+        children = Seq(expr, result(Value.Ref(State.unitSymbol))),
+        resultTypes = Seq(Result(RefType.anyref)),
+      )
+    else
+      expr
+
   /** Validates an IntLit value fits signed 32-bit and delegates codegen to `onValid`.
     */
   private def withValidIntLit(
@@ -1520,8 +1531,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     // Compile the entry function under a dedicated local scope so that any temp locals introduced
     // during codegen (e.g., via `local.tee`) are declared in the entry function.
     ctx.pushLocal()
-    val (entryFnExpr, entryFnLocals) =
+    val (rawEntryFnExpr, entryFnLocals) =
       block(p.main)
+    val entryFnExpr = normalizeEntryExpr(rawEntryFnExpr, p.main.isAbortive)
     val entryExtraLocals = getExtraLocals.filterNot(entryFnLocals.toSet.contains)
 
     val entrySym = BlockMemberSymbol("entry", Nil)
