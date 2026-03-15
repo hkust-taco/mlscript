@@ -96,7 +96,7 @@ class FuncInfo(
 
   /** Returns the type of this function as a [[SignatureType]]. */
   def getSignatureType: SignatureType = SignatureType(
-    params = params.map((_, varNme) => WasmParam(S(varNme), RefType.anyref)),
+    params = params.map((_, varNme) => WasmParam(varNme, RefType.anyref)),
     results = Seq.fill(nResults)(Result(RefType.anyref)),
   )
 

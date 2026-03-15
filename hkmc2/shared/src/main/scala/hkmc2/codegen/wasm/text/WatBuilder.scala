@@ -203,7 +203,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           sym = N,
           TypeInfo(
             id = SymIdx(symNme),
-            FunctionType(params = Seq(WasmParam(N, RefType.anyref)), results = Seq.empty),
+            FunctionType(params = Seq(WasmParam("ex", RefType.anyref)), results = Seq.empty),
             objectTag = S(ctx.getFreshObjectTag()),
           ),
         ),
@@ -253,7 +253,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         TypeInfo(
           id = SymIdx(importTyNme),
           FunctionType(
-            params = Seq(WasmParam(N, RefType.anyref), WasmParam(N, RefType.anyref)),
+            params = Seq(WasmParam("glob_offset", RefType.anyref), WasmParam("len", RefType.anyref)),
             results = Seq(Result(RefType.anyref)),
           ),
           objectTag = N,
@@ -807,7 +807,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       TypeInfo(
         id = SymIdx(scope.allocateName(TempSymbol(N, name))),
         FunctionType(
-          params = params.map((_, nme) => WasmParam(S(nme), RefType.anyref)),
+          params = params.map((_, nme) => WasmParam(nme, RefType.anyref)),
           results = Seq(Result(RefType.anyref)),
         ),
         objectTag = N,
@@ -1159,7 +1159,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       TypeInfo(
                         id = SymIdx(funcTyId),
                         FunctionType(
-                          params = ctorParams.map(p => WasmParam(S(p._2), RefType.anyref)),
+                          params = ctorParams.map(p => WasmParam(p._2, RefType.anyref)),
                           results = Seq(Result(RefType.anyref)),
                         ),
                         objectTag = N,
@@ -1658,7 +1658,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val result = scope.nest givenIn:
       val wasmParams = params.params.map: p =>
         val paramNme = scope.allocateName(p.sym)
-        val param = WasmParam(S(paramNme), RefType.anyref)
+        val param = WasmParam(paramNme, RefType.anyref)
         ctx.addLocal(p.sym)
         param -> paramNme
       val (wasmBody, locals) = block(body)

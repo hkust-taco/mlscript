@@ -89,9 +89,9 @@ end HeapType
 type ValType = NumType | VecType | RefType
 
 /** A Wasm parameter clause. Appears in function signatures. */
-case class Param(id: Opt[Str], valtype: ValType) extends ToWat:
+case class Param(id: Str, valtype: ValType) extends ToWat:
   def toWat: Document =
-    doc"(param${id.fold(doc"")(id => doc" $$$id")} ${valtype.toWat})"
+    doc"(param $$$id ${valtype.toWat})"
 
 /** A Wasm result clause. Appears in function signatures and some instructions. */
 case class Result(valtype: ValType) extends ToWat:
