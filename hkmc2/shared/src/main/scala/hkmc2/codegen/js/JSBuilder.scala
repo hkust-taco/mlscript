@@ -232,16 +232,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     @tailrec
     private def lastBlkAssign(b: Block): Opt[Assign] = b match
       case a @ Assign(lhs, rhs, End(_)) => S(a)
-      case Match(rest = rest) => lastBlkAssign(rest)
-      case Scoped(body = rest) => lastBlkAssign(rest)
-      case Label(rest = rest) => lastBlkAssign(rest)
-      case Begin(rest = rest) => lastBlkAssign(rest)
-      case TryBlock(rest = rest) => lastBlkAssign(rest)
-      case Assign(rest = rest) => lastBlkAssign(rest)
-      case AssignField(rest = rest) => lastBlkAssign(rest)
-      case AssignDynField(rest = rest) => lastBlkAssign(rest)
-      case Define(rest = rest) => lastBlkAssign(rest)
-      case HandleBlock(rest = rest) => lastBlkAssign(rest)
+      case b: NonBlockTail => lastBlkAssign(b.rest)
       case _: BlockTail => N
     
     @tailrec
@@ -254,12 +245,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       val scrutSym = scrut.map(_.l)
       b match
       case Match(
-        scrut_ @ Value.Ref(scrutSym_, _),                   // the scrutinee is ref
-        (Case.Lit(Tree.IntLit(curVal_)), b) :: Nil,         // there is only one case matching an int literal
-        S(End(_)), rest                                     // default case exists and does nothing
+        scrut_ @ Value.Ref(scrutSym_, _),                   // The scrutinee is a ref.
+        (Case.Lit(Tree.IntLit(curVal_)), b) :: Nil,         // There is only one case matching an int literal.
+        S(End(_)), rest                                     // Default case exists and does nothing.
       )
-        if scrutSym.map(_ === scrutSym_).getOrElse(true)    // the scrutinee is the same as the one before
-        && curVal.map(_ === curVal_).getOrElse(true)        // the matched int literal is one previously set
+        if scrutSym.map(_ === scrutSym_).getOrElse(true)    // The scrutinee is the same as the one before.
+        && curVal.map(_ === curVal_).getOrElse(true)        // The matched int literal is one previously set.
         =>
           lastBlkAssign(b) match
           // the one branch ends by assigning `nextInt` to `scrutSym`
