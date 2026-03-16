@@ -196,7 +196,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       if mut then inner else doc"$freeze(${inner})"
   
   /**
-    * Specializes the following, where ai are ints:
+    * Matches the following kind of if statement, where ai are ints:
     * 
     * ```
     * if scrut is a1 do
@@ -209,7 +209,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     *   bodyn
     * ```
     * 
-    * into a switch statement:
+    * The intention is that this can be compiled efficiently into a switch statement:
     * 
     * ```js
     * switch (scrut) {
