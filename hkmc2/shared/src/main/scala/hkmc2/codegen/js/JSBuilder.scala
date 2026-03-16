@@ -248,35 +248,33 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     private def unapplyImpl(
       b: Block, 
       acc: List[(BigInt, Block)],
-      scrutSym: Local,
-      curVal: BigInt
-    ): (List[(BigInt, Block)], Block) = b match
+      scrut: Opt[Value.Ref],
+      curVal: Opt[BigInt]
+    ): Opt[(Value.Ref, List[(BigInt, Block)], Block)] = 
+      val scrutSym = scrut.map(_.l)
+      b match
       case Match(
-        Value.Ref(`scrutSym`, _),                    // the scrutinee is ref to `scrutSym`
-        (Case.Lit(Tree.IntLit(`curVal`)), b) :: Nil, // there is only one case matching the previously set int literal
-        S(End(_)), rest)                             // default case exists and does nothing
-        => lastBlkAssign(b) match
+        scrut_ @ Value.Ref(scrutSym_, _),                   // the scrutinee is ref
+        (Case.Lit(Tree.IntLit(curVal_)), b) :: Nil,         // there is only one case matching an int literal
+        S(End(_)), rest                                     // default case exists and does nothing
+      )
+        if scrutSym.map(_ === scrutSym_).getOrElse(true)    // the scrutinee is the same as the one before
+        && curVal.map(_ === curVal_).getOrElse(true)        // the matched int literal is one previously set
+        =>
+          lastBlkAssign(b) match
           // the one branch ends by assigning `nextInt` to `scrutSym`
-          case S(Assign(`scrutSym`, Value.Lit(Tree.IntLit(nextInt)), _)) =>
-            unapplyImpl(rest, (curVal, b) :: acc, scrutSym, nextInt)
+          case S(Assign(`scrutSym_`, Value.Lit(Tree.IntLit(nextInt)), _)) =>
+            unapplyImpl(rest, (curVal_, b) :: acc, S(scrut_), S(nextInt))
           case _ =>
-            ((curVal, b) :: acc, rest)
-      case _ => (acc, b)
+            S((scrut_, (curVal_, b) :: acc, rest))
+      case _ => scrut match
+        case Some(value) => S((value, acc, b))
+        case None => N
     
-    def unapply(b: Block): Opt[(scrut: Value.Ref, cases: List[(BigInt, Block)], rest: Block)] = b match
-      case Match(
-        scrut @ Value.Ref(scrutSym, _),               // the scrutinee is a ref to scrutSym
-        (Case.Lit(Tree.IntLit(i)), b) :: Nil,         // there is only one case matching an int literal
-        S(End(_)), rest)                              // default case exists and does nothing
-        => lastBlkAssign(b) match
-          // the one branch ends by assigning `nextInt` to `scrutSym`
-          case S(Assign(`scrutSym`, Value.Lit(Tree.IntLit(nextInt)), _)) =>
-            // start searching for more match blocks that match on `scrutSym` and have
-            // one case that matches `nextInt`
-            val (cases, rest_) = unapplyImpl(rest, (i, b) :: Nil, scrutSym, nextInt)
-            if cases.length === 1 then N else S((scrut, cases, rest_))
-          case _ => N 
-      case _ => N
+    def unapply(b: Block): Opt[(scrut: Value.Ref, cases: List[(BigInt, Block)], rest: Block)] =
+      unapplyImpl(b, Nil, N, N) match
+        case Some(value) if value._2.length > 1 => S(value)
+        case _ => N
   
   def returningTerm(t: Block, endSemi: Bool)(using Raise, Scope): Document =
     def mkSemi = if endSemi then ";" else ""
