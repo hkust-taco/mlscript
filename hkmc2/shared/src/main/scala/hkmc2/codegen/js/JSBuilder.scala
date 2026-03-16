@@ -17,6 +17,7 @@ import Scope.scope
 import hkmc2.syntax.Tree.UnitLit
 import hkmc2.semantics.Elaborator.ctx
 import hkmc2.syntax.Tree.{IntLit, StrLit}
+import scala.annotation.tailrec
 
 
 // TODO factor some logic for other codegen backends
@@ -193,6 +194,87 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           case RcdArg(N, v) => doc"...${result(v)}"
         .mkDocument(doc", # ")
       if mut then inner else doc"$freeze(${inner})"
+  
+  /**
+    * Specializes the following, where ai are ints:
+    * 
+    * ```
+    * if scrut is a1 do
+    *   body1
+    *   set scrut = a2
+    * if scrut is a2 do
+    *   body2
+    *   set scrut = a3
+    * if scrut is an do
+    *   bodyn
+    * ```
+    * 
+    * into a switch statement:
+    * 
+    * ```js
+    * switch (scrut) {
+    *   case a1:
+    *     body1
+    *   case a2:
+    *     body2
+    *   ...
+    *   case an:
+    *     bodyn
+    * }
+    * ```
+    * Note that `scrut` is guaranteed to not change between `set scrut = ai` and `if scrut is ai`,
+    * because the JS event loop waits until the entire call stack is cleared before running any other
+    * code. Hence, this transformation is safe.
+    */
+  object IfIntChain:
+    @tailrec
+    private def lastBlkAssign(b: Block): Opt[Assign] = b match
+      case a @ Assign(lhs, rhs, End(_)) => S(a)
+      case Match(rest = rest) => lastBlkAssign(rest)
+      case Scoped(body = rest) => lastBlkAssign(rest)
+      case Label(rest = rest) => lastBlkAssign(rest)
+      case Begin(rest = rest) => lastBlkAssign(rest)
+      case TryBlock(rest = rest) => lastBlkAssign(rest)
+      case Assign(rest = rest) => lastBlkAssign(rest)
+      case AssignField(rest = rest) => lastBlkAssign(rest)
+      case AssignDynField(rest = rest) => lastBlkAssign(rest)
+      case Define(rest = rest) => lastBlkAssign(rest)
+      case HandleBlock(rest = rest) => lastBlkAssign(rest)
+      case _: BlockTail => N
+    
+    @tailrec
+    private def unapplyImpl(
+      b: Block, 
+      acc: List[(BigInt, Block)],
+      scrutSym: Local,
+      curVal: BigInt
+    ): (List[(BigInt, Block)], Block) = b match
+      case Match(
+        Value.Ref(`scrutSym`, _),                    // the scrutinee is ref to `scrutSym`
+        (Case.Lit(Tree.IntLit(`curVal`)), b) :: Nil, // there is only one case matching the previously set int literal
+        S(End(_)), rest)                             // default case exists and does nothing
+        => lastBlkAssign(b) match
+          // the one branch ends by assigning `nextInt` to `scrutSym`
+          case S(Assign(`scrutSym`, Value.Lit(Tree.IntLit(nextInt)), _)) =>
+            unapplyImpl(rest, (curVal, b) :: acc, scrutSym, nextInt)
+          case _ =>
+            ((curVal, b) :: acc, rest)
+      case _ => (acc, b)
+    
+    def unapply(b: Block): Opt[(scrut: Value.Ref, cases: List[(BigInt, Block)], rest: Block)] = b match
+      case Match(
+        scrut @ Value.Ref(scrutSym, _),               // the scrutinee is a ref to scrutSym
+        (Case.Lit(Tree.IntLit(i)), b) :: Nil,         // there is only one case matching an int literal
+        S(End(_)), rest)                              // default case exists and does nothing
+        => lastBlkAssign(b) match
+          // the one branch ends by assigning `nextInt` to `scrutSym`
+          case S(Assign(`scrutSym`, Value.Lit(Tree.IntLit(nextInt)), _)) =>
+            // start searching for more match blocks that match on `scrutSym` and have
+            // one case that matches `nextInt`
+            val (cases, rest_) = unapplyImpl(rest, (i, b) :: Nil, scrutSym, nextInt)
+            if cases.length === 1 then N else S((scrut, cases, rest_))
+          case _ => N 
+      case _ => N
   
   def returningTerm(t: Block, endSemi: Bool)(using Raise, Scope): Document =
     def mkSemi = if endSemi then ";" else ""
@@ -482,6 +564,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       case S(el) => nonNestedScoped(el)(bod => returningTerm(bod, endSemi = true))
       case N => doc""
       e :: returningTerm(rest, endSemi)
+    case IfIntChain(scrut, cases, rest) =>
+      val switchBod = cases.foldRight(doc""): (arm, acc) =>
+        acc :: doc" # case ${arm._1.toString}: #{ ${
+          nonNestedScoped(arm._2)(bd => returningTerm(bd, endSemi = true))
+        } #} "
+      doc" # switch (${result(scrut)}) { #{ ${switchBod} #}  # }" :: returningTerm(rest, endSemi)
     case Match(scrut, (Case.Lit(lit), End(msg)) :: Nil, S(el), rest) =>
       val sd = result(scrut)
       val e = braced(nonNestedScoped(el)(res => returningTerm(res, endSemi = false)))

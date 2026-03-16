@@ -1,0 +1,95 @@
+:js
+
+
+
+let x = 1
+//│ x = 1
+
+:sjs
+:expect "b"
+if x is 0 then
+  "a"
+else if x is 1 then
+  "b"
+else if x is 2 then
+  "c"
+else if x is 3 then
+  "d"
+else
+  "e"
+//│ JS (unsanitized):
+//│ switch (x) {
+//│   case 0:
+//│     "a";
+//│     break;
+//│   case 1:
+//│     "b";
+//│     break;
+//│   case 2:
+//│     "c";
+//│     break;
+//│   case 3:
+//│     "d";
+//│     break;
+//│   default:
+//│     "e";
+//│     break;
+//│ }
+//│ = "b"
+
+let x = 2
+let acc = ""
+//│ acc = ""
+//│ x = 2
+
+// Chains of if statements in the following form, which is essentially a jump table,
+// can be converted into a switch statement.
+// (This can be used to very efficiently compile resumable functions, i.e. for effect handlers and co-routines.)
+:sjs
+if x is 0 do
+  set acc += "a"
+  set x = 1
+if x is 1 do
+  set acc += "b"
+  set x = 2
+if x is 2 do
+  set acc += "c"
+  set x = 3
+if x is 3 do
+  set acc += "d"
+  set x = 4
+if x is 4 do
+  set acc += "e"
+//│ JS (unsanitized):
+//│ let tmp, tmp1, tmp2, tmp3, tmp4;
+//│ switch (x1) {
+//│   case 0:
+//│     tmp = acc + "a";
+//│     acc = tmp;
+//│     x1 = 1;
+//│   case 1:
+//│     tmp1 = acc + "b";
+//│     acc = tmp1;
+//│     x1 = 2;
+//│   case 2:
+//│     tmp2 = acc + "c";
+//│     acc = tmp2;
+//│     x1 = 3;
+//│   case 3:
+//│     tmp3 = acc + "d";
+//│     acc = tmp3;
+//│     x1 = 4;
+//│   case 4:
+//│     tmp4 = acc + "e";
+//│     acc = tmp4;
+//│ }
+//│ runtime.Unit
+
+:expect 4
+x
+//│ = 4
+
+:expect "cde"
+acc
+//│ = "cde"
+
