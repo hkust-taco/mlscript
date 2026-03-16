@@ -1,0 +1,196 @@
+:js
+:silent
+
+import "../../../../hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mls"
+import "../../../../hkmc2/shared/src/test/mlscript-compile/Stack.mls"
+import "./mlscript-compile/Benchmark.mls"
+
+open Benchmark
+
+:silent
+let suite = mkSuite()
+
+
+:silent
+let ftree = FingerTreeList.mk()
+let stack = Stack.Nil
+
+// Push an array of elements
+:silent
+suite.add("FingerTreeList.push100", () =>
+  let ft = FingerTreeList.mk()
+  let i = 0
+  while i < 100 do
+    set ft = FingerTreeList.cons(i, ft)
+    set i += 1
+)
+
+:silent
+suite.add("FingerTreeList.push1000", () =>
+  let ft = FingerTreeList.mk()
+  let i = 0
+  while (i < 1000) do
+    set ft = FingerTreeList.cons(i, ft)
+    set i = i + 1
+)
+
+:silent
+suite.add("FingerTreeList.push10000", () =>
+  let ft = FingerTreeList.mk()
+  let i = 0
+  while (i < 10000) do
+    set ft = FingerTreeList.cons(i, ft)
+    set i = i + 1
+)
+
+:silent
+suite.add("FingerTreeList.push100000", () =>
+  let ft = FingerTreeList.mk()
+  let i = 0
+  while (i < 100000) do
+    set ft = FingerTreeList.cons(i, ft)
+    set i = i + 1
+  set ftree = ft
+)
+
+:silent
+suite.add("Stack.push100", () =>
+  let st = Stack.Nil
+  let i = 0
+  while (i < 100) do
+    set st = Stack.Cons(i, st)
+    set i = i + 1
+)
+
+:silent
+suite.add("Stack.push1000", () =>
+  let st = Stack.Nil
+  let i = 0
+  while (i < 1000) do
+    set st = Stack.Cons(i, st)
+    set i = i + 1
+)
+
+
+:silent
+suite.add("Stack.push10000", () =>
+  let st = Stack.Nil
+  let i = 0
+  while (i < 10000) do
+    set st = Stack.Cons(i, st)
+    set i = i + 1
+)
+
+:silent
+suite.add("Stack.push100000", () =>
+  let st = Stack.Nil
+  let i = 0
+  while (i < 100000) do
+    set st = Stack.Cons(i, st)
+    set i = i + 1
+  set stack = st
+)
+
+:silent
+let ftElems = new Array(100000)
+let stElems = new Array(100000)
+
+// Pop elements
+:silent
+suite.add("FingerTreeList.pop100", () => 
+  let popft = ftree
+  let i = 0
+  while (i < 100) do
+    val v = FingerTreeList.popFront(popft)
+    set ftElems.[i] = v.e1
+    set popft = FingerTreeList.popFront(popft).rest
+    set i = i + 1
+)
+
+:silent
+suite.add("FingerTreeList.pop1000", () => 
+  let popft = ftree
+  let i = 0
+  while (i < 1000) do
+    val v = FingerTreeList.popFront(popft)
+    set ftElems.[i] = v.e1
+    set popft = FingerTreeList.popFront(popft).rest
+    set i = i + 1
+)
+
+:silent
+suite.add("FingerTreeList.pop10000", () => 
+  let popft = ftree
+  let i = 0
+  while (i < 10000) do
+    val v = FingerTreeList.popFront(popft)
+    set ftElems.[i] = v.e1
+    set popft = FingerTreeList.popFront(popft).rest
+    set i = i + 1
+)
+
+:silent
+suite.add("FingerTreeList.pop100000", () => 
+  let popft = ftree
+  let i = 0
+  while (FingerTreeList.isEmpty(popft) is false) do
+    val v = FingerTreeList.popFront(popft)
+    set ftElems.[i] = v.e1
+    set popft = FingerTreeList.popFront(popft).rest
+    set i = i + 1
+)
+
+:silent
+suite.add("Stack.pop100", () =>
+  let popStack = stack
+  let i = 0
+  while (i < 100) do
+    set stElems.[i] = popStack.head
+    set popStack = popStack.tail
+    set i = i + 1
+)
+
+:silent
+suite.add("Stack.pop1000", () =>
+  let popStack = stack
+  let i = 0
+  while (i < 1000) do
+    set stElems.[i] = popStack.head
+    set popStack = popStack.tail
+    set i = i + 1
+)
+
+:silent
+suite.add("Stack.pop10000", () =>
+  let popStack = stack
+  let i = 0
+  while (i < 10000) do
+    set stElems.[i] = popStack.head
+    set popStack = popStack.tail
+    set i = i + 1
+)
+
+:silent
+suite.add("Stack.pop100000", () =>
+  let popStack = stack
+  let i = 0
+  while (popStack is Stack.Cons) do
+    set stElems.[i] = popStack.head
+    set popStack = popStack.tail
+    set i = i + 1
+)
+
+:silent
+suite |> runSuite
+writeResults(suite, "FingerTreesAsStack.json")
+
+:expect true
+:silent
+let i = 0
+let same = true
+while (i < 100000) do
+  set same = same && (ftElems.[i] === stElems.[i]) && (ftElems.[i] === 100000 - i - 1)
+  set i = i + 1
+same
+
+

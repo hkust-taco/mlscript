@@ -1,0 +1,25 @@
+:js
+
+
+:ge
+1 | 2
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (composed type)
+//│ ║  l.5: 	1 | 2
+//│ ╙──     	^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:ge
+print("A") & print("B")
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (composed type)
+//│ ║  l.12: 	print("A") & print("B")
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:ge
+~false
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
+//│ ║  l.19: 	~false
+//│ ╙──      	 ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+

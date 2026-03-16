@@ -1,0 +1,31 @@
+:js
+
+class Foo(val bar: Int)
+
+pattern Bar = Foo(0)
+
+Foo(0) is Bar
+//│ = true
+
+Foo(1) is Bar
+//│ = false
+
+pattern Baz(pattern A) = A
+
+:e
+pattern Baz(pattern A) = A()
+//│ ╔══[COMPILATION ERROR] `A` is a pattern parameter.
+//│ ║  l.16: 	pattern Baz(pattern A) = A()
+//│ ║        	                    ^
+//│ ╟── It cannot be applied.
+//│ ║  l.16: 	pattern Baz(pattern A) = A()
+//│ ╙──      	                         ^
+
+:e
+pattern Baz(pattern A) = A(1, 2, 3)
+//│ ╔══[COMPILATION ERROR] `A` is a pattern parameter.
+//│ ║  l.25: 	pattern Baz(pattern A) = A(1, 2, 3)
+//│ ║        	                    ^
+//│ ╟── It cannot be applied to any arguments.
+//│ ║  l.25: 	pattern Baz(pattern A) = A(1, 2, 3)
+//│ ╙──      	                         ^^^^^^^^^

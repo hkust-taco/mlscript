@@ -6,7 +6,7 @@ import mlscript.utils._, shorthands._
 final case class Message(bits: Ls[Message.Bit]):
   def show: Str =
     val ctx = ShowCtx.mk(typeBits)
-    showIn(ctx)
+    showIn(using ctx)
   def typeBits: Ls[TypeLike] = bits.collect{ case Message.Code(t) => t }
   def showIn(implicit ctx: ShowCtx): Str =
     bits.map {
@@ -29,8 +29,9 @@ object Message:
   sealed abstract class Bit
   final case class Text(str: Str) extends Bit
   final case class Code(ty: TypeLike) extends Bit
-  implicit def fromType(ty: TypeLike): Message = Message(Code(ty)::Nil)
-  implicit def fromStr(str: Str): Message = Message(Text(str)::Nil)
+  implicit def fromType(ty: TypeLike): Message = Message(Code(ty) :: Nil)
+  implicit def fromStr(str: Str): Message = Message(Text(str) :: Nil)
+  implicit def fromInt(int: Int): Message = Message(Text(int.toString) :: Nil)
   
   implicit class MessageContext(private val ctx: StringContext):
     def msg(inserted: Message*): Message =

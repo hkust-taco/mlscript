@@ -2,13 +2,13 @@
 
 
 case x then x
-//│ = [function]
+//│ = fun
 
 :sjs
 case { x then x }
 //│ JS (unsanitized):
 //│ let lambda1; lambda1 = (undefined, function (caseScrut) { let x; x = caseScrut; return x }); lambda1
-//│ = [function]
+//│ = fun
 
 :sjs
 x => if x is
@@ -18,12 +18,10 @@ x => if x is
 //│ lambda2 = (undefined, function (x) {
 //│   if (x === 0) {
 //│     return true
-//│   } else {
-//│     throw new globalThis.Error("match error");
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ });
 //│ lambda2
-//│ = [function]
+//│ = fun
 
 :sjs
 case 0 then true
@@ -32,12 +30,25 @@ case 0 then true
 //│ lambda3 = (undefined, function (caseScrut) {
 //│   if (caseScrut === 0) {
 //│     return true
-//│   } else {
-//│     throw new globalThis.Error("match error");
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ });
 //│ lambda3
-//│ = [function]
+//│ = fun
+
+
+// * Note: `case`/`do` works analogously to `if`/`do`
+:sjs
+case
+  0 do print(1)
+//│ JS (unsanitized):
+//│ let lambda4;
+//│ lambda4 = (undefined, function (caseScrut) {
+//│   if (caseScrut === 0) { Predef.print(1); }
+//│   return runtime.Unit
+//│ });
+//│ lambda4
+//│ = fun
+
 
 (case x then x) of 1
 //│ = 1
@@ -56,28 +67,25 @@ case 0 then true
 
 :todo // TODO: support this braceless syntax?
 case [x] then x, [] then 0
-//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.58: 	case [x] then x, [] then 0
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.69: 	case [x] then x, [] then 0
 //│ ╙──      	                 ^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.58: 	case [x] then x, [] then 0
-//│ ╙──      	      ^^^^^^^^^
+//│ ║  l.69: 	case [x] then x, [] then 0
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :sjs
 case
   0 then true
   _ then false
 //│ JS (unsanitized):
-//│ let lambda11;
-//│ lambda11 = (undefined, function (caseScrut) {
-//│   if (caseScrut === 0) {
-//│     return true
-//│   } else {
-//│     return false
-//│   }
+//│ let lambda12;
+//│ lambda12 = (undefined, function (caseScrut) {
+//│   if (caseScrut === 0) { return true } else { return false }
 //│ });
-//│ lambda11
-//│ = [function]
+//│ lambda12
+//│ = fun
 
 data class Some(value)
 object None
@@ -87,17 +95,16 @@ val isDefined = case
   Some then true
   None then false
 //│ JS (unsanitized):
-//│ let isDefined, tmp6, lambda12;
-//│ lambda12 = (undefined, function (caseScrut) {
+//│ let isDefined, lambda13;
+//│ lambda13 = (undefined, function (caseScrut) {
 //│   if (caseScrut instanceof Some1.class) {
 //│     return true
 //│   } else if (caseScrut instanceof None1.class) {
 //│     return false
 //│   } else {
-//│     throw new globalThis.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ });
-//│ tmp6 = lambda12;
-//│ isDefined = tmp6;
-//│ isDefined = [function]
+//│ isDefined = lambda13;
+//│ isDefined = fun
 

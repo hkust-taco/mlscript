@@ -6,7 +6,7 @@ globalThis.Number("0.50")
 
 
 let num = _ globalThis.Number()
-//│ num = [function num]
+//│ num = fun num
 
 num("0.50")
 //│ = 0.5

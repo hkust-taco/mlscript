@@ -14,14 +14,18 @@ class Test with
   print(foo())
 //│ JS (unsanitized):
 //│ let Test1;
-//│ Test1 = class Test {
+//│ (class Test {
+//│   static {
+//│     Test1 = this
+//│   }
 //│   constructor() {
 //│     let tmp;
 //│     tmp = foo();
-//│     Predef.print(tmp)
+//│     Predef.print(tmp);
 //│   }
-//│   toString() { return "Test"; }
-//│ };
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Test"]; 
+//│ });
 
 new Test
 //│ > 3

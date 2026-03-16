@@ -1,5 +1,6 @@
 :js
 :effectHandlers
+:lift
 
 
 abstract class Effect with
@@ -11,80 +12,30 @@ data class Lol(h) with
   print(h.perform("k"))
 //│ JS (unsanitized):
 //│ let Lol1;
-//│ Lol1 = function Lol(h1) {
-//│   return new Lol.class(h1);
+//│ Lol1 = function Lol(h) {
+//│   return globalThis.Object.freeze(new Lol.class(h));
 //│ };
-//│ Lol1.class = class Lol {
+//│ (class Lol {
+//│   static {
+//│     Lol1.class = this
+//│   }
 //│   constructor(h) {
-//│     let tmp, res, Cont$ctor$Lol$1;
-//│     const this$Lol = this;
-//│     Cont$ctor$Lol$1 = function Cont$ctor$Lol$(pc1) {
-//│       return new Cont$ctor$Lol$.class(pc1);
-//│     };
-//│     Cont$ctor$Lol$1.class = class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
-//│       constructor(pc) {
-//│         let tmp1;
-//│         tmp1 = super(null);
-//│         this.pc = pc;
-//│       }
-//│       resume(value$) {
-//│         if (this.pc === 0) {
-//│           tmp = value$;
-//│         } else if (this.pc === 1) {
-//│           res = value$;
-//│         }
-//│         contLoop: while (true) {
-//│           if (this.pc === 2) {
-//│             return this$Lol
-//│           } else if (this.pc === 3) {
-//│             res = Predef.print(tmp);
-//│             if (res instanceof runtime.EffectSig.class) {
-//│               this.pc = 1;
-//│               res.contTrace.last.next = this;
-//│               res.contTrace.last = this;
-//│               return res
-//│             }
-//│             this.pc = 1;
-//│             continue contLoop;
-//│           } else if (this.pc === 4) {
-//│             tmp = runtime.safeCall(this$Lol.h.perform("k"));
-//│             if (tmp instanceof runtime.EffectSig.class) {
-//│               this.pc = 0;
-//│               tmp.contTrace.last.next = this;
-//│               tmp.contTrace.last = this;
-//│               return tmp
-//│             }
-//│             this.pc = 0;
-//│             continue contLoop;
-//│           } else if (this.pc === 0) {
-//│             this.pc = 3;
-//│             continue contLoop;
-//│           } else if (this.pc === 1) {
-//│             this.pc = 2;
-//│             continue contLoop;
-//│           }
-//│           break;
-//│         }
-//│       }
-//│       toString() { return "Cont$ctor$Lol$(" + runtime.render(this.pc) + ")"; }
-//│     };
+//│     let tmp, tmp1;
 //│     this.h = h;
 //│     tmp = runtime.safeCall(this.h.perform("k"));
-//│     if (tmp instanceof runtime.EffectSig.class) {
-//│       tmp.contTrace.last.next = new Cont$ctor$Lol$1.class(0);
-//│       tmp.contTrace.last = tmp.contTrace.last.next;
-//│       return tmp
+//│     if (runtime.curEffect !== null) {
+//│       tmp = runtime.illegalEffect("in a constructor");
 //│     }
-//│     res = Predef.print(tmp);
-//│     if (res instanceof runtime.EffectSig.class) {
-//│       res.contTrace.last.next = new Cont$ctor$Lol$1.class(1);
-//│       res.contTrace.last = res.contTrace.last.next;
-//│       return res
+//│     tmp1 = Predef.print(tmp);
+//│     if (runtime.curEffect !== null) {
+//│       tmp1 = runtime.illegalEffect("in a constructor");
 //│     }
-//│     res
+//│     tmp1;
 //│   }
-//│   toString() { return "Lol(" + runtime.render(this.h) + ")"; }
-//│ };
+//│   #Lol$cap;
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Lol", ["h"]]; 
+//│ });
 
 
 // * This is a weird use of effect handlers where an effect is raised during the construction of a handler.
@@ -103,57 +54,63 @@ handle k = Eff with
   fun test()(k) = k()
 k.test()
 print("test")
-//│ ═══[RUNTIME ERROR] TypeError: k.test is not a function
+//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$ is raised in a constructor
 
 
+
+:fixme
 let oops = 
   handle h = Effect with
     fun perform(arg)(k) =
       print(arg)
       "b"
   Lol(h)
-//│ > k
-//│ oops = "b"
+//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$2 is raised in a constructor
+//│ oops = undefined
 
+:fixme
 :expect "b"
 oops
-//│ = "b"
+//│ ═══[RUNTIME ERROR] Expected: '"b"', got: 'undefined'
 
+:fixme
 let oops = 
   handle h = Effect with
     fun perform(arg)(k) =
       print(arg)
       "b"
   new Lol(h)
-//│ > k
-//│ oops = "b"
+//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$4 is raised in a constructor
+//│ oops = undefined
 
+:fixme
 :expect "b"
 oops
-//│ = "b"
+//│ ═══[RUNTIME ERROR] Expected: '"b"', got: 'undefined'
 
 
+:fixme
 let oops = 
   handle h = Effect with
     fun perform(arg)(k) =
       print(arg)
       k("b")
   Lol(h)
-//│ > k
-//│ > b
-//│ oops = Lol(Handler$h$)
+//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$6 is raised in a constructor
+//│ oops = undefined
 
+:fixme
 oops.h
-//│ = Handler$h$
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'h')
 
-let obj = {}
-//│ obj = ()
+let obj = mut {s: undefined}
+//│ obj = {s: undefined}
 
 handle h = Effect with
   fun perform(arg)(k) =
     k()
     print(arg)
-set obj.["s"] = h.perform("k")
+set obj.s = h.perform("k")
 //│ > k
 
 fun f() = ()

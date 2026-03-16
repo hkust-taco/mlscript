@@ -4,33 +4,36 @@
 :sjs
 :e
 1::x
-//│ ╔══[ERROR] Integer literal is not a known class.
+//│ ╔══[COMPILATION ERROR] Integer literal is not a known class.
 //│ ║  l.6: 	1::x
 //│ ║       	^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found integer literal.
+//│ ║  l.6: 	1::x
+//│ ╙──     	^
 //│ JS (unsanitized):
 //│ let lambda;
-//│ lambda = (undefined, function (self, ...args) {
-//│   return runtime.safeCall(self.x(...args))
-//│ });
+//│ lambda = (undefined, function (self, ...args) { return runtime.safeCall(self.x(...args)) });
 //│ lambda
-//│ = [function]
+//│ = fun
 
 :ssjs
 :e
 :re
 1::x()
-//│ ╔══[ERROR] Integer literal is not a known class.
-//│ ║  l.23: 	1::x()
+//│ ╔══[COMPILATION ERROR] Integer literal is not a known class.
+//│ ║  l.24: 	1::x()
 //│ ║        	^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found integer literal.
+//│ ║  l.24: 	1::x()
+//│ ╙──      	^
 //│ JS:
-//│ lambda1 = (undefined, function (...args1) {
-//│   runtime.checkArgs("", 1, false, args1.length);
-//│   let self = args1[0];
-//│   let args = runtime.Tuple.slice(args1, 1, 0);
+//│ let lambda1;
+//│ lambda1 = (undefined, function (self, ...args) {
+//│   runtime.checkArgs("", 1, false, arguments.length);
 //│   return runtime.safeCall(self.x(...args))
 //│ });
 //│ block$res2 = runtime.checkCall(lambda1());
@@ -51,20 +54,26 @@ let x = 1
 
 :e
 "A"::x
-//│ ╔══[ERROR] String literal is not a known class.
-//│ ║  l.53: 	"A"::x
+//│ ╔══[COMPILATION ERROR] String literal is not a known class.
+//│ ║  l.56: 	"A"::x
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ = [function]
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found string literal.
+//│ ║  l.56: 	"A"::x
+//│ ╙──      	^^^
+//│ = fun
 
 :e
 "A" ::x
-//│ ╔══[ERROR] String literal is not a known class.
-//│ ║  l.62: 	"A" ::x
+//│ ╔══[COMPILATION ERROR] String literal is not a known class.
+//│ ║  l.68: 	"A" ::x
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ = [function]
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found string literal.
+//│ ║  l.68: 	"A" ::x
+//│ ╙──      	^^^
+//│ = fun
 
 

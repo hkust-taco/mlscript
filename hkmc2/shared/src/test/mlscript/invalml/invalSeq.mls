@@ -27,17 +27,17 @@ fun mapi = s => f =>
   region r in
     let i = r.ref 0
     map(s) of x =>
-      i := !i + 1
-      f(!i, x)
-//│ ╔══[ERROR] Type error in region expression with expected type Seq[out A, out E]
+      i := !(i) + 1
+      f(!(i), x)
+//│ ╔══[COMPILATION ERROR] Type error in region expression with expected type Seq[out A, out E]
 //│ ║  l.28: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.29: 	    map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.30: 	      i := !i + 1
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.31: 	      f(!i, x)
-//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.30: 	      i := !(i) + 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.31: 	      f(!(i), x)
+//│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  Seq[in ⊥ out 'B, in ⊥ out 'E1]  <:  Seq[in ⊥ out A, in ⊥ out E]
 //│ ╟── because: cannot constrain  'E1  <:  E
 //│ ╟── because: cannot constrain  'reg  <:  E
@@ -50,8 +50,8 @@ fun mapi = s => f =>
   region r in
     let i = r.ref 0
     map(s) of x =>
-      i := !i + 1
-      f(!i, x)
+      i := !(i) + 1
+      f(!(i), x)
 mapi
 //│ Type: [outer, 'A, 'E, 'app, 'eff] -> Seq[out 'A, out 'E] -> (((Int, 'A) ->{'eff} 'app) -> Seq[out 'app, out (¬outer ∨ 'eff) ∨ 'E])
 
@@ -61,24 +61,24 @@ fun mapi_force = s => f =>
   region r in
     let i = r.ref 0
     force_cache of map(s) of x =>
-      i := !i + 1
-      f(!i, x)
+      i := !(i) + 1
+      f(!(i), x)
 
 // * An alternative version that takes an existing region in parameter
 fun mapi: [A, R, E] -> (Seq[out A, out E], Region[out R]) -> ((Int, A) ->{E} A) ->{R} Seq[out A, out E | R]
 fun mapi = (s, r) => f =>
   let i = r.ref 0
   map(s) of x =>
-    i := !i + 1
-    f(!i, x)
+    i := !(i) + 1
+    f(!(i), x)
 
 // * Simpler; should be equivalent when Region is covariant
 fun mapi: [A, E] -> (Seq[out A, out E], Region[out E]) -> ((Int, A) ->{E} A) ->{E} Seq[out A, out E]
 fun mapi = (s, r) => f =>
   let i = r.ref 0
   map(s) of x =>
-    i := !i + 1
-    f(!i, x)
+    i := !(i) + 1
+    f(!(i), x)
 
 
 // * Example usage
@@ -89,23 +89,23 @@ fun head: [A, E] -> Seq[out A, out E] ->{E} A
 region r in
   let sum = r.ref 0
   let s1 = mkSeq of () =>
-    sum := !sum + 1,
-    !sum
+    sum := !(sum) + 1,
+    !(sum)
   let s2 = mapi(s1, r) of (x, i) => x * i
-  !sum + head(s2)
+  !(sum) + head(s2)
 //│ Type: Int
 
 
 fun r: Ref[Int, Nothing]
 
 r := 1
-!r
+!(r)
 //│ Type: Int
 
 :e
 r := 1
 ! r // because of the space, this is a NL-op
-//│ ╔══[ERROR] Variable not found: !
+//│ ╔══[COMPILATION ERROR] Variable not found: !
 //│ ║  l.107: 	! r // because of the space, this is a NL-op
 //│ ╙──       	^
 //│ Type: ⊥

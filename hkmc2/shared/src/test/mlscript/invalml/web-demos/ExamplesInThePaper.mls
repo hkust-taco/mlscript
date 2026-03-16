@@ -33,7 +33,7 @@ region r in // This is used to delimit the scope of mutation
 fun mapi: [A, B, E] -> (List[out A], (Int, A) ->{E} B) ->{E} List[out B]
 fun mapi(xs, f) =
   region r in
-    let index = r.ref 0 in map(xs, x => let res = f(!index, x) in index := !index + 1; res)
+    let index = r.ref 0 in map(xs, x => let res = f(!(index), x) in index := !(index) + 1; res)
 
 
 fun f: [R1, R2 extends ~R1] -> (Region[out R1], Region[out R2]) ->{R1 | R2} Int

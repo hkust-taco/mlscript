@@ -1,0 +1,19 @@
+:js
+
+:e
+pattern Foo(val T) = null | T
+//│ ╔══[COMPILATION ERROR] Unexpected pattern parameter T with modifiers: val
+//│ ║  l.4: 	pattern Foo(val T) = null | T
+//│ ╙──     	                ^
+//│ ╔══[COMPILATION ERROR] Found an inconsistent variable in disjunction patterns.
+//│ ║  l.4: 	pattern Foo(val T) = null | T
+//│ ║       	                            ^
+//│ ╟── The variable is missing from this sub-pattern.
+//│ ║  l.4: 	pattern Foo(val T) = null | T
+//│ ╙──     	                     ^^^^
+
+pattern Foo(pattern T) = null | T
+
+:breakme
+data pattern Foo = _
+

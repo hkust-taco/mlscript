@@ -1,6 +1,6 @@
+
+:global
 :invalml
-
-
 
 class IntList with
   constructor
@@ -18,14 +18,14 @@ Cons(1, Cons(2, Cons(3, Nil)))
 class Foo with
   constructor
     Bar(x)
-//│ ╔══[ERROR] Invalid ADT parameter.
+//│ ╔══[COMPILATION ERROR] Invalid ADT parameter.
 //│ ║  l.20: 	    Bar(x)
 //│ ╙──      	        ^
 
 
 :e
 Nil(1)
-//│ ╔══[ERROR] Type error in application
+//│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.27: 	Nil(1)
 //│ ║        	^^^^^^
 //│ ╙── because: cannot constrain  IntList  <:  (Int) ->{'eff} ('app)
@@ -33,7 +33,7 @@ Nil(1)
 
 :e
 Nil()
-//│ ╔══[ERROR] Type error in application
+//│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.35: 	Nil()
 //│ ║        	^^^^^
 //│ ╙── because: cannot constrain  IntList  <:  () ->{'eff} ('app)
@@ -42,7 +42,7 @@ Nil()
 
 :e
 Cons("1", Nil)
-//│ ╔══[ERROR] Type error in string literal with expected type Int
+//│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
 //│ ║  l.44: 	Cons("1", Nil)
 //│ ║        	     ^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
@@ -87,7 +87,7 @@ BoolVal(false)
 
 :e
 IntVal("1")
-//│ ╔══[ERROR] Type error in string literal with expected type Int
+//│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
 //│ ║  l.89: 	IntVal("1")
 //│ ║        	       ^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
@@ -111,7 +111,7 @@ f
 
 :e
 Lam(42)
-//│ ╔══[ERROR] Type error in integer literal with expected type (Expr[out 'U]) ->{⊥} Expr[out 'V]
+//│ ╔══[COMPILATION ERROR] Type error in integer literal with expected type (Expr[out 'U]) ->{⊥} Expr[out 'V]
 //│ ║  l.113: 	Lam(42)
 //│ ║         	    ^^
 //│ ╙── because: cannot constrain  Int  <:  (Expr[in ⊥ out 'U]) ->{⊥} (Expr[in ⊥ out 'V])
@@ -127,7 +127,7 @@ b
 
 :e
 App(f, b)
-//│ ╔══[ERROR] Type error in reference with expected type Expr[out 'U]
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type Expr[out 'U]
 //│ ║  l.129: 	App(f, b)
 //│ ║         	       ^
 //│ ╟── because: cannot constrain  Expr[in ⊥ out 'S]  <:  Expr[in ⊥ out 'U]
@@ -154,7 +154,7 @@ sum(Cons(1, Cons(2, Cons(3, Cons(4, Nil)))))
 fun badSum(xs) =
   if xs is
     Cons(x, xs) then x + badSum(xs)
-//│ ╔══[ERROR] Expect 2 cases, but 1 got.
+//│ ╔══[COMPILATION ERROR] Expect 2 cases, but 1 got.
 //│ ║  l.156: 	    Cons(x, xs) then x + badSum(xs)
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -163,12 +163,12 @@ fun badSum(xs) =
   if xs is
     Cons(x, xs) then x + badSum(xs)
     Cons(x, xs) then x + badSum(xs)
-//│ ╔══[ERROR] Duplicate match branches.
+//│ ╔══[COMPILATION ERROR] Duplicate match branches.
 //│ ║  l.164: 	    Cons(x, xs) then x + badSum(xs)
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.165: 	    Cons(x, xs) then x + badSum(xs)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Expect 2 cases, but 1 got.
+//│ ╔══[COMPILATION ERROR] Expect 2 cases, but 1 got.
 //│ ║  l.164: 	    Cons(x, xs) then x + badSum(xs)
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.165: 	    Cons(x, xs) then x + badSum(xs)
@@ -278,10 +278,10 @@ fun foo(x) =
     Some(x) then 1
     None then 0
     42 then 42
-//│ ╔══[ERROR] Mixing ADT pattern matching and general matching is not supported yet.
+//│ ╔══[COMPILATION ERROR] Mixing ADT pattern matching and general matching is not supported yet.
 //│ ║  l.280: 	    42 then 42
 //│ ╙──       	    ^^^^^^^^^^
-//│ ═══[ERROR] Variable not found: param0
+//│ ═══[COMPILATION ERROR] Variable not found: arg$Some$0$
 
 
 fun foo(x) =

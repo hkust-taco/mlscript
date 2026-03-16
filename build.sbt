@@ -1,11 +1,13 @@
 import Wart._
+import org.scalajs.linker.interface.OutputPatterns
 
 enablePlugins(ScalaJSPlugin)
 
-val scala3Version = "3.6.1"
+val scala3Version = "3.7.4"
 val directoryWatcherVersion = "0.18.0"
+val scalaTestVersion = "3.2.19"
 
-ThisBuild / scalaVersion     := "2.13.14"
+ThisBuild / scalaVersion     := "2.13.18"
 ThisBuild / version          := "0.1.0-SNAPSHOT"
 ThisBuild / organization     := "hkust-taco.github.io"
 ThisBuild / organizationName := "HKUST-TACO"
@@ -14,6 +16,7 @@ ThisBuild / scalacOptions ++= Seq(
   "-feature",
   "-unchecked",
   "-language:higherKinds",
+  "-language:implicitConversions",
   if (insideCI.value) "-Wconf:any:error"
   else                "-Wconf:any:warning",
 )
@@ -36,14 +39,16 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
     
     // scalacOptions ++= Seq("-indent", "-rewrite"),
     scalacOptions ++= Seq("-new-syntax", "-rewrite"),
+    // scalacOptions ++= Seq("-language:experimental.modularity"), // https://docs.scala-lang.org/scala3/reference/experimental/modularity.html
     
     libraryDependencies += "io.methvin" % "directory-watcher" % directoryWatcherVersion,
     libraryDependencies += "io.methvin" %% "directory-watcher-better-files" % directoryWatcherVersion,
-    libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.4.0",
+    libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.5.0", // Scala.js or Scala-Native
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.4.2", // Scala.js / Scala Native
     libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.9.3",
     
-    libraryDependencies += "org.scalactic" %%% "scalactic" % "3.2.18",
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.18" % "test",
+    libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
     
     watchSources += WatchSource(
       baseDirectory.value.getParentFile()/"shared"/"src"/"test"/"mlscript", "*.mls", NothingFilter),
@@ -53,6 +58,13 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
       baseDirectory.value.getParentFile()/"shared"/"src"/"test"/"mlscript", "*.cmd", NothingFilter),
   )
   .jvmSettings(
+  )
+  .jsSettings(
+    scalaJSLinkerConfig ~= {
+      _.withModuleKind(ModuleKind.ESModule)
+        .withOutputPatterns(OutputPatterns.fromJSFile("MLscript.mjs"))
+    },
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.2.0",
   )
   .dependsOn(core)
 
@@ -64,15 +76,27 @@ lazy val hkmc2DiffTests = project.in(file("hkmc2DiffTests"))
   .settings(
     scalaVersion := scala3Version,
     
-    libraryDependencies += "org.scalactic" %%% "scalactic" % "3.2.18",
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.18" % "test",
+    libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
     
     Test/run/fork := true, // so that CTRL+C actually terminates the watcher
   )
 
+lazy val hkmc2MostTests = project.in(file("hkmc2MostTests"))
+  .settings(
+    Test / test := (
+      (hkmc2DiffTests / Test / test)
+        .dependsOn(hkmc2JVM / Test / test)
+    ).value
+  )
+
 lazy val hkmc2AllTests = project.in(file("hkmc2AllTests"))
   .settings(
-    Test / test := ((hkmc2DiffTests / Test / test) dependsOn (hkmc2JVM / Test / test)).value
+    Test / test := (
+      (hkmc2DiffTests / Test / test)
+        .dependsOn(hkmc2JVM / Test / test)
+        .dependsOn(hkmc2JS / Test / test)
+    ).value
   )
 
 lazy val core = crossProject(JSPlatform, JVMPlatform).in(file("core"))
@@ -98,7 +122,7 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
       JavaSerializable, Serializable, Product, ToString,
       LeakingSealed, Overloading,
       Option2Iterable, IterableOps, ListAppend, SeqApply,
-      TripleQuestionMark,
+      TripleQuestionMark, PartialFunctionApply,
     ),
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.12" % Test,
     libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.3.1",
@@ -153,3 +177,16 @@ lazy val compiler = crossProject(JSPlatform, JVMPlatform).in(file("compiler"))
 lazy val compilerJVM = compiler.jvm
 lazy val compilerJS = compiler.js
 
+lazy val hkmc2Benchmarks = project.in(file("hkmc2Benchmarks"))
+  .settings(
+    name := "benchmark",
+    scalaVersion := scala3Version,
+    sourceDirectory := baseDirectory.value/"src",
+    libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
+    watchSources += WatchSource(
+      baseDirectory.value/"src"/"test"/"bench", "*.mls", NothingFilter),
+
+    Test/run/fork := true, // so that CTRL+C actually terminates the watcher
+  )
+  .dependsOn(hkmc2JVM)
+  .dependsOn(hkmc2DiffTests % "compile->compile;test->test")

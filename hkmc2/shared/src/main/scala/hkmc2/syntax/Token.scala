@@ -9,6 +9,7 @@ sealed abstract class Token:
   def describe: Str = this match
     case SPACE => "space"
     case COMMA => "comma"
+    case PERIOD => "period"
     case NEWLINE => "new line"
     case INDENT => "indentation"
     case DEINDENT => "deindentation"
@@ -20,7 +21,7 @@ sealed abstract class Token:
     case IDENT(name, symbolic) =>
       if Keyword.all.contains(name) then s"'$name' keyword"
       else if symbolic then "operator" else "identifier"
-    case SELECT(name) => "selector"
+    case SELECT(name, dyn) => (if dyn then "dynamic" else "static") + " selector"
     case OPEN_BRACKET(k) => s"opening ${k.name}"
     case CLOSE_BRACKET(k) => s"closing ${k.name}"
     case BRACKETS(BracketKind.Indent, contents) => s"indented block"
@@ -36,6 +37,7 @@ sealed trait Stroken extends Token
 
 case object SPACE extends Token with Stroken
 case object COMMA extends Token with Stroken
+case object PERIOD extends Token with Stroken
 case object NEWLINE extends Token with Stroken // TODO rm
 case object INDENT extends Token
 case object DEINDENT extends Token
@@ -44,7 +46,7 @@ case object QUOTE extends Token with Stroken
 final case class LITVAL(value: Literal) extends Token with Stroken
 // final case class KEYWRD(name: String) extends Token with Stroken
 final case class IDENT(name: String, symbolic: Bool) extends Token with Stroken
-final case class SELECT(name: String) extends Token with Stroken
+final case class SELECT(name: String, dynamic: Bool) extends Token with Stroken
 final case class OPEN_BRACKET(k: BracketKind) extends Token
 final case class CLOSE_BRACKET(k: BracketKind) extends Token
 final case class BRACKETS(k: BracketKind, contents: Ls[Stroken -> Loc])(val innerLoc: Loc) extends Token with Stroken

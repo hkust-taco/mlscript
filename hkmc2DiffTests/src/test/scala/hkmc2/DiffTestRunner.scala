@@ -6,6 +6,7 @@ import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 import os.up
 
 import mlscript.utils._, shorthands._
+import io.PlatformPath.given, io.FileSystem
 
 
 // * Note: we used to use:
@@ -20,6 +21,8 @@ import mlscript.utils._, shorthands._
 object DiffTestRunner:
   
   class State:
+    
+    val cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default)
     
     val pwd = os.pwd
     
@@ -83,7 +86,7 @@ class DiffTestRunner
   extends DiffTestRunnerBase(DiffTestRunner.State)
   with ParallelTestExecution
 
-class DiffTestRunnerBase(state: DiffTestRunner.State)
+class DiffTestRunnerBase(val state: DiffTestRunner.State)
   extends funsuite.AnyFunSuite
   with TimeLimitedTests
 :
@@ -112,6 +115,15 @@ class DiffTestRunnerBase(state: DiffTestRunner.State)
       && filter(file.relativeTo(state.workingDir))
     )
   
+  protected def createDiffMaker(
+    file: os.Path,
+    preludePath: os.Path,
+    predefPath: os.Path,
+    relativeName: String
+  ): DiffMaker =
+    new MainDiffMaker(workingDir.toString, file, preludePath, predefPath, relativeName):
+      def cctx = state.cctx
+  
   diffTestFiles.foreach: file =>
     
     val basePath = file.segments.drop(dir.segmentCount).toList.init
@@ -122,7 +134,7 @@ class DiffTestRunnerBase(state: DiffTestRunner.State)
       val preludePath = dir/"mlscript"/"decls"/"Prelude.mls"
       val predefPath = dir/"mlscript-compile"/"Predef.mls"
       
-      val dm = new MainDiffMaker(workingDir.toString, file, preludePath, predefPath, relativeName)
+      val dm = createDiffMaker(file, preludePath, predefPath, relativeName)
       
       dm.run()
       
@@ -131,5 +143,3 @@ class DiffTestRunnerBase(state: DiffTestRunner.State)
           dm.failures.distinct.map("\n\t"+relativeName+"."+file.ext+":"+_).mkString(", "))
   
 end DiffTestRunnerBase
-
-

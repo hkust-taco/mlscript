@@ -3,10 +3,10 @@
 
 mut let x = 1
 //│ Parsed:
-//│ 	Modified(keyword 'mut',None,LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None))
+//│ 	Modified(Keywrd(keyword 'mut'),LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None))
 
 mut mut let x = 1
 //│ Parsed:
-//│ 	Modified(keyword 'mut',None,Modified(keyword 'mut',None,LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None)))
+//│ 	Modified(Keywrd(keyword 'mut'),Modified(Keywrd(keyword 'mut'),LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None)))
 
 

@@ -49,7 +49,7 @@ fun foo2(r1, r2) =
 :e
 region r in
   foo2(r, r)
-//│ ╔══[ERROR] Type error in reference with expected type 'r2
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'r2
 //│ ║  l.51: 	  foo2(r, r)
 //│ ║        	          ^
 //│ ╟── because: cannot constrain  Region[in ⊥ out r]  <:  'r2
@@ -102,7 +102,7 @@ fun foo'(r) = foo(r)
 fun foo(r1, r2, f) =
   let exec = freeze(r1, () => freeze(r2, () => f(r1, r2)))
   let r = exec()
-  !r + 1
+  !(r) + 1
 
 region r in
   region s in
@@ -152,15 +152,15 @@ region r in
 
 fun foo(r1, r2, f) =
   let r = freeze(r1, () => freeze(r2, () => f(r1, r2)))
-  r := !r + 1
+  r := !(r) + 1
 
 :e
 region r in
   region s in
     foo(r, s, (x, y) => (if rand() then x.ref 0 else y.ref 0))
-//│ ╔══[ERROR] Type error in function literal with expected type 'f
+//│ ╔══[COMPILATION ERROR] Type error in function literal with expected type 'f
 //│ ║  l.160: 	    foo(r, s, (x, y) => (if rand() then x.ref 0 else y.ref 0))
-//│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ('x, 'y) ->{'reg ∨ 'reg1} (Ref[Int, in ⊥ out 'reg] ∨ Ref[Int, in ⊥ out 'reg1])  <:  'f
 //│ ╟── because: cannot constrain  ('x, 'y) ->{'reg ∨ 'reg1} (Ref[Int, in ⊥ out 'reg] ∨ Ref[Int, in ⊥ out 'reg1])  <:  ('r1, 'r2) ->{'eff} ('app)
 //│ ╟── because: cannot constrain  'reg ∨ 'reg1  <:  'eff

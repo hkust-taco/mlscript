@@ -1,5 +1,7 @@
 import "./RuntimeJS.mjs"
 import "./Rendering.mls"
+import "./LazyArray.mjs"
+import "./Iter.mjs"
 
 
 module Runtime with ...
@@ -8,8 +10,18 @@ module Runtime with ...
 object Unit with
   fun toString() = "()"
 
+// This object is used as a marker for the end of a while loop in the compiled codegen.
+// It is possible for the loop body to contain a return statement,
+// in which case we want to distinguish between returning from the loop body and loop termination.
+object LoopEnd
+val short_and = RuntimeJS.short_and
+val short_or = RuntimeJS.short_or
+
 
 fun unreachable = throw Error("unreachable")
+
+fun assertFail(file, line) = throw Error("Assertion failed (" + file + ":" + line + ")")
+
 
 fun checkArgs(functionName, expected, isUB, got) =
   if got < expected || isUB && got > expected do
@@ -25,7 +37,7 @@ fun checkArgs(functionName, expected, isUB, got) =
       + " but got " + got
 
 fun safeCall(x) =
-  if x is undefined then Unit else x
+  if x is undefined then () else x
 
 fun checkCall(x) =
   if x is undefined
@@ -37,6 +49,10 @@ fun deboundMethod(mtdName, clsName) =
     "[debinding error] Method '" + mtdName + "' of class '" + clsName + "' was accessed without being called."
 
 
+val bitand = RuntimeJS.bitand
+val bitnot = RuntimeJS.bitnot
+val bitor = RuntimeJS.bitor
+val shl = RuntimeJS.shl
 val try_catch = RuntimeJS.try_catch
 
 class EffectHandle(_reified) with
@@ -44,29 +60,37 @@ class EffectHandle(_reified) with
   fun resumeWith(value) =
     Runtime.try(() => resume(reified.contTrace)(value))
   fun raise() =
-    topLevelEffect(reified, false)
+    set curEffect = reified
 
 fun try(f) =
   let res = f()
-  if res is EffectSig then EffectHandle(res) else res
+  if curEffect !== null then
+    let tmp = curEffect
+    set curEffect = null
+    EffectHandle(tmp)
+  else res
 
 
 // For `pattern` definitions
-data class MatchResult(captures)
+data class MatchSuccess(output, bindings)
 data class MatchFailure(errors)
 
 // For pattern matching on tuples
 module Tuple with
-  fun slice(xs, i, j) =
-    // * This is more robust than `xs.slice(i, xs.length - j)`
-    // * as it is not affected by users redefining `slice`
-    globalThis.Array.prototype.slice.call(xs, i, xs.length - j)
+  fun slice(xs, i, j) = xs.slice(i, xs.length - j)
+
+  fun lazySlice(xs, i, j) = LazyArray.dropLeftRight(i, j)(xs)
+  fun lazyConcat(...args) = LazyArray.__concat(...args)
 
   fun get(xs, i) =
-    // * Contrary to `xs.[i]`, this supports negative indices (Python-style)
-    if i >= xs.length then
+    if i >= xs.length do
       throw RangeError("Tuple.get: index out of bounds")
-    else globalThis.Array.prototype.at.call(xs, i)
+    if i < -xs.length do
+      throw RangeError("Tuple.get: negative index out of bounds")
+    xs.[i]
+
+  fun isArrayLike(xs) = Iter.isArrayLike(xs)
+  val split = LazyArray.__split
 
 module Str with
   fun startsWith(string, prefix) = string.startsWith(prefix)
@@ -75,13 +99,15 @@ module Str with
     if i >= string.length then
       throw RangeError("Str.get: index out of bounds")
     else string.at(i)
+  
+  fun take(string, n) = string.slice(0, n)
 
-  fun drop(string, n) = string.slice(n)
+  fun leave(string, n) = string.slice(n)
 
 // Re-export rendering functions
 val render = Rendering.render
 
-fun printRaw(x) = console.log(render(x))
+fun printRaw(x) = console.log(render(x, indent: 2, breakLength: 76))
 
 // TraceLogger
 
@@ -105,11 +131,63 @@ module TraceLogger with
 
 // Private definitions for algebraic effects
 
+// layout:
+// | f | pc | pcStr | debugInfo | this | argLists... (*) | localCnt | locals... |
+// (*) argLists is length encoded nested array
+
+mut val curEffect = null
+mut val resumeValue = null
+mut val resumeArr = null
+mut val resumeIdx = null
+mut val resumePc = -1
+
 object FatalEffect
 object PrintStackEffect
 
-data abstract class FunctionContFrame(next) with
-  fun resume(value)
+data class FunctionContFrame(next, saved) with
+  fun resume(value) =
+    let
+      i = 0
+      f = saved.[0]
+      argListsLength = saved.[5]
+      currentArgList = 6
+    set
+      resumeValue = value
+      resumeArr = saved
+      resumePc = saved.[1]
+    if argListsLength === 0 do
+      console.log("cannot resume getters")
+    while i < argListsLength - 1 do
+      let argListLength = saved.[currentArgList]
+      set
+        f = f.apply(saved.[4], saved.slice(currentArgList + 1, currentArgList + 1 + argListLength))
+        currentArgList += argListLength + 1
+        i += 1
+    let argListLength = saved.[currentArgList]
+    set
+      resumeIdx = currentArgList + argListLength + 2
+    f.apply(saved.[4], saved.slice(currentArgList + 1, currentArgList + 1 + argListLength))
+  fun getLocals =
+    let debugInfo = saved.[3]
+    let i = 0
+    let cur = 6
+    while i < saved.[5] do
+      set
+        cur += saved.[cur] + 1
+        i += 1
+    let res = mut []
+    let i = 1
+    while i < debugInfo.length do
+      res.push(new LocalVarInfo(debugInfo.[i + 1], saved.[cur + 1 + debugInfo.[i]]))
+      set i += 2
+    res
+  fun getNme = saved.[3].[0]
+  fun getLoc =
+    let loc = saved.[2]
+    if
+      loc is null then "pc=" + saved.[1]
+      else loc
+
 data class HandlerContFrame(next, nextHandler, handler)
 
 data class ContTrace(next, last, nextHandler, lastHandler, resumed)
@@ -120,19 +198,32 @@ class NonLocalReturn with
 
 data class FnLocalsInfo(fnName, locals)
 data class LocalVarInfo(localName, value)
+data class CustomStackError(stack) with
+  fun toString() = stack
 
 
 fun raisePrintStackEffect(showLocals) =
   mkEffect(PrintStackEffect, showLocals)
 
-fun topLevelEffect(tr, debug) =
-  while tr.handler === PrintStackEffect do
+fun topLevelEffect(debug) =
+  let tr = curEffect
+  let v = null
+  while tr is EffectSig and tr.handler === PrintStackEffect do
     console.log(showStackTrace("Stack Trace:", tr, debug, tr.handlerFun))
-    set tr = resume(tr.contTrace)(())
+    set
+      curEffect = null
+      v = resume(tr.contTrace)(())
+      tr = curEffect
   if tr is EffectSig then
-    throw showStackTrace("Error: Unhandled effect " + tr.handler.constructor.name, tr, debug, false)
+    set curEffect = null
+    throw CustomStackError(showStackTrace("Error: Unhandled effect " + tr.handler.constructor.name, tr, debug, false))
   else
-    tr
+    v
+
+fun illegalEffect(position) =
+  let tmp = curEffect
+  set curEffect = null
+  throw CustomStackError(showStackTrace("Error: Effect " + tmp.handler.constructor.name + " is raised " + position, tmp, false, false))
 
 fun showStackTrace(header, tr, debug, showLocals) =
   let
@@ -143,16 +234,13 @@ fun showStackTrace(header, tr, debug, showLocals) =
     while curHandler !== null do
       let cur = curHandler.next
       while cur !== null do
-        let locals = cur.getLocals
-        let curLocals = locals.at(locals.length - 1)
+        let curLocals = cur.getLocals
         let loc = cur.getLoc
-        let loc = if loc is null then "pc=" + cur.pc else loc
-        let localsMsg = if showLocals and curLocals.locals.length > 0 then
-          " with locals: " + curLocals.locals.map(l => l.localName + "=" + Rendering.render(l.value)).join(", ")
-        else
-          ""
+        let localsMsg = if showLocals and curLocals.length > 0
+          then " with locals: " + curLocals.map(l => l.localName + "=" + Rendering.render(l.value)).join(", ")
+          else ""
         set
-          msg += "\n\tat " + curLocals.fnName + " (" + loc + ")"
+          msg += "\n\tat " + cur.getNme + " (" + loc + ")"
           msg += localsMsg
           cur = cur.next
           atTail = false
@@ -167,7 +255,7 @@ fun showStackTrace(header, tr, debug, showLocals) =
 
 fun showFunctionContChain(cont, hl, vis, reps) =
   if cont is FunctionContFrame then
-    let result = cont.constructor.name + "(pc=" + cont.pc
+    let result = cont.constructor.name + "(pc=" + cont.saved.[1]
     hl.forEach((m, marker) => if m.has(cont) do set result += ", " + marker)
     if vis.has(cont) then
       set reps = reps + 1
@@ -234,15 +322,20 @@ fun debugEff(eff) =
     console.log(eff)
 
 // runtime implementations
+fun unwind(...saved) =
+  set
+    curEffect.contTrace.last.next = new mut FunctionContFrame(null, saved)
+    curEffect.contTrace.last = curEffect.contTrace.last.next
+
 fun mkEffect(handler, handlerFun) =
-  let res = new EffectSig(new ContTrace(null, null, null, null, false), handler, handlerFun)
+  let res = new mut EffectSig(new mut ContTrace(null, null, null, null, false), handler, handlerFun)
   set
     res.contTrace.last = res.contTrace
     res.contTrace.lastHandler = res.contTrace
-  res
+    curEffect = res
 
 fun handleBlockImpl(cur, handler) =
-  let handlerFrame = new HandlerContFrame(null, null, handler)
+  let handlerFrame = new mut HandlerContFrame(null, null, handler)
   set
     cur.contTrace.lastHandler.nextHandler = handlerFrame
     cur.contTrace.lastHandler = handlerFrame
@@ -250,18 +343,19 @@ fun handleBlockImpl(cur, handler) =
   handleEffects(cur)
 
 fun enterHandleBlock(handler, body) =
-  let cur = body()
-  if cur is EffectSig then
-    handleBlockImpl(cur, handler)
+  let tmp = body()
+  if curEffect === null then
+    tmp
   else
-    cur
+    handleBlockImpl(curEffect, handler)
 
 fun handleEffects(cur) =
   while cur is
     EffectSig then
       let nxt = handleEffect(cur)
       if cur === nxt then
-        return cur
+        set curEffect = cur
+        return null
       else
         set cur = nxt
     else
@@ -283,7 +377,7 @@ fun handleEffect(cur) =
   let handlerFrame = prevHandlerFrame.nextHandler
 
   // unlink and save frames
-  let saved = new ContTrace(
+  let saved = new mut ContTrace(
     handlerFrame.next,
     cur.contTrace.last,
     handlerFrame.nextHandler,
@@ -297,8 +391,10 @@ fun handleEffect(cur) =
     handlerFrame.nextHandler = null
 
   // handle the effect
-  set cur = cur.handlerFun(resume(cur.contTrace))
-  if cur is EffectSig then
+  set curEffect = null
+  let tmp = set stackDepth += 2 in cur.handlerFun(resume(cur.contTrace))
+  if curEffect !== null then
+    set cur = curEffect
     // relink the saved frames
     if saved.next !== null do
       set
@@ -311,7 +407,7 @@ fun handleEffect(cur) =
     cur
   else
     // resume the unlinked handle blocks
-    resumeContTrace(saved, cur)
+    resumeContTrace(saved, tmp)
 
 fun resume(contTrace)(value) =
   if contTrace.resumed do
@@ -324,7 +420,10 @@ fun resumeContTrace(contTrace, value) =
   let handlerCont = contTrace.nextHandler
   while
     cont is FunctionContFrame then
-      set value = cont.resume(value)
+      set curEffect = null
+      set value = set stackDepth += 3 in cont.resume(value)
+      if curEffect !== null do
+        set value = curEffect
       if value is EffectSig then
         set
           value.contTrace.last.next = cont.next
@@ -344,8 +443,7 @@ fun resumeContTrace(contTrace, value) =
 
 // stack safety
 mut val stackLimit = 0 // How deep the stack can go before heapifying the stack
-mut val stackDepth = 0 // Tracks the virtual + real stack depth
-mut val stackOffset = 0 // How much to offset stackDepth by to get the true stack depth (i.e. the virtual depth)
+mut val stackDepth = 0
 mut val stackHandler = null
 mut val stackResume = null
 
@@ -354,34 +452,33 @@ object StackDelayHandler with
     set stackResume = k
 
 fun checkDepth() =
-  if stackDepth - stackOffset >= stackLimit && stackHandler !== null then
+  if stackDepth >= stackLimit && stackHandler !== null then
     // this is a tail call to effectful function
     stackHandler.delay()
   else
     ()
 
-fun resetDepth(tmp, curDepth) =
-  set stackDepth = curDepth
-  if curDepth < stackOffset do
-    set stackOffset = curDepth
-  tmp
-
 fun runStackSafe(limit, f) =
-  set
-    stackLimit = limit
-    stackDepth = 1
-    stackOffset = 0
-    stackHandler = StackDelayHandler
+  set stackLimit = limit in...
+  set stackDepth = 1 in...
+  set stackHandler = StackDelayHandler in...
   let result = enterHandleBlock(StackDelayHandler, f)
+  if curEffect !== null do
+    throw new Error("Effect crossed through stack safe boundary")
   while stackResume !== null do
     let saved = stackResume
     set
       stackResume = null
-      stackOffset = stackDepth
-      result = saved()
-  set
-    stackLimit = 0
-    stackDepth = 0
-    stackOffset = 0
-    stackHandler = null
+      stackDepth = 1
+      result = saved(())
+    if curEffect !== null do
+      throw new Error("Effect crossed through stack safe boundary")
   result
+
+class Int31(v) with
+  fun zext() = bitand(v, bitnot(shl(1, 31))) as Int
+  fun sext() = bitor(v, shl(1, 31)) as Int
+
+fun plus_impl(lhs, rhs) = if lhs is
+  Int31 and rhs is Int31 then lhs + rhs
+  else unreachable()

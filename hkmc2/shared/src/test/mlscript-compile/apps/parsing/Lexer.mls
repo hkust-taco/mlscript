@@ -5,18 +5,17 @@ open Predef
 
 import "../../Char.mls"
 import "../../Stack.mls"
-import "../../Str.mls"
+import "../../StrOps.mls"
 import "../../Option.mls"
 import "../../Iter.mls"
 
 import "./Token.mls"
 
 open Stack
-open Str
+open StrOps
 open Option { Some, None}
 open Token { LiteralKind, LineLookupTable }
 
-type StackType = Stack.Cons | Stack.Nil
 type TokenType = Token.Token
 type Opt[T] = Some[T] | None
 
@@ -26,7 +25,7 @@ class Location(start: Int, end: Int)
 
 class Message(description: Str, location: Location)
 
-class Report(messages: StackType[Message])
+class Report(messages: Stack[Message])
 
 pattern IdentifierStart = Char.Letter | "_"
 
@@ -45,7 +44,7 @@ fun makeLineLookupTable(text: Str): LineLookupTable =
   let
     i = 0
     n = text.length
-    ns = []
+    ns = mut []
   while i < n do
     let i' = text.indexOf("\n", i)
     if i' == -1 then
@@ -65,37 +64,34 @@ fun lex(str: Str, options) =
   // Consume a sequence of characters that satisfy a predicate.
   // The function returns the accumulated string and the following index.
   fun take(pred: Str -> Bool, idx: Int, acc: Str): [Int, Str] =
-    while (char of idx) is Some(ch) and pred(ch)
-      then
-        set
-          idx += 1
-          acc += ch
-      else [idx, acc]
+    while (char of idx) is Some(ch) and pred(ch) do
+      set
+        idx += 1
+        acc += ch
+    [idx, acc]
   
   fun whitespace(idx: Int): Int =
-    while char(idx) is Some(Char.Whitespace)
-      then set idx = idx + 1
-      else idx
+    while char(idx) is Some(Char.Whitespace) do
+      set idx = idx + 1
+    idx
   
   fun digits(idx: Int, acc: Str) =
-    while char(idx) is Some(Char.Digit as ch)
-      then
-        set idx = idx + 1
-        set acc = acc + ch
-      else [idx, acc]
-  
-  fun hex(idx: Int, acc: Str) =
-    while char(idx) is Some(Char.Digit as ch)
-      then
-        set idx = idx + 1
-        set acc = acc + ch
-      else [idx, acc]
-  
-  fun identifier(idx: Int, acc: Str) =
-    while char(idx) is Some(IdentifierBody as ch) then
+    while char(idx) is Some(Char.Digit as ch) do
       set idx = idx + 1
       set acc = acc + ch
-    else tuple of
+    [idx, acc]
+  
+  fun hex(idx: Int, acc: Str) =
+    while char(idx) is Some(Char.Digit as ch) do
+      set idx = idx + 1
+      set acc = acc + ch
+    [idx, acc]
+  
+  fun identifier(idx: Int, acc: Str) =
+    while char(idx) is Some(IdentifierBody as ch) do
+      set idx = idx + 1
+      set acc = acc + ch
+    tuple of
       idx
       if acc is
         "true" then Token.boolean("true", idx)
@@ -103,12 +99,11 @@ fun lex(str: Str, options) =
         else Token.identifier(acc, idx)
   
   fun operator(idx: Int, acc: Str) =
-    while char(idx) is Some(Operator as ch)
-      then
-        set idx = idx + 1
-        set acc = acc + ch
-      else [idx, Token.symbol(acc, idx)]
-      
+    while char(idx) is Some(Operator as ch) do
+      set idx = idx + 1
+      set acc = acc + ch
+    [idx, Token.symbol(acc, idx)]
+    
   fun comment(idx: Int) =
     let start = idx
     let content = ""
@@ -116,10 +111,10 @@ fun lex(str: Str, options) =
       Some("/") then
         set idx = idx + 1
         while char(idx) is Some(ch)
-          and ch !== "\n" then
+          and ch !== "\n" do
             set idx = idx + 1
             set content = content + ch
-          else [idx, Token.comment(content, start, idx)]
+        [idx, Token.comment(content, start, idx)]
       Some("*") then
         let terminated = false
         set idx = idx + 1
@@ -130,11 +125,10 @@ fun lex(str: Str, options) =
           Some(ch) then
             set idx = idx + 1
             set content = content + ch
-          else
-            if terminated then
-              [idx, Token.comment(content, start, idx)]
-            else
-              [idx, Token.error(start, idx)]
+        if terminated then
+          [idx, Token.comment(content, start, idx)]
+        else
+          [idx, Token.error(start, idx)]
       else operator(idx, "/")
   
   fun scanHexDigits(idx: Int, lim: Int, acc: Int, cnt: Int): [Int, Int, Int] =
@@ -215,7 +209,7 @@ fun lex(str: Str, options) =
         [idx'', Token.decimal(integer ~ "." ~ fraction, idx)]
       else [idx', Token.integer(integer, idx)]
   
-  fun scan(idx: Int, acc: StackType[TokenType]): StackType[TokenType] =
+  fun scan(idx: Int, acc: Stack[TokenType]): Stack[TokenType] =
     fun go(idx: Int, tok: TokenType) = if
       options.noWhitespace and tok is
         Token.Comment then scan(idx, acc)
@@ -226,12 +220,12 @@ fun lex(str: Str, options) =
       None then reverse of acc
       Some(Char.Whitespace) and whitespace(idx) is idx' then
         go(idx', Token.space(idx, idx'))
-      Some("\"") then go(..string(idx + 1))
+      Some("\"") then go(...string(idx + 1))
       Some(Bracket as b) then go(idx + 1, Token.symbol(b, idx))
-      Some("/") then go(..comment(idx + 1))
-      Some(Operator as ch) then go(..operator(idx + 1, ch))
-      Some(Char.Digit as ch) then go(..number(idx + 1, ch))
-      Some(IdentifierStart as ch) then go(..identifier(idx + 1, ch))
+      Some("/") then go(...comment(idx + 1))
+      Some(Operator as ch) then go(...operator(idx + 1, ch))
+      Some(Char.Digit as ch) then go(...number(idx + 1, ch))
+      Some(IdentifierStart as ch) then go(...identifier(idx + 1, ch))
       Some(IdentifierQuote as quote)
         and char(idx + 1) is Some(IdentifierStart as ch)
         and identifier(idx + 2, quote + ch) is [idx', token] and

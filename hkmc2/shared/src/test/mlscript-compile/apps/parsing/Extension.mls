@@ -15,20 +15,17 @@ open Option { Some, None }
 open Token { LiteralKind }
 open ParseRule { Choice }
 
-type StackT[A] = Cons[A] | Nil
-type TreeT = Tree.Tree
-
 module Extension with ...
 
-fun isDiagramDirective(tree: TreeT) = tree is
+fun isDiagramDirective(tree: Tree) = tree is
   Tree.Define(Tree.DefineKind.Directive, [Tree.Ident("diagram", _), _] :: Nil)
 
-fun parsePrecedenceTree(tree: TreeT) = if tree is
+fun parsePrecedenceTree(tree: Tree) = if tree is
   Tree.Ident("None", _) then None
   Tree.App(Tree.Ident("Some", _), Tree.Literal(Token.LiteralKind.Integer, value)) then
     Some(parseInt(value, 10))
 
-fun extendKeyword(tree: TreeT) =
+fun extendKeyword(tree: Tree) =
   if tree is Tree.Tuple(keyword :: leftPrec :: rightPrec :: Nil) and
     keyword is Tree.Literal(Token.LiteralKind.String, name) then
       let leftPrec' = parsePrecedenceTree(leftPrec)
@@ -38,7 +35,7 @@ fun extendKeyword(tree: TreeT) =
   else print of "expect a tuple but found " + tree
 
 // * Add an empty parse rule to the map associated with the given name.
-fun newCategory(tree: TreeT) =
+fun newCategory(tree: Tree) =
   if tree is Tree.Literal(Token.LiteralKind.String, name) and
     Rules.syntaxKinds |> MutMap.get(name) is
       Some(rule) then print of "Category already exists: " + rule.display
@@ -51,7 +48,7 @@ fun newCategory(tree: TreeT) =
 pattern OpenCategory = "term" | "type" | "decl"
 pattern ClosedCategory = "ident" | "typevar"
 
-fun extendCategory(choiceBodyTree: TreeT) =
+fun extendCategory(choiceBodyTree: Tree) =
   if parseChoiceTree(choiceBodyTree) is
     Some([kindName, choice]) and Rules.syntaxKinds |> MutMap.get(kindName) is
       Some(rule) and kindName is
@@ -76,8 +73,8 @@ fun extendCategory(choiceBodyTree: TreeT) =
     None then
       print of "Invalid syntax description: " + choiceBodyTree Tree.summary()
 
-fun parseChoiceTree(tree: TreeT) = 
-  fun go(trees: StackT[TreeT]): Choice.Choice = 
+fun parseChoiceTree(tree: Tree) = 
+  fun go(trees: Stack[Tree]): Choice[Tree] = 
     let res = if trees is
       Tree.App(Tree.Ident("keyword", _), Tree.Literal(LiteralKind.String, name)) :: rest and
         Keywords.all |> MutMap.get(name) is Some(keyword) then

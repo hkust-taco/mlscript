@@ -10,8 +10,12 @@ module A with
 //│ let A1;
 //│ (class A {
 //│   static {
-//│     A1 = A;
+//│     A1 = this
 //│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static #A_mod$cap;
 //│   static f(x) {
 //│     if (x instanceof Option.Some.class) {
 //│       return true
@@ -19,6 +23,8 @@ module A with
 //│       return false
 //│     }
 //│   }
-//│   static toString() { return "A"; }
+//│   #A$cap;
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A"]; 
 //│ });
 

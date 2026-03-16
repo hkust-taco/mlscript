@@ -1,0 +1,4 @@
+import "./../Predef.mls"
+module Opened with ...
+fun res =
+  Predef.equals(Predef.id(1), 2)

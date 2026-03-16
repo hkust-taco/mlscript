@@ -5,15 +5,18 @@ package js
 import mlscript.utils.*, shorthands.*
 import utils.*
 import document.*
+import document.Document.{braced, bracketed}
 
 import hkmc2.Message.MessageContext
-import hkmc2.syntax.{Tree, ImmutVal}
+import hkmc2.syntax.{Tree, MutVal, ImmutVal, SpreadKind}
 import hkmc2.semantics.*
 import Elaborator.{State, Ctx}
-import hkmc2.codegen.Value.Lam
+import hkmc2.codegen.Lambda
 
 import Scope.scope
 import hkmc2.syntax.Tree.UnitLit
+import hkmc2.semantics.Elaborator.ctx
+import hkmc2.syntax.Tree.{IntLit, StrLit}
 
 
 // TODO factor some logic for other codegen backends
@@ -27,6 +30,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   
   def checkMLsCalls: Bool = false
   def checkSelections: Bool = false
+  def freezeDefinitions: Bool = false
   
   val builtinOpsBase: Ls[Str] = Ls(
     "+", "-", "*", "/", "%",
@@ -38,6 +42,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     + (";" -> ",")
   )
   val needsParens: Set[Str] = Set(",")
+  
+  val freeze = "globalThis.Object.freeze"
+  lazy val freezeDefns = if freezeDefinitions then "globalThis.Object.freeze" else ""
   
   // TODO use this to avoid parens when we generate recomposed expressions later
   enum Context:
@@ -59,62 +66,69 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       source = Diagnostic.Source.Compilation))
     doc" # ${mkErr(errMsg)};"
   
-  def getVar(l: Local)(using Raise, Scope): Document = l match
+  def getVar(l: Local, loc: Opt[Loc])(using Raise, Scope): Document = l match
     case ts: semantics.TermSymbol =>
       ts.owner match
       case S(owner) =>
-        doc"${getVar(owner)}${
+        doc"${getVar(owner, loc)}${
           if (ts.k is syntax.LetBind) && !owner.isInstanceOf[semantics.TopLevelSymbol]
-          then ".#" + owner.privatesScope.lookup_!(ts)
+          then ".#" + owner.privatesScope.lookup_!(ts, loc)
           else fieldSelect(ts.id.name)
         }"
-      case N => summon[Scope].lookup_!(ts)
+      case N => scope.lookup_!(ts, loc)
+    case ts: semantics.ModuleOrObjectSymbol if ts.asMod.isDefined => // FIXME: currently, objects have a ModuleSymbol...
+      // * Module self-references use the module name itself instead of `this`
+      scope.lookup_!(ts, loc)
     case ts: semantics.InnerSymbol =>
-      if ts.asMod.isDefined
-      then
-        // * Module self-references use the module name itself instead of `this`
-        summon[Scope].lookup_!(ts)
-      else summon[Scope].findThis_!(ts)
-    case _ => summon[Scope].lookup_!(l)
+      scope.findThis_!(ts)
+    case _ => scope.lookup_!(l, loc)
   
-  def runtimeVar(using Raise, Scope): Document = getVar(State.runtimeSymbol)
+  def runtimeVar(using Raise, Scope): Document = getVar(State.runtimeSymbol, N)
   
   def argument(a: Arg)(using Raise, Scope): Document =
-    if a.spread then doc"...${result(a.value)}" else result(a.value)
+    val spd = a.spread match
+      case S(SpreadKind.Eager) => doc"..."
+      case S(SpreadKind.Lazy) => doc"$runtimeVar.Tuple.split, "
+      case N => doc""
+    doc"${spd}${result(a.value)}"
   
   def operand(a: Arg)(using Raise, Scope): Document =
-    if a.spread then die else subexpression(a.value)
+    if a.spread.nonEmpty then die else subexpression(a.value)
   
   def subexpression(r: Result)(using Raise, Scope): Document = r match
-    case _: Value.Lam => doc"(${result(r)})"
+    case _: Lambda => doc"(${result(r)})"
     case _ => result(r)
   
-  def fieldSelect(s: Str): Document =
-    if JSBuilder.isValidFieldName(s) then doc".$s"
+  def fieldSelect(s: Str): Document = escapeField(s, ".")
+  def escapeField(s: Str, defaultPrefix: Str): Document =
+    if JSBuilder.isValidFieldName(s) then doc"$defaultPrefix$s"
     else s.toIntOption match
-      case S(index) => s"[$index]"
-      case N => s"[${JSBuilder.makeStringLiteral(s)}]"
+      case S(index) => doc"[$index]"
+      case N => doc"[${JSBuilder.makeStringLiteral(s)}]"
   
   def result(r: Result)(using Raise, Scope): Document = r match
-    case Value.This(sym) => summon[Scope].findThis_!(sym)
+    case Value.This(sym) => scope.findThis_!(sym)
     case Value.Lit(Tree.StrLit(value)) => makeStringLiteral(value)
     case Value.Lit(lit) => lit.idStr
-    case Value.Ref(l: BuiltinSymbol) =>
+    case Value.Ref(l: BuiltinSymbol, _) =>
       if l.nullary then l.nme
       else errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
-    case Value.Ref(l) => getVar(l)
-    
-    case Call(Value.Ref(l: BuiltinSymbol), lhs :: rhs :: Nil) if !l.functionLike =>
+    case Value.Ref(l, disamb) => l match
+      case l: BlockMemberSymbol if disamb.exists(_.shouldBeLifted) =>
+        doc"${getVar(l, l.toLoc)}.class"
+      case _ =>
+        getVar(l, r.toLoc)
+    case Call(Value.Ref(l: BuiltinSymbol, _), lhs :: rhs :: Nil) if !l.functionLike =>
       if l.binary then
         val res = doc"${operand(lhs)} ${l.nme} ${operand(rhs)}"
         if needsParens(l.nme) then doc"(${res})" else res
       else errExpr(msg"Cannot call non-binary builtin symbol '${l.nme}'")
-    case Call(Value.Ref(l: BuiltinSymbol), rhs :: Nil) if !l.functionLike =>
+    case Call(Value.Ref(l: BuiltinSymbol, _), rhs :: Nil) if !l.functionLike =>
       if l.unary then
         val res = doc"${l.nme} ${operand(rhs)}"
         if needsParens(l.nme) then doc"(${res})" else res
       else errExpr(msg"Cannot call non-unary builtin symbol '${l.nme}'")
-    case Call(Value.Ref(l: BuiltinSymbol), args) =>
+    case Call(Value.Ref(l: BuiltinSymbol, _), args) =>
       if l.functionLike then
         val argsDoc = args.map(argument).mkDocument(", ")
         doc"${l.nme}(${argsDoc})"
@@ -134,41 +148,62 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         then doc"$runtimeVar.checkCall(${base}(${argsDoc}))"
         else doc"${base}(${argsDoc})"
       else doc"$runtimeVar.safeCall(${base}(${argsDoc}))"
-    case Value.Lam(ps, bod) => scope.nest givenIn:
-      val (params, bodyDoc) = setupFunction(none, ps, bod)
+    case Lambda(ps, bod) => scope.nest givenIn:
+      val (params, bodyDoc) = setupFunction(none, ps, bod, isLambda = true)
       doc"($params) => ${ braced(bodyDoc) }"
-    case Select(qual, id) =>
+    case s @ Select(qual, id) => 
+      val dotClass = s.symbol match
+        case S(ds) if ds.shouldBeLifted => doc".class"
+        case _ => doc""
       val name = id.name
       doc"${result(qual)}${
         if isValidFieldName(name)
         then doc".$name"
         else name.toIntOption match
-          case S(index) => s"[$index]"
-          case N => s"[${makeStringLiteral(name)}]"
-      }"
+          case S(index) => doc"[$index]"
+          case N => doc"[${makeStringLiteral(name)}]"
+      }${dotClass}"
     case DynSelect(qual, fld, ai) =>
-      doc"${result(qual)}[${result(fld)}]"
-    case Instantiate(cls, as) =>
-      doc"new ${result(cls)}(${as.map(result).mkDocument(", ")})"
-    case Value.Arr(es) if es.isEmpty => doc"[]"
-    case Value.Arr(es) =>
-      doc"[ #{  # ${es.map(argument).mkDocument(doc", # ")} #}  # ]"
-    case Value.Rcd(flds) =>
-      doc"{ #  #{ ${
+      if ai
+      then doc"${result(qual)}.at(${result(fld)})"
+      else doc"${result(qual)}[${result(fld)}]"
+    case Instantiate(mut, cls, as) =>
+      val inner = doc"new ${result(cls)}(${as.map(argument).mkDocument(", ")})"
+      if mut then inner else doc"$freeze(${inner})"
+    case Tuple(mut, es) if es.isEmpty => if mut then "[]" else doc"$freeze([])"
+    case Tuple(mut, es) =>
+      val inner =
+        val lazyConcat = es.exists(!_.spread.fold(true)(_.isEager))
+        if lazyConcat
+        then doc"$runtimeVar.Tuple.lazyConcat(${es.map(argument).mkDocument(doc", ")})"
+        else bracketed("[", "]", insertBreak = true):
+          es.map(argument).mkDocument(doc", # ")
+      if mut then inner else doc"$freeze(${inner})"
+    case Record(mut, Nil) =>
+      if mut then "{}" else doc"$freeze({})"
+    case Record(mut, flds) =>
+      val inner = bracketed(pre = "{", post = "}", insertBreak = true):
         flds.map:
+          case RcdArg(S(Value.Lit(IntLit(idx))), v) =>
+            doc"${idx.toString}: ${result(v)}"
+          case RcdArg(S(Value.Lit(StrLit(idx))), v) =>
+            doc"${if isValidIdentifier(idx) then idx else s"\"$idx\""}: ${result(v)}"
           case RcdArg(S(idx), v) =>
-            doc"${result(idx)}: ${result(v)}"
+            doc"[${result(idx)}]: ${result(v)}"
           case RcdArg(N, v) => doc"...${result(v)}"
-        .mkDocument(", ")
-      } #}  # }"
+        .mkDocument(doc", # ")
+      if mut then inner else doc"$freeze(${inner})"
   
   def returningTerm(t: Block, endSemi: Bool)(using Raise, Scope): Document =
     def mkSemi = if endSemi then ";" else ""
     t match
     case _: HandleBlock =>
       errStmt(msg"This code requires effect handler instrumentation but was compiled without it.")
+    case Assign(l, r, rst) if l is State.noSymbol =>
+      doc" # ${result(r)};${returningTerm(rst, endSemi)}"
     case Assign(l, r, rst) =>
-      doc" # ${getVar(l)} = ${result(r)};${returningTerm(rst, endSemi)}"
+      doc" # ${getVar(l, l.toLoc // TODO: improve location
+        )} = ${result(r)};${returningTerm(rst, endSemi)}"
     case AssignField(p, n, r, rst) =>
       doc" # ${result(p)}${fieldSelect(n.name)} = ${result(r)};${returningTerm(rst, endSemi)}"
     case AssignDynField(p, f, ai, r, rst) =>
@@ -177,190 +212,291 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       def mkThis(sym: InnerSymbol): Document =
         result(Value.This(sym))
       val resJS = defn match
-      case ValDefn(own, k, sym, p) =>
+      case ValDefn(tsym, sym, p) =>
         val sym = defn.sym
         // * Currently we allow `val` outside of object/module scopes,
         // * in which case it has no owner and is just a glorified local variable rather than a field.
-        own match
+        tsym.owner match
         case N =>
-          doc"${getVar(sym)} = ${result(p)};${returningTerm(rst, endSemi)}"
+          doc"${getVar(sym, sym.toLoc)} = ${result(p)};${returningTerm(rst, endSemi)}"
         case S(owner) =>
           doc"${mkThis(owner)}${fieldSelect(sym.nme)} = ${result(p)};${returningTerm(rst, endSemi)}"
       case defn: (FunDefn | ClsLikeDefn) =>
+        
         val outerScope = scope
         val (thisProxy, res) = scope.nestRebindThis(
             // * Either this is an InnerSymbol or this is a Fun,
             // * and we need to rebind `this` to None to shadow it.
             defn.innerSym.collectFirst{ case s: InnerSymbol => s }):
           defn match
-          case FunDefn(own, sym, Nil, body) =>
+            
+          case FunDefn(params = Nil) =>
             lastWords("cannot generate function with no parameter list")
-          case FunDefn(own, sym, ps :: pss, bod) =>
+          case FunDefn(own, sym, dSym, ps :: pss, bod) =>
             val result = pss.foldRight(bod):
-              case (ps, block) => 
-                Return(Lam(ps, block), false)
-            val name = if sym.nameIsMeaningful then S(sym.nme) else N
-            val (params, bodyDoc) = setupFunction(name, ps, result)
-            if sym.nameIsMeaningful then
-              // If the name is not valid JavaScript identifiers, do not use it in the generated function.
-              val nme = if isValidIdentifier(sym.nme) then sym.nme else ""
-              doc"${getVar(sym)} = function $nme($params) ${ braced(bodyDoc) };"
+              case (ps, block) =>
+                Return(Lambda(ps, block), false)
+            val displayName = if sym.nameIsMeaningful then S(dSym.name) else N
+            
+            // * We may need to set up the function in a nested scope in one case below, so this is marked as lazy.
+            lazy val (params, bodyDoc) = setupFunction(displayName, ps, result, isLambda = false)
+            
+            val symName = sym.nme
+            
+            // * If the name is a valid JavaScript identifier, use it in the generated function code.
+            if sym.nameIsMeaningful && isValidIdentifier(symName)
+            then
+              val varName = getVar(sym, dSym.toLoc)
+              scope.reverseLookup(sym.nme) match
+              // * Maybe the function's internal name was already bound in scope;
+              // * in that case, we need to forward it to a different variable to avoid unintended capture.
+              case S(otherSym) if (otherSym isnt sym) && bod.freeVars.contains(otherSym) => scope.nest.givenIn:
+                val externalName = scope.allocateName(otherSym, prefix = "proxy$", shadow = true)
+                val (params, bodyDoc) = setupFunction(displayName, ps, result, isLambda = false)
+                doc"const $externalName = $symName; ${
+                  varName} = function $symName($params) ${ braced(bodyDoc) };"
+              case _ =>
+                doc"${varName} = function ${sym.nme}($params) ${ braced(bodyDoc) };"
             else
-              // in JS, let name = (0, function (args) => {} ) prevents function's name from being bound to `name`
-              doc"${getVar(sym)} = (undefined, function ($params) ${ braced(bodyDoc) });"
-          case ClsLikeDefn(ownr, isym, sym, kind, paramsOpt, auxParams, par, mtds, privFlds, _pubFlds, preCtor, ctor) =>
-            // * Note: `_pubFlds` is not used because in JS, fields are not declared
+              // * In JS, `let x = (0, function (args) {...})` makes the function anonymous;
+              // * otherwise, using `let x = function (args) {...}` would name the function `x`,
+              // * which is not meaningful, here.
+              doc"${getVar(sym, dSym.toLoc)} = (undefined, function ($params) ${ braced(bodyDoc) });"
+            
+          case ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
+              privFlds, pubFlds, preCtor, ctor, modo, bufferable)
+          =>
             val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
             val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
-            val ctorFields = ctorParams.filter: p =>
-              p._1.decl match
-              case S(Param(flags = FldFlags(value = true))) => true
-              case _ => false
             val ctorAuxParams = auxParams.map(ps => ps.params.map(p => p.sym -> scope.allocateName(p.sym)))
-
-            val isModule = kind is syntax.Mod
-            val mtdPrefix = if isModule then "static " else ""
-
-            val privs =
-              val scp = isym.asInstanceOf[InnerSymbol].privatesScope
-              privFlds.map: fld =>
-                  val nme = scp.allocateName(fld)
-                  doc" # $mtdPrefix#$nme;"
-                .mkDocument(doc"")
-            val preCtorCode = ctorAuxParams.flatMap(ps => ps).foldLeft(body(preCtor, endSemi = true)):
-              case (acc, (sym, nme)) =>
-                doc"$acc # this${fieldSelect(sym.name)} = $nme;"
-            val ctorCode = doc"$preCtorCode${body(ctor, endSemi = auxParams.nonEmpty)}"
-
-            val ctorAux = if auxParams.isEmpty then
+            
+            def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str)(using Scope): Document =
+              mtds.map:
+                case td @ FunDefn(params = ps :: pss, body = bod) =>
+                  val result = pss.foldRight(bod):
+                    case (ps, block) =>
+                      Return(Lambda(ps, block), false)
+                  val (params, bodyDoc) = scope.nest.givenIn:
+                    setupFunction(S(td.sym.nme), ps, result, isLambda = false)
+                  doc" # $mtdPrefix${td.sym.nme}($params) ${ braced(bodyDoc) }"
+                case td @ FunDefn(params = Nil, body = bod) =>
+                  doc" # ${mtdPrefix}get ${td.sym.nme}() ${ braced(body(bod, endSemi = true)) }"
+              .mkDocument(" ")
+            
+            def mkPrivs(pubFlds: Ls[BlockMemberSymbol -> TermSymbol], privFlds: Ls[TermSymbol],
+                  mtdPrefix: Str, isym: InnerSymbol)(using Scope): Document =
+              // * Note: the non-mut-val parts of `pubFlds` are not used because in JS, fields are not declared
+              val mutPubFields =
+                pubFlds.collect:
+                  case (_, sym) if sym.k is MutVal =>
+                    sym -> TermSymbol(
+                      syntax.LetBind, S(isym), Tree.Ident(sym.nme))
+              val allPrivFlds = privFlds ++ mutPubFields.map(_._2)
+              val privDecls = allPrivFlds.map: fld =>
+                val nme = isym.privatesScope.allocateOrGetName(fld)
+                doc" # $mtdPrefix#$nme;"
+              val accessors = mutPubFields.flatMap: (valSym, letSym) =>
+                doc" # ${mtdPrefix}get ${escapeField(valSym.name, "")
+                  }() { return ${getVar(letSym, letSym.toLoc)}; }"
+                :: doc" # ${mtdPrefix}set ${escapeField(valSym.name, "")
+                  }(value) { ${getVar(letSym, letSym.toLoc)} = value; }"
+                :: Nil
+              (privDecls ::: accessors).mkDocument(doc"")
+            
+            val modDoc = modo match
+              case N => doc""
+              case S(mod) =>
+                val (thisProxy, res) = outerScope.nestRebindThis(S(mod.isym)):
+                  val mtdPrefix = "static "
+                  val privs = mkPrivs(mod.publicFields, mod.privateFields, mtdPrefix, mod.isym)
+                  val ctorCode = if mod.ctor.isEmpty then doc"" else doc" # static " :: braced:
+                    body(mod.ctor, endSemi = true)
+                  privs :: ctorCode :: {
+                    mkMethods(mod.methods, mtdPrefix)
+                  }
+                // * Note that `thisProxy` might be defined at this point,
+                // * if the module accesses the self-reference of an outer definition.
+                // * But in that case, we'll already be creating a proxy through the `nestRebindThis` call above,
+                // * and that proxy will return the same symbol, so we don't need to bind it here.
+                res
+            
+            val mtdPrefix = ""
+            
+            val privs = mkPrivs(pubFlds, privFlds, mtdPrefix, isym)
+            
+            val isSingleton = (kind is syntax.Obj) || (kind is syntax.Pat)
+            
+            val (singletonInit, singletonFreeze) =
+              if isSingleton
+              then
+                val fz = doc" # $freeze(this);"
+                ownr match
+                case S(owner) =>
+                  (doc" # ${result(Value.Ref(owner, N))}.${sym.nme} = this;", fz)
+                case N =>
+                  (doc" # ${getVar(sym, sym.toLoc)} = this;", fz)
+              else (doc"", doc"")
+            
+            val ctorCode = scope.nest.givenIn:
+              val preCtorCode = nonNestedScoped(preCtor)(bd => block(bd, true))
+              doc"$preCtorCode$singletonInit${nonNestedScoped(ctor)(bd => block(bd, true))}${
+                  kind match
+                  case syntax.Obj =>
+                    doc" # ${defineProperty(doc"this", "class", doc"${scope.lookup_!(isym, isym.toLoc)}")};"
+                  case _ => ""
+                }$singletonFreeze"
+            
+            // * If there are no ctor params, pop one param list off the aux params
+            val (newCtorAuxParams, initialCtorParams) = paramsOpt match
+              case None => ctorAuxParams match
+                case head :: next => (next, head)
+                case Nil => (ctorAuxParams, Nil)
+              case Some(_) => (ctorAuxParams, ctorParams)
+            
+            val ctorAux = if newCtorAuxParams.isEmpty then
               ctorCode
             else
-              val pss = ctorAuxParams.map(_.map(_._2))
+              val pss = newCtorAuxParams.map(_.map(_._2))
               val newCtorCode = doc"$ctorCode # return this;"
               val ctorBraced = doc"${ braced(newCtorCode) }"
               val funBod = pss.foldRight(ctorBraced):
                 case (psDoc, doc) => doc"(${psDoc.mkDocument(", ")}) => $doc"
-
               doc" # return $funBod"
             
-            val ctorBod = if isModule then
-              ownr match
-              case S(owner) =>
-                braced(doc" # ${result(Value.Ref(owner))}.${sym.nme} = ${getVar(isym)};$ctorCode")
-              case N =>
-                braced(doc" # ${getVar(sym)} = ${getVar(isym)};$ctorCode")
-            else
-              braced(ctorAux)
-            
-            val ctorOrStatic = if isModule
-              then doc"static"
-              else doc"constructor(${
-                  ctorParams.unzip._2.mkDocument(", ")
+            val ctorHead = doc"constructor(${
+                  initialCtorParams.unzip._2.mkDocument(", ")
                 })"
-            val clsJS = doc"class ${scope.lookup_!(isym)}${
-                par.map(p => s" extends ${result(p)}").getOrElse("")
-              } { #{ ${
-                privs
-              } # $ctorOrStatic $ctorBod${
-                if checkSelections && !isModule
-                then mtds
-                  .flatMap:
-                    case td @ FunDefn(_, _, ps :: pss, bod) => S:
-                      doc" # get ${td.sym.nme}$$__checkNotMethod() { ${
-                        runtimeVar
-                      }.deboundMethod(${makeStringLiteral(td.sym.nme)}, ${
-                        makeStringLiteral(sym.nme)
-                      }); }"
-                    case _ => N
-                  .mkDocument(" ")
-                else doc""
-              }${
-                mtds.map: 
-                  case td @ FunDefn(_, _, ps :: pss, bod) =>
-                    val result = pss.foldRight(bod):
-                      case (ps, block) => 
-                        Return(Lam(ps, block), false)
-                    val (params, bodyDoc) = setupFunction(some(td.sym.nme), ps, result)
-                    doc" # $mtdPrefix${td.sym.nme}($params) ${ braced(bodyDoc) }"
-                  case td @ FunDefn(_, _, Nil, bod) =>
-                    doc" # ${mtdPrefix}get ${td.sym.nme}() ${ braced(body(bod, endSemi = true)) }"
-                .mkDocument(" ")
-              }${
-                if mtds.exists(_.sym.nme == "toString")
-                then doc""
-                else doc""" # ${mtdPrefix}toString() { return "${sym.nme}${
-                  if paramsOpt.isEmpty then doc"""""""
-                  else doc"""(" + ${
-                      ctorFields.headOption.fold("\"\"")(f => "runtime.render(this" + fieldSelect(f._1.name) + ")")
-                    }${
-                      ctorFields.tailOption.fold("")(_.map(f =>
-                        """ + ", " + runtime.render(this""" + fieldSelect(f._1.name) + ")").mkString)
-                    } + ")""""
-                }; }"""
-              } #}  # }"
-            if (kind is syntax.Mod) || (kind is syntax.Obj) || (kind is syntax.Pat) then
-              lazy val clsTmp = outerScope.allocateName(new semantics.TempSymbol(N, sym.nme+"$class"))
+            
+            val ctorBod = {{
+                val extraPath = if paramsOpt.isDefined then ".class" else ""
+                doc" # static " :: braced:
+                  val v = getVar(isym, isym.toLoc)
+                  if isSingleton
+                  then doc" # new $v"
+                  else
+                    ownr match
+                    case S(owner) =>
+                      doc" # ${result(Value.Ref(owner, N))}.${sym.nme}$extraPath = $v"
+                    case N =>
+                      doc" # ${getVar(sym, sym.toLoc)}$extraPath = $v"
+              }} :/: ctorHead :: " " :: braced(ctorAux)
+            
+            val clsJS = doc"class ${scope.lookup_!(isym, isym.toLoc)}${
+                par.map(p => doc" extends ${
+                  result(p)
+                }").getOrElse("")
+              } " :: braced:
+                
+                ctorBod :: modDoc :: privs :: {
+                  // * Create "debound method" checkers as accessors
+                  if checkSelections
+                  then mtds
+                    .flatMap:
+                      case td @ FunDefn(params = ps :: pss, body = bod) => S:
+                        doc" # get ${td.sym.nme}$$__checkNotMethod() { ${
+                          runtimeVar
+                        }.deboundMethod(${makeStringLiteral(td.sym.nme)}, ${
+                          makeStringLiteral(sym.nme)
+                        }); }"
+                      case _ => N
+                    .mkDocument(" ")
+                  else doc""
+                } :: {
+                  mkMethods(mtds, mtdPrefix)
+                } :: {
+                  // * If this class has a `toString` implementation, then delegate
+                  // * `prettyPrint` to `toString`.
+                  if mtds.exists(_.sym.nme == "toString") then doc""" # [${
+                    getVar(State.prettyPrintSymbol, N)
+                  }]() { return this.toString(); }"""
+                  // * Call the `render` function in the default `toString` method.
+                  else doc" # ${mtdPrefix}toString() { return $runtimeVar.render(this); }"
+                } :: {
+                  doc""" # static [${getVar(State.definitionMetadataSymbol, N)}] = [${
+                    kind.desc.escaped}, ${sym.nme.escaped}${
+                    if (kind is syntax.Cls) && paramsOpt.isDefined then
+                      doc", [${ctorParams.map { (p, _) => p.decl match
+                        case S(Param(flags = FldFlags(isVal = true))) => doc"${p.name.escaped}"
+                        case S(_) | N => doc"null"
+                      }.mkDocument(", ")}]"
+                    else doc""
+                  }]; """
+              }
+            
+            if isSingleton then
               ownr match
               case S(owner) =>
                 assert((kind is syntax.Pat) || paramsOpt.isEmpty)
-                // doc"${mkThis(owner)}.${sym.nme} = new ${clsJS}"
-                if isModule
-                then doc"(${clsJS});"
-                else doc"const $clsTmp = ${clsJS}; # ${mkThis(owner)}.${sym.nme} = new ${clsTmp
-                  }; # ${mkThis(owner)}.${sym.nme}.class = $clsTmp;"
+                doc"$freezeDefns(${clsJS});"
               case N =>
-                val v = getVar(sym)
-                if isModule
-                then doc"(${clsJS});"
-                else doc"const $clsTmp = ${clsJS}; ${v} = new ${clsTmp
-                  }; # ${v}.class = $clsTmp;"
+                doc"$freezeDefns(${clsJS});"
             else
               val paramsAll = paramsOpt match
                 case None => auxParams
                 case Some(value) => value :: auxParams
               
               val fun = paramsAll match
-                case ps_ :: pss_ =>
-                  val (ps, _) = setupFunction(some(sym.nme), ps_, End())
-                  val pss = pss_.map(setupFunction(N, _, End())._1)
+                case ps_ :: pss_ if paramsOpt.isDefined => outerScope.nest.givenIn:
+                  val (ps, _) = setupFunction(some(sym.nme), ps_, End(), isLambda = false)
+                  val pss = pss_.map(setupFunction(N, _, End(), isLambda = false)._1)
                   val paramsDoc = pss.foldLeft(doc"($ps)"):
                     case (doc, ps) => doc"${doc}(${ps})"
-                  val extraBrace = if paramsOpt.isDefined then "" else "()"
-                  val bod = braced(doc" # return new ${sym.nme}.class$extraBrace$paramsDoc;")
+                  val inner = doc"new ${sym.nme}.class$paramsDoc"
+                  val bod = braced(doc" # return $freeze($inner);")
                   val funBod = pss.foldRight(bod):
                     case (psDoc, doc_) => doc"($psDoc) => $doc_"
                   val funBodRet = if pss.isEmpty then funBod else braced(doc" # return $funBod")
                   val nme = if isValidIdentifier(sym.nme) then sym.nme else ""
                   S(doc"function $nme($ps) ${ funBodRet }")
-                case Nil => N
+                case _ => N
               
               ownr match
               case S(owner) =>
                 val ths = mkThis(owner)
                 fun match
                 case S(f) =>
-                  doc"${ths}.${sym.nme} = ${f}; # ${ths}.${sym.nme}.class = ${clsJS};"
+                  doc"${ths}.${sym.nme} = ${f}; # $freezeDefns($clsJS);"
                 case N =>
-                  doc"${ths}.${sym.nme} = ${clsJS};"
+                  doc"$freezeDefns(${clsJS});"
               case N =>
                 fun match
-                case S(f) => doc"${getVar(sym)} = ${f}; # ${getVar(sym)}.class = ${clsJS};"
-                case N => doc"${getVar(sym)} = ${clsJS};"
+                case S(f) =>
+                  doc"${getVar(sym, sym.toLoc)} = ${f}; # $freezeDefns($clsJS);"
+                case N =>
+                  doc"$freezeDefns(${clsJS});"
+        
         thisProxy match
           case S(proxy) if !scope.thisProxyDefined =>
             scope.thisProxyDefined = true
             doc"const $proxy = this; # $res${returningTerm(rst, endSemi)}"
-          case _ => doc"$res${returningTerm(rst, endSemi = false)}"
+          case _ => doc"$res${returningTerm(rst, endSemi)}"
+      
       doc" # $resJS"
+      
     case Return(Value.Lit(UnitLit(false)), false) => doc" # return${mkSemi}"
     case Return(res, true) => doc" # ${result(res)}${mkSemi}"
     case Return(res, false) => doc" # return ${result(res)}${mkSemi}"
     
     case Match(scrut, Nil, els, rest) =>
       val e = els match
-      case S(el) => returningTerm(el, endSemi = true)
+      case S(el) => nonNestedScoped(el)(bod => returningTerm(bod, endSemi = true))
       case N => doc""
       e :: returningTerm(rest, endSemi)
+    case Match(scrut, (Case.Lit(lit), End(msg)) :: Nil, S(el), rest) =>
+      val sd = result(scrut)
+      val e = braced(nonNestedScoped(el)(res => returningTerm(res, endSemi = false)))
+      doc" # if ($sd !== ${lit.idStr}) $e" :: returningTerm(rest, endSemi)
+    case Match(scrut, arms, els, rest)
+    if arms.sizeCompare(1) > 0 && arms.forall(_._1.isInstanceOf[Case.Lit]) =>
+      val l = arms.foldLeft(doc""): (acc, arm) =>
+        acc :: doc" # case ${arm._1.asInstanceOf[Case.Lit].lit.idStr}: #{ ${
+          nonNestedScoped(arm._2)(bd => returningTerm(bd, endSemi = true))
+        } # break; #} "
+      val e = els match
+        case S(el) =>
+          doc" # default: #{ ${ nonNestedScoped(el)(bd => returningTerm(bd, endSemi = true)) } # break; #} "
+        case N => doc""
+      doc" # switch (${result(scrut)}) { #{ ${l :: e} #}  # }" :: returningTerm(rest, endSemi)
     case Match(scrut, hd :: tl, els, rest) =>
       val sd = result(scrut)
       def cond(cse: Case) = cse match
@@ -373,19 +509,24 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           case Elaborator.ctx.builtins.Num => doc"typeof $sd === 'number'"
           case Elaborator.ctx.builtins.Bool => doc"typeof $sd === 'boolean'"
           case Elaborator.ctx.builtins.Int => doc"globalThis.Number.isInteger($sd)"
+          case Elaborator.ctx.builtins.BigInt => doc"typeof $sd === 'bigint'"
+          case Elaborator.ctx.builtins.Symbol.module => doc"typeof $sd === 'symbol'"
+          case Elaborator.ctx.builtins.TypedArray => doc"globalThis.ArrayBuffer.isView($sd) && !($sd instanceof globalThis.DataView)"
+          case _: ModuleOrObjectSymbol => doc"$sd instanceof ${result(pth)}.class"
           case _ => doc"$sd instanceof ${result(pth)}"
-        case Case.Tup(len, inf) => doc"globalThis.Array.isArray($sd) && $sd.length ${if inf then ">=" else "==="} ${len}"
-        case Case.Field(n, safe = false) =>
+        case Case.Tup(len, inf) => doc"$runtimeVar.Tuple.isArrayLike($sd) && $sd.length ${if inf then ">=" else "==="} ${len}"
+        case Case.Field(name = n, safe = false) =>
           doc"""typeof $sd === "object" && $sd !== null && "${n.name}" in $sd"""
-        case Case.Field(n, safe = true) =>
+        case Case.Field(name = n, safe = true) =>
           doc""""${n.name}" in $sd"""
-      val h = doc" # if (${ cond(hd._1) }) ${ braced(returningTerm(hd._2, endSemi = false)) }"
+      val h = doc" # if (${ cond(hd._1) }) ${ braced(nonNestedScoped(hd._2)(res => returningTerm(res, endSemi = false))) }"
       val t = tl.foldLeft(h)((acc, arm) =>
-        acc :: doc" else if (${ cond(arm._1) }) ${ braced(returningTerm(arm._2, endSemi = false)) }")
+        acc :: doc" else if (${ cond(arm._1) }) ${ braced(nonNestedScoped(arm._2)(res => returningTerm(res, endSemi = false))) }")
       val e = els match
-      case S(el) =>
-        doc" else ${ braced(returningTerm(el, endSemi = false)) }"
-      case N  => doc""
+        case S(End(_)) => doc""
+        case S(el) =>
+          doc" else ${ braced(nonNestedScoped(el)(res => returningTerm(res, endSemi = false))) }"
+        case N  => doc""
       t :: e :: returningTerm(rest, endSemi)
     
     case Begin(sub, thn) =>
@@ -396,28 +537,40 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       doc" # /* $msg */"
     
     case Throw(res) =>
-      doc" # throw ${result(res)};"
+      doc" # throw ${result(res)}${mkSemi}"
     
     case Break(lbl) =>
-      doc" # break ${getVar(lbl)};"
-    
+      doc" # break ${getVar(lbl, lbl.toLoc)}${mkSemi}"
+      
     case Continue(lbl) =>
-      doc" # continue ${getVar(lbl)};"
-    
-    case Label(lbl, bod, rst) =>
+      doc" # continue ${getVar(lbl, lbl.toLoc)}${mkSemi}"
+      
+    case Label(lbl, loop, bod, rst) =>
       scope.allocateName(lbl)
       
       // [fixme:0] TODO check scope and allocate local variables here (see: https://github.com/hkust-taco/mlscript/pull/293#issuecomment-2792229849)
       
-      doc" # ${getVar(lbl)}: while (true) { #{ ${
-        returningTerm(bod, endSemi = false)
-      } # break; #}  # }${returningTerm(rst, endSemi)}"
+      doc" # ${getVar(lbl, lbl.toLoc)}:${if loop then doc" while (true)" else ""} " :: braced {
+          nonNestedScoped(bod)(bd => returningTerm(bd, endSemi = true)) :: (if loop && !bod.isAbortive then doc" # break;" else doc"")
+      } :: returningTerm(rst, endSemi)
       
     case TryBlock(sub, fin, rst) =>
       doc" # try ${ braced(returningTerm(sub, endSemi = false)) } finally ${
         braced(returningTerm(fin, endSemi = false))
       } # ${
         returningTerm(rst, endSemi).stripBreaks}"
+
+    // Only nested scopes will be handled here.
+    case Scoped(syms, body) =>
+      scope.nest.givenIn:
+        val vars = syms.toArray.sortBy(_.uid).iterator.flatMap: l =>
+          whenValidatingIR:
+            if scope.lookup(l).isDefined then // * It is invalid to shadow symbols in the IR
+              raise:
+                WarningReport(msg"var ${l.toString()} in scoped is already allocated" -> N :: Nil)
+          Some(l -> scope.allocateName(l))
+        braced:
+          genLetDecls(vars) :: returningTerm(body, endSemi)   
     
     // case _ => ???
   
@@ -443,65 +596,100 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     *     `foo1 = function foo() { return foo1(); }`
     *   but the result has the same semantics.
     *  */
-  def reserveNames(p: Program)(using Scope): Unit =
+  def reserveNames(p: Program)(using Scope, Raise): Unit =
     def go(blk: Block): Unit = tl.trace(s"avoidNames ${blk.toString.take(100)}..."):
       blk match
       case Define(defn, rest) =>
         defn match
           case d: ClsLikeDefn =>
-            scope.allocateName(d.isym)
+            val nme = scope.allocateName(d.isym)
+            d.companion match
+            case N => ()
+            case S(comp) =>
+              // * This is a bit messy.
+              // * If there is a companion module, we need to map its inner symbol to the same name
+              // * as the class' inner symbol, since in the end they are consolidated into a single definition.
+              scope.addToBindings(comp.isym, nme, shadow = false)
           case _ => //scope.allocateName(defn.sym)
         defn.subBlocks.foreach(go)
         go(rest)
       case _ => blk.subBlocks.foreach(go)
     go(p.main)
   
-  def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: os.Path)(using Raise, Scope): Document =
+  def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using Raise, Scope): Document =
+    scope.allocateName(State.definitionMetadataSymbol)
+    scope.allocateName(State.prettyPrintSymbol)
+    doc"""const ${getVar(State.definitionMetadataSymbol, N)} = globalThis.Symbol.for("mlscript.definitionMetadata");"""
+      :/: doc"""const ${getVar(State.prettyPrintSymbol, N)} = globalThis.Symbol.for("mlscript.prettyPrint");"""
+      :/: programBody(p, exprt, wd)
+  
+  def programBody(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using Raise, Scope): Document =
     reserveNames(p)
+    // Allocate names for imported modules.
     p.imports.foreach: i =>
       i._1 -> scope.allocateName(i._1)
+    // Generate import statements.
     val imps = p.imports.map: i =>
       val path = i._2
       val relPath = if path.startsWith("/")
-        then "./" + os.Path(path).relativeTo(wd).toString
+        then "./" + io.Path(path).relativeTo(wd).map(_.toString).getOrElse(path)
         else path
-      doc"""import ${getVar(i._1)} from "${relPath}";"""
-    imps.mkDocument(doc" # ") :/: block(p.main, endSemi = false).stripBreaks :: (
+      doc"""import ${getVar(i._1, N)} from "${relPath}";"""
+    imps.mkDocument(doc" # ")
+    :/: nonNestedScoped(p.main)(block(_, endSemi = false)).stripBreaks
+    :: locally:
       exprt match
-        case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym)}; export default ${sym.nme};\n"
-        case N => doc""
-      )
+      case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"
+      case N => doc""
   
   def worksheet(p: Program)(using Raise, Scope): (Document, Document) =
     reserveNames(p)
     lazy val imps = p.imports.map: i =>
-      doc"""${getVar(i._1)} = await import("${i._2.toString}").then(m => m.default ?? m);"""
-    blockPreamble(p.imports.map(_._1).toSeq ++ p.main.definedVars.toSeq) ->
-      (imps.mkDocument(doc" # ") :/: returningTerm(p.main, endSemi = false).stripBreaks)
+      doc"""${getVar(i._1, N)} = await import("${i._2.toString}").then(m => m.default ?? m);"""
+    p.main match
+    case Scoped(syms, body) =>
+      val fvs = body.freeVars
+      blockPreamble(p.imports.map(_._1) ++ syms.view.filter(s =>
+          !s.isInstanceOf[TempSymbol]
+          // ^ VarSymbols and TermSymbols should be kept as their value will be acessed and printed by the worksheet
+          || fvs(s))) ->
+        (imps.mkDocument(doc" # ") :/: block(body, endSemi = false).stripBreaks)
+    case body =>
+      blockPreamble(p.imports.map(_._1)) ->
+        (imps.mkDocument(doc" # ") :/: returningTerm(body, endSemi = false).stripBreaks)
   
-  def blockPreamble(ss: Iterable[Symbol])(using Raise, Scope): Document =
-    // TODO document: mutable var assnts require the lookup
-    val vars = ss.filter(scope.lookup(_).isEmpty).toArray.sortBy(_.uid).iterator.map(l =>
-      l -> scope.allocateName(l))
+  def genLetDecls(vars: Iterator[(Symbol, Str)]): Document =
     if vars.isEmpty then doc"" else
       doc" # let " :: vars.map: (_, nme) =>
         nme
       .toList.mkDocument(", ")
       :: doc";"
   
+  def blockPreamble(ss: Iterable[Symbol])(using Raise, Scope): Document =
+    val vars = ss.toArray.sortBy(_.uid).iterator.map(l =>
+      l -> scope.allocateName(l))
+    genLetDecls(vars)
+
+  // Only handle non-nested Scoped nodes: we output the bindings, but do not add another pair of braces
+  def nonNestedScoped(blk: Block)(k: Block => Document)(using Raise, Scope): Document = blk match
+    case Scoped(syms, body) =>
+      blockPreamble(syms.view.filter(body.freeVars)) :: k(body)
+    case _ => k(blk)
+  
+  
   def block(t: Block, endSemi: Bool)(using Raise, Scope): Document =
-    blockPreamble(t.definedVars) :: returningTerm(t, endSemi)
+    returningTerm(t, endSemi)
   
   def body(t: Block, endSemi: Bool)(using Raise, Scope): Document = scope.nest givenIn:
-    block(t, endSemi)
+    nonNestedScoped(t)(bd => block(bd, endSemi))
   
-  def braced(t: Document)(using Raise, Scope): Document =
-    if t.isEmpty then
-      doc"{}"
-    else
-      doc"{ #{ ${t} #}  # }"
+  def defineProperty(target: Document, prop: Str, value: Document, enumerable: Bool = false): Document =
+    doc"Object.defineProperty(${target}, ${prop.escaped}, ${
+      bracketed("{", "}", insertBreak = true):
+        (if enumerable then doc"enumerable: true, # " else doc"") :: doc"value: ${value}"
+    })"
   
-  def setupFunction(name: Option[Str], params: ParamList, body: Block)
+  def setupFunction(name: Option[Str], params: ParamList, body: Block, isLambda: Bool)
       (using Raise, Scope): (Document, Document) =
     val paramsList = params.params.map(p => scope.allocateName(p.sym))
       .++(params.restParam.map(p => "..." + scope.allocateName(p.sym)))
@@ -511,10 +699,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
 
 
 object JSBuilder:
-  import scala.util.matching.Regex
   
-  private val identifierPattern: Regex = "^[A-Za-z_$][A-Za-z0-9_$]*$".r
-
   def isValidIdentifier(s: Str): Bool = identifierPattern.matches(s) && !keywords.contains(s)
   
   // in this case, a keyword can be used as a field name
@@ -604,24 +789,48 @@ object JSBuilder:
         else f"\\u${c.toInt}%04X"
     }.mkString
   
+  extension (dsym: DefinitionSymbol[?])
+    def shouldBeLifted: Bool = 
+      val bsym = dsym.asBlkMember
+      (
+        (dsym.asTrm orElse bsym.flatMap(_.asTrm)).isDefined ||
+        (dsym.asCls orElse bsym.flatMap(_.asCls)).flatMap(_.defn).exists(_.paramsOpt.isDefined)
+      ) && 
+        (dsym.asModOrObj orElse dsym.asCls).isDefined
+  
 end JSBuilder
 
 
-trait JSBuilderArgNumSanityChecks(using Config, Elaborator.State)
+trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
     extends JSBuilder:
   
-  val instrument: Bool = config.sanityChecks.isDefined
+  private val doInstrument = config.sanityChecks.isDefined
+  private val init = true
+  def instrument: Bool =
+    require(init, "trait body is not yet initialized")
+    doInstrument
   
   override def checkMLsCalls: Bool = instrument
   override def checkSelections: Bool = instrument
+  override def freezeDefinitions: Bool = instrument
   
   val functionParamVarargSymbol = semantics.TempSymbol(N, "args")
   
-  override def setupFunction(name: Option[Str], params: ParamList, body: Block)(using Raise, Scope): (Document, Document) =
+  override def setupFunction(name: Option[Str], params: ParamList, body: Block, isLambda: Bool)(using Raise, Scope): (Document, Document) =
+    // * We used to instrument `fun f(x, y) = x + y` into something like
+    // * `function f(...args) { runtime.checkArgs("f", 2, true, args.length); let x = args[0]; let y = args[1]; x + y }`
+    // * which was very verbose, in addition to possibly making things quite inefficient.
+    // * Now, we no longer instrument lambdas (which affects extra parameter lists),
+    // * and we instead use the JS builtin `arguments` array to get the number of received arguments, as in
+    // * `function f(x, y) { runtime.checkArgs("f", 2, true, arguments.length); x + y }`
+    // * The idea is that later on, we'll add a runtime type sanity check as well anyway,
+    // * which will check arguments against the erased parameter type,
+    // * including checking they are not `undefined`, which should achieve most of the benefit.
+    /*
     if instrument then
-      val paramsList = params.params.map(p => Scope.scope.allocateName(p.sym))
-      val paramRest = params.restParam.map(p => Scope.scope.allocateName(p.sym))
-      val paramsStr = Scope.scope.allocateName(functionParamVarargSymbol)
+      val paramsList = params.params.map(p => scope.allocateName(p.sym))
+      val paramRest = params.restParam.map(p => scope.allocateName(p.sym))
+      val paramsStr = scope.allocateName(functionParamVarargSymbol, shadow = true)
       val functionName = JSBuilder.makeStringLiteral(name.fold("")(n => s"${JSBuilder.escapeStringCharacters(n)}"))
       val checkArgsNum = doc"\n$runtimeVar.checkArgs($functionName, ${params.paramCountLB}, ${params.paramCountUB.toString}, $paramsStr.length);"
       val paramsAssign = paramsList.zipWithIndex.map{(nme, i) =>
@@ -630,6 +839,16 @@ trait JSBuilderArgNumSanityChecks(using Config, Elaborator.State)
         case N => doc""
         case S(p) => doc"\nlet $p = $runtimeVar.Tuple.slice($paramsStr, ${params.paramCountLB}, 0);"
       (doc"...$paramsStr", doc"$checkArgsNum$paramsAssign$restAssign${this.body(body, endSemi = false)}")
+    */
+    if instrument && !isLambda then
+      val functionName = JSBuilder.makeStringLiteral(name.fold("")(n => s"${JSBuilder.escapeStringCharacters(n)}"))
+      val checkArgsNum = doc"\n$runtimeVar.checkArgs($functionName, ${params.paramCountLB}, ${params.paramCountUB.toString}, arguments.length);"
+      val paramsList = params.params.map(p => scope.allocateName(p.sym))
+        .++(params.restParam.map(p => "..." + scope.allocateName(p.sym)))
+        .mkDocument(", ")
+      (paramsList,
+        doc"$checkArgsNum${this.body(body, endSemi = false)}")
     else
-      super.setupFunction(name, params, body)
+      super.setupFunction(name, params, body, isLambda = isLambda)
+
 

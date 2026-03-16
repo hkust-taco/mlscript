@@ -1,0 +1,104 @@
+:js
+
+open annotations { compile }
+
+object A
+object B
+
+data class Node[T](left: Node[T], value: T, right: Node[T])
+
+// The patterns generate trees that have odd or even numbers of node `A`.
+
+pattern OddTree =
+  A |
+  Node(EvenTree, A, EvenTree) | Node(OddTree, A, OddTree) |
+  Node(EvenTree, B, OddTree) | Node(OddTree, B, EvenTree)
+pattern EvenTree =
+  B |
+  Node(EvenTree, A, OddTree) | Node(OddTree, A, EvenTree) |
+  Node(EvenTree, B, EvenTree) | Node(OddTree, B, OddTree)
+
+fun a(lc, rc) = Node(lc, A, rc)
+
+fun b(lc, rc) = Node(lc, B, rc)
+
+:global
+:expect true
+
+// Test each case of `EvenTree`.
+// =============================
+
+B is @compile EvenTree
+//│ = true
+
+B is EvenTree
+//│ = true
+
+not A is @compile EvenTree
+//│ = true
+
+not A is EvenTree
+//│ = true
+
+not a(B, B) is @compile EvenTree
+//│ = true
+
+not a(B, B) is EvenTree
+//│ = true
+
+a(B, A) is @compile EvenTree
+//│ = true
+
+a(B, A) is EvenTree
+//│ = true
+
+a(A, B) is @compile EvenTree
+//│ = true
+
+a(A, B) is EvenTree
+//│ = true
+
+b(A, A) is @compile EvenTree
+//│ = true
+
+b(A, A) is EvenTree
+//│ = true
+
+b(B, B) is @compile EvenTree
+//│ = true
+
+b(B, B) is EvenTree
+//│ = true
+
+// Test each case of `OddTree`.
+// ============================
+
+A is @compile OddTree
+//│ = true
+
+A is OddTree
+//│ = true
+
+a(B, B) is @compile OddTree
+//│ = true
+
+a(B, B) is OddTree
+//│ = true
+
+a(A, A) is @compile OddTree
+//│ = true
+
+a(A, A) is OddTree
+//│ = true
+
+b(B, A) is @compile OddTree
+//│ = true
+
+b(B, A) is OddTree
+//│ = true
+
+b(A, B) is @compile OddTree
+//│ = true
+
+b(A, B) is OddTree
+//│ = true

@@ -1,0 +1,62 @@
+:js
+
+
+
+:fixme
+let x: Int
+//│ ╔══[COMPILATION ERROR] Unsupported let binding shape
+//│ ║  l.6: 	let x: Int
+//│ ╙──     	    ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+let x
+//│ x = undefined
+
+x
+
+
+val x
+
+// `x` is declared, just never initilized,
+// so there shouldn't be a compilation error
+// of "`x` not found in scope"
+x
+
+
+val x: Int
+
+// `x` is declared, just never initilized,
+// so there shouldn't be a compilation error
+// of "`x` not found in scope"
+x
+
+
+fun p: Int
+
+:re
+p
+//│ ═══[RUNTIME ERROR] TypeError: p is not a function
+
+
+// :ctx
+fun (++) test: (Int, Int) -> Int
+
+:re
+test(1, 2)
+//│ ═══[RUNTIME ERROR] TypeError: test is not a function
+
+:sjs
+:re
+1 ++ 1
+//│ JS (unsanitized):
+//│ let tmp2; tmp2 = test(); tmp2(1, 1)
+//│ ═══[RUNTIME ERROR] TypeError: test is not a function
+
+
+declare class C
+
+:re
+new C
+//│ ═══[RUNTIME ERROR] TypeError: globalThis.C is not a constructor
+
+

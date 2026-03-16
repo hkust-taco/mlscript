@@ -32,7 +32,7 @@ take_1(r)
 
 let f = case
   { a: 1 as a } then a
-//│ f = [function]
+//│ f = fun
 
 f(a: 1)
 //│ = 1
@@ -42,10 +42,10 @@ f(a: 1)
 :e
 let f = case
   { a: 1 } then a
-//│ ╔══[ERROR] Name not found: a
+//│ ╔══[COMPILATION ERROR] Name not found: a
 //│ ║  l.44: 	  { a: 1 } then a
 //│ ╙──      	                ^
-//│ f = [function]
+//│ f = fun
 
 // * OTOH, note that `a` is bound here
 let rcd =
@@ -56,12 +56,19 @@ let rcd =
 // * As that will make sense when we have dependent types,
 // * as in: `{ n: Int, v: Vec[Int, n] }`
 
-:js
 let r = {x: 2, y : 4}
+//│ r = {x: 2, y: 4}
+
+:e
 if r is
   {x:a, y:a} then a
+//│ ╔══[COMPILATION ERROR] Duplicated pattern variable.
+//│ ║  l.64: 	  {x:a, y:a} then a
+//│ ║        	          ^
+//│ ╟── The previous definition is as follows.
+//│ ║  l.64: 	  {x:a, y:a} then a
+//│ ╙──      	     ^
 //│ = 4
-//│ r = {x: 2, y: 4}
 
 
 let rr = {x: {y:10, z:100}, t:1000}
@@ -74,12 +81,12 @@ if rr is
 
 let f = case
   { a: 1 & a } then a
-//│ f = [function]
+//│ f = fun
 
 
 let f = case
   { :a } then a
-//│ f = [function]
+//│ f = fun
 
 f(a: 1)
 //│ = 1
@@ -173,6 +180,16 @@ is_object([1, 2])
 is_object(is_object)
 //│ = true
 
-:todo
 fun is_record_alt(x) = x is {}
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: encountered empty block
+
+is_record_alt of []
+//│ = true
+
+is_record_alt of 0
+//│ = false
+
+is_object("")
+//│ = false
+
+is_object(Nil)
+//│ = true

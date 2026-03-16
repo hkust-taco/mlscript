@@ -1,0 +1,12 @@
+:js
+
+
+module M with
+  type T = Int
+
+fun f[A] = (x: A) => x
+
+f[M.T](42)
+//│ = 42
+
+

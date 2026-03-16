@@ -13,3 +13,13 @@ module A with
 class Test with
   f()
   val a = 1
+
+class Eff
+
+:effectHandlers
+:expect 7
+handle h = Eff with
+  fun perform(x)(k) = k(x) + 1
+let x = 5
+h.perform(x) + 1
+//│ = 7

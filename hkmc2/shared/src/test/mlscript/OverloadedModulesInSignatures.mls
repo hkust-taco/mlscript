@@ -1,0 +1,155 @@
+:js
+
+
+class ClsMod with
+  val whoami = "class"
+module ClsMod with
+  val whoami = "module"
+
+type TypMod = Int
+module TypMod with
+  val whoami = "module"
+
+:fixme
+fun TrmMod = 42
+module TrmMod with
+  val whoami = "module"
+//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'TrmMod'
+//│ ║  l.14: 	fun TrmMod = 42
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── with module of the same name
+//│ ║  l.15: 	module TrmMod with
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.16: 	  val whoami = "module"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
+
+fun f: ClsMod = 42
+
+:rt
+f
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Resolved{sym=term:f⁰,typ=class:ClsMod⁰}:
+//│     t = Ref{sym=member:f¹} of member:f¹
+//│     sym = term:f⁰
+//│ = 42
+
+fun f: module ClsMod = ClsMod
+
+:rt
+f
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Resolved{sym=term:f²,typ=module:ClsMod¹}:
+//│     t = Ref{sym=member:f³} of member:f³
+//│     sym = term:f²
+//│ = class ClsMod { whoami: "module" }
+
+fun f: TypMod = 42
+
+:rt
+f
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Resolved{sym=term:f⁴,typ=type:TypMod⁰}:
+//│     t = Ref{sym=member:f⁵} of member:f⁵
+//│     sym = term:f⁴
+//│ = 42
+
+fun f: module TypMod = TypMod
+
+:rt
+f
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Resolved{sym=term:f⁶,typ=module:TypMod¹}:
+//│     t = Ref{sym=member:f⁷} of member:f⁷
+//│     sym = term:f⁶
+//│ = class TypMod { whoami: "module" }
+
+:e
+fun f: TrmMod = 42
+//│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference of type TrmMod denoting module 'TrmMod'.
+//│ ║  l.75: 	fun f: TrmMod = 42
+//│ ║        	       ^^^^^^
+//│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
+
+:sjs
+fun f = TrmMod
+//│ JS (unsanitized):
+//│ let f5; f5 = function f() { let tmp4; tmp4 = TrmMod1(); return tmp4 };
+
+:fixme
+:expect 42
+f
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor TrmMod cannot be invoked without 'new'
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+
+:sjs
+fun f: module TrmMod = TrmMod
+//│ JS (unsanitized):
+//│ let f6; f6 = function f() { return TrmMod1.class };
+
+fun assertModule(module m: ClsMod): module ClsMod = m
+
+assertModule(ClsMod).whoami
+//│ = "module"
+
+assertModule(TypMod).whoami
+//│ = "module"
+
+:fixme
+assertModule(TrmMod).whoami
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor TrmMod cannot be invoked without 'new'
+
+
+fun assertNonModule(m) = m
+
+// FIXME: should not resolve to module's `.whoami`, hence should be an error
+:breakme
+assertNonModule(ClsMod).whoami
+//│ = "module"
+
+// FIXME: should not resolve to module's `.whoami`, hence should be an error
+:breakme
+assertNonModule(TypMod).whoami
+//│ = "module"
+
+// FIXME: should not resolve to module's `.whoami`, hence should be an error
+// FIXME: Should module-check as the term module (or probably we will remove module-checks before that)
+:breakme
+:fixme
+assertNonModule(TrmMod).whoami
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor TrmMod cannot be invoked without 'new'
+
+
+type Foo[A] = Int
+module Foo
+
+:e
+fun f(x: Foo): Foo = x
+//│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
+//│ ║  l.134: 	fun f(x: Foo): Foo = x
+//│ ╙──       	         ^^^
+//│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
+//│ ║  l.134: 	fun f(x: Foo): Foo = x
+//│ ╙──       	               ^^^
+
+fun f(x: Foo[Int]): Foo[Int] = x
+
+fun f(module x: Foo): module Foo = x
+
+:e
+fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
+//│ ║  l.147: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ╙──       	                ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
+//│ ║  l.147: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ╙──       	                                  ^^^^^^^^
+
+

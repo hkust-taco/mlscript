@@ -3,26 +3,26 @@
 
 a and b
 //│ Parsed:
-//│ 	InfixApp(Ident(a),keyword 'and',Ident(b))
+//│ 	InfixApp(Ident(a),Keywrd(keyword 'and'),Ident(b))
 
 a and b and c
 //│ Parsed:
-//│ 	InfixApp(InfixApp(Ident(a),keyword 'and',Ident(b)),keyword 'and',Ident(c))
+//│ 	InfixApp(InfixApp(Ident(a),Keywrd(keyword 'and'),Ident(b)),Keywrd(keyword 'and'),Ident(c))
 
 a and b or x and d
 //│ Parsed:
-//│ 	InfixApp(InfixApp(Ident(a),keyword 'and',Ident(b)),keyword 'or',InfixApp(Ident(x),keyword 'and',Ident(d)))
+//│ 	InfixApp(InfixApp(Ident(a),Keywrd(keyword 'and'),Ident(b)),Keywrd(keyword 'or'),InfixApp(Ident(x),Keywrd(keyword 'and'),Ident(d)))
 
 a or b and x or d
 //│ Parsed:
-//│ 	InfixApp(InfixApp(Ident(a),keyword 'or',InfixApp(Ident(b),keyword 'and',Ident(x))),keyword 'or',Ident(d))
+//│ 	InfixApp(InfixApp(Ident(a),Keywrd(keyword 'or'),InfixApp(Ident(b),Keywrd(keyword 'and'),Ident(x))),Keywrd(keyword 'or'),Ident(d))
 
 (a and b) or (x and d)
 //│ Parsed:
-//│ 	InfixApp(Bra(Round,InfixApp(Ident(a),keyword 'and',Ident(b))),keyword 'or',Bra(Round,InfixApp(Ident(x),keyword 'and',Ident(d))))
+//│ 	InfixApp(Bra(Round,InfixApp(Ident(a),Keywrd(keyword 'and'),Ident(b))),Keywrd(keyword 'or'),Bra(Round,InfixApp(Ident(x),Keywrd(keyword 'and'),Ident(d))))
 
 a and (b or x) and d
 //│ Parsed:
-//│ 	InfixApp(InfixApp(Ident(a),keyword 'and',Bra(Round,InfixApp(Ident(b),keyword 'or',Ident(x)))),keyword 'and',Ident(d))
+//│ 	InfixApp(InfixApp(Ident(a),Keywrd(keyword 'and'),Bra(Round,InfixApp(Ident(b),Keywrd(keyword 'or'),Ident(x)))),Keywrd(keyword 'and'),Ident(d))
 
 

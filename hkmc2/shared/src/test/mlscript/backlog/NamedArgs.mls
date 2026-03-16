@@ -36,18 +36,14 @@ id(a: 0)
 //│ Blk:
 //│   stats = Nil
 //│   res = App:
-//│     lhs = SynthSel{member:id}:
-//│       prefix = Ref:
-//│         sym = member:Predef
-//│         iargsLs = N
+//│     lhs = SynthSel{sym=member:id⁰}:
+//│       prefix = Ref{sym=member:Predef⁰} of member:Predef⁰
 //│       nme = Ident of "id"
-//│       iargsLs = N
 //│     rhs = Tup of Ls of 
 //│       Fld:
 //│         flags = ()
 //│         term = Lit of StrLit of "a"
 //│         asc = S of Lit of IntLit of 0
-//│     iargsLs = N
 //│ = {a: 0}
 
 id of a: 0

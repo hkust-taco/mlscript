@@ -45,13 +45,14 @@ and then use one of the following commands.
 - `hkmc2AllTests/test` for running all hkmc2 tests.
 - `hkmc2JVM/test` for running only the compilation tests, in `hkmc2/shared/src/test/mlscript-compile`.
 - `hkmc2DiffTests/test` for running only the diff-tests, in `hkmc2/shared/src/test/mlscript`.
+- `hkmc2MostTests/test` for running the above two.
 - `~hkmc2DiffTests/Test/run` for running the test watcher,
   which updates test files as you save them and recompiles the Scala sources automatically on change.
 - `test` for compiling all JVM and JS subprojects
   and running every single test in the repository,
   including obsolete ones.
 
-Another useful SBT incantation is `; hkmc2AllTests/test; ~hkmc2DiffTests/Test/run`.
+Another useful SBT incantation is `; hkmc2MostTests/test; ~hkmc2DiffTests/Test/run`.
 This command runs all hkmc2 tests once and then starts the test watcher.
 This is a useful command to use periodically while making changes to the compiler,
 to check that you haven't broken anything.

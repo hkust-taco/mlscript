@@ -39,17 +39,17 @@ fun h1(a) =
     a is Some(y) and y is Right(z) then z
     a is None then 0
 //│ Normalized:
-//│ >  if
-//│ >    a is Option.Some.class(param0) and
-//│ >      let x = $param0#1
-//│ >      x is Left.class(param0) and
-//│ >        let y = $param0#0
-//│ >        else y#666
-//│ >      let y = $param0#0
-//│ >      y is Right.class(param0) and
-//│ >        let z = $param0#0
-//│ >        else z#666
-//│ >    a is Option.None.class then 0
+//│ >  ‹if|while›
+//│ >    a is Option.Some(arg$Some$0$) and
+//│ >      let x = tmp:arg$Some$0$⁰
+//│ >      x is Left(arg$Left$0$) and
+//│ >        let y = tmp:arg$Left$0$⁰
+//│ >        else y⁰
+//│ >      let y = tmp:arg$Some$0$⁰
+//│ >      y is Right(arg$Right$0$) and
+//│ >        let z = tmp:arg$Right$0$⁰
+//│ >        else z⁰
+//│ >    a is Option.None then 0
 
 h1(Some(Left(42)))
 //│ = 42
@@ -71,19 +71,19 @@ fun h2(a) =
       y' is Right(z) then z
     a is None then 0
 //│ Normalized:
-//│ >  if
-//│ >    a is Option.Some.class(param0) and
-//│ >      let x = $param0#1
-//│ >      let x' = x#0
-//│ >      x' is Left.class(param0) and
-//│ >        let y = $param0#0
-//│ >        else y#666
-//│ >      let y = $param0#0
-//│ >      let y' = y#666
-//│ >      y' is Right.class(param0) and
-//│ >        let z = $param0#0
-//│ >        else z#666
-//│ >    a is Option.None.class then 0
+//│ >  ‹if|while›
+//│ >    a is Option.Some(arg$Some$0$) and
+//│ >      let x = tmp:arg$Some$0$¹
+//│ >      let x' = x⁰
+//│ >      x' is Left(arg$Left$0$) and
+//│ >        let y = tmp:arg$Left$0$¹
+//│ >        else y¹
+//│ >      let y = tmp:arg$Some$0$¹
+//│ >      let y' = y²
+//│ >      y' is Right(arg$Right$0$) and
+//│ >        let z = tmp:arg$Right$0$¹
+//│ >        else z¹
+//│ >    a is Option.None then 0
 
 // :w
 fun h3(x, y, f, p) =

@@ -90,7 +90,7 @@ fun foo3'(r1) = foo3(r1)
 fun foo4(r1, r2, f) =
   let exec = freeze(r1, () => freeze(r2, () => f(r1, r2)))
   let r = exec()
-  !r + 1
+  !(r) + 1
 
 region r in
   region s in

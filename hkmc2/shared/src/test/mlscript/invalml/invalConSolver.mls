@@ -7,15 +7,16 @@
 declare class Array[T]
 declare class Map[K, V]
 
+fun id(x) = x
+
 fun mkArray: [T] -> () -> Array[T]
-fun mkArray() = @untyped globalThis.Array()
+fun mkArray() = @untyped id(new! mut globalThis.Array())
 
 fun at: [T] -> (Array[T], Int) -> T
 fun at(xs, i) = @untyped xs.at(i)
 
-fun not(b) = if b then false else true
+fun nt(b) = if b then false else true
 fun (;) seq(_, res) = res
-fun id(x) = x
 
 fun println: Any -> ()
 fun println(s) = @untyped print(s)
@@ -30,7 +31,7 @@ fun (===) seq: (Str, Str) -> Bool
 fun seq(x, y) = @untyped x == y
 
 fun mkMap: [K, V] -> () -> Map[K, V]
-fun mkMap() = @untyped id(new globalThis.Map())
+fun mkMap() = @untyped id(new! mut globalThis.Map())
 
 fun has: [K, V] -> (Map[K, V], K) -> Bool
 fun has(m, k) = @untyped m.has(k)
@@ -104,7 +105,7 @@ fun iter(arr, f) =
 
 fun next: [T, S] -> Iter[T, S] ->{S} Option[T]
 fun next(it) =
-  let i = !it.Iter#i
+  let i = !(it.Iter#i)
   if i == it.Iter#end then None()
   else
     let res = Some(at of it.Iter#arr, i)
@@ -199,17 +200,11 @@ fun levelOf(ty) = if ty is
 :e
 fun matchP = case
   Pair(IntType, IntType) then ()
-//│ ╔══[ERROR] Pattern Ident(IntType) is not supported yet.
-//│ ║  l.201: 	  Pair(IntType, IntType) then ()
-//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Pattern Ident(IntType) is not supported yet.
-//│ ║  l.201: 	  Pair(IntType, IntType) then ()
-//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Expect 4 cases, but 1 got.
-//│ ║  l.201: 	  Pair(IntType, IntType) then ()
+//│ ╔══[COMPILATION ERROR] Expect 4 cases, but 1 got.
+//│ ║  l.202: 	  Pair(IntType, IntType) then ()
 //│ ╙──       	                ^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Expect 4 cases, but 1 got.
-//│ ║  l.201: 	  Pair(IntType, IntType) then ()
+//│ ╔══[COMPILATION ERROR] Expect 4 cases, but 1 got.
+//│ ║  l.202: 	  Pair(IntType, IntType) then ()
 //│ ╙──       	       ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -242,10 +237,10 @@ fun test(xs) =
     let ncs = r.ref 0
     iter of xs, it =>
       ncs := 1
-//│ ╔══[ERROR] Type error in function literal with expected type (Iter['T, out S]) ->{S ∨ 'E} 'Res
-//│ ║  l.243: 	    iter of xs, it =>
+//│ ╔══[COMPILATION ERROR] Type error in function literal with expected type (Iter['T, out S]) ->{S ∨ 'E} 'Res
+//│ ║  l.238: 	    iter of xs, it =>
 //│ ║         	                ^^^^^
-//│ ║  l.244: 	      ncs := 1
+//│ ║  l.239: 	      ncs := 1
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg  <:  S ∨ 'E
 //│ ╟── because: cannot constrain  'reg  <:  'E ∨ S
@@ -272,7 +267,7 @@ fun extrude(ty, pol, lvl, freshVar, cache) = getOrUpdate of cache, Pair(ty, Pair
   else if ty is
     IntType() then ty
     FunctionType(lhs, rhs) then
-      FunctionType(extrude(lhs, not(pol), lvl, freshVar, cache), extrude(rhs, pol, lvl, freshVar, cache))
+      FunctionType(extrude(lhs, nt(pol), lvl, freshVar, cache), extrude(rhs, pol, lvl, freshVar, cache))
     RecordType(fields) then
       RecordType(map(fields, p => if p is Pair(name, ty) then Pair(name, extrude(ty, pol, lvl, freshVar, cache))))
     TypeVariable(name, level, lb, ub) then
@@ -309,8 +304,8 @@ fun solve(constraints, freshVar, cache, genExtrCache) = if constraints is
             push(lb, lhs)
             region r in
               let ncs = r.ref cs
-              iter(ub, it => foreach(it, b => ncs := Cons(Pair(lhs, b), !ncs); ()))
-              solve(!ncs, freshVar, cache, genExtrCache)
+              iter(ub, it => foreach(it, b => ncs := Cons(Pair(lhs, b), !(ncs)); ()))
+              solve(!(ncs), freshVar, cache, genExtrCache)
           else report(lhs, rhs)
         FunctionType(arg, res) then if rhs is
           FunctionType(arg', res') then
@@ -320,8 +315,8 @@ fun solve(constraints, freshVar, cache, genExtrCache) = if constraints is
               push(lb, lhs)
               region r in
                 let ncs = r.ref cs
-                iter(ub, it => foreach(it, b => ncs := Cons(Pair(lhs, b), !ncs); ()))
-                solve(!ncs, freshVar, cache, genExtrCache)
+                iter(ub, it => foreach(it, b => ncs := Cons(Pair(lhs, b), !(ncs)); ()))
+                solve(!(ncs), freshVar, cache, genExtrCache)
             else
               let lhs' = extrude(lhs, true, level, freshVar, genExtrCache())
               solve(Cons(Pair(lhs', rhs), cs), freshVar, cache, genExtrCache)
@@ -338,8 +333,8 @@ fun solve(constraints, freshVar, cache, genExtrCache) = if constraints is
               push(lb, lhs)
               region r in
                 let ncs = r.ref cs
-                iter(ub, it => foreach(it, b => ncs := Cons(Pair(lhs, b), !ncs); ()))
-                solve(!ncs, freshVar, cache, genExtrCache)
+                iter(ub, it => foreach(it, b => ncs := Cons(Pair(lhs, b), !(ncs)); ()))
+                solve(!(ncs), freshVar, cache, genExtrCache)
             else
               let lhs' = extrude(lhs, true, level, freshVar, genExtrCache())
               solve(Cons(Pair(lhs', rhs), cs), freshVar, cache, genExtrCache)
@@ -349,15 +344,15 @@ fun solve(constraints, freshVar, cache, genExtrCache) = if constraints is
             push(ub, rhs)
             region r in
               let ncs = r.ref cs
-              iter(lb, it => foreach(it, b => ncs := Cons(Pair(b, rhs), !ncs); ()))
-              solve(!ncs, freshVar, cache, genExtrCache)
+              iter(lb, it => foreach(it, b => ncs := Cons(Pair(b, rhs), !(ncs)); ()))
+              solve(!(ncs), freshVar, cache, genExtrCache)
           else
             let rhs' = extrude(rhs, false, level, freshVar, genExtrCache())
             solve(Cons(Pair(lhs, rhs'), cs), freshVar, cache, genExtrCache)
 
 
 fun freshVar(r, ctx, name, lvl) =
-  if (not of hasKey(ctx, name)) then
+  if (nt(hasKey(ctx, name))) then
     add(ctx, name, 1)
     TypeVariable(name, lvl, empty(r), empty(r))
   else
@@ -365,15 +360,15 @@ fun freshVar(r, ctx, name, lvl) =
       let i = r2.ref 0
       let res = r2.ref None()
       whileDo of () =>
-        let nn = name ~ toString(!i)
-        if (not of hasKey(ctx, nn)) then
+        let nn = name ~ toString(!(i))
+        if (nt(hasKey(ctx, nn))) then
           res := Some(TypeVariable(nn, lvl, empty(r), empty(r)))
           add(ctx, nn, 1)
           false
         else
-          i := !i + 1
+          i := !(i) + 1
           true
-      if !res is
+      if !(res) is
         Some(v) then v
         else error()
 
@@ -588,8 +583,8 @@ region r in
 //│ > a_1 <: a0_1
 //│ > where: 
 //│ >   a_1 <: a0_1
-//│ ╔══[ERROR] Type error in application with expected type 'constraints
-//│ ║  l.586: 	  wrongSolve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+//│ ╔══[COMPILATION ERROR] Type error in application of type Cons with expected type 'constraints
+//│ ║  l.581: 	  wrongSolve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
 //│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  List[in ⊥ out 'A]  <:  'constraints
 //│ ╟── because: cannot constrain  List[in ⊥ out 'A]  <:  List[in 'Cons out 'Cons1]
@@ -606,8 +601,8 @@ region r in
 //│ ╟── because: cannot constrain  'R  <:  ⊥
 //│ ╟── because: cannot constrain  'R1  <:  ⊥
 //│ ╙── because: cannot constrain  r  <:  ⊥
-//│ ╔══[ERROR] Type error in application with expected type 'constraints
-//│ ║  l.586: 	  wrongSolve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+//│ ╔══[COMPILATION ERROR] Type error in application of type Cons with expected type 'constraints
+//│ ║  l.581: 	  wrongSolve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
 //│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  List[in ⊥ out 'A]  <:  'constraints
 //│ ╟── because: cannot constrain  List[in ⊥ out 'A]  <:  List[in 'Cons out 'Cons1]
@@ -636,9 +631,9 @@ region r in
 //│ ╟── because: cannot constrain  r  <:  ¬'R5
 //│ ╟── because: cannot constrain  'R5  <:  ¬r
 //│ ╙── because: cannot constrain  r  <:  ¬r
-//│ ╔══[ERROR] Type error in function literal with expected type 'freshVar
-//│ ║  l.586: 	  wrongSolve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
-//│ ║         	                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Type error in function literal with expected type 'freshVar
+//│ ║  l.581: 	  wrongSolve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+//│ ║         	                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ('n, 'l) ->{'R7 ∨ 'R8 ∨ 'R9 ∨ 'R10 ∨ 'eff} (Type[in ⊥ out 'R11] ∨ 'A6 ∨ 'app)  <:  'freshVar
 //│ ╟── because: cannot constrain  ('n, 'l) ->{'R7 ∨ 'R8 ∨ 'R9 ∨ 'R10 ∨ 'eff} (Type[in ⊥ out 'R11] ∨ 'A6 ∨ 'app)  <:  (Str, Int) ->{'R12} (Type[in ⊥ out 'R12])
 //│ ╟── because: cannot constrain  Type[in ⊥ out 'R11] ∨ 'A6 ∨ 'app  <:  Type[in ⊥ out 'R12]
@@ -655,8 +650,8 @@ region r in
 //│ ╟── because: cannot constrain  'R4  <:  ¬r
 //│ ╟── because: cannot constrain  'R13  <:  ¬r
 //│ ╙── because: cannot constrain  r  <:  ¬r
-//│ ╔══[ERROR] Type error in application with expected type 'cache
-//│ ║  l.586: 	  wrongSolve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+//│ ╔══[COMPILATION ERROR] Type error in application with expected type 'cache
+//│ ║  l.581: 	  wrongSolve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
 //│ ║         	                                                                            ^^^^^^^^^^
 //│ ╟── because: cannot constrain  HashMap['K, 'V, in ⊥ out 'R14]  <:  'cache
 //│ ╟── because: cannot constrain  HashMap['K, 'V, in ⊥ out 'R14]  <:  HashMap[in 'K1 out 'K2, in 'V1 out 'V2, in ⊥ out 'R15]
@@ -671,8 +666,8 @@ region r in
 //│ ╟── because: cannot constrain  'R4  <:  ¬r
 //│ ╟── because: cannot constrain  'R13  <:  ¬r
 //│ ╙── because: cannot constrain  r  <:  ¬r
-//│ ╔══[ERROR] Type error in application with expected type 'genExtrCache
-//│ ║  l.586: 	  wrongSolve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+//│ ╔══[COMPILATION ERROR] Type error in application with expected type 'genExtrCache
+//│ ║  l.581: 	  wrongSolve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
 //│ ║         	                                                                                        ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  () ->{'R16} (HashMap['K3, 'V3, in ⊥ out 'R16])  <:  'genExtrCache
 //│ ╟── because: cannot constrain  () ->{'R16} (HashMap['K3, 'V3, in ⊥ out 'R16])  <:  () ->{'eff1} ('app1)
@@ -697,8 +692,8 @@ region r in
 //│ ╟── because: cannot constrain  r  <:  ¬'R19
 //│ ╟── because: cannot constrain  'R19  <:  ¬r
 //│ ╙── because: cannot constrain  r  <:  ¬r
-//│ ╔══[ERROR] Type error in application with expected type 'genExtrCache
-//│ ║  l.586: 	  wrongSolve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+//│ ╔══[COMPILATION ERROR] Type error in application with expected type 'genExtrCache
+//│ ║  l.581: 	  wrongSolve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
 //│ ║         	                                                                                        ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  () ->{'R16} (HashMap['K3, 'V3, in ⊥ out 'R16])  <:  'genExtrCache
 //│ ╟── because: cannot constrain  () ->{'R16} (HashMap['K3, 'V3, in ⊥ out 'R16])  <:  () ->{'eff1} ('app1)
@@ -756,8 +751,8 @@ region r in // This is used to delimit the scope of mutation
 //│ > 1
 //│ > 2
 //│ > 3
-//│ ╔══[ERROR] Type error in function literal with expected type (Iter['T, out S]) ->{S ∨ 'E} 'Res
-//│ ║  l.755: 	  iter(xs, it => foreach(it, e => println(e); clear(xs)))
+//│ ╔══[COMPILATION ERROR] Type error in function literal with expected type (Iter['T, out S]) ->{S ∨ 'E} 'Res
+//│ ║  l.750: 	  iter(xs, it => foreach(it, e => println(e); clear(xs)))
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'R ∨ 'E1  <:  S ∨ 'E
 //│ ╟── because: cannot constrain  'E1  <:  'E ∨ S
@@ -784,7 +779,7 @@ fun test(x) = case
   TypeVariable(id, lvl, lbs, ubs) then clear(ubs)
 
 test
-//│ = [function test]
+//│ = fun test
 //│ Type: ['TypeVariable] -> ⊤ -> ((((Type[out 'TypeVariable] ∧ Type[?]) ∧ Type[?]) ∧ Type[?]) ->{'TypeVariable} ())
 
 
@@ -828,7 +823,7 @@ fun solve = case
         error() // Placeholder for unification logic
 
 solve
-//│ = [function]
+//│ = fun
 //│ Type: (List[out PairOf[out Type[?], out Type[?]]] ∧ List[?]) -> ()
 
 

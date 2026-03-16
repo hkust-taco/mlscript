@@ -1,0 +1,28 @@
+:js
+
+
+object A with
+  val x = 1
+  object B with
+    print(A, "|", B)
+    print(x, y)
+  val y = 2
+  print(A, "|", B)
+  print(x, y)
+//│ > A { x: 1, B: B {} } | B {}
+//│ > 1 undefined
+//│ > A { x: 1, B: B, y: 2 } | B
+//│ > 1 2
+
+print(A, "|", A.B)
+//│ > A { x: 1, B: B, y: 2, class: object A } | B
+
+module A with
+  val x = 1
+  module B with
+    print(x, y)
+    A
+  val y = 2
+//│ > 1 undefined
+
+

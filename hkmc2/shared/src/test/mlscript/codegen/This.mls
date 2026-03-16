@@ -6,15 +6,18 @@
 :e
 fun test(x) =
   [this.a, x]
-//│ ═══[ERROR] Cannot use 'this' outside of an object scope.
+//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope.
+//│ ║  l.8: 	  [this.a, x]
+//│ ╙──     	   ^^^^
 //│ JS (unsanitized):
-//│ let test; test = function test(x) { return [] };
+//│ let test;
+//│ test = function test(x) { throw "This code cannot be run as its compilation yielded an error." };
 
 :sjs
 fun test(x) =
   [globalThis.a, x]
 //│ JS (unsanitized):
-//│ let test1; test1 = function test(x) { return [ globalThis.a, x ] };
+//│ let test1; test1 = function test(x) { return globalThis.Object.freeze([ globalThis.a, x ]) };
 
 :re
 test(123)
@@ -43,19 +46,25 @@ module Test with
 //│ let Test1;
 //│ (class Test {
 //│   static {
-//│     Test1 = Test;
+//│     Test1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
 //│     this.a = 3;
 //│   }
 //│   static test1(x) {
 //│     return test1(x)
 //│   } 
-//│   static test2(x1) {
-//│     return [
+//│   static test2(x) {
+//│     return globalThis.Object.freeze([
 //│       Test.a,
-//│       x1
-//│     ]
+//│       x
+//│     ])
 //│   }
-//│   static toString() { return "Test"; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Test"]; 
 //│ });
 
 
@@ -64,5 +73,16 @@ Test.test1(123)
 
 Test.test2(123)
 //│ = [3, 123]
+
+
+// * Note: a module that induces a `this`-proxy
+// :sjs
+class A(x) with
+  module M with
+    print(x)
+
+A(42)
+//│ > 42
+//│ = A(_)
 
 

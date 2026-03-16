@@ -17,12 +17,12 @@ r
 
 :e
 let r = region x in x.ref 42
-!r
-//│ ╔══[ERROR] Type error in block
+!(r)
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.19: 	let r = region x in x.ref 42
 //│ ║        	                    ^^^^^^^^
-//│ ║  l.20: 	!r
-//│ ║        	^^
+//│ ║  l.20: 	!(r)
+//│ ║        	^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
 //│ ╟── because: cannot constrain  'reg1  <:  ⊥
@@ -36,7 +36,7 @@ mkRef
 
 :e
 let t = region x in x in t.ref 42
-//│ ╔══[ERROR] Type error in block
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.38: 	let t = region x in x in t.ref 42
 //│ ║        	                    ^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
@@ -54,7 +54,7 @@ region x in
 let t = region x in
   x.ref 42
 in t := 0
-//│ ╔══[ERROR] Type error in block
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.55: 	  x.ref 42
 //│ ║        	  ^^^^^^^^
 //│ ║  l.56: 	in t := 0
@@ -68,18 +68,18 @@ in t := 0
 
 
 region x in
-  let r = x.ref 42 in !r
+  let r = x.ref 42 in !(r)
 //│ Type: Int
 
 :e
 let t = region x in
   x.ref 42
-in !t
-//│ ╔══[ERROR] Type error in block
+in !(t)
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.76: 	  x.ref 42
 //│ ║        	  ^^^^^^^^
-//│ ║  l.77: 	in !t
-//│ ║        	^^^^^
+//│ ║  l.77: 	in !(t)
+//│ ║        	^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
 //│ ╟── because: cannot constrain  'reg1  <:  ⊥
@@ -88,7 +88,7 @@ in !t
 //│ Type: Int
 
 region x in
-  let r = x.ref 42 in let t = r := 0 in !r
+  let r = x.ref 42 in let t = r := 0 in !(r)
 //│ Type: Int
 
 fun rid: [A] -> A -> A
@@ -103,7 +103,7 @@ fun rid(x) =
 :e
 region x in
   (let dz = x.ref 42 in 42) as [A] -> Int
-//│ ╔══[ERROR] Type error in block with expected type [outer, 'A] -> Int
+//│ ╔══[COMPILATION ERROR] Type error in block with expected type [outer, 'A] -> Int
 //│ ║  l.105: 	  (let dz = x.ref 42 in 42) as [A] -> Int
 //│ ║         	            ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
@@ -116,7 +116,7 @@ let t =
   region x in
     y => x.ref y
 in t(42)
-//│ ╔══[ERROR] Type error in block
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.117: 	    y => x.ref y
 //│ ║         	    ^^^^^^^^^^^^
 //│ ║  l.118: 	in t(42)
@@ -156,7 +156,7 @@ bar
 
 :e
 region x in x.ref bar
-//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but ([outer, 'A] -> ('A) ->{⊥} 'A) ->{⊥} Int found
+//│ ╔══[COMPILATION ERROR] Expected a monomorphic type or an instantiable type here, but ([outer, 'A] -> ('A) ->{⊥} 'A) ->{⊥} Int found
 //│ ║  l.158: 	region x in x.ref bar
 //│ ╙──       	                  ^^^
 //│ Type: Ref[⊥, ?]

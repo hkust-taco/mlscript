@@ -8,7 +8,7 @@
 
 // *** infrastructures
 
-fun not(b) = if b then false else true
+fun nt(b) = if b then false else true
 fun (;) seq(_, res) = res
 fun id(x) = x
 
@@ -118,7 +118,7 @@ fun extrude(ty, pol, lvl, freshVar, cache) = getOrUpdate of cache, Pair(ty, Pair
   else if ty is
     IntType() then ty
     FunctionType(lhs, rhs) then
-      FunctionType(extrude(lhs, not(pol), lvl, freshVar, cache), extrude(rhs, pol, lvl, freshVar, cache))
+      FunctionType(extrude(lhs, nt(pol), lvl, freshVar, cache), extrude(rhs, pol, lvl, freshVar, cache))
     RecordType(fields) then
       RecordType(map(fields, p => if p is Pair(name, ty) then Pair(name, extrude(ty, pol, lvl, freshVar, cache))))
     TypeVariable(name, level, lb, ub) then
@@ -155,8 +155,8 @@ fun solve(constraints, freshVar, cache, genExtrCache) = if constraints is
             push(lb, lhs)
             region r in
               let ncs = r.ref cs
-              iter(ub, it => foreach(it, b => ncs := Cons(Pair(lhs, b), !ncs); ()))
-              solve(!ncs, freshVar, cache, genExtrCache)
+              iter(ub, it => foreach(it, b => ncs := Cons(Pair(lhs, b), !(ncs)); ()))
+              solve(!(ncs), freshVar, cache, genExtrCache)
           else report(lhs, rhs)
         FunctionType(arg, res) then if rhs is
           FunctionType(arg', res') then
@@ -166,8 +166,8 @@ fun solve(constraints, freshVar, cache, genExtrCache) = if constraints is
               push(lb, lhs)
               region r in
                 let ncs = r.ref cs
-                iter(ub, it => foreach(it, b => ncs := Cons(Pair(lhs, b), !ncs); ()))
-                solve(!ncs, freshVar, cache, genExtrCache)
+                iter(ub, it => foreach(it, b => ncs := Cons(Pair(lhs, b), !(ncs)); ()))
+                solve(!(ncs), freshVar, cache, genExtrCache)
             else
               let lhs' = extrude(lhs, true, level, freshVar, genExtrCache())
               solve(Cons(Pair(lhs', rhs), cs), freshVar, cache, genExtrCache)
@@ -184,8 +184,8 @@ fun solve(constraints, freshVar, cache, genExtrCache) = if constraints is
               push(lb, lhs)
               region r in
                 let ncs = r.ref cs
-                iter(ub, it => foreach(it, b => ncs := Cons(Pair(lhs, b), !ncs); ()))
-                solve(!ncs, freshVar, cache, genExtrCache)
+                iter(ub, it => foreach(it, b => ncs := Cons(Pair(lhs, b), !(ncs)); ()))
+                solve(!(ncs), freshVar, cache, genExtrCache)
             else
               let lhs' = extrude(lhs, true, level, freshVar, genExtrCache())
               solve(Cons(Pair(lhs', rhs), cs), freshVar, cache, genExtrCache)
@@ -195,15 +195,15 @@ fun solve(constraints, freshVar, cache, genExtrCache) = if constraints is
             push(ub, rhs)
             region r in
               let ncs = r.ref cs
-              iter(lb, it => foreach(it, b => ncs := Cons(Pair(b, rhs), !ncs); ()))
-              solve(!ncs, freshVar, cache, genExtrCache)
+              iter(lb, it => foreach(it, b => ncs := Cons(Pair(b, rhs), !(ncs)); ()))
+              solve(!(ncs), freshVar, cache, genExtrCache)
           else
             let rhs' = extrude(rhs, false, level, freshVar, genExtrCache())
             solve(Cons(Pair(lhs, rhs'), cs), freshVar, cache, genExtrCache)
 
 
 fun freshVar(r, ctx, name, lvl) =
-  if (not of hasKey(ctx, name)) then
+  if (nt of hasKey(ctx, name)) then
     add(ctx, name, 1)
     TypeVariable(name, lvl, empty(r), empty(r))
   else
@@ -211,15 +211,15 @@ fun freshVar(r, ctx, name, lvl) =
       let i = r2.ref 0
       let res = r2.ref None()
       whileDo of () =>
-        let nn = name ~ toString(!i)
-        if (not of hasKey(ctx, nn)) then
+        let nn = name ~ toString(!(i))
+        if (nt of hasKey(ctx, nn)) then
           res := Some(TypeVariable(nn, lvl, empty(r), empty(r)))
           add(ctx, nn, 1)
           false
         else
-          i := !i + 1
+          i := !(i) + 1
           true
-      if !res is
+      if !(res) is
         Some(v) then v
         else error()
 

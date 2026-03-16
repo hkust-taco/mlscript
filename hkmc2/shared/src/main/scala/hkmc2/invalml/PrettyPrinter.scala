@@ -4,7 +4,7 @@ import scala.collection.mutable.{Set => MutSet, ListBuffer}
 import utils.Scope
 
 class PrettyPrinter(output: String => Unit)(using Scope, InvalCtx):
-  def print(ty: GeneralType): Unit =
+  def print(ty: GeneralType)(using Raise): Unit =
     ty.show match
     case "()" =>
     case tyStr =>

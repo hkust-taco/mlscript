@@ -31,7 +31,7 @@ class BlockTraverser:
         applyCase(arm._1); applySubBlock(arm._2)
       dflt.foreach(applySubBlock)
       applySubBlock(rst)
-    case Label(lbl, bod, rst) => applyLocal(lbl); applySubBlock(bod); applySubBlock(rst)
+    case Label(lbl, loop, bod, rst) => applyLocal(lbl); applySubBlock(bod); applySubBlock(rst)
     case Begin(sub, rst) => applySubBlock(sub); applySubBlock(rst)
     case TryBlock(sub, fin, rst) => applySubBlock(sub); applySubBlock(fin); applySubBlock(rst)
     case Assign(l, r, rst) => applyLocal(l); applyResult(r); applySubBlock(rst)
@@ -51,10 +51,15 @@ class BlockTraverser:
       applyResult(rhs)
       applyPath(fld)
       applySubBlock(rest)
+    case Scoped(_, body) => applySubBlock(body)
   
   def applyResult(r: Result): Unit = r match
     case r @ Call(fun, args) => applyPath(fun); args.foreach(applyArg)
-    case Instantiate(cls, args) =>; applyPath(cls); args.foreach(applyPath)
+    case Instantiate(mut, cls, args) =>; applyPath(cls); args.foreach(applyArg)
+    case l @ Lambda(params, body) => applyLam(l)
+    case Tuple(mut, elems) => elems.foreach(applyArg)
+    case Record(mut, fields) => fields.foreach:
+      case RcdArg(idx, value) => idx.foreach(applyPath); applyPath(value)
     case p: Path => applyPath(p)
   
   def applyPath(p: Path): Unit = p match
@@ -65,43 +70,52 @@ class BlockTraverser:
     case v: Value => applyValue(v)
   
   def applyValue(v: Value): Unit = v match
-    case Value.Ref(l) => l.traverse
+    case Value.Ref(l, disamb) => l.traverse
     case Value.This(sym) => sym.traverse
     case Value.Lit(lit) => ()
-    case v @ Value.Lam(params, body) => applyLam(v)
-    case Value.Arr(elems) => elems.foreach(applyArg)
-    case Value.Rcd(fields) => fields.foreach:
-      case RcdArg(idx, value) => idx.foreach(applyPath); applyPath(value)
   
   def applyLocal(sym: Local): Unit = sym.traverse
   
   def applyFunDefn(fun: FunDefn): Unit =
     fun.owner.foreach(_.traverse)
     fun.sym.traverse
+    fun.dSym.traverse
     fun.params.foreach(applyParamList)
     applySubBlock(fun.body)
   
   def applyValDefn(defn: ValDefn): Unit =
-    val ValDefn(owner, k, sym, rhs) = defn
-    owner.foreach(_.traverse); sym.traverse; applyPath(rhs)
+    val ValDefn(tsym, sym, rhs) = defn
+    tsym.owner.foreach(_.traverse); sym.traverse; applyPath(rhs)
   
   def applyDefn(defn: Defn): Unit = defn match
     case defn: FunDefn => applyFunDefn(defn)
     case defn: ValDefn => applyValDefn(defn)
-    case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentPath, methods, 
-      privateFields, publicFields, preCtor, ctor) =>
+    case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
+        privateFields, publicFields, preCtor, ctor, mod, bufferable)
+    =>
       own.foreach(_.traverse)
       isym.traverse
       sym.traverse
+      ctorSym.foreach(_.traverse)
       paramsOpt.foreach(applyParamList)
       auxParams.foreach(applyParamList)
       parentPath.foreach(applyPath)
       methods.foreach(applyFunDefn)
       privateFields.foreach(_.traverse)
-      publicFields.foreach(_.traverse)
+      publicFields.foreach: f =>
+        f._1.traverse; f._2.traverse
       applySubBlock(preCtor)
       applySubBlock(ctor)
+      mod.foreach(applyClsLikeBody)
   
+  def applyClsLikeBody(b: ClsLikeBody): Unit =
+    b.isym.traverse
+    b.methods.foreach(applyFunDefn)
+    b.privateFields.foreach(_.traverse)
+    b.publicFields.foreach: f =>
+      f._1.traverse; f._2.traverse
+    applySubBlock(b.ctor)
+
   def applyArg(arg: Arg): Unit =
     applyPath(arg.value)
   
@@ -115,6 +129,7 @@ class BlockTraverser:
       cls.traverse
       applyPath(path)
     case Case.Tup(len, inf) => ()
+    case Case.Field(_, _) => ()
   
   def applyHandler(hdr: Handler): Unit =
     hdr.sym.traverse
@@ -122,12 +137,12 @@ class BlockTraverser:
     hdr.params.foreach(applyParamList)
     applySubBlock(hdr.body)
   
-  def applyLam(lam: Value.Lam): Unit =
+  def applyLam(lam: Lambda): Unit =
     applyParamList(lam.params)
     applySubBlock(lam.body)
   
 class BlockTraverserShallow extends BlockTraverser:
-  override def applyLam(lam: Value.Lam) = ()
+  override def applyLam(lam: Lambda) = ()
   override def applyFunDefn(fun: FunDefn): Unit = ()
   override def applyDefn(defn: Defn): Unit = defn match
     case _: FunDefn | _: ClsLikeDefn => ()

@@ -1,0 +1,44 @@
+:js
+
+open annotations { compile }
+
+pattern Zero = "0"
+pattern One = "1"
+pattern Two = "2"
+
+fun checkZeroOneTwo(x) = if x is
+  @compile Zero then 0
+  @compile One then 1
+  @compile Two then 2
+  else ()
+
+checkZeroOneTwo of "0"
+//│ = 0
+
+checkZeroOneTwo of "1"
+//│ = 1
+
+checkZeroOneTwo of "2"
+//│ = 2
+
+checkZeroOneTwo of "hello"
+
+import "../../../mlscript-compile/Option.mls"
+open Option
+
+fun checkSomeZeroOneTwo(x) = if x is
+  Some(@compile Zero) then 0
+  Some(@compile One) then 1
+  Some(@compile Two) then 2
+  else ()
+
+pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
+
+:e
+:todo
+let res = "1" is @compile ManyZero
+//│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
+//│ ║  l.35: 	pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
+//│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^
+//│ res = false
+

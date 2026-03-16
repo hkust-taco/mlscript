@@ -1,6 +1,7 @@
 :js
 :effectHandlers
-:stackSafe 1000
+:lift
+:stackSafe
 
 fun selfApp(f) = f(f)
 
@@ -10,7 +11,7 @@ fun mkrec(g) =
 
 let fact = mkrec of self => x =>
   if x == 0 then 1 else self(x - 1) * x
-//│ fact = [function]
+//│ fact = fun
 
 fact(3)
 //│ = 6
@@ -23,17 +24,18 @@ fact(10)
 fact(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
-:stackSafe 1000
+:stackSafe
 fun mkrec(g) =
   selfApp of self =>
     g of y => selfApp(self)(y)
 
+// * FIXME: Why doesn't the following work when using Predef function `(==) equals`?
 let fact = mkrec of self => x =>
-  if x == 0 then 1 
+  if x === 0 then 1 
   else self(x - 1) * x
-//│ fact = [function]
+//│ fact = fun
 
-:stackSafe 1000
+:stackSafe
 fact(10000)
 //│ = Infinity
 
@@ -43,7 +45,7 @@ fact(10000)
 fact(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
-:stackSafe 1000
+:stackSafe
 fact(10000)
 //│ = Infinity
 
@@ -53,7 +55,7 @@ fact(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
 
-:stackSafe 5
+:stackSafe 6
 set selfApp = f => f(f)
 
 :expect 3628800
@@ -61,47 +63,36 @@ fact(10)
 //│ = 3628800
 
 
-:stackSafe 10
+:stackSafe 6
 set selfApp = f => f(f)
 
 fact(1000)
 //│ = Infinity
 
 // simplified version without lambdas for easier debugging
-:stackSafe 5
+:stackSafe 6
 fun mkrec(g) =
   fun a(self) =
     fun b(y) = selfApp(self)(y)
     g(b)
   selfApp(a)
 
-:stackSafe 5
+:stackSafe 6
 import "../../mlscript-compile/Runtime.mls"
 let fact =
   fun a(self) =
     fun b(x) =
       if x == 0 then 1 else
-        console.log(Runtime.stackDepth, Runtime.stackOffset)
         let prev = self(x - 1)
         console.log("resumed:", x)
         x * prev
     b
   mkrec(a)
-//│ fact = [function b]
+//│ fact = fun
 
 :expect 3628800
-:stackSafe 5
+:stackSafe 6
 fact(10)
-//│ > 1 0
-//│ > 3 0
-//│ > 5 4
-//│ > 7 4
-//│ > 9 8
-//│ > 11 8
-//│ > 13 12
-//│ > 15 12
-//│ > 17 16
-//│ > 19 16
 //│ > resumed: 1
 //│ > resumed: 2
 //│ > resumed: 3

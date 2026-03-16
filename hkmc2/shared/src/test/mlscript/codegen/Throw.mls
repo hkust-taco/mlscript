@@ -31,7 +31,7 @@ fun f(x) =
   return y
 f(1)
 //│ JS (unsanitized):
-//│ let f2; f2 = function f(x) { throw globalThis.Error("e"); }; f2(1)
+//│ let f2; f2 = function f(x) { throw runtime.safeCall(globalThis.Error("e")) }; f2(1)
 //│ ═══[RUNTIME ERROR] Error: e
 
 
@@ -44,10 +44,49 @@ f(false)
 //│ let f3;
 //│ f3 = function f(x) {
 //│   if (x === true) {
-//│     throw globalThis.Error("x");
-//│   } else {
-//│     throw globalThis.Error("y");
-//│   }
+//│     throw runtime.safeCall(globalThis.Error("x"))
+//│   } else { throw runtime.safeCall(globalThis.Error("y")) }
 //│ };
 //│ f3(false)
 //│ ═══[RUNTIME ERROR] Error: y
+
+
+:re
+:sjs
+if false then throw 0
+throw 1
+//│ JS (unsanitized):
+//│ let scrut;
+//│ scrut = false;
+//│ if (scrut === true) {
+//│   throw 0
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ ═══[RUNTIME ERROR] Error: match error
+
+
+
+import "../../mlscript-compile/Runtime.mls"
+
+fun foo(e) =
+  Runtime.try_catch of
+    () => throw e
+    case
+      Str as o then "caught " + o
+      else
+        print("caught something else")
+        throw e // rethrow the original error
+
+foo("hello")
+//│ = "caught hello"
+
+:re
+foo(42)
+//│ > caught something else
+//│ ═══[RUNTIME ERROR] 42
+
+:re
+foo(Error("hi"))
+//│ > caught something else
+//│ ═══[RUNTIME ERROR] Error: hi
+
+

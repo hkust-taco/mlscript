@@ -1,0 +1,44 @@
+:js
+
+pattern X = "x"
+
+"x" is X
+//│ = true
+
+pattern Xs = X ~ (Xs | "")
+
+"xxxxxxx" is Xs
+//│ = true
+
+pattern Xss = Xs ~ (Xss | "")
+
+"xxxxxxxxxxxxxx" is Xss
+//│ = true
+
+pattern XsX = Xs ~ "x"
+
+// In the following tests, the left-hand side of concatenation should not
+// eagerly consume all letters. We should compile these string patterns even in
+// naive compilation, rather than just transliterate them.
+
+:expect true
+:fixme
+"xxxxxxxxxxxxxx" is XsX
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
+
+pattern XssX = Xss ~ "x"
+
+:expect true
+:fixme
+"xxxxxxxx" is XssX
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
+
+pattern XsXs = Xs ~ Xs
+
+:expect true
+:fixme
+"xxxxxx" is XsXs
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false

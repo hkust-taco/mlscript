@@ -53,9 +53,10 @@ undefined
 
 :todo
 NaN
-//│ ╔══[ERROR] Name not found: NaN
+//│ ╔══[COMPILATION ERROR] Name not found: NaN
 //│ ║  l.55: 	NaN
 //│ ╙──      	^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 "\u0068\u0065\u006c\u006c\u006f"
 //│ = "hello"
@@ -75,42 +76,42 @@ NaN
 :w
 "\uFE&&"
 //│ ╔══[WARNING] Invalid Unicode escape sequence: expected 4 hexadecimal digits but got 2
-//│ ║  l.76: 	"\uFE&&"
+//│ ║  l.77: 	"\uFE&&"
 //│ ╙──      	   ^^
 //│ = "&&"
 
 :w
 "\u{}"
 //│ ╔══[WARNING] Expected at least one hexadecimal digit in Unicode escape sequence
-//│ ║  l.83: 	"\u{}"
+//│ ║  l.84: 	"\u{}"
 //│ ╙──      	   ^
 //│ = ""
 
 :w
 "\u{ffffffff}"
 //│ ╔══[WARNING] Too many hexadecimal digits in Unicode escape sequence
-//│ ║  l.90: 	"\u{ffffffff}"
+//│ ║  l.91: 	"\u{ffffffff}"
 //│ ╙──      	          ^^
 //│ = ""
 
 :w
 "\u{efefef}"
 //│ ╔══[WARNING] Unicode code point out of range: 0xefefef
-//│ ║  l.97: 	"\u{efefef}"
+//│ ║  l.98: 	"\u{efefef}"
 //│ ╙──      	    ^^^^^^
 //│ = ""
 
 :w
 "\u{55"
 //│ ╔══[WARNING] Unterminated Unicode escape sequence: missing '}'
-//│ ║  l.104: 	"\u{55"
+//│ ║  l.105: 	"\u{55"
 //│ ╙──       	      ^
 //│ = "U"
 
 :w
 "\u{41****"
 //│ ╔══[WARNING] Unterminated Unicode escape sequence: missing '}'
-//│ ║  l.111: 	"\u{41****"
+//│ ║  l.112: 	"\u{41****"
 //│ ╙──       	      ^
 //│ = "A****"
 

@@ -55,7 +55,12 @@ fun fromList(t, xs) =
     Nil then t
 
 let tree1 = fromList(Empty, 3 :: 4 :: 1 :: 2 :: Nil)
-//│ tree1 = Node(1, Node(2, Empty, Node(3, Empty, Node(4, Empty, Empty, 1), 1), 1), Empty, 1)
+//│ tree1 = Node(
+//│   1,
+//│   Node(2, Empty, Node(3, Empty, Node(4, Empty, Empty, 1), 1), 1),
+//│   Empty,
+//│   1
+//│ )
 
 tree1 |> show
 //│ = "((• 2 (• 3 (• 4 •))) 1 •)"

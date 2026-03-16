@@ -1,0 +1,7 @@
+import "./Predef.mls"
+
+open Predef
+
+module QuoteExample1 with
+  fun foo() = `id`(`1) `== id(`2)
+

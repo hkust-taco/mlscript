@@ -13,7 +13,9 @@ trait BlockImpl(using Elaborator.State):
   val desugStmts =
     def desug(stmts: Ls[Tree]): Ls[Tree] =
       stmts match
-      case PossiblyAnnotated(anns, syntax.Desugared(td: TypeDef)) :: stmts =>
+      case syntax.Desugared(PossiblyAnnotated(anns, Assert(kw, cond, N, els))) :: stmts =>
+        PossiblyAnnotated(anns, Assert(kw, cond, S(Block(stmts)), els)) :: Nil
+      case syntax.Desugared(PossiblyAnnotated(anns, td: TypeDef)) :: stmts =>
         val ctors = td.withPart.toList.flatMap:
           case Block(sts) => sts.flatMap:
             case Constructor(Block(ctors)) => ctors
@@ -30,14 +32,14 @@ trait BlockImpl(using Elaborator.State):
         // - Ctor[...](...) extends ADT[...]
         // since the former will be desugared to `class Ctor[...](...) extends ADT[...]`,
         // where `Ctor[...]` and `ADT[...]` share the same type parameter list
-        def wrapGeneric(decl: Tree, res: Tree) = decl match
-          case InfixApp(_, syntax.Keyword.`extends`, _) =>
-            Annotated(Keywrd(syntax.Keyword.data), res)
-          case _ => res
+        def getPossibleGenericAnns(decl: Tree, anns: Ls[Tree]) = decl match
+          case InfixApp(_, Keywrd(syntax.Keyword.`extends`), _) =>
+            Keywrd(syntax.Keyword.data) :: anns
+          case _ => anns
         // Generate `extends` suffix if it is not provided by users
         // Also check if the number of type parameters is correct
         def genExt(decl: Tree) = decl match
-          case InfixApp(_, syntax.Keyword.`extends`, ext) => ext match
+          case InfixApp(_, Keywrd(syntax.Keyword.`extends`), ext) => ext match
             case _: Ident if headPs.isEmpty => ext
             case App(id: Ident, TyTup(ps)) if id.name == headId.name && ps.length == headPs.length => ext
             case _ => Error()
@@ -45,15 +47,15 @@ trait BlockImpl(using Elaborator.State):
             case Nil => headId
             case ps =>
               App(headId, TyTup(ps.map {
-                case m @ Modified(syntax.Keyword.`in` | syntax.Keyword.`out`, _, _) => m
-                case t => Tup(Tree.Modified(syntax.Keyword.`in`, N, t) :: Tree.Modified(syntax.Keyword.`out`, N, t) :: Nil)
+                case m @ Modified(Keywrd(syntax.Keyword.`in`) | Keywrd(syntax.Keyword.`out`), _) => m
+                case t => Tup(Tree.Modified(Keywrd(syntax.Keyword.`in`), t) :: Tree.Modified(Keywrd(syntax.Keyword.`out`), t) :: Nil)
               }))
         // Insert type parameters for constructors.
         // e.g. `class Foo[T] with constructor Bar(x: T)` will be desugared to
         // `class Bar[T](x: T) extends Foo[T]`
         // Otherwise, the elaborator will complain `T` is not defined.
         def genCtorHead(decl: Tree) = decl match
-          case InfixApp(decl, syntax.Keyword.`extends`, _) => decl // check will be applied in genExt
+          case InfixApp(decl, Keywrd(syntax.Keyword.`extends`), _) => decl // check will be applied in genExt
           case App(_: Ident, tup: TyTup) => Error()
           case App(id: Ident, ps: Tup) => App(App(id, TyTup(headPs)), ps)
           case id: Ident => App(id, TyTup(headPs))
@@ -66,9 +68,12 @@ trait BlockImpl(using Elaborator.State):
           case App(f, tup: TyTup) => App(insertVal(f), tup)
           case _ => Error()
         PossiblyAnnotated(anns, td) :: (
-          td.name match
-            case L(_) => Nil
-            case R(_) => ctors.map(head => PossiblyAnnotated(anns, wrapGeneric(head, TypeDef(syntax.Cls, InfixApp(insertVal(genCtorHead(head)), syntax.Keyword.`extends`, genExt(head)), N))))
+          ctors.map(head => PossiblyAnnotated(getPossibleGenericAnns(head, anns), TypeDef(syntax.Cls,
+            td.name match
+                case L(_) => head
+                case R(name) =>
+                  InfixApp(insertVal(genCtorHead(head)), Keywrd(syntax.Keyword.`extends`), genExt(head))
+            , N)))
         ) ::: desug(stmts)
       case stmt :: stmts =>
         stmt.desugared match

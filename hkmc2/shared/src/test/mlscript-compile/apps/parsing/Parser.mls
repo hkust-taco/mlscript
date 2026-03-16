@@ -23,7 +23,7 @@ open Keywords { opPrecOpt }
 open Rules { termRule, typeRule, declRule, syntaxKinds }
 
 type Opt[A] = Some[A] | None
-type TreeT = Tree.Tree
+type TreeT = Tree
 type StackT[A] = Stack.Cons[A] | Stack.Nil
 
 module Parser with ...
@@ -128,7 +128,7 @@ fun parse(tokens) =
       do tracer.print of "no end choice", source.line
       else
         consume
-        Tree.error("unexpected token " + other) // TODO: Pretty-print the token.
+        Tree.error("unexpected token " + render(other)) // TODO: Pretty-print the token.
     Nil and rule.endChoice is
       Some(value) then value
       None then
@@ -154,7 +154,7 @@ fun parse(tokens) =
           Tree.empty
       // * the non-keyword case
       None then
-        if (not of options.allowOperators) and symbolic then
+        if not options.allowOperators and symbolic then
           Tree.error("symbolic identifiers are disallowed in kind \"" + options.kind + "\"")
         else
           consume

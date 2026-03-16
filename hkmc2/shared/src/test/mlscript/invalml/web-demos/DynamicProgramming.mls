@@ -1,3 +1,5 @@
+
+:global
 :invalml
 
 :...
@@ -62,12 +64,12 @@ fun select(interviewees, budget, results) =
         Some(itv) then if itv is Itv(score, salary) then
           let j = r.ref 0
           whileDo of () =>
-            if !j < salary then update(dp, !i, !j, get(dp, !i - 1, !j))
+            if !(j) < salary then update(dp, !(i), !(j), get(dp, !(i) - 1, !(j)))
             else
-              let p = get(dp, !i - 1, !j - salary), let np = get(dp, !i - 1, !j)
-              update(dp, !i, !j, max of np, p + score)
-            j := !j + 1; !j <= budget
-          i := !i + 1
+              let p = get(dp, !(i) - 1, !(j) - salary), let np = get(dp, !(i) - 1, !(j))
+              update(dp, !(i), !(j), max of np, p + score)
+            j := !(j) + 1; !(j) <= budget
+          i := !(i) + 1
           true
         None then false
     i := size
@@ -76,9 +78,10 @@ fun select(interviewees, budget, results) =
       whileDo of () =>
         if next(it) is
           Some(itv) then if itv is Itv(score, salary) then
-            if get(dp, !i, !rest) == get(dp, !i - 1, !rest - salary) + score
-                do push(results, itv); rest := !rest - salary
-            i := !i - 1
+            if get(dp, !(i), !(rest)) == get(dp, !(i) - 1, !(rest) - salary) + score then
+              push(results, itv); rest := !(rest) - salary
+            else ()
+            i := !(i) - 1
             true
           None then false
     get(dp, size, budget)

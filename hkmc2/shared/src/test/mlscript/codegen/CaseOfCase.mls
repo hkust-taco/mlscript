@@ -17,27 +17,25 @@ fun test(x) =
 //│ JS (unsanitized):
 //│ let test;
 //│ test = function test(x) {
-//│   let param0, v, scrut, param01, v1, tmp, tmp1;
+//│   let v, scrut, v1, arg$Some$0$, arg$Some$0$1, tmp, tmp1;
 //│   if (x instanceof Some1.class) {
-//│     param0 = x.value;
-//│     v = param0;
+//│     arg$Some$0$1 = x.value;
+//│     v = arg$Some$0$1;
 //│     tmp = v + 1;
 //│     tmp1 = Some1(tmp);
 //│   } else if (x instanceof None1.class) {
 //│     tmp1 = None1;
 //│   } else {
-//│     throw new globalThis.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│   scrut = tmp1;
 //│   if (scrut instanceof Some1.class) {
-//│     param01 = scrut.value;
-//│     v1 = param01;
+//│     arg$Some$0$ = scrut.value;
+//│     v1 = arg$Some$0$;
 //│     return Predef.print(v1)
 //│   } else if (scrut instanceof None1.class) {
 //│     return Predef.print("none")
-//│   } else {
-//│     throw new globalThis.Error("match error");
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
 
 

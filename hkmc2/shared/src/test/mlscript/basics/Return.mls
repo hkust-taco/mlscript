@@ -1,0 +1,78 @@
+:js
+
+
+fun f =
+  print("reachable")
+  return
+  print("unreachable")
+
+f
+//│ > reachable
+
+
+fun foo(x) =
+  if x do
+    print("true")
+    return 42
+  print("false")
+  0
+
+foo(true)
+//│ > true
+//│ = 42
+
+foo(false)
+//│ > false
+//│ = 0
+
+
+fun foo(x) =
+  return
+    print("returning...")
+    x
+
+foo(123)
+//│ > returning...
+//│ = 123
+
+
+:e
+return "whoops"
+//│ ╔══[COMPILATION ERROR] Return statements are not allowed outside of functions.
+//│ ║  l.40: 	return "whoops"
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+x => return "whoops"
+//│ ╔══[COMPILATION ERROR] Return statements are not allowed outside of functions.
+//│ ║  l.47: 	x => return "whoops"
+//│ ╙──      	     ^^^^^^^^^^^^^^^
+//│ = fun
+
+:e
+fun foo() =
+  x => return "whoops"
+//│ ╔══[COMPILATION ERROR] Non-local return statements are only supported with effect handlers enabled.
+//│ ║  l.55: 	  x => return "whoops"
+//│ ╙──      	       ^^^^^^^^^^^^^^^
+
+:e
+fun foo(x: return "whoops") = 1
+//│ ╔══[COMPILATION ERROR] Return statements are not allowed in this context.
+//│ ║  l.61: 	fun foo(x: return "whoops") = 1
+//│ ╙──      	           ^^^^^^^^^^^^^^^
+//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
+
+:e
+fun foo() =
+  fun bar(x: return "whoops") = 1
+  bar(123)
+//│ ╔══[COMPILATION ERROR] Return statements are not allowed in this context.
+//│ ║  l.70: 	  fun bar(x: return "whoops") = 1
+//│ ╙──      	             ^^^^^^^^^^^^^^^
+//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
+
+

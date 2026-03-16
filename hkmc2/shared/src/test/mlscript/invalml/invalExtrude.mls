@@ -30,7 +30,7 @@ g(foo)
 
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
-//│ ╔══[ERROR] Type error in quoted term with expected type CodeBase[out 'T, ⊥, ?]
+//│ ╔══[COMPILATION ERROR] Type error in quoted term with expected type CodeBase[out 'T, ⊥, ?]
 //│ ║  l.32: 	y `=> (let t = run(x `=> x `+ y) in y)
 //│ ║        	                   ^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  CodeBase[in ⊥ out ('x) ->{⊥} ('cde), in ⊥ out 'ctx, in ⊥ out ⊤]  <:  CodeBase[in ⊥ out 'T, ⊥, in ⊥ out ⊤]
@@ -70,7 +70,7 @@ f(g)(foo)
 
 :fixme // ???
 f(g)(bar)
-//│ ╔══[ERROR] Type error in reference with expected type 'A
+//│ ╔══[COMPILATION ERROR] Type error in reference of type C[‹not implemented›] with expected type 'A
 //│ ║  l.72: 	f(g)(bar)
 //│ ║        	     ^^^
 //│ ╟── because: cannot constrain  C[Int]  <:  'A
@@ -90,9 +90,9 @@ k
 
 :e
 k(_ => "")
-//│ ╔══[ERROR] Type error in function literal with expected type 'x
+//│ ╔══[COMPILATION ERROR] Type error in function literal with expected type 'x
 //│ ║  l.92: 	k(_ => "")
-//│ ║        	       ^^
+//│ ║        	  ^^^^^^^
 //│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  'x
 //│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  (Int) ->{'eff} (Int)
 //│ ╙── because: cannot constrain  Str  <:  Int
@@ -112,9 +112,9 @@ k
 
 :e
 k(_ => "")
-//│ ╔══[ERROR] Type error in function literal with expected type 'x
+//│ ╔══[COMPILATION ERROR] Type error in function literal with expected type 'x
 //│ ║  l.114: 	k(_ => "")
-//│ ║         	       ^^
+//│ ║         	  ^^^^^^^
 //│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  'x
 //│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  (⊤) ->{⊥} ⊥
 //│ ╙── because: cannot constrain  Str  <:  ⊥
@@ -122,9 +122,9 @@ k(_ => "")
 
 :e
 k(_ => 42)
-//│ ╔══[ERROR] Type error in function literal with expected type 'x
+//│ ╔══[COMPILATION ERROR] Type error in function literal with expected type 'x
 //│ ║  l.124: 	k(_ => 42)
-//│ ║         	       ^^
+//│ ║         	  ^^^^^^^
 //│ ╟── because: cannot constrain  ('_) ->{⊥} (Int)  <:  'x
 //│ ╟── because: cannot constrain  ('_) ->{⊥} (Int)  <:  (⊤) ->{⊥} ⊥
 //│ ╙── because: cannot constrain  Int  <:  ⊥

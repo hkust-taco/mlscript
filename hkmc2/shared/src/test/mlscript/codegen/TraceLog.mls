@@ -13,13 +13,7 @@ fun fib(a) = if
 //│   scrut = a <= 1;
 //│   if (scrut === true) {
 //│     return a
-//│   } else {
-//│     tmp = a - 1;
-//│     tmp1 = fib(tmp);
-//│     tmp2 = a - 2;
-//│     tmp3 = fib(tmp2);
-//│     return tmp1 + tmp3
-//│   }
+//│   } else { tmp = a - 1; tmp1 = fib(tmp); tmp2 = a - 2; tmp3 = fib(tmp2); return tmp1 + tmp3 }
 //│ };
 
 fun f(x) = g(x)

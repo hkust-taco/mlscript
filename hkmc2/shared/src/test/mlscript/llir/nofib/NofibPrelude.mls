@@ -1,5 +1,6 @@
-// shadow the one in Predef
-fun not(c) = if c then false else true
+
+// Alternative from the standard operator
+fun nott(c) = if c then false else true
 
 type Char = String
 
@@ -88,7 +89,7 @@ fun listEq(xs, ys) = if
 
 fun listEqBy(f, a, b) = if a is
   Nil and b is Nil then true
-  x :: xs and b is y :: ys then f(x, y) && listEqBy(f, xs, ys)
+  x :: xs and b is y :: ys then f(x, y) and listEqBy(f, xs, ys)
   else false
 
 fun listNeq(xs, ys) = if
@@ -100,11 +101,11 @@ fun enumFromTo(a, b) = if a <= b then a :: enumFromTo(a + 1, b) else Nil
 
 fun enumFromThenTo(a, t, b) = if a <= b then a :: enumFromThenTo(t, 2 * t - a, b) else Nil
 
-fun drop(n, ls) = if ls is
+fun leave(n, ls) = if ls is
   Nil then Nil
   h :: t and
     n <= 0 then ls
-    else drop(n - 1, t)
+    else leave(n - 1, t)
 
 fun take(n, ls) = if ls is
   Nil then Nil
@@ -112,7 +113,7 @@ fun take(n, ls) = if ls is
     n <= 0 then Nil
     else h :: take(n - 1, t)
 
-fun splitAt(n, ls) = [take(n, ls), drop(n, ls)]
+fun splitAt(n, ls) = [take(n, ls), leave(n, ls)]
 
 fun zip(xs, ys) = if xs is
   x :: xs and ys is y :: ys then [x, y] :: zip(xs, ys)
@@ -124,7 +125,7 @@ fun inList(x, ls) = if ls is
     else inList(x, t)
   Nil then false
 
-fun notElem(x, ls) = not(inList(x, ls))
+fun notElem(x, ls) = nott(inList(x, ls))
 
 fun (+:) append(xs, ys) = if xs is
   Nil then ys
@@ -158,10 +159,10 @@ fun orList(ls) = if ls is
     h then true
     else orList(t)
 
-fun dropWhile(f, ls) = if ls is
+fun leaveWhile(f, ls) = if ls is
   Nil then Nil
   h :: t and
-    f(h) then dropWhile(f, t)
+    f(h) then leaveWhile(f, t)
     else h :: t
 
 fun foldl(f, a, xs) = if xs is
@@ -191,7 +192,7 @@ fun maximum(xs) = foldl1((x, y) => if x > y then x else y, xs)
 
 fun nubBy(eq, ls) = if ls is
   Nil then Nil
-  h :: t then h :: nubBy(eq, filter(y => not(eq(h, y)), t))
+  h :: t then h :: nubBy(eq, filter(y => nott(eq(h, y)), t))
 
 fun zipWith(f, xss, yss) = if
   xss is x :: xs and yss is y :: ys then f(x, y) :: zipWith(f, xs, ys)
@@ -274,7 +275,7 @@ fun filter_lz(p, ls) = Lazy of () =>
 fun nubBy_lz(eq, ls) = Lazy of () =>
   if force(ls) is
     LzNil then LzNil
-    LzCons(h, t) then LzCons(h, nubBy_lz(eq, filter_lz(y => not(eq(h, y)), t)))
+    LzCons(h, t) then LzCons(h, nubBy_lz(eq, filter_lz(y => nott(eq(h, y)), t)))
 
 fun nub_lz(ls) = nubBy_lz((x, y) => x == y, ls)
 
@@ -290,13 +291,13 @@ fun take_lz_lz(n, ls) = lazy of () =>
     LzCons(h, t) then LzCons(h, take_lz_lz(n - 1, t))
   else LzNil
 
-fun drop_lz(n, ls) = if
+fun leave_lz(n, ls) = if
   n <= 0 then ls
   force(ls) is
     LzNil then lazy of () => LzNil
-    LzCons(h, t) then drop_lz(n - 1, t)
+    LzCons(h, t) then leave_lz(n - 1, t)
 
-fun splitAt_lz(n, ls) = [take_lz(n, ls), drop_lz(n, ls)]
+fun splitAt_lz(n, ls) = [take_lz(n, ls), leave_lz(n, ls)]
 
 fun zip_lz_nl(xs, ys) = if
   force(xs) is LzCons(x, xs) and ys is y :: ys then [x, y] :: zip_lz_nl(xs, ys)

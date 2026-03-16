@@ -30,10 +30,10 @@ fun reset() =
   set renderedKinds = new Set of defaultKinds
 
 // * `rr` is the railroad library.
-fun render(rr, title: Str, rule: ParseRule.ParseRule) =
-  let helperRules = []
+fun render[T](rr, title: Str, rule: ParseRule.ParseRule[T]) =
+  let helperRules = mut []
   let referencedKinds = new Set()
-  let renderCache = new globalThis.Map()
+  let renderCache = new Map()
   fun sequence(lhs, rhsOpt) =
     if rhsOpt is
       Some(rhs) then rr.Sequence(lhs, rhs)
@@ -61,14 +61,14 @@ fun render(rr, title: Str, rule: ParseRule.ParseRule) =
         referencedKinds.add of kind
       Some of rr.NonTerminal(kind, href: "#" + kind)
         sequence(renderRule(rest))
-  fun renderRule(rule: ParseRule.ParseRule) = tracer.trace of
+  fun renderRule(rule: ParseRule.ParseRule[T]) = tracer.trace of
     "renderRule <<< " + rule.name
     result => "renderRule >>> "
     () => ...
     let
       rest = rule.choices
       optional = false
-      nodes = []
+      nodes = mut []
     while rest is head :: tail do
       if renderChoice(rule, head) is
         Some(node) do nodes.push of node
@@ -81,7 +81,7 @@ fun render(rr, title: Str, rule: ParseRule.ParseRule) =
       optional is true then Some(rr.Optional(choice))
       else Some(choice)
   // Iteratively render the rule and its dependencies.
-  let diagrams = [[title, diagram of renderRule(rule)]]
+  let diagrams = mut [[title, diagram of renderRule(rule)]]
   while referencedKinds.size > 0 do
     let currentKinds = referencedKinds
     set renderedKinds = renderedKinds.union of currentKinds

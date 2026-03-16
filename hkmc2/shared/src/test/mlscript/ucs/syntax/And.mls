@@ -6,7 +6,7 @@ x and y
 //│ Parsed tree:
 //│ InfixApp:
 //│   lhs = Ident of "x"
-//│   kw = keyword 'and'
+//│   kw = Keywrd of keyword 'and'
 //│   rhs = Ident of "y"
 
 x
@@ -14,21 +14,20 @@ x
 //│ Parsed tree:
 //│ InfixApp:
 //│   lhs = Ident of "x"
-//│   kw = keyword 'and'
+//│   kw = Keywrd of keyword 'and'
 //│   rhs = Ident of "y"
 
 if x
   and y then z
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
 //│     lhs = InfixApp:
 //│       lhs = Ident of "x"
-//│       kw = keyword 'and'
+//│       kw = Keywrd of keyword 'and'
 //│       rhs = Ident of "y"
-//│     kw = keyword 'then'
+//│     kw = Keywrd of keyword 'then'
 //│     rhs = Ident of "z"
 
 if x
@@ -36,37 +35,34 @@ if x
   else d
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = Block of Ls of 
 //│     InfixApp:
 //│       lhs = InfixApp:
 //│         lhs = Ident of "x"
-//│         kw = keyword 'and'
+//│         kw = Keywrd of keyword 'and'
 //│         rhs = Ident of "y"
-//│       kw = keyword 'then'
+//│       kw = Keywrd of keyword 'then'
 //│       rhs = Ident of "z"
-//│     Modified:
-//│       modifier = keyword 'else'
-//│       modLoc = N
-//│       body = Ident of "d"
+//│     PrefixApp:
+//│       kw = Keywrd of keyword 'else'
+//│       rhs = Ident of "d"
 
 if x is
   A and y then z
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
-//│     kw = keyword 'is'
+//│     kw = Keywrd of keyword 'is'
 //│     rhs = Block of Ls of 
 //│       InfixApp:
 //│         lhs = InfixApp:
 //│           lhs = Ident of "A"
-//│           kw = keyword 'and'
+//│           kw = Keywrd of keyword 'and'
 //│           rhs = Ident of "y"
-//│         kw = keyword 'then'
+//│         kw = Keywrd of keyword 'then'
 //│         rhs = Ident of "z"
 
 if x is
@@ -75,11 +71,10 @@ if x is
   B then C
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
-//│     kw = keyword 'is'
+//│     kw = Keywrd of keyword 'is'
 //│     rhs = Block of Ls of 
 //│       InfixApp:
 //│         lhs = InfixApp:
@@ -89,13 +84,13 @@ if x is
 //│               Ident of "u"
 //│               Ident of "v"
 //│               Ident of "w"
-//│           kw = keyword 'and'
+//│           kw = Keywrd of keyword 'and'
 //│           rhs = Ident of "y"
-//│         kw = keyword 'then'
+//│         kw = Keywrd of keyword 'then'
 //│         rhs = Ident of "z"
 //│       InfixApp:
 //│         lhs = Ident of "B"
-//│         kw = keyword 'then'
+//│         kw = Keywrd of keyword 'then'
 //│         rhs = Ident of "C"
 
 if x is
@@ -105,11 +100,10 @@ if x is
   B then C
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
-//│     kw = keyword 'is'
+//│     kw = Keywrd of keyword 'is'
 //│     rhs = Block of Ls of 
 //│       InfixApp:
 //│         lhs = App:
@@ -118,18 +112,18 @@ if x is
 //│             Ident of "u"
 //│             Ident of "v"
 //│             Ident of "w"
-//│         kw = keyword 'and'
+//│         kw = Keywrd of keyword 'and'
 //│         rhs = InfixApp:
 //│           lhs = Ident of "v"
-//│           kw = keyword 'is'
+//│           kw = Keywrd of keyword 'is'
 //│           rhs = Block of Ls of 
 //│             InfixApp:
 //│               lhs = Ident of "B"
-//│               kw = keyword 'then'
+//│               kw = Keywrd of keyword 'then'
 //│               rhs = Ident of "z"
 //│       InfixApp:
 //│         lhs = Ident of "B"
-//│         kw = keyword 'then'
+//│         kw = Keywrd of keyword 'then'
 //│         rhs = Ident of "C"
 
 :todo
@@ -139,17 +133,16 @@ if x is
     B then z
   B then C
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.138: 	    and v is
+//│ ║  l.132: 	    and v is
 //│ ║         	            ^
-//│ ║  l.139: 	    B then z
+//│ ║  l.133: 	    B then z
 //│ ╙──       	^^^^
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
-//│     kw = keyword 'is'
+//│     kw = Keywrd of keyword 'is'
 //│     rhs = Block of Ls of 
 //│       InfixApp:
 //│         lhs = App:
@@ -158,18 +151,18 @@ if x is
 //│             Ident of "u"
 //│             Ident of "v"
 //│             Ident of "w"
-//│         kw = keyword 'and'
+//│         kw = Keywrd of keyword 'and'
 //│         rhs = InfixApp:
 //│           lhs = Ident of "v"
-//│           kw = keyword 'is'
+//│           kw = Keywrd of keyword 'is'
 //│           rhs = Error
 //│       InfixApp:
 //│         lhs = Ident of "B"
-//│         kw = keyword 'then'
+//│         kw = Keywrd of keyword 'then'
 //│         rhs = Ident of "z"
 //│       InfixApp:
 //│         lhs = Ident of "B"
-//│         kw = keyword 'then'
+//│         kw = Keywrd of keyword 'then'
 //│         rhs = Ident of "C"
 
 if x is
@@ -179,11 +172,10 @@ if x is
   B then C
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
-//│     kw = keyword 'is'
+//│     kw = Keywrd of keyword 'is'
 //│     rhs = Block of Ls of 
 //│       InfixApp:
 //│         lhs = InfixApp:
@@ -194,21 +186,21 @@ if x is
 //│                 Ident of "u"
 //│                 Ident of "v"
 //│                 Ident of "w"
-//│             kw = keyword 'and'
+//│             kw = Keywrd of keyword 'and'
 //│             rhs = InfixApp:
 //│               lhs = Ident of "v"
-//│               kw = keyword 'is'
+//│               kw = Keywrd of keyword 'is'
 //│               rhs = Ident of "B"
-//│           kw = keyword 'and'
+//│           kw = Keywrd of keyword 'and'
 //│           rhs = InfixApp:
 //│             lhs = Ident of "w"
-//│             kw = keyword 'is'
+//│             kw = Keywrd of keyword 'is'
 //│             rhs = Ident of "B"
-//│         kw = keyword 'then'
+//│         kw = Keywrd of keyword 'then'
 //│         rhs = Ident of "z"
 //│       InfixApp:
 //│         lhs = Ident of "B"
-//│         kw = keyword 'then'
+//│         kw = Keywrd of keyword 'then'
 //│         rhs = Ident of "C"
 
 if x is
@@ -218,11 +210,10 @@ if x is
   B then C
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
-//│     kw = keyword 'is'
+//│     kw = Keywrd of keyword 'is'
 //│     rhs = Block of Ls of 
 //│       InfixApp:
 //│         lhs = InfixApp:
@@ -233,24 +224,24 @@ if x is
 //│                 Ident of "u"
 //│                 Ident of "v"
 //│                 Ident of "w"
-//│             kw = keyword 'and'
+//│             kw = Keywrd of keyword 'and'
 //│             rhs = InfixApp:
 //│               lhs = Ident of "v"
-//│               kw = keyword 'is'
+//│               kw = Keywrd of keyword 'is'
 //│               rhs = Ident of "B"
-//│           kw = keyword 'then'
+//│           kw = Keywrd of keyword 'then'
 //│           rhs = InfixApp:
 //│             lhs = Ident of "z"
-//│             kw = keyword 'and'
+//│             kw = Keywrd of keyword 'and'
 //│             rhs = InfixApp:
 //│               lhs = Ident of "w"
-//│               kw = keyword 'is'
+//│               kw = Keywrd of keyword 'is'
 //│               rhs = Ident of "B"
-//│         kw = keyword 'then'
+//│         kw = Keywrd of keyword 'then'
 //│         rhs = Ident of "z"
 //│       InfixApp:
 //│         lhs = Ident of "B"
-//│         kw = keyword 'then'
+//│         kw = Keywrd of keyword 'then'
 //│         rhs = Ident of "C"
 
 

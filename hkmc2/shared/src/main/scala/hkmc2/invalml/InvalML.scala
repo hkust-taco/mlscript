@@ -9,7 +9,7 @@ import mlscript.utils.*, shorthands.*
 import utils.*
 
 import Message.MessageContext
-import semantics.*, semantics.Term.*
+import semantics.*, Term.*, ucs.FlatPattern
 import Elaborator.Ctx
 import syntax.*
 import Tree.*
@@ -74,7 +74,7 @@ object InvalCtx:
 end InvalCtx
 
 
-class InvalTyper(using elState: Elaborator.State, tl: TL):
+class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
   import tl.{trace, log}
   
   private val infVarState = new InfVarUid.State()
@@ -276,7 +276,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL):
       val res = freshVar(new TempSymbol(S(blk), "ctx"))(using ctx)
       constrain(bodyCtx, sk | res)
       (bodyTy, rhsCtx | res, rhsEff | bodyEff)
-    case Term.IfLike(Keyword.`if`, Split.Let(_, cond, Split.Cons(Branch(_, Pattern.Lit(BoolLit(true)), Split.Else(cons)), Split.Else(alts)))) =>
+    case Term.IfLike(_, IfLikeForm.ReturningIf, SimpleSplit.IfThenElse(cond, cons, alts)) =>
       val (condTy, condCtx, condEff) = typeCode(cond)
       val (consTy, consCtx, consEff) = typeCode(cons)
       val (altsTy, altsCtx, altsEff) = typeCode(alts)
@@ -312,7 +312,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL):
       split match
         case Split.Cons(Branch(_, pattern, _), alts) =>
           pattern match
-            case Pattern.ResolvedClassOrModule(sym, _) if adtParent.keySet(sym.uid) =>
+            case FlatPattern.ClassLike(_, sym, _, _) if adtParent.keySet(sym.uid) =>
               acc match
                 case L(N) => rec(alts, L(S(sym)))
                 case L(S(other)) if adtParent.get(other.uid).exists(p => p.uid == adtParent(sym.uid).uid) =>
@@ -341,14 +341,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL):
       val (scrutineeTy, scrutineeEff) = typeCheck(scrutinee)
       val map = HashMap[Uid[Symbol], TypeArg]()
       pattern match
-        case Pattern.ResolvedClassOrModule(sym, paramsOpt) =>
-          paramsOpt.foreach: params =>
-            params.foreach:
-              case (_, p, _) => p match
-                case Under() => ()
-                case Ident(nme) if !typeNames(nme) => ()
-                case _ =>
-                  error(msg"Pattern ${p.toString} is not supported yet." -> split.toLoc :: Nil)
+        case FlatPattern.ClassLike(_, sym, paramsOpt, _) =>
           val clsTy = adtParent.get(sym.uid).flatMap(_.asCls.flatMap(_.defn)) match
             case S(cls) =>
               ClassLikeType(cls.sym, cls.tparams.map(_ => freshWildcard(sym)))
@@ -384,7 +377,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL):
               constrain(clsTy, tryMkMono(typeAndSubstType(ext, true)(using map.toMap), scrutinee))
             params.iterator.zip(paramList).foreach:
               case (p, Param(_, _, S(ty), _)) =>
-                nestCtx += p.scrutinee -> typeAndSubstType(ty, true)(using map.toMap)
+                nestCtx += p._1 -> typeAndSubstType(ty, true)(using map.toMap)
             val (consTy, consEff) = typeAllSplits(cons, sign)(using nestCtx)
             val (altsTy, altsEff, altCases, fallback) = typeADTMatch(alts, sign)
             val allEff = scrutineeEff | (consEff | altsEff)
@@ -414,7 +407,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL):
       val nestCtx1 = ctx.nest
       val nestCtx2 = ctx.nest
       val patTy = pattern match
-      case pat: Pattern.ClassLike =>
+      case pat: FlatPattern.ClassLike =>
         pat.constructor.symbol.flatMap(_.asCls) match
           case S(sym) =>
             val (clsTy, tv, emptyTy) = sym.defn.map(sym -> _) match
@@ -432,7 +425,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL):
           case N =>
             error(msg"Not a valid class: ${pat.constructor.describe}" -> pat.constructor.toLoc :: Nil)
             Bot
-      case Pattern.Lit(lit) => lit match // TODO dedup with `case Lit(lit)`
+      case FlatPattern.Lit(lit) => lit match
         case _: Tree.BoolLit => InvalCtx.boolTy
         case _: Tree.IntLit => InvalCtx.intTy
         case _: Tree.DecLit => InvalCtx.numTy
@@ -502,8 +495,8 @@ class InvalTyper(using elState: Elaborator.State, tl: TL):
       given InvalCtx = nextCtx
       constrain(ascribe(term, skolemize(pt))._2, Bot) // * never generalize terms with effects
       (pt, Bot)
-    case (Term.IfLike(Keyword.`if`, branches), ty) => // * propagate
-      typeAllSplits(branches, S(ty))
+    case (Term.IfLike(_, IfLikeForm.ReturningIf, split), ty) => // * propagate
+      typeAllSplits(split.getExpandedSplit, S(ty))
     case (Term.Asc(term, ty), rhs) =>
       ascribe(term, typeType(ty))
       ascribe(term, rhs)
@@ -646,10 +639,10 @@ class InvalTyper(using elState: Elaborator.State, tl: TL):
               case S(Term.New(ty, _, N)) => createADTCtor(clsDef, ty)
               case _ => ()
             goStats(stats)
-          case (modDef: ModuleDef) :: stats =>
+          case (modDef: ModuleOrObjectDef) :: stats =>
             typeNames.add(modDef.sym.nme)
             goStats(stats)
-          case Import(sym, pth) :: stats =>
+          case Import(sym, str, pth) :: stats =>
             goStats(stats) // TODO:
           case stat :: _ =>
             TODO(stat)
@@ -697,13 +690,17 @@ class InvalTyper(using elState: Elaborator.State, tl: TL):
       case t @ Term.App(lhs, Term.Tup(rhs)) =>
         val (funTy, lhsEff) = typeCheck(lhs)
         app((funTy, lhsEff), rhs, t)
-      case Term.New(cls, argss, N) =>
+      case Term.New(cls, args, N) =>
         cls.symbol.flatMap(_.asCls.flatMap(_.defn)) match
         case S(clsDfn: ClassDef.Parameterized) =>
           require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
-          require(argss.length <= 1)
-          val args = argss.headOr(Nil)
-          if args.length != clsDfn.params.params.length then
+          val argsList = args match
+            case Nil => Nil
+            case Term.Tup(elems) :: Nil => elems.map:
+              case PlainFld(term) => term
+              case _ => ???
+            case _ => ???
+          if argsList.length != clsDfn.params.params.length then
             (error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil), Bot)
           else
             val map = HashMap[Uid[Symbol], TypeArg]()
@@ -720,7 +717,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL):
             }
             val effBuff = ListBuffer.empty[Type]
             require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
-            args.iterator.zip(clsDfn.params.params).foreach {
+            argsList.iterator.zip(clsDfn.params.params).foreach {
               case (arg, Param(sign = S(sign))) =>
                 val (ty, eff) = ascribe(arg, typeAndSubstType(sign, pol = true)(using map.toMap))
                 effBuff += eff
@@ -733,8 +730,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL):
       case Term.Asc(term, ty) =>
         val res = typeType(ty)(using ctx)
         ascribe(term, res)
-      case Term.IfLike(Keyword.`if`, branches) =>
-        typeAllSplits(branches, N)
+      case Term.IfLike(_, IfLikeForm.ReturningIf, split) => typeAllSplits(split.getExpandedSplit, N)
       case reg @ Term.Region(sym, body) =>
         val sk = freshReg(sym)(using ctx)
         val nestCtx = ctx.nestReg(sk)

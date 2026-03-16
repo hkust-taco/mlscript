@@ -19,8 +19,7 @@ if f(x) ==
   2 then 3
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = OpApp:
 //│     lhs = App:
 //│       lhs = Ident of "f"
@@ -35,11 +34,11 @@ if f(x) ==
 //│             op = Ident of "+"
 //│             rhss = Ls of 
 //│               IntLit of 1
-//│           kw = keyword 'then'
+//│           kw = Keywrd of keyword 'then'
 //│           rhs = IntLit of 0
 //│         InfixApp:
 //│           lhs = IntLit of 2
-//│           kw = keyword 'then'
+//│           kw = Keywrd of keyword 'then'
 //│           rhs = IntLit of 3
 
 if x +
@@ -54,8 +53,7 @@ if x +
     8 then 9
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = OpApp:
 //│     lhs = Ident of "x"
 //│     op = Ident of "+"
@@ -68,11 +66,11 @@ if x +
 //│             Block of Ls of 
 //│               InfixApp:
 //│                 lhs = IntLit of 2
-//│                 kw = keyword 'then'
+//│                 kw = Keywrd of keyword 'then'
 //│                 rhs = IntLit of 3
 //│               InfixApp:
 //│                 lhs = IntLit of 4
-//│                 kw = keyword 'then'
+//│                 kw = Keywrd of keyword 'then'
 //│                 rhs = IntLit of 5
 //│         OpApp:
 //│           lhs = Ident of "y"
@@ -81,23 +79,22 @@ if x +
 //│             Block of Ls of 
 //│               InfixApp:
 //│                 lhs = IntLit of 6
-//│                 kw = keyword 'is'
+//│                 kw = Keywrd of keyword 'is'
 //│                 rhs = Block of Ls of 
 //│                   InfixApp:
 //│                     lhs = Ident of "A"
-//│                     kw = keyword 'then'
+//│                     kw = Keywrd of keyword 'then'
 //│                     rhs = IntLit of 7
 //│                   InfixApp:
 //│                     lhs = Ident of "B"
-//│                     kw = keyword 'then'
+//│                     kw = Keywrd of keyword 'then'
 //│                     rhs = IntLit of 9
-//│                   Modified:
-//│                     modifier = keyword 'else'
-//│                     modLoc = N
-//│                     body = IntLit of 42
+//│                   PrefixApp:
+//│                     kw = Keywrd of keyword 'else'
+//│                     rhs = IntLit of 42
 //│               InfixApp:
 //│                 lhs = IntLit of 8
-//│                 kw = keyword 'then'
+//│                 kw = Keywrd of keyword 'then'
 //│                 rhs = IntLit of 9
 
 :todo

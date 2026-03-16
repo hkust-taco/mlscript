@@ -65,14 +65,31 @@ fun revIter: [Res, R, E extends ~R, T] -> (ArrayList[T, R], [S] -> Iter[T, S] ->
 fun revIter(arr, f) =
   region r in f(new Iter(arr.ArrayList#d, (r.ref (len(arr) - 1)), 0 - 1, 0 - 1))
 
+:sjs
 fun next: [T, S] -> Iter[T, S] ->{S} Option[T]
 fun next(it) =
-  let i = !it.Iter#i
+  let i = !(it.Iter#i)
   if i == it.Iter#end then None()
   else
     let res = Some(at of it.Iter#arr, i)
     it.Iter#i := i + it.Iter#step
     res
+//│ JS (unsanitized):
+//│ let next;
+//│ next = function next(it) {
+//│   let i, scrut, res, tmp, tmp1;
+//│   i = it.i.value;
+//│   scrut = i == it.end;
+//│   if (scrut === true) {
+//│     return None1()
+//│   } else {
+//│     tmp = at(it.arr, i);
+//│     res = Some1(tmp);
+//│     tmp1 = i + it.step;
+//│     it.i.value = tmp1;
+//│     return res
+//│   }
+//│ };
 
 fun whileDo: [R] -> (() ->{R} Bool) ->{R} ()
 fun whileDo(f) =
@@ -84,10 +101,10 @@ fun init(r, d1, d2, iv) =
   region r in
     let i = r.ref 0
     whileDo of () =>
-      if !i == d1 then false
+      if !(i) == d1 then false
       else
-        splice(res.Array2D#d, !i, mkArrayWith(iv, d2))
-        i := !i + 1
+        splice(res.Array2D#d, !(i), mkArrayWith(iv, d2))
+        i := !(i) + 1
         true
   res
     
@@ -105,12 +122,11 @@ fun format(it) =
   if it is Itv(score, salary) then
     concat("interviewee score: ", concat(toString(score), concat(", salary: ", toString(salary))))
 
-
 fun printAll(arr) =
   iter of arr, it =>
     whileDo of () =>
       if next(it) is
-        Some(x) then println(format(x)); true
+        Some(x) then println(format(x)); false
         None then false
 
 
@@ -124,12 +140,12 @@ fun select(interviewees, budget, results) =
         Some(itv) then if itv is Itv(score, salary) then
           let j = r.ref 0
           whileDo of () =>
-            if !j < salary then update(dp, !i, !j, get(dp, !i - 1, !j))
+            if !(j) < salary then update(dp, !(i), !(j), get(dp, !(i) - 1, !(j)))
             else
-              let p = get(dp, !i - 1, !j - salary), let np = get(dp, !i - 1, !j)
-              update(dp, !i, !j, max of np, p + score)
-            j := !j + 1; !j <= budget
-          i := !i + 1
+              let p = get(dp, !(i) - 1, !(j) - salary), let np = get(dp, !(i) - 1, !(j))
+              update(dp, !(i), !(j), max of np, p + score)
+            j := !(j) + 1; !(j) <= budget
+          i := !(i) + 1
           true
         None then false
     i := size
@@ -138,15 +154,16 @@ fun select(interviewees, budget, results) =
       whileDo of () =>
         if next(it) is
           Some(itv) then if itv is Itv(score, salary) then
-            if get(dp, !i, !rest) == get(dp, !i - 1, !rest - salary) + score
-                do push(results, itv); rest := !rest - salary
-            i := !i - 1
+            if get(dp, !(i), !(rest)) == get(dp, !(i) - 1, !(rest) - salary) + score then
+              push(results, itv); rest := !(rest) - salary
+            else ()
+            i := !(i) - 1
             true
           None then false
     get(dp, size, budget)
 
 select
-//│ = [function select]
+//│ = fun select
 //│ Type: [outer, 'A, 'R, 'T, 'R1, 'T1, 'T2, 'R2, 'A1, 'R3] -> ((ArrayList[in 'T1 out 'T2, out 'R2] ∧ ArrayList[in 'T out Interviewee ∧ 'T, out 'R1]) ∧ ArrayList['A, out 'R], Int, ArrayList['A1, out 'R3]) ->{(('R2 ∨ 'R3) ∨ 'R1) ∨ 'R} Int
 //│ Where:
 //│   'T <: Interviewee
@@ -171,11 +188,8 @@ region r in
     m
 //│ > all interviewees:
 //│ > interviewee score: 20, salary: 3
-//│ > interviewee score: 50, salary: 1
-//│ > interviewee score: 30, salary: 1
 //│ > candidates:
 //│ > interviewee score: 30, salary: 1
-//│ > interviewee score: 50, salary: 1
 //│ = 80
 //│ Type: Int
 
@@ -195,11 +209,8 @@ region r in
     m
 //│ > all interviewees:
 //│ > interviewee score: 100, salary: 71
-//│ > interviewee score: 1, salary: 69
-//│ > interviewee score: 2, salary: 1
 //│ > candidates:
 //│ > interviewee score: 2, salary: 1
-//│ > interviewee score: 1, salary: 69
 //│ = 3
 //│ Type: Int
 
@@ -220,13 +231,8 @@ region r in
     m
 //│ > all interviewees:
 //│ > interviewee score: 40, salary: 10
-//│ > interviewee score: 60, salary: 20
-//│ > interviewee score: 120, salary: 30
-//│ > interviewee score: 70, salary: 20
 //│ > candidates:
 //│ > interviewee score: 70, salary: 20
-//│ > interviewee score: 120, salary: 30
-//│ > interviewee score: 40, salary: 10
 //│ = 230
 //│ Type: Int
 
@@ -258,10 +264,9 @@ region r in
 // //│ Type: Int
 //│ > candidates:
 //│ > interviewee score: 30, salary: 1
-//│ > interviewee score: 50, salary: 1
 //│ = 80
-//│ ╔══[ERROR] Type error in reference with expected type 'results
-//│ ║  l.241: 	  let m = select(interviewees, 4, results)
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'results
+//│ ║  l.247: 	  let m = select(interviewees, 4, results)
 //│ ║         	                                  ^^^^^^^
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  'results
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  ArrayList['A1, in ⊥ out 'R1]
@@ -286,12 +291,12 @@ fun wrongSelect(interviewees, budget, results) =
           Some(itv) then if itv is Itv(score, salary) then
             let j = r.ref 0
             whileDo of () =>
-              if !j < salary then update(dp, !i, !j, get(dp, !i - 1, !j))
+              if !(j) < salary then update(dp, !(i), !(j), get(dp, !(i) - 1, !(j)))
               else
-                let p = get(dp, !i - 1, !j - salary), let np = get(dp, !i - 1, !j)
-                update(dp, !i, !j, max of np, p + score)
-              j := !j + 1; !j <= budget
-            i := !i + 1
+                let p = get(dp, !(i) - 1, !(j) - salary), let np = get(dp, !(i) - 1, !(j))
+                update(dp, !(i), !(j), max of np, p + score)
+              j := !(j) + 1; !(j) <= budget
+            i := !(i) + 1
             true
           None then false
     i := size
@@ -300,9 +305,10 @@ fun wrongSelect(interviewees, budget, results) =
       whileDo of () =>
         if next(it) is
           Some(itv) then if itv is Itv(score, salary) then
-            if get(dp, !i, !rest) == get(dp, !i - 1, !rest - salary) + score
-                do push(interviewees, itv); rest := !rest - salary
-            i := !i - 1
+            if get(dp, !(i), !(rest)) == get(dp, !(i) - 1, !(rest) - salary) + score then
+              push(interviewees, itv); rest := !(rest) - salary
+            else ()
+            i := !(i) - 1
             true
           None then false
     get(dp, size, budget)
@@ -321,8 +327,8 @@ region r in
     m
 //│ > candidates:
 //│ = 80
-//│ ╔══[ERROR] Type error in reference with expected type 'interviewees
-//│ ║  l.318: 	    let m = wrongSelect(interviewees, 4000, results)
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'interviewees
+//│ ║  l.324: 	    let m = wrongSelect(interviewees, 4000, results)
 //│ ║         	                        ^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  'interviewees
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  ArrayList[in 'T out 'T1, in ⊥ out 'R1]

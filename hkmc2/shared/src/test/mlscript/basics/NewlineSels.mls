@@ -38,20 +38,18 @@ rcd
 :todo
 rcd
 .a
-//│ ╔══[PARSE ERROR] Expected an expression; found selector instead
-//│ ║  l.40: 	.a
-//│ ╙──      	^^
-//│ ╔══[PARSE ERROR] Expected end of input; found selector instead
-//│ ║  l.40: 	.a
-//│ ╙──      	^^
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.39: 	rcd
 //│ ╙──      	^^^
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
+//│ ║  l.40: 	.a
+//│ ╙──      	^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 let rcd =
   a: x => b: y => c: x + y
-//│ rcd = {a: [function a]}
+//│ rcd = {a: fun a}
 
 rcd.a(1).b(2).c
 //│ = 3
@@ -84,7 +82,7 @@ rcd
   .c !> print
   + 1 !> print
   + 1
-//│ > {b: [function b]}
+//│ > {b: fun b}
 //│ > {c: 3}
 //│ > 3
 //│ > 4

@@ -61,7 +61,7 @@ letreg of r =>
     123
     () => next(it)
   k()
-//│ ╔══[ERROR] Type error in block
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.56: 	letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^
 //│ ║  l.57: 	  let b = mkVec(r)
@@ -70,14 +70,8 @@ letreg of r =>
 //│ ║        	^^^^^^^^^^
 //│ ║  l.59: 	  let k = iterate(b) of it =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.60: 	    next(it)
-//│ ║        	^^^^^^^^^^^^
-//│ ║  l.61: 	    123
-//│ ║        	^^^^^^^
-//│ ║  l.62: 	    () => next(it)
-//│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.63: 	  k()
-//│ ║        	^^^^^
+//│ ║  l.60: 	... (more lines omitted) ...
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'E  <:  ⊥
 //│ ╟── because: cannot constrain  ¬'Rg  <:  ⊥
 //│ ╟── because: cannot constrain  ⊤  <:  'Rg
@@ -94,25 +88,17 @@ letreg of r =>
     123
   clear(b)
   r
-//│ ╔══[ERROR] Type error in block
-//│ ║  l.88: 	letreg of r =>
+//│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.82: 	letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.89: 	  let b = mkVec(r)
+//│ ║  l.83: 	  let b = mkVec(r)
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.90: 	  clear(b)
+//│ ║  l.84: 	  clear(b)
 //│ ║        	^^^^^^^^^^
-//│ ║  l.91: 	  iterate(b) of it =>
+//│ ║  l.85: 	  iterate(b) of it =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.92: 	    next(it)
-//│ ║        	^^^^^^^^^^^^
-//│ ║  l.93: 	    clear(b)
-//│ ║        	^^^^^^^^^^^^
-//│ ║  l.94: 	    123
-//│ ║        	^^^^^^^
-//│ ║  l.95: 	  clear(b)
-//│ ║        	^^^^^^^^^^
-//│ ║  l.96: 	  r
-//│ ║        	^^^
+//│ ║  l.86: 	... (more lines omitted) ...
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'E  <:  ⊥
 //│ ╟── because: cannot constrain  'Rg  <:  ⊥
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
@@ -140,21 +126,17 @@ letreg of r =>
     next(it)
   use_(r)
   r
-//│ ╔══[ERROR] Type error in block
-//│ ║  l.136: 	letreg of r =>
+//│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.122: 	letreg of r =>
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.137: 	  use_(r)
+//│ ║  l.123: 	  use_(r)
 //│ ║         	^^^^^^^^^
-//│ ║  l.138: 	  integers(r) of it =>
+//│ ║  l.124: 	  integers(r) of it =>
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.139: 	    use_(r)
+//│ ║  l.125: 	    use_(r)
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.140: 	    next(it)
-//│ ║         	^^^^^^^^^^^^
-//│ ║  l.141: 	  use_(r)
-//│ ║         	^^^^^^^^^
-//│ ║  l.142: 	  r
-//│ ║         	^^^
+//│ ║  l.126: 	... (more lines omitted) ...
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'E  <:  ⊥
 //│ ╟── because: cannot constrain  'Rg  <:  ⊥
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥

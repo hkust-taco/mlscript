@@ -9,7 +9,7 @@ import utils.Scope
 
 abstract class InvalmlDiffMaker extends JSBackendDiffMaker:
   
-  val invalPreludeFile = os.Path(rootPath) / "hkmc2" / "shared" / "src" / "test" / "mlscript" / "invalml" / "invalPrelude.mls"
+  val invalPreludeFile = io.Path(rootPath) / "hkmc2" / "shared" / "src" / "test" / "mlscript" / "invalml" / "invalPrelude.mls"
   
   val invalmlOpt = new NullaryCommand("invalml"):
     override def onSet(): Unit =
@@ -35,8 +35,9 @@ abstract class InvalmlDiffMaker extends JSBackendDiffMaker:
   override def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     super.processTerm(trm, inImport)
     if invalmlOpt.isSet then
-      given Scope = Scope.empty
+      given Scope = Scope.empty(Scope.Cfg.default)
       if invalmlTyper.isEmpty then
+        given Elaborator.Ctx = curCtx
         invalmlTyper = S(InvalTyper())
       given hkmc2.invalml.InvalCtx = invalCtx.copy(raise = summon)
       val typer = invalmlTyper.get

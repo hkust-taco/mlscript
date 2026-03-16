@@ -66,12 +66,16 @@ foo
 :e
 fun foo[outer, R <: outer](r1: Region[R]) =
   region r2 in 42
-//│ ═══[ERROR] Unsupported type parameter outer binding
-//│ ╔══[ERROR] Unsupported type parameter operator application
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter outer binding
 //│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
-//│ ╙──      	               ^^^^
-//│ ╔══[ERROR] Name not found: R
+//│ ╙──      	        ^^^^^
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter infix operator '<:'
+//│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──      	               ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: R
 //│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╙──      	                                      ^
-//│ ═══[ERROR] Expected a type symbol, got <error>
-//│ ═══[ERROR] Invalid type
+//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ═══[COMPILATION ERROR] Invalid type

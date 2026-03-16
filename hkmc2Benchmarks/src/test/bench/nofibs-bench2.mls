@@ -1,0 +1,151 @@
+:js
+:silent
+
+
+// Comment to run the benchmarks
+:exit
+====================================================================================================
+
+
+import "./mlscript-compile/Benchmark.mls"
+open Benchmark
+
+
+let suite = mkSuite()
+
+
+
+
+// need more stack space
+// import "../../test/bench/mlscript-compile/nofib/cryptarithm1.mls"
+// suite.add("cryptarithm1", () => cryptarithm1.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/cryptarithm2.mls"
+suite.add("cryptarithm2", () => cryptarithm2.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/cse.mls"
+suite.add("cse", () => cse.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/eliza.mls"
+suite.add("eliza", () => eliza.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/gcd.mls"
+suite.add("gcd", () => gcd.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/integer.mls"
+suite.add("integer", () => integer.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/knights.mls"
+suite.add("knights", () => knights.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/lambda.mls"
+suite.add("lambda", () => lambda.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/lastpiece.mls"
+suite.add("lastpiece", () => lastpiece.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/life.mls"
+suite.add("life", () => life.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/mandel.mls"
+suite.add("mandel", () => mandel.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/mandel2.mls"
+suite.add("mandel2", () => mandel2.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/mate.mls"
+suite.add("mate", () => mate.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/minimax.mls"
+suite.add("minimax", () => minimax.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/para.mls"
+suite.add("para", () => para.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/power.mls"
+suite.add("power", () => power.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/pretty.mls"
+suite.add("pretty", () => pretty.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/primetest.mls"
+suite.add("primetest", () => primetest.main())
+
+
+// =======================
+
+// need more stack
+// import "../../test/bench/mlscript-compile/nofib/puzzle.mls"
+// suite.add("puzzle", () => puzzle.main())
+
+
+runSuite(suite)
+writeResults(suite, "nofibs2.json")

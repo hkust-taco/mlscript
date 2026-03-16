@@ -1,0 +1,97 @@
+// Generated from: hkmc2DiffTests/src/test/scala/hkmc2/DocumentTests.scala
+
+// L.44:
+//	DocCons(DocText(hello),DocCons(DocText( ),DocText(world)))
+hello world
+
+// L.46:
+//	DocNest(2,DocCons(DocText(hello),DocCons(DocBreak(false),DocText(world))))
+  hello world
+
+// L.48:
+hello hello hello
+world world world
+
+// L.50:
+hello
+world
+
+// L.52:
+  hello
+  world
+
+// L.54:
+  hello hello hello
+  world world world
+
+// L.56:
+hello hello hello
+world world world
+
+// L.58:
+  hello hello hello
+  world world world
+
+// L.60:
+hi hi world world
+
+// L.62:
+hi
+hi
+world world
+
+// L.64:
+hi hi W W ! !
+
+// L.66:
+hi
+hi
+W W
+! !
+
+// L.68:
+hi
+hi
+W
+W
+! !
+
+// L.70:
+hi
+hi
+world
+world
+
+// L.72:
+hello
+hello
+hello
+world world world
+
+// L.74:
+hello
+hello
+hello
+universe
+universe
+universe
+
+// L.76:
+  hello
+  hello
+  hello
+  world world world
+
+// L.78:
+  hello
+  hello
+  hello
+  world world world
+
+// L.80:
+  hello
+  hello
+  hello
+  world
+  world
+  world

@@ -19,17 +19,15 @@ fun f(x, y, z) = if x then y else z
 //│       Ident of "y"
 //│       Ident of "z"
 //│   rhs = S of IfLike:
-//│     kw = keyword 'if'
-//│     kwLoc = N
+//│     kw = Keywrd of keyword 'if'
 //│     split = Block of Ls of 
 //│       InfixApp:
 //│         lhs = Ident of "x"
-//│         kw = keyword 'then'
+//│         kw = Keywrd of keyword 'then'
 //│         rhs = Ident of "y"
-//│       Modified:
-//│         modifier = keyword 'else'
-//│         modLoc = N
-//│         body = Ident of "z"
+//│       PrefixApp:
+//│         kw = Keywrd of keyword 'else'
+//│         rhs = Ident of "z"
 
 
 fun f(x, y, z) =
@@ -77,7 +75,7 @@ fun f(x, y, z) =
   if
     x then y else z
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.78: 	    x then y else z
+//│ ║  l.76: 	    x then y else z
 //│ ╙──      	             ^^^^
 
 
@@ -86,13 +84,13 @@ fun f(x, y) =
     then y
 
 let audits = new Set()
-//│ audits = Set{}
+//│ audits = Set(0) {}
 
 if audits.has(1) === true do
   print("ok")
 else
-  1
-//│ = 1
+  print(1)
+//│ > 1
 
 
 (if true then
@@ -108,7 +106,7 @@ else
   else 1
 ) + 3
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.108: 	  else 1
+//│ ║  l.106: 	  else 1
 //│ ╙──       	  ^^^^
 //│ = 8
 
@@ -118,6 +116,25 @@ else
     5 else 1
 ) + 3
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.118: 	    5 else 1
+//│ ║  l.116: 	    5 else 1
 //│ ╙──       	      ^^^^
 //│ = 8
+
+data class Box[A](value: A)
+
+:w
+fun foo(x) = if x is
+  Box(0) then "The box contains zero."
+  Box(1) then "The box contains one."
+  else "I can't tell you what's inside the box."
+  else "I don't want to tell you what's inside the box."
+  else "I shouldn't tell you what's inside the box."
+//│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
+//│ ║  l.129: 	  else "I can't tell you what's inside the box."
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This branch is unreachable.
+//│ ║  l.130: 	  else "I don't want to tell you what's inside the box."
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This branch is unreachable.
+//│ ║  l.131: 	  else "I shouldn't tell you what's inside the box."
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

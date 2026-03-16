@@ -16,9 +16,7 @@ fun isDefined(x) = if x is
 //│     return true
 //│   } else if (x instanceof None1.class) {
 //│     return false
-//│   } else {
-//│     throw new globalThis.Error("match error");
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
 
 isDefined(Some(1))
@@ -33,21 +31,20 @@ val isDefined = case
   Some(_) then true
   None    then false
 //│ JS (unsanitized):
-//│ let isDefined1, tmp1, lambda;
+//│ let isDefined1, lambda;
 //│ lambda = (undefined, function (caseScrut) {
-//│   let param0;
+//│   let arg$Some$0$;
 //│   if (caseScrut instanceof Some1.class) {
-//│     param0 = caseScrut.value;
+//│     arg$Some$0$ = caseScrut.value;
 //│     return true
 //│   } else if (caseScrut instanceof None1.class) {
 //│     return false
 //│   } else {
-//│     throw new globalThis.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ });
-//│ tmp1 = lambda;
-//│ isDefined1 = tmp1;
-//│ isDefined = [function]
+//│ isDefined1 = lambda;
+//│ isDefined = fun
 
 isDefined(Some(1))
 //│ = true
@@ -59,7 +56,7 @@ isDefined(None)
 val isDefined = x => if x is
   Some(_) then true
   None    then false
-//│ isDefined = [function]
+//│ isDefined = fun
 
 isDefined(Some(1))
 //│ = true
@@ -74,7 +71,7 @@ module Foo with
 val isOther = x => if x is
   Foo.Other(_) then true
   None    then false
-//│ isOther = [function]
+//│ isOther = fun
 
 
 fun keepIfGreaterThan(x, y) =
@@ -91,14 +88,14 @@ fun keepIfGreaterThan(x, y) =
 //│ > true
 
 1
-  . keepIfGreaterThan(0)
+  \ keepIfGreaterThan(0)
 //│ = Some(1)
 
 
 1
-  . keepIfGreaterThan(0)
-  . isDefined()
-  . console.log()
+  \ keepIfGreaterThan(0)
+  \ isDefined()
+  \ console.log()
 //│ > true
 
 
@@ -121,7 +118,7 @@ fun keepIfGreaterThan(x, y) =
 
 
 let isDefined2 = _ is Some
-//│ isDefined2 = [function isDefined2]
+//│ isDefined2 = fun isDefined2
 
 Some(1) isDefined2()
 //│ = true

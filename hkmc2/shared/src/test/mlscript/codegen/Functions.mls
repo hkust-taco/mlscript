@@ -5,7 +5,7 @@ fun foo() =
   1 + 2
 
 foo
-//│ = [function foo]
+//│ = fun foo
 
 foo()
 //│ = 3
@@ -67,13 +67,13 @@ let f = outerfun(100)
 f(200)
 //│ > 301
 //│ = 401
-//│ f = [function nested]
+//│ f = fun nested
 
 // f(200)
 
 outerfun(100)
 //│ > 301
-//│ = [function nested]
+//│ = fun nested
 
 outerfun(100)(200)
 //│ > 301
@@ -89,18 +89,18 @@ fun test2(y) = y + 1
 //│ REPL> Sending: block$res18 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: let test2, test1;try { test1 = function test1(...args) {   runtime.checkArgs("test1", 1, true, args.length);   let x = args[0];   return runtime.checkCall(test2(x)) }; test2 = function test2(...args) {   runtime.checkArgs("test2", 1, true, args.length);   let y = args[0];   return y + 1 }; block$res18 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: let test2, test1;try { test1 = function test1(x) {   runtime.checkArgs("test1", 1, true, arguments.length);   return runtime.checkCall(test2(x)) }; test2 = function test2(y) {   runtime.checkArgs("test2", 1, true, arguments.length);   return y + 1 }; block$res18 = undefined; } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:
 //│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res18)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res18)) } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 //│ REPL> Parsed:
 //│ >  undefined
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 
 test1(1)
 //│ = 2

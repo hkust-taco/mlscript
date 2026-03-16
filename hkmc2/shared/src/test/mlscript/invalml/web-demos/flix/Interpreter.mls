@@ -1,3 +1,5 @@
+
+:global
 :invalml
 
 :...
@@ -5,7 +7,6 @@
 
 // * This file includes the implementation for an interpreter and a compiler for a small toy programming language.
 // * Adapted from https://doi.org/10.5281/zenodo.7990289
-
 
 class List[T] with
   constructor

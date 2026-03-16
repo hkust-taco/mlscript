@@ -98,7 +98,7 @@ define("multiple-matching") of reference("pattern-list") of
       keyword(Keywords._bar) of reference("multiple-matching") of
         process: idFirst, name: "multiple-matching tail"
 
-fun makeInfixChoice(kw: Keywords.Keyword, rhsKind: Str, compose: (Tree.Tree, Tree.Tree) -> Tree.Tree) =
+fun makeInfixChoice(kw: Keywords.Keyword, rhsKind: Str, compose: (Tree, Tree) -> Tree) =
   keyword(kw) of reference(rhsKind) of
     process: (rhs, _) => lhs => compose(lhs, rhs)
     name: "operator `" + kw.name + "` right-hand side"

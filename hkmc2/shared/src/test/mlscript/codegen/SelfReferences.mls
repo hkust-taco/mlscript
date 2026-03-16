@@ -8,56 +8,82 @@ module Foo with
 //│ let Foo1;
 //│ (class Foo {
 //│   static {
-//│     Foo1 = Foo;
+//│     Foo1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
 //│     this.self = Foo1;
 //│   }
-//│   static toString() { return "Foo"; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
 
 Foo.self
-//│ = Foo
+//│ = class Foo { self: ref'1 } as ref'1
 
 
 module Foo with
   val self: module Foo = this
 
 Foo.self
-//│ = Foo
+//│ = class Foo { self: ref'1 } as ref'1
 
 
 :e
 module Foo with
   val self = this
-//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type Foo.
+//│ ║  l.36: 	  val self = this
+//│ ║        	             ^^^^
 //│ ╙── Value must be marked as returning a 'module' in order to return a module.
 
 Foo.self
-//│ = Foo
+//│ = class Foo { self: ref'1 } as ref'1
 
 
 object Foo with
   val self = this
 
 Foo.self
-//│ = Foo
+//│ = Foo { self: ref'1, class: object Foo } as ref'1
 
 
-:todo // * Initialization error
+module Foo with
+  val foo = 1
+  print(Foo.foo)
+//│ > 1
+
+// * This used not to work, and it could be argued it should be an initialization error
 :sjs
 object Foo with
-  val self = Foo
+  val self = id(Foo)
 //│ JS (unsanitized):
-//│ let Foo9;
-//│ const Foo$class1 = class Foo8 {
-//│   constructor() {
-//│     this.self = Foo9;
+//│ let Foo11;
+//│ (class Foo10 {
+//│   static {
+//│     new this
 //│   }
-//│   toString() { return "Foo"; }
-//│ }; Foo9 = new Foo$class1;
-//│ Foo9.class = Foo$class1;
+//│   constructor() {
+//│     Foo11 = this;
+//│     let tmp;
+//│     tmp = Predef.id(Foo11);
+//│     this.self = tmp;
+//│     Object.defineProperty(this, "class", {
+//│       value: Foo10
+//│     });
+//│     globalThis.Object.freeze(this);
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["object", "Foo"]; 
+//│ });
 
-:re
-Foo.self
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'self' yielded 'undefined'
+
+// * This used not to work, and it could be argued it should be an initialization error
+// * (leaking a partially-initialized module)
+object Foo with
+  val self = id(Foo)
+  val lateInit = 1
 
 

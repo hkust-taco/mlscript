@@ -173,7 +173,7 @@
 
 
 let f = x => x * 2
-//│ f = [function f]
+//│ f = fun f
 
 2
   + 1
@@ -309,8 +309,7 @@ fun f(x) = if x
 //│     rhs = Tup of Ls of 
 //│       Ident of "x"
 //│   rhs = S of IfLike:
-//│     kw = keyword 'if'
-//│     kwLoc = N
+//│     kw = Keywrd of keyword 'if'
 //│     split = OpSplit:
 //│       lhs = Ident of "x"
 //│       ops_rhss = Ls of 
@@ -320,7 +319,7 @@ fun f(x) = if x
 //│             op = Ident of "=="
 //│             rhss = Ls of 
 //│               IntLit of 0
-//│           kw = keyword 'then'
+//│           kw = Keywrd of keyword 'then'
 //│           rhs = StrLit of "a"
 //│         InfixApp:
 //│           lhs = OpApp:
@@ -328,7 +327,7 @@ fun f(x) = if x
 //│             op = Ident of ">"
 //│             rhss = Ls of 
 //│               IntLit of 1
-//│           kw = keyword 'then'
+//│           kw = Keywrd of keyword 'then'
 //│           rhs = StrLit of "b"
 
 f(0)
@@ -359,10 +358,10 @@ f(1)
 fun f(x) = if x
   foo(A) then a
   bar(B) then b
-//│ ╔══[ERROR] Unrecognized term split (juxtaposition).
-//│ ║  l.359: 	fun f(x) = if x
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (juxtaposition)
+//│ ║  l.358: 	fun f(x) = if x
 //│ ║         	              ^
-//│ ║  l.360: 	  foo(A) then a
+//│ ║  l.359: 	  foo(A) then a
 //│ ╙──       	^^
 
 
@@ -377,12 +376,12 @@ if 0
 
 x => if x
   is 0 then "a"
-//│ = [function]
+//│ = fun
 
 x => if x
   is 0 then "a"
   is 1 then "b"
-//│ = [function]
+//│ = fun
 
 
 fun f(x) = if x

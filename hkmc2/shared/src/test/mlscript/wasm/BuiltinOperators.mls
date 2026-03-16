@@ -1,0 +1,204 @@
+
+:global
+:wasm
+
+:wat
+1 + 2
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type (func (result (ref null any))))
+//│   (func  (type 1) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│     (if (result (ref null any))
+//│       (i32.and
+//│         (ref.test (ref null i31)
+//│           (local.get $lhs))
+//│         (ref.test (ref null i31)
+//│           (local.get $rhs)))
+//│       (then
+//│         (ref.i31
+//│           (i32.add
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $lhs)))
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $rhs))))))
+//│       (else
+//│         (unreachable))))
+//│   (func $entry (type 2) (result (ref null any))
+//│     (call 0
+//│       (ref.i31
+//│         (i32.const 1))
+//│       (ref.i31
+//│         (i32.const 2))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 3
+
+:wat
+-2
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type (func (param $arg (ref null any)) (result (ref null any))))
+//│   (type (func (result (ref null any))))
+//│   (func  (type 1) (param $arg (ref null any)) (result (ref null any))
+//│     (if (result (ref null any))
+//│       (ref.test (ref null i31)
+//│         (local.get $arg))
+//│       (then
+//│         (ref.i31
+//│           (i32.sub
+//│             (i32.const 0)
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $arg))))))
+//│       (else
+//│         (unreachable))))
+//│   (func $entry (type 2) (result (ref null any))
+//│     (call 0
+//│       (ref.i31
+//│         (i32.const 2))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = -2
+
+not true
+//│ Wasm result:
+//│ = 0
+
+2 - 1
+//│ Wasm result:
+//│ = 1
+
+3 * 4
+//│ Wasm result:
+//│ = 12
+
+4 / 2
+//│ Wasm result:
+//│ = 2
+
+4 % 3
+//│ Wasm result:
+//│ = 1
+
+:wat
+1 === 1
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type (func (result (ref null any))))
+//│   (func  (type 1) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│     (if (result (ref null any))
+//│       (i32.and
+//│         (ref.test (ref null i31)
+//│           (local.get $lhs))
+//│         (ref.test (ref null i31)
+//│           (local.get $rhs)))
+//│       (then
+//│         (ref.i31
+//│           (i32.eq
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $lhs)))
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $rhs))))))
+//│       (else
+//│         (unreachable))))
+//│   (func $entry (type 2) (result (ref null any))
+//│     (call 0
+//│       (ref.i31
+//│         (i32.const 1))
+//│       (ref.i31
+//│         (i32.const 1))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 1
+
+1 === 2
+//│ Wasm result:
+//│ = 0
+
+1 !== 1
+//│ Wasm result:
+//│ = 0
+
+1 !== 2
+//│ Wasm result:
+//│ = 1
+
+1 < 1
+//│ Wasm result:
+//│ = 0
+
+1 <= 1
+//│ Wasm result:
+//│ = 1
+
+1 < 2
+//│ Wasm result:
+//│ = 1
+
+1 <=2
+//│ Wasm result:
+//│ = 1
+
+2 > 1
+//│ Wasm result:
+//│ = 1
+
+2 >= 1
+//│ Wasm result:
+//│ = 1
+
+2 > 2
+//│ Wasm result:
+//│ = 0
+
+2 >= 2
+//│ Wasm result:
+//│ = 1
+
++3
+//│ Wasm result:
+//│ = 3
+
+-1 + 2
+//│ Wasm result:
+//│ = 1
+
+-1 - 2
+//│ Wasm result:
+//│ = -3
+
+-6 / 3
+//│ Wasm result:
+//│ = -2
+
+-6 % 4
+//│ Wasm result:
+//│ = -2
+
+-1 > 2
+//│ Wasm result:
+//│ = 0
+
+-1 > -3
+//│ Wasm result:
+//│ = 1
+
+- 1>= -1
+//│ Wasm result:
+//│ = 1
+
+not false
+//│ Wasm result:
+//│ = 1

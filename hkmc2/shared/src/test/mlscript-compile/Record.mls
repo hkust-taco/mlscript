@@ -8,7 +8,7 @@ import "./Iter.mls"
 module Record with...
 
 fun steal(from, ...fields) =
-  let rcd = new Object
+  let rcd = new mut Object
   fields Iter.each of f => set rcd.(f) = from.(f)
   rcd
 

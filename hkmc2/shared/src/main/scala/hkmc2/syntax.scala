@@ -24,7 +24,7 @@ trait Located:
   def toLoc: Opt[Loc]
 
 trait AutoLocated extends Located:
-  protected def children: List[Located]
+  protected def children: Vector[Located]
   
   private var loc: Opt[Loc] = N
   
@@ -35,19 +35,23 @@ trait AutoLocated extends Located:
     loc = loco
     this
   def withLocOf(that: Located): this.type = withLoc(that.toLoc)
-  def toLoc: Opt[Loc] = boundary:
+  def mkLocWith(otherChildren: Located*): this.type =
+    mkLoc(otherChildren ++ children)
+    this
+  private def mkLoc(allChildren: IterableOnce[Located]) = boundary:
     if loc.isEmpty then
-      def subLocs = children.iterator.flatMap(_.toLoc.iterator)
+      def subLocs = allChildren.iterator.flatMap(_.toLoc.iterator)
       val spanStart =
         subLocs.map(_.spanStart).minOption.getOrElse(boundary.break(N))
       val spanEnd =
         subLocs.map(_.spanEnd).maxOption.getOrElse(boundary.break(N))
       val origins = subLocs.map(_.origin).toList.distinct
-      assert(origins.size === 1, origins)
+      assert(origins.size === 1, (origins, this))
       val res = S(Loc(spanStart, spanEnd, origins.head))
       val _ = withLoc(res)
       res
     else loc
+  def toLoc: Opt[Loc] = mkLoc(children)
   def withoutLoc: this.type =
     loc = N
     this

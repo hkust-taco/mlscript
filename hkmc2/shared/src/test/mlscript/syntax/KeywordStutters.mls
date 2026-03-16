@@ -22,8 +22,8 @@ abstract
     Bar(b)
 //│ ┊abstract┊→⟨┊class┊→⟨┊Foo┊(⟨┊a┊⟩)┊↵┊Bar┊(⟨┊b┊⟩)┊⟩←┊⟩←┊
 //│ Parsed:
-//│ 	Modified(keyword 'abstract',None,TypeDef(Cls,App(Ident(Foo),Tup(List(Ident(a)))),None))
-//│ 	Modified(keyword 'abstract',None,TypeDef(Cls,App(Ident(Bar),Tup(List(Ident(b)))),None))
+//│ 	Modified(Keywrd(keyword 'abstract'),TypeDef(Cls,App(Ident(Foo),Tup(List(Ident(a)))),None))
+//│ 	Modified(Keywrd(keyword 'abstract'),TypeDef(Cls,App(Ident(Bar),Tup(List(Ident(b)))),None))
 
 :todo
 abstract class
@@ -42,18 +42,14 @@ object
 
 // * Would be cool if something like this was supported:
 :pe
-:ge
 object \$ extends Foo
   A
   B
 //│ ╔══[LEXICAL ERROR] unexpected character '$'
-//│ ║  l.46: 	object \$ extends Foo
+//│ ║  l.45: 	object \$ extends Foo
 //│ ╙──      	        ^
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
-//│ ║  l.46: 	object \$ extends Foo
+//│ ║  l.45: 	object \$ extends Foo
 //│ ╙──      	        ^
-//│ > let $_1;try { const $_$class = class $_ {   constructor() {}   toString() { return "\"; } }; $_1 = new $_$class; $_1.class = $_$class; block$res7 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
 
 

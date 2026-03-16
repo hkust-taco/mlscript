@@ -143,7 +143,7 @@ fun extended = all
 
 pattern Letter = "a" ..= "z" | "A" ..= "Z"
 
-fun hasLetter(s) = [..s].some((ch, _, _) => ch is Letter)
+fun hasLetter(s) = s Iter.some((ch, _, _) => ch is Letter)
 
 pattern FloatOperator = "+." | "-." | "*." | "/."
 

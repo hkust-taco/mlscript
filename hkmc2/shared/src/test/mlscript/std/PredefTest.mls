@@ -9,7 +9,7 @@ id(123)
 :e
 :re
 id()
-//│ ╔══[ERROR] Expected 1 arguments, got 0
+//│ ╔══[COMPILATION ERROR] Expected 1 arguments, got 0
 //│ ║  l.11: 	id()
 //│ ╙──      	  ^^
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
@@ -21,22 +21,28 @@ print(1, 2, 3)
 1 print()
 //│ > 1
 
-1 . print()
+1 \ print()
 //│ > 1
 
-1 . (print(_))()
+1 \ (print(_))()
 //│ > 1
 
-{1 . print(_)}(2)
+{1 \ print(_)}(2)
 //│ > 1 2
 
 1
-  . print()
+  \ print()
 //│ > 1
 
 
 2 + 2 |> print
 //│ > 4
+
+2 + 2 |> (_ * 2)
+//│ = 8
+
+2 + 2 .> (_ * 2)
+//│ = 6
 
 print <| 2 + 2
 //│ > 4
@@ -86,7 +92,7 @@ passing(tuple, 1, 2, 3) of 4, 5, 6
 
 :re
 tuple passing(1, 2, 3) of 4, 5, 6
-//│ ═══[RUNTIME ERROR] TypeError: f3.bind is not a function
+//│ ═══[RUNTIME ERROR] TypeError: f.bind is not a function
 
 
 :re
@@ -109,13 +115,21 @@ tuple passing(1, 2, 3) of 4, 5, 6
 //│ ═══[RUNTIME ERROR] Error: Not implemented
 
 
+Symbols
+//│ = Symbols {
+//│   prettyPrint: Symbol("mlscript.prettyPrint"),
+//│   definitionMetadata: Symbol("mlscript.definitionMetadata"),
+//│   class: object Symbols
+//│ }
+
+
 // * Function composition is associative
 
 let
   f = ((_ + 1) >> (_ * 2)) >> (_ - 1)
   g = (_ + 1) >> ((_ * 2) >> (_ - 1))
-//│ f = [function]
-//│ g = [function]
+//│ f = fun
+//│ g = fun
 
 [f(123), g(123)]
 //│ = [247, 247]
@@ -169,8 +183,8 @@ foldr(tuple)(0, 1, 2, 3)
 :todo
 :re
 foldr(+)()
-//│ ╔══[ERROR] Expected at least 1 arguments, got 0
-//│ ║  l.171: 	foldr(+)()
+//│ ╔══[COMPILATION ERROR] Expected at least 1 arguments, got 0
+//│ ║  l.185: 	foldr(+)()
 //│ ╙──       	        ^^
 
 
@@ -209,7 +223,7 @@ Iter.joined(_, "") of [
   "2"
   "3"
 ]
-//│ = [function]
+//│ = fun
 
 
 mkStr of
@@ -227,4 +241,61 @@ mkStr of
 //│ 
 //│ = "01"
 
+// loose equality is disabled
 
+null == undefined
+//│ = false
+
+undefined == null
+//│ = false
+
+undefined === null
+//│ = false
+
+[] == false
+//│ = false
+
+"0" == false
+//│ = false
+
+1 == true
+//│ = false
+
+// * Arrays are compared elementwise
+
+[1, 2, 3] == [1, 2, 3]
+//│ = true
+
+// non-data classes unchanged
+
+:silent
+class B(val a, b)
+let x = B(1, 2)
+let y = B(1, 4)
+
+x == y
+//│ = false
+
+// data classes are equal from arguments
+
+:silent
+data class A(a, b, c)
+module M with
+  data class A(a, b, c)
+let x = A(1, 2, 3)
+let y = A(1, 2, 3)
+
+x == y
+//│ = true
+
+x != y
+//│ = false
+
+x == A(2, 3, 4)
+//│ = false
+
+x == M.A(1, 2, 3)
+//│ = false
+
+A([x], 2, 3) == A([y], 2, 3)
+//│ = true

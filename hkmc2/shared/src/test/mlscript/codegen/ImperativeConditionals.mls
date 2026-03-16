@@ -1,0 +1,43 @@
+:js
+:todo
+
+
+let x = -1
+//│ x = -1
+
+if x < 0 do set x = 0
+
+
+fun f(x) =
+  if x < 0 return 0
+  Math.sqrt(x)
+//│ ╔══[PARSE ERROR] Unexpected 'return' keyword here
+//│ ║  l.12: 	  if x < 0 return 0
+//│ ╙──      	           ^^^^^^
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (integer literal)
+//│ ║  l.12: 	  if x < 0 return 0
+//│ ╙──      	         ^
+
+
+fun hasZeroElement(xs) =
+  while xs is
+    Cons(0, tl) return true
+    Cons(hd, tl) do set xs = tl
+    Nil return false
+//│ ╔══[PARSE ERROR] Unexpected 'return' keyword here
+//│ ║  l.24: 	    Cons(0, tl) return true
+//│ ╙──      	                ^^^^^^
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (integer literal).
+//│ ║  l.24: 	    Cons(0, tl) return true
+//│ ╙──      	         ^
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (identifier).
+//│ ║  l.24: 	    Cons(0, tl) return true
+//│ ╙──      	            ^^
+//│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
+//│ ║  l.24: 	    Cons(0, tl) return true
+//│ ║        	         ^
+//│ ╟── This branch is unreachable.
+//│ ║  l.24: 	    Cons(0, tl) return true
+//│ ╙──      	            ^^
+
+

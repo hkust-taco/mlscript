@@ -1,0 +1,35 @@
+:js
+
+pattern Nullable(pattern T) = T | null
+
+// Using patterns as pattern argument directly should not create local objects.
+
+pattern Zero = 0
+
+:ucs normalized
+0 is Nullable(Zero)
+//│ Normalized:
+//│ >  ‹if|while›
+//│ >    let tmp:scrut = 0
+//│ >    let tmp:patternArgument0$ = member:Zero‹pattern:Zero›
+//│ >    let tmp:unapplyResult = (member:Nullable⁰.)unapply(tmp:patternArgument0$⁰, tmp:scrut⁰)
+//│ >    tmp:unapplyResult is (tmp:runtime⁰.)MatchSuccess‹class:MatchSuccess›(output, bindings) then true
+//│ >    else false
+//│ = true
+
+import "../../../mlscript-compile/Char.mls"
+
+:ucs normalized
+fun foo(x) = x is Nullable(Char.Letter)
+//│ Normalized:
+//│ >  ‹if|while›
+//│ >    let tmp:patternArgument0$ = (member:Char⁰.)Letter‹pattern:Letter›
+//│ >    let tmp:unapplyResult = (member:Nullable⁰.)unapply(tmp:patternArgument0$¹, x⁰)
+//│ >    tmp:unapplyResult is (tmp:runtime⁰.)MatchSuccess‹class:MatchSuccess›(output, bindings) then true
+//│ >    else false
+
+foo of null
+//│ = true
+
+foo of "A"
+//│ = true

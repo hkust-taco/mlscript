@@ -18,7 +18,7 @@ let arr = [
 arr Iter.joined("")
 //│ = "0123"
 
-arr . Iter.mapping(_ + "!") . Iter.toArray()
+arr \ Iter.mapping(_ + "!") \ Iter.toArray()
 //│ = ["0!", "1!", "2!", "3!"]
 
 arr
@@ -33,7 +33,6 @@ arr
   |> Iter.withFilter of _ != "0"
   |> Iter.toArray
 //│ = ["A", "B", "C", "1", "2", "3", "4"]
-
 
 mkStr of
   "0"
@@ -50,4 +49,39 @@ mkStr of
 //│ 
 //│ = "01"
 
+fun xs = [1, 2, 3] Iter.mapping(_ + "!" !> print)
 
+xs
+//│ = Iterable(_)
+
+xs.toArray()
+//│ > 1!
+//│ > 2!
+//│ > 3!
+//│ = ["1!", "2!", "3!"]
+
+xs.toArray()
+//│ > 1!
+//│ > 2!
+//│ > 3!
+//│ = ["1!", "2!", "3!"]
+
+let ys = xs
+//│ ys = Iterable(_)
+
+ys.toArray()
+//│ > 1!
+//│ > 2!
+//│ > 3!
+//│ = ["1!", "2!", "3!"]
+
+set ys.toArray().[0] = "??"
+//│ > 1!
+//│ > 2!
+//│ > 3!
+
+ys.toArray()
+//│ > 1!
+//│ > 2!
+//│ > 3!
+//│ = ["1!", "2!", "3!"]
