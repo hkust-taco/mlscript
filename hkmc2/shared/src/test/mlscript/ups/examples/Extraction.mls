@@ -35,7 +35,6 @@ action of Some(Some(Some(Some(Some("scratch")))))
 // Test the semantics of biased disjunction.
 
 pattern BiasedOr1 = Some(1 | Some(_))
-
 fun biasedOr1(x) = x is @compile BiasedOr1
 
 biasedOr1 of Some(1)
@@ -52,6 +51,27 @@ biasedOr1 of Some(Some("hello"))
 
 biasedOr1 of Some(Some(Some(Some(Some(Some(Some(Some(42))))))))
 //│ = true
+
+fun observeSome(x) =
+  print("observe some " + x)
+  x + 1
+
+fun observePlain(x) =
+  print("observe plain " + x)
+  x + 2
+
+pattern LoggedBiasedOr =
+  (Some((Some(x) => observeSome(x)) as res) => res) |
+  (Some((x => observePlain(x)) as res) => res)
+
+print of Some(1) is @compile LoggedBiasedOr
+//│ > true
+
+if Some(Some(1)) is (@compile LoggedBiasedOr) as output then
+  print("logged biased: " + output)
+//│ > observe some 1
+//│ > observe plain Some(1)
+//│ > logged biased: 2
 
 // Make it a bit more complicated: biased disjunction with transformations.
 

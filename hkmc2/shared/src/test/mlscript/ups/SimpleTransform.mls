@@ -133,6 +133,17 @@ if 42 is (@compile LoggedInt) as value then
 //│ > observe 42
 //│ > logged value: 43
 
+pattern LoggedIntWithSlot(value) = (Int as value) => observeInt(value)
+
+print of 42 is @compile LoggedIntWithSlot
+//│ > observe 42
+//│ > true
+
+if 42 is (@compile LoggedIntWithSlot) as value then
+  print("logged slot value: " + value)
+//│ > observe 42
+//│ > logged slot value: 43
+
 class Term with
   constructor
     Literal(val value: Int)
