@@ -215,8 +215,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     * switch (scrut) {
     *   case a1:
     *     body1
+    *     scrut = a2;
     *   case a2:
     *     body2
+    *     scrut = a3;
     *   ...
     *   case an:
     *     bodyn
