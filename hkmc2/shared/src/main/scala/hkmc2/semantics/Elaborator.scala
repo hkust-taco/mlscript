@@ -504,8 +504,13 @@ extends Importer with ucs.SplitElaborator:
       ctx.getOuter match
       case S(sym) => sym.ref(id)
       case N =>
-        raise(ErrorReport(msg"Cannot use 'this' outside of an object scope." -> tree.toLoc :: Nil))
+        raise:
+          ErrorReport(msg"Cannot use 'this' outside of an object scope" -> tree.toLoc :: Nil)
         Term.Error
+    case id @ Ident("|" | "&") =>
+      raise:
+        ErrorReport(msg"Unexpected use of special operator '${id.name}'" -> id.toLoc :: Nil)
+      Term.Error
     case id @ Ident(name) => ident(id).getOrElse:
       raise(ErrorReport(msg"Name not found: $name" -> id.toLoc :: Nil))
       Term.Error
@@ -560,7 +565,7 @@ extends Importer with ucs.SplitElaborator:
           val (syms, nestCtx) = funParams(lhs)
           Term.Lam(syms, term(rhs)(using nestCtx))
       case TyTup(tys) =>
-        val constraints = tys.flatMap(constraint)
+        val constraints = tys.flatMap(maybeConstraint)
         val body = term(rhs)
         Term.Constrained(constraints, body)
     case InfixApp(lhs, Keywrd(Keyword.`as`), rhs) =>
@@ -601,6 +606,8 @@ extends Importer with ucs.SplitElaborator:
       Term.Deref(subterm(rhs))
     case App(Ident("~"), Tup(rhs :: Nil)) =>
       Term.Neg(subterm(rhs))
+    case App(Ident("|" | "&"), Tup(rhs :: Nil)) =>
+      subterm(rhs)
     case tree @ OpSplit(lhs, rhss) =>
       val tree = rhss.foldLeft(lhs):
         case (acc, rhs) =>
@@ -1532,15 +1539,19 @@ extends Importer with ucs.SplitElaborator:
     ps_ctx
   
   /** Elaborate a subtyping constraint. */
-  def constraint(t: Tree): Ctxl[Option[SubConstraint]] =
+  def constraint(lhs: Tree, op: "<:<" | ">:>", rhs: Tree): Ctxl[SubConstraint] =
+    val l = term(lhs)
+    val r = term(rhs)
+    val dir = op match
+      case "<:<" => SubDir.Sub
+      case ">:>" => SubDir.Sup
+    SubConstraint(l, r, dir)
+ 
+  /** Elaborate a subtyping constraint that may be malformed. */
+  def maybeConstraint(t: Tree): Ctxl[Option[SubConstraint]] =
     t match
-    case InfixApp(lhs, op @ (Keywrd(Keyword.`<:`) | Keywrd(Keyword.`:>`)), rhs) =>
-      val l = term(lhs)
-      val r = term(rhs)
-      val dir = op match
-        case Keywrd(Keyword.`<:`) => SubDir.Sub
-        case Keywrd(Keyword.`:>`) => SubDir.Sup
-      S(SubConstraint(l, r, dir))
+    case OpApp(lhs, Ident(op : ("<:<" | ">:>")), rhs :: Nil) =>
+      S(constraint(lhs, op, rhs))
     case _ =>
       raise(ErrorReport(msg"Illegal constraint syntax." -> t.toLoc :: Nil))
       N
@@ -1684,7 +1695,8 @@ extends Importer with ucs.SplitElaborator:
     def arg(t: Tree): Ctxl[Pattern \/ Pattern] = t match
       case TypeDef(syntax.Pat, body, N) => L(go(body))
       case _ => R(go(t))
-    def go(t: Tree): Ctxl[Pattern] = t match
+    def go(t: Tree): Ctxl[Pattern] = trace[Pattern](s"Elab pattern ${t.showDbg}", r => s"~> $r"):
+      t match
       // Annotated patterns like `@compile P`.
       case Tree.Annotated(annotation, target) =>
         go(target).annotate(term(annotation), t.toLoc)
@@ -1702,6 +1714,8 @@ extends Importer with ucs.SplitElaborator:
       case app @ App(Ident("-"), Tup(DecLit(n) :: Nil)) =>
         Literal(DecLit(-n).withLocOf(app))
       // Union and intersection patterns: `p | q` and `p & q`
+      case App(Ident(op @ ("|" | "&")), Tup(rhs :: Nil)) =>
+        go(rhs) // unary uses of `|` and `&` are no-ops
       case OpApp(lhs, Ident(op @ ("|" | "&")), rhs :: Nil) =>
         Composition(op === "|", go(lhs), go(rhs))
       // Constructor patterns with pattern arguments and arguments.
@@ -1755,9 +1769,13 @@ extends Importer with ucs.SplitElaborator:
       // Constructor patterns can be written in the infix form.
       case OpApp(lhs, op, rhs :: Nil) => Pattern.Constructor(term(op), S(Ls(go(lhs), go(rhs))))
       // Constructor patterns without arguments
+      case id @ Ident(name) if name.isUncapitalized => Variable(id)
       case id @ Ident(name) => ident(id) match
         case S(target) => Constructor(target, N)
-        case N => Variable(id) // Fallback to variable pattern.
+        case N =>
+          raise:
+            ErrorReport(msg"Pattern name not found: ${id.name}." -> id.toLoc :: Nil)
+          Pattern.Wildcard()
       case sel: (SynthSel | Sel) => Constructor(term(sel), N)
       case _: Tree =>
         raise(ErrorReport(msg"Unrecognized pattern (${t.describe})." -> t.toLoc :: Nil))

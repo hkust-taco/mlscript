@@ -88,8 +88,8 @@ sealed abstract class Block extends Product:
   
   // TODO conserve if no changes
   def mapTail(f: BlockTail => Block): Block = this match
-    case Scoped(syms, body) => Scoped(syms, body.mapTail(f))
     case b: BlockTail => f(b)
+    case Scoped(syms, body) => Scoped(syms, body.mapTail(f))
     case Begin(sub, rst) => Begin(sub, rst.mapTail(f))
     case Assign(lhs, rhs, rst) => Assign(lhs, rhs, rst.mapTail(f))
     case Define(defn, rst) => Define(defn, rst.mapTail(f))
@@ -293,12 +293,15 @@ end Block
 
 sealed abstract class BlockTail extends Block
 
+sealed abstract trait NonBlockTail:
+  val rest: Block
+
 case class Match(
   scrut: Path,
   arms: Ls[Case -> Block],
   dflt: Opt[Block],
   rest: Block,
-) extends Block with ProductWithTail
+) extends Block with ProductWithTail with NonBlockTail
 
 // * `implct`: whether it's a JS implicit return, without the `return` keyword
 // * TODO could just remove this flag and add a flag in Scope instead
@@ -306,27 +309,30 @@ case class Return(res: Result, implct: Bool) extends BlockTail
 
 case class Throw(exc: Result) extends BlockTail
 
-case class Label(label: LabelSymbol, loop: Bool, body: Block, rest: Block) extends Block
+case class Label(label: LabelSymbol, loop: Bool, body: Block, rest: Block) extends Block with NonBlockTail
 
 case class Break(label: LabelSymbol) extends BlockTail
 case class Continue(label: LabelSymbol) extends BlockTail
 
 
-case class Scoped(syms: collection.Set[Local], body: Block) extends BlockTail
+case class Scoped(syms: collection.Set[Local], body: Block) extends Block with NonBlockTail:
+  val rest = body
 
 // TODO: remove this form?
-case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail
+case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail with NonBlockTail
 
-case class TryBlock(sub: Block, finallyDo: Block, rest: Block) extends Block with ProductWithTail
+case class TryBlock(sub: Block, finallyDo: Block, rest: Block) extends Block with ProductWithTail with NonBlockTail
 
-case class Assign(lhs: Local, rhs: Result, rest: Block) extends Block with ProductWithTail
+case class Assign(lhs: Local, rhs: Result, rest: Block) extends Block with ProductWithTail with NonBlockTail
 // case class Assign(lhs: Path, rhs: Result, rest: Block) extends Block with ProductWithTail
 
-case class AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(val symbol: Opt[MemberSymbol]) extends Block with ProductWithTail
+case class AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(val symbol: Opt[MemberSymbol])
+  extends Block with ProductWithTail with NonBlockTail
 
-case class AssignDynField(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, rest: Block) extends Block with ProductWithTail
+case class AssignDynField(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, rest: Block)
+  extends Block with ProductWithTail with NonBlockTail
 
-case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail
+case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail with NonBlockTail
 
 inline def whenValidatingIR(inline code: => Unit): Unit =
   () // code // * uncomment to run on-the fly IR validations
@@ -407,7 +413,7 @@ case class HandleBlock(
     handlers: Ls[Handler],
     body: Block,
     rest: Block
-) extends Block with ProductWithTail
+) extends Block with ProductWithTail with NonBlockTail
 
 object HandleBlock:
   def apply(
@@ -479,7 +485,9 @@ final case class FunDefn(
   val asPath = Value.Ref(sym, S(dSym))
 object FunDefn:
   def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(forceTailRec: Bool)(using State) =
-    FunDefn(owner, sym, TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme)), params, body)(forceTailRec)
+    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
+    sym.tsym = S(tSym)
+    FunDefn(owner, sym, tSym, params, body)(forceTailRec)
 
 final case class ValDefn(
     tsym: TermSymbol,

@@ -17,6 +17,7 @@ import Scope.scope
 import hkmc2.syntax.Tree.UnitLit
 import hkmc2.semantics.Elaborator.ctx
 import hkmc2.syntax.Tree.{IntLit, StrLit}
+import scala.annotation.tailrec
 
 
 // TODO factor some logic for other codegen backends
@@ -193,6 +194,78 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           case RcdArg(N, v) => doc"...${result(v)}"
         .mkDocument(doc", # ")
       if mut then inner else doc"$freeze(${inner})"
+  
+  /**
+    * Matches the following kind of if statement, where ai are ints:
+    * 
+    * ```
+    * if scrut is a1 do
+    *   body1
+    *   set scrut = a2
+    * if scrut is a2 do
+    *   body2
+    *   set scrut = a3
+    * if scrut is an do
+    *   bodyn
+    * ```
+    * 
+    * The intention is that this can be compiled efficiently into a switch statement:
+    * 
+    * ```js
+    * switch (scrut) {
+    *   case a1:
+    *     body1
+    *     scrut = a2;
+    *   case a2:
+    *     body2
+    *     scrut = a3;
+    *   ...
+    *   case an:
+    *     bodyn
+    * }
+    * ```
+    * Note that `scrut` is guaranteed to not change between `set scrut = ai` and `if scrut is ai`,
+    * because the JS event loop waits until the entire call stack is cleared before running any other
+    * code. Hence, this transformation is safe.
+    */
+  object IfIntChain:
+    @tailrec
+    private def lastBlkAssign(b: Block): Opt[Assign] = b match
+      case a @ Assign(lhs, rhs, End(_)) => S(a)
+      case b: NonBlockTail => lastBlkAssign(b.rest)
+      case _: BlockTail => N
+    
+    @tailrec
+    private def unapplyImpl(
+      b: Block, 
+      acc: List[(BigInt, Block)],
+      scrut: Opt[Value.Ref],
+      curVal: Opt[BigInt]
+    ): Opt[(Value.Ref, List[(BigInt, Block)], Block)] = 
+      val scrutSym = scrut.map(_.l)
+      b match
+      case Match(
+        scrut_ @ Value.Ref(scrutSym_, _),                   // The scrutinee is a ref.
+        (Case.Lit(Tree.IntLit(curVal_)), b) :: Nil,         // There is only one case matching an int literal.
+        S(End(_)), rest                                     // Default case exists and does nothing.
+      )
+        if scrutSym.map(_ === scrutSym_).getOrElse(true)    // The scrutinee is the same as the one before.
+        && curVal.map(_ === curVal_).getOrElse(true)        // The matched int literal is one previously set.
+        =>
+          lastBlkAssign(b) match
+          // the one branch ends by assigning `nextInt` to `scrutSym`
+          case S(Assign(`scrutSym_`, Value.Lit(Tree.IntLit(nextInt)), _)) =>
+            unapplyImpl(rest, (curVal_, b) :: acc, S(scrut_), S(nextInt))
+          case _ =>
+            S((scrut_, (curVal_, b) :: acc, rest))
+      case _ => scrut match
+        case Some(value) => S((value, acc, b))
+        case None => N
+    
+    def unapply(b: Block): Opt[(scrut: Value.Ref, cases: List[(BigInt, Block)], rest: Block)] =
+      unapplyImpl(b, Nil, N, N) match
+        case Some(value) if value._2.length > 1 => S(value)
+        case _ => N
   
   def returningTerm(t: Block, endSemi: Bool)(using Raise, Scope): Document =
     def mkSemi = if endSemi then ";" else ""
@@ -482,6 +555,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       case S(el) => nonNestedScoped(el)(bod => returningTerm(bod, endSemi = true))
       case N => doc""
       e :: returningTerm(rest, endSemi)
+    case IfIntChain(scrut, cases, rest) =>
+      val switchBod = cases.foldRight(doc""): (arm, acc) =>
+        acc :: doc" # case ${arm._1.toString}: #{ ${
+          nonNestedScoped(arm._2)(bd => returningTerm(bd, endSemi = true))
+        } #} "
+      doc" # switch (${result(scrut)}) { #{ ${switchBod} #}  # }" :: returningTerm(rest, endSemi)
     case Match(scrut, (Case.Lit(lit), End(msg)) :: Nil, S(el), rest) =>
       val sd = result(scrut)
       val e = braced(nonNestedScoped(el)(res => returningTerm(res, endSemi = false)))

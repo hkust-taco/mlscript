@@ -7,9 +7,9 @@
 //│ Wat:
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type (func (result (ref null any))))
-//│   (func  (type 1) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
 //│     (if (result (ref null any))
 //│       (i32.and
 //│         (ref.test (ref null i31)
@@ -27,8 +27,9 @@
 //│                 (local.get $rhs))))))
 //│       (else
 //│         (unreachable))))
-//│   (func $entry (type 2) (result (ref null any))
-//│     (call 0
+//│   (elem declare func $plus_impl1)
+//│   (func $entry (type $entry1) (result (ref null any))
+//│     (call $plus_impl1
 //│       (ref.i31
 //│         (i32.const 1))
 //│       (ref.i31
@@ -43,9 +44,9 @@
 //│ Wat:
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type (func (param $arg (ref null any)) (result (ref null any))))
-//│   (type (func (result (ref null any))))
-//│   (func  (type 1) (param $arg (ref null any)) (result (ref null any))
+//│   (type $neg_impl (func (param $arg (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $neg_impl1 (type $neg_impl) (param $arg (ref null any)) (result (ref null any))
 //│     (if (result (ref null any))
 //│       (ref.test (ref null i31)
 //│         (local.get $arg))
@@ -58,8 +59,9 @@
 //│                 (local.get $arg))))))
 //│       (else
 //│         (unreachable))))
-//│   (func $entry (type 2) (result (ref null any))
-//│     (call 0
+//│   (elem declare func $neg_impl1)
+//│   (func $entry (type $entry1) (result (ref null any))
+//│     (call $neg_impl1
 //│       (ref.i31
 //│         (i32.const 2))))
 //│   (export "entry" (func $entry))
@@ -92,9 +94,9 @@ not true
 //│ Wat:
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type (func (result (ref null any))))
-//│   (func  (type 1) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│   (type $eq_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $eq_impl1 (type $eq_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
 //│     (if (result (ref null any))
 //│       (i32.and
 //│         (ref.test (ref null i31)
@@ -112,8 +114,9 @@ not true
 //│                 (local.get $rhs))))))
 //│       (else
 //│         (unreachable))))
-//│   (func $entry (type 2) (result (ref null any))
-//│     (call 0
+//│   (elem declare func $eq_impl1)
+//│   (func $entry (type $entry1) (result (ref null any))
+//│     (call $eq_impl1
 //│       (ref.i31
 //│         (i32.const 1))
 //│       (ref.i31

@@ -49,16 +49,16 @@ foo() + foo()
 //│ Wat:
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type (func (result (ref null any))))
-//│   (type (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type (func (result (ref null any))))
-//│   (func $foo (type 1) (result (ref null any))
+//│   (type $foo1 (func (result (ref null any))))
+//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $foo (type $foo1) (result (ref null any))
 //│     (return
 //│       (ref.i31
 //│         (i32.const 42))))
 //│   (export "foo" (func $foo))
 //│   (elem declare func $foo)
-//│   (func  (type 2) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
 //│     (if (result (ref null any))
 //│       (i32.and
 //│         (ref.test (ref null i31)
@@ -76,7 +76,8 @@ foo() + foo()
 //│                 (local.get $rhs))))))
 //│       (else
 //│         (unreachable))))
-//│   (func $entry (type 3) (result (ref null any))
+//│   (elem declare func $plus_impl1)
+//│   (func $entry (type $entry1) (result (ref null any))
 //│     (local $foo (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $tmp1 (ref null any))
@@ -84,13 +85,13 @@ foo() + foo()
 //│       (nop)
 //│       (block (result (ref null any))
 //│         (local.set $tmp
-//│           (call_ref 1
+//│           (call_ref $foo1
 //│             (ref.func $foo)))
 //│         (block (result (ref null any))
 //│           (local.set $tmp1
-//│             (call_ref 1
+//│             (call_ref $foo1
 //│               (ref.func $foo)))
-//│           (call 1
+//│           (call $plus_impl1
 //│             (local.get $tmp)
 //│             (local.get $tmp1))))))
 //│   (export "entry" (func $entry))
@@ -118,38 +119,38 @@ class Foo(val a)
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $a (mut (ref null any))))))
-//│   (type (func (param $a (ref null any)) (result (ref null any))))
-//│   (type (func (result (ref null any))))
-//│   (func $Foo (type 2) (param $a (ref null any)) (result (ref null any))
+//│   (type $Foo_ctor (func (param $a (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $Foo_ctor (type $Foo_ctor) (param $a (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $Foo))
-//│       (struct.set $Foo 0
+//│       (struct.set $Foo $$tag
 //│         (ref.cast (ref $Foo)
 //│           (local.get $this))
 //│         (i32.const 1))
 //│       (block
-//│         (struct.set $Foo 1
+//│         (struct.set $Foo $a
 //│           (ref.cast (ref $Foo)
 //│             (local.get $this))
 //│           (local.get $a))
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (export "Foo" (func $Foo))
-//│   (elem declare func $Foo)
-//│   (func $entry (type 3) (result (ref null any))
+//│   (export "Foo_ctor" (func $Foo_ctor))
+//│   (elem declare func $Foo_ctor)
+//│   (func $entry (type $entry1) (result (ref null any))
 //│     (local $Foo (ref null any))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
 //│       (block (result (ref null any))
 //│         (local.set $tmp
-//│           (call $Foo
+//│           (call $Foo_ctor
 //│             (ref.i31
 //│               (i32.const 42))))
-//│         (struct.get $Foo 1
+//│         (struct.get $Foo $a
 //│           (ref.cast (ref $Foo)
 //│             (local.get $tmp))))))
 //│   (export "entry" (func $entry))
@@ -172,45 +173,45 @@ class Foo(val x) with
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
-//│   (type (func (param $x (ref null any)) (result (ref null any))))
-//│   (type (func (result (ref null any))))
-//│   (func $Foo (type 2) (param $x (ref null any)) (result (ref null any))
+//│   (type $Foo_ctor (func (param $x (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $Foo_ctor (type $Foo_ctor) (param $x (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $Foo))
-//│       (struct.set $Foo 0
+//│       (struct.set $Foo $$tag
 //│         (ref.cast (ref $Foo)
 //│           (local.get $this))
 //│         (i32.const 1))
 //│       (block
-//│         (struct.set $Foo 1
+//│         (struct.set $Foo $x
 //│           (ref.cast (ref $Foo)
 //│             (local.get $this))
 //│           (local.get $x))
 //│         (block
-//│           (struct.set $Foo 2
+//│           (struct.set $Foo $y
 //│             (ref.cast (ref $Foo)
 //│               (local.get $this))
-//│             (struct.get $Foo 1
+//│             (struct.get $Foo $x
 //│               (ref.cast (ref $Foo)
 //│                 (local.get $this))))
 //│           (nop)))
 //│       (return
 //│         (local.get $this))))
-//│   (export "Foo" (func $Foo))
-//│   (elem declare func $Foo)
-//│   (func $entry (type 3) (result (ref null any))
+//│   (export "Foo_ctor" (func $Foo_ctor))
+//│   (elem declare func $Foo_ctor)
+//│   (func $entry (type $entry1) (result (ref null any))
 //│     (local $Foo (ref null any))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
 //│       (block (result (ref null any))
 //│         (local.set $tmp
-//│           (call $Foo
+//│           (call $Foo_ctor
 //│             (ref.i31
 //│               (i32.const 42))))
-//│         (struct.get $Foo 2
+//│         (struct.get $Foo $y
 //│           (ref.cast (ref $Foo)
 //│             (local.get $tmp))))))
 //│   (export "entry" (func $entry))
@@ -229,45 +230,47 @@ O.y
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $O (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
 //│   (type $O_ctor (func (result (ref null any))))
-//│   (type (func (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
 //│   (global $O$inst (mut (ref null $O)) (ref.null $O))
-//│   (start 1)
-//│   (func  (type $O_ctor) (result (ref null any))
+//│   (start $start1)
+//│   (func $O_ctor1 (type $O_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $O))
-//│       (struct.set $O 0
+//│       (struct.set $O $$tag
 //│         (ref.cast (ref $O)
 //│           (local.get $this))
 //│         (i32.const 1))
 //│       (block
-//│         (struct.set $O 1
+//│         (struct.set $O $x
 //│           (ref.cast (ref $O)
 //│             (local.get $this))
 //│           (ref.i31
 //│             (i32.const 1)))
 //│         (block
-//│           (struct.set $O 2
+//│           (struct.set $O $y
 //│             (ref.cast (ref $O)
 //│               (local.get $this))
-//│             (struct.get $O 1
+//│             (struct.get $O $x
 //│               (ref.cast (ref $O)
 //│                 (local.get $this))))
 //│           (nop)))
 //│       (return
 //│         (local.get $this))))
-//│   (func  (type $start)
+//│   (elem declare func $O_ctor1)
+//│   (func $start1 (type $start)
 //│     (block
 //│       (global.set $O$inst
 //│         (ref.cast (ref null $O)
-//│           (call 0)))))
-//│   (func $entry (type 3) (result (ref null any))
+//│           (call $O_ctor1)))))
+//│   (elem declare func $start1)
+//│   (func $entry (type $entry1) (result (ref null any))
 //│     (local $O (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
-//│       (struct.get $O 2
+//│       (struct.get $O $y
 //│         (ref.cast (ref $O)
 //│           (global.get $O$inst)))))
 //│   (export "entry" (func $entry))

@@ -84,7 +84,7 @@ object Parser:
       val r = opStr.last
       (precOf(opStr.head), precOf(r) - (if r === '/' || r === ',' || r === ':' then 1 else 0))
   }
-  val prefixOps: Set[Str] = Set("!", "+", "-", "~", "@")
+  val prefixOps: Set[Str] = Set("!", "+", "-", "~", "@", "|", "&")
   
   type Indent_Curly = Curly.type | Indent.type
   
@@ -572,21 +572,27 @@ abstract class Parser(
       exprCont(id, prec, allowNewlines = true)
     case (IDENT(nme, sym), loc) :: _ =>
       Keyword.all.get(nme) match
-        case S(kw) => // * Expressions starting with keywords should be handled in parseRule
-          // * I guess this case is not really supposed to be ever reached (?)
-          err(msg"Unexpected ${kw.toString} in this position" -> S(loc) :: Nil)
-          errExpr
-        case N =>
-          consume
-          val id = Tree.Ident(nme).withLoc(S(loc))
-          if prefixOps.contains(nme)
-          then
-            yeetSpaces match
-              case Nil => id
-              case _ =>
-                val rhs = expr(PrefixOpsPrec, allowNewlines = allowNewlines)
-                exprCont(App(id, PlainTup(rhs)), prec, allowNewlines = allowNewlines)
-          else exprCont(id, prec, allowNewlines = allowNewlines)
+      case S(kw) => // * Expressions starting with keywords should be handled in parseRule
+        // * I guess this case is not really supposed to ever be reached (?)
+        err(msg"Unexpected ${kw.toString} in this position" -> S(loc) :: Nil)
+        errExpr
+      case N =>
+        consume
+        val id = Tree.Ident(nme).withLoc(S(loc))
+        if prefixOps.contains(nme)
+        then
+          yeetSpaces match
+          case Nil => id
+          case _ =>
+            val newPrec =
+              if nme === "!" then
+                // Special case: bang operator currently used in BbML
+                PrefixOpsPrec
+              else
+                opCharPrec(nme.head)
+            val rhs = expr(newPrec, allowNewlines = allowNewlines)
+            exprCont(App(id, PlainTup(rhs)), prec, allowNewlines = allowNewlines)
+        else exprCont(id, prec, allowNewlines = allowNewlines)
     case (LITVAL(lit), loc) :: _ =>
       consume
       exprCont(lit.asTree.withLoc(S(loc)), prec, allowNewlines = allowNewlines)
@@ -748,7 +754,7 @@ abstract class Parser(
    *  TODO: parse let bindings
    */
   def opSplit(lhs: Tree, splittingOpLoc: Loc, prec: Int)(using Line): Tree =
-    wrap((lhs,splittingOpLoc,prec))(opSplitImpl(lhs, splittingOpLoc, prec, Nil))
+    wrap((lhs, splittingOpLoc, prec))(opSplitImpl(lhs, splittingOpLoc, prec, Nil))
   def opSplitImpl(lhs: Tree, splittingOpLoc: Loc, prec: Int, acc: Ls[Tree]): Tree =
     val (newAcc, e) = yeetSpaces match
       case (PrefixRule(kw, rule), loc) :: _ =>

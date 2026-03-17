@@ -25,6 +25,7 @@ fun hi(n) =
 hi(0)
 //│ JS (unsanitized):
 //│ let hi, tmp, $_stack$_safe$_body$_;
+//│ runtime.resetEffects();
 //│ hi = function hi(n) {
 //│   let scrut, tmp1, stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
@@ -59,13 +60,14 @@ fun sum(n) =
 sum(10000)
 //│ JS (unsanitized):
 //│ let sum1, tmp1, $_stack$_safe$_body$_1;
+//│ runtime.resetEffects();
 //│ sum1 = function sum(n) {
 //│   let scrut, tmp2, tmp3, pc, curDepth, stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
-//│     return runtime.unwind(sum1, -1, "StackSafetyLift.mls:55:1", null, null, 1, 1, n, 0)
+//│     return runtime.unwind(sum1, -1, "StackSafetyLift.mls:56:1", null, null, 1, 1, n, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -86,7 +88,7 @@ sum(10000)
 //│           runtime.stackDepth = curDepth;
 //│           runtime.resumeValue = res;
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(sum1, 1, "StackSafetyLift.mls:58:9", null, null, 1, 1, n, 0)
+//│             return runtime.unwind(sum1, 1, "StackSafetyLift.mls:59:9", null, null, 1, 1, n, 0)
 //│           }
 //│           pc = 1;
 //│           continue main
@@ -205,6 +207,7 @@ foo(h)
 fun max(a, b) = if a < b then b else a
 //│ JS (unsanitized):
 //│ let max;
+//│ runtime.resetEffects();
 //│ max = function max(a, b) {
 //│   let scrut;
 //│   scrut = a < b;

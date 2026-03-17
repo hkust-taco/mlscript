@@ -113,23 +113,23 @@ case class FunctionType(sigType: SignatureType) extends ToWat:
     doc"(func${sigType.toWat.surroundUnlessEmpty(doc" ")})"
 
 /** A type representing a struct field. */
-case class Field(ty: Type, mutable: Bool, id: Opt[Str]) extends ToWat:
+case class Field(ty: Type, mutable: Bool, id: SymIdx) extends ToWat:
   def toWat: Document =
-    doc"(field ${id.fold(doc"")(id => doc"$$$id ")}${
+    doc"(field ${id.toWat} ${
         if mutable then doc"(mut ${ty.toWat})" else ty.toWat
       })"
 
 /** A type representing a structure type. */
 case class StructType(
-    fields: Map[DefinitionSymbol[?], NumIdx -> Field],
+    fields: Seq[DefinitionSymbol[?] -> Field],
     parents: Seq[TypeIdx] = Seq.empty,
     isSubtype: Bool = false,
 ) extends ToWat:
 
-  def fieldSeq: Seq[Field] = fields.values.toSeq.sortBy(_._1.index).map(_._2)
+  lazy val fieldsBySym: Map[DefinitionSymbol[?], Field] = fields.toMap
 
   def toWat: Document =
-    doc"(struct${fieldSeq.map(_.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
+    doc"(struct${fields.map(_._2.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
 
 /** A type representing an array type. */
 case class ArrayType(elemType: Type, mutable: Bool) extends ToWat:
@@ -158,6 +158,9 @@ type HeapType = AbsHeapType | TypeIdx
 sealed abstract class Index extends ToWat
 
 /** A numeric index. */
+@deprecated(
+  "NumIdx is only used for internal bookkeeping and should not be used in WAT generation; Use SymIdx instead.",
+)
 case class NumIdx(val index: Int) extends Index:
   def toWat: Document = doc"${index.toString}"
 
@@ -188,16 +191,14 @@ case class FieldIdx(idx: Index) extends CtxIdx(idx)
 case class TagIdx(idx: Index) extends CtxIdx(idx)
 
 /** A memory import entry. */
-case class MemoryImport(module: Str, name: Str, minPages: Int) extends ToWat:
+case class MemoryImport(module: Str, name: Str, id: SymIdx, minPages: Int) extends ToWat:
   def toWat: Document =
-    doc"""(import "$module" "$name" (memory $minPages))"""
+    doc"""(import "$module" "$name" (memory ${id.toWat} $minPages))"""
 
 /** A function import entry. */
-case class FuncImport(module: Str, name: Str, id: Opt[SymIdx], typeIdx: TypeIdx) extends ToWat:
+case class FuncImport(module: Str, name: Str, id: SymIdx, typeIdx: TypeIdx) extends ToWat:
   def toWat: Document =
-    doc"""(import "$module" "$name" (func ${
-        id.fold(doc"")(_.toWat)
-      } (type ${typeIdx.toWat})))"""
+    doc"""(import "$module" "$name" (func ${id.toWat} (type ${typeIdx.toWat})))"""
 
 /** A data segment entry. */
 case class DataSegment(offsetExpr: Expr, bytes: Str) extends ToWat:

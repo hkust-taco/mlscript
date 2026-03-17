@@ -652,6 +652,13 @@ let Runtime1;
     tmp = Runtime.render(x, rcd);
     return runtime.safeCall(globalThis.console.log(tmp))
   } 
+  static resetEffects() {
+    let tmp;
+    Runtime.curEffect = null;
+    tmp = - 1;
+    Runtime.resumePc = tmp;
+    return runtime.Unit
+  } 
   static raisePrintStackEffect(showLocals) {
     return Runtime.mkEffect(Runtime.PrintStackEffect, showLocals)
   } 

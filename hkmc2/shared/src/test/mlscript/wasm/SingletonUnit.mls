@@ -9,28 +9,30 @@
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $Unit (sub $Object (struct (field $$tag (mut i32)))))
 //│   (type $Unit_ctor (func (result (ref null any))))
-//│   (type (func (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
 //│   (global $Unit$inst (mut (ref null $Unit)) (ref.null $Unit))
-//│   (start 1)
-//│   (func  (type $Unit_ctor) (result (ref null any))
+//│   (start $start1)
+//│   (func $Unit_ctor1 (type $Unit_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $Unit))
-//│       (struct.set $Unit 0
+//│       (struct.set $Unit $$tag
 //│         (ref.cast (ref $Unit)
 //│           (local.get $this))
 //│         (i32.const 1))
 //│       (nop)
 //│       (return
 //│         (local.get $this))))
-//│   (func  (type $start)
+//│   (elem declare func $Unit_ctor1)
+//│   (func $start1 (type $start)
 //│     (block
 //│       (global.set $Unit$inst
 //│         (ref.cast (ref null $Unit)
-//│           (call 0)))))
-//│   (func $entry (type 3) (result (ref null any))
+//│           (call $Unit_ctor1)))))
+//│   (elem declare func $start1)
+//│   (func $entry (type $entry1) (result (ref null any))
 //│     (global.get $Unit$inst))
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))
@@ -74,8 +76,8 @@ x
 //│ Wat:
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type (func (result (ref null any))))
-//│   (func $entry (type 1) (result (ref null any))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $entry (type $entry1) (result (ref null any))
 //│     (local $x (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $x

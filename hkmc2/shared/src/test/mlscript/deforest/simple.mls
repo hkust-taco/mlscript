@@ -1,0 +1,1068 @@
+:js
+:deforest
+
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+
+object A
+object B
+object C
+object D
+data class AA(aa)
+data class BB(bb)
+data class AAA(x, y)
+data class BBB(x, y)
+data class CCC(c)
+object None
+data class Some(value)
+data object Nil
+data class (::) Cons(h, t)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+
+:expect 1
+let x = if true then A else B
+if x is
+  A then 1
+  B then 2
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > <<< fusing <<<
+//│ = 1
+//│ x = fun tmp
+
+:expect A
+let x = if true then AA(A) else BB(B)
+if x is
+  AA(x) then x
+  BB(x) then x
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Ref(member:B,Some(object:B))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(bb))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = A
+//│ x = fun tmp1
+
+
+:expect 1
+fun f(a) = if a is
+  A then 1
+  B then 2
+let x = if true then AA(A) else BB(B)
+if x is
+  AA(x) then f(x)
+  BB(x) then f(x)
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Ref(member:B,Some(object:B))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(bb))
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > <<< fusing <<<
+//│ = 1
+//│ x = fun tmp2
+
+
+// `x.x` is successfully fused
+:expect 1
+fun f1(a) = if a is
+  A then 1
+  B then 2
+  C then 3
+fun f2(a) = if a is
+  A then 4
+  B then 5
+  C then 6
+let x = if true then AA(A) else BB(B)
+if x is
+  AA then f1(x.AA#aa)
+  BB then f2(x.BB#bb)
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Ref(member:B,Some(object:B))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(bb))
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > <<< fusing <<<
+//│ = 1
+//│ x = fun tmp3
+
+
+:expect 11
+fun g(x) = if true then AA(11) else BB(22)
+fun c(x) = if x is
+  AA(x) then x
+  BB(x) then x
+c(g(true))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Lit(IntLit(22))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(bb))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(11))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = 11
+
+
+
+
+// multiple match, no fusion
+:expect 2
+let x = B
+if x is
+  A then 1
+  B then 3
+if x is
+  B then 2
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 2
+//│ x = B
+
+
+
+:expect 2
+let x = A
+let y = B
+if x is
+  A then 1
+if y is
+  B then 2
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(y,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > <<< fusing <<<
+//│ = 2
+//│ x = fun x9
+//│ y = fun y
+
+
+:expect 3
+fun c(a) =
+  let x = if a is
+    A then 1
+    B then 2
+  print(x)
+  x
+c(A) + c(B)
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > <<< fusing <<<
+//│ > 1
+//│ > 2
+//│ = 3
+
+
+
+
+:expect 5
+fun c(x) =
+  let t = x.AA#aa
+  let n = if x is
+    AA then 2
+  n + t
+c(AA(3))
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 5
+
+
+
+:expect 3
+fun f(a, b) = if a is
+  A then if b is
+    B then 3
+f(A, B)
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(b,None)
+//│ deforest > <<< fusing <<<
+//│ = 3
+
+
+:expect 0
+fun f(x) = if x is
+  Some then if x.Some#value > 1 then f(Some(x.Some#value - 1)) else 0
+f(Some(2))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:Some,Some(term:Some/Some)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(value))
+//│ deforest > 	Select(Ref(x,None),Ident(value))
+//│ deforest > Call(Ref(member:Some,Some(term:Some/Some)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(value))
+//│ deforest > 	Select(Ref(x,None),Ident(value))
+//│ deforest > <<< fusing <<<
+//│ = 0
+
+
+
+:expect 2
+let x = A
+let y = B
+if x is
+  A then 1
+if y is
+  B then 2
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(y,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > <<< fusing <<<
+//│ = 2
+//│ x = fun x10
+//│ y = fun y1
+
+
+
+:expect 21
+fun f(x, y) =
+  let a = if x is
+    AAA(n, m) then y + n - m
+    BBB(n, m) then m + 1 - n
+  a + 3
+f(AAA(1, 3), 1) + f(BBB(2, 3), 2) + f(AAA(3, 2), 4) + f(BBB(4, 6), 0)
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:BBB,Some(term:BBB/BBB)),List(Arg(None,Lit(IntLit(4))), Arg(None,Lit(IntLit(6))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(y))
+//│ deforest > 	Select(Ref(x,None),Ident(x))
+//│ deforest > Call(Ref(member:AAA,Some(term:AAA/AAA)),List(Arg(None,Lit(IntLit(3))), Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(y))
+//│ deforest > 	Select(Ref(x,None),Ident(x))
+//│ deforest > Call(Ref(member:BBB,Some(term:BBB/BBB)),List(Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(y))
+//│ deforest > 	Select(Ref(x,None),Ident(x))
+//│ deforest > Call(Ref(member:AAA,Some(term:AAA/AAA)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(y))
+//│ deforest > 	Select(Ref(x,None),Ident(x))
+//│ deforest > <<< fusing <<<
+//│ = 21
+
+
+:expect 2
+fun c1(x) = if x is
+  AA then
+    if A is
+      A then x.AA#aa
+fun c2(x) = if x is
+  AA then x.AA#aa
+fun p(a) = c1(a) + c2(a)
+p(AA(1))
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
+//│ deforest > <<< fusing <<<
+//│ = 2
+
+
+
+:expect 2
+fun c(x, y) = if x is
+  AA(a) then
+    if y is
+      A then a
+c(AA(2), A)
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(y,None)
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = 2
+
+
+:expect 24
+fun f(x, y) =
+  let a = if x is
+    AAA(n, m) then y + n - m
+    CCC(n) then n + 1
+  a + 3
+f(AAA(1, 3), 1) + f(CCC(2), 2) + f(AAA(3, 2), 4) + f(CCC(4), 0)
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:CCC,Some(term:CCC/CCC)),List(Arg(None,Lit(IntLit(4))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(c))
+//│ deforest > Call(Ref(member:AAA,Some(term:AAA/AAA)),List(Arg(None,Lit(IntLit(3))), Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(y))
+//│ deforest > 	Select(Ref(x,None),Ident(x))
+//│ deforest > Call(Ref(member:CCC,Some(term:CCC/CCC)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(c))
+//│ deforest > Call(Ref(member:AAA,Some(term:AAA/AAA)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(y))
+//│ deforest > 	Select(Ref(x,None),Ident(x))
+//│ deforest > <<< fusing <<<
+//│ = 24
+
+
+
+
+:expect 22
+fun f(x, y) =
+  let a = if x is
+    AAA then y + x.AAA#y
+    CCC(n) then n + 1
+  a + 3
+f(AAA(1, 3), 1) + f(CCC(2), 2) + f(AAA(3, 2), 4)
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AAA,Some(term:AAA/AAA)),List(Arg(None,Lit(IntLit(3))), Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(y))
+//│ deforest > Call(Ref(member:CCC,Some(term:CCC/CCC)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(c))
+//│ deforest > Call(Ref(member:AAA,Some(term:AAA/AAA)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(y))
+//│ deforest > <<< fusing <<<
+//│ = 22
+
+
+:expect 0
+fun c(x, m) = if x is
+  AA(n) then n + 1
+  else m
+c(BB(3), 0)
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > <<< fusing <<<
+//│ = 0
+
+
+
+
+:expect 1
+fun f(x) = if x is
+  AA(b) then g(b)
+fun g(b) = if b is
+  AA(a) then a + 1
+f(AA(AA(0)))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > 	Ref(b,None)
+//│ deforest > 	Select(Ref(b,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = 1
+
+
+
+:expect 3
+fun f(x) = x.AA#aa.AA#aa
+f(AA(AA(3)))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	term:AA/aa
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	term:AA/aa
+//│ deforest > <<< fusing <<<
+//│ = 3
+
+:expect 103
+fun inner(x, y) =
+  let t = if x is
+    AA(a) then a + y
+    BB(b) then b - y
+  t * y
+fun outer1(x, y, z) =
+  let t = if x is
+    AA(a) then inner(a, y)
+    BB(b) then inner(b, y)
+  t + z
+fun outer2(x, y, z) =
+  let t = if x is
+    AA(a) then inner(a, z)
+    BB(b) then inner(b, y)
+  t + y
+let p = AA(AA(3))
+outer1(p, 1, 2) + outer2(p, 3, 4) + inner(AA(5), 6)
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(5))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = 103
+//│ p = AA(AA(3))
+
+
+:expect 1
+fun mapHead(f, x) = if x is
+  AAA(h, t) then f(h)
+mapHead(x => x, AAA(1, AAA(2, None)))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AAA,Some(term:AAA/AAA)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(y))
+//│ deforest > 	Select(Ref(x,None),Ident(x))
+//│ deforest > <<< fusing <<<
+//│ = 1
+
+
+:expect 5
+let k
+if A is
+  A then
+    k = 3
+k + 2
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
+//│ deforest > <<< fusing <<<
+//│ = 5
+//│ k = 3
+
+:expect 4
+fun test(a) = if a is
+  AA then 1
+  else 2
+test(B) + test(C)
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:C,Some(object:C)) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > <<< fusing <<<
+//│ = 4
+
+
+
+// technically ill-typed, so `AA(3)` (which flows to `z`) is not fused
+:expect "2AA(3)NaN"
+fun test(x, y, z) = if x is
+  AA(a) then
+    let m = if y is
+      AA(a1) then a1 + z
+    let n = if z is
+      AA(a2) then a2 - z
+    m + n
+test(AA(1), AA(2), AA(3))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(y,None)
+//│ deforest > 	Select(Ref(y,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = "2AA(3)NaN"
+
+
+:expect 141
+fun test(x) =
+  let t = id of
+    if x is
+      AA(CCC(a)) then a
+      BB(CCC(a)) then a
+  t(123).AA#aa + 5 * 4 - 3 + 2 - 1
+let p = if true then AA(CCC(AA)) else BB(CCC(AA))
+test(p)
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(bb))
+//│ deforest > Call(Ref(member:CCC,Some(term:CCC/CCC)),List(Arg(None,Ref(member:AA,Some(term:AA/AA))))) ->
+//│ deforest > 	Ref(tmp:arg$BB$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$BB$0$,None),Ident(c))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
+//│ deforest > Call(Ref(member:CCC,Some(term:CCC/CCC)),List(Arg(None,Ref(member:AA,Some(term:AA/AA))))) ->
+//│ deforest > 	Ref(tmp:arg$AA$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(c))
+//│ deforest > <<< fusing <<<
+//│ = 141
+//│ p = fun tmp61
+
+
+:expect 141
+fun test(x, y) =
+  let t =
+    if y is CCC then
+      if x is
+        AA(a) then a
+        BB(a) then a
+  t(123).CCC#c + 5 * 4 - 3 + 2 - 1
+let p = if true then AA(CCC) else BB(CCC)
+test(p, id(CCC(123)))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Ref(member:CCC,Some(term:CCC/CCC))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(bb))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(member:CCC,Some(term:CCC/CCC))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = 141
+//│ p = fun tmp63
+
+
+:sir
+:expect 2
+fun f(x) = if x is
+  A then 1
+f(id(A)) + f(A)
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > <<< fusing <<<
+//│ Lowered:
+//│ let f⁰, tmp, tmp1, tmp2, f_5$f⁰, f_5$x_A⁰, f_5$x_rest⁰, deforest$lam;
+//│ define f_5$f⁰ as fun (x) {
+//│   return x()
+//│ };
+//│ define f_5$x_A⁰ as fun () {
+//│   return 1
+//│ };
+//│ define f_5$x_rest⁰ as fun () {
+//│   return null
+//│ };
+//│ define f⁰ as fun (x1) {
+//│   match x1
+//│     A⁰ =>
+//│       return 1
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ set tmp = Predef⁰.id⁰(A⁰);
+//│ set tmp1 = f¹(tmp);
+//│ set deforest$lam = () => return f_5$x_A¹();
+//│ set tmp2 = f_5$f¹(deforest$lam);
+//│ +⁰(tmp1, tmp2)
+//│ = 2
+
+
+
+:expect 0
+fun f(x) = if x is
+  A then 0
+  B then 1
+fun g(x) = if x is
+  AA then A
+  BB then B
+f(g(AA(1)))
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > <<< fusing <<<
+//│ = 0
+
+
+:expect 1
+fun f(a, b) = if a is
+  A and b is B then 1
+  else 0
+f(A, B)
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(b,None)
+//│ deforest > <<< fusing <<<
+//│ = 1
+
+
+
+:expect 6
+fun app(f) = f(1)
+fun identity(x) = x
+fun c1(x1) = if x1 is
+  AA(i) then i
+fun c2(x) = if x is
+  AA(i) then i
+  A then 0
+c1(app(AA)) + c1(AA(2)) + c2(AA(3)) + c2(A)
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(x1,None)
+//│ deforest > 	Select(Ref(x1,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = 6
+
+:re
+fun p(x) = if x
+  then new AA(2)
+  else BB(3)
+fun c(x) = if x is
+  AA(a) then a
+  BB(b) then b
+  else throw (if A is A then Error("e1") else Error("e2"))
+print(c(p(true)) + c(p(false)))
+c(B)
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(member:A,Some(object:A))
+//│ deforest > <<< fusing <<<
+//│ > 5
+//│ ═══[RUNTIME ERROR] Error: e1
+
+
+:expect 3
+fun f(a, b) = if a is
+  AA(x) then x + b.BB#bb
+f(AA(1), BB(2))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	term:BB/bb
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > 	Select(Ref(a,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = 3
+
+
+:deforest
+:expect 9
+fun g(k, x) = if k is
+  A then x.AA#aa + x.AA#aa + x.AA#aa
+g(A, AA(3))
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(k,None)
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	term:AA/aa
+//│ deforest > <<< fusing <<<
+//│ = 9
+
+
+// multi parameter list
+:expect 103
+fun inner(x)(y) =
+  let t = if x is
+    AA(a) then a + y
+    BB(b) then b - y
+  t * y
+fun outer1(x)(y, z) =
+  let t = if x is
+    AA(a) then inner(a)(y)
+    BB(b) then inner(b)(y)
+  t + z
+fun outer2(x, y)(z) =
+  let t = if x is
+    AA(a) then inner(a)(z)
+    BB(b) then inner(b)(y)
+  t + y
+let p = AA(AA(3))
+outer1(p)(1, 2) + outer2(p, 3)(4) + inner(AA(5))(6)
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(5))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = 103
+//│ p = AA(AA(3))
+
+
+// `x.AA#aa` is used both as the scrutinee of the inner match
+// and as the base of a field selection (`x.AA#aa.AA#aa`),
+// giving it two consumer destinations, so the inner match is not fused
+:expect 3
+fun f(x) = if x is
+  AA then if x.AA#aa is
+    AA then x.AA#aa.AA#aa
+f(AA(AA(3)))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = 3
+
+
+
+
+:expect 3
+fun id(x) = x
+fun f1(a1) = if a1 is AA then 1
+fun f2(a2) = if a2 is AA then 2
+f1(id(AA(1))) + f2(id(AA(2)))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(a2,None)
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(a1,None)
+//│ deforest > <<< fusing <<<
+//│ = 3
+
+
+
+
+:expect 0
+fun c1(x) = if x is
+  h :: t then
+    if t is
+      Nil then 0
+c1(1 :: Nil)
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(t))
+//│ deforest > 	Select(Ref(x,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(t,None)
+//│ deforest > <<< fusing <<<
+//│ = 0
+
+
+:expect 0
+fun f(x) = if x is
+  AA then g1(x.AA#aa)
+  BB then g2(x.BB#bb)
+fun g1(y1) = if y1 is
+  AA then 0
+fun g2(y2) = if y2 is
+  AA then 1
+fun apply(f) =
+  let inner = AA(0)
+  f(AA(inner))
+apply(f)
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(inner,None)))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > 	Ref(y1,None)
+//│ deforest > <<< fusing <<<
+//│ = 0
+
+
+:expect 3
+fun p(x) = AA(x)
+fun wrap1(x) = p(x)
+fun wrap(x) = wrap1(x)
+fun f1(a1) = if a1 is AA then 1
+fun f2(a2) = if a2 is AA then 2
+f1(wrap(1)) + f2(wrap(2))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > 	Ref(a2,None)
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > 	Ref(a1,None)
+//│ deforest > <<< fusing <<<
+//│ = 3
+
+
+:expect 0
+fun p1(x) = p2(x)
+fun p2(x) = if x == 0 then AA(x) else p1(x - 1)
+fun c(a) = if a is AA(x) then x
+c(p1(3))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > 	Select(Ref(a,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = 0
+
+
+:expect [D, AA(1)]
+fun f(x) = if g(false) is
+  AA and
+    x < 1 then BB(0)
+    else f(x - 1)
+  C then D
+fun g(b) =
+  if b then
+    if f(0) is
+      BB then AA(0)
+      D then AA(1)
+  else
+    C
+[f(3), g(true)]
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:D,Some(object:D)) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Ref(member:C,Some(object:C)) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Ref(member:D,Some(object:D)) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Ref(member:C,Some(object:C)) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > <<< fusing <<<
+//│ = [D, AA(1)]
+
+
+
+
+// `y` should not be considered as a free var for the branch
+:expect 4
+fun f(ls) = if ls is [] then
+  let y = 4
+  fun h(z) = if z > 0 then h(z - 1) else y
+  h(3)
+f([])
+//│ deforest > >>> fusing >>>
+//│ deforest > Tuple(false,List()) ->
+//│ deforest > 	Ref(ls,None)
+//│ deforest > <<< fusing <<<
+//│ = 4
+
+
+:expect 0
+fun f(x, b) = if x is
+  Nil then if b then f(Nil, false) else 0
+f(Nil, false)
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > <<< fusing <<<
+//│ = 0
+
+
+:expect 4
+fun test() =
+  let p = AA(1)
+  let a = if p is
+    AA(x) then x
+  let b = if p is
+    AA(x) then x
+  a + b
+test() + test()
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 4
+
+
+:expect 3
+fun p(d) = AA(3)
+fun c1(x) = if x is AA then 1
+fun c2(x) = if x is AA then 2
+c1(p(1)) + c2(p(2))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > <<< fusing <<<
+//│ = 3
+
+
+:expect 15
+fun p(x) = AA(x)
+fun f1(a1) = if a1 is AA(aa) then aa
+fun f2(a2) = if a2 is AA(aa) then aa
+fun f3(a3) = if a3 is AA(aa) then aa
+fun f4(a4) = if a4 is AA(aa) then aa
+fun f5(a5) = if a5 is AA(aa) then aa
+f1(p(1)) + f2(p(2)) + f3(p(3)) + f4(p(4)) + f5(p(5))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > 	Ref(a5,None)
+//│ deforest > 	Select(Ref(a5,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > 	Ref(a4,None)
+//│ deforest > 	Select(Ref(a4,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > 	Ref(a3,None)
+//│ deforest > 	Select(Ref(a3,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > 	Ref(a2,None)
+//│ deforest > 	Select(Ref(a2,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > 	Ref(a1,None)
+//│ deforest > 	Select(Ref(a1,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = 15
+
+
+// calls to `to` should be able to be duplicated
+:expect 88
+fun to(n) =
+  if n > 0 then
+    let m = n - 1
+    n :: to(m)
+  else
+    Nil
+fun f1(ls1) = if ls1 is
+  h :: t then h + f1(t)
+  Nil then 2
+fun f2(ls2) = if ls2 is
+  h :: t then h + f2(t)
+  Nil then 3
+fun f3(ls3) = if ls3 is
+  h :: t then h + f3(t)
+  Nil then 4
+fun f4(ls4) = if ls4 is
+  h :: t then h + f4(t)
+  Nil then 5
+f1(to(4)) + f2(to(5)) + f3(to(6)) + f4(to(7))
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(ls4,None)
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(ls4,None)
+//│ deforest > 	Select(Ref(ls4,None),Ident(t))
+//│ deforest > 	Select(Ref(ls4,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(ls3,None)
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(ls3,None)
+//│ deforest > 	Select(Ref(ls3,None),Ident(t))
+//│ deforest > 	Select(Ref(ls3,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(ls2,None)
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(ls2,None)
+//│ deforest > 	Select(Ref(ls2,None),Ident(t))
+//│ deforest > 	Select(Ref(ls2,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(ls1,None)
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(ls1,None)
+//│ deforest > 	Select(Ref(ls1,None),Ident(t))
+//│ deforest > 	Select(Ref(ls1,None),Ident(h))
+//│ deforest > <<< fusing <<<
+//│ = 88
+
+
+
+
+:expect 8
+fun p(x) = AA(x)
+fun g1(b) = if b then p(1) else p(2)
+fun wrap(b) = g1(b)
+fun g2(b) = if b then p(3) else p(4)
+fun f1(p) = if p is AA(a) then a + 1
+fun f2(p) = if p is AA(b) then b + 2
+f1(wrap(true)) + f2(g2(false))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > 	Ref(p,None)
+//│ deforest > 	Select(Ref(p,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > 	Ref(p,None)
+//│ deforest > 	Select(Ref(p,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > 	Ref(p,None)
+//│ deforest > 	Select(Ref(p,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > 	Ref(p,None)
+//│ deforest > 	Select(Ref(p,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = 8
+
+
+:expect 10
+fun p(x) = AA(x)
+let one = p(1)
+let two = p(2)
+fun f1(p) = if p is AA(a) then a + 1
+fun f2(p) = if p is AA(b) then b + 2
+fun f3(p) = if p is AA(c) then c + 3
+f1(one) + f2(one) + f3(two)
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > 	Ref(p,None)
+//│ deforest > 	Select(Ref(p,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = 10
+//│ one = AA(1)
+//│ two = fun
+
+
+:expect 4
+fun id(x) = x
+fun f1(a) = if a is AA(i) then i
+fun f2(a) = if a is AA(i) then i + 1
+f1(id(AA(1))) + f2(id(AA(2)))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > 	Select(Ref(a,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(a,None)
+//│ deforest > 	Select(Ref(a,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = 4
+
+
+
+
+:expect 6
+fun p(x) = AA(x)
+fun f1(a1) = if a1 is AA(a) then a + 1
+fun f2(a2) = if a2 is AA(a) then a + 2
+fun wrap(a) = a
+f1(wrap(p(2))) + f2(p(1))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > 	Ref(a2,None)
+//│ deforest > 	Select(Ref(a2,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > 	Ref(a1,None)
+//│ deforest > 	Select(Ref(a1,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = 6

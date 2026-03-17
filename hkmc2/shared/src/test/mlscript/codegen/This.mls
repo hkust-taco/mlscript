@@ -6,7 +6,7 @@
 :e
 fun test(x) =
   [this.a, x]
-//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope.
+//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
 //│ ║  l.8: 	  [this.a, x]
 //│ ╙──     	   ^^^^
 //│ JS (unsanitized):

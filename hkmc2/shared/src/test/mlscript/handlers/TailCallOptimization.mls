@@ -34,6 +34,7 @@ fun hi(n) =
 hi(0)
 //│ JS (unsanitized):
 //│ let hi, tmp1, $_stack$_safe$_body$_;
+//│ runtime.resetEffects();
 //│ hi = function hi(n) {
 //│   loopLabel: while (true) {
 //│     let scrut, tmp2, stackDelayRes;

@@ -427,10 +427,10 @@ class Foo
 set this.pc = 0
 set
   (this).pc = 0
-//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope.
+//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
 //│ ║  l.427: 	set this.pc = 0
 //│ ╙──       	    ^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope.
+//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
 //│ ║  l.429: 	  (this).pc = 0
 //│ ╙──       	   ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -471,5 +471,84 @@ fun test =
 test // should be 42
 //│ ═══[RUNTIME ERROR] Expected: '42', got: '43'
 //│ = 43
+
+// ——— ——— ———
+
+:fixme
+fun parse(tokens) =
+  ()
+  ???
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
+//│ ║  l.480: 	  ???
+//│ ╙──       	     ^
+
+// ——— ——— ———
+
+// * TODO: improve errors (don't cascade meaningless errors)
+:e
+class Id(name: UnboundName)
+//│ ╔══[COMPILATION ERROR] Name not found: UnboundName
+//│ ║  l.489: 	class Id(name: UnboundName)
+//│ ╙──       	               ^^^^^^^^^^^
+//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+
+// ——— ——— ———
+
+if true then (success: 42)
+//│ = {success: 42}
+
+if true then
+  success: 42
+//│ = {success: 42}
+
+:fixme
+if true then success: 42
+//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
+//│ ║  l.507: 	if true then success: 42
+//│ ╙──       	   ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// ——— ——— ———
+
+// FIXME: printing of
+[..[], "a"]
+//│ = [a]
+["a"]
+//│ = ["a"]
+
+// ——— ——— ———
+
++ 1
++ 2
+//│ = 3
+
+// FIXME
++ 1
+// oops
++ 2
+//│ = 2
+
+// FIXME: confusing error!
+:fixme
+pattern Bin =
+  | 0
+  // oops
+  | 1
+//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
+//│ ║  l.536: 	  | 0
+//│ ╙──       	  ^^^
+//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
+//│ ║  l.538: 	  | 1
+//│ ╙──       	  ^^^
+
+// ——— ——— ———
+
+:fixme // Bad parse!
+:expect 101
+100 + 100 / 100
+//│ ═══[RUNTIME ERROR] Expected: '101', got: '2'
+//│ = 2
 
 // ——— ——— ———

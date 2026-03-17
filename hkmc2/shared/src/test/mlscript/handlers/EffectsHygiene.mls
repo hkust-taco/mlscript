@@ -28,6 +28,7 @@ fun foo(h): module M =
 //│ ╙──      	           ^
 //│ JS:
 //│ let foo;
+//│ runtime.checkCall(runtime.resetEffects());
 //│ foo = function foo(h) {
 //│   runtime.checkArgs("foo", 1, true, arguments.length);
 //│   let A2, A3, scrut;
