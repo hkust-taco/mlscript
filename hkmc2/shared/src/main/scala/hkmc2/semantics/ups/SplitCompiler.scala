@@ -133,7 +133,11 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     case Constructor(target, arguments) => target.resolvedSym.flatMap(_.asPat).exists: patternSymbol =>
       val defn = patternSymbol.defn.getOrElse:
         lastWords(s"Pattern `${patternSymbol.nme}` has not been elaborated.")
-      val (_, extractionMatches, shouldReject) =
+      // This check is only used to pick full vs match-only compilation.
+      // Reuse the argument pairing logic, but suppress diagnostics here so we
+      // don't report the same user error twice.
+      given Raise = Function.const(())
+      val (_, extractionMatches, _) =
         matchParametersWithArguments(scrutinee, defn, arguments)
       extractionMatches.exists(_.nonEmpty)
     case _ => false
@@ -336,7 +340,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       scrutinee: Scrut,
       defn: PatternDef,
       arguments: Opt[Ls[SP]]
-  ): (Ls[SP], Opt[Ls[SP]], Bool) =
+  )(using Raise): (Ls[SP], Opt[Ls[SP]], Bool) =
     val argumentCount = arguments.fold(0)(_.length)
     val patternParameterCount = defn.patternParams.length
     val loc = Loc(arguments.getOrElse(Nil))
