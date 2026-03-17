@@ -433,7 +433,7 @@ object Compiler:
   type Implementation = (BlockLocalSymbol, ParamList, Term)
   
   /** Perform a reverse lookup for a term that references a symbol in the
-   *  current context. */
+    *  current context. */
   def reference(symbol: ClassSymbol | ModuleOrObjectSymbol | PatternSymbol, loc: Opt[Loc])(using tl: TL)(using Ctx, State): Opt[Term] =
     /** To make `Lowering` happy about the terms. */
     def fillImplicitArgs(term: Term): Term = term match
@@ -442,25 +442,72 @@ object Compiler:
         fillImplicitArgs(sel.prefix)
         sel.resolve
       case _: Term => term
+    type ClassLikeDefnSymbol = ClassSymbol | ModuleOrObjectSymbol | PatternSymbol
+    def isMatchingSymbol(candidate: ClassLikeDefnSymbol): Bool =
+      (candidate is symbol) || ((candidate, symbol) match
+        case (_: ClassSymbol, _: ClassSymbol) => candidate.nme === symbol.nme
+        case (_: ModuleOrObjectSymbol, _: ModuleOrObjectSymbol) => candidate.nme === symbol.nme
+        case (_: PatternSymbol, _: PatternSymbol) => candidate.nme === symbol.nme
+        case _ => false)
+    def classLikeCandidates(symbol: Symbol): Iterator[ClassLikeDefnSymbol] = symbol match
+      case symbol: ClassLikeDefnSymbol =>
+        Iterator.single(symbol)
+      case member: BlockMemberSymbol =>
+        (member.clsTree.iterator.map(_.symbol.asClsLike) ++
+          member.modOrObjTree.iterator.map(_.symbol.asClsLike) ++
+          member.patTree.iterator.map(_.symbol.asClsLike))
+        .flatten
+      case _ => Iterator.empty
+    def memberReference(
+        ownerRef: Term,
+        key: Str,
+        member: Symbol
+    ): Opt[Term] =
+      classLikeCandidates(member).collectFirst:
+        case candidate if isMatchingSymbol(candidate) =>
+          val memberSymbol = candidate.defn.get.bsym
+          SynthSel(ownerRef, new Ident(key).withLoc(loc))(S(memberSymbol), FlowSymbol.synthSel(key), N, S(summon))
+            .resolved(candidate)
+    def ownerMemberReference(owner: ClassSymbol | ModuleOrObjectSymbol): Opt[Term] =
+      val ownerRef = owner.defn.get.bsym.ref()
+      owner.tree.definedSymbols.iterator.map:
+        case (key, member) => memberReference(ownerRef, key, member)
+      .firstSome
     def findSymbol(elem: Ctx.Elem): Opt[Term] =
-      elem.symbol.flatMap(_.asClsLike).collectFirst:
-        // Check the element's symbol.
-        case `symbol` => S(elem.ref(new Ident(symbol.nme)).withLoc(loc).resolved(symbol))
-        // Look up the symbol in module members.
-        case module: ModuleOrObjectSymbol =>
-          val moduleRef = module.defn.get.bsym.ref()
-          module.tree.definedSymbols.iterator.map(_.mapSecond(_.asClsLike)).collectFirst:
-            case (key, S(`symbol`)) =>
-              val memberSymbol = symbol.defn.get.bsym
-              SynthSel(moduleRef, Ident(key))(S(memberSymbol), FlowSymbol.synthSel(key), N, S(summon)).resolved(symbol)
-      .flatten
+      val direct = elem.symbol.iterator.flatMap(classLikeCandidates).collectFirst:
+        case candidate if isMatchingSymbol(candidate) =>
+          elem.ref(new Ident(candidate.nme)).withLoc(loc).resolved(candidate)
+      direct.orElse:
+        elem.symbol.iterator.collectFirst:
+          case owner: (ClassSymbol | ModuleOrObjectSymbol) =>
+            ownerMemberReference(owner)
+        .flatten
+    def ownerChainReference(symbol: ClassLikeDefnSymbol): Opt[Term] =
+      def mkSelect(prefix: Term, member: BlockMemberSymbol, target: ClassLikeDefnSymbol): Term =
+        SynthSel(prefix, new Ident(member.nme).withLoc(loc))(S(member), FlowSymbol.synthSel(member.nme), N, S(summon))
+          .resolved(target)
+      def go(symbol: ClassLikeDefnSymbol): Term =
+        val defn = symbol.defn.getOrElse(lastWords(s"Missing definition for symbol `${symbol.nme}`."))
+        defn.owner match
+          case S(owner: ClassLikeDefnSymbol) =>
+            mkSelect(go(owner), defn.bsym, symbol)
+          case S(owner) =>
+            mkSelect(owner.ref().resolve, defn.bsym, symbol)
+          case N =>
+            defn.bsym.ref(new Ident(defn.bsym.nme).withLoc(loc)).resolved(symbol)
+      symbol.defn.map(_ => go(symbol))
     @tailrec def go(ctx: Ctx): Opt[Term] =
-      ctx.env.values.iterator.map(findSymbol).firstSome match
+      val fromEnv = ctx.env.values.iterator.map(findSymbol).firstSome
+      val fromOuter = ctx.outer.inner.collectFirst:
+          case owner: (ClassSymbol | ModuleOrObjectSymbol) =>
+            ownerMemberReference(owner)
+        .flatten
+      (fromEnv orElse fromOuter) match
         case S(term) => S(fillImplicitArgs(term))
         case N => ctx.parent match
           case N => N
           case S(parent) => go(parent)
-    go(ctx)
+    go(ctx).orElse(ownerChainReference(symbol))
   
   import Pattern.*
   
