@@ -46,48 +46,48 @@ if Bar(true) is
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $Bar (sub $Object (struct (field $$tag (mut i32)) (field $y (mut (ref null any))))))
 //│   (type $Baz (sub $Object (struct (field $$tag (mut i32)) (field $z (mut (ref null any))))))
-//│   (type (func (param $y (ref null any)) (result (ref null any))))
-//│   (type (func (param $z (ref null any)) (result (ref null any))))
-//│   (type (func (result (ref null any))))
-//│   (func $Bar (type 3) (param $y (ref null any)) (result (ref null any))
+//│   (type $Bar_ctor (func (param $y (ref null any)) (result (ref null any))))
+//│   (type $Baz_ctor (func (param $z (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $Bar_ctor (type $Bar_ctor) (param $y (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $Bar))
-//│       (struct.set $Bar 0
+//│       (struct.set $Bar $$tag
 //│         (ref.cast (ref $Bar)
 //│           (local.get $this))
 //│         (i32.const 1))
 //│       (block
-//│         (struct.set $Bar 1
+//│         (struct.set $Bar $y
 //│           (ref.cast (ref $Bar)
 //│             (local.get $this))
 //│           (local.get $y))
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (export "Bar" (func $Bar))
-//│   (elem declare func $Bar)
-//│   (func $Baz (type 4) (param $z (ref null any)) (result (ref null any))
+//│   (export "Bar_ctor" (func $Bar_ctor))
+//│   (elem declare func $Bar_ctor)
+//│   (func $Baz_ctor (type $Baz_ctor) (param $z (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $Baz))
-//│       (struct.set $Baz 0
+//│       (struct.set $Baz $$tag
 //│         (ref.cast (ref $Baz)
 //│           (local.get $this))
 //│         (i32.const 2))
 //│       (block
-//│         (struct.set $Baz 1
+//│         (struct.set $Baz $z
 //│           (ref.cast (ref $Baz)
 //│             (local.get $this))
 //│           (local.get $z))
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (export "Baz" (func $Baz))
-//│   (elem declare func $Baz)
-//│   (func $entry (type 5) (result (ref null any))
+//│   (export "Baz_ctor" (func $Baz_ctor))
+//│   (elem declare func $Baz_ctor)
+//│   (func $entry (type $entry1) (result (ref null any))
 //│     (local $Bar (ref null any))
 //│     (local $Baz (ref null any))
 //│     (local $scrut (ref null any))
@@ -95,100 +95,118 @@ if Bar(true) is
 //│     (local $b (ref null any))
 //│     (local $arg$Baz$0$ (ref null any))
 //│     (local $arg$Bar$0$ (ref null any))
-//│     (local $y (ref null any))
-//│     (local $Bar1 (ref null any))
-//│     (local $z (ref null any))
-//│     (local $Baz1 (ref null any))
+//│     (local $matchRes (ref null any))
+//│     (local $matchRes1 (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
 //│       (block (result (ref null any))
 //│         (nop)
 //│         (block (result (ref null any))
 //│           (local.set $scrut
-//│             (call_ref 3
+//│             (call_ref $Bar_ctor
 //│               (ref.i31
 //│                 (i32.const 1))
-//│               (ref.func $Bar)))
-//│           (block $match (result (ref null any))
-//│             (if
-//│               (ref.test (ref null $Object)
-//│                 (local.get $scrut))
-//│               (then
-//│                 (if
-//│                   (i32.eq
-//│                     (struct.get $Object 0
-//│                       (ref.cast (ref $Object)
-//│                         (local.get $scrut)))
-//│                     (i32.const 1))
-//│                   (then
-//│                     (block $arm1
-//│                       (block (result (ref null any))
-//│                         (local.set $arg$Bar$0$
-//│                           (struct.get $Bar 1
-//│                             (ref.cast (ref $Bar)
-//│                               (local.get $scrut))))
-//│                         (block (result (ref null any))
-//│                           (local.set $a
-//│                             (local.get $arg$Bar$0$))
-//│                           (block $match1 (result (ref null any))
-//│                             (if
-//│                               (i32.eq
-//│                                 (i31.get_s
-//│                                   (ref.cast (ref null i31)
-//│                                     (local.get $a)))
-//│                                 (i32.const 1))
-//│                               (then
-//│                                 (block $arm
-//│                                   (ref.i31
-//│                                     (i32.const 3))
-//│                                   (br $match1))))
-//│                             (ref.i31
-//│                               (i32.const 4)))))
-//│                       (br $match))))))
-//│             (if
-//│               (ref.test (ref null $Object)
-//│                 (local.get $scrut))
-//│               (then
-//│                 (if
-//│                   (i32.eq
-//│                     (struct.get $Object 0
-//│                       (ref.cast (ref $Object)
-//│                         (local.get $scrut)))
-//│                     (i32.const 2))
-//│                   (then
-//│                     (block $arm2
-//│                       (block (result (ref null any))
-//│                         (local.set $arg$Baz$0$
-//│                           (struct.get $Baz 1
-//│                             (ref.cast (ref $Baz)
-//│                               (local.get $scrut))))
-//│                         (block (result (ref null any))
-//│                           (local.set $b
-//│                             (local.get $arg$Baz$0$))
-//│                           (local.get $b)))
-//│                       (br $match))))))
-//│             (ref.i31
-//│               (i32.const 2)))))))
+//│               (ref.func $Bar_ctor)))
+//│           (block (result (ref null any))
+//│             (block $match
+//│               (local.set $matchRes
+//│                 (ref.null any))
+//│               (if
+//│                 (ref.test (ref null $Object)
+//│                   (local.get $scrut))
+//│                 (then
+//│                   (if
+//│                     (i32.eq
+//│                       (struct.get $Object $$tag
+//│                         (ref.cast (ref $Object)
+//│                           (local.get $scrut)))
+//│                       (i32.const 1))
+//│                     (then
+//│                       (block $arm1
+//│                         (local.set $matchRes
+//│                           (block (result (ref null any))
+//│                             (local.set $arg$Bar$0$
+//│                               (struct.get $Bar $y
+//│                                 (ref.cast (ref $Bar)
+//│                                   (local.get $scrut))))
+//│                             (block (result (ref null any))
+//│                               (local.set $a
+//│                                 (local.get $arg$Bar$0$))
+//│                               (block (result (ref null any))
+//│                                 (block $match1
+//│                                   (local.set $matchRes1
+//│                                     (ref.null any))
+//│                                   (if
+//│                                     (i32.eq
+//│                                       (i31.get_s
+//│                                         (ref.cast (ref null i31)
+//│                                           (local.get $a)))
+//│                                       (i32.const 1))
+//│                                     (then
+//│                                       (block $arm
+//│                                         (local.set $matchRes1
+//│                                           (ref.i31
+//│                                             (i32.const 3)))
+//│                                         (br $match1))))
+//│                                   (local.set $matchRes1
+//│                                     (ref.i31
+//│                                       (i32.const 4))))
+//│                                 (local.get $matchRes1)))))
+//│                         (br $match))))))
+//│               (if
+//│                 (ref.test (ref null $Object)
+//│                   (local.get $scrut))
+//│                 (then
+//│                   (if
+//│                     (i32.eq
+//│                       (struct.get $Object $$tag
+//│                         (ref.cast (ref $Object)
+//│                           (local.get $scrut)))
+//│                       (i32.const 2))
+//│                     (then
+//│                       (block $arm2
+//│                         (local.set $matchRes
+//│                           (block (result (ref null any))
+//│                             (local.set $arg$Baz$0$
+//│                               (struct.get $Baz $z
+//│                                 (ref.cast (ref $Baz)
+//│                                   (local.get $scrut))))
+//│                             (block (result (ref null any))
+//│                               (local.set $b
+//│                                 (local.get $arg$Baz$0$))
+//│                               (local.get $b))))
+//│                         (br $match))))))
+//│               (local.set $matchRes
+//│                 (ref.i31
+//│                   (i32.const 2))))
+//│             (local.get $matchRes))))))
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))
 //│ Wasm result:
 //│ = 3
 
+// TODO: change error to proper match error instance for missing else branch
 :re
+:w
 class Bar(val y)
 class Baz(val z)
 if Baz(10) is
   Bar(a) then 0
+//│ ═══[WARNING] WatBuilder::result for Instantiate(...) of `globalThis.Error(...)` with payload `Lit(StrLit(match error))` not implemented yet
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] RuntimeError: unreachable
+//│ ═══[RUNTIME ERROR] 0
 
 :re
+:w
 if false then 1
+//│ ═══[WARNING] WatBuilder::result for Instantiate(...) of `globalThis.Error(...)` with payload `Lit(StrLit(match error))` not implemented yet
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] RuntimeError: unreachable
+//│ ═══[RUNTIME ERROR] 0
 
+:w
 class Foo(val x, val y)
 if Foo(1,2) is Foo(a,b) then 0
+//│ ═══[WARNING] WatBuilder::result for Instantiate(...) of `globalThis.Error(...)` with payload `Lit(StrLit(match error))` not implemented yet
 //│ Wasm result:
 //│ = 0
 

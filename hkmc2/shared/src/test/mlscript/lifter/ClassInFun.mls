@@ -138,8 +138,8 @@ f().foo()
 //│     }
 //│   }
 //│   #Good$cap;
-//│   #x;
 //│   #y;
+//│   #x;
 //│   #scope0$cap;
 //│   foo() {
 //│     let tmp6, tmp7;
@@ -210,7 +210,7 @@ a.getX()
 
 // handler
 
-:stackSafe 10
+:stackSafe 6
 :effectHandlers
 fun sum(n) =
   if n == 0 then 0

@@ -23,7 +23,7 @@ object Lol with
 :e
 :re
 Lol.x
-//│ ╔══[ERROR] Object 'Lol' does not contain member 'x'
+//│ ╔══[COMPILATION ERROR] Object 'Lol' does not contain member 'x'
 //│ ║  l.25: 	Lol.x
 //│ ╙──      	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
@@ -42,7 +42,7 @@ object Lol with
 :e
 :re
 Lol.x
-//│ ╔══[ERROR] Object 'Lol' does not contain member 'x'
+//│ ╔══[COMPILATION ERROR] Object 'Lol' does not contain member 'x'
 //│ ║  l.44: 	Lol.x
 //│ ╙──      	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'

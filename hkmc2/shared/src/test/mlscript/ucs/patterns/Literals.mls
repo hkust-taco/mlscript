@@ -76,7 +76,7 @@ fun dual_patterns(x, y) =
 
 :fixme // TODO
 () is ()
-//│ ╔══[ERROR] Unrecognized pattern (unit).
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern (unit).
 //│ ║  l.78: 	() is ()
 //│ ╙──      	      ^^
 //│ = true

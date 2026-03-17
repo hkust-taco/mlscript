@@ -118,7 +118,7 @@ sealed abstract class Document {
     
   end format
   
-  def mkString(columns: Int = 120): Str =
+  def mkString(columns: Int = Int.MaxValue): Str =
     val w = new StringWriter()
     format(columns, w)
     w.toString
@@ -157,6 +157,7 @@ object Document {
     else group(doc"$pre #{ ${if insertBreak then break :: d else d} #}  # $post")
   
   def braced(d: Document): Document = bracketed("{", "}")(d)
+  def bracedbk(d: Document): Document = bracketed("{", "}", insertBreak = true)(d)
   
 }
 

@@ -56,6 +56,7 @@ class MLsCompiler
   
   
   // TODO adapt logic
+  given DebugPrinter = new DebugPrinter
   val etl = new TraceLogger{override def doTrace: Bool = false}
   val ltl = new TraceLogger{override def doTrace: Bool = false}
   // val ltl = new TraceLogger{override def doTrace: Bool = true}
@@ -112,7 +113,7 @@ class MLsCompiler
         codegen.js.JSBuilder()
       val le = low.program(blk)
       val baseScp: utils.Scope =
-        utils.Scope.empty
+        utils.Scope.empty(utils.Scope.Cfg.default)
       // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.
       // * Having `module id"import" with ...` in `prelude.mls` will generate `globalThis.import` that is undefined.
       baseScp.addToBindings(Elaborator.State.importSymbol, "import", shadow = false)

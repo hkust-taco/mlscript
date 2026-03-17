@@ -1,4 +1,4 @@
-// :typeCheck
+// :flow
 
 
 module Foo
@@ -11,13 +11,13 @@ module Foo with
 
 :e
 module Foo with val x = 1
-//│ ╔══[ERROR] Illegal body of module definition (should be a block; found term definition).
+//│ ╔══[COMPILATION ERROR] Illegal body of module definition (should be a block; found term definition).
 //│ ║  l.13: 	module Foo with val x = 1
 //│ ╙──      	                ^^^^^^^^^
 
 :e
 Foo.x
-//│ ╔══[ERROR] Module 'Foo' does not contain member 'x'
+//│ ╔══[COMPILATION ERROR] Module 'Foo' does not contain member 'x'
 //│ ║  l.19: 	Foo.x
 //│ ╙──      	   ^^
 

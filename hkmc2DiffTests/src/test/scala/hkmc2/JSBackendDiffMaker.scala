@@ -28,14 +28,20 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     ln.trim
   
   private val baseScp: utils.Scope =
-    utils.Scope.empty
+    utils.Scope.empty(utils.Scope.Cfg.default)
+  private lazy val irPrintingScp: utils.Scope = // for IR printing only
+    Scope.empty(Scope.Cfg.default.copy(
+      escapeChars = false,
+      useSuperscripts = false,
+      includeZero = false,
+    ))
   
-  val runtimeNme = baseScp.allocateName(Elaborator.State.runtimeSymbol)
-  val termNme = baseScp.allocateName(Elaborator.State.termSymbol)
-  val blockNme = baseScp.allocateName(Elaborator.State.blockSymbol)
-  val shapeNme = baseScp.allocateName(Elaborator.State.shapeSymbol)
-  val definitionMetadataNme = baseScp.allocateName(Elaborator.State.definitionMetadataSymbol)
-  val prettyPrintNme = baseScp.allocateName(Elaborator.State.prettyPrintSymbol)
+  val runtimeNme = baseScp.allocateName(Elaborator.State.runtimeSymbol)(using throw _)
+  val termNme = baseScp.allocateName(Elaborator.State.termSymbol)(using throw _)
+  val blockNme = baseScp.allocateName(Elaborator.State.blockSymbol)(using throw _)
+  val optionNme = baseScp.allocateName(Elaborator.State.optionSymbol)(using throw _)
+  val definitionMetadataNme = baseScp.allocateName(Elaborator.State.definitionMetadataSymbol)(using throw _)
+  val prettyPrintNme = baseScp.allocateName(Elaborator.State.prettyPrintSymbol)(using throw _)
   
   val ltl = new TraceLogger:
     override def doTrace = debugLowering.isSet || scope.exists:
@@ -61,7 +67,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     if importQQ.isSet then importRuntimeModule(termNme, termFile)
     if stageCode.isSet then
       importRuntimeModule(blockNme, blockFile)
-      importRuntimeModule(shapeNme, shapeFile)
+      importRuntimeModule(optionNme, optionFile)
     h
   
   private var hostCreated = false
@@ -89,7 +95,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
         jsb.programBody(le, N, wd)
-      val jsStr = je.stripBreaks.mkString(100)
+      val jsStr = je.stripBreaks.mkString(output.ColWidth)
       output(s"JS (unsanitized):")
       output(jsStr)
     if js.isSet then
@@ -107,19 +113,18 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         new JSBuilder
           with JSBuilderArgNumSanityChecks
       val resSym = new TempSymbol(S(blk), "block$res")
-      val lowered0 = low.program(blk)
-      val le = lowered0.copy(main = lowered0.main.mapTail:
+      val lowered = low.program(blk)
+      val loweredMapped = lowered.copy(main = lowered.main.mapTail:
         case e: End =>
           Assign(resSym, Value.Lit(syntax.Tree.UnitLit(false)), e)
         case Return(res, implct) =>
           assert(implct)
           Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
-        case _: Scoped => lastWords("impossible: mapTail should have handled this case specially")
         case tl: (Throw | Break | Continue) => tl
       )
       if showLoweredTree.isSet then
-        output(s"Lowered:")
-        output(lowered0.showAsTree)
+        output(s"Lowered IR:")
+        output(lowered.showAsTree)
       
       // * We used to do this to avoid needlessly generating new variable names in separate blocks:
       // val nestedScp = baseScp.nest
@@ -129,13 +134,18 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val resNme = nestedScp.allocateName(resSym)
       
       if ppLoweredTree.isSet then
-        output(s"Pretty Lowered:")
-        output(Printer.mkDocument(le)(using summon[Raise], nestedScp).mkString())
+        output(s"Lowered:")
+        given ShowCfg = ShowCfg(
+          showExpansionMappings = false,
+          showFlowSymbols = true,
+          debug = debug.isSet,
+        )
+        output(Printer().worksheet(lowered)(using irPrintingScp).mkString(output.ColWidth))
       
       val (pre, js) = nestedScp.givenIn:
-        jsb.worksheet(le)
-      val preStr = pre.stripBreaks.mkString(100)
-      val jsStr = js.stripBreaks.mkString(100)
+        jsb.worksheet(loweredMapped)
+      val preStr = pre.stripBreaks.mkString(output.ColWidth)
+      val jsStr = js.stripBreaks.mkString(output.ColWidth)
       if showSanitizedJS.isSet then
         output(s"JS:")
         if preStr.nonEmpty then output(preStr)
@@ -199,7 +209,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             implct = true)
           val je = nestedScp.givenIn:
             jsb.block(le, endSemi = false)
-          val jsStr = je.stripBreaks.mkString(100)
+          val jsStr = je.stripBreaks.mkString(output.ColWidth)
           mkQuery("", jsStr): out =>
             // Omit the last line which is always "undefined" or the unit.
             val result = out.lastIndexOf('\n') match

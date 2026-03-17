@@ -67,12 +67,13 @@ case
 
 :todo // TODO: support this braceless syntax?
 case [x] then x, [] then 0
-//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
 //│ ║  l.69: 	case [x] then x, [] then 0
 //│ ╙──      	                 ^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.69: 	case [x] then x, [] then 0
 //│ ╙──      	^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :sjs
 case

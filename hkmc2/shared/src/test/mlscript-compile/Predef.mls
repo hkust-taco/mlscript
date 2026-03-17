@@ -49,6 +49,14 @@ object Symbols with
   val definitionMetadata = RuntimeJS.symbols.definitionMetadata
   // val definitionMetadata = Symbol.for("mlscript.definitionMetadata")
 
+abstract class (<:<) Sub[A, B] with
+  fun apply(x: A): B
+abstract class (=:=) Eq[A, B] extends Sub[A, B] with
+  fun apply(x: A): B
+object Refl[A] extends Eq[A, A] with
+  fun apply(x: A): A = x
+
+type (>:>) Sup[A, B] = Sub[B, A]
 
 // * A generic equality comparison.
 // * Returns true for:
@@ -92,6 +100,7 @@ fun (???) notImplementedError = throw Error("Not implemented")
 
 
 fun tuple(...xs) = xs
+fun mkSet(...xs) = new Set(xs)
 
 
 val foldl = fold

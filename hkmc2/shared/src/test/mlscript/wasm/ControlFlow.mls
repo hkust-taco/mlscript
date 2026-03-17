@@ -1,0 +1,295 @@
+
+:global
+:wasm
+
+
+:wat
+let i = 0 in
+  while i < 10 then set i += 1
+  i
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $lt_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $Unit (sub $Object (struct (field $$tag (mut i32)))))
+//│   (type $Unit_ctor (func (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (type $start (func))
+//│   (global $Unit$inst (mut (ref null $Unit)) (ref.null $Unit))
+//│   (start $start1)
+//│   (func $lt_impl1 (type $lt_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│     (if (result (ref null any))
+//│       (i32.and
+//│         (ref.test (ref null i31)
+//│           (local.get $lhs))
+//│         (ref.test (ref null i31)
+//│           (local.get $rhs)))
+//│       (then
+//│         (ref.i31
+//│           (i32.lt_s
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $lhs)))
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $rhs))))))
+//│       (else
+//│         (unreachable))))
+//│   (elem declare func $lt_impl1)
+//│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│     (if (result (ref null any))
+//│       (i32.and
+//│         (ref.test (ref null i31)
+//│           (local.get $lhs))
+//│         (ref.test (ref null i31)
+//│           (local.get $rhs)))
+//│       (then
+//│         (ref.i31
+//│           (i32.add
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $lhs)))
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $rhs))))))
+//│       (else
+//│         (unreachable))))
+//│   (elem declare func $plus_impl1)
+//│   (func $Unit_ctor1 (type $Unit_ctor) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Unit))
+//│       (struct.set $Unit $$tag
+//│         (ref.cast (ref $Unit)
+//│           (local.get $this))
+//│         (i32.const 1))
+//│       (nop)
+//│       (return
+//│         (local.get $this))))
+//│   (elem declare func $Unit_ctor1)
+//│   (func $start1 (type $start)
+//│     (block
+//│       (global.set $Unit$inst
+//│         (ref.cast (ref null $Unit)
+//│           (call $Unit_ctor1)))))
+//│   (elem declare func $start1)
+//│   (func $entry (type $entry1) (result (ref null any))
+//│     (local $i (ref null any))
+//│     (local $scrut (ref null any))
+//│     (local $tmp (ref null any))
+//│     (local $matchRes (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $i
+//│         (ref.i31
+//│           (i32.const 0)))
+//│       (block (result (ref null any))
+//│         (block $lbl
+//│           (loop $lbl_cont
+//│             (drop
+//│               (block (result (ref null any))
+//│                 (local.set $scrut
+//│                   (call $lt_impl1
+//│                     (local.get $i)
+//│                     (ref.i31
+//│                       (i32.const 10))))
+//│                 (block (result (ref null any))
+//│                   (block $match
+//│                     (local.set $matchRes
+//│                       (ref.null any))
+//│                     (if
+//│                       (i32.eq
+//│                         (i31.get_s
+//│                           (ref.cast (ref null i31)
+//│                             (local.get $scrut)))
+//│                         (i32.const 1))
+//│                       (then
+//│                         (block $arm
+//│                           (block
+//│                             (block
+//│                               (local.set $tmp
+//│                                 (call $plus_impl1
+//│                                   (local.get $i)
+//│                                   (ref.i31
+//│                                     (i32.const 1))))
+//│                               (block
+//│                                 (local.set $i
+//│                                   (local.get $tmp))
+//│                                 (br $lbl_cont)))
+//│                             (local.set $matchRes
+//│                               (global.get $Unit$inst)))
+//│                           (br $match))))
+//│                     (block
+//│                       (nop)
+//│                       (local.set $matchRes
+//│                         (global.get $Unit$inst))))
+//│                   (local.get $matchRes))))))
+//│         (local.get $i))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 10
+
+
+fun f() =
+  while true do
+    return 42
+f()
+//│ Wasm result:
+//│ = 42
+
+
+let x = true
+while x do set x = false
+//│ Wasm result:
+//│ = {}
+
+
+fun foo() =
+    let x = 1
+    while false do set x = 0
+foo()
+//│ Wasm result:
+//│ = {}
+
+
+let c = 0
+let x = 0
+while x < 5 do
+  let y = 0
+  while y < 5 do
+    set c += 1
+    set y += 1
+  set x += 1
+c
+//│ Wasm result:
+//│ = 25
+
+
+fun nonTailMatchReturn(x) =
+  if x is
+    0 then return 100
+    1 then 10
+    else 20
+  x + 1
+nonTailMatchReturn(0)
+//│ Wasm result:
+//│ = 100
+
+
+fun tailMatchReturn(x) =
+  if x is
+    0 then return 7
+    1 then x + 41
+    else 99
+tailMatchReturn(0)
+//│ Wasm result:
+//│ = 7
+
+
+fun loopMatchReturn() =
+  let i = 0 in
+    while true do
+      if i is
+        3 then return i
+        else set i += 1
+loopMatchReturn()
+//│ Wasm result:
+//│ = 3
+
+
+:wat
+fun tailMatchAllValue(x) =
+  if x is
+    0 then 10
+    1 then 20
+    else 30
+tailMatchAllValue(1)
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $tailMatchAllValue1 (func (param $x (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $tailMatchAllValue (type $tailMatchAllValue1) (param $x (ref null any)) (result (ref null any))
+//│     (local $matchRes (ref null any))
+//│     (block (result (ref null any))
+//│       (block $match
+//│         (local.set $matchRes
+//│           (ref.null any))
+//│         (if
+//│           (i32.eq
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $x)))
+//│             (i32.const 0))
+//│           (then
+//│             (block $arm
+//│               (return
+//│                 (ref.i31
+//│                   (i32.const 10)))
+//│               (br $match))))
+//│         (if
+//│           (i32.eq
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $x)))
+//│             (i32.const 1))
+//│           (then
+//│             (block $arm1
+//│               (return
+//│                 (ref.i31
+//│                   (i32.const 20)))
+//│               (br $match))))
+//│         (return
+//│           (ref.i31
+//│             (i32.const 30))))
+//│       (local.get $matchRes)))
+//│   (export "tailMatchAllValue" (func $tailMatchAllValue))
+//│   (elem declare func $tailMatchAllValue)
+//│   (func $entry (type $entry1) (result (ref null any))
+//│     (local $tailMatchAllValue (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (call_ref $tailMatchAllValue1
+//│         (ref.i31
+//│           (i32.const 1))
+//│         (ref.func $tailMatchAllValue))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 20
+
+
+fun tailMatchStmtBranch(x) =
+  let y = 0 in
+    if x is
+      0 then
+        set y += 1
+      else 42
+tailMatchStmtBranch(0)
+//│ Wasm result:
+//│ = {}
+
+
+fun tailMatchStmtDefault(x) =
+  let y = 0 in
+    if x is
+      0 then 11
+      else
+        set y += 1
+tailMatchStmtDefault(2)
+//│ Wasm result:
+//│ = {}
+
+
+fun nonTailStmtMatch(x) =
+  let y = 0 in
+    if x is
+      0 then
+        set y += 1
+      else 5
+    y
+nonTailStmtMatch(0)
+//│ Wasm result:
+//│ = 1

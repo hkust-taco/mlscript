@@ -2,6 +2,7 @@ package hkmc2
 
 import mlscript.utils.*, shorthands.*
 
+import codegen.js.JSBuilder
 import codegen.wasm.*
 import document.*
 import semantics.Elaborator
@@ -14,9 +15,8 @@ import scala.collection.mutable
 
 abstract class WasmDiffMaker extends LlirDiffMaker:
 
-  /**
-   * Outputs the compiled module as [[WasmGenerator]] implementation-defined text.
-   */
+  /** Outputs the compiled module as [[WasmGenerator]] implementation-defined text.
+    */
   val wat = NullaryCommand("wat")
 
   /** Outputs the compiled module as stack-based text. */
@@ -26,13 +26,13 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
   val fwat = NullaryCommand("fwat")
 
   private val baseScp: utils.Scope =
-    utils.Scope.empty
+    utils.Scope.empty(utils.Scope.Cfg.default)
 
   final lazy val wasmSuppFile: io.Path = predefFile.up / "Wasm.mjs"
-  final lazy val wasmSuppNme = baseScp.allocateName(Elaborator.State.wasmSymbol)
+  final lazy val wasmSuppNme = baseScp.allocateName(Elaborator.State.wasmSymbol)(using throw _)
   final lazy val loadWasm: Unit =
     host.execute(
-      s"const $wasmSuppNme = (await import(\"${wasmSuppFile}\")).default;"
+      s"const $wasmSuppNme = (await import(\"${wasmSuppFile}\")).default;",
     ) match
       case ReplHost.Result(msg) =>
         if msg.startsWith(ReplHost.uncaughtErrorHead) then
@@ -44,10 +44,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
   lazy val prettifyBinaryenWat = (content: Str) =>
     content.substring(2, content.length() - 2).replace("\\\\n", "\n").replace("\\\\\"", "\"")
 
-  override def processTerm(trm: Blk, inImport: Bool)(using
-      Config,
-      Raise
-  ): Unit =
+  override def processTerm(trm: Blk, inImport: Bool)(using Config, Raise): Unit =
     super.processTerm(trm, inImport)
 
     val outerRaise: Raise = summon
@@ -66,13 +63,14 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
       val low = ltl.givenIn:
         codegen.Lowering()
       val le = low.program(trm)
-      val (modWat, mainFnNme) = ltl.givenIn:
+      val (modWat, mainFnNme, systemMemMinPages) = ltl.givenIn:
         baseScp.nest.givenIn:
           WatBuilder().program(le, N, wd)
+      val modWatJsLit = JSBuilder.makeStringLiteral(modWat.mkString(output.ColWidth))
 
       if wat.isSet then
         output("Wat:")
-        output(modWat.mkString())
+        output(modWat.mkString(output.ColWidth))
 
       // A program with errors may have a WAT that is worth inspecting, but anything that involves
       // using Binaryen requires a valid WAT
@@ -80,9 +78,9 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
 
       if fwat.isSet then
         output("Formatted Wat (Folded):")
-        doc"JSON.stringify(wasm.binaryenFmtWat(`$modWat`, true));"
+        doc"JSON.stringify(wasm.binaryenFmtWat($modWatJsLit, true));"
           .stripBreaks
-          .mkString(100)
+          .mkString(output.ColWidth)
           .replace('\n', ' ') |> host.execute match
           case ReplHost.Result(content) =>
             output(prettifyBinaryenWat(content))
@@ -91,9 +89,9 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
             return
       if swat.isSet then
         output("Formatted Wat (Stack):")
-        doc"JSON.stringify(wasm.binaryenFmtWat(`$modWat`, false));"
+        doc"JSON.stringify(wasm.binaryenFmtWat($modWatJsLit, false));"
           .stripBreaks
-          .mkString(100)
+          .mkString(output.ColWidth)
           .replace('\n', ' ') |> host.execute match
           case ReplHost.Result(content) =>
             output(prettifyBinaryenWat(content))
@@ -106,7 +104,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
         val (reply, stderr) = host.query(
           preStr,
           queryStr,
-          !expectRuntimeOrCodeGenErrors && fixme.isUnset && todo.isUnset
+          !expectRuntimeOrCodeGenErrors && fixme.isUnset && todo.isUnset,
         )
         reply match
           case ReplHost.Result(content) => k(content)
@@ -121,23 +119,42 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
               // it should be a code generation error.
               raise(ErrorReport(
                 msg"[Uncaught SyntaxError] ${message}" -> N :: Nil,
-                source = Diagnostic.Source.Compilation
+                source = Diagnostic.Source.Compilation,
               ))
             else
               // Otherwise, it is considered a simple runtime error.
               raise(ErrorReport(
                 msg"${message}" -> N :: Nil,
-                source = Diagnostic.Source.Runtime
+                source = Diagnostic.Source.Runtime,
               ))
+        end match
         if stderr.nonEmpty then output(s"// Standard Error:\n${stderr}")
       end mkQuery
 
       val importObj =
-        doc"""{ #{  # "system": { #{  # "mem": new WebAssembly.Memory({initial: 100}) #}  # } #}  # }"""
-      val jsStr =
-        doc"""await wasm.binaryenPrintFuncRes( #  #{ `$modWat # `, # $importObj, # exports => exports.${mainFnNme}(), #}  # );"""
+        doc"""
+          {
+            "system": {
+              "mem": mem,
+              "mlx_str_from_utf16": (ptr, byteLen) =>
+                decodeUtf16.decode(new Uint8Array(mem.buffer, ptr, byteLen))
+            }
+          }
+        """
           .stripBreaks
-          .mkString(100)
+          .mkString(output.ColWidth)
+      val jsStr =
+        doc"""
+          await (() => {
+            # const watSrc = $modWatJsLit;
+            # const mem = new WebAssembly.Memory({ initial: $systemMemMinPages });
+            # const decodeUtf16 = new TextDecoder("utf-16le");
+            # const importObj = $importObj;
+            # return wasm.binaryenPrintFuncRes(watSrc, importObj, exports => exports.${mainFnNme}());
+            # })();
+        """
+          .stripBreaks
+          .mkString(output.ColWidth)
       output("Wasm result:")
       mkQuery("", jsStr): out =>
         // Omit the last line which is always "undefined" or the unit.

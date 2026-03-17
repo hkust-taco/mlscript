@@ -46,7 +46,7 @@ obj
 //│ ╔══[PARSE ERROR] Unexpected period here
 //│ ║  l.42: 	  .("a")
 //│ ╙──      	  ^
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (‹erroneous syntax›).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (‹erroneous syntax›).
 //│ ║  l.42: 	  .("a")
 //│ ╙──      	  ^
 //│ = {a: 1}
@@ -73,7 +73,7 @@ obj
 //│ ╔══[PARSE ERROR] Unexpected period here
 //│ ║  l.69: 	  ."a"
 //│ ╙──      	  ^
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (‹erroneous syntax›).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (‹erroneous syntax›).
 //│ ║  l.69: 	  ."a"
 //│ ╙──      	  ^
 //│ = {a: 1}
@@ -109,9 +109,10 @@ let obj = "¯\_(ツ)_/¯": 2
 //│ ╔══[WARNING] Found invalid escape character
 //│ ║  l.105: 	let obj = "¯\_(ツ)_/¯": 2
 //│ ╙──       	             ^
-//│ ╔══[ERROR] Name not found: fixme
+//│ ╔══[COMPILATION ERROR] Name not found: fixme
 //│ ║  l.104: 	:fixme
 //│ ╙──       	 ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'obj'
 //│ ╟── which references the symbol introduced here
 //│ ║  l.105: 	let obj = "¯\_(ツ)_/¯": 2
@@ -120,10 +121,10 @@ let obj = "¯\_(ツ)_/¯": 2
 :fixme
 obj."¯\_(ツ)_/¯"
 //│ ╔══[WARNING] Found invalid escape character
-//│ ║  l.121: 	obj."¯\_(ツ)_/¯"
+//│ ║  l.122: 	obj."¯\_(ツ)_/¯"
 //│ ╙──       	       ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'obj'
-//│ ║  l.121: 	obj."¯\_(ツ)_/¯"
+//│ ║  l.122: 	obj."¯\_(ツ)_/¯"
 //│ ║         	^^^
 //│ ╟── which references the symbol introduced here
 //│ ║  l.105: 	let obj = "¯\_(ツ)_/¯": 2

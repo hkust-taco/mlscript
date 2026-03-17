@@ -10,7 +10,7 @@ fun nonsense(xs) = if xs is
 //│ nonsense = function nonsense(xs) {
 //│   let ys, middleElements;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 0) {
-//│     middleElements = runtime.safeCall(runtime.Tuple.slice(xs, 0, 0));
+//│     middleElements = runtime.Tuple.slice(xs, 0, 0);
 //│     ys = middleElements;
 //│     return ys
 //│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
@@ -32,7 +32,7 @@ fun lead_and_last(xs) = if xs is
 //│   let x, ys, y, lastElement0$, middleElements, element0$;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
 //│     element0$ = runtime.Tuple.get(xs, 0);
-//│     middleElements = runtime.safeCall(runtime.Tuple.slice(xs, 1, 1));
+//│     middleElements = runtime.Tuple.slice(xs, 1, 1);
 //│     lastElement0$ = runtime.Tuple.get(xs, -1);
 //│     y = lastElement0$;
 //│     ys = middleElements;
@@ -68,7 +68,7 @@ fun nested_tuple_patterns(xs) = if xs is
 //│     split_default$: {
 //│       if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
 //│         element0$ = runtime.Tuple.get(xs, 0);
-//│         middleElements = runtime.safeCall(runtime.Tuple.slice(xs, 1, 1));
+//│         middleElements = runtime.Tuple.slice(xs, 1, 1);
 //│         lastElement0$ = runtime.Tuple.get(xs, -1);
 //│         if (runtime.Tuple.isArrayLike(middleElements) && middleElements.length === 2) {
 //│           element0$1 = runtime.Tuple.get(middleElements, 0);

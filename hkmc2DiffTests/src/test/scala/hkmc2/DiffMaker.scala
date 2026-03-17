@@ -2,6 +2,7 @@ package hkmc2
 
 import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*
 
 
 
@@ -15,7 +16,8 @@ class Outputter(val out: java.io.PrintWriter):
   val diff3MidMarker = "|||||||" // * Appears under `git config merge.conflictstyle diff3` (https://stackoverflow.com/a/18131595/1518588)
   val diffEndMarker = ">>>>>>>"
 
-  val exitMarker = "=" * 100
+  val ColWidth = 100
+  val exitMarker = "=" * ColWidth
   val blockSeparator = "—" * 80
   
   val fullBlockSeparator = outputMarker + blockSeparator
@@ -46,6 +48,9 @@ abstract class DiffMaker:
   
   def processOrigin(origin: Origin)(using Raise): Unit
   
+  
+  val dbgPrinter: DebugPrinter
+  given dbgPrinter.type = dbgPrinter
   
   
   def doFail(blockLineNum: Int, msg: String): Unit =
@@ -93,7 +98,9 @@ abstract class DiffMaker:
     line =>
       val commentIndex = line.indexOf("//")
       val body = if commentIndex == -1 then line else line.take(commentIndex)
-      assert(body.forall(_.isWhitespace))
+      // assert(body.forall(_.isWhitespace))
+      if !body.forall(_.isWhitespace) then
+        output(s"/!\\ Warning: non-empty body for command '$name' is ignored: '$body'")
       k()
     ):
     def set: Unit = setCurrentValue(k())
@@ -126,10 +133,12 @@ abstract class DiffMaker:
   val debug = NullaryCommand("d")
   
   val expectParseErrors = NullaryCommand("pe")
-  val expectTypeErrors = NullaryCommand("e")
+  val expectTypeErrors = NullaryCommand("te")
+  val expectTypeOrCodeGenErrors = NullaryCommand("e")
   val expectRuntimeErrors = NullaryCommand("re")
   val expectCodeGenErrors = NullaryCommand("ge")
-  def expectRuntimeOrCodeGenErrors = expectRuntimeErrors.isSet || expectCodeGenErrors.isSet
+  def expectRuntimeOrCodeGenErrors =
+    expectRuntimeErrors.isSet || expectCodeGenErrors.isSet || expectTypeOrCodeGenErrors.isSet
   val allowRuntimeErrors = NullaryCommand("allowRuntimeErrors")
   val expectWarnings = NullaryCommand("w")
   val showRelativeLineNums = NullaryCommand("showRelativeLineNums")
@@ -204,7 +213,7 @@ abstract class DiffMaker:
             unexpected("type error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
         case Diagnostic.Source.Compilation =>
           compilationErrors += 1
-          if expectCodeGenErrors.isUnset && !tolerateErrors then
+          if expectCodeGenErrors.isUnset && expectTypeOrCodeGenErrors.isUnset && !tolerateErrors then
             failures += globalStartLineNum
             unexpected("compilation error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
         case Diagnostic.Source.Runtime =>
@@ -220,8 +229,10 @@ abstract class DiffMaker:
       case Diagnostic.Kind.Internal =>
         if !tolerateErrors then
           failures += globalStartLineNum
-        // unexpected("internal error", blockLineNum)
-        throw d
+          unexpected("internal error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
+        // throw d
+      if fullExceptionStack.isSet then
+        d.printStackTrace()
       report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
     
     processOrigin(origin)(using raise)
@@ -237,6 +248,9 @@ abstract class DiffMaker:
     if expectCodeGenErrors.isSet && compilationErrors === 0 && todo.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of compilation error", blockLineNum, N, () => N)
+    else if expectTypeOrCodeGenErrors.isSet && (compilationErrors + typeErrors) === 0 && todo.isUnset && breakme.isUnset then
+      failures += globalStartLineNum
+      unexpected("lack of compilation or type error", blockLineNum, N, () => N)
     if expectRuntimeErrors.isSet && runtimeErrors === 0 && todo.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of runtime error", blockLineNum, N, () => N)

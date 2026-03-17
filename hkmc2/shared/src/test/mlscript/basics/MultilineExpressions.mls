@@ -127,13 +127,14 @@ if 1 + 2
 //│ ╟── Note: the operator split starts here
 //│ ║  l.116: 	  * 3 then 0
 //│ ╙──       	  ^
-//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
 //│ ║  l.115: 	if 1 + 2
 //│ ║         	       ^
 //│ ║  l.116: 	  * 3 then 0
 //│ ║         	^^^^^^^^^^^^
 //│ ║  l.117: 	  + 4 then 1
 //│ ╙──       	^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :pt
 :re

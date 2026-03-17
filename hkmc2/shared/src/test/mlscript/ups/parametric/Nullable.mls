@@ -58,7 +58,7 @@ null is Optional(Int) as Some(42)
 :e
 // Test the error message.
 fun toIntOption(x) = if x is (@compile Optional) as o then o
-//│ ╔══[ERROR] Pattern `Optional` has one pattern parameter.
+//│ ╔══[COMPILATION ERROR] Pattern `Optional` has one pattern parameter.
 //│ ║  l.47: 	pattern Optional(pattern T) = (null => None) | ((T as x) => Some(x))
 //│ ║        	                         ^
 //│ ╟── But zero pattern arguments were provided.

@@ -213,12 +213,12 @@ class ParseRules(using State):
         Expr(
           ParseRule(s"${kind.desc} head")(
             discardKw(`=`):
-              ParseRule(s"${kind.desc} declaration equals sign"):
-                Expr(
+              ParseRule(s"${kind.desc} declaration equals sign")(
+                exprOrBlk(
                   ParseRule(s"${kind.desc} declaration right-hand side")(
                     end(())
                   )
-                ) { case (rhs, ()) => S(rhs) },
+                ) { case (rhs, ()) => S(rhs) }*),
             end(N),
           )
         ) { (lhs, rhs) => TypeDef(kind, lhs, rhs) }
