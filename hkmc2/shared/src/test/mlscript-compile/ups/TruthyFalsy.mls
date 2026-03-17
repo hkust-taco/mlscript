@@ -16,7 +16,12 @@ pattern Falsy =
   false | And(Falsy, Falsy) | And(Falsy, Truthy) |
   And(Truthy, Falsy) | Or(Falsy, Falsy) | Not(Truthy)
 
-fun isTruthy_naive(expr) = expr is Truthy
-fun isFalsy_naive(expr) = expr is Falsy
-fun isTruthy_optimized(expr) = expr is @compile Truthy
-fun isFalsy_optimized(expr) = expr is @compile Falsy
+fun isTruthy_naive(t) = t is Truthy
+fun isTruthy_optimized(t) =
+  if t is (@compile Truthy) as s then s else ()
+fun isTruthy_optimized_matchOnly(t) = t is @compile Truthy
+
+fun isFalsy_naive(t) = t is Falsy
+fun isFalsy_optimized(t) =
+  if t is (@compile Falsy) as s then s else ()
+fun isFalsy_optimized_matchOnly(t) = t is @compile Falsy

@@ -1,3 +1,5 @@
+open annotations
+
 module EvenOddTree with ...
 
 object A
@@ -16,3 +18,13 @@ pattern EvenTree =
   B |
   Node(EvenTree, A, OddTree) | Node(OddTree, A, EvenTree) |
   Node(EvenTree, B, EvenTree) | Node(OddTree, B, OddTree)
+
+fun isOddTree_naive(t) = t is OddTree
+fun isOddTree_optimized(t) =
+  if t is (@compile OddTree) as s then s else ()
+fun isOddTree_optimized_matchOnly(t) = t is @compile OddTree
+
+fun isEvenTree_naive(t) = t is EvenTree
+fun isEvenTree_optimized(t) =
+  if t is (@compile EvenTree) as s then s else ()
+fun isEvenTree_optimized_matchOnly(t) = t is @compile EvenTree

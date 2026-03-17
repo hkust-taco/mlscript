@@ -1,6 +1,7 @@
 import "../Option.mls"
 
 open Option { Some, None }
+open annotations
 
 module EvaluationContext with ...
 
@@ -75,3 +76,8 @@ pattern Ctx(pattern Hole) =
 pattern Redex = App(Abs(Var(x), m), Abs as n) => subst(m, x, n)
 
 pattern Step = (Ctx(Redex) as res) => res
+
+fun isStep_naive(t) = t is Step
+fun isStep_optimized(t) =
+  if t is (@compile Step) as s then s else ()
+fun isStep_optimized_matchOnly(t) = t is @compile Step
