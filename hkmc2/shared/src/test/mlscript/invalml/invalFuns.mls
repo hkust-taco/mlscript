@@ -69,7 +69,7 @@ fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╔══[COMPILATION ERROR] Unsupported type parameter outer binding
 //│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╙──      	        ^^^^^
-//│ ╔══[COMPILATION ERROR] Unsupported type parameter infix operator '<:'
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter operator application
 //│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╙──      	               ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: R
