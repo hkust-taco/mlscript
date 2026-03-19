@@ -8,6 +8,7 @@ import utils.*
 import hkmc2.semantics.{Elaborator, Resolver, Resolvable, Symbol, SymbolPrinter}
 
 import semantics.Elaborator.Ctx
+import hkmc2.Inliner
 
 abstract class MLsDiffMaker extends DiffMaker:
   
@@ -113,6 +114,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       rewriteWhileLoops = rewriteWhile.isSet,
       tailRecOpt = !noTailRecOpt.isSet,
       deforest = Opt.when(deforest.isSet)(Deforest.default),
+      inliner = S(Config.Inliner(1)),
       qqEnabled = importQQ.isSet,
       funcToCls = funcToCls.isSet,
     )
