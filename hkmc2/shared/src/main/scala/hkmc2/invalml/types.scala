@@ -158,7 +158,7 @@ sealed abstract class BasicType extends Type:
     case NegType(ty) => Type.mkNegType(f(ty))
     case Top | Bot | _: InfVar => this
     
-  override def show(using scope: Scope, invCtx: InvalCtx, raise: Raise): Str =
+  override def show(using Scope, InvalCtx, Raise): Str =
     def printEff(eff: Type) = eff match
       case Bot => ""
       // case ty if ty == allocSkolem => ""
@@ -287,7 +287,7 @@ case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], body: GeneralType) exte
 
   override lazy val isPoly: Bool = true
   override lazy val lvl: Int = (body :: tvs).map(_.lvl).max
-  override def show(using scope: Scope, invCtx: InvalCtx, raise: Raise): Str =
+  override def show(using Scope, InvalCtx, Raise): Str =
     given Scope = scope.nest
     val lst = (outer match {
       case S(outer) =>

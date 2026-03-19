@@ -25,7 +25,6 @@ final case class InvalCtx(
   lvl: Int,
   env: HashMap[Uid[Symbol], GeneralType],
   outRegAcc: Type,
-  // outVar: Option[InfVar],
   symbolCache: HashMap[Str, TypeSymbol],
 ):
   def +=(p: Symbol -> GeneralType): Unit = env += p._1.uid -> p._2
@@ -40,12 +39,8 @@ final case class InvalCtx(
     copy(parent = Some(this), lvl = lvl + 1, env = HashMap.empty, outRegAcc = outRegAcc | reg)
   def nestWithOuter(outer: InfVar): InvalCtx =
     copy(parent = Some(this), lvl = lvl + 1, env = HashMap.empty, outRegAcc = outRegAcc | outer)
-  // def getRegEnv: Type = outVar match
-  //   case S(v) => v | outRegAcc
-  //   case N => outRegAcc
   def getRegEnv: Type = outRegAcc
 
-// object InvalCtx:
 def invalctx(using ctx: InvalCtx): InvalCtx = ctx
 
 given (using ctx: InvalCtx): Raise = ctx.raise
