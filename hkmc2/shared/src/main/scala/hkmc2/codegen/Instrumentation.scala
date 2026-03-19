@@ -27,18 +27,17 @@ class Instrumentation(using State, Raise, Ctx) extends BlockTransformer(new Symb
   // TODO: there could be a fresh scope per function body, instead of a single one for the entire program
   val scope = Scope.empty(Scope.Cfg.default)
 
-  def asArg(x: ArgWrappable): Arg =
-    x match
+  def asArg(x: ArgWrappable): Arg = x match
     case p: Path => p.asArg
     case l: Symbol => l.asPath.asArg
 
   // null and undefined are missing
   def toValue(lit: Str | Int | BigDecimal | Bool): Value =
     val l = lit match
-    case i: Int => Tree.IntLit(i)
-    case b: Bool => Tree.BoolLit(b)
-    case s: Str => Tree.StrLit(s)
-    case n: BigDecimal => Tree.DecLit(n)
+      case i: Int => Tree.IntLit(i)
+      case b: Bool => Tree.BoolLit(b)
+      case s: Str => Tree.StrLit(s)
+      case n: BigDecimal => Tree.DecLit(n)
     Value.Lit(l)
 
   extension [A, B](ls: Ls[(A => B) => B])
@@ -95,8 +94,7 @@ class Instrumentation(using State, Raise, Ctx) extends BlockTransformer(new Symb
   // transformation helpers
 
   // if sym is ClassSymbol, we may need pOpt to link to the path pointing to the value of the symbol
-  def transformSymbol(sym: Symbol, pOpt: Option[Path] = N, symName: Str = "sym")(k: Path => Block): Block =
-    sym match
+  def transformSymbol(sym: Symbol, pOpt: Option[Path] = N, symName: Str = "sym")(k: Path => Block): Block = sym match
     case t: TermSymbol if t.defn.exists(_.sym.asClsOrMod.isDefined) =>
       transformSymbol(t.defn.get.sym.asClsOrMod.get, pOpt, symName)(k)
     // retain names to built-in functions or function definitions
@@ -109,29 +107,28 @@ class Instrumentation(using State, Raise, Ctx) extends BlockTransformer(new Symb
     case baseSym: BaseTypeSymbol =>
       val name = scope.allocateOrGetName(sym)
       val (owner, bsym, paramsOpt, auxParams) = (baseSym.defn, defnMap.get(baseSym)) match
-      case (S(defn), _) => (defn.owner, defn.bsym, defn.paramsOpt, defn.auxParams)
-      case (_, S(defn: ClsLikeDefn)) => (defn.owner, defn.sym, defn.paramsOpt, defn.auxParams)
-      case _ =>
-        raise(ErrorReport(msg"Unable to infer parameters from symbol in staged module, which are necessary to reconstruct class instances: ${sym.toString()}" -> sym.toLoc :: Nil))
-        return End()
+        case (S(defn), _) => (defn.owner, defn.bsym, defn.paramsOpt, defn.auxParams)
+        case (_, S(defn: ClsLikeDefn)) => (defn.owner, defn.sym, defn.paramsOpt, defn.auxParams)
+        case _ =>
+          raise(ErrorReport(msg"Unable to infer parameters from symbol in staged module, which are necessary to reconstruct class instances: ${sym.toString()}" -> sym.toLoc :: Nil))
+          return End()
 
       val path: ArgWrappable = pOpt.getOrElse(owner match
-      case S(owner) => owner.asPath.selSN(sym.nme)
-      case N => bsym)
+        case S(owner) => owner.asPath.selSN(sym.nme)
+        case N => bsym)
       baseSym match
-      case _: ClassSymbol =>
-        transformParamsOpt(paramsOpt): paramsOpt =>
-          auxParams.map(ps => transformParamList(ps)).collectApply: auxParams =>
-            tuple(auxParams): auxParams =>
-              blockCtor("ClassSymbol", Ls(toValue(name), path, paramsOpt, auxParams), symName)(k)
-      case _: ModuleOrObjectSymbol =>
-        blockCtor("ModuleSymbol", Ls(toValue(name), path), symName)(k)
+        case _: ClassSymbol =>
+          transformParamsOpt(paramsOpt): paramsOpt =>
+            auxParams.map(ps => transformParamList(ps)).collectApply: auxParams =>
+              tuple(auxParams): auxParams =>
+                blockCtor("ClassSymbol", Ls(toValue(name), path, paramsOpt, auxParams), symName)(k)
+        case _: ModuleOrObjectSymbol =>
+          blockCtor("ModuleSymbol", Ls(toValue(name), path), symName)(k)
     case _ =>
       val name = scope.allocateOrGetName(sym)
       blockCtor("Symbol", Ls(toValue(name)), symName)(k)
 
-  def transformOption[A](xOpt: Opt[A], f: A => (Path => Block) => Block)(k: Path => Block): Block =
-    xOpt match
+  def transformOption[A](xOpt: Opt[A], f: A => (Path => Block) => Block)(k: Path => Block): Block = xOpt match
     case S(x) => f(x)(optionSome(_)(k))
     case N => optionNone()(k)
 
@@ -155,10 +152,10 @@ class Instrumentation(using State, Raise, Ctx) extends BlockTransformer(new Symb
             // TODO: use transformOption here
             def dfltStaged(k: (Path, Context) => Block) =
               dflt match
-              case S(dflt) =>
-                transformBlock(dflt)(using ctx.clone() += p -> x): (dflt, ctx) =>
-                  optionSome(dflt)(k(_, ctx.clone() -= p))
-              case N => optionNone()(k(_, ctx))
+                case S(dflt) =>
+                  transformBlock(dflt)(using ctx.clone() += p -> x): (dflt, ctx) =>
+                    optionSome(dflt)(k(_, ctx.clone() -= p))
+                case N => optionNone()(k(_, ctx))
             dfltStaged: (dflt, ctx) =>
               blockCtor("Match", Ls(x, arms, dflt, e), symName)(k(_, ctx))
 
@@ -168,27 +165,26 @@ class Instrumentation(using State, Raise, Ctx) extends BlockTransformer(new Symb
     // rulePath
     ctx.get(p).map(k).getOrElse:
       p match
-      case Value.Ref(l, disamb) =>
-        transformSymbol(disamb.getOrElse(l)): sym =>
-          blockCtor("ValueRef", Ls(sym), "var")(k)
-      case l: Value.Lit =>
-        blockCtor("ValueLit", Ls(l), "lit")(k)
-      case s @ Select(p, Tree.Ident(name)) =>
-        transformPath(p): x =>
-          val sym = s.symbol.map(transformSymbol(_, S(s)))
-            .getOrElse(blockCtor("Symbol", Ls(toValue(name))))
-          sym: sym =>
-            blockCtor("Select", Ls(x, sym), "sel")(k)
-      case DynSelect(qual, fld, arrayIdx) =>
-        transformPath(qual): x =>
-          transformPath(fld): y =>
-            blockCtor("DynSelect", Ls(x, y, toValue(arrayIdx)), "dynsel")(k)
-      case _: Value.This =>
-        raise(ErrorReport(msg"Value.This not supported in staged module." -> p.toLoc :: Nil))
-        End()
+        case Value.Ref(l, disamb) =>
+          transformSymbol(disamb.getOrElse(l)): sym =>
+            blockCtor("ValueRef", Ls(sym), "var")(k)
+        case l: Value.Lit =>
+          blockCtor("ValueLit", Ls(l), "lit")(k)
+        case s @ Select(p, Tree.Ident(name)) =>
+          transformPath(p): x =>
+            val sym = s.symbol.map(transformSymbol(_, S(s)))
+              .getOrElse(blockCtor("Symbol", Ls(toValue(name))))
+            sym: sym =>
+              blockCtor("Select", Ls(x, sym), "sel")(k)
+        case DynSelect(qual, fld, arrayIdx) =>
+          transformPath(qual): x =>
+            transformPath(fld): y =>
+              blockCtor("DynSelect", Ls(x, y, toValue(arrayIdx)), "dynsel")(k)
+        case _: Value.This =>
+          raise(ErrorReport(msg"Value.This not supported in staged module." -> p.toLoc :: Nil))
+          End()
 
-  def transformResult(r: Result)(using Context)(k: Path => Block): Block =
-    r match
+  def transformResult(r: Result)(using Context)(k: Path => Block): Block = r match
     case p: Path => transformPath(p)(k)
     case Tuple(mut, elems) =>
       assert(!mut, "mutable tuple not supported")
@@ -202,8 +198,7 @@ class Instrumentation(using State, Raise, Ctx) extends BlockTransformer(new Symb
           tuple(xs.map(_._1)): codes =>
             blockCtor("Instantiate", Ls(cls, codes), "inst")(k)
     case Call(fun, args) =>
-      val stagedFunPath =
-        fun match
+      val stagedFunPath = fun match
         case s @ Select(qual, Tree.Ident(name)) => s.symbol.flatMap({
             case t: TermSymbol => t.owner.flatMap({ case sym: DefinitionSymbol[?] =>
                 sym.defn.flatMap(_.hasStagedModifier.map(_ =>
@@ -242,8 +237,7 @@ class Instrumentation(using State, Raise, Ctx) extends BlockTransformer(new Symb
   def transformParamsOpt(pOpt: Opt[ParamList])(k: Path => Block) =
     transformOption(pOpt, transformParamList)(k)
 
-  def transformCase(cse: Case)(using Context)(k: Path => Block): Block =
-    cse match
+  def transformCase(cse: Case)(using Context)(k: Path => Block): Block = cse match
     case Case.Lit(lit) => blockCtor("Lit", Ls(Value.Lit(lit)))(k)
     case Case.Cls(cls, path) =>
       transformSymbol(cls): cls =>
@@ -261,8 +255,7 @@ class Instrumentation(using State, Raise, Ctx) extends BlockTransformer(new Symb
   def transformBlock(b: Block)(using Context)(k: Path => Block): Block =
     transformBlock(b)((p, _) => k(p))
 
-  def transformBlock(b: Block)(using ctx: Context)(k: (Path, Context) => Block): Block =
-    b match
+  def transformBlock(b: Block)(using ctx: Context)(k: (Path, Context) => Block): Block = b match
     case Return(res, implct) =>
       transformResult(res): x =>
         blockCtor("Return", Ls(x, toValue(implct)), "return")(k(_, ctx))
@@ -340,8 +333,7 @@ class Instrumentation(using State, Raise, Ctx) extends BlockTransformer(new Symb
     val newFun = f.copy(sym = genSym, dSym = dSym, params = Ls(PlainParamList(Nil)), body = newBody)(false)
     (newFun, debug)
 
-  override def applyBlock(b: Block): Block =
-    super.applyBlock(b) match
+  override def applyBlock(b: Block): Block = super.applyBlock(b) match
     // find modules with staged annotation
     case Define(c: ClsLikeDefn, rest) if c.companion.exists(_.isym.defn.exists(_.hasStagedModifier.isDefined)) =>
       val sym = c.sym.subst
@@ -359,13 +351,13 @@ class Instrumentation(using State, Raise, Ctx) extends BlockTransformer(new Symb
       // add generator functions for classes within the constructor
       val genCls = new BlockTransformer(new SymbolSubst()):
         override def applyBlock(b: Block): Block = super.applyBlock(b) match
-        case Define(c: ClsLikeDefn, rest) if c.companion.isEmpty =>
-          val (stagedMethods, debugPrintCode) = c.methods
-            .map(applyFunDefnInner)
-            .unzip
-          val newModule = c.copy(methods = c.methods ++ stagedMethods)
-          Define(newModule, rest)
-        case b => b
+          case Define(c: ClsLikeDefn, rest) if c.companion.isEmpty =>
+            val (stagedMethods, debugPrintCode) = c.methods
+              .map(applyFunDefnInner)
+              .unzip
+            val newModule = c.copy(methods = c.methods ++ stagedMethods)
+            Define(newModule, rest)
+          case b => b
       val newCtor = genCls.applyBlock(companion.ctor)
       val newCompanion = companion.copy(methods = stagedCtor :: companion.methods ++ stagedMethods, ctor = newCtor.mapTail(debugCont))
       val newModule = c.copy(sym = sym, companion = S(newCompanion))
@@ -375,10 +367,10 @@ class Instrumentation(using State, Raise, Ctx) extends BlockTransformer(new Symb
   def mkDefnMap(b: Block): Unit =
     val transformer = new BlockTraverser:
       override def applyDefn(defn: Defn) = defn match
-      case c: ClsLikeDefn =>
-        defnMap.addOne(c.isym, c)
-        super.applyDefn(defn)
-      case _ => super.applyDefn(defn)
+        case c: ClsLikeDefn =>
+          defnMap.addOne(c.isym, c)
+          super.applyDefn(defn)
+        case _ => super.applyDefn(defn)
     transformer.applyBlock(b)
 
   def applyBlockFinal(b: Block) =
