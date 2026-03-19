@@ -1,12 +1,13 @@
 package hkmc2
 
+import scala.collection.mutable
+
 import mlscript.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.codegen.*
 import hkmc2.semantics.*
-
-import scala.collection.mutable
+import semantics.Elaborator.State
 
 object Inliner:
   object TermSymbolPath:
@@ -16,6 +17,26 @@ object Inliner:
         case S(ts: TermSymbol) => S(ts)
         case _ => N
       case _ => N
+  
+  def matchArgs(args: List[Arg], params: ParamList): Option[List[(Local, Result)]] =
+    if args.exists(_.spread.isDefined) then
+      // we require a precise match when any arg is a spread arg
+      if params.restParam.isEmpty then return N
+      if args.exists(_.spread.exists(!_.isEager)) then return N
+      val pairs = args.zip(params.params.iterator.map((_, false)) ++ params.restParam.map((_, true)))
+      if pairs.exists((arg, param) => arg.spread.isDefined =/= param._2) then return N
+      S(pairs.map((arg, param) => (param._1.sym, arg.value)))
+    else
+      // otherwise arg list is a simple list, and
+      // we can perform manual array instantiation if params contain a spread param
+      if params.restParam.isEmpty then
+        if args.size =/= params.params.size then return N
+        S(args.zip(params.params).map((arg, param) => (param.sym, arg.value)))
+      else
+        if args.size < params.params.size then return N
+        val (fixedArgs, restArgs) = args.splitAt(params.params.size)
+        S(fixedArgs.zip(params.params).map((arg, param) => (param.sym, arg.value)) ++
+          List((params.restParam.get.sym, Tuple(true, restArgs))))
 
 import Inliner.*
 
@@ -28,9 +49,12 @@ object InlinerAnalyzer:
     private[InlinerAnalyzer] var hasNakedRef: Bool,
   ):
     def canBeInlineEliminated =
-      isPrivate && !isMethod && useCount <= 1 && !hasNakedRef
+      // isPrivate && !isMethod && useCount <= 1 && !hasNakedRef
+      false
 
-    def shouldBeInlined(newBlk: Block)(using Config.Inliner) =
+    def shouldBeInlined(newBlk: Block)(using Config.Inliner): Bool =
+      // method requires the capturing of `this`, which is not supported currently.
+      if isMethod then return false
       val threshold = summon[Config.Inliner].inlineThreshold
       newBlk.size <= threshold || canBeInlineEliminated
 
@@ -39,6 +63,7 @@ object InlinerAnalyzer:
   class Traverser extends BlockTraverser:
     var map: InlinerMap = Map.empty
     val useCnt = mutable.Map.WithDefault(mutable.Map.empty[TermSymbol, Int], _ => 0)
+    val usages = mutable.Map.WithDefault(mutable.Map.empty[TermSymbol, List[Call]], _ => Nil)
     val hasNakedRef = mutable.Map.WithDefault(mutable.Map.empty[TermSymbol, Bool], _ => false)
     var isNested = false
     
@@ -49,7 +74,7 @@ object InlinerAnalyzer:
       isNested = saved
 
     def addFunctionAndApplyBody(f: FunDefn, isMethod: Bool) =
-      map = map + (f.dSym -> InlinerFunInfo(f, isMethod, !isNested, 0, false))
+      map = map + (f.dSym -> InlinerFunInfo(f, isMethod, isNested, 0, false))
       nested:
         applyBlock(f.body)
     
@@ -65,13 +90,13 @@ object InlinerAnalyzer:
         c.companion.foreach: m =>
           m.methods.foreach: f =>
             addFunctionAndApplyBody(f, true)
-          nested:
-            applySubBlock(m.ctor)
+          applySubBlock(m.ctor)
       case _ => super.applyDefn(defn)
 
     override def applyResult(r: Result): Unit = r match
       case c @ Call(TermSymbolPath(ts), args) =>
         useCnt(ts) += 1
+        usages(ts) ::= c
         args.foreach(applyArg)
       case _ => super.applyResult(r)
     
@@ -84,6 +109,11 @@ object InlinerAnalyzer:
       applyBlock(blk)
       map.foreach: (sym, info) =>
         info.useCount = useCnt(sym)
+      usages.foreach: (sym, calls) =>
+        calls.foreach: call =>
+          if map.contains(sym) then
+          map(sym).hasNakedRef = map(sym).hasNakedRef ||
+            map(sym).defn.params.sizeCompare(1) =/= 0 || matchArgs(call.args, map(sym).defn.params.head).isEmpty
       map
 
   def walk(blk: Block): InlinerMap = Traverser().analyze(blk)
@@ -93,9 +123,78 @@ import InlinerAnalyzer.InlinerMap
 
 object InlinerReplacer:
 
-  object Copier extends BlockTransformer(SymbolSubst())
+  class Copier(doRename: Bool)(using State):
+    val needsSub = mutable.Set.empty[Symbol]
+    val subMap = mutable.Map.empty[Symbol, Symbol]
+    val resSym = TempSymbol(N, "inlinedVal")
+    val lblSym = LabelSymbol(N, "inlinedLbl")
+  
+    def addRenamedSymbol(sym: Symbol) =
+      assert(!subMap.contains(sym), s"Symbol ${sym} is already renamed.")
+      if doRename then
+        needsSub += sym
+    
+    def doSymbolSubst(orig: Symbol, newSym: => Symbol): Symbol =
+      if needsSub(orig) then
+        subMap.getOrElseUpdate(orig, newSym)
+      else
+        orig
 
-  class Transformer(m: InlinerMap)(using Config.Inliner) extends BlockTransformer(SymbolSubst()):
+    object Subst extends SymbolSubst:
+      override def mapBlockMemberSym(s: BlockMemberSymbol): BlockMemberSymbol =
+        doSymbolSubst(s, BlockMemberSymbol(s.nme, s.trees, s.nameIsMeaningful)).asInstanceOf
+      override def mapFlowSym(s: FlowSymbol): FlowSymbol =
+        doSymbolSubst(s, FlowSymbol(s.nme)).asInstanceOf
+      override def mapTempSym(s: TempSymbol): TempSymbol =
+        doSymbolSubst(s, TempSymbol(s.trm, s.nme)).asInstanceOf
+      override def mapVarSym(s: VarSymbol): VarSymbol =
+        doSymbolSubst(s, VarSymbol(s.id)).asInstanceOf
+      override def mapInstSym(s: InstSymbol): InstSymbol =
+        doSymbolSubst(s, InstSymbol(s.origin)).asInstanceOf
+      override def mapBuiltInSym(s: BuiltinSymbol): BuiltinSymbol =
+        // We shouldn't define any builtin so this doesn't make sense.
+        doSymbolSubst(s, ???).asInstanceOf
+      override def mapTermSym(s: TermSymbol): TermSymbol =
+        doSymbolSubst(s, TermSymbol(s.k, s.owner, s.id)).asInstanceOf
+      override def mapCtorSym(s: CtorSymbol): CtorSymbol =
+        doSymbolSubst(s, ???).asInstanceOf
+      override def mapClsSym(s: ClassSymbol): ClassSymbol =
+        doSymbolSubst(s, ClassSymbol(s.tree, s.id)).asInstanceOf
+      override def mapModuleSym(s: ModuleOrObjectSymbol): ModuleOrObjectSymbol =
+        doSymbolSubst(s, ModuleOrObjectSymbol(s.tree, s.id)).asInstanceOf
+      override def mapTypeAliasSym(s: TypeAliasSymbol): TypeAliasSymbol =
+        doSymbolSubst(s, TypeAliasSymbol(s.id)).asInstanceOf
+      override def mapPatSym(s: PatternSymbol): PatternSymbol =
+        doSymbolSubst(s, PatternSymbol(s.id, s.params, s.body)).asInstanceOf
+      override def mapTopLevelSym(s: TopLevelSymbol): TopLevelSymbol =
+        doSymbolSubst(s, TopLevelSymbol(s.nme)).asInstanceOf
+      override def mapErrorSym(s: ErrorSymbol): ErrorSymbol =
+        doSymbolSubst(s, ErrorSymbol(s.nme, s.tree)).asInstanceOf
+      override def mapLabelSym(s: LabelSymbol): LabelSymbol =
+        doSymbolSubst(s, LabelSymbol(s.trm, s.nme)).asInstanceOf
+
+    object Copier extends BlockTransformer(Subst):
+      var currentlyNested = false
+
+      override def applyFunBodyLikeBlock(b: Block): Block =
+        val saved = currentlyNested
+        currentlyNested = true
+        val res = super.applyFunBodyLikeBlock(b)
+        currentlyNested = saved
+        res
+
+      override def applyBlock(b: Block): Block = b match
+        case Scoped(syms, body) if !currentlyNested =>
+          syms.foreach(addRenamedSymbol)
+          super.applyBlock(b)
+        case Return(res, false) if !currentlyNested =>
+          applyResult(res): r2 =>
+            Assign(resSym, r2, Break(lblSym))
+        case _ => super.applyBlock(b)
+
+    def applyBlock(blk: Block) = (Label(lblSym, false, Copier.applyBlock(blk), _), resSym)
+
+  class Transformer(m: InlinerMap)(using Config.Inliner, State) extends BlockTransformer(SymbolSubst()):
 
     // The call graph may be cyclic, in which case we break the infinite loop using this map by
     // assuring that the block corresponding to a term symbol may only be transformed once.
@@ -108,7 +207,7 @@ object InlinerReplacer:
     override def applyBlock(blk: Block) = blk match
       case Define(defn: FunDefn, rest) if m(defn.dSym).canBeInlineEliminated =>
         applyBlock(rest)
-      case _ => applyBlock(blk)
+      case _ => super.applyBlock(blk)
     
     override def applyFunDefn(fun: FunDefn): FunDefn =
       newFunctionBody.get(fun.dSym) match
@@ -131,18 +230,30 @@ object InlinerReplacer:
           newFunctionBody(ts) = S(newBdy)
           S(newBdy)
         .fold(super.applyResult(r)(k)): blk =>
-          if !m(ts).shouldBeInlined(blk) then super.applyResult(r)(k)
+          val info = m(ts)
+          if !info.shouldBeInlined(blk) || info.defn.params.size =/= 1 then super.applyResult(r)(k)
           else
-            // Depends on whether the source is eliminated, we can reuse the original block.
-            // Otherwise, we need to change all the symbols defined within Scoped blocks.
-            val copied = if m(ts).canBeInlineEliminated then blk else
-              ???
+            val matchedArgs = matchArgs(args, info.defn.params.head)
+            matchedArgs match
+            case N => super.applyResult(r)(k)
+            case S(matchedArgs) =>
+              // Depends on whether the source is eliminated, we can reuse symbol from the original block.
+              val copier = Copier(doRename = !info.canBeInlineEliminated)
+              def go(acc: Block => Block, args: List[(Local, Result)]): Block =
+                args match
+                case Nil =>
+                  val (newBlk, resSym) = copier.applyBlock(blk)
+                  acc(Scoped(Set.single(copier.resSym), newBlk(k(Value.Ref(resSym)))))
+                case (sym, value) :: rest =>
+                  copier.addRenamedSymbol(sym)
+                  go(acc.assignScoped(sym.subst(using copier.Subst), value), rest)
+              go(blockBuilder, matchedArgs)
       case _ => super.applyResult(r)(k)
 
-  def replace(m: InlinerMap, blk: Block)(using Config.Inliner): Block =
+  def replace(m: InlinerMap, blk: Block)(using Config.Inliner, State): Block =
     Transformer(m).applyBlock(blk)
 
-class Inliner(using Config.Inliner, TL):
+class Inliner(using Config.Inliner, TL, State):
   def applyBlock(blk: Block) =
     val m = InlinerAnalyzer.walk(blk)
     InlinerReplacer.replace(m, blk)
