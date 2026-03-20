@@ -183,6 +183,8 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         val symbol = TempSymbol(N, label.asFieldName + "$")
         val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
         val split = makeSplit(
+          // There is no topmost transform here, so we emit the direct success
+          // value: `MatchSuccess` in full mode, `true` in match-only mode.
           makeConsequent = (outputSymbol, bindings) => Split.Else:
             successfulMatchResult(outputSymbol, bindings),
           alternative = Split.Else(emptyMatchResult("topmost")))
