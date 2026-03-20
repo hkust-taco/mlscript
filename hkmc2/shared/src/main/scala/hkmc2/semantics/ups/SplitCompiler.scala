@@ -133,12 +133,8 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     case Constructor(target, arguments) => target.resolvedSym.flatMap(_.asPat).exists: patternSymbol =>
       val defn = patternSymbol.defn.getOrElse:
         lastWords(s"Pattern `${patternSymbol.nme}` has not been elaborated.")
-      // This check is only used to pick full vs match-only compilation.
-      // Reuse the argument pairing logic, but suppress diagnostics here so we
-      // don't report the same user error twice.
-      given Raise = Function.const(())
       val (_, extractionMatches, _) =
-        matchParametersWithArguments(scrutinee, defn, arguments)
+        matchParametersWithArguments(scrutinee, defn, arguments, reportErrors = false)
       extractionMatches.exists(_.nonEmpty)
     case _ => false
   
@@ -339,7 +335,8 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   private def matchParametersWithArguments(
       scrutinee: Scrut,
       defn: PatternDef,
-      arguments: Opt[Ls[SP]]
+      arguments: Opt[Ls[SP]],
+      reportErrors: Bool = true
   )(using Raise): (Ls[SP], Opt[Ls[SP]], Bool) =
     val argumentCount = arguments.fold(0)(_.length)
     val patternParameterCount = defn.patternParams.length
@@ -347,9 +344,10 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     if argumentCount < patternParameterCount then
       // Since pattern parameters are required, if the total number of arguments
       // is less than this number, the pattern matching is definitely incorrect.
-      error:
-        msg"Expected ${"pattern argument" countBy patternParameterCount
-        }, but found only ${"pattern argument" countBy argumentCount}." -> loc
+      if reportErrors then
+        error:
+          msg"Expected ${"pattern argument" countBy patternParameterCount
+          }, but found only ${"pattern argument" countBy argumentCount}." -> loc
       (Nil, N, true)
     else arguments match
       // Now that the number of pattern parameters can definitely be satisfied,
@@ -376,10 +374,11 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
           case outputPattern :: Nil if defn.parameters.isEmpty =>
             (Nil, S(outputPattern :: Nil), false)
           case _ :: _ | Nil =>
-            error:
-              msg"Expected ${"extraction argument" countBy extractionParameterCount
-              }, but found ${if extractionArgumentCount < extractionParameterCount then "only " else ""
-              }${"argument" countBy extractionArgumentCount}." -> loc
+            if reportErrors then
+              error:
+                msg"Expected ${"extraction argument" countBy extractionParameterCount
+                }, but found ${if extractionArgumentCount < extractionParameterCount then "only " else ""
+                }${"argument" countBy extractionArgumentCount}." -> loc
             (Nil, N, true)
   
   /**
