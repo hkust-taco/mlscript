@@ -445,12 +445,6 @@ object Compiler:
         sel.resolve
       case _: Term => term
     type ClassLikeDefnSymbol = ClassSymbol | ModuleOrObjectSymbol | PatternSymbol
-    def isMatchingSymbol(candidate: ClassLikeDefnSymbol): Bool =
-      (candidate is symbol) || ((candidate, symbol) match
-        case (_: ClassSymbol, _: ClassSymbol) => candidate.nme === symbol.nme
-        case (_: ModuleOrObjectSymbol, _: ModuleOrObjectSymbol) => candidate.nme === symbol.nme
-        case (_: PatternSymbol, _: PatternSymbol) => candidate.nme === symbol.nme
-        case _ => false)
     def classLikeCandidates(symbol: Symbol): Iterator[ClassLikeDefnSymbol] = symbol match
       case symbol: ClassLikeDefnSymbol =>
         Iterator.single(symbol)
@@ -466,7 +460,7 @@ object Compiler:
         member: Symbol
     ): Opt[Term] =
       classLikeCandidates(member).collectFirst:
-        case candidate if isMatchingSymbol(candidate) =>
+        case candidate if candidate is symbol =>
           val memberSymbol = candidate.defn.get.bsym
           SynthSel(ownerRef, new Ident(key).withLoc(loc))(S(memberSymbol), FlowSymbol.synthSel(key), N, S(summon))
             .resolved(candidate)
@@ -477,7 +471,7 @@ object Compiler:
       .firstSome
     def findSymbol(elem: Ctx.Elem): Opt[Term] =
       val direct = elem.symbol.iterator.flatMap(classLikeCandidates).collectFirst:
-        case candidate if isMatchingSymbol(candidate) =>
+        case candidate if candidate is symbol =>
           elem.ref(new Ident(candidate.nme)).withLoc(loc).resolved(candidate)
       direct.orElse:
         elem.symbol.iterator.collectFirst:
