@@ -269,7 +269,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               mod.classCompanion match
               case S(comp) => comp.defn.getOrElse(wat("Module companion without definition", mod.companion))
               case N =>
-                // val clsSymb = new ClassSymbol(Tree.DummyTypeDef(syntax.Cls), mod.sym.id)
                 val stagedAnnots = mod.annotations.collect { 
                   case Annot.Modifier(Keyword.`staged`) => Annot.Modifier(Keyword.`staged`) 
                 }
@@ -1106,7 +1105,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       if config.funcToCls then Lifter(FirstClassFunctionTransformer().transform(merged)).transform
       else merged
 
-    val staged = Instrumentation(using summon).applyBlock(funcToCls)
+    val staged = Instrumentation(using summon).applyBlockFinal(funcToCls)
     
     val res =
       if config.tailRecOpt then TailRecOpt().transform(staged)

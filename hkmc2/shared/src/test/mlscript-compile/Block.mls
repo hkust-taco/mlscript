@@ -17,9 +17,11 @@ type Literal = null | undefined | Str | Int | Num | Bool
 type ParamList = Array[Symbol]
 
 class Symbol(val name: Str)
-type Ident = Symbol
-// this is so that we're able to retrieve information about the class from the symbol
-class ClassSymbol(val name: Str, val paramsOpt: Opt[ParamList]) extends Symbol(name)
+class VirtualClassSymbol(val name: Str) extends Symbol(name)
+class ClassSymbol(val name: Str, val value, val paramsOpt: Option[ParamList], val auxParams: Array[ParamList]) extends Symbol(name)
+class ModuleSymbol(val name: Str, val value) extends Symbol(name)
+
+// Classes defined in Block.scala
 
 class Arg(val value: Path) 
 
@@ -37,7 +39,7 @@ class Result with
 
 class Path extends Result with
   constructor
-    Select(val qual: Path, val name: Ident)
+    Select(val qual: Path, val name: Symbol)
     DynSelect(val qual: Path, val fld: Path, val arrayIdx: Bool) // is arrayIdx used?
     ValueRef(val l: Symbol)
     ValueLit(val lit: Literal)
@@ -82,22 +84,12 @@ fun showLiteral(l: Literal) =
     else l.toString()
 
 fun showSymbol(s: Symbol) =
-  // console.log("printing " + s)
-  if s is
-    ClassSymbol(name, args) then 
-      "ClassSymbol(" + "\"" + name + "\"" +
-      if args
-          is Some(args) then ":[" + args.map(showSymbol).join(", ") + "]"
-          is None then ""
-      + ")"
-    _ then "Symbol(" + "\"" + s.name + "\"" + ")"
-
-fun showIdent(i: Ident) = showSymbol(i)
+  s.toString()
 
 fun showPath(p: Path): Str =
   if p is
     Select(qual, name) then
-      "Select(" + showPath(qual) + ", " + showIdent(name) + ")"
+      "Select(" + showPath(qual) + ", " + showSymbol(name) + ")"
     DynSelect(qual, fld, arrayIdx) then
       "DynSelect(" + showPath(qual) + ", " + showPath(fld) + ", " + showBool(arrayIdx) + ")"
     ValueRef(l) then
