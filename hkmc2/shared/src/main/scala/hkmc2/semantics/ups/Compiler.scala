@@ -24,7 +24,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
 
   private def bool(value: Bool): Term = Term.Lit(BoolLit(value))
 
-  private def isMatchOnly(using mode: ResultMode): Bool = mode === ResultMode.MatchOnly
+  private def isMatchOnly(using mode: ResultMode): Bool = mode is ResultMode.MatchOnly
 
   private def emptyMatchResult(reason: Str)(using mode: ResultMode): Term =
     if isMatchOnly then bool(false) else makeMatchFailure(str(reason))
