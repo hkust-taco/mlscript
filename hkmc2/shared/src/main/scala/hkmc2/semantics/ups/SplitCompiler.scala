@@ -947,32 +947,25 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       else ResultMode.MatchOnly
     // Initate the compilation.
     val compiler = new Compiler(using context)
-    val ((matcherSymbol, fieldName), implementations) = compiler.buildMatcher(synonym, resultMode)
+    val (matcherSymbol, implementations) = compiler.buildMatcher(synonym, resultMode)
     val innermostSplit = resultMode match
       case ResultMode.MatchOnly =>
-        val recordSymbol = TempSymbol(N, "matchRecord")
-        val recordTerm = app(matcherSymbol.safeRef, tup(fld(scrutinee())), "result of matcher function")
         val resultSymbol = TempSymbol(N, "matchSuccess")
-        val resultTerm = sel(recordSymbol.safeRef, fieldName)
-        Split.Let(recordSymbol, recordTerm,
-          Split.Let(resultSymbol, resultTerm,
-            Branch(resultSymbol.safeRef, makeConsequent(scrutinee, SeqMap.empty)) ~: alternative))
+        val resultTerm = app(matcherSymbol.safeRef, tup(fld(scrutinee())), "result of matcher function")
+        Split.Let(resultSymbol, resultTerm,
+          Branch(resultSymbol.safeRef, makeConsequent(scrutinee, SeqMap.empty)) ~: alternative)
       case ResultMode.Full =>
         // 1. Bind the call result to a variable.
         val recordSymbol = TempSymbol(N, "matchRecord")
         val recordTerm = app(matcherSymbol.safeRef, tup(fld(scrutinee())), "result of matcher function")
         val f1 = Split.Let(recordSymbol, recordTerm, _)
-        // 2. Select the selection field to the result.
-        val matchSuccessSymbol = TempSymbol(N, "matchSuccess")
-        val matchSuccessTerm = sel(recordSymbol.safeRef, fieldName)
-        val f2 = Split.Let(matchSuccessSymbol, matchSuccessTerm, _)
-        // 3. Check if the field value is a `MatchSuccess` and bind the output.
+        // 2. Check if the direct result is a `MatchSuccess` and bind the output.
         val outputSymbol = TempSymbol(N, "patternOutput")
         val bindingsSymbol = TempSymbol(N, "bindings") // TODO: This is useless.
         val consequent = makeConsequent(outputSymbol.toScrut, SeqMap.empty)
         val pattern = matchSuccessPattern(S(outputSymbol :: bindingsSymbol :: Nil))
-        val branch = Branch(matchSuccessSymbol.safeRef, pattern, consequent)
-        f1(f2(branch ~: alternative))
+        val branch = Branch(recordSymbol.safeRef, pattern, consequent)
+        f1(branch ~: alternative)
     implementations.iterator.foldRight(innermostSplit):
       case ((symbol, paramList, term), innerSplit) =>
         log(term.showDbg)

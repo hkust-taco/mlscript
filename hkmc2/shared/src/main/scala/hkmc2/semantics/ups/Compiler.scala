@@ -22,6 +22,28 @@ import scala.annotation.tailrec
 class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends TermSynthesizer:
   import Compiler.*, tl.*
 
+  /** A previously-computed matcher result for one field of the current
+    * multi-matcher. The runtime representation is shape-dependent:
+    * singleton-label matchers return the label's value directly, while
+    * multi-label matchers return a record keyed by label field names.
+    */
+  private final case class MatcherResult(symbol: VarSymbol, labels: Set[Label]):
+    /** Read the result for one label from this matcher result, abstracting over
+      * the singleton direct-return optimization.
+      */
+    def select(label: Label): Term =
+      if labels.size is 1 then symbol.safeRef
+      else sel(symbol.safeRef, label.asFieldName)
+    /** Produce the default failure value for this matcher result with the same
+      * shape that a successful submatcher call would have produced.
+      */
+    def default(using ResultMode): Term =
+      labels.toList match
+        case label :: Nil => emptyMatchResult("empty")
+        case labels =>
+          Rcd(false, labels.map: label =>
+            RcdField(str(label.asFieldName), emptyMatchResult("empty")))
+
   private def bool(value: Bool): Term = Term.Lit(BoolLit(value))
 
   private def isMatchOnly(using mode: ResultMode): Bool = mode is ResultMode.MatchOnly
@@ -83,13 +105,13 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
   
   /** Build a matcher function that matches a single pattern. This function
    *  should be applied to the pattern that is considered as the entry point.*/
-  def buildMatcher(pattern: Pat, resultMode: ResultMode): ((BlockLocalSymbol, Str), Ls[Implementation]) = scoped("ucs:compiler"):
+  def buildMatcher(pattern: Pat, resultMode: ResultMode): (BlockLocalSymbol, Ls[Implementation]) = scoped("ucs:compiler"):
     given ResultMode = resultMode
     val entryPointSymbol = buildMultiMatcher(Set(pattern))
     while buildQueue.nonEmpty do
       val (symbol, patterns) = buildQueue.dequeue()
       implementations += (symbol -> buildMultiMatcherBody(patterns))
-    (entryPointSymbol, pattern.label.asFieldName) -> implementations.iterator.map:
+    entryPointSymbol -> implementations.iterator.map:
       case (symbol, (paramList, term)) => (symbol, paramList, term)
     .toList
   
@@ -146,17 +168,13 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
   ):
     val fields = patterns.flatMap((_, p) => p.fields)
     log(s"fields: ${fields.iterator.map(_.showDbg).mkString("{", ", ", "}")}")
-    val subScrutinees = Map.from(fields.map(id => id -> VarSymbol(id.asIdent)))
-    // The default record value for each sub-scrutinee. It is only used in the
-    // bindings of fields.
-    val emptyRecordSymbol = TempSymbol(N, s"emptyRecord$$")
-    val recordItems = patterns.map: (label, _) =>
-      RcdField(str(label.asFieldName), emptyMatchResult("empty"))
-    .toList
-    val emptyRecord = Rcd(false, recordItems)
+    val subPatternsByField = Map.from(fields.map: field =>
+      field -> patterns.flatMap((_, p) => p.collectSubPatterns(field)))
+    val subScrutinees = Map.from(subPatternsByField.map: (field, subPatterns) =>
+      field -> MatcherResult(VarSymbol(field.asIdent), subPatterns.map(_.label)))
     // Let bindings that bind the sub-scrutinee to the result of each matcher.
-    val bindings = subScrutinees.iterator.flatMap: (field, subScrutineeVar) =>
-      val subPatterns = patterns.flatMap((_, p) => p.collectSubPatterns(field))
+    val bindings = subPatternsByField.iterator.flatMap: (field, subPatterns) =>
+      val subScrutinee = subScrutinees(field)
       log(s"subPattern for field ${field.showDbg}: ${
         subPatterns.iterator.map(_.showDbg).mkString("{", ", ", "}")}")
       val subMatcherSymbol = buildMultiMatcher(subPatterns)
@@ -168,18 +186,14 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         val consequent = Split.Else:
           app(subMatcherSymbol.safeRef, tup(fld(fieldSymbol.safeRef)), "result")
         val branch = Branch(scrutinee.safeRef, fieldTest, consequent)
-        SynthIf(branch ~: Split.Else(emptyRecordSymbol.safeRef))
-      LetDecl(subScrutineeVar, Nil) :: DefineVar(subScrutineeVar, conditional) :: Nil
+        SynthIf(branch ~: Split.Else(subScrutinee.default))
+      LetDecl(subScrutinee.symbol, Nil) :: DefineVar(subScrutinee.symbol, conditional) :: Nil
     .toList
-    // If there are no bindings, we do not need to create the empty record.
-    val bindings2 = if bindings.isEmpty then Nil else
-      LetDecl(emptyRecordSymbol, Nil) ::
-        DefineVar(emptyRecordSymbol, emptyRecord) :: bindings
     // For each pattern, we compile a split and bind the result to a variable.
     // The variable will be a field of the output record.
-    val z = (Nil: Ls[Statement], Nil: Ls[RcdField])
-    val (tests, recordFields) = patterns.iterator.foldLeft(z):
-      case ((stmts, fields), (label, pattern)) =>
+    val z = (Nil: Ls[Statement], Nil: Ls[(Label, Term)])
+    val (tests, resultTerms) = patterns.iterator.foldLeft(z):
+      case ((stmts, results), (label, pattern)) =>
         val symbol = TempSymbol(N, label.asFieldName + "$")
         val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
         val split = makeSplit(
@@ -189,11 +203,16 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
             successfulMatchResult(outputSymbol, bindings),
           alternative = Split.Else(emptyMatchResult("topmost")))
         val test = SynthIf(split)
-        // The corresponding record field should just take the result of the split.
-        val field = RcdField(str(label.asFieldName), symbol.safeRef)
-        (DefineVar(symbol, test) :: LetDecl(symbol, Nil) :: stmts, field :: fields)
-    // Lastly, we return the output record.
-    Blk(bindings2 ::: tests.reverse, Rcd(false, recordFields.reverse))
+        (DefineVar(symbol, test) :: LetDecl(symbol, Nil) :: stmts, (label, symbol.safeRef) :: results)
+    // Materialize the matcher's final return value. Singleton matchers return
+    // their only field directly; multi-label matchers still return a record.
+    val resultTerm = resultTerms.reverse match
+      case (_, term) :: Nil => term
+      case terms => Rcd(false, terms.map: (label, term) =>
+        RcdField(str(label.asFieldName), term))
+    // Lastly, we return the matcher result, directly for singleton matchers
+    // and as a record otherwise.
+    Blk(bindings ::: tests.reverse, resultTerm)
   
   import Pattern.*
   
@@ -234,10 +253,10 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       Split.Let(resultSymbol, transformTerm, Split.Else(
         makeMatchSuccess(resultSymbol.safeRef)))
   
-  def completePattern(
+  private def completePattern(
       pattern: SpPat,
       scrutinee: BlockLocalSymbol,
-      subScrutinees: Map[Ident | Int, BlockLocalSymbol],
+      subScrutinees: Map[Ident | Int, MatcherResult],
       aliases: Ls[VarSymbol]
   )(using ResultMode): MakeSplit = trace(pre = s"completePattern: ${pattern.showDbg}"):
     pattern match
@@ -246,7 +265,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       fields.iterator.foldRight(acceptAll):
         case ((field, pattern), makeInnerSplit) =>
           val label = pattern.label
-          val target = sel(subScrutinees(field).safeRef, label.asFieldName)
+          val target = subScrutinees(field).select(label)
           val resultSymbol = TempSymbol(N, s"result$label$$")
           (makeConsequent, alternative) =>
             Split.Let(resultSymbol, target,
@@ -284,7 +303,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       ):
         case ((field, pattern), makeInnerSplit) =>
           val label = pattern.label
-          val target = sel(subScrutinees(field).safeRef, label.asFieldName)
+          val target = subScrutinees(field).select(label)
           // This is the symbol for `MatchSuccess`.
           val resultSymbol = TempSymbol(N, s"result$label$$")
           // This is the symbol for the output of the pattern.
