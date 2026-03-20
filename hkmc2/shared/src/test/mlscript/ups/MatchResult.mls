@@ -95,28 +95,25 @@ fun getCompiledCross(x) = if x is
 //│ Lowered:
 //│ let getCompiledCross⁰;
 //│ define getCompiledCross⁰ as fun (x) {
-//│   let result, matcher__Cross$, matchRecord, patternOutput, bindings, lambda;
+//│   let result, matcher__Cross$, matchSuccess, lambda;
 //│   define lambda as fun (input) {
-//│     let p_0$, p_0$1, tmp, tmp1, tmp2;
+//│     let p_0$, p_0$1, tmp, tmp1;
 //│     match input
 //│       "X" =>
-//│         set tmp = {  };
-//│         set tmp1 = new runtime⁰.MatchSuccess⁰(input, tmp);
-//│         set p_0$ = tmp1;
+//│         set tmp = true;
+//│         set p_0$ = tmp;
 //│         return p_0$
 //│       else
-//│         set tmp2 = new runtime⁰.MatchFailure⁰("never");
-//│         set p_0$1 = tmp2;
+//│         set tmp1 = false;
+//│         set p_0$1 = tmp1;
 //│         return p_0$1
 //│     end
 //│   };
 //│   set matcher__Cross$ = lambda¹;
-//│   set matchRecord = matcher__Cross$(x);
-//│   match matchRecord
-//│     MatchSuccess⁰ =>
-//│       set patternOutput = matchRecord.output⁰;
-//│       set bindings = matchRecord.bindings⁰;
-//│       set result = patternOutput;
+//│   set matchSuccess = matcher__Cross$(x);
+//│   match matchSuccess
+//│     true =>
+//│       set result = x;
 //│       return result
 //│     else
 //│       return "nope"
@@ -156,6 +153,148 @@ fun isCompiledBacktrackOnRight(x) = x is @compile BacktrackOnRight
 //│ let isCompiledBacktrackOnRight⁰;
 //│ define isCompiledBacktrackOnRight⁰ as fun (x) {
 //│   let matcher__BacktrackOnRight$, matcher__str4$, matcher__0_1$, matchSuccess, lambda, lambda1, lambda2;
+//│   define lambda as fun (input) {
+//│     let p_1$, p_1$1, tmp, tmp1;
+//│     match input
+//│       "same" =>
+//│         set tmp = true;
+//│         set p_1$ = tmp;
+//│         return p_1$
+//│       else
+//│         set tmp1 = false;
+//│         set p_1$1 = tmp1;
+//│         return p_1$1
+//│     end
+//│   };
+//│   set matcher__str4$ = lambda³;
+//│   define lambda1 as fun (input1) {
+//│     let p_2$, p_3$, p_2$1, p_3$1, p_2$2, p_3$2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│     match input1
+//│       0 =>
+//│         set tmp = true;
+//│         set p_2$ = tmp;
+//│         set tmp1 = false;
+//│         set p_3$ = tmp1;
+//│         return { "p_2": p_2$, "p_3": p_3$ }
+//│       1 =>
+//│         set tmp2 = false;
+//│         set p_2$1 = tmp2;
+//│         set tmp3 = true;
+//│         set p_3$1 = tmp3;
+//│         return { "p_2": p_2$1, "p_3": p_3$1 }
+//│       else
+//│         set tmp4 = false;
+//│         set p_2$2 = tmp4;
+//│         set tmp5 = false;
+//│         set p_3$2 = tmp5;
+//│         return { "p_2": p_2$2, "p_3": p_3$2 }
+//│     end
+//│   };
+//│   set matcher__0_1$ = lambda⁴;
+//│   define lambda2 as fun (input2) {
+//│     let left, right, left1, right1, p_0$, result2$, result1$, result3$, result1$1, p_0$1, tmp, tmp1, tmp2, tmp3;
+//│     match input2
+//│       Pair⁰ =>
+//│         match input2
+//│           Object⁰ =>
+//│             match input2
+//│               Field(left) =>
+//│                 set left1 = input2.left﹖;
+//│                 set tmp = matcher__str4$(left1);
+//│                 end
+//│               else
+//│                 set tmp = false;
+//│                 end
+//│             end
+//│           else
+//│             set tmp = false;
+//│             end
+//│         set left = tmp;
+//│         match input2
+//│           Object⁰ =>
+//│             match input2
+//│               Field(right) =>
+//│                 set right1 = input2.right﹖;
+//│                 set tmp1 = matcher__0_1$(right1);
+//│                 end
+//│               else
+//│                 set tmp1 = { "p_2": false, "p_3": false };
+//│                 end
+//│             end
+//│           else
+//│             set tmp1 = { "p_2": false, "p_3": false };
+//│             end
+//│         set right = tmp1;
+//│         set result1$ = left;
+//│         match result1$
+//│           true =>
+//│             set result2$ = right.p_2﹖;
+//│             match result2$
+//│               true =>
+//│                 set tmp2 = true;
+//│                 end
+//│               else
+//│                 set result1$1 = left;
+//│                 match result1$1
+//│                   true =>
+//│                     set result3$ = right.p_3﹖;
+//│                     match result3$
+//│                       true =>
+//│                         set tmp2 = true;
+//│                         end
+//│                       else
+//│                         set tmp2 = false;
+//│                         end
+//│                     end
+//│                   else
+//│                     set tmp2 = false;
+//│                     end
+//│                 end
+//│             end
+//│           else
+//│             set result1$1 = left;
+//│             match result1$1
+//│               true =>
+//│                 set result3$ = right.p_3﹖;
+//│                 match result3$
+//│                   true =>
+//│                     set tmp2 = true;
+//│                     end
+//│                   else
+//│                     set tmp2 = false;
+//│                     end
+//│                 end
+//│               else
+//│                 set tmp2 = false;
+//│                 end
+//│             end
+//│         set p_0$ = tmp2;
+//│         return p_0$
+//│       else
+//│         set tmp3 = false;
+//│         set p_0$1 = tmp3;
+//│         return p_0$1
+//│     end
+//│   };
+//│   set matcher__BacktrackOnRight$ = lambda⁵;
+//│   set matchSuccess = matcher__BacktrackOnRight$(x);
+//│   match matchSuccess
+//│     true =>
+//│       return true
+//│     else
+//│       return false
+//│   end
+//│ };
+//│ end
+
+:sir
+fun getCompiledBacktrackOnRight(x) =
+  if x is (@compile BacktrackOnRight) as result then result
+  else "nope"
+//│ Lowered:
+//│ let getCompiledBacktrackOnRight⁰;
+//│ define getCompiledBacktrackOnRight⁰ as fun (x) {
+//│   let result, matcher__BacktrackOnRight$, matcher__str4$, matcher__0_1$, matchSuccess, lambda, lambda1, lambda2;
 //│   define lambda as fun (input) {
 //│     let left, right, left1, right1, p_0$, result2$, result1$, result3$, result1$1, p_0$1, tmp, tmp1, tmp2, tmp3;
 //│     match input
@@ -241,7 +380,7 @@ fun isCompiledBacktrackOnRight(x) = x is @compile BacktrackOnRight
 //│         return p_0$1
 //│     end
 //│   };
-//│   set matcher__BacktrackOnRight$ = lambda³;
+//│   set matcher__BacktrackOnRight$ = lambda⁶;
 //│   define lambda1 as fun (input1) {
 //│     let p_1$, p_1$1, tmp, tmp1;
 //│     match input1
@@ -255,7 +394,7 @@ fun isCompiledBacktrackOnRight(x) = x is @compile BacktrackOnRight
 //│         return p_1$1
 //│     end
 //│   };
-//│   set matcher__str4$ = lambda⁴;
+//│   set matcher__str4$ = lambda⁷;
 //│   define lambda2 as fun (input2) {
 //│     let p_2$, p_3$, p_2$1, p_3$1, p_2$2, p_3$2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
 //│     match input2
@@ -279,187 +418,11 @@ fun isCompiledBacktrackOnRight(x) = x is @compile BacktrackOnRight
 //│         return { "p_2": p_2$2, "p_3": p_3$2 }
 //│     end
 //│   };
-//│   set matcher__0_1$ = lambda⁵;
+//│   set matcher__0_1$ = lambda⁸;
 //│   set matchSuccess = matcher__BacktrackOnRight$(x);
 //│   match matchSuccess
 //│     true =>
-//│       return true
-//│     else
-//│       return false
-//│   end
-//│ };
-//│ end
-
-:sir
-fun getCompiledBacktrackOnRight(x) =
-  if x is (@compile BacktrackOnRight) as result then result
-  else "nope"
-//│ Lowered:
-//│ let getCompiledBacktrackOnRight⁰;
-//│ define getCompiledBacktrackOnRight⁰ as fun (x) {
-//│   let result, matcher__BacktrackOnRight$, matcher__str4$, matcher__0_1$, matchRecord, patternOutput, bindings, lambda, lambda1, lambda2;
-//│   define lambda as fun (input) {
-//│     let p_1$, p_1$1, tmp, tmp1, tmp2;
-//│     match input
-//│       "same" =>
-//│         set tmp = {  };
-//│         set tmp1 = new runtime⁰.MatchSuccess⁰(input, tmp);
-//│         set p_1$ = tmp1;
-//│         return p_1$
-//│       else
-//│         set tmp2 = new runtime⁰.MatchFailure⁰("never");
-//│         set p_1$1 = tmp2;
-//│         return p_1$1
-//│     end
-//│   };
-//│   set matcher__str4$ = lambda⁶;
-//│   define lambda1 as fun (input1) {
-//│     let p_2$, p_3$, p_2$1, p_3$1, p_2$2, p_3$2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
-//│     match input1
-//│       0 =>
-//│         set tmp = {  };
-//│         set tmp1 = new runtime⁰.MatchSuccess⁰(input1, tmp);
-//│         set p_2$ = tmp1;
-//│         set tmp2 = new runtime⁰.MatchFailure⁰("never");
-//│         set p_3$ = tmp2;
-//│         return { "p_2": p_2$, "p_3": p_3$ }
-//│       1 =>
-//│         set tmp3 = new runtime⁰.MatchFailure⁰("never");
-//│         set p_2$1 = tmp3;
-//│         set tmp4 = {  };
-//│         set tmp5 = new runtime⁰.MatchSuccess⁰(input1, tmp4);
-//│         set p_3$1 = tmp5;
-//│         return { "p_2": p_2$1, "p_3": p_3$1 }
-//│       else
-//│         set tmp6 = new runtime⁰.MatchFailure⁰("never");
-//│         set p_2$2 = tmp6;
-//│         set tmp7 = new runtime⁰.MatchFailure⁰("never");
-//│         set p_3$2 = tmp7;
-//│         return { "p_2": p_2$2, "p_3": p_3$2 }
-//│     end
-//│   };
-//│   set matcher__0_1$ = lambda⁷;
-//│   define lambda2 as fun (input2) {
-//│     let left, right, left1, right1, p_0$, result2$, output2$, fieldBindings, result1$, output1$, fieldBindings1, result3$, output3$, fieldBindings2, result1$1, output1$1, fieldBindings3, bindings1, bindings2, bindings3, bindings4, p_0$1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13;
-//│     match input2
-//│       Pair⁰ =>
-//│         match input2
-//│           Object⁰ =>
-//│             match input2
-//│               Field(left) =>
-//│                 set left1 = input2.left﹖;
-//│                 set tmp = matcher__str4$(left1);
-//│                 end
-//│               else
-//│                 set tmp = new runtime⁰.MatchFailure⁰("empty");
-//│                 end
-//│             end
-//│           else
-//│             set tmp = new runtime⁰.MatchFailure⁰("empty");
-//│             end
-//│         set left = tmp;
-//│         match input2
-//│           Object⁰ =>
-//│             match input2
-//│               Field(right) =>
-//│                 set right1 = input2.right﹖;
-//│                 set tmp1 = matcher__0_1$(right1);
-//│                 end
-//│               else
-//│                 set tmp2 = new runtime⁰.MatchFailure⁰("empty");
-//│                 set tmp3 = new runtime⁰.MatchFailure⁰("empty");
-//│                 set tmp1 = { "p_2": tmp2, "p_3": tmp3 };
-//│                 end
-//│             end
-//│           else
-//│             set tmp4 = new runtime⁰.MatchFailure⁰("empty");
-//│             set tmp5 = new runtime⁰.MatchFailure⁰("empty");
-//│             set tmp1 = { "p_2": tmp4, "p_3": tmp5 };
-//│             end
-//│         set right = tmp1;
-//│         block split_root$:
-//│           block split_1$:
-//│             set result1$ = left;
-//│             match result1$
-//│               MatchSuccess⁰ =>
-//│                 set output1$ = result1$.output⁰;
-//│                 set bindings3 = result1$.bindings⁰;
-//│                 set fieldBindings1 = {  };
-//│                 set result2$ = right.p_2﹖;
-//│                 match result2$
-//│                   MatchSuccess⁰ =>
-//│                     set output2$ = result2$.output⁰;
-//│                     set bindings4 = result2$.bindings⁰;
-//│                     set fieldBindings = {  };
-//│                     set tmp6 = { "left": output1$, "right": output2$ };
-//│                     set tmp7 = { ...bindings3, ...fieldBindings1, ...bindings4, ...fieldBindings };
-//│                     set tmp8 = new runtime⁰.MatchSuccess⁰(tmp6, tmp7);
-//│                     break split_root$
-//│                   else
-//│                     set result1$1 = left;
-//│                     match result1$1
-//│                       MatchSuccess⁰ =>
-//│                         set output1$1 = result1$1.output⁰;
-//│                         set bindings1 = result1$1.bindings⁰;
-//│                         set fieldBindings3 = {  };
-//│                         set result3$ = right.p_3﹖;
-//│                         match result3$
-//│                           MatchSuccess⁰ =>
-//│                             set output3$ = result3$.output⁰;
-//│                             set bindings2 = result3$.bindings⁰;
-//│                             set fieldBindings2 = {  };
-//│                             set tmp9 = { "left": output1$1, "right": output3$ };
-//│                             set tmp10 = { ...bindings1, ...fieldBindings3, ...bindings2, ...fieldBindings2 };
-//│                             set tmp8 = new runtime⁰.MatchSuccess⁰(tmp9, tmp10);
-//│                             break split_root$
-//│                           else
-//│                             break split_1$
-//│                         end
-//│                       else
-//│                         break split_1$
-//│                     end
-//│                 end
-//│               else
-//│                 set result1$1 = left;
-//│                 match result1$1
-//│                   MatchSuccess⁰ =>
-//│                     set output1$1 = result1$1.output⁰;
-//│                     set bindings1 = result1$1.bindings⁰;
-//│                     set fieldBindings3 = {  };
-//│                     set result3$ = right.p_3﹖;
-//│                     match result3$
-//│                       MatchSuccess⁰ =>
-//│                         set output3$ = result3$.output⁰;
-//│                         set bindings2 = result3$.bindings⁰;
-//│                         set fieldBindings2 = {  };
-//│                         set tmp11 = { "left": output1$1, "right": output3$ };
-//│                         set tmp12 = { ...bindings1, ...fieldBindings3, ...bindings2, ...fieldBindings2 };
-//│                         set tmp8 = new runtime⁰.MatchSuccess⁰(tmp11, tmp12);
-//│                         break split_root$
-//│                       else
-//│                         break split_1$
-//│                     end
-//│                   else
-//│                     break split_1$
-//│                 end
-//│             end
-//│           set tmp8 = new runtime⁰.MatchFailure⁰("topmost");
-//│           end
-//│         set p_0$ = tmp8;
-//│         return p_0$
-//│       else
-//│         set tmp13 = new runtime⁰.MatchFailure⁰("never");
-//│         set p_0$1 = tmp13;
-//│         return p_0$1
-//│     end
-//│   };
-//│   set matcher__BacktrackOnRight$ = lambda⁸;
-//│   set matchRecord = matcher__BacktrackOnRight$(x);
-//│   match matchRecord
-//│     MatchSuccess⁰ =>
-//│       set patternOutput = matchRecord.output⁰;
-//│       set bindings = matchRecord.bindings⁰;
-//│       set result = patternOutput;
+//│       set result = x;
 //│       return result
 //│     else
 //│       return "nope"

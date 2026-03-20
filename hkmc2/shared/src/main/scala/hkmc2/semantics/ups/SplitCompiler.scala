@@ -125,9 +125,39 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   private lazy val lt = State.builtinOpsMap("<")
   private lazy val add = State.builtinOpsMap("+")
 
-  private def carriesExtractionSlots(context: ups.Context): Bool =
+  private def carriesExtractionSlots(context: Context): Bool =
     context.definitions.keysIterator.exists:
       _.symbol.defn.exists(_.extractionParams.nonEmpty)
+
+  /** Conservatively checks whether a successful match can reuse the original
+    * scrutinee as the pattern output. This holds for transform-free patterns:
+    * aliases alone do not make the output observable, but `Extract` does.
+    */
+  private def preservesScrutineeOutput(pattern: Pat, context: Context): Bool =
+    def loop(pattern: Pat, visiting: Set[Pattern.Instantiation]): Bool = pattern match
+      case Pattern.Literal(_) => true
+      case Pattern.ClassLike(_, arguments) =>
+        arguments.forall(_.valuesIterator.forall(loop(_, visiting)))
+      case Pattern.Record(entries) =>
+        entries.valuesIterator.forall(loop(_, visiting))
+      case Pattern.Tuple(leading, spread) =>
+        leading.forall(loop(_, visiting)) &&
+          spread.forall: (_, middle, trailing) =>
+            loop(middle, visiting) && trailing.forall(loop(_, visiting))
+      case Pattern.And(patterns) =>
+        patterns.forall(loop(_, visiting))
+      case Pattern.Or(patterns) =>
+        patterns.forall(loop(_, visiting))
+      case Pattern.Not(pattern) =>
+        loop(pattern, visiting)
+      case Pattern.Rename(pattern, _) =>
+        loop(pattern, visiting)
+      case Pattern.Extract(_, _, _) =>
+        false
+      case Pattern.Synonym(instantiation) =>
+        if visiting contains instantiation then true
+        else loop(context.get(instantiation), visiting + instantiation)
+    loop(pattern, Set.empty)
 
   private def hasExplicitExtractionMatches(scrutinee: Scrut, pattern: SP): Bool = pattern match
     case Constructor(target, arguments) => target.resolvedSym.flatMap(_.asPat).exists: patternSymbol =>
@@ -939,11 +969,24 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     // Instantiate the pattern and all patterns used in it.
     val instantiator = new Instantiator
     val (synonym, context) = instantiator(pattern)
+    // Decide whether the compiled matcher needs to create `MatchSuccess` or can
+    // represent success and failure using Boolean values.
+    //
+    // We must stay in `Full` mode when
+    // - the pattern explicitly matches extraction arguments, or when any
+    //   reachable instantiated pattern definition has extraction slots;
+    // - otherwise, if the use site needs an output, we only need `Full`
+    //   mode when a successful match does have transformations.
+    // 
+    // When the instantiated pattern is transform-free and thus preserves the
+    // original scrutinee as its output, `MatchOnly` is used and the caller can
+    // obtain the scrutinee directly.
+    val canReuseScrutineeOutput = preservesScrutineeOutput(synonym, context)
     val resultMode =
-      if outputNeeded ||
-          hasExplicitExtractionMatches(scrutinee, pattern) ||
+      if hasExplicitExtractionMatches(scrutinee, pattern) ||
           carriesExtractionSlots(context)
       then ResultMode.Full
+      else if outputNeeded && !canReuseScrutineeOutput then ResultMode.Full
       else ResultMode.MatchOnly
     // Initate the compilation.
     val compiler = new Compiler(using context)

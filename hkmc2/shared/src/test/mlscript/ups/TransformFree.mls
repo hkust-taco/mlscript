@@ -1,0 +1,233 @@
+:js
+
+open annotations
+
+data class Pair[A, B](first: A, second: B)
+pattern NumPair = Pair(Num, Num)
+pattern SumPair = Pair((Num as x), (Num as y)) => x + y
+
+// TLDR: This file tests the case where a compiled pattern's result is bound
+// with `as`, but the pattern itself does not involve any transformations.
+//
+// `toNumPair` should still compile without creating `MatchSuccess` or
+// `MatchFailure`: all matchers should return Boolean values, and the use site
+// should set the output binding `s` to the original scrutinee `t`.
+//
+// `toSumPair` is the counterexample: because it has a transform and the use
+// site binds the pattern's output, it still creates `MatchSuccess` and
+// `MatchFailure`.
+
+:sir
+fun toNumPair(t) = if t is (@compile NumPair) as s then s else null
+//│ Lowered:
+//│ let toNumPair⁰;
+//│ define toNumPair⁰ as fun (t) {
+//│   let s, matcher__NumPair$, matcher__Num$, matchSuccess, lambda, lambda1;
+//│   define lambda as fun (input) {
+//│     let first, second, first1, second1, p_0$, result1$, result1$1, p_0$1, tmp, tmp1, tmp2, tmp3;
+//│     match input
+//│       Pair⁰ =>
+//│         match input
+//│           Object⁰ =>
+//│             match input
+//│               Field(first) =>
+//│                 set first1 = input.first﹖;
+//│                 set tmp = matcher__Num$(first1);
+//│                 end
+//│               else
+//│                 set tmp = false;
+//│                 end
+//│             end
+//│           else
+//│             set tmp = false;
+//│             end
+//│         set first = tmp;
+//│         match input
+//│           Object⁰ =>
+//│             match input
+//│               Field(second) =>
+//│                 set second1 = input.second﹖;
+//│                 set tmp1 = matcher__Num$(second1);
+//│                 end
+//│               else
+//│                 set tmp1 = false;
+//│                 end
+//│             end
+//│           else
+//│             set tmp1 = false;
+//│             end
+//│         set second = tmp1;
+//│         set result1$1 = first;
+//│         match result1$1
+//│           true =>
+//│             set result1$ = second;
+//│             match result1$
+//│               true =>
+//│                 set tmp2 = true;
+//│                 end
+//│               else
+//│                 set tmp2 = false;
+//│                 end
+//│             end
+//│           else
+//│             set tmp2 = false;
+//│             end
+//│         set p_0$ = tmp2;
+//│         return p_0$
+//│       else
+//│         set tmp3 = false;
+//│         set p_0$1 = tmp3;
+//│         return p_0$1
+//│     end
+//│   };
+//│   set matcher__NumPair$ = lambda⁰;
+//│   define lambda1 as fun (input1) {
+//│     let p_1$, p_1$1, tmp, tmp1;
+//│     match input1
+//│       Num⁰ =>
+//│         set tmp = true;
+//│         set p_1$ = tmp;
+//│         return p_1$
+//│       else
+//│         set tmp1 = false;
+//│         set p_1$1 = tmp1;
+//│         return p_1$1
+//│     end
+//│   };
+//│   set matcher__Num$ = lambda¹;
+//│   set matchSuccess = matcher__NumPair$(t);
+//│   match matchSuccess
+//│     true =>
+//│       set s = t;
+//│       return s
+//│     else
+//│       return null
+//│   end
+//│ };
+//│ end
+
+
+
+:sir
+fun toSumPair(t) = if t is (@compile SumPair) as s then s else null
+//│ Lowered:
+//│ let toSumPair⁰;
+//│ define toSumPair⁰ as fun (t) {
+//│   let s, matcher__SumPair$, matcher1$, matcher2$, matchRecord, patternOutput, bindings, lambda, lambda1, lambda2;
+//│   define lambda as fun (input) {
+//│     let p_2$, p_2$1, tmp, tmp1, tmp2;
+//│     match input
+//│       Num⁰ =>
+//│         set tmp = { "y": input };
+//│         set tmp1 = new runtime⁰.MatchSuccess⁰(input, tmp);
+//│         set p_2$ = tmp1;
+//│         return p_2$
+//│       else
+//│         set tmp2 = new runtime⁰.MatchFailure⁰("never");
+//│         set p_2$1 = tmp2;
+//│         return p_2$1
+//│     end
+//│   };
+//│   set matcher2$ = lambda²;
+//│   define lambda1 as fun (input1) {
+//│     let first, second, first1, second1, p_0$, transform, result2$, output2$, fieldBindings, result1$, output1$, fieldBindings1, bindings1, bindings2, transformResult, bindings3, p_0$1, tmp, tmp1, tmp2, tmp3, tmp4;
+//│     match input1
+//│       Pair⁰ =>
+//│         let lambda3;
+//│         match input1
+//│           Object⁰ =>
+//│             match input1
+//│               Field(first) =>
+//│                 set first1 = input1.first﹖;
+//│                 set tmp = matcher1$(first1);
+//│                 end
+//│               else
+//│                 set tmp = new runtime⁰.MatchFailure⁰("empty");
+//│                 end
+//│             end
+//│           else
+//│             set tmp = new runtime⁰.MatchFailure⁰("empty");
+//│             end
+//│         set first = tmp;
+//│         match input1
+//│           Object⁰ =>
+//│             match input1
+//│               Field(second) =>
+//│                 set second1 = input1.second﹖;
+//│                 set tmp1 = matcher2$(second1);
+//│                 end
+//│               else
+//│                 set tmp1 = new runtime⁰.MatchFailure⁰("empty");
+//│                 end
+//│             end
+//│           else
+//│             set tmp1 = new runtime⁰.MatchFailure⁰("empty");
+//│             end
+//│         set second = tmp1;
+//│         define lambda3 as fun (args) {
+//│           let x, y;
+//│           set x = args.x﹖;
+//│           set y = args.y﹖;
+//│           return +⁰(x, y)
+//│         };
+//│         set transform = lambda³;
+//│         set result1$ = first;
+//│         match result1$
+//│           MatchSuccess⁰ =>
+//│             set output1$ = result1$.output⁰;
+//│             set bindings1 = result1$.bindings⁰;
+//│             set fieldBindings1 = { "x": output1$ };
+//│             set result2$ = second;
+//│             match result2$
+//│               MatchSuccess⁰ =>
+//│                 set output2$ = result2$.output⁰;
+//│                 set bindings2 = result2$.bindings⁰;
+//│                 set fieldBindings = { "y": output2$ };
+//│                 set tmp2 = { ...bindings1, ...fieldBindings1, ...bindings2, ...fieldBindings };
+//│                 set transformResult = transform(tmp2);
+//│                 set bindings3 = {  };
+//│                 set tmp3 = new runtime⁰.MatchSuccess⁰(transformResult, bindings3);
+//│                 end
+//│               else
+//│                 set tmp3 = new runtime⁰.MatchFailure⁰("topmost");
+//│                 end
+//│             end
+//│           else
+//│             set tmp3 = new runtime⁰.MatchFailure⁰("topmost");
+//│             end
+//│         set p_0$ = tmp3;
+//│         return p_0$
+//│       else
+//│         set tmp4 = new runtime⁰.MatchFailure⁰("never");
+//│         set p_0$1 = tmp4;
+//│         return p_0$1
+//│     end
+//│   };
+//│   set matcher__SumPair$ = lambda⁴;
+//│   define lambda2 as fun (input2) {
+//│     let p_1$, p_1$1, tmp, tmp1, tmp2;
+//│     match input2
+//│       Num⁰ =>
+//│         set tmp = { "x": input2 };
+//│         set tmp1 = new runtime⁰.MatchSuccess⁰(input2, tmp);
+//│         set p_1$ = tmp1;
+//│         return p_1$
+//│       else
+//│         set tmp2 = new runtime⁰.MatchFailure⁰("never");
+//│         set p_1$1 = tmp2;
+//│         return p_1$1
+//│     end
+//│   };
+//│   set matcher1$ = lambda⁵;
+//│   set matchRecord = matcher__SumPair$(t);
+//│   match matchRecord
+//│     MatchSuccess⁰ =>
+//│       set patternOutput = matchRecord.output⁰;
+//│       set bindings = matchRecord.bindings⁰;
+//│       set s = patternOutput;
+//│       return s
+//│     else
+//│       return null
+//│   end
+//│ };
+//│ end

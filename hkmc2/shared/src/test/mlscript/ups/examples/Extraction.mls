@@ -109,10 +109,10 @@ xorPair of Pair(None, None)
 //│ = "failed"
 
 xorPair of Pair(None, Some(1))
-//│ = {first: None, second: {value: 1}}
+//│ = Pair(None, Some(1))
 
 xorPair of Pair(Some(56), None)
-//│ = {first: {value: 56}, second: None}
+//│ = Pair(Some(56), None)
 
 data class Triplet[A, B, C](first: A, second: B, third: C)
 
@@ -127,20 +127,20 @@ fun exactlyOneNone(x) =
 fun exactlyOneNone__naive(x) =
   if x is ExactlyOneNone(output) then output else "failed"
 
-// What should the output of class pattern be? In the pattern compilation, we
-// return plain objects without the class tag, as we can't synthesize plain
-// objects with arbitrary class tags.
+// For transform-free compiled patterns, we can now reuse the original
+// scrutinee as the output instead of synthesizing a plain record.
 
 exactlyOneNone of Triplet(None, Some(1), Some(2))
-//│ = {first: None, second: {value: 1}, third: {value: 2}}
+//│ = Triplet(None, Some(1), Some(2))
 
 exactlyOneNone of Triplet(Some(1), None, Some(2))
-//│ = {first: {value: 1}, second: None, third: {value: 2}}
+//│ = Triplet(Some(1), None, Some(2))
 
 exactlyOneNone of Triplet(Some(1), Some(2), None)
-//│ = {first: {value: 1}, second: {value: 2}, third: None}
+//│ = Triplet(Some(1), Some(2), None)
 
-// But in the naive compilation of patterns, we return the scrutinee directly.
+// This now agrees with the naive compilation of patterns, which also returns
+// the scrutinee directly.
 
 exactlyOneNone__naive of Triplet(None, Some(1), Some(100))
 //│ = Triplet(None, Some(1), Some(100))
