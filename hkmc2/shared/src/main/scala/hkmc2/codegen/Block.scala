@@ -459,7 +459,10 @@ sealed abstract class Defn:
   def isPure: Bool = this match
     case vd: ValDefn => vd.rhs.isPure && vd.tsym.owner.isEmpty
     case fd: FunDefn => fd.owner.isEmpty
-    case c: ClsLikeDefn => c.companion.isEmpty // simple heuristic
+    case c: ClsLikeDefn =>
+      // * Simple heuristic. TODO: check the purity of the ctor somehow? (ignore pure local field inits)
+      c.companion.isEmpty
+        && (!(c.k is syntax.Obj) || c.ctor.isEmpty)
   
   def subBlocks: Ls[Block] = this match
     case FunDefn(body = body) => body :: Nil

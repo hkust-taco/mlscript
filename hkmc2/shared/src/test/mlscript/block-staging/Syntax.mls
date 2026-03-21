@@ -23,9 +23,11 @@ staged module A
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let A⁰;
 //│ define A⁰ as class A¹ {
-//│   staged 
+//│   constructor {
+//│     runtime⁰.Unit⁰
+//│   }
 //│ }
-//│ module A² {
+//│ staged module A² {
 //│   constructor {
 //│     let tmp, tmp1;
 //│     begin

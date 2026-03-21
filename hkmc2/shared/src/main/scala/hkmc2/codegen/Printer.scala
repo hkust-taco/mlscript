@@ -94,10 +94,14 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
       case End(_) => doc""
       case _ => doc" # constructor${ctorSym.fold(doc"")(doc" " :: print(_))} ${
         bracedbk(docPreCtor :: print(ctor))}"
-    
     val mtds = methods.map(m => doc"method ${print(m.sym)} = " :: print(m)).mkDocument(sep = doc" # ")
     val docMethods = if methods.isEmpty then doc"" else doc" # ${mtds}"
-    if publicFields.isEmpty && privateFields.isEmpty && methods.isEmpty then doc""
+    if publicFields.isEmpty
+    && privateFields.isEmpty
+    && methods.isEmpty
+    && preCtor.forall(_.isEmpty)
+    && ctor.isEmpty
+    then doc""
     else doc" " :: braced(doc"${docPrivFlds}${docPubFlds}${docCtor}${docMethods}")
   
   def print(defn: Defn)(using Scope): Document = defn match
@@ -117,17 +121,13 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
       val docCtorParams = if clsParams.isEmpty then doc"" else doc"(${ctorParams.mkDocument(", ")})"
       val docStaged = if isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
       val docBody = print(privateFields, publicFields, methods, S(preCtor), ctor, ctorSym)
-      val clsType = k match
-        case Cls => "class"
-        case Pat => "pattern"
-        case Obj => "object"
-        case Mod => "module"
+      val clsType = k.str
       val docCls = doc"${docStaged}${clsType} ${print(isym)}${docCtorParams}${docBody}"
       val docModule = mod match
         case Some(mod) =>
           val docStaged = if mod.isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
           val docBody = print(mod.privateFields, mod.publicFields, mod.methods, N, mod.ctor, N)
-          doc" ${bracedbk(docStaged)} # module ${print(mod.isym)}${docBody}"
+          doc" # ${docStaged}module ${print(mod.isym)}${docBody}"
         case None => doc""
       doc"${docCls}${docModule}"
   
