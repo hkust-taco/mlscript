@@ -95,6 +95,7 @@ biasedOr2__compiled of Some(Some(1))
 biasedOr2__naive of Some(Some(1))
 //│ = 2
 
+
 // Comments: I think the output from the compiled pattern is semantically
 // correct, but people might expect the output from the translated pattern.
 // The problem is that we can't synthesize a record with the class tags.
@@ -113,6 +114,45 @@ xorPair of Pair(None, Some(1))
 
 xorPair of Pair(Some(56), None)
 //│ = Pair(Some(56), None)
+
+fun xorPairInterp(x) = if x is XorPair as output then output else "failed"
+
+xorPairInterp of Pair(None, None)
+//│ = "failed"
+
+xorPairInterp of Pair(None, Some(1))
+//│ = Pair(None, Some(1))
+
+xorPairInterp of Pair(Some(56), None)
+//│ = Pair(Some(56), None)
+
+
+pattern XorPairT = Pair(None, Some(_ => 111)) | Pair(Some(_), None)
+
+fun xorPairT(x) = if x is (@compile XorPairT) as output then output else "failed"
+
+xorPairT of Pair(None, None)
+//│ = "failed"
+
+// * FIXME: this should match the result of the intepreted pattern
+xorPairT of Pair(None, Some(1))
+//│ = {first: None, second: {value: 111}}
+
+// * FIXME: this should match the result of the intepreted pattern
+xorPairT of Pair(Some(56), None)
+//│ = {first: {value: 56}, second: None}
+
+fun xorPairTInterp(x) = if x is XorPairT as output then output else "failed"
+
+xorPairTInterp of Pair(None, None)
+//│ = "failed"
+
+xorPairTInterp of Pair(None, Some(1))
+//│ = Pair(None, Some(1))
+
+xorPairTInterp of Pair(Some(56), None)
+//│ = Pair(Some(56), None)
+
 
 data class Triplet[A, B, C](first: A, second: B, third: C)
 
