@@ -122,7 +122,7 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State):
     val removedLocals: MutSet[Local] = MutSet.empty
     
     override def applyValue(v: Value)(k: Value => Block) = v match
-      // * Replace with `undefined` those references to local varoiables that are never assigned
+      // * Replace with `undefined` those references to local variables that are never assigned
       case Value.Ref(loc, N) if localVars.contains(loc) && !definedVars.contains(loc) =>
         registerChange
         if !symbolsToPreserve(loc) then removedLocals += loc
