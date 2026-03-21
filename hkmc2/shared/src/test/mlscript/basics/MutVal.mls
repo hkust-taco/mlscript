@@ -6,8 +6,9 @@ mut val cached: Int = 1
 
 :sjs
 set cached = 2
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ cached = 2; runtime.Unit
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 cached
 //│ = 2
@@ -32,7 +33,7 @@ O.gy
 
 :sjs
 class Foo(x, val y, mut val z)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo1;
 //│ Foo1 = function Foo(x, y, z) {
 //│   return globalThis.Object.freeze(new Foo.class(x, y, z));
@@ -53,6 +54,7 @@ class Foo(x, val y, mut val z)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", [null, "y", "z"]]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let f = Foo(1, 2, 3)
 //│ f = Foo(_, 2, 3)

@@ -5,7 +5,7 @@
 
 
 data class Foo(arguments)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo1;
 //│ Foo1 = function Foo(arguments1) {
 //│   return globalThis.Object.freeze(new Foo.class(arguments1));
@@ -20,10 +20,11 @@ data class Foo(arguments)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", ["arguments"]]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 data class Foo(eval)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo3;
 //│ Foo3 = function Foo(eval1) {
 //│   return globalThis.Object.freeze(new Foo.class(eval1));
@@ -38,10 +39,11 @@ data class Foo(eval)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", ["eval"]]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 data class Foo(static)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo5;
 //│ Foo5 = function Foo(static1) {
 //│   return globalThis.Object.freeze(new Foo.class(static1));
@@ -56,10 +58,11 @@ data class Foo(static)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", ["static"]]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 data class Foo(v')
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo7;
 //│ Foo7 = function Foo(v$_) {
 //│   return globalThis.Object.freeze(new Foo.class(v$_));
@@ -74,5 +77,6 @@ data class Foo(v')
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", ["v'"]]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

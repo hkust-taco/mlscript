@@ -101,7 +101,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
       val docParams = doc"${
         params.map(_.params.map(x => scope.allocateName(x.sym)).mkDocument("(", ", ", ")")).mkDocument("")}"
       val docBody = print(body)
-      doc"fun ${docParams} ${bracedbk(docBody)}"
+      doc"fun ${print(dSym)}${docParams} ${bracedbk(docBody)}"
     case ValDefn(tsym, sym, rhs) =>
       doc"val ${print(tsym)} = ${print(rhs)}"
     case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, methods,

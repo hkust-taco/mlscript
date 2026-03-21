@@ -96,7 +96,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val je = nestedScp.givenIn:
         jsb.programBody(le, N, wd)
       val jsStr = je.stripBreaks.mkString(output.ColWidth)
-      output(s"JS (unsanitized):")
+      outputSeparator("JS (unsanitized)")
       output(jsStr)
     if js.isSet then
       given Elaborator.Ctx = curCtx
@@ -123,7 +123,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         case tl: (Throw | Break | Continue) => tl
       )
       if showLoweredTree.isSet then
-        output(s"Lowered IR:")
+        outputSeparator("Lowered IR Tree")
         output(lowered.showAsTree)
       
       // * We used to do this to avoid needlessly generating new variable names in separate blocks:
@@ -133,8 +133,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       val resNme = nestedScp.allocateName(resSym)
       
-      if ppLoweredTree.isSet then
-        output(s"Lowered:")
+      if showIR.isSet then
+        outputSeparator("Lowered IR")
         given ShowCfg = ShowCfg(
           showExpansionMappings = false,
           showFlowSymbols = true,
@@ -147,9 +147,12 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val preStr = pre.stripBreaks.mkString(output.ColWidth)
       val jsStr = js.stripBreaks.mkString(output.ColWidth)
       if showSanitizedJS.isSet then
-        output(s"JS:")
+        outputSeparator("JS (sanitized)")
         if preStr.nonEmpty then output(preStr)
         output(jsStr)
+      
+      if printedSeparatedSection then outputSeparator("Output")
+      
       def mkQuery(preStr: Str, jsStr: Str)(k: Str => Unit) =
         val queryStr = jsStr.replaceAll("\n", " ")
         val (reply, stderr) = host.query(preStr, queryStr, !expectRuntimeOrCodeGenErrors && fixme.isUnset && todo.isUnset)

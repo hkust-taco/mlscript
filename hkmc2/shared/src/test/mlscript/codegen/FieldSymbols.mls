@@ -8,7 +8,7 @@ data class Foo(val x) with
 // TODO add symbol to this Sel
 :elt
 Foo(42).x
-//│ Elaborated tree:
+//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
@@ -20,6 +20,7 @@ Foo(42).x
 //│           term = Lit of IntLit of 42
 //│           asc = N
 //│     nme = Ident of "x"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
 
@@ -29,24 +30,26 @@ let foo = Foo(42)
 // TODO add symbol to this Sel
 :elt
 foo.x
-//│ Elaborated tree:
+//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
 //│     prefix = Ref{sym=foo⁰} of foo⁰
 //│     nme = Ident of "x"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
 
 // TODO add symbol to this Sel
 :elt
 foo.y
-//│ Elaborated tree:
+//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
 //│     prefix = Ref{sym=foo⁰} of foo⁰
 //│     nme = Ident of "y"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
 
@@ -55,7 +58,7 @@ foo.y
 :sir
 case
   Foo(a) then a
-//│ Elaborated tree:
+//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Lam:
@@ -82,9 +85,9 @@ case
 //│                 id = Ident of "a"
 //│           consequent = Else of Ref{sym=a⁰} of a⁰
 //│         tail = End
-//│ Lowered:
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda⁰;
-//│ define lambda⁰ as fun (caseScrut) {
+//│ define lambda⁰ as fun lambda¹(caseScrut) {
 //│   let a, arg$Foo$0$;
 //│   match caseScrut
 //│     Foo¹ =>
@@ -96,6 +99,7 @@ case
 //│   end
 //│ };
 //│ lambda¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 

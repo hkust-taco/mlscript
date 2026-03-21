@@ -7,8 +7,9 @@ open StrOps
 
 :sjs
 "a" is Str
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let scrut; scrut = "a"; if (typeof scrut === 'string') { true } else { false }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 
 
@@ -27,7 +28,7 @@ concat of
 :e
 (~)("a", "b", "c")
 //│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 3
-//│ ║  l.28: 	(~)("a", "b", "c")
+//│ ║  l.29: 	(~)("a", "b", "c")
 //│ ╙──      	   ^^^^^^^^^^^^^^^
 //│ = "ab"
 
@@ -35,14 +36,14 @@ concat of
 :e
 (~)("a")
 //│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.36: 	(~)("a")
+//│ ║  l.37: 	(~)("a")
 //│ ╙──      	   ^^^^^
 //│ = "aundefined"
 
 :ge
 ~"a"
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
-//│ ║  l.43: 	~"a"
+//│ ║  l.44: 	~"a"
 //│ ╙──      	 ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -50,7 +51,7 @@ concat of
 :ge
 ~("a", "b")
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
-//│ ║  l.51: 	~("a", "b")
+//│ ║  l.52: 	~("a", "b")
 //│ ╙──      	       ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -59,10 +60,10 @@ concat of
 :ge
 ~ of "a", "b"
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'of' keyword instead
-//│ ║  l.60: 	~ of "a", "b"
+//│ ║  l.61: 	~ of "a", "b"
 //│ ╙──      	  ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.60: 	~ of "a", "b"
+//│ ║  l.61: 	~ of "a", "b"
 //│ ╙──      	     ^^^
 //│ ═══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

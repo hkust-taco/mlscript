@@ -18,8 +18,9 @@ s(123)
 
 :sjs
 ex |>. s(123)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp1; tmp1 = Predef.call(ex, s); runtime.safeCall(tmp1(123))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [123, 456]
 
 
@@ -46,7 +47,7 @@ g(123)
 :e
 Example |>. g(123)
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type Example.
-//│ ║  l.47: 	Example |>. g(123)
+//│ ║  l.48: 	Example |>. g(123)
 //│ ║        	^^^^^^^
 //│ ╙── Module argument passed to a non-module parameter.
 //│ = [123, 456, [123, 456]]

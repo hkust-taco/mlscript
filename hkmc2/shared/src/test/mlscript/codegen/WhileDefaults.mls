@@ -7,7 +7,7 @@
 () => while
   false do print(1)
   _ do print(2)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda;
 //│ lambda = (undefined, function () {
 //│   lbl: while (true) {
@@ -21,6 +21,7 @@
 //│   return runtime.Unit
 //│ });
 //│ lambda
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 // * ...is currently interpreted the same as the loop below

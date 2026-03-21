@@ -4,15 +4,16 @@
 :sjs
 @tailrec
 fun f = f
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f; f = function f() { loopLabel: while (true) { continue loopLabel; } };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :fixme
 module Foo with
   @tailrec
   fun bar = bar
 //│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
-//│ ║  l.13: 	  fun bar = bar
+//│ ║  l.14: 	  fun bar = bar
 //│ ╙──      	      ^^^
 
 @tailrec
@@ -26,7 +27,7 @@ fun f(x) = f(x + 1)
 
 :sjs
 fun f(x) = f(f(x) + 1)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f3;
 //│ f3 = function f(x) {
 //│   loopLabel: while (true) {
@@ -37,6 +38,7 @@ fun f(x) = f(f(x) + 1)
 //│     continue loopLabel;
 //│   }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 module A with
   fun f(x) = @tailcall f(f(x) + 1)
@@ -49,7 +51,7 @@ module A with
 module B with
   fun g(x) = A.f(x * 2)
 //│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
-//│ ║  l.48: 	  fun f(x) = B.g(x + 1)
+//│ ║  l.50: 	  fun f(x) = B.g(x + 1)
 //│ ╙──      	      ^
 
 

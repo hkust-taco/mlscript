@@ -23,7 +23,7 @@ fun hi(n) =
   if n === 0 then 0
   else hi(n - 1)
 hi(0)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let hi, tmp, $_stack$_safe$_body$_;
 //│ runtime.resetEffects();
 //│ hi = function hi(n) {
@@ -47,6 +47,7 @@ hi(0)
 //│ tmp = runtime.runStackSafe(6, $_stack$_safe$_body$_);
 //│ if (runtime.curEffect !== null) { tmp = runtime.topLevelEffect(false); }
 //│ tmp
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 :sjs
@@ -58,7 +59,7 @@ fun sum(n) =
   else
     n + sum(n - 1)
 sum(10000)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let sum1, tmp1, $_stack$_safe$_body$_1;
 //│ runtime.resetEffects();
 //│ sum1 = function sum(n) {
@@ -67,7 +68,7 @@ sum(10000)
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
-//│     return runtime.unwind(sum1, -1, "StackSafetyLift.mls:56:1", null, null, 1, 1, n, 0)
+//│     return runtime.unwind(sum1, -1, "StackSafetyLift.mls:57:1", null, null, 1, 1, n, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -88,7 +89,7 @@ sum(10000)
 //│           runtime.stackDepth = curDepth;
 //│           runtime.resumeValue = res;
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(sum1, 1, "StackSafetyLift.mls:59:9", null, null, 1, 1, n, 0)
+//│             return runtime.unwind(sum1, 1, "StackSafetyLift.mls:60:9", null, null, 1, 1, n, 0)
 //│           }
 //│           pc = 1;
 //│           continue main
@@ -108,6 +109,7 @@ sum(10000)
 //│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
 //│ if (runtime.curEffect !== null) { tmp1 = runtime.topLevelEffect(false); }
 //│ tmp1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 50005000
 
 // stack-overflows without :stackSafe
@@ -205,7 +207,7 @@ foo(h)
 :stackSafe
 :sjs
 fun max(a, b) = if a < b then b else a
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let max;
 //│ runtime.resetEffects();
 //│ max = function max(a, b) {
@@ -213,6 +215,7 @@ fun max(a, b) = if a < b then b else a
 //│   scrut = a < b;
 //│   if (scrut === true) { return b } else { return a }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 :sjs
@@ -220,8 +223,9 @@ fun max(a, b) = if a < b then b else a
 fun hi(n) = n
 hi(0)
 //│ /!!!\ Option ':stackSafe' requires ':effectHandlers' to be set
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let hi1; hi1 = function hi(n) { return n }; hi1(0)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 :stackSafe 42

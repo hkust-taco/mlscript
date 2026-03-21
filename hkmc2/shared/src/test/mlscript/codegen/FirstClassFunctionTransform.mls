@@ -3,7 +3,7 @@
 
 :sjs
 fun aux(f) = f(1) + f(10)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let aux;
 //│ aux = function aux(f) {
 //│   let tmp, tmp1;
@@ -11,12 +11,13 @@ fun aux(f) = f(1) + f(10)
 //│   tmp1 = runtime.safeCall(f.call(10));
 //│   return tmp + tmp1
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 :sjs
 fun f(x, y, b) =
   aux(z => x + z) * aux(z => if b then y + z else y - z)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f, lambda, lambda1, Function$2, Function$3, Function$$, Function$$1;
 //│ Function$$1 = function Function$$(isMut, x) {
 //│   let tmp;
@@ -88,6 +89,7 @@ fun f(x, y, b) =
 //│   tmp1 = aux(tmp3);
 //│   return tmp * tmp1
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 121
 f(0, 0, true)
@@ -96,15 +98,17 @@ f(0, 0, true)
 
 :sjs
 (x => x)(42)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda2; lambda2 = (undefined, function (x) { return x }); lambda2(42)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
 
 :sjs
 let x = 1 in (y => x + y)(0)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let x, lambda3; x = 1; lambda3 = (undefined, function (y) { return x + y }); lambda3(0)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 
@@ -112,7 +116,7 @@ let x = 1 in (y => x + y)(0)
 fun foo(x) = x + 1
 fun bar(f) = f(0)
 bar(foo)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let bar, foo, Function$5, tmp;
 //│ foo = function foo(x1) {
 //│   return x1 + 1
@@ -136,6 +140,7 @@ bar(foo)
 //│ });
 //│ tmp = globalThis.Object.freeze(new Function$5());
 //│ bar(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 :expect 1
@@ -153,12 +158,12 @@ let f = foo in bar(f)
 bar([foo].0)
 bar([foo, x => x].1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if 0 is a function.
-//│ ║  l.153: 	bar([foo].0)
+//│ ║  l.158: 	bar([foo].0)
 //│ ╙──       	         ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 0$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
 //│ ╔══[COMPILATION ERROR] Cannot determine if 1 is a function.
-//│ ║  l.154: 	bar([foo, x => x].1)
+//│ ║  l.159: 	bar([foo, x => x].1)
 //│ ╙──       	                 ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 1$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
@@ -175,7 +180,7 @@ bar([foo, x => x].(i))
 :ge
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.176: 	[foo, x => x].(i)(0)
+//│ ║  l.181: 	[foo, x => x].(i)(0)
 //│ ╙──       	               ^
 
 
@@ -189,10 +194,10 @@ let foo = Foo()
 foo.("f")(0)
 foo.("h")(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.189: 	foo.("f")(0)
+//│ ║  l.194: 	foo.("f")(0)
 //│ ╙──       	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.190: 	foo.("h")(1)
+//│ ║  l.195: 	foo.("h")(1)
 //│ ╙──       	^^^^^^^^
 //│ = 0
 //│ foo = Foo()
@@ -201,7 +206,7 @@ foo.("h")(1)
 :sjs
 class Foo(x) with
   fun foo(f) = f(x)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo3;
 //│ Foo3 = function Foo(x1) {
 //│   return globalThis.Object.freeze(new Foo.class(x1));
@@ -221,12 +226,13 @@ class Foo(x) with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", [null]]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 :expect 0
 :sjs
 Foo(1).foo(x => x - 1)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp14, lambda9, Function$29, tmp15;
 //│ tmp14 = Foo3(1);
 //│ lambda9 = (undefined, function (x1) {
@@ -248,6 +254,7 @@ Foo(1).foo(x => x - 1)
 //│ });
 //│ tmp15 = globalThis.Object.freeze(new Function$29());
 //│ tmp14.foo(tmp15)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 
@@ -255,7 +262,7 @@ Foo(1).foo(x => x - 1)
 :sjs
 fun foo() = x => x
 foo()(1)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo3, tmp16, lambda10, Function$31;
 //│ lambda10 = (undefined, function (x1) {
 //│   return x1
@@ -281,13 +288,14 @@ foo()(1)
 //│ };
 //│ tmp16 = foo3();
 //│ runtime.safeCall(tmp16.call(1))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 
 :sjs
 class Bar() with
   fun bar() = x => x 
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Bar1, lambda11, Function$33;
 //│ lambda11 = (undefined, function (x1) {
 //│   return x1
@@ -323,6 +331,7 @@ class Bar() with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Bar", []]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 :expect 42
@@ -333,7 +342,7 @@ Bar().bar()(42)
 :sjs
 class Baz(b) with
   fun baz() = x => x + b
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Baz1, lambda12, Function$35, Function$$2;
 //│ Function$$2 = function Function$$(isMut, b) {
 //│   let tmp19;
@@ -383,6 +392,7 @@ class Baz(b) with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Baz", [null]]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 :expect 42
@@ -395,7 +405,7 @@ module Foo with
   fun aux(f) = f(1) + f(10)
   fun f(x, y, b) =
     aux(z => x + z) * aux(z => if b then y + z else y - z)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo5, lambda13, lambda14, Function$38, Function$39, Function$$3, Function$$4;
 //│ Function$$4 = function Function$$(isMut, x1) {
 //│   let tmp21;
@@ -485,13 +495,15 @@ module Foo with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 :expect 121
 :sjs
 Foo.f(0, 0, true)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ Foo5.f(0, 0, true)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 121
 
 
@@ -499,7 +511,7 @@ Foo.f(0, 0, true)
 module Foo with
   class Bar(y) with
     fun bar(z) = x => x + y + z 
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo7, lambda15, Function$41, Function$$5;
 //│ Function$$5 = function Function$$(isMut, y, z) {
 //│   let tmp21;
@@ -567,6 +579,7 @@ module Foo with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 :expect 3
@@ -580,7 +593,7 @@ let x = 1
 
 :sjs
 y => x + y
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda16, Function$43, tmp23;
 //│ lambda16 = (undefined, function (y) {
 //│   return x1 + y
@@ -601,6 +614,7 @@ y => x + y
 //│ });
 //│ tmp23 = globalThis.Object.freeze(new Function$43());
 //│ tmp23
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class anonymous
 
 
@@ -612,12 +626,13 @@ y => x + y
 :sjs
 fun foo(x) = x + 1
 fun bar(x) = foo(x) + 1
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let bar2, foo4;
 //│ foo4 = function foo(x2) {
 //│   return x2 + 1
 //│ };
 //│ bar2 = function bar(x2) { let tmp24; tmp24 = foo4(x2); return tmp24 + 1 };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 class A(val x)
@@ -629,7 +644,7 @@ A(42)
 
 :sjs
 A(x => x).x(1)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda18, tmp24, Function$45, tmp25;
 //│ lambda18 = (undefined, function (x2) {
 //│   return x2
@@ -651,6 +666,7 @@ A(x => x).x(1)
 //│ tmp25 = globalThis.Object.freeze(new Function$45());
 //│ tmp24 = A1(tmp25);
 //│ runtime.safeCall(tmp24.x.call(1))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 
@@ -658,7 +674,7 @@ A(x => x).x(1)
 fun foo(x) = x + 1
 fun bar(x) = foo(x) + 1
 A(foo).x(0)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let bar3, foo5, tmp26, Function$47, tmp27;
 //│ foo5 = function foo(x2) {
 //│   return x2 + 1
@@ -685,13 +701,14 @@ A(foo).x(0)
 //│ tmp27 = globalThis.Object.freeze(new Function$47());
 //│ tmp26 = A1(tmp27);
 //│ runtime.safeCall(tmp26.x.call(0))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 
 :sjs
 module Foo with
   fun foo(x) = x + 1
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo9;
 //│ (class Foo8 {
 //│   static {
@@ -708,6 +725,7 @@ module Foo with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 fun foo(f) = f(0)
 
@@ -715,7 +733,7 @@ fun foo(f) = f(0)
 :expect 1
 :sjs
 foo(Foo.foo)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Function$49, tmp28;
 //│ (class Function$48 extends globalThis.Function {
 //│   static {
@@ -733,6 +751,7 @@ foo(Foo.foo)
 //│ });
 //│ tmp28 = globalThis.Object.freeze(new Function$49());
 //│ foo6(tmp28)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 
@@ -785,7 +804,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.786: 	foo.f(0)
+//│ ║  l.805: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -803,7 +822,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.804: 	foo.x(0)
+//│ ║  l.823: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 
@@ -837,7 +856,7 @@ let bar = Bar().bar in bar(1)
 :sjs
 module Foo with
   val f = x => x
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo17, lambda22, Function$61;
 //│ lambda22 = (undefined, function (x2) {
 //│   return x2
@@ -873,6 +892,7 @@ module Foo with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 Foo.f(1)
@@ -899,7 +919,7 @@ Foo.Bar.g2(1)
 
 :sjs
 x => y => x + y
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda23, lambda24, Function$68, Function$69, tmp39, Function$$7;
 //│ Function$$7 = function Function$$(isMut, x2) {
 //│   let tmp40;
@@ -950,12 +970,13 @@ x => y => x + y
 //│ });
 //│ tmp39 = globalThis.Object.freeze(new Function$69());
 //│ tmp39
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class anonymous
 
 
 :sjs
 fun foo(x)(y) = x + y
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo11, lambda$, Function$71, Function$$8;
 //│ Function$$8 = function Function$$(isMut, x2) {
 //│   let tmp40;
@@ -986,6 +1007,7 @@ fun foo(x)(y) = x + y
 //│   static [definitionMetadata] = ["class", "Function$"]; 
 //│ });
 //│ foo11 = function foo(x2) { let tmp40; tmp40 = Function$$8(false, x2); return tmp40 };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 :expect 1
@@ -994,7 +1016,7 @@ let bar = foo(1) in bar(0)
 
 :sjs
 fun foo(x)(y)(z) = x + y + z
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo12, lambda$1, lambda$2, Function$74, Function$75, Function$$9, Function$$10;
 //│ Function$$10 = function Function$$(isMut, x2, y) {
 //│   let tmp40;
@@ -1059,6 +1081,7 @@ fun foo(x)(y)(z) = x + y + z
 //│   static [definitionMetadata] = ["class", "Function$"]; 
 //│ });
 //│ foo12 = function foo(x2) { let tmp40; tmp40 = Function$$9(false, x2); return tmp40 };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 :expect 2
@@ -1072,13 +1095,14 @@ fun foo(x) =
     x + y
   bar(x * 2)
 foo(1)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let bar8, foo13;
 //│ bar8 = function bar(x2, y) {
 //│   return x2 + y
 //│ };
 //│ foo13 = function foo(x2) { let tmp40; tmp40 = x2 * 2; return bar8(x2, tmp40) };
 //│ foo13(1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
 
@@ -1086,7 +1110,7 @@ fun foo(f) = f("abc")
 
 :sjs
 foo(print)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Function$77, tmp40;
 //│ (class Function$76 extends globalThis.Function {
 //│   static {
@@ -1104,6 +1128,7 @@ foo(print)
 //│ });
 //│ tmp40 = globalThis.Object.freeze(new Function$77());
 //│ foo14(tmp40)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 
 
 

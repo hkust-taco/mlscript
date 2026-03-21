@@ -6,9 +6,10 @@
 fun f =
   if true then return 1 else return 2
   (???)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f;
 //│ f = function f() { let scrut; scrut = true; if (scrut === true) { return 1 } else { return 2 } };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // * Note: we don't currently remove the call to `???` because
 // * while the previous block is abortive, that cannot be seen syntactically
@@ -17,7 +18,7 @@ fun f =
 fun f =
   if true and false then return()
   (???)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f1;
 //│ f1 = function f() {
 //│   let scrut, scrut1;
@@ -39,5 +40,6 @@ fun f =
 //│   }
 //│   return Predef.notImplementedError
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

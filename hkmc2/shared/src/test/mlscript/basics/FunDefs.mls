@@ -52,7 +52,7 @@ fun not(b) = !b
 //│ ╔══[PARSE ERROR] Expected an expression; found dynamic selector instead
 //│ ║  l.51: 	fun not(b) = !b
 //│ ╙──      	             ^^
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ DynAccess:
 //│   obj = TermDef:
 //│     k = Fun

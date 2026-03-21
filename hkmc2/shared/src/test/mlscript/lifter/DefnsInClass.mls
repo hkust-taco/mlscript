@@ -6,7 +6,7 @@ data class A(x) with
   data class B(y) with
     fun getB() = x + y
   fun getA() = B(2).getB()
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let B1, A1, B$;
 //│ B$ = function B$(isMut, A2, y) {
 //│   let tmp;
@@ -60,6 +60,7 @@ data class A(x) with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A", ["x"]]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 3
 A(1).getA()
@@ -80,7 +81,7 @@ class A with
     fun g() = 2
     g
 (new A).x()
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let g, A3, tmp2;
 //│ g = function g() {
 //│   return 2
@@ -98,6 +99,7 @@ class A with
 //│ });
 //│ tmp2 = globalThis.Object.freeze(new A3());
 //│ runtime.safeCall(tmp2.x())
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
 :expect 2

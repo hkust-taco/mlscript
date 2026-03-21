@@ -164,6 +164,13 @@ abstract class DiffMaker:
   val output = Outputter(out)
   val report = ReportFormatter(output(_), colorize = false)
   
+  var printedSeparatedSection = false
+  def outputSeparator(title: Str): Unit =
+    printedSeparatedSection = true
+    val totalSepLen = output.ColWidth - title.length - 4
+    val preSepLen = output.ColWidth/5 - title.length/2
+    output("—" * preSepLen + s"| $title |" + "—" * (totalSepLen - preSepLen))
+  
   val failures = mutable.Buffer.empty[Int]
   val unmergedChanges = mutable.Buffer.empty[Int]
   
@@ -184,11 +191,12 @@ abstract class DiffMaker:
   
   
   def processBlock(origin: Origin): Unit =
+    printedSeparatedSection = false
     val globalStartLineNum = origin.startLineNum
     val blockLineNum = origin.startLineNum
     // * ^ In previous DiffTest versions, these two could be different due to relative line numbers
     
-    var parseErrors, typeErrors, compilationErrors, runtimeErrors, warnings = 0
+    var parseErrors, typeErrors, compilationErrors, runtimeErrors, warnings, internalErrors = 0
     
     val raise: Raise = d =>
       d.kind match
@@ -227,6 +235,7 @@ abstract class DiffMaker:
           failures += globalStartLineNum
           unexpected("warning", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
       case Diagnostic.Kind.Internal =>
+        internalErrors += 1
         if !tolerateErrors then
           failures += globalStartLineNum
           unexpected("internal error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
@@ -258,7 +267,13 @@ abstract class DiffMaker:
       failures += globalStartLineNum
       unexpected("lack of warnings", blockLineNum, N, () => N)
     
-    if fixme.isSet && (parseErrors + typeErrors + compilationErrors + runtimeErrors + warnings) === 0 then
+    if fixme.isSet && (
+        + parseErrors
+        + typeErrors
+        + compilationErrors
+        + runtimeErrors
+        + warnings
+        + internalErrors) === 0 then
       failures += globalStartLineNum
       unexpected("lack of error to fix", blockLineNum, N, () => N)
   

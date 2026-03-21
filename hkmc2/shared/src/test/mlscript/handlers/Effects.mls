@@ -70,7 +70,7 @@ in
   h.perform("4")
   h.perform("5")
 result
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let result, h7, tmp7, handleBlock$7, Handler$h$perform7, Handler$h$15, Handler$h$perform$4;
 //│ runtime.resetEffects();
 //│ Handler$h$perform$4 = function Handler$h$perform$(arg) {
@@ -184,6 +184,7 @@ result
 //│ tmp7 = runtime.enterHandleBlock(h7, handleBlock$7);
 //│ if (runtime.curEffect !== null) { tmp7 = runtime.topLevelEffect(false); }
 //│ result
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "54321"
 //│ result = "54321"
 
@@ -457,28 +458,28 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.452: 	    module A with
+//│ ║  l.453: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.448: 	    module A with
+//│ ║  l.449: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.444: 	    module A with
+//│ ║  l.445: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.440: 	    module A with
+//│ ║  l.441: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.440: 	    module A with
+//│ ║  l.441: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.444: 	    module A with
+//│ ║  l.445: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.448: 	    module A with
+//│ ║  l.449: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.452: 	    module A with
+//│ ║  l.453: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 

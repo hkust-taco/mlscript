@@ -6,7 +6,7 @@
 :ssjs
 fun f(x, y) = x + y
 f(2, 3)
-//│ JS:
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f;
 //│ f = function f(x, y) {
 //│   runtime.checkArgs("f", 2, true, arguments.length);
@@ -14,13 +14,14 @@ f(2, 3)
 //│ };
 //│ block$res1 = runtime.checkCall(f(2, 3));
 //│ undefined
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
 
 
 :ssjs
 let f = (x, y) => x + y
 f(2, 3)
-//│ JS:
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f1, f2;
 //│ f2 = function f(x, y) {
 //│   runtime.checkArgs("f", 2, true, arguments.length);
@@ -29,6 +30,7 @@ f(2, 3)
 //│ f1 = f2;
 //│ block$res2 = runtime.safeCall(f1(2, 3));
 //│ undefined
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
 //│ f = fun f
 
@@ -46,7 +48,7 @@ f(2, 3, 4)
 :noSanityCheck
 fun f2(x, y) = x + y
 id(f2)(2)
-//│ JS:
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f21, tmp;
 //│ f21 = function f2(x, y) {
 //│   return x + y
@@ -54,14 +56,16 @@ id(f2)(2)
 //│ tmp = Predef.id(f21);
 //│ block$res5 = runtime.safeCall(tmp(2));
 //│ undefined
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
 
 :ssjs
 :re
 id(f)(2)
-//│ JS:
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let tmp1;
 //│ tmp1 = runtime.checkCall(Predef.id(f1)); block$res6 = runtime.safeCall(tmp1(2)); undefined
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
@@ -69,7 +73,7 @@ id(f)(2)
 // :re // Argument numbers are no longer checked for lambdas, including extra parameter lists
 fun f(x)(y, z) = x + y + z
 id(f)(3)(4)
-//│ JS:
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f3, tmp2, tmp3;
 //│ f3 = function f(x) {
 //│   runtime.checkArgs("f", 1, true, arguments.length);
@@ -83,6 +87,7 @@ id(f)(3)(4)
 //│ tmp3 = runtime.safeCall(tmp2(3));
 //│ block$res7 = runtime.safeCall(tmp3(4));
 //│ undefined
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
 
 
@@ -122,7 +127,7 @@ id(Cls(1, 2)).f(3)
 data class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
 id(Cls(1, 2)).f(3, 4)(5)
-//│ JS:
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let Cls5, tmp8, tmp9, tmp10;
 //│ Cls5 = function Cls(x, y) {
 //│   return globalThis.Object.freeze(new Cls.class(x, y));
@@ -155,6 +160,7 @@ id(Cls(1, 2)).f(3, 4)(5)
 //│ tmp10 = tmp9.f(3, 4);
 //│ block$res12 = runtime.safeCall(tmp10(5));
 //│ undefined
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
 
 
@@ -185,7 +191,7 @@ module M with
 if M.A(1).y is
   x and x == 1 then x
   else 0
-//│ JS:
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let scrut, x, scrut1, tmp11, selRes1;
 //│ tmp11 = runtime.checkCall(M1.A(1));
 //│ selRes1 = tmp11.y;
@@ -197,6 +203,7 @@ if M.A(1).y is
 //│ x = scrut;
 //│ scrut1 = Predef.equals(x, 1);
 //│ if (scrut1 === true) { block$res17 = x; undefined } else { block$res17 = 0; undefined }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
 
