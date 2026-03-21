@@ -85,12 +85,12 @@ foo() + foo()
 //│       (nop)
 //│       (block (result (ref null any))
 //│         (local.set $tmp
-//│           (call_ref $foo1
-//│             (ref.func $foo)))
+//│           (ref.i31
+//│             (i32.const 42)))
 //│         (block (result (ref null any))
 //│           (local.set $tmp1
-//│             (call_ref $foo1
-//│               (ref.func $foo)))
+//│             (ref.i31
+//│               (i32.const 42)))
 //│           (call $plus_impl1
 //│             (local.get $tmp)
 //│             (local.get $tmp1))))))

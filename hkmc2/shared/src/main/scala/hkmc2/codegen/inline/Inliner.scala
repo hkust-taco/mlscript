@@ -45,6 +45,7 @@ object InlinerAnalyzer:
     defn: FunDefn,
     isMethod: Bool,
     isPrivate: Bool,
+    retCnt: Int,
     private[InlinerAnalyzer] var useCount: Int,
     private[InlinerAnalyzer] var hasNakedRef: Bool,
   ):
@@ -60,23 +61,32 @@ object InlinerAnalyzer:
 
   type InlinerMap = Map[TermSymbol, InlinerFunInfo]
 
+  case class FunLikeContext(
+    var retCnt: Int,
+  )
+
   class Traverser extends BlockTraverser:
     var map: InlinerMap = Map.empty
     val useCnt = mutable.Map.WithDefault(mutable.Map.empty[TermSymbol, Int], _ => 0)
     val usages = mutable.Map.WithDefault(mutable.Map.empty[TermSymbol, List[Call]], _ => Nil)
     val hasNakedRef = mutable.Map.WithDefault(mutable.Map.empty[TermSymbol, Bool], _ => false)
-    var isNested = false
+    var contextList: List[FunLikeContext] = FunLikeContext(0) :: Nil
+
+    def isNested = contextList.tail =/= Nil
+
+    def currentContext = contextList.head
     
     def nested(thunk: => Unit) =
-      val saved = isNested
-      isNested = true
+      contextList = FunLikeContext(0) :: contextList
       thunk
-      isNested = saved
+      val res = contextList.head
+      contextList = contextList.tail
+      res
 
     def addFunctionAndApplyBody(f: FunDefn, isMethod: Bool) =
-      map = map + (f.dSym -> InlinerFunInfo(f, isMethod, isNested, 0, false))
-      nested:
+      val r = nested:
         applyBlock(f.body)
+      map = map + (f.dSym -> InlinerFunInfo(f, isMethod, isNested, r.retCnt, 0, false))
     
     override def applyDefn(defn: Defn): Unit = defn match
       case f: FunDefn =>
@@ -104,6 +114,12 @@ object InlinerAnalyzer:
       sym.asTrm.foreach: ts =>
         useCnt(ts) += 1
         hasNakedRef(ts) = true
+
+    override def applyBlock(b: Block): Unit = b match
+      case Return(r, false) =>
+        currentContext.retCnt += 1
+        super.applyBlock(b)
+      case _ => super.applyBlock(b)
     
     def analyze(blk: Block): InlinerMap =
       applyBlock(blk)
@@ -123,7 +139,7 @@ import InlinerAnalyzer.InlinerMap
 
 object InlinerReplacer:
 
-  class Copier(doRename: Bool)(using State):
+  class Copier(doRename: Bool, k: Option[Result => Block])(using State):
     val needsSub = mutable.Set.empty[Symbol]
     val subMap = mutable.Map.empty[Symbol, Symbol]
     val resSym = TempSymbol(N, "inlinedVal")
@@ -186,7 +202,7 @@ object InlinerReplacer:
       override def applyBlock(b: Block): Block = b match
         case Return(res, false) if !currentlyNested =>
           applyResult(res): r2 =>
-            Assign(resSym, r2, Break(lblSym))
+            k.fold(Assign(resSym, r2, Break(lblSym)))(k => k(r2))
         case _ => super.applyBlock(b)
 
       override def applyScopedBlock(b: Block): Block = b match
@@ -195,7 +211,9 @@ object InlinerReplacer:
           Scoped(syms.map(_.subst), applySubBlock(body))
         case _ => super.applyScopedBlock(b)
 
-    def applyBlock(blk: Block) = (Label(lblSym, false, Copier.applyBlock(blk), _), resSym)
+    def applyBlock(blk: Block) =
+      val newBlk = Copier.applyBlock(blk)
+      (k.fold(Label(lblSym, false, newBlk, _))(_ => _ => newBlk), resSym)
 
   class Transformer(m: InlinerMap)(using Config.Inliner, State, TL) extends BlockTransformer(SymbolSubst()):
 
@@ -241,13 +259,17 @@ object InlinerReplacer:
             case N => super.applyResult(r)(k)
             case S(matchedArgs) =>
               // Depends on whether the source is eliminated, we can reuse symbol from the original block.
-              val copier = Copier(doRename = !info.canBeInlineEliminated)
+              val isSimple = info.retCnt === 1
+              val copier = Copier(doRename = !info.canBeInlineEliminated, k = k.optionIf(isSimple))
               def go(acc: Block => Block, args: List[(Local, Result)]): Block =
                 args match
                 case Nil =>
                   val (newBlk, resSym) = copier.applyBlock(blk)
-                  tl.log(blk.showAsTree)
-                  acc(Scoped(Set.single(copier.resSym), newBlk(k(Value.Ref(resSym)))))
+                  if isSimple then
+                    // the continuation is already baked into newBlk via the copier
+                    acc(newBlk(End()))
+                  else
+                    acc(Scoped(Set.single(copier.resSym), newBlk(k(Value.Ref(resSym)))))
                 case (sym, value) :: rest =>
                   copier.addRenamedSymbol(sym)
                   go(acc.assignScoped(sym.subst(using copier.Subst), value), rest)

@@ -138,8 +138,8 @@ f().foo()
 //│     }
 //│   }
 //│   #Good$cap;
-//│   #y;
 //│   #x;
+//│   #y;
 //│   #scope0$cap;
 //│   foo() {
 //│     let tmp6, tmp7;
@@ -228,6 +228,7 @@ fun f() =
   fun foo() = Test
   foo()(0)
 f().get()
+//│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 0
 

@@ -41,17 +41,23 @@ fun test(a) =
 //│       ])
 //│     } 
 //│     g(d) {
-//│       let h;
+//│       let h, e;
 //│       const this$Inner = this;
-//│       h = function h(e) {
+//│       h = function h(e1) {
 //│         return globalThis.Object.freeze([
 //│           a,
 //│           this$Inner.b,
 //│           d,
-//│           e
+//│           e1
 //│         ])
 //│       };
-//│       return h(d)
+//│       e = d;
+//│       return globalThis.Object.freeze([
+//│         a,
+//│         this.b,
+//│         d,
+//│         e
+//│       ])
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Inner", ["b"]]; 
@@ -161,8 +167,8 @@ Foo(123)
 //│     baz = function baz() {
 //│       return this$Foo.a
 //│     };
-//│     bar();
-//│     return baz()
+//│     this.a;
+//│     return this.a
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", ["a"]]; 
@@ -200,7 +206,7 @@ Bar(1)
 //│       bar = function bar() {
 //│         return this$Bar.x
 //│       };
-//│       return bar()
+//│       return this.x
 //│     }
 //│   }
 //│   toString() { return runtime.render(this); }

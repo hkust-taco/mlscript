@@ -31,7 +31,13 @@ fun f(x) =
   return y
 f(1)
 //│ JS (unsanitized):
-//│ let f2; f2 = function f(x) { throw runtime.safeCall(globalThis.Error("e")) }; f2(1)
+//│ let f2, inlinedVal1, x1;
+//│ f2 = function f(x2) {
+//│   throw runtime.safeCall(globalThis.Error("e"))
+//│ };
+//│ x1 = 1;
+//│ inlinedLbl1: { throw runtime.safeCall(globalThis.Error("e")); }
+//│ inlinedVal1
 //│ ═══[RUNTIME ERROR] Error: e
 
 
@@ -42,8 +48,8 @@ fun f(x) =
 f(false)
 //│ JS (unsanitized):
 //│ let f3;
-//│ f3 = function f(x) {
-//│   if (x === true) {
+//│ f3 = function f(x2) {
+//│   if (x2 === true) {
 //│     throw runtime.safeCall(globalThis.Error("x"))
 //│   } else { throw runtime.safeCall(globalThis.Error("y")) }
 //│ };

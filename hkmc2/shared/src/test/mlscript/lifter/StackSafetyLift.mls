@@ -221,7 +221,7 @@ fun hi(n) = n
 hi(0)
 //│ /!!!\ Option ':stackSafe' requires ':effectHandlers' to be set
 //│ JS (unsanitized):
-//│ let hi1; hi1 = function hi(n) { return n }; hi1(0)
+//│ let hi1, n; hi1 = function hi(n1) { return n1 }; n = 0; n
 //│ = 0
 
 :stackSafe 42

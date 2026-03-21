@@ -10,3 +10,87 @@
 
 
 
+
+:sjs
+:lift
+:noTailRec
+fun w() =
+  let f = ()
+  set f = n =>
+    if n > 0 then n + f(n - 1)
+    else 0
+  f(1)
+w()
+//│ JS (unsanitized):
+//│ let w, lambda, Capture$scope01, lambda$;
+//│ (class Capture$scope0 {
+//│   static {
+//│     Capture$scope01 = this
+//│   }
+//│   constructor(f$0) {
+//│     this.f$0 = f$0;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Capture$scope0"]; 
+//│ });
+//│ lambda$ = (undefined, function (scope0$cap) {
+//│   return (n) => {
+//│     return lambda(scope0$cap, n)
+//│   }
+//│ });
+//│ lambda = (undefined, function (scope0$cap, n) {
+//│   let scrut, tmp, tmp1;
+//│   scrut = n > 0;
+//│   if (scrut === true) {
+//│     tmp = n - 1;
+//│     tmp1 = runtime.safeCall(scope0$cap.f$0(tmp));
+//│     return n + tmp1
+//│   } else {
+//│     return 0
+//│   }
+//│ });
+//│ w = function w() {
+//│   let f, scope0$cap, lambda$here;
+//│   scope0$cap = new Capture$scope01(f);
+//│   scope0$cap.f$0 = runtime.Unit;
+//│   lambda$here = lambda$(scope0$cap);
+//│   scope0$cap.f$0 = lambda$here;
+//│   return runtime.safeCall(scope0$cap.f$0(1))
+//│ };
+//│ w()
+//│ = 1
+
+:sjs
+:dl
+fun f() = 1
+f()
+//│ Lowering.term 1
+//│ Lowering.term member:f⁰()
+//│ Expanding term App(Ref(member:f),Tup(List()))
+//│ ~> App(Ref(member:f),Tup(List()))
+//│ Expanding term Ref(member:f)
+//│ ~> Resolved(Ref(member:f),term:f)
+//│ Lowering.term member:f⁰ – symbol term:f
+//│ Expanding term Ref(member:f)
+//│ ~> Resolved(Ref(member:f),term:f)
+//│ avoidNames Scoped(Set(member:f),Define(FunDefn(None,member:f,term:f,List(ParamList(‹›,List(),None)),Return(Lit(...
+//│ | avoidNames Define(FunDefn(None,member:f,term:f,List(ParamList(‹›,List(),None)),Return(Lit(IntLit(1)),false)),Re...
+//│ | | avoidNames Return(Lit(IntLit(1)),false)...
+//│ | | avoidNames Return(Lit(IntLit(1)),true)...
+//│ JS (unsanitized):
+//│ let f; f = function f() { return 1 }; 1
+//│ Lowering.term 1
+//│ Lowering.term member:f⁰()
+//│ Expanding term App(Ref(member:f),Tup(List()))
+//│ ~> App(Ref(member:f),Tup(List()))
+//│ Expanding term Ref(member:f)
+//│ ~> Resolved(Ref(member:f),term:f)
+//│ Lowering.term member:f⁰ – symbol term:f
+//│ Expanding term Ref(member:f)
+//│ ~> Resolved(Ref(member:f),term:f)
+//│ avoidNames Scoped(Set(member:f),Define(FunDefn(None,member:f,term:f,List(ParamList(‹›,List(),None)),Return(Lit(...
+//│ | avoidNames Define(FunDefn(None,member:f,term:f,List(ParamList(‹›,List(),None)),Return(Lit(IntLit(1)),false)),As...
+//│ | | avoidNames Return(Lit(IntLit(1)),false)...
+//│ | | avoidNames Assign(tmp:block$res,Lit(IntLit(1)),Return(Lit(UnitLit(false)),true))...
+//│ | | | avoidNames Return(Lit(UnitLit(false)),true)...
+//│ = 1

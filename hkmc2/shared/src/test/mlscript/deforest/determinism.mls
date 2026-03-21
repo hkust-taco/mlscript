@@ -102,13 +102,19 @@ c2 of A(A(A(A(A(A(1))))))
 //│   return fv_arg$A$0$18(fv_a4, fv_arg$A$0$19, fv_tmp9, fv_tmp9)
 //│ };
 //│ define c2_19$arg$A$0$_A⁴ as fun (fv_a5, fv_arg$A$0$20, fv_tmp10, fv_tmp11, A_a11) {
+//│   let fv_tmp12;
 //│   set fv_arg$A$0$20 = A_a11;
 //│   set fv_a5 = fv_arg$A$0$20;
 //│   set fv_tmp11 = fv_a5;
-//│   return c2_19$split_root$_rest¹(fv_tmp11)
+//│   set fv_tmp12 = fv_tmp11;
+//│   return fv_tmp12
 //│ };
 //│ define c2_19$x_rest⁰ as fun (fv_tmp12) {
-//│   return c2_19$split_default$_rest¹(fv_tmp12)
+//│   let inlinedVal, fv_tmp13;
+//│   set fv_tmp13 = fv_tmp12;
+//│   block inlinedLbl:
+//│     throw new globalThis⁰.Error⁰("match error")
+//│   return inlinedVal
 //│ };
 //│ define c2_19$split_default$_rest⁰ as fun (fv_tmp13) {
 //│   throw new globalThis⁰.Error⁰("match error")
@@ -120,16 +126,20 @@ c2 of A(A(A(A(A(A(1))))))
 //│   return c2_19$x_rest¹(fv_tmp15)
 //│ };
 //│ define c2_19$arg$A$0$_rest¹ as fun (fv_tmp16) {
-//│   return c2_19$arg$A$0$_rest⁵(fv_tmp16)
+//│   let fv_tmp17;
+//│   set fv_tmp17 = fv_tmp16;
+//│   return c2_19$x_rest¹(fv_tmp17)
 //│ };
 //│ define c2_19$arg$A$0$_rest² as fun (fv_tmp17) {
-//│   return c2_19$arg$A$0$_rest⁶(fv_tmp17)
+//│   return c2_19$arg$A$0$_rest⁵(fv_tmp17)
 //│ };
 //│ define c2_19$arg$A$0$_rest³ as fun (fv_tmp18) {
-//│   return c2_19$arg$A$0$_rest⁷(fv_tmp18)
+//│   let fv_tmp19;
+//│   set fv_tmp19 = fv_tmp18;
+//│   return c2_19$arg$A$0$_rest⁵(fv_tmp19)
 //│ };
 //│ define c2_19$arg$A$0$_rest⁴ as fun (fv_tmp19) {
-//│   return c2_19$arg$A$0$_rest⁸(fv_tmp19)
+//│   return c2_19$arg$A$0$_rest⁶(fv_tmp19)
 //│ };
 //│ define c2⁰ as fun (x1) {
 //│   let a, arg$A$0$, arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5, tmp6;

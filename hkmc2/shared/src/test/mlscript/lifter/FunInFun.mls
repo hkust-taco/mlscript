@@ -199,7 +199,7 @@ f(1, 2, 1000)
 //│   let a1, tmp6, tmp7, f$cap;
 //│   f$cap = new Capture$f3(mutated);
 //│   a1 = g6(f$cap, immutable);
-//│   tmp6 = h2(f$cap);
+//│   tmp6 = f$cap.mutated$0;
 //│   tmp7 = a1 + tmp6;
 //│   return tmp7 + unused
 //│ };
