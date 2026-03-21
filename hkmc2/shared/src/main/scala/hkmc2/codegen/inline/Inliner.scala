@@ -184,17 +184,20 @@ object InlinerReplacer:
         res
 
       override def applyBlock(b: Block): Block = b match
-        case Scoped(syms, body) if !currentlyNested =>
-          syms.foreach(addRenamedSymbol)
-          super.applyBlock(b)
         case Return(res, false) if !currentlyNested =>
           applyResult(res): r2 =>
             Assign(resSym, r2, Break(lblSym))
         case _ => super.applyBlock(b)
 
+      override def applyScopedBlock(b: Block): Block = b match
+        case Scoped(syms, body) if !currentlyNested =>
+          syms.foreach(addRenamedSymbol)
+          Scoped(syms.map(_.subst), applySubBlock(body))
+        case _ => super.applyScopedBlock(b)
+
     def applyBlock(blk: Block) = (Label(lblSym, false, Copier.applyBlock(blk), _), resSym)
 
-  class Transformer(m: InlinerMap)(using Config.Inliner, State) extends BlockTransformer(SymbolSubst()):
+  class Transformer(m: InlinerMap)(using Config.Inliner, State, TL) extends BlockTransformer(SymbolSubst()):
 
     // The call graph may be cyclic, in which case we break the infinite loop using this map by
     // assuring that the block corresponding to a term symbol may only be transformed once.
@@ -243,6 +246,7 @@ object InlinerReplacer:
                 args match
                 case Nil =>
                   val (newBlk, resSym) = copier.applyBlock(blk)
+                  tl.log(blk.showAsTree)
                   acc(Scoped(Set.single(copier.resSym), newBlk(k(Value.Ref(resSym)))))
                 case (sym, value) :: rest =>
                   copier.addRenamedSymbol(sym)
@@ -250,10 +254,10 @@ object InlinerReplacer:
               go(blockBuilder, matchedArgs)
       case _ => super.applyResult(r)(k)
 
-  def replace(m: InlinerMap, blk: Block)(using Config.Inliner, State): Block =
+  def replace(m: InlinerMap, blk: Block)(using Config.Inliner, State, TL): Block =
     Transformer(m).applyBlock(blk)
 
-class Inliner(using Config.Inliner, TL, State):
+class Inliner(using Config.Inliner, State, TL):
   def applyBlock(blk: Block) =
     val m = InlinerAnalyzer.walk(blk)
     InlinerReplacer.replace(m, blk)
