@@ -51,7 +51,7 @@ sealed abstract class Block extends Product:
   // * now that we properly put everything in proper Scoped blocks;
   // * and `definedVars` itself should be removed.
   lazy val definedVars: Set[Local] = this match
-    case _: Return | _: Throw => Set.empty
+    case _: Return | _: Throw | _: Unreachable => Set.empty
     case Begin(sub, rst) => sub.definedVars ++ rst.definedVars
     case Assign(l: TermSymbol, r, rst) => rst.definedVars
     case Assign(l, r, rst) => rst.definedVars + l
@@ -363,7 +363,7 @@ object TryBlock:
     case _: Unreachable => body
     case _ =>
       rest match
-      case Scoped(syms, body) => Scoped(syms, TryBlock(body, finallyDo, body))
+      case Scoped(syms, innerRest) => Scoped(syms, TryBlock(body, finallyDo, innerRest))
       case _ => new TryBlock(body, finallyDo, rest)
 object Assign:
   def apply(lhs: Local, rhs: Result, rest: Block): Block = rest match
