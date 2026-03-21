@@ -35,11 +35,11 @@ fun foo(x) = x is Cross
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo;
 //│ foo = function foo(x2) {
-//│   let unapplyResult, output, bindings;
+//│   let unapplyResult;
 //│   unapplyResult = runtime.safeCall(Cross1.unapply(x2));
 //│   if (unapplyResult instanceof runtime.MatchSuccess.class) {
-//│     output = unapplyResult.output;
-//│     bindings = unapplyResult.bindings;
+//│     unapplyResult.output;
+//│     unapplyResult.bindings;
 //│     return true
 //│   } else { return false }
 //│ };

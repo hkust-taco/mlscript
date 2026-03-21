@@ -5,7 +5,6 @@ import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import semantics.*
-import os.write.over
 
 
 // Default implementation: nothing is transformed
@@ -13,10 +12,21 @@ class BlockTransformer(subst: SymbolSubst):
   
   given SymbolSubst = subst
   
+  def applyProgram(prog: Program): Program =
+    val imports2 = prog.imports.mapConserve(applyImport)
+    val main2 = applyBlock(prog.main)
+    if (imports2 is prog.imports) && (main2 is prog.main) then prog
+    else Program(imports2, main2)
+  
+  def applyImport(imp: Local -> Str): Local -> Str =
+    val (l, s) = imp
+    val l2 = applyLocal(l)
+    if l2 is l then imp else l2 -> s
+  
   def applySubBlock(b: Block): Block = applyBlock(b)
   
   def applyBlock(b: Block): Block = b match
-    case _: End => b
+    case _: End | _: Unreachable => b
     case Break(lbl) =>
       val lbl2 = lbl.subst
       if lbl2 is lbl then b else Break(lbl2)
@@ -188,11 +198,16 @@ class BlockTransformer(subst: SymbolSubst):
       if (tsym2 is tsym) && (sym2 is sym) && (rhs2 is rhs)
         then k(defn) else k(ValDefn(tsym2, sym2, rhs2))
   
+  def applyPublicField(f: BlockMemberSymbol -> TermSymbol): BlockMemberSymbol -> TermSymbol =
+    val f_1_2 = f._1.subst
+    val f_2_2 = f._2.subst
+    if (f_1_2 is f._1) && (f_2_2 is f._2) then f else f_1_2 -> f_2_2
+  
   def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
     val isym2 = defn.isym.subst
     val methods2 = defn.methods.mapConserve(applyFunDefn)
     val privateFields2 = defn.privateFields.mapConserve(_.subst)
-    val publicFields2 = defn.publicFields.mapConserve(f => f._1.subst -> f._2.subst)
+    val publicFields2 = defn.publicFields.mapConserve(applyPublicField)
     val ctor2 = applyFunBodyLikeBlock(defn.ctor)
     if (methods2 is defn.methods) &&
         (privateFields2 is defn.privateFields) &&
@@ -212,10 +227,10 @@ class BlockTransformer(subst: SymbolSubst):
       val ctorSym2 = ctorSym.mapConserve(_.subst)
       val paramsOpt2 = paramsOpt.mapConserve(applyParamList)
       val auxParams2 = auxParams.mapConserve(applyParamList)
-      val withoutParentPath = (parentPath2: Opt[Path]) =>
+      def helper(parentPath2: Opt[Path]) =
         val methods2 = methods.mapConserve(applyFunDefn)
         val privateFields2 = privateFields.mapConserve(_.subst)
-        val publicFields2 = publicFields.mapConserve(f => f._1.subst -> f._2.subst)
+        val publicFields2 = publicFields.mapConserve(applyPublicField)
         val preCtor2 = applyFunBodyLikeBlock(preCtor)
         val ctor2 = applyFunBodyLikeBlock(ctor)
         val mod2 = mod.mapConserve(applyObjBody)
@@ -232,10 +247,10 @@ class BlockTransformer(subst: SymbolSubst):
             then defn else ClsLikeDefn(own2, isym2, sym2, ctorSym2, kind, paramsOpt2, 
               auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2, bufferable)
       parentPath match
-        case Some(pp) => applyPath(pp): pp2 =>
-          withoutParentPath:
-            if pp2 is pp then parentPath else Some(pp2)
-        case None => withoutParentPath(parentPath)
+      case Some(pp) => applyPath(pp): pp2 =>
+        helper:
+          if pp2 is pp then parentPath else Some(pp2)
+      case None => helper(parentPath)
       
   
   def applyArg(arg: Arg)(k: Arg => Block): Block =

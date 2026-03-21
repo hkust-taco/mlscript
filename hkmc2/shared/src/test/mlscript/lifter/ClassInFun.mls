@@ -176,8 +176,8 @@ f().foo()
 //│   static [definitionMetadata] = ["class", "Bad", []]; 
 //│ });
 //│ f6 = function f() {
-//│   let x, y, z, w, tmp6, scope0$cap;
-//│   scope0$cap = new Capture$scope01(z, w);
+//│   let x, y, tmp6, scope0$cap;
+//│   scope0$cap = new Capture$scope01(undefined, undefined);
 //│   x = 1;
 //│   y = 10;
 //│   scope0$cap.z$0 = 10;

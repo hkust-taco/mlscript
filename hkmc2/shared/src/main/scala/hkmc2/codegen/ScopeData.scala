@@ -186,7 +186,7 @@ object ScopeData:
           f._1.traverse; f._2.traverse
         traverser.applySubBlock(preCtor)
         traverser.applySubBlock(ctor)
-      case ScopedObject.Companion(comp, cls) => traverser.applyClsLikeBody(comp)
+      case ScopedObject.Companion(comp, cls) => traverser.applyCompanionModule(comp)
       case ScopedObject.Func(fun, isMethod) => traverser.applyFunDefn(fun)
       case ScopedObject.ScopedBlock(uid, block) => traverser.applyBlock(block)
       case ScopedObject.ClassCtor(c) => ()

@@ -239,6 +239,8 @@ class BuiltinSymbol
   
   def subst(using sub: SymbolSubst): BuiltinSymbol = sub.mapBuiltInSym(this)
   
+  def isPure: Bool = true // * For now, all builtins are pure
+  
   // * A basic approximation of builtin operator types
   lazy val signature : semantics.flow.Producer =
     import typing.Type
@@ -381,6 +383,18 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends Symbol:
   
   var defn: Opt[Defn] = N
   def bms: Opt[BlockMemberSymbol] = defn.map(_.bsym) 
+  
+  /** Whether we know it's pure when selected (eg getters are not always pure). */
+  def isPure: Bool =
+    this match
+    case _: ModuleOrObjectSymbol => true
+    case _ =>
+      defn.exists:
+        case d: ClassDef => true
+        case TermDefinition(k = _: syntax.ValLike) => true
+        case TermDefinition(k = syntax.Fun, params = _ :: _) =>
+          true // References to functions are only guaranteed to be pure when the functions have parameter lists
+        case _ => false
   
   def subst(using sub: SymbolSubst): DefinitionSymbol[Defn]
   

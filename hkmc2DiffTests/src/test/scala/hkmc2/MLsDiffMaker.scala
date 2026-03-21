@@ -40,6 +40,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showLoweredTree = NullaryCommand("lot")
   val ppLoweredTreeOld = NullaryCommand("slot", () => output("Option ':slot' is deprecated, use ':sir' instead."))
   val showIR = NullaryCommand("sir")
+  val showOptimizedIR = NullaryCommand("soir")
   val showContext = NullaryCommand("ctx")
   val parseOnly = NullaryCommand("parseOnly")
   val funcToCls = NullaryCommand("ftc")
@@ -115,6 +116,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       deforest = Opt.when(deforest.isSet)(Deforest.default),
       qqEnabled = importQQ.isSet,
       funcToCls = funcToCls.isSet,
+      commentGeneratedCode = debug.isSet,
     )
   
   

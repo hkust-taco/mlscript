@@ -69,8 +69,6 @@ f(1, 2)
 //│   }
 //│ };
 //│ g3 = function g(used1, used2, g_arg) {
-//│   let used3;
-//│   used3 = 2;
 //│   return used1 + used2
 //│ };
 //│ f3 = function f(used1, unused1) {
@@ -269,7 +267,7 @@ fun g() =
   f
 g()(1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let h5, f15, g13, tmp6, Capture$scope07, f$;
+//│ let f15, g12, tmp6, Capture$scope07, f$;
 //│ (class Capture$scope06 {
 //│   static {
 //│     Capture$scope07 = this
@@ -280,30 +278,23 @@ g()(1)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Capture$scope0"]; 
 //│ });
-//│ h5 = function h(scope0$cap, x1, k) {
-//│   k = 5;
-//│   x1 = 4;
-//│   return x1 + scope0$cap.y$0
-//│ };
 //│ f$ = function f$(scope0$cap) {
 //│   return (x1) => {
 //│     return f15(scope0$cap, x1)
 //│   }
 //│ };
 //│ f15 = function f(scope0$cap, x1) {
-//│   let k;
-//│   k = 4;
 //│   scope0$cap.y$0 = 2;
 //│   return x1
 //│ };
-//│ g13 = function g() {
-//│   let y1, scope0$cap, f$here;
-//│   scope0$cap = new Capture$scope07(y1);
+//│ g12 = function g() {
+//│   let scope0$cap, f$here;
+//│   scope0$cap = new Capture$scope07(undefined);
 //│   scope0$cap.y$0 = 0;
 //│   f$here = f$(scope0$cap);
 //│   return f$here
 //│ };
-//│ tmp6 = g13();
+//│ tmp6 = g12();
 //│ runtime.safeCall(tmp6(1))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
@@ -384,8 +375,8 @@ fun f(x) =
   x
 f(0)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g18, f24;
-//│ g18 = function g(x1) {
+//│ let g16, f24;
+//│ g16 = function g(x1) {
 //│   let tmp8;
 //│   tmp8 = x1 + 1;
 //│   x1 = tmp8;
@@ -394,7 +385,7 @@ f(0)
 //│ f24 = function f(x1) {
 //│   let scrut, tmp8;
 //│   scrut = true;
-//│   if (scrut === true) { return g18(x1) }
+//│   if (scrut === true) { return g16(x1) }
 //│   tmp8 = x1 + 1;
 //│   x1 = tmp8;
 //│   return x1
@@ -420,13 +411,13 @@ fun f(x) =
     set y = 2
     [g, g]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g20, f26, g$8;
+//│ let g18, f26, g$8;
 //│ g$8 = function g$(y1) {
 //│   return () => {
-//│     return g20(y1)
+//│     return g18(y1)
 //│   }
 //│ };
-//│ g20 = function g(y1) {
+//│ g18 = function g(y1) {
 //│   return y1
 //│ };
 //│ f26 = function f(x1) {
@@ -450,13 +441,13 @@ fun f(x) =
   set x += 1
   [a, g]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g23, f27, Capture$f7, g$9;
+//│ let g19, f27, Capture$f7, g$9;
 //│ g$9 = function g$(f$cap) {
 //│   return () => {
-//│     return g23(f$cap)
+//│     return g19(f$cap)
 //│   }
 //│ };
-//│ g23 = function g(f$cap) {
+//│ g19 = function g(f$cap) {
 //│   return f$cap.x$0
 //│ };
 //│ (class Capture$f6 {

@@ -255,7 +255,7 @@ fact(3)
 :sjs
 region x in 42
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x1; x1 = globalThis.Object.freeze(new globalThis.Region()); 42
+//│ globalThis.Object.freeze(new globalThis.Region()); 42
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 //│ Type: Int
@@ -264,7 +264,7 @@ region x in 42
 :sjs
 region x in x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x2; x2 = globalThis.Object.freeze(new globalThis.Region()); x2
+//│ let x1; x1 = globalThis.Object.freeze(new globalThis.Region()); x1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Region
 //│ Type: Region[?]
@@ -273,9 +273,9 @@ region x in x
 :sjs
 region x in x.ref 42
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x3;
-//│ x3 = globalThis.Object.freeze(new globalThis.Region());
-//│ globalThis.Object.freeze(new globalThis.Ref(x3, 42))
+//│ let x2;
+//│ x2 = globalThis.Object.freeze(new globalThis.Region());
+//│ globalThis.Object.freeze(new globalThis.Ref(x2, 42))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Ref(Region, 42)
 //│ Type: Ref[Int, ?]
@@ -284,9 +284,9 @@ region x in x.ref 42
 :sjs
 region x in let y = x.ref 42 in !(y)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x4, y;
-//│ x4 = globalThis.Object.freeze(new globalThis.Region());
-//│ y = globalThis.Object.freeze(new globalThis.Ref(x4, 42));
+//│ let x3, y;
+//│ x3 = globalThis.Object.freeze(new globalThis.Region());
+//│ y = globalThis.Object.freeze(new globalThis.Ref(x3, 42));
 //│ y.value
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
@@ -296,9 +296,9 @@ region x in let y = x.ref 42 in !(y)
 :sjs
 region x in let y = x.ref 42 in y := 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x5, y1;
-//│ x5 = globalThis.Object.freeze(new globalThis.Region());
-//│ y1 = globalThis.Object.freeze(new globalThis.Ref(x5, 42));
+//│ let x4, y1;
+//│ x4 = globalThis.Object.freeze(new globalThis.Region());
+//│ y1 = globalThis.Object.freeze(new globalThis.Ref(x4, 42));
 //│ y1.value = 0;
 //│ 0
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

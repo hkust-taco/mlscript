@@ -113,7 +113,7 @@ fun foo(x) = foo
 //│ ║  l.108: 	fun foo(x) = foo
 //│ ╙──       	^^^^^^^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo4, foo5; foo4 = function foo(x) { return foo5 }; foo5 = 1;
+//│ let foo4; foo4 = 1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ foo = 1
 
@@ -121,9 +121,9 @@ fun foo(x) = foo
 :re
 foo(1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ runtime.safeCall(foo5(1))
+//│ runtime.safeCall(foo4(1))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] TypeError: foo5 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: foo4 is not a function
 
 
 fun f(x) =

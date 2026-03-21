@@ -185,8 +185,6 @@ class Foo with
 //│   constructor() {
 //│     this.x1 = 1;
 //│     this.x2 = 2;
-//│     this.#y1 = 3;
-//│     this.#y2 = 4;
 //│     Predef.print("hello");
 //│   }
 //│   #y1;
@@ -255,10 +253,10 @@ class Foo with
   val x = 2
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
-//│ ║  l.254: 	  val x = 1
+//│ ║  l.252: 	  val x = 1
 //│ ║         	  ^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.255: 	  val x = 2
+//│ ║  l.253: 	  val x = 2
 //│ ╙──       	  ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo12;
@@ -280,10 +278,10 @@ class Foo with
   val x = 1
   let x = 2
 //│ ╔══[COMPILATION ERROR] Name 'x' is already used
-//│ ║  l.281: 	  let x = 2
+//│ ║  l.279: 	  let x = 2
 //│ ║         	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.280: 	  val x = 1
+//│ ║  l.278: 	  val x = 1
 //│ ╙──       	  ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo14;
@@ -293,7 +291,6 @@ class Foo with
 //│   }
 //│   constructor() {
 //│     this.x = 1;
-//│     this.#x = 2;
 //│   }
 //│   #x;
 //│   toString() { return runtime.render(this); }
@@ -311,7 +308,7 @@ class Foo with
 :e
 class Foo with val x = 1
 //│ ╔══[COMPILATION ERROR] Illegal body of class definition (should be a block; found term definition).
-//│ ║  l.312: 	class Foo with val x = 1
+//│ ║  l.309: 	class Foo with val x = 1
 //│ ╙──       	               ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo16;

@@ -28,7 +28,8 @@ case class Config(
   tailRecOpt: Bool,
   deforest: Opt[Deforest],
   qqEnabled: Bool,
-  funcToCls: Bool
+  funcToCls: Bool,
+  commentGeneratedCode: Bool,
 ):
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
@@ -64,9 +65,10 @@ object Config:
     deforest = N,
     qqEnabled = false,
     funcToCls = false,
+    commentGeneratedCode = false,
   )
   object default:
-    val patMatConsequentSharingThreshold = S(10)
+    val patMatConsequentSharingThreshold = S(15)
   
   case class SanityChecks(light: Bool)
   

@@ -262,7 +262,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         def compute: StateId = forceId(go(rst)(using partitioned = true), false)
         def transitionSoft: Block = transitionOrBlk(go(rst))
 
-      val nonTrivialBlockChecker = new BlockDataTransformer(SymbolSubst()):
+      val nonTrivialBlockChecker = new BlockDataTransformer(SymbolSubst.Id):
         override def applyBlock(b: Block) = b match
           // Special handling for tail calls
           case Return(c @ Call(fun, args), false) =>
@@ -370,7 +370,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val initPart = BlockPartition(go(blk)(using N, false), opt.stackSafety.isDefined)
     result(initId) = initPart
 
-    val replaceStaleLabels = new BlockTransformerShallow(SymbolSubst()):
+    val replaceStaleLabels = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyBlock(b: Block): Block = b match
         case Break(label) if labelIds(label)._2.isUsed => StateTransition(labelIds(label)._2.force_!)
         case Continue(label) if labelIds(label)._1.isUsed => StateTransition(labelIds(label)._2.force_!)
@@ -529,7 +529,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, bod2)(fun.forceTailRec)
       (debugInfoSym, debugInfo, fun2)
 
-    val subblockTransform = new BlockTransformer(SymbolSubst()):
+    val subblockTransform = new BlockTransformer(SymbolSubst.Id):
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case fun: FunDefn =>
           if !h.allowDefn then
@@ -589,7 +589,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val pcVar = freshTmp("pc")
     val mainLoopLbl = freshLabel("main")
 
-    val postTransform = new BlockTransformerShallow(SymbolSubst()):
+    val postTransform = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyBlock(b: Block) = b match
         case StateTransition(uid) =>
           Assign(pcVar, Value.Lit(Tree.IntLit(uid)), Continue(mainLoopLbl))
@@ -647,7 +647,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           End(),
           S(Assign(l, onEffect, End())))
         .rest(rst)
-    val topLevelTransform = new BlockTransformerShallow(SymbolSubst()):
+    val topLevelTransform = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyBlock(b: Block) = b match
         case Assign(lhs, EffectfulResult(r), rest) =>
           // Optimization to reuse lhs instead of fresh local
@@ -708,7 +708,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   
   def translateHandleBlocks(b: Block): Block =
 
-    val transform = new BlockTransformer(SymbolSubst()):
+    val transform = new BlockTransformer(SymbolSubst.Id):
       override def applyBlock(b: Block) = b match
         case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
           val hdr2 = hdr.map(applyHandler)

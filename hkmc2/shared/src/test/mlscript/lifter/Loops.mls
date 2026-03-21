@@ -64,20 +64,16 @@ fun foo() =
 //│   static [definitionMetadata] = ["class", "Capture$scope0"]; 
 //│ });
 //│ foo2 = function foo() {
-//│   let x, scope0$cap;
-//│   scope0$cap = new Capture$scope03(x);
+//│   let scrut, tmp, scope0$cap;
+//│   scope0$cap = new Capture$scope03(undefined);
 //│   scope0$cap.x$0 = 1;
-//│   lbl: while (true) {
-//│     let scrut, tmp;
-//│     scrut = true;
-//│     if (scrut === true) {
-//│       let lambda$here;
-//│       tmp = scope0$cap.x$0 + 1;
-//│       scope0$cap.x$0 = tmp;
-//│       lambda$here = lambda$2(scope0$cap);
-//│       return lambda$here
-//│     }
-//│     break;
+//│   scrut = true;
+//│   if (scrut === true) {
+//│     let lambda$here;
+//│     tmp = scope0$cap.x$0 + 1;
+//│     scope0$cap.x$0 = tmp;
+//│     lambda$here = lambda$2(scope0$cap);
+//│     return lambda$here
 //│   }
 //│   return runtime.Unit
 //│ };

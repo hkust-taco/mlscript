@@ -366,27 +366,30 @@ fun foo() =
 
 // ——— ——— ———
 
+:breakme
+module Foo(x)
+
 :fixme // proper compilation error
 :sjs
 module Foo(x) with
   print(x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.371: 	module Foo(x) with
+//│ ║  l.374: 	module Foo(x) with
 //│ ╙──       	           ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo5;
-//│ (class Foo4 {
+//│ let Foo7;
+//│ (class Foo6 {
 //│   static {
-//│     Foo5 = this
+//│     Foo7 = this
 //│   }
 //│   constructor() {
 //│     runtime.Unit;
 //│   }
 //│   static #x;
 //│   static {
-//│     Foo4.#x = x;
-//│     Predef.print(Foo4.#x);
+//│     Foo6.#x = x;
+//│     Predef.print(Foo6.#x);
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
@@ -399,13 +402,13 @@ module Foo(x) with
 module Foo(val x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.399: 	module Foo(val x)
+//│ ║  l.402: 	module Foo(val x)
 //│ ╙──       	               ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo7;
-//│ (class Foo6 {
+//│ let Foo9;
+//│ (class Foo8 {
 //│   static {
-//│     Foo7 = this
+//│     Foo9 = this
 //│   }
 //│   constructor() {
 //│     runtime.Unit;
@@ -423,7 +426,7 @@ module Foo(val x)
 // TODO support syntax?
 data class Foo(mut x)
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found 'mut'-modified identifier
-//│ ║  l.424: 	data class Foo(mut x)
+//│ ║  l.427: 	data class Foo(mut x)
 //│ ╙──       	                   ^
 
 // ——— ——— ———
@@ -440,10 +443,10 @@ set this.pc = 0
 set
   (this).pc = 0
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.439: 	set this.pc = 0
+//│ ║  l.442: 	set this.pc = 0
 //│ ╙──       	    ^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.441: 	  (this).pc = 0
+//│ ║  l.444: 	  (this).pc = 0
 //│ ╙──       	   ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -453,10 +456,10 @@ set
 set
   this.pc = 0
 //│ ╔══[PARSE ERROR] Unexpected static selector here
-//│ ║  l.454: 	  this.pc = 0
+//│ ║  l.457: 	  this.pc = 0
 //│ ╙──       	      ^^^
 //│ ╔══[COMPILATION ERROR] Expected a right-hand side for this assignment
-//│ ║  l.454: 	  this.pc = 0
+//│ ║  l.457: 	  this.pc = 0
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -469,7 +472,7 @@ pattern A(pattern B) = B
 
 fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.470: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
+//│ ║  l.473: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╙──       	                                                         ^
 
 // ——— ——— ———
@@ -491,7 +494,7 @@ fun parse(tokens) =
   ()
   ???
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.492: 	  ???
+//│ ║  l.495: 	  ???
 //│ ╙──       	     ^
 
 // ——— ——— ———
@@ -500,7 +503,7 @@ fun parse(tokens) =
 :e
 class Id(name: UnboundName)
 //│ ╔══[COMPILATION ERROR] Name not found: UnboundName
-//│ ║  l.501: 	class Id(name: UnboundName)
+//│ ║  l.504: 	class Id(name: UnboundName)
 //│ ╙──       	               ^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
 //│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
@@ -518,7 +521,7 @@ if true then
 :fixme
 if true then success: 42
 //│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.519: 	if true then success: 42
+//│ ║  l.522: 	if true then success: 42
 //│ ╙──       	   ^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -549,10 +552,10 @@ pattern Bin =
   // oops
   | 1
 //│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.548: 	  | 0
+//│ ║  l.551: 	  | 0
 //│ ╙──       	  ^^^
 //│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.550: 	  | 1
+//│ ║  l.553: 	  | 1
 //│ ╙──       	  ^^^
 
 // ——— ——— ———

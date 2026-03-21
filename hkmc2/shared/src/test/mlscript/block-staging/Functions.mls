@@ -60,7 +60,7 @@ staged module CallSubst with
     Nonstaged.f()
     Staged.f()
 //│ > FunDefn(Symbol("ctor$"), ([]), End, true)
-//│ > FunDefn(Symbol("call"), ([]), Assign(Symbol("$_no$_symbol$_"), Call(Ref(Symbol("+")), [Lit(1), Lit(1)]), Assign(Symbol("$_no$_symbol$_"), Call(Select(Ref(ModuleSymbol("Nonstaged", class Nonstaged)), Symbol("f")), []), Return(Call(Select(Ref(ModuleSymbol("Staged", class Staged)), Symbol("f_gen")), []), false))), true)
+//│ > FunDefn(Symbol("call"), ([]), Assign(Symbol("$_no$_symbol$_"), Call(Select(Ref(ModuleSymbol("Nonstaged", class Nonstaged)), Symbol("f")), []), Return(Call(Select(Ref(ModuleSymbol("Staged", class Staged)), Symbol("f_gen")), []), false)), true)
 
 :ftc
 staged module Arguments with

@@ -116,7 +116,7 @@ else foo = 1
 //│ let foo1, scrut;
 //│ scrut = true;
 //│ if (scrut === true) {
-//│   block$res14 = foo1;
+//│   block$res14 = undefined;
 //│   undefined
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

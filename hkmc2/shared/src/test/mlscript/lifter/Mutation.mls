@@ -32,8 +32,8 @@ fun foo() =
 //│   return scope0$cap.x$0
 //│ };
 //│ foo = function foo() {
-//│   let x, scope0$cap, bar$here;
-//│   scope0$cap = new Capture$scope01(x);
+//│   let scope0$cap, bar$here;
+//│   scope0$cap = new Capture$scope01(undefined);
 //│   scope0$cap.x$0 = 1;
 //│   bar$here = bar$(scope0$cap);
 //│   runtime.safeCall(xs.push(bar$here));
@@ -100,7 +100,7 @@ fun foo() =
     x
   bar
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let bar4, foo4; bar4 = function bar() { let x; return x }; foo4 = function foo() { return bar4 };
+//│ let bar4, foo4; bar4 = function bar() { return }; foo4 = function foo() { return bar4 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

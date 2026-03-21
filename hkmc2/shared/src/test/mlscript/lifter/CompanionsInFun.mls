@@ -13,10 +13,7 @@ fun f(x) =
 //│ ║  l.10: 	  module A
 //│ ╙──      	         ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g, f;
-//│ g = function g(A$) {
-//│   return globalThis.Object.freeze(new A$())
-//│ };
+//│ let f;
 //│ f = function f(x) {
 //│   let A1;
 //│   (class A {

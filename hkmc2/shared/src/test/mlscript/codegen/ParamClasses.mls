@@ -217,9 +217,7 @@ class Foo(x, val y, z, val z, z) with
 //│   }
 //│   constructor(x, y, z, z1, z2) {
 //│     let tmp3, tmp4, tmp5, tmp6, tmp7;
-//│     this.#x = x;
 //│     this.y = y;
-//│     this.#z = z;
 //│     this.z = z1;
 //│     this.#z1 = z2;
 //│     this.#x1 = 1;
@@ -261,10 +259,10 @@ Foo(10, 20, 30, 40, 50)
 class Foo(val z, val z)
 //│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'z'.
 //│ ╟── Defined at: 
-//│ ║  l.261: 	class Foo(val z, val z)
+//│ ║  l.259: 	class Foo(val z, val z)
 //│ ║         	              ^
 //│ ╟── Defined at: 
-//│ ║  l.261: 	class Foo(val z, val z)
+//│ ║  l.259: 	class Foo(val z, val z)
 //│ ╙──       	                     ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo9;

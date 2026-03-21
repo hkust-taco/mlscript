@@ -19,6 +19,10 @@ import hkmc2.document.Document.{braced, bracedbk}
   * with the debug-printed names shown in other parts of the compiler, such as showAsTreee. */
 class Printer(using Raise, ShowCfg, SymbolPrinter):
   
+  val showPurity =
+    false
+    // true
+  
   def print(l: Local)(using Scope): Document =
     // * Symbols that are not local symbols in scope should be printed using their dbgName
     // *  – these will appear like `x¹²` and will be globally unique.
@@ -41,7 +45,8 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
     case Return(res, implct) => if implct then print(res) else doc"return ${print(res)}"
     case Throw(exc) => doc"throw ${print(exc)}"
     case Label(label, loop, body, rest) =>
-      val l2 = scope.allocateName(label)
+      val l2 = scope.allocateOrGetName(label)
+      // * ^ if we print the same block with a top-level label more than once, using `scope.allocateName` will crash...
       doc"${if loop then "loop" else "block"} $l2: #{  # ${print(body)} #}  # ${print(rest)}"
     case Break(label) =>
       doc"break ${print(label)}"
@@ -66,6 +71,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
         doc"let ${names.mkDocument(", ")}; # ${print(body)}"
     case End("") => doc"end"
     case End(msg) => doc"end /* ${msg} */"
+    case Unreachable(msg) => doc"unreachable /* ${msg} */"
     case _ => TODO(blk)
   
   def print(
@@ -145,10 +151,14 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
     case sel @ Select(qual, name) =>
       val docQual = print(qual)
       doc"${docQual}.${showSymbol(name.name, sel.symbol)}"
+    case DynSelect(qual, fld, arrayIdx) =>
+      doc"${print(qual)}${if arrayIdx then "." else "!"}${print(fld)}"
     case x: Value => print(x)
-    case _ => TODO(path)
+    // case _ => TODO(path)
   
-  def print(result: Result)(using Scope): Document = result match
+  def print(result: Result)(using Scope): Document =
+    (if !showPurity || result.isPure then "" else "!") ::
+    result.match
     case Call(fun, args) => doc"${print(fun)}(${args.map(print).mkDocument(", ")})"
     case Instantiate(mut, cls, args) =>
       doc"new ${if mut then "mut " else ""}${print(cls)}(${args.map(print).mkDocument(", ")})"
@@ -162,8 +172,6 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
       doc"${if mut then "mut " else ""}{ ${
         args.map(x => x.idx.fold(doc"...")(p => print(p) :: ": ") :: print(x.value)).mkDocument(", ")
       } }"
-    case DynSelect(qual, fld, arrayIdx) =>
-      doc"${print(qual)}${if arrayIdx then "." else "!"}${print(fld)}"
     case x: Path => print(x)
   
   def print(imports: Ls[Local -> Str])(using Scope): Document =

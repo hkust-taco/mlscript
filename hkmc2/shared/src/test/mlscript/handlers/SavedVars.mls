@@ -61,7 +61,6 @@ fun g() =
 //│           pc = 2;
 //│           continue main
 //│         } else { tmp = 2; pc = 1; continue main }
-//│         /* unreachable */
 //│         break;
 //│     }
 //│     break;

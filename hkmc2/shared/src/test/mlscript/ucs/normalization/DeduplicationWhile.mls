@@ -16,32 +16,26 @@ while true and true and false do print(1) else print(2)
 //│ lambda1 = (undefined, function () {
 //│   lbl: while (true) {
 //│     let scrut, scrut1, scrut2;
-//│     split_root$: {
-//│       split_1$: {
-//│         scrut = true;
-//│         if (scrut === true) {
-//│           scrut2 = true;
-//│           if (scrut2 === true) {
-//│             scrut1 = false;
-//│             if (scrut1 === true) {
-//│               Predef.print(1);
-//│               continue lbl
-//│             } else {
-//│               break split_1$
-//│             }
+//│     split_1$: {
+//│       scrut = true;
+//│       if (scrut === true) {
+//│         scrut2 = true;
+//│         if (scrut2 === true) {
+//│           scrut1 = false;
+//│           if (scrut1 === true) {
+//│             Predef.print(1);
+//│             continue lbl
 //│           } else {
 //│             break split_1$
 //│           }
 //│         } else {
 //│           break split_1$
 //│         }
-//│       }
-//│       Predef.print(2);
-//│       continue lbl;
+//│       } else { break split_1$ }
 //│     }
-//│     break;
+//│     Predef.print(2);
+//│     continue lbl;
 //│   }
-//│   return runtime.Unit
 //│ });
 //│ lambda1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

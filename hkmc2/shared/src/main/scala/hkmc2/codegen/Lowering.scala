@@ -11,7 +11,7 @@ import utils.*
 
 import hkmc2.Message.MessageContext
 
-import codegen.Instrumentation
+import codegen.ReflectionInstrumenter
 
 import semantics.*, ucs.FlatPattern
 import hkmc2.{semantics => sem}
@@ -35,11 +35,10 @@ object Thrw extends TailOp:
   def apply(r: Result): Block = Throw(r)
 
 
-// * No longer in meaningful use and could be removed if we don't find a use for it:
 class LoweringCtx(
-  initMap: Map[Local, Value],
-  val mayRet: Bool,
-  private val definedSymsDuringLowering: collection.mutable.Set[Symbol]
+  initMap: Map[Local, Value], // No longer in meaningful use and could be removed if we don't find a use for it
+  val mayRet: Bool, // TODO[Anson]]: document what this is for...
+  private val definedSymsDuringLowering: collection.mutable.Set[Symbol] // used to create Scoped blocks
 ):
   val map = initMap
   def collectScopedSym(s: Symbol) = definedSymsDuringLowering.add(s)
@@ -61,10 +60,13 @@ class LoweringCtx(
     case Value.Ref(l, _) => map.getOrElse(l, v)
     case _ => v
 object LoweringCtx:
-  val empty = LoweringCtx(Map.empty, false, collection.mutable.Set.empty)
   def loweringCtx(using sub: LoweringCtx): LoweringCtx = sub
-  def nestFunc(using sub: LoweringCtx): LoweringCtx = LoweringCtx(sub.map, true, sub.definedSymsDuringLowering)
-  def nestScoped(using sub: LoweringCtx): LoweringCtx = LoweringCtx(sub.map, sub.mayRet, collection.mutable.Set.empty)
+  val empty =
+    LoweringCtx(Map.empty, mayRet = false, collection.mutable.Set.empty)
+  def nestFunc(using sub: LoweringCtx): LoweringCtx =
+    LoweringCtx(sub.map, mayRet = true, sub.definedSymsDuringLowering)
+  def nestScoped(using sub: LoweringCtx): LoweringCtx =
+    LoweringCtx(sub.map, sub.mayRet, collection.mutable.Set.empty)
 end LoweringCtx
 
 import LoweringCtx.loweringCtx
@@ -1099,13 +1101,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     
     val bufferable = BufferableTransform().transform(flattened)
     
+    // * TODO[Anto]: Can we remove MergeMatchArmTransformer? Seems no longer necessary
     val merged = MergeMatchArmTransformer.applyBlock(bufferable)
-
+    
     val funcToCls =
       if config.funcToCls then Lifter(FirstClassFunctionTransformer().transform(merged)).transform
       else merged
-
-    val staged = Instrumentation(using summon).applyBlockFinal(funcToCls)
+    
+    val staged = ReflectionInstrumenter(using summon).apply(funcToCls)
     
     val res =
       if config.tailRecOpt then TailRecOpt().transform(staged)
@@ -1311,17 +1314,17 @@ object TrivialStatementsAndMatch:
       case _ => N
 
 
-object MergeMatchArmTransformer extends BlockTransformer(new SymbolSubst()):
+object MergeMatchArmTransformer extends BlockTransformer(SymbolSubst.Id):
   override def applyBlock(b: Block): Block = super.applyBlock(b) match
-    case m@Match(scrut, arms, Some(dflt), rest) =>
+    case m @ Match(scrut, arms, Some(dflt), rest) =>
       dflt match
-        case TrivialStatementsAndMatch(k, Match(scrutRewritten, armsRewritten, dfltRewritten, restRewritten))
-          if (scrutRewritten === scrut) && (restRewritten.size * armsRewritten.length) < 10 =>
-            val newArms = restRewritten match
-              case _: End => armsRewritten
-              case _ => armsRewritten.map:
-                case (cse, body) =>
-                  cse -> Begin(body, restRewritten)
-            k.getOrElse(identity: Block => Block)(Match(scrut, arms ::: newArms, dfltRewritten, rest))
-        case _ => m
+      case TrivialStatementsAndMatch(k, Match(scrutRewritten, armsRewritten, dfltRewritten, restRewritten))
+        if (scrutRewritten === scrut) && (restRewritten.size * armsRewritten.length) < 10 =>
+          val newArms = restRewritten match
+            case _: End => armsRewritten
+            case _ => armsRewritten.map:
+              case (cse, body) =>
+                cse -> Begin(body, restRewritten)
+          k.getOrElse(identity: Block => Block)(Match(scrut, arms ::: newArms, dfltRewritten, rest))
+      case _ => m
     case b => b

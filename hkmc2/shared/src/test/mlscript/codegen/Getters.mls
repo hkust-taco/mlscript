@@ -245,14 +245,11 @@ fun b() =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let b;
 //│ b = function b() {
-//│   let c, d;
-//│   c = function c() {
-//│     return 1
-//│   };
+//│   let d;
 //│   d = function d() {
-//│     let c1, tmp3;
-//│     c1 = function c() { return 2 };
-//│     tmp3 = c1();
+//│     let c, tmp3;
+//│     c = function c() { return 2 };
+//│     tmp3 = c();
 //│     return tmp3
 //│   };
 //│   return d
