@@ -9,15 +9,17 @@ fun test(x) =
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
 //│ ║  l.8: 	  [this.a, x]
 //│ ╙──     	   ^^^^
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test;
 //│ test = function test(x) { throw "This code cannot be run as its compilation yielded an error." };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :sjs
 fun test(x) =
   [globalThis.a, x]
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test1; test1 = function test(x) { return globalThis.Object.freeze([ globalThis.a, x ]) };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :re
 test(123)
@@ -42,7 +44,7 @@ module Test with
     test(x)
   fun test2(x) =
     [this.a, x]
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Test1;
 //│ (class Test {
 //│   static {
@@ -66,6 +68,7 @@ module Test with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Test"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 Test.test1(123)

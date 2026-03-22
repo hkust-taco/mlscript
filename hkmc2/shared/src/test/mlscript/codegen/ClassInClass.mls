@@ -13,7 +13,7 @@ data class Outer(a, b) with
   val i = Inner(a)
   print(i.c)
   print(i.i1(1))
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Outer1;
 //│ Outer1 = function Outer(a, b) {
 //│   return globalThis.Object.freeze(new Outer.class(a, b));
@@ -69,6 +69,7 @@ data class Outer(a, b) with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Outer", ["a", "b"]]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 val o = Outer(100, 200)

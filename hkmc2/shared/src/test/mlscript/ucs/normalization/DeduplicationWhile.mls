@@ -11,39 +11,34 @@ while true and false do print(1) else print(2)
 :sjs
 () =>
 while true and true and false do print(1) else print(2)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda1;
 //│ lambda1 = (undefined, function () {
 //│   lbl: while (true) {
 //│     let scrut, scrut1, scrut2;
-//│     split_root$: {
-//│       split_1$: {
-//│         scrut = true;
-//│         if (scrut === true) {
-//│           scrut2 = true;
-//│           if (scrut2 === true) {
-//│             scrut1 = false;
-//│             if (scrut1 === true) {
-//│               Predef.print(1);
-//│               continue lbl
-//│             } else {
-//│               break split_1$
-//│             }
+//│     split_1$: {
+//│       scrut = true;
+//│       if (scrut === true) {
+//│         scrut2 = true;
+//│         if (scrut2 === true) {
+//│           scrut1 = false;
+//│           if (scrut1 === true) {
+//│             Predef.print(1);
+//│             continue lbl
 //│           } else {
 //│             break split_1$
 //│           }
 //│         } else {
 //│           break split_1$
 //│         }
-//│       }
-//│       Predef.print(2);
-//│       continue lbl;
+//│       } else { break split_1$ }
 //│     }
-//│     break;
+//│     Predef.print(2);
+//│     continue lbl;
 //│   }
-//│   return runtime.Unit
 //│ });
 //│ lambda1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 // :sjs
@@ -63,7 +58,7 @@ while x > 0 and x ===
   2 do print("A")
   3 do print("B")
   4 do print("B")
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda2;
 //│ lambda2 = (undefined, function (x1) {
 //│   lbl: while (true) {
@@ -106,6 +101,7 @@ while x > 0 and x ===
 //│   return runtime.Unit
 //│ });
 //│ lambda2
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 :sjs
@@ -113,7 +109,7 @@ x =>
 while x > 0 and x ===
   1 and false and false do print("A")
   2 and false do print("B")
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda3;
 //│ lambda3 = (undefined, function (x1) {
 //│   lbl: while (true) {
@@ -168,6 +164,7 @@ while x > 0 and x ===
 //│   return runtime.Unit
 //│ });
 //│ lambda3
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 

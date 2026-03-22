@@ -6,38 +6,116 @@
 fun f =
   if true then return 1 else return 2
   (???)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f;
 //│ f = function f() { let scrut; scrut = true; if (scrut === true) { return 1 } else { return 2 } };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-// * Note: we don't currently remove the call to `???` because
-// * while the previous block is abortive, that cannot be seen syntactically
-// * due to the use of labels to share branches...
-:sjs
+// * Note: we now remove the call to `???` because
+// * the previous block is abortive, which cannot be seen syntactically on the fly
+// * due to the use of an intervening label, but can be simplified by BlockSimplifier.
+:sir
+:soir
 fun f =
   if true and false then return()
   (???)
-//│ JS (unsanitized):
-//│ let f1;
-//│ f1 = function f() {
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f⁰;
+//│ define f⁰ as fun f¹() {
 //│   let scrut, scrut1;
-//│   split_root$: {
-//│     split_default$: {
-//│       scrut = true;
-//│       if (scrut === true) {
-//│         scrut1 = false;
-//│         if (scrut1 === true) {
-//│           return runtime.Unit
-//│         } else {
+//│   block split_root$:
+//│     block split_default$:
+//│       set scrut = true;
+//│       match scrut
+//│         true =>
+//│           set scrut1 = false;
+//│           match scrut1
+//│             true =>
+//│               return runtime⁰.Unit⁰
+//│             else
+//│               break split_default$
+//│           end
+//│         else
 //│           break split_default$
-//│         }
-//│       } else {
-//│         break split_default$
-//│       }
-//│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
-//│   }
-//│   return Predef.notImplementedError
+//│       end
+//│     throw new globalThis⁰.Error⁰("match error")
+//│   return Predef⁰.notImplementedError⁰
 //│ };
+//│ end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f⁰;
+//│ define f⁰ as fun f¹() {
+//│   let scrut, scrut1;
+//│   block split_default$:
+//│     set scrut = true;
+//│     match scrut
+//│       true =>
+//│         set scrut1 = false;
+//│         match scrut1
+//│           true =>
+//│             return runtime⁰.Unit⁰
+//│           else
+//│             break split_default$
+//│         end
+//│       else
+//│         break split_default$
+//│     end
+//│   throw new globalThis⁰.Error⁰("match error")
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:sir
+:soir
+fun f =
+  if true and false then return "1"
+  else return "2 long long long long long long long long long long long long long long"
+  (???)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f²;
+//│ define f² as fun f³() {
+//│   let scrut, scrut1;
+//│   block split_root$:
+//│     block split_1$:
+//│       set scrut = true;
+//│       match scrut
+//│         true =>
+//│           set scrut1 = false;
+//│           match scrut1
+//│             true =>
+//│               return "1"
+//│             else
+//│               break split_1$
+//│           end
+//│         else
+//│           break split_1$
+//│       end
+//│     return "2 long long long long long long long long long long long long long long"
+//│   return Predef⁰.notImplementedError⁰
+//│ };
+//│ end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f²;
+//│ define f² as fun f³() {
+//│   let scrut, scrut1;
+//│   block split_1$:
+//│     set scrut = true;
+//│     match scrut
+//│       true =>
+//│         set scrut1 = false;
+//│         match scrut1
+//│           true =>
+//│             return "1"
+//│           else
+//│             break split_1$
+//│         end
+//│       else
+//│         break split_1$
+//│     end
+//│   return "2 long long long long long long long long long long long long long long"
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
 
 

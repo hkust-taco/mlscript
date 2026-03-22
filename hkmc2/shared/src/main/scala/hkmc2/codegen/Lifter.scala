@@ -230,7 +230,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
             f._1.traverse; f._2.traverse
           applyBlock(preCtor)
           applyBlock(ctor)
-          mod.foreach(applyClsLikeBody)
+          mod.foreach(applyCompanionModule)
       
       def isFun(d: Defn) = d match
         case _: FunDefn => true
@@ -303,7 +303,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val syms: LinkedHashMap[FunSyms[?], Local] = LinkedHashMap.empty
       val extraLocals: MutSet[Local] = MutSet.empty
 
-      val walker = new BlockDataTransformer(SymbolSubst()):
+      val walker = new BlockDataTransformer(SymbolSubst.Id):
         // only scan within the block. don't traverse
         
         def resolveDefnRef(l: BlockMemberSymbol, d: DefinitionSymbol[?], r: RewrittenScope[?]) =
@@ -538,7 +538,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     
     (defn, sortedVars.iterator.map(x => (x.ctorSyms.local, x.valDefn.tsym)).toList)
   
-  class ScopeRewriter(using ctx: LifterCtxNew) extends BlockTransformerShallow(SymbolSubst()):
+  class ScopeRewriter(using ctx: LifterCtxNew) extends BlockTransformerShallow(SymbolSubst.Id):
     
     val extraDefns: ListBuffer[Defn] = ListBuffer.empty
     

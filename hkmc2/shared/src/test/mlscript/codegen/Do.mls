@@ -3,13 +3,14 @@
 
 :elt
 do ()
-//│ Elaborated tree:
+//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Blk:
 //│     stats = Ls of 
 //│       UnitVal
 //│     res = UnitVal
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 do console.log("ok")
 //│ > ok
@@ -17,7 +18,7 @@ do console.log("ok")
 :w
 do 1
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.18: 	do 1
+//│ ║  l.19: 	do 1
 //│ ╙──      	   ^
 
 do

@@ -31,7 +31,7 @@ fun foo(y) =
       set y = 2
   (new M).foo()
 foo(10)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let M2, foo1, M$;
 //│ M$ = function M$(isMut, y) {
 //│   let tmp;
@@ -46,13 +46,10 @@ foo(10)
 //│   static {
 //│     M2 = this
 //│   }
-//│   constructor(y) {
-//│     this.#y = y;
-//│   }
+//│   constructor(y) {}
 //│   #M$cap;
 //│   #y;
 //│   foo() {
-//│     this.#y = 2;
 //│     return runtime.Unit
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -60,6 +57,7 @@ foo(10)
 //│ });
 //│ foo1 = function foo(y) { let tmp; tmp = M$(false, y); return tmp.foo() };
 //│ foo1(10)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 // * `new mut` (or lack thereof) should be preserved by the lifter
@@ -98,7 +96,7 @@ fun foo(y) =
       set y = 2
   O
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.96: 	  object O with
+//│ ║  l.94: 	  object O with
 //│ ╙──      	         ^
 
 let o = foo(10)
@@ -120,9 +118,9 @@ fun foo(x, y) =
   fun foo3 = M.foo2()
   foo3
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.116: 	  object M with
+//│ ║  l.114: 	  object M with
 //│ ╙──       	         ^
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo31, foo4;
 //│ foo31 = function foo3(M4) {
 //│   return M4.foo2()
@@ -152,8 +150,9 @@ fun foo(x, y) =
 //│   return tmp
 //│ };
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.116: 	  object M with
+//│ ║  l.114: 	  object M with
 //│ ╙──       	         ^
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 12
 foo(10, 0)
@@ -168,7 +167,7 @@ data class A(x) with
     fun bar = M.getB()
     bar
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.165: 	  object M with
+//│ ║  l.164: 	  object M with
 //│ ╙──       	         ^
 
 :expect 2
@@ -225,7 +224,7 @@ fun f =
   foo
 f.a
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.221: 	  object A with
+//│ ║  l.220: 	  object A with
 //│ ╙──       	         ^
 //│ = 2
 
@@ -235,7 +234,7 @@ module M with
     fun get = M.x + x
   val x = if A() is A then 2 else 3
 M.A().get
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let M14, tmp4;
 //│ (class M13 {
 //│   static {
@@ -276,6 +275,7 @@ M.A().get
 //│ });
 //│ tmp4 = M14.A();
 //│ tmp4.get
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 4
 
 module M with

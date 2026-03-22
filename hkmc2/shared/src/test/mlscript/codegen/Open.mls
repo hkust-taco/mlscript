@@ -8,8 +8,9 @@ module Foo with
 
 :sjs
 open Foo { x }
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ 
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 open Foo { x, y }
 
@@ -19,14 +20,14 @@ x + y
 :e
 z
 //│ ╔══[COMPILATION ERROR] Name not found: z
-//│ ║  l.20: 	z
+//│ ║  l.21: 	z
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 open Foo { a }
 //│ ╔══[COMPILATION ERROR] Module 'Foo' does not contain member 'a'
-//│ ║  l.27: 	open Foo { a }
+//│ ║  l.28: 	open Foo { a }
 //│ ╙──      	           ^
 
 

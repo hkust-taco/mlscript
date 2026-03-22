@@ -3,20 +3,23 @@
 
 :sjs
 2 + 2
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ 2 + 2
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 4
 
 :sjs
 2 +. 2
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ 2 + 2
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 4
 
 :sjs
 +2
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ + 2
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
 +
@@ -26,7 +29,7 @@
 :w
 +(2, 3)
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.27: 	+(2, 3)
+//│ ║  l.30: 	+(2, 3)
 //│ ╙──      	  ^
 //│ = 3
 
@@ -36,7 +39,7 @@
 :ge
 *(1)
 //│ ╔══[COMPILATION ERROR] Builtin '*' is not a unary operator
-//│ ║  l.37: 	*(1)
+//│ ║  l.40: 	*(1)
 //│ ╙──      	^^^^
 //│ ═══[COMPILATION ERROR] Cannot call non-unary builtin symbol '*'
 //│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'
@@ -53,7 +56,7 @@
 :ge
 (*)(2)
 //│ ╔══[COMPILATION ERROR] Builtin '*' is not a unary operator
-//│ ║  l.54: 	(*)(2)
+//│ ║  l.57: 	(*)(2)
 //│ ╙──      	^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot call non-unary builtin symbol '*'
 //│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'
@@ -73,13 +76,14 @@ id(+)(1, 2)
 :sjs
 :re
 id(+)(1)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda4, tmp1;
 //│ lambda4 = (undefined, function (arg1, arg2) {
 //│   return arg1 + arg2
 //│ });
 //│ tmp1 = Predef.id(lambda4);
 //│ runtime.safeCall(tmp1(1))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 
@@ -87,20 +91,22 @@ fun (+) lol(a, b) = [a, b]
 
 :sjs
 1 + 2
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ lol(1, 2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [1, 2]
 
 
 :sjs
 id(~)(2)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda5, tmp2;
 //│ lambda5 = (undefined, function (arg) {
 //│   return ~ arg
 //│ });
 //│ tmp2 = Predef.id(lambda5);
 //│ runtime.safeCall(tmp2(2))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = -3
 
 2 |> ~

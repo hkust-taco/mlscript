@@ -4,7 +4,7 @@ class Foo with
 
 :rt
 new Foo
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = New{typ=class:Foo⁰}:
@@ -17,7 +17,7 @@ new Foo
 // * TODO: dynamic new-expression should also be resolvable for its type
 :rt
 new! Foo
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = DynNew:
@@ -30,7 +30,7 @@ val foo: Foo = new Foo
 
 :rt
 foo
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:foo⁰,typ=class:Foo⁰}:
@@ -39,7 +39,7 @@ foo
 
 :rt
 foo.foo
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:Foo⁰/foo²,typ=class:Foo⁰}:
@@ -55,7 +55,7 @@ class Foo2[A, B] with
 
 :rt
 new Foo2
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = New{typ=class:Foo2⁰}:
@@ -68,7 +68,7 @@ new Foo2
 // * TODO: dynamic new-expression should also be resolvable for its type
 :rt
 new! Foo2
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = DynNew:
@@ -81,7 +81,7 @@ val foo: Foo2[Str, Int] = new Foo2
 
 :rt
 foo
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:foo⁴,typ=class:Foo2⁰[class:Str⁰, class:Int⁰]}:
@@ -90,7 +90,7 @@ foo
 
 :rt
 foo.foo
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:Foo2⁰/foo⁶,typ=class:Foo2⁰[class:Int⁰, class:Str⁰]}:
@@ -103,7 +103,7 @@ foo.foo
 
 :rt
 fun f(x: Foo) = x
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Ls of 
 //│     TermDefinition:
@@ -136,7 +136,7 @@ object O
 
 :rt
 M
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=module:M⁰,typ=module:M⁰}:
@@ -145,7 +145,7 @@ M
 
 :rt
 O
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=object:O⁰,typ=object:O⁰}:
@@ -157,7 +157,7 @@ val o: O = O
 
 :rt
 m
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:m⁰,typ=module:M⁰}:
@@ -166,7 +166,7 @@ m
 
 :rt
 o
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:o⁰,typ=object:O⁰}:
@@ -175,7 +175,7 @@ o
 
 :rt
 fun f(module m: M): module M = m
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Ls of 
 //│     TermDefinition:
@@ -207,7 +207,7 @@ fun f(module m: M): module M = m
 
 :rt
 fun f(o: O) = o
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Ls of 
 //│     TermDefinition:
@@ -240,7 +240,7 @@ fun f(o: O) = o
 class Foo with
   val foo = 42
   foo
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Ls of 
 //│     Plain:
@@ -278,7 +278,7 @@ class Foo with
 class Foo with
   val foo = 42
   this.foo
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Ls of 
 //│     Plain:

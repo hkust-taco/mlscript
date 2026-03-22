@@ -1,7 +1,7 @@
 
 :pt
 staged module A
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ Modified:
 //│   modifier = Keywrd of keyword 'staged'
 //│   body = TypeDef:
@@ -20,12 +20,14 @@ staged fun f() = 0
 :sir
 :staging
 staged module A
-//│ Lowered:
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let A⁰;
 //│ define A⁰ as class A¹ {
-//│   staged 
+//│   constructor {
+//│     runtime⁰.Unit⁰
+//│   }
 //│ }
-//│ module A² {
+//│ staged module A² {
 //│   constructor {
 //│     let tmp, tmp1;
 //│     begin
@@ -34,7 +36,7 @@ staged module A
 //│       runtime⁰.Unit﹖;
 //│       end
 //│   }
-//│   method ctor$_instr⁰ = fun () {
+//│   method ctor$_instr⁰ = fun ctor$_instr¹() {
 //│     let end, tmp, tmp1, tmp2, tmp3;
 //│     set end = new Block⁰.End﹖();
 //│     set tmp = new Block⁰.Symbol﹖("ctor$");
@@ -45,4 +47,5 @@ staged module A
 //│   }
 //│ };
 //│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > FunDefn(Symbol("ctor$"), ([]), End, true)

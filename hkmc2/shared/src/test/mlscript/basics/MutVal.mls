@@ -6,8 +6,9 @@ mut val cached: Int = 1
 
 :sjs
 set cached = 2
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ cached = 2; runtime.Unit
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 cached
 //│ = 2
@@ -30,31 +31,40 @@ O.gy
 //│ = 2
 
 
-:sjs
+:soir
 class Foo(x, val y, mut val z)
-//│ JS (unsanitized):
-//│ let Foo1;
-//│ Foo1 = function Foo(x, y, z) {
-//│   return globalThis.Object.freeze(new Foo.class(x, y, z));
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let Foo⁰;
+//│ define Foo⁰ as class Foo²(x, y, z) {
+//│   private val x⁰;
+//│   val y⁰;
+//│   val z⁰;
+//│   constructor Foo¹ { define y⁰ as val y¹ = y; define z⁰ as val z¹ = z; end }
 //│ };
-//│ (class Foo {
-//│   static {
-//│     Foo1.class = this
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:soir
+class Foo(x, val y, mut val z) with
+  print(x)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let Foo³;
+//│ define Foo³ as class Foo⁵(x, y, z) {
+//│   private val x¹;
+//│   val y²;
+//│   val z²;
+//│   constructor Foo⁴ {
+//│     set x¹ = x;
+//│     define y² as val y³ = y;
+//│     define z² as val z³ = z;
+//│     Predef⁰.print⁰(x¹)
 //│   }
-//│   constructor(x, y, z) {
-//│     this.#x = x;
-//│     this.y = y;
-//│     this.z = z;
-//│   }
-//│   #x;
-//│   #z;
-//│   get z() { return this.#z; }
-//│   set z(value) { this.#z = value; }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", [null, "y", "z"]]; 
-//│ });
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let f = Foo(1, 2, 3)
+//│ > 1
 //│ f = Foo(_, 2, 3)
 
 f.z

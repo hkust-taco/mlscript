@@ -723,7 +723,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
   
   def size: Int = this match
     case Lit(Tree.StrLit(str)) => str.size / 4 + 1
-    case _ => children.size + 1
+    case _ => subTerms.iterator.map(_.size).sum + 1
   
   def showDbg(using DebugPrinter): Str = this match
     case r: Ref => r.sym.showAsPlain

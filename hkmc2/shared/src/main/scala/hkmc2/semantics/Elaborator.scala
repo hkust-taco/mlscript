@@ -1680,7 +1680,7 @@ extends Importer with ucs.SplitElaborator:
       Tuple(leading.reverse, spread)
     /** Elaborate record patterns like `(a: p1, b: p2, ...pn)`. */
     def record(ps: Ls[Tree]): Ctxl[Pattern.Record] =
-      val entries = ps.foldLeft(List[(Ident, Pattern)]()):
+      val entries = ps.iterator.map(_.desugared).foldLeft(List[(Ident, Pattern)]()):
         case (acc, InfixApp(id: Ident, Keywrd(Keyword.`:`), p)) => (id, go(p)) :: acc
         case (acc, InfixApp(key: StrLit, Keywrd(Keyword.`:`), p)) =>
           ((Ident(key.value): Ident).withLocOf(key), go(p)) :: acc

@@ -9,7 +9,7 @@ fun f(x, y, z) = if x then y
 
 :pt
 fun f(x, y, z) = if x then y else z
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ TermDef:
 //│   k = Fun
 //│   head = App:
@@ -28,6 +28,7 @@ fun f(x, y, z) = if x then y else z
 //│       PrefixApp:
 //│         kw = Keywrd of keyword 'else'
 //│         rhs = Ident of "z"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 fun f(x, y, z) =
@@ -75,7 +76,7 @@ fun f(x, y, z) =
   if
     x then y else z
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.76: 	    x then y else z
+//│ ║  l.77: 	    x then y else z
 //│ ╙──      	             ^^^^
 
 
@@ -106,7 +107,7 @@ else
   else 1
 ) + 3
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.106: 	  else 1
+//│ ║  l.107: 	  else 1
 //│ ╙──       	  ^^^^
 //│ = 8
 
@@ -116,7 +117,7 @@ else
     5 else 1
 ) + 3
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.116: 	    5 else 1
+//│ ║  l.117: 	    5 else 1
 //│ ╙──       	      ^^^^
 //│ = 8
 
@@ -130,11 +131,11 @@ fun foo(x) = if x is
   else "I don't want to tell you what's inside the box."
   else "I shouldn't tell you what's inside the box."
 //│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
-//│ ║  l.129: 	  else "I can't tell you what's inside the box."
+//│ ║  l.130: 	  else "I can't tell you what's inside the box."
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.130: 	  else "I don't want to tell you what's inside the box."
+//│ ║  l.131: 	  else "I don't want to tell you what's inside the box."
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.131: 	  else "I shouldn't tell you what's inside the box."
+//│ ║  l.132: 	  else "I shouldn't tell you what's inside the box."
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -11,7 +11,7 @@ import hkmc2.syntax.Tree
 object LambdaRewriter:
   
   def desugar(b: Block)(using State) =
-    val transformer = new BlockTransformer(SymbolSubst()):
+    val transformer = new BlockTransformer(SymbolSubst.Id):
       override def applyResult(r: Result)(k: Result => Block): Block = r match
         case lam: Lambda =>
           val sym = BlockMemberSymbol("lambda", Nil, nameIsMeaningful = false)

@@ -6,14 +6,15 @@ let xs = [1, 2, 3]
 
 :sjs
 assert true
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let scrut;
 //│ scrut = true;
 //│ if (scrut === true) { runtime.Unit } else { runtime.assertFail("Assert.mls", "9") }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :re
 assert false
-//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:16)
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:17)
 
 assert xs is Array
 
@@ -22,11 +23,12 @@ assert xs is Array
 :sjs
 :fixme
 assert(true); 123
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let scrut2;
 //│ scrut2 = (true , 123);
-//│ if (scrut2 === true) { runtime.Unit } else { runtime.assertFail("Assert.mls", "25") }
-//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:25)
+//│ if (scrut2 === true) { runtime.Unit } else { runtime.assertFail("Assert.mls", "26") }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (Assert.mls:26)
 
 // * FIXME: the `else` is parsed as part of the `assert`!
 :sjs
@@ -34,7 +36,7 @@ assert(true); 123
 if 1 is
   2 then assert true
   else 3
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let scrut3, scrut4;
 //│ scrut3 = 1;
 //│ if (scrut3 === 2) {
@@ -43,6 +45,7 @@ if 1 is
 //│     runtime.Unit
 //│   } else { 3 }
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: match error
 
 

@@ -9,7 +9,7 @@ object Test with
   fun foo() =
     print(Test)
     Test.x
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Test1;
 //│ (class Test {
 //│   static {
@@ -30,6 +30,7 @@ object Test with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["object", "Test"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 Test
 //│ = Test { x: 12, class: object Test }
@@ -39,15 +40,17 @@ print(Test)
 
 :sjs
 Test.foo()
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ Test1.foo()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Test { x: 12, class: object Test }
 //│ = 12
 
 :sjs
 val Test = "oops"
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Test2; Test2 = "oops";
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ Test = "oops"
 
 :re
@@ -60,8 +63,9 @@ let x = 1
 let f = () => x
 let x = 2
 f()
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let x, f, x1, f1; x = 1; f1 = function f() { return x }; f = f1; x1 = 2; runtime.safeCall(f())
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 //│ f = fun f
 //│ x = 2
@@ -73,12 +77,12 @@ module Test with
   val x = 1
   let x = 2
 //│ ╔══[COMPILATION ERROR] Name 'x' is already used
-//│ ║  l.74: 	  let x = 2
+//│ ║  l.78: 	  let x = 2
 //│ ║        	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.73: 	  val x = 1
+//│ ║  l.77: 	  val x = 1
 //│ ╙──      	  ^^^^^^^^^
-//│ JS:
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let Test4;
 //│ globalThis.Object.freeze(class Test3 {
 //│   static {
@@ -90,12 +94,12 @@ module Test with
 //│   static #x;
 //│   static {
 //│     this.x = 1;
-//│     Test3.#x = 2;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Test"]; 
 //│ });
 //│ block$res8 = undefined;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 Test.x
 //│ = 1
@@ -116,7 +120,7 @@ data class Cls(x) with
   let x *= 2
   fun bar = x
   print(this.x, x)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Cls1;
 //│ Cls1 = function Cls(x2) {
 //│   return globalThis.Object.freeze(new Cls.class(x2));
@@ -142,6 +146,7 @@ data class Cls(x) with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Cls", ["x"]]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let cls = Cls(10)
 //│ > 10 22
@@ -180,7 +185,7 @@ module Whoops with
   module Whoops with
     val w: module Whoops = this
     fun g() = f()
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Whoops2;
 //│ (class Whoops {
 //│   static {
@@ -214,6 +219,7 @@ module Whoops with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Whoops"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 Whoops.f()
 //│ = "Hello"
@@ -228,7 +234,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[COMPILATION ERROR] Name not found: Runtime
-//│ ║  l.229: 	Runtime
+//│ ║  l.235: 	Runtime
 //│ ╙──       	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -240,7 +246,7 @@ module AA with
     fun test =
       let BB = "oops"
       y
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let AA1;
 //│ (class AA {
 //│   static {
@@ -261,8 +267,6 @@ module AA with
 //│         this.y = 2;
 //│       }
 //│       static get test() {
-//│         let BB1;
-//│         BB1 = "oops";
 //│         return BB.y;
 //│       }
 //│       toString() { return runtime.render(this); }
@@ -272,5 +276,6 @@ module AA with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "AA"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

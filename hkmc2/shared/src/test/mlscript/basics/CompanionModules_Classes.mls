@@ -7,7 +7,7 @@ module C with
 
 :rt
 C()
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = App{typ=class:C⁰}:
@@ -15,11 +15,12 @@ C()
 //│       t = Ref{sym=member:C²} of member:C²
 //│       sym = term:C⁰/C¹
 //│     rhs = Tup of Nil
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = C()
 
 :rt
 new C
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = New{typ=class:C⁰}:
@@ -28,6 +29,7 @@ new C
 //│       sym = class:C⁰
 //│     args = Nil
 //│     rft = N
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = C()
 
 new C()
@@ -35,7 +37,7 @@ new C()
 
 :rt
 C.empty
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:C³/empty⁰}:
@@ -45,6 +47,7 @@ C.empty
 //│         sym = module:C³
 //│       nme = Ident of "empty"
 //│     sym = term:C³/empty⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 :breakme // TODO: should be an error, down the line, when we resolve all selections statically
@@ -60,7 +63,7 @@ module C with
 
 :rt
 C.empty
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:C⁴/empty²}:
@@ -70,6 +73,7 @@ C.empty
 //│         sym = module:C⁴
 //│       nme = Ident of "empty"
 //│     sym = term:C⁴/empty²
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 
@@ -94,7 +98,7 @@ class Foo() with // the class definition is moved to the location of its compani
 set state += 1
 module Foo with
   val res = Foo().foo
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo1, tmp1;
 //│ tmp1 = state + 1;
 //│ state = tmp1;
@@ -117,6 +121,7 @@ module Foo with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", []]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 11
 Foo.res

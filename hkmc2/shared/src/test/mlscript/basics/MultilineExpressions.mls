@@ -64,7 +64,7 @@ fun (++) f2(a, b) = "(" + a + " + " + b + ")"
 :re
 if 1 + 2
   * 3 then 0
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
@@ -79,20 +79,21 @@ if 1 + 2
 //│             IntLit of 3
 //│     kw = Keywrd of keyword 'then'
 //│     rhs = IntLit of 0
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let scrut, tmp17;
 //│ tmp17 = 2 * 3;
 //│ scrut = 1 + tmp17;
 //│ if (scrut === true) {
 //│   0
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: match error
 
 :pt
 :re
 if 1 * 2
   + 3 then 0
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
@@ -107,6 +108,7 @@ if 1 * 2
 //│         IntLit of 3
 //│     kw = Keywrd of keyword 'then'
 //│     rhs = IntLit of 0
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: match error
 
 // TODO perhaps we should just require parenthesizing (1 + 2) here
@@ -116,23 +118,23 @@ if 1 + 2
   * 3 then 0
   + 4 then 1
 //│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
-//│ ║  l.117: 	  + 4 then 1
+//│ ║  l.119: 	  + 4 then 1
 //│ ║         	  ^
 //│ ╟── as it has lower precedence than the splitting operator here
-//│ ║  l.116: 	  * 3 then 0
+//│ ║  l.118: 	  * 3 then 0
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this operator split inner position
-//│ ║  l.117: 	  + 4 then 1
+//│ ║  l.119: 	  + 4 then 1
 //│ ║         	      ^^^^
 //│ ╟── Note: the operator split starts here
-//│ ║  l.116: 	  * 3 then 0
+//│ ║  l.118: 	  * 3 then 0
 //│ ╙──       	  ^
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.115: 	if 1 + 2
+//│ ║  l.117: 	if 1 + 2
 //│ ║         	       ^
-//│ ║  l.116: 	  * 3 then 0
+//│ ║  l.118: 	  * 3 then 0
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.117: 	  + 4 then 1
+//│ ║  l.119: 	  + 4 then 1
 //│ ╙──       	^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -141,7 +143,7 @@ if 1 + 2
 if (1 + 2)
   * 3 then 0
   + 4 then 1
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
 //│   split = OpSplit:
@@ -169,6 +171,7 @@ if (1 + 2)
 //│             IntLit of 4
 //│         kw = Keywrd of keyword 'then'
 //│         rhs = IntLit of 1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if (1 + 2)
