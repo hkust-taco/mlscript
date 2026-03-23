@@ -69,6 +69,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val importQQ = NullaryCommand("qq")
   val stageCode = NullaryCommand("staging")
   val rewriteWhile = NullaryCommand("rewriteWhile")
+  val noInlineOpt = NullaryCommand("noInline")
   val noTailRecOpt = NullaryCommand("noTailRec")
   val deforest = Command("deforest")(_.trim)
   val patMatConsequentSharingThreshold = Command("patMatConsequentSharingThreshold")(_.trim.toInt)
@@ -114,7 +115,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       rewriteWhileLoops = rewriteWhile.isSet,
       tailRecOpt = !noTailRecOpt.isSet,
       deforest = Opt.when(deforest.isSet)(Deforest.default),
-      inliner = S(Config.Inliner(1)),
+      inliner = Opt.when(!noInlineOpt.isSet)(Config.Inliner(1)),
       qqEnabled = importQQ.isSet,
       funcToCls = funcToCls.isSet,
     )

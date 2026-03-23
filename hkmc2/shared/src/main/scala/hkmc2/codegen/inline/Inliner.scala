@@ -50,8 +50,8 @@ object InlinerAnalyzer:
     private[InlinerAnalyzer] var hasNakedRef: Bool,
   ):
     def canBeInlineEliminated =
-      // isPrivate && !isMethod && useCount <= 1 && !hasNakedRef
-      false
+      isPrivate && !isMethod && useCount <= 1 && !hasNakedRef
+      // false
 
     def shouldBeInlined(newBlk: Block)(using Config.Inliner): Bool =
       // method requires the capturing of `this`, which is not supported currently.
