@@ -1,0 +1,19 @@
+:js
+
+
+
+:deadParamElim
+:fixme
+:expect 0
+fun f = (a) => 0
+f(3)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ f@1 -> all params live
+//│ dead-param-elim > prodfun f#0 @ f@3 -> all params live
+//│ dead-param-elim > prodfun f#0 @ f@4 -> all params live
+//│ dead-param-elim > prodfun lambda#0 @ f@1 -> eliminable: {0}
+//│ dead-param-elim > prodfun lambda#0 @ f@3 -> eliminable: {0}
+//│ dead-param-elim > prodfun lambda#0 @ f@4 -> all params live
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ═══[RUNTIME ERROR] Expected: '0', got: 'fun'
+//│ = fun

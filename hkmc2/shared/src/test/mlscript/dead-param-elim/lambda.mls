@@ -1,0 +1,137 @@
+:js
+
+
+
+:deadParamElim
+:expect 0
+let f = (a) => 0
+f(42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ f@0 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ f@2 -> all params live
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+//│ f = fun f_0$f
+
+
+:deadParamElim
+:expect 42
+let f = (a) => a
+f(42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ f@0 -> all params live
+//│ dead-param-elim > prodfun f#0 @ f@2 -> all params live
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 42
+//│ f = fun f
+
+
+:deadParamElim
+:expect 0
+fun apply(f, x) = f(x)
+apply((a) => 0, 42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun apply#0 @ apply@2 -> eliminable: {1}
+//│ dead-param-elim > prodfun apply#0 @ apply@4 -> all params live
+//│ dead-param-elim > prodfun lambda#0 @ lambda@3 -> eliminable: {0}
+//│ dead-param-elim > prodfun lambda#0 @ lambda@5 -> all params live
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+
+
+:deadParamElim
+:expect 43
+fun apply(f, x) = f(x)
+apply((a) => a + 1, 42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun apply#0 @ apply@3 -> all params live
+//│ dead-param-elim > prodfun apply#0 @ apply@5 -> all params live
+//│ dead-param-elim > prodfun lambda#0 @ lambda@4 -> all params live
+//│ dead-param-elim > prodfun lambda#0 @ lambda@6 -> all params live
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 43
+
+
+
+
+:deadParamElim
+fun f(a) = a
+let g = (b) => 0
+fun pick(x)(y) = if false then x else y
+pick(f)(g)(5)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ f@4 -> all params live
+//│ dead-param-elim > prodfun f#0 @ f@7 -> all params live
+//│ dead-param-elim > prodfun g#0 @ g@1 -> all params live
+//│ dead-param-elim > prodfun g#0 @ g@9 -> all params live
+//│ dead-param-elim > prodfun pick#0 @ pick@3 -> all params live
+//│ dead-param-elim > prodfun pick#0 @ pick@8 -> all params live
+//│ dead-param-elim > prodfun pick#1 @ pick@3 -> all params live
+//│ dead-param-elim > prodfun pick#1 @ pick@8 -> all params live
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+//│ g = fun g
+
+
+:deadParamElim
+fun f(a) = 0
+let g = (b) => 0
+fun pick(x)(y) = if false then x else y
+pick(f)(g)(5)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ f@4 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ f@7 -> all params live
+//│ dead-param-elim > prodfun g#0 @ g@1 -> eliminable: {0}
+//│ dead-param-elim > prodfun g#0 @ g@9 -> all params live
+//│ dead-param-elim > prodfun pick#0 @ pick@3 -> all params live
+//│ dead-param-elim > prodfun pick#0 @ pick@8 -> all params live
+//│ dead-param-elim > prodfun pick#1 @ pick@3 -> all params live
+//│ dead-param-elim > prodfun pick#1 @ pick@8 -> all params live
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+//│ g = fun g_1$g
+
+
+
+:deadParamElim
+:expect 42
+fun f(a) =
+  let g = () => a
+  g()
+f(42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ f@2 -> all params live
+//│ dead-param-elim > prodfun f#0 @ f@3 -> all params live
+//│ dead-param-elim > prodfun g#0 @ f@2 -> all params live
+//│ dead-param-elim > prodfun g#0 @ f@3 -> all params live
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 42
+
+
+
+// two `apply`, one has dead param, another does not
+:deadParamElim
+fun apply(f, x) = f(x)
+fun main(f1, f2) =
+  apply(f1, 42) + apply(f2, 0)
+fun main1() = main((a) => 0, (a) => a + 1)
+main1()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun apply#0 @ apply@11 -> all params live
+//│ dead-param-elim > prodfun apply#0 @ main1@10.main@8.apply@2 -> eliminable: {1}
+//│ dead-param-elim > prodfun apply#0 @ main1@10.main@8.apply@4 -> all params live
+//│ dead-param-elim > prodfun apply#0 @ main1@13.main@8.apply@2 -> eliminable: {1}
+//│ dead-param-elim > prodfun apply#0 @ main1@13.main@8.apply@4 -> all params live
+//│ dead-param-elim > prodfun apply#0 @ main@12.apply@2 -> all params live
+//│ dead-param-elim > prodfun apply#0 @ main@12.apply@4 -> all params live
+//│ dead-param-elim > prodfun lambda#0 @ main1@10 -> eliminable: {0}
+//│ dead-param-elim > prodfun lambda#0 @ main1@10 -> all params live
+//│ dead-param-elim > prodfun lambda#0 @ main1@13 -> eliminable: {0}
+//│ dead-param-elim > prodfun lambda#0 @ main1@13 -> all params live
+//│ dead-param-elim > prodfun main#0 @ main1@10.main@8 -> all params live
+//│ dead-param-elim > prodfun main#0 @ main1@13.main@8 -> all params live
+//│ dead-param-elim > prodfun main#0 @ main@12 -> all params live
+//│ dead-param-elim > prodfun main1#0 @ main1@10 -> all params live
+//│ dead-param-elim > prodfun main1#0 @ main1@13 -> all params live
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 1

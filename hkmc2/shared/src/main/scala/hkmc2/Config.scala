@@ -32,6 +32,7 @@ case class Config(
   commentGeneratedCode: Bool,
   noFreeze: Bool,
   noModuleCheck: Bool,
+  deadParamElim: Opt[DeadParamElim],
 ):
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
@@ -70,6 +71,7 @@ object Config:
     commentGeneratedCode = false,
     noFreeze = false,
     noModuleCheck = false,
+    deadParamElim = N
   )
   object default:
     val patMatConsequentSharingThreshold = S(15)
@@ -98,11 +100,14 @@ object Config:
 
   case class LiftDefns() // there may be other settings in the future, having it as a case class now
   
-  case class Deforest(val debug: Boolean)
+  case class Deforest(val debug: Boolean, val mono: Boolean)
 
   object Deforest:
-    val default = Deforest(true)
+    val default = Deforest(true, false)
 
+  case class DeadParamElim(val debug: Boolean, val mono: Boolean)
+  object DeadParamElim:
+    val default = DeadParamElim(true, false)
 end Config
 
 

@@ -7,18 +7,22 @@ import mlscript.utils.*, shorthands.*
 import semantics.*
 import syntax.Tree
 import scala.collection.mutable.{Set as MutSet, Map as MutMap, LinkedHashMap, Buffer}
-import hkmc2.syntax.{ImmutVal, MutVal, LetBind, HandlerBind, ParamBind, Fun, Ins}
+import hkmc2.syntax.Fun
+import hkmc2.codegen.flowAnalysis.*
 
 
 
-class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
-  import solver.FinalDestMatch
-  import solver.FinalDestSel
+class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
+  val collector = solver.constraintSolver.collector
   given tl: TraceLogger = solver.tl
-  given dState: Deforest.State = solver.dState
-  given eState: Elaborator.State = solver.collector.elabState
-  given pre: DeforestPreAnalyzer = solver.preAnalyzer
+  given fState: FlowAnalysis.State = solver.fState
+  given eState: Elaborator.State = solver.eState
+  given pre: FlowPreAnalyzer = solver.preAnalyzer
   
+  type MatchOrLabelId = ResultId | LabelSymbol
+  type BranchId = CtorDtorId -> Opt[CtorCls]
+  type LabelId = LabelSymbol -> InstantiationId
+  type RestFunId = CtorDtorId | LabelId
   
   extension (restFunId: RestFunId) def withoutInstId: MatchOrLabelId =
     restFunId match
@@ -40,7 +44,35 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
     case tSym: TermSymbol => tSym.nme
     case n: Int => n.toString
 
-  
+  private def getParentLabelOrMatchesAndRestBefore(
+    matchOrLabelId: MatchOrLabelId
+  ): (Iterator[Label | Match], Block) =
+    val ctx = matchOrLabelId match
+      case label: LabelSymbol => pre.res.labelSymToCtxOfLabel(label)
+      case dtorId: ResultId => pre.res.matchScrutToCtxOfMatch(dtorId)
+    val simpleRest = matchOrLabelId match
+      case label: LabelSymbol => pre.res.labelSymToLabelBlk(label).rest
+      case dtorId: ResultId => pre.res.matchScrutToMatchBlock(dtorId).rest
+    def it = ctx.iterator
+      .takeWhile:
+        case _: (pre.InCtx.Fn | pre.InCtx.ModCtor | pre.InCtx.Cls | pre.InCtx.ClsPreCtor | pre.InCtx.ClsCtor | pre.InCtx.TopLvl) => false
+        case _ => true
+      .collect:
+        case pre.InCtx.LblBody(l) => l
+        case pre.InCtx.MtchBody(m, _) => m
+        case pre.InCtx.BegnBody(b) => b
+    val blockUntilParent = it
+      .takeWhile(_.isInstanceOf[Begin])
+      .collect:
+        case b: Begin => b.rest
+      .foldLeft(simpleRest)(Begin.apply)
+    val parents = it
+      .collect:
+        case l: Label => l
+        case m: Match => m
+      .asInstanceOf[Iterator[Label | Match]]
+    parents -> blockUntilParent
+
   private val _symSubst = SymbolSubst.Id
   
   val newPolyFnSyms = LinkedHashMap.empty[InstantiationId, Map[TermSymbol, (BlockMemberSymbol, TermSymbol)]]
@@ -70,7 +102,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   // compute new symbols
   locally {
     def mkNewPolyFnSyms(path: List[ResultId], refedFun: ResultId): Unit =
-      val groupFuns = solver.collector.funToSccGroups(refedFun.getReferredFun.get)
+      val groupFuns = collector.funToSccGroups(refedFun.getReferredFun.get)
       newPolyFnSyms.getOrElseUpdate(
         path,
         groupFuns
@@ -91,7 +123,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
           ctorInstId <- instIds
           case path@(pathTo :+ refedFun) <- ctorInstId.inits
           // skip synthesized instIds — those rewrite in-place
-          if !solver.collector.synthesizedInstIdToFunSym.contains(path)
+          if !collector.synthesizedInstIdToFunSym.contains(path)
         do mkNewPolyFnSyms(path, refedFun)
       case FinalDestMatch(dest, sels) =>
         val ctorInfo = solver.fusingCtorInfo(ctor)
@@ -101,7 +133,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
           ctorInstId <- List(ctor.instId, dest.instId)
           case path@(pathTo :+ refedFun) <- ctorInstId.inits
           // skip synthesized instIds — those rewrite in-place
-          if !solver.collector.synthesizedInstIdToFunSym.contains(path)
+          if !collector.synthesizedInstIdToFunSym.contains(path)
         do mkNewPolyFnSyms(path, refedFun)
         
         // create branch sel syms
@@ -111,7 +143,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
             sel,
             locally:
               val selInfo = solver.fusingDtorInfo(sel).asInstanceOf[FieldSel]
-              val clsNme = selInfo.isSelFromCls.ctorClsName
+              val clsNme = selInfo.selectsFrom.ctorClsName
               fieldSym.getOrElseUpdate(
                 selInfo.field,
                 new VarSymbol(Tree.Ident(s"${clsNme}_${selInfo.field.fieldName}")))
@@ -160,7 +192,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
               case None => VarSymbol(Tree.Ident(s"_${selField.fieldName}"))
         )
         
-        val (parents, _) = pre.res.getParentLabelOrMatchesAndRestBefore(dest.exprId)
+        val (parents, _) = getParentLabelOrMatchesAndRestBefore(dest.exprId)
         for needRest <- Iterator.single(pre.res.matchScrutToMatchBlock(dest._1)) ++ parents do
           val (matchOrLabelId, nme) = needRest match
             case Match(scrut, arms, dflt, rest) => scrut.uid -> scrut.uid.getReferredSym.nme
@@ -173,7 +205,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
               new BlockMemberSymbol(restFunName, Nil, true)
               -> new TermSymbol(Fun, N, Tree.Ident(restFunName))
           )
-          val (ps, restBeforeParent) = pre.res.getParentLabelOrMatchesAndRestBefore(matchOrLabelId)
+          val (ps, restBeforeParent) = getParentLabelOrMatchesAndRestBefore(matchOrLabelId)
           restOriginalBodiesAndParentRest.getOrElseUpdate(
             matchOrLabelId,
             restBeforeParent
@@ -218,6 +250,10 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
           case _ => Nil
       val freeVars = MutSet.empty[Symbol]
       
+      private def handleTrackableSel(s: Result) =
+        val toBeSubstSymbol = branchSelSyms(s.uid.toCtorDtorId)
+        if !inCtx(toBeSubstSymbol) then freeVars.add(toBeSubstSymbol)
+      
       override def applyValue(v: Value): Unit =
         v match
         case Value.Ref(l, disamb) if !inCtx(l) && l.asClsLike.isEmpty => freeVars.add(l)
@@ -225,9 +261,8 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       
       override def applyResult(r: Result): Unit =
         r match
-        case s@DeforestTupSelect(_, _) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
-          val toBeSubstSymbol = branchSelSyms(s.uid.toCtorDtorId)
-          if !inCtx(toBeSubstSymbol) then freeVars.add(toBeSubstSymbol)
+        case s@TrackableSelect(_, _, _) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
+          handleTrackableSel(s)
         case Lambda(params, body) =>
           for p <- params.allParams do inCtx.add(p.sym)
           applyBlock(body)
@@ -236,9 +271,8 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       
       override def applyPath(p: Path): Unit =
         p match
-        case s@DeforestableSelect(sym: TermSymbol) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
-          val toBeSubstSymbol = branchSelSyms(s.uid.toCtorDtorId)
-          if !inCtx(toBeSubstSymbol) then freeVars.add(toBeSubstSymbol)
+        case s@TrackableSelect(_, _, _) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
+          handleTrackableSel(s)
         case _ => super.applyPath(p)
       
       override def applyBlock(b: Block): Unit =
@@ -334,15 +368,20 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
         case Nil => refId :: Nil
         case pathTo :+ called =>
           val lastRefedSymbol = called.getReferredFun.get
-          val funToSccRepMap = solver.collector.funToSccRep
+          val funToSccRepMap = collector.funToSccRep
           (funToSccRepMap(lastRefedSymbol), funToSccRepMap(refSym)) match
             case (Some(a), Some(b)) if a is b => instId
             case _ => instId :+ refId
         case _ => die
       override def applyResult(r: Result)(k: Result => Block): Block =
         r match
-        case s@DeforestTupSelect(_, _) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
-          k(Value.Ref(branchSelSyms(s.uid.toCtorDtorId)))
+        case s@TrackableSelect(from, _, _) =>
+          if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) then
+            k(Value.Ref(branchSelSyms(s.uid.toCtorDtorId)))
+          else if solver.finalDtorSrcs.contains(s.uid.toCtorDtorId) then
+            applyPath(from)(k)
+          else
+            super.applyResult(r)(k)
         case ctor@CtorCall(cls, args) =>
           def mkCtorFieldSyms(ctorDtorId: CtorDtorId): Ls[TempSymbol] =
             val ctorInfo = solver.fusingCtorInfo(ctorDtorId)
@@ -396,14 +435,13 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
                 mkReturnCall((branchBms, branchTermSym), ctorLamParams)),
               k(Value.Ref(lambdaSym, N)))
           )
-        case s@DeforestableSelect(sym: TermSymbol) =>
+        case s@TrackableSelect(from, _, _) =>
           if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) then
-            assert(sym.k is ParamBind)
             k(Value.Ref(branchSelSyms(s.uid.toCtorDtorId)))
           else if solver.finalDtorSrcs.contains(s.uid.toCtorDtorId) then
-            applyPath(s.qual)(k)
+            applyPath(from)(k)
           else
-            super.applyPath(p)(k)
+            super.applyPath(s)(k)
         case _ => super.applyPath(p)(k)
       
       override def applyBlock(b: Block): Block =
@@ -594,7 +632,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
     end newRestFuns
 
     val inplaceRewrittenFunBodies = Map.from[TermSymbol, Block]:
-      for (selfInstId, funSym) <- solver.collector.synthesizedInstIdToFunSym yield
+      for (selfInstId, funSym) <- collector.synthesizedInstIdToFunSym yield
         val fDefn = pre.res.funSymToFunDefn(funSym)
         funSym -> new Rewriter(selfInstId).applyBlock(fDefn.body)
 
