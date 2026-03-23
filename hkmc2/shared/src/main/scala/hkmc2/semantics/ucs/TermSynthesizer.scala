@@ -99,15 +99,18 @@ trait TermSynthesizer(using State):
   protected final def plainTest(cond: Term, dbgName: Str = "cond")(inner: => Split): Split =
     val s = TempSymbol(N, dbgName)
     Split.Let(s, cond, Branch(s.safeRef, inner) ~: Split.End)
+
+  protected final def makeBindings(fields: Ls[RcdField | RcdSpread]): Term =
+    if fields.isEmpty then `null` else Term.Rcd(false, fields)
   
   protected final def makeMatchSuccess(output: Term) =
-    `new`(matchSuccessClass, tup(fld(output), fld(rcd())) :: Nil, "result of `MatchSuccess`")
+    `new`(matchSuccessClass, tup(fld(output), fld(`null`)) :: Nil, "result of `MatchSuccess`")
   
   protected final def makeMatchSuccess(output: Term, bindings: Term) =
     `new`(matchSuccessClass, tup(fld(output), fld(bindings)) :: Nil, "result of `MatchSuccess`")
   
   protected final def makeMatchSuccess(output: Term, fields: Ls[RcdField | RcdSpread]) =
-    `new`(matchSuccessClass, tup(fld(output), fld(Term.Rcd(false, fields))) :: Nil, "result of `MatchSuccess`")
+    `new`(matchSuccessClass, tup(fld(output), fld(makeBindings(fields))) :: Nil, "result of `MatchSuccess`")
     
   protected final def makeMatchFailure(errors: Term = Term.Lit(UnitLit(true))) =
     `new`(matchFailureClass, tup(fld(errors)) :: Nil, "result of `MatchFailure`")

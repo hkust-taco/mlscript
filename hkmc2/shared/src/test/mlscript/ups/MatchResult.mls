@@ -35,7 +35,7 @@ pattern BacktrackOnRight = Pair("same", 0) | Pair("same", 1)
 pattern BacktrackOnLeft = Pair(0, "same") | Pair(1, "same")
 
 Cross.unapply("X")
-//│ = MatchSuccess("X", {})
+//│ = MatchSuccess("X", null)
 
 Cross.unapply("0")
 //│ = MatchFailure(null)
@@ -128,10 +128,9 @@ fun isCompiledId(x) = x is @compile Id
 //│ define isCompiledId⁰ as fun (x) {
 //│   let matcher__Id$, matchRecord, patternOutput, bindings, lambda;
 //│   define lambda as fun (input) {
-//│     let p_0$, tmp, tmp1;
-//│     set tmp = {  };
-//│     set tmp1 = new runtime⁰.MatchSuccess⁰(input, tmp);
-//│     set p_0$ = tmp1;
+//│     let p_0$, tmp;
+//│     set tmp = new runtime⁰.MatchSuccess⁰(input, null);
+//│     set p_0$ = tmp;
 //│     return p_0$
 //│   };
 //│   set matcher__Id$ = lambda²;
@@ -154,52 +153,14 @@ fun isCompiledBacktrackOnRight(x) = x is @compile BacktrackOnRight
 //│ define isCompiledBacktrackOnRight⁰ as fun (x) {
 //│   let matcher__BacktrackOnRight$, matcher__str4$, matcher__0_1$, matchSuccess, lambda, lambda1, lambda2;
 //│   define lambda as fun (input) {
-//│     let p_1$, p_1$1, tmp, tmp1;
-//│     match input
-//│       "same" =>
-//│         set tmp = true;
-//│         set p_1$ = tmp;
-//│         return p_1$
-//│       else
-//│         set tmp1 = false;
-//│         set p_1$1 = tmp1;
-//│         return p_1$1
-//│     end
-//│   };
-//│   set matcher__str4$ = lambda³;
-//│   define lambda1 as fun (input1) {
-//│     let p_2$, p_3$, p_2$1, p_3$1, p_2$2, p_3$2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
-//│     match input1
-//│       0 =>
-//│         set tmp = true;
-//│         set p_2$ = tmp;
-//│         set tmp1 = false;
-//│         set p_3$ = tmp1;
-//│         return { "p_2": p_2$, "p_3": p_3$ }
-//│       1 =>
-//│         set tmp2 = false;
-//│         set p_2$1 = tmp2;
-//│         set tmp3 = true;
-//│         set p_3$1 = tmp3;
-//│         return { "p_2": p_2$1, "p_3": p_3$1 }
-//│       else
-//│         set tmp4 = false;
-//│         set p_2$2 = tmp4;
-//│         set tmp5 = false;
-//│         set p_3$2 = tmp5;
-//│         return { "p_2": p_2$2, "p_3": p_3$2 }
-//│     end
-//│   };
-//│   set matcher__0_1$ = lambda⁴;
-//│   define lambda2 as fun (input2) {
 //│     let left, right, left1, right1, p_0$, result2$, result1$, result3$, result1$1, p_0$1, tmp, tmp1, tmp2, tmp3;
-//│     match input2
+//│     match input
 //│       Pair⁰ =>
-//│         match input2
+//│         match input
 //│           Object⁰ =>
-//│             match input2
+//│             match input
 //│               Field(left) =>
-//│                 set left1 = input2.left﹖;
+//│                 set left1 = input.left﹖;
 //│                 set tmp = matcher__str4$(left1);
 //│                 end
 //│               else
@@ -210,11 +171,11 @@ fun isCompiledBacktrackOnRight(x) = x is @compile BacktrackOnRight
 //│             set tmp = false;
 //│             end
 //│         set left = tmp;
-//│         match input2
+//│         match input
 //│           Object⁰ =>
-//│             match input2
+//│             match input
 //│               Field(right) =>
-//│                 set right1 = input2.right﹖;
+//│                 set right1 = input.right﹖;
 //│                 set tmp1 = matcher__0_1$(right1);
 //│                 end
 //│               else
@@ -276,7 +237,45 @@ fun isCompiledBacktrackOnRight(x) = x is @compile BacktrackOnRight
 //│         return p_0$1
 //│     end
 //│   };
-//│   set matcher__BacktrackOnRight$ = lambda⁵;
+//│   set matcher__BacktrackOnRight$ = lambda³;
+//│   define lambda1 as fun (input1) {
+//│     let p_1$, p_1$1, tmp, tmp1;
+//│     match input1
+//│       "same" =>
+//│         set tmp = true;
+//│         set p_1$ = tmp;
+//│         return p_1$
+//│       else
+//│         set tmp1 = false;
+//│         set p_1$1 = tmp1;
+//│         return p_1$1
+//│     end
+//│   };
+//│   set matcher__str4$ = lambda⁴;
+//│   define lambda2 as fun (input2) {
+//│     let p_2$, p_3$, p_2$1, p_3$1, p_2$2, p_3$2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│     match input2
+//│       0 =>
+//│         set tmp = true;
+//│         set p_2$ = tmp;
+//│         set tmp1 = false;
+//│         set p_3$ = tmp1;
+//│         return { "p_2": p_2$, "p_3": p_3$ }
+//│       1 =>
+//│         set tmp2 = false;
+//│         set p_2$1 = tmp2;
+//│         set tmp3 = true;
+//│         set p_3$1 = tmp3;
+//│         return { "p_2": p_2$1, "p_3": p_3$1 }
+//│       else
+//│         set tmp4 = false;
+//│         set p_2$2 = tmp4;
+//│         set tmp5 = false;
+//│         set p_3$2 = tmp5;
+//│         return { "p_2": p_2$2, "p_3": p_3$2 }
+//│     end
+//│   };
+//│   set matcher__0_1$ = lambda⁵;
 //│   set matchSuccess = matcher__BacktrackOnRight$(x);
 //│   match matchSuccess
 //│     true =>
@@ -437,14 +436,28 @@ fun isCompiledBacktrackOnLeft(x) = x is @compile BacktrackOnLeft
 //│ define isCompiledBacktrackOnLeft⁰ as fun (x) {
 //│   let matcher__BacktrackOnLeft$, matcher__0_1$, matcher__str4$, matchSuccess, lambda, lambda1, lambda2;
 //│   define lambda as fun (input) {
-//│     let left, right, left1, right1, p_0$, result3$, result1$, result3$1, result2$, p_0$1, tmp, tmp1, tmp2, tmp3;
+//│     let p_3$, p_3$1, tmp, tmp1;
 //│     match input
+//│       "same" =>
+//│         set tmp = true;
+//│         set p_3$ = tmp;
+//│         return p_3$
+//│       else
+//│         set tmp1 = false;
+//│         set p_3$1 = tmp1;
+//│         return p_3$1
+//│     end
+//│   };
+//│   set matcher__str4$ = lambda⁹;
+//│   define lambda1 as fun (input1) {
+//│     let left, right, left1, right1, p_0$, result3$, result1$, result3$1, result2$, p_0$1, tmp, tmp1, tmp2, tmp3;
+//│     match input1
 //│       Pair⁰ =>
-//│         match input
+//│         match input1
 //│           Object⁰ =>
-//│             match input
+//│             match input1
 //│               Field(left) =>
-//│                 set left1 = input.left﹖;
+//│                 set left1 = input1.left﹖;
 //│                 set tmp = matcher__0_1$(left1);
 //│                 end
 //│               else
@@ -455,11 +468,11 @@ fun isCompiledBacktrackOnLeft(x) = x is @compile BacktrackOnLeft
 //│             set tmp = { "p_1": false, "p_2": false };
 //│             end
 //│         set left = tmp;
-//│         match input
+//│         match input1
 //│           Object⁰ =>
-//│             match input
+//│             match input1
 //│               Field(right) =>
-//│                 set right1 = input.right﹖;
+//│                 set right1 = input1.right﹖;
 //│                 set tmp1 = matcher__str4$(right1);
 //│                 end
 //│               else
@@ -521,10 +534,10 @@ fun isCompiledBacktrackOnLeft(x) = x is @compile BacktrackOnLeft
 //│         return p_0$1
 //│     end
 //│   };
-//│   set matcher__BacktrackOnLeft$ = lambda⁹;
-//│   define lambda1 as fun (input1) {
+//│   set matcher__BacktrackOnLeft$ = lambda¹⁰;
+//│   define lambda2 as fun (input2) {
 //│     let p_1$, p_2$, p_1$1, p_2$1, p_1$2, p_2$2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
-//│     match input1
+//│     match input2
 //│       0 =>
 //│         set tmp = true;
 //│         set p_1$ = tmp;
@@ -545,21 +558,7 @@ fun isCompiledBacktrackOnLeft(x) = x is @compile BacktrackOnLeft
 //│         return { "p_1": p_1$2, "p_2": p_2$2 }
 //│     end
 //│   };
-//│   set matcher__0_1$ = lambda¹⁰;
-//│   define lambda2 as fun (input2) {
-//│     let p_3$, p_3$1, tmp, tmp1;
-//│     match input2
-//│       "same" =>
-//│         set tmp = true;
-//│         set p_3$ = tmp;
-//│         return p_3$
-//│       else
-//│         set tmp1 = false;
-//│         set p_3$1 = tmp1;
-//│         return p_3$1
-//│     end
-//│   };
-//│   set matcher__str4$ = lambda¹¹;
+//│   set matcher__0_1$ = lambda¹¹;
 //│   set matchSuccess = matcher__BacktrackOnLeft$(x);
 //│   match matchSuccess
 //│     true =>

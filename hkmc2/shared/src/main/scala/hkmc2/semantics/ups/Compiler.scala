@@ -51,8 +51,9 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
   private def emptyMatchResult(reason: Str)(using mode: ResultMode): Term =
     if isMatchOnly then bool(false) else makeMatchFailure(str(reason))
 
-  private def successfulMatchResult(output: Usable, bindings: Usable)(using mode: ResultMode): Term =
-    if isMatchOnly then bool(true) else makeMatchSuccess(output.use, bindings.use)
+  private def nullifyEmptyBindings(bindings: Term): Term = bindings match
+    case Rcd(false, Nil) => `null`
+    case bindings => bindings
   
   extension (label: Label)
     /** This decides the the field name of each label in the match record. */
@@ -200,7 +201,8 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
           // There is no topmost transform here, so we emit the direct success
           // value: `MatchSuccess` in full mode, `true` in match-only mode.
           makeConsequent = (outputSymbol, bindings) => Split.Else:
-            successfulMatchResult(outputSymbol, bindings),
+            if isMatchOnly then bool(true)
+            else makeMatchSuccess(outputSymbol.use, nullifyEmptyBindings(bindings.use)),
           alternative = Split.Else(emptyMatchResult("topmost")))
         val test = SynthIf(split)
         (DefineVar(symbol, test) :: LetDecl(symbol, Nil) :: stmts, (label, symbol.safeRef) :: results)
@@ -246,10 +248,11 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     // If no transform is provided, we just return the current scrutinee and
     // the bindings through `MatchSuccess`.
     case N => Split.Else:
-      makeMatchSuccess(output, bindings)
+      makeMatchSuccess(output, nullifyEmptyBindings(bindings))
     case S(transform) =>
       val resultSymbol = TempSymbol(N, "transformResult")
-      val transformTerm = app(transform.safeRef, tup(fld(bindings)), "the transform's result")
+      val bindingsTerm = nullifyEmptyBindings(bindings)
+      val transformTerm = app(transform.safeRef, tup(fld(bindingsTerm)), "the transform's result")
       Split.Let(resultSymbol, transformTerm, Split.Else(
         makeMatchSuccess(resultSymbol.safeRef)))
   
@@ -287,17 +290,17 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
             // accumulated bindings. Some special cases here are to make the
             // generated code more concise and efficient.
             val bindings = bindingsSymbols match
-              case Nil => if currentBindings.isEmpty then rcd() else Rcd(false, currentBindings)
+              case Nil => makeBindings(currentBindings)
               case bindingsSymbol :: Nil =>
                 if currentBindings.isEmpty then bindingsSymbol.safeRef
-                else Rcd(false, RcdSpread(bindingsSymbol.safeRef) :: currentBindings)
+                else makeBindings(RcdSpread(bindingsSymbol.safeRef) :: currentBindings)
               case _ =>
                 // Spread the previously accumulated bindings.
                 val spreads = bindingsSymbols.reverseIterator.map:
                   _.safeRef |> RcdSpread.apply
                 .toList
                 // Append the current bindings to the spreads.
-                Rcd(false, spreads ::: currentBindings)
+                makeBindings(spreads ::: currentBindings)
             makeConsequent(Rcd(false, fields.reverse), bindings)
           ): MakeSplit
       ):
@@ -312,22 +315,26 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
           // This is the bindings of the current field.
           val fieldAliases = pattern.aliases
           val fieldBindingsSymbol = TempSymbol(N, "fieldBindings")
-          val fieldBindingsTerm = Rcd(false, fieldAliases.map:
+          val fieldBindingsTerm = makeBindings(fieldAliases.map:
             alias => RcdField(str(alias.name), outputSymbol.safeRef))
           (outputFields: Ls[RcdField], bindingsSymbols: Ls[TempSymbol]) =>
             ((makeConsequent, alternative) =>
               val bindingsSymbol = TempSymbol(N, "bindings")
+              val accumulatedBindings =
+                val withFieldAliases =
+                  if fieldAliases.isEmpty then bindingsSymbols
+                  else fieldBindingsSymbol :: bindingsSymbols
+                if pattern.symbols.isEmpty then withFieldAliases
+                else bindingsSymbol :: withFieldAliases
+              val innerSplit =
+                makeInnerSplit(outputField :: outputFields, accumulatedBindings)
+                  (makeConsequent, Split.End)
               Split.Let(resultSymbol, target, Branch(
                 scrutinee = resultSymbol.safeRef,
                 pattern = matchSuccessPattern(S(outputSymbol :: bindingsSymbol :: Nil)),
-                continuation = Split.Let(
-                  fieldBindingsSymbol,
-                  fieldBindingsTerm,
-                  makeInnerSplit(
-                    outputField :: outputFields,
-                    fieldBindingsSymbol :: bindingsSymbol :: bindingsSymbols
-                  )(makeConsequent, Split.End)
-                )
+                continuation =
+                  if fieldAliases.isEmpty then innerSplit
+                  else Split.Let(fieldBindingsSymbol, fieldBindingsTerm, innerSplit)
               ) ~: alternative)): MakeSplit
       makeMakeSplit(Nil, Nil)
     case Tuple(leading, spread) => (_, _) => 
@@ -339,7 +346,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       if isMatchOnly then makeConsequent(scrutinee, rcd()) else
         val bindings = aliases.map:
           alias => RcdField(str(alias.name), scrutinee.safeRef)
-        makeConsequent(scrutinee, Rcd(false, bindings))
+        makeConsequent(scrutinee, makeBindings(bindings))
     // The never case should always fail.
     case And(Nil) => (_, _) => Split.Else(emptyMatchResult("never"))
     // The disjunction case should check the result from each pattern in order.
@@ -362,8 +369,8 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
             makeInnerSplit(makeConsequent, Split.End),
           alternative = alternative)
     case And(patterns) =>
-      val functions = patterns.map:
-        completePattern(_, scrutinee, subScrutinees, aliases)
+      val functions = patterns.map: pattern =>
+        pattern -> completePattern(pattern, scrutinee, subScrutinees, aliases)
       val makeMakeSplit = functions.foldRight(
         (allOutputs: Ls[Usable], allBindings: Ls[Usable]) => (
           (makeConsequent, alternative) =>
@@ -373,21 +380,27 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
             val outputTerm = tup(allOutputs.reverseIterator.map(_.use |> fld).toSeq*)
             val bindingsSymbol = TempSymbol(N, "combinedBindings")
             // I think the bindings do not need to be reversed.
-            val bindingsTerm = Rcd(false, allBindings.map:
+            val bindingsTerm = makeBindings(allBindings.map:
               binding => RcdSpread(binding.use))
             splitLet(outputSymbol, outputTerm) <|:
               splitLet(bindingsSymbol, bindingsTerm) <|:
                 makeConsequent(outputSymbol, bindingsSymbol)
         ): MakeSplit
-      ): (makeSplit, makeInnerMakeSplit) =>
-        (accOutputs: Ls[Usable], accBindings: Ls[Usable]) => (
-          (makeConsequent, alternative) => makeSplit(
-            // Get the output and bindings of the current pattern.
-            makeConsequent = (output, bindings) =>
-              makeInnerMakeSplit(output :: accOutputs, bindings :: accBindings)
-                (makeConsequent, Split.End),
-            alternative = alternative)
-        ): MakeSplit
+      ):
+        case ((pattern, makeSplit), makeInnerMakeSplit) =>
+          (accOutputs: Ls[Usable], accBindings: Ls[Usable]) => (
+            (makeConsequent, alternative) => makeSplit(
+              // Get the output and bindings of the current pattern.
+              makeConsequent = (output, bindings) =>
+                val nextBindings =
+                  if aliases.nonEmpty || pattern.symbols.nonEmpty then
+                    bindings :: accBindings
+                  else
+                    accBindings
+                makeInnerMakeSplit(output :: accOutputs, nextBindings)
+                  (makeConsequent, Split.End),
+              alternative = alternative)
+          ): MakeSplit
       makeMakeSplit(Nil, Nil)
     case Not(pattern) => (_, _) =>
       // TODO: Think about how to handle negation patterns.
@@ -429,7 +442,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
               // Don't forget that current pattern may also have aliases which are
               // available in some outer transform patterns.
               val currentBindingsSymbol = TempSymbol(N, "bindings")
-              val currentBindings = Rcd(false, aliases.map:
+              val currentBindings = makeBindings(aliases.map:
                 alias => RcdField(str(alias.name), resultSymbol.safeRef))
               Split.Let(resultSymbol, transformTerm,
                 Split.Let(currentBindingsSymbol, currentBindings,

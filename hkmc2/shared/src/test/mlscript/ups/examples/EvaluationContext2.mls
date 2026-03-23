@@ -122,7 +122,7 @@ CBV.Step.unapply(x)
 //│ = MatchFailure(null)
 
 CBV.Step.unapply(t)
-//│ = MatchSuccess(Add(Lit(5), Lit(4)), {})
+//│ = MatchSuccess(Add(Lit(5), Lit(4)), null)
 
 eval(x)
 //│ > Evaluating: 2

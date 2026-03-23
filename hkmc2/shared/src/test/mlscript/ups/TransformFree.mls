@@ -115,30 +115,15 @@ fun toSumPair(t) = if t is (@compile SumPair) as s then s else null
 //│ define toSumPair⁰ as fun (t) {
 //│   let s, matcher__SumPair$, matcher1$, matcher2$, matchRecord, patternOutput, bindings, lambda, lambda1, lambda2;
 //│   define lambda as fun (input) {
-//│     let p_2$, p_2$1, tmp, tmp1, tmp2;
-//│     match input
-//│       Num⁰ =>
-//│         set tmp = { "y": input };
-//│         set tmp1 = new runtime⁰.MatchSuccess⁰(input, tmp);
-//│         set p_2$ = tmp1;
-//│         return p_2$
-//│       else
-//│         set tmp2 = new runtime⁰.MatchFailure⁰("never");
-//│         set p_2$1 = tmp2;
-//│         return p_2$1
-//│     end
-//│   };
-//│   set matcher2$ = lambda²;
-//│   define lambda1 as fun (input1) {
 //│     let first, second, first1, second1, p_0$, transform, result2$, output2$, fieldBindings, result1$, output1$, fieldBindings1, bindings1, bindings2, transformResult, bindings3, p_0$1, tmp, tmp1, tmp2, tmp3, tmp4;
-//│     match input1
+//│     match input
 //│       Pair⁰ =>
 //│         let lambda3;
-//│         match input1
+//│         match input
 //│           Object⁰ =>
-//│             match input1
+//│             match input
 //│               Field(first) =>
-//│                 set first1 = input1.first﹖;
+//│                 set first1 = input.first﹖;
 //│                 set tmp = matcher1$(first1);
 //│                 end
 //│               else
@@ -149,11 +134,11 @@ fun toSumPair(t) = if t is (@compile SumPair) as s then s else null
 //│             set tmp = new runtime⁰.MatchFailure⁰("empty");
 //│             end
 //│         set first = tmp;
-//│         match input1
+//│         match input
 //│           Object⁰ =>
-//│             match input1
+//│             match input
 //│               Field(second) =>
-//│                 set second1 = input1.second﹖;
+//│                 set second1 = input.second﹖;
 //│                 set tmp1 = matcher2$(second1);
 //│                 end
 //│               else
@@ -170,7 +155,7 @@ fun toSumPair(t) = if t is (@compile SumPair) as s then s else null
 //│           set y = args.y﹖;
 //│           return +⁰(x, y)
 //│         };
-//│         set transform = lambda³;
+//│         set transform = lambda²;
 //│         set result1$ = first;
 //│         match result1$
 //│           MatchSuccess⁰ =>
@@ -183,9 +168,9 @@ fun toSumPair(t) = if t is (@compile SumPair) as s then s else null
 //│                 set output2$ = result2$.output⁰;
 //│                 set bindings2 = result2$.bindings⁰;
 //│                 set fieldBindings = { "y": output2$ };
-//│                 set tmp2 = { ...bindings1, ...fieldBindings1, ...bindings2, ...fieldBindings };
+//│                 set tmp2 = { ...fieldBindings1, ...bindings1, ...fieldBindings, ...bindings2 };
 //│                 set transformResult = transform(tmp2);
-//│                 set bindings3 = {  };
+//│                 set bindings3 = null;
 //│                 set tmp3 = new runtime⁰.MatchSuccess⁰(transformResult, bindings3);
 //│                 end
 //│               else
@@ -203,13 +188,13 @@ fun toSumPair(t) = if t is (@compile SumPair) as s then s else null
 //│         return p_0$1
 //│     end
 //│   };
-//│   set matcher__SumPair$ = lambda⁴;
-//│   define lambda2 as fun (input2) {
+//│   set matcher__SumPair$ = lambda³;
+//│   define lambda1 as fun (input1) {
 //│     let p_1$, p_1$1, tmp, tmp1, tmp2;
-//│     match input2
+//│     match input1
 //│       Num⁰ =>
-//│         set tmp = { "x": input2 };
-//│         set tmp1 = new runtime⁰.MatchSuccess⁰(input2, tmp);
+//│         set tmp = { "x": input1 };
+//│         set tmp1 = new runtime⁰.MatchSuccess⁰(input1, tmp);
 //│         set p_1$ = tmp1;
 //│         return p_1$
 //│       else
@@ -218,7 +203,22 @@ fun toSumPair(t) = if t is (@compile SumPair) as s then s else null
 //│         return p_1$1
 //│     end
 //│   };
-//│   set matcher1$ = lambda⁵;
+//│   set matcher1$ = lambda⁴;
+//│   define lambda2 as fun (input2) {
+//│     let p_2$, p_2$1, tmp, tmp1, tmp2;
+//│     match input2
+//│       Num⁰ =>
+//│         set tmp = { "y": input2 };
+//│         set tmp1 = new runtime⁰.MatchSuccess⁰(input2, tmp);
+//│         set p_2$ = tmp1;
+//│         return p_2$
+//│       else
+//│         set tmp2 = new runtime⁰.MatchFailure⁰("never");
+//│         set p_2$1 = tmp2;
+//│         return p_2$1
+//│     end
+//│   };
+//│   set matcher2$ = lambda⁵;
 //│   set matchRecord = matcher__SumPair$(t);
 //│   match matchRecord
 //│     MatchSuccess⁰ =>
