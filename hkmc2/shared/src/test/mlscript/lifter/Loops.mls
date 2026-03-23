@@ -43,7 +43,7 @@ fun foo() =
   while true do
     set x += 1
     return () => x
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo2, lambda2, Capture$scope03, lambda$2;
 //│ lambda$2 = (undefined, function (scope0$cap) {
 //│   return () => {
@@ -81,6 +81,7 @@ fun foo() =
 //│   }
 //│   return runtime.Unit
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 2
 foo()()

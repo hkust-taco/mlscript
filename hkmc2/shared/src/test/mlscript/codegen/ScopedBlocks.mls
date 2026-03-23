@@ -26,7 +26,7 @@ fun g(x, y, z) =
     z then
       let a = 1
       (_ + a)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let g;
 //│ g = function g(x1, y1, z) {
 //│   let a, tmp1, tmp2;
@@ -51,6 +51,7 @@ fun g(x, y, z) =
 //│   tmp2 = 4 * tmp1;
 //│   return 3 + tmp2
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 module M
@@ -119,8 +120,9 @@ module Foo with
 
 :sjs
 type I = Int
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ 
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 
@@ -141,7 +143,7 @@ fun f(x) =
   while x do
     let y = x
     print(x)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f6;
 //│ f6 = function f(x1) {
 //│   lbl: while (true) {
@@ -151,6 +153,7 @@ fun f(x) =
 //│   }
 //│   return runtime.Unit
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 // `:rewriteWhile` turns while loop into functions
@@ -160,7 +163,7 @@ fun f(x) =
   while x do
     let y = x
     print(x)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f7;
 //│ f7 = function f(x1) {
 //│   let while1, tmp2, tmp3;
@@ -178,6 +181,7 @@ fun f(x) =
 //│   if (tmp3 === true) { return tmp2 }
 //│   return runtime.Unit
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 
@@ -188,7 +192,7 @@ data class Bar(x)
 data class Baz(z) extends Bar(z * 1) with
   val k = 1 + 2 + 3
   fun baz = this.bar * 2
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Baz1;
 //│ Baz1 = function Baz(z) {
 //│   return globalThis.Object.freeze(new Baz.class(z));
@@ -213,3 +217,4 @@ data class Baz(z) extends Bar(z * 1) with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Baz", ["z"]]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

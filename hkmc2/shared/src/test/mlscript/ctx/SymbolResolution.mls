@@ -21,7 +21,7 @@ using Str = "42"
 :rt
 
 M.foo
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:M⁰/foo⁰,typ=module:M⁰}:
@@ -33,7 +33,7 @@ M.foo
 //│     sym = term:M⁰/foo⁰
 
 M.bar
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:M⁰/bar⁰,typ=module:M⁰}:
@@ -45,7 +45,7 @@ M.bar
 //│     sym = term:M⁰/bar⁰
 
 M.baz
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:M⁰/baz⁰}:
@@ -57,7 +57,7 @@ M.baz
 //│     sym = term:M⁰/baz⁰
 
 M.baz()
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = App{typ=module:M⁰}:
@@ -71,7 +71,7 @@ M.baz()
 //│     rhs = Tup of Nil
 
 M.foo.bar.baz()
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = App{typ=module:M⁰}:
@@ -93,7 +93,7 @@ M.foo.bar.baz()
 //│     rhs = Tup of Nil
 
 M.that.that
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:N⁰/that⁰,typ=module:M⁰}:
@@ -109,7 +109,7 @@ M.that.that
 //│     sym = term:N⁰/that⁰
 
 M.that.that.that.that.that.that
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:N⁰/that⁰,typ=module:M⁰}:
@@ -141,7 +141,7 @@ M.that.that.that.that.that.that
 //│     sym = term:N⁰/that⁰
 
 R.foo
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:R⁰/foo²}:
@@ -153,7 +153,7 @@ R.foo
 //│     sym = term:R⁰/foo²
 
 R.foo()
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = App:
@@ -167,7 +167,7 @@ R.foo()
 //│     rhs = Tup of Nil
 
 R.foo()()
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = App{typ=module:N⁰}:
@@ -183,7 +183,7 @@ R.foo()()
 //│     rhs = Tup of Nil
 
 R.foo()()()
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = App:
@@ -205,7 +205,7 @@ R.foo()()()
 
 // the symbol of this Sel should be M because of the implicit application
 R.bar
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = App{typ=module:M⁰}:
@@ -242,7 +242,7 @@ R.bar
 
 // the symbol of this Ref should be M because of the implicit application
 foo
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = App{typ=module:M⁰}:
@@ -276,7 +276,7 @@ foo
 // the symbol of this TyApp should be M because of the implicit application
 // note that the resolved symbol for implicit application is on TyApp instead of on Sel
 R.bar[Int]
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = App{typ=module:M⁰}:
@@ -319,7 +319,7 @@ R.bar[Int]
 // the symbol of this TyApp should be M because of the implicit application
 // note that the resolved symbol for implicit application is on TyApp instead of on Ref
 foo[Int]
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = App{typ=module:M⁰}:

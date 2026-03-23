@@ -26,7 +26,7 @@ fun foo(h): module M =
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
 //│ ║  l.15: 	    module A
 //│ ╙──      	           ^
-//│ JS:
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo;
 //│ runtime.checkCall(runtime.resetEffects());
 //│ foo = function foo(h) {
@@ -64,5 +64,6 @@ fun foo(h): module M =
 //│   }
 //│ };
 //│ block$res2 = undefined;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

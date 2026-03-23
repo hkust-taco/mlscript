@@ -17,7 +17,7 @@ fun f() =
   if i == 0 do
     print of raiseUnhandledEffect()
   j / i
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f, f$debugInfo;
 //│ runtime.resetEffects();
 //│ f$debugInfo = globalThis.Object.freeze([
@@ -101,6 +101,7 @@ fun f() =
 //│     break;
 //│   }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :re
 f()
@@ -115,8 +116,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:115:3)
-//│ 	at lambda_test (Debugging.mls:112:3)
+//│ 	at lambda (Debugging.mls:116:3)
+//│ 	at lambda_test (Debugging.mls:113:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -166,16 +167,16 @@ let res =
 :re
 res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Test.test (Debugging.mls:154:15)
-//│ 	at Test.main (Debugging.mls:157:5)
+//│ 	at Test.test (Debugging.mls:155:15)
+//│ 	at Test.main (Debugging.mls:158:5)
 
 set res = res.resumeWith(42)
 
 :re
 res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Test.test (Debugging.mls:154:15)
-//│ 	at Test.main (Debugging.mls:157:16)
+//│ 	at Test.test (Debugging.mls:155:15)
+//│ 	at Test.main (Debugging.mls:158:16)
 
 :expect 0.33676533676533676
 res.resumeWith(666)
@@ -195,8 +196,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:189:3) with locals: j=200
+//│ > 	at f (Debugging.mls:190:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:191:3)
+//│ > 	at f (Debugging.mls:192:3)
 //│ > Stack Trace:
 //│ > 	at tail position

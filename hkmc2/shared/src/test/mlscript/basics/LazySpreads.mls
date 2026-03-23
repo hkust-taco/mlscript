@@ -16,7 +16,7 @@ if [1, ..[2, 3]] is [..a, b] then [a, b]
 fun buildPalindrome = case
   0 then []
   n then [n, ..buildPalindrome(n - 1), n]
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let buildPalindrome;
 //│ buildPalindrome = function buildPalindrome() {
 //│   let lambda;
@@ -34,6 +34,7 @@ fun buildPalindrome = case
 //│   });
 //│   return lambda
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :silent
 val arr = buildPalindrome(5)
@@ -47,7 +48,7 @@ arr
 fun sum2 = case
   [] then 0
   [x, ..xs, y] then x + y + sum2(xs)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let sum2;
 //│ sum2 = function sum2() {
 //│   let lambda;
@@ -72,6 +73,7 @@ fun sum2 = case
 //│   });
 //│   return lambda
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 30
 sum2(arr)
@@ -80,13 +82,13 @@ sum2(arr)
 :e
 fun f(..xs) = xs
 //│ ╔══[COMPILATION ERROR] Lazy spread parameters not allowed.
-//│ ║  l.81: 	fun f(..xs) = xs
+//│ ║  l.83: 	fun f(..xs) = xs
 //│ ╙──      	      ^^^^
 
 :ge
 sum2(..arr)
 //│ ╔══[COMPILATION ERROR] Lazy spreads are not supported in call arguments
-//│ ║  l.87: 	sum2(..arr)
+//│ ║  l.89: 	sum2(..arr)
 //│ ╙──      	    ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 2
 

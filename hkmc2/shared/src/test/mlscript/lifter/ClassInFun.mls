@@ -89,7 +89,7 @@ fun f() =
   Bad().foo()
   Good()
 f().foo()
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Bad1, Good1, f6, tmp5, Capture$scope01, Bad$, Good$;
 //│ (class Capture$scope0 {
 //│   static {
@@ -188,6 +188,7 @@ f().foo()
 //│ };
 //│ tmp5 = f6();
 //│ runtime.safeCall(tmp5.foo())
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 10111
 
 :expect 2

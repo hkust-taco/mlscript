@@ -546,18 +546,18 @@ f(id(A)) + f(A)
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > <<< fusing <<<
-//│ Lowered:
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let f⁰, tmp, tmp1, tmp2, f_5$f⁰, f_5$x_A⁰, f_5$x_rest⁰, deforest$lam;
-//│ define f_5$f⁰ as fun (x) {
+//│ define f_5$f⁰ as fun f_5$f¹(x) {
 //│   return x()
 //│ };
-//│ define f_5$x_A⁰ as fun () {
+//│ define f_5$x_A⁰ as fun f_5$x_A¹() {
 //│   return 1
 //│ };
-//│ define f_5$x_rest⁰ as fun () {
+//│ define f_5$x_rest⁰ as fun f_5$x_rest¹() {
 //│   return null
 //│ };
-//│ define f⁰ as fun (x1) {
+//│ define f⁰ as fun f¹(x1) {
 //│   match x1
 //│     A⁰ =>
 //│       return 1
@@ -570,6 +570,7 @@ f(id(A)) + f(A)
 //│ set deforest$lam = () => return f_5$x_A¹();
 //│ set tmp2 = f_5$f¹(deforest$lam);
 //│ +⁰(tmp1, tmp2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
 

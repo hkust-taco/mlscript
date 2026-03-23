@@ -3,14 +3,16 @@
 
 :sjs
 declare fun foo: Int
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ 
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // :re
 :sjs
 foo
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ globalThis.foo
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 declare fun p: Int
@@ -41,15 +43,16 @@ module M with
 // * FIXME LP: @Harry why is this not resolved?
 :rt
 C
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=class:C⁰}:
 //│     t = Ref{sym=member:C¹} of member:C¹
 //│     sym = class:C⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 // * whereas this is:
 M.D
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=class:D⁰}:
@@ -59,20 +62,21 @@ M.D
 //│         sym = module:M⁰
 //│       nme = Ident of "D"
 //│     sym = class:D⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :fixme // FIXME: Should report a proper error about lack of declared C companion module
 C.oops
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'C'
-//│ ║  l.64: 	C.oops
+//│ ║  l.68: 	C.oops
 //│ ║        	^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.35: 	declare class C
+//│ ║  l.37: 	declare class C
 //│ ╙──      	              ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'C'
-//│ ║  l.64: 	C.oops
+//│ ║  l.68: 	C.oops
 //│ ║        	^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.35: 	declare class C
+//│ ║  l.37: 	declare class C
 //│ ╙──      	              ^
 //│ ═══[RUNTIME ERROR] ReferenceError: C is not defined
 

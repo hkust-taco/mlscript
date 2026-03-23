@@ -27,61 +27,66 @@ fun f: ClsMod = 42
 
 :rt
 f
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:f⁰,typ=class:ClsMod⁰}:
 //│     t = Ref{sym=member:f¹} of member:f¹
 //│     sym = term:f⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
 fun f: module ClsMod = ClsMod
 
 :rt
 f
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:f²,typ=module:ClsMod¹}:
 //│     t = Ref{sym=member:f³} of member:f³
 //│     sym = term:f²
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class ClsMod { whoami: "module" }
 
 fun f: TypMod = 42
 
 :rt
 f
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:f⁴,typ=type:TypMod⁰}:
 //│     t = Ref{sym=member:f⁵} of member:f⁵
 //│     sym = term:f⁴
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
 fun f: module TypMod = TypMod
 
 :rt
 f
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   stats = Nil
 //│   res = Resolved{sym=term:f⁶,typ=module:TypMod¹}:
 //│     t = Ref{sym=member:f⁷} of member:f⁷
 //│     sym = term:f⁶
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class TypMod { whoami: "module" }
 
 :e
 fun f: TrmMod = 42
 //│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference of type TrmMod denoting module 'TrmMod'.
-//│ ║  l.75: 	fun f: TrmMod = 42
+//│ ║  l.79: 	fun f: TrmMod = 42
 //│ ║        	       ^^^^^^
 //│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
 
 :sjs
 fun f = TrmMod
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f5; f5 = function f() { let tmp4; tmp4 = TrmMod1(); return tmp4 };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :fixme
 :expect 42
@@ -91,8 +96,9 @@ f
 
 :sjs
 fun f: module TrmMod = TrmMod
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f6; f6 = function f() { return TrmMod1.class };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 fun assertModule(module m: ClsMod): module ClsMod = m
 
@@ -133,10 +139,10 @@ module Foo
 :e
 fun f(x: Foo): Foo = x
 //│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
-//│ ║  l.134: 	fun f(x: Foo): Foo = x
+//│ ║  l.140: 	fun f(x: Foo): Foo = x
 //│ ╙──       	         ^^^
 //│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
-//│ ║  l.134: 	fun f(x: Foo): Foo = x
+//│ ║  l.140: 	fun f(x: Foo): Foo = x
 //│ ╙──       	               ^^^
 
 fun f(x: Foo[Int]): Foo[Int] = x
@@ -146,10 +152,10 @@ fun f(module x: Foo): module Foo = x
 :e
 fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
-//│ ║  l.147: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.153: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
-//│ ║  l.147: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.153: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                                  ^^^^^^^^
 
 

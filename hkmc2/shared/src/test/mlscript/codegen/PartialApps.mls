@@ -11,8 +11,9 @@ f(2)
 
 :sjs
 let f = foo(1, _, _)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f2, f3; f3 = function f(_0, _1) { return foo(1, _0, _1) }; f2 = f3;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = fun f
 
 f(2, 3)
@@ -78,8 +79,9 @@ h(1)
 
 :sjs
 let i = _(0, 1, _)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let i, i1; i1 = function i(_0, _1) { return runtime.safeCall(_0(0, 1, _1)) }; i = i1;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ i = fun i
 
 i(print, 2)
@@ -199,7 +201,7 @@ _ - _ of 1, 2
 :pe
 |> 1
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.200: 	|> 1
+//│ ║  l.202: 	|> 1
 //│ ╙──       	   ^
 //│ = fun pipeInto
 
@@ -207,7 +209,7 @@ _ - _ of 1, 2
 :re
 |> (1)
 //│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.208: 	|> (1)
+//│ ║  l.210: 	|> (1)
 //│ ╙──       	   ^^^
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
@@ -224,19 +226,21 @@ _ - _ of 1, 2
 
 :sjs
 1 \ (_ - 2)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda37; lambda37 = (undefined, function (_0) { return _0 - 2 }); Predef.passTo(1, lambda37)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 :sjs
 1 \ (_ - 2)()
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda38, tmp19;
 //│ lambda38 = (undefined, function (_0) {
 //│   return _0 - 2
 //│ });
 //│ tmp19 = Predef.passTo(1, lambda38);
 //│ runtime.safeCall(tmp19())
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = -1
 
 1 \ (_ - _)(2)
@@ -248,13 +252,14 @@ _ - _ of 1, 2
 :w
 let f = if _ then 1 else 0
 //│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
-//│ ║  l.249: 	let f = if _ then 1 else 0
+//│ ║  l.253: 	let f = if _ then 1 else 0
 //│ ║         	             ^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.249: 	let f = if _ then 1 else 0
+//│ ║  l.253: 	let f = if _ then 1 else 0
 //│ ╙──       	                    ^^^^^^
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f15, tmp21; tmp21 = 1; f15 = tmp21;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = 1
 
 :sjs
@@ -262,11 +267,12 @@ fun f(x) =
   if x ==
     0 then 1
     _ then 2
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f16;
 //│ f16 = function f(x3) {
 //│   let scrut;
 //│   scrut = Predef.equals(x3, 0);
 //│   if (scrut === true) { return 1 } else { return 2 }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

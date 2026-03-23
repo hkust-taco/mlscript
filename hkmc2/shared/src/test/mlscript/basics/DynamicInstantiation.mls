@@ -5,8 +5,9 @@ class C
 
 :sjs
 new! C
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ globalThis.Object.freeze(new C1())
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = C
 
 let c = C
@@ -30,15 +31,16 @@ f(c)
 :pt
 :re
 new! id(C)
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ App:
 //│   lhs = PrefixApp:
 //│     kw = Keywrd of keyword 'new!'
 //│     rhs = Ident of "id"
 //│   rhs = Tup of Ls of 
 //│     Ident of "C"
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ globalThis.Object.freeze(new Predef.id(C1))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: Predef.id is not a constructor
 
 // * Ok (as in JS)
@@ -50,7 +52,7 @@ new! (id(C))
 :re
 new id(C)
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found selection.
-//│ ║  l.51: 	new id(C)
+//│ ║  l.53: 	new id(C)
 //│ ║        	    ^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] TypeError: Predef.id is not a constructor
@@ -58,7 +60,7 @@ new id(C)
 :e
 new (id(C))
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found application.
-//│ ║  l.59: 	new (id(C))
+//│ ║  l.61: 	new (id(C))
 //│ ║        	     ^^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ = C

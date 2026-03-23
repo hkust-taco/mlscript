@@ -93,8 +93,9 @@ stackLimit
 
 :ssjs
 set stackLimit = 1
-//│ JS:
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ Runtime.stackLimit = 1; block$res29 = runtime.Unit; undefined
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 stackLimit
 //│ = 1

@@ -19,11 +19,11 @@ pattern SumPair = Pair((Num as x), (Num as y)) => x + y
 
 :sir
 fun toNumPair(t) = if t is (@compile NumPair) as s then s else null
-//│ Lowered:
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let toNumPair⁰;
-//│ define toNumPair⁰ as fun (t) {
+//│ define toNumPair⁰ as fun toNumPair¹(t) {
 //│   let s, matcher__NumPair$, matcher__Num$, matchSuccess, lambda, lambda1;
-//│   define lambda as fun (input) {
+//│   define lambda as fun lambda⁰(input) {
 //│     let first, second, first1, second1, p_0$, result1$, result1$1, p_0$1, tmp, tmp1, tmp2, tmp3;
 //│     match input
 //│       Pair⁰ =>
@@ -81,7 +81,7 @@ fun toNumPair(t) = if t is (@compile NumPair) as s then s else null
 //│     end
 //│   };
 //│   set matcher__NumPair$ = lambda⁰;
-//│   define lambda1 as fun (input1) {
+//│   define lambda1 as fun lambda¹(input1) {
 //│     let p_1$, p_1$1, tmp, tmp1;
 //│     match input1
 //│       Num⁰ =>
@@ -105,16 +105,17 @@ fun toNumPair(t) = if t is (@compile NumPair) as s then s else null
 //│   end
 //│ };
 //│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 
 :sir
 fun toSumPair(t) = if t is (@compile SumPair) as s then s else null
-//│ Lowered:
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let toSumPair⁰;
-//│ define toSumPair⁰ as fun (t) {
+//│ define toSumPair⁰ as fun toSumPair¹(t) {
 //│   let s, matcher__SumPair$, matcher1$, matcher2$, matchRecord, patternOutput, bindings, lambda, lambda1, lambda2;
-//│   define lambda as fun (input) {
+//│   define lambda as fun lambda³(input) {
 //│     let first, second, first1, second1, p_0$, transform, result2$, output2$, fieldBindings, result1$, output1$, fieldBindings1, bindings1, bindings2, transformResult, bindings3, p_0$1, tmp, tmp1, tmp2, tmp3, tmp4;
 //│     match input
 //│       Pair⁰ =>
@@ -149,7 +150,7 @@ fun toSumPair(t) = if t is (@compile SumPair) as s then s else null
 //│             set tmp1 = new runtime⁰.MatchFailure⁰("empty");
 //│             end
 //│         set second = tmp1;
-//│         define lambda3 as fun (args) {
+//│         define lambda3 as fun lambda²(args) {
 //│           let x, y;
 //│           set x = args.x﹖;
 //│           set y = args.y﹖;
@@ -189,7 +190,7 @@ fun toSumPair(t) = if t is (@compile SumPair) as s then s else null
 //│     end
 //│   };
 //│   set matcher__SumPair$ = lambda³;
-//│   define lambda1 as fun (input1) {
+//│   define lambda1 as fun lambda⁴(input1) {
 //│     let p_1$, p_1$1, tmp, tmp1, tmp2;
 //│     match input1
 //│       Num⁰ =>
@@ -204,7 +205,7 @@ fun toSumPair(t) = if t is (@compile SumPair) as s then s else null
 //│     end
 //│   };
 //│   set matcher1$ = lambda⁴;
-//│   define lambda2 as fun (input2) {
+//│   define lambda2 as fun lambda⁵(input2) {
 //│     let p_2$, p_2$1, tmp, tmp1, tmp2;
 //│     match input2
 //│       Num⁰ =>
@@ -231,3 +232,4 @@ fun toSumPair(t) = if t is (@compile SumPair) as s then s else null
 //│   end
 //│ };
 //│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

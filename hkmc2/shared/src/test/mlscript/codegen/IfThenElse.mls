@@ -8,12 +8,13 @@ if true then 1 else 0
 
 :sjs
 let f = x => if x then print("ok") else print("ko")
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f, f1;
 //│ f1 = function f(x) {
 //│   if (x === true) { return Predef.print("ok") } else { return Predef.print("ko") }
 //│ };
 //│ f = f1;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = fun f
 
 f(true)
@@ -25,7 +26,7 @@ f(false)
 
 :sjs
 let f = x => print((if x then "ok" else "ko") + "!")
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f2, lambda;
 //│ lambda = (undefined, function (x) {
 //│   let tmp, tmp1;
@@ -36,11 +37,12 @@ let f = x => print((if x then "ok" else "ko") + "!")
 //│   return Predef.print(tmp1)
 //│ });
 //│ f2 = lambda;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = fun
 
 :sjs
 let f = x => print((if x and x then "ok" else "ko") + "!")
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f3, lambda1;
 //│ lambda1 = (undefined, function (x) {
 //│   let tmp, tmp1;
@@ -51,6 +53,7 @@ let f = x => print((if x and x then "ok" else "ko") + "!")
 //│   return Predef.print(tmp1)
 //│ });
 //│ f3 = lambda1;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = fun
 // --- TODO: What we want ---
 // this.f = (x) => {

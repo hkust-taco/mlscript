@@ -19,19 +19,21 @@
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.16: 	1
 //│ ╙──      	^
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ + 2; + 3
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.16: 	1
 //│ ╙──      	^
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
 :sjs
 1
 + 2
 + 3
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp2; tmp2 = 1 + 2; tmp2 + 3
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 
 1
@@ -47,8 +49,9 @@
 
 :sjs
 +
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda; lambda = (undefined, function (arg1, arg2) { return arg1 + arg2 }); lambda
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 *
@@ -59,7 +62,7 @@
 1
 *
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.60: 	*
+//│ ║  l.63: 	*
 //│ ╙──      	 ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -88,7 +91,7 @@ fun (??) foo(x, y) = x + y
 :pe
 ?? 1
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.89: 	?? 1
+//│ ║  l.92: 	?? 1
 //│ ╙──      	   ^
 //│ = fun foo
 

@@ -4,7 +4,7 @@
 :sjs
 module Foo with
   val self: module Foo = Foo
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo1;
 //│ (class Foo {
 //│   static {
@@ -19,6 +19,7 @@ module Foo with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 Foo.self
 //│ = class Foo { self: ref'1 } as ref'1
@@ -35,7 +36,7 @@ Foo.self
 module Foo with
   val self = this
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type Foo.
-//│ ║  l.36: 	  val self = this
+//│ ║  l.37: 	  val self = this
 //│ ║        	             ^^^^
 //│ ╙── Value must be marked as returning a 'module' in order to return a module.
 
@@ -59,7 +60,7 @@ module Foo with
 :sjs
 object Foo with
   val self = id(Foo)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo11;
 //│ (class Foo10 {
 //│   static {
@@ -78,6 +79,7 @@ object Foo with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["object", "Foo"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 // * This used not to work, and it could be argued it should be an initialization error

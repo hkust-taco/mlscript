@@ -11,7 +11,7 @@ fun foo() =
   fun bar() = x
   xs.push(bar)
   set x = 2
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let bar, foo, Capture$scope01, bar$;
 //│ (class Capture$scope0 {
 //│   static {
@@ -40,6 +40,7 @@ fun foo() =
 //│   scope0$cap.x$0 = 2;
 //│   return runtime.Unit
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 2
 foo()
@@ -98,7 +99,8 @@ fun foo() =
     let x
     x
   bar
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let bar4, foo4; bar4 = function bar() { let x; return x }; foo4 = function foo() { return bar4 };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

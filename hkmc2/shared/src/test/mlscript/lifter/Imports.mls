@@ -6,7 +6,7 @@ import "../../mlscript-compile/Option.mls"
 :sjs
 module A with
   fun f(x) = x is Option.Some
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A1;
 //│ (class A {
 //│   static {
@@ -27,4 +27,5 @@ module A with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

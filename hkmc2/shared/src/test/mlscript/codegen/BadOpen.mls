@@ -34,8 +34,9 @@ open Foo { y }
 
 :sjs
 y
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ Foo1.y
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 val Oops = "oops"
@@ -44,7 +45,7 @@ val Oops = "oops"
 :e
 open Oops
 //│ ╔══[COMPILATION ERROR] Wildcard 'open' not supported for this kind of symbol.
-//│ ║  l.45: 	open Oops
+//│ ║  l.46: 	open Oops
 //│ ╙──      	     ^^^^
 
 
