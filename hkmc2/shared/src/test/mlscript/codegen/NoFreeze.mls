@@ -1,0 +1,47 @@
+:js
+:noFreeze
+
+:sjs
+class Foo(x)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Foo1;
+//│ Foo1 = function Foo(x) {
+//│   return (new Foo.class(x));
+//│ };
+//│ (class Foo {
+//│   static {
+//│     Foo1.class = this
+//│   }
+//│   constructor(x) {}
+//│   #x;
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo", [null]]; 
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:sjs
+let foo = new Foo(1)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let foo; foo = (new Foo1.class(1));
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ foo = Foo(_)
+
+:ssjs
+data class Bar(x)
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let Bar1;
+//│ Bar1 = function Bar(x) {
+//│   return (new Bar.class(x));
+//│ };
+//│ (class Bar {
+//│   static {
+//│     Bar1.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar", ["x"]]; 
+//│ });
+//│ block$res3 = undefined;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

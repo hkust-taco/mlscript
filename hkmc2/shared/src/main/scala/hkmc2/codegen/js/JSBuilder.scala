@@ -44,8 +44,8 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
   )
   val needsParens: Set[Str] = Set(",")
   
-  val freeze = "globalThis.Object.freeze"
-  lazy val freezeDefns = if freezeDefinitions then "globalThis.Object.freeze" else ""
+  val freeze = if !config.noFreeze then "globalThis.Object.freeze" else ""
+  lazy val freezeDefns = if freezeDefinitions && !config.noFreeze then "globalThis.Object.freeze" else ""
   
   // TODO use this to avoid parens when we generate recomposed expressions later
   enum Context:
