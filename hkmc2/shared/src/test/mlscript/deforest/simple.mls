@@ -20,6 +20,30 @@ data class (::) Cons(h, t)
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 
+
+
+// * Note that this test produces dead code (non-empty rest after an abortive block prefix),
+// * but that code is now renoved, as can be checked by comparing `:sir` and `:soir` outputs.
+// * FIXME: At the time of writing, there is currently still some (non-dead) duplication of the big addition, though.
+// :sir
+// :soir
+fun test(x) =
+  let y = if x is
+    AA(AA(v)) then v
+  y + 1 + 2 + 3 + 4
+test(AA(AA(10)))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(10))))) ->
+//│ deforest > 	Ref(tmp:arg$AA$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(aa))
+//│ deforest > <<< fusing <<<
+//│ = 20
+
+
+
 :expect 1
 let x = if true then A else B
 if x is
@@ -32,7 +56,7 @@ if x is
 //│ deforest > 	Ref(x,None)
 //│ deforest > <<< fusing <<<
 //│ = 1
-//│ x = fun tmp
+//│ x = fun tmp2
 
 :expect A
 let x = if true then AA(A) else BB(B)
@@ -48,7 +72,7 @@ if x is
 //│ deforest > 	Select(Ref(x,None),Ident(aa))
 //│ deforest > <<< fusing <<<
 //│ = A
-//│ x = fun tmp1
+//│ x = fun tmp3
 
 
 :expect 1
@@ -72,7 +96,7 @@ if x is
 //│ deforest > 	Ref(a,None)
 //│ deforest > <<< fusing <<<
 //│ = 1
-//│ x = fun tmp2
+//│ x = fun tmp4
 
 
 // `x.x` is successfully fused
@@ -102,7 +126,7 @@ if x is
 //│ deforest > 	Ref(a,None)
 //│ deforest > <<< fusing <<<
 //│ = 1
-//│ x = fun tmp3
+//│ x = fun tmp5
 
 
 :expect 11
@@ -512,7 +536,7 @@ test(p)
 //│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(c))
 //│ deforest > <<< fusing <<<
 //│ = 141
-//│ p = fun tmp57
+//│ p = fun tmp59
 
 
 :expect 141
@@ -534,7 +558,7 @@ test(p, id(CCC(123)))
 //│ deforest > 	Select(Ref(x,None),Ident(aa))
 //│ deforest > <<< fusing <<<
 //│ = 141
-//│ p = fun tmp59
+//│ p = fun tmp61
 
 
 :sir
