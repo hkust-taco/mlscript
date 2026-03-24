@@ -40,11 +40,12 @@ r
 
 // * This fails to properly initialize, as expected
 :re
+:noInline
 fun foo() = bar()
 let r = foo()
 fun bar() = r
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 //│ r = undefined
-//│ FAILURE: Unexpected lack of runtime error
 
 // * Similar
 :re
