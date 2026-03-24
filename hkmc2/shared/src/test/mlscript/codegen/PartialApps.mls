@@ -201,7 +201,7 @@ _ - _ of 1, 2
 :pe
 |> 1
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.210: 	|> 1
+//│ ║  l.202: 	|> 1
 //│ ╙──       	   ^
 //│ = fun pipeInto
 
@@ -209,7 +209,7 @@ _ - _ of 1, 2
 :re
 |> (1)
 //│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.218: 	|> (1)
+//│ ║  l.210: 	|> (1)
 //│ ╙──       	   ^^^
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
@@ -252,10 +252,10 @@ _ - _ of 1, 2
 :w
 let f = if _ then 1 else 0
 //│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
-//│ ║  l.269: 	let f = if _ then 1 else 0
+//│ ║  l.253: 	let f = if _ then 1 else 0
 //│ ║         	             ^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.269: 	let f = if _ then 1 else 0
+//│ ║  l.253: 	let f = if _ then 1 else 0
 //│ ╙──       	                    ^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f15, tmp21; tmp21 = 1; f15 = tmp21;

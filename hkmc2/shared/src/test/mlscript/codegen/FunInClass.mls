@@ -152,7 +152,6 @@ Foo(123)
 //│     this.foo();
 //│   }
 //│   foo() {
-//│     this.a;
 //│     return this.a
 //│   }
 //│   toString() { return runtime.render(this); }

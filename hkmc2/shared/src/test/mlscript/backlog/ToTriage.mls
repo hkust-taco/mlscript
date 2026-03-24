@@ -254,13 +254,13 @@ import "../../mlscript-compile/Stack.mls"
 // The parser rejects this, but it should be allowed.
 open Stack { ::, Nil }
 //│ ╔══[COMPILATION ERROR] Illegal 'open' statement shape.
-//│ ║  l.261: 	open Stack { ::, Nil }
+//│ ║  l.255: 	open Stack { ::, Nil }
 //│ ╙──       	     ^^^^^^^^^^^^^^^
 
 // Instead, if we parenthesize the operator, it is rejected by the elaborator.
 open Stack { (::), Nil }
 //│ ╔══[COMPILATION ERROR] Illegal 'open' statement element.
-//│ ║  l.267: 	open Stack { (::), Nil }
+//│ ║  l.261: 	open Stack { (::), Nil }
 //│ ╙──       	             ^^^^
 
 open Stack { Nil, :: }
@@ -268,7 +268,7 @@ open Stack { Nil, :: }
 :sjs
 1 :: Nil
 //│ ╔══[COMPILATION ERROR] Module 'Stack' does not contain member '::'
-//│ ║  l.275: 	1 :: Nil
+//│ ║  l.269: 	1 :: Nil
 //│ ╙──       	  ^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ Stack["::"](1, Stack.Nil)
@@ -280,9 +280,9 @@ open Stack { Nil, :: }
 mkStr of ... // hello
 "oops"
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.286: 	mkStr of ... // hello
+//│ ║  l.280: 	mkStr of ... // hello
 //│ ║         	                     ^
-//│ ║  l.287: 	"oops"
+//│ ║  l.281: 	"oops"
 //│ ╙──       	
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -305,25 +305,25 @@ Foo(1, 2, 3).args
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (spread).
-//│ ║  l.312: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.306: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                       ^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: args
-//│ ║  l.312: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.306: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                                     ^^^^
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.312: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.306: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                   ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found three arguments.
-//│ ║  l.324: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.318: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                       ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.330: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.324: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                       ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -358,10 +358,10 @@ fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
 //│ ╔══[COMPILATION ERROR] Unsupported let binding shape
-//│ ║  l.364: 	  let bar(x: Str): Str = x + x
+//│ ║  l.358: 	  let bar(x: Str): Str = x + x
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected 0 arguments, got 1
-//│ ║  l.365: 	  bar("test")
+//│ ║  l.359: 	  bar("test")
 //│ ╙──       	     ^^^^^^^^
 
 // ——— ——— ———
@@ -375,7 +375,7 @@ module Foo(x) with
   print(x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.380: 	module Foo(x) with
+//│ ║  l.374: 	module Foo(x) with
 //│ ╙──       	           ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo7;
@@ -402,7 +402,7 @@ module Foo(x) with
 module Foo(val x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.408: 	module Foo(val x)
+//│ ║  l.402: 	module Foo(val x)
 //│ ╙──       	               ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo9;
@@ -426,7 +426,7 @@ module Foo(val x)
 // TODO support syntax?
 data class Foo(mut x)
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found 'mut'-modified identifier
-//│ ║  l.433: 	data class Foo(mut x)
+//│ ║  l.427: 	data class Foo(mut x)
 //│ ╙──       	                   ^
 
 // ——— ——— ———
@@ -443,10 +443,10 @@ set this.pc = 0
 set
   (this).pc = 0
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.448: 	set this.pc = 0
+//│ ║  l.442: 	set this.pc = 0
 //│ ╙──       	    ^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.450: 	  (this).pc = 0
+//│ ║  l.444: 	  (this).pc = 0
 //│ ╙──       	   ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -456,10 +456,10 @@ set
 set
   this.pc = 0
 //│ ╔══[PARSE ERROR] Unexpected static selector here
-//│ ║  l.463: 	  this.pc = 0
+//│ ║  l.457: 	  this.pc = 0
 //│ ╙──       	      ^^^
 //│ ╔══[COMPILATION ERROR] Expected a right-hand side for this assignment
-//│ ║  l.463: 	  this.pc = 0
+//│ ║  l.457: 	  this.pc = 0
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -472,7 +472,7 @@ pattern A(pattern B) = B
 
 fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.479: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
+//│ ║  l.473: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╙──       	                                                         ^
 
 // ——— ——— ———
@@ -494,7 +494,7 @@ fun parse(tokens) =
   ()
   ???
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.501: 	  ???
+//│ ║  l.495: 	  ???
 //│ ╙──       	     ^
 
 // ——— ——— ———
@@ -503,7 +503,7 @@ fun parse(tokens) =
 :e
 class Id(name: UnboundName)
 //│ ╔══[COMPILATION ERROR] Name not found: UnboundName
-//│ ║  l.510: 	class Id(name: UnboundName)
+//│ ║  l.504: 	class Id(name: UnboundName)
 //│ ╙──       	               ^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
 //│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
@@ -521,7 +521,7 @@ if true then
 :fixme
 if true then success: 42
 //│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.528: 	if true then success: 42
+//│ ║  l.522: 	if true then success: 42
 //│ ╙──       	   ^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -552,10 +552,10 @@ pattern Bin =
   // oops
   | 1
 //│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.557: 	  | 0
+//│ ║  l.551: 	  | 0
 //│ ╙──       	  ^^^
 //│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.559: 	  | 1
+//│ ║  l.553: 	  | 1
 //│ ╙──       	  ^^^
 
 // ——— ——— ———

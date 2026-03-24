@@ -40,19 +40,9 @@ let rgb_of_hsb h s v =
     )) max)
 ;;
 """
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:171)
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
-//│     at scan (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:966:26)
-//│     at go (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:952:20)
-//│     at scan (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:998:22)
-//│     at go (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:955:20)
-//│     at scan (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:1408:30)
-//│     at go (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:952:20)
-//│     at scan (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:998:22)
-//│     at go (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:955:20)
-//│     at scan (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:1278:26)
-//│     at go (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:955:20)
+//│ > «let max = 255»
+//│ > «let nround x y = 2 * x + y / 2 * y»
+//│ > «let rgb_of_hsb h s v = let h = h * 6 in let i = h / max * max in let f = h - i in let m = v * (max - s) / max and n = v * (max - s * f / max) / max and k = v * (max - s * (max - f) / max) / max in graphics__rgb (nround (max * (match i / max with 0 -> v | 6 -> v | 1 -> n | 2 -> m | 3 -> m | 4 -> k | _ -> v)) max) (nround (max * (match i / max with 0 -> k | 6 -> k | 1 -> v | 2 -> v | 3 -> n | 4 -> m | _ -> m)) max) (nround (max * (match i / max with 0 -> m | 6 -> m | 1 -> m | 2 -> k | 3 -> v | 4 -> v | _ -> n)) max)»
 
 example of """
 let pi180 = 3.141592654 /. 180.0;;
@@ -103,18 +93,18 @@ let main() =
 if sys__interactive then () else begin main(); exit 0 end;;
 """
 //│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:171)
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:219)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
-//│     at scan (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:943:25)
-//│     at go (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:952:20)
-//│     at scan (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:998:22)
-//│     at go (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:955:20)
-//│     at scan (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:1870:34)
-//│     at go (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:952:20)
-//│     at scan (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:998:22)
-//│     at go (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:955:20)
-//│     at scan (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:1870:34)
-//│     at go (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:952:20)
+//│     at scan (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:927:25)
+//│     at go (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:949:19)
+//│     at scan (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:1820:34)
+//│     at go (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:939:25)
+//│     at scan (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:987:22)
+//│     at go (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:949:19)
+//│     at scan (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:1379:30)
+//│     at go (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:949:19)
+//│     at scan (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:1820:34)
+//│     at go (file:///home/attempt0/mlscript/inliner/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Lexer.mjs:939:25)
 
 //  _   _                   _ 
 // | | | | __ _ _ __   ___ (_)

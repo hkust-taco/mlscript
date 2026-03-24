@@ -78,10 +78,10 @@ do
 :e
 foo.Foo#m()
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.87: 	foo.Foo#m()
+//│ ║  l.79: 	foo.Foo#m()
 //│ ╙──      	   ^^^^
 //│ ╔══[COMPILATION ERROR] Identifier `Foo` does not name a known class symbol.
-//│ ║  l.87: 	foo.Foo#m()
+//│ ║  l.79: 	foo.Foo#m()
 //│ ╙──      	   ^^^^
 //│ ═══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
 //│ = 124
@@ -90,7 +90,7 @@ foo.Foo#m()
 :re
 foo.M.Foo::m()
 //│ ╔══[COMPILATION ERROR] Selection is not a known class.
-//│ ║  l.99: 	foo.M.Foo::m()
+//│ ║  l.91: 	foo.M.Foo::m()
 //│ ║        	^^^^^^^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
@@ -100,10 +100,10 @@ foo.M.Foo::m()
 :re
 foo.M.Foo#m()
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.109: 	foo.M.Foo#m()
+//│ ║  l.101: 	foo.M.Foo#m()
 //│ ╙──       	     ^^^^
 //│ ╔══[COMPILATION ERROR] Identifier `Foo` does not name a known class symbol.
-//│ ║  l.109: 	foo.M.Foo#m()
+//│ ║  l.101: 	foo.M.Foo#m()
 //│ ╙──       	     ^^^^
 //│ ═══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'M' yielded 'undefined'
@@ -111,10 +111,10 @@ foo.M.Foo#m()
 :e
 Foo::m
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.120: 	Foo::m
+//│ ║  l.112: 	Foo::m
 //│ ╙──       	^^^
 //│ ╔══[COMPILATION ERROR] Identifier is not a known class.
-//│ ║  l.120: 	Foo::m
+//│ ║  l.112: 	Foo::m
 //│ ║         	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
@@ -125,10 +125,10 @@ Foo::m
 :sjs
 Foo::n(foo, 2)
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.134: 	Foo::n(foo, 2)
+//│ ║  l.126: 	Foo::n(foo, 2)
 //│ ╙──       	^^^
 //│ ╔══[COMPILATION ERROR] Identifier is not a known class.
-//│ ║  l.134: 	Foo::n(foo, 2)
+//│ ║  l.126: 	Foo::n(foo, 2)
 //│ ║         	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
