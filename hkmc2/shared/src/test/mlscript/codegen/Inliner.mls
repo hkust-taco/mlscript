@@ -4,7 +4,10 @@
 fun f() = 0
 f()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f; f = function f() { return 0 }; 0
+//│ let f, inlinedVal;
+//│ f = function f() { return 0 };
+//│ inlinedLbl: { inlinedVal = 0; break inlinedLbl; }
+//│ inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -12,7 +15,13 @@ f()
 fun f(x) = x
 f(100)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f1, x; f1 = function f(x1) { return x1 }; x = 100; x
+//│ let f1, inlinedVal1, x;
+//│ f1 = function f(x1) {
+//│   return x1
+//│ };
+//│ x = 100;
+//│ inlinedLbl1: { inlinedVal1 = x; break inlinedLbl1; }
+//│ inlinedVal1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 100
 
@@ -31,30 +40,38 @@ fun f() =
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:sir
+:soir
 :inlineThreshold 10
 fun f(a, b, c) = a + b + c
-f(1, 2, 3)
-f(1, 2, ...[1])
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰, tmp, a⁰, b⁰, c⁰, tmp1;
+print(f(1, 2, 3))
+print(f(1, 2, ...[1]))
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f⁰, tmp, tmp1, tmp2, inlinedVal, a⁰, b⁰, c⁰;
 //│ define f⁰ as fun f¹(a, b, c) {
-//│   let tmp2;
-//│   set tmp2 = +⁰(a, b);
-//│   return +⁰(tmp2, c)
+//│   let tmp3;
+//│   set tmp3 = +⁰(a, b);
+//│   return +⁰(tmp3, c)
 //│ };
 //│ set a⁰ = 1;
 //│ set b⁰ = 2;
 //│ set c⁰ = 3;
-//│ set tmp1 = +⁰(a⁰, b⁰);
-//│ set tmp = [1];
-//│ f¹(1, 2, ...tmp)
+//│ block inlinedLbl:
+//│   let tmp3;
+//│   set tmp3 = +⁰(a⁰, b⁰);
+//│   set inlinedVal = +⁰(tmp3, c⁰);
+//│   break inlinedLbl
+//│ set tmp = inlinedVal;
+//│ do Predef⁰.print⁰(tmp);
+//│ set tmp1 = [1];
+//│ set tmp2 = f¹(1, 2, ...tmp1);
+//│ Predef⁰.print⁰(tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 4
+//│ > 6
+//│ > 4
 
 
 // All inlined
-:sir
+:soir
 :inlineThreshold 10
 fun f(a, b, ...c) =
   print(a + b)
@@ -62,32 +79,42 @@ fun f(a, b, ...c) =
 f(1, 2)
 f(1, 2, 3)
 f(1, 2, 3, 4)
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f², a¹, b¹, c¹, tmp, a², b², c², tmp1, a³, b³, c³, tmp2;
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f², a¹, b¹, c¹, a², b², c², inlinedVal, a³, b³, c³;
 //│ define f² as fun f³(a, b) {
-//│   let tmp3;
-//│   set tmp3 = +⁰(a, b);
-//│   do Predef⁰.print⁰(tmp3);
+//│   let tmp;
+//│   set tmp = +⁰(a, b);
+//│   do Predef⁰.print⁰(tmp);
 //│   return Predef⁰.print⁰(c⁴)
 //│ };
 //│ set a¹ = 1;
 //│ set b¹ = 2;
 //│ set c¹ = mut [];
-//│ set tmp = +⁰(a¹, b¹);
-//│ do Predef⁰.print⁰(tmp);
-//│ do Predef⁰.print⁰(c¹);
+//│ block inlinedLbl:
+//│   let tmp;
+//│   set tmp = +⁰(a¹, b¹);
+//│   do Predef⁰.print⁰(tmp);
+//│   do Predef⁰.print⁰(c¹);
+//│   break inlinedLbl
 //│ set a² = 1;
 //│ set b² = 2;
 //│ set c² = mut [3];
-//│ set tmp1 = +⁰(a², b²);
-//│ do Predef⁰.print⁰(tmp1);
-//│ do Predef⁰.print⁰(c²);
+//│ block inlinedLbl1:
+//│   let tmp;
+//│   set tmp = +⁰(a², b²);
+//│   do Predef⁰.print⁰(tmp);
+//│   do Predef⁰.print⁰(c²);
+//│   break inlinedLbl1
 //│ set a³ = 1;
 //│ set b³ = 2;
 //│ set c³ = mut [3, 4];
-//│ set tmp2 = +⁰(a³, b³);
-//│ do Predef⁰.print⁰(tmp2);
-//│ Predef⁰.print⁰(c³)
+//│ block inlinedLbl2:
+//│   let tmp;
+//│   set tmp = +⁰(a³, b³);
+//│   do Predef⁰.print⁰(tmp);
+//│   set inlinedVal = Predef⁰.print⁰(c³);
+//│   break inlinedLbl2
+//│ inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 3
 //│ > []
@@ -106,29 +133,33 @@ f(1, ...[2, 3])
 f(1, 2, ...[3])
 f(1, 2, 3, ...[4])
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f5, tmp4, tmp5, tmp6, a3, b3, c3, tmp7;
-//│ f5 = function f(a4, b4, ...c4) {
-//│   let tmp8;
-//│   tmp8 = a4 + b4;
-//│   Predef.print(tmp8);
-//│   return Predef.print(c4)
+//│ let f5, tmp7, tmp8, tmp9, a4, b4, c4;
+//│ f5 = function f(a5, b5, ...c5) {
+//│   let tmp10;
+//│   tmp10 = a5 + b5;
+//│   Predef.print(tmp10);
+//│   return Predef.print(c5)
 //│ };
-//│ tmp4 = globalThis.Object.freeze([
+//│ tmp7 = globalThis.Object.freeze([
 //│   2,
 //│   3
 //│ ]);
-//│ f5(1, ...tmp4);
-//│ tmp5 = globalThis.Object.freeze([
+//│ f5(1, ...tmp7);
+//│ tmp8 = globalThis.Object.freeze([
 //│   3
 //│ ]);
-//│ a3 = 1;
-//│ b3 = 2;
-//│ c3 = tmp5;
-//│ tmp7 = a3 + b3;
-//│ Predef.print(tmp7);
-//│ Predef.print(c3);
-//│ tmp6 = globalThis.Object.freeze([ 4 ]);
-//│ f5(1, 2, 3, ...tmp6)
+//│ a4 = 1;
+//│ b4 = 2;
+//│ c4 = tmp8;
+//│ inlinedLbl6: {
+//│   let tmp10;
+//│   tmp10 = a4 + b4;
+//│   Predef.print(tmp10);
+//│   Predef.print(c4);
+//│   break inlinedLbl6;
+//│ }
+//│ tmp9 = globalThis.Object.freeze([ 4 ]);
+//│ f5(1, 2, 3, ...tmp9)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 3
 //│ > [3]
@@ -140,7 +171,7 @@ f(1, 2, 3, ...[4])
 
 
 :sjs
-:lot
+:soir
 :inlineThreshold 10
 module A with
   fun f() = 1
@@ -163,67 +194,31 @@ module A with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 
 //│ });
-//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
-//│ Program:
-//│   imports = Nil
-//│   main = Scoped(syms = {member:A⁰}): 
-//│     body = Define:
-//│       defn = ClsLikeDefn:
-//│         owner = N
-//│         isym = class:A¹
-//│         sym = member:A⁰
-//│         ctorSym = N
-//│         k = Cls
-//│         paramsOpt = N
-//│         auxParams = Nil
-//│         parentPath = N
-//│         methods = Nil
-//│         privateFields = Nil
-//│         publicFields = Nil
-//│         preCtor = End of ""
-//│         ctor = Return:
-//│           res = Select{sym=object:Unit⁰}:
-//│             qual = Ref:
-//│               l = tmp:runtime⁰
-//│               disamb = N
-//│             name = Ident of "Unit"
-//│           implct = true
-//│         companion = S of ClsLikeBody:
-//│           isym = module:A²
-//│           methods = Ls of 
-//│             FunDefn:
-//│               owner = S of module:A²
-//│               sym = member:f⁴
-//│               dSym = term:A²/f⁵
-//│               params = Ls of 
-//│                 ParamList:
-//│                   flags = ()
-//│                   params = Nil
-//│                   restParam = N
-//│               body = Return:
-//│                 res = Lit of IntLit of 1
-//│                 implct = false
-//│             FunDefn:
-//│               owner = S of module:A²
-//│               sym = member:g⁰
-//│               dSym = term:A²/g¹
-//│               params = Ls of 
-//│                 ParamList:
-//│                   flags = ()
-//│                   params = Nil
-//│                   restParam = N
-//│               body = Return:
-//│                 res = Call:
-//│                   fun = Select{sym=term:A²/f⁵}:
-//│                     qual = Ref{disamb=module:A²}:
-//│                       l = member:A⁰
-//│                       disamb = S of module:A²
-//│                     name = Ident of "f"
-//│                   args = Nil
-//│                 implct = false
-//│           privateFields = Nil
-//│           publicFields = Nil
-//│           ctor = End of ""
-//│         bufferable = N
-//│       rest = End of ""
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let A⁰;
+//│ define A⁰ as class A¹ {
+//│   constructor {
+//│     runtime⁰.Unit⁰
+//│   }
+//│ }
+//│ module A² { method f⁴ = fun f⁵() { return 1 } method g⁰ = fun g¹() { return A².f⁵() } };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// Inlining limits
+:soir
+:inlineThreshold 10
+fun f() = if false do f() + 1
+f()
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+
+// Pathological case of inlining
+:soir
+fun g() =
+  fun f() = f()
+  f()
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError

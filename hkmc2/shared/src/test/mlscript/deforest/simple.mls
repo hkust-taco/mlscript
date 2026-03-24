@@ -512,7 +512,7 @@ test(p)
 //│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(c))
 //│ deforest > <<< fusing <<<
 //│ = 141
-//│ p = fun tmp57
+//│ p = fun tmp58
 
 
 :expect 141
@@ -534,7 +534,7 @@ test(p, id(CCC(123)))
 //│ deforest > 	Select(Ref(x,None),Ident(aa))
 //│ deforest > <<< fusing <<<
 //│ = 141
-//│ p = fun tmp59
+//│ p = fun tmp60
 
 
 :sir
@@ -547,7 +547,7 @@ f(id(A)) + f(A)
 //│ deforest > 	Ref(x,None)
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰, tmp, tmp1, tmp2, f_5$f⁰, f_5$x_A⁰, f_5$x_rest⁰, deforest$lam, x⁰;
+//│ let f⁰, tmp, tmp1, tmp2, f_5$f⁰, f_5$x_A⁰, f_5$x_rest⁰, deforest$lam;
 //│ define f_5$f⁰ as fun f_5$f¹(x) {
 //│   return x()
 //│ };
@@ -567,9 +567,8 @@ f(id(A)) + f(A)
 //│ };
 //│ set tmp = Predef⁰.id⁰(A⁰);
 //│ set tmp1 = f¹(tmp);
-//│ set deforest$lam = () => return 1;
-//│ set x⁰ = deforest$lam;
-//│ set tmp2 = x⁰();
+//│ set deforest$lam = () => return f_5$x_A¹();
+//│ set tmp2 = f_5$f¹(deforest$lam);
 //│ +⁰(tmp1, tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
@@ -1032,7 +1031,7 @@ f1(one) + f2(one) + f3(two)
 //│ deforest > <<< fusing <<<
 //│ = 10
 //│ one = AA(1)
-//│ two = fun
+//│ two = fun inlinedVal92
 
 
 :expect 4

@@ -78,7 +78,13 @@ Foo(1).a
 fun foo(y) = Foo(y)
 foo(27)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo, y; foo = function foo(y1) { return Foo3(y1) }; y = 27; Foo3(y)
+//│ let foo, inlinedVal, y;
+//│ foo = function foo(y1) {
+//│   return Foo3(y1)
+//│ };
+//│ y = 27;
+//│ inlinedLbl: { inlinedVal = Foo3(y); break inlinedLbl; }
+//│ inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Foo(27)
 
@@ -259,10 +265,10 @@ Foo(10, 20, 30, 40, 50)
 class Foo(val z, val z)
 //│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'z'.
 //│ ╟── Defined at: 
-//│ ║  l.259: 	class Foo(val z, val z)
+//│ ║  l.265: 	class Foo(val z, val z)
 //│ ║         	              ^
 //│ ╟── Defined at: 
-//│ ║  l.259: 	class Foo(val z, val z)
+//│ ║  l.265: 	class Foo(val z, val z)
 //│ ╙──       	                     ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo9;

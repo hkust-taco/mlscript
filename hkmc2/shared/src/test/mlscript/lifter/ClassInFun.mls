@@ -90,7 +90,7 @@ fun f() =
   Good()
 f().foo()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Bad1, Good1, f6, tmp5, Capture$scope01, Bad$, Good$;
+//│ let Bad1, Good1, f6, tmp5, Capture$scope01;
 //│ (class Capture$scope0 {
 //│   static {
 //│     Capture$scope01 = this
@@ -102,24 +102,6 @@ f().foo()
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Capture$scope0"]; 
 //│ });
-//│ Good$ = function Good$(isMut, scope0$cap, x, y) {
-//│   let tmp6;
-//│   if (isMut === true) {
-//│     tmp6 = new Good1.class();
-//│   } else {
-//│     tmp6 = globalThis.Object.freeze(new Good1.class());
-//│   }
-//│   return tmp6(scope0$cap, x, y)
-//│ };
-//│ Bad$ = function Bad$(isMut, scope0$cap) {
-//│   let tmp6;
-//│   if (isMut === true) {
-//│     tmp6 = new Bad1.class();
-//│   } else {
-//│     tmp6 = globalThis.Object.freeze(new Bad1.class());
-//│   }
-//│   return tmp6(scope0$cap)
-//│ };
 //│ Good1 = function Good() {
 //│   return (scope0$cap, x, y) => {
 //│     return globalThis.Object.freeze(new Good.class()(scope0$cap, x, y));
@@ -138,8 +120,8 @@ f().foo()
 //│     }
 //│   }
 //│   #Good$cap;
-//│   #x;
 //│   #y;
+//│   #x;
 //│   #scope0$cap;
 //│   foo() {
 //│     let tmp6, tmp7;
@@ -176,15 +158,41 @@ f().foo()
 //│   static [definitionMetadata] = ["class", "Bad", []]; 
 //│ });
 //│ f6 = function f() {
-//│   let x, y, tmp6, scope0$cap;
+//│   let x, y, tmp6, scope0$cap, scope0$cap1, isMut, scope0$cap2, x1, y1, isMut1, inlinedVal, inlinedVal1;
 //│   scope0$cap = new Capture$scope01(undefined, undefined);
 //│   x = 1;
 //│   y = 10;
 //│   scope0$cap.z$0 = 10;
 //│   scope0$cap.w$1 = 1000;
-//│   tmp6 = Bad$(false, scope0$cap);
+//│   isMut = false;
+//│   scope0$cap1 = scope0$cap;
+//│   inlinedLbl: {
+//│     let tmp7;
+//│     if (isMut === true) {
+//│       tmp7 = new Bad1.class();
+//│     } else {
+//│       tmp7 = globalThis.Object.freeze(new Bad1.class());
+//│     }
+//│     inlinedVal = tmp7(scope0$cap1);
+//│     break inlinedLbl;
+//│   }
+//│   tmp6 = inlinedVal;
 //│   tmp6.foo();
-//│   return Good$(false, scope0$cap, x, y)
+//│   isMut1 = false;
+//│   scope0$cap2 = scope0$cap;
+//│   x1 = x;
+//│   y1 = y;
+//│   inlinedLbl1: {
+//│     let tmp8;
+//│     if (isMut1 === true) {
+//│       tmp8 = new Good1.class();
+//│     } else {
+//│       tmp8 = globalThis.Object.freeze(new Good1.class());
+//│     }
+//│     inlinedVal1 = tmp8(scope0$cap2, x1, y1);
+//│     break inlinedLbl1;
+//│   }
+//│   return inlinedVal1
 //│ };
 //│ tmp5 = f6();
 //│ runtime.safeCall(tmp5.foo())

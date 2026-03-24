@@ -97,19 +97,13 @@ f(p())
 //│   return fv_arg$X$0$(fv_y, fv_arg$Y$0$, fv_tmp1, fv_tmp1)
 //│ };
 //│ define f_9$arg$X$0$_Y⁰ as fun f_9$arg$X$0$_Y¹(fv_y1, fv_arg$Y$0$1, fv_tmp2, fv_tmp3, Y_b) {
-//│   let fv_tmp4;
 //│   set fv_arg$Y$0$1 = Y_b;
 //│   set fv_y1 = fv_arg$Y$0$1;
 //│   set fv_tmp3 = fv_y1;
-//│   set fv_tmp4 = fv_tmp3;
-//│   return fv_tmp4
+//│   return f_9$split_root$_rest¹(fv_tmp3)
 //│ };
 //│ define f_9$x_rest⁰ as fun f_9$x_rest¹(fv_tmp4) {
-//│   let inlinedVal, fv_tmp5;
-//│   set fv_tmp5 = fv_tmp4;
-//│   block inlinedLbl:
-//│     throw new globalThis⁰.Error⁰("match error")
-//│   return inlinedVal
+//│   return f_9$split_default$_rest¹(fv_tmp4)
 //│ };
 //│ define f_9$split_default$_rest⁰ as fun f_9$split_default$_rest¹(fv_tmp5) {
 //│   throw new globalThis⁰.Error⁰("match error")

@@ -7,16 +7,7 @@ data class A(x) with
     fun getB() = x + y
   fun getA() = B(2).getB()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let B1, A1, B$;
-//│ B$ = function B$(isMut, A2, y) {
-//│   let tmp;
-//│   if (isMut === true) {
-//│     tmp = new B1.class(y);
-//│   } else {
-//│     tmp = globalThis.Object.freeze(new B1.class(y));
-//│   }
-//│   return tmp(A2)
-//│ };
+//│ let B1, A1;
 //│ B1 = function B(y) {
 //│   return (A2) => {
 //│     return globalThis.Object.freeze(new B.class(y)(A2));
@@ -53,8 +44,21 @@ data class A(x) with
 //│   }
 //│   #A$cap;
 //│   getA() {
-//│     let tmp;
-//│     tmp = B$(false, this, 2);
+//│     let tmp, A2, y, isMut, inlinedVal;
+//│     isMut = false;
+//│     A2 = this;
+//│     y = 2;
+//│     inlinedLbl: {
+//│       let tmp1;
+//│       if (isMut === true) {
+//│         tmp1 = new B1.class(y);
+//│       } else {
+//│         tmp1 = globalThis.Object.freeze(new B1.class(y));
+//│       }
+//│       inlinedVal = tmp1(A2);
+//│       break inlinedLbl;
+//│     }
+//│     tmp = inlinedVal;
 //│     return tmp.getB()
 //│   }
 //│   toString() { return runtime.render(this); }

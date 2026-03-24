@@ -12,7 +12,7 @@ fun foo() =
   xs.push(bar)
   set x = 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let bar, foo, Capture$scope01, bar$;
+//│ let foo, Capture$scope01, bar$;
 //│ (class Capture$scope0 {
 //│   static {
 //│     Capture$scope01 = this
@@ -25,11 +25,14 @@ fun foo() =
 //│ });
 //│ bar$ = function bar$(scope0$cap) {
 //│   return () => {
-//│     return bar(scope0$cap)
+//│     let scope0$cap1, inlinedVal;
+//│     scope0$cap1 = scope0$cap;
+//│     inlinedLbl: {
+//│       inlinedVal = scope0$cap1.x$0;
+//│       break inlinedLbl;
+//│     }
+//│     return inlinedVal
 //│   }
-//│ };
-//│ bar = function bar(scope0$cap) {
-//│   return scope0$cap.x$0
 //│ };
 //│ foo = function foo() {
 //│   let scope0$cap, bar$here;

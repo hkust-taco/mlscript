@@ -54,7 +54,7 @@ fun h(x) =
 //│ ║  l.46: 	@tailrec fun f(x) =
 //│ ║        	             ^
 //│ ╟── It could self-recurse through this call, which is not a tail call.
-//│ ║  l.52: 	  f(x)
+//│ ║  l.49: 	  h(x)
 //│ ╙──      	  ^^^^
 
 :e

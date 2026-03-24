@@ -7,14 +7,15 @@
 fun f(x, y) = x + y
 f(2, 3)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let f, x, y;
+//│ let f, inlinedVal, x, y;
 //│ f = function f(x1, y1) {
 //│   runtime.checkArgs("f", 2, true, arguments.length);
 //│   return x1 + y1
 //│ };
 //│ x = 2;
 //│ y = 3;
-//│ block$res1 = x + y;
+//│ inlinedLbl: { inlinedVal = x + y; break inlinedLbl; }
+//│ block$res1 = inlinedVal;
 //│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5

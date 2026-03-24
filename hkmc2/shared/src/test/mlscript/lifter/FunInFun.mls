@@ -62,14 +62,18 @@ fun f(used1, unused1) =
   foo(used2) + unused2
 f(1, 2)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g2, f3, g$1;
+//│ let f3, g$1;
 //│ g$1 = function g$(used1, used2) {
 //│   return (g_arg) => {
-//│     return g2(used1, used2, g_arg)
+//│     let used11, used21, inlinedVal;
+//│     used11 = used1;
+//│     used21 = used2;
+//│     inlinedLbl: {
+//│       inlinedVal = used11 + used21;
+//│       break inlinedLbl;
+//│     }
+//│     return inlinedVal
 //│   }
-//│ };
-//│ g2 = function g(used1, used2, g_arg) {
-//│   return used1 + used2
 //│ };
 //│ f3 = function f(used1, unused1) {
 //│   let used2, unused2, foo2, tmp1, g$here;
@@ -91,18 +95,25 @@ fun f(a1, a2, a3, a4, a5, a6) =
   g
 f(1,2,3,4,5,6)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g3, f4;
-//│ g3 = function g(a1, a2, a3, a4, a5, a6) {
-//│   let tmp1, tmp2, tmp3, tmp4;
-//│   tmp1 = a1 + a2;
-//│   tmp2 = tmp1 + a3;
-//│   tmp3 = tmp2 + a4;
-//│   tmp4 = tmp3 + a5;
-//│   return tmp4 + a6
-//│ };
+//│ let f4;
 //│ f4 = function f(a1, a2, a3, a4, a5, a6) {
-//│   let tmp1;
-//│   tmp1 = g3(a1, a2, a3, a4, a5, a6);
+//│   let tmp1, a11, a41, a51, a31, a61, a21, inlinedVal;
+//│   a11 = a1;
+//│   a21 = a2;
+//│   a31 = a3;
+//│   a41 = a4;
+//│   a51 = a5;
+//│   a61 = a6;
+//│   inlinedLbl: {
+//│     let tmp2, tmp3, tmp4, tmp5;
+//│     tmp2 = a11 + a21;
+//│     tmp3 = tmp2 + a31;
+//│     tmp4 = tmp3 + a41;
+//│     tmp5 = tmp4 + a51;
+//│     inlinedVal = tmp5 + a61;
+//│     break inlinedLbl;
+//│   }
+//│   tmp1 = inlinedVal;
 //│   return tmp1
 //│ };
 //│ f4(1, 2, 3, 4, 5, 6)
@@ -177,12 +188,34 @@ fun f(unused, immutable, mutated) =
   a + h() + unused
 f(1, 2, 1000)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f7;
+//│ let f7, Capture$f3;
+//│ (class Capture$f2 {
+//│   static {
+//│     Capture$f3 = this
+//│   }
+//│   constructor(mutated$0) {
+//│     this.mutated$0 = mutated$0;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Capture$f"]; 
+//│ });
 //│ f7 = function f(unused, immutable, mutated) {
-//│   let a1, tmp6, tmp7;
-//│   mutated = 2;
-//│   a1 = immutable + mutated;
-//│   tmp6 = mutated;
+//│   let a1, tmp6, tmp7, f$cap, f$cap1, immutable1, f$cap2, inlinedVal, inlinedVal1;
+//│   f$cap = new Capture$f3(mutated);
+//│   f$cap2 = f$cap;
+//│   immutable1 = immutable;
+//│   inlinedLbl: {
+//│     f$cap2.mutated$0 = 2;
+//│     inlinedVal = immutable1 + f$cap2.mutated$0;
+//│     break inlinedLbl;
+//│   }
+//│   a1 = inlinedVal;
+//│   f$cap1 = f$cap;
+//│   inlinedLbl1: {
+//│     inlinedVal1 = f$cap1.mutated$0;
+//│     break inlinedLbl1;
+//│   }
+//│   tmp6 = inlinedVal1;
 //│   tmp7 = a1 + tmp6;
 //│   return tmp7 + unused
 //│ };
@@ -250,10 +283,10 @@ fun g() =
   f
 g()(1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f14, g8, tmp6, Capture$scope09, f$;
-//│ (class Capture$scope08 {
+//│ let g12, tmp6, Capture$scope07, f$;
+//│ (class Capture$scope06 {
 //│   static {
-//│     Capture$scope09 = this
+//│     Capture$scope07 = this
 //│   }
 //│   constructor(y$0) {
 //│     this.y$0 = y$0;
@@ -263,21 +296,25 @@ g()(1)
 //│ });
 //│ f$ = function f$(scope0$cap) {
 //│   return (x1) => {
-//│     return f14(scope0$cap, x1)
+//│     let x2, scope0$cap1, inlinedVal;
+//│     scope0$cap1 = scope0$cap;
+//│     x2 = x1;
+//│     inlinedLbl: {
+//│       scope0$cap1.y$0 = 2;
+//│       inlinedVal = x2;
+//│       break inlinedLbl;
+//│     }
+//│     return inlinedVal
 //│   }
 //│ };
-//│ f14 = function f(scope0$cap, x1) {
-//│   scope0$cap.y$0 = 2;
-//│   return x1
-//│ };
-//│ g8 = function g() {
+//│ g12 = function g() {
 //│   let scope0$cap, f$here;
-//│   scope0$cap = new Capture$scope09(undefined);
+//│   scope0$cap = new Capture$scope07(undefined);
 //│   scope0$cap.y$0 = 0;
 //│   f$here = f$(scope0$cap);
 //│   return f$here
 //│ };
-//│ tmp6 = g8();
+//│ tmp6 = g12();
 //│ runtime.safeCall(tmp6(1))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
@@ -358,21 +395,27 @@ fun f(x) =
   x
 f(0)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f22;
-//│ f22 = function f(x1) {
+//│ let f24;
+//│ f24 = function f(x1) {
 //│   let scrut, tmp8;
 //│   scrut = true;
 //│   if (scrut === true) {
-//│     let tmp9;
-//│     tmp9 = x1 + 1;
-//│     x1 = tmp9;
-//│     return x1
+//│     let x2, inlinedVal;
+//│     x2 = x1;
+//│     inlinedLbl: {
+//│       let tmp9;
+//│       tmp9 = x2 + 1;
+//│       x2 = tmp9;
+//│       inlinedVal = x2;
+//│       break inlinedLbl;
+//│     }
+//│     return inlinedVal
 //│   }
 //│   tmp8 = x1 + 1;
 //│   x1 = tmp8;
 //│   return x1
 //│ };
-//│ f22(0)
+//│ f24(0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -393,16 +436,19 @@ fun f(x) =
     set y = 2
     [g, g]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g12, f24, g$8;
+//│ let f26, g$8;
 //│ g$8 = function g$(y1) {
 //│   return () => {
-//│     return g12(y1)
+//│     let y2, inlinedVal;
+//│     y2 = y1;
+//│     inlinedLbl: {
+//│       inlinedVal = y2;
+//│       break inlinedLbl;
+//│     }
+//│     return inlinedVal
 //│   }
 //│ };
-//│ g12 = function g(y1) {
-//│   return y1
-//│ };
-//│ f24 = function f(x1) {
+//│ f26 = function f(x1) {
 //│   let y1, scrut, g$here;
 //│   scrut = x1 < 0;
 //│   if (scrut === true) {
@@ -423,18 +469,21 @@ fun f(x) =
   set x += 1
   [a, g]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g13, f25, Capture$f5, g$9;
+//│ let f27, Capture$f7, g$9;
 //│ g$9 = function g$(f$cap) {
 //│   return () => {
-//│     return g13(f$cap)
+//│     let f$cap1, inlinedVal;
+//│     f$cap1 = f$cap;
+//│     inlinedLbl: {
+//│       inlinedVal = f$cap1.x$0;
+//│       break inlinedLbl;
+//│     }
+//│     return inlinedVal
 //│   }
 //│ };
-//│ g13 = function g(f$cap) {
-//│   return f$cap.x$0
-//│ };
-//│ (class Capture$f4 {
+//│ (class Capture$f6 {
 //│   static {
-//│     Capture$f5 = this
+//│     Capture$f7 = this
 //│   }
 //│   constructor(x$0) {
 //│     this.x$0 = x$0;
@@ -442,9 +491,9 @@ fun f(x) =
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Capture$f"]; 
 //│ });
-//│ f25 = function f(x1) {
+//│ f27 = function f(x1) {
 //│   let a1, tmp8, f$cap, g$here;
-//│   f$cap = new Capture$f5(x1);
+//│   f$cap = new Capture$f7(x1);
 //│   g$here = g$9(f$cap);
 //│   a1 = g$here;
 //│   tmp8 = f$cap.x$0 + 1;

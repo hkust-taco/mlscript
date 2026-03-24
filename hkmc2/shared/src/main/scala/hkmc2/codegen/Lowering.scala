@@ -1079,15 +1079,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
 
     val withHandlers1 = config.effectHandlers.fold(deforested): opt =>
       HandlerLowering(handlerPaths, opt).translateHandleBlocks(desug)
-
-    val inlined = config.inliner.fold(withHandlers1): opt =>
-      Inliner(using opt).applyBlock(withHandlers1)
     
     val shouldFlattenScopes = config.effectHandlers.isDefined
     
     val scopeFlattened =
-      if shouldFlattenScopes then ScopeFlattener().applyBlock(inlined)
-      else inlined
+      if shouldFlattenScopes then ScopeFlattener().applyBlock(withHandlers1)
+      else withHandlers1
     
     val lifted =
       if lift then Lifter(scopeFlattened).transform

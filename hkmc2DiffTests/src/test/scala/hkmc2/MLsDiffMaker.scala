@@ -8,7 +8,6 @@ import utils.*
 import hkmc2.semantics.{Elaborator, Resolver, Resolvable, Symbol, SymbolPrinter}
 
 import semantics.Elaborator.Ctx
-import hkmc2.Inliner
 
 abstract class MLsDiffMaker extends DiffMaker:
   

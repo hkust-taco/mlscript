@@ -41,14 +41,18 @@ fun test(a) =
 //│       ])
 //│     } 
 //│     g(d) {
-//│       let e;
+//│       let e, inlinedVal;
 //│       e = d;
-//│       return globalThis.Object.freeze([
-//│         a,
-//│         this.b,
-//│         d,
-//│         e
-//│       ])
+//│       inlinedLbl: {
+//│         inlinedVal = globalThis.Object.freeze([
+//│           a,
+//│           this.b,
+//│           d,
+//│           e
+//│         ]);
+//│         break inlinedLbl;
+//│       }
+//│       return inlinedVal
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Inner", ["b"]]; 
@@ -152,7 +156,15 @@ Foo(123)
 //│     this.foo();
 //│   }
 //│   foo() {
-//│     return this.a
+//│     let inlinedVal;
+//│     inlinedLbl: {
+//│       break inlinedLbl;
+//│     }
+//│     inlinedLbl1: {
+//│       inlinedVal = this.a;
+//│       break inlinedLbl1;
+//│     }
+//│     return inlinedVal
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", ["a"]]; 
@@ -186,7 +198,12 @@ Bar(1)
 //│   }
 //│   foo() {
 //│     return () => {
-//│       return this.x
+//│       let inlinedVal;
+//│       inlinedLbl: {
+//│         inlinedVal = this.x;
+//│         break inlinedLbl;
+//│       }
+//│       return inlinedVal
 //│     }
 //│   }
 //│   toString() { return runtime.render(this); }

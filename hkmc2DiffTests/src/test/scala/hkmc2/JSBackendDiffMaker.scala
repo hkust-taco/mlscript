@@ -108,7 +108,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val jsb = ltl.givenIn:
         JSBuilder()
       val le_0 = low.program(blk)
-      val le_1 = BlockSimplifier(symbolsToPreserve)(le_0)
+      val le_1 = ltl.givenIn:
+        BlockSimplifier(symbolsToPreserve)(le_0)
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
         jsb.programBody(le_1, N, wd)
@@ -152,7 +153,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         )
         output(Printer().worksheet(lowered_0)(using irPrintingScp).mkString(output.ColWidth))
       
-      val lowered_1 =
+      val lowered_1 = ltl.givenIn:
         BlockSimplifier(symbolsToPreserve)(lowered_0)
       
       // TODO: Test that transformers retain object identity when there are no changes

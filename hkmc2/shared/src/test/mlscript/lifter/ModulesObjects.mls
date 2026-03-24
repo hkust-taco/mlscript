@@ -32,16 +32,7 @@ fun foo(y) =
   (new M).foo()
 foo(10)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let M2, foo1, M$;
-//│ M$ = function M$(isMut, y) {
-//│   let tmp;
-//│   if (isMut === true) {
-//│     tmp = new M2(y);
-//│   } else {
-//│     tmp = globalThis.Object.freeze(new M2(y));
-//│   }
-//│   return tmp
-//│ };
+//│ let M2, foo1;
 //│ (class M1 {
 //│   static {
 //│     M2 = this
@@ -55,7 +46,23 @@ foo(10)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ foo1 = function foo(y) { let tmp; tmp = M$(false, y); return tmp.foo() };
+//│ foo1 = function foo(y) {
+//│   let tmp, y1, isMut, inlinedVal;
+//│   isMut = false;
+//│   y1 = y;
+//│   inlinedLbl: {
+//│     let tmp1;
+//│     if (isMut === true) {
+//│       tmp1 = new M2(y1);
+//│     } else {
+//│       tmp1 = globalThis.Object.freeze(new M2(y1));
+//│     }
+//│     inlinedVal = tmp1;
+//│     break inlinedLbl;
+//│   }
+//│   tmp = inlinedVal;
+//│   return tmp.foo()
+//│ };
 //│ foo1(10)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -96,8 +103,8 @@ fun foo(y) =
       set y = 2
   O
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.94: 	  object O with
-//│ ╙──      	         ^
+//│ ║  l.101: 	  object O with
+//│ ╙──       	         ^
 
 let o = foo(10)
 //│ o = O
@@ -118,12 +125,12 @@ fun foo(x, y) =
   fun foo3 = M.foo2()
   foo3
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.114: 	  object M with
+//│ ║  l.121: 	  object M with
 //│ ╙──       	         ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo4;
 //│ foo4 = function foo(x, y) {
-//│   let M4, tmp;
+//│   let M4, tmp, M5, inlinedVal;
 //│   (class M3 {
 //│     static {
 //│       new this
@@ -143,11 +150,13 @@ fun foo(x, y) =
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["object", "M"]; 
 //│   });
-//│   tmp = M4.foo2();
+//│   M5 = M4;
+//│   inlinedLbl: { inlinedVal = M5.foo2(); break inlinedLbl; }
+//│   tmp = inlinedVal;
 //│   return tmp
 //│ };
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.114: 	  object M with
+//│ ║  l.121: 	  object M with
 //│ ╙──       	         ^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -164,7 +173,7 @@ data class A(x) with
     fun bar = M.getB()
     bar
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.161: 	  object M with
+//│ ║  l.170: 	  object M with
 //│ ╙──       	         ^
 
 :expect 2
@@ -221,7 +230,7 @@ fun f =
   foo
 f.a
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.217: 	  object A with
+//│ ║  l.226: 	  object A with
 //│ ╙──       	         ^
 //│ = 2
 
@@ -314,7 +323,7 @@ fun foo(x) =
     val baz = x
   [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.312: 	  object O with
+//│ ║  l.321: 	  object O with
 //│ ╙──       	         ^
 
 foo(123)
@@ -363,13 +372,13 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.360: 	  object A with
+//│ ║  l.369: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.361: 	    object B with
+//│ ║  l.370: 	    object B with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.362: 	      object C
+//│ ║  l.371: 	      object C
 //│ ╙──       	             ^
 //│ = C
 
@@ -382,10 +391,10 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.379: 	  module A with
+//│ ║  l.388: 	  module A with
 //│ ╙──       	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.381: 	      object C
+//│ ║  l.390: 	      object C
 //│ ╙──       	             ^
 //│ = C
 
@@ -398,7 +407,7 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.395: 	  module A with
+//│ ║  l.404: 	  module A with
 //│ ╙──       	         ^
 //│ = C
 

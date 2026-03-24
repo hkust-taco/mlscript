@@ -14,7 +14,15 @@ fun main =
   1
 main
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let main⁰, tmp; define main⁰ as fun main¹() { return 1 }; set tmp = main¹(); main¹
+//│ let main⁰, tmp, inlinedVal;
+//│ define main⁰ as fun main¹() {
+//│   return 1
+//│ };
+//│ block inlinedLbl:
+//│   set inlinedVal = 1;
+//│   break inlinedLbl
+//│ set tmp = inlinedVal;
+//│ main¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 

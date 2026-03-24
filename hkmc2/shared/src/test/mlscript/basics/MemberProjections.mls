@@ -134,7 +134,13 @@ Foo::n(foo, 2)
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ ═══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let self7, args7; self7 = foo; args7 = [ 2 ]; runtime.safeCall(self7.n(...args7))
+//│ let self7, args7, inlinedVal7;
+//│ self7 = foo;
+//│ args7 = [
+//│   2
+//│ ];
+//│ inlinedLbl7: { inlinedVal7 = runtime.safeCall(self7.n(...args7)); break inlinedLbl7; }
+//│ inlinedVal7
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 125
 
