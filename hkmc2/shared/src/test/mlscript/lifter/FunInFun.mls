@@ -61,7 +61,7 @@ fun f(used1, unused1) =
   let foo = g
   foo(used2) + unused2
 f(1, 2)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let g2, f3, g$1;
 //│ g$1 = function g$(used1, used2) {
 //│   return (g_arg) => {
@@ -69,8 +69,6 @@ f(1, 2)
 //│   }
 //│ };
 //│ g2 = function g(used1, used2, g_arg) {
-//│   let used3;
-//│   used3 = 2;
 //│   return used1 + used2
 //│ };
 //│ f3 = function f(used1, unused1) {
@@ -83,6 +81,7 @@ f(1, 2)
 //│   return tmp1 + unused2
 //│ };
 //│ f3(1, 2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
 
 // preserve order
@@ -91,7 +90,7 @@ fun f(a1, a2, a3, a4, a5, a6) =
   fun g = a1 + a2 + a3 + a4 + a5 + a6  
   g
 f(1,2,3,4,5,6)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let g3, f4;
 //│ g3 = function g(a1, a2, a3, a4, a5, a6) {
 //│   let tmp1, tmp2, tmp3, tmp4;
@@ -107,6 +106,7 @@ f(1,2,3,4,5,6)
 //│   return tmp1
 //│ };
 //│ f4(1, 2, 3, 4, 5, 6)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 21
 
 :expect "01"
@@ -176,7 +176,7 @@ fun f(unused, immutable, mutated) =
   let a = g()
   a + h() + unused
 f(1, 2, 1000)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f7;
 //│ f7 = function f(unused, immutable, mutated) {
 //│   let a1, tmp6, tmp7;
@@ -187,6 +187,7 @@ f(1, 2, 1000)
 //│   return tmp7 + unused
 //│ };
 //│ f7(1, 2, 1000)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 7
 
 // if used as a higher order function, pass closures
@@ -248,7 +249,7 @@ fun g() =
     x
   f
 g()(1)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f14, g8, tmp6, Capture$scope09, f$;
 //│ (class Capture$scope08 {
 //│   static {
@@ -266,20 +267,19 @@ g()(1)
 //│   }
 //│ };
 //│ f14 = function f(scope0$cap, x1) {
-//│   let k;
-//│   k = 4;
 //│   scope0$cap.y$0 = 2;
 //│   return x1
 //│ };
 //│ g8 = function g() {
-//│   let y1, scope0$cap, f$here;
-//│   scope0$cap = new Capture$scope09(y1);
+//│   let scope0$cap, f$here;
+//│   scope0$cap = new Capture$scope09(undefined);
 //│   scope0$cap.y$0 = 0;
 //│   f$here = f$(scope0$cap);
 //│   return f$here
 //│ };
 //│ tmp6 = g8();
 //│ runtime.safeCall(tmp6(1))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 :expect 2
@@ -357,7 +357,7 @@ fun f(x) =
   set x += 1
   x
 f(0)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f22;
 //│ f22 = function f(x1) {
 //│   let scrut, tmp8;
@@ -373,6 +373,7 @@ f(0)
 //│   return x1
 //│ };
 //│ f22(0)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 // try to avoid creating multiple closures
@@ -391,7 +392,7 @@ fun f(x) =
   else
     set y = 2
     [g, g]
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let g12, f24, g$8;
 //│ g$8 = function g$(y1) {
 //│   return () => {
@@ -413,6 +414,7 @@ fun f(x) =
 //│     ])
 //│   } else { y1 = 2; g$here = g$8(y1); return globalThis.Object.freeze([ g$here, g$here ]) }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :sjs
 fun f(x) =
@@ -420,7 +422,7 @@ fun f(x) =
   let a = g
   set x += 1
   [a, g]
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let g13, f25, Capture$f5, g$9;
 //│ g$9 = function g$(f$cap) {
 //│   return () => {
@@ -450,6 +452,7 @@ fun f(x) =
 //│   g$here = g$9(f$cap);
 //│   return globalThis.Object.freeze([ a1, g$here ])
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // Can be avoided in `h` by passing the initialized closure, but this is more complicated
 // Note that automatically rewriting `fun h() = g` to `fun h() = a` would resolve this,

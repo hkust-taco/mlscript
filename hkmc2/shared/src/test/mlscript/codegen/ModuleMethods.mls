@@ -7,15 +7,17 @@ module Example with
 
 :ssjs
 Example.f(123)
-//│ JS:
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ block$res2 = runtime.checkCall(Example1.f(123)); undefined
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [123, 456]
 
 :ssjs
 let s = Example.f
-//│ JS:
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let s;
 //│ s = Example1.f; block$res3 = undefined;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ s = fun f
 
 s(123)
@@ -24,7 +26,7 @@ s(123)
 :e
 Example |>. s(123)
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type Example.
-//│ ║  l.25: 	Example |>. s(123)
+//│ ║  l.27: 	Example |>. s(123)
 //│ ║        	^^^^^^^
 //│ ╙── Module argument passed to a non-module parameter.
 //│ = [123, 456]
@@ -36,7 +38,7 @@ module Test with
   print(s)
   fun foo() = print(s)
   fun bar() = foo()
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Test1;
 //│ (class Test {
 //│   static {
@@ -59,6 +61,7 @@ module Test with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Test"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 
 let f = Test.foo

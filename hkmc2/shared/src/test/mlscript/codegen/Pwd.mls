@@ -5,7 +5,7 @@
 let folderName1 = process.env.PWD.split("/").pop()
 in let folderName2 = process.cwd().split("/").pop()
 in folderName2 === folderName1 || folderName2 === "shared"
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let folderName1, folderName2, tmp, tmp1, tmp2, tmp3, lambda;
 //│ tmp = runtime.safeCall(globalThis.process.env.PWD.split("/"));
 //│ folderName1 = runtime.safeCall(tmp.pop());
@@ -17,6 +17,7 @@ in folderName2 === folderName1 || folderName2 === "shared"
 //│   return folderName2 === "shared"
 //│ });
 //│ runtime.short_or(tmp3, lambda)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 
 

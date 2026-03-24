@@ -11,33 +11,36 @@ Int
 //│ ╔══[COMPILATION ERROR] Cannot use non-term member Int in term position
 //│ ║  l.10: 	Int
 //│ ╙──      	^^^
-//│ Flowed:
+//│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   Int⁰{ ~> Int⁰ }
 //│ where
 //│     
 //│ ╔══[COMPILATION ERROR] Symbol 'Int' is virtual (i.e., "compiler fiction"); cannot be used as a term
 //│ ║  l.10: 	Int
 //│ ╙──      	^^^
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 class C
-//│ Flowed:
+//│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   class C {
 //│     
 //│   }
 //│ where
 //│     
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :e
 C
 //│ ╔══[COMPILATION ERROR] Cannot use non-term member C in term position
-//│ ║  l.33: 	C
+//│ ║  l.35: 	C
 //│ ╙──      	^
-//│ Flowed:
+//│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   C⁰{ ~> C⁰ }
 //│ where
 //│     
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class C
 
 

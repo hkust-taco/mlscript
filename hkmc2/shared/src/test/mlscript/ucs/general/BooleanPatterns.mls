@@ -8,7 +8,7 @@ fun test(x) = if x is
   ~2 & ~3 then "not 2 and not 3"
   ~3 then "not 3"
   _ then "other"
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test;
 //│ test = function test(x) {
 //│   switch (x) {
@@ -26,6 +26,7 @@ fun test(x) = if x is
 //│       break;
 //│   }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 test(0)
 //│ = "0"

@@ -153,7 +153,7 @@ if y is
 //│ deforest > 	Ref(x,None)
 //│ deforest > <<< fusing <<<
 //│ = 2
-//│ x = fun x12
+//│ x = fun x10
 //│ y = fun y
 
 
@@ -237,7 +237,7 @@ if y is
 //│ deforest > 	Ref(x,None)
 //│ deforest > <<< fusing <<<
 //│ = 2
-//│ x = fun x16
+//│ x = fun x12
 //│ y = fun y1
 
 
@@ -512,7 +512,7 @@ test(p)
 //│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(c))
 //│ deforest > <<< fusing <<<
 //│ = 141
-//│ p = fun tmp85
+//│ p = fun tmp57
 
 
 :expect 141
@@ -534,7 +534,7 @@ test(p, id(CCC(123)))
 //│ deforest > 	Select(Ref(x,None),Ident(aa))
 //│ deforest > <<< fusing <<<
 //│ = 141
-//│ p = fun tmp87
+//│ p = fun tmp59
 
 
 :sir
@@ -546,18 +546,18 @@ f(id(A)) + f(A)
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > <<< fusing <<<
-//│ Lowered:
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let f⁰, tmp, tmp1, tmp2, f_5$f⁰, f_5$x_A⁰, f_5$x_rest⁰, deforest$lam, x⁰;
-//│ define f_5$f⁰ as fun (x) {
+//│ define f_5$f⁰ as fun f_5$f¹(x) {
 //│   return x()
 //│ };
-//│ define f_5$x_A⁰ as fun () {
+//│ define f_5$x_A⁰ as fun f_5$x_A¹() {
 //│   return 1
 //│ };
-//│ define f_5$x_rest⁰ as fun () {
+//│ define f_5$x_rest⁰ as fun f_5$x_rest¹() {
 //│   return null
 //│ };
-//│ define f⁰ as fun (x1) {
+//│ define f⁰ as fun f¹(x1) {
 //│   match x1
 //│     A⁰ =>
 //│       return 1
@@ -571,6 +571,7 @@ f(id(A)) + f(A)
 //│ set x⁰ = deforest$lam;
 //│ set tmp2 = x⁰();
 //│ +⁰(tmp1, tmp2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
 

@@ -32,14 +32,14 @@ fun hi(n) =
   if n === 0 then 0
   else hi(n - 1)
 hi(0)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let hi, tmp1, $_stack$_safe$_body$_;
 //│ runtime.resetEffects();
 //│ hi = function hi(n) {
 //│   loopLabel: while (true) {
-//│     let scrut, tmp2, stackDelayRes;
+//│     let scrut, tmp2;
 //│     runtime.stackDepth = runtime.stackDepth + 1;
-//│     stackDelayRes = runtime.checkDepth();
+//│     runtime.checkDepth();
 //│     if (runtime.curEffect !== null) {
 //│       return runtime.unwind(hi, -1, "TailCallOptimization.mls:31:1", null, null, 1, 1, n, 0)
 //│     }
@@ -59,4 +59,5 @@ hi(0)
 //│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_);
 //│ if (runtime.curEffect !== null) { tmp1 = runtime.topLevelEffect(false); }
 //│ tmp1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0

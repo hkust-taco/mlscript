@@ -26,7 +26,7 @@ abstract class CodeBuilder:
   type Context
   
 
-class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
+class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
   import JSBuilder.*
   
   def checkMLsCalls: Bool = false
@@ -611,9 +611,13 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case Begin(sub, thn) =>
       doc"${returningTerm(sub, endSemi = true)}${returningTerm(thn, endSemi)}"
       
-    case End("") => doc""
-    case End(msg) =>
+    case End(msg) if config.commentGeneratedCode && msg.nonEmpty =>
       doc" # /* $msg */"
+    case End(_) => doc""
+    
+    case Unreachable(msg) if config.commentGeneratedCode =>
+      doc" # /* Unreachable: $msg */"
+    case Unreachable(_) => doc""
     
     case Throw(res) =>
       doc" # throw ${result(res)}${mkSemi}"

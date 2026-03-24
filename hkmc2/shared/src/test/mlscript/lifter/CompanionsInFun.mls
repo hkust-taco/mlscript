@@ -12,7 +12,7 @@ fun f(x) =
 //│ ╔══[WARNING] Modules are not yet lifted.
 //│ ║  l.10: 	  module A
 //│ ╙──      	         ^
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f;
 //│ f = function f(x) {
 //│   let A1;
@@ -34,5 +34,6 @@ fun f(x) =
 //│ ╔══[WARNING] Modules are not yet lifted.
 //│ ║  l.10: 	  module A
 //│ ╙──      	         ^
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

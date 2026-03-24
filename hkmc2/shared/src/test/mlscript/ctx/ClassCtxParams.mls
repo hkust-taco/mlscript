@@ -100,23 +100,23 @@ class T
 :sjs
 class Foo(using T) with
   print(T)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo9;
-//│ Foo9 = function Foo(tmp5) {
-//│   return globalThis.Object.freeze(new Foo.class(tmp5));
+//│ Foo9 = function Foo(tmp4) {
+//│   return globalThis.Object.freeze(new Foo.class(tmp4));
 //│ };
 //│ (class Foo8 {
 //│   static {
 //│     Foo9.class = this
 //│   }
-//│   constructor(tmp5) {
-//│     this.#tmp = tmp5;
+//│   constructor(tmp4) {
 //│     Predef.print(T1);
 //│   }
 //│   #tmp;
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", [null]]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :todo
 :sjs
@@ -131,8 +131,9 @@ x => x.Foo#S
 //│ ║  l.101: 	class Foo(using T) with
 //│ ║         	                ^
 //│ ╙── Missing instance: Expected: T; Available: Int
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda; lambda = (undefined, function (x) { return x.S }); lambda
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 

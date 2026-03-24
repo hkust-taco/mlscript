@@ -19,6 +19,10 @@ import hkmc2.document.Document.{braced, bracedbk}
   * with the debug-printed names shown in other parts of the compiler, such as showAsTreee. */
 class Printer(using Raise, ShowCfg, SymbolPrinter):
   
+  val showPurity =
+    false
+    // true
+  
   def print(l: Local)(using Scope): Document =
     // * Symbols that are not local symbols in scope should be printed using their dbgName
     // *  – these will appear like `x¹²` and will be globally unique.
@@ -41,7 +45,8 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
     case Return(res, implct) => if implct then print(res) else doc"return ${print(res)}"
     case Throw(exc) => doc"throw ${print(exc)}"
     case Label(label, loop, body, rest) =>
-      val l2 = scope.allocateName(label)
+      val l2 = scope.allocateOrGetName(label)
+      // * ^ if we print the same block with a top-level label more than once, using `scope.allocateName` will crash...
       doc"${if loop then "loop" else "block"} $l2: #{  # ${print(body)} #}  # ${print(rest)}"
     case Break(label) =>
       doc"break ${print(label)}"
@@ -66,6 +71,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
         doc"let ${names.mkDocument(", ")}; # ${print(body)}"
     case End("") => doc"end"
     case End(msg) => doc"end /* ${msg} */"
+    case Unreachable(msg) => doc"unreachable /* ${msg} */"
     case _ => TODO(blk)
   
   def print(
@@ -88,10 +94,14 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
       case End(_) => doc""
       case _ => doc" # constructor${ctorSym.fold(doc"")(doc" " :: print(_))} ${
         bracedbk(docPreCtor :: print(ctor))}"
-    
     val mtds = methods.map(m => doc"method ${print(m.sym)} = " :: print(m)).mkDocument(sep = doc" # ")
     val docMethods = if methods.isEmpty then doc"" else doc" # ${mtds}"
-    if publicFields.isEmpty && privateFields.isEmpty && methods.isEmpty then doc""
+    if publicFields.isEmpty
+    && privateFields.isEmpty
+    && methods.isEmpty
+    && preCtor.forall(_.isEmpty)
+    && ctor.isEmpty
+    then doc""
     else doc" " :: braced(doc"${docPrivFlds}${docPubFlds}${docCtor}${docMethods}")
   
   def print(defn: Defn)(using Scope): Document = defn match
@@ -99,7 +109,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
       val docParams = doc"${
         params.map(_.params.map(x => scope.allocateName(x.sym)).mkDocument("(", ", ", ")")).mkDocument("")}"
       val docBody = print(body)
-      doc"fun ${docParams} ${bracedbk(docBody)}"
+      doc"fun ${print(dSym)}${docParams} ${bracedbk(docBody)}"
     case ValDefn(tsym, sym, rhs) =>
       doc"val ${print(tsym)} = ${print(rhs)}"
     case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, methods,
@@ -111,17 +121,13 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
       val docCtorParams = if clsParams.isEmpty then doc"" else doc"(${ctorParams.mkDocument(", ")})"
       val docStaged = if isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
       val docBody = print(privateFields, publicFields, methods, S(preCtor), ctor, ctorSym)
-      val clsType = k match
-        case Cls => "class"
-        case Pat => "pattern"
-        case Obj => "object"
-        case Mod => "module"
+      val clsType = k.str
       val docCls = doc"${docStaged}${clsType} ${print(isym)}${docCtorParams}${docBody}"
       val docModule = mod match
         case Some(mod) =>
           val docStaged = if mod.isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
           val docBody = print(mod.privateFields, mod.publicFields, mod.methods, N, mod.ctor, N)
-          doc" ${bracedbk(docStaged)} # module ${print(mod.isym)}${docBody}"
+          doc" # ${docStaged}module ${print(mod.isym)}${docBody}"
         case None => doc""
       doc"${docCls}${docModule}"
   
@@ -145,10 +151,14 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
     case sel @ Select(qual, name) =>
       val docQual = print(qual)
       doc"${docQual}.${showSymbol(name.name, sel.symbol)}"
+    case DynSelect(qual, fld, arrayIdx) =>
+      doc"${print(qual)}${if arrayIdx then "." else "!"}${print(fld)}"
     case x: Value => print(x)
-    case _ => TODO(path)
+    // case _ => TODO(path)
   
-  def print(result: Result)(using Scope): Document = result match
+  def print(result: Result)(using Scope): Document =
+    (if !showPurity || result.isPure then "" else "!") ::
+    result.match
     case Call(fun, args) => doc"${print(fun)}(${args.map(print).mkDocument(", ")})"
     case Instantiate(mut, cls, args) =>
       doc"new ${if mut then "mut " else ""}${print(cls)}(${args.map(print).mkDocument(", ")})"
@@ -162,8 +172,6 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
       doc"${if mut then "mut " else ""}{ ${
         args.map(x => x.idx.fold(doc"...")(p => print(p) :: ": ") :: print(x.value)).mkDocument(", ")
       } }"
-    case DynSelect(qual, fld, arrayIdx) =>
-      doc"${print(qual)}${if arrayIdx then "." else "!"}${print(fld)}"
     case x: Path => print(x)
   
   def print(imports: Ls[Local -> Str])(using Scope): Document =

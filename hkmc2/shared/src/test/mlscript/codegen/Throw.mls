@@ -30,14 +30,13 @@ fun f(x) =
   let y = throw Error("e")
   return y
 f(1)
-//│ JS (unsanitized):
-//│ let f2, inlinedVal1, x1;
-//│ f2 = function f(x2) {
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f2;
+//│ f2 = function f(x) {
 //│   throw runtime.safeCall(globalThis.Error("e"))
 //│ };
-//│ x1 = 1;
-//│ inlinedLbl1: { throw runtime.safeCall(globalThis.Error("e")); }
-//│ inlinedVal1
+//│ throw runtime.safeCall(globalThis.Error("e"))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: e
 
 
@@ -46,14 +45,15 @@ f(1)
 fun f(x) =
   throw (if x then Error("x") else Error("y"))
 f(false)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f3;
-//│ f3 = function f(x2) {
-//│   if (x2 === true) {
+//│ f3 = function f(x) {
+//│   if (x === true) {
 //│     throw runtime.safeCall(globalThis.Error("x"))
 //│   } else { throw runtime.safeCall(globalThis.Error("y")) }
 //│ };
 //│ f3(false)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: y
 
 
@@ -61,12 +61,13 @@ f(false)
 :sjs
 if false then throw 0
 throw 1
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let scrut;
 //│ scrut = false;
 //│ if (scrut === true) {
 //│   throw 0
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: match error
 
 

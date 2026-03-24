@@ -13,7 +13,7 @@ class A(x) with
     set x += 1
     set z += 2
     x
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A1;
 //│ A1 = function A(x) {
 //│   return globalThis.Object.freeze(new A.class(x));
@@ -70,6 +70,7 @@ class A(x) with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A", [null]]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 let buf = new DefaultObjectBuffer(10)

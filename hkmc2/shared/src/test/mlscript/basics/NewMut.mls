@@ -9,8 +9,9 @@ class Foo with
 
 :sjs
 let f = new Foo
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f; f = globalThis.Object.freeze(new Foo1());
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = Foo { x: 0 }
 
 set
@@ -37,8 +38,9 @@ f.y
 :sjs
 // :elt
 let f = new mut Foo
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f1; f1 = new Foo1();
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = Foo { x: 0 }
 
 set
@@ -59,7 +61,7 @@ f.y
 :e
 let f = mut new Foo
 //│ ╔══[COMPILATION ERROR] Illegal position for 'mut' modifier.
-//│ ║  l.60: 	let f = mut new Foo
+//│ ║  l.62: 	let f = mut new Foo
 //│ ╙──      	        ^^^
 //│ f = Foo { x: 0 }
 
@@ -67,7 +69,7 @@ let f = mut new Foo
 :re
 new mut Foo.x
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found selection.
-//│ ║  l.68: 	new mut Foo.x
+//│ ║  l.70: 	new mut Foo.x
 //│ ║        	        ^^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'

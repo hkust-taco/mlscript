@@ -8,7 +8,7 @@ object None
 
 :sjs
 if Some(0) is Some(x) then x
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let scrut, x, arg$Some$0$;
 //│ scrut = Some1(0);
 //│ if (scrut instanceof Some1.class) {
@@ -16,6 +16,7 @@ if Some(0) is Some(x) then x
 //│   x = arg$Some$0$;
 //│   x
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 
@@ -25,13 +26,14 @@ let s = Some(0)
 :sjs
 if s is
   Some(x) then x
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let x1, arg$Some$0$1;
 //│ if (s instanceof Some1.class) {
 //│   arg$Some$0$1 = s.value;
 //│   x1 = arg$Some$0$1;
 //│   x1
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 if s is
@@ -52,7 +54,7 @@ if s is
 
 :sjs
 x => if x is Some(x) then x
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda;
 //│ lambda = (undefined, function (x3) {
 //│   let x4, arg$Some$0$4;
@@ -63,6 +65,7 @@ x => if x is Some(x) then x
 //│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ });
 //│ lambda
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 
@@ -117,7 +120,7 @@ fun f(x) = if x is
   Some(x) and x > 0 then 42
   None then "ok"
   else print("oops")
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f4;
 //│ f4 = function f(x3) {
 //│   let x4, scrut1, arg$Some$0$4;
@@ -132,6 +135,7 @@ fun f(x) = if x is
 //│     }
 //│   } else if (x3 instanceof None1.class) { return "ok" } else { return Predef.print("oops") }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 f(Some(0))
 //│ > oops
@@ -153,7 +157,7 @@ data class Pair[out A, out B](fst: A, snd: B)
 fun f(x) = if x is
   Some(u) then u
   Pair(a, b) then a + b
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f5;
 //│ f5 = function f(x3) {
 //│   let u, a, b, arg$Pair$0$, arg$Pair$1$, arg$Some$0$4;
@@ -169,6 +173,7 @@ fun f(x) = if x is
 //│     return a + b
 //│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 f(Some(123))
 //│ = 123
@@ -183,7 +188,7 @@ fun f(x) = print of if x is
   Some(0) then "0"
   None then "ok"
   else "oops"
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f6;
 //│ f6 = function f(x3) {
 //│   let arg$Some$0$4, tmp9;
@@ -199,6 +204,7 @@ fun f(x) = print of if x is
 //│   } else { tmp9 = "oops"; }
 //│   return Predef.print(tmp9)
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 f(Some(0))
 //│ > 0

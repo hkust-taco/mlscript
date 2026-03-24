@@ -83,13 +83,13 @@ modSome(Some(17), 3)
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(x))
 //│ deforest > <<< fusing <<<
-//│ Lowered:
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let modSome⁰, tmp, modSome_8$modSome⁰, modSome_8$x_Some⁰, modSome_8$x_rest⁰, Some_x, x⁰, m⁰, n⁰, scrut, arg$Some$0$, tmp1, tmp2;
-//│ define modSome_8$modSome⁰ as fun (x, m) {
+//│ define modSome_8$modSome⁰ as fun modSome_8$modSome¹(x, m) {
 //│   let n, scrut1, arg$Some$0$1, tmp3, tmp4;
 //│   return x(m, n, scrut1, arg$Some$0$1, tmp3, tmp4)
 //│ };
-//│ define modSome_8$x_Some⁰ as fun (fv_m, fv_n, fv_scrut, fv_arg$Some$0$, fv_tmp, fv_tmp1, Some_x1) {
+//│ define modSome_8$x_Some⁰ as fun modSome_8$x_Some¹(fv_m, fv_n, fv_scrut, fv_arg$Some$0$, fv_tmp, fv_tmp1, Some_x1) {
 //│   set fv_arg$Some$0$ = Some_x1;
 //│   set fv_n = fv_arg$Some$0$;
 //│   set fv_scrut = >=⁰(fv_n, fv_m);
@@ -106,10 +106,10 @@ modSome(Some(17), 3)
 //│       return Some⁰(fv_n)
 //│   end
 //│ };
-//│ define modSome_8$x_rest⁰ as fun () {
+//│ define modSome_8$x_rest⁰ as fun modSome_8$x_rest¹() {
 //│   return null
 //│ };
-//│ define modSome⁰ as fun (x1, m1) {
+//│ define modSome⁰ as fun modSome¹(x1, m1) {
 //│   loop loopLabel:
 //│     let n, scrut1, arg$Some$0$1, tmp3, tmp4;
 //│     match x1
@@ -138,6 +138,7 @@ modSome(Some(17), 3)
 //│ set x⁰ = tmp;
 //│ set m⁰ = 3;
 //│ x⁰(m⁰, n⁰, scrut, arg$Some$0$, tmp1, tmp2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Some(2)
 
 

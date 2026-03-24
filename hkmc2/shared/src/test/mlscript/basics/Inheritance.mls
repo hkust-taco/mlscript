@@ -50,7 +50,7 @@ b is String
 :sjs
 data class Baz(z) extends Bar(z * 1) with
   fun baz = this.bar * 2
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Baz1;
 //│ Baz1 = function Baz(z) {
 //│   return globalThis.Object.freeze(new Baz.class(z));
@@ -71,6 +71,7 @@ data class Baz(z) extends Bar(z * 1) with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Baz", ["z"]]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let b = Baz(42)
 //│ b = Baz(42)
@@ -100,7 +101,7 @@ data class Barr(x: Int)(y: Int) with
 data class Bazz(z: Int) extends Bar(z % 10)(z / 10) with
   fun g = z
 //│ ╔══[COMPILATION ERROR] Extending a class with multiple parameter lists is not supported
-//│ ║  l.100: 	data class Bazz(z: Int) extends Bar(z % 10)(z / 10) with
+//│ ║  l.101: 	data class Bazz(z: Int) extends Bar(z % 10)(z / 10) with
 //│ ╙──       	                                ^^^^^^^^^^^^^^^^^^^
 
 :todo
@@ -111,7 +112,7 @@ Bazz(42).f
 new Barr(40)(2) with
   fun f = 43
 //│ ╔══[COMPILATION ERROR] Extending a class with multiple parameter lists is not supported
-//│ ║  l.111: 	new Barr(40)(2) with
+//│ ║  l.112: 	new Barr(40)(2) with
 //│ ╙──       	    ^^^^^^^^^^^
 //│ = fun
 
@@ -123,7 +124,7 @@ module M with
 // * Check that the access to `M.A` is not sanity-checked, as it is resolved.
 :sjs
 class B extends M.A
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let B1;
 //│ (class B extends M1.A {
 //│   static {
@@ -135,5 +136,6 @@ class B extends M.A
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "B"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

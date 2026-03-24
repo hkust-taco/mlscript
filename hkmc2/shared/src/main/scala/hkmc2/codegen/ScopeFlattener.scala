@@ -6,10 +6,11 @@ import hkmc2.utils.*
 
 import semantics.*
 
+
 /** - For function bodies, fuse all shallowly-nested scopes into one top-level one,
   *   because certain passes, such as the handler lowering, rely on knowing all the local
   *   variables of each function.
-  * - Asserts the absence of Label(loop = true) blocks,
+  * - Assert the absence of Label(loop = true) blocks,
   *   because loops should be rewritten to functions first,
   *   otherwise we cannot fuse scopes correctly.
   */
@@ -29,9 +30,10 @@ class ScopeFlattener extends BlockTransformer(new SymbolSubst):
         val newBody = applySubBlock(body)
         new Scoped(scopedSymForCurrentFun.get, newBody)
       case _ =>
-        scopedSymForCurrentFun = Some(collection.mutable.Set.empty[Symbol])
+        val tmp = collection.mutable.Set.empty[Symbol]
+        scopedSymForCurrentFun = Some(tmp)
         val newBlk = applySubBlock(b)
-        Scoped(scopedSymForCurrentFun.get, newBlk)
+        Scoped(tmp, newBlk)
     scopedSymForCurrentFun = prevScopedSymForCurrentFun
     resBlk
   
@@ -43,3 +45,5 @@ class ScopeFlattener extends BlockTransformer(new SymbolSubst):
           scopedForCurrentFun.addAll(syms)
           super.applySubBlock(body)
     case _ => super.applySubBlock(b)
+
+
