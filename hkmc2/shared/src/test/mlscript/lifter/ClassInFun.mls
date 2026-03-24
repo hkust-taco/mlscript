@@ -229,7 +229,6 @@ fun f() =
   foo()(0)
 f().get()
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
-//│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 0
 
 :lift

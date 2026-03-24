@@ -113,6 +113,15 @@ fun f(x) =
   even(x)
 f(3)
 //│ = false
-//│ 
-//│ Interpreted:
-//│ false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.NotImplementedError: Label not supported (of class String)
+//│ 	at: mlscript.utils.package$.TODO(package.scala:236)
+//│ 	at: hkmc2.codegen.llir.LlirBuilder.bBlock$$anonfun$3(Builder.scala:493)
+//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:20)
+//│ 	at: hkmc2.codegen.llir.LlirBuilder.bBlock(Builder.scala:530)
+//│ 	at: hkmc2.codegen.llir.LlirBuilder.bBind$$anonfun$3$$anonfun$1$$anonfun$1(Builder.scala:149)
+//│ 	at: hkmc2.codegen.llir.LlirBuilder.bValue$$anonfun$3(Builder.scala:295)
+//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:20)
+//│ 	at: hkmc2.codegen.llir.LlirBuilder.bValue(Builder.scala:297)
+//│ 	at: hkmc2.codegen.llir.LlirBuilder.bPath$$anonfun$3(Builder.scala:367)
+//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:20)

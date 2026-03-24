@@ -1075,11 +1075,8 @@ fun foo(x) =
   bar(x * 2)
 foo(1)
 //│ JS (unsanitized):
-//│ let bar8, foo13;
-//│ bar8 = function bar(x3, y2) {
-//│   return x3 + y2
-//│ };
-//│ foo13 = function foo(x3) { let tmp40, y2; tmp40 = x3 * 2; y2 = tmp40; return x3 + y2 };
+//│ let foo13;
+//│ foo13 = function foo(x3) { let y2, tmp40; tmp40 = x3 * 2; y2 = tmp40; return x3 + y2 };
 //│ foo13(1)
 //│ = 3
 

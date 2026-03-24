@@ -1,0 +1,29 @@
+:js
+
+:sjs
+fun f() = 0
+f()
+//│ JS (unsanitized):
+//│ let f; f = function f() { return 0 }; 0
+//│ = 0
+
+:sjs
+fun f(x) = x
+f(100)
+//│ JS (unsanitized):
+//│ let f1, x; f1 = function f(x1) { return x1 }; x = 100; x
+//│ = 100
+
+
+:sjs
+fun f() =
+  let done(x) = x
+  done
+//│ JS (unsanitized):
+//│ let f2;
+//│ f2 = function f() {
+//│   let done, done1;
+//│   done1 = function done(x1) { return x1 };
+//│   done = done1;
+//│   return done
+//│ };

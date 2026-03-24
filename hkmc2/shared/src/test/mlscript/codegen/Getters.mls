@@ -1,4 +1,5 @@
 :js
+:noInline
 
 
 :sjs
@@ -138,7 +139,7 @@ fun test() =
 //│ test1 = function test() {
 //│   let whoops, tmp1;
 //│   whoops = function whoops() { return 42 };
-//│   tmp1 = 42;
+//│   tmp1 = whoops();
 //│   return tmp1
 //│ };
 
@@ -183,9 +184,9 @@ fun baz() =
 //│   lambda = (undefined, function (x, y) {
 //│     let tmp1, tmp2, tmp3, tmp4;
 //│     tmp1 = x + y;
-//│     tmp2 = 1;
+//│     tmp2 = w();
 //│     tmp3 = tmp1 + tmp2;
-//│     tmp4 = 2;
+//│     tmp4 = z();
 //│     return tmp3 + tmp4
 //│   });
 //│   return lambda
@@ -213,8 +214,8 @@ fun a() =
 //│   c = function c() {
 //│     let d, tmp2, tmp3;
 //│     d = function d() { return 2 };
-//│     tmp2 = 1;
-//│     tmp3 = 2;
+//│     tmp2 = b();
+//│     tmp3 = d();
 //│     return tmp2 + tmp3
 //│   };
 //│   return c
@@ -242,7 +243,7 @@ fun b() =
 //│   d = function d() {
 //│     let c1, tmp3;
 //│     c1 = function c() { return 2 };
-//│     tmp3 = 2;
+//│     tmp3 = c1();
 //│     return tmp3
 //│   };
 //│   return d
@@ -272,8 +273,8 @@ fun c() =
 //│     e = function e() {
 //│       return 1
 //│     };
-//│     tmp5 = 1;
-//│     tmp6 = 1;
+//│     tmp5 = e();
+//│     tmp6 = f();
 //│     return tmp5 + tmp6
 //│   };
 //│   tmp4 = d();

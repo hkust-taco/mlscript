@@ -236,8 +236,8 @@ fun f(x) =
   if x then
     () => 4
 //│ JS (unsanitized):
-//│ let f4;
-//│ f4 = function f(x5) {
+//│ let f3;
+//│ f3 = function f(x5) {
 //│   if (x5 === true) {
 //│     let lambda1;
 //│     lambda1 = (undefined, function () {
