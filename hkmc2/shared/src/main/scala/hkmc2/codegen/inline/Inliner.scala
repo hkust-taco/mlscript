@@ -10,6 +10,8 @@ import hkmc2.semantics.*
 import semantics.Elaborator.State
 
 object Inliner:
+
+  // Reference to a function body can occur as a.f or f, this handles both cases.
   object TermSymbolPath:
     def unapply(p: Path) = p match
       case Value.Ref(l, S(ts: TermSymbol)) => S(ts)
@@ -140,23 +142,24 @@ import InlinerAnalyzer.InlinerMap
 object InlinerReplacer:
 
   class Copier(doRename: Bool, k: Option[Result => Block])(using State):
-    val needsSub = mutable.Set.empty[Symbol]
-    val subMap = mutable.Map.empty[Symbol, Symbol]
     val resSym = TempSymbol(N, "inlinedVal")
     val lblSym = LabelSymbol(N, "inlinedLbl")
-  
-    def addRenamedSymbol(sym: Symbol) =
-      assert(!subMap.contains(sym), s"Symbol ${sym} is already renamed.")
-      if doRename then
-        needsSub += sym
-    
-    def doSymbolSubst(orig: Symbol, newSym: => Symbol): Symbol =
-      if needsSub(orig) then
-        subMap.getOrElseUpdate(orig, newSym)
-      else
-        orig
 
-    object Subst extends SymbolSubst:
+    object SubstMap extends SymbolSubst:
+      val needsSub = mutable.Set.empty[Symbol]
+      val subMap = mutable.Map.empty[Symbol, Symbol]
+  
+      def addRenamedSymbol(sym: Symbol) =
+        assert(!subMap.contains(sym), s"Symbol ${sym} is already renamed.")
+        if doRename then
+          needsSub += sym
+      
+      def doSymbolSubst(orig: Symbol, newSym: => Symbol): Symbol =
+        if needsSub(orig) then
+          subMap.getOrElseUpdate(orig, newSym)
+        else
+          orig
+
       override def mapBlockMemberSym(s: BlockMemberSymbol): BlockMemberSymbol =
         doSymbolSubst(s, BlockMemberSymbol(s.nme, s.trees, s.nameIsMeaningful)).asInstanceOf
       override def mapFlowSym(s: FlowSymbol): FlowSymbol =
@@ -189,7 +192,7 @@ object InlinerReplacer:
       override def mapLabelSym(s: LabelSymbol): LabelSymbol =
         doSymbolSubst(s, LabelSymbol(s.trm, s.nme)).asInstanceOf
 
-    object Copier extends BlockTransformer(Subst):
+    object Copier extends BlockTransformer(SubstMap):
       var currentlyNested = false
 
       override def applyFunBodyLikeBlock(b: Block): Block =
@@ -207,7 +210,7 @@ object InlinerReplacer:
 
       override def applyScopedBlock(b: Block): Block = b match
         case Scoped(syms, body) if !currentlyNested =>
-          syms.foreach(addRenamedSymbol)
+          syms.foreach(SubstMap.addRenamedSymbol)
           Scoped(syms.map(_.subst), applySubBlock(body))
         case _ => super.applyScopedBlock(b)
 
@@ -271,8 +274,8 @@ object InlinerReplacer:
                   else
                     acc(Scoped(Set.single(copier.resSym), newBlk(k(Value.Ref(resSym)))))
                 case (sym, value) :: rest =>
-                  copier.addRenamedSymbol(sym)
-                  go(acc.assignScoped(sym.subst(using copier.Subst), value), rest)
+                  copier.SubstMap.addRenamedSymbol(sym)
+                  go(acc.assignScoped(sym.subst(using copier.SubstMap), value), rest)
               go(blockBuilder, matchedArgs)
       case _ => super.applyResult(r)(k)
 
