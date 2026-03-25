@@ -13,13 +13,13 @@ fun hi(n) =
   if n === 0 then 0
   else hi(n - 1)
 hi(0)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let hi, tmp, $_stack$_safe$_body$_;
 //│ runtime.resetEffects();
 //│ hi = function hi(n) {
-//│   let scrut, tmp1, stackDelayRes;
+//│   let scrut, tmp1;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
-//│   stackDelayRes = runtime.checkDepth();
+//│   runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
 //│     return runtime.unwind(hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0)
 //│   }
@@ -37,6 +37,7 @@ hi(0)
 //│ tmp = runtime.runStackSafe(6, $_stack$_safe$_body$_);
 //│ if (runtime.curEffect !== null) { tmp = runtime.topLevelEffect(false); }
 //│ tmp
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 :stackSafe
@@ -47,16 +48,16 @@ fun sum(n) =
   else
     n + sum(n - 1)
 sum(10000)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let sum, tmp1, $_stack$_safe$_body$_1;
 //│ runtime.resetEffects();
 //│ sum = function sum(n) {
-//│   let scrut, tmp2, tmp3, pc, curDepth, stackDelayRes;
+//│   let scrut, tmp2, tmp3, pc, curDepth;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   curDepth = runtime.stackDepth;
-//│   stackDelayRes = runtime.checkDepth();
+//│   runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
-//│     return runtime.unwind(sum, -1, "StackSafety.mls:45:1", null, null, 1, 1, n, 0)
+//│     return runtime.unwind(sum, -1, "StackSafety.mls:46:1", null, null, 1, 1, n, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -77,7 +78,7 @@ sum(10000)
 //│           runtime.stackDepth = curDepth;
 //│           runtime.resumeValue = res;
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(sum, 1, "StackSafety.mls:48:9", null, null, 1, 1, n, 0)
+//│             return runtime.unwind(sum, 1, "StackSafety.mls:49:9", null, null, 1, 1, n, 0)
 //│           }
 //│           pc = 1;
 //│           continue main
@@ -97,6 +98,7 @@ sum(10000)
 //│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
 //│ if (runtime.curEffect !== null) { tmp1 = runtime.topLevelEffect(false); }
 //│ tmp1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 50005000
 
 
@@ -191,7 +193,7 @@ foo(h)
 :stackSafe
 :sjs
 fun max(a, b) = if a < b then b else a
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let max;
 //│ runtime.resetEffects();
 //│ max = function max(a, b) {
@@ -199,6 +201,7 @@ fun max(a, b) = if a < b then b else a
 //│   scrut = a < b;
 //│   if (scrut === true) { return b } else { return a }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 :stackSafe

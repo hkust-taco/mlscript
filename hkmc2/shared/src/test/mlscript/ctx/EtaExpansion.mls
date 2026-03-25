@@ -30,7 +30,7 @@ using Num = 0.42
 // () => foo()(<using> 42)
 :sjs
 let f1 = foo
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f1, f11;
 //│ f11 = function f1() {
 //│   let tmp;
@@ -38,6 +38,7 @@ let f1 = foo
 //│   return runtime.safeCall(tmp(instance$Ident$_Int$_))
 //│ };
 //│ f1 = f11;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f1 = fun f1
 
 :expect [42]
@@ -51,7 +52,7 @@ f1()
 // (x) => bar(x)(<using> 42)
 :sjs
 let f2 = bar
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f2, f21;
 //│ f21 = function f2(x) {
 //│   let tmp;
@@ -59,6 +60,7 @@ let f2 = bar
 //│   return runtime.safeCall(tmp(instance$Ident$_Int$_))
 //│ };
 //│ f2 = f21;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f2 = fun f2
 
 :expect [0.42, 42]
@@ -72,7 +74,7 @@ f2(0.42)
 // (x) => baz(x)(<using> 42)
 :sjs
 let f3 = baz
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f3, f31;
 //│ f31 = function f3(x) {
 //│   let lambda1;
@@ -86,6 +88,7 @@ let f3 = baz
 //│   return lambda1
 //│ };
 //│ f3 = f31;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f3 = fun f3
 
 :expect [43, 42, 44, 0.42]
@@ -95,15 +98,17 @@ f3(43)(44)
 // This should not expand
 :sjs
 foo()
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp1; tmp1 = foo(); runtime.safeCall(tmp1(instance$Ident$_Int$_))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42]
 
 // This should not expand
 :sjs
 bar(0.42)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp2; tmp2 = bar(0.42); runtime.safeCall(tmp2(instance$Ident$_Int$_))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [0.42, 42]
 
 
@@ -111,7 +116,7 @@ bar(0.42)
 module Test with
   fun test(j)(using Int) = 0
   fun main(using Int) = test
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Test1;
 //│ (class Test {
 //│   static {
@@ -137,5 +142,6 @@ module Test with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Test"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

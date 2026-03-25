@@ -41,7 +41,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
     case n: Int => n.toString
 
   
-  private val _symSubst = new SymbolSubst()
+  private val _symSubst = SymbolSubst.Id
   
   val newPolyFnSyms = LinkedHashMap.empty[InstantiationId, Map[TermSymbol, (BlockMemberSymbol, TermSymbol)]]
   val branchSelSyms = MutMap.empty[CtorDtorId, VarSymbol]

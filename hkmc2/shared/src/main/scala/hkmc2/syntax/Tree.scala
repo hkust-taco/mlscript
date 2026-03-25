@@ -232,6 +232,13 @@ enum Tree extends AutoLocated:
   
   lazy val desugared: Tree = this match
     
+    case Ident(name) if name.startsWith("'") =>
+      StrLit(name.drop(1)).withLocOf(this)
+    case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
+      InfixApp(lhs.desugared, Keywrd(Keyword.`:`), rhs.desugared)
+    case Sel(pre, nme) if nme.name.startsWith("'") =>
+      DynAccess(pre.desugared, StrLit(nme.name.drop(1)).withLocOf(nme)).withLocOf(this)
+    
     case Pun(false, id) =>
       InfixApp(id, Keywrd(Keyword.`:`), id)
     

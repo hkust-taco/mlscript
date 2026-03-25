@@ -53,11 +53,12 @@ xs \
 //│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
 //│ ║  l.52: 	  map(x => x * 2)
 //│ ╙──      	     ^^^^^^^^^^^^
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda5, tmp4;
 //│ lambda5 = (undefined, function (x) { return x * 2 });
 //│ tmp4 = map(lambda5);
 //│ Predef.passTo(xs1, tmp4)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
 :e
@@ -65,14 +66,14 @@ xs \
 xs\
   map(x => x * 2)
 //│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.66: 	  map(x => x * 2)
+//│ ║  l.67: 	  map(x => x * 2)
 //│ ╙──      	     ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
 :pt
 xs
   \ map(f)
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ App:
 //│   lhs = OpApp:
 //│     lhs = Ident of "xs"
@@ -81,6 +82,7 @@ xs
 //│       Ident of "map"
 //│   rhs = Tup of Ls of 
 //│     Ident of "f"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > [2, 1, 0] 2
 //│ > [2, 1, 0] 1
 //│ > [2, 1, 0] 0

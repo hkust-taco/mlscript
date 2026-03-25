@@ -51,7 +51,7 @@ module A with
   
   val b = 2
   
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ TypeDef:
 //│   k = Mod
 //│   head = InfixApp:
@@ -74,6 +74,7 @@ module A with
 //│               rhs = S of IntLit of 2
 //│         rhs = N
 //│   rhs = N
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 fun test(x) =
@@ -89,11 +90,11 @@ x =>
   1
 let bar = 1
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.87: 	x =>
+//│ ║  l.88: 	x =>
 //│ ║        	^^^^
-//│ ║  l.88: 	  if false then 0 else...
+//│ ║  l.89: 	  if false then 0 else...
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.89: 	  1
+//│ ║  l.90: 	  1
 //│ ╙──      	^^^
 //│ bar = 1
 
@@ -107,12 +108,12 @@ x => if false then 0 else...
   1
 let foo = 1
 //│ ╔══[COMPILATION ERROR] Illegal position for '...' spread operator.
-//│ ║  l.106: 	x => if false then 0 else...
+//│ ║  l.107: 	x => if false then 0 else...
 //│ ╙──       	                         ^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.106: 	x => if false then 0 else...
+//│ ║  l.107: 	x => if false then 0 else...
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.107: 	  1
+//│ ║  l.108: 	  1
 //│ ╙──       	^^^
 //│ foo = 1
 

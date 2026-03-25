@@ -58,6 +58,27 @@ NaN
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+
+""
+//│ = ""
+
+"AAA"
+//│ = "AAA"
+
+'AAA
+//│ = "AAA"
+
+'AAA'
+//│ = "AAA'"
+
+:e
+'AA BB'
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
+//│ ║  l.75: 	'AA BB'
+//│ ╙──      	    ^^^
+//│ = "AA"
+
+
 "\u0068\u0065\u006c\u006c\u006f"
 //│ = "hello"
 
@@ -76,42 +97,42 @@ NaN
 :w
 "\uFE&&"
 //│ ╔══[WARNING] Invalid Unicode escape sequence: expected 4 hexadecimal digits but got 2
-//│ ║  l.77: 	"\uFE&&"
+//│ ║  l.98: 	"\uFE&&"
 //│ ╙──      	   ^^
 //│ = "&&"
 
 :w
 "\u{}"
 //│ ╔══[WARNING] Expected at least one hexadecimal digit in Unicode escape sequence
-//│ ║  l.84: 	"\u{}"
-//│ ╙──      	   ^
+//│ ║  l.105: 	"\u{}"
+//│ ╙──       	   ^
 //│ = ""
 
 :w
 "\u{ffffffff}"
 //│ ╔══[WARNING] Too many hexadecimal digits in Unicode escape sequence
-//│ ║  l.91: 	"\u{ffffffff}"
-//│ ╙──      	          ^^
+//│ ║  l.112: 	"\u{ffffffff}"
+//│ ╙──       	          ^^
 //│ = ""
 
 :w
 "\u{efefef}"
 //│ ╔══[WARNING] Unicode code point out of range: 0xefefef
-//│ ║  l.98: 	"\u{efefef}"
-//│ ╙──      	    ^^^^^^
+//│ ║  l.119: 	"\u{efefef}"
+//│ ╙──       	    ^^^^^^
 //│ = ""
 
 :w
 "\u{55"
 //│ ╔══[WARNING] Unterminated Unicode escape sequence: missing '}'
-//│ ║  l.105: 	"\u{55"
+//│ ║  l.126: 	"\u{55"
 //│ ╙──       	      ^
 //│ = "U"
 
 :w
 "\u{41****"
 //│ ╔══[WARNING] Unterminated Unicode escape sequence: missing '}'
-//│ ║  l.112: 	"\u{41****"
+//│ ║  l.133: 	"\u{41****"
 //│ ╙──       	      ^
 //│ = "A****"
 

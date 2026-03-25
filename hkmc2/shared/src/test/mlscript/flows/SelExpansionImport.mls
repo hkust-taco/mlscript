@@ -7,25 +7,28 @@
 
 
 import "../../mlscript-compile/Example.mls"
-//│ Flowed:
+//│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   import ".../Example.mjs" as Example⁰
 //│ where
 //│     
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 let e = new Example.Test(123)
-//│ Flowed:
+//│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   let e⁰,
 //│   e⁰ = new Example⁰.Test⁰(123)
 //│ where
 //│     e⁰  <~  Test(123)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ e = Test(123)
 
 e.field
-//│ Flowed:
+//│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   e⁰.field⁰
 //│ where
 //│     
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 123
 
 // TODO: support
@@ -33,28 +36,31 @@ e.field
 :re
 e.next
 //│ ╔══[COMPILATION ERROR] Cannot access companion Test from the context of this selection
-//│ ║  l.34: 	e.next
+//│ ║  l.37: 	e.next
 //│ ╙──      	^^^^^^
-//│ Flowed:
+//│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   e⁰.next‹?›
 //│ where
 //│     e⁰  <~  Test(123)
 //│     e⁰  ~>  {field: ⋅field⁰}  {next: ⋅next⁰}
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'next' yielded 'undefined'
 
 
 open Example
-//│ Flowed:
+//│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   
 //│ where
 //│     
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let e = new Test(123)
-//│ Flowed:
+//│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   let e¹,
 //│   e¹ = new ⟨Example⁰.⟩Test⁰(123)
 //│ where
 //│     e¹  <~  Test(123)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ e = Test(123)
 
 // TODO: support
@@ -62,13 +68,14 @@ let e = new Test(123)
 :re
 e.next
 //│ ╔══[COMPILATION ERROR] Cannot access companion Test from the context of this selection
-//│ ║  l.63: 	e.next
+//│ ║  l.69: 	e.next
 //│ ╙──      	^^^^^^
-//│ Flowed:
+//│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   e¹.next‹?›
 //│ where
 //│     e¹  <~  Test(123)
 //│     e¹  ~>  {next: ⋅next¹}
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'next' yielded 'undefined'
 
 
@@ -77,36 +84,39 @@ e.next
 :e
 let e = Example.Test(123)
 //│ ╔══[COMPILATION ERROR] Cannot use non-term member Example in term position
-//│ ║  l.78: 	let e = Example.Test(123)
+//│ ║  l.85: 	let e = Example.Test(123)
 //│ ╙──      	        ^^^^^^^
-//│ Flowed:
+//│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   let e²,
 //│   e² = Example⁰.Test⁰(123)‹app⁰›
 //│ where
 //│     
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ e = Test(123)
 
 // * TODO: better error! (with location)
 :e
 let e = Test(123)
 //│ ═══[COMPILATION ERROR] Cannot use non-term member Example in term position
-//│ Flowed:
+//│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   let e³,
 //│   e³ = ⟨Example⁰.⟩Test⁰(123)‹app¹›
 //│ where
 //│     
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ e = Test(123)
 
 
 :fixme // FIXME: error is probably due to some `bms.asTrm` weirdness (guess: due to lightweight elab?)
 Example.t
 //│ ╔══[COMPILATION ERROR] Cannot use non-term member Example in term position
-//│ ║  l.102: 	Example.t
+//│ ║  l.111: 	Example.t
 //│ ╙──       	^^^^^^^
-//│ Flowed:
+//│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   Example⁰{ ~> Example⁰ }.t⁰{ ~> Example⁰.t⁰ }
 //│ where
 //│     
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Test(123)
 
 // * Note that here, it's important that we don't get the flow symbol attached to BlockMemberSymbol `t`
@@ -115,31 +125,33 @@ Example.t
 :fixme // TODO: should get an inferred Type view of the field
 Example.t.field
 //│ ╔══[COMPILATION ERROR] Cannot use non-term member Example in term position
-//│ ║  l.116: 	Example.t.field
+//│ ║  l.126: 	Example.t.field
 //│ ╙──       	^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unresolved selection:
-//│ ║  l.116: 	Example.t.field
+//│ ║  l.126: 	Example.t.field
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╙── Type `type ⊤` does not contain member 'field'
-//│ Flowed:
+//│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   Example⁰{ ~> Example⁰ }.t⁰{ ~> Example⁰.t⁰ }.field‹?›
 //│ where
 //│     
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 123
 
 :fixme // Same
 Example.t.next
 //│ ╔══[COMPILATION ERROR] Cannot use non-term member Example in term position
-//│ ║  l.131: 	Example.t.next
+//│ ║  l.142: 	Example.t.next
 //│ ╙──       	^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unresolved selection:
-//│ ║  l.131: 	Example.t.next
+//│ ║  l.142: 	Example.t.next
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╙── Type `type ⊤` does not contain member 'next'
-//│ Flowed:
+//│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   Example⁰{ ~> Example⁰ }.t⁰{ ~> Example⁰.t⁰ }.next‹?›
 //│ where
 //│     
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'next' yielded 'undefined'
 
 

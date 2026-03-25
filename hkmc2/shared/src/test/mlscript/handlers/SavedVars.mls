@@ -20,7 +20,7 @@ fun g() =
     else
       2
   a
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let g;
 //│ runtime.resetEffects();
 //│ g = function g() {
@@ -61,9 +61,9 @@ fun g() =
 //│           pc = 2;
 //│           continue main
 //│         } else { tmp = 2; pc = 1; continue main }
-//│         /* unreachable */
 //│         break;
 //│     }
 //│     break;
 //│   }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

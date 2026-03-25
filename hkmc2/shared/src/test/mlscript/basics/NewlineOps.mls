@@ -73,7 +73,7 @@ xs |> len
 :pt
 let r = 10 in r
 -1
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ LetLike:
 //│   kw = Keywrd of keyword 'let'
 //│   lhs = Ident of "r"
@@ -86,6 +86,7 @@ let r = 10 in r
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.74: 	let r = 10 in r
 //│ ╙──      	              ^
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = -1
 
 let r = 10 in id(r)
@@ -105,7 +106,7 @@ let r = id(id)(10)
 :pt
 let r = id(10)
 !(r)
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ LetLike:
 //│   kw = Keywrd of keyword 'let'
 //│   lhs = Ident of "r"
@@ -120,6 +121,7 @@ let r = id(10)
 //│     Bra:
 //│       k = Round
 //│       inner = Ident of "r"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ r = 10
 
 
@@ -171,7 +173,7 @@ let x
   |> (a: _)
 .a
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
-//│ ║  l.172: 	.a
+//│ ║  l.174: 	.a
 //│ ╙──       	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -317,10 +319,10 @@ let incr = _ + 1
 :w
 2, * 3
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.318: 	2, * 3
+//│ ║  l.320: 	2, * 3
 //│ ╙──       	     ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.318: 	2, * 3
+//│ ║  l.320: 	2, * 3
 //│ ╙──       	^
 //│ = fun
 
@@ -374,9 +376,9 @@ xs |> Arr.len
 ,+
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.374: 	,+
+//│ ║  l.376: 	,+
 //│ ║         	  ^
-//│ ║  l.375: 	ys |> Arr.len
+//│ ║  l.377: 	ys |> Arr.len
 //│ ╙──       	
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -390,9 +392,9 @@ xs |> Arr.len
 +,
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.390: 	+,
+//│ ║  l.392: 	+,
 //│ ║         	  ^
-//│ ║  l.391: 	ys |> Arr.len
+//│ ║  l.393: 	ys |> Arr.len
 //│ ╙──       	
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -423,10 +425,10 @@ new Foo(1) is Foo
 :fixme // ?
 new Foo(1) ,is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.424: 	new Foo(1) ,is Foo
+//│ ║  l.426: 	new Foo(1) ,is Foo
 //│ ╙──       	            ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.424: 	new Foo(1) ,is Foo
+//│ ║  l.426: 	new Foo(1) ,is Foo
 //│ ╙──       	               ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -434,10 +436,10 @@ new Foo(1) ,is Foo
 new Foo(1)
 is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.435: 	is Foo
+//│ ║  l.437: 	is Foo
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.435: 	is Foo
+//│ ║  l.437: 	is Foo
 //│ ╙──       	   ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

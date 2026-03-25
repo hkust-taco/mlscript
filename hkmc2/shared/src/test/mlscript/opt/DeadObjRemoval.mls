@@ -1,0 +1,60 @@
+:js
+
+
+// * Remove useless objects
+:soir
+:sjs
+fun f() =
+  object A
+  42
+f()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f; f = function f() { return 42 }; f()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f⁰; define f⁰ as fun f¹() { return 42 }; f¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+// * Do not remove objects with non-trivial constructors
+:soir
+:sjs
+fun f() =
+  object A with
+    print("Hello")
+  42
+f()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f1;
+//│ f1 = function f() {
+//│   let A1;
+//│   (class A {
+//│     static {
+//│       new this
+//│     }
+//│     constructor() {
+//│       A1 = this;
+//│       Predef.print("Hello");
+//│       Object.defineProperty(this, "class", {
+//│         value: A
+//│       });
+//│       globalThis.Object.freeze(this);
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["object", "A"]; 
+//│   });
+//│   return 42
+//│ };
+//│ f1()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f²;
+//│ define f² as fun f³() {
+//│   let A;
+//│   define A as object A⁰ { constructor { Predef⁰.print⁰("Hello") } };
+//│   return 42
+//│ };
+//│ f³()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > Hello
+//│ = 42
+
+

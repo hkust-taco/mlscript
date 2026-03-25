@@ -61,7 +61,7 @@ fun f(used1, unused1) =
   let foo = g
   foo(used2) + unused2
 f(1, 2)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let g3, f3, g$1;
 //│ g$1 = function g$(used1, used2) {
 //│   return (g_arg) => {
@@ -69,8 +69,6 @@ f(1, 2)
 //│   }
 //│ };
 //│ g3 = function g(used1, used2, g_arg) {
-//│   let used3;
-//│   used3 = 2;
 //│   return used1 + used2
 //│ };
 //│ f3 = function f(used1, unused1) {
@@ -83,6 +81,7 @@ f(1, 2)
 //│   return tmp1 + unused2
 //│ };
 //│ f3(1, 2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
 
 // preserve order
@@ -91,7 +90,7 @@ fun f(a1, a2, a3, a4, a5, a6) =
   fun g = a1 + a2 + a3 + a4 + a5 + a6  
   g
 f(1,2,3,4,5,6)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let g4, f4;
 //│ g4 = function g(a1, a2, a3, a4, a5, a6) {
 //│   let tmp1, tmp2, tmp3, tmp4;
@@ -107,6 +106,7 @@ f(1,2,3,4,5,6)
 //│   return tmp1
 //│ };
 //│ f4(1, 2, 3, 4, 5, 6)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 21
 
 :expect "01"
@@ -176,7 +176,7 @@ fun f(unused, immutable, mutated) =
   let a = g()
   a + h() + unused
 f(1, 2, 1000)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let g6, h2, f7, Capture$f3;
 //│ g6 = function g(f$cap, immutable) {
 //│   f$cap.mutated$0 = 2;
@@ -204,6 +204,7 @@ f(1, 2, 1000)
 //│   return tmp7 + unused
 //│ };
 //│ f7(1, 2, 1000)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 7
 
 // if used as a higher order function, pass closures
@@ -265,8 +266,8 @@ fun g() =
     x
   f
 g()(1)
-//│ JS (unsanitized):
-//│ let h5, f15, g13, tmp6, Capture$scope07, f$;
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f15, g12, tmp6, Capture$scope07, f$;
 //│ (class Capture$scope06 {
 //│   static {
 //│     Capture$scope07 = this
@@ -277,31 +278,25 @@ g()(1)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Capture$scope0"]; 
 //│ });
-//│ h5 = function h(scope0$cap, x1, k) {
-//│   k = 5;
-//│   x1 = 4;
-//│   return x1 + scope0$cap.y$0
-//│ };
 //│ f$ = function f$(scope0$cap) {
 //│   return (x1) => {
 //│     return f15(scope0$cap, x1)
 //│   }
 //│ };
 //│ f15 = function f(scope0$cap, x1) {
-//│   let k;
-//│   k = 4;
 //│   scope0$cap.y$0 = 2;
 //│   return x1
 //│ };
-//│ g13 = function g() {
-//│   let y1, scope0$cap, f$here;
-//│   scope0$cap = new Capture$scope07(y1);
+//│ g12 = function g() {
+//│   let scope0$cap, f$here;
+//│   scope0$cap = new Capture$scope07(undefined);
 //│   scope0$cap.y$0 = 0;
 //│   f$here = f$(scope0$cap);
 //│   return f$here
 //│ };
-//│ tmp6 = g13();
+//│ tmp6 = g12();
 //│ runtime.safeCall(tmp6(1))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 :expect 2
@@ -379,9 +374,9 @@ fun f(x) =
   set x += 1
   x
 f(0)
-//│ JS (unsanitized):
-//│ let g18, f24;
-//│ g18 = function g(x1) {
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let g16, f24;
+//│ g16 = function g(x1) {
 //│   let tmp8;
 //│   tmp8 = x1 + 1;
 //│   x1 = tmp8;
@@ -390,12 +385,13 @@ f(0)
 //│ f24 = function f(x1) {
 //│   let scrut, tmp8;
 //│   scrut = true;
-//│   if (scrut === true) { return g18(x1) }
+//│   if (scrut === true) { return g16(x1) }
 //│   tmp8 = x1 + 1;
 //│   x1 = tmp8;
 //│   return x1
 //│ };
 //│ f24(0)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 // try to avoid creating multiple closures
@@ -414,14 +410,14 @@ fun f(x) =
   else
     set y = 2
     [g, g]
-//│ JS (unsanitized):
-//│ let g20, f26, g$8;
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let g18, f26, g$8;
 //│ g$8 = function g$(y1) {
 //│   return () => {
-//│     return g20(y1)
+//│     return g18(y1)
 //│   }
 //│ };
-//│ g20 = function g(y1) {
+//│ g18 = function g(y1) {
 //│   return y1
 //│ };
 //│ f26 = function f(x1) {
@@ -436,6 +432,7 @@ fun f(x) =
 //│     ])
 //│   } else { y1 = 2; g$here = g$8(y1); return globalThis.Object.freeze([ g$here, g$here ]) }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :sjs
 fun f(x) =
@@ -443,14 +440,14 @@ fun f(x) =
   let a = g
   set x += 1
   [a, g]
-//│ JS (unsanitized):
-//│ let g23, f27, Capture$f7, g$9;
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let g19, f27, Capture$f7, g$9;
 //│ g$9 = function g$(f$cap) {
 //│   return () => {
-//│     return g23(f$cap)
+//│     return g19(f$cap)
 //│   }
 //│ };
-//│ g23 = function g(f$cap) {
+//│ g19 = function g(f$cap) {
 //│   return f$cap.x$0
 //│ };
 //│ (class Capture$f6 {
@@ -473,6 +470,7 @@ fun f(x) =
 //│   g$here = g$9(f$cap);
 //│   return globalThis.Object.freeze([ a1, g$here ])
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // Can be avoided in `h` by passing the initialized closure, but this is more complicated
 // Note that automatically rewriting `fun h() = g` to `fun h() = a` would resolve this,

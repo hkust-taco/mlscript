@@ -34,7 +34,7 @@ x `=> x
 x `=>
   print(x)
   x
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let x1, tmp6, tmp7, arr2;
 //│ tmp6 = globalThis.Object.freeze(new Term.Symbol("x"));
 //│ x1 = globalThis.Object.freeze(new Term.Ref(tmp6));
@@ -44,6 +44,7 @@ x `=>
 //│ ]);
 //│ tmp7 = x1;
 //│ globalThis.Object.freeze(new Term.Lam(arr2, tmp7))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Ref(Symbol("x"))
 //│ = Lam([Symbol("x")], Ref(Symbol("x")))
 
@@ -76,7 +77,7 @@ f`(`0)
 
 :sjs
 `if `true then `true else `false
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let scrut, tmp28, tmp29, tmp30, tmp31, tmp32, tmp33, tmp34, tmp35, tmp36, tmp37, tmp38;
 //│ tmp28 = globalThis.Object.freeze(new Term.Symbol("scrut"));
 //│ scrut = globalThis.Object.freeze(new Term.Ref(tmp28));
@@ -91,6 +92,7 @@ f`(`0)
 //│ tmp30 = globalThis.Object.freeze(new Term.Cons(tmp35, tmp36));
 //│ tmp31 = globalThis.Object.freeze(new Term.Let(tmp28, tmp29, tmp30));
 //│ globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp31))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = IfLike(
 //│   If,
 //│   Let(
@@ -123,7 +125,7 @@ x `=> `if x `=== `0.0 then `1.0 else x
 :fixme // TODO: error doesn't make much sense (see https://github.com/hkust-taco/mlscript/pull/368#discussion_r2635074722)
 x `=> `if x `== `0.0 then `1.0 else x
 //│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.equals is only allowed in compiled files due to the lack of `import.meta` in REPL mode.
-//│ ║  l.124: 	x `=> `if x `== `0.0 then `1.0 else x
+//│ ║  l.126: 	x `=> `if x `== `0.0 then `1.0 else x
 //│ ╙──       	             ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -131,7 +133,7 @@ x `=> `if x `== `0.0 then `1.0 else x
 :ge
 `id`(`42)
 //│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.id is only allowed in compiled files due to the lack of `import.meta` in REPL mode.
-//│ ║  l.132: 	`id`(`42)
+//│ ║  l.134: 	`id`(`42)
 //│ ╙──       	 ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

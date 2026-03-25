@@ -14,7 +14,7 @@ fun test(x) =
   ) is
     Some(v) then print(v)
     None then print("none")
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test;
 //│ test = function test(x) {
 //│   let v, scrut, v1, arg$Some$0$, arg$Some$0$1, tmp, tmp1;
@@ -37,6 +37,7 @@ fun test(x) =
 //│     return Predef.print("none")
 //│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 

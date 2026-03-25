@@ -10,8 +10,9 @@ empty.0
 
 :sjs
 let single = [1]
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let single; single = globalThis.Object.freeze([ 1 ]);
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ single = [1]
 
 single.0
@@ -20,8 +21,9 @@ single.0
 
 :sjs
 val single = [1]
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let single1, tmp; tmp = globalThis.Object.freeze([ 1 ]); single1 = tmp;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ single = [1]
 
 single.0

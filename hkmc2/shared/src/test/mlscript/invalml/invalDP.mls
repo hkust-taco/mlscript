@@ -74,7 +74,7 @@ fun next(it) =
     let res = Some(at of it.Iter#arr, i)
     it.Iter#i := i + it.Iter#step
     res
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let next;
 //│ next = function next(it) {
 //│   let i, scrut, res, tmp, tmp1;
@@ -90,6 +90,7 @@ fun next(it) =
 //│     return res
 //│   }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 fun whileDo: [R] -> (() ->{R} Bool) ->{R} ()
 fun whileDo(f) =
@@ -266,7 +267,7 @@ region r in
 //│ > interviewee score: 30, salary: 1
 //│ = 80
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'results
-//│ ║  l.247: 	  let m = select(interviewees, 4, results)
+//│ ║  l.248: 	  let m = select(interviewees, 4, results)
 //│ ║         	                                  ^^^^^^^
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  'results
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  ArrayList['A1, in ⊥ out 'R1]
@@ -328,7 +329,7 @@ region r in
 //│ > candidates:
 //│ = 80
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'interviewees
-//│ ║  l.324: 	    let m = wrongSelect(interviewees, 4000, results)
+//│ ║  l.325: 	    let m = wrongSelect(interviewees, 4000, results)
 //│ ║         	                        ^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  'interviewees
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  ArrayList[in 'T out 'T1, in ⊥ out 'R1]

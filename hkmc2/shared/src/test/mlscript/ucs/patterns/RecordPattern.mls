@@ -78,6 +78,13 @@ if rr is
 //│ rr = {x: {y: 10, z: 100}, t: 1000}
 
 
+if rr is { "x": x } then x
+//│ = {y: 10, z: 100}
+
+if rr is { 'x: x } then x
+//│ = {y: 10, z: 100}
+
+
 
 let f = case
   { a: 1 & a } then a

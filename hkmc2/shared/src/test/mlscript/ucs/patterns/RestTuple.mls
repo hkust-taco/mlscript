@@ -5,7 +5,7 @@
 fun nonsense(xs) = if xs is
   [..ys] then ys
   [] then "empty"
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let nonsense;
 //│ nonsense = function nonsense(xs) {
 //│   let ys, middleElements;
@@ -15,6 +15,7 @@ fun nonsense(xs) = if xs is
 //│     return ys
 //│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 nonsense([])
 //│ = []
@@ -26,22 +27,22 @@ nonsense([1, 2, 3, 4])
 fun lead_and_last(xs) = if xs is
   [x, ..ys, y] then x + y
   [] then 0
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lead_and_last;
 //│ lead_and_last = function lead_and_last(xs) {
-//│   let x, ys, y, lastElement0$, middleElements, element0$;
+//│   let x, y, lastElement0$, element0$;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
 //│     element0$ = runtime.Tuple.get(xs, 0);
-//│     middleElements = runtime.Tuple.slice(xs, 1, 1);
+//│     runtime.Tuple.slice(xs, 1, 1);
 //│     lastElement0$ = runtime.Tuple.get(xs, -1);
 //│     y = lastElement0$;
-//│     ys = middleElements;
 //│     x = element0$;
 //│     return x + y
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
 //│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 lead_and_last(["foo", "bar"])
 //│ = "foobar"
@@ -60,7 +61,7 @@ lead_and_last(["boom"])
 fun nested_tuple_patterns(xs) = if xs is
   [x, ..[y, z], w] then x + y + z + w
   [] then 0
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let nested_tuple_patterns;
 //│ nested_tuple_patterns = function nested_tuple_patterns(xs) {
 //│   let x, y, w, z, lastElement0$, middleElements, element0$, element1$, element0$1, tmp6, tmp7, tmp8;
@@ -95,6 +96,7 @@ fun nested_tuple_patterns(xs) = if xs is
 //│   }
 //│   return tmp8
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 nested_tuple_patterns of [1, 2, 3, 4]
 //│ = 10

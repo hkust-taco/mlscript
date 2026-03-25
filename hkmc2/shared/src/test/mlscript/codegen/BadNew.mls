@@ -30,15 +30,16 @@ new 2 + 2
 :sjs
 :re
 new! 2 + 2
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp1; tmp1 = globalThis.Object.freeze(new 2()); tmp1 + 2
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
 
 :e
 :re
 new()
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found unit value.
-//│ ║  l.39: 	new()
+//│ ║  l.40: 	new()
 //│ ║        	   ^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
@@ -57,7 +58,7 @@ new {}
 :pe
 new! {}
 //│ ╔══[PARSE ERROR] Expected expression after prefix keyword 'new!'; found end of block instead
-//│ ║  l.58: 	new! {}
+//│ ║  l.59: 	new! {}
 //│ ╙──      	     ^^
 
 
@@ -67,7 +68,7 @@ new! {}
 :e
 :pt
 new { x = 1 }
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ LexicalNew:
 //│   body = S of Block of Ls of 
 //│     Def:
@@ -75,16 +76,17 @@ new { x = 1 }
 //│       rhs = IntLit of 1
 //│   rft = N
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.69: 	new { x = 1 }
+//│ ║  l.70: 	new { x = 1 }
 //│ ╙──      	      ^
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found block.
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 new! { x = 1 }
 //│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: prefix operator 'new!'
-//│ ║  l.85: 	new! { x = 1 }
+//│ ║  l.87: 	new! { x = 1 }
 //│ ╙──      	^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
