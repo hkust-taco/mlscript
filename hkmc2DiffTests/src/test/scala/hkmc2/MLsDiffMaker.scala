@@ -63,6 +63,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   val noSanityCheck = NullaryCommand("noSanityCheck")
   val noFreeze = NullaryCommand("noFreeze")
+  val noModuleCheck = NullaryCommand("noModuleCheck")
   val effectHandlers = Command("effectHandlers")(_.trim)
   val effectHandlersOptions = Set("debug", "")
   val stackSafe = Command("stackSafe")(_.trim)
@@ -119,6 +120,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       funcToCls = funcToCls.isSet,
       commentGeneratedCode = debug.isSet,
       noFreeze = noFreeze.isSet,
+      noModuleCheck = noModuleCheck.isSet,
     )
   
   
