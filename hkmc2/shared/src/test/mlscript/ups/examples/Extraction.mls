@@ -134,13 +134,13 @@ fun xorPairT(x) = if x is (@compile XorPairT) as output then output else "failed
 xorPairT of Pair(None, None)
 //│ = "failed"
 
-// * FIXME: this should match the result of the intepreted pattern
+// When one branch transforms a constructor field, both compiled and
+// interpreted matching rebuild a fresh `Pair` with the transformed field.
 xorPairT of Pair(None, Some(1))
-//│ = {first: None, second: {value: 111}}
+//│ = Pair(None, Some(111))
 
-// * FIXME: this should match the result of the intepreted pattern
 xorPairT of Pair(Some(56), None)
-//│ = {first: {value: 56}, second: None}
+//│ = Pair(Some(56), None)
 
 fun xorPairTInterp(x) = if x is XorPairT as output then output else "failed"
 
@@ -148,7 +148,7 @@ xorPairTInterp of Pair(None, None)
 //│ = "failed"
 
 xorPairTInterp of Pair(None, Some(1))
-//│ = Pair(None, Some(1))
+//│ = Pair(None, Some(111))
 
 xorPairTInterp of Pair(Some(56), None)
 //│ = Pair(Some(56), None)

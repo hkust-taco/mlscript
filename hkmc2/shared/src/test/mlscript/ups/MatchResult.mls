@@ -157,7 +157,7 @@ fun isCompiledBacktrackOnRight(x) = x is @compile BacktrackOnRight
 //│ define isCompiledBacktrackOnRight⁰ as fun isCompiledBacktrackOnRight¹(x) {
 //│   let matcher__BacktrackOnRight$, matcher__str4$, matcher__0_1$, matchSuccess, lambda, lambda1, lambda2;
 //│   define lambda as fun lambda³(input) {
-//│     let left, right, left1, right1, p_0$, result2$, result1$, result3$, result1$1, p_0$1, tmp, tmp1, tmp2, tmp3;
+//│     let left, right, left1, right1, p_0$, result2$, result1$, result3$, result1$1, p_0$1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
 //│     match input
 //│       Pair⁰ =>
 //│         match input
@@ -166,78 +166,82 @@ fun isCompiledBacktrackOnRight(x) = x is @compile BacktrackOnRight
 //│               Field(left) =>
 //│                 set left1 = input.left﹖;
 //│                 set tmp = matcher__str4$(left1);
+//│                 set tmp1 = { "input": left1, "result": tmp };
 //│                 end
 //│               else
-//│                 set tmp = false;
+//│                 set tmp1 = { "input": null, "result": false };
 //│                 end
 //│             end
 //│           else
-//│             set tmp = false;
+//│             set tmp1 = { "input": null, "result": false };
 //│             end
-//│         set left = tmp;
+//│         set left = tmp1;
 //│         match input
 //│           Object⁰ =>
 //│             match input
 //│               Field(right) =>
 //│                 set right1 = input.right﹖;
-//│                 set tmp1 = matcher__0_1$(right1);
+//│                 set tmp2 = matcher__0_1$(right1);
+//│                 set tmp3 = { "input": right1, "result": tmp2 };
 //│                 end
 //│               else
-//│                 set tmp1 = { "p_2": false, "p_3": false };
+//│                 set tmp4 = { "p_2": false, "p_3": false };
+//│                 set tmp3 = { "input": null, "result": tmp4 };
 //│                 end
 //│             end
 //│           else
-//│             set tmp1 = { "p_2": false, "p_3": false };
+//│             set tmp5 = { "p_2": false, "p_3": false };
+//│             set tmp3 = { "input": null, "result": tmp5 };
 //│             end
-//│         set right = tmp1;
-//│         set result1$ = left;
+//│         set right = tmp3;
+//│         set result1$ = left.result﹖;
 //│         match result1$
 //│           true =>
-//│             set result2$ = right.p_2﹖;
+//│             set result2$ = right.result﹖.p_2﹖;
 //│             match result2$
 //│               true =>
-//│                 set tmp2 = true;
+//│                 set tmp6 = true;
 //│                 end
 //│               else
-//│                 set result1$1 = left;
+//│                 set result1$1 = left.result﹖;
 //│                 match result1$1
 //│                   true =>
-//│                     set result3$ = right.p_3﹖;
+//│                     set result3$ = right.result﹖.p_3﹖;
 //│                     match result3$
 //│                       true =>
-//│                         set tmp2 = true;
+//│                         set tmp6 = true;
 //│                         end
 //│                       else
-//│                         set tmp2 = false;
+//│                         set tmp6 = false;
 //│                         end
 //│                     end
 //│                   else
-//│                     set tmp2 = false;
+//│                     set tmp6 = false;
 //│                     end
 //│                 end
 //│             end
 //│           else
-//│             set result1$1 = left;
+//│             set result1$1 = left.result﹖;
 //│             match result1$1
 //│               true =>
-//│                 set result3$ = right.p_3﹖;
+//│                 set result3$ = right.result﹖.p_3﹖;
 //│                 match result3$
 //│                   true =>
-//│                     set tmp2 = true;
+//│                     set tmp6 = true;
 //│                     end
 //│                   else
-//│                     set tmp2 = false;
+//│                     set tmp6 = false;
 //│                     end
 //│                 end
 //│               else
-//│                 set tmp2 = false;
+//│                 set tmp6 = false;
 //│                 end
 //│             end
-//│         set p_0$ = tmp2;
+//│         set p_0$ = tmp6;
 //│         return p_0$
 //│       else
-//│         set tmp3 = false;
-//│         set p_0$1 = tmp3;
+//│         set tmp7 = false;
+//│         set p_0$1 = tmp7;
 //│         return p_0$1
 //│     end
 //│   };
@@ -300,7 +304,7 @@ fun getCompiledBacktrackOnRight(x) =
 //│ define getCompiledBacktrackOnRight⁰ as fun getCompiledBacktrackOnRight¹(x) {
 //│   let result, matcher__BacktrackOnRight$, matcher__str4$, matcher__0_1$, matchSuccess, lambda, lambda1, lambda2;
 //│   define lambda as fun lambda⁶(input) {
-//│     let left, right, left1, right1, p_0$, result2$, result1$, result3$, result1$1, p_0$1, tmp, tmp1, tmp2, tmp3;
+//│     let left, right, left1, right1, p_0$, result2$, result1$, result3$, result1$1, p_0$1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
 //│     match input
 //│       Pair⁰ =>
 //│         match input
@@ -309,78 +313,82 @@ fun getCompiledBacktrackOnRight(x) =
 //│               Field(left) =>
 //│                 set left1 = input.left﹖;
 //│                 set tmp = matcher__str4$(left1);
+//│                 set tmp1 = { "input": left1, "result": tmp };
 //│                 end
 //│               else
-//│                 set tmp = false;
+//│                 set tmp1 = { "input": null, "result": false };
 //│                 end
 //│             end
 //│           else
-//│             set tmp = false;
+//│             set tmp1 = { "input": null, "result": false };
 //│             end
-//│         set left = tmp;
+//│         set left = tmp1;
 //│         match input
 //│           Object⁰ =>
 //│             match input
 //│               Field(right) =>
 //│                 set right1 = input.right﹖;
-//│                 set tmp1 = matcher__0_1$(right1);
+//│                 set tmp2 = matcher__0_1$(right1);
+//│                 set tmp3 = { "input": right1, "result": tmp2 };
 //│                 end
 //│               else
-//│                 set tmp1 = { "p_2": false, "p_3": false };
+//│                 set tmp4 = { "p_2": false, "p_3": false };
+//│                 set tmp3 = { "input": null, "result": tmp4 };
 //│                 end
 //│             end
 //│           else
-//│             set tmp1 = { "p_2": false, "p_3": false };
+//│             set tmp5 = { "p_2": false, "p_3": false };
+//│             set tmp3 = { "input": null, "result": tmp5 };
 //│             end
-//│         set right = tmp1;
-//│         set result1$ = left;
+//│         set right = tmp3;
+//│         set result1$ = left.result﹖;
 //│         match result1$
 //│           true =>
-//│             set result2$ = right.p_2﹖;
+//│             set result2$ = right.result﹖.p_2﹖;
 //│             match result2$
 //│               true =>
-//│                 set tmp2 = true;
+//│                 set tmp6 = true;
 //│                 end
 //│               else
-//│                 set result1$1 = left;
+//│                 set result1$1 = left.result﹖;
 //│                 match result1$1
 //│                   true =>
-//│                     set result3$ = right.p_3﹖;
+//│                     set result3$ = right.result﹖.p_3﹖;
 //│                     match result3$
 //│                       true =>
-//│                         set tmp2 = true;
+//│                         set tmp6 = true;
 //│                         end
 //│                       else
-//│                         set tmp2 = false;
+//│                         set tmp6 = false;
 //│                         end
 //│                     end
 //│                   else
-//│                     set tmp2 = false;
+//│                     set tmp6 = false;
 //│                     end
 //│                 end
 //│             end
 //│           else
-//│             set result1$1 = left;
+//│             set result1$1 = left.result﹖;
 //│             match result1$1
 //│               true =>
-//│                 set result3$ = right.p_3﹖;
+//│                 set result3$ = right.result﹖.p_3﹖;
 //│                 match result3$
 //│                   true =>
-//│                     set tmp2 = true;
+//│                     set tmp6 = true;
 //│                     end
 //│                   else
-//│                     set tmp2 = false;
+//│                     set tmp6 = false;
 //│                     end
 //│                 end
 //│               else
-//│                 set tmp2 = false;
+//│                 set tmp6 = false;
 //│                 end
 //│             end
-//│         set p_0$ = tmp2;
+//│         set p_0$ = tmp6;
 //│         return p_0$
 //│       else
-//│         set tmp3 = false;
-//│         set p_0$1 = tmp3;
+//│         set tmp7 = false;
+//│         set p_0$1 = tmp7;
 //│         return p_0$1
 //│     end
 //│   };
@@ -442,108 +450,98 @@ fun isCompiledBacktrackOnLeft(x) = x is @compile BacktrackOnLeft
 //│ define isCompiledBacktrackOnLeft⁰ as fun isCompiledBacktrackOnLeft¹(x) {
 //│   let matcher__BacktrackOnLeft$, matcher__0_1$, matcher__str4$, matchSuccess, lambda, lambda1, lambda2;
 //│   define lambda as fun lambda⁹(input) {
-//│     let p_3$, p_3$1, tmp, tmp1;
+//│     let left, right, left1, right1, p_0$, result3$, result1$, result3$1, result2$, p_0$1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
 //│     match input
-//│       "same" =>
-//│         set tmp = true;
-//│         set p_3$ = tmp;
-//│         return p_3$
-//│       else
-//│         set tmp1 = false;
-//│         set p_3$1 = tmp1;
-//│         return p_3$1
-//│     end
-//│   };
-//│   set matcher__str4$ = lambda⁹;
-//│   define lambda1 as fun lambda¹⁰(input1) {
-//│     let left, right, left1, right1, p_0$, result3$, result1$, result3$1, result2$, p_0$1, tmp, tmp1, tmp2, tmp3;
-//│     match input1
 //│       Pair⁰ =>
-//│         match input1
+//│         match input
 //│           Object⁰ =>
-//│             match input1
+//│             match input
 //│               Field(left) =>
-//│                 set left1 = input1.left﹖;
+//│                 set left1 = input.left﹖;
 //│                 set tmp = matcher__0_1$(left1);
+//│                 set tmp1 = { "input": left1, "result": tmp };
 //│                 end
 //│               else
-//│                 set tmp = { "p_1": false, "p_2": false };
+//│                 set tmp2 = { "p_1": false, "p_2": false };
+//│                 set tmp1 = { "input": null, "result": tmp2 };
 //│                 end
 //│             end
 //│           else
-//│             set tmp = { "p_1": false, "p_2": false };
+//│             set tmp3 = { "p_1": false, "p_2": false };
+//│             set tmp1 = { "input": null, "result": tmp3 };
 //│             end
-//│         set left = tmp;
-//│         match input1
+//│         set left = tmp1;
+//│         match input
 //│           Object⁰ =>
-//│             match input1
+//│             match input
 //│               Field(right) =>
-//│                 set right1 = input1.right﹖;
-//│                 set tmp1 = matcher__str4$(right1);
+//│                 set right1 = input.right﹖;
+//│                 set tmp4 = matcher__str4$(right1);
+//│                 set tmp5 = { "input": right1, "result": tmp4 };
 //│                 end
 //│               else
-//│                 set tmp1 = false;
+//│                 set tmp5 = { "input": null, "result": false };
 //│                 end
 //│             end
 //│           else
-//│             set tmp1 = false;
+//│             set tmp5 = { "input": null, "result": false };
 //│             end
-//│         set right = tmp1;
-//│         set result1$ = left.p_1﹖;
+//│         set right = tmp5;
+//│         set result1$ = left.result﹖.p_1﹖;
 //│         match result1$
 //│           true =>
-//│             set result3$ = right;
+//│             set result3$ = right.result﹖;
 //│             match result3$
 //│               true =>
-//│                 set tmp2 = true;
+//│                 set tmp6 = true;
 //│                 end
 //│               else
-//│                 set result2$ = left.p_2﹖;
+//│                 set result2$ = left.result﹖.p_2﹖;
 //│                 match result2$
 //│                   true =>
-//│                     set result3$1 = right;
+//│                     set result3$1 = right.result﹖;
 //│                     match result3$1
 //│                       true =>
-//│                         set tmp2 = true;
+//│                         set tmp6 = true;
 //│                         end
 //│                       else
-//│                         set tmp2 = false;
+//│                         set tmp6 = false;
 //│                         end
 //│                     end
 //│                   else
-//│                     set tmp2 = false;
+//│                     set tmp6 = false;
 //│                     end
 //│                 end
 //│             end
 //│           else
-//│             set result2$ = left.p_2﹖;
+//│             set result2$ = left.result﹖.p_2﹖;
 //│             match result2$
 //│               true =>
-//│                 set result3$1 = right;
+//│                 set result3$1 = right.result﹖;
 //│                 match result3$1
 //│                   true =>
-//│                     set tmp2 = true;
+//│                     set tmp6 = true;
 //│                     end
 //│                   else
-//│                     set tmp2 = false;
+//│                     set tmp6 = false;
 //│                     end
 //│                 end
 //│               else
-//│                 set tmp2 = false;
+//│                 set tmp6 = false;
 //│                 end
 //│             end
-//│         set p_0$ = tmp2;
+//│         set p_0$ = tmp6;
 //│         return p_0$
 //│       else
-//│         set tmp3 = false;
-//│         set p_0$1 = tmp3;
+//│         set tmp7 = false;
+//│         set p_0$1 = tmp7;
 //│         return p_0$1
 //│     end
 //│   };
-//│   set matcher__BacktrackOnLeft$ = lambda¹⁰;
-//│   define lambda2 as fun lambda¹¹(input2) {
+//│   set matcher__BacktrackOnLeft$ = lambda⁹;
+//│   define lambda1 as fun lambda¹⁰(input1) {
 //│     let p_1$, p_2$, p_1$1, p_2$1, p_1$2, p_2$2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
-//│     match input2
+//│     match input1
 //│       0 =>
 //│         set tmp = true;
 //│         set p_1$ = tmp;
@@ -564,7 +562,21 @@ fun isCompiledBacktrackOnLeft(x) = x is @compile BacktrackOnLeft
 //│         return { "p_1": p_1$2, "p_2": p_2$2 }
 //│     end
 //│   };
-//│   set matcher__0_1$ = lambda¹¹;
+//│   set matcher__0_1$ = lambda¹⁰;
+//│   define lambda2 as fun lambda¹¹(input2) {
+//│     let p_3$, p_3$1, tmp, tmp1;
+//│     match input2
+//│       "same" =>
+//│         set tmp = true;
+//│         set p_3$ = tmp;
+//│         return p_3$
+//│       else
+//│         set tmp1 = false;
+//│         set p_3$1 = tmp1;
+//│         return p_3$1
+//│     end
+//│   };
+//│   set matcher__str4$ = lambda¹¹;
 //│   set matchSuccess = matcher__BacktrackOnLeft$(x);
 //│   match matchSuccess
 //│     true =>
