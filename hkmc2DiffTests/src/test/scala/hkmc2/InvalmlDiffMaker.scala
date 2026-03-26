@@ -9,7 +9,7 @@ import utils.Scope
 
 abstract class InvalMLDiffMaker extends JSBackendDiffMaker:
   
-  val invalPreludeFile = io.Path(rootPath) / "hkmc2" / "shared" / "src" / "test" / "mlscript" / "invalml" / "InvalPrelude.mls"
+  val invalPreludeFile = io.Path(rootPath) / "hkmc2" / "shared" / "src" / "test" / "mlscript" / "invalml" / "InvalMLPrelude.mls"
   
   val invalmlOpt = new NullaryCommand("invalml"):
     override def onSet(): Unit =
