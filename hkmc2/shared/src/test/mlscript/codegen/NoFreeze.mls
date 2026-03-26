@@ -1,13 +1,13 @@
 :js
 
-:sjs
+:ssjs
 class Foo(x)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let Foo1;
 //│ Foo1 = function Foo(x) {
 //│   return globalThis.Object.freeze(new Foo.class(x));
 //│ };
-//│ (class Foo {
+//│ globalThis.Object.freeze(class Foo {
 //│   static {
 //│     Foo1.class = this
 //│   }
@@ -16,12 +16,13 @@ class Foo(x)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", [null]]; 
 //│ });
+//│ block$res1 = undefined;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:sjs
+:ssjs
 :noFreeze
 class Foo(x)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let Foo3;
 //│ Foo3 = function Foo(x) {
 //│   return (new Foo.class(x));
@@ -35,62 +36,24 @@ class Foo(x)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", [null]]; 
 //│ });
+//│ block$res2 = undefined;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-
-
-:sjs
-let foo = new Foo(1)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo; foo = globalThis.Object.freeze(new Foo3.class(1));
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ foo = Foo(_)
-
-:sjs
-:noFreeze
-let foo = new Foo(1)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo1; foo1 = (new Foo3.class(1));
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ foo = Foo(_)
 
 
 :ssjs
-data class Bar(x)
+let foo = new Foo(1)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let Bar1;
-//│ Bar1 = function Bar(x) {
-//│   return globalThis.Object.freeze(new Bar.class(x));
-//│ };
-//│ globalThis.Object.freeze(class Bar {
-//│   static {
-//│     Bar1.class = this
-//│   }
-//│   constructor(x) {
-//│     this.x = x;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Bar", ["x"]]; 
-//│ });
-//│ block$res5 = undefined;
+//│ let foo;
+//│ foo = globalThis.Object.freeze(new Foo3.class(1)); block$res3 = undefined;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ foo = Foo(_)
 
 :ssjs
 :noFreeze
-data class Bar(x)
+let foo = new Foo(1)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let Bar3;
-//│ Bar3 = function Bar(x) {
-//│   return (new Bar.class(x));
-//│ };
-//│ (class Bar2 {
-//│   static {
-//│     Bar3.class = this
-//│   }
-//│   constructor(x) {
-//│     this.x = x;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Bar", ["x"]]; 
-//│ });
-//│ block$res6 = undefined;
+//│ let foo1;
+//│ foo1 = (new Foo3.class(1)); block$res4 = undefined;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ foo = Foo(_)
+
