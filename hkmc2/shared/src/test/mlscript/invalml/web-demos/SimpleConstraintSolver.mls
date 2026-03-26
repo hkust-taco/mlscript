@@ -402,3 +402,19 @@ region r in
 
 
 //│ ————————————————————————————————————————————————————————————————————————————————
+
+
+
+// ––––––––– TO IMPROVE LATER –––––––––
+
+fun test(x) = case
+  IntType() then ()
+  FunctionType(l1, r1) then ()
+  RecordType(f) then ()
+  TypeVariable(id, lvl, lbs, ubs) then clear(ubs)
+
+// FIXME: why is this not simplified more? (((Type[out 'TypeVariable] ∧ Type[?]) ∧ Type[?]) ∧ Type[?])
+test
+//│ Type: ['TypeVariable] -> ⊤ -> ((((Type[out 'TypeVariable] ∧ Type[?]) ∧ Type[?]) ∧ Type[?]) ->{'TypeVariable} ())
+
+
