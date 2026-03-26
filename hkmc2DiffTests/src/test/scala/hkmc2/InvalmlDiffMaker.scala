@@ -7,9 +7,9 @@ import hkmc2.invalml.*
 import utils.Scope
 
 
-abstract class InvalmlDiffMaker extends JSBackendDiffMaker:
+abstract class InvalMLDiffMaker extends JSBackendDiffMaker:
   
-  val invalPreludeFile = io.Path(rootPath) / "hkmc2" / "shared" / "src" / "test" / "mlscript" / "invalml" / "invalPrelude.mls"
+  val invalPreludeFile = io.Path(rootPath) / "hkmc2" / "shared" / "src" / "test" / "mlscript" / "invalml" / "InvalPrelude.mls"
   
   val invalmlOpt = new NullaryCommand("invalml"):
     override def onSet(): Unit =
