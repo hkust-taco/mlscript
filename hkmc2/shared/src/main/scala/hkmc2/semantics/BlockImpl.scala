@@ -21,7 +21,7 @@ trait BlockImpl(using Elaborator.State):
             case Constructor(Block(ctors)) => ctors
             case _ => Nil
           case _ => Nil
-        // A temp solution for ADTs, which desugars ADTs to normal class definitions.
+        // A temporary solution for ADTs, which desugars ADTs to normal class definitions.
         // This will be removed after we truly support ADTs correctly.
         // TODO: No raise contextual variable. Only `Error` nodes are returned if there is an error. 
         lazy val (headId, headPs) = td.baseHead match
