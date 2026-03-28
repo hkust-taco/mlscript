@@ -44,9 +44,6 @@ module Test with
 //│   static {
 //│     Test1 = this
 //│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
 //│   static #s;
 //│   static {
 //│     Test.#s = 1;

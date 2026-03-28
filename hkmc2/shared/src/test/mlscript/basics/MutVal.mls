@@ -57,7 +57,8 @@ class Foo(x, val y, mut val z) with
 //│     set x¹ = x;
 //│     define y² as val y³ = y;
 //│     define z² as val z³ = z;
-//│     Predef⁰.print⁰(x¹)
+//│     do Predef⁰.print⁰(x¹);
+//│     end
 //│   }
 //│ };
 //│ end

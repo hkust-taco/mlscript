@@ -50,9 +50,6 @@ module Test with
 //│   static {
 //│     Test1 = this
 //│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
 //│   static {
 //│     this.a = 3;
 //│   }

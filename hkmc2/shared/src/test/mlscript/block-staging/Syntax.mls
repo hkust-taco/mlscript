@@ -22,11 +22,7 @@ staged fun f() = 0
 staged module A
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let A⁰;
-//│ define A⁰ as class A¹ {
-//│   constructor {
-//│     runtime⁰.Unit⁰
-//│   }
-//│ }
+//│ define A⁰ as class A¹
 //│ staged module A² {
 //│   constructor {
 //│     let tmp, tmp1;

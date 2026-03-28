@@ -167,11 +167,7 @@ module A with
 A.x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let A⁰;
-//│ define A⁰ as class A¹ {
-//│   constructor {
-//│     runtime⁰.Unit⁰
-//│   }
-//│ }
+//│ define A⁰ as class A¹
 //│ module A² {
 //│   private val y⁰;
 //│   val x⁸;
@@ -199,11 +195,7 @@ module A with
 A.x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let A³;
-//│ define A³ as class A⁴ {
-//│   constructor {
-//│     runtime⁰.Unit⁰
-//│   }
-//│ }
+//│ define A³ as class A⁴
 //│ module A⁵ { val x¹¹; constructor { define x¹¹ as val x¹² = 3; end } };
 //│ A⁵.x¹²
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

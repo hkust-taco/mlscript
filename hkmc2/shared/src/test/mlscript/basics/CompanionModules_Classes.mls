@@ -109,7 +109,6 @@ module Foo with
 //│   static {
 //│     Foo1.class = this
 //│   }
-//│   constructor() {}
 //│   static {
 //│     let tmp2;
 //│     tmp2 = Foo1();
