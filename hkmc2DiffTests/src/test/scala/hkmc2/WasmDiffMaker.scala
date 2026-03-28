@@ -2,11 +2,12 @@ package hkmc2
 
 import mlscript.utils.*, shorthands.*
 
+import codegen.Local
 import codegen.wasm.*
 import document.*
 import semantics.Elaborator
 import semantics.Term.Blk
-import text.WatBuilder
+import text.{WasmSessionBinding, WatBuilder}
 import Diagnostic.Source
 import Message.MessageContext
 
@@ -27,6 +28,10 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
 
   private val baseScp: utils.Scope =
     utils.Scope.empty
+  private val wasmReplImportsNme = s"${wasmSuppNme}ReplImports"
+  private val wasmReplImportsRef = s"globalThis.$wasmReplImportsNme"
+  private val sessionImportsBySymbol = mutable.Map.empty[Local, Vector[WasmSessionBinding]]
+  private var wasmSessionInitialized = false
 
   final lazy val wasmSuppFile: io.Path = predefFile.up / "Wasm.mjs"
   final lazy val wasmSuppNme = baseScp.allocateName(Elaborator.State.wasmSymbol)(using throw _)
@@ -44,6 +49,12 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
   lazy val prettifyBinaryenWat = (content: Str) =>
     content.substring(2, content.length() - 2).replace("\\\\n", "\n").replace("\\\\\"", "\"")
 
+  /** Resets Wasm REPL session state for a fresh diff run. */
+  override def init(): Unit =
+    super.init()
+    sessionImportsBySymbol.clear()
+    wasmSessionInitialized = false
+
   override def processTerm(trm: Blk, inImport: Bool)(using
       Config,
       Raise
@@ -51,7 +62,6 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
     super.processTerm(trm, inImport)
 
     val outerRaise: Raise = summon
-    val reportedMessages = mutable.Set.empty[Str]
 
     if wasm.isSet then
       loadWasm
@@ -60,15 +70,21 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
       given Raise =
         case d @ ErrorReport(source = Source.Compilation) =>
           errored = true
-          reportedMessages += d.mainMsg
           outerRaise(d)
         case d => outerRaise(d)
       val low = ltl.givenIn:
         codegen.Lowering()
       val le = low.program(trm)
-      val (modWat, mainFnNme) = ltl.givenIn:
+      val sessionImports =
+        le.main.freeVars.iterator
+          .flatMap(sym => sessionImportsBySymbol.getOrElse(sym, Vector.empty))
+          .toSeq
+          .distinctBy(_.bindingKey)
+      val compiled = ltl.givenIn:
         baseScp.nest.givenIn:
-          WatBuilder().program(le, N, wd)
+          WatBuilder().program(le, N, wd, sessionImports = sessionImports)
+      val modWat = compiled.wat
+      val mainFnNme = compiled.entryName
 
       if wat.isSet then
         output("Wat:")
@@ -132,10 +148,25 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
         if stderr.nonEmpty then output(s"// Standard Error:\n${stderr}")
       end mkQuery
 
-      val importObj =
-        doc"""{ #{  # "system": { #{  # "mem": new WebAssembly.Memory({initial: 100}) #}  # } #}  # }"""
+      if !wasmSessionInitialized then
+        host.execute(
+          s"""$wasmReplImportsRef = { repl: Object.create(null), system: { mem: new WebAssembly.Memory({initial: 100}) } };"""
+        ) match
+          case ReplHost.Result(_) =>
+            wasmSessionInitialized = true
+          case r =>
+            output(s"Failed to initialize wasm REPL session object: $r")
+      val exportAssignments = compiled.sessionExports.flatMap(_.exportNameOpt.toSeq).map: exportName =>
+        doc"""$wasmReplImportsRef.repl["$exportName"] = exports["$exportName"];"""
       val jsStr =
-        doc"""await wasm.binaryenPrintFuncRes( #  #{ `$modWat # `, # $importObj, # exports => exports.${mainFnNme}(), #}  # );"""
+        doc"""await wasm.binaryenPrintFuncRes( #  #{ `$modWat # `, # $wasmReplImportsRef, # exports => { # ${
+            if exportAssignments.nonEmpty then
+              doc"""const result = exports["$mainFnNme"](); # ${
+                  exportAssignments.mkDocument(doc" # ")
+                } # return result;"""
+            else
+              doc"""return exports["$mainFnNme"]();"""
+          } # }, #}  # );"""
           .stripBreaks
           .mkString(100)
       output("Wasm result:")
@@ -144,6 +175,9 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
         val result = out.lastIndexOf('\n') match
           case n if n >= 0 => out.substring(0, n)
           case _ => ""
+        compiled.sessionExports.foreach: binding =>
+          binding.bindingSyms.foreach: sym =>
+            sessionImportsBySymbol.update(sym, sessionImportsBySymbol.getOrElse(sym, Vector.empty) :+ binding)
         output(s"= $result")
     end if
   end processTerm

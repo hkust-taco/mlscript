@@ -112,7 +112,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def registerSingletonInit(clsLikeDefn: ClsLikeDefn, typeref: TypeIdx)(using
       Ctx,
       Raise,
-      Scope
+      Scope,
+      ArrayBuf[WasmSessionBinding]
   ): Unit =
     if ctx.containsSingleton(clsLikeDefn.sym) then return
 
@@ -131,8 +132,16 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         id = SymIdx(globalName),
         valType = globalTy,
         mutable = true,
-        init = ref.`null`(typeref)
+        init = S(ref.`null`(typeref)),
+        exportName = S(globalName)
       )
+    )
+    summon[ArrayBuf[WasmSessionBinding]] += WasmSessionSingleton(
+      blockSym = clsLikeDefn.sym,
+      objectSym = singletonOwner,
+      moduleName = WasmSessionBinding.replModuleName,
+      exportName = globalName,
+      globalTy = globalTy
     )
 
     val ctorCall = call(
@@ -177,6 +186,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               )
             )
         )
+        ctx.getType(defn.sym, resolveSymIdx = true).foreach:
+          case TypeIdx(NumIdx(idx)) => ctx.registerRuntimeClassTag(defn.sym, idx)
+          case _ => ()
       createDefnTypes(rst)
     case Define(_, rst) =>
       createDefnTypes(rst)
@@ -188,7 +200,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       createDefnTypes(rst)
     case Assign(_, _, rst) =>
       createDefnTypes(rst)
-    case af @ AssignField(_, _, _, rst) =>
+    case AssignField(_, _, _, rst) =>
       createDefnTypes(rst)
     case AssignDynField(_, _, _, _, rst) =>
       createDefnTypes(rst)
@@ -199,6 +211,134 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case Scoped(_, body) =>
       createDefnTypes(body)
     case _: BlockTail => ()
+
+  /**
+   * Collects the symbols that should live in mutable globals so later REPL blocks can import them.
+   *
+   * TODO: replace this structural scan with an explicit "session-visible bindings" set from lowering
+   * once that information is available directly in the IR.
+   */
+  private def collectSessionGlobalSymbols(
+      b: Block,
+      existingSessionGlobals: Set[Local],
+      scopedSyms: Set[Local] = Set.empty
+  ): Set[Symbol] =
+    def restOf(block: Block): Opt[Block] = block match
+      case Define(_, rst) => S(rst)
+      case Assign(_, _, rst) => S(rst)
+      case AssignField(_, _, _, rst) => S(rst)
+      case AssignDynField(_, _, _, _, rst) => S(rst)
+      case Match(_, _, _, rst) => S(rst)
+      case TryBlock(_, _, rst) => S(rst)
+      case Label(_, _, _, rst) => S(rst)
+      case HandleBlock(_, _, _, _, _, _, _, rst) => S(rst)
+      case _ => N
+
+    def recur(block: Block, scopedSyms: Set[Local]): Set[Symbol] = block match
+      case Scoped(syms, body) =>
+        recur(body, scopedSyms ++ syms)
+      case Begin(sub, rst) =>
+        recur(sub, scopedSyms) ++ recur(rst, scopedSyms)
+      case Define(ValDefn(_, sym, _), rst) =>
+        recur(rst, scopedSyms) + sym
+      case Assign(sym: Symbol, _, rst)
+          if existingSessionGlobals(sym) || (scopedSyms(sym) && sym.isInstanceOf[VarSymbol]) =>
+        recur(rst, scopedSyms) + sym
+      case _: BlockTail =>
+        Set.empty
+      case block =>
+        restOf(block).fold(Set.empty)(recur(_, scopedSyms))
+
+    recur(b, scopedSyms)
+
+  /** Declares a mutable exported global for a REPL-visible binding produced by the current block. */
+  private def registerSessionGlobal(sym: Symbol)(using
+      Ctx,
+      Raise,
+      Scope,
+      ArrayBuf[WasmSessionBinding]
+  ): Unit =
+    if ctx.containsGlobal(sym) then return
+    val exportName = sym.nme
+    ctx.addGlobal(
+      sym,
+      GlobalInfo(
+        id = SymIdx(scope.allocateOrGetName(sym)),
+        valType = RefType.anyref,
+        mutable = true,
+        init = S(ref.`null`(HeapType.Any)),
+        exportName = S(exportName)
+      )
+    )
+    summon[ArrayBuf[WasmSessionBinding]] += WasmSessionGlobal(
+      sym = sym,
+      moduleName = WasmSessionBinding.replModuleName,
+      exportName = exportName,
+      valType = RefType.anyref,
+      mutable = true
+    )
+
+  /** Registers imported REPL bindings into the current module before codegen starts. */
+  private def registerSessionImports(sessionImports: Seq[WasmSessionBinding])(using
+      Ctx,
+      Raise,
+      Scope
+  ): Unit =
+    sessionImports.foreach:
+      case cls: WasmSessionClass =>
+        if ctx.getType(cls.sym).isEmpty then
+          ctx.addType(sym = S(cls.sym), typeInfo = cls.typeInfo)
+        ctx.registerRuntimeClassTag(cls.sym, cls.runtimeTag)
+      case _ => ()
+
+    sessionImports.foreach:
+      case func: WasmSessionFunc =>
+        val funcName = scope.allocateOrGetName(func.sym)
+        val typeIdx = ctx.addType(
+          sym = N,
+          TypeInfo(id = N, func.funcType)
+        )
+        val params = func.funcType.sigType.params.zipWithIndex.map:
+          case (_, idx) => TempSymbol(N, s"arg$idx") -> s"arg$idx"
+        ctx.addFunc(
+          S(func.sym),
+          FuncInfo(
+            id = SymIdx(funcName),
+            typeIdx = typeIdx,
+            params = params,
+            resultTypes = func.funcType.sigType.results,
+            importModule = func.moduleName,
+            importName = func.exportName
+          )
+        )
+      case glob: WasmSessionGlobal =>
+        val globalName = scope.allocateOrGetName(glob.sym)
+        ctx.addGlobal(
+          glob.sym,
+          GlobalInfo(
+            id = SymIdx(globalName),
+            valType = glob.valType,
+            mutable = glob.mutable,
+            init = N,
+            importModule = S(glob.moduleName),
+            importName = S(glob.exportName)
+          )
+        )
+      case singleton: WasmSessionSingleton =>
+        val globalName = scope.allocateOrGetName(singleton.blockSym)
+        ctx.addGlobal(
+          singleton.blockSym,
+          GlobalInfo(
+            id = SymIdx(globalName),
+            valType = singleton.globalTy,
+            mutable = true,
+            init = N,
+            importModule = S(singleton.moduleName),
+            importName = S(singleton.exportName)
+          )
+        )
+        ctx.registerSingleton(singleton.blockSym, singleton.objectSym, SingletonInfo(globalName, singleton.globalTy))
+      case _: WasmSessionClass => ()
 
   /** 
    * Gets (and caches) the Wasm GC array type used for tuples (`mut` selects mutability). 
@@ -363,7 +503,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           if ctx.containsLocal(l) then
             local.get(LocalIdx(SymIdx(scope.lookup_!(l, l.toLoc))), RefType.anyref)
           else if ctx.containsGlobal(l) then
-            global.get(GlobalIdx(SymIdx(scope.lookup_!(l, l.toLoc))), RefType.anyref)
+            val globalInfo = ctx.getGlobalInfo_!(l)
+            global.get(GlobalIdx(SymIdx(scope.lookup_!(l, l.toLoc))), globalInfo.valType)
           else
             errExpr(
               Ls(
@@ -394,16 +535,27 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       )
     case r => result(r)
 
-  def fieldSelect(thisSym: BlockMemberSymbol, sym: DefinitionSymbol[?])(using Ctx, Raise): FieldIdx =
+  /** Returns the owning class symbol for a resolved field/member symbol, when available. */
+  private def fieldOwner(sym: Symbol): Opt[BlockMemberSymbol] = sym match
+    case ts: TermSymbol => ts.owner.flatMap(_.asBlkMember)
+    case ms: MemberSymbol => ms.asTrm.flatMap(_.owner.flatMap(_.asBlkMember))
+    case _ => N
+
+  def fieldSelect(thisSym: BlockMemberSymbol, sym: Symbol)(using Ctx, Raise): FieldIdx =
     val structInfo = ctx.getTypeInfo_!(thisSym)
     val symToField = structInfo.compType match
       case ty: StructType => ty.fields
       case _ => lastWords(s"Cannot select field from non-struct type: ${structInfo.compType.toWat}")
-    val fieldIdx = symToField.get(sym)
+    val fieldIdx = (sym match
+      case ds: DefinitionSymbol[?] => symToField.get(ds)
+      case ms: MemberSymbol => ms.asTrm.flatMap(symToField.get)
+      case _ => N)
       .orElse:
         // Workaround: TermSymbols are not correctly resolved, so match the fields by name instead
         sym match
           case trmSym: TermSymbol if trmSym.owner.flatMap(_.asBlkMember).exists(_ == thisSym) =>
+            symToField.find((fieldSym, _) => fieldSym.nme == sym.nme).map((_, v) => v)
+          case memSym: MemberSymbol if fieldOwner(memSym).contains(thisSym) =>
             symToField.find((fieldSym, _) => fieldSym.nme == sym.nme).map((_, v) => v)
           case _ => N
       .map((fieldidx, _) => fieldidx)
@@ -515,23 +667,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 extraInfo = S(sel)
               )
 
-        case S(selSym: TermSymbol) =>
+        case S(selSym: MemberSymbol) =>
           val qualRes = result(qual)
-          val selOwner = selSym.owner getOrElse:
-            lastWords(s"Expected resolved Select(...) expression `$selSym` to have an owner")
-          val selCls = selOwner.asBlkMember getOrElse:
+          val selCls = fieldOwner(selSym) getOrElse:
             lastWords(
-              s"Expected resolved class for Select(...) expression to be a BlockMemberSymbol, but got $selOwner (${selOwner.getClass.getName})"
+              s"Expected resolved class for Select(...) expression to be a BlockMemberSymbol, but got $selSym (${selSym.getClass.getName})"
             )
           val fieldidx = fieldSelect(selCls, selSym)
           struct.get(
             fieldidx,
             ref = ref.cast(qualRes, RefType(ctx.getType_!(selCls), nullable = false)),
             ty = RefType.anyref
-          )
-        case S(otherSym) =>
-          lastWords(
-            s"Expected resolved Select(...) expression to be a TermSymbol, but got $otherSym (${otherSym.getClass.getName})"
           )
         case N =>
           errExpr(
@@ -583,9 +729,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       val ctorFuncIdx = ctx.getFunc(ctorClsBlkSym) match
         case S(idx) => idx
         case N => lastWords(s"Missing constructor definition for class ${ctorClsBlkSym.toString}")
-
-      val objType = ctx.getFuncInfo_!(ctorFuncIdx).body.resultType_!
-      call(funcidx = ctorFuncIdx, as.map(argument), Seq(Result(objType.asValType_!)))
+      call(funcidx = ctorFuncIdx, as.map(argument), Seq(Result(RefType.anyref)))
 
     case Tuple(mut, elems) =>
       val tupleValues = elems.map(argument)
@@ -657,9 +801,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       id = N,
       typeIdx = funcTy,
       params = params,
-      nResults = 1,
       locals = Seq.empty,
-      body = body
+      bodyOpt = S(body),
+      resultTypes = Seq(Result(RefType.anyref))
     )
     ctx.addFunc(N, funcInfo)
 
@@ -712,7 +856,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def getI32FromAnyref(name: Str): Expr =
     i31.get(ref.cast(getLocalAnyref(name), RefType.i31ref), true)
 
-  def returningTerm(t: Block)(using Ctx, Raise, Scope): Expr = t match
+  def returningTerm(t: Block)(using Ctx, Raise, Scope, ArrayBuf[WasmSessionBinding]): Expr = t match
     case _: HandleBlock =>
       errExpr(
         Ls(msg"This code requires effect handler instrumentation but was compiled without it." -> N)
@@ -720,21 +864,16 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case Assign(l, r, rst) =>
       val lExpr = getVar(l, l.toLoc)
       val rExpr = result(r)
-      val idx = lExpr.instrargs(0).asInstanceOf[LocalIdx]
       val assignExpr = lExpr.mnemonicPrefix match
         case S("global") =>
-          errExpr(
-            Ls(
-              msg"WatBuilder::returningTerm for Assign(...) to global variable not implemented yet" -> l.toLoc
-            ),
-            extraInfo = S(s"Block IR: ${t.showAsTree}")
-          )
-        case S("local") => local.set(idx, rExpr)
+          global.set(lExpr.instrargs(0).asInstanceOf[GlobalIdx], rExpr)
+        case S("local") =>
+          val idx = lExpr.instrargs(0).asInstanceOf[LocalIdx]
+          local.set(idx, rExpr)
         case _ =>
           lastWords(
             s"Expected `global.*` or `local.*` when compiling instruction for `$l`, but got ${lExpr.mnemonic}"
           )
-
       val rstBlk = returningTerm(rst)
       Instructions.block(
         label = N,
@@ -746,20 +885,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       val lhsExpr = result(lhs)
       val rhsExpr = result(rhs)
       val assignInstr = assign.symbol match
-        case S(selSym: TermSymbol) =>
-          val selOwner = selSym.owner getOrElse
-            lastWords(s"Expected resolved AssignField(...) expression `$selSym` to have an owner")
-          val selCls = selOwner.asBlkMember getOrElse
+        case S(selSym: MemberSymbol) =>
+          val selCls = fieldOwner(selSym) getOrElse
             lastWords(
-              s"Expected resolved class for AssignField(...) expression to be a BlockMemberSymbol, but got $selOwner (${selOwner.getClass.getName})"
+              s"Expected resolved class for AssignField(...) expression to be a BlockMemberSymbol, but got $selSym (${selSym.getClass.getName})"
             )
           val fieldidx = fieldSelect(selCls, selSym)
           val objRef = ref.cast(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false))
           struct.set(fieldidx, objRef, rhsExpr)
-        case S(otherSym) =>
-          lastWords(
-            s"Expected resolved AssignField(...) expression to be a TermSymbol, but got $otherSym (${otherSym.getClass.getName})"
-          )
         case N =>
           errExpr(
             Ls(
@@ -810,13 +943,25 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           // * Currently we allow `val` outside of object/module scopes,
           // * in which case it has no owner and is just a glorified local variable rather than a field
           tsym.owner match
-            case N => errExpr(
-                Ls(
-                  msg"WatBuilder::returningTerm for ValDefn(...) where `tsym.owner.isEmpty` not implemented yet" -> sym.toLoc
+            case N =>
+              val symExpr = getVar(sym, sym.toLoc)
+              val defineExpr = symExpr.mnemonicPrefix match
+                case S("global") =>
+                  global.set(symExpr.instrargs(0).asInstanceOf[GlobalIdx], result(p))
+                case S("local") =>
+                  local.set(symExpr.instrargs(0).asInstanceOf[LocalIdx], result(p))
+                case _ =>
+                  lastWords(
+                    s"Expected `global.*` or `local.*` when compiling definition for `$sym`, but got ${symExpr.mnemonic}"
+                  )
+              val rstWat = returningTerm(rst)
+              Instructions.block(
+                label = N,
+                children = Seq(
+                  defineExpr,
+                  rstWat
                 ),
-                extraInfo = S(
-                  s"Block IR of `defn`: ${defn.toString}\nBlock IR of `defn.tsym`: ${tsym.toString}"
-                )
+                resultTypes = rstWat.resultTypes.map(r => Result(r.asValType_!))
               )
             case S(owner) =>
               val ownerBlkMem = owner.asBlkMember.get
@@ -875,13 +1020,19 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     val funcInfo =
                       FuncInfo(
                         sym,
-                        typeIdx = funcTy,
-                        params = ps.params.zip(params.map(_._2)).map((p, nme) => p.sym -> nme),
-                        nResults = bodyWat.resultTypes.length,
-                        locals = locals,
-                        body = bodyWat
+                        funcTy,
+                        ps.params.zip(params.map(_._2)).map((p, nme) => p.sym -> nme),
+                        bodyWat.resultTypes.length,
+                        locals,
+                        bodyWat
                       )
-                    val func = ctx.addFunc(S(defn.sym), funcInfo)
+                    ctx.addFunc(S(defn.sym), funcInfo)
+                    summon[ArrayBuf[WasmSessionBinding]] += WasmSessionFunc(
+                      sym = defn.sym,
+                      moduleName = WasmSessionBinding.replModuleName,
+                      exportName = sym.nme,
+                      funcType = FunctionType(funcInfo.getSignatureType)
+                    )
 
                     nop
                   else
@@ -942,9 +1093,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   val thisVar = getVar(clsLikeDefn.isym, N).instrargs(0).asInstanceOf[LocalIdx]
                   val (ctorWat, ctorLocals) = block(clsLikeDefn.ctor)
                   
-                  val tagValue = ctx.getType_!(clsLikeDefn.sym, resolveSymIdx = true) match
-                    case TypeIdx(NumIdx(idx)) => idx
-                    case _ => lastWords(s"Expected numeric type index for class ${clsLikeDefn.sym}")
+                  val tagValue = ctx.getRuntimeClassTag_!(clsLikeDefn.sym)
                   
                   val ctorCode = Instructions.block(
                     label = N,
@@ -956,7 +1105,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         i32.const(tagValue)
                       ),
                       ctorWat,
-                      `return`(S(local.get(thisVar, RefType(typeref, nullable = false))))
+                      `return`(S(local.get(thisVar, RefType.anyref)))
                     ),
                     resultTypes = Seq(Result(RefType.anyref))
                   )
@@ -971,13 +1120,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     else N
                   val funcTy = ctx.addType(
                     sym = N,
-                    TypeInfo(
-                      id = funcTyId,
-                      FunctionType(
-                        params = ctorParams.map(p => WasmParam(S(p._2), RefType.anyref)),
-                        results = Seq(Result(RefType.anyref))
+                      TypeInfo(
+                        id = funcTyId,
+                        FunctionType(
+                          params = ctorParams.map(p => WasmParam(S(p._2), RefType.anyref)),
+                          results = Seq(Result(RefType.anyref))
+                        )
                       )
-                    )
                   )
 
                   val ctorId =
@@ -986,18 +1135,42 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   ctx.addFunc(
                     S(clsLikeDefn.sym),
                     FuncInfo(
-                      id = ctorId,
-                      typeIdx = funcTy,
-                      params = ctorParams,
-                      nResults = ctorCode.resultTypes.length,
+                      ctorId,
+                      funcTy,
+                      ctorParams,
                       locals =
                         (clsLikeDefn.isym -> scope.findThis_!(clsLikeDefn.isym)) +: ctorLocals.map:
                           l =>
                             l -> scope.lookup_!(l, l.toLoc)
                       ,
-                      body = ctorAux
+                      bodyOpt = S(ctorAux),
+                      resultTypes = Seq(Result(RefType.anyref)),
+                      importModule = N,
+                      importName = N,
+                      exportName = ctorId.map(_.id)
                     )
                   )
+                  summon[ArrayBuf[WasmSessionBinding]] += WasmSessionClass(
+                    sym = clsLikeDefn.sym,
+                    typeInfo = ctx.getTypeInfo_!(clsLikeDefn.sym),
+                    runtimeTag = ctx.getRuntimeClassTag_!(clsLikeDefn.sym),
+                    aliasSyms =
+                      clsLikeDefn.isym match
+                        case mos: ModuleOrObjectSymbol => mos :: Nil
+                        case _ => Nil
+                  )
+                  if !isSingletonObj && clsLikeDefn.sym.nameIsMeaningful then
+                    summon[ArrayBuf[WasmSessionBinding]] += WasmSessionFunc(
+                      sym = clsLikeDefn.sym,
+                      moduleName = WasmSessionBinding.replModuleName,
+                      exportName = clsLikeDefn.sym.nme,
+                      funcType = FunctionType(
+                        SignatureType(
+                          params = ctorParams.map(p => WasmParam(S(p._2), RefType.anyref)),
+                          results = Seq(Result(RefType.anyref))
+                        )
+                      )
+                    )
                   if isSingletonObj then
                     registerSingletonInit(clsLikeDefn, typeref)
 
@@ -1100,14 +1273,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   Ls(msg"Could not resolve BlockMemberSymbol for class pattern" -> cls.toLoc),
                   extraInfo = S(s"ClassLikeSymbol: ${cls.toString}")
                 ))
-              val clsTypeIdx = ctx.getType_!(clsBlkMemberSym, resolveSymIdx = true)
-              
-              val expectedTag = clsTypeIdx match
-                case TypeIdx(NumIdx(idx)) => idx
-                case _ => break(errExpr(
-                  Ls(msg"Expected numeric type index for class pattern" -> cls.toLoc),
-                  extraInfo = S(s"TypeIdx: ${clsTypeIdx}")
-                ))
+              val expectedTag = ctx.getRuntimeClassTag_!(clsBlkMemberSym)
 
               val scrutExpr = getScrutExpr
               val isStructCompatible = ref.test(scrutExpr, baseObjectRefType(nullable = true))
@@ -1208,10 +1374,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       )
   end returningTerm
 
-  def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using
-      Raise,
-      Scope
-  ): (Document, Str) =
+  def program(
+      p: Program,
+      exprt: Opt[BlockMemberSymbol],
+      wd: io.Path,
+      sessionImports: Seq[WasmSessionBinding] = Nil
+  )(using Raise, Scope): CompiledWasmModule =
     for imprt <- p.imports do
       raise(
         ErrorReport(
@@ -1228,6 +1396,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           source = Diagnostic.Source.Compilation
         )
       )
+
+    val sessionExports = ArrayBuf.empty[WasmSessionBinding]
+    given ArrayBuf[WasmSessionBinding] = sessionExports
 
     val ctx = Ctx.empty
     given Ctx = ctx
@@ -1248,6 +1419,16 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     
     val main = synthesizeUnitObject(p.main)
 
+    registerSessionImports(sessionImports)
+
+    collectSessionGlobalSymbols(
+      main,
+      sessionImports.collect:
+        case glob: WasmSessionGlobal => glob.sym
+      .toSet
+    ).toSeq.sortBy(_.uid).foreach: sym =>
+      registerSessionGlobal(sym)
+
     // Two-pass scheme: register all supported top-level class struct types before compiling any
     // functions, so all class types are available during nested function codegen.
     createDefnTypes(main)
@@ -1256,7 +1437,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     // during codegen (e.g., via `local.tee`) are declared in the entry function.
     ctx.pushLocal()
     val (entryFnExpr, entryFnLocals) =
-      block(main)(using ctx, summon[Raise], summon[Scope])
+      block(main)(using ctx, summon[Raise], summon[Scope], summon[ArrayBuf[WasmSessionBinding]])
     val entryExtraLocals = getExtraLocals(using ctx).filterNot(entryFnLocals.toSet.contains)
 
     val entrySym = BlockMemberSymbol("entry", Nil)
@@ -1270,10 +1451,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       id = S(SymIdx(entryNme)),
       typeIdx = entryFnTy,
       params = Seq.empty,
-      nResults = 1,
-      // TODO(Derppening): Should we place top-level scope variables in the global section?
       locals = (entryFnLocals ++ entryExtraLocals).map(l => l -> scope.allocateOrGetName(l)),
-      body = entryFnExpr
+      bodyOpt = S(entryFnExpr),
+      resultTypes = Seq(Result(RefType.anyref)),
+      exportName = S(entryNme)
     )
 
     ctx.popLocal()
@@ -1301,21 +1482,23 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           id = N,
           typeIdx = initTy,
           params = Seq.empty,
-          nResults = 0,
           locals = Seq.empty,
-          body = initBody
+          bodyOpt = S(initBody),
+          resultTypes = Seq.empty
         )
       )
       ctx.setStartFunc(initFn)
 
     ctx.addFunc(S(entrySym), entryFnInfo)
 
-    (ctx.toWat, entryNme)
+    CompiledWasmModule(ctx.toWat, entryNme, sessionExports.toSeq)
   end program
 
   def blockPreamble(ss: Iterable[Symbol])(using Ctx, Raise, Scope): Seq[Local] =
     val vars = ss.filter(
-      scope.lookup(_).toSeq.isEmpty
+      sym => scope.lookup(sym).toSeq.isEmpty
+        && !ctx.containsGlobal(sym)
+        && ctx.getFunc(sym).isEmpty
     ).toSeq.toArray.sortBy(_.uid).iterator.map: l =>
       scope.allocateName(l)
       l
@@ -1323,18 +1506,19 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ctx.addLocals(vars)
     vars
 
-  def block(t: Block)(using Ctx, Raise, Scope): (Expr, Seq[Local]) =
+  def block(t: Block)(using Ctx, Raise, Scope, ArrayBuf[WasmSessionBinding]): (Expr, Seq[Local]) =
     val locals = blockPreamble(t.definedVars) // TODO: remove use of `definedVars` now that we properly put everything in proper Scoped blocks (see the change already done in JSBuilder)
     (returningTerm(t), locals)
 
-  def body(t: Block)(using Ctx, Raise, Scope): (Expr, Seq[Local]) =
+  def body(t: Block)(using Ctx, Raise, Scope, ArrayBuf[WasmSessionBinding]): (Expr, Seq[Local]) =
     scope.nest givenIn:
       block(t)
 
   def setupFunction(name: Option[Str], params: ParamList, body: Block)(using
       Ctx,
       Raise,
-      Scope
+      Scope,
+      ArrayBuf[WasmSessionBinding]
   ): (Seq[WasmParam -> Str], Expr, Seq[(Local, Str)]) =
     // Add a frame for `ctx.locals`
     ctx.pushLocal()

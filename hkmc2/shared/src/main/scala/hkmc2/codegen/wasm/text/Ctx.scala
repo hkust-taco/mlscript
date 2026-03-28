@@ -14,6 +14,65 @@ import Instructions.*
 
 import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
 
+/** Metadata for a REPL binding that can be imported by later Wasm modules. */
+sealed trait WasmSessionBinding:
+  /** Returns the deduplication key for this binding. */
+  def bindingKey: Str
+  /** Returns the symbols that should resolve to this binding. */
+  def bindingSyms: Seq[Local]
+  /** Returns the export name if this binding is re-exported. */
+  def exportNameOpt: Opt[Str] = N
+
+object WasmSessionBinding:
+  val replModuleName: Str = "repl"
+
+final case class WasmSessionFunc(
+    sym: Symbol,
+    moduleName: Str,
+    exportName: Str,
+    funcType: FunctionType
+) extends WasmSessionBinding:
+  def bindingKey: Str = s"func:$moduleName:$exportName"
+  def bindingSyms: Seq[Local] = sym :: Nil
+  override def exportNameOpt: Opt[Str] = S(exportName)
+
+final case class WasmSessionGlobal(
+    sym: Symbol,
+    moduleName: Str,
+    exportName: Str,
+    valType: ValType,
+    mutable: Bool
+) extends WasmSessionBinding:
+  def bindingKey: Str = s"global:$moduleName:$exportName"
+  def bindingSyms: Seq[Local] = sym :: Nil
+  override def exportNameOpt: Opt[Str] = S(exportName)
+
+final case class WasmSessionClass(
+    sym: BlockMemberSymbol,
+    typeInfo: TypeInfo,
+    runtimeTag: Int,
+    aliasSyms: Seq[Local] = Nil
+) extends WasmSessionBinding:
+  def bindingKey: Str = s"class:${sym.uid}"
+  def bindingSyms: Seq[Local] = sym +: aliasSyms
+
+final case class WasmSessionSingleton(
+    blockSym: BlockMemberSymbol,
+    objectSym: Opt[ModuleOrObjectSymbol],
+    moduleName: Str,
+    exportName: Str,
+    globalTy: RefType
+) extends WasmSessionBinding:
+  def bindingKey: Str = s"singleton:$moduleName:$exportName"
+  def bindingSyms: Seq[Local] = blockSym +: objectSym.toSeq
+  override def exportNameOpt: Opt[Str] = S(exportName)
+
+final case class CompiledWasmModule(
+    wat: Document,
+    entryName: Str,
+    sessionExports: Seq[WasmSessionBinding]
+)
+
 /**
  * A Wasm function and its associated information.
  *
@@ -25,20 +84,29 @@ import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
  *   Index of the function's type in the module's type section.
  * @param params
  *   [[Seq]] of parameter local variables and their names.
- * @param nResults
- *   Number of results the function returns.
  * @param locals
  *   [[Seq]] of local variables (excluding parameters) and their names.
- * @param body
- *   The expression of the function body.
+ * @param bodyOpt
+ *   The expression of the function body, or `N` for imported functions.
+ * @param resultTypes
+ *   The result types of the function.
+ * @param importModule
+ *   The Wasm module name for imported functions.
+ * @param importName
+ *   The imported function name.
+ * @param exportName
+ *   Optional export name.
  */
 class FuncInfo(
     val id: Opt[SymIdx],
     val typeIdx: TypeIdx,
     params: Seq[Local -> Str],
-    nResults: Int,
     locals: Seq[Local -> Str],
-    val body: Expr
+    val bodyOpt: Opt[Expr],
+    val resultTypes: Seq[Result],
+    val importModule: Opt[Str] = N,
+    val importName: Opt[Str] = N,
+    val exportName: Opt[Str] = N
 ) extends ToWat:
 
   /**
@@ -48,8 +116,6 @@ class FuncInfo(
    *   Index of the function's type in the module's type section.
    * @param params
    *   [[Seq]] of parameter local variables and their names.
-   * @param nResults
-   *   Number of results the function returns.
    * @param locals
    *   [[Seq]] of local variables (excluding parameters) and their names.
    * @param body
@@ -66,28 +132,61 @@ class FuncInfo(
     sym.optionIf(_.nameIsMeaningful).map(sym => SymIdx(sym.nme)),
     typeIdx,
     params,
-    nResults,
     locals,
-    body
+    S(body),
+    Seq.fill(nResults)(Result(RefType.anyref)),
+    N,
+    N,
+    sym.optionIf(_.nameIsMeaningful).map(_.nme)
+  )
+
+  def this(
+      id: SymIdx,
+      typeIdx: TypeIdx,
+      params: Seq[Local -> Str],
+      resultTypes: Seq[Result],
+      importModule: Str,
+      importName: Str
+  ) = this(
+    S(id),
+    typeIdx,
+    params,
+    Seq.empty,
+    N,
+    resultTypes,
+    S(importModule),
+    S(importName),
+    N
   )
 
   /** Returns the type of this function as a [[SignatureType]]. */
   def getSignatureType: SignatureType = SignatureType(
     params = params.map((_, varNme) => WasmParam(S(varNme), RefType.anyref)),
-    results = Seq.fill(nResults)(Result(RefType.anyref))
+    results = resultTypes
   )
 
+  /** Returns `true` when this function is declared via a Wasm import. */
+  def isImported: Bool = importModule.nonEmpty
+
   def toWat: Document =
-    doc"""(func ${id.fold(doc"")(_.toWat)} (type ${typeIdx.toWat})${
-        getSignatureType.toWat.surroundUnlessEmpty(doc" ")
-      } #{ ${
-        locals.map: p =>
-          doc"(local $$${p._2} ${RefType.anyref.toWat})"
-        .mkDocument(doc" # ").surroundUnlessEmpty(doc" # ")
-      } # ${body.toWat} #} )${
-        id.fold(doc""): id =>
-          doc""" # (export "${id.id}" (func ${id.toWat})) # (elem declare func ${id.toWat})"""
-      }"""
+    importModule match
+      case S(moduleName) =>
+        doc"""(import "${moduleName}" "${importName.get}" (func ${id.fold(doc"")(_.toWat)}${
+            getSignatureType.toWat.surroundUnlessEmpty(doc" ")
+          }))"""
+      case N =>
+        val body = bodyOpt.getOrElse:
+          lastWords(s"Missing body for function `${id.fold("<anonymous>")(_.id)}`")
+        doc"""(func ${id.fold(doc"")(_.toWat)} (type ${typeIdx.toWat})${
+            getSignatureType.toWat.surroundUnlessEmpty(doc" ")
+          } #{ ${
+            locals.map: p =>
+              doc"(local $$${p._2} ${RefType.anyref.toWat})"
+            .mkDocument(doc" # ").surroundUnlessEmpty(doc" # ")
+          } # ${body.toWat} #} )${
+            exportName.fold(doc""): name =>
+              doc""" # (export "${name}" (func ${id.get.toWat})) # (elem declare func ${id.get.toWat})"""
+          }"""
 end FuncInfo
 
 /**
@@ -102,23 +201,42 @@ end FuncInfo
  * @param mutable
  *   Whether the global is mutable.
  * @param init
- *   The initializer expression for the global.
+ *   The initializer expression for the global, or `N` for imported globals.
+ * @param importModule
+ *   The Wasm module name for imported globals.
+ * @param importName
+ *   The imported global name.
+ * @param exportName
+ *   Optional export name.
  */
 class GlobalInfo(
     val id: SymIdx,
     val valType: ValType,
     val mutable: Bool,
-    val init: Expr
+    val init: Opt[Expr],
+    val importModule: Opt[Str] = N,
+    val importName: Opt[Str] = N,
+    val exportName: Opt[Str] = N
 ) extends ToWat:
 
   /** Returns the symbolic identifier document used in global declarations. */
   private def idDoc: Document = id.toWat
 
+  /** Returns `true` when this global is declared via a Wasm import. */
+  def isImported: Bool = importModule.nonEmpty
+
   def toWat: Document =
     val typeDoc =
       if mutable then doc"(mut ${valType.toWat})"
       else valType.toWat
-    doc"(global${idDoc.surroundUnlessEmpty(doc" ")} ${typeDoc} ${init.toWat})"
+    importModule match
+      case S(moduleName) =>
+        doc"""(import "${moduleName}" "${importName.get}" (global${idDoc.surroundUnlessEmpty(doc" ")} ${typeDoc}))"""
+      case N =>
+        doc"(global${idDoc.surroundUnlessEmpty(doc" ")} ${typeDoc} ${init.get.toWat})${
+          exportName.fold(doc""): name =>
+            doc""" # (export "${name}" (global ${idDoc}))"""
+        }"
 end GlobalInfo
 
 /**
@@ -245,6 +363,7 @@ class Ctx(
   private val singletonByBms: MutMap[BlockMemberSymbol, Ctx.SingletonInfo] = MutMap.empty
   private val singletonByIsym: MutMap[ModuleOrObjectSymbol, Ctx.SingletonInfo] = MutMap.empty
   private val singletonInitActions: ArrayBuf[Expr] = ArrayBuf.empty
+  private val runtimeClassTags: MutMap[BlockMemberSymbol, Int] = MutMap.empty
 
   /** Adds a type into this context. */
   def addType(sym: Opt[BlockMemberSymbol], typeInfo: TypeInfo): TypeIdx =
@@ -321,6 +440,35 @@ class Ctx(
     getFuncInfo(funcref).getOrElse:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
+  /**
+   * Returns the [[GlobalIdx]] of the given `globalref`, optionally resolving the symbolic index
+   * into a numeric index.
+   */
+  def getGlobal(globalref: GlobalIdx | Symbol, resolveSymIdx: Bool = false): Opt[GlobalIdx] =
+    globalref match
+      case GlobalIdx(SymIdx(nme)) if resolveSymIdx =>
+        namedGlobals.find(_._1.nme == nme).map(g => GlobalIdx(g._2))
+      case globalidx: GlobalIdx => S(globalidx)
+      case sym: Symbol if resolveSymIdx => namedGlobals.get(sym).map(GlobalIdx(_))
+      case sym: Symbol =>
+        getGlobal(sym, resolveSymIdx = true).map: numIdx =>
+          getGlobalInfo(numIdx).fold(numIdx)(info => GlobalIdx(info.id))
+
+  /** Same as [[getGlobal]] but throws an exception when the `globalref` is not found. */
+  def getGlobal_!(globalref: GlobalIdx | Symbol, resolveSymIdx: Bool = false): GlobalIdx =
+    getGlobal(globalref, resolveSymIdx).getOrElse:
+      lastWords(s"Missing global definition for ${globalref.prettyString}")
+
+  /** Returns the [[GlobalInfo]] instance associated with the given `globalref`. */
+  def getGlobalInfo(globalref: GlobalIdx | Symbol): Opt[GlobalInfo] = globalref match
+    case GlobalIdx(NumIdx(idx)) => globals.unapply(idx.toInt)
+    case globalref => getGlobal(globalref, resolveSymIdx = true).flatMap(getGlobalInfo(_))
+
+  /** Same as [[getGlobalInfo]] but throws an exception when the `globalref` is not found. */
+  def getGlobalInfo_!(globalref: GlobalIdx | Symbol): GlobalInfo =
+    getGlobalInfo(globalref).getOrElse:
+      lastWords(s"Missing global definition for ${globalref.prettyString}")
+
   /** Pushes a new local variable scope into this context. */
   def pushLocal(): Unit = locals = MutMap() :: locals
 
@@ -354,22 +502,16 @@ class Ctx(
   /** Checks whether the global variable scope contains the variable `sym`. */
   def containsGlobal(sym: Symbol): Bool = namedGlobals.contains(sym)
 
-  /** Checks whether singleton metadata has been registered for class symbol `sym`. */
+  /** Checks whether singleton info has been registered for `sym`. */
   def containsSingleton(sym: BlockMemberSymbol): Bool = singletonByBms.contains(sym)
 
-  /**
-   * Returns singleton metadata for `sym` when it resolves to either the block-member symbol or
-   * module/object symbol used during singleton registration.
-   */
+  /** Returns singleton info for `sym`. */
   def getSingletonInfo(sym: Local): Opt[Ctx.SingletonInfo] = sym match
     case bms: BlockMemberSymbol => singletonByBms.get(bms)
     case isym: ModuleOrObjectSymbol => singletonByIsym.get(isym)
     case _ => N
 
-  /**
-   * Registers singleton metadata under both its block-member symbol and optional module/object
-   * symbol alias.
-   */
+  /** Registers singleton info under its available symbols. */
   def registerSingleton(
       bms: BlockMemberSymbol,
       isym: Opt[ModuleOrObjectSymbol],
@@ -378,12 +520,25 @@ class Ctx(
     singletonByBms(bms) = info
     isym.foreach(singletonByIsym(_) = info)
 
-  /** Appends one eager singleton initialization action for synthesized module start code. */
+  /** Appends a singleton initialization action. */
   def addSingletonInitAction(action: Expr): Unit =
     singletonInitActions += action
 
-  /** Returns the singleton initialization actions in deterministic insertion order. */
+  /** Returns the singleton initialization actions. */
   def getSingletonInitActions: Seq[Expr] = singletonInitActions.toSeq
+
+  /** Records the runtime class tag for `sym`. */
+  def registerRuntimeClassTag(sym: BlockMemberSymbol, tag: Int): Unit =
+    runtimeClassTags(sym) = tag
+
+  /** Returns the runtime class tag for `sym`. */
+  def getRuntimeClassTag(sym: BlockMemberSymbol): Opt[Int] =
+    runtimeClassTags.get(sym)
+
+  /** Same as [[getRuntimeClassTag]] but throws if no runtime tag is known. */
+  def getRuntimeClassTag_!(sym: BlockMemberSymbol): Int =
+    getRuntimeClassTag(sym).getOrElse:
+      lastWords(s"Missing runtime class tag for `${sym.toString}`")
 
   /** Configures the module start function. */
   def setStartFunc(funcIdx: FuncIdx): Unit =
@@ -424,7 +579,11 @@ class Ctx(
     wasmIntrinsicTypes.getOrElseUpdate(key, createType)
 
   def toWat: Document =
+    val importedGlobals = globals.toSeq.filter(_.isImported).map(_.toWat)
+    val definedGlobals = globals.toSeq.filterNot(_.isImported).map(_.toWat)
+    val importedFuncs = funcs.toSeq.filter(_.isImported).map(_.toWat)
+    val definedFuncs = funcs.toSeq.filterNot(_.isImported).map(_.toWat)
     val startDef = startFunc.toSeq.map(funcIdx => doc"(start ${funcIdx.toWat})")
-    doc"(module #{  # ${(types.toSeq.map(_.toWat) ++ globals.toSeq.map(_.toWat) ++ startDef ++ funcs.toSeq.map(_.toWat)).mkDocument(doc" # ")}) #} "
+    doc"(module #{  # ${(types.toSeq.map(_.toWat) ++ importedGlobals ++ importedFuncs ++ definedGlobals ++ startDef ++ definedFuncs).mkDocument(doc" # ")}) #} "
 
 end Ctx

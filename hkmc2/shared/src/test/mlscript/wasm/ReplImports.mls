@@ -1,0 +1,27 @@
+
+:global
+:wasm
+
+object Foo with
+  val x = 1
+class C(val x)
+fun inc(x) = x + 1
+val step = 2
+let counter = 1
+0
+//│ Wasm result:
+//│ = 0
+
+inc(Foo.x)
+//│ Wasm result:
+//│ = 2
+
+if C(7) is C(v) then v else 0
+//│ Wasm result:
+//│ = 7
+
+:wat
+set counter = counter + step
+counter
+//│ Wasm result:
+//│ = 3

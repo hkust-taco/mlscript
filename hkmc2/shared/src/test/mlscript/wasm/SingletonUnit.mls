@@ -12,6 +12,7 @@
 //│   (type (func (result (ref null any))))
 //│   (type $start (func))
 //│   (global $Unit$inst (mut (ref null $Unit)) (ref.null $Unit))
+//│   (export "Unit$inst" (global $Unit$inst))
 //│   (start 1)
 //│   (func  (type $Unit_ctor) (result (ref null any))
 //│     (local $this (ref null any))
@@ -79,13 +80,14 @@ x
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type (func (result (ref null any))))
+//│   (global $x (mut (ref null any)) (ref.null any))
+//│   (export "x" (global $x))
 //│   (func $entry (type 1) (result (ref null any))
-//│     (local $x (ref null any))
 //│     (block (result (ref null any))
-//│       (local.set $x
+//│       (global.set $x
 //│         (ref.i31
 //│           (i32.const 1)))
-//│       (local.get $x)))
+//│       (global.get $x)))
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))
 //│ Wasm result:
