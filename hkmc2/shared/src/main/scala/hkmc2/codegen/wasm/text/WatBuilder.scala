@@ -36,7 +36,7 @@ object WatBuilder:
 
 class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   import Ctx.ctx
-  import Ctx.{SingletonInfo, binaryOps, unaryOps, wasmIntrinsicArities, wasmIntrinsicNameSet}
+  import Ctx.{SingletonInfo, binaryOps, unaryOps, wasmIntrinsicArities, wasmIntrinsicNameSet, ConstructorInfo, MethodInfo, MethodShape}
   import Instructions.{block as blockInstr, *}
   import WatBuilder.ExternIntrinsics
 
@@ -66,7 +66,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       && ((defn.k is syntax.Cls) || (defn.k is syntax.Obj))
       && defn.auxParams.isEmpty
       && defn.parentPath.isEmpty
-      && defn.methods.isEmpty
+      && (defn.methods.isEmpty || (defn.k is syntax.Cls))
       && defn.companion.isEmpty
       && (defn.preCtor match
         case End(_) => true
@@ -192,6 +192,103 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       createDefnTypes(body)
     case _: BlockTail => ()
 
+  /** Registers constructor/method metadata for supported top-level classes before body lowering. */
+  private def registerDefnCallableMetadata(b: Block)(using Ctx, Raise, Scope): Unit = b match
+    case Define(defn: ClsLikeDefn, rst) =>
+      registerClassCallableMetadata(defn)
+      registerDefnCallableMetadata(rst)
+    case Define(_, rst) =>
+      registerDefnCallableMetadata(rst)
+    case Match(_, arms, dflt, rst) =>
+      arms.foreach((_, body) => registerDefnCallableMetadata(body))
+      dflt.foreach(registerDefnCallableMetadata)
+      registerDefnCallableMetadata(rst)
+    case Begin(_, rst) =>
+      registerDefnCallableMetadata(rst)
+    case TryBlock(_, _, rst) =>
+      registerDefnCallableMetadata(rst)
+    case Assign(_, _, rst) =>
+      registerDefnCallableMetadata(rst)
+    case AssignField(_, _, _, rst) =>
+      registerDefnCallableMetadata(rst)
+    case AssignDynField(_, _, _, _, rst) =>
+      registerDefnCallableMetadata(rst)
+    case HandleBlock(_, _, _, _, _, _, _, rst) =>
+      registerDefnCallableMetadata(rst)
+    case Label(_, _, body, rst) =>
+      registerDefnCallableMetadata(body)
+      registerDefnCallableMetadata(rst)
+    case Scoped(_, body) =>
+      registerDefnCallableMetadata(body)
+    case _: BlockTail => ()
+
+  /** Registers constructor and method metadata for one supported class definition. */
+  private def registerClassCallableMetadata(clsLikeDefn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
+    if !isSupportedTopLevelClass(clsLikeDefn) then return
+
+    val methodNamePrefix =
+      clsLikeDefn.sym.optionIf(_.nameIsMeaningful).fold("method$")(sym => s"${sym.nme}_")
+
+    if !ctx.containsConstructorInfo(clsLikeDefn.sym) then
+      val ctorExportName = clsLikeDefn.sym
+        .optionIf(sym => (clsLikeDefn.k is syntax.Cls) && sym.nameIsMeaningful)
+        .map(sym => s"${sym.nme}_ctor")
+      val ctorFuncId =
+        if clsLikeDefn.k is syntax.Cls then
+          SymIdx(ctorExportName.getOrElse(scope.allocateName(TempSymbol(N, s"${clsLikeDefn.sym.nme}_ctor"))))
+        else
+          clsLikeDefn.ctorSym match
+            case S(ctorSym) =>
+              SymIdx(scope.allocateOrGetName(ctorSym, prefix = "ctor$"))
+            case N =>
+              SymIdx(scope.allocateName(TempSymbol(N, clsLikeDefn.sym.nme), prefix = "ctor$"))
+      ctx.registerConstructorInfo(
+        ConstructorInfo(
+          classBms = clsLikeDefn.sym,
+          funcId = ctorFuncId,
+          exportName = ctorExportName,
+        ),
+      )
+
+    clsLikeDefn.methods.foreach: method =>
+      method.params match
+        case Nil =>
+          ctx.registerMethodInfo(
+            MethodInfo(
+              ownerIsym = clsLikeDefn.isym,
+              dSym = method.dSym,
+              funcId = SymIdx(scope.allocateOrGetName(method.dSym, prefix = methodNamePrefix)),
+              shape = MethodShape.Getter,
+            ),
+          )
+        case ps :: Nil if ps.restParam.isEmpty =>
+          ctx.registerMethodInfo(
+            MethodInfo(
+              ownerIsym = clsLikeDefn.isym,
+              dSym = method.dSym,
+              funcId = SymIdx(scope.allocateOrGetName(method.dSym, prefix = methodNamePrefix)),
+              shape = MethodShape.Callable,
+            ),
+          )
+        case ps :: Nil =>
+          raise(
+            ErrorReport(
+              msg"Variable-arity class methods not implemented yet" -> method.dSym.toLoc :: Nil,
+              extraInfo = S(method.showAsTree),
+              source = Diagnostic.Source.Compilation,
+            ),
+          )
+        case _ =>
+          raise(
+            ErrorReport(
+              msg"Only getter-style methods and single parameter list methods are implemented" ->
+                method.dSym.toLoc ::
+                Nil,
+              extraInfo = S(method.showAsTree),
+              source = Diagnostic.Source.Compilation,
+            ),
+          )
+
   /** Gets (and caches) the exception tag used for MLX `throw`. */
   private def exnTagIdx(using Ctx, Raise, Scope): TagIdx =
     val symNme = scope.allocateName(TempSymbol(N, "mlx_exn"))
@@ -316,6 +413,56 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val localsWithNames = (clsLikeDefn.isym -> thisVarName) +: ctorLocals.map(l => l -> scope.lookup_!(l, l.toLoc))
     ctx.popLocal()
     (ctorParams, thisVar, ctorWat, localsWithNames)
+
+  /** Compiles one class method body as a standalone Wasm function with explicit receiver-first params. */
+  private def emitClassMethod(
+      clsLikeDefn: ClsLikeDefn,
+      method: FunDefn,
+  )(using Ctx, Raise, Scope): Unit =
+    ctx.getMethodInfo(method.dSym).foreach: methodInfo =>
+      ctx.pushLocal()
+
+      val (params, bodyWat, locals) = scope.nest givenIn:
+        val (_, thisVarName) = bindCtorThis(clsLikeDefn.isym)
+        val userParams = methodInfo.shape match
+          case MethodShape.Getter => Nil
+          case MethodShape.Callable =>
+            method.params.head.params.map: p =>
+              val paramNme = scope.allocateName(p.sym)
+              ctx.addLocal(p.sym)
+              p.sym -> paramNme
+        val (wasmBody, newLocals) = block(method.body)
+        val paramSyms: Set[Local] = userParams.map(_._1).toSet + clsLikeDefn.isym
+        val extraLocals = getExtraLocals.filterNot((newLocals.toSet ++ paramSyms).contains)
+        val localsWithNames = (newLocals ++ extraLocals).map(l => l -> scope.allocateOrGetName(l))
+        ((clsLikeDefn.isym -> thisVarName) +: userParams, wasmBody, localsWithNames)
+
+      ctx.popLocal()
+
+      val funcTy = ctx.addType(
+        sym = N,
+        TypeInfo(
+          id = SymIdx(methodInfo.funcId.id),
+          FunctionType(
+            params = params.map((_, nme) => WasmParam(S(nme), RefType.anyref)),
+            results = Seq.fill(bodyWat.resultTypes.length)(Result(RefType.anyref)),
+          ),
+          objectTag = N,
+        ),
+      )
+
+      ctx.addFunc(
+        S(method.dSym),
+        FuncInfo(
+          id = methodInfo.funcId,
+          typeIdx = funcTy,
+          params = params,
+          nResults = bodyWat.resultTypes.length,
+          locals = locals,
+          body = bodyWat,
+          `export` = N,
+        ),
+      )
 
   /** Returns locals allocated during codegen (e.g., temp locals). */
   private def getExtraLocals(using Ctx): Seq[Local] =
@@ -528,6 +675,87 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     )
   end fieldSelect
 
+  /** Resolves method metadata for a reference path when it denotes a registered class method. */
+  private def methodInfoForRef(l: Local, disamb: Opt[DefinitionSymbol[?]])(using Ctx): Opt[MethodInfo] =
+    val resolvedSym = l match
+      case trm: TermSymbol => S(trm)
+      case _: BlockMemberSymbol => disamb.flatMap(_.asTrm)
+      case sym: Symbol => sym.asTrm
+    resolvedSym.flatMap(ctx.getMethodInfo)
+
+  /** Resolves method metadata for a selection when it denotes a registered class method. */
+  private def methodInfoForSelection(sel: Select)(using Ctx): Opt[MethodInfo] =
+    sel.symbol.flatMap(_.asTrm).flatMap(ctx.getMethodInfo)
+
+  /** Returns whether `path` is an explicit owner reference such as a class or module path. */
+  private def isDirectOwnerRef(path: Path): Bool = path match
+    case Value.Ref(l, disamb) =>
+      val resolved = l match
+        case _: BlockMemberSymbol => disamb.getOrElse(l)
+        case sym => sym
+      resolved match
+        case _: ClassSymbol | _: ModuleOrObjectSymbol => true
+        case _ => false
+    case _ => false
+
+  /** Returns the erased Wasm result types for a previously emitted class method. */
+  private def methodReturnTypes(methodInfo: MethodInfo)(using Ctx): Seq[Result] =
+    ctx.getFuncInfo(FuncIdx(methodInfo.funcId))
+      .map(_.getSignatureType.results)
+      .getOrElse(Seq(Result(RefType.anyref)))
+
+  /** Emits a direct call to a standalone lowered class method with an explicit receiver argument. */
+  private def directMethodCall(
+      methodInfo: MethodInfo,
+      receiver: Expr,
+      args: Seq[Expr],
+  )(using Ctx): Expr =
+    call(
+      funcidx = FuncIdx(methodInfo.funcId),
+      operands = receiver +: args,
+      returnTypes = methodReturnTypes(methodInfo),
+    )
+
+  /** Resolves constructor metadata when a path denotes a supported class constructor. */
+  private def constructorInfoForPath(path: Path)(using Ctx): Opt[ConstructorInfo] =
+    val ctorClsSymOpt = path match
+      case ref: Value.Ref => ref.disamb
+      case sel: Select => sel.symbol
+      case _ => N
+    ctorClsSymOpt
+      .flatMap(_.asBlkMember)
+      .flatMap(ctx.getConstructorInfo)
+
+  /** Emits a direct constructor call. */
+  private def directConstructorCall(
+      ctorInfo: ConstructorInfo,
+      args: Seq[Expr],
+  )(using Ctx): Expr =
+    ref.cast(
+      call(
+        funcidx = FuncIdx(ctorInfo.funcId),
+        operands = args,
+        returnTypes = Seq(Result(RefType.anyref)),
+      ),
+      RefType(ctx.getType_!(ctorInfo.classBms), nullable = false),
+    )
+
+  /** Computes the receiver expression for a method selection, substituting implicit `this` when appropriate. */
+  private def methodReceiverForSelection(
+      methodInfo: MethodInfo,
+      sel: Select,
+  )(using Ctx, Raise, Scope): Expr =
+    if isDirectOwnerRef(sel.qual) then
+      if scope.lookup(methodInfo.ownerIsym).nonEmpty then
+        result(Value.This(methodInfo.ownerIsym))
+      else
+        errExpr(
+          Ls(msg"WatBuilder::result for exact class-qualified direct calls is not implemented yet" -> sel.toLoc),
+          extraInfo = S(sel.showAsTree),
+        )
+    else
+      result(sel.qual)
+
   def result(r: codegen.Result)(using Ctx, Raise, Scope): Expr = r match
     case Value.This(sym) =>
       // TODO(Derppening): Add type tracking and refinement for locals, remove the `ref.cast`
@@ -551,14 +779,25 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         returnTypes = Seq(Result(RefType.anyref)),
       )
     case Value.Ref(l, disamb) =>
-      if (l is State.unitSymbol) || disamb.contains(State.unitSymbol) then
-        RegisterUnitSingleton()
-      singletonInfoFor(l) match
-        case S(info) => singletonGlobalGet(info)
+      methodInfoForRef(l, disamb) match
+        case S(methodInfo) =>
+          methodInfo.shape match
+            case MethodShape.Getter =>
+              directMethodCall(methodInfo, result(Value.This(methodInfo.ownerIsym)), Seq.empty)
+            case MethodShape.Callable =>
+              errExpr(
+                Ls(msg"WatBuilder::result for method value extraction is not implemented yet" -> r.toLoc),
+                extraInfo = S(s"Block IR: $r"),
+              )
         case N =>
-          ctx.getFunc(l) match
-            case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncInfo_!(l).typeIdx, nullable = false))
-            case N => getVar(l, r.toLoc)
+          if (l is State.unitSymbol) || disamb.contains(State.unitSymbol) then
+            RegisterUnitSingleton()
+          singletonInfoFor(l) match
+            case S(info) => singletonGlobalGet(info)
+            case N =>
+              ctx.getFunc(l) match
+                case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncInfo_!(l).typeIdx, nullable = false))
+                case N => getVar(l, r.toLoc)
 
     case Call(Value.Ref(l: BuiltinSymbol, _), lhs :: rhs :: Nil) if !l.functionLike =>
       if l.binary then
@@ -590,79 +829,127 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             returnTypes = Seq(Result(RefType.anyref)),
           )
         case N =>
-          val base = subexpression(fun)
-          if base.resultTypes.exists(_ is UnreachableType) then return base
-          val wasmArgs = args.map(argument)
+          val ctorCall = constructorInfoForPath(fun).map: ctorInfo =>
+            directConstructorCall(ctorInfo, args.map(argument))
 
-          val baseTypeIdx = base.resultType match
-            case S(RefType(idx: TypeIdx, _)) => idx
-            case ty =>
-              return errExpr(
-                Ls(msg"Expected WAT of `fun` expression in Call(...) to have a `(ref <typeidx>)` type" -> r.toLoc),
-                extraInfo = S(
-                  s"Block IR: `${
-                      fun.toString
-                    }`\nCompiled WAT: `${
-                      base.toWat.toString
-                    }`\n... which has type `${
-                      ty.fold("(none)")(_.toWat.toString)
-                    }`",
-                ),
-              )
-          val baseTypeInfo = ctx.getTypeInfo_!(baseTypeIdx)
+          val methodCall = fun match
+            case Value.Ref(l, disamb) =>
+              methodInfoForRef(l, disamb).flatMap: methodInfo =>
+                methodInfo.shape match
+                  case MethodShape.Callable =>
+                    S(directMethodCall(methodInfo, result(Value.This(methodInfo.ownerIsym)), args.map(argument)))
+                  case MethodShape.Getter =>
+                    S(
+                      errExpr(
+                        Ls(msg"Getter-style methods are not callable; use member access instead of `()`" -> c.toLoc),
+                        extraInfo = S(c.showAsTree),
+                      ),
+                    )
+            case sel: Select =>
+              methodInfoForSelection(sel).flatMap: methodInfo =>
+                methodInfo.shape match
+                  case MethodShape.Callable =>
+                    val receiver = methodReceiverForSelection(methodInfo, sel)
+                    S(
+                      if receiver.resultTypes.exists(_ is UnreachableType) then receiver
+                      else directMethodCall(methodInfo, receiver, args.map(argument))
+                    )
+                  case MethodShape.Getter =>
+                    S(
+                      errExpr(
+                        Ls(msg"Getter-style methods are not callable; use member access instead of `()`" -> c.toLoc),
+                        extraInfo = S(c.showAsTree),
+                      ),
+                    )
+            case _ => N
+          ctorCall.orElse(methodCall).getOrElse:
+            val base = subexpression(fun)
+            if base.resultTypes.exists(_ is UnreachableType) then return base
+            val wasmArgs = args.map(argument)
 
-          call_ref(
-            target = base,
-            operands = wasmArgs.toSeq,
-            typeIdx = baseTypeIdx,
-            funcType = baseTypeInfo.compType.asInstanceOf[FunctionType],
-          )
+            val baseTypeIdx = base.resultType match
+              case S(RefType(idx: TypeIdx, _)) => idx
+              case ty =>
+                return errExpr(
+                  Ls(msg"Expected WAT of `fun` expression in Call(...) to have a `(ref <typeidx>)` type" -> r.toLoc),
+                  extraInfo = S(
+                    s"Block IR: `${
+                        fun.toString
+                      }`\nCompiled WAT: `${
+                        base.toWat.toString
+                      }`\n... which has type `${
+                        ty.fold("(none)")(_.toWat.toString)
+                      }`",
+                  ),
+                )
+            val baseTypeInfo = ctx.getTypeInfo_!(baseTypeIdx)
+
+            call_ref(
+              target = base,
+              operands = wasmArgs.toSeq,
+              typeIdx = baseTypeIdx,
+              funcType = baseTypeInfo.compType.asInstanceOf[FunctionType],
+            )
 
     case sel @ Select(qual, id) =>
-      sel.symbol match
-        case S(selObj: ModuleOrObjectSymbol) =>
-          if selObj is State.unitSymbol then
-            RegisterUnitSingleton()
-          singletonInfoFor(selObj) match
-            case S(info) => singletonGlobalGet(info)
+      methodInfoForSelection(sel) match
+        case S(methodInfo) =>
+          val receiver = methodReceiverForSelection(methodInfo, sel)
+          if receiver.resultTypes.exists(_ is UnreachableType) then receiver
+          else
+            methodInfo.shape match
+              case MethodShape.Getter =>
+                directMethodCall(methodInfo, receiver, Seq.empty)
+              case MethodShape.Callable =>
+                errExpr(
+                  Ls(msg"WatBuilder::result for method value extraction is not implemented yet" -> sel.toLoc),
+                  extraInfo = S(sel.showAsTree),
+                )
+        case N =>
+          sel.symbol match
+            case S(selObj: ModuleOrObjectSymbol) =>
+              if selObj is State.unitSymbol then
+                RegisterUnitSingleton()
+              singletonInfoFor(selObj) match
+                case S(info) => singletonGlobalGet(info)
+                case N =>
+                  errExpr(
+                    Ls(msg"WatBuilder::result for object selection `${id.name}` not implemented yet" -> sel.toLoc),
+                    extraInfo = S(sel),
+                  )
+
+            case S(selSym: TermSymbol) =>
+              val qualRes = result(qual)
+              val selOwner = selSym.owner getOrElse:
+                lastWords(s"Expected resolved Select(...) expression `$selSym` to have an owner")
+              val selCls = selOwner.asBlkMember getOrElse:
+                lastWords(
+                  s"Expected resolved class for Select(...) expression to be a BlockMemberSymbol, but got $selOwner (${
+                      selOwner.getClass.getName
+                    })",
+                )
+              val fieldidx = fieldSelect(selCls, selSym)
+              struct.get(
+                fieldidx,
+                ref = ref.cast(qualRes, RefType(ctx.getType_!(selCls), nullable = false)),
+                ty = RefType.anyref,
+              )
+            case S(otherSym) =>
+              lastWords(
+                s"Expected resolved Select(...) expression to be a TermSymbol, but got $otherSym (${
+                    otherSym.getClass.getName
+                  })",
+              )
             case N =>
               errExpr(
-                Ls(msg"WatBuilder::result for object selection `${id.name}` not implemented yet" -> sel.toLoc),
+                Ls(
+                  msg"WatBuilder::result for field selection without a resolved symbol is not implemented (field `${
+                      id.name
+                    }`). Use `_.[_]` for index-based accesses." ->
+                    sel.toLoc,
+                ),
                 extraInfo = S(sel),
               )
-
-        case S(selSym: TermSymbol) =>
-          val qualRes = result(qual)
-          val selOwner = selSym.owner getOrElse:
-            lastWords(s"Expected resolved Select(...) expression `$selSym` to have an owner")
-          val selCls = selOwner.asBlkMember getOrElse:
-            lastWords(
-              s"Expected resolved class for Select(...) expression to be a BlockMemberSymbol, but got $selOwner (${
-                  selOwner.getClass.getName
-                })",
-            )
-          val fieldidx = fieldSelect(selCls, selSym)
-          struct.get(
-            fieldidx,
-            ref = ref.cast(qualRes, RefType(ctx.getType_!(selCls), nullable = false)),
-            ty = RefType.anyref,
-          )
-        case S(otherSym) =>
-          lastWords(
-            s"Expected resolved Select(...) expression to be a TermSymbol, but got $otherSym (${
-                otherSym.getClass.getName
-              })",
-          )
-        case N =>
-          errExpr(
-            Ls(
-              msg"WatBuilder::result for field selection without a resolved symbol is not implemented (field `${
-                  id.name
-                }`). Use `_.[_]` for index-based accesses." ->
-                sel.toLoc,
-            ),
-            extraInfo = S(sel),
-          )
 
     case dyn @ DynSelect(qual, fld, arrayIdx) =>
       val qualRes = result(qual)
@@ -726,12 +1013,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 ctorClsSym.getClass.getName
               }",
           )
-      val ctorFuncIdx = ctx.getFunc(ctorClsBlkSym) match
-        case S(idx) => idx
+      val ctorInfo = ctx.getConstructorInfo(ctorClsBlkSym) match
+        case S(info) => info
         case N => lastWords(s"Missing constructor definition for class ${ctorClsBlkSym.toString}")
-
-      val objType = ctx.getFuncInfo_!(ctorFuncIdx).body.resultType_!
-      call(funcidx = ctorFuncIdx, as.map(argument), Seq(Result(objType.asValType_!)))
+      ref.cast(
+        call(
+          funcidx = FuncIdx(ctorInfo.funcId),
+          as.map(argument),
+          Seq(Result(RefType.anyref)),
+        ),
+        RefType(ctx.getType_!(ctorInfo.classBms), nullable = false),
+      )
 
     case Tuple(mut, elems) =>
       val tupleValues = elems.map(argument)
@@ -915,17 +1207,23 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         val rhsExpr = result(rhs)
         val assignInstr = assign.symbol match
           case S(selSym: TermSymbol) =>
-            val selOwner = selSym.owner getOrElse
-              lastWords(s"Expected resolved AssignField(...) expression `$selSym` to have an owner")
-            val selCls = selOwner.asBlkMember getOrElse
-              lastWords(
-                s"Expected resolved class for AssignField(...) expression to be a BlockMemberSymbol, but got $selOwner (${
-                    selOwner.getClass.getName
-                  })",
+            if ctx.getMethodInfo(selSym).nonEmpty then
+              errExpr(
+                Ls(msg"WatBuilder::returningTerm for AssignField(...) to class methods is not implemented yet" -> nme.toLoc),
+                extraInfo = S(assign.showAsTree),
               )
-            val fieldidx = fieldSelect(selCls, selSym)
-            val objRef = ref.cast(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false))
-            struct.set(fieldidx, objRef, rhsExpr)
+            else
+              val selOwner = selSym.owner getOrElse
+                lastWords(s"Expected resolved AssignField(...) expression `$selSym` to have an owner")
+              val selCls = selOwner.asBlkMember getOrElse
+                lastWords(
+                  s"Expected resolved class for AssignField(...) expression to be a BlockMemberSymbol, but got $selOwner (${
+                      selOwner.getClass.getName
+                    })",
+                )
+              val fieldidx = fieldSelect(selCls, selSym)
+              val objRef = ref.cast(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false))
+              struct.set(fieldidx, objRef, rhsExpr)
           case S(otherSym) =>
             lastWords(
               s"Expected resolved AssignField(...) expression to be a TermSymbol, but got $otherSym (${
@@ -1083,7 +1381,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       break(errUnimplExpr("auxParams.nonEmpty"))
                     if clsLikeDefn.parentPath.nonEmpty then
                       break(errUnimplExpr("parentPath.nonEmpty"))
-                    if clsLikeDefn.methods.nonEmpty then
+                    if isSingletonObj && clsLikeDefn.methods.nonEmpty then
                       break(errUnimplExpr("methods.nonEmpty"))
                     clsLikeDefn.preCtor match
                       case End(_) => ()
@@ -1135,6 +1433,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     else
                       break(errUnimplExpr("newCtorAuxParams.nonEmpty"))
 
+                    val ctorInfo =
+                      if !isSingletonObj && clsLikeDefn.sym.nameIsMeaningful then
+                        S(ctx.getConstructorInfo(clsLikeDefn.sym).getOrElse:
+                          lastWords(s"Missing constructor metadata for class ${clsLikeDefn.sym}")
+                        )
+                      else N
+
                     val funcTyId = clsLikeDefn.sym
                       .optionIf: sym =>
                         !isSingletonObj && sym.nameIsMeaningful
@@ -1154,26 +1459,23 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       ),
                     )
 
-                    val ctorId = clsLikeDefn.sym
-                      .optionIf: sym =>
-                        !isSingletonObj && sym.nameIsMeaningful
-                      .map: sym =>
-                        s"${sym.nme}_ctor"
                     ctx.addFunc(
                       S(clsLikeDefn.sym),
                       FuncInfo(
-                        id =
-                          SymIdx(ctorId.getOrElse(scope.allocateName(TempSymbol(N, s"${clsLikeDefn.sym.nme}_ctor")))),
+                        id = ctorInfo.fold(
+                          SymIdx(scope.allocateName(TempSymbol(N, s"${clsLikeDefn.sym.nme}_ctor")))
+                        )(_.funcId),
                         typeIdx = funcTy,
                         params = ctorParams,
                         nResults = ctorCode.resultTypes.length,
                         locals = ctorLocals,
                         body = ctorAux,
-                        `export` = ctorId,
+                        `export` = ctorInfo.flatMap(_.`exportName`),
                       ),
                     )
                     if isSingletonObj then
                       registerSingletonInit(clsLikeDefn, typeref)
+                    clsLikeDefn.methods.foreach(emitClassMethod(clsLikeDefn, _))
 
                     nop
 
@@ -1527,6 +1829,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     // Two-pass scheme: register all supported top-level class struct types before compiling any
     // functions, so all class types are available during nested function codegen.
     createDefnTypes(p.main)
+    registerDefnCallableMetadata(p.main)
 
     // Compile the entry function under a dedicated local scope so that any temp locals introduced
     // during codegen (e.g., via `local.tee`) are declared in the entry function.

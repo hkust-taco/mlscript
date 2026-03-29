@@ -204,11 +204,12 @@ class Foo(val a, val b)
 //│       (nop)
 //│       (block (result (ref null any))
 //│         (local.set $tmp
-//│           (call $Foo_ctor
-//│             (ref.i31
-//│               (i32.const 42))
-//│             (ref.i31
-//│               (i32.const 1))))
+//│           (ref.cast (ref $Foo)
+//│             (call $Foo_ctor
+//│               (ref.i31
+//│                 (i32.const 42))
+//│               (ref.i31
+//│                 (i32.const 1)))))
 //│         (struct.get $Foo $a
 //│           (ref.cast (ref $Foo)
 //│             (local.get $tmp))))))

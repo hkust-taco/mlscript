@@ -194,6 +194,23 @@ object Ctx:
       globalTy: RefType,
   )
   
+  enum MethodShape:
+    case Getter
+    case Callable
+
+  case class MethodInfo(
+      ownerIsym: InnerSymbol,
+      dSym: TermSymbol,
+      funcId: SymIdx,
+      shape: MethodShape,
+  )
+
+  case class ConstructorInfo(
+      classBms: BlockMemberSymbol,
+      funcId: SymIdx,
+      exportName: Opt[Str],
+  )
+  
   case class LabelTarget(
       breakLabel: Str,
       continueLabel: Opt[Str],
@@ -232,6 +249,8 @@ object Ctx:
     namedFuncs = MutMap.empty,
     tags = ArrayBuf.empty,
     namedGlobals = MutMap.empty,
+    methodInfoBySymbol = MutMap.empty,
+    constructorInfoByClass = MutMap.empty,
     locals = MutMap() :: Nil,
     startFunc = N,
   )
@@ -279,6 +298,8 @@ class Ctx(
     namedFuncs: MutMap[Symbol, Int],
     tags: ArrayBuf[TagInfo],
     namedGlobals: MutMap[Symbol, Int],
+    methodInfoBySymbol: MutMap[TermSymbol, Ctx.MethodInfo],
+    constructorInfoByClass: MutMap[BlockMemberSymbol, Ctx.ConstructorInfo],
     var locals: Ls[MutMap[Local, Int]],
     private var startFunc: Opt[FuncIdx],
 ) extends ToWat:
@@ -503,6 +524,26 @@ class Ctx(
 
   /** Checks whether the global variable scope contains the variable `sym`. */
   def containsGlobal(sym: Symbol): Bool = namedGlobals.contains(sym)
+
+  /** Returns method metadata for resolved method symbol `sym`, if present. */
+  def getMethodInfo(sym: TermSymbol): Opt[Ctx.MethodInfo] =
+    methodInfoBySymbol.get(sym)
+
+  /** Registers method metadata under its resolved method symbol. */
+  def registerMethodInfo(info: Ctx.MethodInfo): Unit =
+    methodInfoBySymbol(info.dSym) = info
+
+  /** Checks whether constructor metadata has been registered for class symbol `sym`. */
+  def containsConstructorInfo(sym: BlockMemberSymbol): Bool =
+    constructorInfoByClass.contains(sym)
+
+  /** Returns constructor metadata for class symbol `sym`, if present. */
+  def getConstructorInfo(sym: BlockMemberSymbol): Opt[Ctx.ConstructorInfo] =
+    constructorInfoByClass.get(sym)
+
+  /** Registers constructor metadata under its class symbol. */
+  def registerConstructorInfo(info: Ctx.ConstructorInfo): Unit =
+    constructorInfoByClass(info.classBms) = info
 
   /** Checks whether singleton metadata has been registered for class symbol `sym`. */
   def containsSingleton(sym: BlockMemberSymbol): Bool = singletonByBms.contains(sym)

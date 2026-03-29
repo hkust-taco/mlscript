@@ -1,0 +1,343 @@
+
+:global
+:wasm
+
+
+class Foo() with
+    fun inc(x) = x + 1
+Foo().inc(1)
+//│ Wasm result:
+//│ = 2
+
+
+class GetterBox(val x) with
+  fun get = x
+GetterBox(42).get
+//│ Wasm result:
+//│ = 42
+
+
+
+class NullaryBox(val x) with
+  fun get() = x
+NullaryBox(42).get()
+//│ Wasm result:
+//│ = 42
+
+
+class Foo(val x) with
+  fun add(y) = x + y
+Foo(40).add(2)
+//│ Wasm result:
+//│ = 42
+
+
+class Box(val base) with
+  fun inc(x) = x + base
+  fun getinc(x) = inc(x)
+Box(2).getinc(40)
+//│ Wasm result:
+//│ = 42
+
+
+:wat
+class Foo(val x) with
+  fun one(x) = this.add(x)
+  fun add(x) = x + 1
+Foo(2).one(40)
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))
+//│   (type $Foo_ctor (func (param $x (ref null any)) (result (ref null any))))
+//│   (type $Foo_one (func (param $this (ref null any)) (param $x1 (ref null any)) (result (ref null any))))
+//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $Foo_add (func (param $this (ref null any)) (param $x1 (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $Foo_ctor (type $Foo_ctor) (param $x (ref null any)) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Foo))
+//│       (struct.set $Foo $$tag
+//│         (ref.cast (ref $Foo)
+//│           (local.get $this))
+//│         (i32.const 1))
+//│       (block
+//│         (struct.set $Foo $x
+//│           (ref.cast (ref $Foo)
+//│             (local.get $this))
+//│           (local.get $x))
+//│         (nop))
+//│       (return
+//│         (local.get $this))))
+//│   (export "Foo_ctor" (func $Foo_ctor))
+//│   (elem declare func $Foo_ctor)
+//│   (func $Foo_one (type $Foo_one) (param $this (ref null any)) (param $x1 (ref null any)) (result (ref null any))
+//│     (return
+//│       (call $Foo_add
+//│         (ref.cast (ref $Foo)
+//│           (local.get $this))
+//│         (local.get $x1))))
+//│   (elem declare func $Foo_one)
+//│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│     (if (result (ref null any))
+//│       (i32.and
+//│         (ref.test (ref null i31)
+//│           (local.get $lhs))
+//│         (ref.test (ref null i31)
+//│           (local.get $rhs)))
+//│       (then
+//│         (ref.i31
+//│           (i32.add
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $lhs)))
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $rhs))))))
+//│       (else
+//│         (unreachable))))
+//│   (elem declare func $plus_impl1)
+//│   (func $Foo_add (type $Foo_add) (param $this (ref null any)) (param $x1 (ref null any)) (result (ref null any))
+//│     (return
+//│       (call $plus_impl1
+//│         (local.get $x1)
+//│         (ref.i31
+//│           (i32.const 1)))))
+//│   (elem declare func $Foo_add)
+//│   (func $entry (type $entry1) (result (ref null any))
+//│     (local $Foo (ref null any))
+//│     (local $tmp (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (block (result (ref null any))
+//│         (local.set $tmp
+//│           (ref.cast (ref $Foo)
+//│             (call $Foo_ctor
+//│               (ref.i31
+//│                 (i32.const 2)))))
+//│         (call $Foo_one
+//│           (local.get $tmp)
+//│           (ref.i31
+//│             (i32.const 40))))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 41
+
+
+:wat
+class SumDown() with
+  fun sum(n) = 
+    if n === 0 
+        then 0 
+        else n + sum(n - 1)
+SumDown().sum(5)
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $SumDown (sub $Object (struct (field $$tag (mut i32)))))
+//│   (type $SumDown_ctor (func (result (ref null any))))
+//│   (type $eq_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $minus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $SumDown_sum (func (param $this (ref null any)) (param $n (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $SumDown_ctor (type $SumDown_ctor) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $SumDown))
+//│       (struct.set $SumDown $$tag
+//│         (ref.cast (ref $SumDown)
+//│           (local.get $this))
+//│         (i32.const 1))
+//│       (nop)
+//│       (return
+//│         (local.get $this))))
+//│   (export "SumDown_ctor" (func $SumDown_ctor))
+//│   (elem declare func $SumDown_ctor)
+//│   (func $eq_impl1 (type $eq_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│     (if (result (ref null any))
+//│       (i32.and
+//│         (ref.test (ref null i31)
+//│           (local.get $lhs))
+//│         (ref.test (ref null i31)
+//│           (local.get $rhs)))
+//│       (then
+//│         (ref.i31
+//│           (i32.eq
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $lhs)))
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $rhs))))))
+//│       (else
+//│         (unreachable))))
+//│   (elem declare func $eq_impl1)
+//│   (func $minus_impl1 (type $minus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│     (if (result (ref null any))
+//│       (i32.and
+//│         (ref.test (ref null i31)
+//│           (local.get $lhs))
+//│         (ref.test (ref null i31)
+//│           (local.get $rhs)))
+//│       (then
+//│         (ref.i31
+//│           (i32.sub
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $lhs)))
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $rhs))))))
+//│       (else
+//│         (unreachable))))
+//│   (elem declare func $minus_impl1)
+//│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│     (if (result (ref null any))
+//│       (i32.and
+//│         (ref.test (ref null i31)
+//│           (local.get $lhs))
+//│         (ref.test (ref null i31)
+//│           (local.get $rhs)))
+//│       (then
+//│         (ref.i31
+//│           (i32.add
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $lhs)))
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $rhs))))))
+//│       (else
+//│         (unreachable))))
+//│   (elem declare func $plus_impl1)
+//│   (func $SumDown_sum (type $SumDown_sum) (param $this (ref null any)) (param $n (ref null any)) (result (ref null any))
+//│     (local $scrut (ref null any))
+//│     (local $tmp1 (ref null any))
+//│     (local $tmp2 (ref null any))
+//│     (local $matchRes (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $scrut
+//│         (call $eq_impl1
+//│           (local.get $n)
+//│           (ref.i31
+//│             (i32.const 0))))
+//│       (block (result (ref null any))
+//│         (block $match
+//│           (local.set $matchRes
+//│             (ref.null any))
+//│           (if
+//│             (i32.eq
+//│               (i31.get_s
+//│                 (ref.cast (ref null i31)
+//│                   (local.get $scrut)))
+//│               (i32.const 1))
+//│             (then
+//│               (block $arm
+//│                 (return
+//│                   (ref.i31
+//│                     (i32.const 0)))
+//│                 (br $match))))
+//│           (local.set $matchRes
+//│             (block (result (ref null any))
+//│               (local.set $tmp1
+//│                 (call $minus_impl1
+//│                   (local.get $n)
+//│                   (ref.i31
+//│                     (i32.const 1))))
+//│               (block (result (ref null any))
+//│                 (local.set $tmp2
+//│                   (call $SumDown_sum
+//│                     (ref.cast (ref $SumDown)
+//│                       (local.get $this))
+//│                     (local.get $tmp1)))
+//│                 (return
+//│                   (call $plus_impl1
+//│                     (local.get $n)
+//│                     (local.get $tmp2)))))))
+//│         (local.get $matchRes))))
+//│   (elem declare func $SumDown_sum)
+//│   (func $entry (type $entry1) (result (ref null any))
+//│     (local $SumDown (ref null any))
+//│     (local $tmp (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (block (result (ref null any))
+//│         (local.set $tmp
+//│           (ref.cast (ref $SumDown)
+//│             (call $SumDown_ctor)))
+//│         (call $SumDown_sum
+//│           (local.get $tmp)
+//│           (ref.i31
+//│             (i32.const 5))))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 15
+
+
+class Parity() with
+  fun even(n) =
+    if n === 0 then true else odd(n - 1)
+  fun odd(n) =
+    if n === 0 then false else even(n - 1)
+Parity().even(6)
+//│ Wasm result:
+//│ = 1
+
+
+class Box(val x) with
+    fun get() = x
+    fun inc() = Box(x + 1).get()
+Box(41).inc()
+//│ Wasm result:
+//│ = 42
+
+
+class Prev(val y) with
+    fun get() = y
+class Box(val x) with
+    fun mk() = Prev(x + 1).get()
+Box(41).mk()
+//│ Wasm result:
+//│ = 42
+
+
+class Box(val x) with
+    fun mk() = Next(x + 1).get()
+class Next(val y) with
+    fun get() = y
+Box(41).mk()
+//│ Wasm result:
+//│ = 42
+
+
+:ge
+class Box() with
+  fun f(x) = x
+Box().f
+//│ ╔══[COMPILATION ERROR] WatBuilder::result for method value extraction is not implemented yet
+//│ ║  l.322: 	Box().f
+//│ ╙──       	     ^^
+
+
+:ge
+class GetterOnly() with
+  fun f = 1
+GetterOnly().f()
+//│ ╔══[COMPILATION ERROR] Getter-style methods are not callable; use member access instead of `()`
+//│ ║  l.331: 	GetterOnly().f()
+//│ ╙──       	^^^^^^^^^^^^^^^^
+
+
+:ge
+class NullaryOnly() with
+  fun f() = 1
+NullaryOnly().f
+//│ ╔══[COMPILATION ERROR] WatBuilder::result for method value extraction is not implemented yet
+//│ ║  l.340: 	NullaryOnly().f
+//│ ╙──       	             ^^
