@@ -1,0 +1,92 @@
+:js
+:deforest
+
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+
+data class A(x)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+
+data class (::) Cons(h, t)
+object Nil
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+
+
+
+:expect 10
+fun to(n) = if n > 0 then n :: to(n - 1) else Nil
+fun f1(ls) = if ls is
+  h :: t then h
+  Nil then 2
+fun f2(ls) = if ls is
+  h :: t then h + 1
+  Nil then 3
+fun badWrap(n) =
+  let x = to(n)
+  f1(x) + f2(x)
+  x
+f1(badWrap(4)) + f2(badWrap(5))
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 10
+
+
+
+
+:expect 9
+fun p(x) = A(x)
+let one = p(1)
+let two = p(2)
+fun f1(p) = if p is A(a) then a + 1
+fun f2(p) = if p is A(b) then b + 2
+f1(one) + f2(one) + f2(two)
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > 	Ref(p,None)
+//│ deforest > 	Select(Ref(p,None),Ident(x))
+//│ deforest > <<< fusing <<<
+//│ = 9
+//│ one = A(1)
+//│ two = fun
+
+
+
+:expect 5
+fun p(a) = a
+fun f1(a1) = if a1 is A(x1) then x1
+fun f2(a2) = if a2 is A(x2) then x2 + 1
+let x = A(1)
+let y = A(2)
+let res1 = p(if true then x else y) // both x and y flow into this call-site result
+let res2 = p(x) // x flows into this call-site result
+let res3 = p(y) // y flows into this call-site result
+// f1(res1) + f2(res1) + f1(res2) + f2(res3)
+f1(res1) + f1(res2) + f2(res3)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 5
+//│ res1 = A(1)
+//│ res2 = A(1)
+//│ res3 = A(2)
+//│ x = A(1)
+//│ y = A(2)
+
+
+
+:expect 4
+fun f1(a1) = if a1 is A(x1) then x1
+fun f2(a2) = if a2 is A(x2) then x2 + 1
+fun p(x, clashedCtor) =
+  if true then A(x)
+  else clashedCtor
+let clashed = A(3)
+f1(p(1, clashed)) + f2(p(2, clashed))
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 4
+//│ clashed = A(3)
+
+
+

@@ -1,0 +1,111 @@
+:js
+
+
+import "../../mlscript-compile/Stack.mls"
+open Stack
+
+
+
+pattern Bin =
+  (0 => "false") | (1 => "true") | ([Bin as b] => b + "!")
+
+fun f(x) = if x is
+  Bin as b then b
+  ~Bin as c then [c]
+
+f(0)
+//│ = "false"
+
+f(1)
+//│ = "true"
+
+f(2)
+//│ = [2]
+
+f([1])
+//│ = "true!"
+
+f([[[0]]])
+//│ = "false!!!"
+
+
+
+let arr = fromArray of [1, 2, 3]
+//│ arr = Cons(1, Cons(2, Cons(3, Nil)))
+
+
+pattern Find(pattern P) =
+  | ((P as p) :: t) => [p, t]
+  | (h :: (Find(P) as [res, t])) => [res, h :: t]
+
+assert arr is Find(1) as res, res
+//│ = [1, Cons(2, Cons(3, Nil))]
+assert arr is Find(2) as res, res
+//│ = [2, Cons(1, Cons(3, Nil))]
+assert arr is Find(0) as res else "oops", res
+//│ = "oops"
+
+
+// * List-like pattern that disregards the order of elements! (quite inefficient)
+pattern MultiSet(pattern Head, pattern Rest) =
+  | Find(Head) as [h, Rest as t] => h :: t
+
+arr is MultiSet(1, _)
+//│ = true
+arr is MultiSet(0, _)
+//│ = false
+arr is MultiSet(3, _)
+//│ = true
+arr is MultiSet(3, MultiSet(1, MultiSet(2, Nil)))
+//│ = true
+arr is MultiSet(3, MultiSet(0, _))
+//│ = false
+
+:fixme
+assert arr is MultiSet(1, rest), rest
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'rest'
+//│ ║  l.65: 	assert arr is MultiSet(1, rest), rest
+//│ ╙──      	                                 ^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: rest is not defined
+
+:e
+assert arr is MultiSet as res, res
+//│ ═══[COMPILATION ERROR] Expected two pattern arguments, but found only zero pattern arguments.
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (RecursiveTransformations.mls:73)
+
+
+pattern Id = _
+
+:fixme
+if [1, 2, 3] is
+  MultiSet(2, MultiSet(1, Id(x))) do print(x)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'arg$Id$0$'
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'arg$Id$0$'
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
+//│ ║  l.81: 	  MultiSet(2, MultiSet(1, Id(x))) do print(x)
+//│ ╙──      	                                           ^
+
+
+// ———
+
+
+// * Whoopsie: bad definition
+
+pattern MultiSet(pattern Head, pattern Rest) =
+  | ((Head as h) :: (Rest as r)) => h :: r
+  | (((h0 :: h :: r) => h :: h0 :: r) as MultiSet(Head, Rest) as res) => res
+
+arr is
+  MultiSet(1, _)
+//│ = true
+
+:re
+arr is
+  MultiSet(3, _)
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+arr is
+  MultiSet(2, MultiSet(1, _))
+//│ = true
+
+

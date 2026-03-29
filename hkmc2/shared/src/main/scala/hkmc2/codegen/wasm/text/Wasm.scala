@@ -13,7 +13,7 @@ extension (doc: Document)
   /** Surrounds a document by the given `prefix` and `suffix`, unless the document is empty. */
   private def surroundUnlessEmpty(
       prefix: => Document = Document.empty,
-      postfix: => Document = Document.empty
+      postfix: => Document = Document.empty,
   ): Document =
     doc.optionUnless(_.isEmpty).fold(doc): doc =>
       doc"$prefix$doc$postfix"
@@ -24,7 +24,7 @@ trait ToWat:
   def toWat: Document
 
 /** Abstract base class for all Wasm types. */
-abstract sealed class Type extends ToWat:
+sealed abstract class Type extends ToWat:
 
   /** Attempts to convert this type to a [[[ValType]]]. */
   def asValType: Opt[ValType] = this match
@@ -47,7 +47,7 @@ private case object V128Type extends Type:
   def toWat: Document = doc"v128"
 private case object UnreachableType extends Type:
   def toWat: Document = throw UnsupportedOperationException(
-    s"${toString} is a compiler-internal type and cannot be converted to WAT"
+    s"${toString} is a compiler-internal type and cannot be converted to WAT",
   )
 
 type NumType = I32Type.type | I64Type.type | F32Type.type | F64Type.type
@@ -84,6 +84,7 @@ object HeapType:
     def toWat: Document = doc"noextern"
   case object NoFunc extends ToWat:
     def toWat: Document = doc"nofunc"
+end HeapType
 type ValType = NumType | VecType | RefType
 
 /** A Wasm parameter clause. Appears in function signatures. */
@@ -95,11 +96,10 @@ case class Param(id: Opt[Str], valtype: ValType) extends ToWat:
 case class Result(valtype: ValType) extends ToWat:
   def toWat: Document = doc"(result ${valtype.toWat})"
 
-/**
- * A type representing a function signature.
- *
- * Function signatures differ from [[FunctionType]] in that they do not include the `func` keyword.
- */
+/** A type representing a function signature.
+  *
+  * Function signatures differ from [[FunctionType]] in that they do not include the `func` keyword.
+  */
 case class SignatureType(params: Seq[Param], results: Seq[Result]) extends ToWat:
   def toWat: Document = (params.map(_.toWat) ++ results.map(_.toWat)).mkDocument(doc" ")
 
@@ -113,33 +113,26 @@ case class FunctionType(sigType: SignatureType) extends ToWat:
     doc"(func${sigType.toWat.surroundUnlessEmpty(doc" ")})"
 
 /** A type representing a struct field. */
-case class Field(
-    ty: Type,
-    mutable: Bool,
-    id: Opt[Str]
-) extends ToWat:
+case class Field(ty: Type, mutable: Bool, id: SymIdx) extends ToWat:
   def toWat: Document =
-    doc"(field ${id.fold(doc"")(id => doc"$$$id ")}${
+    doc"(field ${id.toWat} ${
         if mutable then doc"(mut ${ty.toWat})" else ty.toWat
       })"
 
 /** A type representing a structure type. */
 case class StructType(
-    fields: Map[DefinitionSymbol[?], NumIdx -> Field],
+    fields: Seq[DefinitionSymbol[?] -> Field],
     parents: Seq[TypeIdx] = Seq.empty,
-    isSubtype: Bool = false
+    isSubtype: Bool = false,
 ) extends ToWat:
 
-  def fieldSeq: Seq[Field] = fields.values.toSeq.sortBy(_._1.index).map(_._2)
+  lazy val fieldsBySym: Map[DefinitionSymbol[?], Field] = fields.toMap
 
   def toWat: Document =
-    doc"(struct${fieldSeq.map(_.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
+    doc"(struct${fields.map(_._2.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
 
 /** A type representing an array type. */
-case class ArrayType(
-    elemType: Type,
-    mutable: Bool,
-) extends ToWat:
+case class ArrayType(elemType: Type, mutable: Bool) extends ToWat:
   private def elemDoc: Document =
     if mutable then doc"(mut ${elemType.toWat})" else elemType.toWat
 
@@ -162,9 +155,12 @@ type AbsHeapType =
     | HeapType.NoFunc.type
 type HeapType = AbsHeapType | TypeIdx
 
-abstract sealed class Index extends ToWat
+sealed abstract class Index extends ToWat
 
 /** A numeric index. */
+@deprecated(
+  "NumIdx is only used for internal bookkeeping and should not be used in WAT generation; Use SymIdx instead.",
+)
 case class NumIdx(val index: Int) extends Index:
   def toWat: Document = doc"${index.toString}"
 
@@ -173,7 +169,7 @@ case class SymIdx(val id: Str) extends Index:
   def toWat: Document = doc"$$$id"
 
 /** An index that is bound to an index space. */
-abstract sealed class CtxIdx(idx: Index) extends ToWat:
+sealed abstract class CtxIdx(idx: Index) extends ToWat:
   def toWat: Document = idx.toWat
 
 /** An index bound to the ''types'' index space. */
@@ -191,20 +187,35 @@ case class LocalIdx(idx: Index) extends CtxIdx(idx)
 /** An index bound to the ''fields'' index space. */
 case class FieldIdx(idx: Index) extends CtxIdx(idx)
 
-/**
- * An abstraction over a generic WebAssembly instructions.
- */
-abstract sealed class Instruction extends ToWat:
+/** An index bound to the ''tags'' index space. */
+case class TagIdx(idx: Index) extends CtxIdx(idx)
+
+/** A memory import entry. */
+case class MemoryImport(module: Str, name: Str, id: SymIdx, minPages: Int) extends ToWat:
+  def toWat: Document =
+    doc"""(import "$module" "$name" (memory ${id.toWat} $minPages))"""
+
+/** A function import entry. */
+case class FuncImport(module: Str, name: Str, id: SymIdx, typeIdx: TypeIdx) extends ToWat:
+  def toWat: Document =
+    doc"""(import "$module" "$name" (func ${id.toWat} (type ${typeIdx.toWat})))"""
+
+/** A data segment entry. */
+case class DataSegment(offsetExpr: Expr, bytes: Str) extends ToWat:
+  def toWat: Document =
+    doc"""(data ${offsetExpr.toWat} "$bytes")"""
+
+/** An abstraction over a generic WebAssembly instructions.
+  */
+sealed abstract class Instruction extends ToWat:
   /** The mnemonic of the instruction, e.g. "i32.add". */
   val mnemonic: String
 
-  /**
-   * The arguments to the instruction. Note that this only includes arguments that are directly part
-   * of the instruction, not the stack arguments.
-   *
-   * For example, for `i32.add` this would be empty, but for `i32.const 42`, this would be
-   * `Seq(doc"42")`.
-   */
+  /** The arguments to the instruction. Note that this only includes arguments that are directly part of the
+    * instruction, not the stack arguments.
+    *
+    * For example, for `i32.add` this would be empty, but for `i32.const 42`, this would be `Seq(doc"42")`.
+    */
   val instrargs: Seq[ToWat | Document]
 
 object FoldedInstr:
@@ -212,21 +223,20 @@ object FoldedInstr:
       mnemonic: Str,
       instrargs: Seq[ToWat | Document],
       stackargs: Seq[FoldedInstr],
-      resultType: Opt[Type]
+      resultType: Opt[Type],
   ): FoldedInstr =
     new FoldedInstr(mnemonic, instrargs, stackargs, resultType.toSeq)
 
-/**
- * A WebAssembly folded instruction.
- *
- * @param stackargs
- *   The stack arguments of the instruction.
- */
+/** A WebAssembly folded instruction.
+  *
+  * @param stackargs
+  *   The stack arguments of the instruction.
+  */
 case class FoldedInstr(
     mnemonic: Str,
     instrargs: Seq[ToWat | Document],
     stackargs: Seq[Expr],
-    resultTypes: Seq[Type]
+    resultTypes: Seq[Type],
 ) extends Instruction:
 
   /** Returns the result type of this instruction if this instruction only has 0-1 result values. */
@@ -235,7 +245,7 @@ case class FoldedInstr(
     case ty :: Seq() => S(ty)
     case _ => lastWords(s"resultType_! called on instruction with multi-value result type: $this")
 
-    /** Returns the singular result type of this instruction, otherwise throws an exception. */
+  /** Returns the singular result type of this instruction, otherwise throws an exception. */
   def resultType_! : Type = resultType.getOrElse:
     lastWords(s"resultType_! called on instruction with a non-unique result type: $this")
 
@@ -250,7 +260,6 @@ case class FoldedInstr(
     } #} )"
 end FoldedInstr
 
-/**
- * A WebAssembly expression, comprised of one or more instructions that generate a result value.
- */
+/** A WebAssembly expression, comprised of one or more instructions that generate a result value.
+  */
 type Expr = FoldedInstr

@@ -210,7 +210,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Rename(pattern, name) => name :: pattern.aliases
     case _: Pattern[K] => Nil
   
-  def showDbg: Str = this match
+  def showDbg(using DebugPrinter): Str = this match
     case Literal(lit) => lit.idStr
     case ClassLike(sym, arguments) =>
       val argumentsText = arguments.fold(""):
@@ -314,7 +314,7 @@ object Pattern:
       symbol: PatternSymbol,
       arguments: Ls[Pat]
   )(val toLoc: Opt[Loc]) extends Located:
-    def showDbg: Str =
+    def showDbg(using DebugPrinter): Str =
       val argumentsText = if arguments.isEmpty then "" else
         arguments.iterator.map(_.showDbg).mkString("[", ", ", "]")
       s"${symbol.nme}$argumentsText"

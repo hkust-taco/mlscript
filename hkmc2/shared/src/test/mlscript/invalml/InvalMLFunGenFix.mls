@@ -1,0 +1,30 @@
+:global
+:invalml
+
+
+class Reg[out Rg, out AccI]
+
+class BaseEff
+
+fun basereg: Reg[Any, BaseEff]
+
+fun subreg: [E, Rg, AccI, Res] -> Reg[Rg, AccI] ->
+  ([Rg2] -> Reg[Rg2 & AccI, AccI & ~Rg2] ->{E | Rg2} Res) ->{E} Res
+
+fun write: [Rg, AccI] -> Reg[Rg, AccI] ->{Rg} Int
+
+
+subreg(basereg) of r0 =>
+  fun helper(a) = write(a)
+  helper(r0)
+//│ Type: Int
+
+
+fun helper(a) = write(a)
+
+helper
+//│ Type: ['Rg] -> Reg[out 'Rg, ?] ->{'Rg} Int
+
+subreg(basereg) of r0 =>
+  helper(r0)
+//│ Type: Int

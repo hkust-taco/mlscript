@@ -5,20 +5,21 @@
 
 
 // preserve tail calls
-// MUST see "return hi(tmp)" in the output
-:stackSafe 5
+// MUST see "return hi(tmp1)" in the output
+:stackSafe 6
 :expect 0
 :sjs
 fun hi(n) =
   if n === 0 then 0
   else hi(n - 1)
 hi(0)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let hi, tmp, $_stack$_safe$_body$_;
+//│ runtime.resetEffects();
 //│ hi = function hi(n) {
-//│   let scrut, tmp1, stackDelayRes;
+//│   let scrut, tmp1;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
-//│   stackDelayRes = runtime.checkDepth();
+//│   runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
 //│     return runtime.unwind(hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0)
 //│   }
@@ -33,12 +34,13 @@ hi(0)
 //│ $_stack$_safe$_body$_ = (undefined, function () {
 //│   return hi(0)
 //│ });
-//│ tmp = runtime.runStackSafe(5, $_stack$_safe$_body$_);
+//│ tmp = runtime.runStackSafe(6, $_stack$_safe$_body$_);
 //│ if (runtime.curEffect !== null) { tmp = runtime.topLevelEffect(false); }
 //│ tmp
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
-:stackSafe 1000
+:stackSafe
 :expect 50005000
 :sjs
 fun sum(n) =
@@ -46,15 +48,16 @@ fun sum(n) =
   else
     n + sum(n - 1)
 sum(10000)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let sum, tmp1, $_stack$_safe$_body$_1;
+//│ runtime.resetEffects();
 //│ sum = function sum(n) {
-//│   let scrut, tmp2, tmp3, pc, curDepth, stackDelayRes;
+//│   let scrut, tmp2, tmp3, pc, curDepth;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   curDepth = runtime.stackDepth;
-//│   stackDelayRes = runtime.checkDepth();
+//│   runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
-//│     return runtime.unwind(sum, -1, "StackSafety.mls:44:1", null, null, 1, 1, n, 0)
+//│     return runtime.unwind(sum, -1, "StackSafety.mls:46:1", null, null, 1, 1, n, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -75,7 +78,7 @@ sum(10000)
 //│           runtime.stackDepth = curDepth;
 //│           runtime.resumeValue = res;
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(sum, 1, "StackSafety.mls:47:9", null, null, 1, 1, n, 0)
+//│             return runtime.unwind(sum, 1, "StackSafety.mls:49:9", null, null, 1, 1, n, 0)
 //│           }
 //│           pc = 1;
 //│           continue main
@@ -95,10 +98,11 @@ sum(10000)
 //│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
 //│ if (runtime.curEffect !== null) { tmp1 = runtime.topLevelEffect(false); }
 //│ tmp1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 50005000
 
 
-:stackSafe 100
+:stackSafe
 mut val ctr = 0
 fun dummy(x) = x
 fun foo(f) = 
@@ -110,7 +114,7 @@ foo(foo)
 //│ = 0
 //│ ctr = 10001
 
-:stackSafe 1000
+:stackSafe
 :expect 50005000
 val foo =
   val f = n =>
@@ -121,7 +125,7 @@ foo
 //│ = 50005000
 //│ foo = 50005000
 
-:stackSafe 10
+:stackSafe 100
 :expect 50005000
 val foo =
   val f = n =>
@@ -189,16 +193,18 @@ foo(h)
 :stackSafe
 :sjs
 fun max(a, b) = if a < b then b else a
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let max;
+//│ runtime.resetEffects();
 //│ max = function max(a, b) {
 //│   let scrut;
 //│   scrut = a < b;
 //│   if (scrut === true) { return b } else { return a }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
-:stackSafe 1000
+:stackSafe
 :expect 100010000
 fun sum(n) =
   if n === 0 then 0
@@ -269,6 +275,15 @@ fun handler_stack(n) =
 handler_stack(100)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
+
+// This test was failing non-deterministically due to handler state not being properly reset.
+// The flakiness was due to the stack overflow in the previous block not always interrupting the code in the same place,
+// sometimes leaving the effect handlers runtime in an inconsistent state.
+:silent
+let
+  N = 100
+  M = 100
+
 :stackSafe
 fun shift_stack(n, f) =
   if n >= 0 then
@@ -278,10 +293,11 @@ fun shift_stack(n, f) =
 fun handler_stack(n) =
   handle h = Eff with
     fun raise()(k) =
-      shift_stack(100, k)
+      shift_stack(N, k)
   h.raise()
   if n >= 0 do
     handler_stack(n - 1)
   "ok"
-handler_stack(100)
+handler_stack(M)
 //│ = "ok"
+

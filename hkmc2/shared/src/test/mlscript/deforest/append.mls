@@ -1,0 +1,105 @@
+:js
+:deforest
+
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+
+
+object Nil
+data class (::) Cons(h, t)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+
+
+
+:expect Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
+fun append1(xs1, ys) = if xs1 is
+  h :: t then h :: append1(t, ys)
+  Nil then ys
+fun append2(xs2, ys) = if xs2 is
+  h :: t then h :: append2(t, ys)
+  Nil then ys
+fun appendThree(xs, ys, zs) =
+  append1(append2(xs, ys), zs)
+appendThree of
+  id(1 :: 2 :: Nil)
+  id(3 :: 4 :: Nil)
+  id(5 :: 6 :: Nil)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
+
+// maybe the fusion target for the previous program
+:expect Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
+fun appendReified(ys, zs) = if ys is
+  h :: t then h :: appendReified(t, zs)
+  Nil then zs
+fun append1(ys, zs) = ys(zs)
+fun append2(xs, ys) = 
+  if xs is
+    h :: t then
+      zs => h :: append1(append2(t, ys), zs)        // normal fusion
+    Nil then zs => appendReified(ys, zs)            // reified
+fun test(xs, ys, zs) = append1(append2(xs, ys), zs)
+test of
+  id(1 :: 2 :: Nil)
+  id(3 :: 4 :: Nil)
+  id(5 :: 6 :: Nil)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
+
+
+:expect Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
+fun idList(l) = if l is
+  h :: t then h :: idList(t)
+  Nil then Nil
+fun append(xs, ys) = if xs is
+  h :: t then h :: append(t, ys)
+  Nil then idList(ys)
+fun appendThree(xs, ys, zs) =
+  append(append(xs, ys), zs)
+appendThree of
+  id(1 :: 2 :: Nil)
+  id(3 :: 4 :: Nil)
+  id(5 :: 6 :: Nil)
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(h,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(xs,None)
+//│ deforest > 	Select(Ref(xs,None),Ident(h))
+//│ deforest > 	Select(Ref(xs,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(xs,None)
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(h,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(xs,None)
+//│ deforest > 	Select(Ref(xs,None),Ident(h))
+//│ deforest > 	Select(Ref(xs,None),Ident(t))
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(h,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(xs,None)
+//│ deforest > 	Select(Ref(xs,None),Ident(h))
+//│ deforest > 	Select(Ref(xs,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(xs,None)
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(h,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(xs,None)
+//│ deforest > 	Select(Ref(xs,None),Ident(h))
+//│ deforest > 	Select(Ref(xs,None),Ident(t))
+//│ deforest > <<< fusing <<<
+//│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
+
+
+
+:expect Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
+fun append(xs, ys) = if xs is
+  h :: t then h :: append(t, ys)
+  Nil then idList(ys)
+fun concat(lss) = if lss is
+  hh :: tt then append(hh, concat(tt))
+  Nil then Nil
+concat of id of
+  (1 :: 2 :: Nil) ::
+  (3 :: 4 :: Nil) ::
+  (5 :: 6 :: Nil) :: Nil
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))

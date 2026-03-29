@@ -1,0 +1,130 @@
+:js
+:noSanityCheck // * For some reason, these cause problems
+
+:global
+:invalml
+
+
+:todo
+fun test1() =
+  fun sayHi = print("Hi")
+  sayHi, sayHi, sayHi
+//│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for sayHi
+//│ ║  l.10: 	  fun sayHi = print("Hi")
+//│ ╙──      	              ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Variable not found: sayHi
+//│ ║  l.11: 	  sayHi, sayHi, sayHi
+//│ ╙──      	  ^^^^^
+//│ ╔══[COMPILATION ERROR] Variable not found: sayHi
+//│ ║  l.11: 	  sayHi, sayHi, sayHi
+//│ ╙──      	         ^^^^^
+//│ ╔══[COMPILATION ERROR] Variable not found: sayHi
+//│ ║  l.11: 	  sayHi, sayHi, sayHi
+//│ ╙──      	                ^^^^^
+
+test1()
+//│ > Hi
+//│ > Hi
+//│ > Hi
+//│ Type: ⊥
+
+
+:todo // it feels like this should work
+fun test2() =
+  fun funny = case
+    0 then 0
+    n then funny(n - 1) + 1
+  funny
+//│ ╔══[COMPILATION ERROR] Expected a monomorphic type or an instantiable type here, but () ->{⊥} [outer, 'caseScrut, 'eff] -> 'caseScrut ->{'eff} Int found
+//│ ║  l.33: 	fun test2() =
+//│ ║        	         ^^^^
+//│ ║  l.34: 	  fun funny = case
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.35: 	    0 then 0
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.36: 	    n then funny(n - 1) + 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.37: 	... (more lines omitted) ...
+//│ ╙──      	^^^^^^^
+
+fun test2() =
+  fun funny = case
+    0 then 0
+    n then funny(n - 1) + 1
+  funny(_)
+
+test2
+//│ = fun test2
+//│ Type: () -> (Int -> Int)
+
+:sjs
+test2()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ test21()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+//│ Type: Int -> Int
+
+:ssjs
+test2()(5)
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ tmp = test21(); block$res8 = runtime.safeCall(tmp(5)); undefined
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 5
+//│ Type: Int
+
+
+// * Notice the mistake here; we warn that the first case in statement position is useless!
+:w
+:e
+:sjs
+fun test2() =
+  fun funny = 
+    case 0 then 0
+    case n then funny(n - 1) + 1
+  funny
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.84: 	    case 0 then 0
+//│ ╙──      	    ^^^^^^^^^^^^^
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let test22;
+//│ test22 = function test2() {
+//│   let funny, tmp1;
+//│   funny = function funny() {
+//│     let lambda1;
+//│     lambda1 = (undefined, function (caseScrut) {
+//│       let n, tmp2, tmp3, tmp4;
+//│       n = caseScrut;
+//│       tmp2 = funny();
+//│       tmp3 = n - 1;
+//│       tmp4 = tmp2(tmp3);
+//│       return tmp4 + 1
+//│     });
+//│     return lambda1
+//│   };
+//│   tmp1 = funny();
+//│   return tmp1
+//│ };
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.84: 	    case 0 then 0
+//│ ╙──      	    ^^^^^^^^^^^^^
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for funny
+//│ ║  l.84: 	    case 0 then 0
+//│ ║        	         ^^^^^^^^
+//│ ║  l.85: 	    case n then funny(n - 1) + 1
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Variable not found: funny
+//│ ║  l.86: 	  funny
+//│ ╙──      	  ^^^^^
+
+
+:todo
+fun test3 =
+  print("Hi")
+//│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for test3
+//│ ║  l.125: 	  print("Hi")
+//│ ╙──       	  ^^^^^^^^^^^
+
+

@@ -1,0 +1,8 @@
+:staging
+:js
+
+import "../../mlscript-compile/Block.mls"
+
+Block.printCode(Block.FunDefn(Block.Symbol("f"), [[Block.Symbol("x")]], Block.Return(Block.ValueLit(1), false), false))
+//│ > FunDefn(Symbol("f"), ([Symbol("x")]), Return(Lit(1), false), false)
+

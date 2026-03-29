@@ -10,7 +10,7 @@ pattern DropZ = ((:x, :y, :z)) => (x: x, y: y)
 
 :ucs ups
 pattern SumList = (Nil => 0) | ((Int as hd) :: (SumList as tl)) => hd + tl
-//│ elaborated pattern body: Nil => 0 ∨ Cons(Int as hd, SumList as tl) => builtin:+(hd, tl)
+//│ elaborated pattern body: Nil => 0 ∨ Cons(Int as hd, SumList as tl) => builtin:+⁰(hd⁰, tl⁰)
 
 // Flatten the nested tuples. Note that it makes use of biased union.
 pattern Flatten = ([Flatten as hd, ...Flatten as tl] => Array.concat(hd, tl)) | _
@@ -28,12 +28,12 @@ pattern CountTree(pattern P) =
 // Match a 2x2 matrix and return its transpose.
 :ucs ups
 pattern Transpose = (null => null) | (([[a, b], [c, d]]) => [[a, c], [b, d]])
-//│ elaborated pattern body: null => null ∨ [[a, b], [c, d]] => [[a, c], [b, d]]
+//│ elaborated pattern body: null => null ∨ [[a, b], [c, d]] => [[a⁰, c⁰], [b⁰, d⁰]]
 
 // Return the middle element of a list. It won't match if the length is even.
 :ucs ups
 pattern Middle = ([x] => x) | ([x, ...(Middle as m), y] => m)
-//│ elaborated pattern body: [x] => x ∨ [x, ...Middle as m, y] => m
+//│ elaborated pattern body: [x] => x⁰ ∨ [x, ...Middle as m, y] => m⁰
 
 // Return the leaves of a tree.
 pattern Leaves = (null => Nil) | ([x] => x :: Nil) | ([Leaves as left, Leaves as right] => left ::: right)
@@ -66,15 +66,17 @@ pattern TreeMin =
 pattern IsBalanced = (Leaf => true) | (Node(_, IsBalanced as left, IsBalanced as right) => Math.abs(TreeDepth(left) - TreeDepth(right)) <= 1)
 
 // Extract the path from root to a target value in a binary tree
-pattern PathToValue(pattern target) = 
+pattern PathToValue(pattern Target) = 
   (Leaf => []) | 
-  (Node(PathToValue(target) as left, target, _) => [0] ::: left) |
-  (Node(_, target, PathToValue(target) as right) => [1] ::: right) |
-  (Node(PathToValue(target) as left, _, _) => [0] ::: left) |
-  (Node(_, _, PathToValue(target) as right) => [1] ::: right)
+  (Node(PathToValue(Target) as left, Target, _) => [0] ::: left) |
+  (Node(_, Target, PathToValue(Target) as right) => [1] ::: right) |
+  (Node(PathToValue(Target) as left, _, _) => [0] ::: left) |
+  (Node(_, _, PathToValue(Target) as right) => [1] ::: right)
 
 // Extract elements at even indices in a list.
 pattern EvenIndicesList = 
   (Nil => Nil) | 
   ((x :: Nil) => x) |
-  ((x :: _ :: EvenIndices as xs) => x :: xs)
+  ((x :: _ :: EvenIndicesList as xs) => x :: xs)
+
+

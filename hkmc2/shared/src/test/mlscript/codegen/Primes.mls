@@ -6,8 +6,9 @@ let x = 1
 
 :sjs
 let x' = 2
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let x$_; x$_ = 2;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ x' = 2
 
 x'
@@ -18,7 +19,7 @@ x'
 object Foo with
   val x' = 0
 //│ ╔══[COMPILATION ERROR] Illegal member value name: 'x''
-//│ ║  l.19: 	  val x' = 0
+//│ ║  l.20: 	  val x' = 0
 //│ ║        	      ^^
 //│ ╙── Member names must start with a letter or underscore, followed by letters, digits, or underscores.
 
@@ -26,7 +27,7 @@ object Foo with
 :re
 Foo.x'
 //│ ╔══[COMPILATION ERROR] Object 'Foo' does not contain member 'x''
-//│ ║  l.27: 	Foo.x'
+//│ ║  l.28: 	Foo.x'
 //│ ╙──      	^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x'' yielded 'undefined'
 
@@ -36,7 +37,7 @@ Foo.("x'")
 object Foo with
   mut val x' = 0
 //│ ╔══[COMPILATION ERROR] Illegal member mutable value name: 'x''
-//│ ║  l.37: 	  mut val x' = 0
+//│ ║  l.38: 	  mut val x' = 0
 //│ ║        	          ^^
 //│ ╙── Member names must start with a letter or underscore, followed by letters, digits, or underscores.
 
@@ -44,10 +45,10 @@ object Foo with
 :re
 set Foo.x' += 1
 //│ ╔══[COMPILATION ERROR] Object 'Foo' does not contain member 'x''
-//│ ║  l.45: 	set Foo.x' += 1
+//│ ║  l.46: 	set Foo.x' += 1
 //│ ╙──      	    ^^^^^^
 //│ ╔══[COMPILATION ERROR] Object 'Foo' does not contain member 'x''
-//│ ║  l.45: 	set Foo.x' += 1
+//│ ║  l.46: 	set Foo.x' += 1
 //│ ╙──      	    ^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x'' yielded 'undefined'
 
@@ -58,7 +59,7 @@ Foo.("x'")
 class Foo with
   fun f' = 1
 //│ ╔══[COMPILATION ERROR] Illegal member function name: 'f''
-//│ ║  l.59: 	  fun f' = 1
+//│ ║  l.60: 	  fun f' = 1
 //│ ║        	      ^^
 //│ ╙── Member names must start with a letter or underscore, followed by letters, digits, or underscores.
 
@@ -66,7 +67,7 @@ class Foo with
 class Foo with
   class F'
 //│ ╔══[COMPILATION ERROR] Illegal member class name: 'F''
-//│ ║  l.67: 	  class F'
+//│ ║  l.68: 	  class F'
 //│ ║        	        ^^
 //│ ╙── Member names must start with a letter or underscore, followed by letters, digits, or underscores.
 
@@ -74,7 +75,7 @@ class Foo with
 class Foo with
   object F'
 //│ ╔══[COMPILATION ERROR] Illegal member object name: 'F''
-//│ ║  l.75: 	  object F'
+//│ ║  l.76: 	  object F'
 //│ ║        	         ^^
 //│ ╙── Member names must start with a letter or underscore, followed by letters, digits, or underscores.
 
@@ -82,7 +83,7 @@ class Foo with
 class Foo with
   module F'
 //│ ╔══[COMPILATION ERROR] Illegal member module name: 'F''
-//│ ║  l.83: 	  module F'
+//│ ║  l.84: 	  module F'
 //│ ║        	         ^^
 //│ ╙── Member names must start with a letter or underscore, followed by letters, digits, or underscores.
 

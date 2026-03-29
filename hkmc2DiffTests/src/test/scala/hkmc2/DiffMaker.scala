@@ -2,6 +2,7 @@ package hkmc2
 
 import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*
 
 
 
@@ -15,7 +16,8 @@ class Outputter(val out: java.io.PrintWriter):
   val diff3MidMarker = "|||||||" // * Appears under `git config merge.conflictstyle diff3` (https://stackoverflow.com/a/18131595/1518588)
   val diffEndMarker = ">>>>>>>"
 
-  val exitMarker = "=" * 100
+  val ColWidth = 100
+  val exitMarker = "=" * ColWidth
   val blockSeparator = "—" * 80
   
   val fullBlockSeparator = outputMarker + blockSeparator
@@ -47,6 +49,9 @@ abstract class DiffMaker:
   def processOrigin(origin: Origin)(using Raise): Unit
   
   
+  val dbgPrinter: DebugPrinter
+  given dbgPrinter.type = dbgPrinter
+  
   
   def doFail(blockLineNum: Int, msg: String): Unit =
     System.err.println(fansi.Color.Red("FAILURE: ").toString + msg)
@@ -60,7 +65,7 @@ abstract class DiffMaker:
       case N => ()
     mkExtraInfo() match
       case S(info: Product) => output(s"FAILURE INFO: ${info.showAsTree}")
-      case S(info) => output(s"FAILURE INFO: $info")
+      case S(info) => output(s"FAILURE INFO: ${info.showAsPlain}")
       case N => ()
     doFail(blockLineNum, s"unexpected $what at $relativeName.${file.ext}:" + blockLineNum)
   
@@ -93,7 +98,9 @@ abstract class DiffMaker:
     line =>
       val commentIndex = line.indexOf("//")
       val body = if commentIndex == -1 then line else line.take(commentIndex)
-      assert(body.forall(_.isWhitespace))
+      // assert(body.forall(_.isWhitespace))
+      if !body.forall(_.isWhitespace) then
+        output(s"/!\\ Warning: non-empty body for command '$name' is ignored: '$body'")
       k()
     ):
     def set: Unit = setCurrentValue(k())
@@ -157,6 +164,13 @@ abstract class DiffMaker:
   val output = Outputter(out)
   val report = ReportFormatter(output(_), colorize = false)
   
+  var printedSeparatedSection = false
+  def outputSeparator(title: Str): Unit =
+    printedSeparatedSection = true
+    val totalSepLen = output.ColWidth - title.length - 4
+    val preSepLen = output.ColWidth/5 - title.length/2
+    output("—" * preSepLen + s"| $title |" + "—" * (totalSepLen - preSepLen))
+  
   val failures = mutable.Buffer.empty[Int]
   val unmergedChanges = mutable.Buffer.empty[Int]
   
@@ -177,11 +191,12 @@ abstract class DiffMaker:
   
   
   def processBlock(origin: Origin): Unit =
+    printedSeparatedSection = false
     val globalStartLineNum = origin.startLineNum
     val blockLineNum = origin.startLineNum
     // * ^ In previous DiffTest versions, these two could be different due to relative line numbers
     
-    var parseErrors, typeErrors, compilationErrors, runtimeErrors, warnings = 0
+    var parseErrors, typeErrors, compilationErrors, runtimeErrors, warnings, internalErrors = 0
     
     val raise: Raise = d =>
       d.kind match
@@ -220,6 +235,7 @@ abstract class DiffMaker:
           failures += globalStartLineNum
           unexpected("warning", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
       case Diagnostic.Kind.Internal =>
+        internalErrors += 1
         if !tolerateErrors then
           failures += globalStartLineNum
           unexpected("internal error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
@@ -251,7 +267,13 @@ abstract class DiffMaker:
       failures += globalStartLineNum
       unexpected("lack of warnings", blockLineNum, N, () => N)
     
-    if fixme.isSet && (parseErrors + typeErrors + compilationErrors + runtimeErrors + warnings) === 0 then
+    if fixme.isSet && (
+        + parseErrors
+        + typeErrors
+        + compilationErrors
+        + runtimeErrors
+        + warnings
+        + internalErrors) === 0 then
       failures += globalStartLineNum
       unexpected("lack of error to fix", blockLineNum, N, () => N)
   

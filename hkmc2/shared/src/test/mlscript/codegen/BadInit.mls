@@ -8,7 +8,7 @@ object Bar with
   val x = 1
   module Baz with
     val a = Bar.x
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Bar1;
 //│ (class Bar {
 //│   static {
@@ -39,6 +39,7 @@ object Bar with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["object", "Bar"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 // * Modules don't have this initialization problem because they set their bindings
@@ -49,7 +50,7 @@ module Bar with
   val x = 1
   module Baz with
     val a = Bar.x
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Bar3;
 //│ (class Bar2 {
 //│   static {
@@ -77,5 +78,6 @@ module Bar with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Bar"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
