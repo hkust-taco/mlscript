@@ -841,7 +841,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   case MethodShape.Getter =>
                     S(
                       errExpr(
-                        Ls(msg"Getter-style methods are not callable; use member access instead of `()`" -> c.toLoc),
+                        Ls(msg"Calling the result of getter-style method access is not implemented yet; use member access without `()`" -> c.toLoc),
                         extraInfo = S(c.showAsTree),
                       ),
                     )
@@ -857,7 +857,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   case MethodShape.Getter =>
                     S(
                       errExpr(
-                        Ls(msg"Getter-style methods are not callable; use member access instead of `()`" -> c.toLoc),
+                        Ls(msg"Calling the result of getter-style method access is not implemented yet; use member access without `()`" -> c.toLoc),
                         extraInfo = S(c.showAsTree),
                       ),
                     )
@@ -1016,14 +1016,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       val ctorInfo = ctx.getConstructorInfo(ctorClsBlkSym) match
         case S(info) => info
         case N => lastWords(s"Missing constructor definition for class ${ctorClsBlkSym.toString}")
-      ref.cast(
-        call(
-          funcidx = FuncIdx(ctorInfo.funcId),
-          as.map(argument),
-          Seq(Result(RefType.anyref)),
-        ),
-        RefType(ctx.getType_!(ctorInfo.classBms), nullable = false),
-      )
+      directConstructorCall(ctorInfo, as.map(argument))
 
     case Tuple(mut, elems) =>
       val tupleValues = elems.map(argument)

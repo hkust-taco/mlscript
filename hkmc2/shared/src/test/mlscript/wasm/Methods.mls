@@ -316,12 +316,57 @@ Box(41).mk()
 //│ = 42
 
 
+class Counter(val x) with
+  fun inc() = Counter(x + 1)
+  fun double() = Counter(x + x)
+  fun get() = x
+let c = Counter(1)
+c.Counter#inc().Counter#double().Counter#get()
+//│ Wasm result:
+//│ = 4
+
+
+class Box(val x) with
+  fun twice() = x * 2
+  fun get() = this
+let b = Box(1)
+b.Box#get().Box#twice()
+//│ Wasm result:
+//│ = 2
+
+
+// Field mutation inside class methods is not implemented yet
+:e
+class Counter(val x) with
+  fun inc() = 
+    set x += 1
+    this
+  fun double() =
+    set x *= 2
+    this
+  fun get() = x
+let c = Counter(1)
+c.Counter#inc().Counter#double().Counter#get()
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Expected resolved AssignField(...) expression to be a TermSymbol, but got member:x (hkmc2.semantics.BlockMemberSymbol)
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:239)
+//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.returningTerm(WatBuilder.scala:1224)
+//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.returningTerm(WatBuilder.scala:1191)
+//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.block$$anonfun$1$$anonfun$1(WatBuilder.scala:1929)
+//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.nonNestedScoped(WatBuilder.scala:1924)
+//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.block$$anonfun$1(WatBuilder.scala:1929)
+//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.withLocalDelta(WatBuilder.scala:1904)
+//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.block(WatBuilder.scala:1929)
+//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.emitClassMethod$$anonfun$1(WatBuilder.scala:434)
+//│ 	at: scala.Option.foreach(Option.scala:437)
+
+
 :ge
 class Box() with
   fun f(x) = x
 Box().f
 //│ ╔══[COMPILATION ERROR] WatBuilder::result for method value extraction is not implemented yet
-//│ ║  l.322: 	Box().f
+//│ ║  l.367: 	Box().f
 //│ ╙──       	     ^^
 
 
@@ -329,8 +374,8 @@ Box().f
 class GetterOnly() with
   fun f = 1
 GetterOnly().f()
-//│ ╔══[COMPILATION ERROR] Getter-style methods are not callable; use member access instead of `()`
-//│ ║  l.331: 	GetterOnly().f()
+//│ ╔══[COMPILATION ERROR] Calling the result of getter-style method access is not implemented yet; use member access without `()`
+//│ ║  l.376: 	GetterOnly().f()
 //│ ╙──       	^^^^^^^^^^^^^^^^
 
 
@@ -339,5 +384,5 @@ class NullaryOnly() with
   fun f() = 1
 NullaryOnly().f
 //│ ╔══[COMPILATION ERROR] WatBuilder::result for method value extraction is not implemented yet
-//│ ║  l.340: 	NullaryOnly().f
+//│ ║  l.385: 	NullaryOnly().f
 //│ ╙──       	             ^^
