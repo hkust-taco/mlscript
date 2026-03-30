@@ -103,10 +103,9 @@ if Bar(true) is
 //│         (nop)
 //│         (block (result (ref null any))
 //│           (local.set $scrut
-//│             (ref.cast (ref $Bar)
-//│               (call $Bar_ctor
-//│                 (ref.i31
-//│                   (i32.const 1)))))
+//│             (call $Bar_ctor
+//│               (ref.i31
+//│                 (i32.const 1))))
 //│           (block (result (ref null any))
 //│             (block $match
 //│               (local.set $matchRes

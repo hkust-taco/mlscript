@@ -147,10 +147,9 @@ class Foo(val a)
 //│       (nop)
 //│       (block (result (ref null any))
 //│         (local.set $tmp
-//│           (ref.cast (ref $Foo)
-//│             (call $Foo_ctor
-//│               (ref.i31
-//│                 (i32.const 42)))))
+//│           (call $Foo_ctor
+//│             (ref.i31
+//│               (i32.const 42))))
 //│         (struct.get $Foo $a
 //│           (ref.cast (ref $Foo)
 //│             (local.get $tmp))))))
@@ -209,10 +208,9 @@ class Foo(val x) with
 //│       (nop)
 //│       (block (result (ref null any))
 //│         (local.set $tmp
-//│           (ref.cast (ref $Foo)
-//│             (call $Foo_ctor
-//│               (ref.i31
-//│                 (i32.const 42)))))
+//│           (call $Foo_ctor
+//│             (ref.i31
+//│               (i32.const 42))))
 //│         (struct.get $Foo $y
 //│           (ref.cast (ref $Foo)
 //│             (local.get $tmp))))))

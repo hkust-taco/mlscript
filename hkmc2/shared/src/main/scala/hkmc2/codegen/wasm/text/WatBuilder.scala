@@ -742,13 +742,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ctorInfo: ConstructorInfo,
       args: Seq[Expr],
   )(using Ctx): Expr =
-    ref.cast(
-      call(
-        funcidx = FuncIdx(ctorInfo.funcId),
-        operands = args,
-        returnTypes = Seq(Result(RefType.anyref)),
-      ),
-      RefType(ctx.getType_!(ctorInfo.classBms), nullable = false),
+    call(
+      funcidx = FuncIdx(ctorInfo.funcId),
+      operands = args,
+      returnTypes = Seq(Result(RefType.anyref)),
     )
 
   /** Computes the receiver expression for a method selection, substituting implicit `this` when appropriate. */
@@ -793,6 +790,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       methodInfoForRef(l, disamb) match
         case S(methodInfo) if methodInfo.shape == MethodShape.Getter =>
           directMethodCall(methodInfo, result(Value.This(methodInfo.ownerIsym)), Seq.empty)
+        case S(methodInfo) =>
+          errExpr(
+            Ls(
+              msg"`${methodInfo.dSym.toString}` is neither a field access nor a callable method" -> r.toLoc,
+            ),
+            extraInfo = S(s"Block IR: $r"),
+          )
         case _ =>
           if (l is State.unitSymbol) || disamb.contains(State.unitSymbol) then
             RegisterUnitSingleton()
@@ -842,7 +846,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 methodInfo.shape match
                   case MethodShape.Callable =>
                     S(directMethodCall(methodInfo, result(Value.This(methodInfo.ownerIsym)), args.map(argument)))
-                  case MethodShape.Getter => N
+                  case MethodShape.Getter =>
+                    S(
+                      errExpr(
+                        Ls(
+                          msg"`${methodInfo.dSym.toString}` is neither a field access nor a callable method" -> c.toLoc,
+                        ),
+                        extraInfo = S(c.showAsTree),
+                      )
+                    )
             case sel: Select =>
               methodInfoForSelection(sel).flatMap: methodInfo =>
                 methodInfo.shape match
@@ -852,7 +864,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       if receiver.resultTypes.exists(_ is UnreachableType) then receiver
                       else directMethodCall(methodInfo, receiver, args.map(argument))
                     )
-                  case MethodShape.Getter => N
+                  case MethodShape.Getter =>
+                    S(
+                      errExpr(
+                        Ls(
+                          msg"`${methodInfo.dSym.toString}` is neither a field access nor a callable method" -> c.toLoc,
+                        ),
+                        extraInfo = S(c.showAsTree),
+                      )
+                    )
             case _ => N
           ctorCall.orElse(methodCall).getOrElse:
             val base = subexpression(fun)
@@ -889,6 +909,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           val receiver = methodReceiverForSelection(methodInfo, sel)
           if receiver.resultTypes.exists(_ is UnreachableType) then receiver
           else directMethodCall(methodInfo, receiver, Seq.empty)
+        case S(methodInfo) =>
+          errExpr(
+            Ls(
+              msg"`${methodInfo.dSym.toString}` is neither a field access nor a callable method" -> sel.toLoc,
+            ),
+            extraInfo = S(sel.showAsTree),
+          )
         case _ =>
           sel.symbol match
             case S(selObj: ModuleOrObjectSymbol) =>

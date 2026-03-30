@@ -113,10 +113,9 @@ Foo(2).one(40)
 //│       (nop)
 //│       (block (result (ref null any))
 //│         (local.set $tmp
-//│           (ref.cast (ref $Foo)
-//│             (call $Foo_ctor
-//│               (ref.i31
-//│                 (i32.const 2)))))
+//│           (call $Foo_ctor
+//│             (ref.i31
+//│               (i32.const 2))))
 //│         (call $Foo_one
 //│           (local.get $tmp)
 //│           (ref.i31
@@ -268,8 +267,7 @@ SumDown().sum(5)
 //│       (nop)
 //│       (block (result (ref null any))
 //│         (local.set $tmp
-//│           (ref.cast (ref $SumDown)
-//│             (call $SumDown_ctor)))
+//│           (call $SumDown_ctor))
 //│         (call $SumDown_sum
 //│           (local.get $tmp)
 //│           (ref.i31
@@ -358,9 +356,28 @@ A(1).inc()
 //│ = 2
 
 
-
-:fixme
+:ge
 class Box() with
   fun f(x) = x
 Box().f
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Box/f` in struct `member:Box` with type `(type $Box (sub $Object (struct (field $$tag (mut i32)))))`
+//│ ╔══[COMPILATION ERROR] `term:Box/f` is neither a field access nor a callable method
+//│ ║  l.362: 	Box().f
+//│ ╙──       	     ^^
+
+
+:ge
+class GetterOnly() with
+  fun f = 1
+GetterOnly().f()
+//│ ╔══[COMPILATION ERROR] `term:GetterOnly/f` is neither a field access nor a callable method
+//│ ║  l.371: 	GetterOnly().f()
+//│ ╙──       	^^^^^^^^^^^^^^^^
+
+
+:ge
+class NullaryOnly() with
+  fun f() = 1
+NullaryOnly().f
+//│ ╔══[COMPILATION ERROR] `term:NullaryOnly/f` is neither a field access nor a callable method
+//│ ║  l.380: 	NullaryOnly().f
+//│ ╙──       	             ^^
