@@ -698,7 +698,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     case Instantiate(_, cls, as) =>
       cls match
-        // TODO: Implement proper lowering for Errors with unit payloads.
+        // TODO: Implement proper lowering for Errors with string and unit payloads.
+        // Currently exceptions are encoded as i31 payloads; unsupported payloads are lossy.
         case Select(Value.Ref(sym, _), id)
             if (sym eq State.globalThisSymbol) && id.name == "Error" =>
           return as.headOption match
@@ -706,7 +707,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 case Value.Lit(BoolLit(value)) => ref.i31(i32.const(if value then 1 else 0))
                 case Value.Lit(IntLit(value)) =>
                   withValidIntLit(value, arg.value.toLoc)(intVal => ref.i31(i32.const(intVal)))
-                case Value.Lit(StrLit(_)) => result(arg.value)
                 case unsupported =>
                   warnExpr(
                     msg"WatBuilder::result for Instantiate(...) of `globalThis.Error(...)` with payload `${
@@ -1452,7 +1452,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           val defaultExpr =
             val rawDefaultExpr = dflt match
               case S(defaultBody) => returningTerm(defaultBody)
-              case N => `throw`(exnTagIdx, Seq(result(Value.Lit(StrLit("match error")))))
+              case N => unreachable
             lowerMatchBody(rawDefaultExpr)
 
           // Generate the match block
