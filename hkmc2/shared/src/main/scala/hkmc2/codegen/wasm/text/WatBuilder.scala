@@ -675,6 +675,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     )
   end fieldSelect
 
+  /** Emits a class-field write. */
+  private def directFieldAssign(
+      clsSym: BlockMemberSymbol,
+      fieldSym: DefinitionSymbol[?],
+      lhsExpr: Expr,
+      rhsExpr: Expr,
+  )(using Ctx, Raise): Expr =
+    val fieldidx = fieldSelect(clsSym, fieldSym)
+    val objRef = ref.cast(lhsExpr, RefType(ctx.getType_!(clsSym), nullable = false))
+    struct.set(fieldidx, objRef, rhsExpr)
+
   /** Resolves method metadata for a reference path when it denotes a registered class method. */
   private def methodInfoForRef(l: Local, disamb: Opt[DefinitionSymbol[?]])(using Ctx): Opt[MethodInfo] =
     val resolvedSym = l match
@@ -780,16 +791,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       )
     case Value.Ref(l, disamb) =>
       methodInfoForRef(l, disamb) match
-        case S(methodInfo) =>
-          methodInfo.shape match
-            case MethodShape.Getter =>
-              directMethodCall(methodInfo, result(Value.This(methodInfo.ownerIsym)), Seq.empty)
-            case MethodShape.Callable =>
-              errExpr(
-                Ls(msg"WatBuilder::result for method value extraction is not implemented yet" -> r.toLoc),
-                extraInfo = S(s"Block IR: $r"),
-              )
-        case N =>
+        case S(methodInfo) if methodInfo.shape == MethodShape.Getter =>
+          directMethodCall(methodInfo, result(Value.This(methodInfo.ownerIsym)), Seq.empty)
+        case _ =>
           if (l is State.unitSymbol) || disamb.contains(State.unitSymbol) then
             RegisterUnitSingleton()
           singletonInfoFor(l) match
@@ -838,13 +842,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 methodInfo.shape match
                   case MethodShape.Callable =>
                     S(directMethodCall(methodInfo, result(Value.This(methodInfo.ownerIsym)), args.map(argument)))
-                  case MethodShape.Getter =>
-                    S(
-                      errExpr(
-                        Ls(msg"Calling the result of getter-style method access is not implemented yet; use member access without `()`" -> c.toLoc),
-                        extraInfo = S(c.showAsTree),
-                      ),
-                    )
+                  case MethodShape.Getter => N
             case sel: Select =>
               methodInfoForSelection(sel).flatMap: methodInfo =>
                 methodInfo.shape match
@@ -854,13 +852,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       if receiver.resultTypes.exists(_ is UnreachableType) then receiver
                       else directMethodCall(methodInfo, receiver, args.map(argument))
                     )
-                  case MethodShape.Getter =>
-                    S(
-                      errExpr(
-                        Ls(msg"Calling the result of getter-style method access is not implemented yet; use member access without `()`" -> c.toLoc),
-                        extraInfo = S(c.showAsTree),
-                      ),
-                    )
+                  case MethodShape.Getter => N
             case _ => N
           ctorCall.orElse(methodCall).getOrElse:
             val base = subexpression(fun)
@@ -893,19 +885,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     case sel @ Select(qual, id) =>
       methodInfoForSelection(sel) match
-        case S(methodInfo) =>
+        case S(methodInfo) if methodInfo.shape == MethodShape.Getter =>
           val receiver = methodReceiverForSelection(methodInfo, sel)
           if receiver.resultTypes.exists(_ is UnreachableType) then receiver
-          else
-            methodInfo.shape match
-              case MethodShape.Getter =>
-                directMethodCall(methodInfo, receiver, Seq.empty)
-              case MethodShape.Callable =>
-                errExpr(
-                  Ls(msg"WatBuilder::result for method value extraction is not implemented yet" -> sel.toLoc),
-                  extraInfo = S(sel.showAsTree),
-                )
-        case N =>
+          else directMethodCall(methodInfo, receiver, Seq.empty)
+        case _ =>
           sel.symbol match
             case S(selObj: ModuleOrObjectSymbol) =>
               if selObj is State.unitSymbol then
@@ -1214,9 +1198,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       selOwner.getClass.getName
                     })",
                 )
-              val fieldidx = fieldSelect(selCls, selSym)
-              val objRef = ref.cast(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false))
-              struct.set(fieldidx, objRef, rhsExpr)
+              directFieldAssign(selCls, selSym, lhsExpr, rhsExpr)
+          case S(selSym: BlockMemberSymbol) =>
+            val fieldSym = selSym.asTrm.get
+            if ctx.getMethodInfo(fieldSym).nonEmpty then
+              errExpr(
+                Ls(msg"WatBuilder::returningTerm for AssignField(...) to class methods is not implemented yet" -> nme.toLoc),
+                extraInfo = S(assign.showAsTree),
+              )
+            else
+              val selCls = fieldSym.owner.flatMap(_.asBlkMember).get
+              directFieldAssign(selCls, fieldSym, lhsExpr, rhsExpr)
           case S(otherSym) =>
             lastWords(
               s"Expected resolved AssignField(...) expression to be a TermSymbol, but got $otherSym (${
@@ -1224,15 +1216,44 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 })",
             )
           case N =>
-            errExpr(
-              Ls(
-                msg"WatBuilder::returningTerm for AssignField(...) without a resolved symbol is not implemented (field `${
-                    nme.name
-                  }`). Use `_.[_]` for index-based accesses." ->
-                  nme.toLoc,
-              ),
-              extraInfo = S(assign),
-            )
+            lhs match
+              case ownerRef: Value.Ref if isDirectOwnerRef(ownerRef) =>
+                val resolvedOwner = ownerRef.l match
+                  case _: BlockMemberSymbol => ownerRef.disamb.getOrElse(ownerRef.l)
+                  case sym => sym
+                val assignInstrOpt = for
+                  defnSym <- resolvedOwner match
+                    case defn: DefinitionSymbol[?] => S(defn)
+                    case _ => N
+                  selCls <- defnSym.bms
+                  ty <- S(ctx.getTypeInfo_!(selCls))
+                  fieldSym <- ty.compType match
+                    case ty: StructType =>
+                      ty.fieldsBySym.keys.collectFirst:
+                        case trmSym: TermSymbol if trmSym.nme == nme.name => trmSym
+                    case _ => N
+                yield
+                  directFieldAssign(selCls, fieldSym, lhsExpr, rhsExpr)
+                assignInstrOpt.getOrElse:
+                  errExpr(
+                    Ls(
+                      msg"WatBuilder::returningTerm for AssignField(...) without a resolved symbol is not implemented (field `${
+                          nme.name
+                        }`). Use `_.[_]` for index-based accesses." ->
+                        nme.toLoc,
+                    ),
+                    extraInfo = S(assign),
+                  )
+              case _ =>
+                errExpr(
+                  Ls(
+                    msg"WatBuilder::returningTerm for AssignField(...) without a resolved symbol is not implemented (field `${
+                        nme.name
+                      }`). Use `_.[_]` for index-based accesses." ->
+                      nme.toLoc,
+                  ),
+                  extraInfo = S(assign),
+                )
 
         val rstBlk = returningTerm(rst)
         blockInstr(
