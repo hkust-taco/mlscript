@@ -14,7 +14,6 @@ data class Foo()
 //│   static {
 //│     Foo1.class = this
 //│   }
-//│   constructor() {}
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", []]; 
 //│ });
@@ -259,10 +258,10 @@ Foo(10, 20, 30, 40, 50)
 class Foo(val z, val z)
 //│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'z'.
 //│ ╟── Defined at: 
-//│ ║  l.259: 	class Foo(val z, val z)
+//│ ║  l.258: 	class Foo(val z, val z)
 //│ ║         	              ^
 //│ ╟── Defined at: 
-//│ ║  l.259: 	class Foo(val z, val z)
+//│ ║  l.258: 	class Foo(val z, val z)
 //│ ╙──       	                     ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo9;
@@ -273,7 +272,6 @@ class Foo(val z, val z)
 //│   static {
 //│     Foo9.class = this
 //│   }
-//│   constructor(z, z1) {}
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", ["z", "z"]]; 
 //│ });

@@ -934,11 +934,14 @@ case class ObjBody(blk: Term.Blk):
   lazy val (methods, nonMethods) = blk.stats.partitionMap:
     case td: TermDefinition if td.k is syntax.Fun => L(td)
     case s => R(s)
+  
   lazy val publicFlds: Ls[TermDefinition] = nonMethods.collect:
     case td: TermDefinition if td.k.isInstanceOf[syntax.Val] => td
   
   // override def toString: String = statmts.mkString("{ ", "; ", " }")
   // override def toString: String = blk.showDbg
+
+end ObjBody
 
 
 /** `sym` is a `MemberSymbol` when the import is made by the user and can be referred to by name,

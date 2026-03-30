@@ -187,7 +187,6 @@ P.x
 //│         k = ImmutVal
 //│         head = Ident of "x"
 //│         rhs = S of IntLit of 1
-//│   rhs = N
 //│ Sel:
 //│   prefix = Ident of "P"
 //│   name = Ident of "x"

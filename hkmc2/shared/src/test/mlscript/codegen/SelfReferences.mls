@@ -10,9 +10,6 @@ module Foo with
 //│   static {
 //│     Foo1 = this
 //│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
 //│   static {
 //│     this.self = Foo1;
 //│   }
@@ -36,7 +33,7 @@ Foo.self
 module Foo with
   val self = this
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type Foo.
-//│ ║  l.37: 	  val self = this
+//│ ║  l.34: 	  val self = this
 //│ ║        	             ^^^^
 //│ ╙── Value must be marked as returning a 'module' in order to return a module.
 

@@ -9,7 +9,6 @@ module C with
 C()
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Nil
 //│   res = App{typ=class:C⁰}:
 //│     lhs = Resolved{sym=term:C⁰/C¹}:
 //│       t = Ref{sym=member:C²} of member:C²
@@ -22,13 +21,10 @@ C()
 new C
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Nil
 //│   res = New{typ=class:C⁰}:
 //│     cls = Resolved{sym=class:C⁰}:
 //│       t = Ref{sym=member:C²} of member:C²
 //│       sym = class:C⁰
-//│     args = Nil
-//│     rft = N
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = C()
 
@@ -39,7 +35,6 @@ new C()
 C.empty
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Nil
 //│   res = Resolved{sym=term:C³/empty⁰}:
 //│     t = Sel{sym=member:empty¹}:
 //│       prefix = Resolved{sym=module:C³,typ=module:C³}:
@@ -65,7 +60,6 @@ module C with
 C.empty
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Nil
 //│   res = Resolved{sym=term:C⁴/empty²}:
 //│     t = Sel{sym=member:empty³}:
 //│       prefix = Resolved{sym=module:C⁴,typ=module:C⁴}:
@@ -109,7 +103,6 @@ module Foo with
 //│   static {
 //│     Foo1.class = this
 //│   }
-//│   constructor() {}
 //│   static {
 //│     let tmp2;
 //│     tmp2 = Foo1();

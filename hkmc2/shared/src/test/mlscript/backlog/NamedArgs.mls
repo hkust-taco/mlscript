@@ -34,14 +34,12 @@ let aa = 123
 id(a: 0)
 //│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Nil
 //│   res = App:
 //│     lhs = SynthSel{sym=member:id⁰}:
 //│       prefix = Ref{sym=member:Predef⁰} of member:Predef⁰
 //│       nme = Ident of "id"
 //│     rhs = Tup of Ls of 
 //│       Fld:
-//│         flags = ()
 //│         term = Lit of StrLit of "a"
 //│         asc = S of Lit of IntLit of 0
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

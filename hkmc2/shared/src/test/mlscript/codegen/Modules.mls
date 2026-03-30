@@ -9,9 +9,6 @@ module None
 //│   static {
 //│     None1 = this
 //│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "None"]; 
 //│ });
@@ -35,7 +32,7 @@ None()
 :e
 new None
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference of type None.
-//│ ║  l.36: 	new None
+//│ ║  l.33: 	new None
 //│ ║        	    ^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ = None
@@ -44,7 +41,7 @@ new None
 :e
 new! None
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type None.
-//│ ║  l.45: 	new! None
+//│ ║  l.42: 	new! None
 //│ ╙──      	     ^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ globalThis.Object.freeze(new None1())
@@ -64,16 +61,12 @@ module M with
 //│   static {
 //│     M1 = this
 //│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
 //│   static {
 //│     let tmp;
 //│     (class C {
 //│       static {
 //│         M.C = this
 //│       }
-//│       constructor() {}
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "C"]; 
 //│     });
@@ -84,7 +77,6 @@ module M with
 //│       static {
 //│         M.D.class = this
 //│       }
-//│       constructor() {}
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "D", []]; 
 //│     });
@@ -116,7 +108,7 @@ M.y
 :re
 M.oops
 //│ ╔══[COMPILATION ERROR] Module 'M' does not contain member 'oops'
-//│ ║  l.117: 	M.oops
+//│ ║  l.109: 	M.oops
 //│ ╙──       	 ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
@@ -132,9 +124,6 @@ module M with
 //│ (class M2 {
 //│   static {
 //│     M3 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
 //│   }
 //│   static {
 //│     this.m = M3;
@@ -168,24 +157,14 @@ module AA with
 //│   static {
 //│     AA1 = this
 //│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
 //│   static {
 //│     this.x = 1;
 //│     (class BB {
 //│       static {
 //│         AA.BB = this
 //│       }
-//│       constructor() {
-//│         runtime.Unit;
-//│       }
 //│       static {
 //│         this.y = 2;
-//│         globalThis.Object.freeze([
-//│           AA.x,
-//│           BB.y
-//│         ]);
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "BB"]; 
