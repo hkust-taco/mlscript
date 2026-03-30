@@ -803,9 +803,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           singletonInfoFor(l) match
             case S(info) => singletonGlobalGet(info)
             case N =>
-              ctx.getFunc(l) match
-                case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncInfo_!(l).typeIdx, nullable = false))
-                case N => getVar(l, r.toLoc)
+              if disamb.exists(_.isInstanceOf[ClassSymbol]) then
+                errExpr:
+                  Ls(msg"Plain class references are not supported in Wasm; instantiate the class instead." -> r.toLoc)
+              else
+                ctx.getFunc(l) match
+                  case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncInfo_!(l).typeIdx, nullable = false))
+                  case N => getVar(l, r.toLoc)
 
     case Call(Value.Ref(l: BuiltinSymbol, _), lhs :: rhs :: Nil) if !l.functionLike =>
       if l.binary then
@@ -980,8 +984,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     case Instantiate(_, cls, as) =>
       cls match
-        // TODO: Implement proper lowering for Errors with string and unit payloads.
-        // Currently exceptions are encoded as i31 payloads; unsupported payloads are lossy.
+        // TODO: Implement proper lowering for Errors with unit payloads.
         case Select(Value.Ref(sym, _), id)
             if (sym eq State.globalThisSymbol) && id.name == "Error" =>
           return as.headOption match
@@ -989,6 +992,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 case Value.Lit(BoolLit(value)) => ref.i31(i32.const(if value then 1 else 0))
                 case Value.Lit(IntLit(value)) =>
                   withValidIntLit(value, arg.value.toLoc)(intVal => ref.i31(i32.const(intVal)))
+                case Value.Lit(StrLit(_)) => result(arg.value)
                 case unsupported =>
                   warnExpr(
                     msg"WatBuilder::result for Instantiate(...) of `globalThis.Error(...)` with payload `${
