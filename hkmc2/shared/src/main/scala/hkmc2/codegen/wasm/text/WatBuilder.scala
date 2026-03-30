@@ -556,21 +556,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       singletonInfoFor(l) match
         case S(info) => singletonGlobalGet(info)
         case N =>
-          val isThisLikeRef = l.isInstanceOf[InnerSymbol] && disamb.isEmpty
-          val isPlainClassRef =
-            !isThisLikeRef && (l match
-              case _: ClassSymbol => true
-              case _ =>
-                disamb.exists:
-                  case _: ClassSymbol => true
-                  case ds => ds.defn.exists:
-                      case _: ClassDef => true
-                      case _ => false
-            )
-          if isPlainClassRef then
-            errExpr(
-              Ls(msg"Plain class references are not supported in Wasm; instantiate the class instead." -> r.toLoc),
-            )
+          if disamb.exists(_.isInstanceOf[ClassSymbol]) then
+            errExpr:
+              Ls(msg"Plain class references are not supported in Wasm; instantiate the class instead." -> r.toLoc)
           else
             ctx.getFunc(l) match
               case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncInfo_!(l).typeIdx, nullable = false))
