@@ -810,6 +810,8 @@ extends Importer with ucs.SplitElaborator:
     case TypeDef(k, head, rhs) =>
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
       Term.Error
+    case Modified(Keyword.`in` | Keyword.`out`, body) =>
+      subterm(body)
     case Modified(Keywrd(Keyword.`mut`), body: Block) =>
       blockOrRcd(body, hasResult = true) match
       case (Blk(Nil, Term.UnitVal()), ctx) =>
@@ -1680,7 +1682,7 @@ extends Importer with ucs.SplitElaborator:
       Tuple(leading.reverse, spread)
     /** Elaborate record patterns like `(a: p1, b: p2, ...pn)`. */
     def record(ps: Ls[Tree]): Ctxl[Pattern.Record] =
-      val entries = ps.foldLeft(List[(Ident, Pattern)]()):
+      val entries = ps.iterator.map(_.desugared).foldLeft(List[(Ident, Pattern)]()):
         case (acc, InfixApp(id: Ident, Keywrd(Keyword.`:`), p)) => (id, go(p)) :: acc
         case (acc, InfixApp(key: StrLit, Keywrd(Keyword.`:`), p)) =>
           ((Ident(key.value): Ident).withLocOf(key), go(p)) :: acc
@@ -1782,11 +1784,14 @@ extends Importer with ucs.SplitElaborator:
   
   def typeParams(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
     case TyTup(ps) =>
-      val vs = ps.map:
+      val vs = ps.flatMap:
         case id: Ident =>
           val sym = VarSymbol(id)
           sym.decl = S(TyParam(FldFlags.empty, N, sym))
-          Param(FldFlags.empty, sym, N, Modulefulness.none)
+          Param(FldFlags.empty, sym, N, Modulefulness.none) :: Nil
+        case t =>
+          raise(ErrorReport(msg"Unsupported type parameter ${t.describe}" -> t.toLoc :: Nil))
+          Nil
       (vs, ctx ++ vs.map(p => p.sym.name -> p.sym))
   
   def importFrom(sts: Block): Ctxl[(Blk, Ctx)] =

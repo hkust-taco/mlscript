@@ -31,7 +31,7 @@ sealed abstract class Block extends Product:
   
   lazy val isAbortive: Bool = this match
     case _: End => false
-    case _: Throw | _: Break | _: Continue => true
+    case _: Throw | _: Break | _: Continue | _: Unreachable => true
     case ret: Return => !ret.implct
     case Begin(sub, rst) => sub.isAbortive || rst.isAbortive
     case Assign(_, _, rst) => rst.isAbortive
@@ -51,7 +51,7 @@ sealed abstract class Block extends Product:
   // * now that we properly put everything in proper Scoped blocks;
   // * and `definedVars` itself should be removed.
   lazy val definedVars: Set[Local] = this match
-    case _: Return | _: Throw => Set.empty
+    case _: Return | _: Throw | _: Unreachable => Set.empty
     case Begin(sub, rst) => sub.definedVars ++ rst.definedVars
     case Assign(l: TermSymbol, r, rst) => rst.definedVars
     case Assign(l, r, rst) => rst.definedVars + l
@@ -72,7 +72,7 @@ sealed abstract class Block extends Product:
     case Scoped(syms, body) => body.definedVars ++ syms
   
   lazy val size: Int = this match
-    case _: Return | _: Throw | _: End | _: Break | _: Continue => 1
+    case _: Return | _: Throw | _: End | _: Break | _: Continue | _: Unreachable => 1
     case Begin(sub, rst) => sub.size + rst.size
     case Assign(_, _, rst) => 1 + rst.size
     case AssignField(_, _, _, rst) => 1 + rst.size
@@ -127,6 +127,7 @@ sealed abstract class Block extends Product:
       (bod.freeVars - lhs) ++ rst.freeVars ++ hdr.flatMap(_.freeVars)
     case Scoped(syms, body) => body.freeVars
     case End(msg) => Set.empty
+    case Unreachable(msg) => Set.empty
   
   lazy val freeVarsLLIR: Set[Local] = this match
     case Match(scrut, arms, dflt, rest) =>
@@ -148,6 +149,7 @@ sealed abstract class Block extends Product:
       (bod.freeVarsLLIR - lhs) ++ rst.freeVarsLLIR ++ hdr.flatMap(_.freeVarsLLIR)
     case Scoped(syms, body) => body.freeVarsLLIR
     case End(msg) => Set.empty
+    case Unreachable(msg) => Set.empty
   
   lazy val subBlocks: Ls[Block] = this match
     case Match(p, arms, dflt, rest) => p.subBlocks ++ arms.map(_._2) ++ dflt.toList :+ rest
@@ -165,7 +167,7 @@ sealed abstract class Block extends Product:
     case Return(r, _) => r.subBlocks
     case Throw(r) => r.subBlocks
     
-    case _: Return | _: Throw | _: Break | _: Continue | _: End => Nil
+    case _: Return | _: Throw | _: Break | _: Continue | _: End | _: Unreachable => Nil
   
   // Moves definitions in a block to the top. Only scans the top-level definitions of the block;
   // i.e, definitions inside other definitions are not moved out. Definitions inside `match`/`if`
@@ -179,7 +181,7 @@ sealed abstract class Block extends Product:
         preserve: Defn => Bool = _ => false
       ): (Block, List[Defn]) =
     var defns: List[Defn] = Nil
-    val transformer = new BlockTransformerShallow(SymbolSubst()):
+    val transformer = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyBlock(b: Block): Block = b match
         case Define(defn, rest) if !ignore(defn) => defn match
           case v: ValDefn => super.applyBlock(b)
@@ -309,13 +311,15 @@ case class Return(res: Result, implct: Bool) extends BlockTail
 
 case class Throw(exc: Result) extends BlockTail
 
-case class Label(label: LabelSymbol, loop: Bool, body: Block, rest: Block) extends Block with NonBlockTail
+case class Label(label: LabelSymbol, loop: Bool, body: Block, rest: Block)
+extends Block with NonBlockTail with ProductWithTail
 
 case class Break(label: LabelSymbol) extends BlockTail
 case class Continue(label: LabelSymbol) extends BlockTail
 
 
-case class Scoped(syms: collection.Set[Local], body: Block) extends Block with NonBlockTail:
+case class Scoped(syms: collection.Set[Local], body: Block)
+extends Block with NonBlockTail:
   val rest = body
 
 // TODO: remove this form?
@@ -338,11 +342,15 @@ inline def whenValidatingIR(inline code: => Unit): Unit =
   () // code // * uncomment to run on-the fly IR validations
   
 object Label:
-  def apply(label: LabelSymbol, loop: Bool, body: Block, rest: Block): Block = rest match
-    case Scoped(syms, rest) => Scoped(syms, Label(label, loop, body, rest))
-    case _ => new Label(label, loop, body, rest)
+  def apply(label: LabelSymbol, loop: Bool, body: Block, rest: Block): Block = body match
+    case _: Unreachable => body
+    case _ =>
+      rest match
+      case Scoped(syms, rest) => Scoped(syms, Label(label, loop, body, rest))
+      case _ => new Label(label, loop, body, rest)
 object Scoped:
   def apply(syms: collection.Set[Local], body: Block): Block = body match
+    case _: Unreachable => body
     case Scoped(syms2, body) =>
       if syms2.isEmpty && syms.isEmpty then Scoped(Set.empty, body)
       else
@@ -352,16 +360,27 @@ object Scoped:
     case _ =>
       if syms.isEmpty then body else new Scoped(syms, body)
 object TryBlock:
-  def apply(sub: Block, finallyDo: Block, rest: Block): Block = rest match
-    case Scoped(syms, body) => Scoped(syms, TryBlock(sub, finallyDo, body))
-    case _ => new TryBlock(sub, finallyDo, rest)
+  def apply(body: Block, finallyDo: Block, rest: Block): Block =
+    body match
+    case _: Unreachable => body
+    case _ =>
+      rest match
+      case Scoped(syms, innerRest) => Scoped(syms, TryBlock(body, finallyDo, innerRest))
+      case _ => new TryBlock(body, finallyDo, rest)
 object Assign:
   def apply(lhs: Local, rhs: Result, rest: Block): Block = rest match
+    case _: Unreachable =>
+      if rhs.isPure then rest else new Assign(lhs, rhs, rest)
     case Scoped(syms, body) => Scoped(syms, Assign(lhs, rhs, body))
-    case _ => new Assign(lhs, rhs, rest)
+    case _ =>
+      lhs match
+      case _: NoSymbol =>
+        if rhs.isPure then rest else new Assign(lhs, rhs, rest)
+      case _ => new Assign(lhs, rhs, rest)
   def discard(res: Result, rest: Block)(using State): Block =
     res match
-    case _: Value | _: Path | _: Lambda => rest
+    case _: Value | _: Lambda => rest
+    case p: Path if p.isPure => rest
     case r => Assign(State.noSymbol, r, rest)
 object AssignField:
   def apply(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(symbol: Opt[MemberSymbol]): Block = rest match
@@ -383,7 +402,7 @@ object Match:
       Match(scrut, arms ::: arms2, dflt2, rest)
     case _ =>
       if !rest.isEmpty && arms.forall(_._2.isAbortive) && dflt.exists(_.isAbortive)
-      then new Match(scrut, arms, dflt, End("unreachable"))
+      then new Match(scrut, arms, dflt, Unreachable("Rest of abortive match"))
       else rest match
         case Scoped(syms, body) => Scoped(syms, Match(scrut, arms, dflt, body))
         case _ => new Match(scrut, arms, dflt, rest)
@@ -437,6 +456,15 @@ sealed abstract class Defn:
   val sym: BlockMemberSymbol
   def isOwned: Bool = owner.isDefined
   def owner: Opt[InnerSymbol]
+  
+  /** Whether this definition as a statement has any side effect (if unused). */
+  def isPure: Bool = this match
+    case vd: ValDefn => vd.rhs.isPure && vd.tsym.owner.isEmpty
+    case fd: FunDefn => fd.owner.isEmpty
+    case c: ClsLikeDefn =>
+      // * Simple heuristic. TODO: check the purity of the ctor somehow? (ignore pure local field inits)
+      c.companion.isEmpty
+        && (!(c.k is syntax.Obj) || c.ctor.isEmpty)
   
   def subBlocks: Ls[Block] = this match
     case FunDefn(body = body) => body :: Nil
@@ -604,6 +632,8 @@ final case class Handler(
  * or the end of a non-returning function or a REPL block */
 case class End(msg: Str = "") extends BlockTail with ProductWithTail
 
+case class Unreachable(cause: Str) extends BlockTail with ProductWithTail
+
 enum Case:
   case Lit(lit: Literal)
   case Cls(cls: ClassLikeSymbol, path: Path)
@@ -631,6 +661,17 @@ sealed abstract class Result extends AutoLocated:
 // // * Used for debugging locations:
 // sealed abstract class Result extends AutoLocated with ProductWithExtraInfo:
 //   def extraInfo: Str = toLoc.toString
+  
+  lazy val isPure: Bool = this match
+    case _: Value => true
+    case sel @ Select(q, n) =>
+      q.isPure && sel.symbol.exists(_.isPure)
+    case Call(Value.Ref(bs: BuiltinSymbol, _), as) if bs.isPure =>
+      as.forall(_.value.isPure)
+    case Record(mut, args) => args.forall(_.value.isPure)
+    case Tuple(mut, elems) => elems.forall(_.value.isPure)
+    // case Instantiate(mut, cls, args) => // TODO?
+    case _ => false
   
   // * Note: this function is used to piece together a location;
   // * for the location to be valid, we should NOT have it include children whose location

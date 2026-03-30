@@ -36,7 +36,7 @@ A(1).getA()
 class Test
 fun hello() =
   class Test2 extends Test
-  2
+  new Test2
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
 
 // This is due to subclasses not calling `super` with the required locals. The analysis to

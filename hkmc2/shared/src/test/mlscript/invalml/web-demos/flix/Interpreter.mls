@@ -1,0 +1,209 @@
+
+:global
+:invalml
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+// * This file includes the implementation for an interpreter and a compiler for a small toy programming language.
+// * Adapted from https://doi.org/10.5281/zenodo.7990289
+
+class List[T] with
+  constructor
+    Nil
+    Cons(x: T, xs: List[out T])
+
+
+fun concat: [T] -> (List[out T], List[out T]) -> List[out T]
+fun (;) seq(_, res) = res
+fun error: Nothing
+
+
+// * Arithmetical Expression
+class AExp with
+  constructor
+    Cst(v: Int)
+    Plus(lhs: AExp, rhs: AExp)
+    Minus(lhs: AExp, rhs: AExp)
+    Times(lhs: AExp, rhs: AExp)
+    IfThenElse(cond: BExp, cons: AExp, alts: AExp)
+
+
+// * Boolean Expression
+class BExp with
+  constructor
+    True
+    False
+    Not(v: BExp)
+    Conj(lhs: BExp, rhs: BExp)
+    Disj(lhs: BExp, rhs: BExp)
+    Eq(lhs: AExp, rhs: AExp)
+    Neq(lhs: AExp, rhs: AExp)
+
+
+// * Evaliation functions
+
+fun evalBExp: BExp -> Bool
+
+fun evalAExp(e) = if e is
+  Cst(v) then v
+  Plus(e1, e2) then evalAExp(e1) + evalAExp(e2)
+  Minus(e1, e2) then evalAExp(e1) - evalAExp(e2)
+  Times(e1, e2) then evalAExp(e1) * evalAExp(e2)
+  IfThenElse(cond, e1, e2) then
+    if evalBExp(cond) then evalAExp(e1) else evalAExp(e2)
+
+
+fun evalBExp(e) = if e is
+  True then true
+  False then false
+  Not(e) then evalBExp(e) is false
+  Conj(e1, e2) then evalBExp(e1) && evalBExp(e2)
+  Disj(e1, e2) then evalBExp(e1) || evalBExp(e2)
+  Eq(e1, e2) then evalAExp(e1) == evalAExp(e2)
+  Neq(e1, e2) then evalAExp(e1) != evalAExp(e2)
+
+
+// * Examples
+
+evalAExp(Cst(42))
+evalAExp(Plus(Cst(42), Cst(21)))
+evalAExp(Minus(Cst(42), Cst(21)))
+evalAExp(IfThenElse(True, Cst(1), Cst(2)))
+evalAExp(IfThenElse(Neq(Cst(1), Cst(2)), Cst(42), Cst(21)))
+
+evalBExp(True)
+evalBExp(Not(True))
+evalBExp(Conj(True, False))
+evalBExp(Disj(True, False))
+evalBExp(Neq(Cst(1), Cst(2)))
+
+
+// * Instruction
+class Inst with
+  constructor
+    Push(v: Int)
+    Add
+    Sub
+    Mul
+    Neg
+    And
+    Or
+    Cmp
+    Branch(cons: List[out Inst], alts: List[out Inst])
+
+
+// * Compilation functions
+
+fun compileBExp: BExp -> List[out Inst]
+
+fun compileAExp(e) = if e is
+  Cst(v) then Cons(Push(v), Nil)
+  Plus(e1, e2) then
+    let is1 = compileAExp(e1) in
+      let is2 = compileAExp(e2) in
+        concat(concat(is2, is1), Cons(Add, Nil))
+  Minus(e1, e2) then
+    let is1 = compileAExp(e1) in
+      let is2 = compileAExp(e2) in
+        concat(concat(is2, is1), Cons(Sub, Nil))
+  Times(e1, e2) then
+    let is1 = compileAExp(e1) in
+      let is2 = compileAExp(e2) in
+        concat(concat(is2, is1), Cons(Mul, Nil))
+  IfThenElse(e1, e2, e3) then
+    let is1 = compileBExp(e1) in
+      let is2 = compileAExp(e2) in
+        let is3 = compileAExp(e3) in
+          concat(is1, Cons(Branch(is2, is3), Nil))
+  
+
+fun compileBExp(e) = if e is
+  True then Cons(Push(1), Nil)
+  False then Cons(Push(0), Nil)
+  Not(e) then concat(compileBExp(e), Cons(Neg, Nil))
+  Conj(e1, e2) then
+    let is1 = compileBExp(e1) in
+      let is2 = compileBExp(e2) in
+        concat(concat(is2, is1), Cons(And, Nil))
+  Disj(e1, e2) then
+    let is1 = compileBExp(e1) in
+      let is2 = compileBExp(e2) in
+        concat(concat(is2, is1), Cons(Or, Nil))
+  Eq(e1, e2) then
+    let is1 = compileAExp(e1) in
+      let is2 = compileAExp(e2) in
+        concat(concat(is2, is1), Cons(Cmp, Nil))
+  Neq(e1, e2) then
+    let is1 = compileAExp(e1) in
+      let is2 = compileAExp(e2) in
+        concat(concat(is2, is1), Cons(Neg, Cons(Cmp, Nil)))
+
+
+// * Examples
+
+compileAExp(Cst(42))
+compileAExp(Plus(Cst(42), Cst(21)))
+compileAExp(Minus(Cst(42), Cst(21)))
+compileAExp(IfThenElse(True, Cst(1), Cst(2)))
+compileAExp(IfThenElse(Neq(Cst(1), Cst(2)), Cst(42), Cst(21)))
+compileBExp(True)
+compileBExp(Not(True))
+compileBExp(Conj(True, False))
+compileBExp(Disj(True, False))
+compileBExp(Neq(Cst(1), Cst(2)))
+
+
+// So far, we have not supported nested patterns.
+// This helper function is for the following pattern matching:
+// `if lst is Cons(x, Cons(y, ys)) then f(x, y, ys) else g()`
+fun matchTwo(lst, f, g) = if lst is
+  Nil then g()
+  Cons(x, xs) then
+    if xs is
+      Nil then g()
+      Cons(y, ys) then f(x, y, ys)
+
+
+// * Instruction evaluation
+
+fun evalInst(insts, stack) = if insts is
+  Nil then
+    if stack is
+      Cons(x, xs) then
+        if xs is
+          Nil then x
+          Cons(_, _) then error
+      Nil then error
+  Cons(inst, rest) then if inst is
+    Push(i) then evalInst(rest, Cons(i, stack))
+    Add then matchTwo(stack, (x, y, r) => evalInst(rest, Cons(x + y, r)), () => error)
+    Sub then matchTwo(stack, (x, y, r) => evalInst(rest, Cons(x - y, r)), () => error)
+    Mul then matchTwo(stack, (x, y, r) => evalInst(rest, Cons(x * y, r)), () => error)
+    Neg then if stack is
+      Nil then error
+      Cons(x, xs) then evalInst(rest, Cons(if x == 0 then 1 else 0, xs))
+    And then
+      matchTwo(stack, (x, y, r) => evalInst(rest, Cons(if x != 0 && y != 0 then 1 else 0, r)), () => error)
+    Or then
+      matchTwo(stack, (x, y, r) => evalInst(rest, Cons(if x != 0 || y != 0 then 1 else 0, r)), () => error)
+    Cmp then
+      matchTwo(stack, (x, y, r) => evalInst(rest, Cons(if x == y then 1 else 0, r)), () => error)
+    Branch(is1, is2) then if stack is
+      Nil then error
+      Cons(x, xs) then
+        if x != 0 then evalInst(is1, xs)
+        else evalInst(is2, xs)
+
+
+// * Examples
+
+evalInst(compileAExp(Cst(42)), Nil)
+evalInst(compileAExp(Plus(Cst(42), Cst(21))), Nil)
+evalInst(compileAExp(Minus(Cst(42), Cst(21))), Nil)
+evalInst(compileAExp(IfThenElse(True, Cst(1), Cst(2))), Nil)
+evalInst(compileAExp(IfThenElse(Neq(Cst(1), Cst(2)), Cst(42), Cst(21))), Nil)
+evalInst(compileAExp(IfThenElse(Eq(Cst(1), Cst(2)), Cst(42), Times(Cst(21), Cst(82)))), Nil)
+
+//│ Type: Int
+//│ ————————————————————————————————————————————————————————————————————————————————

@@ -11,7 +11,7 @@ import semantics.Elaborator.Ctx
 
 abstract class MLsDiffMaker extends DiffMaker:
   
-  val bbmlOpt: Command[?]
+  val invalmlOpt: Command[?]
   
   val rootPath: Str // * Absolute path to the root of the project
   val preludeFile: io.Path // * Contains declarations of JS builtins
@@ -39,7 +39,9 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showFlows = FlagCommand(false, "sf")
   val showLoweredTree = NullaryCommand("lot")
   val ppLoweredTreeOld = NullaryCommand("slot", () => output("Option ':slot' is deprecated, use ':sir' instead."))
-  val ppLoweredTree = NullaryCommand("sir")
+  val showIR = NullaryCommand("sir")
+  val checkIR = NullaryCommand("checkIR")
+  val showOptimizedIR = NullaryCommand("soir")
   val showContext = NullaryCommand("ctx")
   val parseOnly = NullaryCommand("parseOnly")
   val funcToCls = NullaryCommand("ftc")
@@ -61,6 +63,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   // * Compiler configuration
   
   val noSanityCheck = NullaryCommand("noSanityCheck")
+  val noFreeze = NullaryCommand("noFreeze")
+  val noModuleCheck = NullaryCommand("noModuleCheck")
   val effectHandlers = Command("effectHandlers")(_.trim)
   val effectHandlersOptions = Set("debug", "")
   val stackSafe = Command("stackSafe")(_.trim)
@@ -115,6 +119,9 @@ abstract class MLsDiffMaker extends DiffMaker:
       deforest = Opt.when(deforest.isSet)(Deforest.default),
       qqEnabled = importQQ.isSet,
       funcToCls = funcToCls.isSet,
+      commentGeneratedCode = debug.isSet,
+      noFreeze = noFreeze.isSet,
+      noModuleCheck = noModuleCheck.isSet,
     )
   
   
@@ -271,9 +278,9 @@ abstract class MLsDiffMaker extends DiffMaker:
     // If parsed tree is displayed, don't show the string serialization.
     if (parseOnly.isSet || showParse.isSet) && !showParsedTree.isSet then
       output(s"Parsed:${res.map("\n\t"+_.showDbg).mkString}")
-
+    
     if showParsedTree.isSet then
-      output(s"Parsed tree:")
+      outputSeparator(s"Parsed tree")
       res.foreach(t => output(t.showAsTree))
     
     // if showParse.isSet then
@@ -305,9 +312,9 @@ abstract class MLsDiffMaker extends DiffMaker:
     if (showElab.isSet || debug.isSet) && !showElaboratedTree.isSet then
       output(s"Elab: ${e.showDbg}")
     showElaboratedTree.get.foreach: post =>
-      output(s"Elaborated tree:")
+      outputSeparator(s"Elaborated tree")
       output(e.showAsTree)
-      
+    
     processTerm(e, inImport = false)
       
   
@@ -320,7 +327,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     if showResolve.isSet then
       output(s"Resolved: ${trm.showDbg}")
     showResolvedTree.get.foreach: post =>
-      output(s"Resolved tree:")
+      outputSeparator(s"Resolved tree")
       output(trm.showAsTree)
     
     if flow.isSet then
@@ -335,10 +342,10 @@ abstract class MLsDiffMaker extends DiffMaker:
           showFlowSymbols = true,
           debug = debug.isSet,
         )
-        output(s"Flowed:\n${
+        outputSeparator(s"Flowed")
+        output:
           import document.*
           doc" #{ ${trm.showTopLevel(using flowScp)} #} \nwhere #{ ${floan.showFlows(using flowScp)} #} ".mkString()
-        }")
     
   
 

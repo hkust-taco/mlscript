@@ -1,0 +1,47 @@
+:invalml
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+// * This files includes the stack-based memory management extension of InvalML.
+
+class Stack[S, R]
+class StackRef[T, R]
+
+fun (;) seq(_, res) = res
+
+fun allocStack: [E, Res] -> ([S, R] -> Stack[S, R] ->{S | R | E} Res) ->{E} Res
+fun alloc: [S, R, A] -> (Stack[S, R], A) ->{S} StackRef[A, R]
+fun read: [R, A] -> StackRef[A, R] ->{R} A
+fun write: [R, A] -> (StackRef[A, R], A) ->{R} ()
+fun push: [Res, S, R, E extends ~S] -> (Stack[S, R], [U] -> Stack[U, R] -> {U | R | E} Res) ->{E | R | S} Res
+
+
+allocStack of s =>
+  let r1 = alloc(s, 42)
+  let r2 = alloc(s, 0)
+  write(r1, 1)
+  read(r2)
+
+
+allocStack of s1 =>
+  let r1 = alloc(s1, 42)
+  let r2 = alloc(s1, 0)
+  write(r1, 1)
+  read(r2)
+  push of s1, s2 =>
+    let r3 = alloc(s2, 0) in read(r3)
+
+
+// Error! After pusing `s1`, one can not allocate references on it.
+// allocStack of s1 =>
+//   let r1 = alloc(s1, 42)
+//   let r2 = alloc(s1, 0)
+//   write(r1, 1)
+//   read(r2)
+//   push of s1, s2 =>
+//     let r3 = alloc(s1, 0) in read(r3)
+
+
+//│ Type: Int
+//│ ————————————————————————————————————————————————————————————————————————————————

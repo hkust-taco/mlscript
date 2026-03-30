@@ -85,7 +85,7 @@ pattern Negated = ~(Int | Str)
 :todo // The precedence of `=>` is higher than `~`?
 :pt
 pattern BadNegated = ~(Int as x) => x
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ TypeDef:
 //│   k = Pat
 //│   head = Ident of "BadNegated"
@@ -100,18 +100,19 @@ pattern BadNegated = ~(Int as x) => x
 //│             rhs = Ident of "x"
 //│         kw = Keywrd of keyword '=>'
 //│         rhs = Ident of "x"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :ucs ups
 :e
 pattern BadNegated = (~(Int as x)) => x
 //│ ╔══[COMPILATION ERROR] This pattern cannot be bound.
-//│ ║  l.106: 	pattern BadNegated = (~(Int as x)) => x
+//│ ║  l.107: 	pattern BadNegated = (~(Int as x)) => x
 //│ ║         	                        ^^^
 //│ ╟── Because the pattern it belongs to is negated.
-//│ ║  l.106: 	pattern BadNegated = (~(Int as x)) => x
+//│ ║  l.107: 	pattern BadNegated = (~(Int as x)) => x
 //│ ╙──       	                        ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.106: 	pattern BadNegated = (~(Int as x)) => x
+//│ ║  l.107: 	pattern BadNegated = (~(Int as x)) => x
 //│ ╙──       	                                      ^
 //│ elaborated pattern body: ¬(Int as x) => <error>
 
@@ -119,13 +120,13 @@ pattern BadNegated = (~(Int as x)) => x
 :e
 pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╔══[COMPILATION ERROR] This variable cannot be accessed.
-//│ ║  l.120: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ║  l.121: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ║         	                                 ^
 //│ ╟── Because the pattern it belongs to is negated.
-//│ ║  l.120: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ║  l.121: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╙──       	                       ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.120: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ║  l.121: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╙──       	                                        ^
 //│ elaborated pattern body: ¬Pair(Int, x) => <error>
 
@@ -174,10 +175,10 @@ module HiddenCorner with
   class CantYouSeeMe(val wow: Int)
   val k = 0
 //│ ╔══[COMPILATION ERROR] This pattern cannot be matched
-//│ ║  l.169: 	pattern Naughty = HiddenCorner.m.m.YouCantSeeMe(n) => n + HiddenCorner.m.m.k
+//│ ║  l.170: 	pattern Naughty = HiddenCorner.m.m.YouCantSeeMe(n) => n + HiddenCorner.m.m.k
 //│ ║         	                                                ^
 //│ ╟── because the corresponding parameter `wow` is not publicly accessible
-//│ ║  l.173: 	  class YouCantSeeMe(wow: Int)
+//│ ║  l.174: 	  class YouCantSeeMe(wow: Int)
 //│ ║         	                     ^^^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible

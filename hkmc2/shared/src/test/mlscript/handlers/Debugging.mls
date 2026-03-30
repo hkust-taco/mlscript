@@ -17,7 +17,7 @@ fun f() =
   if i == 0 do
     print of raiseUnhandledEffect()
   j / i
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f, f$debugInfo;
 //│ runtime.resetEffects();
 //│ f$debugInfo = globalThis.Object.freeze([
@@ -74,7 +74,6 @@ fun f() =
 //│           pc = 1;
 //│           continue main
 //│         }
-//│         /* unreachable */
 //│         break;
 //│       case 1:
 //│         return j / i;
@@ -101,6 +100,7 @@ fun f() =
 //│     break;
 //│   }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :re
 f()

@@ -723,7 +723,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
   
   def size: Int = this match
     case Lit(Tree.StrLit(str)) => str.size / 4 + 1
-    case _ => children.size + 1
+    case _ => subTerms.iterator.map(_.size).sum + 1
   
   def showDbg(using DebugPrinter): Str = this match
     case r: Ref => r.sym.showAsPlain
@@ -934,11 +934,14 @@ case class ObjBody(blk: Term.Blk):
   lazy val (methods, nonMethods) = blk.stats.partitionMap:
     case td: TermDefinition if td.k is syntax.Fun => L(td)
     case s => R(s)
+  
   lazy val publicFlds: Ls[TermDefinition] = nonMethods.collect:
     case td: TermDefinition if td.k.isInstanceOf[syntax.Val] => td
   
   // override def toString: String = statmts.mkString("{ ", "; ", " }")
   // override def toString: String = blk.showDbg
+
+end ObjBody
 
 
 /** `sym` is a `MemberSymbol` when the import is made by the user and can be referred to by name,

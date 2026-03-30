@@ -1,44 +1,49 @@
 :js
 :sjs
 
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ import Predef from "./../../mlscript-compile/Predef.mjs"; 
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 let discard = drop _
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let discard, discard1; discard1 = function discard(_0) { return runtime.Unit }; discard = discard1;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ discard = fun discard
 
 
 // * Same code, but the latter occurrence is broken because of the slightly wider gensym'd idents
 
 discard of { a: 0, b: 11111 }
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let a, b, tmp;
 //│ a = 0;
 //│ b = 11111;
 //│ tmp = globalThis.Object.freeze({ a: a, b: b });
 //│ runtime.safeCall(discard(tmp))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 discard of { a: 0, b: 11111 }
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let a1, b1, tmp1;
 //│ a1 = 0;
 //│ b1 = 11111;
 //│ tmp1 = globalThis.Object.freeze({ a: a1, b: b1 });
 //│ runtime.safeCall(discard(tmp1))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 discard of { aaaa: 1 }
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let aaaa, tmp2;
 //│ aaaa = 1;
 //│ tmp2 = globalThis.Object.freeze({ aaaa: aaaa });
 //│ runtime.safeCall(discard(tmp2))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 discard of { aaaaaaaaa: 1, bbbb: 2 }
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let aaaaaaaaa, bbbb, tmp3;
 //│ aaaaaaaaa = 1;
 //│ bbbb = 2;
@@ -47,9 +52,10 @@ discard of { aaaaaaaaa: 1, bbbb: 2 }
 //│   bbbb: bbbb
 //│ });
 //│ runtime.safeCall(discard(tmp3))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 discard of { aaaaaaaaa: 1, bbbbbbbb: 2, ccccccccc: 3, dddddddddd: 4 }
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let aaaaaaaaa1, bbbbbbbb, ccccccccc, dddddddddd, tmp4;
 //│ aaaaaaaaa1 = 1;
 //│ bbbbbbbb = 2;
@@ -62,19 +68,21 @@ discard of { aaaaaaaaa: 1, bbbbbbbb: 2, ccccccccc: 3, dddddddddd: 4 }
 //│   dddddddddd: dddddddddd
 //│ });
 //│ runtime.safeCall(discard(tmp4))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 discard of [ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb" ]
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp5;
 //│ tmp5 = globalThis.Object.freeze([
 //│   "aaaaaaaaaaaaaaa",
 //│   "bbbbbbbbbbbbbbbb"
 //│ ]);
 //│ runtime.safeCall(discard(tmp5))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 discard of [ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb", "ccccccccccccccccc", "dddddddddddddddddd" ]
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp6;
 //│ tmp6 = globalThis.Object.freeze([
 //│   "aaaaaaaaaaaaaaa",
@@ -83,9 +91,10 @@ discard of [ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb", "ccccccccccccccccc", "dddddd
 //│   "dddddddddddddddddd"
 //│ ]);
 //│ runtime.safeCall(discard(tmp6))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 discard of [[ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb", "ccccccccccccccccc", "dddddddddddddddddd" ]]
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp7, tmp8;
 //│ tmp7 = globalThis.Object.freeze([
 //│   "aaaaaaaaaaaaaaa",
@@ -95,5 +104,6 @@ discard of [[ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb", "ccccccccccccccccc", "ddddd
 //│ ]);
 //│ tmp8 = globalThis.Object.freeze([ tmp7 ]);
 //│ runtime.safeCall(discard(tmp8))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

@@ -83,13 +83,13 @@ modSome(Some(17), 3)
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(x))
 //│ deforest > <<< fusing <<<
-//│ Lowered:
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let modSome⁰, tmp, modSome_8$modSome⁰, modSome_8$x_Some⁰, modSome_8$x_rest⁰, Some_x;
-//│ define modSome_8$modSome⁰ as fun (x, m) {
+//│ define modSome_8$modSome⁰ as fun modSome_8$modSome¹(x, m) {
 //│   let n, scrut, arg$Some$0$, tmp1, tmp2;
 //│   return x(m, n, scrut, arg$Some$0$, tmp1, tmp2)
 //│ };
-//│ define modSome_8$x_Some⁰ as fun (fv_m, fv_n, fv_scrut, fv_arg$Some$0$, fv_tmp, fv_tmp1, Some_x1) {
+//│ define modSome_8$x_Some⁰ as fun modSome_8$x_Some¹(fv_m, fv_n, fv_scrut, fv_arg$Some$0$, fv_tmp, fv_tmp1, Some_x1) {
 //│   set fv_arg$Some$0$ = Some_x1;
 //│   set fv_n = fv_arg$Some$0$;
 //│   set fv_scrut = >=⁰(fv_n, fv_m);
@@ -104,22 +104,22 @@ modSome(Some(17), 3)
 //│       return Some⁰(fv_n)
 //│   end
 //│ };
-//│ define modSome_8$x_rest⁰ as fun () {
+//│ define modSome_8$x_rest⁰ as fun modSome_8$x_rest¹() {
 //│   return null
 //│ };
-//│ define modSome⁰ as fun (x1, m1) {
+//│ define modSome⁰ as fun modSome¹(x, m) {
 //│   loop loopLabel:
 //│     let n, scrut, arg$Some$0$, tmp1, tmp2;
-//│     match x1
+//│     match x
 //│       Some¹ =>
-//│         set arg$Some$0$ = x1.x⁰;
+//│         set arg$Some$0$ = x.x⁰;
 //│         set n = arg$Some$0$;
-//│         set scrut = >=⁰(n, m1);
+//│         set scrut = >=⁰(n, m);
 //│         match scrut
 //│           true =>
-//│             set tmp1 = -⁰(n, m1);
+//│             set tmp1 = -⁰(n, m);
 //│             set tmp2 = Some⁰(tmp1);
-//│             set x1 = tmp2;
+//│             set x = tmp2;
 //│             continue loopLabel
 //│           else
 //│             return Some⁰(n)
@@ -134,6 +134,7 @@ modSome(Some(17), 3)
 //│ set Some_x = 17;
 //│ set tmp = (fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => return modSome_8$x_Some¹(fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, Some_x);
 //│ modSome_8$modSome¹(tmp, 3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Some(2)
 
 

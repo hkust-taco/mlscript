@@ -3,30 +3,30 @@
 
 :sjs
 module None
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let None1;
 //│ (class None {
 //│   static {
 //│     None1 = this
 //│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "None"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :sjs
 None
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ None1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class None
 
 :sjs
 :re
 None()
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ runtime.safeCall(None1())
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor None cannot be invoked without 'new'
 
 :e
@@ -43,8 +43,9 @@ new! None
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type None.
 //│ ║  l.42: 	new! None
 //│ ╙──      	     ^^^^
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ globalThis.Object.freeze(new None1())
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = None
 
 
@@ -54,14 +55,11 @@ module M with
   class D()
   val x = 1
   val y = x + 1
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let M1;
 //│ (class M {
 //│   static {
 //│     M1 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
 //│   }
 //│   static {
 //│     let tmp;
@@ -69,7 +67,6 @@ module M with
 //│       static {
 //│         M.C = this
 //│       }
-//│       constructor() {}
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "C"]; 
 //│     });
@@ -80,7 +77,6 @@ module M with
 //│       static {
 //│         M.D.class = this
 //│       }
-//│       constructor() {}
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "D", []]; 
 //│     });
@@ -91,6 +87,7 @@ module M with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 M.C
 //│ = class C
@@ -111,7 +108,7 @@ M.y
 :re
 M.oops
 //│ ╔══[COMPILATION ERROR] Module 'M' does not contain member 'oops'
-//│ ║  l.112: 	M.oops
+//│ ║  l.109: 	M.oops
 //│ ╙──       	 ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
@@ -122,14 +119,11 @@ M.oops
 :sjs
 module M with
   val m: module M = M
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let M3;
 //│ (class M2 {
 //│   static {
 //│     M3 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
 //│   }
 //│   static {
 //│     this.m = M3;
@@ -137,11 +131,13 @@ module M with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :sjs
 M.m
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ M3.m
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class M { m: ref'1 } as ref'1
 
 
@@ -155,14 +151,11 @@ module AA with
   module BB with
     val y = 2
     [x, y]
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let AA1;
 //│ (class AA {
 //│   static {
 //│     AA1 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
 //│   }
 //│   static {
 //│     this.x = 1;
@@ -170,15 +163,8 @@ module AA with
 //│       static {
 //│         AA.BB = this
 //│       }
-//│       constructor() {
-//│         runtime.Unit;
-//│       }
 //│       static {
 //│         this.y = 2;
-//│         globalThis.Object.freeze([
-//│           AA.x,
-//│           BB.y
-//│         ]);
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "BB"]; 
@@ -187,5 +173,6 @@ module AA with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "AA"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

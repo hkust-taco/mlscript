@@ -1,15 +1,25 @@
 :js
 
+
 :e
 pattern Foo(val T) = null | T
 //│ ╔══[COMPILATION ERROR] Unexpected pattern parameter T with modifiers: val
-//│ ║  l.4: 	pattern Foo(val T) = null | T
+//│ ║  l.5: 	pattern Foo(val T) = null | T
 //│ ╙──     	                ^
 //│ ╔══[COMPILATION ERROR] Pattern name not found: T.
-//│ ║  l.4: 	pattern Foo(val T) = null | T
+//│ ║  l.5: 	pattern Foo(val T) = null | T
 //│ ╙──     	                            ^
 
+
 pattern Foo(pattern T) = null | T
+
+:fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)
+:checkIR
+pattern Foo(pattern T) = null | T
+//│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol T⁰ is bound more than once
+//│ ║  l.18: 	pattern Foo(pattern T) = null | T
+//│ ╙──      	                    ^
+
 
 :breakme
 data pattern Foo = _

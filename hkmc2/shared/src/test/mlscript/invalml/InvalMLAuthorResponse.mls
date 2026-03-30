@@ -1,0 +1,176 @@
+:invalml
+
+
+
+
+fun wield: [R] -> (Region[out R]) ->{R} ()
+fun freeze: [R, E extends ~R, T] -> (Region[out R], () ->{~R & E} T) ->{R | E} T
+
+fun (;) seq(_, res) = res
+fun rand: () -> Bool
+fun print: Any -> ()
+
+
+
+// ### Example 1
+
+
+fun foo1(r1, r2) =
+  freeze(r1, () => print("ok"))
+  wield(r2)
+
+region r in
+  foo1(r, r)
+
+region r in
+  region s in
+    foo1(r, s)
+
+
+region r0 in
+  
+  fun foo1(r1, r2) =
+    freeze(r1, () => wield(r0))
+    wield(r2)
+  
+  region r in
+    foo1(r, r)
+  
+  region r in
+    region s in
+      foo1(r, s)
+
+
+
+fun foo2(r1, r2) =
+  freeze(r1, () => wield(r2))
+  wield(r2)
+
+:e
+region r in
+  foo2(r, r)
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'r2
+//│ ║  l.51: 	  foo2(r, r)
+//│ ║        	          ^
+//│ ╟── because: cannot constrain  Region[in ⊥ out r]  <:  'r2
+//│ ╟── because: cannot constrain  Region[in ⊥ out r]  <:  Region[in ⊥ out 'R]
+//│ ╟── because: cannot constrain  r  <:  'R
+//│ ╟── because: cannot constrain  r  <:  'E
+//│ ╟── because: cannot constrain  r  <:  ¬'R1
+//│ ╟── because: cannot constrain  'R1  <:  ¬r
+//│ ╙── because: cannot constrain  r  <:  ¬r
+
+region r in
+  region s in
+    foo2(r, s)
+
+
+
+// ### Example 2
+
+
+fun foo: [outer, R extends outer] -> Region[R] ->{outer} ()
+fun foo(r1) =
+  region r2 in
+    freeze(r2, () =>
+      wield(r1)
+    )
+foo
+//│ Type: [outer, 'R] -> (Region['R]) ->{outer} ()
+//│ Where:
+//│   'R <: outer
+
+fun foo': [outer] -> Region[outer] ->{outer} ()
+fun foo'(r) = foo(r)
+
+fun foo: [outer] -> Region[outer] ->{outer} ()
+fun foo(r1) =
+  region r2 in
+    freeze(r2, () =>
+      wield(r1)
+    )
+foo
+//│ Type: [outer] -> (Region[outer]) ->{outer} ()
+
+fun foo: [outer, R extends outer] -> Region[R] ->{outer} ()
+fun foo'(r) = foo(r)
+
+
+// ### Example 3
+
+
+fun foo(r1, r2, f) =
+  let exec = freeze(r1, () => freeze(r2, () => f(r1, r2)))
+  let r = exec()
+  !(r) + 1
+
+region r in
+  region s in
+    foo(r, s, (x, y) =>
+      if rand() then print("Chose x"); () => x.ref 0
+                else print("Chose y"); () => y.ref 1)
+//│ Type: Int
+
+// TODO: simplify this type more!
+foo
+//│ Type: ['r1, 'r2, 'R, 'E, 'R1, 'eff, 'reg, 'ref] -> ('r1, 'r2, ('r1, 'r2) ->{(('E ∧ ¬'R) ∧ ¬'R1) ∧ ¬'R1} (() ->{'eff} Ref['ref, out 'reg])) ->{(('reg ∨ 'R) ∨ 'E) ∨ 'eff} Int
+//│ Where:
+//│   'r1 <: Region[out 'R]
+//│   'E <: ¬'R
+//│   'R1 <: 'E
+//│   'R1 <: ¬'R
+//│   'r2 <: Region[out 'R1]
+//│   'ref <: Int
+
+
+
+
+// *** NOT CURRENTLY USED IN RESPONSE ***
+
+
+fun wield: [R] -> (Region[out R]) ->{R} ()
+fun freeze: [R, E extends ~R, T] -> (Region[out R], () ->{~R | E} T) ->{E} T
+
+
+fun foo(r1, r2, f) =
+  let r = freeze(r1, () => freeze(r2, () => f(r1, r2)))
+  wield(r)
+
+region r in
+  foo(r, r, (x, y) => if rand() then x else y)
+
+region r in
+  region s in
+    foo(r, s, (x, y) => if rand() then x else y)
+
+
+
+// *** NOTES ***
+
+
+// Doesn't type check because r.ref has effect r
+
+fun foo(r1, r2, f) =
+  let r = freeze(r1, () => freeze(r2, () => f(r1, r2)))
+  r := !(r) + 1
+
+:e
+region r in
+  region s in
+    foo(r, s, (x, y) => (if rand() then x.ref 0 else y.ref 0))
+//│ ╔══[COMPILATION ERROR] Type error in function literal with expected type 'f
+//│ ║  l.160: 	    foo(r, s, (x, y) => (if rand() then x.ref 0 else y.ref 0))
+//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('x, 'y) ->{'reg ∨ 'reg1} (Ref[Int, in ⊥ out 'reg] ∨ Ref[Int, in ⊥ out 'reg1])  <:  'f
+//│ ╟── because: cannot constrain  ('x, 'y) ->{'reg ∨ 'reg1} (Ref[Int, in ⊥ out 'reg] ∨ Ref[Int, in ⊥ out 'reg1])  <:  ('r1, 'r2) ->{'eff} ('app)
+//│ ╟── because: cannot constrain  'reg ∨ 'reg1  <:  'eff
+//│ ╟── because: cannot constrain  'reg1  <:  'eff
+//│ ╟── because: cannot constrain  s ∧ ¬r  <:  'eff
+//│ ╟── because: cannot constrain  s ∧ ¬r  <:  'E ∨ ¬'R
+//│ ╟── because: cannot constrain  'R ∧ s ∧ ¬r  <:  'E
+//│ ╟── because: cannot constrain  'R ∧ s ∧ ¬r  <:  ¬'R
+//│ ╟── because: cannot constrain  'R  <:  ¬s ∨ r
+//│ ╙── because: cannot constrain  s ∧ ¬r  <:  ¬s ∨ r
+//│ Type: Int
+
+

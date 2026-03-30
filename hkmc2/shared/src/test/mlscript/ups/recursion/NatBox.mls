@@ -18,8 +18,72 @@ fun int(n) = if n is
 int(nat(42))
 //│ = 42
 
+// FIXME: why are we checking `Object` and `{ value }` patterns?
+:sir
 :expect true
 nat(0) is @compile NatBox
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let scrut, matcher__NatBox$, matchRecord, matchSuccess, patternOutput, bindings, lambda⁰;
+//│ set scrut = nat⁰(0);
+//│ define lambda⁰ as fun lambda¹(input) {
+//│   let p_0$, value, emptyRecord$, value1, p_0$1, result0$, output0$, fieldBindings, bindings1, p_0$2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+//│   match input
+//│     null =>
+//│       set tmp = {  };
+//│       set tmp1 = new runtime⁰.MatchSuccess⁰(input, tmp);
+//│       set p_0$ = tmp1;
+//│       return { "p_0": p_0$ }
+//│     Box⁰ =>
+//│       set tmp2 = new runtime⁰.MatchFailure⁰("empty");
+//│       set emptyRecord$ = { "p_0": tmp2 };
+//│       match input
+//│         Object⁰ =>
+//│           match input
+//│             { value } =>
+//│               set value1 = input.value﹖;
+//│               set tmp3 = matcher__NatBox$(value1);
+//│               end
+//│             else
+//│               set tmp3 = emptyRecord$;
+//│               end
+//│           end
+//│         else
+//│           set tmp3 = emptyRecord$;
+//│           end
+//│       set value = tmp3;
+//│       set result0$ = value.p_0﹖;
+//│       match result0$
+//│         MatchSuccess⁰ =>
+//│           set output0$ = result0$.output⁰;
+//│           set bindings1 = result0$.bindings⁰;
+//│           set fieldBindings = {  };
+//│           set tmp4 = { "value": output0$ };
+//│           set tmp5 = { ...bindings1, ...fieldBindings };
+//│           set tmp6 = new runtime⁰.MatchSuccess⁰(tmp4, tmp5);
+//│           end
+//│         else
+//│           set tmp6 = new runtime⁰.MatchFailure⁰("topmost");
+//│           end
+//│       set p_0$1 = tmp6;
+//│       return { "p_0": p_0$1 }
+//│     else
+//│       set tmp7 = new runtime⁰.MatchFailure⁰("never");
+//│       set p_0$2 = tmp7;
+//│       return { "p_0": p_0$2 }
+//│   end
+//│ };
+//│ set matcher__NatBox$ = lambda¹;
+//│ set matchRecord = matcher__NatBox$(scrut);
+//│ set matchSuccess = matchRecord.p_0﹖;
+//│ match matchSuccess
+//│   MatchSuccess⁰ =>
+//│     set patternOutput = matchSuccess.output⁰;
+//│     set bindings = matchSuccess.bindings⁰;
+//│     true
+//│   else
+//│     false
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 
 :expect true

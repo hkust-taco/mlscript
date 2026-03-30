@@ -267,7 +267,7 @@ class TailRecOpt(using State, TL, Raise):
     val loopSym = LabelSymbol(N, "loopLabel")
     val curIdSym = VarSymbol(Tree.Ident("id"))
     
-    class FunRewriter(f: FunDefn) extends BlockTransformerShallow(SymbolSubst()):
+    class FunRewriter(f: FunDefn) extends BlockTransformerShallow(SymbolSubst.Id):
       val params = getParamSyms(f)
       val paramsSet = f.params.toSet
       val paramsIdxes = params.zipWithIndex.toMap
@@ -298,7 +298,7 @@ class TailRecOpt(using State, TL, Raise):
           case x => x -> VarSymbol(x.id)
         .toMap
       
-      val subst = new SymbolSubst():
+      val subst = new SymbolSubst:
         override def mapVarSym(l: VarSymbol): VarSymbol = 
           copiedParamSyms.getOrElse(
             l,
@@ -329,7 +329,7 @@ class TailRecOpt(using State, TL, Raise):
               .toMap
             var requiredTmps: Set[(VarSymbol, TempSymbol)] = Set.empty
             
-            val paramRewriter = new BlockDataTransformer(SymbolSubst()):
+            val paramRewriter = new BlockDataTransformer(SymbolSubst.Id):
               override def applyValue(v: Value)(k: Value => Block): Block = v match
                 case Value.Ref(l: VarSymbol, disamb) => assignedSyms.get(l) match
                   case S(v) =>
@@ -477,7 +477,7 @@ class TailRecOpt(using State, TL, Raise):
       optC.map(c => c.isym -> c).toMap
     
     // replace them in place 
-    val transformer = new BlockTransformerShallow(SymbolSubst()):
+    val transformer = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case f: FunDefn => fMap.get(f.dSym) match
           case Some(value) => k(value)

@@ -8,7 +8,7 @@ object Bar with
   val x = 1
   module Baz with
     val a = Bar.x
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Bar1;
 //│ (class Bar {
 //│   static {
@@ -21,9 +21,6 @@ object Bar with
 //│     (class Baz {
 //│       static {
 //│         this$Bar.Baz = this
-//│       }
-//│       constructor() {
-//│         runtime.Unit;
 //│       }
 //│       static {
 //│         this.a = Bar1.x;
@@ -39,6 +36,7 @@ object Bar with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["object", "Bar"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 // * Modules don't have this initialization problem because they set their bindings
@@ -49,23 +47,17 @@ module Bar with
   val x = 1
   module Baz with
     val a = Bar.x
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Bar3;
 //│ (class Bar2 {
 //│   static {
 //│     Bar3 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
 //│   }
 //│   static {
 //│     this.x = 1;
 //│     (class Baz1 {
 //│       static {
 //│         Bar2.Baz = this
-//│       }
-//│       constructor() {
-//│         runtime.Unit;
 //│       }
 //│       static {
 //│         this.a = Bar3.x;
@@ -77,5 +69,6 @@ module Bar with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Bar"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

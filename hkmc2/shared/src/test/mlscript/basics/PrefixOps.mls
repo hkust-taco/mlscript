@@ -50,7 +50,7 @@ let res =
 
 :pt
 1 + | 2 + 3
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ OpApp:
 //│   lhs = IntLit of 1
 //│   op = Ident of "+"
@@ -63,15 +63,16 @@ let res =
 //│           op = Ident of "+"
 //│           rhss = Ls of 
 //│             IntLit of 3
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 
 :fixme // ?
 | 1
 | 2
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (composed type)
-//│ ║  l.69: 	| 1
+//│ ║  l.70: 	| 1
 //│ ║        	  ^
-//│ ║  l.70: 	| 2
+//│ ║  l.71: 	| 2
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -125,7 +126,7 @@ x(2, 3)
 :e
 let x = |
 //│ ╔══[COMPILATION ERROR] Unexpected use of special operator '|'
-//│ ║  l.126: 	let x = |
+//│ ║  l.127: 	let x = |
 //│ ╙──       	        ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ x = undefined
@@ -133,7 +134,7 @@ let x = |
 :e
 let x = (|)
 //│ ╔══[COMPILATION ERROR] Unexpected use of special operator '|'
-//│ ║  l.134: 	let x = (|)
+//│ ║  l.135: 	let x = (|)
 //│ ╙──       	         ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ x = undefined
@@ -141,7 +142,7 @@ let x = (|)
 :e
 &
 //│ ╔══[COMPILATION ERROR] Unexpected use of special operator '&'
-//│ ║  l.142: 	&
+//│ ║  l.143: 	&
 //│ ╙──       	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -151,7 +152,7 @@ fun (|) test = 1
 :e
 let x = |
 //│ ╔══[COMPILATION ERROR] Unexpected use of special operator '|'
-//│ ║  l.152: 	let x = |
+//│ ║  l.153: 	let x = |
 //│ ╙──       	        ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ x = undefined
