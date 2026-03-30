@@ -21,17 +21,16 @@ data class Lol(h) with
 //│     Lol1.class = this
 //│   }
 //│   constructor(h) {
-//│     let tmp, tmp1;
+//│     let tmp;
 //│     this.h = h;
 //│     tmp = runtime.safeCall(this.h.perform("k"));
 //│     if (runtime.curEffect !== null) {
 //│       tmp = runtime.illegalEffect("in a constructor");
 //│     }
-//│     tmp1 = Predef.print(tmp);
+//│     Predef.print(tmp);
 //│     if (runtime.curEffect !== null) {
-//│       tmp1 = runtime.illegalEffect("in a constructor");
+//│       runtime.illegalEffect("in a constructor");
 //│     }
-//│     tmp1;
 //│   }
 //│   #Lol$cap;
 //│   toString() { return runtime.render(this); }

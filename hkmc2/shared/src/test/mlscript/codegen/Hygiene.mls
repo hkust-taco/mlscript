@@ -88,9 +88,6 @@ module Test with
 //│   static {
 //│     Test4 = this
 //│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
 //│   static #x;
 //│   static {
 //│     this.x = 1;
@@ -191,17 +188,11 @@ module Whoops with
 //│   static {
 //│     Whoops2 = this
 //│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
 //│   static {
 //│     this.v = Whoops;
 //│     (class Whoops1 {
 //│       static {
 //│         Whoops.Whoops = this
-//│       }
-//│       constructor() {
-//│         runtime.Unit;
 //│       }
 //│       static {
 //│         this.w = Whoops1;
@@ -234,7 +225,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[COMPILATION ERROR] Name not found: Runtime
-//│ ║  l.235: 	Runtime
+//│ ║  l.226: 	Runtime
 //│ ╙──       	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -252,16 +243,10 @@ module AA with
 //│   static {
 //│     AA1 = this
 //│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
 //│   static {
 //│     (class BB {
 //│       static {
 //│         AA.BB = this
-//│       }
-//│       constructor() {
-//│         runtime.Unit;
 //│       }
 //│       static {
 //│         this.y = 2;

@@ -969,7 +969,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         sym
     val ctor =
       inScopedBlock:
-        term_nonTail(Blk(clsBody.nonMethods, clsBody.blk.res))(ImplctRet)
+        term_nonTail(Blk(clsBody.nonMethods :+ clsBody.blk.res, Term.Lit(syntax.Tree.UnitLit(true))))(ImplctRet)
           // * This is just a minor improvement to get `constructor() {}` instead of `constructor() { null }`
           .mapTail:
             case Return(Value.Lit(syntax.Tree.UnitLit(true)), true) => End()

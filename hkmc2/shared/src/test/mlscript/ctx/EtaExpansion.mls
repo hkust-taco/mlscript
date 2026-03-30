@@ -123,11 +123,7 @@ module Test with
   fun main(using Int) = test
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Test⁰;
-//│ define Test⁰ as class Test¹ {
-//│   constructor {
-//│     runtime⁰.Unit⁰
-//│   }
-//│ }
+//│ define Test⁰ as class Test¹
 //│ module Test² {
 //│   method test⁰ = fun test¹(j)(tmp) {
 //│     return 0

@@ -24,7 +24,6 @@
 //│ ╙──      	^
 //│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
 //│ Program:
-//│   imports = Nil
 //│   main = Return:
 //│     res = Lit of IntLit of 2
 //│     implct = true
@@ -45,7 +44,6 @@ print("Hi")
 //│ Predef.print("Hi"); 2
 //│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
 //│ Program:
-//│   imports = Nil
 //│   main = Assign:
 //│     lhs = ‹no symbol›⁰
 //│     rhs = Call:
@@ -56,7 +54,6 @@ print("Hi")
 //│         name = Ident of "print"
 //│       args = Ls of 
 //│         Arg:
-//│           spread = N
 //│           value = Lit of StrLit of "Hi"
 //│     rest = Return: \
 //│     res = Lit of IntLit of 2

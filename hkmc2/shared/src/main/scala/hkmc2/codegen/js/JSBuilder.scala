@@ -436,10 +436,6 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
                 case (psDoc, doc) => doc"(${psDoc.mkDocument(", ")}) => $doc"
               doc" # return $funBod"
             
-            val ctorHead = doc"constructor(${
-                  initialCtorParams.unzip._2.mkDocument(", ")
-                })"
-            
             val ctorBod = {{
                 val extraPath = if paramsOpt.isDefined then ".class" else ""
                 doc" # static " :: braced:
@@ -452,7 +448,10 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
                       doc" # ${result(Value.Ref(owner, N))}.${sym.nme}$extraPath = $v"
                     case N =>
                       doc" # ${getVar(sym, sym.toLoc)}$extraPath = $v"
-              }} :/: ctorHead :: " " :: braced(ctorAux)
+              }} :: (
+                if ctorAux.isEmpty then doc""
+                else doc" # constructor(${initialCtorParams.unzip._2.mkDocument(", ")}) " :: braced(ctorAux)
+              )
             
             val clsJS = doc"class ${scope.lookup_!(isym, isym.toLoc)}${
                 par.map(p => doc" extends ${

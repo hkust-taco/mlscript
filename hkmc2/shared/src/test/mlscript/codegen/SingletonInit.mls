@@ -17,12 +17,16 @@ object A with
 print(A, "|", A.B)
 //│ > A { x: 1, B: B, y: 2, class: object A } | B
 
+:w
 module A with
   val x = 1
   module B with
     print(x, y)
     A
   val y = 2
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.25: 	    A
+//│ ╙──      	    ^
 //│ > 1 undefined
 
 

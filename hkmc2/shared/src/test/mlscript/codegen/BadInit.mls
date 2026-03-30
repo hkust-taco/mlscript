@@ -22,9 +22,6 @@ object Bar with
 //│       static {
 //│         this$Bar.Baz = this
 //│       }
-//│       constructor() {
-//│         runtime.Unit;
-//│       }
 //│       static {
 //│         this.a = Bar1.x;
 //│       }
@@ -56,17 +53,11 @@ module Bar with
 //│   static {
 //│     Bar3 = this
 //│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
 //│   static {
 //│     this.x = 1;
 //│     (class Baz1 {
 //│       static {
 //│         Bar2.Baz = this
-//│       }
-//│       constructor() {
-//│         runtime.Unit;
 //│       }
 //│       static {
 //│         this.a = Bar3.x;

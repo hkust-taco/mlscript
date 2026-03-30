@@ -257,9 +257,6 @@ module Foo with
 //│ };
 //│ define Foo¹ as class Foo² {
 //│   private val Foo$cap⁰;
-//│   constructor {
-//│     runtime⁰.Unit⁰
-//│   }
 //│ }
 //│ module Foo³ {
 //│   private val Foo_mod$cap⁰;
@@ -396,7 +393,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.397: 	foo.f(0)
+//│ ║  l.394: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -414,7 +411,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.415: 	foo.x(0)
+//│ ║  l.412: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 

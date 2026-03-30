@@ -225,9 +225,6 @@ M.A().get
 //│ let M³, tmp;
 //│ define M³ as class M⁴ {
 //│   private val M$cap²;
-//│   constructor {
-//│     runtime⁰.Unit⁰
-//│   }
 //│ }
 //│ module M⁵ {
 //│   private val M_mod$cap⁰;
@@ -298,7 +295,7 @@ fun foo(x) =
     val baz = x
   [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.296: 	  object O with
+//│ ║  l.293: 	  object O with
 //│ ╙──       	         ^
 
 foo(123)
@@ -347,13 +344,13 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.344: 	  object A with
+//│ ║  l.341: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.345: 	    object B with
+//│ ║  l.342: 	    object B with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.346: 	      object C
+//│ ║  l.343: 	      object C
 //│ ╙──       	             ^
 //│ = C
 
@@ -366,10 +363,10 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.363: 	  module A with
+//│ ║  l.360: 	  module A with
 //│ ╙──       	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.365: 	      object C
+//│ ║  l.362: 	      object C
 //│ ╙──       	             ^
 //│ = C
 
@@ -382,7 +379,7 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.379: 	  module A with
+//│ ║  l.376: 	  module A with
 //│ ╙──       	         ^
 //│ = C
 
