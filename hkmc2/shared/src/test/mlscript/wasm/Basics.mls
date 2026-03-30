@@ -177,11 +177,6 @@ getX(Foo(42))
 class Foo(val x) with
   val y = this.x
 (new Foo(42)).Foo#y
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: errExpr (WatBuilder.scala:572)
-//│ ╔══[COMPILATION ERROR] Plain class references are not supported in Wasm; instantiate the class instead.
-//│ ║  l.178: 	  val y = this.x
-//│ ╙──       	          ^^^^
 //│ Wat:
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
@@ -208,7 +203,7 @@ class Foo(val x) with
 //│               (local.get $this))
 //│             (struct.get $Foo $x
 //│               (ref.cast (ref $Foo)
-//│                 (unreachable))))
+//│                 (local.get $this))))
 //│           (nop)))
 //│       (return
 //│         (local.get $this))))
@@ -229,6 +224,8 @@ class Foo(val x) with
 //│             (local.get $tmp))))))
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 42
 
 
 :wat
