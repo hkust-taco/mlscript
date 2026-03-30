@@ -1436,7 +1436,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           val defaultExpr =
             val rawDefaultExpr = dflt match
               case S(defaultBody) => returningTerm(defaultBody)
-              case N => `throw`(exnTagIdx, Seq(result(Value.Lit(StrLit("match error")))))
+              case N => unreachable
             lowerMatchBody(rawDefaultExpr)
 
           // Generate the match block
