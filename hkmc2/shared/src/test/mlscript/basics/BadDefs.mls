@@ -14,28 +14,30 @@ x
 
 :sjs
 val ++ = 0
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let $_$_; $_$_ = 0;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ++ = 0
 
 :sjs
 ++
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ $_$_
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 
 :e
 val ++ y = 1
 //│ ╔══[COMPILATION ERROR] Invalid value definition head: unexpected identifier in this position
-//│ ║  l.29: 	val ++ y = 1
+//│ ║  l.31: 	val ++ y = 1
 //│ ╙──      	       ^
 //│ ++ = 1
 
 :e
 y
 //│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.36: 	y
+//│ ║  l.38: 	y
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -46,20 +48,21 @@ y
 :e
 fun ++ z = 0
 //│ ╔══[COMPILATION ERROR] Invalid function definition head: unexpected identifier in this position
-//│ ║  l.47: 	fun ++ z = 0
+//│ ║  l.49: 	fun ++ z = 0
 //│ ╙──      	       ^
 
 :sjs
 ++
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp; tmp = $_$_2(); tmp
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 
 :e
 fun (class Lol) foo = 0
 //│ ╔══[COMPILATION ERROR] This type definition is not a valid symbolic name
-//│ ║  l.60: 	fun (class Lol) foo = 0
+//│ ║  l.63: 	fun (class Lol) foo = 0
 //│ ╙──      	     ^^^^^^^^^
 
 foo
@@ -68,7 +71,7 @@ foo
 :e
 Lol
 //│ ╔══[COMPILATION ERROR] Name not found: Lol
-//│ ║  l.69: 	Lol
+//│ ║  l.72: 	Lol
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

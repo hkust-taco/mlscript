@@ -8,7 +8,7 @@ class B
 
 :sjs
 x => if x is Pair(A, B) then 1
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda;
 //│ lambda = (undefined, function (x) {
 //│   let arg$Pair$0$, arg$Pair$1$, tmp;
@@ -36,6 +36,7 @@ x => if x is Pair(A, B) then 1
 //│   return tmp
 //│ });
 //│ lambda
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 
@@ -44,7 +45,7 @@ x => if x is Pair(A, B) then 1
 fun f(x) = if x is
   Pair(A, A) then 1
   Pair(B, B) then 2
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f;
 //│ f = function f(x) {
 //│   let arg$Pair$0$, arg$Pair$1$, tmp;
@@ -78,5 +79,6 @@ fun f(x) = if x is
 //│   }
 //│   return tmp
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

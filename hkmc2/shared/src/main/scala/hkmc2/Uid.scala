@@ -13,6 +13,8 @@ object Uid:
         curUid
       def reset = curUid = -1
   object Symbol extends Handler[semantics.Symbol]
+  object Result extends Handler[codegen.Result]
+  object StratVar extends Handler[codegen.deforest.StratVar]
 
 extension [T] (x: Uid[T])
   def <=(rhs: Uid[T]) = x <= rhs

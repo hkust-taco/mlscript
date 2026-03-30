@@ -6,7 +6,7 @@
 fun fib(a) = if
   a <= 1 then a
   else fib(a - 1) + fib(a - 2)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let fib;
 //│ fib = function fib(a) {
 //│   let scrut, tmp, tmp1, tmp2, tmp3;
@@ -15,6 +15,7 @@ fun fib(a) = if
 //│     return a
 //│   } else { tmp = a - 1; tmp1 = fib(tmp); tmp2 = a - 2; tmp3 = fib(tmp2); return tmp1 + tmp3 }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 fun f(x) = g(x)
 fun g(x) = h(x)

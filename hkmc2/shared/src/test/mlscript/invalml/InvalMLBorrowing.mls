@@ -1,0 +1,174 @@
+:invalml
+
+
+class Reg[Rg, Br]
+
+fun letreg: [E, Res] -> ([Rg] -> Reg[Rg, E] ->{E | Rg} Res) ->{E} Res
+
+fun use_: [Rg, Br] -> Reg[Rg, Br] ->{Rg} Int
+
+
+class MutVec[A, Rg, Br]
+
+fun mkVec: [A, Rg, Br] -> Reg[Rg, Br] -> MutVec[A, Rg, Br]
+
+fun clear: [A, Rg, Br] -> MutVec[A, Rg, Br] ->{Rg} Int
+
+class Iter[A, Rg]
+
+fun iterate: [A, Rg, Br, Res] -> MutVec[A, Rg, Br] -> ([L] -> Iter[A, Br | L] ->{Br | L} Res) ->{Br} Res
+
+fun integers: [Rg, Br, Res] -> Reg[Rg, Br] ->{Rg} (Iter[Int, Br] ->{Br} Res) ->{Br} Res
+
+
+fun next: [A, Br] -> Iter[A, Br] ->{Br} A
+
+letreg(r => r)
+//│ Type: Reg[?, 'E]
+//│ Where:
+//│   'E <: ⊥
+
+letreg of r =>
+  let b = mkVec(r)
+  clear(b)
+  iterate(b) of it =>
+    next(it)
+    123
+  clear(b)
+  r
+//│ Type: Reg[?, 'E]
+//│ Where:
+//│   'E <: ⊥
+
+
+// * Non-lexical borrowing pattern encoded with a thunk
+letreg of r =>
+  let b = mkVec(r)
+  clear(b)
+  let k = iterate(b) of it =>
+    next(it)
+    123
+    if next(it) > 0 then () => 0 else () => clear(b)
+  k()
+//│ Type: Int
+
+:e
+letreg of r =>
+  let b = mkVec(r)
+  clear(b)
+  let k = iterate(b) of it =>
+    next(it)
+    123
+    () => next(it)
+  k()
+//│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.56: 	letreg of r =>
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.57: 	  let b = mkVec(r)
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.58: 	  clear(b)
+//│ ║        	^^^^^^^^^^
+//│ ║  l.59: 	  let k = iterate(b) of it =>
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.60: 	... (more lines omitted) ...
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'E  <:  ⊥
+//│ ╟── because: cannot constrain  ¬'Rg  <:  ⊥
+//│ ╟── because: cannot constrain  ⊤  <:  'Rg
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: ⊥
+
+:e
+letreg of r =>
+  let b = mkVec(r)
+  clear(b)
+  iterate(b) of it =>
+    next(it)
+    clear(b)
+    123
+  clear(b)
+  r
+//│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.82: 	letreg of r =>
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.83: 	  let b = mkVec(r)
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.84: 	  clear(b)
+//│ ║        	^^^^^^^^^^
+//│ ║  l.85: 	  iterate(b) of it =>
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.86: 	... (more lines omitted) ...
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'E  <:  ⊥
+//│ ╟── because: cannot constrain  'Rg  <:  ⊥
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Reg[?, 'E]
+//│ Where:
+//│   ⊤ <: 'E
+//│   'E <: ⊥
+
+
+letreg of r =>
+  use_(r)
+  integers(r) of it =>
+    next(it)
+  use_(r)
+  r
+//│ Type: Reg[?, 'E]
+//│ Where:
+//│   'E <: ⊥
+
+:e
+letreg of r =>
+  use_(r)
+  integers(r) of it =>
+    use_(r)
+    next(it)
+  use_(r)
+  r
+//│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.122: 	letreg of r =>
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.123: 	  use_(r)
+//│ ║         	^^^^^^^^^
+//│ ║  l.124: 	  integers(r) of it =>
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.125: 	    use_(r)
+//│ ║         	^^^^^^^^^^^
+//│ ║  l.126: 	... (more lines omitted) ...
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'E  <:  ⊥
+//│ ╟── because: cannot constrain  'Rg  <:  ⊥
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Reg[?, 'E]
+//│ Where:
+//│   ⊤ <: 'E
+//│   'E <: ⊥
+
+letreg of r0 =>
+  letreg of r1 =>
+    integers(r1) of it =>
+      use_(r0)
+      next(it)
+    use_(r1)
+    r1
+//│ Type: Reg[?, in 'E]
+//│ Where:
+//│   'E <: ⊥
+
+
+// * Can leak the iterator
+fun iterate_unsafe: [A, Rg, Br, Res] -> MutVec[A, Rg, Br] -> (Iter[A, Br] ->{Br} Res) ->{Br} Res
+// * Eg:
+letreg of r =>
+  let b = mkVec(r)
+  clear(b)
+  let k = iterate_unsafe(b) of it =>
+    next(it)
+    123
+    () => next(it)
+  clear(b)
+  k()
+//│ Type: ⊥
+
+

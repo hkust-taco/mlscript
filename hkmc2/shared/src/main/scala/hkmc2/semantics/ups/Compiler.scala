@@ -419,7 +419,7 @@ object Compiler:
           module.tree.definedSymbols.iterator.map(_.mapSecond(_.asClsLike)).collectFirst:
             case (key, S(`symbol`)) =>
               val memberSymbol = symbol.defn.get.bsym
-              SynthSel(moduleRef, Ident(key))(S(memberSymbol), N).resolved(symbol)
+              SynthSel(moduleRef, Ident(key))(S(memberSymbol), FlowSymbol.synthSel(key), N, S(summon)).resolved(symbol)
       .flatten
     @tailrec def go(ctx: Ctx): Opt[Term] =
       ctx.env.values.iterator.map(findSymbol).firstSome match

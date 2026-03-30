@@ -17,7 +17,7 @@ fun f(x) =
     print("whoops")
     return 0
   x + 1
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f1;
 //│ f1 = function f(x) {
 //│   let scrut;
@@ -25,6 +25,7 @@ fun f(x) =
 //│   if (scrut === true) { Predef.print("whoops"); return 0 }
 //│   return x + 1
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 f(1)
 //│ = 2

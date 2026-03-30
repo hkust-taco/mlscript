@@ -53,7 +53,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
 
     val extract = if isTopLevel then extractResTopLevel else extractRes
     
-    val transform = new BlockTransformer(SymbolSubst()):
+    val transform = new BlockTransformer(SymbolSubst.Id):
 
       override def applyFunDefn(fun: FunDefn): FunDefn = rewriteFn(fun)
       

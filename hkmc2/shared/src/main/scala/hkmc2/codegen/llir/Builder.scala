@@ -73,6 +73,7 @@ object Ctx:
 
 final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   import tl.{trace, log, logs}
+  given TraceLogger = tl
   
   def er = Expr.Ref
   def nr = Node.Result

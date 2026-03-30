@@ -16,7 +16,7 @@ import hkmc2.syntax.Tree.DummyTypeDef
 
 class BufferableTransform()(using Ctx, State, Raise):
   def transform(blk: Block): Block =
-    val transformer = new BlockTransformer(SymbolSubst()):
+    val transformer = new BlockTransformer(SymbolSubst.Id):
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case cls: ClsLikeDefn if cls.k is syntax.Cls =>
           cls.bufferable.fold(super.applyDefn(defn)(k)): bufferable =>
@@ -35,7 +35,7 @@ class BufferableTransform()(using Ctx, State, Raise):
                 val idxSymbol = new TempSymbol(N, "idx")
                 Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asPath, baseIdx.asPath.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil)(true, false, false),
                   AssignDynField(buf.asPath.selSN("buf"), idxSymbol.asPath, true, r, applyBlock(rst))))
-              new BlockTransformer(SymbolSubst()):
+              new BlockTransformer(SymbolSubst.Id):
                 override def applyBlock(b: Block): Block = b match
                   case Assign(l, r, rst) =>
                     fieldMap.get(l).fold(super.applyBlock(b)): off =>

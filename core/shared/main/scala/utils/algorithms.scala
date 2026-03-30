@@ -50,8 +50,12 @@ object algorithms {
     )
 
     // pre-process: assign each node an id
-    val edgesSet = edges.toSet
-    val nodesUniq = (edgesSet.flatMap { case (a, b) => Set(a, b) } ++ nodes.toSet).toList
+    val nodesUniq = {
+      val seen = collection.mutable.LinkedHashSet.empty[A]
+      for ((a, b) <- edges) { seen.add(a); seen.add(b) }
+      for (n <- nodes) seen.add(n)
+      seen.toList
+    }
     val nodesN = nodesUniq.zipWithIndex.map { case (node, idx) => SccNode(node, idx) }
     val nodeToIdx = nodesN.map(node => node.node -> node.id).toMap
     val nodesIdx = nodesN.map { case node => node.id -> node }.toMap

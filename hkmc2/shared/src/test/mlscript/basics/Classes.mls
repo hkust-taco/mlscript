@@ -33,8 +33,9 @@ class Foo(x: Int) { log("Hello!") }
 //│ ╔══[COMPILATION ERROR] Expected a valid class definition head; found block instead
 //│ ║  l.32: 	class Foo(x: Int) { log("Hello!") }
 //│ ╙──      	                  ^^^^^^^^^^^^^^^^^
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ 
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 
@@ -43,7 +44,7 @@ class Foo(x: Int) { log("Hello!") }
 :e
 class Foo(42)
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
-//│ ║  l.44: 	class Foo(42)
+//│ ║  l.45: 	class Foo(42)
 //│ ╙──      	          ^^
 
 

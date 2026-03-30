@@ -3,6 +3,7 @@ package hkmc2
 import mlscript.utils.*, shorthands.*
 import utils.*
 
+import syntax.{SpreadKind}
 import hkmc2.codegen.*
 import hkmc2.semantics.*
 import hkmc2.Message.*
@@ -229,7 +230,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
             f._1.traverse; f._2.traverse
           applyBlock(preCtor)
           applyBlock(ctor)
-          mod.foreach(applyClsLikeBody)
+          mod.foreach(applyCompanionModule)
       
       def isFun(d: Defn) = d match
         case _: FunDefn => true
@@ -302,7 +303,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val syms: LinkedHashMap[FunSyms[?], Local] = LinkedHashMap.empty
       val extraLocals: MutSet[Local] = MutSet.empty
 
-      val walker = new BlockDataTransformer(SymbolSubst()):
+      val walker = new BlockDataTransformer(SymbolSubst.Id):
         // only scan within the block. don't traverse
         
         def resolveDefnRef(l: BlockMemberSymbol, d: DefinitionSymbol[?], r: RewrittenScope[?]) =
@@ -537,7 +538,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     
     (defn, sortedVars.iterator.map(x => (x.ctorSyms.local, x.valDefn.tsym)).toList)
   
-  class ScopeRewriter(using ctx: LifterCtxNew) extends BlockTransformerShallow(SymbolSubst()):
+  class ScopeRewriter(using ctx: LifterCtxNew) extends BlockTransformerShallow(SymbolSubst.Id):
     
     val extraDefns: ListBuffer[Defn] = ListBuffer.empty
     
@@ -961,7 +962,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         case Nil => lastWords("tried to make an aux defn for a function with no parameter list")
       val args = restSym match
         case Some(value) =>
-          val tail = Arg(S(true), value.asPath) :: Nil
+          val tail = Arg(S(SpreadKind.Eager), value.asPath) :: Nil
           syms.foldLeft(tail):
             case (acc, sym) => Arg(N, sym.asPath) :: acc
         case None => syms.map(s => Arg(N, s.asPath))

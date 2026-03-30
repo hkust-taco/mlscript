@@ -1,0 +1,131 @@
+:js
+
+// This is an interesting experiment in evaluation context.
+// Author: Lionel Parreaux
+
+
+import "../../../mlscript-compile/Option.mls"
+
+open annotations
+open Option { Some, None }
+
+
+class Ident(val name: Str)
+
+data class Term with
+  constructor
+    Lit(value: Int)
+    Var(name: Ident)
+    App(lhs: Term, rhs: Term)
+    Abs(lhs: Ident, rhs: Term)
+    Add(lhs: Term, rhs: Term)
+  
+  // A cached set of free variables
+  let _freeVars = None
+  
+  // Compute free variables. Retrieve the cache if it exists.
+  fun freeVars = if _freeVars is
+    Some(fv) then fv
+    None then
+      let fv = if this is
+        Var(name) then mkSet of name
+        App(lhs, rhs) then lhs.freeVars.union(rhs.freeVars)
+        Abs(name, body) then body.freeVars.difference(mkSet of name)
+      set _freeVars = Some(fv)
+      fv
+  
+  // Pretty-print the term.
+  fun show =
+    fun par(t) = if t is
+      Lit | Var then t.show
+      else "(" + t.show + ")"
+    if this is
+      Var(id) then id.name
+      App(App as lhs, rhs) then lhs.show + par(rhs)
+      App(lhs, rhs) then par(lhs) + " " + par(rhs)
+      Abs(id, body) then "λ" + id.name + ". " + body.show
+      Lit(value) then value.toString()
+      Add(Add as lhs, rhs) then lhs.show + " + " + par(rhs)
+      Add(lhs, rhs) then par(lhs) + " + " + par(rhs)
+
+
+App(Var(Ident of "a"), Var(Ident of "a_1")).show
+//│ = "a a_1"
+
+
+pattern Value = Abs | Lit
+
+module CBV with
+  
+  pattern Ctx(pattern Hole) =
+    | (Hole as res) => res
+    | Add(Ctx(Hole) as lhs, rhs)          => Add(lhs, rhs)
+    | Add(Value as lhs, Ctx(Hole) as rhs) => Add(lhs, rhs)
+      // * or:
+      // | (Add(Ctx(Hole) as lhs, rhs) | Add(Value as lhs, Ctx(Hole) as rhs)) =>
+      //     Add(lhs, rhs)
+    | App(Value as lhs, Ctx(Hole) as rhs) => App(lhs, rhs)
+    | App(Ctx(Hole) as lhs, rhs)          => App(lhs, rhs)
+  
+  pattern Redex =
+    | Add(Lit(v1), Lit(v2)) => Lit(v1 + v2)
+    | App(Abs(id, body), Value as arg) => body.subst(id, arg)
+  
+  pattern Step =
+    | Ctx(Redex) as res => res
+  
+  pattern Steps = Step as Steps | _
+
+
+fun eval(term) =
+  print("Evaluating:", term.show)
+  if term is
+    CBV.Step(next) then eval(next)
+    Value then print("Done.")
+    else print("Stuck!")
+
+:silent
+let
+  a = Var(Ident("a"))
+  b = Var(Ident("b"))
+  x = Lit(2)
+  y = Lit(3)
+  z = Lit(4)
+  t = Add(Add(x, y), z)
+
+eval(t)
+//│ > Evaluating: 2 + 3 + 4
+//│ > Evaluating: 5 + 4
+//│ > Evaluating: 9
+//│ > Done.
+
+eval(Add(t, t))
+//│ > Evaluating: 2 + 3 + 4 + (2 + 3 + 4)
+//│ > Evaluating: 5 + 4 + (2 + 3 + 4)
+//│ > Evaluating: 9 + (2 + 3 + 4)
+//│ > Evaluating: 9 + (5 + 4)
+//│ > Evaluating: 9 + 9
+//│ > Evaluating: 18
+//│ > Done.
+
+eval(Add(t, a))
+//│ > Evaluating: 2 + 3 + 4 + a
+//│ > Evaluating: 5 + 4 + a
+//│ > Evaluating: 9 + a
+//│ > Stuck!
+
+assert Add(t, t) is CBV.Steps(res), res
+//│ = Lit(18)
+
+
+CBV.Step.unapply(x)
+//│ = MatchFailure(null)
+
+CBV.Step.unapply(t)
+//│ = MatchSuccess(Add(Lit(5), Lit(4)), {})
+
+eval(x)
+//│ > Evaluating: 2
+//│ > Done.
+
+

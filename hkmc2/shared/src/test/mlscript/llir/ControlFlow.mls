@@ -153,7 +153,7 @@ f5()
 :sllir
 fun test() =
   if true do test()
-//│ ═══[COMPILATION ERROR] Name not found: $runtime
+//│ ═══[COMPILATION ERROR] Name not found: tmp:runtime
 //│ Stopped due to an error during the Llir generation
 
 :sllir

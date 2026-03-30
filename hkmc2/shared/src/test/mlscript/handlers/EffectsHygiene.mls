@@ -26,20 +26,17 @@ fun foo(h): module M =
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
 //│ ║  l.15: 	    module A
 //│ ╙──      	           ^
-//│ JS:
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo;
-//│ foo = function foo(...args) {
-//│   runtime.checkArgs("foo", 1, true, args.length);
-//│   let h = args[0];
+//│ runtime.checkCall(runtime.resetEffects());
+//│ foo = function foo(h) {
+//│   runtime.checkArgs("foo", 1, true, arguments.length);
 //│   let A2, A3, scrut;
 //│   scrut = false;
 //│   if (scrut === true) {
 //│     globalThis.Object.freeze(class A {
 //│       static {
 //│         A2 = this
-//│       }
-//│       constructor() {
-//│         runtime.Unit;
 //│       }
 //│       static #A_mod$cap;
 //│       #A$cap;
@@ -52,9 +49,6 @@ fun foo(h): module M =
 //│       static {
 //│         A3 = this
 //│       }
-//│       constructor() {
-//│         runtime.Unit;
-//│       }
 //│       static #A_mod$cap;
 //│       #A$cap;
 //│       toString() { return runtime.render(this); }
@@ -64,5 +58,6 @@ fun foo(h): module M =
 //│   }
 //│ };
 //│ block$res2 = undefined;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

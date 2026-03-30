@@ -10,8 +10,9 @@ abstract class Effect with
 :sjs
 data class Lol(h) with
   print(h.perform("k"))
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Lol1;
+//│ runtime.resetEffects();
 //│ Lol1 = function Lol(h) {
 //│   return globalThis.Object.freeze(new Lol.class(h));
 //│ };
@@ -20,22 +21,22 @@ data class Lol(h) with
 //│     Lol1.class = this
 //│   }
 //│   constructor(h) {
-//│     let tmp, tmp1;
+//│     let tmp;
 //│     this.h = h;
 //│     tmp = runtime.safeCall(this.h.perform("k"));
 //│     if (runtime.curEffect !== null) {
 //│       tmp = runtime.illegalEffect("in a constructor");
 //│     }
-//│     tmp1 = Predef.print(tmp);
+//│     Predef.print(tmp);
 //│     if (runtime.curEffect !== null) {
-//│       tmp1 = runtime.illegalEffect("in a constructor");
+//│       runtime.illegalEffect("in a constructor");
 //│     }
-//│     tmp1;
 //│   }
 //│   #Lol$cap;
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Lol", ["h"]]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 // * This is a weird use of effect handlers where an effect is raised during the construction of a handler.

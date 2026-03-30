@@ -1,0 +1,91 @@
+
+:global
+:invalml
+
+
+fun power: [C] -> CodeBase[out Num, out C, out Any] -> Int -> CodeBase[out Num, out C, out Any]
+fun power(x) = case
+  0 then `1.0
+  n then x `*. power(x)(n - 1)
+power
+//│ Type: ['C] -> (CodeBase[out Num, out 'C, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Num, out 'C, ?]
+
+
+fun id: [A] -> A -> A
+fun id(x) = x
+
+
+run(x `=> id(x) `* x)
+//│ Type: Int -> Int
+
+
+fun assertNotZero: [C] -> CodeBase[out Num, out C, out Any] -> CodeBase[out Num, out C, out Any]
+fun assertNotZero(x) =
+  `if (x `== `0.0) then `error else x
+let checkedDiv = x `=> y `=> x `/. (assertNotZero(y))
+run(checkedDiv)
+//│ Type: Num -> (Num -> Num)
+
+
+
+fun show: [T] -> CodeBase[out T, out Any, out Any] -> Str = s => "debug"
+show
+//│ Type: (CodeBase[?, ?, ?]) ->{⊥} Str
+
+
+
+fun inc(dbg) =
+  x `=> let c = x `+ `1 in let t = dbg(c) in c
+inc
+//│ Type: ['eff] -> (CodeBase[out Int, ?, ?] ->{'eff} ⊤) ->{'eff} CodeBase[out Int -> Int, ⊥, ?]
+
+inc(c => log(show(c)))
+//│ Type: CodeBase[out Int -> Int, ⊥, ?]
+
+
+fun body: [T, C] -> (CodeBase[out Int, out T, out Any], CodeBase[out Int, out C, out Any]) -> Int -> CodeBase[out Int, out T | C, out Any]
+fun body(x, y) = case
+  0 then x
+  1 then y
+  n then body(y, x `+ y)(n - 1)
+fun gib_naive(n) =
+  (x, y) `=> body(x, y)(n)
+let gn5 = run(gib_naive(5))
+
+fun bind(rhs, k) = `let x = rhs `in k(x)
+bind
+//│ Type: ['cde, 'ctx, 'eff, 'cde1, 'ctx1] -> (CodeBase[out 'cde, out 'ctx, ?], CodeBase['cde, ?, ⊥] ->{'eff} CodeBase[out 'cde1, out 'ctx1, ?]) ->{'eff} CodeBase[out 'cde1, out 'ctx ∨ 'ctx1, ?]
+
+:e
+fun body: [G] -> (CodeBase[out Int, out G, out Any], CodeBase[out Int, out G, out Any]) -> Int -> CodeBase[out Int, out G, out Any]
+fun body(x, y) = case
+  0 then x
+  1 then y
+  n then bind of x `+ y, (z => body(y, z)(n - 1))
+//│ ╔══[COMPILATION ERROR] Type error in application with expected type CodeBase[out Int, out G, ?]
+//│ ║  l.64: 	  n then bind of x `+ y, (z => body(y, z)(n - 1))
+//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  CodeBase[in ⊥ out 'cde, in ⊥ out 'ctx ∨ 'ctx1, in ⊥ out ⊤]  <:  CodeBase[in ⊥ out Int, in ⊥ out G, in ⊥ out ⊤]
+//│ ╟── because: cannot constrain  'ctx ∨ 'ctx1  <:  G
+//│ ╟── because: cannot constrain  'ctx1  <:  G
+//│ ╟── because: cannot constrain  'ctx2  <:  G
+//│ ╙── because: cannot constrain  ⊤  <:  G
+
+fun bind: [G] -> (CodeBase[out Int, out G, out Any], [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out Int, out C | G, out Any]) -> CodeBase[out Int, out G, out Any]
+fun bind(rhs, k) = `let x = rhs `in k(x)
+bind
+//│ Type: ['G] -> (CodeBase[out Int, out 'G, ?], ['C] -> (CodeBase[out Int, out 'C, ?]) ->{⊥} CodeBase[out Int, out 'C ∨ 'G, ?]) ->{⊥} CodeBase[out Int, out 'G, ?]
+
+
+fun body: [G] -> (CodeBase[out Int, out G, out Any], CodeBase[out Int, out G, out Any]) -> Int -> CodeBase[out Int, out G, out Any]
+fun body(x, y) = case
+  0 then x
+  1 then y
+  n then bind of x `+ y, (z => body(y, z)(n - 1))
+body
+//│ Type: ['G] -> (CodeBase[out Int, out 'G, ?], CodeBase[out Int, out 'G, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Int, out 'G, ?]
+
+fun gib(n) = (x, y) `=> body(x, y)(n)
+let g5 = run(gib(5))
+g5
+//│ Type: (Int, Int) -> Int

@@ -1,12 +1,15 @@
 :js
 
 // This is an interesting experiment in evaluation context.
+// Author: Luyu Cheng
+
 
 import "../../../mlscript-compile/Option.mls"
 import "../../../mlscript-compile/MutMap.mls"
 
 open annotations
 open Option { Some, None }
+
 
 data class Term with
   constructor
@@ -278,11 +281,17 @@ fun evalByValue'(term) =
       set term = remake(subterm)
     else term
 //│ ╔══[COMPILATION ERROR] Pattern chaining is not supported in pattern compilation.
-//│ ║  l.211: 	      App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
+//│ ║  l.214: 	      App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
 //│ ╙──       	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Pattern chaining is not supported in pattern compilation.
-//│ ║  l.214: 	      App(Context(Hole) as [lhs, remake], Term as rhs) =>
+//│ ║  l.217: 	      App(Context(Hole) as [lhs, remake], Term as rhs) =>
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.282: 	    else term
+//│ ╙──       	         ^^^^
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.282: 	    else term
+//│ ╙──       	         ^^^^
 
 object ByName with
   // Call-by-name allows reducing any beta redex. The argument `n` may be any

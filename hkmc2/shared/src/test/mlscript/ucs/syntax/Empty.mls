@@ -4,8 +4,9 @@
 :sjs
 :re
 if {}
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: match error
 
 
@@ -27,7 +28,7 @@ if
 if
   let x
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (let)
-//│ ║  l.28: 	  let x
+//│ ║  l.29: 	  let x
 //│ ╙──      	      ^
 //│ ═══[RUNTIME ERROR] Error: match error
 

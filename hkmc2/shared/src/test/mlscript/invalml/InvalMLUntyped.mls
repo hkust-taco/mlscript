@@ -1,0 +1,26 @@
+:invalml
+:js
+
+
+
+@untyped 1
+//│ = 1
+//│ Type: ⊥
+
+:re
+(@untyped 1)(2)
+//│ ═══[RUNTIME ERROR] TypeError: 1 is not a function
+//│ Type: ⊥
+
+@untyped
+fun f: Int
+
+@untyped declare fun f: Int
+
+@untyped 
+@untyped 
+declare fun f: Int
+
+@untyped fun f() = 1
+
+

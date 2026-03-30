@@ -1,0 +1,218 @@
+
+:global
+:wasm
+
+
+:wat
+let topA = 1
+let topB = 2
+topA + topB
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│     (if (result (ref null any))
+//│       (i32.and
+//│         (ref.test (ref null i31)
+//│           (local.get $lhs))
+//│         (ref.test (ref null i31)
+//│           (local.get $rhs)))
+//│       (then
+//│         (ref.i31
+//│           (i32.add
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $lhs)))
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $rhs))))))
+//│       (else
+//│         (unreachable))))
+//│   (elem declare func $plus_impl1)
+//│   (func $entry (type $entry1) (result (ref null any))
+//│     (local $topA (ref null any))
+//│     (local $topB (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $topA
+//│         (ref.i31
+//│           (i32.const 1)))
+//│       (block (result (ref null any))
+//│         (local.set $topB
+//│           (ref.i31
+//│             (i32.const 2)))
+//│         (call $plus_impl1
+//│           (local.get $topA)
+//│           (local.get $topB)))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 3
+
+
+:wat
+fun chain(x) =
+  let a = x + 1
+  let b = a + 1
+  a + b
+chain(1)
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $chain1 (func (param $x (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│     (if (result (ref null any))
+//│       (i32.and
+//│         (ref.test (ref null i31)
+//│           (local.get $lhs))
+//│         (ref.test (ref null i31)
+//│           (local.get $rhs)))
+//│       (then
+//│         (ref.i31
+//│           (i32.add
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $lhs)))
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $rhs))))))
+//│       (else
+//│         (unreachable))))
+//│   (elem declare func $plus_impl1)
+//│   (func $chain (type $chain1) (param $x (ref null any)) (result (ref null any))
+//│     (local $a (ref null any))
+//│     (local $b (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $a
+//│         (call $plus_impl1
+//│           (local.get $x)
+//│           (ref.i31
+//│             (i32.const 1))))
+//│       (block (result (ref null any))
+//│         (local.set $b
+//│           (call $plus_impl1
+//│             (local.get $a)
+//│             (ref.i31
+//│               (i32.const 1))))
+//│         (return
+//│           (call $plus_impl1
+//│             (local.get $a)
+//│             (local.get $b))))))
+//│   (export "chain" (func $chain))
+//│   (elem declare func $chain)
+//│   (func $entry (type $entry1) (result (ref null any))
+//│     (local $chain (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (call_ref $chain1
+//│         (ref.i31
+//│           (i32.const 1))
+//│         (ref.func $chain))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 5
+
+
+fun ifLocals(flag) =
+  if flag then
+    let a = 10
+    a + 1
+  else
+    let b = 20
+    b + 2
+ifLocals(true)
+ifLocals(false)
+//│ Wasm result:
+//│ = 22
+
+
+fun litMatch(x) =
+  if x is
+    0 then
+      let arm = 10
+      arm
+    1 then
+      let arm = 20
+      arm
+    else
+      let arm = 30
+      arm
+litMatch(0)
+litMatch(1)
+litMatch(9)
+//│ Wasm result:
+//│ = 30
+
+
+fun nestedInArm(x) =
+  if x is
+    0 then
+      let a = 40
+      if true then
+        let b = a + 2
+        b
+      else
+        0
+    else
+      0
+nestedInArm(0)
+//│ Wasm result:
+//│ = 42
+
+
+:wat
+class Foo(val a, val b)
+(new Foo(42, 1)).Foo#a
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $a (mut (ref null any))) (field $b (mut (ref null any))))))
+//│   (type $Foo_ctor (func (param $a (ref null any)) (param $b (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $Foo_ctor (type $Foo_ctor) (param $a (ref null any)) (param $b (ref null any)) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Foo))
+//│       (struct.set $Foo $$tag
+//│         (ref.cast (ref $Foo)
+//│           (local.get $this))
+//│         (i32.const 1))
+//│       (block
+//│         (struct.set $Foo $a
+//│           (ref.cast (ref $Foo)
+//│             (local.get $this))
+//│           (local.get $a))
+//│         (block
+//│           (struct.set $Foo $b
+//│             (ref.cast (ref $Foo)
+//│               (local.get $this))
+//│             (local.get $b))
+//│           (nop)))
+//│       (return
+//│         (local.get $this))))
+//│   (export "Foo_ctor" (func $Foo_ctor))
+//│   (elem declare func $Foo_ctor)
+//│   (func $entry (type $entry1) (result (ref null any))
+//│     (local $Foo (ref null any))
+//│     (local $tmp (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (block (result (ref null any))
+//│         (local.set $tmp
+//│           (call $Foo_ctor
+//│             (ref.i31
+//│               (i32.const 42))
+//│             (ref.i31
+//│               (i32.const 1))))
+//│         (struct.get $Foo $a
+//│           (ref.cast (ref $Foo)
+//│             (local.get $tmp))))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 42

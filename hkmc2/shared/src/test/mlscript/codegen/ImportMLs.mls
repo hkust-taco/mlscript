@@ -19,8 +19,9 @@ open Option
 
 :sjs
 None isDefined()
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ Option.isDefined(Option.None)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = false
 
 case Some(x) then x
@@ -38,8 +39,9 @@ Some(1)
 
 :sjs
 (new Some(1)) isDefined()
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp3; tmp3 = globalThis.Object.freeze(new Option.Some.class(1)); Option.isDefined(tmp3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 
 new Some(1) isDefined()
@@ -66,14 +68,14 @@ None == Option.None
 :re
 Option.oops
 //│ ╔══[COMPILATION ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.67: 	Option.oops
+//│ ║  l.69: 	Option.oops
 //│ ╙──      	      ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 :e
 open Option { oops }
 //│ ╔══[COMPILATION ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.74: 	open Option { oops }
+//│ ║  l.76: 	open Option { oops }
 //│ ╙──      	              ^^^^
 
 oops
@@ -82,7 +84,7 @@ oops
 :re
 Option.None.oops
 //│ ╔══[COMPILATION ERROR] Object 'None' does not contain member 'oops'
-//│ ║  l.83: 	Option.None.oops
+//│ ║  l.85: 	Option.None.oops
 //│ ╙──      	           ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 

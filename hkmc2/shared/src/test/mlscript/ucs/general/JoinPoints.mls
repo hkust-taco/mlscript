@@ -4,7 +4,7 @@
 // * Note: no join point needed
 :sjs
 x => if x is 0 then 1
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda;
 //│ lambda = (undefined, function (x) {
 //│   if (x === 0) {
@@ -12,12 +12,13 @@ x => if x is 0 then 1
 //│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ });
 //│ lambda
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 // * Note: join point needed
 :sjs
 x => if x is [[0]] then 1
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda1;
 //│ lambda1 = (undefined, function (x) {
 //│   let element0$, element0$1, tmp;
@@ -45,6 +46,7 @@ x => if x is [[0]] then 1
 //│   return tmp
 //│ });
 //│ lambda1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 
@@ -56,7 +58,7 @@ fun crazy(v) =
   if v is
     S(S(S(S(S(S(0)))))) then "bruh!"
     _ then S(S(S(S(S(S(0))))))
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let crazy;
 //│ crazy = function crazy(v) {
 //│   let arg$S$0$, arg$S$0$1, arg$S$0$2, arg$S$0$3, arg$S$0$4, arg$S$0$5, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
@@ -108,5 +110,6 @@ fun crazy(v) =
 //│   }
 //│   return tmp
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

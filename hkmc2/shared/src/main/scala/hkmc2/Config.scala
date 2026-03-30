@@ -21,11 +21,17 @@ case class Config(
   sanityChecks: Opt[SanityChecks],
   effectHandlers: Opt[EffectHandlers],
   liftDefns: Opt[LiftDefns],
+  patMatConsequentSharingThreshold: Opt[Int],
   stageCode: Bool,
   target: CompilationTarget,
   rewriteWhileLoops: Bool,
   tailRecOpt: Bool,
+  deforest: Opt[Deforest],
   qqEnabled: Bool,
+  funcToCls: Bool,
+  commentGeneratedCode: Bool,
+  noFreeze: Bool,
+  noModuleCheck: Bool,
 ):
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
@@ -53,12 +59,20 @@ object Config:
     // sanityChecks = S(SanityChecks(light = true)),
     effectHandlers = N,
     liftDefns = N,
+    patMatConsequentSharingThreshold = default.patMatConsequentSharingThreshold, // minimum: 1
     target = CompilationTarget.JS,
     rewriteWhileLoops = false,
     stageCode = false,
     tailRecOpt = true,
+    deforest = N,
     qqEnabled = false,
+    funcToCls = false,
+    commentGeneratedCode = false,
+    noFreeze = false,
+    noModuleCheck = false,
   )
+  object default:
+    val patMatConsequentSharingThreshold = S(15)
   
   case class SanityChecks(light: Bool)
   
@@ -84,6 +98,11 @@ object Config:
 
   case class LiftDefns() // there may be other settings in the future, having it as a case class now
   
+  case class Deforest(val debug: Boolean)
+
+  object Deforest:
+    val default = Deforest(true)
+
 end Config
 
 

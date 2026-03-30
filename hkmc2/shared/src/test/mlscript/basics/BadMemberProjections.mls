@@ -12,10 +12,11 @@
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found integer literal.
 //│ ║  l.6: 	1::x
 //│ ╙──     	^
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda;
 //│ lambda = (undefined, function (self, ...args) { return runtime.safeCall(self.x(...args)) });
 //│ lambda
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 :ssjs
@@ -23,23 +24,22 @@
 :re
 1::x()
 //│ ╔══[COMPILATION ERROR] Integer literal is not a known class.
-//│ ║  l.24: 	1::x()
+//│ ║  l.25: 	1::x()
 //│ ║        	^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found integer literal.
-//│ ║  l.24: 	1::x()
+//│ ║  l.25: 	1::x()
 //│ ╙──      	^
-//│ JS:
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let lambda1;
-//│ lambda1 = (undefined, function (...args1) {
-//│   runtime.checkArgs("", 1, false, args1.length);
-//│   let self = args1[0];
-//│   let args = runtime.Tuple.slice(args1, 1, 0);
+//│ lambda1 = (undefined, function (self, ...args) {
+//│   runtime.checkArgs("", 1, false, arguments.length);
 //│   return runtime.safeCall(self.x(...args))
 //│ });
 //│ block$res2 = runtime.checkCall(lambda1());
 //│ undefined
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 1 argument but got 0
 
 
