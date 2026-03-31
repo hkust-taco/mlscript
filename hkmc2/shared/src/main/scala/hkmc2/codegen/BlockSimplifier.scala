@@ -201,7 +201,7 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
             case _ => N
           case _ => N
       
-      def matchArgs(args: List[Arg], params: ParamList): Option[List[(Local, Result)]] =
+      def matchArgs(args: List[Arg], params: ParamList): Option[List[(VarSymbol, Result)]] =
         if args.exists(_.spread.isDefined) then
           // we require a precise match when any arg is a spread arg
           if params.restParam.isEmpty then return N
@@ -340,57 +340,10 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
 
     object InlinerReplacer:
 
-      class Copier(doRename: Bool, k: Option[Result => Block], resSym: Symbol)(using State):
+      class Copier(resSym: Symbol, existingMapping: Map[Symbol, Symbol])(using State):
         val lblSym = LabelSymbol(N, "inlinedLbl")
 
-        object SubstMap extends SymbolSubst:
-          val needsSub = MutSet.empty[Symbol]
-          val subMap = MutMap.empty[Symbol, Symbol]
-      
-          def addRenamedSymbol(sym: Symbol) =
-            assert(!subMap.contains(sym), s"Symbol ${sym} is already renamed.")
-            if doRename then
-              needsSub += sym
-          
-          def doSymbolSubst(orig: Symbol, newSym: => Symbol): Symbol =
-            if needsSub(orig) then
-              subMap.getOrElseUpdate(orig, newSym)
-            else
-              orig
-
-          override def mapBlockMemberSym(s: BlockMemberSymbol): BlockMemberSymbol =
-            doSymbolSubst(s, BlockMemberSymbol(s.nme, s.trees, s.nameIsMeaningful)).asInstanceOf
-          override def mapFlowSym(s: FlowSymbol): FlowSymbol =
-            doSymbolSubst(s, FlowSymbol(s.nme)).asInstanceOf
-          override def mapTempSym(s: TempSymbol): TempSymbol =
-            doSymbolSubst(s, TempSymbol(s.trm, s.nme)).asInstanceOf
-          override def mapVarSym(s: VarSymbol): VarSymbol =
-            doSymbolSubst(s, VarSymbol(s.id)).asInstanceOf
-          override def mapInstSym(s: InstSymbol): InstSymbol =
-            doSymbolSubst(s, InstSymbol(s.origin)).asInstanceOf
-          override def mapBuiltInSym(s: BuiltinSymbol): BuiltinSymbol =
-            // We shouldn't define any builtin so this doesn't make sense.
-            doSymbolSubst(s, ???).asInstanceOf
-          override def mapTermSym(s: TermSymbol): TermSymbol =
-            doSymbolSubst(s, TermSymbol(s.k, s.owner, s.id)).asInstanceOf
-          override def mapCtorSym(s: CtorSymbol): CtorSymbol =
-            doSymbolSubst(s, ???).asInstanceOf
-          override def mapClsSym(s: ClassSymbol): ClassSymbol =
-            doSymbolSubst(s, ClassSymbol(s.tree, s.id)).asInstanceOf
-          override def mapModuleSym(s: ModuleOrObjectSymbol): ModuleOrObjectSymbol =
-            doSymbolSubst(s, ModuleOrObjectSymbol(s.tree, s.id)).asInstanceOf
-          override def mapTypeAliasSym(s: TypeAliasSymbol): TypeAliasSymbol =
-            doSymbolSubst(s, TypeAliasSymbol(s.id)).asInstanceOf
-          override def mapPatSym(s: PatternSymbol): PatternSymbol =
-            doSymbolSubst(s, PatternSymbol(s.id, s.params, s.body)).asInstanceOf
-          override def mapTopLevelSym(s: TopLevelSymbol): TopLevelSymbol =
-            doSymbolSubst(s, TopLevelSymbol(s.nme)).asInstanceOf
-          override def mapErrorSym(s: ErrorSymbol): ErrorSymbol =
-            doSymbolSubst(s, ErrorSymbol(s.nme, s.tree)).asInstanceOf
-          override def mapLabelSym(s: LabelSymbol): LabelSymbol =
-            doSymbolSubst(s, LabelSymbol(s.trm, s.nme)).asInstanceOf
-
-        object Copier extends BlockTransformer(SubstMap):
+        object Copier extends SymbolRefresher(existingMapping):
           var currentlyNested = false
 
           override def applyFunBodyLikeBlock(b: Block): Block =
@@ -403,18 +356,11 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
           override def applyBlock(b: Block): Block = b match
             case Return(res, false) if !currentlyNested =>
               applyResult(res): r2 =>
-                k.fold(Assign(resSym, r2, Break(lblSym)))(k => k(r2))
+                Assign(resSym, r2, Break(lblSym))
             case _ => super.applyBlock(b)
 
-          override def applyScopedBlock(b: Block): Block = b match
-            case Scoped(syms, body) if !currentlyNested =>
-              syms.foreach(SubstMap.addRenamedSymbol)
-              Scoped(syms.map(_.subst), applySubBlock(body))
-            case _ => super.applyScopedBlock(b)
-
         def applyBlock(blk: Block) =
-          val newBlk = Copier.applyBlock(blk)
-          k.fold(Label(lblSym, false, newBlk, _))(_ => _ => newBlk)
+          Label(lblSym, false, Copier.applyBlock(blk), _)
 
       class Transformer(m: InlinerMap)(using Config.Inliner, State) extends BlockTransformer(SymbolSubst()):
 
@@ -468,27 +414,17 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
                 case S(matchedArgs) =>
                   registerChange
                   tl.log(s"Inline call for ${ts}, with args ${args}")
-                  // this doesn't work for various reasons:
-                  // the inlined block may end up inside a label/match, which can put implicit return in the wrong place
-                  // using a Begin() node to append the continuation doesn't work either,
-                  // as the function may contain unreachable node at the end which is now reachable due to inlining.
-                  // TODO: Proper detection of return at tail position, or optimize the label in another pass
-                  val isSimple = false
-                  val resSym = TempSymbol(N, "inlinedVal")
-                  // Depends on whether the source is eliminated, we can reuse symbol from the original block.
-                  val copier = Copier(doRename = !info.canBeInlineEliminated, k = k.optionIf(isSimple), resSym)
-                  def go(acc: Block => Block, args: List[(Local, Result)]): Block =
+                  def go(acc: Block => Block, args: List[(VarSymbol, Result)], mapping: Map[Symbol, Symbol]): Block =
                     args match
                     case Nil =>
+                      val resSym = TempSymbol(N, "inlinedVal")
+                      val copier = Copier(resSym, mapping)
                       val newBlk = copier.applyBlock(blk)
-                      if isSimple then
-                        acc(newBlk(End()))
-                      else
-                        acc(Scoped(Set.single(resSym), newBlk(k(Value.Ref(resSym)))))
-                    case (sym, value) :: rest =>
-                      copier.SubstMap.addRenamedSymbol(sym)
-                      go(acc.assignScoped(sym.subst(using copier.SubstMap), value), rest)
-                  go(blockBuilder, matchedArgs)
+                      acc(Scoped(Set.single(resSym), newBlk(k(Value.Ref(resSym)))))
+                    case (sym, value) :: argRest =>
+                      val newSym = VarSymbol(sym.id)
+                      go(acc.assignScoped(newSym, value), argRest, mapping + (sym -> newSym))
+                  go(blockBuilder, matchedArgs, Map.empty)
           case _ => super.applyResult(r)(k)
 
       def replace(m: InlinerMap, prog: Program)(using Config.Inliner, State): Program =

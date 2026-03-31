@@ -97,7 +97,7 @@ f(1,2,3,4,5,6)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f4;
 //│ f4 = function f(a1, a2, a3, a4, a5, a6) {
-//│   let tmp1, a11, a41, a51, a31, a61, a21, inlinedVal;
+//│   let tmp1, a11, a21, a31, a41, a51, a61, inlinedVal;
 //│   a11 = a1;
 //│   a21 = a2;
 //│   a31 = a3;
@@ -200,19 +200,19 @@ f(1, 2, 1000)
 //│   static [definitionMetadata] = ["class", "Capture$f"]; 
 //│ });
 //│ f7 = function f(unused, immutable, mutated) {
-//│   let a1, tmp6, tmp7, f$cap, f$cap1, immutable1, f$cap2, inlinedVal, inlinedVal1;
+//│   let a1, tmp6, tmp7, f$cap, f$cap1, immutable1, inlinedVal, f$cap2, inlinedVal1;
 //│   f$cap = new Capture$f3(mutated);
-//│   f$cap2 = f$cap;
+//│   f$cap1 = f$cap;
 //│   immutable1 = immutable;
 //│   inlinedLbl: {
-//│     f$cap2.mutated$0 = 2;
-//│     inlinedVal = immutable1 + f$cap2.mutated$0;
+//│     f$cap1.mutated$0 = 2;
+//│     inlinedVal = immutable1 + f$cap1.mutated$0;
 //│     break inlinedLbl;
 //│   }
 //│   a1 = inlinedVal;
-//│   f$cap1 = f$cap;
+//│   f$cap2 = f$cap;
 //│   inlinedLbl1: {
-//│     inlinedVal1 = f$cap1.mutated$0;
+//│     inlinedVal1 = f$cap2.mutated$0;
 //│     break inlinedLbl1;
 //│   }
 //│   tmp6 = inlinedVal1;
@@ -296,7 +296,7 @@ g()(1)
 //│ });
 //│ f$ = function f$(scope0$cap) {
 //│   return (x1) => {
-//│     let x2, scope0$cap1, inlinedVal;
+//│     let scope0$cap1, x2, inlinedVal;
 //│     scope0$cap1 = scope0$cap;
 //│     x2 = x1;
 //│     inlinedLbl: {

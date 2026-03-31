@@ -11,25 +11,41 @@ import semantics.Elaborator.State
 
 class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends BlockTransformer(SymbolSubst.Id):
   val mapping = MutMap.from(existingMapping)
+  private def copyInnerSym(s: InnerSymbol): InnerSymbol = s match
+    case s: ClassSymbol => ClassSymbol(s.tree, s.id)
+    case s: ModuleOrObjectSymbol => ModuleOrObjectSymbol(s.tree, s.id)
+    case s: PatternSymbol => PatternSymbol(s.id, s.params, s.body)
+    case s: TopLevelSymbol => TopLevelSymbol(s.nme)
+  
   override def applyScopedBlock(b: Block): Block =
     b match
     case Scoped(syms, body) =>
       val newSyms = MutSet.empty[Symbol]
+      val oldSyms = MutSet.empty[Symbol]
       for s <- syms.toList.sortBy(_.uid) do
         assert(!mapping.isDefinedAt(s), s"already defined: $s")
         val newS = s match
           case tmpSym: TempSymbol => new TempSymbol(N, tmpSym.nme)
           case bms: BlockMemberSymbol =>
-            assert(bms.tsym.forall(_.owner.isEmpty))
             val newBms = new BlockMemberSymbol(bms.nme, Nil, bms.nameIsMeaningful)
-            newBms.tsym = bms.tsym.map(t => new TermSymbol(t.k, N, t.id))
+            newBms.tsym = bms.tsym.map: t =>
+              val newOwner = t.owner.map: o =>
+                val newInner = copyInnerSym(o)
+                mapping(o) = newInner
+                oldSyms.add(o)
+                newInner
+              val nt = new TermSymbol(t.k, newOwner, t.id)
+              mapping(t) = nt
+              oldSyms.add(t)
+              nt
             newBms
           case varSym: VarSymbol => new VarSymbol(varSym.id)
           case _ => lastWords(s"unexpected symbol kind: $s")
         mapping(s) = newS
+        oldSyms.add(s)
         newSyms.add(newS)
       val res = Scoped(newSyms, applyBlock(body))
-      for s <- syms do mapping.remove(s)
+      for s <- oldSyms do mapping.remove(s)
       res
     case _ => super.applyScopedBlock(b)
   override def applyBlock(b: Block): Block =
@@ -40,7 +56,7 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
         val newRest = applyBlock(rest)
         if (newLhs is lhs) && (newRhs is rhs) && (newRest is rest) then b else Assign(newLhs, newRhs, newRest)
     case Label(label, loop, body, rest) =>
-      assert(!mapping.isDefinedAt(label) && !loop)
+      assert(!mapping.isDefinedAt(label))
       val newLabel = new LabelSymbol(label.trm, label.nme)
       mapping(label) = newLabel
       val newBody = applyBlock(body)
@@ -48,7 +64,7 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
       val newRest = applyBlock(rest)
       Label(newLabel, loop, newBody, newRest)
     case Break(label) => Break(mapping.getOrElse(label, label).asInstanceOf[LabelSymbol])
-    case Continue(label) => TODO("unsupported `continue` instruction during rewriting")
+    case Continue(label) => Continue(mapping.getOrElse(label, label).asInstanceOf[LabelSymbol])
     case _ => super.applyBlock(b)
   
   override def applyDefn(defn: Defn)(k: Defn => Block): Block =

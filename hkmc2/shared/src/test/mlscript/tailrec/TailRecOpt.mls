@@ -16,7 +16,7 @@ fun f(a, b, c) =
     else c
 f(10000, 20000, 0)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f, g, g_f, inlinedVal1, a, b, c;
+//│ let f, g, g_f, a, b, c, inlinedVal1;
 //│ g_f = function g_f(id, param0, param1, param2, param3) {
 //│   loopLabel: while (true) {
 //│     switch (id) {

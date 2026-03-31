@@ -44,7 +44,7 @@ data class A(x) with
 //│   }
 //│   #A$cap;
 //│   getA() {
-//│     let tmp, A2, y, isMut, inlinedVal;
+//│     let tmp, isMut, A2, y, inlinedVal;
 //│     isMut = false;
 //│     A2 = this;
 //│     y = 2;

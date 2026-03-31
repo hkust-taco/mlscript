@@ -68,54 +68,9 @@ staged module Arguments with
     x = 1
     x
   fun g(x)(y, z)() = z
-//│ FAILURE: Unexpected internal error
-//│ FAILURE LOCATION: vars (JSBuilder.scala:753)
-//│ FAILURE INFO: Scope:
-//│   parentOrCfg = Right of Scope:
-//│     parentOrCfg = Right of Scope:
-//│       parentOrCfg = Right of Scope:
-//│         parentOrCfg = Left of Cfg:
-//│           escapeChars = true
-//│           useSuperscripts = false
-//│           includeZero = false
-//│           defaultName = "tmp"
-//│         curThis = S of S of globalThis:globalThis⁰
-//│         bindings = HashMap(module:Staged -> Staged, member:Function$$ -> Function$$, tmp:block$res -> block$res3, class:Nonstaged -> Nonstaged, member:Predef -> Predef, tmp:block$res -> block$res2, class:Staged -> Staged, tmp:runtime -> runtime, class:ClassInstrumentation -> ClassInstrumentation, tmp:definitionMetadata -> definitionMetadata, tmp:block$res -> block$res, tmp:prettyPrint -> prettyPrint, tmp:Term -> Term, tmp:Block -> Block, tmp:option -> option, member:x -> x, member:Expressions -> Expressions1, member:Arguments -> Arguments1, module:Arguments -> Arguments, module:Expressions -> Expressions, member:CallSubst -> CallSubst1, module:CallSubst -> CallSubst, tmp:block$res -> block$res5, class:Arguments -> Arguments, member:ClassInstrumentation -> ClassInstrumentation1, member:lambda$ -> lambda$, member:Outside -> Outside1, class:Outside -> Outside, member:lambda$ -> lambda$1, class:Function$ -> Function$, module:ClassInstrumentation -> ClassInstrumentation, tmp:block$res -> block$res4, member:Function$ -> Function$2, class:CallSubst -> CallSubst, class:Inside -> Inside, class:Function$ -> Function$1, member:Function$ -> Function$3, tmp:block$res -> block$res1, tmp:tmp -> tmp, class:Expressions -> Expressions, class:NoArg -> NoArg, member:Staged -> Staged1, member:Nonstaged -> Nonstaged1, module:Nonstaged -> Nonstaged)
-//│       curThis = S of S of class:Function$⁰
-//│       bindings = HashMap()
-//│     curThis = N
-//│     bindings = HashMap(z -> z, y -> y)
-//│   curThis = N
-//│   bindings = HashMap()
-//│ ╔══[INTERNAL ERROR] `y` is already in scope
-//│ ║  l.70: 	  fun g(x)(y, z)() = z
-//│ ╙──      	           ^
-//│ FAILURE: Unexpected internal error
-//│ FAILURE LOCATION: vars (JSBuilder.scala:753)
-//│ FAILURE INFO: Scope:
-//│   parentOrCfg = Right of Scope:
-//│     parentOrCfg = Right of Scope:
-//│       parentOrCfg = Right of Scope:
-//│         parentOrCfg = Left of Cfg:
-//│           escapeChars = true
-//│           useSuperscripts = false
-//│           includeZero = false
-//│           defaultName = "tmp"
-//│         curThis = S of S of globalThis:globalThis⁰
-//│         bindings = HashMap(module:Staged -> Staged, member:Function$$ -> Function$$, tmp:block$res -> block$res3, class:Nonstaged -> Nonstaged, member:Predef -> Predef, tmp:block$res -> block$res2, class:Staged -> Staged, tmp:runtime -> runtime, class:ClassInstrumentation -> ClassInstrumentation, tmp:definitionMetadata -> definitionMetadata, tmp:block$res -> block$res, tmp:prettyPrint -> prettyPrint, tmp:Term -> Term, tmp:Block -> Block, tmp:option -> option, member:x -> x, member:Expressions -> Expressions1, member:Arguments -> Arguments1, module:Arguments -> Arguments, module:Expressions -> Expressions, member:CallSubst -> CallSubst1, module:CallSubst -> CallSubst, tmp:block$res -> block$res5, class:Arguments -> Arguments, member:ClassInstrumentation -> ClassInstrumentation1, member:lambda$ -> lambda$, member:Outside -> Outside1, class:Outside -> Outside, member:lambda$ -> lambda$1, class:Function$ -> Function$, module:ClassInstrumentation -> ClassInstrumentation, tmp:block$res -> block$res4, member:Function$ -> Function$2, class:CallSubst -> CallSubst, class:Inside -> Inside, class:Function$ -> Function$1, member:Function$ -> Function$3, tmp:block$res -> block$res1, tmp:tmp -> tmp, class:Expressions -> Expressions, class:NoArg -> NoArg, member:Staged -> Staged1, member:Nonstaged -> Nonstaged1, module:Nonstaged -> Nonstaged)
-//│       curThis = S of S of class:Function$⁰
-//│       bindings = HashMap()
-//│     curThis = N
-//│     bindings = HashMap(z -> z, y -> y)
-//│   curThis = N
-//│   bindings = HashMap(y -> y1‹BAD_SHADOW›)
-//│ ╔══[INTERNAL ERROR] `z` is already in scope
-//│ ║  l.70: 	  fun g(x)(y, z)() = z
-//│ ╙──      	              ^
-//│ > let Arguments1, lambda$, lambda$1, Function$2, Function$3, Function$$;try { globalThis.Object.freeze(class Function$ extends globalThis.Function {   static {     Function$2 = this   }   constructor(z) {     super();     this.#z = z;   }   #Function$$cap;   #z;   get call$__checkNotMethod() { runtime.deboundMethod("call", "Function$"); }   call() {     runtime.checkArgs("call", 0, true, arguments.length);     let z1, inlinedVal;     z1 = this.#z;     inlinedLbl: {       inlinedVal = z1;       break inlinedLbl;     }     return inlinedVal   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Function$"];  }); globalThis.Object.freeze(class Function$1 extends globalThis.Function {   static {     Function$3 = this   }   constructor() {     super();   }   #Function$$cap;   get call$__checkNotMethod() { runtime.deboundMethod("call", "Function$"); }   call(y, z) {     runtime.checkArgs("call", 2, true, arguments.length);     let y1‹BAD_SHADOW›, z1‹BAD_SHADOW›, inlinedVal;     y1‹BAD_SHADOW› = y1‹BAD_SHADOW›;     z1‹BAD_SHADOW› = z1‹BAD_SHADOW›;     inlinedLbl: {       let tmp1, z1, isMut, inlinedVal1;       isMut = false;       z1 = z1‹BAD_SHADOW›;       inlinedLbl1: {         let tmp2;         if (isMut === true) {           tmp2 = new Function$2(z1);         } else {           tmp2 = globalThis.Object.freeze(new Function$2(z1));         }         inlinedVal1 = tmp2;         break inlinedLbl1;       }       tmp1 = inlinedVal1;       inlinedVal = tmp1;       break inlinedLbl;     }     return inlinedVal   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Function$"];  }); globalThis.Object.freeze(class Arguments {   static {     Arguments1 = this   }   constructor() {     runtime.Unit;   }   static #Arguments_mod$cap;   static {     let tmp1, tmp2, tmp3;     tmp3 = runtime.checkCall(Arguments.ctor$_instr());     runtime.checkCall(Block.printCode(tmp3));     tmp2 = runtime.checkCall(Arguments.f_instr());     runtime.checkCall(Block.printCode(tmp2));     tmp1 = runtime.checkCall(Arguments.g_instr());     runtime.checkCall(Block.printCode(tmp1));     runtime.Unit;   }   static ctor$_instr() {     runtime.checkArgs("ctor$_instr", 0, true, arguments.length);     let end, tmp1, tmp2, tmp3, tmp4;     end = globalThis.Object.freeze(new Block.End());     tmp1 = globalThis.Object.freeze(new Block.Symbol("ctor$"));     tmp2 = globalThis.Object.freeze([]);     tmp3 = globalThis.Object.freeze([       tmp2     ]);     tmp4 = globalThis.Object.freeze(new Block.FunDefn(tmp1, tmp3, end, true));     return tmp4   }    static f(x1) {     runtime.checkArgs("f", 1, true, arguments.length);     x1 = 1;     return x1   }    static g(x1) {     runtime.checkArgs("g", 1, true, arguments.length);     let tmp1;     tmp1 = globalThis.Object.freeze(new Function$3());     return tmp1   }    static f_instr() {     runtime.checkArgs("f_instr", 0, true, arguments.length);     let x1, lit, sym, tmp1, return1, assign, tmp2, tmp3, tmp4, tmp5, tmp6;     lit = globalThis.Object.freeze(new Block.ValueLit(1));     sym = globalThis.Object.freeze(new Block.Symbol("x"));     tmp1 = globalThis.Object.freeze(new Block.ValueRef(sym));     x1 = tmp1;     return1 = globalThis.Object.freeze(new Block.Return(tmp1, false));     assign = globalThis.Object.freeze(new Block.Assign(sym, lit, return1));     tmp2 = globalThis.Object.freeze(new Block.Symbol("x"));     tmp3 = globalThis.Object.freeze(new Block.Symbol("f"));     tmp4 = globalThis.Object.freeze([       tmp2     ]);     tmp5 = globalThis.Object.freeze([       tmp4     ]);     tmp6 = globalThis.Object.freeze(new Block.FunDefn(tmp3, tmp5, assign, true));     return tmp6   }    static g_instr() {     runtime.checkArgs("g_instr", 0, true, arguments.length);     let tmp1, sym, tmp2, tmp3, tmp4, sym1, var1, tmp5, inst, sym2, tmp6, return1, assign, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;     sym = globalThis.Object.freeze(new Block.Symbol("tmp"));     tmp2 = globalThis.Object.freeze([       sym     ]);     tmp3 = option.None;     tmp4 = globalThis.Object.freeze([]);     sym1 = globalThis.Object.freeze(new Block.ClassSymbol("Function$", Function$3, tmp3, tmp4));     var1 = globalThis.Object.freeze(new Block.ValueRef(sym1));     tmp5 = globalThis.Object.freeze([]);     inst = globalThis.Object.freeze(new Block.Instantiate(var1, tmp5));     sym2 = globalThis.Object.freeze(new Block.Symbol("tmp"));     tmp6 = globalThis.Object.freeze(new Block.ValueRef(sym2));     tmp1 = tmp6;     return1 = globalThis.Object.freeze(new Block.Return(tmp6, false));     assign = globalThis.Object.freeze(new Block.Assign(sym2, inst, return1));     tmp7 = globalThis.Object.freeze(new Block.Scoped(tmp2, assign));     tmp8 = globalThis.Object.freeze(new Block.Symbol("x"));     tmp9 = globalThis.Object.freeze(new Block.Symbol("g"));     tmp10 = globalThis.Object.freeze([       tmp8     ]);     tmp11 = globalThis.Object.freeze([       tmp10     ]);     tmp12 = globalThis.Object.freeze(new Block.FunDefn(tmp9, tmp11, tmp7, true));     return tmp12   }   #Arguments$cap;   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Arguments"];  }); block$res5 = undefined; } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:216)
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
+//│ > FunDefn(Symbol("ctor$"), ([]), End, true)
+//│ > FunDefn(Symbol("f"), ([Symbol("x")]), Assign(Symbol("x"), Lit(1), Return(Ref(Symbol("x")), false)), true)
+//│ > FunDefn(Symbol("g"), ([Symbol("x")]), Scoped([Symbol("tmp")], Assign(Symbol("tmp"), Instantiate(Ref(ClassSymbol("Function$", class Function$, None, [])), []), Return(Ref(Symbol("tmp")), false))), true)
 
 staged module OtherBlocks with
   fun scope() =
@@ -140,19 +95,7 @@ staged module ClassFunctions with
   class InnerClass() with
     fun f() = 1 + Arguments.f(1)
     fun g() = f() // TODO
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:220)
-//│ ═══[RUNTIME ERROR] ReferenceError: Arguments1 is not defined
-//│     at ClassFunctions.ctor$_instr (REPL34:1:5508)
-//│     at <static_initializer> (REPL34:1:4477)
-//│     at REPL34:1:8446
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:927:10)
-//│     at REPLServer.emit (node:events:518:28)
-//│     at REPLServer.emit (node:domain:489:12)
+//│ > FunDefn(Symbol("ctor$"), ([]), Define(ClsLikeDefn(ClassSymbol("InnerClass", fun InnerClass { class: class InnerClass }, Some([]), []), [FunDefn(Symbol("f"), ([]), Scoped([Symbol("tmp")], Assign(Symbol("tmp"), Call(Select(Ref(ModuleSymbol("Arguments", class Arguments)), Symbol("f_gen")), [Lit(1)]), Return(Call(Ref(Symbol("+")), [Lit(1), Ref(Symbol("tmp"))]), false))), true),FunDefn(Symbol("g"), ([]), Return(Call(Select(Ref(ClassSymbol("InnerClass", fun InnerClass { class: class InnerClass }, Some([]), [])), Symbol("f")), []), false), true)], TODO), End), true)
 
 // name collision
 class A()
@@ -185,7 +128,7 @@ staged module A with
   fun g() = {1 : 2}
 //│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: AssignField(Ref(term:A/x,None),Ident(a),Lit(IntLit(0)),Return(Select(Ref(tmp:runtime,None),Ident(Unit)),false))
 //│ ╔══[COMPILATION ERROR] Other Results not supported in staged module: Record(false,List(RcdArg(Some(Lit(IntLit(1))),Lit(IntLit(2)))))
-//│ ║  l.185: 	  fun g() = {1 : 2}
+//│ ║  l.128: 	  fun g() = {1 : 2}
 //│ ╙──       	                 ^
 //│ > FunDefn(Symbol("ctor$"), ([]), Assign(Symbol("x"), Call(Ref(ClassSymbol("C", fun C { class: class C }, Some([Symbol("a")]), [])), [Lit(1)]), End), true)
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.

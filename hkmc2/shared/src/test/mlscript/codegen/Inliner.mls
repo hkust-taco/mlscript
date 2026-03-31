@@ -15,7 +15,7 @@ f()
 fun f(x) = x
 f(100)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f1, inlinedVal1, x;
+//│ let f1, x, inlinedVal1;
 //│ f1 = function f(x1) {
 //│   return x1
 //│ };
@@ -46,7 +46,7 @@ fun f(a, b, c) = a + b + c
 print(f(1, 2, 3))
 print(f(1, 2, ...[1]))
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰, tmp, tmp1, tmp2, inlinedVal, a⁰, b⁰, c⁰;
+//│ let f⁰, tmp, tmp1, tmp2, a⁰, b⁰, c⁰, inlinedVal;
 //│ define f⁰ as fun f¹(a, b, c) {
 //│   let tmp3;
 //│   set tmp3 = +⁰(a, b);
@@ -80,7 +80,7 @@ f(1, 2)
 f(1, 2, 3)
 f(1, 2, 3, 4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f², a¹, b¹, c¹, a², b², c², inlinedVal, a³, b³, c³;
+//│ let f², a¹, b¹, c¹, a², b², c², a³, b³, c³, inlinedVal;
 //│ define f² as fun f³(a, b) {
 //│   let tmp;
 //│   set tmp = +⁰(a, b);

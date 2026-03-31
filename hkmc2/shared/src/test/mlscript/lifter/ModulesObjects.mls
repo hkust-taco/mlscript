@@ -47,7 +47,7 @@ foo(10)
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
 //│ foo1 = function foo(y) {
-//│   let tmp, y1, isMut, inlinedVal;
+//│   let tmp, isMut, y1, inlinedVal;
 //│   isMut = false;
 //│   y1 = y;
 //│   inlinedLbl: {
