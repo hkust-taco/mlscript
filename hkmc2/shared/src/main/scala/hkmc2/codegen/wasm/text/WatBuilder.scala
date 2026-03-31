@@ -686,6 +686,18 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val objRef = ref.cast(lhsExpr, RefType(ctx.getType_!(clsSym), nullable = false))
     struct.set(fieldidx, objRef, rhsExpr)
 
+  /** Reports an unresolved class-field write target. */
+  private def unresolvedAssignField(assign: AssignField, nme: Ident)(using Ctx, Raise): Expr =
+    errExpr(
+      Ls(
+        msg"WatBuilder::returningTerm for AssignField(...) without a resolved symbol is not implemented (field `${
+            nme.name
+          }`). Use `_.[_]` for index-based accesses." ->
+          nme.toLoc,
+      ),
+      extraInfo = S(assign),
+    )
+
   /** Resolves method metadata for a reference path when it denotes a registered class method. */
   private def methodInfoForRef(l: Local, disamb: Opt[DefinitionSymbol[?]])(using Ctx): Opt[MethodInfo] =
     val resolvedSym = l match
@@ -714,6 +726,19 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ctx.getFuncInfo(FuncIdx(methodInfo.funcId))
       .map(_.getSignatureType.results)
       .getOrElse(Seq(Result(RefType.anyref)))
+
+  /** Reports unsupported first-class use of a class method. */
+  private def unsupportedMethodValue(
+      methodInfo: MethodInfo,
+      loc: Opt[Loc],
+      extraInfo: => Str,
+  )(using Ctx, Raise): Expr =
+    errExpr(
+      Ls(
+        msg"`${methodInfo.dSym.toString}` is neither a field access nor a callable method" -> loc,
+      ),
+      extraInfo = S(extraInfo),
+    )
 
   /** Emits a direct call to a standalone lowered class method with an explicit receiver argument. */
   private def directMethodCall(
@@ -791,12 +816,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         case S(methodInfo) if methodInfo.shape == MethodShape.Getter =>
           directMethodCall(methodInfo, result(Value.This(methodInfo.ownerIsym)), Seq.empty)
         case S(methodInfo) =>
-          errExpr(
-            Ls(
-              msg"`${methodInfo.dSym.toString}` is neither a field access nor a callable method" -> r.toLoc,
-            ),
-            extraInfo = S(s"Block IR: $r"),
-          )
+          unsupportedMethodValue(methodInfo, r.toLoc, s"Block IR: $r")
         case _ =>
           if (l is State.unitSymbol) || disamb.contains(State.unitSymbol) then
             RegisterUnitSingleton()
@@ -851,14 +871,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   case MethodShape.Callable =>
                     S(directMethodCall(methodInfo, result(Value.This(methodInfo.ownerIsym)), args.map(argument)))
                   case MethodShape.Getter =>
-                    S(
-                      errExpr(
-                        Ls(
-                          msg"`${methodInfo.dSym.toString}` is neither a field access nor a callable method" -> c.toLoc,
-                        ),
-                        extraInfo = S(c.showAsTree),
-                      )
-                    )
+                    S(unsupportedMethodValue(methodInfo, c.toLoc, c.showAsTree))
             case sel: Select =>
               methodInfoForSelection(sel).flatMap: methodInfo =>
                 methodInfo.shape match
@@ -869,14 +882,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       else directMethodCall(methodInfo, receiver, args.map(argument))
                     )
                   case MethodShape.Getter =>
-                    S(
-                      errExpr(
-                        Ls(
-                          msg"`${methodInfo.dSym.toString}` is neither a field access nor a callable method" -> c.toLoc,
-                        ),
-                        extraInfo = S(c.showAsTree),
-                      )
-                    )
+                    S(unsupportedMethodValue(methodInfo, c.toLoc, c.showAsTree))
             case _ => N
           ctorCall.orElse(methodCall).getOrElse:
             val base = subexpression(fun)
@@ -914,12 +920,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           if receiver.resultTypes.exists(_ is UnreachableType) then receiver
           else directMethodCall(methodInfo, receiver, Seq.empty)
         case S(methodInfo) =>
-          errExpr(
-            Ls(
-              msg"`${methodInfo.dSym.toString}` is neither a field access nor a callable method" -> sel.toLoc,
-            ),
-            extraInfo = S(sel.showAsTree),
-          )
+          unsupportedMethodValue(methodInfo, sel.toLoc, sel.showAsTree)
         case _ =>
           sel.symbol match
             case S(selObj: ModuleOrObjectSymbol) =>
@@ -1265,26 +1266,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     case _ => N
                 yield
                   directFieldAssign(selCls, fieldSym, lhsExpr, rhsExpr)
-                assignInstrOpt.getOrElse:
-                  errExpr(
-                    Ls(
-                      msg"WatBuilder::returningTerm for AssignField(...) without a resolved symbol is not implemented (field `${
-                          nme.name
-                        }`). Use `_.[_]` for index-based accesses." ->
-                        nme.toLoc,
-                    ),
-                    extraInfo = S(assign),
-                  )
+                assignInstrOpt.getOrElse(unresolvedAssignField(assign, nme))
               case _ =>
-                errExpr(
-                  Ls(
-                    msg"WatBuilder::returningTerm for AssignField(...) without a resolved symbol is not implemented (field `${
-                        nme.name
-                      }`). Use `_.[_]` for index-based accesses." ->
-                      nme.toLoc,
-                  ),
-                  extraInfo = S(assign),
-                )
+                unresolvedAssignField(assign, nme)
 
         val rstBlk = returningTerm(rst)
         blockInstr(
