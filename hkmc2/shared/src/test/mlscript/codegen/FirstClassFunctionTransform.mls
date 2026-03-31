@@ -15,10 +15,32 @@ fun aux(f) = f(1) + f(10)
 
 
 :sjs
+:noInline
 fun f(x, y, b) =
   aux(z => x + z) * aux(z => if b then y + z else y - z)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f, Function$2, Function$3;
+//│ let f, lambda, lambda1, Function$2, Function$3, Function$$, Function$$1;
+//│ Function$$1 = function Function$$(isMut, x) {
+//│   let tmp;
+//│   if (isMut === true) {
+//│     tmp = new Function$2(x);
+//│   } else {
+//│     tmp = globalThis.Object.freeze(new Function$2(x));
+//│   }
+//│   return tmp
+//│ };
+//│ Function$$ = function Function$$(isMut, y, b) {
+//│   let tmp;
+//│   if (isMut === true) {
+//│     tmp = new Function$3(y, b);
+//│   } else {
+//│     tmp = globalThis.Object.freeze(new Function$3(y, b));
+//│   }
+//│   return tmp
+//│ };
+//│ lambda = (undefined, function (x, z) {
+//│   return x + z
+//│ });
 //│ (class Function$ extends globalThis.Function {
 //│   static {
 //│     Function$2 = this
@@ -30,14 +52,17 @@ fun f(x, y, b) =
 //│   #Function$$cap;
 //│   #x;
 //│   call(z) {
-//│     let x1, z1, inlinedVal;
-//│     x1 = this.#x;
-//│     z1 = z;
-//│     inlinedVal = x1 + z1;
-//│     return inlinedVal
+//│     return lambda(this.#x, z)
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Function$"]; 
+//│ });
+//│ lambda1 = (undefined, function (y, b, z) {
+//│   if (b === true) {
+//│     return y + z
+//│   } else {
+//│     return y - z
+//│   }
 //│ });
 //│ (class Function$1 extends globalThis.Function {
 //│   static {
@@ -52,42 +77,16 @@ fun f(x, y, b) =
 //│   #y;
 //│   #b;
 //│   call(z) {
-//│     let y1, b1, z1, inlinedVal;
-//│     y1 = this.#y;
-//│     b1 = this.#b;
-//│     z1 = z;
-//│     if (b1 === true) {
-//│       inlinedVal = y1 + z1;
-//│     } else {
-//│       inlinedVal = y1 - z1;
-//│     }
-//│     return inlinedVal
+//│     return lambda1(this.#y, this.#b, z)
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Function$"]; 
 //│ });
 //│ f = function f(x, y, b) {
-//│   let tmp, tmp1, tmp2, tmp3, isMut, x1, inlinedVal, isMut1, y1, b1, inlinedVal1, tmp4, tmp5;
-//│   isMut = false;
-//│   x1 = x;
-//│   if (isMut === true) {
-//│     tmp5 = new Function$2(x1);
-//│   } else {
-//│     tmp5 = globalThis.Object.freeze(new Function$2(x1));
-//│   }
-//│   inlinedVal = tmp5;
-//│   tmp2 = inlinedVal;
+//│   let tmp, tmp1, tmp2, tmp3;
+//│   tmp2 = Function$$1(false, x);
 //│   tmp = aux(tmp2);
-//│   isMut1 = false;
-//│   y1 = y;
-//│   b1 = b;
-//│   if (isMut1 === true) {
-//│     tmp4 = new Function$3(y1, b1);
-//│   } else {
-//│     tmp4 = globalThis.Object.freeze(new Function$3(y1, b1));
-//│   }
-//│   inlinedVal1 = tmp4;
-//│   tmp3 = inlinedVal1;
+//│   tmp3 = Function$$(false, y, b);
 //│   tmp1 = aux(tmp3);
 //│   return tmp * tmp1
 //│ };
@@ -165,12 +164,12 @@ let f = foo in bar(f)
 bar([foo].0)
 bar([foo, x => x].1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if 0 is a function.
-//│ ║  l.165: 	bar([foo].0)
+//│ ║  l.164: 	bar([foo].0)
 //│ ╙──       	         ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 0$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
 //│ ╔══[COMPILATION ERROR] Cannot determine if 1 is a function.
-//│ ║  l.166: 	bar([foo, x => x].1)
+//│ ║  l.165: 	bar([foo, x => x].1)
 //│ ╙──       	                 ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 1$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
@@ -187,7 +186,7 @@ bar([foo, x => x].(i))
 :ge
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.188: 	[foo, x => x].(i)(0)
+//│ ║  l.187: 	[foo, x => x].(i)(0)
 //│ ╙──       	               ^
 
 
@@ -201,10 +200,10 @@ let foo = Foo()
 foo.("f")(0)
 foo.("h")(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.201: 	foo.("f")(0)
+//│ ║  l.200: 	foo.("f")(0)
 //│ ╙──       	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.202: 	foo.("h")(1)
+//│ ║  l.201: 	foo.("h")(1)
 //│ ╙──       	^^^^^^^^
 //│ = 0
 //│ foo = Foo()
@@ -825,7 +824,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.826: 	foo.f(0)
+//│ ║  l.825: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -843,7 +842,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.844: 	foo.x(0)
+//│ ║  l.843: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 

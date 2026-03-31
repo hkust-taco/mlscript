@@ -101,6 +101,7 @@ fun f() =
 f()
 //│ = 100
 
+// TODO(inliner): something is wrong here
 // broken due to handlers currently not handling `object` properly
 :fixme
 :expect 100
@@ -110,20 +111,20 @@ fun f() =
   4
 f()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.108: 	  object A with
+//│ ║  l.109: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.108: 	  object A with
+//│ ║  l.109: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
-//│ ║  l.108: 	  object A with
+//│ ║  l.109: 	  object A with
 //│ ║         	  ^^^^^^^^^^^^^
-//│ ║  l.109: 	    return 100
+//│ ║  l.110: 	    return 100
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.108: 	  object A with
+//│ ║  l.109: 	  object A with
 //│ ║         	         ^^^^^^
-//│ ║  l.109: 	    return 100
+//│ ║  l.110: 	    return 100
 //│ ╙──       	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: Assignment to constant variable.
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
@@ -147,20 +148,20 @@ fun f() =
   4
 f()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.145: 	  object A with
+//│ ║  l.146: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.145: 	  object A with
+//│ ║  l.146: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
-//│ ║  l.145: 	  object A with
+//│ ║  l.146: 	  object A with
 //│ ║         	  ^^^^^^^^^^^^^
-//│ ║  l.146: 	    (() => return 100)()
+//│ ║  l.147: 	    (() => return 100)()
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.145: 	  object A with
+//│ ║  l.146: 	  object A with
 //│ ║         	         ^^^^^^
-//│ ║  l.146: 	    (() => return 100)()
+//│ ║  l.147: 	    (() => return 100)()
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: A is not defined
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'

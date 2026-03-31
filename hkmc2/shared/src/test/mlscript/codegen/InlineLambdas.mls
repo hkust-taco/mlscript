@@ -1,46 +1,51 @@
 :js
+:noInline
 
 :sjs
 (x => x + 1 + 1 + 1 + 1 + 1)(1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x, inlinedVal, tmp, tmp1, tmp2, tmp3;
-//│ x = 1;
-//│ tmp = x + 1;
-//│ tmp1 = tmp + 1;
-//│ tmp2 = tmp1 + 1;
-//│ tmp3 = tmp2 + 1;
-//│ inlinedVal = tmp3 + 1;
-//│ inlinedVal
+//│ let lambda;
+//│ lambda = (undefined, function (x) {
+//│   let tmp, tmp1, tmp2, tmp3;
+//│   tmp = x + 1;
+//│   tmp1 = tmp + 1;
+//│   tmp2 = tmp1 + 1;
+//│   tmp3 = tmp2 + 1;
+//│   return tmp3 + 1
+//│ });
+//│ lambda(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 
 :sjs
 (x => x + 1 + 1 + 1 + 1 + 1 + 1)(1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x1, inlinedVal1, tmp4, tmp5, tmp6, tmp7, tmp8;
-//│ x1 = 1;
-//│ tmp4 = x1 + 1;
-//│ tmp5 = tmp4 + 1;
-//│ tmp6 = tmp5 + 1;
-//│ tmp7 = tmp6 + 1;
-//│ tmp8 = tmp7 + 1;
-//│ inlinedVal1 = tmp8 + 1;
-//│ inlinedVal1
+//│ let lambda1;
+//│ lambda1 = (undefined, function (x) {
+//│   let tmp, tmp1, tmp2, tmp3, tmp4;
+//│   tmp = x + 1;
+//│   tmp1 = tmp + 1;
+//│   tmp2 = tmp1 + 1;
+//│   tmp3 = tmp2 + 1;
+//│   tmp4 = tmp3 + 1;
+//│   return tmp4 + 1
+//│ });
+//│ lambda1(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 7
 
 :sjs
 (x => x) + 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda2; lambda2 = (undefined, function (x2) { return x2 }); lambda2 + 1
+//│ let lambda2; lambda2 = (undefined, function (x) { return x }); lambda2 + 1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = "function (x2) {   runtime.checkArgs(\"\", 1, true, arguments.length);   return x2 }1"
+//│ = "function (x) {   runtime.checkArgs(\"\", 1, true, arguments.length);   return x }1"
 
 :sjs
 1 + (x => x)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda3; lambda3 = (undefined, function (x2) { return x2 }); 1 + lambda3
+//│ let lambda3; lambda3 = (undefined, function (x) { return x }); 1 + lambda3
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = "1function (x2) {   runtime.checkArgs(\"\", 1, true, arguments.length);   return x2 }"
+//│ = "1function (x) {   runtime.checkArgs(\"\", 1, true, arguments.length);   return x }"
 
 

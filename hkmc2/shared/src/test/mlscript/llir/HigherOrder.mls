@@ -101,8 +101,6 @@ f(3)
 //│ Interpreted:
 //│ 6
 
-// Note: Current LLIR backend do not support Label used by the inliner.
-:noInline
 fun f(x) =
   fun even(x) =
     fun odd(x) =

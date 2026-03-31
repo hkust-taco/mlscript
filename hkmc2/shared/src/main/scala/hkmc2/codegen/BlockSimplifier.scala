@@ -335,6 +335,7 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
           case f: FunDefn =>
             addFunctionAndApplyBody(f, false)
           case c: ClsLikeDefn =>
+            c.parentPath.foreach(applyPath)
             c.methods.foreach: f =>
               addFunctionAndApplyBody(f, true)
             // Note: no tracking, since instantiate will not be inlined and won't cause cycles.
