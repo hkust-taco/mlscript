@@ -375,6 +375,9 @@ extends Importer with ucs.SplitElaborator:
   
   def annot(tree: Tree): Ctxl[Opt[Annot]] = tree match
     case Keywrd(kw @ (Keyword.`abstract` | Keyword.`declare` | Keyword.`data` | Keyword.`staged`)) => S(Annot.Modifier(kw))
+    case App(Ident("config"), Tup(args)) =>
+      val modify = ConfigParser.parseOverrides(args)
+      S(Annot.Config(modify))
     case _ => term(tree) match
       case Term.Error => N
       case trm =>
@@ -1475,6 +1478,15 @@ extends Importer with ucs.SplitElaborator:
         go(sts, Nil, defn :: acc)
       case Annotated(annotation, target) :: sts =>
         go(target :: sts, annotations ++ annot(annotation), acc)
+      case Directive(Ident("config"), Tup(args)) :: sts =>
+        reportUnusedAnnotations
+        val modify = ConfigParser.parseOverrides(args)
+        go(sts, Nil, SetConfig(modify) :: acc)
+      case Directive(Ident(name), _) :: sts =>
+        raise(ErrorReport(
+          msg"Unknown directive '#${name}'" -> sts.headOption.flatMap(_.toLoc) :: Nil,
+          source = Diagnostic.Source.Compilation))
+        go(sts, annotations, acc)
       case (st: Tree) :: sts =>
         // TODO reject plain term statements? Currently, `(1, 2)` is allowed to elaborate (tho it should be rejected in type checking later)
         val res = annotations.foldLeft(term(st)):

@@ -508,6 +508,7 @@ final case class FunDefn(
     body: Block,
   )(
     val forceTailRec: Bool,
+    val configOverride: Opt[Config] = N,
 ) extends Defn:
   val innerSym = N
   val asPath = Value.Ref(sym, S(dSym))

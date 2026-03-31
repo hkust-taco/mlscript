@@ -215,6 +215,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case DefineVar(sym, rhs) :: stats =>
         term(rhs): r =>
           Assign(sym, r, blockImpl(stats, res))
+      case (_: SetConfig) :: stats =>
+        // Config changes are handled at the program level; skip during block lowering
+        blockImpl(stats, res)
       case (imp: Import) :: stats =>
         raise(ErrorReport(
           msg"Imports must be at the top level" ->
@@ -241,7 +244,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                   blockImpl(stats, res)))(using LoweringCtx.nestFunc)
             case syntax.Fun =>
               val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme))
-              Define(FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(td.extraAnnotations.contains(Annot.TailRec)),
+              val cfgOverride = td.extraAnnotations.collectFirst:
+                case Annot.Config(modify) => modify(config)
+              Define(FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(td.extraAnnotations.contains(Annot.TailRec), cfgOverride),
                 blockImpl(stats, res))
             case syntax.Ins =>
               // Implicit instances are not parameterized for now.
@@ -1049,6 +1054,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   
   def program(main: st.Blk): Program =
     
+    // Extract cumulative config modifications from SetConfig statements
+    val configModify = main.stats.collect:
+      case sc: SetConfig => sc.modify
+    .foldLeft(identity[Config]): (acc, modify) =>
+      cfg => modify(acc(cfg))
+    val effectiveConfig = configModify(config)
+    
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
     
     val blk =
@@ -1059,7 +1071,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     
     val deforested =
       val outterTl = tl
-      config.deforest match
+      effectiveConfig.deforest match
         case None => desug
         case Some(dCfg) =>
           /*
@@ -1077,10 +1089,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     
     val handlerPaths = new HandlerPaths
 
-    val withHandlers1 = config.effectHandlers.fold(deforested): opt =>
+    val withHandlers1 = effectiveConfig.effectHandlers.fold(deforested): opt =>
       HandlerLowering(handlerPaths, opt).translateHandleBlocks(desug)
     
-    val shouldFlattenScopes = config.effectHandlers.isDefined
+    val shouldFlattenScopes = effectiveConfig.effectHandlers.isDefined
     
     val scopeFlattened =
       if shouldFlattenScopes then ScopeFlattener().applyBlock(withHandlers1)
@@ -1090,10 +1102,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       if lift then Lifter(scopeFlattened).transform
       else scopeFlattened
     
-    val (withHandlers2, stackSafetyInfo) = config.effectHandlers.fold((lifted, Map.empty)): opt =>
+    val (withHandlers2, stackSafetyInfo) = effectiveConfig.effectHandlers.fold((lifted, Map.empty)): opt =>
       HandlerLowering(handlerPaths, opt).translateTopLevel(lifted)
       
-    val stackSafe = config.stackSafety match
+    val stackSafe = effectiveConfig.stackSafety match
       case N => withHandlers2
       case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths, stackSafetyInfo).transformTopLevel(withHandlers2)
     
@@ -1105,13 +1117,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val merged = MergeMatchArmTransformer.applyBlock(bufferable)
     
     val funcToCls =
-      if config.funcToCls then Lifter(FirstClassFunctionTransformer().transform(merged)).transform
+      if effectiveConfig.funcToCls then Lifter(FirstClassFunctionTransformer().transform(merged)).transform
       else merged
     
     val staged = ReflectionInstrumenter(using summon).apply(funcToCls)
     
     val res =
-      if config.tailRecOpt then TailRecOpt().transform(staged)
+      if effectiveConfig.tailRecOpt then TailRecOpt().transform(staged)
       else staged
     
     Program(
