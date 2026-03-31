@@ -146,12 +146,13 @@ object ConfigParser:
         source = Diagnostic.Source.Compilation))
       N
 
-  /** Parse the `None` or `Some(...)` syntax for optional config fields. */
+  /** Parse the `None`/`Some(...)` syntax for optional config fields.
+    * Also accepts unwrapped values as a convenience (treated as `Some(value)`). */
   private def parseOpt[A](tree: Tree)(parseInner: Tree => Opt[A])(using Raise): Opt[Opt[A]] = tree match
     case Ident("None") | Ident("N") =>
       S(N)
     case App(Ident("Some") | Ident("S"), Tup(inner :: Nil)) =>
-      parseInner(inner).map(v => S(v)).orElse(S(N))
+      parseInner(inner).map(v => S(v))
     case other =>
       parseInner(other).map(v => S(v))
   
