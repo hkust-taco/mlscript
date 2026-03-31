@@ -36,6 +36,14 @@ foo
 //│ ║  l.34: 	foo
 //│ ╙──      	^^^
 
+:ge
+class Foo with
+  val x = 1
+let f = Foo
+//│ ╔══[COMPILATION ERROR] Plain class references are not supported in Wasm; instantiate the class instead.
+//│ ║  l.42: 	let f = Foo
+//│ ╙──      	        ^^^
+
 
 fun foo() = 42
 foo()
