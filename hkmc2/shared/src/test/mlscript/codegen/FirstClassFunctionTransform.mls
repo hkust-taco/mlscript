@@ -15,7 +15,6 @@ fun aux(f) = f(1) + f(10)
 
 
 :sjs
-:sir
 fun f(x, y, b) =
   aux(z => x + z) * aux(z => if b then y + z else y - z)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
@@ -107,108 +106,6 @@ fun f(x, y, b) =
 //│   tmp1 = aux(tmp3);
 //│   return tmp * tmp1
 //│ };
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ FAILURE: Unexpected internal error
-//│ FAILURE LOCATION: docParams (Printer.scala:112)
-//│ FAILURE INFO: Scope:
-//│   parentOrCfg = Right of Scope:
-//│     parentOrCfg = Left of Cfg:
-//│       escapeChars = false
-//│       useSuperscripts = false
-//│       includeZero = false
-//│       defaultName = "tmp"
-//│     curThis = S of S of globalThis:globalThis⁰
-//│     bindings = HashMap()
-//│   curThis = N
-//│   bindings = HashMap(b -> b, isMut -> isMut1, x -> x2, z -> z, x -> x1, x -> x, isMut -> isMut, y -> y)
-//│ ╔══[INTERNAL ERROR] `z` is already in scope
-//│ ║  l.20: 	  aux(z => x + z) * aux(z => if b then y + z else y - z)
-//│ ╙──      	      ^
-//│ FAILURE: Unexpected internal error
-//│ FAILURE LOCATION: docParams (Printer.scala:112)
-//│ FAILURE INFO: Scope:
-//│   parentOrCfg = Right of Scope:
-//│     parentOrCfg = Left of Cfg:
-//│       escapeChars = false
-//│       useSuperscripts = false
-//│       includeZero = false
-//│       defaultName = "tmp"
-//│     curThis = S of S of globalThis:globalThis⁰
-//│     bindings = HashMap()
-//│   curThis = N
-//│   bindings = HashMap(b -> b, isMut -> isMut1, z -> z1‹BAD_SHADOW›, z -> z1, y -> y2, b -> b2, y -> y1, b -> b1, x -> x2, x -> x1, x -> x, isMut -> isMut, y -> y)
-//│ ╔══[INTERNAL ERROR] `z` is already in scope
-//│ ║  l.20: 	  aux(z => x + z) * aux(z => if b then y + z else y - z)
-//│ ╙──      	                        ^
-//│ let f⁰, lambda⁰, lambda¹, Function$⁰, Function$¹, Function$$⁰, Function$$¹;
-//│ define Function$$¹ as fun Function$$²(isMut, x) {
-//│   let tmp;
-//│   match isMut
-//│     true =>
-//│       set tmp = new mut Function$²(x);
-//│       end
-//│     else
-//│       set tmp = new Function$²(x);
-//│       end
-//│   return tmp
-//│ };
-//│ define Function$$⁰ as fun Function$$³(isMut1, y, b) {
-//│   let tmp;
-//│   match isMut1
-//│     true =>
-//│       set tmp = new mut Function$³(y, b);
-//│       end
-//│     else
-//│       set tmp = new Function$³(y, b);
-//│       end
-//│   return tmp
-//│ };
-//│ define lambda⁰ as fun lambda²(x1, z) {
-//│   return +⁰(x1, z)
-//│ };
-//│ define Function$⁰ as class Function$² {
-//│   private val Function$$cap⁰;
-//│   private val x⁰;
-//│   constructor {
-//│     super⁰();
-//│     set x⁰ = x2;
-//│     end
-//│   }
-//│   method call⁰ = fun call¹(z1‹BAD_SHADOW›) {
-//│     return lambda²(x⁰, z1‹BAD_SHADOW›)
-//│   }
-//│ };
-//│ define lambda¹ as fun lambda³(y1, b1, z1) {
-//│   match b1
-//│     true =>
-//│       return +⁰(y1, z1)
-//│     else
-//│       return -⁰(y1, z1)
-//│   end
-//│ };
-//│ define Function$¹ as class Function$³ {
-//│   private val Function$$cap¹;
-//│   private val y⁰;
-//│   private val b⁰;
-//│   constructor {
-//│     super⁰();
-//│     set y⁰ = y2;
-//│     set b⁰ = b2;
-//│     end
-//│   }
-//│   method call² = fun call³(z2‹BAD_SHADOW›) {
-//│     return lambda³(y⁰, b⁰, z2‹BAD_SHADOW›)
-//│   }
-//│ };
-//│ define f⁰ as fun f¹(x3, y3, b3) {
-//│   let tmp, tmp1, tmp2, tmp3;
-//│   set tmp2 = Function$$²(false, x3);
-//│   set tmp = aux⁰(tmp2);
-//│   set tmp3 = Function$$³(false, y3, b3);
-//│   set tmp1 = aux⁰(tmp3);
-//│   return *⁰(tmp, tmp1)
-//│ };
-//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 121
@@ -290,12 +187,12 @@ let f = foo in bar(f)
 bar([foo].0)
 bar([foo, x => x].1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if 0 is a function.
-//│ ║  l.290: 	bar([foo].0)
+//│ ║  l.187: 	bar([foo].0)
 //│ ╙──       	         ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 0$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
 //│ ╔══[COMPILATION ERROR] Cannot determine if 1 is a function.
-//│ ║  l.291: 	bar([foo, x => x].1)
+//│ ║  l.188: 	bar([foo, x => x].1)
 //│ ╙──       	                 ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 1$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
@@ -312,7 +209,7 @@ bar([foo, x => x].(i))
 :ge
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.313: 	[foo, x => x].(i)(0)
+//│ ║  l.210: 	[foo, x => x].(i)(0)
 //│ ╙──       	               ^
 
 
@@ -326,10 +223,10 @@ let foo = Foo()
 foo.("f")(0)
 foo.("h")(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.326: 	foo.("f")(0)
+//│ ║  l.223: 	foo.("f")(0)
 //│ ╙──       	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.327: 	foo.("h")(1)
+//│ ║  l.224: 	foo.("h")(1)
 //│ ╙──       	^^^^^^^^
 //│ = 0
 //│ foo = Foo()
@@ -1001,8 +898,8 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.1002: 	foo.f(0)
-//│ ╙──        	^^^^^
+//│ ║  l.899: 	foo.f(0)
+//│ ╙──       	^^^^^
 //│ = 1
 
 foo.Foo#f(0)
@@ -1019,8 +916,8 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.1020: 	foo.x(0)
-//│ ╙──        	^^^^^
+//│ ║  l.917: 	foo.x(0)
+//│ ╙──       	^^^^^
 
 
 foo.Foo#x(0)
