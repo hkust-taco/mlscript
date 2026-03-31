@@ -44,20 +44,16 @@ data class A(x) with
 //│   }
 //│   #A$cap;
 //│   getA() {
-//│     let tmp, isMut, A2, y, inlinedVal;
+//│     let tmp, isMut, A2, y, inlinedVal, tmp1;
 //│     isMut = false;
 //│     A2 = this;
 //│     y = 2;
-//│     inlinedLbl: {
-//│       let tmp1;
-//│       if (isMut === true) {
-//│         tmp1 = new B1.class(y);
-//│       } else {
-//│         tmp1 = globalThis.Object.freeze(new B1.class(y));
-//│       }
-//│       inlinedVal = tmp1(A2);
-//│       break inlinedLbl;
+//│     if (isMut === true) {
+//│       tmp1 = new B1.class(y);
+//│     } else {
+//│       tmp1 = globalThis.Object.freeze(new B1.class(y));
 //│     }
+//│     inlinedVal = tmp1(A2);
 //│     tmp = inlinedVal;
 //│     return tmp.getB()
 //│   }

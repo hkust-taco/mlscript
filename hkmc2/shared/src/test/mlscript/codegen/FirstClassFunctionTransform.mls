@@ -33,10 +33,7 @@ fun f(x, y, b) =
 //│     let x1, z1, inlinedVal;
 //│     x1 = this.#x;
 //│     z1 = z;
-//│     inlinedLbl: {
-//│       inlinedVal = x1 + z1;
-//│       break inlinedLbl;
-//│     }
+//│     inlinedVal = x1 + z1;
 //│     return inlinedVal
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -59,14 +56,10 @@ fun f(x, y, b) =
 //│     y1 = this.#y;
 //│     b1 = this.#b;
 //│     z1 = z;
-//│     inlinedLbl: {
-//│       if (b1 === true) {
-//│         inlinedVal = y1 + z1;
-//│         break inlinedLbl
-//│       } else {
-//│         inlinedVal = y1 - z1;
-//│         break inlinedLbl
-//│       }
+//│     if (b1 === true) {
+//│       inlinedVal = y1 + z1;
+//│     } else {
+//│       inlinedVal = y1 - z1;
 //│     }
 //│     return inlinedVal
 //│   }
@@ -74,34 +67,26 @@ fun f(x, y, b) =
 //│   static [definitionMetadata] = ["class", "Function$"]; 
 //│ });
 //│ f = function f(x, y, b) {
-//│   let tmp, tmp1, tmp2, tmp3, isMut, x1, inlinedVal, isMut1, y1, b1, inlinedVal1;
+//│   let tmp, tmp1, tmp2, tmp3, isMut, x1, inlinedVal, isMut1, y1, b1, inlinedVal1, tmp4, tmp5;
 //│   isMut = false;
 //│   x1 = x;
-//│   inlinedLbl: {
-//│     let tmp4;
-//│     if (isMut === true) {
-//│       tmp4 = new Function$2(x1);
-//│     } else {
-//│       tmp4 = globalThis.Object.freeze(new Function$2(x1));
-//│     }
-//│     inlinedVal = tmp4;
-//│     break inlinedLbl;
+//│   if (isMut === true) {
+//│     tmp5 = new Function$2(x1);
+//│   } else {
+//│     tmp5 = globalThis.Object.freeze(new Function$2(x1));
 //│   }
+//│   inlinedVal = tmp5;
 //│   tmp2 = inlinedVal;
 //│   tmp = aux(tmp2);
 //│   isMut1 = false;
 //│   y1 = y;
 //│   b1 = b;
-//│   inlinedLbl1: {
-//│     let tmp5;
-//│     if (isMut1 === true) {
-//│       tmp5 = new Function$3(y1, b1);
-//│     } else {
-//│       tmp5 = globalThis.Object.freeze(new Function$3(y1, b1));
-//│     }
-//│     inlinedVal1 = tmp5;
-//│     break inlinedLbl1;
+//│   if (isMut1 === true) {
+//│     tmp4 = new Function$3(y1, b1);
+//│   } else {
+//│     tmp4 = globalThis.Object.freeze(new Function$3(y1, b1));
 //│   }
+//│   inlinedVal1 = tmp4;
 //│   tmp3 = inlinedVal1;
 //│   tmp1 = aux(tmp3);
 //│   return tmp * tmp1
@@ -116,7 +101,7 @@ f(0, 0, true)
 :sjs
 (x => x)(42)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x, inlinedVal; x = 42; inlinedLbl: { inlinedVal = x; break inlinedLbl; } inlinedVal
+//│ let x, inlinedVal; x = 42; inlinedVal = x; inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -124,11 +109,7 @@ f(0, 0, true)
 :sjs
 let x = 1 in (y => x + y)(0)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x1, y, inlinedVal1;
-//│ x1 = 1;
-//│ y = 0;
-//│ inlinedLbl1: { inlinedVal1 = x1 + y; break inlinedLbl1; }
-//│ inlinedVal1
+//│ let x1, y, inlinedVal1; x1 = 1; y = 0; inlinedVal1 = x1 + y; inlinedVal1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -156,10 +137,7 @@ bar(foo)
 //│   call(x2) {
 //│     let x3, inlinedVal3;
 //│     x3 = x2;
-//│     inlinedLbl2: {
-//│       inlinedVal3 = x3 + 1;
-//│       break inlinedLbl2;
-//│     }
+//│     inlinedVal3 = x3 + 1;
 //│     return inlinedVal3
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -167,7 +145,7 @@ bar(foo)
 //│ });
 //│ tmp = globalThis.Object.freeze(new Function$5());
 //│ f1 = tmp;
-//│ inlinedLbl2: { inlinedVal2 = runtime.safeCall(f1.call(0)); break inlinedLbl2; }
+//│ inlinedVal2 = runtime.safeCall(f1.call(0));
 //│ inlinedVal2
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
@@ -187,12 +165,12 @@ let f = foo in bar(f)
 bar([foo].0)
 bar([foo, x => x].1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if 0 is a function.
-//│ ║  l.187: 	bar([foo].0)
+//│ ║  l.165: 	bar([foo].0)
 //│ ╙──       	         ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 0$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
 //│ ╔══[COMPILATION ERROR] Cannot determine if 1 is a function.
-//│ ║  l.188: 	bar([foo, x => x].1)
+//│ ║  l.166: 	bar([foo, x => x].1)
 //│ ╙──       	                 ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 1$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
@@ -209,7 +187,7 @@ bar([foo, x => x].(i))
 :ge
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.210: 	[foo, x => x].(i)(0)
+//│ ║  l.188: 	[foo, x => x].(i)(0)
 //│ ╙──       	               ^
 
 
@@ -223,10 +201,10 @@ let foo = Foo()
 foo.("f")(0)
 foo.("h")(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.223: 	foo.("f")(0)
+//│ ║  l.201: 	foo.("f")(0)
 //│ ╙──       	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.224: 	foo.("h")(1)
+//│ ║  l.202: 	foo.("h")(1)
 //│ ╙──       	^^^^^^^^
 //│ = 0
 //│ foo = Foo()
@@ -275,10 +253,7 @@ Foo(1).foo(x => x - 1)
 //│   call(x2) {
 //│     let x3, inlinedVal4;
 //│     x3 = x2;
-//│     inlinedLbl4: {
-//│       inlinedVal4 = x3 - 1;
-//│       break inlinedLbl4;
-//│     }
+//│     inlinedVal4 = x3 - 1;
 //│     return inlinedVal4
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -307,10 +282,7 @@ foo()(1)
 //│   call(x2) {
 //│     let x3, inlinedVal4;
 //│     x3 = x2;
-//│     inlinedLbl4: {
-//│       inlinedVal4 = x3;
-//│       break inlinedLbl4;
-//│     }
+//│     inlinedVal4 = x3;
 //│     return inlinedVal4
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -343,10 +315,7 @@ class Bar() with
 //│   call(x2) {
 //│     let x3, inlinedVal4;
 //│     x3 = x2;
-//│     inlinedLbl4: {
-//│       inlinedVal4 = x3;
-//│       break inlinedLbl4;
-//│     }
+//│     inlinedVal4 = x3;
 //│     return inlinedVal4
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -396,10 +365,7 @@ class Baz(b) with
 //│     let b1, x3, inlinedVal4;
 //│     b1 = this.#b;
 //│     x3 = x2;
-//│     inlinedLbl4: {
-//│       inlinedVal4 = x3 + b1;
-//│       break inlinedLbl4;
-//│     }
+//│     inlinedVal4 = x3 + b1;
 //│     return inlinedVal4
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -418,19 +384,15 @@ class Baz(b) with
 //│   #Baz$cap;
 //│   #b;
 //│   baz() {
-//│     let tmp19, isMut, b1, inlinedVal4;
+//│     let tmp19, isMut, b1, inlinedVal4, tmp20;
 //│     isMut = false;
 //│     b1 = this.#b;
-//│     inlinedLbl4: {
-//│       let tmp20;
-//│       if (isMut === true) {
-//│         tmp20 = new Function$35(b1);
-//│       } else {
-//│         tmp20 = globalThis.Object.freeze(new Function$35(b1));
-//│       }
-//│       inlinedVal4 = tmp20;
-//│       break inlinedLbl4;
+//│     if (isMut === true) {
+//│       tmp20 = new Function$35(b1);
+//│     } else {
+//│       tmp20 = globalThis.Object.freeze(new Function$35(b1));
 //│     }
+//│     inlinedVal4 = tmp20;
 //│     tmp19 = inlinedVal4;
 //│     return tmp19
 //│   }
@@ -466,10 +428,7 @@ module Foo with
 //│     let x3, z1, inlinedVal4;
 //│     x3 = this.#x;
 //│     z1 = z;
-//│     inlinedLbl4: {
-//│       inlinedVal4 = x3 + z1;
-//│       break inlinedLbl4;
-//│     }
+//│     inlinedVal4 = x3 + z1;
 //│     return inlinedVal4
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -492,14 +451,10 @@ module Foo with
 //│     y2 = this.#y;
 //│     b1 = this.#b;
 //│     z1 = z;
-//│     inlinedLbl4: {
-//│       if (b1 === true) {
-//│         inlinedVal4 = y2 + z1;
-//│         break inlinedLbl4
-//│       } else {
-//│         inlinedVal4 = y2 - z1;
-//│         break inlinedLbl4
-//│       }
+//│     if (b1 === true) {
+//│       inlinedVal4 = y2 + z1;
+//│     } else {
+//│       inlinedVal4 = y2 - z1;
 //│     }
 //│     return inlinedVal4
 //│   }
@@ -521,34 +476,26 @@ module Foo with
 //│     return tmp21 + tmp22
 //│   } 
 //│   static f(x2, y1, b) {
-//│     let tmp21, tmp22, tmp23, tmp24, isMut, x3, inlinedVal4, isMut1, y2, b1, inlinedVal5;
+//│     let tmp21, tmp22, tmp23, tmp24, isMut, x3, inlinedVal4, isMut1, y2, b1, inlinedVal5, tmp25, tmp26;
 //│     isMut = false;
 //│     x3 = x2;
-//│     inlinedLbl4: {
-//│       let tmp25;
-//│       if (isMut === true) {
-//│         tmp25 = new Function$38(x3);
-//│       } else {
-//│         tmp25 = globalThis.Object.freeze(new Function$38(x3));
-//│       }
-//│       inlinedVal4 = tmp25;
-//│       break inlinedLbl4;
+//│     if (isMut === true) {
+//│       tmp26 = new Function$38(x3);
+//│     } else {
+//│       tmp26 = globalThis.Object.freeze(new Function$38(x3));
 //│     }
+//│     inlinedVal4 = tmp26;
 //│     tmp23 = inlinedVal4;
 //│     tmp21 = Foo4.aux(tmp23);
 //│     isMut1 = false;
 //│     y2 = y1;
 //│     b1 = b;
-//│     inlinedLbl5: {
-//│       let tmp26;
-//│       if (isMut1 === true) {
-//│         tmp26 = new Function$39(y2, b1);
-//│       } else {
-//│         tmp26 = globalThis.Object.freeze(new Function$39(y2, b1));
-//│       }
-//│       inlinedVal5 = tmp26;
-//│       break inlinedLbl5;
+//│     if (isMut1 === true) {
+//│       tmp25 = new Function$39(y2, b1);
+//│     } else {
+//│       tmp25 = globalThis.Object.freeze(new Function$39(y2, b1));
 //│     }
+//│     inlinedVal5 = tmp25;
 //│     tmp24 = inlinedVal5;
 //│     tmp22 = Foo4.aux(tmp24);
 //│     return tmp21 * tmp22
@@ -588,16 +535,12 @@ module Foo with
 //│   #y;
 //│   #z;
 //│   call(x2) {
-//│     let y2, z1, x3, inlinedVal4;
+//│     let y2, z1, x3, inlinedVal4, tmp21;
 //│     y2 = this.#y;
 //│     z1 = this.#z;
 //│     x3 = x2;
-//│     inlinedLbl4: {
-//│       let tmp21;
-//│       tmp21 = x3 + y2;
-//│       inlinedVal4 = tmp21 + z1;
-//│       break inlinedLbl4;
-//│     }
+//│     tmp21 = x3 + y2;
+//│     inlinedVal4 = tmp21 + z1;
 //│     return inlinedVal4
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -625,20 +568,16 @@ module Foo with
 //│       #Bar$cap;
 //│       #y;
 //│       bar(z) {
-//│         let tmp21, isMut, y2, z1, inlinedVal4;
+//│         let tmp21, isMut, y2, z1, inlinedVal4, tmp22;
 //│         isMut = false;
 //│         y2 = this.#y;
 //│         z1 = z;
-//│         inlinedLbl4: {
-//│           let tmp22;
-//│           if (isMut === true) {
-//│             tmp22 = new Function$41(y2, z1);
-//│           } else {
-//│             tmp22 = globalThis.Object.freeze(new Function$41(y2, z1));
-//│           }
-//│           inlinedVal4 = tmp22;
-//│           break inlinedLbl4;
+//│         if (isMut === true) {
+//│           tmp22 = new Function$41(y2, z1);
+//│         } else {
+//│           tmp22 = globalThis.Object.freeze(new Function$41(y2, z1));
 //│         }
+//│         inlinedVal4 = tmp22;
 //│         tmp21 = inlinedVal4;
 //│         return tmp21
 //│       }
@@ -677,10 +616,7 @@ y => x + y
 //│   call(y1) {
 //│     let y2, inlinedVal4;
 //│     y2 = y1;
-//│     inlinedLbl4: {
-//│       inlinedVal4 = x2 + y2;
-//│       break inlinedLbl4;
-//│     }
+//│     inlinedVal4 = x2 + y2;
 //│     return inlinedVal4
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -708,7 +644,7 @@ fun bar(x) = foo(x) + 1
 //│ bar2 = function bar(x3) {
 //│   let tmp24, x4, inlinedVal5;
 //│   x4 = x3;
-//│   inlinedLbl5: { inlinedVal5 = x4 + 1; break inlinedLbl5; }
+//│   inlinedVal5 = x4 + 1;
 //│   tmp24 = inlinedVal5;
 //│   return tmp24 + 1
 //│ };
@@ -737,10 +673,7 @@ A(x => x).x(1)
 //│   call(x3) {
 //│     let x4, inlinedVal5;
 //│     x4 = x3;
-//│     inlinedLbl5: {
-//│       inlinedVal5 = x4;
-//│       break inlinedLbl5;
-//│     }
+//│     inlinedVal5 = x4;
 //│     return inlinedVal5
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -765,10 +698,7 @@ A(foo).x(0)
 //│ bar3 = function bar(x3) {
 //│   let tmp28, x4, inlinedVal5;
 //│   x4 = x3;
-//│   inlinedLbl5: {
-//│     inlinedVal5 = x4 + 1;
-//│     break inlinedLbl5;
-//│   }
+//│   inlinedVal5 = x4 + 1;
 //│   tmp28 = inlinedVal5;
 //│   return tmp28 + 1
 //│ };
@@ -783,10 +713,7 @@ A(foo).x(0)
 //│   call(x3) {
 //│     let x4, inlinedVal5;
 //│     x4 = x3;
-//│     inlinedLbl5: {
-//│       inlinedVal5 = x4 + 1;
-//│       break inlinedLbl5;
-//│     }
+//│     inlinedVal5 = x4 + 1;
 //│     return inlinedVal5
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -898,7 +825,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.899: 	foo.f(0)
+//│ ║  l.826: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -916,7 +843,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.917: 	foo.x(0)
+//│ ║  l.844: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 
@@ -963,10 +890,7 @@ module Foo with
 //│   call(x3) {
 //│     let x4, inlinedVal5;
 //│     x4 = x3;
-//│     inlinedLbl5: {
-//│       inlinedVal5 = x4;
-//│       break inlinedLbl5;
-//│     }
+//│     inlinedVal5 = x4;
 //│     return inlinedVal5
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -1032,10 +956,7 @@ x => y => x + y
 //│     let x4, y3, inlinedVal5;
 //│     x4 = this.#x;
 //│     y3 = y2;
-//│     inlinedLbl5: {
-//│       inlinedVal5 = x4 + y3;
-//│       break inlinedLbl5;
-//│     }
+//│     inlinedVal5 = x4 + y3;
 //│     return inlinedVal5
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -1050,26 +971,18 @@ x => y => x + y
 //│   }
 //│   #Function$$cap;
 //│   call(x3) {
-//│     let x4, inlinedVal5;
+//│     let x4, inlinedVal5, tmp40, isMut, x5, inlinedVal6, tmp41;
 //│     x4 = x3;
-//│     inlinedLbl5: {
-//│       let tmp40, isMut, x5, inlinedVal6;
-//│       isMut = false;
-//│       x5 = x4;
-//│       inlinedLbl6: {
-//│         let tmp41;
-//│         if (isMut === true) {
-//│           tmp41 = new Function$68(x5);
-//│         } else {
-//│           tmp41 = globalThis.Object.freeze(new Function$68(x5));
-//│         }
-//│         inlinedVal6 = tmp41;
-//│         break inlinedLbl6;
-//│       }
-//│       tmp40 = inlinedVal6;
-//│       inlinedVal5 = tmp40;
-//│       break inlinedLbl5;
+//│     isMut = false;
+//│     x5 = x4;
+//│     if (isMut === true) {
+//│       tmp41 = new Function$68(x5);
+//│     } else {
+//│       tmp41 = globalThis.Object.freeze(new Function$68(x5));
 //│     }
+//│     inlinedVal6 = tmp41;
+//│     tmp40 = inlinedVal6;
+//│     inlinedVal5 = tmp40;
 //│     return inlinedVal5
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -1099,29 +1012,22 @@ fun foo(x)(y) = x + y
 //│     let x4, y3, inlinedVal5;
 //│     x4 = this.#x;
 //│     y3 = y2;
-//│     inlinedLbl5: {
-//│       inlinedVal5 = x4 + y3;
-//│       break inlinedLbl5;
-//│     }
+//│     inlinedVal5 = x4 + y3;
 //│     return inlinedVal5
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Function$"]; 
 //│ });
 //│ foo11 = function foo(x3) {
-//│   let tmp40, isMut, x4, inlinedVal5;
+//│   let tmp40, isMut, x4, inlinedVal5, tmp41;
 //│   isMut = false;
 //│   x4 = x3;
-//│   inlinedLbl5: {
-//│     let tmp41;
-//│     if (isMut === true) {
-//│       tmp41 = new Function$71(x4);
-//│     } else {
-//│       tmp41 = globalThis.Object.freeze(new Function$71(x4));
-//│     }
-//│     inlinedVal5 = tmp41;
-//│     break inlinedLbl5;
+//│   if (isMut === true) {
+//│     tmp41 = new Function$71(x4);
+//│   } else {
+//│     tmp41 = globalThis.Object.freeze(new Function$71(x4));
 //│   }
+//│   inlinedVal5 = tmp41;
 //│   tmp40 = inlinedVal5;
 //│   return tmp40
 //│ };
@@ -1149,16 +1055,12 @@ fun foo(x)(y)(z) = x + y + z
 //│   #y;
 //│   #x;
 //│   call(z) {
-//│     let x4, y3, z1, inlinedVal5;
+//│     let x4, y3, z1, inlinedVal5, tmp40;
 //│     x4 = this.#x;
 //│     y3 = this.#y;
 //│     z1 = z;
-//│     inlinedLbl5: {
-//│       let tmp40;
-//│       tmp40 = x4 + y3;
-//│       inlinedVal5 = tmp40 + z1;
-//│       break inlinedLbl5;
-//│     }
+//│     tmp40 = x4 + y3;
+//│     inlinedVal5 = tmp40 + z1;
 //│     return inlinedVal5
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -1175,47 +1077,35 @@ fun foo(x)(y)(z) = x + y + z
 //│   #Function$$cap;
 //│   #x;
 //│   call(y2) {
-//│     let x4, y3, inlinedVal5;
+//│     let x4, y3, inlinedVal5, tmp40, isMut, x5, y4, inlinedVal6, tmp41;
 //│     x4 = this.#x;
 //│     y3 = y2;
-//│     inlinedLbl5: {
-//│       let tmp40, isMut, x5, y4, inlinedVal6;
-//│       isMut = false;
-//│       x5 = x4;
-//│       y4 = y3;
-//│       inlinedLbl6: {
-//│         let tmp41;
-//│         if (isMut === true) {
-//│           tmp41 = new Function$74(x5, y4);
-//│         } else {
-//│           tmp41 = globalThis.Object.freeze(new Function$74(x5, y4));
-//│         }
-//│         inlinedVal6 = tmp41;
-//│         break inlinedLbl6;
-//│       }
-//│       tmp40 = inlinedVal6;
-//│       inlinedVal5 = tmp40;
-//│       break inlinedLbl5;
+//│     isMut = false;
+//│     x5 = x4;
+//│     y4 = y3;
+//│     if (isMut === true) {
+//│       tmp41 = new Function$74(x5, y4);
+//│     } else {
+//│       tmp41 = globalThis.Object.freeze(new Function$74(x5, y4));
 //│     }
+//│     inlinedVal6 = tmp41;
+//│     tmp40 = inlinedVal6;
+//│     inlinedVal5 = tmp40;
 //│     return inlinedVal5
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Function$"]; 
 //│ });
 //│ foo12 = function foo(x3) {
-//│   let tmp40, isMut, x4, inlinedVal5;
+//│   let tmp40, isMut, x4, inlinedVal5, tmp41;
 //│   isMut = false;
 //│   x4 = x3;
-//│   inlinedLbl5: {
-//│     let tmp41;
-//│     if (isMut === true) {
-//│       tmp41 = new Function$75(x4);
-//│     } else {
-//│       tmp41 = globalThis.Object.freeze(new Function$75(x4));
-//│     }
-//│     inlinedVal5 = tmp41;
-//│     break inlinedLbl5;
+//│   if (isMut === true) {
+//│     tmp41 = new Function$75(x4);
+//│   } else {
+//│     tmp41 = globalThis.Object.freeze(new Function$75(x4));
 //│   }
+//│   inlinedVal5 = tmp41;
 //│   tmp40 = inlinedVal5;
 //│   return tmp40
 //│ };
@@ -1240,7 +1130,7 @@ foo(1)
 //│   tmp40 = x3 * 2;
 //│   x4 = x3;
 //│   y2 = tmp40;
-//│   inlinedLbl5: { inlinedVal5 = x4 + y2; break inlinedLbl5; }
+//│   inlinedVal5 = x4 + y2;
 //│   return inlinedVal5
 //│ };
 //│ foo13(1)

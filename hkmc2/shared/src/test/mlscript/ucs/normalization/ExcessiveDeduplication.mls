@@ -20,13 +20,9 @@ if
   y then 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp;
-//│ split_1$: {
-//│   if (x === true) {
-//│     break split_1$
-//│   } else {
-//│     if (y === true) {
-//│       break split_1$
-//│     } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ if (x !== true) {
+//│   if (y !== true) {
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ }
 //│ tmp = 0;
@@ -80,28 +76,24 @@ if
 //│ let b, x1, element0$, tmp1;
 //│ split_root$: {
 //│   split_default$: {
-//│     split_1$1: {
-//│       if (x === true) {
-//│         if (z === true) {
-//│           tmp1 = 1;
-//│           break split_root$
-//│         } else {
-//│           if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
-//│             element0$ = runtime.Tuple.get(y, 0);
-//│             b = element0$;
-//│             break split_1$1
-//│           } else {
-//│             break split_default$
-//│           }
-//│         }
+//│     if (x === true) {
+//│       if (z === true) {
+//│         tmp1 = 1;
+//│         break split_root$
 //│       } else {
 //│         if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
 //│           element0$ = runtime.Tuple.get(y, 0);
 //│           b = element0$;
-//│           break split_1$1
 //│         } else {
 //│           break split_default$
 //│         }
+//│       }
+//│     } else {
+//│       if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
+//│         element0$ = runtime.Tuple.get(y, 0);
+//│         b = element0$;
+//│       } else {
+//│         break split_default$
 //│       }
 //│     }
 //│     x1 = 1;
@@ -137,9 +129,7 @@ if
 if false do ()
 123
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut;
-//│ split_1$2: { scrut = false; if (scrut === true) { break split_1$2 } else { break split_1$2 } }
-//│ 123
+//│ let scrut; scrut = false; if (scrut !== true) {} 123
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let scrut;
 //│ block split_root$:
@@ -154,18 +144,7 @@ if false do ()
 //│   end
 //│ 123
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let scrut;
-//│ begin
-//│   block split_1$:
-//│     set scrut = false;
-//│     match scrut
-//│       true =>
-//│         break split_1$
-//│       else
-//│         break split_1$
-//│     end
-//│   end;
-//│   123
+//│ let scrut; begin begin set scrut = false; match scrut true => end else end end; end; 123
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 123
 

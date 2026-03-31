@@ -119,10 +119,7 @@ fun f(x) =
 //│           let z1, inlinedVal;
 //│           z = 3;
 //│           z1 = z;
-//│           inlinedLbl: {
-//│             inlinedVal = z1;
-//│             break inlinedLbl;
-//│           }
+//│           inlinedVal = z1;
 //│           runtime.resumeValue = inlinedVal;
 //│           if (runtime.curEffect !== null) {
 //│             return runtime.unwind(f4, 2, "ScopedBlocksAndHandlers.mls:103:7", null, null, 1, 1, x, 0)

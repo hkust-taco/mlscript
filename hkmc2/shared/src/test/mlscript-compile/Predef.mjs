@@ -156,31 +156,23 @@ let Predef1;
   static equals(a, b) {
     let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, scrut10, scrut11, tmp, lambda, lambda1, tmp1, tmp2, tmp3;
     split_root$: {
-      split_1$: {
-        scrut = a === b;
-        if (scrut === true) {
-          tmp = true;
-          break split_root$
-        } else {
-          if (a instanceof globalThis.Array) {
-            if (b instanceof globalThis.Array) {
-              scrut1 = a.length === b.length;
-              if (scrut1 === true) {
-                lambda = (undefined, function (a1, i) {
-                  let tmp4;
-                  tmp4 = runtime.safeCall(b.at(i));
-                  return Predef.equals(a1, tmp4)
-                });
-                tmp = runtime.safeCall(a.every(lambda));
-                break split_root$
-              } else {
-                break split_1$
-              }
-            } else {
-              break split_1$
+      scrut = a === b;
+      if (scrut === true) {
+        tmp = true;
+        break split_root$
+      } else {
+        if (a instanceof globalThis.Array) {
+          if (b instanceof globalThis.Array) {
+            scrut1 = a.length === b.length;
+            if (scrut1 === true) {
+              lambda = (undefined, function (a1, i) {
+                let tmp4;
+                tmp4 = runtime.safeCall(b.at(i));
+                return Predef.equals(a1, tmp4)
+              });
+              tmp = runtime.safeCall(a.every(lambda));
+              break split_root$
             }
-          } else {
-            break split_1$
           }
         }
       }

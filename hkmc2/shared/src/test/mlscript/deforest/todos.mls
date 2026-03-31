@@ -30,6 +30,7 @@ data class Some(x)
 // in "rest function"s and after the early return (and becomes dead code).
 // A dead code elimination pass that detects code after early return would solve this problem.
 :sir
+:sjs
 :expect 78
 fun test(x) =
   let t = if x is
@@ -40,6 +41,246 @@ fun f(a) = if a is
   AA(AA) then 0
 let p = AA(AA(AA(10)))
 test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
+//│ deforest > >>> fusing >>>
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(x,None)
+//│ deforest > 	Select(Ref(x,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(tmp:arg$AA$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(10))))) ->
+//│ deforest > 	Ref(tmp:arg$AA$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(10))))) ->
+//│ deforest > 	Ref(tmp:arg$AA$0$,None)
+//│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
+//│ deforest > <<< fusing <<<
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let test, f, p, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, AA_x, AA_x1, AA_x2, AA_x3, deforest$lam, x, inlinedVal, x1, inlinedVal1, x2, inlinedVal2;
+//│ test = function test(x3) {
+//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
+//│   if (x3 instanceof AA1.class) {
+//│     arg$AA$0$ = x3.x;
+//│     if (arg$AA$0$ instanceof AA1.class) {
+//│       arg$AA$0$1 = arg$AA$0$.x;
+//│       if (arg$AA$0$1 instanceof AA1.class) {
+//│         arg$AA$0$2 = arg$AA$0$1.x;
+//│         a = arg$AA$0$2;
+//│         tmp11 = a;
+//│       } else {
+//│         tmp11 = 4;
+//│       }
+//│     } else {
+//│       tmp11 = 4;
+//│     }
+//│   } else {
+//│     tmp11 = 4;
+//│   }
+//│   t = tmp11;
+//│   tmp12 = 5 * 4;
+//│   tmp13 = t + tmp12;
+//│   tmp14 = tmp13 - 3;
+//│   tmp15 = tmp14 + 2;
+//│   return tmp15 - 1
+//│ };
+//│ f = function f(a) {
+//│   let arg$AA$0$, tmp11;
+//│   split_root$: {
+//│     if (a instanceof AA1.class) {
+//│       arg$AA$0$ = a.x;
+//│       if (arg$AA$0$ instanceof AA1.class) {
+//│         tmp11 = 0;
+//│         break split_root$
+//│       }
+//│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   }
+//│   return tmp11
+//│ };
+//│ AA_x = 10;
+//│ tmp = (fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5) => {
+//│   let fv_a, fv_arg$AA$0$, fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, AA_x4, inlinedVal3, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, inlinedVal4, fv_t2, fv_tmp10, fv_tmp11, fv_tmp12, fv_tmp13, fv_tmp14, inlinedVal5, fv_t3, fv_tmp15, fv_tmp16, fv_tmp17, fv_tmp18, fv_tmp19, inlinedVal6;
+//│   fv_a = fv_ctorLam_a;
+//│   fv_arg$AA$0$ = fv_ctorLam_arg$AA$0$;
+//│   fv_t = fv_ctorLam_t;
+//│   fv_tmp = fv_ctorLam_tmp1;
+//│   fv_tmp1 = fv_ctorLam_tmp2;
+//│   fv_tmp2 = fv_ctorLam_tmp3;
+//│   fv_tmp3 = fv_ctorLam_tmp4;
+//│   fv_tmp4 = fv_ctorLam_tmp5;
+//│   AA_x4 = AA_x;
+//│   fv_arg$AA$0$ = AA_x4;
+//│   fv_a = fv_arg$AA$0$;
+//│   fv_tmp = fv_a;
+//│   fv_t1 = fv_t;
+//│   fv_tmp5 = fv_tmp;
+//│   fv_tmp6 = fv_tmp1;
+//│   fv_tmp7 = fv_tmp2;
+//│   fv_tmp8 = fv_tmp3;
+//│   fv_tmp9 = fv_tmp4;
+//│   fv_t2 = fv_t1;
+//│   fv_tmp10 = fv_tmp5;
+//│   fv_tmp11 = fv_tmp6;
+//│   fv_tmp12 = fv_tmp7;
+//│   fv_tmp13 = fv_tmp8;
+//│   fv_tmp14 = fv_tmp9;
+//│   fv_t3 = fv_t2;
+//│   fv_tmp15 = fv_tmp10;
+//│   fv_tmp16 = fv_tmp11;
+//│   fv_tmp17 = fv_tmp12;
+//│   fv_tmp18 = fv_tmp13;
+//│   fv_tmp19 = fv_tmp14;
+//│   fv_t3 = fv_tmp15;
+//│   fv_tmp16 = 5 * 4;
+//│   fv_tmp17 = fv_t3 + fv_tmp16;
+//│   fv_tmp18 = fv_tmp17 - 3;
+//│   fv_tmp19 = fv_tmp18 + 2;
+//│   inlinedVal6 = fv_tmp19 - 1;
+//│   inlinedVal5 = inlinedVal6;
+//│   inlinedVal4 = inlinedVal5;
+//│   inlinedVal3 = inlinedVal4;
+//│   return inlinedVal3
+//│ };
+//│ tmp1 = AA1(tmp);
+//│ p = AA1(tmp1);
+//│ x = p;
+//│ inlinedLbl: {
+//│   let t, arg$AA$0$, arg$AA$0$1, tmp11, tmp12, tmp13, tmp14, tmp15;
+//│   if (x instanceof AA1.class) {
+//│     arg$AA$0$ = x.x;
+//│     if (arg$AA$0$ instanceof AA1.class) {
+//│       arg$AA$0$1 = arg$AA$0$.x;
+//│       inlinedVal = arg$AA$0$1(undefined, undefined, tmp11, t, tmp11, tmp12, tmp13, tmp14, tmp15);
+//│       break inlinedLbl
+//│     } else {
+//│       tmp11 = 4;
+//│     }
+//│   } else {
+//│     tmp11 = 4;
+//│   }
+//│   t = tmp11;
+//│   tmp12 = 5 * 4;
+//│   tmp13 = t + tmp12;
+//│   tmp14 = tmp13 - 3;
+//│   tmp15 = tmp14 + 2;
+//│   inlinedVal = tmp15 - 1;
+//│ }
+//│ tmp2 = inlinedVal;
+//│ tmp3 = f(p);
+//│ tmp4 = tmp2 + tmp3;
+//│ AA_x1 = 10;
+//│ tmp5 = (fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5) => {
+//│   let fv_a, fv_arg$AA$0$, fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, AA_x4, inlinedVal3, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, inlinedVal4, fv_t2, fv_tmp10, fv_tmp11, fv_tmp12, fv_tmp13, fv_tmp14, inlinedVal5, fv_t3, fv_tmp15, fv_tmp16, fv_tmp17, fv_tmp18, fv_tmp19, inlinedVal6;
+//│   fv_a = fv_ctorLam_a;
+//│   fv_arg$AA$0$ = fv_ctorLam_arg$AA$0$;
+//│   fv_t = fv_ctorLam_t;
+//│   fv_tmp = fv_ctorLam_tmp1;
+//│   fv_tmp1 = fv_ctorLam_tmp2;
+//│   fv_tmp2 = fv_ctorLam_tmp3;
+//│   fv_tmp3 = fv_ctorLam_tmp4;
+//│   fv_tmp4 = fv_ctorLam_tmp5;
+//│   AA_x4 = AA_x1;
+//│   fv_arg$AA$0$ = AA_x4;
+//│   fv_a = fv_arg$AA$0$;
+//│   fv_tmp = fv_a;
+//│   fv_t1 = fv_t;
+//│   fv_tmp5 = fv_tmp;
+//│   fv_tmp6 = fv_tmp1;
+//│   fv_tmp7 = fv_tmp2;
+//│   fv_tmp8 = fv_tmp3;
+//│   fv_tmp9 = fv_tmp4;
+//│   fv_t2 = fv_t1;
+//│   fv_tmp10 = fv_tmp5;
+//│   fv_tmp11 = fv_tmp6;
+//│   fv_tmp12 = fv_tmp7;
+//│   fv_tmp13 = fv_tmp8;
+//│   fv_tmp14 = fv_tmp9;
+//│   fv_t3 = fv_t2;
+//│   fv_tmp15 = fv_tmp10;
+//│   fv_tmp16 = fv_tmp11;
+//│   fv_tmp17 = fv_tmp12;
+//│   fv_tmp18 = fv_tmp13;
+//│   fv_tmp19 = fv_tmp14;
+//│   fv_t3 = fv_tmp15;
+//│   fv_tmp16 = 5 * 4;
+//│   fv_tmp17 = fv_t3 + fv_tmp16;
+//│   fv_tmp18 = fv_tmp17 - 3;
+//│   fv_tmp19 = fv_tmp18 + 2;
+//│   inlinedVal6 = fv_tmp19 - 1;
+//│   inlinedVal5 = inlinedVal6;
+//│   inlinedVal4 = inlinedVal5;
+//│   inlinedVal3 = inlinedVal4;
+//│   return inlinedVal3
+//│ };
+//│ AA_x2 = tmp5;
+//│ tmp6 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_t1, fv_ctorLam_tmp5, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9) => {
+//│   let fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, AA_x4, inlinedVal3;
+//│   fv_a = fv_ctorLam_a;
+//│   fv_arg$AA$0$ = fv_ctorLam_arg$AA$0$;
+//│   fv_arg$AA$0$1 = fv_ctorLam_arg$AA$0$1;
+//│   fv_t = fv_ctorLam_t1;
+//│   fv_tmp = fv_ctorLam_tmp5;
+//│   fv_tmp1 = fv_ctorLam_tmp6;
+//│   fv_tmp2 = fv_ctorLam_tmp7;
+//│   fv_tmp3 = fv_ctorLam_tmp8;
+//│   fv_tmp4 = fv_ctorLam_tmp9;
+//│   AA_x4 = AA_x2;
+//│   fv_arg$AA$0$ = AA_x4;
+//│   inlinedVal3 = fv_arg$AA$0$(fv_a, fv_arg$AA$0$1, fv_tmp, fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4);
+//│   return inlinedVal3
+//│ };
+//│ AA_x3 = tmp6;
+//│ tmp7 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_arg$AA$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_t1, fv_ctorLam_tmp5, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9) => {
+//│   let fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, AA_x4, inlinedVal3;
+//│   fv_a = fv_ctorLam_a;
+//│   fv_arg$AA$0$ = fv_ctorLam_arg$AA$0$;
+//│   fv_arg$AA$0$1 = fv_ctorLam_arg$AA$0$1;
+//│   fv_arg$AA$0$2 = fv_ctorLam_arg$AA$0$2;
+//│   fv_t = fv_ctorLam_t1;
+//│   fv_tmp = fv_ctorLam_tmp5;
+//│   fv_tmp1 = fv_ctorLam_tmp6;
+//│   fv_tmp2 = fv_ctorLam_tmp7;
+//│   fv_tmp3 = fv_ctorLam_tmp8;
+//│   fv_tmp4 = fv_ctorLam_tmp9;
+//│   AA_x4 = AA_x3;
+//│   fv_arg$AA$0$ = AA_x4;
+//│   inlinedVal3 = fv_arg$AA$0$(fv_t, fv_a, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4);
+//│   return inlinedVal3
+//│ };
+//│ x1 = tmp7;
+//│ inlinedVal1 = x1(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+//│ tmp8 = inlinedVal1;
+//│ tmp9 = tmp4 + tmp8;
+//│ deforest$lam = (fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5) => {
+//│   let fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, inlinedVal3, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, inlinedVal4;
+//│   fv_t = fv_ctorLam_t;
+//│   fv_tmp = fv_ctorLam_tmp1;
+//│   fv_tmp1 = fv_ctorLam_tmp2;
+//│   fv_tmp2 = fv_ctorLam_tmp3;
+//│   fv_tmp3 = fv_ctorLam_tmp4;
+//│   fv_tmp4 = fv_ctorLam_tmp5;
+//│   fv_tmp = 4;
+//│   fv_t1 = fv_t;
+//│   fv_tmp5 = fv_tmp;
+//│   fv_tmp6 = fv_tmp1;
+//│   fv_tmp7 = fv_tmp2;
+//│   fv_tmp8 = fv_tmp3;
+//│   fv_tmp9 = fv_tmp4;
+//│   fv_t1 = fv_tmp5;
+//│   fv_tmp6 = 5 * 4;
+//│   fv_tmp7 = fv_t1 + fv_tmp6;
+//│   fv_tmp8 = fv_tmp7 - 3;
+//│   fv_tmp9 = fv_tmp8 + 2;
+//│   inlinedVal4 = fv_tmp9 - 1;
+//│   inlinedVal3 = inlinedVal4;
+//│   return inlinedVal3
+//│ };
+//│ x2 = deforest$lam;
+//│ inlinedVal2 = x2(undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+//│ tmp10 = inlinedVal2;
+//│ tmp9 + tmp10
 //│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(x,None)

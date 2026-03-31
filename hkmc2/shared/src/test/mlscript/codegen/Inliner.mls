@@ -4,10 +4,7 @@
 fun f() = 0
 f()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f, inlinedVal;
-//│ f = function f() { return 0 };
-//│ inlinedLbl: { inlinedVal = 0; break inlinedLbl; }
-//│ inlinedVal
+//│ let f, inlinedVal; f = function f() { return 0 }; inlinedVal = 0; inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -15,13 +12,7 @@ f()
 fun f(x) = x
 f(100)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f1, x, inlinedVal1;
-//│ f1 = function f(x1) {
-//│   return x1
-//│ };
-//│ x = 100;
-//│ inlinedLbl1: { inlinedVal1 = x; break inlinedLbl1; }
-//│ inlinedVal1
+//│ let f1, x, inlinedVal1; f1 = function f(x1) { return x1 }; x = 100; inlinedVal1 = x; inlinedVal1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 100
 
@@ -46,25 +37,24 @@ fun f(a, b, c) = a + b + c
 print(f(1, 2, 3))
 print(f(1, 2, ...[1]))
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰, tmp, tmp1, tmp2, a⁰, b⁰, c⁰, inlinedVal;
+//│ let f⁰, tmp, tmp1, tmp2, a⁰, b⁰, c⁰, inlinedVal, tmp3;
 //│ define f⁰ as fun f¹(a, b, c) {
-//│   let tmp3;
-//│   set tmp3 = +⁰(a, b);
-//│   return +⁰(tmp3, c)
+//│   let tmp4;
+//│   set tmp4 = +⁰(a, b);
+//│   return +⁰(tmp4, c)
 //│ };
 //│ set a⁰ = 1;
 //│ set b⁰ = 2;
 //│ set c⁰ = 3;
-//│ block inlinedLbl:
-//│   let tmp3;
+//│ begin
 //│   set tmp3 = +⁰(a⁰, b⁰);
 //│   set inlinedVal = +⁰(tmp3, c⁰);
-//│   break inlinedLbl
-//│ set tmp = inlinedVal;
-//│ do Predef⁰.print⁰(tmp);
-//│ set tmp1 = [1];
-//│ set tmp2 = f¹(1, 2, ...tmp1);
-//│ Predef⁰.print⁰(tmp2)
+//│   end;
+//│   set tmp = inlinedVal;
+//│   do Predef⁰.print⁰(tmp);
+//│   set tmp1 = [1];
+//│   set tmp2 = f¹(1, 2, ...tmp1);
+//│   Predef⁰.print⁰(tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 6
 //│ > 4
@@ -80,41 +70,38 @@ f(1, 2)
 f(1, 2, 3)
 f(1, 2, 3, 4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f², a¹, b¹, c¹, a², b², c², a³, b³, c³, inlinedVal;
+//│ let f², a¹, b¹, c¹, a², b², c², a³, b³, c³, inlinedVal, tmp, tmp1, tmp2;
 //│ define f² as fun f³(a, b) {
-//│   let tmp;
-//│   set tmp = +⁰(a, b);
-//│   do Predef⁰.print⁰(tmp);
+//│   let tmp3;
+//│   set tmp3 = +⁰(a, b);
+//│   do Predef⁰.print⁰(tmp3);
 //│   return Predef⁰.print⁰(c⁴)
 //│ };
 //│ set a¹ = 1;
 //│ set b¹ = 2;
 //│ set c¹ = mut [];
-//│ block inlinedLbl:
-//│   let tmp;
-//│   set tmp = +⁰(a¹, b¹);
-//│   do Predef⁰.print⁰(tmp);
+//│ begin
+//│   set tmp2 = +⁰(a¹, b¹);
+//│   do Predef⁰.print⁰(tmp2);
 //│   do Predef⁰.print⁰(c¹);
-//│   break inlinedLbl
-//│ set a² = 1;
-//│ set b² = 2;
-//│ set c² = mut [3];
-//│ block inlinedLbl1:
-//│   let tmp;
-//│   set tmp = +⁰(a², b²);
-//│   do Predef⁰.print⁰(tmp);
-//│   do Predef⁰.print⁰(c²);
-//│   break inlinedLbl1
-//│ set a³ = 1;
-//│ set b³ = 2;
-//│ set c³ = mut [3, 4];
-//│ block inlinedLbl2:
-//│   let tmp;
-//│   set tmp = +⁰(a³, b³);
-//│   do Predef⁰.print⁰(tmp);
-//│   set inlinedVal = Predef⁰.print⁰(c³);
-//│   break inlinedLbl2
-//│ inlinedVal
+//│   end;
+//│   set a² = 1;
+//│   set b² = 2;
+//│   set c² = mut [3];
+//│   begin
+//│     set tmp1 = +⁰(a², b²);
+//│     do Predef⁰.print⁰(tmp1);
+//│     do Predef⁰.print⁰(c²);
+//│     end;
+//│     set a³ = 1;
+//│     set b³ = 2;
+//│     set c³ = mut [3, 4];
+//│     begin
+//│       set tmp = +⁰(a³, b³);
+//│       do Predef⁰.print⁰(tmp);
+//│       set inlinedVal = Predef⁰.print⁰(c³);
+//│       end;
+//│       inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 3
 //│ > []
@@ -133,11 +120,11 @@ f(1, ...[2, 3])
 f(1, 2, ...[3])
 f(1, 2, 3, ...[4])
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f5, tmp7, tmp8, tmp9, a4, b4, c4;
+//│ let f5, tmp7, tmp8, tmp9, a4, b4, c4, tmp10;
 //│ f5 = function f(a5, b5, ...c5) {
-//│   let tmp10;
-//│   tmp10 = a5 + b5;
-//│   Predef.print(tmp10);
+//│   let tmp11;
+//│   tmp11 = a5 + b5;
+//│   Predef.print(tmp11);
 //│   return Predef.print(c5)
 //│ };
 //│ tmp7 = globalThis.Object.freeze([
@@ -151,13 +138,9 @@ f(1, 2, 3, ...[4])
 //│ a4 = 1;
 //│ b4 = 2;
 //│ c4 = tmp8;
-//│ inlinedLbl6: {
-//│   let tmp10;
-//│   tmp10 = a4 + b4;
-//│   Predef.print(tmp10);
-//│   Predef.print(c4);
-//│   break inlinedLbl6;
-//│ }
+//│ tmp10 = a4 + b4;
+//│ Predef.print(tmp10);
+//│ Predef.print(c4);
 //│ tmp9 = globalThis.Object.freeze([ 4 ]);
 //│ f5(1, 2, 3, ...tmp9)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -169,6 +152,36 @@ f(1, 2, 3, ...[4])
 //│ > [3, 4]
 
 
+// Multiple return points
+:sjs
+:expect true
+fun f() =
+  fun g(x) =
+    if x is true do return true
+    return false
+  g(true)
+f()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f6;
+//│ f6 = function f() {
+//│   let x1, inlinedVal4;
+//│   x1 = true;
+//│   inlinedLbl: {
+//│     if (x1 === true) {
+//│       inlinedVal4 = true;
+//│       break inlinedLbl
+//│     }
+//│     inlinedVal4 = false;
+//│   }
+//│   return inlinedVal4
+//│ };
+//│ f6()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = true
+
+
+// Methods (not implemented currently)
+// NOTE: only final method may be inlined, as they could be overriden
 
 :sjs
 :soir

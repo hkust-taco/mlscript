@@ -43,15 +43,12 @@ fun test(a) =
 //│     g(d) {
 //│       let e, inlinedVal;
 //│       e = d;
-//│       inlinedLbl: {
-//│         inlinedVal = globalThis.Object.freeze([
-//│           a,
-//│           this.b,
-//│           d,
-//│           e
-//│         ]);
-//│         break inlinedLbl;
-//│       }
+//│       inlinedVal = globalThis.Object.freeze([
+//│         a,
+//│         this.b,
+//│         d,
+//│         e
+//│       ]);
 //│       return inlinedVal
 //│     }
 //│     toString() { return runtime.render(this); }
@@ -157,13 +154,7 @@ Foo(123)
 //│   }
 //│   foo() {
 //│     let inlinedVal;
-//│     inlinedLbl: {
-//│       break inlinedLbl;
-//│     }
-//│     inlinedLbl1: {
-//│       inlinedVal = this.a;
-//│       break inlinedLbl1;
-//│     }
+//│     inlinedVal = this.a;
 //│     return inlinedVal
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -199,10 +190,7 @@ Bar(1)
 //│   foo() {
 //│     return () => {
 //│       let inlinedVal;
-//│       inlinedLbl: {
-//│         inlinedVal = this.x;
-//│         break inlinedLbl;
-//│       }
+//│       inlinedVal = this.x;
 //│       return inlinedVal
 //│     }
 //│   }

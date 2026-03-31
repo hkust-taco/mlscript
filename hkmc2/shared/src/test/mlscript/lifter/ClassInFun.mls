@@ -158,7 +158,7 @@ f().foo()
 //│   static [definitionMetadata] = ["class", "Bad", []]; 
 //│ });
 //│ f6 = function f() {
-//│   let x, y, tmp6, scope0$cap, isMut, scope0$cap1, inlinedVal, isMut1, scope0$cap2, x1, y1, inlinedVal1;
+//│   let x, y, tmp6, scope0$cap, isMut, scope0$cap1, inlinedVal, isMut1, scope0$cap2, x1, y1, inlinedVal1, tmp7, tmp8;
 //│   scope0$cap = new Capture$scope01(undefined, undefined);
 //│   x = 1;
 //│   y = 10;
@@ -166,32 +166,24 @@ f().foo()
 //│   scope0$cap.w$1 = 1000;
 //│   isMut = false;
 //│   scope0$cap1 = scope0$cap;
-//│   inlinedLbl: {
-//│     let tmp7;
-//│     if (isMut === true) {
-//│       tmp7 = new Bad1.class();
-//│     } else {
-//│       tmp7 = globalThis.Object.freeze(new Bad1.class());
-//│     }
-//│     inlinedVal = tmp7(scope0$cap1);
-//│     break inlinedLbl;
+//│   if (isMut === true) {
+//│     tmp8 = new Bad1.class();
+//│   } else {
+//│     tmp8 = globalThis.Object.freeze(new Bad1.class());
 //│   }
+//│   inlinedVal = tmp8(scope0$cap1);
 //│   tmp6 = inlinedVal;
 //│   tmp6.foo();
 //│   isMut1 = false;
 //│   scope0$cap2 = scope0$cap;
 //│   x1 = x;
 //│   y1 = y;
-//│   inlinedLbl1: {
-//│     let tmp8;
-//│     if (isMut1 === true) {
-//│       tmp8 = new Good1.class();
-//│     } else {
-//│       tmp8 = globalThis.Object.freeze(new Good1.class());
-//│     }
-//│     inlinedVal1 = tmp8(scope0$cap2, x1, y1);
-//│     break inlinedLbl1;
+//│   if (isMut1 === true) {
+//│     tmp7 = new Good1.class();
+//│   } else {
+//│     tmp7 = globalThis.Object.freeze(new Good1.class());
 //│   }
+//│   inlinedVal1 = tmp7(scope0$cap2, x1, y1);
 //│   return inlinedVal1
 //│ };
 //│ tmp5 = f6();

@@ -46,7 +46,7 @@ fun f =
 //│ let f⁰;
 //│ define f⁰ as fun f¹() {
 //│   let scrut, scrut1;
-//│   block split_default$:
+//│   begin
 //│     set scrut = true;
 //│     match scrut
 //│       true =>
@@ -55,12 +55,12 @@ fun f =
 //│           true =>
 //│             return runtime⁰.Unit⁰
 //│           else
-//│             break split_default$
+//│             end
 //│         end
 //│       else
-//│         break split_default$
-//│     end
-//│   throw new globalThis⁰.Error⁰("match error")
+//│         end
+//│     end;
+//│     throw new globalThis⁰.Error⁰("match error")
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -98,7 +98,7 @@ fun f =
 //│ let f²;
 //│ define f² as fun f³() {
 //│   let scrut, scrut1;
-//│   block split_1$:
+//│   begin
 //│     set scrut = true;
 //│     match scrut
 //│       true =>
@@ -107,12 +107,12 @@ fun f =
 //│           true =>
 //│             return "1"
 //│           else
-//│             break split_1$
+//│             end
 //│         end
 //│       else
-//│         break split_1$
-//│     end
-//│   return "2 long long long long long long long long long long long long long long"
+//│         end
+//│     end;
+//│     return "2 long long long long long long long long long long long long long long"
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

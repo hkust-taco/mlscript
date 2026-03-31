@@ -136,10 +136,8 @@ Foo::n(foo, 2)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let self7, args7, inlinedVal7;
 //│ self7 = foo;
-//│ args7 = [
-//│   2
-//│ ];
-//│ inlinedLbl7: { inlinedVal7 = runtime.safeCall(self7.n(...args7)); break inlinedLbl7; }
+//│ args7 = [ 2 ];
+//│ inlinedVal7 = runtime.safeCall(self7.n(...args7));
 //│ inlinedVal7
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 125

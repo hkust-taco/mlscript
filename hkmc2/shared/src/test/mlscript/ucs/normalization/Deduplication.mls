@@ -89,42 +89,37 @@ if x is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp2;
 //│ split_root$: {
-//│   split_1$: {
-//│     switch (x) {
-//│       case 0:
-//│         switch (y) {
-//│           case 0:
-//│             switch (z) {
-//│               case 0:
-//│                 tmp2 = "000-------------------------------------------------------------------------";
-//│                 break split_root$;
-//│                 break;
-//│               case 1:
-//│                 tmp2 = "001-------------------------------------------------------------------------";
-//│                 break split_root$;
-//│                 break;
-//│               default:
-//│                 break split_1$;
-//│                 break;
-//│             }
-//│             break;
-//│           case 1:
-//│             tmp2 = "01-------------------------------------------------------------------------";
-//│             break split_root$;
-//│             break;
-//│           default:
-//│             break split_1$;
-//│             break;
-//│         }
-//│         break;
-//│       case 1:
-//│         tmp2 = "1-------------------------------------------------------------------------";
-//│         break split_root$;
-//│         break;
-//│       default:
-//│         break split_1$;
-//│         break;
-//│     }
+//│   switch (x) {
+//│     case 0:
+//│       switch (y) {
+//│         case 0:
+//│           switch (z) {
+//│             case 0:
+//│               tmp2 = "000-------------------------------------------------------------------------";
+//│               break split_root$;
+//│               break;
+//│             case 1:
+//│               tmp2 = "001-------------------------------------------------------------------------";
+//│               break split_root$;
+//│               break;
+//│             default:
+//│               break;
+//│           }
+//│           break;
+//│         case 1:
+//│           tmp2 = "01-------------------------------------------------------------------------";
+//│           break split_root$;
+//│           break;
+//│         default:
+//│           break;
+//│       }
+//│       break;
+//│     case 1:
+//│       tmp2 = "1-------------------------------------------------------------------------";
+//│       break split_root$;
+//│       break;
+//│     default:
+//│       break;
 //│   }
 //│   tmp2 = "-------------------------------------------------------------------------";
 //│ }
@@ -144,42 +139,37 @@ let qqq = if x is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let qqq, tmp3;
 //│ split_root$1: {
-//│   split_1$1: {
-//│     switch (x) {
-//│       case 0:
-//│         switch (y) {
-//│           case 0:
-//│             switch (z) {
-//│               case 0:
-//│                 tmp3 = "000-------------------------------------------------------------------------";
-//│                 break split_root$1;
-//│                 break;
-//│               case 1:
-//│                 tmp3 = "001-------------------------------------------------------------------------";
-//│                 break split_root$1;
-//│                 break;
-//│               default:
-//│                 break split_1$1;
-//│                 break;
-//│             }
-//│             break;
-//│           case 1:
-//│             tmp3 = "01-------------------------------------------------------------------------";
-//│             break split_root$1;
-//│             break;
-//│           default:
-//│             break split_1$1;
-//│             break;
-//│         }
-//│         break;
-//│       case 1:
-//│         tmp3 = "1-------------------------------------------------------------------------";
-//│         break split_root$1;
-//│         break;
-//│       default:
-//│         break split_1$1;
-//│         break;
-//│     }
+//│   switch (x) {
+//│     case 0:
+//│       switch (y) {
+//│         case 0:
+//│           switch (z) {
+//│             case 0:
+//│               tmp3 = "000-------------------------------------------------------------------------";
+//│               break split_root$1;
+//│               break;
+//│             case 1:
+//│               tmp3 = "001-------------------------------------------------------------------------";
+//│               break split_root$1;
+//│               break;
+//│             default:
+//│               break;
+//│           }
+//│           break;
+//│         case 1:
+//│           tmp3 = "01-------------------------------------------------------------------------";
+//│           break split_root$1;
+//│           break;
+//│         default:
+//│           break;
+//│       }
+//│       break;
+//│     case 1:
+//│       tmp3 = "1-------------------------------------------------------------------------";
+//│       break split_root$1;
+//│       break;
+//│     default:
+//│       break;
 //│   }
 //│   tmp3 = "-------------------------------------------------------------------------";
 //│ }
@@ -457,42 +447,37 @@ fun foo(x, y, z) = if x is
 //│ foo2 = function foo(x1, y1, z1) {
 //│   let value, tmp7;
 //│   split_root$2: {
-//│     split_1$2: {
-//│       switch (x1) {
-//│         case 0:
-//│           switch (y1) {
-//│             case 0:
-//│               switch (z1) {
-//│                 case 0:
-//│                   tmp7 = "000";
-//│                   break split_root$2;
-//│                   break;
-//│                 case 1:
-//│                   tmp7 = "001";
-//│                   break split_root$2;
-//│                   break;
-//│                 default:
-//│                   break split_1$2;
-//│                   break;
-//│               }
-//│               break;
-//│             case 1:
-//│               tmp7 = "01";
-//│               break split_root$2;
-//│               break;
-//│             default:
-//│               break split_1$2;
-//│               break;
-//│           }
-//│           break;
-//│         case 1:
-//│           tmp7 = "1";
-//│           break split_root$2;
-//│           break;
-//│         default:
-//│           break split_1$2;
-//│           break;
-//│       }
+//│     switch (x1) {
+//│       case 0:
+//│         switch (y1) {
+//│           case 0:
+//│             switch (z1) {
+//│               case 0:
+//│                 tmp7 = "000";
+//│                 break split_root$2;
+//│                 break;
+//│               case 1:
+//│                 tmp7 = "001";
+//│                 break split_root$2;
+//│                 break;
+//│               default:
+//│                 break;
+//│             }
+//│             break;
+//│           case 1:
+//│             tmp7 = "01";
+//│             break split_root$2;
+//│             break;
+//│           default:
+//│             break;
+//│         }
+//│         break;
+//│       case 1:
+//│         tmp7 = "1";
+//│         break split_root$2;
+//│         break;
+//│       default:
+//│         break;
 //│     }
 //│     value = "hello";
 //│     tmp7 = expensive_call(value);
@@ -545,17 +530,13 @@ fun foo(x, y, z) =
 //│ foo4 = function foo(x1, y1, z1) {
 //│   let tmp7;
 //│   split_root$2: {
-//│     split_1$2: {
-//│       if (x1 instanceof A1.class) {
-//│         if (y1 instanceof B1.class) {
-//│           if (z1 instanceof C1.class) {
-//│             tmp7 = "Hello";
-//│             break split_root$2
-//│           } else {
-//│             break split_1$2
-//│           }
-//│         } else { break split_1$2 }
-//│       } else { break split_1$2 }
+//│     if (x1 instanceof A1.class) {
+//│       if (y1 instanceof B1.class) {
+//│         if (z1 instanceof C1.class) {
+//│           tmp7 = "Hello";
+//│           break split_root$2
+//│         }
+//│       }
 //│     }
 //│     tmp7 = "Goodbye";
 //│   }
@@ -572,20 +553,12 @@ fun foo(x, y, z) =
 //│ foo5 = function foo(x1, y1, z1) {
 //│   let tmp7;
 //│   split_root$2: {
-//│     split_default$: {
-//│       if (x1 instanceof A1.class) {
-//│         if (y1 instanceof B1.class) {
-//│           if (z1 instanceof C1.class) {
-//│             tmp7 = "Hello";
-//│             break split_root$2
-//│           } else {
-//│             break split_default$
-//│           }
-//│         } else {
-//│           break split_default$
+//│     if (x1 instanceof A1.class) {
+//│       if (y1 instanceof B1.class) {
+//│         if (z1 instanceof C1.class) {
+//│           tmp7 = "Hello";
+//│           break split_root$2
 //│         }
-//│       } else {
-//│         break split_default$
 //│       }
 //│     }
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"));

@@ -49,10 +49,7 @@ fun foo() =
 //│   return () => {
 //│     let scope0$cap1, inlinedVal;
 //│     scope0$cap1 = scope0$cap;
-//│     inlinedLbl: {
-//│       inlinedVal = scope0$cap1.x$0;
-//│       break inlinedLbl;
-//│     }
+//│     inlinedVal = scope0$cap1.x$0;
 //│     return inlinedVal
 //│   }
 //│ });

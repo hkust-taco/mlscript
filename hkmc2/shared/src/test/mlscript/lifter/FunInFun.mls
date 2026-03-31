@@ -68,10 +68,7 @@ f(1, 2)
 //│     let used11, used21, inlinedVal;
 //│     used11 = used1;
 //│     used21 = used2;
-//│     inlinedLbl: {
-//│       inlinedVal = used11 + used21;
-//│       break inlinedLbl;
-//│     }
+//│     inlinedVal = used11 + used21;
 //│     return inlinedVal
 //│   }
 //│ };
@@ -97,22 +94,18 @@ f(1,2,3,4,5,6)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f4;
 //│ f4 = function f(a1, a2, a3, a4, a5, a6) {
-//│   let tmp1, a11, a21, a31, a41, a51, a61, inlinedVal;
+//│   let tmp1, a11, a21, a31, a41, a51, a61, inlinedVal, tmp2, tmp3, tmp4, tmp5;
 //│   a11 = a1;
 //│   a21 = a2;
 //│   a31 = a3;
 //│   a41 = a4;
 //│   a51 = a5;
 //│   a61 = a6;
-//│   inlinedLbl: {
-//│     let tmp2, tmp3, tmp4, tmp5;
-//│     tmp2 = a11 + a21;
-//│     tmp3 = tmp2 + a31;
-//│     tmp4 = tmp3 + a41;
-//│     tmp5 = tmp4 + a51;
-//│     inlinedVal = tmp5 + a61;
-//│     break inlinedLbl;
-//│   }
+//│   tmp2 = a11 + a21;
+//│   tmp3 = tmp2 + a31;
+//│   tmp4 = tmp3 + a41;
+//│   tmp5 = tmp4 + a51;
+//│   inlinedVal = tmp5 + a61;
 //│   tmp1 = inlinedVal;
 //│   return tmp1
 //│ };
@@ -204,17 +197,11 @@ f(1, 2, 1000)
 //│   f$cap = new Capture$f3(mutated);
 //│   f$cap1 = f$cap;
 //│   immutable1 = immutable;
-//│   inlinedLbl: {
-//│     f$cap1.mutated$0 = 2;
-//│     inlinedVal = immutable1 + f$cap1.mutated$0;
-//│     break inlinedLbl;
-//│   }
+//│   f$cap1.mutated$0 = 2;
+//│   inlinedVal = immutable1 + f$cap1.mutated$0;
 //│   a1 = inlinedVal;
 //│   f$cap2 = f$cap;
-//│   inlinedLbl1: {
-//│     inlinedVal1 = f$cap2.mutated$0;
-//│     break inlinedLbl1;
-//│   }
+//│   inlinedVal1 = f$cap2.mutated$0;
 //│   tmp6 = inlinedVal1;
 //│   tmp7 = a1 + tmp6;
 //│   return tmp7 + unused
@@ -299,11 +286,8 @@ g()(1)
 //│     let scope0$cap1, x2, inlinedVal;
 //│     scope0$cap1 = scope0$cap;
 //│     x2 = x1;
-//│     inlinedLbl: {
-//│       scope0$cap1.y$0 = 2;
-//│       inlinedVal = x2;
-//│       break inlinedLbl;
-//│     }
+//│     scope0$cap1.y$0 = 2;
+//│     inlinedVal = x2;
 //│     return inlinedVal
 //│   }
 //│ };
@@ -400,15 +384,11 @@ f(0)
 //│   let scrut, tmp8;
 //│   scrut = true;
 //│   if (scrut === true) {
-//│     let x2, inlinedVal;
+//│     let x2, inlinedVal, tmp9;
 //│     x2 = x1;
-//│     inlinedLbl: {
-//│       let tmp9;
-//│       tmp9 = x2 + 1;
-//│       x2 = tmp9;
-//│       inlinedVal = x2;
-//│       break inlinedLbl;
-//│     }
+//│     tmp9 = x2 + 1;
+//│     x2 = tmp9;
+//│     inlinedVal = x2;
 //│     return inlinedVal
 //│   }
 //│   tmp8 = x1 + 1;
@@ -441,10 +421,7 @@ fun f(x) =
 //│   return () => {
 //│     let y2, inlinedVal;
 //│     y2 = y1;
-//│     inlinedLbl: {
-//│       inlinedVal = y2;
-//│       break inlinedLbl;
-//│     }
+//│     inlinedVal = y2;
 //│     return inlinedVal
 //│   }
 //│ };
@@ -474,10 +451,7 @@ fun f(x) =
 //│   return () => {
 //│     let f$cap1, inlinedVal;
 //│     f$cap1 = f$cap;
-//│     inlinedLbl: {
-//│       inlinedVal = f$cap1.x$0;
-//│       break inlinedLbl;
-//│     }
+//│     inlinedVal = f$cap1.x$0;
 //│     return inlinedVal
 //│   }
 //│ };

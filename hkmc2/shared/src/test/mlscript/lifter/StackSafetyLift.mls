@@ -224,13 +224,7 @@ fun hi(n) = n
 hi(0)
 //│ /!!!\ Option ':stackSafe' requires ':effectHandlers' to be set
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let hi1, n, inlinedVal;
-//│ hi1 = function hi(n1) {
-//│   return n1
-//│ };
-//│ n = 0;
-//│ inlinedLbl: { inlinedVal = n; break inlinedLbl; }
-//│ inlinedVal
+//│ let hi1, n, inlinedVal; hi1 = function hi(n1) { return n1 }; n = 0; inlinedVal = n; inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 

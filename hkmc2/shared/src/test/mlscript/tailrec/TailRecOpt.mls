@@ -62,7 +62,7 @@ f(10000, 20000, 0)
 //│ a = 10000;
 //│ b = 20000;
 //│ c = 0;
-//│ inlinedLbl1: { inlinedVal1 = g_f(1, a, b, c, undefined); break inlinedLbl1; }
+//│ inlinedVal1 = g_f(1, a, b, c, undefined);
 //│ inlinedVal1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 50000

@@ -44,6 +44,7 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
     val definedVars = MutSet.empty[Local]
     val localVars = MutSet.empty[Local]
     val usedVars = MutSet.empty[Local]
+    var tailLabels = MutSet.empty[LabelSymbol]
     
     def apply(prog: Program): Program =
       
@@ -80,6 +81,13 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
           super.applyBlock(b)
       
       applyProgram(prog)
+    
+    def freshLabelCtx[T](thunk: => T)(using Line) =
+      val oldTailLabels = tailLabels
+      tailLabels = MutSet.empty
+      val result = thunk
+      tailLabels = oldTailLabels
+      result
     
     
     // * Cached analysis to find which labels are the targets of `break`s in a given block
@@ -159,13 +167,60 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
           registerChange
           val unr = Unreachable("Rest of abortive labelled block")
           if usedLabels.contains(lbl)
-          then Label(lbl, loop, applyBlock(bod), unr)
-          else Begin(applyBlock(bod), unr)
+          then Label(lbl, loop, freshLabelCtx(applyBlock(bod)), unr)
+          else Begin(freshLabelCtx(applyBlock(bod)), unr)
         else
-          if usedLabels.contains(lbl) then super.applyBlock(b)
+          if usedLabels.contains(lbl) then
+            def computeBod =
+              tailLabels += lbl
+              val result = applyBlock(bod)
+              tailLabels -= lbl
+              result
+            val lbl2 = lbl.subst
+            val bod2 = if rst.isEmpty && !loop then computeBod else freshLabelCtx(computeBod)
+            val rst2 = applySubBlock(rst)
+            if (lbl2 is lbl) && (bod2 is bod) && (rst2 is rst) then b else Label(lbl2, loop, bod2, rst2)
           else
             registerChange
-            Begin(applyBlock(bod), applyBlock(rst))
+            Begin(freshLabelCtx(applyBlock(bod)), applyBlock(rst))
+      
+      // * Remove useless break
+      case Break(label) if tailLabels.contains(label) =>
+        tl.log(s"Break ${label} is eliminated: current tail label list is ${tailLabels}")
+        registerChange
+        End()
+      
+      // * Create fresh label contexts for non tails
+      case Begin(sub, _: End) => super.applyBlock(b)
+      case Begin(sub, rst) =>
+        val sub2 = freshLabelCtx(applySubBlock(sub))
+        val rst2 = applySubBlock(rst)
+        if (sub2 is sub) && (rst2 is rst) then b else Begin(sub2, rst2)
+      
+      case Match(scrut, arms, dflt, _: End) => super.applyBlock(b)
+      case Match(scrut, arms, dflt, rst) =>
+        applyPath(scrut): scrut2 =>
+          applyListOf(
+            arms,
+            (tup, k) =>
+              val (cse, blk) = tup
+              val blk2 = freshLabelCtx(applySubBlock(blk))
+              applyCase(cse): cse2 =>
+                if (cse2 is cse) && (blk is blk2) then k(tup) else k(cse2 -> blk2)
+          ): arms2 =>
+              val dflt2 = freshLabelCtx(dflt.mapConserve(applySubBlock))
+              val rst2 = applySubBlock(rst)
+              if (scrut2 is scrut) &&
+                  (arms2 is arms) &&
+                  (dflt2 is dflt) && (rst2 is rst)
+                then b else Match(scrut2, arms2, dflt2, rst2)
+
+      case TryBlock(sub, fin, _: End) => super.applyBlock(b)
+      case TryBlock(sub, fin, rst) =>
+        val sub2 = freshLabelCtx(applySubBlock(sub))
+        val fin2 = freshLabelCtx(applySubBlock(fin))
+        val rst2 = applySubBlock(rst)
+        if (sub2 is sub) && (fin2 is fin) && (rst2 is rst) then b else TryBlock(sub2, fin2, rst2)
       
       case x => super.applyBlock(x)
     
@@ -185,7 +240,10 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
           else Scoped(syms2, body2)
         else b
       case _ => super.applyScopedBlock(b)
-      
+    
+    override def applyFunBodyLikeBlock(b: Block): Block =
+      freshLabelCtx:
+        super.applyFunBodyLikeBlock(b)
     
   end DeadCodeElim
 
@@ -298,9 +356,7 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
           case _ => super.applyResult(r)
         
         override def applySymbol(sym: Symbol): Unit =
-          tl.log(s"Symbol: ${sym}")
           sym.asTrm.foreach: ts =>
-            tl.log(s"Symbol (as trm): ${ts}")
             useCnt(ts) += 1
             hasNakedRef(ts) = true
         

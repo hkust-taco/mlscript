@@ -47,19 +47,15 @@ foo(10)
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
 //│ foo1 = function foo(y) {
-//│   let tmp, isMut, y1, inlinedVal;
+//│   let tmp, isMut, y1, inlinedVal, tmp1;
 //│   isMut = false;
 //│   y1 = y;
-//│   inlinedLbl: {
-//│     let tmp1;
-//│     if (isMut === true) {
-//│       tmp1 = new M2(y1);
-//│     } else {
-//│       tmp1 = globalThis.Object.freeze(new M2(y1));
-//│     }
-//│     inlinedVal = tmp1;
-//│     break inlinedLbl;
+//│   if (isMut === true) {
+//│     tmp1 = new M2(y1);
+//│   } else {
+//│     tmp1 = globalThis.Object.freeze(new M2(y1));
 //│   }
+//│   inlinedVal = tmp1;
 //│   tmp = inlinedVal;
 //│   return tmp.foo()
 //│ };
@@ -103,8 +99,8 @@ fun foo(y) =
       set y = 2
   O
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.101: 	  object O with
-//│ ╙──       	         ^
+//│ ║  l.97: 	  object O with
+//│ ╙──      	         ^
 
 let o = foo(10)
 //│ o = O
@@ -125,7 +121,7 @@ fun foo(x, y) =
   fun foo3 = M.foo2()
   foo3
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.121: 	  object M with
+//│ ║  l.117: 	  object M with
 //│ ╙──       	         ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo4;
@@ -151,12 +147,12 @@ fun foo(x, y) =
 //│     static [definitionMetadata] = ["object", "M"]; 
 //│   });
 //│   M5 = M4;
-//│   inlinedLbl: { inlinedVal = M5.foo2(); break inlinedLbl; }
+//│   inlinedVal = M5.foo2();
 //│   tmp = inlinedVal;
 //│   return tmp
 //│ };
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.121: 	  object M with
+//│ ║  l.117: 	  object M with
 //│ ╙──       	         ^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -173,7 +169,7 @@ data class A(x) with
     fun bar = M.getB()
     bar
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.170: 	  object M with
+//│ ║  l.166: 	  object M with
 //│ ╙──       	         ^
 
 :expect 2
@@ -230,7 +226,7 @@ fun f =
   foo
 f.a
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.226: 	  object A with
+//│ ║  l.222: 	  object A with
 //│ ╙──       	         ^
 //│ = 2
 
@@ -323,7 +319,7 @@ fun foo(x) =
     val baz = x
   [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.321: 	  object O with
+//│ ║  l.317: 	  object O with
 //│ ╙──       	         ^
 
 foo(123)
@@ -372,13 +368,13 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.369: 	  object A with
+//│ ║  l.365: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.370: 	    object B with
+//│ ║  l.366: 	    object B with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.371: 	      object C
+//│ ║  l.367: 	      object C
 //│ ╙──       	             ^
 //│ = C
 
@@ -391,10 +387,10 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.388: 	  module A with
+//│ ║  l.384: 	  module A with
 //│ ╙──       	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.390: 	      object C
+//│ ║  l.386: 	      object C
 //│ ╙──       	             ^
 //│ = C
 
@@ -407,7 +403,7 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.404: 	  module A with
+//│ ║  l.400: 	  module A with
 //│ ╙──       	         ^
 //│ = C
 
