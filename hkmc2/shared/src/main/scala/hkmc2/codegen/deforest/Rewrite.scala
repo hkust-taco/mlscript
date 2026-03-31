@@ -502,9 +502,9 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
           val body2 = applyFunBodyLikeBlock(fun.body)
           for s <- oldParamSyms do mapping.remove(s)
           if newlyCreated then
-            Scoped(Set.single(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec)))
+            Scoped(Set.single(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride)))
           else
-            k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec))
+            k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride))
         case ValDefn(tsym, sym, rhs) =>
           val (tsym2, sym2) = mapping.get(sym) match
             case None =>
@@ -516,7 +516,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
               (bms.tsym.get, bms)
             case _ => die
           applyPath(rhs): rhs2 =>
-            k(ValDefn(tsym2, sym2, rhs2))
+            k(ValDefn(tsym2, sym2, rhs2)(defn.asInstanceOf[ValDefn].configOverride))
         case _ => super.applyDefn(defn)(k)
       
       override def applyValue(v: Value)(k: Value => Block): Block = v match
@@ -553,8 +553,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
         val bodyWithCorrectSymbols = new RefreshSymbol(refreshParamMap.toMap).applyBlock(transformedBody)
         FunDefn(
           N, bms, tSym, refreshedParams,
-          bodyWithCorrectSymbols)(false)
-    end newPolyFuns
+          bodyWithCorrectSymbols)(false, N)
     
     val newBranchFuns =
       for (branchId@(dtorId, whichBranch), (bms, tSym)) <- branchFunSyms yield
@@ -570,7 +569,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
         FunDefn(N, bms, tSym,
           (refreshedFvSymbols.unzip._2 ++ branchFunParamFieldSyms(branchId)).asParamList :: Nil,
           bodyWithCorrectSymbols
-        )(false)
+        )(false, N)
     end newBranchFuns
     
     val newRestFuns =
@@ -590,7 +589,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
             Begin(transformedOgBody, Return(Value.Lit(Tree.UnitLit(true)), false))
         val refreshedFvSymbols = restFnFvs(restFunId).map(s => s -> new VarSymbol(Tree.Ident(s"fv_${s.nme}")))
         val bodyWithCorrectSymbols = new RefreshSymbol(refreshedFvSymbols.toMap).applyBlock(actualBody)
-        FunDefn(N, bms, tsym, refreshedFvSymbols.unzip._2.asParamList :: Nil, bodyWithCorrectSymbols)(false)
+        FunDefn(N, bms, tsym, refreshedFvSymbols.unzip._2.asParamList :: Nil, bodyWithCorrectSymbols)(false, N)
     end newRestFuns
 
     val inplaceRewrittenFunBodies = Map.from[TermSymbol, Block]:
@@ -603,7 +602,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
         override def applyFunDefn(fun: FunDefn): FunDefn =
           inplaceRewrittenFunBodies.get(fun.dSym) match
             case Some(rewrittenBody) =>
-              FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, rewrittenBody)(fun.forceTailRec)
+              FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, rewrittenBody)(fun.forceTailRec, fun.configOverride)
             case None => super.applyFunDefn(fun)
       object implicitRetPass extends BlockTransformerShallow(_symSubst):
         override def applyBlock(b: Block): Block = b match

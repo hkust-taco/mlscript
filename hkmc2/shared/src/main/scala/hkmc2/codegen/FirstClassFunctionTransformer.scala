@@ -26,10 +26,10 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
     )
     val defSym = new BlockMemberSymbol("Function$", Nil, false)
     val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), params :: Nil,
-      Return(Call(p, params.params.map(_.sym.asPath.asArg))(true, false, false), false))(false)
+      Return(Call(p, params.params.map(_.sym.asPath.asArg))(true, false, false), false))(false, N)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
       Some(Select(Value.Ref(State.globalThisSymbol, Some(State.globalThisSymbol)), Tree.Ident("Function"))(Some(ctx.builtins.Function))),
-      callDef :: Nil, Nil, Nil, Return(Call(Value.Ref(State.builtinOpsMap("super")), Nil)(false, false, false), true), End(), None, None)
+      callDef :: Nil, Nil, Nil, Return(Call(Value.Ref(State.builtinOpsMap("super")), Nil)(false, false, false), true), End(), None, None)(N)
 
   private def getParamList(l: BlockMemberSymbol): Option[ParamList] = funDefns.get(l) match
     case Some(fd) => fd.params.headOption

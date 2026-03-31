@@ -518,7 +518,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           tSym,
           fldSym,
           Value.Ref(varSym)
-        )
+        )(N)
         
         (sym -> varSym, p, vd)
     
@@ -534,7 +534,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         case (acc, (_, _, vd)) => Define(vd, acc),
       N,
       N,
-    )
+    )(N)
     
     (defn, sortedVars.iterator.map(x => (x.ctorSyms.local, x.valDefn.tsym)).toList)
   
@@ -976,7 +976,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         auxDsym,
         newPlists,
         bod
-      )(false)
+      )(false, N)
     
     private val aux = Lazy[Defn](mkAuxDefn)
     
@@ -1106,7 +1106,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         ret
       ))
       
-      FunDefn(N, flattenedSym, flattenedDSym, params :: Nil, bod)(false)
+      FunDefn(N, flattenedSym, flattenedDSym, params :: Nil, bod)(false, N)
     
     private val flat = Lazy[Defn](mkFlattenedDefn)
     

@@ -237,10 +237,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             td.k match
             case knd: syntax.Val =>
               assert(td.params.isEmpty)
+              val cfgOverride = td.extraAnnotations.collectFirst:
+                case Annot.Config(modify) => modify(config)
               subTerm_nonTail(bod)(r =>
                 // Assign(td.sym, r,
                 //   term(st.Blk(stats, res))(k)))
-                Define(ValDefn(td.tsym, td.sym, r),
+                Define(ValDefn(td.tsym, td.sym, r)(cfgOverride),
                   blockImpl(stats, res)))(using LoweringCtx.nestFunc)
             case syntax.Fun =>
               val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme))
@@ -251,8 +253,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             case syntax.Ins =>
               // Implicit instances are not parameterized for now.
               assert(td.params.isEmpty)
+              val cfgOverride = td.extraAnnotations.collectFirst:
+                case Annot.Config(modify) => modify(config)
               subTerm(bod)(r =>
-                Define(ValDefn(td.tsym, td.sym, r),
+                Define(ValDefn(td.tsym, td.sym, r)(cfgOverride),
                   blockImpl(stats, res)))
             case syntax.LetBind | syntax.ParamBind | syntax.HandlerBind => fail:
               ErrorReport(
@@ -345,6 +349,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             case _ => N
           defn.ext match
           case N =>
+            val cfgOverride = defn.extraAnnotations.collectFirst:
+              case Annot.Config(modify) => modify(config)
             Define(
               ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, N,
                 mtds,
@@ -354,17 +360,19 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                 ctor,
                 mod,
                 bufferable,
-              ),
+              )(cfgOverride),
               blockImpl(stats, res))
           case S(ext) =>
             assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
+            val cfgOverride = defn.extraAnnotations.collectFirst:
+              case Annot.Config(modify) => modify(config)
             subTerm(ext.cls): clsp =>
               val pctor = inScopedBlock(parentConstructor(ext.cls, ext.args))
               Define(
                 ClsLikeDefn(
                   defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, S(clsp),
                   mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable,
-                ),
+                )(cfgOverride),
                 blockImpl(stats, res)
               )
         case td: TypeDef => // * Type definitions are erased
@@ -751,7 +759,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
           val pctor = parentConstructor(cls, as)
           val clsDef = ClsLikeDefn(N, isym, sym, N, syntax.Cls, N, Nil, S(sr),
-            mtds, privateFlds, publicFlds, pctor, ctor, N, N)
+            mtds, privateFlds, publicFlds, pctor, ctor, N, N)(N)
           val inner = new New(sym.ref().resolved(isym), Nil, N)(N)
           Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k))
       
@@ -966,7 +974,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         td.body.map: bod =>
           val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))
           reportAnnotations(td, td.extraAnnotations)
-          FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(td.extraAnnotations.contains(Annot.TailRec))
+          val cfgOverride = td.extraAnnotations.collectFirst:
+            case Annot.Config(modify) => modify(config)
+          FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(td.extraAnnotations.contains(Annot.TailRec), cfgOverride)
     val publicFlds = clsBody.publicFlds.map(f => f.sym -> f.tsym)
     val privateFlds = clsBody.nonMethods.collect:
       case decl @ LetDecl(sym: TermSymbol, annotations) =>

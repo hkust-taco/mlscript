@@ -198,7 +198,7 @@ class BlockTransformer(subst: SymbolSubst):
     val sym2 = sym.subst
     applyPath(rhs): rhs2 =>
       if (tsym2 is tsym) && (sym2 is sym) && (rhs2 is rhs)
-        then k(defn) else k(ValDefn(tsym2, sym2, rhs2))
+        then k(defn) else k(ValDefn(tsym2, sym2, rhs2)(defn.configOverride))
   
   def applyPublicField(f: BlockMemberSymbol -> TermSymbol): BlockMemberSymbol -> TermSymbol =
     val f_1_2 = f._1.subst
@@ -247,7 +247,7 @@ class BlockTransformer(subst: SymbolSubst):
               (preCtor2 is preCtor) && (ctor2 is ctor) &&
               (mod2 is mod)
             then defn else ClsLikeDefn(own2, isym2, sym2, ctorSym2, kind, paramsOpt2, 
-              auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2, bufferable)
+              auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2, bufferable)(defn.configOverride)
       parentPath match
       case Some(pp) => applyPath(pp): pp2 =>
         helper:

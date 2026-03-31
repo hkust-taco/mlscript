@@ -98,7 +98,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ctor = End(""),
       companion = N,
       bufferable = N,
-    )
+    )(N)
 
   /** Registers the synthetic `Unit` singleton. */
   private def RegisterUnitSingleton()(using Ctx, Raise, Scope): Unit =

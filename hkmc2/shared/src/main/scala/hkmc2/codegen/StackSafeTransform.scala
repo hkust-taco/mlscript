@@ -115,7 +115,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
         ctor,
         mod.map(rewriteObjBody(_, isTopLevel)),
         bufferable,
-      )
+      )(defn.configOverride)
   
   def rewriteObjBody(defn: ClsLikeBody, isTopLevel: Bool): ClsLikeBody =
     ClsLikeBody(
@@ -155,6 +155,6 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
 
 
   def rewriteFn(defn: FunDefn) = 
-    FunDefn(defn.owner, defn.sym, defn.dSym, defn.params, rewriteBlk(defn.body, L(defn.sym)))(defn.forceTailRec)
+    FunDefn(defn.owner, defn.sym, defn.dSym, defn.params, rewriteBlk(defn.body, L(defn.sym)))(defn.forceTailRec, defn.configOverride)
 
   def transformTopLevel(b: Block) = transform(b, TempSymbol(N), true)

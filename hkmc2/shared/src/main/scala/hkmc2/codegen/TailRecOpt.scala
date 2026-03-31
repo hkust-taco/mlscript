@@ -388,7 +388,7 @@ class TailRecOpt(using State, TL, Raise):
           Call(sel, args)(true, false, false),
           false
         )
-        FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(false)
+        FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(false, N)
     
     val params =
       val initial = paramSyms.map(Param.simple(_))
@@ -398,7 +398,7 @@ class TailRecOpt(using State, TL, Raise):
     val loopDefn = FunDefn(
       owner, bms, dSym,
       PlainParamList(params) :: Nil,
-      loop)(false)
+      loop)(false, N)
     
     if funs.size === 1 then (N, loopDefn :: Nil)
     else (S(loopDefn), rewrittenFuns)
