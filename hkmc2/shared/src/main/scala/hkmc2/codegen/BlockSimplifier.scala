@@ -1,7 +1,8 @@
 package hkmc2
 package codegen
 
-import scala.collection.mutable.{Map => MutMap, Set => MutSet}
+import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer}
+import scala.annotation.tailrec
 import sourcecode.Line
 
 import mlscript.utils.*, shorthands.*
@@ -9,6 +10,7 @@ import hkmc2.utils.*
 
 import semantics.*
 import semantics.Elaborator.State
+import mlscript.utils.algorithms.partitionScc
 
 
 /** `symbolsToPreserve` is the set of local symbols we want to leave alone;
@@ -225,17 +227,18 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
       case class InlinerFunInfo(
         defn: FunDefn,
         isMethod: Bool,
-        retCnt: Int,
         private[InlinerAnalyzer] var useCount: Int,
         private[InlinerAnalyzer] var hasNakedRef: Bool,
+        private[InlinerAnalyzer] var isLoopBreaker: Bool,
       ):
         def isPrivate = !symbolsToPreserve.contains(defn.sym)
 
         def canBeInlineEliminated =
-          isPrivate && !isMethod && useCount <= 1 && !hasNakedRef
+          isPrivate && !isMethod && useCount <= 1 && !hasNakedRef && !isLoopBreaker
           // false
 
         def shouldBeInlined(newBlk: Block)(using Config.Inliner): Bool =
+          if isLoopBreaker then return false
           // method requires the capturing of `this`, which is not supported currently.
           if isMethod then return false
           val threshold = summon[Config.Inliner].inlineThreshold
@@ -244,29 +247,31 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
       type InlinerMap = Map[TermSymbol, InlinerFunInfo]
 
       case class FunLikeContext(
-        var retCnt: Int,
+        curFunSym: Opt[TermSymbol],
       )
 
       class Traverser extends BlockTraverser:
         var map: InlinerMap = Map.empty
         val useCnt = MutMap.WithDefault(MutMap.empty[TermSymbol, Int], _ => 0)
-        val usages = MutMap.WithDefault(MutMap.empty[TermSymbol, List[Call]], _ => Nil)
+        val usages = MutMap.WithDefault(MutMap.empty[TermSymbol, List[(Option[TermSymbol], Call)]], _ => Nil)
         val hasNakedRef = MutMap.WithDefault(MutMap.empty[TermSymbol, Bool], _ => false)
-        var contextList: List[FunLikeContext] = FunLikeContext(0) :: Nil
+        var contextList: List[FunLikeContext] = FunLikeContext(N) :: Nil
 
         def currentContext = contextList.head
+
+        def currentFunSym = currentContext.curFunSym
         
-        def nested(thunk: => Unit) =
-          contextList = FunLikeContext(0) :: contextList
+        def nested(ts: Option[TermSymbol])(thunk: => Unit) =
+          contextList = FunLikeContext(ts) :: contextList
           thunk
           val res = contextList.head
           contextList = contextList.tail
           res
 
         def addFunctionAndApplyBody(f: FunDefn, isMethod: Bool) =
-          val r = nested:
+          val r = nested(S(f.dSym)):
             applyBlock(f.body)
-          map = map + (f.dSym -> InlinerFunInfo(f, isMethod, r.retCnt, 0, false))
+          map = map + (f.dSym -> InlinerFunInfo(f, isMethod, 0, false, false))
         
         override def applyDefn(defn: Defn): Unit = defn match
           case f: FunDefn =>
@@ -274,19 +279,21 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
           case c: ClsLikeDefn =>
             c.methods.foreach: f =>
               addFunctionAndApplyBody(f, true)
-            nested:
+            // Note: no tracking, since instantiate will not be inlined and won't cause cycles.
+            nested(N):
               applySubBlock(c.preCtor)
               applySubBlock(c.ctor)
             c.companion.foreach: m =>
               m.methods.foreach: f =>
                 addFunctionAndApplyBody(f, true)
+              // This inherits the previous context as the module ctor is run with the constructor.
               applySubBlock(m.ctor)
           case _ => super.applyDefn(defn)
 
         override def applyResult(r: Result): Unit = r match
           case c @ Call(TermSymbolPath(ts), args) =>
             useCnt(ts) += 1
-            usages(ts) ::= c
+            usages(ts) ::= (currentFunSym, c)
             args.foreach(applyArg)
           case _ => super.applyResult(r)
         
@@ -296,24 +303,34 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
             tl.log(s"Symbol (as trm): ${ts}")
             useCnt(ts) += 1
             hasNakedRef(ts) = true
-
-        override def applyBlock(b: Block): Unit = b match
-          case Return(r, false) =>
-            // FIXME: return inside a while loop will cause problem
-            currentContext.retCnt += 1
-            super.applyBlock(b)
-          case _ => super.applyBlock(b)
         
         def analyze(blk: Block): InlinerMap =
           applyBlock(blk)
           map.foreach: (sym, info) =>
             info.useCount = useCnt(sym)
             info.hasNakedRef = info.hasNakedRef || hasNakedRef(sym)
+          val edges: Buffer[(TermSymbol, TermSymbol)] = Buffer.empty
           usages.foreach: (sym, calls) =>
-            calls.foreach: call =>
+            calls.foreach: (caller, call) =>
               if map.contains(sym) then
-              map(sym).hasNakedRef = map(sym).hasNakedRef ||
-                map(sym).defn.params.sizeCompare(1) =/= 0 || matchArgs(call.args, map(sym).defn.params.head).isEmpty
+                map(sym).hasNakedRef = map(sym).hasNakedRef ||
+                  map(sym).defn.params.sizeCompare(1) =/= 0 || matchArgs(call.args, map(sym).defn.params.head).isEmpty
+                caller.foreach: caller =>
+                  edges.append((caller, sym))
+
+          @tailrec
+          def assignLoopBreakers(): Unit =
+            val sccs = partitionScc(edges.filterNot((from, to) => map(to).isLoopBreaker), map.keys)
+            if sccs.forall(_.sizeIs == 1) then return
+            sccs.foreach: sccComp =>
+              if sccComp.sizeIs > 1 then
+                // TODO: Score computation
+                map(sccComp.minBy(_.uid)).isLoopBreaker = true
+            assignLoopBreakers()
+          edges.foreach: (from, to) =>
+            if from === to then
+              map(from).isLoopBreaker = true
+          assignLoopBreakers()
           map
 
       def walk(blk: Block): InlinerMap = Traverser().analyze(blk)

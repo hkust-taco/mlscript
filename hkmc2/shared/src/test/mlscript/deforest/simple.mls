@@ -1031,7 +1031,7 @@ f1(one) + f2(one) + f3(two)
 //│ deforest > <<< fusing <<<
 //│ = 10
 //│ one = AA(1)
-//│ two = fun inlinedVal92
+//│ two = fun inlinedVal91
 
 
 :expect 4

@@ -211,8 +211,21 @@ module A with
 :inlineThreshold 10
 fun f() = if false do f() + 1
 f()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f⁶;
+//│ define f⁶ as fun f⁷() {
+//│   let scrut;
+//│   set scrut = false;
+//│   match scrut
+//│     true =>
+//│       do f⁷();
+//│       end
+//│     else
+//│       end
+//│   return runtime⁰.Unit⁰
+//│ };
+//│ f⁷()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 // Pathological case of inlining
@@ -220,5 +233,6 @@ f()
 fun g() =
   fun f() = f()
   f()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let g²; define g² as fun g³() { let f; define f as fun f⁸() { return f⁸() }; return f⁸() }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
