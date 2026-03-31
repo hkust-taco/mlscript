@@ -206,8 +206,8 @@ object Ctx:
   )
 
   case class ConstructorInfo(
-      classBms: BlockMemberSymbol,
       funcId: SymIdx,
+      initFuncId: SymIdx,
       exportName: Opt[Str],
   )
   
@@ -251,6 +251,7 @@ object Ctx:
     namedGlobals = MutMap.empty,
     methodInfoBySymbol = MutMap.empty,
     constructorInfoByClass = MutMap.empty,
+    classParentByChild = MutMap.empty,
     locals = MutMap() :: Nil,
     startFunc = N,
   )
@@ -300,6 +301,7 @@ class Ctx(
     namedGlobals: MutMap[Symbol, Int],
     methodInfoBySymbol: MutMap[TermSymbol, Ctx.MethodInfo],
     constructorInfoByClass: MutMap[BlockMemberSymbol, Ctx.ConstructorInfo],
+    classParentByChild: MutMap[BlockMemberSymbol, BlockMemberSymbol],
     var locals: Ls[MutMap[Local, Int]],
     private var startFunc: Opt[FuncIdx],
 ) extends ToWat:
@@ -533,17 +535,25 @@ class Ctx(
   def registerMethodInfo(info: Ctx.MethodInfo): Unit =
     methodInfoBySymbol(info.dSym) = info
 
-  /** Checks whether constructor metadata has been registered for class symbol `sym`. */
-  def containsConstructorInfo(sym: BlockMemberSymbol): Bool =
-    constructorInfoByClass.contains(sym)
-
   /** Returns constructor metadata for class symbol `sym`, if present. */
   def getConstructorInfo(sym: BlockMemberSymbol): Opt[Ctx.ConstructorInfo] =
     constructorInfoByClass.get(sym)
 
   /** Registers constructor metadata under its class symbol. */
-  def registerConstructorInfo(info: Ctx.ConstructorInfo): Unit =
-    constructorInfoByClass(info.classBms) = info
+  def registerConstructorInfo(sym: BlockMemberSymbol, info: Ctx.ConstructorInfo): Unit =
+    constructorInfoByClass(sym) = info
+
+  /** Returns the explicit direct parent class for `sym`, if one was registered during prescan. */
+  def getClassParent(sym: BlockMemberSymbol): Opt[BlockMemberSymbol] =
+    classParentByChild.get(sym)
+
+  /** Registers the explicit direct parent class for `child`. */
+  def registerClassParent(child: BlockMemberSymbol, parent: BlockMemberSymbol): Unit =
+    classParentByChild(child) = parent
+
+  /** Returns whether `parent` has at least one registered direct child class. */
+  def hasRegisteredChildClass(parent: BlockMemberSymbol): Bool =
+    classParentByChild.valuesIterator.contains(parent)
 
   /** Checks whether singleton metadata has been registered for class symbol `sym`. */
   def containsSingleton(sym: BlockMemberSymbol): Bool = singletonByBms.contains(sym)

@@ -15,7 +15,7 @@ import text.Param as WasmParam
 import Message.MessageContext
 import Scope.scope
 
-import scala.collection.mutable.{ArrayBuffer as ArrayBuf, LinkedHashMap}
+import scala.collection.mutable.{ArrayBuffer as ArrayBuf, LinkedHashMap, Map as MutMap}
 import scala.util.boundary, boundary.break
 import sourcecode.Line
 
@@ -48,6 +48,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private case class StringLitInfo(offset: Int, byteLen: Int, watBytes: Str)
   private val stringLits: LinkedHashMap[Str, StringLitInfo] = LinkedHashMap.empty
   private var nextStringDataOffset: Int = 0
+  private var localClassTypeScopes: List[Map[Local, BlockMemberSymbol]] = Map.empty :: Nil
 
   private def baseObjectTypeIdx(using Ctx): TypeIdx =
     ctx.getType_!(baseObjectSym)
@@ -143,28 +144,164 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ctx.addSingletonInitAction(global.set(globalIdx, ref.cast(ctorCall, globalTy)))
   end registerSingletonInit
 
+  private def collectTopLevelClasses(b: Block, out: ArrayBuf[ClsLikeDefn]): Unit = b match
+    case Define(defn: ClsLikeDefn, rst) =>
+      val prescanDefn =
+        if extractSuperCtorArgs(defn.preCtor).nonEmpty then defn.copy(parentPath = N, preCtor = End(""))
+        else defn.copy(parentPath = N)
+      if isSupportedTopLevelClass(prescanDefn) && (defn.k is syntax.Cls) then
+        out += defn
+      collectTopLevelClasses(rst, out)
+    case Define(_, rst) =>
+      collectTopLevelClasses(rst, out)
+    case Match(_, arms, dflt, rst) =>
+      arms.foreach((_, body) => collectTopLevelClasses(body, out))
+      dflt.foreach(collectTopLevelClasses(_, out))
+      collectTopLevelClasses(rst, out)
+    case Begin(_, rst) =>
+      collectTopLevelClasses(rst, out)
+    case TryBlock(_, _, rst) =>
+      collectTopLevelClasses(rst, out)
+    case Assign(_, _, rst) =>
+      collectTopLevelClasses(rst, out)
+    case AssignField(_, _, _, rst) =>
+      collectTopLevelClasses(rst, out)
+    case AssignDynField(_, _, _, _, rst) =>
+      collectTopLevelClasses(rst, out)
+    case HandleBlock(_, _, _, _, _, _, _, rst) =>
+      collectTopLevelClasses(rst, out)
+    case Label(_, _, body, rst) =>
+      collectTopLevelClasses(body, out)
+      collectTopLevelClasses(rst, out)
+    case Scoped(_, body) =>
+      collectTopLevelClasses(body, out)
+    case _: BlockTail => ()
+
+  private def resolveParent(
+      defn: ClsLikeDefn,
+      classBySym: Map[BlockMemberSymbol, ClsLikeDefn],
+  ): Opt[BlockMemberSymbol] =
+    defn.parentPath.flatMap:
+      case Value.Ref(l: BlockMemberSymbol, disamb) =>
+        val parentSym = disamb.flatMap(_.asBlkMember).getOrElse(l)
+        parentSym.optionIf(classBySym.contains)
+      case _ => N
+
+  private def directClassFields(defn: ClsLikeDefn): Seq[DefinitionSymbol[?] -> Field] =
+    (defn.publicFields.map(_._2) ++ defn.privateFields).map: f =>
+      f -> Field(RefType.anyref, mutable = true, id = SymIdx(f.nme))
+
+  private def classLayout(defn: ClsLikeDefn)(using Ctx, Raise): Opt[TypeIdx -> Seq[DefinitionSymbol[?] -> Field]] =
+    ctx.getClassParent(defn.sym) match
+      case N =>
+        S(baseObjectTypeIdx -> (baseObjectStruct.fields ++ directClassFields(defn)))
+      case S(parentSym) =>
+        val parentStruct = ctx.getTypeInfo_!(parentSym).compType.asInstanceOf[StructType]
+        S(ctx.getType_!(parentSym) -> (parentStruct.fields ++ directClassFields(defn)))
+
+  private def extractSuperCtorArgs(block: Block): Opt[Seq[Arg]] = block.flattened match
+    case Return(Call(Value.Ref(sym: BuiltinSymbol, _), args), true) if sym eq State.builtinOpsMap("super") => S(args)
+    case _ => N
+
+  private def requiresCtorInit(sym: BlockMemberSymbol)(using Ctx): Bool =
+    ctx.getClassParent(sym).nonEmpty || ctx.hasRegisteredChildClass(sym)
+
+  private def registerClassType(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
+    if ctx.getType(defn.sym).nonEmpty then return
+    val (parentTypeIdx, allFields) = classLayout(defn).getOrElse(return)
+
+    ctx.addType(
+      sym = S(defn.sym),
+      typeInfo = TypeInfo(
+        sym = defn.sym,
+        compType = StructType(fields = allFields, parents = Seq(parentTypeIdx), isSubtype = true),
+        objectTag = S(ctx.getFreshObjectTag()),
+      ),
+    )
+
+  private def registerConstructorInfo(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
+    if ctx.getConstructorInfo(defn.sym).nonEmpty then return
+
+    val ctorExportName = defn.sym
+      .optionIf(sym => (defn.k is syntax.Cls) && sym.nameIsMeaningful)
+      .map(sym => s"${sym.nme}_ctor")
+    val initFuncName = defn.sym
+      .optionIf(sym => (defn.k is syntax.Cls) && sym.nameIsMeaningful)
+      .map(sym => s"${sym.nme}_init")
+    val ctorFuncId =
+      if defn.k is syntax.Cls then
+        SymIdx(ctorExportName.getOrElse(scope.allocateName(TempSymbol(N, s"${defn.sym.nme}_ctor"))))
+      else
+        defn.ctorSym match
+          case S(ctorSym) =>
+            SymIdx(scope.allocateOrGetName(ctorSym, prefix = "ctor$"))
+          case N =>
+            SymIdx(scope.allocateName(TempSymbol(N, defn.sym.nme), prefix = "ctor$"))
+    val initFuncId =
+      if defn.k is syntax.Cls then
+        SymIdx(initFuncName.getOrElse(scope.allocateName(TempSymbol(N, s"${defn.sym.nme}_init"))))
+      else
+        ctorFuncId
+    ctx.registerConstructorInfo(
+      defn.sym,
+      ConstructorInfo(
+        funcId = ctorFuncId,
+        initFuncId = initFuncId,
+        exportName = ctorExportName,
+      ),
+    )
+
+  /** Prescans top-level classes, records direct parent links, and allocates class type/tag/ctor ids. */
+  private def registerClassHierarchyMetadata(b: Block)(using Ctx, Raise, Scope): Set[BlockMemberSymbol] =
+    boundary:
+      val collected = ArrayBuf.empty[ClsLikeDefn]
+      collectTopLevelClasses(b, collected)
+
+      val classBySym = collected.iterator.map(defn => defn.sym -> defn).toMap
+      val parentByChild = collected.iterator.flatMap: defn =>
+        resolveParent(defn, classBySym).map(defn.sym -> _)
+      .toMap
+
+      enum VisitState:
+        case Unseen
+        case Visiting
+        case Done
+
+      val visitState = MutMap.from(collected.iterator.map(defn => defn.sym -> VisitState.Unseen))
+      val ordered = ArrayBuf.empty[ClsLikeDefn]
+
+      def cycleError(sym: BlockMemberSymbol): Nothing =
+        raise(
+          ErrorReport(
+            msg"Cyclic class inheritance is not supported" -> sym.toLoc :: Nil,
+            extraInfo = S(sym),
+            source = Diagnostic.Source.Compilation,
+          ),
+        )
+        break(Set.empty)
+
+      def visit(sym: BlockMemberSymbol): Unit =
+        visitState.getOrElse(sym, VisitState.Done) match
+          case VisitState.Done => ()
+          case VisitState.Visiting => cycleError(sym)
+          case VisitState.Unseen =>
+            visitState(sym) = VisitState.Visiting
+            parentByChild.get(sym).foreach(visit)
+            visitState(sym) = VisitState.Done
+            val defn = classBySym(sym)
+            parentByChild.get(sym).foreach(ctx.registerClassParent(sym, _))
+            registerClassType(defn)
+            registerConstructorInfo(defn)
+            ordered += defn
+
+      collected.foreach(defn => visit(defn.sym))
+      ordered.iterator.map(_.sym).toSet
+
   /** Recursively declares supported top-level class types (needed for nested function codegen). */
   private def createDefnTypes(b: Block)(using Ctx, Raise, Scope): Unit = b match
     case Define(defn: ClsLikeDefn, rst) =>
       if isSupportedTopLevelClass(defn) then
-        val inheritedFields = baseObjectStruct.fields
-        val inheritedSize = inheritedFields.size
-
-        val classFields = (defn.publicFields.map(_._2) ++ defn.privateFields)
-          .map: f =>
-            f -> Field(RefType.anyref, mutable = true, id = SymIdx(f.nme))
-
-        val allFields = inheritedFields ++ classFields
-
-        // Only parent is base Object for now. For general inheritance add other parents.
-        ctx.addType(
-          sym = S(defn.sym),
-          typeInfo = TypeInfo(
-            sym = defn.sym,
-            compType = StructType(fields = allFields, parents = Seq(baseObjectTypeIdx), isSubtype = true),
-            objectTag = S(ctx.getFreshObjectTag()),
-          ),
-        )
+        registerClassType(defn)
       end if
       createDefnTypes(rst)
     case Define(_, rst) =>
@@ -229,26 +366,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val methodNamePrefix =
       clsLikeDefn.sym.optionIf(_.nameIsMeaningful).fold("method$")(sym => s"${sym.nme}_")
 
-    if !ctx.containsConstructorInfo(clsLikeDefn.sym) then
-      val ctorExportName = clsLikeDefn.sym
-        .optionIf(sym => (clsLikeDefn.k is syntax.Cls) && sym.nameIsMeaningful)
-        .map(sym => s"${sym.nme}_ctor")
-      val ctorFuncId =
-        if clsLikeDefn.k is syntax.Cls then
-          SymIdx(ctorExportName.getOrElse(scope.allocateName(TempSymbol(N, s"${clsLikeDefn.sym.nme}_ctor"))))
-        else
-          clsLikeDefn.ctorSym match
-            case S(ctorSym) =>
-              SymIdx(scope.allocateOrGetName(ctorSym, prefix = "ctor$"))
-            case N =>
-              SymIdx(scope.allocateName(TempSymbol(N, clsLikeDefn.sym.nme), prefix = "ctor$"))
-      ctx.registerConstructorInfo(
-        ConstructorInfo(
-          classBms = clsLikeDefn.sym,
-          funcId = ctorFuncId,
-          exportName = ctorExportName,
-        ),
-      )
+    registerConstructorInfo(clsLikeDefn)
 
     clsLikeDefn.methods.foreach: method =>
       method.params match
@@ -398,21 +516,41 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ctx.addLocal(thisSym)
     LocalIdx(SymIdx(thisName)) -> thisName
 
+  private def classTypeFromParam(param: semantics.Param): Opt[BlockMemberSymbol] =
+    param.sign.flatMap(_.symbol).flatMap(_.asBlkMember)
+
+  private def withKnownLocalClassTypes[A](bindings: Seq[Local -> BlockMemberSymbol])(body: => A): A =
+    localClassTypeScopes = bindings.toMap :: localClassTypeScopes
+    try body
+    finally localClassTypeScopes = localClassTypeScopes.tail
+
   /** Compiles a class/object constructor body under its own Wasm-local frame.
     */
   private def setupCtorLocals(
       clsLikeDefn: ClsLikeDefn,
-  )(using Ctx, Raise, Scope): (Seq[Local -> Str], LocalIdx, Expr, Seq[Local -> Str]) =
+      parentInitArgs: Seq[Arg],
+  )(using Ctx, Raise, Scope): (Seq[Local -> Str], LocalIdx, Str, Seq[Expr], Expr, Seq[Local -> Str]) =
     ctx.pushLocal()
-    val clsParams = clsLikeDefn.paramsOpt.fold(Nil)(_.paramSyms)
-    val ctorParams = clsParams.map: p =>
-      ctx.addLocal(p)
-      p -> scope.allocateName(p)
-    val (thisVar, thisVarName) = bindCtorThis(clsLikeDefn.isym)
-    val (ctorWat, ctorLocals) = block(clsLikeDefn.ctor)
-    val localsWithNames = (clsLikeDefn.isym -> thisVarName) +: ctorLocals.map(l => l -> scope.lookup_!(l, l.toLoc))
+    val result = scope.nest givenIn:
+      val clsParams = clsLikeDefn.paramsOpt.fold(Nil)(_.params)
+      val ctorParamSyms = clsParams.map(_.sym)
+      val ctorParams = clsParams.map: p =>
+        ctx.addLocal(p.sym)
+        p.sym -> scope.allocateName(p.sym)
+      val (thisVar, thisVarName) = bindCtorThis(clsLikeDefn.isym)
+      val knownClassBindings =
+        (clsLikeDefn.isym: Local) -> clsLikeDefn.sym ::
+          clsParams.flatMap(param => classTypeFromParam(param).map(param.sym -> _))
+      val (initArgExprs, ctorWat, ctorLocals) = withKnownLocalClassTypes(knownClassBindings):
+        val args = parentInitArgs.map(argument)
+        val (wat, locals) = block(clsLikeDefn.ctor)
+        (args, wat, locals)
+      val paramSyms: Set[Local] = ctorParamSyms.toSet + clsLikeDefn.isym
+      val extraLocals = getExtraLocals.filterNot((ctorLocals.toSet ++ paramSyms).contains)
+      val localsWithNames = (ctorLocals ++ extraLocals).map(l => l -> scope.allocateOrGetName(l))
+      (ctorParams, thisVar, thisVarName, initArgExprs, ctorWat, localsWithNames)
     ctx.popLocal()
-    (ctorParams, thisVar, ctorWat, localsWithNames)
+    result
 
   /** Compiles one class method body as a standalone Wasm function with explicit receiver-first params. */
   private def emitClassMethod(
@@ -431,7 +569,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               val paramNme = scope.allocateName(p.sym)
               ctx.addLocal(p.sym)
               p.sym -> paramNme
-        val (wasmBody, newLocals) = block(method.body)
+        val knownClassBindings =
+          (clsLikeDefn.isym: Local) -> clsLikeDefn.sym ::
+            method.params.headOption.toList.flatMap(_.params)
+              .flatMap(param => classTypeFromParam(param).map(param.sym -> _))
+        val (wasmBody, newLocals) = withKnownLocalClassTypes(knownClassBindings):
+          block(method.body)
         val paramSyms: Set[Local] = userParams.map(_._1).toSet + clsLikeDefn.isym
         val extraLocals = getExtraLocals.filterNot((newLocals.toSet ++ paramSyms).contains)
         val localsWithNames = (newLocals ++ extraLocals).map(l => l -> scope.allocateOrGetName(l))
@@ -686,6 +829,27 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val objRef = ref.cast(lhsExpr, RefType(ctx.getType_!(clsSym), nullable = false))
     struct.set(fieldidx, objRef, rhsExpr)
 
+  /** Emits a class-field read. */
+  private def directFieldRead(
+      clsSym: BlockMemberSymbol,
+      fieldSym: DefinitionSymbol[?],
+      receiverExpr: Expr,
+  )(using Ctx, Raise): Expr =
+    val fieldidx = fieldSelect(clsSym, fieldSym)
+    struct.get(
+      fieldidx,
+      ref = ref.cast(receiverExpr, RefType(ctx.getType_!(clsSym), nullable = false)),
+      ty = RefType.anyref,
+    )
+
+  private def fieldSymbolNamed(clsSym: BlockMemberSymbol, fieldName: Str)(using Ctx): Opt[TermSymbol] =
+    ctx.getTypeInfo(clsSym).flatMap: structInfo =>
+      structInfo.compType match
+        case ty: StructType =>
+          ty.fieldsBySym.keys.collectFirst:
+            case fieldSym: TermSymbol if fieldSym.nme == fieldName => fieldSym
+        case _ => N
+
   /** Reports an unresolved class-field write target. */
   private def unresolvedAssignField(assign: AssignField, nme: Ident)(using Ctx, Raise): Expr =
     errExpr(
@@ -771,6 +935,18 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       funcidx = FuncIdx(ctorInfo.funcId),
       operands = args,
       returnTypes = Seq(Result(RefType.anyref)),
+    )
+
+  /** Emits a direct internal constructor-init call. */
+  private def directConstructorInitCall(
+      ctorInfo: ConstructorInfo,
+      thisExpr: Expr,
+      args: Seq[Expr],
+  )(using Ctx): Expr =
+    call(
+      funcidx = FuncIdx(ctorInfo.initFuncId),
+      operands = thisExpr +: args,
+      returnTypes = Seq.empty,
     )
 
   /** Computes the receiver expression for a method selection, substituting implicit `this` when appropriate. */
@@ -936,20 +1112,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
             case S(selSym: TermSymbol) =>
               val qualRes = result(qual)
-              val selOwner = selSym.owner getOrElse:
+              val ownerCls = selSym.owner.flatMap(_.asBlkMember).getOrElse:
                 lastWords(s"Expected resolved Select(...) expression `$selSym` to have an owner")
-              val selCls = selOwner.asBlkMember getOrElse:
-                lastWords(
-                  s"Expected resolved class for Select(...) expression to be a BlockMemberSymbol, but got $selOwner (${
-                      selOwner.getClass.getName
-                    })",
-                )
-              val fieldidx = fieldSelect(selCls, selSym)
-              struct.get(
-                fieldidx,
-                ref = ref.cast(qualRes, RefType(ctx.getType_!(selCls), nullable = false)),
-                ty = RefType.anyref,
-              )
+              directFieldRead(ownerCls, selSym, qualRes)
             case S(otherSym) =>
               lastWords(
                 s"Expected resolved Select(...) expression to be a TermSymbol, but got $otherSym (${
@@ -957,15 +1122,24 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   })",
               )
             case N =>
-              errExpr(
-                Ls(
-                  msg"WatBuilder::result for field selection without a resolved symbol is not implemented (field `${
-                      id.name
-                    }`). Use `_.[_]` for index-based accesses." ->
-                    sel.toLoc,
-                ),
-                extraInfo = S(sel),
-              )
+              val qualRes = result(qual)
+              (qual match
+                case Value.Ref(l, _) =>
+                  localClassTypeScopes.iterator.collectFirst(Function.unlift(_.get(l))).flatMap: clsSym =>
+                    fieldSymbolNamed(clsSym, id.name).map: fieldSym =>
+                      val ownerCls = fieldSym.owner.flatMap(_.asBlkMember).getOrElse(clsSym)
+                      directFieldRead(ownerCls, fieldSym, qualRes)
+                case _ => N
+              ).getOrElse:
+                errExpr(
+                  Ls(
+                    msg"WatBuilder::result for field selection without a resolved symbol is not implemented (field `${
+                        id.name
+                      }`). Use `_.[_]` for index-based accesses." ->
+                      sel.toLoc,
+                  ),
+                  extraInfo = S(sel),
+                )
 
     case dyn @ DynSelect(qual, fld, arrayIdx) =>
       val qualRes = result(qual)
@@ -1258,12 +1432,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     case defn: DefinitionSymbol[?] => S(defn)
                     case _ => N
                   selCls <- defnSym.bms
-                  ty <- S(ctx.getTypeInfo_!(selCls))
-                  fieldSym <- ty.compType match
-                    case ty: StructType =>
-                      ty.fieldsBySym.keys.collectFirst:
-                        case trmSym: TermSymbol if trmSym.nme == nme.name => trmSym
-                    case _ => N
+                  fieldSym <- fieldSymbolNamed(selCls, nme.name)
                 yield
                   directFieldAssign(selCls, fieldSym, lhsExpr, rhsExpr)
                 assignInstrOpt.getOrElse(unresolvedAssignField(assign, nme))
@@ -1408,59 +1577,37 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       break(errUnimplExpr("paramsOpt.nonEmpty for object"))
                     if clsLikeDefn.auxParams.nonEmpty then
                       break(errUnimplExpr("auxParams.nonEmpty"))
-                    if clsLikeDefn.parentPath.nonEmpty then
+                    val registeredParent = ctx.getClassParent(clsLikeDefn.sym)
+                    if clsLikeDefn.parentPath.nonEmpty && registeredParent.isEmpty then
                       break(errUnimplExpr("parentPath.nonEmpty"))
                     if isSingletonObj && clsLikeDefn.methods.nonEmpty then
                       break(errUnimplExpr("methods.nonEmpty"))
-                    clsLikeDefn.preCtor match
-                      case End(_) => ()
-                      case _ => break(errUnimplExpr("preCtor is not End"))
+                    registeredParent match
+                      case S(_) =>
+                        if extractSuperCtorArgs(clsLikeDefn.preCtor).isEmpty then
+                          break(errUnimplExpr("unsupported inherited preCtor"))
+                      case N =>
+                        clsLikeDefn.preCtor match
+                          case End(_) => ()
+                          case _ => break(errUnimplExpr("preCtor is not End"))
                     if clsLikeDefn.companion.isDefined then
                       break(errUnimplExpr("companion.isDefined"))
-
-                    val ctorAuxParams = clsLikeDefn.auxParams.map: ps =>
-                      ps.params.map: p =>
-                        p -> scope.allocateName(p.sym)
 
                     // Use the symbolic type reference (e.g. `$Foo`) in emitted WAT for readability.
                     // Numeric indices are only needed for `$tag` values.
                     val typeref = ctx.getType_!(clsLikeDefn.sym)
                     val typeinfo = ctx.getTypeInfo_!(typeref)
+                    val parentInitArgs = registeredParent match
+                      case S(_) =>
+                        extractSuperCtorArgs(clsLikeDefn.preCtor).getOrElse:
+                          break(errUnimplExpr("unsupported inherited preCtor"))
+                      case N => Nil
 
-                    val (ctorParams, thisVar, ctorWat, ctorLocals) = setupCtorLocals(clsLikeDefn)
-
-                    // * If there are no ctor params, pop one param list off the aux params
-                    val (newCtorAuxParams, initialCtorParams) = clsLikeDefn.paramsOpt match
-                      case None => ctorAuxParams match
-                          case head :: next => (next, head)
-                          case Nil => (ctorAuxParams, Nil)
-                      case Some(_) => (ctorAuxParams, ctorParams)
+                    val (ctorParams, thisVar, thisVarName, parentInitArgExprs, ctorWat, ctorLocals) =
+                      setupCtorLocals(clsLikeDefn, parentInitArgs)
 
                     val tagValue = typeinfo.objectTag.getOrElse:
                       lastWords(s"Expected class ${clsLikeDefn.sym} to have an object tag")
-
-                    val ctorCode = blockInstr(
-                      label = N,
-                      Seq(
-                        local.set(thisVar, struct.new_default(typeref)),
-                        struct.set(
-                          FieldIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id),
-                          ref.cast(
-                            local.get(thisVar, RefType.anyref),
-                            RefType(typeref, nullable = false),
-                          ),
-                          i32.const(tagValue),
-                        ),
-                        ctorWat,
-                        `return`(S(local.get(thisVar, RefType(typeref, nullable = false)))),
-                      ),
-                      resultTypes = Seq(Result(RefType.anyref)),
-                    )
-
-                    val ctorAux = if newCtorAuxParams.isEmpty then
-                      ctorCode
-                    else
-                      break(errUnimplExpr("newCtorAuxParams.nonEmpty"))
 
                     val ctorInfo =
                       if !isSingletonObj && clsLikeDefn.sym.nameIsMeaningful then
@@ -1468,6 +1615,87 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                           lastWords(s"Missing constructor metadata for class ${clsLikeDefn.sym}")
                         )
                       else N
+
+                    val ctorAux =
+                      if !isSingletonObj && requiresCtorInit(clsLikeDefn.sym) then
+                        val ctorMetadata = ctorInfo.getOrElse:
+                          lastWords(s"Missing constructor metadata for class ${clsLikeDefn.sym}")
+                        val initParams = (clsLikeDefn.isym -> thisVarName) +: ctorParams
+                        val parentInitCall = registeredParent.map: parentSym =>
+                          val parentCtorInfo = ctx.getConstructorInfo(parentSym).getOrElse:
+                            lastWords(s"Missing constructor metadata for class ${parentSym}")
+                          directConstructorInitCall(
+                            parentCtorInfo,
+                            local.get(thisVar, RefType.anyref),
+                            parentInitArgExprs,
+                          )
+                        val initBody = blockInstr(
+                          label = N,
+                          children = parentInitCall.toSeq :+ asStatement(ctorWat),
+                          resultTypes = Seq.empty,
+                        )
+                        val initFuncTy = ctx.addType(
+                          sym = N,
+                          TypeInfo(
+                            id = ctorMetadata.initFuncId,
+                            FunctionType(
+                              params = initParams.map((_, nme) => WasmParam(S(nme), RefType.anyref)),
+                              results = Seq.empty,
+                            ),
+                            objectTag = N,
+                          ),
+                        )
+                        ctx.addFunc(
+                          N,
+                          FuncInfo(
+                            id = ctorMetadata.initFuncId,
+                            typeIdx = initFuncTy,
+                            params = initParams,
+                            nResults = 0,
+                            locals = ctorLocals,
+                            body = initBody,
+                            `export` = N,
+                          ),
+                        )
+                        blockInstr(
+                          label = N,
+                          Seq(
+                            local.set(thisVar, struct.new_default(typeref)),
+                            struct.set(
+                              FieldIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id),
+                              ref.cast(
+                                local.get(thisVar, RefType.anyref),
+                                RefType(typeref, nullable = false),
+                              ),
+                              i32.const(tagValue),
+                            ),
+                            directConstructorInitCall(
+                              ctorMetadata,
+                              local.get(thisVar, RefType.anyref),
+                              ctorParams.map((_, nme) => local.get(LocalIdx(SymIdx(nme)), RefType.anyref)),
+                            ),
+                            `return`(S(local.get(thisVar, RefType(typeref, nullable = false)))),
+                          ),
+                          resultTypes = Seq(Result(RefType.anyref)),
+                        )
+                      else
+                        blockInstr(
+                          label = N,
+                          Seq(
+                            local.set(thisVar, struct.new_default(typeref)),
+                            struct.set(
+                              FieldIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id),
+                              ref.cast(
+                                local.get(thisVar, RefType.anyref),
+                                RefType(typeref, nullable = false),
+                              ),
+                              i32.const(tagValue),
+                            ),
+                            ctorWat,
+                            `return`(S(local.get(thisVar, RefType(typeref, nullable = false)))),
+                          ),
+                          resultTypes = Seq(Result(RefType.anyref)),
+                        )
 
                     val funcTyId = clsLikeDefn.sym
                       .optionIf: sym =>
@@ -1496,8 +1724,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         )(_.funcId),
                         typeIdx = funcTy,
                         params = ctorParams,
-                        nResults = ctorCode.resultTypes.length,
-                        locals = ctorLocals,
+                        nResults = ctorAux.resultTypes.length,
+                        locals =
+                          if !isSingletonObj && requiresCtorInit(clsLikeDefn.sym) then
+                            Seq(clsLikeDefn.isym -> thisVarName)
+                          else
+                            (clsLikeDefn.isym -> thisVarName) +: ctorLocals,
                         body = ctorAux,
                         `export` = ctorInfo.flatMap(_.`exportName`),
                       ),
@@ -1691,6 +1923,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     Ls(msg"Could not resolve BlockMemberSymbol for class pattern" -> cls.toLoc),
                     extraInfo = S(s"ClassLikeSymbol: ${cls.toString}"),
                   ))
+                if ctx.getClassParent(clsBlkMemberSym).nonEmpty || ctx.hasRegisteredChildClass(clsBlkMemberSym) then
+                  break(errExpr(
+                    Ls(msg"Inherited class-pattern/runtime tests are not implemented yet" -> cls.toLoc),
+                    extraInfo = S(clsBlkMemberSym.toString),
+                  ))
                 val clsTypeIdx = ctx.getType_!(clsBlkMemberSym)
                 val typeinfo = ctx.getTypeInfo_!(clsTypeIdx)
 
@@ -1855,6 +2092,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ),
     )
 
+    // Prescan classes so direct class parents are recorded and
+    // type/tag/ctor ids are allocated before body lowering.
+    registerClassHierarchyMetadata(p.main)
+
     // Two-pass scheme: register all supported top-level class struct types before compiling any
     // functions, so all class types are available during nested function codegen.
     createDefnTypes(p.main)
@@ -1977,7 +2218,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         val param = WasmParam(S(paramNme), RefType.anyref)
         ctx.addLocal(p.sym)
         param -> paramNme
-      val (wasmBody, locals) = block(body)
+      val knownClassBindings =
+        params.params.flatMap(param => classTypeFromParam(param).map(param.sym -> _))
+      val (wasmBody, locals) = withKnownLocalClassTypes(knownClassBindings):
+        block(body)
       val paramSyms: Set[Local] = params.params.map(p => (p.sym: Local)).toSet
       val extraLocals = getExtraLocals.filterNot((locals.toSet ++ paramSyms).contains)
       val localsWithNames = (locals ++ extraLocals).map(l => l -> scope.allocateOrGetName(l))
