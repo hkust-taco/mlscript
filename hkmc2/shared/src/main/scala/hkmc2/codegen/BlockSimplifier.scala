@@ -30,7 +30,7 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
     while changed do
       changed = false
       res = new DeadCodeElim().apply(res)
-      summon[Config].inliner.foreach: cfg =>
+      summon[Config].inlining.foreach: cfg =>
         res = new Inliner.Inliner(using cfg).applyProgram(res)
       // TODO: other simplifications, such as inlining
     res
