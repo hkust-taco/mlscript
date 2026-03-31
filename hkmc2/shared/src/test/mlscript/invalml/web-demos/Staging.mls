@@ -1,0 +1,77 @@
+
+:global
+:invalml
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+// * This files includes the metaprogramming extension of InvalML.
+
+// Type `CodeBase[T, R, S]`:
+//   T: type of quoted expression
+//   R: union of free variables' skolems
+//   S: can be either top or bot. `CodeBase[T, R, bot]` is equivalent to `Var[T, R]`; `CodeBase[T, R, top]` is equivalent to `Code[T, R]`.
+
+fun power: [C] -> CodeBase[out Num, out C, out Any] -> Int -> CodeBase[out Num, out C, out Any]
+fun power(x) = case
+  0 then `1.0
+  n then x `*. power(x)(n - 1)
+power
+
+fun id: [A] -> A -> A
+fun id(x) = x
+
+
+run(x `=> id(x) `* x)
+
+
+fun assertNotZero: [C] -> CodeBase[out Num, out C, out Any] -> CodeBase[out Num, out C, out Any]
+fun assertNotZero(x) =
+  `if (x `== `0.0) then `error else x
+let checkedDiv = x `=> y `=> x `/. (assertNotZero(y))
+run(checkedDiv)
+
+
+
+fun show: [T] -> CodeBase[out T, out Any, out Any] -> Str = s => "debug"
+
+fun inc(dbg) =
+  x `=> let c = x `+ `1 in let t = dbg(c) in c
+
+inc(c => log(show(c)))
+
+fun body_naive: [T, C] -> (CodeBase[out Int, out T, out Any], CodeBase[out Int, out C, out Any]) -> Int -> CodeBase[out Int, out T | C, out Any]
+fun body_naive(x, y) = case
+  0 then x
+  1 then y
+  n then body_naive(y, x `+ y)(n - 1)
+fun gib_naive(n) =
+  (x, y) `=> body_naive(x, y)(n)
+let gn5 = run(gib_naive(5))
+
+
+// Wrong version! There is an unexpected extrusion in `bind`, making `bind` unusable.
+// fun bind(rhs, k) = `let x = rhs `in k(x)
+// fun body: [G] -> (CodeBase[out Int, out G, out Any], CodeBase[out Int, out G, out Any]) -> Int -> CodeBase[out Int, out G, out Any]
+// fun body(x, y) = case
+//   0 then x
+//   1 then y
+//   n then bind of x `+ y, (z => body(y, z)(n - 1))
+
+
+fun bind: [G] -> (CodeBase[out Int, out G, out Any], [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out Int, out C | G, out Any]) -> CodeBase[out Int, out G, out Any]
+fun bind(rhs, k) = `let x = rhs `in k(x)
+
+fun body: [G] -> (CodeBase[out Int, out G, out Any], CodeBase[out Int, out G, out Any]) -> Int -> CodeBase[out Int, out G, out Any]
+fun body(x, y) = case
+  0 then x
+  1 then y
+  n then bind of x `+ y, (z => body(y, z)(n - 1))
+
+fun gib(n) = (x, y) `=> body(x, y)(n)
+let g5 = run(gib(5))
+g5
+
+
+//│ Type: (Int, Int) -> Int
+//│ ————————————————————————————————————————————————————————————————————————————————

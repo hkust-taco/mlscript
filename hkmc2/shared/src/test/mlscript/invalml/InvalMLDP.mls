@@ -1,0 +1,341 @@
+:js
+
+:global
+:invalml
+
+
+declare class Array[T]
+
+fun mkArray: [T] -> () -> Array[T]
+fun mkArray() = @untyped globalThis.Array()
+
+fun mkArrayWith: [T] -> (T, Int) -> Array[T]
+fun mkArrayWith(iv, size) = @untyped globalThis.Array(size).fill(iv)
+
+fun at: [T] -> (Array[T], Int) -> T
+fun at(xs, i) = @untyped xs.at(i)
+
+fun splice: [T] -> (Array[T], Int, T) -> ()
+fun splice(xs, i, v) = @untyped xs.splice(i, 1, v); ()
+
+class Option[A] with
+  constructor
+    Some(x: A)
+    None()
+
+
+class ArrayList[T, out R](val d: Array[T])
+class Iter[T, out R](val arr: Array[T], val i: Ref[Int, out R], val step: Int, val end: Int)
+class Array2D[T, out R](val d: Array[Array[T]])
+
+class Interviewee with
+  constructor
+    Itv(score: Int, salary: Int)
+
+
+fun debug: Any -> ()
+fun debug(s) = @untyped print(s)
+
+
+fun (;) seq(_, res) = res
+
+fun toString: Any -> Str
+fun toString(x) = @untyped x.toString()
+
+fun concat: (Str, Str) -> Str
+fun concat(x, y) = @untyped x + y
+
+fun println: Str -> ()
+fun println(s) = @untyped print(s)
+
+fun empty: [A, R] -> Region[out R] ->{R} ArrayList[A, R]
+fun empty(r) = new ArrayList(mkArray())
+
+fun push: [A, R] -> (ArrayList[A, R], A) ->{R} ()
+fun push(arr, e) = @untyped arr.ArrayList#d.push(e); ()
+
+fun len: [A, R] -> (ArrayList[A, R]) ->{R} Int
+fun len(arr) = @untyped arr.ArrayList#d.length
+
+fun iter: [Res, R, E extends ~R, T] -> (ArrayList[T, R], [S] -> Iter[T, S] ->{S | E} Res) ->{E | R} Res
+fun iter(arr, f) =
+  region r in f(new Iter(arr.ArrayList#d, (r.ref 0), 1, len(arr)))
+
+fun revIter: [Res, R, E extends ~R, T] -> (ArrayList[T, R], [S] -> Iter[T, S] ->{S | E} Res) ->{E | R} Res
+fun revIter(arr, f) =
+  region r in f(new Iter(arr.ArrayList#d, (r.ref (len(arr) - 1)), 0 - 1, 0 - 1))
+
+:sjs
+fun next: [T, S] -> Iter[T, S] ->{S} Option[T]
+fun next(it) =
+  let i = !(it.Iter#i)
+  if i == it.Iter#end then None()
+  else
+    let res = Some(at of it.Iter#arr, i)
+    it.Iter#i := i + it.Iter#step
+    res
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let next;
+//│ next = function next(it) {
+//│   let i, scrut, res, tmp, tmp1;
+//│   i = it.i.value;
+//│   scrut = i == it.end;
+//│   if (scrut === true) {
+//│     return None1()
+//│   } else {
+//│     tmp = at(it.arr, i);
+//│     res = Some1(tmp);
+//│     tmp1 = i + it.step;
+//│     it.i.value = tmp1;
+//│     return res
+//│   }
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+fun whileDo: [R] -> (() ->{R} Bool) ->{R} ()
+fun whileDo(f) =
+  if f() then whileDo(f) else ()
+
+fun init: [A, R] -> (Region[out R], Int, Int, A) ->{R} Array2D[A, R]
+fun init(r, d1, d2, iv) =
+  let res = new Array2D(mkArrayWith(mkArrayWith(iv, d2), d1))
+  region r in
+    let i = r.ref 0
+    whileDo of () =>
+      if !(i) == d1 then false
+      else
+        splice(res.Array2D#d, !(i), mkArrayWith(iv, d2))
+        i := !(i) + 1
+        true
+  res
+    
+fun update: [A, R] -> (Array2D[A, R], Int, Int, A) ->{R} ()
+fun update(arr, d1, d2, v) = splice(at(arr.Array2D#d, d1), d2, v)
+
+fun get: [A, R] -> (Array2D[A, R], Int, Int) ->{R} A
+fun get(arr, d1, d2) = at(at(arr.Array2D#d, d1), d2)
+
+fun max: (Int, Int) -> Int
+fun max(x, y) = if x > y then x else y
+
+
+fun format(it) =
+  if it is Itv(score, salary) then
+    concat("interviewee score: ", concat(toString(score), concat(", salary: ", toString(salary))))
+
+fun printAll(arr) =
+  iter of arr, it =>
+    whileDo of () =>
+      if next(it) is
+        Some(x) then println(format(x)); false
+        None then false
+
+
+// fun select: [outer, R1 extends outer, R2 extends ~R1] -> (ArrayList[Interviewee, R1], Int, ArrayList[Interviewee, R2]) ->{R1 | R2} Int
+fun select(interviewees, budget, results) =
+  region r in
+    let size = len(interviewees), let i = r.ref 1
+    let dp = init(r, size + 1, budget + 1, 0)
+    iter of interviewees, it => whileDo of () =>
+      if next(it) is
+        Some(itv) then if itv is Itv(score, salary) then
+          let j = r.ref 0
+          whileDo of () =>
+            if !(j) < salary then update(dp, !(i), !(j), get(dp, !(i) - 1, !(j)))
+            else
+              let p = get(dp, !(i) - 1, !(j) - salary), let np = get(dp, !(i) - 1, !(j))
+              update(dp, !(i), !(j), max of np, p + score)
+            j := !(j) + 1; !(j) <= budget
+          i := !(i) + 1
+          true
+        None then false
+    i := size
+    let rest = r.ref budget
+    revIter of interviewees, it =>
+      whileDo of () =>
+        if next(it) is
+          Some(itv) then if itv is Itv(score, salary) then
+            if get(dp, !(i), !(rest)) == get(dp, !(i) - 1, !(rest) - salary) + score then
+              push(results, itv); rest := !(rest) - salary
+            else ()
+            i := !(i) - 1
+            true
+          None then false
+    get(dp, size, budget)
+
+select
+//│ = fun select
+//│ Type: [outer, 'A, 'R, 'T, 'R1, 'T1, 'T2, 'R2, 'A1, 'R3] -> ((ArrayList[in 'T1 out 'T2, out 'R2] ∧ ArrayList[in 'T out Interviewee ∧ 'T, out 'R1]) ∧ ArrayList['A, out 'R], Int, ArrayList['A1, out 'R3]) ->{(('R2 ∨ 'R3) ∨ 'R1) ∨ 'R} Int
+//│ Where:
+//│   'T <: Interviewee
+//│   'T <: 'T1
+//│   'R <: outer
+//│   'R1 <: outer
+//│   'T <: 'A
+//│   'R2 <: ¬'R
+
+region r in
+  let interviewees = empty(r)
+  push(interviewees, Itv(20, 3))
+  push(interviewees, Itv(50, 1))
+  push(interviewees, Itv(30, 1))
+  println("all interviewees:")
+  printAll(interviewees)
+  region r2 in
+    let results = empty(r2)
+    let m = select(interviewees, 4, results)
+    println("candidates:")
+    printAll(results)
+    m
+//│ > all interviewees:
+//│ > interviewee score: 20, salary: 3
+//│ > candidates:
+//│ > interviewee score: 30, salary: 1
+//│ = 80
+//│ Type: Int
+
+
+region r in
+  let interviewees = empty(r)
+  push(interviewees, Itv(100, 71))
+  push(interviewees, Itv(1, 69))
+  push(interviewees, Itv(2, 1))
+  println("all interviewees:")
+  printAll(interviewees)
+  region r2 in
+    let results = empty(r2)
+    let m = select(interviewees, 70, results)
+    println("candidates:")
+    printAll(results)
+    m
+//│ > all interviewees:
+//│ > interviewee score: 100, salary: 71
+//│ > candidates:
+//│ > interviewee score: 2, salary: 1
+//│ = 3
+//│ Type: Int
+
+
+region r in
+  let interviewees = empty(r)
+  push(interviewees, Itv(40, 10))
+  push(interviewees, Itv(60, 20))
+  push(interviewees, Itv(120, 30))
+  push(interviewees, Itv(70, 20))
+  println("all interviewees:")
+  printAll(interviewees)
+  region r2 in
+    let results = empty(r2)
+    let m = select(interviewees, 60, results)
+    println("candidates:")
+    printAll(results)
+    m
+//│ > all interviewees:
+//│ > interviewee score: 40, salary: 10
+//│ > candidates:
+//│ > interviewee score: 70, salary: 20
+//│ = 230
+//│ Type: Int
+
+
+:e
+region r in
+  let interviewees = empty(r)
+  push(interviewees, Itv(20, 3))
+  push(interviewees, Itv(50, 1))
+  push(interviewees, Itv(30, 1))
+  let results = empty(r)
+  let m = select(interviewees, 4, results)
+  println("candidates:")
+  printAll(results)
+  m
+// //│ ╔══[ERROR] Type error in reference with expected type 'results
+// //│ ║  l.110: 	  let m = select(interviewees, 4000, results)
+// //│ ║         	                                     ^^^^^^^
+// //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  'results
+// //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  ArrayList['A1, in ⊥ out 'R1]
+// //│ ╟── because: cannot constrain  'R  <:  'R1
+// //│ ╟── because: cannot constrain  'R  <:  ¬'R2
+// //│ ╟── because: cannot constrain  'R2  <:  ¬'R
+// //│ ╟── because: cannot constrain  'R3  <:  ¬'R
+// //│ ╟── because: cannot constrain  'R  <:  ¬'R3
+// //│ ╟── because: cannot constrain  r  <:  ¬'R3
+// //│ ╟── because: cannot constrain  'R3  <:  ¬r
+// //│ ╙── because: cannot constrain  r  <:  ¬r
+// //│ Type: Int
+//│ > candidates:
+//│ > interviewee score: 30, salary: 1
+//│ = 80
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'results
+//│ ║  l.248: 	  let m = select(interviewees, 4, results)
+//│ ║         	                                  ^^^^^^^
+//│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  'results
+//│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  ArrayList['A1, in ⊥ out 'R1]
+//│ ╟── because: cannot constrain  'R  <:  'R1
+//│ ╟── because: cannot constrain  'R  <:  ¬'R2
+//│ ╟── because: cannot constrain  'R2  <:  ¬'R
+//│ ╟── because: cannot constrain  'R3  <:  ¬'R
+//│ ╟── because: cannot constrain  'R  <:  ¬'R3
+//│ ╟── because: cannot constrain  r  <:  ¬'R3
+//│ ╟── because: cannot constrain  'R3  <:  ¬r
+//│ ╙── because: cannot constrain  r  <:  ¬r
+//│ Type: Int
+
+
+fun wrongSelect(interviewees, budget, results) =
+  region r in
+    let size = len(interviewees), let i = r.ref 1
+    let dp = init(r, size + 1, budget + 1, 0)
+    iter of interviewees, it =>
+      whileDo of () =>
+        if next(it) is
+          Some(itv) then if itv is Itv(score, salary) then
+            let j = r.ref 0
+            whileDo of () =>
+              if !(j) < salary then update(dp, !(i), !(j), get(dp, !(i) - 1, !(j)))
+              else
+                let p = get(dp, !(i) - 1, !(j) - salary), let np = get(dp, !(i) - 1, !(j))
+                update(dp, !(i), !(j), max of np, p + score)
+              j := !(j) + 1; !(j) <= budget
+            i := !(i) + 1
+            true
+          None then false
+    i := size
+    let rest = r.ref budget
+    revIter of interviewees, it =>
+      whileDo of () =>
+        if next(it) is
+          Some(itv) then if itv is Itv(score, salary) then
+            if get(dp, !(i), !(rest)) == get(dp, !(i) - 1, !(rest) - salary) + score then
+              push(interviewees, itv); rest := !(rest) - salary
+            else ()
+            i := !(i) - 1
+            true
+          None then false
+    get(dp, size, budget)
+
+:e
+region r in
+  let interviewees = empty(r)
+  push(interviewees, Itv(20, 3000))
+  push(interviewees, Itv(50, 1000))
+  push(interviewees, Itv(30, 1000))
+  region r2 in
+    let results = empty(r2)
+    let m = wrongSelect(interviewees, 4000, results)
+    println("candidates:")
+    printAll(results)
+    m
+//│ > candidates:
+//│ = 80
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'interviewees
+//│ ║  l.325: 	    let m = wrongSelect(interviewees, 4000, results)
+//│ ║         	                        ^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  'interviewees
+//│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  ArrayList[in 'T out 'T1, in ⊥ out 'R1]
+//│ ╟── because: cannot constrain  'R  <:  'R1
+//│ ╟── because: cannot constrain  'R  <:  ¬'R
+//│ ╟── because: cannot constrain  'R  <:  ⊥
+//│ ╙── because: cannot constrain  r  <:  ⊥
+//│ Type: Int
+

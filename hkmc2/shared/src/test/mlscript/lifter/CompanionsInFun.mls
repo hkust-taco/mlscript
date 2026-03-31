@@ -3,7 +3,7 @@
 
 
 :w
-:sjs
+:sir
 fun f(x) =
   class A with
     fun get = x
@@ -12,28 +12,23 @@ fun f(x) =
 //│ ╔══[WARNING] Modules are not yet lifted.
 //│ ║  l.10: 	  module A
 //│ ╙──      	         ^
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f;
-//│ f = function f(x) {
-//│   let A1;
-//│   (class A {
-//│     static {
-//│       A1 = this
-//│     }
-//│     constructor() {}
-//│     static #A_mod$cap;
-//│     #A$cap;
-//│     get get() {
-//│       return x;
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "A"]; 
-//│   });
-//│   return runtime.Unit
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g⁰, f⁰;
+//│ define g⁰ as fun g¹(A$) {
+//│   return new A$()
 //│ };
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.10: 	  module A
-//│ ╙──      	         ^
+//│ define f⁰ as fun f¹(x) {
+//│   let A;
+//│   define A as class A⁰ {
+//│     private val A$cap⁰;
+//│     method get⁰ = fun get¹ {
+//│       return x
+//│     }
+//│   }
+//│   module A¹ { private val A_mod$cap⁰; };
+//│   return runtime⁰.Unit⁰
+//│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

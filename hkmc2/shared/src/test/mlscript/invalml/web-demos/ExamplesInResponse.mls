@@ -1,0 +1,122 @@
+:invalml
+
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+
+// * This file contains examples in the author response. A few typos therein are corrected.
+
+
+// Some utility functions:
+
+fun wield: [R] -> (Region[out R]) ->{R} ()
+fun freeze: [R, E extends ~R, T] -> (Region[out R], () ->{~R & E} T) ->{R | E} T
+// ^ Fixed a typo in the author response (`{~R | E}` should have been `{~R & E}`)
+
+fun (;) seq(_, res) = res
+fun rand: () -> Bool
+fun print: Any -> ()
+
+
+// ### Example 1
+
+
+// Passing the same region for both arguments fundamentally does not work approaches like Rust and Capability Calculus.
+fun foo1(r1, r2) =
+  freeze(r1, () => print("ok"))
+  wield(r2)
+
+// InvalML allows r1 and r2 to alias as long as ‹body› does not use r2; for instance:
+region r in
+  foo1(r, r)
+
+// Capability Calculus and related systems would require r2 to be distinct from r1.
+
+// Note – this also works:
+region r in
+  region s in
+    foo1(r, s)
+
+// Here is a slightly less trivial examples that still type checks seamlessly in InvalML:
+region r0 in
+  
+  fun foo1(r1, r2) =
+    freeze(r1, () => wield(r0))
+    wield(r2)
+  
+  region r in
+    foo1(r, r)
+  
+  region r in
+    region s in
+      foo1(r, s)
+
+
+// On the other hand, given
+fun foo2(r1, r2) =
+  freeze(r1, () => wield(r2))
+  wield(r2)
+
+// we rightfully reject
+// region r in
+//   foo2(r, r)
+
+// but still accept
+region r in
+  region s in
+    foo2(r, s)
+
+
+// ### Example 2
+
+
+fun foo3: [outer, R extends outer] -> Region[out R] ->{outer} ()
+fun foo3(r1) =
+  region r2 in
+    freeze(r2, () =>
+      wield(r1)
+    )
+// ^ Fixed typos in the author response (it used the paper's syntax instead of the implementation's syntax)
+
+// In fact, this formally equivalent signature also works:
+fun foo3': [outer] -> Region[out outer] ->{outer} ()
+fun foo3'(r1) = foo3(r1)
+
+
+// ### Example 3
+
+
+fun foo4(r1, r2, f) =
+  let exec = freeze(r1, () => freeze(r2, () => f(r1, r2)))
+  let r = exec()
+  !(r) + 1
+
+region r in
+  region s in
+    foo4(r, s, (x, y) =>
+      if rand() then print("Chose x"); () => x.ref 0
+                else print("Chose y"); () => y.ref 1)
+
+
+// ### Example 4
+
+
+fun foo5(f) =
+  region r in
+    freeze(r, () => f(32))
+
+
+fun freeze2: [R, E extends ~R, T] -> (Region[out R], () ->{~R & E} T) ->{R | E} T
+
+fun foo6(f) =
+  region r in
+    freeze(r, () => f(32))
+
+foo6
+
+
+//│ Type: [outer, 'app, 'eff] -> (Int ->{'eff} 'app) ->{'eff} 'app
+//│ Where:
+//│   'eff <: outer
+//│ ————————————————————————————————————————————————————————————————————————————————

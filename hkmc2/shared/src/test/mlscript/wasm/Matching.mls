@@ -185,28 +185,21 @@ if Bar(true) is
 //│ Wasm result:
 //│ = 3
 
-// TODO: change error to proper match error instance for missing else branch
 :re
-:w
 class Bar(val y)
 class Baz(val z)
 if Baz(10) is
   Bar(a) then 0
-//│ ═══[WARNING] WatBuilder::result for Instantiate(...) of `globalThis.Error(...)` with payload `Lit(StrLit(match error))` not implemented yet
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] 0
+//│ ═══[RUNTIME ERROR] match error
 
 :re
-:w
 if false then 1
-//│ ═══[WARNING] WatBuilder::result for Instantiate(...) of `globalThis.Error(...)` with payload `Lit(StrLit(match error))` not implemented yet
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] 0
+//│ ═══[RUNTIME ERROR] match error
 
-:w
 class Foo(val x, val y)
 if Foo(1,2) is Foo(a,b) then 0
-//│ ═══[WARNING] WatBuilder::result for Instantiate(...) of `globalThis.Error(...)` with payload `Lit(StrLit(match error))` not implemented yet
 //│ Wasm result:
 //│ = 0
 

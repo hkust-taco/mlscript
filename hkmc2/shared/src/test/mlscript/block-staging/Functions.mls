@@ -1,6 +1,20 @@
 :js
 :staging
 
+
+:fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)
+:checkIR
+staged module Expressions with
+  fun lit() =
+    let x = 42
+    x
+//│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
+//│ ║  l.9: 	    let x = 42
+//│ ╙──     	        ^
+//│ > FunDefn(Symbol("ctor$"), ([]), End, true)
+//│ > FunDefn(Symbol("lit"), ([]), Scoped([Symbol("x")], Assign(Symbol("x"), Lit(42), Return(Ref(Symbol("x")), false))), true)
+
+
 val x = [1, 2, 3]
 staged module Expressions with
   fun lit() = 1
@@ -31,7 +45,7 @@ staged module Expressions with
 //│ > FunDefn(Symbol("tup2"), ([]), Return(Tuple([Lit(1), Ref(Symbol("x1"))]), false), true)
 //│ > FunDefn(Symbol("dynsel"), ([]), Scoped([Symbol("tmp")], Assign(Symbol("tmp"), Tuple([Lit(1)]), Return(DynSelect(Ref(Symbol("tmp")), Lit(0), false), false))), true)
 //│ > FunDefn(Symbol("match1"), ([]), Scoped([Symbol("scrut")], Assign(Symbol("scrut"), Lit(9), Match(Ref(Symbol("scrut")), [Cls(VirtualClassSymbol("Bool"), Select(Ref(Symbol("runtime")), Symbol("unreachable"))) -> Return(Lit(1), false), Lit(8) -> Return(Lit(2), false), Cls(VirtualClassSymbol("Int"), Select(Ref(Symbol("runtime")), Symbol("unreachable"))) -> Return(Lit(3), false)], Return(Lit(0), false), End))), true)
-//│ > FunDefn(Symbol("match2"), ([]), Scoped([Symbol("a"), Symbol("element1$"), Symbol("element0$")], Match(Ref(Symbol("x1")), [Tup(0) -> Return(Lit(1), false), Tup(2) -> Assign(Symbol("element0$"), Call(Select(Select(Ref(Symbol("runtime")), Symbol("Tuple")), Symbol("get")), [Ref(Symbol("x1")), Lit(0)]), Assign(Symbol("element1$"), Call(Select(Select(Ref(Symbol("runtime")), Symbol("Tuple")), Symbol("get")), [Ref(Symbol("x1")), Lit(1)]), Match(Ref(Symbol("element0$")), [Lit(1) -> Match(Ref(Symbol("element1$")), [Lit(2) -> Return(Lit(2), false)], Assign(Symbol("a"), Ref(Symbol("element0$")), Return(Lit(3), false)), End)], Assign(Symbol("a"), Ref(Symbol("element0$")), Return(Lit(3), false)), End)))], Return(Lit(0), false), End)), true)
+//│ > FunDefn(Symbol("match2"), ([]), Scoped([Symbol("element1$"), Symbol("element0$"), Symbol("a")], Match(Ref(Symbol("x1")), [Tup(0) -> Return(Lit(1), false), Tup(2) -> Assign(Symbol("element0$"), Call(Select(Select(Ref(Symbol("runtime")), Symbol("Tuple")), Symbol("get")), [Ref(Symbol("x1")), Lit(0)]), Assign(Symbol("element1$"), Call(Select(Select(Ref(Symbol("runtime")), Symbol("Tuple")), Symbol("get")), [Ref(Symbol("x1")), Lit(1)]), Match(Ref(Symbol("element0$")), [Lit(1) -> Match(Ref(Symbol("element1$")), [Lit(2) -> Return(Lit(2), false)], Assign(Symbol("a"), Ref(Symbol("element0$")), Return(Lit(3), false)), End)], Assign(Symbol("a"), Ref(Symbol("element0$")), Return(Lit(3), false)), End)))], Return(Lit(0), false), End)), true)
 //│ x = [1, 2, 3]
 
 class Outside(a)
@@ -128,7 +142,7 @@ staged module A with
   fun g() = {1 : 2}
 //│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: AssignField(Ref(term:A/x,None),Ident(a),Lit(IntLit(0)),Return(Select(Ref(tmp:runtime,None),Ident(Unit)),false))
 //│ ╔══[COMPILATION ERROR] Other Results not supported in staged module: Record(false,List(RcdArg(Some(Lit(IntLit(1))),Lit(IntLit(2)))))
-//│ ║  l.128: 	  fun g() = {1 : 2}
+//│ ║  l.142: 	  fun g() = {1 : 2}
 //│ ╙──       	                 ^
 //│ > FunDefn(Symbol("ctor$"), ([]), Assign(Symbol("x"), Call(Ref(ClassSymbol("C", fun C { class: class C }, Some([Symbol("a")]), [])), [Lit(1)]), End), true)
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.

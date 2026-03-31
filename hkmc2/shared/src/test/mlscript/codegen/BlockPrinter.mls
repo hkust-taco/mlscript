@@ -18,7 +18,6 @@ let x = 1
 x + 1
 //│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
 //│ Program:
-//│   imports = Nil
 //│   main = Scoped(syms = {x⁰}): 
 //│     body = Assign:
 //│       lhs = x⁰
@@ -27,15 +26,11 @@ x + 1
 //│       res = Call:
 //│         fun = Ref:
 //│           l = builtin:+⁰
-//│           disamb = N
 //│         args = Ls of 
 //│           Arg:
-//│             spread = N
 //│             value = Ref:
 //│               l = x⁰
-//│               disamb = N
 //│           Arg:
-//│             spread = N
 //│             value = Lit of IntLit of 1
 //│       implct = true
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -167,11 +162,7 @@ module A with
 A.x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let A⁰;
-//│ define A⁰ as class A¹ {
-//│   constructor {
-//│     runtime⁰.Unit⁰
-//│   }
-//│ }
+//│ define A⁰ as class A¹
 //│ module A² {
 //│   private val y⁰;
 //│   val x⁸;
@@ -188,7 +179,7 @@ A.x
 //│     };
 //│     end
 //│   }
-//│   method g⁰ = fun g¹(x2) { return 3 }
+//│   method g⁰ = fun g¹(x) { return 3 }
 //│ };
 //│ A².x⁹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -199,11 +190,7 @@ module A with
 A.x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let A³;
-//│ define A³ as class A⁴ {
-//│   constructor {
-//│     runtime⁰.Unit⁰
-//│   }
-//│ }
+//│ define A³ as class A⁴
 //│ module A⁵ { val x¹¹; constructor { define x¹¹ as val x¹² = 3; end } };
 //│ A⁵.x¹²
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -238,7 +225,7 @@ pattern P = B
 //│         return new runtime⁰.MatchFailure⁰(null)
 //│     end
 //│   }
-//│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input1) {
+//│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input) {
 //│     return new runtime⁰.MatchFailure⁰(null)
 //│   }
 //│ };

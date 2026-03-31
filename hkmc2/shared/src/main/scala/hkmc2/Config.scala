@@ -31,6 +31,8 @@ case class Config(
   qqEnabled: Bool,
   funcToCls: Bool,
   commentGeneratedCode: Bool,
+  noFreeze: Bool,
+  noModuleCheck: Bool,
 ):
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
@@ -68,6 +70,8 @@ object Config:
     qqEnabled = false,
     funcToCls = false,
     commentGeneratedCode = false,
+    noFreeze = false,
+    noModuleCheck = false,
   )
   object default:
     val patMatConsequentSharingThreshold = S(15)

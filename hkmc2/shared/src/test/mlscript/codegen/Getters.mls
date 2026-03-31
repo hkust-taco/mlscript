@@ -73,9 +73,6 @@ module T with
 //│   static {
 //│     T1 = this
 //│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
 //│   static {
 //│     this.a = T.t;
 //│     this.b = T.t;
@@ -115,9 +112,6 @@ module M with
 //│ (class M {
 //│   static {
 //│     M1 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
 //│   }
 //│   static get t() {
 //│     return 0;

@@ -82,7 +82,7 @@ f(p())
 //│   set Y_b = O⁰;
 //│   set tmp1 = (fv_ctorLam_y, fv_ctorLam_arg$Y$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => return f_9$arg$X$0$_Y¹(fv_ctorLam_y, fv_ctorLam_arg$Y$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, Y_b);
 //│   set X_a = tmp1;
-//│   return (fv_ctorLam_y1, fv_ctorLam_arg$X$0$, fv_ctorLam_arg$Y$0$1, fv_ctorLam_tmp2, fv_ctorLam_tmp3) => return f_9$x_X¹(fv_ctorLam_y1, fv_ctorLam_arg$X$0$, fv_ctorLam_arg$Y$0$1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, X_a)
+//│   return (fv_ctorLam_y, fv_ctorLam_arg$X$0$, fv_ctorLam_arg$Y$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => return f_9$x_X¹(fv_ctorLam_y, fv_ctorLam_arg$X$0$, fv_ctorLam_arg$Y$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, X_a)
 //│ };
 //│ define f_9$f⁰ as fun f_9$f¹(x) {
 //│   let y, arg$X$0$, arg$Y$0$, tmp1;
@@ -96,36 +96,36 @@ f(p())
 //│   set fv_arg$X$0$ = X_a;
 //│   return fv_arg$X$0$(fv_y, fv_arg$Y$0$, fv_tmp1, fv_tmp1)
 //│ };
-//│ define f_9$arg$X$0$_Y⁰ as fun f_9$arg$X$0$_Y¹(fv_y1, fv_arg$Y$0$1, fv_tmp2, fv_tmp3, Y_b) {
-//│   set fv_arg$Y$0$1 = Y_b;
-//│   set fv_y1 = fv_arg$Y$0$1;
-//│   set fv_tmp3 = fv_y1;
-//│   return f_9$split_root$_rest¹(fv_tmp3)
+//│ define f_9$arg$X$0$_Y⁰ as fun f_9$arg$X$0$_Y¹(fv_y, fv_arg$Y$0$, fv_tmp, fv_tmp1, Y_b) {
+//│   set fv_arg$Y$0$ = Y_b;
+//│   set fv_y = fv_arg$Y$0$;
+//│   set fv_tmp1 = fv_y;
+//│   return f_9$split_root$_rest¹(fv_tmp1)
 //│ };
-//│ define f_9$x_rest⁰ as fun f_9$x_rest¹(fv_tmp4) {
-//│   return f_9$split_default$_rest¹(fv_tmp4)
+//│ define f_9$x_rest⁰ as fun f_9$x_rest¹(fv_tmp) {
+//│   return f_9$split_default$_rest¹(fv_tmp)
 //│ };
-//│ define f_9$split_default$_rest⁰ as fun f_9$split_default$_rest¹(fv_tmp5) {
+//│ define f_9$split_default$_rest⁰ as fun f_9$split_default$_rest¹(fv_tmp) {
 //│   throw new globalThis⁰.Error⁰("match error")
 //│ };
-//│ define f_9$split_root$_rest⁰ as fun f_9$split_root$_rest¹(fv_tmp6) {
-//│   return fv_tmp6
+//│ define f_9$split_root$_rest⁰ as fun f_9$split_root$_rest¹(fv_tmp) {
+//│   return fv_tmp
 //│ };
-//│ define f_9$arg$X$0$_rest⁰ as fun f_9$arg$X$0$_rest¹(fv_tmp7) {
-//│   return f_9$x_rest¹(fv_tmp7)
+//│ define f_9$arg$X$0$_rest⁰ as fun f_9$arg$X$0$_rest¹(fv_tmp) {
+//│   return f_9$x_rest¹(fv_tmp)
 //│ };
 //│ define p⁰ as fun p¹() {
 //│   let tmp1;
 //│   set tmp1 = Y⁰(O⁰);
 //│   return X⁰(tmp1)
 //│ };
-//│ define f⁰ as fun f¹(x1) {
+//│ define f⁰ as fun f¹(x) {
 //│   let y, arg$X$0$, arg$Y$0$, tmp1;
 //│   block split_root$:
 //│     block split_default$:
-//│       match x1
+//│       match x
 //│         X¹ =>
-//│           set arg$X$0$ = x1.a¹;
+//│           set arg$X$0$ = x.a¹;
 //│           match arg$X$0$
 //│             Y¹ =>
 //│               set arg$Y$0$ = arg$X$0$.b¹;

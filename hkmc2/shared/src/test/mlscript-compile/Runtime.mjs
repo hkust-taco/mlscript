@@ -10,9 +10,6 @@ let Runtime1;
   static {
     Runtime1 = this
   }
-  constructor() {
-    runtime.Unit;
-  }
   static #curEffect;
   static #resumeValue;
   static #resumeArr;
@@ -140,9 +137,6 @@ let Runtime1;
       static {
         Runtime.Tuple = this
       }
-      constructor() {
-        runtime.Unit;
-      }
       static {
         this.split = LazyArray.__split;
       }
@@ -182,9 +176,6 @@ let Runtime1;
       static {
         Runtime.Str = this
       }
-      constructor() {
-        runtime.Unit;
-      }
       static startsWith(string, prefix) {
         return runtime.safeCall(string.startsWith(prefix))
       } 
@@ -210,9 +201,6 @@ let Runtime1;
     (class TraceLogger {
       static {
         Runtime.TraceLogger = this
-      }
-      constructor() {
-        runtime.Unit;
       }
       static #enabled;
       static #indentLvl;
@@ -455,7 +443,6 @@ let Runtime1;
       static {
         Runtime.NonLocalReturn = this
       }
-      constructor() {}
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "NonLocalReturn"]; 
     });

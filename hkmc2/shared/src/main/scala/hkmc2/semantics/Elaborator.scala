@@ -810,6 +810,8 @@ extends Importer with ucs.SplitElaborator:
     case TypeDef(k, head, rhs) =>
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
       Term.Error
+    case Modified(Keyword.`in` | Keyword.`out`, body) =>
+      subterm(body)
     case Modified(Keywrd(Keyword.`mut`), body: Block) =>
       blockOrRcd(body, hasResult = true) match
       case (Blk(Nil, Term.UnitVal()), ctx) =>
@@ -1782,11 +1784,14 @@ extends Importer with ucs.SplitElaborator:
   
   def typeParams(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
     case TyTup(ps) =>
-      val vs = ps.map:
+      val vs = ps.flatMap:
         case id: Ident =>
           val sym = VarSymbol(id)
           sym.decl = S(TyParam(FldFlags.empty, N, sym))
-          Param(FldFlags.empty, sym, N, Modulefulness.none)
+          Param(FldFlags.empty, sym, N, Modulefulness.none) :: Nil
+        case t =>
+          raise(ErrorReport(msg"Unsupported type parameter ${t.describe}" -> t.toLoc :: Nil))
+          Nil
       (vs, ctx ++ vs.map(p => p.sym.name -> p.sym))
   
   def importFrom(sts: Block): Ctxl[(Blk, Ctx)] =

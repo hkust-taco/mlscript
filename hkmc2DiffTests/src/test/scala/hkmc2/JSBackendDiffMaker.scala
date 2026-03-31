@@ -171,6 +171,9 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           }
         rec(lowered_0.main, lowered_1.main)
       
+      if checkIR.isSet then
+        BlockChecker().applyProgram(lowered_1)
+      
       if showOptimizedIR.isSet then
         outputSeparator("Optimized IR")
         given ShowCfg = ShowCfg(

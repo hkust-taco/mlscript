@@ -245,7 +245,7 @@ end Resolver
   * Therefore, resolution of such symbols is deferred to the resolver. 
   */
 class Resolver(tl: TraceLogger)
-(using raise: Raise, state: State, ctx: Elaborator.Ctx):
+(using raise: Raise, state: State, ctx: Elaborator.Ctx, cfg: Config):
   import tl.*
   import Resolver.*
   import Expect.*
@@ -337,21 +337,21 @@ class Resolver(tl: TraceLogger)
     // TODO: currently it checks for only overloaded statically
     // known classes, it might require checking other definitions also
     // later.
-    
-    val evalsToModule = ModuleChecker.evalsToModule(t, prefer = expect)
-    val evalsToStaticClass = ModuleChecker.isStaticClass(t)
-    log(s"Checking ${t}: expect ${expect}, evalsToModule = ${evalsToModule}, evalsToStaticClass = ${evalsToStaticClass}")
-    
-    if expect.`module` && !evalsToModule then
-      raise(ErrorReport(msg"Expected a module; found non-moduleful ${t.describe}." -> t.toLoc 
-        :: expect.message))
-    if expect.nonModule && evalsToModule && !evalsToStaticClass then
-      raise(ErrorReport(msg"Unexpected moduleful ${t.describe}." -> t.toLoc 
-        :: expect.message))
-    
-    if expect.`class` && !evalsToStaticClass then
-      raise(ErrorReport(msg"Expected a statically known class; found ${t.describe}." -> t.toLoc
-        :: expect.message))
+    if !cfg.noModuleCheck then
+      val evalsToModule = ModuleChecker.evalsToModule(t, prefer = expect)
+      val evalsToStaticClass = ModuleChecker.isStaticClass(t)
+      log(s"Checking ${t}: expect ${expect}, evalsToModule = ${evalsToModule}, evalsToStaticClass = ${evalsToStaticClass}")
+      
+      if expect.`module` && !evalsToModule then
+        raise(ErrorReport(msg"Expected a module; found non-moduleful ${t.describe}." -> t.toLoc 
+          :: expect.message))
+      if expect.nonModule && evalsToModule && !evalsToStaticClass then
+        raise(ErrorReport(msg"Unexpected moduleful ${t.describe}." -> t.toLoc 
+          :: expect.message))
+      
+      if expect.`class` && !evalsToStaticClass then
+        raise(ErrorReport(msg"Expected a statically known class; found ${t.describe}." -> t.toLoc
+          :: expect.message))
     
   end traverse
   

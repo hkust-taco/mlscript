@@ -195,9 +195,6 @@ module A with
 //│   static {
 //│     A1 = this
 //│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
 //│   static f() {
 //│     return 1
 //│   } 
@@ -209,11 +206,7 @@ module A with
 //│ });
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let A⁰;
-//│ define A⁰ as class A¹ {
-//│   constructor {
-//│     runtime⁰.Unit⁰
-//│   }
-//│ }
+//│ define A⁰ as class A¹
 //│ module A² { method f⁴ = fun f⁵() { return 1 } method g⁰ = fun g¹() { return A².f⁵() } };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

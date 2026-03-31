@@ -74,7 +74,6 @@ new { x = 1 }
 //│     Def:
 //│       lhs = Ident of "x"
 //│       rhs = IntLit of 1
-//│   rft = N
 //│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.70: 	new { x = 1 }
 //│ ╙──      	      ^
@@ -86,7 +85,7 @@ new { x = 1 }
 :e
 new! { x = 1 }
 //│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: prefix operator 'new!'
-//│ ║  l.87: 	new! { x = 1 }
+//│ ║  l.86: 	new! { x = 1 }
 //│ ╙──      	^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
