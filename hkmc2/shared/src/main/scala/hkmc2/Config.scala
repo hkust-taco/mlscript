@@ -4,6 +4,7 @@ import mlscript.utils.*, shorthands.*
 import utils.*
 
 import Config.*
+import Message.MessageContext
 
 
 /** The compilation target of a program. */

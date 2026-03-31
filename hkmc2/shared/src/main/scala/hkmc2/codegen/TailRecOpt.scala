@@ -468,7 +468,10 @@ class TailRecOpt(using State, TL, Raise):
       case f: FunDefn => L(f)
       case c: ClsLikeDefn => R(c)
       case _ => die // unreachable as floatOutDefns only floats out FunDefns and ClsLikeDefns
-    val (optFNew, optF) = optFunctions(funs, N)
+    // Filter out functions that have a @config annotation disabling tailRecOpt
+    val (tailRecFuns, skippedFuns) = funs.partition: f =>
+      f.configOverride.forall(_.tailRecOpt)
+    val (optFNew, optF) = optFunctions(tailRecFuns, N)
     val optC = optClasses(clses)
     
     val fMap = optF.map(f => f.dSym -> f).toMap

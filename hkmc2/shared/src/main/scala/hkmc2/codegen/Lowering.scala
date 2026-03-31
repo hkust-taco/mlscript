@@ -1168,6 +1168,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           case _ => warn(a)
         
       case Annot.Modifier(syntax.Keyword("staged")) => ()
+      case _: Annot.Config => () // Config annotations are handled during FunDefn creation
       case annot => warn(annot)
 
   def reportAnnotations(receiver: Term, annotations: Ls[Annot]): Unit =
