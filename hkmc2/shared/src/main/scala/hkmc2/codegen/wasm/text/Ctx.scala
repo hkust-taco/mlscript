@@ -265,17 +265,17 @@ class Ctx extends ToWat:
   /** Counter for generating object tags. */
   private var objectTagNum = 0
 
-  private val wasmIntrinsicFuncs: MutMap[Str, FuncIdx] = MutMap.empty
-  private val wasmIntrinsicTypes: MutMap[WasmIntrinsicType, TypeIdx] = MutMap.empty
-  private val wasmIntrinsicTags: MutMap[Str, TagIdx] = MutMap.empty
+  private val wasmIntrinsicFuncs = MutMap.empty[Str, FuncIdx]
+  private val wasmIntrinsicTypes = MutMap.empty[WasmIntrinsicType, TypeIdx]
+  private val wasmIntrinsicTags = MutMap.empty[Str, TagIdx]
 
-  private val cachedMemoryImport: MutMap[(Str, Str), Int] = MutMap.empty
-  private val cachedFunctionImports: MutMap[(Str, Str), FuncIdx] = MutMap.empty
+  private val cachedMemoryImport = MutMap.empty[(Str, Str), Int]
+  private val cachedFunctionImports = MutMap.empty[(Str, Str), FuncIdx]
 
-  private var labelTargets: List[(LabelSymbol, Ctx.LabelTarget)] = Nil
-  private val singletonByBms: MutMap[BlockMemberSymbol, Ctx.SingletonInfo] = MutMap.empty
-  private val singletonByIsym: MutMap[ModuleOrObjectSymbol, Ctx.SingletonInfo] = MutMap.empty
-  private val singletonInitActions: ArrayBuf[Expr] = ArrayBuf.empty
+  private var labelTargets = Nil: List[(LabelSymbol, Ctx.LabelTarget)]
+  private val singletonByBms = MutMap.empty[BlockMemberSymbol, Ctx.SingletonInfo]
+  private val singletonByIsym = MutMap.empty[ModuleOrObjectSymbol, Ctx.SingletonInfo]
+  private val singletonInitActions = ArrayBuf.empty[Expr]
 
   /** Pushes a label target for the dynamic extent of `body` and pops it afterwards. */
   def withLabel[T](label: LabelSymbol, target: Ctx.LabelTarget)(body: => T): T =

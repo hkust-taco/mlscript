@@ -116,9 +116,7 @@ case class FunctionType(sigType: SignatureType) extends ToWat:
 /** A type representing a struct field. */
 case class Field(ty: ValType, mutable: Bool, id: Str) extends ToWat:
   def toWat: Document =
-    doc"(field $$$id ${
-        if mutable then doc"(mut ${ty.toWat})" else ty.toWat
-      })"
+    doc"(field $$$id ${if mutable then doc"(mut ${ty.toWat})" else ty.toWat})"
 
 /** A type representing a structure type. */
 case class StructType(
