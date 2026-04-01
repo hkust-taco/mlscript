@@ -19,4 +19,5 @@ Never use `asInstanceOf` unless absolutely necessary. If you find yourself using
 
 Never use default arguments in core business logic. Default arguments should be reserved for user-facing APIs.
 
+Do not remove existing `end` markers.
 
