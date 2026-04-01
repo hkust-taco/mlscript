@@ -54,10 +54,6 @@ fun f =
 //│         match scrut1
 //│           true =>
 //│             return runtime⁰.Unit⁰
-//│           else
-//│             end
-//│         end
-//│       else
 //│         end
 //│     end;
 //│     throw new globalThis⁰.Error⁰("match error")
@@ -106,10 +102,6 @@ fun f =
 //│         match scrut1
 //│           true =>
 //│             return "1"
-//│           else
-//│             end
-//│         end
-//│       else
 //│         end
 //│     end;
 //│     return "2 long long long long long long long long long long long long long long"

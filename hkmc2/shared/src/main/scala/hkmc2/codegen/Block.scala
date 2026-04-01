@@ -396,7 +396,12 @@ object Define:
     case _ => new Define(defn, rest)
 
 object Match:
-  def apply(scrut: Path, arms: Ls[Case -> Block], dflt: Opt[Block], rest: Block): Block = dflt match
+  def apply(scrut: Path, _arms: Ls[Case -> Block], _dflt: Opt[Block], rest: Block): Block =
+    val emptyDflt = _dflt.forall(_.isEmpty)
+    val dflt = if emptyDflt then N else _dflt
+    val arms = if emptyDflt then _arms.filterNot(_._2.isEmpty) else _arms
+    if arms.isEmpty && scrut.isPure then dflt.fold(rest)(Begin(_, rest))
+    else dflt match
     case S(Match(`scrut`, arms2, dflt2, _: End)) => // TODO: also handle non-End rest (may require a join point)
       // * Currently, this branch does not seem used, because the UCS already does a good job at merging matches
       Match(scrut, arms ::: arms2, dflt2, rest)
@@ -410,6 +415,7 @@ object Match:
 object Begin:
   def apply(sub: Block, rest: Block): Block =
     if sub.isEmpty then rest
+    else if rest.isEmpty then sub
     else if sub.isAbortive then sub
     else (sub, rest) match
       case (Scoped(symsSub, bodySub), Scoped(symsRest, bodyRest)) =>

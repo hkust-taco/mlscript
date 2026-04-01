@@ -19,9 +19,7 @@ fun f(x) =
       let z = 3
       fun g() = z
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f;
-//│ runtime.resetEffects();
-//│ f = function f(x) { if (x === true) { if (x !== true) {} } return runtime.Unit };
+//│ let f; runtime.resetEffects(); f = function f(x) { return runtime.Unit };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -122,7 +120,7 @@ fun f(x) =
 //│           inlinedVal = z1;
 //│           runtime.resumeValue = inlinedVal;
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(f4, 2, "ScopedBlocksAndHandlers.mls:103:7", null, null, 1, 1, x, 0)
+//│             return runtime.unwind(f4, 2, "ScopedBlocksAndHandlers.mls:101:7", null, null, 1, 1, x, 0)
 //│           }
 //│           pc = 2;
 //│           continue main
@@ -149,7 +147,7 @@ fun f(x) =
       let z = 3
       fun g() = z )
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f5; runtime.resetEffects(); f5 = function f(x) { if (x !== true) {} return runtime.Unit };
+//│ let f5; runtime.resetEffects(); f5 = function f(x) { return runtime.Unit };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

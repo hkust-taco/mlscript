@@ -226,8 +226,6 @@ f()
 //│     true =>
 //│       do f⁷();
 //│       end
-//│     else
-//│       end
 //│   return runtime⁰.Unit⁰
 //│ };
 //│ f⁷()

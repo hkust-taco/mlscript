@@ -195,8 +195,6 @@ f()
 //│       Lit(BoolLit(true)) =>
 //│         let x2 = +(x,1) in
 //│         jump j(x2)
-//│       _ =>
-//│         jump j(x)
 //│   def j(x3) =
 //│     x3
 //│   def entry() =

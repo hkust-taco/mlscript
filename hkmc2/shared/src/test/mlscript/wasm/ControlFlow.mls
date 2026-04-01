@@ -3,6 +3,11 @@
 :wasm
 
 
+if 1 === 2 do 2 + 2
+//│ Wasm result:
+//│ = {}
+
+
 :wat
 let i = 0 in
   while i < 10 then set i += 1
