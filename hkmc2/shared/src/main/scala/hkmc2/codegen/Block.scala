@@ -254,7 +254,7 @@ sealed abstract class Block extends Product:
           val newBody = d.body.flattened
           if newBody is d.body
           then d
-          else d.copy(body = newBody)(forceTailRec = d.forceTailRec)
+          else d.copy(body = newBody)(forceTailRec = d.forceTailRec, configOverride = d.configOverride)
         case v: ValDefn => v
         case c: ClsLikeDefn =>
           val newPreCtor = c.preCtor.flattened
@@ -262,10 +262,10 @@ sealed abstract class Block extends Product:
           val newMethods = c.methods.mapConserve:
             case f@FunDefn(owner, sym, dSym, params, body) =>
               val newBody = body.flattened
-              if newBody is body then f else f.copy(body = newBody)(forceTailRec = f.forceTailRec)
+              if newBody is body then f else f.copy(body = newBody)(forceTailRec = f.forceTailRec, configOverride = f.configOverride)
           if (newPreCtor is c.preCtor) && (newCtor is c.ctor) && (newMethods is c.methods)
           then c
-          else c.copy(preCtor = newPreCtor, ctor = newCtor, methods = newMethods)
+          else c.copy(preCtor = newPreCtor, ctor = newCtor, methods = newMethods)(c.configOverride)
       
       val newRest = rest.flatten(k)
       if (newDefn is defn) && (newRest is rest)
@@ -508,19 +508,22 @@ final case class FunDefn(
     body: Block,
   )(
     val forceTailRec: Bool,
+    val configOverride: Opt[Config],
 ) extends Defn:
   val innerSym = N
   val asPath = Value.Ref(sym, S(dSym))
 object FunDefn:
-  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(forceTailRec: Bool)(using State) =
+  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(forceTailRec: Bool, configOverride: Opt[Config])(using State) =
     val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
     sym.tsym = S(tSym)
-    FunDefn(owner, sym, tSym, params, body)(forceTailRec)
+    FunDefn(owner, sym, tSym, params, body)(forceTailRec, configOverride)
 
 final case class ValDefn(
     tsym: TermSymbol,
     sym: BlockMemberSymbol,
     rhs: Path,
+)(
+    val configOverride: Opt[Config],
 ) extends Defn:
   val innerSym = S(tsym)
   val owner: Opt[InnerSymbol] = tsym.owner
@@ -532,9 +535,10 @@ object ValDefn:
       k: syntax.Val,
       sym: BlockMemberSymbol,
       rhs: Path,
+      configOverride: Opt[Config],
     )(using State)
     : ValDefn =
-      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme)), sym = sym, rhs = rhs)
+      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme)), sym = sym, rhs = rhs)(configOverride)
 
 
 /*
@@ -587,6 +591,8 @@ final case class ClsLikeDefn(
     ctor: Block,
     companion: Opt[ClsLikeBody],
     bufferable: Option[Bool],
+)(
+    val configOverride: Opt[Config],
 ) extends Defn:
   require(k isnt syntax.Mod)
   val innerSym = S(isym.asMemSym)

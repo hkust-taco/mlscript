@@ -179,7 +179,7 @@ case class Scope
                 case _ => die
               else i.toString
             s"$realBase$idx"
-          .filterNot(inScope).next
+          .filterNot(inScope).next()
     
     val fullName = addToBindings(l, name, shadow = shadow)
     
