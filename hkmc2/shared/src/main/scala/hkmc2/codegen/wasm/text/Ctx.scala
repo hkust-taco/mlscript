@@ -102,16 +102,16 @@ class FuncInfo(
   )
 
   def toWat: Document =
-    doc"""(func ${id.toWat} ${typeUse.toWat}${
+    doc"""(func ${id.toWat}${
+        `export`.fold(doc""): e =>
+          doc""" (export "$e")"""
+      } ${typeUse.toWat}${
         getSignatureType.toWat.surroundUnlessEmpty(doc" ")
       } #{ ${
         locals.map: p =>
           doc"(local $$${p._2} ${RefType.anyref.toWat})"
         .mkDocument(doc" # ").surroundUnlessEmpty(doc" # ")
-      } # ${body.toWat} #} )${
-        `export`.fold(doc""): e =>
-          doc""" # (export "${e}" (func ${id.toWat}))"""
-      } # (elem declare func ${id.toWat})"""
+      } # ${body.toWat} #} ) # (elem declare func ${id.toWat})"""
 end FuncInfo
 
 /** A Wasm global and its associated information.
@@ -187,7 +187,7 @@ class TypeInfo(val id: SymIdx, val compType: CompType, val objectTag: Opt[Int]) 
 class TagInfo(val id: SymIdx, val typeUse: TypeUse) extends ToWat:
 
   def toWat: Document =
-    doc"""(tag ${id.toWat} ${typeUse.toWat}) # (export "${id.id}" (tag ${id.toWat}))"""
+    doc"""(tag ${id.toWat} (export "${id.id}") ${typeUse.toWat})"""
 end TagInfo
 
 enum WasmIntrinsicType:

@@ -23,7 +23,7 @@ let dup2 = "dup"
 //│   (type $entry1 (func (result (ref null any))))
 //│   (import "system" "mlx_str_from_utf16" (func $mlx_str_from_utf16 (type $mlx_str_from_utf16)))
 //│   (import "system" "mem" (memory $mem 1))
-//│   (func $entry (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $dup1 (ref null any))
 //│     (local $dup2 (ref null any))
 //│     (local $tmp (ref null any))
@@ -61,7 +61,6 @@ let dup2 = "dup"
 //│                 (ref.cast (ref $TupleArray)
 //│                   (local.get $tuple))
 //│                 (i32.const 1))))))))
-//│   (export "entry" (func $entry))
 //│   (elem declare func $entry)
 //│   (data $dup (i32.const 0) "\64\00\75\00\70\00"))
 //│ Wasm result:

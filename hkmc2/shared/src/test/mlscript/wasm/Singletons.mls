@@ -67,7 +67,7 @@ Bar.y
 //│         (ref.cast (ref null $Bar)
 //│           (call $Bar_ctor1)))))
 //│   (elem declare func $start1)
-//│   (func $entry (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $Bar (ref null any))
 //│     (local $Foo (ref null any))
 //│     (block (result (ref null any))
@@ -77,7 +77,6 @@ Bar.y
 //│         (struct.get $Bar $y
 //│           (ref.cast (ref $Bar)
 //│             (global.get $Bar$inst))))))
-//│   (export "entry" (func $entry))
 //│   (elem declare func $entry)
 //│   (start $start1))
 //│ Wasm result:
