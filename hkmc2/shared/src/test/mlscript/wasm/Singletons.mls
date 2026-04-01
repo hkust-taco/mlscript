@@ -20,7 +20,6 @@ Bar.y
 //│   (type $start (func))
 //│   (global $Foo$inst (mut (ref null $Foo)) (ref.null $Foo))
 //│   (global $Bar$inst (mut (ref null $Bar)) (ref.null $Bar))
-//│   (start $start1)
 //│   (func $Foo_ctor1 (type $Foo_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
@@ -79,7 +78,8 @@ Bar.y
 //│           (ref.cast (ref $Bar)
 //│             (global.get $Bar$inst))))))
 //│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
+//│   (elem declare func $entry)
+//│   (start $start1))
 //│ Wasm result:
 //│ = 2
 

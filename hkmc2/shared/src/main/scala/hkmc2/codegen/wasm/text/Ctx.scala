@@ -232,9 +232,6 @@ class Ctx extends ToWat:
   /** [[MutMap]] containing type symbols mapped to their corresponding [[TypeInfo]] instance. */
   private val namedTypes = MutMap.empty[BlockMemberSymbol, TypeInfo]
 
-  /** [[ArrayBuf]] containing all imports in the module. */
-  private val imports = ArrayBuf.empty[Import[?]]
-
   /** [[ListMap]] containing all data segments in the module. */
   private var dataSegments = ListMap.empty[SymIdx, DataSegment]
 
@@ -243,6 +240,9 @@ class Ctx extends ToWat:
 
   /** [[MutMap]] containing function symbols mapped to the corresponding [[FuncInfo]] or [[Import]] instance. */
   private val namedFuncs = MutMap.empty[Symbol, FuncInfo | Import[ExternType.Func]]
+
+  /** [[ListMap]] containing all memory definitions and imports in the module mapped by their symbolic identifiers. */
+  private var memories = ListMap.empty[SymIdx, Import[ExternType.Mem]]
 
   /** [[ListMap]] containing all tag definitions in the module. */
   private var tags = ListMap.empty[SymIdx, TagInfo]
@@ -271,6 +271,13 @@ class Ctx extends ToWat:
   private val singletonByBms = MutMap.empty[BlockMemberSymbol, Ctx.SingletonInfo]
   private val singletonByIsym = MutMap.empty[ModuleOrObjectSymbol, Ctx.SingletonInfo]
   private val singletonInitActions = ArrayBuf.empty[Expr]
+
+  private def imports: Seq[Import[?]] =
+    val importedFuncs = funcs.collect:
+      case (_, imp: Import[ExternType.Func]) => imp
+    val importedMems = memories.collect:
+      case (_, imp: Import[ExternType.Mem]) => imp
+    (importedFuncs ++ importedMems).toSeq
 
   /** Pushes a label target for the dynamic extent of `body` and pops it afterwards. */
   def withLabel[T](label: LabelSymbol, target: Ctx.LabelTarget)(body: => T): T =
@@ -340,13 +347,6 @@ class Ctx extends ToWat:
     getTypeInfo(typeref).getOrElse:
       lastWords(s"Missing type definition for ${typeref.prettyString}")
 
-  /** Filters all imports by a given [[ExternType]]. */
-  private def filterImportsByType[ET <: ExternType](implicit ct: ClassTag[ET]): ListMap[SymIdx, Import[ET]] =
-    imports.collect:
-      case i if ct.runtimeClass.isInstance(i.externType) => i.asInstanceOf[Import[ET]]
-    .foldLeft(ListMap.empty[SymIdx, Import[ET]]): (m, i) =>
-      m + (i.externType.id -> i)
-
   @deprecated("Use the `Import[ExternType.Func]` overload instead.")
   def addFunctionImport(sym: Opt[Symbol], funcImport: FuncImport): FuncIdx =
     addFunctionImport(
@@ -359,11 +359,11 @@ class Ctx extends ToWat:
     * Returns the function index in the global function index space.
     */
   def addFunctionImport(sym: Opt[Symbol], funcImport: Import[ExternType.Func]): FuncIdx =
-    val numIdx = filterImportsByType[ExternType.Func].size
-    imports += funcImport
+    val id = funcImport.externType.id
+    funcs = funcs + (id -> funcImport)
     sym.foreach:
       namedFuncs(_) = funcImport
-    FuncIdx(funcImport.externType.id)
+    FuncIdx(id)
 
   @deprecated("Use the `Import[ExternType.Func]` overload instead.")
   @targetName("getOrCreateFuncImport")
@@ -388,23 +388,18 @@ class Ctx extends ToWat:
     val key = module -> name
     cachedMemoryImport.get(key) match
       case S(idx) =>
-        val numIdx = filterImportsByType[ExternType.Mem].zipWithIndex.collectFirst:
-          case ((symIdx, _), i) if symIdx == idx => i
-        .get
-        val existing = filterImportsByType[ExternType.Mem].drop(numIdx).head._2
+        val existing = memories(idx)
         val newMin = existing.externType.memType.lim.min max minPages
         if newMin > existing.externType.memType.lim.min then
-          imports.update(
-            numIdx,
-            Import(
+          memories = memories +
+            (idx -> Import(
               module,
               name,
               ExternType.Mem(SymIdx(name), MemType(existing.externType.memType.lim.copy(min = minPages))),
-            ),
-          )
+            ))
       case N =>
-        val idx = filterImportsByType[ExternType.Mem].size
-        imports += Import(module, name, ExternType.Mem(SymIdx(name), MemType(Limits(minPages))))
+        val id = SymIdx(name)
+        memories = memories + (id -> Import(module, name, ExternType.Mem(id, MemType(Limits(minPages)))))
         cachedMemoryImport(key) = SymIdx(name)
 
   /** Returns the minimum page requirement of memory import (`module`, `name`) if present. */
@@ -414,7 +409,8 @@ class Ctx extends ToWat:
 
   /** Returns the memory import information for the given (`module`, `name`) tuple if present. */
   def getMemoryImport(module: Str, name: Str): Opt[ExternType.Mem] =
-    filterImportsByType[ExternType.Mem].find((_, m) => m.module === module && m.name === name).map(_._2.externType)
+    memories.collectFirst:
+      case (_, imp @ Import(`module`, `name`, mem: ExternType.Mem)) => mem
 
   /** Adds a data segment into this context. */
   def addDataSegment(seg: DataSegment): Unit =
@@ -429,7 +425,6 @@ class Ctx extends ToWat:
   /** Adds a function into this context. */
   def addFunc(sym: Opt[Symbol], funcInfo: FuncInfo): FuncIdx =
     val id = funcInfo.id
-    val numIdx = filterImportsByType[ExternType.Func].size + funcs.size
     funcs = funcs + (id -> funcInfo)
     sym.foreach:
       namedFuncs(_) = funcInfo
@@ -440,12 +435,12 @@ class Ctx extends ToWat:
     if resolveSymIdx then
       funcref match
         case FuncIdx(idx @ SymIdx(_)) =>
-          (filterImportsByType[ExternType.Func] ++ funcs).zipWithIndex.collectFirst:
+          funcs.zipWithIndex.collectFirst:
             case ((symIdx, _), i) if symIdx == idx => FuncIdx(NumIdx(i))
         case funcidx: FuncIdx => S(funcidx)
         case sym: Symbol =>
           namedFuncs.get(sym).flatMap: funcInfo =>
-            (filterImportsByType[ExternType.Func] ++ funcs).zipWithIndex.collectFirst:
+            funcs.zipWithIndex.collectFirst:
               case ((_, fi), i) if fi === funcInfo => FuncIdx(NumIdx(i))
     else getFunc(funcref)
 
@@ -471,9 +466,9 @@ class Ctx extends ToWat:
 
   /** Returns the [[FuncInfo]] instance associated with the given `funcref`. */
   @nowarn("cat=deprecation")
-  def getFuncInfo(funcref: FuncIdx | Symbol): Opt[FuncInfo] = 
+  def getFuncInfo(funcref: FuncIdx | Symbol): Opt[FuncInfo] =
     val func = funcref match
-      case FuncIdx(NumIdx(idx)) => (filterImportsByType[ExternType.Func] ++ funcs).drop(idx).headOption.map(_._2)
+      case FuncIdx(NumIdx(idx)) => funcs.drop(idx).headOption.map(_._2)
       case FuncIdx(idx @ SymIdx(_)) => funcs.get(idx)
       case funcref: Symbol => namedFuncs.get(funcref)
     func.collect:
@@ -580,11 +575,13 @@ class Ctx extends ToWat:
         (
           types.toSeq.map(_._2.toWat)
             ++ imports.toSeq.map(_.toWat)
-            ++ dataSegments.toSeq.map(_._2.toWat)
-            ++ globals.toSeq.map(_._2.toWat)
             ++ tags.toSeq.map(_._2.toWat)
+            ++ globals.toSeq.map(_._2.toWat)
+            // TODO(Derppening): Reinstate this when we have memory definitions in the module
+            // ++ memories.toSeq.map(_._2.toWat)
+            ++ funcs.toSeq.filter(_._2.isInstanceOf[FuncInfo]).map(_._2.toWat)
             ++ startFunc.toSeq.map(funcIdx => doc"(start ${funcIdx.toWat})")
-            ++ funcs.toSeq.map(_._2.toWat)
+            ++ dataSegments.toSeq.map(_._2.toWat)
         ).mkDocument(doc" # ")
       } #} )"
 

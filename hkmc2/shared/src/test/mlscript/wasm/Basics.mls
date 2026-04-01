@@ -239,7 +239,6 @@ O.y
 //│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
 //│   (global $O$inst (mut (ref null $O)) (ref.null $O))
-//│   (start $start1)
 //│   (func $O_ctor1 (type $O_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
@@ -280,6 +279,7 @@ O.y
 //│         (ref.cast (ref $O)
 //│           (global.get $O$inst)))))
 //│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
+//│   (elem declare func $entry)
+//│   (start $start1))
 //│ Wasm result:
 //│ = 1

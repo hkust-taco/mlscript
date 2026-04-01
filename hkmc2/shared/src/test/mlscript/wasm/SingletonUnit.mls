@@ -12,7 +12,6 @@
 //│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
 //│   (global $Unit$inst (mut (ref null $Unit)) (ref.null $Unit))
-//│   (start $start1)
 //│   (func $Unit_ctor1 (type $Unit_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
@@ -35,7 +34,8 @@
 //│   (func $entry (type $entry1) (result (ref null any))
 //│     (global.get $Unit$inst))
 //│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
+//│   (elem declare func $entry)
+//│   (start $start1))
 //│ Wasm result:
 //│ = {}
 

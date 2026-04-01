@@ -17,7 +17,6 @@ let i = 0 in
 //│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
 //│   (global $Unit$inst (mut (ref null $Unit)) (ref.null $Unit))
-//│   (start $start1)
 //│   (func $lt_impl1 (type $lt_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
 //│     (if (result (ref null any))
 //│       (i32.and
@@ -127,7 +126,8 @@ let i = 0 in
 //│                   (local.get $matchRes))))))
 //│         (local.get $i))))
 //│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
+//│   (elem declare func $entry)
+//│   (start $start1))
 //│ Wasm result:
 //│ = 10
 
