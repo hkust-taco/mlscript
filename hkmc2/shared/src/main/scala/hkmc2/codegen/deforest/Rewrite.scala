@@ -428,20 +428,20 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
     class RefreshSymbol(existingMapping: Map[Symbol, Symbol]) extends SymbolRefresher(existingMapping):
       override def applyScopedBlock(b: Block): Block =
         b match
-          case Scoped(syms, body) =>
-            syms.foreach: sym =>
-              sym match
-                case bms: BlockMemberSymbol =>
-                  assert(bms.tsym.forall(_.owner.isEmpty))
-                case _ =>
-          case _ =>
+        case Scoped(syms, body) =>
+          syms.foreach: sym =>
+            sym match
+              case bms: BlockMemberSymbol =>
+                assert(bms.tsym.forall(_.owner.isEmpty))
+              case _ =>
+        case _ =>
         super.applyScopedBlock(b)
       override def applyBlock(b: Block): Block =
         b match
-          case Label(label, loop, body, rest) =>
-            assert(!loop)
-          case Continue(label) => TODO("unsupported `continue` instruction during rewriting")
-          case _ =>
+        case Label(label, loop, body, rest) =>
+          assert(!loop)
+        case Continue(label) => TODO("unsupported `continue` instruction during rewriting")
+        case _ =>
         super.applyBlock(b)
       override def applyValue(v: Value)(k: Value => Block): Block = v match
         case Value.Ref(l, x) =>
@@ -450,6 +450,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
               k(Value.Ref(bms, l.asMod))
             case None => super.applyValue(v)(k)
         case _ => super.applyValue(v)(k)
+    end RefreshSymbol
     
     val newPolyFuns =
       for

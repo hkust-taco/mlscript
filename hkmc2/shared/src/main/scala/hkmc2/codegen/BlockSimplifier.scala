@@ -338,7 +338,7 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
             c.parentPath.foreach(applyPath)
             c.methods.foreach: f =>
               addFunctionAndApplyBody(f, true)
-            // Note: no tracking, since instantiate will not be inlined and won't cause cycles.
+            // Note: no tracking, since `Instantiate` will not be inlined and won't cause cycles.
             nested(N):
               applySubBlock(c.preCtor)
               applySubBlock(c.ctor)
