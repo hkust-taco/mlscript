@@ -603,16 +603,16 @@ class Ctx extends ToWat:
       case funcInfo: FuncInfo => funcInfo.toWat
     doc"(module #{  # ${
         (
-          types.values.map(_.toWat).toSeq
-            ++ imports.map(_.toWat).toSeq
-            ++ tags.values.map(_.toWat).toSeq
-            ++ globals.values.map(_.toWat).toSeq
-            ++ memDefns.toSeq
-            ++ funcDefns.toSeq
-            ++ dataSegments.values.map(_.toWat).toSeq
-            ++ elemSegments.values.map(_.toWat).toSeq
-            ++ startFunc.toSeq.map(funcIdx => doc"(start ${funcIdx.toWat})")
-        ).mkDocument(doc" # ")
+          types.values.map(_.toWat).iterator
+            ++ imports.map(_.toWat).iterator
+            ++ tags.values.map(_.toWat).iterator
+            ++ globals.values.map(_.toWat).iterator
+            ++ memDefns.iterator
+            ++ funcDefns.iterator
+            ++ dataSegments.values.map(_.toWat).iterator
+            ++ elemSegments.values.map(_.toWat).iterator
+            ++ startFunc.iterator.map(funcIdx => doc"(start ${funcIdx.toWat})")
+        ).toSeq.mkDocument(doc" # ")
       } #} )"
 
 end Ctx
