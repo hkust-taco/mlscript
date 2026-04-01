@@ -292,7 +292,7 @@ object ElemSegment:
       override val id: SymIdx,
       offset: Expr,
       override val elemlist: RefType -> Seq[Expr],
-      // TODO(Derppening): Add `tableuse` here once we support multiple tables.
+      // TODO(Derppening): Add `tableuse` here if/when we support multiple tables.
   ) extends ElemSegment(id, elemlist):
     def toWat: Document = doc"(elem ${id.toWat} ${offset.toWat} ${abbrevElemList})"
 
@@ -301,9 +301,11 @@ object ElemSegment:
       override val elemlist: RefType -> Seq[Expr],
   ) extends ElemSegment(id, elemlist):
     def toWat: Document = doc"(elem ${id.toWat} declare ${abbrevElemList})"
+end ElemSegment
 
 /** An element segment entry. */
 sealed abstract class ElemSegment(val id: SymIdx, val elemlist: RefType -> Seq[Expr]) extends ToWat:
+  /** Applies abbreviations on the `elemlist` if a simpler replacement is available. */
   protected def abbrevElemList: Document =
     if elemlist._2.forall(_.mnemonic == "ref.func") then
       doc"func${
