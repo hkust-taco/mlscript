@@ -1,0 +1,141 @@
+:js
+
+
+// Test 1: #config global directive - test_before has tailRecOpt (default)
+:sir
+fun test_before(n, acc) = if n == 0 then acc else test_before(n - 1, n + acc)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let test_before⁰;
+//│ define test_before⁰ as fun test_before¹(n, acc) {
+//│   loop loopLabel:
+//│     let scrut, tmp, tmp1;
+//│     set scrut = Predef⁰.equals⁰(n, 0);
+//│     match scrut
+//│       true =>
+//│         return acc
+//│       else
+//│         set tmp = -⁰(n, 1);
+//│         set tmp1 = +⁰(n, acc);
+//│         set n = tmp;
+//│         set acc = tmp1;
+//│         continue loopLabel
+//│     end
+//│   end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+#config(tailRecOpt: false)
+
+// Test 2: After #config(tailRecOpt: false), functions should NOT be tail-rec optimized
+:sir
+fun test_after(n, acc) = if n == 0 then acc else test_after(n - 1, n + acc)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let test_after⁰;
+//│ define test_after⁰ as fun test_after¹(n, acc) {
+//│   let scrut, tmp, tmp1;
+//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   match scrut
+//│     true =>
+//│       return acc
+//│     else
+//│       set tmp = -⁰(n, 1);
+//│       set tmp1 = +⁰(n, acc);
+//│       return test_after¹(tmp, tmp1)
+//│   end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Test 3: Re-enable tail recursion optimization
+#config(tailRecOpt: true)
+
+:sir
+fun test_reenabled(n, acc) = if n == 0 then acc else test_reenabled(n - 1, n + acc)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let test_reenabled⁰;
+//│ define test_reenabled⁰ as fun test_reenabled¹(n, acc) {
+//│   loop loopLabel:
+//│     let scrut, tmp, tmp1;
+//│     set scrut = Predef⁰.equals⁰(n, 0);
+//│     match scrut
+//│       true =>
+//│         return acc
+//│       else
+//│         set tmp = -⁰(n, 1);
+//│         set tmp1 = +⁰(n, acc);
+//│         set n = tmp;
+//│         set acc = tmp1;
+//│         continue loopLabel
+//│     end
+//│   end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Test 4: @config local annotation - disable tailRecOpt for one function only
+:sir
+@config(tailRecOpt: false)
+fun foo(n, acc) = if n == 0 then acc else foo(n - 1, n + acc)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let foo⁰;
+//│ define foo⁰ as fun foo¹(n, acc) {
+//│   let scrut, tmp, tmp1;
+//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   match scrut
+//│     true =>
+//│       return acc
+//│     else
+//│       set tmp = -⁰(n, 1);
+//│       set tmp1 = +⁰(n, acc);
+//│       return foo¹(tmp, tmp1)
+//│   end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Test 5: bar (no annotation) should still have tailRecOpt
+:sir
+fun bar(n, acc) = if n == 0 then acc else bar(n - 1, n + acc)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let bar⁰;
+//│ define bar⁰ as fun bar¹(n, acc) {
+//│   loop loopLabel:
+//│     let scrut, tmp, tmp1;
+//│     set scrut = Predef⁰.equals⁰(n, 0);
+//│     match scrut
+//│       true =>
+//│         return acc
+//│       else
+//│         set tmp = -⁰(n, 1);
+//│         set tmp1 = +⁰(n, acc);
+//│         set n = tmp;
+//│         set acc = tmp1;
+//│         continue loopLabel
+//│     end
+//│   end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// * Make sure effect handlers with stack safety can be enabled in one go:
+
+// * Here, handlers are not enabled
+:sir
+fun foo(x) = { x.call(), print(42) }
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let foo²; define foo² as fun foo³(x) { do x.call﹖(); return Predef⁰.print⁰(42) }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+#config(effectHandlers: Some(EffectHandlers(stackSafety: Some(StackSafety(100)))))
+#config(liftDefns: Some(LiftDefns)) // * Needed by effect handlers instrumentation
+
+// * Now, they are
+fun foo(x) = { x.call(), print(42) }
+handle h = Object with
+  fun call()(resume) = "Aborted!"
+foo(h)
+//│ = "Aborted!"
+
+
