@@ -254,6 +254,9 @@ case class MemUse(memidx: MemIdx) extends ToWat:
 object DataSegment:
   object Passive:
     def apply(id: SymIdx, bytes: Str): Passive = new Passive(id, Seq(bytes))
+
+  /** A passive data segment, which is not associated with any memory and must be explicitly loaded with `memory.init`.
+    */
   case class Passive(override val id: SymIdx, bytes: Seq[Str]) extends DataSegment(id, bytes):
     def toWat: Document =
       doc"(data ${id.toWat}${bytes.map(s => s"\"$s\"").mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
@@ -261,6 +264,9 @@ object DataSegment:
   object Active:
     def apply(id: SymIdx, offset: Expr, bytes: Str, memuse: Opt[MemUse]): Active =
       new Active(id, offset, Seq(bytes), memuse)
+
+  /** An active data segment, which is automatically copied into a memory given by `memuse` and `offset`.
+    */
   case class Active(
       override val id: SymIdx,
       offset: Expr,
@@ -282,12 +288,16 @@ end DataSegment
 sealed abstract class DataSegment(val id: SymIdx, bytes: Seq[Str]) extends ToWat
 
 object ElemSegment:
+  /** A passive element segment, which is not associated with any table and must be explicitly initialized with
+    * `table.init`.
+    */
   case class Passive(
       override val id: SymIdx,
       override val elemlist: RefType -> Seq[Expr],
   ) extends ElemSegment(id, elemlist):
     def toWat: Document = doc"(elem ${id.toWat} ${abbrevElemList})"
 
+  /** An active element segment, which is automatically copied into a table given by `offset. */
   case class Active(
       override val id: SymIdx,
       offset: Expr,
@@ -296,6 +306,9 @@ object ElemSegment:
   ) extends ElemSegment(id, elemlist):
     def toWat: Document = doc"(elem ${id.toWat} ${offset.toWat} ${abbrevElemList})"
 
+  /** A declarative element segment, which is used to forward declare references present in the code (such as using
+    * `ref.func`).
+    */
   case class Declare(
       override val id: SymIdx,
       override val elemlist: RefType -> Seq[Expr],
