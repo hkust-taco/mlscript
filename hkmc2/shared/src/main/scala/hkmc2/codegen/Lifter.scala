@@ -583,7 +583,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           case Some(_) => die 
           case None => N
         
-        k(newCls.copy(companion = newComp))
+        k(newCls.copy(companion = newComp)(newCls.configOverride))
       case _ => super.applyDefn(defn)(k)
 
   /**
@@ -881,7 +881,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         preCtor = rewrittenPrector,
         privateFields = captureSym :: liftedObjsSyms.values.toList ::: obj.cls.privateFields,
         methods = newMtds,
-      )
+      )(obj.cls.configOverride)
       LifterResult(newCls, rewriterCtor.extraDefns.toList ::: rewriterPreCtor.extraDefns.toList ::: extras)
 
   class RewrittenCompanion(override val obj: ScopedObject.Companion)(using ctx: LifterCtxNew)
@@ -1176,7 +1176,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         privateFields = captureSym :: extraPrivSyms.toList ::: obj.cls.privateFields,
         methods = newMtds,
         auxParams = newAuxList
-      )
+      )(obj.cls.configOverride)
       val extrasDefns = rewriterCtor.extraDefns.toList ::: rewriterPreCtor.extraDefns.toList ::: extras
       LifterResult(newCls, flat :: extrasDefns)
   

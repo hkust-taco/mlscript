@@ -355,12 +355,12 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
             val (stagedMethods, debugPrintCode) = c.methods
               .map(applyFunDefnInner)
               .unzip
-            val newModule = c.copy(methods = c.methods ++ stagedMethods)
+            val newModule = c.copy(methods = c.methods ++ stagedMethods)(c.configOverride)
             Define(newModule, rest)
           case b => b
       val newCtor = genCls.applyBlock(companion.ctor)
       val newCompanion = companion.copy(methods = stagedCtor :: companion.methods ++ stagedMethods, ctor = newCtor.mapTail(debugCont))
-      val newModule = c.copy(sym = sym, companion = S(newCompanion))
+      val newModule = c.copy(sym = sym, companion = S(newCompanion))(c.configOverride)
       Define(newModule, rest)
     case b => b
 

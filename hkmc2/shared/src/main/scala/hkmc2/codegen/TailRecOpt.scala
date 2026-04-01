@@ -436,13 +436,13 @@ class TailRecOpt(using State, TL, Raise):
       val companion = c.companion.map: comp =>
         val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
         comp.copy(methods = cMtds)
-      c.copy(companion = companion)
+      c.copy(companion = companion)(c.configOverride)
     else
       val mtds = optFunctionsFlat(c.methods, S(c.isym))
       val companion = c.companion.map: comp =>
         val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
         comp.copy(methods = cMtds)
-      c.copy(methods = mtds, companion = companion)
+      c.copy(methods = mtds, companion = companion)(c.configOverride)
   
   def transform(b: Block) =
     /* To avoid `x` being overridden in the following when the lifter is not run:
