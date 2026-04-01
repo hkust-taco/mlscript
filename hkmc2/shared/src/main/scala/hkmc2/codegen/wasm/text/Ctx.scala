@@ -592,16 +592,20 @@ class Ctx extends ToWat:
     wasmIntrinsicTags.getOrElseUpdate(name, createTag)
 
   def toWat: Document =
+    val memDefns = memories.values.collect:
+      case memInfo: MemInfo => memInfo.toWat
+    val funcDefns = funcs.values.collect:
+      case funcInfo: FuncInfo => funcInfo.toWat
     doc"(module #{  # ${
         (
-          types.toSeq.map(_._2.toWat)
-            ++ imports.toSeq.map(_.toWat)
-            ++ tags.toSeq.map(_._2.toWat)
-            ++ globals.toSeq.map(_._2.toWat)
-            ++ memories.toSeq.filter(_._2.isInstanceOf[MemInfo]).map(_._2.toWat)
-            ++ funcs.toSeq.filter(_._2.isInstanceOf[FuncInfo]).map(_._2.toWat)
-            ++ dataSegments.toSeq.map(_._2.toWat)
-            ++ elemSegments.toSeq.map(_._2.toWat)
+          types.values.map(_.toWat).toSeq
+            ++ imports.map(_.toWat).toSeq
+            ++ tags.values.map(_.toWat).toSeq
+            ++ globals.values.map(_.toWat).toSeq
+            ++ memDefns.toSeq
+            ++ funcDefns.toSeq
+            ++ dataSegments.values.map(_.toWat).toSeq
+            ++ elemSegments.values.map(_.toWat).toSeq
             ++ startFunc.toSeq.map(funcIdx => doc"(start ${funcIdx.toWat})")
         ).mkDocument(doc" # ")
       } #} )"
