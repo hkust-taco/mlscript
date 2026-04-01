@@ -238,8 +238,8 @@ class Ctx extends ToWat:
   /** [[ListMap]] containing all data segments in the module. */
   private var dataSegments = ListMap.empty[SymIdx, DataSegment]
 
-  /** [[ListMap]] containing all function definitions in the module mapped by their symbolic identifiers. */
-  private var funcs = ListMap.empty[SymIdx, FuncInfo]
+  /** [[ListMap]] containing all function definitions and imports in the module mapped by their symbolic identifiers. */
+  private var funcs = ListMap.empty[SymIdx, FuncInfo | Import[ExternType.Func]]
 
   /** [[MutMap]] containing function symbols mapped to the corresponding [[FuncInfo]] or [[Import]] instance. */
   private val namedFuncs = MutMap.empty[Symbol, FuncInfo | Import[ExternType.Func]]
@@ -471,14 +471,13 @@ class Ctx extends ToWat:
 
   /** Returns the [[FuncInfo]] instance associated with the given `funcref`. */
   @nowarn("cat=deprecation")
-  def getFuncInfo(funcref: FuncIdx | Symbol): Opt[FuncInfo] = funcref match
-    case FuncIdx(NumIdx(idx)) =>
-      (filterImportsByType[ExternType.Func] ++ funcs).drop(idx).headOption.map(_._2).collect:
-        case funcInfo: FuncInfo => funcInfo
-    case FuncIdx(idx @ SymIdx(_)) => funcs.get(idx)
-    case funcref: Symbol =>
-      namedFuncs.get(funcref).collect:
-        case funcInfo: FuncInfo => funcInfo
+  def getFuncInfo(funcref: FuncIdx | Symbol): Opt[FuncInfo] = 
+    val func = funcref match
+      case FuncIdx(NumIdx(idx)) => (filterImportsByType[ExternType.Func] ++ funcs).drop(idx).headOption.map(_._2)
+      case FuncIdx(idx @ SymIdx(_)) => funcs.get(idx)
+      case funcref: Symbol => namedFuncs.get(funcref)
+    func.collect:
+      case funcInfo: FuncInfo => funcInfo
 
   /** Same as [[getFuncInfo]] but throws an exception when the `funcref` is not found. */
   def getFuncInfo_!(funcref: FuncIdx | Symbol): FuncInfo =
