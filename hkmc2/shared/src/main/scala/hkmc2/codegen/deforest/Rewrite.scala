@@ -505,7 +505,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
             Scoped(Set.single(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride)))
           else
             k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride))
-        case ValDefn(tsym, sym, rhs) =>
+        case defn @ ValDefn(tsym, sym, rhs) =>
           val (tsym2, sym2) = mapping.get(sym) match
             case None =>
               val newBms = new BlockMemberSymbol(sym.nme, sym.trees, sym.nameIsMeaningful)
@@ -516,7 +516,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
               (bms.tsym.get, bms)
             case _ => die
           applyPath(rhs): rhs2 =>
-            k(ValDefn(tsym2, sym2, rhs2)(defn.asInstanceOf[ValDefn].configOverride))
+            k(ValDefn(tsym2, sym2, rhs2)(defn.configOverride))
         case _ => super.applyDefn(defn)(k)
       
       override def applyValue(v: Value)(k: Value => Block): Block = v match
