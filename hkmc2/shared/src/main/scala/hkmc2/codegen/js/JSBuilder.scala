@@ -569,10 +569,10 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
       val l = arms.foldLeft(doc""): (acc, arm) =>
         acc :: doc" # case ${arm._1.asInstanceOf[Case.Lit].lit.idStr}: #{ ${
           nonNestedScoped(arm._2)(bd => returningTerm(bd, endSemi = true))
-        } # break; #} "
+        }${if arm._2.isAbortive then doc"" else doc" # break;"} #} "
       val e = els match
         case S(el) =>
-          doc" # default: #{ ${ nonNestedScoped(el)(bd => returningTerm(bd, endSemi = true)) } # break; #} "
+          doc" # default: #{ ${ nonNestedScoped(el)(bd => returningTerm(bd, endSemi = true)) } #} "
         case N => doc""
       doc" # switch (${result(scrut)}) { #{ ${l :: e} #}  # }" :: returningTerm(rest, endSemi)
     case Match(scrut, hd :: tl, els, rest) =>

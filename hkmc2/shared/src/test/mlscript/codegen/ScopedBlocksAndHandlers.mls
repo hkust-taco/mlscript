@@ -129,15 +129,12 @@ fun f(x) =
 //│         }
 //│         pc = 1;
 //│         continue main;
-//│         break;
 //│       case 1:
 //│         return runtime.Unit;
-//│         break;
 //│       case 2:
 //│         runtime.resumeValue;
 //│         pc = 1;
 //│         continue main;
-//│         break;
 //│     }
 //│     break;
 //│   }

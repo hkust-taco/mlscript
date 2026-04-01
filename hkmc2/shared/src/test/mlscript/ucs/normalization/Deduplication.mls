@@ -55,7 +55,6 @@ if x is
 //│             break;
 //│           default:
 //│             "";
-//│             break;
 //│         }
 //│         break;
 //│       case 1:
@@ -63,7 +62,6 @@ if x is
 //│         break;
 //│       default:
 //│         "";
-//│         break;
 //│     }
 //│     break;
 //│   case 1:
@@ -71,7 +69,6 @@ if x is
 //│     break;
 //│   default:
 //│     "";
-//│     break;
 //│ }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "000"
@@ -97,29 +94,22 @@ if x is
 //│             case 0:
 //│               tmp2 = "000-------------------------------------------------------------------------";
 //│               break split_root$;
-//│               break;
 //│             case 1:
 //│               tmp2 = "001-------------------------------------------------------------------------";
 //│               break split_root$;
-//│               break;
 //│             default:
-//│               break;
 //│           }
 //│           break;
 //│         case 1:
 //│           tmp2 = "01-------------------------------------------------------------------------";
 //│           break split_root$;
-//│           break;
 //│         default:
-//│           break;
 //│       }
 //│       break;
 //│     case 1:
 //│       tmp2 = "1-------------------------------------------------------------------------";
 //│       break split_root$;
-//│       break;
 //│     default:
-//│       break;
 //│   }
 //│   tmp2 = "-------------------------------------------------------------------------";
 //│ }
@@ -147,29 +137,22 @@ let qqq = if x is
 //│             case 0:
 //│               tmp3 = "000-------------------------------------------------------------------------";
 //│               break split_root$1;
-//│               break;
 //│             case 1:
 //│               tmp3 = "001-------------------------------------------------------------------------";
 //│               break split_root$1;
-//│               break;
 //│             default:
-//│               break;
 //│           }
 //│           break;
 //│         case 1:
 //│           tmp3 = "01-------------------------------------------------------------------------";
 //│           break split_root$1;
-//│           break;
 //│         default:
-//│           break;
 //│       }
 //│       break;
 //│     case 1:
 //│       tmp3 = "1-------------------------------------------------------------------------";
 //│       break split_root$1;
-//│       break;
 //│     default:
-//│       break;
 //│   }
 //│   tmp3 = "-------------------------------------------------------------------------";
 //│ }
@@ -201,7 +184,6 @@ print of if x is
 //│             break;
 //│           default:
 //│             tmp4 = "";
-//│             break;
 //│         }
 //│         break;
 //│       case 1:
@@ -209,7 +191,6 @@ print of if x is
 //│         break;
 //│       default:
 //│         tmp4 = "";
-//│         break;
 //│     }
 //│     break;
 //│   case 1:
@@ -217,7 +198,6 @@ print of if x is
 //│     break;
 //│   default:
 //│     tmp4 = "";
-//│     break;
 //│ }
 //│ Predef.print(tmp4)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -247,7 +227,6 @@ print of if x is
 //│             break;
 //│           default:
 //│             tmp5 = "";
-//│             break;
 //│         }
 //│         break;
 //│       case 1:
@@ -255,7 +234,6 @@ print of if x is
 //│         break;
 //│       default:
 //│         tmp5 = "";
-//│         break;
 //│     }
 //│     break;
 //│   case 1:
@@ -263,7 +241,6 @@ print of if x is
 //│     break;
 //│   default:
 //│     tmp5 = "";
-//│     break;
 //│ }
 //│ Predef.print(tmp5)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -289,29 +266,20 @@ fun foo(x, y, z) =
 //│           switch (z1) {
 //│             case 0:
 //│               return "000";
-//│               break;
 //│             case 1:
 //│               return "001";
-//│               break;
 //│             default:
 //│               return "";
-//│               break;
 //│           }
-//│           break;
 //│         case 1:
 //│           return "01";
-//│           break;
 //│         default:
 //│           return "";
-//│           break;
 //│       }
-//│       break;
 //│     case 1:
 //│       return "1";
-//│       break;
 //│     default:
 //│       return "";
-//│       break;
 //│   }
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -344,7 +312,6 @@ print of if
 //│             break;
 //│           default:
 //│             tmp6 = "___";
-//│             break;
 //│         }
 //│         break;
 //│       case 1:
@@ -360,7 +327,6 @@ print of if
 //│             tmp6 = "___";
 //│           }
 //│         }
-//│         break;
 //│     }
 //│     break;
 //│   case 1:
@@ -368,7 +334,6 @@ print of if
 //│     break;
 //│   default:
 //│     if (y === 2) { tmp6 = "_2_"; } else { tmp6 = "___"; }
-//│     break;
 //│ }
 //│ Predef.print(tmp6)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -394,18 +359,13 @@ fun foo(x, y, z) = if
 //│           switch (z1) {
 //│             case 0:
 //│               return "000";
-//│               break;
 //│             case 1:
 //│               return "0_1";
-//│               break;
 //│             default:
 //│               return "___";
-//│               break;
 //│           }
-//│           break;
 //│         case 1:
 //│           return "01_";
-//│           break;
 //│         default:
 //│           if (z1 === 1) {
 //│             return "0_1"
@@ -416,15 +376,11 @@ fun foo(x, y, z) = if
 //│               return "___"
 //│             }
 //│           }
-//│           break;
 //│       }
-//│       break;
 //│     case 1:
 //│       return "1__";
-//│       break;
 //│     default:
 //│       if (y1 === 2) { return "_2_" } else { return "___" }
-//│       break;
 //│   }
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -455,29 +411,22 @@ fun foo(x, y, z) = if x is
 //│               case 0:
 //│                 tmp7 = "000";
 //│                 break split_root$2;
-//│                 break;
 //│               case 1:
 //│                 tmp7 = "001";
 //│                 break split_root$2;
-//│                 break;
 //│               default:
-//│                 break;
 //│             }
 //│             break;
 //│           case 1:
 //│             tmp7 = "01";
 //│             break split_root$2;
-//│             break;
 //│           default:
-//│             break;
 //│         }
 //│         break;
 //│       case 1:
 //│         tmp7 = "1";
 //│         break split_root$2;
-//│         break;
 //│       default:
-//│         break;
 //│     }
 //│     value = "hello";
 //│     tmp7 = expensive_call(value);

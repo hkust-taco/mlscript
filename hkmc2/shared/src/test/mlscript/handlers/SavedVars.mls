@@ -40,17 +40,14 @@ fun g() =
 //│         }
 //│         pc = 3;
 //│         continue main;
-//│         break;
 //│       case 1:
 //│         a = tmp;
 //│         return a;
-//│         break;
 //│       case 2:
 //│         runtime.resumeValue;
 //│         tmp = 1;
 //│         pc = 1;
 //│         continue main;
-//│         break;
 //│       case 3:
 //│         scrut = runtime.resumeValue;
 //│         if (scrut === true) {
@@ -61,7 +58,6 @@ fun g() =
 //│           pc = 2;
 //│           continue main
 //│         } else { tmp = 2; pc = 1; continue main }
-//│         break;
 //│     }
 //│     break;
 //│   }
