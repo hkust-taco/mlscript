@@ -23,7 +23,8 @@ import scala.reflect.ClassTag
   * Each instance of [[FuncInfo]] represents a single function definition in a WebAssembly module.
   *
   * @param id
-  *   Symbolic identifier for the function, or `N` if the function is anonymous.
+  *   Symbolic identifier for the function. If the function is an anonymous function, `id` should be generated from a
+  *   fresh name allocated in the current scope.
   * @param typeUse
   *   [[TypeUse]] of the function's type in the module's type section.
   * @param params
