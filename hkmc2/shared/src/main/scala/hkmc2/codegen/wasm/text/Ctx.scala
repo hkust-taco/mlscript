@@ -136,6 +136,20 @@ class GlobalInfo(val id: SymIdx, val valType: ValType, val mutable: Bool, val in
     doc"(global ${id.toWat} $typeDoc ${init.toWat})"
 end GlobalInfo
 
+/** A WebAssembly memory and its associated information.
+  *
+  * Each instance of [[MemInfo]] represents a single memory definition in a WebAssembly module.
+  *
+  * @param id
+  *   Symbolic identifier for the memory.
+  * @param memType
+  *   The type of the memory.
+  */
+class MemInfo(val id: SymIdx, val memType: MemType) extends ToWat:
+
+  def toWat: Document = doc"(memory ${id.toWat} ${memType.toWat})"
+end MemInfo
+
 /** A Wasm type and its associated information.
   *
   * Each instance of [[FuncInfo]] represents a single type defintion in a WebAssembly module.
@@ -242,7 +256,7 @@ class Ctx extends ToWat:
   private val namedFuncs = MutMap.empty[Symbol, FuncInfo | Import[ExternType.Func]]
 
   /** [[ListMap]] containing all memory definitions and imports in the module mapped by their symbolic identifiers. */
-  private var memories = ListMap.empty[SymIdx, Import[ExternType.Mem]]
+  private var memories = ListMap.empty[SymIdx, MemInfo | Import[ExternType.Mem]]
 
   /** [[ListMap]] containing all tag definitions in the module. */
   private var tags = ListMap.empty[SymIdx, TagInfo]
@@ -388,7 +402,7 @@ class Ctx extends ToWat:
     val key = module -> name
     cachedMemoryImport.get(key) match
       case S(idx) =>
-        val existing = memories(idx)
+        val existing = memories(idx).asInstanceOf[Import[ExternType.Mem]]
         val newMin = existing.externType.memType.lim.min max minPages
         if newMin > existing.externType.memType.lim.min then
           memories = memories +
@@ -577,8 +591,7 @@ class Ctx extends ToWat:
             ++ imports.toSeq.map(_.toWat)
             ++ tags.toSeq.map(_._2.toWat)
             ++ globals.toSeq.map(_._2.toWat)
-            // TODO(Derppening): Reinstate this when we have memory definitions in the module
-            // ++ memories.toSeq.map(_._2.toWat)
+            ++ memories.toSeq.filter(_._2.isInstanceOf[MemInfo]).map(_._2.toWat)
             ++ funcs.toSeq.filter(_._2.isInstanceOf[FuncInfo]).map(_._2.toWat)
             ++ startFunc.toSeq.map(funcIdx => doc"(start ${funcIdx.toWat})")
             ++ dataSegments.toSeq.map(_._2.toWat)
