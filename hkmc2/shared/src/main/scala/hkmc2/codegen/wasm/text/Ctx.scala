@@ -405,7 +405,11 @@ class Ctx extends ToWat:
     val key = module -> name
     cachedMemoryImport.get(key) match
       case S(idx) =>
-        val existing = memories(idx).asInstanceOf[Import[ExternType.Mem]]
+        val existing = memories(idx) match
+          case imp: Import[ExternType.Mem] => imp
+          case _ => lastWords(
+              s"Expected an existing memory import \"$module\".\"$name\" for `${idx.toWat}`, got a definition instead.",
+            )
         val newMin = existing.externType.memType.lim.min max minPages
         if newMin > existing.externType.memType.lim.min then
           memories = memories +
@@ -418,6 +422,7 @@ class Ctx extends ToWat:
         val id = SymIdx(name)
         memories = memories + (id -> Import(module, name, ExternType.Mem(id, MemType(Limits(minPages)))))
         cachedMemoryImport(key) = SymIdx(name)
+  end ensureMemoryImport
 
   /** Returns the minimum page requirement of memory import (`module`, `name`) if present. */
   @deprecated("Use `getMemoryImport` instead to get the full memory import information.")
