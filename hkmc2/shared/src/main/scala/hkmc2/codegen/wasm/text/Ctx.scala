@@ -242,7 +242,6 @@ class Ctx extends ToWat:
 
   /** [[ArrayBuf]] containing all function definitions in the module. */
   private val funcs = ArrayBuf.empty[FuncInfo]
-  private val funcInfosByIndex = MutMap.empty[Int, FuncInfo]
 
   /** [[ArrayBuf]] containing all global definitions in the module. */
   private val globals = ArrayBuf.empty[GlobalInfo]
@@ -347,7 +346,6 @@ class Ctx extends ToWat:
   def addFunc(sym: Opt[Symbol], funcInfo: FuncInfo): FuncIdx =
     val numIdx = filterImportsByType[ExternType.Func].size + funcs.size
     funcs += funcInfo
-    funcInfosByIndex(numIdx) = funcInfo
     sym.foreach:
       namedFuncs(_) = numIdx
     FuncIdx(funcInfo.id)
