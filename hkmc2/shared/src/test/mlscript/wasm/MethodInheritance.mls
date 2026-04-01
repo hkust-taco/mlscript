@@ -1,0 +1,221 @@
+
+:global
+:wasm
+
+
+class A() with
+  fun inc(x) = x + 1
+class B() extends A()
+B().inc(1)
+//│ Wasm result:
+//│ = 2
+
+
+class A(val x) with 
+  fun get = x
+class B(val y) extends A(y + 1)
+B(1).get
+//│ Wasm result:
+//│ = 2
+
+
+class A(val x) with 
+  fun get() = x
+class B(val y) extends A(y + 2)
+B(1).get()
+//│ Wasm result:
+//│ = 3
+
+
+class A(val x) with 
+  fun get = x
+class B(val y) extends A(y + 1)
+fun f(b: B) = b.get
+f(B(1))
+//│ Wasm result:
+//│ = 2
+
+
+class A(val x) with 
+  fun get = x
+class B(val y) extends A(y + 1) with 
+  fun use = this.get
+B(1).use
+//│ Wasm result:
+//│ = 2
+
+
+:wat
+class A(val x) with
+  fun add(y) = x + y
+class B(val z) extends A(z) with
+  fun add2(y) = this.add(y) + 1
+B(1).add2(40)
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $A (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))
+//│   (type $B (sub $A (struct (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $z (mut (ref null any))))))
+//│   (type $A_init (func (param $this (ref null any)) (param $x (ref null any))))
+//│   (type $A_ctor (func (param $x (ref null any)) (result (ref null any))))
+//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $A_add (func (param $this (ref null any)) (param $y (ref null any)) (result (ref null any))))
+//│   (type $B_init (func (param $this (ref null any)) (param $z (ref null any))))
+//│   (type $B_ctor (func (param $z (ref null any)) (result (ref null any))))
+//│   (type $B_add2 (func (param $this (ref null any)) (param $y (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $A_init (type $A_init) (param $this (ref null any)) (param $x (ref null any))
+//│     (block
+//│       (nop)
+//│       (block
+//│         (struct.set $A $x
+//│           (ref.cast (ref $A)
+//│             (local.get $this))
+//│           (local.get $x))
+//│         (nop))))
+//│   (elem declare func $A_init)
+//│   (func $A_ctor (type $A_ctor) (param $x (ref null any)) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $A))
+//│       (struct.set $A $$tag
+//│         (ref.cast (ref $A)
+//│           (local.get $this))
+//│         (i32.const 1))
+//│       (call $A_init
+//│         (local.get $this)
+//│         (local.get $x))
+//│       (return
+//│         (local.get $this))))
+//│   (export "A_ctor" (func $A_ctor))
+//│   (elem declare func $A_ctor)
+//│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│     (if (result (ref null any))
+//│       (i32.and
+//│         (ref.test (ref null i31)
+//│           (local.get $lhs))
+//│         (ref.test (ref null i31)
+//│           (local.get $rhs)))
+//│       (then
+//│         (ref.i31
+//│           (i32.add
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $lhs)))
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $rhs))))))
+//│       (else
+//│         (unreachable))))
+//│   (elem declare func $plus_impl1)
+//│   (func $A_add (type $A_add) (param $this (ref null any)) (param $y (ref null any)) (result (ref null any))
+//│     (return
+//│       (call $plus_impl1
+//│         (struct.get $A $x
+//│           (ref.cast (ref $A)
+//│             (local.get $this)))
+//│         (local.get $y))))
+//│   (elem declare func $A_add)
+//│   (func $B_init (type $B_init) (param $this (ref null any)) (param $z (ref null any))
+//│     (block
+//│       (nop)
+//│       (call $A_init
+//│         (local.get $this)
+//│         (local.get $z))
+//│       (block
+//│         (struct.set $B $z
+//│           (ref.cast (ref $B)
+//│             (local.get $this))
+//│           (local.get $z))
+//│         (nop))))
+//│   (elem declare func $B_init)
+//│   (func $B_ctor (type $B_ctor) (param $z (ref null any)) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $B))
+//│       (struct.set $B $$tag
+//│         (ref.cast (ref $B)
+//│           (local.get $this))
+//│         (i32.const 2))
+//│       (call $B_init
+//│         (local.get $this)
+//│         (local.get $z))
+//│       (return
+//│         (local.get $this))))
+//│   (export "B_ctor" (func $B_ctor))
+//│   (elem declare func $B_ctor)
+//│   (func $B_add2 (type $B_add2) (param $this (ref null any)) (param $y (ref null any)) (result (ref null any))
+//│     (local $tmp1 (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $tmp1
+//│         (call $A_add
+//│           (ref.cast (ref $B)
+//│             (local.get $this))
+//│           (local.get $y)))
+//│       (return
+//│         (call $plus_impl1
+//│           (local.get $tmp1)
+//│           (ref.i31
+//│             (i32.const 1))))))
+//│   (elem declare func $B_add2)
+//│   (func $entry (type $entry1) (result (ref null any))
+//│     (local $A (ref null any))
+//│     (local $B (ref null any))
+//│     (local $tmp (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (block (result (ref null any))
+//│         (nop)
+//│         (block (result (ref null any))
+//│           (local.set $tmp
+//│             (call $B_ctor
+//│               (ref.i31
+//│                 (i32.const 1))))
+//│           (call $B_add2
+//│             (local.get $tmp)
+//│             (ref.i31
+//│               (i32.const 40)))))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 42
+
+
+class A(val x)
+class B(val z) extends A(z + 1) with
+  fun sum() = this.x + z
+B(20).sum()
+//│ Wasm result:
+//│ = 41
+
+
+class A(val x) with
+  fun add(y) = x + y
+class B(val z) extends A(z + 1)
+class C(val w) extends B(w)
+C(1).add(40)
+//│ Wasm result:
+//│ = 42
+
+
+class A(val x)
+class B(val y) extends A(y + 1)
+fun readA(a: A) = a.x
+readA(B(41))
+//│ Wasm result:
+//│ = 42
+
+
+:fixme
+class A(val x) with 
+  fun get = x
+class B(val y) extends A(y + 1) with 
+  fun use = get
+B(1).use
+//│ ╔══[COMPILATION ERROR] Name not found: get
+//│ ║  l.215: 	  fun use = get
+//│ ╙──       	            ^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

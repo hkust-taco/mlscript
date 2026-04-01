@@ -63,15 +63,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   /** True if this top-level class can be declared as a Wasm struct type. */
   private def isSupportedTopLevelClass(defn: ClsLikeDefn): Bool =
+    val supportsInheritedPreCtor =
+      (defn.k is syntax.Cls) && splitInheritedPreCtor(defn.preCtor).nonEmpty
     defn.owner.isEmpty
       && ((defn.k is syntax.Cls) || (defn.k is syntax.Obj))
       && defn.auxParams.isEmpty
-      && defn.parentPath.isEmpty
+      && (defn.parentPath.isEmpty || supportsInheritedPreCtor)
       && (defn.methods.isEmpty || (defn.k is syntax.Cls))
       && defn.companion.isEmpty
       && (defn.preCtor match
         case End(_) => true
-        case _ => false)
+        case _ => supportsInheritedPreCtor)
 
   /** Returns singleton metadata when `sym` resolves to a registered singleton object. */
   private def singletonInfoFor(sym: Local)(using Ctx): Opt[SingletonInfo] =
@@ -146,9 +148,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   private def collectTopLevelClasses(b: Block, out: ArrayBuf[ClsLikeDefn]): Unit = b match
     case Define(defn: ClsLikeDefn, rst) =>
-      val prescanDefn =
-        if splitInheritedPreCtor(defn.preCtor).nonEmpty then defn.copy(parentPath = N, preCtor = End(""))
-        else defn.copy(parentPath = N)
+      val prescanDefn = defn.copy(parentPath = N)
       if isSupportedTopLevelClass(prescanDefn) && (defn.k is syntax.Cls) then
         out += defn
       collectTopLevelClasses(rst, out)
@@ -916,9 +916,18 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case sym: Symbol => sym.asTrm
     resolvedSym.flatMap(ctx.getMethodInfo)
 
-  /** Resolves method metadata for a selection when it denotes a registered class method. */
+  /** Resolves method metadata for a selection when it denotes a registered class or ancestor method. */
   private def methodInfoForSelection(sel: Select)(using Ctx): Opt[MethodInfo] =
-    sel.symbol.flatMap(_.asTrm).flatMap(ctx.getMethodInfo)
+    sel.symbol.flatMap(_.asTrm).flatMap(ctx.getMethodInfo).orElse:
+      val receiverCls = sel.qual match
+        case ownerRef: Value.Ref if isDirectOwnerRef(ownerRef) =>
+          val resolvedOwner = ownerRef.l match
+            case _: BlockMemberSymbol => ownerRef.disamb.getOrElse(ownerRef.l)
+            case sym => sym
+          resolvedOwner.asBlkMember
+        case _ =>
+          classTypeFromResult(sel.qual)
+      receiverCls.flatMap(ctx.getMethodInfoInHierarchy(_, sel.name.name))
 
   /** Returns whether `path` is an explicit owner reference such as a class or module path. */
   private def isDirectOwnerRef(path: Path): Bool = path match
@@ -1050,13 +1059,23 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       sel: Select,
   )(using Ctx, Raise, Scope): Expr =
     if isDirectOwnerRef(sel.qual) then
-      if scope.lookup(methodInfo.ownerIsym).nonEmpty then
-        result(Value.This(methodInfo.ownerIsym))
-      else
-        errExpr(
-          Ls(msg"WatBuilder::result for exact class-qualified direct calls is not implemented yet" -> sel.toLoc),
-          extraInfo = S(sel.showAsTree),
-        )
+      val receiverIsym = sel.qual match
+        case Value.Ref(l, disamb) =>
+          val resolved = l match
+            case _: BlockMemberSymbol => disamb.getOrElse(l)
+            case sym => sym
+          resolved match
+            case owner: InnerSymbol if scope.lookup(owner).nonEmpty => S(owner)
+            case _ => N
+        case _ => N
+      receiverIsym match
+        case S(ownerIsym) =>
+          result(Value.This(ownerIsym))
+        case N =>
+          errExpr(
+            Ls(msg"WatBuilder::result for exact class-qualified direct calls is not implemented yet" -> sel.toLoc),
+            extraInfo = S(sel.showAsTree),
+          )
     else
       result(sel.qual)
 

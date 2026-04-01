@@ -1,0 +1,310 @@
+
+:global
+:wasm
+
+
+class A(val x)
+class B(val y) extends A(y + 1)
+let b = B(2)
+b.x
+//│ Wasm result:
+//│ = 3
+
+
+class A(val x)
+class B(val y) extends A(1)
+B(2).x
+//│ Wasm result:
+//│ = 1
+
+
+class A(val x)
+class B(val y) extends A(1)
+fun getX(b: B) = b.x
+getX(B(2))
+//│ Wasm result:
+//│ = 1
+
+
+class A(val x)
+class B(val y) extends A(1) with
+  val z = this.x
+B(2).z
+//│ Wasm result:
+//│ = 1
+
+
+class A(val x)
+class B(val y) extends A(y) with
+    val z = this.y
+B(1).z
+//│ Wasm result:
+//│ = 1
+
+
+class A(val x)
+class B(val y) extends A(y)
+class C(val z) extends B(z)
+fun getX(c: C) = c.x
+getX(C(3))
+//│ Wasm result:
+//│ = 3
+
+
+class A(val x)
+class B(val y) extends A(y)
+B(1).y === A(1).x
+//│ Wasm result:
+//│ = 1
+
+
+:wat
+class A(val x)
+class B(val y) extends A(y)
+B(1).x === A(1).x
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $A (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))
+//│   (type $B (sub $A (struct (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
+//│   (type $A_init (func (param $this (ref null any)) (param $x (ref null any))))
+//│   (type $A_ctor (func (param $x (ref null any)) (result (ref null any))))
+//│   (type $B_init (func (param $this (ref null any)) (param $y (ref null any))))
+//│   (type $B_ctor (func (param $y (ref null any)) (result (ref null any))))
+//│   (type $eq_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $A_init (type $A_init) (param $this (ref null any)) (param $x (ref null any))
+//│     (block
+//│       (nop)
+//│       (block
+//│         (struct.set $A $x
+//│           (ref.cast (ref $A)
+//│             (local.get $this))
+//│           (local.get $x))
+//│         (nop))))
+//│   (elem declare func $A_init)
+//│   (func $A_ctor (type $A_ctor) (param $x (ref null any)) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $A))
+//│       (struct.set $A $$tag
+//│         (ref.cast (ref $A)
+//│           (local.get $this))
+//│         (i32.const 1))
+//│       (call $A_init
+//│         (local.get $this)
+//│         (local.get $x))
+//│       (return
+//│         (local.get $this))))
+//│   (export "A_ctor" (func $A_ctor))
+//│   (elem declare func $A_ctor)
+//│   (func $B_init (type $B_init) (param $this (ref null any)) (param $y (ref null any))
+//│     (block
+//│       (nop)
+//│       (call $A_init
+//│         (local.get $this)
+//│         (local.get $y))
+//│       (block
+//│         (struct.set $B $y
+//│           (ref.cast (ref $B)
+//│             (local.get $this))
+//│           (local.get $y))
+//│         (nop))))
+//│   (elem declare func $B_init)
+//│   (func $B_ctor (type $B_ctor) (param $y (ref null any)) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $B))
+//│       (struct.set $B $$tag
+//│         (ref.cast (ref $B)
+//│           (local.get $this))
+//│         (i32.const 2))
+//│       (call $B_init
+//│         (local.get $this)
+//│         (local.get $y))
+//│       (return
+//│         (local.get $this))))
+//│   (export "B_ctor" (func $B_ctor))
+//│   (elem declare func $B_ctor)
+//│   (func $eq_impl1 (type $eq_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│     (if (result (ref null any))
+//│       (i32.and
+//│         (ref.test (ref null i31)
+//│           (local.get $lhs))
+//│         (ref.test (ref null i31)
+//│           (local.get $rhs)))
+//│       (then
+//│         (ref.i31
+//│           (i32.eq
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $lhs)))
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $rhs))))))
+//│       (else
+//│         (unreachable))))
+//│   (elem declare func $eq_impl1)
+//│   (func $entry (type $entry1) (result (ref null any))
+//│     (local $A (ref null any))
+//│     (local $B (ref null any))
+//│     (local $tmp (ref null any))
+//│     (local $tmp1 (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (block (result (ref null any))
+//│         (nop)
+//│         (block (result (ref null any))
+//│           (local.set $tmp
+//│             (call $B_ctor
+//│               (ref.i31
+//│                 (i32.const 1))))
+//│           (block (result (ref null any))
+//│             (local.set $tmp1
+//│               (call $A_ctor
+//│                 (ref.i31
+//│                   (i32.const 1))))
+//│             (call $eq_impl1
+//│               (struct.get $A $x
+//│                 (ref.cast (ref $A)
+//│                   (local.get $tmp)))
+//│               (struct.get $A $x
+//│                 (ref.cast (ref $A)
+//│                   (local.get $tmp1)))))))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 1
+
+
+class A(val x) with
+    set x += 1
+class B(val y) extends A(y)
+B(1).x + B(1).y
+//│ Wasm result:
+//│ = 3
+
+
+class A(val x)
+class B(val y) extends A(y + 1) with
+  val z = this.x
+B(1).z
+//│ Wasm result:
+//│ = 2
+
+
+class A(val x) with
+  val s = x + 1
+class B(val y) extends A(y + 1) with
+  set this.s += 1
+B(1).s
+//│ Wasm result:
+//│ = 4
+
+
+class A(val x) with
+  val s = x + 1
+class B(val y) extends A(y + 1)
+let b = B(1)
+set b.s = 5
+b.s
+//│ Wasm result:
+//│ = 5
+
+
+// Confirms no ctor/init split
+:wat
+class Plain(val x) with
+  val y = this.x
+Plain(42).y
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $Plain (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
+//│   (type $Plain_ctor (func (param $x (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $Plain_ctor (type $Plain_ctor) (param $x (ref null any)) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Plain))
+//│       (struct.set $Plain $$tag
+//│         (ref.cast (ref $Plain)
+//│           (local.get $this))
+//│         (i32.const 1))
+//│       (block
+//│         (struct.set $Plain $x
+//│           (ref.cast (ref $Plain)
+//│             (local.get $this))
+//│           (local.get $x))
+//│         (block
+//│           (struct.set $Plain $y
+//│             (ref.cast (ref $Plain)
+//│               (local.get $this))
+//│             (struct.get $Plain $x
+//│               (ref.cast (ref $Plain)
+//│                 (local.get $this))))
+//│           (nop)))
+//│       (return
+//│         (local.get $this))))
+//│   (export "Plain_ctor" (func $Plain_ctor))
+//│   (elem declare func $Plain_ctor)
+//│   (func $entry (type $entry1) (result (ref null any))
+//│     (local $Plain (ref null any))
+//│     (local $tmp (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (block (result (ref null any))
+//│         (local.set $tmp
+//│           (call $Plain_ctor
+//│             (ref.i31
+//│               (i32.const 42))))
+//│         (struct.get $Plain $y
+//│           (ref.cast (ref $Plain)
+//│             (local.get $tmp))))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 42
+
+
+:fixme
+class A(val x)
+class B(val y) extends A(1) with
+  val z = x
+B(2).z
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.276: 	  val z = x
+//│ ╙──       	          ^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+:ge
+class A(val x)
+class B(val y)
+let b = B(1)
+b.B#x
+//│ ╔══[COMPILATION ERROR] Class 'B' does not contain member 'x'.
+//│ ║  l.289: 	b.B#x
+//│ ╙──       	    ^
+//│ ╔══[COMPILATION ERROR] WatBuilder::result for field selection without a resolved symbol is not implemented (field `x`). Use `_.[_]` for index-based accesses.
+//│ ║  l.289: 	b.B#x
+//│ ╙──       	^^^^^
+
+
+:fixme
+class A(val x) with
+  val s = x + 1
+class B(val y) extends A(y + 1) with
+  set s += 1
+B(1).s
+//│ ╔══[COMPILATION ERROR] Name not found: s
+//│ ║  l.302: 	  set s += 1
+//│ ╙──       	      ^
+//│ ╔══[COMPILATION ERROR] Name not found: s
+//│ ║  l.302: 	  set s += 1
+//│ ╙──       	      ^
+//│ ═══[COMPILATION ERROR] Unexpected left-hand side in assignment (‹error›)

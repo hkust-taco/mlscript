@@ -1,0 +1,321 @@
+
+:global
+:wasm
+
+
+class A
+class B extends A
+//│ Wasm result:
+//│ = {}
+
+
+class A(val x)
+class B(val y) extends A(1)
+B(2).y
+//│ Wasm result:
+//│ = 2
+
+
+class A()
+class B() extends A()
+B() is A
+//│ Wasm result:
+//│ = 1
+
+
+class A()
+class B() extends A()
+let b = B()
+if b is A then 1 else 0
+//│ Wasm result:
+//│ = 1
+
+
+class A(val x)
+class B(val y) extends A(1)
+if B(2) is A(a) then a else 0
+//│ Wasm result:
+//│ = 1
+
+
+class Bar(val a)
+class Foo(val x, val y) extends Bar(x + y)
+if Foo(1,2) is Foo(x,y) then Foo(1,2).a
+//│ Wasm result:
+//│ = 3
+
+
+class Bar(val a)
+class Foo(val x) extends Bar(x * 2)
+fun getXor(f) = if f is Foo(z) then f.a else 0
+getXor(Foo(42))
+//│ Wasm result:
+//│ = 84
+
+
+:wat
+class Foo(val x)
+class Bar(val y) extends Foo(y + y)
+class Baz(val z) extends Bar(z - 1)
+if Baz(10) is
+  Foo(a) then a
+  Bar(b) then b
+  Baz(c) then c
+  else 0
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))
+//│   (type $Bar (sub $Foo (struct (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
+//│   (type $Baz (sub $Bar (struct (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $y (mut (ref null any))) (field $z (mut (ref null any))))))
+//│   (type $Foo_init (func (param $this (ref null any)) (param $x (ref null any))))
+//│   (type $Foo_ctor (func (param $x (ref null any)) (result (ref null any))))
+//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $Bar_init (func (param $this (ref null any)) (param $y (ref null any))))
+//│   (type $Bar_ctor (func (param $y (ref null any)) (result (ref null any))))
+//│   (type $minus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $Baz_init (func (param $this (ref null any)) (param $z (ref null any))))
+//│   (type $Baz_ctor (func (param $z (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (func $Foo_init (type $Foo_init) (param $this (ref null any)) (param $x (ref null any))
+//│     (block
+//│       (nop)
+//│       (block
+//│         (struct.set $Foo $x
+//│           (ref.cast (ref $Foo)
+//│             (local.get $this))
+//│           (local.get $x))
+//│         (nop))))
+//│   (elem declare func $Foo_init)
+//│   (func $Foo_ctor (type $Foo_ctor) (param $x (ref null any)) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Foo))
+//│       (struct.set $Foo $$tag
+//│         (ref.cast (ref $Foo)
+//│           (local.get $this))
+//│         (i32.const 1))
+//│       (call $Foo_init
+//│         (local.get $this)
+//│         (local.get $x))
+//│       (return
+//│         (local.get $this))))
+//│   (export "Foo_ctor" (func $Foo_ctor))
+//│   (elem declare func $Foo_ctor)
+//│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│     (if (result (ref null any))
+//│       (i32.and
+//│         (ref.test (ref null i31)
+//│           (local.get $lhs))
+//│         (ref.test (ref null i31)
+//│           (local.get $rhs)))
+//│       (then
+//│         (ref.i31
+//│           (i32.add
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $lhs)))
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $rhs))))))
+//│       (else
+//│         (unreachable))))
+//│   (elem declare func $plus_impl1)
+//│   (func $Bar_init (type $Bar_init) (param $this (ref null any)) (param $y (ref null any))
+//│     (local $tmp (ref null any))
+//│     (block
+//│       (block
+//│         (local.set $tmp
+//│           (call $plus_impl1
+//│             (local.get $y)
+//│             (local.get $y)))
+//│         (nop))
+//│       (call $Foo_init
+//│         (local.get $this)
+//│         (local.get $tmp))
+//│       (block
+//│         (struct.set $Bar $y
+//│           (ref.cast (ref $Bar)
+//│             (local.get $this))
+//│           (local.get $y))
+//│         (nop))))
+//│   (elem declare func $Bar_init)
+//│   (func $Bar_ctor (type $Bar_ctor) (param $y (ref null any)) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Bar))
+//│       (struct.set $Bar $$tag
+//│         (ref.cast (ref $Bar)
+//│           (local.get $this))
+//│         (i32.const 2))
+//│       (call $Bar_init
+//│         (local.get $this)
+//│         (local.get $y))
+//│       (return
+//│         (local.get $this))))
+//│   (export "Bar_ctor" (func $Bar_ctor))
+//│   (elem declare func $Bar_ctor)
+//│   (func $minus_impl1 (type $minus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│     (if (result (ref null any))
+//│       (i32.and
+//│         (ref.test (ref null i31)
+//│           (local.get $lhs))
+//│         (ref.test (ref null i31)
+//│           (local.get $rhs)))
+//│       (then
+//│         (ref.i31
+//│           (i32.sub
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $lhs)))
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $rhs))))))
+//│       (else
+//│         (unreachable))))
+//│   (elem declare func $minus_impl1)
+//│   (func $Baz_init (type $Baz_init) (param $this (ref null any)) (param $z (ref null any))
+//│     (local $tmp (ref null any))
+//│     (block
+//│       (block
+//│         (local.set $tmp
+//│           (call $minus_impl1
+//│             (local.get $z)
+//│             (ref.i31
+//│               (i32.const 1))))
+//│         (nop))
+//│       (call $Bar_init
+//│         (local.get $this)
+//│         (local.get $tmp))
+//│       (block
+//│         (struct.set $Baz $z
+//│           (ref.cast (ref $Baz)
+//│             (local.get $this))
+//│           (local.get $z))
+//│         (nop))))
+//│   (elem declare func $Baz_init)
+//│   (func $Baz_ctor (type $Baz_ctor) (param $z (ref null any)) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Baz))
+//│       (struct.set $Baz $$tag
+//│         (ref.cast (ref $Baz)
+//│           (local.get $this))
+//│         (i32.const 3))
+//│       (call $Baz_init
+//│         (local.get $this)
+//│         (local.get $z))
+//│       (return
+//│         (local.get $this))))
+//│   (export "Baz_ctor" (func $Baz_ctor))
+//│   (elem declare func $Baz_ctor)
+//│   (func $entry (type $entry1) (result (ref null any))
+//│     (local $Bar (ref null any))
+//│     (local $Foo (ref null any))
+//│     (local $Baz (ref null any))
+//│     (local $scrut (ref null any))
+//│     (local $a (ref null any))
+//│     (local $b (ref null any))
+//│     (local $c (ref null any))
+//│     (local $arg$Baz$0$ (ref null any))
+//│     (local $arg$Bar$0$ (ref null any))
+//│     (local $arg$Foo$0$ (ref null any))
+//│     (local $matchRes (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (block (result (ref null any))
+//│         (nop)
+//│         (block (result (ref null any))
+//│           (nop)
+//│           (block (result (ref null any))
+//│             (local.set $scrut
+//│               (call $Baz_ctor
+//│                 (ref.i31
+//│                   (i32.const 10))))
+//│             (block (result (ref null any))
+//│               (block $match
+//│                 (local.set $matchRes
+//│                   (ref.null any))
+//│                 (if
+//│                   (ref.test (ref null $Foo)
+//│                     (local.get $scrut))
+//│                   (then
+//│                     (block $arm
+//│                       (local.set $matchRes
+//│                         (block (result (ref null any))
+//│                           (local.set $arg$Foo$0$
+//│                             (struct.get $Foo $x
+//│                               (ref.cast (ref $Foo)
+//│                                 (local.get $scrut))))
+//│                           (block (result (ref null any))
+//│                             (local.set $a
+//│                               (local.get $arg$Foo$0$))
+//│                             (local.get $a))))
+//│                       (br $match))))
+//│                 (if
+//│                   (ref.test (ref null $Bar)
+//│                     (local.get $scrut))
+//│                   (then
+//│                     (block $arm1
+//│                       (local.set $matchRes
+//│                         (block (result (ref null any))
+//│                           (local.set $arg$Bar$0$
+//│                             (struct.get $Bar $y
+//│                               (ref.cast (ref $Bar)
+//│                                 (local.get $scrut))))
+//│                           (block (result (ref null any))
+//│                             (local.set $b
+//│                               (local.get $arg$Bar$0$))
+//│                             (local.get $b))))
+//│                       (br $match))))
+//│                 (if
+//│                   (ref.test (ref null $Baz)
+//│                     (local.get $scrut))
+//│                   (then
+//│                     (block $arm2
+//│                       (local.set $matchRes
+//│                         (block (result (ref null any))
+//│                           (local.set $arg$Baz$0$
+//│                             (struct.get $Baz $z
+//│                               (ref.cast (ref $Baz)
+//│                                 (local.get $scrut))))
+//│                           (block (result (ref null any))
+//│                             (local.set $c
+//│                               (local.get $arg$Baz$0$))
+//│                             (local.get $c))))
+//│                       (br $match))))
+//│                 (local.set $matchRes
+//│                   (ref.i31
+//│                     (i32.const 0))))
+//│               (local.get $matchRes)))))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 18
+
+
+class Bar(val y)
+class Baz(val z) extends Bar(not z)
+if Baz(true) is
+  Bar(a) then if a then Bar(a).y else a
+  Baz(b) then b
+  else 2
+//│ Wasm result:
+//│ = 0
+
+
+:ge
+class A() extends B()
+class B() extends A()
+//│ ╔══[COMPILATION ERROR] Cyclic class inheritance is not supported
+//│ ║  l.311: 	class A() extends B()
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] WatBackend::returningTerm for ClsLikeDefn(...) where `parentPath.nonEmpty` not implemented yet
+//│ ║  l.311: 	class A() extends B()
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] WatBackend::returningTerm for ClsLikeDefn(...) where `parentPath.nonEmpty` not implemented yet
+//│ ║  l.312: 	class B() extends A()
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^

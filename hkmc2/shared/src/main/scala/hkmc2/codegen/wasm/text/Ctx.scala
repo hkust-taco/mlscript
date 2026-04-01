@@ -531,6 +531,19 @@ class Ctx(
   def getMethodInfo(sym: TermSymbol): Opt[Ctx.MethodInfo] =
     methodInfoBySymbol.get(sym)
 
+  /** Returns metadata for a method declared directly on `clsSym` with name `methodName`, if present. */
+  def getDeclaredMethodInfo(clsSym: BlockMemberSymbol, methodName: Str): Opt[Ctx.MethodInfo] =
+    methodInfoBySymbol.valuesIterator.find: info =>
+      info.dSym.nme == methodName && info.ownerIsym.asBlkMember.contains(clsSym)
+
+  /** Returns the nearest declared method named `methodName` on `startCls` or one of its ancestors. */
+  def getMethodInfoInHierarchy(startCls: BlockMemberSymbol, methodName: Str): Opt[Ctx.MethodInfo] =
+    def loop(clsSym: Opt[BlockMemberSymbol]): Opt[Ctx.MethodInfo] = clsSym match
+      case S(sym) =>
+        getDeclaredMethodInfo(sym, methodName).orElse(loop(getClassParent(sym)))
+      case N => N
+    loop(S(startCls))
+
   /** Registers method metadata under its resolved method symbol. */
   def registerMethodInfo(info: Ctx.MethodInfo): Unit =
     methodInfoBySymbol(info.dSym) = info
