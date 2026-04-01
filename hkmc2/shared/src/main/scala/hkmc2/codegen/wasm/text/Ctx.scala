@@ -14,6 +14,7 @@ import text.Param as WasmParam
 import Instructions.*
 
 import scala.annotation.{nowarn, targetName}
+import scala.collection.immutable.ListMap
 import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
 import scala.reflect.ClassTag
 
@@ -228,15 +229,11 @@ class Ctx extends ToWat:
 
   import Ctx.prettyString
 
-  /** [[ArrayBuf]] containing all type definitions in the module. */
-  // TODO(Derppening): Refactor to ListMap[SymIdx, TypeInfo]
-  private val types = ArrayBuf.empty[TypeInfo]
+  /** [[ListMap]]] containing all type definitions in the module mapped by their symbolic identifiers. */
+  private var types = ListMap.empty[SymIdx, TypeInfo]
 
-  /** [[MutMap]] containing type indices mapped to their corresponding index in the [[types]] array. */
-  private val typesByIdx = MutMap.empty[SymIdx, Int]
-
-  /** [[MutMap]] containing type symbols mapped to their corresponding index in the [[types]] array. */
-  private val namedTypes = MutMap.empty[BlockMemberSymbol, Int]
+  /** [[MutMap]] containing type symbols mapped to their corresponding [[TypeInfo]] instance. */
+  private val namedTypes = MutMap.empty[BlockMemberSymbol, TypeInfo]
 
   /** [[ArrayBuf]] containing all imports in the module. */
   private val imports = ArrayBuf.empty[Import[?]]
@@ -244,22 +241,11 @@ class Ctx extends ToWat:
   /** [[ArrayBuf]] containing all data segments in the module. */
   private val dataSegments = ArrayBuf.empty[DataSegment]
 
-  /** [[ArrayBuf]] containing all function definitions in the module. */
-  // TODO(Derppening): Refactor to ListMap[SymIdx, FuncInfo]
-  private val funcs = ArrayBuf.empty[FuncInfo]
+  /** [[ListMap]] containing all function definitions in the module mapped by their symbolic identifiers. */
+  private var funcs = ListMap.empty[SymIdx, FuncInfo]
 
-  /** [[MutMap]] containing function indices mapped to their corresponding index in the [[funcs]] array.
-    *
-    * Note that for import functions, the index is bitwise-negated to distinguish them from defined functions.
-    */
-  private val funcsByIdx = MutMap.empty[SymIdx, Int]
-
-  /** [[MutMap]] containing function symbols mapped to the index of the corresponding [[FuncInfo]] in the `funcs` or
-    * `imports` field.
-    *
-    * Note that for import functions, the index is bitwise-negated to distinguish them from defined functions.
-    */
-  private val namedFuncs = MutMap.empty[Symbol, Int]
+  /** [[MutMap]] containing function symbols mapped to the corresponding [[FuncInfo]] or [[Import]] instance. */
+  private val namedFuncs = MutMap.empty[Symbol, FuncInfo | Import[ExternType.Func]]
 
   /** [[ArrayBuf]] containing all tag definitions in the module. */
   private val tags = ArrayBuf.empty[TagInfo]
@@ -309,23 +295,27 @@ class Ctx extends ToWat:
 
   /** Adds a type into this context. */
   def addType(sym: Opt[BlockMemberSymbol], typeInfo: TypeInfo): TypeIdx =
-    val numIdx = types.size
-    types += typeInfo
-    typesByIdx(typeInfo.id) = numIdx
+    val id = typeInfo.id
+    types = types + (id -> typeInfo)
     sym.foreach:
-      namedTypes(_) = numIdx
-    TypeIdx(typeInfo.id)
+      namedTypes(_) = typeInfo
+    TypeIdx(id)
 
   @deprecated("Use the overload without `resolveSymIdx` instead.")
   def getType(typeref: TypeIdx | BlockMemberSymbol, resolveSymIdx: Bool): Opt[TypeIdx] =
     if resolveSymIdx then
       typeref match
-        case TypeIdx(idx @ SymIdx(_)) => typesByIdx.get(idx).map(i => TypeIdx(NumIdx(i)))
+        case TypeIdx(idx @ SymIdx(_)) =>
+          types.zipWithIndex.collectFirst:
+            case ((symIdx, _), i) if symIdx == idx => TypeIdx(NumIdx(i))
         case typeidx: TypeIdx => S(typeidx)
-        case sym: BlockMemberSymbol => namedTypes.get(sym).map(idx => TypeIdx(NumIdx(idx)))
+        case sym: BlockMemberSymbol =>
+          namedTypes.get(sym).flatMap: typeInfo =>
+            types.zipWithIndex.collectFirst:
+              case ((_, ti), i) if ti === typeInfo => TypeIdx(NumIdx(i))
     else getType(typeref)
 
-  /** Returns the [[TypeIdx]] of the given `typeref`, optionally resolving the symbolic index into a numeric index.
+  /** Returns the [[TypeIdx]] of the given `typeref`.
     */
   def getType(typeref: TypeIdx | BlockMemberSymbol): Opt[TypeIdx] = typeref match
     case typeidx: TypeIdx => S(typeidx)
@@ -344,10 +334,9 @@ class Ctx extends ToWat:
   /** Returns the [[TypeInfo]] instance associated with the given `typeref`. */
   @nowarn("cat=deprecation")
   def getTypeInfo(typeref: TypeIdx | BlockMemberSymbol): Opt[TypeInfo] = typeref match
-    case TypeIdx(NumIdx(idx)) => types.unapply(idx.toInt)
-    case TypeIdx(SymIdx(nme)) =>
-      typesByIdx.get(SymIdx(nme)).flatMap(i => types.unapply(i))
-    case sym: BlockMemberSymbol => namedTypes.get(sym).flatMap(i => types.unapply(i))
+    case TypeIdx(NumIdx(idx)) => types.drop(idx).headOption.map(_._2)
+    case TypeIdx(idx @ SymIdx(nme)) => types.get(idx)
+    case sym: BlockMemberSymbol => namedTypes.get(sym)
 
   /** Same as [[getTypeInfo]] but throws an exception when the `typeref` is not found. */
   def getTypeInfo_!(typeref: TypeIdx | BlockMemberSymbol): TypeInfo =
@@ -355,9 +344,11 @@ class Ctx extends ToWat:
       lastWords(s"Missing type definition for ${typeref.prettyString}")
 
   /** Filters all imports by a given [[ExternType]]. */
-  private def filterImportsByType[ET <: ExternType](implicit ct: ClassTag[ET]): Seq[Import[ET]] = imports.collect:
-    case i if ct.runtimeClass.isInstance(i.externType) => i.asInstanceOf[Import[ET]]
-  .toSeq
+  private def filterImportsByType[ET <: ExternType](implicit ct: ClassTag[ET]): ListMap[SymIdx, Import[ET]] =
+    imports.collect:
+      case i if ct.runtimeClass.isInstance(i.externType) => i.asInstanceOf[Import[ET]]
+    .foldLeft(ListMap.empty[SymIdx, Import[ET]]): (m, i) =>
+      m + (i.externType.id -> i)
 
   @deprecated("Use the `Import[ExternType.Func]` overload instead.")
   def addFunctionImport(sym: Opt[Symbol], funcImport: FuncImport): FuncIdx =
@@ -373,9 +364,8 @@ class Ctx extends ToWat:
   def addFunctionImport(sym: Opt[Symbol], funcImport: Import[ExternType.Func]): FuncIdx =
     val numIdx = filterImportsByType[ExternType.Func].size
     imports += funcImport
-    funcsByIdx(funcImport.externType.id) = ~numIdx
     sym.foreach:
-      namedFuncs(_) = ~numIdx
+      namedFuncs(_) = funcImport
     FuncIdx(funcImport.externType.id)
 
   @deprecated("Use the `Import[ExternType.Func]` overload instead.")
@@ -401,7 +391,7 @@ class Ctx extends ToWat:
     val key = module -> name
     cachedMemoryImport.get(key) match
       case S(idx) =>
-        val existing = filterImportsByType[ExternType.Mem].apply(idx)
+        val existing = filterImportsByType[ExternType.Mem].drop(idx).head._2
         val newMin = existing.externType.memType.lim.min max minPages
         if newMin > existing.externType.memType.lim.min then
           imports.update(
@@ -424,7 +414,7 @@ class Ctx extends ToWat:
 
   /** Returns the memory import information for the given (`module`, `name`) tuple if present. */
   def getMemoryImport(module: Str, name: Str): Opt[ExternType.Mem] =
-    filterImportsByType[ExternType.Mem].find(m => m.module === module && m.name === name).map(_.externType)
+    filterImportsByType[ExternType.Mem].find((_, m) => m.module === module && m.name === name).map(_._2.externType)
 
   /** Adds a data segment into this context. */
   def addDataSegment(seg: DataSegment): Unit =
@@ -437,34 +427,36 @@ class Ctx extends ToWat:
 
   /** Adds a function into this context. */
   def addFunc(sym: Opt[Symbol], funcInfo: FuncInfo): FuncIdx =
-    val funcsIdx = funcs.size
-    val numIdx = filterImportsByType[ExternType.Func].size + funcsIdx
-    funcs += funcInfo
-    funcsByIdx(funcInfo.id) = numIdx
+    val id = funcInfo.id
+    val numIdx = filterImportsByType[ExternType.Func].size + funcs.size
+    funcs = funcs + (id -> funcInfo)
     sym.foreach:
-      namedFuncs(_) = numIdx
+      namedFuncs(_) = funcInfo
     FuncIdx(funcInfo.id)
 
   @deprecated("Use the overload without `resolveSymIdx` instead.")
   def getFunc(funcref: FuncIdx | Symbol, resolveSymIdx: Bool): Opt[FuncIdx] =
     if resolveSymIdx then
       funcref match
-        case FuncIdx(idx @ SymIdx(_)) => funcsByIdx.get(idx).map(i => FuncIdx(NumIdx(i)))
+        case FuncIdx(idx @ SymIdx(_)) =>
+          (filterImportsByType[ExternType.Func] ++ funcs).zipWithIndex.collectFirst:
+            case ((symIdx, _), i) if symIdx == idx => FuncIdx(NumIdx(i))
         case funcidx: FuncIdx => S(funcidx)
-        case sym: Symbol => namedFuncs.get(sym).map(idx => FuncIdx(NumIdx(if idx < 0 then ~idx else idx)))
+        case sym: Symbol =>
+          namedFuncs.get(sym).flatMap: funcInfo =>
+            (filterImportsByType[ExternType.Func] ++ funcs).zipWithIndex.collectFirst:
+              case ((_, fi), i) if fi === funcInfo => FuncIdx(NumIdx(i))
     else getFunc(funcref)
 
-  /** Returns the [[FuncIdx]] of the given `funcref`, optionally resolving the symbolic index into a numeric index.
+  /** Returns the [[FuncIdx]] of the given `funcref`.
     */
   def getFunc(funcref: FuncIdx | Symbol): Opt[FuncIdx] = funcref match
     case funcidx: FuncIdx => S(funcidx)
-    case sym: Symbol => namedFuncs.unapply(sym).map: numIdx =>
-        FuncIdx(
-          if numIdx < 0 then
-            filterImportsByType[ExternType.Func].apply(~numIdx).externType.id
-          else
-            funcs(numIdx).id,
-        )
+    case sym: Symbol => 
+      namedFuncs.get(sym).map: funcInfo =>
+        funcInfo match
+          case fi: FuncInfo => FuncIdx(fi.id)
+          case imp: Import[ExternType.Func] => FuncIdx(imp.externType.id)
 
   @deprecated("Use the overload without `resolveSymIdx` instead.")
   def getFunc_!(funcref: FuncIdx | Symbol, resolveSymIdx: Bool): FuncIdx =
@@ -479,21 +471,13 @@ class Ctx extends ToWat:
   /** Returns the [[FuncInfo]] instance associated with the given `funcref`. */
   @nowarn("cat=deprecation")
   def getFuncInfo(funcref: FuncIdx | Symbol): Opt[FuncInfo] = funcref match
-    case FuncIdx(NumIdx(idx)) => funcs.unapply(idx)
-    case FuncIdx(idx @ SymIdx(_)) =>
-      funcsByIdx.get(idx).map: i =>
-        if i < 0 then
-          lastWords(
-            s"Function index ${idx.toWat} corresponds to an imported function, which does not have associated FuncInfo",
-          )
-        funcs(i)
+    case FuncIdx(NumIdx(idx)) =>
+      (filterImportsByType[ExternType.Func] ++ funcs).drop(idx).headOption.map(_._2).collect:
+        case funcInfo: FuncInfo => funcInfo
+    case FuncIdx(idx @ SymIdx(_)) => funcs.get(idx)
     case funcref: Symbol =>
-      namedFuncs.get(funcref).map: i =>
-        if i < 0 then
-          lastWords(
-            s"Symbol `${funcref}` corresponds to an imported function, which does not have associated FuncInfo",
-          )
-        funcs(i)
+      namedFuncs.get(funcref).collect:
+        case funcInfo: FuncInfo => funcInfo
 
   /** Same as [[getFuncInfo]] but throws an exception when the `funcref` is not found. */
   def getFuncInfo_!(funcref: FuncIdx | Symbol): FuncInfo =
@@ -600,13 +584,13 @@ class Ctx extends ToWat:
   def toWat: Document =
     doc"(module #{  # ${
         (
-          types.toSeq.map(_.toWat)
+          types.toSeq.map(_._2.toWat)
             ++ imports.toSeq.map(_.toWat)
             ++ dataSegments.toSeq.map(_.toWat)
             ++ globals.toSeq.map(_.toWat)
             ++ tags.toSeq.map(_.toWat)
             ++ startFunc.toSeq.map(funcIdx => doc"(start ${funcIdx.toWat})")
-            ++ funcs.toSeq.map(_.toWat)
+            ++ funcs.toSeq.map(_._2.toWat)
         ).mkDocument(doc" # ")
       } #} )"
 

@@ -226,14 +226,14 @@ case class MemType(lim: Limits, addrType: AddrType = AddrType.i32) extends ToWat
 
 object ExternType:
   /** An linear memory entry that is externally addressable. */
-  case class Mem(id: SymIdx, memType: MemType) extends ExternType:
+  case class Mem(override val id: SymIdx, memType: MemType) extends ExternType(id):
     def toWat: Document = doc"""(memory ${id.toWat} ${memType.toWat})"""
 
   /** An function entry that is externally addressable. */
-  case class Func(id: SymIdx, typeUse: TypeUse) extends ExternType:
+  case class Func(override val id: SymIdx, typeUse: TypeUse) extends ExternType(id):
     def toWat: Document = doc"""(func ${id.toWat} ${typeUse.toWat})"""
 
-sealed abstract class ExternType extends ToWat
+sealed abstract class ExternType(val id: SymIdx) extends ToWat
 
 /** A memory import entry. */
 @deprecated("Use `Import` with `ExternType.Memory` instead.")
