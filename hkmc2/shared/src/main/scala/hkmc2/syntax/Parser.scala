@@ -962,10 +962,6 @@ abstract class Parser(
         consume
         consume
         exprCont(MemberProj(acc, new Ident(id).withLoc(S(l1))).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
-      // * Stop expression continuation when encountering a directive pattern `# directiveName`
-      // * so that blockOfImpl can parse it as a directive
-      case (IDENT("#", _), _) :: (IDENT(_, false), _) :: _ =>
-        acc
       case (OP(opStr), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
         val v = Ident(opStr).withLoc(S(l0))

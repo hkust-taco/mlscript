@@ -1,41 +1,5 @@
 :js
 
-//│ Failed to load runtime: Uncaught:
-//│ Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs' imported from /home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs
-//│     at finalizeResolution (node:internal/modules/esm/resolve:275:11)
-//│     at moduleResolve (node:internal/modules/esm/resolve:865:10)
-//│     at defaultResolve (node:internal/modules/esm/resolve:991:11)
-//│     at #cachedDefaultResolve (node:internal/modules/esm/loader:719:20)
-//│     at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:736:38)
-//│     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:765:52)
-//│     at #resolve (node:internal/modules/esm/loader:701:17)
-//│     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:621:35)
-//│     at ModuleJob.syncLink (node:internal/modules/esm/module_job:160:33) {
-//│   code: 'ERR_MODULE_NOT_FOUND',
-//│   url: 'file:///home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs'
-//│ }
-//│ Error: hkmc2.ErrorReport: Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs' imported from /home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs
-//│     at finalizeResolution (node:internal/modules/esm/resolve:275:11)
-//│     at moduleResolve (node:internal/modules/esm/resolve:865:10)
-//│     at defaultResolve (node:internal/modules/esm/resolve:991:11)
-//│     at #cachedDefaultResolve (node:internal/modules/esm/loader:719:20)
-//│     at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:736:38)
-//│     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:765:52)
-//│     at #resolve (node:internal/modules/esm/loader:701:17)
-//│     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:621:35)
-//│     at ModuleJob.syncLink (node:internal/modules/esm/module_job:160:33)
-//│     at ModuleJob.link (node:internal/modules/esm/module_job:245:17)
-//│ Error: hkmc2.ErrorReport: TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│     at REPL8:1:15
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 // Test 1: #config global directive - test_before has tailRecOpt (default)
 :sir
@@ -60,34 +24,8 @@ fun test_before(n, acc) = if n == 0 then acc else test_before(n - 1, n + acc)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:222)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│     at REPL11:1:15
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 #config(tailRecOpt: false)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:222)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│     at REPL14:1:15
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 // Test 2: After #config(tailRecOpt: false), functions should NOT be tail-rec optimized
 :sir
@@ -108,35 +46,9 @@ fun test_after(n, acc) = if n == 0 then acc else test_after(n - 1, n + acc)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:222)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│     at REPL17:1:15
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 // Test 3: Re-enable tail recursion optimization
 #config(tailRecOpt: true)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:222)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│     at REPL20:1:15
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 :sir
 fun test_reenabled(n, acc) = if n == 0 then acc else test_reenabled(n - 1, n + acc)
@@ -160,19 +72,6 @@ fun test_reenabled(n, acc) = if n == 0 then acc else test_reenabled(n - 1, n + a
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:222)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│     at REPL23:1:15
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 // Test 4: @config local annotation - disable tailRecOpt for one function only
 :sir
@@ -194,19 +93,6 @@ fun foo(n, acc) = if n == 0 then acc else foo(n - 1, n + acc)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:222)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│     at REPL26:1:15
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 // Test 5: bar (no annotation) should still have tailRecOpt
 :sir
@@ -231,19 +117,6 @@ fun bar(n, acc) = if n == 0 then acc else bar(n - 1, n + acc)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:222)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│     at REPL29:1:15
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 
 // * Make sure effect handlers with stack safety can be enabled in one go:
@@ -254,19 +127,6 @@ fun foo(x) = { x.call(), print(42) }
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let foo²; define foo² as fun foo³(x) { do x.call﹖(); return Predef⁰.print⁰(42) }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:222)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│     at REPL32:1:15
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 
 :fixme // Configuration is not taken into account, here
@@ -274,89 +134,36 @@ fun foo(x) = { x.call(), print(42) }
 handle h = Object with {}
 foo(h)
 //│ ╔══[COMPILATION ERROR] Effect handlers are not enabled
-//│ ║  l.274: 	handle h = Object with {}
+//│ ║  l.134: 	handle h = Object with {}
 //│ ║         	           ^^^^^^^^^^^^^^
-//│ ║  l.275: 	foo(h)
+//│ ║  l.135: 	foo(h)
 //│ ╙──       	^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 #config(effectHandlers: Some(EffectHandlers(stackSafety: Some(StackSafety(100)))))
 #config(liftDefns: Some(LiftDefns)) // * Needed by effect handlers instrumentation
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:222)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│     at REPL37:1:15
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:222)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│     at REPL38:1:15
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 // * Now, they are
 fun foo(x) = { x.call(), print(42) }
 handle h = Object with
   fun call()(resume) = "Aborted!"
 foo(h)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:222)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│     at REPL40:1:122
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:222)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│     at REPL41:1:15
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ = "Aborted!"
 
 
 :fixme // `#` should probably be treated as a prefix keyword, not an operator identifier
 print(42)
 #config(liftDefns: None)
 //│ ╔══[COMPILATION ERROR] Name not found: #
-//│ ║  l.349: 	#config(liftDefns: None)
+//│ ║  l.157: 	#config(liftDefns: None)
 //│ ╙──       	^
 //│ ╔══[COMPILATION ERROR] Name not found: config
-//│ ║  l.349: 	#config(liftDefns: None)
+//│ ║  l.157: 	#config(liftDefns: None)
 //│ ╙──       	 ^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: None
-//│ ║  l.349: 	#config(liftDefns: None)
+//│ ║  l.157: 	#config(liftDefns: None)
 //│ ╙──       	                   ^^^^
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
