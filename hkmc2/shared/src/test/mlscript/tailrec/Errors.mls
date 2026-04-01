@@ -127,5 +127,5 @@ fun scan(idx, acc) =
 @config(tailRecOpt: false)
 fun foo() = foo()
 //│ ╔══[COMPILATION ERROR] This @tailrec function was not processed by the tail-call optimizer.
-//│ ║  l.126: 	fun foo() = foo()
+//│ ║  l.128: 	fun foo() = foo()
 //│ ╙──       	    ^^^
