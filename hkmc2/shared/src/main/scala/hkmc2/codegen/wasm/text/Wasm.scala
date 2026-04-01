@@ -236,7 +236,7 @@ object ExternType:
 sealed abstract class ExternType(val id: SymIdx) extends ToWat
 
 /** A memory import entry. */
-@deprecated("Use `Import` with `ExternType.Memory` instead.")
+@deprecated("Use `Import` with `ExternType.Mem` instead.")
 case class MemoryImport(module: Str, name: Str, id: SymIdx, minPages: Int) extends ToWat:
   def toWat: Document =
     doc"""(import "$module" "$name" (memory ${id.toWat} $minPages))"""

@@ -240,7 +240,7 @@ class Ctx extends ToWat:
 
   import Ctx.prettyString
 
-  /** [[ListMap]]] containing all type definitions in the module mapped by their symbolic identifiers. */
+  /** [[ListMap]] containing all type definitions in the module mapped by their symbolic identifiers. */
   private var types = ListMap.empty[SymIdx, TypeInfo]
 
   /** [[MutMap]] containing type symbols mapped to their corresponding [[TypeInfo]] instance. */
