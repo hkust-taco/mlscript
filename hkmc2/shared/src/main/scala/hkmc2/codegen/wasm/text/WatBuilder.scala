@@ -1232,15 +1232,23 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 )
               directFieldAssign(selCls, selSym, lhsExpr, rhsExpr)
           case S(selSym: BlockMemberSymbol) =>
-            val fieldSym = selSym.asTrm.get
-            if ctx.getMethodInfo(fieldSym).nonEmpty then
-              errExpr(
-                Ls(msg"WatBuilder::returningTerm for AssignField(...) to class methods is not implemented yet" -> nme.toLoc),
-                extraInfo = S(assign.showAsTree),
-              )
-            else
-              val selCls = fieldSym.owner.flatMap(_.asBlkMember).get
-              directFieldAssign(selCls, fieldSym, lhsExpr, rhsExpr)
+            selSym.asTrm match
+              case S(fieldSym) =>
+                if ctx.getMethodInfo(fieldSym).nonEmpty then
+                  errExpr(
+                    Ls(msg"WatBuilder::returningTerm for AssignField(...) to class methods is not implemented yet" -> nme.toLoc),
+                    extraInfo = S(assign.showAsTree),
+                  )
+                else
+                  val selCls = fieldSym.owner.flatMap(_.asBlkMember).get
+                  directFieldAssign(selCls, fieldSym, lhsExpr, rhsExpr)
+              case N =>
+                errExpr(
+                  Ls(
+                    msg"Expected resolved AssignField(...) expression `${selSym.toString}` to be a term symbol, but it has no associated term symbol" -> nme.toLoc
+                  ),
+                  extraInfo = S(assign.showAsTree),
+                )
           case S(otherSym) =>
             lastWords(
               s"Expected resolved AssignField(...) expression to be a TermSymbol, but got $otherSym (${
@@ -1463,7 +1471,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       break(errUnimplExpr("newCtorAuxParams.nonEmpty"))
 
                     val ctorInfo =
-                      if !isSingletonObj && clsLikeDefn.sym.nameIsMeaningful then
+                      if !isSingletonObj then
                         S(ctx.getConstructorInfo(clsLikeDefn.sym).getOrElse:
                           lastWords(s"Missing constructor metadata for class ${clsLikeDefn.sym}")
                         )
