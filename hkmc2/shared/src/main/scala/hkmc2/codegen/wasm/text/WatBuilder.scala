@@ -101,7 +101,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ctor = End(""),
       companion = N,
       bufferable = N,
-    )
+    )(N)
 
   /** Registers the synthetic `Unit` singleton. */
   private def RegisterUnitSingleton()(using Ctx, Raise, Scope): Unit =
@@ -148,7 +148,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   private def collectTopLevelClasses(b: Block, out: ArrayBuf[ClsLikeDefn]): Unit = b match
     case Define(defn: ClsLikeDefn, rst) =>
-      val prescanDefn = defn.copy(parentPath = N)
+      val prescanDefn = defn.copy(parentPath = N)(defn.configOverride)
       if isSupportedTopLevelClass(prescanDefn) && (defn.k is syntax.Cls) then
         out += defn
       collectTopLevelClasses(rst, out)
@@ -1519,15 +1519,23 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 )
               directFieldAssign(selCls, selSym, lhsExpr, rhsExpr)
           case S(selSym: BlockMemberSymbol) =>
-            val fieldSym = selSym.asTrm.get
-            if ctx.getMethodInfo(fieldSym).nonEmpty then
-              errExpr(
-                Ls(msg"WatBuilder::returningTerm for AssignField(...) to class methods is not implemented yet" -> nme.toLoc),
-                extraInfo = S(assign.showAsTree),
-              )
-            else
-              val selCls = fieldSym.owner.flatMap(_.asBlkMember).get
-              directFieldAssign(selCls, fieldSym, lhsExpr, rhsExpr)
+            selSym.asTrm match
+              case S(fieldSym) =>
+                if ctx.getMethodInfo(fieldSym).nonEmpty then
+                  errExpr(
+                    Ls(msg"WatBuilder::returningTerm for AssignField(...) to class methods is not implemented yet" -> nme.toLoc),
+                    extraInfo = S(assign.showAsTree),
+                  )
+                else
+                  val selCls = fieldSym.owner.flatMap(_.asBlkMember).get
+                  directFieldAssign(selCls, fieldSym, lhsExpr, rhsExpr)
+              case N =>
+                errExpr(
+                  Ls(
+                    msg"Expected resolved AssignField(...) expression `${selSym.toString}` to be a term symbol, but it has no associated term symbol" -> nme.toLoc
+                  ),
+                  extraInfo = S(assign.showAsTree),
+                )
           case S(otherSym) =>
             lastWords(
               s"Expected resolved AssignField(...) expression to be a TermSymbol, but got $otherSym (${
@@ -1726,7 +1734,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       lastWords(s"Expected class ${clsLikeDefn.sym} to have an object tag")
 
                     val ctorInfo =
-                      if !isSingletonObj && clsLikeDefn.sym.nameIsMeaningful then
+                      if !isSingletonObj then
                         S(ctx.getConstructorInfo(clsLikeDefn.sym).getOrElse:
                           lastWords(s"Missing constructor metadata for class ${clsLikeDefn.sym}")
                         )

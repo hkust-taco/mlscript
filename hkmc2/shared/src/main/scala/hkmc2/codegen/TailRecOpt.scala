@@ -388,7 +388,7 @@ class TailRecOpt(using State, TL, Raise):
           Call(sel, args)(true, false, false),
           false
         )
-        FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(false)
+        FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(false, N)
     
     val params =
       val initial = paramSyms.map(Param.simple(_))
@@ -398,7 +398,7 @@ class TailRecOpt(using State, TL, Raise):
     val loopDefn = FunDefn(
       owner, bms, dSym,
       PlainParamList(params) :: Nil,
-      loop)(false)
+      loop)(false, N)
     
     if funs.size === 1 then (N, loopDefn :: Nil)
     else (S(loopDefn), rewrittenFuns)
@@ -436,13 +436,13 @@ class TailRecOpt(using State, TL, Raise):
       val companion = c.companion.map: comp =>
         val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
         comp.copy(methods = cMtds)
-      c.copy(companion = companion)
+      c.copy(companion = companion)(c.configOverride)
     else
       val mtds = optFunctionsFlat(c.methods, S(c.isym))
       val companion = c.companion.map: comp =>
         val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
         comp.copy(methods = cMtds)
-      c.copy(methods = mtds, companion = companion)
+      c.copy(methods = mtds, companion = companion)(c.configOverride)
   
   def transform(b: Block) =
     /* To avoid `x` being overridden in the following when the lifter is not run:
@@ -468,7 +468,10 @@ class TailRecOpt(using State, TL, Raise):
       case f: FunDefn => L(f)
       case c: ClsLikeDefn => R(c)
       case _ => die // unreachable as floatOutDefns only floats out FunDefns and ClsLikeDefns
-    val (optFNew, optF) = optFunctions(funs, N)
+    // Filter out functions that have a @config annotation disabling tailRecOpt
+    val (tailRecFuns, _) = funs.partition: f =>
+      f.configOverride.forall(_.tailRecOpt)
+    val (optFNew, optF) = optFunctions(tailRecFuns, N)
     val optC = optClasses(clses)
     
     val fMap = optF.map(f => f.dSym -> f).toMap

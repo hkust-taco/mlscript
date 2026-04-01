@@ -518,7 +518,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           tSym,
           fldSym,
           Value.Ref(varSym)
-        )
+        )(N)
         
         (sym -> varSym, p, vd)
     
@@ -534,7 +534,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         case (acc, (_, _, vd)) => Define(vd, acc),
       N,
       N,
-    )
+    )(N)
     
     (defn, sortedVars.iterator.map(x => (x.ctorSyms.local, x.valDefn.tsym)).toList)
   
@@ -583,7 +583,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           case Some(_) => die 
           case None => N
         
-        k(newCls.copy(companion = newComp))
+        k(newCls.copy(companion = newComp)(newCls.configOverride))
       case _ => super.applyDefn(defn)(k)
 
   /**
@@ -851,7 +851,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       val rewritten = rewriter.rewrite(obj.fun.body)
       val withCapture = addExtraSyms(rewritten)
-      LifterResult(obj.fun.copy(body = withCapture)(obj.fun.forceTailRec), rewriter.extraDefns.toList)
+      LifterResult(obj.fun.copy(body = withCapture)(obj.fun.forceTailRec, obj.fun.configOverride), rewriter.extraDefns.toList)
   
   class RewrittenClassCtor(override val obj: ScopedObject.ClassCtor)(using ctx: LifterCtxNew) extends RewrittenScope[Unit](obj):
     override lazy val capturePath: Path = lastWords("tried to create a capture class for a class ctor")
@@ -881,7 +881,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         preCtor = rewrittenPrector,
         privateFields = captureSym :: liftedObjsSyms.values.toList ::: obj.cls.privateFields,
         methods = newMtds,
-      )
+      )(obj.cls.configOverride)
       LifterResult(newCls, rewriterCtor.extraDefns.toList ::: rewriterPreCtor.extraDefns.toList ::: extras)
 
   class RewrittenCompanion(override val obj: ScopedObject.Companion)(using ctx: LifterCtxNew)
@@ -946,7 +946,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val rewriter = new BlockRewriter
       val newBod = rewriter.rewrite(fun.body)
       val withCapture = addExtraSyms(newBod)
-      val newDefn = fun.copy(owner = N, sym = mainSym, dSym = mainDsym, params = newPlists, body = withCapture)(fun.forceTailRec)
+      val newDefn = fun.copy(owner = N, sym = mainSym, dSym = mainDsym, params = newPlists, body = withCapture)(fun.forceTailRec, fun.configOverride)
       LifterResult(newDefn, rewriter.extraDefns.toList)
     
     // Definition with the auxiliary parameters merged into the second parameter list.
@@ -976,7 +976,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         auxDsym,
         newPlists,
         bod
-      )(false)
+      )(false, N)
     
     private val aux = Lazy[Defn](mkAuxDefn)
     
@@ -1106,7 +1106,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         ret
       ))
       
-      FunDefn(N, flattenedSym, flattenedDSym, params :: Nil, bod)(false)
+      FunDefn(N, flattenedSym, flattenedDSym, params :: Nil, bod)(false, N)
     
     private val flat = Lazy[Defn](mkFlattenedDefn)
     
@@ -1176,7 +1176,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         privateFields = captureSym :: extraPrivSyms.toList ::: obj.cls.privateFields,
         methods = newMtds,
         auxParams = newAuxList
-      )
+      )(obj.cls.configOverride)
       val extrasDefns = rewriterCtor.extraDefns.toList ::: rewriterPreCtor.extraDefns.toList ::: extras
       LifterResult(newCls, flat :: extrasDefns)
   

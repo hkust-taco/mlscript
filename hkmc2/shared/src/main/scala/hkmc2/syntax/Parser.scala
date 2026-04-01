@@ -312,6 +312,19 @@ abstract class Parser(
     case (IDENT("@", _), l0) :: rest if rest.nonEmpty =>
       consume
       blockOf(rule, simpleExpr(AppPrec, allowNewlines = allowNewlines) :: annotations, allowNewlines)
+    case (IDENT("#", _), l0) :: (IDENT(dirName, _), l1) :: rest if rest.nonEmpty =>
+      consume
+      val prefix = Tree.Ident(dirName).withLoc(S(l1)).asInstanceOf[Tree.Ident]
+      consume
+      val body = yeetSpaces match
+        case (br @ BRACKETS(Round, toks), loc) :: _ =>
+          consume
+          val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
+          Tree.Tup(as).withLoc(S(loc))
+        case _ =>
+          err(msg"Expected arguments for '#${dirName}' directive" -> S(l0) :: Nil)
+          Tree.Error()
+      Tree.Directive(prefix, body).withLoc(S(l0)) :: blockContOf(rule)
     case (tok @ (id: IDENT), loc) :: _ if id.name =/= ":" =>
       Keyword.all.get(id.name) match
       case S(kw) =>

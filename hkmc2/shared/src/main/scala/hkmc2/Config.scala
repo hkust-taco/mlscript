@@ -4,6 +4,7 @@ import mlscript.utils.*, shorthands.*
 import utils.*
 
 import Config.*
+import Message.MessageContext
 
 
 /** The compilation target of a program. */
@@ -105,4 +106,158 @@ object Config:
 
 end Config
 
+
+object ConfigParser:
+  import syntax.Tree
+  import syntax.Tree.*
+  import syntax.Keyword
+  
+  /** Parse a list of config override arguments (from the Tup tree) into a Config modification function. */
+  def parseOverrides(args: Ls[Tree])(using Raise): Config => Config =
+    args.foldLeft(identity[Config]): (acc, arg) =>
+      val override_ = parseOverride(arg)
+      cfg => override_(acc(cfg))
+  
+  /** Parse a single config override argument. */
+  def parseOverride(arg: Tree)(using Raise): Config => Config = arg match
+    case InfixApp(Ident(name), Keywrd(Keyword.`:`), value) =>
+      parseField(name, value)
+    case _ =>
+      raise(ErrorReport(
+        msg"Unsupported config override syntax" -> arg.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
+      identity
+  
+  private def parseBool(tree: Tree)(using Raise): Opt[Bool] = tree match
+    case BoolLit(v) => S(v)
+    case Ident("true") => S(true)
+    case Ident("false") => S(false)
+    case _ =>
+      raise(ErrorReport(
+        msg"Expected a boolean value" -> tree.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
+      N
+  
+  private def parseInt(tree: Tree)(using Raise): Opt[Int] = tree match
+    case IntLit(v) => S(v.toInt)
+    case _ =>
+      raise(ErrorReport(
+        msg"Expected an integer value" -> tree.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
+      N
+
+  /** Parse the `None`/`Some(...)` syntax for optional config fields.
+    * Also accepts unwrapped values as a convenience (treated as `Some(value)`). */
+  private def parseOpt[A](tree: Tree)(parseInner: Tree => Opt[A])(using Raise): Opt[Opt[A]] = tree match
+    case Ident("None") | Ident("N") =>
+      S(N)
+    case App(Ident("Some") | Ident("S"), Tup(inner :: Nil)) =>
+      parseInner(inner).map(v => S(v))
+    case other =>
+      parseInner(other).map(v => S(v))
+  
+  private def parseStackSafety(tree: Tree)(using Raise): Opt[Config.StackSafety] = tree match
+    case App(Ident("StackSafety"), Tup(args)) =>
+      var stackLimit = Config.StackSafety.default.stackLimit
+      args.foreach:
+        case InfixApp(Ident("stackLimit"), Keywrd(Keyword.`:`), value) =>
+          parseInt(value).foreach(v => stackLimit = v)
+        case IntLit(v) =>
+          stackLimit = v.toInt
+        case other =>
+          raise(ErrorReport(
+            msg"Unsupported StackSafety argument" -> other.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation))
+      S(Config.StackSafety(stackLimit))
+    case IntLit(v) =>
+      S(Config.StackSafety(v.toInt))
+    case _ =>
+      raise(ErrorReport(
+        msg"Expected StackSafety(...) or an integer" -> tree.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
+      N
+  
+  private def parseEffectHandlers(tree: Tree, current: Opt[Config.EffectHandlers])(using Raise): Opt[Config.EffectHandlers] = tree match
+    case App(Ident("EffectHandlers"), Tup(args)) =>
+      val base = current.getOrElse(Config.EffectHandlers(debug = false, stackSafety = N))
+      var debug = base.debug
+      var stackSafety = base.stackSafety
+      var checkInstantiateEffect = base.checkInstantiateEffect
+      var softLifterError = base.softLifterError
+      var doNotInstrumentTopLevelModCtor = base.doNotInstrumentTopLevelModCtor
+      args.foreach:
+        case InfixApp(Ident("debug"), Keywrd(Keyword.`:`), value) =>
+          parseBool(value).foreach(v => debug = v)
+        case InfixApp(Ident("stackSafety"), Keywrd(Keyword.`:`), value) =>
+          parseOpt(value)(parseStackSafety).foreach(v => stackSafety = v)
+        case InfixApp(Ident("checkInstantiateEffect"), Keywrd(Keyword.`:`), value) =>
+          parseBool(value).foreach(v => checkInstantiateEffect = v)
+        case InfixApp(Ident("softLifterError"), Keywrd(Keyword.`:`), value) =>
+          parseBool(value).foreach(v => softLifterError = v)
+        case InfixApp(Ident("doNotInstrumentTopLevelModCtor"), Keywrd(Keyword.`:`), value) =>
+          parseBool(value).foreach(v => doNotInstrumentTopLevelModCtor = v)
+        case other =>
+          raise(ErrorReport(
+            msg"Unsupported EffectHandlers argument" -> other.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation))
+      S(Config.EffectHandlers(debug, stackSafety, checkInstantiateEffect, softLifterError, doNotInstrumentTopLevelModCtor))
+    case _ =>
+      raise(ErrorReport(
+        msg"Expected EffectHandlers(...)" -> tree.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
+      N
+  
+  /** Parse a single field override like `tailRecOpt: false`. */
+  private def parseField(name: Str, value: Tree)(using Raise): Config => Config = name match
+    case "tailRecOpt" => parseBool(value) match
+      case S(v) => _.copy(tailRecOpt = v)
+      case N => identity
+    case "noFreeze" => parseBool(value) match
+      case S(v) => _.copy(noFreeze = v)
+      case N => identity
+    case "noModuleCheck" => parseBool(value) match
+      case S(v) => _.copy(noModuleCheck = v)
+      case N => identity
+    case "rewriteWhileLoops" => parseBool(value) match
+      case S(v) => _.copy(rewriteWhileLoops = v)
+      case N => identity
+    case "stageCode" => parseBool(value) match
+      case S(v) => _.copy(stageCode = v)
+      case N => identity
+    case "qqEnabled" => parseBool(value) match
+      case S(v) => _.copy(qqEnabled = v)
+      case N => identity
+    case "funcToCls" => parseBool(value) match
+      case S(v) => _.copy(funcToCls = v)
+      case N => identity
+    case "commentGeneratedCode" => parseBool(value) match
+      case S(v) => _.copy(commentGeneratedCode = v)
+      case N => identity
+    case "effectHandlers" =>
+      cfg =>
+        parseOpt(value)(v => parseEffectHandlers(v, cfg.effectHandlers)) match
+          case S(v) => cfg.copy(effectHandlers = v)
+          case N => cfg
+    case "liftDefns" =>
+      parseOpt(value)(_ => S(Config.LiftDefns())) match
+        case S(v) => _.copy(liftDefns = v)
+        case N => identity
+    case "deforest" =>
+      parseOpt(value)(_ => S(Config.Deforest.default)) match
+        case S(v) => _.copy(deforest = v)
+        case N => identity
+    case "sanityChecks" =>
+      parseOpt(value)(_ => S(Config.SanityChecks(light = true))) match
+        case S(v) => _.copy(sanityChecks = v)
+        case N => identity
+    case "patMatConsequentSharingThreshold" =>
+      parseInt(value) match
+        case S(v) => _.copy(patMatConsequentSharingThreshold = S(v))
+        case N => identity
+    case _ =>
+      raise(ErrorReport(
+        msg"Unknown config field '${name}'" -> value.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
+      identity
+end ConfigParser
 
