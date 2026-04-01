@@ -497,19 +497,19 @@ class TailRecOpt(using State, TL, Raise):
       optFNew.foldLeft(transformer.applyBlock(b)):
         case (acc, f) => Define(f, acc))
     
-    // Report @tailrec on nested functions that weren't processed by the optimization above.
-    // Only top-level function definitions are gathered and optimized; nested functions
-    // (inside other function bodies) are silently skipped. This traversal catches them.
-    // `depth` tracks FunDefn nesting; safe because this traverser is used exactly once.
-    var depth = 0
+    // Report @tailrec on functions that weren't processed by the optimization above,
+    // e.g. nested functions or functions with @config(tailRecOpt: false).
+    // Class/module methods are handled separately by optClasses and are skipped here.
+    val tailRecFunSyms = tailRecFuns.map(_.dSym).toSet
     new BlockTraverser:
       override def applyFunDefn(fun: FunDefn): Unit =
-        if depth > 0 && fun.forceTailRec then
+        if fun.forceTailRec && !tailRecFunSyms.contains(fun.dSym) then
           raise(ErrorReport(
-            msg"Nested functions may not yet be marked @tailrec." -> fun.dSym.toLoc :: Nil))
-        depth += 1
+            msg"This @tailrec function was not processed by the tail-call optimizer." -> fun.dSym.toLoc :: Nil))
         super.applyFunDefn(fun)
-        depth -= 1
+      override def applyDefn(defn: Defn): Unit = defn match
+        case _: ClsLikeDefn => ()
+        case _ => super.applyDefn(defn)
     .applyBlock(result)
     
     result

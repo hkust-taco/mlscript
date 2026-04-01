@@ -95,7 +95,7 @@ fun f(x) =
   @tailrec
   fun g() = g()
   g()
-//│ ╔══[COMPILATION ERROR] Nested functions may not yet be marked @tailrec.
+//│ ╔══[COMPILATION ERROR] This @tailrec function was not processed by the tail-call optimizer.
 //│ ║  l.96: 	  fun g() = g()
 //│ ╙──      	      ^
 
@@ -104,7 +104,7 @@ fun scan(idx, acc) =
   @tailrec
   fun go(idx, tok) = scan(idx, tok)
   go(idx, acc)
-//│ ╔══[COMPILATION ERROR] Nested functions may not yet be marked @tailrec.
+//│ ╔══[COMPILATION ERROR] This @tailrec function was not processed by the tail-call optimizer.
 //│ ║  l.105: 	  fun go(idx, tok) = scan(idx, tok)
 //│ ╙──       	      ^^
 
@@ -118,7 +118,14 @@ fun scan(idx, acc) =
 //│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
 //│ ║  l.114: 	fun scan(idx, acc) =
 //│ ╙──       	    ^^^^
-//│ ╔══[COMPILATION ERROR] Nested functions may not yet be marked @tailrec.
+//│ ╔══[COMPILATION ERROR] This @tailrec function was not processed by the tail-call optimizer.
 //│ ║  l.116: 	  fun go(idx, tok) = scan(idx, tok)
 //│ ╙──       	      ^^
 
+:e
+@tailrec
+@config(tailRecOpt: false)
+fun foo() = foo()
+//│ ╔══[COMPILATION ERROR] This @tailrec function was not processed by the tail-call optimizer.
+//│ ║  l.126: 	fun foo() = foo()
+//│ ╙──       	    ^^^
