@@ -395,34 +395,27 @@ fun foo(x, y, z) = if x is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo2;
 //│ foo2 = function foo(x1, y1, z1) {
-//│   let value, tmp7;
-//│   split_root$2: {
-//│     switch (x1) {
-//│       case 0:
-//│         switch (y1) {
-//│           case 0:
-//│             switch (z1) {
-//│               case 0:
-//│                 tmp7 = "000";
-//│                 break split_root$2;
-//│               case 1:
-//│                 tmp7 = "001";
-//│                 break split_root$2;
-//│             }
-//│             break;
-//│           case 1:
-//│             tmp7 = "01";
-//│             break split_root$2;
-//│         }
-//│         break;
-//│       case 1:
-//│         tmp7 = "1";
-//│         break split_root$2;
-//│     }
-//│     value = "hello";
-//│     tmp7 = expensive_call(value);
+//│   let value;
+//│   switch (x1) {
+//│     case 0:
+//│       switch (y1) {
+//│         case 0:
+//│           switch (z1) {
+//│             case 0:
+//│               return "000";
+//│             case 1:
+//│               return "001";
+//│           }
+//│           break;
+//│         case 1:
+//│           return "01";
+//│       }
+//│       break;
+//│     case 1:
+//│       return "1";
 //│   }
-//│   return tmp7
+//│   value = "hello";
+//│   return expensive_call(value)
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -468,19 +461,12 @@ fun foo(x, y, z) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo4;
 //│ foo4 = function foo(x1, y1, z1) {
-//│   let tmp7;
-//│   split_root$2: {
-//│     if (x1 instanceof A1.class) {
-//│       if (y1 instanceof B1.class) {
-//│         if (z1 instanceof C1.class) {
-//│           tmp7 = "Hello";
-//│           break split_root$2
-//│         }
-//│       }
+//│   if (x1 instanceof A1.class) {
+//│     if (y1 instanceof B1.class) {
+//│       if (z1 instanceof C1.class) { return "Hello" }
 //│     }
-//│     tmp7 = "Goodbye";
 //│   }
-//│   return tmp7
+//│   return "Goodbye"
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -491,19 +477,14 @@ fun foo(x, y, z) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo5;
 //│ foo5 = function foo(x1, y1, z1) {
-//│   let tmp7;
-//│   split_root$2: {
-//│     if (x1 instanceof A1.class) {
-//│       if (y1 instanceof B1.class) {
-//│         if (z1 instanceof C1.class) {
-//│           tmp7 = "Hello";
-//│           break split_root$2
-//│         }
+//│   if (x1 instanceof A1.class) {
+//│     if (y1 instanceof B1.class) {
+//│       if (z1 instanceof C1.class) {
+//│         return "Hello"
 //│       }
 //│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   }
-//│   return tmp7
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
