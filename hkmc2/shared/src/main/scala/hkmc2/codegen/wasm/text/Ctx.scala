@@ -361,7 +361,7 @@ class Ctx extends ToWat:
   def addFunctionImport(sym: Opt[Symbol], funcImport: FuncImport): FuncIdx =
     addFunctionImport(
       sym,
-      Import(funcImport.module, funcImport.name, ExternType.Func(funcImport.id, funcImport.typeIdx)),
+      Import(funcImport.module, funcImport.name, ExternType.Func(funcImport.id, TypeUse(funcImport.typeIdx))),
     )
 
   /** Adds a function import into this context.

@@ -199,14 +199,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       "mlx_exn",
       ctx.addTag(TagInfo(
         id = SymIdx("mlx_exn"),
-        typeUse = ctx.addType(
+        typeUse = TypeUse(ctx.addType(
           sym = N,
           TypeInfo(
             id = SymIdx(symNme),
             FunctionType(params = Seq(WasmParam("ex", RefType.anyref)), results = Seq.empty),
             objectTag = S(ctx.getFreshObjectTag()),
           ),
-        ),
+        )),
       )),
     )
 
@@ -264,7 +264,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         name = ExternIntrinsics.StringFromUtf16ImportName,
         externType = ExternType.Func(
           id = SymIdx(ExternIntrinsics.StringFromUtf16ImportName),
-          typeUse = importTy,
+          typeUse = TypeUse(importTy),
         ),
       )
   end getOrLoadStrCtorFunction
@@ -522,12 +522,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             symToField.find((fieldSym, _) => fieldSym.nme == sym.nme).map((_, v) => v)
           case _ => N
       .map(_.id)
-    FieldIdx(
+    FieldIdx(SymIdx(
       fieldIdx getOrElse:
         lastWords(
           s"Missing field `${sym.toString}` in struct `${thisSym.toString}` with type `${structInfo.toWat.mkString()}`",
         ),
-    )
+    ))
   end fieldSelect
 
   def result(r: codegen.Result)(using Ctx, Raise, Scope): Expr = r match
@@ -826,7 +826,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     )
     val funcInfo = FuncInfo(
       id = SymIdx(scope.allocateName(TempSymbol(N, name))),
-      typeUse = funcTy,
+      typeUse = TypeUse(funcTy),
       params = params,
       nResults = 1,
       locals = Seq.empty,
@@ -1068,7 +1068,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       val funcInfo =
                         FuncInfo(
                           sym,
-                          typeUse = funcTy,
+                          typeUse = TypeUse(funcTy),
                           params = ps.params.zip(params.map(_._2)).map((p, nme) => p.sym -> nme),
                           nResults = bodyWat.resultTypes.length,
                           locals = locals,
@@ -1140,7 +1140,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       Seq(
                         local.set(thisVar, struct.new_default(typeref)),
                         struct.set(
-                          FieldIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id),
+                          FieldIdx(SymIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id)),
                           ref.cast(
                             local.get(thisVar, RefType.anyref),
                             RefType(typeref, nullable = false),
@@ -1187,7 +1187,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       FuncInfo(
                         id =
                           SymIdx(ctorId.getOrElse(scope.allocateName(TempSymbol(N, s"${clsLikeDefn.sym.nme}_ctor")))),
-                        typeUse = funcTy,
+                        typeUse = TypeUse(funcTy),
                         params = ctorParams,
                         nResults = ctorCode.resultTypes.length,
                         locals = ctorLocals,
@@ -1400,7 +1400,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 // Safe to cast and extract tag since ref.test passed
                 val scrutAsObject = ref.cast(scrutExpr, baseObjectRefType(nullable = false))
                 val scrutTag = struct.get(
-                  FieldIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id),
+                  FieldIdx(SymIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id)),
                   scrutAsObject,
                   I32Type,
                 )
@@ -1569,7 +1569,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     )
     val entryFnInfo = FuncInfo(
       id = SymIdx(entryNme),
-      typeUse = entryFnTy,
+      typeUse = TypeUse(entryFnTy),
       params = Seq.empty,
       nResults = 1,
       // TODO(Derppening): Should we place top-level scope variables in the global section?
@@ -1608,7 +1608,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         sym = N,
         FuncInfo(
           id = SymIdx(scope.allocateName(TempSymbol(N, "start"))),
-          typeUse = initTy,
+          typeUse = TypeUse(initTy),
           params = Seq.empty,
           nResults = 0,
           locals = Seq.empty,

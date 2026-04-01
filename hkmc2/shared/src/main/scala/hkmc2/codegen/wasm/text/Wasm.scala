@@ -165,9 +165,6 @@ type HeapType = AbsHeapType | TypeIdx
 case class TypeUse(typeIdx: TypeIdx) extends ToWat:
   def toWat: Document = doc"(type ${typeIdx.toWat})"
 
-given Conversion[TypeIdx, TypeUse] with
-  def apply(typeIdx: TypeIdx): TypeUse = TypeUse(typeIdx)
-
 sealed abstract class Index extends ToWat
 
 /** A numeric index. */
@@ -177,15 +174,9 @@ sealed abstract class Index extends ToWat
 case class NumIdx(val index: Int) extends Index:
   def toWat: Document = doc"${index.toString}"
 
-given Conversion[Int, NumIdx] with
-  def apply(index: Int): NumIdx = NumIdx(index)
-
 /** A symbolic identifier. */
 case class SymIdx(val id: Str) extends Index:
   def toWat: Document = doc"$$$id"
-
-given Conversion[Str, SymIdx] with
-  def apply(id: Str): SymIdx = SymIdx(id)
 
 /** An index that is bound to an index space. */
 sealed abstract class CtxIdx(idx: Index) extends ToWat:
@@ -261,9 +252,6 @@ case class FuncImport(module: Str, name: Str, id: SymIdx, typeIdx: TypeIdx) exte
 /** A memory use entry. */
 case class MemUse(memidx: MemIdx) extends ToWat:
   def toWat: Document = doc"(memory ${memidx.toWat})"
-
-given Conversion[MemIdx, MemUse] with
-  def apply(memidx: MemIdx): MemUse = MemUse(memidx)
 
 object DataSegment:
   object Passive:
