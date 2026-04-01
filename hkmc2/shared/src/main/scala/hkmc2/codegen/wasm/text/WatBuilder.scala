@@ -28,6 +28,9 @@ extension (instr: FoldedInstr)
     instr.mnemonic.split('.').optionUnless(_.size == 1).map(_.head)
 
 object WatBuilder:
+  /** The maximum length for symbolic identifiers of string constants. */
+  val StringConstantIdentMaxLength = 16
+
   object ExternIntrinsics:
     val SystemModule = "system"
     val SystemMemoryImportName = "mem"
@@ -1587,7 +1590,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       stringLits.foreach: (s, lit) =>
         if lit.byteLen > 0 then
           ctx.addDataSegment(DataSegment.Active(
-            id = SymIdx(scope.allocateName(TempSymbol(N, s))),
+            id = SymIdx(scope.allocateName(TempSymbol(N, s.take(WatBuilder.StringConstantIdentMaxLength)))),
             offset = i32.const(lit.offset),
             bytes = lit.watBytes,
             memuse = N,
