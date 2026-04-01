@@ -128,6 +128,19 @@ fun foo(x) = { x.call(), print(42) }
 //│ let foo²; define foo² as fun foo³(x) { do x.call﹖(); return Predef⁰.print⁰(42) }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+
+:fixme // Configuration is not taken into account, here
+#config(effectHandlers: Some(EffectHandlers()))
+handle h = Object with {}
+foo(h)
+//│ ╔══[COMPILATION ERROR] Effect handlers are not enabled
+//│ ║  l.134: 	handle h = Object with {}
+//│ ║         	           ^^^^^^^^^^^^^^
+//│ ║  l.135: 	foo(h)
+//│ ╙──       	^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
 #config(effectHandlers: Some(EffectHandlers(stackSafety: Some(StackSafety(100)))))
 #config(liftDefns: Some(LiftDefns)) // * Needed by effect handlers instrumentation
 
@@ -137,5 +150,20 @@ handle h = Object with
   fun call()(resume) = "Aborted!"
 foo(h)
 //│ = "Aborted!"
+
+
+:fixme // `#` should probably be treated as a prefix keyword, not an operator identifier
+print(42)
+#config(liftDefns: None)
+//│ ╔══[COMPILATION ERROR] Name not found: #
+//│ ║  l.157: 	#config(liftDefns: None)
+//│ ╙──       	^
+//│ ╔══[COMPILATION ERROR] Name not found: config
+//│ ║  l.157: 	#config(liftDefns: None)
+//│ ╙──       	 ^^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: None
+//│ ║  l.157: 	#config(liftDefns: None)
+//│ ╙──       	                   ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
