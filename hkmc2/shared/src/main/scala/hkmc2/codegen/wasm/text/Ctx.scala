@@ -264,7 +264,7 @@ class Ctx extends ToWat:
   private val wasmIntrinsicTypes = MutMap.empty[WasmIntrinsicType, TypeIdx]
   private val wasmIntrinsicTags = MutMap.empty[Str, TagIdx]
 
-  private val cachedMemoryImport = MutMap.empty[(Str, Str), Int]
+  private val cachedMemoryImport = MutMap.empty[(Str, Str), SymIdx]
   private val cachedFunctionImports = MutMap.empty[(Str, Str), FuncIdx]
 
   private var labelTargets = Nil: List[(LabelSymbol, Ctx.LabelTarget)]
@@ -388,11 +388,14 @@ class Ctx extends ToWat:
     val key = module -> name
     cachedMemoryImport.get(key) match
       case S(idx) =>
-        val existing = filterImportsByType[ExternType.Mem].drop(idx).head._2
+        val numIdx = filterImportsByType[ExternType.Mem].zipWithIndex.collectFirst:
+          case ((symIdx, _), i) if symIdx == idx => i
+        .get
+        val existing = filterImportsByType[ExternType.Mem].drop(numIdx).head._2
         val newMin = existing.externType.memType.lim.min max minPages
         if newMin > existing.externType.memType.lim.min then
           imports.update(
-            idx,
+            numIdx,
             Import(
               module,
               name,
@@ -402,7 +405,7 @@ class Ctx extends ToWat:
       case N =>
         val idx = filterImportsByType[ExternType.Mem].size
         imports += Import(module, name, ExternType.Mem(SymIdx(name), MemType(Limits(minPages))))
-        cachedMemoryImport(key) = idx
+        cachedMemoryImport(key) = SymIdx(name)
 
   /** Returns the minimum page requirement of memory import (`module`, `name`) if present. */
   @deprecated("Use `getMemoryImport` instead to get the full memory import information.")
