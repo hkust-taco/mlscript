@@ -92,8 +92,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           r.expanded
       case t => t
   
-  val lowerHandlers: Bool = config.effectHandlers.isDefined
-  val lift: Bool = config.liftDefns.isDefined
+  var lowerHandlers: Bool = config.effectHandlers.isDefined
+  var lift: Bool = config.liftDefns.isDefined
 
   private lazy val wasmBinaryIntrinsicMap: Map[Str, Str] = Map(
     "+" -> "plus_impl",
@@ -1070,6 +1070,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     .foldLeft(identity[Config]): (acc, modify) =>
       cfg => modify(acc(cfg))
     val effectiveConfig = configModify(config)
+    
+    // * Update mutable flags to reflect the effective config before block lowering
+    lowerHandlers = effectiveConfig.effectHandlers.isDefined
+    lift = effectiveConfig.liftDefns.isDefined
     
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
     
