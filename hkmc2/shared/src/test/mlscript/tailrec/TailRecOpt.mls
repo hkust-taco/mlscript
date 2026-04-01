@@ -203,17 +203,16 @@ a.x
 // Functions inside module definitions are lifted to the top level. This means they cannot yet be optimized.
 :lift
 :fixme
-:noInline
 module A with
   fun f(x) =
     fun g(x) = if x < 0 then 0 else @tailcall f(x)
     @tailcall g(x - 1)
 A.f(10000)
 //│ ╔══[COMPILATION ERROR] This tail call exits the current scope and is not optimized.
-//│ ║  l.209: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
+//│ ║  l.208: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
 //│ ╙──       	                                              ^^^^
 //│ ╔══[COMPILATION ERROR] This tail call exits the current scope and is not optimized.
-//│ ║  l.210: 	    @tailcall g(x - 1)
+//│ ║  l.209: 	    @tailcall g(x - 1)
 //│ ╙──       	              ^^^^^^^^
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
@@ -240,12 +239,12 @@ class A with
   fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 (new A).f(10)
 //│ ╔══[COMPILATION ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.239: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.238: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	                                                      ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Class methods may not yet be marked @tailrec.
-//│ ║  l.239: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.238: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	               ^
 //│ ╔══[COMPILATION ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.240: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
+//│ ║  l.239: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 //│ ╙──       	                                             ^^^^^^^^
 //│ = 0

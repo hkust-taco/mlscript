@@ -9,11 +9,10 @@ fun f(x) =
 //│ ╙──     	            ^^^^
 
 :e
-:noInline
 fun f(x) = 2
 fun g(x) = @tailcall f(x)
 //│ ╔══[COMPILATION ERROR] This call is not optimized as it does not directly recurse through its parent function.
-//│ ║  l.14: 	fun g(x) = @tailcall f(x)
+//│ ║  l.13: 	fun g(x) = @tailcall f(x)
 //│ ╙──      	                     ^^^^
 
 :e
@@ -21,10 +20,10 @@ fun g(x) = @tailcall f(x)
   g(x)
 fun g(x) = f(x); f(x)
 //│ ╔══[COMPILATION ERROR] This function is not tail recursive.
-//│ ║  l.20: 	@tailrec fun f(x) =
+//│ ║  l.19: 	@tailrec fun f(x) =
 //│ ║        	             ^
 //│ ╟── It could self-recurse through this call, which is not a tail call.
-//│ ║  l.22: 	fun g(x) = f(x); f(x)
+//│ ║  l.21: 	fun g(x) = f(x); f(x)
 //│ ╙──      	           ^^^^
 
 :e
@@ -36,10 +35,10 @@ fun g(x) =
 fun h(x) =
   g(x)
 //│ ╔══[COMPILATION ERROR] This function is not tail recursive.
-//│ ║  l.31: 	@tailrec fun f(x) =
+//│ ║  l.30: 	@tailrec fun f(x) =
 //│ ║        	             ^
 //│ ╟── It could self-recurse through this call, which is not a tail call.
-//│ ║  l.34: 	  f(x)
+//│ ║  l.33: 	  f(x)
 //│ ╙──      	  ^^^^
 
 :e
@@ -51,10 +50,10 @@ fun g(x) =
 fun h(x) =
   f(x)
 //│ ╔══[COMPILATION ERROR] This function is not tail recursive.
-//│ ║  l.46: 	@tailrec fun f(x) =
+//│ ║  l.45: 	@tailrec fun f(x) =
 //│ ║        	             ^
 //│ ╟── It could self-recurse through this call, which is not a tail call.
-//│ ║  l.49: 	  h(x)
+//│ ║  l.48: 	  h(x)
 //│ ╙──      	  ^^^^
 
 :e
@@ -64,14 +63,14 @@ module A with
     @tailcall f(x - 1)
     @tailcall f(x - 1)
 //│ ╔══[COMPILATION ERROR] This call is not in tail position.
-//│ ║  l.64: 	    @tailcall f(x - 1)
+//│ ║  l.63: 	    @tailcall f(x - 1)
 //│ ╙──      	              ^^^^^^^^
 
 :w
 @tailrec
 fun f = 2
 //│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
-//│ ║  l.72: 	fun f = 2
+//│ ║  l.71: 	fun f = 2
 //│ ╙──      	    ^
 
 :w
@@ -79,7 +78,7 @@ module A with
   @tailrec
   fun f() = 2
 //│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
-//│ ║  l.80: 	  fun f() = 2
+//│ ║  l.79: 	  fun f() = 2
 //│ ╙──      	      ^
 
 :fixme // TODO: support
@@ -88,7 +87,7 @@ fun foo() = Foo.bar()
 module Foo with
   fun bar() = foo()
 //│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
-//│ ║  l.87: 	fun foo() = Foo.bar()
+//│ ║  l.86: 	fun foo() = Foo.bar()
 //│ ╙──      	    ^^^
 
 
