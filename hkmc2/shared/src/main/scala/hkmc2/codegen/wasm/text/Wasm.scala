@@ -254,14 +254,14 @@ case class MemUse(memidx: MemIdx) extends ToWat:
 object DataSegment:
   object Passive:
     def apply(id: SymIdx, bytes: Str): Passive = new Passive(id, Seq(bytes))
-  case class Passive(id: SymIdx, bytes: Seq[Str]) extends DataSegment(id, bytes):
+  case class Passive(override val id: SymIdx, bytes: Seq[Str]) extends DataSegment(id, bytes):
     def toWat: Document =
       doc"(data ${id.toWat}${bytes.map(s => s"\"$s\"").mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
 
   object Active:
     def apply(id: SymIdx, offset: Expr, bytes: Str, memuse: Opt[MemUse]): Active =
       new Active(id, offset, Seq(bytes), memuse)
-  case class Active(id: SymIdx, offset: Expr, bytes: Seq[Str], memuse: Opt[MemUse]) extends DataSegment(id, bytes):
+  case class Active(override val id: SymIdx, offset: Expr, bytes: Seq[Str], memuse: Opt[MemUse]) extends DataSegment(id, bytes):
     def toWat: Document =
       doc"(data ${id.toWat}${
           memuse.fold(doc"")(memuse => doc" ${memuse.toWat}")
@@ -274,7 +274,7 @@ object DataSegment:
 end DataSegment
 
 /** A data segment entry. */
-sealed abstract class DataSegment(id: SymIdx, bytes: Seq[Str]) extends ToWat
+sealed abstract class DataSegment(val id: SymIdx, bytes: Seq[Str]) extends ToWat
 
 /** An abstraction over a generic WebAssembly instructions.
   */

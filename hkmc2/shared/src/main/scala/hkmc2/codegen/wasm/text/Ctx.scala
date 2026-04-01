@@ -235,8 +235,8 @@ class Ctx extends ToWat:
   /** [[ArrayBuf]] containing all imports in the module. */
   private val imports = ArrayBuf.empty[Import[?]]
 
-  /** [[ArrayBuf]] containing all data segments in the module. */
-  private val dataSegments = ArrayBuf.empty[DataSegment]
+  /** [[ListMap]] containing all data segments in the module. */
+  private var dataSegments = ListMap.empty[SymIdx, DataSegment]
 
   /** [[ListMap]] containing all function definitions in the module mapped by their symbolic identifiers. */
   private var funcs = ListMap.empty[SymIdx, FuncInfo]
@@ -244,16 +244,16 @@ class Ctx extends ToWat:
   /** [[MutMap]] containing function symbols mapped to the corresponding [[FuncInfo]] or [[Import]] instance. */
   private val namedFuncs = MutMap.empty[Symbol, FuncInfo | Import[ExternType.Func]]
 
-  /** [[ArrayBuf]] containing all tag definitions in the module. */
+  /** [[ListMap]] containing all tag definitions in the module. */
   private var tags = ListMap.empty[SymIdx, TagInfo]
 
-  /** [[ArrayBuf]] containing all global definitions in the module. */
+  /** [[ListMap]] containing all global definitions in the module. */
   private var globals = ListMap.empty[SymIdx, GlobalInfo]
 
   /** [[MutMap]] containing global symbols mapped to their corresponding Wasm global indices. */
   private val namedGlobals = MutMap.empty[Symbol, GlobalInfo]
 
-  /** Stack of [[MutMap]] from local variable symbols to their symbolic indices within the current function scope. */
+  /** Stack of [[ListMap]] from local variable symbols to their symbolic indices within the current function scope. */
   private var locals = ListMap.empty[Local, SymIdx] :: Nil
   private var startFunc = N: Opt[FuncIdx]
 
@@ -418,7 +418,7 @@ class Ctx extends ToWat:
 
   /** Adds a data segment into this context. */
   def addDataSegment(seg: DataSegment): Unit =
-    dataSegments += seg
+    dataSegments = dataSegments + (seg.id -> seg)
 
   /** Adds a tag into this context. */
   def addTag(tagInfo: TagInfo): TagIdx =
@@ -581,7 +581,7 @@ class Ctx extends ToWat:
         (
           types.toSeq.map(_._2.toWat)
             ++ imports.toSeq.map(_.toWat)
-            ++ dataSegments.toSeq.map(_.toWat)
+            ++ dataSegments.toSeq.map(_._2.toWat)
             ++ globals.toSeq.map(_._2.toWat)
             ++ tags.toSeq.map(_._2.toWat)
             ++ startFunc.toSeq.map(funcIdx => doc"(start ${funcIdx.toWat})")
