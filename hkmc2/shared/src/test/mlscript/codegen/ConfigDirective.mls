@@ -1,5 +1,6 @@
 :js
 
+
 // Test 1: #config global directive - test_before has tailRecOpt (default)
 :sir
 fun test_before(n, acc) = if n == 0 then acc else test_before(n - 1, n + acc)
@@ -116,3 +117,25 @@ fun bar(n, acc) = if n == 0 then acc else bar(n - 1, n + acc)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// * Make sure effect handlers with stack safety can be enabled in one go:
+
+// * Here, handlers are not enabled
+:sir
+fun foo(x) = { x.call(), print(42) }
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let foo²; define foo² as fun foo³(x) { do x.call﹖(); return Predef⁰.print⁰(42) }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+#config(effectHandlers: Some(EffectHandlers(stackSafety: Some(StackSafety(100)))))
+#config(liftDefns: Some(LiftDefns)) // * Needed by effect handlers instrumentation
+
+// * Now, they are
+fun foo(x) = { x.call(), print(42) }
+handle h = Object with
+  fun call()(resume) = "Aborted!"
+foo(h)
+//│ = "Aborted!"
+
+
