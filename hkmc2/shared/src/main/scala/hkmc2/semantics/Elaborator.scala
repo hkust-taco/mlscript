@@ -580,17 +580,7 @@ extends Importer with ucs.SplitElaborator:
         PlainFld(subterm(rhs, inAppPrefix = true)) :: Nil)(DummyTup))(DummyApp, N, FlowSymbol("not-app"))
     case tree @ InfixApp(lhs, Keywrd(Keyword.`is` | Keyword.`and` | Keyword.`or`), rhs) =>
       Term.IfLike(Keyword.`if`, IfLikeForm.ReturningIf, shorthandSplit(tree))
-    case InfixApp(lhs, kw, rhs) =>
-      raise:
-        ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
-      Term.Error
-    case OpApp(lhs, Ident("|"), rhs :: Nil) =>
-      Term.CompType(subterm(lhs), subterm(rhs), true)
-    case OpApp(lhs, Ident("&"), rhs :: Nil) =>
-      Term.CompType(subterm(lhs), subterm(rhs), false)
-    case OpApp(lhs, Ident(":="),rhs :: Nil) =>
-      Term.SetRef(subterm(lhs), subterm(rhs))
-    case OpApp(Sel(pre, idn: Ident), Ident("#"), (idp: Ident) :: Nil) =>
+    case InfixApp(Sel(pre, idn: Ident), Keywrd(Keyword.`#`), idp: Ident) =>
       val c = subterm(idn)
       val f = c.symbol.flatMap(_.asCls) match
         case S(cls: ClassSymbol) =>
@@ -603,8 +593,21 @@ extends Importer with ucs.SplitElaborator:
           raise(ErrorReport(msg"Identifier `${idn.name}` does not name a known class symbol." -> idn.toLoc :: Nil))
           N
       Term.SelProj(subterm(pre), c, idp)(f, FlowSymbol.selProj(idp.name), N, S(summon))
-    case App(Ident("#"), Tup(Sel(pre, Ident(name)) :: App(Ident(proj), args) :: Nil)) =>
-      subterm(App(App(Ident("#"), Tup(Sel(pre, Ident(name)) :: Ident(proj) :: Nil)), args))
+    case InfixApp(sel @ Sel(pre, idn: Ident), kw @ Keywrd(Keyword.`#`), App(idp: Ident, args)) =>
+      val proj = subterm(InfixApp(sel, kw, idp))
+      val sym = FlowSymbol.app()
+      val rt = subterm(args)
+      Term.App(proj, rt)(DummyApp, N, sym)
+    case InfixApp(lhs, kw, rhs) =>
+      raise:
+        ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
+      Term.Error
+    case OpApp(lhs, Ident("|"), rhs :: Nil) =>
+      Term.CompType(subterm(lhs), subterm(rhs), true)
+    case OpApp(lhs, Ident("&"), rhs :: Nil) =>
+      Term.CompType(subterm(lhs), subterm(rhs), false)
+    case OpApp(lhs, Ident(":="),rhs :: Nil) =>
+      Term.SetRef(subterm(lhs), subterm(rhs))
     case App(Ident("!"), Tup(rhs :: Nil)) =>
       Term.Deref(subterm(rhs))
     case App(Ident("~"), Tup(rhs :: Nil)) =>

@@ -149,6 +149,14 @@ object Keyword:
   val `new!` = Keyword("new!", N, newRightPrec)
   val `mut` = Keyword("mut", N, newRightPrec)
   
+  // * `#` is both a prefix keyword (for directives like `#config(...)`)
+  // * and an infix operator (for disambiguation like `Lazy#get()`).
+  // * It has very high left precedence (like selection) when used as infix.
+  // * `canStartInfixOnNewLine = false` prevents it from being parsed as infix
+  // * when it appears on a new line after an expression.
+  val hashSelPrec = S(maxPrec.get + charPrecList.length)
+  val `#` = Keyword("#", hashSelPrec, N, canStartInfixOnNewLine = false)
+  
   val __ = Keyword("_", N, N)
   
   val modifiers = Set(
@@ -159,7 +167,7 @@ object Keyword:
   
   type Infix =
     `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type |
-    `where`.type | `with`.type | `and`.type | `or`.type | `then`.type | `else`.type
+    `where`.type | `with`.type | `and`.type | `or`.type | `then`.type | `else`.type | `#`.type
   
   type InfixSplittable =
     `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type |

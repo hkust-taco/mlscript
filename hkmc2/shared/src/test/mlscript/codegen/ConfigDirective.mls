@@ -129,16 +129,22 @@ fun foo(x) = { x.call(), print(42) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
-:fixme // Configuration is not taken into account, here
 #config(effectHandlers: Some(EffectHandlers()))
 handle h = Object with {}
 foo(h)
-//│ ╔══[COMPILATION ERROR] Effect handlers are not enabled
-//│ ║  l.134: 	handle h = Object with {}
-//│ ║         	           ^^^^^^^^^^^^^^
-//│ ║  l.135: 	foo(h)
-//│ ╙──       	^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:222)
+//│ ═══[RUNTIME ERROR] TypeError: x.call is not a function
+//│     at foo (REPL31:1:117)
+//│     at handleBlock$ (REPL34:1:632)
+//│     at Runtime.enterHandleBlock (file:///home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:937:28)
+//│     at REPL34:1:659
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:552:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:887:10)
+//│     at REPLServer.emit (node:events:508:28)
 
 
 #config(effectHandlers: Some(EffectHandlers(stackSafety: Some(StackSafety(100)))))
@@ -152,18 +158,8 @@ foo(h)
 //│ = "Aborted!"
 
 
-:fixme // `#` should probably be treated as a prefix keyword, not an operator identifier
 print(42)
 #config(liftDefns: None)
-//│ ╔══[COMPILATION ERROR] Name not found: #
-//│ ║  l.157: 	#config(liftDefns: None)
-//│ ╙──       	^
-//│ ╔══[COMPILATION ERROR] Name not found: config
-//│ ║  l.157: 	#config(liftDefns: None)
-//│ ╙──       	 ^^^^^^
-//│ ╔══[COMPILATION ERROR] Name not found: None
-//│ ║  l.157: 	#config(liftDefns: None)
-//│ ╙──       	                   ^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ > 42
 
 
