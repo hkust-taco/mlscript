@@ -129,14 +129,11 @@ end FuncInfo
   */
 class GlobalInfo(val id: SymIdx, val valType: ValType, val mutable: Bool, val init: Expr) extends ToWat:
 
-  /** Returns the symbolic identifier document used in global declarations. */
-  private def idDoc: Document = id.toWat
-
   def toWat: Document =
     val typeDoc =
       if mutable then doc"(mut ${valType.toWat})"
       else valType.toWat
-    doc"(global${idDoc.surroundUnlessEmpty(doc" ")} ${typeDoc} ${init.toWat})"
+    doc"(global ${id.toWat} $typeDoc ${init.toWat})"
 end GlobalInfo
 
 /** A Wasm type and its associated information.
