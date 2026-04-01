@@ -11,7 +11,6 @@ class Foo
 //│   static {
 //│     Foo1 = this
 //│   }
-//│   constructor() {}
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
@@ -108,7 +107,7 @@ let t = test()
 :e
 new t
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference.
-//│ ║  l.109: 	new t
+//│ ║  l.108: 	new t
 //│ ║         	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
@@ -127,7 +126,7 @@ new! t
 :e
 new t()
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference.
-//│ ║  l.128: 	new t()
+//│ ║  l.127: 	new t()
 //│ ║         	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
@@ -253,10 +252,10 @@ class Foo with
   val x = 2
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
-//│ ║  l.252: 	  val x = 1
+//│ ║  l.251: 	  val x = 1
 //│ ║         	  ^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.253: 	  val x = 2
+//│ ║  l.252: 	  val x = 2
 //│ ╙──       	  ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo12;
@@ -278,10 +277,10 @@ class Foo with
   val x = 1
   let x = 2
 //│ ╔══[COMPILATION ERROR] Name 'x' is already used
-//│ ║  l.279: 	  let x = 2
+//│ ║  l.278: 	  let x = 2
 //│ ║         	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.278: 	  val x = 1
+//│ ║  l.277: 	  val x = 1
 //│ ╙──       	  ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo14;
@@ -308,7 +307,7 @@ class Foo with
 :e
 class Foo with val x = 1
 //│ ╔══[COMPILATION ERROR] Illegal body of class definition (should be a block; found term definition).
-//│ ║  l.309: 	class Foo with val x = 1
+//│ ║  l.308: 	class Foo with val x = 1
 //│ ╙──       	               ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo16;
@@ -316,7 +315,6 @@ class Foo with val x = 1
 //│   static {
 //│     Foo16 = this
 //│   }
-//│   constructor() {}
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });

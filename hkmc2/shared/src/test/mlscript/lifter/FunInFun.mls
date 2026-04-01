@@ -51,7 +51,7 @@ f(1, 2)
 //│ = 9
 
 :expect 5
-:sjs
+:sir
 fun f(used1, unused1) =
   let used2 = unused1
   fun g(g_arg) =
@@ -61,51 +61,51 @@ fun f(used1, unused1) =
   let foo = g
   foo(used2) + unused2
 f(1, 2)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g3, f3, g$1;
-//│ g$1 = function g$(used1, used2) {
-//│   return (g_arg) => {
-//│     return g3(used1, used2, g_arg)
-//│   }
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g⁰, f⁰, g$⁰;
+//│ define g$⁰ as fun g$¹(used1, used2)(g_arg) {
+//│   return g¹(used1, used2, g_arg)
 //│ };
-//│ g3 = function g(used1, used2, g_arg) {
-//│   return used1 + used2
+//│ define g⁰ as fun g¹(used1, used2, g_arg) {
+//│   let used3;
+//│   set used3 = 2;
+//│   return +⁰(used1, used2)
 //│ };
-//│ f3 = function f(used1, unused1) {
-//│   let used2, unused2, foo2, tmp1, g$here;
-//│   used2 = unused1;
-//│   unused2 = 2;
-//│   g$here = g$1(used1, used2);
-//│   foo2 = g$here;
-//│   tmp1 = runtime.safeCall(foo2(used2));
-//│   return tmp1 + unused2
+//│ define f⁰ as fun f¹(used1, unused1) {
+//│   let used2, unused2, foo, tmp, g$here;
+//│   set used2 = unused1;
+//│   set unused2 = 2;
+//│   set g$here = g$¹(used1, used2);
+//│   set foo = g$here;
+//│   set tmp = foo(used2);
+//│   return +⁰(tmp, unused2)
 //│ };
-//│ f3(1, 2)
+//│ f¹(1, 2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
 
 // preserve order
-:sjs
+:sir
 fun f(a1, a2, a3, a4, a5, a6) =
   fun g = a1 + a2 + a3 + a4 + a5 + a6  
   g
 f(1,2,3,4,5,6)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g4, f4;
-//│ g4 = function g(a1, a2, a3, a4, a5, a6) {
-//│   let tmp1, tmp2, tmp3, tmp4;
-//│   tmp1 = a1 + a2;
-//│   tmp2 = tmp1 + a3;
-//│   tmp3 = tmp2 + a4;
-//│   tmp4 = tmp3 + a5;
-//│   return tmp4 + a6
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g², f²;
+//│ define g² as fun g³(a1, a2, a3, a4, a5, a6) {
+//│   let tmp, tmp1, tmp2, tmp3;
+//│   set tmp = +⁰(a1, a2);
+//│   set tmp1 = +⁰(tmp, a3);
+//│   set tmp2 = +⁰(tmp1, a4);
+//│   set tmp3 = +⁰(tmp2, a5);
+//│   return +⁰(tmp3, a6)
 //│ };
-//│ f4 = function f(a1, a2, a3, a4, a5, a6) {
-//│   let tmp1;
-//│   tmp1 = g4(a1, a2, a3, a4, a5, a6);
-//│   return tmp1
+//│ define f² as fun f³(a1, a2, a3, a4, a5, a6) {
+//│   let tmp;
+//│   set tmp = g³(a1, a2, a3, a4, a5, a6);
+//│   return tmp
 //│ };
-//│ f4(1, 2, 3, 4, 5, 6)
+//│ f³(1, 2, 3, 4, 5, 6)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 21
 
@@ -166,7 +166,7 @@ a.toString() + b + c + d
 //│ ret = Tuple(Tuple(fun, fun), fun)
 
 // some variables mutated, some not
-:sjs
+:sir
 :expect 7
 fun f(unused, immutable, mutated) =
   fun g() =
@@ -176,34 +176,30 @@ fun f(unused, immutable, mutated) =
   let a = g()
   a + h() + unused
 f(1, 2, 1000)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g6, h2, f7, Capture$f3;
-//│ g6 = function g(f$cap, immutable) {
-//│   f$cap.mutated$0 = 2;
-//│   return immutable + f$cap.mutated$0
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g⁴, h⁰, f⁴, Capture$f⁰;
+//│ define g⁴ as fun g⁵(f$cap, immutable) {
+//│   set f$cap.mutated$0 = 2;
+//│   return +⁰(immutable, f$cap.mutated$0⁰)
 //│ };
-//│ h2 = function h(f$cap) {
-//│   return f$cap.mutated$0
+//│ define h⁰ as fun h¹(f$cap) {
+//│   return f$cap.mutated$0⁰
 //│ };
-//│ (class Capture$f2 {
-//│   static {
-//│     Capture$f3 = this
+//│ define Capture$f⁰ as class Capture$f² {
+//│   constructor Capture$f¹ {
+//│     define mutated$0¹ as val mutated$0⁰ = mutated$0;
+//│     end
 //│   }
-//│   constructor(mutated$0) {
-//│     this.mutated$0 = mutated$0;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Capture$f"]; 
-//│ });
-//│ f7 = function f(unused, immutable, mutated) {
-//│   let a1, tmp6, tmp7, f$cap;
-//│   f$cap = new Capture$f3(mutated);
-//│   a1 = g6(f$cap, immutable);
-//│   tmp6 = h2(f$cap);
-//│   tmp7 = a1 + tmp6;
-//│   return tmp7 + unused
 //│ };
-//│ f7(1, 2, 1000)
+//│ define f⁴ as fun f⁵(unused, immutable, mutated) {
+//│   let a, tmp, tmp1, f$cap;
+//│   set f$cap = new mut Capture$f²(mutated);
+//│   set a = g⁵(f$cap, immutable);
+//│   set tmp = h¹(f$cap);
+//│   set tmp1 = +⁰(a, tmp);
+//│   return +⁰(tmp1, unused)
+//│ };
+//│ f⁵(1, 2, 1000)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 7
 
@@ -251,7 +247,7 @@ fun g() =
 g()
 //│ = 3
 
-:sjs
+:sir
 fun g() =
   let y = 0
   fun f(x) =
@@ -266,36 +262,37 @@ fun g() =
     x
   f
 g()(1)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f15, g12, tmp6, Capture$scope07, f$;
-//│ (class Capture$scope06 {
-//│   static {
-//│     Capture$scope07 = this
-//│   }
-//│   constructor(y$0) {
-//│     this.y$0 = y$0;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Capture$scope0"]; 
-//│ });
-//│ f$ = function f$(scope0$cap) {
-//│   return (x1) => {
-//│     return f15(scope0$cap, x1)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let h², f⁶, g⁶, tmp, Capture$scope0⁰, f$⁰;
+//│ define Capture$scope0⁰ as class Capture$scope0² {
+//│   constructor Capture$scope0¹ {
+//│     define y$0⁰ as val y$0¹ = y$0;
+//│     end
 //│   }
 //│ };
-//│ f15 = function f(scope0$cap, x1) {
-//│   scope0$cap.y$0 = 2;
-//│   return x1
+//│ define h² as fun h³(scope0$cap, x, k) {
+//│   set k = 5;
+//│   set x = 4;
+//│   return +⁰(x, scope0$cap.y$0¹)
 //│ };
-//│ g12 = function g() {
-//│   let scope0$cap, f$here;
-//│   scope0$cap = new Capture$scope07(undefined);
-//│   scope0$cap.y$0 = 0;
-//│   f$here = f$(scope0$cap);
+//│ define f$⁰ as fun f$¹(scope0$cap)(x) {
+//│   return f⁷(scope0$cap, x)
+//│ };
+//│ define f⁶ as fun f⁷(scope0$cap, x) {
+//│   let k;
+//│   set k = 4;
+//│   set scope0$cap.y$0 = 2;
+//│   return x
+//│ };
+//│ define g⁶ as fun g⁷() {
+//│   let y, scope0$cap, f$here;
+//│   set scope0$cap = new mut Capture$scope0²(y);
+//│   set scope0$cap.y$0 = 0;
+//│   set f$here = f$¹(scope0$cap);
 //│   return f$here
 //│ };
-//│ tmp6 = g12();
-//│ runtime.safeCall(tmp6(1))
+//│ set tmp = g⁷();
+//│ tmp(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -365,7 +362,7 @@ fun f(es, vs) =
 
 // f should not have a capture
 :expect 1
-:sjs
+:sir
 fun f(x) =
   fun g() =
     set x += 1
@@ -374,23 +371,27 @@ fun f(x) =
   set x += 1
   x
 f(0)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g16, f24;
-//│ g16 = function g(x1) {
-//│   let tmp8;
-//│   tmp8 = x1 + 1;
-//│   x1 = tmp8;
-//│   return x1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g⁸, f⁸;
+//│ define g⁸ as fun g⁹(x) {
+//│   let tmp;
+//│   set tmp = +⁰(x, 1);
+//│   set x = tmp;
+//│   return x
 //│ };
-//│ f24 = function f(x1) {
-//│   let scrut, tmp8;
-//│   scrut = true;
-//│   if (scrut === true) { return g16(x1) }
-//│   tmp8 = x1 + 1;
-//│   x1 = tmp8;
-//│   return x1
+//│ define f⁸ as fun f⁹(x) {
+//│   let scrut, tmp;
+//│   set scrut = true;
+//│   match scrut
+//│     true =>
+//│       return g⁹(x)
+//│     else
+//│       end
+//│   set tmp = +⁰(x, 1);
+//│   set x = tmp;
+//│   return x
 //│ };
-//│ f24(0)
+//│ f⁹(0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -400,7 +401,7 @@ fun f(x) =
   fun g() = x
   [g, g]
 
-:sjs
+:sir
 fun f(x) =
   let y
   fun g() = y
@@ -410,66 +411,62 @@ fun f(x) =
   else
     set y = 2
     [g, g]
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g18, f26, g$8;
-//│ g$8 = function g$(y1) {
-//│   return () => {
-//│     return g18(y1)
-//│   }
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g¹⁰, f¹⁰, g$²;
+//│ define g$² as fun g$³(y)() {
+//│   return g¹¹(y)
 //│ };
-//│ g18 = function g(y1) {
-//│   return y1
+//│ define g¹⁰ as fun g¹¹(y) {
+//│   return y
 //│ };
-//│ f26 = function f(x1) {
-//│   let y1, scrut, g$here;
-//│   scrut = x1 < 0;
-//│   if (scrut === true) {
-//│     y1 = 1;
-//│     g$here = g$8(y1);
-//│     return globalThis.Object.freeze([
-//│       g$here,
-//│       g$here
-//│     ])
-//│   } else { y1 = 2; g$here = g$8(y1); return globalThis.Object.freeze([ g$here, g$here ]) }
+//│ define f¹⁰ as fun f¹¹(x) {
+//│   let y, scrut, g$here;
+//│   set scrut = <⁰(x, 0);
+//│   match scrut
+//│     true =>
+//│       set y = 1;
+//│       set g$here = g$³(y);
+//│       return [g$here, g$here]
+//│     else
+//│       set y = 2;
+//│       set g$here = g$³(y);
+//│       return [g$here, g$here]
+//│   end
 //│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:sjs
+:sir
 fun f(x) =
   fun g() = x
   let a = g
   set x += 1
   [a, g]
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g19, f27, Capture$f7, g$9;
-//│ g$9 = function g$(f$cap) {
-//│   return () => {
-//│     return g19(f$cap)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g¹², f¹², Capture$f³, g$⁴;
+//│ define g$⁴ as fun g$⁵(f$cap)() {
+//│   return g¹³(f$cap)
+//│ };
+//│ define g¹² as fun g¹³(f$cap) {
+//│   return f$cap.x$0⁰
+//│ };
+//│ define Capture$f³ as class Capture$f⁵ {
+//│   constructor Capture$f⁴ {
+//│     define x$0¹ as val x$0⁰ = x$0;
+//│     end
 //│   }
 //│ };
-//│ g19 = function g(f$cap) {
-//│   return f$cap.x$0
+//│ define f¹² as fun f¹³(x) {
+//│   let a, tmp, f$cap, g$here;
+//│   set f$cap = new mut Capture$f⁵(x);
+//│   set g$here = g$⁵(f$cap);
+//│   set a = g$here;
+//│   set tmp = +⁰(f$cap.x$0⁰, 1);
+//│   set f$cap.x$0 = tmp;
+//│   set g$here = g$⁵(f$cap);
+//│   return [a, g$here]
 //│ };
-//│ (class Capture$f6 {
-//│   static {
-//│     Capture$f7 = this
-//│   }
-//│   constructor(x$0) {
-//│     this.x$0 = x$0;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Capture$f"]; 
-//│ });
-//│ f27 = function f(x1) {
-//│   let a1, tmp8, f$cap, g$here;
-//│   f$cap = new Capture$f7(x1);
-//│   g$here = g$9(f$cap);
-//│   a1 = g$here;
-//│   tmp8 = f$cap.x$0 + 1;
-//│   f$cap.x$0 = tmp8;
-//│   g$here = g$9(f$cap);
-//│   return globalThis.Object.freeze([ a1, g$here ])
-//│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // Can be avoided in `h` by passing the initialized closure, but this is more complicated

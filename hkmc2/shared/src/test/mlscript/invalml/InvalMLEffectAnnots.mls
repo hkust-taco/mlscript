@@ -1,0 +1,15 @@
+:invalml
+
+
+fun foo: Int ->{Int} Int
+
+fun foo: Int ->{Int} Int
+
+fun foo: Int -> Int ->{Int} Int
+
+fun foo: Int ->{Int} Int -> Int
+
+fun foo: Int ->{Int} Int ->{Int} Int
+
+fun foo: [A] -> Int ->{A} Int
+

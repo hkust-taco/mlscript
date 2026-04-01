@@ -362,12 +362,8 @@ class DeforestPreAnalyzer(
           && methods.isEmpty
           && privateFields.isEmpty
           && publicFields.isEmpty
-          && preCtor.matches:
-            case End("") => true
-          && ctor
-            .matches:
-              case Return(Select(Value.Ref(runtimeSym, None), Tree.Ident("Unit")), true) =>
-                runtimeSym is elabState.runtimeSymbol
+          && preCtor.isEmpty
+          && ctor.isEmpty
         then mod.foreach(applyCompanionModule)
       else
         ctxTracker.markAsNonHandleable()

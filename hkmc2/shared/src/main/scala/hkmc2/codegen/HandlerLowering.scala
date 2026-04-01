@@ -18,44 +18,6 @@ import semantics.Elaborator.State
 import hkmc2.Config.EffectHandlers
 
 
-/** - For function bodies, fuse all shallowly-nested scopes into one top-level one,
-  *   because handler lowering relies on knowing all local variables in the function.
-  * - Assert the absence of Label(loop = true) blocks,
-  *   because loops should be rewritten to functions first,
-  *   otherwise we cannot fuse scopes correctly.
-  */
-class PreHandlerLowering extends BlockTransformer(new SymbolSubst):
-  override def applyBlock(b: Block): Block = b match
-    case Label(_, loop, _, _) =>
-      assert(!loop)
-      super.applyBlock(b)
-    case _ => super.applyBlock(b)
-  
-  private var scopedSymForCurrentFun: Option[collection.mutable.Set[Symbol]] = None
-  override def applyFunBodyLikeBlock(b: Block): Block =
-    val prevScopedSymForCurrentFun = scopedSymForCurrentFun
-    val resBlk = b match
-      case Scoped(syms, body) =>
-        scopedSymForCurrentFun = Some(collection.mutable.Set.from(syms))
-        val newBody = applySubBlock(body)
-        new Scoped(scopedSymForCurrentFun.get, newBody)
-      case _ =>
-        scopedSymForCurrentFun = Some(collection.mutable.Set.empty[Symbol])
-        val newBlk = applySubBlock(b)
-        Scoped(scopedSymForCurrentFun.get, newBlk)
-    scopedSymForCurrentFun = prevScopedSymForCurrentFun
-    resBlk
-  
-  override def applyScopedBlock(b: Block): Block = b match
-    case Scoped(syms, body) =>
-      scopedSymForCurrentFun match
-        case None => super.applyScopedBlock(b)
-        case Some(scopedForCurrentFun) =>
-          scopedForCurrentFun.addAll(syms)
-          applySubBlock(body)
-    case _ => applySubBlock(b)
-    
-
 object HandlerLowering:
 
   private val pcIdent: Tree.Ident = Tree.Ident("pc")
@@ -719,7 +681,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     transform.applyBlock(b)
 
   def translateTopLevel(b: Block): (Block, StackSafetyMap) =
-    val preTransformed = new PreHandlerLowering().applyBlock(b)
+    val preTransformed = new ScopeFlattener().applyBlock(b)
     val ctx = HandlerCtx.TopLevel
     val transformed = translateBlock(preTransformed, ctx, Set.empty)
     val blk = blockBuilder

@@ -12,9 +12,6 @@ module A with
 //│   static {
 //│     A1 = this
 //│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
 //│   static #A_mod$cap;
 //│   static f(x) {
 //│     if (x instanceof Option.Some.class) {

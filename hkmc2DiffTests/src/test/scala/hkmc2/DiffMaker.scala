@@ -65,7 +65,7 @@ abstract class DiffMaker:
       case N => ()
     mkExtraInfo() match
       case S(info: Product) => output(s"FAILURE INFO: ${info.showAsTree}")
-      case S(info) => output(s"FAILURE INFO: $info")
+      case S(info) => output(s"FAILURE INFO: ${info.showAsPlain}")
       case N => ()
     doFail(blockLineNum, s"unexpected $what at $relativeName.${file.ext}:" + blockLineNum)
   

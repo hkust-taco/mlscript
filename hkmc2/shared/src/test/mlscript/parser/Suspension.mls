@@ -72,8 +72,6 @@ module A with
 //│               k = ImmutVal
 //│               head = Ident of "b"
 //│               rhs = S of IntLit of 2
-//│         rhs = N
-//│   rhs = N
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -90,11 +88,11 @@ x =>
   1
 let bar = 1
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.88: 	x =>
+//│ ║  l.86: 	x =>
 //│ ║        	^^^^
-//│ ║  l.89: 	  if false then 0 else...
+//│ ║  l.87: 	  if false then 0 else...
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.90: 	  1
+//│ ║  l.88: 	  1
 //│ ╙──      	^^^
 //│ bar = 1
 
@@ -108,12 +106,12 @@ x => if false then 0 else...
   1
 let foo = 1
 //│ ╔══[COMPILATION ERROR] Illegal position for '...' spread operator.
-//│ ║  l.107: 	x => if false then 0 else...
+//│ ║  l.105: 	x => if false then 0 else...
 //│ ╙──       	                         ^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.107: 	x => if false then 0 else...
+//│ ║  l.105: 	x => if false then 0 else...
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.108: 	  1
+//│ ║  l.106: 	  1
 //│ ╙──       	^^^
 //│ foo = 1
 

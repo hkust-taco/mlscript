@@ -5,41 +5,36 @@
 let xs = mut []
 //│ xs = []
 
-:sjs
+:sir
 fun foo() =
   let x = 1
   fun bar() = x
   xs.push(bar)
   set x = 2
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let bar, foo, Capture$scope01, bar$;
-//│ (class Capture$scope0 {
-//│   static {
-//│     Capture$scope01 = this
-//│   }
-//│   constructor(x$0) {
-//│     this.x$0 = x$0;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Capture$scope0"]; 
-//│ });
-//│ bar$ = function bar$(scope0$cap) {
-//│   return () => {
-//│     return bar(scope0$cap)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let bar⁰, foo⁰, Capture$scope0⁰, bar$⁰;
+//│ define Capture$scope0⁰ as class Capture$scope0² {
+//│   constructor Capture$scope0¹ {
+//│     define x$0⁰ as val x$0¹ = x$0;
+//│     end
 //│   }
 //│ };
-//│ bar = function bar(scope0$cap) {
-//│   return scope0$cap.x$0
+//│ define bar$⁰ as fun bar$¹(scope0$cap)() {
+//│   return bar¹(scope0$cap)
 //│ };
-//│ foo = function foo() {
-//│   let scope0$cap, bar$here;
-//│   scope0$cap = new Capture$scope01(undefined);
-//│   scope0$cap.x$0 = 1;
-//│   bar$here = bar$(scope0$cap);
-//│   runtime.safeCall(xs.push(bar$here));
-//│   scope0$cap.x$0 = 2;
-//│   return runtime.Unit
+//│ define bar⁰ as fun bar¹(scope0$cap) {
+//│   return scope0$cap.x$0¹
 //│ };
+//│ define foo⁰ as fun foo¹() {
+//│   let x, scope0$cap, bar$here;
+//│   set scope0$cap = new mut Capture$scope0²(x);
+//│   set scope0$cap.x$0 = 1;
+//│   set bar$here = bar$¹(scope0$cap);
+//│   do xs⁰.push﹖(bar$here);
+//│   set scope0$cap.x$0 = 2;
+//│   return runtime⁰.Unit⁰
+//│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 2
@@ -51,7 +46,7 @@ xs.0()
 let xs = mut []
 //│ xs = []
 
-// :sjs
+// :sir
 fun foo() =
   let x
   fun bar() = x
@@ -93,14 +88,17 @@ b_x.1()
 //│ b_x = [fun, fun]
 
 
-:sjs
+:sir
 fun foo() =
   fun bar() =
     let x
     x
   bar
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let bar4, foo4; bar4 = function bar() { return }; foo4 = function foo() { return bar4 };
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let bar², foo²;
+//│ define bar² as fun bar³() { let x; return x };
+//│ define foo² as fun foo³() { return bar³ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

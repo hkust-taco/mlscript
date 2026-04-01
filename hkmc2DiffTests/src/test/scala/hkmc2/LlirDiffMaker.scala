@@ -18,7 +18,7 @@ import hkmc2.codegen.cpp._
 import hkmc2.semantics.Elaborator
 import scala.collection.mutable.ListBuffer
 
-abstract class LlirDiffMaker extends BbmlDiffMaker:
+abstract class LlirDiffMaker extends InvalMLDiffMaker:
   val llir = NullaryCommand("llir")
   val sllir = NullaryCommand("sllir")
   val intl = NullaryCommand("intl")

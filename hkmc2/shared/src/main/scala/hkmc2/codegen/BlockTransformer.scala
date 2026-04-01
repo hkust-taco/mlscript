@@ -145,11 +145,13 @@ class BlockTransformer(subst: SymbolSubst):
     case r @ Call(fun, args) =>
       applyPath(fun): fun2 =>
         applyArgs(args): args2 =>
-          k(if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects, r.explicitTailCall).withLocOf(r))
+          k(if (fun2 is fun) && (args2 is args) then r
+            else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects, r.explicitTailCall).withLocOf(r))
     case Instantiate(mut, cls, args) =>
       applyPath(cls): cls2 =>
         applyArgs(args): args2 =>
-          k(if (cls2 is cls) && (args2 is args) then r else Instantiate(mut, cls2, args2).withLocOf(r))
+          k(if (cls2 is cls) && (args2 is args) then r
+            else Instantiate(mut, cls2, args2).withLocOf(r))
     case l: Lambda => k(applyLam(l))
     case Tuple(mut, elems) =>
       applyArgs(elems): elems2 =>
@@ -326,3 +328,5 @@ class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst
 // to traverse sub-blocks while using this class to perform more complicated transformations on the blocks themselves.
 class BlockDataTransformer(subst: SymbolSubst) extends BlockTransformerShallow(subst):
   override def applySubBlock(b: Block): Block = b
+
+

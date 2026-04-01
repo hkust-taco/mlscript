@@ -30,7 +30,7 @@ pattern SumPair = Pair(a, b) => a + b
 //│         return new runtime⁰.MatchFailure⁰(null)
 //│     end
 //│   }
-//│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input1) {
+//│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input) {
 //│     return new runtime⁰.MatchFailure⁰(null)
 //│   }
 //│ };

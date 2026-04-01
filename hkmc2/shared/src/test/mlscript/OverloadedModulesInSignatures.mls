@@ -29,7 +29,6 @@ fun f: ClsMod = 42
 f
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Nil
 //│   res = Resolved{sym=term:f⁰,typ=class:ClsMod⁰}:
 //│     t = Ref{sym=member:f¹} of member:f¹
 //│     sym = term:f⁰
@@ -42,7 +41,6 @@ fun f: module ClsMod = ClsMod
 f
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Nil
 //│   res = Resolved{sym=term:f²,typ=module:ClsMod¹}:
 //│     t = Ref{sym=member:f³} of member:f³
 //│     sym = term:f²
@@ -55,7 +53,6 @@ fun f: TypMod = 42
 f
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Nil
 //│   res = Resolved{sym=term:f⁴,typ=type:TypMod⁰}:
 //│     t = Ref{sym=member:f⁵} of member:f⁵
 //│     sym = term:f⁴
@@ -68,7 +65,6 @@ fun f: module TypMod = TypMod
 f
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Nil
 //│   res = Resolved{sym=term:f⁶,typ=module:TypMod¹}:
 //│     t = Ref{sym=member:f⁷} of member:f⁷
 //│     sym = term:f⁶
@@ -78,7 +74,7 @@ f
 :e
 fun f: TrmMod = 42
 //│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference of type TrmMod denoting module 'TrmMod'.
-//│ ║  l.79: 	fun f: TrmMod = 42
+//│ ║  l.75: 	fun f: TrmMod = 42
 //│ ║        	       ^^^^^^
 //│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
 
@@ -139,10 +135,10 @@ module Foo
 :e
 fun f(x: Foo): Foo = x
 //│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
-//│ ║  l.140: 	fun f(x: Foo): Foo = x
+//│ ║  l.136: 	fun f(x: Foo): Foo = x
 //│ ╙──       	         ^^^
 //│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
-//│ ║  l.140: 	fun f(x: Foo): Foo = x
+//│ ║  l.136: 	fun f(x: Foo): Foo = x
 //│ ╙──       	               ^^^
 
 fun f(x: Foo[Int]): Foo[Int] = x
@@ -152,10 +148,10 @@ fun f(module x: Foo): module Foo = x
 :e
 fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
-//│ ║  l.153: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.149: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
-//│ ║  l.153: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.149: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                                  ^^^^^^^^
 
 

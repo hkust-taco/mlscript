@@ -311,13 +311,15 @@ case class Return(res: Result, implct: Bool) extends BlockTail
 
 case class Throw(exc: Result) extends BlockTail
 
-case class Label(label: LabelSymbol, loop: Bool, body: Block, rest: Block) extends Block with NonBlockTail
+case class Label(label: LabelSymbol, loop: Bool, body: Block, rest: Block)
+extends Block with NonBlockTail with ProductWithTail
 
 case class Break(label: LabelSymbol) extends BlockTail
 case class Continue(label: LabelSymbol) extends BlockTail
 
 
-case class Scoped(syms: collection.Set[Local], body: Block) extends Block with NonBlockTail:
+case class Scoped(syms: collection.Set[Local], body: Block)
+extends Block with NonBlockTail:
   val rest = body
 
 // TODO: remove this form?

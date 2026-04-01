@@ -71,9 +71,44 @@ fun f(x) =
 f(1)
 //│ = 2
 
+
+// TODO: do not generate an intermediate function
+// TODO: do not generate a useless `C$cap` field
+:sir
+fun f(x) =
+  class C with
+    fun y = x
+  new C
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let C⁰, f⁰, C$⁰;
+//│ define C$⁰ as fun C$¹(isMut, x) {
+//│   let tmp;
+//│   match isMut
+//│     true =>
+//│       set tmp = new mut C¹(x);
+//│       end
+//│     else
+//│       set tmp = new C¹(x);
+//│       end
+//│   return tmp
+//│ };
+//│ define C⁰ as class C¹ {
+//│   private val C$cap⁰;
+//│   private val x⁰;
+//│   constructor {
+//│     set x⁰ = x;
+//│     end
+//│   }
+//│   method y⁰ = fun y¹ { return x⁰ }
+//│ };
+//│ define f⁰ as fun f¹(x) { return C$¹(false, x) };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
 // only w should be in a capture
 :expect 10111
-:sjs
+:sir
 fun f() =
   let x = 1
   let y = 10
@@ -89,105 +124,81 @@ fun f() =
   Bad().foo()
   Good()
 f().foo()
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Bad1, Good1, f6, tmp5, Capture$scope01, Bad$, Good$;
-//│ (class Capture$scope0 {
-//│   static {
-//│     Capture$scope01 = this
-//│   }
-//│   constructor(z$0, w$1) {
-//│     this.w$1 = w$1;
-//│     this.z$0 = z$0;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Capture$scope0"]; 
-//│ });
-//│ Good$ = function Good$(isMut, scope0$cap, x, y) {
-//│   let tmp6;
-//│   if (isMut === true) {
-//│     tmp6 = new Good1.class();
-//│   } else {
-//│     tmp6 = globalThis.Object.freeze(new Good1.class());
-//│   }
-//│   return tmp6(scope0$cap, x, y)
-//│ };
-//│ Bad$ = function Bad$(isMut, scope0$cap) {
-//│   let tmp6;
-//│   if (isMut === true) {
-//│     tmp6 = new Bad1.class();
-//│   } else {
-//│     tmp6 = globalThis.Object.freeze(new Bad1.class());
-//│   }
-//│   return tmp6(scope0$cap)
-//│ };
-//│ Good1 = function Good() {
-//│   return (scope0$cap, x, y) => {
-//│     return globalThis.Object.freeze(new Good.class()(scope0$cap, x, y));
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let Bad⁰, Good⁰, f², tmp, Capture$scope0⁰, Bad$⁰, Good$⁰;
+//│ define Capture$scope0⁰ as class Capture$scope0² {
+//│   constructor Capture$scope0¹ {
+//│     define w$1⁰ as val w$1¹ = w$1;
+//│     define z$0⁰ as val z$0¹ = z$0;
+//│     end
 //│   }
 //│ };
-//│ (class Good {
-//│   static {
-//│     Good1.class = this
+//│ define Good$⁰ as fun Good$¹(isMut, scope0$cap, x, y) {
+//│   let tmp1;
+//│   match isMut
+//│     true =>
+//│       set tmp1 = new mut Good¹();
+//│       end
+//│     else
+//│       set tmp1 = new Good¹();
+//│       end
+//│   return tmp1(scope0$cap, x, y)
+//│ };
+//│ define Bad$⁰ as fun Bad$¹(isMut, scope0$cap) {
+//│   let tmp1;
+//│   match isMut
+//│     true =>
+//│       set tmp1 = new mut Bad¹();
+//│       end
+//│     else
+//│       set tmp1 = new Bad¹();
+//│       end
+//│   return tmp1(scope0$cap)
+//│ };
+//│ define Good⁰ as class Good¹ {
+//│   private val Good$cap⁰;
+//│   private val y²;
+//│   private val x¹;
+//│   private val scope0$cap⁰;
+//│   constructor Good² {
+//│     set scope0$cap⁰ = scope0$cap;
+//│     set x¹ = x;
+//│     set y² = y;
+//│     end
 //│   }
-//│   constructor() {
-//│     return (scope0$cap, x, y) => {
-//│       this.#scope0$cap = scope0$cap;
-//│       this.#x = x;
-//│       this.#y = y;
-//│       return this;
-//│     }
-//│   }
-//│   #Good$cap;
-//│   #y;
-//│   #x;
-//│   #scope0$cap;
-//│   foo() {
-//│     let tmp6, tmp7;
-//│     this.#scope0$cap.z$0 = 100;
-//│     tmp6 = this.#x + this.#y;
-//│     tmp7 = tmp6 + this.#scope0$cap.z$0;
-//│     return tmp7 + this.#scope0$cap.w$1
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Good", []]; 
-//│ });
-//│ Bad1 = function Bad() {
-//│   return (scope0$cap) => {
-//│     return globalThis.Object.freeze(new Bad.class()(scope0$cap));
+//│   method foo⁰ = fun foo¹() {
+//│     let tmp1, tmp2;
+//│     set scope0$cap⁰.z$0 = 100;
+//│     set tmp1 = +⁰(x¹, y²);
+//│     set tmp2 = +⁰(tmp1, scope0$cap⁰.z$0¹);
+//│     return +⁰(tmp2, scope0$cap⁰.w$1¹)
 //│   }
 //│ };
-//│ (class Bad {
-//│   static {
-//│     Bad1.class = this
+//│ define Bad⁰ as class Bad¹ {
+//│   private val Bad$cap⁰;
+//│   private val scope0$cap¹;
+//│   constructor Bad² {
+//│     set scope0$cap¹ = scope0$cap;
+//│     end
 //│   }
-//│   constructor() {
-//│     return (scope0$cap) => {
-//│       this.#scope0$cap = scope0$cap;
-//│       return this;
-//│     }
+//│   method foo² = fun foo³() {
+//│     set scope0$cap¹.w$1 = 10000;
+//│     return runtime⁰.Unit⁰
 //│   }
-//│   #Bad$cap;
-//│   #scope0$cap;
-//│   foo() {
-//│     this.#scope0$cap.w$1 = 10000;
-//│     return runtime.Unit
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Bad", []]; 
-//│ });
-//│ f6 = function f() {
-//│   let x, y, tmp6, scope0$cap;
-//│   scope0$cap = new Capture$scope01(undefined, undefined);
-//│   x = 1;
-//│   y = 10;
-//│   scope0$cap.z$0 = 10;
-//│   scope0$cap.w$1 = 1000;
-//│   tmp6 = Bad$(false, scope0$cap);
-//│   tmp6.foo();
-//│   return Good$(false, scope0$cap, x, y)
 //│ };
-//│ tmp5 = f6();
-//│ runtime.safeCall(tmp5.foo())
+//│ define f² as fun f³() {
+//│   let x, y, z, w, tmp1, scope0$cap;
+//│   set scope0$cap = new mut Capture$scope0²(z, w);
+//│   set x = 1;
+//│   set y = 10;
+//│   set scope0$cap.z$0 = 10;
+//│   set scope0$cap.w$1 = 1000;
+//│   set tmp1 = Bad$¹(false, scope0$cap);
+//│   do tmp1.foo³();
+//│   return Good$¹(false, scope0$cap, x, y)
+//│ };
+//│ set tmp = f³();
+//│ tmp.foo﹖()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 10111
 
@@ -256,7 +267,7 @@ test()
 //│ = 2
 
 // Note: semicolon required for auxparam before `return this;`
-// :sjs
+// :sir
 fun test(f) =
   class A(x) with
     f(x)

@@ -10,9 +10,6 @@ let Predef1;
   static {
     Predef1 = this
   }
-  constructor() {
-    runtime.Unit;
-  }
   static {
     (class Symbols {
       static {
@@ -34,7 +31,6 @@ let Predef1;
       static {
         Predef.Sub = this
       }
-      constructor() {}
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "Sub"]; 
     });
@@ -79,9 +75,6 @@ let Predef1;
     (class meta {
       static {
         Predef.meta = this
-      }
-      constructor() {
-        runtime.Unit;
       }
       static codegen(t, file) {
         return Term.codegen(t, file)

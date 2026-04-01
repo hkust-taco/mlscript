@@ -36,7 +36,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
         case Case.Lit(lit) => doc"${lit.idStr}"
         case Case.Cls(cls, path) => doc"${print(cls)}"
         case Case.Tup(len, inf) => doc"Array($len${if inf then "+" else ""})"
-        case _ => TODO(c)
+        case Case.Field(name, safe) => doc"${if safe then "" else "Object "}{ ${name.name} }"
       val docCases = arms
         .map{ case (c, b) => doc"${case_doc(c)} => #{  # ${print(b)} #} " }
         .mkDocument(sep = doc" # ")
@@ -106,15 +106,16 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
   
   def print(defn: Defn)(using Scope): Document = defn match
     case FunDefn(own, sym, dSym, params, body) =>
-      val docParams = doc"${
-        params.map(_.params.map(x => scope.allocateName(x.sym)).mkDocument("(", ", ", ")")).mkDocument("")}"
-      val docBody = print(body)
-      doc"fun ${print(dSym)}${docParams} ${bracedbk(docBody)}"
+      scope.nest.givenIn:
+        val docParams = doc"${
+          params.map(_.params.map(x => scope.allocateName(x.sym)).mkDocument("(", ", ", ")")).mkDocument("")}"
+        val docBody = print(body)
+        doc"fun ${print(dSym)}${docParams} ${bracedbk(docBody)}"
     case ValDefn(tsym, sym, rhs) =>
       doc"val ${print(tsym)} = ${print(rhs)}"
     case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable)
-    =>
+    => scope.nest.givenIn:
       val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
       val auxClsParams = auxParams.flatMap(_.paramSyms)
       val ctorParams = (clsParams ++ auxClsParams).map(p => scope.allocateName(p))
@@ -163,8 +164,9 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
     case Instantiate(mut, cls, args) =>
       doc"new ${if mut then "mut " else ""}${print(cls)}(${args.map(print).mkDocument(", ")})"
     case Lambda(params, body) =>
-      val docParams = params.params.map(x => scope.allocateName(x.sym)).mkDocument(", ")
-      doc"(${docParams}) => ${print(body)}"
+      scope.nest.givenIn:
+        val docParams = params.params.map(x => scope.allocateName(x.sym)).mkDocument(", ")
+        doc"(${docParams}) => ${print(body)}"
     case Tuple(mut, elems) =>
       val docElems = elems.map(x => print(x)).mkDocument(", ")
       doc"${if mut then "mut " else ""}[${docElems}]"

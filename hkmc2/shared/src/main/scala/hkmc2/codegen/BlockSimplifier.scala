@@ -149,15 +149,6 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State):
           removedLocals += defn.sym
           applyBlock(rest)
         
-      // * Delete removed local variables from Scoped blocks
-      case Scoped(syms, body) =>
-        val body2 = applyBlock(body)
-        if changed then
-          val syms2 = syms.filterNot(removedLocals)
-          if syms2.size === syms.size && (body2 is body) then b
-          else Scoped(syms2, body2)
-        else b
-      
       // * Simplify labelled blocks
       case Label(lbl, loop, bod, rst) =>
         if !BrokenLabels.analyze(bod).contains(lbl) && AbortiveAnalysis.analyze(bod) && !rst.isInstanceOf[Unreachable] then
@@ -174,6 +165,23 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State):
       
       case x => super.applyBlock(x)
     
+    
+    // FIXME: refactor transformers so this is not so error-prine (adding this case to `applyBlock` doesn't work)
+    override def applyScopedBlock(b: Block): Block = b match
+      // * Delete removed local variables from Scoped blocks
+      case Scoped(syms, body) =>
+        val body2 = applyBlock(body)
+        // println(s">> $body2 ${body is body2}")
+        // println(s">> $body2 ${changed}")
+        if changed then
+        // if changed || (body isnt body2) then
+          val syms2 = syms.filterNot(removedLocals)
+          // println(s">> $syms $syms2 ${removedLocals}")
+          if syms2.size === syms.size && (body2 is body) then b
+          else Scoped(syms2, body2)
+        else b
+      case _ => super.applyScopedBlock(b)
+      
     
   end DeadCodeElim
   

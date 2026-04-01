@@ -24,39 +24,40 @@ foo(10, 0)
 // * This works the same with classes.
 // * Note that we currently generate accessors, which is not ideal;
 // * When the captures are not accessed from the outside, we should be able to drop these.
-:sjs
+:sir
 fun foo(y) =
   class M with
     fun foo() =
       set y = 2
   (new M).foo()
 foo(10)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let M2, foo1, M$;
-//│ M$ = function M$(isMut, y) {
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let M⁰, foo⁰, M$⁰;
+//│ define M$⁰ as fun M$¹(isMut, y) {
 //│   let tmp;
-//│   if (isMut === true) {
-//│     tmp = new M2(y);
-//│   } else {
-//│     tmp = globalThis.Object.freeze(new M2(y));
-//│   }
+//│   match isMut
+//│     true =>
+//│       set tmp = new mut M¹(y);
+//│       end
+//│     else
+//│       set tmp = new M¹(y);
+//│       end
 //│   return tmp
 //│ };
-//│ (class M1 {
-//│   static {
-//│     M2 = this
+//│ define M⁰ as class M¹ {
+//│   private val M$cap⁰;
+//│   private val y⁰;
+//│   constructor {
+//│     set y⁰ = y;
+//│     end
 //│   }
-//│   constructor(y) {}
-//│   #M$cap;
-//│   #y;
-//│   foo() {
-//│     return runtime.Unit
+//│   method foo¹ = fun foo²() {
+//│     set y⁰ = 2;
+//│     return runtime⁰.Unit⁰
 //│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "M"]; 
-//│ });
-//│ foo1 = function foo(y) { let tmp; tmp = M$(false, y); return tmp.foo() };
-//│ foo1(10)
+//│ };
+//│ define foo⁰ as fun foo³(y) { let tmp; set tmp = M$¹(false, y); return tmp.foo²() };
+//│ foo³(10)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -96,7 +97,7 @@ fun foo(y) =
       set y = 2
   O
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.94: 	  object O with
+//│ ║  l.95: 	  object O with
 //│ ╙──      	         ^
 
 let o = foo(10)
@@ -109,7 +110,7 @@ o.x
 
 :todo
 :w
-:sjs
+:sir
 fun foo(x, y) =
   object M with
     fun foo2() =
@@ -118,40 +119,26 @@ fun foo(x, y) =
   fun foo3 = M.foo2()
   foo3
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.114: 	  object M with
+//│ ║  l.115: 	  object M with
 //│ ╙──       	         ^
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo31, foo4;
-//│ foo31 = function foo3(M4) {
-//│   return M4.foo2()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let foo3⁰, foo⁴;
+//│ define foo3⁰ as fun foo3¹(M) {
+//│   return M.foo2⁰()
 //│ };
-//│ foo4 = function foo(x, y) {
-//│   let M4, tmp;
-//│   (class M3 {
-//│     static {
-//│       new this
+//│ define foo⁴ as fun foo⁵(x, y) {
+//│   let M, tmp;
+//│   define M as object M² {
+//│     private val M$cap¹;
+//│     method foo2¹ = fun foo2⁰() {
+//│       set y = 2;
+//│       return +⁰(x, y)
 //│     }
-//│     constructor() {
-//│       M4 = this;
-//│       Object.defineProperty(this, "class", {
-//│         value: M3
-//│       });
-//│       globalThis.Object.freeze(this);
-//│     }
-//│     #M$cap;
-//│     foo2() {
-//│       y = 2;
-//│       return x + y
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["object", "M"]; 
-//│   });
-//│   tmp = foo31(M4);
+//│   };
+//│   set tmp = foo3¹(M²);
 //│   return tmp
 //│ };
-//│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.114: 	  object M with
-//│ ╙──       	         ^
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 12
@@ -167,7 +154,7 @@ data class A(x) with
     fun bar = M.getB()
     bar
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.164: 	  object M with
+//│ ║  l.151: 	  object M with
 //│ ╙──       	         ^
 
 :expect 2
@@ -224,57 +211,48 @@ fun f =
   foo
 f.a
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.220: 	  object A with
+//│ ║  l.207: 	  object A with
 //│ ╙──       	         ^
 //│ = 2
 
-:sjs
+:sir
 module M with
   class A() with
     fun get = M.x + x
   val x = if A() is A then 2 else 3
 M.A().get
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let M14, tmp4;
-//│ (class M13 {
-//│   static {
-//│     M14 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
-//│   static #M_mod$cap;
-//│   static {
-//│     let scrut, tmp5;
-//│     this.A = function A() {
-//│       return globalThis.Object.freeze(new A.class());
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let M³, tmp;
+//│ define M³ as class M⁴ {
+//│   private val M$cap²;
+//│ }
+//│ module M⁵ {
+//│   private val M_mod$cap⁰;
+//│   val x⁰;
+//│   constructor {
+//│     let scrut, tmp1;
+//│     define A⁰ as class A¹ {
+//│       private val A$cap⁰;
+//│       method get⁰ = fun get¹ {
+//│         return +⁰(M⁵.x¹, M⁵.x¹)
+//│       }
 //│     };
-//│     (class A6 {
-//│       static {
-//│         M13.A.class = this
-//│       }
-//│       constructor() {}
-//│       #A$cap;
-//│       get get() {
-//│         return M13.x + M13.x;
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "A", []]; 
-//│     });
-//│     scrut = M13.A();
-//│     if (scrut instanceof M13.A.class) {
-//│       tmp5 = 2;
-//│     } else {
-//│       tmp5 = 3;
-//│     }
-//│     this.x = tmp5;
+//│     begin
+//│       set scrut = M⁵.A²();
+//│       match scrut
+//│         A¹ =>
+//│           set tmp1 = 2;
+//│           end
+//│         else
+//│           set tmp1 = 3;
+//│           end
+//│       end;
+//│       define x⁰ as val x¹ = tmp1;
+//│       end
 //│   }
-//│   #M$cap;
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "M"]; 
-//│ });
-//│ tmp4 = M14.A();
-//│ tmp4.get
+//│ };
+//│ set tmp = M⁵.A²();
+//│ tmp.get¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 4
 
@@ -317,7 +295,7 @@ fun foo(x) =
     val baz = x
   [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.315: 	  object O with
+//│ ║  l.293: 	  object O with
 //│ ╙──       	         ^
 
 foo(123)
@@ -366,13 +344,13 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.363: 	  object A with
+//│ ║  l.341: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.364: 	    object B with
+//│ ║  l.342: 	    object B with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.365: 	      object C
+//│ ║  l.343: 	      object C
 //│ ╙──       	             ^
 //│ = C
 
@@ -385,10 +363,10 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.382: 	  module A with
+//│ ║  l.360: 	  module A with
 //│ ╙──       	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.384: 	      object C
+//│ ║  l.362: 	      object C
 //│ ╙──       	             ^
 //│ = C
 
@@ -401,7 +379,7 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.398: 	  module A with
+//│ ║  l.376: 	  module A with
 //│ ╙──       	         ^
 //│ = C
 

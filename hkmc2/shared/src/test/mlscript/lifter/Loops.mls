@@ -37,46 +37,46 @@ fs.0()
 //│ = 1
 
 
-:sjs
+:sir
 fun foo() =
   let x = 1
   while true do
     set x += 1
     return () => x
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo2, lambda2, Capture$scope03, lambda$2;
-//│ lambda$2 = (undefined, function (scope0$cap) {
-//│   return () => {
-//│     return lambda2(scope0$cap)
-//│   }
-//│ });
-//│ lambda2 = (undefined, function (scope0$cap) {
-//│   return scope0$cap.x$0
-//│ });
-//│ (class Capture$scope02 {
-//│   static {
-//│     Capture$scope03 = this
-//│   }
-//│   constructor(x$0) {
-//│     this.x$0 = x$0;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Capture$scope0"]; 
-//│ });
-//│ foo2 = function foo() {
-//│   let scrut, tmp, scope0$cap;
-//│   scope0$cap = new Capture$scope03(undefined);
-//│   scope0$cap.x$0 = 1;
-//│   scrut = true;
-//│   if (scrut === true) {
-//│     let lambda$here;
-//│     tmp = scope0$cap.x$0 + 1;
-//│     scope0$cap.x$0 = tmp;
-//│     lambda$here = lambda$2(scope0$cap);
-//│     return lambda$here
-//│   }
-//│   return runtime.Unit
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let foo⁰, lambda⁰, Capture$scope0⁰, lambda$⁰;
+//│ define lambda$⁰ as fun lambda$¹(scope0$cap)() {
+//│   return lambda¹(scope0$cap)
 //│ };
+//│ define lambda⁰ as fun lambda¹(scope0$cap) {
+//│   return scope0$cap.x$0⁰
+//│ };
+//│ define Capture$scope0⁰ as class Capture$scope0² {
+//│   constructor Capture$scope0¹ {
+//│     define x$0¹ as val x$0⁰ = x$0;
+//│     end
+//│   }
+//│ };
+//│ define foo⁰ as fun foo¹() {
+//│   let x, scope0$cap;
+//│   set scope0$cap = new mut Capture$scope0²(x);
+//│   set scope0$cap.x$0 = 1;
+//│   loop lbl:
+//│     let scrut, tmp;
+//│     set scrut = true;
+//│     match scrut
+//│       true =>
+//│         let lambda$here;
+//│         set tmp = +⁰(scope0$cap.x$0⁰, 1);
+//│         set scope0$cap.x$0 = tmp;
+//│         set lambda$here = lambda$¹(scope0$cap);
+//│         return lambda$here
+//│       else
+//│         end
+//│     end
+//│   return runtime⁰.Unit⁰
+//│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 2

@@ -153,8 +153,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         output(Printer().worksheet(lowered_0)(using irPrintingScp).mkString(output.ColWidth))
       
       val lowered_1 =
-        // val bs = BlockSimplifier()
-        // bs.DeadCodeElim().applyProgram(lowered_0)
         BlockSimplifier(symbolsToPreserve)(lowered_0)
       
       // TODO: Test that transformers retain object identity when there are no changes
@@ -171,6 +169,9 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             else false
           }
         rec(lowered_0.main, lowered_1.main)
+      
+      if checkIR.isSet then
+        BlockChecker().applyProgram(lowered_1)
       
       if showOptimizedIR.isSet then
         outputSeparator("Optimized IR")
