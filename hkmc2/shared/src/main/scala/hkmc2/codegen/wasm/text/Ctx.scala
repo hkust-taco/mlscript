@@ -248,16 +248,16 @@ class Ctx extends ToWat:
   private val namedFuncs = MutMap.empty[Symbol, FuncInfo | Import[ExternType.Func]]
 
   /** [[ArrayBuf]] containing all tag definitions in the module. */
-  private val tags = ArrayBuf.empty[TagInfo]
+  private var tags = ListMap.empty[SymIdx, TagInfo]
 
   /** [[ArrayBuf]] containing all global definitions in the module. */
-  private val globals = ArrayBuf.empty[GlobalInfo]
+  private var globals = ListMap.empty[SymIdx, GlobalInfo]
 
   /** [[MutMap]] containing global symbols mapped to their corresponding Wasm global indices. */
-  private val namedGlobals = MutMap.empty[Symbol, Int]
+  private val namedGlobals = MutMap.empty[Symbol, GlobalInfo]
 
-  /** Stack of [[MutMap]] from local variable symbols to their numeric indices within the current function scope. */
-  private var locals = MutMap.empty[Local, Int] :: Nil
+  /** Stack of [[MutMap]] from local variable symbols to their symbolic indices within the current function scope. */
+  private var locals = ListMap.empty[Local, SymIdx] :: Nil
   private var startFunc = N: Opt[FuncIdx]
 
   /** Counter for generating object tags. */
@@ -422,8 +422,9 @@ class Ctx extends ToWat:
 
   /** Adds a tag into this context. */
   def addTag(tagInfo: TagInfo): TagIdx =
-    tags += tagInfo
-    TagIdx(tagInfo.id)
+    val id = tagInfo.id
+    tags = tags + (id -> tagInfo)
+    TagIdx(id)
 
   /** Adds a function into this context. */
   def addFunc(sym: Opt[Symbol], funcInfo: FuncInfo): FuncIdx =
@@ -452,7 +453,7 @@ class Ctx extends ToWat:
     */
   def getFunc(funcref: FuncIdx | Symbol): Opt[FuncIdx] = funcref match
     case funcidx: FuncIdx => S(funcidx)
-    case sym: Symbol => 
+    case sym: Symbol =>
       namedFuncs.get(sym).map: funcInfo =>
         funcInfo match
           case fi: FuncInfo => FuncIdx(fi.id)
@@ -485,16 +486,16 @@ class Ctx extends ToWat:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
   /** Pushes a new local variable scope into this context. */
-  def pushLocal(): Unit = locals = MutMap() :: locals
+  def pushLocal(): Unit = locals = ListMap() :: locals
 
   /** Pops the top-most level local variable scope into this context. */
   def popLocal(): Unit = locals = locals.tail
 
   /** Adds a new local variable into the top-most variable scope. */
   def addLocal(sym: Local): LocalIdx =
-    val numIdx = locals.head.size
-    locals.head(sym) = numIdx
-    LocalIdx(SymIdx(sym.nme))
+    val idx = SymIdx(sym.nme)
+    locals = (locals.head + (sym -> idx)) :: locals.tail
+    LocalIdx(idx)
 
   /** Adds a [[Seq]] of local variables into the top-most variable scope. */
   def addLocals(syms: Seq[Local]): Seq[LocalIdx] =
@@ -505,10 +506,10 @@ class Ctx extends ToWat:
 
   /** Adds a new variable into the global variable scope. */
   def addGlobal(sym: Symbol, globalInfo: GlobalInfo): GlobalIdx =
-    val numIdx = globals.size
-    globals += globalInfo
-    namedGlobals(sym) = numIdx
-    GlobalIdx(globalInfo.id)
+    val id = globalInfo.id
+    globals = globals + (id -> globalInfo)
+    namedGlobals(sym) = globalInfo
+    GlobalIdx(id)
 
   /** Adds a [[Seq]] of variables into the global variable scope. */
   def addGlobals(globalDefs: Seq[Symbol -> GlobalInfo]): Seq[GlobalIdx] =
@@ -549,21 +550,15 @@ class Ctx extends ToWat:
   def setStartFunc(funcIdx: FuncIdx): Unit =
     startFunc = S(funcIdx)
 
-  /** Converts a [[Map]] of symbols and their respective numeric identifiers into a [[Seq]] of symbols sorted by its
-    * numeric index.
-    */
-  private def wasmLocalsToSeq(scope: Map[Symbol, Int]): Seq[Local] =
-    scope.toSeq.sortBy(_._2).map(_._1)
-
   /** Returns a tuple containing the variables in the current `global` and `local` scopes respectively.
     */
   def getWasmLocals: Seq[Symbol] -> Opt[Seq[Local]] =
-    wasmLocalsToSeq(namedGlobals.toMap) -> locals.headOption.map(l => wasmLocalsToSeq(l.toMap))
+    namedGlobals.keys.toSeq -> locals.headOption.map(l => l.keys.toSeq)
 
   /** Returns all local variable scopes and their variables. */
   def getAllWasmLocals: Ls[Seq[Local]] = locals match
-    case Nil => wasmLocalsToSeq(namedGlobals.toMap) :: Nil
-    case _ => locals.init.map(l => wasmLocalsToSeq(l.toMap)) :+ wasmLocalsToSeq(namedGlobals.toMap)
+    case Nil => namedGlobals.keys.toSeq :: Nil
+    case locals => locals.init.map(l => l.keys.toSeq) :+ namedGlobals.keys.toSeq
 
   /** Returns the cached [[FuncIdx]] for the intrinsic named `name`, creating it with `createIntrinsic` if it does not
     * yet exist in this context.
@@ -587,8 +582,8 @@ class Ctx extends ToWat:
           types.toSeq.map(_._2.toWat)
             ++ imports.toSeq.map(_.toWat)
             ++ dataSegments.toSeq.map(_.toWat)
-            ++ globals.toSeq.map(_.toWat)
-            ++ tags.toSeq.map(_.toWat)
+            ++ globals.toSeq.map(_._2.toWat)
+            ++ tags.toSeq.map(_._2.toWat)
             ++ startFunc.toSeq.map(funcIdx => doc"(start ${funcIdx.toWat})")
             ++ funcs.toSeq.map(_._2.toWat)
         ).mkDocument(doc" # ")
