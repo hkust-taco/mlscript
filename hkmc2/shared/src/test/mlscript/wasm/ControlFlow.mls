@@ -35,7 +35,6 @@ let i = 0 in
 //│                 (local.get $rhs))))))
 //│       (else
 //│         (unreachable))))
-//│   (elem declare func $lt_impl1)
 //│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
 //│     (if (result (ref null any))
 //│       (i32.and
@@ -54,7 +53,6 @@ let i = 0 in
 //│                 (local.get $rhs))))))
 //│       (else
 //│         (unreachable))))
-//│   (elem declare func $plus_impl1)
 //│   (func $Unit_ctor1 (type $Unit_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
@@ -67,13 +65,11 @@ let i = 0 in
 //│       (nop)
 //│       (return
 //│         (local.get $this))))
-//│   (elem declare func $Unit_ctor1)
 //│   (func $start1 (type $start)
 //│     (block
 //│       (global.set $Unit$inst
 //│         (ref.cast (ref null $Unit)
 //│           (call $Unit_ctor1)))))
-//│   (elem declare func $start1)
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $i (ref null any))
 //│     (local $scrut (ref null any))
@@ -125,7 +121,11 @@ let i = 0 in
 //│                         (global.get $Unit$inst))))
 //│                   (local.get $matchRes))))))
 //│         (local.get $i))))
-//│   (elem declare func $entry)
+//│   (elem $lt_impl1 declare func $lt_impl1)
+//│   (elem $plus_impl1 declare func $plus_impl1)
+//│   (elem $Unit_ctor1 declare func $Unit_ctor1)
+//│   (elem $start1 declare func $start1)
+//│   (elem $entry declare func $entry)
 //│   (start $start1))
 //│ Wasm result:
 //│ = 10
@@ -244,7 +244,6 @@ tailMatchAllValue(1)
 //│           (ref.i31
 //│             (i32.const 30))))
 //│       (local.get $matchRes)))
-//│   (elem declare func $tailMatchAllValue)
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $tailMatchAllValue (ref null any))
 //│     (block (result (ref null any))
@@ -252,7 +251,8 @@ tailMatchAllValue(1)
 //│       (call $tailMatchAllValue
 //│         (ref.i31
 //│           (i32.const 1)))))
-//│   (elem declare func $entry))
+//│   (elem $tailMatchAllValue declare func $tailMatchAllValue)
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 20
 

@@ -64,7 +64,6 @@ foo() + foo()
 //│     (return
 //│       (ref.i31
 //│         (i32.const 42))))
-//│   (elem declare func $foo)
 //│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
 //│     (if (result (ref null any))
 //│       (i32.and
@@ -83,7 +82,6 @@ foo() + foo()
 //│                 (local.get $rhs))))))
 //│       (else
 //│         (unreachable))))
-//│   (elem declare func $plus_impl1)
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $foo (ref null any))
 //│     (local $tmp (ref null any))
@@ -99,7 +97,9 @@ foo() + foo()
 //│           (call $plus_impl1
 //│             (local.get $tmp)
 //│             (local.get $tmp1))))))
-//│   (elem declare func $entry))
+//│   (elem $foo declare func $foo)
+//│   (elem $plus_impl1 declare func $plus_impl1)
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 84
 
@@ -142,7 +142,6 @@ class Foo(val a)
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (elem declare func $Foo_ctor)
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $Foo (ref null any))
 //│     (local $tmp (ref null any))
@@ -156,7 +155,8 @@ class Foo(val a)
 //│         (struct.get $Foo $a
 //│           (ref.cast (ref $Foo)
 //│             (local.get $tmp))))))
-//│   (elem declare func $entry))
+//│   (elem $Foo_ctor declare func $Foo_ctor)
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 42
 
@@ -201,7 +201,6 @@ class Foo(val x) with
 //│           (nop)))
 //│       (return
 //│         (local.get $this))))
-//│   (elem declare func $Foo_ctor)
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $Foo (ref null any))
 //│     (local $tmp (ref null any))
@@ -215,7 +214,8 @@ class Foo(val x) with
 //│         (struct.get $Foo $y
 //│           (ref.cast (ref $Foo)
 //│             (local.get $tmp))))))
-//│   (elem declare func $entry))
+//│   (elem $Foo_ctor declare func $Foo_ctor)
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 42
 
@@ -258,13 +258,11 @@ O.y
 //│           (nop)))
 //│       (return
 //│         (local.get $this))))
-//│   (elem declare func $O_ctor1)
 //│   (func $start1 (type $start)
 //│     (block
 //│       (global.set $O$inst
 //│         (ref.cast (ref null $O)
 //│           (call $O_ctor1)))))
-//│   (elem declare func $start1)
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $O (ref null any))
 //│     (block (result (ref null any))
@@ -272,7 +270,9 @@ O.y
 //│       (struct.get $O $y
 //│         (ref.cast (ref $O)
 //│           (global.get $O$inst)))))
-//│   (elem declare func $entry)
+//│   (elem $O_ctor1 declare func $O_ctor1)
+//│   (elem $start1 declare func $start1)
+//│   (elem $entry declare func $entry)
 //│   (start $start1))
 //│ Wasm result:
 //│ = 1

@@ -261,7 +261,12 @@ object DataSegment:
   object Active:
     def apply(id: SymIdx, offset: Expr, bytes: Str, memuse: Opt[MemUse]): Active =
       new Active(id, offset, Seq(bytes), memuse)
-  case class Active(override val id: SymIdx, offset: Expr, bytes: Seq[Str], memuse: Opt[MemUse]) extends DataSegment(id, bytes):
+  case class Active(
+      override val id: SymIdx,
+      offset: Expr,
+      bytes: Seq[Str],
+      memuse: Opt[MemUse],
+  ) extends DataSegment(id, bytes):
     def toWat: Document =
       doc"(data ${id.toWat}${
           memuse.fold(doc"")(memuse => doc" ${memuse.toWat}")
@@ -275,6 +280,41 @@ end DataSegment
 
 /** A data segment entry. */
 sealed abstract class DataSegment(val id: SymIdx, bytes: Seq[Str]) extends ToWat
+
+object ElemSegment:
+  case class Passive(
+      override val id: SymIdx,
+      override val elemlist: RefType -> Seq[Expr],
+  ) extends ElemSegment(id, elemlist):
+    def toWat: Document = doc"(elem ${id.toWat} ${abbrevElemList})"
+
+  case class Active(
+      override val id: SymIdx,
+      offset: Expr,
+      override val elemlist: RefType -> Seq[Expr],
+      // TODO(Derppening): Add `tableuse` here once we support multiple tables.
+  ) extends ElemSegment(id, elemlist):
+    def toWat: Document = doc"(elem ${id.toWat} ${offset.toWat} ${abbrevElemList})"
+
+  case class Declare(
+      override val id: SymIdx,
+      override val elemlist: RefType -> Seq[Expr],
+  ) extends ElemSegment(id, elemlist):
+    def toWat: Document = doc"(elem ${id.toWat} declare ${abbrevElemList})"
+
+/** An element segment entry. */
+sealed abstract class ElemSegment(val id: SymIdx, val elemlist: RefType -> Seq[Expr]) extends ToWat:
+  protected def abbrevElemList: Document =
+    if elemlist._2.forall(_.mnemonic == "ref.func") then
+      doc"func${
+          elemlist._2.map: e =>
+            e.instrargs.head match
+              case a: ToWat => a.toWat
+              case a: Document => a
+          .mkDocument(doc" ").surroundUnlessEmpty(doc" ")
+        }"
+    else
+      doc"${elemlist._1.toWat}${elemlist._2.map(_.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")}"
 
 /** An abstraction over a generic WebAssembly instructions.
   */

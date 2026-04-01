@@ -61,8 +61,8 @@ let dup2 = "dup"
 //│                 (ref.cast (ref $TupleArray)
 //│                   (local.get $tuple))
 //│                 (i32.const 1))))))))
-//│   (elem declare func $entry)
-//│   (data $dup (i32.const 0) "\64\00\75\00\70\00"))
+//│   (data $dup (i32.const 0) "\64\00\75\00\70\00")
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = "dup"
 

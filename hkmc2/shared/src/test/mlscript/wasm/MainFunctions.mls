@@ -42,6 +42,6 @@ throw x
 //│           (i32.const 2)))
 //│       (throw $mlx_exn
 //│         (local.get $x))))
-//│   (elem declare func $entry))
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] 2

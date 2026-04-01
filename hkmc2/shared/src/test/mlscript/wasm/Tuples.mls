@@ -83,6 +83,6 @@ c.[3]
 //│             (ref.cast (ref $TupleArray)
 //│               (local.get $tuple))
 //│             (i32.const 3))))))
-//│   (elem declare func $entry))
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 40

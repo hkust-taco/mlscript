@@ -24,16 +24,16 @@
 //│       (nop)
 //│       (return
 //│         (local.get $this))))
-//│   (elem declare func $Unit_ctor1)
 //│   (func $start1 (type $start)
 //│     (block
 //│       (global.set $Unit$inst
 //│         (ref.cast (ref null $Unit)
 //│           (call $Unit_ctor1)))))
-//│   (elem declare func $start1)
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (global.get $Unit$inst))
-//│   (elem declare func $entry)
+//│   (elem $Unit_ctor1 declare func $Unit_ctor1)
+//│   (elem $start1 declare func $start1)
+//│   (elem $entry declare func $entry)
 //│   (start $start1))
 //│ Wasm result:
 //│ = {}
@@ -83,6 +83,6 @@ x
 //│         (ref.i31
 //│           (i32.const 1)))
 //│       (local.get $x)))
-//│   (elem declare func $entry))
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 1

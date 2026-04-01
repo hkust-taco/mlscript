@@ -111,7 +111,7 @@ class FuncInfo(
         locals.map: p =>
           doc"(local $$${p._2} ${RefType.anyref.toWat})"
         .mkDocument(doc" # ").surroundUnlessEmpty(doc" # ")
-      } # ${body.toWat} #} ) # (elem declare func ${id.toWat})"""
+      } # ${body.toWat} #} )"""
 end FuncInfo
 
 /** A Wasm global and its associated information.
@@ -248,6 +248,9 @@ class Ctx extends ToWat:
 
   /** [[ListMap]] containing all data segments in the module. */
   private var dataSegments = ListMap.empty[SymIdx, DataSegment]
+
+  /** [[ListMap]] containing all element segments in the module. */
+  private var elemSegments = ListMap.empty[SymIdx, ElemSegment]
 
   /** [[ListMap]] containing all function definitions and imports in the module mapped by their symbolic identifiers. */
   private var funcs = ListMap.empty[SymIdx, FuncInfo | Import[ExternType.Func]]
@@ -442,7 +445,11 @@ class Ctx extends ToWat:
     funcs = funcs + (id -> funcInfo)
     sym.foreach:
       namedFuncs(_) = funcInfo
-    FuncIdx(funcInfo.id)
+    val idx = FuncIdx(funcInfo.id)
+    val refType = RefType(funcInfo.typeUse.typeIdx, nullable = false)
+    elemSegments = elemSegments +
+      (id -> ElemSegment.Declare(id, refType -> Seq(ref.func(idx, refType))))
+    idx
 
   @deprecated("Use the overload without `resolveSymIdx` instead.")
   def getFunc(funcref: FuncIdx | Symbol, resolveSymIdx: Bool): Opt[FuncIdx] =
@@ -593,8 +600,9 @@ class Ctx extends ToWat:
             ++ globals.toSeq.map(_._2.toWat)
             ++ memories.toSeq.filter(_._2.isInstanceOf[MemInfo]).map(_._2.toWat)
             ++ funcs.toSeq.filter(_._2.isInstanceOf[FuncInfo]).map(_._2.toWat)
-            ++ startFunc.toSeq.map(funcIdx => doc"(start ${funcIdx.toWat})")
             ++ dataSegments.toSeq.map(_._2.toWat)
+            ++ elemSegments.toSeq.map(_._2.toWat)
+            ++ startFunc.toSeq.map(funcIdx => doc"(start ${funcIdx.toWat})")
         ).mkDocument(doc" # ")
       } #} )"
 
