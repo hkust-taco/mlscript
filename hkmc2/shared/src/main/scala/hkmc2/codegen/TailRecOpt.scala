@@ -500,6 +500,7 @@ class TailRecOpt(using State, TL, Raise):
     // Report @tailrec on nested functions that weren't processed by the optimization above.
     // Only top-level function definitions are gathered and optimized; nested functions
     // (inside other function bodies) are silently skipped. This traversal catches them.
+    // `depth` tracks FunDefn nesting; safe because this traverser is used exactly once.
     var depth = 0
     new BlockTraverser:
       override def applyFunDefn(fun: FunDefn): Unit =
