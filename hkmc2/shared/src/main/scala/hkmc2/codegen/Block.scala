@@ -513,7 +513,7 @@ final case class FunDefn(
   val innerSym = N
   val asPath = Value.Ref(sym, S(dSym))
 object FunDefn:
-  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(forceTailRec: Bool, configOverride: Opt[Config] = N)(using State) =
+  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(forceTailRec: Bool, configOverride: Opt[Config])(using State) =
     val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
     sym.tsym = S(tSym)
     FunDefn(owner, sym, tSym, params, body)(forceTailRec, configOverride)
@@ -535,7 +535,7 @@ object ValDefn:
       k: syntax.Val,
       sym: BlockMemberSymbol,
       rhs: Path,
-      configOverride: Opt[Config] = N,
+      configOverride: Opt[Config],
     )(using State)
     : ValDefn =
       ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme)), sym = sym, rhs = rhs)(configOverride)

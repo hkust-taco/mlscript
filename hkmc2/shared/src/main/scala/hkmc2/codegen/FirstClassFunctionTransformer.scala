@@ -99,10 +99,10 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
           case head :: rest =>
             val newBody = rec(rest)
             val funSym = new BlockMemberSymbol("lambda$", Nil, false)
-            val funDef = FunDefn.withFreshSymbol(None, funSym, head :: Nil, newBody)(false)
+            val funDef = FunDefn.withFreshSymbol(None, funSym, head :: Nil, newBody)(false, N)
             Scoped(Set(funSym), Define(funDef, Return(Value.Ref(funDef.sym, Some(funDef.dSym)), false)))
           case Nil => fd.body
-        FunDefn.withFreshSymbol(fd.owner, fd.sym, head :: Nil, rec(tail))(fd.forceTailRec)
+        FunDefn.withFreshSymbol(fd.owner, fd.sym, head :: Nil, rec(tail))(fd.forceTailRec, fd.configOverride)
 
   def transform(b: Block): Block =
     val desugared = new DesugarMultipleParamList().applyBlock(b)

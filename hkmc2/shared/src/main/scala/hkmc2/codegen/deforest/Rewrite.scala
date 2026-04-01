@@ -554,6 +554,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
         FunDefn(
           N, bms, tSym, refreshedParams,
           bodyWithCorrectSymbols)(false, N)
+    end newPolyFuns
     
     val newBranchFuns =
       for (branchId@(dtorId, whichBranch), (bms, tSym)) <- branchFunSyms yield

@@ -341,7 +341,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
       val (stagedMethods, debugPrintCode) = companion.methods
         .map(applyFunDefnInner)
         .unzip
-      val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(PlainParamList(Nil)), companion.ctor)(false)
+      val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(PlainParamList(Nil)), companion.ctor)(false, N)
       val (stagedCtor, ctorPrint) = applyFunDefnInner(ctor)
 
       val unit = State.runtimeSymbol.asPath.selSN("Unit")
