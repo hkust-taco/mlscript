@@ -102,10 +102,10 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
       val body2 = applyFunBodyLikeBlock(fun.body)
       for s <- oldParamSyms do mapping.remove(s)
       if newlyCreated then
-        Scoped(Set.single(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec)))
+        Scoped(Set.single(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride)))
       else
-        k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec))
-    case ValDefn(tsym, sym, rhs) =>
+        k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride))
+    case defn @ ValDefn(tsym, sym, rhs) =>
       val (tsym2, sym2) = mapping.get(sym) match
         case None =>
           val newBms = new BlockMemberSymbol(sym.nme, sym.trees, sym.nameIsMeaningful)
@@ -116,7 +116,7 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
           (bms.tsym.get, bms)
         case _ => die
       applyPath(rhs): rhs2 =>
-        k(ValDefn(tsym2, sym2, rhs2))
+        k(ValDefn(tsym2, sym2, rhs2)(defn.configOverride))
     case _ => super.applyDefn(defn)(k)
   
   override def applyValue(v: Value)(k: Value => Block): Block = v match

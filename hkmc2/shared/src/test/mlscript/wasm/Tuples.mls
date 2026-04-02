@@ -55,7 +55,7 @@ c.[3]
 //│   (type $TupleArray (array (ref null any)))
 //│   (type $TupleArrayMut (array (mut (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (func $entry (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $c (ref null any))
 //│     (local $tuple (ref null any))
 //│     (block (result (ref null any))
@@ -83,7 +83,6 @@ c.[3]
 //│             (ref.cast (ref $TupleArray)
 //│               (local.get $tuple))
 //│             (i32.const 3))))))
-//│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 40

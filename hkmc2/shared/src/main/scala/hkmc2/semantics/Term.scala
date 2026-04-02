@@ -24,6 +24,7 @@ enum Annot extends AutoLocated:
   case Trm(trm: Term)
   case TailRec
   case TailCall
+  case Config(modify: hkmc2.Config => hkmc2.Config)
   
   def symbol: Opt[Symbol] = this match
     case Trm(trm) => trm.symbol
@@ -31,16 +32,17 @@ enum Annot extends AutoLocated:
   
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
-    case _: Modifier | Untyped | TailRec | TailCall => Vector.empty
+    case _: Modifier | Untyped | TailRec | TailCall | _: Config => Vector.empty
   
   def children: Vector[Located] = this match
     case Trm(trm) => Vector.single(trm)
-    case _: Modifier | Untyped | TailRec | TailCall => Vector.empty
+    case _: Modifier | Untyped | TailRec | TailCall | _: Config => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case Untyped => doc"‹untyped›"
     case Modifier(mod) => doc"@${mod.name}"
     case Trm(trm) => doc"@${trm.show}"
+    case Config(_) => doc"@config(...)"
   
   def mkClone(using State): Annot = this match
     case Untyped => Untyped
@@ -48,6 +50,7 @@ enum Annot extends AutoLocated:
     case Trm(trm) => Trm(trm.mkClone)
     case TailRec => TailRec
     case TailCall => TailCall
+    case c: Config => c
 
 type AnySelTerm = AnySel & Resolvable
 
@@ -508,6 +511,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case RcdField(field, rhs) => RcdField(field.mkClone, rhs.mkClone)
     case RcdSpread(rcd) => RcdSpread(rcd.mkClone)
     case DefineVar(sym, rhs) => DefineVar(sym, rhs.mkClone)
+    case sc: SetConfig => sc
   
   def describe: Str =
     val desc = this match
@@ -625,6 +629,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Neg(e) => Vector.single(e)
     case Annotated(ann, target) => ann.subTerms ++ Vector.single(target)
     case LeadingDotSel(nme) => Vector.empty
+    case SetConfig(_) => Vector.empty
   
   // private def treeOrSubterms(t: Tree, t: Term): Ls[Located] = t match
   private def treeOrSubterms(t: Tree): Vector[Located] = t match
@@ -825,6 +830,10 @@ final case class RcdField(field: Term, rhs: Term) extends Statement
 final case class RcdSpread(rcd: Term) extends Statement
 
 final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
+
+/** A global configuration change directive (`#config(...)`).
+  * Records a function that modifies the current compiler configuration. */
+final case class SetConfig(modify: hkmc2.Config => hkmc2.Config) extends Statement
 
 /**
  * isMethod: if the term is a method (as opposed to a function)

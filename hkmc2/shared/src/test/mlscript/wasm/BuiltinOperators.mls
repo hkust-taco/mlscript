@@ -27,15 +27,14 @@
 //│                 (local.get $rhs))))))
 //│       (else
 //│         (unreachable))))
-//│   (elem declare func $plus_impl1)
-//│   (func $entry (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (call $plus_impl1
 //│       (ref.i31
 //│         (i32.const 1))
 //│       (ref.i31
 //│         (i32.const 2))))
-//│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
+//│   (elem $plus_impl1 declare func $plus_impl1)
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3
 
@@ -59,13 +58,12 @@
 //│                 (local.get $arg))))))
 //│       (else
 //│         (unreachable))))
-//│   (elem declare func $neg_impl1)
-//│   (func $entry (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (call $neg_impl1
 //│       (ref.i31
 //│         (i32.const 2))))
-//│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
+//│   (elem $neg_impl1 declare func $neg_impl1)
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = -2
 
@@ -114,15 +112,14 @@ not true
 //│                 (local.get $rhs))))))
 //│       (else
 //│         (unreachable))))
-//│   (elem declare func $eq_impl1)
-//│   (func $entry (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (call $eq_impl1
 //│       (ref.i31
 //│         (i32.const 1))
 //│       (ref.i31
 //│         (i32.const 1))))
-//│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
+//│   (elem $eq_impl1 declare func $eq_impl1)
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 1
 
