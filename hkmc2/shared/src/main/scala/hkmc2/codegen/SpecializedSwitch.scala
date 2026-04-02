@@ -57,7 +57,7 @@ private enum MatchType:
  * 
  * For this chain to be specialized, for each adjacent pair Mi and M(i+1), one of the following hold:
  * 
- * - Mi = MFallthrough(_, _, v) and Mi(i+1) matches v, and the first case of M(i+1) matches v.
+ * - Mi = MFallthrough(_, _, v), and the first case of M(i+1) matches v.
  * - Mi = MBreak.
  * 
  * Note that this means Mi = MCases only if i = n.
