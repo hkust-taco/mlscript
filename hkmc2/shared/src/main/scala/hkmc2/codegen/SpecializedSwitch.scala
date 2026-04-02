@@ -6,8 +6,6 @@ import utils.*
 
 import hkmc2.codegen.*
 import hkmc2.semantics.*
-import hkmc2.Message.*
-import hkmc2.ScopeData.*
 import hkmc2.syntax.{Literal}
 import scala.annotation.tailrec
 
