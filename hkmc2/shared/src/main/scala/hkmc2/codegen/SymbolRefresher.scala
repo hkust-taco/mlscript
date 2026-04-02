@@ -11,11 +11,6 @@ import semantics.Elaborator.State
 
 class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends BlockTransformer(SymbolSubst.Id):
   val mapping = MutMap.from(existingMapping)
-  private def copyInnerSym(s: InnerSymbol): InnerSymbol = s match
-    case s: ClassSymbol => ClassSymbol(s.tree, s.id)
-    case s: ModuleOrObjectSymbol => ModuleOrObjectSymbol(s.tree, s.id)
-    case s: PatternSymbol => PatternSymbol(s.id, s.params, s.body)
-    case s: TopLevelSymbol => TopLevelSymbol(s.nme)
   
   override def applyScopedBlock(b: Block): Block =
     b match
@@ -29,11 +24,7 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
           case bms: BlockMemberSymbol =>
             val newBms = new BlockMemberSymbol(bms.nme, Nil, bms.nameIsMeaningful)
             newBms.tsym = bms.tsym.map: t =>
-              val newOwner = t.owner.map: o =>
-                val newInner = copyInnerSym(o)
-                mapping(o) = newInner
-                oldSyms.add(o)
-                newInner
+              val newOwner = t.owner.map(o => existingMapping.getOrElse(o, o).asInstanceOf)
               val nt = new TermSymbol(t.k, newOwner, t.id)
               mapping(t) = nt
               oldSyms.add(t)
