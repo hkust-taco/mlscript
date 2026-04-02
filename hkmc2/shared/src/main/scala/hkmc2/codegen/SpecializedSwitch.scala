@@ -38,9 +38,9 @@ enum SwitchCase(l: Literal, b: Block):
   case Fallthrough(l: Literal, b: Block, next: Literal) extends SwitchCase(l, b)
 
 private enum MatchType:
-  case Fallthrough(value: Literal, body: Block, next: Literal)
-  case Break(value: Literal, body: Block)
-  case Cases(arms: List[Literal -> Block])
+  case MFallthrough(value: Literal, body: Block, next: Literal)
+  case MBreak(value: Literal, body: Block)
+  case MCases(arms: List[Literal -> Block])
 
 /*
  * We specialize chains of match statements of the following form:
@@ -58,14 +58,16 @@ private enum MatchType:
  * For this chain to be specialized, for each adjacent pair Mi and M(i+1), one of the following hold:
  * 
  * - Mi = MFallthrough(_, _, v) and Mi(i+1) matches v, and the first case of M(i+1) matches v.
- *   ==> Mi gets translated into SwitchCase.Fallthrough.
  * - Mi = MBreak.
- *   ==> Mi gets translated into ImplicitBreak.
  * 
  * Note that this means Mi = MCases only if i = n.
  * 
  * Furthermore, if M(n-1) is an MBreak, then the last statement may have a non-empty default case and it will be
  * compiled into `default: body`.
+ * 
+ * - MFallthrough is translated into SwitchCase.Fallthrough.
+ * - MBreak is translated into SwitchCase.ImplicitBreak.
+ * - MCases is translated into a list of SwitchCase.ExplicitBreak.
  */
 
 // S(S(value)): Ends with assign
@@ -104,11 +106,11 @@ private def findMatchChainRec(
                                                                   //   and it ends with break, continue or a literal assignment.
           default, restBlk
         ) => nextVal match
-          case S(nextVal) => S(MatchType.Fallthrough(curVal, b, nextVal))
-          case N => S(MatchType.Break(curVal, b))
+          case S(nextVal) => S(MatchType.MFallthrough(curVal, b, nextVal))
+          case N => S(MatchType.MBreak(curVal, b))
         // MCases
         case Match(Value.Ref(`scrutSym`, _), LitCases(arms), default, restBlk) =>
-          S(MatchType.Cases(arms))
+          S(MatchType.MCases(arms))
         case _ => N
       
       curMatch match
@@ -126,9 +128,9 @@ private def findMatchChainRec(
     case _ => N
   
   acc.headOption match
-    case Some(MatchType.Fallthrough(next = expectedVal))
+    case Some(MatchType.MFallthrough(next = expectedVal))
       if curVal.map(_ == expectedVal).getOrElse(true) => join
-    case Some(_: MatchType.Break) | None => join
+    case Some(_: MatchType.MBreak) | None => join
     case _ => (acc, N, b)
 
 
