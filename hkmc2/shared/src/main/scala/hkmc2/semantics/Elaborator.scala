@@ -593,12 +593,6 @@ extends Importer with ucs.SplitElaborator:
           raise(ErrorReport(msg"Identifier `${idn.name}` does not name a known class symbol." -> idn.toLoc :: Nil))
           N
       Term.SelProj(subterm(pre), c, idp)(f, FlowSymbol.selProj(idp.name), N, S(summon))
-    case tree @ InfixApp(sel @ Sel(pre, idn: Ident), kw @ Keywrd(Keyword.`#`), App(idp: Ident, args)) =>
-      val projTree = InfixApp(sel, kw, idp).withLocOf(tree)
-      val proj = subterm(projTree)
-      val sym = FlowSymbol.app()
-      val rt = subterm(args)
-      Term.App(proj, rt)(App(projTree, args), N, sym)
     case InfixApp(lhs, kw, rhs) =>
       raise:
         ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
@@ -1482,6 +1476,10 @@ extends Importer with ucs.SplitElaborator:
         go(sts, Nil, defn :: acc)
       case Annotated(annotation, target) :: sts =>
         go(target :: sts, annotations ++ annot(annotation), acc)
+      // * With tight right precedence, `#config(args)` is parsed as `App(Directive(config, Tup()), Tup(args))`.
+      // * Reconstruct as `Directive(config, Tup(args))` and re-process.
+      case App(Directive(prefix, _), args) :: sts =>
+        go(Directive(prefix, args) :: sts, annotations, acc)
       case Directive(Ident("config"), Tup(args)) :: sts =>
         reportUnusedAnnotations
         val modify = ConfigParser.parseOverrides(args)

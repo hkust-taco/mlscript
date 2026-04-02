@@ -415,19 +415,13 @@ f(AA(AA(0)))
 :expect 3
 fun f(x) = x.AA#aa.AA#aa
 f(AA(AA(3)))
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:604)
-//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword '#' here
-//│ ║  l.416: 	fun f(x) = x.AA#aa.AA#aa
-//│ ╙──       	           ^^^^^^^^^^^^^
 //│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	term:AA/aa
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	term:AA/aa
 //│ deforest > <<< fusing <<<
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:222)
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:261)
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+//│ = 3
 
 :expect 103
 fun inner(x, y) =
@@ -750,24 +744,13 @@ fun f(x) = if x is
   AA then if x.AA#aa is
     AA then x.AA#aa.AA#aa
 f(AA(AA(3)))
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:604)
-//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword '#' here
-//│ ║  l.751: 	    AA then x.AA#aa.AA#aa
-//│ ╙──       	            ^^^^^^^^^^^^^
 //│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(aa))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > 	Select(Ref(x,None),Ident(aa))
 //│ deforest > <<< fusing <<<
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:222)
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:261)
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+//│ = 3
 
 
 

@@ -43,11 +43,11 @@ t.Bar#x
 
 foo.Bar#baz(42)
 //│ Parsed:
-//│ 	InfixApp(Sel(Ident(foo),Ident(Bar)),Keywrd(keyword '#'),App(Ident(baz),Tup(List(IntLit(42)))))
+//│ 	App(InfixApp(Sel(Ident(foo),Ident(Bar)),Keywrd(keyword '#'),Ident(baz)),Tup(List(IntLit(42))))
 
 foo(42).Bar#baz(42)
 //│ Parsed:
-//│ 	InfixApp(Sel(App(Ident(foo),Tup(List(IntLit(42)))),Ident(Bar)),Keywrd(keyword '#'),App(Ident(baz),Tup(List(IntLit(42)))))
+//│ 	App(InfixApp(Sel(App(Ident(foo),Tup(List(IntLit(42)))),Ident(Bar)),Keywrd(keyword '#'),Ident(baz)),Tup(List(IntLit(42))))
 
 let x = 42 in x + 0
 //│ Parsed:
