@@ -408,9 +408,8 @@ class ParseRules(using State):
       )
     ) { case (kw, body) =>
       body match
-        case App(prefix: Ident, args) => Directive(prefix, args).mkLocWith(kw)
-        case _ =>
-          Directive(Ident("<error>"), body).mkLocWith(kw)
+        case App(prefix, args) => Directive(prefix, args).mkLocWith(kw)
+        case _ => Directive(body, Tup(Nil)).mkLocWith(kw)
     },
     standaloneExpr,
   )

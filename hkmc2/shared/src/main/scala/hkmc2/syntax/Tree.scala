@@ -107,7 +107,7 @@ enum Tree extends AutoLocated:
   case Outer(name: Opt[Tree])
   case Spread(kw: Keywrd[Keyword.Ellipsis], body: Opt[Tree])
   case Annotated(annotation: Tree, target: Tree)
-  case Directive(prefix: Ident, body: Tree)
+  case Directive(prefix: Tree, body: Tree)
   case Constructor(decl: Tree)
   /** Represents a term that has already been elaborated. When desugaring
    *  operator splits in the UCS, the `lhs` of `OpSplit` has already been elaborated

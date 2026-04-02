@@ -152,10 +152,14 @@ object Keyword:
   // * `#` is both a prefix keyword (for directives like `#config(...)`)
   // * and an infix operator (for disambiguation like `Lazy#get()`).
   // * It has very high left precedence (like selection) when used as infix.
+  // * The right precedence is set to application level so that:
+  // *   - In prefix position, `#config(args)` parses the full application.
+  // *   - In infix position, `Lazy#get()` picks up `get()` but not lower-prec operators.
   // * `canStartInfixOnNewLine = false` prevents it from being parsed as infix
   // * when it appears on a new line after an expression.
   val hashSelPrec = S(maxPrec.get + charPrecList.length)
-  val `#` = Keyword("#", hashSelPrec, N, canStartInfixOnNewLine = false)
+  val hashRightPrec = S(maxPrec.get + charPrecList.length - 2)
+  val `#` = Keyword("#", hashSelPrec, hashRightPrec, canStartInfixOnNewLine = false)
   
   val __ = Keyword("_", N, N)
   

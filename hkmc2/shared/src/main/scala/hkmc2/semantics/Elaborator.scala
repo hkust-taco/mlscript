@@ -593,11 +593,12 @@ extends Importer with ucs.SplitElaborator:
           raise(ErrorReport(msg"Identifier `${idn.name}` does not name a known class symbol." -> idn.toLoc :: Nil))
           N
       Term.SelProj(subterm(pre), c, idp)(f, FlowSymbol.selProj(idp.name), N, S(summon))
-    case InfixApp(sel @ Sel(pre, idn: Ident), kw @ Keywrd(Keyword.`#`), App(idp: Ident, args)) =>
-      val proj = subterm(InfixApp(sel, kw, idp))
+    case tree @ InfixApp(sel @ Sel(pre, idn: Ident), kw @ Keywrd(Keyword.`#`), App(idp: Ident, args)) =>
+      val projTree = InfixApp(sel, kw, idp).withLocOf(tree)
+      val proj = subterm(projTree)
       val sym = FlowSymbol.app()
       val rt = subterm(args)
-      Term.App(proj, rt)(DummyApp, N, sym)
+      Term.App(proj, rt)(App(projTree, args), N, sym)
     case InfixApp(lhs, kw, rhs) =>
       raise:
         ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
@@ -1488,6 +1489,11 @@ extends Importer with ucs.SplitElaborator:
       case Directive(Ident(name), _) :: sts =>
         raise(ErrorReport(
           msg"Unknown directive '#${name}'" -> sts.headOption.flatMap(_.toLoc) :: Nil,
+          source = Diagnostic.Source.Compilation))
+        go(sts, annotations, acc)
+      case (dir @ Directive(prefix, _)) :: sts =>
+        raise(ErrorReport(
+          msg"Expected a directive name after '#', but found ${prefix.describe}" -> prefix.toLoc :: Nil,
           source = Diagnostic.Source.Compilation))
         go(sts, annotations, acc)
       case (st: Tree) :: sts =>
