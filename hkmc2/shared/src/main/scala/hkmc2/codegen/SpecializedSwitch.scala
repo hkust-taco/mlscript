@@ -37,6 +37,11 @@ enum SwitchCase(l: Literal, b: Block):
     */
   case Fallthrough(l: Literal, b: Block, next: Literal) extends SwitchCase(l, b)
 
+private enum MatchType:
+  case Fallthrough(value: Literal, body: Block, next: Literal)
+  case Break(value: Literal, body: Block)
+  case Cases(arms: List[Literal -> Block])
+
 /*
  * We specialize chains of match statements of the following form:
  * 
@@ -48,7 +53,7 @@ enum SwitchCase(l: Literal, b: Block):
  * - MFallthrough(next): Has only one branch, and assigns the literal `next` to `x` at the end of that branch.
  * - MBreak: Has only one branch that ends with a `break` or a `continue` (and thus exits the
  *   scope that the match chain is defined in).
- * - MCases: Is not an MFallthrough or an MBreak (but still matches on `x` and only has literals patterns.)
+ * - MCases: Is not an MFallthrough or an MBreak (but still matches on `x` and only has literals patterns).
  * 
  * For this chain to be specialized, for each adjacent pair Mi and M(i+1), one of the following hold:
  * 
@@ -62,33 +67,69 @@ enum SwitchCase(l: Literal, b: Block):
  * Furthermore, if M(n-1) is an MBreak, then the last statement may have a non-empty default case and it will be
  * compiled into `default: body`.
  */
+
+// S(S(value)): Ends with assign
+// S(N): Ends with break or continue
+// N: None of the cases
 @tailrec
-private def lastBlk(b: Block): Opt[Assign | Break | Continue] = b match
-  case a @ Assign(lhs, rhs, End(_)) => S(a)
-  case b: (Break | Continue) => S(b)
-  case b: NonBlockTail => lastBlk(b.rest)
+private def caseLastBlk(b: Block, scrutSym: Local): Opt[Opt[Literal]] = b match
+  case a @ Assign(`scrutSym`, l: Literal, End(_)) => S(S(l))
+  case b: (Break | Continue) => S(N)
+  case b: NonBlockTail => caseLastBlk(b.rest, scrutSym)
   case _: BlockTail => N
 
-// @tailrec
-private def specializeIfRec(
-  b: Block, 
+private object LitCases:
+  def unapply(arms: List[Case -> Block]) = arms.foldLeft[Opt[List[Literal -> Block]]](S(Nil)):
+    case (S(acc), Case.Lit(litVal) -> b) => S((litVal -> b) :: acc)
+    case _ => N
+
+@tailrec
+private def findMatchChainRec(
+  b: Block,
   scrutSym: Local,
-  prev: Opt[SwitchCase],
-  acc: List[SwitchCase]
-): (cases: List[SwitchCase], rest: Block) = b match
-  case Match(
-    Value.Ref(`scrutSym`, _),         // The scrutinee is a ref and is the same as the one before.
-    Case.Lit(curVal) -> caseBod :: Nil,     // There is only one case matching an int literal.
-    N | S(End(_)), rest               // Default case does nothing, or does not exist.
-  ) => 
-    def join =
-      val last = lastBlk(caseBod)
-      ???
-    prev match
-    case Some(SwitchCase.Fallthrough(l, b, expectedVal)) if expectedVal === curVal => join
-    case Some(_: SwitchCase.ExplicitBreak) | Some(_: SwitchCase.ImplicitBreak) | None => join
-    case _ => (acc, b)
-  case _ => (acc, b)
+  acc: List[MatchType]
+): (cases: List[MatchType], dflt: Opt[Block], rest: Block) =
+  
+  object CaseLastBlk:
+    def unapply(b: Block) = caseLastBlk(b, scrutSym)
+  
+  inline def join: (cases: List[MatchType], dflt: Opt[Block], rest: Block) = b match
+    case m: Match =>
+      // Classify the current match statement.
+      val curMatch = b match
+        // MFallthrough or MBreak
+        case Match(
+          Value.Ref(`scrutSym`, _),                               // * The scrutinee is a ref and is the same as the one before.
+          Case.Lit(curVal) -> (b @ CaseLastBlk(nextVal)) :: Nil,  // * There is only one case matching an int literal
+                                                                  //   and it ends with break, continue or a literal assignment.
+          default, restBlk
+        ) => nextVal match
+          case S(nextVal) => S(MatchType.Fallthrough(curVal, b, nextVal))
+          case N => S(MatchType.Break(curVal, b))
+        // MCases
+        case Match(Value.Ref(`scrutSym`, _), LitCases(arms), default, restBlk) =>
+          S(MatchType.Cases(arms))
+        case _ => N
+      
+      curMatch match
+      case Some(value) =>
+        // Only the last match may have a default case.
+        if m.dflt.isDefined then (value :: acc, m.dflt, m.rest)
+        else findMatchChainRec(m.rest, scrutSym, value :: acc)
+      case None => (acc, N, m)
+    case _ => (acc, N, b)
+  
+  
+  val curVal = b match
+    case m: Match => m.arms.headOption.collect:
+      case Case.Lit(lit) -> _ => lit
+    case _ => N
+  
+  acc.headOption match
+    case Some(MatchType.Fallthrough(next = expectedVal))
+      if curVal.map(_ == expectedVal).getOrElse(true) => join
+    case Some(_: MatchType.Break) | None => join
+    case _ => (acc, N, b)
 
 
 
