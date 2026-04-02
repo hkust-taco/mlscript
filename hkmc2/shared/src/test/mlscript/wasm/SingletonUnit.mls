@@ -12,7 +12,6 @@
 //│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
 //│   (global $Unit$inst (mut (ref null $Unit)) (ref.null $Unit))
-//│   (start $start1)
 //│   (func $Unit_ctor1 (type $Unit_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
@@ -25,17 +24,17 @@
 //│       (nop)
 //│       (return
 //│         (local.get $this))))
-//│   (elem declare func $Unit_ctor1)
 //│   (func $start1 (type $start)
 //│     (block
 //│       (global.set $Unit$inst
 //│         (ref.cast (ref null $Unit)
 //│           (call $Unit_ctor1)))))
-//│   (elem declare func $start1)
-//│   (func $entry (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (global.get $Unit$inst))
-//│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
+//│   (elem $Unit_ctor1 declare func $Unit_ctor1)
+//│   (elem $start1 declare func $start1)
+//│   (elem $entry declare func $entry)
+//│   (start $start1))
 //│ Wasm result:
 //│ = {}
 
@@ -77,14 +76,13 @@ x
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (func $entry (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $x (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $x
 //│         (ref.i31
 //│           (i32.const 1)))
 //│       (local.get $x)))
-//│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 1

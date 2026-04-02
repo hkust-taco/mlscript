@@ -20,7 +20,6 @@ Bar.y
 //│   (type $start (func))
 //│   (global $Foo$inst (mut (ref null $Foo)) (ref.null $Foo))
 //│   (global $Bar$inst (mut (ref null $Bar)) (ref.null $Bar))
-//│   (start $start1)
 //│   (func $Foo_ctor1 (type $Foo_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
@@ -39,7 +38,6 @@ Bar.y
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (elem declare func $Foo_ctor1)
 //│   (func $Bar_ctor1 (type $Bar_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
@@ -58,7 +56,6 @@ Bar.y
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (elem declare func $Bar_ctor1)
 //│   (func $start1 (type $start)
 //│     (block
 //│       (global.set $Foo$inst
@@ -67,8 +64,7 @@ Bar.y
 //│       (global.set $Bar$inst
 //│         (ref.cast (ref null $Bar)
 //│           (call $Bar_ctor1)))))
-//│   (elem declare func $start1)
-//│   (func $entry (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $Bar (ref null any))
 //│     (local $Foo (ref null any))
 //│     (block (result (ref null any))
@@ -78,8 +74,11 @@ Bar.y
 //│         (struct.get $Bar $y
 //│           (ref.cast (ref $Bar)
 //│             (global.get $Bar$inst))))))
-//│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
+//│   (elem $Foo_ctor1 declare func $Foo_ctor1)
+//│   (elem $Bar_ctor1 declare func $Bar_ctor1)
+//│   (elem $start1 declare func $start1)
+//│   (elem $entry declare func $entry)
+//│   (start $start1))
 //│ Wasm result:
 //│ = 2
 

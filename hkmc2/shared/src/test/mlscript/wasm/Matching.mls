@@ -49,7 +49,7 @@ if Bar(true) is
 //│   (type $Bar_ctor (func (param $y (ref null any)) (result (ref null any))))
 //│   (type $Baz_ctor (func (param $z (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (func $Bar_ctor (type $Bar_ctor) (param $y (ref null any)) (result (ref null any))
+//│   (func $Bar_ctor (export "Bar_ctor") (type $Bar_ctor) (param $y (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -66,9 +66,7 @@ if Bar(true) is
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (export "Bar_ctor" (func $Bar_ctor))
-//│   (elem declare func $Bar_ctor)
-//│   (func $Baz_ctor (type $Baz_ctor) (param $z (ref null any)) (result (ref null any))
+//│   (func $Baz_ctor (export "Baz_ctor") (type $Baz_ctor) (param $z (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -85,9 +83,7 @@ if Bar(true) is
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (export "Baz_ctor" (func $Baz_ctor))
-//│   (elem declare func $Baz_ctor)
-//│   (func $entry (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $Bar (ref null any))
 //│     (local $Baz (ref null any))
 //│     (local $scrut (ref null any))
@@ -103,10 +99,9 @@ if Bar(true) is
 //│         (nop)
 //│         (block (result (ref null any))
 //│           (local.set $scrut
-//│             (call_ref $Bar_ctor
+//│             (call $Bar_ctor
 //│               (ref.i31
-//│                 (i32.const 1))
-//│               (ref.func $Bar_ctor)))
+//│                 (i32.const 1))))
 //│           (block (result (ref null any))
 //│             (block $match
 //│               (local.set $matchRes
@@ -180,8 +175,9 @@ if Bar(true) is
 //│                 (ref.i31
 //│                   (i32.const 2))))
 //│             (local.get $matchRes))))))
-//│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
+//│   (elem $Bar_ctor declare func $Bar_ctor)
+//│   (elem $Baz_ctor declare func $Baz_ctor)
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3
 

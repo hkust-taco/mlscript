@@ -17,7 +17,6 @@ let i = 0 in
 //│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
 //│   (global $Unit$inst (mut (ref null $Unit)) (ref.null $Unit))
-//│   (start $start1)
 //│   (func $lt_impl1 (type $lt_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
 //│     (if (result (ref null any))
 //│       (i32.and
@@ -36,7 +35,6 @@ let i = 0 in
 //│                 (local.get $rhs))))))
 //│       (else
 //│         (unreachable))))
-//│   (elem declare func $lt_impl1)
 //│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
 //│     (if (result (ref null any))
 //│       (i32.and
@@ -55,7 +53,6 @@ let i = 0 in
 //│                 (local.get $rhs))))))
 //│       (else
 //│         (unreachable))))
-//│   (elem declare func $plus_impl1)
 //│   (func $Unit_ctor1 (type $Unit_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
@@ -68,14 +65,12 @@ let i = 0 in
 //│       (nop)
 //│       (return
 //│         (local.get $this))))
-//│   (elem declare func $Unit_ctor1)
 //│   (func $start1 (type $start)
 //│     (block
 //│       (global.set $Unit$inst
 //│         (ref.cast (ref null $Unit)
 //│           (call $Unit_ctor1)))))
-//│   (elem declare func $start1)
-//│   (func $entry (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $i (ref null any))
 //│     (local $scrut (ref null any))
 //│     (local $tmp (ref null any))
@@ -126,8 +121,12 @@ let i = 0 in
 //│                         (global.get $Unit$inst))))
 //│                   (local.get $matchRes))))))
 //│         (local.get $i))))
-//│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
+//│   (elem $lt_impl1 declare func $lt_impl1)
+//│   (elem $plus_impl1 declare func $plus_impl1)
+//│   (elem $Unit_ctor1 declare func $Unit_ctor1)
+//│   (elem $start1 declare func $start1)
+//│   (elem $entry declare func $entry)
+//│   (start $start1))
 //│ Wasm result:
 //│ = 10
 
@@ -211,7 +210,7 @@ tailMatchAllValue(1)
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $tailMatchAllValue1 (func (param $x (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (func $tailMatchAllValue (type $tailMatchAllValue1) (param $x (ref null any)) (result (ref null any))
+//│   (func $tailMatchAllValue (export "tailMatchAllValue") (type $tailMatchAllValue1) (param $x (ref null any)) (result (ref null any))
 //│     (local $matchRes (ref null any))
 //│     (block (result (ref null any))
 //│       (block $match
@@ -245,18 +244,15 @@ tailMatchAllValue(1)
 //│           (ref.i31
 //│             (i32.const 30))))
 //│       (local.get $matchRes)))
-//│   (export "tailMatchAllValue" (func $tailMatchAllValue))
-//│   (elem declare func $tailMatchAllValue)
-//│   (func $entry (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $tailMatchAllValue (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
-//│       (call_ref $tailMatchAllValue1
+//│       (call $tailMatchAllValue
 //│         (ref.i31
-//│           (i32.const 1))
-//│         (ref.func $tailMatchAllValue))))
-//│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
+//│           (i32.const 1)))))
+//│   (elem $tailMatchAllValue declare func $tailMatchAllValue)
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 20
 
