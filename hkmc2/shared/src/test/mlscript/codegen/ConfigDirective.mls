@@ -129,16 +129,11 @@ fun foo(x) = { x.call(), print(42) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
-:fixme // Configuration is not taken into account, here
 #config(effectHandlers: Some(EffectHandlers()))
 handle h = Object with {}
-foo(h)
-//│ ╔══[COMPILATION ERROR] Effect handlers are not enabled
-//│ ║  l.134: 	handle h = Object with {}
-//│ ║         	           ^^^^^^^^^^^^^^
-//│ ║  l.135: 	foo(h)
-//│ ╙──       	^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+print(h)
+//│
+//│ > Handler$h$
 
 
 #config(effectHandlers: Some(EffectHandlers(stackSafety: Some(StackSafety(100)))))
@@ -152,18 +147,9 @@ foo(h)
 //│ = "Aborted!"
 
 
-:fixme // `#` should probably be treated as a prefix keyword, not an operator identifier
 print(42)
 #config(liftDefns: None)
-//│ ╔══[COMPILATION ERROR] Name not found: #
-//│ ║  l.157: 	#config(liftDefns: None)
-//│ ╙──       	^
-//│ ╔══[COMPILATION ERROR] Name not found: config
-//│ ║  l.157: 	#config(liftDefns: None)
-//│ ╙──       	 ^^^^^^
-//│ ╔══[COMPILATION ERROR] Name not found: None
-//│ ║  l.157: 	#config(liftDefns: None)
-//│ ╙──       	                   ^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│
+//│ > 42
 
 

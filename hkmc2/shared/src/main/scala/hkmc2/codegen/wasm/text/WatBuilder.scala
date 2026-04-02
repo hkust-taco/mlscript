@@ -11,7 +11,7 @@ import document.Document
 import js.CodeBuilder
 import semantics.*, Elaborator.State
 import syntax.Tree.{BoolLit, IntLit, StrLit, Ident}
-import text.Param as WasmParam
+import text.{Import as WasmImport, Param as WasmParam}
 import Message.MessageContext
 import Scope.scope
 
@@ -28,6 +28,9 @@ extension (instr: FoldedInstr)
     instr.mnemonic.split('.').optionUnless(_.size == 1).map(_.head)
 
 object WatBuilder:
+  /** The maximum number of characters taken to be part of the identifier asscoiated with string constants. */
+  val StringConstantIdentMaxLength = 16
+
   object ExternIntrinsics:
     val SystemModule = "system"
     val SystemMemoryImportName = "mem"
@@ -152,7 +155,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
         val classFields = (defn.publicFields.map(_._2) ++ defn.privateFields)
           .map: f =>
-            f -> Field(RefType.anyref, mutable = true, id = SymIdx(f.nme))
+            f -> Field(RefType.anyref, mutable = true, id = f.nme)
 
         val allFields = inheritedFields ++ classFields
 
@@ -161,7 +164,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           sym = S(defn.sym),
           typeInfo = TypeInfo(
             sym = defn.sym,
-            compType = StructType(fields = allFields, parents = Seq(baseObjectTypeIdx), isSubtype = true),
+            compType = StructType(fields = allFields, parents = Seq(baseObjectTypeIdx)),
             objectTag = S(ctx.getFreshObjectTag()),
           ),
         )
@@ -199,14 +202,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       "mlx_exn",
       ctx.addTag(TagInfo(
         id = SymIdx("mlx_exn"),
-        typeIdx = ctx.addType(
+        typeUse = TypeUse(ctx.addType(
           sym = N,
           TypeInfo(
             id = SymIdx(symNme),
-            FunctionType(params = Seq(WasmParam(N, RefType.anyref)), results = Seq.empty),
+            FunctionType(params = Seq(WasmParam("ex", RefType.anyref)), results = Seq.empty),
             objectTag = S(ctx.getFreshObjectTag()),
           ),
-        ),
+        )),
       )),
     )
 
@@ -253,17 +256,19 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         TypeInfo(
           id = SymIdx(importTyNme),
           FunctionType(
-            params = Seq(WasmParam(N, RefType.anyref), WasmParam(N, RefType.anyref)),
+            params = Seq(WasmParam("glob_offset", RefType.anyref), WasmParam("len", RefType.anyref)),
             results = Seq(Result(RefType.anyref)),
           ),
           objectTag = N,
         ),
       )
-      FuncImport(
+      WasmImport(
         module = ExternIntrinsics.SystemModule,
         name = ExternIntrinsics.StringFromUtf16ImportName,
-        id = SymIdx(ExternIntrinsics.StringFromUtf16ImportName),
-        typeIdx = importTy,
+        externType = ExternType.Func(
+          id = SymIdx(ExternIntrinsics.StringFromUtf16ImportName),
+          typeUse = TypeUse(importTy),
+        ),
       )
   end getOrLoadStrCtorFunction
 
@@ -520,12 +525,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             symToField.find((fieldSym, _) => fieldSym.nme == sym.nme).map((_, v) => v)
           case _ => N
       .map(_.id)
-    FieldIdx(
+    FieldIdx(SymIdx(
       fieldIdx getOrElse:
         lastWords(
           s"Missing field `${sym.toString}` in struct `${thisSym.toString}` with type `${structInfo.toWat.mkString()}`",
         ),
-    )
+    ))
   end fieldSelect
 
   def result(r: codegen.Result)(using Ctx, Raise, Scope): Expr = r match
@@ -561,7 +566,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               Ls(msg"Plain class references are not supported in Wasm; instantiate the class instead." -> r.toLoc)
           else
             ctx.getFunc(l) match
-              case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncInfo_!(l).typeIdx, nullable = false))
+              case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncInfo_!(l).typeUse.typeIdx, nullable = false))
               case N => getVar(l, r.toLoc)
 
     case Call(Value.Ref(l: BuiltinSymbol, _), lhs :: rhs :: Nil) if !l.functionLike =>
@@ -594,33 +599,53 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             returnTypes = Seq(Result(RefType.anyref)),
           )
         case N =>
-          val base = subexpression(fun)
-          if base.resultTypes.exists(_ is UnreachableType) then return base
-          val wasmArgs = args.map(argument)
+          fun match
+            case Value.Ref(l, _) =>
+              val base = fun match
+                case Value.Ref(l, _) => ctx.getFunc(l)
+                case _ => N
+              val baseFuncIdx = base match
+                case S(idx) => idx
+                case N => return errExpr(
+                    Ls(msg"Expected static function reference in Call(...) expression" -> fun.toLoc),
+                    extraInfo = S(fun.toString),
+                  )
+              val baseTypeInfo = ctx.getTypeInfo_!(ctx.getFuncInfo_!(baseFuncIdx).typeUse.typeIdx)
+              val wasmArgs = args.map(argument)
 
-          val baseTypeIdx = base.resultType match
-            case S(RefType(idx: TypeIdx, _)) => idx
-            case ty =>
-              return errExpr(
-                Ls(msg"Expected WAT of `fun` expression in Call(...) to have a `(ref <typeidx>)` type" -> r.toLoc),
-                extraInfo = S(
-                  s"Block IR: `${
-                      fun.toString
-                    }`\nCompiled WAT: `${
-                      base.toWat.toString
-                    }`\n... which has type `${
-                      ty.fold("(none)")(_.toWat.toString)
-                    }`",
-                ),
+              call(
+                funcidx = baseFuncIdx,
+                operands = wasmArgs.toSeq,
+                returnTypes = baseTypeInfo.compType.asInstanceOf[FunctionType].sigType.results,
               )
-          val baseTypeInfo = ctx.getTypeInfo_!(baseTypeIdx)
+            case _ =>
+              val base = subexpression(fun)
+              if base.resultTypes.exists(_ is UnreachableType) then return base
+              val wasmArgs = args.map(argument)
 
-          call_ref(
-            target = base,
-            operands = wasmArgs.toSeq,
-            typeIdx = baseTypeIdx,
-            funcType = baseTypeInfo.compType.asInstanceOf[FunctionType],
-          )
+              val baseTypeIdx = base.resultType match
+                case S(RefType(idx: TypeIdx, _)) => idx
+                case ty =>
+                  return errExpr(
+                    Ls(msg"Expected WAT of `fun` expression in Call(...) to have a `(ref <typeidx>)` type" -> r.toLoc),
+                    extraInfo = S(
+                      s"Block IR: `${
+                          fun.toString
+                        }`\nCompiled WAT: `${
+                          base.toWat.toString
+                        }`\n... which has type `${
+                          ty.fold("(none)")(_.toWat.toString)
+                        }`",
+                    ),
+                  )
+              val baseTypeInfo = ctx.getTypeInfo_!(baseTypeIdx)
+
+              call_ref(
+                target = base,
+                operands = wasmArgs.toSeq,
+                typeIdx = baseTypeIdx,
+                funcType = baseTypeInfo.compType.asInstanceOf[FunctionType],
+              )
 
     case sel @ Select(qual, id) =>
       sel.symbol match
@@ -799,7 +824,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       TypeInfo(
         id = SymIdx(scope.allocateName(TempSymbol(N, name))),
         FunctionType(
-          params = params.map((_, nme) => WasmParam(S(nme), RefType.anyref)),
+          params = params.map((_, nme) => WasmParam(nme, RefType.anyref)),
           results = Seq(Result(RefType.anyref)),
         ),
         objectTag = N,
@@ -807,7 +832,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     )
     val funcInfo = FuncInfo(
       id = SymIdx(scope.allocateName(TempSymbol(N, name))),
-      typeIdx = funcTy,
+      typeUse = TypeUse(funcTy),
       params = params,
       nResults = 1,
       locals = Seq.empty,
@@ -1049,7 +1074,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       val funcInfo =
                         FuncInfo(
                           sym,
-                          typeIdx = funcTy,
+                          typeUse = TypeUse(funcTy),
                           params = ps.params.zip(params.map(_._2)).map((p, nme) => p.sym -> nme),
                           nResults = bodyWat.resultTypes.length,
                           locals = locals,
@@ -1121,7 +1146,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       Seq(
                         local.set(thisVar, struct.new_default(typeref)),
                         struct.set(
-                          FieldIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id),
+                          FieldIdx(SymIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id)),
                           ref.cast(
                             local.get(thisVar, RefType.anyref),
                             RefType(typeref, nullable = false),
@@ -1151,7 +1176,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       TypeInfo(
                         id = SymIdx(funcTyId),
                         FunctionType(
-                          params = ctorParams.map(p => WasmParam(S(p._2), RefType.anyref)),
+                          params = ctorParams.map(p => WasmParam(p._2, RefType.anyref)),
                           results = Seq(Result(RefType.anyref)),
                         ),
                         objectTag = N,
@@ -1168,7 +1193,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       FuncInfo(
                         id =
                           SymIdx(ctorId.getOrElse(scope.allocateName(TempSymbol(N, s"${clsLikeDefn.sym.nme}_ctor")))),
-                        typeIdx = funcTy,
+                        typeUse = TypeUse(funcTy),
                         params = ctorParams,
                         nResults = ctorCode.resultTypes.length,
                         locals = ctorLocals,
@@ -1381,7 +1406,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 // Safe to cast and extract tag since ref.test passed
                 val scrutAsObject = ref.cast(scrutExpr, baseObjectRefType(nullable = false))
                 val scrutTag = struct.get(
-                  FieldIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id),
+                  FieldIdx(SymIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id)),
                   scrutAsObject,
                   I32Type,
                 )
@@ -1520,10 +1545,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       sym = S(baseObjectSym),
       TypeInfo(
         id = SymIdx("Object"),
-        StructType(
-          Seq(tagFieldSym -> Field(I32Type, mutable = true, id = SymIdx("$tag"))),
-          isSubtype = true,
-        ),
+        StructType(Seq(tagFieldSym -> Field(I32Type, mutable = true, id = "$tag"))),
         objectTag = S(ctx.getFreshObjectTag() ensuring (_ == 0)),
       ),
     )
@@ -1553,7 +1575,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     )
     val entryFnInfo = FuncInfo(
       id = SymIdx(entryNme),
-      typeIdx = entryFnTy,
+      typeUse = TypeUse(entryFnTy),
       params = Seq.empty,
       nResults = 1,
       // TODO(Derppening): Should we place top-level scope variables in the global section?
@@ -1564,9 +1586,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     ctx.popLocal()
     if stringLits.nonEmpty then
-      stringLits.valuesIterator.foreach: lit =>
+      stringLits.foreach: (s, lit) =>
         if lit.byteLen > 0 then
-          ctx.addDataSegment(DataSegment(i32.const(lit.offset), lit.watBytes))
+          ctx.addDataSegment(DataSegment.Active(
+            id = SymIdx(scope.allocateName(TempSymbol(N, s.take(WatBuilder.StringConstantIdentMaxLength)))),
+            offset = i32.const(lit.offset),
+            bytes = lit.watBytes,
+            memuse = N,
+          ))
 
     val singletonInitActions = ctx.getSingletonInitActions
     if singletonInitActions.nonEmpty then
@@ -1587,7 +1614,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         sym = N,
         FuncInfo(
           id = SymIdx(scope.allocateName(TempSymbol(N, "start"))),
-          typeIdx = initTy,
+          typeUse = TypeUse(initTy),
           params = Seq.empty,
           nResults = 0,
           locals = Seq.empty,
@@ -1601,7 +1628,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ctx.addFunc(S(entrySym), entryFnInfo)
 
     val systemMemMinPages =
-      ctx.getMemoryImport(ExternIntrinsics.SystemModule, ExternIntrinsics.SystemMemoryImportName).fold(0)(_.minPages)
+      ctx.getMemoryImport(
+        ExternIntrinsics.SystemModule,
+        ExternIntrinsics.SystemMemoryImportName,
+      ).fold(0)(_.memType.lim.min)
     (ctx.toWat, entryNme, systemMemMinPages)
   end program
 
@@ -1646,7 +1676,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val result = scope.nest givenIn:
       val wasmParams = params.params.map: p =>
         val paramNme = scope.allocateName(p.sym)
-        val param = WasmParam(S(paramNme), RefType.anyref)
+        val param = WasmParam(paramNme, RefType.anyref)
         ctx.addLocal(p.sym)
         param -> paramNme
       val (wasmBody, locals) = block(body)

@@ -5,7 +5,8 @@ package text
 import mlscript.utils.*, shorthands.*
 
 import document.*
-import semantics.DefinitionSymbol
+import semantics.{DefinitionSymbol, Elaborator, TempSymbol}, Elaborator.State
+import utils.Scope
 
 import scala.collection.Map
 
@@ -88,9 +89,9 @@ end HeapType
 type ValType = NumType | VecType | RefType
 
 /** A Wasm parameter clause. Appears in function signatures. */
-case class Param(id: Opt[Str], valtype: ValType) extends ToWat:
+case class Param(id: Str, valtype: ValType) extends ToWat:
   def toWat: Document =
-    doc"(param${id.fold(doc"")(id => doc" $$$id")} ${valtype.toWat})"
+    doc"(param $$$id ${valtype.toWat})"
 
 /** A Wasm result clause. Appears in function signatures and some instructions. */
 case class Result(valtype: ValType) extends ToWat:
@@ -113,30 +114,34 @@ case class FunctionType(sigType: SignatureType) extends ToWat:
     doc"(func${sigType.toWat.surroundUnlessEmpty(doc" ")})"
 
 /** A type representing a struct field. */
-case class Field(ty: Type, mutable: Bool, id: SymIdx) extends ToWat:
+case class Field(ty: ValType, mutable: Bool, id: Str) extends ToWat:
   def toWat: Document =
-    doc"(field ${id.toWat} ${
-        if mutable then doc"(mut ${ty.toWat})" else ty.toWat
-      })"
+    doc"(field $$$id ${if mutable then doc"(mut ${ty.toWat})" else ty.toWat})"
 
 /** A type representing a structure type. */
 case class StructType(
     fields: Seq[DefinitionSymbol[?] -> Field],
     parents: Seq[TypeIdx] = Seq.empty,
-    isSubtype: Bool = false,
+    isFinal: Bool = false,
 ) extends ToWat:
 
   lazy val fieldsBySym: Map[DefinitionSymbol[?], Field] = fields.toMap
 
   def toWat: Document =
-    doc"(struct${fields.map(_._2.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
+    val structWat = doc"(struct${fields.map(_._2.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
+    if parents.isEmpty && isFinal then
+      structWat
+    else
+      doc"(sub${
+          if isFinal then doc" final" else doc""
+        }${
+          parents.map(_.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")
+        } $structWat)"
 
 /** A type representing an array type. */
-case class ArrayType(elemType: Type, mutable: Bool) extends ToWat:
-  private def elemDoc: Document =
-    if mutable then doc"(mut ${elemType.toWat})" else elemType.toWat
-
+case class ArrayType(elemType: ValType, mutable: Bool) extends ToWat:
   def toWat: Document =
+    val elemDoc = if mutable then doc"(mut ${elemType.toWat})" else elemType.toWat
     doc"(array ${elemDoc})"
 
 /** A composite type. */
@@ -154,6 +159,9 @@ type AbsHeapType =
     | HeapType.NoExt.type
     | HeapType.NoFunc.type
 type HeapType = AbsHeapType | TypeIdx
+
+case class TypeUse(typeIdx: TypeIdx) extends ToWat:
+  def toWat: Document = doc"(type ${typeIdx.toWat})"
 
 sealed abstract class Index extends ToWat
 
@@ -178,6 +186,9 @@ case class TypeIdx(idx: Index) extends CtxIdx(idx)
 /** An index bound to the ''global'' index space. */
 case class GlobalIdx(idx: Index) extends CtxIdx(idx)
 
+/** An index bound to the ''memory'' index space. */
+case class MemIdx(idx: Index) extends CtxIdx(idx)
+
 /** An index bound to the ''funcs'' index space. */
 case class FuncIdx(idx: Index) extends CtxIdx(idx)
 
@@ -190,20 +201,135 @@ case class FieldIdx(idx: Index) extends CtxIdx(idx)
 /** An index bound to the ''tags'' index space. */
 case class TagIdx(idx: Index) extends CtxIdx(idx)
 
+/** An import entry. */
+case class Import[ET <: ExternType](module: Str, name: Str, externType: ET) extends ToWat:
+  def toWat: Document =
+    doc"""(import "$module" "$name" ${externType.toWat})"""
+
+/** The address type of a memory type. */
+enum AddrType extends ToWat:
+  case i32
+  case i64
+
+  def toWat: Document = this match
+    case AddrType.i32 => doc"i32"
+    case AddrType.i64 => doc"i64"
+
+/** The size range of resizeable storage. */
+case class Limits(min: Int, max: Opt[Int] = N) extends ToWat:
+  def toWat: Document = doc"$min${max.fold(doc"")(max => doc" $max")}"
+
+/** A linear memory entry. */
+case class MemType(lim: Limits, addrType: AddrType = AddrType.i32) extends ToWat:
+  def toWat: Document =
+    doc"${addrType.optionIf(_ != AddrType.i32).fold(doc"")(at => doc"${at.toWat} ")}${lim.toWat}"
+
+object ExternType:
+  /** An linear memory entry that is externally addressable. */
+  case class Mem(override val id: SymIdx, memType: MemType) extends ExternType(id):
+    def toWat: Document = doc"""(memory ${id.toWat} ${memType.toWat})"""
+
+  /** An function entry that is externally addressable. */
+  case class Func(override val id: SymIdx, typeUse: TypeUse) extends ExternType(id):
+    def toWat: Document = doc"""(func ${id.toWat} ${typeUse.toWat})"""
+
+sealed abstract class ExternType(val id: SymIdx) extends ToWat
+
 /** A memory import entry. */
+@deprecated("Use `Import` with `ExternType.Mem` instead.")
 case class MemoryImport(module: Str, name: Str, id: SymIdx, minPages: Int) extends ToWat:
   def toWat: Document =
     doc"""(import "$module" "$name" (memory ${id.toWat} $minPages))"""
 
 /** A function import entry. */
+@deprecated("Use `Import` with `ExternType.Func` instead.")
 case class FuncImport(module: Str, name: Str, id: SymIdx, typeIdx: TypeIdx) extends ToWat:
   def toWat: Document =
     doc"""(import "$module" "$name" (func ${id.toWat} (type ${typeIdx.toWat})))"""
 
+/** A memory use entry. */
+case class MemUse(memidx: MemIdx) extends ToWat:
+  def toWat: Document = doc"(memory ${memidx.toWat})"
+
+object DataSegment:
+  object Passive:
+    def apply(id: SymIdx, bytes: Str): Passive = new Passive(id, Seq(bytes))
+
+  /** A passive data segment, which is not associated with any memory and must be explicitly loaded with `memory.init`.
+    */
+  case class Passive(override val id: SymIdx, bytes: Seq[Str]) extends DataSegment(id, bytes):
+    def toWat: Document =
+      doc"(data ${id.toWat}${bytes.map(s => s"\"$s\"").mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
+
+  object Active:
+    def apply(id: SymIdx, offset: Expr, bytes: Str, memuse: Opt[MemUse]): Active =
+      new Active(id, offset, Seq(bytes), memuse)
+
+  /** An active data segment, which is automatically copied into a memory given by `memuse` and `offset`.
+    */
+  case class Active(
+      override val id: SymIdx,
+      offset: Expr,
+      bytes: Seq[Str],
+      memuse: Opt[MemUse],
+  ) extends DataSegment(id, bytes):
+    def toWat: Document =
+      doc"(data ${id.toWat}${
+          memuse.fold(doc"")(memuse => doc" ${memuse.toWat}")
+        } ${offset.toWat}${
+          bytes.map(s => s"\"$s\"").mkDocument(doc" ").surroundUnlessEmpty(doc" ")
+        })"
+
+  def apply(offsetExpr: Expr, bytes: Str)(using Raise, Scope, State): Active =
+    new Active(SymIdx(summon[Scope].allocateName(TempSymbol(N, ""))), offsetExpr, Seq(bytes), N)
+end DataSegment
+
 /** A data segment entry. */
-case class DataSegment(offsetExpr: Expr, bytes: Str) extends ToWat:
-  def toWat: Document =
-    doc"""(data ${offsetExpr.toWat} "$bytes")"""
+sealed abstract class DataSegment(val id: SymIdx, bytes: Seq[Str]) extends ToWat
+
+object ElemSegment:
+  /** A passive element segment, which is not associated with any table and must be explicitly initialized with
+    * `table.init`.
+    */
+  case class Passive(
+      override val id: SymIdx,
+      override val elemlist: RefType -> Seq[Expr],
+  ) extends ElemSegment(id, elemlist):
+    def toWat: Document = doc"(elem ${id.toWat} ${abbrevElemList})"
+
+  /** An active element segment, which is automatically copied into a table given by `offset. */
+  case class Active(
+      override val id: SymIdx,
+      offset: Expr,
+      override val elemlist: RefType -> Seq[Expr],
+      // TODO(Derppening): Add `tableuse` here if/when we support multiple tables.
+  ) extends ElemSegment(id, elemlist):
+    def toWat: Document = doc"(elem ${id.toWat} ${offset.toWat} ${abbrevElemList})"
+
+  /** A declarative element segment, which is used to forward declare references present in the code (such as using
+    * `ref.func`).
+    */
+  case class Declare(
+      override val id: SymIdx,
+      override val elemlist: RefType -> Seq[Expr],
+  ) extends ElemSegment(id, elemlist):
+    def toWat: Document = doc"(elem ${id.toWat} declare ${abbrevElemList})"
+end ElemSegment
+
+/** An element segment entry. */
+sealed abstract class ElemSegment(val id: SymIdx, val elemlist: RefType -> Seq[Expr]) extends ToWat:
+  /** Applies abbreviations on the `elemlist` if a simpler replacement is available. */
+  protected def abbrevElemList: Document =
+    if elemlist._2.forall(_.mnemonic == "ref.func") then
+      doc"func${
+          elemlist._2.map: e =>
+            e.instrargs.head match
+              case a: ToWat => a.toWat
+              case a: Document => a
+          .mkDocument(doc" ").surroundUnlessEmpty(doc" ")
+        }"
+    else
+      doc"${elemlist._1.toWat}${elemlist._2.map(_.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")}"
 
 /** An abstraction over a generic WebAssembly instructions.
   */

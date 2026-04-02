@@ -17,14 +17,13 @@ let dup2 = "dup"
 //│ Wat:
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type $mlx_str_from_utf16 (func (param (ref null any)) (param (ref null any)) (result (ref null any))))
+//│   (type $mlx_str_from_utf16 (func (param $glob_offset (ref null any)) (param $len (ref null any)) (result (ref null any))))
 //│   (type $TupleArray (array (ref null any)))
 //│   (type $TupleArrayMut (array (mut (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (import "system" "mem" (memory $mem 1))
 //│   (import "system" "mlx_str_from_utf16" (func $mlx_str_from_utf16 (type $mlx_str_from_utf16)))
-//│   (data (i32.const 0) "\64\00\75\00\70\00")
-//│   (func $entry (type $entry1) (result (ref null any))
+//│   (import "system" "mem" (memory $mem 1))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $dup1 (ref null any))
 //│     (local $dup2 (ref null any))
 //│     (local $tmp (ref null any))
@@ -62,8 +61,8 @@ let dup2 = "dup"
 //│                 (ref.cast (ref $TupleArray)
 //│                   (local.get $tuple))
 //│                 (i32.const 1))))))))
-//│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
+//│   (data $dup (i32.const 0) "\64\00\75\00\70\00")
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = "dup"
 
@@ -83,3 +82,25 @@ let s2 = "hello"
 if true then id(1) else s2
 //│ Wasm result:
 //│ = 1
+
+
+// Identifier Truncation
+:wat
+"abcdefghijklmnopqrstuvwxyz"
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $mlx_str_from_utf16 (func (param $glob_offset (ref null any)) (param $len (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (import "system" "mlx_str_from_utf16" (func $mlx_str_from_utf16 (type $mlx_str_from_utf16)))
+//│   (import "system" "mem" (memory $mem 1))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│     (call $mlx_str_from_utf16
+//│       (ref.i31
+//│         (i32.const 0))
+//│       (ref.i31
+//│         (i32.const 52))))
+//│   (data $abcdefghijklmnop (i32.const 0) "\61\00\62\00\63\00\64\00\65\00\66\00\67\00\68\00\69\00\6a\00\6b\00\6c\00\6d\00\6e\00\6f\00\70\00\71\00\72\00\73\00\74\00\75\00\76\00\77\00\78\00\79\00\7a\00")
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = "abcdefghijklmnopqrstuvwxyz"
