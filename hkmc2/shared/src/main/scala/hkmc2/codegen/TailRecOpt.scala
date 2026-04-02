@@ -492,7 +492,24 @@ class TailRecOpt(using State, TL, Raise):
         
         case _ => super.applyDefn(defn)(k)
     
-    Scoped(
+    val result = Scoped(
       optFNew.map(_.sym).toSet,
       optFNew.foldLeft(transformer.applyBlock(b)):
         case (acc, f) => Define(f, acc))
+    
+    // Report @tailrec on functions that weren't processed by the optimization above,
+    // e.g. nested functions or functions with @config(tailRecOpt: false).
+    // Class/module methods are handled separately by optClasses and are skipped here.
+    val tailRecFunSyms = tailRecFuns.map(_.dSym).toSet
+    new BlockTraverser:
+      override def applyFunDefn(fun: FunDefn): Unit =
+        if fun.forceTailRec && !tailRecFunSyms.contains(fun.dSym) then
+          raise(ErrorReport(
+            msg"This @tailrec function was not processed by the tail-call optimizer." -> fun.dSym.toLoc :: Nil))
+        super.applyFunDefn(fun)
+      override def applyDefn(defn: Defn): Unit = defn match
+        case _: ClsLikeDefn => ()
+        case _ => super.applyDefn(defn)
+    .applyBlock(result)
+    
+    result
