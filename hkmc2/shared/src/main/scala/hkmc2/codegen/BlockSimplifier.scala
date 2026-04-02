@@ -214,7 +214,7 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
                   (arms2 is arms) &&
                   (dflt2 is dflt) && (rst2 is rst)
                 then b else Match(scrut2, arms2, dflt2, rst2)
-
+      
       case TryBlock(sub, fin, _: End) => super.applyBlock(b)
       case TryBlock(sub, fin, rst) =>
         val sub2 = freshLabelCtx(applySubBlock(sub))
@@ -278,9 +278,9 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
             val (fixedArgs, restArgs) = args.splitAt(params.params.size)
             S(fixedArgs.zip(params.params).map((arg, param) => (param.sym, arg.value)) ++
               List((params.restParam.get.sym, Tuple(true, restArgs))))
-
+    
     import Inliner.*
-
+    
     object InlinerAnalyzer:
       case class InlinerFunInfo(
         defn: FunDefn,
@@ -290,33 +290,33 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
         private[InlinerAnalyzer] var isLoopBreaker: Bool,
       ):
         def isPrivate = !symbolsToPreserve.contains(defn.sym)
-
+        
         def canBeInlineEliminated =
           isPrivate && !isMethod && useCount <= 1 && !hasNakedRef && !isLoopBreaker
           // false
-
+        
         def shouldBeInlined(newBlk: Block)(using Config.Inliner): Bool =
           if isLoopBreaker then return false
           // method requires the capturing of `this`, which is not supported currently.
           if isMethod then return false
           val threshold = summon[Config.Inliner].inlineThreshold
           newBlk.size <= threshold || canBeInlineEliminated
-
+        
       type InlinerMap = Map[TermSymbol, InlinerFunInfo]
-
+      
       case class FunLikeContext(
         curFunSym: Opt[TermSymbol],
       )
-
+      
       class Traverser extends BlockTraverser:
         var map: InlinerMap = Map.empty
         val useCnt = MutMap.WithDefault(MutMap.empty[TermSymbol, Int], _ => 0)
         val usages = MutMap.WithDefault(MutMap.empty[TermSymbol, List[(Option[TermSymbol], Call)]], _ => Nil)
         val hasNakedRef = MutMap.WithDefault(MutMap.empty[TermSymbol, Bool], _ => false)
         var contextList: List[FunLikeContext] = FunLikeContext(N) :: Nil
-
+        
         def currentContext = contextList.head
-
+        
         def currentFunSym = currentContext.curFunSym
         
         def nested(ts: Option[TermSymbol])(thunk: => Unit) =
@@ -325,7 +325,7 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
           val res = contextList.head
           contextList = contextList.tail
           res
-
+        
         def addFunctionAndApplyBody(f: FunDefn, isMethod: Bool) =
           val r = nested(S(f.dSym)):
             applyBlock(f.body)
@@ -348,7 +348,7 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
               // This inherits the previous context as the module ctor is run with the constructor.
               applySubBlock(m.ctor)
           case _ => super.applyDefn(defn)
-
+        
         override def applyResult(r: Result): Unit = r match
           case c @ Call(TermSymbolPath(ts), args) =>
             useCnt(ts) += 1
@@ -374,7 +374,7 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
                   map(sym).defn.params.sizeCompare(1) =/= 0 || matchArgs(call.args, map(sym).defn.params.head).isEmpty
                 caller.foreach: caller =>
                   edges.append((caller, sym))
-
+          
           @tailrec
           def assignLoopBreakers(): Unit =
             val sccs = partitionScc(edges.filterNot((from, to) => map(to).isLoopBreaker), map.keys)
@@ -389,38 +389,38 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
               map(from).isLoopBreaker = true
           assignLoopBreakers()
           map
-
+      
       def walk(blk: Block): InlinerMap = Traverser().analyze(blk)
-
+    
     import InlinerAnalyzer.InlinerMap
-
-
+    
+    
     object InlinerReplacer:
-
+      
       class Copier(resSym: Symbol, existingMapping: Map[Symbol, Symbol])(using State):
         val lblSym = LabelSymbol(N, "inlinedLbl")
-
+        
         object Copier extends SymbolRefresher(existingMapping):
           var currentlyNested = false
-
+          
           override def applyFunBodyLikeBlock(b: Block): Block =
             val saved = currentlyNested
             currentlyNested = true
             val res = super.applyFunBodyLikeBlock(b)
             currentlyNested = saved
             res
-
+          
           override def applyBlock(b: Block): Block = b match
             case Return(res, false) if !currentlyNested =>
               applyResult(res): r2 =>
                 Assign(resSym, r2, Break(lblSym))
             case _ => super.applyBlock(b)
-
+        
         def applyBlock(blk: Block) =
           Label(lblSym, false, Copier.applyBlock(blk), _)
-
+      
       class Transformer(m: InlinerMap)(using Config.Inliner, State) extends BlockTransformer(SymbolSubst()):
-
+        
         // The call graph may be cyclic, in which case we break the infinite loop using this map by
         // assuring that the block corresponding to a term symbol may only be transformed once.
         // This map also allows the function block to be optimized on first use before its declaration.
@@ -428,7 +428,10 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
         // Key in map but value is None -> the optimized body is being computed
         // Key in map with value -> the function is optimized
         val newFunctionBody = MutMap.empty[TermSymbol, Option[Block]]
-
+        
+        override def applyMainBlock(main: Block): Block =
+          super.applyMainBlock(main).flattened
+        
         override def applyBlock(blk: Block) = blk match
           case Define(defn: FunDefn, rest) if m(defn.dSym).canBeInlineEliminated =>
             tl.log(s"Inline elimination: ${defn.dSym}")
@@ -483,12 +486,12 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
                       go(acc.assignScoped(newSym, value), argRest, mapping + (sym -> newSym))
                   go(blockBuilder, matchedArgs, Map.empty)
           case _ => super.applyResult(r)(k)
-
+      
       def replace(m: InlinerMap, prog: Program)(using Config.Inliner, State): Program =
         Transformer(m).applyProgram(prog)
-
+    
     class Inliner(using Config.Inliner, State):
-      def applyProgram(prog: Program) =
+      def applyProgram(prog: Program): Program =
         val m = InlinerAnalyzer.walk(prog.main)
         InlinerReplacer.replace(m, prog)
   end Inliner

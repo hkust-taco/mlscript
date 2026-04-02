@@ -182,6 +182,9 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           debug = debug.isSet,
         )
         output(Printer().worksheet(lowered_1)(using irPrintingScp).mkString(output.ColWidth))
+      if showOptimizedTree.isSet then
+        outputSeparator("Optimized IR Tree")
+        output(lowered_1.showAsTree)
       
       val loweredMapped = lowered_1.copy(main = lowered_1.main.mapTail:
         case e: End =>

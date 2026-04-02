@@ -16,11 +16,9 @@ main
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let main⁰, tmp, inlinedVal;
 //│ define main⁰ as fun main¹() { return 1 };
-//│ begin
-//│   set inlinedVal = 1;
-//│   end;
-//│   set tmp = inlinedVal;
-//│   main¹
+//│ set inlinedVal = 1;
+//│ set tmp = inlinedVal;
+//│ main¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 

@@ -202,12 +202,13 @@ sealed abstract class Block extends Product:
   lazy val flattened: Block = this.flatten(identity)
   
   private def flatten(k: End => Block): Block = this match
+    
     case Match(scrut, arms, dflt, rest) =>
       val newRest = rest.flatten(k)
       val newArms = arms.mapConserve: arm =>
         val newBody = arm._2.flattened
         if newBody is arm._2 then arm else (arm._1, newBody)
-      val newDflt = dflt.map(_.flattened)
+      val newDflt = dflt.mapConserve  (_.flattened)
       if (newRest is rest) && (newArms is arms) && (dflt is newDflt)
       then this
       else Match(scrut, newArms, newDflt, newRest)
@@ -236,7 +237,7 @@ sealed abstract class Block extends Product:
       then this
       else Assign(lhs, rhs, newRest)
       
-    case a@AssignField(lhs, nme, rhs, rest) =>
+    case a @ AssignField(lhs, nme, rhs, rest) =>
       val newRest = rest.flatten(k)
       if newRest is rest
       then this
@@ -259,13 +260,27 @@ sealed abstract class Block extends Product:
         case c: ClsLikeDefn =>
           val newPreCtor = c.preCtor.flattened
           val newCtor = c.ctor.flattened
-          val newMethods = c.methods.mapConserve:
+          def flattenMethods(ms: List[FunDefn]) = ms.mapConserve:
             case f@FunDefn(owner, sym, dSym, params, body) =>
               val newBody = body.flattened
               if newBody is body then f else f.copy(body = newBody)(forceTailRec = f.forceTailRec, configOverride = f.configOverride)
-          if (newPreCtor is c.preCtor) && (newCtor is c.ctor) && (newMethods is c.methods)
+          val newMethods = flattenMethods(c.methods)
+          val newCompanion = c.companion.mapConserve: c =>
+            val newCtor = c.ctor.flattened
+            val newMethods = flattenMethods(c.methods)
+            if (newCtor is c.ctor) && (newMethods is c.methods) then c
+              else c.copy(ctor = newCtor, methods = newMethods)
+          if (newPreCtor is c.preCtor)
+          && (newCtor is c.ctor)
+          && (newMethods is c.methods)
+          && (newCompanion is c.companion)
           then c
-          else c.copy(preCtor = newPreCtor, ctor = newCtor, methods = newMethods)(c.configOverride)
+          else c.copy(
+            preCtor = newPreCtor,
+            ctor = newCtor,
+            methods = newMethods,
+            companion = newCompanion,
+          )(c.configOverride)
       
       val newRest = rest.flatten(k)
       if (newDefn is defn) && (newRest is rest)

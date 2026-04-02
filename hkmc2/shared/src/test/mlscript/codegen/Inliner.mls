@@ -46,15 +46,13 @@ print(f(1, 2, ...[1]))
 //│ set a⁰ = 1;
 //│ set b⁰ = 2;
 //│ set c⁰ = 3;
-//│ begin
-//│   set tmp3 = +⁰(a⁰, b⁰);
-//│   set inlinedVal = +⁰(tmp3, c⁰);
-//│   end;
-//│   set tmp = inlinedVal;
-//│   do Predef⁰.print⁰(tmp);
-//│   set tmp1 = [1];
-//│   set tmp2 = f¹(1, 2, ...tmp1);
-//│   Predef⁰.print⁰(tmp2)
+//│ set tmp3 = +⁰(a⁰, b⁰);
+//│ set inlinedVal = +⁰(tmp3, c⁰);
+//│ set tmp = inlinedVal;
+//│ do Predef⁰.print⁰(tmp);
+//│ set tmp1 = [1];
+//│ set tmp2 = f¹(1, 2, ...tmp1);
+//│ Predef⁰.print⁰(tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 6
 //│ > 4
@@ -80,28 +78,22 @@ f(1, 2, 3, 4)
 //│ set a¹ = 1;
 //│ set b¹ = 2;
 //│ set c¹ = mut [];
-//│ begin
-//│   set tmp2 = +⁰(a¹, b¹);
-//│   do Predef⁰.print⁰(tmp2);
-//│   do Predef⁰.print⁰(c¹);
-//│   end;
-//│   set a² = 1;
-//│   set b² = 2;
-//│   set c² = mut [3];
-//│   begin
-//│     set tmp1 = +⁰(a², b²);
-//│     do Predef⁰.print⁰(tmp1);
-//│     do Predef⁰.print⁰(c²);
-//│     end;
-//│     set a³ = 1;
-//│     set b³ = 2;
-//│     set c³ = mut [3, 4];
-//│     begin
-//│       set tmp = +⁰(a³, b³);
-//│       do Predef⁰.print⁰(tmp);
-//│       set inlinedVal = Predef⁰.print⁰(c³);
-//│       end;
-//│       inlinedVal
+//│ set tmp2 = +⁰(a¹, b¹);
+//│ do Predef⁰.print⁰(tmp2);
+//│ do Predef⁰.print⁰(c¹);
+//│ set a² = 1;
+//│ set b² = 2;
+//│ set c² = mut [3];
+//│ set tmp1 = +⁰(a², b²);
+//│ do Predef⁰.print⁰(tmp1);
+//│ do Predef⁰.print⁰(c²);
+//│ set a³ = 1;
+//│ set b³ = 2;
+//│ set c³ = mut [3, 4];
+//│ set tmp = +⁰(a³, b³);
+//│ do Predef⁰.print⁰(tmp);
+//│ set inlinedVal = Predef⁰.print⁰(c³);
+//│ inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 3
 //│ > []
@@ -181,7 +173,7 @@ f()
 
 
 // Methods (not implemented currently)
-// NOTE: only final method may be inlined, as they could be overriden
+// NOTE: only final (ie, non-virtual) method may be inlined, as they could be overriden
 
 :sjs
 :soir
@@ -240,3 +232,5 @@ fun g() =
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let g²; define g² as fun g³() { let f; define f as fun f⁸() { return f⁸() }; return f⁸() }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+

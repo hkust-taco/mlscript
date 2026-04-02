@@ -14,9 +14,12 @@ class BlockTransformer(subst: SymbolSubst):
   
   def applyProgram(prog: Program): Program =
     val imports2 = prog.imports.mapConserve(applyImport)
-    val main2 = applyBlock(prog.main)
+    val main2 = applyMainBlock(prog.main)
     if (imports2 is prog.imports) && (main2 is prog.main) then prog
     else Program(imports2, main2)
+  
+  def applyMainBlock(main: Block): Block =
+    applyBlock(main)
   
   def applyImport(imp: Local -> Str): Local -> Str =
     val (l, s) = imp

@@ -11,7 +11,7 @@ f()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f, inlinedVal; f = function f() { return 42 }; inlinedVal = 42; inlinedVal
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰, inlinedVal; define f⁰ as fun f¹() { return 42 }; begin set inlinedVal = 42; end; inlinedVal
+//│ let f⁰, inlinedVal; define f⁰ as fun f¹() { return 42 }; set inlinedVal = 42; inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 

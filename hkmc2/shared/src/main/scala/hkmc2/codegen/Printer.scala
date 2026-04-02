@@ -53,7 +53,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
     case Continue(label) =>
       doc"continue ${print(label)}"
     case Begin(sub, rest) =>
-      doc"begin #{  # ${print(sub)}; # ${print(rest)} #} "
+      doc"begin #{  # ${print(sub)}; #}  # ${print(rest)}"
     case TryBlock(sub, finallyDo, rest) =>
       doc"try #{  # ${print(sub)} #  #} finally #  #{ ${print(finallyDo)}; #  #} ${print(rest)}"
     case Assign(_: NoSymbol, rhs, rest) =>
