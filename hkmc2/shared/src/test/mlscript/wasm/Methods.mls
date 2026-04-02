@@ -76,8 +76,7 @@ Foo(2).one(40)
 //│   (func $Foo_one (type $Foo_one) (param $this (ref null any)) (param $x1 (ref null any)) (result (ref null any))
 //│     (return
 //│       (call $Foo_add
-//│         (ref.cast (ref $Foo)
-//│           (local.get $this))
+//│         (local.get $this)
 //│         (local.get $x1))))
 //│   (elem declare func $Foo_one)
 //│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
@@ -251,8 +250,7 @@ SumDown().sum(5)
 //│               (block (result (ref null any))
 //│                 (local.set $tmp2
 //│                   (call $SumDown_sum
-//│                     (ref.cast (ref $SumDown)
-//│                       (local.get $this))
+//│                     (local.get $this)
 //│                     (local.get $tmp1)))
 //│                 (return
 //│                   (call $plus_impl1
@@ -347,13 +345,17 @@ c.Counter#inc().Counter#double().Counter#get()
 //│ = 4
 
 
+let a = A(1)
+a.A#inc()
+let tmp = a.A#x
+set a.A#x = 42
 class A(val x) with
   fun inc() = 
     set this.x += 1
     x
-A(1).inc()
+tmp + a.A#x
 //│ Wasm result:
-//│ = 2
+//│ = 44
 
 
 :ge
@@ -361,7 +363,7 @@ class Box() with
   fun f(x) = x
 Box().f
 //│ ╔══[COMPILATION ERROR] `term:Box/f` is neither a field access nor a callable method
-//│ ║  l.362: 	Box().f
+//│ ║  l.364: 	Box().f
 //│ ╙──       	     ^^
 
 
@@ -370,7 +372,7 @@ class GetterOnly() with
   fun f = 1
 GetterOnly().f()
 //│ ╔══[COMPILATION ERROR] `term:GetterOnly/f` is neither a field access nor a callable method
-//│ ║  l.371: 	GetterOnly().f()
+//│ ║  l.373: 	GetterOnly().f()
 //│ ╙──       	^^^^^^^^^^^^^^^^
 
 
@@ -379,5 +381,5 @@ class NullaryOnly() with
   fun f() = 1
 NullaryOnly().f
 //│ ╔══[COMPILATION ERROR] `term:NullaryOnly/f` is neither a field access nor a callable method
-//│ ║  l.380: 	NullaryOnly().f
+//│ ║  l.382: 	NullaryOnly().f
 //│ ╙──       	             ^^

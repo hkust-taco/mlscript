@@ -711,7 +711,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     sel.symbol.flatMap(_.asTrm).flatMap(ctx.getMethodInfo)
 
   /** Returns whether `path` is an explicit owner reference such as a class or module path. */
-  private def isDirectOwnerRef(path: Path): Bool = path match
+  private def isDirectOwnerRef(path: Path): Bool = path match // FIXME meaningless function (don't mix symbols up)
     case Value.Ref(l, disamb) =>
       val resolved = l match
         case _: BlockMemberSymbol => disamb.getOrElse(l)
@@ -778,7 +778,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       methodInfo: MethodInfo,
       sel: Select,
   )(using Ctx, Raise, Scope): Expr =
-    if isDirectOwnerRef(sel.qual) then
+    if isDirectOwnerRef(sel.qual) && false then // FIXME meaningless branch
       if scope.lookup(methodInfo.ownerIsym).nonEmpty then
         result(Value.This(methodInfo.ownerIsym))
       else
@@ -1259,7 +1259,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             lhs match
               case ownerRef: Value.Ref if isDirectOwnerRef(ownerRef) =>
                 val resolvedOwner = ownerRef.l match
-                  case _: BlockMemberSymbol => ownerRef.disamb.getOrElse(ownerRef.l)
+                  case _: BlockMemberSymbol =>
+                    ??? // FIXME meaningless branch
+                    ownerRef.disamb.getOrElse(ownerRef.l)
                   case sym => sym
                 val assignInstrOpt = for
                   defnSym <- resolvedOwner match
