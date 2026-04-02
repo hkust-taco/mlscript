@@ -37,7 +37,7 @@ object Thrw extends TailOp:
 
 class LoweringCtx(
   initMap: Map[Local, Value], // No longer in meaningful use and could be removed if we don't find a use for it
-  val mayRet: Bool, // For rewriting while loop into tail recursive function, represent whether a explicit return is legal in the current block
+  val mayRet: Bool, // For rewriting while loop into tail recursive function, represent whether an explicit return is legal in the current block
   private val definedSymsDuringLowering: collection.mutable.Set[Symbol] // used to create Scoped blocks
 ):
   val map = initMap
