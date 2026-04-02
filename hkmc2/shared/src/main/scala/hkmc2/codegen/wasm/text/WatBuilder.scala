@@ -607,8 +607,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               val baseFuncIdx = base match
                 case S(idx) => idx
                 case N => return errExpr(
-                    Ls(msg"Expected function reference in Call(...) expression, but found non-function value" ->
-                      fun.toLoc),
+                    Ls(msg"Expected static function reference in Call(...) expression" -> fun.toLoc),
                     extraInfo = S(fun.toString),
                   )
               val baseTypeInfo = ctx.getTypeInfo_!(ctx.getFuncInfo_!(baseFuncIdx).typeUse.typeIdx)

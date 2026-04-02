@@ -276,3 +276,13 @@ O.y
 //│   (start $start1))
 //│ Wasm result:
 //│ = 1
+
+
+:ge
+fun bar() = 42
+fun foo() = bar
+foo()()
+//│ ╔══[COMPILATION ERROR] Returning function instances is not supported
+//│ ║  l.283: 	fun foo() = bar
+//│ ╙──       	            ^^^
+//│ ═══[COMPILATION ERROR] Expected static function reference in Call(...) expression
