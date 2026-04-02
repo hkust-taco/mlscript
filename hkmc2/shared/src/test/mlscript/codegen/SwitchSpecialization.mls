@@ -62,27 +62,27 @@ if x is 4 do
   set acc += "e"
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp, tmp1, tmp2, tmp3, tmp4;
-//│ if (x1 === 0) {
-//│   tmp = acc + "a";
-//│   acc = tmp;
-//│   x1 = 1;
+//│ switch (x1) {
+//│   case 0:
+//│     tmp = acc + "a";
+//│     acc = tmp;
+//│     x1 = 1;
+//│   case 1:
+//│     tmp1 = acc + "b";
+//│     acc = tmp1;
+//│     x1 = 2;
+//│   case 2:
+//│     tmp2 = acc + "c";
+//│     acc = tmp2;
+//│     x1 = 3;
+//│   case 3:
+//│     tmp3 = acc + "d";
+//│     acc = tmp3;
+//│     x1 = 4;
+//│   case 4:
+//│     tmp4 = acc + "e";
+//│     acc = tmp4;
 //│ }
-//│ if (x1 === 1) {
-//│   tmp1 = acc + "b";
-//│   acc = tmp1;
-//│   x1 = 2;
-//│ }
-//│ if (x1 === 2) {
-//│   tmp2 = acc + "c";
-//│   acc = tmp2;
-//│   x1 = 3;
-//│ }
-//│ if (x1 === 3) {
-//│   tmp3 = acc + "d";
-//│   acc = tmp3;
-//│   x1 = 4;
-//│ }
-//│ if (x1 === 4) { tmp4 = acc + "e"; acc = tmp4; }
 //│ runtime.Unit
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

@@ -247,7 +247,7 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
       case Match(
         scrut_ @ Value.Ref(scrutSym_, _),                   // The scrutinee is a ref.
         (Case.Lit(Tree.IntLit(curVal_)), b) :: Nil,         // There is only one case matching an int literal.
-        S(End(_)), rest                                     // Default case exists and does nothing.
+        S(End(_)) | N, rest                                 // Default case exists and does nothing.
       )
         if scrutSym.map(_ === scrutSym_).getOrElse(true)    // The scrutinee is the same as the one before.
         && curVal.map(_ === curVal_).getOrElse(true)        // The matched int literal is one previously set.
