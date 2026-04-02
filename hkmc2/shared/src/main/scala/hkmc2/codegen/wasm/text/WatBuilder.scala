@@ -28,7 +28,7 @@ extension (instr: FoldedInstr)
     instr.mnemonic.split('.').optionUnless(_.size == 1).map(_.head)
 
 object WatBuilder:
-  /** The maximum length for symbolic identifiers of string constants. */
+  /** The maximum number of characters taken to be part of the identifier asscoiated with string constants. */
   val StringConstantIdentMaxLength = 16
 
   object ExternIntrinsics:
