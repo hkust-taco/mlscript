@@ -103,7 +103,15 @@ object Parser:
     def unapply(t: Token): Opt[Str] = t match
       case IDENT(nme, false) if !Keyword.all.contains(nme) => S(nme)
       case _ => N
-
+  
+  object NOISE:
+    def get(ts: Ls[TokLoc]): Ls[TokLoc] = ts match
+      case (SPACE, _) :: rest => get(rest)
+      case (COMMENT(_), _) :: rest => get(rest)
+      case _ => ts
+    def unapply(ts: Ls[TokLoc]): S[Ls[TokLoc]] =
+      S(get(ts))
+  
   extension (loc: Loc)
     def showStart: String =
       loc.origin.fph.getLineColAt(loc.spanStart) match
@@ -156,20 +164,13 @@ abstract class Parser(
       case _ => false
     =>
       preprocessTokens(rest)
-    // * Expands end-of-line suspensions that introduce implied indentation
-    // * Also skip COMMENT and SPACE tokens between `...` and NEWLINE (eg `... // hello\n body`)
-    case (SUSPENSION(true), l0) :: rest0
-    if rest0.dropWhile { case (_: COMMENT | SPACE, _) => true; case _ => false } match
-      case (NEWLINE, _) :: _ => true
-      case _ => false
-    =>
-      val rest = rest0.dropWhile { case (_: COMMENT | SPACE, _) => true; case _ => false }
-      val (l1, rest2) = rest match
-        case (NEWLINE, l1) :: rest2 => (l1, rest2)
-        case _ => die // unreachable due to guard
-      val outerLoc = l0.left ++ rest2.lastOption.map(_._2.right)
-      val innerLoc = l1.right ++ rest2.lastOption.map(_._2.left)
-      BRACKETS(Indent, preprocessTokens(rest2))(innerLoc) -> outerLoc :: Nil
+    // * Expands end-of-line suspensions that introduce implied indentation,
+    // * skipping NOISE tokens between `...` and NEWLINE (eg `... // hello\n body`)
+    // * Note: using `NEWLINE_COMMA` instead of `NEWLINE` causes misparsing of things like `fun foo(..., ...)`
+    case (SUSPENSION(true), l0) :: NOISE((NEWLINE, l1) :: rest) =>
+      val outerLoc = l0.left ++ rest.lastOption.map(_._2.right)
+      val innerLoc = l1.right ++ rest.lastOption.map(_._2.left)
+      BRACKETS(Indent, preprocessTokens(rest))(innerLoc) -> outerLoc :: Nil
     case tl :: rest =>
       val rest2 = preprocessTokens(rest)
       if rest2 is rest then tokens
@@ -933,7 +934,7 @@ abstract class Parser(
       case (_: NEWLINE_COMMA, _) :: (OP(opStr), l0) :: rest
       if allowNewlines
       && prec <= NoElsePrec // (Q: why doesn't MinPrec work?)
-      && rest.nonEmpty // * Don't treat as infix if there are no tokens for the RHS (eg `()\n???`)
+      && NOISE.get(rest).nonEmpty // * Don't treat as infix if there are no tokens for the RHS (eg `()\n???`)
       && (!prefixOps.contains(opStr) || rest.match
         case (_: NEWLINE_COMMA, _) :: _ | (SPACE, _) :: _ | (BRACKETS(_: Indent_Curly, _), _) :: _ | Nil => true
         case _ => false

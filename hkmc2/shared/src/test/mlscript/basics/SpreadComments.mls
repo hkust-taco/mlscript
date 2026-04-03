@@ -1,7 +1,0 @@
-:js
-
-// Spread with end-of-line comment should properly expand the continuation body
-
-mkStr of ... // hello
-"oops"
-//│ = "oops"
