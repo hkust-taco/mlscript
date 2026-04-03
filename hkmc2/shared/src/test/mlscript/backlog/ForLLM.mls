@@ -108,22 +108,6 @@ test // should be 42
 
 // ——— ——— ———
 
-if true then (success: 42)
-//│ = {success: 42}
-
-if true then
-  success: 42
-//│ = {success: 42}
-
-:fixme
-if true then success: 42
-//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.119: 	if true then success: 42
-//│ ╙──       	   ^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// ——— ——— ———
-
 // FIXME: Printing of
 [..[], "a"]
 //│ = [a]
@@ -137,10 +121,10 @@ if true then success: 42
 tuple(1,
   2)
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.138: 	  2)
+//│ ║  l.122: 	  2)
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.138: 	  2)
+//│ ║  l.122: 	  2)
 //│ ╙──       	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -148,10 +132,10 @@ tuple(1,
 tuple of 1,
   2
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.149: 	  2
+//│ ║  l.133: 	  2
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.149: 	  2
+//│ ║  l.133: 	  2
 //│ ╙──       	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
