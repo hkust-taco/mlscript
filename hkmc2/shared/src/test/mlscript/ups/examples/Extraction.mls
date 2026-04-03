@@ -61,8 +61,8 @@ fun observePlain(x) =
   x + 2
 
 pattern LoggedBiasedOr =
-  (Some((Some(x) => observeSome(x)) as res) => res) |
-  (Some((x => observePlain(x)) as res) => res)
+  | (Some((Some(x) => observeSome(x)) as res) => res)
+  | (Some((x => observePlain(x)) as res) => res)
 
 print of Some(1) is @compile LoggedBiasedOr
 //│ > true
@@ -76,8 +76,8 @@ if Some(Some(1)) is (@compile LoggedBiasedOr) as output then
 // Make it a bit more complicated: biased disjunction with transformations.
 
 pattern BiasedOr2 =
-  (Some((Some(x) => x + 1) as res) => res) |
-  (Some((x => x + 2) as res) => res)
+  | (Some((Some(x) => x + 1) as res) => res)
+  | (Some((x => x + 2) as res) => res)
 
 :fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)
 :checkIR
@@ -156,9 +156,9 @@ xorPairTInterp of Pair(Some(56), None)
 data class Triplet[A, B, C](first: A, second: B, third: C)
 
 pattern ExactlyOneNone =
-  Triplet(None,    Some(_), Some(_)) |
-  Triplet(Some(_), None,    Some(_)) |
-  Triplet(Some(_), Some(_), None   )
+  | Triplet(None,    Some(_), Some(_))
+  | Triplet(Some(_), None,    Some(_))
+  | Triplet(Some(_), Some(_), None   )
 
 fun exactlyOneNone(x) =
   if x is (@compile ExactlyOneNone) as output then output else "failed"
