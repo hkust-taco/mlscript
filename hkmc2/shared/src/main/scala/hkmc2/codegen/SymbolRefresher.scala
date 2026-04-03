@@ -24,9 +24,9 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
           case bms: BlockMemberSymbol =>
             val newBms = new BlockMemberSymbol(bms.nme, Nil, bms.nameIsMeaningful)
             newBms.tsym = bms.tsym.map: t =>
-              val newOwner = t.owner.map: o =>
+              val newOwner: Opt[InnerSymbol] = t.owner.map: o =>
                 existingMapping.get(o) match
-                  case Some(ts: TermSymbol) => ts
+                  case Some(inner: InnerSymbol) => inner
                   case _ => o
               val nt = new TermSymbol(t.k, newOwner, t.id)
               mapping(t) = nt
