@@ -23,62 +23,52 @@ int(nat(42))
 :expect true
 nat(0) is @compile NatBox
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut, matcher__NatBox$, matchRecord, matchSuccess, patternOutput, bindings, lambda⁰;
+//│ let scrut, matcher__NatBox$, matchSuccess, lambda⁰;
 //│ set scrut = nat⁰(0);
 //│ define lambda⁰ as fun lambda¹(input) {
-//│   let p_0$, value, emptyRecord$, value1, p_0$1, result0$, output0$, fieldBindings, bindings1, p_0$2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+//│   let p_0$, value, value1, p_0$1, result0$, p_0$2, tmp, tmp1, tmp2, tmp3, tmp4;
 //│   match input
 //│     null =>
-//│       set tmp = {  };
-//│       set tmp1 = new runtime⁰.MatchSuccess⁰(input, tmp);
-//│       set p_0$ = tmp1;
-//│       return { "p_0": p_0$ }
+//│       set tmp = true;
+//│       set p_0$ = tmp;
+//│       return p_0$
 //│     Box⁰ =>
-//│       set tmp2 = new runtime⁰.MatchFailure⁰("empty");
-//│       set emptyRecord$ = { "p_0": tmp2 };
 //│       match input
 //│         Object⁰ =>
 //│           match input
 //│             { value } =>
 //│               set value1 = input.value﹖;
-//│               set tmp3 = matcher__NatBox$(value1);
+//│               set tmp1 = matcher__NatBox$(value1);
+//│               set tmp2 = { "input": value1, "result": tmp1 };
 //│               end
 //│             else
-//│               set tmp3 = emptyRecord$;
+//│               set tmp2 = { "input": null, "result": false };
 //│               end
 //│           end
 //│         else
-//│           set tmp3 = emptyRecord$;
+//│           set tmp2 = { "input": null, "result": false };
 //│           end
-//│       set value = tmp3;
-//│       set result0$ = value.p_0﹖;
+//│       set value = tmp2;
+//│       set result0$ = value.result﹖;
 //│       match result0$
-//│         MatchSuccess⁰ =>
-//│           set output0$ = result0$.output⁰;
-//│           set bindings1 = result0$.bindings⁰;
-//│           set fieldBindings = {  };
-//│           set tmp4 = { "value": output0$ };
-//│           set tmp5 = { ...bindings1, ...fieldBindings };
-//│           set tmp6 = new runtime⁰.MatchSuccess⁰(tmp4, tmp5);
+//│         true =>
+//│           set tmp3 = true;
 //│           end
 //│         else
-//│           set tmp6 = new runtime⁰.MatchFailure⁰("topmost");
+//│           set tmp3 = false;
 //│           end
-//│       set p_0$1 = tmp6;
-//│       return { "p_0": p_0$1 }
+//│       set p_0$1 = tmp3;
+//│       return p_0$1
 //│     else
-//│       set tmp7 = new runtime⁰.MatchFailure⁰("never");
-//│       set p_0$2 = tmp7;
-//│       return { "p_0": p_0$2 }
+//│       set tmp4 = false;
+//│       set p_0$2 = tmp4;
+//│       return p_0$2
 //│   end
 //│ };
 //│ set matcher__NatBox$ = lambda¹;
-//│ set matchRecord = matcher__NatBox$(scrut);
-//│ set matchSuccess = matchRecord.p_0﹖;
+//│ set matchSuccess = matcher__NatBox$(scrut);
 //│ match matchSuccess
-//│   MatchSuccess⁰ =>
-//│     set patternOutput = matchSuccess.output⁰;
-//│     set bindings = matchSuccess.bindings⁰;
+//│   true =>
 //│     true
 //│   else
 //│     false
