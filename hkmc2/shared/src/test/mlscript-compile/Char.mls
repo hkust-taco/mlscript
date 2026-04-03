@@ -1,6 +1,6 @@
 
 module Char with
-  pattern AnyCharacter = (Str as s where s.length is 1) => s
+  pattern AnyChar = (Str as s where s.length is 1) => s
   pattern Lowercase = "a" ..= "z"
   pattern Uppercase = "A" ..= "Z"
   pattern Letter = Lowercase | Uppercase

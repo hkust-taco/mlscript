@@ -3,7 +3,7 @@
 import "../../../mlscript-compile/Char.mls"
 import "../../../mlscript-compile/Stack.mls"
 
-open Char { AnyCharacter }
+open Char { AnyChar }
 open Stack
 
 open annotations
@@ -64,7 +64,7 @@ pattern ToUppercase =
   | ("o" => "O") | ("p" => "P") | ("q" => "Q") | ("r" => "R")
   | ("s" => "S") | ("t" => "T") | ("u" => "U") | ("v" => "V")
   | ("w" => "W") | ("x" => "X") | ("y" => "Y") | ("z" => "Z")
-  | AnyCharacter
+  | AnyChar
 
 pattern ToUppercaseList = Nil | (ToUppercase :: ToUppercaseList)
 
