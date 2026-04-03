@@ -988,16 +988,6 @@ abstract class Parser(
               case _ => OpApp(acc, v, rhs :: Nil)
             }, prec, allowNewlines = allowNewlines)
         
-        /*
-      case (KEYWORD(":"), l0) :: _ if prec <= NewParser.prec(':') =>
-        consume
-        R(Asc(acc, typ(0)))
-      case (KEYWORD("where"), l0) :: _ if prec <= 1 =>
-        consume
-        val tu = typingUnitMaybeIndented
-        val res = Where(acc, tu.entities).withLoc(S(l0))
-        exprCont(res, prec, allowNewlines = false)
-        */
       case (SPACE, l0) :: _ =>
         consume
         acc match // TODO: looks fishy. a better way?
@@ -1010,81 +1000,7 @@ abstract class Parser(
         else
           Sel(acc, new Ident(name).withLoc(S(l0)))
         exprCont(tree, prec, allowNewlines = allowNewlines)
-        /*
-      // case (br @ BRACKETS(Indent, (SELECT(name), l0) :: toks), _) :: _ =>
-      case (br @ BRACKETS(Indent, (SELECT(name), l0) :: toks), _) :: _ if prec <= 1 =>
-        consume
-        val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.exprCont(Sel(acc, Var(name).withLoc(S(l0))), 0, allowNewlines = true))
-        if (allowNewlines) res match {
-          case L(ifb) => L(ifb) // TODO something else?
-          case R(res) => exprCont(res, 0, allowNewlines)
-        }
-        else res
-      case (br @ BRACKETS(Indent, (IDENT(opStr, true), l0) :: toks), _) :: _ =>
-        consume
-        rec(toks, S(br.innerLoc), br.describe).concludeWith(_.opBlock(acc, opStr, l0))
-      case (KEYWORD("then"), _) :: _ if /* expectThen && */ prec === 0 =>
-      // case (KEYWORD("then"), _) :: _ if /* expectThen && */ prec <= 1 =>
-        consume
-        L(IfThen(acc, exprOrBlockContinuation))
-      case (NEWLINE, _) :: (KEYWORD("then"), _) :: _ if /* expectThen && */ prec === 0 =>
-        consume
-        consume
-        L(IfThen(acc, exprOrBlockContinuation))
-      case (NEWLINE, _) :: _ if allowNewlines =>
-        consume
-        exprCont(acc, 0, allowNewlines)
         
-      case (br @ BRACKETS(Curly, toks), loc) :: _ if prec <= AppPrec =>
-        consume
-        val tu = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.typingUnitMaybeIndented).withLoc(S(loc))
-        exprCont(Rft(acc, tu), prec, allowNewlines)
-        
-      case (COMMA | SEMI | NEWLINE | KEYWORD("then" | "else" | "in" | "=" | "do")
-        | OP(_) | BRACKETS(Curly, _), _) :: _ => R(acc)
-      
-      case (KEYWORD("of"), _) :: _ if prec <= 1 =>
-        consume
-        val as = argsMaybeIndented()
-        val res = App(acc, Tup(as))
-        exprCont(res, prec, allowNewlines)
-      case (br @ BRACKETS(Indent, (KEYWORD("of"), _) :: toks), _) :: _ if prec <= 1 =>
-        consume
-        // 
-        // val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
-        // val res = App(acc, Tup(as))
-        // exprCont(res, 0, allowNewlines = true) // ?!
-        // 
-        val res = rec(toks, S(br.innerLoc), br.describe).concludeWith { nested =>
-          val as = nested.argsMaybeIndented()
-          nested.exprCont(App(acc, Tup(as)), 0, allowNewlines = true)
-        }
-        // if (allowNewlines) 
-        res match {
-          case L(ifb) => L(ifb) // TODO something else?
-          case R(res) => exprCont(res, 0, allowNewlines)
-        }
-        // else res
-        
-      case (BRACKETS(Indent, (KEYWORD("then"|"else"), _) :: toks), _) :: _ => R(acc)
-      
-      /* 
-      case (br @ BRACKETS(Indent, toks), _) :: _ 
-      if prec === 0 && !toks.dropWhile(_._1 === SPACE).headOption.map(_._1).contains(KEYWORD("else")) // FIXME
-      =>
-        consume
-        val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockTerm)
-        R(App(acc, res))
-      */
-      // case (br @ BRACKETS(Indent, (BRACKETS(Round | Square, toks1), _) :: toks2), _) :: _ =>
-      case (br @ BRACKETS(Indent, toks @ (BRACKETS(Round | Square, _), _) :: _), _) :: _ if prec <= 1 =>
-        consume
-        val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.exprCont(acc, 0, allowNewlines = true))
-        res match {
-          case L(ifb) => L(ifb) // TODO something else?
-          case R(res) => exprCont(res, 0, allowNewlines)
-        }
-        */
       case (br @ BRACKETS(Angle | Square, toks), loc) :: _ =>
         consume
         val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
@@ -1108,24 +1024,6 @@ abstract class Parser(
         val as = blockMaybeIndented
         val res = App(acc, Tup(as))
         exprCont(res, prec, allowNewlines = allowNewlines)
-      /*
-      case c @ (h :: _) if (h._1 match {
-        case KEYWORD(":" | "of" | "where" | "extends") | SEMI | BRACKETS(Round | Square, _)
-          | BRACKETS(Indent, (
-              KEYWORD("of") | SEMI
-              | BRACKETS(Round | Square, _)
-              | SELECT(_)
-            , _) :: _)
-          => false
-        case _ => true
-      }) =>
-        val as = argsMaybeIndented()
-        val res = App(acc, Tup(as))
-        raise(WarningReport(msg"Paren-less applications should use the 'of' keyword"
-          -> res.toLoc :: Nil, newDefs = true))
-        exprCont(res, prec, allowNewlines)
-        */
-        
       
       case (_: NEWLINE_COMMA, _) :: (KEYWORD(kw), _) :: _
       if kw.canStartInfixOnNewLine && kw.leftPrecOrMin > prec
