@@ -65,23 +65,16 @@ if (1 + 2)
 //│ = 1
 
 
-:pe
 :e
 if 1 + 2
   * 3 then 0
   then 0
-//│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this operator split inner position
-//│ ║  l.72: 	  then 0
-//│ ║        	  ^^^^
-//│ ╟── Note: the operator split starts here
-//│ ║  l.71: 	  * 3 then 0
-//│ ╙──      	  ^
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.70: 	if 1 + 2
-//│ ║        	       ^
-//│ ║  l.71: 	  * 3 then 0
-//│ ╙──      	^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ║  l.70: 	  * 3 then 0
+//│ ║        	           ^
+//│ ║  l.71: 	  then 0
+//│ ╙──      	^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
 
 
 if x

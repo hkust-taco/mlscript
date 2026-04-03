@@ -5,49 +5,6 @@
 
 // ——— ——— ———
 
-"a" +
-  "b"
-//│ = "ab"
-
-// FIXME
-"a" +
-  // a
-"b"
-//│ = "b"
-
-:fixme
-// :dp
-"a" +
-// a
-"b"
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.21: 	// a
-//│ ║        	    ^
-//│ ║  l.22: 	"b"
-//│ ╙──      	
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// ——— ——— ———
-
-:fixme
-module Example with
-// whoops
-  val a = this
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.33: 	module Example with
-//│ ║        	                   ^
-//│ ║  l.34: 	// whoops
-//│ ╙──      	
-//│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.35: 	  val a = this
-//│ ╙──      	  ^
-//│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.35: 	  val a = this
-//│ ╙──      	^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// ——— ——— ———
-
 // TODO `baz()` should be a call in tail position (like `print(1)`), not bound to a variable (this is due to its by-name nature)
 :sir
 fun baz = print(1)
@@ -63,69 +20,6 @@ fun bar() = baz
 
 // ——— ——— ———
 
-:fixme
-mkStr of ... // hello
-"oops"
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.67: 	mkStr of ... // hello
-//│ ║        	                     ^
-//│ ║  l.68: 	"oops"
-//│ ╙──      	
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// ——— ——— ———
-// [SERIOUS]
-
-:ssjs
-:fixme
-module M with
-  val name = "Student"
-//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let M1;
-//│ globalThis.Object.freeze(class M {
-//│   static {
-//│     M1 = this
-//│   }
-//│   static {
-//│     this.name = "Student";
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "M"]; 
-//│ });
-//│ block$res7 = undefined;
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'name' of function 'class M {   static {     M1 = this   }   static {     this.name = "Student";   }   toString() { return runtime....<omitted>... }'
-
-// ——— ——— ———
-
-// Somehow these parse:
-:e
-set this.pc = 0
-set
-  (this).pc = 0
-//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.103: 	set this.pc = 0
-//│ ╙──       	    ^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.105: 	  (this).pc = 0
-//│ ╙──       	   ^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// But this doesn't...
-:fixme
-:e
-set
-  this.pc = 0
-//│ ╔══[PARSE ERROR] Unexpected static selector here
-//│ ║  l.118: 	  this.pc = 0
-//│ ╙──       	      ^^^
-//│ ╔══[COMPILATION ERROR] Expected a right-hand side for this assignment
-//│ ║  l.118: 	  this.pc = 0
-//│ ╙──       	  ^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// ——— ——— ———
-
 pattern A(pattern B) = B
 
 // What @compile actually annotates here is `A(0) as y` instead of `A(0)`.
@@ -134,8 +28,8 @@ pattern A(pattern B) = B
 :fixme
 fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.135: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
-//│ ╙──       	                                                         ^
+//│ ║  l.29: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
+//│ ╙──      	                                                         ^
 
 // ——— ——— ———
 
@@ -186,32 +80,6 @@ test // should be 42
 
 // ——— ——— ———
 
-:fixme
-fun parse(tokens) =
-  ()
-  ???
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.192: 	  ???
-//│ ╙──       	     ^
-
-// ——— ——— ———
-
-if true then (success: 42)
-//│ = {success: 42}
-
-if true then
-  success: 42
-//│ = {success: 42}
-
-:fixme
-if true then success: 42
-//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.207: 	if true then success: 42
-//│ ╙──       	   ^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// ——— ——— ———
-
 // FIXME: Printing of
 [..[], "a"]
 //│ = [a]
@@ -221,50 +89,25 @@ if true then success: 42
 
 // ——— ——— ———
 
-+ 1
-+ 2
-//│ = 3
-
-// FIXME
-+ 1
-// oops
-+ 2
-//│ = 2
-
-// FIXME: confusing error!
-:fixme
-pattern Bin =
-  | 0
-  // oops
-  | 1
-//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.237: 	  | 0
-//│ ╙──       	  ^^^
-//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.239: 	  | 1
-//│ ╙──       	  ^^^
-
-// ——— ——— ———
-
 :fixme
 tuple(1,
   2)
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.251: 	  2)
-//│ ╙──       	    ^
+//│ ║  l.94: 	  2)
+//│ ╙──      	    ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.251: 	  2)
-//│ ╙──       	  ^
+//│ ║  l.94: 	  2)
+//│ ╙──      	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :fixme
 tuple of 1,
   2
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.262: 	  2
+//│ ║  l.105: 	  2
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.262: 	  2
+//│ ║  l.105: 	  2
 //│ ╙──       	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
