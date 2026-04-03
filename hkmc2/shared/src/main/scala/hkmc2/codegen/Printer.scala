@@ -37,7 +37,6 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
         case Case.Cls(cls, path) => doc"${print(cls)}"
         case Case.Tup(len, inf) => doc"Array($len${if inf then "+" else ""})"
         case Case.Field(name, safe) => doc"${if safe then "" else "Object "}{ ${name.name} }"
-        case _ => TODO(c)
       val docCases = arms
         .map{ case (c, b) => doc"${case_doc(c)} => #{  # ${print(b)} #} " }
         .mkDocument(sep = doc" # ")
