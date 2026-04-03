@@ -16,6 +16,8 @@ After you are done fixing all the problems and all the tests pass,
 *you need to commit the resulting golden test output changes*.
 Any commit that does not include the latest changes to test outputs will fail the CI.
 
+Please also read the files in `.github/skills/hkmc2-difftests`.
+
 
 ## Coding Style
 
