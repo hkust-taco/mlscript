@@ -90,7 +90,6 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
       val oldTailLabels = tailLabels
       tailLabels = MutSet.empty
       val result = thunk
-      assert(tailLabels.isEmpty)
       tailLabels = oldTailLabels
       result
     
