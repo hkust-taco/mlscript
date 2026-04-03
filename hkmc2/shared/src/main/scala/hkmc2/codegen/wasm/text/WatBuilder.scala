@@ -1207,11 +1207,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       val funcInfo =
                         FuncInfo(
                           sym,
-                          funcTy,
-                          ps.params.zip(params.map(_._2)).map((p, nme) => p.sym -> nme),
-                          bodyWat.resultTypes.length,
-                          locals,
-                          bodyWat,
+                          typeIdx = funcTy,
+                          params = ps.params.zip(params.map(_._2)).map((p, nme) => p.sym -> nme),
+                          nResults = bodyWat.resultTypes.length,
+                          locals = locals,
+                          body = bodyWat,
                         )
                       ctx.addFunc(S(defn.sym), funcInfo)
                       summon[ArrayBuf[WasmSessionBinding]] += WasmSessionFunc(
@@ -1684,7 +1684,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       exprt: Opt[BlockMemberSymbol],
       wd: io.Path,
       sessionImports: Seq[WasmSessionBinding] = Nil
-  )(using Raise, Scope): CompiledWasmModule =
+  )(using Raise, Scope): (Document, Str, Int, Seq[WasmSessionBinding]) =
     for imprt <- p.imports do
       raise(
         ErrorReport(
@@ -1804,7 +1804,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     val systemMemMinPages =
       ctx.getMemoryImport(ExternIntrinsics.SystemModule, ExternIntrinsics.SystemMemoryImportName).fold(0)(_.minPages)
-    CompiledWasmModule(ctx.toWat, entryNme, systemMemMinPages, sessionExports.toSeq)
+    (ctx.toWat, entryNme, systemMemMinPages, sessionExports.toSeq)
   end program
 
   /** Captures the local symbols introduced while compiling `expr`.

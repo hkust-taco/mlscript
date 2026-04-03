@@ -67,14 +67,7 @@ final case class WasmSessionSingleton(
   def bindingKey: Str = s"singleton:$moduleName:$exportName"
   def bindingSyms: Seq[Local] = blockSym +: objectSym.toSeq
   override def exportNameOpt: Opt[Str] = S(exportName)
-
-final case class CompiledWasmModule(
-    wat: Document,
-    entryName: Str,
-    systemMemMinPages: Int,
-    sessionExports: Seq[WasmSessionBinding]
-)
-
+  
 /** A Wasm function and its associated information.
   *
   * Each instance of [[FuncInfo]] represents a single function definition in a WebAssembly module.

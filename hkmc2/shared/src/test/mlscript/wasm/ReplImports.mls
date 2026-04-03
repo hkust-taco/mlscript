@@ -21,7 +21,7 @@ if C(7) is C(v) then v else 0
 //│ = 7
 
 :wat
-set counter = counter + step
+set counter += step
 counter
 //│ Wat:
 //│ (module

@@ -32,6 +32,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
   private val wasmReplImportsRef = s"globalThis.$wasmReplImportsNme"
   private val sessionImportsBySymbol = mutable.Map.empty[Local, Vector[WasmSessionBinding]]
   private var wasmSessionInitialized = false
+  private var wasmSessionMemPages = 0
 
   final lazy val wasmSuppFile: io.Path = predefFile.up / "Wasm.mjs"
   final lazy val wasmSuppNme = baseScp.allocateName(Elaborator.State.wasmSymbol)(using throw _)
@@ -48,12 +49,6 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
   /** Prettifies a JSON-stringified Binaryen-formatted Wat. */
   lazy val prettifyBinaryenWat = (content: Str) =>
     content.substring(2, content.length() - 2).replace("\\\\n", "\n").replace("\\\\\"", "\"")
-
-  /** Resets Wasm REPL session state for a fresh diff run. */
-  override def init(): Unit =
-    super.init()
-    sessionImportsBySymbol.clear()
-    wasmSessionInitialized = false
 
   override def processTerm(trm: Blk, inImport: Bool)(using Config, Raise): Unit =
     super.processTerm(trm, inImport)
@@ -77,11 +72,9 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
           .flatMap(sym => sessionImportsBySymbol.getOrElse(sym, Vector.empty))
           .toSeq
           .distinctBy(_.bindingKey)
-      val compiled = ltl.givenIn:
+      val (modWat, mainFnNme, systemMemMinPages, sessionExports) = ltl.givenIn:
         baseScp.nest.givenIn:
-          WatBuilder().program(le, N, wd, sessionImports = sessionImports)
-      val modWat = compiled.wat
-      val mainFnNme = compiled.entryName
+          WatBuilder().program(le, N, wd, sessionImports)
       val modWatJsLit = JSBuilder.makeStringLiteral(modWat.mkString(output.ColWidth))
 
       if wat.isSet then
@@ -150,7 +143,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
       if !wasmSessionInitialized then
         host.execute(
           doc"""(() => {
-            # const mem = new WebAssembly.Memory({ initial: ${compiled.systemMemMinPages} });
+            # const mem = new WebAssembly.Memory({ initial: ${systemMemMinPages} });
             # const decodeUtf16 = new TextDecoder("utf-16le");
             # $wasmReplImportsRef = {
             #   repl: Object.create(null),
@@ -166,9 +159,23 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
         ) match
           case ReplHost.Result(_) =>
             wasmSessionInitialized = true
+            wasmSessionMemPages = systemMemMinPages
           case r =>
             output(s"Failed to initialize wasm REPL session object: $r")
-      val exportAssignments = compiled.sessionExports.flatMap(_.exportNameOpt.toSeq).map: exportName =>
+      else if systemMemMinPages > wasmSessionMemPages then
+        host.execute(
+          doc"""(() => {
+            # const extraPages = ${systemMemMinPages - wasmSessionMemPages};
+            # $wasmReplImportsRef.system.mem.grow(extraPages);
+            # })();"""
+            .stripBreaks
+            .mkString(output.ColWidth)
+        ) match
+          case ReplHost.Result(_) =>
+            wasmSessionMemPages = systemMemMinPages
+          case r =>
+            output(s"Failed to grow wasm REPL session memory: $r")
+      val exportAssignments = sessionExports.flatMap(_.exportNameOpt.toSeq).map: exportName =>
         s"""$wasmReplImportsRef.repl["$exportName"] = exports["$exportName"];"""
       val jsBody =
         if exportAssignments.nonEmpty then
@@ -183,7 +190,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
         val result = out.lastIndexOf('\n') match
           case n if n >= 0 => out.substring(0, n)
           case _ => ""
-        compiled.sessionExports.foreach: binding =>
+        sessionExports.foreach: binding =>
           binding.bindingSyms.foreach: sym =>
             sessionImportsBySymbol.update(sym, sessionImportsBySymbol.getOrElse(sym, Vector.empty) :+ binding)
         output(s"= $result")
