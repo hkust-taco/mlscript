@@ -246,16 +246,14 @@ pattern Bin =
 
 // ——— ——— ———
 
-// ——— ——— ———
-
 :fixme
 tuple(1,
   2)
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.253: 	  2)
+//│ ║  l.251: 	  2)
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.253: 	  2)
+//│ ║  l.251: 	  2)
 //│ ╙──       	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -263,10 +261,10 @@ tuple(1,
 tuple of 1,
   2
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.264: 	  2
+//│ ║  l.262: 	  2
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.264: 	  2
+//│ ║  l.262: 	  2
 //│ ╙──       	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

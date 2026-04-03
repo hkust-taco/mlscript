@@ -348,116 +348,14 @@ class Foo
 
 // ——— ——— ———
 
-fun test =
-  true && return 42
-  43
-
-:fixme
-:expect 42
-test // should be 42
-//│ ═══[RUNTIME ERROR] Expected: '42', got: '43'
-//│ = 43
-
-// ——— ——— ———
-
-:fixme
-fun parse(tokens) =
-  ()
-  ???
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.366: 	  ???
-//│ ╙──       	     ^
-
-// ——— ——— ———
-
 // * TODO: improve errors (don't cascade meaningless errors)
 :e
 class Id(name: UnboundName)
 //│ ╔══[COMPILATION ERROR] Name not found: UnboundName
-//│ ║  l.375: 	class Id(name: UnboundName)
+//│ ║  l.353: 	class Id(name: UnboundName)
 //│ ╙──       	               ^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
 //│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
 //│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-
-// ——— ——— ———
-
-if true then (success: 42)
-//│ = {success: 42}
-
-if true then
-  success: 42
-//│ = {success: 42}
-
-:fixme
-if true then success: 42
-//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.393: 	if true then success: 42
-//│ ╙──       	   ^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// ——— ——— ———
-
-// FIXME: Printing of
-[..[], "a"]
-//│ = [a]
-// It should print the same as:
-["a"]
-//│ = ["a"]
-
-// ——— ——— ———
-
-+ 1
-+ 2
-//│ = 3
-
-// FIXME
-+ 1
-// oops
-+ 2
-//│ = 2
-
-// FIXME: confusing error!
-:fixme
-pattern Bin =
-  | 0
-  // oops
-  | 1
-//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.423: 	  | 0
-//│ ╙──       	  ^^^
-//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.425: 	  | 1
-//│ ╙──       	  ^^^
-
-// ——— ——— ———
-
-:expect 101
-100 + 100 / 100
-//│ = 101
-
-// ——— ——— ———
-
-:fixme
-tuple(1,
-  2)
-//│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.443: 	  2)
-//│ ╙──       	    ^
-//│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.443: 	  2)
-//│ ╙──       	  ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-:fixme
-tuple of 1,
-  2
-//│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.454: 	  2
-//│ ╙──       	  ^
-//│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.454: 	  2
-//│ ╙──       	  ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // ——— ——— ———

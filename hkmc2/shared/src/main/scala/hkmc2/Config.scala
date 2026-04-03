@@ -96,7 +96,7 @@ object Config:
     val default: StackSafety = StackSafety(
       stackLimit = 1000,
     )
-
+  
   case class LiftDefns() // there may be other settings in the future, having it as a case class now
   
   case class Deforest(val debug: Boolean)
