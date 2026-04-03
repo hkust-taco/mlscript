@@ -29,14 +29,12 @@ val charPrecList: List[Str] = List(
     "&",
     "=",
     // "/ \\",
-    "/",
     "^",
     // "= !",
     "!",
     "< >",
     "+ -",
-    // "* / %",
-    "* %",
+    "* / %",
     "~",
     "", // Precedence of prefix operators
     "", // Precedence of application
@@ -82,7 +80,7 @@ object Parser:
       (Keyword.maxPrec.get, Keyword.maxPrec.get)
     case _ =>
       val r = opStr.last
-      (precOf(opStr.head), precOf(r) - (if r === '/' || r === ',' || r === ':' then 1 else 0))
+      (precOf(opStr.head), precOf(r) - (if r === ',' || r === ':' then 1 else 0))
   }
   val prefixOps: Set[Str] = Set("!", "+", "-", "~", "@", "|", "&")
   

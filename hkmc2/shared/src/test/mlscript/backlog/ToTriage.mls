@@ -432,11 +432,9 @@ pattern Bin =
 
 // ——— ——— ———
 
-:fixme // Bad parse!
 :expect 101
 100 + 100 / 100
-//│ ═══[RUNTIME ERROR] Expected: '101', got: '2'
-//│ = 2
+//│ = 101
 
 // ——— ——— ———
 
@@ -444,10 +442,10 @@ pattern Bin =
 tuple(1,
   2)
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.445: 	  2)
+//│ ║  l.443: 	  2)
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.445: 	  2)
+//│ ║  l.443: 	  2)
 //│ ╙──       	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -455,10 +453,10 @@ tuple(1,
 tuple of 1,
   2
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.456: 	  2
+//│ ║  l.454: 	  2
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.456: 	  2
+//│ ║  l.454: 	  2
 //│ ╙──       	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
