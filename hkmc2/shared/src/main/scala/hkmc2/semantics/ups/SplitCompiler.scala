@@ -644,7 +644,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   /** Make a UCS split that matches the entire scrutinee against the pattern.
    *  Since each pattern has an output, the split is responsible for creating
    *  a binding that holds the output value and pass it to the continuation
-   *  function that makes the conseuqent split.
+   *  function that makes the consequent split.
    */
   def makeMatchSplit(scrutinee: Scrut, pattern: SP, outputNeeded: Bool): MakeSplit =
     pattern match
@@ -1148,7 +1148,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       then ResultMode.Full
       else if outputNeeded && !canReuseScrutineeOutput then ResultMode.Full
       else ResultMode.MatchOnly
-    // Initate the compilation.
+    // Initiate the compilation.
     val compiler = new Compiler(using context)
     val (matcherSymbol, implementations) = compiler.buildMatcher(synonym, resultMode)
     val innermostSplit = resultMode match
