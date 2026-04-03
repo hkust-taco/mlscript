@@ -96,10 +96,6 @@ biasedOr2__naive of Some(Some(1))
 //│ = 2
 
 
-// Comments: I think the output from the compiled pattern is semantically
-// correct, but people might expect the output from the translated pattern.
-// The problem is that we can't synthesize a record with the class tags.
-
 data class Pair[A, B](first: A, second: B)
 
 pattern XorPair = Pair(None, Some(_)) | Pair(Some(_), None)
