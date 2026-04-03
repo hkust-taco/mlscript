@@ -82,13 +82,25 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
       
       applyProgram(prog)
     
-    def freshLabelCtx[T](thunk: => T)(using Line) =
+    // Evaluate `thunk` with a new tail label set. This is used for evaluating any sub blocks that is not in the tail position.
+    // For example, the match arms within a `Match` node are not in the tail position unless the rest block is `End`.
+    // When evaluating the match arms, the tail labels should not be considered to be at tail.
+    // The tail label set is restored after `thunk` completes.
+    inline def freshLabelCtx[T](inline thunk: => T): T =
       val oldTailLabels = tailLabels
       tailLabels = MutSet.empty
       val result = thunk
+      assert(tailLabels.isEmpty)
       tailLabels = oldTailLabels
       result
     
+    // Add the new label to the tail label set during the execution of `thunk`.
+    inline def withTailLabel[T](newLabel: LabelSymbol)(inline thunk: => T): T =
+      assert(!tailLabels.contains(newLabel))
+      tailLabels += newLabel
+      val result = thunk
+      tailLabels -= newLabel
+      result
     
     // * Cached analysis to find which labels are the targets of `break`s in a given block
     object BrokenLabels extends CachedAnalysis[Block, Set[LabelSymbol]]:
@@ -172,10 +184,8 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
         else
           if usedLabels.contains(lbl) then
             def computeBod =
-              tailLabels += lbl
-              val result = applyBlock(bod)
-              tailLabels -= lbl
-              result
+              withTailLabel(lbl):
+                applyBlock(bod)
             val lbl2 = lbl.subst
             val bod2 = if rst.isEmpty && !loop then computeBod else freshLabelCtx(computeBod)
             val rst2 = applySubBlock(rst)
@@ -189,38 +199,6 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
         tl.log(s"Break ${label} is eliminated: current tail label list is ${tailLabels}")
         registerChange
         End()
-      
-      // * Create fresh label contexts for non tails
-      case Begin(sub, _: End) => super.applyBlock(b)
-      case Begin(sub, rst) =>
-        val sub2 = freshLabelCtx(applySubBlock(sub))
-        val rst2 = applySubBlock(rst)
-        if (sub2 is sub) && (rst2 is rst) then b else Begin(sub2, rst2)
-      
-      case Match(scrut, arms, dflt, _: End) => super.applyBlock(b)
-      case Match(scrut, arms, dflt, rst) =>
-        applyPath(scrut): scrut2 =>
-          applyListOf(
-            arms,
-            (tup, k) =>
-              val (cse, blk) = tup
-              val blk2 = freshLabelCtx(applySubBlock(blk))
-              applyCase(cse): cse2 =>
-                if (cse2 is cse) && (blk is blk2) then k(tup) else k(cse2 -> blk2)
-          ): arms2 =>
-              val dflt2 = freshLabelCtx(dflt.mapConserve(applySubBlock))
-              val rst2 = applySubBlock(rst)
-              if (scrut2 is scrut) &&
-                  (arms2 is arms) &&
-                  (dflt2 is dflt) && (rst2 is rst)
-                then b else Match(scrut2, arms2, dflt2, rst2)
-      
-      case TryBlock(sub, fin, _: End) => super.applyBlock(b)
-      case TryBlock(sub, fin, rst) =>
-        val sub2 = freshLabelCtx(applySubBlock(sub))
-        val fin2 = freshLabelCtx(applySubBlock(fin))
-        val rst2 = applySubBlock(rst)
-        if (sub2 is sub) && (fin2 is fin) && (rst2 is rst) then b else TryBlock(sub2, fin2, rst2)
       
       case x => super.applyBlock(x)
     
@@ -244,6 +222,10 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
     override def applyFunBodyLikeBlock(b: Block): Block =
       freshLabelCtx:
         super.applyFunBodyLikeBlock(b)
+    
+    override def applySubBlockNonTail(b: Block): Block =
+      freshLabelCtx:
+        super.applySubBlockNonTail(b)
     
   end DeadCodeElim
 
