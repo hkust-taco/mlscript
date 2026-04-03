@@ -408,7 +408,7 @@ class RangeIterator(val start: Int, val end: Int) extends Iterator with
       (done: true, value: undefined)
 
 renderAsStr of RangeIterator(0, 1)
-//│ = "RangeIterator(0, 1)"
+//│ = "[0]"
 
 renderAsStr of RangeIterator(0, 5).toArray()
 //│ = "[0, 1, 2, 3, 4]"

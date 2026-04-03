@@ -1,0 +1,11 @@
+:js
+
+// Regression test: Spread arrays should render strings with quotes.
+// [..[], "a"] should render as ["a"], not [a].
+
+[..[], "a"]
+//│ = ["a"]
+
+// It should print the same as:
+["a"]
+//│ = ["a"]

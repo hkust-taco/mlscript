@@ -52,7 +52,10 @@ mkStr of
 fun xs = [1, 2, 3] Iter.mapping(_ + "!" !> print)
 
 xs
-//│ = Iterable(_)
+//│ = 1!
+//│ 2!
+//│ 3!
+//│ ["1!", "2!", "3!"]
 
 xs.toArray()
 //│ > 1!
@@ -67,7 +70,10 @@ xs.toArray()
 //│ = ["1!", "2!", "3!"]
 
 let ys = xs
-//│ ys = Iterable(_)
+//│ ys = 1!
+//│ 2!
+//│ 3!
+//│ ["1!", "2!", "3!"]
 
 ys.toArray()
 //│ > 1!

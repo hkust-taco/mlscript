@@ -384,6 +384,10 @@ fun render(target, ...args) =
         WeakSet then "WeakSet { <items unknown> }"
         WeakMap then "WeakMap { <items unknown> }"
         Error then arg.name + ": " + arg.message
+      // Render array-like iterables (e.g. IterableBase) as arrays.
+      arg.(Symbol.iterator) is Function then
+        renderArray of [...arg], level, keyLength, startPos
+      arg is
         Function then
           let desc = Object.getOwnPropertyDescriptor(arg, "prototype")
           let head = if
