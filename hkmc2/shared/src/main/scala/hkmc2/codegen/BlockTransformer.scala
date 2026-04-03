@@ -46,7 +46,7 @@ class BlockTransformer(subst: SymbolSubst):
       applyResult(exc): exc2 =>
         if exc2 is exc then b else Throw(exc2)
     case Match(scrut, arms, dflt, rst) =>
-      val applySub = if rst.isEmpty then applySubBlock else applySubBlockNonTail
+      def applySub(b: Block) = if rst.isEmpty then applySubBlock(b) else applySubBlockNonTail(b)
       applyPath(scrut): scrut2 =>
         applyListOf(
           arms,
@@ -68,12 +68,14 @@ class BlockTransformer(subst: SymbolSubst):
       val rst2 = applySubBlock(rst)
       if (lbl2 is lbl) && (bod2 is bod) && (rst2 is rst) then b else Label(lbl2, loop, bod2, rst2)
     case Begin(sub, rst) =>
-      val sub2 = if rst.isEmpty then applySubBlock(sub) else applySubBlockNonTail(sub)
+      def applySub(b: Block) = if rst.isEmpty then applySubBlock(b) else applySubBlockNonTail(b)
+      val sub2 = applySub(sub)
       val rst2 = applySubBlock(rst)
       if (sub2 is sub) && (rst2 is rst) then b else Begin(sub2, rst2)
     case TryBlock(sub, fin, rst) =>
-      val sub2 = if rst.isEmpty then applySubBlock(sub) else applySubBlockNonTail(sub)
-      val fin2 = if rst.isEmpty then applySubBlock(fin) else applySubBlockNonTail(fin)
+      def applySub(b: Block) = if rst.isEmpty then applySubBlock(b) else applySubBlockNonTail(b)
+      val sub2 = applySub(sub)
+      val fin2 = applySub(rst)
       val rst2 = applySubBlock(rst)
       if (sub2 is sub) && (fin2 is fin) && (rst2 is rst) then b else TryBlock(sub2, fin2, rst2)
     case Assign(l, r, rst) =>
