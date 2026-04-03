@@ -933,6 +933,7 @@ abstract class Parser(
       case (_: NEWLINE_COMMA, _) :: (OP(opStr), l0) :: rest
       if allowNewlines
       && prec <= NoElsePrec // (Q: why doesn't MinPrec work?)
+      && rest.nonEmpty // * Don't treat as infix if there are no tokens for the RHS (eg `()\n???`)
       && (!prefixOps.contains(opStr) || rest.match
         case (_: NEWLINE_COMMA, _) :: _ | (SPACE, _) :: _ | (BRACKETS(_: Indent_Curly, _), _) :: _ | Nil => true
         case _ => false

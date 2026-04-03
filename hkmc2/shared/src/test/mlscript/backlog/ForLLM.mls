@@ -151,16 +151,6 @@ test // should be 42
 
 // ——— ——— ———
 
-:fixme
-fun parse(tokens) =
-  ()
-  ???
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.157: 	  ???
-//│ ╙──       	     ^
-
-// ——— ——— ———
-
 if true then (success: 42)
 //│ = {success: 42}
 
@@ -171,7 +161,7 @@ if true then
 :fixme
 if true then success: 42
 //│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.172: 	if true then success: 42
+//│ ║  l.162: 	if true then success: 42
 //│ ╙──       	   ^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -203,10 +193,10 @@ pattern Bin =
   // oops
   | 1
 //│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.202: 	  | 0
+//│ ║  l.192: 	  | 0
 //│ ╙──       	  ^^^
 //│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.204: 	  | 1
+//│ ║  l.194: 	  | 1
 //│ ╙──       	  ^^^
 
 // ——— ——— ———
@@ -215,10 +205,10 @@ pattern Bin =
 tuple(1,
   2)
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.216: 	  2)
+//│ ║  l.206: 	  2)
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.216: 	  2)
+//│ ║  l.206: 	  2)
 //│ ╙──       	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -226,10 +216,10 @@ tuple(1,
 tuple of 1,
   2
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.227: 	  2
+//│ ║  l.217: 	  2
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.227: 	  2
+//│ ║  l.217: 	  2
 //│ ╙──       	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
