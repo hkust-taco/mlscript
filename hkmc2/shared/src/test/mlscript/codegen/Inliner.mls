@@ -1,44 +1,50 @@
 :js
 
-:sjs
+:soir
 fun f() = 0
 f()
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f, inlinedVal; f = function f() { return 0 }; inlinedVal = 0; inlinedVal
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f⁰, inlinedVal; define f⁰ as fun f¹() { return 0 }; set inlinedVal = 0; inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
-:sjs
+:soir
 fun f(x) = x
 f(100)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f1, x, inlinedVal1; f1 = function f(x1) { return x1 }; x = 100; inlinedVal1 = x; inlinedVal1
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f², x⁰, inlinedVal;
+//│ define f² as fun f³(x) { return x };
+//│ set x⁰ = 100;
+//│ set inlinedVal = x⁰;
+//│ inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 100
 
 
-:sjs
+:soir
 fun f() =
   let done(x) = x
   done
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f2;
-//│ f2 = function f() {
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f⁴;
+//│ define f⁴ as fun f⁵() {
 //│   let done, done1;
-//│   done1 = function done(x1) { return x1 };
-//│   done = done1;
+//│   define done1 as fun done⁰(x) { return x };
+//│   set done = done⁰;
 //│   return done
 //│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+// * TODO: support spread arguments like this one
 :soir
 :inlineThreshold 10
 fun f(a, b, c) = a + b + c
 print(f(1, 2, 3))
 print(f(1, 2, ...[1]))
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰, tmp, tmp1, tmp2, a⁰, b⁰, c⁰, inlinedVal, tmp3;
-//│ define f⁰ as fun f¹(a, b, c) {
+//│ let f⁶, tmp, tmp1, tmp2, a⁰, b⁰, c⁰, inlinedVal, tmp3;
+//│ define f⁶ as fun f⁷(a, b, c) {
 //│   let tmp4;
 //│   set tmp4 = +⁰(a, b);
 //│   return +⁰(tmp4, c)
@@ -51,7 +57,7 @@ print(f(1, 2, ...[1]))
 //│ set tmp = inlinedVal;
 //│ do Predef⁰.print⁰(tmp);
 //│ set tmp1 = [1];
-//│ set tmp2 = f¹(1, 2, ...tmp1);
+//│ set tmp2 = f⁷(1, 2, ...tmp1);
 //│ Predef⁰.print⁰(tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 6
@@ -66,16 +72,16 @@ fun f(a, ...b) =
 f(1, ...[2])
 f(1, ...[2], ...[3])
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f², tmp, tmp1, tmp2;
-//│ define f² as fun f³(a) {
+//│ let f⁸, tmp, tmp1, tmp2;
+//│ define f⁸ as fun f⁹(a) {
 //│   do Predef⁰.print⁰(a);
 //│   return Predef⁰.print⁰(b¹)
 //│ };
 //│ set tmp = [2];
-//│ do f³(1, ...tmp);
+//│ do f⁹(1, ...tmp);
 //│ set tmp1 = [2];
 //│ set tmp2 = [3];
-//│ f³(1, ...tmp1, ...tmp2)
+//│ f⁹(1, ...tmp1, ...tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ > [2]
@@ -93,8 +99,8 @@ f(1, 2)
 f(1, 2, 3)
 f(1, 2, 3, 4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁴, a¹, b², c¹, a², b³, c², a³, b⁴, c³, inlinedVal, tmp, tmp1, tmp2;
-//│ define f⁴ as fun f⁵(a, b) {
+//│ let f¹⁰, a¹, b², c¹, a², b³, c², a³, b⁴, c³, inlinedVal, tmp, tmp1, tmp2;
+//│ define f¹⁰ as fun f¹¹(a, b) {
 //│   let tmp3;
 //│   set tmp3 = +⁰(a, b);
 //│   do Predef⁰.print⁰(tmp3);
@@ -219,7 +225,7 @@ module A with
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let A⁰;
 //│ define A⁰ as class A¹
-//│ module A² { method f⁶ = fun f⁷() { return 1 } method g⁰ = fun g¹() { return A².f⁷() } };
+//│ module A² { method f¹² = fun f¹³() { return 1 } method g⁰ = fun g¹() { return A².f¹³() } };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -230,17 +236,17 @@ module A with
 fun f() = if false do f() + 1
 f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁸;
-//│ define f⁸ as fun f⁹() {
+//│ let f¹⁴;
+//│ define f¹⁴ as fun f¹⁵() {
 //│   let scrut;
 //│   set scrut = false;
 //│   match scrut
 //│     true =>
-//│       do f⁹();
+//│       do f¹⁵();
 //│       end
 //│   return runtime⁰.Unit⁰
 //│ };
-//│ f⁹()
+//│ f¹⁵()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -250,7 +256,7 @@ fun g() =
   fun f() = f()
   f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let g²; define g² as fun g³() { let f; define f as fun f¹⁰() { return f¹⁰() }; return f¹⁰() }; end
+//│ let g²; define g² as fun g³() { let f; define f as fun f¹⁶() { return f¹⁶() }; return f¹⁶() }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
