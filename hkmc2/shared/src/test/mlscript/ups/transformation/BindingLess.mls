@@ -1,7 +1,9 @@
 :js
 
+import "../../../mlscript-compile/Char.mls"
 import "../../../mlscript-compile/Stack.mls"
 
+open Char { AnyCharacter }
 open Stack
 
 open annotations
@@ -54,9 +56,6 @@ ps is @compile IncFst
 pi is @compile IncFst
 //│ = true
 
-// An awkward but usable definition of characters...
-pattern Char = (Str as s where s.length is 1) => s
-
 pattern ToUppercase =
   | ("a" => "A") | ("b" => "B") | ("c" => "C")
   | ("d" => "D") | ("e" => "E") | ("f" => "F")
@@ -65,7 +64,7 @@ pattern ToUppercase =
   | ("o" => "O") | ("p" => "P") | ("q" => "Q") | ("r" => "R")
   | ("s" => "S") | ("t" => "T") | ("u" => "U") | ("v" => "V")
   | ("w" => "W") | ("x" => "X") | ("y" => "Y") | ("z" => "Z")
-  | Char
+  | AnyCharacter
 
 pattern ToUppercaseList = Nil | (ToUppercase :: ToUppercaseList)
 
