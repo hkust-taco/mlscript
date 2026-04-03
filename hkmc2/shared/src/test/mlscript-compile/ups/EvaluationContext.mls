@@ -69,9 +69,9 @@ fun subst(term, name, target) = if term is
 pattern Value = Abs
 
 pattern Ctx(pattern Hole) =
-  ((Hole as res)                       => res)           |
-  (App(Value as lhs, Ctx(Hole) as rhs) => App(lhs, rhs)) |
-  (App(Ctx(Hole) as lhs, rhs)          => App(lhs, rhs))
+  | Hole
+  | App(Value, Ctx(Hole))
+  | App(Ctx(Hole), _)
 
 pattern Redex = App(Abs(Var(x), m), Abs as n) => subst(m, x, n)
 
