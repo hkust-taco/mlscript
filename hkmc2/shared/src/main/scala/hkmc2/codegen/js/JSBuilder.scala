@@ -295,11 +295,12 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
         case S(owner) =>
           val thisDoc = mkThis(owner)
           val nme = sym.nme
-          // * JavaScript class constructors have built-in non-writable `name` and `length` properties.
-          // * Use Object.defineProperty to override them in module/class static contexts.
-          if nme == "name" || nme == "length" then
+          owner match 
+          case mod: ModuleOrObjectSymbol if (mod.tree.k is syntax.Mod) && (nme == "name" || nme == "length") =>
+            // * JavaScript class constructors have built-in non-writable `name` and `length` properties.
+            // * Use Object.defineProperty to override them in module/class static contexts.
             doc"Object.defineProperty(${thisDoc}, ${nme.escaped}, { configurable: true, enumerable: true, writable: true, value: ${result(p)} });${returningTerm(rst, endSemi)}"
-          else
+          case _ =>
             doc"${thisDoc}${fieldSelect(nme)} = ${result(p)};${returningTerm(rst, endSemi)}"
       case defn: (FunDefn | ClsLikeDefn) =>
         
