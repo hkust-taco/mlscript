@@ -1,6 +1,7 @@
 :js
 
-// Fixed: `if true then success: 42` should work like `if true then (success: 42)`
+
+//* Fixed: `if true then success: 42` should work like `if true then (success: 42)`
 
 if true then (success: 42)
 //│ = {success: 42}
@@ -12,8 +13,11 @@ if true then
 if true then success: 42
 //│ = {success: 42}
 
-if true then 1 else 2
-//│ = 1
 
-if true then print("hello") else print("world")
-//│ > hello
+if true then success: 42 else failure: "oops"
+//│ = {success: 42}
+
+if false then success: 42 else failure: "oops"
+//│ = {failure: "oops"}
+
+
