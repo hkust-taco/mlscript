@@ -86,7 +86,7 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
     // For example, the match arms within a `Match` node are not in the tail position unless the rest block is `End`.
     // When evaluating the match arms, the tail labels should not be considered to be at tail.
     // The tail label set is restored after `thunk` completes.
-    inline def freshLabelCtx[T](inline thunk: => T): T =
+    inline def nestLabelCtx[T](inline thunk: => T): T =
       val oldTailLabels = tailLabels
       tailLabels = MutSet.empty
       val result = thunk
@@ -178,20 +178,20 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
           registerChange
           val unr = Unreachable("Rest of abortive labelled block")
           if usedLabels.contains(lbl)
-          then Label(lbl, loop, freshLabelCtx(applyBlock(bod)), unr)
-          else Begin(freshLabelCtx(applyBlock(bod)), unr)
+          then Label(lbl, loop, nestLabelCtx(applyBlock(bod)), unr)
+          else Begin(nestLabelCtx(applyBlock(bod)), unr)
         else
           if usedLabels.contains(lbl) then
             def computeBod =
               withTailLabel(lbl):
                 applyBlock(bod)
             val lbl2 = lbl.subst
-            val bod2 = if rst.isEmpty && !loop then computeBod else freshLabelCtx(computeBod)
+            val bod2 = if rst.isEmpty && !loop then computeBod else nestLabelCtx(computeBod)
             val rst2 = applySubBlock(rst)
             if (lbl2 is lbl) && (bod2 is bod) && (rst2 is rst) then b else Label(lbl2, loop, bod2, rst2)
           else
             registerChange
-            Begin(freshLabelCtx(applyBlock(bod)), applyBlock(rst))
+            Begin(nestLabelCtx(applyBlock(bod)), applyBlock(rst))
       
       // * Remove useless break
       case Break(label) if tailLabels.contains(label) =>
@@ -219,11 +219,11 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
       case _ => super.applyScopedBlock(b)
     
     override def applyFunBodyLikeBlock(b: Block): Block =
-      freshLabelCtx:
+      nestLabelCtx:
         super.applyFunBodyLikeBlock(b)
     
     override def applySubBlockNonTail(b: Block): Block =
-      freshLabelCtx:
+      nestLabelCtx:
         super.applySubBlockNonTail(b)
     
   end DeadCodeElim
