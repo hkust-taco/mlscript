@@ -1,0 +1,29 @@
+:invalml
+
+
+:todo
+let id: [A] -> A -> A = x => x
+//│ ╔══[COMPILATION ERROR] Unsupported let binding shape
+//│ ║  l.5: 	let id: [A] -> A -> A = x => x
+//│ ╙──     	    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:todo
+fun id[A](x: A) = x
+//│ ╔══[COMPILATION ERROR] Variable not found: A
+//│ ║  l.11: 	fun id[A](x: A) = x
+//│ ╙──      	             ^
+
+:fixme
+fun id: [A] -> A -> A => x = x
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.17: 	fun id: [A] -> A -> A => x = x
+//│ ╙──      	                         ^
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.17: 	fun id: [A] -> A -> A => x = x
+//│ ╙──      	                             ^
+//│ ╔══[COMPILATION ERROR] Expected a type, got function literal
+//│ ║  l.17: 	fun id: [A] -> A -> A => x = x
+//│ ╙──      	                    ^
+//│ ═══[COMPILATION ERROR] Function definition shape not yet supported for id
+
+

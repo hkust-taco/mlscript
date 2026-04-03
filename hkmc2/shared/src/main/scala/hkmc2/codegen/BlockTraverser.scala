@@ -5,7 +5,7 @@ import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import semantics.*
-import os.write.over
+
 
 // These all work like BlockTransformer and its derivatives, but do not rewrite the block. See BlockTransformer.scala.
 // Please use this instead of BlockTransformer for static analysis.
@@ -15,12 +15,21 @@ class BlockTraverser:
   extension (sym: Symbol)
     inline def traverse: Unit = applySymbol(sym)
   
+  
+  def applyProgram(prog: Program): Unit =
+    prog.imports.foreach(applyImport)
+    applyBlock(prog.main)
+  
+  def applyImport(imp: Local -> Str): Unit =
+    applyLocal(imp._1)
+  
+  
   def applySymbol(sym: Symbol): Unit = ()
   
   def applySubBlock(b: Block): Unit = applyBlock(b)
   
   def applyBlock(b: Block): Unit = b match
-    case _: End => ()
+    case _: End | _: Unreachable => ()
     case Break(lbl) => applyLocal(lbl)
     case Continue(lbl) => applyLocal(lbl)
     case Return(res, implct) => applyResult(res)
@@ -55,7 +64,7 @@ class BlockTraverser:
   
   def applyResult(r: Result): Unit = r match
     case r @ Call(fun, args) => applyPath(fun); args.foreach(applyArg)
-    case Instantiate(mut, cls, args) =>; applyPath(cls); args.foreach(applyArg)
+    case Instantiate(mut, cls, args) => applyPath(cls); args.foreach(applyArg)
     case l @ Lambda(params, body) => applyLam(l)
     case Tuple(mut, elems) => elems.foreach(applyArg)
     case Record(mut, fields) => fields.foreach:
@@ -106,9 +115,9 @@ class BlockTraverser:
         f._1.traverse; f._2.traverse
       applySubBlock(preCtor)
       applySubBlock(ctor)
-      mod.foreach(applyClsLikeBody)
+      mod.foreach(applyCompanionModule)
   
-  def applyClsLikeBody(b: ClsLikeBody): Unit =
+  def applyCompanionModule(b: ClsLikeBody): Unit =
     b.isym.traverse
     b.methods.foreach(applyFunDefn)
     b.privateFields.foreach(_.traverse)

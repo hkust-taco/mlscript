@@ -147,8 +147,7 @@ fun f(x) =
 //│ let f6;
 //│ f6 = function f(x1) {
 //│   lbl: while (true) {
-//│     let y1;
-//│     if (x1 === true) { y1 = x1; Predef.print(x1); continue lbl }
+//│     if (x1 === true) { Predef.print(x1); continue lbl }
 //│     break;
 //│   }
 //│   return runtime.Unit
@@ -168,9 +167,7 @@ fun f(x) =
 //│ f7 = function f(x1) {
 //│   let while1, tmp2, tmp3;
 //│   while1 = (undefined, function () {
-//│     let y1;
 //│     if (x1 === true) {
-//│       y1 = x1;
 //│       Predef.print(x1);
 //│       return while1()
 //│     }

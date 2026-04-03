@@ -1,0 +1,271 @@
+:js
+
+// Instruction for agent: for each test case you solve, move it to its own test file outside of the `backlog` folder
+
+
+// ——— ——— ———
+
+"a" +
+  "b"
+//│ = "ab"
+
+// FIXME
+"a" +
+  // a
+"b"
+//│ = "b"
+
+:fixme
+// :dp
+"a" +
+// a
+"b"
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
+//│ ║  l.21: 	// a
+//│ ║        	    ^
+//│ ║  l.22: 	"b"
+//│ ╙──      	
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// ——— ——— ———
+
+:fixme
+module Example with
+// whoops
+  val a = this
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
+//│ ║  l.33: 	module Example with
+//│ ║        	                   ^
+//│ ║  l.34: 	// whoops
+//│ ╙──      	
+//│ ╔══[PARSE ERROR] Expected an expression; found block instead
+//│ ║  l.35: 	  val a = this
+//│ ╙──      	  ^
+//│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
+//│ ║  l.35: 	  val a = this
+//│ ╙──      	^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// ——— ——— ———
+
+// TODO `baz()` should be a call in tail position (like `print(1)`), not bound to a variable (this is due to its by-name nature)
+:sir
+fun baz = print(1)
+fun bar() = baz
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let bar⁰, baz⁰;
+//│ define baz⁰ as fun baz¹() {
+//│   return Predef⁰.print⁰(1)
+//│ };
+//│ define bar⁰ as fun bar¹() { let tmp; set tmp = baz¹(); return baz¹ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// ——— ——— ———
+
+:fixme
+mkStr of ... // hello
+"oops"
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
+//│ ║  l.67: 	mkStr of ... // hello
+//│ ║        	                     ^
+//│ ║  l.68: 	"oops"
+//│ ╙──      	
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// ——— ——— ———
+// [SERIOUS]
+
+:ssjs
+:fixme
+module M with
+  val name = "Student"
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let M1;
+//│ globalThis.Object.freeze(class M {
+//│   static {
+//│     M1 = this
+//│   }
+//│   static {
+//│     this.name = "Student";
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"]; 
+//│ });
+//│ block$res7 = undefined;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'name' of function 'class M {   static {     M1 = this   }   static {     this.name = "Student";   }   toString() { return runtime....<omitted>... }'
+
+// ——— ——— ———
+
+// Somehow these parse:
+:e
+set this.pc = 0
+set
+  (this).pc = 0
+//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
+//│ ║  l.103: 	set this.pc = 0
+//│ ╙──       	    ^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
+//│ ║  l.105: 	  (this).pc = 0
+//│ ╙──       	   ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// But this doesn't...
+:fixme
+:e
+set
+  this.pc = 0
+//│ ╔══[PARSE ERROR] Unexpected static selector here
+//│ ║  l.118: 	  this.pc = 0
+//│ ╙──       	      ^^^
+//│ ╔══[COMPILATION ERROR] Expected a right-hand side for this assignment
+//│ ║  l.118: 	  this.pc = 0
+//│ ╙──       	  ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// ——— ——— ———
+
+pattern A(pattern B) = B
+
+// What @compile actually annotates here is `A(0) as y` instead of `A(0)`.
+// We should tighten the precedence of annotations.
+
+:fixme
+fun foo(x) = if x is @annotations.compile A(0) as y then y
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
+//│ ║  l.135: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
+//│ ╙──       	                                                         ^
+
+// ——— ——— ———
+
+// TODO: implement && and || using `Match` block, rather than as intrinsic function calls `short_and` and `short_or`
+
+:elt
+:sir
+fun test =
+  true && return 42
+  43
+//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   stats = Ls of 
+//│     TermDefinition:
+//│       k = Fun
+//│       sym = member:test⁰
+//│       tsym = term:test¹
+//│       body = S of Blk:
+//│         stats = Ls of 
+//│           App:
+//│             lhs = Ref{sym=builtin:&&⁰} of builtin:&&⁰
+//│             rhs = Tup of Ls of 
+//│               Fld:
+//│                 term = Lit of BoolLit of true
+//│               Fld:
+//│                 term = Ret of Lit of IntLit of 42
+//│         res = Lit of IntLit of 43
+//│       modulefulness = Modulefulness of N
+//│   res = Lit of UnitLit of false
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let test⁰;
+//│ define test⁰ as fun test¹() {
+//│   let lambda;
+//│   define lambda as fun lambda⁰() {
+//│     return 42
+//│   };
+//│   do runtime⁰.short_and﹖(true, lambda⁰);
+//│   return 43
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:fixme
+:expect 42
+test // should be 42
+//│ ═══[RUNTIME ERROR] Expected: '42', got: '43'
+//│ = 43
+
+// ——— ——— ———
+
+:fixme
+fun parse(tokens) =
+  ()
+  ???
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
+//│ ║  l.192: 	  ???
+//│ ╙──       	     ^
+
+// ——— ——— ———
+
+if true then (success: 42)
+//│ = {success: 42}
+
+if true then
+  success: 42
+//│ = {success: 42}
+
+:fixme
+if true then success: 42
+//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
+//│ ║  l.207: 	if true then success: 42
+//│ ╙──       	   ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// ——— ——— ———
+
+// FIXME: Printing of
+[..[], "a"]
+//│ = [a]
+// It should print the same as:
+["a"]
+//│ = ["a"]
+
+// ——— ——— ———
+
++ 1
++ 2
+//│ = 3
+
+// FIXME
++ 1
+// oops
++ 2
+//│ = 2
+
+// FIXME: confusing error!
+:fixme
+pattern Bin =
+  | 0
+  // oops
+  | 1
+//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
+//│ ║  l.237: 	  | 0
+//│ ╙──       	  ^^^
+//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
+//│ ║  l.239: 	  | 1
+//│ ╙──       	  ^^^
+
+// ——— ——— ———
+
+:fixme
+tuple(1,
+  2)
+//│ ╔══[PARSE ERROR] Expected an expression; found block instead
+//│ ║  l.251: 	  2)
+//│ ╙──       	    ^
+//│ ╔══[PARSE ERROR] Unexpected literal here
+//│ ║  l.251: 	  2)
+//│ ╙──       	  ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:fixme
+tuple of 1,
+  2
+//│ ╔══[PARSE ERROR] Expected an expression; found block instead
+//│ ║  l.262: 	  2
+//│ ╙──       	  ^
+//│ ╔══[PARSE ERROR] Unexpected literal here
+//│ ║  l.262: 	  2
+//│ ╙──       	  ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// ——— ——— ———

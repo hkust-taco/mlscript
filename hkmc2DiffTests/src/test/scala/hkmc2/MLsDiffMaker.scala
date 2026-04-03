@@ -11,7 +11,7 @@ import semantics.Elaborator.Ctx
 
 abstract class MLsDiffMaker extends DiffMaker:
   
-  val bbmlOpt: Command[?]
+  val invalmlOpt: Command[?]
   
   val rootPath: Str // * Absolute path to the root of the project
   val preludeFile: io.Path // * Contains declarations of JS builtins
@@ -40,6 +40,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showLoweredTree = NullaryCommand("lot")
   val ppLoweredTreeOld = NullaryCommand("slot", () => output("Option ':slot' is deprecated, use ':sir' instead."))
   val showIR = NullaryCommand("sir")
+  val checkIR = NullaryCommand("checkIR")
+  val showOptimizedIR = NullaryCommand("soir")
   val showContext = NullaryCommand("ctx")
   val parseOnly = NullaryCommand("parseOnly")
   val funcToCls = NullaryCommand("ftc")
@@ -61,6 +63,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   // * Compiler configuration
   
   val noSanityCheck = NullaryCommand("noSanityCheck")
+  val noFreeze = NullaryCommand("noFreeze")
+  val noModuleCheck = NullaryCommand("noModuleCheck")
   val effectHandlers = Command("effectHandlers")(_.trim)
   val effectHandlersOptions = Set("debug", "")
   val stackSafe = Command("stackSafe")(_.trim)
@@ -115,6 +119,9 @@ abstract class MLsDiffMaker extends DiffMaker:
       deforest = Opt.when(deforest.isSet)(Deforest.default),
       qqEnabled = importQQ.isSet,
       funcToCls = funcToCls.isSet,
+      commentGeneratedCode = debug.isSet,
+      noFreeze = noFreeze.isSet,
+      noModuleCheck = noModuleCheck.isSet,
     )
   
   
@@ -183,6 +190,9 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   var curCtx = Elaborator.State.init
   var curICtx = Resolver.ICtx.empty
+  
+  /** Persistent config modification from `#config(...)` directives. */
+  var configModify: Config => Config = identity
   
   var prelude = Elaborator.Ctx.empty
   
@@ -255,7 +265,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   def processOrigin(origin: Origin)(using Raise): Unit =
     val oldCtx = curCtx
     
-    given Config = mkConfig
+    given Config = configModify(mkConfig)
     
     val lexer = new syntax.Lexer(origin, dbg = dbgParsing.isSet)
     val tokens = lexer.bracketedTokens
@@ -301,6 +311,14 @@ abstract class MLsDiffMaker extends DiffMaker:
     val blk = new syntax.Tree.Block(trees)
     val (e, newCtx) = elab.topLevel(blk)
     curCtx = newCtx
+    
+    // Extract SetConfig statements and update persistent config
+    e.stats.foreach:
+      case sc: semantics.SetConfig =>
+        val prev = configModify
+        configModify = cfg => sc.modify(prev(cfg))
+      case _ => ()
+    
     // If elaborated tree is displayed, don't show the string serialization.
     if (showElab.isSet || debug.isSet) && !showElaboratedTree.isSet then
       output(s"Elab: ${e.showDbg}")

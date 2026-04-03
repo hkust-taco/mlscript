@@ -207,10 +207,8 @@ fun f(x) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f2;
 //│ f2 = function f(x4) {
-//│   let y3;
 //│   if (x4 === true) {
 //│     let z2, z3;
-//│     y3 = 2;
 //│     z3 = function z() {
 //│       return 3
 //│     };
@@ -243,8 +241,8 @@ fun f(x) =
   if x then
     () => 4
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f4;
-//│ f4 = function f(x5) {
+//│ let f3;
+//│ f3 = function f(x5) {
 //│   if (x5 === true) {
 //│     let lambda1;
 //│     lambda1 = (undefined, function () {

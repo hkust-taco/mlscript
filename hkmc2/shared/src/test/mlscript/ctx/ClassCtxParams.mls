@@ -102,15 +102,14 @@ class Foo(using T) with
   print(T)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo9;
-//│ Foo9 = function Foo(tmp5) {
-//│   return globalThis.Object.freeze(new Foo.class(tmp5));
+//│ Foo9 = function Foo(tmp4) {
+//│   return globalThis.Object.freeze(new Foo.class(tmp4));
 //│ };
 //│ (class Foo8 {
 //│   static {
 //│     Foo9.class = this
 //│   }
-//│   constructor(tmp5) {
-//│     this.#tmp = tmp5;
+//│   constructor(tmp4) {
 //│     Predef.print(T1);
 //│   }
 //│   #tmp;
@@ -123,10 +122,10 @@ class Foo(using T) with
 :sjs
 x => x.Foo#S
 //│ ╔══[COMPILATION ERROR] Class 'Foo' does not contain member 'S'.
-//│ ║  l.124: 	x => x.Foo#S
+//│ ║  l.123: 	x => x.Foo#S
 //│ ╙──       	           ^
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type T for call: 
-//│ ║  l.124: 	x => x.Foo#S
+//│ ║  l.123: 	x => x.Foo#S
 //│ ║         	      ^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.101: 	class Foo(using T) with

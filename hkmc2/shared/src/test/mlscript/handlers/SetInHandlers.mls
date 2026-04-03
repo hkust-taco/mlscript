@@ -7,10 +7,10 @@ let x = 1
 set x += 1 in print(x)
 x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x, old, tmp, tmp1, tmp2;
+//│ let x, old, tmp;
 //│ x = 1;
 //│ old = x;
-//│ try { tmp1 = x + 1; x = tmp1; tmp2 = Predef.print(x); tmp = tmp2; } finally { x = old; }
+//│ try { tmp = x + 1; x = tmp; Predef.print(x); } finally { x = old; }
 //│ x
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 2

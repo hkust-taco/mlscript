@@ -18,44 +18,6 @@ import semantics.Elaborator.State
 import hkmc2.Config.EffectHandlers
 
 
-/** - For function bodies, fuse all shallowly-nested scopes into one top-level one,
-  *   because handler lowering relies on knowing all local variables in the function.
-  * - Assert the absence of Label(loop = true) blocks,
-  *   because loops should be rewritten to functions first,
-  *   otherwise we cannot fuse scopes correctly.
-  */
-class PreHandlerLowering extends BlockTransformer(new SymbolSubst):
-  override def applyBlock(b: Block): Block = b match
-    case Label(_, loop, _, _) =>
-      assert(!loop)
-      super.applyBlock(b)
-    case _ => super.applyBlock(b)
-  
-  private var scopedSymForCurrentFun: Option[collection.mutable.Set[Symbol]] = None
-  override def applyFunBodyLikeBlock(b: Block): Block =
-    val prevScopedSymForCurrentFun = scopedSymForCurrentFun
-    val resBlk = b match
-      case Scoped(syms, body) =>
-        scopedSymForCurrentFun = Some(collection.mutable.Set.from(syms))
-        val newBody = applySubBlock(body)
-        new Scoped(scopedSymForCurrentFun.get, newBody)
-      case _ =>
-        scopedSymForCurrentFun = Some(collection.mutable.Set.empty[Symbol])
-        val newBlk = applySubBlock(b)
-        Scoped(scopedSymForCurrentFun.get, newBlk)
-    scopedSymForCurrentFun = prevScopedSymForCurrentFun
-    resBlk
-  
-  override def applyScopedBlock(b: Block): Block = b match
-    case Scoped(syms, body) =>
-      scopedSymForCurrentFun match
-        case None => super.applyScopedBlock(b)
-        case Some(scopedForCurrentFun) =>
-          scopedForCurrentFun.addAll(syms)
-          applySubBlock(body)
-    case _ => applySubBlock(b)
-    
-
 object HandlerLowering:
 
   private val pcIdent: Tree.Ident = Tree.Ident("pc")
@@ -262,7 +224,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         def compute: StateId = forceId(go(rst)(using partitioned = true), false)
         def transitionSoft: Block = transitionOrBlk(go(rst))
 
-      val nonTrivialBlockChecker = new BlockDataTransformer(SymbolSubst()):
+      val nonTrivialBlockChecker = new BlockDataTransformer(SymbolSubst.Id):
         override def applyBlock(b: Block) = b match
           // Special handling for tail calls
           case Return(c @ Call(fun, args), false) =>
@@ -370,7 +332,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val initPart = BlockPartition(go(blk)(using N, false), opt.stackSafety.isDefined)
     result(initId) = initPart
 
-    val replaceStaleLabels = new BlockTransformerShallow(SymbolSubst()):
+    val replaceStaleLabels = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyBlock(b: Block): Block = b match
         case Break(label) if labelIds(label)._2.isUsed => StateTransition(labelIds(label)._2.force_!)
         case Continue(label) if labelIds(label)._1.isUsed => StateTransition(labelIds(label)._2.force_!)
@@ -526,17 +488,17 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         DebugInfo(debugNme, if opt.debug then debugInfoSym.asPath else unit), thisPath.isDefined && fun.params.isEmpty))
       val bod2 = translateBlock(fun.body, newCtx, scopedVars)
       val fun2 = if fun.body is bod2 then fun else
-        FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, bod2)(fun.forceTailRec)
+        FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, bod2)(fun.forceTailRec, fun.configOverride)
       (debugInfoSym, debugInfo, fun2)
 
-    val subblockTransform = new BlockTransformer(SymbolSubst()):
+    val subblockTransform = new BlockTransformer(SymbolSubst.Id):
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case fun: FunDefn =>
           if !h.allowDefn then
             raise(lifterReport(msg"Unexpected nested function: lambdas may not function correctly." -> fun.sym.toLoc :: Nil))
           val (debugInfoSym, debugInfo, fun2) = translateFunLike(fun, Value.Ref(fun.sym, S(fun.dSym)), N, fun.sym.nme)
           if opt.debug then Scoped(Set.single(debugInfoSym), Assign(debugInfoSym, Tuple(false, debugInfo), k(fun2))) else k(fun2)
-        case ClsLikeDefn(owner, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods, privateFields, publicFields, preCtor, ctor, companion, bufferable) =>
+        case defn @ ClsLikeDefn(owner, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods, privateFields, publicFields, preCtor, ctor, companion, bufferable) =>
           if !h.allowDefn then
             raise(lifterReport(msg"Unexpected nested class: lambdas may not function correctly." -> isym.toLoc :: Nil))
           val debugInfos = mutable.ArrayBuffer.empty[(Local, List[Arg])]
@@ -561,7 +523,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             tl.log(s"companion name: ${bod.isym.nme}")
             ClsLikeBody(bod.isym, newMtds, bod.privateFields, bod.publicFields, newCtor)
           val c2 = ClsLikeDefn(owner, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, newMtds, privateFields, publicFields,
-            translateCtorLike(preCtor, isym.asPath, false), translateCtorLike(ctor, isym.asPath, false), companion2, bufferable)
+            translateCtorLike(preCtor, isym.asPath, false), translateCtorLike(ctor, isym.asPath, false), companion2, bufferable)(defn.configOverride)
           if opt.debug then
             Scoped(debugInfos.map(_._1).toSet, debugInfos.foldRight(k(c2)): (elem, blk) =>
               Assign(elem._1, Tuple(false, elem._2), blk))
@@ -589,7 +551,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val pcVar = freshTmp("pc")
     val mainLoopLbl = freshLabel("main")
 
-    val postTransform = new BlockTransformerShallow(SymbolSubst()):
+    val postTransform = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyBlock(b: Block) = b match
         case StateTransition(uid) =>
           Assign(pcVar, Value.Lit(Tree.IntLit(uid)), Continue(mainLoopLbl))
@@ -647,7 +609,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           End(),
           S(Assign(l, onEffect, End())))
         .rest(rst)
-    val topLevelTransform = new BlockTransformerShallow(SymbolSubst()):
+    val topLevelTransform = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyBlock(b: Block) = b match
         case Assign(lhs, EffectfulResult(r), rest) =>
           // Optimization to reuse lhs instead of fresh local
@@ -667,21 +629,21 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def translateHandleBlockShallow(h: HandleBlock): Block =
     val sym = new BlockMemberSymbol("handleBlock$", Nil, false)
 
-    val bodyDefn = FunDefn.withFreshSymbol(N, sym, PlainParamList(Nil) :: Nil, h.body)(false)
+    val bodyDefn = FunDefn.withFreshSymbol(N, sym, PlainParamList(Nil) :: Nil, h.body)(false, N)
     
     val handlerMtds = h.handlers.map: handler =>
       val sym = BlockMemberSymbol(h.cls.nme + handler.sym.nme, Nil, true)
       val fDef = FunDefn.withFreshSymbol(
         N, sym, PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil) :: Nil,
         handler.body
-        )(false)
+        )(false, N)
       FunDefn.withFreshSymbol(
         S(h.cls),
         handler.sym,
         handler.params,
         Scoped(Set(sym), Define(
           fDef,
-          Return(PureCall(paths.mkEffectPath, h.cls.asPath :: Value.Ref(sym, S(fDef.dSym)) :: Nil), false))))(false)
+          Return(PureCall(paths.mkEffectPath, h.cls.asPath :: Value.Ref(sym, S(fDef.dSym)) :: Nil), false))))(false, N)
 
     val clsDefn = ClsLikeDefn(
       N, // no owner
@@ -696,7 +658,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       End(),
       N,
       N,
-    )
+    )(N)
 
     blockBuilder
       .scopedVars(Set(clsDefn.sym, sym))
@@ -708,7 +670,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   
   def translateHandleBlocks(b: Block): Block =
 
-    val transform = new BlockTransformer(SymbolSubst()):
+    val transform = new BlockTransformer(SymbolSubst.Id):
       override def applyBlock(b: Block) = b match
         case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
           val hdr2 = hdr.map(applyHandler)
@@ -719,7 +681,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     transform.applyBlock(b)
 
   def translateTopLevel(b: Block): (Block, StackSafetyMap) =
-    val preTransformed = new PreHandlerLowering().applyBlock(b)
+    val preTransformed = new ScopeFlattener().applyBlock(b)
     val ctx = HandlerCtx.TopLevel
     val transformed = translateBlock(preTransformed, ctx, Set.empty)
     val blk = blockBuilder

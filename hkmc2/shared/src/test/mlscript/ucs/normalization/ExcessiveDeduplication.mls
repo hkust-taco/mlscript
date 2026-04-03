@@ -20,20 +20,16 @@ if
   y then 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp;
-//│ split_root$: {
-//│   split_1$: {
-//│     if (x === true) {
+//│ split_1$: {
+//│   if (x === true) {
+//│     break split_1$
+//│   } else {
+//│     if (y === true) {
 //│       break split_1$
-//│     } else {
-//│       if (y === true) {
-//│         break split_1$
-//│       } else {
-//│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│       }
-//│     }
+//│     } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│   }
-//│   tmp = 0;
 //│ }
+//│ tmp = 0;
 //│ tmp
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
@@ -82,13 +78,13 @@ if
 //│ >        builtin:+⁰(x⁰, b⁰)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let b, x1, element0$, tmp1;
-//│ split_root$1: {
+//│ split_root$: {
 //│   split_default$: {
 //│     split_1$1: {
 //│       if (x === true) {
 //│         if (z === true) {
 //│           tmp1 = 1;
-//│           break split_root$1
+//│           break split_root$
 //│         } else {
 //│           if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
 //│             element0$ = runtime.Tuple.get(y, 0);
@@ -110,7 +106,7 @@ if
 //│     }
 //│     x1 = 1;
 //│     tmp1 = x1 + b;
-//│     break split_root$1;
+//│     break split_root$;
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ }
@@ -134,30 +130,53 @@ if
 // >    $j
 
 
-// * Contemplate this absolutely horrendous code:
+// * Contemplate this absolutely horrendous code (before optimization):
+:sir
+:soir
 :sjs
 if false do ()
 123
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let scrut;
-//│ split_root$2: {
-//│   split_1$2: {
-//│     scrut = false;
-//│     if (scrut === true) { break split_1$2 } else { break split_1$2 }
-//│   }
-//│ }
+//│ split_1$2: { scrut = false; if (scrut === true) { break split_1$2 } else { break split_1$2 } }
 //│ 123
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let scrut;
+//│ block split_root$:
+//│   block split_1$:
+//│     set scrut = false;
+//│     match scrut
+//│       true =>
+//│         break split_1$
+//│       else
+//│         break split_1$
+//│     end
+//│   end
+//│ 123
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let scrut;
+//│ begin
+//│   block split_1$:
+//│     set scrut = false;
+//│     match scrut
+//│       true =>
+//│         break split_1$
+//│       else
+//│         break split_1$
+//│     end
+//│   end;
+//│   123
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 123
 
 :patMatConsequentSharingThreshold 10
 
 // * How it ought to be:
-:sjs
+:sir
 if false do ()
 123
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut1; scrut1 = false; if (scrut1 !== true) {} 123
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let scrut; set scrut = false; match scrut true => end else end 123
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 123
 

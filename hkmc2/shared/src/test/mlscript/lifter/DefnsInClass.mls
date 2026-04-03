@@ -1,65 +1,47 @@
 :js
 :lift
 
-:sjs
+:sir
 data class A(x) with
   data class B(y) with
     fun getB() = x + y
   fun getA() = B(2).getB()
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let B1, A1, B$;
-//│ B$ = function B$(isMut, A2, y) {
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let B⁰, A⁰, B$⁰;
+//│ define B$⁰ as fun B$¹(isMut, A, y) {
 //│   let tmp;
-//│   if (isMut === true) {
-//│     tmp = new B1.class(y);
-//│   } else {
-//│     tmp = globalThis.Object.freeze(new B1.class(y));
-//│   }
-//│   return tmp(A2)
+//│   match isMut
+//│     true =>
+//│       set tmp = new mut B¹(y);
+//│       end
+//│     else
+//│       set tmp = new B¹(y);
+//│       end
+//│   return tmp(A)
 //│ };
-//│ B1 = function B(y) {
-//│   return (A2) => {
-//│     return globalThis.Object.freeze(new B.class(y)(A2));
+//│ define B⁰ as class B¹(y, A) {
+//│   private val B$cap⁰;
+//│   private val A¹;
+//│   val y⁰;
+//│   constructor B² {
+//│     set A¹ = A;
+//│     define y⁰ as val y¹ = y;
+//│     end
+//│   }
+//│   method getB⁰ = fun getB¹() {
+//│     return +⁰(A¹.x⁰, B¹.y¹)
 //│   }
 //│ };
-//│ (class B {
-//│   static {
-//│     B1.class = this
+//│ define A⁰ as class A³(x) {
+//│   private val A$cap⁰;
+//│   val x¹;
+//│   constructor A² {
+//│     define x¹ as val x⁰ = x;
+//│     end
 //│   }
-//│   constructor(y) {
-//│     return (A2) => {
-//│       this.#A = A2;
-//│       this.y = y;
-//│       return this;
-//│     }
-//│   }
-//│   #B$cap;
-//│   #A;
-//│   getB() {
-//│     return this.#A.x + this.y
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "B", ["y"]]; 
-//│ });
-//│ A1 = function A(x) {
-//│   return globalThis.Object.freeze(new A.class(x));
+//│   method getA⁰ = fun getA¹() { let tmp; set tmp = B$¹(false, A³, 2); return tmp.getB¹() }
 //│ };
-//│ (class A {
-//│   static {
-//│     A1.class = this
-//│   }
-//│   constructor(x) {
-//│     this.x = x;
-//│   }
-//│   #A$cap;
-//│   getA() {
-//│     let tmp;
-//│     tmp = B$(false, this, 2);
-//│     return tmp.getB()
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A", ["x"]]; 
-//│ });
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 3
@@ -75,30 +57,24 @@ data class A1(x) with
 (new A1(1)).getA()
 //│ = 3
 
-:sjs
+:sir
 class A with
   val x = 
     fun g() = 2
     g
 (new A).x()
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g, A3, tmp2;
-//│ g = function g() {
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g⁰, A⁴, tmp;
+//│ define g⁰ as fun g¹() {
 //│   return 2
 //│ };
-//│ (class A2 {
-//│   static {
-//│     A3 = this
-//│   }
-//│   constructor() {
-//│     this.x = g;
-//│   }
-//│   #A$cap;
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
-//│ });
-//│ tmp2 = globalThis.Object.freeze(new A3());
-//│ runtime.safeCall(tmp2.x())
+//│ define A⁴ as class A⁵ {
+//│   private val A$cap¹;
+//│   val x²;
+//│   constructor { define x² as val x³ = g¹; end }
+//│ };
+//│ set tmp = new A⁵();
+//│ tmp.x³()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 

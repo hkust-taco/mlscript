@@ -37,9 +37,9 @@ hi(0)
 //│ runtime.resetEffects();
 //│ hi = function hi(n) {
 //│   loopLabel: while (true) {
-//│     let scrut, tmp2, stackDelayRes;
+//│     let scrut, tmp2;
 //│     runtime.stackDepth = runtime.stackDepth + 1;
-//│     stackDelayRes = runtime.checkDepth();
+//│     runtime.checkDepth();
 //│     if (runtime.curEffect !== null) {
 //│       return runtime.unwind(hi, -1, "TailCallOptimization.mls:31:1", null, null, 1, 1, n, 0)
 //│     }

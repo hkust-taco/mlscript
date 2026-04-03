@@ -267,7 +267,7 @@ class TailRecOpt(using State, TL, Raise):
     val loopSym = LabelSymbol(N, "loopLabel")
     val curIdSym = VarSymbol(Tree.Ident("id"))
     
-    class FunRewriter(f: FunDefn) extends BlockTransformerShallow(SymbolSubst()):
+    class FunRewriter(f: FunDefn) extends BlockTransformerShallow(SymbolSubst.Id):
       val params = getParamSyms(f)
       val paramsSet = f.params.toSet
       val paramsIdxes = params.zipWithIndex.toMap
@@ -298,7 +298,7 @@ class TailRecOpt(using State, TL, Raise):
           case x => x -> VarSymbol(x.id)
         .toMap
       
-      val subst = new SymbolSubst():
+      val subst = new SymbolSubst:
         override def mapVarSym(l: VarSymbol): VarSymbol = 
           copiedParamSyms.getOrElse(
             l,
@@ -329,7 +329,7 @@ class TailRecOpt(using State, TL, Raise):
               .toMap
             var requiredTmps: Set[(VarSymbol, TempSymbol)] = Set.empty
             
-            val paramRewriter = new BlockDataTransformer(SymbolSubst()):
+            val paramRewriter = new BlockDataTransformer(SymbolSubst.Id):
               override def applyValue(v: Value)(k: Value => Block): Block = v match
                 case Value.Ref(l: VarSymbol, disamb) => assignedSyms.get(l) match
                   case S(v) =>
@@ -388,7 +388,7 @@ class TailRecOpt(using State, TL, Raise):
           Call(sel, args)(true, false, false),
           false
         )
-        FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(false)
+        FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(false, N)
     
     val params =
       val initial = paramSyms.map(Param.simple(_))
@@ -398,7 +398,7 @@ class TailRecOpt(using State, TL, Raise):
     val loopDefn = FunDefn(
       owner, bms, dSym,
       PlainParamList(params) :: Nil,
-      loop)(false)
+      loop)(false, N)
     
     if funs.size === 1 then (N, loopDefn :: Nil)
     else (S(loopDefn), rewrittenFuns)
@@ -436,13 +436,13 @@ class TailRecOpt(using State, TL, Raise):
       val companion = c.companion.map: comp =>
         val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
         comp.copy(methods = cMtds)
-      c.copy(companion = companion)
+      c.copy(companion = companion)(c.configOverride)
     else
       val mtds = optFunctionsFlat(c.methods, S(c.isym))
       val companion = c.companion.map: comp =>
         val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
         comp.copy(methods = cMtds)
-      c.copy(methods = mtds, companion = companion)
+      c.copy(methods = mtds, companion = companion)(c.configOverride)
   
   def transform(b: Block) =
     /* To avoid `x` being overridden in the following when the lifter is not run:
@@ -468,7 +468,10 @@ class TailRecOpt(using State, TL, Raise):
       case f: FunDefn => L(f)
       case c: ClsLikeDefn => R(c)
       case _ => die // unreachable as floatOutDefns only floats out FunDefns and ClsLikeDefns
-    val (optFNew, optF) = optFunctions(funs, N)
+    // Filter out functions that have a @config annotation disabling tailRecOpt
+    val (tailRecFuns, _) = funs.partition: f =>
+      f.configOverride.forall(_.tailRecOpt)
+    val (optFNew, optF) = optFunctions(tailRecFuns, N)
     val optC = optClasses(clses)
     
     val fMap = optF.map(f => f.dSym -> f).toMap
@@ -477,7 +480,7 @@ class TailRecOpt(using State, TL, Raise):
       optC.map(c => c.isym -> c).toMap
     
     // replace them in place 
-    val transformer = new BlockTransformerShallow(SymbolSubst()):
+    val transformer = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case f: FunDefn => fMap.get(f.dSym) match
           case Some(value) => k(value)
@@ -489,7 +492,24 @@ class TailRecOpt(using State, TL, Raise):
         
         case _ => super.applyDefn(defn)(k)
     
-    Scoped(
+    val result = Scoped(
       optFNew.map(_.sym).toSet,
       optFNew.foldLeft(transformer.applyBlock(b)):
         case (acc, f) => Define(f, acc))
+    
+    // Report @tailrec on functions that weren't processed by the optimization above,
+    // e.g. nested functions or functions with @config(tailRecOpt: false).
+    // Class/module methods are handled separately by optClasses and are skipped here.
+    val tailRecFunSyms = tailRecFuns.map(_.dSym).toSet
+    new BlockTraverser:
+      override def applyFunDefn(fun: FunDefn): Unit =
+        if fun.forceTailRec && !tailRecFunSyms.contains(fun.dSym) then
+          raise(ErrorReport(
+            msg"This @tailrec function was not processed by the tail-call optimizer." -> fun.dSym.toLoc :: Nil))
+        super.applyFunDefn(fun)
+      override def applyDefn(defn: Defn): Unit = defn match
+        case _: ClsLikeDefn => ()
+        case _ => super.applyDefn(defn)
+    .applyBlock(result)
+    
+    result

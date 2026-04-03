@@ -30,13 +30,12 @@ fun lead_and_last(xs) = if xs is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lead_and_last;
 //│ lead_and_last = function lead_and_last(xs) {
-//│   let x, ys, y, lastElement0$, middleElements, element0$;
+//│   let x, y, lastElement0$, element0$;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
 //│     element0$ = runtime.Tuple.get(xs, 0);
-//│     middleElements = runtime.Tuple.slice(xs, 1, 1);
+//│     runtime.Tuple.slice(xs, 1, 1);
 //│     lastElement0$ = runtime.Tuple.get(xs, -1);
 //│     y = lastElement0$;
-//│     ys = middleElements;
 //│     x = element0$;
 //│     return x + y
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {

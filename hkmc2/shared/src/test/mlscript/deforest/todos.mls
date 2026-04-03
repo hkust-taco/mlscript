@@ -62,15 +62,15 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
 //│   return x(tmp11, t, tmp11, tmp12, tmp13, tmp14, tmp15)
 //│ };
-//│ define test_18$test⁰ as fun test_18$test¹(x1) {
+//│ define test_18$test⁰ as fun test_18$test¹(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
-//│   return x1(t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15, t, tmp11, tmp12, tmp13, tmp14, tmp15)
+//│   return x(t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15, t, tmp11, tmp12, tmp13, tmp14, tmp15)
 //│ };
-//│ define test_13$test⁰ as fun test_13$test¹(x2) {
+//│ define test_13$test⁰ as fun test_13$test¹(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
-//│   match x2
+//│   match x
 //│     AA⁰ =>
-//│       set arg$AA$0$ = x2.x⁰;
+//│       set arg$AA$0$ = x.x⁰;
 //│       match arg$AA$0$
 //│         AA⁰ =>
 //│           set arg$AA$0$1 = arg$AA$0$.x⁰;
@@ -93,67 +93,67 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   set fv_tmp1 = 4;
 //│   return test_19$x_rest¹(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
 //│ };
-//│ define test_18$x_AA⁰ as fun test_18$x_AA¹(fv_t1, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_tmp10, fv_t2, fv_tmp11, fv_tmp12, fv_tmp13, fv_tmp14, fv_tmp15, AA_x4) {
+//│ define test_18$x_AA⁰ as fun test_18$x_AA¹(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, AA_x4) {
 //│   set fv_arg$AA$0$ = AA_x4;
-//│   return fv_arg$AA$0$(fv_t2, fv_a, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp11, fv_tmp12, fv_tmp13, fv_tmp14, fv_tmp15, fv_t2, fv_tmp11, fv_tmp12, fv_tmp13, fv_tmp14, fv_tmp15)
+//│   return fv_arg$AA$0$(fv_t1, fv_a, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9)
 //│ };
-//│ define test_18$arg$AA$0$_AA⁰ as fun test_18$arg$AA$0$_AA²(fv_t3, fv_a1, fv_arg$AA$0$3, fv_arg$AA$0$4, fv_tmp16, fv_tmp17, fv_tmp18, fv_tmp19, fv_tmp20, fv_t4, fv_tmp21, fv_tmp22, fv_tmp23, fv_tmp24, fv_tmp25, AA_x5) {
-//│   set fv_arg$AA$0$3 = AA_x5;
-//│   return fv_arg$AA$0$3(fv_a1, fv_arg$AA$0$4, fv_tmp21, fv_t4, fv_tmp21, fv_tmp22, fv_tmp23, fv_tmp24, fv_tmp25)
+//│ define test_18$arg$AA$0$_AA⁰ as fun test_18$arg$AA$0$_AA²(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, AA_x4) {
+//│   set fv_arg$AA$0$ = AA_x4;
+//│   return fv_arg$AA$0$(fv_a, fv_arg$AA$0$1, fv_tmp5, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9)
 //│ };
-//│ define test_18$arg$AA$0$_AA¹ as fun test_18$arg$AA$0$_AA³(fv_a2, fv_arg$AA$0$5, fv_tmp26, fv_t5, fv_tmp27, fv_tmp28, fv_tmp29, fv_tmp30, fv_tmp31, AA_x6) {
-//│   set fv_arg$AA$0$5 = AA_x6;
-//│   set fv_a2 = fv_arg$AA$0$5;
-//│   set fv_tmp27 = fv_a2;
-//│   return test_18$arg$AA$0$_rest²(fv_t5, fv_tmp27, fv_tmp28, fv_tmp29, fv_tmp30, fv_tmp31)
+//│ define test_18$arg$AA$0$_AA¹ as fun test_18$arg$AA$0$_AA³(fv_a, fv_arg$AA$0$, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, AA_x4) {
+//│   set fv_arg$AA$0$ = AA_x4;
+//│   set fv_a = fv_arg$AA$0$;
+//│   set fv_tmp1 = fv_a;
+//│   return test_18$arg$AA$0$_rest²(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
 //│ };
-//│ define test_13$arg$AA$0$_AA⁰ as fun test_13$arg$AA$0$_AA¹(fv_a3, fv_arg$AA$0$6, fv_tmp32, fv_t6, fv_tmp33, fv_tmp34, fv_tmp35, fv_tmp36, fv_tmp37, AA_x7) {
-//│   set fv_arg$AA$0$6 = AA_x7;
-//│   set fv_a3 = fv_arg$AA$0$6;
-//│   set fv_tmp33 = fv_a3;
-//│   return test_13$arg$AA$0$_rest²(fv_t6, fv_tmp33, fv_tmp34, fv_tmp35, fv_tmp36, fv_tmp37)
+//│ define test_13$arg$AA$0$_AA⁰ as fun test_13$arg$AA$0$_AA¹(fv_a, fv_arg$AA$0$, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, AA_x4) {
+//│   set fv_arg$AA$0$ = AA_x4;
+//│   set fv_a = fv_arg$AA$0$;
+//│   set fv_tmp1 = fv_a;
+//│   return test_13$arg$AA$0$_rest²(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
 //│ };
-//│ define test_19$x_rest⁰ as fun test_19$x_rest¹(fv_t7, fv_tmp38, fv_tmp39, fv_tmp40, fv_tmp41, fv_tmp42) {
-//│   set fv_t7 = fv_tmp38;
-//│   set fv_tmp39 = *⁰(5, 4);
-//│   set fv_tmp40 = +⁰(fv_t7, fv_tmp39);
-//│   set fv_tmp41 = -⁰(fv_tmp40, 3);
-//│   set fv_tmp42 = +⁰(fv_tmp41, 2);
-//│   return -⁰(fv_tmp42, 1)
+//│ define test_19$x_rest⁰ as fun test_19$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
+//│   set fv_t = fv_tmp;
+//│   set fv_tmp1 = *⁰(5, 4);
+//│   set fv_tmp2 = +⁰(fv_t, fv_tmp1);
+//│   set fv_tmp3 = -⁰(fv_tmp2, 3);
+//│   set fv_tmp4 = +⁰(fv_tmp3, 2);
+//│   return -⁰(fv_tmp4, 1)
 //│ };
-//│ define test_18$x_rest⁰ as fun test_18$x_rest¹(fv_t8, fv_tmp43, fv_tmp44, fv_tmp45, fv_tmp46, fv_tmp47) {
-//│   set fv_t8 = fv_tmp43;
-//│   set fv_tmp44 = *⁰(5, 4);
-//│   set fv_tmp45 = +⁰(fv_t8, fv_tmp44);
-//│   set fv_tmp46 = -⁰(fv_tmp45, 3);
-//│   set fv_tmp47 = +⁰(fv_tmp46, 2);
-//│   return -⁰(fv_tmp47, 1)
+//│ define test_18$x_rest⁰ as fun test_18$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
+//│   set fv_t = fv_tmp;
+//│   set fv_tmp1 = *⁰(5, 4);
+//│   set fv_tmp2 = +⁰(fv_t, fv_tmp1);
+//│   set fv_tmp3 = -⁰(fv_tmp2, 3);
+//│   set fv_tmp4 = +⁰(fv_tmp3, 2);
+//│   return -⁰(fv_tmp4, 1)
 //│ };
-//│ define test_18$arg$AA$0$_rest⁰ as fun test_18$arg$AA$0$_rest³(fv_t9, fv_tmp48, fv_tmp49, fv_tmp50, fv_tmp51, fv_tmp52) {
-//│   return test_18$x_rest¹(fv_t9, fv_tmp48, fv_tmp49, fv_tmp50, fv_tmp51, fv_tmp52)
+//│ define test_18$arg$AA$0$_rest⁰ as fun test_18$arg$AA$0$_rest³(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
+//│   return test_18$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
 //│ };
-//│ define test_18$arg$AA$0$_rest¹ as fun test_18$arg$AA$0$_rest²(fv_t10, fv_tmp53, fv_tmp54, fv_tmp55, fv_tmp56, fv_tmp57) {
-//│   return test_18$arg$AA$0$_rest³(fv_t10, fv_tmp53, fv_tmp54, fv_tmp55, fv_tmp56, fv_tmp57)
+//│ define test_18$arg$AA$0$_rest¹ as fun test_18$arg$AA$0$_rest²(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
+//│   return test_18$arg$AA$0$_rest³(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
 //│ };
-//│ define test_13$arg$AA$0$_rest⁰ as fun test_13$arg$AA$0$_rest²(fv_t11, fv_tmp58, fv_tmp59, fv_tmp60, fv_tmp61, fv_tmp62) {
-//│   return test_13$arg$AA$0$_rest³(fv_t11, fv_tmp58, fv_tmp59, fv_tmp60, fv_tmp61, fv_tmp62)
+//│ define test_13$arg$AA$0$_rest⁰ as fun test_13$arg$AA$0$_rest²(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
+//│   return test_13$arg$AA$0$_rest³(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
 //│ };
-//│ define test_13$arg$AA$0$_rest¹ as fun test_13$arg$AA$0$_rest³(fv_t12, fv_tmp63, fv_tmp64, fv_tmp65, fv_tmp66, fv_tmp67) {
-//│   return test_13$x_rest¹(fv_t12, fv_tmp63, fv_tmp64, fv_tmp65, fv_tmp66, fv_tmp67)
+//│ define test_13$arg$AA$0$_rest¹ as fun test_13$arg$AA$0$_rest³(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
+//│   return test_13$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
 //│ };
-//│ define test_13$x_rest⁰ as fun test_13$x_rest¹(fv_t13, fv_tmp68, fv_tmp69, fv_tmp70, fv_tmp71, fv_tmp72) {
-//│   set fv_t13 = fv_tmp68;
-//│   set fv_tmp69 = *⁰(5, 4);
-//│   set fv_tmp70 = +⁰(fv_t13, fv_tmp69);
-//│   set fv_tmp71 = -⁰(fv_tmp70, 3);
-//│   set fv_tmp72 = +⁰(fv_tmp71, 2);
-//│   return -⁰(fv_tmp72, 1)
+//│ define test_13$x_rest⁰ as fun test_13$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
+//│   set fv_t = fv_tmp;
+//│   set fv_tmp1 = *⁰(5, 4);
+//│   set fv_tmp2 = +⁰(fv_t, fv_tmp1);
+//│   set fv_tmp3 = -⁰(fv_tmp2, 3);
+//│   set fv_tmp4 = +⁰(fv_tmp3, 2);
+//│   return -⁰(fv_tmp4, 1)
 //│ };
-//│ define test⁰ as fun test¹(x3) {
+//│ define test⁰ as fun test¹(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
-//│   match x3
+//│   match x
 //│     AA⁰ =>
-//│       set arg$AA$0$ = x3.x⁰;
+//│       set arg$AA$0$ = x.x⁰;
 //│       match arg$AA$0$
 //│         AA⁰ =>
 //│           set arg$AA$0$1 = arg$AA$0$.x⁰;
@@ -209,14 +209,14 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ set tmp3 = f¹(p⁰);
 //│ set tmp4 = +⁰(tmp2, tmp3);
 //│ set AA_x1 = 10;
-//│ set tmp5 = (fv_ctorLam_a1, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp6, fv_ctorLam_t1, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, fv_ctorLam_tmp11) => return test_18$arg$AA$0$_AA³(fv_ctorLam_a1, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp6, fv_ctorLam_t1, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, fv_ctorLam_tmp10, fv_ctorLam_tmp11, AA_x1);
+//│ set tmp5 = (fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5) => return test_18$arg$AA$0$_AA³(fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, AA_x1);
 //│ set AA_x2 = tmp5;
-//│ set tmp6 = (fv_ctorLam_t2, fv_ctorLam_a2, fv_ctorLam_arg$AA$0$2, fv_ctorLam_arg$AA$0$3, fv_ctorLam_tmp12, fv_ctorLam_tmp13, fv_ctorLam_tmp14, fv_ctorLam_tmp15, fv_ctorLam_tmp16, fv_ctorLam_t3, fv_ctorLam_tmp17, fv_ctorLam_tmp18, fv_ctorLam_tmp19, fv_ctorLam_tmp20, fv_ctorLam_tmp21) => return test_18$arg$AA$0$_AA²(fv_ctorLam_t2, fv_ctorLam_a2, fv_ctorLam_arg$AA$0$2, fv_ctorLam_arg$AA$0$3, fv_ctorLam_tmp12, fv_ctorLam_tmp13, fv_ctorLam_tmp14, fv_ctorLam_tmp15, fv_ctorLam_tmp16, fv_ctorLam_t3, fv_ctorLam_tmp17, fv_ctorLam_tmp18, fv_ctorLam_tmp19, fv_ctorLam_tmp20, fv_ctorLam_tmp21, AA_x2);
+//│ set tmp6 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_t1, fv_ctorLam_tmp5, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9) => return test_18$arg$AA$0$_AA²(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_t1, fv_ctorLam_tmp5, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, AA_x2);
 //│ set AA_x3 = tmp6;
-//│ set tmp7 = (fv_ctorLam_t4, fv_ctorLam_a3, fv_ctorLam_arg$AA$0$4, fv_ctorLam_arg$AA$0$5, fv_ctorLam_arg$AA$0$6, fv_ctorLam_tmp22, fv_ctorLam_tmp23, fv_ctorLam_tmp24, fv_ctorLam_tmp25, fv_ctorLam_tmp26, fv_ctorLam_t5, fv_ctorLam_tmp27, fv_ctorLam_tmp28, fv_ctorLam_tmp29, fv_ctorLam_tmp30, fv_ctorLam_tmp31) => return test_18$x_AA¹(fv_ctorLam_t4, fv_ctorLam_a3, fv_ctorLam_arg$AA$0$4, fv_ctorLam_arg$AA$0$5, fv_ctorLam_arg$AA$0$6, fv_ctorLam_tmp22, fv_ctorLam_tmp23, fv_ctorLam_tmp24, fv_ctorLam_tmp25, fv_ctorLam_tmp26, fv_ctorLam_t5, fv_ctorLam_tmp27, fv_ctorLam_tmp28, fv_ctorLam_tmp29, fv_ctorLam_tmp30, fv_ctorLam_tmp31, AA_x3);
+//│ set tmp7 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_arg$AA$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_t1, fv_ctorLam_tmp5, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9) => return test_18$x_AA¹(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_arg$AA$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_t1, fv_ctorLam_tmp5, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, AA_x3);
 //│ set tmp8 = test_18$test¹(tmp7);
 //│ set tmp9 = +⁰(tmp4, tmp8);
-//│ set deforest$lam = (fv_ctorLam_tmp32, fv_ctorLam_t6, fv_ctorLam_tmp33, fv_ctorLam_tmp34, fv_ctorLam_tmp35, fv_ctorLam_tmp36, fv_ctorLam_tmp37) => return test_19$x_dflt¹(fv_ctorLam_tmp32, fv_ctorLam_t6, fv_ctorLam_tmp33, fv_ctorLam_tmp34, fv_ctorLam_tmp35, fv_ctorLam_tmp36, fv_ctorLam_tmp37);
+//│ set deforest$lam = (fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5) => return test_19$x_dflt¹(fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5);
 //│ set tmp10 = test_19$test¹(deforest$lam);
 //│ +⁰(tmp9, tmp10)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

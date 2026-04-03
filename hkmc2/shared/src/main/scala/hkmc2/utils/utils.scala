@@ -51,6 +51,7 @@ class DebugPrinter:
   def printPlain(v: Any): Str = v.toString
   
   def printProduct(inTailPos: Bool, t: Product): Str =
+    
     def aux(v: Any, inTailPos: Bool = false): Str =
       v match
       case Some(v) => "S of " + aux(v)
@@ -98,14 +99,33 @@ class DebugPrinter:
       case 0 => prefix
       case 1 => prefix + " of " + aux(tt.productElement(0))
       case a =>
-        var args = tt.productIterator.zipWithIndex.map:
+        var args = tt.productIterator.zipWithIndex.filterNot(DebugPrinter.emptyValues contains _._1).map:
           case (v, i) => tt.productElementName(i) + " = " + aux(v, tt.isInstanceOf[ProductWithTail] && i === a - 1)
-        prefix + locally:
-          if inTailPos then ": \\\n" + args.mkString("\n")
-          else ":\n" + args.mkString("\n").indent("  ")
+        // val emptyArgs = args.isEmpty
+        // val argsStr = if emptyArgs then "‹empty›" else args.mkString("\n")
+        // prefix + locally:
+        //   if inTailPos then ": \\\n" + argsStr
+        //   else ":\n" + argsStr.indent("  ")
+        if args.isEmpty then prefix + ": ‹empty›" else
+          val argsStr = args.mkString("\n")
+          prefix + locally:
+            if inTailPos then ": \\\n" + argsStr
+            else ":\n" + argsStr.indent("  ")
 
 end DebugPrinter
 
+object DebugPrinter:
+  
+  val emptyValues: Set[Any] = Set(
+    None, Nil, Vector.empty,
+    semantics.PlainParamList(Nil),
+    ParamListFlags.empty,
+    TermDefFlags.empty,
+    FldFlags.empty,
+    codegen.End(""),
+  )
+  
+end DebugPrinter
 
 extension [A](self: Opt[A])
   def mapConserve[B](f: A => A): Opt[A] =

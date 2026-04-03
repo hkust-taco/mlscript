@@ -1,0 +1,4 @@
+interface:
+  display_name: "HKMC2 DiffTests"
+  short_description: "Work with HKMC2 inline golden-file DiffTests in .mls files"
+  default_prompt: "Use this skill to edit, run, and validate HKMC2 DiffTests that rewrite //│ snapshots in .mls files."

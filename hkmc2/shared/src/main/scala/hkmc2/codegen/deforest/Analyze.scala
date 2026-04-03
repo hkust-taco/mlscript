@@ -362,17 +362,13 @@ class DeforestPreAnalyzer(
           && methods.isEmpty
           && privateFields.isEmpty
           && publicFields.isEmpty
-          && preCtor.matches:
-            case End("") => true
-          && ctor
-            .matches:
-              case Return(Select(Value.Ref(runtimeSym, None), Tree.Ident("Unit")), true) =>
-                runtimeSym is elabState.runtimeSymbol
-        then mod.foreach(applyClsLikeBody)
+          && preCtor.isEmpty
+          && ctor.isEmpty
+        then mod.foreach(applyCompanionModule)
       else
         ctxTracker.markAsNonHandleable()
   
-  override def applyClsLikeBody(b: ClsLikeBody): Unit =
+  override def applyCompanionModule(b: ClsLikeBody): Unit =
     if ctxTracker.isToplvl then
       res.modSymToBms(b.isym.asMod.get) = b.isym.asBlkMember.get
       ctxTracker.inCtxOf(b):

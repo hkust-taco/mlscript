@@ -38,9 +38,6 @@ fun foo(h): module M =
 //│       static {
 //│         A2 = this
 //│       }
-//│       constructor() {
-//│         runtime.Unit;
-//│       }
 //│       static #A_mod$cap;
 //│       #A$cap;
 //│       toString() { return runtime.render(this); }
@@ -51,9 +48,6 @@ fun foo(h): module M =
 //│     globalThis.Object.freeze(class A1 {
 //│       static {
 //│         A3 = this
-//│       }
-//│       constructor() {
-//│         runtime.Unit;
 //│       }
 //│       static #A_mod$cap;
 //│       #A$cap;

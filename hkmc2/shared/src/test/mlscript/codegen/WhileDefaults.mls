@@ -18,7 +18,6 @@
 //│       continue lbl
 //│     } else { Predef.print(2); continue lbl }
 //│   }
-//│   return runtime.Unit
 //│ });
 //│ lambda
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

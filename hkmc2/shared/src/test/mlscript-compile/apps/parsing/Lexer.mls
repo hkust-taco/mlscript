@@ -218,22 +218,23 @@ fun lex(str: Str, options) =
     
     if char(idx) is
       None then reverse of acc
-      Some(Char.Whitespace) and whitespace(idx) is idx' then
+      Some(ch) and ch is...
+      Char.Whitespace and whitespace(idx) is idx' then
         go(idx', Token.space(idx, idx'))
-      Some("\"") then go(...string(idx + 1))
-      Some(Bracket as b) then go(idx + 1, Token.symbol(b, idx))
-      Some("/") then go(...comment(idx + 1))
-      Some(Operator as ch) then go(...operator(idx + 1, ch))
-      Some(Char.Digit as ch) then go(...number(idx + 1, ch))
-      Some(IdentifierStart as ch) then go(...identifier(idx + 1, ch))
-      Some(IdentifierQuote as quote)
+      "\"" then go(...string(idx + 1))
+      Bracket as b then go(idx + 1, Token.symbol(b, idx))
+      "/" then go(...comment(idx + 1))
+      Operator as ch then go(...operator(idx + 1, ch))
+      Char.Digit as ch then go(...number(idx + 1, ch))
+      IdentifierStart as ch then go(...identifier(idx + 1, ch))
+      IdentifierQuote as quote
         and char(idx + 1) is Some(IdentifierStart as ch)
         and identifier(idx + 2, quote + ch) is [idx', token] and
           token is Token.Identifier(name, _) then
             go(idx', Token.identifier(name, idx))
           else go(idx + 1, Token.error(idx, idx + 1))
-      Some(other) then
-        print("Unrecognized character: '" ~ other ~ "'")
+      else
+        print("Unrecognized character: '" ~ ch ~ "'")
         go(idx + 1, Token.error(idx, idx + 1))
   
   scan(0, Nil)

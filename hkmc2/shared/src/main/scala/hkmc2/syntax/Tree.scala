@@ -107,6 +107,7 @@ enum Tree extends AutoLocated:
   case Outer(name: Opt[Tree])
   case Spread(kw: Keywrd[Keyword.Ellipsis], body: Opt[Tree])
   case Annotated(annotation: Tree, target: Tree)
+  case Directive(prefix: Tree, body: Tree)
   case Constructor(decl: Tree)
   /** Represents a term that has already been elaborated. When desugaring
    *  operator splits in the UCS, the `lhs` of `OpSplit` has already been elaborated
@@ -162,6 +163,7 @@ enum Tree extends AutoLocated:
     case Def(lhs, rhs) => Vector.double(lhs, rhs)
     case Spread(kw, body) => Vector.single(kw) ++ body.toVector
     case Annotated(annotation, target) => Vector.double(annotation, target)
+    case Directive(prefix, body) => Vector.double(prefix, body)
     case Constructor(decl) => Vector.single(decl)
     case MemberProj(cls, name) => Vector.single(cls)
     case Keywrd(kw) => Vector.empty
@@ -213,6 +215,7 @@ enum Tree extends AutoLocated:
     case Def(lhs, rhs) => "defining assignment"
     case Spread(_, _) => "spread"
     case Annotated(_, _) => "annotated"
+    case Directive(_, _) => "directive"
     case Open(_) => "open"
     case Constructor(_) => "constructor"
     case MemberProj(_, _) => "member projection"
@@ -231,6 +234,13 @@ enum Tree extends AutoLocated:
   def showDbg: Str = toString // TODO
   
   lazy val desugared: Tree = this match
+    
+    case Ident(name) if name.startsWith("'") =>
+      StrLit(name.drop(1)).withLocOf(this)
+    case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
+      InfixApp(lhs.desugared, Keywrd(Keyword.`:`), rhs.desugared)
+    case Sel(pre, nme) if nme.name.startsWith("'") =>
+      DynAccess(pre.desugared, StrLit(nme.name.drop(1)).withLocOf(nme)).withLocOf(this)
     
     case Pun(false, id) =>
       InfixApp(id, Keywrd(Keyword.`:`), id)

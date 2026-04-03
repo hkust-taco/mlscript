@@ -107,19 +107,19 @@ modSome(Some(17), 3)
 //│ define modSome_8$x_rest⁰ as fun modSome_8$x_rest¹() {
 //│   return null
 //│ };
-//│ define modSome⁰ as fun modSome¹(x1, m1) {
+//│ define modSome⁰ as fun modSome¹(x, m) {
 //│   loop loopLabel:
 //│     let n, scrut, arg$Some$0$, tmp1, tmp2;
-//│     match x1
+//│     match x
 //│       Some¹ =>
-//│         set arg$Some$0$ = x1.x⁰;
+//│         set arg$Some$0$ = x.x⁰;
 //│         set n = arg$Some$0$;
-//│         set scrut = >=⁰(n, m1);
+//│         set scrut = >=⁰(n, m);
 //│         match scrut
 //│           true =>
-//│             set tmp1 = -⁰(n, m1);
+//│             set tmp1 = -⁰(n, m);
 //│             set tmp2 = Some⁰(tmp1);
-//│             set x1 = tmp2;
+//│             set x = tmp2;
 //│             continue loopLabel
 //│           else
 //│             return Some⁰(n)

@@ -10,15 +10,12 @@ data class Foo(val x) with
 Foo(42).x
 //│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Nil
 //│   res = Sel:
 //│     prefix = App:
 //│       lhs = Ref{sym=member:Foo⁰} of member:Foo⁰
 //│       rhs = Tup of Ls of 
 //│         Fld:
-//│           flags = ()
 //│           term = Lit of IntLit of 42
-//│           asc = N
 //│     nme = Ident of "x"
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
@@ -32,7 +29,6 @@ let foo = Foo(42)
 foo.x
 //│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Nil
 //│   res = Sel:
 //│     prefix = Ref{sym=foo⁰} of foo⁰
 //│     nme = Ident of "x"
@@ -45,7 +41,6 @@ foo.x
 foo.y
 //│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Nil
 //│   res = Sel:
 //│     prefix = Ref{sym=foo⁰} of foo⁰
 //│     nme = Ident of "y"
@@ -60,17 +55,12 @@ case
   Foo(a) then a
 //│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Nil
 //│   res = Lam:
 //│     params = ParamList:
-//│       flags = ()
 //│       params = Ls of 
 //│         Param:
-//│           flags = ()
 //│           sym = caseScrut⁰
-//│           sign = N
 //│           modulefulness = Modulefulness of N
-//│       restParam = N
 //│     body = IfLike:
 //│       kw = keyword 'case'
 //│       form = ReturningIf

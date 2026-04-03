@@ -71,7 +71,7 @@ in
   h.perform("5")
 result
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let result, h7, tmp7, handleBlock$7, Handler$h$perform7, Handler$h$15, Handler$h$perform$4;
+//│ let result, h7, handleBlock$7, Handler$h$perform7, Handler$h$15, Handler$h$perform$4;
 //│ runtime.resetEffects();
 //│ Handler$h$perform$4 = function Handler$h$perform$(arg) {
 //│   return (k) => {
@@ -111,12 +111,12 @@ result
 //│     Handler$h$15 = this
 //│   }
 //│   constructor() {
-//│     let tmp8;
-//│     tmp8 = super();
+//│     let tmp7;
+//│     tmp7 = super();
 //│     if (runtime.curEffect !== null) {
-//│       tmp8 = runtime.illegalEffect("in a constructor");
+//│       tmp7 = runtime.illegalEffect("in a constructor");
 //│     }
-//│     tmp8;
+//│     tmp7;
 //│   }
 //│   #Handler$h$$cap;
 //│   perform(arg) {
@@ -181,8 +181,8 @@ result
 //│     break;
 //│   }
 //│ });
-//│ tmp7 = runtime.enterHandleBlock(h7, handleBlock$7);
-//│ if (runtime.curEffect !== null) { tmp7 = runtime.topLevelEffect(false); }
+//│ runtime.enterHandleBlock(h7, handleBlock$7);
+//│ if (runtime.curEffect !== null) { runtime.topLevelEffect(false); }
 //│ result
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "54321"

@@ -1,0 +1,158 @@
+
+:global
+:invalml
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+class Option[A] with
+  constructor
+    Some(x: A)
+    None
+
+
+class ArrayList[T, out R]
+class Iter[T, out R]
+class Array2D[T, out R]
+
+class Interviewee with
+  constructor
+    Itv(score: Int, salary: Int)
+
+fun (;) seq(_, res) = res
+fun toString: Any -> Str
+fun concat: (Str, Str) -> Str
+fun println: Str -> ()
+
+fun
+  empty:   [A, R] -> Region[out R] ->{R} ArrayList[A, out R]
+  push:    [A, R] -> (ArrayList[A, out R], A) ->{R} ()
+  iter: [Res, R, E extends ~R, T] ->
+    (ArrayList[T, out R], [S] -> Iter[T, S] ->{S | E} Res) ->{E | R} Res
+  revIter: [outer, Res, R, E extends ~R, T] ->
+    (ArrayList[T, out R], [S extends ~outer] -> Iter[T, S] ->{S | E} Res) ->{E | R} Res
+  next: [T, S] -> Iter[T, S] ->{S} Option[T]
+  len:  [A, R] -> (ArrayList[A, out R]) ->{R} Int
+  whileDo: [R] -> (() ->{R} Bool) ->{R} ()
+  init:    [A, R] -> (Region[out R], Int, Int, A) ->{R} Array2D[A, R]
+  update: [A, R] -> (Array2D[A, out R], Int, Int, A) ->{R} ()
+  get: [A, R] -> (Array2D[A, out R], Int, Int) ->{R} A
+  max: (Int, Int) -> Int
+
+
+
+fun format(it) =
+  if it is Itv(score, salary) then
+    concat("interviewee, score: ", concat(toString(score), concat("salary", toString(salary))))
+
+
+fun printAll(arr) =
+  iter of arr, it =>
+    whileDo of () =>
+      if next(it) is
+        Some(x) then println(format(x)); true
+        None then false
+
+
+// fun select: [outer, R1 extends outer, R2 extends ~R1] -> (ArrayList[Interviewee, R1], Int, ArrayList[Interviewee, R2]) ->{R1 | R2} Int
+fun select(interviewees, budget, results) =
+  region r in
+    let size = len(interviewees), let i = r.ref 1
+    let dp = init(r, size + 1, budget + 1, 0)
+    iter of interviewees, it => whileDo of () =>
+      if next(it) is
+        Some(itv) then if itv is Itv(score, salary) then
+          let j = r.ref 0
+          whileDo of () =>
+            if !(j) < salary then update(dp, !(i), !(j), get(dp, !(i) - 1, !(j)))
+            else
+              let p = get(dp, !(i) - 1, !(j) - salary), let np = get(dp, !(i) - 1, !(j))
+              update(dp, !(i), !(j), max of np, p + score)
+            j := !(j) + 1; !(j) <= budget
+          i := !(i) + 1
+          true
+        None then false
+    i := size
+    let rest = r.ref budget
+    revIter of interviewees, it =>
+      whileDo of () =>
+        if next(it) is
+          Some(itv) then if itv is Itv(score, salary) then
+            if get(dp, !(i), !(rest)) == get(dp, !(i) - 1, !(rest) - salary) + score then
+              push(results, itv); rest := !(rest) - salary
+            else ()
+            i := !(i) - 1
+            true
+          None then false
+    get(dp, size, budget)
+
+// region r in
+//   let interviewees = empty(r)
+//   push(interviewees, Itv(20, 3000))
+//   push(interviewees, Itv(50, 1000))
+//   push(interviewees, Itv(30, 1000))
+//   let results = empty(r)
+//   let m = select(interviewees, 4000, results)
+//   printAll(results)
+//   m
+
+
+// fun wrongSelect(interviewees, budget, results) =
+//   region r in
+//     let size = len(interviewees), let i = r.ref 1
+//     let dp = init(r, size + 1, budget + 1, 0)
+//     iter of interviewees, it =>
+//       whileDo of () =>
+//         if next(it) is
+//           Some(itv) then if itv is Itv(score, salary) then
+//             let j = r.ref 0
+//             whileDo of () =>
+//               if !j < salary then update(dp, !i, !j, get(dp, !i - 1, !j))
+//               else
+//                 let p = get(dp, !i - 1, !j - salary), let np = get(dp, !i - 1, !j)
+//                 update(dp, !i, !j, max of np, p + score)
+//               j := !j + 1; !j <= budget
+//             i := !i + 1
+//             true
+//           None then false
+//     i := size
+//     let rest = r.ref budget
+//     revIter of interviewees, it =>
+//       whileDo of () =>
+//         if next(it) is
+//           Some(itv) then if itv is Itv(score, salary) then
+//             if get(dp, !i, !rest) == get(dp, !i - 1, !rest - salary) + score
+//                 do push(interviewees, itv); rest := !rest - salary
+//             i := !i - 1
+//             true
+//           None then false
+//     get(dp, size, budget)
+
+// region r in
+//   let interviewees = empty(r)
+//   push(interviewees, Itv(20, 3000))
+//   push(interviewees, Itv(50, 1000))
+//   push(interviewees, Itv(30, 1000))
+//   region r2 in
+//     let results = empty(r2)
+//     let m = wrongSelect(interviewees, 4000, results)
+//     printAll(results)
+//     m
+
+
+region r in
+  let interviewees = empty(r)
+  push(interviewees, Itv(40, 10))
+  push(interviewees, Itv(60, 20))
+  push(interviewees, Itv(120, 30))
+  push(interviewees, Itv(70, 20))
+  println("all interviewees:")
+  printAll(interviewees)
+  region r2 in
+    let results = empty(r2)
+    let m = select(interviewees, 60, results)
+    println("candidates:")
+    printAll(results)
+    m
+//│ Type: Int
+//│ ————————————————————————————————————————————————————————————————————————————————

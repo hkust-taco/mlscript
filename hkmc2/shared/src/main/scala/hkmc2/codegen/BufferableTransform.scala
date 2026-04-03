@@ -16,7 +16,7 @@ import hkmc2.syntax.Tree.DummyTypeDef
 
 class BufferableTransform()(using Ctx, State, Raise):
   def transform(blk: Block): Block =
-    val transformer = new BlockTransformer(SymbolSubst()):
+    val transformer = new BlockTransformer(SymbolSubst.Id):
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case cls: ClsLikeDefn if cls.k is syntax.Cls =>
           cls.bufferable.fold(super.applyDefn(defn)(k)): bufferable =>
@@ -35,7 +35,7 @@ class BufferableTransform()(using Ctx, State, Raise):
                 val idxSymbol = new TempSymbol(N, "idx")
                 Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asPath, baseIdx.asPath.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil)(true, false, false),
                   AssignDynField(buf.asPath.selSN("buf"), idxSymbol.asPath, true, r, applyBlock(rst))))
-              new BlockTransformer(SymbolSubst()):
+              new BlockTransformer(SymbolSubst.Id):
                 override def applyBlock(b: Block): Block = b match
                   case Assign(l, r, rst) =>
                     fieldMap.get(l).fold(super.applyBlock(b)): off =>
@@ -68,19 +68,19 @@ class BufferableTransform()(using Ctx, State, Raise):
               val blk = mkFieldReplacer(buf, idx).applyBlock(f.body)
               FunDefn(f.owner, f.sym, f.dSym, PlainParamList(
                 Param(FldFlags.empty, buf, N, Modulefulness.none) :: Param(FldFlags.empty, idx, N, Modulefulness.none) :: Nil) :: f.params,
-                if isCtor then Begin(blk, Return(idx.asPath, false)) else blk)(forceTailRec = f.forceTailRec)
+                if isCtor then Begin(blk, Return(idx.asPath, false)) else blk)(forceTailRec = f.forceTailRec, configOverride = f.configOverride)
             val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
                 S(companionSym), 
                 BlockMemberSymbol("ctor", Nil, false), 
                 cls.paramsOpt.toList,
                 Begin(cls.preCtor, cls.ctor),
-              )(false), true)
+              )(false, N), true)
             val fakeCompanion = ClsLikeBody(
               companionSym,
               fakeCtor :: cls.methods.map(transformFunDefn(_, false)),
               Nil,
               clsSizeSym -> clsSizeTermSym :: Nil,
-              Define(ValDefn(clsSizeTermSym, clsSizeSym, Value.Lit(Tree.IntLit(fields.size))), End()),
+              Define(ValDefn(clsSizeTermSym, clsSizeSym, Value.Lit(Tree.IntLit(fields.size)))(N), End()),
             )
             k:
               ClsLikeDefn(
@@ -99,6 +99,6 @@ class BufferableTransform()(using Ctx, State, Raise):
                 if bufferable then cls.ctor else End(),
                 S(fakeCompanion),
                 cls.bufferable,
-              )
+              )(cls.configOverride)
         case _ => super.applyDefn(defn)(k)
     transformer.applyBlock(blk)

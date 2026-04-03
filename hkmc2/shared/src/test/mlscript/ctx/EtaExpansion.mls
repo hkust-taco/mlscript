@@ -28,16 +28,17 @@ using Num = 0.42
 // () => foo()
 // and then resolved to
 // () => foo()(<using> 42)
-:sjs
+:sir
 let f1 = foo
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f1, f11;
-//│ f11 = function f1() {
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f1⁰, f1¹;
+//│ define f1¹ as fun f1²() {
 //│   let tmp;
-//│   tmp = foo();
-//│   return runtime.safeCall(tmp(instance$Ident$_Int$_))
+//│   set tmp = foo⁰();
+//│   return tmp(instance$Ident(Int)⁰)
 //│ };
-//│ f1 = f11;
+//│ set f1⁰ = f1²;
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f1 = fun f1
 
@@ -50,16 +51,17 @@ f1()
 // (x) => bar(x)
 // and then resolved to
 // (x) => bar(x)(<using> 42)
-:sjs
+:sir
 let f2 = bar
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f2, f21;
-//│ f21 = function f2(x) {
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f2⁰, f2¹;
+//│ define f2¹ as fun f2²(x) {
 //│   let tmp;
-//│   tmp = bar(x);
-//│   return runtime.safeCall(tmp(instance$Ident$_Int$_))
+//│   set tmp = bar⁰(x);
+//│   return tmp(instance$Ident(Int)⁰)
 //│ };
-//│ f2 = f21;
+//│ set f2⁰ = f2²;
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f2 = fun f2
 
@@ -72,22 +74,23 @@ f2(0.42)
 // (x) => baz(x)
 // and then resolved to
 // (x) => baz(x)(<using> 42)
-:sjs
+:sir
 let f3 = baz
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f3, f31;
-//│ f31 = function f3(x) {
-//│   let lambda1;
-//│   lambda1 = (undefined, function (y) {
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f3⁰, f3¹;
+//│ define f3¹ as fun f3²(x) {
+//│   let lambda;
+//│   define lambda as fun lambda⁰(y) {
 //│     let tmp, tmp1, tmp2;
-//│     tmp = baz(x);
-//│     tmp1 = runtime.safeCall(tmp(instance$Ident$_Int$_));
-//│     tmp2 = runtime.safeCall(tmp1(y));
-//│     return runtime.safeCall(tmp2(instance$Ident$_Num$_))
-//│   });
-//│   return lambda1
+//│     set tmp = baz⁰(x);
+//│     set tmp1 = tmp(instance$Ident(Int)⁰);
+//│     set tmp2 = tmp1(y);
+//│     return tmp2(instance$Ident(Num)⁰)
+//│   };
+//│   return lambda⁰
 //│ };
-//│ f3 = f31;
+//│ set f3⁰ = f3²;
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f3 = fun f3
 
@@ -96,52 +99,46 @@ f3(43)(44)
 //│ = [43, 42, 44, 0.42]
 
 // This should not expand
-:sjs
+:sir
 foo()
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp1; tmp1 = foo(); runtime.safeCall(tmp1(instance$Ident$_Int$_))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp; set tmp = foo⁰(); tmp(instance$Ident(Int)⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42]
 
 // This should not expand
-:sjs
+:sir
 bar(0.42)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp2; tmp2 = bar(0.42); runtime.safeCall(tmp2(instance$Ident$_Int$_))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp; set tmp = bar⁰(0.42); tmp(instance$Ident(Int)⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [0.42, 42]
 
 
-:sjs
+// :fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)
+// :checkIR
+:sir
 module Test with
   fun test(j)(using Int) = 0
   fun main(using Int) = test
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Test1;
-//│ (class Test {
-//│   static {
-//│     Test1 = this
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let Test⁰;
+//│ define Test⁰ as class Test¹
+//│ module Test² {
+//│   method test⁰ = fun test¹(j)(tmp) {
+//│     return 0
 //│   }
-//│   constructor() {
-//│     runtime.Unit;
+//│   method main⁰ = fun main¹(tmp) {
+//│     let lambda;
+//│     define lambda as fun lambda¹(j) {
+//│       let tmp1;
+//│       set tmp1 = Test².test¹(j);
+//│       return tmp1(tmp)
+//│     };
+//│     return lambda¹
 //│   }
-//│   static test(j) {
-//│     return (tmp3) => {
-//│       return 0
-//│     }
-//│   } 
-//│   static main(tmp3) {
-//│     let lambda1;
-//│     lambda1 = (undefined, function (j) {
-//│       let tmp4;
-//│       tmp4 = Test.test(j);
-//│       return runtime.safeCall(tmp4(tmp3))
-//│     });
-//│     return lambda1
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Test"]; 
-//│ });
+//│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
