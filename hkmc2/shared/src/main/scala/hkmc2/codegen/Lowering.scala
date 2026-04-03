@@ -550,19 +550,22 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val isAnd = sym is State.andSymbol
           val isOr = sym is State.orSymbol
           if isAnd || isOr then
-            val lamSym = BlockMemberSymbol("lambda", Nil, false)
-            loweringCtx.collectScopedSym(lamSym)
-            val lamDef = FunDefn.withFreshSymbol(
-              N,
-              lamSym,
-              PlainParamList(Nil) :: Nil,
-              inScopedBlock(returnedTerm(arg2)))(forceTailRec = false, configOverride = N)
-            Define(
-              lamDef,
-              k(Call(
-                Value.Ref(State.runtimeSymbol).selN(Tree.Ident(if isAnd then "short_and" else "short_or")),
-                Arg(N, ar1) :: Arg(N, lamDef.asPath) :: Nil
-              )(true, true, false)))
+            val trueLit = Tree.BoolLit(true)
+            val falseLit = Tree.BoolLit(false)
+            if isAnd then
+              Match(
+                ar1,
+                (Case.Lit(trueLit) -> term_nonTail(arg2)(k)) :: Nil,
+                S(k(Value.Lit(falseLit))),
+                End(""),
+              )
+            else // isOr
+              Match(
+                ar1,
+                (Case.Lit(trueLit) -> k(Value.Lit(trueLit))) :: Nil,
+                S(term_nonTail(arg2)(k)),
+                End(""),
+              )
           else
             subTerm_nonTail(arg2): ar2 =>
               val target = wasmIntrinsicPath(sym, unary = false)
