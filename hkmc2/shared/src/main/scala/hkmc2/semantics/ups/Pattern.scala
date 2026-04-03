@@ -162,7 +162,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       case ClassLike(sym, arguments) => /* TODO:raise a warning */ arguments match
         case None => Set()
         case Some(arguments) =>
-          arguments.find((id1, _) => id === id).map((_, p) => p).toSet
+          arguments.find((id1, _) => id1 === id).map((_, p) => p).toSet
       case MatchedClassLike(_, entries) => entries.get(id).toSet
       case Record(entries) => entries.get(id).toSet
       case Tuple(leading, spread) => Set()
