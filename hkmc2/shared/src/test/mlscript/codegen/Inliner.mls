@@ -58,6 +58,31 @@ print(f(1, 2, ...[1]))
 //│ > 4
 
 
+:soir
+:inlineThreshold 10
+fun f(a, ...b) =
+  print(a)
+  print(b)
+f(1, ...[2])
+f(1, ...[2], ...[3])
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f², tmp, tmp1, tmp2;
+//│ define f² as fun f³(a) {
+//│   do Predef⁰.print⁰(a);
+//│   return Predef⁰.print⁰(b¹)
+//│ };
+//│ set tmp = [2];
+//│ do f³(1, ...tmp);
+//│ set tmp1 = [2];
+//│ set tmp2 = [3];
+//│ f³(1, ...tmp1, ...tmp2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 1
+//│ > [2]
+//│ > 1
+//│ > [2, 3]
+
+
 // All inlined
 :soir
 :inlineThreshold 10
@@ -68,29 +93,29 @@ f(1, 2)
 f(1, 2, 3)
 f(1, 2, 3, 4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f², a¹, b¹, c¹, a², b², c², a³, b³, c³, inlinedVal, tmp, tmp1, tmp2;
-//│ define f² as fun f³(a, b) {
+//│ let f⁴, a¹, b², c¹, a², b³, c², a³, b⁴, c³, inlinedVal, tmp, tmp1, tmp2;
+//│ define f⁴ as fun f⁵(a, b) {
 //│   let tmp3;
 //│   set tmp3 = +⁰(a, b);
 //│   do Predef⁰.print⁰(tmp3);
 //│   return Predef⁰.print⁰(c⁴)
 //│ };
 //│ set a¹ = 1;
-//│ set b¹ = 2;
+//│ set b² = 2;
 //│ set c¹ = mut [];
-//│ set tmp2 = +⁰(a¹, b¹);
+//│ set tmp2 = +⁰(a¹, b²);
 //│ do Predef⁰.print⁰(tmp2);
 //│ do Predef⁰.print⁰(c¹);
 //│ set a² = 1;
-//│ set b² = 2;
+//│ set b³ = 2;
 //│ set c² = mut [3];
-//│ set tmp1 = +⁰(a², b²);
+//│ set tmp1 = +⁰(a², b³);
 //│ do Predef⁰.print⁰(tmp1);
 //│ do Predef⁰.print⁰(c²);
 //│ set a³ = 1;
-//│ set b³ = 2;
+//│ set b⁴ = 2;
 //│ set c³ = mut [3, 4];
-//│ set tmp = +⁰(a³, b³);
+//│ set tmp = +⁰(a³, b⁴);
 //│ do Predef⁰.print⁰(tmp);
 //│ set inlinedVal = Predef⁰.print⁰(c³);
 //│ inlinedVal
@@ -112,29 +137,24 @@ f(1, ...[2, 3])
 f(1, 2, ...[3])
 f(1, 2, 3, ...[4])
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f5, tmp7, tmp8, tmp9, a4, b4, c4, tmp10;
-//│ f5 = function f(a5, b5, ...c5) {
-//│   let tmp11;
-//│   tmp11 = a5 + b5;
-//│   Predef.print(tmp11);
-//│   return Predef.print(c5)
+//│ let f6, tmp10, tmp11, tmp12;
+//│ f6 = function f(a4, b4, ...c4) {
+//│   let tmp13;
+//│   tmp13 = a4 + b4;
+//│   Predef.print(tmp13);
+//│   return Predef.print(c4)
 //│ };
-//│ tmp7 = globalThis.Object.freeze([
+//│ tmp10 = globalThis.Object.freeze([
 //│   2,
 //│   3
 //│ ]);
-//│ f5(1, ...tmp7);
-//│ tmp8 = globalThis.Object.freeze([
+//│ f6(1, ...tmp10);
+//│ tmp11 = globalThis.Object.freeze([
 //│   3
 //│ ]);
-//│ a4 = 1;
-//│ b4 = 2;
-//│ c4 = tmp8;
-//│ tmp10 = a4 + b4;
-//│ Predef.print(tmp10);
-//│ Predef.print(c4);
-//│ tmp9 = globalThis.Object.freeze([ 4 ]);
-//│ f5(1, 2, 3, ...tmp9)
+//│ f6(1, 2, ...tmp11);
+//│ tmp12 = globalThis.Object.freeze([ 4 ]);
+//│ f6(1, 2, 3, ...tmp12)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 3
 //│ > [3]
@@ -154,8 +174,8 @@ fun f() =
   g(true)
 f()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f6;
-//│ f6 = function f() {
+//│ let f7;
+//│ f7 = function f() {
 //│   let x1, inlinedVal4;
 //│   x1 = true;
 //│   inlinedLbl: {
@@ -167,7 +187,7 @@ f()
 //│   }
 //│   return inlinedVal4
 //│ };
-//│ f6()
+//│ f7()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 
@@ -199,7 +219,7 @@ module A with
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let A⁰;
 //│ define A⁰ as class A¹
-//│ module A² { method f⁴ = fun f⁵() { return 1 } method g⁰ = fun g¹() { return A².f⁵() } };
+//│ module A² { method f⁶ = fun f⁷() { return 1 } method g⁰ = fun g¹() { return A².f⁷() } };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -210,17 +230,17 @@ module A with
 fun f() = if false do f() + 1
 f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁶;
-//│ define f⁶ as fun f⁷() {
+//│ let f⁸;
+//│ define f⁸ as fun f⁹() {
 //│   let scrut;
 //│   set scrut = false;
 //│   match scrut
 //│     true =>
-//│       do f⁷();
+//│       do f⁹();
 //│       end
 //│   return runtime⁰.Unit⁰
 //│ };
-//│ f⁷()
+//│ f⁹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -230,7 +250,7 @@ fun g() =
   fun f() = f()
   f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let g²; define g² as fun g³() { let f; define f as fun f⁸() { return f⁸() }; return f⁸() }; end
+//│ let g²; define g² as fun g³() { let f; define f as fun f¹⁰() { return f¹⁰() }; return f¹⁰() }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

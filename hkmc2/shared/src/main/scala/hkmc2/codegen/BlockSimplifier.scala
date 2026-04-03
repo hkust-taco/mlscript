@@ -264,6 +264,7 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
           // we require a precise match when any arg is a spread arg
           if params.restParam.isEmpty then return N
           if args.exists(_.spread.exists(!_.isEager)) then return N
+          if args.size =/= params.params.size then return N
           val pairs = args.zip(params.params.iterator.map((_, false)) ++ params.restParam.map((_, true)))
           if pairs.exists((arg, param) => arg.spread.isDefined =/= param._2) then return N
           S(pairs.map((arg, param) => (param._1.sym, arg.value)))
