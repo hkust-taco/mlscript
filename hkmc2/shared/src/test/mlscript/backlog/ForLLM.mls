@@ -77,7 +77,6 @@ mkStr of ... // hello
 // [SERIOUS]
 
 :ssjs
-:fixme
 module M with
   val name = "Student"
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
@@ -87,14 +86,13 @@ module M with
 //│     M1 = this
 //│   }
 //│   static {
-//│     this.name = "Student";
+//│     Object.defineProperty(this, "name", { configurable: true, enumerable: true, writable: true, value: "Student" });
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
 //│ block$res7 = undefined;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'name' of function 'class M {   static {     M1 = this   }   static {     this.name = "Student";   }   toString() { return runtime....<omitted>... }'
 
 // ——— ——— ———
 
@@ -104,10 +102,10 @@ set this.pc = 0
 set
   (this).pc = 0
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.103: 	set this.pc = 0
+//│ ║  l.101: 	set this.pc = 0
 //│ ╙──       	    ^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.105: 	  (this).pc = 0
+//│ ║  l.103: 	  (this).pc = 0
 //│ ╙──       	   ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -117,10 +115,10 @@ set
 set
   this.pc = 0
 //│ ╔══[PARSE ERROR] Unexpected static selector here
-//│ ║  l.118: 	  this.pc = 0
+//│ ║  l.116: 	  this.pc = 0
 //│ ╙──       	      ^^^
 //│ ╔══[COMPILATION ERROR] Expected a right-hand side for this assignment
-//│ ║  l.118: 	  this.pc = 0
+//│ ║  l.116: 	  this.pc = 0
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -134,7 +132,7 @@ pattern A(pattern B) = B
 :fixme
 fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.135: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
+//│ ║  l.133: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╙──       	                                                         ^
 
 // ——— ——— ———
@@ -191,7 +189,7 @@ fun parse(tokens) =
   ()
   ???
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.192: 	  ???
+//│ ║  l.190: 	  ???
 //│ ╙──       	     ^
 
 // ——— ——— ———
@@ -206,7 +204,7 @@ if true then
 :fixme
 if true then success: 42
 //│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.207: 	if true then success: 42
+//│ ║  l.205: 	if true then success: 42
 //│ ╙──       	   ^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -238,10 +236,10 @@ pattern Bin =
   // oops
   | 1
 //│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.237: 	  | 0
+//│ ║  l.235: 	  | 0
 //│ ╙──       	  ^^^
 //│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.239: 	  | 1
+//│ ║  l.237: 	  | 1
 //│ ╙──       	  ^^^
 
 // ——— ——— ———
@@ -250,10 +248,10 @@ pattern Bin =
 tuple(1,
   2)
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.251: 	  2)
+//│ ║  l.249: 	  2)
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.251: 	  2)
+//│ ║  l.249: 	  2)
 //│ ╙──       	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -261,10 +259,10 @@ tuple(1,
 tuple of 1,
   2
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.262: 	  2
+//│ ║  l.260: 	  2
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.262: 	  2
+//│ ║  l.260: 	  2
 //│ ╙──       	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

@@ -293,7 +293,14 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
         case N =>
           doc"${getVar(sym, sym.toLoc)} = ${result(p)};${returningTerm(rst, endSemi)}"
         case S(owner) =>
-          doc"${mkThis(owner)}${fieldSelect(sym.nme)} = ${result(p)};${returningTerm(rst, endSemi)}"
+          val thisDoc = mkThis(owner)
+          val nme = sym.nme
+          // * JavaScript class constructors have built-in non-writable `name` and `length` properties.
+          // * Use Object.defineProperty to override them in module/class static contexts.
+          if nme == "name" || nme == "length" then
+            doc"Object.defineProperty(${thisDoc}, ${nme.escaped}, { configurable: true, enumerable: true, writable: true, value: ${result(p)} });${returningTerm(rst, endSemi)}"
+          else
+            doc"${thisDoc}${fieldSelect(nme)} = ${result(p)};${returningTerm(rst, endSemi)}"
       case defn: (FunDefn | ClsLikeDefn) =>
         
         val outerScope = scope
