@@ -261,7 +261,7 @@ dropLeftRight(1, 1)("hello")
 //│ = ["e", "l", "l"]
 
 val mm = MutMap.empty
-//│ mm = []
+//│ mm = MutMap(Map(0) {})
 
 mm |> MutMap.insert of "a", 1
 
@@ -271,15 +271,15 @@ val uint8Arr = new Uint8Array([1, 2, 3, 4, 5])
 //│ uint8Arr = undefined
 
 val uint8Arr = new mut Uint8Array([1, 2, 3, 4, 5])
-//│ uint8Arr = [1, 2, 3, 4, 5]
+//│ uint8Arr = Uint8Array { "0": 1, "1": 2, "2": 3, "3": 4, "4": 5 }
 
 dropLeftRight(1, 1)(uint8Arr)
 //│ = [2, 3, 4]
 
 :re
 concat([1, 2, 3], "hello", uint8Arr, mm)
-//│ ═══[RUNTIME ERROR] Error: Expected an Array, got: [["a", 1]]
+//│ ═══[RUNTIME ERROR] Error: Expected an Array, got: MutMap(Map(1) {"a" => 1})
 
 :re
 dropLeftRight(0, 0)(mm)
-//│ ═══[RUNTIME ERROR] Error: Expected an Array, got: [["a", 1]]
+//│ ═══[RUNTIME ERROR] Error: Expected an Array, got: MutMap(Map(1) {"a" => 1})

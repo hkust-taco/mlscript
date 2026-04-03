@@ -384,9 +384,6 @@ fun render(target, ...args) =
         WeakSet then "WeakSet { <items unknown> }"
         WeakMap then "WeakMap { <items unknown> }"
         Error then arg.name + ": " + arg.message
-      // Render array-like iterables (e.g. IterableBase) as arrays.
-      arg.(Symbol.iterator) is Function then
-        renderArray of [...arg], level, keyLength, startPos
       arg is
         Function then
           let desc = Object.getOwnPropertyDescriptor(arg, "prototype")
@@ -417,6 +414,11 @@ fun render(target, ...args) =
             renderObject(arg, level, keyLength, startPos, false)
           // The `constructor` field refers to the class.
           proto.constructor is Function and
+            // For array-like iterables (e.g. IterableBase), render as array
+            // instead of using their prettyPrint/toString methods.
+            proto.hasOwnProperty(prettyPrintSymbol) and
+              arg.(Symbol.iterator) is Function then
+                renderArray of arg.toArray(), level, keyLength, startPos
             // Call its implementation of `prettyPrint` if defined.
             proto.hasOwnProperty(prettyPrintSymbol) then
               arg.(prettyPrintSymbol)() indentText(level)

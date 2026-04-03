@@ -554,106 +554,45 @@ let Runtime1;
     throw runtime.safeCall(globalThis.Error(tmp3))
   } 
   static checkArgs(functionName, expected, isUB, got) {
-    let scrut, name, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21, tmp22, tmp23, tmp24, tmp25, tmp26, tmp27, tmp28, tmp29, tmp30, tmp31, tmp32, tmp33, tmp34, tmp35, tmp36;
+    let scrut, name, scrut1, scrut2, tmp, lambda, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;
     tmp = got < expected;
-    if (tmp === true) {
-      scrut = true;
-      if (scrut === true) {
-        scrut1 = functionName.length > 0;
-        if (scrut1 === true) {
-          tmp1 = " '" + functionName;
-          tmp2 = tmp1 + "'";
-        } else {
-          tmp2 = "";
-        }
-        name = tmp2;
-        tmp3 = "Function" + name;
-        tmp4 = tmp3 + " expected ";
-        if (isUB === true) {
-          tmp5 = "";
-        } else {
-          tmp5 = "at least ";
-        }
-        tmp6 = tmp4 + tmp5;
-        tmp7 = tmp6 + expected;
-        tmp8 = tmp7 + " argument";
-        scrut2 = expected === 1;
-        if (scrut2 === true) {
-          tmp9 = "";
-        } else {
-          tmp9 = "s";
-        }
-        tmp10 = tmp8 + tmp9;
-        tmp11 = tmp10 + " but got ";
-        tmp12 = tmp11 + got;
-        throw runtime.safeCall(globalThis.Error(tmp12))
-      }
-    } else {
-      if (isUB === true) {
-        scrut = got > expected;
-        if (scrut === true) {
-          scrut1 = functionName.length > 0;
-          if (scrut1 === true) {
-            tmp13 = " '" + functionName;
-            tmp14 = tmp13 + "'";
-          } else {
-            tmp14 = "";
-          }
-          name = tmp14;
-          tmp15 = "Function" + name;
-          tmp16 = tmp15 + " expected ";
-          if (isUB === true) {
-            tmp17 = "";
-          } else {
-            tmp17 = "at least ";
-          }
-          tmp18 = tmp16 + tmp17;
-          tmp19 = tmp18 + expected;
-          tmp20 = tmp19 + " argument";
-          scrut2 = expected === 1;
-          if (scrut2 === true) {
-            tmp21 = "";
-          } else {
-            tmp21 = "s";
-          }
-          tmp22 = tmp20 + tmp21;
-          tmp23 = tmp22 + " but got ";
-          tmp24 = tmp23 + got;
-          throw runtime.safeCall(globalThis.Error(tmp24))
-        }
+    lambda = (undefined, function () {
+      let lambda1;
+      lambda1 = (undefined, function () {
+        return got > expected
+      });
+      return runtime.short_and(isUB, lambda1)
+    });
+    scrut = runtime.short_or(tmp, lambda);
+    if (scrut === true) {
+      scrut1 = functionName.length > 0;
+      if (scrut1 === true) {
+        tmp1 = " '" + functionName;
+        tmp2 = tmp1 + "'";
       } else {
-        scrut = false;
-        if (scrut === true) {
-          scrut1 = functionName.length > 0;
-          if (scrut1 === true) {
-            tmp25 = " '" + functionName;
-            tmp26 = tmp25 + "'";
-          } else {
-            tmp26 = "";
-          }
-          name = tmp26;
-          tmp27 = "Function" + name;
-          tmp28 = tmp27 + " expected ";
-          if (isUB === true) {
-            tmp29 = "";
-          } else {
-            tmp29 = "at least ";
-          }
-          tmp30 = tmp28 + tmp29;
-          tmp31 = tmp30 + expected;
-          tmp32 = tmp31 + " argument";
-          scrut2 = expected === 1;
-          if (scrut2 === true) {
-            tmp33 = "";
-          } else {
-            tmp33 = "s";
-          }
-          tmp34 = tmp32 + tmp33;
-          tmp35 = tmp34 + " but got ";
-          tmp36 = tmp35 + got;
-          throw runtime.safeCall(globalThis.Error(tmp36))
-        }
+        tmp2 = "";
       }
+      name = tmp2;
+      tmp3 = "Function" + name;
+      tmp4 = tmp3 + " expected ";
+      if (isUB === true) {
+        tmp5 = "";
+      } else {
+        tmp5 = "at least ";
+      }
+      tmp6 = tmp4 + tmp5;
+      tmp7 = tmp6 + expected;
+      tmp8 = tmp7 + " argument";
+      scrut2 = expected === 1;
+      if (scrut2 === true) {
+        tmp9 = "";
+      } else {
+        tmp9 = "s";
+      }
+      tmp10 = tmp8 + tmp9;
+      tmp11 = tmp10 + " but got ";
+      tmp12 = tmp11 + got;
+      throw runtime.safeCall(globalThis.Error(tmp12))
     }
     return runtime.Unit
   } 
@@ -1138,22 +1077,16 @@ let Runtime1;
     }
   } 
   static checkDepth() {
-    let scrut, tmp;
+    let scrut, tmp, lambda;
     tmp = Runtime.stackDepth >= Runtime.stackLimit;
-    if (tmp === true) {
-      scrut = Runtime.stackHandler !== null;
-      if (scrut === true) {
-        return runtime.safeCall(Runtime.stackHandler.delay())
-      } else {
-        return runtime.Unit
-      }
+    lambda = (undefined, function () {
+      return Runtime.stackHandler !== null
+    });
+    scrut = runtime.short_and(tmp, lambda);
+    if (scrut === true) {
+      return runtime.safeCall(Runtime.stackHandler.delay())
     } else {
-      scrut = false;
-      if (scrut === true) {
-        return runtime.safeCall(Runtime.stackHandler.delay())
-      } else {
-        return runtime.Unit
-      }
+      return runtime.Unit
     }
   } 
   static runStackSafe(limit, f) {

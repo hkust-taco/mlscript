@@ -4,12 +4,12 @@
 :sjs
 1 && 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (1 === true) { 2 } else { false }
+//│ let lambda; lambda = (undefined, function () { return 2 }); runtime.short_and(1, lambda)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = false
+//│ = 2
 
 1 || 2
-//│ = 2
+//│ = 1
 
 
 fun test(x) =
@@ -19,39 +19,40 @@ fun test(x) =
 :sjs
 123 || test(42)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (123 === true) { true } else { test(42) }
+//│ let lambda2; lambda2 = (undefined, function () { return test(42) }); runtime.short_or(123, lambda2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ > 42
-//│ = 42
+//│ = 123
 
 0 || test(42)
 //│ > 42
 //│ = 42
 
 123 && test(42)
-//│ = false
+//│ > 42
+//│ = 42
 
 :sjs
 fold(||)(0, false, 42, 123)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda, tmp;
-//│ lambda = (undefined, function (arg1, arg2) {
-//│   if (arg1 === true) {
-//│     return true
-//│   } else {
+//│ let lambda5, tmp;
+//│ lambda5 = (undefined, function (arg1, arg2) {
+//│   let lambda6;
+//│   lambda6 = (undefined, function () {
 //│     return arg2
-//│   }
+//│   });
+//│   return runtime.short_or(arg1, lambda6)
 //│ });
-//│ tmp = runtime.safeCall(Predef.fold(lambda));
+//│ tmp = runtime.safeCall(Predef.fold(lambda5));
 //│ runtime.safeCall(tmp(0, false, 42, 123))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 123
+//│ = 42
 
 
 print of
   print("A") && print("B")
 //│ > A
-//│ > undefined false
+//│ > B
+//│ > ()
 
 
 fun (&&) foo(x, y) =
