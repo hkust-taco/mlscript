@@ -63,28 +63,16 @@ fun bar() = baz
 
 // ——— ——— ———
 
-:fixme
-mkStr of ... // hello
-"oops"
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.67: 	mkStr of ... // hello
-//│ ║        	                     ^
-//│ ║  l.68: 	"oops"
-//│ ╙──      	
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// ——— ——— ———
-
 // Somehow these parse:
 :e
 set this.pc = 0
 set
   (this).pc = 0
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.80: 	set this.pc = 0
+//│ ║  l.68: 	set this.pc = 0
 //│ ╙──      	    ^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.82: 	  (this).pc = 0
+//│ ║  l.70: 	  (this).pc = 0
 //│ ╙──      	   ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -94,10 +82,10 @@ set
 set
   this.pc = 0
 //│ ╔══[PARSE ERROR] Unexpected static selector here
-//│ ║  l.95: 	  this.pc = 0
+//│ ║  l.83: 	  this.pc = 0
 //│ ╙──      	      ^^^
 //│ ╔══[COMPILATION ERROR] Expected a right-hand side for this assignment
-//│ ║  l.95: 	  this.pc = 0
+//│ ║  l.83: 	  this.pc = 0
 //│ ╙──      	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -111,7 +99,7 @@ pattern A(pattern B) = B
 :fixme
 fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.112: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
+//│ ║  l.100: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╙──       	                                                         ^
 
 // ——— ——— ———
@@ -168,7 +156,7 @@ fun parse(tokens) =
   ()
   ???
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.169: 	  ???
+//│ ║  l.157: 	  ???
 //│ ╙──       	     ^
 
 // ——— ——— ———
@@ -183,7 +171,7 @@ if true then
 :fixme
 if true then success: 42
 //│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.184: 	if true then success: 42
+//│ ║  l.172: 	if true then success: 42
 //│ ╙──       	   ^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -215,10 +203,10 @@ pattern Bin =
   // oops
   | 1
 //│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.214: 	  | 0
+//│ ║  l.202: 	  | 0
 //│ ╙──       	  ^^^
 //│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.216: 	  | 1
+//│ ║  l.204: 	  | 1
 //│ ╙──       	  ^^^
 
 // ——— ——— ———
@@ -227,10 +215,10 @@ pattern Bin =
 tuple(1,
   2)
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.228: 	  2)
+//│ ║  l.216: 	  2)
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.228: 	  2)
+//│ ║  l.216: 	  2)
 //│ ╙──       	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -238,10 +226,10 @@ tuple(1,
 tuple of 1,
   2
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.239: 	  2
+//│ ║  l.227: 	  2
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.239: 	  2
+//│ ║  l.227: 	  2
 //│ ╙──       	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

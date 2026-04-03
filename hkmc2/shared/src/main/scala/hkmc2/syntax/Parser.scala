@@ -157,13 +157,19 @@ abstract class Parser(
     =>
       preprocessTokens(rest)
     // * Expands end-of-line suspensions that introduce implied indentation
-    case (SUSPENSION(true), l0)
-        // :: (_: NEWLINE_COMMA, l1) // * Doing this causes misparsing of things like `fun foo(..., ...)`
-        :: (NEWLINE, l1)
-        :: rest =>
-      val outerLoc = l0.left ++ rest.lastOption.map(_._2.right)
-      val innerLoc = l1.right ++ rest.lastOption.map(_._2.left)
-      BRACKETS(Indent, preprocessTokens(rest))(innerLoc) -> outerLoc :: Nil
+    // * Also skip COMMENT and SPACE tokens between `...` and NEWLINE (eg `... // hello\n body`)
+    case (SUSPENSION(true), l0) :: rest0
+    if rest0.dropWhile { case (_: COMMENT | SPACE, _) => true; case _ => false } match
+      case (NEWLINE, _) :: _ => true
+      case _ => false
+    =>
+      val rest = rest0.dropWhile { case (_: COMMENT | SPACE, _) => true; case _ => false }
+      val (l1, rest2) = rest match
+        case (NEWLINE, l1) :: rest2 => (l1, rest2)
+        case _ => die // unreachable due to guard
+      val outerLoc = l0.left ++ rest2.lastOption.map(_._2.right)
+      val innerLoc = l1.right ++ rest2.lastOption.map(_._2.left)
+      BRACKETS(Indent, preprocessTokens(rest2))(innerLoc) -> outerLoc :: Nil
     case tl :: rest =>
       val rest2 = preprocessTokens(rest)
       if rest2 is rest then tokens
