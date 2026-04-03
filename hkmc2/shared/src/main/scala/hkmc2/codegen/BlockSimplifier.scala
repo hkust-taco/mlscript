@@ -275,7 +275,7 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
         def isPrivate = !symbolsToPreserve.contains(defn.sym)
         
         // Whether this function can be inlined without causing any code duplication,
-        // i.e. the original defintion can be removed and there is only one usage.
+        // i.e. the original definition can be removed and there is only one usage.
         def canBeInlineEliminated =
           isPrivate && !isMethod && useCount <= 1 && !hasNakedRef && !isLoopBreaker
           // false
