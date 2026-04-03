@@ -1148,7 +1148,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       then ResultMode.Full
       else if outputNeeded && !canReuseScrutineeOutput then ResultMode.Full
       else ResultMode.MatchOnly
-    // Initate the compilation.
+    // Initiate the compilation.
     val compiler = new Compiler(using context)
     val (matcherSymbol, implementations) = compiler.buildMatcher(synonym, resultMode)
     val innermostSplit = resultMode match
