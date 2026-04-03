@@ -108,6 +108,8 @@ object Parser:
     def get(ts: Ls[TokLoc]): Ls[TokLoc] = ts match
       case (SPACE, _) :: rest => get(rest)
       case (COMMENT(_), _) :: rest => get(rest)
+      case (NEWLINE, _) :: (COMMENT(_), _) :: rest => get(rest)
+      case (BRACKETS(Indent, NOISE(Nil)), _) :: rest => get(rest)
       case _ => ts
     def unapply(ts: Ls[TokLoc]): S[Ls[TokLoc]] =
       S(get(ts))
@@ -224,10 +226,8 @@ abstract class Parser(
     resetCur(_cur.tailOption.getOrElse(Nil)) // FIXME throw error if empty?
   
   private def yeetSpaces(using Line, Name): Ls[TokLoc] =
-    cur.dropWhile(tkloc =>
-      (tkloc._1 === SPACE
-      || tkloc._1.isInstanceOf[COMMENT] // TODO properly retrieve and store all comments in AST?
-      ) && { consume; true })
+    _cur = NOISE.get(_cur)
+    _cur
   
   
   // final def raise(mkDiag: => Diagnostic)(implicit fe: FoundErr = false): Unit =

@@ -12,25 +12,15 @@ mkStr of ...
 "oops"
 //│ = "oops"
 
-:fixme // * Should atleast raise a warning
 mkStr of ...
   // hello
 "oops"
-//│ ═══[RUNTIME ERROR] TypeError: Spread syntax requires ...iterable[Symbol.iterator] to be a function
+//│ = "oops"
 
-:fixme // * Comments should be allowed to start ar any indentation level?
 mkStr of ...
   // hello
     // hello
 "oops"
-//│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.25: 	"oops"
-//│ ╙──      	^
-//│ ╔══[PARSE ERROR] Unexpected indented block here
-//│ ║  l.24: 	    // hello
-//│ ║        	^^^^^^^^^^^^
-//│ ║  l.25: 	"oops"
-//│ ╙──      	^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = "oops"
 
 

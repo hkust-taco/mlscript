@@ -5,49 +5,6 @@
 
 // ——— ——— ———
 
-"a" +
-  "b"
-//│ = "ab"
-
-// FIXME
-"a" +
-  // a
-"b"
-//│ = "b"
-
-:fixme
-// :dp
-"a" +
-// a
-"b"
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.21: 	// a
-//│ ║        	    ^
-//│ ║  l.22: 	"b"
-//│ ╙──      	
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// ——— ——— ———
-
-:fixme
-module Example with
-// whoops
-  val a = this
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.33: 	module Example with
-//│ ║        	                   ^
-//│ ║  l.34: 	// whoops
-//│ ╙──      	
-//│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.35: 	  val a = this
-//│ ╙──      	  ^
-//│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.35: 	  val a = this
-//│ ╙──      	^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// ——— ——— ———
-
 // TODO `baz()` should be a call in tail position (like `print(1)`), not bound to a variable (this is due to its by-name nature)
 :sir
 fun baz = print(1)
@@ -69,10 +26,10 @@ set this.pc = 0
 set
   (this).pc = 0
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.68: 	set this.pc = 0
+//│ ║  l.25: 	set this.pc = 0
 //│ ╙──      	    ^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.70: 	  (this).pc = 0
+//│ ║  l.27: 	  (this).pc = 0
 //│ ╙──      	   ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -82,10 +39,10 @@ set
 set
   this.pc = 0
 //│ ╔══[PARSE ERROR] Unexpected static selector here
-//│ ║  l.83: 	  this.pc = 0
+//│ ║  l.40: 	  this.pc = 0
 //│ ╙──      	      ^^^
 //│ ╔══[COMPILATION ERROR] Expected a right-hand side for this assignment
-//│ ║  l.83: 	  this.pc = 0
+//│ ║  l.40: 	  this.pc = 0
 //│ ╙──      	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -99,8 +56,8 @@ pattern A(pattern B) = B
 :fixme
 fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.100: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
-//│ ╙──       	                                                         ^
+//│ ║  l.57: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
+//│ ╙──      	                                                         ^
 
 // ——— ——— ———
 
@@ -161,7 +118,7 @@ if true then
 :fixme
 if true then success: 42
 //│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.162: 	if true then success: 42
+//│ ║  l.119: 	if true then success: 42
 //│ ╙──       	   ^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -176,39 +133,14 @@ if true then success: 42
 
 // ——— ——— ———
 
-+ 1
-+ 2
-//│ = 3
-
-// FIXME
-+ 1
-// oops
-+ 2
-//│ = 2
-
-// FIXME: confusing error!
-:fixme
-pattern Bin =
-  | 0
-  // oops
-  | 1
-//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.192: 	  | 0
-//│ ╙──       	  ^^^
-//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.194: 	  | 1
-//│ ╙──       	  ^^^
-
-// ——— ——— ———
-
 :fixme
 tuple(1,
   2)
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.206: 	  2)
+//│ ║  l.138: 	  2)
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.206: 	  2)
+//│ ║  l.138: 	  2)
 //│ ╙──       	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -216,10 +148,10 @@ tuple(1,
 tuple of 1,
   2
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.217: 	  2
+//│ ║  l.149: 	  2
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.217: 	  2
+//│ ║  l.149: 	  2
 //│ ╙──       	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
