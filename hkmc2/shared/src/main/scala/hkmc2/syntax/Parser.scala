@@ -354,7 +354,8 @@ abstract class Parser(
             case _ =>
               prefixRules.getKwAlt(kw, S(loc)) match
               case S(subRule) =>
-                val e = parseRule(CommaPrecNext, subRule, allowNewlines = allowNewlines).getOrElse(errExpr)
+                val e = exprCont(parseRule(CommaPrecNext, subRule, allowNewlines = allowNewlines)
+                  .getOrElse(errExpr), CommaPrecNext, allowNewlines = allowNewlines)
                 annotations.annotate(parseRule(CommaPrecNext, exprAlt.rest, allowNewlines = allowNewlines).map(res => exprAlt.k(e, res)).getOrElse(errExpr)) :: blockContOf(rule)
               case N =>
                 // TODO dedup?

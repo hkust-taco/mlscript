@@ -1,0 +1,23 @@
+:js
+
+// Same-line set with member selection parses fine
+:e
+set this.pc = 0
+set
+  (this).pc = 0
+//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
+//│ ║  l.5: 	set this.pc = 0
+//│ ╙──     	    ^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
+//│ ║  l.7: 	  (this).pc = 0
+//│ ╙──     	   ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Indented set with member selection should also parse fine
+:e
+set
+  this.pc = 0
+//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
+//│ ║  l.19: 	  this.pc = 0
+//│ ╙──      	  ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

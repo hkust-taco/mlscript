@@ -20,34 +20,6 @@ fun bar() = baz
 
 // ——— ——— ———
 
-// Somehow these parse:
-:e
-set this.pc = 0
-set
-  (this).pc = 0
-//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.25: 	set this.pc = 0
-//│ ╙──      	    ^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.27: 	  (this).pc = 0
-//│ ╙──      	   ^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// But this doesn't...
-:fixme
-:e
-set
-  this.pc = 0
-//│ ╔══[PARSE ERROR] Unexpected static selector here
-//│ ║  l.40: 	  this.pc = 0
-//│ ╙──      	      ^^^
-//│ ╔══[COMPILATION ERROR] Expected a right-hand side for this assignment
-//│ ║  l.40: 	  this.pc = 0
-//│ ╙──      	  ^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// ——— ——— ———
-
 pattern A(pattern B) = B
 
 // What @compile actually annotates here is `A(0) as y` instead of `A(0)`.
@@ -56,7 +28,7 @@ pattern A(pattern B) = B
 :fixme
 fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.57: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
+//│ ║  l.29: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╙──      	                                                         ^
 
 // ——— ——— ———
@@ -121,21 +93,21 @@ test // should be 42
 tuple(1,
   2)
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.122: 	  2)
-//│ ╙──       	    ^
+//│ ║  l.94: 	  2)
+//│ ╙──      	    ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.122: 	  2)
-//│ ╙──       	  ^
+//│ ║  l.94: 	  2)
+//│ ╙──      	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :fixme
 tuple of 1,
   2
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.133: 	  2
+//│ ║  l.105: 	  2
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.133: 	  2
+//│ ║  l.105: 	  2
 //│ ╙──       	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
