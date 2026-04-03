@@ -430,7 +430,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
                 else
                   rebuiltArguments
               buildConsequent(rest, nextArguments, bindings ++ argumentBindings),
-            alternative)
+            Split.End)
       val pattern = FlatPattern.ClassLike(classTerm, classSymbol, destructuringArguments, false)(Tree.Dummy)
       Branch(scrutinee(), pattern, buildConsequent(argumentInfos, Nil, SeqMap.empty)) ~: alternative
     else RejectSplit
