@@ -54,6 +54,7 @@ ps is @compile IncFst
 pi is @compile IncFst
 //│ = true
 
+// An awkward but usable definition of characters...
 pattern Char = (Str as s where s.length is 1) => s
 
 pattern ToUppercase =
@@ -73,10 +74,12 @@ fun toUppercaseList(input) = if input is ToUppercaseList as output then output
 toUppercaseList of "a" :: "X" :: "c" :: Nil
 //│ = Cons("A", Cons("X", Cons("C", Nil)))
 
-pattern ToUppercase = ToUppercase ~ ("" | ToUppercase)
+pattern ToUppercaseString = ToUppercase ~ (ToUppercaseString | "")
 
-fun toUppercase(input) = if input is ToUppercase as output then output
+fun toUppercase(input) = if input is ToUppercaseString as output then output
 
-:re
-toUppercase of "aXc"
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+toUppercase of "abc"
+//│ = "ABC"
+
+toUppercase of "ThIs Is AlTeRnAtInG cApS!"
+//│ = "THIS IS ALTERNATING CAPS!"

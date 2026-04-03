@@ -701,15 +701,23 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         makeRangeTest(scrutinee, lower, upper, rightInclusive, makeConsequent(scrutinee, SeqMap.empty)) ~~: alternative
       case Concatenation(left, right) => (makeConsequent, alternative) =>
         makeStringPrefixMatchSplit(scrutinee, left)(
-          (_consumedOutput, remainingOutput, bindingsFromConsumed) =>
-            makeMatchSplit(remainingOutput, right, false)(
-              // Here we discard the postfix output because I still haven't
-              // figured out the semantics of string concatenation.
-              (_postfixOutput, bindingsFromRemaining) => makeConsequent(
-                  scrutinee, bindingsFromConsumed ++ bindingsFromRemaining
-                ) ~~: alternative,
-              alternative
-            ),
+          (consumedOutput, remainingOutput, bindingsFromConsumed) =>
+            makeMatchSplit(remainingOutput, right, outputNeeded)(
+              (postfixOutput, bindingsFromRemaining) =>
+                if outputNeeded then
+                  val combinedOutput = new LazyScrut(S("concatenatedOutput"))
+                  val combinedTerm = app(
+                    add.ref(),
+                    tup(fld(consumedOutput()), fld(postfixOutput())),
+                    "concatenated string output"
+                  )
+                  combinedOutput.toLet(
+                    combinedTerm,
+                    makeConsequent(combinedOutput, bindingsFromConsumed ++ bindingsFromRemaining)
+                  ) ~~: alternative
+                else
+                  makeConsequent(scrutinee, bindingsFromConsumed ++ bindingsFromRemaining) ~~: alternative,
+              alternative),
           alternative
         )
       case Tuple(elements, N) => (makeConsequent, alternative) =>
@@ -910,12 +918,38 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       // The case when the target refers to a pattern parameter.
       case S(symbol: VarSymbol) =>
         makeMatchPrefixPatternParameterSplit(scrutinee, target, symbol, arguments, pattern.toLoc)
-      case symbolOption => symbolOption.flatMap(_.asPat) match
-        // The case when the target refers to a pattern symbol.
+      case symbolOption => symbolOption.flatMap(_.asClsLike) match
         case S(symbol: PatternSymbol) =>
           makeMatchPrefixPatternSplit(scrutinee, target, symbol, arguments)
-        // The other cases are not compatible with strings.
-        case S(_) | N => RejectPrefixSplit
+        // We accept the string class as a valid string pattern as it literally
+        // means all strings.
+        case S(symbol: ClassSymbol) if symbol is ctx.builtins.Str =>
+          arguments match
+            case S(args) if args.nonEmpty =>
+              error(
+                msg"`${symbol.name}` does not take any arguments." -> target.toLoc,
+                msg"But the pattern has ${"sub-pattern" countBy args.size}." -> Loc(args)
+              )
+              RejectPrefixSplit
+            case _ => (makeConsequent, alternative) =>
+              val nonEmptySymbol = TempSymbol(N, "nonEmpty")
+              val nonEmptyTerm = app(
+                this.lt.safeRef,
+                tup(fld(int(0)), fld(sel(scrutinee(), "length"))),
+                "string is not empty"
+              )
+              val outputSymbol = TempSymbol(N, "stringHead")
+              val outputTerm = callStringGet(scrutinee(), 0, "head")
+              val remainsSymbol = TempSymbol(N, "stringTail")
+              val remainsTerm = callStringDrop(scrutinee(), 1, "tail")
+              Split.Let(nonEmptySymbol, nonEmptyTerm,
+                Branch(nonEmptySymbol.safeRef,
+                  Split.Let(outputSymbol, outputTerm,
+                    Split.Let(remainsSymbol, remainsTerm,
+                      makeConsequent(outputSymbol.toScrut, remainsSymbol.toScrut, SeqMap.empty)))
+                ) ~: alternative)
+        case S(_: ModuleOrObjectSymbol) | S(_: ClassSymbol) | N =>
+          RejectPrefixSplit
     case Composition(true, left, right) =>
       val makeLeft = makeStringPrefixMatchSplit(scrutinee, left)
       val makeRight = makeStringPrefixMatchSplit(scrutinee, right)
