@@ -22,25 +22,74 @@ data class MatchSuccess(x)
 MatchSuccess(0)
 //│ = MatchSuccess(0)
 
+open annotations { compile }
+
 pattern Cross = "X"
 
+pattern Id(x) = _
+
+data class Pair(left, right)
+
+pattern BacktrackOnRight = Pair("same", 0) | Pair("same", 1)
+
+pattern BacktrackOnLeft = Pair(0, "same") | Pair(1, "same")
+
 Cross.unapply("X")
-//│ = MatchSuccess("X", {})
+//│ = MatchSuccess("X", null)
 
 Cross.unapply("0")
 //│ = MatchFailure(null)
 
-:sjs
+// :sir
 fun foo(x) = x is Cross
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo;
-//│ foo = function foo(x2) {
-//│   let unapplyResult;
-//│   unapplyResult = runtime.safeCall(Cross1.unapply(x2));
-//│   if (unapplyResult instanceof runtime.MatchSuccess.class) {
-//│     unapplyResult.output;
-//│     unapplyResult.bindings;
-//│     return true
-//│   } else { return false }
+
+:sir
+// Keep the IR output to prevent regressions.
+fun isCompiledCross(x) = x is @compile Cross
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let isCompiledCross⁰;
+//│ define isCompiledCross⁰ as fun isCompiledCross¹(x) {
+//│   let matcher__Cross$, matchSuccess, lambda;
+//│   define lambda as fun lambda⁰(input) {
+//│     let p_0$, p_0$1, tmp, tmp1;
+//│     match input
+//│       "X" =>
+//│         set tmp = true;
+//│         set p_0$ = tmp;
+//│         return p_0$
+//│       else
+//│         set tmp1 = false;
+//│         set p_0$1 = tmp1;
+//│         return p_0$1
+//│     end
+//│   };
+//│   set matcher__Cross$ = lambda⁰;
+//│   set matchSuccess = matcher__Cross$(x);
+//│   match matchSuccess
+//│     true =>
+//│       return true
+//│     else
+//│       return false
+//│   end
 //│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// :sir
+fun getCompiledCross(x) = if x is
+  (@compile Cross) as result then result
+  else "nope"
+
+// :sir
+fun isCompiledId(x) = x is @compile Id
+
+// :sir
+fun isCompiledBacktrackOnRight(x) = x is @compile BacktrackOnRight
+
+// :sir
+fun getCompiledBacktrackOnRight(x) =
+  if x is (@compile BacktrackOnRight) as result then result
+  else "nope"
+
+// :sir
+fun isCompiledBacktrackOnLeft(x) = x is @compile BacktrackOnLeft

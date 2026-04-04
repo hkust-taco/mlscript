@@ -106,9 +106,9 @@ pattern Bin =
   | 1 => true
 
 Bin.unapply(0)
-//│ = MatchSuccess(false, {})
+//│ = MatchSuccess(false, null)
 Bin.unapply(1)
-//│ = MatchSuccess(true, {})
+//│ = MatchSuccess(true, null)
 Bin.unapply(2)
 //│ = MatchFailure(null)
 

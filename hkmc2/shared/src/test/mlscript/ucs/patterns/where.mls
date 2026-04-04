@@ -141,7 +141,7 @@ class C1(m) with
 //│ ╙──       	                   ^
 
 C1(m0).P.unapply(Pair(3, 4))
-//│ = MatchSuccess(Pair(3, 4), {})
+//│ = MatchSuccess(Pair(3, 4), null)
 
 C1(m0).P.unapply(Pair(3, 5))
 //│ = MatchFailure(null)
@@ -180,7 +180,7 @@ class C3(m) with
 //│ ╙──       	                   ^
 
 C3(m0).P.unapply(Pair(3, 4))
-//│ = MatchSuccess(Pair(3, 4), {})
+//│ = MatchSuccess(Pair(3, 4), null)
 
 C3(m0).P.unapply(Pair(3, 5))
 //│ = MatchFailure(null)

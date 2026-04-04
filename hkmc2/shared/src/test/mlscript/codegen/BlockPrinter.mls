@@ -215,12 +215,9 @@ pattern P = B
 //│ let P⁰;
 //│ define P⁰ as pattern P¹ {
 //│   method unapply⁰ = fun unapply¹(input) {
-//│     let output, tmp;
 //│     match input
 //│       B² =>
-//│         set output = input;
-//│         set tmp = {  };
-//│         return new runtime⁰.MatchSuccess⁰(output, tmp)
+//│         return new runtime⁰.MatchSuccess⁰(input, null)
 //│       else
 //│         return new runtime⁰.MatchFailure⁰(null)
 //│     end

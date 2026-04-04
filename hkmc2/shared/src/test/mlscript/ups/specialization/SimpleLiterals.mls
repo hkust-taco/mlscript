@@ -26,6 +26,20 @@ checkZeroOneTwo of "hello"
 import "../../../mlscript-compile/Option.mls"
 open Option
 
+fun observeZero(x) =
+  print("zero " + x)
+  x
+
+pattern ZeroLogged = ("0" as x) => observeZero(x)
+
+print of Some("0") is Some(@compile ZeroLogged)
+//│ > true
+
+if Some("0") is Some((@compile ZeroLogged) as zero) then
+  print("nested zero: " + zero)
+//│ > zero 0
+//│ > nested zero: 0
+
 fun checkSomeZeroOneTwo(x) = if x is
   Some(@compile Zero) then 0
   Some(@compile One) then 1
@@ -38,7 +52,6 @@ pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
 :todo
 let res = "1" is @compile ManyZero
 //│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
-//│ ║  l.35: 	pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
+//│ ║  l.49: 	pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
 //│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^
 //│ res = false
-

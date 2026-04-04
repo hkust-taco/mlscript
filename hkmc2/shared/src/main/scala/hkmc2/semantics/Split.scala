@@ -124,7 +124,7 @@ object Split:
             bindings.iterator.foldLeft(go(consequent)):
               case (innerSplit, (symbol, mkTerm)) => Let(symbol, mkTerm(), innerSplit)
           compiler.makeMatchSplit
-            (scrutCache.getOrElseUpdate(ref, Scrut.from(ref)), pattern)
+            (scrutCache.getOrElseUpdate(ref, Scrut.from(ref)), pattern, false)
             (makeConsequent, alternative)
         case SS.Head.Let(binding, term) => Let(binding, term, go(tail))
       case SS.Else(default) => Else(default)

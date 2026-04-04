@@ -1,0 +1,35 @@
+open annotations
+
+module TruthyFalsy with ...
+
+data
+  class
+    (&&) And(lhs: Bool, rhs: Bool)
+    (||) Or(lhs: Bool, rhs: Bool)
+    Not(arg: Bool)
+
+pattern Truthy =
+  | true
+  | And(Truthy, Truthy)
+  | Or(Truthy, Truthy)
+  | Or(Truthy, Falsy)
+  | Or(Falsy, Truthy)
+  | Not(Falsy)
+
+pattern Falsy =
+  | false
+  | And(Falsy, Falsy)
+  | And(Falsy, Truthy)
+  | And(Truthy, Falsy)
+  | Or(Falsy, Falsy)
+  | Not(Truthy)
+
+fun isTruthy_naive(t) = t is Truthy
+fun isTruthy_optimized(t) =
+  if t is (@compile Truthy) as s then s else ()
+fun isTruthy_optimized_matchOnly(t) = t is @compile Truthy
+
+fun isFalsy_naive(t) = t is Falsy
+fun isFalsy_optimized(t) =
+  if t is (@compile Falsy) as s then s else ()
+fun isFalsy_optimized_matchOnly(t) = t is @compile Falsy

@@ -49,13 +49,13 @@ let TBool = TPrim("Bool")
 //│ TInt = TPrim("Int")
 
 pattern ShowTerm =
-  (Var(name) => name) |
-  (App(Abs as ShowTerm as lhs, rhs) => "(" + lhs + ") " + rhs) |
-  (App(ShowTerm as lhs, App as ShowTerm as rhs) => lhs + " (" + rhs + ")") |
-  (App(ShowTerm as lhs, ShowTerm as rhs) => lhs + " " + rhs) |
-  (Abs(name, ShowTerm as body) => "λ" + name + ". " + body) |
-  (IntLit(value) => value.toString()) |
-  (BoolLit(value) => if value then "true" else "false")
+  | Var(name) => name
+  | App(Abs as ShowTerm as lhs, rhs) => "(" + lhs + ") " + rhs
+  | App(ShowTerm as lhs, App as ShowTerm as rhs) => lhs + " (" + rhs + ")"
+  | App(ShowTerm as lhs, ShowTerm as rhs) => lhs + " " + rhs
+  | Abs(name, ShowTerm as body) => "λ" + name + ". " + body
+  | IntLit(value) => value.toString()
+  | BoolLit(value) => if value then "true" else "false"
 //
 data class Term with
   constructor

@@ -153,7 +153,7 @@ isDoubleOrSum__compiled of _1234
 //│ > 4 + 0 = 4
 //│ > 3 + 4 = 7
 //│ > 2 + 7 = 9
-//│ = {head: 1, tail: {head: 2, tail: {head: 3, tail: {head: 4, tail: Nil}}}}
+//│ = Cons(1, Cons(2, Cons(3, Cons(4, Nil))))
 
 isDoubleOrSum__compiled of _1234567
 //│ > 7 + 0 = 7
