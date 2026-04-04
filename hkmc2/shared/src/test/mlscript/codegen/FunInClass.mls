@@ -41,17 +41,15 @@ fun test(a) =
 //│       ])
 //│     } 
 //│     g(d) {
-//│       let h;
-//│       const this$Inner = this;
-//│       h = function h(e) {
-//│         return globalThis.Object.freeze([
-//│           a,
-//│           this$Inner.b,
-//│           d,
-//│           e
-//│         ])
-//│       };
-//│       return h(d)
+//│       let e, inlinedVal;
+//│       e = d;
+//│       inlinedVal = globalThis.Object.freeze([
+//│         a,
+//│         this.b,
+//│         d,
+//│         e
+//│       ]);
+//│       return inlinedVal
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Inner", ["b"]]; 
@@ -132,7 +130,9 @@ test(123)
 //│ = [C1(1), C2(2)]
 
 
+// Inlining is disabled to test this proxy
 :sjs
+:noInline
 data class Foo(a) with
   fun foo() =
     fun bar() = a
@@ -198,12 +198,9 @@ Bar(1)
 //│   }
 //│   foo() {
 //│     return () => {
-//│       let bar;
-//│       const this$Bar = this;
-//│       bar = function bar() {
-//│         return this$Bar.x
-//│       };
-//│       return bar()
+//│       let inlinedVal;
+//│       inlinedVal = this.x;
+//│       return inlinedVal
 //│     }
 //│   }
 //│   toString() { return runtime.render(this); }

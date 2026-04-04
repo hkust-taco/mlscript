@@ -53,7 +53,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
     case Continue(label) =>
       doc"continue ${print(label)}"
     case Begin(sub, rest) =>
-      doc"begin #{  # ${print(sub)}; # ${print(rest)} #} "
+      doc"begin #{  # ${print(sub)}; #}  # ${print(rest)}"
     case TryBlock(sub, finallyDo, rest) =>
       doc"try #{  # ${print(sub)} #  #} finally #  #{ ${print(finallyDo)}; #  #} ${print(rest)}"
     case Assign(_: NoSymbol, rhs, rest) =>
@@ -62,6 +62,8 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
       doc"set ${print(lhs)} = ${print(rhs)}; # ${print(rest)}"
     case AssignField(lhs, nme, rhs, rest) =>
       doc"set ${print(lhs)}.${nme.name} = ${print(rhs)}; # ${print(rest)}"
+    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+      doc"set ${print(lhs)}${if arrayIdx then "." else "!"}${print(fld)} = ${print(rhs)}; # ${print(rest)}"
     case Define(defn, rest) =>
       doc"define ${print(defn.sym)} as ${print(defn)}; # ${print(rest)}"
     case Scoped(syms, body) =>

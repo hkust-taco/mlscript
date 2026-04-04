@@ -385,8 +385,6 @@ f(0)
 //│   match scrut
 //│     true =>
 //│       return g⁹(x)
-//│     else
-//│       end
 //│   set tmp = +⁰(x, 1);
 //│   set x = tmp;
 //│   return x

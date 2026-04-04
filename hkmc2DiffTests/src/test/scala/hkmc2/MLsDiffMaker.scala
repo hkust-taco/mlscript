@@ -42,6 +42,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showIR = NullaryCommand("sir")
   val checkIR = NullaryCommand("checkIR")
   val showOptimizedIR = NullaryCommand("soir")
+  val showOptimizedTree = NullaryCommand("olot")
   val showContext = NullaryCommand("ctx")
   val parseOnly = NullaryCommand("parseOnly")
   val funcToCls = NullaryCommand("ftc")
@@ -72,6 +73,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   val importQQ = NullaryCommand("qq")
   val stageCode = NullaryCommand("staging")
   val rewriteWhile = NullaryCommand("rewriteWhile")
+  val noInlineOpt = NullaryCommand("noInline")
+  val inlineThreshold = Command("inlineThreshold")(_.trim.toInt)
   val noTailRecOpt = NullaryCommand("noTailRec")
   val deforest = Command("deforest")(_.trim)
   val patMatConsequentSharingThreshold = Command("patMatConsequentSharingThreshold")(_.trim.toInt)
@@ -85,6 +88,8 @@ abstract class MLsDiffMaker extends DiffMaker:
     if effectHandlers.isSet then
       if liftDefns.isUnset then
         output(s"$errMarker Option ':effectHandlers' requires ':lift'")
+    if inlineThreshold.isSet && noInlineOpt.isSet then
+      output(s"$errMarker Option ':noInline' conflicts with option ':inlineThreshold'")
     Config(
       baseDir = wd,
       sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true)),
@@ -117,6 +122,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       rewriteWhileLoops = rewriteWhile.isSet,
       tailRecOpt = !noTailRecOpt.isSet,
       deforest = Opt.when(deforest.isSet)(Deforest.default),
+      inlining = Opt.when(!noInlineOpt.isSet)(Config.Inliner(inlineThreshold.get.getOrElse(1))),
       qqEnabled = importQQ.isSet,
       funcToCls = funcToCls.isSet,
       commentGeneratedCode = debug.isSet,

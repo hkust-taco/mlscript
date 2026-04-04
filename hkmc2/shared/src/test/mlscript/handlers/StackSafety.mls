@@ -83,11 +83,9 @@ sum(10000)
 //│           pc = 1;
 //│           continue main
 //│         }
-//│         break;
 //│       case 1:
 //│         tmp3 = runtime.resumeValue;
 //│         return n + tmp3;
-//│         break;
 //│     }
 //│     break;
 //│   }

@@ -190,13 +190,10 @@ fun nott = case
 //│     switch (caseScrut) {
 //│       case true:
 //│         return false;
-//│         break;
 //│       case false:
 //│         return true;
-//│         break;
 //│       default:
 //│         throw globalThis.Object.freeze(new globalThis.Error.class("match error"));
-//│         break;
 //│     }
 //│   });
 //│   return lambda2

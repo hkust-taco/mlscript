@@ -34,9 +34,10 @@ x => x
 
 :fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)
 :checkIR
+:noInline
 x => x
 //│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
-//│ ║  l.37: 	x => x
+//│ ║  l.38: 	x => x
 //│ ╙──      	^
 //│ = class anonymous
 
@@ -97,12 +98,12 @@ let f = foo in bar(f)
 bar([foo].0)
 bar([foo, x => x].1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if 0 is a function.
-//│ ║  l.97: 	bar([foo].0)
+//│ ║  l.98: 	bar([foo].0)
 //│ ╙──      	         ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 0$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
 //│ ╔══[COMPILATION ERROR] Cannot determine if 1 is a function.
-//│ ║  l.98: 	bar([foo, x => x].1)
+//│ ║  l.99: 	bar([foo, x => x].1)
 //│ ╙──      	                 ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 1$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
@@ -119,7 +120,7 @@ bar([foo, x => x].(i))
 :ge
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.120: 	[foo, x => x].(i)(0)
+//│ ║  l.121: 	[foo, x => x].(i)(0)
 //│ ╙──       	               ^
 
 
@@ -133,10 +134,10 @@ let foo = Foo()
 foo.("f")(0)
 foo.("h")(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.133: 	foo.("f")(0)
+//│ ║  l.134: 	foo.("f")(0)
 //│ ╙──       	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.134: 	foo.("h")(1)
+//│ ║  l.135: 	foo.("h")(1)
 //│ ╙──       	^^^^^^^^
 //│ = 0
 //│ foo = Foo()
@@ -144,6 +145,7 @@ foo.("h")(1)
 
 class Foo(x) with
   fun foo(f) = f(x)
+
 
 :expect 0
 :sir
@@ -393,7 +395,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.394: 	foo.f(0)
+//│ ║  l.396: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -411,7 +413,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.412: 	foo.x(0)
+//│ ║  l.414: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 

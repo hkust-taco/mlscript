@@ -95,7 +95,6 @@ module Test with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Test"]; 
 //│ });
-//│ block$res8 = undefined;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 Test.x
@@ -225,7 +224,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[COMPILATION ERROR] Name not found: Runtime
-//│ ║  l.226: 	Runtime
+//│ ║  l.225: 	Runtime
 //│ ╙──       	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

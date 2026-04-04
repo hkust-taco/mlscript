@@ -237,18 +237,16 @@ M.A().get
 //│         return +⁰(M⁵.x¹, M⁵.x¹)
 //│       }
 //│     };
-//│     begin
-//│       set scrut = M⁵.A²();
-//│       match scrut
-//│         A¹ =>
-//│           set tmp1 = 2;
-//│           end
-//│         else
-//│           set tmp1 = 3;
-//│           end
-//│       end;
-//│       define x⁰ as val x¹ = tmp1;
-//│       end
+//│     set scrut = M⁵.A²();
+//│     match scrut
+//│       A¹ =>
+//│         set tmp1 = 2;
+//│         end
+//│       else
+//│         set tmp1 = 3;
+//│         end
+//│     define x⁰ as val x¹ = tmp1;
+//│     end
 //│   }
 //│ };
 //│ set tmp = M⁵.A²();
@@ -295,7 +293,7 @@ fun foo(x) =
     val baz = x
   [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.293: 	  object O with
+//│ ║  l.291: 	  object O with
 //│ ╙──       	         ^
 
 foo(123)
@@ -344,13 +342,13 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.341: 	  object A with
+//│ ║  l.339: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.342: 	    object B with
+//│ ║  l.340: 	    object B with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.343: 	      object C
+//│ ║  l.341: 	      object C
 //│ ╙──       	             ^
 //│ = C
 
@@ -363,10 +361,10 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.360: 	  module A with
+//│ ║  l.358: 	  module A with
 //│ ╙──       	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.362: 	      object C
+//│ ║  l.360: 	      object C
 //│ ╙──       	             ^
 //│ = C
 
@@ -379,7 +377,7 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.376: 	  module A with
+//│ ║  l.374: 	  module A with
 //│ ╙──       	         ^
 //│ = C
 

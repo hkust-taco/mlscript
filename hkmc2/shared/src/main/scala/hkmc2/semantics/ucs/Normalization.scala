@@ -354,10 +354,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       // Collect consequents that are shared in more than one branch.
       given labels: Labels = createLabelsForDuplicatedBranches(normalized)
       lazy val rootBreakLabel = new LabelSymbol(N, "split_root$")
-      lazy val breakRoot = (r: Result) => Assign(l, r, Break(rootBreakLabel))
+      lazy val breakRoot = if (k is Ret) || (k is Thrw) then k else (r: Result) => Assign(l, r, Break(rootBreakLabel))
       lazy val assignResult = (r: Result) =>
         form match
-        case IfLikeForm.ReturningIf => Assign(l, r, End())
+        case IfLikeForm.ReturningIf => if (k is Ret) || (k is Thrw) then k(r) else Assign(l, r, End())
         case IfLikeForm.ImperativeIf => Assign.discard(r, End())
         case IfLikeForm.While => Assign(State.noSymbol, r, loopCont)
       // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`

@@ -80,7 +80,7 @@ t.01
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.79: 	!(1,2)
 //│ ╙──      	  ^
-//│ > try { block$res15 = 2.value; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > try { block$res15 = 2.value; undefined; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                     ^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
 

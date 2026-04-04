@@ -1,0 +1,262 @@
+:js
+
+:soir
+fun f() = 0
+f()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f⁰, inlinedVal; define f⁰ as fun f¹() { return 0 }; set inlinedVal = 0; inlinedVal
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 0
+
+:soir
+fun f(x) = x
+f(100)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f², x⁰, inlinedVal;
+//│ define f² as fun f³(x) { return x };
+//│ set x⁰ = 100;
+//│ set inlinedVal = x⁰;
+//│ inlinedVal
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 100
+
+
+:soir
+fun f() =
+  let done(x) = x
+  done
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f⁴;
+//│ define f⁴ as fun f⁵() {
+//│   let done, done1;
+//│   define done1 as fun done⁰(x) { return x };
+//│   set done = done⁰;
+//│   return done
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// * TODO: support spread arguments like this one
+:soir
+:inlineThreshold 10
+fun f(a, b, c) = a + b + c
+print(f(1, 2, 3))
+print(f(1, 2, ...[1]))
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f⁶, tmp, tmp1, tmp2, a⁰, b⁰, c⁰, inlinedVal, tmp3;
+//│ define f⁶ as fun f⁷(a, b, c) {
+//│   let tmp4;
+//│   set tmp4 = +⁰(a, b);
+//│   return +⁰(tmp4, c)
+//│ };
+//│ set a⁰ = 1;
+//│ set b⁰ = 2;
+//│ set c⁰ = 3;
+//│ set tmp3 = +⁰(a⁰, b⁰);
+//│ set inlinedVal = +⁰(tmp3, c⁰);
+//│ set tmp = inlinedVal;
+//│ do Predef⁰.print⁰(tmp);
+//│ set tmp1 = [1];
+//│ set tmp2 = f⁷(1, 2, ...tmp1);
+//│ Predef⁰.print⁰(tmp2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 6
+//│ > 4
+
+
+:soir
+:inlineThreshold 10
+fun f(a, ...b) =
+  print(a)
+  print(b)
+f(1, ...[2])
+f(1, ...[2], ...[3])
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f⁸, tmp, tmp1, tmp2;
+//│ define f⁸ as fun f⁹(a) {
+//│   do Predef⁰.print⁰(a);
+//│   return Predef⁰.print⁰(b¹)
+//│ };
+//│ set tmp = [2];
+//│ do f⁹(1, ...tmp);
+//│ set tmp1 = [2];
+//│ set tmp2 = [3];
+//│ f⁹(1, ...tmp1, ...tmp2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 1
+//│ > [2]
+//│ > 1
+//│ > [2, 3]
+
+
+// All inlined
+:soir
+:inlineThreshold 10
+fun f(a, b, ...c) =
+  print(a + b)
+  print(c)
+f(1, 2)
+f(1, 2, 3)
+f(1, 2, 3, 4)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f¹⁰, a¹, b², c¹, a², b³, c², a³, b⁴, c³, inlinedVal, tmp, tmp1, tmp2;
+//│ define f¹⁰ as fun f¹¹(a, b) {
+//│   let tmp3;
+//│   set tmp3 = +⁰(a, b);
+//│   do Predef⁰.print⁰(tmp3);
+//│   return Predef⁰.print⁰(c⁴)
+//│ };
+//│ set a¹ = 1;
+//│ set b² = 2;
+//│ set c¹ = mut [];
+//│ set tmp2 = +⁰(a¹, b²);
+//│ do Predef⁰.print⁰(tmp2);
+//│ do Predef⁰.print⁰(c¹);
+//│ set a² = 1;
+//│ set b³ = 2;
+//│ set c² = mut [3];
+//│ set tmp1 = +⁰(a², b³);
+//│ do Predef⁰.print⁰(tmp1);
+//│ do Predef⁰.print⁰(c²);
+//│ set a³ = 1;
+//│ set b⁴ = 2;
+//│ set c³ = mut [3, 4];
+//│ set tmp = +⁰(a³, b⁴);
+//│ do Predef⁰.print⁰(tmp);
+//│ set inlinedVal = Predef⁰.print⁰(c³);
+//│ inlinedVal
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 3
+//│ > []
+//│ > 3
+//│ > [3]
+//│ > 3
+//│ > [3, 4]
+
+// only inline perfect match when spread is used
+:sjs
+:inlineThreshold 10
+fun f(a, b, ...c) =
+  print(a + b)
+  print(c)
+f(1, ...[2, 3])
+f(1, 2, ...[3])
+f(1, 2, 3, ...[4])
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f6, tmp10, tmp11, tmp12;
+//│ f6 = function f(a4, b4, ...c4) {
+//│   let tmp13;
+//│   tmp13 = a4 + b4;
+//│   Predef.print(tmp13);
+//│   return Predef.print(c4)
+//│ };
+//│ tmp10 = globalThis.Object.freeze([
+//│   2,
+//│   3
+//│ ]);
+//│ f6(1, ...tmp10);
+//│ tmp11 = globalThis.Object.freeze([
+//│   3
+//│ ]);
+//│ f6(1, 2, ...tmp11);
+//│ tmp12 = globalThis.Object.freeze([ 4 ]);
+//│ f6(1, 2, 3, ...tmp12)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 3
+//│ > [3]
+//│ > 3
+//│ > [3]
+//│ > 3
+//│ > [3, 4]
+
+
+// Multiple return points
+:sjs
+:expect true
+fun f() =
+  fun g(x) =
+    if x is true do return true
+    return false
+  g(true)
+f()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f7;
+//│ f7 = function f() {
+//│   let x1, inlinedVal4;
+//│   x1 = true;
+//│   inlinedLbl: {
+//│     if (x1 === true) {
+//│       inlinedVal4 = true;
+//│       break inlinedLbl
+//│     }
+//│     inlinedVal4 = false;
+//│   }
+//│   return inlinedVal4
+//│ };
+//│ f7()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = true
+
+
+// Methods (not implemented currently)
+// NOTE: only final (ie, non-virtual) method may be inlined, as they could be overriden
+
+:sjs
+:soir
+:inlineThreshold 10
+module A with
+  fun f() = 1
+  fun g() = A.f()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let A1;
+//│ (class A {
+//│   static {
+//│     A1 = this
+//│   }
+//│   static f() {
+//│     return 1
+//│   } 
+//│   static g() {
+//│     return A1.f()
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A"]; 
+//│ });
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let A⁰;
+//│ define A⁰ as class A¹
+//│ module A² { method f¹² = fun f¹³() { return 1 } method g⁰ = fun g¹() { return A².f¹³() } };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// Inlining limits
+:soir
+:inlineThreshold 10
+fun f() = if false do f() + 1
+f()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f¹⁴;
+//│ define f¹⁴ as fun f¹⁵() {
+//│   let scrut;
+//│   set scrut = false;
+//│   match scrut
+//│     true =>
+//│       do f¹⁵();
+//│       end
+//│   return runtime⁰.Unit⁰
+//│ };
+//│ f¹⁵()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// Pathological case of inlining
+:soir
+fun g() =
+  fun f() = f()
+  f()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let g²; define g² as fun g³() { let f; define f as fun f¹⁶() { return f¹⁶() }; return f¹⁶() }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
