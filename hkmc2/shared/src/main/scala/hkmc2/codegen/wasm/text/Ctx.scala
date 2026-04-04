@@ -70,6 +70,13 @@ final case class WasmSessionSingleton(
   def bindingKey: Str = s"singleton:$moduleName:$exportName"
   def bindingSyms: Seq[Local] = blockSym +: objectSym.toSeq
   override def exportNameOpt: Opt[Str] = S(exportName)
+
+final case class CompiledWasmModule(
+    wat: Document,
+    entryName: Str,
+    systemMemMinPages: Int,
+    sessionExports: Seq[WasmSessionBinding]
+)
   
 /** A Wasm function and its associated information.
   *
@@ -104,9 +111,9 @@ class FuncInfo(
     locals: Seq[Local -> Str],
     val bodyOpt: Opt[Expr],
     val resultTypes: Seq[Result],
-    val importModule: Opt[Str] = N,
-    val importName: Opt[Str] = N,
-    val exportName: Opt[Str] = N
+    val importModule: Opt[Str],
+    val importName: Opt[Str],
+    val exportName: Opt[Str]
 ) extends ToWat:
 
   /** @param sym
@@ -128,7 +135,7 @@ class FuncInfo(
       params: Seq[Local -> Str],
       nResults: Int,
       locals: Seq[Local -> Str],
-      body: Expr
+      body: Expr,
   )(using Raise, Scope) = this(
     SymIdx(sym.optionIf(_.nameIsMeaningful).fold(summon[Scope].allocateName(sym))(_.nme)),
     typeUse,
@@ -235,9 +242,9 @@ class GlobalInfo(
     val valType: ValType,
     val mutable: Bool,
     val init: Opt[Expr],
-    val importModule: Opt[Str] = N,
-    val importName: Opt[Str] = N,
-    val exportName: Opt[Str] = N
+    val importModule: Opt[Str],
+    val importName: Opt[Str],
+    val exportName: Opt[Str]
 ) extends ToWat:
 
   /** Returns the symbolic identifier document used in global declarations. */
@@ -695,7 +702,7 @@ class Ctx extends ToWat:
   /** Checks whether the global variable scope contains the variable `sym`. */
   def containsGlobal(sym: Symbol): Bool = namedGlobals.contains(sym)
 
-  /** Checks whether singleton info has been registered for `sym`. */
+  /** Checks whether singleton metadata has been registered for class symbol `sym`. */
   def containsSingleton(sym: BlockMemberSymbol): Bool = singletonByBms.contains(sym)
 
   /** Returns singleton metadata for `sym` when it resolves to either the block-member symbol or module/object symbol
@@ -716,11 +723,11 @@ class Ctx extends ToWat:
     singletonByBms(bms) = info
     isym.foreach(singletonByIsym(_) = info)
 
-  /** Appends a singleton initialization action. */
+  /** Appends one eager singleton initialization action for synthesized module start code. */
   def addSingletonInitAction(action: Expr): Unit =
     singletonInitActions += action
 
-  /** Returns the singleton initialization actions. */
+  /** Returns the singleton initialization actions in deterministic insertion order. */
   def getSingletonInitActions: Seq[Expr] = singletonInitActions.toSeq
 
   /** Records the runtime class tag for `sym`. */

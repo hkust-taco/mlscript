@@ -72,9 +72,13 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
           .flatMap(sym => sessionImportsBySymbol.getOrElse(sym, Vector.empty))
           .toSeq
           .distinctBy(_.bindingKey)
-      val (modWat, mainFnNme, systemMemMinPages, sessionExports) = ltl.givenIn:
+      val compiled = ltl.givenIn:
         baseScp.nest.givenIn:
           WatBuilder().program(le, N, wd, sessionImports)
+      val modWat = compiled.wat
+      val mainFnNme = compiled.entryName
+      val systemMemMinPages = compiled.systemMemMinPages
+      val sessionExports = compiled.sessionExports
       val modWatJsLit = JSBuilder.makeStringLiteral(modWat.mkString(output.ColWidth))
 
       if wat.isSet then

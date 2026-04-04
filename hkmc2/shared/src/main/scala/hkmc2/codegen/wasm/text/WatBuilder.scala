@@ -137,6 +137,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         valType = globalTy,
         mutable = true,
         init = S(ref.`null`(typeref)),
+        importModule = N,
+        importName = N,
         exportName = S(globalName),
       ),
     )
@@ -262,6 +264,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         valType = RefType.anyref,
         mutable = true,
         init = S(ref.`null`(HeapType.Any)),
+        importModule = N,
+        importName = N,
         exportName = S(exportName)
       )
     )
@@ -316,7 +320,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             mutable = glob.mutable,
             init = N,
             importModule = S(glob.moduleName),
-            importName = S(glob.exportName)
+            importName = S(glob.exportName),
+            exportName = N
           )
         )
       case singleton: WasmSessionSingleton =>
@@ -329,7 +334,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             mutable = true,
             init = N,
             importModule = S(singleton.moduleName),
-            importName = S(singleton.exportName)
+            importName = S(singleton.exportName),
+            exportName = N
           )
         )
         ctx.registerSingleton(singleton.blockSym, singleton.objectSym, SingletonInfo(globalName, singleton.globalTy))
@@ -984,6 +990,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       locals = Seq.empty,
       bodyOpt = S(body),
       resultTypes = Seq(Result(RefType.anyref)),
+      importModule = N,
+      importName = N,
       exportName = N,
     )
     ctx.addFunc(N, funcInfo)
@@ -1709,7 +1717,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       exprt: Opt[BlockMemberSymbol],
       wd: io.Path,
       sessionImports: Seq[WasmSessionBinding] = Nil
-  )(using Raise, Scope): (Document, Str, Int, Seq[WasmSessionBinding]) =
+  )(using Raise, Scope): CompiledWasmModule =
     for imprt <- p.imports do
       raise(
         ErrorReport(
@@ -1783,6 +1791,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       locals = (entryFnLocals ++ entryExtraLocals).map(l => l -> scope.allocateOrGetName(l)),
       bodyOpt = S(entryFnExpr),
       resultTypes = Seq(Result(RefType.anyref)),
+      importModule = N,
+      importName = N,
       exportName = S(entryNme),
     )
 
@@ -1821,6 +1831,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           locals = Seq.empty,
           bodyOpt = S(initBody),
           resultTypes = Seq.empty,
+          importModule = N,
+          importName = N,
           exportName = N,
         ),
       )
@@ -1834,7 +1846,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         ExternIntrinsics.SystemModule,
         ExternIntrinsics.SystemMemoryImportName,
       ).fold(0)(_.memType.lim.min)
-    (ctx.toWat, entryNme, systemMemMinPages, sessionExports.toSeq)
+    CompiledWasmModule(ctx.toWat, entryNme, systemMemMinPages, sessionExports.toSeq)
   end program
 
   /** Captures the local symbols introduced while compiling `expr`.
