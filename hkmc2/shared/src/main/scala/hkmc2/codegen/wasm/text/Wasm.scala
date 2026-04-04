@@ -233,6 +233,14 @@ object ExternType:
   case class Func(override val id: SymIdx, typeUse: TypeUse) extends ExternType(id):
     def toWat: Document = doc"""(func ${id.toWat} ${typeUse.toWat})"""
 
+  /** A global entry that is externally addressable. */
+  case class Global(override val id: SymIdx, valType: ValType, mutable: Bool) extends ExternType(id):
+    def toWat: Document =
+      val typeDoc =
+        if mutable then doc"(mut ${valType.toWat})"
+        else valType.toWat
+      doc"""(global ${id.toWat} ${typeDoc})"""
+
 sealed abstract class ExternType(val id: SymIdx) extends ToWat
 
 /** A memory import entry. */

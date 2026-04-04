@@ -89,20 +89,14 @@ final case class CompiledWasmModule(
   *   [[TypeUse]] of the function's type in the module's type section.
   * @param params
   *   [[Seq]] of parameter local variables and their names.
-  * @param nResults
-  *   Number of results the function returns.
   * @param locals
   *   [[Seq]] of local variables (excluding parameters) and their names.
-  *  * @param bodyOpt
- *   The expression of the function body, or `N` for imported functions.
- * @param resultTypes
- *   The result types of the function.
- * @param importModule
- *   The Wasm module name for imported functions.
- * @param importName
- *   The imported function name.
- * @param exportName
- *   Optional export name.
+  * @param bodyOpt
+  *   The expression of the function body.
+  * @param resultTypes
+  *   The result types of the function.
+  * @param exportName
+  *   Optional export name.
   */
 class FuncInfo(
     val id: SymIdx,
@@ -111,8 +105,6 @@ class FuncInfo(
     locals: Seq[Local -> Str],
     val bodyOpt: Opt[Expr],
     val resultTypes: Seq[Result],
-    val importModule: Opt[Str],
-    val importName: Opt[Str],
     val exportName: Opt[Str]
 ) extends ToWat:
 
@@ -143,8 +135,6 @@ class FuncInfo(
     locals,
     S(body),
     Seq.fill(nResults)(Result(RefType.anyref)),
-    N,
-    N,
     sym.optionIf(_.nameIsMeaningful).map(_.nme),
   )
 
@@ -163,28 +153,7 @@ class FuncInfo(
     locals,
     S(body),
     Seq.fill(nResults)(Result(RefType.anyref)),
-    N,
-    N,
     `export`,
-  )
-
-  def this(
-      id: SymIdx,
-      typeUse: TypeUse,
-      params: Seq[Local -> Str],
-      resultTypes: Seq[Result],
-      importModule: Str,
-      importName: Str,
-  ) = this(
-    id,
-    typeUse,
-    params,
-    Seq.empty,
-    N,
-    resultTypes,
-    S(importModule),
-    S(importName),
-    N,
   )
 
   /** Returns the type of this function as a [[SignatureType]]. */
@@ -193,28 +162,19 @@ class FuncInfo(
     results = resultTypes,
   )
 
-  /** Returns `true` when this function is declared via a Wasm import. */
-  def isImported: Bool = importModule.nonEmpty
-
   def toWat: Document =
-    importModule match
-      case S(moduleName) =>
-        doc"""(import "${moduleName}" "${importName.get}" (func ${id.toWat}${
-            getSignatureType.toWat.surroundUnlessEmpty(doc" ")
-          }))"""
-      case N =>
-        val body = bodyOpt.getOrElse:
-          lastWords(s"Missing body for function `${id.id}`")
-        doc"""(func ${id.toWat}${
-            exportName.fold(doc""): e =>
-              doc""" (export "$e")"""
-          } (type ${typeUse.typeIdx.toWat})${
-            getSignatureType.toWat.surroundUnlessEmpty(doc" ")
-          } #{ ${
-            locals.map: p =>
-              doc"(local $$${p._2} ${RefType.anyref.toWat})"
-            .mkDocument(doc" # ").surroundUnlessEmpty(doc" # ")
-          } # ${body.toWat} #} )"""
+    val body = bodyOpt.getOrElse:
+      lastWords(s"Missing body for function `${id.id}`")
+    doc"""(func ${id.toWat}${
+        exportName.fold(doc""): e =>
+          doc""" (export "$e")"""
+      } ${typeUse.toWat}${
+        getSignatureType.toWat.surroundUnlessEmpty(doc" ")
+      } #{ ${
+        locals.map: p =>
+          doc"(local $$${p._2} ${RefType.anyref.toWat})"
+        .mkDocument(doc" # ").surroundUnlessEmpty(doc" # ")
+      } # ${body.toWat} #} )"""
 end FuncInfo
 
 /**
@@ -229,11 +189,7 @@ end FuncInfo
  * @param mutable
  *   Whether the global is mutable.
  * @param init
- *   The initializer expression for the global, or `N` for imported globals.
- * @param importModule
- *   The Wasm module name for imported globals.
- * @param importName
- *   The imported global name.
+ *   The initializer expression for the global.
  * @param exportName
  *   Optional export name.
  */
@@ -242,28 +198,20 @@ class GlobalInfo(
     val valType: ValType,
     val mutable: Bool,
     val init: Opt[Expr],
-    val importModule: Opt[Str],
-    val importName: Opt[Str],
     val exportName: Opt[Str]
 ) extends ToWat:
 
   /** Returns the symbolic identifier document used in global declarations. */
   private def idDoc: Document = id.toWat
 
-  /** Returns `true` when this global is declared via a Wasm import. */
-  def isImported: Bool = importModule.nonEmpty
   def toWat: Document =
     val typeDoc =
       if mutable then doc"(mut ${valType.toWat})"
       else valType.toWat
-    importModule match
-      case S(moduleName) =>
-        doc"""(import "${moduleName}" "${importName.get}" (global${idDoc.surroundUnlessEmpty(doc" ")} ${typeDoc}))"""
-      case N =>
-        doc"(global${idDoc.surroundUnlessEmpty(doc" ")} ${typeDoc} ${init.get.toWat})${
-          exportName.fold(doc""): name =>
-            doc""" # (export "${name}" (global ${idDoc}))"""
-        }"
+    doc"(global${idDoc.surroundUnlessEmpty(doc" ")} ${typeDoc} ${init.get.toWat})${
+      exportName.fold(doc""): name =>
+        doc""" # (export "${name}" (global ${idDoc}))"""
+    }"
 end GlobalInfo
 
 /** A WebAssembly memory and its associated information.
@@ -394,11 +342,11 @@ class Ctx extends ToWat:
   /** [[ListMap]] containing all tag definitions in the module. */
   private var tags = ListMap.empty[SymIdx, TagInfo]
 
-  /** [[ListMap]] containing all global definitions in the module. */
-  private var globals = ListMap.empty[SymIdx, GlobalInfo]
+  /** [[ListMap]] containing all global definitions and imports in the module. */
+  private var globals = ListMap.empty[SymIdx, GlobalInfo | Import[ExternType.Global]]
 
-  /** [[MutMap]] containing global symbols mapped to their corresponding Wasm global indices. */
-  private val namedGlobals = MutMap.empty[Symbol, GlobalInfo]
+  /** [[MutMap]] containing global symbols mapped to their corresponding [[GlobalInfo]] or [[Import]] instance. */
+  private val namedGlobals = MutMap.empty[Symbol, GlobalInfo | Import[ExternType.Global]]
 
   /** Stack of [[ListMap]] from local variable symbols to their symbolic indices within the current function scope. */
   private var locals = ListMap.empty[Local, SymIdx] :: Nil
@@ -413,6 +361,7 @@ class Ctx extends ToWat:
 
   private val cachedMemoryImport = MutMap.empty[(Str, Str), SymIdx]
   private val cachedFunctionImports = MutMap.empty[(Str, Str), FuncIdx]
+  private val cachedGlobalImports = MutMap.empty[(Str, Str), GlobalIdx]
 
   private var labelTargets = Nil: List[(LabelSymbol, Ctx.LabelTarget)]
   private val singletonByBms = MutMap.empty[BlockMemberSymbol, Ctx.SingletonInfo]
@@ -423,9 +372,16 @@ class Ctx extends ToWat:
   private def imports: Seq[Import[?]] =
     val importedFuncs = funcs.collect:
       case (_, imp: Import[ExternType.Func]) => imp
+    val importedGlobals = globals.collect:
+      case (_, imp: Import[ExternType.Global]) => imp
     val importedMems = memories.collect:
       case (_, imp: Import[ExternType.Mem]) => imp
-    (importedFuncs ++ importedMems).toSeq
+    (importedFuncs ++ importedGlobals ++ importedMems).toSeq
+
+  private def globalExternType(globalEntry: GlobalInfo | Import[ExternType.Global]): ExternType.Global =
+    globalEntry match
+      case globalInfo: GlobalInfo => ExternType.Global(globalInfo.id, globalInfo.valType, globalInfo.mutable)
+      case globalImport: Import[ExternType.Global] => globalImport.externType
 
   /** Pushes a label target for the dynamic extent of `body` and pops it afterwards. */
   def withLabel[T](label: LabelSymbol, target: Ctx.LabelTarget)(body: => T): T =
@@ -529,6 +485,25 @@ class Ctx extends ToWat:
   )(createImport: => Import[ExternType.Func]): FuncIdx =
     cachedFunctionImports.getOrElseUpdate((module, name), addFunctionImport(N, createImport))
 
+  /** Adds a global import into this context.
+    *
+    * Returns the global index in the global index space.
+    */
+  def addGlobalImport(sym: Opt[Symbol], globalImport: Import[ExternType.Global]): GlobalIdx =
+    val id = globalImport.externType.id
+    globals = globals + (id -> globalImport)
+    sym.foreach:
+      namedGlobals(_) = globalImport
+    GlobalIdx(id)
+
+  /** Returns the cached global import for (`module`, `name`), creating it with `createImport` if needed.
+    */
+  def getOrCreateGlobalImport(
+      module: Str,
+      name: Str,
+  )(createImport: => Import[ExternType.Global]): GlobalIdx =
+    cachedGlobalImports.getOrElseUpdate((module, name), addGlobalImport(N, createImport))
+
   /** Adds or updates a memory import. If the import already exists, its minimum pages are increased to at least
     * `minPages`.
     */
@@ -621,19 +596,31 @@ class Ctx extends ToWat:
     getFunc(funcref).getOrElse:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
-  /** Returns the [[FuncInfo]] instance associated with the given `funcref`. */
   @nowarn("cat=deprecation")
+  private def getFuncEntry(funcref: FuncIdx | Symbol): Opt[FuncInfo | Import[ExternType.Func]] = funcref match
+    case FuncIdx(NumIdx(idx)) => funcs.drop(idx).headOption.map(_._2)
+    case FuncIdx(idx @ SymIdx(_)) => funcs.get(idx)
+    case funcref: Symbol => namedFuncs.get(funcref)
+
+  /** Returns the [[FuncInfo]] instance associated with the given `funcref`. */
   def getFuncInfo(funcref: FuncIdx | Symbol): Opt[FuncInfo] =
-    val func = funcref match
-      case FuncIdx(NumIdx(idx)) => funcs.drop(idx).headOption.map(_._2)
-      case FuncIdx(idx @ SymIdx(_)) => funcs.get(idx)
-      case funcref: Symbol => namedFuncs.get(funcref)
-    func.collect:
+    getFuncEntry(funcref).collect:
       case funcInfo: FuncInfo => funcInfo
 
   /** Same as [[getFuncInfo]] but throws an exception when the `funcref` is not found. */
   def getFuncInfo_!(funcref: FuncIdx | Symbol): FuncInfo =
     getFuncInfo(funcref).getOrElse:
+      lastWords(s"Missing function definition for ${funcref.prettyString}")
+
+  /** Returns the type use associated with the given `funcref`, whether it is a definition or an import. */
+  def getFuncTypeUse(funcref: FuncIdx | Symbol): Opt[TypeUse] =
+    getFuncEntry(funcref).map:
+      case funcInfo: FuncInfo => funcInfo.typeUse
+      case funcImport: Import[ExternType.Func] => funcImport.externType.typeUse
+
+  /** Same as [[getFuncTypeUse]] but throws an exception when the `funcref` is not found. */
+  def getFuncTypeUse_!(funcref: FuncIdx | Symbol): TypeUse =
+    getFuncTypeUse(funcref).getOrElse:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
   /**
@@ -647,22 +634,37 @@ class Ctx extends ToWat:
           case ((symIdx, _), i) if symIdx.id == nme => GlobalIdx(NumIdx(i))
       case globalidx: GlobalIdx => S(globalidx)
       case sym: Symbol if resolveSymIdx =>
-        namedGlobals.get(sym).flatMap: globalInfo =>
+        namedGlobals.get(sym).flatMap: globalEntry =>
           globals.zipWithIndex.collectFirst:
-            case ((_, gi), i) if gi === globalInfo => GlobalIdx(NumIdx(i))
+            case ((_, gi), i) if gi === globalEntry => GlobalIdx(NumIdx(i))
       case sym: Symbol =>
-        getGlobal(sym, resolveSymIdx = true).map: numIdx =>
-          getGlobalInfo(numIdx).fold(numIdx)(info => GlobalIdx(info.id))
+        namedGlobals.get(sym).map: globalEntry =>
+          GlobalIdx(globalExternType(globalEntry).id)
 
   /** Same as [[getGlobal]] but throws an exception when the `globalref` is not found. */
   def getGlobal_!(globalref: GlobalIdx | Symbol, resolveSymIdx: Bool = false): GlobalIdx =
     getGlobal(globalref, resolveSymIdx).getOrElse:
       lastWords(s"Missing global definition for ${globalref.prettyString}")
 
-  /** Returns the [[GlobalInfo]] instance associated with the given `globalref`. */
-  def getGlobalInfo(globalref: GlobalIdx | Symbol): Opt[GlobalInfo] = globalref match
+  @nowarn("cat=deprecation")
+  private def getGlobalEntry(globalref: GlobalIdx | Symbol): Opt[GlobalInfo | Import[ExternType.Global]] = globalref match
     case GlobalIdx(NumIdx(idx)) => globals.drop(idx.toInt).headOption.map(_._2)
-    case globalref => getGlobal(globalref, resolveSymIdx = true).flatMap(getGlobalInfo(_))
+    case GlobalIdx(idx @ SymIdx(_)) => globals.get(idx)
+    case sym: Symbol => namedGlobals.get(sym)
+
+  /** Returns the global extern metadata associated with the given `globalref`. */
+  def getGlobalType(globalref: GlobalIdx | Symbol): Opt[ExternType.Global] =
+    getGlobalEntry(globalref).map(globalExternType)
+
+  /** Same as [[getGlobalType]] but throws an exception when the `globalref` is not found. */
+  def getGlobalType_!(globalref: GlobalIdx | Symbol): ExternType.Global =
+    getGlobalType(globalref).getOrElse:
+      lastWords(s"Missing global definition for ${globalref.prettyString}")
+
+  /** Returns the [[GlobalInfo]] instance associated with the given `globalref` when it is a definition. */
+  def getGlobalInfo(globalref: GlobalIdx | Symbol): Opt[GlobalInfo] =
+    getGlobalEntry(globalref).collect:
+      case globalInfo: GlobalInfo => globalInfo
 
   /** Same as [[getGlobalInfo]] but throws an exception when the `globalref` is not found. */
   def getGlobalInfo_!(globalref: GlobalIdx | Symbol): GlobalInfo =
@@ -774,20 +776,16 @@ class Ctx extends ToWat:
     wasmIntrinsicTags.getOrElseUpdate(name, createTag)
 
   def toWat: Document =
-    val importedGlobals = globals.valuesIterator.filter(_.isImported).map(_.toWat)
-    val definedGlobals = globals.valuesIterator.filterNot(_.isImported).map(_.toWat)
-    val importedFuncs = funcs.valuesIterator.collect:
-      case funcInfo: FuncInfo if funcInfo.isImported => funcInfo.toWat
+    val definedGlobals = globals.valuesIterator.collect:
+      case globalInfo: GlobalInfo => globalInfo.toWat
     val memDefns = memories.valuesIterator.collect:
       case memInfo: MemInfo => memInfo.toWat
     val funcDefns = funcs.valuesIterator.collect:
-      case funcInfo: FuncInfo if !funcInfo.isImported => funcInfo.toWat
+      case funcInfo: FuncInfo => funcInfo.toWat
     doc"(module #{  # ${
         (
           types.valuesIterator.map(_.toWat)
             ++ imports.iterator.map(_.toWat)
-            ++ importedGlobals
-            ++ importedFuncs
             ++ tags.valuesIterator.map(_.toWat)
             ++ definedGlobals
             ++ memDefns

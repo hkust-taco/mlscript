@@ -137,8 +137,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         valType = globalTy,
         mutable = true,
         init = S(ref.`null`(typeref)),
-        importModule = N,
-        importName = N,
         exportName = S(globalName),
       ),
     )
@@ -264,8 +262,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         valType = RefType.anyref,
         mutable = true,
         init = S(ref.`null`(HeapType.Any)),
-        importModule = N,
-        importName = N,
         exportName = S(exportName)
       )
     )
@@ -297,45 +293,32 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           sym = N,
           TypeInfo(id = N, func.funcType)
         )
-        val params = func.funcType.sigType.params.zipWithIndex.map:
-          case (_, idx) => TempSymbol(N, s"arg$idx") -> s"arg$idx"
-        ctx.addFunc(
+        ctx.addFunctionImport(
           S(func.sym),
-          FuncInfo(
-            id = SymIdx(funcName),
-            typeUse = TypeUse(typeIdx),
-            params = params,
-            resultTypes = func.funcType.sigType.results,
-            importModule = func.moduleName,
-            importName = func.exportName
-          )
+          WasmImport(
+            func.moduleName,
+            func.exportName,
+            ExternType.Func(SymIdx(funcName), TypeUse(typeIdx)),
+          ),
         )
       case glob: WasmSessionGlobal =>
         val globalName = scope.allocateOrGetName(glob.sym)
-        ctx.addGlobal(
-          glob.sym,
-          GlobalInfo(
-            id = SymIdx(globalName),
-            valType = glob.valType,
-            mutable = glob.mutable,
-            init = N,
-            importModule = S(glob.moduleName),
-            importName = S(glob.exportName),
-            exportName = N
+        ctx.addGlobalImport(
+          S(glob.sym),
+          WasmImport(
+            glob.moduleName,
+            glob.exportName,
+            ExternType.Global(SymIdx(globalName), glob.valType, glob.mutable),
           )
         )
       case singleton: WasmSessionSingleton =>
         val globalName = scope.allocateOrGetName(singleton.blockSym)
-        ctx.addGlobal(
-          singleton.blockSym,
-          GlobalInfo(
-            id = SymIdx(globalName),
-            valType = singleton.globalTy,
-            mutable = true,
-            init = N,
-            importModule = S(singleton.moduleName),
-            importName = S(singleton.exportName),
-            exportName = N
+        ctx.addGlobalImport(
+          S(singleton.blockSym),
+          WasmImport(
+            singleton.moduleName,
+            singleton.exportName,
+            ExternType.Global(SymIdx(globalName), singleton.globalTy, mutable = true),
           )
         )
         ctx.registerSingleton(singleton.blockSym, singleton.objectSym, SingletonInfo(globalName, singleton.globalTy))
@@ -622,8 +605,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             if ctx.containsLocal(l) then
               local.get(LocalIdx(SymIdx(scope.lookup_!(l, l.toLoc))), RefType.anyref)
             else if ctx.containsGlobal(l) then
-              val globalInfo = ctx.getGlobalInfo_!(l)
-              global.get(GlobalIdx(SymIdx(scope.lookup_!(l, l.toLoc))), globalInfo.valType)
+              global.get(GlobalIdx(SymIdx(scope.lookup_!(l, l.toLoc))), ctx.getGlobalType_!(l).valType)
             else
               errExpr(
                 Ls(
@@ -722,7 +704,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               Ls(msg"Plain class references are not supported in Wasm; instantiate the class instead." -> r.toLoc)
           else
             ctx.getFunc(l) match
-              case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncInfo_!(l).typeUse.typeIdx, nullable = false))
+              case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncTypeUse_!(l).typeIdx, nullable = false))
               case N => getVar(l, r.toLoc)
 
     case Call(Value.Ref(l: BuiltinSymbol, _), lhs :: rhs :: Nil) if !l.functionLike =>
@@ -766,7 +748,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     Ls(msg"Expected static function reference in Call(...) expression" -> fun.toLoc),
                     extraInfo = S(fun.toString),
                   )
-              val baseTypeInfo = ctx.getTypeInfo_!(ctx.getFuncInfo_!(baseFuncIdx).typeUse.typeIdx)
+              val baseTypeInfo = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(baseFuncIdx).typeIdx)
               val wasmArgs = args.map(argument)
 
               call(
@@ -990,8 +972,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       locals = Seq.empty,
       bodyOpt = S(body),
       resultTypes = Seq(Result(RefType.anyref)),
-      importModule = N,
-      importName = N,
       exportName = N,
     )
     ctx.addFunc(N, funcInfo)
@@ -1373,8 +1353,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         locals = ctorLocals,
                         bodyOpt = S(ctorAux),
                         resultTypes = Seq(Result(RefType.anyref)),
-                        importModule = N,
-                        importName = N,
                         exportName = ctorExportName,
                       ),
                     )
@@ -1791,8 +1769,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       locals = (entryFnLocals ++ entryExtraLocals).map(l => l -> scope.allocateOrGetName(l)),
       bodyOpt = S(entryFnExpr),
       resultTypes = Seq(Result(RefType.anyref)),
-      importModule = N,
-      importName = N,
       exportName = S(entryNme),
     )
 
@@ -1831,8 +1807,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           locals = Seq.empty,
           bodyOpt = S(initBody),
           resultTypes = Seq.empty,
-          importModule = N,
-          importName = N,
           exportName = N,
         ),
       )
