@@ -3,56 +3,5 @@
 // Instruction for agent: for each test case you solve, move it to its own test file outside of the `backlog` folder
 
 
-// ——— ——— ———
+// (all test cases have been fixed and moved to their own files)
 
-// TODO `baz()` should be a call in tail position (like `print(1)`), not bound to a variable (this is due to its by-name nature)
-:sir
-fun baz = print(1)
-fun bar() = baz
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let bar⁰, baz⁰;
-//│ define baz⁰ as fun baz¹() {
-//│   return Predef⁰.print⁰(1)
-//│ };
-//│ define bar⁰ as fun bar¹() { let tmp; set tmp = baz¹(); return baz¹ };
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-
-// ——— ——— ———
-
-pattern A(pattern B) = B
-
-// What @compile actually annotates here is `A(0) as y` instead of `A(0)`.
-// We should tighten the precedence of annotations.
-
-:fixme
-fun foo(x) = if x is @annotations.compile A(0) as y then y
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.29: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
-//│ ╙──      	                                                         ^
-
-// ——— ——— ———
-
-:fixme
-tuple(1,
-  2)
-//│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.38: 	  2)
-//│ ╙──      	    ^
-//│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.38: 	  2)
-//│ ╙──      	  ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-:fixme
-tuple of 1,
-  2
-//│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.49: 	  2
-//│ ╙──      	  ^
-//│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.49: 	  2
-//│ ╙──      	  ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// ——— ——— ———

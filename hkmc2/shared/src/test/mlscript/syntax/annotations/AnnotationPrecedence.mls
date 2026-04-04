@@ -1,0 +1,9 @@
+:js
+
+// @compile annotation should annotate A(0), not A(0) as y.
+// The precedence of annotations should be tight enough to not include `as`.
+
+pattern A(pattern B) = B
+
+fun foo(x) = if x is @annotations.compile A(0) as y then y
+

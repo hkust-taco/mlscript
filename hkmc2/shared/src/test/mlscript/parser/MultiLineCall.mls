@@ -1,0 +1,12 @@
+:js
+
+// Multi-line function call with comma continuation should parse correctly
+
+tuple(1,
+  2)
+//│ = [1, 2]
+
+tuple of 1,
+  2
+//│ = [1, 2]
+

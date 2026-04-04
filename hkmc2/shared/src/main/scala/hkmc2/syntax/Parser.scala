@@ -71,6 +71,9 @@ object Parser:
   private val SelPrec = precOf('.')
   private val AppPrec = SelPrec - 1
   private val PrefixOpsPrec = AppPrec - 1
+  // * Annotation body precedence: above all keyword infix ops (like `as`, `is`)
+  // * but below character-based operators (like `+`, `;`).
+  private val AnnotBodyPrec = Keyword.maxPrec.get + 1
   
   final def opCharPrec(opChar: Char): Int = precOf(opChar)
   final def opPrec(opStr: Str): (Int, Int) = opStr match {
@@ -314,6 +317,9 @@ abstract class Parser(
     case (NEWLINE, _) :: _ if allowNewlines => consume; blockOf(rule, annotations, allowNewlines)
     case (COMMA, _) :: _ => consume; blockOf(rule, annotations, allowNewlines)
     case (SPACE, _) :: _ => consume; blockOf(rule, annotations, allowNewlines)
+    case (br @ BRACKETS(Indent, toks), _) :: _ =>
+      consume
+      rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockOf(rule, annotations, true)) ++ blockContOf(rule)
     case (IDENT("@", _), l0) :: rest if rest.nonEmpty =>
       consume
       blockOf(rule, simpleExpr(AppPrec, allowNewlines = allowNewlines) :: annotations, allowNewlines)
@@ -571,7 +577,7 @@ abstract class Parser(
     case (IDENT("@", _), l0) :: rest if rest.nonEmpty =>
       consume
       val annotation = simpleExpr(AppPrec, allowNewlines = allowNewlines)
-      Annotated(annotation, simpleExpr(prec, allowNewlines = allowNewlines))
+      Annotated(annotation, simpleExpr(prec max AnnotBodyPrec, allowNewlines = allowNewlines))
     case (ESC_IDENT(name), loc) :: _ =>
       consume
       val id = Tree.Ident(name).withLoc(S(loc))
