@@ -33,23 +33,14 @@ fun foo(x) = if x is @annotations.compile A(0) as y then y
 
 // ——— ——— ———
 
-// FIXME: Printing of
-[..[], "a"]
-//│ = [a]
-// It should print the same as:
-["a"]
-//│ = ["a"]
-
-// ——— ——— ———
-
 :fixme
 tuple(1,
   2)
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.47: 	  2)
+//│ ║  l.38: 	  2)
 //│ ╙──      	    ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.47: 	  2)
+//│ ║  l.38: 	  2)
 //│ ╙──      	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -57,10 +48,10 @@ tuple(1,
 tuple of 1,
   2
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.58: 	  2
+//│ ║  l.49: 	  2
 //│ ╙──      	  ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.58: 	  2
+//│ ║  l.49: 	  2
 //│ ╙──      	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
