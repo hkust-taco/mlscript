@@ -186,13 +186,10 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         outputSeparator("Optimized IR Tree")
         output(lowered_1.showAsTree)
       
-      val loweredMapped = lowered_1.copy(main = lowered_1.main.mapTail:
-        case e: End =>
-          Assign(resSym, Value.Lit(syntax.Tree.UnitLit(false)), e)
+      val loweredMapped = lowered_1.copy(main = lowered_1.main.mapReturn:
         case Return(res, implct) =>
           assert(implct)
           Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
-        case tl: (Throw | Break | Continue | Unreachable) => tl
       )
       val (pre, js) = nestedScp.givenIn:
         jsb.worksheet(loweredMapped)

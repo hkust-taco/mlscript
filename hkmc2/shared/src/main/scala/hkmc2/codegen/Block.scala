@@ -86,26 +86,15 @@ sealed abstract class Block extends Product:
       1 + handlers.map(_.body.size).sum + bdy.size + rst.size
     case Scoped(_, body) => body.size
   
-  // TODO conserve if no changes
-  def mapTail(f: BlockTail => Block): Block = this match
-    case b: BlockTail => f(b)
-    case Scoped(syms, body) => Scoped(syms, body.mapTail(f))
-    case Begin(sub, rst) => Begin(sub, rst.mapTail(f))
-    case Assign(lhs, rhs, rst) => Assign(lhs, rhs, rst.mapTail(f))
-    case Define(defn, rst) => Define(defn, rst.mapTail(f))
-    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
-      HandleBlock(lhs, res, par, args, cls, handlers.map(h => Handler(h.sym, h.resumeSym, h.params, h.body)), body, rest.mapTail(f))
-    case Match(scrut, arms, dflt, rst: End) =>
-      Match(scrut, arms.map(_ -> _.mapTail(f)), dflt.map(_.mapTail(f)), rst)
-    case Match(scrut, arms, dflt, rst) =>
-      Match(scrut, arms, dflt, rst.mapTail(f))
-    case Label(label, loop, body, rest) => Label(label, loop, body, rest.mapTail(f))
-    case af @ AssignField(lhs, nme, rhs, rest) =>
-      AssignField(lhs, nme, rhs, rest.mapTail(f))(af.symbol)
-    case adf @ AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
-      AssignDynField(lhs, fld, arrayIdx, rhs, rest.mapTail(f))
-    case tb @ TryBlock(sub, fin, rest) =>
-      TryBlock(sub, fin, rest.mapTail(f))
+  
+  // TODO: make patmat use unreach
+  
+  def mapReturn(f: Return => Block): Block =
+    new BlockTransformerShallow(SymbolSubst.Id):
+      override def applyBlock(b: Block): Block = b match
+        case ret: Return => f(ret)
+        case _ => super.applyBlock(b)
+    .applyBlock(this)
   
   lazy val freeVars: Set[Local] = this match
     case Match(scrut, arms, dflt, rest) =>
@@ -320,8 +309,10 @@ case class Match(
   rest: Block,
 ) extends Block with ProductWithTail with NonBlockTail
 
-// * `implct`: whether it's a JS implicit return, without the `return` keyword
-// * TODO could just remove this flag and add a flag in Scope instead
+// * `implct`: metadata indicating whether this is a JS implicit return, without the `return` keyword.
+// * This is currenlty only used for the main blocks of modules and diff-test blocks;
+// * for all intents and purposes, one can view an implicit return as a normal return.
+// * I would remove it, but it helps print cleaner outputs for diff tests (eg, using `:sir`).
 case class Return(res: Result, implct: Bool) extends BlockTail
 
 case class Throw(exc: Result) extends BlockTail

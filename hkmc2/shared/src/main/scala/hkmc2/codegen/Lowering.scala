@@ -406,10 +406,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       subTerm_nonTail(arg): ar =>
         k(Arg(spread = S(SpreadKind.Eager), ar) :: Nil)
   
+  def warnPureExprInStmtPos(loc: Opt[Loc], extraInfo: => Opt[Any] = N)(using Line): Unit =
+    raise:
+      WarningReport(msg"Pure expression in statement position" -> loc :: Nil, extraInfo,
+        source = Diagnostic.Source.Compilation)
+  
   def ref(ref: st.Ref, annots: List[Annot], disamb: Opt[DefinitionSymbol[?]], inStmtPos: Bool)(k: Result => Block)(using LoweringCtx): Block =
-    def warnStmt = if inStmtPos then
-      raise:
-        WarningReport(msg"Pure expression in statement position" -> ref.toLoc :: Nil, S(ref))
+    def warnStmt = if inStmtPos then warnPureExprInStmtPos(ref.toLoc, S(ref))
     
     val sym = ref.sym
     sym match
@@ -489,9 +492,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       if inStmtPos then " (in stmt)" else ""}${
       t.resolvedSym.fold("")(" – symbol " + _)}")
     
-    def warnStmt = if inStmtPos then
-      raise:
-        WarningReport(msg"Pure expression in statement position" -> t.toLoc :: Nil, S(t))
+    def warnStmt = if inStmtPos then warnPureExprInStmtPos(t.toLoc, S(t))
     
     @tailrec
     def extractAnnots(t: st, acc: List[Annot]): (List[Annot], st) = t match
@@ -984,11 +985,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         sym
     val ctor =
       inScopedBlock:
-        term_nonTail(Blk(clsBody.nonMethods :+ clsBody.blk.res, Term.Lit(syntax.Tree.UnitLit(true))))(ImplctRet)
-          // * This is just a minor improvement to get `constructor() {}` instead of `constructor() { null }`
-          .mapTail:
-            case Return(Value.Lit(syntax.Tree.UnitLit(true)), true) => End()
-            case t => t
+        term_nonTail(Blk(clsBody.nonMethods, clsBody.blk.res), inStmtPos = true)(Assign.discard(_, End()))
+    
     (mtds, publicFlds, privateFlds, ctor)
   
   def args(elems: Ls[Elem])(k: Ls[Arg] => Block)(using LoweringCtx): Block =
@@ -1168,11 +1166,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val scopedBody = inScopedBlock(returnedTerm(bodyTerm))
     (paramLists, scopedBody)
   
+  
+  // TODO: reduce duplication between the two `reportAnnotations`
+  
   def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit =
     def warn(annot: Annot, msg: Opt[Message] = N) = raise:
       msg match
         case S(value) => WarningReport(value -> annot.toLoc :: Nil)
-        case N =>  WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
+        case N => WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
     annotations.foreach:
       case Annot.Untyped => ()
       case a @ Annot.TailRec =>
@@ -1188,8 +1189,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   def reportAnnotations(receiver: Term, annotations: Ls[Annot]): Unit =
     def warn(annot: Annot, msg: Opt[Message] = N) =
       val message = msg match
-        case None => msg"This annotation is not supported on ${receiver.describe} terms."
-        case Some(value) => value
+        case N => msg"This annotation is not supported on ${receiver.describe} terms."
+        case S(value) => value
       raise:
         WarningReport(
           msg"This annotation has no effect." -> annot.toLoc ::

@@ -311,7 +311,7 @@ class BlockTransformer(subst: SymbolSubst):
 
 class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst):
   override def applyLam(lam: Lambda) = lam
-  override def applyFunDefn(fun: FunDefn): FunDefn = fun
+  // Note: no need to override things like applyFunDefn, as they are only called by applyDefn
   override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
     case _: FunDefn | _: ClsLikeDefn => k(defn)
     case _: ValDefn => super.applyDefn(defn)(k)
