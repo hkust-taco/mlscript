@@ -72,12 +72,13 @@ object Keyword:
   val `case` = Keyword("case", N, curPrec)
   
   val thenPrec = nextPrec
-  val `then` = Keyword("then", thenPrec, thenPrec)
-  val `do` = Keyword("do", thenPrec, thenPrec)
-  val `drop` = Keyword("drop", thenPrec, thenPrec)
+  val `then` = Keyword("then", thenPrec, eqPrec)
+  val `do` = Keyword("do", thenPrec, eqPrec)
+  val `drop` = Keyword("drop", thenPrec, eqPrec)
   
-  val `else` = Keyword("else", nextPrec, curPrec)
+  val `else` = Keyword("else", N, eqPrec)
   type `else` = `else`.type
+  
   val `fun` = Keyword("fun", N, N)
   // val `val` = Keyword("val", N, N)
   val `var` = Keyword("var", N, N)
@@ -149,6 +150,19 @@ object Keyword:
   val `new!` = Keyword("new!", N, newRightPrec)
   val `mut` = Keyword("mut", N, newRightPrec)
   
+  // * `#` is both a prefix keyword (for directives like `#config(...)`)
+  // * and an infix operator (for disambiguation like `Lazy#get()`).
+  // * It has very high left precedence (like selection) when used as infix.
+  // * The right precedence is set to the same level (very tight) so that infix `#`
+  // * only picks up the immediately following identifier, e.g., `arr.Cls#d.f()`
+  // * parses as `App(Sel(InfixApp(Sel(arr, Cls), #, d), f), ())`.
+  // * In prefix position, this means `#config` only gets the name; `(args)` is
+  // * consumed by `exprCont` and the elaborator reconstructs the directive.
+  // * `canStartInfixOnNewLine = false` prevents it from being parsed as infix
+  // * when it appears on a new line after an expression.
+  val hashSelPrec = S(maxPrec.get + charPrecList.length)
+  val `#` = Keyword("#", hashSelPrec, hashSelPrec, canStartInfixOnNewLine = false)
+  
   val __ = Keyword("_", N, N)
   
   val modifiers = Set(
@@ -159,7 +173,7 @@ object Keyword:
   
   type Infix =
     `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type |
-    `where`.type | `with`.type | `and`.type | `or`.type | `then`.type | `else`.type
+    `where`.type | `with`.type | `and`.type | `or`.type | `then`.type | `else`.type | `#`.type
   
   type InfixSplittable =
     `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type |

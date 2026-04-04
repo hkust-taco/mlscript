@@ -70,10 +70,14 @@ test("hello")
 test / (inc / 123)
 //│ = "int"
 
+// Note: `/` is left-associative, so `test / inc / 123` parses as `(test / inc) / 123`,
+// which errors because `funnySlash(test, inc)` does not return a valid function.
+:re
 test / inc / 123
-//│ = "int"
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
+:re
 test / inc / 123 * 0.5
-//│ = "num"
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
 

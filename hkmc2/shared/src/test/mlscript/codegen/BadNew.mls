@@ -90,3 +90,14 @@ new! { x = 1 }
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
+:e
+let xs = new Oopsie
+//│ ╔══[COMPILATION ERROR] Name not found: Oopsie
+//│ ║  l.94: 	let xs = new Oopsie
+//│ ╙──      	             ^^^^^^
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ xs = undefined
+
+

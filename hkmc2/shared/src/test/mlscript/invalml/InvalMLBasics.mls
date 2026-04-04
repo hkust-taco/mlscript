@@ -128,7 +128,7 @@ let t = new Some(true) in t.Some#value
 //│ ╔══[LEXICAL ERROR] Expected at least one digit after the  decimal point
 //│ ║  l.127: 	42.Some#value
 //│ ╙──       	   ^
-//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (operator application).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (infix operator '#').
 //│ ║  l.127: 	42.Some#value
 //│ ╙──       	   ^^^^^^^^^^
 //│ Type: Num

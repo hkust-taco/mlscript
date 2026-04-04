@@ -402,6 +402,15 @@ class ParseRules(using State):
     singleKw(`null`)(UnitLit(true)),
     singleKw(`this`)(Ident("this")),
     singleKw(Keyword.__)(Under()),
+    Kw(`#`)(
+      ParseRule(s"'#' directive keyword")(
+        Expr(ParseRule(s"'#' directive body")(end(()))){ case (body, ()) => body }
+      )
+    ) { case (kw, body) =>
+      body match
+        case App(prefix, args) => Directive(prefix, args).mkLocWith(kw)
+        case _ => Directive(body, Tup(Nil)).mkLocWith(kw)
+    },
     standaloneExpr,
   )
   
@@ -460,13 +469,13 @@ class ParseRules(using State):
     makeInfixRule(`is`),
     makeInfixRule(`as`),
     makeInfixRule(`then`),
-    // makeInfixRule(`else`),
     makeInfixRule(`:`),
     makeInfixRule(`extends`),
     makeInfixRule(`restricts`),
     makeInfixRule(`do`),
     makeInfixRule(`where`),
     makeInfixRule(`with`),
+    makeInfixRule(`#`),
   )
 
 end ParseRules
