@@ -23,6 +23,16 @@ extension (s: Str)
     .mkString("\"", "", "\"")
 
 
+abstract class OnceFunction[-A, +B] extends (A => B):
+  private var called = false
+  final def apply(x: A): B =
+    if called then throw new IllegalStateException("This function can only be called once.")
+    called = true
+    applyBody(x)
+  def applyBody(x: A): B
+inline def ensureOnce[A, B](f: OnceFunction[A, B]): f.type = f
+
+
 import hkmc2.semantics.{TermDefFlags, FldFlags, ParamListFlags, Resolvable}
 import scala.collection.mutable.Buffer
 

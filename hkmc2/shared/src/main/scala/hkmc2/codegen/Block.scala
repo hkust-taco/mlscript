@@ -86,26 +86,15 @@ sealed abstract class Block extends Product:
       1 + handlers.map(_.body.size).sum + bdy.size + rst.size
     case Scoped(_, body) => body.size
   
-  // TODO conserve if no changes
-  def mapTail(f: BlockTail => Block): Block = this match
-    case b: BlockTail => f(b)
-    case Scoped(syms, body) => Scoped(syms, body.mapTail(f))
-    case Begin(sub, rst) => Begin(sub, rst.mapTail(f))
-    case Assign(lhs, rhs, rst) => Assign(lhs, rhs, rst.mapTail(f))
-    case Define(defn, rst) => Define(defn, rst.mapTail(f))
-    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
-      HandleBlock(lhs, res, par, args, cls, handlers.map(h => Handler(h.sym, h.resumeSym, h.params, h.body)), body, rest.mapTail(f))
-    case Match(scrut, arms, dflt, rst: End) =>
-      Match(scrut, arms.map(_ -> _.mapTail(f)), dflt.map(_.mapTail(f)), rst)
-    case Match(scrut, arms, dflt, rst) =>
-      Match(scrut, arms, dflt, rst.mapTail(f))
-    case Label(label, loop, body, rest) => Label(label, loop, body, rest.mapTail(f))
-    case af @ AssignField(lhs, nme, rhs, rest) =>
-      AssignField(lhs, nme, rhs, rest.mapTail(f))(af.symbol)
-    case adf @ AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
-      AssignDynField(lhs, fld, arrayIdx, rhs, rest.mapTail(f))
-    case tb @ TryBlock(sub, fin, rest) =>
-      TryBlock(sub, fin, rest.mapTail(f))
+  
+  // TODO: make patmat use unreach
+  
+  def mapReturn(f: Return => Block): Block =
+    new BlockTransformerShallow(SymbolSubst.Id):
+      override def applyBlock(b: Block): Block = b match
+        case ret: Return => f(ret)
+        case _ => super.applyBlock(b)
+    .applyBlock(this)
   
   lazy val freeVars: Set[Local] = this match
     case Match(scrut, arms, dflt, rest) =>
@@ -202,12 +191,13 @@ sealed abstract class Block extends Product:
   lazy val flattened: Block = this.flatten(identity)
   
   private def flatten(k: End => Block): Block = this match
+    
     case Match(scrut, arms, dflt, rest) =>
       val newRest = rest.flatten(k)
       val newArms = arms.mapConserve: arm =>
         val newBody = arm._2.flattened
         if newBody is arm._2 then arm else (arm._1, newBody)
-      val newDflt = dflt.map(_.flattened)
+      val newDflt = dflt.mapConserve  (_.flattened)
       if (newRest is rest) && (newArms is arms) && (dflt is newDflt)
       then this
       else Match(scrut, newArms, newDflt, newRest)
@@ -236,7 +226,7 @@ sealed abstract class Block extends Product:
       then this
       else Assign(lhs, rhs, newRest)
       
-    case a@AssignField(lhs, nme, rhs, rest) =>
+    case a @ AssignField(lhs, nme, rhs, rest) =>
       val newRest = rest.flatten(k)
       if newRest is rest
       then this
@@ -259,13 +249,27 @@ sealed abstract class Block extends Product:
         case c: ClsLikeDefn =>
           val newPreCtor = c.preCtor.flattened
           val newCtor = c.ctor.flattened
-          val newMethods = c.methods.mapConserve:
+          def flattenMethods(ms: List[FunDefn]) = ms.mapConserve:
             case f@FunDefn(owner, sym, dSym, params, body) =>
               val newBody = body.flattened
               if newBody is body then f else f.copy(body = newBody)(forceTailRec = f.forceTailRec, configOverride = f.configOverride)
-          if (newPreCtor is c.preCtor) && (newCtor is c.ctor) && (newMethods is c.methods)
+          val newMethods = flattenMethods(c.methods)
+          val newCompanion = c.companion.mapConserve: c =>
+            val newCtor = c.ctor.flattened
+            val newMethods = flattenMethods(c.methods)
+            if (newCtor is c.ctor) && (newMethods is c.methods) then c
+              else c.copy(ctor = newCtor, methods = newMethods)
+          if (newPreCtor is c.preCtor)
+          && (newCtor is c.ctor)
+          && (newMethods is c.methods)
+          && (newCompanion is c.companion)
           then c
-          else c.copy(preCtor = newPreCtor, ctor = newCtor, methods = newMethods)(c.configOverride)
+          else c.copy(
+            preCtor = newPreCtor,
+            ctor = newCtor,
+            methods = newMethods,
+            companion = newCompanion,
+          )(c.configOverride)
       
       val newRest = rest.flatten(k)
       if (newDefn is defn) && (newRest is rest)
@@ -305,8 +309,10 @@ case class Match(
   rest: Block,
 ) extends Block with ProductWithTail with NonBlockTail
 
-// * `implct`: whether it's a JS implicit return, without the `return` keyword
-// * TODO could just remove this flag and add a flag in Scope instead
+// * `implct`: metadata indicating whether this is a JS implicit return, without the `return` keyword.
+// * This is currenlty only used for the main blocks of modules and diff-test blocks;
+// * for all intents and purposes, one can view an implicit return as a normal return.
+// * I would remove it, but it helps print cleaner outputs for diff tests (eg, using `:sir`).
 case class Return(res: Result, implct: Bool) extends BlockTail
 
 case class Throw(exc: Result) extends BlockTail
@@ -396,7 +402,12 @@ object Define:
     case _ => new Define(defn, rest)
 
 object Match:
-  def apply(scrut: Path, arms: Ls[Case -> Block], dflt: Opt[Block], rest: Block): Block = dflt match
+  def apply(scrut: Path, _arms: Ls[Case -> Block], _dflt: Opt[Block], rest: Block): Block =
+    val emptyDflt = _dflt.forall(_.isEmpty)
+    val dflt = if emptyDflt then N else _dflt
+    val arms = if emptyDflt then _arms.filterNot(_._2.isEmpty) else _arms
+    if arms.isEmpty && scrut.isPure then dflt.fold(rest)(Begin(_, rest))
+    else dflt match
     case S(Match(`scrut`, arms2, dflt2, _: End)) => // TODO: also handle non-End rest (may require a join point)
       // * Currently, this branch does not seem used, because the UCS already does a good job at merging matches
       Match(scrut, arms ::: arms2, dflt2, rest)
@@ -410,6 +421,7 @@ object Match:
 object Begin:
   def apply(sub: Block, rest: Block): Block =
     if sub.isEmpty then rest
+    else if rest.isEmpty then sub
     else if sub.isAbortive then sub
     else (sub, rest) match
       case (Scoped(symsSub, bodySub), Scoped(symsRest, bodyRest)) =>

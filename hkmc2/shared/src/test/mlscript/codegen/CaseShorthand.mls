@@ -85,8 +85,8 @@ case
   _ then false
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda11;
-//│ lambda11 = (undefined, function (caseScrut) {
-//│   if (caseScrut === 0) { return true } else { return false }
+//│ lambda11 = (undefined, function (caseScrut1) {
+//│   if (caseScrut1 === 0) { return true } else { return false }
 //│ });
 //│ lambda11
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -101,10 +101,10 @@ val isDefined = case
   None then false
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let isDefined, lambda12;
-//│ lambda12 = (undefined, function (caseScrut) {
-//│   if (caseScrut instanceof Some1.class) {
+//│ lambda12 = (undefined, function (caseScrut1) {
+//│   if (caseScrut1 instanceof Some1.class) {
 //│     return true
-//│   } else if (caseScrut instanceof None1.class) {
+//│   } else if (caseScrut1 instanceof None1.class) {
 //│     return false
 //│   } else {
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))

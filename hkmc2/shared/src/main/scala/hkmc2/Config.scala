@@ -28,6 +28,7 @@ case class Config(
   rewriteWhileLoops: Bool,
   tailRecOpt: Bool,
   deforest: Opt[Deforest],
+  inlining: Opt[Inliner],
   qqEnabled: Bool,
   funcToCls: Bool,
   commentGeneratedCode: Bool,
@@ -66,6 +67,7 @@ object Config:
     stageCode = false,
     tailRecOpt = true,
     deforest = N,
+    inlining = S(Inliner(1)),
     qqEnabled = false,
     funcToCls = false,
     commentGeneratedCode = false,
@@ -103,6 +105,8 @@ object Config:
 
   object Deforest:
     val default = Deforest(true)
+
+  case class Inliner(inlineThreshold: Int)
 
 end Config
 

@@ -80,7 +80,7 @@ h(1)
 :sjs
 let i = _(0, 1, _)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let i, i1; i1 = function i(_0, _1) { return runtime.safeCall(_0(0, 1, _1)) }; i = i1;
+//│ let i, i1; i1 = function i(_03, _13) { return runtime.safeCall(_03(0, 1, _13)) }; i = i1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ i = fun i
 
@@ -227,19 +227,19 @@ _ - _ of 1, 2
 :sjs
 1 \ (_ - 2)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda37; lambda37 = (undefined, function (_0) { return _0 - 2 }); Predef.passTo(1, lambda37)
+//│ let lambda37; lambda37 = (undefined, function (_05) { return _05 - 2 }); Predef.passTo(1, lambda37)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 :sjs
 1 \ (_ - 2)()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda38, tmp19;
-//│ lambda38 = (undefined, function (_0) {
-//│   return _0 - 2
+//│ let lambda38, tmp22;
+//│ lambda38 = (undefined, function (_05) {
+//│   return _05 - 2
 //│ });
-//│ tmp19 = Predef.passTo(1, lambda38);
-//│ runtime.safeCall(tmp19())
+//│ tmp22 = Predef.passTo(1, lambda38);
+//│ runtime.safeCall(tmp22())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = -1
 
@@ -258,7 +258,7 @@ let f = if _ then 1 else 0
 //│ ║  l.253: 	let f = if _ then 1 else 0
 //│ ╙──       	                    ^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f15, tmp21; tmp21 = 1; f15 = tmp21;
+//│ let f15, tmp24; tmp24 = 1; f15 = tmp24;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = 1
 

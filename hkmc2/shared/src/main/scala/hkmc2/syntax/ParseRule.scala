@@ -469,7 +469,6 @@ class ParseRules(using State):
     makeInfixRule(`is`),
     makeInfixRule(`as`),
     makeInfixRule(`then`),
-    // makeInfixRule(`else`),
     makeInfixRule(`:`),
     makeInfixRule(`extends`),
     makeInfixRule(`restricts`),

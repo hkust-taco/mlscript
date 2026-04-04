@@ -11,29 +11,17 @@ x => if x is Pair(A, B) then 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda;
 //│ lambda = (undefined, function (x) {
-//│   let arg$Pair$0$, arg$Pair$1$, tmp;
-//│   split_root$: {
-//│     split_default$: {
-//│       if (x instanceof Pair1.class) {
-//│         arg$Pair$0$ = x.a;
-//│         arg$Pair$1$ = x.b;
-//│         if (arg$Pair$0$ instanceof A1) {
-//│           if (arg$Pair$1$ instanceof B1) {
-//│             tmp = 1;
-//│             break split_root$
-//│           } else {
-//│             break split_default$
-//│           }
-//│         } else {
-//│           break split_default$
-//│         }
-//│       } else {
-//│         break split_default$
+//│   let arg$Pair$0$, arg$Pair$1$;
+//│   if (x instanceof Pair1.class) {
+//│     arg$Pair$0$ = x.a;
+//│     arg$Pair$1$ = x.b;
+//│     if (arg$Pair$0$ instanceof A1) {
+//│       if (arg$Pair$1$ instanceof B1) {
+//│         return 1
 //│       }
 //│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   }
-//│   return tmp
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ });
 //│ lambda
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -48,36 +36,21 @@ fun f(x) = if x is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f;
 //│ f = function f(x) {
-//│   let arg$Pair$0$, arg$Pair$1$, tmp;
-//│   split_root$: {
-//│     split_default$: {
-//│       if (x instanceof Pair1.class) {
-//│         arg$Pair$0$ = x.a;
-//│         arg$Pair$1$ = x.b;
-//│         if (arg$Pair$0$ instanceof A1) {
-//│           if (arg$Pair$1$ instanceof A1) {
-//│             tmp = 1;
-//│             break split_root$
-//│           } else {
-//│             break split_default$
-//│           }
-//│         } else if (arg$Pair$0$ instanceof B1) {
-//│           if (arg$Pair$1$ instanceof B1) {
-//│             tmp = 2;
-//│             break split_root$
-//│           } else {
-//│             break split_default$
-//│           }
-//│         } else {
-//│           break split_default$
-//│         }
-//│       } else {
-//│         break split_default$
+//│   let arg$Pair$0$, arg$Pair$1$;
+//│   if (x instanceof Pair1.class) {
+//│     arg$Pair$0$ = x.a;
+//│     arg$Pair$1$ = x.b;
+//│     if (arg$Pair$0$ instanceof A1) {
+//│       if (arg$Pair$1$ instanceof A1) {
+//│         return 1
+//│       }
+//│     } else if (arg$Pair$0$ instanceof B1) {
+//│       if (arg$Pair$1$ instanceof B1) {
+//│         return 2
 //│       }
 //│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   }
-//│   return tmp
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

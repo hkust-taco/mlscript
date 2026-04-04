@@ -79,7 +79,9 @@ class BlockTraverser:
     case v: Value => applyValue(v)
   
   def applyValue(v: Value): Unit = v match
-    case Value.Ref(l, disamb) => l.traverse
+    case Value.Ref(l, disamb) =>
+      l.traverse
+      disamb.foreach(_.traverse)
     case Value.This(sym) => sym.traverse
     case Value.Lit(lit) => ()
   

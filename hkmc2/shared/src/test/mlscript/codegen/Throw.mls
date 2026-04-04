@@ -31,7 +31,11 @@ fun f(x) =
   return y
 f(1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f2; f2 = function f(x) { throw runtime.safeCall(globalThis.Error("e")) }; f2(1)
+//│ let f2;
+//│ f2 = function f(x) {
+//│   throw runtime.safeCall(globalThis.Error("e"))
+//│ };
+//│ throw runtime.safeCall(globalThis.Error("e"))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: e
 

@@ -1,0 +1,43 @@
+:js
+
+
+"a" + // hi
+  "b"
+//│ = "ab"
+
+"a" +
+  // hi
+"b"
+//│ = "ab"
+
+"a" +
+// hi
+"b"
+//│ = "ab"
+
+
++ 1
++ 2
+//│ = 3
+
++ 1
+// oops
++ 2
+//│ = 3
+
+
+object Example with
+// whoops
+  val a = this
+
+assert Example.a is Example
+
+
+pattern Bin =
+  | 0
+  // oops
+  | 1
+
+assert 1 is Bin
+
+

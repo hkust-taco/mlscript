@@ -18,9 +18,6 @@ do label:
 //│ ╔══[COMPILATION ERROR] Name not found: label
 //│ ║  l.12: 	  if x == 0 do label.break 42
 //│ ╙──      	               ^^^^^
-//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.11: 	do label:
-//│ ╙──      	^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -32,7 +29,7 @@ let i = 10 in do
   label2: // this is implicitly nested in label1
     label1.continue
 //│ ╔══[COMPILATION ERROR] Name not found: label1
-//│ ║  l.29: 	    if i <= 0 do label1.break ()
+//│ ║  l.26: 	    if i <= 0 do label1.break ()
 //│ ╙──      	                 ^^^^^^
 //│ > Still > 0: 10
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'continue' yielded 'undefined'

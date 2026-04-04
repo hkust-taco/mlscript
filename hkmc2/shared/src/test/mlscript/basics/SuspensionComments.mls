@@ -1,0 +1,26 @@
+:js
+
+
+// * Suspension with end-of-line comment should properly expand the continuation body
+
+mkStr of ... // hello
+"oops"
+//│ = "oops"
+
+mkStr of ...
+// hello
+"oops"
+//│ = "oops"
+
+mkStr of ...
+  // hello
+"oops"
+//│ = "oops"
+
+mkStr of ...
+  // hello
+    // hello
+"oops"
+//│ = "oops"
+
+

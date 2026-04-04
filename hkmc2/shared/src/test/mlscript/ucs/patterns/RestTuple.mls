@@ -64,37 +64,26 @@ fun nested_tuple_patterns(xs) = if xs is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let nested_tuple_patterns;
 //│ nested_tuple_patterns = function nested_tuple_patterns(xs) {
-//│   let x, y, w, z, lastElement0$, middleElements, element0$, element1$, element0$1, tmp6, tmp7, tmp8;
-//│   split_root$: {
-//│     split_default$: {
-//│       if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
-//│         element0$ = runtime.Tuple.get(xs, 0);
-//│         middleElements = runtime.Tuple.slice(xs, 1, 1);
-//│         lastElement0$ = runtime.Tuple.get(xs, -1);
-//│         if (runtime.Tuple.isArrayLike(middleElements) && middleElements.length === 2) {
-//│           element0$1 = runtime.Tuple.get(middleElements, 0);
-//│           element1$ = runtime.Tuple.get(middleElements, 1);
-//│           w = lastElement0$;
-//│           z = element1$;
-//│           y = element0$1;
-//│           x = element0$;
-//│           tmp6 = x + y;
-//│           tmp7 = tmp6 + z;
-//│           tmp8 = tmp7 + w;
-//│           break split_root$
-//│         } else {
-//│           break split_default$
-//│         }
-//│       } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
-//│         tmp8 = 0;
-//│         break split_root$
-//│       } else {
-//│         break split_default$
-//│       }
+//│   let x, y, w, z, lastElement0$, middleElements, element0$, element1$, element0$1, tmp6, tmp7;
+//│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
+//│     element0$ = runtime.Tuple.get(xs, 0);
+//│     middleElements = runtime.Tuple.slice(xs, 1, 1);
+//│     lastElement0$ = runtime.Tuple.get(xs, -1);
+//│     if (runtime.Tuple.isArrayLike(middleElements) && middleElements.length === 2) {
+//│       element0$1 = runtime.Tuple.get(middleElements, 0);
+//│       element1$ = runtime.Tuple.get(middleElements, 1);
+//│       w = lastElement0$;
+//│       z = element1$;
+//│       y = element0$1;
+//│       x = element0$;
+//│       tmp6 = x + y;
+//│       tmp7 = tmp6 + z;
+//│       return tmp7 + w
 //│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
+//│     return 0
 //│   }
-//│   return tmp8
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

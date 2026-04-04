@@ -1,0 +1,51 @@
+:js
+
+
+// * JavaScript classes have built-in non-writable `name` and `length` properties,
+// * which can't be set directly by a normal assignment.
+
+// * Notice:
+:re
+:noModuleCheck
+module M with
+  set this."name" = "oops"
+//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'name' of function 'class M {   static {     M1 = this   }   static {     M["name"] = "oops";   }   toString() { return runtime.ren...<omitted>... }'
+
+// * So we use `Object.defineProperty` instead:
+:sjs
+module M with
+  val name = "Student"
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let M3;
+//│ (class M2 {
+//│   static {
+//│     M3 = this
+//│   }
+//│   static {
+//│     Object.defineProperty(this, "name", { configurable: true, enumerable: true, writable: true, value: "Student" });
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"]; 
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// * Non-static definitions should be unaffected:
+:sjs
+class C with
+  val name = "Student"
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let C1;
+//│ (class C {
+//│   static {
+//│     C1 = this
+//│   }
+//│   constructor() {
+//│     this.name = "Student";
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C"]; 
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+

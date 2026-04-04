@@ -108,7 +108,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val jsb = ltl.givenIn:
         JSBuilder()
       val le_0 = low.program(blk)
-      val le_1 = BlockSimplifier(symbolsToPreserve)(le_0)
+      val le_1 = ltl.givenIn:
+        BlockSimplifier(symbolsToPreserve)(le_0)
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
         jsb.programBody(le_1, N, wd)
@@ -152,7 +153,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         )
         output(Printer().worksheet(lowered_0)(using irPrintingScp).mkString(output.ColWidth))
       
-      val lowered_1 =
+      val lowered_1 = ltl.givenIn:
         BlockSimplifier(symbolsToPreserve)(lowered_0)
       
       // TODO: Test that transformers retain object identity when there are no changes
@@ -181,14 +182,14 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           debug = debug.isSet,
         )
         output(Printer().worksheet(lowered_1)(using irPrintingScp).mkString(output.ColWidth))
+      if showOptimizedTree.isSet then
+        outputSeparator("Optimized IR Tree")
+        output(lowered_1.showAsTree)
       
-      val loweredMapped = lowered_1.copy(main = lowered_1.main.mapTail:
-        case e: End =>
-          Assign(resSym, Value.Lit(syntax.Tree.UnitLit(false)), e)
+      val loweredMapped = lowered_1.copy(main = lowered_1.main.mapReturn:
         case Return(res, implct) =>
           assert(implct)
           Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
-        case tl: (Throw | Break | Continue | Unreachable) => tl
       )
       val (pre, js) = nestedScp.givenIn:
         jsb.worksheet(loweredMapped)

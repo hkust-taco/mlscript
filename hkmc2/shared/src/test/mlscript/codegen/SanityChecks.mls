@@ -7,12 +7,15 @@
 fun f(x, y) = x + y
 f(2, 3)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let f;
-//│ f = function f(x, y) {
+//│ let f, x, y, inlinedVal;
+//│ f = function f(x1, y1) {
 //│   runtime.checkArgs("f", 2, true, arguments.length);
-//│   return x + y
+//│   return x1 + y1
 //│ };
-//│ block$res1 = runtime.checkCall(f(2, 3));
+//│ x = 2;
+//│ y = 3;
+//│ inlinedVal = x + y;
+//│ block$res1 = inlinedVal;
 //│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
@@ -23,9 +26,9 @@ let f = (x, y) => x + y
 f(2, 3)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f1, f2;
-//│ f2 = function f(x, y) {
+//│ f2 = function f(x1, y1) {
 //│   runtime.checkArgs("f", 2, true, arguments.length);
-//│   return x + y
+//│   return x1 + y1
 //│ };
 //│ f1 = f2;
 //│ block$res2 = runtime.safeCall(f1(2, 3));
@@ -50,8 +53,8 @@ fun f2(x, y) = x + y
 id(f2)(2)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f21, tmp;
-//│ f21 = function f2(x, y) {
-//│   return x + y
+//│ f21 = function f2(x1, y1) {
+//│   return x1 + y1
 //│ };
 //│ tmp = Predef.id(f21);
 //│ block$res5 = runtime.safeCall(tmp(2));
@@ -75,11 +78,11 @@ fun f(x)(y, z) = x + y + z
 id(f)(3)(4)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f3, tmp2, tmp3;
-//│ f3 = function f(x) {
+//│ f3 = function f(x1) {
 //│   runtime.checkArgs("f", 1, true, arguments.length);
-//│   return (y, z) => {
+//│   return (y1, z) => {
 //│     let tmp4;
-//│     tmp4 = x + y;
+//│     tmp4 = x1 + y1;
 //│     return tmp4 + z
 //│   }
 //│ };
@@ -129,16 +132,16 @@ data class Cls(x, y) with
 id(Cls(1, 2)).f(3, 4)(5)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let Cls5, tmp8, tmp9, tmp10;
-//│ Cls5 = function Cls(x, y) {
-//│   return globalThis.Object.freeze(new Cls.class(x, y));
+//│ Cls5 = function Cls(x1, y1) {
+//│   return globalThis.Object.freeze(new Cls.class(x1, y1));
 //│ };
 //│ globalThis.Object.freeze(class Cls4 {
 //│   static {
 //│     Cls5.class = this
 //│   }
-//│   constructor(x, y) {
-//│     this.x = x;
-//│     this.y = y;
+//│   constructor(x1, y1) {
+//│     this.x = x1;
+//│     this.y = y1;
 //│   }
 //│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
 //│   f(z, p) {
@@ -192,7 +195,7 @@ if M.A(1).y is
   x and x == 1 then x
   else 0
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let scrut, x, scrut1, tmp11, selRes1;
+//│ let scrut, x1, scrut1, tmp11, selRes1;
 //│ tmp11 = runtime.checkCall(M1.A(1));
 //│ selRes1 = tmp11.y;
 //│ tmp11.y$__checkNotMethod;
@@ -200,9 +203,9 @@ if M.A(1).y is
 //│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"))
 //│ }
 //│ scrut = selRes1;
-//│ x = scrut;
-//│ scrut1 = Predef.equals(x, 1);
-//│ if (scrut1 === true) { block$res17 = x; undefined } else { block$res17 = 0; undefined }
+//│ x1 = scrut;
+//│ scrut1 = Predef.equals(x1, 1);
+//│ if (scrut1 === true) { block$res17 = x1; undefined } else { block$res17 = 0; undefined }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 

@@ -4,55 +4,87 @@
 :sjs
 1 && 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda; lambda = (undefined, function () { return 2 }); runtime.short_and(1, lambda)
+//│ if (1 === true) { 2 } else { false }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 2
-
-1 || 2
-//│ = 1
+//│ = false
 
 
-fun test(x) =
-  print(x)
-  x
+fun
+  loud(x) = print(x); x
+  loudTrue = loud(true)
+  loudFalse = loud(false)
+
+
+true && loudTrue
+//│ > true
+//│ = true
+
+true && loudFalse
+//│ > false
+//│ = false
+
+false && loudTrue
+//│ = false
 
 :sjs
-123 || test(42)
+print(1 && loudTrue)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda2; lambda2 = (undefined, function () { return test(42) }); runtime.short_or(123, lambda2)
+//│ let tmp3, tmp4;
+//│ if (1 === true) { tmp4 = loudTrue(); tmp3 = tmp4; } else { tmp3 = false; }
+//│ Predef.print(tmp3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 123
+//│ > false
 
-0 || test(42)
-//│ > 42
-//│ = 42
+:sjs
+1 || 2
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ if (1 === false) { 2 } else { true }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = true
 
-123 && test(42)
-//│ > 42
-//│ = 42
+print(1 || 2)
+//│ > true
+
+1 || loudTrue
+//│ = true
+
+1 || loudFalse
+//│ = true
+
+true || loudTrue
+//│ = true
+
+
+123 || loud(42)
+//│ = true
+
+0 || loud(42)
+//│ = true
+
+123 && loud(42)
+//│ = false
 
 :sjs
 fold(||)(0, false, 42, 123)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda5, tmp;
-//│ lambda5 = (undefined, function (arg1, arg2) {
-//│   let lambda6;
-//│   lambda6 = (undefined, function () {
+//│ let lambda, tmp9;
+//│ lambda = (undefined, function (arg1, arg2) {
+//│   if (arg1 === false) {
 //│     return arg2
-//│   });
-//│   return runtime.short_or(arg1, lambda6)
+//│   } else {
+//│     return true
+//│   }
 //│ });
-//│ tmp = runtime.safeCall(Predef.fold(lambda5));
-//│ runtime.safeCall(tmp(0, false, 42, 123))
+//│ tmp9 = runtime.safeCall(Predef.fold(lambda));
+//│ runtime.safeCall(tmp9(0, false, 42, 123))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 42
+//│ = true
 
 
 print of
   print("A") && print("B")
 //│ > A
-//│ > B
-//│ > ()
+//│ > false
 
 
 fun (&&) foo(x, y) =

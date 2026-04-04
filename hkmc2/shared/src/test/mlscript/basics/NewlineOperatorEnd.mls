@@ -1,0 +1,15 @@
+:js
+
+
+// * Operators like ??? on a new line at end of block should be standalone expressions, not newline-infix
+
+fun parse(tokens) =
+  ()
+  ???
+
+
+fun parse(tokens) =
+  ()
+  ??? // oops
+
+
