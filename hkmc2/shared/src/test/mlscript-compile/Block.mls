@@ -18,8 +18,8 @@ type ParamList = Array[Symbol]
 
 class Symbol(val name: Str)
 class VirtualClassSymbol(val name: Str) extends Symbol(name)
-class ClassSymbol(val name: Str, val value, val paramsOpt: Option[ParamList], val auxParams: Array[ParamList]) extends Symbol(name)
-class ModuleSymbol(val name: Str, val value) extends Symbol(name)
+class ClassSymbol(val name: Str, val value: Class, val paramsOpt: Option[ParamList], val auxParams: Array[ParamList]) extends Symbol(name)
+class ModuleSymbol(val name: Str, val value: Class) extends Symbol(name)
 
 // Classes defined in Block.scala
 
