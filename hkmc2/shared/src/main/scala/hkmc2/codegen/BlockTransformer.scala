@@ -75,7 +75,7 @@ class BlockTransformer(subst: SymbolSubst):
     case TryBlock(sub, fin, rst) =>
       def applySub(b: Block) = if rst.isEmpty then applySubBlock(b) else applySubBlockNonTail(b)
       val sub2 = applySub(sub)
-      val fin2 = applySub(rst)
+      val fin2 = applySub(fin)
       val rst2 = applySubBlock(rst)
       if (sub2 is sub) && (fin2 is fin) && (rst2 is rst) then b else TryBlock(sub2, fin2, rst2)
     case Assign(l, r, rst) =>
