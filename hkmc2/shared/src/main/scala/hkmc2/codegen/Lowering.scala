@@ -548,23 +548,26 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             msg"Builtin '${sym.nme}' is not a binary operator" -> t.toLoc :: Nil, S(arg),
             source = Diagnostic.Source.Compilation)
         subTerm(arg1): ar1 =>
-          val isAnd = sym is State.andSymbol
-          val isOr = sym is State.orSymbol
-          if isAnd || isOr then
-            val lamSym = BlockMemberSymbol("lambda", Nil, false)
-            loweringCtx.collectScopedSym(lamSym)
-            val lamDef = FunDefn.withFreshSymbol(
-              N,
-              lamSym,
-              PlainParamList(Nil) :: Nil,
-              inScopedBlock(returnedTerm(arg2)))(forceTailRec = false, configOverride = N)
-            Define(
-              lamDef,
-              k(Call(
-                Value.Ref(State.runtimeSymbol).selN(Tree.Ident(if isAnd then "short_and" else "short_or")),
-                Arg(N, ar1) :: Arg(N, lamDef.asPath) :: Nil
-              )(true, true, false)))
-          else
+          def mkBooleanMatch(isAnd: Bool): Block =
+            val posLit = Tree.BoolLit(isAnd)
+            val negLit = Tree.BoolLit(!isAnd)
+            if k.isInstanceOf[TailOp] then Match(
+              ar1,
+              (Case.Lit(posLit) -> term_nonTail(arg2)(k)) :: Nil,
+              S(k(Value.Lit(negLit))),
+              Unreachable("tail operation in branches"),
+            ) else
+              val ts = loweringCtx.registerTempSymbol(N)
+              Match(
+                ar1,
+                (Case.Lit(posLit) -> term_nonTail(arg2)(Assign(ts, _, End()))) :: Nil,
+                S(Assign(ts, Value.Lit(negLit), End())),
+                k(Value.Ref(ts)),
+              )
+          sym match
+          case State.andSymbol => mkBooleanMatch(true)
+          case State.orSymbol => mkBooleanMatch(false)
+          case _ =>
             subTerm_nonTail(arg2): ar2 =>
               val target = wasmIntrinsicPath(sym, unary = false)
                 .getOrElse(Value.Ref(sym).withLocOf(ref))
@@ -1010,14 +1013,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     def rec(as: Ls[(Term -> Term) \/ (Opt[SpreadKind] -> st)]): Block = as match
       case Nil => End()
       case R((spd, a)) :: as =>
-        subTerm_nonTail(a): ar =>
-          asr ::= Arg(spd, ar)
-          rec(as)
+        subTerm_nonTail(a):
+          ensureOnce: (ar: Path) =>
+              asr ::= Arg(spd, ar)
+              rec(as)
       case L((idx, t)) :: as =>
         subTerm_nonTail(idx): ir =>
-          subTerm_nonTail(t): tr =>
-            fsr ::= RcdArg(S(ir), tr)
-            rec(as)
+          subTerm_nonTail(t):
+            ensureOnce: (tr: Path) =>
+              fsr ::= RcdArg(S(ir), tr)
+              rec(as)
     val b = rec(as)
     if fsr.isEmpty then
       Begin(b, k(asr.reverse))

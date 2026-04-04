@@ -33,53 +33,6 @@ fun foo(x) = if x is @annotations.compile A(0) as y then y
 
 // ——— ——— ———
 
-// TODO: implement && and || using `Match` block, rather than as intrinsic function calls `short_and` and `short_or`
-
-:elt
-:sir
-fun test =
-  true && return 42
-  43
-//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
-//│ Blk:
-//│   stats = Ls of 
-//│     TermDefinition:
-//│       k = Fun
-//│       sym = member:test⁰
-//│       tsym = term:test¹
-//│       body = S of Blk:
-//│         stats = Ls of 
-//│           App:
-//│             lhs = Ref{sym=builtin:&&⁰} of builtin:&&⁰
-//│             rhs = Tup of Ls of 
-//│               Fld:
-//│                 term = Lit of BoolLit of true
-//│               Fld:
-//│                 term = Ret of Lit of IntLit of 42
-//│         res = Lit of IntLit of 43
-//│       modulefulness = Modulefulness of N
-//│   res = Lit of UnitLit of false
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let test⁰;
-//│ define test⁰ as fun test¹() {
-//│   let lambda;
-//│   define lambda as fun lambda⁰() {
-//│     return 42
-//│   };
-//│   do runtime⁰.short_and﹖(true, lambda⁰);
-//│   return 43
-//│ };
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-
-:fixme
-:expect 42
-test // should be 42
-//│ ═══[RUNTIME ERROR] Expected: '42', got: '43'
-//│ = 43
-
-// ——— ——— ———
-
 // FIXME: Printing of
 [..[], "a"]
 //│ = [a]
@@ -93,10 +46,10 @@ test // should be 42
 tuple(1,
   2)
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.94: 	  2)
+//│ ║  l.47: 	  2)
 //│ ╙──      	    ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.94: 	  2)
+//│ ║  l.47: 	  2)
 //│ ╙──      	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -104,11 +57,11 @@ tuple(1,
 tuple of 1,
   2
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.105: 	  2
-//│ ╙──       	  ^
+//│ ║  l.58: 	  2
+//│ ╙──      	  ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.105: 	  2
-//│ ╙──       	  ^
+//│ ║  l.58: 	  2
+//│ ╙──      	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // ——— ——— ———

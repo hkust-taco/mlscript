@@ -3,8 +3,9 @@
 import "../../mlscript-compile/apps/CSV.mls"
 
 
-let csv = CSV(null)
+let csv = CSV(undefined)
 //│ csv = CSV(",")
+
 
 csv.strDelimiter
 //│ = ","
@@ -27,5 +28,24 @@ csv.toArrays(",")
 csv.toArrays(",,")
 //│ = [["", ""]]
 
+csv.toArrays("1,\"2\"")
+//│ = [["1", "2"]]
+
+csv.toArrays("1,\"2,3\",4")
+//│ = [["1", "2,3", "4"]]
+
+csv.toArrays("1,\"\",4")
+//│ = [["1", "", "4"]]
+
+csv.toArrays("1,\",4")
+//│ = [["1", "", "4"]]
+
+csv.toArrays("1,\",4\"")
+//│ = [["1", ",4"]]
+
+
+// We would probably rather expect "A\\\"B", here
+csv.toArrays("1,\"A\\\"B\",4").0.1
+//│ = "A\\"
 
 
