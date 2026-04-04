@@ -318,6 +318,8 @@ abstract class Parser(
     case (COMMA, _) :: _ => consume; blockOf(rule, annotations, allowNewlines)
     case (SPACE, _) :: _ => consume; blockOf(rule, annotations, allowNewlines)
     case (br @ BRACKETS(Indent, toks), _) :: _ =>
+      // * Handle indented blocks appearing after comma continuations
+      // * (e.g., in multi-line function calls like `tuple(1,\n  2)`)
       consume
       rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockOf(rule, annotations, true)) ++ blockContOf(rule)
     case (IDENT("@", _), l0) :: rest if rest.nonEmpty =>
