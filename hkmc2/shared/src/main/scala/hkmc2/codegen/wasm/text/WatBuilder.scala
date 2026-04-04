@@ -918,34 +918,62 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   /** Gets (or creates) the intrinsic function implementing the wasm operator `name`.
     */
   private def getIntrinsic(name: Str)(using Ctx, Raise, Scope): FuncIdx =
-    ctx.getOrCreateWasmIntrinsic(name, createIntrinsic(name))
+    ctx.getOrCreateWasmIntrinsic(name, importIntrinsic(name))
+
+  private def importIntrinsic(name: Str)(using Ctx, Raise, Scope): FuncIdx =
+    val typeIdx = declareIntrinsicType(name)
+    ctx.addFunctionImport(
+      N,
+      WasmImport(
+        ExternIntrinsics.SystemModule,
+        name,
+        ExternType.Func(SymIdx(name), TypeUse(typeIdx)),
+      ),
+    )
 
   /** Creates the intrinsic definition for `name`.
     */
-  private def createIntrinsic(name: Str)(using Ctx, Raise, Scope): FuncIdx =
-    if binaryOps.contains(name) then createBinaryInt31Func(name, binaryOps(name))
-    else if unaryOps.contains(name) then createUnaryInt31Func(name, unaryOps(name))
+  private def createIntrinsic(name: Str, exportName: Opt[Str])(using Ctx, Raise, Scope): FuncIdx =
+    if binaryOps.contains(name) then createBinaryInt31Func(name, binaryOps(name), exportName)
+    else if unaryOps.contains(name) then createUnaryInt31Func(name, unaryOps(name), exportName)
     else lastWords(s"Unsupported wasm intrinsic '$name'")
+
+  private def intrinsicParamSuffixes(name: Str): Seq[Str] =
+    if binaryOps.contains(name) then Seq("lhs", "rhs") else Seq("arg")
+
+  private def declareIntrinsicType(name: Str)(using Ctx, Raise, Scope): TypeIdx =
+    ctx.addType(
+      sym = N,
+      TypeInfo(
+        id = SymIdx(scope.allocateName(TempSymbol(N, name))),
+        FunctionType(
+          params = intrinsicParamSuffixes(name).map(nme => WasmParam(nme, RefType.anyref)),
+          results = Seq(Result(RefType.anyref)),
+        ),
+        objectTag = N,
+      ),
+    )
 
   /** Creates a binary Int31 intrinsic with two parameters and body built from `op`.
     */
   private def createBinaryInt31Func(
       name: Str,
       op: (Expr, Expr) => Expr,
+      exportName: Opt[Str],
   )(using Ctx, Raise, Scope): FuncIdx =
     val params = mkIntrinsicParams(name, Seq("lhs", "rhs"))
     val lhsName = params.head._2
     val rhsName = params(1)._2
     val body = binaryInt31Body(lhsName, rhsName, op)
-    createIntrinsicFunc(name, params, body)
+    createIntrinsicFunc(name, params, body, exportName)
 
   /** Creates a unary Int31 intrinsic with a single parameter and body built from `op`.
     */
-  private def createUnaryInt31Func(name: Str, op: Expr => Expr)(using Ctx, Raise, Scope): FuncIdx =
+  private def createUnaryInt31Func(name: Str, op: Expr => Expr, exportName: Opt[Str])(using Ctx, Raise, Scope): FuncIdx =
     val params = mkIntrinsicParams(name, Seq("arg"))
     val argName = params.head._2
     val body = unaryInt31Body(argName, op)
-    createIntrinsicFunc(name, params, body)
+    createIntrinsicFunc(name, params, body, exportName)
 
   /** Allocates the Wasm type and function definition for an intrinsic with the given signature.
     */
@@ -953,18 +981,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       name: Str,
       params: Seq[(TempSymbol, Str)],
       body: Expr,
+      exportName: Opt[Str],
   )(using Ctx, Raise, Scope): FuncIdx =
-    val funcTy = ctx.addType(
-      sym = N,
-      TypeInfo(
-        id = SymIdx(scope.allocateName(TempSymbol(N, name))),
-        FunctionType(
-          params = params.map((_, nme) => WasmParam(nme, RefType.anyref)),
-          results = Seq(Result(RefType.anyref)),
-        ),
-        objectTag = N,
-      ),
-    )
+    val funcTy = declareIntrinsicType(name)
     val funcInfo = FuncInfo(
       id = SymIdx(scope.allocateName(TempSymbol(N, name))),
       typeUse = TypeUse(funcTy),
@@ -972,10 +991,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       locals = Seq.empty,
       bodyOpt = S(body),
       resultTypes = Seq(Result(RefType.anyref)),
-      exportName = N,
+      exportName = exportName,
     )
     ctx.addFunc(N, funcInfo)
   end createIntrinsicFunc
+
+  def intrinsicSupportModule()(using Raise, Scope): Document =
+    val ctx = Ctx.empty
+    given Ctx = ctx
+    wasmIntrinsicNameSet.toSeq.sorted.foreach: name =>
+      createIntrinsic(name, S(name))
+    ctx.toWat
 
   /** Builds the body for an Int31 binary operator.
     */

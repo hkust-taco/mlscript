@@ -145,17 +145,25 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
       end mkQuery
 
       if !wasmSessionInitialized then
+        val intrinsicWatJsLit = JSBuilder.makeStringLiteral(
+          ltl.givenIn:
+            baseScp.nest.givenIn:
+              WatBuilder().intrinsicSupportModule().mkString(output.ColWidth)
+        )
         host.execute(
-          doc"""(() => {
+          doc"""await (async () => {
             # const mem = new WebAssembly.Memory({ initial: ${systemMemMinPages} });
             # const decodeUtf16 = new TextDecoder("utf-16le");
+            # const system = {
+            #   mem,
+            #   mlx_str_from_utf16: (ptr, byteLen) =>
+            #     decodeUtf16.decode(new Uint8Array(mem.buffer, ptr, byteLen)),
+            # };
+            # const intrinsicModule = await $wasmSuppNme.binaryenCompileToModule($intrinsicWatJsLit, {});
+            # Object.assign(system, intrinsicModule.instance.exports);
             # $wasmReplImportsRef = {
             #   repl: Object.create(null),
-            #   system: {
-            #     mem,
-            #     mlx_str_from_utf16: (ptr, byteLen) =>
-            #       decodeUtf16.decode(new Uint8Array(mem.buffer, ptr, byteLen)),
-            #   },
+            #   system,
             # };
             # })();"""
             .stripBreaks
