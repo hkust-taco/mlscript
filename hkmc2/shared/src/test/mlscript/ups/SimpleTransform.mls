@@ -145,13 +145,13 @@ class Term with
 
 // The following pattern generates a lot of code.
 pattern EvaluatedTerm =
-  | (Literal(value) => value)
-  | (Infix("+", EvaluatedTerm as left, EvaluatedTerm as right) => left + right)
-  | (Infix("-", EvaluatedTerm as left, EvaluatedTerm as right) => left - right)
-  | (Infix("*", EvaluatedTerm as left, EvaluatedTerm as right) => left * right)
-  | (Infix("/", EvaluatedTerm as left, EvaluatedTerm as right) => left / right)
-  | (Prefix("-", EvaluatedTerm as operand) => -operand)
-  | (Prefix("+", EvaluatedTerm as operand) => +operand)
+  | Literal(value) => value
+  | Infix("+", EvaluatedTerm as left, EvaluatedTerm as right) => left + right
+  | Infix("-", EvaluatedTerm as left, EvaluatedTerm as right) => left - right
+  | Infix("*", EvaluatedTerm as left, EvaluatedTerm as right) => left * right
+  | Infix("/", EvaluatedTerm as left, EvaluatedTerm as right) => left / right
+  | Prefix("-", EvaluatedTerm as operand) => -operand
+  | Prefix("+", EvaluatedTerm as operand) => +operand
 
 // Some helper functions to create `Term`s.
 fun wrapLiteral(value) = if value is Int then Literal(value) else value
