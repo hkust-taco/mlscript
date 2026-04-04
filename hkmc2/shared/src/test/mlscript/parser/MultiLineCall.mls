@@ -1,5 +1,6 @@
 :js
 
+
 // Multi-line function call with comma continuation should parse correctly
 
 tuple(1,
@@ -9,4 +10,33 @@ tuple(1,
 tuple of 1,
   2
 //│ = [1, 2]
+
+tuple of
+  1,
+  2,
+  3
+//│ = [1, 2, 3]
+
+tuple of
+  1,
+    2,
+  3
+//│ = [1, 2, 3]
+
+tuple of
+  1,
+    2
+  3
+//│ = [1, 2, 3]
+
+:e
+tuple of
+  1
+    2
+  3
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (integer literal).
+//│ ║  l.35: 	    2
+//│ ╙──      	    ^
+//│ = [1, 3]
+
 
