@@ -69,6 +69,14 @@ if a is
 //│     } else if (b instanceof B1.class) {
 //│       tmp = 2;
 //│       break split_root$
+//│     } else {
+//│       if (a instanceof B1.class) {
+//│         tmp = 2;
+//│         break split_root$
+//│       } else if (a instanceof C1.class) {
+//│         tmp = 3;
+//│         break split_root$
+//│       }
 //│     }
 //│   } else if (a instanceof B1.class) {
 //│     tmp = 2;

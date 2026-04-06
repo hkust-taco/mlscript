@@ -179,13 +179,15 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                 log(s"case 1.1.5: $pattern <:< $thatPattern")
                 split
               else
-                // TODO: the warning will be useful when we have inheritance information
-                // raiseDesugaringWarning(
-                //   msg"possibly conflicting patterns for this scrutinee" -> scrutinee.toLoc,
-                //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
-                //   msg"which is unrelated with ${thatPattern.toString}" -> thatPattern.toLoc)
-                log(s"Case 1.1._ else : ${tail}")
-                rec(tail)
+                if areProvablyDisjoint(pattern, thatPattern) then
+                  log(s"Case 1.1._ else disjoint: ${tail}")
+                  rec(tail)
+                else
+                  // When patterns are not provably disjoint, we cannot assume
+                  // the scrutinee can't match both (e.g., conjunction patterns
+                  // like `A & B`). Keep the branch.
+                  log(s"Case 1.1._ else non-disjoint: ${tail}")
+                  head.copy(continuation = rec(continuation)) ~: rec(tail)
           case - =>
             log(s"Case 1.2: $scrutinee === $thatScrutinee")
             if thatPattern =:= pattern || thatPattern <:< pattern then
@@ -530,6 +532,27 @@ object Normalization:
     case (ClassLike(_, lhsSym, _, _), ClassLike(_, rhsSym, _, _)) =>
       isSubclassOf(lhsSym, rhsSym)
     case (_: FlatPattern, _: FlatPattern) => false
+  
+  /**
+    * Check if two patterns are provably disjoint, i.e., no value can match both.
+    * This is used to safely eliminate branches during specialization.
+    * Returns `true` only for clear-cut cases (e.g., different literals,
+    * incompatible tuple sizes). For class patterns, returns `false` (conservative)
+    * to support conjunction patterns like `A & B`.
+    */
+  def areProvablyDisjoint(lhs: FlatPattern, rhs: FlatPattern)(using ctx: Elaborator.Ctx): Bool =
+    import FlatPattern.*
+    (lhs, rhs) match
+    case (Lit(l1), Lit(l2)) => !(l1 === l2)
+    case (Tuple(n1, false), Tuple(n2, false)) => n1 =/= n2
+    case (Tuple(n1, true), Tuple(n2, false)) => n2 < n1
+    case (Tuple(n1, false), Tuple(n2, true)) => n1 < n2
+    case (Lit(_), _: ClassLike) => !compareCasePattern(lhs, rhs)
+    case (_: ClassLike, Lit(_)) => !compareCasePattern(rhs, lhs)
+    case (Lit(_), Tuple(_, _)) | (Tuple(_, _), Lit(_)) => true
+    case (Record(_), Lit(_)) | (Lit(_), Record(_)) => true
+    case (Record(_), Tuple(_, _)) | (Tuple(_, _), Record(_)) => true
+    case _ => false
   
   /** Get the parent class-like symbol from the extends clause of a class or module. */
   private def getParentClassLikeSymbol(sym: ClassSymbol | ModuleOrObjectSymbol)

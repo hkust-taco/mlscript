@@ -522,21 +522,12 @@ fun test(x) =
 let p = if true then AA(CCC(AA)) else BB(CCC(AA))
 test(p)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(bb))
-//│ deforest > Call(Ref(member:CCC,Some(term:CCC/CCC)),List(Arg(None,Ref(member:AA,Some(term:AA/AA))))) ->
-//│ deforest > 	Ref(tmp:arg$BB$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$BB$0$,None),Ident(c))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(aa))
 //│ deforest > Call(Ref(member:CCC,Some(term:CCC/CCC)),List(Arg(None,Ref(member:AA,Some(term:AA/AA))))) ->
 //│ deforest > 	Ref(tmp:arg$AA$0$,None)
 //│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(c))
 //│ deforest > <<< fusing <<<
 //│ = 141
-//│ p = fun tmp60
+//│ p = AA(fun tmp59)
 
 
 :expect 141
@@ -558,7 +549,7 @@ test(p, id(CCC(123)))
 //│ deforest > 	Select(Ref(x,None),Ident(aa))
 //│ deforest > <<< fusing <<<
 //│ = 141
-//│ p = fun tmp62
+//│ p = fun tmp63
 
 
 :sir

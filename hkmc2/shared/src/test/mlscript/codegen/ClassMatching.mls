@@ -131,7 +131,11 @@ fun f(x) = if x is
 //│     if (scrut1 === true) {
 //│       return 42
 //│     } else {
-//│       return Predef.print("oops")
+//│       if (x3 instanceof None1.class) {
+//│         return "ok"
+//│       } else {
+//│         return Predef.print("oops")
+//│       }
 //│     }
 //│   } else if (x3 instanceof None1.class) { return "ok" } else { return Predef.print("oops") }
 //│ };
@@ -197,7 +201,11 @@ fun f(x) = print of if x is
 //│     if (arg$Some$0$4 === 0) {
 //│       tmp9 = "0";
 //│     } else {
-//│       tmp9 = "oops";
+//│       if (x3 instanceof None1.class) {
+//│         tmp9 = "ok";
+//│       } else {
+//│         tmp9 = "oops";
+//│       }
 //│     }
 //│   } else if (x3 instanceof None1.class) {
 //│     tmp9 = "ok";

@@ -43,6 +43,12 @@ fun f(x) = if x is
 //│     if (arg$Pair$0$ instanceof A1) {
 //│       if (arg$Pair$1$ instanceof A1) {
 //│         return 1
+//│       } else {
+//│         if (arg$Pair$0$ instanceof B1) {
+//│           if (arg$Pair$1$ instanceof B1) {
+//│             return 2
+//│           }
+//│         }
 //│       }
 //│     } else if (arg$Pair$0$ instanceof B1) {
 //│       if (arg$Pair$1$ instanceof B1) {
