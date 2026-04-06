@@ -1,0 +1,40 @@
+:js
+
+// Regression test: spread destructuring with different trailing sizes should
+// correctly index elements from the end of the array.
+
+fun go(stack) = if stack is
+  [..stack, "+", "+"] then 0
+  [..stack2, Str] then 1
+  else print("Str??", stack is [..stack2, Str])
+
+go([1, 2, "z"])
+//│ = 1
+
+// When the last two elements are "+", branch 0 matches
+go([1, "+", "+"])
+//│ = 0
+
+// Fallback to else branch
+go([1, 2, 3])
+//│ > Str?? false
+
+// Single element array
+go(["hello"])
+//│ = 1
+
+// Same with `...` (spread rest)
+fun go2(stack) = if stack is
+  [...stack, "+", "+"] then 0
+  [...stack2, Str] then 1
+  else 2
+
+go2([1, 2, "z"])
+//│ = 1
+
+go2([1, "+", "+"])
+//│ = 0
+
+go2([1, 2, 3])
+//│ = 2
+

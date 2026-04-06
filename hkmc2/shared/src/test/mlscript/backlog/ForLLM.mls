@@ -4,19 +4,6 @@
 
 
 // ——— ——— ———
-// From ups/UpsBugsBacklog.mls
-
-// * Problems happen with `..` destructuring of sequences (same happens with `...`)
-
-fun go(stack) = if stack is
-  [..stack, "+", "+"] then 0
-  [..stack2, Str] then 1
-  else print("Str??", stack is [..stack2, Str])
-
-go([1, 2, "z"])
-//│ > Str?? true
-
-// ——— ——— ———
 // [Comment from Copilot (Claude Opus 4.6):]
 // Bug: `pattern do body` inside `is` expression is not handled by the pattern elaborator.
 // The `do` keyword is recognized as a connective in `if`/`while`/`case` splits (via the
@@ -32,7 +19,7 @@ class Some(val v)
 Some(1) is
   Some of [process, rest] do "hi"
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator 'do').
-//│ ║  l.33: 	  Some of [process, rest] do "hi"
+//│ ║  l.20: 	  Some of [process, rest] do "hi"
 //│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ = true
 
@@ -51,17 +38,17 @@ if true
     5
   else 1
 //│ ╔══[PARSE ERROR] Expected end of input after 'true' keyword; found 'then' keyword instead
-//│ ║  l.50: 	  then
+//│ ║  l.37: 	  then
 //│ ╙──      	  ^^^^
 //│ ╔══[PARSE ERROR] Unexpected indented block here
-//│ ║  l.51: 	    5
+//│ ║  l.38: 	    5
 //│ ║        	^^^^^
-//│ ║  l.52: 	  else 1
+//│ ║  l.39: 	  else 1
 //│ ╙──      	^^
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (‹erroneous syntax›)
-//│ ║  l.51: 	    5
+//│ ║  l.38: 	    5
 //│ ║        	^^^^^
-//│ ║  l.52: 	  else 1
+//│ ║  l.39: 	  else 1
 //│ ╙──      	^^
 //│ ═══[RUNTIME ERROR] Error: match error
 

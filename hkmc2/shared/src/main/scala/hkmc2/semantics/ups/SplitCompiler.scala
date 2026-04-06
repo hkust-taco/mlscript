@@ -727,8 +727,9 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         val consequent = makeChainedConsequent(scrutinee, SeqMap.empty)
         makeTupleBranch(scrutinee(), subScrutinees.map(_._1), consequent, alternative)
       case Tuple(leading, S((_, spread, trailing))) => (makeConsequent, alternative) =>
+        val trailingSize = trailing.size
         val (trailSubScrutinees, makeConsequent0) = trailing.folded(makeConsequent):
-          index => scrutinee.getTupleLastSubScrutinee(index)
+          index => scrutinee.getTupleLastSubScrutinee(trailingSize - index)
         val spreadSubScrutinee = TempSymbol(N, "middleElements")
         val makeConsequent1: MakeConsequent = (outerOutput, outerBindings) =>
           makeMatchSplit(spreadSubScrutinee.toScrut, spread, false)(
