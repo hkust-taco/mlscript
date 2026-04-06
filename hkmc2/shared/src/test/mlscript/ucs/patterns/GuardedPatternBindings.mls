@@ -1,0 +1,14 @@
+:js
+
+// Regression test: variables used in `where` guards should not produce
+// spurious "Useless pattern binding" warnings.
+
+pattern Sym =
+  ([x, y] where (x == y))
+
+[1, 1] is Sym
+//│ = true
+
+[1, 2] is Sym
+//│ = false
+
