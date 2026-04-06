@@ -150,7 +150,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             log(s"Case 1.1: $scrutinee === $thatScrutinee")
             if thatPattern =:= pattern then
               log(s"Case 1.1.1: $pattern =:= $thatPattern")
-              thatPattern reportInconsistentRefinedWith pattern
               aliasBindings(pattern, thatPattern)(rec(continuation) ++ rec(tail))
             else if thatPattern <:< pattern then
               log(s"Case 1.1.2: $pattern <:< $thatPattern")
@@ -189,7 +188,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                 rec(tail)
           case - =>
             log(s"Case 1.2: $scrutinee === $thatScrutinee")
-            thatPattern reportInconsistentRefinedWith pattern
             if thatPattern =:= pattern || thatPattern <:< pattern then
               log(s"Case 1.2.1: $pattern =:= (or <:<) $thatPattern")
               rec(tail)
@@ -497,8 +495,7 @@ object Normalization:
     inline def get(term: Term): Opt[LabelSymbol] = map.get(term)
   
   /**
-    * Hard-coded subtyping relations used in normalization and coverage checking.
-    * TODO use base classes and also handle modules
+    * Subtyping relations used in normalization and coverage checking.
     */
   def compareCasePattern(lhs: FlatPattern, rhs: FlatPattern)(using ctx: Elaborator.Ctx): Bool =
     import FlatPattern.*, ctx.builtins as blt
@@ -513,7 +510,6 @@ object Normalization:
     // Note: We don't make Int31 compatible with Num, since Int31 needs to know how it should be
     // sign-extended in order to convert into a Num.
     case (ClassLike(symbol = blt.`Int`), ClassLike(symbol = blt.`Num`)) => true
-    // case (s1: ClassSymbol, s2: ClassSymbol) => s1 <:< s2 // TODO: find a way to check inheritance
     // TODO(Derppening): Do we limit IntLit to (1 << 31) - 1 for `Int31`?
     case (Lit(Tree.IntLit(_)), ClassLike(symbol = blt.`Int` | blt.`Int31` | blt.`Num`)) => true
     case (Lit(Tree.StrLit(_)), ClassLike(symbol = blt.`Str`)) => true
@@ -530,8 +526,28 @@ object Normalization:
       entries.forall { (fieldName, _) => clsParams.exists {
         case Param(flags = FldFlags(isVal = isVal), sym = sym) => isVal && fieldName === sym.id
       }}
-    // case (Class(cs1: ClassSymbol), Class(cs2: ClassSymbol)) => true
+    // Check user-defined class hierarchy via extends clauses.
+    case (ClassLike(_, lhsSym, _, _), ClassLike(_, rhsSym, _, _)) =>
+      isSubclassOf(lhsSym, rhsSym)
     case (_: FlatPattern, _: FlatPattern) => false
+  
+  /** Get the parent class-like symbol from the extends clause of a class or module. */
+  private def getParentClassLikeSymbol(sym: ClassSymbol | ModuleOrObjectSymbol)
+      : Opt[ClassSymbol | ModuleOrObjectSymbol] =
+    val ext: Opt[Term.New] = sym match
+      case cls: ClassSymbol => cls.defn.flatMap(_.ext)
+      case mod: ModuleOrObjectSymbol => mod.defn.flatMap(_.ext)
+    ext.flatMap(nw => nw.cls.symbol.flatMap(_.asClsOrMod))
+  
+  /** Check if `child` is a subclass of `parent` by traversing the class hierarchy. */
+  private def isSubclassOf(
+      child: ClassSymbol | ModuleOrObjectSymbol,
+      parent: ClassSymbol | ModuleOrObjectSymbol
+  ): Bool =
+    getParentClassLikeSymbol(child) match
+      case S(parentSym) =>
+        parentSym === parent || isSubclassOf(parentSym, parent)
+      case N => false
 
   final case class VarSet(declared: Set[BlockLocalSymbol]):
     def +(nme: BlockLocalSymbol): VarSet = copy(declared + nme)

@@ -29,36 +29,42 @@ f(new B)
 //│ = "B"
 
 
-// FIXME: UCS normalization wrongly considers `A` and `B` to be disjoint
-//  because it currently does not take into account the class hierarchy,
-//  which is a very serious issue that needs to be fixed.
 :sir
 let f = case
   A & B then "A & B"
   A then "A"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰, f¹;
-//│ define f¹ as fun f²(caseScrut) {
-//│   match caseScrut
-//│     A⁰ =>
-//│       return "A"
-//│     else
-//│       throw new globalThis⁰.Error⁰("match error")
-//│   end
+//│ let f⁰, lambda⁰;
+//│ define lambda⁰ as fun lambda¹(caseScrut) {
+//│   block split_root$:
+//│     block split_default$:
+//│       match caseScrut
+//│         A⁰ =>
+//│           match caseScrut
+//│             B⁰ =>
+//│               return "A & B"
+//│             A⁰ =>
+//│               return "A"
+//│             else
+//│               break split_default$
+//│           end
+//│         else
+//│           break split_default$
+//│       end
+//│     throw new globalThis⁰.Error⁰("match error")
+//│   return runtime⁰.Unit⁰
 //│ };
-//│ set f⁰ = f²;
+//│ set f⁰ = lambda¹;
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ f = fun f
+//│ f = fun
 
 :expect "A"
 f(new A)
 //│ = "A"
 
-:fixme
 :expect "A & B"
 f(new B)
-//│ ═══[RUNTIME ERROR] Expected: '"A & B"', got: '"A"'
-//│ = "A"
+//│ = "A & B"
 
 
