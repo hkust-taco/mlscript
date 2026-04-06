@@ -475,9 +475,12 @@ abstract class Parser(
             prefixRules.getKwAlt(kw, S(loc)) match
             case S(subRule) =>
               val e = yeetSpaces match
-                case (br @ BRACKETS(_: Indent_Curly, toks), _brLoc) :: _ if subRule.blkAlt.isEmpty =>
+                case (br @ BRACKETS(_: Indent_Curly, toks), _brLoc) :: _
+                if subRule.blkAlt.isEmpty && (subRule.kwAlts.nonEmpty || subRule.exprAlt.isDefined) =>
                   // * Curly brackets after prefix keywords like `set`/`let` should be parsed
                   // * as multi-item blocks to support comma-separated items (e.g., `set { x = 1, y = 1 }`).
+                  // * Don't enter the block for keywords with end-only continuations (like `true`, `false`),
+                  // * so that the block can be handled by `exprCont` as an infix continuation.
                   consume
                   val blk = rec(toks, S(br.innerLoc), br.describe)
                     .concludeWith(_.blockOf(subRule, Nil, allowNewlines = true))

@@ -26,32 +26,3 @@ Some(1) is
 //│ = true
 
 // ——— ——— ———
-
-// Works
-if true then
-    5
-  else 1
-//│ = 5
-
-// Doesn't work
-:fixme
-if true
-  then
-    5
-  else 1
-//│ ╔══[PARSE ERROR] Expected end of input after 'true' keyword; found 'then' keyword instead
-//│ ║  l.39: 	  then
-//│ ╙──      	  ^^^^
-//│ ╔══[PARSE ERROR] Unexpected indented block here
-//│ ║  l.40: 	    5
-//│ ║        	^^^^^
-//│ ║  l.41: 	  else 1
-//│ ╙──      	^^
-//│ ╔══[COMPILATION ERROR] Unrecognized term split (‹erroneous syntax›)
-//│ ║  l.40: 	    5
-//│ ║        	^^^^^
-//│ ║  l.41: 	  else 1
-//│ ╙──      	^^
-//│ ═══[RUNTIME ERROR] Error: match error
-
-// ——— ——— ———
