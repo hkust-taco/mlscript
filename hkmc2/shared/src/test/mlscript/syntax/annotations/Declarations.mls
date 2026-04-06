@@ -10,7 +10,7 @@ tailrec
   if n == 0 then acc else fact_n(n - 1, n * acc)
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.9: 	@tailrec fun fact_n(n, acc) =
-//│ ╙──     	 ^^^^^^^
+//│ ╙──     	^^^^^^^^
 
 :w
 fun fact(n) =
@@ -19,7 +19,7 @@ fun fact(n) =
   go(n, 1)
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.17: 	  @tailrec fun go(n, acc) =
-//│ ╙──      	   ^^^^^^^
+//│ ╙──      	  ^^^^^^^^
 
 data class Freezed(degree: Num)
 
@@ -27,19 +27,19 @@ data class Freezed(degree: Num)
 @Freezed(-273.15) class AbsoluteZero
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.27: 	@Freezed(-273.15) class AbsoluteZero
-//│ ╙──      	 ^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^
 
 :w
 @Freezed(-18) class Beverage(name: Str)
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.33: 	@Freezed(-18) class Beverage(name: Str)
-//│ ╙──      	 ^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^
 
 :w
 @Freezed(-4) let drink = Beverage("Coke")
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.39: 	@Freezed(-4) let drink = Beverage("Coke")
-//│ ╙──      	 ^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^
 //│ drink = Beverage(_)
 
 module Foo with
@@ -49,25 +49,32 @@ module Foo with
 @Foo.Bar("baz") class Qux
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.49: 	@Foo.Bar("baz") class Qux
-//│ ╙──      	 ^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^
 
-:w
+// * Not an annotation, but an applicationo f operator `@`...
+:pe
+:re
 @42 class Qux
-//│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.55: 	@42 class Qux
-//│ ╙──      	 ^^
+//│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
+//│ ║  l.57: 	@42 class Qux
+//│ ╙──      	    ^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
-:w
+:pe
+:re
 @(1 + 2) class Qux
-//│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.61: 	@(1 + 2) class Qux
-//│ ╙──      	  ^^^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
+//│ ║  l.65: 	@(1 + 2) class Qux
+//│ ╙──      	         ^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
-:w
+:pe
+:re
 @1 module Qux
-//│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.67: 	@1 module Qux
-//│ ╙──      	 ^
+//│ ╔══[PARSE ERROR] Expected end of input; found 'module' keyword instead
+//│ ║  l.73: 	@1 module Qux
+//│ ╙──      	   ^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
 object inline
 
@@ -78,22 +85,22 @@ fun
   min(x, y) = if x < y then x else y
   max(x, y) = if x > y then x else y
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.76: 	@inline
-//│ ╙──      	 ^^^^^^
+//│ ║  l.83: 	@inline
+//│ ╙──      	^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.76: 	@inline
-//│ ╙──      	 ^^^^^^
+//│ ║  l.83: 	@inline
+//│ ╙──      	^^^^^^^
 
 :w
 @inline let
   abs(x) = if x < 0 then -x else x
   clamp(x, lo, hi) = min(max(x, lo), hi)
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.88: 	@inline let
-//│ ╙──      	 ^^^^^^
+//│ ║  l.95: 	@inline let
+//│ ╙──      	^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.88: 	@inline let
-//│ ╙──      	 ^^^^^^
+//│ ║  l.95: 	@inline let
+//│ ╙──      	^^^^^^^
 //│ abs = fun abs
 //│ clamp = fun clamp
 
@@ -103,8 +110,8 @@ let
   @inline success = 0
   failure = 1
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.103: 	  @inline success = 0
-//│ ╙──       	   ^^^^^^
+//│ ║  l.110: 	  @inline success = 0
+//│ ╙──       	  ^^^^^^^
 //│ failure = 1
 //│ success = 0
 
@@ -115,11 +122,11 @@ let
 @inline @tailrec fun fib(n) =
   if n < 2 then n else fib(n - 1) + fib(n - 2)
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.115: 	@inline @tailrec fun fib(n) =
-//│ ╙──       	 ^^^^^^
+//│ ║  l.122: 	@inline @tailrec fun fib(n) =
+//│ ╙──       	^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.115: 	@inline @tailrec fun fib(n) =
-//│ ╙──       	         ^^^^^^^
+//│ ║  l.122: 	@inline @tailrec fun fib(n) =
+//│ ╙──       	        ^^^^^^^^
 
 object internal
 
@@ -130,17 +137,17 @@ object internal
   transient
   volatile
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.127: 	@internal object
-//│ ╙──       	 ^^^^^^^^
+//│ ║  l.134: 	@internal object
+//│ ╙──       	^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.127: 	@internal object
-//│ ╙──       	 ^^^^^^^^
+//│ ║  l.134: 	@internal object
+//│ ╙──       	^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.127: 	@internal object
-//│ ╙──       	 ^^^^^^^^
+//│ ║  l.134: 	@internal object
+//│ ╙──       	^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.127: 	@internal object
-//│ ╙──       	 ^^^^^^^^
+//│ ║  l.134: 	@internal object
+//│ ╙──       	^^^^^^^^^
 
 :w
 @volatile let
@@ -149,32 +156,32 @@ object internal
   @volatile @transient empty = ""
   normal = ()
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.146: 	@volatile let
-//│ ╙──       	 ^^^^^^^^
+//│ ║  l.153: 	@volatile let
+//│ ╙──       	^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.147: 	  @shared counter = 0
-//│ ╙──       	   ^^^^^^
+//│ ║  l.154: 	  @shared counter = 0
+//│ ╙──       	  ^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.146: 	@volatile let
-//│ ╙──       	 ^^^^^^^^
+//│ ║  l.153: 	@volatile let
+//│ ╙──       	^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.148: 	  @transient @thread_local cache = ()
-//│ ╙──       	   ^^^^^^^^^
+//│ ║  l.155: 	  @transient @thread_local cache = ()
+//│ ╙──       	  ^^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.148: 	  @transient @thread_local cache = ()
-//│ ╙──       	              ^^^^^^^^^^^^
+//│ ║  l.155: 	  @transient @thread_local cache = ()
+//│ ╙──       	             ^^^^^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.146: 	@volatile let
-//│ ╙──       	 ^^^^^^^^
+//│ ║  l.153: 	@volatile let
+//│ ╙──       	^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.149: 	  @volatile @transient empty = ""
-//│ ╙──       	   ^^^^^^^^
+//│ ║  l.156: 	  @volatile @transient empty = ""
+//│ ╙──       	  ^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.149: 	  @volatile @transient empty = ""
-//│ ╙──       	             ^^^^^^^^^
+//│ ║  l.156: 	  @volatile @transient empty = ""
+//│ ╙──       	            ^^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.146: 	@volatile let
-//│ ╙──       	 ^^^^^^^^
+//│ ║  l.153: 	@volatile let
+//│ ╙──       	^^^^^^^^^
 //│ cache = ()
 //│ counter = 0
 //│ empty = ""

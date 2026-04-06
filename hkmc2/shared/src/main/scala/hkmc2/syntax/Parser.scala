@@ -71,6 +71,9 @@ object Parser:
   private val SelPrec = precOf('.')
   private val AppPrec = SelPrec - 1
   private val PrefixOpsPrec = AppPrec - 1
+  // * Annotation body precedence: above all keyword infix ops (like `as`, `is`)
+  // * but below character-based operators (like `+`, `;`).
+  private val AnnotBodyPrec = Keyword.maxPrec.get + 1
   
   final def opCharPrec(opChar: Char): Int = precOf(opChar)
   final def opPrec(opStr: Str): (Int, Int) = opStr match {
@@ -299,6 +302,23 @@ abstract class Parser(
     maybeIndented((p, i) => p.block(allowNewlines = i))
   
   
+  /* Note on annotation parsing:
+      There is currently an inconsistency when parsing annotations that start blocks,
+      where the annotatee is parsed with no precedence (because this is done by `block`),
+      so that `@Test 2 as Int` at the top level parses as `@Test (2 as Int)`;
+      but within a subexpression, it is parsed with precendence AnnotBodyPrec,
+      so that, eg, `x is @compile P() as y` parses correctly...
+  */
+  def annot(id: Ident): Tree =
+    val pre = exprCont(id, SelPrec, allowNewlines = false, gobbleSpaces = false)
+    cur match
+    case (br @ BRACKETS(Round, toks), loc) :: _ =>
+      consume
+      val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
+      App(pre, Tup(as).withLoc(S(loc)))
+    case _ => pre
+  
+  
   def block(allowNewlines: Bool)(using Line): Ls[Tree] = blockOf(prefixRules, Nil, allowNewlines)
   
   def blockOf(rule: ParseRule[Tree], annotations: Ls[Tree], allowNewlines: Bool)(using Line): Ls[Tree] =
@@ -314,9 +334,25 @@ abstract class Parser(
     case (NEWLINE, _) :: _ if allowNewlines => consume; blockOf(rule, annotations, allowNewlines)
     case (COMMA, _) :: _ => consume; blockOf(rule, annotations, allowNewlines)
     case (SPACE, _) :: _ => consume; blockOf(rule, annotations, allowNewlines)
-    case (IDENT("@", _), l0) :: rest if rest.nonEmpty =>
+    case (br @ BRACKETS(Indent, toks), _) :: _ =>
+      // * Handle indented blocks appearing after comma continuations
+      // * (e.g., in multi-line function calls like `tuple(1,\n  2)`)
       consume
-      blockOf(rule, simpleExpr(AppPrec, allowNewlines = allowNewlines) :: annotations, allowNewlines)
+      rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockOf(rule, annotations, true)) ++ blockContOf(rule)
+    case (IDENT("@", _), l0) :: (IDENT(id, false), l1) :: _ =>
+      consume
+      consume
+      val a = annot(new Ident(id).withLoc(S(l0 ++ l1)))
+      yeetSpaces match
+      case Nil =>
+        err(
+          msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}" -> a.toLoc.map(_.right)
+          :: msg"found a lone annotation instead" -> a.toLoc
+          :: Nil
+        )
+        errExpr :: Nil
+      case _ =>
+        blockOf(rule, a :: annotations, allowNewlines = allowNewlines)
     case (tok @ (id: IDENT), loc) :: _ if id.name =/= ":" =>
       Keyword.all.get(id.name) match
       case S(kw) =>
@@ -568,10 +604,13 @@ abstract class Parser(
       consume
       consume
       Pun(false, new Ident(nme).withLoc(S(l1)))
-    case (IDENT("@", _), l0) :: rest if rest.nonEmpty =>
+    case (IDENT("@", _), l0) :: (IDENT(id, false), l1) :: _ =>
       consume
-      val annotation = simpleExpr(AppPrec, allowNewlines = allowNewlines)
-      Annotated(annotation, simpleExpr(prec, allowNewlines = allowNewlines))
+      consume
+      val a = annot(new Ident(id).withLoc(S(l0 ++ l1)))
+      exprCont(
+        Annotated(a, simpleExpr(AnnotBodyPrec, allowNewlines = allowNewlines)),
+        prec, allowNewlines = allowNewlines)
     case (ESC_IDENT(name), loc) :: _ =>
       consume
       val id = Tree.Ident(name).withLoc(S(loc))
@@ -807,10 +846,19 @@ abstract class Parser(
       OpSplit(lhs, acc reverse_::: errExpr :: Nil)
   
   
-  final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool)(using Line): Tree =
-    wrap(prec, s"`$acc`", allowNewlines)(exprContImpl(acc, prec, allowNewlines))
-  final def exprContImpl(acc: Tree, prec: Int, allowNewlines: Bool): Tree =
+  /** `gobbleSpaces` is currently only used to prevent `@foo (2 + 2)` from parsing as `@foo(2 + 2) ...` */
+  final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool, gobbleSpaces: Bool = true)(using Line): Tree =
+    wrap(prec, s"`$acc`", allowNewlines)(exprContImpl(acc, prec, allowNewlines, gobbleSpaces))
+  
+  final def exprContImpl(acc: Tree, prec: Int, allowNewlines: Bool, gobbleSpaces: Bool): Tree =
     cur match
+      
+      case (SPACE, l0) :: _ if gobbleSpaces =>
+        consume
+        acc match // TODO: [CY] looks fishy. a better way? [LP] indeed; ref should be a prefix keyword!
+        case Sel(reg, Ident("ref")) => RegRef(reg, simpleExprImpl(0, allowNewlines = false))
+        case _ => exprCont(acc, prec, allowNewlines = allowNewlines)
+        
       case (QUOTE, l) :: _ => cur match {
         case _ :: (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ if kw.leftPrecOrMin > prec =>
           consume
@@ -989,11 +1037,6 @@ abstract class Parser(
               case _ => OpApp(acc, v, rhs :: Nil)
             }, prec, allowNewlines = allowNewlines)
         
-      case (SPACE, l0) :: _ =>
-        consume
-        acc match // TODO: looks fishy. a better way?
-          case Sel(reg, Ident("ref")) => RegRef(reg, simpleExprImpl(0, allowNewlines = false))
-          case _ => exprCont(acc, prec, allowNewlines = allowNewlines)
       case (SELECT(name, dyn), l0) :: _ if SelPrec >= prec =>
         consume
         val tree = if dyn then

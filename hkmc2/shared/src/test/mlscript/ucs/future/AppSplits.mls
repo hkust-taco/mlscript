@@ -27,17 +27,13 @@ if foo of
 if foo of 1,
   0 then "a"
   1 then "b"
-//│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.28: 	  0 then "a"
-//│ ╙──      	  ^
-//│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.28: 	  0 then "a"
-//│ ╙──      	  ^
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (application)
 //│ ║  l.27: 	if foo of 1,
 //│ ║        	   ^^^^^^^^^
 //│ ║  l.28: 	  0 then "a"
-//│ ╙──      	^^
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.29: 	  1 then "b"
+//│ ╙──      	^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 :todo
@@ -48,9 +44,9 @@ if foo
   (0) then "a"
   (1) then "b"
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (juxtaposition)
-//│ ║  l.47: 	if foo
+//│ ║  l.43: 	if foo
 //│ ║        	   ^^^
-//│ ║  l.48: 	  (0) then "a"
+//│ ║  l.44: 	  (0) then "a"
 //│ ╙──      	^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
