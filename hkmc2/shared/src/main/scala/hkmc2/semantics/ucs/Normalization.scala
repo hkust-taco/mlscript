@@ -544,10 +544,12 @@ object Normalization:
       child: ClassSymbol | ModuleOrObjectSymbol,
       parent: ClassSymbol | ModuleOrObjectSymbol
   ): Bool =
-    getParentClassLikeSymbol(child) match
-      case S(parentSym) =>
-        parentSym === parent || isSubclassOf(parentSym, parent)
-      case N => false
+    def go(sym: ClassSymbol | ModuleOrObjectSymbol, fuel: Int): Bool =
+      fuel > 0 && (getParentClassLikeSymbol(sym) match
+        case S(parentSym) =>
+          parentSym === parent || go(parentSym, fuel - 1)
+        case N => false)
+    go(child, 128)
 
   final case class VarSet(declared: Set[BlockLocalSymbol]):
     def +(nme: BlockLocalSymbol): VarSet = copy(declared + nme)
