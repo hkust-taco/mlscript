@@ -1,0 +1,27 @@
+:js
+
+:global
+
+let { x = 0, y = 0 }
+//│ x = 0
+//│ y = 0
+
+// Works:
+if false then 0
+else
+  set { x = 1, y = 1 }
+
+// Also works (set { ... } on same line as else):
+if false then 0
+else set { x = 1, y = 1 }
+
+x
+//│ = 1
+
+y
+//│ = 1
+
+// Reset and test single set
+set { x = 42 }
+x
+//│ = 42
