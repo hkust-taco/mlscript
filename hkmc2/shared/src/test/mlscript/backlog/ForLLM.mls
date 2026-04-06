@@ -5,6 +5,12 @@
 
 // ——— ——— ———
 // From backlog/UCS.mls
+// Bug: `do` on a new line after `while` condition is not parsed as infix.
+// The parser explicitly excludes `do` from newline-infix handling (Parser.scala ~line 1088)
+// to prevent ambiguity with UCS splits (e.g., `0 then "null"\ndo body` should be two split
+// arms, not `(0 then "null") do body`). Fixing this would require context-sensitive parsing
+// to distinguish `while` conditions from `if` split arms, which is a significant refactoring
+// of the parser's `exprCont` method.
 
 :fixme
 while
@@ -13,18 +19,24 @@ while
   do
     print(arrMatches)
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'do' here
-//│ ║  l.11: 	    let arrMatches = true
+//│ ║  l.17: 	    let arrMatches = true
 //│ ║        	        ^^^^^^^^^^^^^^^^^
-//│ ║  l.12: 	    arrMatches
+//│ ║  l.18: 	    arrMatches
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.13: 	  do
+//│ ║  l.19: 	  do
 //│ ║        	^^^^
-//│ ║  l.14: 	    print(arrMatches)
+//│ ║  l.20: 	    print(arrMatches)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // ——— ——— ———
 // From backlog/UCS.mls
+// Bug: `do` on a new line inside `if` block is not parsed as infix continuation.
+// Same root cause as the `while...do` bug above: the `do` exclusion in Parser.scala
+// prevents `do` from being treated as a newline-infix operator. In the `if` block,
+// `arrMatches !== null` and `do ()` are parsed as separate block items instead of
+// `arrMatches !== null do ()`. Fixing requires the same context-sensitive parsing
+// refactoring mentioned above.
 
 let arrMatches = ()
 //│ arrMatches = ()
@@ -36,7 +48,7 @@ if
   do
     ()
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (null)
-//│ ║  l.35: 	  arrMatches !== null
+//│ ║  l.47: 	  arrMatches !== null
 //│ ╙──      	                 ^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -47,6 +59,13 @@ if
 
 // ——— ——— ———
 // From backlog/UCS.mls
+// Bug: `pattern do body` inside `is` expression is not handled by the pattern elaborator.
+// The `do` keyword is recognized as a connective in `if`/`while`/`case` splits (via the
+// `~>` extractor in SplitElaborator.scala), but the `shorthandSplit` method used for
+// standalone `is` expressions passes the entire `InfixApp(pattern, do, body)` to the
+// `pattern()` method, which doesn't recognize `do`. Fixing this would require modifying
+// `shorthandSplit` or `patternBranch` to decompose `pattern do body` before pattern
+// elaboration, similar to how `termBranch` handles it at line ~184.
 
 class Some(val v)
 
@@ -54,7 +73,7 @@ class Some(val v)
 Some(1) is
   Some of [process, rest] do "hi"
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator 'do').
-//│ ║  l.55: 	  Some of [process, rest] do "hi"
+//│ ║  l.74: 	  Some of [process, rest] do "hi"
 //│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ = true
 
