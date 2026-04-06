@@ -282,16 +282,30 @@ enum Pattern extends AutoLocated:
     case Annotated(pattern, _) => pattern.variables
     case Guarded(pattern, _) => pattern.variables
   
-  /** Collect the names of all variables that are bound inside a `Guarded`
-    * pattern's inner pattern. These variables are in scope for the guard
-    * condition and should not be considered "useless" in pattern definitions. */
+  /** Collect the names of pattern variables that are actually referenced
+    * inside guard terms of `Guarded` patterns. Only variables that appear
+    * as `Term.Ref` in the guard are included, so that truly unused pattern
+    * bindings (e.g., `[x] where true`) still trigger warnings. */
   lazy val guardedVarNames: Set[Str] = this match
-    case Guarded(pattern, _) =>
-      pattern.variables.varMap.keySet ++ pattern.guardedVarNames
+    case Guarded(pattern, guard) =>
+      val boundNames = pattern.variables.varMap.keySet
+      val referencedNames = termRefNames(guard)
+      (boundNames & referencedNames) ++ pattern.guardedVarNames
     case _ =>
       children.iterator.collect:
         case p: Pattern => p.guardedVarNames
       .foldLeft(Set.empty[Str])(_ ++ _)
+  
+  /** Collect all names referenced via `Term.Ref` in the given term tree. */
+  private def termRefNames(t: Term): Set[Str] =
+    val refs = Set.newBuilder[Str]
+    def go(t: Term): Unit =
+      t match
+        case Term.Ref(sym) => refs += sym.nme
+        case _ => ()
+      t.subTerms.foreach(go)
+    go(t)
+    refs.result()
   
   def children: Vector[Located] = this match
     case Constructor(target, arguments) => target +: arguments.fold(Vector.empty)(_.toVector)
