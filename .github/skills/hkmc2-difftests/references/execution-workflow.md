@@ -2,7 +2,11 @@
 
 ## Prerequisites
 - Install JDK, `sbt`, and Node.js.
-- Run `npm install` in the repository root (`/Users/chengluyu/Developer/hkmc2`) to install TypeScript/runtime packages used by JS/Wasm paths.
+- **Run `npm install` in the repository root** to install all required npm packages (TypeScript, Binaryen, etc.).
+  This step is **mandatory** for JS and WASM test paths. In particular, the WASM tests
+  (`hkmc2/shared/src/test/mlscript/wasm/`) depend on the `binaryen` npm package for
+  WAT validation, formatting, and compilation to WebAssembly binary. Skipping `npm install`
+  will cause all WASM tests to fail with module-not-found errors at runtime.
 
 ## Core Commands
 - Full HKMC2 test pass: `sbt hkmc2AllTests/test`

@@ -15,7 +15,7 @@ jobs:
       - uses: rrbutani/use-nix-shell-action@v1
         with:
           devShell: .#default
-      - name: Install TypeScript
+      - name: Install npm dependencies (TypeScript, Binaryen, etc.)
         run: npm ci
       - name: Run test
         id: run_test
