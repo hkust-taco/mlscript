@@ -15,7 +15,7 @@ import text.{Import as WasmImport, Param as WasmParam}
 import Message.MessageContext
 import Scope.scope
 
-import scala.collection.mutable.{ArrayBuffer as ArrayBuf, LinkedHashMap}
+import scala.collection.mutable.{ArrayBuffer as ArrayBuf, LinkedHashMap, Queue}
 import scala.util.boundary, boundary.break
 import sourcecode.Line
 
@@ -68,7 +68,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     defn.owner.isEmpty
       && ((defn.k is syntax.Cls) || (defn.k is syntax.Obj))
       && defn.auxParams.isEmpty
-      && defn.parentPath.isEmpty
+      && (!(defn.k is syntax.Obj) || defn.parentPath.isEmpty)
       && defn.methods.isEmpty
       && defn.companion.isEmpty
       && (defn.preCtor match
@@ -109,7 +109,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     if ctx.containsSingleton(unitDefn.sym) then return
 
     if ctx.getType(unitDefn.sym).isEmpty then
-      createDefnTypes(Define(unitDefn, End("")))
+      predeclareClassType(unitDefn)
+      predeclareClassConstructor(unitDefn)
 
     ctx.pushLocal()
     returningTerm(Define(unitDefn, End("")))
@@ -146,54 +147,153 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ctx.addSingletonInitAction(global.set(globalIdx, ref.cast(ctorCall, globalTy)))
   end registerSingletonInit
 
-  /** Recursively declares supported top-level class types (needed for nested function codegen). */
-  private def createDefnTypes(b: Block)(using Ctx, Raise, Scope): Unit = b match
+  /** Collects only top-level class definitions in `block`. */
+  private def collectTopLevelClassDefns(block: Block): List[ClsLikeDefn] = block match
     case Define(defn: ClsLikeDefn, rst) =>
-      if isSupportedTopLevelClass(defn) then
-        val inheritedFields = baseObjectStruct.fields
-        val inheritedSize = inheritedFields.size
+      defn.optionIf(isSupportedTopLevelClass).toList ::: collectTopLevelClassDefns(rst)
+    case Begin(sub, rst) =>
+      collectTopLevelClassDefns(sub) ::: collectTopLevelClassDefns(rst)
+    case b: NonBlockTail =>
+      collectTopLevelClassDefns(b.rest)
+    case _: BlockTail => Nil
 
-        val classFields = (defn.publicFields.map(_._2) ++ defn.privateFields)
-          .map: f =>
-            f -> Field(RefType.anyref, mutable = true, id = f.nme)
+  /** Resolves the parent symbol for a top-level class definition, if present. */
+  private def resolveParentSym(defn: ClsLikeDefn)(using Raise): Opt[BlockMemberSymbol] =
+    def unsupportedParent(): Opt[BlockMemberSymbol] =
+      raise(ErrorReport(
+        msg"Wasm inheritance ordering only supports direct resolved parent class references." ->
+          defn.parentPath.flatMap(_.toLoc) :: Nil,
+        extraInfo = S(defn.showAsTree),
+        source = Diagnostic.Source.Compilation,
+      ))
+      N
 
-        val allFields = inheritedFields ++ classFields
+    defn.parentPath match
+      case N => N
+      case S(Value.Ref(sym, _)) =>
+        sym.asCls.flatMap(_.asBlkMember).orElse(unsupportedParent())
+      case S(sel: Select) =>
+        sel.symbol.flatMap(_.asCls).flatMap(_.asBlkMember).orElse(unsupportedParent())
+      case S(_) =>
+        unsupportedParent()
 
-        // Only parent is base Object for now. For general inheritance add other parents.
-        ctx.addType(
-          sym = S(defn.sym),
-          typeInfo = TypeInfo(
-            sym = defn.sym,
-            compType = StructType(fields = allFields, parents = Seq(baseObjectTypeIdx)),
-            objectTag = S(ctx.getFreshObjectTag()),
-          ),
-        )
-      end if
-      createDefnTypes(rst)
-    case Define(_, rst) =>
-      createDefnTypes(rst)
-    case Match(_, arms, dflt, rst) =>
-      arms.foreach((_, body) => createDefnTypes(body))
-      dflt.foreach(createDefnTypes)
-      createDefnTypes(rst)
-    case Begin(_, rst) =>
-      createDefnTypes(rst)
-    case TryBlock(_, _, rst) =>
-      createDefnTypes(rst)
-    case Assign(_, _, rst) =>
-      createDefnTypes(rst)
-    case af @ AssignField(_, _, _, rst) =>
-      createDefnTypes(rst)
-    case AssignDynField(_, _, _, _, rst) =>
-      createDefnTypes(rst)
-    case HandleBlock(_, _, _, _, _, _, _, rst) =>
-      createDefnTypes(rst)
-    case Label(_, _, body, rst) =>
-      createDefnTypes(body)
-      createDefnTypes(rst)
-    case Scoped(_, body) =>
-      createDefnTypes(body)
-    case _: BlockTail => ()
+  /** Orders top-level classes using a Kahn topological sort. */
+  private def sortTopLevelClasses(defns: List[ClsLikeDefn])(using Raise): List[ClsLikeDefn] =
+    val defnsBySym = defns.iterator.map(defn => defn.sym -> defn).toMap
+    val childrenBySym = LinkedHashMap.empty[BlockMemberSymbol, ArrayBuf[BlockMemberSymbol]]
+    val indegrees = LinkedHashMap.empty[BlockMemberSymbol, Int]
+
+    defns.foreach: defn =>
+      childrenBySym(defn.sym) = ArrayBuf.empty
+      indegrees(defn.sym) = 0
+
+    defns.foreach: defn =>
+      resolveParentSym(defn).foreach: parentSym =>
+        if defnsBySym.contains(parentSym) then
+          childrenBySym(parentSym) += defn.sym
+          indegrees(defn.sym) += 1
+        else
+          raise(ErrorReport(
+            msg"Wasm inheritance ordering requires parent classes to be supported top-level classes." ->
+              defn.parentPath.flatMap(_.toLoc) :: Nil,
+            extraInfo = S(s"${defn.sym.nme} extends ${parentSym.nme}"),
+            source = Diagnostic.Source.Compilation,
+          ))
+
+    val zeroIndegree = Queue.from:
+      defns.iterator.collect:
+        case defn if indegrees(defn.sym) == 0 => defn.sym
+
+    val ordered = ArrayBuf.empty[ClsLikeDefn]
+    while zeroIndegree.nonEmpty do
+      val sym = zeroIndegree.dequeue()
+      ordered += defnsBySym(sym)
+      childrenBySym(sym).foreach: childSym =>
+        indegrees(childSym) -= 1
+        if indegrees(childSym) == 0 then
+          zeroIndegree.enqueue(childSym)
+
+    if ordered.size != defns.size then
+      raise(ErrorReport(
+        msg"Wasm inheritance ordering detected an inheritance cycle." ->
+          defns.flatMap(_.sym.toLoc).headOption :: Nil,
+        extraInfo = S(
+          defns.iterator
+            .filter(defn => indegrees(defn.sym) > 0)
+            .map(_.sym.nme)
+            .mkString(", ")
+        ),
+        source = Diagnostic.Source.Compilation,
+      ))
+
+    ordered.toList
+
+  /** Declares one supported top-level class type for early wasm registration. */
+  private def predeclareClassType(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
+    val parentTypeIdx = resolveParentSym(defn).fold(baseObjectTypeIdx)(ctx.getType_!(_))
+    val inheritedFields = ctx.getTypeInfo_!(parentTypeIdx).compType match
+      case struct: StructType => struct.fields
+      case other => lastWords(s"Parent type must be a struct, found ${other.toWat.mkString()}")
+
+    val classFields = (defn.publicFields.map(_._2) ++ defn.privateFields)
+      .map: f =>
+        f -> Field(RefType.anyref, mutable = true, id = f.nme)
+
+    val allFields = inheritedFields ++ classFields
+
+    ctx.addType(
+      sym = S(defn.sym),
+      typeInfo = TypeInfo(
+        sym = defn.sym,
+        compType = StructType(fields = allFields, parents = Seq(parentTypeIdx)),
+        objectTag = S(ctx.getFreshObjectTag()),
+      ),
+    )
+
+  /** Declares one top-level class constructor for early registration. */
+  private def predeclareClassConstructor(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
+    val isSingletonObj = defn.k is syntax.Obj
+    val ctorParams = defn.paramsOpt.fold(Nil): ps =>
+      ps.params.map: p =>
+        p.sym -> p.sym.nme
+
+    val funcTyId = defn.sym
+      .optionIf: sym =>
+        !isSingletonObj && sym.nameIsMeaningful
+      .map: sym =>
+        s"${sym.nme}_ctor"
+      .getOrElse:
+        scope.allocateName(TempSymbol(N, s"${defn.sym.nme}_ctor"))
+    val funcTy = ctx.addType(
+      sym = N,
+      TypeInfo(
+        id = SymIdx(funcTyId),
+        FunctionType(
+          params = ctorParams.map(p => WasmParam(p._2, RefType.anyref)),
+          results = Seq(Result(RefType.anyref)),
+        ),
+        objectTag = N,
+      ),
+    )
+
+    val ctorId = defn.sym
+      .optionIf: sym =>
+        !isSingletonObj && sym.nameIsMeaningful
+      .map: sym =>
+        s"${sym.nme}_ctor"
+
+    ctx.addFunc(
+      S(defn.sym),
+      FuncInfo(
+        id = SymIdx(ctorId.getOrElse(scope.allocateName(TempSymbol(N, s"${defn.sym.nme}_ctor")))),
+        typeUse = TypeUse(funcTy),
+        params = ctorParams,
+        nResults = 1,
+        locals = Seq.empty,
+        body = ref.`null`(ctx.getType_!(defn.sym)),
+        `export` = ctorId,
+      ),
+    )
 
   /** Gets (and caches) the exception tag used for MLX `throw`. */
   private def exnTagIdx(using Ctx, Raise, Scope): TagIdx =
@@ -1164,41 +1264,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     else
                       break(errUnimplExpr("newCtorAuxParams.nonEmpty"))
 
-                    val funcTyId = clsLikeDefn.sym
-                      .optionIf: sym =>
-                        !isSingletonObj && sym.nameIsMeaningful
-                      .map: sym =>
-                        s"${sym.nme}_ctor"
-                      .getOrElse:
-                        scope.allocateName(TempSymbol(N, s"${clsLikeDefn.sym.nme}_ctor"))
-                    val funcTy = ctx.addType(
-                      sym = N,
-                      TypeInfo(
-                        id = SymIdx(funcTyId),
-                        FunctionType(
-                          params = ctorParams.map(p => WasmParam(p._2, RefType.anyref)),
-                          results = Seq(Result(RefType.anyref)),
-                        ),
-                        objectTag = N,
-                      ),
-                    )
-
-                    val ctorId = clsLikeDefn.sym
-                      .optionIf: sym =>
-                        !isSingletonObj && sym.nameIsMeaningful
-                      .map: sym =>
-                        s"${sym.nme}_ctor"
+                    val predeclaredCtor = ctx.getFuncInfo_!(clsLikeDefn.sym)
                     ctx.addFunc(
                       S(clsLikeDefn.sym),
                       FuncInfo(
-                        id =
-                          SymIdx(ctorId.getOrElse(scope.allocateName(TempSymbol(N, s"${clsLikeDefn.sym.nme}_ctor")))),
-                        typeUse = TypeUse(funcTy),
+                        id = predeclaredCtor.id,
+                        typeUse = predeclaredCtor.typeUse,
                         params = ctorParams,
                         nResults = ctorCode.resultTypes.length,
                         locals = ctorLocals,
                         body = ctorAux,
-                        `export` = ctorId,
+                        `export` = predeclaredCtor.`export`,
                       ),
                     )
                     if isSingletonObj then
@@ -1550,9 +1626,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ),
     )
 
-    // Two-pass scheme: register all supported top-level class struct types before compiling any
-    // functions, so all class types are available during nested function codegen.
-    createDefnTypes(p.main)
+    // Early registration scheme: collect supported top-level classes from main block,
+    // order by inheritance, predeclare struct types and constructors.
+    val orderedTopLevelClassDefns = sortTopLevelClasses(collectTopLevelClassDefns(p.main))
+    orderedTopLevelClassDefns.foreach(predeclareClassType)
+    orderedTopLevelClassDefns.foreach(predeclareClassConstructor)
 
     // Compile the entry function under a dedicated local scope so that any temp locals introduced
     // during codegen (e.g., via `local.tee`) are declared in the entry function.
