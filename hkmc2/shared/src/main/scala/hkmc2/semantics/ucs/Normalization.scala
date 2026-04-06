@@ -552,6 +552,9 @@ object Normalization:
     case (Lit(_), Tuple(_, _)) | (Tuple(_, _), Lit(_)) => true
     case (Record(_), Lit(_)) | (Lit(_), Record(_)) => true
     case (Record(_), Tuple(_, _)) | (Tuple(_, _), Record(_)) => true
+    // Class-vs-class patterns are conservatively treated as potentially overlapping
+    // to support conjunction patterns like `A & B`. Without sealed class analysis,
+    // we cannot prove two unrelated classes are disjoint.
     case _ => false
   
   /** Get the parent class-like symbol from the extends clause of a class or module. */
