@@ -1,5 +1,6 @@
 :js
 
+
 // Bug fix: `and` on its own line in `if` condition should work
 if
   true
@@ -28,3 +29,5 @@ if
   and
   false do
     print("should not print")
+
+

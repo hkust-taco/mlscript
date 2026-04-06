@@ -1,0 +1,61 @@
+:js
+
+// * It looks like trying to support both infix `do` and prefix `do` is a problem;
+// * maybe this part of the syntax needs to be redesigned.
+
+
+// ——— ——— ———
+// [Comment from Copilot (Claude Opus 4.6):]
+// Bug: `do` on a new line after `while` condition is not parsed as infix.
+// The parser explicitly excludes `do` from newline-infix handling (Parser.scala ~line 1088)
+// to prevent ambiguity with UCS splits (e.g., `0 then "null"\ndo body` should be two split
+// arms, not `(0 then "null") do body`). Fixing this would require context-sensitive parsing
+// to distinguish `while` conditions from `if` split arms, which is a significant refactoring
+// of the parser's `exprCont` method.
+
+:fixme
+while
+    let arrMatches = true
+    arrMatches
+  do
+    print(arrMatches)
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'do' here
+//│ ║  l.18: 	    let arrMatches = true
+//│ ║        	        ^^^^^^^^^^^^^^^^^
+//│ ║  l.19: 	    arrMatches
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.20: 	  do
+//│ ║        	^^^^
+//│ ║  l.21: 	    print(arrMatches)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// ——— ——— ———
+// [Comment from Copilot (Claude Opus 4.6):]
+// Bug: `do` on a new line inside `if` block is not parsed as infix continuation.
+// Same root cause as the `while...do` bug above: the `do` exclusion in Parser.scala
+// prevents `do` from being treated as a newline-infix operator. In the `if` block,
+// `arrMatches !== null` and `do ()` are parsed as separate block items instead of
+// `arrMatches !== null do ()`. Fixing requires the same context-sensitive parsing
+// refactoring mentioned above.
+
+let arrMatches = ()
+//│ arrMatches = ()
+
+// * Note: produces a match error
+:fixme
+if
+  arrMatches !== null
+  do
+    ()
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (null)
+//│ ║  l.48: 	  arrMatches !== null
+//│ ╙──      	                 ^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+
+// * This one works:
+if
+  arrMatches !== null do
+    ()
+
+

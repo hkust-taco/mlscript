@@ -1,6 +1,5 @@
 :js
 
-:global
 
 let { x = 0, y = 0 }
 //│ x = 0
@@ -25,3 +24,17 @@ y
 set { x = 42 }
 x
 //│ = 42
+
+
+if false then 0
+else set
+  x = 2
+  y = 2
+
+x
+//│ = 2
+
+y
+//│ = 2
+
+
