@@ -26,6 +26,22 @@ x
 //│ = 42
 
 
+:pe
+set { }
+//│ ╔══[PARSE ERROR] Expected expression after 'set' binding keyword; found end of block instead
+//│ ║  l.30: 	set { }
+//│ ╙──      	    ^^^
+
+:pe
+:re
+if false then 0
+else set { }
+//│ ╔══[PARSE ERROR] Expected expression after 'set' binding keyword; found empty block instead
+//│ ║  l.38: 	else set { }
+//│ ╙──      	         ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
 if false then 0
 else set
   x = 2
