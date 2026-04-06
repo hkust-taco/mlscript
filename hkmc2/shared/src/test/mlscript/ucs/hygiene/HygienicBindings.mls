@@ -49,7 +49,6 @@ fun h1(a) =
 //│ >      y is Right(arg$Right$0$) and
 //│ >        let z = tmp:arg$Right$0$⁰
 //│ >        else z⁰
-//│ >      a is Option.None then 0
 //│ >    a is Option.None then 0
 
 h1(Some(Left(42)))
@@ -84,7 +83,6 @@ fun h2(a) =
 //│ >      y' is Right(arg$Right$0$) and
 //│ >        let z = tmp:arg$Right$0$¹
 //│ >        else z¹
-//│ >      a is Option.None then 0
 //│ >    a is Option.None then 0
 
 // :w

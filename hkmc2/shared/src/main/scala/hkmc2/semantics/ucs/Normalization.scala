@@ -536,9 +536,8 @@ object Normalization:
   /**
     * Check if two patterns are provably disjoint, i.e., no value can match both.
     * This is used to safely eliminate branches during specialization.
-    * Returns `true` only for clear-cut cases (e.g., different literals,
-    * incompatible tuple sizes). For class patterns, returns `false` (conservative)
-    * to support conjunction patterns like `A & B`.
+    * Returns `true` for clear-cut cases (e.g., different literals,
+    * incompatible tuple sizes, sibling classes under single inheritance).
     */
   def areProvablyDisjoint(lhs: FlatPattern, rhs: FlatPattern)(using ctx: Elaborator.Ctx): Bool =
     import FlatPattern.*
@@ -552,9 +551,12 @@ object Normalization:
     case (Lit(_), Tuple(_, _)) | (Tuple(_, _), Lit(_)) => true
     case (Record(_), Lit(_)) | (Lit(_), Record(_)) => true
     case (Record(_), Tuple(_, _)) | (Tuple(_, _), Record(_)) => true
-    // Class-vs-class patterns are conservatively treated as potentially overlapping
-    // to support conjunction patterns like `A & B`. Without sealed class analysis,
-    // we cannot prove two unrelated classes are disjoint.
+    // Under the single-inheritance restriction, two classes where neither is a
+    // subclass of the other are provably disjoint. When we add matchable
+    // class-like things with multiple inheritance (e.g., interfaces), this check
+    // will need to be refined.
+    case (ClassLike(_, lhsSym, _, _), ClassLike(_, rhsSym, _, _)) =>
+      !isSubclassOf(lhsSym, rhsSym) && !isSubclassOf(rhsSym, lhsSym)
     case _ => false
   
   /** Get the parent class-like symbol from the extends clause of a class or module. */

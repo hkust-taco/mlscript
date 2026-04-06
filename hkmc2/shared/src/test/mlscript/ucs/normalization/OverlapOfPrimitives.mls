@@ -84,9 +84,6 @@ fun test(x, p) = if x is
 //│ >    x is Object and
 //│ >      let tmp:scrut = p⁴(x⁴)
 //│ >      tmp:scrut is true then "great"
-//│ >      x is refined Bool and
-//│ >        let tmp:scrut = p⁴(x⁴)
-//│ >        tmp:scrut is true then "great, again"
 //│ >    x is refined Bool and
 //│ >      let tmp:scrut = p⁴(x⁴)
 //│ >      tmp:scrut is true then "great, again"
