@@ -62,7 +62,7 @@ Many extensions were also added over time and splintered off into supporting res
 
 You need [JDK supported by Scala][supported-jdk-versions], [sbt][sbt], [Node.js][node.js], and TypeScript to compile the project and run the tests.
 
-We recommend you to install JDK and sbt via [coursier][coursier]. The versions of Node.js that passed our tests are from v16.14 to v16.17, v17 and v18. Run `npm install` to install TypeScript. **Note that ScalaJS cannot find the global installed TypeScript.** We explicitly support TypeScript v4.7.4.
+We recommend you to install JDK and sbt via [coursier][coursier]. The versions of Node.js that passed our tests are from v16.14 to v16.17, v17 and v18. **Run `npm install` in the repository root** to install required npm packages (including TypeScript). **Note that ScalaJS cannot find globally installed TypeScript.** We explicitly support TypeScript v4.7.4.
 
 [supported-jdk-versions]: https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html
 [sbt]: https://www.scala-sbt.org/
@@ -137,12 +137,19 @@ Most of the important code of the new compiler is in the `hkmc2` folder.
 
 You need [JDK supported by Scala][supported-jdk-versions], [sbt][sbt], [Node.js][node.js], and TypeScript to compile the project and run the tests.
 
-We recommend you to install JDK and sbt via [coursier][coursier]. The versions of Node.js that passed our tests are from v16.14 to v16.17, v17 and v18. Run `npm install` to install TypeScript. **Note that ScalaJS cannot find the global installed TypeScript.** We explicitly support TypeScript v4.7.4.
+We recommend you to install JDK and sbt via [coursier][coursier]. The versions of Node.js that passed our tests are from v16.14 to v16.17, v17 and v18.
+
+**Run `npm install` in the repository root** to install the required npm packages.
+This installs TypeScript (used by the JS backend tests) as well as [Binaryen][binaryen] (used by the WASM backend tests in `hkmc2/shared/src/test/mlscript/wasm/`).
+If you skip this step, **WASM tests will fail** at runtime because the `binaryen` module cannot be found by Node.js.
+
+**Note that ScalaJS cannot find globally installed TypeScript.** We explicitly support TypeScript v4.7.4.
 
 [supported-jdk-versions]: https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html
 [sbt]: https://www.scala-sbt.org/
 [node.js]: https://nodejs.org/
 [coursier]: https://get-coursier.io/
+[binaryen]: https://github.com/WebAssembly/binaryen
 
 Some tests in the `compiler` subproject generate and compile C++ while making use of some libraries.
 You can run these by installing `nix` (for MacOS, we recommend https://determinate.systems/posts/graphical-nix-installer/)
