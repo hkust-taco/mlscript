@@ -1093,7 +1093,7 @@ abstract class Parser(
         // Otherwise, `do` will be parsed as an infix operator
       =>
         consume
-        exprCont(acc, prec, allowNewlines = false)
+        exprCont(acc, prec, allowNewlines = allowNewlines)
         
       case (br @ BRACKETS(bk @ (_: Indent_Curly), toks @ ((KEYWORD(kw), _) :: _)), loc) :: _
       if kw.leftPrecOrMin > prec

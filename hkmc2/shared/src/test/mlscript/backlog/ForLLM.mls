@@ -48,55 +48,13 @@ if
 // ——— ——— ———
 // From backlog/UCS.mls
 
-// Works
-if
-  true and
-  true do
-    print("ok")
-//│ > ok
-
-// Works
-if
-  true and
-  false do
-    print("ok")
-
-// Works
-if
-  true and
-    true do
-      print("ok")
-//│ > ok
-
-// Should work?
-:fixme
-if
-  true
-  and
-  true do
-    print("ok")
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.75: 	  and
-//│ ║        	     ^
-//│ ║  l.76: 	  true do
-//│ ╙──      	^^
-//│ ╔══[COMPILATION ERROR] Unrecognized term split (‹erroneous syntax›)
-//│ ║  l.75: 	  and
-//│ ║        	     ^
-//│ ║  l.76: 	  true do
-//│ ╙──      	^^
-//│ > ok
-
-// ——— ——— ———
-// From backlog/UCS.mls
-
 class Some(val v)
 
 :fixme
 Some(1) is
   Some of [process, rest] do "hi"
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator 'do').
-//│ ║  l.97: 	  Some of [process, rest] do "hi"
+//│ ║  l.55: 	  Some of [process, rest] do "hi"
 //│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ = true
 
