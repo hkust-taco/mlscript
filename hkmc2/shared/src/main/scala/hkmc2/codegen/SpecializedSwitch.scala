@@ -22,11 +22,11 @@ enum SwitchCase(val litValue: Literal, val body: Block):
     */
   case ExplicitBreak(l: Literal, b: Block) extends SwitchCase(l, b)
   /**
-    * A switch case that already has a `break`, `return` or `continue` at the end.
+    * A switch case that is abortive and does not explicitly require a `break`.
     * @param l The case's literal value.
     * @param b The case body.
     */
-  case ImplicitBreak(l: Literal, b: Block) extends SwitchCase(l, b)
+  case Abortive(l: Literal, b: Block) extends SwitchCase(l, b)
   /**
     * A switch case that falls through to the subsequent case.
     * @param l The case's literal value.
@@ -37,7 +37,7 @@ enum SwitchCase(val litValue: Literal, val body: Block):
 
 private enum MatchType:
   case MFallthrough(value: Literal, body: Block, next: Literal)
-  case MBreak(value: Literal, body: Block)
+  case MAbortive(value: Literal, body: Block)
   case MCases(arms: List[Literal -> Block])
 
 /*
@@ -49,22 +49,21 @@ private enum MatchType:
  * and have an empty or no default case, except for Mn. We define three types of such match statements
  * (which are mostly unrelated to switch case types in the enum `SwitchCase`):
  * - MFallthrough(next): Has only one branch, and assigns the literal `next` to `x` at the end of that branch.
- * - MBreak: Has only one branch that ends with a `break` or a `continue` (and thus exits the
- *   scope that the match chain is defined in).
- * - MCases: Is not an MFallthrough or an MBreak (but still matches on `x` and only has literals patterns).
+ * - MAbortive: Has only one branch that is abortive (and thus exits the scope that the match chain is defined in).
+ * - MCases: Is not an MFallthrough or an MAbortive (but still matches on `x` and only has literals patterns).
  * 
  * For this chain to be specialized, for each adjacent pair Mi and M(i+1), one of the following hold:
  * 
  * - Mi = MFallthrough(_, _, v), and the first case of M(i+1) matches v.
- * - Mi = MBreak.
+ * - Mi = MAbortive.
  * 
  * Note that this means Mi = MCases only if i = n.
  * 
- * Furthermore, if M(n-1) is an MBreak, then the last statement may have a non-empty default case and it will be
+ * Furthermore, if M(n-1) is an MAbortive, then the last statement may have a non-empty default case and it will be
  * compiled into `default: body`.
  * 
  * - MFallthrough is translated into SwitchCase.Fallthrough.
- * - MBreak is translated into SwitchCase.ImplicitBreak.
+ * - MAbortive is translated into SwitchCase.Abortive.
  * - MCases is translated into a list of SwitchCase.ExplicitBreak.
  */
 
@@ -73,9 +72,8 @@ private enum MatchType:
 // N: None of the cases
 @tailrec
 private def caseLastBlk(b: Block, scrutSym: Local): Opt[Opt[Literal]] = b match
+  case b if b.isAbortive => S(N)
   case a @ Assign(`scrutSym`, Value.Lit(l), End(_)) => S(S(l))
-  case b: (Break | Continue) => S(N)
-  case Return(_, false) => S(N)
   case b: NonBlockTail => caseLastBlk(b.rest, scrutSym)
   case _: BlockTail => N
 
@@ -103,7 +101,7 @@ private def findMatchChainRec(
   
   // Allowed iff the previous case was a break, or if this is the only case
   val isDfltCaseAllowed = acc.headOption match
-    case Some(_: MatchType.MBreak) => true
+    case Some(_: MatchType.MAbortive) => true
     case None => true
     case _ => false
   
@@ -116,7 +114,7 @@ private def findMatchChainRec(
       else
         // Classify the current match statement.
         val curMatch = m match
-          // MFallthrough or MBreak
+          // MFallthrough or MAbortive
           case Match(
             `scrutRef`,                                             // * The scrutinee is a ref and is the same as the one before.
             Case.Lit(curVal) -> (b @ CaseLastBlk(nextVal)) :: Nil,  // * There is only one case matching an int literal
@@ -124,7 +122,7 @@ private def findMatchChainRec(
             default, restBlk
           ) => nextVal match
             case S(nextVal) => S(MatchType.MFallthrough(curVal, b, nextVal))
-            case N => S(MatchType.MBreak(curVal, b))
+            case N => S(MatchType.MAbortive(curVal, b))
           // MCases
           case Match(`scrutRef`, LitCases(arms), default, restBlk) =>
             S(MatchType.MCases(arms))
@@ -148,7 +146,7 @@ private def findMatchChainRec(
     case S(MatchType.MFallthrough(next = expectedVal))
       if curVal.map(_ == expectedVal).getOrElse(true) =>
         join
-    case S(_: MatchType.MBreak) | N => join
+    case S(_: MatchType.MAbortive) | N => join
     case S(_) => MatchChain(scrutRef, acc, N, b)
 
 private case class SwitchLikeBlock(scrut: Value.Ref, cases: List[SwitchCase], dflt: Opt[Block], rest: Block)
@@ -157,10 +155,12 @@ def matchChainToSwitch(m: MatchChain): SwitchLikeBlock =
   val cases = m.cases.flatMap:
     case MatchType.MFallthrough(value, body, next) =>
       SwitchCase.Fallthrough(value, body, next) :: Nil
-    case MatchType.MBreak(value, body) =>
-      SwitchCase.ImplicitBreak(value, body) :: Nil
+    case MatchType.MAbortive(value, body) =>
+      SwitchCase.Abortive(value, body) :: Nil
     case MatchType.MCases(arms) => arms.map:
-      case (l, b) => SwitchCase.ExplicitBreak(l, b)
+      case (l, b) =>
+        if b.isAbortive then SwitchCase.Abortive(l, b)
+        else SwitchCase.ExplicitBreak(l, b)
   SwitchLikeBlock(m.scrut, cases, m.dflt, m.rest)
 
 object SpecializedSwitch:
