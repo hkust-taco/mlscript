@@ -568,7 +568,7 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
       doc" # if ($sd !== ${lit.idStr}) $e" :: returningTerm(rest, endSemi)
     case SpecializedSwitch(scrut, cases, dflt, rest) =>
       val switchBod = cases.foldLeft(doc""): (acc, arm) =>
-        val needsBreak = arm.isInstanceOf[SwitchCase.ExplicitBreak]
+        val needsBreak = arm.isInstanceOf[SwitchCase.ExplicitBreak] && !arm.body.isAbortive
         acc :: doc" # case ${result(Value.Lit(arm.litValue))}: #{ ${
           nonNestedScoped(arm.body)(bd => returningTerm(bd, endSemi = true))
         }${if needsBreak then doc" # break;" else ""} #} "
