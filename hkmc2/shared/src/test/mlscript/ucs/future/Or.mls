@@ -3,7 +3,7 @@
 data class Some[T](value: T)
 
 
-:fixme
+:fixme // TODO
 // TODO support `or` in UCS
 fun f(a, b) = if a is
   Some(v)

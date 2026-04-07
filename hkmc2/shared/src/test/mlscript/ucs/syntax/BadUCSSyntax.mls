@@ -39,7 +39,7 @@ if
 //│ > ok
 
 // Should work? Probably not
-:fixme
+:e
 if
   true
   and true

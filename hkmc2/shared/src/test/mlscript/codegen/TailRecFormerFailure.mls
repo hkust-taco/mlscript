@@ -65,6 +65,7 @@ fun go(x) = if x is
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+// Note: Used not to be tail-rec optimized; now fixed
 :sir
 :patMatConsequentSharingThreshold 1
  // ^ The default value allowed duplicating "Z" in the above version

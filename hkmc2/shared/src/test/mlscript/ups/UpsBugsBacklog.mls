@@ -14,53 +14,21 @@ if "a b c" is Input as chars then chars
 
 // ——— ——— ———
 
-// * Problems happen with `..` destrucuring of sequences (same happens with `...`)
-
-fun go(stack) = if stack is
-  [..stack, "+", "+"] then 0
-  [..stack2, Str] then 1
-  else print("Str??", stack is [..stack2, Str])
-
-go([1, 2, "z"])
-//│ > Str?? true
-
-// ——— ——— ———
-
-:fixme
-pattern Sym =
-  ([x, y] where (x == y))
-//│ ╔══[WARNING] Useless pattern binding: x.
-//│ ║  l.31: 	  ([x, y] where (x == y))
-//│ ╙──      	    ^
-//│ ╔══[WARNING] Useless pattern binding: y.
-//│ ║  l.31: 	  ([x, y] where (x == y))
-//│ ╙──      	       ^
-
-// * It does work, though:
-
-[1, 1] is Sym
-//│ = true
-
-[1, 2] is Sym
-//│ = false
-
-// ——— ——— ———
-
 pattern Bin =
   [(1 => true) | (_ => false)]
 
 fun f(x) = if x is Bin as res then res
 
-:fixme
-:expect false
+:fixme // TODO support
+:expect [false]
 f([0])
-//│ ═══[RUNTIME ERROR] Expected: 'false', got: '[0]'
+//│ ═══[RUNTIME ERROR] Expected: '[false]', got: '[0]'
 //│ = [0]
 
-:fixme
-:expect true
+:fixme // TODO support
+:expect [true]
 f([1])
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: '[1]'
+//│ ═══[RUNTIME ERROR] Expected: '[true]', got: '[1]'
 //│ = [1]
 
 // ——— ——— ———

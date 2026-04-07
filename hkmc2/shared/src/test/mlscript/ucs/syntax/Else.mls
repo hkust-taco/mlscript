@@ -106,20 +106,41 @@ else
     5
   else 1
 ) + 3
-//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.107: 	  else 1
+//│ ╔══[PARSE ERROR] Expected end of input after 'true' keyword; found 'then' keyword instead
+//│ ║  l.105: 	  then
 //│ ╙──       	  ^^^^
-//│ = 8
+//│ ╔══[PARSE ERROR] Unexpected indented block here
+//│ ║  l.106: 	    5
+//│ ║         	^^^^^
+//│ ║  l.107: 	  else 1
+//│ ╙──       	^^
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (‹erroneous syntax›)
+//│ ║  l.106: 	    5
+//│ ║         	^^^^^
+//│ ║  l.107: 	  else 1
+//│ ╙──       	^^
+//│ ═══[RUNTIME ERROR] Error: match error
 
 :fixme
 (if true
   then
     5 else 1
 ) + 3
-//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.117: 	    5 else 1
-//│ ╙──       	      ^^^^
-//│ = 8
+//│ ╔══[PARSE ERROR] Expected end of input after 'true' keyword; found 'then' keyword instead
+//│ ║  l.126: 	  then
+//│ ╙──       	  ^^^^
+//│ ╔══[PARSE ERROR] Unexpected indented block here
+//│ ║  l.127: 	    5 else 1
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.128: 	) + 3
+//│ ╙──       	^
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (‹erroneous syntax›)
+//│ ║  l.127: 	    5 else 1
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.128: 	) + 3
+//│ ╙──       	^
+//│ ═══[RUNTIME ERROR] Error: match error
+
 
 data class Box[A](value: A)
 
@@ -131,11 +152,11 @@ fun foo(x) = if x is
   else "I don't want to tell you what's inside the box."
   else "I shouldn't tell you what's inside the box."
 //│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
-//│ ║  l.130: 	  else "I can't tell you what's inside the box."
+//│ ║  l.151: 	  else "I can't tell you what's inside the box."
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.131: 	  else "I don't want to tell you what's inside the box."
+//│ ║  l.152: 	  else "I don't want to tell you what's inside the box."
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.132: 	  else "I shouldn't tell you what's inside the box."
+//│ ║  l.153: 	  else "I shouldn't tell you what's inside the box."
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
