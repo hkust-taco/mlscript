@@ -53,19 +53,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         (_: FlatPattern.Tuple, _) | (_: FlatPattern.Record, _) => false
     /** Checks if `lhs` can be subsumed under `rhs`. */
     def <:<(rhs: FlatPattern): Bool = compareCasePattern(lhs, rhs)
-    /**
-      * If two class-like patterns has different `refined` flag. Report the
-      * inconsistency as a warning.
-      */
-    infix def reportInconsistentRefinedWith(rhs: FlatPattern): Unit = (lhs, rhs) match
-      // case (Pattern.Class(n1, _, r1), Pattern.Class(n2, _, r2)) if r1 =/= r2 =>
-      case (FlatPattern.ClassLike(c1, _, _, rfd1), FlatPattern.ClassLike(c2, _, _, rfd2)) if rfd1 =/= rfd2 =>
-        def be(value: Bool): Str = if value then "is" else "is not"
-        warn(
-          msg"Found two inconsistently refined patterns:" -> rhs.toLoc,
-          msg"one ${be(rfd1)} refined," -> c1.toLoc,
-          msg"but the other ${be(rfd2)} refined." -> c2.toLoc)
-      case (_, _) => ()
     /** If the pattern is a class-like pattern, override its `refined` flag. */
     def markAsRefined: Unit = lhs match
       case lhs: FlatPattern.ClassLike => lhs.refined = true
@@ -123,10 +110,24 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
   
   /**
     * Specialize `split` with the assumption that `scrutinee` matches `pattern`.
-    * If `mode` is `+`, the function _keeps_ branches that agree on
-    * `scrutinee` matching `pattern` and simplifies the record patterns it sees if the fields were already matched.
-    * Otherwise (if `mode` is `-`), the function _removes_ branches
-    * that agree on `scrutinee` matches `pattern`.
+    *
+    * In mode `+` (positive), keeps branches consistent with the assumption:
+    *   - Case 1.1.1: Same pattern (`=:=`) → merge continuation and tail via alias bindings.
+    *   - Case 1.1.2: Branch pattern is more general (`thatPattern <:< pattern`) → keep as-is,
+    *     mark the specializing pattern as refined (the branch will be matched by its subtypes).
+    *   - Case 1.1.3: Branch is a fallback → skip to tail.
+    *   - Case 1.1.4: Branch is a record → simplify fields already matched by the assumption.
+    *   - Case 1.1.5: Specializing pattern is more specific (`pattern <:< thatPattern`) → keep as-is
+    *     (the branch always matches when the assumption holds).
+    *   - Case 1.1._: Patterns are unrelated — if provably disjoint (e.g., different literals,
+    *     sibling classes under single inheritance), skip; otherwise keep the branch to support
+    *     conjunction patterns like `A & B`.
+    *
+    * In mode `-` (negative), removes branches that the assumption makes unreachable:
+    *   - Case 1.2.1: Branch pattern equals or is subsumed by the assumption → remove.
+    *   - Case 1.2.2: Unrelated → keep, recurse into tail.
+    *
+    * Case 2: Different scrutinee → recurse into both continuation and tail.
     */
   private def specialize(
       split: Split,
@@ -567,17 +568,19 @@ object Normalization:
       case mod: ModuleOrObjectSymbol => mod.defn.flatMap(_.ext)
     ext.flatMap(nw => nw.cls.symbol.flatMap(_.asClsOrMod))
   
-  /** Check if `child` is a subclass of `parent` by traversing the class hierarchy. */
+  /** Check if `child` is a subclass of `parent` by traversing the class hierarchy.
+    * Uses a visited set to avoid infinite loops in case of cyclic inheritance. */
   private def isSubclassOf(
       child: ClassSymbol | ModuleOrObjectSymbol,
       parent: ClassSymbol | ModuleOrObjectSymbol
   ): Bool =
-    def go(sym: ClassSymbol | ModuleOrObjectSymbol, fuel: Int): Bool =
-      fuel > 0 && (getParentClassLikeSymbol(sym) match
+    def go(sym: ClassSymbol | ModuleOrObjectSymbol,
+        visited: Set[ClassSymbol | ModuleOrObjectSymbol]): Bool =
+      !visited.contains(sym) && (getParentClassLikeSymbol(sym) match
         case S(parentSym) =>
-          parentSym === parent || go(parentSym, fuel - 1)
+          parentSym === parent || go(parentSym, visited + sym)
         case N => false)
-    go(child, 128)
+    go(child, Set.empty)
 
   final case class VarSet(declared: Set[BlockLocalSymbol]):
     def +(nme: BlockLocalSymbol): VarSet = copy(declared + nme)
