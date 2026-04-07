@@ -36,23 +36,17 @@ let f = case
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let f⁰, lambda⁰;
 //│ define lambda⁰ as fun lambda¹(caseScrut) {
-//│   block split_root$:
-//│     block split_default$:
+//│   match caseScrut
+//│     A⁰ =>
 //│       match caseScrut
-//│         A⁰ =>
-//│           match caseScrut
-//│             B⁰ =>
-//│               return "A & B"
-//│             A⁰ =>
-//│               return "A"
-//│             else
-//│               break split_default$
-//│           end
+//│         B⁰ =>
+//│           return "A & B"
 //│         else
-//│           break split_default$
+//│           return "A"
 //│       end
-//│     throw new globalThis⁰.Error⁰("match error")
-//│   return runtime⁰.Unit⁰
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
 //│ };
 //│ set f⁰ = lambda¹;
 //│ end

@@ -113,8 +113,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     *
     * In mode `+` (positive), keeps branches consistent with the assumption:
     *   - Case 1.1.1: Same pattern (`=:=`) → merge continuation and tail via alias bindings.
-    *   - Case 1.1.2: Branch pattern is more general (`thatPattern <:< pattern`) → keep as-is,
-    *     mark the specializing pattern as refined (the branch will be matched by its subtypes).
+    *   - Case 1.1.2: Branch pattern is more specific (`thatPattern <:< pattern`) → keep as-is,
+    *     mark the specializing pattern as refined, and recurse into the tail so remaining
+    *     branches on the same scrutinee are simplified with the known assumption.
     *   - Case 1.1.3: Branch is a fallback → skip to tail.
     *   - Case 1.1.4: Branch is a record → simplify fields already matched by the assumption.
     *   - Case 1.1.5: Specializing pattern is more specific (`pattern <:< thatPattern`) → keep as-is
@@ -154,7 +155,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
               aliasBindings(pattern, thatPattern)(rec(continuation) ++ rec(tail))
             else if thatPattern <:< pattern then
               log(s"Case 1.1.2: $pattern <:< $thatPattern")
-              pattern.markAsRefined; split
+              pattern.markAsRefined; split.copy(tail = rec(tail))
             else if split.isFallback then
               log(s"Case 1.1.3: $pattern is unrelated with $thatPattern")
               rec(tail)
