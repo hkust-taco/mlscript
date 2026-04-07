@@ -1,14 +1,28 @@
 :js
 
+:w
+pattern PlainPair = [x, y]
+//│ ╔══[WARNING] Useless pattern binding: x.
+//│ ║  l.4: 	pattern PlainPair = [x, y]
+//│ ╙──     	                     ^
+//│ ╔══[WARNING] Useless pattern binding: y.
+//│ ║  l.4: 	pattern PlainPair = [x, y]
+//│ ╙──     	                        ^
+
+
 // Regression test: variables used in `where` guards should not produce
 // spurious "Useless pattern binding" warnings.
 
-pattern Sym =
+pattern Symmetry =
   ([x, y] where (x == y))
 
-[1, 1] is Sym
+[1, 1] is Symmetry
 //│ = true
 
-[1, 2] is Sym
+[1, 2] is Symmetry
 //│ = false
 
+:todo
+:w
+// We should check the free variables in `where` guards.
+pattern PairSum = [x, y] where (let x = true, let y = x, y)
