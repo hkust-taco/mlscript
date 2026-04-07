@@ -286,14 +286,14 @@ enum Pattern extends AutoLocated:
     * inside guard terms of `Guarded` patterns. Only variables that appear
     * as `Term.Ref` in the guard are included, so that truly unused pattern
     * bindings (e.g., `[x] where true`) still trigger warnings. */
-  lazy val guardedVarNames: Set[Str] = this match
+  lazy val varNamesUsedInGuards: Set[Str] = this match
     case Guarded(pattern, guard) =>
       val boundNames = pattern.variables.varMap.keySet
       val referencedNames = termRefNames(guard)
-      (boundNames & referencedNames) ++ pattern.guardedVarNames
+      (boundNames & referencedNames) ++ pattern.varNamesUsedInGuards
     case _ =>
       children.iterator.collect:
-        case p: Pattern => p.guardedVarNames
+        case p: Pattern => p.varNamesUsedInGuards
       .foldLeft(Set.empty[Str])(_ ++ _)
   
   /** Collect all names referenced via `Term.Ref` in the given term tree. */

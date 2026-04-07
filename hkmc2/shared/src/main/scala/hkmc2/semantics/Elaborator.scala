@@ -1413,7 +1413,7 @@ extends Importer with ucs.SplitElaborator:
             // parameters. We only report warnings for unbound variables
             // because they are harmless. Variables used in guard conditions
             // (from `where` clauses) are not considered useless.
-            val guardedNames = pat.guardedVarNames
+            val guardedNames = pat.varNamesUsedInGuards
             pat.variables.varMap.foreach: (name, aliases) =>
               extractionParams.find(_.sym.name == name) match
                 case S(param) => aliases.foreach(_.symbol = param.sym)
