@@ -196,7 +196,6 @@ fun nott = case
 //│         break;
 //│       default:
 //│         throw globalThis.Object.freeze(new globalThis.Error.class("match error"));
-//│         break;
 //│     }
 //│   });
 //│   return lambda2

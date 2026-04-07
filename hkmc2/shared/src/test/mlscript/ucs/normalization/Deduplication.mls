@@ -55,7 +55,6 @@ if x is
 //│             break;
 //│           default:
 //│             "";
-//│             break;
 //│         }
 //│         break;
 //│       case 1:
@@ -63,7 +62,6 @@ if x is
 //│         break;
 //│       default:
 //│         "";
-//│         break;
 //│     }
 //│     break;
 //│   case 1:
@@ -71,7 +69,6 @@ if x is
 //│     break;
 //│   default:
 //│     "";
-//│     break;
 //│ }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "000"
@@ -105,7 +102,6 @@ if x is
 //│                 break;
 //│               default:
 //│                 break split_1$;
-//│                 break;
 //│             }
 //│             break;
 //│           case 1:
@@ -114,7 +110,6 @@ if x is
 //│             break;
 //│           default:
 //│             break split_1$;
-//│             break;
 //│         }
 //│         break;
 //│       case 1:
@@ -123,7 +118,6 @@ if x is
 //│         break;
 //│       default:
 //│         break split_1$;
-//│         break;
 //│     }
 //│   }
 //│   tmp2 = "-------------------------------------------------------------------------";
@@ -160,7 +154,6 @@ let qqq = if x is
 //│                 break;
 //│               default:
 //│                 break split_1$1;
-//│                 break;
 //│             }
 //│             break;
 //│           case 1:
@@ -169,7 +162,6 @@ let qqq = if x is
 //│             break;
 //│           default:
 //│             break split_1$1;
-//│             break;
 //│         }
 //│         break;
 //│       case 1:
@@ -178,7 +170,6 @@ let qqq = if x is
 //│         break;
 //│       default:
 //│         break split_1$1;
-//│         break;
 //│     }
 //│   }
 //│   tmp3 = "-------------------------------------------------------------------------";
@@ -211,7 +202,6 @@ print of if x is
 //│             break;
 //│           default:
 //│             tmp4 = "";
-//│             break;
 //│         }
 //│         break;
 //│       case 1:
@@ -219,7 +209,6 @@ print of if x is
 //│         break;
 //│       default:
 //│         tmp4 = "";
-//│         break;
 //│     }
 //│     break;
 //│   case 1:
@@ -227,7 +216,6 @@ print of if x is
 //│     break;
 //│   default:
 //│     tmp4 = "";
-//│     break;
 //│ }
 //│ Predef.print(tmp4)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -257,7 +245,6 @@ print of if x is
 //│             break;
 //│           default:
 //│             tmp5 = "";
-//│             break;
 //│         }
 //│         break;
 //│       case 1:
@@ -265,7 +252,6 @@ print of if x is
 //│         break;
 //│       default:
 //│         tmp5 = "";
-//│         break;
 //│     }
 //│     break;
 //│   case 1:
@@ -273,7 +259,6 @@ print of if x is
 //│     break;
 //│   default:
 //│     tmp5 = "";
-//│     break;
 //│ }
 //│ Predef.print(tmp5)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -305,7 +290,6 @@ fun foo(x, y, z) =
 //│               break;
 //│             default:
 //│               return "";
-//│               break;
 //│           }
 //│           break;
 //│         case 1:
@@ -313,7 +297,6 @@ fun foo(x, y, z) =
 //│           break;
 //│         default:
 //│           return "";
-//│           break;
 //│       }
 //│       break;
 //│     case 1:
@@ -321,7 +304,6 @@ fun foo(x, y, z) =
 //│       break;
 //│     default:
 //│       return "";
-//│       break;
 //│   }
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -354,7 +336,6 @@ print of if
 //│             break;
 //│           default:
 //│             tmp6 = "___";
-//│             break;
 //│         }
 //│         break;
 //│       case 1:
@@ -370,7 +351,6 @@ print of if
 //│             tmp6 = "___";
 //│           }
 //│         }
-//│         break;
 //│     }
 //│     break;
 //│   case 1:
@@ -378,7 +358,6 @@ print of if
 //│     break;
 //│   default:
 //│     if (y === 2) { tmp6 = "_2_"; } else { tmp6 = "___"; }
-//│     break;
 //│ }
 //│ Predef.print(tmp6)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -410,7 +389,6 @@ fun foo(x, y, z) = if
 //│               break;
 //│             default:
 //│               return "___";
-//│               break;
 //│           }
 //│           break;
 //│         case 1:
@@ -426,7 +404,6 @@ fun foo(x, y, z) = if
 //│               return "___"
 //│             }
 //│           }
-//│           break;
 //│       }
 //│       break;
 //│     case 1:
@@ -434,7 +411,6 @@ fun foo(x, y, z) = if
 //│       break;
 //│     default:
 //│       if (y1 === 2) { return "_2_" } else { return "___" }
-//│       break;
 //│   }
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -473,7 +449,6 @@ fun foo(x, y, z) = if x is
 //│                   break;
 //│                 default:
 //│                   break split_1$2;
-//│                   break;
 //│               }
 //│               break;
 //│             case 1:
@@ -482,7 +457,6 @@ fun foo(x, y, z) = if x is
 //│               break;
 //│             default:
 //│               break split_1$2;
-//│               break;
 //│           }
 //│           break;
 //│         case 1:
@@ -491,7 +465,6 @@ fun foo(x, y, z) = if x is
 //│           break;
 //│         default:
 //│           break split_1$2;
-//│           break;
 //│       }
 //│     }
 //│     value = "hello";
