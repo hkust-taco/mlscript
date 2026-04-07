@@ -94,6 +94,7 @@ f(2)
 // See `SpecializedSwitch` for details on what is specialized here
 // Note: It would also specialize if `return` were replaced with `break` or `continue`, but it isn't
 // yet possible to explicitly write in the source language
+:sjs
 fun f(x) =
   let acc = ""
   if x is 0 do
@@ -119,6 +120,47 @@ fun f(x) =
     7 then "EndB"
     8 then "EndC"
     else "EndD"
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f2;
+//│ f2 = function f(x) {
+//│   let acc, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│   acc = "";
+//│   switch (x) {
+//│     case 0:
+//│       tmp = acc + "a";
+//│       acc = tmp;
+//│       x = 1;
+//│     case 1:
+//│       tmp1 = acc + "b";
+//│       acc = tmp1;
+//│       x = 2;
+//│     case 2:
+//│       tmp2 = acc + "c";
+//│       acc = tmp2;
+//│       return acc;
+//│     case 3:
+//│       tmp3 = acc + "A";
+//│       acc = tmp3;
+//│       x = 4;
+//│     case 4:
+//│       tmp4 = acc + "B";
+//│       acc = tmp4;
+//│       x = 5;
+//│     case 5:
+//│       tmp5 = acc + "C";
+//│       acc = tmp5;
+//│       return acc;
+//│     case 6:
+//│       return "EndA";
+//│     case 7:
+//│       return "EndB";
+//│     case 8:
+//│       return "EndC";
+//│     default:
+//│       return "EndD";
+//│   }
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect "bc"
 f(1)
