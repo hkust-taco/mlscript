@@ -308,9 +308,8 @@ enum Pattern extends AutoLocated:
       case LetDecl(sym, _) =>
         bound + sym.nme
       case DefineVar(sym, rhs) =>
-        val newBound = bound + sym.nme
-        go(rhs, newBound)
-        newBound
+        go(rhs, bound)
+        bound + sym.nme
       case td: TermDefinition =>
         val newBound = bound + td.sym.nme
         td.body.foreach(go(_, newBound))
