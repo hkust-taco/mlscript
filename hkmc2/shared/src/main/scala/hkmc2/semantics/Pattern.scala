@@ -283,29 +283,54 @@ enum Pattern extends AutoLocated:
     case Guarded(pattern, _) => pattern.variables
   
   /** Collect the names of pattern variables that are actually referenced
-    * inside guard terms of `Guarded` patterns. Only variables that appear
-    * as `Term.Ref` in the guard are included, so that truly unused pattern
-    * bindings (e.g., `[x] where true`) still trigger warnings. */
+    * as free variables inside guard terms of `Guarded` patterns. Only
+    * variables whose names appear free (not locally re-bound) in the guard
+    * are included, so that truly unused pattern bindings (e.g.,
+    * `[x] where true`) and shadowed bindings (e.g.,
+    * `[x, y] where (let x = ..., x)`) still trigger warnings. */
   lazy val varNamesUsedInGuards: Set[Str] = this match
     case Guarded(pattern, guard) =>
       val boundNames = pattern.variables.varMap.keySet
-      val referencedNames = termRefNames(guard)
+      val referencedNames = termFreeVarNames(guard)
       (boundNames & referencedNames) ++ pattern.varNamesUsedInGuards
     case _ =>
       children.iterator.collect:
         case p: Pattern => p.varNamesUsedInGuards
       .foldLeft(Set.empty[Str])(_ ++ _)
   
-  /** Collect all names referenced via `Term.Ref` in the given term tree. */
-  private def termRefNames(t: Term): Set[Str] =
-    val refs = Set.newBuilder[Str]
-    def go(t: Term): Unit =
-      t match
-        case Term.Ref(sym) => refs += sym.nme
-        case _ => ()
-      t.subTerms.foreach(go)
-    go(t)
-    refs.result()
+  /** Compute the set of free variable names in the given term tree.
+    * This accounts for local bindings introduced by `let` declarations
+    * (in `Blk`), lambda parameters, and local function definitions,
+    * so that shadowed names are not counted as free. */
+  private def termFreeVarNames(t: Term): Set[Str] =
+    val free = Set.newBuilder[Str]
+    def goStmt(s: Statement, bound: Set[Str]): Set[Str] = s match
+      case LetDecl(sym, _) =>
+        bound + sym.nme
+      case DefineVar(sym, rhs) =>
+        val newBound = bound + sym.nme
+        go(rhs, newBound)
+        newBound
+      case td: TermDefinition =>
+        val newBound = bound + td.sym.nme
+        td.body.foreach(go(_, newBound))
+        newBound
+      case other =>
+        other.subTerms.foreach(go(_, bound))
+        bound
+    def go(t: Term, bound: Set[Str]): Unit = t match
+      case Term.Ref(sym) =>
+        if !bound.contains(sym.nme) then free += sym.nme
+      case Term.Blk(stats, res) =>
+        val finalBound = stats.foldLeft(bound)((b, s) => goStmt(s, b))
+        go(res, finalBound)
+      case Term.Lam(params, body) =>
+        val paramNames = params.allParams.iterator.map(_.sym.nme).toSet
+        go(body, bound ++ paramNames)
+      case _ =>
+        t.subTerms.foreach(go(_, bound))
+    go(t, Set.empty)
+    free.result()
   
   def children: Vector[Located] = this match
     case Constructor(target, arguments) => target +: arguments.fold(Vector.empty)(_.toVector)
