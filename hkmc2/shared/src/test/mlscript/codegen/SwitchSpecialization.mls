@@ -159,8 +159,8 @@ fun f(x) =
     2 do return acc + "2"
   "fail"
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f4;
-//│ f4 = function f(x) {
+//│ let f3;
+//│ f3 = function f(x) {
 //│   let acc, tmp1;
 //│   acc = "";
 //│   switch (x) {
@@ -204,8 +204,8 @@ fun f(x) =
     else do return acc + "3"
   "fail"
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f5;
-//│ f5 = function f(x) {
+//│ let f4;
+//│ f4 = function f(x) {
 //│   let acc, tmp1;
 //│   acc = "";
 //│   if (x === 0) {
