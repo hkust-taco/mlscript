@@ -96,6 +96,8 @@ f(2)
 //│ = ["cde", 4]
 
 // See `SpecializedSwitch` for details on what is specialized here
+// Note: It would also specialize if `return` were replaced with `break` or `continue`, but it isn't
+// yet possible to explicitly write in the source language
 :sjs
 fun f(x) =
   let acc = ""
