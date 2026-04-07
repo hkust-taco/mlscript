@@ -152,6 +152,72 @@ c.A#x
 //│ = 3
 
 
+class A()
+class B() extends A()
+B() is A
+//│ Wasm result:
+//│ = 1
+
+
+class B() extends A()
+class A()
+let b = B()
+if b is A then 1 else 0
+//│ Wasm result:
+//│ = 1
+
+
+class A(val x)
+class B(val y) extends A(1)
+if B(2) is A(a) then a else 0
+//│ Wasm result:
+//│ = 1
+
+
+class Bar(val a)
+class Foo(val x, val y) extends Bar(x + y)
+if Foo(1,2) is Foo(x,y) then Foo(1,2).Bar#a
+//│ Wasm result:
+//│ = 3
+
+
+class Bar(val a)
+class Foo(val x) extends Bar(x * 2)
+fun getXor(f) = if f is Foo(z) then f.Bar#a else 0
+getXor(Foo(42))
+//│ Wasm result:
+//│ = 84
+
+
+class Foo(val x)
+class Bar(val y) extends Foo(y + y)
+class Baz(val z) extends Bar(z - 1)
+if Baz(10) is
+  Foo(a) then a
+  Bar(b) then b
+  Baz(c) then c
+  else 0
+//│ Wasm result:
+//│ = 18
+
+
+class Bar(val y)
+class Baz(val z) extends Bar(not z)
+if Baz(true) is
+  Bar(a) then if a then Bar(a).Bar#y else a
+  Baz(b) then b
+  else 2
+//│ Wasm result:
+//│ = 0
+
+
+class A()
+class B()
+B() is A
+//│ Wasm result:
+//│ = 0
+
+
 // Unrelated top-level classes preserve their source order in type declaration.
 :wat
 class A 
@@ -259,10 +325,9 @@ class B
 //│ = {}
 
 
-:fixme
+:ge
 class A extends B
 class B extends A
 //│ ╔══[COMPILATION ERROR] Wasm inheritance ordering detected an inheritance cycle.
-//│ ║  l.263: 	class A extends B
+//│ ║  l.329: 	class A extends B
 //│ ╙──       	^^^^^^^^^^^^^^^^^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:A`

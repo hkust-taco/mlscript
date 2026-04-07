@@ -289,6 +289,7 @@ class Ctx extends ToWat:
   private val singletonByBms = MutMap.empty[BlockMemberSymbol, Ctx.SingletonInfo]
   private val singletonByIsym = MutMap.empty[ModuleOrObjectSymbol, Ctx.SingletonInfo]
   private val singletonInitActions = ArrayBuf.empty[Expr]
+  private val classTags = MutMap.empty[BlockMemberSymbol, Seq[Int]]
 
   private def imports: Seq[Import[?]] =
     val importedFuncs = funcs.collect:
@@ -364,6 +365,12 @@ class Ctx extends ToWat:
   def getTypeInfo_!(typeref: TypeIdx | BlockMemberSymbol): TypeInfo =
     getTypeInfo(typeref).getOrElse:
       lastWords(s"Missing type definition for ${typeref.prettyString}")
+
+  def setClassTags(sym: BlockMemberSymbol, tags: Seq[Int]): Unit =
+    classTags(sym) = tags
+
+  def getClassTags(sym: BlockMemberSymbol): Opt[Seq[Int]] =
+    classTags.get(sym)
 
   @deprecated("Use the `Import[ExternType.Func]` overload instead.")
   def addFunctionImport(sym: Opt[Symbol], funcImport: FuncImport): FuncIdx =

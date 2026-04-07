@@ -252,6 +252,22 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ),
     )
 
+  private def predeclareClassTags(
+      orderedDefns: List[ClsLikeDefn],
+  )(using Ctx, Raise, Scope): Unit =
+    val childrenBySym = LinkedHashMap.empty[BlockMemberSymbol, ArrayBuf[BlockMemberSymbol]]
+    orderedDefns.foreach: defn =>
+      childrenBySym(defn.sym) = ArrayBuf.empty
+    orderedDefns.foreach: defn =>
+      resolveParentSym(defn).foreach: parentSym =>
+        childrenBySym(parentSym) += defn.sym
+    orderedDefns.reverseIterator.foreach: defn =>
+      val ownTag = ctx.getTypeInfo_!(defn.sym).objectTag.getOrElse:
+        lastWords(s"Expected class ${defn.sym} to have an object tag")
+      val childTags = childrenBySym(defn.sym).flatMap: childSym =>
+        ctx.getClassTags(childSym).getOrElse(lastWords("unreachable"))
+      ctx.setClassTags(defn.sym, ownTag +: childTags.toSeq)
+
   private def declareClassFuncType(
       defn: ClsLikeDefn,
       suffix: Str,
@@ -1599,6 +1615,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
                 val expectedTag = typeinfo.objectTag.getOrElse:
                   lastWords(s"Expected class $clsBlkMemberSym to have an object tag")
+                val acceptedTags = ctx.getClassTags(clsBlkMemberSym).getOrElse(Seq(expectedTag))
 
                 val scrutExpr = getScrutExpr
                 val isStructCompatible = ref.test(scrutExpr, baseObjectRefType(nullable = true))
@@ -1615,7 +1632,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   scrutAsObject,
                   I32Type,
                 )
-                val tagMatches = i32.eq(scrutTag, i32.const(expectedTag))
+                val tagMatches = acceptedTags.toList match
+                  case tag :: Nil => i32.eq(scrutTag, i32.const(tag))
+                  case tag :: rest =>
+                    rest.foldLeft[Expr](i32.eq(scrutTag, i32.const(tag))):
+                      (acc, candidateTag) => i32.or(acc, i32.eq(scrutTag, i32.const(candidateTag)))
+                  case Nil =>
+                    lastWords(s"Expected class $clsBlkMemberSym to have at least one accepted runtime tag")
 
                 S(`if`(
                   condition = isStructCompatible,
@@ -1745,102 +1768,113 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val ctx = Ctx.empty
     given Ctx = ctx
 
-    // Create base Object struct with tag field that all other structs will inherit
-    ctx.addType(
-      sym = S(baseObjectSym),
-      TypeInfo(
-        id = SymIdx("Object"),
-        StructType(Seq(tagFieldSym -> Field(I32Type, mutable = true, id = "$tag"))),
-        objectTag = S(ctx.getFreshObjectTag() ensuring (_ == 0)),
-      ),
-    )
+    boundary[(Document, Str, Int)]:
+      val outerRaise = summon[Raise]
 
-    // Early registration scheme: collect supported top-level classes from main block,
-    // order by inheritance, predeclare struct types, init functions, and constructors.
-    val orderedTopLevelClassDefns = sortTopLevelClasses(collectTopLevelClassDefns(p.main))
-    orderedTopLevelClassDefns.foreach(predeclareClassType)
-    orderedTopLevelClassDefns.foreach(predeclareClassInit)
-    orderedTopLevelClassDefns.foreach(predeclareClassConstructor)
+      // Create base Object struct with tag field that all other structs will inherit
+      ctx.addType(
+        sym = S(baseObjectSym),
+        TypeInfo(
+          id = SymIdx("Object"),
+          StructType(Seq(tagFieldSym -> Field(I32Type, mutable = true, id = "$tag"))),
+          objectTag = S(ctx.getFreshObjectTag() ensuring (_ == 0)),
+        ),
+      )
 
-    // Compile the entry function under a dedicated local scope so that any temp locals introduced
-    // during codegen (e.g., via `local.tee`) are declared in the entry function.
-    ctx.pushLocal()
-    val (rawEntryFnExpr, entryFnLocals) =
-      block(p.main)
-    val entryFnExpr = normalizeEntryExpr(rawEntryFnExpr, p.main.isAbortive)
-    val entryExtraLocals = getExtraLocals.filterNot(entryFnLocals.toSet.contains)
+      // Early registration scheme: collect supported top-level classes from main block,
+      // order by inheritance, predeclare struct types, init functions, and constructors.
+      val orderedTopLevelClassDefns =
+        given Raise = diag =>
+          outerRaise(diag)
+          diag match
+            case _: ErrorReport => break((ctx.toWat, "entry", 0))
+            case _ => ()
+        val ordered = sortTopLevelClasses(collectTopLevelClassDefns(p.main))
+        ordered.foreach(predeclareClassType)
+        predeclareClassTags(ordered)
+        ordered.foreach(predeclareClassInit)
+        ordered.foreach(predeclareClassConstructor)
+        ordered
 
-    val entrySym = BlockMemberSymbol("entry", Nil)
-    val entryNme = scope.allocateName(entrySym)
+      // Compile the entry function under a dedicated local scope so that any temp locals introduced
+      // during codegen (e.g., via `local.tee`) are declared in the entry function.
+      ctx.pushLocal()
+      val (rawEntryFnExpr, entryFnLocals) =
+        block(p.main)
+      val entryFnExpr = normalizeEntryExpr(rawEntryFnExpr, p.main.isAbortive)
+      val entryExtraLocals = getExtraLocals.filterNot(entryFnLocals.toSet.contains)
 
-    val entryFnTy = ctx.addType(
-      sym = N,
-      TypeInfo(
-        id = SymIdx(scope.allocateName(TempSymbol(N, entryNme))),
-        FunctionType(params = Seq.empty, results = Seq(Result(RefType.anyref))),
-        objectTag = N,
-      ),
-    )
-    val entryFnInfo = FuncInfo(
-      id = SymIdx(entryNme),
-      typeUse = TypeUse(entryFnTy),
-      params = Seq.empty,
-      nResults = 1,
-      // TODO(Derppening): Should we place top-level scope variables in the global section?
-      locals = (entryFnLocals ++ entryExtraLocals).map(l => l -> scope.allocateOrGetName(l)),
-      body = entryFnExpr,
-      `export` = S(entryNme),
-    )
+      val entrySym = BlockMemberSymbol("entry", Nil)
+      val entryNme = scope.allocateName(entrySym)
 
-    ctx.popLocal()
-    if stringLits.nonEmpty then
-      stringLits.foreach: (s, lit) =>
-        if lit.byteLen > 0 then
-          ctx.addDataSegment(DataSegment.Active(
-            id = SymIdx(scope.allocateName(TempSymbol(N, s.take(WatBuilder.StringConstantIdentMaxLength)))),
-            offset = i32.const(lit.offset),
-            bytes = lit.watBytes,
-            memuse = N,
-          ))
-
-    val singletonInitActions = ctx.getSingletonInitActions
-    if singletonInitActions.nonEmpty then
-      val initTy = ctx.addType(
+      val entryFnTy = ctx.addType(
         sym = N,
         TypeInfo(
-          id = SymIdx(scope.allocateName(TempSymbol(N, "start"))),
-          FunctionType(params = Seq.empty, results = Seq.empty),
+          id = SymIdx(scope.allocateName(TempSymbol(N, entryNme))),
+          FunctionType(params = Seq.empty, results = Seq(Result(RefType.anyref))),
           objectTag = N,
         ),
       )
-      val initBody = blockInstr(
-        label = N,
-        children = singletonInitActions.toSeq,
-        resultTypes = Seq.empty,
+      val entryFnInfo = FuncInfo(
+        id = SymIdx(entryNme),
+        typeUse = TypeUse(entryFnTy),
+        params = Seq.empty,
+        nResults = 1,
+        // TODO(Derppening): Should we place top-level scope variables in the global section?
+        locals = (entryFnLocals ++ entryExtraLocals).map(l => l -> scope.allocateOrGetName(l)),
+        body = entryFnExpr,
+        `export` = S(entryNme),
       )
-      val initFn = ctx.addFunc(
-        sym = N,
-        FuncInfo(
-          id = SymIdx(scope.allocateName(TempSymbol(N, "start"))),
-          typeUse = TypeUse(initTy),
-          params = Seq.empty,
-          nResults = 0,
-          locals = Seq.empty,
-          body = initBody,
-          `export` = N,
-        ),
-      )
-      ctx.setStartFunc(initFn)
-    end if
 
-    ctx.addFunc(S(entrySym), entryFnInfo)
+      ctx.popLocal()
+      if stringLits.nonEmpty then
+        stringLits.foreach: (s, lit) =>
+          if lit.byteLen > 0 then
+            ctx.addDataSegment(DataSegment.Active(
+              id = SymIdx(scope.allocateName(TempSymbol(N, s.take(WatBuilder.StringConstantIdentMaxLength)))),
+              offset = i32.const(lit.offset),
+              bytes = lit.watBytes,
+              memuse = N,
+            ))
 
-    val systemMemMinPages =
-      ctx.getMemoryImport(
-        ExternIntrinsics.SystemModule,
-        ExternIntrinsics.SystemMemoryImportName,
-      ).fold(0)(_.memType.lim.min)
-    (ctx.toWat, entryNme, systemMemMinPages)
+      val singletonInitActions = ctx.getSingletonInitActions
+      if singletonInitActions.nonEmpty then
+        val initTy = ctx.addType(
+          sym = N,
+          TypeInfo(
+            id = SymIdx(scope.allocateName(TempSymbol(N, "start"))),
+            FunctionType(params = Seq.empty, results = Seq.empty),
+            objectTag = N,
+          ),
+        )
+        val initBody = blockInstr(
+          label = N,
+          children = singletonInitActions.toSeq,
+          resultTypes = Seq.empty,
+        )
+        val initFn = ctx.addFunc(
+          sym = N,
+          FuncInfo(
+            id = SymIdx(scope.allocateName(TempSymbol(N, "start"))),
+            typeUse = TypeUse(initTy),
+            params = Seq.empty,
+            nResults = 0,
+            locals = Seq.empty,
+            body = initBody,
+            `export` = N,
+          ),
+        )
+        ctx.setStartFunc(initFn)
+      end if
+
+      ctx.addFunc(S(entrySym), entryFnInfo)
+
+      val systemMemMinPages =
+        ctx.getMemoryImport(
+          ExternIntrinsics.SystemModule,
+          ExternIntrinsics.SystemMemoryImportName,
+        ).fold(0)(_.memType.lim.min)
+      (ctx.toWat, entryNme, systemMemMinPages)
   end program
 
   /** Captures the local symbols introduced while compiling `expr`.
