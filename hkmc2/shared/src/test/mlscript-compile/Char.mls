@@ -1,5 +1,6 @@
 
 module Char with
+  pattern AnyChar = (Str as s where s.length is 1) => s
   pattern Lowercase = "a" ..= "z"
   pattern Uppercase = "A" ..= "Z"
   pattern Letter = Lowercase | Uppercase
@@ -8,4 +9,3 @@ module Char with
   pattern OctDigit = "0" ..= "7"
   pattern BinDigit = "0" | "1"
   pattern Whitespace = " " | "\t" | "\n" | "\r"
-

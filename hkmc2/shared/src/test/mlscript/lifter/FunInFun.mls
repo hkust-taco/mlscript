@@ -101,9 +101,7 @@ f(1,2,3,4,5,6)
 //│   return +⁰(tmp3, a6)
 //│ };
 //│ define f² as fun f³(a1, a2, a3, a4, a5, a6) {
-//│   let tmp;
-//│   set tmp = g³(a1, a2, a3, a4, a5, a6);
-//│   return tmp
+//│   return g³(a1, a2, a3, a4, a5, a6)
 //│ };
 //│ f³(1, 2, 3, 4, 5, 6)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -385,8 +383,6 @@ f(0)
 //│   match scrut
 //│     true =>
 //│       return g⁹(x)
-//│     else
-//│       end
 //│   set tmp = +⁰(x, 1);
 //│   set x = tmp;
 //│   return x

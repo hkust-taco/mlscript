@@ -1,4 +1,5 @@
 :js
+:noInline
 
 
 :sjs
@@ -12,7 +13,7 @@ fun t = 42
 :sjs
 t
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp; tmp = t(); tmp
+//│ t()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -41,14 +42,14 @@ fun test() =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test;
 //│ test = function test() {
-//│   let whoops, tmp1, tmp2;
+//│   let whoops, tmp, tmp1;
 //│   whoops = function whoops() {
 //│     Predef.print("ok");
 //│     return 42
 //│   };
+//│   tmp = whoops();
 //│   tmp1 = whoops();
-//│   tmp2 = whoops();
-//│   return tmp1 + tmp2
+//│   return tmp + tmp1
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -135,12 +136,7 @@ fun test() =
   whoops
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test1;
-//│ test1 = function test() {
-//│   let whoops, tmp1;
-//│   whoops = function whoops() { return 42 };
-//│   tmp1 = whoops();
-//│   return tmp1
-//│ };
+//│ test1 = function test() { let whoops; whoops = function whoops() { return 42 }; return whoops() };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -183,12 +179,12 @@ fun baz() =
 //│     return 2
 //│   };
 //│   lambda = (undefined, function (x, y) {
-//│     let tmp1, tmp2, tmp3, tmp4;
-//│     tmp1 = x + y;
-//│     tmp2 = w();
-//│     tmp3 = tmp1 + tmp2;
-//│     tmp4 = z();
-//│     return tmp3 + tmp4
+//│     let tmp, tmp1, tmp2, tmp3;
+//│     tmp = x + y;
+//│     tmp1 = w();
+//│     tmp2 = tmp + tmp1;
+//│     tmp3 = z();
+//│     return tmp2 + tmp3
 //│   });
 //│   return lambda
 //│ };
@@ -214,11 +210,11 @@ fun a() =
 //│     return 1
 //│   };
 //│   c = function c() {
-//│     let d, tmp2, tmp3;
+//│     let d, tmp1, tmp2;
 //│     d = function d() { return 2 };
-//│     tmp2 = b();
-//│     tmp3 = d();
-//│     return tmp2 + tmp3
+//│     tmp1 = b();
+//│     tmp2 = d();
+//│     return tmp1 + tmp2
 //│   };
 //│   return c
 //│ };
@@ -240,12 +236,7 @@ fun b() =
 //│ let b;
 //│ b = function b() {
 //│   let d;
-//│   d = function d() {
-//│     let c, tmp3;
-//│     c = function c() { return 2 };
-//│     tmp3 = c();
-//│     return tmp3
-//│   };
+//│   d = function d() { let c; c = function c() { return 2 }; return c() };
 //│   return d
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -265,21 +256,18 @@ fun c() =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let c;
 //│ c = function c() {
-//│   let d, f, tmp4;
+//│   let d, f;
 //│   f = function f() {
 //│     return 1
 //│   };
 //│   d = function d() {
-//│     let e, tmp5, tmp6;
-//│     e = function e() {
-//│       return 1
-//│     };
-//│     tmp5 = e();
-//│     tmp6 = f();
-//│     return tmp5 + tmp6
+//│     let e, tmp3, tmp4;
+//│     e = function e() { return 1 };
+//│     tmp3 = e();
+//│     tmp4 = f();
+//│     return tmp3 + tmp4
 //│   };
-//│   tmp4 = d();
-//│   return tmp4
+//│   return d()
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -331,6 +319,6 @@ foo(Foo(42))
 
 :re
 foo(Foo(42))()
-//│ ═══[RUNTIME ERROR] TypeError: tmp7 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: tmp6 is not a function
 
 

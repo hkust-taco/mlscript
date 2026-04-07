@@ -47,7 +47,7 @@ M.Foo:: n(foo, 2)
 :sjs
 let m = M.Foo::m
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let m, m1; m1 = function m(self, ...args) { return self.m(...args) }; m = m1;
+//│ let m, m1; m1 = function m(self5, ...args5) { return self5.m(...args5) }; m = m1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ m = fun m
 
@@ -123,20 +123,21 @@ Foo::m
 
 :e
 :sjs
+:noInline
 Foo::n(foo, 2)
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.126: 	Foo::n(foo, 2)
+//│ ║  l.127: 	Foo::n(foo, 2)
 //│ ╙──       	^^^
 //│ ╔══[COMPILATION ERROR] Identifier is not a known class.
-//│ ║  l.126: 	Foo::n(foo, 2)
+//│ ║  l.127: 	Foo::n(foo, 2)
 //│ ║         	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ ═══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda9;
-//│ lambda9 = (undefined, function (self, ...args) {
-//│   return runtime.safeCall(self.n(...args))
+//│ lambda9 = (undefined, function (self7, ...args7) {
+//│   return runtime.safeCall(self7.n(...args7))
 //│ });
 //│ lambda9(foo, 2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

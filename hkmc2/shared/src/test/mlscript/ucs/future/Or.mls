@@ -3,22 +3,17 @@
 data class Some[T](value: T)
 
 
-:fixme
+:fixme // TODO
 // TODO support `or` in UCS
 fun f(a, b) = if a is
   Some(v)
     and b is Some(v') then v + v'
     or  b is Some(v)  then v
   else 0
-//│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator 'then').
-//│ ║  l.9: 	  Some(v)
-//│ ║       	  ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
 //│ ║  l.10: 	    and b is Some(v') then v + v'
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	                           ^^^^^^
 //│ ║  l.11: 	    or  b is Some(v)  then v
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Name not found: v
-//│ ║  l.11: 	    or  b is Some(v)  then v
-//│ ╙──      	                           ^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

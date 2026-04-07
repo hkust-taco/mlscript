@@ -1,20 +1,63 @@
+:js
 
+
+// ——— ——— ———
 
 :e
 if x else z
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (identifier)
-//│ ║  l.4: 	if x else z
+//│ ║  l.7: 	if x else z
 //│ ╙──     	   ^
 //│ ╔══[COMPILATION ERROR] Name not found: z
-//│ ║  l.4: 	if x else z
+//│ ║  l.7: 	if x else z
 //│ ╙──     	          ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 fun f(x, z) =
   if x
     else z
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (identifier)
-//│ ║  l.14: 	  if x
+//│ ║  l.18: 	  if x
 //│ ╙──      	     ^
+
+// ——— ——— ———
+
+// Works
+if
+  true
+  and true do
+    print("ok")
+//│ > ok
+
+// Works
+if
+  true
+  and true
+  and true do
+    print("ok")
+//│ > ok
+
+// Should work? Probably not
+:e
+if
+  true
+  and true
+  let x = 1
+  and true do
+    print("ok")
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (true literal)
+//│ ║  l.45: 	  and true
+//│ ╙──      	      ^^^^
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'do' here
+//│ ║  l.46: 	  let x = 1
+//│ ║        	          ^
+//│ ║  l.47: 	  and true do
+//│ ║        	^^^^^^^^^^^^^
+//│ ║  l.48: 	    print("ok")
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// ——— ——— ———
 
 

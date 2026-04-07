@@ -4,115 +4,6 @@
 
 // ——— ——— ———
 
-:fixme
-while
-    let arrMatches = true
-    arrMatches
-  do
-    print(arrMatches)
-//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'do' here
-//│ ║  l.9: 	    let arrMatches = true
-//│ ║       	        ^^^^^^^^^^^^^^^^^
-//│ ║  l.10: 	    arrMatches
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.11: 	  do
-//│ ║        	^^^^
-//│ ║  l.12: 	    print(arrMatches)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// ——— ——— ———
-
-let arrMatches = ()
-//│ arrMatches = ()
-
-// * Note: produces a match error
-:fixme
-if
-  arrMatches !== null
-  do
-    ()
-//│ ╔══[COMPILATION ERROR] Unrecognized term split (null)
-//│ ║  l.32: 	  arrMatches !== null
-//│ ╙──      	                 ^^^^
-//│ ═══[RUNTIME ERROR] Error: match error
-
-// * This one works:
-if
-  arrMatches !== null do
-    ()
-
-// ——— ——— ———
-
-if
-  true and
-  true do
-    print("ok")
-//│ > ok
-
-if
-  true and
-  false do
-    print("ok")
-
-if
-  true and
-    true do
-      print("ok")
-//│ > ok
-
-:fixme
-if
-  true
-  and
-  true do
-    print("ok")
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.67: 	  and
-//│ ║        	     ^
-//│ ║  l.68: 	  true do
-//│ ╙──      	^^
-//│ ╔══[COMPILATION ERROR] Unrecognized term split (‹erroneous syntax›)
-//│ ║  l.67: 	  and
-//│ ║        	     ^
-//│ ║  l.68: 	  true do
-//│ ╙──      	^^
-//│ > ok
-
-if
-  true
-  and true do
-    print("ok")
-//│ > ok
-
-if
-  true
-  and true
-  and true do
-    print("ok")
-//│ > ok
-
-:fixme
-if
-  true
-  and true
-  let x = 1
-  and true do
-    print("ok")
-//│ ╔══[COMPILATION ERROR] Unrecognized term split (true literal)
-//│ ║  l.98: 	  and true
-//│ ╙──      	      ^^^^
-//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'do' here
-//│ ║  l.99: 	  let x = 1
-//│ ║        	          ^
-//│ ║  l.100: 	  and true do
-//│ ║         	^^^^^^^^^^^^^
-//│ ║  l.101: 	    print("ok")
-//│ ╙──       	^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-// ——— ——— ———
-
 // * Example confusing parses that should be fixed when we fix the parsing of operator splits
 
 if 1 + 0
@@ -125,36 +16,25 @@ if 1 + 1
     * 2 == 1 then "A"
     |> id is r then r
 //│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
-//│ ║  l.124: 	    * 2 == 4 then "X"
-//│ ║         	        ^^
+//│ ║  l.15: 	    * 2 == 4 then "X"
+//│ ║        	        ^^
 //│ ╟── as it has lower precedence than the splitting operator here
-//│ ║  l.124: 	    * 2 == 4 then "X"
-//│ ╙──       	    ^
+//│ ║  l.15: 	    * 2 == 4 then "X"
+//│ ╙──      	    ^
 //│ ╔══[PARSE ERROR] Unexpected literal in this operator split inner position
-//│ ║  l.124: 	    * 2 == 4 then "X"
-//│ ║         	           ^
+//│ ║  l.15: 	    * 2 == 4 then "X"
+//│ ║        	           ^
 //│ ╟── Note: the operator split starts here
-//│ ║  l.124: 	    * 2 == 4 then "X"
-//│ ╙──       	    ^
+//│ ║  l.15: 	    * 2 == 4 then "X"
+//│ ╙──      	    ^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.124: 	    * 2 == 4 then "X"
-//│ ╙──       	           ^
+//│ ║  l.15: 	    * 2 == 4 then "X"
+//│ ╙──      	           ^
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (integer literal)
-//│ ║  l.124: 	    * 2 == 4 then "X"
-//│ ╙──       	      ^
+//│ ║  l.15: 	    * 2 == 4 then "X"
+//│ ╙──      	      ^
 //│ ═══[COMPILATION ERROR] Unrecognized term split (reference term)
 //│ ═══[RUNTIME ERROR] Error: match error
-
-// ——— ——— ———
-
-class Some(val v)
-
-Some(1) is
-  Some of [process, rest] do "hi"
-//│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator 'do').
-//│ ║  l.153: 	  Some of [process, rest] do "hi"
-//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^
-//│ = true
 
 // ——— ——— ———
 
@@ -202,14 +82,14 @@ let foo =
   case
     Tuple(...elements) then elements
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (spread).
-//│ ║  l.203: 	    Tuple(...elements) then elements
-//│ ╙──       	          ^^^^^^^^^^^
+//│ ║  l.83: 	    Tuple(...elements) then elements
+//│ ╙──      	          ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: elements
-//│ ║  l.203: 	    Tuple(...elements) then elements
-//│ ╙──       	                            ^^^^^^^^
+//│ ║  l.83: 	    Tuple(...elements) then elements
+//│ ╙──      	                            ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected three arguments, but found only one argument.
-//│ ║  l.203: 	    Tuple(...elements) then elements
-//│ ╙──       	    ^^^^^
+//│ ║  l.83: 	    Tuple(...elements) then elements
+//│ ╙──      	    ^^^^^
 //│ foo = fun foo
 
 foo(Tuple(1, 2, 3))
@@ -226,21 +106,21 @@ fun foo(x) = if x is Foo.
   Bar then "Bar"
   Foo then "Foo"
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.225: 	fun foo(x) = if x is Foo.
+//│ ║  l.105: 	fun foo(x) = if x is Foo.
 //│ ╙──       	                        ^
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (identifier).
-//│ ║  l.225: 	fun foo(x) = if x is Foo.
+//│ ║  l.105: 	fun foo(x) = if x is Foo.
 //│ ╙──       	                     ^^^
 
 fun foo(x) = if x is Foo
   .Bar then "Bar"
   .Foo then "Foo"
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (operator split).
-//│ ║  l.235: 	fun foo(x) = if x is Foo
+//│ ║  l.115: 	fun foo(x) = if x is Foo
 //│ ║         	                     ^^^
-//│ ║  l.236: 	  .Bar then "Bar"
+//│ ║  l.116: 	  .Bar then "Bar"
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.237: 	  .Foo then "Foo"
+//│ ║  l.117: 	  .Foo then "Foo"
 //│ ╙──       	^^^^^^^^^^^^^^^^^
 
 // ——— ——— ———

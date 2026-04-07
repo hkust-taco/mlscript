@@ -1,0 +1,156 @@
+:js
+
+
+// The `@compile` annotation should annotate `A(0)`, not `A(0) as y`.
+// The precedence of annotations should be tight enough to not include `as`.
+
+pattern A(pattern B) = B
+
+
+fun foo(x) = if x is @annotations.compile A(0) as y then y
+
+fun foo(x) = if x is (@annotations.compile A(0)) as y then y
+
+// :pt
+// :re
+// if 1 is (@annotations.compile A(0)) as y then y
+
+:pe
+:w
+:e
+fun foo(x) = if x is @annotations.compile (A(0) as y) then y
+//│ ╔══[PARSE ERROR] Unexpected keyword 'then' in this position
+//│ ║  l.21: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
+//│ ╙──      	                                                      ^^^^
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern (‹erroneous syntax›).
+//│ ║  l.21: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
+//│ ╙──      	                                                      ^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: y
+//│ ║  l.21: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
+//│ ╙──      	                                                   ^
+//│ ╔══[COMPILATION ERROR] Name not found: y
+//│ ║  l.21: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
+//│ ╙──      	                                                           ^
+//│ ╔══[WARNING] This annotation is not supported here.
+//│ ║  l.21: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
+//│ ║        	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: Patterns only support the `@compile` annotation.
+
+:e
+fun foo(x) = if x is @annotations.compile {A(0) as y} then y
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
+//│ ║  l.40: 	fun foo(x) = if x is @annotations.compile {A(0) as y} then y
+//│ ╙──      	                                                           ^
+
+:pe // parses as `@annotations.compile(A(0) as y) ‹missing annot body›`
+:e
+fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
+//│ ╔══[PARSE ERROR] Expected start of expression in this position
+//│ ║  l.47: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
+//│ ║        	                                                      ^
+//│ ╟── found a lone annotation instead
+//│ ║  l.47: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
+//│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern (‹erroneous syntax›).
+//│ ║  l.47: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
+//│ ╙──      	                                                      ^
+//│ ╔══[COMPILATION ERROR] Name not found: y
+//│ ║  l.47: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
+//│ ╙──      	                                                             ^
+
+:pe // parses as `@annotations.compile(A(0) as y) ‹missing annot body›`
+:e
+fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
+//│ ╔══[PARSE ERROR] Expected start of expression in this position
+//│ ║  l.63: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
+//│ ║        	                                                     ^
+//│ ╟── found a lone annotation instead
+//│ ║  l.63: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
+//│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern (‹erroneous syntax›).
+//│ ║  l.63: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
+//│ ╙──      	                                                     ^
+//│ ╔══[COMPILATION ERROR] Name not found: y
+//│ ║  l.63: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
+//│ ╙──      	                                                            ^
+
+:e
+fun foo(x) = if x is (@annotations.compile {A(0) as y}) then y
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
+//│ ║  l.78: 	fun foo(x) = if x is (@annotations.compile {A(0) as y}) then y
+//│ ╙──      	                                                             ^
+
+:fixme
+fun foo(x) = if x is (@annotations.compile A(0) as y) then y
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
+//│ ║  l.84: 	fun foo(x) = if x is (@annotations.compile A(0) as y) then y
+//│ ╙──      	                                                           ^
+
+
+// Using a dummy annotation to test that annotations gobble
+
+type Test
+
+:w
+@Test 1
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.95: 	@Test 1
+//│ ║        	^^^^^
+//│ ╟── This annotation is not supported on integer literal terms.
+//│ ║  l.95: 	@Test 1
+//│ ╙──      	      ^
+//│ = 1
+
+:w
+@Test 2 + 1
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.105: 	@Test 2 + 1
+//│ ║         	^^^^^
+//│ ╟── This annotation is not supported on application terms.
+//│ ║  l.105: 	@Test 2 + 1
+//│ ╙──       	      ^^^^^
+//│ = 3
+
+:w
+@Test 2 as Int
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.115: 	@Test 2 as Int
+//│ ║         	^^^^^
+//│ ╟── This annotation is not supported on type ascription terms.
+//│ ║  l.115: 	@Test 2 as Int
+//│ ╙──       	      ^^^^^^^^
+//│ = 2
+
+:w
+@Test id(2) as Int
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.125: 	@Test id(2) as Int
+//│ ║         	^^^^^
+//│ ╟── This annotation is not supported on type ascription terms.
+//│ ║  l.125: 	@Test id(2) as Int
+//│ ╙──       	      ^^^^^^^^^^^^
+//│ = 2
+
+:pe
+:re
+(@Test)
+//│ ╔══[PARSE ERROR] Expected start of expression in this position
+//│ ║  l.136: 	(@Test)
+//│ ║         	      ^
+//│ ╟── found a lone annotation instead
+//│ ║  l.136: 	(@Test)
+//│ ╙──       	 ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:pe
+:re
+print(@Test)
+//│ ╔══[PARSE ERROR] Expected start of expression in this position
+//│ ║  l.147: 	print(@Test)
+//│ ║         	           ^
+//│ ╟── found a lone annotation instead
+//│ ║  l.147: 	print(@Test)
+//│ ╙──       	      ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+

@@ -84,17 +84,10 @@ do
   print(() => f)
   ()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f, f1, lambda;
-//│ f1 = 1;
-//│ f = function f() {
-//│   loopLabel: while (true) {
-//│     continue loopLabel;
-//│   }
-//│ };
+//│ let f, lambda;
+//│ f = 1;
 //│ lambda = (undefined, function () {
-//│   let tmp;
-//│   tmp = f();
-//│   return tmp
+//│   loopLabel: while (true) { continue loopLabel; }
 //│ });
 //│ Predef.print(lambda);
 //│ runtime.Unit
@@ -107,10 +100,10 @@ do
 let foo = 1
 fun foo(x) = foo
 //│ ╔══[COMPILATION ERROR] Name 'foo' is already used
-//│ ║  l.107: 	let foo = 1
+//│ ║  l.100: 	let foo = 1
 //│ ║         	    ^^^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.108: 	fun foo(x) = foo
+//│ ║  l.101: 	fun foo(x) = foo
 //│ ╙──       	^^^^^^^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo4; foo4 = 1;

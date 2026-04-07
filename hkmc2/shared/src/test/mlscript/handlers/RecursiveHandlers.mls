@@ -181,13 +181,11 @@ str
 //│         }
 //│         pc = 1;
 //│         continue main;
-//│         break;
 //│       case 1:
 //│         runtime.resumeValue;
 //│         tmp11 = str + "A";
 //│         str = tmp11;
 //│         return runtime.Unit;
-//│         break;
 //│     }
 //│     break;
 //│   }
@@ -217,14 +215,12 @@ str
 //│         }
 //│         pc = 1;
 //│         continue main;
-//│         break;
 //│       case 1:
 //│         runtime.resumeValue;
 //│         tmp12 = str + "B";
 //│         tmp13 = str + tmp12;
 //│         str = tmp13;
 //│         return runtime.Unit;
-//│         break;
 //│     }
 //│     break;
 //│   }
@@ -272,11 +268,9 @@ str
 //│         }
 //│         pc = 1;
 //│         continue main;
-//│         break;
 //│       case 1:
 //│         runtime.resumeValue;
 //│         return runtime.safeCall(h11.perform(runtime.Unit));
-//│         break;
 //│     }
 //│     break;
 //│   }
@@ -321,11 +315,9 @@ str
 //│         }
 //│         pc = 1;
 //│         continue main;
-//│         break;
 //│       case 1:
 //│         tmp10 = runtime.resumeValue;
 //│         return tmp10;
-//│         break;
 //│     }
 //│     break;
 //│   }

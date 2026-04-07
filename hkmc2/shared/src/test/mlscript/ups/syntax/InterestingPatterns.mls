@@ -21,9 +21,9 @@ data class Node[A](value: A, left: Node[A], right: Node[A])
 pattern TreeDepth = (Leaf => 0) | (Node(_, TreeDepth as left, TreeDepth as right) => 1 + Math.max(left, right))
 
 pattern CountTree(pattern P) =
-  (Node(P as x, CountTree(P) as left, CountTree(P) as right) => 1 + left + right) |
-  (Node(_, CountTree(P) as left, CountTree(P) as right) => left + right) |
-  (Leaf => 0)
+  | Node(P as x, CountTree(P) as left, CountTree(P) as right) => 1 + left + right
+  | Node(_, CountTree(P) as left, CountTree(P) as right) => left + right
+  | Leaf => 0
 
 // Match a 2x2 matrix and return its transpose.
 :ucs ups
@@ -43,8 +43,8 @@ pattern MatrixDiagonal = ([[a, _, _], [_, b, _], [_, _, c]] => [a, b, c])
 
 // Flatten a binary tree to a list using in-order traversal
 pattern InOrderTraversal =
-  (Leaf => []) |
-  (Node(x, InOrderTraversal as left, InOrderTraversal as right) => left ::: [x] ::: right)
+  | Leaf => []
+  | Node(x, InOrderTraversal as left, InOrderTraversal as right) => left ::: [x] ::: right
 
 fun max(ow, v) = if ow is
   Some(w) and w > v then w
@@ -56,27 +56,28 @@ fun min(ow, v) = if ow is
 
 // Extract the maximum value from a binary tree
 pattern TreeMax =
-  (Leaf => None) |
-  (Node(x, TreeMax as left, TreeMax as right) => max(max(left, x), right))
+  | Leaf => None
+  | Node(x, TreeMax as left, TreeMax as right) => max(max(left, x), right)
 pattern TreeMin =
-  (Leaf => None) |
-  (Node(x, TreeMin as left, TreeMin as right) => min(min(left, x), right))
+  | Leaf => None
+  | Node(x, TreeMin as left, TreeMin as right) => min(min(left, x), right)
 
 // Check if a binary tree is balanced
-pattern IsBalanced = (Leaf => true) | (Node(_, IsBalanced as left, IsBalanced as right) => Math.abs(TreeDepth(left) - TreeDepth(right)) <= 1)
+pattern IsBalanced =
+  | Leaf => true
+  | Node(_, IsBalanced as left, IsBalanced as right) => Math.abs(TreeDepth(left) - TreeDepth(right)) <= 1
 
 // Extract the path from root to a target value in a binary tree
 pattern PathToValue(pattern Target) = 
-  (Leaf => []) | 
-  (Node(PathToValue(Target) as left, Target, _) => [0] ::: left) |
-  (Node(_, Target, PathToValue(Target) as right) => [1] ::: right) |
-  (Node(PathToValue(Target) as left, _, _) => [0] ::: left) |
-  (Node(_, _, PathToValue(Target) as right) => [1] ::: right)
+  | Leaf => []
+  | Node(PathToValue(Target) as left, Target, _) => [0] ::: left
+  | Node(_, Target, PathToValue(Target) as right) => [1] ::: right
+  | Node(PathToValue(Target) as left, _, _) => [0] ::: left
+  | Node(_, _, PathToValue(Target) as right) => [1] ::: right
 
 // Extract elements at even indices in a list.
 pattern EvenIndicesList = 
-  (Nil => Nil) | 
-  ((x :: Nil) => x) |
-  ((x :: _ :: EvenIndicesList as xs) => x :: xs)
-
+  | Nil => Nil
+  | (x :: Nil) => x
+  | (x :: _ :: EvenIndicesList as xs) => x :: xs
 

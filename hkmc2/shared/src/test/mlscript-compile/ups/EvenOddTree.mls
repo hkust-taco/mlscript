@@ -1,0 +1,34 @@
+open annotations
+
+module EvenOddTree with ...
+
+object A
+object B
+
+data class Node[T](left: Node[T], value: T, right: Node[T])
+
+// The patterns generate trees that have odd or even numbers of node `A`.
+
+pattern OddTree =
+  | A
+  | Node(EvenTree, A, EvenTree)
+  | Node(OddTree, A, OddTree)
+  | Node(EvenTree, B, OddTree)
+  | Node(OddTree, B, EvenTree)
+
+pattern EvenTree =
+  | B
+  | Node(EvenTree, A, OddTree)
+  | Node(OddTree, A, EvenTree)
+  | Node(EvenTree, B, EvenTree)
+  | Node(OddTree, B, OddTree)
+
+fun isOddTree_naive(t) = t is OddTree
+fun isOddTree_optimized(t) =
+  if t is (@compile OddTree) as s then s else ()
+fun isOddTree_optimized_matchOnly(t) = t is @compile OddTree
+
+fun isEvenTree_naive(t) = t is EvenTree
+fun isEvenTree_optimized(t) =
+  if t is (@compile EvenTree) as s then s else ()
+fun isEvenTree_optimized_matchOnly(t) = t is @compile EvenTree

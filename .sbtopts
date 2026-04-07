@@ -4,7 +4,7 @@
 
 -J-server
 
--J-Xss4M
+-J-Xss8M
 
 # The options below were inspired by a message I got on some runs with more than usual memory retention:
 #   [warn] In the last 10 seconds, 5.067 (50.7%) were spent in GC. [Heap: 0.01GB free of 1.00GB, max 1.00GB] Consider increasing the JVM heap using `-Xmx` or try a different collector, e.g. `-XX:+UseG1GC`, for better performance.

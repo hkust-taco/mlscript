@@ -127,16 +127,12 @@ fun foo(x, y) =
 //│   return M.foo2⁰()
 //│ };
 //│ define foo⁴ as fun foo⁵(x, y) {
-//│   let M, tmp;
+//│   let M;
 //│   define M as object M² {
 //│     private val M$cap¹;
-//│     method foo2¹ = fun foo2⁰() {
-//│       set y = 2;
-//│       return +⁰(x, y)
-//│     }
+//│     method foo2¹ = fun foo2⁰() { set y = 2; return +⁰(x, y) }
 //│   };
-//│   set tmp = foo3¹(M²);
-//│   return tmp
+//│   return foo3¹(M²)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -154,7 +150,7 @@ data class A(x) with
     fun bar = M.getB()
     bar
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.151: 	  object M with
+//│ ║  l.147: 	  object M with
 //│ ╙──       	         ^
 
 :expect 2
@@ -211,7 +207,7 @@ fun f =
   foo
 f.a
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.207: 	  object A with
+//│ ║  l.203: 	  object A with
 //│ ╙──       	         ^
 //│ = 2
 
@@ -237,18 +233,16 @@ M.A().get
 //│         return +⁰(M⁵.x¹, M⁵.x¹)
 //│       }
 //│     };
-//│     begin
-//│       set scrut = M⁵.A²();
-//│       match scrut
-//│         A¹ =>
-//│           set tmp1 = 2;
-//│           end
-//│         else
-//│           set tmp1 = 3;
-//│           end
-//│       end;
-//│       define x⁰ as val x¹ = tmp1;
-//│       end
+//│     set scrut = M⁵.A²();
+//│     match scrut
+//│       A¹ =>
+//│         set tmp1 = 2;
+//│         end
+//│       else
+//│         set tmp1 = 3;
+//│         end
+//│     define x⁰ as val x¹ = tmp1;
+//│     end
 //│   }
 //│ };
 //│ set tmp = M⁵.A²();
@@ -295,7 +289,7 @@ fun foo(x) =
     val baz = x
   [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.293: 	  object O with
+//│ ║  l.287: 	  object O with
 //│ ╙──       	         ^
 
 foo(123)
@@ -344,13 +338,13 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.341: 	  object A with
+//│ ║  l.335: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.342: 	    object B with
+//│ ║  l.336: 	    object B with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.343: 	      object C
+//│ ║  l.337: 	      object C
 //│ ╙──       	             ^
 //│ = C
 
@@ -363,10 +357,10 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.360: 	  module A with
+//│ ║  l.354: 	  module A with
 //│ ╙──       	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.362: 	      object C
+//│ ║  l.356: 	      object C
 //│ ╙──       	             ^
 //│ = C
 
@@ -379,7 +373,7 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.376: 	  module A with
+//│ ║  l.370: 	  module A with
 //│ ╙──       	         ^
 //│ = C
 

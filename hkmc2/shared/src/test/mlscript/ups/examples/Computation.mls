@@ -7,12 +7,12 @@ data class Celsius(value: Num)
 data class Fahrenheit(value: Num)
 
 pattern ToFahrenheit =
-  ((Celsius(c)) => Fahrenheit((c * 9 / 5) + 32)) |
-  ((Fahrenheit as f) => f)
+  | (Celsius(c)) => Fahrenheit((c * 9 / 5) + 32)
+  | (Fahrenheit as f) => f
 
 pattern ToCelsius =
-  ((Fahrenheit(f)) => Celsius((f - 32) * 5 / 9)) |
-  ((Celsius as c) => c)
+  | (Fahrenheit(f)) => Celsius((f - 32) * 5 / 9)
+  | (Celsius as c) => c
 
 Celsius(0) is ToFahrenheit(Fahrenheit(32))
 //│ = true
@@ -83,13 +83,13 @@ print of "I should go to bed before", formatTime of hour: 23, minute: 0
 // This makes use of the chain pattern. It generates 29,232 lines of code!
 pattern Time12Hour = ((
   hour: ((
-    ((0 ..= 11) => "AM") |
-    ((12 ..= 23) => "PM")
+    | (0 ..= 11) => "AM"
+    | (12 ..= 23) => "PM"
   ) & (
-    (0 => 12) |
-    (1 ..= 11) |
-    12 |
-    ((13 ..= 23) as h => h - 12)
+    | 0 => 12
+    | 1 ..= 11
+    | 12
+    | ((13 ..= 23) as h) => (h - 12)
   )) as [hour, flag],
   minute: Minute as minute
 )) => hour + ":" + minute + " " + flag

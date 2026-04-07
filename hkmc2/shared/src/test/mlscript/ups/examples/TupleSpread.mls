@@ -18,8 +18,9 @@ pattern FirstLast = ([x, ..._, y] => [x, y])
 // Test if a list is a palindrome. This example is not very good because it
 // outputs a boolean value, rather than rejecting the input.
 pattern TestPalindrome =
-  ([x, ...TestPalindrome as m, y] => m && x == y) |
-  (([_] | []) => true) | (_ => false)
+  | [x, ...TestPalindrome as m, y] => m && x == y
+  | ([_] | []) => true
+  | _ => false
 
 [1, 2, 1] is TestPalindrome(true)
 //│ = true

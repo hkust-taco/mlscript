@@ -163,6 +163,25 @@ pattern Digit = "0" ..= "9"
 pattern Naughty = CanYouSeeMe(n) => n
 data class CanYouSeeMe(wow: Int)
 
+class SecretPair(a: Int, val b: Int)
+
+:ucs ups
+pattern KeepSecret(b) = SecretPair(_, b)
+//│ elaborated pattern body: SecretPair(_, b)
+
+:e
+pattern RebuildSecret = SecretPair(_, b => b + 1)
+//│ ╔══[COMPILATION ERROR] This pattern cannot be matched
+//│ ║  l.173: 	pattern RebuildSecret = SecretPair(_, b => b + 1)
+//│ ║         	                                   ^
+//│ ╟── because the corresponding parameter `a` is not publicly accessible
+//│ ║  l.166: 	class SecretPair(a: Int, val b: Int)
+//│ ║         	                 ^
+//│ ╟── because rebuilding the matched `SecretPair` value requires reading every constructor argument
+//│ ║  l.173: 	pattern RebuildSecret = SecretPair(_, b => b + 1)
+//│ ║         	                        ^^^^^^^^^^
+//│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
+
 :e
 // Even if a certain class is under the selection of multiple modules, we should
 // still be able to resolve it correctly.
@@ -175,10 +194,10 @@ module HiddenCorner with
   class CantYouSeeMe(val wow: Int)
   val k = 0
 //│ ╔══[COMPILATION ERROR] This pattern cannot be matched
-//│ ║  l.170: 	pattern Naughty = HiddenCorner.m.m.YouCantSeeMe(n) => n + HiddenCorner.m.m.k
+//│ ║  l.189: 	pattern Naughty = HiddenCorner.m.m.YouCantSeeMe(n) => n + HiddenCorner.m.m.k
 //│ ║         	                                                ^
 //│ ╟── because the corresponding parameter `wow` is not publicly accessible
-//│ ║  l.174: 	  class YouCantSeeMe(wow: Int)
+//│ ║  l.193: 	  class YouCantSeeMe(wow: Int)
 //│ ║         	                     ^^^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible

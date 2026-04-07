@@ -7,7 +7,7 @@
 
 1 then 2 then 3
 //│ Parsed:
-//│ 	InfixApp(InfixApp(IntLit(1),Keywrd(keyword 'then'),IntLit(2)),Keywrd(keyword 'then'),IntLit(3))
+//│ 	InfixApp(IntLit(1),Keywrd(keyword 'then'),InfixApp(IntLit(2),Keywrd(keyword 'then'),IntLit(3)))
 
 1 and 2 then 3
 //│ Parsed:

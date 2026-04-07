@@ -177,7 +177,7 @@ if y is
 //│ deforest > 	Ref(x,None)
 //│ deforest > <<< fusing <<<
 //│ = 2
-//│ x = fun x9
+//│ x = fun x11
 //│ y = fun y
 
 
@@ -261,7 +261,7 @@ if y is
 //│ deforest > 	Ref(x,None)
 //│ deforest > <<< fusing <<<
 //│ = 2
-//│ x = fun x10
+//│ x = fun x13
 //│ y = fun y1
 
 
@@ -536,7 +536,7 @@ test(p)
 //│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(c))
 //│ deforest > <<< fusing <<<
 //│ = 141
-//│ p = fun tmp59
+//│ p = fun tmp60
 
 
 :expect 141
@@ -558,7 +558,7 @@ test(p, id(CCC(123)))
 //│ deforest > 	Select(Ref(x,None),Ident(aa))
 //│ deforest > <<< fusing <<<
 //│ = 141
-//│ p = fun tmp61
+//│ p = fun tmp62
 
 
 :sir
@@ -1055,7 +1055,7 @@ f1(one) + f2(one) + f3(two)
 //│ deforest > <<< fusing <<<
 //│ = 10
 //│ one = AA(1)
-//│ two = fun
+//│ two = fun inlinedVal92
 
 
 :expect 4

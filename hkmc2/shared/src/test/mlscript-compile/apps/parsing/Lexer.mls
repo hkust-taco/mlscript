@@ -1,3 +1,4 @@
+#config(liftDefns: Some(LiftDefns))
 
 import "../../Predef.mls"
 
@@ -216,17 +217,19 @@ fun lex(str: Str, options) =
         Token.Space then scan(idx, acc)
       else scan(idx, tok :: acc)
     
+    fun go_tup(tup: [Int, TokenType]) = go(tup.0, tup.1)
+    
     if char(idx) is
       None then reverse of acc
       Some(ch) and ch is...
       Char.Whitespace and whitespace(idx) is idx' then
         go(idx', Token.space(idx, idx'))
-      "\"" then go(...string(idx + 1))
+      "\"" then go_tup(string(idx + 1))
       Bracket as b then go(idx + 1, Token.symbol(b, idx))
-      "/" then go(...comment(idx + 1))
-      Operator as ch then go(...operator(idx + 1, ch))
-      Char.Digit as ch then go(...number(idx + 1, ch))
-      IdentifierStart as ch then go(...identifier(idx + 1, ch))
+      "/" then go_tup(comment(idx + 1))
+      Operator as ch then go_tup(operator(idx + 1, ch))
+      Char.Digit as ch then go_tup(number(idx + 1, ch))
+      IdentifierStart as ch then go_tup(identifier(idx + 1, ch))
       IdentifierQuote as quote
         and char(idx + 1) is Some(IdentifierStart as ch)
         and identifier(idx + 2, quote + ch) is [idx', token] and

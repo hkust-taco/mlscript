@@ -23,7 +23,7 @@ import "../../../mlscript-compile/Char.mls"
 fun foo(x) = x is Nullable(Char.Letter)
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    let tmp:patternArgument0$ = (member:Char⁰.)Letter‹pattern:Letter›
+//│ >    let tmp:patternArgument0$ = (member:Char‹module:Char›.)Letter‹pattern:Letter›
 //│ >    let tmp:unapplyResult = (member:Nullable⁰.)unapply(tmp:patternArgument0$¹, x⁰)
 //│ >    tmp:unapplyResult is (tmp:runtime⁰.)MatchSuccess‹class:MatchSuccess›(output, bindings) then true
 //│ >    else false

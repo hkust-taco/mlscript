@@ -15,7 +15,6 @@ class Foo(x)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", [null]]; 
 //│ });
-//│ block$res1 = undefined;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :ssjs
@@ -34,7 +33,6 @@ class Foo(x)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", [null]]; 
 //│ });
-//│ block$res2 = undefined;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -42,7 +40,7 @@ class Foo(x)
 let foo = new Foo(1)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo;
-//│ foo = globalThis.Object.freeze(new Foo3.class(1)); block$res3 = undefined;
+//│ foo = globalThis.Object.freeze(new Foo3.class(1));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ foo = Foo(_)
 
@@ -51,7 +49,7 @@ let foo = new Foo(1)
 let foo = new Foo(1)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo1;
-//│ foo1 = (new Foo3.class(1)); block$res4 = undefined;
+//│ foo1 = (new Foo3.class(1));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ foo = Foo(_)
 

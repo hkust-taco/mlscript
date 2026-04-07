@@ -65,7 +65,7 @@ fun go(x) = if x is
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-// FIXME: not tail-rec optimized due to consequent-sharing
+// Note: Used not to be tail-rec optimized; now fixed
 :sir
 :patMatConsequentSharingThreshold 1
  // ^ The default value allowed duplicating "Z" in the above version
@@ -75,29 +75,30 @@ fun go(x) = if x is
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let go⁴;
 //│ define go⁴ as fun go⁵(x) {
-//│   let n, arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
-//│   block split_root$:
-//│     block split_1$:
-//│       match x
-//│         Cons⁰ =>
-//│           set arg$Cons$0$ = x.head⁰;
-//│           set arg$Cons$1$ = x.tail⁰;
-//│           match arg$Cons$1$
-//│             Nil⁰ =>
-//│               set tmp = "Z";
-//│               break split_root$
-//│             else
-//│               set n = x;
-//│               break split_1$
-//│           end
-//│         else
-//│           set n = x;
-//│           break split_1$
-//│       end
-//│     set tmp1 = [];
-//│     set tmp = go⁵(tmp1);
-//│     end
-//│   return tmp
+//│   loop loopLabel:
+//│     let n, arg$Cons$0$, arg$Cons$1$, tmp;
+//│     block split_root$:
+//│       block split_1$:
+//│         match x
+//│           Cons⁰ =>
+//│             set arg$Cons$0$ = x.head⁰;
+//│             set arg$Cons$1$ = x.tail⁰;
+//│             match arg$Cons$1$
+//│               Nil⁰ =>
+//│                 return "Z"
+//│               else
+//│                 set n = x;
+//│                 break split_1$
+//│             end
+//│           else
+//│             set n = x;
+//│             break split_1$
+//│         end
+//│       set tmp = [];
+//│       set x = tmp;
+//│       continue loopLabel
+//│     return runtime⁰.Unit⁰
+//│   end
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

@@ -102,6 +102,7 @@ if x is
 //│                 break;
 //│               default:
 //│                 break split_1$;
+//│                 break;
 //│             }
 //│             break;
 //│           case 1:
@@ -110,6 +111,7 @@ if x is
 //│             break;
 //│           default:
 //│             break split_1$;
+//│             break;
 //│         }
 //│         break;
 //│       case 1:
@@ -118,6 +120,7 @@ if x is
 //│         break;
 //│       default:
 //│         break split_1$;
+//│         break;
 //│     }
 //│   }
 //│   tmp2 = "-------------------------------------------------------------------------";
@@ -154,6 +157,7 @@ let qqq = if x is
 //│                 break;
 //│               default:
 //│                 break split_1$1;
+//│                 break;
 //│             }
 //│             break;
 //│           case 1:
@@ -162,6 +166,7 @@ let qqq = if x is
 //│             break;
 //│           default:
 //│             break split_1$1;
+//│             break;
 //│         }
 //│         break;
 //│       case 1:
@@ -170,6 +175,7 @@ let qqq = if x is
 //│         break;
 //│       default:
 //│         break split_1$1;
+//│         break;
 //│     }
 //│   }
 //│   tmp3 = "-------------------------------------------------------------------------";
@@ -284,24 +290,18 @@ fun foo(x, y, z) =
 //│           switch (z1) {
 //│             case 0:
 //│               return "000";
-//│               break;
 //│             case 1:
 //│               return "001";
-//│               break;
 //│             default:
 //│               return "";
 //│           }
-//│           break;
 //│         case 1:
 //│           return "01";
-//│           break;
 //│         default:
 //│           return "";
 //│       }
-//│       break;
 //│     case 1:
 //│       return "1";
-//│       break;
 //│     default:
 //│       return "";
 //│   }
@@ -383,17 +383,13 @@ fun foo(x, y, z) = if
 //│           switch (z1) {
 //│             case 0:
 //│               return "000";
-//│               break;
 //│             case 1:
 //│               return "0_1";
-//│               break;
 //│             default:
 //│               return "___";
 //│           }
-//│           break;
 //│         case 1:
 //│           return "01_";
-//│           break;
 //│         default:
 //│           if (z1 === 1) {
 //│             return "0_1"
@@ -405,10 +401,8 @@ fun foo(x, y, z) = if
 //│             }
 //│           }
 //│       }
-//│       break;
 //│     case 1:
 //│       return "1__";
-//│       break;
 //│     default:
 //│       if (y1 === 2) { return "_2_" } else { return "___" }
 //│   }
@@ -431,12 +425,12 @@ fun foo(x, y, z) = if x is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo2;
 //│ foo2 = function foo(x1, y1, z1) {
-//│   let value, tmp7;
-//│   split_root$2: {
-//│     split_1$2: {
-//│       switch (x1) {
+//│   let value;
+//│   switch (x1) {
+//│     case 0:
+//│       switch (y1) {
 //│         case 0:
-//│           switch (y1) {
+//│           switch (z1) {
 //│             case 0:
 //│               switch (z1) {
 //│                 case 0:
@@ -449,6 +443,7 @@ fun foo(x, y, z) = if x is
 //│                   break;
 //│                 default:
 //│                   break split_1$2;
+//│                   break;
 //│               }
 //│               break;
 //│             case 1:
@@ -457,6 +452,7 @@ fun foo(x, y, z) = if x is
 //│               break;
 //│             default:
 //│               break split_1$2;
+//│               break;
 //│           }
 //│           break;
 //│         case 1:
@@ -465,6 +461,7 @@ fun foo(x, y, z) = if x is
 //│           break;
 //│         default:
 //│           break split_1$2;
+//│           break;
 //│       }
 //│     }
 //│     value = "hello";
@@ -516,23 +513,12 @@ fun foo(x, y, z) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo4;
 //│ foo4 = function foo(x1, y1, z1) {
-//│   let tmp7;
-//│   split_root$2: {
-//│     split_1$2: {
-//│       if (x1 instanceof A1.class) {
-//│         if (y1 instanceof B1.class) {
-//│           if (z1 instanceof C1.class) {
-//│             tmp7 = "Hello";
-//│             break split_root$2
-//│           } else {
-//│             break split_1$2
-//│           }
-//│         } else { break split_1$2 }
-//│       } else { break split_1$2 }
+//│   if (x1 instanceof A1.class) {
+//│     if (y1 instanceof B1.class) {
+//│       if (z1 instanceof C1.class) { return "Hello" }
 //│     }
-//│     tmp7 = "Goodbye";
 //│   }
-//│   return tmp7
+//│   return "Goodbye"
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -543,27 +529,14 @@ fun foo(x, y, z) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo5;
 //│ foo5 = function foo(x1, y1, z1) {
-//│   let tmp7;
-//│   split_root$2: {
-//│     split_default$: {
-//│       if (x1 instanceof A1.class) {
-//│         if (y1 instanceof B1.class) {
-//│           if (z1 instanceof C1.class) {
-//│             tmp7 = "Hello";
-//│             break split_root$2
-//│           } else {
-//│             break split_default$
-//│           }
-//│         } else {
-//│           break split_default$
-//│         }
-//│       } else {
-//│         break split_default$
+//│   if (x1 instanceof A1.class) {
+//│     if (y1 instanceof B1.class) {
+//│       if (z1 instanceof C1.class) {
+//│         return "Hello"
 //│       }
 //│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   }
-//│   return tmp7
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

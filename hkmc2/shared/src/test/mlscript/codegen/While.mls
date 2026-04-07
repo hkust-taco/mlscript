@@ -55,7 +55,7 @@ fun f = while x
   else return 42 // TODO: support `break`
 f
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f, tmp;
+//│ let f;
 //│ f = function f() {
 //│   lbl4: while (true) {
 //│     if (x2 === true) {
@@ -65,8 +65,7 @@ f
 //│     } else { return 42 }
 //│   }
 //│ };
-//│ tmp = f();
-//│ tmp
+//│ f()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Hello World
 //│ = 42
@@ -321,10 +320,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.321: 	  then 0(0)
+//│ ║  l.320: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (false literal)
-//│ ║  l.320: 	while print("Hello World"); false
+//│ ║  l.319: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 
@@ -333,12 +332,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.332: 	while { print("Hello World"), false }
+//│ ║  l.331: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.333: 	  then 0(0)
+//│ ║  l.332: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.334: 	  else 1
+//│ ║  l.333: 	  else 1
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -349,14 +348,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.347: 	    print("Hello World")
+//│ ║  l.346: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.348: 	    false
+//│ ║  l.347: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.349: 	  then 0(0)
+//│ ║  l.348: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.350: 	  else 1
+//│ ║  l.349: 	  else 1
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

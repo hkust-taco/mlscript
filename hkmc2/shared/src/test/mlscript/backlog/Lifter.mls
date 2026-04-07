@@ -195,6 +195,7 @@ foo(2)
 
 // `h` is lifted out, but then cannot access the BlockMemberSymbol M.
 :fixme
+:noInline
 :w
 fun f =
   module M with
@@ -203,19 +204,19 @@ fun f =
       h
   M.g
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.200: 	  module M with
+//│ ║  l.201: 	  module M with
 //│ ╙──       	         ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'M'
-//│ ║  l.202: 	      fun h = M.g
+//│ ║  l.203: 	      fun h = M.g
 //│ ║         	              ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.200: 	  module M with
+//│ ║  l.201: 	  module M with
 //│ ║         	         ^^^^^^
-//│ ║  l.201: 	    fun g =
+//│ ║  l.202: 	    fun g =
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.202: 	      fun h = M.g
+//│ ║  l.203: 	      fun h = M.g
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.203: 	      h
+//│ ║  l.204: 	      h
 //│ ╙──       	^^^^^^^
 
 

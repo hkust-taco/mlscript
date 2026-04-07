@@ -101,6 +101,7 @@ fun f() =
 f()
 //│ = 100
 
+// TODO(inliner): something is wrong here
 // broken due to handlers currently not handling `object` properly
 :fixme
 :expect 100
@@ -110,12 +111,22 @@ fun f() =
   4
 f()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.108: 	  object A with
+//│ ║  l.109: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.108: 	  object A with
+//│ ║  l.109: 	  object A with
 //│ ╙──       	         ^
-//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_18 is raised in a constructor
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
+//│ ║  l.109: 	  object A with
+//│ ║         	  ^^^^^^^^^^^^^
+//│ ║  l.110: 	    return 100
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.109: 	  object A with
+//│ ║         	         ^^^^^^
+//│ ║  l.110: 	    return 100
+//│ ╙──       	^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Assignment to constant variable.
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 // ctor cannot raise effect, so error is expected.
@@ -137,12 +148,22 @@ fun f() =
   4
 f()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.135: 	  object A with
+//│ ║  l.146: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.135: 	  object A with
+//│ ║  l.146: 	  object A with
 //│ ╙──       	         ^
-//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_22 is raised in a constructor
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
+//│ ║  l.146: 	  object A with
+//│ ║         	  ^^^^^^^^^^^^^
+//│ ║  l.147: 	    (() => return 100)()
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.146: 	  object A with
+//│ ║         	         ^^^^^^
+//│ ║  l.147: 	    (() => return 100)()
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: A is not defined
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 :fixme

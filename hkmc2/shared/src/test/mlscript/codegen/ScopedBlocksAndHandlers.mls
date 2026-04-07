@@ -19,9 +19,7 @@ fun f(x) =
       let z = 3
       fun g() = z
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f;
-//│ runtime.resetEffects();
-//│ f = function f(x) { if (x === true) { if (x !== true) {} } return runtime.Unit };
+//│ let f; runtime.resetEffects(); f = function f(x) { return runtime.Unit };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -102,11 +100,8 @@ fun f(x) =
       fun g() = z
       g() )
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g4, f4;
+//│ let f4;
 //│ runtime.resetEffects();
-//│ g4 = function g(z) {
-//│   return z
-//│ };
 //│ f4 = function f(x) {
 //│   let z, pc;
 //│   if (runtime.resumePc === -1) {
@@ -119,25 +114,25 @@ fun f(x) =
 //│     switch (pc) {
 //│       case 0:
 //│         if (x === true) {
+//│           let z1, inlinedVal;
 //│           z = 3;
-//│           runtime.resumeValue = g4(z);
+//│           z1 = z;
+//│           inlinedVal = z1;
+//│           runtime.resumeValue = inlinedVal;
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(f4, 2, "ScopedBlocksAndHandlers.mls:103:7", null, null, 1, 1, x, 0)
+//│             return runtime.unwind(f4, 2, "ScopedBlocksAndHandlers.mls:101:7", null, null, 1, 1, x, 0)
 //│           }
 //│           pc = 2;
 //│           continue main
 //│         }
 //│         pc = 1;
 //│         continue main;
-//│         break;
 //│       case 1:
 //│         return runtime.Unit;
-//│         break;
 //│       case 2:
 //│         runtime.resumeValue;
 //│         pc = 1;
 //│         continue main;
-//│         break;
 //│     }
 //│     break;
 //│   }
@@ -152,7 +147,7 @@ fun f(x) =
       let z = 3
       fun g() = z )
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f5; runtime.resetEffects(); f5 = function f(x) { if (x !== true) {} return runtime.Unit };
+//│ let f5; runtime.resetEffects(); f5 = function f(x) { return runtime.Unit };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

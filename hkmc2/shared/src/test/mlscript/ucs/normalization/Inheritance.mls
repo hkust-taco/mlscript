@@ -1,0 +1,64 @@
+:js
+
+
+class A
+class B extends A
+
+:breakme // Should warn that the `B` branch is unreachable
+let f = case
+  A then "A"
+  B then "B"
+//│ f = fun f
+
+f(new A)
+//│ = "A"
+
+f(new B)
+//│ = "A"
+
+
+let f = case
+  B then "B"
+  A then "A"
+//│ f = fun f
+
+f(new A)
+//│ = "A"
+
+f(new B)
+//│ = "B"
+
+
+// FIXME: UCS normalization wrongly considers `A` and `B` to be disjoint
+//  because it currently does not take into account the class hierarchy,
+//  which is a very serious issue that needs to be fixed.
+:sir
+let f = case
+  A & B then "A & B"
+  A then "A"
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f⁰, f¹;
+//│ define f¹ as fun f²(caseScrut) {
+//│   match caseScrut
+//│     A⁰ =>
+//│       return "A"
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ set f⁰ = f²;
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ f = fun f
+
+:expect "A"
+f(new A)
+//│ = "A"
+
+:fixme
+:expect "A & B"
+f(new B)
+//│ ═══[RUNTIME ERROR] Expected: '"A & B"', got: '"A"'
+//│ = "A"
+
+
