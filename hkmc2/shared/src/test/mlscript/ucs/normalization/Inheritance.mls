@@ -62,4 +62,40 @@ f(new B)
 //│ = "A & B"
 
 
+// Cross-file import test: verify isSubclassOf works with imported classes.
+// Token.mls defines: abstract class Token; class Space() extends Token; class Error() extends Token; etc.
+// Space and Error are siblings (both extend Token), so they should be disjoint.
+
+import "../../../mlscript-compile/apps/parsing/Token.mls"
+open Token { Space, Error }
+
+:sir
+let g = case
+  Space & Error then "Space & Error"
+  Space then "Space"
+  Error then "Error"
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g⁰, g¹;
+//│ define g¹ as fun g²(caseScrut) {
+//│   match caseScrut
+//│     Space⁰ =>
+//│       return "Space"
+//│     Error¹ =>
+//│       return "Error"
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ set g⁰ = g²;
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ g = fun g
+
+:expect "Space"
+g(Space())
+//│ = "Space"
+
+:expect "Error"
+g(Error())
+//│ = "Error"
 
