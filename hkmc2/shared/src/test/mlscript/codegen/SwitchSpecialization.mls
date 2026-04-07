@@ -98,69 +98,6 @@ f(2)
 // See `SpecializedSwitch` for details on what is specialized here
 // Note: It would also specialize if `return` were replaced with `break` or `continue`, but it isn't
 // yet possible to explicitly write in the source language
-:sjs
-fun f(x) =
-  let acc = ""
-  if x is
-    0 do
-      set acc += "a"
-      set x = 1
-    1 do
-      set acc += "b"
-      set x = 2
-    2 do
-      set acc += "c"
-      return acc
-    3 do
-      set acc += "A"
-      set x = 1
-    4 do
-      set acc += "B"
-      set x = 2
-    5 do
-      set acc += "C"
-      return acc
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f2;
-//│ f2 = function f(x) {
-//│   let acc, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
-//│   acc = "";
-//│   switch (x) {
-//│     case 0:
-//│       tmp = acc + "a";
-//│       acc = tmp;
-//│       x = 1;
-//│       break;
-//│     case 1:
-//│       tmp1 = acc + "b";
-//│       acc = tmp1;
-//│       x = 2;
-//│       break;
-//│     case 2:
-//│       tmp2 = acc + "c";
-//│       acc = tmp2;
-//│       return acc;
-//│       break;
-//│     case 3:
-//│       tmp3 = acc + "A";
-//│       acc = tmp3;
-//│       x = 1;
-//│       break;
-//│     case 4:
-//│       tmp4 = acc + "B";
-//│       acc = tmp4;
-//│       x = 2;
-//│       break;
-//│     case 5:
-//│       tmp5 = acc + "C";
-//│       acc = tmp5;
-//│       return acc;
-//│       break;
-//│   }
-//│   return runtime.Unit
-//│ };
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-
 fun f(x) =
   let acc = ""
   if x is 0 do
