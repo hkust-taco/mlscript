@@ -50,6 +50,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   private case class StringLitInfo(offset: Int, byteLen: Int, watBytes: Str)
   private val stringLits: LinkedHashMap[Str, StringLitInfo] = LinkedHashMap.empty
+  private val initFuncSyms: LinkedHashMap[BlockMemberSymbol, BlockMemberSymbol] = LinkedHashMap.empty
   private var nextStringDataOffset: Int = 0
 
   private def baseObjectTypeIdx(using Ctx): TypeIdx =
@@ -71,9 +72,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       && (!(defn.k is syntax.Obj) || defn.parentPath.isEmpty)
       && defn.methods.isEmpty
       && defn.companion.isEmpty
-      && (defn.preCtor match
-        case End(_) => true
-        case _ => false)
 
   /** Returns singleton metadata when `sym` resolves to a registered singleton object. */
   private def singletonInfoFor(sym: Local)(using Ctx): Opt[SingletonInfo] =
@@ -110,6 +108,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     if ctx.getType(unitDefn.sym).isEmpty then
       predeclareClassType(unitDefn)
+      predeclareClassInit(unitDefn)
       predeclareClassConstructor(unitDefn)
 
     ctx.pushLocal()
@@ -188,7 +187,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       indegrees(defn.sym) = 0
 
     defns.foreach: defn =>
-      resolveParentSym(defn).foreach: parentSym =>
+      if defn.parentPath.nonEmpty then
+        val parentSym = resolveParentSym(defn).getOrElse(lastWords("unreachable"))
         if defnsBySym.contains(parentSym) then
           childrenBySym(parentSym) += defn.sym
           indegrees(defn.sym) += 1
@@ -230,7 +230,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   /** Declares one supported top-level class type for early wasm registration. */
   private def predeclareClassType(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
-    val parentTypeIdx = resolveParentSym(defn).fold(baseObjectTypeIdx)(ctx.getType_!(_))
+    val parentTypeIdx =
+      if defn.parentPath.isEmpty then baseObjectTypeIdx
+      else ctx.getType_!(resolveParentSym(defn).getOrElse(lastWords("unreachable")))
     val inheritedFields = ctx.getTypeInfo_!(parentTypeIdx).compType match
       case struct: StructType => struct.fields
       case other => lastWords(s"Parent type must be a struct, found ${other.toWat.mkString()}")
@@ -250,50 +252,80 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ),
     )
 
-  /** Declares one top-level class constructor for early registration. */
-  private def predeclareClassConstructor(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
+  private def declareClassFuncType(
+      defn: ClsLikeDefn,
+      suffix: Str,
+      params: Seq[Local -> Str],
+  )(using Ctx, Raise, Scope): TypeIdx =
     val isSingletonObj = defn.k is syntax.Obj
-    val ctorParams = defn.paramsOpt.fold(Nil): ps =>
-      ps.params.map: p =>
-        p.sym -> p.sym.nme
-
     val funcTyId = defn.sym
       .optionIf: sym =>
         !isSingletonObj && sym.nameIsMeaningful
       .map: sym =>
-        s"${sym.nme}_ctor"
+        s"${sym.nme}_$suffix"
       .getOrElse:
-        scope.allocateName(TempSymbol(N, s"${defn.sym.nme}_ctor"))
-    val funcTy = ctx.addType(
+        scope.allocateName(TempSymbol(N, s"${defn.sym.nme}_$suffix"))
+    ctx.addType(
       sym = N,
       TypeInfo(
         id = SymIdx(funcTyId),
         FunctionType(
-          params = ctorParams.map(p => WasmParam(p._2, RefType.anyref)),
+          params = params.map(p => WasmParam(p._2, RefType.anyref)),
           results = Seq(Result(RefType.anyref)),
         ),
         objectTag = N,
       ),
     )
 
-    val ctorId = defn.sym
-      .optionIf: sym =>
-        !isSingletonObj && sym.nameIsMeaningful
-      .map: sym =>
-        s"${sym.nme}_ctor"
+  private def initFuncSym(sym: BlockMemberSymbol): BlockMemberSymbol =
+    initFuncSyms.getOrElseUpdate(sym, BlockMemberSymbol(s"${sym.nme}_init", Nil, nameIsMeaningful = false))
 
+  private def predeclareClassFunc(
+      defn: ClsLikeDefn,
+      suffix: Str,
+      params: Seq[Local -> Str],
+      sym: Opt[Symbol],
+      id: Opt[Str],
+      `export`: Opt[Str],
+  )(using Ctx, Raise, Scope): Unit =
+    val funcTy = declareClassFuncType(defn, suffix, params)
     ctx.addFunc(
-      S(defn.sym),
+      sym,
       FuncInfo(
-        id = SymIdx(ctorId.getOrElse(scope.allocateName(TempSymbol(N, s"${defn.sym.nme}_ctor")))),
+        id = SymIdx(id.orElse(`export`).getOrElse(scope.allocateName(TempSymbol(N, s"${defn.sym.nme}_$suffix")))),
         typeUse = TypeUse(funcTy),
-        params = ctorParams,
+        params = params,
         nResults = 1,
         locals = Seq.empty,
         body = ref.`null`(ctx.getType_!(defn.sym)),
-        `export` = ctorId,
+        `export` = `export`,
       ),
     )
+
+  /** Declares one top-level class init function. */
+  private def predeclareClassInit(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
+    val initParams = (defn.isym -> "this") +:
+      defn.paramsOpt.fold(Nil): ps =>
+        ps.params.map: p =>
+          p.sym -> p.sym.nme
+    val initId = defn.sym
+      .optionIf: sym =>
+        !(defn.k is syntax.Obj) && sym.nameIsMeaningful
+      .map: sym =>
+        s"${sym.nme}_init"
+    predeclareClassFunc(defn, "init", initParams, S(initFuncSym(defn.sym)), initId, N)
+
+  /** Declares one top-level class constructor. */
+  private def predeclareClassConstructor(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
+    val ctorParams = defn.paramsOpt.fold(Nil): ps =>
+      ps.params.map: p =>
+        p.sym -> p.sym.nme
+    val ctorId = defn.sym
+      .optionIf: sym =>
+        !(defn.k is syntax.Obj) && sym.nameIsMeaningful
+      .map: sym =>
+        s"${sym.nme}_ctor"
+    predeclareClassFunc(defn, "ctor", ctorParams, S(defn.sym), N, ctorId)
 
   /** Gets (and caches) the exception tag used for MLX `throw`. */
   private def exnTagIdx(using Ctx, Raise, Scope): TagIdx =
@@ -406,21 +438,100 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ctx.addLocal(thisSym)
     LocalIdx(SymIdx(thisName)) -> thisName
 
-  /** Compiles a class/object constructor body under its own Wasm-local frame.
-    */
-  private def setupCtorLocals(
+  /** Sets up an allocating constructor wrapper with params and a local `this`. */
+  private def setupCtorWrapperLocals(
       clsLikeDefn: ClsLikeDefn,
-  )(using Ctx, Raise, Scope): (Seq[Local -> Str], LocalIdx, Expr, Seq[Local -> Str]) =
+  )(using Ctx, Raise, Scope): (Seq[Local -> Str], LocalIdx, Seq[Local -> Str]) =
     ctx.pushLocal()
     val clsParams = clsLikeDefn.paramsOpt.fold(Nil)(_.paramSyms)
     val ctorParams = clsParams.map: p =>
       ctx.addLocal(p)
-      p -> scope.allocateName(p)
+      p -> scope.allocateOrGetName(p)
     val (thisVar, thisVarName) = bindCtorThis(clsLikeDefn.isym)
-    val (ctorWat, ctorLocals) = block(clsLikeDefn.ctor)
-    val localsWithNames = (clsLikeDefn.isym -> thisVarName) +: ctorLocals.map(l => l -> scope.lookup_!(l, l.toLoc))
     ctx.popLocal()
-    (ctorParams, thisVar, ctorWat, localsWithNames)
+    (ctorParams, thisVar, Seq(clsLikeDefn.isym -> thisVarName))
+
+  /** Compiles a class init body under its own Wasm-local frame with explicit `this`. */
+  private def setupInitLocals(
+      clsLikeDefn: ClsLikeDefn,
+  )(using Ctx, Raise, Scope): (Seq[Local -> Str], Expr, Seq[Local -> Str]) =
+    ctx.pushLocal()
+    val clsParams = clsLikeDefn.paramsOpt.fold(Nil)(_.paramSyms)
+    val initParams = clsParams.map: p =>
+      ctx.addLocal(p)
+      p -> scope.allocateOrGetName(p)
+    val (thisVar, thisVarName) = bindCtorThis(clsLikeDefn.isym)
+    val (preCtorWat, preCtorLocals) = compilePreCtor(clsLikeDefn, thisVar)
+    val (ctorWat, ctorLocals) = block(clsLikeDefn.ctor)
+    val initWat = blockInstr(
+      label = N,
+      children = Seq(
+        preCtorWat,
+        ctorWat,
+        `return`(S(local.get(thisVar, RefType.anyref))),
+      ),
+      resultTypes = Seq(Result(RefType.anyref)),
+    )
+    val initLocals = preCtorLocals ++ ctorLocals.filterNot(preCtorLocals.toSet)
+    val localsWithNames = initLocals.map(l => l -> scope.lookup_!(l, l.toLoc))
+    ctx.popLocal()
+    ((clsLikeDefn.isym -> thisVarName) +: initParams, initWat, localsWithNames)
+
+  private def compilePreCtor(
+      clsLikeDefn: ClsLikeDefn,
+      thisVar: LocalIdx,
+  )(using Ctx, Raise, Scope): (Expr, Seq[Local]) =
+    def withRest(block: NonBlockTail, rest: Block): Block = block match
+      case Scoped(syms, _) => Scoped(syms, rest)
+      case Begin(sub, _) => Begin(sub, rest)
+      case TryBlock(sub, finallyDo, _) => TryBlock(sub, finallyDo, rest)
+      case Assign(lhs, rhs, _) => Assign(lhs, rhs, rest)
+      case af @ AssignField(lhs, nme, rhs, _) => AssignField(lhs, nme, rhs, rest)(af.symbol)
+      case AssignDynField(lhs, fld, arrayIdx, rhs, _) => AssignDynField(lhs, fld, arrayIdx, rhs, rest)
+      case Define(defn, _) => Define(defn, rest)
+      case Match(scrut, arms, dflt, _) => Match(scrut, arms, dflt, rest)
+      case HandleBlock(lhs, res, par, args0, cls, handlers, body, _) =>
+        HandleBlock(lhs, res, par, args0, cls, handlers, body, rest)
+      case Label(label, loop, body, _) => Label(label, loop, body, rest)
+
+    def splitSuperTail(block: Block): Opt[Block -> Ls[Arg]] = block match
+      case End(_) => N
+      case Return(Call(Value.Ref(bs: BuiltinSymbol, _), args), true) if bs eq State.builtinOpsMap("super") =>
+        S(End("") -> args)
+      case b: NonBlockTail =>
+        splitSuperTail(b.rest).map: (prefix, args) =>
+          withRest(b, prefix) -> args
+      case _ => N
+
+    clsLikeDefn.preCtor match
+      case End(_) => (nop, Nil)
+      case _ =>
+        splitSuperTail(clsLikeDefn.preCtor) match
+          case S((prefixBlock, args)) =>
+            val parentSym = resolveParentSym(clsLikeDefn).getOrElse(lastWords("unreachable"))
+            val parentInitFunc = initFuncSym(parentSym)
+            val (prefixWat, prefixLocals) = block(prefixBlock)
+            val superCall = call(
+              funcidx = ctx.getFunc_!(parentInitFunc),
+              operands = local.get(thisVar, RefType.anyref) +: args.map(argument),
+              returnTypes = Seq(Result(RefType.anyref)),
+            )
+            (
+              blockInstr(
+                label = N,
+                children = Seq(asStatement(prefixWat), drop(superCall)),
+                resultTypes = Seq.empty,
+              ),
+              prefixLocals,
+            )
+          case N =>
+            raise(ErrorReport(
+              msg"Wasm preCtor lowering only supports lowered super(...) shapes." ->
+                clsLikeDefn.sym.toLoc :: Nil,
+              extraInfo = S(clsLikeDefn.preCtor.showAsTree),
+              source = Diagnostic.Source.Compilation,
+            ))
+            (nop, Nil)
 
   /** Returns locals allocated during codegen (e.g., temp locals). */
   private def getExtraLocals(using Ctx): Seq[Local] =
@@ -990,17 +1101,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def getI32FromAnyref(name: Str): Expr =
     i31.get(ref.cast(getLocalAnyref(name), RefType.i31ref), true)
 
+  private def isControlTransfer(expr: Expr): Bool =
+    expr.resultType.contains(UnreachableType) || expr.mnemonic == "return"
+
+  private def asStatement(expr: Expr): Expr =
+    if isControlTransfer(expr) then expr
+    else
+      expr.resultType match
+        case S(_) => drop(expr)
+        case N => expr
+
   def returningTerm(t: Block)(using Ctx, Raise, Scope): Expr =
-    def isControlTransfer(expr: Expr): Bool =
-      expr.resultType.contains(UnreachableType) || expr.mnemonic == "return"
-
-    def asStatement(expr: Expr): Expr =
-      if isControlTransfer(expr) then expr
-      else
-        expr.resultType match
-          case S(_) => drop(expr)
-          case N => expr
-
     t match
       case _: HandleBlock =>
         errExpr(Ls(msg"This code requires effect handler instrumentation but was compiled without it." -> N))
@@ -1210,13 +1321,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       break(errUnimplExpr("paramsOpt.nonEmpty for object"))
                     if clsLikeDefn.auxParams.nonEmpty then
                       break(errUnimplExpr("auxParams.nonEmpty"))
-                    if clsLikeDefn.parentPath.nonEmpty then
-                      break(errUnimplExpr("parentPath.nonEmpty"))
+                    if isSingletonObj && clsLikeDefn.parentPath.nonEmpty then
+                      break(errUnimplExpr("parentPath.nonEmpty for object"))
                     if clsLikeDefn.methods.nonEmpty then
                       break(errUnimplExpr("methods.nonEmpty"))
-                    clsLikeDefn.preCtor match
-                      case End(_) => ()
-                      case _ => break(errUnimplExpr("preCtor is not End"))
                     if clsLikeDefn.companion.isDefined then
                       break(errUnimplExpr("companion.isDefined"))
 
@@ -1229,7 +1337,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     val typeref = ctx.getType_!(clsLikeDefn.sym)
                     val typeinfo = ctx.getTypeInfo_!(typeref)
 
-                    val (ctorParams, thisVar, ctorWat, ctorLocals) = setupCtorLocals(clsLikeDefn)
+                    val (ctorParams, thisVar, ctorLocals) = setupCtorWrapperLocals(clsLikeDefn)
+                    val (initParams, initWat, initLocals) = setupInitLocals(clsLikeDefn)
 
                     // * If there are no ctor params, pop one param list off the aux params
                     val (newCtorAuxParams, initialCtorParams) = clsLikeDefn.paramsOpt match
@@ -1241,6 +1350,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     val tagValue = typeinfo.objectTag.getOrElse:
                       lastWords(s"Expected class ${clsLikeDefn.sym} to have an object tag")
 
+                    val initFuncRef = initFuncSym(clsLikeDefn.sym)
+                    val initCall = call(
+                      funcidx = ctx.getFunc_!(initFuncRef),
+                      operands = local.get(thisVar, RefType.anyref) +: ctorParams.map((_, nme) => getLocalAnyref(nme)),
+                      returnTypes = Seq(Result(RefType.anyref)),
+                    )
                     val ctorCode = blockInstr(
                       label = N,
                       Seq(
@@ -1253,7 +1368,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                           ),
                           i32.const(tagValue),
                         ),
-                        ctorWat,
+                        drop(initCall),
                         `return`(S(local.get(thisVar, RefType(typeref, nullable = false)))),
                       ),
                       resultTypes = Seq(Result(RefType.anyref)),
@@ -1263,6 +1378,20 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       ctorCode
                     else
                       break(errUnimplExpr("newCtorAuxParams.nonEmpty"))
+
+                    val predeclaredInit = ctx.getFuncInfo_!(initFuncRef)
+                    ctx.addFunc(
+                      S(initFuncRef),
+                      FuncInfo(
+                        id = predeclaredInit.id,
+                        typeUse = predeclaredInit.typeUse,
+                        params = initParams,
+                        nResults = initWat.resultTypes.length,
+                        locals = initLocals,
+                        body = initWat,
+                        `export` = predeclaredInit.`export`,
+                      ),
+                    )
 
                     val predeclaredCtor = ctx.getFuncInfo_!(clsLikeDefn.sym)
                     ctx.addFunc(
@@ -1627,9 +1756,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     )
 
     // Early registration scheme: collect supported top-level classes from main block,
-    // order by inheritance, predeclare struct types and constructors.
+    // order by inheritance, predeclare struct types, init functions, and constructors.
     val orderedTopLevelClassDefns = sortTopLevelClasses(collectTopLevelClassDefns(p.main))
     orderedTopLevelClassDefns.foreach(predeclareClassType)
+    orderedTopLevelClassDefns.foreach(predeclareClassInit)
     orderedTopLevelClassDefns.foreach(predeclareClassConstructor)
 
     // Compile the entry function under a dedicated local scope so that any temp locals introduced
