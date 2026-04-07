@@ -120,7 +120,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     *   - Case 1.1.4: Branch is a record → simplify fields already matched by the assumption.
     *   - Case 1.1.5: Specializing pattern is more specific (`pattern <:< thatPattern`) → keep as-is
     *     (the branch always matches when the assumption holds).
-    *   - Case 1.1._: Patterns are unrelated — if provably disjoint (e.g., different literals,
+    *   - Case 1.1.6: Patterns are unrelated — if provably disjoint (e.g., different literals,
     *     sibling classes under single inheritance), skip; otherwise keep the branch to support
     *     conjunction patterns like `A & B`.
     *
@@ -182,13 +182,13 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                 split
               else
                 if areProvablyDisjoint(pattern, thatPattern) then
-                  log(s"Case 1.1._ else disjoint: ${tail}")
+                  log(s"Case 1.1.6: $pattern and $thatPattern are provably disjoint")
                   rec(tail)
                 else
                   // When patterns are not provably disjoint, we cannot assume
                   // the scrutinee can't match both (e.g., conjunction patterns
                   // like `A & B`). Keep the branch.
-                  log(s"Case 1.1._ else non-disjoint: ${tail}")
+                  log(s"Case 1.1.6: $pattern and $thatPattern are not provably disjoint")
                   head.copy(continuation = rec(continuation)) ~: rec(tail)
           case - =>
             log(s"Case 1.2: $scrutinee === $thatScrutinee")

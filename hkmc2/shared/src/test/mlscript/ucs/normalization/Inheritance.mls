@@ -62,3 +62,40 @@ f(new B)
 //│ = "A & B"
 
 
+// Test with imported class hierarchy
+import "../../../mlscript-compile/InheritanceBase.mls"
+open InheritanceBase
+
+:sir
+let g = case
+  Base & Child1 then "Base & Child1"
+  Base then "Base"
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g⁰, lambda²;
+//│ define lambda² as fun lambda³(caseScrut) {
+//│   match caseScrut
+//│     Base⁰ =>
+//│       match caseScrut
+//│         Child1⁰ =>
+//│           return "Base & Child1"
+//│         else
+//│           return "Base"
+//│       end
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ set g⁰ = lambda³;
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ g = fun
+
+:expect "Base & Child1"
+g(new Child1)
+//│ = "Base & Child1"
+
+:expect "Base"
+g(new Child2)
+//│ = "Base"
+
+
