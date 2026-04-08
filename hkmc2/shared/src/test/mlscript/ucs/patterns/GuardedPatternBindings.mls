@@ -1,12 +1,13 @@
 :js
 
+
 :w
 pattern PlainPair = [x, y]
 //│ ╔══[WARNING] Useless pattern binding: x.
-//│ ║  l.4: 	pattern PlainPair = [x, y]
+//│ ║  l.5: 	pattern PlainPair = [x, y]
 //│ ╙──     	                     ^
 //│ ╔══[WARNING] Useless pattern binding: y.
-//│ ║  l.4: 	pattern PlainPair = [x, y]
+//│ ║  l.5: 	pattern PlainPair = [x, y]
 //│ ╙──     	                        ^
 
 
@@ -22,13 +23,25 @@ pattern Symmetry =
 [1, 2] is Symmetry
 //│ = false
 
-:todo
-:w
 // We should check the free variables in `where` guards.
+:w
 pattern PairSum = [x, y] where (let x = true, let y = x, y)
+// We should check the free variables in `where` guards.
 //│ ╔══[WARNING] Useless pattern binding: x.
 //│ ║  l.28: 	pattern PairSum = [x, y] where (let x = true, let y = x, y)
 //│ ╙──      	                   ^
 //│ ╔══[WARNING] Useless pattern binding: y.
 //│ ║  l.28: 	pattern PairSum = [x, y] where (let x = true, let y = x, y)
 //│ ╙──      	                      ^
+
+:w
+pattern PairSum = [x, y] where (if x is [y] then y)
+//│ FAILURE: Unexpected lack of warnings
+
+:w
+pattern PairSum = [x, y] where (class C(y) with { fun test = y }, C(x).test)
+//│ ╔══[WARNING] Useless pattern binding: y.
+//│ ║  l.42: 	pattern PairSum = [x, y] where (class C(y) with { fun test = y }, C(x).test)
+//│ ╙──      	                      ^
+
+
