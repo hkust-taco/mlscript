@@ -91,8 +91,8 @@ final case class CompiledWasmModule(
   *   [[Seq]] of parameter local variables and their names.
   * @param locals
   *   [[Seq]] of local variables (excluding parameters) and their names.
-  * @param bodyOpt
-  *   The expression of the function body.
+ * @param body
+ *   The expression of the function body.
   * @param resultTypes
   *   The result types of the function.
   * @param exportName
@@ -103,7 +103,7 @@ class FuncInfo(
     val typeUse: TypeUse,
     params: Seq[Local -> Str],
     locals: Seq[Local -> Str],
-    val bodyOpt: Opt[Expr],
+    val body: Expr,
     val resultTypes: Seq[Result],
     val exportName: Opt[Str]
 ) extends ToWat:
@@ -133,7 +133,7 @@ class FuncInfo(
     typeUse,
     params,
     locals,
-    S(body),
+    body,
     Seq.fill(nResults)(Result(RefType.anyref)),
     sym.optionIf(_.nameIsMeaningful).map(_.nme),
   )
@@ -151,7 +151,7 @@ class FuncInfo(
     typeUse,
     params,
     locals,
-    S(body),
+    body,
     Seq.fill(nResults)(Result(RefType.anyref)),
     `export`,
   )
@@ -163,8 +163,6 @@ class FuncInfo(
   )
 
   def toWat: Document =
-    val body = bodyOpt.getOrElse:
-      lastWords(s"Missing body for function `${id.id}`")
     doc"""(func ${id.toWat}${
         exportName.fold(doc""): e =>
           doc""" (export "$e")"""
@@ -197,7 +195,7 @@ class GlobalInfo(
     val id: SymIdx,
     val valType: ValType,
     val mutable: Bool,
-    val init: Opt[Expr],
+    val init: Expr,
     val exportName: Opt[Str]
 ) extends ToWat:
 
@@ -208,7 +206,7 @@ class GlobalInfo(
     val typeDoc =
       if mutable then doc"(mut ${valType.toWat})"
       else valType.toWat
-    doc"(global${idDoc.surroundUnlessEmpty(doc" ")} ${typeDoc} ${init.get.toWat})${
+    doc"(global${idDoc.surroundUnlessEmpty(doc" ")} ${typeDoc} ${init.toWat})${
       exportName.fold(doc""): name =>
         doc""" # (export "${name}" (global ${idDoc}))"""
     }"

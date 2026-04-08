@@ -136,7 +136,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         id = SymIdx(globalName),
         valType = globalTy,
         mutable = true,
-        init = S(ref.`null`(typeref)),
+        init = ref.`null`(typeref),
         exportName = S(globalName),
       ),
     )
@@ -261,7 +261,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         id = SymIdx(scope.allocateOrGetName(sym)),
         valType = RefType.anyref,
         mutable = true,
-        init = S(ref.`null`(HeapType.Any)),
+        init = ref.`null`(HeapType.Any),
         exportName = S(exportName)
       )
     )
@@ -989,7 +989,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       typeUse = TypeUse(funcTy),
       params = params,
       locals = Seq.empty,
-      bodyOpt = S(body),
+      body = body,
       resultTypes = Seq(Result(RefType.anyref)),
       exportName = exportName,
     )
@@ -1377,7 +1377,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         typeUse = TypeUse(funcTy),
                         params = ctorParams,
                         locals = ctorLocals,
-                        bodyOpt = S(ctorAux),
+                        body = ctorAux,
                         resultTypes = Seq(Result(RefType.anyref)),
                         exportName = ctorExportName,
                       ),
@@ -1793,7 +1793,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       typeUse = TypeUse(entryFnTy),
       params = Seq.empty,
       locals = (entryFnLocals ++ entryExtraLocals).map(l => l -> scope.allocateOrGetName(l)),
-      bodyOpt = S(entryFnExpr),
+      body = entryFnExpr,
       resultTypes = Seq(Result(RefType.anyref)),
       exportName = S(entryNme),
     )
@@ -1831,7 +1831,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           typeUse = TypeUse(initTy),
           params = Seq.empty,
           locals = Seq.empty,
-          bodyOpt = S(initBody),
+          body = initBody,
           resultTypes = Seq.empty,
           exportName = N,
         ),
