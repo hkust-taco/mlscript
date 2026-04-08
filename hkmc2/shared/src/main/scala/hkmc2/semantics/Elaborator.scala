@@ -1418,7 +1418,7 @@ extends Importer with ucs.SplitElaborator:
               extractionParams.find(_.sym.name == name) match
                 case S(param) => aliases.foreach(_.symbol = param.sym)
                 case N if !guardedNames.contains(name) =>
-                  raise(WarningReport(msg"Useless pattern binding: $name." -> aliases.head.toLoc :: Nil))
+                  raise(WarningReport(msg"Unused pattern binding: $name." -> aliases.head.toLoc :: Nil))
                 case _ => ()
             scoped("ucs:ups")(log(s"elaborated pattern body: ${pat.showDbg}"))
             scoped("ucs:ups:tree")(log(s"elaborated pattern body: ${pat.showAsTree}"))
