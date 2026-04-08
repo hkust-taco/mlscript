@@ -2,47 +2,55 @@
 
 open annotations
 
-// * Note that `(@compile (...))` is currently parsed as `(@compile(...) ())`...
-:e
-fun trimStart(str) =
-  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
-//│ ╔══[COMPILATION ERROR] Unrecognized pattern (unit).
-//│ ║  l.8: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
-//│ ╙──     	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Name not found: rest
-//│ ║  l.8: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
-//│ ╙──     	                                                            ^^^^
+// * Note: these syntaxes work but, the compilation doesn't support this yet
 
-:pe
-:e
-:w
-// Note: `compile ((" " | "\t") ~ rest)` is parsed as an annotation.
-fun trimStart(str) =
-  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
-//│ ╔══[PARSE ERROR] Unexpected keyword 'then' in this position
-//│ ║  l.21: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
-//│ ╙──      	                                           ^^^^
-//│ ╔══[COMPILATION ERROR] Unrecognized pattern (‹erroneous syntax›).
-//│ ║  l.21: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
-//│ ╙──      	                                           ^^^^
-//│ ╔══[COMPILATION ERROR] Name not found: rest
-//│ ║  l.21: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
-//│ ╙──      	                                     ^^^^
-//│ ╔══[COMPILATION ERROR] Name not found: rest
-//│ ║  l.21: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
-//│ ╙──      	                                                          ^^^^
-//│ ╔══[WARNING] This annotation is not supported here.
-//│ ║  l.21: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
-//│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: Patterns only support the `@compile` annotation.
-
-:todo
-// Note: the syntax works but the compilation doesn't support.
+:fixme
 fun trimStart(str) =
   if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
 //│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
-//│ ║  l.42: 	  if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
+//│ ║  l.9: 	  if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
+//│ ╙──     	                        ^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'rest'
+//│ ║  l.9: 	  if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
+//│ ╙──     	                                                            ^^^^
+
+:fixme
+fun trimStart(str) =
+  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
+//│ ║  l.19: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╙──      	                        ^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'rest'
-//│ ║  l.42: 	  if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
+//│ ║  l.19: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╙──      	                                                            ^^^^
+
+:fixme
+fun trimStart(str) =
+  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
+//│ ║  l.29: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ╙──      	                       ^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'rest'
+//│ ║  l.29: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ╙──      	                                                          ^^^^
+
+
+// * Note: `@compile(...)` is parsed as a whole annotation
+:pe
+:e
+fun trimStart(str) =
+  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ╔══[PARSE ERROR] Expected start of expression in this position
+//│ ║  l.42: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ║        	                                          ^
+//│ ╟── found a lone annotation instead
+//│ ║  l.42: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern (‹erroneous syntax›).
+//│ ║  l.42: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ╙──      	                                          ^
+//│ ╔══[COMPILATION ERROR] Name not found: rest
+//│ ║  l.42: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ╙──      	                                                           ^^^^
+
+

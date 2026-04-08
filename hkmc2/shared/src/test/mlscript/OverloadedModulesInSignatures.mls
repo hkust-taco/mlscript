@@ -81,7 +81,7 @@ fun f: TrmMod = 42
 :sjs
 fun f = TrmMod
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f5; f5 = function f() { let tmp4; tmp4 = TrmMod1(); return tmp4 };
+//│ let f5; f5 = function f() { return TrmMod1() };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :fixme

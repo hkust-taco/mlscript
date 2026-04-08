@@ -58,21 +58,17 @@ pattern Value = Abs | Lit
 module CBV with
   
   pattern Ctx(pattern Hole) =
-    | (Hole as res) => res
-    | Add(Ctx(Hole) as lhs, rhs)          => Add(lhs, rhs)
-    | Add(Value as lhs, Ctx(Hole) as rhs) => Add(lhs, rhs)
-      // * or:
-      // | (Add(Ctx(Hole) as lhs, rhs) | Add(Value as lhs, Ctx(Hole) as rhs)) =>
-      //     Add(lhs, rhs)
-    | App(Value as lhs, Ctx(Hole) as rhs) => App(lhs, rhs)
-    | App(Ctx(Hole) as lhs, rhs)          => App(lhs, rhs)
+    | Hole
+    | Add(Ctx(Hole), _)
+    | Add(Value, Ctx(Hole))
+    | App(Value, Ctx(Hole))
+    | App(Ctx(Hole), _)
   
   pattern Redex =
     | Add(Lit(v1), Lit(v2)) => Lit(v1 + v2)
     | App(Abs(id, body), Value as arg) => body.subst(id, arg)
   
-  pattern Step =
-    | Ctx(Redex) as res => res
+  pattern Step = Ctx(Redex)
   
   pattern Steps = Step as Steps | _
 
@@ -122,7 +118,7 @@ CBV.Step.unapply(x)
 //│ = MatchFailure(null)
 
 CBV.Step.unapply(t)
-//│ = MatchSuccess(Add(Lit(5), Lit(4)), {})
+//│ = MatchSuccess(Add(Lit(5), Lit(4)), null)
 
 eval(x)
 //│ > Evaluating: 2

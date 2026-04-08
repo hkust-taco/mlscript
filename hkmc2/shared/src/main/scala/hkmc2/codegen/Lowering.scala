@@ -476,10 +476,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         // * and are lowered to functions with an empty parameter list
         // * (non-local functions are compiled into getter methods selected on some prefix)
         if td.params.isEmpty then
-          val l = loweringCtx.registerTempSymbol(S(ref))
-          return Assign(l, Call(
+          return k(Call(
               Value.Ref(bs, disamb).withLocOf(ref), Nil
-            )(isMlsFun = true, true, annots.contains(Annot.TailCall)), k(Value.Ref(l, disamb)))
+            )(isMlsFun = true, true, annots.contains(Annot.TailCall)))
       case S(_) => ()
       case N => () // TODO panic here; can only lower refs to elab'd symbols
     case _ => ()

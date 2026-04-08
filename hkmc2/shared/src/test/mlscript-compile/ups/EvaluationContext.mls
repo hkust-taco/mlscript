@@ -1,0 +1,83 @@
+import "../Option.mls"
+
+open Option { Some, None }
+open annotations
+
+module EvaluationContext with ...
+
+data class Term with
+  constructor
+    Var(name: Str)
+    App(lhs: Term, rhs: Term)
+    Abs(lhs: Var, rhs: Term)
+  
+  // A cached set of free variables
+  let _freeVars = None
+  
+  // Compute free variables. Retrieve the cache if it exists.
+  fun freeVars = if _freeVars is
+    Some(fv) then fv
+    None then
+      let fv = if this is
+        Var(name) then new Set([name])
+        App(lhs, rhs) then lhs.freeVars.union(rhs.freeVars)
+        Abs(name, body) then body.freeVars.difference(new Set([name]))
+      set _freeVars = Some(fv)
+      fv
+  
+  // Keep increasing the index until the based name with the index is not a free
+  // variable in this term.
+  fun freshName(baseName) =
+    let
+      freeVars = this.freeVars
+      nameIndex = 1
+    if freeVars.has(baseName) is false then baseName else...
+    while (baseName + "_" + nameIndex) is currentName and
+      freeVars.has(currentName) then set nameIndex += 1
+      else return currentName
+  
+  fun freshVar(baseName) = Var of freshName(baseName)
+  
+  fun equals(that) = if this is
+    Var(name) and that is Var(name') then name === name'
+    App(lhs, rhs) and that is App(lhs', rhs') then
+      lhs.equals(lhs') && rhs.equals(rhs')
+    Abs(Var(name), body) and that is Abs(Var(name'), body') then
+      name === name' && body.equals(body')
+    else false
+  
+  // Pretty-print the term.
+  fun show = if this is
+    Var(name) then name
+    App(Abs as lhs, rhs) then "(" + lhs.show + ") " + rhs.show
+    App(lhs, App as rhs) then lhs.show + " (" + rhs.show + ")"
+    App(lhs, rhs) then lhs.show + " " + rhs.show
+    Abs(Var(name), body) then "λ" + name + ". " + body.show
+
+fun subst(term, name, target) = if term is
+  Var(name') and
+    name === name' then target
+    else term
+  Abs(Var(name'), body) and
+    name === name' then term
+    let target' = if target.freeVars.has(name')
+      then subst(target, name', target.freshVar(name'))
+      else target
+    else Abs(Var(name'), subst(body, name, target'))
+  App(lhs, rhs) then App(subst(lhs, name, target), subst(rhs, name, target))
+
+pattern Value = Abs
+
+pattern Ctx(pattern Hole) =
+  | Hole
+  | App(Value, Ctx(Hole))
+  | App(Ctx(Hole), _)
+
+pattern Redex = App(Abs(Var(x), m), Abs as n) => subst(m, x, n)
+
+pattern Step = (Ctx(Redex) as res) => res
+
+fun isStep_naive(t) = t is Step
+fun isStep_optimized(t) =
+  if t is (@compile Step) as s then s else ()
+fun isStep_optimized_matchOnly(t) = t is @compile Step

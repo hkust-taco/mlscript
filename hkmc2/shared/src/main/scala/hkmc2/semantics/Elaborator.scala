@@ -1411,11 +1411,15 @@ extends Importer with ucs.SplitElaborator:
             // Note that the remaining variables have not been bound to any
             // `VarSymbol` yet. Thus, we need to pair them with the extraction
             // parameters. We only report warnings for unbound variables
-            // because they are harmless.
+            // because they are harmless. Variables used in guard conditions
+            // (from `where` clauses) are not considered useless.
+            val guardedNames = pat.varNamesUsedInGuards
             pat.variables.varMap.foreach: (name, aliases) =>
               extractionParams.find(_.sym.name == name) match
                 case S(param) => aliases.foreach(_.symbol = param.sym)
-                case N => raise(WarningReport(msg"Useless pattern binding: $name." -> aliases.head.toLoc :: Nil))
+                case N if !guardedNames.contains(name) =>
+                  raise(WarningReport(msg"Unused pattern binding: $name." -> aliases.head.toLoc :: Nil))
+                case _ => ()
             scoped("ucs:ups")(log(s"elaborated pattern body: ${pat.showDbg}"))
             scoped("ucs:ups:tree")(log(s"elaborated pattern body: ${pat.showAsTree}"))
             // `paramsOpt` is set to `N` because we don't want parameters to

@@ -9,26 +9,25 @@ abstract class Q
 abstract class A extends Q
 abstract class B extends Q
 
-// Note: The following tests expose a normalization issue where conjunction
-// patterns involving overlapping classes (A and B) generate incorrect code.
-// The normalization assumes all classes are mutually exclusive, causing
-// patterns like `A & B` to be optimized away instead of properly testing both
-// classes.
+// Note: A and B are sibling classes (both extend Q but neither extends the
+// other), so under the single-inheritance restriction they are provably
+// disjoint. Conjunction patterns like `A & B` for such classes should
+// correctly be eliminated by normalization.
 
 
-if A is
+if new A is
   A & A & B then 0
   B & A & B then 1
   A & A & A then 2
   else 3
-//│ = 3
+//│ = 2
 
-if A is
+if new A is
   A & A & B then 0
   B & A & B then 1
   A & A & A then 2
   else 3
-//│ = 3
+//│ = 2
 
 :sjs
 fun foo(v) =

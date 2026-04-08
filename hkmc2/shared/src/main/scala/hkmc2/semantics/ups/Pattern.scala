@@ -52,6 +52,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Literal(lit) => Vector.single(lit)
     case ClassLike(sym, arguments) => arguments.fold(Vector.empty):
       _.map((id, p) => p).toVector
+    case MatchedClassLike(sym, entries) => entries.values.toVector
     case Record(entries) => entries.values.toVector
     case Tuple(leading, spread) => leading.toVector ++ spread.fold(Vector.empty):
       case (_, middle, trailing) => middle +: trailing.toVector
@@ -66,6 +67,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Literal(lit) => Nil
     case ClassLike(sym, arguments) =>
       arguments.fold(Nil)(_.values.flatMap(_.symbols).toList)
+    case MatchedClassLike(sym, entries) => entries.values.flatMap(_.symbols).toList
     case Record(entries) => entries.values.flatMap(_.symbols).toList
     case Tuple(leading, spread) => leading.flatMap(_.symbols) ::: spread.fold(Nil):
       case (_, middle, trailing) => middle.symbols ::: trailing.flatMap(_.symbols)
@@ -78,6 +80,38 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Not(_) => Nil
     case Rename(pattern, name) => name :: pattern.symbols
     case Extract(_, _, _) => Nil
+
+  /** Checks whether a successful match preserves the original scrutinee as the
+    * produced output.
+    *
+    * This property is context-sensitive because `Synonym` nodes must look
+    * through instantiated pattern definitions. Cycles are treated as
+    * preserving so the traversal stays well-founded on recursive patterns.
+    */
+  def preservesOriginalScrutinee(using Context, Raise): Bool =
+    def loop(pattern: Pat, visiting: Set[Instantiation]): Bool = pattern match
+      case Literal(_) => true
+      case ClassLike(_, arguments) =>
+        arguments.fold(true)(_.valuesIterator.forall(loop(_, visiting)))
+      case MatchedClassLike(_, entries) =>
+        entries.valuesIterator.forall(loop(_, visiting))
+      case Record(entries) =>
+        entries.valuesIterator.forall(loop(_, visiting))
+      case Tuple(leading, spread) =>
+        leading.forall(loop(_, visiting)) &&
+          spread.forall: (_, middle, trailing) =>
+            loop(middle, visiting) && trailing.forall(loop(_, visiting))
+      case And(patterns) =>
+        patterns.forall(loop(_, visiting))
+      case Or(patterns) =>
+        patterns.forall(loop(_, visiting))
+      case Not(_) => true
+      case Rename(pattern, _) => loop(pattern, visiting)
+      case Extract(_, _, _) => false
+      case Synonym(instantiation) =>
+        if visiting contains instantiation then true
+        else loop(instantiation.body, visiting + instantiation)
+    loop(this, Set.empty)
   
   /** Apply a partial function to every node in the pattern tree. Replace each
    *  node with the result of the partial function. If the partial function is
@@ -114,6 +148,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case ClassLike(sym, _) => Set(sym)
 
   def fields: Set[Ident | Int] = reduce[Set[Ident | Int]](_.toSet.flatten):
+    case MatchedClassLike(_, entries) => entries.keys.toSet
     case Record(entries) => entries.keys.toSet
     case Tuple(leading, spread) =>
       val n = leading.size + spread.fold(0)(_._3.size)
@@ -127,7 +162,8 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       case ClassLike(sym, arguments) => /* TODO:raise a warning */ arguments match
         case None => Set()
         case Some(arguments) =>
-          arguments.find((id1, _) => id === id).map((_, p) => p).toSet
+          arguments.find((id1, _) => id1 === id).map((_, p) => p).toSet
+      case MatchedClassLike(_, entries) => entries.get(id).toSet
       case Record(entries) => entries.get(id).toSet
       case Tuple(leading, spread) => Set()
     case n: Int => this.reduce[Set[Pat]](_.toSet.flatten):
@@ -138,6 +174,10 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case _: Literal => this
     case ClassLike(sym, arguments) =>
       ClassLike(sym, arguments.map(_.map((id, p) => (id, p.simplify))))
+    case MatchedClassLike(sym, entries) =>
+      val simplified = entries.map((id, p) => (id, p.simplify))
+      if simplified.exists((_, p) => p === Never) then Never
+      else MatchedClassLike(sym, simplified)
     case Record(entries) =>
       val simplify = entries.map((id, p) => (id, p.simplify))
       if simplify.exists((_, p) => p === Never) then Never else Record(simplify)
@@ -216,6 +256,11 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       val argumentsText = arguments.fold(""):
         _.iterator.map((id, p) => s"${id.name}: ${p.showDbg}").mkString(" { ", ", ", " }")
       s"${sym.nme}$argumentsText"
+    case MatchedClassLike(sym, entries) =>
+      val argumentsText = entries.iterator.map:
+        case (id, p) => s"${id.name}: ${p.showDbg}"
+      .mkString(" { ", ", ", " }")
+      s"${sym.nme}$argumentsText"
     case Record(entries) =>
       if entries.isEmpty then "{}" else entries.iterator.map:
         case (id, p) => s"${id.name}: ${p.showDbg}"
@@ -262,6 +307,26 @@ object Pattern:
       sym: ClassLikeSymbol,
       arguments: Opt[SeqMap[Ident, Pat]]
   ) extends NonCompositional[Kind.Expanded]
+
+  /** Represents a constructor pattern after its head has already been matched
+    * by specialization.
+    *
+    * We cannot reuse `ClassLike` here because that would still mean “a class
+    * head that must participate in head-based specialization”, which is no
+    * longer true at this stage. We also cannot collapse it to `Record`,
+    * because matching the remaining fields may still need to rebuild an output
+    * value of the original constructor, so the constructor symbol must be
+    * preserved.
+    *
+    * In other words, this node denotes the intermediate state where the class
+    * identity is already known, but the field subpatterns still need to be
+    * matched and may determine whether the final output reuses the original
+    * scrutinee or rebuilds a fresh instance of the same class.
+    */
+  final case class MatchedClassLike(
+      sym: ClassLikeSymbol,
+      entries: SeqMap[Ident, Pat]
+  ) extends NonCompositional[Kind.Specialized]
 
   final case class Record(
       entries: SeqMap[Ident, Pat]
@@ -344,9 +409,9 @@ extension (pattern: ExPat)
      *  intersected with record patterns. So, we need to leave the arguments
      *  part unchanged. If there's no arguments, we return `Wildcard`. */
     case ClassLike(`symbol`, arguments) =>
-      arguments.fold(Wildcard)(_ |> Record.apply)
+      arguments.fold(Wildcard)(MatchedClassLike(symbol, _))
     case ClassLike(_, _) => Never
-    case pattern: (Record | Tuple) => pattern
+    case pattern: (MatchedClassLike | Record | Tuple) => pattern
   
   /** Modifies the pattern under the assumption that the scrutinee matches the
    *  given literal or class. */

@@ -103,9 +103,9 @@ pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 "foobar" is Test
 //│ = true
 
-:expect MatchSuccess(["foo", "bar"], {})
+:expect MatchSuccess(["foo", "bar"], null)
 Test.unapply("foobar")
-//│ = MatchSuccess(["foo", "bar"], {})
+//│ = MatchSuccess(["foo", "bar"], null)
 
 :todo
 :pt
@@ -223,5 +223,4 @@ pattern StatementBased =
 //│ ║  l.221: 	| (x, 0) => 1
 //│ ╙──       	      ^
 //│ = fun
-
 

@@ -39,7 +39,13 @@ add@1@2
 @
 //│ = fun apply
 
+:sjs
+:fixme
 @(id, 123)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ Predef.apply(123)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
 (@)(id, 123)
 //│ = 123
@@ -101,7 +107,7 @@ pipeInto(1, _) @ inc
 :re
 1 pipeInto @ inc
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
-//│ ║  l.102: 	1 pipeInto @ inc
+//│ ║  l.108: 	1 pipeInto @ inc
 //│ ╙──       	  ^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 

@@ -35,7 +35,6 @@ action of Some(Some(Some(Some(Some("scratch")))))
 // Test the semantics of biased disjunction.
 
 pattern BiasedOr1 = Some(1 | Some(_))
-
 fun biasedOr1(x) = x is @compile BiasedOr1
 
 biasedOr1 of Some(1)
@@ -53,11 +52,32 @@ biasedOr1 of Some(Some("hello"))
 biasedOr1 of Some(Some(Some(Some(Some(Some(Some(Some(42))))))))
 //│ = true
 
+fun observeSome(x) =
+  print("observe some " + x)
+  x + 1
+
+fun observePlain(x) =
+  print("observe plain " + x)
+  x + 2
+
+pattern LoggedBiasedOr =
+  | Some((Some(x) => observeSome(x)) as res) => res
+  | Some((x => observePlain(x)) as res) => res
+
+print of Some(1) is @compile LoggedBiasedOr
+//│ > true
+
+if Some(Some(1)) is (@compile LoggedBiasedOr) as output then
+  print("logged biased: " + output)
+//│ > observe some 1
+//│ > observe plain Some(1)
+//│ > logged biased: 2
+
 // Make it a bit more complicated: biased disjunction with transformations.
 
 pattern BiasedOr2 =
-  (Some((Some(x) => x + 1) as res) => res) |
-  (Some((x => x + 2) as res) => res)
+  | Some((Some(x) => x + 1) as res) => res
+  | Some((x => x + 2) as res) => res
 
 :fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)
 :checkIR
@@ -78,9 +98,6 @@ biasedOr2__compiled of Some(Some(1))
 biasedOr2__naive of Some(Some(1))
 //│ = 2
 
-// Comments: I think the output from the compiled pattern is semantically
-// correct, but people might expect the output from the translated pattern.
-// The problem is that we can't synthesize a record with the class tags.
 
 data class Pair[A, B](first: A, second: B)
 
@@ -92,17 +109,56 @@ xorPair of Pair(None, None)
 //│ = "failed"
 
 xorPair of Pair(None, Some(1))
-//│ = {first: None, second: {value: 1}}
+//│ = Pair(None, Some(1))
 
 xorPair of Pair(Some(56), None)
-//│ = {first: {value: 56}, second: None}
+//│ = Pair(Some(56), None)
+
+fun xorPairInterp(x) = if x is XorPair as output then output else "failed"
+
+xorPairInterp of Pair(None, None)
+//│ = "failed"
+
+xorPairInterp of Pair(None, Some(1))
+//│ = Pair(None, Some(1))
+
+xorPairInterp of Pair(Some(56), None)
+//│ = Pair(Some(56), None)
+
+
+pattern XorPairT = Pair(None, Some(_ => 111)) | Pair(Some(_), None)
+
+fun xorPairT(x) = if x is (@compile XorPairT) as output then output else "failed"
+
+xorPairT of Pair(None, None)
+//│ = "failed"
+
+// When one branch transforms a constructor field, both compiled and
+// interpreted matching rebuild a fresh `Pair` with the transformed field.
+xorPairT of Pair(None, Some(1))
+//│ = Pair(None, Some(111))
+
+xorPairT of Pair(Some(56), None)
+//│ = Pair(Some(56), None)
+
+fun xorPairTInterp(x) = if x is XorPairT as output then output else "failed"
+
+xorPairTInterp of Pair(None, None)
+//│ = "failed"
+
+xorPairTInterp of Pair(None, Some(1))
+//│ = Pair(None, Some(111))
+
+xorPairTInterp of Pair(Some(56), None)
+//│ = Pair(Some(56), None)
+
 
 data class Triplet[A, B, C](first: A, second: B, third: C)
 
 pattern ExactlyOneNone =
-  Triplet(None,    Some(_), Some(_)) |
-  Triplet(Some(_), None,    Some(_)) |
-  Triplet(Some(_), Some(_), None   )
+  | Triplet(None,    Some(_), Some(_))
+  | Triplet(Some(_), None,    Some(_))
+  | Triplet(Some(_), Some(_), None   )
 
 fun exactlyOneNone(x) =
   if x is (@compile ExactlyOneNone) as output then output else "failed"
@@ -110,20 +166,20 @@ fun exactlyOneNone(x) =
 fun exactlyOneNone__naive(x) =
   if x is ExactlyOneNone(output) then output else "failed"
 
-// What should the output of class pattern be? In the pattern compilation, we
-// return plain objects without the class tag, as we can't synthesize plain
-// objects with arbitrary class tags.
+// For transform-free compiled patterns, we can now reuse the original
+// scrutinee as the output instead of synthesizing a plain record.
 
 exactlyOneNone of Triplet(None, Some(1), Some(2))
-//│ = {first: None, second: {value: 1}, third: {value: 2}}
+//│ = Triplet(None, Some(1), Some(2))
 
 exactlyOneNone of Triplet(Some(1), None, Some(2))
-//│ = {first: {value: 1}, second: None, third: {value: 2}}
+//│ = Triplet(Some(1), None, Some(2))
 
 exactlyOneNone of Triplet(Some(1), Some(2), None)
-//│ = {first: {value: 1}, second: {value: 2}, third: None}
+//│ = Triplet(Some(1), Some(2), None)
 
-// But in the naive compilation of patterns, we return the scrutinee directly.
+// This now agrees with the naive compilation of patterns, which also returns
+// the scrutinee directly.
 
 exactlyOneNone__naive of Triplet(None, Some(1), Some(100))
 //│ = Triplet(None, Some(1), Some(100))

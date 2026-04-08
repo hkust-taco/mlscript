@@ -94,9 +94,9 @@ area__compiled of (width: 10, height: 20, base: 10)
 
 // Convert between different number systems
 pattern NumberSystem = 
-  (((:digits, radix: "x")) => parseInt(digits, 16)) |
-  (((:digits, radix: "o")) => parseInt(digits, 8)) |
-  (((:digits, radix: "b")) => parseInt(digits, 2))
+  | ((:digits, radix: "x")) => parseInt(digits, 16)
+  | ((:digits, radix: "o")) => parseInt(digits, 8)
+  | ((:digits, radix: "b")) => parseInt(digits, 2)
 
 fun parseIntegerLiteral(value) = if
   value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and

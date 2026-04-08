@@ -396,6 +396,31 @@ enum Term extends Statement:
     case nu: New => nu.typ
     case _ => N
   
+  /** The set of free variable names in this term.
+    * Note: it is wrong to compute this based on strings, rather than symbols,
+    * but strings are good enough for now. This is currently only used to detect useless pattern variables.
+    * (These definitions were generated as part of a slop PR.) */
+  lazy val freeVars: Set[Str] = this match
+    case Ref(sym) => Set.single(sym.nme)
+    case Lam(params, body) =>
+      val paramNames = params.allParams.iterator.map(_.sym.nme).toSet
+      body.freeVars -- paramNames
+    case Blk(stats, res) =>
+      Term.blkFreeVars(stats, res.freeVars)
+    case IfLike(_, _, split) => split.freeVars
+    case SynthIf(split) => split.freeVars
+    case Region(name, body) =>
+      body.freeVars - name.nme
+    case Handle(lhs, rhs, args, _, defs, body) =>
+      val rhsFree = rhs.freeVars
+      val argsFree = args.iterator.flatMap(_.freeVars).toSet
+      val defsFree = defs.iterator.flatMap(d => Term.termDefFreeVars(d.td)).toSet
+      val bodyFree = body.freeVars - lhs.nme
+      rhsFree ++ argsFree ++ defsFree ++ bodyFree
+    case Forall(_, _, body) => body.freeVars
+    case Error | Missing | _: Lit | _: UnitVal | _: LeadingDotSel => Set.empty
+    case _ => subTerms.iterator.flatMap(_.freeVars).toSet
+
   def sel(id: Tree.Ident, sym: Opt[MemberSymbol])(using State, Elaborator.Ctx): Sel =
     Sel(this, id)(sym, FlowSymbol.sel(id.name), N, S(summon))
   def selNoSym(nme: Str, synth: Bool = false)(using State, Elaborator.Ctx): Sel | SynthSel =
@@ -471,7 +496,48 @@ enum Term extends Statement:
       case _ =>
         that
   
+end Term
+
+object Term:
+  /** Compute the free variable names of a block given its statements and the
+    * free vars of its result term. Processes statements right-to-left so that
+    * bindings introduced by `LetDecl`, `TermDefinition`, class definitions,
+    * etc. correctly shadow uses in subsequent statements. */
+  private[semantics] def blkFreeVars(stats: Ls[Statement], resFree: Set[Str]): Set[Str] =
+    val blockLevelBinders = Buffer.empty[Str]
+    stats.foreach:
+      case td: TermDefinition =>
+        blockLevelBinders += td.sym.nme
+      case cls: ClassLikeDef =>
+        blockLevelBinders += cls.sym.nme
+      case td: TypeDef =>
+        blockLevelBinders += td.bsym.nme
+      case _: (Import | SetConfig | RcdField | RcdSpread | Term | LetDecl | DefineVar) => ()
+    (stats.foldRight(resFree): (stat, acc) =>
+      stat match
+        case LetDecl(sym, annotations) =>
+          (acc - sym.nme) ++ annotations.iterator.flatMap(_.subTerms).flatMap(_.freeVars)
+        case DefineVar(sym, rhs) =>
+          acc + sym.nme ++ rhs.freeVars
+        case t: Term =>
+          acc ++ t.freeVars
+        case _: (Import | SetConfig | RcdField | RcdSpread | TermDefinition | ClassLikeDef | TypeDef) =>
+          acc ++ stat.subTerms.iterator.flatMap(_.freeVars)
+    ) -- blockLevelBinders
   
+  /** Free vars of a TermDefinition body, with its own params subtracted. */
+  private[semantics] def termDefFreeVars(td: TermDefinition): Set[Str] =
+    val paramNames = td.params.iterator.flatMap(_.allParams).map(_.sym.nme).toSet
+    val bodyFree = td.body.iterator.flatMap(_.freeVars).toSet
+    val signFree = td.sign.iterator.flatMap(_.freeVars).toSet
+    (bodyFree ++ signFree) -- paramNames
+  
+  /** Free vars of a ClassLikeDef body, with constructor params subtracted. */
+  private def classLikeDefFreeVars(cls: ClassLikeDef): Set[Str] =
+    val paramNames = cls.paramsOpt.iterator.flatMap(_.allParams).map(_.sym.nme).toSet
+    val bodyFree = cls.body.blk.freeVars
+    val extFree = cls.ext.iterator.flatMap(_.freeVars).toSet
+    (bodyFree ++ extFree) -- paramNames
 end Term
 
 import Term.*

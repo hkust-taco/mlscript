@@ -53,19 +53,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         (_: FlatPattern.Tuple, _) | (_: FlatPattern.Record, _) => false
     /** Checks if `lhs` can be subsumed under `rhs`. */
     def <:<(rhs: FlatPattern): Bool = compareCasePattern(lhs, rhs)
-    /**
-      * If two class-like patterns has different `refined` flag. Report the
-      * inconsistency as a warning.
-      */
-    infix def reportInconsistentRefinedWith(rhs: FlatPattern): Unit = (lhs, rhs) match
-      // case (Pattern.Class(n1, _, r1), Pattern.Class(n2, _, r2)) if r1 =/= r2 =>
-      case (FlatPattern.ClassLike(c1, _, _, rfd1), FlatPattern.ClassLike(c2, _, _, rfd2)) if rfd1 =/= rfd2 =>
-        def be(value: Bool): Str = if value then "is" else "is not"
-        warn(
-          msg"Found two inconsistently refined patterns:" -> rhs.toLoc,
-          msg"one ${be(rfd1)} refined," -> c1.toLoc,
-          msg"but the other ${be(rfd2)} refined." -> c2.toLoc)
-      case (_, _) => ()
     /** If the pattern is a class-like pattern, override its `refined` flag. */
     def markAsRefined: Unit = lhs match
       case lhs: FlatPattern.ClassLike => lhs.refined = true
@@ -123,10 +110,25 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
   
   /**
     * Specialize `split` with the assumption that `scrutinee` matches `pattern`.
-    * If `mode` is `+`, the function _keeps_ branches that agree on
-    * `scrutinee` matching `pattern` and simplifies the record patterns it sees if the fields were already matched.
-    * Otherwise (if `mode` is `-`), the function _removes_ branches
-    * that agree on `scrutinee` matches `pattern`.
+    *
+    * In mode `+` (positive), keeps branches consistent with the assumption:
+    *   - Case 1.1.1: Same pattern (`=:=`) → merge continuation and tail via alias bindings.
+    *   - Case 1.1.2: Branch pattern is more specific (`thatPattern <:< pattern`) → keep as-is,
+    *     mark the specializing pattern as refined, and recurse into the tail so remaining
+    *     branches on the same scrutinee are simplified with the known assumption.
+    *   - Case 1.1.3: Branch is a fallback → skip to tail.
+    *   - Case 1.1.4: Branch is a record → simplify fields already matched by the assumption.
+    *   - Case 1.1.5: Specializing pattern is more specific (`pattern <:< thatPattern`) → keep as-is
+    *     (the branch always matches when the assumption holds).
+    *   - Case 1.1.6: Patterns are unrelated — if provably disjoint (e.g., different literals,
+    *     sibling classes under single inheritance), skip; otherwise keep the branch to support
+    *     conjunction patterns like `A & B`.
+    *
+    * In mode `-` (negative), removes branches that the assumption makes unreachable:
+    *   - Case 1.2.1: Branch pattern equals or is subsumed by the assumption → remove.
+    *   - Case 1.2.2: Unrelated → keep, recurse into tail.
+    *
+    * Case 2: Different scrutinee → recurse into both continuation and tail.
     */
   private def specialize(
       split: Split,
@@ -150,11 +152,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             log(s"Case 1.1: $scrutinee === $thatScrutinee")
             if thatPattern =:= pattern then
               log(s"Case 1.1.1: $pattern =:= $thatPattern")
-              thatPattern reportInconsistentRefinedWith pattern
               aliasBindings(pattern, thatPattern)(rec(continuation) ++ rec(tail))
             else if thatPattern <:< pattern then
               log(s"Case 1.1.2: $pattern <:< $thatPattern")
-              pattern.markAsRefined; split
+              pattern.markAsRefined; split.copy(tail = rec(tail))
             else if split.isFallback then
               log(s"Case 1.1.3: $pattern is unrelated with $thatPattern")
               rec(tail)
@@ -180,16 +181,17 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                 log(s"case 1.1.5: $pattern <:< $thatPattern")
                 split
               else
-                // TODO: the warning will be useful when we have inheritance information
-                // raiseDesugaringWarning(
-                //   msg"possibly conflicting patterns for this scrutinee" -> scrutinee.toLoc,
-                //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
-                //   msg"which is unrelated with ${thatPattern.toString}" -> thatPattern.toLoc)
-                log(s"Case 1.1._ else : ${tail}")
-                rec(tail)
+                if areProvablyDisjoint(pattern, thatPattern) then
+                  log(s"Case 1.1.6: $pattern and $thatPattern are provably disjoint")
+                  rec(tail)
+                else
+                  // When patterns are not provably disjoint, we cannot assume
+                  // the scrutinee can't match both (e.g., conjunction patterns
+                  // like `A & B`). Keep the branch.
+                  log(s"Case 1.1.6: $pattern and $thatPattern are not provably disjoint")
+                  head.copy(continuation = rec(continuation)) ~: rec(tail)
           case - =>
             log(s"Case 1.2: $scrutinee === $thatScrutinee")
-            thatPattern reportInconsistentRefinedWith pattern
             if thatPattern =:= pattern || thatPattern <:< pattern then
               log(s"Case 1.2.1: $pattern =:= (or <:<) $thatPattern")
               rec(tail)
@@ -497,8 +499,7 @@ object Normalization:
     inline def get(term: Term): Opt[LabelSymbol] = map.get(term)
   
   /**
-    * Hard-coded subtyping relations used in normalization and coverage checking.
-    * TODO use base classes and also handle modules
+    * Subtyping relations used in normalization and coverage checking.
     */
   def compareCasePattern(lhs: FlatPattern, rhs: FlatPattern)(using ctx: Elaborator.Ctx): Bool =
     import FlatPattern.*, ctx.builtins as blt
@@ -513,7 +514,6 @@ object Normalization:
     // Note: We don't make Int31 compatible with Num, since Int31 needs to know how it should be
     // sign-extended in order to convert into a Num.
     case (ClassLike(symbol = blt.`Int`), ClassLike(symbol = blt.`Num`)) => true
-    // case (s1: ClassSymbol, s2: ClassSymbol) => s1 <:< s2 // TODO: find a way to check inheritance
     // TODO(Derppening): Do we limit IntLit to (1 << 31) - 1 for `Int31`?
     case (Lit(Tree.IntLit(_)), ClassLike(symbol = blt.`Int` | blt.`Int31` | blt.`Num`)) => true
     case (Lit(Tree.StrLit(_)), ClassLike(symbol = blt.`Str`)) => true
@@ -530,8 +530,58 @@ object Normalization:
       entries.forall { (fieldName, _) => clsParams.exists {
         case Param(flags = FldFlags(isVal = isVal), sym = sym) => isVal && fieldName === sym.id
       }}
-    // case (Class(cs1: ClassSymbol), Class(cs2: ClassSymbol)) => true
+    // Check user-defined class hierarchy via extends clauses.
+    case (ClassLike(_, lhsSym, _, _), ClassLike(_, rhsSym, _, _)) =>
+      isSubclassOf(lhsSym, rhsSym)
     case (_: FlatPattern, _: FlatPattern) => false
+  
+  /**
+    * Check if two patterns are provably disjoint, i.e., no value can match both.
+    * This is used to safely eliminate branches during specialization.
+    * Returns `true` for clear-cut cases (e.g., different literals,
+    * incompatible tuple sizes, sibling classes under single inheritance).
+    */
+  def areProvablyDisjoint(lhs: FlatPattern, rhs: FlatPattern)(using ctx: Elaborator.Ctx): Bool =
+    import FlatPattern.*
+    (lhs, rhs) match
+    case (Lit(l1), Lit(l2)) => !(l1 === l2)
+    case (Tuple(n1, false), Tuple(n2, false)) => n1 =/= n2
+    case (Tuple(n1, true), Tuple(n2, false)) => n2 < n1
+    case (Tuple(n1, false), Tuple(n2, true)) => n1 < n2
+    case (Lit(_), _: ClassLike) => !compareCasePattern(lhs, rhs)
+    case (_: ClassLike, Lit(_)) => !compareCasePattern(rhs, lhs)
+    case (Lit(_), Tuple(_, _)) | (Tuple(_, _), Lit(_)) => true
+    case (Record(_), Lit(_)) | (Lit(_), Record(_)) => true
+    case (Record(_), Tuple(_, _)) | (Tuple(_, _), Record(_)) => true
+    // Under the single-inheritance restriction, two classes where neither is a
+    // subclass of the other are provably disjoint. When we add matchable
+    // class-like things with multiple inheritance (e.g., interfaces), this check
+    // will need to be refined.
+    case (ClassLike(_, lhsSym, _, _), ClassLike(_, rhsSym, _, _)) =>
+      !isSubclassOf(lhsSym, rhsSym) && !isSubclassOf(rhsSym, lhsSym)
+    case _ => false
+  
+  /** Get the parent class-like symbol from the extends clause of a class or module. */
+  private def getParentClassLikeSymbol(sym: ClassSymbol | ModuleOrObjectSymbol)
+      : Opt[ClassSymbol | ModuleOrObjectSymbol] =
+    val ext: Opt[Term.New] = sym match
+      case cls: ClassSymbol => cls.defn.flatMap(_.ext)
+      case mod: ModuleOrObjectSymbol => mod.defn.flatMap(_.ext)
+    ext.flatMap(nw => nw.cls.symbol.flatMap(_.asClsOrMod))
+  
+  /** Check if `child` is a subclass of `parent` by traversing the class hierarchy.
+    * Uses a visited set to avoid infinite loops in case of cyclic inheritance. */
+  private def isSubclassOf(
+      child: ClassSymbol | ModuleOrObjectSymbol,
+      parent: ClassSymbol | ModuleOrObjectSymbol
+  ): Bool =
+    def go(sym: ClassSymbol | ModuleOrObjectSymbol,
+        visited: Set[ClassSymbol | ModuleOrObjectSymbol]): Bool =
+      !visited.contains(sym) && (getParentClassLikeSymbol(sym) match
+        case S(parentSym) =>
+          parentSym === parent || go(parentSym, visited + sym)
+        case N => false)
+    go(child, Set.empty)
 
   final case class VarSet(declared: Set[BlockLocalSymbol]):
     def +(nme: BlockLocalSymbol): VarSet = copy(declared + nme)

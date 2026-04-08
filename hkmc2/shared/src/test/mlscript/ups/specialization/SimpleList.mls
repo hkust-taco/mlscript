@@ -110,9 +110,9 @@ pattern G_0 = Triplet(Box, Bowl, Basket) | Triplet(Box, Bowl, Basket)
 pattern G_0 = Triplet(Triplet(Box, Box, Box), Bowl, Basket) | Triplet(Triplet(Box, Box, Box), Bowl, Basket)
 
 pattern G_1 =
-  Triplet(Triplet(Box, Bowl, Box), Bowl, Basket) |
-  Triplet(Triplet(Box, Box, Box), Bowl, Basket) |
-  Triplet(Triplet(Box, Box, Bowl), Bowl, Basket)
+  | Triplet(Triplet(Box, Bowl, Box), Bowl, Basket)
+  | Triplet(Triplet(Box, Box, Box), Bowl, Basket)
+  | Triplet(Triplet(Box, Box, Bowl), Bowl, Basket)
 
 pattern BinSeq'(pattern D) = D | Pair(0 | 1, BinSeq'(D))
 

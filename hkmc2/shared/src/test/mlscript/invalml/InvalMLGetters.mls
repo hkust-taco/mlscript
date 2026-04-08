@@ -90,21 +90,20 @@ fun test2() =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test22;
 //│ test22 = function test2() {
-//│   let funny, tmp1;
+//│   let funny;
 //│   funny = function funny() {
 //│     let lambda1;
 //│     lambda1 = (undefined, function (caseScrut) {
-//│       let n, tmp2, tmp3, tmp4;
+//│       let n, tmp1, tmp2, tmp3;
 //│       n = caseScrut;
-//│       tmp2 = funny();
-//│       tmp3 = n - 1;
-//│       tmp4 = tmp2(tmp3);
-//│       return tmp4 + 1
+//│       tmp1 = funny();
+//│       tmp2 = n - 1;
+//│       tmp3 = tmp1(tmp2);
+//│       return tmp3 + 1
 //│     });
 //│     return lambda1
 //│   };
-//│   tmp1 = funny();
-//│   return tmp1
+//│   return funny()
 //│ };
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.84: 	    case 0 then 0
@@ -124,7 +123,7 @@ fun test2() =
 fun test3 =
   print("Hi")
 //│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for test3
-//│ ║  l.125: 	  print("Hi")
+//│ ║  l.124: 	  print("Hi")
 //│ ╙──       	  ^^^^^^^^^^^
 
 

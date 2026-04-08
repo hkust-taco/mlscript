@@ -10,7 +10,7 @@ import "../../../mlscript-compile/StrOps.mls"
 open StrOps
 //│ ╔══[WARNING] This annotation has no effect
 //│ ║  l.9: 	@debug
-//│ ║       	 ^^^^^
+//│ ║       	^^^^^^
 //│ ╟── Annotations are not supported on open terms.
 //│ ║  l.10: 	open StrOps
 //│ ╙──      	^^^^^^^^^^^
@@ -19,7 +19,7 @@ open StrOps
 @debug 0
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.19: 	@debug 0
-//│ ║        	 ^^^^^
+//│ ║        	^^^^^^
 //│ ╟── This annotation is not supported on integer literal terms.
 //│ ║  l.19: 	@debug 0
 //│ ╙──      	       ^
@@ -29,7 +29,7 @@ open StrOps
 @debug 1 + 2
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.29: 	@debug 1 + 2
-//│ ║        	 ^^^^^
+//│ ║        	^^^^^^
 //│ ╟── This annotation is not supported on application terms.
 //│ ║  l.29: 	@debug 1 + 2
 //│ ╙──      	       ^^^^^
@@ -39,7 +39,7 @@ open StrOps
 (@debug 1 + 2)
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.39: 	(@debug 1 + 2)
-//│ ║        	  ^^^^^
+//│ ║        	 ^^^^^^
 //│ ╟── This annotation is not supported on application terms.
 //│ ║  l.39: 	(@debug 1 + 2)
 //│ ╙──      	        ^^^^^
@@ -49,7 +49,7 @@ open StrOps
 (@debug 1) + 2
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.49: 	(@debug 1) + 2
-//│ ║        	  ^^^^^
+//│ ║        	 ^^^^^^
 //│ ╟── This annotation is not supported on integer literal terms.
 //│ ║  l.49: 	(@debug 1) + 2
 //│ ╙──      	        ^
@@ -59,7 +59,7 @@ open StrOps
 (1 + @debug 2)
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.59: 	(1 + @debug 2)
-//│ ║        	      ^^^^^
+//│ ║        	     ^^^^^^
 //│ ╟── This annotation is not supported on integer literal terms.
 //│ ║  l.59: 	(1 + @debug 2)
 //│ ╙──      	            ^
@@ -71,22 +71,16 @@ data class Log(msg: Str)
 id(@Log 5)
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.71: 	id(@Log 5)
-//│ ║        	    ^^^
+//│ ║        	   ^^^^
 //│ ╟── This annotation is not supported on integer literal terms.
 //│ ║  l.71: 	id(@Log 5)
 //│ ╙──      	        ^
 //│ = 5
 
 :pe
-:w
+:re
 @1 + 2 class Qux
 //│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
 //│ ║  l.82: 	@1 + 2 class Qux
 //│ ╙──      	       ^^^^^
-//│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.82: 	@1 + 2 class Qux
-//│ ║        	 ^
-//│ ╟── This annotation is not supported on application terms.
-//│ ║  l.82: 	@1 + 2 class Qux
-//│ ╙──      	   ^^^
-//│ = 2
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function

@@ -1,0 +1,82 @@
+:js
+
+
+class A
+class B extends A
+
+:breakme // Should warn that the `B` branch is unreachable
+let f = case
+  A then "A"
+  B then "B"
+//│ f = fun f
+
+f(new A)
+//│ = "A"
+
+f(new B)
+//│ = "A"
+
+
+let f = case
+  B then "B"
+  A then "A"
+//│ f = fun f
+
+f(new A)
+//│ = "A"
+
+f(new B)
+//│ = "B"
+
+
+:sir
+let f = case
+  A & B then "A & B"
+  A then "A"
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f⁰, lambda⁰;
+//│ define lambda⁰ as fun lambda¹(caseScrut) {
+//│   match caseScrut
+//│     A⁰ =>
+//│       match caseScrut
+//│         B⁰ =>
+//│           return "A & B"
+//│         else
+//│           return "A"
+//│       end
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ set f⁰ = lambda¹;
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ f = fun
+
+:expect "A"
+f(new A)
+//│ = "A"
+
+:expect "A & B"
+f(new B)
+//│ = "A & B"
+
+
+// Test with imported class hierarchy
+import "../../../mlscript-compile/Example.mls"
+open Example
+
+let g = case
+  Base & Child1 then "Base & Child1"
+  Base then "Base"
+//│ g = fun
+
+:expect "Base & Child1"
+g(new Child1)
+//│ = "Base & Child1"
+
+:expect "Base"
+g(new Child2)
+//│ = "Base"
+
+
