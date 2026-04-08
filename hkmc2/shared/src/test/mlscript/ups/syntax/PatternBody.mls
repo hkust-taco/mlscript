@@ -48,7 +48,7 @@ pattern PairLike(fst, snd) = Pair(fst, snd) | [fst, snd]
 
 :w
 pattern UselessParameter = x
-//│ ╔══[WARNING] Useless pattern binding: x.
+//│ ╔══[WARNING] Unused pattern binding: x.
 //│ ║  l.50: 	pattern UselessParameter = x
 //│ ╙──      	                           ^
 

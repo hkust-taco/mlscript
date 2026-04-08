@@ -12,7 +12,7 @@ pattern P = x :: xs => [x, xs]
 //│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.11: 	pattern P = x :: xs => [x, xs]
 //│ ╙──      	                        ^
-//│ ╔══[WARNING] Useless pattern binding: x.
+//│ ╔══[WARNING] Unused pattern binding: x.
 //│ ║  l.11: 	pattern P = x :: xs => [x, xs]
 //│ ╙──      	            ^
 

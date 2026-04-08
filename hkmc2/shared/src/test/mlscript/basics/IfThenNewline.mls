@@ -1,0 +1,25 @@
+:js
+
+// Regression test: `if true` with `then` on a new indented line should work
+// the same as `if true then` on the same line.
+
+// Works (same line)
+if true then
+    5
+  else 1
+//│ = 5
+
+// Previously broken (then on next line)
+if true
+  then
+    5
+  else 1
+//│ = 5
+
+// Also test false
+if false
+  then
+    5
+  else 1
+//│ = 1
+

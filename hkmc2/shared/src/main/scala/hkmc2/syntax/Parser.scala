@@ -475,9 +475,16 @@ abstract class Parser(
             prefixRules.getKwAlt(kw, S(loc)) match
             case S(subRule) =>
               val e = yeetSpaces match
-                case (br @ BRACKETS(_: Indent_Curly, toks), _brLoc) :: _ if subRule.blkAlt.isEmpty =>
-                  // * Curly brackets after prefix keywords like `set`/`let` should be parsed
-                  // * as multi-item blocks to support comma-separated items (e.g., `set { x = 1, y = 1 }`).
+                case (br @ BRACKETS(_: Indent_Curly, toks), _brLoc) :: _
+                if subRule.blkAlt.isEmpty && (subRule.kwAlts.nonEmpty || subRule.exprAlt.isDefined) =>
+                  // * Enter this indented block to parse the continuation of a prefix keyword,
+                  // * but only when the subrule doesn't already have its own block handler (`blkAlt.isEmpty`)
+                  // * and has keyword or expression alternatives to parse (`kwAlts.nonEmpty || exprAlt.isDefined`).
+                  // * This skips block entry for keywords registered via `singleKw` (e.g., `true`, `false`,
+                  // * `undefined`, `null`, `this`) whose continuation rule is end-only — they produce a
+                  // * `ParseRule(end(v))` with no `kwAlts`, no `exprAlt`, and no `blkAlt`.
+                  // * Without this guard, `if true` followed by an indented `then`/`else` would consume the
+                  // * block trying to parse `true`'s empty continuation, losing the `then`/`else` tokens.
                   consume
                   val blk = rec(toks, S(br.innerLoc), br.describe)
                     .concludeWith(_.blockOf(subRule, Nil, allowNewlines = true))

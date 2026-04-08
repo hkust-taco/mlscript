@@ -4,50 +4,16 @@
 
 
 // ——— ——— ———
-// From ups/UpsBugsBacklog.mls
-
-// * Problems happen with `..` destructuring of sequences (same happens with `...`)
-
-fun go(stack) = if stack is
-  [..stack, "+", "+"] then 0
-  [..stack2, Str] then 1
-  else print("Str??", stack is [..stack2, Str])
-
-go([1, 2, "z"])
-//│ > Str?? true
-
-// ——— ——— ———
-// From ups/UpsBugsBacklog.mls
-
-// * The warnings are spurious
-
-:fixme
-pattern Sym =
-  ([x, y] where (x == y))
-//│ ╔══[WARNING] Useless pattern binding: x.
-//│ ║  l.26: 	  ([x, y] where (x == y))
-//│ ╙──      	    ^
-//│ ╔══[WARNING] Useless pattern binding: y.
-//│ ║  l.26: 	  ([x, y] where (x == y))
-//│ ╙──      	       ^
-
-// * The definition does work, though:
-
-[1, 1] is Sym
-//│ = true
-
-[1, 2] is Sym
-//│ = false
-
-// ——— ——— ———
-// [Comment from Copilot (Claude Opus 4.6):]
-// Bug: `pattern do body` inside `is` expression is not handled by the pattern elaborator.
-// The `do` keyword is recognized as a connective in `if`/`while`/`case` splits (via the
-// `~>` extractor in SplitElaborator.scala), but the `shorthandSplit` method used for
-// standalone `is` expressions passes the entire `InfixApp(pattern, do, body)` to the
-// `pattern()` method, which doesn't recognize `do`. Fixing this would require modifying
-// `shorthandSplit` or `patternBranch` to decompose `pattern do body` before pattern
-// elaboration, similar to how `termBranch` handles it at line ~184.
+// Bug: `pattern do body` inside `is` expression is not handled.
+// The root cause is at the parser level: in `Some of [process, rest] do "hi"`,
+// the `of` keyword greedily includes `do "hi"` inside the constructor argument,
+// producing `App(Some, Tup([InfixApp(Tup([process, rest]), do, "hi")]))`.
+// In `if`/`case`/`while` splits, the parser treats `do` as a split boundary
+// at the branch level, so it correctly separates pattern from consequent. But
+// in standalone `is` expressions, the block lines are parsed as regular
+// expressions, so `do` is parsed as an infix operator inside the constructor's
+// argument. Fixing this would require the parser to switch to a split-like
+// parsing mode for `is` RHS blocks, which is a significant refactoring.
 
 class Some(val v)
 
@@ -55,37 +21,8 @@ class Some(val v)
 Some(1) is
   Some of [process, rest] do "hi"
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator 'do').
-//│ ║  l.56: 	  Some of [process, rest] do "hi"
+//│ ║  l.22: 	  Some of [process, rest] do "hi"
 //│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ = true
-
-// ——— ——— ———
-
-// Works
-if true then
-    5
-  else 1
-//│ = 5
-
-// Doesn't work
-:fixme
-if true
-  then
-    5
-  else 1
-//│ ╔══[PARSE ERROR] Expected end of input after 'true' keyword; found 'then' keyword instead
-//│ ║  l.73: 	  then
-//│ ╙──      	  ^^^^
-//│ ╔══[PARSE ERROR] Unexpected indented block here
-//│ ║  l.74: 	    5
-//│ ║        	^^^^^
-//│ ║  l.75: 	  else 1
-//│ ╙──      	^^
-//│ ╔══[COMPILATION ERROR] Unrecognized term split (‹erroneous syntax›)
-//│ ║  l.74: 	    5
-//│ ║        	^^^^^
-//│ ║  l.75: 	  else 1
-//│ ╙──      	^^
-//│ ═══[RUNTIME ERROR] Error: match error
 
 // ——— ——— ———

@@ -130,15 +130,8 @@ let m0 = {get: _ + 1}
 //│ m0 = {get: fun get}
 
 
-:fixme // TODO
 class C1(m) with
   pattern P = Pair(k, v) where m.get(k) is w and v === w
-//│ ╔══[WARNING] Useless pattern binding: v.
-//│ ║  l.135: 	  pattern P = Pair(k, v) where m.get(k) is w and v === w
-//│ ╙──       	                      ^
-//│ ╔══[WARNING] Useless pattern binding: k.
-//│ ║  l.135: 	  pattern P = Pair(k, v) where m.get(k) is w and v === w
-//│ ╙──       	                   ^
 
 C1(m0).P.unapply(Pair(3, 4))
 //│ = MatchSuccess(Pair(3, 4), null)
@@ -147,18 +140,12 @@ C1(m0).P.unapply(Pair(3, 5))
 //│ = MatchFailure(null)
 
 
-:fixme // incorrect warning
+:e
 class C2(m) with
   pattern P = Pair(k, v) where m.get(k) is w where v === w
 //│ ╔══[COMPILATION ERROR] Name not found: w
-//│ ║  l.152: 	  pattern P = Pair(k, v) where m.get(k) is w where v === w
+//│ ║  l.145: 	  pattern P = Pair(k, v) where m.get(k) is w where v === w
 //│ ╙──       	                                                         ^
-//│ ╔══[WARNING] Useless pattern binding: v.
-//│ ║  l.152: 	  pattern P = Pair(k, v) where m.get(k) is w where v === w
-//│ ╙──       	                      ^
-//│ ╔══[WARNING] Useless pattern binding: k.
-//│ ║  l.152: 	  pattern P = Pair(k, v) where m.get(k) is w where v === w
-//│ ╙──       	                   ^
 
 :re
 C2(m0).P.unapply(Pair(3, 4))
@@ -169,15 +156,8 @@ C2(m0).P.unapply(Pair(3, 5))
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
-:fixme // incorrect warning
 class C3(m) with
   pattern P = Pair(k, v) where m.get(k) is (w where v === w)
-//│ ╔══[WARNING] Useless pattern binding: v.
-//│ ║  l.174: 	  pattern P = Pair(k, v) where m.get(k) is (w where v === w)
-//│ ╙──       	                      ^
-//│ ╔══[WARNING] Useless pattern binding: k.
-//│ ║  l.174: 	  pattern P = Pair(k, v) where m.get(k) is (w where v === w)
-//│ ╙──       	                   ^
 
 C3(m0).P.unapply(Pair(3, 4))
 //│ = MatchSuccess(Pair(3, 4), null)
