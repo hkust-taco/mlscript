@@ -36,12 +36,14 @@ pattern PairSum = [x, y] where (let x = true, let y = x, y)
 
 :w
 pattern PairSum = [x, y] where (if x is [y] then y)
-//│ FAILURE: Unexpected lack of warnings
+//│ ╔══[WARNING] Useless pattern binding: y.
+//│ ║  l.38: 	pattern PairSum = [x, y] where (if x is [y] then y)
+//│ ╙──      	                      ^
 
 :w
 pattern PairSum = [x, y] where (class C(y) with { fun test = y }, C(x).test)
 //│ ╔══[WARNING] Useless pattern binding: y.
-//│ ║  l.42: 	pattern PairSum = [x, y] where (class C(y) with { fun test = y }, C(x).test)
+//│ ║  l.44: 	pattern PairSum = [x, y] where (class C(y) with { fun test = y }, C(x).test)
 //│ ╙──      	                      ^
 
 

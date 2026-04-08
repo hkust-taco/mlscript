@@ -291,45 +291,12 @@ enum Pattern extends AutoLocated:
   lazy val varNamesUsedInGuards: Set[Str] = this match
     case Guarded(pattern, guard) =>
       val boundNames = pattern.variables.varMap.keySet
-      val referencedNames = termFreeVarNames(guard)
+      val referencedNames = guard.freeVars
       (boundNames & referencedNames) ++ pattern.varNamesUsedInGuards
     case _ =>
       children.iterator.collect:
         case p: Pattern => p.varNamesUsedInGuards
       .foldLeft(Set.empty[Str])(_ ++ _)
-  
-  /** Compute the set of free variable names in the given term tree.
-    * This accounts for local bindings introduced by `let` declarations
-    * (in `Blk`), lambda parameters, and local function definitions,
-    * so that shadowed names are not counted as free. */
-  private def termFreeVarNames(t: Term): Set[Str] =
-    val free = Set.newBuilder[Str]
-    def goStmt(s: Statement, bound: Set[Str]): Set[Str] = s match
-      case LetDecl(sym, _) =>
-        bound + sym.nme
-      case DefineVar(sym, rhs) =>
-        go(rhs, bound)
-        bound + sym.nme
-      case td: TermDefinition =>
-        val newBound = bound + td.sym.nme
-        td.body.foreach(go(_, newBound))
-        newBound
-      case other =>
-        other.subTerms.foreach(go(_, bound))
-        bound
-    def go(t: Term, bound: Set[Str]): Unit = t match
-      case Term.Ref(sym) =>
-        if !bound.contains(sym.nme) then free += sym.nme
-      case Term.Blk(stats, res) =>
-        val finalBound = stats.foldLeft(bound)((b, s) => goStmt(s, b))
-        go(res, finalBound)
-      case Term.Lam(params, body) =>
-        val paramNames = params.allParams.iterator.map(_.sym.nme).toSet
-        go(body, bound ++ paramNames)
-      case _ =>
-        t.subTerms.foreach(go(_, bound))
-    go(t, Set.empty)
-    free.result()
   
   def children: Vector[Located] = this match
     case Constructor(target, arguments) => target +: arguments.fold(Vector.empty)(_.toVector)
