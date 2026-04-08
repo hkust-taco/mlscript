@@ -35,3 +35,9 @@ module Test with
 val t = new Test(123)
 
 
+// Example of inheritance
+abstract class Base
+class Child1 extends Base
+class Child2 extends Base
+
+
