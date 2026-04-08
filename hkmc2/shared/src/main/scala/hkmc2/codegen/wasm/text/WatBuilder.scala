@@ -147,14 +147,20 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   end registerSingletonInit
 
   /** Collects only top-level class definitions in `block`. */
-  private def collectTopLevelClassDefns(block: Block): List[ClsLikeDefn] = block match
-    case Define(defn: ClsLikeDefn, rst) =>
-      defn.optionIf(isSupportedTopLevelClass).toList ::: collectTopLevelClassDefns(rst)
-    case Begin(sub, rst) =>
-      collectTopLevelClassDefns(sub) ::: collectTopLevelClassDefns(rst)
-    case b: NonBlockTail =>
-      collectTopLevelClassDefns(b.rest)
-    case _: BlockTail => Nil
+  private def collectTopLevelClassDefns(block: Block): List[ClsLikeDefn] =
+    val acc = ArrayBuf.empty[ClsLikeDefn]
+    new BlockTraverserShallow:
+      applyBlock(block)
+      override def applyBlock(b: Block): Unit = b match
+        case Match(_, _, _, rst) => applySubBlock(rst)
+        case Label(_, _, _, rst) => applySubBlock(rst)
+        case TryBlock(_, _, rst) => applySubBlock(rst)
+        case _ => super.applyBlock(b)
+      override def applyDefn(defn: Defn): Unit = defn match
+        case clsLikeDefn: ClsLikeDefn =>
+          clsLikeDefn.optionIf(isSupportedTopLevelClass).foreach(acc += _)
+        case _ => ()
+    acc.toList
 
   /** Resolves the parent symbol for a top-level class definition, if present. */
   private def resolveParentSym(defn: ClsLikeDefn)(using Raise): Opt[BlockMemberSymbol] =
@@ -524,22 +530,25 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case _ =>
         splitSuperTail(clsLikeDefn.preCtor) match
           case S((prefixBlock, args)) =>
-            val parentSym = resolveParentSym(clsLikeDefn).getOrElse(lastWords("unreachable"))
-            val parentInitFunc = initFuncSym(parentSym)
             val (prefixWat, prefixLocals) = block(prefixBlock)
-            val superCall = call(
-              funcidx = ctx.getFunc_!(parentInitFunc),
-              operands = local.get(thisVar, RefType.anyref) +: args.map(argument),
-              returnTypes = Seq(Result(RefType.anyref)),
-            )
-            (
-              blockInstr(
-                label = N,
-                children = Seq(asStatement(prefixWat), drop(superCall)),
-                resultTypes = Seq.empty,
-              ),
-              prefixLocals,
-            )
+            resolveParentSym(clsLikeDefn) match
+              case S(parentSym) =>
+                val parentInitFunc = initFuncSym(parentSym)
+                val superCall = call(
+                  funcidx = ctx.getFunc_!(parentInitFunc),
+                  operands = local.get(thisVar, RefType.anyref) +: args.map(argument),
+                  returnTypes = Seq(Result(RefType.anyref)),
+                )
+                (
+                  blockInstr(
+                    label = N,
+                    children = Seq(asStatement(prefixWat), drop(superCall)),
+                    resultTypes = Seq.empty,
+                  ),
+                  prefixLocals,
+                )
+              case N =>
+                (nop, Nil)
           case N =>
             raise(ErrorReport(
               msg"Wasm preCtor lowering only supports lowered super(...) shapes." ->
@@ -1783,7 +1792,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
       // Early registration scheme: collect supported top-level classes from main block,
       // order by inheritance, predeclare struct types, init functions, and constructors.
-      val orderedTopLevelClassDefns =
+      locally:
         given Raise = diag =>
           outerRaise(diag)
           diag match
@@ -1794,7 +1803,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         predeclareClassTags(ordered)
         ordered.foreach(predeclareClassInit)
         ordered.foreach(predeclareClassConstructor)
-        ordered
 
       // Compile the entry function under a dedicated local scope so that any temp locals introduced
       // during codegen (e.g., via `local.tee`) are declared in the entry function.
