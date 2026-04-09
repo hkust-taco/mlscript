@@ -26,6 +26,7 @@ class CompileTestRunner
 
   val mainTestDir = workingDir/"hkmc2"/"shared"/"src"/"test"  
   
+  // The bench/nofib compilation tests are in the hkmc2NofibTests project.
   val dirs = mainTestDir :: Nil
   
   val validExt = Set("mls")
