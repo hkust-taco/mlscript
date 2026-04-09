@@ -12,9 +12,11 @@ pattern Middle = ([x] => x) | ([x, ...(Middle as m), y] => m)
 :deadParamElim
 if [1,2,3,4,5] is
   Middle as x then x
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 3
 
-
-if [1,2,3] is
+:re
+if [1,2,3,4] is
   Middle as x then x
-//│ = 2
+//│ ═══[RUNTIME ERROR] Error: match error

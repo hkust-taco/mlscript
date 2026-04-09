@@ -20,20 +20,20 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
   given eState: Elaborator.State = constraintSolver.eState
 
   val collector: FlowConstraintsCollector = constraintSolver.collector
-  val funDests: collection.Map[ConcreteFunProducer, Set[ConcreteFunConsumer | NoCons.type]] =
+  val funDests: collection.Map[ProdFun, Set[ConsFun | NoCons.type]] =
     constraintSolver.funDests
-  val funSrcs: collection.Map[ConcreteFunConsumer, Set[ConcreteFunProducer | NoProd.type]] =
+  val funSrcs: collection.Map[ConsFun, Set[ProdFun | NoProd.type]] =
     constraintSolver.funSrcs
 
-  extension (prodFun: ConcreteFunProducer)
+  extension (prodFun: ProdFun)
     def concreteId: ConcreteFunId = prodFun.funId -> prodFun.instantiationId.get
   
-  extension (consFun: ConcreteFunConsumer)
+  extension (consFun: ConsFun)
     def concreteId: ConcreteCallSiteId = consFun.exprId -> consFun.instantiationId.get
   
   // handle clashes for dead param elim
   val (liveParams, liveCallSiteParams) =
-    def isSyntheticRoot(prodFun: ConcreteFunProducer): Bool =
+    def isSyntheticRoot(prodFun: ProdFun): Bool =
       val instId = prodFun.instantiationId.get
       collector.synthesizedInstIdToFunSym.get(instId).exists: rootFunSym =>
         prodFun.funId match
@@ -44,8 +44,8 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
           case _ => false
     end isSyntheticRoot
     
-    val prodRoots = Buffer.empty[(ConcreteFunProducer, Int)]
-    val consRoots = Buffer.empty[(ConcreteFunConsumer, Int)]
+    val prodRoots = Buffer.empty[(ProdFun, Int)]
+    val consRoots = Buffer.empty[(ConsFun, Int)]
     for (prodFun, dests) <- funDests do
       if isSyntheticRoot(prodFun) || dests.contains(NoCons) then
         prodFun.params.indices.foreach: i =>
@@ -75,11 +75,11 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
             consRoots += consFun -> i
         
 
-    val result = FlowWebComputation[(ConcreteFunProducer, Int), (ConcreteFunConsumer, Int)](
+    val result = FlowWebComputation[(ProdFun, Int), (ConsFun, Int)](
       (prodFun, idx) => funDests(prodFun).collect:
-        case c: ConcreteFunConsumer => (c, idx),
+        case c: ConsFun => (c, idx),
       (consFun, idx) => funSrcs(consFun).collect:
-        case p: ConcreteFunProducer => (p, idx),
+        case p: ProdFun => (p, idx),
       prodRoots,
       consRoots,
     )
@@ -120,7 +120,7 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
       if instId.isEmpty then "<root>" else instId.map(showRefSite).mkString(".")
     end showInstId
 
-    def showProdFun(prodFun: ConcreteFunProducer): Str =
+    def showProdFun(prodFun: ProdFun): Str =
       def showFunId(funId: FunId): Str = funId match
         case (funSym: Symbol, whichParamList) => s"${funSym.nme}#$whichParamList"
         case exprId: ResultId => exprId.getResult match

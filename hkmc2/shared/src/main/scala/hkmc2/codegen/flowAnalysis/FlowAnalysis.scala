@@ -227,8 +227,6 @@ case class CtorDtorId(exprId: ResultId, instId: InstantiationId):
 
 type ConcreteProducer = Ctor
 type ConcreteConsumer = Dtor | FieldSel
-type ConcreteFunProducer = ProdFun
-type ConcreteFunConsumer = ConsFun
 
 class ProdStratScheme(val s: StratVarState, val constraints: Ls[ProdStrat -> ConsStrat])
 
@@ -831,8 +829,8 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   
   val ctorDests = LinkedHashMap.empty[ConcreteProducer, Set[ConcreteConsumer | NoCons.type]].withDefaultValue(Set.empty)
   val dtorSrcs = LinkedHashMap.empty[ConcreteConsumer, Set[ConcreteProducer | NoProd.type]].withDefaultValue(Set.empty)
-  val funDests = LinkedHashMap.empty[ConcreteFunProducer, Set[ConcreteFunConsumer | NoCons.type]].withDefaultValue(Set.empty)
-  val funSrcs = LinkedHashMap.empty[ConcreteFunConsumer, Set[ConcreteFunProducer | NoProd.type]].withDefaultValue(Set.empty)
+  val funDests = LinkedHashMap.empty[ProdFun, Set[ConsFun | NoCons.type]].withDefaultValue(Set.empty)
+  val funSrcs = LinkedHashMap.empty[ConsFun, Set[ProdFun | NoProd.type]].withDefaultValue(Set.empty)
   
   val upperBounds = MutMap.empty[StratVarId, Ls[ConsStrat]].withDefaultValue(Nil)
   val lowerBounds = MutMap.empty[StratVarId, Ls[ProdStrat]].withDefaultValue(Nil)
