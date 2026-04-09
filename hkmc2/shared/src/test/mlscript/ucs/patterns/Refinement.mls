@@ -11,28 +11,41 @@ x => if x is
 //│ ╔══[COMPILATION ERROR] Name not found: refined
 //│ ║  l.10: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
+//│ ═══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
+//│ Normalized:
+//│ >  ‹if|while›
 
 // OK
 x => if x is
   refined(Some) then x
 //│ ╔══[COMPILATION ERROR] Name not found: refined
-//│ ║  l.17: 	  refined(Some) then x
+//│ ║  l.20: 	  refined(Some) then x
 //│ ╙──      	  ^^^^^^^
+//│ ═══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
+//│ Normalized:
+//│ >  ‹if|while›
 
 // Should warn about the inconsistent refinement
 x => if x is
   refined(None) then x
   Some then x
 //│ ╔══[COMPILATION ERROR] Name not found: refined
-//│ ║  l.24: 	  refined(None) then x
+//│ ║  l.30: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
+//│ ═══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
+//│ Normalized:
+//│ >  ‹if|while› x is Option.Some then x⁰
 
 x => if x is
   refined(None) then x
   refined(Some) then x
 //│ ╔══[COMPILATION ERROR] Name not found: refined
-//│ ║  l.31: 	  refined(None) then x
+//│ ║  l.40: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: refined
-//│ ║  l.32: 	  refined(Some) then x
+//│ ║  l.41: 	  refined(Some) then x
 //│ ╙──      	  ^^^^^^^
+//│ ═══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
+//│ ═══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
+//│ Normalized:
+//│ >  ‹if|while›

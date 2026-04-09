@@ -13,11 +13,11 @@ data class A(x) with
 //│   match isMut
 //│     true =>
 //│       set tmp = new mut B¹(y);
-//│       end
+//│       return tmp(A)
 //│     else
 //│       set tmp = new B¹(y);
-//│       end
-//│   return tmp(A)
+//│       return tmp(A)
+//│   end
 //│ };
 //│ define B⁰ as class B¹(y, A) {
 //│   private val B$cap⁰;

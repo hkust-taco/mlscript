@@ -1,20 +1,21 @@
+:noCodeGen
 
 :pe
 handle
 //│ ╔══[PARSE ERROR] Expected expression after 'handle' binding keyword; found end of input instead
-//│ ║  l.3: 	handle
+//│ ║  l.4: 	handle
 //│ ╙──     	      ^
 
 :pe
 handle h
 //│ ╔══[PARSE ERROR] Expected '=' keyword after 'handle' binding head; found end of input instead
-//│ ║  l.9: 	handle h
-//│ ╙──     	        ^
+//│ ║  l.10: 	handle h
+//│ ╙──      	        ^
 
 :pe
 handle h = Eff
 //│ ╔══[PARSE ERROR] Expected 'with' keyword after 'handle' binding class name; found end of input instead
-//│ ║  l.15: 	handle h = Eff
+//│ ║  l.16: 	handle h = Eff
 //│ ╙──      	              ^
 
 :parseOnly
@@ -33,13 +34,13 @@ handle 1 = 1 with
 in
   foo(h)
 //│ ╔══[COMPILATION ERROR] Unsupported handle binding shape
-//│ ║  l.31: 	handle 1 = 1 with
+//│ ║  l.32: 	handle 1 = 1 with
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.32: 	  fun f()(r) = r(0)
+//│ ║  l.33: 	  fun f()(r) = r(0)
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.33: 	in
+//│ ║  l.34: 	in
 //│ ║        	^^
-//│ ║  l.34: 	  foo(h)
+//│ ║  l.35: 	  foo(h)
 //│ ╙──      	^^^^^^^^
 
 abstract class Eff
@@ -59,11 +60,11 @@ in
     fun g(a)()(r) = r(1)
 ) + 1
 //│ ╔══[COMPILATION ERROR] Unsupported handle binding shape
-//│ ║  l.57: 	  handle h = Eff with
+//│ ║  l.58: 	  handle h = Eff with
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^
-//│ ║  l.58: 	    fun f()(r) = r(0)
+//│ ║  l.59: 	    fun f()(r) = r(0)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.59: 	    fun g(a)()(r) = r(1)
+//│ ║  l.60: 	    fun g(a)()(r) = r(1)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
 
 module Mod with
@@ -85,10 +86,10 @@ handle h = Eff with
     fun x() = x
 foo(h)
 //│ ╔══[COMPILATION ERROR] Only function definitions are allowed in handler blocks
-//│ ║  l.83: 	  val x = 24
+//│ ║  l.84: 	  val x = 24
 //│ ╙──      	  ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Only function definitions are allowed in handler blocks
-//│ ║  l.85: 	    fun x() = x
+//│ ║  l.86: 	    fun x() = x
 //│ ╙──      	              ^
 
 :e
@@ -103,19 +104,19 @@ handle h = Eff with
     foo(h)
 foo(h)
 //│ ╔══[COMPILATION ERROR] Handler function is missing resumption parameter
-//│ ║  l.99: 	      fun f = r(0)
-//│ ╙──      	      ^^^^^^^^^^^^
+//│ ║  l.100: 	      fun f = r(0)
+//│ ╙──       	      ^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Handler function is missing resumption parameter
-//│ ║  l.100: 	      fun g() = r(0)
+//│ ║  l.101: 	      fun g() = r(0)
 //│ ╙──       	      ^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Handler function is missing resumption parameter
-//│ ║  l.101: 	      fun h()() = r(1)
+//│ ║  l.102: 	      fun h()() = r(1)
 //│ ╙──       	      ^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Handler function is missing resumption parameter
-//│ ║  l.102: 	      fun h2()(a, b) = r(1)
+//│ ║  l.103: 	      fun h2()(a, b) = r(1)
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: h
-//│ ║  l.103: 	    foo(h)
+//│ ║  l.104: 	    foo(h)
 //│ ╙──       	        ^
 
 :w
@@ -126,6 +127,6 @@ handle h = Eff with
   12345
 foo(h)
 //│ ╔══[WARNING] Terms in handler block do nothing
-//│ ║  l.126: 	  12345
+//│ ║  l.127: 	  12345
 //│ ╙──       	  ^^^^^
 //│ Elab: { handle h = Ref(member:Eff)() List(HandlerTermDefinition(r,TermDefinition(Fun,member:f,term:Handler$h$/f,List(ParamList(‹›,List(),None)),None,None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹method ›,Modulefulness(None),List(),None)), HandlerTermDefinition(r,TermDefinition(Fun,member:g,term:Handler$h$/g,List(ParamList(‹›,List(Param(‹›,a,None,Modulefulness(None))),None)),None,None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(1)),None))))),‹method ›,Modulefulness(None),List(),None))) in App(Ref(member:foo),Tup(List(Fld(‹›,Ref(h),None)))) }

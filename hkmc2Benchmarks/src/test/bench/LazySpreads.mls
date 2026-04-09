@@ -24,7 +24,7 @@ fun materialize(xs) = if (xs |> FingerTreeList.isFingerTree)
 :sjs
 fun buildLazy(i) =
   if i > 0 then [i, ..buildLazy(i - 1), -i] else []
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let buildLazy;
 //│ buildLazy = function buildLazy(i) {
 //│   let scrut, tmp, tmp1, tmp2;
@@ -34,13 +34,15 @@ fun buildLazy(i) =
 //│     tmp1 = buildLazy(tmp);
 //│     tmp2 = - i;
 //│     return globalThis.Object.freeze(runtime.Tuple.lazyConcat(i, runtime.Tuple.split, tmp1, tmp2))
-//│   } else { return globalThis.Object.freeze([]) }
+//│   }
+//│   return globalThis.Object.freeze([]);
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :sjs
 fun buildEager(i) =
   if i > 0 then [i, ...buildEager(i - 1), -i] else []
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let buildEager;
 //│ buildEager = function buildEager(i) {
 //│   let scrut, tmp, tmp1, tmp2;
@@ -49,28 +51,26 @@ fun buildEager(i) =
 //│     tmp = i - 1;
 //│     tmp1 = buildEager(tmp);
 //│     tmp2 = - i;
-//│     return globalThis.Object.freeze([
-//│       i,
-//│       ...tmp1,
-//│       tmp2
-//│     ])
-//│   } else { return globalThis.Object.freeze([]) }
+//│     return globalThis.Object.freeze([ i, ...tmp1, tmp2 ])
+//│   }
+//│   return globalThis.Object.freeze([]);
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :sjs
 fun funnySum(xs) = if xs is
   [a, ..ls, b] then
     a + funnySum(ls) - b
   [] then 0
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let funnySum;
 //│ funnySum = function funnySum(xs) {
-//│   let ls, a, b, lastElement0$, middleElements, element0$, tmp, tmp1;
+//│   let ls, a, b, lastElement1$, middleElements, element0$, tmp, tmp1;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
 //│     element0$ = runtime.Tuple.get(xs, 0);
-//│     middleElements = runtime.safeCall(runtime.Tuple.slice(xs, 1, 1));
-//│     lastElement0$ = runtime.Tuple.get(xs, -1);
-//│     b = lastElement0$;
+//│     middleElements = runtime.Tuple.slice(xs, 1, 1);
+//│     lastElement1$ = runtime.Tuple.get(xs, -1);
+//│     b = lastElement1$;
 //│     ls = middleElements;
 //│     a = element0$;
 //│     tmp = funnySum(ls);
@@ -78,23 +78,25 @@ fun funnySum(xs) = if xs is
 //│     return tmp1 - b
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :sjs
 fun funnySumEager(xs) = if xs is
   [a, ...ls, b] then
     a + funnySumEager(ls) - b
   [] then 0
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let funnySumEager;
 //│ funnySumEager = function funnySumEager(xs) {
-//│   let ls, a, b, lastElement0$, middleElements, element0$, tmp, tmp1;
+//│   let ls, a, b, lastElement1$, middleElements, element0$, tmp, tmp1;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
 //│     element0$ = runtime.Tuple.get(xs, 0);
-//│     middleElements = runtime.safeCall(runtime.Tuple.slice(xs, 1, 1));
-//│     lastElement0$ = runtime.Tuple.get(xs, -1);
-//│     b = lastElement0$;
+//│     middleElements = runtime.Tuple.slice(xs, 1, 1);
+//│     lastElement1$ = runtime.Tuple.get(xs, -1);
+//│     b = lastElement1$;
 //│     ls = middleElements;
 //│     a = element0$;
 //│     tmp = funnySumEager(ls);
@@ -102,8 +104,10 @@ fun funnySumEager(xs) = if xs is
 //│     return tmp1 - b
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :silent
 suite.add("BuildLazy3", () => buildLazy(3))
@@ -177,61 +181,61 @@ fun map(f) = case
   [a, ..rest] then
     [f(a), ..map(f)(rest)]
   [] then []
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let map;
 //│ map = function map(f) {
 //│   let lambda18;
 //│   lambda18 = (undefined, function (caseScrut) {
-//│     let rest, a, middleElements, element0$, tmp17, tmp18, tmp19;
+//│     let rest, a, middleElements, element0$, tmp3, tmp4, tmp5;
 //│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 1) {
 //│       element0$ = runtime.Tuple.get(caseScrut, 0);
-//│       middleElements = runtime.safeCall(runtime.Tuple.slice(caseScrut, 1, 0));
+//│       middleElements = runtime.Tuple.slice(caseScrut, 1, 0);
 //│       rest = middleElements;
 //│       a = element0$;
-//│       tmp17 = runtime.safeCall(f(a));
-//│       tmp18 = map(f);
-//│       tmp19 = runtime.safeCall(tmp18(rest));
-//│       return globalThis.Object.freeze(runtime.Tuple.lazyConcat(tmp17, runtime.Tuple.split, tmp19))
+//│       tmp3 = runtime.safeCall(f(a));
+//│       tmp4 = map(f);
+//│       tmp5 = runtime.safeCall(tmp4(rest));
+//│       return globalThis.Object.freeze(runtime.Tuple.lazyConcat(tmp3, runtime.Tuple.split, tmp5))
 //│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
 //│       return globalThis.Object.freeze([])
-//│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   });
 //│   return lambda18
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :sjs
 fun mapEager(f) = case
   [a, ...rest] then
     [f(a), ...mapEager(f)(rest)]
   [] then []
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let mapEager;
 //│ mapEager = function mapEager(f) {
 //│   let lambda18;
 //│   lambda18 = (undefined, function (caseScrut) {
-//│     let rest, a, middleElements, element0$, tmp17, tmp18, tmp19;
+//│     let rest, a, middleElements, element0$, tmp3, tmp4, tmp5;
 //│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 1) {
 //│       element0$ = runtime.Tuple.get(caseScrut, 0);
-//│       middleElements = runtime.safeCall(runtime.Tuple.slice(caseScrut, 1, 0));
+//│       middleElements = runtime.Tuple.slice(caseScrut, 1, 0);
 //│       rest = middleElements;
 //│       a = element0$;
-//│       tmp17 = runtime.safeCall(f(a));
-//│       tmp18 = mapEager(f);
-//│       tmp19 = runtime.safeCall(tmp18(rest));
+//│       tmp3 = runtime.safeCall(f(a));
+//│       tmp4 = mapEager(f);
+//│       tmp5 = runtime.safeCall(tmp4(rest));
 //│       return globalThis.Object.freeze([
-//│         tmp17,
-//│         ...tmp19
+//│         tmp3,
+//│         ...tmp5
 //│       ])
 //│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
 //│       return globalThis.Object.freeze([])
-//│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   });
 //│   return lambda18
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :silent
 let res = buildEager(1500)
@@ -283,14 +287,14 @@ suite.add("EagerBuiltMap2Eager15", () =>
 :ge
 mapEager(..[[1]])
 //│ ╔══[COMPILATION ERROR] Lazy spreads are not supported in call arguments
-//│ ║  l.284: 	mapEager(..[[1]])
+//│ ║  l.288: 	mapEager(..[[1]])
 //│ ╙──       	        ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'mapEager' expected 1 argument but got 2
 
 :e
 fun what(..args) = args
-//│ ╔══[ERROR] Lazy spread parameters not allowed.
-//│ ║  l.291: 	fun what(..args) = args
+//│ ╔══[COMPILATION ERROR] Lazy spread parameters not allowed.
+//│ ║  l.295: 	fun what(..args) = args
 //│ ╙──       	         ^^^^^^
 
 fun silly = case

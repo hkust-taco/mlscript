@@ -99,7 +99,8 @@ _ is Int
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda8;
 //│ lambda8 = (undefined, function (_0) {
-//│   if (globalThis.Number.isInteger(_0)) { return true } else { return false }
+//│   if (globalThis.Number.isInteger(_0)) { return true }
+//│   return false;
 //│ });
 //│ lambda8
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -138,14 +139,14 @@ mkObj(1, 2)
 :re
 let mkObj = x: _, y: _, z: 3
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder.
-//│ ║  l.139: 	let mkObj = x: _, y: _, z: 3
+//│ ║  l.140: 	let mkObj = x: _, y: _, z: 3
 //│ ╙──       	                     ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ mkObj = fun mkObj
 //│ y = undefined
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'z'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.139: 	let mkObj = x: _, y: _, z: 3
+//│ ║  l.140: 	let mkObj = x: _, y: _, z: 3
 //│ ╙──       	                        ^
 //│ ═══[RUNTIME ERROR] ReferenceError: z is not defined
 

@@ -231,12 +231,16 @@ module Foo with
 //│   let tmp;
 //│   match isMut
 //│     true =>
-//│       set tmp = new mut Function$⁹(y, z);
-//│       end
+//│       begin
+//│         set tmp = new mut Function$⁹(y, z);
+//│         end;
+//│       return tmp
 //│     else
-//│       set tmp = new Function$⁹(y, z);
-//│       end
-//│   return tmp
+//│       begin
+//│         set tmp = new Function$⁹(y, z);
+//│         end;
+//│       return tmp
+//│   end
 //│ };
 //│ define lambda⁸ as fun lambda⁹(y, z, x) {
 //│   let tmp;
@@ -245,8 +249,8 @@ module Foo with
 //│ };
 //│ define Function$⁸ as class Function$⁹ {
 //│   private val Function$$cap⁴;
-//│   private val y⁰;
 //│   private val z⁰;
+//│   private val y⁰;
 //│   constructor {
 //│     super⁰();
 //│     set y⁰ = y;
@@ -395,7 +399,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.396: 	foo.f(0)
+//│ ║  l.400: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -413,7 +417,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.414: 	foo.x(0)
+//│ ║  l.418: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 
@@ -486,12 +490,16 @@ fun foo(x)(y) = x + y
 //│   let tmp;
 //│   match isMut
 //│     true =>
-//│       set tmp = new mut Function$¹³(x);
-//│       end
+//│       begin
+//│         set tmp = new mut Function$¹³(x);
+//│         end;
+//│       return tmp
 //│     else
-//│       set tmp = new Function$¹³(x);
-//│       end
-//│   return tmp
+//│       begin
+//│         set tmp = new Function$¹³(x);
+//│         end;
+//│       return tmp
+//│   end
 //│ };
 //│ define lambda$⁰ as fun lambda$¹(x, y) {
 //│   return +⁰(x, y)
@@ -565,8 +573,8 @@ if 0 is
   Str then 1
   0 then 0
   else 2
-//│ = 0
   
+//│ = 0
 
 class Foo(val x)
 

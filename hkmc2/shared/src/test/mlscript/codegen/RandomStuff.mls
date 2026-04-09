@@ -9,8 +9,8 @@ fun foo() = if false do foo()
 //│ foo = function foo() {
 //│   let scrut;
 //│   scrut = false;
-//│   if (scrut === true) { foo(); }
-//│   return runtime.Unit
+//│   if (scrut === true) { foo(); return runtime.Unit }
+//│   return runtime.Unit;
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 // * ...but this is (so it's tailrec-optimized)

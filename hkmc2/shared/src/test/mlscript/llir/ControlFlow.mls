@@ -149,12 +149,25 @@ f5()
 //│ Interpreted:
 //│ 5
 
-:fixme // wat
+// :fixme // wat
 :sllir
 fun test() =
   if true do test()
-//│ ═══[COMPILATION ERROR] Name not found: tmp:runtime
-//│ Stopped due to an error during the Llir generation
+//│ LLIR:
+//│   
+//│   def test() =
+//│     let x = true in
+//│     case x of
+//│       Lit(BoolLit(true)) =>
+//│         let* (x1) = test() in
+//│         undefined
+//│       _ =>
+//│         undefined
+//│   def j() =
+//│     undefined
+//│   def entry() =
+//│     undefined
+//│   entry = entry
 
 :sllir
 fun test() =
@@ -166,12 +179,12 @@ fun test() =
 //│     case x of
 //│       Lit(BoolLit(true)) =>
 //│         let* (x1) = test() in
-//│         jump j(x1)
+//│         let x2 = +(x1,1) in
+//│         x2
 //│       _ =>
 //│         panic "match error"
-//│   def j(tmp) =
-//│     let x2 = +(tmp,1) in
-//│     x2
+//│   def j() =
+//│     undefined
 //│   def entry() =
 //│     undefined
 //│   entry = entry
@@ -194,12 +207,14 @@ f()
 //│     case x1 of
 //│       Lit(BoolLit(true)) =>
 //│         let x2 = +(x,1) in
-//│         jump j(x2)
-//│   def j(x3) =
-//│     x3
+//│         x2
+//│       _ =>
+//│         x
+//│   def j() =
+//│     undefined
 //│   def entry() =
-//│     let* (x4) = f() in
-//│     x4
+//│     let* (x3) = f() in
+//│     x3
 //│   entry = entry
 //│ 
 //│ Interpreted:

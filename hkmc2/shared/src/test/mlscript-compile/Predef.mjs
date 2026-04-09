@@ -151,18 +151,17 @@ let Predef1;
     scrut = a === b;
     if (scrut === true) {
       return true
-    } else {
-      if (a instanceof globalThis.Array) {
-        if (b instanceof globalThis.Array) {
-          scrut1 = a.length === b.length;
-          if (scrut1 === true) {
-            lambda = (undefined, function (a1, i) {
-              let tmp3;
-              tmp3 = runtime.safeCall(b.at(i));
-              return Predef.equals(a1, tmp3)
-            });
-            return runtime.safeCall(a.every(lambda))
-          }
+    }
+    if (a instanceof globalThis.Array) {
+      if (b instanceof globalThis.Array) {
+        scrut1 = a.length === b.length;
+        if (scrut1 === true) {
+          lambda = (undefined, function (a1, i) {
+            let tmp3;
+            tmp3 = runtime.safeCall(b.at(i));
+            return Predef.equals(a1, tmp3)
+          });
+          return runtime.safeCall(a.every(lambda))
         }
       }
     }
@@ -189,12 +188,10 @@ let Predef1;
                       scrut13 = Predef.equals(a[field], b[field]);
                       if (scrut13 === true) {
                         return true
-                      } else {
-                        return false
                       }
-                    } else {
-                      return false
+                      return false;
                     }
+                    return false;
                   });
                   scrut5 = runtime.safeCall(md[2].every(lambda1));
                   if (scrut5 === true) {
@@ -223,19 +220,19 @@ let Predef1;
             } else {
               tmp2 = false;
             }
-          } else {
-            tmp2 = false;
+            return tmp2
           }
-        } else {
           tmp2 = false;
+          return tmp2;
         }
-      } else {
         tmp2 = false;
+        return tmp2;
       }
-    } else {
       tmp2 = false;
+      return tmp2;
     }
-    return tmp2
+    tmp2 = false;
+    return tmp2;
   } 
   static nequals(a, b) {
     let tmp;
@@ -251,9 +248,8 @@ let Predef1;
   static renderAsStr(arg) {
     if (typeof arg === 'string') {
       return arg
-    } else {
-      return runtime.safeCall(Predef.render(arg))
     }
+    return runtime.safeCall(Predef.render(arg));
   } 
   static check(...args) {
     return runtime.safeCall(Predef.js_assert(...args))
@@ -279,24 +275,23 @@ let Predef1;
       scrut = len === 0;
       if (scrut === true) {
         return first
-      } else {
-        i = len - 1;
-        init = runtime.safeCall(rest.at(i));
-        lbl: while (true) {
-          let scrut1, tmp, tmp1, tmp2;
-          scrut1 = i > 0;
-          if (scrut1 === true) {
-            tmp = i - 1;
-            i = tmp;
-            tmp1 = runtime.safeCall(rest.at(i));
-            tmp2 = runtime.safeCall(f(tmp1, init));
-            init = tmp2;
-            continue lbl
-          }
-          break;
-        }
-        return runtime.safeCall(f(first, init))
       }
+      i = len - 1;
+      init = runtime.safeCall(rest.at(i));
+      lbl: while (true) {
+        let scrut1, tmp, tmp1, tmp2;
+        scrut1 = i > 0;
+        if (scrut1 === true) {
+          tmp = i - 1;
+          i = tmp;
+          tmp1 = runtime.safeCall(rest.at(i));
+          tmp2 = runtime.safeCall(f(tmp1, init));
+          init = tmp2;
+          continue lbl
+        }
+        break;
+      }
+      return runtime.safeCall(f(first, init));
     }
   } 
   static mkStr(...xs) {

@@ -23,7 +23,7 @@ fun f(x) =
 //│   let scrut;
 //│   scrut = x < 0;
 //│   if (scrut === true) { Predef.print("whoops"); return 0 }
-//│   return x + 1
+//│   return x + 1;
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

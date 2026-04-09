@@ -70,6 +70,8 @@ fun foo() =
 //│         set scope0$cap.x$0 = tmp;
 //│         set lambda$here = lambda$¹(scope0$cap);
 //│         return lambda$here
+//│       else
+//│         end
 //│     end
 //│   return runtime⁰.Unit⁰
 //│ };

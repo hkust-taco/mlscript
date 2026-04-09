@@ -2,6 +2,7 @@ package hkmc2
 
 import mlscript.utils.*, shorthands.*
 
+import codegen.*
 import codegen.js.JSBuilder
 import codegen.wasm.*
 import document.*
@@ -44,13 +45,17 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
   lazy val prettifyBinaryenWat = (content: Str) =>
     content.substring(2, content.length() - 2).replace("\\\\n", "\n").replace("\\\\\"", "\"")
 
-  override def processTerm(trm: Blk, inImport: Bool)(using Config, Raise): Unit =
-    super.processTerm(trm, inImport)
+  
+  override def processIRBlock(pgrm: Program, definedValues: ComputeDefinedValues)(using Config, Raise, Elaborator.Ctx): Unit =
+    
+    super.processIRBlock(pgrm, definedValues)
 
     val outerRaise: Raise = summon
-    val reportedMessages = mutable.Set.empty[Str]
 
     if wasm.isSet then
+      
+      val reportedMessages = mutable.Set.empty[Str]
+      
       loadWasm
 
       var errored = false
@@ -60,12 +65,9 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
           reportedMessages += d.mainMsg
           outerRaise(d)
         case d => outerRaise(d)
-      val low = ltl.givenIn:
-        codegen.Lowering()
-      val le = low.program(trm)
       val (modWat, mainFnNme, systemMemMinPages) = ltl.givenIn:
         baseScp.nest.givenIn:
-          WatBuilder().program(le, N, wd)
+          WatBuilder().program(pgrm, N, wd)
       val modWatJsLit = JSBuilder.makeStringLiteral(modWat.mkString(output.ColWidth))
 
       if wat.isSet then
@@ -163,5 +165,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
           case _ => ""
         output(s"= $result")
     end if
-  end processTerm
+  
+  end processIRBlock
+  
 end WasmDiffMaker

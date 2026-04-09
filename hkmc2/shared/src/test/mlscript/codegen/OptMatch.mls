@@ -16,7 +16,8 @@ fun isDefined(x) = if x is
 //│     return true
 //│   } else if (x instanceof None1.class) {
 //│     return false
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -39,9 +40,8 @@ val isDefined = case
 //│     return true
 //│   } else if (caseScrut instanceof None1.class) {
 //│     return false
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
 //│ isDefined1 = lambda;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

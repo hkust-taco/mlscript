@@ -17,9 +17,17 @@ class Foo { 1 }
 
 // * Note that these work:
 
+:w
 class Foo with { 1 }
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.21: 	class Foo with { 1 }
+//│ ╙──      	                 ^
 
+:w
 class Foo with
   1
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.28: 	  1
+//│ ╙──      	  ^
 
 

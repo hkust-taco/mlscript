@@ -86,11 +86,11 @@ fun f(x) =
 //│   match isMut
 //│     true =>
 //│       set tmp = new mut C¹(x);
-//│       end
+//│       return tmp
 //│     else
 //│       set tmp = new C¹(x);
-//│       end
-//│   return tmp
+//│       return tmp
+//│   end
 //│ };
 //│ define C⁰ as class C¹ {
 //│   private val C$cap⁰;
@@ -138,22 +138,22 @@ f().foo()
 //│   match isMut
 //│     true =>
 //│       set tmp1 = new mut Good¹();
-//│       end
+//│       return tmp1(scope0$cap, x, y)
 //│     else
 //│       set tmp1 = new Good¹();
-//│       end
-//│   return tmp1(scope0$cap, x, y)
+//│       return tmp1(scope0$cap, x, y)
+//│   end
 //│ };
 //│ define Bad$⁰ as fun Bad$¹(isMut, scope0$cap) {
 //│   let tmp1;
 //│   match isMut
 //│     true =>
 //│       set tmp1 = new mut Bad¹();
-//│       end
+//│       return tmp1(scope0$cap)
 //│     else
 //│       set tmp1 = new Bad¹();
-//│       end
-//│   return tmp1(scope0$cap)
+//│       return tmp1(scope0$cap)
+//│   end
 //│ };
 //│ define Good⁰ as class Good¹ {
 //│   private val Good$cap⁰;

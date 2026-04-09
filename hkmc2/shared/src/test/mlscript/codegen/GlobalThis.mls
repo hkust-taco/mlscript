@@ -44,7 +44,8 @@ foo()
 //│   scrut1 = false;
 //│   if (scrut1 === true) {
 //│     return 0
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
 //│ foo()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

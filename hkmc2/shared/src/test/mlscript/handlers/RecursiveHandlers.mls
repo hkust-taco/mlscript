@@ -176,16 +176,17 @@ str
 //│         tmp10 = str + "A";
 //│         str = tmp10;
 //│         runtime.resumeValue = runtime.safeCall(k(arg));
-//│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(Handler$h1$perform1, 1, "RecursiveHandlers.mls:147:7", null, null, 1, 2, arg, k, 0)
+//│         if (runtime.curEffect === null) {
+//│           pc = 1;
+//│           continue main
 //│         }
-//│         pc = 1;
-//│         continue main;
+//│         return runtime.unwind(Handler$h1$perform1, 1, "RecursiveHandlers.mls:147:7", null, null, 1, 2, arg, k, 0);
 //│       case 1:
 //│         runtime.resumeValue;
 //│         tmp11 = str + "A";
 //│         str = tmp11;
 //│         return runtime.Unit;
+//│       default:
 //│     }
 //│     break;
 //│   }
@@ -210,17 +211,18 @@ str
 //│         tmp11 = str + tmp10;
 //│         str = tmp11;
 //│         runtime.resumeValue = runtime.safeCall(k(arg));
-//│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(Handler$h2$perform1, 1, "RecursiveHandlers.mls:152:7", null, null, 1, 2, arg, k, 0)
+//│         if (runtime.curEffect === null) {
+//│           pc = 1;
+//│           continue main
 //│         }
-//│         pc = 1;
-//│         continue main;
+//│         return runtime.unwind(Handler$h2$perform1, 1, "RecursiveHandlers.mls:152:7", null, null, 1, 2, arg, k, 0);
 //│       case 1:
 //│         runtime.resumeValue;
 //│         tmp12 = str + "B";
 //│         tmp13 = str + tmp12;
 //│         str = tmp13;
 //│         return runtime.Unit;
+//│       default:
 //│     }
 //│     break;
 //│   }
@@ -237,10 +239,12 @@ str
 //│   constructor() {
 //│     let tmp10;
 //│     tmp10 = super();
-//│     if (runtime.curEffect !== null) {
+//│     if (runtime.curEffect === null) {
+//│       tmp10
+//│     } else {
 //│       tmp10 = runtime.illegalEffect("in a constructor");
+//│       tmp10
 //│     }
-//│     tmp10;
 //│   }
 //│   #Handler$h2$$cap;
 //│   perform(arg) {
@@ -263,14 +267,15 @@ str
 //│     switch (pc) {
 //│       case 0:
 //│         runtime.resumeValue = runtime.safeCall(h22.perform(runtime.Unit));
-//│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(handleBlock$9, 1, "RecursiveHandlers.mls:154:3", null, null, 1, 1, h22, 0)
+//│         if (runtime.curEffect === null) {
+//│           pc = 1;
+//│           continue main
 //│         }
-//│         pc = 1;
-//│         continue main;
+//│         return runtime.unwind(handleBlock$9, 1, "RecursiveHandlers.mls:154:3", null, null, 1, 1, h22, 0);
 //│       case 1:
 //│         runtime.resumeValue;
 //│         return runtime.safeCall(h11.perform(runtime.Unit));
+//│       default:
 //│     }
 //│     break;
 //│   }
@@ -282,10 +287,12 @@ str
 //│   constructor() {
 //│     let tmp10;
 //│     tmp10 = super();
-//│     if (runtime.curEffect !== null) {
+//│     if (runtime.curEffect === null) {
+//│       tmp10
+//│     } else {
 //│       tmp10 = runtime.illegalEffect("in a constructor");
+//│       tmp10
 //│     }
-//│     tmp10;
 //│   }
 //│   #Handler$h1$$cap;
 //│   perform(arg) {
@@ -310,14 +317,15 @@ str
 //│         h22 = new Handler$h2$3();
 //│         handleBlock$$here = handleBlock$$2(h22);
 //│         runtime.resumeValue = runtime.enterHandleBlock(h22, handleBlock$$here);
-//│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(handleBlock$10, 1, null, null, null, 1, 0, 0)
+//│         if (runtime.curEffect === null) {
+//│           pc = 1;
+//│           continue main
 //│         }
-//│         pc = 1;
-//│         continue main;
+//│         return runtime.unwind(handleBlock$10, 1, null, null, null, 1, 0, 0);
 //│       case 1:
 //│         tmp10 = runtime.resumeValue;
 //│         return tmp10;
+//│       default:
 //│     }
 //│     break;
 //│   }
@@ -327,9 +335,8 @@ str
 //│ if (scrut === true) {
 //│   h11 = new Handler$h1$3();
 //│   runtime.enterHandleBlock(h11, handleBlock$10);
-//│   if (runtime.curEffect !== null) { runtime.topLevelEffect(false); }
-//│ }
-//│ str
+//│   if (runtime.curEffect === null) { str } else { runtime.topLevelEffect(false); str }
+//│ } else { str }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "BABABA"
 //│ str = "BABABA"
