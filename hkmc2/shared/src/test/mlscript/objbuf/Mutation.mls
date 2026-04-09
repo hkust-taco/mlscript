@@ -5,6 +5,15 @@ open ObjectBuffer
 open annotations
 
 
+:fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)
+:checkIR
+@bufferable
+class A() with
+  let z = 0
+  set z += 1
+//│ ═══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol tmp:tmp⁰ is bound more than once
+
+
 :sjs
 @bufferable
 class A(x) with
@@ -14,13 +23,13 @@ class A(x) with
     set z += 2
     x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let A1;
-//│ A1 = function A(x) {
+//│ let A3;
+//│ A3 = function A(x) {
 //│   return globalThis.Object.freeze(new A.class(x));
 //│ };
-//│ (class A {
+//│ (class A2 {
 //│   static {
-//│     A1.class = this
+//│     A3.class = this
 //│   }
 //│   constructor(x) {
 //│     this.#x = x;

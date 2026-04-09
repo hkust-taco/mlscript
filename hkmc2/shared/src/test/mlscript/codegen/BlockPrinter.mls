@@ -5,6 +5,12 @@
 //│ import Predef; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+#config(commentGeneratedCode: true)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
 
 2 + 2 + 2
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -18,7 +24,6 @@ let x = 1
 x + 1
 //│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
 //│ Program:
-//│   imports = Nil
 //│   main = Scoped(syms = {x⁰}): 
 //│     body = Assign:
 //│       lhs = x⁰
@@ -27,15 +32,11 @@ x + 1
 //│       res = Call:
 //│         fun = Ref:
 //│           l = builtin:+⁰
-//│           disamb = N
 //│         args = Ls of 
 //│           Arg:
-//│             spread = N
 //│             value = Ref:
 //│               l = x⁰
-//│               disamb = N
 //│           Arg:
-//│             spread = N
 //│             value = Lit of IntLit of 1
 //│       implct = true
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -92,7 +93,7 @@ case
 //│       return Predef⁰.print⁰("non-empty", x)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
-//│   end
+//│   end /* Unreachable: rest of abortive match */
 //│ };
 //│ lambda¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -167,11 +168,7 @@ module A with
 A.x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let A⁰;
-//│ define A⁰ as class A¹ {
-//│   constructor {
-//│     runtime⁰.Unit⁰
-//│   }
-//│ }
+//│ define A⁰ as class A¹
 //│ module A² {
 //│   private val y⁰;
 //│   val x⁸;
@@ -188,7 +185,7 @@ A.x
 //│     };
 //│     end
 //│   }
-//│   method g⁰ = fun g¹(x1) { return 3 }
+//│   method g⁰ = fun g¹(x) { return 3 }
 //│ };
 //│ A².x⁹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -199,11 +196,7 @@ module A with
 A.x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let A³;
-//│ define A³ as class A⁴ {
-//│   constructor {
-//│     runtime⁰.Unit⁰
-//│   }
-//│ }
+//│ define A³ as class A⁴
 //│ module A⁵ { val x¹¹; constructor { define x¹¹ as val x¹² = 3; end } };
 //│ A⁵.x¹²
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -228,15 +221,12 @@ pattern P = B
 //│ let P⁰;
 //│ define P⁰ as pattern P¹ {
 //│   method unapply⁰ = fun unapply¹(input) {
-//│     let output, tmp;
 //│     match input
 //│       B² =>
-//│         set output = input;
-//│         set tmp = {  };
-//│         return new runtime⁰.MatchSuccess⁰(output, tmp)
+//│         return new runtime⁰.MatchSuccess⁰(input, null)
 //│       else
 //│         return new runtime⁰.MatchFailure⁰(null)
-//│     end
+//│     end /* Unreachable: rest of abortive match */
 //│   }
 //│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input) {
 //│     return new runtime⁰.MatchFailure⁰(null)
@@ -261,7 +251,9 @@ x.0
 //│ match selRes
 //│   undefined =>
 //│     throw new globalThis⁰.Error﹖("Access to required field '0' yielded 'undefined'")
-//│ selRes
+//│   else
+//│     selRes
+//│ end /* Unreachable: rest of abortive match */
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 //│ x = [1, 2, 3]

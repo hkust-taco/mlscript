@@ -41,6 +41,19 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
     case Else(default) => Vector.single(default)
     case End => Vector.empty
   
+  /** Free variable names, accounting for pattern bindings in match heads
+    * and let bindings in let heads. */
+  lazy val freeVars: Set[Str] = this match
+    case Cons(head, tail) => head match
+      case Head.Match(scrutinee, pattern, consequent) =>
+        val patVarNames = pattern.variables.varMap.keySet
+        scrutinee.freeVars ++ pattern.subTerms.iterator.flatMap(_.freeVars) ++
+          (consequent.freeVars -- patVarNames) ++ tail.freeVars
+      case Head.Let(binding, term) =>
+        term.freeVars ++ (tail.freeVars - binding.nme)
+    case Else(default) => default.freeVars
+    case End => Set.empty
+  
   def showDbg(using DebugPrinter): Str = this match
     case Cons(branch, tail) => s"${branch.showDbg}; ${tail.showDbg}"
     case Else(default) => s"else ${default.showDbg}"

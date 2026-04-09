@@ -114,7 +114,8 @@ class MLsCompiler
       val le_0 = low.program(blk)
       val nme = file.baseName
       val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
-      val le_1 = codegen.BlockSimplifier(exportedSymbol.toSet)(le_0)
+      val le_1 = ltl.givenIn:
+        codegen.BlockSimplifier(exportedSymbol.toSet)(le_0)
       val baseScp: utils.Scope =
         utils.Scope.empty(utils.Scope.Cfg.default)
       // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.

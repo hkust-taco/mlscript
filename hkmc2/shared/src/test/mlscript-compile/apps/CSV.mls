@@ -2,9 +2,6 @@
 // Adapted from https://www.bennadel.com/blog/1504-ask-ben-parsing-csv-strings-with-javascript-exec-regular-expression-command.htm
 // (JS code commented at bottom)
 
-import "../StrOps.mls"
-open StrOps
-
 import "../Predef.mls"
 open Predef
 
@@ -14,16 +11,15 @@ data class CSV(strDelimiter) with ...
 
 
 // Check to see if the delimiter is defined. If not, then default to comma.
-set strDelimiter ||= ","
+if strDelimiter is undefined then set strDelimiter = ","
 
-// TODO allow better code layout/formatting
 val objPattern = new mut RegExp of
   // Delimiters.
-  "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
-    // Quoted fields.
-    "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
-      // Standard fields.
-      "([^\"\\" + strDelimiter + "\\r\\n]*))"
+  "(\\" + strDelimiter + "|\\r?\\n|\\r|^)"
+  // Quoted fields.
+  + "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|"
+  // Standard fields.
+  + "([^\"\\" + strDelimiter + "\\r\\n]*))"
   "gi"
 
 // This will parse a delimited string into an array of arrays.
@@ -43,14 +39,14 @@ fun toArrays(strData) =
       // Check to see if the given delimiter has a length (is not the start of string)
       // and if it matches field delimiter.
       // If id does not, then we know that this delimiter is a row delimiter.
-      if strMatchedDelimiter.length && strMatchedDelimiter != strDelimiter do
+      if strMatchedDelimiter.length != 0 and strMatchedDelimiter != strDelimiter do
         // Since we have reached a new row of data, add an empty row to our data array.
         arrData.push(mut [])
       
       // Now that we have our delimiter out of the way,
       // let's check to see which kind of value we captured (quoted or unquoted).
       let strMatchedValue =
-        if arrMatches.2 !== undefined
+        if arrMatches.2 != undefined
         then
           // We found a quoted value. When we capture this value, unescape any double quotes.
           arrMatches.2.replace of
@@ -111,7 +107,7 @@ fun toArrays(strData) =
       // field delimiter. If id does not, then we know
       // that this delimiter is a row delimiter.
       if (
-        strMatchedDelimiter.length &&
+        strMatchedDelimiter.length != 0 &&
         (strMatchedDelimiter != strDelimiter)
         ){
 

@@ -160,7 +160,7 @@ fold(+) of
   3
 //│ = 6
 
-:todo
+:breakme
 :re
 :e
 fold(+)()
@@ -182,10 +182,9 @@ foldr(tuple)(0, 1, 2, 3)
 //│ = [0, [1, [2, 3]]]
 
 :todo
-:re
 foldr(+)()
 //│ ╔══[COMPILATION ERROR] Expected at least 1 arguments, got 0
-//│ ║  l.186: 	foldr(+)()
+//│ ║  l.185: 	foldr(+)()
 //│ ╙──       	        ^^
 
 

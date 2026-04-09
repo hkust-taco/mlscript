@@ -247,7 +247,7 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
       case Match(
         scrut_ @ Value.Ref(scrutSym_, _),                   // The scrutinee is a ref.
         (Case.Lit(Tree.IntLit(curVal_)), b) :: Nil,         // There is only one case matching an int literal.
-        S(End(_)), rest                                     // Default case exists and does nothing.
+        S(End(_)) | N, rest                                 // Default case exists and does nothing.
       )
         if scrutSym.map(_ === scrutSym_).getOrElse(true)    // The scrutinee is the same as the one before.
         && curVal.map(_ === curVal_).getOrElse(true)        // The matched int literal is one previously set.
@@ -293,7 +293,15 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
         case N =>
           doc"${getVar(sym, sym.toLoc)} = ${result(p)};${returningTerm(rst, endSemi)}"
         case S(owner) =>
-          doc"${mkThis(owner)}${fieldSelect(sym.nme)} = ${result(p)};${returningTerm(rst, endSemi)}"
+          val thisDoc = mkThis(owner)
+          val nme = sym.nme
+          owner match 
+          case mod: ModuleOrObjectSymbol if (mod.tree.k is syntax.Mod) && (nme == "name" || nme == "length") =>
+            // * JavaScript class constructors have built-in non-writable `name` and `length` properties.
+            // * Use Object.defineProperty to override them in module/class static contexts.
+            doc"Object.defineProperty(${thisDoc}, ${nme.escaped}, { configurable: true, enumerable: true, writable: true, value: ${result(p)} });${returningTerm(rst, endSemi)}"
+          case _ =>
+            doc"${thisDoc}${fieldSelect(nme)} = ${result(p)};${returningTerm(rst, endSemi)}"
       case defn: (FunDefn | ClsLikeDefn) =>
         
         val outerScope = scope
@@ -436,10 +444,6 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
                 case (psDoc, doc) => doc"(${psDoc.mkDocument(", ")}) => $doc"
               doc" # return $funBod"
             
-            val ctorHead = doc"constructor(${
-                  initialCtorParams.unzip._2.mkDocument(", ")
-                })"
-            
             val ctorBod = {{
                 val extraPath = if paramsOpt.isDefined then ".class" else ""
                 doc" # static " :: braced:
@@ -452,7 +456,10 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
                       doc" # ${result(Value.Ref(owner, N))}.${sym.nme}$extraPath = $v"
                     case N =>
                       doc" # ${getVar(sym, sym.toLoc)}$extraPath = $v"
-              }} :/: ctorHead :: " " :: braced(ctorAux)
+              }} :: (
+                if ctorAux.isEmpty then doc""
+                else doc" # constructor(${initialCtorParams.unzip._2.mkDocument(", ")}) " :: braced(ctorAux)
+              )
             
             val clsJS = doc"class ${scope.lookup_!(isym, isym.toLoc)}${
                 par.map(p => doc" extends ${
@@ -570,13 +577,13 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
       val l = arms.foldLeft(doc""): (acc, arm) =>
         acc :: doc" # case ${arm._1.asInstanceOf[Case.Lit].lit.idStr}: #{ ${
           nonNestedScoped(arm._2)(bd => returningTerm(bd, endSemi = true))
-        } # break; #} "
+        }${if arm._2.isAbortive then doc"" else doc" # break;"} #} "
       val e = els match
         case S(el) =>
-          doc" # default: #{ ${ nonNestedScoped(el)(bd => returningTerm(bd, endSemi = true)) } # break; #} "
+          doc" # default: #{ ${ nonNestedScoped(el)(bd => returningTerm(bd, endSemi = true)) } #} "
         case N => doc""
       doc" # switch (${result(scrut)}) { #{ ${l :: e} #}  # }" :: returningTerm(rest, endSemi)
-    case Match(scrut, hd :: tl, els, rest) =>
+    case Match(scrut, arms @ hd :: tl, els, rest) =>
       val sd = result(scrut)
       def cond(cse: Case) = cse match
         case Case.Lit(lit) => doc"$sd === ${lit.idStr}"
@@ -603,6 +610,11 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
         acc :: doc" else if (${ cond(arm._1) }) ${ braced(nonNestedScoped(arm._2)(res => returningTerm(res, endSemi = false))) }")
       val e = els match
         case S(End(_)) => doc""
+        case S(el) if arms.forall(_._2.isAbortive) =>
+          // * We print the `else` branch outside, after the `if` when all arms are abortive.
+          // * This typically results in slightly more concise code.
+          // * Not sure it's necessarily a good idea, though. (Does it affect the performance of the generated code?)
+          returningTerm(el, endSemi = true)
         case S(el) =>
           doc" else ${ braced(nonNestedScoped(el)(res => returningTerm(res, endSemi = false))) }"
         case N  => doc""
@@ -616,7 +628,8 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
     case End(_) => doc""
     
     case Unreachable(msg) if config.commentGeneratedCode =>
-      doc" # /* Unreachable: $msg */"
+      if msg.isEmpty then doc" # /* Unreachable */"
+      else doc" # /* Unreachable: $msg */"
     case Unreachable(_) => doc""
     
     case Throw(res) =>

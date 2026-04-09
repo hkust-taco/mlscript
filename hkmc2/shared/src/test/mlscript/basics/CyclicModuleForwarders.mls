@@ -6,7 +6,7 @@ module M1 with
 module M2 with
   fun List: module M1 = M1.List
 
-:todo
+:breakme // TODO: init error
 :e
 f
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded

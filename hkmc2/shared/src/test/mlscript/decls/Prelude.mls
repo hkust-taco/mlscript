@@ -95,6 +95,7 @@ declare class Bool
 declare class Int
 declare class Num
 declare class Str
+declare class Class
 
 // The `Array` class/function is a footgun:
 //    > Array()

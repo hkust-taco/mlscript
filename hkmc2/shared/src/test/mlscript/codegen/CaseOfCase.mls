@@ -35,7 +35,8 @@ fun test(x) =
 //│     return Predef.print(v1)
 //│   } else if (scrut instanceof None1.class) {
 //│     return Predef.print("none")
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

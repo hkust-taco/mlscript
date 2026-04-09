@@ -32,6 +32,15 @@ x => x
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class anonymous
 
+:fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)
+:checkIR
+:noInline
+x => x
+//│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
+//│ ║  l.38: 	x => x
+//│ ╙──      	^
+//│ = class anonymous
+
 
 fun f(x, y, b) =
   aux(z => x + z) * aux(z => if b then y + z else y - z)
@@ -89,12 +98,12 @@ let f = foo in bar(f)
 bar([foo].0)
 bar([foo, x => x].1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if 0 is a function.
-//│ ║  l.89: 	bar([foo].0)
+//│ ║  l.98: 	bar([foo].0)
 //│ ╙──      	         ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 0$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
 //│ ╔══[COMPILATION ERROR] Cannot determine if 1 is a function.
-//│ ║  l.90: 	bar([foo, x => x].1)
+//│ ║  l.99: 	bar([foo, x => x].1)
 //│ ╙──      	                 ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 1$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
@@ -111,7 +120,7 @@ bar([foo, x => x].(i))
 :ge
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.112: 	[foo, x => x].(i)(0)
+//│ ║  l.121: 	[foo, x => x].(i)(0)
 //│ ╙──       	               ^
 
 
@@ -125,10 +134,10 @@ let foo = Foo()
 foo.("f")(0)
 foo.("h")(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.125: 	foo.("f")(0)
+//│ ║  l.134: 	foo.("f")(0)
 //│ ╙──       	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.126: 	foo.("h")(1)
+//│ ║  l.135: 	foo.("h")(1)
 //│ ╙──       	^^^^^^^^
 //│ = 0
 //│ foo = Foo()
@@ -136,6 +145,7 @@ foo.("h")(1)
 
 class Foo(x) with
   fun foo(f) = f(x)
+
 
 :expect 0
 :sir
@@ -221,12 +231,16 @@ module Foo with
 //│   let tmp;
 //│   match isMut
 //│     true =>
-//│       set tmp = new mut Function$⁹(y, z);
-//│       end
+//│       begin
+//│         set tmp = new mut Function$⁹(y, z);
+//│         end;
+//│       return tmp
 //│     else
-//│       set tmp = new Function$⁹(y, z);
-//│       end
-//│   return tmp
+//│       begin
+//│         set tmp = new Function$⁹(y, z);
+//│         end;
+//│       return tmp
+//│   end
 //│ };
 //│ define lambda⁸ as fun lambda⁹(y, z, x) {
 //│   let tmp;
@@ -235,8 +249,8 @@ module Foo with
 //│ };
 //│ define Function$⁸ as class Function$⁹ {
 //│   private val Function$$cap⁴;
-//│   private val y⁰;
 //│   private val z⁰;
+//│   private val y⁰;
 //│   constructor {
 //│     super⁰();
 //│     set y⁰ = y;
@@ -249,23 +263,20 @@ module Foo with
 //│ };
 //│ define Foo¹ as class Foo² {
 //│   private val Foo$cap⁰;
-//│   constructor {
-//│     runtime⁰.Unit⁰
-//│   }
 //│ }
 //│ module Foo³ {
 //│   private val Foo_mod$cap⁰;
 //│   constructor {
-//│     define Bar⁰ as class Bar²(y1) {
+//│     define Bar⁰ as class Bar²(y) {
 //│       private val Bar$cap⁰;
 //│       private val y¹;
 //│       constructor Bar¹ {
-//│         set y¹ = y1;
+//│         set y¹ = y;
 //│         end
 //│       }
-//│       method bar² = fun bar³(z1) {
+//│       method bar² = fun bar³(z) {
 //│         let tmp;
-//│         set tmp = Function$$¹(false, y¹, z1);
+//│         set tmp = Function$$¹(false, y¹, z);
 //│         return tmp
 //│       }
 //│     };
@@ -290,7 +301,7 @@ y => x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda¹⁰, Function$¹⁰, tmp;
 //│ define lambda¹⁰ as fun lambda¹¹(y) {
-//│   return +⁰(x⁰, y)
+//│   return +⁰(x¹, y)
 //│ };
 //│ define Function$¹⁰ as class Function$¹¹ {
 //│   private val Function$$cap⁵;
@@ -388,7 +399,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.389: 	foo.f(0)
+//│ ║  l.400: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -406,7 +417,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.407: 	foo.x(0)
+//│ ║  l.418: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 
@@ -479,29 +490,33 @@ fun foo(x)(y) = x + y
 //│   let tmp;
 //│   match isMut
 //│     true =>
-//│       set tmp = new mut Function$¹³(x);
-//│       end
+//│       begin
+//│         set tmp = new mut Function$¹³(x);
+//│         end;
+//│       return tmp
 //│     else
-//│       set tmp = new Function$¹³(x);
-//│       end
-//│   return tmp
+//│       begin
+//│         set tmp = new Function$¹³(x);
+//│         end;
+//│       return tmp
+//│   end
 //│ };
 //│ define lambda$⁰ as fun lambda$¹(x, y) {
 //│   return +⁰(x, y)
 //│ };
 //│ define Function$¹² as class Function$¹³ {
 //│   private val Function$$cap⁶;
-//│   private val x¹;
+//│   private val x²;
 //│   constructor {
 //│     super⁰();
-//│     set x¹ = x;
+//│     set x² = x;
 //│     end
 //│   }
 //│   method call¹² = fun call¹³(y) {
-//│     return lambda$¹(x¹, y)
+//│     return lambda$¹(x², y)
 //│   }
 //│ };
-//│ define foo⁵ as fun foo⁶(x1) { let tmp; set tmp = Function$$³(false, x1); return tmp };
+//│ define foo⁵ as fun foo⁶(x) { let tmp; set tmp = Function$$³(false, x); return tmp };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -558,8 +573,8 @@ if 0 is
   Str then 1
   0 then 0
   else 2
-//│ = 0
   
+//│ = 0
 
 class Foo(val x)
 

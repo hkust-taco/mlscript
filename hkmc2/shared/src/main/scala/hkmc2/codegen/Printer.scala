@@ -17,7 +17,7 @@ import hkmc2.document.Document.{braced, bracedbk}
 
 /** `SymbolPrinter` is used for printing symbols that are not locally bound, so that they are consistent
   * with the debug-printed names shown in other parts of the compiler, such as showAsTreee. */
-class Printer(using Raise, ShowCfg, SymbolPrinter):
+class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
   
   val showPurity =
     false
@@ -36,7 +36,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
         case Case.Lit(lit) => doc"${lit.idStr}"
         case Case.Cls(cls, path) => doc"${print(cls)}"
         case Case.Tup(len, inf) => doc"Array($len${if inf then "+" else ""})"
-        case _ => TODO(c)
+        case Case.Field(name, safe) => doc"${if safe then "" else "Object "}{ ${name.name} }"
       val docCases = arms
         .map{ case (c, b) => doc"${case_doc(c)} => #{  # ${print(b)} #} " }
         .mkDocument(sep = doc" # ")
@@ -53,7 +53,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
     case Continue(label) =>
       doc"continue ${print(label)}"
     case Begin(sub, rest) =>
-      doc"begin #{  # ${print(sub)}; # ${print(rest)} #} "
+      doc"begin #{  # ${print(sub)}; #}  # ${print(rest)}"
     case TryBlock(sub, finallyDo, rest) =>
       doc"try #{  # ${print(sub)} #  #} finally #  #{ ${print(finallyDo)}; #  #} ${print(rest)}"
     case Assign(_: NoSymbol, rhs, rest) =>
@@ -62,6 +62,8 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
       doc"set ${print(lhs)} = ${print(rhs)}; # ${print(rest)}"
     case AssignField(lhs, nme, rhs, rest) =>
       doc"set ${print(lhs)}.${nme.name} = ${print(rhs)}; # ${print(rest)}"
+    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+      doc"set ${print(lhs)}${if arrayIdx then "." else "!"}${print(fld)} = ${print(rhs)}; # ${print(rest)}"
     case Define(defn, rest) =>
       doc"define ${print(defn.sym)} as ${print(defn)}; # ${print(rest)}"
     case Scoped(syms, body) =>
@@ -69,8 +71,8 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
         import hkmc2.given_Ordering_Uid // Not sure why needed...
         val names = syms.toList.sortBy(_.uid).map(s => scope.allocateName(s))
         doc"let ${names.mkDocument(", ")}; # ${print(body)}"
-    case End("") => doc"end"
-    case End(msg) => doc"end /* ${msg} */"
+    case End(msg) if msg.nonEmpty && config.commentGeneratedCode => doc"end /* ${msg} */"
+    case End(_) => doc"end"
     case Unreachable(msg) => doc"unreachable /* ${msg} */"
     case _ => TODO(blk)
   
@@ -115,7 +117,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
       doc"val ${print(tsym)} = ${print(rhs)}"
     case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable)
-    =>
+    => scope.nest.givenIn:
       val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
       val auxClsParams = auxParams.flatMap(_.paramSyms)
       val ctorParams = (clsParams ++ auxClsParams).map(p => scope.allocateName(p))

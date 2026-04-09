@@ -10,7 +10,7 @@ module M with
 M.f(1)
 M.g(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@2 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ f@1 -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 2
 
@@ -22,8 +22,8 @@ module M with
   fun main() = M.f(42)
 M.main()
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ main@4.f@1 -> eliminable: {0}
-//│ dead-param-elim > prodfun f#0 @ main@6.f@1 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ main@3.f@1 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ main@5.f@1 -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 

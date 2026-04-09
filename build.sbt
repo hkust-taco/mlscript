@@ -3,7 +3,7 @@ import org.scalajs.linker.interface.OutputPatterns
 
 enablePlugins(ScalaJSPlugin)
 
-val scala3Version = "3.7.4"
+val scala3Version = "3.8.3"
 val directoryWatcherVersion = "0.18.0"
 val scalaTestVersion = "3.2.19"
 
@@ -96,6 +96,7 @@ lazy val hkmc2AllTests = project.in(file("hkmc2AllTests"))
       (hkmc2DiffTests / Test / test)
         .dependsOn(hkmc2JVM / Test / test)
         .dependsOn(hkmc2JS / Test / test)
+        .dependsOn(hkmc2Benchmarks / Test / compile)
     ).value
   )
 

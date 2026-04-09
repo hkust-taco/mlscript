@@ -24,7 +24,19 @@ Bool
 //│ ╙──      	^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+:soir
 (case Bool then 1)(true)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let lambda⁰, caseScrut⁰, inlinedVal;
+//│ set caseScrut⁰ = true;
+//│ match caseScrut⁰
+//│   Bool⁰ =>
+//│     set inlinedVal = 1;
+//│     inlinedVal
+//│   else
+//│     throw new globalThis⁰.Error⁰("match error")
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 

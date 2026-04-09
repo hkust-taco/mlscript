@@ -293,7 +293,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
         applyFunBodyLikeBlock(fun.body)
       if (own2 is fun.owner) && (sym2 is fun.sym) && (dSym2 is fun.dSym) &&
           (params2 is fun.params) && (body2 is fun.body)
-      then fun else FunDefn(own2, sym2, dSym2, params2, body2)(fun.forceTailRec)
+      then fun else FunDefn(own2, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride)
   end Rewriter
   
   val newBody =
@@ -391,10 +391,10 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
           val body2 = applyFunBodyLikeBlock(fun.body)
           for s <- oldParamSyms do mapping.remove(s)
           if newlyCreated then
-            Scoped(Set.single(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec)))
+            Scoped(Set.single(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride)))
           else
-            k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec))
-        case ValDefn(tsym, sym, rhs) =>
+            k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride))
+        case defn @ ValDefn(tsym, sym, rhs) =>
           val (tsym2, sym2) = mapping.get(sym) match
             case None =>
               val newBms = new BlockMemberSymbol(sym.nme, sym.trees, sym.nameIsMeaningful)
@@ -405,7 +405,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
               (bms.tsym.get, bms)
             case _ => die
           applyPath(rhs): rhs2 =>
-            k(ValDefn(tsym2, sym2, rhs2))
+            k(ValDefn(tsym2, sym2, rhs2)(defn.configOverride))
         case _ => super.applyDefn(defn)(k)
 
       override def applyValue(v: Value)(k: Value => Block): Block = v match
@@ -451,7 +451,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
         val bodyWithCorrectSymbols = new RefreshSymbol(refreshParamMap).applyBlock(transformedBody)
         FunDefn(
           N, bms, tSym, refreshedParams,
-          bodyWithCorrectSymbols)(fDefn.forceTailRec)
+          bodyWithCorrectSymbols)(fDefn.forceTailRec, fDefn.configOverride)
     
     val inplaceRewrittenFunBodies = Map.from[TermSymbol, Block]:
       for (selfInstId, funSym) <- collector.synthesizedInstIdToFunSym yield
@@ -463,7 +463,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
         override def applyFunDefn(fun: FunDefn): FunDefn =
           inplaceRewrittenFunBodies.get(fun.dSym) match
             case Some(rewrittenBody) =>
-              FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, rewrittenBody)(fun.forceTailRec)
+              FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, rewrittenBody)(fun.forceTailRec, fun.configOverride)
             case None => super.applyFunDefn(fun)
       Scoped(
         Set.from(newPolyFuns.map(_.sym)),

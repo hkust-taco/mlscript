@@ -121,6 +121,7 @@ else
 //│ ╙──       	      ^^^^
 //│ = 8
 
+
 data class Box[A](value: A)
 
 :w
@@ -131,11 +132,11 @@ fun foo(x) = if x is
   else "I don't want to tell you what's inside the box."
   else "I shouldn't tell you what's inside the box."
 //│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
-//│ ║  l.130: 	  else "I can't tell you what's inside the box."
+//│ ║  l.131: 	  else "I can't tell you what's inside the box."
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.131: 	  else "I don't want to tell you what's inside the box."
+//│ ║  l.132: 	  else "I don't want to tell you what's inside the box."
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.132: 	  else "I shouldn't tell you what's inside the box."
+//│ ║  l.133: 	  else "I shouldn't tell you what's inside the box."
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

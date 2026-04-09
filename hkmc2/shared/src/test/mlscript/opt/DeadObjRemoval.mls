@@ -9,9 +9,9 @@ fun f() =
   42
 f()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f; f = function f() { return 42 }; f()
+//│ let f, inlinedVal; f = function f() { return 42 }; inlinedVal = 42; inlinedVal
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰; define f⁰ as fun f¹() { return 42 }; f¹()
+//│ let f⁰, inlinedVal; define f⁰ as fun f¹() { return 42 }; set inlinedVal = 42; inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -49,7 +49,7 @@ f()
 //│ let f²;
 //│ define f² as fun f³() {
 //│   let A;
-//│   define A as object A⁰ { constructor { Predef⁰.print⁰("Hello") } };
+//│   define A as object A⁰ { constructor { do Predef⁰.print⁰("Hello"); end } };
 //│   return 42
 //│ };
 //│ f³()

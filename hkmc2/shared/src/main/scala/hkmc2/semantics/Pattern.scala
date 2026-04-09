@@ -282,6 +282,22 @@ enum Pattern extends AutoLocated:
     case Annotated(pattern, _) => pattern.variables
     case Guarded(pattern, _) => pattern.variables
   
+  /** Collect the names of pattern variables that are actually referenced
+    * as free variables inside guard terms of `Guarded` patterns. Only
+    * variables whose names appear free (not locally re-bound) in the guard
+    * are included, so that truly unused pattern bindings (e.g.,
+    * `[x] where true`) and shadowed bindings (e.g.,
+    * `[x, y] where (let x = ..., x)`) still trigger warnings. */
+  lazy val varNamesUsedInGuards: Set[Str] = this match
+    case Guarded(pattern, guard) =>
+      val boundNames = pattern.variables.varMap.keySet
+      val referencedNames = guard.freeVars
+      (boundNames & referencedNames) ++ pattern.varNamesUsedInGuards
+    case _ =>
+      children.iterator.collect:
+        case p: Pattern => p.varNamesUsedInGuards
+      .foldLeft(Set.empty[Str])(_ ++ _)
+  
   def children: Vector[Located] = this match
     case Constructor(target, arguments) => target +: arguments.fold(Vector.empty)(_.toVector)
     case Composition(polarity, left, right) => Vector.double(left, right)

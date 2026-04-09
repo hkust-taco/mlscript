@@ -85,9 +85,9 @@ emails
 open Stack
 
 pattern CommaSep(pattern S) =
-  (((S as head) ~ "," ~ (CommaSep(S) as tail)) => head :: tail) |
-  (S as head => head :: Nil) |
-  ("" => Nil)
+  | ((S as head) ~ "," ~ (CommaSep(S) as tail)) => head :: tail
+  | (S as head) => head :: Nil
+  | "" => Nil
 
 fun parseEmails(input) =
   if input is CommaSep(Email) as emails then emails else Nil

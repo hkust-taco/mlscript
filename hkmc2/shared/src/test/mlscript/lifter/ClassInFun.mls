@@ -86,11 +86,11 @@ fun f(x) =
 //│   match isMut
 //│     true =>
 //│       set tmp = new mut C¹(x);
-//│       end
+//│       return tmp
 //│     else
 //│       set tmp = new C¹(x);
-//│       end
-//│   return tmp
+//│       return tmp
+//│   end
 //│ };
 //│ define C⁰ as class C¹ {
 //│   private val C$cap⁰;
@@ -101,7 +101,7 @@ fun f(x) =
 //│   }
 //│   method y⁰ = fun y¹ { return x⁰ }
 //│ };
-//│ define f⁰ as fun f¹(x1) { return C$¹(false, x1) };
+//│ define f⁰ as fun f¹(x) { return C$¹(false, x) };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -138,22 +138,22 @@ f().foo()
 //│   match isMut
 //│     true =>
 //│       set tmp1 = new mut Good¹();
-//│       end
+//│       return tmp1(scope0$cap, x, y)
 //│     else
 //│       set tmp1 = new Good¹();
-//│       end
-//│   return tmp1(scope0$cap, x, y)
+//│       return tmp1(scope0$cap, x, y)
+//│   end
 //│ };
 //│ define Bad$⁰ as fun Bad$¹(isMut, scope0$cap) {
 //│   let tmp1;
 //│   match isMut
 //│     true =>
 //│       set tmp1 = new mut Bad¹();
-//│       end
+//│       return tmp1(scope0$cap)
 //│     else
 //│       set tmp1 = new Bad¹();
-//│       end
-//│   return tmp1(scope0$cap)
+//│       return tmp1(scope0$cap)
+//│   end
 //│ };
 //│ define Good⁰ as class Good¹ {
 //│   private val Good$cap⁰;
@@ -178,7 +178,7 @@ f().foo()
 //│   private val Bad$cap⁰;
 //│   private val scope0$cap¹;
 //│   constructor Bad² {
-//│     set scope0$cap¹ = scope0$cap1;
+//│     set scope0$cap¹ = scope0$cap;
 //│     end
 //│   }
 //│   method foo² = fun foo³() {
@@ -187,15 +187,15 @@ f().foo()
 //│   }
 //│ };
 //│ define f² as fun f³() {
-//│   let x1, y1, z, w, tmp1, scope0$cap2;
-//│   set scope0$cap2 = new mut Capture$scope0²(z, w);
-//│   set x1 = 1;
-//│   set y1 = 10;
-//│   set scope0$cap2.z$0 = 10;
-//│   set scope0$cap2.w$1 = 1000;
-//│   set tmp1 = Bad$¹(false, scope0$cap2);
+//│   let x, y, z, w, tmp1, scope0$cap;
+//│   set scope0$cap = new mut Capture$scope0²(z, w);
+//│   set x = 1;
+//│   set y = 10;
+//│   set scope0$cap.z$0 = 10;
+//│   set scope0$cap.w$1 = 1000;
+//│   set tmp1 = Bad$¹(false, scope0$cap);
 //│   do tmp1.foo³();
-//│   return Good$¹(false, scope0$cap2, x1, y1)
+//│   return Good$¹(false, scope0$cap, x, y)
 //│ };
 //│ set tmp = f³();
 //│ tmp.foo﹖()

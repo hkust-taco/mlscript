@@ -31,11 +31,10 @@ throw x
 //│ Wat:
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type $mlx_exn (func (param (ref null any))))
+//│   (type $mlx_exn (func (param $ex (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (tag $mlx_exn (type $mlx_exn))
-//│   (export "mlx_exn" (tag $mlx_exn))
-//│   (func $entry (type $entry1) (result (ref null any))
+//│   (tag $mlx_exn (export "mlx_exn") (type $mlx_exn))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $x (ref null any))
 //│     (block
 //│       (local.set $x
@@ -43,7 +42,6 @@ throw x
 //│           (i32.const 2)))
 //│       (throw $mlx_exn
 //│         (local.get $x))))
-//│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] 2

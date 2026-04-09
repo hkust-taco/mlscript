@@ -14,16 +14,12 @@ fun test(x) = if x is
 //│   switch (x) {
 //│     case 0:
 //│       return "0";
-//│       break;
 //│     case 2:
 //│       return "not 3";
-//│       break;
 //│     case 3:
 //│       return "other";
-//│       break;
 //│     default:
 //│       return "not 2 and not 3";
-//│       break;
 //│   }
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

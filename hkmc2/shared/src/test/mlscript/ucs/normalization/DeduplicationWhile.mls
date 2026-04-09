@@ -16,22 +16,16 @@ while true and true and false do print(1) else print(2)
 //│ lambda1 = (undefined, function () {
 //│   lbl: while (true) {
 //│     let scrut, scrut1, scrut2;
-//│     split_1$: {
-//│       scrut = true;
-//│       if (scrut === true) {
-//│         scrut2 = true;
-//│         if (scrut2 === true) {
-//│           scrut1 = false;
-//│           if (scrut1 === true) {
-//│             Predef.print(1);
-//│             continue lbl
-//│           } else {
-//│             break split_1$
-//│           }
-//│         } else {
-//│           break split_1$
+//│     scrut = true;
+//│     if (scrut === true) {
+//│       scrut2 = true;
+//│       if (scrut2 === true) {
+//│         scrut1 = false;
+//│         if (scrut1 === true) {
+//│           Predef.print(1);
+//│           continue lbl
 //│         }
-//│       } else { break split_1$ }
+//│       }
 //│     }
 //│     Predef.print(2);
 //│     continue lbl;
@@ -71,22 +65,20 @@ while x > 0 and x ===
 //│             scrut6 = x1 === 1;
 //│             if (scrut6 === true) {
 //│               break split_1$1
-//│             } else {
-//│               scrut7 = x1 === 2;
-//│               if (scrut7 === true) {
-//│                 break split_1$1
-//│               } else {
-//│                 scrut8 = x1 === 3;
-//│                 if (scrut8 === true) {
-//│                   break split_2$1
-//│                 } else {
-//│                   scrut9 = x1 === 4;
-//│                   if (scrut9 === true) {
-//│                     break split_2$1
-//│                   }
-//│                 }
-//│               }
 //│             }
+//│             scrut7 = x1 === 2;
+//│             if (scrut7 === true) {
+//│               break split_1$1
+//│             }
+//│             scrut8 = x1 === 3;
+//│             if (scrut8 === true) {
+//│               break split_2$1
+//│             }
+//│             scrut9 = x1 === 4;
+//│             if (scrut9 === true) {
+//│               break split_2$1
+//│             }
+//│             break split_root$1;
 //│           }
 //│           break split_root$1;
 //│         }
@@ -126,13 +118,12 @@ while x > 0 and x ===
 //│               if (scrut7 === true) {
 //│                 Predef.print("A");
 //│                 continue lbl
-//│               } else {
-//│                 scrut9 = x1 === 2;
-//│                 if (scrut9 === true) {
-//│                   scrut10 = false;
-//│                   if (scrut10 === true) {
-//│                     break split_1$1
-//│                   }
+//│               }
+//│               scrut9 = x1 === 2;
+//│               if (scrut9 === true) {
+//│                 scrut10 = false;
+//│                 if (scrut10 === true) {
+//│                   break split_1$1
 //│                 }
 //│               }
 //│             } else {
@@ -144,15 +135,16 @@ while x > 0 and x ===
 //│                 }
 //│               }
 //│             }
-//│           } else {
-//│             scrut9 = x1 === 2;
-//│             if (scrut9 === true) {
-//│               scrut10 = false;
-//│               if (scrut10 === true) {
-//│                 break split_1$1
-//│               }
+//│             break split_root$1
+//│           }
+//│           scrut9 = x1 === 2;
+//│           if (scrut9 === true) {
+//│             scrut10 = false;
+//│             if (scrut10 === true) {
+//│               break split_1$1
 //│             }
 //│           }
+//│           break split_root$1;
 //│         }
 //│         break split_root$1;
 //│       }

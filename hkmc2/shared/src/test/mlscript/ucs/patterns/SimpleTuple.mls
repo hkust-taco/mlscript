@@ -11,7 +11,7 @@ fun sum(x, y) = x + y
 sum(1, 2)
 //│ = 3
 
-:fixme
+:fixme // TODO
 fun sum([x, y]) = x + y
 sum([1, 2])
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found tuple

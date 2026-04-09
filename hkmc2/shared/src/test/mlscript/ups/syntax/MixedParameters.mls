@@ -87,3 +87,23 @@ if 0 is Q'(Bit, y) then y
 //│ ║  l.85: 	if 0 is Q'(Bit, y) then y
 //│ ╙──      	           ^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
+
+pattern ZeroToOne = 0 => 1
+pattern CaptureBit(value) = Bit as value
+
+:w
+// Extraction matches on pattern symbols only use their success/failure. If the
+// supplied extraction pattern transforms its output, that transformed value is
+// discarded unless the user makes the discard explicit with `as _`.
+if 0 is CaptureBit(ZeroToOne) then "discarded implicitly"
+//│ ╔══[WARNING] This extraction argument's transformation result is discarded by pattern `CaptureBit`.
+//│ ║  l.98: 	if 0 is CaptureBit(ZeroToOne) then "discarded implicitly"
+//│ ║        	                   ^^^^^^^^^
+//│ ╙── Write `... as _` to discard it explicitly.
+//│ = "discarded implicitly"
+
+if 0 is CaptureBit(ZeroToOne as _) then "discarded explicitly"
+//│ = "discarded explicitly"
+
+if 0 is CaptureBit(Bit) then "output preserving"
+//│ = "output preserving"

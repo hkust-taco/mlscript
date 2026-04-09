@@ -34,6 +34,27 @@ print of "42:", show of 42
 //│ > 3: None
 //│ > 42: None
 
+fun observeLeft(x) =
+  print("left " + x)
+  x
+
+fun observeRight(x) =
+  print("right " + x)
+  x
+
+pattern LoggedOverlappedIntervals =
+  (((0 ..= 2) as x) => observeLeft(x)) &
+  (((1 ..= 3) as y) => observeRight(y))
+
+print of 1 is @compile LoggedOverlappedIntervals
+//│ > true
+
+if 1 is (@compile LoggedOverlappedIntervals) as value then
+  print("logged interval: " + value)
+//│ > left 1
+//│ > right 1
+//│ > logged interval: 1,1
+
 data class A(x: Int)
 data class B(x: Int)
 

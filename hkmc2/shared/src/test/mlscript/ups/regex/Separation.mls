@@ -3,11 +3,11 @@
 import "../../../mlscript-compile/Iter.mls"
 
 pattern TailLines(pattern L) =
-  (("\n" ~ (Lines(L) as t)) => t) |
-  ("" => [])
+  | ("\n" ~ (Lines(L) as t)) => t
+  | "" => []
 pattern Lines(pattern L) = 
-  ((((L as h) ~ (TailLines(L) as t)) => [h, ...t])) |
-  ("" => [])
+  | (((L as h) ~ (TailLines(L) as t)) => [h, ...t])
+  | "" => []
 
 :expect true
 "hello" is Lines("hello")
@@ -29,7 +29,7 @@ pattern Integer = Digit ~ (Integer | "")
 //│ = true
 
 Integer.unapplyStringPrefix("123")
-//│ = MatchSuccess(["123", ""], {})
+//│ = MatchSuccess(["123", ""], null)
 
 // Beautiful!
 "123\n456\n789" is Lines of Integer

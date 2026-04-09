@@ -16,7 +16,7 @@ Example.f(123)
 let s = Example.f
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let s;
-//│ s = Example1.f; block$res3 = undefined;
+//│ s = Example1.f;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ s = fun f
 
@@ -43,9 +43,6 @@ module Test with
 //│ (class Test {
 //│   static {
 //│     Test1 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
 //│   }
 //│   static #s;
 //│   static {

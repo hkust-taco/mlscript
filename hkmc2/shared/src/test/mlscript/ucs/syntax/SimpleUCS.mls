@@ -84,7 +84,7 @@ fun f(x, y, z) =
     A then "oui"
 
 
-:todo // Note: should report missing final else clause.
+:breakme // Note: should report missing final else clause.
 :e
 fun f(x, y) =
   if x is
