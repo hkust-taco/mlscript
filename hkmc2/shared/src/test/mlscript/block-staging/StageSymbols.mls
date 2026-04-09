@@ -31,7 +31,7 @@ staged module D with
 //│ >   A.f_gen()
 //│ >   B.f()
 //│ > fun matching() =
-//│ >   let {tmp, scrut, scrut1}
+//│ >   let {scrut, scrut1, tmp}
 //│ >   scrut = 1
 //│ >   if scrut is
 //│ >     Int then

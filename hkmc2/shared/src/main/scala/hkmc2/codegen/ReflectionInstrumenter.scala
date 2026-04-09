@@ -304,7 +304,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
         transformBlock(rest)(using ctx): (rest, ctx) =>
           fnConcat(sub, rest)(k(_, ctx))
     case Scoped(syms, body) =>
-      syms.toList.map(transformSymbol(_)).collectApply: symsStaged =>
+      syms.toList.sortBy(_.uid).map(transformSymbol(_)).collectApply: symsStaged =>
         tuple(symsStaged): tup =>
           transformBlock(body): (body, ctx) =>
             blockCtor("Scoped", Ls(tup, body))(b => Scoped(syms, k(b, ctx)))

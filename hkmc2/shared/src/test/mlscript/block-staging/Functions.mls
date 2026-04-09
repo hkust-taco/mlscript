@@ -61,7 +61,7 @@ staged module Expressions with
 //│ >     Int then 3
 //│ >     else 0
 //│ > fun match2() =
-//│ >   let {element0_, a, element1_}
+//│ >   let {a, element1_, element0_}
 //│ >   if x1 is
 //│ >     [] then 1
 //│ >     [_, _] then
