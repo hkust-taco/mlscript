@@ -129,7 +129,7 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
       val inst = prodFun.instantiationId.fold("")(instId => s" @ ${showInstId(instId)}")
       s"prodfun ${showFunId(prodFun.funId)}$inst"
     end showProdFun
-
+    assert(eliminableCallSiteArgsById.nonEmpty === eliminableParamsById.nonEmpty)
     tl.log(">>> dead-param-elim results >>>")
     for (prodFun, _) <- funDests.toSeq.sortBy(pair => showProdFun(pair._1)) do
       eliminableParamsById.get(prodFun.concreteId) match
