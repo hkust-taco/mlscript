@@ -13,7 +13,8 @@ fun nonsense(xs) = if xs is
 //│     middleElements = runtime.Tuple.slice(xs, 0, 0);
 //│     ys = middleElements;
 //│     return ys
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -40,7 +41,8 @@ fun lead_and_last(xs) = if xs is
 //│     return x + y
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -80,10 +82,11 @@ fun nested_tuple_patterns(xs) = if xs is
 //│       tmp7 = tmp6 + z;
 //│       return tmp7 + w
 //│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
 //│   }
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

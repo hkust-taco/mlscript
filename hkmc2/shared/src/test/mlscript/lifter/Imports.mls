@@ -16,9 +16,8 @@ module A with
 //│   static f(x) {
 //│     if (x instanceof Option.Some.class) {
 //│       return true
-//│     } else {
-//│       return false
 //│     }
+//│     return false;
 //│   }
 //│   #A$cap;
 //│   toString() { return runtime.render(this); }

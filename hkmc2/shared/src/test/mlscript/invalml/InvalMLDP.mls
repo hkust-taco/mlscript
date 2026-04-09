@@ -82,13 +82,12 @@ fun next(it) =
 //│   scrut = i == it.end;
 //│   if (scrut === true) {
 //│     return None1()
-//│   } else {
-//│     tmp = at(it.arr, i);
-//│     res = Some1(tmp);
-//│     tmp1 = i + it.step;
-//│     it.i.value = tmp1;
-//│     return res
 //│   }
+//│   tmp = at(it.arr, i);
+//│   res = Some1(tmp);
+//│   tmp1 = i + it.step;
+//│   it.i.value = tmp1;
+//│   return res;
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -267,7 +266,7 @@ region r in
 //│ > interviewee score: 30, salary: 1
 //│ = 80
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'results
-//│ ║  l.248: 	  let m = select(interviewees, 4, results)
+//│ ║  l.247: 	  let m = select(interviewees, 4, results)
 //│ ║         	                                  ^^^^^^^
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  'results
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  ArrayList['A1, in ⊥ out 'R1]
@@ -329,7 +328,7 @@ region r in
 //│ > candidates:
 //│ = 80
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'interviewees
-//│ ║  l.325: 	    let m = wrongSelect(interviewees, 4000, results)
+//│ ║  l.324: 	    let m = wrongSelect(interviewees, 4000, results)
 //│ ║         	                        ^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  'interviewees
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  ArrayList[in 'T out 'T1, in ⊥ out 'R1]

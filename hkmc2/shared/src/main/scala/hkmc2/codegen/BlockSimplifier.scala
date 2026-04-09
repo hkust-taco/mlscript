@@ -144,6 +144,7 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
     
     val removedLocals: MutSet[Local] = MutSet.empty
     
+    
     override def applyValue(v: Value)(k: Value => Block) = v match
       // * Replace with `undefined` those references to local variables that are never assigned
       case Value.Ref(loc, N) if localVars.contains(loc) && !definedVars.contains(loc) =>
@@ -202,7 +203,7 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
       case x => super.applyBlock(x)
     
     
-    // FIXME: refactor transformers so this is not so error-prine (adding this case to `applyBlock` doesn't work)
+    // FIXME: refactor transformers so this is not so error-prone (adding this case to `applyBlock` doesn't work)
     override def applyScopedBlock(b: Block): Block = b match
       // * Delete removed local variables from Scoped blocks
       case Scoped(syms, body) =>
@@ -227,7 +228,8 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
         super.applySubBlockNonTail(b)
     
   end DeadCodeElim
-
+  
+  
   object Inliner:
     object Inliner:
 

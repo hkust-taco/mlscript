@@ -58,11 +58,8 @@ f
 //│ let f;
 //│ f = function f() {
 //│   lbl4: while (true) {
-//│     if (x2 === true) {
-//│       Predef.print("Hello World");
-//│       x2 = false;
-//│       continue lbl4
-//│     } else { return 42 }
+//│     if (x2 === true) { Predef.print("Hello World"); x2 = false; continue lbl4 }
+//│     return 42;
 //│   }
 //│ };
 //│ f()
@@ -320,10 +317,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.320: 	  then 0(0)
+//│ ║  l.317: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (false literal)
-//│ ║  l.319: 	while print("Hello World"); false
+//│ ║  l.316: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 
@@ -332,12 +329,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.331: 	while { print("Hello World"), false }
+//│ ║  l.328: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.332: 	  then 0(0)
+//│ ║  l.329: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.333: 	  else 1
+//│ ║  l.330: 	  else 1
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -348,14 +345,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.346: 	    print("Hello World")
+//│ ║  l.343: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.347: 	    false
+//│ ║  l.344: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.348: 	  then 0(0)
+//│ ║  l.345: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.349: 	  else 1
+//│ ║  l.346: 	  else 1
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

@@ -37,27 +37,27 @@ hi(0)
 //│ runtime.resetEffects();
 //│ hi = function hi(n) {
 //│   loopLabel: while (true) {
-//│     let scrut, tmp2;
 //│     runtime.stackDepth = runtime.stackDepth + 1;
 //│     runtime.checkDepth();
-//│     if (runtime.curEffect !== null) {
-//│       return runtime.unwind(hi, -1, "TailCallOptimization.mls:31:1", null, null, 1, 1, n, 0)
+//│     if (runtime.curEffect === null) {
+//│       let scrut, tmp2;
+//│       scrut = n === 0;
+//│       if (scrut === true) {
+//│         return 0
+//│       }{
+//│         let res;
+//│         tmp2 = n - 1;
+//│         n = tmp2;
+//│         continue loopLabel;
+//│       }
 //│     }
-//│     scrut = n === 0;
-//│     if (scrut === true) {
-//│       return 0
-//│     } else {
-//│       tmp2 = n - 1;
-//│       n = tmp2;
-//│       continue loopLabel
-//│     }
+//│     return runtime.unwind(hi, -1, "TailCallOptimization.mls:31:1", null, null, 1, 1, n, 0);
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {
 //│   return hi(0)
 //│ });
 //│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_);
-//│ if (runtime.curEffect !== null) { tmp1 = runtime.topLevelEffect(false); }
-//│ tmp1
+//│ if (runtime.curEffect === null) { tmp1 } else { tmp1 = runtime.topLevelEffect(false); tmp1 }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0

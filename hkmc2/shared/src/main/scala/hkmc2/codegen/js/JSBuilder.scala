@@ -583,7 +583,7 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
           doc" # default: #{ ${ nonNestedScoped(el)(bd => returningTerm(bd, endSemi = true)) } #} "
         case N => doc""
       doc" # switch (${result(scrut)}) { #{ ${l :: e} #}  # }" :: returningTerm(rest, endSemi)
-    case Match(scrut, hd :: tl, els, rest) =>
+    case Match(scrut, arms @ hd :: tl, els, rest) =>
       val sd = result(scrut)
       def cond(cse: Case) = cse match
         case Case.Lit(lit) => doc"$sd === ${lit.idStr}"
@@ -610,6 +610,11 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
         acc :: doc" else if (${ cond(arm._1) }) ${ braced(nonNestedScoped(arm._2)(res => returningTerm(res, endSemi = false))) }")
       val e = els match
         case S(End(_)) => doc""
+        case S(el) if arms.forall(_._2.isAbortive) =>
+          // * We print the `else` branch outside, after the `if` when all arms are abortive.
+          // * This typically results in slightly more concise code.
+          // * Not sure it's necessarily a good idea, though. (Does it affect the performance of the generated code?)
+          returningTerm(el, endSemi = true)
         case S(el) =>
           doc" else ${ braced(nonNestedScoped(el)(res => returningTerm(res, endSemi = false))) }"
         case N  => doc""
@@ -623,7 +628,8 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
     case End(_) => doc""
     
     case Unreachable(msg) if config.commentGeneratedCode =>
-      doc" # /* Unreachable: $msg */"
+      if msg.isEmpty then doc" # /* Unreachable */"
+      else doc" # /* Unreachable: $msg */"
     case Unreachable(_) => doc""
     
     case Throw(res) =>

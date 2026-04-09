@@ -24,6 +24,7 @@
 - `:ge`: expect compilation/codegen errors.
 - `:w`: expect warnings.
 - `:fixme` and `:todo`: expect and tolerate failures (failing in their absence).
+- `:breakme`: tolerate temporary expected lack of failures.
 - `:ignore`: ignore failures, but do not expect them, either.
 - `:wasm`: enable Wasm path.
 - `:wat`, `:fwat`, `:swat`: print Wasm text variants.

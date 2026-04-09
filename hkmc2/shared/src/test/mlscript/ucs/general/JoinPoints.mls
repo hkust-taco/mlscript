@@ -9,7 +9,8 @@ x => if x is 0 then 1
 //│ lambda = (undefined, function (x) {
 //│   if (x === 0) {
 //│     return 1
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
 //│ lambda
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -29,9 +30,11 @@ x => if x is [[0]] then 1
 //│       if (element0$1 === 0) {
 //│         return 1
 //│       }
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   }
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
 //│ lambda1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

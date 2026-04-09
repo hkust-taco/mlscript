@@ -13,6 +13,8 @@ while true do ???
 //│     true =>
 //│       do Predef⁰.notImplementedError⁰;
 //│       continue lbl
+//│     else
+//│       end
 //│   end
 //│ runtime⁰.Unit⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

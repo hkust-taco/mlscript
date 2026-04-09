@@ -7,8 +7,7 @@ fun f =
   if true then return 1 else return 2
   (???)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f;
-//│ f = function f() { let scrut; scrut = true; if (scrut === true) { return 1 } else { return 2 } };
+//│ let f; f = function f() { let scrut; scrut = true; if (scrut === true) { return 1 } return 2; };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // * Note: we now remove the call to `???` because
@@ -53,8 +52,12 @@ fun f =
 //│       match scrut1
 //│         true =>
 //│           return runtime⁰.Unit⁰
+//│         else
+//│           throw new globalThis⁰.Error⁰("match error")
 //│       end
-//│   throw new globalThis⁰.Error⁰("match error")
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -99,8 +102,12 @@ fun f =
 //│       match scrut1
 //│         true =>
 //│           return "1"
+//│         else
+//│           return "2 long long long long long long long long long long long long long long"
 //│       end
-//│   return "2 long long long long long long long long long long long long long long"
+//│     else
+//│       return "2 long long long long long long long long long long long long long long"
+//│   end
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

@@ -17,7 +17,7 @@ import hkmc2.document.Document.{braced, bracedbk}
 
 /** `SymbolPrinter` is used for printing symbols that are not locally bound, so that they are consistent
   * with the debug-printed names shown in other parts of the compiler, such as showAsTreee. */
-class Printer(using Raise, ShowCfg, SymbolPrinter):
+class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
   
   val showPurity =
     false
@@ -71,8 +71,8 @@ class Printer(using Raise, ShowCfg, SymbolPrinter):
         import hkmc2.given_Ordering_Uid // Not sure why needed...
         val names = syms.toList.sortBy(_.uid).map(s => scope.allocateName(s))
         doc"let ${names.mkDocument(", ")}; # ${print(body)}"
-    case End("") => doc"end"
-    case End(msg) => doc"end /* ${msg} */"
+    case End(msg) if msg.nonEmpty && config.commentGeneratedCode => doc"end /* ${msg} */"
+    case End(_) => doc"end"
     case Unreachable(msg) => doc"unreachable /* ${msg} */"
     case _ => TODO(blk)
   

@@ -184,14 +184,12 @@ f()
 //│ f7 = function f() {
 //│   let x1, inlinedVal4;
 //│   x1 = true;
-//│   inlinedLbl: {
-//│     if (x1 === true) {
-//│       inlinedVal4 = true;
-//│       break inlinedLbl
-//│     }
-//│     inlinedVal4 = false;
+//│   if (x1 === true) {
+//│     inlinedVal4 = true;
+//│     return inlinedVal4
 //│   }
-//│   return inlinedVal4
+//│   inlinedVal4 = false;
+//│   return inlinedVal4;
 //│ };
 //│ f7()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -243,8 +241,10 @@ f()
 //│   match scrut
 //│     true =>
 //│       do f¹⁵();
-//│       end
-//│   return runtime⁰.Unit⁰
+//│       return runtime⁰.Unit⁰
+//│     else
+//│       return runtime⁰.Unit⁰
+//│   end
 //│ };
 //│ f¹⁵()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

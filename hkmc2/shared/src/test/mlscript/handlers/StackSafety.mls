@@ -17,26 +17,26 @@ hi(0)
 //│ let hi, tmp, $_stack$_safe$_body$_;
 //│ runtime.resetEffects();
 //│ hi = function hi(n) {
-//│   let scrut, tmp1;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   runtime.checkDepth();
-//│   if (runtime.curEffect !== null) {
-//│     return runtime.unwind(hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0)
+//│   if (runtime.curEffect === null) {
+//│     let scrut, tmp1;
+//│     scrut = n === 0;
+//│     if (scrut === true) {
+//│       return 0
+//│     }{
+//│       let res;
+//│       tmp1 = n - 1;
+//│       return hi(tmp1);
+//│     }
 //│   }
-//│   scrut = n === 0;
-//│   if (scrut === true) {
-//│     return 0
-//│   } else {
-//│     tmp1 = n - 1;
-//│     return hi(tmp1)
-//│   }
+//│   return runtime.unwind(hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0);
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {
 //│   return hi(0)
 //│ });
 //│ tmp = runtime.runStackSafe(6, $_stack$_safe$_body$_);
-//│ if (runtime.curEffect !== null) { tmp = runtime.topLevelEffect(false); }
-//│ tmp
+//│ if (runtime.curEffect === null) { tmp } else { tmp = runtime.topLevelEffect(false); tmp }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -52,50 +52,54 @@ sum(10000)
 //│ let sum, tmp1, $_stack$_safe$_body$_1;
 //│ runtime.resetEffects();
 //│ sum = function sum(n) {
-//│   let scrut, tmp2, tmp3, pc, curDepth;
+//│   let curDepth;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   curDepth = runtime.stackDepth;
 //│   runtime.checkDepth();
-//│   if (runtime.curEffect !== null) {
-//│     return runtime.unwind(sum, -1, "StackSafety.mls:46:1", null, null, 1, 1, n, 0)
-//│   }
-//│   if (runtime.resumePc === -1) {
-//│     pc = 0;
-//│   } else {
-//│     pc = runtime.resumePc;
-//│     runtime.resumePc = -1;
-//│   }
-//│   main: while (true) {
-//│     switch (pc) {
-//│       case 0:
-//│         scrut = n === 0;
-//│         if (scrut === true) {
-//│           return 0
-//│         } else {
-//│           let res;
-//│           tmp2 = n - 1;
-//│           res = sum(tmp2);
-//│           runtime.stackDepth = curDepth;
-//│           runtime.resumeValue = res;
-//│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(sum, 1, "StackSafety.mls:49:9", null, null, 1, 1, n, 0)
-//│           }
-//│           pc = 1;
-//│           continue main
-//│         }
-//│       case 1:
-//│         tmp3 = runtime.resumeValue;
-//│         return n + tmp3;
+//│   if (runtime.curEffect === null) {
+//│     let scrut, tmp2, tmp3, pc;
+//│     if (runtime.resumePc === -1) {
+//│       pc = 0;
+//│     } else {
+//│       pc = runtime.resumePc;
+//│       runtime.resumePc = -1;
 //│     }
-//│     break;
+//│     main: while (true) {
+//│       switch (pc) {
+//│         case 0:
+//│           scrut = n === 0;
+//│           if (scrut === true) {
+//│             return 0
+//│           }{
+//│             let res;
+//│             tmp2 = n - 1;
+//│             res = sum(tmp2);
+//│             runtime.stackDepth = curDepth;
+//│             runtime.resumeValue = res;
+//│             if (runtime.curEffect === null) {
+//│               pc = 1;
+//│               continue main
+//│             }{
+//│               let res1;
+//│               return runtime.unwind(sum, 1, "StackSafety.mls:49:9", null, null, 1, 1, n, 0);
+//│             }
+//│           }
+//│         case 1:
+//│           tmp3 = runtime.resumeValue;
+//│           return n + tmp3;
+//│         default:
+//│       }
+//│       break;
+//│     }
+//│   } else {
+//│     return runtime.unwind(sum, -1, "StackSafety.mls:46:1", null, null, 1, 1, n, 0)
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_1 = (undefined, function () {
 //│   return sum(10000)
 //│ });
 //│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
-//│ if (runtime.curEffect !== null) { tmp1 = runtime.topLevelEffect(false); }
-//│ tmp1
+//│ if (runtime.curEffect === null) { tmp1 } else { tmp1 = runtime.topLevelEffect(false); tmp1 }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 50005000
 
@@ -194,11 +198,7 @@ fun max(a, b) = if a < b then b else a
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let max;
 //│ runtime.resetEffects();
-//│ max = function max(a, b) {
-//│   let scrut;
-//│   scrut = a < b;
-//│   if (scrut === true) { return b } else { return a }
-//│ };
+//│ max = function max(a, b) { let scrut; scrut = a < b; if (scrut === true) { return b } return a; };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

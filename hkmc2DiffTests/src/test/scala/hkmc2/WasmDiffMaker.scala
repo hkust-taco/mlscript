@@ -2,6 +2,7 @@ package hkmc2
 
 import mlscript.utils.*, shorthands.*
 
+import codegen.*
 import codegen.js.JSBuilder
 import codegen.Local
 import codegen.wasm.*
@@ -51,11 +52,13 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
   lazy val prettifyBinaryenWat = (content: Str) =>
     content.substring(2, content.length() - 2).replace("\\\\n", "\n").replace("\\\\\"", "\"")
 
-  override def processTerm(trm: Blk, inImport: Bool)(using Config, Raise): Unit =
-    super.processTerm(trm, inImport)
+  
+  override def processIRBlock(pgrm: Program, definedValues: ComputeDefinedValues)(using Config, Raise, Elaborator.Ctx): Unit =
+    
+    super.processIRBlock(pgrm, definedValues)
 
     val outerRaise: Raise = summon
-    def definedValues(includeNonTerms: Bool) =
+    def computeDefinedValues(includeNonTerms: Bool) =
       import Elaborator.Ctx.*
       curCtx.env.iterator.flatMap:
         case (nme, e @ (_: RefElem | SelElem(base = RefElem(_: InnerSymbol)))) =>
@@ -67,9 +70,12 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
             case _ => N
         case _ => N
       .toList
-    val symbolsToPreserve = definedValues(includeNonTerms = true).iterator.map(_._2).toSet
+    val symbolsToPreserve = computeDefinedValues(includeNonTerms = true).iterator.map(_._2).toSet
 
     if wasm.isSet then
+      
+      val reportedMessages = mutable.Set.empty[Str]
+      
       loadWasm
 
       var errored = false
@@ -78,17 +84,14 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
           errored = true
           outerRaise(d)
         case d => outerRaise(d)
-      val low = ltl.givenIn:
-        codegen.Lowering()
-      val le = low.program(trm)
       val sessionImports =
-        le.main.freeVars.iterator
+        pgrm.main.freeVars.iterator
           .flatMap(sym => sessionImportsBySymbol.getOrElse(sym, Vector.empty))
           .toSeq
           .distinctBy(_.bindingKey)
       val CompiledWasmModule(modWat, mainFnNme, systemMemMinPages, sessionExports) = ltl.givenIn:
         baseScp.nest.givenIn:
-          WatBuilder().program(le, N, wd, sessionImports, symbolsToPreserve)
+          WatBuilder().program(pgrm, N, wd, sessionImports, symbolsToPreserve)
       val modWatJsLit = JSBuilder.makeStringLiteral(modWat.mkString(output.ColWidth))
 
       if wat.isSet then
@@ -217,5 +220,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
             sessionImportsBySymbol.update(sym, sessionImportsBySymbol.getOrElse(sym, Vector.empty) :+ binding)
         output(s"= $result")
     end if
-  end processTerm
+  
+  end processIRBlock
+  
 end WasmDiffMaker

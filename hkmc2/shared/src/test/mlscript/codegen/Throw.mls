@@ -50,7 +50,8 @@ f(false)
 //│ f3 = function f(x) {
 //│   if (x === true) {
 //│     throw runtime.safeCall(globalThis.Error("x"))
-//│   } else { throw runtime.safeCall(globalThis.Error("y")) }
+//│   }
+//│   throw runtime.safeCall(globalThis.Error("y"));
 //│ };
 //│ f3(false)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -64,9 +65,8 @@ throw 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let scrut;
 //│ scrut = false;
-//│ if (scrut === true) {
-//│   throw 0
-//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ if (scrut === true) { throw 0 }
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: match error
 

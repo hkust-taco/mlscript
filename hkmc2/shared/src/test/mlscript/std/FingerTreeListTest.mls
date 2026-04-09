@@ -141,17 +141,16 @@ fun popByIndex(start, end, acc, lft) =
 //│     scrut = start >= end;
 //│     if (scrut === true) {
 //│       return acc
-//│     } else {
-//│       tmp34 = start + 1;
-//│       tmp35 = runtime.safeCall(lft.at(start));
-//│       tmp36 = globalThis.Object.freeze([
-//│         ...acc,
-//│         tmp35
-//│       ]);
-//│       start = tmp34;
-//│       acc = tmp36;
-//│       continue loopLabel
 //│     }
+//│     tmp34 = start + 1;
+//│     tmp35 = runtime.safeCall(lft.at(start));
+//│     tmp36 = globalThis.Object.freeze([
+//│       ...acc,
+//│       tmp35
+//│     ]);
+//│     start = tmp34;
+//│     acc = tmp36;
+//│     continue loopLabel;
 //│   }
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

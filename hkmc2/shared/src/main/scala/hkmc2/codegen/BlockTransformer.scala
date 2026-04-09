@@ -28,7 +28,8 @@ class BlockTransformer(subst: SymbolSubst):
   
   def applySubBlock(b: Block): Block = applyBlock(b)
 
-  // Called for any sub block not in the `rest` position and `rest` is not empty. This is not called for Label body or function body.
+  /** Called for any sub block not in the `rest` position (when `rest` is nonempty).
+    * This is not called for Label body or function body. */
   def applySubBlockNonTail(b: Block): Block = applySubBlock(b)
   
   def applyBlock(b: Block): Block = b match

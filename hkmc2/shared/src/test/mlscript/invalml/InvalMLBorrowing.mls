@@ -42,6 +42,7 @@ letreg of r =>
 
 
 // * Non-lexical borrowing pattern encoded with a thunk
+:w
 letreg of r =>
   let b = mkVec(r)
   clear(b)
@@ -50,8 +51,12 @@ letreg of r =>
     123
     if next(it) > 0 then () => 0 else () => clear(b)
   k()
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.51: 	    123
+//│ ╙──      	    ^^^
 //│ Type: Int
 
+:w
 :e
 letreg of r =>
   let b = mkVec(r)
@@ -61,16 +66,19 @@ letreg of r =>
     123
     () => next(it)
   k()
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.66: 	    123
+//│ ╙──      	    ^^^
 //│ ╔══[COMPILATION ERROR] Type error in block
-//│ ║  l.56: 	letreg of r =>
+//│ ║  l.61: 	letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.57: 	  let b = mkVec(r)
+//│ ║  l.62: 	  let b = mkVec(r)
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.58: 	  clear(b)
+//│ ║  l.63: 	  clear(b)
 //│ ║        	^^^^^^^^^^
-//│ ║  l.59: 	  let k = iterate(b) of it =>
+//│ ║  l.64: 	  let k = iterate(b) of it =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.60: 	... (more lines omitted) ...
+//│ ║  l.65: 	... (more lines omitted) ...
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'E  <:  ⊥
 //│ ╟── because: cannot constrain  ¬'Rg  <:  ⊥
@@ -89,15 +97,15 @@ letreg of r =>
   clear(b)
   r
 //│ ╔══[COMPILATION ERROR] Type error in block
-//│ ║  l.82: 	letreg of r =>
+//│ ║  l.90: 	letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.83: 	  let b = mkVec(r)
+//│ ║  l.91: 	  let b = mkVec(r)
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.84: 	  clear(b)
+//│ ║  l.92: 	  clear(b)
 //│ ║        	^^^^^^^^^^
-//│ ║  l.85: 	  iterate(b) of it =>
+//│ ║  l.93: 	  iterate(b) of it =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.86: 	... (more lines omitted) ...
+//│ ║  l.94: 	... (more lines omitted) ...
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'E  <:  ⊥
 //│ ╟── because: cannot constrain  'Rg  <:  ⊥
@@ -127,15 +135,15 @@ letreg of r =>
   use_(r)
   r
 //│ ╔══[COMPILATION ERROR] Type error in block
-//│ ║  l.122: 	letreg of r =>
+//│ ║  l.130: 	letreg of r =>
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.123: 	  use_(r)
+//│ ║  l.131: 	  use_(r)
 //│ ║         	^^^^^^^^^
-//│ ║  l.124: 	  integers(r) of it =>
+//│ ║  l.132: 	  integers(r) of it =>
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.125: 	    use_(r)
+//│ ║  l.133: 	    use_(r)
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.126: 	... (more lines omitted) ...
+//│ ║  l.134: 	... (more lines omitted) ...
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'E  <:  ⊥
 //│ ╟── because: cannot constrain  'Rg  <:  ⊥
@@ -158,6 +166,7 @@ letreg of r0 =>
 
 
 // * Can leak the iterator
+:w
 fun iterate_unsafe: [A, Rg, Br, Res] -> MutVec[A, Rg, Br] -> (Iter[A, Br] ->{Br} Res) ->{Br} Res
 // * Eg:
 letreg of r =>
@@ -169,6 +178,9 @@ letreg of r =>
     () => next(it)
   clear(b)
   k()
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.177: 	    123
+//│ ╙──       	    ^^^
 //│ Type: ⊥
 
 

@@ -44,18 +44,17 @@ fun foo(h): module M =
 //│       static [definitionMetadata] = ["class", "A"]; 
 //│     });
 //│     return A2
-//│   } else {
-//│     globalThis.Object.freeze(class A1 {
-//│       static {
-//│         A3 = this
-//│       }
-//│       static #A_mod$cap;
-//│       #A$cap;
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "A"]; 
-//│     });
-//│     return A3
 //│   }
+//│   globalThis.Object.freeze(class A1 {
+//│     static {
+//│       A3 = this
+//│     }
+//│     static #A_mod$cap;
+//│     #A$cap;
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "A"]; 
+//│   });
+//│   return A3;
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
