@@ -768,7 +768,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     case r =>
       errExpr(
-        Ls(msg"WatBackend::result for ${r.toString} expression not implemented yet" -> r.toLoc),
+        Ls(msg"WatBackend::result for ${r.getClass.getSimpleName} expression not implemented yet" -> r.toLoc),
         extraInfo = S(s"Block IR: `${r.toString}`"),
       )
   end result

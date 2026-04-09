@@ -46,7 +46,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
     content.substring(2, content.length() - 2).replace("\\\\n", "\n").replace("\\\\\"", "\"")
 
   
-  override def processIRBlock(pgrm: Program, definedValues: ComoputeDefinedValues)(using Config, Raise, Elaborator.Ctx): Unit =
+  override def processIRBlock(pgrm: Program, definedValues: ComputeDefinedValues)(using Config, Raise, Elaborator.Ctx): Unit =
     
     super.processIRBlock(pgrm, definedValues)
 

@@ -181,9 +181,9 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
   end processTerm
   
-  type ComoputeDefinedValues = (includeNonTerms: Bool) => Ls[(Str, Symbol, Opt[Str])]
+  type ComputeDefinedValues = (includeNonTerms: Bool) => Ls[(Str, Symbol, Opt[Str])]
   
-  def processIRBlock(pgrm: Program, definedValues: ComoputeDefinedValues)(using Config, Raise, Elaborator.Ctx): Unit =
+  def processIRBlock(pgrm: Program, definedValues: ComputeDefinedValues)(using Config, Raise, Elaborator.Ctx): Unit =
     
     if js.isSet then
       
