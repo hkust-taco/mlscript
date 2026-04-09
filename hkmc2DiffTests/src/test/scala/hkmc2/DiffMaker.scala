@@ -123,9 +123,11 @@ abstract class DiffMaker:
   )
   
   val fixme = Command("fixme")(_ => ())
-  val breakme = Command("breakme")(_ => ())
   val todo = Command("todo")(_ => ())
-  def tolerateErrors = fixme.isSet || todo.isSet
+  val breakme = Command("breakme")(_ => ())
+  val ignore = Command("ignore")(_ => ())
+  def expectErrors = fixme.isSet || todo.isSet
+  def tolerateErrors = expectErrors || ignore.isSet
   
   val fullExceptionStack = NullaryCommand("s")
   
@@ -248,26 +250,26 @@ abstract class DiffMaker:
     
     // Note: when `todo` is set, we allow the lack of errors.
     // Use `todo` when the errors are expected but not yet implemented.
-    if expectParseErrors.isSet && parseErrors === 0 && todo.isUnset && breakme.isUnset then
+    if expectParseErrors.isSet && parseErrors === 0 && ignore.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of parse error", blockLineNum, N, () => N)
-    if expectTypeErrors.isSet && typeErrors === 0 && todo.isUnset && breakme.isUnset then
+    if expectTypeErrors.isSet && typeErrors === 0 && ignore.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of type error", blockLineNum, N, () => N)
-    if expectCodeGenErrors.isSet && compilationErrors === 0 && todo.isUnset && breakme.isUnset then
+    if expectCodeGenErrors.isSet && compilationErrors === 0 && ignore.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of compilation error", blockLineNum, N, () => N)
-    else if expectTypeOrCodeGenErrors.isSet && (compilationErrors + typeErrors) === 0 && todo.isUnset && breakme.isUnset then
+    else if expectTypeOrCodeGenErrors.isSet && (compilationErrors + typeErrors) === 0 && ignore.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of compilation or type error", blockLineNum, N, () => N)
-    if expectRuntimeErrors.isSet && runtimeErrors === 0 && todo.isUnset && breakme.isUnset then
+    if expectRuntimeErrors.isSet && runtimeErrors === 0 && ignore.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of runtime error", blockLineNum, N, () => N)
-    if expectWarnings.isSet && warnings === 0 && todo.isUnset && breakme.isUnset then
+    if expectWarnings.isSet && warnings === 0 && ignore.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of warnings", blockLineNum, N, () => N)
     
-    if fixme.isSet && (
+    if expectErrors && (
         + parseErrors
         + typeErrors
         + compilationErrors

@@ -42,12 +42,12 @@ foo.("x")
 //│ = 123
 
 // TODO sanitize
-:todo
+:breakme
 :re
 foo.("y")
 
 // TODO sanitize
-:todo
+:breakme
 :re
 foo.(0)
 

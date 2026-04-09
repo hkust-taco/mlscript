@@ -21,10 +21,9 @@ class Pair[A, B](val fst: A, val snd: B)
 pattern PlainList(pattern T) = (null => Nil) | (Pair(T as hd, PlainList(T) as tl) => hd :: tl)
 //│ elaborated pattern body: null => (member:Stack⁰.)Nil‹member:Nil› ∨ Pair(T as hd, PlainList(T) as tl) => (member:Stack⁰.)Cons‹member:Cons›(hd⁰, tl⁰)
 
-:todo
 :ucs ups
-// Decide the operator precedence between `as` and `=>`.
-// This is elaborated into `T as (x => x)`, which might not be what we want.
+// TODO: Decide on the relative operator precedence between `as` and `=>`.
+//  This is elaborated into `T as (x => x)`, which might not be what we want.
 pattern Identity(pattern T) = T as x => x
 //│ elaborated pattern body: T as (x => x⁰)
 
@@ -49,7 +48,7 @@ pattern PairLike(fst, snd) = Pair(fst, snd) | [fst, snd]
 :w
 pattern UselessParameter = x
 //│ ╔══[WARNING] Unused pattern binding: x.
-//│ ║  l.50: 	pattern UselessParameter = x
+//│ ║  l.49: 	pattern UselessParameter = x
 //│ ╙──      	                           ^
 
 :ucs ups
@@ -63,26 +62,26 @@ pattern Consistent = ((Int as x) | (Str as x)) => x.toString()
 :e
 pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
 //│ ╔══[COMPILATION ERROR] This pattern cannot be bound.
-//│ ║  l.64: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
+//│ ║  l.63: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
 //│ ║        	                           ^^^
 //│ ╟── Because the pattern it belongs to is negated.
-//│ ║  l.64: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
+//│ ║  l.63: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
 //│ ╙──      	                           ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.64: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
+//│ ║  l.63: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
 //│ ╙──      	                                               ^
 
 :e
 pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.76: 	pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
+//│ ║  l.75: 	pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
 //│ ╙──      	                                                        ^
 
 :ucs ups
 pattern Negated = ~(Int | Str)
 //│ elaborated pattern body: ¬(Int ∨ Str)
 
-:todo // The precedence of `=>` is higher than `~`?
+// FIXME: The precedence of `=>` is higher than `~`?
 :pt
 pattern BadNegated = ~(Int as x) => x
 //│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
@@ -106,13 +105,13 @@ pattern BadNegated = ~(Int as x) => x
 :e
 pattern BadNegated = (~(Int as x)) => x
 //│ ╔══[COMPILATION ERROR] This pattern cannot be bound.
-//│ ║  l.107: 	pattern BadNegated = (~(Int as x)) => x
+//│ ║  l.106: 	pattern BadNegated = (~(Int as x)) => x
 //│ ║         	                        ^^^
 //│ ╟── Because the pattern it belongs to is negated.
-//│ ║  l.107: 	pattern BadNegated = (~(Int as x)) => x
+//│ ║  l.106: 	pattern BadNegated = (~(Int as x)) => x
 //│ ╙──       	                        ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.107: 	pattern BadNegated = (~(Int as x)) => x
+//│ ║  l.106: 	pattern BadNegated = (~(Int as x)) => x
 //│ ╙──       	                                      ^
 //│ elaborated pattern body: ¬(Int as x) => <error>
 
@@ -120,13 +119,13 @@ pattern BadNegated = (~(Int as x)) => x
 :e
 pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╔══[COMPILATION ERROR] This variable cannot be accessed.
-//│ ║  l.121: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ║  l.120: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ║         	                                 ^
 //│ ╟── Because the pattern it belongs to is negated.
-//│ ║  l.121: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ║  l.120: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╙──       	                       ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.121: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ║  l.120: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╙──       	                                        ^
 //│ elaborated pattern body: ¬Pair(Int, x) => <error>
 
@@ -172,13 +171,13 @@ pattern KeepSecret(b) = SecretPair(_, b)
 :e
 pattern RebuildSecret = SecretPair(_, b => b + 1)
 //│ ╔══[COMPILATION ERROR] This pattern cannot be matched
-//│ ║  l.173: 	pattern RebuildSecret = SecretPair(_, b => b + 1)
+//│ ║  l.172: 	pattern RebuildSecret = SecretPair(_, b => b + 1)
 //│ ║         	                                   ^
 //│ ╟── because the corresponding parameter `a` is not publicly accessible
-//│ ║  l.166: 	class SecretPair(a: Int, val b: Int)
+//│ ║  l.165: 	class SecretPair(a: Int, val b: Int)
 //│ ║         	                 ^
 //│ ╟── because rebuilding the matched `SecretPair` value requires reading every constructor argument
-//│ ║  l.173: 	pattern RebuildSecret = SecretPair(_, b => b + 1)
+//│ ║  l.172: 	pattern RebuildSecret = SecretPair(_, b => b + 1)
 //│ ║         	                        ^^^^^^^^^^
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
 
@@ -194,10 +193,10 @@ module HiddenCorner with
   class CantYouSeeMe(val wow: Int)
   val k = 0
 //│ ╔══[COMPILATION ERROR] This pattern cannot be matched
-//│ ║  l.189: 	pattern Naughty = HiddenCorner.m.m.YouCantSeeMe(n) => n + HiddenCorner.m.m.k
+//│ ║  l.188: 	pattern Naughty = HiddenCorner.m.m.YouCantSeeMe(n) => n + HiddenCorner.m.m.k
 //│ ║         	                                                ^
 //│ ╟── because the corresponding parameter `wow` is not publicly accessible
-//│ ║  l.193: 	  class YouCantSeeMe(wow: Int)
+//│ ║  l.192: 	  class YouCantSeeMe(wow: Int)
 //│ ║         	                     ^^^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible

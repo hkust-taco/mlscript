@@ -142,7 +142,6 @@ let n = inc of 42
 n \pipeInto @ inc
 //│ = 44
 
-:todo
 n
   \pipeInto @ inc
   \pipeInto @ inc

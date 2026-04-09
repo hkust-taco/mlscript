@@ -13,7 +13,6 @@ x =>
 //│ = fun
 
 
-:todo
 (acc, _) => acc
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda1; lambda1 = (undefined, function (acc, _) { return acc }); lambda1
