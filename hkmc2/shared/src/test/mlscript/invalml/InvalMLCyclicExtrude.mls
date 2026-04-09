@@ -36,7 +36,6 @@ let foo = f => (f(x => x(x)) as [A] -> A -> A) in foo
 //│ Where:
 //│   'x <: 'x ->{'eff} 'app
 
-:todo
 let foo(f) = (f(x => x(x)) as [A] -> A -> A) in foo
 //│ Type: ((('x ->{'eff} 'app) ->{'eff} 'app) -> (⊤ -> ⊥)) ->{⊥} ['A] -> ('A) ->{⊥} 'A
 //│ Where:
@@ -45,7 +44,7 @@ let foo(f) = (f(x => x(x)) as [A] -> A -> A) in foo
 :todo
 fun foo(f) = (f(x => x(x)) as [A] -> A -> A)
 //│ ╔══[COMPILATION ERROR] Expected a monomorphic type or an instantiable type here, but ('f) ->{⊥} [outer, 'A] -> ('A) ->{⊥} 'A found
-//│ ║  l.46: 	fun foo(f) = (f(x => x(x)) as [A] -> A -> A)
+//│ ║  l.45: 	fun foo(f) = (f(x => x(x)) as [A] -> A -> A)
 //│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

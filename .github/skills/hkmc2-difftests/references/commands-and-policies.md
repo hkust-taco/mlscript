@@ -23,7 +23,8 @@
 - `:re`: expect runtime errors.
 - `:ge`: expect compilation/codegen errors.
 - `:w`: expect warnings.
-- `:fixme` and `:todo`: tolerate temporary expected failures.
+- `:fixme` and `:todo`: expect and tolerate failures (failing in their absence).
+- `:ignore`: ignore failures, but do not expect them, either.
 - `:wasm`: enable Wasm path.
 - `:wat`, `:fwat`, `:swat`: print Wasm text variants.
 - `:llir`: enable LLIR generation (with optional LLIR/C++ helpers in the same family).

@@ -78,12 +78,10 @@ Example2(1).!. oops2(2).!. oops2(2)
 (new Example2(1)) .!. oops2(2)
 //│ = Example2(1)
 
-:todo
 new Example2(1)
   .!. oops2(2)
 //│ = Example2(1)
 
-:todo
 new Example2(1)
   .!. oops2(2)
   .!. oops2(2)

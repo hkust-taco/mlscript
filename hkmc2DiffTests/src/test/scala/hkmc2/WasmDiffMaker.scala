@@ -104,7 +104,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
         val (reply, stderr) = host.query(
           preStr,
           queryStr,
-          !expectRuntimeOrCodeGenErrors && fixme.isUnset && todo.isUnset,
+          !expectRuntimeOrCodeGenErrors && !expectErrors,
         )
         reply match
           case ReplHost.Result(content) => k(content)

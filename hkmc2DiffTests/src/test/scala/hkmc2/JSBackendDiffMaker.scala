@@ -204,7 +204,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       def mkQuery(preStr: Str, jsStr: Str)(k: Str => Unit) =
         val queryStr = jsStr.replaceAll("\n", " ")
-        val (reply, stderr) = host.query(preStr, queryStr, !expectRuntimeOrCodeGenErrors && fixme.isUnset && todo.isUnset)
+        val (reply, stderr) =
+          host.query(preStr, queryStr, !expectRuntimeOrCodeGenErrors && !tolerateErrors)
         reply match
           case ReplHost.Result(content) => k(content)
           case ReplHost.Empty =>

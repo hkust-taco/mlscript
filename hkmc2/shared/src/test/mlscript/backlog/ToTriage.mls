@@ -1,5 +1,5 @@
 :js
-:todo
+:ignore
 
 
 // ——— ——— ———
@@ -15,7 +15,7 @@
 
 // ——— ——— ———
 
-:todo // TODO instrument Predef
+:breakme // TODO instrument Predef
 :re
 id(1, 2)
 //│ ╔══[COMPILATION ERROR] Expected 1 arguments, got 2
@@ -25,7 +25,7 @@ id(1, 2)
 
 // ——— ——— ———
 
-:todo // TODO confusing formatting should not be allowed
+:breakme // TODO confusing formatting should not be allowed
 :e
 let x = if true
 then 1
@@ -61,14 +61,14 @@ Test.Infinity
 // ——— ——— ———
 
 // TODO forbid declarations inside local blocks
-:todo
+:breakme
 :e
 fun main() =
   declare fun foo: Int
   ()
 
 // TODO forbid unimplemented signatures inside local blocks
-:todo
+:breakme
 :e
 fun main() =
   fun bar: Int
@@ -129,7 +129,7 @@ c.x
 
 // ——— ——— ———
 
-:todo // TODO: warn against using `undefined`
+:breakme // TODO: warn against using `undefined`
 :w
 fun oops = undefined
 

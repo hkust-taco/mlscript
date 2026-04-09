@@ -67,11 +67,11 @@ new Array(4)
 
 // TODO also sanity-check these accesses
 
-:todo
+:breakme
 :re
 empty.(0)
 
-:todo
+:breakme
 :re
 empty.[0]
 
