@@ -186,6 +186,13 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
       path <- instId.inits
       if path.nonEmpty
     do mkNewPolyFnSyms(path)
+    for
+      ((callId, instId), _) <- deadParamElimSolver.eliminableCallSiteArgsById
+      if instId.nonEmpty
+      if !collector.synthesizedInstIdToFunSym.contains(instId.head :: Nil)
+      path <- instId.inits
+      if path.nonEmpty
+    do mkNewPolyFnSyms(path)
   }
   
   class Rewriter(instId: InstantiationId) extends BlockTransformer(_symSubst):
