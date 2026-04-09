@@ -201,12 +201,11 @@ if M.A(1).y is
 //│ tmp11.y$__checkNotMethod;
 //│ if (selRes1 === undefined) {
 //│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"))
-//│ } else {
-//│   scrut = selRes1;
-//│   x1 = scrut;
-//│   scrut1 = Predef.equals(x1, 1);
-//│   if (scrut1 === true) { block$res17 = x1; undefined } else { block$res17 = 0; undefined }
 //│ }
+//│ scrut = selRes1;
+//│ x1 = scrut;
+//│ scrut1 = Predef.equals(x1, 1);
+//│ if (scrut1 === true) { block$res17 = x1; undefined } else { block$res17 = 0; undefined }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 

@@ -22,7 +22,8 @@ fun f(x) =
 //│ f1 = function f(x) {
 //│   let scrut;
 //│   scrut = x < 0;
-//│   if (scrut === true) { Predef.print("whoops"); return 0 } else { return x + 1 }
+//│   if (scrut === true) { Predef.print("whoops"); return 0 }
+//│   return x + 1;
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

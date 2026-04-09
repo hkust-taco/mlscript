@@ -165,13 +165,12 @@ fun pow(x) = case
 //│     let n, tmp, tmp1, tmp2;
 //│     if (caseScrut === 0) {
 //│       return 1
-//│     } else {
-//│       n = caseScrut;
-//│       tmp = pow(x1);
-//│       tmp1 = n - 1;
-//│       tmp2 = runtime.safeCall(tmp(tmp1));
-//│       return x1 * tmp2
 //│     }
+//│     n = caseScrut;
+//│     tmp = pow(x1);
+//│     tmp1 = n - 1;
+//│     tmp2 = runtime.safeCall(tmp(tmp1));
+//│     return x1 * tmp2;
 //│   });
 //│   return lambda2
 //│ };
@@ -223,13 +222,12 @@ fun fact = case
 //│     let n, tmp1, tmp2, tmp3;
 //│     if (caseScrut === 0) {
 //│       return 1
-//│     } else {
-//│       n = caseScrut;
-//│       tmp1 = fact();
-//│       tmp2 = n - 1;
-//│       tmp3 = tmp1(tmp2);
-//│       return n * tmp3
 //│     }
+//│     n = caseScrut;
+//│     tmp1 = fact();
+//│     tmp2 = n - 1;
+//│     tmp3 = tmp1(tmp2);
+//│     return n * tmp3;
 //│   });
 //│   return lambda2
 //│ };

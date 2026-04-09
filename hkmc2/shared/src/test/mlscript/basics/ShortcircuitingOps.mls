@@ -70,9 +70,8 @@ fold(||)(0, false, 42, 123)
 //│ lambda = (undefined, function (arg1, arg2) {
 //│   if (arg1 === false) {
 //│     return arg2
-//│   } else {
-//│     return true
 //│   }
+//│   return true;
 //│ });
 //│ tmp2 = runtime.safeCall(Predef.fold(lambda));
 //│ runtime.safeCall(tmp2(0, false, 42, 123))

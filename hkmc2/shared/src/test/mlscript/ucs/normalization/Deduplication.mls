@@ -377,18 +377,17 @@ fun foo(x, y, z) = if
 //│         default:
 //│           if (z1 === 1) {
 //│             return "0_1"
-//│           } else {
-//│             if (y1 === 2) {
-//│               return "_2_"
-//│             } else {
-//│               return "___"
-//│             }
 //│           }
+//│           if (y1 === 2) {
+//│             return "_2_"
+//│           }
+//│           return "___";
 //│       }
 //│     case 1:
 //│       return "1__";
 //│     default:
-//│       if (y1 === 2) { return "_2_" } else { return "___" }
+//│       if (y1 === 2) { return "_2_" }
+//│       return "___";
 //│   }
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -453,9 +452,8 @@ fun foo(x, y, z) =
 //│ foo3 = function foo(x1, y1, z1) {
 //│   if (x1 instanceof A1.class) {
 //│     return "Hello-------------------------------------------------------------------------"
-//│   } else {
-//│     return "Goodbye-------------------------------------------------------------------------"
 //│   }
+//│   return "Goodbye-------------------------------------------------------------------------";
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -483,8 +481,10 @@ fun foo(x, y, z) =
 //│         return "Hello"
 //│       }
 //│       return "Goodbye"
-//│     } else { return "Goodbye" }
-//│   } else { return "Goodbye" }
+//│     }
+//│     return "Goodbye";
+//│   }
+//│   return "Goodbye";
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -501,10 +501,10 @@ fun foo(x, y, z) =
 //│         return "Hello"
 //│       }
 //│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

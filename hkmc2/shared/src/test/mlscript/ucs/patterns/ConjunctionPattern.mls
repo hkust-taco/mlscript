@@ -35,7 +35,7 @@ fun foo(v) =
     A & B then 1
     else 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo; foo = function foo(v) { if (v instanceof A1) { return 0 } else { return 0 } };
+//│ let foo; foo = function foo(v) { if (v instanceof A1) { return 0 } return 0; };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 fun range(i, j) =

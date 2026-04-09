@@ -24,13 +24,13 @@ hi(0)
 //│     scrut = n === 0;
 //│     if (scrut === true) {
 //│       return 0
-//│     } else {
+//│     }{
+//│       let res;
 //│       tmp1 = n - 1;
-//│       return hi(tmp1)
+//│       return hi(tmp1);
 //│     }
-//│   } else {
-//│     return runtime.unwind(hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0)
 //│   }
+//│   return runtime.unwind(hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0);
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {
 //│   return hi(0)
@@ -70,7 +70,7 @@ sum(10000)
 //│           scrut = n === 0;
 //│           if (scrut === true) {
 //│             return 0
-//│           } else {
+//│           }{
 //│             let res;
 //│             tmp2 = n - 1;
 //│             res = sum(tmp2);
@@ -79,8 +79,9 @@ sum(10000)
 //│             if (runtime.curEffect === null) {
 //│               pc = 1;
 //│               continue main
-//│             } else {
-//│               return runtime.unwind(sum, 1, "StackSafety.mls:49:9", null, null, 1, 1, n, 0)
+//│             }{
+//│               let res1;
+//│               return runtime.unwind(sum, 1, "StackSafety.mls:49:9", null, null, 1, 1, n, 0);
 //│             }
 //│           }
 //│         case 1:
@@ -197,11 +198,7 @@ fun max(a, b) = if a < b then b else a
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let max;
 //│ runtime.resetEffects();
-//│ max = function max(a, b) {
-//│   let scrut;
-//│   scrut = a < b;
-//│   if (scrut === true) { return b } else { return a }
-//│ };
+//│ max = function max(a, b) { let scrut; scrut = a < b; if (scrut === true) { return b } return a; };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

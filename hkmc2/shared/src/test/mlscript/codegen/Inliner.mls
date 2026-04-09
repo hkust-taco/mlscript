@@ -187,7 +187,9 @@ f()
 //│   if (x1 === true) {
 //│     inlinedVal4 = true;
 //│     return inlinedVal4
-//│   } else { inlinedVal4 = false; return inlinedVal4 }
+//│   }
+//│   inlinedVal4 = false;
+//│   return inlinedVal4;
 //│ };
 //│ f7()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

@@ -66,46 +66,9 @@ f(new B)
 import "../../../mlscript-compile/Example.mls"
 open Example
 
-:sir
-:soir
 let g = case
   Base & Child1 then "Base & Child1"
   Base then "Base"
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let g⁰, lambda²;
-//│ define lambda² as fun lambda³(caseScrut) {
-//│   match caseScrut
-//│     Base⁰ =>
-//│       match caseScrut
-//│         Child1⁰ =>
-//│           return "Base & Child1"
-//│         else
-//│           return "Base"
-//│       end
-//│     else
-//│       throw new globalThis⁰.Error⁰("match error")
-//│   end
-//│ };
-//│ set g⁰ = lambda³;
-//│ end
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let g⁰, lambda²;
-//│ define lambda² as fun lambda³(caseScrut) {
-//│   match caseScrut
-//│     Base⁰ =>
-//│       match caseScrut
-//│         Child1⁰ =>
-//│           return "Base & Child1"
-//│         else
-//│           return "Base"
-//│       end
-//│     else
-//│       throw new globalThis⁰.Error⁰("match error")
-//│   end
-//│ };
-//│ set g⁰ = lambda³;
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ g = fun
 
 :expect "Base & Child1"

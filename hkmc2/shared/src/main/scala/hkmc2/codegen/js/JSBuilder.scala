@@ -610,6 +610,11 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
         acc :: doc" else if (${ cond(arm._1) }) ${ braced(nonNestedScoped(arm._2)(res => returningTerm(res, endSemi = false))) }")
       val e = els match
         case S(End(_)) => doc""
+        case S(el) if arms.forall(_._2.isAbortive) =>
+          // * We print the `else` branch outside, after the `if` when all arms are abortive.
+          // * This typically results in slightly more concise code.
+          // * Not sure it's necessarily a good idea, though. (Does it affect the performance of the generated code?)
+          returningTerm(el, endSemi = true)
         case S(el) =>
           doc" else ${ braced(nonNestedScoped(el)(res => returningTerm(res, endSemi = false))) }"
         case N  => doc""

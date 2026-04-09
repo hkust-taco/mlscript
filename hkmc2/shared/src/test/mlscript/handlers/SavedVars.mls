@@ -38,9 +38,8 @@ fun g() =
 //│         if (runtime.curEffect === null) {
 //│           pc = 3;
 //│           continue main
-//│         } else {
-//│           return runtime.unwind(g, 3, "SavedVars.mls:17:8", null, null, 1, 0, 0)
 //│         }
+//│         return runtime.unwind(g, 3, "SavedVars.mls:17:8", null, null, 1, 0, 0);
 //│       case 1:
 //│         a = tmp;
 //│         return a;
@@ -56,10 +55,12 @@ fun g() =
 //│           if (runtime.curEffect === null) {
 //│             pc = 2;
 //│             continue main
-//│           } else {
-//│             return runtime.unwind(g, 2, "SavedVars.mls:18:7", null, null, 1, 0, 0)
 //│           }
-//│         } else { tmp = 2; pc = 1; continue main }
+//│           return runtime.unwind(g, 2, "SavedVars.mls:18:7", null, null, 1, 0, 0);
+//│         }
+//│         tmp = 2;
+//│         pc = 1;
+//│         continue main;
 //│       default:
 //│     }
 //│     break;

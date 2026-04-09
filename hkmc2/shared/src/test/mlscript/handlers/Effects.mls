@@ -93,9 +93,8 @@ result
 //│         if (runtime.curEffect === null) {
 //│           pc = 1;
 //│           continue main
-//│         } else {
-//│           return runtime.unwind(Handler$h$perform7, 1, "Effects.mls:63:13", null, null, 1, 2, arg, k, 0)
 //│         }
+//│         return runtime.unwind(Handler$h$perform7, 1, "Effects.mls:63:13", null, null, 1, 2, arg, k, 0);
 //│       case 1:
 //│         v = runtime.resumeValue;
 //│         result = result + arg;
@@ -145,9 +144,8 @@ result
 //│         if (runtime.curEffect === null) {
 //│           pc = 4;
 //│           continue main
-//│         } else {
-//│           return runtime.unwind(handleBlock$7, 4, "Effects.mls:67:3", null, null, 1, 0, 0)
 //│         }
+//│         return runtime.unwind(handleBlock$7, 4, "Effects.mls:67:3", null, null, 1, 0, 0);
 //│       case 1:
 //│         runtime.resumeValue;
 //│         return runtime.safeCall(h7.perform("5"));
@@ -157,27 +155,24 @@ result
 //│         if (runtime.curEffect === null) {
 //│           pc = 1;
 //│           continue main
-//│         } else {
-//│           return runtime.unwind(handleBlock$7, 1, "Effects.mls:70:3", null, null, 1, 0, 0)
 //│         }
+//│         return runtime.unwind(handleBlock$7, 1, "Effects.mls:70:3", null, null, 1, 0, 0);
 //│       case 3:
 //│         runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("3"));
 //│         if (runtime.curEffect === null) {
 //│           pc = 2;
 //│           continue main
-//│         } else {
-//│           return runtime.unwind(handleBlock$7, 2, "Effects.mls:69:3", null, null, 1, 0, 0)
 //│         }
+//│         return runtime.unwind(handleBlock$7, 2, "Effects.mls:69:3", null, null, 1, 0, 0);
 //│       case 4:
 //│         runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("2"));
 //│         if (runtime.curEffect === null) {
 //│           pc = 3;
 //│           continue main
-//│         } else {
-//│           return runtime.unwind(handleBlock$7, 3, "Effects.mls:68:3", null, null, 1, 0, 0)
 //│         }
+//│         return runtime.unwind(handleBlock$7, 3, "Effects.mls:68:3", null, null, 1, 0, 0);
 //│       default:
 //│     }
 //│     break;
@@ -459,28 +454,28 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.454: 	    module A with
+//│ ║  l.449: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.450: 	    module A with
+//│ ║  l.445: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.446: 	    module A with
+//│ ║  l.441: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.442: 	    module A with
+//│ ║  l.437: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.442: 	    module A with
+//│ ║  l.437: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.446: 	    module A with
+//│ ║  l.441: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.450: 	    module A with
+//│ ║  l.445: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.454: 	    module A with
+//│ ║  l.449: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 

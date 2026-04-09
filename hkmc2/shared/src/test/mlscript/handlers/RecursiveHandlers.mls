@@ -179,9 +179,8 @@ str
 //│         if (runtime.curEffect === null) {
 //│           pc = 1;
 //│           continue main
-//│         } else {
-//│           return runtime.unwind(Handler$h1$perform1, 1, "RecursiveHandlers.mls:147:7", null, null, 1, 2, arg, k, 0)
 //│         }
+//│         return runtime.unwind(Handler$h1$perform1, 1, "RecursiveHandlers.mls:147:7", null, null, 1, 2, arg, k, 0);
 //│       case 1:
 //│         runtime.resumeValue;
 //│         tmp11 = str + "A";
@@ -215,9 +214,8 @@ str
 //│         if (runtime.curEffect === null) {
 //│           pc = 1;
 //│           continue main
-//│         } else {
-//│           return runtime.unwind(Handler$h2$perform1, 1, "RecursiveHandlers.mls:152:7", null, null, 1, 2, arg, k, 0)
 //│         }
+//│         return runtime.unwind(Handler$h2$perform1, 1, "RecursiveHandlers.mls:152:7", null, null, 1, 2, arg, k, 0);
 //│       case 1:
 //│         runtime.resumeValue;
 //│         tmp12 = str + "B";
@@ -272,9 +270,8 @@ str
 //│         if (runtime.curEffect === null) {
 //│           pc = 1;
 //│           continue main
-//│         } else {
-//│           return runtime.unwind(handleBlock$9, 1, "RecursiveHandlers.mls:154:3", null, null, 1, 1, h22, 0)
 //│         }
+//│         return runtime.unwind(handleBlock$9, 1, "RecursiveHandlers.mls:154:3", null, null, 1, 1, h22, 0);
 //│       case 1:
 //│         runtime.resumeValue;
 //│         return runtime.safeCall(h11.perform(runtime.Unit));
@@ -323,9 +320,8 @@ str
 //│         if (runtime.curEffect === null) {
 //│           pc = 1;
 //│           continue main
-//│         } else {
-//│           return runtime.unwind(handleBlock$10, 1, null, null, null, 1, 0, 0)
 //│         }
+//│         return runtime.unwind(handleBlock$10, 1, null, null, null, 1, 0, 0);
 //│       case 1:
 //│         tmp10 = runtime.resumeValue;
 //│         return tmp10;

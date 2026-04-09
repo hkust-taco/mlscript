@@ -20,10 +20,10 @@ x => if x is Pair(A, B) then 1
 //│         return 1
 //│       }
 //│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
 //│ lambda
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -52,10 +52,10 @@ fun f(x) = if x is
 //│         return 2
 //│       }
 //│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

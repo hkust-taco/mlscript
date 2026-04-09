@@ -92,42 +92,9 @@ if s is
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: match error
 
-:sir
-:soir
 :expect 0
 if s is
   Some then s.value
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let selRes;
-//│ match s⁰
-//│   Some⁰ =>
-//│     set selRes = s⁰.value﹖;
-//│     do s⁰.value$__checkNotMethod﹖;
-//│     match selRes
-//│       undefined =>
-//│         throw new globalThis⁰.Error﹖("Access to required field 'value' yielded 'undefined'")
-//│       else
-//│         selRes
-//│     end
-//│   else
-//│     throw new globalThis⁰.Error⁰("match error")
-//│ end
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let selRes;
-//│ match s⁰
-//│   Some⁰ =>
-//│     set selRes = s⁰.value﹖;
-//│     do s⁰.value$__checkNotMethod﹖;
-//│     match selRes
-//│       undefined =>
-//│         throw new globalThis⁰.Error﹖("Access to required field 'value' yielded 'undefined'")
-//│       else
-//│         selRes
-//│     end
-//│   else
-//│     throw new globalThis⁰.Error⁰("match error")
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 
@@ -141,7 +108,8 @@ x => if x is Some(x) then x
 //│     arg$Some$0$4 = x3.value;
 //│     x4 = arg$Some$0$4;
 //│     return x4
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
 //│ lambda
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -209,10 +177,10 @@ fun f(x) = if x is
 //│     scrut1 = x4 > 0;
 //│     if (scrut1 === true) {
 //│       return 42
-//│     } else {
-//│       return Predef.print("oops")
 //│     }
-//│   } else if (x3 instanceof None1.class) { return "ok" } else { return Predef.print("oops") }
+//│     return Predef.print("oops");
+//│   } else if (x3 instanceof None1.class) { return "ok" }
+//│   return Predef.print("oops");
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -250,7 +218,8 @@ fun f(x) = if x is
 //│     b = arg$Pair$1$;
 //│     a = arg$Pair$0$;
 //│     return a + b
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -276,14 +245,15 @@ fun f(x) = print of if x is
 //│     if (arg$Some$0$4 === 0) {
 //│       tmp9 = "0";
 //│       return Predef.print(tmp9)
-//│     } else {
-//│       tmp9 = "oops";
-//│       return Predef.print(tmp9)
 //│     }
+//│     tmp9 = "oops";
+//│     return Predef.print(tmp9);
 //│   } else if (x3 instanceof None1.class) {
 //│     tmp9 = "ok";
 //│     return Predef.print(tmp9)
-//│   } else { tmp9 = "oops"; return Predef.print(tmp9) }
+//│   }
+//│   tmp9 = "oops";
+//│   return Predef.print(tmp9);
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

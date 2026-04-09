@@ -88,7 +88,9 @@ fun f() =
 //│ f = function f() {
 //│   let scrut, b;
 //│   scrut = true;
-//│   if (scrut === true) { let a; a = 4; return a + 4 } else { b = 5; return b + 9 }
+//│   if (scrut === true) { let a; a = 4; return a + 4 }
+//│   b = 5;
+//│   return b + 9;
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -113,7 +115,7 @@ fun f() =
 //│ f1 = function f() {
 //│   let scrut, a;
 //│   scrut = false;
-//│   if (scrut === true) { a = 4; return a + 4 } else { let b; b = 5; return b + 9 }
+//│   if (scrut === true) { a = 4; return a + 4 }{ let b; b = 5; return b + 9; }
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -150,7 +152,7 @@ fun foo(x, y) =
 :ge
 scope.locally()
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.151: 	scope.locally()
+//│ ║  l.153: 	scope.locally()
 //│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -158,7 +160,7 @@ scope.locally()
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.159: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
+//│ ║  l.161: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -167,10 +169,10 @@ scope.locally of (let x = 1 in x), (let y = 2 in y)
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.168: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.170: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	                                                 ^
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.168: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.170: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -214,7 +216,8 @@ fun f(x) =
 //│     };
 //│     z2 = z3;
 //│     return z2
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -249,6 +252,7 @@ fun f(x) =
 //│       return 4
 //│     });
 //│     return lambda1
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

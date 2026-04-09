@@ -44,14 +44,14 @@ hi(0)
 //│       scrut = n === 0;
 //│       if (scrut === true) {
 //│         return 0
-//│       } else {
+//│       }{
+//│         let res;
 //│         tmp2 = n - 1;
 //│         n = tmp2;
-//│         continue loopLabel
+//│         continue loopLabel;
 //│       }
-//│     } else {
-//│       return runtime.unwind(hi, -1, "TailCallOptimization.mls:31:1", null, null, 1, 1, n, 0)
 //│     }
+//│     return runtime.unwind(hi, -1, "TailCallOptimization.mls:31:1", null, null, 1, 1, n, 0);
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {
