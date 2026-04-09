@@ -122,8 +122,7 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
       eliminableParamsById.get(prodFun.concreteId) match
         case Some(elim) =>
           tl.log(s"${showProdFun(prodFun)} -> eliminable: {${elim.toSeq.sorted.mkString(", ")}}")
-        case None =>
-          tl.log(s"${showProdFun(prodFun)} -> all params live")
+        case _ => ()
     tl.log("<<< dead-param-elim results <<<")
   end if
 end DeadParamElimSolver

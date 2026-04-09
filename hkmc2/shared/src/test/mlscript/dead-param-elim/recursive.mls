@@ -12,7 +12,6 @@ fun countdown(n, unused) =
 countdown(5, 42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun countdown#0 @ countdown@5 -> eliminable: {1}
-//│ dead-param-elim > prodfun countdown#0 @ countdown@6 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let countdown⁰, countdown_5$countdown⁰;
@@ -51,8 +50,6 @@ fun countdown(n) =
   else countdown(n - 1)
 countdown(5)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun countdown#0 @ countdown@5 -> all params live
-//│ dead-param-elim > prodfun countdown#0 @ countdown@6 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let countdown²;
@@ -81,12 +78,6 @@ fun isEven(n) = if n == 0 then true else isOdd(n - 1)
 fun isOdd(n) = if n == 0 then false else isEven(n - 1)
 isEven(10)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun isEven#0 @ isEven@10 -> all params live
-//│ dead-param-elim > prodfun isEven#0 @ isEven@9 -> all params live
-//│ dead-param-elim > prodfun isEven#0 @ isOdd@11 -> all params live
-//│ dead-param-elim > prodfun isOdd#0 @ isEven@10 -> all params live
-//│ dead-param-elim > prodfun isOdd#0 @ isEven@9 -> all params live
-//│ dead-param-elim > prodfun isOdd#0 @ isOdd@11 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = true
 
@@ -99,12 +90,8 @@ fun ping(n, unused) = if n == 0 then 0 else pong(n - 1, unused)
 fun pong(n, unused) = if n == 0 then 0 else ping(n - 1, unused)
 ping(5, 99)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun ping#0 @ ping@10 -> all params live
 //│ dead-param-elim > prodfun ping#0 @ ping@9 -> eliminable: {1}
-//│ dead-param-elim > prodfun ping#0 @ pong@11 -> all params live
-//│ dead-param-elim > prodfun pong#0 @ ping@10 -> all params live
 //│ dead-param-elim > prodfun pong#0 @ ping@9 -> eliminable: {1}
-//│ dead-param-elim > prodfun pong#0 @ pong@11 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let ping⁰, pong⁰, ping_9$pong⁰, ping_9$ping⁰;
@@ -169,18 +156,8 @@ fun ping(n)(unused) = if n == 0 then 0 else pong(n - 1)(unused)
 fun pong(n)(unused) = if n == 0 then 0 else ping(n - 1)(unused)
 ping(5)(99)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun ping#0 @ ping@11 -> all params live
-//│ dead-param-elim > prodfun ping#0 @ ping@13 -> all params live
-//│ dead-param-elim > prodfun ping#0 @ pong@14 -> all params live
 //│ dead-param-elim > prodfun ping#1 @ ping@11 -> eliminable: {0}
-//│ dead-param-elim > prodfun ping#1 @ ping@13 -> all params live
-//│ dead-param-elim > prodfun ping#1 @ pong@14 -> all params live
-//│ dead-param-elim > prodfun pong#0 @ ping@11 -> all params live
-//│ dead-param-elim > prodfun pong#0 @ ping@13 -> all params live
-//│ dead-param-elim > prodfun pong#0 @ pong@14 -> all params live
 //│ dead-param-elim > prodfun pong#1 @ ping@11 -> eliminable: {0}
-//│ dead-param-elim > prodfun pong#1 @ ping@13 -> all params live
-//│ dead-param-elim > prodfun pong#1 @ pong@14 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let ping², pong², tmp, ping_11$pong⁰, ping_11$ping⁰;
@@ -251,12 +228,8 @@ fun pong(n, unused) = if n == 0 then 0 else M.ping(n - 1, unused)
 class Test(a) with
   fun f() = pong(0, 123)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun ping#0 @ ping@12 -> all params live
 //│ dead-param-elim > prodfun ping#0 @ pong@10 -> eliminable: {1}
-//│ dead-param-elim > prodfun ping#0 @ pong@11 -> all params live
-//│ dead-param-elim > prodfun pong#0 @ ping@12 -> all params live
 //│ dead-param-elim > prodfun pong#0 @ pong@10 -> eliminable: {1}
-//│ dead-param-elim > prodfun pong#0 @ pong@11 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Test⁰, pong⁴, M⁰, pong_10$ping⁰, pong_10$pong⁰;

@@ -10,10 +10,8 @@ fun g(a) = 2
 f(undefined)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun f#0 @ f@3 -> eliminable: {0}
-//│ dead-param-elim > prodfun f#0 @ f@4 -> all params live
 //│ dead-param-elim > prodfun g#0 @ f@3.g@1 -> eliminable: {0}
 //│ dead-param-elim > prodfun g#0 @ f@4.g@1 -> eliminable: {0}
-//│ dead-param-elim > prodfun g#0 @ g@5 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let f⁰, g⁰, f_4_g_1$g⁰, f_3_g_1$g⁰, f_3$f⁰;
@@ -44,7 +42,6 @@ fun f(a) = Box(a)
 if f(42) is Box(v) then 0
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun f#0 @ f@4 -> eliminable: {0}
-//│ dead-param-elim > prodfun f#0 @ f@6 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let f², scrut, v⁰, arg$Box$0$, f_4$f⁰;
@@ -77,7 +74,6 @@ fun f(a) =
 f(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun f#0 @ f@1 -> eliminable: {0}
-//│ dead-param-elim > prodfun f#0 @ f@2 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let f⁴, f_1$f⁰;

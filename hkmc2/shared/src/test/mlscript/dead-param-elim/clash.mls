@@ -10,15 +10,6 @@ fun g(b) = 0
 fun test(x)(y) = if false then x else y
 fun m() = test(f)(g)(5)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@7 -> all params live
-//│ dead-param-elim > prodfun f#0 @ m@10.f@3 -> all params live
-//│ dead-param-elim > prodfun g#0 @ g@8 -> all params live
-//│ dead-param-elim > prodfun g#0 @ m@10.g@5 -> all params live
-//│ dead-param-elim > prodfun m#0 @ m@10 -> all params live
-//│ dead-param-elim > prodfun test#0 @ m@10.test@2 -> all params live
-//│ dead-param-elim > prodfun test#0 @ test@9 -> all params live
-//│ dead-param-elim > prodfun test#1 @ m@10.test@2 -> all params live
-//│ dead-param-elim > prodfun test#1 @ test@9 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 
 
@@ -29,19 +20,6 @@ fun g(a)(b) = a + b
 fun main(x)(y) = if false then x else y
 fun m1() = main(f)(g)(1)(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@9 -> all params live
-//│ dead-param-elim > prodfun f#0 @ m1@12.f@4 -> all params live
-//│ dead-param-elim > prodfun f#1 @ f@9 -> all params live
-//│ dead-param-elim > prodfun f#1 @ m1@12.f@4 -> all params live
-//│ dead-param-elim > prodfun g#0 @ g@10 -> all params live
-//│ dead-param-elim > prodfun g#0 @ m1@12.g@6 -> all params live
-//│ dead-param-elim > prodfun g#1 @ g@10 -> all params live
-//│ dead-param-elim > prodfun g#1 @ m1@12.g@6 -> all params live
-//│ dead-param-elim > prodfun m1#0 @ m1@12 -> all params live
-//│ dead-param-elim > prodfun main#0 @ m1@12.main@3 -> all params live
-//│ dead-param-elim > prodfun main#0 @ main@11 -> all params live
-//│ dead-param-elim > prodfun main#1 @ m1@12.main@3 -> all params live
-//│ dead-param-elim > prodfun main#1 @ main@11 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 
 
@@ -51,10 +29,6 @@ fun g(b) = 0
 let h = if true then f else g
 h(5)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@1 -> all params live
-//│ dead-param-elim > prodfun f#0 @ f@4 -> all params live
-//│ dead-param-elim > prodfun g#0 @ g@2 -> all params live
-//│ dead-param-elim > prodfun g#0 @ g@5 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 5
 //│ h = fun f
@@ -69,19 +43,6 @@ fun h(c) = 0
 fun pick(x)(y)(z) = if false then x else if false then y else z
 fun m() = pick(f)(g)(h)(5)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@10 -> all params live
-//│ dead-param-elim > prodfun f#0 @ m@14.f@4 -> all params live
-//│ dead-param-elim > prodfun g#0 @ g@11 -> all params live
-//│ dead-param-elim > prodfun g#0 @ m@14.g@6 -> all params live
-//│ dead-param-elim > prodfun h#0 @ h@12 -> all params live
-//│ dead-param-elim > prodfun h#0 @ m@14.h@8 -> all params live
-//│ dead-param-elim > prodfun m#0 @ m@14 -> all params live
-//│ dead-param-elim > prodfun pick#0 @ m@14.pick@3 -> all params live
-//│ dead-param-elim > prodfun pick#0 @ pick@13 -> all params live
-//│ dead-param-elim > prodfun pick#1 @ m@14.pick@3 -> all params live
-//│ dead-param-elim > prodfun pick#1 @ pick@13 -> all params live
-//│ dead-param-elim > prodfun pick#2 @ m@14.pick@3 -> all params live
-//│ dead-param-elim > prodfun pick#2 @ pick@13 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 
 
@@ -95,19 +56,8 @@ fun g(a)(b) = a
 fun choose(x)(y) = if false then x else y
 fun m() = choose(f)(g)(1)(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun choose#0 @ choose@10 -> all params live
-//│ dead-param-elim > prodfun choose#0 @ m@11.choose@2 -> all params live
-//│ dead-param-elim > prodfun choose#1 @ choose@10 -> all params live
-//│ dead-param-elim > prodfun choose#1 @ m@11.choose@2 -> all params live
-//│ dead-param-elim > prodfun f#0 @ f@8 -> all params live
-//│ dead-param-elim > prodfun f#0 @ m@11.f@3 -> all params live
-//│ dead-param-elim > prodfun f#1 @ f@8 -> all params live
 //│ dead-param-elim > prodfun f#1 @ m@11.f@3 -> eliminable: {0}
-//│ dead-param-elim > prodfun g#0 @ g@9 -> all params live
-//│ dead-param-elim > prodfun g#0 @ m@11.g@5 -> all params live
-//│ dead-param-elim > prodfun g#1 @ g@9 -> all params live
 //│ dead-param-elim > prodfun g#1 @ m@11.g@5 -> eliminable: {0}
-//│ dead-param-elim > prodfun m#0 @ m@11 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 
 
@@ -119,15 +69,8 @@ fun g(a, b) = a
 fun choose(x)(y) = if false then x else y
 fun m() = choose(f)(g)(1, 2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun choose#0 @ choose@9 -> all params live
-//│ dead-param-elim > prodfun choose#0 @ m@10.choose@2 -> all params live
-//│ dead-param-elim > prodfun choose#1 @ choose@9 -> all params live
-//│ dead-param-elim > prodfun choose#1 @ m@10.choose@2 -> all params live
-//│ dead-param-elim > prodfun f#0 @ f@7 -> all params live
 //│ dead-param-elim > prodfun f#0 @ m@10.f@3 -> eliminable: {1}
-//│ dead-param-elim > prodfun g#0 @ g@8 -> all params live
 //│ dead-param-elim > prodfun g#0 @ m@10.g@5 -> eliminable: {1}
-//│ dead-param-elim > prodfun m#0 @ m@10 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 
 
@@ -137,8 +80,6 @@ fun m() = choose(f)(g)(1, 2)
 :sir
 [1,2,3].map((x, i, a) => x + 1)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun lambda#0 @ lambda@3 -> all params live
-//│ dead-param-elim > prodfun lambda#0 @ lambda@4 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp, lambda⁰;
