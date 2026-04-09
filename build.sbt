@@ -82,10 +82,28 @@ lazy val hkmc2DiffTests = project.in(file("hkmc2DiffTests"))
     Test/run/fork := true, // so that CTRL+C actually terminates the watcher
   )
 
+lazy val hkmc2NofibTests = project.in(file("hkmc2NofibTests"))
+  .dependsOn(hkmc2JVM)
+  .dependsOn(hkmc2DiffTests % "compile->compile;test->test")
+  .settings(
+    scalaVersion := scala3Version,
+    
+    libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
+    
+    Test / test := Def.sequential(
+      (Test / testOnly).toTask(" hkmc2.NofibCompileTestRunner"),
+      (Test / testOnly).toTask(" hkmc2.NofibDiffTestRunner"),
+    ).value,
+    
+    Test/run/fork := true, // so that CTRL+C actually terminates the watcher
+  )
+
 lazy val hkmc2MostTests = project.in(file("hkmc2MostTests"))
   .settings(
     Test / test := (
       (hkmc2DiffTests / Test / test)
+        .dependsOn(hkmc2NofibTests / Test / test)
         .dependsOn(hkmc2JVM / Test / test)
     ).value
   )
@@ -94,6 +112,7 @@ lazy val hkmc2AllTests = project.in(file("hkmc2AllTests"))
   .settings(
     Test / test := (
       (hkmc2DiffTests / Test / test)
+        .dependsOn(hkmc2NofibTests / Test / test)
         .dependsOn(hkmc2JVM / Test / test)
         .dependsOn(hkmc2JS / Test / test)
     ).value

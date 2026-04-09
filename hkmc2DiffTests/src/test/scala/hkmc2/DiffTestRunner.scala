@@ -84,7 +84,16 @@ end DiffTestRunner
 
 class DiffTestRunner
   extends DiffTestRunnerBase(DiffTestRunner.State)
-  with ParallelTestExecution
+  with ParallelTestExecution:
+  
+  // Nofib tests are in hkmc2NofibTests project
+  override protected lazy val diffTestFiles = state.allFiles.filter: file =>
+    (
+      !file.segments.contains("staging")
+      && !file.segments.contains("mlscript-compile")
+      && !file.segments.contains("nofib")
+      && state.filter(file.relativeTo(state.workingDir))
+    )
 
 class DiffTestRunnerBase(val state: DiffTestRunner.State)
   extends funsuite.AnyFunSuite
