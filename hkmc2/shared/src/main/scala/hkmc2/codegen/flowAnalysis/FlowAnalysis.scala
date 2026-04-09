@@ -796,14 +796,7 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool 
           case refSite@FunRef(f) =>
             funsToProdStratScheme.get(f) match
             case Some(fScheme) =>
-              val fStrat = fScheme.instantiate(refSite.uid, f)
-              // handle function with no param list?
-              if f.defn.fold(false)(_.params.isEmpty) then
-                val callRes = freshVar("call_res", cc.forFunGroup)
-                cc.constrain(fStrat, new ConsFun(refSite.uid, instId)(Nil, callRes.asConsStrat))
-                callRes.asProdStrat
-              else
-                fStrat
+              fScheme.instantiate(refSite.uid, f)
             case None => generatedProdVars(f).asProdStrat
           case RefLike(sym) =>
             generatedProdVars(sym).asProdStrat

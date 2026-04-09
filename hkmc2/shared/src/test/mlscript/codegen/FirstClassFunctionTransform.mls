@@ -555,7 +555,9 @@ foo(tuple)
 //│ let Function$¹⁴, tmp;
 //│ define Function$¹⁴ as class Function$¹⁵ {
 //│   private val Function$$cap⁷;
-//│   method call¹⁴ = fun call¹⁵() { return Predef⁰.tuple⁰() }
+//│   method call¹⁴ = fun call¹⁵(...xs) {
+//│     return Predef⁰.tuple⁰()
+//│   }
 //│ };
 //│ set tmp = new Function$¹⁵();
 //│ foo⁷(tmp)

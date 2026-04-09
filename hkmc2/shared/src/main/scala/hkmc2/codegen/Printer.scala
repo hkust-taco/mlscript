@@ -109,8 +109,16 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
   def print(defn: Defn)(using Scope): Document = defn match
     case FunDefn(own, sym, dSym, params, body) =>
       scope.nest.givenIn:
-        val docParams = doc"${
-          params.map(_.params.map(x => scope.allocateName(x.sym)).mkDocument("(", ", ", ")")).mkDocument("")}"
+        val docParams =
+          doc"${
+            params
+              .map: pl =>
+                val allParams =
+                  pl.params.map(x => scope.allocateName(x.sym)) ++
+                  pl.restParam.map(x => "..." + scope.allocateName(x.sym))
+                allParams.mkDocument("(", ", ", ")")
+              .mkDocument("")
+          }"
         val docBody = print(body)
         doc"fun ${print(dSym)}${docParams} ${bracedbk(docBody)}"
     case ValDefn(tsym, sym, rhs) =>
@@ -167,8 +175,11 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
       doc"new ${if mut then "mut " else ""}${print(cls)}(${args.map(print).mkDocument(", ")})"
     case Lambda(params, body) =>
       scope.nest.givenIn:
-        val docParams = params.params.map(x => scope.allocateName(x.sym)).mkDocument(", ")
-        doc"(${docParams}) => ${print(body)}"
+        val allParams =
+          params.params.map(x => scope.allocateName(x.sym)) ++
+          params.restParam.map(x => "..." + scope.allocateName(x.sym))
+        val docParams = allParams.mkDocument("(", ", ", ")")
+        doc"$docParams => ${print(body)}"
     case Tuple(mut, elems) =>
       val docElems = elems.map(x => print(x)).mkDocument(", ")
       doc"${if mut then "mut " else ""}[${docElems}]"

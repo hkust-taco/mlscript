@@ -81,18 +81,17 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
         case _ => die
       val oldParamSyms = Buffer.empty[VarSymbol]
       val params2 = fun.params.map:
-        case ParamList(flags, params, N) =>
-          ParamList(
-            flags,
-            params.map: 
-              case Param(flags, sym, sign, modulefulness) =>
-                oldParamSyms.append(sym)
-                val newSym = new VarSymbol(sym.id)
-                assert(!mapping.isDefinedAt(sym))
-                mapping(sym) = newSym
-                Param(flags, newSym, sign, modulefulness),
-            N)
-        case _ => TODO("rest params are not supported")
+        case ParamList(flags, params, restParam) =>
+          def handleSingleParam(p: Param) =
+            val Param(flags, sym, sign, modulefulness) = p
+            oldParamSyms.append(sym)
+            val newSym = new VarSymbol(sym.id)
+            assert(!mapping.isDefinedAt(sym))
+            mapping(sym) = newSym
+            Param(flags, newSym, sign, modulefulness)
+          val params2 = params.map(handleSingleParam)
+          val rest2 = restParam.map(handleSingleParam)
+          ParamList(flags, params2, rest2)
       val body2 = applyFunBodyLikeBlock(fun.body)
       for s <- oldParamSyms do mapping.remove(s)
       if newlyCreated then

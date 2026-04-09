@@ -16,16 +16,17 @@ M.g(2)
 
 
 :deadParamElim
-:expect 0
+:expect 3
 module M with
-  fun f(a) = 0
+  val x = 3
+  fun f(a) = x
   fun main() = M.f(42)
 M.main()
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun f#0 @ main@3.f@1 -> eliminable: {0}
 //│ dead-param-elim > prodfun f#0 @ main@5.f@1 -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ = 0
+//│ = 3
 
 
 :deadParamElim
