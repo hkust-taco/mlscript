@@ -51,3 +51,18 @@ M.main()
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
+
+
+
+:deadParamElim
+:expect 125
+module M with
+  data class Foo(x) with
+    fun m() = this.x + 1
+    fun n(y) = this.x + y
+let foo = M.Foo(123)
+foo M.Foo::n(2)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 125
+//│ foo = Foo(123)

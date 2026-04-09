@@ -334,3 +334,18 @@ g(1)
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 3
 
+
+:deadParamElim
+:expect [3, 4]
+fun f(x) =
+  fun g(a, b, ...rest) = 
+    print(x)
+    rest
+  g(1, 2, 3, 4)
+f(2)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun g#0 @ f@3 -> eliminable: {0, 1}
+//│ dead-param-elim > prodfun g#0 @ f@4 -> eliminable: {0, 1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ > 2
+//│ = [3, 4]

@@ -658,7 +658,9 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool 
       rootFunId: FunId
     )(using cc: ConstraintsCollector): ProdStrat =
       val res = freshVar(resName, cc.forFunGroup)
-      params.foreach(_.restParam.foreach(p => generatedProdVars(p.sym).constrainOpaque(OpaqueBoundary.Both)))
+      params.foreach:
+        _.restParam.foreach: p =>
+          generatedProdVars(p.sym).constrainOpaque(OpaqueBoundary.Both)
       val funProdStrat = mkFunProdStrat(params, rootFunId, res.asProdStrat)
       processBlock(body)(using cc, res.asConsStrat)
       funProdStrat

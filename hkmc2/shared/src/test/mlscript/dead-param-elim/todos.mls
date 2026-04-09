@@ -33,33 +33,3 @@ fun g() =
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
-
-:fixme
-:deadParamElim
-:expect [1]
-fun f(x) =
-  fun g(...rest) = 
-    print(x)
-    rest
-  let a = g
-  a(1)
-f(2)
-//│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > <<< dead-param-elim results <<<
-//│ > 2
-//│ ═══[RUNTIME ERROR] Expected: '[1]', got: '[]'
-//│ = []
-
-
-:fixme
-:deadParamElim
-module M with
-  data class Foo(x) with
-    fun m() = this.x + 1
-    fun n(y) = this.x + y
-let foo = M.Foo(123)
-foo M.Foo::n(2)
-//│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > <<< dead-param-elim results <<<
-//│ ═══[RUNTIME ERROR] Error: Function 'n' expected 1 argument but got 0
-//│ foo = Foo(123)

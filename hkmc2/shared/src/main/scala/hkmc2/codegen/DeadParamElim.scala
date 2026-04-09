@@ -48,19 +48,32 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
     val consRoots = Buffer.empty[(ConcreteFunConsumer, Int)]
     for (prodFun, dests) <- funDests do
       if isSyntheticRoot(prodFun) || dests.contains(NoCons) then
-        prodFun.params.indices.foreach(i => prodRoots += ((prodFun, i)))
+        prodFun.params.indices.foreach: i =>
+          prodRoots += prodFun -> i
       else
         prodFun.params.zipWithIndex.foreach:
           case (ConsVar(s), i) =>
             val ubs = constraintSolver.upperBounds(s.uid)
             if ubs.exists(!_.isInstanceOf[ConsVar]) then
-              prodRoots += ((prodFun, i))
+              prodRoots += prodFun -> i
           case (_, i) =>
-            prodRoots += ((prodFun, i))
+            prodRoots += prodFun -> i
 
     for (consFun, srcs) <- funSrcs do
       if srcs.contains(NoProd) then
-        consFun.params.indices.foreach(i => consRoots += ((consFun, i)))
+        consFun.params.indices.foreach: i =>
+          consRoots += consFun -> i
+      else
+        val minSize = srcs
+          .collect:
+            case p: ProdFun if p.restParam.isDefined => p.params.size
+          .minOption
+        minSize match
+        case None => ()
+        case Some(s) =>
+          (s until consFun.params.size).foreach: i =>
+            consRoots += consFun -> i
+        
 
     val result = FlowWebComputation[(ConcreteFunProducer, Int), (ConcreteFunConsumer, Int)](
       (prodFun, idx) => funDests(prodFun).collect:
