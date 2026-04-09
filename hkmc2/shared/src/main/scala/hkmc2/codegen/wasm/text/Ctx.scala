@@ -101,9 +101,9 @@ class FuncInfo(
     val id: SymIdx,
     val typeUse: TypeUse,
     params: Seq[Local -> Str],
+    val resultTypes: Seq[Result],
     locals: Seq[Local -> Str],
     val body: Expr,
-    val resultTypes: Seq[Result],
     val exportName: Opt[Str]
 ) extends ToWat:
 
@@ -131,9 +131,9 @@ class FuncInfo(
     SymIdx(sym.optionIf(_.nameIsMeaningful).fold(summon[Scope].allocateName(sym))(_.nme)),
     typeUse,
     params,
+    Seq.fill(nResults)(Result(RefType.anyref)),
     locals,
     body,
-    Seq.fill(nResults)(Result(RefType.anyref)),
     sym.optionIf(_.nameIsMeaningful).map(_.nme),
   )
 
@@ -149,9 +149,9 @@ class FuncInfo(
     id.getOrElse(SymIdx(summon[Scope].allocateName(TempSymbol(N, "")))),
     typeUse,
     params,
+    Seq.fill(nResults)(Result(RefType.anyref)),
     locals,
     body,
-    Seq.fill(nResults)(Result(RefType.anyref)),
     `export`,
   )
 

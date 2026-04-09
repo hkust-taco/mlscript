@@ -32,7 +32,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
     utils.Scope.empty(utils.Scope.Cfg.default)
   private val wasmReplImportsNme = s"${wasmSuppNme}ReplImports"
   private val wasmReplImportsRef = s"globalThis.$wasmReplImportsNme"
-  private val sessionImportsBySymbol = mutable.Map.empty[Local, Vector[SessionBinding]]
+  private val sessionImportsBySymbol = mutable.Map.empty[Local, mutable.LinkedHashMap[Str, SessionBinding]]
   private var wasmSessionInitialized = false
   private var wasmSessionMemPages = 0
 
@@ -84,14 +84,14 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
           errored = true
           outerRaise(d)
         case d => outerRaise(d)
-      val sessionImports =
-        pgrm.main.freeVars.iterator
-          .flatMap(sym => sessionImportsBySymbol.getOrElse(sym, Vector.empty))
-          .toSeq
-          .distinctBy(_.bindingKey)
+      val sessionImports = mutable.LinkedHashMap.empty[Str, SessionBinding]
+      pgrm.main.freeVars.iterator.foreach: sym =>
+        sessionImportsBySymbol.get(sym).foreach: bindings =>
+          bindings.foreach: (bindingKey, binding) =>
+            sessionImports.update(bindingKey, binding)
       val CompiledWasmModule(modWat, mainFnNme, systemMemMinPages, sessionExports) = ltl.givenIn:
         baseScp.nest.givenIn:
-          WatBuilder().program(pgrm, N, wd, sessionImports, symbolsToPreserve)
+          WatBuilder().program(pgrm, N, wd, sessionImports.values.toSeq, symbolsToPreserve)
       val modWatJsLit = JSBuilder.makeStringLiteral(modWat.mkString(output.ColWidth))
 
       if wat.isSet then
@@ -217,7 +217,9 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
           case _ => ""
         sessionExports.foreach: binding =>
           binding.bindingSyms.foreach: sym =>
-            sessionImportsBySymbol.update(sym, sessionImportsBySymbol.getOrElse(sym, Vector.empty) :+ binding)
+            sessionImportsBySymbol
+              .getOrElseUpdate(sym, mutable.LinkedHashMap.empty)
+              .update(binding.bindingKey, binding)
         output(s"= $result")
     end if
   
