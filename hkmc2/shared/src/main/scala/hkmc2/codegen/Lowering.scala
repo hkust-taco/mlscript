@@ -1105,7 +1105,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     
     val deadParamElimed =
       val outterTl = tl
-      config.deadParamElim match
+      effectiveConfig.deadParamElim match
         case None => deforested
         case Some(dCfg) =>
           (new TraceLogger:

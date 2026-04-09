@@ -1,7 +1,7 @@
-:js
 
 
 // original failure: lifter/ClassInFun.mls
+:js
 :deadParamElim
 :fixme
 :lift
@@ -10,11 +10,15 @@ fun f(used, unused) =
     fun get() = used
   new C
 f(1, 2).get()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ f@2 -> eliminable: {1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
 //│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: used
 
 
 
 // original failure: lifter/ModulesObjects
+:js
 :deadParamElim
 :fixme
 :lift
@@ -23,22 +27,25 @@ fun foo(y) =
     fun bar() = set y = 2
   (new M).bar()
 foo(10)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun foo#0 @ foo@4 -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ╔══[INTERNAL ERROR] `class:M` is already in scope
-//│ ║  l.22: 	  class M with
+//│ ║  l.26: 	  class M with
 //│ ╙──      	        ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.21: 	fun foo(y) =
+//│ ║  l.25: 	fun foo(y) =
 //│ ║        	        ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.21: 	fun foo(y) =
+//│ ║  l.25: 	fun foo(y) =
 //│ ╙──      	        ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.21: 	fun foo(y) =
+//│ ║  l.25: 	fun foo(y) =
 //│ ║        	        ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.21: 	fun foo(y) =
+//│ ║  l.25: 	fun foo(y) =
 //│ ╙──      	        ^
-//│ > let M1, foo, foo_4$foo, inlinedVal, tmp;try { globalThis.Object.freeze(class M1‹BAD_SHADOW› {   static {     M1 = this   }   #M$cap;   get bar$__checkNotMethod() { runtime.deboundMethod("bar", "M"); }   bar() {     runtime.checkArgs("bar", 0, true, arguments.length);     y = 2;     return runtime.Unit   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "M"];  }); globalThis.Object.freeze(class M1‹BAD_SHADOW› {   static {     M1 = this   }   #M$cap;   get bar$__checkNotMethod() { runtime.deboundMethod("bar", "M"); }   bar() {     runtime.checkArgs("bar", 0, true, arguments.length);     y = 2;     return runtime.Unit   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "M"];  }); foo = function foo(y) {   runtime.checkArgs("foo", 1, true, arguments.length);   let tmp1;   tmp1 = globalThis.Object.freeze(new M1());   return runtime.checkCall(tmp1.bar()) }; tmp = globalThis.Object.freeze(new undefined()); inlinedVal = runtime.checkCall(tmp.bar()); block$res1 = inlinedVal; undefined; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > let M1, foo, foo_4$foo, inlinedVal, tmp;try { globalThis.Object.freeze(class M1‹BAD_SHADOW› {   static {     M1 = this   }   #M$cap;   get bar$__checkNotMethod() { runtime.deboundMethod("bar", "M"); }   bar() {     runtime.checkArgs("bar", 0, true, arguments.length);     y = 2;     return runtime.Unit   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "M"];  }); globalThis.Object.freeze(class M1‹BAD_SHADOW› {   static {     M1 = this   }   #M$cap;   get bar$__checkNotMethod() { runtime.deboundMethod("bar", "M"); }   bar() {     runtime.checkArgs("bar", 0, true, arguments.length);     y = 2;     return runtime.Unit   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "M"];  }); foo = function foo(y) {   runtime.checkArgs("foo", 1, true, arguments.length);   let tmp1;   tmp1 = globalThis.Object.freeze(new M1());   return runtime.checkCall(tmp1.bar()) }; tmp = globalThis.Object.freeze(new undefined()); inlinedVal = runtime.checkCall(tmp.bar()); block$res = inlinedVal; undefined; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
 
 
@@ -47,6 +54,7 @@ foo(10)
 :llir
 :intl
 :fixme
+:deadParamElim
 abstract class Callable
 object FnLike1 extends Callable with
   fun apply1(x) = x * 2
@@ -55,8 +63,15 @@ fun main() =
   let mul2 = FnLike1
   apply(mul2, 3)
 main()
-//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun apply#0 @ main@7.apply@3 -> eliminable: {1}
+//│ dead-param-elim > prodfun apply#0 @ main@9.apply@3 -> eliminable: {1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun apply#0 @ main@7.apply@3 -> eliminable: {1}
+//│ dead-param-elim > prodfun apply#0 @ main@9.apply@3 -> eliminable: {1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
 //│ 
 //│ Interpreted:
-//│ /!!!\ Uncaught error: hkmc2.codegen.llir.InterpreterError: Stuck evaluation: StuckExpr(DocCons(DocCons(DocCons(DocCons(DocText(),DocText(*)),DocText(()),DocCons(DocCons(DocCons(DocCons(DocCons(DocText(),DocText(x)),DocText($)),DocText(804)),DocText()),DocCons(DocText(,),DocCons(DocCons(DocText(),DocText(2)),DocText())))),DocText())), unable to evaluate basic operation)
+//│ /!!!\ Uncaught error: hkmc2.codegen.llir.InterpreterError: Stuck evaluation: StuckExpr(DocCons(DocCons(DocCons(DocCons(DocText(),DocText(*)),DocText(()),DocCons(DocCons(DocCons(DocCons(DocCons(DocText(),DocText(x)),DocText($)),DocText(802)),DocText()),DocCons(DocText(,),DocCons(DocCons(DocText(),DocText(2)),DocText())))),DocText())), unable to evaluate basic operation)
 

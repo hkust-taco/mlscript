@@ -215,6 +215,52 @@ object ConfigParser:
         msg"Expected EffectHandlers(...)" -> tree.toLoc :: Nil,
         source = Diagnostic.Source.Compilation))
       N
+
+  private def parseDeforest(tree: Tree, current: Opt[Config.Deforest])(using Raise): Opt[Config.Deforest] = tree match
+    case BoolLit(true) | Ident("true") | Ident("Deforest") =>
+      S(current.getOrElse(Config.Deforest.default))
+    case App(Ident("Deforest"), Tup(args)) =>
+      val base = current.getOrElse(Config.Deforest.default)
+      var debug = base.debug
+      var mono = base.mono
+      args.foreach:
+        case InfixApp(Ident("debug"), Keywrd(Keyword.`:`), value) =>
+          parseBool(value).foreach(v => debug = v)
+        case InfixApp(Ident("mono"), Keywrd(Keyword.`:`), value) =>
+          parseBool(value).foreach(v => mono = v)
+        case other =>
+          raise(ErrorReport(
+            msg"Unsupported Deforest argument" -> other.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation))
+      S(Config.Deforest(debug, mono))
+    case _ =>
+      raise(ErrorReport(
+        msg"Expected Deforest(...), Deforest, or true" -> tree.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
+      N
+
+  private def parseDeadParamElim(tree: Tree, current: Opt[Config.DeadParamElim])(using Raise): Opt[Config.DeadParamElim] = tree match
+    case BoolLit(true) | Ident("true") | Ident("DeadParamElim") =>
+      S(current.getOrElse(Config.DeadParamElim.default))
+    case App(Ident("DeadParamElim"), Tup(args)) =>
+      val base = current.getOrElse(Config.DeadParamElim.default)
+      var debug = base.debug
+      var mono = base.mono
+      args.foreach:
+        case InfixApp(Ident("debug"), Keywrd(Keyword.`:`), value) =>
+          parseBool(value).foreach(v => debug = v)
+        case InfixApp(Ident("mono"), Keywrd(Keyword.`:`), value) =>
+          parseBool(value).foreach(v => mono = v)
+        case other =>
+          raise(ErrorReport(
+            msg"Unsupported DeadParamElim argument" -> other.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation))
+      S(Config.DeadParamElim(debug, mono))
+    case _ =>
+      raise(ErrorReport(
+        msg"Expected DeadParamElim(...), DeadParamElim, or true" -> tree.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
+      N
   
   /** Parse a single field override like `tailRecOpt: false`. */
   private def parseField(name: Str, value: Tree)(using Raise): Config => Config = name match
@@ -252,9 +298,15 @@ object ConfigParser:
         case S(v) => _.copy(liftDefns = v)
         case N => identity
     case "deforest" =>
-      parseOpt(value)(_ => S(Config.Deforest.default)) match
-        case S(v) => _.copy(deforest = v)
-        case N => identity
+      cfg =>
+        parseOpt(value)(v => parseDeforest(v, cfg.deforest)) match
+          case S(v) => cfg.copy(deforest = v)
+          case N => cfg
+    case "deadParamElim" =>
+      cfg =>
+        parseOpt(value)(v => parseDeadParamElim(v, cfg.deadParamElim)) match
+          case S(v) => cfg.copy(deadParamElim = v)
+          case N => cfg
     case "sanityChecks" =>
       parseOpt(value)(_ => S(Config.SanityChecks(light = true))) match
         case S(v) => _.copy(sanityChecks = v)
