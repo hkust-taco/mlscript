@@ -224,6 +224,12 @@ case class MemType(lim: Limits, addrType: AddrType = AddrType.i32) extends ToWat
   def toWat: Document =
     doc"${addrType.optionIf(_ != AddrType.i32).fold(doc"")(at => doc"${at.toWat} ")}${lim.toWat}"
 
+/** A global type. */
+case class GlobalType(valType: ValType, mutable: Bool) extends ToWat:
+  def toWat: Document =
+    if mutable then doc"(mut ${valType.toWat})"
+    else valType.toWat
+
 object ExternType:
   /** An linear memory entry that is externally addressable. */
   case class Mem(override val id: SymIdx, memType: MemType) extends ExternType(id):
@@ -234,12 +240,9 @@ object ExternType:
     def toWat: Document = doc"""(func ${id.toWat} ${typeUse.toWat})"""
 
   /** A global entry that is externally addressable. */
-  case class Global(override val id: SymIdx, valType: ValType, mutable: Bool) extends ExternType(id):
+  case class Global(override val id: SymIdx, globalType: GlobalType) extends ExternType(id):
     def toWat: Document =
-      val typeDoc =
-        if mutable then doc"(mut ${valType.toWat})"
-        else valType.toWat
-      doc"""(global ${id.toWat} ${typeDoc})"""
+      doc"""(global ${id.toWat} ${globalType.toWat})"""
 
 sealed abstract class ExternType(val id: SymIdx) extends ToWat
 

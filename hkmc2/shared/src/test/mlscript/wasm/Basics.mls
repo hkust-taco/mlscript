@@ -214,8 +214,7 @@ O.y
 //│   (type $O_ctor (func (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
-//│   (global $O$inst (mut (ref null $O)) (ref.null $O))
-//│   (export "O$inst" (global $O$inst))
+//│   (global $O$inst (export "O$inst") (mut (ref null $O)) (ref.null $O))
 //│   (func $O_ctor1 (type $O_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
@@ -266,6 +265,6 @@ fun bar() = 42
 fun foo() = bar
 foo()()
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.266: 	fun foo() = bar
+//│ ║  l.265: 	fun foo() = bar
 //│ ╙──       	            ^^^
 //│ ═══[COMPILATION ERROR] Expected static function reference in Call(...) expression

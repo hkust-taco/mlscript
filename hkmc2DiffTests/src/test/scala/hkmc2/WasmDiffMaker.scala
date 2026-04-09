@@ -6,9 +6,10 @@ import codegen.js.JSBuilder
 import codegen.Local
 import codegen.wasm.*
 import document.*
+import semantics.*
 import semantics.Elaborator
 import semantics.Term.Blk
-import text.{WasmSessionBinding, CompiledWasmModule, WatBuilder}
+import text.{SessionBinding, CompiledWasmModule, WatBuilder}
 import Diagnostic.Source
 import Message.MessageContext
 
@@ -30,7 +31,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
     utils.Scope.empty(utils.Scope.Cfg.default)
   private val wasmReplImportsNme = s"${wasmSuppNme}ReplImports"
   private val wasmReplImportsRef = s"globalThis.$wasmReplImportsNme"
-  private val sessionImportsBySymbol = mutable.Map.empty[Local, Vector[WasmSessionBinding]]
+  private val sessionImportsBySymbol = mutable.Map.empty[Local, Vector[SessionBinding]]
   private var wasmSessionInitialized = false
   private var wasmSessionMemPages = 0
 
@@ -54,6 +55,19 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
     super.processTerm(trm, inImport)
 
     val outerRaise: Raise = summon
+    def definedValues(includeNonTerms: Bool) =
+      import Elaborator.Ctx.*
+      curCtx.env.iterator.flatMap:
+        case (nme, e @ (_: RefElem | SelElem(base = RefElem(_: InnerSymbol)))) =>
+          e.symbol match
+            case S(ts: TermSymbol) if ts.k.isInstanceOf[syntax.ValLike] => S((nme, ts, N))
+            case S(ts: BlockMemberSymbol)
+                if includeNonTerms || ts.trmImplTree.exists(_.k.isInstanceOf[syntax.ValLike]) => S((nme, ts, N))
+            case S(vs: VarSymbol) => S((nme, vs, N))
+            case _ => N
+        case _ => N
+      .toList
+    val symbolsToPreserve = definedValues(includeNonTerms = true).iterator.map(_._2).toSet
 
     if wasm.isSet then
       loadWasm
@@ -74,7 +88,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
           .distinctBy(_.bindingKey)
       val CompiledWasmModule(modWat, mainFnNme, systemMemMinPages, sessionExports) = ltl.givenIn:
         baseScp.nest.givenIn:
-          WatBuilder().program(le, N, wd, sessionImports)
+          WatBuilder().program(le, N, wd, sessionImports, symbolsToPreserve)
       val modWatJsLit = JSBuilder.makeStringLiteral(modWat.mkString(output.ColWidth))
 
       if wat.isSet then

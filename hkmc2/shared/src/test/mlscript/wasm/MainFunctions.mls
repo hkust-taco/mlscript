@@ -34,8 +34,7 @@ throw x
 //│   (type $mlx_exn (func (param $ex (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (tag $mlx_exn (export "mlx_exn") (type $mlx_exn))
-//│   (global $x (mut (ref null any)) (ref.null any))
-//│   (export "x" (global $x))
+//│   (global $x (export "x") (mut (ref null any)) (ref.null any))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (block
 //│       (global.set $x

@@ -13,10 +13,8 @@ topA + topB
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
-//│   (global $topA (mut (ref null any)) (ref.null any))
-//│   (export "topA" (global $topA))
-//│   (global $topB (mut (ref null any)) (ref.null any))
-//│   (export "topB" (global $topB))
+//│   (global $topA (export "topA") (mut (ref null any)) (ref.null any))
+//│   (global $topB (export "topB") (mut (ref null any)) (ref.null any))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (global.set $topA

@@ -11,8 +11,7 @@
 //│   (type $Unit_ctor (func (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
-//│   (global $Unit$inst (mut (ref null $Unit)) (ref.null $Unit))
-//│   (export "Unit$inst" (global $Unit$inst))
+//│   (global $Unit$inst (export "Unit$inst") (mut (ref null $Unit)) (ref.null $Unit))
 //│   (func $Unit_ctor1 (type $Unit_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
@@ -77,8 +76,7 @@ x
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (global $x (mut (ref null any)) (ref.null any))
-//│   (export "x" (global $x))
+//│   (global $x (export "x") (mut (ref null any)) (ref.null any))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (global.set $x

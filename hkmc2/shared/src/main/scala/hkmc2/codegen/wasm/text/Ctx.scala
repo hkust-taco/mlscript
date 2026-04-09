@@ -19,7 +19,7 @@ import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
 import scala.reflect.ClassTag
 
 /** Metadata for a REPL binding that can be imported by later Wasm modules. */
-sealed trait WasmSessionBinding:
+sealed trait SessionBinding:
   /** Returns the deduplication key for this binding. */
   def bindingKey: Str
   /** Returns the symbols that should resolve to this binding. */
@@ -27,46 +27,45 @@ sealed trait WasmSessionBinding:
   /** Returns the export name if this binding is re-exported. */
   def exportNameOpt: Opt[Str] = N
 
-object WasmSessionBinding:
-  val replModuleName: Str = "repl"
+object SessionBinding:
+  val ReplModuleName: Str = "repl"
 
-final case class WasmSessionFunc(
+final case class SessionFunc(
     sym: Symbol,
     moduleName: Str,
     exportName: Str,
     funcType: FunctionType
-) extends WasmSessionBinding:
+) extends SessionBinding:
   def bindingKey: Str = s"func:$moduleName:$exportName"
   def bindingSyms: Seq[Local] = sym :: Nil
   override def exportNameOpt: Opt[Str] = S(exportName)
 
-final case class WasmSessionGlobal(
+final case class SessionGlobal(
     sym: Symbol,
     moduleName: Str,
     exportName: Str,
-    valType: ValType,
-    mutable: Bool
-) extends WasmSessionBinding:
+    globalType: GlobalType
+) extends SessionBinding:
   def bindingKey: Str = s"global:$moduleName:$exportName"
   def bindingSyms: Seq[Local] = sym :: Nil
   override def exportNameOpt: Opt[Str] = S(exportName)
 
-final case class WasmSessionClass(
+final case class SessionClass(
     sym: BlockMemberSymbol,
     typeInfo: TypeInfo,
     runtimeTag: Int,
     aliasSyms: Seq[Local] = Nil
-) extends WasmSessionBinding:
+) extends SessionBinding:
   def bindingKey: Str = s"class:${sym.uid}"
   def bindingSyms: Seq[Local] = sym +: aliasSyms
 
-final case class WasmSessionSingleton(
+final case class SessionSingleton(
     blockSym: BlockMemberSymbol,
     objectSym: Opt[ModuleOrObjectSymbol],
     moduleName: Str,
     exportName: Str,
     globalTy: RefType
-) extends WasmSessionBinding:
+) extends SessionBinding:
   def bindingKey: Str = s"singleton:$moduleName:$exportName"
   def bindingSyms: Seq[Local] = blockSym +: objectSym.toSeq
   override def exportNameOpt: Opt[Str] = S(exportName)
@@ -75,7 +74,7 @@ final case class CompiledWasmModule(
     wat: Document,
     entryName: Str,
     systemMemMinPages: Int,
-    sessionExports: Seq[WasmSessionBinding]
+    sessionExports: Seq[SessionBinding]
 )
   
 /** A Wasm function and its associated information.
@@ -193,23 +192,16 @@ end FuncInfo
  */
 class GlobalInfo(
     val id: SymIdx,
-    val valType: ValType,
-    val mutable: Bool,
+    val globalType: GlobalType,
     val init: Expr,
     val exportName: Opt[Str]
 ) extends ToWat:
 
-  /** Returns the symbolic identifier document used in global declarations. */
-  private def idDoc: Document = id.toWat
-
   def toWat: Document =
-    val typeDoc =
-      if mutable then doc"(mut ${valType.toWat})"
-      else valType.toWat
-    doc"(global${idDoc.surroundUnlessEmpty(doc" ")} ${typeDoc} ${init.toWat})${
-      exportName.fold(doc""): name =>
-        doc""" # (export "${name}" (global ${idDoc}))"""
-    }"
+    doc"""(global ${id.toWat}${
+        exportName.fold(doc""): name =>
+          doc""" (export "$name")"""
+      } ${globalType.toWat} ${init.toWat})"""
 end GlobalInfo
 
 /** A WebAssembly memory and its associated information.
@@ -378,7 +370,7 @@ class Ctx extends ToWat:
 
   private def globalExternType(globalEntry: GlobalInfo | Import[ExternType.Global]): ExternType.Global =
     globalEntry match
-      case globalInfo: GlobalInfo => ExternType.Global(globalInfo.id, globalInfo.valType, globalInfo.mutable)
+      case globalInfo: GlobalInfo => ExternType.Global(globalInfo.id, globalInfo.globalType)
       case globalImport: Import[ExternType.Global] => globalImport.externType
 
   /** Pushes a label target for the dynamic extent of `body` and pops it afterwards. */

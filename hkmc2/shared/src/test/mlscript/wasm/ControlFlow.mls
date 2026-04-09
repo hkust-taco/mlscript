@@ -23,10 +23,7 @@ let i = 0 in
 //│   (type $start (func))
 //│   (import "system" "lt_impl" (func $lt_impl (type $lt_impl)))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
-//│   (global $i (mut (ref null any)) (ref.null any))
-//│   (export "i" (global $i))
-//│   (global $Unit$inst (mut (ref null $Unit)) (ref.null $Unit))
-//│   (export "Unit$inst" (global $Unit$inst))
+//│   (global $Unit$inst (export "Unit$inst") (mut (ref null $Unit)) (ref.null $Unit))
 //│   (func $Unit_ctor1 (type $Unit_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
@@ -45,11 +42,12 @@ let i = 0 in
 //│         (ref.cast (ref null $Unit)
 //│           (call $Unit_ctor1)))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│     (local $i (ref null any))
 //│     (local $scrut (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $matchRes (ref null any))
 //│     (block (result (ref null any))
-//│       (global.set $i
+//│       (local.set $i
 //│         (ref.i31
 //│           (i32.const 0)))
 //│       (block (result (ref null any))
@@ -59,7 +57,7 @@ let i = 0 in
 //│               (block (result (ref null any))
 //│                 (local.set $scrut
 //│                   (call $lt_impl
-//│                     (global.get $i)
+//│                     (local.get $i)
 //│                     (ref.i31
 //│                       (i32.const 10))))
 //│                 (block (result (ref null any))
@@ -78,11 +76,11 @@ let i = 0 in
 //│                             (block
 //│                               (local.set $tmp
 //│                                 (call $plus_impl
-//│                                   (global.get $i)
+//│                                   (local.get $i)
 //│                                   (ref.i31
 //│                                     (i32.const 1))))
 //│                               (block
-//│                                 (global.set $i
+//│                                 (local.set $i
 //│                                   (local.get $tmp))
 //│                                 (br $lbl_cont)))
 //│                             (local.set $matchRes
@@ -93,7 +91,7 @@ let i = 0 in
 //│                       (local.set $matchRes
 //│                         (global.get $Unit$inst))))
 //│                   (local.get $matchRes))))))
-//│         (global.get $i))))
+//│         (local.get $i))))
 //│   (elem $Unit_ctor1 declare func $Unit_ctor1)
 //│   (elem $start1 declare func $start1)
 //│   (elem $entry declare func $entry)
