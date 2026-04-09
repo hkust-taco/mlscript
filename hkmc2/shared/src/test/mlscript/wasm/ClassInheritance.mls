@@ -328,6 +328,6 @@ class B
 :ge
 class A extends B
 class B extends A
-//│ ╔══[COMPILATION ERROR] Wasm inheritance ordering detected an inheritance cycle.
+//│ ╔══[COMPILATION ERROR] Inheritance cycles are not supported.
 //│ ║  l.329: 	class A extends B
 //│ ╙──       	^^^^^^^^^^^^^^^^^

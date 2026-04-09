@@ -15,7 +15,7 @@ import text.{Import as WasmImport, Param as WasmParam}
 import Message.MessageContext
 import Scope.scope
 
-import scala.collection.mutable.{ArrayBuffer as ArrayBuf, LinkedHashMap, Queue}
+import scala.collection.mutable.{ArrayBuffer as ArrayBuf, LinkedHashMap, LinkedHashSet, Queue}
 import scala.util.boundary, boundary.break
 import sourcecode.Line
 
@@ -221,7 +221,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     if ordered.size != defns.size then
       raise(ErrorReport(
-        msg"Wasm inheritance ordering detected an inheritance cycle." ->
+        msg"Inheritance cycles are not supported." ->
           defns.flatMap(_.sym.toLoc).headOption :: Nil,
         extraInfo = S(
           defns.iterator
@@ -238,7 +238,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def predeclareClassType(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
     val parentTypeIdx =
       if defn.parentPath.isEmpty then baseObjectTypeIdx
-      else ctx.getType_!(resolveParentSym(defn).getOrElse(lastWords("unreachable")))
+      else ctx.getType_!(resolveParentSym(defn).getOrElse:
+        lastWords(s"Expected resolved parent class symbol when predeclaring ${defn.sym.nme}"))
     val inheritedFields = ctx.getTypeInfo_!(parentTypeIdx).compType match
       case struct: StructType => struct.fields
       case other => lastWords(s"Parent type must be a struct, found ${other.toWat.mkString()}")
@@ -258,6 +259,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ),
     )
 
+  /** Records the runtime tag accepted by each class pattern: the class's own tag and descendant tags. */
   private def predeclareClassTags(
       orderedDefns: List[ClsLikeDefn],
   )(using Ctx, Raise, Scope): Unit =
@@ -271,9 +273,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       val ownTag = ctx.getTypeInfo_!(defn.sym).objectTag.getOrElse:
         lastWords(s"Expected class ${defn.sym} to have an object tag")
       val childTags = childrenBySym(defn.sym).flatMap: childSym =>
-        ctx.getClassTags(childSym).getOrElse(lastWords("unreachable"))
-      ctx.setClassTags(defn.sym, ownTag +: childTags.toSeq)
+        ctx.getRuntimeClassTags(childSym).getOrElse(lastWords("unreachable"))
+      ctx.registerRuntimeClassTags(defn.sym, LinkedHashSet(ownTag) ++ childTags)
 
+  /** Declares the shared Wasm function type used by a class ctor/init placeholder. */
   private def declareClassFuncType(
       defn: ClsLikeDefn,
       suffix: Str,
@@ -299,9 +302,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ),
     )
 
+  /** Returns the symbol used to predeclare and later overwrite a class init function. */
   private def initFuncSym(sym: BlockMemberSymbol): BlockMemberSymbol =
     initFuncSyms.getOrElseUpdate(sym, BlockMemberSymbol(s"${sym.nme}_init", Nil, nameIsMeaningful = false))
 
+  /** Registers a placeholder class ctor/init function so later lowering can overwrite it. */
   private def predeclareClassFunc(
       defn: ClsLikeDefn,
       suffix: Str,
@@ -499,6 +504,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ctx.popLocal()
     ((clsLikeDefn.isym -> thisVarName) +: initParams, initWat, localsWithNames)
 
+  /** Lowers an inherited pre-constructor by preserving its setup code and rewriting the final `super(...)` into `Parent_init(this, ...)`. */
   private def compilePreCtor(
       clsLikeDefn: ClsLikeDefn,
       thisVar: LocalIdx,
@@ -1126,11 +1132,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def getI32FromAnyref(name: Str): Expr =
     i31.get(ref.cast(getLocalAnyref(name), RefType.i31ref), true)
 
-  private def isControlTransfer(expr: Expr): Bool =
-    expr.resultType.contains(UnreachableType) || expr.mnemonic == "return"
+  extension (expr: Expr)
+    private def isControlTransfer: Bool =
+      expr.resultType.contains(UnreachableType) || expr.mnemonic == "return"
 
   private def asStatement(expr: Expr): Expr =
-    if isControlTransfer(expr) then expr
+    if expr.isControlTransfer then expr
     else
       expr.resultType match
         case S(_) => drop(expr)
@@ -1559,7 +1566,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         def getScrutExpr: Expr = result(scrut)
 
         def assignTailResult(target: LocalIdx, expr: Expr): Expr =
-          if isControlTransfer(expr) then expr
+          if expr.isControlTransfer then expr
           else
             expr.resultType match
               case S(_) => local.set(target, expr)
@@ -1624,7 +1631,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
                 val expectedTag = typeinfo.objectTag.getOrElse:
                   lastWords(s"Expected class $clsBlkMemberSym to have an object tag")
-                val acceptedTags = ctx.getClassTags(clsBlkMemberSym).getOrElse(Seq(expectedTag))
+                val acceptedTags = ctx.getRuntimeClassTags(clsBlkMemberSym).getOrElse(LinkedHashSet(expectedTag))
 
                 val scrutExpr = getScrutExpr
                 val isStructCompatible = ref.test(scrutExpr, baseObjectRefType(nullable = true))
