@@ -105,6 +105,11 @@ r := 1
 :e
 r := 1
 ! r // because of the space, this is a NL-op
+//│ ╔══[COMPILATION ERROR] Builtin '!' is not a binary operator
+//│ ║  l.106: 	r := 1
+//│ ║         	^^^^^^
+//│ ║  l.107: 	! r // because of the space, this is a NL-op
+//│ ╙──       	^^^
 //│ ╔══[COMPILATION ERROR] Variable not found: !
 //│ ║  l.107: 	! r // because of the space, this is a NL-op
 //│ ╙──       	^

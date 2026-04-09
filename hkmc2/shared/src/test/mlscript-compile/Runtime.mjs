@@ -158,13 +158,15 @@ let Runtime1;
         scrut = i >= xs.length;
         if (scrut === true) {
           throw runtime.safeCall(globalThis.RangeError("Tuple.get: index out of bounds"))
+        } else {
+          tmp1 = - xs.length;
+          scrut1 = i < tmp1;
+          if (scrut1 === true) {
+            throw runtime.safeCall(globalThis.RangeError("Tuple.get: negative index out of bounds"))
+          } else {
+            return xs.at(i)
+          }
         }
-        tmp1 = - xs.length;
-        scrut1 = i < tmp1;
-        if (scrut1 === true) {
-          throw runtime.safeCall(globalThis.RangeError("Tuple.get: negative index out of bounds"))
-        }
-        return xs.at(i)
       } 
       static isArrayLike(xs) {
         return runtime.safeCall(Iter.isArrayLike(xs))
@@ -596,8 +598,9 @@ let Runtime1;
       tmp13 = tmp12 + " but got ";
       tmp14 = tmp13 + got;
       throw runtime.safeCall(globalThis.Error(tmp14))
+    } else {
+      return runtime.Unit
     }
-    return runtime.Unit
   } 
   static safeCall(x) {
     if (x === undefined) {
@@ -749,17 +752,23 @@ let Runtime1;
             tmp2 = msg + tmp1;
             msg = tmp2;
             atTail = false;
+            continue lbl
+          } else {
+            continue lbl
           }
-          continue lbl
         }
         break;
       }
       if (atTail === true) {
         tmp = msg + "\n\tat tail position";
         msg = tmp;
+        return msg
+      } else {
+        return msg
       }
+    } else {
+      return msg
     }
-    return msg
   } 
   static showFunctionContChain(cont, hl, vis, reps) {
     let result, scrut, scrut1, scrut2, tmp, lambda, tmp1, tmp2, tmp3, tmp4;
@@ -773,8 +782,10 @@ let Runtime1;
           tmp5 = ", " + marker;
           tmp6 = result + tmp5;
           result = tmp6;
+          return runtime.Unit
+        } else {
+          return runtime.Unit
         }
-        return runtime.Unit
       });
       runtime.safeCall(hl.forEach(lambda));
       scrut = runtime.safeCall(vis.has(cont));
@@ -784,9 +795,10 @@ let Runtime1;
         scrut1 = reps > 10;
         if (scrut1 === true) {
           throw runtime.safeCall(globalThis.Error("10 repeated continuation frame (loop?)"))
+        } else {
+          tmp2 = result + ", REPEAT";
+          result = tmp2;
         }
-        tmp2 = result + ", REPEAT";
-        result = tmp2;
       } else {
         runtime.safeCall(vis.add(cont));
       }
@@ -813,8 +825,10 @@ let Runtime1;
           tmp4 = ", " + marker;
           tmp5 = result + tmp4;
           result = tmp5;
+          return runtime.Unit
+        } else {
+          return runtime.Unit
         }
-        return runtime.Unit
       });
       runtime.safeCall(hl.forEach(lambda));
       scrut = runtime.safeCall(vis.has(cont));
@@ -824,9 +838,10 @@ let Runtime1;
         scrut1 = reps > 10;
         if (scrut1 === true) {
           throw runtime.safeCall(globalThis.Error("10 repeated continuation frame (loop?)"))
+        } else {
+          tmp1 = result + ", REPEAT";
+          result = tmp1;
         }
-        tmp1 = result + ", REPEAT";
-        result = tmp1;
       } else {
         runtime.safeCall(vis.add(cont));
       }
@@ -956,8 +971,8 @@ let Runtime1;
           return null
         } else {
           cur = nxt;
+          continue lbl
         }
-        continue lbl
       } else {
         return cur
       }
@@ -981,41 +996,44 @@ let Runtime1;
     scrut = prevHandlerFrame.nextHandler === null;
     if (scrut === true) {
       return cur
-    }
-    handlerFrame = prevHandlerFrame.nextHandler;
-    saved = new Runtime.ContTrace.class(handlerFrame.next, cur.contTrace.last, handlerFrame.nextHandler, cur.contTrace.lastHandler, false);
-    cur.contTrace.last = handlerFrame;
-    cur.contTrace.lastHandler = handlerFrame;
-    handlerFrame.next = null;
-    handlerFrame.nextHandler = null;
-    Runtime.curEffect = null;
-    old = Runtime.stackDepth;
-    try {
-      tmp2 = Runtime.stackDepth + 2;
-      Runtime.stackDepth = tmp2;
-      tmp3 = Runtime.resume(cur.contTrace);
-      tmp4 = runtime.safeCall(cur.handlerFun(tmp3));
-      tmp1 = tmp4;
-    } finally {
-      Runtime.stackDepth = old;
-    }
-    tmp = tmp1;
-    scrut1 = Runtime.curEffect !== null;
-    if (scrut1 === true) {
-      cur = Runtime.curEffect;
-      scrut2 = saved.next !== null;
-      if (scrut2 === true) {
-        cur.contTrace.last.next = saved.next;
-        cur.contTrace.last = saved.last;
-      }
-      scrut3 = saved.nextHandler !== null;
-      if (scrut3 === true) {
-        cur.contTrace.lastHandler.nextHandler = saved.nextHandler;
-        cur.contTrace.lastHandler = saved.lastHandler;
-      }
-      return cur
     } else {
-      return Runtime.resumeContTrace(saved, tmp)
+      handlerFrame = prevHandlerFrame.nextHandler;
+      saved = new Runtime.ContTrace.class(handlerFrame.next, cur.contTrace.last, handlerFrame.nextHandler, cur.contTrace.lastHandler, false);
+      cur.contTrace.last = handlerFrame;
+      cur.contTrace.lastHandler = handlerFrame;
+      handlerFrame.next = null;
+      handlerFrame.nextHandler = null;
+      Runtime.curEffect = null;
+      old = Runtime.stackDepth;
+      try {
+        tmp2 = Runtime.stackDepth + 2;
+        Runtime.stackDepth = tmp2;
+        tmp3 = Runtime.resume(cur.contTrace);
+        tmp4 = runtime.safeCall(cur.handlerFun(tmp3));
+        tmp1 = tmp4;
+      } finally {
+        Runtime.stackDepth = old;
+      }
+      tmp = tmp1;
+      scrut1 = Runtime.curEffect !== null;
+      if (scrut1 === true) {
+        cur = Runtime.curEffect;
+        scrut2 = saved.next !== null;
+        if (scrut2 === true) {
+          cur.contTrace.last.next = saved.next;
+          cur.contTrace.last = saved.last;
+        }
+        scrut3 = saved.nextHandler !== null;
+        if (scrut3 === true) {
+          cur.contTrace.lastHandler.nextHandler = saved.nextHandler;
+          cur.contTrace.lastHandler = saved.lastHandler;
+          return cur
+        } else {
+          return cur
+        }
+      } else {
+        return Runtime.resumeContTrace(saved, tmp)
+      }
     }
   } 
   static resume(contTrace) {
@@ -1024,10 +1042,11 @@ let Runtime1;
       scrut = contTrace.resumed;
       if (scrut === true) {
         throw runtime.safeCall(globalThis.Error("Multiple resumption"))
+      } else {
+        contTrace.resumed = true;
+        tmp = Runtime.resumeContTrace(contTrace, value);
+        return Runtime.handleEffects(tmp)
       }
-      contTrace.resumed = true;
-      tmp = Runtime.resumeContTrace(contTrace, value);
-      return Runtime.handleEffects(tmp)
     }
   } 
   static resumeContTrace(contTrace, value) {
@@ -1062,12 +1081,14 @@ let Runtime1;
           scrut2 = handlerCont !== null;
           if (scrut2 === true) {
             value.contTrace.lastHandler = contTrace.lastHandler;
+            return value
+          } else {
+            return value
           }
-          return value
         } else {
           cont = cont.next;
+          continue lbl
         }
-        continue lbl
       } else {
         if (handlerCont instanceof Runtime.HandlerContFrame.class) {
           cont = handlerCont.next;
@@ -1109,25 +1130,27 @@ let Runtime1;
           scrut = Runtime.curEffect !== null;
           if (scrut === true) {
             throw globalThis.Object.freeze(new globalThis.Error("Effect crossed through stack safe boundary"))
-          }
-          lbl: while (true) {
-            let scrut1, saved, scrut2, tmp3;
-            scrut1 = Runtime.stackResume !== null;
-            if (scrut1 === true) {
-              saved = Runtime.stackResume;
-              Runtime.stackResume = null;
-              Runtime.stackDepth = 1;
-              tmp3 = runtime.safeCall(saved(runtime.Unit));
-              result = tmp3;
-              scrut2 = Runtime.curEffect !== null;
-              if (scrut2 === true) {
-                throw globalThis.Object.freeze(new globalThis.Error("Effect crossed through stack safe boundary"))
+          } else {
+            lbl: while (true) {
+              let scrut1, saved, scrut2, tmp3;
+              scrut1 = Runtime.stackResume !== null;
+              if (scrut1 === true) {
+                saved = Runtime.stackResume;
+                Runtime.stackResume = null;
+                Runtime.stackDepth = 1;
+                tmp3 = runtime.safeCall(saved(runtime.Unit));
+                result = tmp3;
+                scrut2 = Runtime.curEffect !== null;
+                if (scrut2 === true) {
+                  throw globalThis.Object.freeze(new globalThis.Error("Effect crossed through stack safe boundary"))
+                } else {
+                  continue lbl
+                }
               }
-              continue lbl
+              break;
             }
-            break;
+            tmp2 = result;
           }
-          tmp2 = result;
         } finally {
           Runtime.stackHandler = old2;
         }

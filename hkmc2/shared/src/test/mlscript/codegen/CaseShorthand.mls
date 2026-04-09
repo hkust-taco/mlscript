@@ -46,8 +46,10 @@ case
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda4;
 //│ lambda4 = (undefined, function (caseScrut) {
-//│   if (caseScrut === 0) { Predef.print(1); }
-//│   return runtime.Unit
+//│   if (caseScrut === 0) {
+//│     Predef.print(1);
+//│     return runtime.Unit
+//│   } else { return runtime.Unit }
 //│ });
 //│ lambda4
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -72,10 +74,10 @@ case
 :todo // TODO: support this braceless syntax?
 case [x] then x, [] then 0
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.73: 	case [x] then x, [] then 0
+//│ ║  l.75: 	case [x] then x, [] then 0
 //│ ╙──      	                 ^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.73: 	case [x] then x, [] then 0
+//│ ║  l.75: 	case [x] then x, [] then 0
 //│ ╙──      	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

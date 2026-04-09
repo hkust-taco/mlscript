@@ -79,11 +79,8 @@ if x is 4 do
 //│     tmp3 = acc + "d";
 //│     acc = tmp3;
 //│     x1 = 4;
-//│   case 4:
-//│     tmp4 = acc + "e";
-//│     acc = tmp4;
 //│ }
-//│ runtime.Unit
+//│ if (x1 === 4) { tmp4 = acc + "e"; acc = tmp4; runtime.Unit } else { runtime.Unit }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 4

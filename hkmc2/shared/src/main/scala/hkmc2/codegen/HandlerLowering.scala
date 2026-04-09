@@ -295,6 +295,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         val newSub = go(sub)(using afterEnd = S(restId))
         Begin(newSub, restId.transitionSoft)
 
+      case u: Unreachable => u
+      
       case End(_) =>
         if partitioned then
           afterEnd.fold(blk)(id => StateTransition(id.force_!))

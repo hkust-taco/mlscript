@@ -16,7 +16,6 @@ fun power: [C] -> CodeBase[out Num, out C, out Any] -> Int -> CodeBase[out Num, 
 fun power(x) = case
   0 then `1.0
   n then x `*. power(x)(n - 1)
-power
 
 fun id: [A] -> A -> A
 fun id(x) = x

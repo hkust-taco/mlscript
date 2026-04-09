@@ -412,8 +412,22 @@ object Match:
       // * Currently, this branch does not seem used, because the UCS already does a good job at merging matches
       Match(scrut, arms ::: arms2, dflt2, rest)
     case _ =>
-      if !rest.isEmpty && arms.forall(_._2.isAbortive) && dflt.exists(_.isAbortive)
-      then new Match(scrut, arms, dflt, Unreachable("Rest of abortive match"))
+      val numNonAbortive = arms.count(!_._2.isAbortive)
+      def mapDflt = dflt match
+        case S(d) => S(if d.isAbortive then d else Begin(d, rest))
+        case N => S(rest)
+      if numNonAbortive === 0 then
+        new Match(scrut, arms, mapDflt, End("Unreachable: rest of abortive match"))
+      else if numNonAbortive === 1 && dflt.exists(_.isAbortive) || rest.size <= 1 then
+        new Match(scrut,
+          arms.map: a =>
+            if a._2.isAbortive then a else (a._1, Begin(a._2, rest)),
+          mapDflt,
+          // * We used to produce an `Unreachable` here, but that got in the way of the useless-break optimization;
+          // * Indeed, `L: { match scrut { C => break L }; end }` can no longer be optimized
+          // * if we replace `end` with `unreachable`, since the break is no longer jumping over nothing,
+          // * ie no longer in tail position of the label (trying to treat it as such is unsound).
+          End("Rest moved to non-abortive branch(es)"))
       else rest match
         case Scoped(syms, body) => Scoped(syms, Match(scrut, arms, dflt, body))
         case _ => new Match(scrut, arms, dflt, rest)

@@ -8,5 +8,146 @@
 // :d
 // :todo
 
+#config(commentGeneratedCode: true)
 
+:sir
+:soir
+:sjs
+if false do print()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let scrut;
+//│ scrut = false;
+//│ if (scrut === true) {
+//│   Predef.print();
+//│   runtime.Unit
+//│ } else { runtime.Unit }
+//│ /* Rest moved to non-abortive branch(es) */
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let scrut;
+//│ set scrut = false;
+//│ match scrut
+//│   true =>
+//│     begin
+//│       do Predef⁰.print⁰();
+//│       end;
+//│     runtime⁰.Unit⁰
+//│   else
+//│     runtime⁰.Unit⁰
+//│ end /* Rest moved to non-abortive branch(es) */
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let scrut;
+//│ set scrut = false;
+//│ match scrut
+//│   true =>
+//│     do Predef⁰.print⁰();
+//│     runtime⁰.Unit⁰
+//│   else
+//│     runtime⁰.Unit⁰
+//│ end /* Rest moved to non-abortive branch(es) */
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:sir
+:soir
+fun foo() = if false then 1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let foo⁰;
+//│ define foo⁰ as fun foo¹() {
+//│   let scrut;
+//│   set scrut = false;
+//│   match scrut
+//│     true =>
+//│       return 1
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end /* Unreachable: rest of abortive match */
+//│ };
+//│ end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let foo⁰;
+//│ define foo⁰ as fun foo¹() {
+//│   let scrut;
+//│   set scrut = false;
+//│   match scrut
+//│     true =>
+//│       return 1
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end /* Unreachable: rest of abortive match */
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:sir
+:soir
+fun foo() = print(if true then 1)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let foo²;
+//│ define foo² as fun foo³() {
+//│   let scrut, tmp;
+//│   set scrut = true;
+//│   match scrut
+//│     true =>
+//│       begin
+//│         set tmp = 1;
+//│         end;
+//│       return Predef⁰.print⁰(tmp)
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end /* Rest moved to non-abortive branch(es) */
+//│ };
+//│ end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let foo²;
+//│ define foo² as fun foo³() {
+//│   let scrut, tmp;
+//│   set scrut = true;
+//│   match scrut
+//│     true =>
+//│       set tmp = 1;
+//│       return Predef⁰.print⁰(tmp)
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end /* Unreachable: rest of abortive match */
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:sir
+:soir
+if 1 === 2 do 2 + 2
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let scrut; set scrut = ===⁰(1, 2); runtime⁰.Unit⁰
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ runtime⁰.Unit⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:sir
+:soir
+if 1 == 2 do 2 + 2
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let scrut; set scrut = Predef⁰.equals⁰(1, 2); runtime⁰.Unit⁰
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ do Predef⁰.equals⁰(1, 2); runtime⁰.Unit⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+
+@untyped
+set
+  globalThis.CodeBase = 1
+
+:elt
+@untyped
+1
+//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   res = Annotated:
+//│     annot = Untyped
+//│     target = Lit of IntLit of 1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+// :p
+// (:aaa)
 

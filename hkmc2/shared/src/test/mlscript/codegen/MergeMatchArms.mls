@@ -61,25 +61,23 @@ if a is
   C then 3
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let tmp;
-//│ split_root$: {
-//│   if (a instanceof A1.class) {
-//│     if (b instanceof A1.class) {
-//│       tmp = 1;
-//│       break split_root$
-//│     } else if (b instanceof B1.class) {
-//│       tmp = 2;
-//│       break split_root$
-//│     }
-//│   } else if (a instanceof B1.class) {
+//│ if (a instanceof A1.class) {
+//│   if (b instanceof A1.class) {
+//│     tmp = 1;
+//│     tmp
+//│   } else if (b instanceof B1.class) {
 //│     tmp = 2;
-//│     break split_root$
-//│   } else if (a instanceof C1.class) {
-//│     tmp = 3;
-//│     break split_root$
+//│     tmp
+//│   } else {
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
-//│ }
-//│ tmp
+//│ } else if (a instanceof B1.class) {
+//│   tmp = 2;
+//│   tmp
+//│ } else if (a instanceof C1.class) {
+//│   tmp = 3;
+//│   tmp
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 

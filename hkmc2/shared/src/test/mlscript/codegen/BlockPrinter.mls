@@ -5,6 +5,12 @@
 //│ import Predef; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+#config(commentGeneratedCode: true)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
 
 2 + 2 + 2
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -87,7 +93,7 @@ case
 //│       return Predef⁰.print⁰("non-empty", x)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
-//│   end
+//│   end /* Unreachable: rest of abortive match */
 //│ };
 //│ lambda¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -220,7 +226,7 @@ pattern P = B
 //│         return new runtime⁰.MatchSuccess⁰(input, null)
 //│       else
 //│         return new runtime⁰.MatchFailure⁰(null)
-//│     end
+//│     end /* Unreachable: rest of abortive match */
 //│   }
 //│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input) {
 //│     return new runtime⁰.MatchFailure⁰(null)
@@ -245,7 +251,9 @@ x.0
 //│ match selRes
 //│   undefined =>
 //│     throw new globalThis⁰.Error﹖("Access to required field '0' yielded 'undefined'")
-//│ selRes
+//│   else
+//│     selRes
+//│ end /* Unreachable: rest of abortive match */
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 //│ x = [1, 2, 3]

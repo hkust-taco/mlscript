@@ -35,11 +35,12 @@ fun g() =
 //│     switch (pc) {
 //│       case 0:
 //│         runtime.resumeValue = always_true();
-//│         if (runtime.curEffect !== null) {
+//│         if (runtime.curEffect === null) {
+//│           pc = 3;
+//│           continue main
+//│         } else {
 //│           return runtime.unwind(g, 3, "SavedVars.mls:17:8", null, null, 1, 0, 0)
 //│         }
-//│         pc = 3;
-//│         continue main;
 //│       case 1:
 //│         a = tmp;
 //│         return a;
@@ -52,12 +53,14 @@ fun g() =
 //│         scrut = runtime.resumeValue;
 //│         if (scrut === true) {
 //│           runtime.resumeValue = f();
-//│           if (runtime.curEffect !== null) {
+//│           if (runtime.curEffect === null) {
+//│             pc = 2;
+//│             continue main
+//│           } else {
 //│             return runtime.unwind(g, 2, "SavedVars.mls:18:7", null, null, 1, 0, 0)
 //│           }
-//│           pc = 2;
-//│           continue main
 //│         } else { tmp = 2; pc = 1; continue main }
+//│       default:
 //│     }
 //│     break;
 //│   }

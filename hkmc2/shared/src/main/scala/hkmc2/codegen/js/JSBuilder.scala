@@ -583,7 +583,7 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
           doc" # default: #{ ${ nonNestedScoped(el)(bd => returningTerm(bd, endSemi = true)) } #} "
         case N => doc""
       doc" # switch (${result(scrut)}) { #{ ${l :: e} #}  # }" :: returningTerm(rest, endSemi)
-    case Match(scrut, hd :: tl, els, rest) =>
+    case Match(scrut, arms @ hd :: tl, els, rest) =>
       val sd = result(scrut)
       def cond(cse: Case) = cse match
         case Case.Lit(lit) => doc"$sd === ${lit.idStr}"
@@ -623,7 +623,8 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
     case End(_) => doc""
     
     case Unreachable(msg) if config.commentGeneratedCode =>
-      doc" # /* Unreachable: $msg */"
+      if msg.isEmpty then doc" # /* Unreachable */"
+      else doc" # /* Unreachable: $msg */"
     case Unreachable(_) => doc""
     
     case Throw(res) =>

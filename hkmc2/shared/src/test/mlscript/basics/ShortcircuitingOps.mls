@@ -29,7 +29,8 @@ false && loudTrue
 :sjs
 print(1 && loudTrue)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp; if (1 === true) { tmp = loudTrue(); } else { tmp = false; } Predef.print(tmp)
+//│ let tmp;
+//│ if (1 === true) { tmp = loudTrue(); Predef.print(tmp) } else { tmp = false; Predef.print(tmp) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > false
 

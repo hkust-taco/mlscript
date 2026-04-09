@@ -170,13 +170,13 @@ fun f(x) =
 //│     if (x1 === true) {
 //│       Predef.print(x1);
 //│       return while1()
+//│     } else {
+//│       return runtime.LoopEnd
 //│     }
-//│     return runtime.LoopEnd
 //│   });
 //│   tmp2 = while1();
 //│   tmp3 = tmp2 !== runtime.LoopEnd;
-//│   if (tmp3 === true) { return tmp2 }
-//│   return runtime.Unit
+//│   if (tmp3 === true) { return tmp2 } else { return runtime.Unit }
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

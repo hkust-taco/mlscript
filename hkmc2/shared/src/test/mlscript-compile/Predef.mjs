@@ -165,77 +165,81 @@ let Predef1;
           }
         }
       }
-    }
-    scrut2 = a !== undefined;
-    if (scrut2 === true) {
-      scrut11 = a !== null;
-      if (scrut11 === true) {
-        scrut10 = b !== undefined;
-        if (scrut10 === true) {
-          scrut9 = b !== null;
-          if (scrut9 === true) {
-            ac = a.constructor;
-            scrut3 = ac !== undefined;
-            if (scrut3 === true) {
-              scrut7 = ac === b.constructor;
-              if (scrut7 === true) {
-                md = ac[Predef.Symbols.definitionMetadata];
-                scrut4 = md !== undefined;
-                if (scrut4 === true) {
-                  lambda1 = (undefined, function (field) {
-                    let scrut12, scrut13;
-                    scrut12 = field !== null;
-                    if (scrut12 === true) {
-                      scrut13 = Predef.equals(a[field], b[field]);
-                      if (scrut13 === true) {
-                        return true
+      scrut2 = a !== undefined;
+      if (scrut2 === true) {
+        scrut11 = a !== null;
+        if (scrut11 === true) {
+          scrut10 = b !== undefined;
+          if (scrut10 === true) {
+            scrut9 = b !== null;
+            if (scrut9 === true) {
+              ac = a.constructor;
+              scrut3 = ac !== undefined;
+              if (scrut3 === true) {
+                scrut7 = ac === b.constructor;
+                if (scrut7 === true) {
+                  md = ac[Predef.Symbols.definitionMetadata];
+                  scrut4 = md !== undefined;
+                  if (scrut4 === true) {
+                    lambda1 = (undefined, function (field) {
+                      let scrut12, scrut13;
+                      scrut12 = field !== null;
+                      if (scrut12 === true) {
+                        scrut13 = Predef.equals(a[field], b[field]);
+                        if (scrut13 === true) {
+                          return true
+                        } else {
+                          return false
+                        }
                       } else {
                         return false
                       }
+                    });
+                    scrut5 = runtime.safeCall(md[2].every(lambda1));
+                    if (scrut5 === true) {
+                      tmp = true;
                     } else {
-                      return false
+                      tmp = false;
                     }
-                  });
-                  scrut5 = runtime.safeCall(md[2].every(lambda1));
-                  if (scrut5 === true) {
-                    tmp = true;
                   } else {
                     tmp = false;
                   }
-                } else {
-                  tmp = false;
-                }
-                scrut6 = tmp;
-                if (scrut6 === true) {
-                  tmp1 = true;
+                  scrut6 = tmp;
+                  if (scrut6 === true) {
+                    tmp1 = true;
+                  } else {
+                    tmp1 = false;
+                  }
                 } else {
                   tmp1 = false;
                 }
               } else {
                 tmp1 = false;
               }
-            } else {
-              tmp1 = false;
-            }
-            scrut8 = tmp1;
-            if (scrut8 === true) {
-              tmp2 = true;
+              scrut8 = tmp1;
+              if (scrut8 === true) {
+                tmp2 = true;
+              } else {
+                tmp2 = false;
+              }
+              return tmp2
             } else {
               tmp2 = false;
+              return tmp2
             }
           } else {
             tmp2 = false;
+            return tmp2
           }
         } else {
           tmp2 = false;
+          return tmp2
         }
       } else {
         tmp2 = false;
+        return tmp2
       }
-    } else {
-      tmp2 = false;
     }
-    return tmp2
   } 
   static nequals(a, b) {
     let tmp;

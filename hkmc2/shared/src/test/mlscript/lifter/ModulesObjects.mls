@@ -38,11 +38,11 @@ foo(10)
 //│   match isMut
 //│     true =>
 //│       set tmp = new mut M¹(y);
-//│       end
+//│       return tmp
 //│     else
 //│       set tmp = new M¹(y);
-//│       end
-//│   return tmp
+//│       return tmp
+//│   end
 //│ };
 //│ define M⁰ as class M¹ {
 //│   private val M$cap⁰;

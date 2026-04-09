@@ -80,9 +80,11 @@ while x > 0 and x ===
 //│                   }
 //│                 }
 //│               }
+//│               break split_root$1
 //│             }
+//│           } else {
+//│             break split_root$1
 //│           }
-//│           break split_root$1;
 //│         }
 //│         Predef.print("B");
 //│         continue lbl;
@@ -138,6 +140,7 @@ while x > 0 and x ===
 //│                 }
 //│               }
 //│             }
+//│             break split_root$1
 //│           } else {
 //│             scrut9 = x1 === 2;
 //│             if (scrut9 === true) {
@@ -146,9 +149,11 @@ while x > 0 and x ===
 //│                 break split_1$1
 //│               }
 //│             }
+//│             break split_root$1
 //│           }
+//│         } else {
+//│           break split_root$1
 //│         }
-//│         break split_root$1;
 //│       }
 //│       Predef.print("B");
 //│       continue lbl;
