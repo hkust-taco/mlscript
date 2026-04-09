@@ -45,7 +45,7 @@ object FlowAnalysis:
         case Some(id) => id
   
   
-  def apply(b: Block, mono: Bool = false)(using TraceLogger, Elaborator.State) =
+  def apply(b: Block, mono: Bool)(using TraceLogger, Elaborator.State) =
     given State = new State
     val pre = new FlowPreAnalyzer(b)
     val constrCol = new FlowConstraintsCollector(pre, mono)
@@ -489,7 +489,7 @@ class FlowPreAnalyzer(val b: Block)(using
         applyBlock(b.ctor)
 end FlowPreAnalyzer
 
-class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool = false):
+class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool):
   given FlowPreAnalyzer = preAnalyzer
   given Uid.StratVar.State = preAnalyzer.stratVarUidState
   given fState: FlowAnalysis.State = preAnalyzer.fState
