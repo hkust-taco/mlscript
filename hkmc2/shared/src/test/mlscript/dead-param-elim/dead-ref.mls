@@ -16,14 +16,20 @@ f(undefined)
 //│ dead-param-elim > prodfun g#0 @ g@5 -> all params live
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰, g⁰, f_3_g_1$g⁰, f_3$f⁰;
+//│ let f⁰, g⁰, f_4_g_1$g⁰, f_3_g_1$g⁰, f_3$f⁰;
+//│ define f_4_g_1$g⁰ as fun f_4_g_1$g¹() {
+//│   return 2
+//│ };
 //│ define f_3_g_1$g⁰ as fun f_3_g_1$g¹() {
 //│   return 2
 //│ };
 //│ define f_3$f⁰ as fun f_3$f¹() {
 //│   return f_3_g_1$g¹()
 //│ };
-//│ define f⁰ as fun f¹(a) { set a = 3; return g¹() };
+//│ define f⁰ as fun f¹(a) {
+//│   set a = 3;
+//│   return f_4_g_1$g¹()
+//│ };
 //│ define g⁰ as fun g¹(a) { return 2 };
 //│ f_3$f¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

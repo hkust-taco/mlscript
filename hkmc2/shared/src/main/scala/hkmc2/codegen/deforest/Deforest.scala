@@ -61,14 +61,16 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver):
           else N
     end mergeDests
 
-    val prodRoots = for
-      (ctor, dests) <- constraintSolver.ctorDests
-      if mergeDests(dests).isEmpty
-    yield ctor
-    val consRoots = for
-      (dtor, srcs) <- constraintSolver.dtorSrcs
-      if srcs.contains(NoProd)
-    yield dtor
+    val prodRoots =
+      for
+        (ctor, dests) <- constraintSolver.ctorDests
+        if mergeDests(dests).isEmpty
+      yield ctor
+    val consRoots =
+      for
+        (dtor, srcs) <- constraintSolver.dtorSrcs
+        if srcs.contains(NoProd)
+      yield dtor
 
     val result = FlowWebComputation[ConcreteProducer, ConcreteConsumer](
       p => constraintSolver.ctorDests(p).collect:

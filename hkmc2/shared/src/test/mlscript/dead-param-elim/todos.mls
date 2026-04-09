@@ -17,3 +17,23 @@ f(3)
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ═══[RUNTIME ERROR] Expected: '0', got: 'fun'
 //│ = fun
+
+
+
+// TODO: no call site for `f`
+:deadParamElim
+:sir
+fun f(a) = a
+fun g() =
+  let x = f
+  0
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ f@1 -> all params live
+//│ dead-param-elim > prodfun g#0 @ g@2 -> all params live
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f⁰, g⁰;
+//│ define f⁰ as fun f¹(a) { return a };
+//│ define g⁰ as fun g¹() { let x; set x = f¹; return 0 };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

@@ -31,9 +31,6 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
   extension (consFun: ConcreteFunConsumer)
     def concreteId: ConcreteCallSiteId = consFun.exprId -> consFun.instantiationId.get
   
-  val prodFunsById = LinkedHashMap.empty[ConcreteFunId, Set[ConcreteFunProducer]].withDefaultValue(Set.empty)
-  val consFunsById = LinkedHashMap.empty[ConcreteCallSiteId, Set[ConcreteFunConsumer]].withDefaultValue(Set.empty)
-
   // handle clashes for dead param elim
   val (liveParams, liveCallSiteParams) =
     def isSyntheticRoot(prodFun: ConcreteFunProducer): Bool =
@@ -46,25 +43,21 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
             case _ => false
           case _ => false
     end isSyntheticRoot
-
-    for (prodFun, _) <- funDests do
-      prodFunsById(prodFun.concreteId) = prodFunsById(prodFun.concreteId) + prodFun
-    for (consFun, _) <- funSrcs do
-      consFunsById(consFun.concreteId) = consFunsById(consFun.concreteId) + consFun
-
+    
     val prodRoots = Buffer.empty[(ConcreteFunProducer, Int)]
+    val consRoots = Buffer.empty[(ConcreteFunConsumer, Int)]
     for (prodFun, dests) <- funDests do
       if isSyntheticRoot(prodFun) || dests.contains(NoCons) then
         prodFun.params.indices.foreach(i => prodRoots += ((prodFun, i)))
-      prodFun.params.zipWithIndex.foreach:
-        case (ConsVar(s), i) =>
-          val ubs = constraintSolver.upperBounds(s.uid)
-          if ubs.exists(!_.isInstanceOf[ConsVar]) then
+      else
+        prodFun.params.zipWithIndex.foreach:
+          case (ConsVar(s), i) =>
+            val ubs = constraintSolver.upperBounds(s.uid)
+            if ubs.exists(!_.isInstanceOf[ConsVar]) then
+              prodRoots += ((prodFun, i))
+          case (_, i) =>
             prodRoots += ((prodFun, i))
-        case (_, i) =>
-          prodRoots += ((prodFun, i))
 
-    val consRoots = Buffer.empty[(ConcreteFunConsumer, Int)]
     for (consFun, srcs) <- funSrcs do
       if srcs.contains(NoProd) then
         consFun.params.indices.foreach(i => consRoots += ((consFun, i)))
@@ -80,42 +73,26 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
     (result.markedProducers, result.markedConsumers)
   end val
   
+  val eliminableParamsById =
+    LinkedHashMap.empty[ConcreteFunId, Set[Int]].withDefaultValue(Set.empty)
+  val eliminableCallSiteArgsById =
+    LinkedHashMap.empty[ConcreteCallSiteId, Set[Int]].withDefaultValue(Set.empty)
   
-  val eliminableParamsById: Map[ConcreteFunId, Set[Int]] =
-    (for (prodId, prodFuns) <- prodFunsById yield
-      val paramCount = prodFuns.head.params.size
-      val live = prodFuns.iterator
-        .flatMap: prodFun =>
-          prodFun.params.indices.collect:
-            case i if liveParams((prodFun, i)) => i
-        .toSet
-      val eliminable = (0 until paramCount).filter(i => !live(i)).toSet
-      prodId -> eliminable
-    ).filter(_._2.nonEmpty).toMap
+  for (prodFun, _) <- funDests do
+    val eliminable = prodFun.params.indices.filterNot: i =>
+      liveParams.contains(prodFun -> i)
+    if eliminable.nonEmpty then
+      eliminableParamsById.get(prodFun.concreteId) match
+      case None => eliminableParamsById(prodFun.concreteId) = eliminable.toSet
+      case _ => lastWords(s"$prodFun appears twice")
   
-  val eliminableCallSiteArgsById: Map[ConcreteCallSiteId, Set[Int]] =
-    (for (consId, consFuns) <- consFunsById yield
-      val argCount = consFuns.head.params.size
-      val live = MutSet.empty[Int]
-      for consFun <- consFuns do
-        for
-          i <- consFun.params.indices
-          if liveCallSiteParams((consFun, i))
-        do live.add(i)
-        for case prodFun: ConcreteFunProducer <- funSrcs(consFun) do
-          if prodFun.restParam.isDefined then
-            live ++= (prodFun.params.size until consFun.params.size)
-        if funSrcs(consFun).contains(NoProd) then
-          live ++= consFun.params.indices
-      val eliminable = (0 until argCount).filter(i => !live(i)).toSet
-      consId -> eliminable
-    ).filter(_._2.nonEmpty).toMap
-  
-  def eliminableParamsFor(funId: FunId, instId: InstantiationId): Set[Int] =
-    eliminableParamsById.getOrElse(funId -> instId, Set.empty)
-  
-  def eliminableArgsFor(exprId: ResultId, instId: InstantiationId): Set[Int] =
-    eliminableCallSiteArgsById.getOrElse(exprId -> instId, Set.empty)
+  for (consFun, _) <- funSrcs do
+    val eliminable = consFun.params.indices.filterNot: i =>
+      liveCallSiteParams.contains(consFun -> i)
+    if eliminable.nonEmpty then
+      eliminableCallSiteArgsById.get(consFun.concreteId) match
+      case None => eliminableCallSiteArgsById(consFun.concreteId) = eliminable.toSet
+      case _ => lastWords(s"$consFun appears twice")
   
   if tl.doTrace then
     def showRefSite(resultId: ResultId): Str =
@@ -180,18 +157,11 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
     end mkNewPolyFnSyms
     
     for
-      ((funId, instId), _) <- deadParamElimSolver.eliminableParamsById
-      if instId.nonEmpty
-      if !collector.synthesizedInstIdToFunSym.contains(instId.head :: Nil)
+      (_, instId) <-
+        deadParamElimSolver.eliminableParamsById.keysIterator ++
+        deadParamElimSolver.eliminableCallSiteArgsById.keysIterator
       path <- instId.inits
-      if path.nonEmpty
-    do mkNewPolyFnSyms(path)
-    for
-      ((callId, instId), _) <- deadParamElimSolver.eliminableCallSiteArgsById
-      if instId.nonEmpty
-      if !collector.synthesizedInstIdToFunSym.contains(instId.head :: Nil)
-      path <- instId.inits
-      if path.nonEmpty
+      if path.nonEmpty && !collector.synthesizedInstIdToFunSym.contains(path)
     do mkNewPolyFnSyms(path)
   }
   
@@ -222,7 +192,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
       val params2 = params.zipWithIndex.map:
         case (pl, whichParamList) =>
           val (pl2, removed2) =
-            filterParamList(pl, deadParamElimSolver.eliminableParamsFor((funSym, whichParamList), instId))
+            filterParamList(pl, deadParamElimSolver.eliminableParamsById((funSym, whichParamList), instId))
           if pl2 isnt pl then changed = true
           removed ++= removed2
           pl2
@@ -279,7 +249,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
       
       r match
       case c@Call(fun, args) if args.forall(_.spread.isEmpty) =>
-        val eliminable = deadParamElimSolver.eliminableArgsFor(c.uid, instId)
+        val eliminable = deadParamElimSolver.eliminableCallSiteArgsById(c.uid, instId)
         applyPath(fun): fun2 =>
           rewriteArgs(args, eliminable): args2 =>
             k(
@@ -287,7 +257,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
               else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLocOf(c)
             )
       case i@Instantiate(mut, cls, args) if args.forall(_.spread.isEmpty) =>
-        val eliminable = deadParamElimSolver.eliminableArgsFor(i.uid, instId)
+        val eliminable = deadParamElimSolver.eliminableCallSiteArgsById(i.uid, instId)
         applyPath(cls): cls2 =>
           rewriteArgs(args, eliminable): args2 =>
             k(
@@ -297,7 +267,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
       case _ => super.applyResult(r)(k)
     
     override def applyLam(lam: Lambda): Lambda =
-      val (params2, removed) = filterParamList(lam.params, deadParamElimSolver.eliminableParamsFor(lam.uid, instId))
+      val (params2, removed) = filterParamList(lam.params, deadParamElimSolver.eliminableParamsById(lam.uid, instId))
       val body2 = withEliminatedParams(removed):
         applyFunBodyLikeBlock(lam.body)
       if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)
@@ -329,7 +299,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
     def filterFunParams(funSym: TermSymbol, params: Ls[ParamList], instId: InstantiationId): Ls[ParamList] =
       params.zipWithIndex.map:
         case (pl, whichParamList) =>
-          filterParamList(pl, deadParamElimSolver.eliminableParamsFor((funSym, whichParamList), instId))
+          filterParamList(pl, deadParamElimSolver.eliminableParamsById((funSym, whichParamList), instId))
     end filterFunParams
     
     class RefreshSymbol(existingMapping: Map[Symbol, Symbol]) extends BlockTransformer(_symSubst):

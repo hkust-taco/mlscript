@@ -159,6 +159,7 @@ ping(5, 99)
 
 :expect 0
 ping(5, 0)
+pong(5, 0)
 //│ = 0
 
 :deadParamElim
@@ -238,6 +239,7 @@ ping(5)(99)
 
 :expect 0
 ping(5)(0)
+pong(5)(0)
 //│ = 0
 
 :deadParamElim
