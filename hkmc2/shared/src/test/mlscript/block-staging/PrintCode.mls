@@ -2,7 +2,118 @@
 :js
 
 import "../../mlscript-compile/Block.mls"
+import "../../mlscript-compile/Option.mls"
 
-Block.printCode(Block.FunDefn(Block.Symbol("f"), [[Block.Symbol("x")]], Block.Return(Block.ValueLit(1), false), false))
-//│ > FunDefn(Symbol("f"), ([Symbol("x")]), Return(Lit(1), false), false)
+open Block
+open Option
 
+printCode(FunDefn(Symbol("f"), [[Symbol("x")]], Return(ValueLit(1), false)))
+//│ > fun f(x) = 1
+
+printCode(ValueLit(true))
+printCode(ValueLit(null))
+printCode(ValueLit(undefined))
+printCode(ValueLit("c"))
+printCode(ValueLit("string"))
+//│ > true
+//│ > null
+//│ > undefined
+//│ > "c"
+//│ > "string"
+
+printCode(Symbol("internal$"))
+//│ > internal_
+
+printCode(Select(ValueRef(Symbol("p")), Symbol("x")))
+printCode(DynSelect(ValueRef(Symbol("p")), ValueRef(Symbol("field")), false))
+//│ > p.x
+//│ > p.(field)
+
+:silent
+class A(val x)(y)
+class B
+let aSym = ConcreteClassSymbol("A", A, Some([Symbol("x")]), [[Symbol("y")]])
+let bSym = ConcreteClassSymbol("B", B, None, [])
+
+printCode(Call(ValueRef(Symbol("f")), [Arg(ValueLit(3))]))
+printCode(Instantiate(ValueRef(aSym), [Arg(ValueLit(0))]))
+printCode(Tuple([Arg(ValueRef(Symbol("x"))), Arg(ValueRef(Symbol("y")))]))
+//│ > f(3)
+//│ > new A(0)
+//│ > [x, y]
+
+:silent
+let f = FunDefn(Symbol("f"), [[Symbol("x")]], Return(ValueLit(1), false))
+
+printCode(f)
+printCode(ClsLikeDefn(aSym, [f], None))
+printCode(ClsLikeDefn(bSym, [], None))
+//│ > fun f(x) = 1
+//│ > class A(x) with
+//│ >   fun f(x) = 1
+//│ > class B
+
+printCode(Scoped([Symbol("x"), Symbol("y")], Assign(Symbol("x"), ValueLit(4.2), Return(ValueRef(Symbol("x")), true))))
+//│ > let {x, y}
+//│ > x = 4.2
+//│ > x
+
+printCode(Define(ValDefn(Some(aSym), Symbol("x"), ValueLit(1)), End()))
+printCode(Define(ValDefn(None, Symbol("a"), ValueLit(1)), End()))
+//│ > val x = 1
+//│ > val a = 1
+
+printCode(Match(ValueRef(Symbol("x")), [Arm(Lit(1), Return(ValueLit(2), false)), Arm(Cls(aSym, ValueRef(aSym)), Return(ValueLit(3), false))], Some(Return(ValueRef(Symbol("x")), false)), End()))
+//│ > if x is
+//│ >   1 then 2
+//│ >   A then 3
+//│ >   else x
+
+printCode(Scoped([Symbol("y")], Match(
+    ValueLit(1), 
+    [Arm(Lit(1), Return(ValueLit(1), false))], 
+    Some(Return(ValueLit(1), false)), 
+    Return(ValueRef(Symbol("y")), false))))
+//│ > let {y}
+//│ > if 1 is
+//│ >   1 then 1
+//│ >   else 1
+//│ > y
+
+printCode(Scoped([Symbol("y")],  Match(
+    ValueLit(1), 
+    [Arm(Lit(1), Assign(Symbol("y"), ValueLit(1), Return(ValueRef(Symbol("y")), false)))], 
+    Some(Assign(Symbol("y"), ValueLit(2), Return(ValueRef(Symbol("y")), false))), 
+    End())))
+//│ > let {y}
+//│ > if 1 is
+//│ >   1 then
+//│ >     y = 1
+//│ >     y
+//│ >   else
+//│ >     y = 2
+//│ >     y
+
+printCode(Scoped([Symbol("y")], Match(
+    ValueLit(1), 
+    [Arm(Lit(1), Match(
+        ValueLit(2),
+        [Arm(Lit(2), Assign(Symbol("y"), ValueLit(1), Return(ValueRef(Symbol("y")), false)))],
+        Some(Assign(Symbol("y"), ValueLit(2), Return(ValueRef(Symbol("y")), false))),
+        End()
+    ))], 
+    Some(Assign(Symbol("y"), ValueLit(3), Return(ValueRef(Symbol("y")), false))), 
+    End())))
+//│ > let {y}
+//│ > if 1 is
+//│ >   1 then
+//│ >     if 2 is
+//│ >       2 then
+//│ >         y = 1
+//│ >         y
+//│ >       else
+//│ >         y = 2
+//│ >         y
+//│ >   else
+//│ >     y = 3
+//│ >     y
