@@ -60,9 +60,6 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
   def tuple(elems: Ls[ArgWrappable], symName: Str = "tmp")(k: Path => Block): Block =
     assign(Tuple(false, elems.map(asArg)), symName)(k)
 
-  def ctor(cls: Path, args: Ls[ArgWrappable], symName: Str = "tmp")(k: Path => Block): Block =
-    assign(Instantiate(false, cls, args.map(asArg)), symName)(k)
-
   // isMlsFun is probably always true?
   def call(fun: Path, args: Ls[ArgWrappable], isMlsFun: Bool = true, symName: Str = "tmp")(k: Path => Block): Block =
     assign(Call(fun, args.map(asArg))(isMlsFun, false, false), symName)(k)
@@ -73,9 +70,9 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
   def optionMod(name: Str) = summon[State].optionSymbol.asPath.selSN(name)
 
   def blockCtor(name: Str, args: Ls[ArgWrappable], symName: Str = "tmp")(k: Path => Block): Block =
-    ctor(blockMod(name), args, symName)(k)
+    call(blockMod(name), args, true, symName)(k)
   def optionSome(arg: ArgWrappable, symName: Str = "tmp")(k: Path => Block): Block =
-    ctor(optionMod("Some"), Ls(arg), symName)(k)
+    call(optionMod("Some"), Ls(arg), true, symName)(k)
   def optionNone(symName: Str = "tmp")(k: Path => Block): Block =
     assign(optionMod("None"), symName)(k)
 
@@ -100,8 +97,6 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
     // retain names to built-in functions or function definitions
     case t: TermSymbol if t.defn.exists(_.k == syntax.Fun) =>
       blockCtor("Symbol", Ls(toValue(sym.nme)), symName)(k)
-    case _: BuiltinSymbol =>
-      blockCtor("Symbol", Ls(toValue(sym.nme)), symName)(k)
     case clsSym: ClassSymbol if ctx.builtins.virtualClasses(clsSym) =>
       blockCtor("VirtualClassSymbol", Ls(toValue(sym.nme)), symName)(k)
     case baseSym: BaseTypeSymbol =>
@@ -109,6 +104,8 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
       val (owner, bsym, paramsOpt, auxParams) = (baseSym.defn, defnMap.get(baseSym)) match
         case (S(defn), _) => (defn.owner, defn.bsym, defn.paramsOpt, defn.auxParams)
         case (_, S(defn: ClsLikeDefn)) => (defn.owner, defn.sym, defn.paramsOpt, defn.auxParams)
+        // FIXME: hack to patch in staging for returning the object Unit.
+        case _ if baseSym == State.unitSymbol => (N, baseSym, N, Nil)
         case _ =>
           raise(ErrorReport(msg"Unable to infer parameters from symbol in staged module, which are necessary to reconstruct class instances: ${sym.toString()}" -> sym.toLoc :: Nil))
           return End()
@@ -121,12 +118,20 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           transformParamsOpt(paramsOpt): paramsOpt =>
             auxParams.map(ps => transformParamList(ps)).collectApply: auxParams =>
               tuple(auxParams): auxParams =>
-                blockCtor("ClassSymbol", Ls(toValue(name), path, paramsOpt, auxParams), symName)(k)
+                blockCtor("ConcreteClassSymbol", Ls(toValue(name), path, paramsOpt, auxParams), symName)(k)
         case _: ModuleOrObjectSymbol =>
           blockCtor("ModuleSymbol", Ls(toValue(name), path), symName)(k)
-    case _ =>
+    case _: NoSymbol =>
+      blockCtor("NoSymbol", Nil, symName)(k)
+    case _: TempSymbol | _: VarSymbol =>
       val name = scope.allocateOrGetName(sym)
       blockCtor("Symbol", Ls(toValue(name)), symName)(k)
+    // preserve names to builtin symbols
+    case _: BuiltinSymbol =>
+      blockCtor("Symbol", Ls(toValue(sym.nme)), symName)(k)
+    // FIXME: there may be more types of symbols that need to be renamed during staging
+    case _ =>
+      blockCtor("Symbol", Ls(toValue(sym.nme)), symName)(k)
 
   def transformOption[A](xOpt: Opt[A], f: A => (Path => Block) => Block)(k: Path => Block): Block = xOpt match
     case S(x) => f(x)(optionSome(_)(k))
@@ -141,8 +146,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
     def applyRuleBranch(cse: Case, block: Block)(f: Path => Context => Block)(ctx: Context): Block =
       transformCase(cse): cse =>
         transformBlock(block)(using ctx.clone() += p -> x): (y, ctx) =>
-          // TODO: use Arm type instead of Tup
-          tuple(Ls(cse, y), "branch"): cde =>
+          blockCtor("Arm", Ls(cse, y)): cde =>
             f(cde)(ctx.clone() -= p)
 
     (arms.map(applyRuleBranch).collectApply(_: Ls[Path] => Context => Block)(summon)): arms =>
@@ -197,6 +201,9 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
         transformPath(cls): cls =>
           tuple(xs.map(_._1)): codes =>
             blockCtor("Instantiate", Ls(cls, codes), "inst")(k)
+    // desugar Runtime.Tuple.get into Select
+    case Call(fun, Ls(Arg(_, scrut), Arg(_, Value.Lit(Tree.IntLit(idx))))) if fun == State.runtimeSymbol.asPath.selSN("Tuple").selSN("get") =>
+      transformPath(Select(scrut, Tree.Ident(idx.toString()))(N))(k)
     case Call(fun, args) =>
       val stagedFunPath = fun match
         case s @ Select(qual, Tree.Ident(name)) => s.symbol.flatMap({
@@ -215,7 +222,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           tuple(args.map(_._1)): tup =>
             blockCtor("Call", Ls(fun, tup), "app")(k)
     case _ =>
-      raise(ErrorReport(msg"Other Results not supported in staged module: ${r.toString()}" -> r.toLoc :: Nil))
+      raise(ErrorReport(msg"Other Results not supported in staged module: ${r.getClass.toString()}" -> r.toLoc :: Nil))
       End()
 
   def transformArg(a: Arg)(using Context)(k: ((Path, Bool)) => Block): Block =
@@ -277,6 +284,14 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
               optionNone(): none => // TODO: handle companion object
                 blockCtor("ClsLikeDefn", Ls(c, methods, none)): cls =>
                   blockCtor("Define", Ls(cls, p))(k(_, ctx))
+    case Define(v: ValDefn, rest) =>
+      // TODO: only allow ValDefn inside ctors
+      transformBlock(rest): p =>
+        transformOption(v.tsym.owner, transformSymbol(_)): owner =>
+          transformSymbol(v.sym): sym =>
+            transformPath(v.rhs): rhs =>
+              blockCtor("ValDefn", Ls(owner, sym, rhs)): v =>
+                blockCtor("Define", Ls(v, p))(k(_, ctx))
     case End(_) => ruleEnd()(k(_, ctx))
     case Match(p, ks, dflt, rest) =>
       transformPath(p): x =>
@@ -289,20 +304,18 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
         transformBlock(rest)(using ctx): (rest, ctx) =>
           fnConcat(sub, rest)(k(_, ctx))
     case Scoped(syms, body) =>
-      syms.toList.map(transformSymbol(_)).collectApply: symsStaged =>
+      syms.toList.sortBy(_.uid).map(transformSymbol(_)).collectApply: symsStaged =>
         tuple(symsStaged): tup =>
           transformBlock(body): (body, ctx) =>
             blockCtor("Scoped", Ls(tup, body))(b => Scoped(syms, k(b, ctx)))
-    case Label(labelSymbol, loop, body, rest) =>
-      transformSymbol(labelSymbol): labelSymbol =>
-        transformBlock(body): (body, ctx) =>
-          transformBlock(rest)(using ctx): (rest, ctx) =>
-            blockCtor("Label", Ls(labelSymbol, toValue(loop), body, rest))(k(_, ctx))
-    case Break(labelSymbol) =>
-      transformSymbol(labelSymbol): labelSymbol =>
-        blockCtor("Break", Ls(labelSymbol))(k(_, ctx))
+    case Define(_: FunDefn, _) =>
+      raise(ErrorReport(msg"Nested function definitions are not supported in staged modules. Try enabling :ftc." -> N :: Nil))
+      End()
+    case _: Label | _: Break =>
+      raise(ErrorReport(msg"Other Blocks not supported in staged module: ${b.getClass.toString()}." -> N :: Nil))
+      End()
     case _ =>
-      raise(ErrorReport(msg"Other Blocks not supported in staged module: ${b.toString()}" -> N :: Nil))
+      raise(ErrorReport(msg"Other Blocks not supported in staged module: ${b.getClass.toString()}" -> N :: Nil))
       End()
 
   def transformFunDefn(f: FunDefn)(using Context)(k: Path => Block): Block =

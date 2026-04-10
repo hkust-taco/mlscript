@@ -15,7 +15,7 @@ import Instructions.*
 
 import scala.annotation.{nowarn, targetName}
 import scala.collection.immutable.ListMap
-import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
+import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap, LinkedHashSet}
 import scala.reflect.ClassTag
 
 /** A Wasm function and its associated information.
@@ -289,6 +289,7 @@ class Ctx extends ToWat:
   private val singletonByBms = MutMap.empty[BlockMemberSymbol, Ctx.SingletonInfo]
   private val singletonByIsym = MutMap.empty[ModuleOrObjectSymbol, Ctx.SingletonInfo]
   private val singletonInitActions = ArrayBuf.empty[Expr]
+  private val runtimeClassTags = MutMap.empty[BlockMemberSymbol, LinkedHashSet[Int]]
 
   private def imports: Seq[Import[?]] =
     val importedFuncs = funcs.collect:
@@ -364,6 +365,12 @@ class Ctx extends ToWat:
   def getTypeInfo_!(typeref: TypeIdx | BlockMemberSymbol): TypeInfo =
     getTypeInfo(typeref).getOrElse:
       lastWords(s"Missing type definition for ${typeref.prettyString}")
+
+  def registerRuntimeClassTags(sym: BlockMemberSymbol, tags: LinkedHashSet[Int]): Unit =
+    runtimeClassTags(sym) = tags
+
+  def getRuntimeClassTags(sym: BlockMemberSymbol): Opt[LinkedHashSet[Int]] =
+    runtimeClassTags.get(sym)
 
   @deprecated("Use the `Import[ExternType.Func]` overload instead.")
   def addFunctionImport(sym: Opt[Symbol], funcImport: FuncImport): FuncIdx =
