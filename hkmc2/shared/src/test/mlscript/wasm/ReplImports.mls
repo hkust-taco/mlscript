@@ -8,9 +8,9 @@ class C(val x)
 fun inc(x) = x + 1
 val step = 2
 let counter = 1
-0
+let unit = ()
 //│ Wasm result:
-//│ = 0
+//│ = {}
 
 inc(Foo.x)
 //│ Wasm result:
@@ -45,3 +45,21 @@ counter
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3
+
+unit
+//│ Wasm result:
+//│ = {}
+
+:wat
+()
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $Unit (sub $Object (struct (field $$tag (mut i32)))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (import "repl" "Unit$inst" (global $Unit (mut (ref null $Unit))))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│     (global.get $Unit))
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = {}

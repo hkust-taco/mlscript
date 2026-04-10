@@ -252,6 +252,8 @@ object Elaborator:
     given State = this
     val globalThisSymbol = TopLevelSymbol("globalThis")
     val unitSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Obj), Ident("Unit"))
+    // Stable symbol for the synthetic Wasm Unit singleton
+    val unitBlockMemberSymbol = BlockMemberSymbol("Unit", Nil)
     val loopEndSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Obj), Ident("LoopEnd"))
     val tupleSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Mod), Ident("Tuple"))
     val strSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Mod), Ident("Str"))
@@ -1939,4 +1941,3 @@ end Elaborator
 
 type Pol = Opt[Bool]
 extension (p: Pol) def ! : Pol = p.map(!_)
-

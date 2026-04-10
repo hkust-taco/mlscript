@@ -88,7 +88,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ClsLikeDefn(
       owner = N,
       isym = State.unitSymbol,
-      sym = BlockMemberSymbol("Unit", Nil),
+      sym = State.unitBlockMemberSymbol,
       ctorSym = N,
       k = syntax.Obj,
       paramsOpt = N,
@@ -106,6 +106,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   /** Registers the synthetic `Unit` singleton. */
   private def RegisterUnitSingleton()(using Ctx, Raise, Scope, SessionExportCtx): Unit =
     val unitDefn = syntheticUnitDefn
+    val singletonOwner = unitDefn.isym match
+      case mos: ModuleOrObjectSymbol => S(mos)
+      case _ => N
     if ctx.containsSingleton(unitDefn.sym) then return
 
     if ctx.getType(unitDefn.sym).isEmpty then
@@ -114,6 +117,25 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ctx.pushLocal()
     returningTerm(Define(unitDefn, End("")))
     ctx.popLocal()
+
+    val typeInfo = ctx.getTypeInfo_!(unitDefn.sym)
+    val singletonInfo = ctx.getSingletonInfo(unitDefn.sym).getOrElse:
+      lastWords("Missing singleton metadata for synthetic Unit object")
+    // Record session metadata for the synthetic Unit singleton.
+    summon[SessionExportCtx].emit(SessionClass(
+      sym = unitDefn.sym,
+      typeInfo = typeInfo,
+      runtimeTag = ctx.getRuntimeClassTag_!(unitDefn.sym),
+      aliasSyms = singletonOwner.toSeq,
+    ))
+    summon[SessionExportCtx].emit(SessionSingleton(
+      blockSym = unitDefn.sym,
+      objectSym = singletonOwner,
+      moduleName = SessionBinding.ReplModuleName,
+      exportName = singletonInfo.globalName,
+      globalTy = singletonInfo.globalTy,
+    ))
+  end RegisterUnitSingleton
 
   /** Registers eager singleton runtime state by creating its global and start-init action. */
   private def registerSingletonInit(

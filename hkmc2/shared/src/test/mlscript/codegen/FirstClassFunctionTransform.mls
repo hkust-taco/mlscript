@@ -249,8 +249,8 @@ module Foo with
 //│ };
 //│ define Function$⁸ as class Function$⁹ {
 //│   private val Function$$cap⁴;
-//│   private val z⁰;
 //│   private val y⁰;
+//│   private val z⁰;
 //│   constructor {
 //│     super⁰();
 //│     set y⁰ = y;

@@ -86,8 +86,13 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
           errored = true
           outerRaise(d)
         case d => outerRaise(d)
+      val referencedSessionSymbols = mutable.LinkedHashSet.empty[Local]
+      new BlockTraverser:
+        override def applySymbol(sym: Symbol): Unit =
+          referencedSessionSymbols += sym
+      .applyBlock(pgrm.main)
       val sessionImports = mutable.LinkedHashMap.empty[Str, SessionBinding]
-      pgrm.main.freeVars.iterator.foreach: sym =>
+      referencedSessionSymbols.iterator.foreach: sym =>
         sessionImportsBySymbol.get(sym).foreach: bindings =>
           bindings.foreach: (bindingKey, binding) =>
             sessionImports.update(bindingKey, binding)
