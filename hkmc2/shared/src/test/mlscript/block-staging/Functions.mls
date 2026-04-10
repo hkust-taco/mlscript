@@ -1,7 +1,6 @@
 :js
 :staging
 
-
 :fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)
 :checkIR
 staged module Expressions with
@@ -9,13 +8,15 @@ staged module Expressions with
     let x = 42
     x
 //│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
-//│ ║  l.9: 	    let x = 42
+//│ ║  l.8: 	    let x = 42
 //│ ╙──     	        ^
-//│ > FunDefn(Symbol("ctor$"), ([]), End, true)
-//│ > FunDefn(Symbol("lit"), ([]), Scoped([Symbol("x")], Assign(Symbol("x"), Lit(42), Return(Ref(Symbol("x")), false))), true)
+//│ > fun ctor_() = ()
+//│ > fun lit() =
+//│ >   let {x}
+//│ >   x = 42
+//│ >   x
 
-
-val x = [1, 2, 3]
+let x = [1, 2, 3]
 staged module Expressions with
   fun lit() = 1
   fun assign() =
@@ -38,14 +39,45 @@ staged module Expressions with
       [1, 2] then 2
       [a, _] then 3
       else 0
-//│ > FunDefn(Symbol("ctor$"), ([]), End, true)
-//│ > FunDefn(Symbol("lit"), ([]), Return(Lit(1), false), true)
-//│ > FunDefn(Symbol("assign"), ([]), Scoped([Symbol("x"), Symbol("y")], Assign(Symbol("x"), Lit(42), Assign(Symbol("y"), Ref(Symbol("x")), Return(Ref(Symbol("y")), false)))), true)
-//│ > FunDefn(Symbol("tup1"), ([]), Return(Tuple([Lit(1), Lit(2)]), false), true)
-//│ > FunDefn(Symbol("tup2"), ([]), Return(Tuple([Lit(1), Ref(Symbol("x1"))]), false), true)
-//│ > FunDefn(Symbol("dynsel"), ([]), Scoped([Symbol("tmp")], Assign(Symbol("tmp"), Tuple([Lit(1)]), Return(DynSelect(Ref(Symbol("tmp")), Lit(0), false), false))), true)
-//│ > FunDefn(Symbol("match1"), ([]), Scoped([Symbol("scrut")], Assign(Symbol("scrut"), Lit(9), Match(Ref(Symbol("scrut")), [Cls(VirtualClassSymbol("Bool"), Select(Ref(Symbol("runtime")), Symbol("unreachable"))) -> Return(Lit(1), false), Lit(8) -> Return(Lit(2), false), Cls(VirtualClassSymbol("Int"), Select(Ref(Symbol("runtime")), Symbol("unreachable"))) -> Return(Lit(3), false)], Return(Lit(0), false), End))), true)
-//│ > FunDefn(Symbol("match2"), ([]), Scoped([Symbol("element1$"), Symbol("element0$"), Symbol("a")], Match(Ref(Symbol("x1")), [Tup(0) -> Return(Lit(1), false), Tup(2) -> Assign(Symbol("element0$"), Call(Select(Select(Ref(Symbol("runtime")), Symbol("Tuple")), Symbol("get")), [Ref(Symbol("x1")), Lit(0)]), Assign(Symbol("element1$"), Call(Select(Select(Ref(Symbol("runtime")), Symbol("Tuple")), Symbol("get")), [Ref(Symbol("x1")), Lit(1)]), Match(Ref(Symbol("element0$")), [Lit(1) -> Match(Ref(Symbol("element1$")), [Lit(2) -> Return(Lit(2), false)], Assign(Symbol("a"), Ref(Symbol("element0$")), Return(Lit(3), false)), End)], Assign(Symbol("a"), Ref(Symbol("element0$")), Return(Lit(3), false)), End)))], Return(Lit(0), false), End)), true)
+//│ > fun ctor_() = ()
+//│ > fun lit() = 1
+//│ > fun assign() =
+//│ >   let {x, y}
+//│ >   x = 42
+//│ >   y = x
+//│ >   y
+//│ > fun tup1() = [1, 2]
+//│ > fun tup2() = [1, x1]
+//│ > fun dynsel() =
+//│ >   let {tmp}
+//│ >   tmp = [1]
+//│ >   tmp.(0)
+//│ > fun match1() =
+//│ >   let {scrut}
+//│ >   scrut = 9
+//│ >   if scrut is
+//│ >     Bool then 1
+//│ >     8 then 2
+//│ >     Int then 3
+//│ >     else 0
+//│ > fun match2() =
+//│ >   let {a, element1_, element0_}
+//│ >   if x1 is
+//│ >     [] then 1
+//│ >     [_, _] then
+//│ >       element0_ = x1.0
+//│ >       element1_ = x1.1
+//│ >       if element0_ is
+//│ >         1 then
+//│ >           if element1_ is
+//│ >             2 then 2
+//│ >             else
+//│ >               a = element0_
+//│ >               3
+//│ >         else
+//│ >           a = element0_
+//│ >           3
+//│ >     else 0
 //│ x = [1, 2, 3]
 
 class Outside(a)
@@ -56,25 +88,29 @@ staged module ClassInstrumentation with
   fun inst2() = new NoArg
   fun app1() = Outside(1)
   fun app2() = Inside(1, 2)
-//│ > FunDefn(Symbol("ctor$"), ([]), Define(ClsLikeDefn(ClassSymbol("Inside", fun Inside { class: class Inside }, Some([Symbol("a1"), Symbol("b")]), []), [], TODO), Define(ClsLikeDefn(ClassSymbol("NoArg", class NoArg, None, []), [], TODO), End)), true)
-//│ > FunDefn(Symbol("inst1"), ([]), Return(Instantiate(Ref(ClassSymbol("Outside", fun Outside { class: class Outside }, Some([Symbol("a")]), [])), [Lit(1)]), false), true)
-//│ > FunDefn(Symbol("inst2"), ([]), Return(Instantiate(Select(Ref(ModuleSymbol("ClassInstrumentation", class ClassInstrumentation { Inside: fun Inside { class: class Inside }, NoArg: class NoArg })), ClassSymbol("NoArg", class NoArg, None, [])), []), false), true)
-//│ > FunDefn(Symbol("app1"), ([]), Return(Call(Ref(ClassSymbol("Outside", fun Outside { class: class Outside }, Some([Symbol("a")]), [])), [Lit(1)]), false), true)
-//│ > FunDefn(Symbol("app2"), ([]), Return(Call(Select(Ref(ModuleSymbol("ClassInstrumentation", class ClassInstrumentation { Inside: fun Inside { class: class Inside }, NoArg: class NoArg })), ClassSymbol("Inside", fun Inside { class: class Inside }, Some([Symbol("a1"), Symbol("b")]), [])), [Lit(1), Lit(2)]), false), true)
+//│ > fun ctor_() =
+//│ >   class Inside(a1, b)
+//│ >   class NoArg
+//│ > fun inst1() = new Outside(1)
+//│ > fun inst2() = new ClassInstrumentation.NoArg
+//│ > fun app1() = Outside(1)
+//│ > fun app2() = ClassInstrumentation.Inside(1, 2)
 
 module Nonstaged with
   fun f() = 1
 staged module Staged with
   fun f() = 1
-//│ > FunDefn(Symbol("ctor$"), ([]), End, true)
-//│ > FunDefn(Symbol("f"), ([]), Return(Lit(1), false), true)
 staged module CallSubst with
   fun call() = 
     1 + 1
     Nonstaged.f()
     Staged.f()
-//│ > FunDefn(Symbol("ctor$"), ([]), End, true)
-//│ > FunDefn(Symbol("call"), ([]), Assign(Symbol("$_no$_symbol$_"), Call(Select(Ref(ModuleSymbol("Nonstaged", class Nonstaged)), Symbol("f")), []), Return(Call(Select(Ref(ModuleSymbol("Staged", class Staged)), Symbol("f_gen")), []), false)), true)
+//│ > fun ctor_() = ()
+//│ > fun f() = 1
+//│ > fun ctor_() = ()
+//│ > fun call() =
+//│ >   Nonstaged.f()
+//│ >   Staged.f_gen()
 
 :ftc
 staged module Arguments with
@@ -82,9 +118,14 @@ staged module Arguments with
     x = 1
     x
   fun g(x)(y, z)() = z
-//│ > FunDefn(Symbol("ctor$"), ([]), End, true)
-//│ > FunDefn(Symbol("f"), ([Symbol("x")]), Assign(Symbol("x"), Lit(1), Return(Ref(Symbol("x")), false)), true)
-//│ > FunDefn(Symbol("g"), ([Symbol("x")]), Scoped([Symbol("tmp")], Assign(Symbol("tmp"), Instantiate(Ref(ClassSymbol("Function$", class Function$, None, [])), []), Return(Ref(Symbol("tmp")), false))), true)
+//│ > fun ctor_() = ()
+//│ > fun f(x) =
+//│ >   x = 1
+//│ >   x
+//│ > fun g(x) =
+//│ >   let {tmp}
+//│ >   tmp = new Function_
+//│ >   tmp
 
 staged module OtherBlocks with
   fun scope() =
@@ -97,42 +138,88 @@ staged module OtherBlocks with
       2 then 0
       3 then 0
       else 0
-//│ > FunDefn(Symbol("ctor$"), ([]), End, true)
-//│ > FunDefn(Symbol("scope"), ([]), Scoped([Symbol("a")], Assign(Symbol("a"), Lit(1), Return(Call(Select(Select(Ref(ModuleSymbol("OtherBlocks", class OtherBlocks)), Symbol("scope")), Symbol("locally")), [Ref(Symbol("a"))]), false))), true)
-//│ > FunDefn(Symbol("breakAndLabel"), ([]), Scoped([Symbol("scrut")], Assign(Symbol("scrut"), Lit(1), Match(Ref(Symbol("scrut")), [Lit(2) -> Return(Lit(0), false), Lit(3) -> Return(Lit(0), false)], Return(Lit(0), false), End))), true)
+//│ > fun ctor_() = ()
+//│ > fun scope() =
+//│ >   let {a}
+//│ >   a = 1
+//│ >   OtherBlocks.scope.locally(a)
+//│ > fun breakAndLabel() =
+//│ >   let {scrut}
+//│ >   scrut = 1
+//│ >   if scrut is
+//│ >     2 then 0
+//│ >     3 then 0
+//│ >     else 0
 
 staged module ClassDefs with
   class A
-//│ > FunDefn(Symbol("ctor$"), ([]), Define(ClsLikeDefn(ClassSymbol("A", class A, None, []), [], TODO), End), true)
+//│ > fun ctor_() =
+//│ >   class A
+
+staged module ValClass with
+  class A(val a)
+//│ > fun ctor_() =
+//│ >   class A(a)
 
 staged module ClassFunctions with
   class InnerClass() with
     fun f() = 1 + Arguments.f(1)
-    fun g() = f() // TODO
-//│ > FunDefn(Symbol("ctor$"), ([]), Define(ClsLikeDefn(ClassSymbol("InnerClass", fun InnerClass { class: class InnerClass }, Some([]), []), [FunDefn(Symbol("f"), ([]), Scoped([Symbol("tmp")], Assign(Symbol("tmp"), Call(Select(Ref(ModuleSymbol("Arguments", class Arguments)), Symbol("f_gen")), [Lit(1)]), Return(Call(Ref(Symbol("+")), [Lit(1), Ref(Symbol("tmp"))]), false))), true),FunDefn(Symbol("g"), ([]), Return(Call(Select(Ref(ClassSymbol("InnerClass", fun InnerClass { class: class InnerClass }, Some([]), [])), Symbol("f")), []), false), true)], TODO), End), true)
+    fun g() = f()
+//│ > fun ctor_() =
+//│ >   class InnerClass() with
+//│ >     fun f() =
+//│ >       let {tmp}
+//│ >       tmp = Arguments.f_gen(1)
+//│ >       1 + tmp
+//│ >     fun g() = InnerClass.f()
+
+staged module RetUnit with
+  fun f() = ()
+//│ > fun ctor_() = ()
+//│ > fun f() = ()
 
 // name collision
 class A()
 staged module A with
   fun f() = 1
-//│ > FunDefn(Symbol("ctor$"), ([]), End, true)
-//│ > FunDefn(Symbol("f"), ([]), Return(Lit(1), false), true)
+//│ > fun ctor_() = ()
+//│ > fun f() = 1
 
 // nested module
 module A with
   staged module B with
     fun f() = 1
-//│ > FunDefn(Symbol("ctor$"), ([]), End, true)
-//│ > FunDefn(Symbol("f"), ([]), Return(Lit(1), false), true)
+//│ > fun ctor_() = ()
+//│ > fun f() = 1
 
-// TODO: force enable :ftc to desugar Label and Break
-staged module M with
-  fun f() = if 1 is
+// FIXME: for g to be defined in the next stage, we need to also print the other ClsLikeDefn/FunDefn nodes when printing the next stage
+:ftc
+staged module NestedFunDefn with
+  fun f() =
+    fun g() = 1
+    g()
+//│ > fun ctor_() = ()
+//│ > fun f() = g()
+
+:todo
+staged module LabelBreak with
+  fun f() =
+    let x = 1
+    while x == 1 do
+      set x = x + 1
+  fun g() = if 1 is
     0 then 2
     1 then 2
     else 2
-//│ > FunDefn(Symbol("ctor$"), ([]), End, true)
-//│ > FunDefn(Symbol("f"), ([]), Scoped([Symbol("scrut")], Assign(Symbol("scrut"), Lit(1), Match(Ref(Symbol("scrut")), [Lit(0) -> Return(Lit(2), false), Lit(1) -> Return(Lit(2), false)], Return(Lit(2), false), End))), true)
+//│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.Label.
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
+//│ ║  l.207: 	    let x = 1
+//│ ║         	        ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.207: 	    let x = 1
+//│ ╙──       	        ^
+//│ > fun ctor_() = ()
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 :e
 class C(val a)
@@ -140,11 +227,12 @@ staged module A with
   let x = C(1)
   fun f() = set x.a = 0
   fun g() = {1 : 2}
-//│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: AssignField(Ref(term:A/x,None),Ident(a),Lit(IntLit(0)),Return(Select(Ref(tmp:runtime,None),Ident(Unit)),false))
-//│ ╔══[COMPILATION ERROR] Other Results not supported in staged module: Record(false,List(RcdArg(Some(Lit(IntLit(1))),Lit(IntLit(2)))))
-//│ ║  l.142: 	  fun g() = {1 : 2}
+//│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.AssignField
+//│ ╔══[COMPILATION ERROR] Other Results not supported in staged module: class hkmc2.codegen.Record
+//│ ║  l.229: 	  fun g() = {1 : 2}
 //│ ╙──       	                 ^
-//│ > FunDefn(Symbol("ctor$"), ([]), Assign(Symbol("x"), Call(Ref(ClassSymbol("C", fun C { class: class C }, Some([Symbol("a")]), [])), [Lit(1)]), End), true)
+//│ > fun ctor_() =
+//│ >   x = C(1)
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 :todo
@@ -152,5 +240,5 @@ staged module Spread with
   fun f() = if [1, ..[1, 2]] is [1, ...x] then x else 0
 //│ ═══[COMPILATION ERROR] Spread parameters are not supported in staged module: Arg(Some(Lazy),Ref(tmp:tmp,None))
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ > FunDefn(Symbol("ctor$"), ([]), End, true)
+//│ > fun ctor_() = ()
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
