@@ -109,40 +109,53 @@ private def findMatchChainRec(
   // This block does not include the match chain
   inline def fail = MatchChain(scrutRef, acc, N, b)
   
+  inline def success(res: MatchType, m: Match, dflt: Opt[Block], dfltEmpty: Bool, rest: Block) =
+    if !dfltEmpty then MatchChain(scrutRef, res :: acc, dflt, rest)
+    else findMatchChainRec(rest, scrutRef, res :: acc)
+  
   inline def join: MatchChain = b match
     case m: Match =>
       val dfltEmpty = isEmptyDflt(m.dflt)
-      if !isDfltCaseAllowed && !dfltEmpty then fail // Default branch not allowed
-      else
-        // Classify the current match statement.
-        val curMatch = m match
-          // MFallthrough
-          case Match(
-            `scrutRef`,                                                // * The scrutinee is a ref and is the same as the one before.
-            Case.Lit(curVal) -> (b @ TailAssign(nextVal)) :: Nil,      // * There is only one case matching a literal
-                                                                       //   and it assigns the scrut to a literal.
-            default, restBlk
-          ) =>
-            S(MatchType.MFallthrough(curVal, b, nextVal))
-          // MAbortive
-          case Match(
-            `scrutRef`,                                                // * The scrutinee is a ref and is the same as the one before.
-            Case.Lit(curVal) -> b :: Nil,                              // * There is only one case matcing a literal
-                                                                       //   and it is abortive.
-            default, restBlk
-          ) if b.isAbortive =>
-            S(MatchType.MAbortive(curVal, b))
-          // MCases
-          case Match(`scrutRef`, LitCases(arms), default, restBlk) =>
-            S(MatchType.MCases(arms))
-          case _ => N
+      
+      // Classify the current match statement.
+      m match
+        // MFallthrough
+        case Match(
+          `scrutRef`,                                                 // * The scrutinee is a ref and is the same as the one before.
+          Case.Lit(curVal) -> (b @ TailAssign(nextVal)) :: Nil,       // * There is only one case matching a literal
+                                                                      //   and it assigns the scrut to a literal.
+          default, restBlk
+        ) =>
+          if !isDfltCaseAllowed && !dfltEmpty then fail               // Default branch not allowed
+          else
+            val res = MatchType.MFallthrough(curVal, b, nextVal)
+            success(res, m, m.dflt, dfltEmpty, restBlk)
+        // MAbortive
+        case Match(
+          `scrutRef`,                                                 // * The scrutinee is a ref and is the same as the one before.
+          Case.Lit(curVal) -> b :: Nil,                               // * There is only one case matcing a literal
+                                                                      //   and it is abortive.
+          default, restBlk
+        ) if b.isAbortive =>
+          // If both default and restBlk are not End(), and default blocks are not allowed, then fail
+          // Otherwise, take the non-end one as the next block
+          val restEmpty = restBlk.isInstanceOf[End]
+          val res = MatchType.MAbortive(curVal, b)
+          if !dfltEmpty && !restEmpty then
+            if !isDfltCaseAllowed then fail
+            else success(res, m, m.dflt, dfltEmpty, restBlk)
+          else if restEmpty then
+            success(res, m, N, true, m.dflt.get)
+          else
+            success(res, m, m.dflt, dfltEmpty, restBlk)
         
-        curMatch match
-        case Some(value) =>
-          // Only the last match may have a default case.
-          if !dfltEmpty then MatchChain(scrutRef, value :: acc, m.dflt, m.rest)
-          else findMatchChainRec(m.rest, scrutRef, value :: acc)
-        case None => fail
+        // MCases
+        case Match(`scrutRef`, LitCases(arms), default, restBlk) =>
+          if !isDfltCaseAllowed && !dfltEmpty then fail                // Default branch not allowed
+          else
+            val res = MatchType.MCases(arms)
+            success(res, m, m.dflt, dfltEmpty, restBlk)
+        case _ => fail
     case _ => fail
   
   // Get the first case's value (in case the previous match is MFallthrough).

@@ -78,13 +78,12 @@ fun f(x) =
 //│       tmp3 = acc + "d";
 //│       acc = tmp3;
 //│       x = 4;
+//│     case 4:
+//│       tmp4 = acc + "e";
+//│       acc = tmp4;
+//│       return globalThis.Object.freeze([ acc, x ]);
 //│   }
-//│   if (x === 4) {
-//│     tmp4 = acc + "e";
-//│     acc = tmp4;
-//│     return globalThis.Object.freeze([ acc, x ])
-//│   }
-//│   return globalThis.Object.freeze([ acc, x ]);
+//│   return globalThis.Object.freeze([ acc, x ])
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -135,13 +134,10 @@ fun f(x) =
 //│       tmp1 = acc + "b";
 //│       acc = tmp1;
 //│       x = 2;
-//│   }
-//│   if (x === 2) {
-//│     tmp2 = acc + "c";
-//│     acc = tmp2;
-//│     return acc
-//│   }
-//│   switch (x) {
+//│     case 2:
+//│       tmp2 = acc + "c";
+//│       acc = tmp2;
+//│       return acc;
 //│     case 3:
 //│       tmp3 = acc + "A";
 //│       acc = tmp3;
