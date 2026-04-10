@@ -95,9 +95,9 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
       val body2 = applyFunBodyLikeBlock(fun.body)
       for s <- oldParamSyms do mapping.remove(s)
       if newlyCreated then
-        Scoped(Set.single(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride)))
+        Scoped(Set.single(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride, fun.visibility)))
       else
-        k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride))
+        k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride, fun.visibility))
     case defn @ ValDefn(tsym, sym, rhs) =>
       val (tsym2, sym2) = mapping.get(sym) match
         case None =>
