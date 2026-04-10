@@ -67,16 +67,15 @@ private enum MatchType:
  * - MCases is translated into a list of SwitchCase.ExplicitBreak.
  */
 
-// S(S(value)): Ends with assign
-// S(N): Ends with break or continue
+// S(value): Ends with assign
 // N: None of the cases
 @tailrec
-private def caseLastBlk(b: Block, scrutSym: Local): Opt[Opt[Literal]] = b match
-  case b if b.isAbortive => S(N)
-  case a @ Assign(`scrutSym`, Value.Lit(l), End(_)) => S(S(l))
-  case b: NonBlockTail => caseLastBlk(b.rest, scrutSym)
+private def isTailAssign(b: Block, scrutSym: Local): Opt[Literal] = b match
+  case a @ Assign(`scrutSym`, Value.Lit(l), End(_)) => S(l)
+  case b: NonBlockTail => isTailAssign(b.rest, scrutSym)
   case _: BlockTail => N
 
+// Matches List[Case.Lit -> Block]
 private object LitCases:
   def unapply(arms: List[Case -> Block]) = arms.foldLeft[Opt[List[Literal -> Block]]](S(Nil)):
     case (S(acc), Case.Lit(litVal) -> b) => S((litVal -> b) :: acc)
@@ -84,45 +83,55 @@ private object LitCases:
 
 private case class MatchChain(scrut: Value.Ref, cases: List[MatchType], dflt: Opt[Block], rest: Block)
 
+// Helper that determines whether a default branch is empty
 private def isEmptyDflt(dflt: Opt[Block]) = dflt match
   case Some(End(_)) => true
   case None => true
   case _ => false
 
-
+// Extracts a valid match chain beginning at a block.
 @tailrec
 private def findMatchChainRec(
   b: Block,
   scrutRef: Value.Ref,
   acc: List[MatchType]
 ): MatchChain =
-  object CaseLastBlk:
-    def unapply(b: Block) = caseLastBlk(b, scrutRef.l)
+  object TailAssign:
+    def unapply(b: Block) = isTailAssign(b, scrutRef.l)
   
-  // Allowed iff the previous case was a break, or if this is the only case
+  // Whether the current match may have a non-empty default case.
+  // It is allowed iff the previous case was a break, or if this is the only case.
   val isDfltCaseAllowed = acc.headOption match
     case Some(_: MatchType.MAbortive) => true
     case None => true
     case _ => false
   
+  // This block does not include the match chain
   inline def fail = MatchChain(scrutRef, acc, N, b)
   
   inline def join: MatchChain = b match
     case m: Match =>
       val dfltEmpty = isEmptyDflt(m.dflt)
-      if !isDfltCaseAllowed && !dfltEmpty then fail
+      if !isDfltCaseAllowed && !dfltEmpty then fail // Default branch not allowed
       else
         // Classify the current match statement.
         val curMatch = m match
-          // MFallthrough or MAbortive
+          // MFallthrough
           case Match(
-            `scrutRef`,                                             // * The scrutinee is a ref and is the same as the one before.
-            Case.Lit(curVal) -> (b @ CaseLastBlk(nextVal)) :: Nil,  // * There is only one case matching an int literal
-                                                                    //   and it ends with break, continue, return, or a literal assignment.
+            `scrutRef`,                                                // * The scrutinee is a ref and is the same as the one before.
+            Case.Lit(curVal) -> (b @ TailAssign(nextVal)) :: Nil,      // * There is only one case matching a literal
+                                                                       //   and it assigns the scrut to a literal.
             default, restBlk
-          ) => nextVal match
-            case S(nextVal) => S(MatchType.MFallthrough(curVal, b, nextVal))
-            case N => S(MatchType.MAbortive(curVal, b))
+          ) =>
+            S(MatchType.MFallthrough(curVal, b, nextVal))
+          // MAbortive
+          case Match(
+            `scrutRef`,                                                // * The scrutinee is a ref and is the same as the one before.
+            Case.Lit(curVal) -> b :: Nil,                              // * There is only one case matcing a literal
+                                                                       //   and it is abortive.
+            default, restBlk
+          ) if b.isAbortive =>
+            S(MatchType.MAbortive(curVal, b))
           // MCases
           case Match(`scrutRef`, LitCases(arms), default, restBlk) =>
             S(MatchType.MCases(arms))
@@ -136,22 +145,26 @@ private def findMatchChainRec(
         case None => fail
     case _ => fail
   
-  
+  // Get the first case's value (in case the previous match is MFallthrough).
   val curVal = b match
     case m: Match => m.arms.headOption.collect:
       case Case.Lit(lit) -> _ => lit
     case _ => N
   
+  // Check for the valid cases:
+  // - The previous match is a fallthrough that sets the scrut to curVal.
+  // - The previous match is abortive.
   acc.headOption match
     case S(MatchType.MFallthrough(next = expectedVal))
       if curVal.map(_ == expectedVal).getOrElse(true) =>
-        join
-    case S(_: MatchType.MAbortive) | N => join
-    case S(_) => MatchChain(scrutRef, acc, N, b)
+        join // OK
+    case S(_: MatchType.MAbortive) | N => join // OK
+    case S(_) => fail
 
-private case class SwitchLikeBlock(scrut: Value.Ref, cases: List[SwitchCase], dflt: Opt[Block], rest: Block)
+private case class SwitchLike(scrut: Value.Ref, cases: List[SwitchCase], dflt: Opt[Block], rest: Block)
 
-def matchChainToSwitch(m: MatchChain): SwitchLikeBlock =
+// Converts a match chain to a switch.
+private def matchChainToSwitch(m: MatchChain): SwitchLike =
   val cases = m.cases.flatMap:
     case MatchType.MFallthrough(value, body, next) =>
       SwitchCase.Fallthrough(value, body, next) :: Nil
@@ -161,13 +174,13 @@ def matchChainToSwitch(m: MatchChain): SwitchLikeBlock =
       case (l, b) =>
         if b.isAbortive then SwitchCase.Abortive(l, b)
         else SwitchCase.ExplicitBreak(l, b)
-  SwitchLikeBlock(m.scrut, cases, m.dflt, m.rest)
+  SwitchLike(m.scrut, cases, m.dflt, m.rest)
 
 object SpecializedSwitch:
   def unapply(b: Block) = b match
     case m @ Match(scrut = r @ Value.Ref(l, _)) =>
       val chain = findMatchChainRec(m, r, Nil)
-      val SwitchLikeBlock(scrut, cases, dflt, rest) = matchChainToSwitch(chain)
+      val SwitchLike(scrut, cases, dflt, rest) = matchChainToSwitch(chain)
       if cases.size < 2 then N
       else
         S((scrut, cases.reverse, dflt, rest))
