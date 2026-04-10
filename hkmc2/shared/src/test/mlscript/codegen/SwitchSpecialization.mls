@@ -25,9 +25,8 @@ fun f(x) =
 //│       return "c";
 //│     case 3:
 //│       return "d";
-//│     default:
-//│       return "e";
 //│   }
+//│   return "e"
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -146,8 +145,6 @@ fun f(x) =
 //│       tmp4 = acc + "B";
 //│       acc = tmp4;
 //│       x = 5;
-//│   }
-//│   switch (x) {
 //│     case 5:
 //│       tmp5 = acc + "C";
 //│       acc = tmp5;
@@ -158,9 +155,8 @@ fun f(x) =
 //│       return "EndB";
 //│     case 8:
 //│       return "EndC";
-//│     default:
-//│       return "EndD";
 //│   }
+//│   return "EndD"
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -203,19 +199,17 @@ fun f(x) =
 //│ f3 = function f(x) {
 //│   let acc, tmp1;
 //│   acc = "";
-//│   if (x === 0) {
-//│     tmp1 = acc + "M";
-//│     acc = tmp1;
-//│     x = 1;
-//│   }
 //│   switch (x) {
+//│     case 0:
+//│       tmp1 = acc + "M";
+//│       acc = tmp1;
+//│       x = 1;
 //│     case 1:
 //│       return acc + "1";
 //│     case 2:
 //│       return acc + "2";
-//│     default:
-//│       return "fail";
 //│   }
+//│   return "fail"
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -248,19 +242,17 @@ fun f(x) =
 //│ f4 = function f(x) {
 //│   let acc, tmp1;
 //│   acc = "";
-//│   if (x === 0) {
-//│     tmp1 = acc + "M";
-//│     acc = tmp1;
-//│     x = 1;
-//│   }
 //│   switch (x) {
+//│     case 0:
+//│       tmp1 = acc + "M";
+//│       acc = tmp1;
+//│       x = 1;
 //│     case 1:
 //│       return acc + "1";
 //│     case 2:
 //│       return acc + "2";
-//│     default:
-//│       return acc + "3";
 //│   }
+//│   return acc + "3"
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

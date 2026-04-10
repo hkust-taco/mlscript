@@ -37,7 +37,7 @@ enum SwitchCase(val litValue: Literal, val body: Block):
 
 private enum MatchType:
   case MFallthrough(value: Literal, body: Block, next: Literal)
-  case MAbortive(value: Literal, body: Block)
+  case MAbortive(arms: List[Literal -> Block])
   case MCases(arms: List[Literal -> Block])
 
 /*
@@ -49,7 +49,7 @@ private enum MatchType:
  * and have an empty or no default case, except for Mn. We define three types of such match statements
  * (which are mostly unrelated to switch case types in the enum `SwitchCase`):
  * - MFallthrough(next): Has only one branch, and assigns the literal `next` to `x` at the end of that branch.
- * - MAbortive: Has only one branch that is abortive (and thus exits the scope that the match chain is defined in).
+ * - MAbortive: All branches are abortive (and thus exits the scope that the match chain is defined in).
  * - MCases: Is not an MFallthrough or an MAbortive (but still matches on `x` and only has literals patterns).
  * 
  * For this chain to be specialized, for each adjacent pair Mi and M(i+1), one of the following hold:
@@ -130,31 +130,27 @@ private def findMatchChainRec(
           else
             val res = MatchType.MFallthrough(curVal, b, nextVal)
             success(res, m, m.dflt, dfltEmpty, restBlk)
-        // MAbortive
-        case Match(
-          `scrutRef`,                                                 // * The scrutinee is a ref and is the same as the one before.
-          Case.Lit(curVal) -> b :: Nil,                               // * There is only one case matcing a literal
-                                                                      //   and it is abortive.
-          default, restBlk
-        ) if b.isAbortive =>
-          // If both default and restBlk are not End(), and default blocks are not allowed, then fail
-          // Otherwise, take the non-end one as the next block
-          val restEmpty = restBlk.isInstanceOf[End]
-          val res = MatchType.MAbortive(curVal, b)
-          if !dfltEmpty && !restEmpty then
-            if !isDfltCaseAllowed then fail
-            else success(res, m, m.dflt, dfltEmpty, restBlk)
-          else if restEmpty then
-            success(res, m, N, true, m.dflt.get)
-          else
-            success(res, m, m.dflt, dfltEmpty, restBlk)
-        
-        // MCases
+        // MAbortive or MCases
         case Match(`scrutRef`, LitCases(arms), default, restBlk) =>
-          if !isDfltCaseAllowed && !dfltEmpty then fail                // Default branch not allowed
+          // MAbortive
+          if arms.forall(_._2.isAbortive) then
+            // If both default and restBlk are not End(), and default blocks are not allowed, then fail
+            // Otherwise, take the non-end one as the next block
+            val restEmpty = restBlk.isInstanceOf[End]
+            val res = MatchType.MAbortive(arms)
+            if !dfltEmpty && !restEmpty then
+              if !isDfltCaseAllowed then fail
+              else success(res, m, m.dflt, dfltEmpty, restBlk)
+            else if restEmpty then
+              success(res, m, N, true, m.dflt.get)
+            else
+              success(res, m, m.dflt, dfltEmpty, restBlk)
+          // MCases
           else
-            val res = MatchType.MCases(arms)
-            success(res, m, m.dflt, dfltEmpty, restBlk)
+            if !isDfltCaseAllowed && !dfltEmpty then fail                // Default branch not allowed
+            else
+              val res = MatchType.MCases(arms)
+              success(res, m, m.dflt, dfltEmpty, restBlk)
         case _ => fail
     case _ => fail
   
@@ -178,15 +174,15 @@ private case class SwitchLike(scrut: Value.Ref, cases: List[SwitchCase], dflt: O
 
 // Converts a match chain to a switch.
 private def matchChainToSwitch(m: MatchChain): SwitchLike =
+  def mpArms(arms: List[(Literal, Block)]) = arms.map:
+    case (l, b) =>
+      if b.isAbortive then SwitchCase.Abortive(l, b)
+      else SwitchCase.ExplicitBreak(l, b)
   val cases = m.cases.flatMap:
     case MatchType.MFallthrough(value, body, next) =>
       SwitchCase.Fallthrough(value, body, next) :: Nil
-    case MatchType.MAbortive(value, body) =>
-      SwitchCase.Abortive(value, body) :: Nil
-    case MatchType.MCases(arms) => arms.map:
-      case (l, b) =>
-        if b.isAbortive then SwitchCase.Abortive(l, b)
-        else SwitchCase.ExplicitBreak(l, b)
+    case MatchType.MAbortive(arms) => mpArms(arms)
+    case MatchType.MCases(arms) => mpArms(arms)
   SwitchLike(m.scrut, cases, m.dflt, m.rest)
 
 object SpecializedSwitch:
