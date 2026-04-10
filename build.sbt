@@ -82,56 +82,30 @@ lazy val hkmc2DiffTests = project.in(file("hkmc2DiffTests"))
     Test/run/fork := true, // so that CTRL+C actually terminates the watcher
   )
 
-lazy val hkmc2NofibTests = project.in(file("hkmc2NofibTests"))
-  .dependsOn(hkmc2JVM % "compile->compile;test->test")
-  .dependsOn(hkmc2DiffTests % "compile->compile;test->test")
-  .settings(
-    scalaVersion := scala3Version,
-    
-    libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
-    libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
-    
-    Test / test := Def.sequential(
-      (Test / testOnly).toTask(" hkmc2.NofibCompileTestRunner"),
-      (Test / testOnly).toTask(" hkmc2.NofibDiffTestRunner"),
-    ).value,
-    
-    Test/run/fork := true, // so that CTRL+C actually terminates the watcher
-  )
+/** Helper to create test subprojects that compile `.mls` files then run diff tests.
+  * Each subproject depends on `hkmc2JVM` and `hkmc2DiffTests` for shared test infrastructure,
+  * and uses `Def.sequential` to guarantee compile tests complete before diff tests start. */
+def hkmc2TestSubproject(dirName: String, compileRunner: String, diffRunner: String): Project =
+  Project(dirName, file(dirName))
+    .dependsOn(hkmc2JVM % "compile->compile;test->test")
+    .dependsOn(hkmc2DiffTests % "compile->compile;test->test")
+    .settings(
+      scalaVersion := scala3Version,
+      
+      libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
+      libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
+      
+      Test / test := Def.sequential(
+        (Test / testOnly).toTask(s" hkmc2.$compileRunner"),
+        (Test / testOnly).toTask(s" hkmc2.$diffRunner"),
+      ).value,
+      
+      Test/run/fork := true, // so that CTRL+C actually terminates the watcher
+    )
 
-lazy val hkmc2AppsTests = project.in(file("hkmc2AppsTests"))
-  .dependsOn(hkmc2JVM % "compile->compile;test->test")
-  .dependsOn(hkmc2DiffTests % "compile->compile;test->test")
-  .settings(
-    scalaVersion := scala3Version,
-    
-    libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
-    libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
-    
-    Test / test := Def.sequential(
-      (Test / testOnly).toTask(" hkmc2.AppsCompileTestRunner"),
-      (Test / testOnly).toTask(" hkmc2.AppsDiffTestRunner"),
-    ).value,
-    
-    Test/run/fork := true, // so that CTRL+C actually terminates the watcher
-  )
-
-lazy val hkmc2WasmTests = project.in(file("hkmc2WasmTests"))
-  .dependsOn(hkmc2JVM % "compile->compile;test->test")
-  .dependsOn(hkmc2DiffTests % "compile->compile;test->test")
-  .settings(
-    scalaVersion := scala3Version,
-    
-    libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
-    libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
-    
-    Test / test := Def.sequential(
-      (Test / testOnly).toTask(" hkmc2.WasmCompileTestRunner"),
-      (Test / testOnly).toTask(" hkmc2.WasmDiffTestRunner"),
-    ).value,
-    
-    Test/run/fork := true, // so that CTRL+C actually terminates the watcher
-  )
+lazy val hkmc2NofibTests = hkmc2TestSubproject("hkmc2NofibTests", "NofibCompileTestRunner", "NofibDiffTestRunner")
+lazy val hkmc2AppsTests = hkmc2TestSubproject("hkmc2AppsTests", "AppsCompileTestRunner", "AppsDiffTestRunner")
+lazy val hkmc2WasmTests = hkmc2TestSubproject("hkmc2WasmTests", "WasmCompileTestRunner", "WasmDiffTestRunner")
 
 lazy val hkmc2MainTests = project.in(file("hkmc2MainTests"))
   .settings(

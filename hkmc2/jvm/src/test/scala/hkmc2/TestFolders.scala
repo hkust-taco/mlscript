@@ -63,7 +63,7 @@ object TestFolders:
   
   /** Directories whose compile files are excluded from the main CompileTestRunner. */
   def mainExcludedCompileDirs(wd: os.Path): Ls[os.Path] =
-    appsCompileDirs(wd) ::: wasmCompileDirs(wd)
+    nofibCompileDirs(wd) ::: appsCompileDirs(wd) ::: wasmCompileDirs(wd)
   
   /** Compile test directories for the hkmc2NofibTests project.
     * We walk from `bench/` so test names include the `mlscript-compile/` prefix. */
