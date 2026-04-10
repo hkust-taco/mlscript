@@ -1631,6 +1631,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
                 val expectedTag = typeinfo.objectTag.getOrElse:
                   lastWords(s"Expected class $clsBlkMemberSym to have an object tag")
+                
+                // TODO: replace with RTTI ancestry checks once each object carries runtime type information.
                 val acceptedTags = ctx.getRuntimeClassTags(clsBlkMemberSym).getOrElse(LinkedHashSet(expectedTag))
 
                 val scrutExpr = getScrutExpr
