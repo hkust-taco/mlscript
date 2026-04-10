@@ -1,7 +1,7 @@
 :js
 
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/minimax.mls"
+import "../../mlscript-compile/nofib/minimax.mls"
 print(minimax.main())
 //│ > OXO
 //│ > XWin

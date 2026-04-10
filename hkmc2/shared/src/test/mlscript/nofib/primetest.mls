@@ -1,7 +1,7 @@
 :js
 
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/primetest.mls"
+import "../../mlscript-compile/nofib/primetest.mls"
 primetest.main()
 //│ = "[\"Composite\",\"Composite\",\"Probably prime\",\"Composite\",\"Composite\"]"
 

@@ -1,5 +1,5 @@
 :js
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/integer.mls"
+import "../../mlscript-compile/nofib/integer.mls"
 integer.main()
 //│ = "[true,false,false,false,false,false,true,true,false,false,false,false,true,true,true,false,false,false,true,true,true,true,false,false,true,true,true,true,true,false,true,true,true,true,true,true]"

@@ -68,8 +68,8 @@ object TestFolders:
   /** Compile test directories for the hkmc2NofibTests project.
     * We walk from `bench/` so test names include the `mlscript-compile/` prefix. */
   def nofibCompileDirs(wd: os.Path): Ls[os.Path] =
-    (wd/"hkmc2Benchmarks"/"src"/"test"/"bench") :: Nil
-
+    compileTestDir(wd)/"nofib" :: Nil
+  
   /** Compile test directories for the hkmc2AppsTests project.
     * We walk from `mlscript-compile/apps/` directly. */
   def appsCompileDirs(wd: os.Path): Ls[os.Path] =

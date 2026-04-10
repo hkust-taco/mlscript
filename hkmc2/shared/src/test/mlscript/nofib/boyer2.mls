@@ -1,6 +1,6 @@
 :js
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/boyer2.mls"
+import "../../mlscript-compile/nofib/boyer2.mls"
 boyer2.main()
 //│ = "The term is a tautology"
 

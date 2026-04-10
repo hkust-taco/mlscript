@@ -1,5 +1,5 @@
 :js
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/constraints.mls"
+import "../../mlscript-compile/nofib/constraints.mls"
 constraints.main()
 //│ = "[4,4,4,4,4]"

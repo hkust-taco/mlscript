@@ -1,6 +1,6 @@
 :js
 
 :re
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/cryptarithm1.mls"
+import "../../mlscript-compile/nofib/cryptarithm1.mls"
 cryptarithm1.main()
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded

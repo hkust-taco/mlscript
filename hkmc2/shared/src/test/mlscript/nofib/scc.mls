@@ -1,6 +1,6 @@
 :js
 
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/scc.mls"
+import "../../mlscript-compile/nofib/scc.mls"
 scc.main()
 //│ = "[[1],[2],[7,5,6],[3,4]]"

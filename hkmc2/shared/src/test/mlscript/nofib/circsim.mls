@@ -1,5 +1,5 @@
 :js
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/circsim.mls"
+import "../../mlscript-compile/nofib/circsim.mls"
 circsim.main()
 //│ = "[[F,F,F,F,F,F,F,F],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T]]"

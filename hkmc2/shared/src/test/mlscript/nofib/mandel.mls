@@ -1,7 +1,7 @@
 :js
 
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/mandel.mls"
+import "../../mlscript-compile/nofib/mandel.mls"
 mandel.main()
 //│ = Pixmap(
 //│   25,
