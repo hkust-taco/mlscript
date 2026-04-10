@@ -116,7 +116,7 @@ class DiffTestRunnerBase(val state: DiffTestRunner.State)
   
   protected lazy val diffTestFiles = allFiles.filter: file =>
     (
-      !TestFolders.isExcluded(file, excludedDiffDirs)
+      !TestFolders.isExcluded(file, excludedDiffDirs, Nil)
       && filter(file.relativeTo(state.workingDir))
     )
   

@@ -53,7 +53,7 @@ object TestFolders:
   
   /** Check whether a file should be excluded from the given list of excluded
     * directories and/or individual files. */
-  def isExcluded(file: os.Path, excludedDirs: Ls[os.Path], excludedFiles: Ls[os.Path] = Nil): Bool =
+  def isExcluded(file: os.Path, excludedDirs: Ls[os.Path], excludedFiles: Ls[os.Path]): Bool =
     excludedDirs.exists(dir => isInDir(file, dir)) || excludedFiles.contains(file)
   
   // ——— Compile test directories ———
