@@ -78,12 +78,13 @@ fun f(x) =
 //│       tmp3 = acc + "d";
 //│       acc = tmp3;
 //│       x = 4;
-//│     case 4:
-//│       tmp4 = acc + "e";
-//│       acc = tmp4;
-//│       break;
 //│   }
-//│   return globalThis.Object.freeze([ acc, x ])
+//│   if (x === 4) {
+//│     tmp4 = acc + "e";
+//│     acc = tmp4;
+//│     return globalThis.Object.freeze([ acc, x ])
+//│   }
+//│   return globalThis.Object.freeze([ acc, x ]);
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -134,10 +135,13 @@ fun f(x) =
 //│       tmp1 = acc + "b";
 //│       acc = tmp1;
 //│       x = 2;
-//│     case 2:
-//│       tmp2 = acc + "c";
-//│       acc = tmp2;
-//│       return acc;
+//│   }
+//│   if (x === 2) {
+//│     tmp2 = acc + "c";
+//│     acc = tmp2;
+//│     return acc
+//│   }
+//│   switch (x) {
 //│     case 3:
 //│       tmp3 = acc + "A";
 //│       acc = tmp3;
@@ -146,6 +150,8 @@ fun f(x) =
 //│       tmp4 = acc + "B";
 //│       acc = tmp4;
 //│       x = 5;
+//│   }
+//│   switch (x) {
 //│     case 5:
 //│       tmp5 = acc + "C";
 //│       acc = tmp5;
@@ -201,17 +207,19 @@ fun f(x) =
 //│ f3 = function f(x) {
 //│   let acc, tmp1;
 //│   acc = "";
+//│   if (x === 0) {
+//│     tmp1 = acc + "M";
+//│     acc = tmp1;
+//│     x = 1;
+//│   }
 //│   switch (x) {
-//│     case 0:
-//│       tmp1 = acc + "M";
-//│       acc = tmp1;
-//│       x = 1;
 //│     case 1:
 //│       return acc + "1";
 //│     case 2:
 //│       return acc + "2";
+//│     default:
+//│       return "fail";
 //│   }
-//│   return "fail"
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

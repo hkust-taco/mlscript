@@ -135,7 +135,6 @@ fun f(x) =
 //│         runtime.resumeValue;
 //│         pc = 1;
 //│         continue main;
-//│       default:
 //│     }
 //│     break;
 //│   }

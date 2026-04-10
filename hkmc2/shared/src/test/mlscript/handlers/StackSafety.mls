@@ -87,7 +87,6 @@ sum(10000)
 //│         case 1:
 //│           tmp3 = runtime.resumeValue;
 //│           return n + tmp3;
-//│         default:
 //│       }
 //│       break;
 //│     }
