@@ -32,6 +32,17 @@ sealed trait SessionBinding:
 object SessionBinding:
   val ReplModuleName: Str = "repl"
 
+/** Metadata for an exported function that later Wasm REPL modules can import.
+  *
+  * @param sym
+  *   The source symbol associated with the exported function.
+  * @param moduleName
+  *   The Wasm module name used by the import.
+  * @param exportName
+  *   The exported function name within `moduleName`.
+  * @param funcType
+  *   The Wasm function type expected by the import.
+  */
 final case class SessionFunc(
     sym: Symbol,
     moduleName: Str,
@@ -42,6 +53,17 @@ final case class SessionFunc(
   def bindingSyms: Seq[Local] = sym :: Nil
   override def exportNameOpt: Opt[Str] = S(exportName)
 
+/** Metadata for an exported global that later Wasm REPL modules can import.
+  *
+  * @param sym
+  *   The source symbol associated with the exported global.
+  * @param moduleName
+  *   The Wasm module name used by the import.
+  * @param exportName
+  *   The exported global name within `moduleName`.
+  * @param globalType
+  *   The Wasm global type expected by the import.
+  */
 final case class SessionGlobal(
     sym: Symbol,
     moduleName: Str,
@@ -52,6 +74,17 @@ final case class SessionGlobal(
   def bindingSyms: Seq[Local] = sym :: Nil
   override def exportNameOpt: Opt[Str] = S(exportName)
 
+/** Metadata for a class type made visible to later Wasm REPL modules.
+  *
+  * @param sym
+  *   The block member symbol of the class.
+  * @param typeInfo
+  *   The Wasm type information that must be recreated in importing modules.
+  * @param runtimeTag
+  *   The runtime class tag associated with this class.
+  * @param aliasSyms
+  *   Additional symbols that should resolve to this class binding.
+  */
 final case class SessionClass(
     sym: BlockMemberSymbol,
     typeInfo: TypeInfo,
@@ -61,6 +94,19 @@ final case class SessionClass(
   def bindingKey: Str = s"class:${sym.uid}"
   def bindingSyms: Seq[Local] = sym +: aliasSyms
 
+/** Metadata for a singleton object's backing global made visible to later Wasm REPL modules.
+  *
+  * @param blockSym
+  *   The block member symbol of the singleton object.
+  * @param objectSym
+  *   Optional object/module symbol that should also resolve to this singleton binding.
+  * @param moduleName
+  *   The Wasm module name used by the import.
+  * @param exportName
+  *   The exported global name within `moduleName`.
+  * @param globalTy
+  *   The Wasm reference type of the singleton backing global.
+  */
 final case class SessionSingleton(
     blockSym: BlockMemberSymbol,
     objectSym: Opt[ModuleOrObjectSymbol],
@@ -72,6 +118,17 @@ final case class SessionSingleton(
   def bindingSyms: Seq[Local] = blockSym +: objectSym.toSeq
   override def exportNameOpt: Opt[Str] = S(exportName)
 
+/** The emitted Wasm module together with REPL/session export metadata.
+  *
+  * @param wat
+  *   The generated WAT for the module.
+  * @param entryName
+  *   The name of the module entry function.
+  * @param systemMemMinPages
+  *   The minimum number of imported system-memory pages required by the module.
+  * @param sessionExports
+  *   Session bindings exported by this module for use by later REPL blocks.
+  */
 final case class CompiledWasmModule(
     wat: Document,
     entryName: Str,
@@ -79,7 +136,13 @@ final case class CompiledWasmModule(
     sessionExports: Seq[SessionBinding],
 )
 
-/** Context used while collecting REPL/session exports for a single Wasm module. */
+/** Context used while collecting REPL/session exports for a single Wasm module.
+  *
+  * @param symbolsToExport
+  *   The symbols from the current module that should be recorded as session exports.
+  * @param collectedBindings
+  *   The session bindings accumulated while compiling the current module.
+  */
 final class SessionExportCtx(
     val symbolsToExport: Set[Local],
     val collectedBindings: ArrayBuf[SessionBinding],
@@ -105,18 +168,18 @@ object SessionExportCtx:
   * Each instance of [[FuncInfo]] represents a single function definition in a WebAssembly module.
   *
   * @param id
-  *   Symbolic identifier for the function. If the function is an anonymous function, `id` should be generated from a
-  *   fresh name allocated in the current scope.
+  *   Symbolic identifier for the function. If the function is anonymous, `id` should be generated from a fresh name
+  *   allocated in the current scope.
   * @param typeUse
   *   [[TypeUse]] of the function's type in the module's type section.
   * @param params
   *   [[Seq]] of parameter local variables and their names.
+  * @param resultTypes
+  *   The result types of the function.
   * @param locals
   *   [[Seq]] of local variables (excluding parameters) and their names.
   * @param body
   *   The expression of the function body.
-  * @param resultTypes
-  *   The result types of the function.
   * @param exportName
   *   Optional export name.
   */
@@ -203,10 +266,8 @@ end FuncInfo
   *
   * @param id
   *   Symbolic identifier for the global.
-  * @param valType
-  *   The value type of the global.
-  * @param mutable
-  *   Whether the global is mutable.
+  * @param globalType
+  *   The type of the global.
   * @param init
   *   The initializer expression for the global.
   * @param exportName
@@ -242,10 +303,10 @@ end MemInfo
 
 /** A Wasm type and its associated information.
   *
-  * Each instance of [[FuncInfo]] represents a single type defintion in a WebAssembly module.
+  * Each instance of [[TypeInfo]] represents a single type definition in a WebAssembly module.
   *
   * @param id
-  *   Symbolic identifier for the function, or `N` if the function is anonymous.
+  *   Symbolic identifier for the type.
   * @param compType
   *   The composite type this type definition represents.
   * @param objectTag
@@ -273,6 +334,11 @@ class TypeInfo(val id: SymIdx, val compType: CompType, val objectTag: Opt[Int]) 
   *
   * In Wasm, a `tag` names an exception kind and points to a function type that describes the payload values carried by
   * `throw tag ...` and extracted by matching `catch tag ...`.
+  *
+  * @param id
+  *   Symbolic identifier for the tag.
+  * @param typeUse
+  *   The function type referenced by this tag.
   */
 class TagInfo(val id: SymIdx, val typeUse: TypeUse) extends ToWat:
 

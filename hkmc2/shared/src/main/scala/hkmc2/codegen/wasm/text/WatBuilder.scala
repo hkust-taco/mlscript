@@ -263,11 +263,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   end registerSessionGlobal
 
   /** Registers imported REPL bindings into the current module before codegen starts. */
-  private def registerSessionImports(sessionImports: Seq[SessionBinding])(using
-      Ctx,
-      Raise,
-      Scope,
-  ): Unit =
+  private def registerSessionImports(
+      sessionImports: Seq[SessionBinding],
+  )(using Ctx, Raise, Scope): Unit =
     sessionImports.foreach:
       case cls: SessionClass =>
         if ctx.getType(cls.sym).isEmpty then
