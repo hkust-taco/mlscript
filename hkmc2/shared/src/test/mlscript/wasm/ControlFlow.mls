@@ -18,6 +18,7 @@ let i = 0 in
 //│   (type $lt_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $Unit (sub $Object (struct (field $$tag (mut i32)))))
+//│   (type $Unit_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $Unit_ctor (func (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
@@ -58,6 +59,12 @@ let i = 0 in
 //│                 (local.get $rhs))))))
 //│       (else
 //│         (unreachable))))
+//│   (func $Unit_init1 (type $Unit_init) (param $this (ref null any)) (result (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (nop)
+//│       (return
+//│         (local.get $this))))
 //│   (func $Unit_ctor1 (type $Unit_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
@@ -67,7 +74,9 @@ let i = 0 in
 //│         (ref.cast (ref $Unit)
 //│           (local.get $this))
 //│         (i32.const 1))
-//│       (nop)
+//│       (drop
+//│         (call $Unit_init1
+//│           (local.get $this)))
 //│       (return
 //│         (local.get $this))))
 //│   (func $start1 (type $start)
@@ -128,6 +137,7 @@ let i = 0 in
 //│         (local.get $i))))
 //│   (elem $lt_impl1 declare func $lt_impl1)
 //│   (elem $plus_impl1 declare func $plus_impl1)
+//│   (elem $Unit_init1 declare func $Unit_init1)
 //│   (elem $Unit_ctor1 declare func $Unit_ctor1)
 //│   (elem $start1 declare func $start1)
 //│   (elem $entry declare func $entry)
