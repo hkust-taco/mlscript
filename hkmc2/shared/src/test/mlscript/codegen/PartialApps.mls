@@ -227,18 +227,18 @@ _ - _ of 1, 2
 :sjs
 1 \ (_ - 2)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda37; lambda37 = (undefined, function (_05) { return _05 - 2 }); Predef.passTo(1, lambda37)
+//│ let lambda39; lambda39 = (undefined, function (_05) { return _05 - 2 }); Predef.passTo(1, lambda39)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 :sjs
 1 \ (_ - 2)()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda38, tmp22;
-//│ lambda38 = (undefined, function (_05) {
+//│ let lambda40, tmp22;
+//│ lambda40 = (undefined, function (_05) {
 //│   return _05 - 2
 //│ });
-//│ tmp22 = Predef.passTo(1, lambda38);
+//│ tmp22 = Predef.passTo(1, lambda40);
 //│ runtime.safeCall(tmp22())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = -1
@@ -272,7 +272,8 @@ fun f(x) =
 //│ f16 = function f(x3) {
 //│   let scrut;
 //│   scrut = Predef.equals(x3, 0);
-//│   if (scrut === true) { return 1 } else { return 2 }
+//│   if (scrut === true) { return 1 }
+//│   return 2;
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

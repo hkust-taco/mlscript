@@ -29,7 +29,8 @@ false && loudTrue
 :sjs
 print(1 && loudTrue)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp; if (1 === true) { tmp = loudTrue(); } else { tmp = false; } Predef.print(tmp)
+//│ let tmp;
+//│ if (1 === true) { tmp = loudTrue(); Predef.print(tmp) } else { tmp = false; Predef.print(tmp) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > false
 
@@ -69,9 +70,8 @@ fold(||)(0, false, 42, 123)
 //│ lambda = (undefined, function (arg1, arg2) {
 //│   if (arg1 === false) {
 //│     return arg2
-//│   } else {
-//│     return true
 //│   }
+//│   return true;
 //│ });
 //│ tmp2 = runtime.safeCall(Predef.fold(lambda));
 //│ runtime.safeCall(tmp2(0, false, 42, 123))

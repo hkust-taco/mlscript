@@ -202,7 +202,6 @@ t("group")
 //│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
-:todo
 let empty = Object.create of null
 //│ empty = {}
 

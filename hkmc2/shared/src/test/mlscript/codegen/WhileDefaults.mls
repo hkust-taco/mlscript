@@ -16,7 +16,9 @@
 //│     if (scrut === true) {
 //│       Predef.print(1);
 //│       continue lbl
-//│     } else { Predef.print(2); continue lbl }
+//│     }
+//│     Predef.print(2);
+//│     continue lbl;
 //│   }
 //│ });
 //│ lambda

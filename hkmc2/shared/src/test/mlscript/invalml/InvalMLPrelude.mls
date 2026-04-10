@@ -1,4 +1,5 @@
-// :invalml
+:ignore
+// ^ Ignore the silly warnings below, which are due to `untyped` not being treated as THE `untyped` builtin
 
 
 declare class Any
@@ -33,6 +34,24 @@ set
   globalThis.CodeBase = CodeBase
   globalThis.Region = Region
   globalThis.Ref = (r, v) => new mut Ref(r, v)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.32: 	@untyped
+//│ ║        	^^^^^^^^
+//│ ╟── This annotation is not supported on assignment terms.
+//│ ║  l.34: 	  globalThis.CodeBase = CodeBase
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.32: 	@untyped
+//│ ║        	^^^^^^^^
+//│ ╟── This annotation is not supported on assignment terms.
+//│ ║  l.35: 	  globalThis.Region = Region
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.32: 	@untyped
+//│ ║        	^^^^^^^^
+//│ ╟── This annotation is not supported on assignment terms.
+//│ ║  l.36: 	  globalThis.Ref = (r, v) => new mut Ref(r, v)
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 declare class Function
 
@@ -120,5 +139,11 @@ declare fun (||): (Bool, Bool) -> Bool
 
 
 fun print(x) = @untyped globalThis.console.log(x)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.141: 	fun print(x) = @untyped globalThis.console.log(x)
+//│ ║         	               ^^^^^^^^
+//│ ╟── This annotation is not supported on application terms.
+//│ ║  l.141: 	fun print(x) = @untyped globalThis.console.log(x)
+//│ ╙──       	                        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

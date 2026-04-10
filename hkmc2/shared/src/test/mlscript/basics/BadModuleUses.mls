@@ -22,7 +22,7 @@ let m = Example.foo()
 //│ ╙──      	        ^^^^^^^^^^^^^
 //│ m = class M
 
-:todo // FIXME: should be an error
+:breakme // FIXME: should be an error
 :e
 id(m).mtd()
 //│ = 42

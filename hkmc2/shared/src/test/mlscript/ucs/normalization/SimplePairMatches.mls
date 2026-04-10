@@ -19,9 +19,11 @@ x => if x is Pair(A, B) then 1
 //│       if (arg$Pair$1$ instanceof B1) {
 //│         return 1
 //│       }
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   }
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
 //│ lambda
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -44,13 +46,16 @@ fun f(x) = if x is
 //│       if (arg$Pair$1$ instanceof A1) {
 //│         return 1
 //│       }
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     } else if (arg$Pair$0$ instanceof B1) {
 //│       if (arg$Pair$1$ instanceof B1) {
 //│         return 2
 //│       }
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   }
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

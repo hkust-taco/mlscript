@@ -5,6 +5,7 @@ import "../../../mlscript-compile/Option.mls"
 open Option
 
 
+
 // Using `do` will not cause match errors.
 
 let x = false
@@ -53,7 +54,6 @@ f(42)
 
 f(41)
 //│ = Some(41)
-
 
 
 // Mix using `then` and `do`
@@ -107,3 +107,30 @@ h(42)
 :re
 h(41)
 //│ ═══[RUNTIME ERROR] Error: match error
+
+
+
+// [Adapted from Copilot (Claude Opus 4.6) summary:]
+// `pattern do body` inside `is` expression is not handled.
+// The root cause is at the parser level: in `Some of [process, rest] do "hi"`,
+// the `of` keyword greedily includes `do "hi"` inside the constructor argument,
+// producing `App(Some, Tup([InfixApp(Tup([process, rest]), do, "hi")]))`.
+// In `if`/`case`/`while` splits, the parser treats `do` as a split boundary
+// at the branch level, so it correctly separates pattern from consequent. But
+// in standalone `is` expressions, the block lines are parsed as regular
+// expressions, so `do` is parsed as an infix operator inside the constructor's
+// argument.
+// * [My note:]
+// * Operator `of` parses a _block_ on the RHS,
+// * and there's currently no way of parsing blocks at a lower precedence level.
+// * This code is not supposed to compile, anyway.
+:e
+Some(1) is
+  Some of [process, rest] do "hi"
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator 'do').
+//│ ║  l.129: 	  Some of [process, rest] do "hi"
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^
+//│ = true
+
+
+

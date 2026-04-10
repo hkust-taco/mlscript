@@ -1,9 +1,13 @@
 :js
 
 
-:todo // check init
+// Note:
+//  This used to fail.
+//  It now works, but allowing this to work requires nontrivial compilation
+//  in a way that makes objects problematic to lift, in the lifter.
+//  So, we might just want to drop objects altogether
+//  and just use `val`s with more obvious initialization semantics (?)
 :sjs
-:re
 object Bar with
   val x = 1
   module Baz with

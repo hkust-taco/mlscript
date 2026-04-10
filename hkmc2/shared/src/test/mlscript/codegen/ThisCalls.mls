@@ -11,7 +11,7 @@ val ex = new Example
 let s = ex.("f")
 //│ s = fun f
 
-:todo
+:breakme
 :e
 s(123)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')

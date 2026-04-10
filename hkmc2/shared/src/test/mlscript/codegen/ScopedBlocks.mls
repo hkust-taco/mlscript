@@ -171,12 +171,12 @@ fun f(x) =
 //│       Predef.print(x1);
 //│       return while1()
 //│     }
-//│     return runtime.LoopEnd
+//│     return runtime.LoopEnd;
 //│   });
 //│   tmp2 = while1();
 //│   tmp3 = tmp2 !== runtime.LoopEnd;
 //│   if (tmp3 === true) { return tmp2 }
-//│   return runtime.Unit
+//│   return runtime.Unit;
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

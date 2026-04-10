@@ -29,36 +29,54 @@ f(new B)
 //│ = "B"
 
 
-// FIXME: UCS normalization wrongly considers `A` and `B` to be disjoint
-//  because it currently does not take into account the class hierarchy,
-//  which is a very serious issue that needs to be fixed.
 :sir
 let f = case
   A & B then "A & B"
   A then "A"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰, f¹;
-//│ define f¹ as fun f²(caseScrut) {
+//│ let f⁰, lambda⁰;
+//│ define lambda⁰ as fun lambda¹(caseScrut) {
 //│   match caseScrut
 //│     A⁰ =>
-//│       return "A"
+//│       match caseScrut
+//│         B⁰ =>
+//│           return "A & B"
+//│         else
+//│           return "A"
+//│       end
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ set f⁰ = f²;
+//│ set f⁰ = lambda¹;
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ f = fun f
+//│ f = fun
 
 :expect "A"
 f(new A)
 //│ = "A"
 
-:fixme
 :expect "A & B"
 f(new B)
-//│ ═══[RUNTIME ERROR] Expected: '"A & B"', got: '"A"'
-//│ = "A"
+//│ = "A & B"
+
+
+// Test with imported class hierarchy
+import "../../../mlscript-compile/Example.mls"
+open Example
+
+let g = case
+  Base & Child1 then "Base & Child1"
+  Base then "Base"
+//│ g = fun
+
+:expect "Base & Child1"
+g(new Child1)
+//│ = "Base & Child1"
+
+:expect "Base"
+g(new Child2)
+//│ = "Base"
 
 

@@ -90,15 +90,16 @@ result
 //│     switch (pc) {
 //│       case 0:
 //│         runtime.resumeValue = runtime.safeCall(k(arg));
-//│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(Handler$h$perform7, 1, "Effects.mls:63:13", null, null, 1, 2, arg, k, 0)
+//│         if (runtime.curEffect === null) {
+//│           pc = 1;
+//│           continue main
 //│         }
-//│         pc = 1;
-//│         continue main;
+//│         return runtime.unwind(Handler$h$perform7, 1, "Effects.mls:63:13", null, null, 1, 2, arg, k, 0);
 //│       case 1:
 //│         v = runtime.resumeValue;
 //│         result = result + arg;
 //│         return v;
+//│       default:
 //│     }
 //│     break;
 //│   }
@@ -111,10 +112,12 @@ result
 //│   constructor() {
 //│     let tmp7;
 //│     tmp7 = super();
-//│     if (runtime.curEffect !== null) {
+//│     if (runtime.curEffect === null) {
+//│       tmp7
+//│     } else {
 //│       tmp7 = runtime.illegalEffect("in a constructor");
+//│       tmp7
 //│     }
-//│     tmp7;
 //│   }
 //│   #Handler$h$$cap;
 //│   perform(arg) {
@@ -138,45 +141,45 @@ result
 //│     switch (pc) {
 //│       case 0:
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("1"));
-//│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(handleBlock$7, 4, "Effects.mls:67:3", null, null, 1, 0, 0)
+//│         if (runtime.curEffect === null) {
+//│           pc = 4;
+//│           continue main
 //│         }
-//│         pc = 4;
-//│         continue main;
+//│         return runtime.unwind(handleBlock$7, 4, "Effects.mls:67:3", null, null, 1, 0, 0);
 //│       case 1:
 //│         runtime.resumeValue;
 //│         return runtime.safeCall(h7.perform("5"));
 //│       case 2:
 //│         runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("4"));
-//│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(handleBlock$7, 1, "Effects.mls:70:3", null, null, 1, 0, 0)
+//│         if (runtime.curEffect === null) {
+//│           pc = 1;
+//│           continue main
 //│         }
-//│         pc = 1;
-//│         continue main;
+//│         return runtime.unwind(handleBlock$7, 1, "Effects.mls:70:3", null, null, 1, 0, 0);
 //│       case 3:
 //│         runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("3"));
-//│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(handleBlock$7, 2, "Effects.mls:69:3", null, null, 1, 0, 0)
+//│         if (runtime.curEffect === null) {
+//│           pc = 2;
+//│           continue main
 //│         }
-//│         pc = 2;
-//│         continue main;
+//│         return runtime.unwind(handleBlock$7, 2, "Effects.mls:69:3", null, null, 1, 0, 0);
 //│       case 4:
 //│         runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("2"));
-//│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(handleBlock$7, 3, "Effects.mls:68:3", null, null, 1, 0, 0)
+//│         if (runtime.curEffect === null) {
+//│           pc = 3;
+//│           continue main
 //│         }
-//│         pc = 3;
-//│         continue main;
+//│         return runtime.unwind(handleBlock$7, 3, "Effects.mls:68:3", null, null, 1, 0, 0);
+//│       default:
 //│     }
 //│     break;
 //│   }
 //│ });
 //│ runtime.enterHandleBlock(h7, handleBlock$7);
-//│ if (runtime.curEffect !== null) { runtime.topLevelEffect(false); }
-//│ result
+//│ if (runtime.curEffect === null) { result } else { runtime.topLevelEffect(false); result }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "54321"
 //│ result = "54321"
@@ -451,28 +454,28 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.446: 	    module A with
+//│ ║  l.449: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.442: 	    module A with
+//│ ║  l.445: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.438: 	    module A with
+//│ ║  l.441: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.434: 	    module A with
+//│ ║  l.437: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.434: 	    module A with
+//│ ║  l.437: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.438: 	    module A with
+//│ ║  l.441: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.442: 	    module A with
+//│ ║  l.445: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.446: 	    module A with
+//│ ║  l.449: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 

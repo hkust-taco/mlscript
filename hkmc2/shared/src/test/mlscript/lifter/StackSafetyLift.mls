@@ -27,22 +27,23 @@ hi(0)
 //│ let hi⁰, tmp, ‹stack safe body›⁰;
 //│ do runtime⁰.resetEffects﹖();
 //│ define hi⁰ as fun hi¹(n) {
-//│   let scrut, tmp1, stackDelayRes;
+//│   let stackDelayRes;
 //│   set runtime⁰.stackDepth = +⁰(runtime⁰.stackDepth﹖, 1);
 //│   set stackDelayRes = runtime⁰.checkDepth﹖();
 //│   match runtime⁰.curEffect﹖
 //│     null =>
+//│       let scrut, tmp1;
+//│       set scrut = ===⁰(n, 0);
+//│       match scrut
+//│         true =>
+//│           return 0
+//│         else
+//│           let res;
+//│           set tmp1 = -⁰(n, 1);
+//│           return hi¹(tmp1)
 //│       end
 //│     else
 //│       return runtime⁰.unwind﹖(hi¹, -1, "StackSafetyLift.mls:22:1", null, null, 1, 1, n, 0)
-//│   set scrut = ===⁰(n, 0);
-//│   match scrut
-//│     true =>
-//│       return 0
-//│     else
-//│       let res;
-//│       set tmp1 = -⁰(n, 1);
-//│       return hi¹(tmp1)
 //│   end
 //│ };
 //│ define ‹stack safe body›⁰ as fun ‹stack safe body›¹() {
@@ -51,11 +52,11 @@ hi(0)
 //│ set tmp = runtime⁰.runStackSafe﹖(6, ‹stack safe body›⁰);
 //│ match runtime⁰.curEffect﹖
 //│   null =>
-//│     end
+//│     tmp
 //│   else
 //│     set tmp = runtime⁰.topLevelEffect﹖(false);
-//│     end
-//│ tmp
+//│     tmp
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -72,50 +73,53 @@ sum(10000)
 //│ let sum⁰, tmp, ‹stack safe body›²;
 //│ do runtime⁰.resetEffects﹖();
 //│ define sum⁰ as fun sum¹(n) {
-//│   let scrut, tmp1, tmp2, pc, curDepth, stackDelayRes;
+//│   let curDepth, stackDelayRes;
 //│   set runtime⁰.stackDepth = +⁰(runtime⁰.stackDepth﹖, 1);
 //│   set curDepth = runtime⁰.stackDepth﹖;
 //│   set stackDelayRes = runtime⁰.checkDepth﹖();
 //│   match runtime⁰.curEffect﹖
 //│     null =>
-//│       end
-//│     else
-//│       return runtime⁰.unwind﹖(sum¹, -1, "StackSafetyLift.mls:66:1", null, null, 1, 1, n, 0)
-//│   match runtime⁰.resumePc﹖
-//│     -1 =>
-//│       set pc = 0;
-//│       end
-//│     else
-//│       let saveOffset;
-//│       set pc = runtime⁰.resumePc﹖;
-//│       set runtime⁰.resumePc = -1;
-//│       end
-//│   loop main:
-//│     match pc
-//│       0 =>
-//│         set scrut = ===⁰(n, 0);
-//│         match scrut
-//│           true =>
-//│             return 0
-//│           else
-//│             let res;
-//│             set tmp1 = -⁰(n, 1);
-//│             set res = sum¹(tmp1);
-//│             set runtime⁰.stackDepth = curDepth;
-//│             set runtime⁰.resumeValue = res;
-//│             match runtime⁰.curEffect﹖
-//│               null =>
-//│                 end
+//│       let scrut, tmp1, tmp2, pc;
+//│       match runtime⁰.resumePc﹖
+//│         -1 =>
+//│           set pc = 0;
+//│           end
+//│         else
+//│           let saveOffset;
+//│           set pc = runtime⁰.resumePc﹖;
+//│           set runtime⁰.resumePc = -1;
+//│           end
+//│       loop main:
+//│         match pc
+//│           0 =>
+//│             set scrut = ===⁰(n, 0);
+//│             match scrut
+//│               true =>
+//│                 return 0
 //│               else
-//│                 let res1;
-//│                 return runtime⁰.unwind﹖(sum¹, 1, "StackSafetyLift.mls:69:9", null, null, 1, 1, n, 0)
-//│             set pc = 1;
-//│             continue main
+//│                 let res;
+//│                 set tmp1 = -⁰(n, 1);
+//│                 set res = sum¹(tmp1);
+//│                 set runtime⁰.stackDepth = curDepth;
+//│                 set runtime⁰.resumeValue = res;
+//│                 match runtime⁰.curEffect﹖
+//│                   null =>
+//│                     set pc = 1;
+//│                     continue main
+//│                   else
+//│                     let res1;
+//│                     return runtime⁰.unwind﹖(sum¹, 1, "StackSafetyLift.mls:70:9", null, null, 1, 1, n, 0)
+//│                 end
+//│             end
+//│           1 =>
+//│             set tmp2 = runtime⁰.resumeValue﹖;
+//│             return +⁰(n, tmp2)
+//│           else
+//│             end
 //│         end
-//│       1 =>
-//│         set tmp2 = runtime⁰.resumeValue﹖;
-//│         return +⁰(n, tmp2)
-//│     end
+//│       end
+//│     else
+//│       return runtime⁰.unwind﹖(sum¹, -1, "StackSafetyLift.mls:67:1", null, null, 1, 1, n, 0)
 //│   end
 //│ };
 //│ define ‹stack safe body›² as fun ‹stack safe body›³() {
@@ -124,11 +128,11 @@ sum(10000)
 //│ set tmp = runtime⁰.runStackSafe﹖(1000, ‹stack safe body›²);
 //│ match runtime⁰.curEffect﹖
 //│   null =>
-//│     end
+//│     tmp
 //│   else
 //│     set tmp = runtime⁰.topLevelEffect﹖(false);
-//│     end
-//│ tmp
+//│     tmp
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 50005000
 

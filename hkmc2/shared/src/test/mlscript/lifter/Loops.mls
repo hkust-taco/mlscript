@@ -1,6 +1,6 @@
 :js
 :lift
-:todo // FIXME: Lifting should not require scope flattening (which doesn't handle loops)
+:ignore // FIXME: Lifting should not require scope flattening (which doesn't handle loops)
 
 
 let fs = mut []
@@ -30,7 +30,6 @@ fun foo() =
 
 // * Note that this works with while loop rewriting
 // * See [fixme:0] for cause of the issue
-:todo
 :expect 1
 foo()
 fs.0()
@@ -71,6 +70,8 @@ fun foo() =
 //│         set scope0$cap.x$0 = tmp;
 //│         set lambda$here = lambda$¹(scope0$cap);
 //│         return lambda$here
+//│       else
+//│         end
 //│     end
 //│   return runtime⁰.Unit⁰
 //│ };

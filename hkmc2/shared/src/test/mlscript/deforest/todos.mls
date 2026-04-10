@@ -224,8 +224,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 
 
 // TODO: currently nothing is done at all when seeing
-// `Define` blocks defining things other than functions
-:todo
+//  `Define` blocks defining things other than functions
 :expect Local(2)
 data class Global(x)
 fun test() =

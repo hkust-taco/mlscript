@@ -113,9 +113,7 @@ M.oops
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 
-// FIXME report initialization problem or make it work
-:todo
-:e
+// Note: this used to fail, but we now set the module's own binding as the first thing in the static ctor
 :sjs
 module M with
   val m: module M = M

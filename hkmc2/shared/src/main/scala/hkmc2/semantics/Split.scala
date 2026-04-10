@@ -73,6 +73,16 @@ enum Split extends AutoLocated with ProductWithTail:
     case Split.Else(term) => Vector.single(term)
     case Split.End => Vector.empty
   
+  /** Free variable names, accounting for let bindings. */
+  lazy val freeVars: Set[Str] = this match
+    case Split.Cons(Branch(scrutinee, pattern, continuation), tail) =>
+      scrutinee.freeVars ++ pattern.subTerms.iterator.flatMap(_.freeVars) ++
+        continuation.freeVars ++ tail.freeVars
+    case Split.Let(sym, term, tail) =>
+      term.freeVars ++ (tail.freeVars - sym.nme)
+    case Split.Else(term) => term.freeVars
+    case Split.End => Set.empty
+  
   final def showDbg(using DebugPrinter): String = this match
     case Split.Cons(head, tail) => s"${head.showDbg}; ${tail.showDbg}"
     case Split.Let(name, term, tail) => s"let ${name} = ${term.showDbg}; ${tail.showDbg}"

@@ -238,7 +238,14 @@ abstract class MLsDiffMaker extends DiffMaker:
     val origin = Origin(file, 0, fph)
     
     val lexer = new syntax.Lexer(origin, dbg = dbgParsing.isSet)
-    val tokens = lexer.bracketedTokens
+    
+    // Stupid hack to ignore diff-test directives like `:ignore`
+    def dropCrap(ts: Ls[syntax.Stroken -> Loc]): Ls[syntax.Stroken -> Loc] = ts match
+      case (syntax.IDENT(":", true), _) :: (syntax.IDENT(nme, false), _) :: rest =>
+        dropCrap(rest.dropWhile(_._1 isnt syntax.NEWLINE).drop(1))
+      case _ => ts
+    
+    val tokens = dropCrap(lexer.bracketedTokens)
     
     if showParse.isSet || dbgParsing.isSet then
       output(syntax.Lexer.printTokens(tokens))

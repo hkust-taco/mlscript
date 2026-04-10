@@ -96,11 +96,11 @@ parse("x y z")
 //│ > not Ident?? false
 //│ > Str? Id("y") false
 //│ > Str?? false
-//│ > not Ident [Id("x"), Id("y"), z]
-//│ > not Ident?? true
-//│ > Str? z true
-//│ > Str?? true
-//│ = {Error: [Id("x"), Id("y"), z]}
+//│ > not Ident [Id("x"), Id("y"), Id("z")]
+//│ > not Ident?? false
+//│ > Str? Id("z") false
+//│ > Str?? false
+//│ = {Error: [Id("x"), Id("y"), Id("z")]}
 
 go([], ["x", "y", "z"])
 //│ > not Ident []
@@ -115,18 +115,18 @@ go([], ["x", "y", "z"])
 //│ > not Ident?? false
 //│ > Str? Id("y") false
 //│ > Str?? false
-//│ > not Ident [Id("x"), Id("y"), z]
-//│ > not Ident?? true
-//│ > Str? z true
-//│ > Str?? true
-//│ = {Error: [Id("x"), Id("y"), z]}
+//│ > not Ident [Id("x"), Id("y"), Id("z")]
+//│ > not Ident?? false
+//│ > Str? Id("z") false
+//│ > Str?? false
+//│ = {Error: [Id("x"), Id("y"), Id("z")]}
 
 go([Id("x"), Id("y"), "z"], [])
-//│ > not Ident [Id("x"), Id("y"), "z"]
-//│ > not Ident?? true
-//│ > Str? z true
-//│ > Str?? true
-//│ = {Error: [Id("x"), Id("y"), "z"]}
+//│ > not Ident [Id("x"), Id("y"), Id("z")]
+//│ > not Ident?? false
+//│ > Str? Id("z") false
+//│ > Str?? false
+//│ = {Error: [Id("x"), Id("y"), Id("z")]}
 
 parse("x + y")
 //│ > not Ident []
@@ -141,10 +141,10 @@ parse("x + y")
 //│ > not Ident?? false
 //│ > Str? + true
 //│ > Str?? true
-//│ > not Ident [Id("x"), +, y]
-//│ > not Ident?? true
-//│ > Str? y true
-//│ > Str?? true
-//│ = {Error: [Id("x"), +, y]}
+//│ > not Ident [Op(Id("y"), "+", Id("x"))]
+//│ > not Ident?? false
+//│ > Str? Op(Id("y"), "+", Id("x")) false
+//│ > Str?? false
+//│ = {Success: Op(Id("y"), "+", Id("x"))}
 
 

@@ -35,18 +35,17 @@ f(10000, 20000, 0)
 //│           param3 = 1;
 //│           id = 0;
 //│           continue loopLabel
-//│         } else {
-//│           scrut1 = param1 > 0;
-//│           if (scrut1 === true) {
-//│             tmp2 = param1 - 1;
-//│             param1 = tmp2;
-//│             param3 = 2;
-//│             id = 0;
-//│             continue loopLabel
-//│           } else {
-//│             return param2
-//│           }
 //│         }
+//│         scrut1 = param1 > 0;
+//│         if (scrut1 === true) {
+//│           tmp2 = param1 - 1;
+//│           param1 = tmp2;
+//│           param3 = 2;
+//│           id = 0;
+//│           continue loopLabel
+//│         }
+//│         return param2;
+//│       default:
 //│     }
 //│     break;
 //│   }
@@ -83,13 +82,12 @@ A.sum(20000)
 //│       scrut = Predef.equals(n1, 0);
 //│       if (scrut === true) {
 //│         return acc
-//│       } else {
-//│         tmp = n1 - 1;
-//│         tmp1 = n1 + acc;
-//│         n1 = tmp;
-//│         acc = tmp1;
-//│         continue loopLabel
 //│       }
+//│       tmp = n1 - 1;
+//│       tmp1 = n1 + acc;
+//│       n1 = tmp;
+//│       acc = tmp1;
+//│       continue loopLabel;
 //│     }
 //│   } 
 //│   static sum(n1) {
@@ -150,7 +148,7 @@ fun f(x) =
     @tailcall f(x)
   @tailcall g()
 //│ ╔══[COMPILATION ERROR] This call is not in tail position.
-//│ ║  l.149: 	    @tailcall f(x)
+//│ ║  l.147: 	    @tailcall f(x)
 //│ ╙──       	              ^^^^
 
 :lift
@@ -209,10 +207,10 @@ module A with
     @tailcall g(x - 1)
 A.f(10000)
 //│ ╔══[COMPILATION ERROR] This tail call exits the current scope and is not optimized.
-//│ ║  l.208: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
+//│ ║  l.206: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
 //│ ╙──       	                                              ^^^^
 //│ ╔══[COMPILATION ERROR] This tail call exits the current scope and is not optimized.
-//│ ║  l.209: 	    @tailcall g(x - 1)
+//│ ║  l.207: 	    @tailcall g(x - 1)
 //│ ╙──       	              ^^^^^^^^
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
@@ -239,12 +237,12 @@ class A with
   fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 (new A).f(10)
 //│ ╔══[COMPILATION ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.238: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.236: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	                                                      ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Class methods may not yet be marked @tailrec.
-//│ ║  l.238: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.236: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	               ^
 //│ ╔══[COMPILATION ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.239: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
+//│ ║  l.237: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 //│ ╙──       	                                             ^^^^^^^^
 //│ = 0

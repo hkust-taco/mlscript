@@ -107,9 +107,8 @@ pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 Test.unapply("foobar")
 //│ = MatchSuccess(["foo", "bar"], null)
 
-:todo
 :pt
-// We cannot distinguish between `...` and `undefined` in the `Elaborator` now.
+// TODO: We cannot distinguish between `...` and `undefined` in the `Elaborator` now.
 pattern Email(name, domain) = ...
 //│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ TypeDef:
@@ -131,11 +130,11 @@ x => if x as
   0 then false
   1 then true
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (infix operator 'as')
-//│ ║  l.130: 	x => if x as
+//│ ║  l.129: 	x => if x as
 //│ ║         	        ^^^^
-//│ ║  l.131: 	  0 then false
+//│ ║  l.130: 	  0 then false
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.132: 	  1 then true
+//│ ║  l.131: 	  1 then true
 //│ ╙──       	^^^^^^^^^^^^^
 //│ = fun
 
@@ -146,11 +145,11 @@ fun test(x) = if x is
     true  then "T"
     false then "F"
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (infix operator 'as').
-//│ ║  l.145: 	  Test as
+//│ ║  l.144: 	  Test as
 //│ ║         	  ^^^^^^^
-//│ ║  l.146: 	    true  then "T"
+//│ ║  l.145: 	    true  then "T"
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.147: 	    false then "F"
+//│ ║  l.146: 	    false then "F"
 //│ ╙──       	^^^^^^^^^^^^^^^^^^
 
 
@@ -158,7 +157,7 @@ fun test(x) = if x is
 pattern Test = (0 => false) | (1 => true)
 if 0 is ((Test as r) where (r is x)) then print(x)
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.159: 	if 0 is ((Test as r) where (r is x)) then print(x)
+//│ ║  l.158: 	if 0 is ((Test as r) where (r is x)) then print(x)
 //│ ╙──       	                                                ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -167,14 +166,14 @@ if 0 is ((Test as r) where (r is x)) then print(x)
 pattern Test = 0 | 1
 class Id(name: Test)
 //│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference.
-//│ ║  l.168: 	class Id(name: Test)
+//│ ║  l.167: 	class Id(name: Test)
 //│ ╙──       	               ^^^^
 //│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference.
-//│ ║  l.168: 	class Id(name: Test)
+//│ ║  l.167: 	class Id(name: Test)
 //│ ║         	               ^^^^
 //│ ╙── Non-module parameter must have a non-module type.
 //│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference.
-//│ ║  l.168: 	class Id(name: Test)
+//│ ║  l.167: 	class Id(name: Test)
 //│ ╙──       	               ^^^^
 
 
@@ -186,13 +185,13 @@ pattern StatementBased =
   1 => "one"
   _ => "many"
 //│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.185: 	  0 => "zero"
+//│ ║  l.184: 	  0 => "zero"
 //│ ╙──       	  ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.186: 	  1 => "one"
+//│ ║  l.185: 	  1 => "one"
 //│ ╙──       	  ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.187: 	  _ => "many"
+//│ ║  l.186: 	  _ => "many"
 //│ ╙──       	  ^^^^^^^^^^^
 
 
@@ -203,14 +202,14 @@ pattern StatementBased =
 :fixme // TODO: support lambdas with patterns defined this way?
 | 0 => 1
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
-//│ ║  l.204: 	| 0 => 1
+//│ ║  l.203: 	| 0 => 1
 //│ ╙──       	  ^
 //│ = fun
 
 :fixme // TODO
 | [x] => 1
 //│ ╔══[COMPILATION ERROR] Illegal constraint syntax.
-//│ ║  l.211: 	| [x] => 1
+//│ ║  l.210: 	| [x] => 1
 //│ ╙──       	   ^
 //│ /!!!\ Uncaught error: scala.MatchError: Constrained(List(),Lit(IntLit(1))) (of class hkmc2.semantics.Term$Constrained)
 
@@ -220,7 +219,7 @@ pattern StatementBased =
 :fixme // TODO
 | (x, 0) => 1
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
-//│ ║  l.221: 	| (x, 0) => 1
+//│ ║  l.220: 	| (x, 0) => 1
 //│ ╙──       	      ^
 //│ = fun
 
