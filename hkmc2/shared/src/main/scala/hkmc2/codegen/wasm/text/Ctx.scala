@@ -701,25 +701,16 @@ class Ctx extends ToWat:
     getFuncTypeUse(funcref).getOrElse:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
-  /** Returns the [[GlobalIdx]] of the given `globalref`, optionally resolving the symbolic index into a numeric index.
-    */
-  def getGlobal(globalref: GlobalIdx | Symbol, resolveSymIdx: Bool = false): Opt[GlobalIdx] =
-    globalref match
-      case GlobalIdx(SymIdx(nme)) if resolveSymIdx =>
-        globals.zipWithIndex.collectFirst:
-          case ((symIdx, _), i) if symIdx.id == nme => GlobalIdx(NumIdx(i))
-      case globalidx: GlobalIdx => S(globalidx)
-      case sym: Symbol if resolveSymIdx =>
-        namedGlobals.get(sym).flatMap: globalEntry =>
-          globals.zipWithIndex.collectFirst:
-            case ((_, gi), i) if gi === globalEntry => GlobalIdx(NumIdx(i))
-      case sym: Symbol =>
-        namedGlobals.get(sym).map: globalEntry =>
-          GlobalIdx(globalExternType(globalEntry).id)
+  /** Returns the [[GlobalIdx]] of the given `globalref`. */
+  def getGlobal(globalref: GlobalIdx | Symbol): Opt[GlobalIdx] = globalref match
+    case globalidx: GlobalIdx => S(globalidx)
+    case sym: Symbol =>
+      namedGlobals.get(sym).map: globalEntry =>
+        GlobalIdx(globalExternType(globalEntry).id)
 
   /** Same as [[getGlobal]] but throws an exception when the `globalref` is not found. */
-  def getGlobal_!(globalref: GlobalIdx | Symbol, resolveSymIdx: Bool = false): GlobalIdx =
-    getGlobal(globalref, resolveSymIdx).getOrElse:
+  def getGlobal_!(globalref: GlobalIdx | Symbol): GlobalIdx =
+    getGlobal(globalref).getOrElse:
       lastWords(s"Missing global definition for ${globalref.prettyString}")
 
   @nowarn("cat=deprecation")
