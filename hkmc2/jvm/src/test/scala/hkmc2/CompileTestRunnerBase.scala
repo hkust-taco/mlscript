@@ -15,6 +15,8 @@ import io.PlatformPath.given
 abstract class CompileTestRunnerBase(
   compileDirs: Ls[os.Path],
   excludedDirs: Ls[os.Path] = Nil,
+  excludedFiles: Ls[os.Path] = Nil,
+  includedFiles: Ls[os.Path] = Nil,
 )
   extends funsuite.AnyFunSuite
   with ParallelTestExecution
@@ -39,7 +41,8 @@ abstract class CompileTestRunnerBase(
     
     lazy val compileTestFiles = allFiles.filter: file =>
       file.segments.contains("mlscript-compile")
-        && !TestFolders.isExcluded(file, excludedDirs)
+        && !TestFolders.isExcluded(file, excludedDirs, excludedFiles)
+        && (includedFiles.isEmpty || includedFiles.contains(file))
     
     compileTestFiles.foreach: file =>
       
