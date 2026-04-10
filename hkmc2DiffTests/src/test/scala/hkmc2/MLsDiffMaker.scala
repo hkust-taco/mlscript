@@ -135,7 +135,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       deadParamElim = Opt.when(deadParamElim.isSet):
         DeadParamElim(
           debug = true,
-          mono = deadParamElim.get.exists(_.contains("mono"))),
+          mono = deadParamElim.get.fold(true)(!_.contains("poly"))),
     )
   
   

@@ -2,10 +2,10 @@
 
 // original failure: lifter/ClassInFun.mls
 :js
-:deadParamElim
+:deadParamElim poly
 :fixme
 :lift
-fun f(used, unused) =
+private fun f(used, unused) =
   class C with
     fun get() = used
   new C
@@ -19,7 +19,7 @@ f(1, 2).get()
 
 // original failure: lifter/ModulesObjects
 :js
-:deadParamElim
+:deadParamElim poly
 :fixme
 :lift
 fun foo(y) =
@@ -54,7 +54,7 @@ foo(10)
 :llir
 :intl
 :fixme
-:deadParamElim
+:deadParamElim poly
 abstract class Callable
 object FnLike1 extends Callable with
   fun apply1(x) = x * 2

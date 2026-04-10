@@ -387,7 +387,7 @@ object DeadParamElim:
     eState: Elaborator.State,
   ): Program =
     val fState = new FlowAnalysis.State
-    val flowAnalysisRes = FlowAnalysis(p.main, mono = cfg.deadParamElim.exists(_.mono))
+    val flowAnalysisRes = FlowAnalysis(p.main, mono = cfg.deadParamElim.fold(true)(_.mono))
     val deadParamElimSolver = new DeadParamElimSolver(flowAnalysisRes)
     val rewrite = new Rewrite(deadParamElimSolver)
     Program(p.imports, rewrite.newBody)

@@ -3,33 +3,17 @@
 
 :deadParamElim
 :sir
-fun f(a) =
+private fun f(a) =
   a = 3
   g(a)
-fun g(a) = 2
+private fun g(a) = 2
 f(undefined)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@3 -> eliminable: {0}
-//│ dead-param-elim > prodfun g#0 @ f@3.g@1 -> eliminable: {0}
-//│ dead-param-elim > prodfun g#0 @ f@4.g@1 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > prodfun g#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰, g⁰, f_4_g_1$g⁰, f_3_g_1$g⁰, f_3$f⁰;
-//│ define f_4_g_1$g⁰ as fun f_4_g_1$g¹() {
-//│   return 2
-//│ };
-//│ define f_3_g_1$g⁰ as fun f_3_g_1$g¹() {
-//│   return 2
-//│ };
-//│ define f_3$f⁰ as fun f_3$f¹() {
-//│   return f_3_g_1$g¹()
-//│ };
-//│ define f⁰ as fun f¹(a) {
-//│   set a = 3;
-//│   return f_4_g_1$g¹()
-//│ };
-//│ define g⁰ as fun g¹(a) { return 2 };
-//│ f_3$f¹()
+//│ let f⁰, g⁰; define f⁰ as fun f¹() { return g¹() }; define g⁰ as fun g¹() { return 2 }; f¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
@@ -38,20 +22,17 @@ data class Box(x)
 
 :deadParamElim
 :sir
-fun f(a) = Box(a)
+private fun f(a) = Box(a)
 if f(42) is Box(v) then 0
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@4 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f², scrut, v⁰, arg$Box$0$, f_4$f⁰;
-//│ define f_4$f⁰ as fun f_4$f¹() {
+//│ let f², scrut, v⁰, arg$Box$0$;
+//│ define f² as fun f³() {
 //│   return Box⁰(undefined)
 //│ };
-//│ define f² as fun f³(a) {
-//│   return Box⁰(a)
-//│ };
-//│ set scrut = f_4$f¹();
+//│ set scrut = f³();
 //│ match scrut
 //│   Box¹ =>
 //│     set arg$Box$0$ = scrut.x⁰;
@@ -68,22 +49,15 @@ if f(42) is Box(v) then 0
 
 :deadParamElim
 :sir
-fun f(a) =
+private fun f(a) =
   let x = a
   0
 f(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@1 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁴, f_1$f⁰;
-//│ define f_1$f⁰ as fun f_1$f¹() {
-//│   let x;
-//│   set x = undefined;
-//│   return 0
-//│ };
-//│ define f⁴ as fun f⁵(a) { let x; set x = a; return 0 };
-//│ f_1$f¹()
+//│ let f⁴; define f⁴ as fun f⁵() { let x; set x = undefined; return 0 }; f⁵()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 

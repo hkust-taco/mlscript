@@ -5,12 +5,12 @@
 
 :deadParamElim
 module M with
-  fun f(a) = 0
-  fun g(b) = b
+  private fun f(a) = 0
+  private fun g(b) = b
 M.f(1)
 M.g(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@1 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 2
 
@@ -19,12 +19,11 @@ M.g(2)
 :expect 3
 module M with
   val x = 3
-  fun f(a) = x
-  fun main() = M.f(42)
+  private fun f(a) = x
+  private fun main() = M.f(42)
 M.main()
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ main@3.f@1 -> eliminable: {0}
-//│ dead-param-elim > prodfun f#0 @ main@5.f@1 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 3
 
@@ -32,8 +31,8 @@ M.main()
 :deadParamElim
 :expect 42
 module M with
-  fun f(a) = a
-  fun main() = M.f(42)
+  private fun f(a) = a
+  private fun main() = M.f(42)
 M.main()
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
@@ -44,10 +43,10 @@ M.main()
 
 :deadParamElim
 module M with
-  fun f(a) = a
-  fun g(b) = 0
-  fun pick(x)(y) = if false then x else y
-  fun main() = M.pick(M.f)(M.g)(5)
+  private fun f(a) = a
+  private fun g(b) = 0
+  private fun pick(x)(y) = if false then x else y
+  private fun main() = M.pick(M.f)(M.g)(5)
 M.main()
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
@@ -59,8 +58,8 @@ M.main()
 :expect 125
 module M with
   data class Foo(x) with
-    fun m() = this.x + 1
-    fun n(y) = this.x + y
+    private fun m() = this.x + 1
+    private fun n(y) = this.x + y
 let foo = M.Foo(123)
 foo M.Foo::n(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>

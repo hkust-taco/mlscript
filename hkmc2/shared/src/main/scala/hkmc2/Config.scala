@@ -109,7 +109,7 @@ object Config:
 
   case class DeadParamElim(val debug: Boolean, val mono: Boolean)
   object DeadParamElim:
-    val default = DeadParamElim(true, false)
+    val default = DeadParamElim(true, true)
   
   case class Inliner(inlineThreshold: Int)
 

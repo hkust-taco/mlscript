@@ -3,50 +3,38 @@
 
 :deadParamElim
 :sir
-fun f(a) = 0
+private fun f(a) = 0
 f(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@1 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰, f_1$f⁰;
-//│ define f_1$f⁰ as fun f_1$f¹() { return 0 };
-//│ define f⁰ as fun f¹(a) { return 0 };
-//│ f_1$f¹()
+//│ let f⁰; define f⁰ as fun f¹() { return 0 }; f¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 :deadParamElim
 :sir
-fun f(a, b) = 0
+private fun f(a, b) = 0
 f(1, 2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@1 -> eliminable: {0, 1}
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0, 1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f², f_1$f²;
-//│ define f_1$f² as fun f_1$f³() { return 0 };
-//│ define f² as fun f³(a, b) { return 0 };
-//│ f_1$f³()
+//│ let f²; define f² as fun f³() { return 0 }; f³()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 :deadParamElim
 :sir
-fun f(a)(b) = 0
+private fun f(a)(b) = 0
 f(1)(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@1 -> eliminable: {0}
-//│ dead-param-elim > prodfun f#1 @ f@1 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > prodfun f#1 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁴, tmp, f_1$f⁴;
-//│ define f_1$f⁴ as fun f_1$f⁵()() {
-//│   return 0
-//│ };
-//│ define f⁴ as fun f⁵(a)(b) { return 0 };
-//│ set tmp = f_1$f⁵();
-//│ tmp()
+//│ let f⁴, tmp; define f⁴ as fun f⁵()() { return 0 }; set tmp = f⁵(); tmp()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -54,7 +42,7 @@ f(1)(2)
 
 :deadParamElim
 :sir
-fun f(a) = a
+private fun f(a) = a
 f(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
@@ -65,7 +53,7 @@ f(42)
 
 :deadParamElim
 :sir
-fun f(a, b) = a + b
+private fun f(a, b) = a + b
 f(1, 2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
@@ -77,31 +65,25 @@ f(1, 2)
 
 :deadParamElim
 :sir
-fun f(a, b) = a
+private fun f(a, b) = a
 f(1, 2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@1 -> eliminable: {1}
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f¹⁰, f_1$f⁶;
-//│ define f_1$f⁶ as fun f_1$f⁷(a) { return a };
-//│ define f¹⁰ as fun f¹¹(a, b) { return a };
-//│ f_1$f⁷(1)
+//│ let f¹⁰; define f¹⁰ as fun f¹¹(a) { return a }; f¹¹(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 :deadParamElim
 :sir
-fun f(a, b) = b
+private fun f(a, b) = b
 f(1, 2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@1 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f¹², f_1$f⁸;
-//│ define f_1$f⁸ as fun f_1$f⁹(b) { return b };
-//│ define f¹² as fun f¹³(a, b) { return b };
-//│ f_1$f⁹(2)
+//│ let f¹²; define f¹² as fun f¹³(b) { return b }; f¹³(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
@@ -109,37 +91,25 @@ f(1, 2)
 
 :deadParamElim
 :sir
-fun f(a)(b) = a
+private fun f(a)(b) = a
 f(1)(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#1 @ f@1 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#1 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f¹⁴, tmp, f_1$f¹⁰;
-//│ define f_1$f¹⁰ as fun f_1$f¹¹(a)() {
-//│   return a
-//│ };
-//│ define f¹⁴ as fun f¹⁵(a)(b) { return a };
-//│ set tmp = f_1$f¹¹(1);
-//│ tmp()
+//│ let f¹⁴, tmp; define f¹⁴ as fun f¹⁵(a)() { return a }; set tmp = f¹⁵(1); tmp()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 :deadParamElim
 :sir
-fun f(a)(b) = b
+private fun f(a)(b) = b
 f(1)(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@1 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f¹⁶, tmp, f_1$f¹²;
-//│ define f_1$f¹² as fun f_1$f¹³()(b) {
-//│   return b
-//│ };
-//│ define f¹⁶ as fun f¹⁷(a)(b) { return b };
-//│ set tmp = f_1$f¹³();
-//│ tmp(2)
+//│ let f¹⁶, tmp; define f¹⁶ as fun f¹⁷()(b) { return b }; set tmp = f¹⁷(); tmp(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
@@ -147,41 +117,26 @@ f(1)(2)
 
 :deadParamElim
 :sir
-fun f(a) = 0
+private fun f(a) = 0
 f(1)
 f(2)
 f(3)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@1 -> eliminable: {0}
-//│ dead-param-elim > prodfun f#0 @ f@3 -> eliminable: {0}
-//│ dead-param-elim > prodfun f#0 @ f@5 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f¹⁸, f_5$f⁰, f_3$f⁰, f_1$f¹⁴;
-//│ define f_5$f⁰ as fun f_5$f¹() {
-//│   return 0
-//│ };
-//│ define f_3$f⁰ as fun f_3$f¹() {
-//│   return 0
-//│ };
-//│ define f_1$f¹⁴ as fun f_1$f¹⁵() {
-//│   return 0
-//│ };
-//│ define f¹⁸ as fun f¹⁹(a) { return 0 };
-//│ do f_1$f¹⁵();
-//│ do f_3$f¹();
-//│ f_5$f¹()
+//│ let f¹⁸; define f¹⁸ as fun f¹⁹() { return 0 }; do f¹⁹(); do f¹⁹(); f¹⁹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 
 :sir
 :deadParamElim
-fun g() =
+private fun g() =
   fun f(a) = 3
   f(4)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ g@1 -> eliminable: {0}
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let g⁰; define g⁰ as fun g¹() { let f; define f as fun f²⁰() { return 3 }; return f²⁰() }; end
@@ -242,7 +197,7 @@ Foo(1).get()
 :deadParamElim
 :expect 1
 data class Pair(a, b)
-fun fst(p) = if p is Pair(a, b) then a
+private fun fst(p) = if p is Pair(a, b) then a
 fst(Pair(1, 2))
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
@@ -253,7 +208,7 @@ fst(Pair(1, 2))
 :deadParamElim
 :expect 2
 data class Pair(a, b)
-fun snd(p) = if p is Pair(a, b) then b
+private fun snd(p) = if p is Pair(a, b) then b
 snd(Pair(1, 2))
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
@@ -264,8 +219,8 @@ snd(Pair(1, 2))
 
 :deadParamElim
 :expect 43
-fun g(x) = x + 1
-fun f(a) = g(a)
+private fun g(x) = x + 1
+private fun f(a) = g(a)
 f(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
@@ -278,7 +233,7 @@ f(42)
 
 :deadParamElim
 :expect 42
-fun f(a) =
+private fun f(a) =
   let x = a
   x
 f(42)
@@ -292,8 +247,8 @@ f(42)
 
 :deadParamElim
 :expect 1
-fun apply(f) = f(0)
-fun inc(x) = x + 1
+private fun apply(f) = f(0)
+private fun inc(x) = x + 1
 apply(inc)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
@@ -305,7 +260,7 @@ apply(inc)
 :deadParamElim
 :expect 1
 data class Pair(a, b)
-fun f(p) = p.Pair#a
+private fun f(p) = p.Pair#a
 f(Pair(1, 2))
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
@@ -315,6 +270,16 @@ f(Pair(1, 2))
 
 
 :deadParamElim
+private fun f(a) = g(a)
+private fun g(x) = 3
+f(1)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > prodfun g#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 3
+
+:deadParamElim poly
 fun f(a) = g(a)
 fun g(x) = 3
 f(1)
@@ -324,8 +289,6 @@ f(1)
 //│ dead-param-elim > prodfun g#0 @ f@4.g@1 -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 3
-
-
 
 :deadParamElim
 f(2)
@@ -337,15 +300,14 @@ g(1)
 
 :deadParamElim
 :expect [3, 4]
-fun f(x) =
+private fun f(x) =
   fun g(a, b, ...rest) = 
     print(x)
     rest
   g(1, 2, 3, 4)
 f(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun g#0 @ f@3 -> eliminable: {0, 1}
-//│ dead-param-elim > prodfun g#0 @ f@4 -> eliminable: {0, 1}
+//│ dead-param-elim > prodfun g#0 @ <root> -> eliminable: {0, 1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ > 2
 //│ = [3, 4]

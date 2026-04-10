@@ -562,7 +562,10 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
       processBlock(preAnalyzer.b)(using cc, NoCons)
 
       if mono then
-        for fun <- preAnalyzer.res.rootFunDefns do
+        for
+          fun <- preAnalyzer.res.rootFunDefns
+          if fun.visibility is Visibility.Public
+        do
           cc.constrain(generatedProdVars(fun.dSym).asProdStrat, NoCons)
       else
         for fun <- preAnalyzer.res.rootFunDefns do
@@ -571,7 +574,8 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
           val synthesizedRefUid =
             Value.Ref(preAnalyzer.res.funSymToFunDefn(funSym).sym, S(funSym)).uid
           val selfProd = pScheme.instantiate(synthesizedRefUid, funSym)
-          cc.constrain(selfProd, NoCons)
+          if fun.visibility is Visibility.Public then
+            cc.constrain(selfProd, NoCons)
           val selfInstId = synthesizedRefUid :: Nil
           synthesizedInstIdToFunSym(selfInstId) = funSym
     
