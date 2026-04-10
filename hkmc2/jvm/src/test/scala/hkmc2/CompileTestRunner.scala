@@ -7,7 +7,6 @@ import io.PlatformPath.given
 class CompileTestRunner extends CompileTestRunnerBase(
   compileDirs = TestFolders.mainCompileDirs(os.pwd),
   excludedDirs = TestFolders.mainExcludedCompileDirs(os.pwd),
-  excludedFiles = TestFolders.mainExcludedCompileFiles(os.pwd),
 ):
   protected def cctx: CompilerCtx = CompileTestRunner.cctx
 

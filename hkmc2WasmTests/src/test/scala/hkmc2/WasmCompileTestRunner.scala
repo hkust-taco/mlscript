@@ -6,7 +6,6 @@ import io.PlatformPath.given
 
 class WasmCompileTestRunner extends CompileTestRunnerBase(
   compileDirs = TestFolders.wasmCompileDirs(os.pwd),
-  includedFiles = TestFolders.wasmCompileFiles(os.pwd),
 ):
   protected def cctx: CompilerCtx = WasmCompileTestRunner.cctx
 

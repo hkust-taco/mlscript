@@ -13,82 +13,74 @@ object TestFolders:
     file.startsWith(dir)
   
   /** The base test directory: `hkmc2/shared/src/test`. */
-  def mainTestDir(workingDir: os.Path): os.Path =
-    workingDir/"hkmc2"/"shared"/"src"/"test"
+  def mainTestDir(wd: os.Path): os.Path =
+    wd/"hkmc2"/"shared"/"src"/"test"
   
   /** The diff test directory: `hkmc2/shared/src/test/mlscript`. */
-  def diffTestDir(workingDir: os.Path): os.Path =
-    mainTestDir(workingDir)/"mlscript"
+  def diffTestDir(wd: os.Path): os.Path =
+    mainTestDir(wd)/"mlscript"
   
   /** The compile test directory: `hkmc2/shared/src/test/mlscript-compile`. */
-  def compileTestDir(workingDir: os.Path): os.Path =
-    mainTestDir(workingDir)/"mlscript-compile"
+  def compileTestDir(wd: os.Path): os.Path =
+    mainTestDir(wd)/"mlscript-compile"
   
   // ——— Diff test subdirectories excluded from the main DiffTestRunner ———
   
   /** Diff test subdirectories that belong to the hkmc2NofibTests project. */
-  def nofibDiffDirs(workingDir: os.Path): Ls[os.Path] =
-    diffTestDir(workingDir)/"nofib" :: Nil
+  def nofibDiffDirs(wd: os.Path): Ls[os.Path] =
+    diffTestDir(wd)/"nofib" :: Nil
   
   /** Diff test subdirectories that belong to the hkmc2AppsTests project. */
-  def appsDiffDirs(workingDir: os.Path): Ls[os.Path] =
-    diffTestDir(workingDir)/"apps" :: Nil
+  def appsDiffDirs(wd: os.Path): Ls[os.Path] =
+    diffTestDir(wd)/"apps" :: Nil
   
   /** Diff test subdirectories that belong to the hkmc2WasmTests project. */
-  def wasmDiffDirs(workingDir: os.Path): Ls[os.Path] =
-    diffTestDir(workingDir)/"wasm" :: Nil
+  def wasmDiffDirs(wd: os.Path): Ls[os.Path] =
+    diffTestDir(wd)/"wasm" :: Nil
   
   /** Diff test directories that are always excluded (staging, mlscript-compile). */
-  def alwaysExcludedDiffDirs(workingDir: os.Path): Ls[os.Path] =
-    (diffTestDir(workingDir)/"ucs"/"staging") ::
-    compileTestDir(workingDir) ::
+  def alwaysExcludedDiffDirs(wd: os.Path): Ls[os.Path] =
+    (diffTestDir(wd)/"ucs"/"staging") ::
+    compileTestDir(wd) ::
     Nil
   
   /** All diff test directories excluded from the main DiffTestRunner. */
-  def mainExcludedDiffDirs(workingDir: os.Path): Ls[os.Path] =
-    alwaysExcludedDiffDirs(workingDir) ++
-      nofibDiffDirs(workingDir) ++
-      appsDiffDirs(workingDir) ++
-      wasmDiffDirs(workingDir)
+  def mainExcludedDiffDirs(wd: os.Path): Ls[os.Path] =
+    alwaysExcludedDiffDirs(wd) ++
+      nofibDiffDirs(wd) ++
+      appsDiffDirs(wd) ++
+      wasmDiffDirs(wd)
   
   /** Check whether a file should be excluded from the given list of excluded
     * directories and/or individual files. */
-  def isExcluded(file: os.Path, excludedDirs: Ls[os.Path], excludedFiles: Ls[os.Path]): Bool =
-    excludedDirs.exists(dir => isInDir(file, dir)) || excludedFiles.contains(file)
+  def isExcluded(file: os.Path, excludedDirs: Ls[os.Path]): Bool =
+    excludedDirs.exists(dir => isInDir(file, dir))
   
   // ——— Compile test directories ———
   
   /** Compile test directories for the main hkmc2JVM project.
     * We walk from `mainTestDir` so test names include the `mlscript-compile/` prefix. */
-  def mainCompileDirs(workingDir: os.Path): Ls[os.Path] =
-    mainTestDir(workingDir) :: Nil
+  def mainCompileDirs(wd: os.Path): Ls[os.Path] =
+    mainTestDir(wd) :: Nil
   
   /** Directories whose compile files are excluded from the main CompileTestRunner. */
-  def mainExcludedCompileDirs(workingDir: os.Path): Ls[os.Path] =
-    compileTestDir(workingDir)/"apps" :: Nil
-  
-  /** Individual compile files excluded from the main CompileTestRunner. */
-  def mainExcludedCompileFiles(workingDir: os.Path): Ls[os.Path] =
-    compileTestDir(workingDir)/"Wasm.mls" :: Nil
+  def mainExcludedCompileDirs(wd: os.Path): Ls[os.Path] =
+    appsCompileDirs(wd) ::: wasmCompileDirs(wd)
   
   /** Compile test directories for the hkmc2NofibTests project.
     * We walk from `bench/` so test names include the `mlscript-compile/` prefix. */
-  def nofibCompileDirs(workingDir: os.Path): Ls[os.Path] =
-    (workingDir/"hkmc2Benchmarks"/"src"/"test"/"bench") :: Nil
+  def nofibCompileDirs(wd: os.Path): Ls[os.Path] =
+    (wd/"hkmc2Benchmarks"/"src"/"test"/"bench") :: Nil
 
   /** Compile test directories for the hkmc2AppsTests project.
     * We walk from `mlscript-compile/apps/` directly. */
-  def appsCompileDirs(workingDir: os.Path): Ls[os.Path] =
-    compileTestDir(workingDir)/"apps" :: Nil
-
-  /** Compile test directories for the hkmc2WasmTests project.
-    * We walk from `mainTestDir` so test names include the `mlscript-compile/` prefix.
-    * Only `Wasm.mls` is included (via the specific include list in `WasmCompileTestRunner`). */
-  def wasmCompileDirs(workingDir: os.Path): Ls[os.Path] =
-    mainTestDir(workingDir) :: Nil
+  def appsCompileDirs(wd: os.Path): Ls[os.Path] =
+    compileTestDir(wd)/"apps" :: Nil
   
-  /** The specific compile files that belong to the hkmc2WasmTests project. */
-  def wasmCompileFiles(workingDir: os.Path): Ls[os.Path] =
-    compileTestDir(workingDir)/"Wasm.mls" :: Nil
-
+  /** Compile test directories for the hkmc2WasmTests project.
+    * We walk from `mainTestDir` so test names include the `mlscript-compile/` prefix.. */
+  def wasmCompileDirs(wd: os.Path): Ls[os.Path] =
+    compileTestDir(wd)/"wasm" :: Nil
+  
 end TestFolders
+
