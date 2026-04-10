@@ -1103,21 +1103,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           ).givenIn:
             deforest.Deforest(Program(imps.map(imp => imp.sym -> imp.str), desug)).main
     
-    val deadParamElimed =
-      val outterTl = tl
-      effectiveConfig.deadParamElim match
-        case None => deforested
-        case Some(dCfg) =>
-          (new TraceLogger:
-            override def doTrace: Bool = dCfg.debug
-            override def emitDbg(str: Str): Unit = outterTl.emitDbg(s"dead-param-elim > $str")
-          ).givenIn:
-            DeadParamElim(Program(imps.map(imp => imp.sym -> imp.str), deforested)).main
-    
     val handlerPaths = new HandlerPaths
 
-    val withHandlers1 = effectiveConfig.effectHandlers.fold(deadParamElimed): opt =>
-      HandlerLowering(handlerPaths, opt).translateHandleBlocks(deadParamElimed)
+    val withHandlers1 = effectiveConfig.effectHandlers.fold(deforested): opt =>
+      HandlerLowering(handlerPaths, opt).translateHandleBlocks(deforested)
     
     val shouldFlattenScopes = effectiveConfig.effectHandlers.isDefined
     

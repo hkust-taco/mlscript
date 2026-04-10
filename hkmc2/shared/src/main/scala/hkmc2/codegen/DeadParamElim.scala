@@ -386,8 +386,16 @@ object DeadParamElim:
     raise: Raise,
     eState: Elaborator.State,
   ): Program =
-    val fState = new FlowAnalysis.State
-    val flowAnalysisRes = FlowAnalysis(p.main, mono = cfg.deadParamElim.fold(true)(_.mono))
-    val deadParamElimSolver = new DeadParamElimSolver(flowAnalysisRes)
-    val rewrite = new Rewrite(deadParamElimSolver)
-    Program(p.imports, rewrite.newBody)
+    cfg.deadParamElim match
+      case None => p
+      case Some(dCfg) =>
+        val outerTl = tl
+        (new TraceLogger:
+          override def doTrace: Bool = dCfg.debug
+          override def emitDbg(str: Str): Unit = outerTl.emitDbg(s"dead-param-elim > $str")
+        ).givenIn:
+          val fState = new FlowAnalysis.State
+          val flowAnalysisRes = FlowAnalysis(p.main, mono = dCfg.mono)
+          val deadParamElimSolver = new DeadParamElimSolver(flowAnalysisRes)
+          val rewrite = new Rewrite(deadParamElimSolver)
+          Program(p.imports, rewrite.newBody)

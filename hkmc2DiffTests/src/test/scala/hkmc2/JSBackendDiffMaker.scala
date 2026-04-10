@@ -110,9 +110,11 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val le_0 = low.program(blk)
       val le_1 = ltl.givenIn:
         BlockSimplifier(symbolsToPreserve)(le_0)
+      val le_2 = ltl.givenIn:
+        DeadParamElim(le_1)
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
-        jsb.programBody(le_1, N, wd)
+        jsb.programBody(le_2, N, wd)
       val jsStr = je.stripBreaks.mkString(output.ColWidth)
       outputSeparator("JS (unsanitized)")
       output(jsStr)
@@ -162,8 +164,10 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           }
         rec(lowered_0.main, lowered_1.main)
       
+      val lowered_2 = ltl.givenIn:
+        DeadParamElim(lowered_1)
       if checkIR.isSet then
-        BlockChecker().applyProgram(lowered_1)
+        BlockChecker().applyProgram(lowered_2)
       
       if showOptimizedIR.isSet then
         outputSeparator("Optimized IR")
@@ -172,12 +176,12 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           showFlowSymbols = true,
           debug = debug.isSet,
         )
-        output(Printer().worksheet(lowered_1)(using irPrintingScp).mkString(output.ColWidth))
+        output(Printer().worksheet(lowered_2)(using irPrintingScp).mkString(output.ColWidth))
       if showOptimizedTree.isSet then
         outputSeparator("Optimized IR Tree")
-        output(lowered_1.showAsTree)
+        output(lowered_2.showAsTree)
       
-      processIRBlock(lowered_1, definedValues)
+      processIRBlock(lowered_2, definedValues)
       
   end processTerm
   
