@@ -116,6 +116,14 @@ lazy val hkmc2AppsTests = project.in(file("hkmc2AppsTests"))
     Test/run/fork := true, // so that CTRL+C actually terminates the watcher
   )
 
+lazy val hkmc2MainTests = project.in(file("hkmc2MainTests"))
+  .settings(
+    Test / test := (
+      (hkmc2DiffTests / Test / test)
+        .dependsOn(hkmc2JVM / Test / test)
+    ).value
+  )
+
 lazy val hkmc2MostTests = project.in(file("hkmc2MostTests"))
   .settings(
     Test / test := (
