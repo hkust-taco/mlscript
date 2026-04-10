@@ -147,7 +147,7 @@ let Predef1;
     }
   } 
   static equals(a, b) {
-    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, scrut10, scrut11, lambda, lambda1, tmp, tmp1, tmp2;
+    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, scrut10, scrut11, tmp, tmp1, lambda, tmp2, tmp3, lambda1;
     scrut = a === b;
     if (scrut === true) {
       return true
@@ -156,12 +156,12 @@ let Predef1;
       if (b instanceof globalThis.Array) {
         scrut1 = a.length === b.length;
         if (scrut1 === true) {
-          lambda = (undefined, function (a1, i) {
-            let tmp3;
-            tmp3 = runtime.safeCall(b.at(i));
-            return Predef.equals(a1, tmp3)
+          lambda1 = (undefined, function (a1, i) {
+            let tmp4;
+            tmp4 = runtime.safeCall(b.at(i));
+            return Predef.equals(a1, tmp4)
           });
-          return runtime.safeCall(a.every(lambda))
+          return runtime.safeCall(a.every(lambda1))
         }
       }
     }
@@ -175,64 +175,56 @@ let Predef1;
           if (scrut9 === true) {
             ac = a.constructor;
             scrut3 = ac !== undefined;
-            if (scrut3 === true) {
-              scrut7 = ac === b.constructor;
-              if (scrut7 === true) {
-                md = ac[Predef.Symbols.definitionMetadata];
-                scrut4 = md !== undefined;
-                if (scrut4 === true) {
-                  lambda1 = (undefined, function (field) {
-                    let scrut12, scrut13;
-                    scrut12 = field !== null;
-                    if (scrut12 === true) {
-                      scrut13 = Predef.equals(a[field], b[field]);
-                      if (scrut13 === true) {
-                        return true
+            σ$x: {
+              if (scrut3 === true) {
+                scrut7 = ac === b.constructor;
+                if (scrut7 === true) {
+                  md = ac[Predef.Symbols.definitionMetadata];
+                  scrut4 = md !== undefined;
+                  σ$x1: {
+                    if (scrut4 === true) {
+                      lambda = (undefined, function (field) {
+                        let scrut12, scrut13;
+                        scrut12 = field !== null;
+                        if (scrut12 === true) {
+                          scrut13 = Predef.equals(a[field], b[field]);
+                          if (scrut13 === true) {
+                            return true
+                          }
+                          return false;
+                        }
+                        return false;
+                      });
+                      scrut5 = runtime.safeCall(md[2].every(lambda));
+                      if (scrut5 === true) {
+                        tmp1 = true;
+                        break σ$x1
                       }
-                      return false;
                     }
-                    return false;
-                  });
-                  scrut5 = runtime.safeCall(md[2].every(lambda1));
-                  if (scrut5 === true) {
-                    tmp = true;
-                  } else {
-                    tmp = false;
+                    tmp1 = false;
                   }
-                } else {
-                  tmp = false;
+                  tmp2 = tmp1;
+                  scrut6 = tmp2;
+                  if (scrut6 === true) {
+                    tmp = true;
+                    break σ$x
+                  }
                 }
-                scrut6 = tmp;
-                if (scrut6 === true) {
-                  tmp1 = true;
-                } else {
-                  tmp1 = false;
-                }
-              } else {
-                tmp1 = false;
               }
-            } else {
-              tmp1 = false;
+              tmp = false;
             }
-            scrut8 = tmp1;
+            tmp3 = tmp;
+            scrut8 = tmp3;
             if (scrut8 === true) {
-              tmp2 = true;
-            } else {
-              tmp2 = false;
+              return true
             }
-            return tmp2
           }
-          tmp2 = false;
-          return tmp2;
         }
-        tmp2 = false;
-        return tmp2;
+        return false
       }
-      tmp2 = false;
-      return tmp2;
+      return false;
     }
-    tmp2 = false;
-    return tmp2;
+    return false;
   } 
   static nequals(a, b) {
     let tmp;

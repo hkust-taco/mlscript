@@ -48,44 +48,34 @@ if s is
   Some(1) then 0
   None then 1
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let arg$Some$0$, tmp;
-//│ block split_root$:
-//│   block split_default$:
-//│     match s⁰
-//│       Some⁰ =>
-//│         set arg$Some$0$ = s⁰.value⁰;
-//│         match arg$Some$0$
-//│           1 =>
-//│             set tmp = 0;
-//│             break split_root$
-//│           else
-//│             break split_default$
-//│         end
-//│       None⁰ =>
-//│         set tmp = 1;
-//│         break split_root$
-//│       else
-//│         break split_default$
-//│     end
-//│   throw new globalThis⁰.Error⁰("match error")
-//│ tmp
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let arg$Some$0$, tmp;
+//│ let arg$Some$0$;
 //│ match s⁰
 //│   Some⁰ =>
 //│     set arg$Some$0$ = s⁰.value⁰;
 //│     match arg$Some$0$
 //│       1 =>
-//│         begin
-//│           set tmp = 0;
-//│           end;
-//│         tmp
+//│         0
 //│       else
 //│         throw new globalThis⁰.Error⁰("match error")
 //│     end
 //│   None⁰ =>
-//│     set tmp = 1;
-//│     tmp
+//│     1
+//│   else
+//│     throw new globalThis⁰.Error⁰("match error")
+//│ end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let arg$Some$0$;
+//│ match s⁰
+//│   Some⁰ =>
+//│     set arg$Some$0$ = s⁰.value⁰;
+//│     match arg$Some$0$
+//│       1 =>
+//│         0
+//│       else
+//│         throw new globalThis⁰.Error⁰("match error")
+//│     end
+//│   None⁰ =>
+//│     1
 //│   else
 //│     throw new globalThis⁰.Error⁰("match error")
 //│ end
@@ -239,21 +229,21 @@ fun f(x) = print of if x is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f6;
 //│ f6 = function f(x3) {
-//│   let arg$Some$0$4, tmp9;
+//│   let arg$Some$0$4, tmp8;
 //│   if (x3 instanceof Some1.class) {
 //│     arg$Some$0$4 = x3.value;
 //│     if (arg$Some$0$4 === 0) {
-//│       tmp9 = "0";
-//│       return Predef.print(tmp9)
+//│       tmp8 = "0";
+//│       return Predef.print(tmp8)
 //│     }
-//│     tmp9 = "oops";
-//│     return Predef.print(tmp9);
+//│     tmp8 = "oops";
+//│     return Predef.print(tmp8);
 //│   } else if (x3 instanceof None1.class) {
-//│     tmp9 = "ok";
-//│     return Predef.print(tmp9)
+//│     tmp8 = "ok";
+//│     return Predef.print(tmp8)
 //│   }
-//│   tmp9 = "oops";
-//│   return Predef.print(tmp9);
+//│   tmp8 = "oops";
+//│   return Predef.print(tmp8);
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

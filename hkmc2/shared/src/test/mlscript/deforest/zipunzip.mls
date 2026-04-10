@@ -32,8 +32,6 @@ testUnzipZip(3)
 //│ deforest > 	Select(Ref(tmp:arg$Cons$0$,None),Ident(b))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(ls_unzip,None)
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls_unzip,None)
 //│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
 //│ deforest > 	Ref(ls_unzip,None)
 //│ deforest > 	Select(Ref(ls_unzip,None),Ident(h))
@@ -42,8 +40,6 @@ testUnzipZip(3)
 //│ deforest > 	Ref(tmp:arg$Cons$0$,None)
 //│ deforest > 	Select(Ref(tmp:arg$Cons$0$,None),Ident(a))
 //│ deforest > 	Select(Ref(tmp:arg$Cons$0$,None),Ident(b))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls_unzip,None)
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(ls_unzip,None)
 //│ deforest > <<< fusing <<<

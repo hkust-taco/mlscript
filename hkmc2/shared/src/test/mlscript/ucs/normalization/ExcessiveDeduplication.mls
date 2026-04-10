@@ -1,6 +1,4 @@
 :js
-:patMatConsequentSharingThreshold 1
-// ^ force dedup even for small consequents
 
 
 let
@@ -19,14 +17,13 @@ if
   x then 0
   y then 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp;
-//│ if (x !== true) {
-//│   if (y !== true) {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│ if (x === true) {
+//│   0
+//│ } else {
+//│   if (y === true) {
+//│     0
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ }
-//│ tmp = 0;
-//│ tmp
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -56,52 +53,36 @@ if
   y is [b] then let x = 1 in x + b
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    x is true and
-//│ >      z is true then 1
-//│ >      y is []=1 and
-//│ >        let tmp:element0$ = ((tmp:runtime⁰.)Tuple.)get‹term:get›(y⁰, 0)
-//│ >        let b = tmp:element0$⁰
-//│ >        else
-//│ >          let x
-//│ >          x = 1
-//│ >          builtin:+⁰(x⁰, b⁰)
-//│ >    y is []=1 and
+//│ >    let-split σ = y is []=1 and
 //│ >      let tmp:element0$ = ((tmp:runtime⁰.)Tuple.)get‹term:get›(y⁰, 0)
 //│ >      let b = tmp:element0$⁰
 //│ >      else
 //│ >        let x
 //│ >        x = 1
 //│ >        builtin:+⁰(x⁰, b⁰)
+//│ >    x is true and
+//│ >      z is true then 1
+//│ >      $σ
+//│ >    $σ
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let b, x1, element0$, tmp1;
-//│ split_root$: {
-//│   split_default$: {
-//│     if (x === true) {
-//│       if (z === true) {
-//│         tmp1 = 1;
-//│         break split_root$
-//│       }
-//│       if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
-//│         element0$ = runtime.Tuple.get(y, 0);
-//│         b = element0$;
-//│       } else {
-//│         break split_default$
-//│       }
-//│     } else {
-//│       if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
-//│         element0$ = runtime.Tuple.get(y, 0);
-//│         b = element0$;
-//│       } else {
-//│         break split_default$
-//│       }
+//│ let b, x1, element0$, tmp;
+//│ σ$x: {
+//│   if (x === true) {
+//│     if (z === true) {
+//│       tmp = 1;
+//│       break σ$x
 //│     }
-//│     x1 = 1;
-//│     tmp1 = x1 + b;
-//│     break split_root$;
 //│   }
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
+//│     element0$ = runtime.Tuple.get(y, 0);
+//│     b = element0$;
+//│     x1 = 1;
+//│     tmp = x1 + b;
+//│   } else {
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   }
 //│ }
-//│ block$res4 = tmp1;
+//│ block$res4 = tmp;
 //│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
@@ -130,24 +111,11 @@ if false do ()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ 123
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut;
-//│ block split_root$:
-//│   block split_1$:
-//│     set scrut = false;
-//│     match scrut
-//│       true =>
-//│         break split_1$
-//│       else
-//│         break split_1$
-//│     end
-//│   end
-//│ 123
+//│ let scrut; set scrut = false; 123
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ 123
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 123
-
-:patMatConsequentSharingThreshold 10
 
 // * How it ought to be:
 :sir

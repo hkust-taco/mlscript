@@ -22,7 +22,6 @@ case class Config(
   sanityChecks: Opt[SanityChecks],
   effectHandlers: Opt[EffectHandlers],
   liftDefns: Opt[LiftDefns],
-  patMatConsequentSharingThreshold: Opt[Int],
   stageCode: Bool,
   target: CompilationTarget,
   rewriteWhileLoops: Bool,
@@ -61,7 +60,6 @@ object Config:
     // sanityChecks = S(SanityChecks(light = true)),
     effectHandlers = N,
     liftDefns = N,
-    patMatConsequentSharingThreshold = default.patMatConsequentSharingThreshold, // minimum: 1
     target = CompilationTarget.JS,
     rewriteWhileLoops = false,
     stageCode = false,
@@ -74,8 +72,7 @@ object Config:
     noFreeze = false,
     noModuleCheck = false,
   )
-  object default:
-    val patMatConsequentSharingThreshold = S(15)
+  object default
   
   case class SanityChecks(light: Bool)
   
@@ -253,10 +250,6 @@ object ConfigParser:
     case "sanityChecks" =>
       parseOpt(value)(_ => S(Config.SanityChecks(light = true))) match
         case S(v) => _.copy(sanityChecks = v)
-        case N => identity
-    case "patMatConsequentSharingThreshold" =>
-      parseInt(value) match
-        case S(v) => _.copy(patMatConsequentSharingThreshold = S(v))
         case N => identity
     case _ =>
       raise(ErrorReport(

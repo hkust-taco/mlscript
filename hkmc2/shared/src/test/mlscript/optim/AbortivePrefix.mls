@@ -22,23 +22,19 @@ fun f =
 //│ let f⁰;
 //│ define f⁰ as fun f¹() {
 //│   let scrut, scrut1;
-//│   block split_root$:
-//│     block split_default$:
-//│       set scrut = true;
-//│       match scrut
+//│   set scrut = true;
+//│   match scrut
+//│     true =>
+//│       set scrut1 = false;
+//│       match scrut1
 //│         true =>
-//│           set scrut1 = false;
-//│           match scrut1
-//│             true =>
-//│               return runtime⁰.Unit⁰
-//│             else
-//│               break split_default$
-//│           end
+//│           return runtime⁰.Unit⁰
 //│         else
-//│           break split_default$
+//│           throw new globalThis⁰.Error⁰("match error")
 //│       end
-//│     throw new globalThis⁰.Error⁰("match error")
-//│   return Predef⁰.notImplementedError⁰
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
 //│ };
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
@@ -71,10 +67,10 @@ fun f =
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let f²;
 //│ define f² as fun f³() {
-//│   let scrut, scrut1;
-//│   block split_root$:
-//│     block split_1$:
-//│       set scrut = true;
+//│   let scrut, scrut1, tmp, tmp1;
+//│   set scrut = true;
+//│   block σ$x:
+//│     block σ:
 //│       match scrut
 //│         true =>
 //│           set scrut1 = false;
@@ -82,19 +78,20 @@ fun f =
 //│             true =>
 //│               return "1"
 //│             else
-//│               break split_1$
+//│               break σ
 //│           end
 //│         else
-//│           break split_1$
+//│           break σ
 //│       end
 //│     return "2 long long long long long long long long long long long long long long"
+//│   set tmp1 = tmp;
 //│   return Predef⁰.notImplementedError⁰
 //│ };
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f²;
 //│ define f² as fun f³() {
-//│   let scrut, scrut1;
+//│   let scrut, scrut1, tmp, tmp1;
 //│   set scrut = true;
 //│   match scrut
 //│     true =>

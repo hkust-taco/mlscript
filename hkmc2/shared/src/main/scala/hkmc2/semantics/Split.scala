@@ -23,6 +23,11 @@ enum Split extends AutoLocated with ProductWithTail:
   case Let(sym: BlockLocalSymbol, term: Term, tail: Split)
   case Else(default: Term)
   case End
+  /** Declares a named split (join point). The symbol's `body` holds the shared
+    * split; `tail` is the continuation where the symbol is in scope. */
+  case LetSplit(sym: SplitSymbol, tail: Split)
+  /** References a previously declared split (join point). */
+  case UseSplit(sym: SplitSymbol)
   
   inline def ~:(head: Branch): Split = Split.Cons(head, this)
   
@@ -31,6 +36,8 @@ enum Split extends AutoLocated with ProductWithTail:
     case Let(sym, term, tail) => Let(sym, term.mkClone, tail.mkClone)
     case Else(default) => Else(default.mkClone)
     case End => End
+    case LetSplit(sym, tail) => LetSplit(sym, tail.mkClone)
+    case UseSplit(sym) => UseSplit(sym)
   
   /** Used to indicate whether the `Split` was duplicated during desugaring or
     * normalization. */
@@ -47,24 +54,32 @@ enum Split extends AutoLocated with ProductWithTail:
       case Cons(head, tail) => Cons(head, tail.duplicate)
       case Let(name, term, tail) => Let(name, term, tail.duplicate)
       case Else(default) => Else(default)
-      case End => End).setDuplicated
+      case End => End
+      case LetSplit(sym, tail) => LetSplit(sym, tail.duplicate)
+      case UseSplit(sym) => UseSplit(sym)).setDuplicated
   
   lazy val isFull: Bool = this match
     case Split.Cons(_, tail) => tail.isFull
     case Split.Let(_, _, tail) => tail.isFull
     case Split.Else(_) => true
     case Split.End => false
+    case Split.LetSplit(_, tail) => tail.isFull
+    case Split.UseSplit(sym) => sym.body.isFull
   
   lazy val isEmpty: Bool = this match
     case Split.Let(_, _, tail) => tail.isEmpty
     case Split.Else(_) | Split.Cons(_, _) => false
     case Split.End => true
+    case Split.LetSplit(_, tail) => tail.isEmpty
+    case Split.UseSplit(sym) => sym.body.isEmpty
   
   final override def children: Vector[Located] = this match
     case Split.Cons(head, tail) => Vector.double(head, tail)
     case Split.Let(name, term, tail) => Vector.triple(name, term, tail)
     case Split.Else(default) => Vector.single(default)
     case Split.End => Vector.empty
+    case Split.LetSplit(sym, tail) => Vector.double(sym, tail)
+    case Split.UseSplit(sym) => Vector.single(sym)
   
   def subTerms: Vector[Term] = this match
     case Split.Cons(Branch(scrutinee, pattern, continuation), tail) => 
@@ -72,6 +87,8 @@ enum Split extends AutoLocated with ProductWithTail:
     case Split.Let(_, term, tail) => term +: tail.subTerms
     case Split.Else(term) => Vector.single(term)
     case Split.End => Vector.empty
+    case Split.LetSplit(sym, tail) => sym.body.subTerms ++ tail.subTerms
+    case Split.UseSplit(_) => Vector.empty
   
   /** Free variable names, accounting for let bindings. */
   lazy val freeVars: Set[Str] = this match
@@ -82,12 +99,16 @@ enum Split extends AutoLocated with ProductWithTail:
       term.freeVars ++ (tail.freeVars - sym.nme)
     case Split.Else(term) => term.freeVars
     case Split.End => Set.empty
+    case Split.LetSplit(sym, tail) => sym.body.freeVars ++ tail.freeVars
+    case Split.UseSplit(sym) => sym.body.freeVars
   
   final def showDbg(using DebugPrinter): String = this match
     case Split.Cons(head, tail) => s"${head.showDbg}; ${tail.showDbg}"
     case Split.Let(name, term, tail) => s"let ${name} = ${term.showDbg}; ${tail.showDbg}"
     case Split.Else(default) => s"else ${default.showDbg}"
     case Split.End => ""
+    case Split.LetSplit(sym, tail) => s"let-split ${sym.nme} = { ${sym.body.showDbg} }; ${tail.showDbg}"
+    case Split.UseSplit(sym) => s"$$${sym.nme}"
   
   final override def withLoc(loco: Option[Loc]): this.type =
     super.withLoc:
@@ -96,6 +117,7 @@ enum Split extends AutoLocated with ProductWithTail:
         // which causes the assertion of distinctness of origins to fail.
         case Split.End => N
         case _: Split.Else => N // FIXME: @Luyu pls clean up this mess
+        case _: Split.UseSplit => N
         case _ => loco
   
   var isFallback: Bool = false
@@ -112,6 +134,8 @@ extension (split: Split)
       case Split.Let(name, term, tail) => Split.Let(name, term, tail ~~: fallback)
       case Split.Else(_) => lastWords("impossible since split is not full")
       case Split.End => fallback
+      case Split.LetSplit(sym, tail) => Split.LetSplit(sym, tail ~~: fallback)
+      case Split.UseSplit(_) => split // UseSplit is terminal; the referenced body determines fullness
 
 object Split:
   def default(term: Term): Split = Split.Else(term)
@@ -186,6 +210,11 @@ object Split:
           case Split.Else(t) =>
             (if isFirst && !isTopLevel then "" else "else") #: term(t)
           case Split.End => Nil
+          case Split.LetSplit(sym, tail) =>
+            val bodyLines = split(sym.body, true, true)
+            (s"let-split ${sym.nme} =" #: bodyLines) ::: split(tail, false, isTopLevel)
+          case Split.UseSplit(sym) =>
+            (0, s"$$${sym.nme}") :: Nil
         if s.duplicated then lines.map:
           case (n, line) if !line.endsWith("// duplicated") => (n, s"$line // duplicated")
           case other => other

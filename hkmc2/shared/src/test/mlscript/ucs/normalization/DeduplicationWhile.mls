@@ -1,6 +1,4 @@
 :js
-:patMatConsequentSharingThreshold 1
-// ^ force dedup even for small consequents
 
 
 // :sjs
@@ -17,17 +15,19 @@ while true and true and false do print(1) else print(2)
 //│   lbl: while (true) {
 //│     let scrut, scrut1, scrut2;
 //│     scrut = true;
-//│     if (scrut === true) {
-//│       scrut2 = true;
-//│       if (scrut2 === true) {
-//│         scrut1 = false;
-//│         if (scrut1 === true) {
-//│           Predef.print(1);
-//│           continue lbl
+//│     σ$x: {
+//│       if (scrut === true) {
+//│         scrut2 = true;
+//│         if (scrut2 === true) {
+//│           scrut1 = false;
+//│           if (scrut1 === true) {
+//│             Predef.print(1);
+//│             break σ$x
+//│           }
 //│         }
 //│       }
+//│       Predef.print(2);
 //│     }
-//│     Predef.print(2);
 //│     continue lbl;
 //│   }
 //│ });
@@ -57,36 +57,28 @@ while x > 0 and x ===
 //│ lambda2 = (undefined, function (x1) {
 //│   lbl: while (true) {
 //│     let scrut5, scrut6, scrut7, scrut8, scrut9;
-//│     split_root$1: {
-//│       split_1$1: {
-//│         split_2$1: {
-//│           scrut5 = x1 > 0;
-//│           if (scrut5 === true) {
-//│             scrut6 = x1 === 1;
-//│             if (scrut6 === true) {
-//│               break split_1$1
-//│             }
-//│             scrut7 = x1 === 2;
-//│             if (scrut7 === true) {
-//│               break split_1$1
-//│             }
-//│             scrut8 = x1 === 3;
-//│             if (scrut8 === true) {
-//│               break split_2$1
-//│             }
-//│             scrut9 = x1 === 4;
-//│             if (scrut9 === true) {
-//│               break split_2$1
-//│             }
-//│             break split_root$1;
-//│           }
-//│           break split_root$1;
-//│         }
-//│         Predef.print("B");
-//│         continue lbl;
+//│     scrut5 = x1 > 0;
+//│     if (scrut5 === true) {
+//│       scrut6 = x1 === 1;
+//│       if (scrut6 === true) {
+//│         Predef.print("A");
+//│         continue lbl
 //│       }
-//│       Predef.print("A");
-//│       continue lbl;
+//│       scrut7 = x1 === 2;
+//│       if (scrut7 === true) {
+//│         Predef.print("A");
+//│         continue lbl
+//│       }
+//│       scrut8 = x1 === 3;
+//│       if (scrut8 === true) {
+//│         Predef.print("B");
+//│         continue lbl
+//│       }
+//│       scrut9 = x1 === 4;
+//│       if (scrut9 === true) {
+//│         Predef.print("B");
+//│         continue lbl
+//│       }
 //│     }
 //│     break;
 //│   }
@@ -106,50 +98,29 @@ while x > 0 and x ===
 //│ lambda3 = (undefined, function (x1) {
 //│   lbl: while (true) {
 //│     let scrut5, scrut6, scrut7, scrut8, scrut9, scrut10;
-//│     split_root$1: {
-//│       split_1$1: {
-//│         scrut5 = x1 > 0;
-//│         if (scrut5 === true) {
-//│           scrut6 = x1 === 1;
-//│           if (scrut6 === true) {
-//│             scrut8 = false;
-//│             if (scrut8 === true) {
-//│               scrut7 = false;
-//│               if (scrut7 === true) {
-//│                 Predef.print("A");
-//│                 continue lbl
-//│               }
-//│               scrut9 = x1 === 2;
-//│               if (scrut9 === true) {
-//│                 scrut10 = false;
-//│                 if (scrut10 === true) {
-//│                   break split_1$1
-//│                 }
-//│               }
-//│             } else {
-//│               scrut9 = x1 === 2;
-//│               if (scrut9 === true) {
-//│                 scrut10 = false;
-//│                 if (scrut10 === true) {
-//│                   break split_1$1
-//│                 }
-//│               }
-//│             }
-//│             break split_root$1
-//│           }
-//│           scrut9 = x1 === 2;
-//│           if (scrut9 === true) {
-//│             scrut10 = false;
-//│             if (scrut10 === true) {
-//│               break split_1$1
+//│     scrut5 = x1 > 0;
+//│     if (scrut5 === true) {
+//│       scrut6 = x1 === 1;
+//│       σ$x: {
+//│         if (scrut6 === true) {
+//│           scrut8 = false;
+//│           if (scrut8 === true) {
+//│             scrut7 = false;
+//│             if (scrut7 === true) {
+//│               Predef.print("A");
+//│               break σ$x
 //│             }
 //│           }
-//│           break split_root$1;
 //│         }
-//│         break split_root$1;
+//│         scrut9 = x1 === 2;
+//│         if (scrut9 === true) {
+//│           scrut10 = false;
+//│           if (scrut10 === true) {
+//│             Predef.print("B");
+//│           }
+//│         }
 //│       }
-//│       Predef.print("B");
-//│       continue lbl;
+//│       continue lbl
 //│     }
 //│     break;
 //│   }

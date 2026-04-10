@@ -47,8 +47,6 @@ lscomp1(zip(enumFromTo(1, 3), enumFromTo(2, 4)))
 //│ deforest > 	Select(Ref(ls2,None),Ident(h))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(ls2,None)
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls2,None)
 //│ deforest > Call(Ref(member:Pair,Some(term:Pair/Pair)),List(Arg(None,Ref(x,None)), Arg(None,Ref(y,None)))) ->
 //│ deforest > 	Ref(tmp:arg$Cons$0$,None)
 //│ deforest > 	Select(Ref(tmp:arg$Cons$0$,None),Ident(b))
@@ -71,14 +69,10 @@ lscomp1(zip(enumFromTo(1, 3), enumFromTo(2, 4)))
 //│ deforest > 	Select(Ref(ls2,None),Ident(h))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(ls2,None)
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls2,None)
 //│ deforest > Call(Ref(member:Pair,Some(term:Pair/Pair)),List(Arg(None,Ref(x,None)), Arg(None,Ref(y,None)))) ->
 //│ deforest > 	Ref(tmp:arg$Cons$0$,None)
 //│ deforest > 	Select(Ref(tmp:arg$Cons$0$,None),Ident(b))
 //│ deforest > 	Select(Ref(tmp:arg$Cons$0$,None),Ident(a))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(ls,None)
 //│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
