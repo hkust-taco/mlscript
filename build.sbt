@@ -72,7 +72,7 @@ lazy val hkmc2JVM = hkmc2.jvm
 lazy val hkmc2JS = hkmc2.js
 
 lazy val hkmc2DiffTests = project.in(file("hkmc2DiffTests"))
-  .dependsOn(hkmc2JVM)
+  .dependsOn(hkmc2JVM % "compile->compile;test->test")
   .settings(
     scalaVersion := scala3Version,
     
@@ -83,7 +83,7 @@ lazy val hkmc2DiffTests = project.in(file("hkmc2DiffTests"))
   )
 
 lazy val hkmc2NofibTests = project.in(file("hkmc2NofibTests"))
-  .dependsOn(hkmc2JVM)
+  .dependsOn(hkmc2JVM % "compile->compile;test->test")
   .dependsOn(hkmc2DiffTests % "compile->compile;test->test")
   .settings(
     scalaVersion := scala3Version,
@@ -99,11 +99,29 @@ lazy val hkmc2NofibTests = project.in(file("hkmc2NofibTests"))
     Test/run/fork := true, // so that CTRL+C actually terminates the watcher
   )
 
+lazy val hkmc2AppsTests = project.in(file("hkmc2AppsTests"))
+  .dependsOn(hkmc2JVM % "compile->compile;test->test")
+  .dependsOn(hkmc2DiffTests % "compile->compile;test->test")
+  .settings(
+    scalaVersion := scala3Version,
+    
+    libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
+    
+    Test / test := Def.sequential(
+      (Test / testOnly).toTask(" hkmc2.AppsCompileTestRunner"),
+      (Test / testOnly).toTask(" hkmc2.AppsDiffTestRunner"),
+    ).value,
+    
+    Test/run/fork := true, // so that CTRL+C actually terminates the watcher
+  )
+
 lazy val hkmc2MostTests = project.in(file("hkmc2MostTests"))
   .settings(
     Test / test := (
       (hkmc2DiffTests / Test / test)
         .dependsOn(hkmc2NofibTests / Test / test)
+        .dependsOn(hkmc2AppsTests / Test / test)
         .dependsOn(hkmc2JVM / Test / test)
     ).value
   )
@@ -113,6 +131,7 @@ lazy val hkmc2AllTests = project.in(file("hkmc2AllTests"))
     Test / test := (
       (hkmc2DiffTests / Test / test)
         .dependsOn(hkmc2NofibTests / Test / test)
+        .dependsOn(hkmc2AppsTests / Test / test)
         .dependsOn(hkmc2JVM / Test / test)
         .dependsOn(hkmc2JS / Test / test)
         .dependsOn(hkmc2Benchmarks / Test / compile)

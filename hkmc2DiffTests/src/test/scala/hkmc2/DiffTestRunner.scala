@@ -86,14 +86,8 @@ class DiffTestRunner
   extends DiffTestRunnerBase(DiffTestRunner.State)
   with ParallelTestExecution:
   
-  // Nofib tests are in hkmc2NofibTests project
-  override protected lazy val diffTestFiles = state.allFiles.filter: file =>
-    (
-      !file.segments.contains("staging")
-      && !file.segments.contains("mlscript-compile")
-      && !file.segments.contains("nofib")
-      && state.filter(file.relativeTo(state.workingDir))
-    )
+  override protected def excludedDiffDirs: Ls[os.Path] =
+    TestFolders.mainExcludedDiffDirs(state.workingDir)
 
 class DiffTestRunnerBase(val state: DiffTestRunner.State)
   extends funsuite.AnyFunSuite
@@ -117,10 +111,12 @@ class DiffTestRunnerBase(val state: DiffTestRunner.State)
       // * with ugly `Thread.isInterrupted` checks everywhere...
       testThread.stop()
   
+  protected def excludedDiffDirs: Ls[os.Path] =
+    TestFolders.alwaysExcludedDiffDirs(state.workingDir)
+  
   protected lazy val diffTestFiles = allFiles.filter: file =>
     (
-      !file.segments.contains("staging") // Exclude staging test files
-      && !file.segments.contains("mlscript-compile")
+      !TestFolders.isExcluded(file, excludedDiffDirs)
       && filter(file.relativeTo(state.workingDir))
     )
   

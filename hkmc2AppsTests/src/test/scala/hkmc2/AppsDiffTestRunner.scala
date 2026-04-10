@@ -7,15 +7,15 @@ import mlscript.utils._
 import os.Path
 import io.PlatformPath.given
 
-object NofibDiffTestState extends DiffTestRunner.State:
+object AppsDiffTestState extends DiffTestRunner.State:
 
-  override val allFiles = TestFolders.nofibDiffDirs(workingDir).flatMap(dir =>
+  override val allFiles = TestFolders.appsDiffDirs(workingDir).flatMap(dir =>
     os.walk(dir)
       .filter(_.toIO.isFile)
       .filter(_.ext == "mls")
   ).toIndexedSeq
 
-class NofibDiffTestRunner
-  extends DiffTestRunnerBase(NofibDiffTestState)
+class AppsDiffTestRunner
+  extends DiffTestRunnerBase(AppsDiffTestState)
   with ParallelTestExecution
 
