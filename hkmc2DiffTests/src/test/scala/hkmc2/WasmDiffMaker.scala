@@ -52,9 +52,11 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
   lazy val prettifyBinaryenWat = (content: Str) =>
     content.substring(2, content.length() - 2).replace("\\\\n", "\n").replace("\\\\\"", "\"")
 
-  
-  override def processIRBlock(pgrm: Program, definedValues: ComputeDefinedValues)(using Config, Raise, Elaborator.Ctx): Unit =
-    
+  override def processIRBlock(
+      pgrm: Program,
+      definedValues: ComputeDefinedValues,
+  )(using Config, Raise, Elaborator.Ctx): Unit =
+
     super.processIRBlock(pgrm, definedValues)
 
     val outerRaise: Raise = summon
@@ -73,9 +75,9 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
     val symbolsToPreserve = computeDefinedValues(includeNonTerms = true).iterator.map(_._2).toSet
 
     if wasm.isSet then
-      
+
       val reportedMessages = mutable.Set.empty[Str]
-      
+
       loadWasm
 
       var errored = false
@@ -161,7 +163,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
         val intrinsicWatJsLit = JSBuilder.makeStringLiteral(
           ltl.givenIn:
             baseScp.nest.givenIn:
-              WatBuilder().intrinsicSupportModule().mkString(output.ColWidth)
+              WatBuilder().intrinsicSupportModule().mkString(output.ColWidth),
         )
         host.execute(
           doc"""await (async () => {
@@ -180,13 +182,14 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
             # };
             # })();"""
             .stripBreaks
-            .mkString(output.ColWidth)
+            .mkString(output.ColWidth),
         ) match
           case ReplHost.Result(_) =>
             wasmSessionInitialized = true
             wasmSessionMemPages = systemMemMinPages
           case r =>
             output(s"Failed to initialize wasm REPL session object: $r")
+        end match
       else if systemMemMinPages > wasmSessionMemPages then
         host.execute(
           doc"""(() => {
@@ -194,12 +197,13 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
             # $wasmReplImportsRef.system.mem.grow(extraPages);
             # })();"""
             .stripBreaks
-            .mkString(output.ColWidth)
+            .mkString(output.ColWidth),
         ) match
           case ReplHost.Result(_) =>
             wasmSessionMemPages = systemMemMinPages
           case r =>
             output(s"Failed to grow wasm REPL session memory: $r")
+      end if
       val exportAssignments = sessionExports.flatMap(_.exportNameOpt.toSeq).map: exportName =>
         s"""$wasmReplImportsRef.repl["$exportName"] = exports["$exportName"];"""
       val jsBody =
@@ -222,7 +226,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
               .update(binding.bindingKey, binding)
         output(s"= $result")
     end if
-  
+
   end processIRBlock
-  
+
 end WasmDiffMaker

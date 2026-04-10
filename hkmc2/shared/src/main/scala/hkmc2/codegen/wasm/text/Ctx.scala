@@ -22,8 +22,10 @@ import scala.reflect.ClassTag
 sealed trait SessionBinding:
   /** Returns the deduplication key for this binding. */
   def bindingKey: Str
+
   /** Returns the symbols that should resolve to this binding. */
   def bindingSyms: Seq[Local]
+
   /** Returns the export name if this binding is re-exported. */
   def exportNameOpt: Opt[Str] = N
 
@@ -34,7 +36,7 @@ final case class SessionFunc(
     sym: Symbol,
     moduleName: Str,
     exportName: Str,
-    funcType: FunctionType
+    funcType: FunctionType,
 ) extends SessionBinding:
   def bindingKey: Str = s"func:$moduleName:$exportName"
   def bindingSyms: Seq[Local] = sym :: Nil
@@ -44,7 +46,7 @@ final case class SessionGlobal(
     sym: Symbol,
     moduleName: Str,
     exportName: Str,
-    globalType: GlobalType
+    globalType: GlobalType,
 ) extends SessionBinding:
   def bindingKey: Str = s"global:$moduleName:$exportName"
   def bindingSyms: Seq[Local] = sym :: Nil
@@ -54,7 +56,7 @@ final case class SessionClass(
     sym: BlockMemberSymbol,
     typeInfo: TypeInfo,
     runtimeTag: Int,
-    aliasSyms: Seq[Local] = Nil
+    aliasSyms: Seq[Local] = Nil,
 ) extends SessionBinding:
   def bindingKey: Str = s"class:${sym.uid}"
   def bindingSyms: Seq[Local] = sym +: aliasSyms
@@ -64,7 +66,7 @@ final case class SessionSingleton(
     objectSym: Opt[ModuleOrObjectSymbol],
     moduleName: Str,
     exportName: Str,
-    globalTy: RefType
+    globalTy: RefType,
 ) extends SessionBinding:
   def bindingKey: Str = s"singleton:$moduleName:$exportName"
   def bindingSyms: Seq[Local] = blockSym +: objectSym.toSeq
@@ -74,9 +76,30 @@ final case class CompiledWasmModule(
     wat: Document,
     entryName: Str,
     systemMemMinPages: Int,
-    sessionExports: Seq[SessionBinding]
+    sessionExports: Seq[SessionBinding],
 )
-  
+
+/** Context used while collecting REPL/session exports for a single Wasm module. */
+final class SessionExportCtx(
+    val symbolsToExport: Set[Local],
+    val collectedBindings: ArrayBuf[SessionBinding],
+):
+  def shouldExport(sym: Local): Bool = symbolsToExport(sym)
+
+  def emit(binding: SessionBinding): Unit =
+    collectedBindings += binding
+
+  def freshCollector(): SessionExportCtx =
+    SessionExportCtx(symbolsToExport, ArrayBuf.empty)
+end SessionExportCtx
+
+object SessionExportCtx:
+  def apply(
+      symbolsToExport: Set[Local],
+      collectedBindings: ArrayBuf[SessionBinding],
+  ): SessionExportCtx =
+    new SessionExportCtx(symbolsToExport, collectedBindings)
+
 /** A Wasm function and its associated information.
   *
   * Each instance of [[FuncInfo]] represents a single function definition in a WebAssembly module.
@@ -90,8 +113,8 @@ final case class CompiledWasmModule(
   *   [[Seq]] of parameter local variables and their names.
   * @param locals
   *   [[Seq]] of local variables (excluding parameters) and their names.
- * @param body
- *   The expression of the function body.
+  * @param body
+  *   The expression of the function body.
   * @param resultTypes
   *   The result types of the function.
   * @param exportName
@@ -104,7 +127,7 @@ class FuncInfo(
     val resultTypes: Seq[Result],
     locals: Seq[Local -> Str],
     val body: Expr,
-    val exportName: Opt[Str]
+    val exportName: Opt[Str],
 ) extends ToWat:
 
   /** @param sym
@@ -174,27 +197,26 @@ class FuncInfo(
       } # ${body.toWat} #} )"""
 end FuncInfo
 
-/**
- * A Wasm global and its associated information.
- *
- * Each instance of [[GlobalInfo]] represents a single global definition in a WebAssembly module.
- *
- * @param id
- *   Symbolic identifier for the global.
- * @param valType
- *   The value type of the global.
- * @param mutable
- *   Whether the global is mutable.
- * @param init
- *   The initializer expression for the global.
- * @param exportName
- *   Optional export name.
- */
+/** A Wasm global and its associated information.
+  *
+  * Each instance of [[GlobalInfo]] represents a single global definition in a WebAssembly module.
+  *
+  * @param id
+  *   Symbolic identifier for the global.
+  * @param valType
+  *   The value type of the global.
+  * @param mutable
+  *   Whether the global is mutable.
+  * @param init
+  *   The initializer expression for the global.
+  * @param exportName
+  *   Optional export name.
+  */
 class GlobalInfo(
     val id: SymIdx,
     val globalType: GlobalType,
     val init: Expr,
-    val exportName: Opt[Str]
+    val exportName: Opt[Str],
 ) extends ToWat:
 
   def toWat: Document =
@@ -613,10 +635,8 @@ class Ctx extends ToWat:
     getFuncTypeUse(funcref).getOrElse:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
-  /**
-   * Returns the [[GlobalIdx]] of the given `globalref`, optionally resolving the symbolic index
-   * into a numeric index.
-   */
+  /** Returns the [[GlobalIdx]] of the given `globalref`, optionally resolving the symbolic index into a numeric index.
+    */
   def getGlobal(globalref: GlobalIdx | Symbol, resolveSymIdx: Bool = false): Opt[GlobalIdx] =
     globalref match
       case GlobalIdx(SymIdx(nme)) if resolveSymIdx =>
@@ -637,10 +657,11 @@ class Ctx extends ToWat:
       lastWords(s"Missing global definition for ${globalref.prettyString}")
 
   @nowarn("cat=deprecation")
-  private def getGlobalEntry(globalref: GlobalIdx | Symbol): Opt[GlobalInfo | Import[ExternType.Global]] = globalref match
-    case GlobalIdx(NumIdx(idx)) => globals.drop(idx.toInt).headOption.map(_._2)
-    case GlobalIdx(idx @ SymIdx(_)) => globals.get(idx)
-    case sym: Symbol => namedGlobals.get(sym)
+  private def getGlobalEntry(globalref: GlobalIdx | Symbol): Opt[GlobalInfo | Import[ExternType.Global]] =
+    globalref match
+      case GlobalIdx(NumIdx(idx)) => globals.drop(idx.toInt).headOption.map(_._2)
+      case GlobalIdx(idx @ SymIdx(_)) => globals.get(idx)
+      case sym: Symbol => namedGlobals.get(sym)
 
   /** Returns the global extern metadata associated with the given `globalref`. */
   def getGlobalType(globalref: GlobalIdx | Symbol): Opt[ExternType.Global] =
@@ -785,5 +806,6 @@ class Ctx extends ToWat:
             ++ startFunc.iterator.map(funcIdx => doc"(start ${funcIdx.toWat})")
         ).toSeq.mkDocument(doc" # ")
       } #} )"
+  end toWat
 
 end Ctx
