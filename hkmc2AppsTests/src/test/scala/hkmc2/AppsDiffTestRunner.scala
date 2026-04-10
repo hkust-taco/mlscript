@@ -8,12 +8,8 @@ import os.Path
 import io.PlatformPath.given
 
 object AppsDiffTestState extends DiffTestRunner.State:
-
-  override val allFiles = TestFolders.appsDiffDirs(workingDir).flatMap(dir =>
-    os.walk(dir)
-      .filter(_.toIO.isFile)
-      .filter(_.ext == "mls")
-  ).toIndexedSeq
+  
+  override def testDir = TestFolders.appsDiffDir(workingDir)
 
 class AppsDiffTestRunner
   extends DiffTestRunnerBase(AppsDiffTestState)

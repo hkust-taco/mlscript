@@ -9,11 +9,7 @@ import io.PlatformPath.given
 
 object NofibDiffTestState extends DiffTestRunner.State:
 
-  override val allFiles = TestFolders.nofibDiffDirs(workingDir).flatMap(dir =>
-    os.walk(dir)
-      .filter(_.toIO.isFile)
-      .filter(_.ext == "mls")
-  ).toIndexedSeq
+  override def testDir = TestFolders.nofibDiffDir(workingDir)
 
 class NofibDiffTestRunner
   extends DiffTestRunnerBase(NofibDiffTestState)

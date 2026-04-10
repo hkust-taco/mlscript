@@ -27,29 +27,27 @@ object TestFolders:
   // ——— Diff test subdirectories excluded from the main DiffTestRunner ———
   
   /** Diff test subdirectories that belong to the hkmc2NofibTests project. */
-  def nofibDiffDirs(wd: os.Path): Ls[os.Path] =
-    diffTestDir(wd)/"nofib" :: Nil
+  def nofibDiffDir(wd: os.Path): os.Path =
+    diffTestDir(wd)/"nofib"
   
   /** Diff test subdirectories that belong to the hkmc2AppsTests project. */
-  def appsDiffDirs(wd: os.Path): Ls[os.Path] =
-    diffTestDir(wd)/"apps" :: Nil
+  def appsDiffDir(wd: os.Path): os.Path =
+    diffTestDir(wd)/"apps"
   
   /** Diff test subdirectories that belong to the hkmc2WasmTests project. */
-  def wasmDiffDirs(wd: os.Path): Ls[os.Path] =
-    diffTestDir(wd)/"wasm" :: Nil
+  def wasmDiffDir(wd: os.Path): os.Path =
+    diffTestDir(wd)/"wasm"
   
   /** Diff test directories that are always excluded (staging, mlscript-compile). */
   def alwaysExcludedDiffDirs(wd: os.Path): Ls[os.Path] =
-    (diffTestDir(wd)/"ucs"/"staging") ::
-    compileTestDir(wd) ::
-    Nil
+    (diffTestDir(wd)/"ucs"/"staging") :: compileTestDir(wd) :: Nil
   
   /** All diff test directories excluded from the main DiffTestRunner. */
   def mainExcludedDiffDirs(wd: os.Path): Ls[os.Path] =
-    alwaysExcludedDiffDirs(wd) ++
-      nofibDiffDirs(wd) ++
-      appsDiffDirs(wd) ++
-      wasmDiffDirs(wd)
+    nofibDiffDir(wd) ::
+    appsDiffDir(wd) ::
+    wasmDiffDir(wd) ::
+    alwaysExcludedDiffDirs(wd)
   
   /** Check whether a file should be excluded from the given list of excluded
     * directories and/or individual files. */

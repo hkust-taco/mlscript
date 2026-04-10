@@ -35,9 +35,12 @@ object DiffTestRunner:
     
     val dir = workingDir/"hkmc2"/"shared"/"src"/"test"
     
+    // To be overridden in subproject-specific State classes
+    def testDir: os.Path = dir
+    
     val validExt = Set("mls")
     
-    val allFiles = os.walk(dir)
+    val allFiles = os.walk(testDir)
       .filter(_.toIO.isFile)
       .filter(_.ext in validExt)
     

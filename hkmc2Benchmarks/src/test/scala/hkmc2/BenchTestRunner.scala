@@ -9,9 +9,7 @@ import io.PlatformPath.given
 
 object BenchTestState extends DiffTestRunner.State:
 
-  override val allFiles = os.walk(workingDir/"hkmc2Benchmarks"/"src"/"test"/"bench")
-    .filter(_.toIO.isFile)
-    .filter(_.ext == "mls")
+  override def testDir = workingDir/"hkmc2Benchmarks"/"src"/"test"/"bench"
 
   override val TimeLimit = Span(1, Hour)
 

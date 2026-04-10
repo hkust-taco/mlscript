@@ -9,11 +9,7 @@ import io.PlatformPath.given
 
 object WasmDiffTestState extends DiffTestRunner.State:
 
-  override val allFiles = TestFolders.wasmDiffDirs(workingDir).flatMap(dir =>
-    os.walk(dir)
-      .filter(_.toIO.isFile)
-      .filter(_.ext == "mls")
-  ).toIndexedSeq
+  override def testDir = TestFolders.wasmDiffDir(workingDir)
 
 class WasmDiffTestRunner
   extends DiffTestRunnerBase(WasmDiffTestState)
