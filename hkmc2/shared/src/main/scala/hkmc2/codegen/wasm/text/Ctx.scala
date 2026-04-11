@@ -81,7 +81,7 @@ final case class SessionGlobal(
   * @param typeInfo
   *   The Wasm type information that must be recreated in importing modules.
   * @param runtimeTags
-  *   The class's runtime tag together with descendant class tags.
+  *   The class' runtime tag together with descendant class tags.
   * @param aliasSyms
   *   Additional symbols that should resolve to this class binding.
   */
@@ -529,11 +529,11 @@ class Ctx extends ToWat:
     getTypeInfo(typeref).getOrElse:
       lastWords(s"Missing type definition for ${typeref.prettyString}")
 
-  /** Records the class's runtime tag together with descendant class tags for `sym`. */
+  /** Records the class' runtime tag together with descendant class tags for `sym`. */
   def registerRuntimeClassTags(sym: BlockMemberSymbol, tags: LinkedHashSet[Int]): Unit =
     runtimeClassTags(sym) = tags
 
-  /** Returns the class's runtime tag together with descendant class tags for `sym`. */
+  /** Returns the class' runtime tag together with descendant class tags for `sym`. */
   def getAllRuntimeTags(sym: BlockMemberSymbol): Opt[LinkedHashSet[Int]] =
     runtimeClassTags.get(sym)
 
