@@ -370,6 +370,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   /** Declares placeholders for all methods on one top-level class. */
   private def predeclareClassMethods(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
     defn.methods.foreach:
+      case methodDefn @ FunDefn(_, _, _, Nil, _) =>
+        predeclareMethod(methodDefn, defn)
       case methodDefn @ FunDefn(_, _, _, _ :: Nil, _) =>
         predeclareMethod(methodDefn, defn)
       case _ => ()
@@ -795,6 +797,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ))
   end fieldSelect
 
+  /** Resolves `sym` to a predeclared class method symbol, if any. */
   private def predeclaredClassMethodSym(sym: DefinitionSymbol[?])(using Ctx): Opt[BlockMemberSymbol] =
     sym.asBlkMember.filter: methodSym =>
       methodSym.asTrm.exists(_.owner.exists(_.asCls.isDefined)) && ctx.getFunc(methodSym).nonEmpty
@@ -936,13 +939,21 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
         case S(selSym) if predeclaredClassMethodSym(selSym).nonEmpty =>
           val methodSym = predeclaredClassMethodSym(selSym).get
-          errExpr(
-            Ls(
-              msg"`${methodSym.toString}` is neither a field access nor a callable method" ->
-                sel.toLoc,
-            ),
-            extraInfo = S(sel),
-          )
+          methodSym.asTrm.flatMap(_.defn) match
+            case S(defn: TermDefinition) if defn.params.isEmpty =>
+              call(
+                funcidx = ctx.getFunc_!(methodSym),
+                operands = Seq(result(qual)),
+                returnTypes = Seq(Result(RefType.anyref)),
+              )
+            case _ =>
+              errExpr(
+                Ls(
+                  msg"`${methodSym.toString}` is neither a field access nor a callable method" ->
+                    sel.toLoc,
+                ),
+                extraInfo = S(sel),
+              )
 
         case S(selSym: TermSymbol) =>
           val qualRes = result(qual)
@@ -1483,27 +1494,34 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       ),
                     )
 
+                    def overwriteMethod(
+                        sym: BlockMemberSymbol,
+                        methodParamLocals: Seq[Local],
+                        ps: ParamList,
+                        bod: Block,
+                    ): Unit =
+                      val (params, bodyWat, locals) = setupFunction(S(clsLikeDefn.isym -> "this"), ps, bod)
+                      val predeclaredMethod = ctx.getFuncInfo_!(sym)
+                      ctx.addFunc(
+                        S(sym),
+                        FuncInfo(
+                          id = predeclaredMethod.id,
+                          typeUse = predeclaredMethod.typeUse,
+                          params = methodParamLocals.zip(params.map(_._2)),
+                          nResults = bodyWat.resultTypes.length,
+                          locals = locals,
+                          body = bodyWat,
+                          `export` = predeclaredMethod.`export`,
+                        ),
+                      )
+
                     clsLikeDefn.methods.foreach:
-                      case methodDefn @ FunDefn(_, sym, _, Nil, _) =>
-                        break(errUnimplExpr("method params = Nil"))
+                      case methodDefn @ FunDefn(_, sym, _, Nil, bod) =>
+                        overwriteMethod(sym, Seq(clsLikeDefn.isym), PlainParamList(Nil), bod)
                       case methodDefn @ FunDefn(_, sym, _, _ :: _ :: _, _) =>
                         break(errUnimplExpr("multi-parameter-list method"))
                       case methodDefn @ FunDefn(_, sym, _, ps :: Nil, bod) =>
-                        val (params, bodyWat, locals) = setupFunction(S(clsLikeDefn.isym -> "this"), ps, bod)
-                        val methodParamLocals = clsLikeDefn.isym +: ps.params.map(_.sym)
-                        val predeclaredMethod = ctx.getFuncInfo_!(sym)
-                        ctx.addFunc(
-                          S(sym),
-                          FuncInfo(
-                            id = predeclaredMethod.id,
-                            typeUse = predeclaredMethod.typeUse,
-                            params = methodParamLocals.zip(params.map(_._2)),
-                            nResults = bodyWat.resultTypes.length,
-                            locals = locals,
-                            body = bodyWat,
-                            `export` = predeclaredMethod.`export`,
-                          ),
-                        )
+                        overwriteMethod(sym, clsLikeDefn.isym +: ps.params.map(_.sym), ps, bod)
                     if isSingletonObj then
                       registerSingletonInit(clsLikeDefn, typeref)
 

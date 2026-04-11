@@ -105,6 +105,14 @@ a.A#get() + A(2).get()
 
 
 class A(val x) with
+  fun get = x
+let a = A(1)
+a.A#get
+//│ Wasm result:
+//│ = 1
+
+
+class A(val x) with
   fun add(y) = x + y
 A(1).add(2)
 //│ Wasm result:
@@ -112,8 +120,8 @@ A(1).add(2)
 
 
 class C(val x) with
-  fun get() = double()
-  fun double() = x + this.x
+  fun get() = double
+  fun double = x + this.x
 C(2).get()
 //│ Wasm result:
 //│ = 4
@@ -180,10 +188,20 @@ c.Counter#inc().Counter#double().Counter#get()
 //│ = 4
 
 
+class GetterOnly() with
+  fun f = 1
+GetterOnly().f()
+//│ Wasm result:
+//│ = 1
+
+
 :ge
 class A(val x) with
   fun get() = x
 A(1).get
 //│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
-//│ ║  l.186: 	A(1).get
+//│ ║  l.201: 	A(1).get
 //│ ╙──       	    ^^^^
+
+
+
