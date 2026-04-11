@@ -688,6 +688,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           subTerm_nonTail(fld): f =>
             subTerm_nonTail(rhs): r =>
               AssignDynField(p, f, ai, r, k(unit))
+      case sel @ SelProj(prefix, _, proj) =>
+        subTerm(prefix): p =>
+          subTerm_nonTail(rhs): r =>
+            AssignField(p, proj, r, k(unit))(sel.sym)
       case _ => fail:
         ErrorReport(
           msg"Unexpected left-hand side in assignment (${lhs.describe})" -> lhs.toLoc :: Nil, S(lhs),
