@@ -1,93 +1,261 @@
 :js
 
 
-
-let x = 1
-//│ x = 1
-
 :sjs
-:expect "b"
-if x is 0 then
-  "a"
-else if x is 1 then
-  "b"
-else if x is 2 then
-  "c"
-else if x is 3 then
-  "d"
-else
-  "e"
+fun f(x) =
+  if x is 0 then
+    "a"
+  else if x is 1 then
+    "b"
+  else if x is 2 then
+    "c"
+  else if x is 3 then
+    "d"
+  else
+    "e"
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ switch (x) {
-//│   case 0:
-//│     "a";
-//│     break;
-//│   case 1:
-//│     "b";
-//│     break;
-//│   case 2:
-//│     "c";
-//│     break;
-//│   case 3:
-//│     "d";
-//│     break;
-//│   default:
-//│     "e";
-//│ }
+//│ let f;
+//│ f = function f(x) {
+//│   switch (x) {
+//│     case 0:
+//│       return "a";
+//│     case 1:
+//│       return "b";
+//│     case 2:
+//│       return "c";
+//│     case 3:
+//│       return "d";
+//│   }
+//│   return "e"
+//│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = "b"
 
-let x = 2
-let acc = ""
-//│ acc = ""
-//│ x = 2
+:expect "b"
+f(1)
+//│ = "b"
 
 // Chains of if statements in the following form, which is essentially a jump table,
 // can be converted into a switch statement.
 // (This can be used to very efficiently compile resumable functions, i.e. for effect handlers and co-routines.)
 :sjs
-if x is 0 do
-  set acc += "a"
-  set x = 1
-if x is 1 do
-  set acc += "b"
-  set x = 2
-if x is 2 do
-  set acc += "c"
-  set x = 3
-if x is 3 do
-  set acc += "d"
-  set x = 4
-if x is 4 do
-  set acc += "e"
+fun f(x) =
+  let acc = ""
+  if x is 0 do
+    set acc += "a"
+    set x = 1
+  if x is 1 do
+    set acc += "b"
+    set x = 2
+  if x is 2 do
+    set acc += "c"
+    set x = 3
+  if x is 3 do
+    set acc += "d"
+    set x = 4
+  if x is 4 do
+    set acc += "e"
+  [acc, x]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, tmp2, tmp3, tmp4;
-//│ switch (x1) {
-//│   case 0:
-//│     tmp = acc + "a";
-//│     acc = tmp;
-//│     x1 = 1;
-//│   case 1:
-//│     tmp1 = acc + "b";
-//│     acc = tmp1;
-//│     x1 = 2;
-//│   case 2:
-//│     tmp2 = acc + "c";
-//│     acc = tmp2;
-//│     x1 = 3;
-//│   case 3:
-//│     tmp3 = acc + "d";
-//│     acc = tmp3;
-//│     x1 = 4;
-//│ }
-//│ if (x1 === 4) { tmp4 = acc + "e"; acc = tmp4; runtime.Unit } else { runtime.Unit }
+//│ let f1;
+//│ f1 = function f(x) {
+//│   let acc, tmp, tmp1, tmp2, tmp3, tmp4;
+//│   acc = "";
+//│   switch (x) {
+//│     case 0:
+//│       tmp = acc + "a";
+//│       acc = tmp;
+//│       x = 1;
+//│     case 1:
+//│       tmp1 = acc + "b";
+//│       acc = tmp1;
+//│       x = 2;
+//│     case 2:
+//│       tmp2 = acc + "c";
+//│       acc = tmp2;
+//│       x = 3;
+//│     case 3:
+//│       tmp3 = acc + "d";
+//│       acc = tmp3;
+//│       x = 4;
+//│     case 4:
+//│       tmp4 = acc + "e";
+//│       acc = tmp4;
+//│       return globalThis.Object.freeze([ acc, x ]);
+//│   }
+//│   return globalThis.Object.freeze([ acc, x ])
+//│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:expect 4
-x
-//│ = 4
+:expect ["cde", 4]
+f(2)
+//│ = ["cde", 4]
 
-:expect "cde"
-acc
-//│ = "cde"
+// See `SpecializedSwitch` for details on what is specialized here
+// Note: It would also specialize if `return` were replaced with `break` or `continue`, but it isn't
+// yet possible to explicitly write in the source language
+:sjs
+fun f(x) =
+  let acc = ""
+  if x is 0 do
+    set acc += "a"
+    set x = 1
+  if x is 1 do
+    set acc += "b"
+    set x = 2
+  if x is 2 do
+    set acc += "c"
+    return acc
+  if x is 3 do
+    set acc += "A"
+    set x = 4
+  if x is 4 do
+    set acc += "B"
+    set x = 5
+  if x is 5 do
+    set acc += "C"
+    return acc
+  if x is
+    6 then "EndA"
+    7 then "EndB"
+    8 then "EndC"
+    else "EndD"
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f2;
+//│ f2 = function f(x) {
+//│   let acc, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│   acc = "";
+//│   switch (x) {
+//│     case 0:
+//│       tmp = acc + "a";
+//│       acc = tmp;
+//│       x = 1;
+//│     case 1:
+//│       tmp1 = acc + "b";
+//│       acc = tmp1;
+//│       x = 2;
+//│     case 2:
+//│       tmp2 = acc + "c";
+//│       acc = tmp2;
+//│       return acc;
+//│     case 3:
+//│       tmp3 = acc + "A";
+//│       acc = tmp3;
+//│       x = 4;
+//│     case 4:
+//│       tmp4 = acc + "B";
+//│       acc = tmp4;
+//│       x = 5;
+//│     case 5:
+//│       tmp5 = acc + "C";
+//│       acc = tmp5;
+//│       return acc;
+//│     case 6:
+//│       return "EndA";
+//│     case 7:
+//│       return "EndB";
+//│     case 8:
+//│       return "EndC";
+//│   }
+//│   return "EndD"
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+:expect "bc"
+f(1)
+//│ = "bc"
+
+:expect "c"
+f(2)
+//│ = "c"
+
+:expect "ABC"
+f(3)
+//│ = "ABC"
+
+:expect "EndA"
+f(6)
+//│ = "EndA"
+
+:expect "EndC"
+f(8)
+//│ = "EndC"
+
+:expect "EndD"
+f(-1)
+//│ = "EndD"
+
+:sjs
+fun f(x) =
+  let acc = ""
+  if x is 0 do
+    set acc += "M"
+    set x = 1
+  if x is
+    1 do return acc + "1"
+    2 do return acc + "2"
+  "fail"
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f3;
+//│ f3 = function f(x) {
+//│   let acc, tmp1;
+//│   acc = "";
+//│   switch (x) {
+//│     case 0:
+//│       tmp1 = acc + "M";
+//│       acc = tmp1;
+//│       x = 1;
+//│     case 1:
+//│       return acc + "1";
+//│     case 2:
+//│       return acc + "2";
+//│   }
+//│   return "fail"
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect "M1"
+f(0)
+//│ = "M1"
+
+:expect "fail"
+f(4)
+//│ = "fail"
+
+:expect "2"
+f(2)
+//│ = "2"
+
+// Do not specialize all into one switch
+:sjs
+fun f(x) =
+  let acc = ""
+  if x is 0 do
+    set acc += "M"
+    set x = 1
+  if x is
+    1 do return acc + "1"
+    2 do return acc + "2"
+    else do return acc + "3"
+  "fail"
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f4;
+//│ f4 = function f(x) {
+//│   let acc, tmp1;
+//│   acc = "";
+//│   switch (x) {
+//│     case 0:
+//│       tmp1 = acc + "M";
+//│       acc = tmp1;
+//│       x = 1;
+//│     case 1:
+//│       return acc + "1";
+//│     case 2:
+//│       return acc + "2";
+//│   }
+//│   return acc + "3"
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect "3"
+f(4)
+//│ = "3"

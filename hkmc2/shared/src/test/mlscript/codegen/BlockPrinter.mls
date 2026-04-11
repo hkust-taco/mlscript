@@ -93,7 +93,7 @@ case
 //│       return Predef⁰.print⁰("non-empty", x)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
-//│   end /* Unreachable: rest of abortive match */
+//│   end
 //│ };
 //│ lambda¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -226,7 +226,7 @@ pattern P = B
 //│         return new runtime⁰.MatchSuccess⁰(input, null)
 //│       else
 //│         return new runtime⁰.MatchFailure⁰(null)
-//│     end /* Unreachable: rest of abortive match */
+//│     end
 //│   }
 //│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input) {
 //│     return new runtime⁰.MatchFailure⁰(null)
@@ -253,7 +253,7 @@ x.0
 //│     throw new globalThis⁰.Error﹖("Access to required field '0' yielded 'undefined'")
 //│   else
 //│     selRes
-//│ end /* Unreachable: rest of abortive match */
+//│ end /* (Unreachable:) rest of abortive match */
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 //│ x = [1, 2, 3]

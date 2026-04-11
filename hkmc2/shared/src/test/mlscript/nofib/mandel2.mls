@@ -1,6 +1,6 @@
 :js
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/mandel2.mls"
+import "../../mlscript-compile/nofib/mandel2.mls"
 mandel2.main()
 //│ = true
 

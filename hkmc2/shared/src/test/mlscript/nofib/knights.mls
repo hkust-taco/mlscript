@@ -1,6 +1,6 @@
 :js
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/knights.mls"
+import "../../mlscript-compile/nofib/knights.mls"
 print(knights.main())
 //│ > 
 //│ > Knights tour with 0 backtracking moves

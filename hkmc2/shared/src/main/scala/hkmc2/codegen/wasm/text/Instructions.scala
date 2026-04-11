@@ -183,6 +183,14 @@ object Instructions:
       resultType = S(I32Type),
     )
 
+    /** Creates an `i32.or` instruction. */
+    def or(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
+      mnemonic = "i32.or",
+      instrargs = Seq.empty,
+      stackargs = Seq(lhs, rhs),
+      resultType = S(I32Type),
+    )
+
     /** Creates an `i32.sub` instruction. */
     def sub(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
       mnemonic = "i32.sub",

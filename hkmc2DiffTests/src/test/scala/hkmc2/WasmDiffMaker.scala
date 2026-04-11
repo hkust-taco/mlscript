@@ -36,7 +36,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
   private var wasmSessionInitialized = false
   private var wasmSessionMemPages = 0
 
-  final lazy val wasmSuppFile: io.Path = predefFile.up / "Wasm.mjs"
+  final lazy val wasmSuppFile: io.Path = predefFile.up / "wasm" / "Wasm.mjs"
   final lazy val wasmSuppNme = baseScp.allocateName(Elaborator.State.wasmSymbol)(using throw _)
   final lazy val loadWasm: Unit =
     host.execute(
@@ -89,7 +89,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
       val sessionImportSymbols = mutable.LinkedHashSet.from(pgrm.main.freeVars)
       new BlockTraverser:
         override def applyPath(p: Path): Unit = p match
-          case sel @ Select(_, _) =>
+          case sel: Select =>
             sel.symbol.foreach:
               case sym: ModuleOrObjectSymbol => sessionImportSymbols += sym
               case _ => ()

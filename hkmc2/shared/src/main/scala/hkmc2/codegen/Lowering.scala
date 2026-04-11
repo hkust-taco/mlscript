@@ -1357,6 +1357,9 @@ object MergeMatchArmTransformer extends BlockTransformer(SymbolSubst.Id):
             case _ => armsRewritten.map:
               case (cse, body) =>
                 cse -> Begin(body, restRewritten)
-          k.getOrElse(identity: Block => Block)(Match(scrut, arms ::: newArms, dfltRewritten, rest))
+          k.getOrElse(identity[Block]):
+            Match(scrut, arms ::: newArms,
+              dfltRewritten.fold(restRewritten)(Begin(_, restRewritten)) |> some, rest)
       case _ => m
     case b => b
+
