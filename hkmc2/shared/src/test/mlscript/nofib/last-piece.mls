@@ -1,6 +1,6 @@
 :js
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/lastpiece.mls"
+import "../../mlscript-compile/nofib/lastpiece.mls"
 print of
   lastpiece.main()
 //│ > Success!

@@ -29,7 +29,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
   private val baseScp: utils.Scope =
     utils.Scope.empty(utils.Scope.Cfg.default)
 
-  final lazy val wasmSuppFile: io.Path = predefFile.up / "Wasm.mjs"
+  final lazy val wasmSuppFile: io.Path = predefFile.up / "wasm" / "Wasm.mjs"
   final lazy val wasmSuppNme = baseScp.allocateName(Elaborator.State.wasmSymbol)(using throw _)
   final lazy val loadWasm: Unit =
     host.execute(

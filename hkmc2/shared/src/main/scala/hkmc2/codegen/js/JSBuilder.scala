@@ -562,27 +562,21 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
       case S(el) => nonNestedScoped(el)(bod => returningTerm(bod, endSemi = true))
       case N => doc""
       e :: returningTerm(rest, endSemi)
-    case IfIntChain(scrut, cases, rest) =>
-      val switchBod = cases.foldRight(doc""): (arm, acc) =>
-        acc :: doc" # case ${arm._1.toString}: #{ ${
-          nonNestedScoped(arm._2)(bd => returningTerm(bd, endSemi = true))
-        } #} "
-      doc" # switch (${result(scrut)}) { #{ ${switchBod} #}  # }" :: returningTerm(rest, endSemi)
     case Match(scrut, (Case.Lit(lit), End(msg)) :: Nil, S(el), rest) =>
       val sd = result(scrut)
       val e = braced(nonNestedScoped(el)(res => returningTerm(res, endSemi = false)))
       doc" # if ($sd !== ${lit.idStr}) $e" :: returningTerm(rest, endSemi)
-    case Match(scrut, arms, els, rest)
-    if arms.sizeCompare(1) > 0 && arms.forall(_._1.isInstanceOf[Case.Lit]) =>
-      val l = arms.foldLeft(doc""): (acc, arm) =>
-        acc :: doc" # case ${arm._1.asInstanceOf[Case.Lit].lit.idStr}: #{ ${
-          nonNestedScoped(arm._2)(bd => returningTerm(bd, endSemi = true))
-        }${if arm._2.isAbortive then doc"" else doc" # break;"} #} "
-      val e = els match
-        case S(el) =>
-          doc" # default: #{ ${ nonNestedScoped(el)(bd => returningTerm(bd, endSemi = true)) } #} "
-        case N => doc""
-      doc" # switch (${result(scrut)}) { #{ ${l :: e} #}  # }" :: returningTerm(rest, endSemi)
+    case SpecializedSwitch(scrut, cases, dflt, rest) =>
+      val switchBod = cases.foldLeft(doc""): (acc, arm) =>
+        val needsBreak = arm.isInstanceOf[SwitchCase.ExplicitBreak]
+        acc :: doc" # case ${result(Value.Lit(arm.litValue))}: #{ ${
+          nonNestedScoped(arm.body)(bd => returningTerm(bd, endSemi = true))
+        }${if needsBreak then doc" # break;" else ""} #} "
+      val bodWithDflt = doc"${switchBod}${dflt match
+        case Some(bd) => doc" # default: #{ ${nonNestedScoped(bd)(bd => returningTerm(bd, endSemi = true))} #} "
+        case None => doc""
+      }"
+      doc" # switch (${result(scrut)}) { #{ ${bodWithDflt} #}  # }" :: returningTerm(rest, endSemi)
     case Match(scrut, arms @ hd :: tl, els, rest) =>
       val sd = result(scrut)
       def cond(cse: Case) = cse match

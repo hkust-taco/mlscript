@@ -1,6 +1,6 @@
 :js
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/banner.mls"
+import "../../mlscript-compile/nofib/banner.mls"
 print(banner.main())
 //│ > 
 //│ > IIIII   SSSS         TTTTT  H   H  IIIII   SSSS         N   N   OOO   TTTTT           A            GGGG  RRRR   EEEEE    A    TTTTT         BBBB     A    N   N  N   N  EEEEE  RRRR    ??? 

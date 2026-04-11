@@ -1,5 +1,5 @@
 :js
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/lambda.mls"
+import "../../mlscript-compile/nofib/lambda.mls"
 lambda.main()
 //│ = "[\"C\",\"o\",\"n\",\" \",\"3\",\"2\",\"4\",\"0\"],[\"3\",\"2\",\"4\",\"0\",\" \",\" \",\"[\",\"]\"]"

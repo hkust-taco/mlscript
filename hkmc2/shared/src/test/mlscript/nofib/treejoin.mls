@@ -1,7 +1,7 @@
 :js
 
 :re // nodejs stack size 8192 can handle this
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/treejoin.mls"
+import "../../mlscript-compile/nofib/treejoin.mls"
 treejoin.main()
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 

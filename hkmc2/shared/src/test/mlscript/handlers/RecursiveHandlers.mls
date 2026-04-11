@@ -186,7 +186,6 @@ str
 //│         tmp11 = str + "A";
 //│         str = tmp11;
 //│         return runtime.Unit;
-//│       default:
 //│     }
 //│     break;
 //│   }
@@ -222,7 +221,6 @@ str
 //│         tmp13 = str + tmp12;
 //│         str = tmp13;
 //│         return runtime.Unit;
-//│       default:
 //│     }
 //│     break;
 //│   }
@@ -275,7 +273,6 @@ str
 //│       case 1:
 //│         runtime.resumeValue;
 //│         return runtime.safeCall(h11.perform(runtime.Unit));
-//│       default:
 //│     }
 //│     break;
 //│   }
@@ -325,7 +322,6 @@ str
 //│       case 1:
 //│         tmp10 = runtime.resumeValue;
 //│         return tmp10;
-//│       default:
 //│     }
 //│     break;
 //│   }

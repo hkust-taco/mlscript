@@ -16,7 +16,12 @@ import io.FileSystem, io.PlatformPath.given
 
 // Note: when SBT's `fork` is set to `false`, the path should be `File("hkmc2/")` instead...
 // * Only the first path can contain tests. The other paths are only watched for source changes.
-object MainWatcher extends Watcher(File("../hkmc2/shared/src") :: File("./src") :: Nil):
+object MainWatcher extends Watcher(
+    File("../hkmc2/shared/src") ::
+    File("./src") ::
+    // File("../hkmc2Benchmarks/src") ::
+    Nil
+):
   def main(args: Array[String]): Unit = run
 
 class Watcher(dirs: Ls[File]):

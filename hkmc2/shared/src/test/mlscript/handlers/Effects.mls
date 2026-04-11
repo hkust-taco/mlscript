@@ -99,7 +99,6 @@ result
 //│         v = runtime.resumeValue;
 //│         result = result + arg;
 //│         return v;
-//│       default:
 //│     }
 //│     break;
 //│   }
@@ -173,7 +172,6 @@ result
 //│           continue main
 //│         }
 //│         return runtime.unwind(handleBlock$7, 3, "Effects.mls:68:3", null, null, 1, 0, 0);
-//│       default:
 //│     }
 //│     break;
 //│   }
@@ -454,28 +452,28 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.449: 	    module A with
+//│ ║  l.447: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.445: 	    module A with
+//│ ║  l.443: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.441: 	    module A with
+//│ ║  l.439: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.437: 	    module A with
+//│ ║  l.435: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.437: 	    module A with
+//│ ║  l.435: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.441: 	    module A with
+//│ ║  l.439: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.445: 	    module A with
+//│ ║  l.443: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.449: 	    module A with
+//│ ║  l.447: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 

@@ -1,6 +1,6 @@
 :js
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/calendar.mls"
+import "../../mlscript-compile/nofib/calendar.mls"
 print(calendar.main())
 //│ >                                    1993                                    
 //│ >                                                                            
