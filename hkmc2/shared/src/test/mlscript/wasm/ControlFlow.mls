@@ -18,46 +18,19 @@ let i = 0 in
 //│   (type $lt_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $Unit (sub $Object (struct (field $$tag (mut i32)))))
+//│   (type $Unit_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $Unit_ctor (func (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
-//│   (global $Unit$inst (mut (ref null $Unit)) (ref.null $Unit))
-//│   (func $lt_impl1 (type $lt_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
-//│     (if (result (ref null any))
-//│       (i32.and
-//│         (ref.test (ref null i31)
-//│           (local.get $lhs))
-//│         (ref.test (ref null i31)
-//│           (local.get $rhs)))
-//│       (then
-//│         (ref.i31
-//│           (i32.lt_s
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $lhs)))
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $rhs))))))
-//│       (else
-//│         (unreachable))))
-//│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
-//│     (if (result (ref null any))
-//│       (i32.and
-//│         (ref.test (ref null i31)
-//│           (local.get $lhs))
-//│         (ref.test (ref null i31)
-//│           (local.get $rhs)))
-//│       (then
-//│         (ref.i31
-//│           (i32.add
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $lhs)))
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $rhs))))))
-//│       (else
-//│         (unreachable))))
+//│   (import "system" "lt_impl" (func $lt_impl (type $lt_impl)))
+//│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
+//│   (global $Unit$inst (export "Unit$inst") (mut (ref null $Unit)) (ref.null $Unit))
+//│   (func $Unit_init1 (type $Unit_init) (param $this (ref null any)) (result (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (nop)
+//│       (return
+//│         (local.get $this))))
 //│   (func $Unit_ctor1 (type $Unit_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
@@ -67,7 +40,9 @@ let i = 0 in
 //│         (ref.cast (ref $Unit)
 //│           (local.get $this))
 //│         (i32.const 1))
-//│       (nop)
+//│       (drop
+//│         (call $Unit_init1
+//│           (local.get $this)))
 //│       (return
 //│         (local.get $this))))
 //│   (func $start1 (type $start)
@@ -90,7 +65,7 @@ let i = 0 in
 //│             (drop
 //│               (block (result (ref null any))
 //│                 (local.set $scrut
-//│                   (call $lt_impl1
+//│                   (call $lt_impl
 //│                     (local.get $i)
 //│                     (ref.i31
 //│                       (i32.const 10))))
@@ -109,7 +84,7 @@ let i = 0 in
 //│                           (block
 //│                             (block
 //│                               (local.set $tmp
-//│                                 (call $plus_impl1
+//│                                 (call $plus_impl
 //│                                   (local.get $i)
 //│                                   (ref.i31
 //│                                     (i32.const 1))))
@@ -126,8 +101,7 @@ let i = 0 in
 //│                         (global.get $Unit$inst))))
 //│                   (local.get $matchRes))))))
 //│         (local.get $i))))
-//│   (elem $lt_impl1 declare func $lt_impl1)
-//│   (elem $plus_impl1 declare func $plus_impl1)
+//│   (elem $Unit_init1 declare func $Unit_init1)
 //│   (elem $Unit_ctor1 declare func $Unit_ctor1)
 //│   (elem $start1 declare func $start1)
 //│   (elem $entry declare func $entry)

@@ -1,6 +1,6 @@
 :js
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/power.mls"
+import "../../mlscript-compile/nofib/power.mls"
 power.main()
 //│ = "[0,1,1,2,5,14,42,132,429,1430,4862,16796,58786,208012]"
 

@@ -1,7 +1,7 @@
 import "binaryen"
 
-import "./Predef.mls"
-import "./Runtime.mls"
+import "../Predef.mls"
+import "../Runtime.mls"
 
 module Wasm with ...
 

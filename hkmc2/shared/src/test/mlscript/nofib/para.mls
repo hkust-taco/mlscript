@@ -1,6 +1,6 @@
 :js
 
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/para.mls"
+import "../../mlscript-compile/nofib/para.mls"
 para.main()
 //│ = "In the constructive programming community it is commonplace to\nsee formal developments of textbook algorithms. In the algorithm\ndesign community, on the other hand, it may be well known that\nthe textbook solution to a problem is not the most efficient\npossible. However, in presenting the more efficient solution, the\nalgorithm designer will usually omit some of the implementation\ndetails, this creating an algorithm gap between the abstract\nalgorithm and its concrete implementation. This is in contrast\nto the formal development, which usually presents the complete\nconcrete implementation of the less efficient solution.\n"

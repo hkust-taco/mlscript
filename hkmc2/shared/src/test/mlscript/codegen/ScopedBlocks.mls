@@ -184,7 +184,7 @@ fun f(x) =
 
 data class Bar(x)
 
-// NOTE: `tmp`s in pCtor and ctor shouldn't have name crashes with each other
+// NOTE: `tmp`s in pCtor and ctor shouldn't have name clashes with each other
 :sjs
 data class Baz(z) extends Bar(z * 1) with
   val k = 1 + 2 + 3

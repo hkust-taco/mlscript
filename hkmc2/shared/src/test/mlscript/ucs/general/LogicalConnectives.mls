@@ -25,11 +25,11 @@ fun test(x) =
 :sjs
 true and test(42)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut6, scrut7;
-//│ scrut6 = true;
-//│ if (scrut6 === true) {
-//│   scrut7 = test(42);
-//│   if (scrut7 === true) { true } else { false }
+//│ let scrut4, scrut5;
+//│ scrut4 = true;
+//│ if (scrut4 === true) {
+//│   scrut5 = test(42);
+//│   if (scrut5 === true) { true } else { false }
 //│ } else { false }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 42

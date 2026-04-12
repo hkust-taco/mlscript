@@ -7,9 +7,9 @@ while false do ???
 while false then ()
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ lbl1: while (true) {
-//│   let scrut1;
-//│   scrut1 = false;
-//│   if (scrut1 === true) { continue lbl1 }
+//│   let scrut;
+//│   scrut = false;
+//│   if (scrut === true) { continue lbl1 }
 //│   break;
 //│ }
 //│ block$res2 = runtime.Unit;

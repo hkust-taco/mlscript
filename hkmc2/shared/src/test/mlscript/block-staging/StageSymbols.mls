@@ -5,7 +5,10 @@ staged module M with
   class C with
     fun f() = 1
     fun g() = f()
-//│ > FunDefn(Symbol("ctor$"), ([]), Define(ClsLikeDefn(ClassSymbol("C", class C, None, []), [FunDefn(Symbol("f"), ([]), Return(Lit(1), false), true),FunDefn(Symbol("g"), ([]), Return(Call(Select(Ref(ClassSymbol("C", class C, None, [])), Symbol("f")), []), false), true)], TODO), End), true)
+//│ > fun ctor_() =
+//│ >   class C with
+//│ >     fun f() = 1
+//│ >     fun g() = C.f()
 
 staged module A with
   fun f() = 1
@@ -20,11 +23,25 @@ staged module D with
   fun matching() =
     1 is Int
     1 is C
-//│ > FunDefn(Symbol("ctor$"), ([]), End, true)
-//│ > FunDefn(Symbol("f"), ([]), Return(Lit(1), false), true)
-//│ > FunDefn(Symbol("ctor$"), ([]), Define(ClsLikeDefn(ClassSymbol("E", class E, None, []), [], TODO), End), true)
-//│ > FunDefn(Symbol("f"), ([]), Assign(Symbol("$_no$_symbol$_"), Call(Select(Ref(ModuleSymbol("A", class A)), Symbol("f_gen")), []), Return(Call(Select(Ref(ModuleSymbol("B", class B)), Symbol("f")), []), false)), true)
-//│ > FunDefn(Symbol("matching"), ([]), Scoped([Symbol("tmp"), Symbol("scrut"), Symbol("scrut1")], Assign(Symbol("scrut"), Lit(1), Match(Ref(Symbol("scrut")), [Cls(VirtualClassSymbol("Int"), Select(Ref(Symbol("runtime")), Symbol("unreachable"))) -> Assign(Symbol("tmp"), Lit(true), End)], Assign(Symbol("tmp"), Lit(false), End), Assign(Symbol("scrut1"), Lit(1), Match(Ref(Symbol("scrut1")), [Cls(ClassSymbol("C", fun C { class: class C }, Some([Symbol("a"), Symbol("b")]), [[Symbol("c")], [Symbol("d")]]), Ref(ClassSymbol("C", fun C { class: class C }, Some([Symbol("a"), Symbol("b")]), [[Symbol("c")], [Symbol("d")]]))) -> Return(Lit(true), false)], Return(Lit(false), false), End))))), true)
+//│ > fun ctor_() = ()
+//│ > fun f() = 1
+//│ > fun ctor_() =
+//│ >   class E
+//│ > fun f() =
+//│ >   A.f_gen()
+//│ >   B.f()
+//│ > fun matching() =
+//│ >   let {scrut, scrut1, tmp}
+//│ >   scrut = 1
+//│ >   if scrut is
+//│ >     Int then
+//│ >       tmp = true
+//│ >     else
+//│ >       tmp = false
+//│ >   scrut1 = 1
+//│ >   if scrut1 is
+//│ >     C then true
+//│ >     else false
 
 module A with
   module B with
@@ -36,22 +53,40 @@ staged module M with
     A.B.C
     A.B.C(1)
     E
-//│ > FunDefn(Symbol("ctor$"), ([]), Define(ClsLikeDefn(ClassSymbol("E", class E, None, []), [], TODO), End), true)
-//│ > FunDefn(Symbol("f"), ([]), Assign(Symbol("$_no$_symbol$_"), Call(Select(Select(Ref(ModuleSymbol("A", class A { B: class B { C: fun C { class: class C } } })), ModuleSymbol("B", class B { C: fun C { class: class C } })), ClassSymbol("C", fun C { class: class C }, Some([Symbol("a")]), [])), [Lit(1)]), Return(Select(Ref(ModuleSymbol("M", class M2 { E: class E })), ClassSymbol("E", class E, None, [])), false)), true)
+//│ > fun ctor_() =
+//│ >   class E
+//│ > fun f() =
+//│ >   A.B.C(1)
+//│ >   M.E
 
 :e
 staged module M with
   fun g()() = 1
 //│ ╔══[COMPILATION ERROR] :ftc must be enabled to desugar functions with multiple parameter lists.
-//│ ║  l.44: 	  fun g()() = 1
+//│ ║  l.64: 	  fun g()() = 1
 //│ ╙──      	  ^^^^^^^^^^^^^
-//│ > FunDefn(Symbol("ctor$"), ([]), End, true)
-//│ > FunDefn(Symbol("g"), ([],[]), Return(Lit(1), false), true)
+//│ > fun ctor_() = ()
+//│ > fun g()() = 1
 
 :ftc
 staged module M with
   fun f() = x => x
   fun g()() = 1
-//│ > FunDefn(Symbol("ctor$"), ([]), End, true)
-//│ > FunDefn(Symbol("f"), ([]), Scoped([Symbol("tmp")], Assign(Symbol("tmp"), Instantiate(Ref(ClassSymbol("Function$", class Function$, None, [])), []), Return(Ref(Symbol("tmp")), false))), true)
-//│ > FunDefn(Symbol("g"), ([]), Scoped([Symbol("tmp1")], Assign(Symbol("tmp1"), Instantiate(Ref(ClassSymbol("Function$1", class Function$, None, [])), []), Return(Ref(Symbol("tmp1")), false))), true)
+//│ > fun ctor_() = ()
+//│ > fun f() =
+//│ >   let {tmp}
+//│ >   tmp = new Function_
+//│ >   tmp
+//│ > fun g() =
+//│ >   let {tmp1}
+//│ >   tmp1 = new Function_1
+//│ >   tmp1
+
+// TODO: these need to be printed, somehow:
+:noModuleCheck
+let x = M."f_instr"().body.rest.rhs.cls.l.value
+let y = M."g_instr"().body.rest.rhs.cls.l.value
+//│ x = class Function$
+//│ y = class Function$
+(new x).call(2)
+//│ = 2

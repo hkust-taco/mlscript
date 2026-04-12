@@ -197,8 +197,8 @@ sealed abstract class Block extends Product:
       val newArms = arms.mapConserve: arm =>
         val newBody = arm._2.flattened
         if newBody is arm._2 then arm else (arm._1, newBody)
-      val newDflt = dflt.mapConserve  (_.flattened)
-      if (newRest is rest) && (newArms is arms) && (dflt is newDflt)
+      val newDflt = dflt.mapConserve(_.flattened)
+      if (newRest is rest) && (newArms is arms) && (newDflt is dflt)
       then this
       else Match(scrut, newArms, newDflt, newRest)
       
@@ -409,7 +409,8 @@ object Match:
     if arms.isEmpty && scrut.isPure then dflt.fold(rest)(Begin(_, rest))
     else dflt match
     case S(Match(`scrut`, arms2, dflt2, _: End)) => // TODO: also handle non-End rest (may require a join point)
-      // * Currently, this branch does not seem used, because the UCS already does a good job at merging matches
+      // * Currently, this branch does not seem used often (or at all?),
+      // * because the UCS and (especially) MergeMatchArmTransformer already do a good job at merging matches
       Match(scrut, arms ::: arms2, dflt2, rest)
     case _ =>
       val numNonAbortive = arms.count(!_._2.isAbortive)
@@ -417,7 +418,8 @@ object Match:
         case S(d) => S(if d.isAbortive then d else Begin(d, rest))
         case N => S(rest)
       if numNonAbortive === 0 then
-        new Match(scrut, arms, mapDflt, End("Unreachable: rest of abortive match"))
+        if rest.isEmpty then new Match(scrut, arms, mapDflt, rest)
+        else new Match(scrut, arms, mapDflt, End("(Unreachable:) rest of abortive match"))
       else if numNonAbortive === 1 && dflt.exists(_.isAbortive) || rest.size <= 1 then
         new Match(scrut,
           arms.map: a =>

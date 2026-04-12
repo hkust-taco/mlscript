@@ -1,6 +1,6 @@
 :js
 
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/gcd.mls"
+import "../../mlscript-compile/nofib/gcd.mls"
 gcd.main()
 //│ = 5021
