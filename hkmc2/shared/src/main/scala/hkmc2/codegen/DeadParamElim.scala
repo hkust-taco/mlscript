@@ -97,7 +97,7 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
     if eliminable.nonEmpty then
       eliminableParamsById.get(prodFun.concreteId) match
       case None => eliminableParamsById(prodFun.concreteId) = eliminable.toSet
-      case _ => lastWords(s"$prodFun appears twice")
+      case S(existing) => assert(existing.toList.sorted === eliminable)
   
   for (consFun, _) <- funSrcs do
     val eliminable = consFun.params.indices.filterNot: i =>
@@ -105,7 +105,7 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
     if eliminable.nonEmpty then
       eliminableCallSiteArgsById.get(consFun.concreteId) match
       case None => eliminableCallSiteArgsById(consFun.concreteId) = eliminable.toSet
-      case _ => lastWords(s"$consFun appears twice")
+      case S(existing) => assert(existing.toList.sorted === eliminable)
   
   if tl.doTrace then
     def showRefSite(resultId: ResultId): Str =

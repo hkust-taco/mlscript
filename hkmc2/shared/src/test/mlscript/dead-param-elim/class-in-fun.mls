@@ -3,10 +3,10 @@
 
 
 
-
 :deadParamElim
 :lift
-:sir
+:soir
+:expect 1
 private fun f(used, unused) =
   class C with
     fun get() = used
@@ -15,19 +15,8 @@ f(1, 2).get()
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let C⁰, f⁰, tmp, C$⁰;
-//│ define C$⁰ as fun C$¹(isMut, used) {
-//│   let tmp1;
-//│   match isMut
-//│     true =>
-//│       set tmp1 = new mut C¹(used);
-//│       return tmp1
-//│     else
-//│       set tmp1 = new C¹(used);
-//│       return tmp1
-//│   end
-//│ };
 //│ define C⁰ as class C¹ {
 //│   private val C$cap⁰;
 //│   private val used⁰;
@@ -39,7 +28,21 @@ f(1, 2).get()
 //│     return used⁰
 //│   }
 //│ };
-//│ define f⁰ as fun f¹(used) { return C$¹(false, used) };
+//│ define f⁰ as fun f¹(used) {
+//│   let isMut, used1, inlinedVal, tmp1;
+//│   set isMut = false;
+//│   set used1 = used;
+//│   match isMut
+//│     true =>
+//│       set tmp1 = new mut C¹(used1);
+//│       set inlinedVal = tmp1;
+//│       return inlinedVal
+//│     else
+//│       set tmp1 = new C¹(used1);
+//│       set inlinedVal = tmp1;
+//│       return inlinedVal
+//│   end
+//│ };
 //│ set tmp = f¹(1);
 //│ tmp.get﹖()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -58,5 +61,4 @@ private fun foo(y) =
   (new M).bar()
 foo(10)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun foo#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<

@@ -93,11 +93,11 @@ m()
 
 
 :deadParamElim
-:sir
+:soir
 [1,2,3].map((x, i, a) => x + 1)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp, lambda⁰;
 //│ set tmp = [1, 2, 3];
 //│ define lambda⁰ as fun lambda¹(x, i, a) { return +⁰(x, 1) };

@@ -72,7 +72,7 @@ object RefLike:
       yield
         cls
   
-  def unapply(p: Path)(using Elaborator.State): Opt[Symbol] =
+  def unapply(p: Value.Ref | Select)(using Elaborator.State): Opt[Symbol] =
     p match
       case Value.Ref(l, disamb) =>
         val sym = disamb.getOrElse(l)
@@ -87,7 +87,6 @@ object RefLike:
               _ <- owner.asMod
             yield
               selTermSym
-      case _ => N
 
 object TrackableFieldSelect:
   def unapply(s: Select): Opt[Path -> (field: TermSymbol, owner: ClassSymbol)] =
@@ -181,7 +180,9 @@ class ProdFun(
   val params: Ls[ConsStrat],
   val restParam: Opt[ConsStrat],
   val res: ProdStrat
-) extends ProdStrat
+) extends ProdStrat:
+  override def toString(): String =
+    s"(${params.map(_.toString()).mkString(", ")}) -> ${res.toString()}"
 
 case object NoProd extends ProdStrat
 
@@ -191,7 +192,9 @@ class Ctor(
 )(
   val ctor: CtorCls,
   val args: Ls[SelField -> ProdStrat]
-) extends ProdStrat with ToCtorDtorId(exprId, instantiationId)
+) extends ProdStrat with ToCtorDtorId(exprId, instantiationId):
+  override def toString(): String =
+    s"$ctor(${args.map(_.toString()).mkString(", ")})"
 
 sealed abstract class ConsStrat
 case class ConsVar(s: StratVarState) extends ConsStrat with StratVar(s)
@@ -201,7 +204,9 @@ class ConsFun(
 )(
   val params: Ls[ProdStrat],
   val res: ConsStrat
-) extends ConsStrat
+) extends ConsStrat:
+  override def toString(): String =
+    s"(${params.map(_.toString()).mkString(", ")}) -> ${res.toString()}"
 
 case object NoCons extends ConsStrat
 
@@ -253,10 +258,12 @@ class FlowPreAnalyzer(val b: Block)(using
     val modSymToBms = MutMap.empty[Symbol, BlockMemberSymbol]
     val generatedProdVars = MutMap.empty[Symbol, StratVarState]
     lazy val rootFunSyms: collection.Set[TermSymbol] = rootFunDefns.map(_.dSym).toSet
-    def getEnclosingMatchesForSel(selExprId: ResultId) = selToCtxOfSel(selExprId)
-      .iterator
-      .collect:
-        case InCtx.MtchBody(m, cse) => m.scrut.uid -> cse
+    def getEnclosingMatchesForSel(selExprId: ResultId) =
+      selToCtxOfSel.get(selExprId).fold(Iterator.empty):
+        _.iterator
+        .collect:
+          case InCtx.MtchBody(m, cse) => m.scrut.uid -> cse
+        
   end res
   
   enum InCtx:
@@ -475,18 +482,20 @@ class FlowPreAnalyzer(val b: Block)(using
           applyBlock(preCtor)
         ctxTracker.inClsCtor(cls):
           applyBlock(ctor)
-      mod.foreach(applyCompanionModule)
-  
+      for b: ClsLikeBody <- mod do
+        if ctxTracker.isTopLvlLikeModuleCtx then
+          res.modSymToBms(b.isym) = sym
+        ctxTracker.inMod(b):
+          b.privateFields.foreach(tsym => ctxTracker.registerStratVar(tsym, tsym.nme))
+          b.publicFields.foreach: (_, tsym) =>
+            ctxTracker.registerStratVar(tsym, tsym.nme)
+          b.methods.foreach(applyFunDefn)
+          ctxTracker.inModCtor(b):
+            applyBlock(b.ctor)
+      
   override def applyCompanionModule(b: ClsLikeBody): Unit =
-    if ctxTracker.isTopLvlLikeModuleCtx then
-      res.modSymToBms(b.isym.asMod.get) = b.isym.asBlkMember.get
-    ctxTracker.inMod(b):
-      b.privateFields.foreach(tsym => ctxTracker.registerStratVar(tsym, tsym.nme))
-      b.publicFields.foreach: (_, tsym) =>
-        ctxTracker.registerStratVar(tsym, tsym.nme)
-      b.methods.foreach(applyFunDefn)
-      ctxTracker.inModCtor(b):
-        applyBlock(b.ctor)
+    lastWords("handled inline in `applyDefn`")
+  
 end FlowPreAnalyzer
 
 class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool):
@@ -574,8 +583,7 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
           val synthesizedRefUid =
             Value.Ref(preAnalyzer.res.funSymToFunDefn(funSym).sym, S(funSym)).uid
           val selfProd = pScheme.instantiate(synthesizedRefUid, funSym)
-          if fun.visibility is Visibility.Public then
-            cc.constrain(selfProd, NoCons)
+          cc.constrain(selfProd, NoCons)
           val selfInstId = synthesizedRefUid :: Nil
           synthesizedInstIdToFunSym(selfInstId) = funSym
     
@@ -716,7 +724,9 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
         processBlock(rest)
       case Assign(lhs, rhs, rest) =>
         val rhsStrat = processResult(rhs)
-        cc.constrain(rhsStrat, generatedProdVars(lhs).asConsStrat)
+        lhs.match
+          case _: NoSymbol => ()
+          case _ => cc.constrain(rhsStrat, generatedProdVars(lhs).asConsStrat)
         processBlock(rest)
       case TryBlock(sub, finallyDo, rest) =>
         processBlock(sub)
@@ -777,7 +787,11 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
           val argsStrat = args.map:
             case Arg(_, a) => processResult(a)
           ctor match
-          case cls: ClassSymbol => new Ctor(c.uid, instId)(ctor, cls.tree.clsParams.zip(argsStrat))
+          case cls: ClassSymbol =>
+            val (toZip, toUnknown) = argsStrat.splitAt(cls.tree.clsParams.size)
+            for a <- toUnknown do
+              cc.constrain(a, NoCons)
+            new Ctor(c.uid, instId)(ctor, cls.tree.clsParams.zip(toZip))
           case _: ModuleOrObjectSymbol => new Ctor(c.uid, instId)(ctor, Nil)
           case tupSize: Int => new Ctor(c.uid, instId)(tupSize, (0 until tupSize).zip(argsStrat).toList)
         case c@CtorCall(_, args) =>
@@ -802,9 +816,12 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
             case Some(fScheme) =>
               fScheme.instantiate(refSite.uid, f)
             case None => generatedProdVars(f).asProdStrat
-          case RefLike(sym) =>
+          case refLk@RefLike(sym) =>
+            refLk match
+              case Select(p, _) => cc.constrain(processResult(p), NoCons)
+              case _ => ()
             generatedProdVars(sym).asProdStrat
-          case _: Value.Ref => lastWords("already handled in `RefLife` case")
+          case _: Value.Ref => lastWords("already handled in `RefLike` case")
           case Select(qual, name) =>
             cc.constrain(processResult(qual), NoCons)
             NoProd

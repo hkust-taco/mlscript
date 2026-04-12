@@ -153,18 +153,18 @@ print(42)
 //│ > 42
 
 
-#config(deadParamElim: Some(DeadParamElim(mono: false)))
-//│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > <<< dead-param-elim results <<<
+#config(deadParamElim: Some(DeadParamElim(mono: true)), inline: -1)
 
-fun deadParamConfig(a) = 0
+private fun deadParamConfig(a) = 0
 deadParamConfig(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun deadParamConfig#0 @ deadParamConfig@1 -> eliminable: {0}
+//│ dead-param-elim > prodfun deadParamConfig#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 
 #config(deadParamElim: None)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
 
 
 #config(deforest: Some(Deforest(mono: false)))

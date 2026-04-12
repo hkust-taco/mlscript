@@ -4,7 +4,7 @@
 
 :deadParamElim
 :expect 0
-:sir
+:soir
 :noTailRec
 private fun countdown(n, unused) =
   if n == 0 then 0
@@ -13,7 +13,7 @@ countdown(5, 42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun countdown#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let countdown⁰;
 //│ define countdown⁰ as fun countdown¹(n) {
 //│   let scrut, tmp;
@@ -33,14 +33,14 @@ countdown(5, 42)
 
 
 :deadParamElim
-:sir
+:soir
 private fun countdown(n) =
   if n == 0 then 0
   else countdown(n - 1)
 countdown(5)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let countdown²;
 //│ define countdown² as fun countdown³(n) {
 //│   loop loopLabel:
@@ -54,7 +54,7 @@ countdown(5)
 //│         set n = tmp;
 //│         continue loopLabel
 //│     end
-//│   end
+//│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ countdown³(5)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -73,7 +73,7 @@ isEven(10)
 
 
 :deadParamElim
-:sir
+:soir
 :noTailRec
 private fun ping(n, unused) = if n == 0 then 0 else pong(n - 1, unused)
 private fun pong(n, unused) = if n == 0 then 0 else ping(n - 1, unused)
@@ -82,7 +82,7 @@ ping(5, 99)
 //│ dead-param-elim > prodfun ping#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > prodfun pong#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let ping⁰, pong⁰;
 //│ define ping⁰ as fun ping¹(n) {
 //│   let scrut, tmp;
@@ -113,14 +113,14 @@ ping(5, 99)
 
 
 :deadParamElim
-:sir
+:soir
 :noTailRec
 fun ping(n, unused) = if n == 0 then 0 else pong(n - 1, unused)
 fun pong(n, unused) = if n == 0 then 0 else ping(n - 1, unused)
 ping(5, 99)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let ping², pong²;
 //│ define ping² as fun ping³(n, unused) {
 //│   let scrut, tmp;
@@ -154,7 +154,7 @@ pong(5, 0)
 //│ = 0
 
 :deadParamElim
-:sir
+:soir
 :noTailRec
 private fun ping(n)(unused) = if n == 0 then 0 else pong(n - 1)(unused)
 private fun pong(n)(unused) = if n == 0 then 0 else ping(n - 1)(unused)
@@ -163,7 +163,7 @@ ping(5)(99)
 //│ dead-param-elim > prodfun ping#1 @ <root> -> eliminable: {0}
 //│ dead-param-elim > prodfun pong#1 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let ping⁴, pong⁴, tmp;
 //│ define ping⁴ as fun ping⁵(n)() {
 //│   let scrut, tmp1, tmp2;
@@ -213,7 +213,7 @@ pong(5)(0)
 
 
 :deadParamElim
-:sir
+:soir
 :noTailRec
 module M with
   fun ping(n, unused) = if n == 0 then 0 else pong(n - 1, unused)
@@ -223,7 +223,7 @@ class Test(a) with
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun pong#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let Test⁰, pong⁶, M⁰;
 //│ define pong⁶ as fun pong⁷(n) {
 //│   let scrut, tmp;
@@ -250,11 +250,7 @@ class Test(a) with
 //│     end
 //│   }
 //│ };
-//│ define Test⁰ as class Test²(a) {
-//│   private val a⁰;
-//│   constructor Test¹ { set a⁰ = a; end }
-//│   method f⁰ = fun f¹() { return pong⁷(3) }
-//│ };
+//│ define Test⁰ as class Test¹(a) { private val a⁰; method f⁰ = fun f¹() { return pong⁷(3) } };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

@@ -149,6 +149,7 @@ object ConfigParser:
   
   private def parseInt(tree: Tree)(using Raise): Opt[Int] = tree match
     case IntLit(v) => S(v.toInt)
+    case App(Ident("-"), Tup(IntLit(v) :: Nil)) => S(-v.toInt)
     case _ =>
       raise(ErrorReport(
         msg"Expected an integer value" -> tree.toLoc :: Nil,
@@ -314,6 +315,11 @@ object ConfigParser:
     case "patMatConsequentSharingThreshold" =>
       parseInt(value) match
         case S(v) => _.copy(patMatConsequentSharingThreshold = S(v))
+        case N => identity
+    case "inline" =>
+      parseInt(value) match
+        case S(x) if x < 0 => _.copy(inlining = N)
+        case S(v) => _.copy(inlining = S(Inliner(v)))
         case N => identity
     case _ =>
       raise(ErrorReport(
