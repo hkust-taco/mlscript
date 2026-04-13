@@ -12,39 +12,21 @@ topA + topB
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
-//│     (if (result (ref null any))
-//│       (i32.and
-//│         (ref.test (ref null i31)
-//│           (local.get $lhs))
-//│         (ref.test (ref null i31)
-//│           (local.get $rhs)))
-//│       (then
-//│         (ref.i31
-//│           (i32.add
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $lhs)))
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $rhs))))))
-//│       (else
-//│         (unreachable))))
+//│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
+//│   (global $topA (export "topA") (mut (ref null any)) (ref.null any))
+//│   (global $topB (export "topB") (mut (ref null any)) (ref.null any))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
-//│     (local $topA (ref null any))
-//│     (local $topB (ref null any))
 //│     (block (result (ref null any))
-//│       (local.set $topA
+//│       (global.set $topA
 //│         (ref.i31
 //│           (i32.const 1)))
 //│       (block (result (ref null any))
-//│         (local.set $topB
+//│         (global.set $topB
 //│           (ref.i31
 //│             (i32.const 2)))
-//│         (call $plus_impl1
-//│           (local.get $topA)
-//│           (local.get $topB)))))
-//│   (elem $plus_impl1 declare func $plus_impl1)
+//│         (call $plus_impl
+//│           (global.get $topA)
+//│           (global.get $topB)))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3
@@ -62,41 +44,24 @@ chain(1)
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $chain1 (func (param $x (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
-//│     (if (result (ref null any))
-//│       (i32.and
-//│         (ref.test (ref null i31)
-//│           (local.get $lhs))
-//│         (ref.test (ref null i31)
-//│           (local.get $rhs)))
-//│       (then
-//│         (ref.i31
-//│           (i32.add
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $lhs)))
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $rhs))))))
-//│       (else
-//│         (unreachable))))
+//│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
 //│   (func $chain (export "chain") (type $chain1) (param $x (ref null any)) (result (ref null any))
 //│     (local $a (ref null any))
 //│     (local $b (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $a
-//│         (call $plus_impl1
+//│         (call $plus_impl
 //│           (local.get $x)
 //│           (ref.i31
 //│             (i32.const 1))))
 //│       (block (result (ref null any))
 //│         (local.set $b
-//│           (call $plus_impl1
+//│           (call $plus_impl
 //│             (local.get $a)
 //│             (ref.i31
 //│               (i32.const 1))))
 //│         (return
-//│           (call $plus_impl1
+//│           (call $plus_impl
 //│             (local.get $a)
 //│             (local.get $b))))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
@@ -106,7 +71,6 @@ chain(1)
 //│       (call $chain
 //│         (ref.i31
 //│           (i32.const 1)))))
-//│   (elem $plus_impl1 declare func $plus_impl1)
 //│   (elem $chain declare func $chain)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
@@ -167,17 +131,12 @@ class Foo(val a, val b)
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $a (mut (ref null any))) (field $b (mut (ref null any))))))
+//│   (type $Foo_init (func (param $this (ref null any)) (param $a (ref null any)) (param $b (ref null any)) (result (ref null any))))
 //│   (type $Foo_ctor (func (param $a (ref null any)) (param $b (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (func $Foo_ctor (export "Foo_ctor") (type $Foo_ctor) (param $a (ref null any)) (param $b (ref null any)) (result (ref null any))
-//│     (local $this (ref null any))
+//│   (func $Foo_init (type $Foo_init) (param $this (ref null any)) (param $a (ref null any)) (param $b (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
-//│       (local.set $this
-//│         (struct.new_default $Foo))
-//│       (struct.set $Foo $$tag
-//│         (ref.cast (ref $Foo)
-//│           (local.get $this))
-//│         (i32.const 1))
+//│       (nop)
 //│       (block
 //│         (struct.set $Foo $a
 //│           (ref.cast (ref $Foo)
@@ -191,8 +150,23 @@ class Foo(val a, val b)
 //│           (nop)))
 //│       (return
 //│         (local.get $this))))
+//│   (func $Foo_ctor (export "Foo") (type $Foo_ctor) (param $a (ref null any)) (param $b (ref null any)) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Foo))
+//│       (struct.set $Foo $$tag
+//│         (ref.cast (ref $Foo)
+//│           (local.get $this))
+//│         (i32.const 1))
+//│       (drop
+//│         (call $Foo_init
+//│           (local.get $this)
+//│           (local.get $a)
+//│           (local.get $b)))
+//│       (return
+//│         (local.get $this))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
-//│     (local $Foo (ref null any))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -206,6 +180,7 @@ class Foo(val a, val b)
 //│         (struct.get $Foo $a
 //│           (ref.cast (ref $Foo)
 //│             (local.get $tmp))))))
+//│   (elem $Foo_init declare func $Foo_init)
 //│   (elem $Foo_ctor declare func $Foo_ctor)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:

@@ -9,31 +9,13 @@
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
-//│     (if (result (ref null any))
-//│       (i32.and
-//│         (ref.test (ref null i31)
-//│           (local.get $lhs))
-//│         (ref.test (ref null i31)
-//│           (local.get $rhs)))
-//│       (then
-//│         (ref.i31
-//│           (i32.add
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $lhs)))
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $rhs))))))
-//│       (else
-//│         (unreachable))))
+//│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
-//│     (call $plus_impl1
+//│     (call $plus_impl
 //│       (ref.i31
 //│         (i32.const 1))
 //│       (ref.i31
 //│         (i32.const 2))))
-//│   (elem $plus_impl1 declare func $plus_impl1)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3
@@ -45,24 +27,11 @@
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $neg_impl (func (param $arg (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (func $neg_impl1 (type $neg_impl) (param $arg (ref null any)) (result (ref null any))
-//│     (if (result (ref null any))
-//│       (ref.test (ref null i31)
-//│         (local.get $arg))
-//│       (then
-//│         (ref.i31
-//│           (i32.sub
-//│             (i32.const 0)
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $arg))))))
-//│       (else
-//│         (unreachable))))
+//│   (import "system" "neg_impl" (func $neg_impl (type $neg_impl)))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
-//│     (call $neg_impl1
+//│     (call $neg_impl
 //│       (ref.i31
 //│         (i32.const 2))))
-//│   (elem $neg_impl1 declare func $neg_impl1)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = -2
@@ -94,31 +63,13 @@ not true
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $eq_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (func $eq_impl1 (type $eq_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
-//│     (if (result (ref null any))
-//│       (i32.and
-//│         (ref.test (ref null i31)
-//│           (local.get $lhs))
-//│         (ref.test (ref null i31)
-//│           (local.get $rhs)))
-//│       (then
-//│         (ref.i31
-//│           (i32.eq
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $lhs)))
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $rhs))))))
-//│       (else
-//│         (unreachable))))
+//│   (import "system" "eq_impl" (func $eq_impl (type $eq_impl)))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
-//│     (call $eq_impl1
+//│     (call $eq_impl
 //│       (ref.i31
 //│         (i32.const 1))
 //│       (ref.i31
 //│         (i32.const 1))))
-//│   (elem $eq_impl1 declare func $eq_impl1)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 1

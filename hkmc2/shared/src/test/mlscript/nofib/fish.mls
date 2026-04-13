@@ -4,6 +4,6 @@
 // `+:` with a non-recursive implementation can fix the stack overflow error.
 // However, it will cause the file size to increase by ~390 KiB.
 :re
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/fish.mls"
+import "../../mlscript-compile/nofib/fish.mls"
 fish.main()
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded

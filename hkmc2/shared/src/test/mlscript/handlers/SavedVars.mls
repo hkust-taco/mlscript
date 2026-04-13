@@ -61,7 +61,6 @@ fun g() =
 //│         tmp = 2;
 //│         pc = 1;
 //│         continue main;
-//│       default:
 //│     }
 //│     break;
 //│   }

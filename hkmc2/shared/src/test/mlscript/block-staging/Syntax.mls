@@ -31,14 +31,14 @@ staged module A
 //│   }
 //│   method ctor$_instr⁰ = fun ctor$_instr¹() {
 //│     let end, tmp, tmp1, tmp2, tmp3;
-//│     set end = new Block⁰.End﹖();
-//│     set tmp = new Block⁰.Symbol﹖("ctor$");
+//│     set end = Block⁰.End﹖();
+//│     set tmp = Block⁰.Symbol﹖("ctor$");
 //│     set tmp1 = [];
 //│     set tmp2 = [tmp1];
-//│     set tmp3 = new Block⁰.FunDefn﹖(tmp, tmp2, end, true);
+//│     set tmp3 = Block⁰.FunDefn﹖(tmp, tmp2, end, true);
 //│     return tmp3
 //│   }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ > FunDefn(Symbol("ctor$"), ([]), End, true)
+//│ > fun ctor_() = ()

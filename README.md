@@ -168,10 +168,14 @@ i.e., do not restart SBT every time,
 but launch it in shell mode (with command `sbt`)
 and then use one of the following commands.
 
-- `hkmc2AllTests/test` for running all hkmc2 tests.
-- `hkmc2JVM/test` for running only the compilation tests, in `hkmc2/shared/src/test/mlscript-compile`.
-- `hkmc2DiffTests/test` for running only the diff-tests, in `hkmc2/shared/src/test/mlscript`.
-- `hkmc2MostTests/test` for running the above two.
+- `hkmc2JVM/test` for running only the main compilation tests, in `hkmc2/shared/src/test/mlscript-compile`.
+- `hkmc2DiffTests/test` for running only the main diff-tests, in `hkmc2/shared/src/test/mlscript`.
+- `hkmc2MainTests/test` for running the above two.
+- `hkmc2AppsTests/test` for running the applications compile and diff tests.
+- `hkmc2NofibTests/test` for running the nofib compile and diff tests.
+- `hkmc2WasmTests/test` for running the wasm compile and diff tests.
+- `hkmc2MostTests/test` for running all of the above.
+- `hkmc2AllTests/test` for running all hkmc2 tests, including ScalaJS-compiled tests.
 - `~hkmc2DiffTests/Test/run` for running the test watcher,
   which updates test files as you save them and recompiles the Scala sources automatically on change.
 - `test` for compiling all JVM and JS subprojects

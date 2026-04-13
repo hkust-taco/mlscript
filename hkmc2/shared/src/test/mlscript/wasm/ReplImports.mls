@@ -1,0 +1,65 @@
+
+:global
+:wasm
+
+object Foo with
+  val x = 1
+class C(val x)
+fun inc(x) = x + 1
+val step = 2
+let counter = 1
+let unit = ()
+//│ Wasm result:
+//│ = {}
+
+inc(Foo.x)
+//│ Wasm result:
+//│ = 2
+
+if C(7) is C(v) then v else 0
+//│ Wasm result:
+//│ = 7
+
+:wat
+set counter += step
+counter
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
+//│   (import "repl" "counter" (global $counter (mut (ref null any))))
+//│   (import "repl" "step" (global $step (mut (ref null any))))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│     (local $tmp (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $tmp
+//│         (call $plus_impl
+//│           (global.get $counter)
+//│           (global.get $step)))
+//│       (block (result (ref null any))
+//│         (global.set $counter
+//│           (local.get $tmp))
+//│         (global.get $counter))))
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = 3
+
+unit
+//│ Wasm result:
+//│ = {}
+
+:wat
+()
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $Unit (sub $Object (struct (field $$tag (mut i32)))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (import "repl" "Unit$inst" (global $Unit (mut (ref null $Unit))))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│     (global.get $Unit))
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = {}

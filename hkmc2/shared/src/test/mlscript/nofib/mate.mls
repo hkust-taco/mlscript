@@ -1,7 +1,7 @@
 :js
 
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/mate.mls"
+import "../../mlscript-compile/nofib/mate.mls"
 print(mate.main())
 //│ >  - - - - - - - -
 //│ >  - - - - - - - -

@@ -18,9 +18,8 @@ fun test(x) = if x is
 //│       return "not 3";
 //│     case 3:
 //│       return "other";
-//│     default:
-//│       return "not 2 and not 3";
 //│   }
+//│   return "not 2 and not 3"
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

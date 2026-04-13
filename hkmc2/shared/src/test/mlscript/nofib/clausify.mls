@@ -1,5 +1,5 @@
 :js
 
-import "../../../../../../hkmc2Benchmarks/src/test/bench/mlscript-compile/nofib/clausify.mls"
+import "../../mlscript-compile/nofib/clausify.mls"
 clausify.main()
 //│ = "a <=\na <=\na <=\na <=\na <=\na <=\na <=\na <=\na <=\na <=\n"
