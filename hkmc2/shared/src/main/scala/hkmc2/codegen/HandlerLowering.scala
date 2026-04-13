@@ -623,7 +623,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           ctx.doUnwind(loc, uid, vars)(using paths)
         case _ => super.applyBlock(b)
 
-    // Note: `line` starts at the end
+    // Note: `line` has the last state as the head, and the first state at the end
     def straightLineToArms(line: List[StateId]): Block => Block =
       def transformState(state: StateId) =
         val blk = parts.states(state)
