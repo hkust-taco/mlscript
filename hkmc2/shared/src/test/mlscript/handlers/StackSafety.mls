@@ -62,28 +62,25 @@ sum(10000)
 //│       pc = runtime.resumePc;
 //│       runtime.resumePc = -1;
 //│     }
-//│     main: while (true) {
-//│       switch (pc) {
-//│         case 0:
-//│           scrut = n === 0;
-//│           if (scrut === true) {
-//│             return 0
-//│           }
-//│           let res;
-//│           tmp2 = n - 1;
-//│           res = sum(tmp2);
-//│           runtime.stackDepth = curDepth;
-//│           runtime.resumeValue = res;
-//│           if (runtime.curEffect === null) {
-//│             pc = 1;
-//│             continue main
-//│           }
-//│           return runtime.unwind(sum, 1, "StackSafety.mls:47:9", null, null, 1, 1, n, 0);
-//│         case 1:
-//│           tmp3 = runtime.resumeValue;
-//│           return n + tmp3;
-//│       }
-//│       break;
+//│     switch (pc) {
+//│       case 0:
+//│         scrut = n === 0;
+//│         if (scrut === true) {
+//│           return 0
+//│         }
+//│         let res;
+//│         tmp2 = n - 1;
+//│         res = sum(tmp2);
+//│         runtime.stackDepth = curDepth;
+//│         runtime.resumeValue = res;
+//│         if (runtime.curEffect === null) {
+//│           pc = 1;
+//│         } else {
+//│           return runtime.unwind(sum, 1, "StackSafety.mls:47:9", null, null, 1, 1, n, 0)
+//│         }
+//│       case 1:
+//│         tmp3 = runtime.resumeValue;
+//│         return n + tmp3;
 //│     }
 //│   } else {
 //│     return runtime.unwind(sum, -1, "StackSafety.mls:44:1", null, null, 1, 1, n, 0)

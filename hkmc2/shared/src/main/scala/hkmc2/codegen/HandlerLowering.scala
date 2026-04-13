@@ -455,6 +455,65 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       .toList
       .map(locals(_))
 
+  private def computeEdges(parts: PartitionedBlock): Map[StateId, Iterable[StateId]] =
+    val edges = mutable.ListBuffer.empty[(StateId, StateId)]
+    def findEdges(uid: StateId, b: Block) =
+      new BlockTraverser:
+        override def applyBlock(b: Block): Unit = b match
+          case StateTransition(uid2) => edges.addOne((uid, uid2))
+          case _ => super.applyBlock(b)
+        applyBlock(b)
+    for (uid, blk) <- parts.states do
+      findEdges(uid, blk.blk)
+    edges.groupBy(_._1).map:
+      case uid -> ids => uid -> ids.map:
+        case (a, b) => b
+  
+  // Denotes whether a block transitions to another state only on the outer level,
+  // i.e. should return false iff there is a state transition within an if, label, etc.
+  // A precondition is that the state corresponding to the input block has an out-degree
+  // of 1. This means if a state transition cannot be found on the outer level, there
+  // must be a state transition within another construct and should return false.
+  @tailrec
+  private def isSimpleTransition(b: Block): Bool = b match
+    case StateTransition(uid) => true
+    case b: NonBlockTail => isSimpleTransition(b.rest)
+    case _: BlockTail => false
+
+  // Given a directed graph, computes the "straight line" segments of the graph, i.e. partitions it
+  // into segments such that the out-degree of all elements in each segment is 1, except
+  // for the last element. Note that the partitioning is not necessarily unique and this does
+  // not necessarily produce a "maximal" partitioning. (I actually suspect that producing a
+  // maximal partitioning is NP-hard...)
+  private def computeStraightLines[T](entry: T, edges: Map[T, Iterable[T]]): Iterable[List[T]] =
+    val visited = mutable.HashSet.empty[T]
+    val ret = mutable.ListBuffer.empty[List[T]]
+    // Algorithm: Perform a DFS and accumulate the current straight-line segment as we visit nodes.
+    // Once we reach a node that has an out degree of != 1, we end the current straight line segment.
+    def dfs(state: T, acc: List[T]): Unit =
+      var curAcc = acc
+      def concludeSegment =
+        ret.addOne(curAcc)
+        curAcc = List.empty
+      if !visited.contains(state) then
+        // Not yet visited: Add this node to the current segment.
+        curAcc = state :: curAcc
+        visited.add(state)
+        edges.get(state) match
+        case Some(nexts) =>
+          // If this state has an out degree of != 1, then end the current segment.
+          if nexts.size != 1 then
+            concludeSegment
+          for n <- nexts do dfs(n, curAcc)
+        case None => concludeSegment
+      // If this state was visited from a node u with an out-degree of 1, but this state
+      // has already been previously visited, then we must conclude the current segment,
+      // ending at the node u.
+      else if !curAcc.isEmpty then
+        concludeSegment
+    dfs(entry, List.empty)
+    ret
+
   val stackSafetyMap: mutable.Map[FnOrCls, (Int, Block)] = mutable.HashMap.empty
   
   private def lifterReport(using Line, FileName)(msgs: Ls[Message -> Opt[Loc]])(using Name) =
@@ -553,7 +612,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val pcVar = freshTmp("pc")
     val mainLoopLbl = freshLabel("main")
 
-    val postTransform = new BlockTransformerShallow(SymbolSubst.Id):
+    val edges = computeEdges(parts)
+    val straightLines = computeStraightLines(parts.entry, edges)
+
+    val segmentTailTransform = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyBlock(b: Block) = b match
         case StateTransition(uid) =>
           Assign(pcVar, Value.Lit(Tree.IntLit(uid)), Continue(mainLoopLbl))
@@ -561,16 +623,73 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           ctx.doUnwind(loc, uid, vars)(using paths)
         case _ => super.applyBlock(b)
 
-    val arms = parts.states.toList.map: (id, part) =>
-      Case.Lit(Tree.IntLit(id)) ->
-        postTransform.applyBlock(part.blk)
+    // Note: `line` starts at the end
+    def straightLineToArms(line: List[StateId]): Block => Block =
+      def transformState(state: StateId) =
+        val blk = parts.states(state)
+        // If the state transition does not appear in tail position on the outer level,
+        // we must wrap the transformed state in a label, and jump to that label when
+        // encountering a state transition
+        val isSimple = isSimpleTransition(blk.blk)
+        lazy val lblSym = LabelSymbol(N, "brk" + state.toString())
+        val nextState = edges(state).head
+        val transform = new BlockTransformerShallow(SymbolSubst.Id):
+          override def applyBlock(b: Block) = b match
+            case StateTransition(uid) =>
+              assert(uid === nextState)
+              if isSimple then
+                Assign(pcVar, Value.Lit(Tree.IntLit(uid)), End())
+              else
+                Break(lblSym)
+            case Unwind(uid, loc) =>
+              ctx.doUnwind(loc, uid, vars)(using paths)
+            case _ => super.applyBlock(b)
+        val transformed = transform.applyBlock(blk.blk)
+        if isSimple then transformed
+        else Label(
+          lblSym, false, transformed,
+          Assign(pcVar, Value.Lit(Tree.IntLit(nextState)), End())
+        )
+      line match
+        case head :: next =>
+          val headTransformed = segmentTailTransform.applyBlock(parts.states(head).blk)
+          val initial: Block => Block = blk =>
+            Match(
+              Value.Ref(pcVar),
+              Case.Lit(Tree.IntLit(head)) -> headTransformed :: Nil,
+              N,
+              blk
+            )
+          next.foldLeft(initial):
+            // Applying this function to a block b will result in b appearing in the tail
+            // of the sequence of match blocks
+            case (acc, uid) => 
+              val transformed = transformState(uid)
+              blk =>
+              Match(
+                Value.Ref(pcVar),
+                Case.Lit(Tree.IntLit(uid)) -> transformed :: Nil,
+                N,
+                acc(blk)
+              )
+        case Nil => id
+      
+      
 
     val mainLoop =
       if parts.states.size <= 1 then
-        postTransform.applyBlock(parts.states.head._2.blk)
+        segmentTailTransform.applyBlock(parts.states.head._2.blk)
       else
+        val matches = straightLines.map(straightLineToArms).foldLeft[Block](End()):
+          case (acc, f) => f(acc)
+        Label(mainLoopLbl, true, matches, End())
+        /*
+        val arms = parts.states.toList.map: (id, part) =>
+          Case.Lit(Tree.IntLit(id)) ->
+            segmentTailTransform.applyBlock(part.blk)
         Label(mainLoopLbl, true, Match(Value.Ref(pcVar), arms, N, End()), End())
-
+        */
+        
     val getSavedTmp = freshTmp("saveOffset")
     def getSaved(off: BigInt): (Block => Block, Path) =
       if off == 0 then
