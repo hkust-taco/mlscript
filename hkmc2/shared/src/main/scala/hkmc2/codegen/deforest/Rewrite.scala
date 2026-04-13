@@ -7,7 +7,7 @@ import mlscript.utils.*, shorthands.*
 import semantics.*
 import syntax.Tree
 import scala.collection.mutable.{Set as MutSet, Map as MutMap, LinkedHashMap, Buffer}
-import hkmc2.syntax.{ImmutVal, MutVal, LetBind, HandlerBind, ParamBind, Fun, Ins}
+import hkmc2.syntax.{ImmutVal, MutVal, LetBind, HandlerBind, Val, Fun, Ins}
 
 
 
@@ -398,7 +398,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
           )
         case s@DeforestableSelect(sym: TermSymbol) =>
           if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) then
-            assert(sym.k is ParamBind)
+            assert(sym.k.isInstanceOf[Val])
             k(Value.Ref(branchSelSyms(s.uid.toCtorDtorId)))
           else if solver.finalDtorSrcs.contains(s.uid.toCtorDtorId) then
             applyPath(s.qual)(k)

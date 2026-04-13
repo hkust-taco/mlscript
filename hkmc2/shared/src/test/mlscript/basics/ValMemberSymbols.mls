@@ -1,0 +1,157 @@
+:js
+:noSanityCheck
+
+
+
+:sir
+class A(val x)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let A⁰; define A⁰ as class A²(x) { val x⁰; constructor A¹ { define x⁰ as val x¹ = x; end } }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+let a = A(1)
+//│ a = A(1)
+
+// * Currently, we don't get a symbol here, yet
+:sir
+a.x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ a⁰.x﹖
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+// * Check that the symbol here is the one we expect: `x¹`, from `define x⁰ as val x¹` above
+:sir
+a.A#x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ a⁰.x¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+// * Idem
+:sir
+A::x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda⁰; define lambda⁰ as fun lambda¹(self) { return self.x¹(...args⁰) }; lambda¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+// * Idem
+:sir
+case A(x) then x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda²;
+//│ define lambda² as fun lambda³(caseScrut) {
+//│   let x, arg$A$0$;
+//│   match caseScrut
+//│     A² =>
+//│       set arg$A$0$ = caseScrut.x¹;
+//│       set x = arg$A$0$;
+//│       return x
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ lambda³
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+
+:sir
+class A()(val x)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let A³; define A³ as class A⁵()(x) { val x²; constructor A⁴ { define x² as val x³ = x; end } }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+let a = A()(1)
+//│ a = A()
+
+:sir
+a.x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ a¹.x﹖
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+:sir
+a.A#x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ a¹.x³
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+:sir
+A::x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda⁴; define lambda⁴ as fun lambda⁵(self) { return self.x³(...args¹) }; lambda⁵
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+// * Note: no symbol info here, yet
+:sir
+case A as a then a.x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda⁶;
+//│ define lambda⁶ as fun lambda⁷(caseScrut) {
+//│   let a;
+//│   match caseScrut
+//│     A⁵ =>
+//│       set a = caseScrut;
+//│       return a.x﹖
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ lambda⁷
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+
+// :ssjs
+:sir
+:lift
+fun foo(x, y) =
+  class A(val u) with { val v = y }
+  let a = new A(x)
+  [a, a.A#u, a.A#v]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let A⁶, foo⁰, A$⁰;
+//│ define A$⁰ as fun A$¹(isMut, y, u) {
+//│   let tmp;
+//│   match isMut
+//│     true =>
+//│       set tmp = new mut A⁷(u);
+//│       return tmp(y)
+//│     else
+//│       set tmp = new A⁷(u);
+//│       return tmp(y)
+//│   end
+//│ };
+//│ define A⁶ as class A⁷(u)(y) {
+//│   private val A$cap⁰;
+//│   private val y⁰;
+//│   val u⁰;
+//│   val v⁰;
+//│   constructor A⁸ {
+//│     set y⁰ = y;
+//│     define u⁰ as val u¹ = u;
+//│     define v⁰ as val v¹ = y⁰;
+//│     end
+//│   }
+//│ };
+//│ define foo⁰ as fun foo¹(x, y) { let a; set a = A$¹(false, y, x); return [a, a.u¹, a.v¹] };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [A(1), 1, 2]
+foo(1, 2)
+//│ = [A(1), 1, 2]
+
+
+// TODO: when it's supported in the surface language, also test classes with only aux param lists, as in
+// class A with
+//   constructor(val x)
+// if new A(1) is
+//   A { x } then ...
+
+

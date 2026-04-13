@@ -106,11 +106,13 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
     then doc""
     else doc" " :: braced(doc"${docPrivFlds}${docPubFlds}${docCtor}${docMethods}")
   
+  def printParamLists(paramss: Ls[ParamList])(using Scope): Document =
+    doc"${paramss.map(_.params.map(x => scope.allocateName(x.sym)).mkDocument("(", ", ", ")")).mkDocument("")}"
+  
   def print(defn: Defn)(using Scope): Document = defn match
-    case FunDefn(own, sym, dSym, params, body) =>
+    case FunDefn(own, sym, dSym, paramss, body) =>
       scope.nest.givenIn:
-        val docParams = doc"${
-          params.map(_.params.map(x => scope.allocateName(x.sym)).mkDocument("(", ", ", ")")).mkDocument("")}"
+        val docParams = printParamLists(paramss)
         val docBody = print(body)
         doc"fun ${print(dSym)}${docParams} ${bracedbk(docBody)}"
     case ValDefn(tsym, sym, rhs) =>
@@ -118,14 +120,11 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
     case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable)
     => scope.nest.givenIn:
-      val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
-      val auxClsParams = auxParams.flatMap(_.paramSyms)
-      val ctorParams = (clsParams ++ auxClsParams).map(p => scope.allocateName(p))
-      val docCtorParams = if clsParams.isEmpty then doc"" else doc"(${ctorParams.mkDocument(", ")})"
+      val ctorParams = printParamLists(paramsOpt.toList ::: auxParams)
       val docStaged = if isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
       val docBody = print(privateFields, publicFields, methods, S(preCtor), ctor, ctorSym)
       val clsType = k.str
-      val docCls = doc"${docStaged}${clsType} ${print(isym)}${docCtorParams}${docBody}"
+      val docCls = doc"${docStaged}${clsType} ${print(isym)}${ctorParams}${docBody}"
       val docModule = mod match
         case Some(mod) =>
           val docStaged = if mod.isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "

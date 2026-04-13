@@ -7,7 +7,7 @@ import mlscript.utils.*, shorthands.*
 import semantics.*
 import syntax.Tree
 import scala.collection.mutable.{Set as MutSet, Map as MutMap, LinkedHashMap, LinkedHashSet}
-import hkmc2.syntax.{ImmutVal, MutVal, LetBind, HandlerBind, ParamBind, Fun, Ins}
+import hkmc2.syntax.{ImmutVal, MutVal, LetBind, HandlerBind, Fun, Ins}
 
 type StratVarId = Uid[StratVar]
 
@@ -621,7 +621,9 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
         val argsStrat = args.map:
           case Arg(_, a) => processResult(a)
         ctor match
-        case cls: ClassSymbol => new Ctor(c.uid, instId)(ctor, cls.tree.clsParams.zip(argsStrat))
+        case cls: ClassSymbol => new Ctor(c.uid, instId)(ctor,
+          cls.tree.clsParams.headOption.getOrElse(Nil)//FIXME? case when there are only aux parameter lists
+          .zip(argsStrat))
         case _: ModuleOrObjectSymbol => new Ctor(c.uid, instId)(ctor, Nil)
         case tupSize: Int => new Ctor(c.uid, instId)(tupSize, (0 until tupSize).zip(argsStrat).toList)
       case Call(fun, args) => handleCallLike(fun, args)
@@ -643,7 +645,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
           case s: TermSymbol =>
             // only parambind and let/vals in modules are handled here
             s.k match
-            case ParamBind =>
+            case _ if s.decl.exists(_.isInstanceOf[Param]) =>
               val obj = processResult(sel.qual)
               val selRes = freshVar("sel_res", cc.forFunGroup)
               cc.constrain(

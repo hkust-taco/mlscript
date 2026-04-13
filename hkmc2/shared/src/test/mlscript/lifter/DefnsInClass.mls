@@ -19,7 +19,7 @@ data class A(x) with
 //│       return tmp(A)
 //│   end
 //│ };
-//│ define B⁰ as class B¹(y, A) {
+//│ define B⁰ as class B¹(y)(A) {
 //│   private val B$cap⁰;
 //│   private val A¹;
 //│   val y⁰;
