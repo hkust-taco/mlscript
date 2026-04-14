@@ -398,7 +398,7 @@ class TailRecOpt(using State, TL, Raise):
     val loopDefn = FunDefn(
       owner, bms, dSym,
       PlainParamList(params) :: Nil,
-      loop)(false, N, Visibility.Public)
+      loop)(false, N, Visibility.Public) // Q: maybe should be Private?
     
     if funs.size === 1 then (N, loopDefn :: Nil)
     else (S(loopDefn), rewrittenFuns)
