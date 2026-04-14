@@ -92,7 +92,7 @@ fun f(x) =
 //│       return tmp
 //│   end
 //│ };
-//│ define C⁰ as class C¹ {
+//│ define C⁰ as class C¹(x) {
 //│   private val C$cap⁰;
 //│   private val x⁰;
 //│   constructor {
@@ -126,7 +126,7 @@ fun f() =
 f().foo()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Bad⁰, Good⁰, f², tmp, Capture$scope0⁰, Bad$⁰, Good$⁰;
-//│ define Capture$scope0⁰ as class Capture$scope0² {
+//│ define Capture$scope0⁰ as class Capture$scope0²(z$0, w$1) {
 //│   constructor Capture$scope0¹ {
 //│     define w$1⁰ as val w$1¹ = w$1;
 //│     define z$0⁰ as val z$0¹ = z$0;
@@ -155,10 +155,10 @@ f().foo()
 //│       return tmp1(scope0$cap)
 //│   end
 //│ };
-//│ define Good⁰ as class Good¹ {
+//│ define Good⁰ as class Good¹()(scope0$cap, x, y) {
 //│   private val Good$cap⁰;
-//│   private val y²;
 //│   private val x¹;
+//│   private val y²;
 //│   private val scope0$cap⁰;
 //│   constructor Good² {
 //│     set scope0$cap⁰ = scope0$cap;
@@ -174,7 +174,7 @@ f().foo()
 //│     return +⁰(tmp2, scope0$cap⁰.w$1¹)
 //│   }
 //│ };
-//│ define Bad⁰ as class Bad¹ {
+//│ define Bad⁰ as class Bad¹()(scope0$cap) {
 //│   private val Bad$cap⁰;
 //│   private val scope0$cap¹;
 //│   constructor Bad² {
@@ -291,5 +291,7 @@ fun f(x) =
 let res = f(0)
 res.a
 res.b
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Elaborator.scala:1306': mismatched param list lengths List() vs List(term:A/r)
+//│ ╙── The compilation result may be incorrect.
 //│ ═══[RUNTIME ERROR] ReferenceError: r is not defined
 //│ res = A(_)

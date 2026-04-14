@@ -11,7 +11,7 @@ import hkmc2.utils.*
 import hkmc2.utils.SymbolSubst
 import hkmc2.Message.MessageContext
 
-import syntax.{Literal, Tree, ParamBind}
+import syntax.{Literal, Tree}
 import semantics.*
 import semantics.Elaborator.ctx
 import semantics.Elaborator.State

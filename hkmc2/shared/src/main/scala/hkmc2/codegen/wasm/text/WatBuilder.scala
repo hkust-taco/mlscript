@@ -921,10 +921,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case _ => lastWords(s"Cannot select field from non-struct type: ${structInfo.compType.toWat}")
     val fieldIdx = symToField.get(sym)
       .orElse:
-        // Workaround: TermSymbols are not correctly resolved, so match the fields by name instead
         sym match
-          case trmSym: TermSymbol if trmSym.owner.flatMap(_.asBlkMember).exists(_ == thisSym) =>
-            symToField.find((fieldSym, _) => fieldSym.nme == sym.nme).map((_, v) => v)
           case memSym: MemberSymbol if fieldOwner(memSym).contains(thisSym) =>
             symToField.find((fieldSym, _) => fieldSym.nme == sym.nme).map((_, v) => v)
           case _ => N

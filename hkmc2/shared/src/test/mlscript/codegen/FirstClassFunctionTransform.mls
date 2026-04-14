@@ -247,7 +247,7 @@ module Foo with
 //│   set tmp = +⁰(x, y);
 //│   return +⁰(tmp, z)
 //│ };
-//│ define Function$⁸ as class Function$⁹ {
+//│ define Function$⁸ as class Function$⁹(y, z) {
 //│   private val Function$$cap⁴;
 //│   private val y⁰;
 //│   private val z⁰;
@@ -504,7 +504,7 @@ fun foo(x)(y) = x + y
 //│ define lambda$⁰ as fun lambda$¹(x, y) {
 //│   return +⁰(x, y)
 //│ };
-//│ define Function$¹² as class Function$¹³ {
+//│ define Function$¹² as class Function$¹³(x) {
 //│   private val Function$$cap⁶;
 //│   private val x²;
 //│   constructor {

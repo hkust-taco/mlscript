@@ -8,7 +8,7 @@ import syntax.Tree
 import utils.*
 import mlscript.utils.*, shorthands.*
 import scala.collection.mutable
-import hkmc2.syntax.{ImmutVal, MutVal, LetBind, HandlerBind, ParamBind, Fun, Ins}
+import hkmc2.syntax.{ImmutVal, MutVal, LetBind, HandlerBind, Fun, Ins}
 
 case class ImportedInfo(seeThroughMods: Ls[ClsLikeBody])
 
@@ -35,7 +35,7 @@ object DeforestableSelect:
       val tSym = sSym.asTrm.get
       tSym.k match
         case (Ins | HandlerBind | MutVal) => None
-        case ParamBind => Some(tSym)
+        case _ if tSym.decl.exists(_.isInstanceOf[Param]) => Some(tSym)
         case ImmutVal =>
           // this can be a selection from module or a class
           tSym.owner.flatMap:
@@ -43,7 +43,9 @@ object DeforestableSelect:
             // handleable if the selected field is
             // one of the cls params, because in deforestation
             // the known field information of a ctor is only its args
-            case cls: ClassSymbol => cls.tree.clsParams.find(_.id == tSym.id)
+            case cls: ClassSymbol => cls.tree.clsParams.headOption
+              .getOrElse(Nil)//FIXME? case when there are only aux parameter lists
+              .find(_.id == tSym.id)
             case mod: ModuleOrObjectSymbol => Some(tSym)
             case _ => None
         case LetBind =>

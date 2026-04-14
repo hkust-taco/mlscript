@@ -44,7 +44,7 @@ foo(10)
 //│       return tmp
 //│   end
 //│ };
-//│ define M⁰ as class M¹ {
+//│ define M⁰ as class M¹(y) {
 //│   private val M$cap⁰;
 //│   private val y⁰;
 //│   constructor {
@@ -227,7 +227,7 @@ M.A().get
 //│   val x⁰;
 //│   constructor {
 //│     let scrut, tmp1;
-//│     define A⁰ as class A¹ {
+//│     define A⁰ as class A¹() {
 //│       private val A$cap⁰;
 //│       method get⁰ = fun get¹ {
 //│         return +⁰(M⁵.x¹, M⁵.x¹)
