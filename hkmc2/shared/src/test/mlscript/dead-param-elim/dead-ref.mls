@@ -36,7 +36,6 @@ if f(42) is Box(v) then 0
 //│ set scrut = f³();
 //│ match scrut
 //│   Box¹ =>
-//│     do scrut.x⁰;
 //│     0
 //│   else
 //│     throw new globalThis⁰.Error⁰("match error")

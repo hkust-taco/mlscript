@@ -45,7 +45,7 @@ object FlowAnalysis:
         case Some(id) => id
   
   
-  def apply(b: Block, mono: Bool)(using TraceLogger, Elaborator.State) =
+  def apply(b: Block, mono: Bool)(using TraceLogger, Elaborator.State, Raise) =
     given State = new State
     val pre = new FlowPreAnalyzer(b)
     val constrCol = new FlowConstraintsCollector(pre, mono)
@@ -91,18 +91,13 @@ object RefLike:
 object TrackableFieldSelect:
   def unapply(s: Select): Opt[Path -> (field: TermSymbol, owner: ClassSymbol)] =
     s.symbol match
-    case S(sSym) if sSym.asTrm.isDefined =>
+    case S(sSym) if sSym.asTrm.exists(_.decl.exists(_.isInstanceOf[Param])) =>
       val tSym = sSym.asTrm.get
-      tSym.k match
-        case syntax.ParamBind =>
-          tSym.owner.flatMap(_.asCls).map(cls => s.qual -> (tSym, cls))
-        case syntax.ImmutVal =>
-          for
-            cls <- tSym.owner.flatMap(_.asCls)
-            field <- cls.tree.clsParams.find(_.id == tSym.id)
-          yield
-            s.qual -> (field, cls)
-        case _ => N
+      for
+        owner <- tSym.owner
+        cls <- owner.asCls
+        if cls.tree.clsParams.size === 1
+      yield s.qual -> (tSym, cls)
     case _ => N
 
 object PossibleTrackableTupleSelect:
@@ -238,7 +233,8 @@ class ProdStratScheme(val s: StratVarState, val constraints: Ls[ProdStrat -> Con
 class FlowPreAnalyzer(val b: Block)(using
   val tl: TraceLogger,
   val eState: Elaborator.State,
-  val fState: FlowAnalysis.State
+  val fState: FlowAnalysis.State,
+  val raise: Raise
 ) extends BlockTraverser:
   given stratVarUidState: Uid.StratVar.State = new Uid.StratVar.State
   import StratVarState.freshVar
@@ -501,6 +497,7 @@ end FlowPreAnalyzer
 class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool):
   given FlowPreAnalyzer = preAnalyzer
   given Uid.StratVar.State = preAnalyzer.stratVarUidState
+  given Raise = preAnalyzer.raise
   given fState: FlowAnalysis.State = preAnalyzer.fState
   given eState: Elaborator.State = preAnalyzer.eState
   given tl: TraceLogger = preAnalyzer.tl
@@ -788,10 +785,18 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
             case Arg(_, a) => processResult(a)
           ctor match
           case cls: ClassSymbol =>
-            val (toZip, toUnknown) = argsStrat.splitAt(cls.tree.clsParams.size)
-            for a <- toUnknown do
-              cc.constrain(a, NoCons)
-            new Ctor(c.uid, instId)(ctor, cls.tree.clsParams.zip(toZip))
+            cls.tree.clsParams.size match
+            case 1 =>
+              val clsParams = cls.tree.clsParams.head
+              softAssert(argsStrat.size == clsParams.size)
+              new Ctor(c.uid, instId)(ctor, clsParams.zip(argsStrat))
+            case _ =>
+              // - the size of 0 means we don't know the cls param symbols,
+              // so we constrain args with NoCons and this CtorCall gives NoProd
+              // - if size > 1, we cannot handle multiple parameter class flow now,
+              //   constrain args with NoCons and this CtorCall gives NoProd
+              for a <- argsStrat do cc.constrain(a, NoCons)
+              NoProd
           case _: ModuleOrObjectSymbol => new Ctor(c.uid, instId)(ctor, Nil)
           case tupSize: Int => new Ctor(c.uid, instId)(tupSize, (0 until tupSize).zip(argsStrat).toList)
         case c@CtorCall(_, args) =>

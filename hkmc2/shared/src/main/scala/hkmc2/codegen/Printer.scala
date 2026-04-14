@@ -108,7 +108,13 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
     else doc" " :: braced(doc"${docPrivFlds}${docPubFlds}${docCtor}${docMethods}")
   
   def printParamLists(paramss: Ls[ParamList])(using Scope): Document =
-    doc"${paramss.map(_.params.map(x => scope.allocateName(x.sym)).mkDocument("(", ", ", ")")).mkDocument("")}"
+    paramss
+      .map: pl =>
+        val allParams =
+          pl.params.map(x => scope.allocateName(x.sym)) ++
+          pl.restParam.map(x => "..." + scope.allocateName(x.sym))
+        allParams.mkDocument("(", ", ", ")")
+      .mkDocument("")
   
   def print(defn: Defn)(using Scope): Document = defn match
     case FunDefn(own, sym, dSym, paramss, body) =>

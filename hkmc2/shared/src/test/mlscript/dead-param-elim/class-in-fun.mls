@@ -20,7 +20,7 @@ f(1, 2).get()
 //│ define C⁰ as class C¹ {
 //│   private val C$cap⁰;
 //│   private val used⁰;
-//│   constructor {
+//│   constructor(used) {
 //│     set used⁰ = used;
 //│     end
 //│   }

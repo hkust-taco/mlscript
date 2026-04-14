@@ -58,7 +58,7 @@ foo(0, ...a)
 data class A(...r)
 let x = new A(1, 2, 3)
 x.r
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Elaborator.scala:1306': mismatched param list lengths List() vs List(term:A/r)
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Elaborator.scala:1313': mismatched param list lengths List() vs List(term:A/r)
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'r' yielded 'undefined'
@@ -70,7 +70,7 @@ x.r
 data class A(...r) with
   fun getR = r
 new A(1, 2, 3).getR
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Elaborator.scala:1306': mismatched param list lengths List() vs List(term:A/r)
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Elaborator.scala:1313': mismatched param list lengths List() vs List(term:A/r)
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ ═══[RUNTIME ERROR] ReferenceError: r is not defined

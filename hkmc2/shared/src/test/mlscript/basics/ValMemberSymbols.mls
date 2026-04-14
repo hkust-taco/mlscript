@@ -32,7 +32,7 @@ a.A#x
 :sir
 A::x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda⁰; define lambda⁰ as fun lambda¹(self) { return self.x¹(...args⁰) }; lambda¹
+//│ let lambda⁰; define lambda⁰ as fun lambda¹(self, ...args) { return self.x¹(...args) }; lambda¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -83,7 +83,7 @@ a.A#x
 :sir
 A::x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda⁴; define lambda⁴ as fun lambda⁵(self) { return self.x³(...args¹) }; lambda⁵
+//│ let lambda⁴; define lambda⁴ as fun lambda⁵(self, ...args) { return self.x³(...args) }; lambda⁵
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
