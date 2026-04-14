@@ -71,23 +71,27 @@ private enum MatchType:
 private object PostCondRes:
   val empty = PostCondRes(false, false, Map.empty)
 
-private case class PostCondRes(stop: Bool, isAbortive: Bool, varsMap: Map[Local, Literal]):
-  def markStop = copy(stop = true)
+// isImpure: indicates whether the result was computed for a possibly impure expression. All analysis results
+// that could possibly come before this result must be discarded.
+// isAbortive: indicates whether the result was computed for an abortive block. When merging results from
+// different branches, the results for this must be discarded.
+private case class PostCondRes(isImpure: Bool, isAbortive: Bool, varsMap: Map[Local, Literal]):
+  def markImpure = copy(isImpure = true)
 
 // Combines postconditions from different branches.
 private def combinePostConds(p1: PostCondRes, p2: PostCondRes) =
   if p1.isAbortive && p2.isAbortive then
-    PostCondRes(p1.stop || p2.stop, false, Map.empty)
+    PostCondRes(false, false, Map.empty)
   else if p1.isAbortive then
-    PostCondRes(p1.stop || p2.stop, false, p2.varsMap)
+    PostCondRes(p2.isImpure, false, p2.varsMap) // We don't care about whether p1 is impure if it is abortive.
   else if p2.isAbortive then
-    PostCondRes(p1.stop || p2.stop, false, p1.varsMap)
+    PostCondRes(p1.isImpure, false, p1.varsMap) // Same as above
   else
     // If a variable was set to a different value in either branch, or was only set in one branch, do not include
     // Otherwise, we can combine them
     val combined = p1.varsMap.collect:
       case k -> v1 if p2.varsMap.contains(k) && p2.varsMap(k) == v1 => k -> v1
-    PostCondRes(p1.stop || p2.stop, false, combined)
+    PostCondRes(p1.isImpure || p2.isImpure, false, combined)
 
 extension (r: PostCondRes)
   // For combining postconditions derived in different branches
@@ -95,9 +99,9 @@ extension (r: PostCondRes)
   // For combining sequences of postconditions
   def >=>(r2: PostCondRes): PostCondRes =
     if r.isAbortive then r
-    else if r2.stop then r2
-    else PostCondRes(r.stop, r2.isAbortive, r.varsMap ++ r2.varsMap)
-  def +(v: Local -> Literal): PostCondRes = PostCondRes(r.stop, r.isAbortive, r.varsMap + v)
+    else if r2.isImpure then r2
+    else PostCondRes(r.isImpure, r2.isAbortive, r.varsMap ++ r2.varsMap)
+  def +(v: Local -> Literal): PostCondRes = PostCondRes(r.isImpure, r.isAbortive, r.varsMap + v)
 
 // Analyzes postconditions for a block. Namely, determines variables that are
 // definitely set to a certain literal.
@@ -107,7 +111,8 @@ extension (r: PostCondRes)
 //
 // The intended semantics of this are, assuming the block finishes execution, i.e.
 // it does not break to a label that wraps the block or returns, then the 
-// postconditions hold.
+// postconditions hold. Otherwise, the results are invalid, which does not matter,
+// because they will be irrelevant in that case anyway.
 private object PostCondAnalysisImpl extends CachedAnalysis[Block, PostCondRes]:
   
   private def res(lhs: Opt[Local], rhs: Result, rest: Block) =
@@ -116,7 +121,7 @@ private object PostCondAnalysisImpl extends CachedAnalysis[Block, PostCondRes]:
         case Value.Lit(lit) => PostCondRes(false, false, Map(lhs -> lit)) >=> analyze(rest)
         case _ => analyze(rest)
       case None => analyze(rest)
-    else analyze(rest).markStop
+    else analyze(rest).markImpure
   
   override def analyzeUncached(b: Block): PostCondRes = b match
     case Label(label, loop, body, rest) =>
@@ -130,14 +135,14 @@ private object PostCondAnalysisImpl extends CachedAnalysis[Block, PostCondRes]:
        *   end
        * end
        * 
-       * and it is impossible to tell whether we should have the postcondition x = 2 in the outer loop,
+       * and it is very difficult to tell whether we should have the postcondition x = 2 in the outer loop,
        * because `body` could break out of `l1` or `l2`.
        * 
-       * Not traversing into the label also makes `Block.isAbortive` more useful. We always know that
-       * if a block is abortive, then it aborts out of the current match statement.
+       * Not traversing into labels also makes `Block.isAbortive` more useful, as we always know that
+       * if a block is abortive, then it aborts out of the "initial" block that `analyze` was called on.
        */
       val lblRes = analyze(body)
-      analyze(rest).copy(stop = lblRes.stop)
+      analyze(rest).copy(isImpure = lblRes.isImpure)
     case Match(scrut, arms, dflt, rest) =>
       arms.foldLeft(dflt.map(analyze).getOrElse(PostCondRes.empty)):
         case (acc, (_, blk)) => acc ++ analyze(blk)
@@ -150,7 +155,7 @@ private object PostCondAnalysisImpl extends CachedAnalysis[Block, PostCondRes]:
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => res(N, rhs, rest)
     case Define(defn, rest) => defn match
       case v: ValDefn => res(S(v.sym), v.rhs, rest)
-      case c: ClsLikeDefn => analyze(rest).markStop // TODO: refine for object and module ctors
+      case c: ClsLikeDefn => analyze(rest).markImpure // TODO: refine for object and module ctors
       case f: FunDefn => analyze(rest)
     case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) => analyze(body) >=> analyze(rest)
     case b: BlockTail => PostCondRes.empty.copy(isAbortive = b.isAbortive)

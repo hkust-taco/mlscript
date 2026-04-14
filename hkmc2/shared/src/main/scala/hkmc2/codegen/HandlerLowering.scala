@@ -683,12 +683,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         val matches = straightLines.map(straightLineToArms).foldLeft[Block](End()):
           case (acc, f) => f(acc)
         Label(mainLoopLbl, true, matches, End())
-        /*
-        val arms = parts.states.toList.map: (id, part) =>
-          Case.Lit(Tree.IntLit(id)) ->
-            segmentTailTransform.applyBlock(part.blk)
-        Label(mainLoopLbl, true, Match(Value.Ref(pcVar), arms, N, End()), End())
-        */
         
     val getSavedTmp = freshTmp("saveOffset")
     def getSaved(off: BigInt): (Block => Block, Path) =
