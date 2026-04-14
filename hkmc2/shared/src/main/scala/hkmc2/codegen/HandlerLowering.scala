@@ -469,6 +469,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       case uid -> ids => uid -> ids.map:
           case (a, b) => b
         .toList
+        .distinct
   
   // Denotes whether a block transitions to another state only on the outer level,
   // i.e. should return false iff there is a state transition within an if, label, etc.
@@ -486,6 +487,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   // for the last element. Note that the partitioning is not necessarily unique and this does
   // not necessarily produce a "maximal" partitioning. (I actually suspect that producing a
   // maximal partitioning is NP-hard...)
+  //
+  // I do have some ideas to improve this though, but those can be done later.
   private def computeStraightLines(entry: StateId, edges: Map[StateId, List[StateId]]): List[List[StateId]] =
     val visited = mutable.HashSet.empty[StateId]
     val ret = mutable.ListBuffer.empty[List[StateId]]

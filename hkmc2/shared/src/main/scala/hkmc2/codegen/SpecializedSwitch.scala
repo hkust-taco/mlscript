@@ -48,7 +48,7 @@ private enum MatchType:
  * where each Mi are match statements that match on a common scrutinee `x`, only have literal patterns,
  * and have an empty or no default case, except for Mn. We define three types of such match statements
  * (which are mostly unrelated to switch case types in the enum `SwitchCase`):
- * - MFallthrough(next): Has only one branch, and if the branch executes to completion, then `next` is asssigned
+ * - MFallthrough(next): Has only one branch, and if the branch executes to completion, then `next` is assigned
  *   to `x`.
  * - MAbortive: All branches are abortive (and thus exits the scope that the match chain is defined in).
  * - MCases: Is not an MFallthrough or an MAbortive (but still matches on `x` and only has literals patterns).
@@ -106,8 +106,8 @@ extension (r: PostCondRes)
 // Analyzes postconditions for a block. Namely, determines variables that are
 // definitely set to a certain literal.
 //
-// Note that impure computations will lead to `stop` being set to true. This means
-// all analysis *before* the impure computation will be deemed invalid.
+// Note that impure computations will lead to `isImpure` being set to true. This means
+// all analysis *before* the impure computation will be discarded.
 //
 // The intended semantics of this are, assuming the block finishes execution, i.e.
 // it does not break to a label that wraps the block or returns, then the 
@@ -141,8 +141,8 @@ private object PostCondAnalysisImpl extends CachedAnalysis[Block, PostCondRes]:
        * Not traversing into labels also makes `Block.isAbortive` more useful, as we always know that
        * if a block is abortive, then it aborts out of the "initial" block that `analyze` was called on.
        */
-      val lblRes = analyze(body)
-      analyze(rest).copy(isImpure = lblRes.isImpure)
+      val restRes = analyze(rest)
+      restRes.copy(isImpure = restRes.isImpure || analyze(body).isImpure)
     case Match(scrut, arms, dflt, rest) =>
       arms.foldLeft(dflt.map(analyze).getOrElse(PostCondRes.empty)):
         case (acc, (_, blk)) => acc ++ analyze(blk)
@@ -185,9 +185,11 @@ private def findMatchChainRec(
   acc: List[MatchType]
 ): MatchChain =
   object TailAssign:
-    def unapply(b: Block) = PostCondAnalysis.analyze(b).get(scrutRef.l) match
-      case S(value) => S(value)
-      case N => N
+    def unapply(b: Block) =
+      if b.isAbortive then N
+      else PostCondAnalysis.analyze(b).get(scrutRef.l) match
+        case S(value) => S(value)
+        case N => N
   
   
   // Whether the current match may have a non-empty default case.
