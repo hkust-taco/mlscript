@@ -7,7 +7,7 @@ import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
 import hkmc2.utils.SymbolSubst
 
-import syntax.{Literal, Tree, ParamBind}
+import syntax.{Literal, Tree}
 import semantics.*
 import semantics.Elaborator.{Ctx, ctx}
 import semantics.Elaborator.State

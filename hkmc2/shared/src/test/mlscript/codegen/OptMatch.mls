@@ -36,7 +36,6 @@ val isDefined = case
 //│ let isDefined1, lambda;
 //│ lambda = (undefined, function (caseScrut) {
 //│   if (caseScrut instanceof Some1.class) {
-//│     caseScrut.value;
 //│     return true
 //│   } else if (caseScrut instanceof None1.class) {
 //│     return false

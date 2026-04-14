@@ -259,3 +259,84 @@ fun f(x) =
 :expect "3"
 f(4)
 //│ = "3"
+
+// More tricky fallthrough cases //
+
+// Do not optimize
+:sjs
+fun f(x, y) =
+  fun bad() = set x = 1000
+  if x is 0 do
+    set x = 1
+    if y == 0 then
+      bad()
+    else
+      set x = 1
+  if x is 1 do
+    return "x = 1"
+  return "x != 1"
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f5;
+//│ f5 = function f(x, y) {
+//│   let scrut;
+//│   if (x === 0) {
+//│     x = 1;
+//│     scrut = Predef.equals(y, 0);
+//│     if (scrut === true) {
+//│       x = 1000;
+//│     } else { x = 1; }
+//│   }
+//│   if (x === 1) { return "x = 1" }
+//│   return "x != 1";
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect "x != 1"
+f(0, 0)
+//│ = "x != 1"
+
+:expect "x = 1"
+f(0, 1)
+//│ = "x = 1"
+
+// Optimize
+:sjs
+fun f(x, y) =
+  fun bad() = set x = 1000
+  if x is 0 do
+    set x = 1
+    if y == 0 then
+      bad()
+      set x = 1
+    else
+      set x = 1
+  if x is 1 do
+    return "x = 1"
+  return "x != 1"
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f6;
+//│ f6 = function f(x, y) {
+//│   let scrut;
+//│   switch (x) {
+//│     case 0:
+//│       x = 1;
+//│       scrut = Predef.equals(y, 0);
+//│       if (scrut === true) {
+//│         x = 1000;
+//│         x = 1;
+//│       } else { x = 1; }
+//│     case 1:
+//│       return "x = 1";
+//│   }
+//│   return "x != 1"
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect "x = 1"
+f(0, 0)
+//│ = "x = 1"
+
+:expect "x = 1"
+f(1, 0)
+//│ = "x = 1"
+

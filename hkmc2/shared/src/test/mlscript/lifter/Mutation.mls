@@ -14,7 +14,7 @@ fun foo() =
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let bar⁰, foo⁰, Capture$scope0⁰, bar$⁰;
 //│ define Capture$scope0⁰ as class Capture$scope0² {
-//│   constructor Capture$scope0¹ {
+//│   constructor Capture$scope0¹(x$0) {
 //│     define x$0⁰ as val x$0¹ = x$0;
 //│     end
 //│   }

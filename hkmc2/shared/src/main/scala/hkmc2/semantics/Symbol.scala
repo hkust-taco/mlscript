@@ -382,6 +382,7 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends Symbol:
   this: MemberSymbol =>
   
   var defn: Opt[Defn] = N
+  var decl: Opt[Declaration] = N // NOTE: currently only assigned for class params and only used by deforestation; may want to just remove it once deforestation is improved
   def bms: Opt[BlockMemberSymbol] = defn.map(_.bsym) 
   
   /** Whether we know it's pure when selected (eg getters are not always pure). */

@@ -258,7 +258,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               subTerm(bod)(r =>
                 Define(ValDefn(td.tsym, td.sym, r)(cfgOverride),
                   blockImpl(stats, res)))
-            case syntax.LetBind | syntax.ParamBind | syntax.HandlerBind => fail:
+            case syntax.LetBind | syntax.HandlerBind => fail:
               ErrorReport(
                 msg"Unexpected declaration kind '${td.k.str}' in lowering" -> td.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)

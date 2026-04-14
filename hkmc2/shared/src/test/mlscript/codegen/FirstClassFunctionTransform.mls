@@ -251,7 +251,7 @@ module Foo with
 //│   private val Function$$cap⁴;
 //│   private val y⁰;
 //│   private val z⁰;
-//│   constructor {
+//│   constructor(y, z) {
 //│     super⁰();
 //│     set y⁰ = y;
 //│     set z⁰ = z;
@@ -507,7 +507,7 @@ fun foo(x)(y) = x + y
 //│ define Function$¹² as class Function$¹³ {
 //│   private val Function$$cap⁶;
 //│   private val x²;
-//│   constructor {
+//│   constructor(x) {
 //│     super⁰();
 //│     set x² = x;
 //│     end

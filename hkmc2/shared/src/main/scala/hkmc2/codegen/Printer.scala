@@ -77,9 +77,10 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
     case _ => TODO(blk)
   
   def print(
-      privateFields: List[TermSymbol],
-      publicFields: List[(BlockMemberSymbol, TermSymbol)],
-      methods: List[FunDefn],
+      privateFields: Ls[TermSymbol],
+      publicFields: Ls[(BlockMemberSymbol, TermSymbol)],
+      methods: Ls[FunDefn],
+      auxParams: Ls[ParamList],
       preCtor: Opt[Block],
       ctor: Block,
       ctorSym: Opt[TermSymbol],
@@ -94,7 +95,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
       case None => doc""
     val docCtor = ctor match
       case End(_) => doc""
-      case _ => doc" # constructor${ctorSym.fold(doc"")(doc" " :: print(_))} ${
+      case _ => doc" # constructor${ctorSym.fold(doc"")(doc" " :: print(_))}${printParamLists(auxParams)} ${
         bracedbk(docPreCtor :: print(ctor))}"
     val mtds = methods.map(m => doc"method ${print(m.sym)} = " :: print(m)).mkDocument(sep = doc" # ")
     val docMethods = if methods.isEmpty then doc"" else doc" # ${mtds}"
@@ -106,19 +107,13 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
     then doc""
     else doc" " :: braced(doc"${docPrivFlds}${docPubFlds}${docCtor}${docMethods}")
   
+  def printParamLists(paramss: Ls[ParamList])(using Scope): Document =
+    doc"${paramss.map(_.params.map(x => scope.allocateName(x.sym)).mkDocument("(", ", ", ")")).mkDocument("")}"
+  
   def print(defn: Defn)(using Scope): Document = defn match
-    case FunDefn(own, sym, dSym, params, body) =>
+    case FunDefn(own, sym, dSym, paramss, body) =>
       scope.nest.givenIn:
-        val docParams =
-          doc"${
-            params
-              .map: pl =>
-                val allParams =
-                  pl.params.map(x => scope.allocateName(x.sym)) ++
-                  pl.restParam.map(x => "..." + scope.allocateName(x.sym))
-                allParams.mkDocument("(", ", ", ")")
-              .mkDocument("")
-          }"
+        val docParams = printParamLists(paramss)
         val docBody = print(body)
         doc"fun ${print(dSym)}${docParams} ${bracedbk(docBody)}"
     case ValDefn(tsym, sym, rhs) =>
@@ -126,18 +121,15 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
     case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable)
     => scope.nest.givenIn:
-      val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
-      val auxClsParams = auxParams.flatMap(_.paramSyms)
-      val ctorParams = (clsParams ++ auxClsParams).map(p => scope.allocateName(p))
-      val docCtorParams = if clsParams.isEmpty then doc"" else doc"(${ctorParams.mkDocument(", ")})"
+      val ctorParams = printParamLists(paramsOpt.toList)
       val docStaged = if isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
-      val docBody = print(privateFields, publicFields, methods, S(preCtor), ctor, ctorSym)
+      val docBody = print(privateFields, publicFields, methods, auxParams, S(preCtor), ctor, ctorSym)
       val clsType = k.str
-      val docCls = doc"${docStaged}${clsType} ${print(isym)}${docCtorParams}${docBody}"
+      val docCls = doc"${docStaged}${clsType} ${print(isym)}${ctorParams}${docBody}"
       val docModule = mod match
         case Some(mod) =>
           val docStaged = if mod.isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
-          val docBody = print(mod.privateFields, mod.publicFields, mod.methods, N, mod.ctor, N)
+          val docBody = print(mod.privateFields, mod.publicFields, mod.methods, Nil, N, mod.ctor, N)
           doc" # ${docStaged}module ${print(mod.isym)}${docBody}"
         case None => doc""
       doc"${docCls}${docModule}"

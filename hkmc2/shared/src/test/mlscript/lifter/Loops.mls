@@ -51,7 +51,7 @@ fun foo() =
 //│   return scope0$cap.x$0⁰
 //│ };
 //│ define Capture$scope0⁰ as class Capture$scope0² {
-//│   constructor Capture$scope0¹ {
+//│   constructor Capture$scope0¹(x$0) {
 //│     define x$0¹ as val x$0⁰ = x$0;
 //│     end
 //│   }
