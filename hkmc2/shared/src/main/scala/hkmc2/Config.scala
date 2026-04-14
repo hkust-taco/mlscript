@@ -316,11 +316,10 @@ object ConfigParser:
       parseInt(value) match
         case S(v) => _.copy(patMatConsequentSharingThreshold = S(v))
         case N => identity
-    case "inline" =>
-      parseInt(value) match
-        case S(x) if x < 0 => _.copy(inlining = N)
-        case S(v) => _.copy(inlining = S(Inliner(v)))
-        case N => identity
+    case "inlining" =>
+      parseOpt(value)(parseInt) match
+        case S(v) => _.copy(inlining = v.map(Inliner.apply))
+        case _ => identity
     case _ =>
       raise(ErrorReport(
         msg"Unknown config field '${name}'" -> value.toLoc :: Nil,

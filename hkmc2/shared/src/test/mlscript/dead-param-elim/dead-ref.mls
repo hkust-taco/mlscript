@@ -1,6 +1,7 @@
 :js
-
 :noInline
+
+
 :deadParamElim
 :soir
 private fun f(a) =
@@ -20,7 +21,6 @@ f(undefined)
 
 data class Box(x)
 
-:noInline
 :deadParamElim
 :soir
 private fun f(a) = Box(a)
@@ -46,7 +46,6 @@ if f(42) is Box(v) then 0
 
 
 
-:noInline
 :deadParamElim
 :soir
 private fun f(a) =

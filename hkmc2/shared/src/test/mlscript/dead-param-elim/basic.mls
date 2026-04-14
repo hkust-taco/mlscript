@@ -1,6 +1,6 @@
 :js
-
 :noInline
+
 :deadParamElim
 :soir
 private fun f(a) = 0
@@ -15,7 +15,6 @@ f(42)
 
 :deadParamElim
 :soir
-:noInline
 private fun f(a, b) = 0
 f(1, 2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
@@ -43,7 +42,6 @@ f(1)(2)
 
 :deadParamElim
 :soir
-:noInline
 private fun f(a) = a
 f(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
@@ -55,7 +53,6 @@ f(42)
 
 :deadParamElim
 :soir
-:noInline
 private fun f(a, b) = a + b
 f(1, 2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
@@ -68,7 +65,6 @@ f(1, 2)
 
 :deadParamElim
 :soir
-:noInline
 private fun f(a, b) = a
 f(1, 2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
@@ -81,7 +77,6 @@ f(1, 2)
 
 :deadParamElim
 :soir
-:noInline
 private fun f(a, b) = b
 f(1, 2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
@@ -122,7 +117,6 @@ f(1)(2)
 
 :deadParamElim
 :soir
-:noInline
 private fun f(a) = 0
 f(1)
 f(2)
@@ -138,7 +132,6 @@ f(3)
 
 :soir
 :deadParamElim
-:noInline
 private fun g() =
   fun f(a) = 3
   f(4)
@@ -277,7 +270,6 @@ f(Pair(1, 2))
 
 
 :deadParamElim
-:noInline
 private fun f(a) = g(a)
 private fun g(x) = 3
 f(1)
@@ -288,7 +280,6 @@ f(1)
 //│ = 3
 
 :deadParamElim poly
-:noInline
 fun f(a) = g(a)
 fun g(x) = 3
 f(1)
@@ -308,7 +299,6 @@ g(1)
 
 
 :deadParamElim
-:noInline
 :expect [3, 4]
 private fun f(x) =
   fun g(a, b, ...rest) = 
