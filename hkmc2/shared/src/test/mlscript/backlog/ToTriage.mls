@@ -234,7 +234,8 @@ id(Foo)(1)
 
 data class FooSpd(...args)
 //│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Elaborator.scala:1306': mismatched param list lengths List() vs List(term:FooSpd/args)
-//│ ╙── The compilation result may be incorrect.
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a compiler bug; please report it to the maintainers.
 
 FooSpd(1, 2, 3).args
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'args' yielded 'undefined'
@@ -242,25 +243,25 @@ FooSpd(1, 2, 3).args
 :todo
 if FooSpd(1, 2, 3) is FooSpd(...args) then args
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (spread).
-//│ ║  l.243: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
+//│ ║  l.244: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
 //│ ╙──       	                             ^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: args
-//│ ║  l.243: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
+//│ ║  l.244: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
 //│ ╙──       	                                           ^^^^
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.243: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
+//│ ║  l.244: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
 //│ ╙──       	                      ^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if FooSpd(1, 2, 3) is FooSpd(a, b, c) then [a, b, c]
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found three arguments.
-//│ ║  l.255: 	if FooSpd(1, 2, 3) is FooSpd(a, b, c) then [a, b, c]
+//│ ║  l.256: 	if FooSpd(1, 2, 3) is FooSpd(a, b, c) then [a, b, c]
 //│ ╙──       	                             ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if FooSpd(1, 2, 3) is FooSpd(arg) then arg
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.261: 	if FooSpd(1, 2, 3) is FooSpd(arg) then arg
+//│ ║  l.262: 	if FooSpd(1, 2, 3) is FooSpd(arg) then arg
 //│ ╙──       	                             ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -288,10 +289,10 @@ fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
 //│ ╔══[COMPILATION ERROR] Unsupported let binding shape
-//│ ║  l.288: 	  let bar(x: Str): Str = x + x
+//│ ║  l.289: 	  let bar(x: Str): Str = x + x
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: bar
-//│ ║  l.289: 	  bar("test")
+//│ ║  l.290: 	  bar("test")
 //│ ╙──       	  ^^^
 
 // ——— ——— ———
@@ -305,7 +306,7 @@ module Foo(x) with
   print(x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.304: 	module Foo(x) with
+//│ ║  l.305: 	module Foo(x) with
 //│ ╙──       	           ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo5;
@@ -329,7 +330,7 @@ module Foo(x) with
 module Foo(val x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.329: 	module Foo(val x)
+//│ ║  l.330: 	module Foo(val x)
 //│ ╙──       	               ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo7;
@@ -350,7 +351,7 @@ module Foo(val x)
 // TODO support syntax?
 data class Foo(mut x)
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found 'mut'-modified identifier
-//│ ║  l.351: 	data class Foo(mut x)
+//│ ║  l.352: 	data class Foo(mut x)
 //│ ╙──       	                   ^
 
 // ——— ——— ———
@@ -365,7 +366,7 @@ class Foo
 :e
 class Id(name: UnboundName)
 //│ ╔══[COMPILATION ERROR] Name not found: UnboundName
-//│ ║  l.366: 	class Id(name: UnboundName)
+//│ ║  l.367: 	class Id(name: UnboundName)
 //│ ╙──       	               ^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
 //│ ═══[COMPILATION ERROR] Expected a type, got ‹error›

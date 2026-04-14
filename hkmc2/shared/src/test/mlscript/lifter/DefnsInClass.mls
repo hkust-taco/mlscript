@@ -19,11 +19,11 @@ data class A(x) with
 //│       return tmp(A)
 //│   end
 //│ };
-//│ define B⁰ as class B¹(y)(A) {
+//│ define B⁰ as class B¹(y) {
 //│   private val B$cap⁰;
 //│   private val A¹;
 //│   val y⁰;
-//│   constructor B² {
+//│   constructor B²(A) {
 //│     set A¹ = A;
 //│     define y⁰ as val y¹ = y;
 //│     end

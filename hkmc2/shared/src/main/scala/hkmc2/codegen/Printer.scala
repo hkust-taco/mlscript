@@ -77,9 +77,10 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
     case _ => TODO(blk)
   
   def print(
-      privateFields: List[TermSymbol],
-      publicFields: List[(BlockMemberSymbol, TermSymbol)],
-      methods: List[FunDefn],
+      privateFields: Ls[TermSymbol],
+      publicFields: Ls[(BlockMemberSymbol, TermSymbol)],
+      methods: Ls[FunDefn],
+      auxParams: Ls[ParamList],
       preCtor: Opt[Block],
       ctor: Block,
       ctorSym: Opt[TermSymbol],
@@ -94,7 +95,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
       case None => doc""
     val docCtor = ctor match
       case End(_) => doc""
-      case _ => doc" # constructor${ctorSym.fold(doc"")(doc" " :: print(_))} ${
+      case _ => doc" # constructor${ctorSym.fold(doc"")(doc" " :: print(_))}${printParamLists(auxParams)} ${
         bracedbk(docPreCtor :: print(ctor))}"
     val mtds = methods.map(m => doc"method ${print(m.sym)} = " :: print(m)).mkDocument(sep = doc" # ")
     val docMethods = if methods.isEmpty then doc"" else doc" # ${mtds}"
@@ -120,15 +121,15 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
     case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable)
     => scope.nest.givenIn:
-      val ctorParams = printParamLists(paramsOpt.toList ::: auxParams)
+      val ctorParams = printParamLists(paramsOpt.toList)
       val docStaged = if isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
-      val docBody = print(privateFields, publicFields, methods, S(preCtor), ctor, ctorSym)
+      val docBody = print(privateFields, publicFields, methods, auxParams, S(preCtor), ctor, ctorSym)
       val clsType = k.str
       val docCls = doc"${docStaged}${clsType} ${print(isym)}${ctorParams}${docBody}"
       val docModule = mod match
         case Some(mod) =>
           val docStaged = if mod.isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
-          val docBody = print(mod.privateFields, mod.publicFields, mod.methods, N, mod.ctor, N)
+          val docBody = print(mod.privateFields, mod.publicFields, mod.methods, Nil, N, mod.ctor, N)
           doc" # ${docStaged}module ${print(mod.isym)}${docBody}"
         case None => doc""
       doc"${docCls}${docModule}"

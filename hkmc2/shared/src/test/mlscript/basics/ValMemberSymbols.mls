@@ -60,7 +60,7 @@ case A(x) then x
 :sir
 class A()(val x)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let A³; define A³ as class A⁵()(x) { val x²; constructor A⁴ { define x² as val x³ = x; end } }; end
+//│ let A³; define A³ as class A⁵() { val x²; constructor A⁴(x) { define x² as val x³ = x; end } }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let a = A()(1)
@@ -127,12 +127,12 @@ fun foo(x, y) =
 //│       return tmp(y)
 //│   end
 //│ };
-//│ define A⁶ as class A⁷(u)(y) {
+//│ define A⁶ as class A⁷(u) {
 //│   private val A$cap⁰;
 //│   private val y⁰;
 //│   val u⁰;
 //│   val v⁰;
-//│   constructor A⁸ {
+//│   constructor A⁸(y) {
 //│     set y⁰ = y;
 //│     define u⁰ as val u¹ = u;
 //│     define v⁰ as val v¹ = y⁰;

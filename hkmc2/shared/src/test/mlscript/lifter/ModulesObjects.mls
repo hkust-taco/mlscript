@@ -44,10 +44,10 @@ foo(10)
 //│       return tmp
 //│   end
 //│ };
-//│ define M⁰ as class M¹(y) {
+//│ define M⁰ as class M¹ {
 //│   private val M$cap⁰;
 //│   private val y⁰;
-//│   constructor {
+//│   constructor(y) {
 //│     set y⁰ = y;
 //│     end
 //│   }
