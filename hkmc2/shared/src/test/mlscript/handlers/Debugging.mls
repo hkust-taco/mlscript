@@ -50,21 +50,6 @@ fun f() =
 //│   }
 //│   main: while (true) {
 //│     switch (pc) {
-//│       case 4:
-//│         tmp1 = runtime.resumeValue;
-//│         pc = 3;
-//│       case 3:
-//│         runtime.resumeValue = Predef.print(tmp1);
-//│         if (runtime.curEffect === null) {
-//│           pc = 2;
-//│         } else {
-//│           return runtime.unwind(f, 2, "Debugging.mls:18:5", f$debugInfo, null, 1, 0, 5, i, j, k, scrut, tmp1)
-//│         }
-//│       case 2:
-//│         runtime.resumeValue;
-//│         pc = 1;
-//│       case 1:
-//│         return j / i;
 //│       case 0:
 //│         i = 0;
 //│         j = 100;
@@ -87,6 +72,21 @@ fun f() =
 //│         }
 //│         pc = 1;
 //│         continue main;
+//│       case 4:
+//│         tmp1 = runtime.resumeValue;
+//│         pc = 3;
+//│       case 3:
+//│         runtime.resumeValue = Predef.print(tmp1);
+//│         if (runtime.curEffect === null) {
+//│           pc = 2;
+//│         } else {
+//│           return runtime.unwind(f, 2, "Debugging.mls:18:5", f$debugInfo, null, 1, 0, 5, i, j, k, scrut, tmp1)
+//│         }
+//│       case 2:
+//│         runtime.resumeValue;
+//│         pc = 1;
+//│       case 1:
+//│         return j / i;
 //│     }
 //│     break;
 //│   }

@@ -455,7 +455,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       .toList
       .map(locals(_))
 
-  private def computeEdges(parts: PartitionedBlock): Map[StateId, Iterable[StateId]] =
+  private def computeEdges(parts: PartitionedBlock): Map[StateId, List[StateId]] =
     val edges = mutable.ListBuffer.empty[(StateId, StateId)]
     def findEdges(uid: StateId, b: Block) =
       new BlockTraverser:
@@ -467,7 +467,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       findEdges(uid, blk.blk)
     edges.groupBy(_._1).map:
       case uid -> ids => uid -> ids.map:
-        case (a, b) => b
+          case (a, b) => b
+        .toList
   
   // Denotes whether a block transitions to another state only on the outer level,
   // i.e. should return false iff there is a state transition within an if, label, etc.
@@ -485,12 +486,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   // for the last element. Note that the partitioning is not necessarily unique and this does
   // not necessarily produce a "maximal" partitioning. (I actually suspect that producing a
   // maximal partitioning is NP-hard...)
-  private def computeStraightLines[T](entry: T, edges: Map[T, Iterable[T]]): Iterable[List[T]] =
-    val visited = mutable.HashSet.empty[T]
-    val ret = mutable.ListBuffer.empty[List[T]]
+  private def computeStraightLines(entry: StateId, edges: Map[StateId, List[StateId]]): List[List[StateId]] =
+    val visited = mutable.HashSet.empty[StateId]
+    val ret = mutable.ListBuffer.empty[List[StateId]]
     // Algorithm: Perform a DFS and accumulate the current straight-line segment as we visit nodes.
     // Once we reach a node that has an out degree of != 1, we end the current straight line segment.
-    def dfs(state: T, acc: List[T]): Unit =
+    def dfs(state: StateId, acc: List[StateId]): Unit =
       var curAcc = acc
       def concludeSegment =
         ret.addOne(curAcc)
@@ -512,7 +513,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       else if !curAcc.isEmpty then
         concludeSegment
     dfs(entry, List.empty)
-    ret
+    ret.sortBy(x => x.headOption.getOrElse(BigInt(-1))).toList
 
   val stackSafetyMap: mutable.Map[FnOrCls, (Int, Block)] = mutable.HashMap.empty
   
