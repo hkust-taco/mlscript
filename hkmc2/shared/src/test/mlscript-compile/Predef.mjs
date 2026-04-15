@@ -147,7 +147,7 @@ let Predef1;
     }
   } 
   static equals(a, b) {
-    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, scrut10, scrut11, tmp, tmp1, lambda, tmp2, tmp3, lambda1;
+    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, scrut10, scrut11, lambda, tmp, tmp1, lambda1;
     scrut = a === b;
     if (scrut === true) {
       return true
@@ -157,9 +157,9 @@ let Predef1;
         scrut1 = a.length === b.length;
         if (scrut1 === true) {
           lambda1 = (undefined, function (a1, i) {
-            let tmp4;
-            tmp4 = runtime.safeCall(b.at(i));
-            return Predef.equals(a1, tmp4)
+            let tmp2;
+            tmp2 = runtime.safeCall(b.at(i));
+            return Predef.equals(a1, tmp2)
           });
           return runtime.safeCall(a.every(lambda1))
         }
@@ -175,52 +175,54 @@ let Predef1;
           if (scrut9 === true) {
             ac = a.constructor;
             scrut3 = ac !== undefined;
-            σ$x: {
-              if (scrut3 === true) {
-                scrut7 = ac === b.constructor;
-                if (scrut7 === true) {
-                  md = ac[Predef.Symbols.definitionMetadata];
-                  scrut4 = md !== undefined;
-                  σ$x1: {
-                    if (scrut4 === true) {
-                      lambda = (undefined, function (field) {
-                        let scrut12, scrut13;
-                        scrut12 = field !== null;
-                        if (scrut12 === true) {
-                          scrut13 = Predef.equals(a[field], b[field]);
-                          if (scrut13 === true) {
-                            return true
-                          }
-                          return false;
-                        }
-                        return false;
-                      });
-                      scrut5 = runtime.safeCall(md[2].every(lambda));
-                      if (scrut5 === true) {
-                        tmp1 = true;
-                        break σ$x1
+            if (scrut3 === true) {
+              scrut7 = ac === b.constructor;
+              if (scrut7 === true) {
+                md = ac[Predef.Symbols.definitionMetadata];
+                scrut4 = md !== undefined;
+                if (scrut4 === true) {
+                  lambda = (undefined, function (field) {
+                    let scrut12, scrut13;
+                    scrut12 = field !== null;
+                    if (scrut12 === true) {
+                      scrut13 = Predef.equals(a[field], b[field]);
+                      if (scrut13 === true) {
+                        return true
                       }
+                      return false;
                     }
-                    tmp1 = false;
-                  }
-                  tmp2 = tmp1;
-                  scrut6 = tmp2;
-                  if (scrut6 === true) {
+                    return false;
+                  });
+                  scrut5 = runtime.safeCall(md[2].every(lambda));
+                  if (scrut5 === true) {
                     tmp = true;
-                    break σ$x
+                  } else {
+                    tmp = false;
                   }
+                } else {
+                  tmp = false;
                 }
+                scrut6 = tmp;
+                if (scrut6 === true) {
+                  tmp1 = true;
+                } else {
+                  tmp1 = false;
+                }
+              } else {
+                tmp1 = false;
               }
-              tmp = false;
+            } else {
+              tmp1 = false;
             }
-            tmp3 = tmp;
-            scrut8 = tmp3;
+            scrut8 = tmp1;
             if (scrut8 === true) {
               return true
             }
+            return false;
           }
+          return false;
         }
-        return false
+        return false;
       }
       return false;
     }

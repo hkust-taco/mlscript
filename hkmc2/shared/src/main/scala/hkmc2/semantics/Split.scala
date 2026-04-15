@@ -73,6 +73,17 @@ enum Split extends AutoLocated with ProductWithTail:
     case Split.LetSplit(_, tail) => tail.isEmpty
     case Split.UseSplit(sym) => sym.body.isEmpty
   
+  /** Approximate tree size, used to decide whether sharing via `LetSplit` is
+    * worthwhile compared to inlining (see `patMatConsequentSharingThreshold`). */
+  lazy val size: Int = this match
+    case Split.Cons(Branch(scrutinee, _, continuation), tail) =>
+      scrutinee.size + continuation.size + tail.size + 1
+    case Split.Let(_, term, tail) => term.size + tail.size + 1
+    case Split.Else(term) => term.size
+    case Split.End => 0
+    case Split.LetSplit(_, tail) => tail.size
+    case Split.UseSplit(_) => 0
+  
   final override def children: Vector[Located] = this match
     case Split.Cons(head, tail) => Vector.double(head, tail)
     case Split.Let(name, term, tail) => Vector.triple(name, term, tail)

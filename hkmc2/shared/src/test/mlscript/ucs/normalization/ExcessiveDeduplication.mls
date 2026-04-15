@@ -1,4 +1,6 @@
 :js
+:patMatConsequentSharingThreshold 1
+// ^ force dedup even for small consequents
 
 
 let
@@ -116,6 +118,8 @@ if false do ()
 //│ 123
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 123
+
+:patMatConsequentSharingThreshold 10
 
 // * How it ought to be:
 :sir

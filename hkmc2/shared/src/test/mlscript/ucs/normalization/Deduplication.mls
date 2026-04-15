@@ -1,4 +1,5 @@
 :js
+:patMatConsequentSharingThreshold 5
 
 let x = 0
 let y = 0
@@ -473,7 +474,7 @@ fun foo(x, y, z) =
 //│       if (z1 instanceof C1.class) {
 //│         return "Hello"
 //│       }
-//│       return "Goodbye"
+//│       return "Goodbye";
 //│     }
 //│     return "Goodbye";
 //│   }

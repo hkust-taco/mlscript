@@ -25,16 +25,12 @@ fun test(x) =
 :sjs
 true and test(42)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut4, scrut5, tmp2;
+//│ let scrut4, scrut5;
 //│ scrut4 = true;
-//│ σ$x2: {
-//│   if (scrut4 === true) {
-//│     scrut5 = test(42);
-//│     if (scrut5 === true) { tmp2 = true; break σ$x2 }
-//│   }
-//│   tmp2 = false;
-//│ }
-//│ tmp2
+//│ if (scrut4 === true) {
+//│   scrut5 = test(42);
+//│   if (scrut5 === true) { true } else { false }
+//│ } else { false }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 42
 //│ = false
@@ -42,7 +38,7 @@ true and test(42)
 :fixme
 true or test(42)
 //│ ╔══[COMPILATION ERROR] Logical `or` is not yet supported.
-//│ ║  l.43: 	true or test(42)
+//│ ║  l.39: 	true or test(42)
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ > 42
 //│ = false

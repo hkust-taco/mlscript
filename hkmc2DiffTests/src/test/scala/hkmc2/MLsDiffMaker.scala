@@ -77,6 +77,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val inlineThreshold = Command("inlineThreshold")(_.trim.toInt)
   val noTailRecOpt = NullaryCommand("noTailRec")
   val deforest = Command("deforest")(_.trim)
+  val patMatConsequentSharingThreshold = Command("patMatConsequentSharingThreshold")(_.trim.toInt)
   
   def mkConfig: Config =
     import Config.*
@@ -114,6 +115,8 @@ abstract class MLsDiffMaker extends DiffMaker:
         ,
       )),
       liftDefns = Opt.when(liftDefns.isSet)(LiftDefns()),
+      patMatConsequentSharingThreshold = patMatConsequentSharingThreshold.get
+        .orElse(Config.default.patMatConsequentSharingThreshold),
       stageCode = stageCode.isSet,
       target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
       rewriteWhileLoops = rewriteWhile.isSet,

@@ -16,7 +16,6 @@ staged module Expressions with
 //│ >   x = 42
 //│ >   x
 
-:fixme // Label/Break blocks from LetSplit lowering not yet supported in ReflectionInstrumenter
 let x = [1, 2, 3]
 staged module Expressions with
   fun lit() = 1
@@ -40,9 +39,6 @@ staged module Expressions with
       [1, 2] then 2
       [a, _] then 3
       else 0
-//│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.Label.
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'element0$'
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'element1$'
 //│ > fun ctor_() = ()
 //│ > fun lit() = 1
 //│ > fun assign() =
@@ -64,7 +60,24 @@ staged module Expressions with
 //│ >     8 then 2
 //│ >     Int then 3
 //│ >     else 0
-//│ ═══[RUNTIME ERROR] ReferenceError: element0$ is not defined
+//│ > fun match2() =
+//│ >   let {a, element1_, element0_}
+//│ >   if x1 is
+//│ >     [] then 1
+//│ >     [_, _] then
+//│ >       element0_ = x1.0
+//│ >       element1_ = x1.1
+//│ >       if element0_ is
+//│ >         1 then
+//│ >           if element1_ is
+//│ >             2 then 2
+//│ >             else
+//│ >               a = element0_
+//│ >               3
+//│ >         else
+//│ >           a = element0_
+//│ >           3
+//│ >     else 0
 //│ x = [1, 2, 3]
 
 class Outside(a)
@@ -200,10 +213,10 @@ staged module LabelBreak with
     else 2
 //│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.Label.
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
-//│ ║  l.194: 	    let x = 1
+//│ ║  l.207: 	    let x = 1
 //│ ║         	        ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.194: 	    let x = 1
+//│ ║  l.207: 	    let x = 1
 //│ ╙──       	        ^
 //│ > fun ctor_() = ()
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
@@ -216,7 +229,7 @@ staged module A with
   fun g() = {1 : 2}
 //│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.AssignField
 //│ ╔══[COMPILATION ERROR] Other Results not supported in staged module: class hkmc2.codegen.Record
-//│ ║  l.216: 	  fun g() = {1 : 2}
+//│ ║  l.229: 	  fun g() = {1 : 2}
 //│ ╙──       	                 ^
 //│ > fun ctor_() =
 //│ >   x = C(1)

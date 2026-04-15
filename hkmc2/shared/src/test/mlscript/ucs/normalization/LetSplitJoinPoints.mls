@@ -159,32 +159,30 @@ f6(42)
 //│ let f6⁰, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
 //│ define f6⁰ as fun f6¹(v) {
 //│   let arg$S$0$, arg$S$0$1, arg$S$0$2;
-//│   block σ:
-//│     match v
-//│       S⁰ =>
-//│         set arg$S$0$ = v.value⁰;
-//│         match arg$S$0$
-//│           S⁰ =>
-//│             set arg$S$0$1 = arg$S$0$.value⁰;
-//│             match arg$S$0$1
-//│               S⁰ =>
-//│                 set arg$S$0$2 = arg$S$0$1.value⁰;
-//│                 match arg$S$0$2
-//│                   0 =>
-//│                     return "deep"
-//│                   else
-//│                     break σ
-//│                 end
-//│               else
-//│                 break σ
-//│             end
-//│           else
-//│             break σ
-//│         end
-//│       else
-//│         break σ
-//│     end
-//│   return "default"
+//│   match v
+//│     S⁰ =>
+//│       set arg$S$0$ = v.value⁰;
+//│       match arg$S$0$
+//│         S⁰ =>
+//│           set arg$S$0$1 = arg$S$0$.value⁰;
+//│           match arg$S$0$1
+//│             S⁰ =>
+//│               set arg$S$0$2 = arg$S$0$1.value⁰;
+//│               match arg$S$0$2
+//│                 0 =>
+//│                   return "deep"
+//│                 else
+//│                   return "default"
+//│               end
+//│             else
+//│               return "default"
+//│           end
+//│         else
+//│           return "default"
+//│       end
+//│     else
+//│       return "default"
+//│   end
 //│ };
 //│ set tmp = S¹(0);
 //│ set tmp1 = S¹(tmp);
@@ -256,19 +254,17 @@ f8(1, 0)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let f8⁰;
 //│ define f8⁰ as fun f8¹(x, y) {
-//│   block σ:
-//│     match x
-//│       0 =>
-//│         match y
-//│           0 =>
-//│             return "both zero"
-//│           else
-//│             break σ
-//│         end
-//│       else
-//│         break σ
-//│     end
-//│   return "fallback"
+//│   match x
+//│     0 =>
+//│       match y
+//│         0 =>
+//│           return "both zero"
+//│         else
+//│           return "fallback"
+//│       end
+//│     else
+//│       return "fallback"
+//│   end
 //│ };
 //│ do f8¹(0, 0);
 //│ do f8¹(0, 1);
@@ -289,11 +285,10 @@ fun f9(x, y) = if
   else "fallback"
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    let-split σ = else "fallback"
 //│ >    x is 0 and
 //│ >      y is 0 then "match"
-//│ >      $σ
-//│ >    $σ
+//│ >      else "fallback"
+//│ >    else "fallback"
 
 
 // * Verify no LetSplit when alternative references same scrutinee
@@ -338,33 +333,32 @@ fun f11(x, y) = if
   else 3
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    let-split σ =
-//│ >      y is Dog() then 2
-//│ >      else 3
 //│ >    x is Cat() and
 //│ >      y is Cat() then 1
-//│ >      $σ
-//│ >    $σ
+//│ >      y is Dog() then 2
+//│ >      else 3
+//│ >    y is Dog() then 2
+//│ >    else 3
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let f11⁰;
 //│ define f11⁰ as fun f11¹(x, y) {
-//│   block σ:
-//│     match x
-//│       Cat⁰ =>
-//│         match y
-//│           Cat⁰ =>
-//│             return 1
-//│           else
-//│             break σ
-//│         end
-//│       else
-//│         break σ
-//│     end
-//│   match y
-//│     Dog⁰ =>
-//│       return 2
+//│   match x
+//│     Cat⁰ =>
+//│       match y
+//│         Cat⁰ =>
+//│           return 1
+//│         Dog⁰ =>
+//│           return 2
+//│         else
+//│           return 3
+//│       end
 //│     else
-//│       return 3
+//│       match y
+//│         Dog⁰ =>
+//│           return 2
+//│         else
+//│           return 3
+//│       end
 //│   end
 //│ };
 //│ end

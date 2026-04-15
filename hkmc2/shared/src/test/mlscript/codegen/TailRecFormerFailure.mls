@@ -40,25 +40,26 @@ fun go(x) = if x is
 //│ let go²;
 //│ define go² as fun go³(x) {
 //│   loop loopLabel:
-//│     let n, arg$Cons$0$, arg$Cons$1$, tmp;
-//│     block σ:
-//│       match x
-//│         Cons⁰ =>
-//│           set arg$Cons$0$ = x.head⁰;
-//│           set arg$Cons$1$ = x.tail⁰;
-//│           match arg$Cons$1$
-//│             Nil⁰ =>
-//│               return "Z"
-//│             else
-//│               break σ
-//│           end
-//│         else
-//│           break σ
-//│       end
-//│     set n = x;
-//│     set tmp = [];
-//│     set x = tmp;
-//│     continue loopLabel
+//│     let n, arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
+//│     match x
+//│       Cons⁰ =>
+//│         set arg$Cons$0$ = x.head⁰;
+//│         set arg$Cons$1$ = x.tail⁰;
+//│         match arg$Cons$1$
+//│           Nil⁰ =>
+//│             return "Z"
+//│           else
+//│             set n = x;
+//│             set tmp = [];
+//│             set x = tmp;
+//│             continue loopLabel
+//│         end
+//│       else
+//│         set n = x;
+//│         set tmp1 = [];
+//│         set x = tmp1;
+//│         continue loopLabel
+//│     end
 //│   end
 //│ };
 //│ end
@@ -66,6 +67,8 @@ fun go(x) = if x is
 
 // Note: Used not to be tail-rec optimized; now fixed
 :sir
+:patMatConsequentSharingThreshold 1
+ // ^ The default value allowed duplicating "Z" in the above version
 fun go(x) = if x is
   Cons(_, Nil) then "Z"
   n then go([])

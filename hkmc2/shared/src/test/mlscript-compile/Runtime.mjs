@@ -695,39 +695,38 @@ let Runtime1;
         if (scrut === true) {
           cur = curHandler.next;
           lbl1: while (true) {
-            let scrut2, curLocals, loc, localsMsg, scrut3, tmp3, lambda, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;
+            let scrut2, curLocals, loc, localsMsg, scrut3, lambda, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
             scrut2 = cur !== null;
             if (scrut2 === true) {
               curLocals = cur.getLocals;
               loc = cur.getLoc;
-              σ$x: {
-                if (showLocals === true) {
-                  scrut3 = curLocals.length > 0;
-                  if (scrut3 === true) {
-                    lambda = (undefined, function (l) {
-                      let tmp13, tmp14;
-                      tmp13 = l.localName + "=";
-                      tmp14 = Rendering.render(l.value);
-                      return tmp13 + tmp14
-                    });
-                    tmp4 = runtime.safeCall(curLocals.map(lambda));
-                    tmp5 = runtime.safeCall(tmp4.join(", "));
-                    tmp3 = " with locals: " + tmp5;
-                    break σ$x
-                  }
+              if (showLocals === true) {
+                scrut3 = curLocals.length > 0;
+                if (scrut3 === true) {
+                  lambda = (undefined, function (l) {
+                    let tmp12, tmp13;
+                    tmp12 = l.localName + "=";
+                    tmp13 = Rendering.render(l.value);
+                    return tmp12 + tmp13
+                  });
+                  tmp3 = runtime.safeCall(curLocals.map(lambda));
+                  tmp4 = runtime.safeCall(tmp3.join(", "));
+                  tmp5 = " with locals: " + tmp4;
+                } else {
+                  tmp5 = "";
                 }
-                tmp3 = "";
+              } else {
+                tmp5 = "";
               }
-              tmp6 = tmp3;
-              localsMsg = tmp6;
-              tmp7 = "\n\tat " + cur.getNme;
-              tmp8 = tmp7 + " (";
-              tmp9 = tmp8 + loc;
-              tmp10 = tmp9 + ")";
-              tmp11 = msg + tmp10;
+              localsMsg = tmp5;
+              tmp6 = "\n\tat " + cur.getNme;
+              tmp7 = tmp6 + " (";
+              tmp8 = tmp7 + loc;
+              tmp9 = tmp8 + ")";
+              tmp10 = msg + tmp9;
+              msg = tmp10;
+              tmp11 = msg + localsMsg;
               msg = tmp11;
-              tmp12 = msg + localsMsg;
-              msg = tmp12;
               cur = cur.next;
               atTail = false;
               continue lbl1

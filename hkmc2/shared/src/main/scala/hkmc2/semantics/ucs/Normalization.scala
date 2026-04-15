@@ -114,6 +114,15 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       case Split.UseSplit(_) => true
       case _ => false
 
+  /** Replace all `UseSplit(sym)` references in `split` with a duplicate of `body`. */
+  private def inlineUseSplit(split: Split, sym: SplitSymbol, body: Split): Split = split match
+    case Split.Cons(Branch(scrut, pat, cons), tail) =>
+      Split.Cons(Branch(scrut, pat, inlineUseSplit(cons, sym, body)), inlineUseSplit(tail, sym, body))
+    case Split.Let(v, rhs, tail) => Split.Let(v, rhs, inlineUseSplit(tail, sym, body))
+    case Split.Else(_) | Split.End => split
+    case Split.LetSplit(s, tail) => Split.LetSplit(s, inlineUseSplit(tail, sym, body))
+    case Split.UseSplit(s) => if s eq sym then body.duplicate else split
+
   /** Workhorse of `normalize`. Returns the same pair: the normalized split
     * and the set of unbound `SplitSymbol`s whose `LetSplit` placement is
     * deferred to an ancestor. */
@@ -136,15 +145,25 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         // the normalized alternative; append UseSplit as a placeholder fallback
         // in the consequent, then check whether specialization + normalization
         // kept or discarded it.
-        val (normalizedAlt, _) = normalize(alternative)(using vs, JoinPointCtx.empty)
+        val (normalizedAlt, _) = normalize(alternative)(using vs, JoinPointCtx(Set.empty, jpctx.sharingThreshold))
         val sym = new SplitSymbol(normalizedAlt, "σ")
         val useSplit = Split.UseSplit(sym)
         val combinedSplit = consequent ++ useSplit
         val (whenTrue, trueRefs) = normalize(specialize(combinedSplit, +, scrutinee, pattern).getOrElse(combinedSplit))(using vs, jpctx + sym)
         if trueRefs.contains(sym) then
           // The UseSplit survived in the true branch, meaning the alternative
-          // is reachable from both sides — share it via LetSplit.
-          (Split.LetSplit(sym, Branch(scrutinee, pattern, whenTrue) ~: useSplit), trueRefs - sym)
+          // is reachable from both sides. Decide whether sharing via LetSplit
+          // is worthwhile based on the consequent sharing threshold.
+          val shouldShare = jpctx.sharingThreshold match
+            case S(threshold) => normalizedAlt.size * 2 > threshold
+            case N => false
+          if shouldShare then
+            (Split.LetSplit(sym, Branch(scrutinee, pattern, whenTrue) ~: useSplit), trueRefs - sym)
+          else
+            // The alternative is too small to justify sharing — inline UseSplit
+            // references back into the true branch.
+            val inlinedTrue = inlineUseSplit(whenTrue, sym, normalizedAlt)
+            (Branch(scrutinee, pattern, inlinedTrue) ~: normalizedAlt, trueRefs - sym)
         else
           // The consequent was exhaustive after specialization, so the UseSplit
           // was discarded. No sharing needed — use the alternative directly
@@ -440,7 +459,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         res
       lazy val tSym = TermSymbol.fromFunBms(f, N)
       val normalized = tl.scoped("ucs:normalize"):
-        normalize(inputSplit)(using VarSet(), JoinPointCtx.empty)._1
+        normalize(inputSplit)(using VarSet(), JoinPointCtx.withThreshold(cfg.patMatConsequentSharingThreshold))._1
       tl.scoped("ucs:normalized"):
         tl.log(s"Normalized:\n${normalized.prettyPrint}")
       lazy val assignResult = (r: Result) =>
@@ -611,11 +630,12 @@ object Normalization:
 
   /** Immutable context tracking pending join point symbols whose LetSplit
     * placement is deferred to the lowest common ancestor of their UseSplit references. */
-  case class JoinPointCtx(pending: Set[SplitSymbol]):
-    def +(sym: SplitSymbol): JoinPointCtx = JoinPointCtx(pending + sym)
+  case class JoinPointCtx(pending: Set[SplitSymbol], sharingThreshold: Opt[Int]):
+    def +(sym: SplitSymbol): JoinPointCtx = JoinPointCtx(pending + sym, sharingThreshold)
     def contains(sym: SplitSymbol): Bool = pending.contains(sym)
   object JoinPointCtx:
-    val empty: JoinPointCtx = JoinPointCtx(Set.empty)
+    val empty: JoinPointCtx = JoinPointCtx(Set.empty, S(0))
+    def withThreshold(threshold: Opt[Int]): JoinPointCtx = JoinPointCtx(Set.empty, threshold)
 
   /** Specialization mode */
   enum Mode:
