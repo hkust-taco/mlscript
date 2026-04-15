@@ -877,7 +877,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val rewriterPreCtor = new BlockRewriter
       val rewrittenCtor = rewriterCtor.rewrite(obj.cls.ctor)
       val rewrittenPrector = rewriterPreCtor.rewrite(obj.cls.preCtor)
-      val ctorWithCap = addExtraSyms(rewrittenCtor, captureSym, Nil, false) 
+      val ctorWithCap = addExtraSyms(rewrittenCtor, captureSym, Nil, false)
       
       val LifterResult(newMtds, extras) = rewriteMethods(node, obj.cls.methods)
       val newCls = obj.cls.copy(
