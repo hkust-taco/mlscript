@@ -919,19 +919,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val symToField = structInfo.compType match
       case ty: StructType => ty.fieldsBySym
       case _ => lastWords(s"Cannot select field from non-struct type: ${structInfo.compType.toWat}")
-    val fieldIdx = symToField.get(sym)
-      .orElse:
-        sym match
-          case memSym: MemberSymbol if fieldOwner(memSym).contains(thisSym) =>
-            symToField.find((fieldSym, _) => fieldSym.nme == sym.nme).map((_, v) => v)
-          case _ => N
-      .map(_.id)
-    FieldIdx(SymIdx(
-      fieldIdx getOrElse:
-        lastWords(
-          s"Missing field `${sym.toString}` in struct `${thisSym.toString}` with type `${structInfo.toWat.mkString()}`",
-        ),
-    ))
+    val fieldIdx = symToField.get(sym).map(_.id).getOrElse:
+      lastWords(s"Missing field `${sym.toString}` in struct `${thisSym.toString}` with type `${structInfo.toWat.mkString()}`")
+    FieldIdx(SymIdx(fieldIdx))
   end fieldSelect
 
   def result(r: codegen.Result)(using Ctx, Raise, Scope, SessionExportCtx): Expr = r match
