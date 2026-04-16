@@ -918,7 +918,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val structInfo = ctx.getTypeInfo_!(thisSym)
     val symToField = structInfo.compType match
       case ty: StructType => ty.fieldsBySym
-      case _ => lastWords(s"Cannot select field from non-struct type: ${structInfo.compType.toWat}")
+      case _ => lastWords(s"Cannot select field from non-struct type: ${structInfo.compType.toWat.mkString()}")
     val fieldIdx = symToField.get(sym).map(_.id).getOrElse:
       lastWords(
         s"Missing field `${sym.toString}` in struct `${thisSym.toString}` with type `${structInfo.toWat.mkString()}`",
@@ -1025,9 +1025,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       s"Block IR: `${
                           fun.toString
                         }`\nCompiled WAT: `${
-                          base.toWat.toString
+                          base.toWat.mkString()
                         }`\n... which has type `${
-                          ty.fold("(none)")(_.toWat.toString)
+                          ty.fold("(none)")(_.toWat.mkString())
                         }`",
                     ),
                   )
