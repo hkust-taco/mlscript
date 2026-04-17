@@ -69,20 +69,18 @@ fun f =
 //│ define f² as fun f³() {
 //│   let scrut, scrut1;
 //│   set scrut = true;
-//│   block σ:
-//│     match scrut
-//│       true =>
-//│         set scrut1 = false;
-//│         match scrut1
-//│           true =>
-//│             return "1"
-//│           else
-//│             break σ
-//│         end
-//│       else
-//│         break σ
-//│     end
-//│   return "2 long long long long long long long long long long long long long long"
+//│   match scrut
+//│     true =>
+//│       set scrut1 = false;
+//│       match scrut1
+//│         true =>
+//│           return "1"
+//│         else
+//│           return "2 long long long long long long long long long long long long long long"
+//│       end
+//│     else
+//│       return "2 long long long long long long long long long long long long long long"
+//│   end
 //│ };
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————

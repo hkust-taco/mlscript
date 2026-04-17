@@ -55,37 +55,48 @@ if
   y is [b] then let x = 1 in x + b
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    let-split σ = y is []=1 and
+//│ >    x is true and
+//│ >      z is true then 1
+//│ >      y is []=1 and
+//│ >        let tmp:element0$ = ((tmp:runtime⁰.)Tuple.)get‹term:get›(y⁰, 0)
+//│ >        let b = tmp:element0$⁰
+//│ >        else
+//│ >          let x
+//│ >          x = 1
+//│ >          builtin:+⁰(x⁰, b⁰)
+//│ >    y is []=1 and
 //│ >      let tmp:element0$ = ((tmp:runtime⁰.)Tuple.)get‹term:get›(y⁰, 0)
 //│ >      let b = tmp:element0$⁰
 //│ >      else
 //│ >        let x
 //│ >        x = 1
 //│ >        builtin:+⁰(x⁰, b⁰)
-//│ >    x is true and
-//│ >      z is true then 1
-//│ >      $σ
-//│ >    $σ
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let b, x1, element0$, tmp;
-//│ σ$x: {
-//│   if (x === true) {
-//│     if (z === true) {
-//│       tmp = 1;
-//│       break σ$x
+//│ let b, x1, element0$;
+//│ if (x === true) {
+//│   if (z === true) {
+//│     block$res4 = 1;
+//│     undefined
+//│   } else {
+//│     if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
+//│       element0$ = runtime.Tuple.get(y, 0);
+//│       b = element0$;
+//│       x1 = 1;
+//│       block$res4 = x1 + b;
+//│       undefined
+//│     } else {
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
 //│   }
+//│ } else {
 //│   if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
 //│     element0$ = runtime.Tuple.get(y, 0);
 //│     b = element0$;
 //│     x1 = 1;
-//│     tmp = x1 + b;
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│     block$res4 = x1 + b;
+//│     undefined
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ }
-//│ block$res4 = tmp;
-//│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 

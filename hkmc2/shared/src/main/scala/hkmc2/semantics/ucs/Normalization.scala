@@ -115,6 +115,15 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       case Split.UseSplit(_) => true
       case _ => false
 
+    /** Count the number of `UseSplit(sym)` references in `split`. */
+    private def countUseSplit(sym: SplitSymbol): Int = split match
+      case Split.Cons(Branch(_, _, cons), tail) =>
+        cons.countUseSplit(sym) + tail.countUseSplit(sym)
+      case Split.Let(_, _, tail) => tail.countUseSplit(sym)
+      case Split.Else(_) | Split.End => 0
+      case Split.LetSplit(_, tail) => tail.countUseSplit(sym)
+      case Split.UseSplit(s) => if s eq sym then 1 else 0
+
     /** Whether every leaf of `split` unconditionally transfers control away
       * (no fall-through). `End` compiles to `throw`, explicit `return`/`throw`
       * terms are abortive, and `UseSplit` compiles to a `Break`. */
@@ -157,7 +166,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         (Branch(scrutinee, pattern, whenTrue) ~: whenFalse, trueRefs | falseRefs)
       else
         // The alternative doesn't reference the same scrutinee, so specialization
-        // is a no-op on the alternative. Create a join point symbol wrapping
+        // is a no-op on it in both modes. Create a join point symbol wrapping
         // the normalized alternative; append UseSplit as a placeholder fallback
         // in the consequent, then check whether specialization + normalization
         // kept or discarded it.
@@ -168,16 +177,20 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         val (whenTrue, trueRefs) = normalize(specialize(combinedSplit, +, scrutinee, pattern).getOrElse(combinedSplit))(using vs, jpctx + sym)
         if trueRefs.contains(sym) then
           // The UseSplit survived in the true branch, meaning the alternative
-          // is reachable from both sides. Decide whether sharing via LetSplit
-          // is worthwhile based on the consequent sharing threshold.
-          val shouldShare = config.patMatConsequentSharingThreshold match
+          // is reachable from both sides. Count the surviving references and
+          // decide whether sharing via LetSplit is worthwhile: only share when
+          // the alternative is referenced more than once AND it's large enough
+          // to be worth a join point, per the configured threshold.
+          val refCount = whenTrue.countUseSplit(sym)
+          val shouldShare = refCount > 1 && (config.patMatConsequentSharingThreshold match
             case S(threshold) => normalizedAlt.size * 2 > threshold
-            case N => false
+            case N => false)
           if shouldShare then
             (Split.LetSplit(sym, Branch(scrutinee, pattern, whenTrue) ~: useSplit), trueRefs - sym)
           else
-            // The alternative is too small to justify sharing — inline UseSplit
-            // references back into the true branch.
+            // Either only a single reference survives (no real sharing) or the
+            // alternative is too small to justify a join point — inline all
+            // UseSplit references back into the true branch.
             val inlinedTrue = inlineUseSplit(whenTrue, sym, normalizedAlt)
             (Branch(scrutinee, pattern, inlinedTrue) ~: normalizedAlt, trueRefs - sym)
         else
