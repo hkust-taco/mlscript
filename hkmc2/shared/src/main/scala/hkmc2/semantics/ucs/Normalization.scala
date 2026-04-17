@@ -9,7 +9,7 @@ import Elaborator.{Ctx, State, ctx}
 import codegen.Lowering
 
 
-class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) extends TermSynthesizer:
+class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, Config) extends TermSynthesizer:
   import Normalization.*, Mode.*
   import tl.*
 
@@ -80,7 +80,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       case _ => lhs
 
   inline def apply(split: Split): Split = normalize(split)(using VarSet(), JoinPointCtx.empty)._1
-  
+
   /**
     * Normalize a split by specializing branches that test the same scrutinee
     * and introducing join points (`LetSplit`/`UseSplit`) to share duplicated
@@ -92,7 +92,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     *         bindings have not yet been placed — these are propagated upward so
     *         that the caller (an enclosing `normalizeImpl`) can place the
     *         `LetSplit` at the lowest common ancestor.
-    */ 
+    */
   private def normalize(split: Split)(using vs: VarSet, jpctx: JoinPointCtx): (Split, Set[SplitSymbol]) = trace(
     pre = s"normalize <<< ${split.prettyPrint}",
     post = (res: (Split, Set[SplitSymbol])) => "normalize >>> " + res._1.prettyPrint,
@@ -147,7 +147,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         // the normalized alternative; append UseSplit as a placeholder fallback
         // in the consequent, then check whether specialization + normalization
         // kept or discarded it.
-        val (normalizedAlt, _) = normalize(alternative)(using vs, JoinPointCtx(Set.empty, jpctx.sharingThreshold))
+        val (normalizedAlt, _) = normalize(alternative)(using vs, JoinPointCtx.empty)
         val sym = new SplitSymbol(normalizedAlt, "σ")
         val useSplit = Split.UseSplit(sym)
         val combinedSplit = consequent ++ useSplit
@@ -156,7 +156,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
           // The UseSplit survived in the true branch, meaning the alternative
           // is reachable from both sides. Decide whether sharing via LetSplit
           // is worthwhile based on the consequent sharing threshold.
-          val shouldShare = jpctx.sharingThreshold match
+          val shouldShare = config.patMatConsequentSharingThreshold match
             case S(threshold) => normalizedAlt.size * 2 > threshold
             case N => false
           if shouldShare then
@@ -461,7 +461,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         res
       lazy val tSym = TermSymbol.fromFunBms(f, N)
       val normalized = tl.scoped("ucs:normalize"):
-        normalize(inputSplit)(using VarSet(), JoinPointCtx.withThreshold(cfg.patMatConsequentSharingThreshold))._1
+        normalize(inputSplit)(using VarSet(), JoinPointCtx.empty)._1
       tl.scoped("ucs:normalized"):
         tl.log(s"Normalized:\n${normalized.prettyPrint}")
       lazy val assignResult = (r: Result) =>
@@ -632,12 +632,11 @@ object Normalization:
 
   /** Immutable context tracking pending join point symbols whose LetSplit
     * placement is deferred to the lowest common ancestor of their UseSplit references. */
-  case class JoinPointCtx(pending: Set[SplitSymbol], sharingThreshold: Opt[Int]):
-    def +(sym: SplitSymbol): JoinPointCtx = JoinPointCtx(pending + sym, sharingThreshold)
+  case class JoinPointCtx(pending: Set[SplitSymbol]):
+    def +(sym: SplitSymbol): JoinPointCtx = JoinPointCtx(pending + sym)
     def contains(sym: SplitSymbol): Bool = pending.contains(sym)
   object JoinPointCtx:
-    val empty: JoinPointCtx = JoinPointCtx(Set.empty, S(0))
-    def withThreshold(threshold: Opt[Int]): JoinPointCtx = JoinPointCtx(Set.empty, threshold)
+    val empty: JoinPointCtx = JoinPointCtx(Set.empty)
 
   /** Specialization mode */
   enum Mode:
