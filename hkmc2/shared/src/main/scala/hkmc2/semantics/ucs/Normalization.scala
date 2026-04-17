@@ -35,7 +35,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       else (these match
         case Split.Cons(head, tail) => Split.Cons(head, tail ++ those)
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ those)
-        case Split.Else(_) /* impossible */ | Split.End => those
+        case Split.Else(_) => softAssert(false); those
+        case Split.End => those
         case Split.LetSplit(sym, tail) => Split.LetSplit(sym, tail ++ those)
         case Split.UseSplit(_) => these) // UseSplit is terminal; fullness determined by referenced body
   
