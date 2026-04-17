@@ -46,8 +46,11 @@ if
 //│ = 0
 
 
-// * Currently, dedup' is implemented by hash-consing after the fact, which doesn't work when bindings are involved;
-// * it fails here:
+// * Sharing is now implemented via `LetSplit` / `UseSplit` join points during normalization
+// * (see `Normalization.normalizeImpl`). However, when the consequent references the shared
+// * alternative at most once (refCount ≤ 1), the alternative is inlined instead of being
+// * hoisted behind a label, since a label wrapper would only pay for itself with multiple
+// * reuses. That is the case here, so the alternative below is duplicated:
 :ssjs
 :ucs normalized
 if
@@ -100,7 +103,8 @@ if
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
-// * What we want is a way of let-binding split tails (ie, join points), as in:
+// * With a consequent that references the alternative more than once, the join-point
+// * sharing does kick in and we get output shaped like:
 // >  if
 // >    let-split $j =
 // >      y is Some(argument0$) and
@@ -115,7 +119,8 @@ if
 // >    $j
 
 
-// * Contemplate this absolutely horrendous code (before optimization):
+// * Note the redundant `set scrut = false` before `123` in the lowered IR below; it is
+// * the remnant of a trivially-false `if false do ()` that the IR optimizer later removes.
 :sir
 :soir
 :sjs
