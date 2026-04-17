@@ -132,8 +132,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       if alternative.isTrivial || alternative.referencesScrutinee(scrutinee) then
         // The alternative is trivial (End or UseSplit — no code worth sharing),
         // or it references the same scrutinee (so positive and negative
-        // specialization transform it differently on each side, making sharing
-        // invalid). Duplicate and specialize separately.
+        // specialization may transform it differently on each side, making
+        // sharing unsound). Duplicate and specialize separately.
+        // TODO: detect when both specializations agree and share even here.
         val positiveSplit = consequent ++ alternative.duplicate
         val (whenTrue, trueRefs) = normalize(specialize(positiveSplit, +, scrutinee, pattern).getOrElse(positiveSplit))
         val negativeSplit = alternative
