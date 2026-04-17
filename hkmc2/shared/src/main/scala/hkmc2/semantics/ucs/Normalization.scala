@@ -115,6 +115,20 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       case Split.UseSplit(_) => true
       case _ => false
 
+    /** Whether every leaf of `split` unconditionally transfers control away
+      * (no fall-through). `End` compiles to `throw`, explicit `return`/`throw`
+      * terms are abortive, and `UseSplit` compiles to a `Break`. */
+    private def alwaysTerminates: Bool = split match
+      case Split.End => true
+      case Split.Else(t) => t match
+        case _: Term.Ret | _: Term.Throw => true
+        case _ => false
+      case Split.Cons(Branch(_, _, cons), tail) =>
+        cons.alwaysTerminates && tail.alwaysTerminates
+      case Split.Let(_, _, tail) => tail.alwaysTerminates
+      case Split.LetSplit(_, tail) => tail.alwaysTerminates
+      case Split.UseSplit(_) => true
+
   /** Replace all `UseSplit(sym)` references in `split` with a duplicate of `body`. */
   private def inlineUseSplit(split: Split, sym: SplitSymbol, body: Split): Split = split match
     case Split.Cons(Branch(scrut, pat, cons), tail) =>
@@ -390,9 +404,12 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       // UseSplit generates Break(joinLabel) to reach it.
       val joinLabel = new LabelSymbol(N, sym.nme)
       sym.label = S(joinLabel)
-      if (cont eq Ret) || (cont eq Thrw) then
-        // Ret/Thrw produce `return`/`throw` which truly terminate control flow
-        // in JS. Using them directly preserves tail-call position.
+      // When every leaf of both sides transfers control away (explicit
+      // `return`/`throw`, `UseSplit` → break, or `End` → throw), no value
+      // can flow into `cont`, so the exit-label wrapper is unnecessary even
+      // when `cont` is not a TailOp.
+      if (cont eq Ret) || (cont eq Thrw) ||
+          (sym.body.alwaysTerminates && tail.alwaysTerminates) then
         val bodyBlock = lowerSplit(sym.body, cont)
         Label(joinLabel, false, lowerSplit(tail, cont), bodyBlock)
       else
