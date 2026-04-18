@@ -196,7 +196,7 @@ fun foo2(x) =
 let res = foo2(40)
 res.0(2).get
 //│ = 43
-//│ res = [fun inlinedVal1, ()]
+//│ res = [fun, ()]
 
 :lift
 :w

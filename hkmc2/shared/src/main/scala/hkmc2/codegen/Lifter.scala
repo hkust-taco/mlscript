@@ -1124,13 +1124,13 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val ret = 
         if clsIsParamless then Return(tmp.asPath, false)
         else Return(Call(tmp.asPath, argList2)(true, config.checkInstantiateEffect, false), false)
-      val innerBody = Scoped(Set(tmp), Assign(tmp, Instantiate(false, ref, argList1), ret))
-      // Curried: C$(auxArgs) returns a lambda (mainArgs) => { new C(mainArgs)(auxArgs) }
-      val bod =
-        if clsIsParamless then innerBody
-        else Return(Lambda(main, innerBody), false)
+      val bod = Scoped(Set(tmp), Assign(tmp, Instantiate(false, ref, argList1), ret))
+      // Curried via multiple param lists: C$(auxArgs)(mainArgs) = new C(mainArgs)(auxArgs)
+      val paramLists =
+        if clsIsParamless then auxParamList :: Nil
+        else auxParamList :: main :: Nil
       
-      FunDefn(N, flattenedSym, flattenedDSym, auxParamList :: Nil, bod)(false, N, Visibility.Public)
+      FunDefn(N, flattenedSym, flattenedDSym, paramLists, bod)(false, N, Visibility.Public)
     
     private val flat = Lazy[Defn](mkFlattenedDefn)
     
