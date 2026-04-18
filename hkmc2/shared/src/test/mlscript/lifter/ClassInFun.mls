@@ -378,7 +378,7 @@ fun main(x) =
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:fixme
+:fixme // * The JS code-gen currently doesn't properly freeze classes with curried parameter lists
 :expect [0, "hi", 456, 789, 42, 498, 831]
 main(42)
 //│ ═══[RUNTIME ERROR] Expected: '[0, "hi", 456, 789, 42, 498, 831]', got: '[0, "hi", 0, 0, 42, 42, 42]'
