@@ -111,7 +111,7 @@ fun f() =
   Good()
 f().foo()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let Bad⁰, Good⁰, f², tmp, Capture$scope0⁰, Bad$⁰, Good$⁰;
+//│ let Bad⁰, Good⁰, f², tmp, Capture$scope0⁰;
 //│ define Capture$scope0⁰ as class Capture$scope0² {
 //│   constructor Capture$scope0¹(z$0, w$1) {
 //│     define w$1⁰ as val w$1¹ = w$1;
@@ -119,21 +119,11 @@ f().foo()
 //│     end
 //│   }
 //│ };
-//│ define Good$⁰ as fun Good$¹(scope0$cap, x, y) {
-//│   let tmp1;
-//│   set tmp1 = new Good¹();
-//│   return tmp1(scope0$cap, x, y)
-//│ };
-//│ define Bad$⁰ as fun Bad$¹(scope0$cap) {
-//│   let tmp1;
-//│   set tmp1 = new Bad¹();
-//│   return tmp1(scope0$cap)
-//│ };
-//│ define Good⁰ as class Good¹() {
+//│ define Good⁰ as class Good²() {
 //│   private val scope0$cap⁰;
 //│   private val x¹;
 //│   private val y²;
-//│   constructor Good²(scope0$cap, x, y) {
+//│   constructor Good¹(scope0$cap, x, y) {
 //│     set scope0$cap⁰ = scope0$cap;
 //│     set x¹ = x;
 //│     set y² = y;
@@ -147,9 +137,9 @@ f().foo()
 //│     return +⁰(tmp2, scope0$cap⁰.w$1¹)
 //│   }
 //│ };
-//│ define Bad⁰ as class Bad¹() {
+//│ define Bad⁰ as class Bad²() {
 //│   private val scope0$cap¹;
-//│   constructor Bad²(scope0$cap) {
+//│   constructor Bad¹(scope0$cap) {
 //│     set scope0$cap¹ = scope0$cap;
 //│     end
 //│   }
@@ -159,15 +149,17 @@ f().foo()
 //│   }
 //│ };
 //│ define f² as fun f³() {
-//│   let x, y, z, w, tmp1, scope0$cap;
+//│   let x, y, z, w, tmp1, scope0$cap, tmp2, tmp3;
 //│   set scope0$cap = new mut Capture$scope0²(z, w);
 //│   set x = 1;
 //│   set y = 10;
 //│   set scope0$cap.z$0 = 10;
 //│   set scope0$cap.w$1 = 1000;
-//│   set tmp1 = Bad$¹(scope0$cap);
+//│   set tmp2 = new Bad²();
+//│   set tmp1 = tmp2(scope0$cap);
 //│   do tmp1.foo³();
-//│   return Good$¹(scope0$cap, x, y)
+//│   set tmp3 = new Good²();
+//│   return tmp3(scope0$cap, x, y)
 //│ };
 //│ set tmp = f³();
 //│ tmp.foo﹖()
@@ -187,15 +179,24 @@ sum(100)
 
 // instance checks
 
-:w
 fun f() =
   data class Test(a) with
     fun get() = a
   fun foo() = Test
   foo()(0)
 f().get()
-//│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 0
+
+// Parameterized class constructor used as a first-class function
+:expect 43
+fun foo2(x) =
+  class C(y) with
+    fun get = x + y
+  [C, set x += 1]
+let res = foo2(40)
+res.0(2).get
+//│ = 43
+//│ res = [fun inlinedVal1, ()]
 
 :lift
 :w
@@ -326,34 +327,30 @@ fun main(x) =
   set e.a = 0
   [c.a, c.b, d.a, e.a, c.get, d.get, e.get]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let C⁵, main², C$⁰;
-//│ define C$⁰ as fun C$¹(x, a) {
-//│   let tmp;
-//│   set tmp = new C⁶(a);
-//│   return tmp(x)
-//│ };
-//│ define C⁵ as class C⁶(a) {
+//│ let C⁵, main²;
+//│ define C⁵ as class C⁷(a) {
 //│   private val x²;
 //│   val a²;
-//│   constructor C⁷(x) {
+//│   constructor C⁶(x) {
 //│     set x² = x;
 //│     define a² as val a³ = a;
 //│     end
 //│   }
 //│   method get⁰ = fun get¹ {
-//│     return +⁰(x², C⁶.this.a³)
+//│     return +⁰(x², C⁷.this.a³)
 //│   }
 //│ };
 //│ define main² as fun main³(x) {
-//│   let c, d, e, tmp, tmp1;
-//│   set tmp = new mut C⁶(123);
+//│   let c, d, e, tmp, tmp1, tmp2;
+//│   set tmp = new mut C⁷(123);
 //│   set c = tmp(x);
 //│   set c.a = 0;
 //│   set c.b = "hi";
-//│   set tmp1 = new C⁶(456);
+//│   set tmp1 = new C⁷(456);
 //│   set d = tmp1(x);
 //│   set d.a = 0;
-//│   set e = C$¹(x, 789);
+//│   set tmp2 = new C⁷(789);
+//│   set e = tmp2(x);
 //│   set e.a = 0;
 //│   return [c.a﹖, c.b﹖, d.a﹖, e.a﹖, c.get﹖, d.get﹖, e.get﹖]
 //│ };
