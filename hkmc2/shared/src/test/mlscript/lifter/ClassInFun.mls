@@ -270,14 +270,18 @@ res.b
 //│ res = A(_)
 
 
-:lift
+
+// *** Mutability ***
+
+
+// * Trivial case
 :sir
 :noSanityCheck
 fun main() =
   class C(val a)
   let c = new mut C(123)
   set c.a = 0
-  set c.b = "oops"
+  set c.b = "hi"
   let d = new C(456)
   set d.a = 0
   let e = C(789)
@@ -296,7 +300,7 @@ fun main() =
 //│   let c, d, e;
 //│   set c = new mut C⁴(123);
 //│   set c.a = 0;
-//│   set c.b = "oops";
+//│   set c.b = "hi";
 //│   set d = new C⁴(456);
 //│   set d.a = 0;
 //│   set e = C³(789);
@@ -306,17 +310,13 @@ fun main() =
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:expect [0, "oops", 456, 789]
-main()
-//│ = [0, "oops", 456, 789]
-
-// * Notice that the lifted class above behaves the same as an equivalent top-level class:
+// * Notice that the lifted class above behaves the same as the equivalent top-level class below:
 
 class C(val a)
 
 let c = new mut C(123)
 set c.a = 0
-set c.b = "oops"
+set c.b = "hi"
 let d = new C(456)
 set d.a = 0
 let e = C(789)
@@ -325,8 +325,83 @@ set e.a = 0
 //│ d = C(456)
 //│ e = C(789)
 
-:expect [0, "oops", 456, 789]
+:expect [0, "hi", 456, 789]
 [c.a, c.b, d.a, e.a]
-//│ = [0, "oops", 456, 789]
+//│ = [0, "hi", 456, 789]
+
+// * Nontrivial case
+:sir
+:noSanityCheck
+fun main(x) =
+  class C(val a) with
+    fun get = x + a
+  let c = new mut C(123)
+  set c.a = 0
+  set c.b = "hi"
+  let d = new C(456)
+  set d.a = 0
+  let e = C(789)
+  set e.a = 0
+  [c.a, c.b, d.a, e.a, c.get, d.get, e.get]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let C⁵, main², C$⁰;
+//│ define C$⁰ as fun C$¹(x, a) {
+//│   let tmp;
+//│   set tmp = new C⁶(a);
+//│   return tmp(x)
+//│ };
+//│ define C⁵ as class C⁶(a) {
+//│   private val x²;
+//│   val a²;
+//│   constructor C⁷(x) {
+//│     set x² = x;
+//│     define a² as val a³ = a;
+//│     end
+//│   }
+//│   method get⁰ = fun get¹ {
+//│     return +⁰(x², C⁶.a³)
+//│   }
+//│ };
+//│ define main² as fun main³(x) {
+//│   let c, d, e;
+//│   set c = C$¹(x, 123);
+//│   set c.a = 0;
+//│   set c.b = "hi";
+//│   set d = C$¹(x, 456);
+//│   set d.a = 0;
+//│   set e = C$¹(x, 789);
+//│   set e.a = 0;
+//│   return [c.a﹖, c.b﹖, d.a﹖, e.a﹖, c.get﹖, d.get﹖, e.get﹖]
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:fixme
+:expect [0, "hi", 456, 789, 42, 498, 831]
+main(42)
+//│ ═══[RUNTIME ERROR] Expected: '[0, "hi", 456, 789, 42, 498, 831]', got: '[0, "hi", 0, 0, 42, 42, 42]'
+//│ = [0, "hi", 0, 0, 42, 42, 42]
+
+// * The lifted class above should behave the same as the equivalent top-level class below:
+
+let x = id(42)
+class C(val a) with
+  fun get = x + a
+//│ x = 42
+
+let c = new mut C(123)
+set c.a = 0
+set c.b = "hi"
+let d = new C(456)
+set d.a = 0
+let e = C(789)
+set e.a = 0
+//│ c = C(0)
+//│ d = C(456)
+//│ e = C(789)
+
+:expect [0, "hi", 456, 789, 42, 498, 831]
+[c.a, c.b, d.a, e.a, c.get, d.get, e.get]
+//│ = [0, "hi", 456, 789, 42, 498, 831]
 
 
