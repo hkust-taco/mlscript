@@ -157,7 +157,8 @@ private object PostCondAnalysisImpl extends CachedAnalysis[Block, PostCondRes]:
       case v: ValDefn => res(S(v.sym), v.rhs, rest)
       case c: ClsLikeDefn => analyze(rest).markImpure // TODO: refine for object and module ctors
       case f: FunDefn => analyze(rest)
-    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) => analyze(body) >=> analyze(rest)
+    case Suspend(tag, handlerFun, rest) => analyze(rest)
+    case HandleSuspension(tag, bodyFun, rest) => analyze(rest)
     case b: BlockTail => PostCondRes.empty.copy(isAbortive = b.isAbortive)
 
 private object PostCondAnalysis extends CachedAnalysis[Block, Map[Local, Literal]]:

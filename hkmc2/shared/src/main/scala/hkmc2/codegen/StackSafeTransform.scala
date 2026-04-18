@@ -74,7 +74,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
           else
             super.applyBlock(b)
         
-        case HandleBlock(l, res, par, args, cls, hdr, bod, rst) => lastWords("HandleBlock in stack safe transformation")
+        case _: Suspend | _: HandleSuspension => lastWords("Suspension in stack safe transformation")
         
         case _ => super.applyBlock(b)
         
