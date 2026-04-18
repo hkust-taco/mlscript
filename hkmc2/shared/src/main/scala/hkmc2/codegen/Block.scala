@@ -529,7 +529,7 @@ object HandleBlock:
       Assign(res, Call(Value.Ref(sym, S(bodyDefn.dSym)), Nil)(true, true, false), Return(Value.Lit(Tree.UnitLit(false)), false)))(false, N, Visibility.Public)
 
     blockBuilder
-      .scopedVars(Set(clsDefn.sym, sym))
+      .scopedVars(Set(clsDefn.sym, sym, sym2))
       .define(clsDefn)
       .assign(lhs, Instantiate(mut = true, Value.Ref(clsDefn.sym, S(cls)), Nil))
       .define(bodyDefn)
