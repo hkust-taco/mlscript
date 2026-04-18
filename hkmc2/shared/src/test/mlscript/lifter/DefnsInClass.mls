@@ -8,16 +8,10 @@ data class A(x) with
   fun getA() = B(2).getB()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let B⁰, A⁰, B$⁰;
-//│ define B$⁰ as fun B$¹(isMut, A, y) {
+//│ define B$⁰ as fun B$¹(A, y) {
 //│   let tmp;
-//│   match isMut
-//│     true =>
-//│       set tmp = new mut B¹(y);
-//│       return tmp(A)
-//│     else
-//│       set tmp = new B¹(y);
-//│       return tmp(A)
-//│   end
+//│   set tmp = new B¹(y);
+//│   return tmp(A)
 //│ };
 //│ define B⁰ as class B¹(y) {
 //│   private val A¹;
@@ -37,7 +31,7 @@ data class A(x) with
 //│     define x¹ as val x⁰ = x;
 //│     end
 //│   }
-//│   method getA⁰ = fun getA¹() { let tmp; set tmp = B$¹(false, A³, 2); return tmp.getB¹() }
+//│   method getA⁰ = fun getA¹() { let tmp; set tmp = B$¹(A³, 2); return tmp.getB¹() }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

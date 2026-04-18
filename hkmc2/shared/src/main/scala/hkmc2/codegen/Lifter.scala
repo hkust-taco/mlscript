@@ -1088,25 +1088,17 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         else argList1_
       val argList2 = argList2_
       
-      val isMut = VarSymbol(Tree.Ident("isMut"))
       val params = ParamList(
         ParamListFlags.empty,
-        Param.simple(isMut) :: auxSyms.map(Param.simple(_)) ::: main.params,
+        auxSyms.map(Param.simple(_)) ::: main.params,
         main.restParam
       )
       val tmp = TempSymbol(N)
       val ref = Value.Ref(obj.cls.sym, S(obj.cls.isym))
-      val instMut = Assign(tmp, Instantiate(true, ref, argList1), End())
-      val inst = Assign(tmp, Instantiate(false, ref, argList1), End())
       val ret = 
         if clsIsParamless then Return(tmp.asPath, false)
         else Return(Call(tmp.asPath, argList2)(true, config.checkInstantiateEffect, false), false)
-      val bod = Scoped(Set(tmp), Match(
-        isMut.asPath,
-        Case.Lit(Tree.BoolLit(true)) -> instMut :: Nil,
-        S(inst),
-        ret
-      ))
+      val bod = Scoped(Set(tmp), Assign(tmp, Instantiate(false, ref, argList1), ret))
       
       FunDefn(N, flattenedSym, flattenedDSym, params :: Nil, bod)(false, N, Visibility.Public)
     
@@ -1116,15 +1108,19 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     
     def rewriteInstantiate(inst: Instantiate, args: List[Arg]): Result =
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")
+      val path = Value.Ref(cls.sym, S(cls.isym))
       if isTrivial then
-        val path = Value.Ref(cls.sym, S(cls.isym))
         if (inst.cls === path) && (inst.args is args) then inst
         else inst.copy(cls = path, args = args).withLocOf(inst)
+      else if cls.paramsOpt.isEmpty && cls.auxParams.isEmpty then
+        // Paramless class: aux args go directly into the Instantiate constructor
+        Instantiate(inst.mut, path, formatArgs ::: args).withLoc(inst.toLoc)
       else
-        flat.force // force computation
+        // Parameterized class: use the constructor wrapper (without isMut)
+        flat.force
         Call(
           Value.Ref(flattenedSym, S(flattenedDSym)),
-          Value.Lit(Tree.BoolLit(inst.mut)).asArg :: formatArgs ::: args
+          formatArgs ::: args
         )(true, config.checkInstantiateEffect, false).withLoc(inst.toLoc)
     
     def rewriteCall(c: Call, args: List[Arg])(using ctx: LifterCtxNew): Call =
@@ -1136,7 +1132,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         flat.force // force computation
         Call(
           Value.Ref(flattenedSym, S(flattenedDSym)),
-          Value.Lit(Tree.BoolLit(false)).asArg :: formatArgs ::: args
+          formatArgs ::: args
         )(
           isMlsFun = true,
           mayRaiseEffects = c.mayRaiseEffects,

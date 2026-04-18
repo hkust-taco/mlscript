@@ -116,16 +116,10 @@ fun foo(x, y) =
   [a, a.A#u, a.A#v]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let A⁶, foo⁰, A$⁰;
-//│ define A$⁰ as fun A$¹(isMut, y, u) {
+//│ define A$⁰ as fun A$¹(y, u) {
 //│   let tmp;
-//│   match isMut
-//│     true =>
-//│       set tmp = new mut A⁷(u);
-//│       return tmp(y)
-//│     else
-//│       set tmp = new A⁷(u);
-//│       return tmp(y)
-//│   end
+//│   set tmp = new A⁷(u);
+//│   return tmp(y)
 //│ };
 //│ define A⁶ as class A⁷(u) {
 //│   private val y⁰;
@@ -138,7 +132,7 @@ fun foo(x, y) =
 //│     end
 //│   }
 //│ };
-//│ define foo⁰ as fun foo¹(x, y) { let a; set a = A$¹(false, y, x); return [a, a.u¹, a.v¹] };
+//│ define foo⁰ as fun foo¹(x, y) { let a; set a = A$¹(y, x); return [a, a.u¹, a.v¹] };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

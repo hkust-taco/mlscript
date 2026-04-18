@@ -72,7 +72,6 @@ f(1)
 //│ = 2
 
 
-// TODO: do not generate an intermediate function
 // TODO: do not generate a useless `C$cap` field
 :sir
 fun f(x) =
@@ -80,18 +79,7 @@ fun f(x) =
     fun y = x
   new C
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let C⁰, f⁰, C$⁰;
-//│ define C$⁰ as fun C$¹(isMut, x) {
-//│   let tmp;
-//│   match isMut
-//│     true =>
-//│       set tmp = new mut C¹(x);
-//│       return tmp
-//│     else
-//│       set tmp = new C¹(x);
-//│       return tmp
-//│   end
-//│ };
+//│ let C⁰, f⁰;
 //│ define C⁰ as class C¹ {
 //│   private val x⁰;
 //│   constructor(x) {
@@ -100,7 +88,7 @@ fun f(x) =
 //│   }
 //│   method y⁰ = fun y¹ { return x⁰ }
 //│ };
-//│ define f⁰ as fun f¹(x) { return C$¹(false, x) };
+//│ define f⁰ as fun f¹(x) { return new C¹(x) };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -132,27 +120,15 @@ f().foo()
 //│     end
 //│   }
 //│ };
-//│ define Good$⁰ as fun Good$¹(isMut, scope0$cap, x, y) {
+//│ define Good$⁰ as fun Good$¹(scope0$cap, x, y) {
 //│   let tmp1;
-//│   match isMut
-//│     true =>
-//│       set tmp1 = new mut Good¹();
-//│       return tmp1(scope0$cap, x, y)
-//│     else
-//│       set tmp1 = new Good¹();
-//│       return tmp1(scope0$cap, x, y)
-//│   end
+//│   set tmp1 = new Good¹();
+//│   return tmp1(scope0$cap, x, y)
 //│ };
-//│ define Bad$⁰ as fun Bad$¹(isMut, scope0$cap) {
+//│ define Bad$⁰ as fun Bad$¹(scope0$cap) {
 //│   let tmp1;
-//│   match isMut
-//│     true =>
-//│       set tmp1 = new mut Bad¹();
-//│       return tmp1(scope0$cap)
-//│     else
-//│       set tmp1 = new Bad¹();
-//│       return tmp1(scope0$cap)
-//│   end
+//│   set tmp1 = new Bad¹();
+//│   return tmp1(scope0$cap)
 //│ };
 //│ define Good⁰ as class Good¹() {
 //│   private val scope0$cap⁰;
@@ -190,9 +166,9 @@ f().foo()
 //│   set y = 10;
 //│   set scope0$cap.z$0 = 10;
 //│   set scope0$cap.w$1 = 1000;
-//│   set tmp1 = Bad$¹(false, scope0$cap);
+//│   set tmp1 = Bad$¹(scope0$cap);
 //│   do tmp1.foo³();
-//│   return Good$¹(false, scope0$cap, x, y)
+//│   return Good$¹(scope0$cap, x, y)
 //│ };
 //│ set tmp = f³();
 //│ tmp.foo﹖()

@@ -13,36 +13,25 @@ private fun f(used, unused) =
   new C
 f(1, 2).get()
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let C⁰, f⁰, tmp, C$⁰;
+//│ let C⁰, f⁰, tmp, used⁰, inlinedVal;
 //│ define C⁰ as class C¹ {
-//│   private val used⁰;
+//│   private val used¹;
 //│   constructor(used) {
-//│     set used⁰ = used;
+//│     set used¹ = used;
 //│     end
 //│   }
 //│   method get⁰ = fun get¹() {
-//│     return used⁰
+//│     return used¹
 //│   }
 //│ };
-//│ define f⁰ as fun f¹(used) {
-//│   let isMut, used1, inlinedVal, tmp1;
-//│   set isMut = false;
-//│   set used1 = used;
-//│   match isMut
-//│     true =>
-//│       set tmp1 = new mut C¹(used1);
-//│       set inlinedVal = tmp1;
-//│       return inlinedVal
-//│     else
-//│       set tmp1 = new C¹(used1);
-//│       set inlinedVal = tmp1;
-//│       return inlinedVal
-//│   end
+//│ define f⁰ as fun f¹(used, unused) {
+//│   return new C¹(used)
 //│ };
-//│ set tmp = f¹(1);
+//│ set used⁰ = 1;
+//│ set inlinedVal = new C¹(used⁰);
+//│ set tmp = inlinedVal;
 //│ tmp.get﹖()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
