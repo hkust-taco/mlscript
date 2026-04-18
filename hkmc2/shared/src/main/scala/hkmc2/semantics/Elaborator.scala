@@ -378,8 +378,17 @@ extends Importer with ucs.SplitElaborator:
   def annot(tree: Tree): Ctxl[Opt[Annot]] = tree match
     case Keywrd(kw @ (Keyword.`abstract` | Keyword.`declare` | Keyword.`data` | Keyword.`staged`)) => S(Annot.Modifier(kw))
     case App(Ident("config"), Tup(args)) =>
-      val modify = ConfigParser.parseOverrides(args)
-      S(Annot.Config(modify))
+      val hasTargetOverride = args.collectFirst:
+        case InfixApp(Ident("target"), Keywrd(Keyword.`:`), _) => ()
+      .nonEmpty
+      if hasTargetOverride then
+        raise(ErrorReport(
+          msg"`target` can only be configured with a top-level #config(...) directive" -> tree.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation))
+        N
+      else
+        val modify = ConfigParser.parseOverrides(args)
+        S(Annot.Config(modify))
     case _ => term(tree) match
       case Term.Error => N
       case trm =>
