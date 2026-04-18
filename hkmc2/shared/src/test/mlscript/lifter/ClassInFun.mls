@@ -268,3 +268,65 @@ res.b
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ ═══[RUNTIME ERROR] ReferenceError: r is not defined
 //│ res = A(_)
+
+
+:lift
+:sir
+:noSanityCheck
+fun main() =
+  class C(val a)
+  let c = new mut C(123)
+  set c.a = 0
+  set c.b = "oops"
+  let d = new C(456)
+  set d.a = 0
+  let e = C(789)
+  set e.a = 0
+  [c.a, c.b, d.a, e.a]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let C², main⁰;
+//│ define C² as class C⁴(a) {
+//│   val a⁰;
+//│   constructor C³ {
+//│     define a⁰ as val a¹ = a;
+//│     end
+//│   }
+//│ };
+//│ define main⁰ as fun main¹() {
+//│   let c, d, e;
+//│   set c = new mut C⁴(123);
+//│   set c.a = 0;
+//│   set c.b = "oops";
+//│   set d = new C⁴(456);
+//│   set d.a = 0;
+//│   set e = C³(789);
+//│   set e.a = 0;
+//│   return [c.a﹖, c.b﹖, d.a﹖, e.a﹖]
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [0, "oops", 456, 789]
+main()
+//│ = [0, "oops", 456, 789]
+
+// * Notice that the lifted class above behaves the same as an equivalent top-level class:
+
+class C(val a)
+
+let c = new mut C(123)
+set c.a = 0
+set c.b = "oops"
+let d = new C(456)
+set d.a = 0
+let e = C(789)
+set e.a = 0
+//│ c = C(0)
+//│ d = C(456)
+//│ e = C(789)
+
+:expect [0, "oops", 456, 789]
+[c.a, c.b, d.a, e.a]
+//│ = [0, "oops", 456, 789]
+
+
