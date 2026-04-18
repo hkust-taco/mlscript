@@ -344,13 +344,12 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
               def join =
                 if args is newArgs then inst
                 else inst.copy(args = newArgs).withLoc(inst.toLoc)
-              val res = ctx.rewrittenScopes.get(d) match
-                case N => join
-                case S(c: LiftedClass) => c.rewriteInstantiate(inst, newArgs)
+              ctx.rewrittenScopes.get(d) match
+                case N => k(join)
+                case S(c: LiftedClass) => c.rewriteInstantiate(inst, newArgs, extraLocals)(k)
                 case S(r) => resolveDefnRef(l, d, r) match
-                  case Some(value) => Instantiate(inst.mut, value, newArgs).withLoc(inst.toLoc)
-                  case None => join
-              k(res)
+                  case Some(value) => k(Instantiate(inst.mut, value, newArgs).withLoc(inst.toLoc))
+                  case None => k(join)
           case _ => super.applyResult(r)(k)
         
         // extract the call
@@ -1106,22 +1105,21 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     
     def instObject = Instantiate(false, Value.Ref(cls.sym, S(cls.isym)), formatArgs)
     
-    def rewriteInstantiate(inst: Instantiate, args: List[Arg]): Result =
+    def rewriteInstantiate(inst: Instantiate, args: List[Arg], extraLocals: MutSet[Local])(k: Result => Block): Block =
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")
       val path = Value.Ref(cls.sym, S(cls.isym))
       if isTrivial then
-        if (inst.cls === path) && (inst.args is args) then inst
-        else inst.copy(cls = path, args = args).withLocOf(inst)
+        if (inst.cls === path) && (inst.args is args) then k(inst)
+        else k(inst.copy(cls = path, args = args).withLocOf(inst))
       else if cls.paramsOpt.isEmpty && cls.auxParams.isEmpty then
         // Paramless class: aux args go directly into the Instantiate constructor
-        Instantiate(inst.mut, path, formatArgs ::: args).withLoc(inst.toLoc)
+        k(Instantiate(inst.mut, path, formatArgs ::: args).withLoc(inst.toLoc))
       else
-        // Parameterized class: use the constructor wrapper (without isMut)
-        flat.force
-        Call(
-          Value.Ref(flattenedSym, S(flattenedDSym)),
-          formatArgs ::: args
-        )(true, config.checkInstantiateEffect, false).withLoc(inst.toLoc)
+        // Parameterized class: use Instantiate + Call directly, preserving mutability
+        val tmp = TempSymbol(N)
+        extraLocals.add(tmp)
+        Assign(tmp, Instantiate(inst.mut, path, args).withLoc(inst.toLoc),
+          k(Call(tmp.asPath, formatArgs)(true, config.checkInstantiateEffect, false)))
     
     def rewriteCall(c: Call, args: List[Arg])(using ctx: LifterCtxNew): Call =
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")

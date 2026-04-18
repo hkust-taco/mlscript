@@ -363,11 +363,13 @@ fun main(x) =
 //│   }
 //│ };
 //│ define main² as fun main³(x) {
-//│   let c, d, e;
-//│   set c = C$¹(x, 123);
+//│   let c, d, e, tmp, tmp1;
+//│   set tmp = new mut C⁶(123);
+//│   set c = tmp(x);
 //│   set c.a = 0;
 //│   set c.b = "hi";
-//│   set d = C$¹(x, 456);
+//│   set tmp1 = new C⁶(456);
+//│   set d = tmp1(x);
 //│   set d.a = 0;
 //│   set e = C$¹(x, 789);
 //│   set e.a = 0;
