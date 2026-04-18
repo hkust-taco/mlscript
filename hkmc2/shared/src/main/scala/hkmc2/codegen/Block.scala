@@ -276,15 +276,7 @@ sealed abstract class Block extends Product:
       then this
       else Define(newDefn, newRest)
     
-    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
-      val newHandlers = handlers.mapConserve: h =>
-        val newBody = h.body.flattened
-        if newBody is h.body then h else h.copy(body = newBody)
-      val newBody = body.flattened
-      val newRest = rest.flatten(k)
-      if (newHandlers is handlers) && (newBody is body) && (newRest is rest)
-      then this
-      else HandleBlock(lhs, res, par, args, cls, newHandlers, newBody, newRest)
+    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) => ???
 
     case Scoped(syms, body) =>
       val newBody = body.flatten(k)
@@ -450,6 +442,21 @@ object Begin:
       case _ => new Begin(sub, rest)
 
 
+// `shift0` operator
+case class Suspend(
+    tag: Path,
+    handlerFun: Path,
+    rest: Block
+) extends Block with ProductWithTail with NonBlockTail
+
+
+// `reset0` operator
+case class HandleSuspension(
+    tag: Path,
+    body: Block,
+    rest: Block,
+) extends Block with ProductWithTail with NonBlockTail
+
 case class HandleBlock(
     lhs: Local,
     res: Local,
@@ -461,7 +468,67 @@ case class HandleBlock(
     rest: Block
 ) extends Block with ProductWithTail with NonBlockTail
 
+object Suspend:
+  def apply(tag: Path, handlerFun: Path, rest: Block): Block = rest match
+    case Scoped(syms, body) => Scoped(syms, Suspend(tag, handlerFun, body))
+    case _ => new Suspend(tag, handlerFun, rest)
+
+object HandleSuspension:
+  def apply(tag: Path, body: Block, rest: Block): Block = rest match
+    case Scoped(syms, b) => Scoped(syms, HandleSuspension(tag, body, b))
+    case _ => new HandleSuspension(tag, body, rest)
+
 object HandleBlock:
+  private def create(
+      lhs: Local,
+      res: Local,
+      par: Path,
+      args: Ls[Path],
+      cls: ClassSymbol,
+      handlers: Ls[Handler],
+      body: Block,
+      rest: Block
+  )(using State) =
+    val sym = new BlockMemberSymbol("handleBlock$", Nil, false)
+
+    val bodyDefn = FunDefn.withFreshSymbol(N, sym, PlainParamList(Nil) :: Nil, body)(false, N, Visibility.Public)
+    
+    val handlerMtds = handlers.map: handler =>
+      val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
+      val fDef = FunDefn.withFreshSymbol(
+        N, sym, PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil) :: Nil,
+        handler.body
+        )(false, N, Visibility.Public)
+      FunDefn.withFreshSymbol(
+        S(cls),
+        handler.sym,
+        handler.params,
+        Scoped(Set(sym), Define(
+          fDef,
+          Suspend(cls.asPath, Value.Ref(sym, S(fDef.dSym)), Return(Value.Lit(Tree.UnitLit(true)), false)))))(false, N, Visibility.Public)
+
+    val clsDefn = ClsLikeDefn(
+      N, // no owner
+      cls,
+      BlockMemberSymbol(cls.id.name, Nil),
+      N,
+      syntax.Cls,
+      N, Nil,
+      S(par), handlerMtds, Nil, Nil,
+      // Apparently, the lifter is not happy with any assignment in the preCtor...
+      Return(Call(Value.Ref(State.builtinOpsMap("super")), args.map(_.asArg))(true, true, false), true),
+      End(),
+      N,
+      N,
+    )(N)
+
+    blockBuilder
+      .scopedVars(Set(clsDefn.sym, sym))
+      .define(clsDefn)
+      .assign(lhs, Instantiate(mut = true, Value.Ref(clsDefn.sym, S(cls)), Nil))
+      .define(bodyDefn)
+      .rest(HandleSuspension(lhs.asPath, Assign(res, Call(Value.Ref(sym, S(bodyDefn.dSym)), Nil)(true, true, false), End()), rest))
+  
   def apply(
       lhs: Local,
       res: Local,
@@ -471,11 +538,11 @@ object HandleBlock:
       handlers: Ls[Handler],
       body: Block,
       rest: Block
-    ) =
+    )(using State) =
   rest match
   case Scoped(syms, rest) =>
-    Scoped(syms, new HandleBlock(lhs, res, par, args, cls, handlers, body, rest))
-  case _ => new HandleBlock(lhs, res, par, args, cls, handlers, body, rest)
+    Scoped(syms, create(lhs, res, par, args, cls, handlers, body, rest))
+  case _ => create(lhs, res, par, args, cls, handlers, body, rest)
 
 
 sealed abstract class Defn:
