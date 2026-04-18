@@ -106,8 +106,8 @@ fun foo2() =
 
 :w
 fun foo3() =
-  class C()
-  fun f = C()
+  class C
+  fun f = new C
   C
 //│ ═══[WARNING] Cannot yet lift class `C` as it is used as a first-class class.
 

@@ -1112,10 +1112,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         if (inst.cls === path) && (inst.args is args) then k(inst)
         else k(inst.copy(cls = path, args = args).withLocOf(inst))
       else if cls.paramsOpt.isEmpty && cls.auxParams.isEmpty then
-        // Paramless class: aux args go directly into the Instantiate constructor
+        // Paramless class: lifter args go directly into the Instantiate constructor
         k(Instantiate(inst.mut, path, formatArgs ::: args).withLoc(inst.toLoc))
       else
-        // Parameterized class: use Instantiate + Call directly, preserving mutability
+        // Parameterized class: use Instantiate with original args + Call with lifter args (curried class params)
         val tmp = TempSymbol(N)
         extraLocals.add(tmp)
         Assign(tmp, Instantiate(inst.mut, path, args).withLoc(inst.toLoc),

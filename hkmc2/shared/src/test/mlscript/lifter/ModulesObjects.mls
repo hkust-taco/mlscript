@@ -213,10 +213,10 @@ M.A().get
 //│     let scrut, tmp1;
 //│     define A⁰ as class A¹() {
 //│       method get⁰ = fun get¹ {
-//│         return +⁰(M⁵.x¹, M⁵.x¹)
+//│         return +⁰(M⁵.this.x¹, M⁵.this.x¹)
 //│       }
 //│     };
-//│     set scrut = M⁵.A²();
+//│     set scrut = M⁵.this.A²();
 //│     match scrut
 //│       A¹ =>
 //│         set tmp1 = 2;

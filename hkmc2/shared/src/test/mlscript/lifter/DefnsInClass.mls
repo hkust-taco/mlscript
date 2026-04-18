@@ -22,7 +22,7 @@ data class A(x) with
 //│     end
 //│   }
 //│   method getB⁰ = fun getB¹() {
-//│     return +⁰(A¹.x⁰, B¹.y¹)
+//│     return +⁰(A¹.x⁰, B¹.this.y¹)
 //│   }
 //│ };
 //│ define A⁰ as class A³(x) {
@@ -31,7 +31,7 @@ data class A(x) with
 //│     define x¹ as val x⁰ = x;
 //│     end
 //│   }
-//│   method getA⁰ = fun getA¹() { let tmp; set tmp = B$¹(A³, 2); return tmp.getB¹() }
+//│   method getA⁰ = fun getA¹() { let tmp; set tmp = B$¹(A³.this, 2); return tmp.getB¹() }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

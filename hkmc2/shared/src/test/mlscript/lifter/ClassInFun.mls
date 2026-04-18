@@ -174,24 +174,6 @@ f().foo()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 10111
 
-:expect 2
-fun f(x) =
-  class A()() with
-    fun newA() = A()()
-    fun foo() =
-      set x += 1
-      x
-    fun getX() = x
-  A()()
-let a = f(0)
-a.foo()
-let b = a.newA()
-b.foo()
-a.getX()
-//│ = 2
-//│ a = A()
-//│ b = A()
-
 // handler
 
 :stackSafe 6
@@ -219,13 +201,13 @@ f().get()
 :w
 :expect 2
 fun f(x) =
-  class Test() with
+  class Test with
     fun get() =
       fun h() = x
       h()
   let foo = Test
-  foo()
-f(2).get()
+  foo
+(new! (f(2))).get()
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 2
 
@@ -359,7 +341,7 @@ fun main(x) =
 //│     end
 //│   }
 //│   method get⁰ = fun get¹ {
-//│     return +⁰(x², C⁶.a³)
+//│     return +⁰(x², C⁶.this.a³)
 //│   }
 //│ };
 //│ define main² as fun main³(x) {

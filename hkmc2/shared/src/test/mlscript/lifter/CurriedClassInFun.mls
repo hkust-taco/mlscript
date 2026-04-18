@@ -1,0 +1,99 @@
+:lift
+:js
+
+
+:expect 2
+fun f(x) =
+  class A()() with
+    fun newA() = A()()
+    fun foo() =
+      set x += 1
+      x
+    fun getX() = x
+  A()()
+let a = f(0)
+a.foo()
+let b = a.newA()
+b.foo()
+a.getX()
+//│ = 2
+//│ a = A()
+//│ b = A()
+
+
+// * Notice how the capture parameter `f$cap` is inserted before the aux param `z` but after the main param `y`
+:soir
+:expect [2, 2]
+fun f(x) =
+  class A(val y)(z) with
+    fun newA() = new A(y + 1)(z + 1)
+    fun foo() =
+      set x += 1
+      x
+    fun getX() = x
+  new A(x + 1)(x + 2)
+let a = f(0)
+a.foo()
+let b = a.newA()
+b.foo()
+[a.getX(), b.getX()]
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let A⁰, f⁰, a⁰, b⁰, tmp, tmp1, Capture$f⁰;
+//│ define A⁰ as class A²(y) {
+//│   private val f$cap⁰;
+//│   private val z⁰;
+//│   val y⁰;
+//│   constructor A¹(f$cap)(z) {
+//│     set f$cap⁰ = f$cap;
+//│     define y⁰ as val y¹ = y;
+//│     set z⁰ = z;
+//│     end
+//│   }
+//│   method newA⁰ = fun newA¹() {
+//│     let tmp2, tmp3, tmp4, tmp5, tmp6;
+//│     set tmp2 = +⁰(A².this.y¹, 1);
+//│     set tmp6 = new A²(tmp2);
+//│     set tmp3 = tmp6(f$cap⁰);
+//│     set tmp4 = +⁰(z⁰, 1);
+//│     set tmp5 = tmp3(tmp4);
+//│     return tmp5
+//│   }
+//│   method foo⁰ = fun foo¹() {
+//│     let tmp2;
+//│     set tmp2 = +⁰(f$cap⁰.x$0⁰, 1);
+//│     set f$cap⁰.x$0 = tmp2;
+//│     return f$cap⁰.x$0⁰
+//│   }
+//│   method getX⁰ = fun getX¹() {
+//│     return f$cap⁰.x$0⁰
+//│   }
+//│ };
+//│ define Capture$f⁰ as class Capture$f² {
+//│   constructor Capture$f¹(x$0) {
+//│     define x$0¹ as val x$0⁰ = x$0;
+//│     end
+//│   }
+//│ };
+//│ define f⁰ as fun f¹(x) {
+//│   let tmp2, tmp3, tmp4, tmp5, f$cap, tmp6;
+//│   set f$cap = new mut Capture$f²(x);
+//│   set tmp2 = +⁰(f$cap.x$0⁰, 1);
+//│   set tmp6 = new A²(tmp2);
+//│   set tmp3 = tmp6(f$cap);
+//│   set tmp4 = +⁰(f$cap.x$0⁰, 2);
+//│   set tmp5 = tmp3(tmp4);
+//│   return tmp5
+//│ };
+//│ set a⁰ = f¹(0);
+//│ do a⁰.foo﹖();
+//│ set b⁰ = a⁰.newA﹖();
+//│ do b⁰.foo﹖();
+//│ set tmp = a⁰.getX﹖();
+//│ set tmp1 = b⁰.getX﹖();
+//│ [tmp, tmp1]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [2, 2]
+//│ a = A(1)
+//│ b = A(2)
+
+
