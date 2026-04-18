@@ -528,9 +528,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
   /**
    * The actual translation:
-   * 1. rewrite handler blocks in terms of classes and functions
+   * 1. rewrite handler blocks in terms of classes and functions (directly during Lowering)
    * 2. class lifter
-   * 3. state machine transformation of all functions
+   * 3. state machine transformation of all functions (HandlerLowering, this class)
    */
 
   private def translateBlock(blk: Block, h: HandlerCtx, scopedVars: collection.Set[Local]): Block =
@@ -556,7 +556,22 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, bod2)(fun.forceTailRec, fun.configOverride, fun.visibility)
       (debugInfoSym, debugInfo, fun2)
 
-    val subblockTransform = new BlockTransformer(SymbolSubst.Id):
+    // transform innner function/class and Suspend/HandleSuspend to the JS runtime primitives.
+    val preTransform = new BlockTransformer(SymbolSubst.Id):
+      override def applyBlock(b: Block): Block = b match
+        // This is the common case
+        // case Suspend(tag, handlerFun, Return(Value.Lit(Tree.UnitLit(true)), false)) =>
+        //   Return(Call(paths.mkEffectPath, tag.asArg :: handlerFun.asArg :: Nil)(true, true, false), false)
+        // To handle possible transformed block, we need to handle the general case
+        case Suspend(tag, handlerFun, rest) =>
+          Assign(State.noSymbol,
+            Call(paths.mkEffectPath, tag.asArg :: handlerFun.asArg :: Nil)(true, true, false),
+            applyBlock(rest))
+        case HandleSuspension(tag, bodyFun, rest) =>
+          Assign(State.noSymbol,
+            Call(paths.enterHandleBlockPath, tag.asArg :: bodyFun.asArg :: Nil)(true, true, false),
+            applyBlock(rest))
+        case _ => super.applyBlock(b)
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case fun: FunDefn =>
           if !h.allowDefn then
@@ -594,7 +609,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
               Assign(elem._1, Tuple(false, elem._2), blk))
           else k(c2)
         case _ => super.applyDefn(defn)(k)
-    val b = subblockTransform.applyBlock(blk)
+    val b = preTransform.applyBlock(blk)
     if h.inCtor then
       return translateIllegalEffectCtx(b, Call(paths.illegalEffectPath, Value.Lit(Tree.StrLit("in a constructor")).asArg :: Nil)(true, true, false))
     if h.inTopLevel then
