@@ -560,15 +560,15 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val preTransform = new BlockTransformer(SymbolSubst.Id):
       override def applyBlock(b: Block): Block = b match
         // This is the common case
-        // case Suspend(tag, handlerFun, Return(Value.Lit(Tree.UnitLit(true)), false)) =>
-        //   Return(Call(paths.mkEffectPath, tag.asArg :: handlerFun.asArg :: Nil)(true, true, false), false)
+        case Suspend(lhs, tag, handlerFun, Return(Value.Ref(lhs2, N), false)) if lhs is lhs2 =>
+          Return(Call(paths.mkEffectPath, tag.asArg :: handlerFun.asArg :: Nil)(true, true, false), false)
         // To handle possible transformed block, we need to handle the general case
-        case Suspend(tag, handlerFun, rest) =>
-          Assign(State.noSymbol,
+        case Suspend(lhs, tag, handlerFun, rest) =>
+          Assign(lhs,
             Call(paths.mkEffectPath, tag.asArg :: handlerFun.asArg :: Nil)(true, true, false),
             applyBlock(rest))
-        case HandleSuspension(tag, bodyFun, rest) =>
-          Assign(State.noSymbol,
+        case HandleSuspension(lhs, tag, bodyFun, rest) =>
+          Assign(lhs,
             Call(paths.enterHandleBlockPath, tag.asArg :: bodyFun.asArg :: Nil)(true, true, false),
             applyBlock(rest))
         case _ => super.applyBlock(b)

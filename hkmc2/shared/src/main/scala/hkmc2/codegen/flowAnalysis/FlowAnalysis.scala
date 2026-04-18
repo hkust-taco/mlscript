@@ -402,11 +402,11 @@ class FlowPreAnalyzer(val pgrm: Program)(using
       applyPath(fld)
       applyResult(rhs)
       applyBlock(rest)
-    case Suspend(tag, handlerFun, rest) =>
+    case Suspend(lhs, tag, handlerFun, rest) =>
       applyPath(tag)
       applyPath(handlerFun)
       applyBlock(rest)
-    case HandleSuspension(tag, bodyFun, rest) =>
+    case HandleSuspension(lhs, tag, bodyFun, rest) =>
       applyPath(tag)
       applyPath(bodyFun)
       applyBlock(rest)
@@ -740,11 +740,13 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
         constrainOpaqueResult(fld)
         constrainOpaqueResult(rhs)
         processBlock(rest)
-      case Suspend(tag, handlerFun, rest) =>
+      case Suspend(lhs, tag, handlerFun, rest) =>
+        // TODO: do sth with lhs...
         constrainOpaqueResult(tag)
         constrainOpaqueResult(handlerFun)
         processBlock(rest)
-      case HandleSuspension(tag, bodyFun, rest) =>
+      case HandleSuspension(lhs, tag, bodyFun, rest) =>
+        // TODO: do sth with lhs...
         constrainOpaqueResult(tag)
         constrainOpaqueResult(bodyFun)
         processBlock(rest)
