@@ -1,0 +1,176 @@
+:js
+
+:deforest
+:expect 5
+data class AA(x)
+class Store(n) with
+  fun get() =
+    if AA(n) is AA(x) then x + n
+  fun foo(x) =
+    if x is
+      AA(x) then x + n
+val store = Store(1)
+store.foo(AA(4))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(term:Store/n,None)))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
+//│ deforest > <<< fusing <<<
+//│ = 5
+//│ store = Store(_)
+
+
+
+
+
+
+
+:deforest
+:expect 3
+fun classMethodSibling() =
+  if AA(1) is
+    AA(x) then x + store.get()
+classMethodSibling()
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
+//│ deforest > <<< fusing <<<
+//│ = 3
+
+
+:deforest
+let r =
+  a: 0
+  value: 1
+if AA(1) is
+  AA(x) then
+    x + r!a
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
+//│ deforest > <<< fusing <<<
+//│ = 1
+//│ r = {a: 0, value: 1}
+
+
+:expect 2
+:deforest
+if AA(1) is
+  AA(x) then
+    let xs = [0, 1]
+    x + xs!1
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
+//│ deforest > <<< fusing <<<
+//│ = 2
+
+
+
+// TODO: rewriting for nested classes
+:deforest
+:fixme
+fun nestedClass() =
+  class Local() with
+    fun get() = 0
+  Local().get()
+  if AA(1) is
+    AA(x) then x
+nestedClass()
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
+//│ deforest > <<< fusing <<<
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+
+
+
+// TODO: rewriting for loops
+:deforest
+:fixme
+fun loopSibling() =
+  while false do
+    if AA(1) is
+      AA(x) then print(x)
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
+//│ deforest > <<< fusing <<<
+//│ /!!!\ Uncaught error: scala.NotImplementedError: unsupported `continue` instruction during rewriting (of class String)
+
+
+// TODO: branch body capturing mutable vars
+:fixme
+:deforest
+:expect 5
+class C(n) with
+  let _n = n
+  fun get() =
+    if AA(1) is AA(x) then
+      let res = x + _n
+      _n = _n + 1
+      res
+let c = C(1)
+c.get() + c.get()
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
+//│ deforest > <<< fusing <<<
+//│ ═══[RUNTIME ERROR] Expected: '5', got: '4'
+//│ = 4
+//│ c = C(_)
+
+
+// TODO: private members aren't visible outside
+:fixme
+:deforest
+module M with
+  let _private = 3
+  fun f() =
+    if AA(1) is
+      AA(a) then a + _private
+M.f()
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
+//│ deforest > <<< fusing <<<
+//│ > let M1, f_7$scrut_AA, f_6$f, f_6$scrut_AA, inlinedVal1, scrut3, AA_x3;try { globalThis.Object.freeze(class M {   static {     M1 = this   }   static #_private;   static {     M.#_private = 3;   }   static f() {     runtime.checkArgs("f", 0, true, arguments.length);     let scrut4, AA_x4;     AA_x4 = 1;     scrut4 = (fv_ctorLam__private, fv_ctorLam_a, fv_ctorLam_arg$AA$0$) => {       let fv__private, fv_a, fv_arg$AA$0$, AA_x5, inlinedVal2;       fv__private = fv_ctorLam__private;       fv_a = fv_ctorLam_a;       fv_arg$AA$0$ = fv_ctorLam_arg$AA$0$;       AA_x5 = AA_x4;       fv_arg$AA$0$ = AA_x5;       fv_a = fv_arg$AA$0$;       inlinedVal2 = fv_a + fv__private;       return inlinedVal2     };     return runtime.checkCall(scrut4(M.#_private, undefined, undefined))   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "M"];  }); AA_x3 = 1; scrut3 = (fv_ctorLam__private, fv_ctorLam_a, fv_ctorLam_arg$AA$0$) => {   let fv__private, fv_a, fv_arg$AA$0$, AA_x4, inlinedVal2;   fv__private = fv_ctorLam__private;   fv_a = fv_ctorLam_a;   fv_arg$AA$0$ = fv_ctorLam_arg$AA$0$;   AA_x4 = AA_x3;   fv_arg$AA$0$ = AA_x4;   fv_a = fv_arg$AA$0$;   inlinedVal2 = fv_a + fv__private;   return inlinedVal2 }; inlinedVal1 = runtime.checkCall(scrut3(M.#_private, undefined, undefined)); block$res6 = inlinedVal1; undefined; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Private field '#_private' must be declared in an enclosing class
+
+
+
+// TODO: rewrite selecting from nested modules
+:fixme
+:deforest
+module M with
+  module MM with
+    fun g() = 5
+    fun f() =
+      if AA(1) is
+        AA(a) then a + g()
+M.MM.f()
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
+//│ deforest > <<< fusing <<<
+//│ ═══[RUNTIME ERROR] ReferenceError: MM is not defined

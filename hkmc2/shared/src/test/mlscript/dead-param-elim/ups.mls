@@ -1,0 +1,22 @@
+:js
+
+:deadParamElim
+:ucs ups
+pattern Middle = ([x] => x) | ([x, ...(Middle as m), y] => m)
+//│ elaborated pattern body: [x] => x⁰ ∨ [x, ...Middle as m, y] => m⁰
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun lambda#0 @ <root> -> eliminable: {0, 1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+
+
+:deadParamElim
+if [1,2,3,4,5] is
+  Middle as x then x
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 3
+
+:re
+if [1,2,3,4] is
+  Middle as x then x
+//│ ═══[RUNTIME ERROR] Error: match error

@@ -108,7 +108,13 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
     else doc" " :: braced(doc"${docPrivFlds}${docPubFlds}${docCtor}${docMethods}")
   
   def printParamLists(paramss: Ls[ParamList])(using Scope): Document =
-    doc"${paramss.map(_.params.map(x => scope.allocateName(x.sym)).mkDocument("(", ", ", ")")).mkDocument("")}"
+    paramss
+      .map: pl =>
+        val allParams =
+          pl.params.map(x => scope.allocateName(x.sym)) ++
+          pl.restParam.map(x => "..." + scope.allocateName(x.sym))
+        allParams.mkDocument("(", ", ", ")")
+      .mkDocument("")
   
   def print(defn: Defn)(using Scope): Document = defn match
     case FunDefn(own, sym, dSym, paramss, body) =>
@@ -167,8 +173,11 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
       doc"new ${if mut then "mut " else ""}${print(cls)}(${args.map(print).mkDocument(", ")})"
     case Lambda(params, body) =>
       scope.nest.givenIn:
-        val docParams = params.params.map(x => scope.allocateName(x.sym)).mkDocument(", ")
-        doc"(${docParams}) => ${print(body)}"
+        val allParams =
+          params.params.map(x => scope.allocateName(x.sym)) ++
+          params.restParam.map(x => "..." + scope.allocateName(x.sym))
+        val docParams = allParams.mkDocument("(", ", ", ")")
+        doc"$docParams => ${bracedbk(print(body))}"
     case Tuple(mut, elems) =>
       val docElems = elems.map(x => print(x)).mkDocument(", ")
       doc"${if mut then "mut " else ""}[${docElems}]"

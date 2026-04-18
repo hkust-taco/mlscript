@@ -116,6 +116,8 @@ class MLsCompiler
       val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
       val le_1 = ltl.givenIn:
         codegen.BlockSimplifier(exportedSymbol.toSet)(le_0)
+      val le_2 = ltl.givenIn:
+        codegen.DeadParamElim(le_1)
       val baseScp: utils.Scope =
         utils.Scope.empty(utils.Scope.Cfg.default)
       // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.
@@ -123,7 +125,7 @@ class MLsCompiler
       baseScp.addToBindings(Elaborator.State.importSymbol, "import", shadow = false)
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
-        jsb.program(le_1, exportedSymbol, wd)
+        jsb.program(le_2, exportedSymbol, wd)
       val jsStr = je.stripBreaks.mkString(100)
       val out = file.up / io.RelPath(file.baseName + ".mjs")
       cctx.fs.write(out, jsStr)

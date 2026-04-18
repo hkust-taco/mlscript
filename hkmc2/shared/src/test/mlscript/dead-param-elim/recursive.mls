@@ -1,0 +1,259 @@
+:js
+
+
+
+:deadParamElim
+:expect 0
+:soir
+:noTailRec
+private fun countdown(n, unused) =
+  if n == 0 then 0
+  else countdown(n - 1, unused)
+countdown(5, 42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun countdown#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let countdown⁰;
+//│ define countdown⁰ as fun countdown¹(n) {
+//│   let scrut, tmp;
+//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   match scrut
+//│     true =>
+//│       return 0
+//│     else
+//│       set tmp = -⁰(n, 1);
+//│       return countdown¹(tmp)
+//│   end
+//│ };
+//│ countdown¹(5)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 0
+
+
+
+:deadParamElim
+:soir
+private fun countdown(n) =
+  if n == 0 then 0
+  else countdown(n - 1)
+countdown(5)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let countdown²;
+//│ define countdown² as fun countdown³(n) {
+//│   loop loopLabel:
+//│     let scrut, tmp;
+//│     set scrut = Predef⁰.equals⁰(n, 0);
+//│     match scrut
+//│       true =>
+//│         return 0
+//│       else
+//│         set tmp = -⁰(n, 1);
+//│         set n = tmp;
+//│         continue loopLabel
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ countdown³(5)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 0
+
+
+
+:deadParamElim
+private fun isEven(n) = if n == 0 then true else isOdd(n - 1)
+private fun isOdd(n) = if n == 0 then false else isEven(n - 1)
+isEven(10)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = true
+
+
+
+:deadParamElim
+:soir
+:noTailRec
+private fun ping(n, unused) = if n == 0 then 0 else pong(n - 1, unused)
+private fun pong(n, unused) = if n == 0 then 0 else ping(n - 1, unused)
+ping(5, 99)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun ping#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > prodfun pong#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let ping⁰, pong⁰;
+//│ define ping⁰ as fun ping¹(n) {
+//│   let scrut, tmp;
+//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   match scrut
+//│     true =>
+//│       return 0
+//│     else
+//│       set tmp = -⁰(n, 1);
+//│       return pong¹(tmp)
+//│   end
+//│ };
+//│ define pong⁰ as fun pong¹(n) {
+//│   let scrut, tmp;
+//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   match scrut
+//│     true =>
+//│       return 0
+//│     else
+//│       set tmp = -⁰(n, 1);
+//│       return ping¹(tmp)
+//│   end
+//│ };
+//│ ping¹(5)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 0
+
+
+
+:deadParamElim
+:soir
+:noTailRec
+fun ping(n, unused) = if n == 0 then 0 else pong(n - 1, unused)
+fun pong(n, unused) = if n == 0 then 0 else ping(n - 1, unused)
+ping(5, 99)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let ping², pong²;
+//│ define ping² as fun ping³(n, unused) {
+//│   let scrut, tmp;
+//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   match scrut
+//│     true =>
+//│       return 0
+//│     else
+//│       set tmp = -⁰(n, 1);
+//│       return pong³(tmp, unused)
+//│   end
+//│ };
+//│ define pong² as fun pong³(n, unused) {
+//│   let scrut, tmp;
+//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   match scrut
+//│     true =>
+//│       return 0
+//│     else
+//│       set tmp = -⁰(n, 1);
+//│       return ping³(tmp, unused)
+//│   end
+//│ };
+//│ ping³(5, 99)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 0
+
+:expect 0
+ping(5, 0)
+pong(5, 0)
+//│ = 0
+
+:deadParamElim
+:soir
+:noTailRec
+private fun ping(n)(unused) = if n == 0 then 0 else pong(n - 1)(unused)
+private fun pong(n)(unused) = if n == 0 then 0 else ping(n - 1)(unused)
+ping(5)(99)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun ping#1 @ <root> -> eliminable: {0}
+//│ dead-param-elim > prodfun pong#1 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let ping⁴, pong⁴, tmp;
+//│ define ping⁴ as fun ping⁵(n)() {
+//│   let scrut, tmp1, tmp2;
+//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   match scrut
+//│     true =>
+//│       return 0
+//│     else
+//│       set tmp1 = -⁰(n, 1);
+//│       set tmp2 = pong⁵(tmp1);
+//│       return tmp2()
+//│   end
+//│ };
+//│ define pong⁴ as fun pong⁵(n)() {
+//│   let scrut, tmp1, tmp2;
+//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   match scrut
+//│     true =>
+//│       return 0
+//│     else
+//│       set tmp1 = -⁰(n, 1);
+//│       set tmp2 = ping⁵(tmp1);
+//│       return tmp2()
+//│   end
+//│ };
+//│ set tmp = ping⁵(5);
+//│ tmp()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 0
+
+
+:deadParamElim
+:noTailRec
+fun ping(n)(unused) = if n == 0 then 0 else pong(n - 1)(unused)
+fun pong(n)(unused) = if n == 0 then 0 else ping(n - 1)(unused)
+ping(5)(99)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+
+
+:expect 0
+ping(5)(0)
+pong(5)(0)
+//│ = 0
+
+
+
+:deadParamElim
+:soir
+:noTailRec
+module M with
+  fun ping(n, unused) = if n == 0 then 0 else pong(n - 1, unused)
+private fun pong(n, unused) = if n == 0 then 0 else M.ping(n - 1, unused)
+class Test(a) with
+  fun f() = pong(3, 123)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun pong#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let Test⁰, pong⁶, M⁰;
+//│ define pong⁶ as fun pong⁷(n) {
+//│   let scrut, tmp;
+//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   match scrut
+//│     true =>
+//│       return 0
+//│     else
+//│       set tmp = -⁰(n, 1);
+//│       return M¹.ping⁶(tmp, undefined)
+//│   end
+//│ };
+//│ define M⁰ as class M²
+//│ module M¹ {
+//│   method ping⁷ = fun ping⁶(n, unused) {
+//│     let scrut, tmp;
+//│     set scrut = Predef⁰.equals⁰(n, 0);
+//│     match scrut
+//│       true =>
+//│         return 0
+//│       else
+//│         set tmp = -⁰(n, 1);
+//│         return pong⁷(tmp)
+//│     end
+//│   }
+//│ };
+//│ define Test⁰ as class Test¹(a) { private val a⁰; method f⁰ = fun f¹() { return pong⁷(3) } };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect 0
+Test(2).f()
+//│ = 0

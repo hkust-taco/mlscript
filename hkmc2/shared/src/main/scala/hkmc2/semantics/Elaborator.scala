@@ -376,7 +376,14 @@ extends Importer with ucs.SplitElaborator:
     case _ => N
   
   def annot(tree: Tree): Ctxl[Opt[Annot]] = tree match
-    case Keywrd(kw @ (Keyword.`abstract` | Keyword.`declare` | Keyword.`data` | Keyword.`staged`)) => S(Annot.Modifier(kw))
+    case Keywrd(kw @ (
+      Keyword.`abstract`
+      | Keyword.`declare`
+      | Keyword.`data`
+      | Keyword.`staged`
+      | Keyword.`public`
+      | Keyword.`private`
+    )) => S(Annot.Modifier(kw))
     case App(Ident("config"), Tup(args)) =>
       val hasTargetOverride = args.collectFirst:
         case InfixApp(Ident("target"), Keywrd(Keyword.`:`), _) => ()

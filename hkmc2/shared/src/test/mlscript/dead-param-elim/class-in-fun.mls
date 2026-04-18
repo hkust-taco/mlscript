@@ -1,0 +1,63 @@
+:js
+
+
+
+
+:deadParamElim
+:lift
+:soir
+:expect 1
+private fun f(used, unused) =
+  class C with
+    fun get() = used
+  new C
+f(1, 2).get()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let C⁰, f⁰, tmp, C$⁰;
+//│ define C⁰ as class C¹ {
+//│   private val used⁰;
+//│   constructor(used) {
+//│     set used⁰ = used;
+//│     end
+//│   }
+//│   method get⁰ = fun get¹() {
+//│     return used⁰
+//│   }
+//│ };
+//│ define f⁰ as fun f¹(used) {
+//│   let isMut, used1, inlinedVal, tmp1;
+//│   set isMut = false;
+//│   set used1 = used;
+//│   match isMut
+//│     true =>
+//│       set tmp1 = new mut C¹(used1);
+//│       set inlinedVal = tmp1;
+//│       return inlinedVal
+//│     else
+//│       set tmp1 = new C¹(used1);
+//│       set inlinedVal = tmp1;
+//│       return inlinedVal
+//│   end
+//│ };
+//│ set tmp = f¹(1);
+//│ tmp.get﹖()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+
+
+
+
+:js
+:deadParamElim
+:lift
+private fun foo(y) =
+  class M with
+    fun bar() = set y = 2
+  (new M).bar()
+foo(10)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<

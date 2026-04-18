@@ -20,7 +20,6 @@ data class A(x) with
 //│   end
 //│ };
 //│ define B⁰ as class B¹(y) {
-//│   private val B$cap⁰;
 //│   private val A¹;
 //│   val y⁰;
 //│   constructor B²(A) {
@@ -33,7 +32,6 @@ data class A(x) with
 //│   }
 //│ };
 //│ define A⁰ as class A³(x) {
-//│   private val A$cap⁰;
 //│   val x¹;
 //│   constructor A² {
 //│     define x¹ as val x⁰ = x;
@@ -69,7 +67,6 @@ class A with
 //│   return 2
 //│ };
 //│ define A⁴ as class A⁵ {
-//│   private val A$cap¹;
 //│   val x²;
 //│   constructor { define x² as val x³ = g¹; end }
 //│ };

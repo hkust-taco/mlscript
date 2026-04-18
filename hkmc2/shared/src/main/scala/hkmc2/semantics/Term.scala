@@ -901,6 +901,9 @@ final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
   * Records a function that modifies the current compiler configuration. */
 final case class SetConfig(modify: hkmc2.Config => hkmc2.Config) extends Statement
 
+enum Visibility:
+  case Public, Private
+
 /**
  * isMethod: if the term is a method (as opposed to a function)
  */
@@ -964,6 +967,10 @@ final case class TermDefinition(
   require(k is tsym.k)
   def bsym: BlockMemberSymbol = sym
   val owner = tsym.owner
+  def visibility: Visibility = annotations.collectFirst:
+    case Annot.Modifier(Keyword.`private`) => Visibility.Private
+    case Annot.Modifier(Keyword.`public`) => Visibility.Public
+  .getOrElse(Visibility.Public)
   def extraAnnotations: Ls[Annot] = annotations.filter:
     case Annot.Modifier(Keyword.`declare` | Keyword.`abstract`) => false
     case _ => true

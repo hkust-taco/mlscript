@@ -38,8 +38,6 @@ fun foo(h): module M =
 //│       static {
 //│         A2 = this
 //│       }
-//│       static #A_mod$cap;
-//│       #A$cap;
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "A"]; 
 //│     });
@@ -49,8 +47,6 @@ fun foo(h): module M =
 //│     static {
 //│       A3 = this
 //│     }
-//│     static #A_mod$cap;
-//│     #A$cap;
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "A"]; 
 //│   });

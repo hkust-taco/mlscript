@@ -57,9 +57,9 @@ fun f() =
 //│         runtime.resumeValue = Predef.equals(i, 0);
 //│         if (runtime.curEffect === null) {
 //│           pc = 5;
-//│           continue main
+//│         } else {
+//│           return runtime.unwind(f, 5, "Debugging.mls:17:6", f$debugInfo, null, 1, 0, 5, i, j, k, scrut, tmp1)
 //│         }
-//│         return runtime.unwind(f, 5, "Debugging.mls:17:6", f$debugInfo, null, 1, 0, 5, i, j, k, scrut, tmp1);
 //│       case 5:
 //│         scrut = runtime.resumeValue;
 //│         if (scrut === true) {
@@ -72,23 +72,21 @@ fun f() =
 //│         }
 //│         pc = 1;
 //│         continue main;
-//│       case 1:
-//│         return j / i;
-//│       case 2:
-//│         runtime.resumeValue;
-//│         pc = 1;
-//│         continue main;
+//│       case 4:
+//│         tmp1 = runtime.resumeValue;
+//│         pc = 3;
 //│       case 3:
 //│         runtime.resumeValue = Predef.print(tmp1);
 //│         if (runtime.curEffect === null) {
 //│           pc = 2;
-//│           continue main
+//│         } else {
+//│           return runtime.unwind(f, 2, "Debugging.mls:18:5", f$debugInfo, null, 1, 0, 5, i, j, k, scrut, tmp1)
 //│         }
-//│         return runtime.unwind(f, 2, "Debugging.mls:18:5", f$debugInfo, null, 1, 0, 5, i, j, k, scrut, tmp1);
-//│       case 4:
-//│         tmp1 = runtime.resumeValue;
-//│         pc = 3;
-//│         continue main;
+//│       case 2:
+//│         runtime.resumeValue;
+//│         pc = 1;
+//│       case 1:
+//│         return j / i;
 //│     }
 //│     break;
 //│   }
@@ -108,8 +106,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:108:3)
-//│ 	at lambda_test (Debugging.mls:105:3)
+//│ 	at lambda (Debugging.mls:106:3)
+//│ 	at lambda_test (Debugging.mls:103:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -159,16 +157,16 @@ let res =
 :re
 res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Test.test (Debugging.mls:147:15)
-//│ 	at Test.main (Debugging.mls:150:5)
+//│ 	at Test.test (Debugging.mls:145:15)
+//│ 	at Test.main (Debugging.mls:148:5)
 
 set res = res.resumeWith(42)
 
 :re
 res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Test.test (Debugging.mls:147:15)
-//│ 	at Test.main (Debugging.mls:150:16)
+//│ 	at Test.test (Debugging.mls:145:15)
+//│ 	at Test.main (Debugging.mls:148:16)
 
 :expect 0.33676533676533676
 res.resumeWith(666)
@@ -188,8 +186,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:182:3) with locals: j=200
+//│ > 	at f (Debugging.mls:180:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:184:3)
+//│ > 	at f (Debugging.mls:182:3)
 //│ > Stack Trace:
 //│ > 	at tail position
