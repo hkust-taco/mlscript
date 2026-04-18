@@ -72,7 +72,6 @@ f(1)
 //│ = 2
 
 
-// TODO: do not generate a useless `C$cap` field
 :sir
 fun f(x) =
   class C with
