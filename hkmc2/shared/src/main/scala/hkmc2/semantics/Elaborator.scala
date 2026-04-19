@@ -277,6 +277,8 @@ object Elaborator:
     val nonLocalRet =
       val id = new Ident("ret")
       BlockMemberSymbol(id.name, Nil, true)
+    val suspendSymbol = TempSymbol(N, "suspend")
+    val handleSuspensionSymbol = TempSymbol(N, "handleSuspension")
     val unreachableSymbol = TermSymbol(syntax.ImmutVal, N, new Ident("unreachable"))
     val tupleGetSymbol = createFunSymbolInMod("get", "xs" :: "i" :: Nil, tupleSymbol)
     val tupleSliceSymbol = createFunSymbolInMod("slice", "xs" :: "i" :: "j" :: Nil, tupleSymbol)

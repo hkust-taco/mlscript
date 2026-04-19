@@ -741,14 +741,16 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
         constrainOpaqueResult(rhs)
         processBlock(rest)
       case Suspend(lhs, tag, handlerFun, rest) =>
-        // TODO: do sth with lhs...
-        constrainOpaqueResult(tag)
-        constrainOpaqueResult(handlerFun)
+        val rhsStrat = processResult(Call(eState.suspendSymbol.asPath, tag.asArg :: handlerFun.asArg :: Nil)(true, true, false))
+        lhs.match
+          case _: NoSymbol => ()
+          case _ => cc.constrain(rhsStrat, generatedProdVars(lhs).asConsStrat)
         processBlock(rest)
       case HandleSuspension(lhs, tag, bodyFun, rest) =>
-        // TODO: do sth with lhs...
-        constrainOpaqueResult(tag)
-        constrainOpaqueResult(bodyFun)
+        val rhsStrat = processResult(Call(eState.handleSuspensionSymbol.asPath, tag.asArg :: bodyFun.asArg :: Nil)(true, true, false))
+        lhs.match
+          case _: NoSymbol => ()
+          case _ => cc.constrain(rhsStrat, generatedProdVars(lhs).asConsStrat)
         processBlock(rest)
       case Define(defn, rest) =>
         defn match
