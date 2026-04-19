@@ -195,9 +195,6 @@ class TailRecOpt(using State, TL, Raise):
     case Failure
   
   private def rewriteCallArgs(f: FunDefn, c: Call): CallArgsResult =
-    // need to be careful in handling restParams
-    // if any arg is a spread that spreads across multiple parameters, then
-    // we ignore it for now
     val ret = f.params match
       case head :: Nil =>
         val (headArgs, restArgs) = head.restParam match
