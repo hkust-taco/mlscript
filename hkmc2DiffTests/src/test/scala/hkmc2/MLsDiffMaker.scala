@@ -132,14 +132,14 @@ abstract class MLsDiffMaker extends DiffMaker:
       commentGeneratedCode = debug.isSet,
       noFreeze = noFreeze.isSet,
       noModuleCheck = noModuleCheck.isSet,
-      deadParamElim = {
-        if deadParamElim.isUnset then S(DeadParamElim(debug = false, mono = true))
+      deadParamElim =
+        if deadParamElim.isUnset then S(DeadParamElim.default)
         else
           val value = deadParamElim.get.getOrElse("")
           val flags = value.split("\\s+").filter(_.nonEmpty).toSet
           val unknownFlags = flags -- Set("debug", "mono", "poly", "off")
           if unknownFlags.nonEmpty then
-            output(s"$errMarker Unknown ':deadParamElim' flags: ${unknownFlags.mkString(", ")}")
+            output(s"$errMarker Unknown ':deadParamElim' flags: ${unknownFlags.toList.sorted.mkString(", ")}")
           if flags.contains("mono") && flags.contains("poly") then
             output(s"$errMarker ':deadParamElim' flags 'mono' and 'poly' conflict")
           if flags.contains("off") && (flags & Set("debug", "mono", "poly")).nonEmpty then
@@ -148,8 +148,7 @@ abstract class MLsDiffMaker extends DiffMaker:
           else S(DeadParamElim(
             debug = flags.contains("debug"),
             mono = !flags.contains("poly")
-          ))
-      },
+          )),
     )
   
   
