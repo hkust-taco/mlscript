@@ -65,6 +65,70 @@ class MLsCompiler
   
   var dbgParsing = false
   var dbgElab = false
+
+  private def emitJs(
+      file: io.Path,
+      wd: io.Path,
+      program: codegen.Program,
+      exportedSymbol: Opt[BlockMemberSymbol],
+  )(using Raise, Elaborator.State, Elaborator.Ctx): Unit =
+    val jsb = ltl.givenIn:
+      codegen.js.JSBuilder()
+    val baseScp: utils.Scope =
+      utils.Scope.empty(utils.Scope.Cfg.default)
+    // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.
+    // * Having `module id"import" with ...` in `prelude.mls` will generate `globalThis.import` that is undefined.
+    baseScp.addToBindings(Elaborator.State.importSymbol, "import", shadow = false)
+    val nestedScp = baseScp.nest
+    val je = nestedScp.givenIn:
+      jsb.program(program, exportedSymbol, wd)
+    cctx.fs.write(file.up / io.RelPath(s"${file.baseName}.mjs"), je.stripBreaks.mkString(100))
+
+  private def wasmGlue(wat: Str, compiled: codegen.wasm.text.CompiledWasmModule): Str =
+    s"""|import binaryen from "binaryen"
+        |
+        |const __mlx_wat = ${wat.escaped}
+        |
+        |function binaryenCompileToModule(wat, importObject) {
+        |  const mod = binaryen.parseText(wat)
+        |  mod.setFeatures(binaryen.Features.All)
+        |  if (!mod.validate()) throw new Error("Generated WAT is invalid")
+        |  const modBuf = mod.emitBinary()
+        |  mod.dispose()
+        |  return WebAssembly.instantiate(modBuf, importObject)
+        |}
+        |
+        |function __mlx_importObject() {
+        |  return {
+        |    system: {
+        |      memory: new WebAssembly.Memory({ initial: ${compiled.systemMemMinPages} })
+        |    }
+        |  }
+        |}
+        |
+        |const __mlx_wasmPromise = binaryenCompileToModule(__mlx_wat, __mlx_importObject())
+        |
+        |export const __mlx_wasm = () => __mlx_wasmPromise
+        |
+        |export default __mlx_wasm().then(({ instance }) => instance.exports[${compiled.entryName.escaped}]())
+        |""".stripMargin
+
+  private def emitWasm(
+      file: io.Path,
+      wd: io.Path,
+      program: codegen.Program,
+      exportedSymbol: Opt[BlockMemberSymbol],
+  )(using Raise, Elaborator.State): Unit =
+    val baseScp: utils.Scope =
+      utils.Scope.empty(utils.Scope.Cfg.default)
+    val nestedScp = baseScp.nest
+    val watb = ltl.givenIn:
+      new codegen.wasm.text.WatBuilder()
+    val compiled = nestedScp.givenIn:
+      watb.program(program, exportedSymbol, wd, Nil, Set.empty)
+    val watStr = compiled.wat.mkString(100)
+    cctx.fs.write(file.up / io.RelPath(s"${file.baseName}.wat"), watStr)
+    cctx.fs.write(file.up / io.RelPath(s"${file.baseName}.mjs"), wasmGlue(watStr, compiled))
   
   
   def compileModule(file: io.Path): Unit =
@@ -97,40 +161,40 @@ class MLsCompiler
         case Term.Ref(sym) => sym === State.termSymbol
         case _ => t.subTerms.exists(findQuote)
       val hasQuote = findQuote(blk0)
-      val blk = new Term.Blk(
-        Import(State.runtimeSymbol, runtimeFile.toString, runtimeFile) ::
-          // Only import `Term.mls` when necessary.
-          (if hasQuote then
-            Import(State.termSymbol, termFile.toString, termFile) :: blk0.stats
-          else
-            blk0.stats),
-        blk0.res
-      )
-      val low = ltl.givenIn:
-        new codegen.Lowering()
-          with codegen.LoweringSelSanityChecks
-      val jsb = ltl.givenIn:
-        codegen.js.JSBuilder()
-      val le_0 = low.program(blk)
-      val nme = file.baseName
-      val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
-      val le_1 = ltl.givenIn:
-        codegen.BlockSimplifier(exportedSymbol.toSet)(le_0)
-      val le_2 = ltl.givenIn:
-        codegen.DeadParamElim(le_1)
-      val baseScp: utils.Scope =
-        utils.Scope.empty(utils.Scope.Cfg.default)
-      // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.
-      // * Having `module id"import" with ...` in `prelude.mls` will generate `globalThis.import` that is undefined.
-      baseScp.addToBindings(Elaborator.State.importSymbol, "import", shadow = false)
-      val nestedScp = baseScp.nest
-      val je = nestedScp.givenIn:
-        jsb.program(le_2, exportedSymbol, wd)
-      val jsStr = je.stripBreaks.mkString(100)
-      val out = file.up / io.RelPath(file.baseName + ".mjs")
-      cctx.fs.write(out, jsStr)
+      val effectiveCfg = blk0.stats.collect:
+        case sc: SetConfig => sc.modify
+      .foldLeft(config): (cfg, modify) =>
+        modify(cfg)
+      val blk =
+        effectiveCfg.target match
+          case CompilationTarget.JS =>
+            new Term.Blk(
+              Import(State.runtimeSymbol, runtimeFile.toString, runtimeFile) ::
+                // Only import `Term.mls` when necessary.
+                (if hasQuote then
+                  Import(State.termSymbol, termFile.toString, termFile) :: blk0.stats
+                else
+                  blk0.stats),
+              blk0.res
+            )
+          case CompilationTarget.Wasm =>
+            blk0
+      effectiveCfg.givenIn:
+        val low = ltl.givenIn:
+          new codegen.Lowering()
+            with codegen.LoweringSelSanityChecks
+        val le_0 = low.program(blk)
+        val nme = file.baseName
+        val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
+        val le_1 = ltl.givenIn:
+          codegen.BlockSimplifier(exportedSymbol.toSet)(le_0)
+        val le_2 = ltl.givenIn:
+          codegen.DeadParamElim(le_1)
+        effectiveCfg.target match
+          case CompilationTarget.JS =>
+            emitJs(file, wd, le_2, exportedSymbol)
+          case CompilationTarget.Wasm =>
+            emitWasm(file, wd, le_2, exportedSymbol)
   
   
 end MLsCompiler
-
-

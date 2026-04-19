@@ -385,6 +385,7 @@ extends Importer with ucs.SplitElaborator:
       | Keyword.`private`
     )) => S(Annot.Modifier(kw))
     case App(Ident("config"), Tup(args)) =>
+      // Config target flag override is not allowed
       val hasTargetOverride = args.collectFirst:
         case InfixApp(Ident("target"), Keywrd(Keyword.`:`), _) => ()
       .nonEmpty

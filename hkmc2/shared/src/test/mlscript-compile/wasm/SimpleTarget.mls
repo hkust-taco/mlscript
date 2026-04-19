@@ -1,0 +1,3 @@
+#config(target: CompilationTarget.Wasm)
+
+40 + 2
