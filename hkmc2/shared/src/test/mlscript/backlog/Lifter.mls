@@ -72,7 +72,6 @@ test(0).toString()
 
 /// The following are related to first-class classes, instance checks, and private fields. ///
 
-:w
 :expect 1
 fun f(used1, unused1) =
   fun g(g_arg) =
@@ -85,7 +84,6 @@ fun f(used1, unused1) =
   let foo = Test
   foo(unused1)
 f(1, 2).get()
-//│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 1
 
 
@@ -97,17 +95,14 @@ fun foo1(x, n) =
   if n > 0 then res + foo1(C(), n - 1) else ""
 //│ ═══[WARNING] Cannot yet lift class/module `C` as it is used in an instance check.
 
-:todo // should return the function that creates C instances
-:w
 fun foo2() =
   class C()
   C
-//│ ═══[WARNING] Cannot yet lift class `C` as it is used as a first-class class.
 
 :w
 fun foo3() =
-  class C()
-  fun f = C()
+  class C
+  fun f = new C
   C
 //│ ═══[WARNING] Cannot yet lift class `C` as it is used as a first-class class.
 
@@ -139,7 +134,7 @@ fun foo(x, y) =
       x + y + test
   M.foo()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.135: 	  module M with
+//│ ║  l.130: 	  module M with
 //│ ╙──       	         ^
 
 :expect 14
@@ -154,7 +149,7 @@ fun foo(x, y) =
   fun foo = M.foo()
   foo
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.150: 	  module M with
+//│ ║  l.145: 	  module M with
 //│ ╙──       	         ^
 
 :expect 12
@@ -167,7 +162,7 @@ data class A(x) with
     fun getB() = x
   fun getA() = M.getB()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.166: 	  module M with
+//│ ║  l.161: 	  module M with
 //│ ╙──       	         ^
 
 :expect 2
@@ -183,11 +178,11 @@ fun foo(x) =
   (new Bar).self2
 foo(2)
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference of type Foo.
-//│ ║  l.182: 	  class Bar extends Foo
+//│ ║  l.177: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.179: 	  object Foo with
+//│ ║  l.174: 	  object Foo with
 //│ ╙──       	         ^^^
 //│ ═══[WARNING] Cannot yet lift definition `Bar` as it extends an expression.
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
@@ -203,19 +198,19 @@ fun f =
       h
   M.g
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.200: 	  module M with
+//│ ║  l.195: 	  module M with
 //│ ╙──       	         ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'M'
-//│ ║  l.202: 	      fun h = M.g
+//│ ║  l.197: 	      fun h = M.g
 //│ ║         	              ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.200: 	  module M with
+//│ ║  l.195: 	  module M with
 //│ ║         	         ^^^^^^
-//│ ║  l.201: 	    fun g =
+//│ ║  l.196: 	    fun g =
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.202: 	      fun h = M.g
+//│ ║  l.197: 	      fun h = M.g
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.203: 	      h
+//│ ║  l.198: 	      h
 //│ ╙──       	^^^^^^^
 
 

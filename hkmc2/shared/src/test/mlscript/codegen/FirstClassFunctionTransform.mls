@@ -222,22 +222,7 @@ module Foo with
   class Bar(y) with
     fun bar(z) = x => x + y + z 
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let Foo¹, lambda⁸, Function$⁸, Function$$⁰;
-//│ define Function$$⁰ as fun Function$$¹(isMut, y, z) {
-//│   let tmp;
-//│   match isMut
-//│     true =>
-//│       begin
-//│         set tmp = new mut Function$⁹(y, z);
-//│         end;
-//│       return tmp
-//│     else
-//│       begin
-//│         set tmp = new Function$⁹(y, z);
-//│         end;
-//│       return tmp
-//│   end
-//│ };
+//│ let Foo¹, lambda⁸, Function$⁸;
 //│ define lambda⁸ as fun lambda⁹(y, z, x) {
 //│   let tmp;
 //│   set tmp = +⁰(x, y);
@@ -267,7 +252,7 @@ module Foo with
 //│       }
 //│       method bar² = fun bar³(z) {
 //│         let tmp;
-//│         set tmp = Function$$¹(false, y¹, z);
+//│         set tmp = new Function$⁹(y¹, z);
 //│         return tmp
 //│       }
 //│     };
@@ -389,7 +374,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.390: 	foo.f(0)
+//│ ║  l.375: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -407,7 +392,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.408: 	foo.x(0)
+//│ ║  l.393: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 
@@ -475,22 +460,7 @@ f(1)(2)
 :sir
 fun foo(x)(y) = x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo⁵, lambda$⁰, Function$¹², Function$$²;
-//│ define Function$$² as fun Function$$³(isMut, x) {
-//│   let tmp;
-//│   match isMut
-//│     true =>
-//│       begin
-//│         set tmp = new mut Function$¹³(x);
-//│         end;
-//│       return tmp
-//│     else
-//│       begin
-//│         set tmp = new Function$¹³(x);
-//│         end;
-//│       return tmp
-//│   end
-//│ };
+//│ let foo⁵, lambda$⁰, Function$¹²;
 //│ define lambda$⁰ as fun lambda$¹(x, y) {
 //│   return +⁰(x, y)
 //│ };
@@ -505,7 +475,7 @@ fun foo(x)(y) = x + y
 //│     return lambda$¹(x², y)
 //│   }
 //│ };
-//│ define foo⁵ as fun foo⁶(x) { let tmp; set tmp = Function$$³(false, x); return tmp };
+//│ define foo⁵ as fun foo⁶(x) { let tmp; set tmp = new Function$¹³(x); return tmp };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
