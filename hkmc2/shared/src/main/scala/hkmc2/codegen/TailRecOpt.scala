@@ -344,8 +344,9 @@ class TailRecOpt(using State, TL, Raise):
                   override def applyValue(v: Value)(k: Value => Block): Block = v match
                     case Value.Ref(l: VarSymbol, disamb) => assignedSyms.get(l) match
                       case S(v) =>
-                        requiredTmps += (l, v.force_!)
-                        k(Value.Ref(v.force_!, disamb))
+                        val tmpSym = v.force_!
+                        requiredTmps += (l, tmpSym)
+                        k(Value.Ref(tmpSym, disamb))
                       case _ => super.applyValue(v)(k)
                     case _ => super.applyValue(v)(k)
                   
@@ -386,9 +387,7 @@ class TailRecOpt(using State, TL, Raise):
                   // If the rest param exists, append a slice
                   val (initialBlk: (Block => Block), pathList: List[Path]) =
                     if restParam.isDefined then
-                      val sliceLenSym = TempSymbol(N, "sliceLen")
                       val sliceResSym = TempSymbol(N, "sliceRes")
-                      val sliceLen = DynSelect(tupleSym.asPath, Value.Lit(Tree.StrLit("length")), false)
                       // runtime.Tuple.slice(tupleSym, paramList.length, 0)
                       val sliceRes = Call(
                         State.runtimeSymbol.asPath
@@ -401,7 +400,6 @@ class TailRecOpt(using State, TL, Raise):
                       )(true, false, false)
                       val blk = blockBuilder
                         .assignScoped(tupleSym, tupleRes)
-                        .assignScoped(sliceLenSym, sliceLen)
                         .assignScoped(sliceResSym, sliceRes)
                       (blk, mainArgs(sliceResSym.asPath :: Nil))
                     else
