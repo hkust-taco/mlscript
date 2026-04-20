@@ -8,7 +8,7 @@ import hkmc2.utils.*
 
 import document.*
 import document.Document
-import semantics.{BlockMemberSymbol, Elaborator, LabelSymbol, ModuleOrObjectSymbol, Symbol, TempSymbol},
+import semantics.{BlockMemberSymbol, Elaborator, InnerSymbol, LabelSymbol, ModuleOrObjectSymbol, Symbol, TempSymbol},
   Elaborator.State
 import text.Param as WasmParam
 import Instructions.*
@@ -359,7 +359,7 @@ object FunctionCtx:
   * @param _params
   *   The parameters of this function.
   */
-class FunctionCtx(_params: Seq[Local], thisSym: Opt[Symbol])(using Raise, State):
+class FunctionCtx(_params: Seq[Local], thisSym: Opt[InnerSymbol])(using Raise, State):
 
   /** [[Scope]] for generating WAT identifiers of locals. */
   private[text] val localScp = Scope.empty(Scope.Cfg.default)
@@ -407,7 +407,7 @@ end FunctionCtx
   *
   * Returns the result of the `mkBody` function along with the [[FunctionCtx]].
   */
-def genFuncBody[T](params: Seq[Local], thisSym: Opt[Symbol] = N)(mkBody: FunctionCtx ?=> T)(using Raise, State): T -> FunctionCtx =
+def genFuncBody[T](params: Seq[Local], thisSym: Opt[InnerSymbol])(mkBody: FunctionCtx ?=> T)(using Raise, State): T -> FunctionCtx =
   val funcCtx = FunctionCtx(params, thisSym)
   val result = mkBody(using funcCtx)
   result -> funcCtx
