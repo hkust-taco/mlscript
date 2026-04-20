@@ -35,6 +35,8 @@ c.Parent#x
 //│   (type $Child_ctor (func (param $y (ref null any)) (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
+//│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
+//│   (global $c (export "c") (mut (ref null any)) (ref.null any))
 //│   (func $Parent_init (type $Parent_init) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -52,7 +54,7 @@ c.Parent#x
 //│       (block
 //│         (block
 //│           (local.set $tmp
-//│             (call $plus_impl1
+//│             (call $plus_impl
 //│               (local.get $y)
 //│               (ref.i31
 //│                 (i32.const 1))))
@@ -69,7 +71,7 @@ c.Parent#x
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (func $Parent_ctor (export "Parent_ctor") (type $Parent_ctor) (param $x (ref null any)) (result (ref null any))
+//│   (func $Parent_ctor (export "Parent") (type $Parent_ctor) (param $x (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -84,7 +86,7 @@ c.Parent#x
 //│           (local.get $x)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $Child_ctor (export "Child_ctor") (type $Child_ctor) (param $y (ref null any)) (result (ref null any))
+//│   (func $Child_ctor (export "Child") (type $Child_ctor) (param $y (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -99,30 +101,9 @@ c.Parent#x
 //│           (local.get $y)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
-//│     (if (result (ref null any))
-//│       (i32.and
-//│         (ref.test (ref null i31)
-//│           (local.get $lhs))
-//│         (ref.test (ref null i31)
-//│           (local.get $rhs)))
-//│       (then
-//│         (ref.i31
-//│           (i32.add
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $lhs)))
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $rhs))))))
-//│       (else
-//│         (unreachable))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
-//│     (local $Parent (ref null any))
-//│     (local $Child (ref null any))
-//│     (local $c (ref null any))
 //│     (block (result (ref null any))
-//│       (local.set $c
+//│       (global.set $c
 //│         (call $Child_ctor
 //│           (ref.i31
 //│             (i32.const 2))))
@@ -132,12 +113,11 @@ c.Parent#x
 //│           (nop)
 //│           (struct.get $Parent $x
 //│             (ref.cast (ref $Parent)
-//│               (local.get $c)))))))
+//│               (global.get $c)))))))
 //│   (elem $Parent_init declare func $Parent_init)
 //│   (elem $Child_init declare func $Child_init)
 //│   (elem $Parent_ctor declare func $Parent_ctor)
 //│   (elem $Child_ctor declare func $Child_ctor)
-//│   (elem $plus_impl1 declare func $plus_impl1)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3
@@ -236,7 +216,7 @@ class B
 //│   (type $Unit_ctor (func (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
-//│   (global $Unit$inst (mut (ref null $Unit)) (ref.null $Unit))
+//│   (global $Unit$inst (export "Unit$inst") (mut (ref null $Unit)) (ref.null $Unit))
 //│   (func $A_init (type $A_init) (param $this (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -249,7 +229,7 @@ class B
 //│       (nop)
 //│       (return
 //│         (local.get $this))))
-//│   (func $A_ctor (export "A_ctor") (type $A_ctor) (result (ref null any))
+//│   (func $A_ctor (export "A") (type $A_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -263,7 +243,7 @@ class B
 //│           (local.get $this)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $B_ctor (export "B_ctor") (type $B_ctor) (result (ref null any))
+//│   (func $B_ctor (export "B") (type $B_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -303,8 +283,6 @@ class B
 //│         (ref.cast (ref null $Unit)
 //│           (call $Unit_ctor1)))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
-//│     (local $A (ref null any))
-//│     (local $B (ref null any))
 //│     (block (result (ref null any))
 //│       (block
 //│         (nop)
@@ -329,5 +307,5 @@ class B
 class A extends B
 class B extends A
 //│ ╔══[COMPILATION ERROR] Inheritance cycles are not supported.
-//│ ║  l.329: 	class A extends B
+//│ ║  l.307: 	class A extends B
 //│ ╙──       	^^^^^^^^^^^^^^^^^

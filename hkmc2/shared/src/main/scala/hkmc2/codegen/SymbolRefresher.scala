@@ -11,9 +11,16 @@ import semantics.Elaborator.State
 
 class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends BlockTransformer(SymbolSubst.Id):
   val mapping = MutMap.from(existingMapping)
-  
+  // Stack of cleanup frames, one per scoped block. ClsLikeDefn / applyObjBody add
+  // class-internal symbols to the top frame; the enclosing applyScopedBlock pops
+  // and removes them from `mapping` when its body finishes. Initialized with a
+  // bottom frame so callers that hand us a non-Scoped entry block still have a
+  // valid `cleanupStack.head` to add to (the bottom frame is never popped).
+  private var toRemoveSymbols: List[MutSet[Symbol]] = MutSet.empty[Symbol] :: Nil
+
   override def applyScopedBlock(b: Block): Block =
-    b match
+    toRemoveSymbols = MutSet.empty[Symbol] :: toRemoveSymbols
+    val res = b match
     case Scoped(syms, body) =>
       val newSyms = MutSet.empty[Symbol]
       val oldSyms = MutSet.empty[Symbol]
@@ -38,10 +45,14 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
         mapping(s) = newS
         oldSyms.add(s)
         newSyms.add(newS)
-      val res = Scoped(newSyms, applyBlock(body))
+      val r = Scoped(newSyms, applyBlock(body))
       for s <- oldSyms do mapping.remove(s)
-      res
+      r
     case _ => super.applyScopedBlock(b)
+    val hd = toRemoveSymbols.head
+    toRemoveSymbols = toRemoveSymbols.tail
+    hd.foreach(mapping.remove)
+    res
   override def applyBlock(b: Block): Block =
     b match
     case Assign(lhs, rhs, rest) =>
@@ -81,24 +92,23 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
         case _ => die
       val oldParamSyms = Buffer.empty[VarSymbol]
       val params2 = fun.params.map:
-        case ParamList(flags, params, N) =>
-          ParamList(
-            flags,
-            params.map: 
-              case Param(flags, sym, sign, modulefulness) =>
-                oldParamSyms.append(sym)
-                val newSym = new VarSymbol(sym.id)
-                assert(!mapping.isDefinedAt(sym))
-                mapping(sym) = newSym
-                Param(flags, newSym, sign, modulefulness),
-            N)
-        case _ => TODO("rest params are not supported")
+        case ParamList(flags, params, restParam) =>
+          def handleSingleParam(p: Param) =
+            val Param(flags, sym, sign, modulefulness) = p
+            oldParamSyms.append(sym)
+            val newSym = new VarSymbol(sym.id)
+            assert(!mapping.isDefinedAt(sym))
+            mapping(sym) = newSym
+            Param(flags, newSym, sign, modulefulness)
+          val params2 = params.map(handleSingleParam)
+          val rest2 = restParam.map(handleSingleParam)
+          ParamList(flags, params2, rest2)
       val body2 = applyFunBodyLikeBlock(fun.body)
       for s <- oldParamSyms do mapping.remove(s)
       if newlyCreated then
-        Scoped(Set.single(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride)))
+        Scoped(Set.single(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride, fun.visibility)))
       else
-        k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride))
+        k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride, fun.visibility))
     case defn @ ValDefn(tsym, sym, rhs) =>
       val (tsym2, sym2) = mapping.get(sym) match
         case None =>
@@ -111,12 +121,166 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
         case _ => die
       applyPath(rhs): rhs2 =>
         k(ValDefn(tsym2, sym2, rhs2)(defn.configOverride))
-    case _ => super.applyDefn(defn)(k)
+    case defn: ClsLikeDefn =>
+      val hd = toRemoveSymbols.head
+      val oldIsym = defn.isym
+      assert(!mapping.isDefinedAt(oldIsym), s"isym already in mapping: $oldIsym")
+      val newIsym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol = oldIsym match
+        case c: ClassSymbol => new ClassSymbol(c.tree, c.id)
+        case m: ModuleOrObjectSymbol => new ModuleOrObjectSymbol(m.tree, m.id)
+        case p: PatternSymbol => new PatternSymbol(p.id, p.params, p.body)
+        case _ => lastWords(s"unexpected isym kind: $oldIsym")
+      mapping(oldIsym) = newIsym
+      hd += oldIsym
+
+      var newlyCreatedSym = false
+      val newSym: BlockMemberSymbol = mapping.get(defn.sym) match
+        case Some(bms: BlockMemberSymbol) => bms
+        case None =>
+          newlyCreatedSym = true
+          val nb = new BlockMemberSymbol(defn.sym.nme, Nil, defn.sym.nameIsMeaningful)
+          mapping(defn.sym) = nb
+          nb
+        case _ => die
+
+      val newCtorSym: Opt[TermSymbol] = defn.ctorSym.map: cs =>
+        assert(!mapping.isDefinedAt(cs))
+        val ncs = new TermSymbol(cs.k, S(newIsym), cs.id)
+        mapping(cs) = ncs
+        hd += cs
+        ncs
+
+      val newOwn: Opt[InnerSymbol] = defn.owner.map: o =>
+        mapping.get(o) match
+          case Some(inner: InnerSymbol) => inner
+          case _ => o
+
+      def freshenParamList(pl: ParamList): ParamList =
+        def handleParam(p: Param) =
+          val ns = new VarSymbol(p.sym.id)
+          assert(!mapping.isDefinedAt(p.sym))
+          mapping(p.sym) = ns
+          hd += p.sym
+          Param(p.flags, ns, p.sign, p.modulefulness)
+        ParamList(pl.flags, pl.params.map(handleParam), pl.restParam.map(handleParam))
+      val newParamsOpt = defn.paramsOpt.map(freshenParamList)
+      val newAuxParams = defn.auxParams.map(freshenParamList)
+
+      val newPrivateFields = freshenPrivateFields(defn.privateFields, newIsym)
+      val newPublicFields = freshenPublicFields(defn.publicFields, newIsym)
+      val newMethods = freshenMethods(defn.methods, oldIsym, newIsym)
+
+      val newPreCtor = applyFunBodyLikeBlock(defn.preCtor)
+      val newCtor = applyFunBodyLikeBlock(defn.ctor)
+      val newMod = defn.companion.map(applyObjBody)
+
+      def buildResult(newParentPath: Opt[Path]): Block =
+        val newDefn = ClsLikeDefn(newOwn, newIsym, newSym, newCtorSym, defn.k,
+          newParamsOpt, newAuxParams, newParentPath, newMethods,
+          newPrivateFields, newPublicFields, newPreCtor, newCtor, newMod, defn.bufferable)(defn.configOverride)
+        if newlyCreatedSym then
+          Scoped(Set.single(newSym), k(newDefn))
+        else
+          k(newDefn)
+
+      defn.parentPath match
+        case Some(pp) => applyPath(pp): pp2 =>
+          buildResult(if pp2 is pp then defn.parentPath else Some(pp2))
+        case None => buildResult(None)
   
+  override def applyPath(p: Path)(k: Path => Block): Block = p match
+    case p @ Select(qual, name) =>
+      applyPath(qual): qual2 =>
+        val sym2 = p.symbol.map: s =>
+          mapping.get(s) match
+            case Some(ds: DefinitionSymbol[?]) => ds
+            case _ => s
+        k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2).withLocOf(p))
+    case _ => super.applyPath(p)(k)
+
   override def applyValue(v: Value)(k: Value => Block): Block = v match
     case Value.Ref(l, x) =>
       mapping.get(l) match
         case None => super.applyValue(v)(k)
-        case Some(newBms: BlockMemberSymbol) => k(Value.Ref(newBms, newBms.tsym))
+        case Some(newBms: BlockMemberSymbol) =>
+          val newDisamb = x match
+            case Some(oldDisamb) =>
+              mapping.get(oldDisamb) match
+                case Some(nd: DefinitionSymbol[?]) => Some(nd)
+                case _ => newBms.tsym.orElse(x)
+            case None => newBms.tsym
+          k(Value.Ref(newBms, newDisamb))
         case Some(newSym) => k(Value.Ref(newSym, N))
+    case Value.This(sym) =>
+      mapping.get(sym) match
+        case Some(inner: InnerSymbol) => k(Value.This(inner).withLocOf(v))
+        case _ => super.applyValue(v)(k)
     case _ => super.applyValue(v)(k)
+  
+  private def freshenPrivateFields(
+    fields: Ls[TermSymbol], ownerIsym: InnerSymbol
+  ): Ls[TermSymbol] = fields.map: ts =>
+    assert(!mapping.isDefinedAt(ts))
+    val nts = new TermSymbol(ts.k, S(ownerIsym), ts.id)
+    mapping(ts) = nts
+    toRemoveSymbols.head += ts
+    nts
+
+  private def freshenPublicFields(
+    fields: Ls[BlockMemberSymbol -> TermSymbol], ownerIsym: InnerSymbol
+  ): Ls[BlockMemberSymbol -> TermSymbol] = fields.map:
+    case (bms, ts) =>
+      assert(!mapping.isDefinedAt(bms))
+      assert(!mapping.isDefinedAt(ts))
+      val nbms = new BlockMemberSymbol(bms.nme, Nil, bms.nameIsMeaningful)
+      val nts = new TermSymbol(ts.k, S(ownerIsym), ts.id)
+      nbms.tsym = S(nts)
+      mapping(bms) = nbms
+      mapping(ts) = nts
+      toRemoveSymbols.head.addAll(Seq(bms, ts))
+      nbms -> nts
+
+  private def freshenMethods(
+    methods: Ls[FunDefn], oldIsym: InnerSymbol, newIsym: InnerSymbol
+  ): Ls[FunDefn] =
+    val methodsAndNewSyms = methods.map: m =>
+      assert(m.owner.contains(oldIsym), s"method owner mismatch: ${m.owner} vs S($oldIsym)")
+      assert(!mapping.isDefinedAt(m.sym))
+      assert(!mapping.isDefinedAt(m.dSym))
+      val newMsym = new BlockMemberSymbol(m.sym.nme, Nil, m.sym.nameIsMeaningful)
+      val newDsym = new TermSymbol(m.dSym.k, S(newIsym), m.dSym.id)
+      newMsym.tsym = S(newDsym)
+      mapping(m.sym) = newMsym
+      mapping(m.dSym) = newDsym
+      toRemoveSymbols.head.addAll(Seq(m.sym, m.dSym))
+      (m, newMsym, newDsym)
+    methodsAndNewSyms.map: (m, newMsym, newDsym) =>
+      val methodParamOlds = MutSet.empty[VarSymbol]
+      val newParams = m.params.map: pl =>
+        def handleParam(p: Param) =
+          val ns = new VarSymbol(p.sym.id)
+          assert(!mapping.isDefinedAt(p.sym))
+          mapping(p.sym) = ns
+          methodParamOlds += p.sym
+          Param(p.flags, ns, p.sign, p.modulefulness)
+        ParamList(pl.flags, pl.params.map(handleParam), pl.restParam.map(handleParam))
+      val newBody = applyFunBodyLikeBlock(m.body)
+      methodParamOlds.foreach(mapping.remove)
+      FunDefn(S(newIsym), newMsym, newDsym, newParams, newBody)(m.forceTailRec, m.configOverride, m.visibility)
+  
+  override def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
+    val hd = toRemoveSymbols.head
+    val oldIsym = defn.isym
+    assert(!mapping.isDefinedAt(oldIsym), s"companion isym already in mapping: $oldIsym")
+    val newIsym: DefinitionSymbol[? <: ModuleOrObjectDef] & InnerSymbol = oldIsym match
+      case m: ModuleOrObjectSymbol => new ModuleOrObjectSymbol(m.tree, m.id)
+      case _ => lastWords(s"unexpected companion isym kind: $oldIsym")
+    mapping(oldIsym) = newIsym
+    hd += oldIsym
+
+    val newPrivateFields = freshenPrivateFields(defn.privateFields, newIsym)
+    val newPublicFields = freshenPublicFields(defn.publicFields, newIsym)
+    val newMethods = freshenMethods(defn.methods, oldIsym, newIsym)
+    val newCtor = applyFunBodyLikeBlock(defn.ctor)
+
+    ClsLikeBody(newIsym, newMethods, newPrivateFields, newPublicFields, newCtor)

@@ -74,8 +74,8 @@ consume(sum, enumFrom(3))
 //│ deforest > 	Ref(x,None)
 //│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
 //│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(t))
 //│ deforest > 	Select(Ref(x,None),Ident(h))
+//│ deforest > 	Select(Ref(x,None),Ident(t))
 //│ deforest > <<< fusing <<<
 //│ = 12
 

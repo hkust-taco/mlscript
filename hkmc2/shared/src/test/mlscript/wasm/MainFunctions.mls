@@ -34,14 +34,14 @@ throw x
 //│   (type $mlx_exn (func (param $ex (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (tag $mlx_exn (export "mlx_exn") (type $mlx_exn))
+//│   (global $x (export "x") (mut (ref null any)) (ref.null any))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
-//│     (local $x (ref null any))
 //│     (block
-//│       (local.set $x
+//│       (global.set $x
 //│         (ref.i31
 //│           (i32.const 2)))
 //│       (throw $mlx_exn
-//│         (local.get $x))))
+//│         (global.get $x))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] 2

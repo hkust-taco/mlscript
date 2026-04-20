@@ -78,7 +78,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   val noTailRecOpt = NullaryCommand("noTailRec")
   val deforest = Command("deforest")(_.trim)
   val patMatConsequentSharingThreshold = Command("patMatConsequentSharingThreshold")(_.trim.toInt)
-  
+  val deadParamElim = Command("deadParamElim")(_.trim)
+
   def mkConfig: Config =
     import Config.*
     if stackSafe.isSet && effectHandlers.isUnset then
@@ -121,13 +122,20 @@ abstract class MLsDiffMaker extends DiffMaker:
       target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
       rewriteWhileLoops = rewriteWhile.isSet,
       tailRecOpt = !noTailRecOpt.isSet,
-      deforest = Opt.when(deforest.isSet)(Deforest.default),
+      deforest = Opt.when(deforest.isSet):
+        Deforest(
+          debug = true,
+          mono = deforest.get.exists(_.contains("mono"))),
       inlining = Opt.when(!noInlineOpt.isSet)(Config.Inliner(inlineThreshold.get.getOrElse(1))),
       qqEnabled = importQQ.isSet,
       funcToCls = funcToCls.isSet,
       commentGeneratedCode = debug.isSet,
       noFreeze = noFreeze.isSet,
       noModuleCheck = noModuleCheck.isSet,
+      deadParamElim = Opt.when(deadParamElim.isSet):
+        DeadParamElim(
+          debug = true,
+          mono = deadParamElim.get.fold(true)(!_.contains("poly"))),
     )
   
   

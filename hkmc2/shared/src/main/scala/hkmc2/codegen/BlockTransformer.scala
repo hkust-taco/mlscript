@@ -200,7 +200,7 @@ class BlockTransformer(subst: SymbolSubst):
     val params2 = fun.params.mapConserve(applyParamList)
     val body2 = applyFunBodyLikeBlock(fun.body)
     if (own2 is fun.owner) && (sym2 is fun.sym) && (dSym2 is fun.dSym) && (params2 is fun.params) && (body2 is fun.body)
-      then fun else FunDefn(own2, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride)
+      then fun else FunDefn(own2, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride, fun.visibility)
   
   def applyValDefn(defn: ValDefn)(k: ValDefn => Block): Block =
     val ValDefn(tsym, sym, rhs) = defn

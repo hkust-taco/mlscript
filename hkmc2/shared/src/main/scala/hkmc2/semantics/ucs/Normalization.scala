@@ -279,7 +279,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                 // and use it `Predef.unreachable` here.
                 k(cls, Nil)(unreachableFn)
               case cls: ClassSymbol =>
-                subTerm_nonTail(ctor)(k(cls, cls.tree.clsParams))
+                subTerm_nonTail(ctor)(k(cls,
+                  cls.tree.clsParams.headOption.getOrElse(Nil) // FIXME? case when there are only aux parameter lists
+                  ))
               case mod: ModuleOrObjectSymbol =>
                 subTerm_nonTail(ctor)(k(mod, Nil))
           case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowerSplit(tail, cont))
@@ -459,7 +461,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             val loopEnd: Path =
               Select(Value.Ref(State.runtimeSymbol), Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
             val blk = blockBuilder
-              .define(FunDefn(N, f, tSym, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd, false)))(forceTailRec = false, configOverride = N))
+              .define(FunDefn(N, f, tSym, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd, false)))(forceTailRec = false, configOverride = N, visibility = Visibility.Public))
               .assign(loopResult, Call(Value.Ref(f, S(tSym)), Nil)(true, true, false))
             if summon[LoweringCtx].mayRet then
               blk

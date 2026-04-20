@@ -1,0 +1,61 @@
+:js
+:noInline
+
+
+:deadParamElim
+:soir
+private fun f(a) =
+  a = 3
+  g(a)
+private fun g(a) = 2
+f(undefined)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > prodfun g#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f⁰, g⁰; define f⁰ as fun f¹() { return g¹() }; define g⁰ as fun g¹() { return 2 }; f¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+
+
+data class Box(x)
+
+:deadParamElim
+:soir
+private fun f(a) = Box(a)
+if f(42) is Box(v) then 0
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f², scrut;
+//│ define f² as fun f³() {
+//│   return Box⁰(undefined)
+//│ };
+//│ set scrut = f³();
+//│ match scrut
+//│   Box¹ =>
+//│     0
+//│   else
+//│     throw new globalThis⁰.Error⁰("match error")
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 0
+
+
+
+:deadParamElim
+:soir
+private fun f(a) =
+  let x = a
+  0
+f(42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f⁴; define f⁴ as fun f⁵() { return 0 }; f⁵()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 0
+

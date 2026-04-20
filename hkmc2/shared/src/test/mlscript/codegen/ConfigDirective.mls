@@ -153,3 +153,38 @@ print(42)
 //│ > 42
 
 
+#config(deadParamElim: Some(DeadParamElim(mono: true)), inlining: None)
+
+private fun deadParamConfig(a) = 0
+deadParamConfig(42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun deadParamConfig#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+
+#config(deadParamElim: None)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+
+
+#config(deforest: Some(Deforest(mono: false)))
+#config(effectHandlers: Some(EffectHandlers(stackSafety: None)))
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+
+data class Pair(a, b)
+fun fstConfig(p) = if p is Pair(x, y) then x
+fstConfig(Pair(1, 2))
+//│ deforest > >>> fusing >>>
+//│ deforest > Call(Ref(member:Pair,Some(term:Pair/Pair)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(p,None)
+//│ deforest > 	Select(Ref(p,None),Ident(a))
+//│ deforest > 	Select(Ref(p,None),Ident(b))
+//│ deforest > <<< fusing <<<
+//│ = 1
+
+#config(deforest: None)
+
+fun fstConfig(p) = if p is Pair(x, y) then x
+fstConfig(Pair(1, 2))
+//│ = 1

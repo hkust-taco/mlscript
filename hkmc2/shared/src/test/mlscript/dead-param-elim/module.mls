@@ -1,0 +1,68 @@
+:js
+
+
+
+
+:deadParamElim
+module M with
+  private fun f(a) = 0
+  private fun g(b) = b
+M.f(1)
+M.g(2)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 2
+
+
+:deadParamElim
+:expect 3
+module M with
+  val x = 3
+  private fun f(a) = x
+  private fun main() = M.f(42)
+M.main()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 3
+
+
+:deadParamElim
+:expect 42
+module M with
+  private fun f(a) = a
+  private fun main() = M.f(42)
+M.main()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 42
+
+
+
+
+:deadParamElim
+module M with
+  private fun f(a) = a
+  private fun g(b) = 0
+  private fun pick(x)(y) = if false then x else y
+  private fun main() = M.pick(M.f)(M.g)(5)
+M.main()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+
+
+
+:deadParamElim
+:expect 125
+module M with
+  data class Foo(x) with
+    private fun m() = this.x + 1
+    private fun n(y) = this.x + y
+let foo = M.Foo(123)
+foo M.Foo::n(2)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 125
+//│ foo = Foo(123)

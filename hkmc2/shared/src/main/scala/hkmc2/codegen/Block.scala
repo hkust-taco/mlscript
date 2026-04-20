@@ -244,7 +244,7 @@ sealed abstract class Block extends Product:
           val newBody = d.body.flattened
           if newBody is d.body
           then d
-          else d.copy(body = newBody)(forceTailRec = d.forceTailRec, configOverride = d.configOverride)
+          else d.copy(body = newBody)(forceTailRec = d.forceTailRec, configOverride = d.configOverride, visibility = d.visibility)
         case v: ValDefn => v
         case c: ClsLikeDefn =>
           val newPreCtor = c.preCtor.flattened
@@ -252,7 +252,7 @@ sealed abstract class Block extends Product:
           def flattenMethods(ms: List[FunDefn]) = ms.mapConserve:
             case f@FunDefn(owner, sym, dSym, params, body) =>
               val newBody = body.flattened
-              if newBody is body then f else f.copy(body = newBody)(forceTailRec = f.forceTailRec, configOverride = f.configOverride)
+              if newBody is body then f else f.copy(body = newBody)(forceTailRec = f.forceTailRec, configOverride = f.configOverride, visibility = f.visibility)
           val newMethods = flattenMethods(c.methods)
           val newCompanion = c.companion.mapConserve: c =>
             val newCtor = c.ctor.flattened
@@ -357,14 +357,13 @@ object Label:
 object Scoped:
   def apply(syms: collection.Set[Local], body: Block): Block = body match
     case _: Unreachable => body
+    case _ if syms.isEmpty => body
     case Scoped(syms2, body) =>
-      if syms2.isEmpty && syms.isEmpty then Scoped(Set.empty, body)
-      else
-        whenValidatingIR:
-          assert(!syms2.exists(syms.contains), "overlapping symbols in nested Scoped")
-        Scoped(syms ++ syms2, body)
+      whenValidatingIR:
+        assert(!syms2.exists(syms.contains), "overlapping symbols in nested Scoped")
+      Scoped(syms ++ syms2, body)
     case _ =>
-      if syms.isEmpty then body else new Scoped(syms, body)
+      new Scoped(syms, body)
 object TryBlock:
   def apply(body: Block, finallyDo: Block, rest: Block): Block =
     body match
@@ -537,14 +536,15 @@ final case class FunDefn(
   )(
     val forceTailRec: Bool,
     val configOverride: Opt[Config],
+    val visibility: Visibility,
 ) extends Defn:
   val innerSym = N
   val asPath = Value.Ref(sym, S(dSym))
 object FunDefn:
-  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(forceTailRec: Bool, configOverride: Opt[Config])(using State) =
+  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(forceTailRec: Bool, configOverride: Opt[Config], visibility: Visibility)(using State) =
     val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
     sym.tsym = S(tSym)
-    FunDefn(owner, sym, tSym, params, body)(forceTailRec, configOverride)
+    FunDefn(owner, sym, tSym, params, body)(forceTailRec, configOverride, visibility)
 
 final case class ValDefn(
     tsym: TermSymbol,

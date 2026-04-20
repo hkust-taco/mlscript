@@ -60,28 +60,11 @@ foo() + foo()
 //│   (type $foo1 (func (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
+//│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
 //│   (func $foo (export "foo") (type $foo1) (result (ref null any))
 //│     (return
 //│       (ref.i31
 //│         (i32.const 42))))
-//│   (func $plus_impl1 (type $plus_impl) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
-//│     (if (result (ref null any))
-//│       (i32.and
-//│         (ref.test (ref null i31)
-//│           (local.get $lhs))
-//│         (ref.test (ref null i31)
-//│           (local.get $rhs)))
-//│       (then
-//│         (ref.i31
-//│           (i32.add
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $lhs)))
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $rhs))))))
-//│       (else
-//│         (unreachable))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $foo (ref null any))
 //│     (local $tmp (ref null any))
@@ -104,11 +87,10 @@ foo() + foo()
 //│             (block (result (ref null any))
 //│               (local.set $tmp1
 //│                 (local.get $inlinedVal1))
-//│               (call $plus_impl1
+//│               (call $plus_impl
 //│                 (local.get $tmp)
 //│                 (local.get $tmp1))))))))
 //│   (elem $foo declare func $foo)
-//│   (elem $plus_impl1 declare func $plus_impl1)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 84
@@ -147,7 +129,7 @@ class Foo(val a)
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (func $Foo_ctor (export "Foo_ctor") (type $Foo_ctor) (param $a (ref null any)) (result (ref null any))
+//│   (func $Foo_ctor (export "Foo") (type $Foo_ctor) (param $a (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -163,7 +145,6 @@ class Foo(val a)
 //│       (return
 //│         (local.get $this))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
-//│     (local $Foo (ref null any))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -217,7 +198,7 @@ class Foo(val x) with
 //│           (nop)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $Foo_ctor (export "Foo_ctor") (type $Foo_ctor) (param $x (ref null any)) (result (ref null any))
+//│   (func $Foo_ctor (export "Foo") (type $Foo_ctor) (param $x (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -233,7 +214,6 @@ class Foo(val x) with
 //│       (return
 //│         (local.get $this))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
-//│     (local $Foo (ref null any))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -265,7 +245,7 @@ O.y
 //│   (type $O_ctor (func (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
-//│   (global $O$inst (mut (ref null $O)) (ref.null $O))
+//│   (global $O$inst (export "O$inst") (mut (ref null $O)) (ref.null $O))
 //│   (func $O_init1 (type $O_init) (param $this (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -305,7 +285,6 @@ O.y
 //│         (ref.cast (ref null $O)
 //│           (call $O_ctor1)))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
-//│     (local $O (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
 //│       (struct.get $O $y
@@ -325,6 +304,6 @@ fun bar() = 42
 fun foo() = bar
 foo()()
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.325: 	fun foo() = bar
+//│ ║  l.304: 	fun foo() = bar
 //│ ╙──       	            ^^^
 //│ ═══[COMPILATION ERROR] Expected static function reference in Call(...) expression

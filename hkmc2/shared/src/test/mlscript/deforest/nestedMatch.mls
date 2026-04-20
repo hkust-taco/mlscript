@@ -596,12 +596,12 @@ sum(prodDouble(4))
 //│ deforest > >>> fusing >>>
 //│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
 //│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
 //│ deforest > 	Select(Ref(ls,None),Ident(h))
+//│ deforest > 	Select(Ref(ls,None),Ident(t))
 //│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
 //│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
 //│ deforest > 	Select(Ref(ls,None),Ident(h))
+//│ deforest > 	Select(Ref(ls,None),Ident(t))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(ls,None)
 //│ deforest > <<< fusing <<<

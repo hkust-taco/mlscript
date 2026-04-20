@@ -184,7 +184,7 @@ f(1, 2, 1000)
 //│   return f$cap.mutated$0⁰
 //│ };
 //│ define Capture$f⁰ as class Capture$f² {
-//│   constructor Capture$f¹ {
+//│   constructor Capture$f¹(mutated$0) {
 //│     define mutated$0¹ as val mutated$0⁰ = mutated$0;
 //│     end
 //│   }
@@ -263,7 +263,7 @@ g()(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let h², f⁶, g⁶, tmp, Capture$scope0⁰, f$⁰;
 //│ define Capture$scope0⁰ as class Capture$scope0² {
-//│   constructor Capture$scope0¹ {
+//│   constructor Capture$scope0¹(y$0) {
 //│     define y$0⁰ as val y$0¹ = y$0;
 //│     end
 //│   }
@@ -449,7 +449,7 @@ fun f(x) =
 //│   return f$cap.x$0⁰
 //│ };
 //│ define Capture$f³ as class Capture$f⁵ {
-//│   constructor Capture$f⁴ {
+//│   constructor Capture$f⁴(x$0) {
 //│     define x$0¹ as val x$0⁰ = x$0;
 //│     end
 //│   }

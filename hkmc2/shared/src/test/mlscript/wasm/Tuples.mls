@@ -55,11 +55,11 @@ c.[3]
 //│   (type $TupleArray (array (ref null any)))
 //│   (type $TupleArrayMut (array (mut (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
+//│   (global $c (export "c") (mut (ref null any)) (ref.null any))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
-//│     (local $c (ref null any))
 //│     (local $tuple (ref null any))
 //│     (block (result (ref null any))
-//│       (local.set $c
+//│       (global.set $c
 //│         (array.new_fixed $TupleArray 4
 //│           (ref.i31
 //│             (i32.const 10))
@@ -72,7 +72,7 @@ c.[3]
 //│       (if (result (ref null any))
 //│         (ref.test (ref null $TupleArrayMut)
 //│           (local.tee $tuple
-//│             (local.get $c)))
+//│             (global.get $c)))
 //│         (then
 //│           (array.get $TupleArrayMut
 //│             (ref.cast (ref $TupleArrayMut)

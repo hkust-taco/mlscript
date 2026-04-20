@@ -260,6 +260,10 @@ enum Tree extends AutoLocated:
           Annotated(kw, s.desugared)
         case Modified(kw @ Keywrd(Keyword.`staged`), s) =>
           Annotated(kw, s.desugared)
+        case Modified(kw @ Keywrd(Keyword.`public`), s) =>
+          Annotated(kw, s.desugared)
+        case Modified(kw @ Keywrd(Keyword.`private`), s) =>
+          Annotated(kw, s.desugared)
         case Modified(kw @ Keywrd(Keyword.`mut`), TermDef(ImmutVal, anme, rhs)) =>
           TermDef(MutVal, anme, rhs).withLocOf(this).desugared
         case _ => m
@@ -436,7 +440,6 @@ case object ImmutVal extends Val("val", "value")
 case object MutVal extends Val("mut val", "mutable value")
 case object LetBind extends ValLike("let", "let binding")
 case object HandlerBind extends TermDefKind("handler", "handler binding")
-case object ParamBind extends ValLike("", "parameter")
 case object Fun extends TermDefKind("fun", "function")
 case object Ins extends TermDefKind("using", "implicit instance")
 sealed abstract class TypeDefKind(str: Str, desc: Str)(using Line) extends DeclKind(str, desc)
@@ -572,14 +575,16 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
     case _ =>
       Map.empty
   
-  lazy val clsParams: Ls[TermSymbol] =
-    this.paramLists.headOption.fold(Nil): tup =>
+  lazy val clsParams: Ls[Ls[TermSymbol]] =
+    this.paramLists.map: tup =>
       val pts = tup.fields
       val inUsing = pts.headOption.exists(_.isModified(Ins))
-      pts.flatMap(_.asParam(inUsing = inUsing).toOption).map:
-        case ParamTree(spd = S(_)) => lastWords("spreads are not allowed in class parameters")
-        case ParamTree(ident = id) => TermSymbol(ParamBind, symbol.asClsLike, id)
+      pts.flatMap(_.desugared.asParam(inUsing = inUsing).toOption).map:
+        // case ParamTree(spd = S(_)) => lastWords("spreads are not allowed in class parameters") // TODO: properly report this in Elaborator
+        case pt @ ParamTree(ident = id) =>
+          val k = if pt.flags.mut then MutVal else ImmutVal
+          TermSymbol(k, symbol.asClsLike, id)
       .toList
     
-  lazy val allSymbols = definedSymbols ++ clsParams.map(s => s.nme -> s).toMap
+  lazy val allSymbols = definedSymbols ++ clsParams.flatten.map(s => s.nme -> s).toMap
 

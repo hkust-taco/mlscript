@@ -1,0 +1,150 @@
+:js
+:noInline
+
+
+
+
+// g has dead param `b`, but f has live param `a`
+:deadParamElim
+:expect 0
+private fun f(a) = a
+private fun g(b) = 0
+private fun test(x)(y) = if false then x else y
+private fun m() = test(f)(g)(5)
+m()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+
+
+
+:deadParamElim
+:expect 3
+private fun f(a)(b) = 0
+private fun g(a)(b) = a + b
+private fun main(x)(y) = if false then x else y
+private fun m1() = main(f)(g)(1)(2)
+m1()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 3
+
+
+:deadParamElim
+:expect 5
+private fun f(a) = a
+private fun g(b) = 0
+let h = if true then f else g
+h(5)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 5
+//│ h = fun f
+
+
+
+// f, g, h all flow to the same call site
+:deadParamElim
+:expect 0
+private fun f(a) = a
+private fun g(b) = 0
+private fun h(c) = 0
+private fun pick(x)(y)(z) = if false then x else if false then y else z
+private fun m() = pick(f)(g)(h)(5)
+m()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+
+
+
+
+
+
+:deadParamElim
+:expect 1
+private fun f(a)(b) = 0
+private fun g(a)(b) = a
+private fun choose(x)(y) = if false then x else y
+private fun m() = choose(f)(g)(1)(2)
+m()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#1 @ <root> -> eliminable: {0}
+//│ dead-param-elim > prodfun g#1 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 1
+
+
+
+
+:deadParamElim
+:expect 1
+private fun f(a, b) = 0
+private fun g(a, b) = a
+private fun choose(x)(y) = if false then x else y
+private fun m() = choose(f)(g)(1, 2)
+m()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > prodfun g#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 1
+
+
+
+
+:deadParamElim
+:soir
+[1,2,3].map((x, i, a) => x + 1)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp, lambda⁰;
+//│ set tmp = [1, 2, 3];
+//│ define lambda⁰ as fun lambda¹(x, i, a) { return +⁰(x, 1) };
+//│ tmp.map﹖(lambda¹)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [2, 3, 4]
+
+
+
+:deadParamElim
+:expect [4, 5]
+private fun f(a, b, ...rest) = rest
+private fun g(a, b, c, ...rest) = rest
+(if false then f else g)(1,2,3,4,5)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0, 1}
+//│ dead-param-elim > prodfun g#0 @ <root> -> eliminable: {0, 1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = [4, 5]
+
+
+:deadParamElim
+:expect [3, 4, 5]
+private fun f(a, b, ...rest) = rest
+private fun g(a, b, c, ...rest) = rest
+(if true then f else g)(1,2,3,4,5)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0, 1}
+//│ dead-param-elim > prodfun g#0 @ <root> -> eliminable: {0, 1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = [3, 4, 5]
+
+
+:deadParamElim
+:expect [3, 4, 5]
+public fun f(a, b, ...rest) = rest
+public fun g(a, b, c, ...rest) = rest
+(if true then f else g)(1,2,3,4,5)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = [3, 4, 5]
+
+:expect [4, 5]
+(if false then f else g)(1,2,3,4,5)
+//│ = [4, 5]
+
+:expect [3, 4, 5]
+(if true then f else g)(1,2,3,4,5)
+//│ = [3, 4, 5]

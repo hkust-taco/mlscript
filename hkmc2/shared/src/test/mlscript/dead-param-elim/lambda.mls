@@ -1,0 +1,132 @@
+:js
+
+
+
+:deadParamElim
+:expect 0
+let f = (a) => 0
+f(42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+//│ f = fun f
+
+
+:deadParamElim
+:expect 42
+let f = (a) => a
+f(42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 42
+//│ f = fun f
+
+:noInline
+:deadParamElim
+:expect 0
+private fun apply(f, x) = f(x)
+apply((a) => 0, 42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun apply#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+
+
+:deadParamElim
+:expect 43
+private fun apply(f, x) = f(x)
+apply((a) => a + 1, 42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 43
+
+
+
+
+:deadParamElim
+private fun f(a) = a
+let g = (b) => 0
+private fun pick(x)(y) = if false then x else y
+pick(f)(g)(5)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+//│ g = fun g
+
+
+:deadParamElim
+fun f(a) = 0
+let g = (b) => 0
+private fun pick(x)(y) = if false then x else y
+pick(f)(g)(5)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+//│ g = fun g
+
+
+
+:deadParamElim
+:expect 42
+private fun f(a) =
+  let g = () => a
+  g()
+f(42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 42
+
+
+
+// two `apply`, one has dead param, another does not
+:deadParamElim
+:noInline
+private fun apply(f, x) = f(x)
+private fun main(f1, f2) =
+  apply(f1, 42) + apply(f2, 0)
+private fun main1() = main((a) => 0, (a) => a + 1)
+main1()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 1
+
+
+// two `apply`, one has dead param, another does not;
+// but if `apply` is inlined, we can eliminate the `a` in `(a) => 0`
+:deadParamElim
+private fun apply(f, x) = f(x)
+private fun main(f1, f2) =
+  apply(f1, 42) + apply(f2, 0)
+private fun main1() = main((a) => 0, (a) => a + 1)
+main1()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun lambda#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 1
+
+
+:deadParamElim poly
+:noInline
+private fun apply(f, x) = f(x)
+private fun main(f1, f2) =
+  apply(f1, 42) + apply(f2, 0)
+private fun main1() = main((a) => 0, (a) => a + 1)
+main1()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun apply#0 @ main1@10.main@8.apply@2 -> eliminable: {1}
+//│ dead-param-elim > prodfun apply#0 @ main1@13.main@8.apply@2 -> eliminable: {1}
+//│ dead-param-elim > prodfun lambda#0 @ main1@10 -> eliminable: {0}
+//│ dead-param-elim > prodfun lambda#0 @ main1@13 -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 1
+
+
+:deadParamElim
+:expect 0
+private fun f = (a) => 0
+f(3)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun lambda#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+

@@ -357,16 +357,16 @@ let Runtime1;
         res = [];
         i1 = 1;
         lbl1: while (true) {
-          let scrut1, tmp4, tmp5, tmp6, tmp7, tmp8;
-          scrut1 = i1 < debugInfo.length;
-          if (scrut1 === true) {
-            tmp4 = i1 + 1;
-            tmp5 = cur + 1;
-            tmp6 = tmp5 + debugInfo.at(i1);
-            tmp7 = globalThis.Object.freeze(new Runtime.LocalVarInfo.class(debugInfo.at(tmp4), this.saved.at(tmp6)));
-            runtime.safeCall(res.push(tmp7));
-            tmp8 = i1 + 2;
-            i1 = tmp8;
+          let scrut, tmp1, tmp2, tmp3, tmp4, tmp5;
+          scrut = i1 < debugInfo.length;
+          if (scrut === true) {
+            tmp1 = i1 + 1;
+            tmp2 = cur + 1;
+            tmp3 = tmp2 + debugInfo.at(i1);
+            tmp4 = globalThis.Object.freeze(new Runtime.LocalVarInfo.class(debugInfo.at(tmp1), this.saved.at(tmp3)));
+            runtime.safeCall(res.push(tmp4));
+            tmp5 = i1 + 2;
+            i1 = tmp5;
             continue lbl1
           }
           break;

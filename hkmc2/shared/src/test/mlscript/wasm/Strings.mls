@@ -23,20 +23,20 @@ let dup2 = "dup"
 //│   (type $entry1 (func (result (ref null any))))
 //│   (import "system" "mlx_str_from_utf16" (func $mlx_str_from_utf16 (type $mlx_str_from_utf16)))
 //│   (import "system" "mem" (memory $mem 1))
+//│   (global $dup1 (export "dup1") (mut (ref null any)) (ref.null any))
+//│   (global $dup2 (export "dup2") (mut (ref null any)) (ref.null any))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
-//│     (local $dup1 (ref null any))
-//│     (local $dup2 (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $tuple (ref null any))
 //│     (block (result (ref null any))
-//│       (local.set $dup1
+//│       (global.set $dup1
 //│         (call $mlx_str_from_utf16
 //│           (ref.i31
 //│             (i32.const 0))
 //│           (ref.i31
 //│             (i32.const 6))))
 //│       (block (result (ref null any))
-//│         (local.set $dup2
+//│         (global.set $dup2
 //│           (call $mlx_str_from_utf16
 //│             (ref.i31
 //│               (i32.const 0))
@@ -45,8 +45,8 @@ let dup2 = "dup"
 //│         (block (result (ref null any))
 //│           (local.set $tmp
 //│             (array.new_fixed $TupleArray 2
-//│               (local.get $dup1)
-//│               (local.get $dup2)))
+//│               (global.get $dup1)
+//│               (global.get $dup2)))
 //│           (if (result (ref null any))
 //│             (ref.test (ref null $TupleArrayMut)
 //│               (local.tee $tuple

@@ -4,11 +4,13 @@ import mlscript.utils.*, shorthands.*
 
 import codegen.*
 import codegen.js.JSBuilder
+import codegen.Local
 import codegen.wasm.*
 import document.*
+import semantics.*
 import semantics.Elaborator
 import semantics.Term.Blk
-import text.WatBuilder
+import text.{SessionBinding, CompiledWasmModule, WatBuilder}
 import Diagnostic.Source
 import Message.MessageContext
 
@@ -28,6 +30,11 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
 
   private val baseScp: utils.Scope =
     utils.Scope.empty(utils.Scope.Cfg.default)
+  private val wasmReplImportsNme = s"${wasmSuppNme}ReplImports"
+  private val wasmReplImportsRef = s"globalThis.$wasmReplImportsNme"
+  private val sessionImportsBySymbol = mutable.Map.empty[Local, mutable.LinkedHashMap[Str, SessionBinding]]
+  private var wasmSessionInitialized = false
+  private var wasmSessionMemPages = 0
 
   final lazy val wasmSuppFile: io.Path = predefFile.up / "wasm" / "Wasm.mjs"
   final lazy val wasmSuppNme = baseScp.allocateName(Elaborator.State.wasmSymbol)(using throw _)
@@ -45,29 +52,59 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
   lazy val prettifyBinaryenWat = (content: Str) =>
     content.substring(2, content.length() - 2).replace("\\\\n", "\n").replace("\\\\\"", "\"")
 
-  
-  override def processIRBlock(pgrm: Program, definedValues: ComputeDefinedValues)(using Config, Raise, Elaborator.Ctx): Unit =
-    
+  override def processIRBlock(
+      pgrm: Program,
+      definedValues: ComputeDefinedValues,
+  )(using Config, Raise, Elaborator.Ctx): Unit =
+
     super.processIRBlock(pgrm, definedValues)
 
     val outerRaise: Raise = summon
+    def computeDefinedValues(includeNonTerms: Bool) =
+      import Elaborator.Ctx.*
+      curCtx.env.iterator.flatMap:
+        case (nme, e @ (_: RefElem | SelElem(base = RefElem(_: InnerSymbol)))) =>
+          e.symbol match
+            case S(ts: TermSymbol) if ts.k.isInstanceOf[syntax.ValLike] => S((nme, ts, N))
+            case S(ts: BlockMemberSymbol)
+                if includeNonTerms || ts.trmImplTree.exists(_.k.isInstanceOf[syntax.ValLike]) => S((nme, ts, N))
+            case S(vs: VarSymbol) => S((nme, vs, N))
+            case _ => N
+        case _ => N
+      .toList
+    val symbolsToPreserve = computeDefinedValues(includeNonTerms = true).iterator.map(_._2).toSet
 
     if wasm.isSet then
-      
+
       val reportedMessages = mutable.Set.empty[Str]
-      
+
       loadWasm
 
       var errored = false
       given Raise =
         case d @ ErrorReport(source = Source.Compilation) =>
           errored = true
-          reportedMessages += d.mainMsg
           outerRaise(d)
         case d => outerRaise(d)
-      val (modWat, mainFnNme, systemMemMinPages) = ltl.givenIn:
+      val sessionImportSymbols = mutable.LinkedHashSet.from(pgrm.main.freeVars)
+      new BlockTraverser:
+        override def applyPath(p: Path): Unit = p match
+          case sel: Select =>
+            sel.symbol.foreach:
+              case sym: ModuleOrObjectSymbol => sessionImportSymbols += sym
+              case _ => ()
+            super.applyPath(sel)
+          case _ =>
+            super.applyPath(p)
+      .applyBlock(pgrm.main)
+      val sessionImports = mutable.LinkedHashMap.empty[Str, SessionBinding]
+      sessionImportSymbols.iterator.foreach: sym =>
+        sessionImportsBySymbol.get(sym).foreach: bindings =>
+          bindings.foreach: (bindingKey, binding) =>
+            sessionImports.update(bindingKey, binding)
+      val CompiledWasmModule(modWat, mainFnNme, systemMemMinPages, sessionExports) = ltl.givenIn:
         baseScp.nest.givenIn:
-          WatBuilder().program(pgrm, N, wd)
+          WatBuilder().program(pgrm, N, wd, sessionImports.values.toSeq, symbolsToPreserve)
       val modWatJsLit = JSBuilder.makeStringLiteral(modWat.mkString(output.ColWidth))
 
       if wat.isSet then
@@ -133,39 +170,74 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
         if stderr.nonEmpty then output(s"// Standard Error:\n${stderr}")
       end mkQuery
 
-      val importObj =
-        doc"""
-          {
-            "system": {
-              "mem": mem,
-              "mlx_str_from_utf16": (ptr, byteLen) =>
-                decodeUtf16.decode(new Uint8Array(mem.buffer, ptr, byteLen))
-            }
-          }
-        """
-          .stripBreaks
-          .mkString(output.ColWidth)
-      val jsStr =
-        doc"""
-          await (() => {
-            # const watSrc = $modWatJsLit;
-            # const mem = new WebAssembly.Memory({ initial: $systemMemMinPages });
+      if !wasmSessionInitialized then
+        val intrinsicWatJsLit = JSBuilder.makeStringLiteral(
+          ltl.givenIn:
+            baseScp.nest.givenIn:
+              WatBuilder().intrinsicSupportModule().mkString(output.ColWidth),
+        )
+        host.execute(
+          doc"""await (async () => {
+            # const mem = new WebAssembly.Memory({ initial: ${systemMemMinPages} });
             # const decodeUtf16 = new TextDecoder("utf-16le");
-            # const importObj = $importObj;
-            # return wasm.binaryenPrintFuncRes(watSrc, importObj, exports => exports.${mainFnNme}());
-            # })();
-        """
-          .stripBreaks
-          .mkString(output.ColWidth)
+            # const system = {
+            #   mem,
+            #   mlx_str_from_utf16: (ptr, byteLen) =>
+            #     decodeUtf16.decode(new Uint8Array(mem.buffer, ptr, byteLen)),
+            # };
+            # const intrinsicModule = await $wasmSuppNme.binaryenCompileToModule($intrinsicWatJsLit, {});
+            # Object.assign(system, intrinsicModule.instance.exports);
+            # $wasmReplImportsRef = {
+            #   repl: Object.create(null),
+            #   system,
+            # };
+            # })();"""
+            .stripBreaks
+            .mkString(output.ColWidth),
+        ) match
+          case ReplHost.Result(_) =>
+            wasmSessionInitialized = true
+            wasmSessionMemPages = systemMemMinPages
+          case r =>
+            output(s"Failed to initialize wasm REPL session object: $r")
+        end match
+      else if systemMemMinPages > wasmSessionMemPages then
+        host.execute(
+          doc"""(() => {
+            # const extraPages = ${systemMemMinPages - wasmSessionMemPages};
+            # $wasmReplImportsRef.system.mem.grow(extraPages);
+            # })();"""
+            .stripBreaks
+            .mkString(output.ColWidth),
+        ) match
+          case ReplHost.Result(_) =>
+            wasmSessionMemPages = systemMemMinPages
+          case r =>
+            output(s"Failed to grow wasm REPL session memory: $r")
+      end if
+      val exportAssignments = sessionExports.flatMap(_.exportNameOpt.toSeq).map: exportName =>
+        s"""$wasmReplImportsRef.repl["$exportName"] = exports["$exportName"];"""
+      val jsBody =
+        if exportAssignments.nonEmpty then
+          s"""const result = exports["$mainFnNme"](); ${exportAssignments.mkString(" ")} return result;"""
+        else
+          s"""return exports["$mainFnNme"]();"""
+      val jsStr =
+        s"""await wasm.binaryenPrintFuncRes($modWatJsLit, $wasmReplImportsRef, exports => { $jsBody });"""
       output("Wasm result:")
       mkQuery("", jsStr): out =>
         // Omit the last line which is always "undefined" or the unit.
         val result = out.lastIndexOf('\n') match
           case n if n >= 0 => out.substring(0, n)
           case _ => ""
+        sessionExports.foreach: binding =>
+          binding.bindingSyms.foreach: sym =>
+            sessionImportsBySymbol
+              .getOrElseUpdate(sym, mutable.LinkedHashMap.empty)
+              .update(binding.bindingKey, binding)
         output(s"= $result")
     end if
-  
+
   end processIRBlock
-  
+
 end WasmDiffMaker

@@ -232,34 +232,37 @@ id(Foo)(1)
 
 // ——— ——— ———
 
-data class Foo(...args)
+data class FooSpd(...args)
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Elaborator.scala:1313': mismatched param list lengths List() vs List(term:FooSpd/args)
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a compiler bug; please report it to the maintainers.
 
-Foo(1, 2, 3).args
+FooSpd(1, 2, 3).args
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'args' yielded 'undefined'
 
 :todo
-if Foo(1, 2, 3) is Foo(...args) then args
+if FooSpd(1, 2, 3) is FooSpd(...args) then args
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (spread).
-//│ ║  l.241: 	if Foo(1, 2, 3) is Foo(...args) then args
-//│ ╙──       	                       ^^^^^^^
+//│ ║  l.244: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
+//│ ╙──       	                             ^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: args
-//│ ║  l.241: 	if Foo(1, 2, 3) is Foo(...args) then args
-//│ ╙──       	                                     ^^^^
+//│ ║  l.244: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
+//│ ╙──       	                                           ^^^^
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.241: 	if Foo(1, 2, 3) is Foo(...args) then args
-//│ ╙──       	                   ^^^
+//│ ║  l.244: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
+//│ ╙──       	                      ^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
-if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+if FooSpd(1, 2, 3) is FooSpd(a, b, c) then [a, b, c]
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found three arguments.
-//│ ║  l.253: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
-//│ ╙──       	                       ^^^^^^^
+//│ ║  l.256: 	if FooSpd(1, 2, 3) is FooSpd(a, b, c) then [a, b, c]
+//│ ╙──       	                             ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
-if Foo(1, 2, 3) is Foo(arg) then arg
+if FooSpd(1, 2, 3) is FooSpd(arg) then arg
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.259: 	if Foo(1, 2, 3) is Foo(arg) then arg
-//│ ╙──       	                       ^^^
+//│ ║  l.262: 	if FooSpd(1, 2, 3) is FooSpd(arg) then arg
+//│ ╙──       	                             ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 // ——— ——— ———
@@ -286,10 +289,10 @@ fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
 //│ ╔══[COMPILATION ERROR] Unsupported let binding shape
-//│ ║  l.286: 	  let bar(x: Str): Str = x + x
+//│ ║  l.289: 	  let bar(x: Str): Str = x + x
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: bar
-//│ ║  l.287: 	  bar("test")
+//│ ║  l.290: 	  bar("test")
 //│ ╙──       	  ^^^
 
 // ——— ——— ———
@@ -303,18 +306,18 @@ module Foo(x) with
   print(x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.302: 	module Foo(x) with
+//│ ║  l.305: 	module Foo(x) with
 //│ ╙──       	           ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo7;
-//│ (class Foo6 {
+//│ let Foo5;
+//│ (class Foo4 {
 //│   static {
-//│     Foo7 = this
+//│     Foo5 = this
 //│   }
 //│   static #x;
 //│   static {
-//│     Foo6.#x = x;
-//│     Predef.print(Foo6.#x);
+//│     Foo4.#x = x;
+//│     Predef.print(Foo4.#x);
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
@@ -327,13 +330,13 @@ module Foo(x) with
 module Foo(val x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.327: 	module Foo(val x)
+//│ ║  l.330: 	module Foo(val x)
 //│ ╙──       	               ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo9;
-//│ (class Foo8 {
+//│ let Foo7;
+//│ (class Foo6 {
 //│   static {
-//│     Foo9 = this
+//│     Foo7 = this
 //│   }
 //│   static {
 //│     this.x = x;
@@ -348,7 +351,7 @@ module Foo(val x)
 // TODO support syntax?
 data class Foo(mut x)
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found 'mut'-modified identifier
-//│ ║  l.349: 	data class Foo(mut x)
+//│ ║  l.352: 	data class Foo(mut x)
 //│ ╙──       	                   ^
 
 // ——— ——— ———
@@ -363,7 +366,7 @@ class Foo
 :e
 class Id(name: UnboundName)
 //│ ╔══[COMPILATION ERROR] Name not found: UnboundName
-//│ ║  l.364: 	class Id(name: UnboundName)
+//│ ║  l.367: 	class Id(name: UnboundName)
 //│ ╙──       	               ^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
 //│ ═══[COMPILATION ERROR] Expected a type, got ‹error›

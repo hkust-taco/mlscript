@@ -322,7 +322,7 @@ object Instructions:
       stackargs = Seq(value),
       resultType = S(I32Type),
     )
-    
+
     /** Creates a `ref.func` instruction. */
     def func(idx: FuncIdx, ty: RefType): FoldedInstr = FoldedInstr(
       mnemonic = "ref.func",

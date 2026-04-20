@@ -73,9 +73,9 @@ f(1, ...[2])
 f(1, ...[2], ...[3])
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f⁸, tmp, tmp1, tmp2;
-//│ define f⁸ as fun f⁹(a) {
+//│ define f⁸ as fun f⁹(a, ...b) {
 //│   do Predef⁰.print⁰(a);
-//│   return Predef⁰.print⁰(b¹)
+//│   return Predef⁰.print⁰(b)
 //│ };
 //│ set tmp = [2];
 //│ do f⁹(1, ...tmp);
@@ -99,29 +99,29 @@ f(1, 2)
 f(1, 2, 3)
 f(1, 2, 3, 4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹⁰, a¹, b², c¹, a², b³, c², a³, b⁴, c³, inlinedVal, tmp, tmp1, tmp2;
-//│ define f¹⁰ as fun f¹¹(a, b) {
+//│ let f¹⁰, a¹, b¹, c¹, a², b², c², a³, b³, c³, inlinedVal, tmp, tmp1, tmp2;
+//│ define f¹⁰ as fun f¹¹(a, b, ...c) {
 //│   let tmp3;
 //│   set tmp3 = +⁰(a, b);
 //│   do Predef⁰.print⁰(tmp3);
-//│   return Predef⁰.print⁰(c⁴)
+//│   return Predef⁰.print⁰(c)
 //│ };
 //│ set a¹ = 1;
-//│ set b² = 2;
+//│ set b¹ = 2;
 //│ set c¹ = mut [];
-//│ set tmp2 = +⁰(a¹, b²);
+//│ set tmp2 = +⁰(a¹, b¹);
 //│ do Predef⁰.print⁰(tmp2);
 //│ do Predef⁰.print⁰(c¹);
 //│ set a² = 1;
-//│ set b³ = 2;
+//│ set b² = 2;
 //│ set c² = mut [3];
-//│ set tmp1 = +⁰(a², b³);
+//│ set tmp1 = +⁰(a², b²);
 //│ do Predef⁰.print⁰(tmp1);
 //│ do Predef⁰.print⁰(c²);
 //│ set a³ = 1;
-//│ set b⁴ = 2;
+//│ set b³ = 2;
 //│ set c³ = mut [3, 4];
-//│ set tmp = +⁰(a³, b⁴);
+//│ set tmp = +⁰(a³, b³);
 //│ do Predef⁰.print⁰(tmp);
 //│ set inlinedVal = Predef⁰.print⁰(c³);
 //│ inlinedVal

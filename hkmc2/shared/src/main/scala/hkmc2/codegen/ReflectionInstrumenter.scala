@@ -343,7 +343,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
     // TODO: remove it. only for test
     val debug = (k: Block) => call(sym, Nil)(fnPrintCode(_)(k))
-    val newFun = f.copy(sym = genSym, dSym = dSym, params = Ls(PlainParamList(Nil)), body = newBody)(false, f.configOverride)
+    val newFun = f.copy(sym = genSym, dSym = dSym, params = Ls(PlainParamList(Nil)), body = newBody)(false, f.configOverride, f.visibility)
     (newFun, debug)
 
   override def applyBlock(b: Block): Block = super.applyBlock(b) match
@@ -354,7 +354,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
       val (stagedMethods, debugPrintCode) = companion.methods
         .map(applyFunDefnInner)
         .unzip
-      val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(PlainParamList(Nil)), companion.ctor)(false, N)
+      val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(PlainParamList(Nil)), companion.ctor)(false, N, Visibility.Public)
       val (stagedCtor, ctorPrint) = applyFunDefnInner(ctor)
 
       val unit = State.runtimeSymbol.asPath.selSN("Unit")

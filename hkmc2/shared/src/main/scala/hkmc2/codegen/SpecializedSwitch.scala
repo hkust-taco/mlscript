@@ -48,7 +48,8 @@ private enum MatchType:
  * where each Mi are match statements that match on a common scrutinee `x`, only have literal patterns,
  * and have an empty or no default case, except for Mn. We define three types of such match statements
  * (which are mostly unrelated to switch case types in the enum `SwitchCase`):
- * - MFallthrough(next): Has only one branch, and assigns the literal `next` to `x` at the end of that branch.
+ * - MFallthrough(next): Has only one branch, and if the branch executes to completion, then `next` is assigned
+ *   to `x`.
  * - MAbortive: All branches are abortive (and thus exits the scope that the match chain is defined in).
  * - MCases: Is not an MFallthrough or an MAbortive (but still matches on `x` and only has literals patterns).
  * 
@@ -67,13 +68,100 @@ private enum MatchType:
  * - MCases is translated into a list of SwitchCase.ExplicitBreak.
  */
 
-// S(value): Ends with assign
-// N: None of the cases
-@tailrec
-private def isTailAssign(b: Block, scrutSym: Local): Opt[Literal] = b match
-  case a @ Assign(`scrutSym`, Value.Lit(l), End(_)) => S(l)
-  case b: NonBlockTail => isTailAssign(b.rest, scrutSym)
-  case _: BlockTail => N
+private object PostCondRes:
+  val empty = PostCondRes(false, false, Map.empty)
+
+// isImpure: indicates whether the result was computed for a possibly impure expression. All analysis results
+// that could possibly come before this result must be discarded.
+// isAbortive: indicates whether the result was computed for an abortive block. When merging results from
+// different branches, the results for this must be discarded.
+private case class PostCondRes(isImpure: Bool, isAbortive: Bool, varsMap: Map[Local, Literal]):
+  def markImpure = copy(isImpure = true)
+
+// Combines postconditions from different branches.
+private def combinePostConds(p1: PostCondRes, p2: PostCondRes) =
+  if p1.isAbortive && p2.isAbortive then
+    PostCondRes(false, false, Map.empty)
+  else if p1.isAbortive then
+    PostCondRes(p2.isImpure, false, p2.varsMap) // We don't care about whether p1 is impure if it is abortive.
+  else if p2.isAbortive then
+    PostCondRes(p1.isImpure, false, p1.varsMap) // Same as above
+  else
+    // If a variable was set to a different value in either branch, or was only set in one branch, do not include
+    // Otherwise, we can combine them
+    val combined = p1.varsMap.collect:
+      case k -> v1 if p2.varsMap.contains(k) && p2.varsMap(k) == v1 => k -> v1
+    PostCondRes(p1.isImpure || p2.isImpure, false, combined)
+
+extension (r: PostCondRes)
+  // For combining postconditions derived in different branches
+  def ++(r2: PostCondRes): PostCondRes = combinePostConds(r, r2)
+  // For combining sequences of postconditions
+  def >=>(r2: PostCondRes): PostCondRes =
+    if r.isAbortive then r
+    else if r2.isImpure then r2
+    else PostCondRes(r.isImpure, r2.isAbortive, r.varsMap ++ r2.varsMap)
+  def +(v: Local -> Literal): PostCondRes = PostCondRes(r.isImpure, r.isAbortive, r.varsMap + v)
+
+// Analyzes postconditions for a block. Namely, determines variables that are
+// definitely set to a certain literal.
+//
+// Note that impure computations will lead to `isImpure` being set to true. This means
+// all analysis *before* the impure computation will be discarded.
+//
+// The intended semantics of this are, assuming the block finishes execution, i.e.
+// it does not break to a label that wraps the block or returns, then the 
+// postconditions hold. Otherwise, the results are invalid, which does not matter,
+// because they will be irrelevant in that case anyway.
+private object PostCondAnalysisImpl extends CachedAnalysis[Block, PostCondRes]:
+  
+  private def res(lhs: Opt[Local], rhs: Result, rest: Block) =
+    if rhs.isPure then lhs match
+      case Some(lhs) => rhs match
+        case Value.Lit(lit) => PostCondRes(false, false, Map(lhs -> lit)) >=> analyze(rest)
+        case _ => analyze(rest)
+      case None => analyze(rest)
+    else analyze(rest).markImpure
+  
+  override def analyzeUncached(b: Block): PostCondRes = b match
+    case Label(label, loop, body, rest) =>
+      /* We do not traverse into the label body.
+       * If we do, then there are cases like this:
+       * 
+       * label l1:
+       *   label l2:
+       *     body
+       *     set x = 1
+       *   end
+       * end
+       * 
+       * and it is very difficult to tell whether we should have the postcondition x = 2 in the outer loop,
+       * because `body` could break out of `l1` or `l2`.
+       * 
+       * Not traversing into labels also makes `Block.isAbortive` more useful, as we always know that
+       * if a block is abortive, then it aborts out of the "initial" block that `analyze` was called on.
+       */
+      val restRes = analyze(rest)
+      restRes.copy(isImpure = restRes.isImpure || analyze(body).isImpure)
+    case Match(scrut, arms, dflt, rest) =>
+      arms.foldLeft(dflt.map(analyze).getOrElse(PostCondRes.empty)):
+        case (acc, (_, blk)) => acc ++ analyze(blk)
+      >=> analyze(rest)
+    case Scoped(syms, body) => analyze(body)
+    case Begin(sub, rest) => analyze(sub) >=> analyze(rest)
+    case TryBlock(sub, finallyDo, rest) => analyze(sub) >=> analyze(finallyDo) >=> analyze(rest)
+    case Assign(lhs, rhs, rest) => res(S(lhs), rhs, rest)
+    case AssignField(path, _, rhs, rest) => res(N, rhs, rest)
+    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => res(N, rhs, rest)
+    case Define(defn, rest) => defn match
+      case v: ValDefn => res(S(v.sym), v.rhs, rest)
+      case c: ClsLikeDefn => analyze(rest).markImpure // TODO: refine for object and module ctors
+      case f: FunDefn => analyze(rest)
+    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) => analyze(body) >=> analyze(rest)
+    case b: BlockTail => PostCondRes.empty.copy(isAbortive = b.isAbortive)
+
+private object PostCondAnalysis extends CachedAnalysis[Block, Map[Local, Literal]]:
+  override def analyzeUncached(b: Block): Map[Symbol, Literal] = PostCondAnalysisImpl.analyze(b).varsMap
 
 // Matches List[Case.Lit -> Block]
 private object LitCases:
@@ -85,8 +173,8 @@ private case class MatchChain(scrut: Value.Ref, cases: List[MatchType], dflt: Op
 
 // Helper that determines whether a default branch is empty
 private def isEmptyDflt(dflt: Opt[Block]) = dflt match
-  case Some(End(_)) => true
-  case None => true
+  case S(x) if x.isEmpty => true
+  case N => true
   case _ => false
 
 // Extracts a valid match chain beginning at a block.
@@ -97,7 +185,12 @@ private def findMatchChainRec(
   acc: List[MatchType]
 ): MatchChain =
   object TailAssign:
-    def unapply(b: Block) = isTailAssign(b, scrutRef.l)
+    def unapply(b: Block) =
+      if b.isAbortive then N
+      else PostCondAnalysis.analyze(b).get(scrutRef.l) match
+        case S(value) => S(value)
+        case N => N
+  
   
   // Whether the current match may have a non-empty default case.
   // It is allowed iff the previous case was a break, or if this is the only case.
@@ -136,13 +229,13 @@ private def findMatchChainRec(
           if arms.forall(_._2.isAbortive) then
             // If both default and restBlk are not End(), and default blocks are not allowed, then fail
             // Otherwise, take the non-end one as the next block
-            val restEmpty = restBlk.isInstanceOf[End]
+            val restEmpty = restBlk.isEmpty
             val res = MatchType.MAbortive(arms)
             if !dfltEmpty && !restEmpty then
               if !isDfltCaseAllowed then fail
               else success(res, m, m.dflt, dfltEmpty, restBlk)
             else if restEmpty then
-              success(res, m, N, true, m.dflt.get)
+              success(res, m, N, true, m.dflt.getOrElse(End()))
             else
               success(res, m, m.dflt, dfltEmpty, restBlk)
           // MCases

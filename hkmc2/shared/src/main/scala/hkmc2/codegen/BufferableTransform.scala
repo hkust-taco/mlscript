@@ -7,7 +7,7 @@ import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
 import hkmc2.utils.SymbolSubst
 
-import syntax.{Literal, Tree, ParamBind}
+import syntax.{Literal, Tree}
 import semantics.*
 import semantics.Elaborator.{Ctx, ctx}
 import semantics.Elaborator.State
@@ -79,13 +79,13 @@ class BufferableTransform()(using Ctx, State, Raise):
               val blk = mkFieldReplacer(buf, idx, symMap).applyBlock(f.body)
               FunDefn(f.owner, f.sym, TermSymbol(f.dSym.k, f.dSym.owner, f.dSym.id), PlainParamList(
                 Param(FldFlags.empty, buf, N, Modulefulness.none) :: Param(FldFlags.empty, idx, N, Modulefulness.none) :: Nil) :: newParams,
-                if isCtor then Begin(blk, Return(idx.asPath, false)) else blk)(forceTailRec = f.forceTailRec, configOverride = f.configOverride)
+                if isCtor then Begin(blk, Return(idx.asPath, false)) else blk)(forceTailRec = f.forceTailRec, configOverride = f.configOverride, visibility = f.visibility)
             val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
                 S(companionSym), 
                 BlockMemberSymbol("ctor", Nil, false), 
                 cls.paramsOpt.toList,
                 Begin(cls.preCtor, cls.ctor),
-              )(false, N), true)
+              )(false, N, Visibility.Public), true)
             val fakeCompanion = ClsLikeBody(
               companionSym,
               fakeCtor :: cls.methods.map(transformFunDefn(_, false)),

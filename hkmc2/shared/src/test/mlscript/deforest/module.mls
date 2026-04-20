@@ -53,6 +53,12 @@ DeforestList.res + DeforestList.main()
 //│ deforest > 	Select(Ref(ls,None),Ident(t))
 //│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
 //│ deforest > 	Ref(ls,None)
+//│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
+//│ deforest > 	Ref(ls,None)
+//│ deforest > Call(Select(Ref(module:DeforestList,None),Ident(Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(ls,None)
+//│ deforest > 	Select(Ref(ls,None),Ident(h))
+//│ deforest > 	Select(Ref(ls,None),Ident(t))
 //│ deforest > <<< fusing <<<
 //│ = 5056
 
@@ -87,6 +93,12 @@ DeforestList.res + DeforestList.main()
 //│ deforest > 	Select(Ref(ls,None),Ident(t))
 //│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
 //│ deforest > 	Ref(ls,None)
+//│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
+//│ deforest > 	Ref(ls,None)
+//│ deforest > Call(Select(Ref(module:DeforestList,None),Ident(Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > 	Ref(ls,None)
+//│ deforest > 	Select(Ref(ls,None),Ident(h))
+//│ deforest > 	Select(Ref(ls,None),Ident(t))
 //│ deforest > <<< fusing <<<
 //│ = 5056
 
@@ -102,6 +114,8 @@ module MMM with
     if A is A then y
 MMM.f()
 //│ deforest > >>> fusing >>>
+//│ deforest > Select(Ref(module:MMM,None),Ident(A)) ->
+//│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > Select(Ref(module:MMM,None),Ident(A)) ->
 //│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > Select(Ref(module:MMM,None),Ident(A)) ->

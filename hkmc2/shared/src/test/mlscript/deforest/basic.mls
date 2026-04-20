@@ -41,7 +41,7 @@ let useless = if lsit is [a, b] then 0
 //│ };
 //│ set tup2_0 = 2;
 //│ set tup2_1 = 1;
-//│ set lsit⁰ = () => return $lsit_tup2¹(tup2_0, tup2_1);
+//│ set lsit⁰ = () => { return $lsit_tup2¹(tup2_0, tup2_1) };
 //│ lsit⁰()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = null
@@ -76,15 +76,19 @@ f(p())
 //│ deforest > 	Select(Ref(tmp:arg$X$0$,None),Ident(b))
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let p⁰, f⁰, tmp, p_9$p⁰, f_10$f⁰, f_10$x_X⁰, f_10$x_rest⁰, f_10$split_default$_rest⁰, f_10$split_root$_rest⁰, f_10$arg$X$0$_Y⁰, f_10$arg$X$0$_rest⁰;
-//│ define p_9$p⁰ as fun p_9$p¹() {
+//│ let p⁰, f⁰, tmp, p_10$p⁰, f_12$f⁰, f_12$x_X⁰, f_12$x_rest⁰, f_12$split_default$_rest⁰, f_12$split_root$_rest⁰, f_12$arg$X$0$_Y⁰, f_12$arg$X$0$_rest⁰;
+//│ define p_10$p⁰ as fun p_10$p¹() {
 //│   let tmp1, Y_b, X_a;
 //│   set Y_b = O⁰;
-//│   set tmp1 = (fv_ctorLam_y, fv_ctorLam_arg$Y$0$) => return f_10$arg$X$0$_Y¹(fv_ctorLam_y, fv_ctorLam_arg$Y$0$, Y_b);
+//│   set tmp1 = (fv_ctorLam_y, fv_ctorLam_arg$Y$0$) => {
+//│     return f_12$arg$X$0$_Y¹(fv_ctorLam_y, fv_ctorLam_arg$Y$0$, Y_b)
+//│   };
 //│   set X_a = tmp1;
-//│   return (fv_ctorLam_y, fv_ctorLam_arg$X$0$, fv_ctorLam_arg$Y$0$) => return f_10$x_X¹(fv_ctorLam_y, fv_ctorLam_arg$X$0$, fv_ctorLam_arg$Y$0$, X_a)
+//│   return (fv_ctorLam_y, fv_ctorLam_arg$X$0$, fv_ctorLam_arg$Y$0$) => {
+//│     return f_12$x_X¹(fv_ctorLam_y, fv_ctorLam_arg$X$0$, fv_ctorLam_arg$Y$0$, X_a)
+//│   }
 //│ };
-//│ define f_10$f⁰ as fun f_10$f¹(x) {
+//│ define f_12$f⁰ as fun f_12$f¹(x) {
 //│   let y, arg$X$0$, arg$Y$0$;
 //│   block split_root$:
 //│     block split_default$:
@@ -92,26 +96,26 @@ f(p())
 //│     throw new globalThis⁰.Error⁰("match error")
 //│   return runtime⁰.Unit⁰
 //│ };
-//│ define f_10$x_X⁰ as fun f_10$x_X¹(fv_y, fv_arg$X$0$, fv_arg$Y$0$, X_a) {
+//│ define f_12$x_X⁰ as fun f_12$x_X¹(fv_y, fv_arg$X$0$, fv_arg$Y$0$, X_a) {
 //│   set fv_arg$X$0$ = X_a;
 //│   return fv_arg$X$0$(fv_y, fv_arg$Y$0$)
 //│ };
-//│ define f_10$arg$X$0$_Y⁰ as fun f_10$arg$X$0$_Y¹(fv_y, fv_arg$Y$0$, Y_b) {
+//│ define f_12$arg$X$0$_Y⁰ as fun f_12$arg$X$0$_Y¹(fv_y, fv_arg$Y$0$, Y_b) {
 //│   set fv_arg$Y$0$ = Y_b;
 //│   set fv_y = fv_arg$Y$0$;
 //│   return fv_y
 //│ };
-//│ define f_10$x_rest⁰ as fun f_10$x_rest¹() {
-//│   return f_10$split_default$_rest¹()
+//│ define f_12$x_rest⁰ as fun f_12$x_rest¹() {
+//│   return f_12$split_default$_rest¹()
 //│ };
-//│ define f_10$split_default$_rest⁰ as fun f_10$split_default$_rest¹() {
+//│ define f_12$split_default$_rest⁰ as fun f_12$split_default$_rest¹() {
 //│   throw new globalThis⁰.Error⁰("match error")
 //│ };
-//│ define f_10$split_root$_rest⁰ as fun f_10$split_root$_rest¹() {
+//│ define f_12$split_root$_rest⁰ as fun f_12$split_root$_rest¹() {
 //│   return runtime⁰.Unit⁰
 //│ };
-//│ define f_10$arg$X$0$_rest⁰ as fun f_10$arg$X$0$_rest¹() {
-//│   return f_10$x_rest¹()
+//│ define f_12$arg$X$0$_rest⁰ as fun f_12$arg$X$0$_rest¹() {
+//│   return f_12$x_rest¹()
 //│ };
 //│ define p⁰ as fun p¹() {
 //│   let tmp1;
@@ -139,8 +143,8 @@ f(p())
 //│     throw new globalThis⁰.Error⁰("match error")
 //│   return runtime⁰.Unit⁰
 //│ };
-//│ set tmp = p_9$p¹();
-//│ f_10$f¹(tmp)
+//│ set tmp = p_10$p¹();
+//│ f_12$f¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = O
 
@@ -203,7 +207,7 @@ fun c(x, d) = if x is
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(a))
 //│ deforest > <<< fusing <<<
-//│ = fun lambda_6$lambda
+//│ = fun lambda_8$lambda
 
 
 :expect 2
@@ -244,7 +248,7 @@ if [1, 2] is
 //│ };
 //│ set tup2_0 = 1;
 //│ set tup2_1 = 2;
-//│ set scrut = () => return $scrut_tup2¹(tup2_0, tup2_1);
+//│ set scrut = () => { return $scrut_tup2¹(tup2_0, tup2_1) };
 //│ scrut()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
@@ -257,8 +261,8 @@ f([1,2])
 //│ deforest > >>> fusing >>>
 //│ deforest > Tuple(false,List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))))) ->
 //│ deforest > 	Ref(x,None)
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(x,None)), Arg(None,Lit(IntLit(1)))))
 //│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(x,None)), Arg(None,Lit(IntLit(0)))))
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(x,None)), Arg(None,Lit(IntLit(1)))))
 //│ deforest > <<< fusing <<<
 //│ = 3
 

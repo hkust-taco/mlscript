@@ -1,0 +1,132 @@
+:js
+
+
+:checkIR
+:deadParamElim poly
+:expect 1
+fun f(used, unused) =
+  class C with
+    fun get() = used
+  new C
+f(1, 2).get()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ f@1 -> eliminable: {1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 1
+
+
+
+:checkIR
+:deadParamElim poly
+fun foo(y) =
+  class M with
+    fun bar() = set y = 2
+  (new M).bar()
+foo(10)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun foo#0 @ foo@3 -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+
+
+
+:checkIR
+:deadParamElim poly
+:expect 10
+fun g(x, dead) =
+  class Pair with
+    fun first() = x
+    fun second() = x + x
+  let p = new Pair
+  p.first()
+g(10, 99)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun g#0 @ g@3 -> eliminable: {1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 10
+
+
+
+:checkIR
+:deadParamElim poly
+:expect 13
+fun h(base, unused) =
+  class Adder with
+    fun add(n) = base + n
+  new Adder
+h(10, 0).add(3)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun h#0 @ h@2 -> eliminable: {1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 13
+
+
+
+:checkIR
+:deadParamElim poly
+:expect 42
+:soir
+fun wrapper(val1, dead) =
+  class A with
+    fun makeB() =
+      class B with
+        fun getVal() = val1
+      new B
+  (new A).makeB().getVal()
+wrapper(42, 0)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun wrapper#0 @ wrapper@3 -> eliminable: {1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let wrapper⁰, wrapper_3$wrapper⁰;
+//│ define wrapper_3$wrapper⁰ as fun wrapper_3$wrapper¹(val1) {
+//│   let A, tmp, tmp1;
+//│   define A as class A⁰ {
+//│     method makeB⁰ = fun makeB¹() {
+//│       let B;
+//│       define B as class B⁰ {
+//│         method getVal⁰ = fun getVal¹() {
+//│           return val1
+//│         }
+//│       };
+//│       return new B⁰()
+//│     }
+//│   };
+//│   set tmp = new A⁰();
+//│   set tmp1 = tmp.makeB¹();
+//│   return tmp1.getVal﹖()
+//│ };
+//│ define wrapper⁰ as fun wrapper¹(val1, dead) {
+//│   let A, tmp, tmp1;
+//│   define A as class A¹ {
+//│     method makeB² = fun makeB³() {
+//│       let B;
+//│       define B as class B¹ {
+//│         method getVal² = fun getVal³() {
+//│           return val1
+//│         }
+//│       };
+//│       return new B¹()
+//│     }
+//│   };
+//│   set tmp = new A¹();
+//│   set tmp1 = tmp.makeB³();
+//│   return tmp1.getVal﹖()
+//│ };
+//│ wrapper_3$wrapper¹(42)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+:checkIR
+:deadParamElim poly
+:expect 30
+fun multi(a, b, dead) =
+  class Calc with
+    fun sum() = a + b
+    fun prod() = a * b
+  (new Calc).prod()
+multi(5, 6, 999)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun multi#0 @ multi@4 -> eliminable: {2}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 30

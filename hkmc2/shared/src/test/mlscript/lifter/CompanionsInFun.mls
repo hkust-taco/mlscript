@@ -20,12 +20,9 @@ fun f(x) =
 //│ define f⁰ as fun f¹(x) {
 //│   let A;
 //│   define A as class A⁰ {
-//│     private val A$cap⁰;
-//│     method get⁰ = fun get¹ {
-//│       return x
-//│     }
+//│     method get⁰ = fun get¹ { return x }
 //│   }
-//│   module A¹ { private val A_mod$cap⁰; };
+//│   module A¹;
 //│   return runtime⁰.Unit⁰
 //│ };
 //│ end
