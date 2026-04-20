@@ -8,7 +8,7 @@ import hkmc2.utils.*
 
 import document.*
 import document.Document
-import semantics.{BlockMemberSymbol, Elaborator, InnerSymbol, LabelSymbol, ModuleOrObjectSymbol, Symbol, TempSymbol},
+import semantics.{BlockMemberSymbol, Elaborator, InnerSymbol, LabelSymbol, ModuleOrObjectSymbol, ParamList, Symbol, TempSymbol},
   Elaborator.State
 import text.Param as WasmParam
 import Instructions.*
@@ -361,7 +361,7 @@ object FunctionCtx:
   * @param thisSym
   *   The implicit `this` parameter symbol if this function is generated from a non-static method, or `N` otherwise.
   */
-class FunctionCtx(_params: Seq[Local], thisSym: Opt[InnerSymbol])(using Raise, State):
+class FunctionCtx(_params: Ls[ParamList], thisSym: Opt[InnerSymbol])(using Raise, State):
 
   /** [[Scope]] for generating WAT identifiers of locals. */
   private[text] val localScp = Scope.empty(Scope.Cfg.default)
@@ -370,9 +370,11 @@ class FunctionCtx(_params: Seq[Local], thisSym: Opt[InnerSymbol])(using Raise, S
     * identifier.
     */
   val params: Seq[Local -> SymIdx] =
+    if _params.length > 1 then
+      lastWords("Multiple parameter lists are not yet supported")
     val thisParam = thisSym.map: dis =>
       dis -> SymIdx(localScp.addToBindings(dis, "this", shadow = false))
-    thisParam.toSeq ++ _params.map(p => p -> SymIdx(localScp.allocateName(p)))
+    thisParam.toSeq ++ _params.flatMap(_.paramSyms).map(p => p -> SymIdx(localScp.allocateName(p)))
   private val _locals = ArrayBuf.empty[Local]
 
   /** Adds a Wasm local into this context.
@@ -402,7 +404,7 @@ end FunctionCtx
   *
   * Returns the result of the `mkBody` function along with the [[FunctionCtx]].
   */
-def genFuncBody[T](params: Seq[Local], thisSym: Opt[InnerSymbol])(mkBody: FunctionCtx ?=> T)(using Raise, State): T -> FunctionCtx =
+def genFuncBody[T](params: Ls[ParamList], thisSym: Opt[InnerSymbol])(mkBody: FunctionCtx ?=> T)(using Raise, State): T -> FunctionCtx =
   val funcCtx = FunctionCtx(params, thisSym)
   val result = mkBody(using funcCtx)
   result -> funcCtx

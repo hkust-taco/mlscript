@@ -608,8 +608,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def setupInitLocals(
       clsLikeDefn: ClsLikeDefn,
   )(using Ctx, Raise, Scope, SessionExportCtx): (Expr, FunctionCtx) =
-    val clsParams = clsLikeDefn.paramsOpt.fold(Nil)(_.paramSyms)
-    genFuncBody(clsParams, thisSym = S(clsLikeDefn.isym)):
+    genFuncBody(clsLikeDefn.paramsOpt.toList, thisSym = S(clsLikeDefn.isym)):
       val thisVar = funcCtx.lookupLocal(clsLikeDefn.isym).get
       val preCtorWat = compilePreCtor(clsLikeDefn, thisVar)
       val ctorWat = block(clsLikeDefn.ctor)
@@ -1532,7 +1531,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       lastWords(s"Expected class ${clsLikeDefn.sym} to have an object tag")
 
                     val initFuncRef = initFuncSym(clsLikeDefn.sym)
-                    val (ctorCode, ctorFnCtx) = genFuncBody(clsLikeDefn.paramsOpt.fold(Nil)(_.paramSyms), thisSym = N):
+                    val (ctorCode, ctorFnCtx) = genFuncBody(clsLikeDefn.paramsOpt.toList, thisSym = N):
                       val thisVar = bindCtorThis(clsLikeDefn.isym)
                       val initCall = call(
                         funcidx = ctx.getFunc_!(initFuncRef),
@@ -2030,7 +2029,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
       // Compile the entry function under a dedicated local scope so that any temp locals introduced
       // during codegen (e.g., via `local.tee`) are declared in the entry function.
-      val (entryFnExpr, entryFnCtx) = genFuncBody(Seq.empty, thisSym = N):
+      val (entryFnExpr, entryFnCtx) = genFuncBody(Nil, thisSym = N):
         val rawEntryFnExpr = block(p.main)
         normalizeEntryExpr(rawEntryFnExpr, p.main.isAbortive)
 
@@ -2132,7 +2131,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       params: ParamList,
       body: Block,
   )(using Ctx, Raise, Scope, SessionExportCtx): (Expr, FunctionCtx) =
-    genFuncBody(params.params.map(_.sym).toSeq, thisSym = N):
+    genFuncBody(params :: Nil, thisSym = N):
       block(body)
 
 end WatBuilder
