@@ -1763,7 +1763,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         blockPreamble(syms)
         returningTerm(body)
       case Break(label) =>
-        ctx.lookupLabel(label) match
+        funcCtx.lookupLabel(label) match
           case S(target) => br(target.breakLabel)
           case N =>
             errExpr(
@@ -1773,7 +1773,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               extraInfo = S(t.showAsTree),
             )
       case Continue(label) =>
-        ctx.lookupLabel(label) match
+        funcCtx.lookupLabel(label) match
           case S(target) =>
             target.continueLabel match
               case S(continueLabel) => br(continueLabel)
@@ -1792,37 +1792,29 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               extraInfo = S(t.showAsTree),
             )
       case Label(label, loop, body, rst) =>
-        val breakLabel = scope.allocateName(label)
-        val continueLabel =
-          if loop then S(scope.allocateName(TempSymbol(N, s"${label.nme}_cont")))
-          else N
-
-        val bodyExpr = ctx.withLabel(
-          label,
-          Ctx.LabelTarget(breakLabel, continueLabel),
-        ):
-          returningTerm(body)
-        val bodyStmt = asStatement(bodyExpr)
-
-        val labeledRegion =
-          if loop then
-            Instructions.block(
-              label = S(breakLabel),
-              children = Seq(
-                Instructions.loop(
-                  label = continueLabel,
-                  children = Seq(bodyStmt),
-                  resultTypes = Seq.empty,
+        val labeledRegion = funcCtx.withLabel(label, hasContinueLabel = loop):
+          case LabelTarget(breakLabel, continueLabel) =>
+            val bodyExpr = returningTerm(body)
+            val bodyStmt = asStatement(bodyExpr)
+    
+            if loop then
+              Instructions.block(
+                label = S(breakLabel),
+                children = Seq(
+                  Instructions.loop(
+                    label = continueLabel,
+                    children = Seq(bodyStmt),
+                    resultTypes = Seq.empty,
+                  ),
                 ),
-              ),
-              resultTypes = Seq.empty,
-            )
-          else
-            Instructions.block(
-              label = S(breakLabel),
-              children = Seq(bodyStmt),
-              resultTypes = Seq.empty,
-            )
+                resultTypes = Seq.empty,
+              )
+            else
+              Instructions.block(
+                label = S(breakLabel),
+                children = Seq(bodyStmt),
+                resultTypes = Seq.empty,
+              )
 
         val rstExpr = returningTerm(rst)
         val rstResultTypes = rstExpr.resultTypes.flatMap(ty => ty.asValType.map(Result(_)))
