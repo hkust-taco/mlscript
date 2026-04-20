@@ -341,3 +341,4 @@ object ConfigParser:
         source = Diagnostic.Source.Compilation))
       identity
 end ConfigParser
+

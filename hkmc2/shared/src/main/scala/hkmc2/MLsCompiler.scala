@@ -357,16 +357,19 @@ class MLsCompiler
     compilation.compiled
 
   def compileModule(file: io.Path): Unit =
+
     val wd = file.up
+
     given Raise = mkRaise(file)
+
     given Elaborator.State = new Elaborator.State:
       override def dbg: Bool = dbgElab
-
     val preludeParse = ParserSetup(preludeFile, dbgParsing)
     val mainParse = ParserSetup(file, dbgParsing)
-
     val elab = Elaborator(etl, wd, Ctx.empty)
+
     val initState = State.init.nestLocal("prelude")
+    
     val (_, newCtx) = elab.importFrom(preludeParse.resultBlk)(using initState)
 
     newCtx.nestLocal("file:"+file.baseName).givenIn:
