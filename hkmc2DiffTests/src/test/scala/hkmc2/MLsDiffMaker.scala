@@ -239,7 +239,11 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"Error: $d")
       ()
     if file != preludeFile then
-      given Config = mkConfig
+      val cfg = mkConfig
+      given Config = cfg.copy(
+        deforest = cfg.deforest.map(_.copy(debug = false)),
+        deadParamElim = cfg.deadParamElim.map(_.copy(debug = false))
+      )
       processTrees(
         PrefixApp(Keywrd(`import`), StrLit(predefFile.toString))
         :: Open(Ident("Predef"))
@@ -393,4 +397,3 @@ abstract class MLsDiffMaker extends DiffMaker:
           doc" #{ ${trm.showTopLevel(using flowScp)} #} \nwhere #{ ${floan.showFlows(using flowScp)} #} ".mkString()
     
   
-

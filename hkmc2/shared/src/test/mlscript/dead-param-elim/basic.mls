@@ -2,8 +2,7 @@
 :noInline
 :deadParamElim debug
 
-//│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > <<< dead-param-elim results <<<
+
 :soir
 private fun f(a) = 0
 f(42)
