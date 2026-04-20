@@ -136,14 +136,13 @@ final case class CompiledWasmModule(
     sessionExports: Seq[SessionBinding],
 )
 
-/** Context used while collecting REPL/session exports for a single Wasm module.
+/** Context for collecting session exports from a Wasm module.
   *
-  * @param symbolsToExport
-  *   The symbols from the current module that should be recorded as session exports.
-  * @param collectedBindings
-  *   The session bindings accumulated while compiling the current module.
+  * @param moduleName
+  *   The module name used for identifying exports in dependent modules.
   */
 final class SessionExportCtx(
+    val moduleName: Str,
     val symbolsToExport: Set[Local],
     val collectedBindings: ArrayBuf[SessionBinding],
 ):
@@ -153,15 +152,16 @@ final class SessionExportCtx(
     collectedBindings += binding
 
   def freshCollector(): SessionExportCtx =
-    SessionExportCtx(symbolsToExport, ArrayBuf.empty)
+    SessionExportCtx(moduleName, symbolsToExport, ArrayBuf.empty)
 end SessionExportCtx
 
 object SessionExportCtx:
   def apply(
+      moduleName: Str,
       symbolsToExport: Set[Local],
       collectedBindings: ArrayBuf[SessionBinding],
   ): SessionExportCtx =
-    new SessionExportCtx(symbolsToExport, collectedBindings)
+    new SessionExportCtx(moduleName, symbolsToExport, collectedBindings)
 
 /** A Wasm function and its associated information.
   *

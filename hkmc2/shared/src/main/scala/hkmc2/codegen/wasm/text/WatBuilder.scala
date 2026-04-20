@@ -132,7 +132,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     summon[SessionExportCtx].emit(SessionSingleton(
       blockSym = unitDefn.sym,
       objectSym = singletonOwner,
-      moduleName = SessionBinding.ReplModuleName,
+      moduleName = summon[SessionExportCtx].moduleName,
       exportName = singletonInfo.globalName,
       globalTy = singletonInfo.globalTy,
     ))
@@ -447,7 +447,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     )
     summon[SessionExportCtx].emit(SessionGlobal(
       sym = sym,
-      moduleName = SessionBinding.ReplModuleName,
+      moduleName = summon[SessionExportCtx].moduleName,
       exportName = exportName,
       globalType = GlobalType(RefType.anyref, mutable = true),
     ))
@@ -1517,7 +1517,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       if summon[SessionExportCtx].shouldExport(defn.sym) then
                         summon[SessionExportCtx].emit(SessionFunc(
                           sym = defn.sym,
-                          moduleName = SessionBinding.ReplModuleName,
+                          moduleName = summon[SessionExportCtx].moduleName,
                           exportName = sym.nme,
                           funcType = FunctionType(funcInfo.getSignatureType),
                         ))
@@ -1647,7 +1647,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       if !isSingletonObj && clsLikeDefn.sym.nameIsMeaningful then
                         summon[SessionExportCtx].emit(SessionFunc(
                           sym = clsLikeDefn.sym,
-                          moduleName = SessionBinding.ReplModuleName,
+                          moduleName = summon[SessionExportCtx].moduleName,
                           exportName = clsLikeDefn.sym.nme,
                           funcType = FunctionType(
                             SignatureType(
@@ -1667,7 +1667,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                           summon[SessionExportCtx].emit(SessionSingleton(
                             blockSym = clsLikeDefn.sym,
                             objectSym = singletonOwner,
-                            moduleName = SessionBinding.ReplModuleName,
+                            moduleName = summon[SessionExportCtx].moduleName,
                             exportName = info.globalName,
                             globalTy = info.globalTy,
                           ))
@@ -2002,25 +2002,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       wd: io.Path,
       sessionImports: Seq[SessionBinding],
       preservedSessionSymbols: Set[Local],
+      currentModuleName: Str,
   )(using Raise, Scope): CompiledWasmModule =
-    for imprt <- p.imports do
-      raise(
-        ErrorReport(
-          msg"Import of symbol `${imprt._2}` not implemented yet" -> imprt._1.toLoc :: Nil,
-          extraInfo = S(imprt),
-          source = Diagnostic.Source.Compilation,
-        ),
-      )
-    exprt.foreach: exprt =>
-      raise(
-        ErrorReport(
-          msg"Export of symbol `${exprt.nme}` not implemented yet" -> exprt.toLoc :: Nil,
-          extraInfo = S(exprt),
-          source = Diagnostic.Source.Compilation,
-        ),
-      )
-
     val sessionExportCtx = SessionExportCtx(
+      moduleName = currentModuleName,
       symbolsToExport = preservedSessionSymbols,
       collectedBindings = ArrayBuf.empty,
     )

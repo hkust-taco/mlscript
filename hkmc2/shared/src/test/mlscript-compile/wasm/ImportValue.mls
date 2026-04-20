@@ -1,0 +1,5 @@
+#config(target: CompilationTarget.Wasm)
+
+import "./ImportedValue.mls"
+
+ImportedValue.base + 1
