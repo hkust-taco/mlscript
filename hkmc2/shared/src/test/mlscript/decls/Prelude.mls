@@ -245,6 +245,8 @@ declare module js with
     bitor
     shl
     try_catch
+    suspend
+    handle_suspension
 
 declare module wasm with
   fun

@@ -47,10 +47,6 @@ class BlockTraverser:
     case b @ AssignField(l, n, r, rst) =>
       applyPath(l); applyResult(r); applySubBlock(rst); b.symbol.foreach(_.traverse)
     case Define(defn, rst) => applyDefn(defn); applySubBlock(rst)
-    case Suspend(lhs, tag, handlerFun, rst) =>
-      applyLocal(lhs); applyPath(tag); applyPath(handlerFun); applySubBlock(rst)
-    case HandleSuspension(lhs, tag, bodyFun, rst) =>
-      applyLocal(lhs); applyPath(tag); applyPath(bodyFun); applySubBlock(rst)
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
       applyPath(lhs)
       applyResult(rhs)

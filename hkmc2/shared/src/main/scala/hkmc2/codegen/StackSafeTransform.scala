@@ -74,8 +74,6 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
           else
             super.applyBlock(b)
         
-        case _: Suspend | _: HandleSuspension => lastWords("Suspension in stack safe transformation")
-        
         case _ => super.applyBlock(b)
         
       override def applyHandler(hdr: Handler): Handler = lastWords("HandleBlock in stack safe transformation")

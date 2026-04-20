@@ -82,6 +82,8 @@ declare module js with
     bitor
     shl
     try_catch
+    suspend
+    handle_suspension
 
 declare module wasm with
   fun
@@ -140,10 +142,10 @@ declare fun (||): (Bool, Bool) -> Bool
 
 fun print(x) = @untyped globalThis.console.log(x)
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.141: 	fun print(x) = @untyped globalThis.console.log(x)
+//│ ║  l.143: 	fun print(x) = @untyped globalThis.console.log(x)
 //│ ║         	               ^^^^^^^^
 //│ ╟── This annotation is not supported on application terms.
-//│ ║  l.141: 	fun print(x) = @untyped globalThis.console.log(x)
+//│ ║  l.143: 	fun print(x) = @untyped globalThis.console.log(x)
 //│ ╙──       	                        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

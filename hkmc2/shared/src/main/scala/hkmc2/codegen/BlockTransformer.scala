@@ -95,20 +95,6 @@ class BlockTransformer(subst: SymbolSubst):
       applyDefn(defn): defn2 =>
         val rst2 = applySubBlock(rst)
         if (defn2 is defn) && (rst2 is rst) then b else Define(defn2, rst2)
-    case Suspend(l, tag, handlerFun, rst) =>
-      applyPath(tag): tag2 =>
-        applyPath(handlerFun): handlerFun2 =>
-          val l2 = applyLocal(l)
-          val rst2 = applySubBlock(rst)
-          if (l2 is l) && (tag2 is tag) && (handlerFun2 is handlerFun) && (rst2 is rst)
-            then b else Suspend(l2, tag2, handlerFun2, rst2)
-    case HandleSuspension(l, tag, bodyFun, rst) =>
-      applyPath(tag): tag2 =>
-        applyPath(bodyFun): bodyFun2 =>
-          val l2 = applyLocal(l)
-          val rst2 = applySubBlock(rst)
-          if (l2 is l) && (tag2 is tag) && (bodyFun2 is bodyFun) && (rst2 is rst)
-            then b else HandleSuspension(l2, tag2, bodyFun2, rst2)
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
       applyResult(rhs): rhs2 =>
         applyPath(lhs): lhs2 =>

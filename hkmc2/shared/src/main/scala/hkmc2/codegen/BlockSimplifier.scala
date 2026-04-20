@@ -136,8 +136,6 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
         case _: Throw | Return(_, false) | _: Unreachable | _: Continue | _: Break => true
         case Return(_, true) => false
         case _: End => false
-        case Suspend(_, _, _, rest) => rest.analyze
-        case HandleSuspension(_, _, _, rest) => rest.analyze
         
     end AbortiveAnalysis
     

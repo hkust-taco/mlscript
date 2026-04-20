@@ -327,7 +327,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           source = Diagnostic.Source.Compilation))
       case Throw(_) => blk
       case Scoped(_, body) => go(body) // PreHandlerLowering
-      case _: Suspend | _: HandleSuspension => lastWords("unexpected handleBlock") // already translated at this point
 
     val initId = allocId()
     // Note: initial part will only be resumed if stack safety is on.
@@ -556,22 +555,14 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, bod2)(fun.forceTailRec, fun.configOverride, fun.visibility)
       (debugInfoSym, debugInfo, fun2)
 
-    // transform innner function/class and Suspend/HandleSuspend to the JS runtime primitives.
+    // transform inner function/class and Suspend/HandleSuspend to the JS runtime primitives.
     val preTransform = new BlockTransformer(SymbolSubst.Id):
-      override def applyBlock(b: Block): Block = b match
-        // This is the common case
-        case Suspend(lhs, tag, handlerFun, Return(Value.Ref(lhs2, N), false)) if lhs is lhs2 =>
-          Return(Call(paths.mkEffectPath, tag.asArg :: handlerFun.asArg :: Nil)(true, true, false), false)
-        // To handle possible transformed block, we need to handle the general case
-        case Suspend(lhs, tag, handlerFun, rest) =>
-          Assign(lhs,
-            Call(paths.mkEffectPath, tag.asArg :: handlerFun.asArg :: Nil)(true, true, false),
-            applyBlock(rest))
-        case HandleSuspension(lhs, tag, bodyFun, rest) =>
-          Assign(lhs,
-            Call(paths.enterHandleBlockPath, tag.asArg :: bodyFun.asArg :: Nil)(true, true, false),
-            applyBlock(rest))
-        case _ => super.applyBlock(b)
+      override def applyResult(r: Result)(k: Result => Block): Block = r match
+        case Call(Value.Ref(sym, _), args) if sym is Elaborator.ctx.builtins.js.suspend =>
+          k(Call(paths.mkEffectPath, args)(true, true, false))
+        case Call(Value.Ref(sym, _), args) if sym is Elaborator.ctx.builtins.js.handle_suspension =>
+          k(Call(paths.enterHandleBlockPath, args)(true, true, false))
+        case _ => super.applyResult(r)(k)
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case fun: FunDefn =>
           if !h.allowDefn then

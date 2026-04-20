@@ -408,8 +408,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case Match(_, _, _, rst) => S(rst)
       case TryBlock(_, _, rst) => S(rst)
       case Label(_, _, _, rst) => S(rst)
-      case Suspend(_, _, _, rst) => S(rst)
-      case HandleSuspension(_, _, _, rst) => S(rst)
       case _ => N
 
     def recur(block: Block): Set[Symbol] = block match
@@ -671,8 +669,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case AssignDynField(lhs, fld, arrayIdx, rhs, _) => AssignDynField(lhs, fld, arrayIdx, rhs, rest)
       case Define(defn, _) => Define(defn, rest)
       case Match(scrut, arms, dflt, _) => Match(scrut, arms, dflt, rest)
-      case Suspend(lhs, tag, handlerFun, _) => Suspend(lhs, tag, handlerFun, rest)
-      case HandleSuspension(lhs, tag, bodyFun, _) => HandleSuspension(lhs, tag, bodyFun, rest)
       case Label(label, loop, body, _) => Label(label, loop, body, rest)
 
     def splitSuperTail(block: Block): Opt[Block -> Ls[Arg]] = block match
@@ -1326,8 +1322,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   def returningTerm(t: Block)(using Ctx, Raise, Scope, SessionExportCtx): Expr =
     t match
-      case _: Suspend | _: HandleSuspension =>
-        errExpr(Ls(msg"This code requires effect handler instrumentation but was compiled without it." -> N))
       case Assign(l, r, rst) if l is State.noSymbol =>
         val rExpr = result(r)
         val evalExpr = rExpr.resultType match

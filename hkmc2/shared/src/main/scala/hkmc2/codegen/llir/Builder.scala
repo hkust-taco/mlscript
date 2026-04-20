@@ -569,8 +569,6 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => applyBlock(rest)
         case Define(defn, rest) => applyDefn(defn); applyBlock(rest)
         case Scoped(_, body) => applyBlock(body)
-        case Suspend(lhs, tag, handlerFun, rest) => applyBlock(rest)
-        case HandleSuspension(lhs, tag, bodyFun, rest) => applyBlock(rest)
         case End(msg) =>
       
       override def applyDefn(defn: Defn): Unit = defn match
