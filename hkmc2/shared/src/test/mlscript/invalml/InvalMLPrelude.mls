@@ -111,6 +111,11 @@ declare module annotations with
 declare module scope with
   fun locally
 
+declare module runtime with
+  fun
+    suspend
+    handle_suspension
+
 
 declare fun run: [T] -> CodeBase[out T, out Nothing, out Any] -> T
 declare fun log: Str -> Any
@@ -140,10 +145,10 @@ declare fun (||): (Bool, Bool) -> Bool
 
 fun print(x) = @untyped globalThis.console.log(x)
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.141: 	fun print(x) = @untyped globalThis.console.log(x)
+//│ ║  l.146: 	fun print(x) = @untyped globalThis.console.log(x)
 //│ ║         	               ^^^^^^^^
 //│ ╟── This annotation is not supported on application terms.
-//│ ║  l.141: 	fun print(x) = @untyped globalThis.console.log(x)
+//│ ║  l.146: 	fun print(x) = @untyped globalThis.console.log(x)
 //│ ╙──       	                        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

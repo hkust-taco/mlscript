@@ -28,8 +28,8 @@ class WasmModuleImportTest extends AnyFunSuite:
     val report = ReportFormatter(_ => (), colorize = false)
     val wasmDir = compileDir / "wasm"
     val entryFile = wasmDir / "ImportValue.mls"
-    val importedModule = wasmDir / "ImportedValue.mjs"
-    val importedWat = wasmDir / "ImportedValue.wat"
+    val importedModule = wasmDir / "IVal.mjs"
+    val importedWat = wasmDir / "IVal.wat"
     val importedRelativePath = "./" + importedModule.relativeTo(wasmDir).toString
 
     val mlxCompiler = compiler(report)

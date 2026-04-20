@@ -270,8 +270,6 @@ class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
   def returningTerm(t: Block, endSemi: Bool)(using Raise, Scope): Document =
     def mkSemi = if endSemi then ";" else ""
     t match
-    case _: HandleBlock =>
-      errStmt(msg"This code requires effect handler instrumentation but was compiled without it.")
     case Assign(l, r, rst) if l is State.noSymbol =>
       doc" # ${result(r)};${returningTerm(rst, endSemi)}"
     case Assign(l, r, rst) =>

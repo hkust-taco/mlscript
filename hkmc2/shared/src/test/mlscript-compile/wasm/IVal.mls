@@ -1,4 +1,4 @@
 #config(target: CompilationTarget.Wasm)
 
-object ImportedValue with
+object IVal with
   val base = 41
