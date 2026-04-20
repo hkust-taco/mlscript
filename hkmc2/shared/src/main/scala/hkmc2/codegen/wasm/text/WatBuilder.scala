@@ -1673,6 +1673,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         overwriteMethod(sym, PlainParamList(Nil), bod)
                       case FunDefn(_, sym, _, ps :: Nil, bod) =>
                         overwriteMethod(sym, ps, bod)
+                      case methodDefn =>
+                        lastWords(
+                          s"Class method `$methodDefn` with multiple parameter lists should be rejected in predeclaration pass",
+                        )
                     if summon[SessionExportCtx].shouldExport(clsLikeDefn.sym) then
                       summon[SessionExportCtx].emit(SessionClass(
                         sym = clsLikeDefn.sym,
