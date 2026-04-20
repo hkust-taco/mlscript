@@ -358,6 +358,8 @@ object FunctionCtx:
   *
   * @param _params
   *   The parameters of this function.
+  * @param thisSym
+  *   The implicit `this` parameter symbol if this function is generated from a non-static method, or `N` otherwise.
   */
 class FunctionCtx(_params: Seq[Local], thisSym: Opt[InnerSymbol])(using Raise, State):
 
@@ -386,16 +388,9 @@ class FunctionCtx(_params: Seq[Local], thisSym: Opt[InnerSymbol])(using Raise, S
     _locals += local
     LocalIdx(SymIdx(localScp.lookup_!(local, N)))
 
-  /** Returns `true` if a local or a parameter is already defined in this function context. */
-  def containsLocal(sym: Local): Bool = _params.contains(sym) || _locals.contains(sym)
-
   /** Looks up the given `sym` in this function context, returning its [[LocalIdx]] if it exists. */
   def lookupLocal(sym: Local): Opt[LocalIdx] =
     localScp.lookup(sym).map(idx => LocalIdx(SymIdx(idx)))
-
-  /** Similar to [[lookupLocal]], but throws an exception if `sym` is not in this context. */
-  def lookupLocal_!(sym: Local, loc: Opt[Loc]): LocalIdx =
-    LocalIdx(SymIdx(localScp.lookup_!(sym, loc)))
 
   /** The locals of this function, represented by a tuple of the symbol representing the parameter and its symbolic
     * identifier.

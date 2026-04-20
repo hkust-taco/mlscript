@@ -610,7 +610,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   )(using Ctx, Raise, Scope, SessionExportCtx): (Expr, FunctionCtx) =
     val clsParams = clsLikeDefn.paramsOpt.fold(Nil)(_.paramSyms)
     genFuncBody(clsParams, thisSym = S(clsLikeDefn.isym)):
-      val thisVar = funcCtx.lookupLocal_!(clsLikeDefn.isym, N)
+      val thisVar = funcCtx.lookupLocal(clsLikeDefn.isym).get
       val preCtorWat = compilePreCtor(clsLikeDefn, thisVar)
       val ctorWat = block(clsLikeDefn.ctor)
       blockInstr(
@@ -834,20 +834,20 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   ),
                 )
           case l =>
-            if funcCtx.containsLocal(l) then
-              local.get(funcCtx.lookupLocal_!(l, l.toLoc), RefType.anyref)
-            else if ctx.containsGlobal(l) then
-              global.get(GlobalIdx(SymIdx(scope.lookup_!(l, l.toLoc))), ctx.getGlobalType_!(l).globalType.valType)
-            else
-              errExpr(
-                Ls(
-                  msg"Cannot find variable `${l.toString}` (${l.getClass.getSimpleName}) in local or global scope." ->
-                    l.toLoc,
-                ),
-                extraInfo = S(
-                  s"Locals: ${(funcCtx.params ++ funcCtx.locals).toString}\nGlobals: ${ctx.getGlobals.toString}",
-                ),
-              )
+            funcCtx.lookupLocal(l) match
+              case S(localIdx) => local.get(localIdx, RefType.anyref)
+              case N if ctx.containsGlobal(l) =>
+                global.get(GlobalIdx(SymIdx(scope.lookup_!(l, l.toLoc))), ctx.getGlobalType_!(l).globalType.valType)
+              case _ =>
+                errExpr(
+                  Ls(
+                    msg"Cannot find variable `${l.toString}` (${l.getClass.getSimpleName}) in local or global scope." ->
+                      l.toLoc,
+                  ),
+                  extraInfo = S(
+                    s"Locals: ${(funcCtx.params ++ funcCtx.locals).toString}\nGlobals: ${ctx.getGlobals.toString}",
+                  ),
+                )
   end getVar
 
   def argument(a: Arg)(using Ctx, FunctionCtx, Raise, Scope, SessionExportCtx): Expr =
@@ -891,7 +891,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case Value.This(sym) =>
       // TODO(Derppening): Add type tracking and refinement for locals, remove the `ref.cast`
       ref.cast(
-        local.get(funcCtx.lookupLocal_!(sym, sym.toLoc), RefType.anyref),
+        local.get(funcCtx.lookupLocal(sym).get, RefType.anyref),
         RefType(
           sym.asBlkMember.fold(baseObjectTypeIdx)(ctx.getType_!(_)),
           nullable = false,
