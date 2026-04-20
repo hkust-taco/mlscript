@@ -72,26 +72,13 @@ f(1)
 //│ = 2
 
 
-// TODO: do not generate an intermediate function
-// TODO: do not generate a useless `C$cap` field
 :sir
 fun f(x) =
   class C with
     fun y = x
   new C
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let C⁰, f⁰, C$⁰;
-//│ define C$⁰ as fun C$¹(isMut, x) {
-//│   let tmp;
-//│   match isMut
-//│     true =>
-//│       set tmp = new mut C¹(x);
-//│       return tmp
-//│     else
-//│       set tmp = new C¹(x);
-//│       return tmp
-//│   end
-//│ };
+//│ let C⁰, f⁰;
 //│ define C⁰ as class C¹ {
 //│   private val x⁰;
 //│   constructor(x) {
@@ -100,7 +87,7 @@ fun f(x) =
 //│   }
 //│   method y⁰ = fun y¹ { return x⁰ }
 //│ };
-//│ define f⁰ as fun f¹(x) { return C$¹(false, x) };
+//│ define f⁰ as fun f¹(x) { return new C¹(x) };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -124,7 +111,7 @@ fun f() =
   Good()
 f().foo()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let Bad⁰, Good⁰, f², tmp, Capture$scope0⁰, Bad$⁰, Good$⁰;
+//│ let Bad⁰, Good⁰, f², tmp, Capture$scope0⁰;
 //│ define Capture$scope0⁰ as class Capture$scope0² {
 //│   constructor Capture$scope0¹(z$0, w$1) {
 //│     define w$1⁰ as val w$1¹ = w$1;
@@ -132,33 +119,11 @@ f().foo()
 //│     end
 //│   }
 //│ };
-//│ define Good$⁰ as fun Good$¹(isMut, scope0$cap, x, y) {
-//│   let tmp1;
-//│   match isMut
-//│     true =>
-//│       set tmp1 = new mut Good¹();
-//│       return tmp1(scope0$cap, x, y)
-//│     else
-//│       set tmp1 = new Good¹();
-//│       return tmp1(scope0$cap, x, y)
-//│   end
-//│ };
-//│ define Bad$⁰ as fun Bad$¹(isMut, scope0$cap) {
-//│   let tmp1;
-//│   match isMut
-//│     true =>
-//│       set tmp1 = new mut Bad¹();
-//│       return tmp1(scope0$cap)
-//│     else
-//│       set tmp1 = new Bad¹();
-//│       return tmp1(scope0$cap)
-//│   end
-//│ };
-//│ define Good⁰ as class Good¹() {
+//│ define Good⁰ as class Good²() {
 //│   private val scope0$cap⁰;
 //│   private val x¹;
 //│   private val y²;
-//│   constructor Good²(scope0$cap, x, y) {
+//│   constructor Good¹(scope0$cap, x, y) {
 //│     set scope0$cap⁰ = scope0$cap;
 //│     set x¹ = x;
 //│     set y² = y;
@@ -172,9 +137,9 @@ f().foo()
 //│     return +⁰(tmp2, scope0$cap⁰.w$1¹)
 //│   }
 //│ };
-//│ define Bad⁰ as class Bad¹() {
+//│ define Bad⁰ as class Bad²() {
 //│   private val scope0$cap¹;
-//│   constructor Bad²(scope0$cap) {
+//│   constructor Bad¹(scope0$cap) {
 //│     set scope0$cap¹ = scope0$cap;
 //│     end
 //│   }
@@ -184,38 +149,22 @@ f().foo()
 //│   }
 //│ };
 //│ define f² as fun f³() {
-//│   let x, y, z, w, tmp1, scope0$cap;
+//│   let x, y, z, w, tmp1, scope0$cap, tmp2, tmp3;
 //│   set scope0$cap = new mut Capture$scope0²(z, w);
 //│   set x = 1;
 //│   set y = 10;
 //│   set scope0$cap.z$0 = 10;
 //│   set scope0$cap.w$1 = 1000;
-//│   set tmp1 = Bad$¹(false, scope0$cap);
+//│   set tmp2 = new Bad²();
+//│   set tmp1 = tmp2(scope0$cap);
 //│   do tmp1.foo³();
-//│   return Good$¹(false, scope0$cap, x, y)
+//│   set tmp3 = new Good²();
+//│   return tmp3(scope0$cap, x, y)
 //│ };
 //│ set tmp = f³();
 //│ tmp.foo﹖()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 10111
-
-:expect 2
-fun f(x) =
-  class A()() with
-    fun newA() = A()()
-    fun foo() =
-      set x += 1
-      x
-    fun getX() = x
-  A()()
-let a = f(0)
-a.foo()
-let b = a.newA()
-b.foo()
-a.getX()
-//│ = 2
-//│ a = A()
-//│ b = A()
 
 // handler
 
@@ -230,27 +179,36 @@ sum(100)
 
 // instance checks
 
-:w
 fun f() =
   data class Test(a) with
     fun get() = a
   fun foo() = Test
   foo()(0)
 f().get()
-//│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 0
+
+// Parameterized class constructor used as a first-class function
+:expect 43
+fun foo2(x) =
+  class C(y) with
+    fun get = x + y
+  [C, set x += 1]
+let res = foo2(40)
+res.0(2).get
+//│ = 43
+//│ res = [fun, ()]
 
 :lift
 :w
 :expect 2
 fun f(x) =
-  class Test() with
+  class Test with
     fun get() =
       fun h() = x
       h()
   let foo = Test
-  foo()
-f(2).get()
+  foo
+(new! (f(2))).get()
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 2
 
@@ -293,3 +251,138 @@ res.b
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ ═══[RUNTIME ERROR] ReferenceError: r is not defined
 //│ res = A(_)
+
+
+
+// *** Mutability ***
+
+
+// * Trivial case
+:sir
+:noSanityCheck
+fun main() =
+  class C(val a)
+  let c = new mut C(123)
+  set c.a = 0
+  set c.b = "hi"
+  let d = new C(456)
+  set d.a = 0
+  let e = C(789)
+  set e.a = 0
+  [c.a, c.b, d.a, e.a]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let C², main⁰;
+//│ define C² as class C⁴(a) {
+//│   val a⁰;
+//│   constructor C³ {
+//│     define a⁰ as val a¹ = a;
+//│     end
+//│   }
+//│ };
+//│ define main⁰ as fun main¹() {
+//│   let c, d, e;
+//│   set c = new mut C⁴(123);
+//│   set c.a = 0;
+//│   set c.b = "hi";
+//│   set d = new C⁴(456);
+//│   set d.a = 0;
+//│   set e = C³(789);
+//│   set e.a = 0;
+//│   return [c.a﹖, c.b﹖, d.a﹖, e.a﹖]
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// * Notice that the lifted class above behaves the same as the equivalent top-level class below:
+
+class C(val a)
+
+let c = new mut C(123)
+set c.a = 0
+set c.b = "hi"
+let d = new C(456)
+set d.a = 0
+let e = C(789)
+set e.a = 0
+//│ c = C(0)
+//│ d = C(456)
+//│ e = C(789)
+
+:expect [0, "hi", 456, 789]
+[c.a, c.b, d.a, e.a]
+//│ = [0, "hi", 456, 789]
+
+// * Nontrivial case
+:sir
+:noSanityCheck
+fun main(x) =
+  class C(val a) with
+    fun get = x + a
+  let c = new mut C(123)
+  set c.a = 0
+  set c.b = "hi"
+  let d = new C(456)
+  set d.a = 0
+  let e = C(789)
+  set e.a = 0
+  [c.a, c.b, d.a, e.a, c.get, d.get, e.get]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let C⁵, main²;
+//│ define C⁵ as class C⁷(a) {
+//│   private val x²;
+//│   val a²;
+//│   constructor C⁶(x) {
+//│     set x² = x;
+//│     define a² as val a³ = a;
+//│     end
+//│   }
+//│   method get⁰ = fun get¹ {
+//│     return +⁰(x², C⁷.this.a³)
+//│   }
+//│ };
+//│ define main² as fun main³(x) {
+//│   let c, d, e, tmp, tmp1, tmp2;
+//│   set tmp = new mut C⁷(123);
+//│   set c = tmp(x);
+//│   set c.a = 0;
+//│   set c.b = "hi";
+//│   set tmp1 = new C⁷(456);
+//│   set d = tmp1(x);
+//│   set d.a = 0;
+//│   set tmp2 = new C⁷(789);
+//│   set e = tmp2(x);
+//│   set e.a = 0;
+//│   return [c.a﹖, c.b﹖, d.a﹖, e.a﹖, c.get﹖, d.get﹖, e.get﹖]
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:fixme // * The JS code-gen currently doesn't properly freeze classes with curried parameter lists
+:expect [0, "hi", 456, 789, 42, 498, 831]
+main(42)
+//│ ═══[RUNTIME ERROR] Expected: '[0, "hi", 456, 789, 42, 498, 831]', got: '[0, "hi", 0, 0, 42, 42, 42]'
+//│ = [0, "hi", 0, 0, 42, 42, 42]
+
+// * The lifted class above should behave the same as the equivalent top-level class below:
+
+let x = id(42)
+class C(val a) with
+  fun get = x + a
+//│ x = 42
+
+let c = new mut C(123)
+set c.a = 0
+set c.b = "hi"
+let d = new C(456)
+set d.a = 0
+let e = C(789)
+set e.a = 0
+//│ c = C(0)
+//│ d = C(456)
+//│ e = C(789)
+
+:expect [0, "hi", 456, 789, 42, 498, 831]
+[c.a, c.b, d.a, e.a, c.get, d.get, e.get]
+//│ = [0, "hi", 456, 789, 42, 498, 831]
+
+

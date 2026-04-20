@@ -132,7 +132,7 @@ module Test with
 //│     let lambda;
 //│     define lambda as fun lambda¹(j) {
 //│       let tmp1;
-//│       set tmp1 = Test².test¹(j);
+//│       set tmp1 = Test².this.test¹(j);
 //│       return tmp1(tmp)
 //│     };
 //│     return lambda¹

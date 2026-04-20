@@ -7,6 +7,7 @@
 :lift
 :soir
 :expect 1
+:noInline
 private fun f(used, unused) =
   class C with
     fun get() = used
@@ -16,7 +17,7 @@ f(1, 2).get()
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let C⁰, f⁰, tmp, C$⁰;
+//│ let C⁰, f⁰, tmp;
 //│ define C⁰ as class C¹ {
 //│   private val used⁰;
 //│   constructor(used) {
@@ -27,21 +28,7 @@ f(1, 2).get()
 //│     return used⁰
 //│   }
 //│ };
-//│ define f⁰ as fun f¹(used) {
-//│   let isMut, used1, inlinedVal, tmp1;
-//│   set isMut = false;
-//│   set used1 = used;
-//│   match isMut
-//│     true =>
-//│       set tmp1 = new mut C¹(used1);
-//│       set inlinedVal = tmp1;
-//│       return inlinedVal
-//│     else
-//│       set tmp1 = new C¹(used1);
-//│       set inlinedVal = tmp1;
-//│       return inlinedVal
-//│   end
-//│ };
+//│ define f⁰ as fun f¹(used) { return new C¹(used) };
 //│ set tmp = f¹(1);
 //│ tmp.get﹖()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
