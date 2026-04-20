@@ -68,7 +68,14 @@ new (id(C))
 
 data class C(x, y)
 
+
+// TODO: dead param elimination cannot yet handle this
+// mismatch of the number of arguments and class parameters
+:todo
 new! C
+//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched ctor arg and cls param sizes
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 //│ = C(undefined, undefined)
 
 new! C(1, 2)

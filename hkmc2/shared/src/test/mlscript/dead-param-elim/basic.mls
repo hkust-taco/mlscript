@@ -1,7 +1,8 @@
 :js
 :noInline
+:deadParamElim debug
 
-:deadParamElim
+
 :soir
 private fun f(a) = 0
 f(42)
@@ -13,7 +14,6 @@ f(42)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
-:deadParamElim
 :soir
 private fun f(a, b) = 0
 f(1, 2)
@@ -25,7 +25,6 @@ f(1, 2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
-:deadParamElim
 :soir
 private fun f(a)(b) = 0
 f(1)(2)
@@ -40,7 +39,6 @@ f(1)(2)
 
 
 
-:deadParamElim
 :soir
 private fun f(a) = a
 f(42)
@@ -51,7 +49,6 @@ f(42)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
-:deadParamElim
 :soir
 private fun f(a, b) = a + b
 f(1, 2)
@@ -63,7 +60,6 @@ f(1, 2)
 //│ = 3
 
 
-:deadParamElim
 :soir
 private fun f(a, b) = a
 f(1, 2)
@@ -75,7 +71,6 @@ f(1, 2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
-:deadParamElim
 :soir
 private fun f(a, b) = b
 f(1, 2)
@@ -89,7 +84,6 @@ f(1, 2)
 
 
 
-:deadParamElim
 :soir
 private fun f(a)(b) = a
 f(1)(2)
@@ -101,7 +95,6 @@ f(1)(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
-:deadParamElim
 :soir
 private fun f(a)(b) = b
 f(1)(2)
@@ -115,7 +108,6 @@ f(1)(2)
 
 
 
-:deadParamElim
 :soir
 private fun f(a) = 0
 f(1)
@@ -131,7 +123,6 @@ f(3)
 
 
 :soir
-:deadParamElim
 private fun g() =
   fun f(a) = 3
   f(4)
@@ -145,7 +136,6 @@ private fun g() =
 
 
 
-:deadParamElim
 :soir
 class Foo(x) with
   fun bar(a) = x
@@ -170,7 +160,6 @@ foo.bar(99)
 //│ foo = Foo(_)
 
 
-:deadParamElim
 class Foo(x) with
   fun bar(a) = a
 let foo = Foo(1)
@@ -182,7 +171,6 @@ foo.bar(99)
 
 
 
-:deadParamElim
 :expect 1
 class Foo(x) with
   fun get() = x
@@ -194,7 +182,6 @@ Foo(1).get()
 
 
 
-:deadParamElim
 :expect 1
 data class Pair(a, b)
 private fun fst(p) = if p is Pair(a, b) then a
@@ -205,7 +192,6 @@ fst(Pair(1, 2))
 
 
 
-:deadParamElim
 :expect 2
 data class Pair(a, b)
 private fun snd(p) = if p is Pair(a, b) then b
@@ -217,7 +203,6 @@ snd(Pair(1, 2))
 
 
 
-:deadParamElim
 :expect 43
 private fun g(x) = x + 1
 private fun f(a) = g(a)
@@ -231,7 +216,6 @@ f(42)
 
 
 
-:deadParamElim
 :expect 42
 private fun f(a) =
   let x = a
@@ -245,7 +229,6 @@ f(42)
 
 
 
-:deadParamElim
 :expect 1
 private fun apply(f) = f(0)
 private fun inc(x) = x + 1
@@ -257,7 +240,6 @@ apply(inc)
 
 
 
-:deadParamElim
 :expect 1
 data class Pair(a, b)
 private fun f(p) = p.Pair#a
@@ -269,7 +251,6 @@ f(Pair(1, 2))
 
 
 
-:deadParamElim
 private fun f(a) = g(a)
 private fun g(x) = 3
 f(1)
@@ -279,7 +260,7 @@ f(1)
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 3
 
-:deadParamElim poly
+:deadParamElim debug poly
 fun f(a) = g(a)
 fun g(x) = 3
 f(1)
@@ -290,7 +271,6 @@ f(1)
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 3
 
-:deadParamElim
 f(2)
 g(1)
 //│ dead-param-elim > >>> dead-param-elim results >>>
@@ -298,7 +278,7 @@ g(1)
 //│ = 3
 
 
-:deadParamElim
+:deadParamElim debug mono
 :expect [3, 4]
 private fun f(x) =
   fun g(a, b, ...rest) = 

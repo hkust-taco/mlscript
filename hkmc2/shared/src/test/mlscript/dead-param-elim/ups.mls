@@ -1,6 +1,7 @@
 :js
+:deadParamElim debug
 
-:deadParamElim
+
 :ucs ups
 pattern Middle = ([x] => x) | ([x, ...(Middle as m), y] => m)
 //│ elaborated pattern body: [x] => x⁰ ∨ [x, ...Middle as m, y] => m⁰
@@ -9,7 +10,6 @@ pattern Middle = ([x] => x) | ([x, ...(Middle as m), y] => m)
 //│ dead-param-elim > <<< dead-param-elim results <<<
 
 
-:deadParamElim
 if [1,2,3,4,5] is
   Middle as x then x
 //│ dead-param-elim > >>> dead-param-elim results >>>
@@ -19,4 +19,6 @@ if [1,2,3,4,5] is
 :re
 if [1,2,3,4] is
   Middle as x then x
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ═══[RUNTIME ERROR] Error: match error
