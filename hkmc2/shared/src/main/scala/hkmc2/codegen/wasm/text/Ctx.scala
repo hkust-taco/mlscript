@@ -403,14 +403,14 @@ class FunctionCtx(_params: Seq[Local], thisSym: Opt[Symbol])(using Raise, State)
   def locals: Seq[Local -> SymIdx] = _locals.map(l => l -> SymIdx(localScp.lookup_!(l, N))).toSeq
 end FunctionCtx
   
-  /** Generates a function body, providing an instance of [[FunctionCtx]] for parameter and locals tracking.
-    *
-    * Returns the result of the `mkBody` function along with the [[FunctionCtx]].
-    */
-  def genFuncBody[T](params: Seq[Local], thisSym: Opt[Symbol] = N)(mkBody: FunctionCtx ?=> T)(using Raise, State): T -> FunctionCtx =
-    val funcCtx = FunctionCtx(params, thisSym)
-    val result = mkBody(using funcCtx)
-    result -> funcCtx
+/** Generates a function body, providing an instance of [[FunctionCtx]] for parameter and locals tracking.
+  *
+  * Returns the result of the `mkBody` function along with the [[FunctionCtx]].
+  */
+def genFuncBody[T](params: Seq[Local], thisSym: Opt[Symbol] = N)(mkBody: FunctionCtx ?=> T)(using Raise, State): T -> FunctionCtx =
+  val funcCtx = FunctionCtx(params, thisSym)
+  val result = mkBody(using funcCtx)
+  result -> funcCtx
 
 object Ctx:
   case class SingletonInfo(
