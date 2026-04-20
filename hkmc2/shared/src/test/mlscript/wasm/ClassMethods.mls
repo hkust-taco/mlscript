@@ -164,9 +164,12 @@ class Counter(val x) with
     this
   fun get() = x
 let c = Counter(1)
-c.Counter#inc().Counter#double().Counter#get()
+let a_val = c.Counter#inc().Counter#double().Counter#get()
+let d = Counter(c.Counter#get())
+let b_val = d.Counter#inc().Counter#double().Counter#get()
+a_val + b_val + c.Counter#get()
 //│ Wasm result:
-//│ = 4
+//│ = 18
 
 
 class GetterOnly() with
@@ -181,7 +184,7 @@ class A(val x) with
   fun get() = x
 A(1).get
 //│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
-//│ ║  l.182: 	A(1).get
+//│ ║  l.185: 	A(1).get
 //│ ╙──       	    ^^^^
 
 

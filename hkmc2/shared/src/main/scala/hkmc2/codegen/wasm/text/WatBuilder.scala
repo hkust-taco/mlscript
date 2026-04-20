@@ -519,10 +519,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   /** Declares placeholders for all methods on one top-level class. */
   private def predeclareClassMethods(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
     defn.methods.foreach:
-      case methodDefn @ FunDefn(_, _, _, Nil, _) =>
+      case methodDefn @ (FunDefn(_, _, _, Nil, _) | FunDefn(_, _, _, _ :: Nil, _)) =>
         predeclareMethod(methodDefn, defn)
-      case methodDefn @ FunDefn(_, _, _, _ :: Nil, _) =>
-        predeclareMethod(methodDefn, defn)
+      case FunDefn(_, sym, _, _ :: _ :: _, _) =>
+        raise(ErrorReport(
+          msg"WatBuilder::predeclareClassMethods for ClsLikeDefn(...) with `multi-parameter-list method` not implemented yet" ->
+            sym.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation,
+        ))
       case _ => ()
 
   /** Gets (and caches) the exception tag used for MLX `throw`. */
@@ -1712,11 +1716,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       )
 
                     clsLikeDefn.methods.foreach:
-                      case methodDefn @ FunDefn(_, sym, _, Nil, bod) =>
+                      case FunDefn(_, sym, _, Nil, bod) =>
                         overwriteMethod(sym, Seq(clsLikeDefn.isym), PlainParamList(Nil), bod)
-                      case methodDefn @ FunDefn(_, sym, _, _ :: _ :: _, _) =>
-                        break(errUnimplExpr("multi-parameter-list method"))
-                      case methodDefn @ FunDefn(_, sym, _, ps :: Nil, bod) =>
+                      case FunDefn(_, sym, _, ps :: Nil, bod) =>
                         overwriteMethod(sym, clsLikeDefn.isym +: ps.params.map(_.sym), ps, bod)
                     if summon[SessionExportCtx].shouldExport(clsLikeDefn.sym) then
                       summon[SessionExportCtx].emit(SessionClass(
