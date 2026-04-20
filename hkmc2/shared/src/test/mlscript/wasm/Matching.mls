@@ -135,7 +135,7 @@ if Bar(true) is
 //│                           (local.get $scrut)))
 //│                       (i32.const 1))
 //│                     (then
-//│                       (block $arm1
+//│                       (block $arm
 //│                         (local.set $matchRes
 //│                           (block (result (ref null any))
 //│                             (local.set $arg$Bar$0$
@@ -177,7 +177,7 @@ if Bar(true) is
 //│                           (local.get $scrut)))
 //│                       (i32.const 2))
 //│                     (then
-//│                       (block $arm2
+//│                       (block $arm
 //│                         (local.set $matchRes
 //│                           (block (result (ref null any))
 //│                             (local.set $arg$Baz$0$

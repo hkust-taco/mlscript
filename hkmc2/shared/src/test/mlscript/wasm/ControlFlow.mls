@@ -214,7 +214,7 @@ tailMatchAllValue(1)
 //│                 (local.get $x)))
 //│             (i32.const 1))
 //│           (then
-//│             (block $arm1
+//│             (block $arm
 //│               (return
 //│                 (ref.i31
 //│                   (i32.const 20)))
