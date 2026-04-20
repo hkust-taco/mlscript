@@ -609,7 +609,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       clsLikeDefn: ClsLikeDefn,
   )(using Ctx, Raise, Scope, SessionExportCtx): (Expr, FunctionCtx) =
     genFuncBody(clsLikeDefn.paramsOpt.toList, thisSym = S(clsLikeDefn.isym)):
-      val thisVar = funcCtx.lookupLocal(clsLikeDefn.isym).get
+      val thisVar = funcCtx.lookupLocal_!(clsLikeDefn.isym, N)
       val preCtorWat = compilePreCtor(clsLikeDefn, thisVar)
       val ctorWat = block(clsLikeDefn.ctor)
       blockInstr(
@@ -890,7 +890,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case Value.This(sym) =>
       // TODO(Derppening): Add type tracking and refinement for locals, remove the `ref.cast`
       ref.cast(
-        local.get(funcCtx.lookupLocal(sym).get, RefType.anyref),
+        local.get(funcCtx.lookupLocal_!(sym, sym.toLoc), RefType.anyref),
         RefType(
           sym.asBlkMember.fold(baseObjectTypeIdx)(ctx.getType_!(_)),
           nullable = false,

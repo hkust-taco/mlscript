@@ -395,6 +395,10 @@ class FunctionCtx(_params: Ls[ParamList], thisSym: Opt[InnerSymbol])(using Raise
   def lookupLocal(sym: Local): Opt[LocalIdx] =
     localScp.lookup(sym).map(idx => LocalIdx(SymIdx(idx)))
 
+  /** Similar to [[lookupLocal]], but throws an exception if `sym` is not in this context. */
+  def lookupLocal_!(sym: Local, loc: Opt[Loc]): LocalIdx =
+    LocalIdx(SymIdx(localScp.lookup_!(sym, loc)))
+
   /** The locals of this function, represented by a tuple of the symbol representing the parameter and its symbolic
     * identifier.
     */
