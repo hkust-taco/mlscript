@@ -1312,7 +1312,8 @@ extends Importer with ucs.SplitElaborator:
           softAssert(pss.sizeCompare(td.clsParams) === 0,
             s"mismatched parameter list numbers ${pss} vs ${td.clsParams}")
           val fields: Ls[Statement] = pss.zip(td.clsParams).flatMap: (ps, cps) =>
-            softAssert(ps.params.sizeCompare(cps) === 0,
+            // TODO: handle this gracefully (could be caused by erroneous input code)
+            softTODO(ps.params.sizeCompare(cps) === 0,
               s"mismatched param list lengths ${ps.params} vs ${cps}")
             ps.params.zip(cps).flatMap: (p, cp) =>
               // For class-like types, "desugar" the parameters into additional class fields.

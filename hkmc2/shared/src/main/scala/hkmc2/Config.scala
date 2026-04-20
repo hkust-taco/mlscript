@@ -74,7 +74,7 @@ object Config:
     commentGeneratedCode = false,
     noFreeze = false,
     noModuleCheck = false,
-    deadParamElim = N
+    deadParamElim = S(DeadParamElim.default)
   )
   object default:
     val patMatConsequentSharingThreshold = S(15)
@@ -109,7 +109,7 @@ object Config:
 
   case class DeadParamElim(val debug: Boolean, val mono: Boolean)
   object DeadParamElim:
-    val default = DeadParamElim(true, true)
+    val default = DeadParamElim(false, true)
   
   case class Inliner(inlineThreshold: Int)
 

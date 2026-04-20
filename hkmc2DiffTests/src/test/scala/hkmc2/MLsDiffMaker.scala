@@ -132,10 +132,23 @@ abstract class MLsDiffMaker extends DiffMaker:
       commentGeneratedCode = debug.isSet,
       noFreeze = noFreeze.isSet,
       noModuleCheck = noModuleCheck.isSet,
-      deadParamElim = Opt.when(deadParamElim.isSet):
-        DeadParamElim(
-          debug = true,
-          mono = deadParamElim.get.fold(true)(!_.contains("poly"))),
+      deadParamElim =
+        if deadParamElim.isUnset then S(DeadParamElim.default)
+        else
+          val value = deadParamElim.get.getOrElse("")
+          val flags = value.split("\\s+").filter(_.nonEmpty).toSet
+          val unknownFlags = flags -- Set("debug", "mono", "poly", "off")
+          if unknownFlags.nonEmpty then
+            output(s"$errMarker Unknown ':deadParamElim' flags: ${unknownFlags.toList.sorted.mkString(", ")}")
+          if flags.contains("mono") && flags.contains("poly") then
+            output(s"$errMarker ':deadParamElim' flags 'mono' and 'poly' conflict")
+          if flags.contains("off") && (flags & Set("debug", "mono", "poly")).nonEmpty then
+            output(s"$errMarker ':deadParamElim off' conflicts with other flags")
+          if flags.contains("off") then N
+          else S(DeadParamElim(
+            debug = flags.contains("debug"),
+            mono = !flags.contains("poly")
+          )),
     )
   
   
@@ -226,7 +239,11 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"Error: $d")
       ()
     if file != preludeFile then
-      given Config = mkConfig
+      val cfg = mkConfig
+      given Config = cfg.copy(
+        deforest = cfg.deforest.map(_.copy(debug = false)),
+        deadParamElim = cfg.deadParamElim.map(_.copy(debug = false))
+      )
       processTrees(
         PrefixApp(Keywrd(`import`), StrLit(predefFile.toString))
         :: Open(Ident("Predef"))

@@ -1,8 +1,6 @@
 :js
 :deforest
 
-//│ deforest > >>> fusing >>>
-//│ deforest > <<< fusing <<<
 
 object A
 object B

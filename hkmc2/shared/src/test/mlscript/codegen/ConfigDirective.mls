@@ -153,7 +153,7 @@ print(42)
 //│ > 42
 
 
-#config(deadParamElim: Some(DeadParamElim(mono: true)), inlining: None)
+#config(deadParamElim: Some(DeadParamElim(debug: true, mono: true)), inlining: None)
 
 private fun deadParamConfig(a) = 0
 deadParamConfig(42)

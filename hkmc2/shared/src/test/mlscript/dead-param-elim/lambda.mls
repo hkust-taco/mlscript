@@ -1,8 +1,8 @@
 :js
+:deadParamElim debug
 
 
 
-:deadParamElim
 :expect 0
 let f = (a) => 0
 f(42)
@@ -12,7 +12,6 @@ f(42)
 //│ f = fun f
 
 
-:deadParamElim
 :expect 42
 let f = (a) => a
 f(42)
@@ -22,7 +21,6 @@ f(42)
 //│ f = fun f
 
 :noInline
-:deadParamElim
 :expect 0
 private fun apply(f, x) = f(x)
 apply((a) => 0, 42)
@@ -32,7 +30,6 @@ apply((a) => 0, 42)
 //│ = 0
 
 
-:deadParamElim
 :expect 43
 private fun apply(f, x) = f(x)
 apply((a) => a + 1, 42)
@@ -43,7 +40,6 @@ apply((a) => a + 1, 42)
 
 
 
-:deadParamElim
 private fun f(a) = a
 let g = (b) => 0
 private fun pick(x)(y) = if false then x else y
@@ -54,7 +50,6 @@ pick(f)(g)(5)
 //│ g = fun g
 
 
-:deadParamElim
 fun f(a) = 0
 let g = (b) => 0
 private fun pick(x)(y) = if false then x else y
@@ -66,7 +61,6 @@ pick(f)(g)(5)
 
 
 
-:deadParamElim
 :expect 42
 private fun f(a) =
   let g = () => a
@@ -79,7 +73,6 @@ f(42)
 
 
 // two `apply`, one has dead param, another does not
-:deadParamElim
 :noInline
 private fun apply(f, x) = f(x)
 private fun main(f1, f2) =
@@ -93,7 +86,6 @@ main1()
 
 // two `apply`, one has dead param, another does not;
 // but if `apply` is inlined, we can eliminate the `a` in `(a) => 0`
-:deadParamElim
 private fun apply(f, x) = f(x)
 private fun main(f1, f2) =
   apply(f1, 42) + apply(f2, 0)
@@ -104,8 +96,7 @@ main1()
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 1
 
-
-:deadParamElim poly
+:deadParamElim debug poly
 :noInline
 private fun apply(f, x) = f(x)
 private fun main(f1, f2) =
@@ -120,8 +111,7 @@ main1()
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 1
 
-
-:deadParamElim
+:deadParamElim debug mono
 :expect 0
 private fun f = (a) => 0
 f(3)
