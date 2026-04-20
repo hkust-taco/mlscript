@@ -7,28 +7,17 @@ data class A(x) with
     fun getB() = x + y
   fun getA() = B(2).getB()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let B⁰, A⁰, B$⁰;
-//│ define B$⁰ as fun B$¹(isMut, A, y) {
-//│   let tmp;
-//│   match isMut
-//│     true =>
-//│       set tmp = new mut B¹(y);
-//│       return tmp(A)
-//│     else
-//│       set tmp = new B¹(y);
-//│       return tmp(A)
-//│   end
-//│ };
-//│ define B⁰ as class B¹(y) {
+//│ let B⁰, A⁰;
+//│ define B⁰ as class B²(y) {
 //│   private val A¹;
 //│   val y⁰;
-//│   constructor B²(A) {
+//│   constructor B¹(A) {
 //│     set A¹ = A;
 //│     define y⁰ as val y¹ = y;
 //│     end
 //│   }
 //│   method getB⁰ = fun getB¹() {
-//│     return +⁰(A¹.x⁰, B¹.y¹)
+//│     return +⁰(A¹.x⁰, B².this.y¹)
 //│   }
 //│ };
 //│ define A⁰ as class A³(x) {
@@ -37,7 +26,12 @@ data class A(x) with
 //│     define x¹ as val x⁰ = x;
 //│     end
 //│   }
-//│   method getA⁰ = fun getA¹() { let tmp; set tmp = B$¹(false, A³, 2); return tmp.getB¹() }
+//│   method getA⁰ = fun getA¹() {
+//│     let tmp, tmp1;
+//│     set tmp1 = new B²(2);
+//│     set tmp = tmp1(A³.this);
+//│     return tmp.getB¹()
+//│   }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

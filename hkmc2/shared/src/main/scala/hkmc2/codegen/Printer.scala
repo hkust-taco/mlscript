@@ -151,6 +151,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
       else doc
 
   def print(value: Value)(using Scope): Document = value match
+    case Value.Ref(l: InnerSymbol, N) => doc"${print(l)}.this"
     case Value.Ref(l, N) => print(l)
     case Value.Ref(l, disamb) => showSymbol(l.nme, disamb)
     case Value.This(sym) => doc"this"
