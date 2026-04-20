@@ -830,7 +830,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       ts.toLoc,
                   ),
                   extraInfo = S(
-                    s"Block IR: `${l.toString}`\nLocals${(funcCtx.params ++ funcCtx.locals).toString}\nGlobals: ${ctx.getGlobals.toString}",
+                    s"Block IR: `${l.toString}`\nLocals: ${(funcCtx.params ++ funcCtx.locals).toString}\nGlobals: ${ctx.getGlobals.toString}",
                   ),
                 )
           case l =>
@@ -843,11 +843,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 Ls(
                   msg"WatBuilder::getVar for ${
                       l.getClass.getSimpleName
-                    } (symbol not in top-level scope) not implemented yet" ->
+                    } (symbol not in global or local scope) not implemented yet" ->
                     l.toLoc,
                 ),
                 extraInfo = S(
-                  s"Block IR: `${l.toString}`\nLocals${(funcCtx.params ++ funcCtx.locals).toString}\nGlobals: ${ctx.getGlobals.toString}",
+                  s"Block IR: `${l.toString}`\nLocals: ${(funcCtx.params ++ funcCtx.locals).toString}\nGlobals: ${ctx.getGlobals.toString}",
                 ),
               )
   end getVar
