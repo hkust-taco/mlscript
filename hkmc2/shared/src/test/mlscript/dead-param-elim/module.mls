@@ -1,9 +1,11 @@
 :js
-
-
-
-
 :deadParamElim debug
+
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+
+
+
 module M with
   private fun f(a) = 0
   private fun g(b) = b
@@ -15,7 +17,6 @@ M.g(2)
 //│ = 2
 
 
-:deadParamElim debug
 :expect 3
 module M with
   val x = 3
@@ -28,7 +29,6 @@ M.main()
 //│ = 3
 
 
-:deadParamElim debug
 :expect 42
 module M with
   private fun f(a) = a
@@ -41,7 +41,6 @@ M.main()
 
 
 
-:deadParamElim debug
 module M with
   private fun f(a) = a
   private fun g(b) = 0
@@ -54,7 +53,6 @@ M.main()
 
 
 
-:deadParamElim debug
 :expect 125
 module M with
   data class Foo(x) with

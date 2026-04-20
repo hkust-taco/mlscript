@@ -1,8 +1,10 @@
 :js
+:deadParamElim debug poly
 
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
 
 :checkIR
-:deadParamElim debug poly
 :expect 1
 fun f(used, unused) =
   class C with
@@ -17,7 +19,6 @@ f(1, 2).get()
 
 
 :checkIR
-:deadParamElim debug poly
 fun foo(y) =
   class M with
     fun bar() = set y = 2
@@ -30,7 +31,6 @@ foo(10)
 
 
 :checkIR
-:deadParamElim debug poly
 :expect 10
 fun g(x, dead) =
   class Pair with
@@ -47,7 +47,6 @@ g(10, 99)
 
 
 :checkIR
-:deadParamElim debug poly
 :expect 13
 fun h(base, unused) =
   class Adder with
@@ -62,7 +61,6 @@ h(10, 0).add(3)
 
 
 :checkIR
-:deadParamElim debug poly
 :expect 42
 :soir
 fun wrapper(val1, dead) =
@@ -118,7 +116,6 @@ wrapper(42, 0)
 
 
 :checkIR
-:deadParamElim debug poly
 :expect 30
 fun multi(a, b, dead) =
   class Calc with

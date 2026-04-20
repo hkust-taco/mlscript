@@ -1,9 +1,11 @@
 :js
-
-
-
-
 :deadParamElim debug
+
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+
+
+
 :lift
 :soir
 :expect 1
@@ -39,7 +41,6 @@ f(1, 2).get()
 
 
 :js
-:deadParamElim debug
 :lift
 private fun foo(y) =
   class M with
