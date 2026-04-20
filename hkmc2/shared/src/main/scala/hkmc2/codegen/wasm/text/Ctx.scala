@@ -8,7 +8,9 @@ import hkmc2.utils.*
 
 import document.*
 import document.Document
-import semantics.{BlockMemberSymbol, Elaborator, LabelSymbol, ModuleOrObjectSymbol, Symbol, TempSymbol},
+import semantics.{
+  BlockMemberSymbol, Elaborator, InnerSymbol, LabelSymbol, ModuleOrObjectSymbol, ParamList, Symbol, TempSymbol,
+},
   Elaborator.State
 import text.Param as WasmParam
 import Instructions.*
@@ -349,6 +351,72 @@ end TagInfo
 enum WasmIntrinsicType:
   case TupleArray(mutable: Bool)
 
+object FunctionCtx:
+
+  def funcCtx(using funcCtx: FunctionCtx): FunctionCtx = funcCtx
+
+/** Context associated with codegen for a Wasm function.
+  *
+  * @param _params
+  *   The parameters of this function.
+  * @param thisSym
+  *   The implicit `this` parameter symbol if this function is generated from a non-static method, or `N` otherwise.
+  */
+class FunctionCtx(_params: Ls[ParamList], thisSym: Opt[InnerSymbol])(using Raise, State):
+
+  /** [[Scope]] for generating WAT identifiers of locals. */
+  private[text] val localScp = Scope.empty(Scope.Cfg.default)
+
+  /** The parameter of this function, represented by a tuple of the symbol representing the parameter and its symbolic
+    * identifier.
+    */
+  val params: Seq[Local -> SymIdx] =
+    if _params.length > 1 then
+      lastWords("Multiple parameter lists are not yet supported")
+    val thisParam = thisSym.map: dis =>
+      dis -> SymIdx(localScp.addToBindings(dis, "this", shadow = false))
+    thisParam.toSeq ++ _params.flatMap(_.paramSyms).map(p => p -> SymIdx(localScp.allocateName(p)))
+  private val _locals = ArrayBuf.empty[Local]
+
+  /** Adds a Wasm local into this context.
+    *
+    * @param customName
+    *   An optional name for the local variable. If provided, the local will be emitted with the given name instead of
+    *   an auto-generated one.
+    */
+  def addLocal(local: Local, customName: Opt[Str] = N): LocalIdx =
+    customName match
+      case S(name) => localScp.addToBindings(local, name, shadow = false)
+      case N => localScp.allocateName(local)
+    _locals += local
+    LocalIdx(SymIdx(localScp.lookup_!(local, N)))
+
+  /** Looks up the given `sym` in this function context, returning its [[LocalIdx]] if it exists. */
+  def lookupLocal(sym: Local): Opt[LocalIdx] =
+    localScp.lookup(sym).map(idx => LocalIdx(SymIdx(idx)))
+
+  /** Similar to [[lookupLocal]], but throws an exception if `sym` is not in this context. */
+  def lookupLocal_!(sym: Local, loc: Opt[Loc]): LocalIdx =
+    LocalIdx(SymIdx(localScp.lookup_!(sym, loc)))
+
+  /** The locals of this function, represented by a tuple of the symbol representing the parameter and its symbolic
+    * identifier.
+    */
+  def locals: Seq[Local -> SymIdx] = _locals.map(l => l -> SymIdx(localScp.lookup_!(l, N))).toSeq
+end FunctionCtx
+  
+/** Generates a function body, providing an instance of [[FunctionCtx]] for parameter and locals tracking.
+  *
+  * Returns the result of the `mkBody` function along with the [[FunctionCtx]].
+  */
+def genFuncBody[T](
+    params: Ls[ParamList],
+    thisSym: Opt[InnerSymbol],
+)(mkBody: FunctionCtx ?=> T)(using Raise, State): T -> FunctionCtx =
+  val funcCtx = FunctionCtx(params, thisSym)
+  val result = mkBody(using funcCtx)
+  result -> funcCtx
+
 object Ctx:
   case class SingletonInfo(
       globalName: Str,
@@ -426,8 +494,6 @@ class Ctx extends ToWat:
   /** [[MutMap]] containing global symbols mapped to their corresponding [[GlobalInfo]] or [[Import]] instance. */
   private val namedGlobals = MutMap.empty[Symbol, GlobalInfo | Import[ExternType.Global]]
 
-  /** Stack of [[ListMap]] from local variable symbols to their symbolic indices within the current function scope. */
-  private var locals = ListMap.empty[Local, SymIdx] :: Nil
   private var startFunc = N: Opt[FuncIdx]
 
   /** Counter for generating object tags. */
@@ -747,25 +813,6 @@ class Ctx extends ToWat:
     getGlobalInfo(globalref).getOrElse:
       lastWords(s"Missing global definition for ${globalref.prettyString}")
 
-  /** Pushes a new local variable scope into this context. */
-  def pushLocal(): Unit = locals = ListMap() :: locals
-
-  /** Pops the top-most level local variable scope into this context. */
-  def popLocal(): Unit = locals = locals.tail
-
-  /** Adds a new local variable into the top-most variable scope. */
-  def addLocal(sym: Local): LocalIdx =
-    val idx = SymIdx(sym.nme)
-    locals = (locals.head + (sym -> idx)) :: locals.tail
-    LocalIdx(idx)
-
-  /** Adds a [[Seq]] of local variables into the top-most variable scope. */
-  def addLocals(syms: Seq[Local]): Seq[LocalIdx] =
-    syms.map(addLocal)
-
-  /** Checks whether the top-most level local variable scope contains the local variable `sym`. */
-  def containsLocal(sym: Local): Bool = locals.head.contains(sym)
-
   /** Adds a new variable into the global variable scope. */
   def addGlobal(sym: Symbol, globalInfo: GlobalInfo): GlobalIdx =
     val id = globalInfo.id
@@ -779,6 +826,9 @@ class Ctx extends ToWat:
 
   /** Checks whether the global variable scope contains the variable `sym`. */
   def containsGlobal(sym: Symbol): Bool = namedGlobals.contains(sym)
+  
+  /** Returns all globals in this context. */
+  def getGlobals: Seq[Symbol] = namedGlobals.keys.toSeq
 
   /** Checks whether singleton metadata has been registered for class symbol `sym`. */
   def containsSingleton(sym: BlockMemberSymbol): Bool = singletonByBms.contains(sym)
@@ -820,16 +870,6 @@ class Ctx extends ToWat:
   /** Configures the module start function. */
   def setStartFunc(funcIdx: FuncIdx): Unit =
     startFunc = S(funcIdx)
-
-  /** Returns a tuple containing the variables in the current `global` and `local` scopes respectively.
-    */
-  def getWasmLocals: Seq[Symbol] -> Opt[Seq[Local]] =
-    namedGlobals.keys.toSeq -> locals.headOption.map(l => l.keys.toSeq)
-
-  /** Returns all local variable scopes and their variables. */
-  def getAllWasmLocals: Ls[Seq[Local]] = locals match
-    case Nil => namedGlobals.keys.toSeq :: Nil
-    case locals => locals.init.map(l => l.keys.toSeq) :+ namedGlobals.keys.toSeq
 
   /** Returns the cached [[FuncIdx]] for the intrinsic named `name`, creating it with `createIntrinsic` if it does not
     * yet exist in this context.

@@ -174,7 +174,7 @@ let d = Counter(c.Counter#get())
 
 :todo
 d.Counter#inc().Counter#double().Counter#get()
-//│ ╔══[COMPILATION ERROR] WatBuilder::getVar for VarSymbol (symbol not in top-level scope) not implemented yet
+//│ ╔══[COMPILATION ERROR] Cannot find variable `d` (VarSymbol) in local or global scope.
 //│ ║  l.172: 	let d = Counter(c.Counter#get())
 //│ ╙──       	    ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Counter`
