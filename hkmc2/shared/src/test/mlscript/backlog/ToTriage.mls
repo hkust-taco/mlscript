@@ -246,13 +246,13 @@ FooSpd(1, 2, 3).args
 :todo
 if FooSpd(1, 2, 3) is FooSpd(...args) then args
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (spread).
-//│ ║  l.252: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
+//│ ║  l.247: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
 //│ ╙──       	                             ^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: args
-//│ ║  l.252: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
+//│ ║  l.247: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
 //│ ╙──       	                                           ^^^^
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.252: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
+//│ ║  l.247: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
 //│ ╙──       	                      ^^^^^^
 //│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched ctor arg and cls param sizes
 //│ ╟── The compilation result may be incorrect.
@@ -261,7 +261,7 @@ if FooSpd(1, 2, 3) is FooSpd(...args) then args
 
 if FooSpd(1, 2, 3) is FooSpd(a, b, c) then [a, b, c]
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found three arguments.
-//│ ║  l.267: 	if FooSpd(1, 2, 3) is FooSpd(a, b, c) then [a, b, c]
+//│ ║  l.262: 	if FooSpd(1, 2, 3) is FooSpd(a, b, c) then [a, b, c]
 //│ ╙──       	                             ^^^^^^^
 //│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched ctor arg and cls param sizes
 //│ ╟── The compilation result may be incorrect.
@@ -270,7 +270,7 @@ if FooSpd(1, 2, 3) is FooSpd(a, b, c) then [a, b, c]
 
 if FooSpd(1, 2, 3) is FooSpd(arg) then arg
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.276: 	if FooSpd(1, 2, 3) is FooSpd(arg) then arg
+//│ ║  l.271: 	if FooSpd(1, 2, 3) is FooSpd(arg) then arg
 //│ ╙──       	                             ^^^
 //│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched ctor arg and cls param sizes
 //│ ╟── The compilation result may be incorrect.
@@ -301,10 +301,10 @@ fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
 //│ ╔══[COMPILATION ERROR] Unsupported let binding shape
-//│ ║  l.306: 	  let bar(x: Str): Str = x + x
+//│ ║  l.301: 	  let bar(x: Str): Str = x + x
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: bar
-//│ ║  l.307: 	  bar("test")
+//│ ║  l.302: 	  bar("test")
 //│ ╙──       	  ^^^
 
 // ——— ——— ———
@@ -318,7 +318,7 @@ module Foo(x) with
   print(x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.322: 	module Foo(x) with
+//│ ║  l.317: 	module Foo(x) with
 //│ ╙──       	           ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo5;
@@ -342,7 +342,7 @@ module Foo(x) with
 module Foo(val x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.347: 	module Foo(val x)
+//│ ║  l.342: 	module Foo(val x)
 //│ ╙──       	               ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo7;
@@ -363,7 +363,7 @@ module Foo(val x)
 // TODO support syntax?
 data class Foo(mut x)
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found 'mut'-modified identifier
-//│ ║  l.369: 	data class Foo(mut x)
+//│ ║  l.364: 	data class Foo(mut x)
 //│ ╙──       	                   ^
 
 // ——— ——— ———
@@ -378,7 +378,7 @@ class Foo
 :e
 class Id(name: UnboundName)
 //│ ╔══[COMPILATION ERROR] Name not found: UnboundName
-//│ ║  l.384: 	class Id(name: UnboundName)
+//│ ║  l.379: 	class Id(name: UnboundName)
 //│ ╙──       	               ^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
 //│ ═══[COMPILATION ERROR] Expected a type, got ‹error›

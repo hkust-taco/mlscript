@@ -74,8 +74,8 @@ class CompilerCtx(
       case cur @ S(art) =>
         if art.lastChangedTimestamp < lastMod then mk
         else art
-
-
+  
+  
 object CompilerCtx:
   
   inline def get(using cctx: CompilerCtx) = cctx
