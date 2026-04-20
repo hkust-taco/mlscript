@@ -558,9 +558,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     // transform inner function/class and effect handler intrinsics to the JS runtime functions.
     val preTransform = new BlockTransformer(SymbolSubst.Id):
       override def applyResult(r: Result)(k: Result => Block): Block = r match
-        case Call(Value.Ref(sym, _), args) if sym is Elaborator.ctx.builtins.js.suspend =>
+        case Call(Value.Ref(sym, _), args) if sym is Elaborator.ctx.builtins.runtime.suspend =>
           k(Call(paths.mkEffectPath, args)(true, true, false))
-        case Call(Value.Ref(sym, _), args) if sym is Elaborator.ctx.builtins.js.handle_suspension =>
+        case Call(Value.Ref(sym, _), args) if sym is Elaborator.ctx.builtins.runtime.handle_suspension =>
           k(Call(paths.enterHandleBlockPath, args)(true, true, false))
         case _ => super.applyResult(r)(k)
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match

@@ -433,10 +433,10 @@ object Begin:
 object HandleBlock:
 
   def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx): Result =
-    Call(Value.Ref(Elaborator.ctx.builtins.js.suspend, N), tag.asArg :: handlerFun.asArg :: Nil)(true, true, false)
+    Call(Value.Ref(Elaborator.ctx.builtins.runtime.suspend, N), tag.asArg :: handlerFun.asArg :: Nil)(true, true, false)
 
   def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx): Result =
-    Call(Value.Ref(Elaborator.ctx.builtins.js.handle_suspension, N), tag.asArg :: bodyFun.asArg :: Nil)(true, true, false)
+    Call(Value.Ref(Elaborator.ctx.builtins.runtime.handle_suspension, N), tag.asArg :: bodyFun.asArg :: Nil)(true, true, false)
   
   private def create(
       lhs: Local,

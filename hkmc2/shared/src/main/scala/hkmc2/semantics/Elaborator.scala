@@ -188,8 +188,6 @@ object Elaborator:
         val bitor = assumeObject("bitor")
         val shl = assumeObject("shl")
         val try_catch = assumeObject("try_catch")
-        val suspend = assumeObject("suspend")
-        val handle_suspension = assumeObject("handle_suspension")
       object wasm extends VirtualModule(assumeBuiltinMod("wasm")):
         val plus_impl = assumeObject("plus_impl")
         val minus_impl = assumeObject("minus_impl")
@@ -213,6 +211,9 @@ object Elaborator:
         val bufferable = assumeObject("bufferable")
       object scope extends VirtualModule(assumeBuiltinMod("scope")):
         val locally = assumeObject("locally")
+      object runtime extends VirtualModule(assumeBuiltinMod("runtime")):
+        val suspend = assumeObject("suspend")
+        val handle_suspension = assumeObject("handle_suspension")
       def getBuiltinOp(op: Str): Opt[Str] =
         if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
       /** Classes that do not use `instanceof` in pattern matching. */

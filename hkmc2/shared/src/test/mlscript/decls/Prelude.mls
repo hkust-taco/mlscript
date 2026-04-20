@@ -245,8 +245,6 @@ declare module js with
     bitor
     shl
     try_catch
-    suspend
-    handle_suspension
 
 declare module wasm with
   fun
@@ -275,6 +273,11 @@ declare module annotations with
 
 declare module scope with
   fun locally
+
+declare module runtime with
+  fun
+    suspend
+    handle_suspension
 
 
 // HTML DOM API definitions.
