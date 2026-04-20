@@ -402,12 +402,6 @@ class FlowPreAnalyzer(val pgrm: Program)(using
       applyPath(fld)
       applyResult(rhs)
       applyBlock(rest)
-    case HandleBlock(local, res, par, args, cls, hdr, bod, rst) =>
-      applyPath(par)
-      args.foreach(applyPath)
-      hdr.foreach(applyHandler)
-      applyBlock(bod)
-      applyBlock(rst)
     case End(_) => ()
     case Unreachable(_) => ()
   
@@ -737,14 +731,6 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
         constrainOpaqueResult(lhs)
         constrainOpaqueResult(fld)
         constrainOpaqueResult(rhs)
-        processBlock(rest)
-      case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
-        constrainOpaqueResult(par)
-        args.foreach: arg =>
-          constrainOpaqueResult(arg)
-        handlers.foreach: handler =>
-          processBlock(handler.body)(using cc, NoCons)
-        processBlock(body)
         processBlock(rest)
       case Define(defn, rest) =>
         defn match

@@ -33,10 +33,11 @@ h.lol
 //│ ╔══[COMPILATION ERROR] Handler function cannot be a getter
 //│ ║  l.31: 	  fun lol(k) = k(())
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$6 is raised in a getter
   fun lol(k) = k(1)
 h.lol + 2
 //│ ╔══[COMPILATION ERROR] Name not found: h
-//│ ║  l.37: 	h.lol + 2
+//│ ║  l.38: 	h.lol + 2
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -64,7 +65,7 @@ object Foo with
 :re
 Foo.x
 //│ ╔══[COMPILATION ERROR] Object 'Foo' does not contain member 'x'
-//│ ║  l.65: 	Foo.x
+//│ ║  l.66: 	Foo.x
 //│ ╙──      	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 

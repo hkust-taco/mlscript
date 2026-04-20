@@ -246,7 +246,7 @@ fun f(x) =
 let res = f(0)
 res.a
 res.b
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Elaborator.scala:1313': mismatched param list lengths List() vs List(term:A/r)
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Elaborator.scala:1316': mismatched param list lengths List() vs List(term:A/r)
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ ═══[RUNTIME ERROR] ReferenceError: r is not defined

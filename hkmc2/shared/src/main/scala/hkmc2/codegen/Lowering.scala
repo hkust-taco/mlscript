@@ -1108,15 +1108,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             deforest.Deforest(Program(imps.map(imp => imp.sym -> imp.str), desug)).main
     
     val handlerPaths = new HandlerPaths
-
-    val withHandlers1 = effectiveConfig.effectHandlers.fold(deforested): opt =>
-      HandlerLowering(handlerPaths, opt).translateHandleBlocks(deforested)
     
     val shouldFlattenScopes = effectiveConfig.effectHandlers.isDefined
     
     val scopeFlattened =
-      if shouldFlattenScopes then ScopeFlattener().applyBlock(withHandlers1)
-      else withHandlers1
+      if shouldFlattenScopes then ScopeFlattener().applyBlock(deforested)
+      else deforested
     
     val lifted =
       if lift then Lifter(scopeFlattened).transform

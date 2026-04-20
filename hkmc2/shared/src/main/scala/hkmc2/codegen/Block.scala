@@ -44,7 +44,6 @@ sealed abstract class Block extends Product:
       // * Note: the body may be abortive for the reason of breaking to the rest!
       // * So we can't really use the result of bod.isAbortive even when `loop` is false.
       rst.isAbortive
-    case HandleBlock(_, _, _, _, _, handlers, body, rst) => rst.isAbortive
     case Scoped(_, body) => body.isAbortive
   
   // * Note: it seems most historical uses of `definedVars` would be better removed,
@@ -65,8 +64,6 @@ sealed abstract class Block extends Product:
     case Define(defn, rst) =>
       val rest = rst.definedVars
       if defn.isOwned then rest else rest + defn.sym
-    // Note that the handler's LHS and body are not part of the current block, so we do not consider them here.
-    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVars + res
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, _, bod, rst) => bod.definedVars ++ rst.definedVars
     case Scoped(syms, body) => body.definedVars ++ syms
@@ -82,8 +79,6 @@ sealed abstract class Block extends Product:
     case Define(_, rst) => 1 + rst.size
     case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
     case Label(_, _, bod, rst) => 1 + bod.size + rst.size
-    case HandleBlock(lhs, res, par, args, cls, handlers, bdy, rst) =>
-      1 + handlers.map(_.body.size).sum + bdy.size + rst.size
     case Scoped(_, body) => body.size
   
   
@@ -112,8 +107,6 @@ sealed abstract class Block extends Product:
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVars ++ rhs.freeVars ++ rest.freeVars
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVars ++ fld.freeVars ++ rhs.freeVars ++ rest.freeVars
     case Define(defn, rest) => defn.freeVars ++ rest.freeVars
-    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
-      (bod.freeVars - lhs) ++ rst.freeVars ++ hdr.flatMap(_.freeVars)
     case Scoped(syms, body) => body.freeVars
     case End(msg) => Set.empty
     case Unreachable(msg) => Set.empty
@@ -134,8 +127,6 @@ sealed abstract class Block extends Product:
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVarsLLIR ++ rhs.freeVarsLLIR ++ rest.freeVarsLLIR
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVarsLLIR ++ fld.freeVarsLLIR ++ rhs.freeVarsLLIR ++ rest.freeVarsLLIR
     case Define(defn, rest) => defn.freeVarsLLIR ++ (rest.freeVarsLLIR - defn.sym)
-    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
-      (bod.freeVarsLLIR - lhs) ++ rst.freeVarsLLIR ++ hdr.flatMap(_.freeVarsLLIR)
     case Scoped(syms, body) => body.freeVarsLLIR
     case End(msg) => Set.empty
     case Unreachable(msg) => Set.empty
@@ -148,7 +139,6 @@ sealed abstract class Block extends Product:
     case AssignField(_, _, rhs, rest) => rhs.subBlocks ::: rest :: Nil
     case AssignDynField(_, _, _, rhs, rest) => rhs.subBlocks ::: rest :: Nil
     case Define(d, rest) => d.subBlocks ::: rest :: Nil
-    case HandleBlock(_, _, par, args, _, handlers, body, rest) => par.subBlocks ++ args.flatMap(_.subBlocks) ++ handlers.map(_.body) :+ body :+ rest
     case Label(_, _, body, rest) => body :: rest :: Nil
     case Scoped(_, body) => body :: Nil
     
@@ -276,16 +266,6 @@ sealed abstract class Block extends Product:
       then this
       else Define(newDefn, newRest)
     
-    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
-      val newHandlers = handlers.mapConserve: h =>
-        val newBody = h.body.flattened
-        if newBody is h.body then h else h.copy(body = newBody)
-      val newBody = body.flattened
-      val newRest = rest.flatten(k)
-      if (newHandlers is handlers) && (newBody is body) && (newRest is rest)
-      then this
-      else HandleBlock(lhs, res, par, args, cls, newHandlers, newBody, newRest)
-
     case Scoped(syms, body) =>
       val newBody = body.flatten(k)
       if newBody is body
@@ -450,18 +430,66 @@ object Begin:
       case _ => new Begin(sub, rest)
 
 
-case class HandleBlock(
-    lhs: Local,
-    res: Local,
-    par: Path,
-    args: Ls[Path],
-    cls: ClassSymbol,
-    handlers: Ls[Handler],
-    body: Block,
-    rest: Block
-) extends Block with ProductWithTail with NonBlockTail
-
 object HandleBlock:
+
+  def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx): Result =
+    Call(Value.Ref(Elaborator.ctx.builtins.runtime.suspend, N), tag.asArg :: handlerFun.asArg :: Nil)(true, true, false)
+
+  def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx): Result =
+    Call(Value.Ref(Elaborator.ctx.builtins.runtime.handle_suspension, N), tag.asArg :: bodyFun.asArg :: Nil)(true, true, false)
+  
+  private def create(
+      lhs: Local,
+      res: Local,
+      par: Path,
+      args: Ls[Path],
+      cls: ClassSymbol,
+      handlers: Ls[Handler],
+      body: Block,
+      rest: Block
+  )(using Elaborator.State, Elaborator.Ctx) =
+    val sym = new BlockMemberSymbol("handleBlock$", Nil, false)
+
+    val bodyDefn = FunDefn.withFreshSymbol(N, sym, PlainParamList(Nil) :: Nil, body)(false, N, Visibility.Public)
+    
+    val handlerMtds = handlers.map: handler =>
+      val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
+      val fDef = FunDefn.withFreshSymbol(
+        N, sym, PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil) :: Nil,
+        handler.body
+        )(false, N, Visibility.Public)
+      val rSym = TempSymbol(N, "suspendRes")
+      FunDefn.withFreshSymbol(
+        S(cls),
+        handler.sym,
+        handler.params,
+        Scoped(Set(sym, rSym), Define(
+          fDef,
+          Return(suspend(cls.asPath, Value.Ref(sym, S(fDef.dSym))), false))))(false, N, Visibility.Public)
+
+    val clsDefn = ClsLikeDefn(
+      N, // no owner
+      cls,
+      BlockMemberSymbol(cls.id.name, Nil),
+      N,
+      syntax.Cls,
+      N, Nil,
+      S(par), handlerMtds, Nil, Nil,
+      // Apparently, the lifter is not happy with any assignment in the preCtor...
+      Return(Call(Value.Ref(State.builtinOpsMap("super")), args.map(_.asArg))(true, true, false), true),
+      End(),
+      N,
+      N,
+    )(N)
+
+    blockBuilder
+      .scopedVars(Set(clsDefn.sym, sym))
+      .define(clsDefn)
+      .assign(lhs, Instantiate(mut = true, Value.Ref(clsDefn.sym, S(cls)), Nil))
+      .define(bodyDefn)
+      .assign(res, handleSuspension(lhs.asPath, Value.Ref(bodyDefn.sym, S(bodyDefn.dSym))))
+      .rest(rest)
+  
   def apply(
       lhs: Local,
       res: Local,
@@ -471,11 +499,11 @@ object HandleBlock:
       handlers: Ls[Handler],
       body: Block,
       rest: Block
-    ) =
+    )(using Elaborator.State, Elaborator.Ctx) =
   rest match
   case Scoped(syms, rest) =>
-    Scoped(syms, new HandleBlock(lhs, res, par, args, cls, handlers, body, rest))
-  case _ => new HandleBlock(lhs, res, par, args, cls, handlers, body, rest)
+    Scoped(syms, create(lhs, res, par, args, cls, handlers, body, rest))
+  case _ => create(lhs, res, par, args, cls, handlers, body, rest)
 
 
 sealed abstract class Defn:

@@ -327,7 +327,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           source = Diagnostic.Source.Compilation))
       case Throw(_) => blk
       case Scoped(_, body) => go(body) // PreHandlerLowering
-      case _: HandleBlock => lastWords("unexpected handleBlock") // already translated at this point
 
     val initId = allocId()
     // Note: initial part will only be resumed if stack safety is on.
@@ -528,9 +527,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
   /**
    * The actual translation:
-   * 1. rewrite handler blocks in terms of classes and functions
+   * 1. rewrite handler blocks in terms of classes and functions (directly during Lowering)
    * 2. class lifter
-   * 3. state machine transformation of all functions
+   * 3. state machine transformation of all functions (HandlerLowering, this class)
    */
 
   private def translateBlock(blk: Block, h: HandlerCtx, scopedVars: collection.Set[Local]): Block =
@@ -556,7 +555,14 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, bod2)(fun.forceTailRec, fun.configOverride, fun.visibility)
       (debugInfoSym, debugInfo, fun2)
 
-    val subblockTransform = new BlockTransformer(SymbolSubst.Id):
+    // transform inner function/class and effect handler intrinsics to the runtime functions.
+    val preTransform = new BlockTransformer(SymbolSubst.Id):
+      override def applyResult(r: Result)(k: Result => Block): Block = r match
+        case Call(Value.Ref(sym, _), args) if sym is Elaborator.ctx.builtins.runtime.suspend =>
+          k(Call(paths.mkEffectPath, args)(true, true, false))
+        case Call(Value.Ref(sym, _), args) if sym is Elaborator.ctx.builtins.runtime.handle_suspension =>
+          k(Call(paths.enterHandleBlockPath, args)(true, true, false))
+        case _ => super.applyResult(r)(k)
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case fun: FunDefn =>
           if !h.allowDefn then
@@ -594,7 +600,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
               Assign(elem._1, Tuple(false, elem._2), blk))
           else k(c2)
         case _ => super.applyDefn(defn)(k)
-    val b = subblockTransform.applyBlock(blk)
+    val b = preTransform.applyBlock(blk)
     if h.inCtor then
       return translateIllegalEffectCtx(b, Call(paths.illegalEffectPath, Value.Lit(Tree.StrLit("in a constructor")).asArg :: Nil)(true, true, false))
     if h.inTopLevel then
@@ -741,63 +747,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           Scoped(Set(l), effectCheck(l, r, k(Value.Ref(l))))
         case _ => super.applyResult(r)(k)
     topLevelTransform.applyBlock(b)
-  
-  // Handle block is rewritten into:
-  // 1. Instantiation of the handler
-  // 2. An effectful call to enterHandleBlock
-  private def translateHandleBlockShallow(h: HandleBlock): Block =
-    val sym = new BlockMemberSymbol("handleBlock$", Nil, false)
-
-    val bodyDefn = FunDefn.withFreshSymbol(N, sym, PlainParamList(Nil) :: Nil, h.body)(false, N, Visibility.Public)
-    
-    val handlerMtds = h.handlers.map: handler =>
-      val sym = BlockMemberSymbol(h.cls.nme + handler.sym.nme, Nil, true)
-      val fDef = FunDefn.withFreshSymbol(
-        N, sym, PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil) :: Nil,
-        handler.body
-        )(false, N, Visibility.Public)
-      FunDefn.withFreshSymbol(
-        S(h.cls),
-        handler.sym,
-        handler.params,
-        Scoped(Set(sym), Define(
-          fDef,
-          Return(PureCall(paths.mkEffectPath, h.cls.asPath :: Value.Ref(sym, S(fDef.dSym)) :: Nil), false))))(false, N, Visibility.Public)
-
-    val clsDefn = ClsLikeDefn(
-      N, // no owner
-      h.cls,
-      BlockMemberSymbol(h.cls.id.name, Nil),
-      N,
-      syntax.Cls,
-      N, Nil,
-      S(h.par), handlerMtds, Nil, Nil,
-      // Apparently, the lifter is not happy with any assignment in the preCtor...
-      Return(Call(Value.Ref(State.builtinOpsMap("super")), h.args.map(_.asArg))(true, true, false), true),
-      End(),
-      N,
-      N,
-    )(N)
-
-    blockBuilder
-      .scopedVars(Set(clsDefn.sym, sym))
-      .define(clsDefn)
-      .assign(h.lhs, Instantiate(mut = true, Value.Ref(clsDefn.sym, S(h.cls)), Nil))
-      .define(bodyDefn)
-      .assign(h.res, Call(paths.enterHandleBlockPath, List(h.lhs.asPath.asArg, Value.Ref(sym, S(bodyDefn.dSym)).asArg))(true, true, false))
-      .rest(h.rest)
-  
-  def translateHandleBlocks(b: Block): Block =
-
-    val transform = new BlockTransformer(SymbolSubst.Id):
-      override def applyBlock(b: Block) = b match
-        case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
-          val hdr2 = hdr.map(applyHandler)
-          val bod2 = applySubBlock(bod)
-          val rst2 = applySubBlock(rst)
-          translateHandleBlockShallow(new HandleBlock(lhs, res, par, args, cls, hdr2, bod2, rst2))
-        case _ => super.applyBlock(b)
-    transform.applyBlock(b)
 
   def translateTopLevel(b: Block): (Block, StackSafetyMap) =
     val preTransformed = new ScopeFlattener().applyBlock(b)
