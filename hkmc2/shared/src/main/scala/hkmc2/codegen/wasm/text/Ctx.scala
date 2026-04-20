@@ -8,7 +8,9 @@ import hkmc2.utils.*
 
 import document.*
 import document.Document
-import semantics.{BlockMemberSymbol, Elaborator, InnerSymbol, LabelSymbol, ModuleOrObjectSymbol, ParamList, Symbol, TempSymbol},
+import semantics.{
+  BlockMemberSymbol, Elaborator, InnerSymbol, LabelSymbol, ModuleOrObjectSymbol, ParamList, Symbol, TempSymbol,
+},
   Elaborator.State
 import text.Param as WasmParam
 import Instructions.*
@@ -349,7 +351,6 @@ end TagInfo
 enum WasmIntrinsicType:
   case TupleArray(mutable: Bool)
 
-
 object FunctionCtx:
 
   def funcCtx(using funcCtx: FunctionCtx): FunctionCtx = funcCtx
@@ -404,7 +405,10 @@ end FunctionCtx
   *
   * Returns the result of the `mkBody` function along with the [[FunctionCtx]].
   */
-def genFuncBody[T](params: Ls[ParamList], thisSym: Opt[InnerSymbol])(mkBody: FunctionCtx ?=> T)(using Raise, State): T -> FunctionCtx =
+def genFuncBody[T](
+    params: Ls[ParamList],
+    thisSym: Opt[InnerSymbol],
+)(mkBody: FunctionCtx ?=> T)(using Raise, State): T -> FunctionCtx =
   val funcCtx = FunctionCtx(params, thisSym)
   val result = mkBody(using funcCtx)
   result -> funcCtx
