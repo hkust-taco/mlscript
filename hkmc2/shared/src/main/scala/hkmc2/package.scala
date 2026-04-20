@@ -22,8 +22,18 @@ def softAssert(cond: Boolean, msg: => Str = "")(using Line, FileName, Raise): Un
     raise:
       InternalError(
         msg"Compiler reached an unexpected state at '${summon[FileName].value}:${summon[Line].value}'${
-          if msg == "" then "" else s": $msg"}" -> N
+          if msg === "" then "" else s": $msg"}" -> N
         :: msg"The compilation result may be incorrect." -> N
         :: msg"This is a compiler bug; please report it to the maintainers." -> N
+        :: Nil)
+
+def softTODO(cond: Boolean, msg: => Str = "")(using Line, FileName, Raise): Unit =
+  if !cond then
+    raise:
+      InternalError(
+        msg"Compiler reached an unsupported state${
+          if msg === "" then "" else s": $msg"}" -> N
+        :: msg"The compilation result may be incorrect." -> N
+        :: msg"This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers." -> N
         :: Nil)
 
