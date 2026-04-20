@@ -71,7 +71,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       && ((defn.k is syntax.Cls) || (defn.k is syntax.Obj))
       && defn.auxParams.isEmpty
       && (!(defn.k is syntax.Obj) || defn.parentPath.isEmpty)
-      && defn.methods.isEmpty
+      && (!(defn.k is syntax.Obj) || defn.methods.isEmpty)
       && defn.companion.isEmpty
 
   /** Returns singleton metadata when `sym` resolves to a registered singleton object. */
@@ -306,7 +306,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         ctx.getAllRuntimeTags(childSym).getOrElse(lastWords("unreachable"))
       ctx.registerRuntimeClassTags(defn.sym, LinkedHashSet(ownTag) ++ childTags)
 
-  /** Declares the shared Wasm function type used by a class ctor/init placeholder. */
+  /** Declares the shared Wasm function type used by a class-associated function placeholder. */
   private def declareClassFuncType(
       defn: ClsLikeDefn,
       suffix: Str,
@@ -337,7 +337,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def initFuncSym(sym: BlockMemberSymbol): BlockMemberSymbol =
     initFuncSyms.getOrElseUpdate(sym, BlockMemberSymbol(s"${sym.nme}_init", Nil, nameIsMeaningful = false))
 
-  /** Registers a placeholder class ctor/init function so later lowering can overwrite it. */
+  /** Registers a placeholder class-associated function so later lowering can overwrite it. */
   private def predeclareClassFunc(
       defn: ClsLikeDefn,
       suffix: Str,
@@ -501,6 +501,32 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         ctx.registerSingleton(singleton.blockSym, singleton.objectSym, SingletonInfo(globalName, singleton.globalTy))
       case _: SessionClass => ()
   end registerSessionImports
+
+  /** Declares one top-level class method. */
+  private def predeclareMethod(methodDefn: FunDefn, ownerCls: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
+    val methodParams = (ownerCls.isym -> "this") +:
+      methodDefn.params.headOption.fold(Nil): ps =>
+        ps.params.map: p =>
+          p.sym -> p.sym.nme
+    val methodId = ownerCls.sym
+      .optionIf: sym =>
+        !(ownerCls.k is syntax.Obj) && sym.nameIsMeaningful
+      .map: sym =>
+        s"${sym.nme}_${methodDefn.sym.nme}"
+    predeclareClassFunc(ownerCls, methodDefn.sym.nme, methodParams, S(methodDefn.sym), methodId, N)
+
+  /** Declares placeholders for all methods on one top-level class. */
+  private def predeclareClassMethods(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
+    defn.methods.foreach:
+      case methodDefn @ FunDefn(_, _, _, Nil | _ :: Nil, _) =>
+        predeclareMethod(methodDefn, defn)
+      case FunDefn(_, sym, _, _ :: _ :: _, _) =>
+        raise(ErrorReport(
+          msg"WatBuilder::predeclareClassMethods for ClsLikeDefn(...) with `multi-parameter-list method` not implemented yet" ->
+            sym.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation,
+        ))
+      case _ => ()
 
   /** Gets (and caches) the exception tag used for MLX `throw`. */
   private def exnTagIdx(using Ctx, Raise, Scope): TagIdx =
@@ -886,6 +912,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     FieldIdx(SymIdx(fieldIdx))
   end fieldSelect
 
+  /** Resolves `sym` to a predeclared class method symbol, if any. */
+  private def predeclaredClassMethodSym(sym: DefinitionSymbol[?])(using Ctx): Opt[BlockMemberSymbol] =
+    sym.asBlkMember.filter: methodSym =>
+      methodSym.asTrm.exists(_.owner.exists(_.asCls.isDefined)) && ctx.getFunc(methodSym).nonEmpty
+
   def result(r: codegen.Result)(using Ctx, FunctionCtx, Raise, Scope, SessionExportCtx): Expr = r match
     case Value.This(sym) =>
       // TODO(Derppening): Add type tracking and refinement for locals, remove the `ref.cast`
@@ -935,6 +966,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         )
       else
         errExpr(Ls(msg"Cannot call non-binary builtin symbol '${l.nme}'" -> r.toLoc))
+
+    case Call(sel @ Select(qual, _), args) if sel.symbol.flatMap(predeclaredClassMethodSym).nonEmpty =>
+      val methodSym = sel.symbol.flatMap(predeclaredClassMethodSym).get
+      call(
+        funcidx = ctx.getFunc_!(methodSym),
+        operands = result(qual) +: args.map(argument),
+        returnTypes = Seq(Result(RefType.anyref)),
+      )
 
     case c @ Call(fun, args) =>
       wasmIntrinsicName(fun) match
@@ -1010,6 +1049,24 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             case N =>
               errExpr(
                 Ls(msg"WatBuilder::result for object selection `${id.name}` not implemented yet" -> sel.toLoc),
+                extraInfo = S(sel),
+              )
+
+        case S(selSym) if predeclaredClassMethodSym(selSym).nonEmpty =>
+          val methodSym = predeclaredClassMethodSym(selSym).get
+          methodSym.asTrm.flatMap(_.defn) match
+            case S(defn: TermDefinition) if defn.params.isEmpty =>
+              call(
+                funcidx = ctx.getFunc_!(methodSym),
+                operands = Seq(result(qual)),
+                returnTypes = Seq(Result(RefType.anyref)),
+              )
+            case _ =>
+              errExpr(
+                Ls(
+                  msg"`${methodSym.toString}` is neither a field access nor a callable method" ->
+                    sel.toLoc,
+                ),
                 extraInfo = S(sel),
               )
 
@@ -1315,24 +1372,26 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         val lhsExpr = result(lhs)
         val rhsExpr = result(rhs)
         val assignInstr = assign.symbol match
-          case S(selSym: TermSymbol) =>
-            val selOwner = selSym.owner getOrElse
-              lastWords(s"Expected resolved AssignField(...) expression `$selSym` to have an owner")
-            val selCls = selOwner.asBlkMember getOrElse
-              lastWords(
-                s"Expected resolved class for AssignField(...) expression to be a BlockMemberSymbol, but got $selOwner (${
-                    selOwner.getClass.getName
-                  })",
-              )
-            val fieldidx = fieldSelect(selCls, selSym)
-            val objRef = ref.cast(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false))
-            struct.set(fieldidx, objRef, rhsExpr)
-          case S(otherSym) =>
-            lastWords(
-              s"Expected resolved AssignField(...) expression to be a TermSymbol, but got $otherSym (${
-                  otherSym.getClass.getName
-                })",
-            )
+          case S(selSym) =>
+            selSym.asTrm match
+              case S(fieldSym) =>
+                val selOwner = fieldSym.owner getOrElse
+                  lastWords(s"Expected resolved AssignField(...) expression `$fieldSym` to have an owner")
+                val selCls = selOwner.asBlkMember getOrElse
+                  lastWords(
+                    s"Expected resolved class for AssignField(...) expression to be a BlockMemberSymbol, but got $selOwner (${
+                        selOwner.getClass.getName
+                      })",
+                  )
+                val fieldidx = fieldSelect(selCls, fieldSym)
+                val objRef = ref.cast(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false))
+                struct.set(fieldidx, objRef, rhsExpr)
+              case N =>
+                lastWords(
+                  s"Expected resolved AssignField(...) expression to be a TermSymbol, but got $selSym (${
+                      selSym.getClass.getName
+                    })",
+                )
           case N =>
             errExpr(
               Ls(
@@ -1442,7 +1501,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     val result = pss.foldRight(bod):
                       case (ps, block) =>
                         Return(Lambda(ps, block), false)
-                    val (bodyWat, fnCtx) = setupFunction(ps, result)
+                    val (bodyWat, fnCtx) = setupFunction(N, ps, result)
                     if sym.nameIsMeaningful then
                       val funcTy = ctx.addType(
                         sym = N,
@@ -1504,8 +1563,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       break(errUnimplExpr("auxParams.nonEmpty"))
                     if isSingletonObj && clsLikeDefn.parentPath.nonEmpty then
                       break(errUnimplExpr("parentPath.nonEmpty for object"))
-                    if clsLikeDefn.methods.nonEmpty then
-                      break(errUnimplExpr("methods.nonEmpty"))
+                    if isSingletonObj && clsLikeDefn.methods.nonEmpty then
+                      break(errUnimplExpr("methods.nonEmpty for object"))
                     if clsLikeDefn.companion.isDefined then
                       break(errUnimplExpr("companion.isDefined"))
 
@@ -1588,6 +1647,32 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         exportName = predeclaredCtor.exportName,
                       ),
                     )
+
+                    def overwriteMethod(
+                        sym: BlockMemberSymbol,
+                        ps: ParamList,
+                        bod: Block,
+                    ): Unit =
+                      val (bodyWat, fnCtx) = setupFunction(S(clsLikeDefn.isym), ps, bod)
+                      val predeclaredMethod = ctx.getFuncInfo_!(sym)
+                      ctx.addFunc(
+                        S(sym),
+                        FuncInfo(
+                          id = predeclaredMethod.id,
+                          typeUse = predeclaredMethod.typeUse,
+                          params = fnCtx.params.map((local, idx) => local -> idx.id),
+                          resultTypes = Seq.fill(bodyWat.resultTypes.length)(Result(RefType.anyref)),
+                          locals = fnCtx.locals.map((local, idx) => local -> idx.id),
+                          body = bodyWat,
+                          exportName = predeclaredMethod.exportName,
+                        ),
+                      )
+
+                    clsLikeDefn.methods.foreach:
+                      case FunDefn(_, sym, _, Nil, bod) =>
+                        overwriteMethod(sym, PlainParamList(Nil), bod)
+                      case FunDefn(_, sym, _, ps :: Nil, bod) =>
+                        overwriteMethod(sym, ps, bod)
                     if summon[SessionExportCtx].shouldExport(clsLikeDefn.sym) then
                       summon[SessionExportCtx].emit(SessionClass(
                         sym = clsLikeDefn.sym,
@@ -2026,6 +2111,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         predeclareClassTags(ordered)
         ordered.foreach(predeclareClassInit)
         ordered.foreach(predeclareClassConstructor)
+        ordered.foreach(predeclareClassMethods)
 
       // Compile the entry function under a dedicated local scope so that any temp locals introduced
       // during codegen (e.g., via `local.tee`) are declared in the entry function.
@@ -2128,10 +2214,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     nonNestedScoped(t)(returningTerm)
 
   def setupFunction(
+      thisParam: Opt[InnerSymbol],
       params: ParamList,
       body: Block,
   )(using Ctx, Raise, Scope, SessionExportCtx): (Expr, FunctionCtx) =
-    genFuncBody(params :: Nil, thisSym = N):
+    genFuncBody(params :: Nil, thisSym = thisParam):
       block(body)
 
 end WatBuilder

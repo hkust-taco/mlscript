@@ -1,0 +1,200 @@
+
+:global
+:wasm
+
+
+:wat
+class A(val x) with
+  fun get() = x
+let a = A(1)
+a.A#get() + A(2).get()
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $A (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))
+//│   (type $A_init (func (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))))
+//│   (type $A_ctor (func (param $x (ref null any)) (result (ref null any))))
+//│   (type $A_get (func (param $this (ref null any)) (result (ref null any))))
+//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
+//│   (global $a (export "a") (mut (ref null any)) (ref.null any))
+//│   (func $A_init (type $A_init) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (block
+//│         (struct.set $A $x
+//│           (ref.cast (ref $A)
+//│             (local.get $this))
+//│           (local.get $x))
+//│         (nop))
+//│       (return
+//│         (local.get $this))))
+//│   (func $A_ctor (export "A") (type $A_ctor) (param $x (ref null any)) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $A))
+//│       (struct.set $A $$tag
+//│         (ref.cast (ref $A)
+//│           (local.get $this))
+//│         (i32.const 1))
+//│       (drop
+//│         (call $A_init
+//│           (local.get $this)
+//│           (local.get $x)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $A_get (type $A_get) (param $this (ref null any)) (result (ref null any))
+//│     (return
+//│       (struct.get $A $x
+//│         (ref.cast (ref $A)
+//│           (local.get $this)))))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│     (local $tmp (ref null any))
+//│     (local $tmp1 (ref null any))
+//│     (local $tmp2 (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (block (result (ref null any))
+//│         (global.set $a
+//│           (call $A_ctor
+//│             (ref.i31
+//│               (i32.const 1))))
+//│         (block (result (ref null any))
+//│           (local.set $tmp
+//│             (call $A_get
+//│               (global.get $a)))
+//│           (block (result (ref null any))
+//│             (local.set $tmp1
+//│               (call $A_ctor
+//│                 (ref.i31
+//│                   (i32.const 2))))
+//│             (block (result (ref null any))
+//│               (local.set $tmp2
+//│                 (call $A_get
+//│                   (local.get $tmp1)))
+//│               (call $plus_impl
+//│                 (local.get $tmp)
+//│                 (local.get $tmp2))))))))
+//│   (elem $A_init declare func $A_init)
+//│   (elem $A_ctor declare func $A_ctor)
+//│   (elem $A_get declare func $A_get)
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = 3
+
+
+class A(val x) with
+  fun get = x
+let a = A(1)
+a.A#get
+//│ Wasm result:
+//│ = 1
+
+
+class A(val x) with
+  fun add(y) = x + y
+A(1).add(2)
+//│ Wasm result:
+//│ = 3
+
+
+class C(val x) with
+  fun get() = double
+  fun double = x + this.x
+C(2).get()
+//│ Wasm result:
+//│ = 4
+
+
+class SumDown() with
+  fun sum(n) = 
+    if n === 0 
+        then 0 
+        else n + sum(n - 1)
+SumDown().sum(5)
+//│ Wasm result:
+//│ = 15
+
+
+class Parity() with
+  fun even(n) =
+    if n === 0 then true else odd(n - 1)
+  fun odd(n) =
+    if n === 0 then false else even(n - 1)
+Parity().even(6)
+//│ Wasm result:
+//│ = 1
+
+
+class Box(val x) with
+    fun get() = x
+    fun inc() = Box(x + 1).get()
+Box(2).inc()
+//│ Wasm result:
+//│ = 3
+
+
+class Counter(val x) with
+  fun inc() = Counter(x + 1)
+  fun double() = Counter(x + x)
+  fun get() = x
+let c = Counter(1)
+c.Counter#inc().Counter#double().Counter#get()
+//│ Wasm result:
+//│ = 4
+
+
+class Box(val x) with
+    fun mk() = Next(x + 1).get()
+class Next(val y) with
+    fun get() = y
+Box(41).mk()
+//│ Wasm result:
+//│ = 42
+
+
+class Counter(val x) with
+  fun inc() = 
+    set x += 1
+    this
+  fun double() =
+    set x *= 2
+    this
+  fun get() = x
+let c = Counter(1)
+c.Counter#inc().Counter#double().Counter#get()
+//│ Wasm result:
+//│ = 4
+
+:todo
+let d = Counter(c.Counter#get())
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))`
+
+:todo
+d.Counter#inc().Counter#double().Counter#get()
+//│ ╔══[COMPILATION ERROR] Cannot find variable `d` (VarSymbol) in local or global scope.
+//│ ║  l.172: 	let d = Counter(c.Counter#get())
+//│ ╙──       	    ^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Counter`
+
+:todo
+c.Counter#get()
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Counter`
+
+
+class GetterOnly() with
+  fun f = 1
+GetterOnly().f()
+//│ Wasm result:
+//│ = 1
+
+
+:ge
+class A(val x) with
+  fun get() = x
+A(1).get
+//│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
+//│ ║  l.197: 	A(1).get
+//│ ╙──       	    ^^^^
