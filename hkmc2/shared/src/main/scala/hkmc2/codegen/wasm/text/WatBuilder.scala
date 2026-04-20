@@ -519,7 +519,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   /** Declares placeholders for all methods on one top-level class. */
   private def predeclareClassMethods(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
     defn.methods.foreach:
-      case methodDefn @ (FunDefn(_, _, _, Nil, _) | FunDefn(_, _, _, _ :: Nil, _)) =>
+      case methodDefn @ FunDefn(_, _, _, Nil | _ :: Nil, _) =>
         predeclareMethod(methodDefn, defn)
       case FunDefn(_, sym, _, _ :: _ :: _, _) =>
         raise(ErrorReport(

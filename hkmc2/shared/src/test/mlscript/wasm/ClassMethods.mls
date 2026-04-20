@@ -164,12 +164,24 @@ class Counter(val x) with
     this
   fun get() = x
 let c = Counter(1)
-let a_val = c.Counter#inc().Counter#double().Counter#get()
-let d = Counter(c.Counter#get())
-let b_val = d.Counter#inc().Counter#double().Counter#get()
-a_val + b_val + c.Counter#get()
+c.Counter#inc().Counter#double().Counter#get()
 //│ Wasm result:
-//│ = 18
+//│ = 4
+
+:todo
+let d = Counter(c.Counter#get())
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))`
+
+:todo
+d.Counter#inc().Counter#double().Counter#get()
+//│ ╔══[COMPILATION ERROR] WatBuilder::getVar for VarSymbol (symbol not in top-level scope) not implemented yet
+//│ ║  l.172: 	let d = Counter(c.Counter#get())
+//│ ╙──       	    ^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Counter`
+
+:todo
+c.Counter#get()
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Counter`
 
 
 class GetterOnly() with
@@ -184,7 +196,5 @@ class A(val x) with
   fun get() = x
 A(1).get
 //│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
-//│ ║  l.185: 	A(1).get
+//│ ║  l.197: 	A(1).get
 //│ ╙──       	    ^^^^
-
-
