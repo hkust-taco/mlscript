@@ -274,6 +274,11 @@ declare module annotations with
 declare module scope with
   fun locally
 
+declare module runtime with
+  fun
+    suspend
+    handle_suspension
+
 
 // HTML DOM API definitions.
 // Move them to a separate Prelude file when there are enough of them.

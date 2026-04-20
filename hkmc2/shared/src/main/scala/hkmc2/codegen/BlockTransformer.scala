@@ -95,18 +95,6 @@ class BlockTransformer(subst: SymbolSubst):
       applyDefn(defn): defn2 =>
         val rst2 = applySubBlock(rst)
         if (defn2 is defn) && (rst2 is rst) then b else Define(defn2, rst2)
-    case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
-      val l2 = applyLocal(l)
-      val res2 = applyLocal(res)
-      applyPath(par): par2 =>
-        applyListOf(args, applyPath(_)(_)): args2 =>
-          val cls2 = cls.subst
-          val hdr2 = hdr.mapConserve(applyHandler)
-          val bod2 = applySubBlock(bod)
-          val rst2 = applySubBlock(rst)
-          if (l2 is l) && (res2 is res) && (par2 is par) && (args2 is args) &&
-              (cls2 is cls) && (hdr2 is hdr) && (bod2 is bod) && (rst2 is rst)
-            then b else HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod2, rst2)
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
       applyResult(rhs): rhs2 =>
         applyPath(lhs): lhs2 =>
@@ -318,20 +306,6 @@ class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst
     case _: ValDefn => super.applyDefn(defn)(k)
   
   override def applyHandler(hdr: Handler): Handler = hdr
-  
-  override def applyBlock(b: Block): Block = b match
-    case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
-      val l2 = applyLocal(l)
-      val res2 = applyLocal(res)
-      applyPath(par): par2 =>
-        applyListOf(args, applyPath(_)(_)): args2 =>
-          val cls2 = cls.subst
-          val hdr2 = hdr.mapConserve(applyHandler)
-          val rst2 = applySubBlock(rst)
-          if (l2 is l) && (res2 is res) && (par2 is par) && (args2 is args) &&
-              (cls2 is cls) && (hdr2 is hdr) && (rst2 is rst)
-            then b else HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod, rst2)
-    case _ => super.applyBlock(b)
 
 // Does not traverse into sub-blocks or definitions. The purpose of this is is to only rewrite a block's data, i.e. 
 // paths, values, cases, etc. within a block. Can be used in tandem with `BlockTransformer` or `BlockTransformerShallow` 

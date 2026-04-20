@@ -688,6 +688,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           subTerm_nonTail(fld): f =>
             subTerm_nonTail(rhs): r =>
               AssignDynField(p, f, ai, r, k(unit))
+      case sel @ SelProj(prefix, _, proj) =>
+        subTerm(prefix): p =>
+          subTerm_nonTail(rhs): r =>
+            AssignField(p, proj, r, k(unit))(sel.sym)
       case _ => fail:
         ErrorReport(
           msg"Unexpected left-hand side in assignment (${lhs.describe})" -> lhs.toLoc :: Nil, S(lhs),
@@ -1104,15 +1108,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             deforest.Deforest(Program(imps.map(imp => imp.sym -> imp.str), desug)).main
     
     val handlerPaths = new HandlerPaths
-
-    val withHandlers1 = effectiveConfig.effectHandlers.fold(deforested): opt =>
-      HandlerLowering(handlerPaths, opt).translateHandleBlocks(deforested)
     
     val shouldFlattenScopes = effectiveConfig.effectHandlers.isDefined
     
     val scopeFlattened =
-      if shouldFlattenScopes then ScopeFlattener().applyBlock(withHandlers1)
-      else withHandlers1
+      if shouldFlattenScopes then ScopeFlattener().applyBlock(deforested)
+      else deforested
     
     val lifted =
       if lift then Lifter(scopeFlattened).transform
