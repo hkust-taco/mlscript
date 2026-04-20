@@ -810,13 +810,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case N => l match
           case ts: semantics.TermSymbol =>
             errExpr(
-              Ls(msg"WatBuilder::getVar for TermSymbol not implemented yet" -> l.toLoc),
+              Ls(msg"WatBuilder::getVar for TermSymbol not implemented yet" -> ts.toLoc),
               extraInfo = S(ts.toString),
             )
           case ts: semantics.ModuleOrObjectSymbol if ts.asMod.isDefined =>
             errExpr(
               Ls(
-                msg"WatBuilder::getVar for ModuleOrObjectSymbol (`ts.asMod.isDefined`) not implemented yet" -> l.toLoc,
+                msg"WatBuilder::getVar for ModuleOrObjectSymbol (`ts.asMod.isDefined`) not implemented yet" -> ts.toLoc,
               ),
               extraInfo = S(ts.toString),
             )
@@ -826,11 +826,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               case N =>
                 errExpr(
                   Ls(
-                    msg"WatBuilder::getVar for InnerSymbol (symbol not in top-level scope) not implemented yet" ->
+                    msg"WatBuilder::getVar for InnerSymbol `${ts.toString}` (symbol not in top-level scope) not implemented yet" ->
                       ts.toLoc,
                   ),
                   extraInfo = S(
-                    s"Block IR: `${l.toString}`\nLocals: ${(funcCtx.params ++ funcCtx.locals).toString}\nGlobals: ${ctx.getGlobals.toString}",
+                    s"Locals: ${(funcCtx.params ++ funcCtx.locals).toString}\nGlobals: ${ctx.getGlobals.toString}",
                   ),
                 )
           case l =>
@@ -841,13 +841,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             else
               errExpr(
                 Ls(
-                  msg"WatBuilder::getVar for ${
-                      l.getClass.getSimpleName
-                    } (symbol not in global or local scope) not implemented yet" ->
+                  msg"Cannot find variable `${l.toString}` (${l.getClass.getSimpleName}) in local or global scope." ->
                     l.toLoc,
                 ),
                 extraInfo = S(
-                  s"Block IR: `${l.toString}`\nLocals: ${(funcCtx.params ++ funcCtx.locals).toString}\nGlobals: ${ctx.getGlobals.toString}",
+                  s"Locals: ${(funcCtx.params ++ funcCtx.locals).toString}\nGlobals: ${ctx.getGlobals.toString}",
                 ),
               )
   end getVar
