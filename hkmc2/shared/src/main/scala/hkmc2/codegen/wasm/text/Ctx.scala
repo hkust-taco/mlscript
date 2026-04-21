@@ -436,8 +436,6 @@ class FunctionCtx(_params: Ls[ParamList], thisSym: Opt[InnerSymbol])(using Raise
     *   Indicates whether a `continue` label should be generated for this control flow context, e.g. for loops.
     */
   def withLabel[T](label: LabelSymbol, hasContinueLabel: Bool)(body: LabelTarget => T): T =
-    import Scope.scope
-
     val ctrlFlowCtx = FunctionCtx.ControlFlowCtx(
       scp = labels.lastOption.fold(Scope.empty(Scope.Cfg.default))(_._2.scp.nest),
       breakLabel = label,
