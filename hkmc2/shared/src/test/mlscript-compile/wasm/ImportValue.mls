@@ -1,5 +1,0 @@
-#config(target: CompilationTarget.Wasm)
-
-import "./IVal.mls"
-
-IVal.base + 1

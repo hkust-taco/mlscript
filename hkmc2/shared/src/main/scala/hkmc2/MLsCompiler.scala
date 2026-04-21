@@ -82,6 +82,7 @@ class MLsCompiler
   // val ltl = new TraceLogger{override def doTrace: Bool = true}
   val rtl = new TraceLogger{override def doTrace: Bool = false}
 
+
   var dbgParsing = false
   var dbgElab = false
 
@@ -116,13 +117,11 @@ class MLsCompiler
   )(using Elaborator.State, CompilerCtx): ModuleInfo =
     val parentCctx = summon[CompilerCtx]
     given Raise = mkRaise(file)
-    val parsed = etl.givenIn:
-      parentCctx.getElaboratedBlock(file, prelude).tree
+    val artifact = etl.givenIn:
+      parentCctx.getElaboratedBlock(file, prelude)
     prelude.nestLocal("file:" + file.baseName).givenIn:
       given CompilerCtx = parentCctx.derive(file)
-      val elab = Elaborator(etl, file.up, prelude)
-      val (blk, _) = elab.importFrom(parsed)
-      moduleInfo(file, parsed, blk)
+      moduleInfo(file, artifact.tree, artifact.term)
 
   /** Lowers a module to intermediate representation with optimization passes. */
   private def lowerModule(module: ModuleInfo)(using Raise, Elaborator.State, Elaborator.Ctx): codegen.Program =

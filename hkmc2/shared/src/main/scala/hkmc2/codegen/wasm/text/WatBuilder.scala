@@ -910,7 +910,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       symToField.collectFirst:
         case (fieldSym, field) if fieldSym.toString == symQualName => field.id
       .getOrElse:
-        val availableFields = symToField.keys.map(_.toString).mkString(", ")
+        val availableFields = symToField.keys.iterator.map(_.toString).toSeq.sorted.mkString(", ")
         lastWords(
           s"Missing field `${sym.toString}` in struct `${thisSym.toString}` with type `${structInfo.toWat.mkString()}`. Available fields: $availableFields",
         )

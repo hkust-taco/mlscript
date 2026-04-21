@@ -53,3 +53,8 @@ new! Option.Some(1)
 //│ = Some(1)
 
 
+import "../../mlscript-compile/wasm/SimpleTarget.mjs"
+//│ SimpleTarget = 42
+
+SimpleTarget + 1
+//│ = 43

@@ -1,4 +1,0 @@
-#config(target: CompilationTarget.Wasm)
-
-object IVal with
-  val base = 41
