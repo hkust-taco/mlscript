@@ -443,7 +443,7 @@ class FunctionCtx(_params: Ls[ParamList], thisSym: Opt[InnerSymbol])(using Raise
       breakLabel = label,
       continueLabel = if hasContinueLabel then S(LabelSymbol(N, s"${label.nme}_cont")) else N,
     )
-    labels = labels + (label -> ctrlFlowCtx)
+    labels += label -> ctrlFlowCtx
     val res = body(
       LabelTarget(
         breakLabel = ctrlFlowCtx.scp.allocateName(label),
