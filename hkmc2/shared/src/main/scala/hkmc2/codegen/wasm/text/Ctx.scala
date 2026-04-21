@@ -9,7 +9,7 @@ import hkmc2.utils.*
 import document.*
 import document.Document
 import semantics.{
-  BlockMemberSymbol, Elaborator, InnerSymbol, LabelSymbol, ModuleOrObjectSymbol, ParamList, Symbol, TempSymbol,
+  BlockMemberSymbol, Elaborator, InnerSymbol, LabelSymbol, ModuleOrObjectSymbol, ParamList, Symbol,
 },
   Elaborator.State
 import text.Param as WasmParam
@@ -233,7 +233,7 @@ class FuncInfo(
       body: Expr,
       `export`: Opt[Str],
   )(using Raise, Scope, State) = this(
-    id.getOrElse(SymIdx(summon[Scope].allocateName(TempSymbol(N, "")))),
+    id.getOrElse(SymIdx(summon[Scope].allocateName(BlockMemberSymbol("", Nil, nameIsMeaningful = false)))),
     typeUse,
     params,
     Seq.fill(nResults)(Result(RefType.anyref)),
@@ -327,7 +327,7 @@ class TypeInfo(val id: SymIdx, val compType: CompType, val objectTag: Opt[Int]) 
   )
 
   def this(id: Opt[SymIdx], compType: CompType)(using Raise, Scope, State) =
-    this(id.getOrElse(SymIdx(summon[Scope].allocateName(TempSymbol(N, "")))), compType, N)
+    this(id.getOrElse(SymIdx(summon[Scope].allocateName(BlockMemberSymbol("", Nil, nameIsMeaningful = false)))), compType, N)
 
   def toWat: Document = doc"(type ${id.toWat} ${compType.toWat})"
 
