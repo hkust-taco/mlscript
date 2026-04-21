@@ -41,7 +41,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   import Ctx.ctx
   import Ctx.{SingletonInfo, binaryOps, unaryOps, wasmIntrinsicArities, wasmIntrinsicNameSet}
   import FunctionCtx.funcCtx
-  import Instructions.{block as blockInstr, *}
+  import Instructions.{block as blockInstr, loop as loopInstr, *}
   import WatBuilder.ExternIntrinsics
 
   type Context = Ctx
@@ -1453,7 +1453,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       s"Expected `global.*` or `local.*` when compiling definition for `$sym`, but got ${symExpr.mnemonic}",
                     )
                 val rstWat = returningTerm(rst)
-                Instructions.block(
+                blockInstr(
                   label = N,
                   children = Seq(
                     defineExpr,
@@ -1793,10 +1793,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             val bodyStmt = asStatement(bodyExpr)
     
             if loop then
-              Instructions.block(
+              blockInstr(
                 label = S(breakLabel),
                 children = Seq(
-                  Instructions.loop(
+                  loopInstr(
                     label = continueLabel,
                     children = Seq(bodyStmt),
                     resultTypes = Seq.empty,
@@ -1805,7 +1805,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 resultTypes = Seq.empty,
               )
             else
-              Instructions.block(
+              blockInstr(
                 label = S(breakLabel),
                 children = Seq(bodyStmt),
                 resultTypes = Seq.empty,
@@ -1813,7 +1813,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
         val rstExpr = returningTerm(rst)
         val rstResultTypes = rstExpr.resultTypes.flatMap(ty => ty.asValType.map(Result(_)))
-        Instructions.block(
+        blockInstr(
           label = N,
           children = Seq(labeledRegion, rstExpr),
           resultTypes = rstResultTypes,
@@ -1831,7 +1831,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           else
             expr.resultType match
               case S(_) => local.set(target, expr)
-              case N => Instructions.block(
+              case N => blockInstr(
                   label = N,
                   children = Seq(
                     expr,
@@ -1989,7 +1989,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               )
 
         if tailMode then
-          Instructions.block(
+          blockInstr(
             label = N,
             children = Seq(
               matchBlock,
@@ -1999,7 +1999,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           )
         else
           val rstExpr = returningTerm(rst)
-          Instructions.block(
+          blockInstr(
             label = N,
             children = Seq(matchBlock, rstExpr),
             resultTypes = rstExpr.resultTypes.flatMap(ty => ty.asValType.map(Result(_))),
