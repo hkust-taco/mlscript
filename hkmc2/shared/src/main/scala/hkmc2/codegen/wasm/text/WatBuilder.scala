@@ -310,7 +310,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def declareClassFuncType(
       defn: ClsLikeDefn,
       suffix: Str,
-      params: Seq[Local -> Str],
+      params: Seq[Local -> SymIdx],
   )(using Ctx, Raise, Scope): TypeIdx =
     val isSingletonObj = defn.k is syntax.Obj
     val funcTyId = defn.sym
@@ -341,7 +341,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def predeclareClassFunc(
       defn: ClsLikeDefn,
       suffix: Str,
-      params: Seq[Local -> Str],
+      params: Seq[Local -> SymIdx],
       sym: Opt[Symbol],
       id: Opt[Str],
       exportName: Opt[Str],
@@ -363,10 +363,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   /** Declares one top-level class init function. */
   private def predeclareClassInit(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
-    val initParams = (defn.isym -> "this") +:
+    val initParams = (defn.isym -> SymIdx("this")) +:
       defn.paramsOpt.fold(Nil): ps =>
         ps.params.map: p =>
-          p.sym -> p.sym.nme
+          p.sym -> SymIdx(p.sym.nme)
     val initId = defn.sym
       .optionIf: sym =>
         !(defn.k is syntax.Obj) && sym.nameIsMeaningful
@@ -378,7 +378,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def predeclareClassConstructor(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
     val ctorParams = defn.paramsOpt.fold(Nil): ps =>
       ps.params.map: p =>
-        p.sym -> p.sym.nme
+        p.sym -> SymIdx(p.sym.nme)
     val ctorId = defn.sym
       .optionIf: sym =>
         !(defn.k is syntax.Obj) && sym.nameIsMeaningful
@@ -503,10 +503,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   /** Declares one top-level class method. */
   private def predeclareMethod(methodDefn: FunDefn, ownerCls: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
-    val methodParams = (ownerCls.isym -> "this") +:
+    val methodParams = (ownerCls.isym -> SymIdx("this")) +:
       methodDefn.params.headOption.fold(Nil): ps =>
         ps.params.map: p =>
-          p.sym -> p.sym.nme
+          p.sym -> SymIdx(p.sym.nme)
     val methodId = ownerCls.sym
       .optionIf: sym =>
         !(ownerCls.k is syntax.Obj) && sym.nameIsMeaningful
@@ -538,7 +538,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           sym = N,
           TypeInfo(
             id = SymIdx(symNme),
-            FunctionType(params = Seq(WasmParam("ex", RefType.anyref)), results = Seq.empty),
+            FunctionType(params = Seq(WasmParam(SymIdx("ex"), RefType.anyref)), results = Seq.empty),
             objectTag = S(ctx.getFreshObjectTag()),
           ),
         )),
@@ -588,7 +588,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         TypeInfo(
           id = SymIdx(importTyNme),
           FunctionType(
-            params = Seq(WasmParam("glob_offset", RefType.anyref), WasmParam("len", RefType.anyref)),
+            params = Seq(WasmParam(SymIdx("glob_offset"), RefType.anyref), WasmParam(SymIdx("len"), RefType.anyref)),
             results = Seq(Result(RefType.anyref)),
           ),
           objectTag = N,
@@ -1210,7 +1210,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       TypeInfo(
         id = SymIdx(scope.allocateName(TempSymbol(N, name))),
         FunctionType(
-          params = intrinsicParamSuffixes(name).map(nme => WasmParam(nme, RefType.anyref)),
+          params = intrinsicParamSuffixes(name).map(nme => WasmParam(SymIdx(nme), RefType.anyref)),
           results = Seq(Result(RefType.anyref)),
         ),
         objectTag = N,
@@ -1227,7 +1227,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val params = mkIntrinsicParams(name, Seq("lhs", "rhs"))
     val lhsName = params.head._2
     val rhsName = params(1)._2
-    val body = binaryInt31Body(lhsName, rhsName, op)
+    val body = binaryInt31Body(LocalIdx(lhsName), LocalIdx(rhsName), op)
     createIntrinsicFunc(name, params, body, exportName)
 
   /** Creates a unary Int31 intrinsic with a single parameter and body built from `op`.
@@ -1239,14 +1239,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   )(using Ctx, Raise, Scope): FuncIdx =
     val params = mkIntrinsicParams(name, Seq("arg"))
     val argName = params.head._2
-    val body = unaryInt31Body(argName, op)
+    val body = unaryInt31Body(LocalIdx(argName), op)
     createIntrinsicFunc(name, params, body, exportName)
 
   /** Allocates the Wasm type and function definition for an intrinsic with the given signature.
     */
   private def createIntrinsicFunc(
       name: Str,
-      params: Seq[(TempSymbol, Str)],
+      params: Seq[TempSymbol -> SymIdx],
       body: Expr,
       exportName: Opt[Str],
   )(using Ctx, Raise, Scope): FuncIdx =
@@ -1273,15 +1273,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   /** Builds the body for an Int31 binary operator.
     */
   private def binaryInt31Body(
-      lhsName: Str,
-      rhsName: Str,
+      lhsIdx: LocalIdx,
+      rhsIdx: LocalIdx,
       op: (Expr, Expr) => Expr,
   )(using Ctx, Scope): Expr =
     val cond = i32.and(
-      ref.test(getLocalAnyref(lhsName), RefType.i31ref),
-      ref.test(getLocalAnyref(rhsName), RefType.i31ref),
+      ref.test(getLocalAnyref(lhsIdx), RefType.i31ref),
+      ref.test(getLocalAnyref(rhsIdx), RefType.i31ref),
     )
-    val i31Op = ref.i31(op(getI32FromAnyref(lhsName), getI32FromAnyref(rhsName)))
+    val i31Op = ref.i31(op(getI32FromAnyref(lhsIdx), getI32FromAnyref(rhsIdx)))
     `if`(
       condition = cond,
       ifTrue = i31Op,
@@ -1291,9 +1291,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   /** Builds the body for an Int31 unary operator.
     */
-  private def unaryInt31Body(paramName: Str, op: Expr => Expr)(using Ctx, Scope): Expr =
-    val cond = ref.test(getLocalAnyref(paramName), RefType.i31ref)
-    val i31Op = ref.i31(op(getI32FromAnyref(paramName)))
+  private def unaryInt31Body(paramIdx: LocalIdx, op: Expr => Expr)(using Ctx, Scope): Expr =
+    val cond = ref.test(getLocalAnyref(paramIdx), RefType.i31ref)
+    val i31Op = ref.i31(op(getI32FromAnyref(paramIdx)))
     `if`(
       condition = cond,
       ifTrue = i31Op,
@@ -1303,20 +1303,20 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   /** Creates parameters for an intrinsic.
     */
-  private def mkIntrinsicParams(name: Str, suffixes: Seq[Str]): Seq[(TempSymbol, Str)] =
+  private def mkIntrinsicParams(name: Str, suffixes: Seq[Str]): Seq[TempSymbol -> SymIdx] =
     suffixes.map: suffix =>
       val sym = TempSymbol(N, suffix)
-      sym -> suffix
+      sym -> SymIdx(suffix)
 
   /** Loads the local `name` as an `anyref`.
     */
-  private def getLocalAnyref(name: Str): Expr =
-    local.get(LocalIdx(SymIdx(name)), RefType.anyref)
+  private def getLocalAnyref(idx: LocalIdx): Expr =
+    local.get(idx, RefType.anyref)
 
   /** Extracts the signed i32 value from the Int31 stored in the local `name`.
     */
-  private def getI32FromAnyref(name: Str): Expr =
-    i31.get(ref.cast(getLocalAnyref(name), RefType.i31ref), true)
+  private def getI32FromAnyref(idx: LocalIdx): Expr =
+    i31.get(ref.cast(getLocalAnyref(idx), RefType.i31ref), true)
 
   extension (expr: Expr)
     private def isControlTransfer: Bool =
@@ -1503,7 +1503,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         TypeInfo(
                           id = SymIdx(scope.allocateName(TempSymbol(N, sym.nme))),
                           FunctionType(
-                            params = fnCtx.params.map(p => WasmParam(p._2.id, RefType.anyref)),
+                            params = fnCtx.params.map(p => WasmParam(p._2, RefType.anyref)),
                             results = Seq.fill(bodyWat.resultTypes.length)(Result(RefType.anyref)),
                           ),
                           objectTag = N,
@@ -1514,9 +1514,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         FuncInfo(
                           sym,
                           typeUse = TypeUse(funcTy),
-                          params = ps.params.zip(fnCtx.params.map(_._2.id)).map((p, nme) => p.sym -> nme),
+                          params = ps.params.zip(fnCtx.params.map(_._2)).map((p, idx) => p.sym -> idx),
                           nResults = bodyWat.resultTypes.length,
-                          locals = fnCtx.locals.map((local, idx) => local -> idx.id),
+                          locals = fnCtx.locals,
                           body = bodyWat,
                         )
                       ctx.addFunc(S(defn.sym), funcInfo)
@@ -1590,7 +1590,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       val initCall = call(
                         funcidx = ctx.getFunc_!(initFuncRef),
                         operands = local.get(thisVar, RefType.anyref) +:
-                          funcCtx.params.map((_, nme) => getLocalAnyref(nme.id)),
+                          funcCtx.params.map((_, nme) => getLocalAnyref(LocalIdx(nme))),
                         returnTypes = Seq(Result(RefType.anyref)),
                       )
                       blockInstr(
@@ -1621,9 +1621,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       FuncInfo(
                         id = predeclaredInit.id,
                         typeUse = predeclaredInit.typeUse,
-                        params = initFnCtx.params.map((local, idx) => local -> idx.id),
+                        params = initFnCtx.params,
                         resultTypes = initWat.resultTypes.map(ty => Result(ty.asValType_!)),
-                        locals = initFnCtx.locals.map((local, idx) => local -> idx.id),
+                        locals = initFnCtx.locals,
                         body = initWat,
                         exportName = predeclaredInit.exportName,
                       ),
@@ -1635,9 +1635,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       FuncInfo(
                         id = predeclaredCtor.id,
                         typeUse = predeclaredCtor.typeUse,
-                        params = ctorFnCtx.params.map((local, idx) => local -> idx.id),
+                        params = ctorFnCtx.params,
                         resultTypes = ctorAux.resultTypes.map(ty => Result(ty.asValType_!)),
-                        locals = ctorFnCtx.locals.map((local, idx) => local -> idx.id),
+                        locals = ctorFnCtx.locals,
                         body = ctorAux,
                         exportName = predeclaredCtor.exportName,
                       ),
@@ -1655,9 +1655,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         FuncInfo(
                           id = predeclaredMethod.id,
                           typeUse = predeclaredMethod.typeUse,
-                          params = fnCtx.params.map((local, idx) => local -> idx.id),
+                          params = fnCtx.params,
                           resultTypes = Seq.fill(bodyWat.resultTypes.length)(Result(RefType.anyref)),
-                          locals = fnCtx.locals.map((local, idx) => local -> idx.id),
+                          locals = fnCtx.locals,
                           body = bodyWat,
                           exportName = predeclaredMethod.exportName,
                         ),
@@ -1689,7 +1689,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                           exportName = clsLikeDefn.sym.nme,
                           funcType = FunctionType(
                             SignatureType(
-                              params = ctorFnCtx.params.map(p => WasmParam(p._2.id, RefType.anyref)),
+                              params = ctorFnCtx.params.map(p => WasmParam(p._2, RefType.anyref)),
                               results = Seq(Result(RefType.anyref)),
                             ),
                           ),
@@ -2128,7 +2128,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         typeUse = TypeUse(entryFnTy),
         params = Seq.empty,
         resultTypes = Seq(Result(RefType.anyref)),
-        locals = entryFnCtx.locals.map((local, idx) => local -> idx.id),
+        locals = entryFnCtx.locals,
         body = entryFnExpr,
         exportName = S(entryNme),
       )

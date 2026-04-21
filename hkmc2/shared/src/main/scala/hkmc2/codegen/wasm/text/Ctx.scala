@@ -188,9 +188,9 @@ object SessionExportCtx:
 class FuncInfo(
     val id: SymIdx,
     val typeUse: TypeUse,
-    params: Seq[Local -> Str],
+    params: Seq[Local -> SymIdx],
     val resultTypes: Seq[Result],
-    locals: Seq[Local -> Str],
+    locals: Seq[Local -> SymIdx],
     val body: Expr,
     val exportName: Opt[Str],
 ) extends ToWat:
@@ -211,9 +211,9 @@ class FuncInfo(
   def this(
       sym: BlockMemberSymbol,
       typeUse: TypeUse,
-      params: Seq[Local -> Str],
+      params: Seq[Local -> SymIdx],
       nResults: Int,
-      locals: Seq[Local -> Str],
+      locals: Seq[Local -> SymIdx],
       body: Expr,
   )(using Raise, Scope) = this(
     SymIdx(sym.optionIf(_.nameIsMeaningful).fold(summon[Scope].allocateName(sym))(_.nme)),
@@ -228,9 +228,9 @@ class FuncInfo(
   def this(
       id: Opt[SymIdx],
       typeUse: TypeUse,
-      params: Seq[Local -> Str],
+      params: Seq[Local -> SymIdx],
       nResults: Int,
-      locals: Seq[Local -> Str],
+      locals: Seq[Local -> SymIdx],
       body: Expr,
       `export`: Opt[Str],
   )(using Raise, Scope, State) = this(
@@ -245,7 +245,7 @@ class FuncInfo(
 
   /** Returns the type of this function as a [[SignatureType]]. */
   def getSignatureType: SignatureType = SignatureType(
-    params = params.map((_, varNme) => WasmParam(varNme, RefType.anyref)),
+    params = params.map((_, paramIdx) => WasmParam(paramIdx, RefType.anyref)),
     results = resultTypes,
   )
 
@@ -257,7 +257,7 @@ class FuncInfo(
         getSignatureType.toWat.surroundUnlessEmpty(doc" ")
       } #{ ${
         locals.map: p =>
-          doc"(local $$${p._2} ${RefType.anyref.toWat})"
+          doc"(local ${p._2.toWat} ${RefType.anyref.toWat})"
         .mkDocument(doc" # ").surroundUnlessEmpty(doc" # ")
       } # ${body.toWat} #} )"""
 end FuncInfo
