@@ -1766,7 +1766,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         blockPreamble(syms)
         returningTerm(body)
       case Break(label) =>
-        ctx.lookupLabel(label) match
+        funcCtx.lookupLabel(label) match
           case S(target) => br(target.breakLabel)
           case N =>
             errExpr(
@@ -1776,7 +1776,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               extraInfo = S(t.showAsTree),
             )
       case Continue(label) =>
-        ctx.lookupLabel(label) match
+        funcCtx.lookupLabel(label) match
           case S(target) =>
             target.continueLabel match
               case S(continueLabel) => br(continueLabel)
@@ -1795,37 +1795,29 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               extraInfo = S(t.showAsTree),
             )
       case Label(label, loop, body, rst) =>
-        val breakLabel = scope.allocateName(label)
-        val continueLabel =
-          if loop then S(scope.allocateName(TempSymbol(N, s"${label.nme}_cont")))
-          else N
-
-        val bodyExpr = ctx.withLabel(
-          label,
-          Ctx.LabelTarget(breakLabel, continueLabel),
-        ):
-          returningTerm(body)
-        val bodyStmt = asStatement(bodyExpr)
-
-        val labeledRegion =
-          if loop then
-            Instructions.block(
-              label = S(breakLabel),
-              children = Seq(
-                Instructions.loop(
-                  label = continueLabel,
-                  children = Seq(bodyStmt),
-                  resultTypes = Seq.empty,
+        val labeledRegion = funcCtx.withLabel(label, hasContinueLabel = loop):
+          case LabelTarget(breakLabel, continueLabel) =>
+            val bodyExpr = returningTerm(body)
+            val bodyStmt = asStatement(bodyExpr)
+    
+            if loop then
+              Instructions.block(
+                label = S(breakLabel),
+                children = Seq(
+                  Instructions.loop(
+                    label = continueLabel,
+                    children = Seq(bodyStmt),
+                    resultTypes = Seq.empty,
+                  ),
                 ),
-              ),
-              resultTypes = Seq.empty,
-            )
-          else
-            Instructions.block(
-              label = S(breakLabel),
-              children = Seq(bodyStmt),
-              resultTypes = Seq.empty,
-            )
+                resultTypes = Seq.empty,
+              )
+            else
+              Instructions.block(
+                label = S(breakLabel),
+                children = Seq(bodyStmt),
+                resultTypes = Seq.empty,
+              )
 
         val rstExpr = returningTerm(rst)
         val rstResultTypes = rstExpr.resultTypes.flatMap(ty => ty.asValType.map(Result(_)))
@@ -1835,8 +1827,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           resultTypes = rstResultTypes,
         )
       case Match(scrut, arms, dflt, rst) =>
-        val matchLabelSym = TempSymbol(N, "match")
-        val matchLabel = scope.allocateName(matchLabelSym)
         val tailMode = rst.isInstanceOf[End]
         val matchResLocal =
           if tailMode then S(mkTempLocal("matchRes"))
@@ -1867,157 +1857,161 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           local.set(localIdx, ref.`null`(HeapType.Any))
 
         // Compile each match arm
-        boundary:
-          val armExprs = arms.zipWithIndex.flatMap: (caseAndBody, armIdx) =>
-            val (cse, body) = caseAndBody
-            cse match
-              case Case.Lit(lit) =>
-                val testExpr: FoldedInstr = lit match
-                  case BoolLit(value) =>
-                    val scrutAsI31 = ref.cast(getScrutExpr, RefType.i31ref)
-                    val scrutValue = i31.get(scrutAsI31, signed = true)
-                    i32.eq(scrutValue, i32.const(if value then 1 else 0))
-                  case IntLit(value) =>
-                    val scrutAsI31 = ref.cast(getScrutExpr, RefType.i31ref)
-                    val scrutValue = i31.get(scrutAsI31, signed = true)
-                    i32.eq(scrutValue, withValidIntLit(value, lit.toLoc)(i32.const))
+        val matchBlock = funcCtx.withLabel(LabelSymbol(N, "match"), hasContinueLabel = false):
+          case LabelTarget(matchLabel, _) =>
+            boundary:
+              val armExprs = arms.zipWithIndex.flatMap: (caseAndBody, armIdx) =>
+                val (cse, body) = caseAndBody
+                cse match
+                  case Case.Lit(lit) =>
+                    val testExpr: FoldedInstr = lit match
+                      case BoolLit(value) =>
+                        val scrutAsI31 = ref.cast(getScrutExpr, RefType.i31ref)
+                        val scrutValue = i31.get(scrutAsI31, signed = true)
+                        i32.eq(scrutValue, i32.const(if value then 1 else 0))
+                      case IntLit(value) =>
+                        val scrutAsI31 = ref.cast(getScrutExpr, RefType.i31ref)
+                        val scrutValue = i31.get(scrutAsI31, signed = true)
+                        i32.eq(scrutValue, withValidIntLit(value, lit.toLoc)(i32.const))
+                      case _ =>
+                        break(errExpr(Ls(msg"Pattern matching for unit literals not implemented yet" -> lit.toLoc)))
+
+                    val bodyExpr = returningTerm(body)
+                    val armBodyExpr = lowerMatchBody(bodyExpr)
+                    funcCtx.withLabel(LabelSymbol(N, "arm"), hasContinueLabel = false):
+                      case LabelTarget(armLabel, _) =>
+                        S(`if`(
+                          condition = testExpr,
+                          ifTrue = blockInstr(
+                            label = S(armLabel),
+                            children = Seq(armBodyExpr, br(matchLabel)),
+                            resultTypes = Seq.empty,
+                          ),
+                          ifFalse = N,
+                          resultTypes = Seq.empty,
+                        ))
+
+                  case Case.Cls(cls, _) =>
+                    val clsBlkMemberSym = cls.asBlkMember.getOrElse:
+                      break(errExpr(
+                        Ls(msg"Could not resolve BlockMemberSymbol for class pattern" -> cls.toLoc),
+                        extraInfo = S(s"ClassLikeSymbol: ${cls.toString}"),
+                      ))
+                    val clsTypeIdx = ctx.getType_!(clsBlkMemberSym)
+                    val typeinfo = ctx.getTypeInfo_!(clsTypeIdx)
+
+                    val expectedTag = typeinfo.objectTag.getOrElse:
+                      lastWords(s"Expected class $clsBlkMemberSym to have an object tag")
+
+                    // TODO (https://github.com/orgs/hkust-taco/projects/14/views/1?pane=issue&itemId=174476970):
+                    // replace with RTTI ancestry checks once each object carries runtime type information.
+                    val matchTags = ctx.getAllRuntimeTags(clsBlkMemberSym)
+                      .getOrElse(LinkedHashSet(expectedTag))
+
+                    val scrutExpr = getScrutExpr
+                    val isStructCompatible = ref.test(scrutExpr, baseObjectRefType(nullable = true))
+
+                    val bodyExpr = returningTerm(body)
+                    val armBodyExpr = lowerMatchBody(bodyExpr)
+
+                    // Safe to cast and extract tag since ref.test passed
+                    val scrutAsObject = ref.cast(scrutExpr, baseObjectRefType(nullable = false))
+                    val scrutTag = struct.get(
+                      FieldIdx(SymIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id)),
+                      scrutAsObject,
+                      I32Type,
+                    )
+                    val tagMatches = matchTags.toList match
+                      case tag :: Nil => i32.eq(scrutTag, i32.const(tag))
+                      case tag :: rest =>
+                        rest.foldLeft[Expr](i32.eq(scrutTag, i32.const(tag))): (acc, candidateTag) =>
+                          i32.or(acc, i32.eq(scrutTag, i32.const(candidateTag)))
+                      case Nil =>
+                        lastWords(s"Expected class $clsBlkMemberSym to have at least one accepted runtime tag")
+
+                    funcCtx.withLabel(LabelSymbol(N, "arm"), hasContinueLabel = false):
+                      case LabelTarget(armLabel, _) =>
+                        S(`if`(
+                          condition = isStructCompatible,
+                          ifTrue = `if`(
+                            condition = tagMatches,
+                            ifTrue = blockInstr(
+                              label = S(armLabel),
+                              children = Seq(armBodyExpr, br(matchLabel)),
+                              resultTypes = Seq.empty,
+                            ),
+                            ifFalse = N,
+                            resultTypes = Seq.empty,
+                          ),
+                          ifFalse = N,
+                          resultTypes = Seq.empty,
+                        ))
+                  case Case.Tup(len, inf) =>
+                    val arrayRefType = RefType(HeapType.Array, nullable = true)
+                    val isArrayTest = ref.test(getScrutExpr, arrayRefType)
+
+                    // Length check
+                    val scrutArray = ref.cast(getScrutExpr, arrayRefType)
+                    val arrayLength = array.len(scrutArray)
+                    val lengthTest = if inf then
+                      i32.ge_u(arrayLength, i32.const(len))
+                    else
+                      i32.eq(arrayLength, i32.const(len))
+
+                    val testExpr = i32.and(isArrayTest, lengthTest)
+                    val bodyExpr = returningTerm(body)
+                    val armBodyExpr = lowerMatchBody(bodyExpr)
+                    funcCtx.withLabel(LabelSymbol(N, "arm"), hasContinueLabel = false):
+                      case LabelTarget(armLabel, _) =>
+                        S(`if`(
+                          condition = testExpr,
+                          ifTrue = blockInstr(
+                            label = S(armLabel),
+                            children = Seq(armBodyExpr, br(matchLabel)),
+                            resultTypes = Seq.empty,
+                          ),
+                          ifFalse = N,
+                          resultTypes = Seq.empty,
+                        ))
                   case _ =>
-                    break(errExpr(Ls(msg"Pattern matching for unit literals not implemented yet" -> lit.toLoc)))
+                    break(errExpr(
+                      Ls(
+                        msg"WatBuilder::returningTerm for Match(...) with case `${cse.toString}` not implemented yet" ->
+                          N,
+                      ),
+                      extraInfo = S(cse.toString),
+                    ))
+                end match
 
-                val bodyExpr = returningTerm(body)
-                val armBodyExpr = lowerMatchBody(bodyExpr)
-                val armLabelSym = TempSymbol(N, "arm")
-                val armLabel = scope.allocateName(armLabelSym)
-                S(`if`(
-                  condition = testExpr,
-                  ifTrue = blockInstr(
-                    label = S(armLabel),
-                    children = Seq(armBodyExpr, br(matchLabel)),
-                    resultTypes = Seq.empty,
-                  ),
-                  ifFalse = N,
-                  resultTypes = Seq.empty,
-                ))
+              val defaultExpr =
+                val rawDefaultExpr = dflt match
+                  case S(defaultBody) => returningTerm(defaultBody)
+                  case N => nop
+                lowerMatchBody(rawDefaultExpr)
 
-              case Case.Cls(cls, _) =>
-                val clsBlkMemberSym = cls.asBlkMember.getOrElse:
-                  break(errExpr(
-                    Ls(msg"Could not resolve BlockMemberSymbol for class pattern" -> cls.toLoc),
-                    extraInfo = S(s"ClassLikeSymbol: ${cls.toString}"),
-                  ))
-                val clsTypeIdx = ctx.getType_!(clsBlkMemberSym)
-                val typeinfo = ctx.getTypeInfo_!(clsTypeIdx)
+              // Generate the match block
+              blockInstr(
+                label = S(matchLabel),
+                children = matchResInitExpr.toSeq ++ armExprs :+ defaultExpr,
+                resultTypes = Seq.empty,
+              )
 
-                val expectedTag = typeinfo.objectTag.getOrElse:
-                  lastWords(s"Expected class $clsBlkMemberSym to have an object tag")
-
-                // TODO (https://github.com/orgs/hkust-taco/projects/14/views/1?pane=issue&itemId=174476970):
-                // replace with RTTI ancestry checks once each object carries runtime type information.
-                val matchTags = ctx.getAllRuntimeTags(clsBlkMemberSym)
-                  .getOrElse(LinkedHashSet(expectedTag))
-
-                val scrutExpr = getScrutExpr
-                val isStructCompatible = ref.test(scrutExpr, baseObjectRefType(nullable = true))
-
-                val bodyExpr = returningTerm(body)
-                val armBodyExpr = lowerMatchBody(bodyExpr)
-                val armLabelSym = TempSymbol(N, "arm")
-                val armLabel = scope.allocateName(armLabelSym)
-
-                // Safe to cast and extract tag since ref.test passed
-                val scrutAsObject = ref.cast(scrutExpr, baseObjectRefType(nullable = false))
-                val scrutTag = struct.get(
-                  FieldIdx(SymIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id)),
-                  scrutAsObject,
-                  I32Type,
-                )
-                val tagMatches = matchTags.toList match
-                  case tag :: Nil => i32.eq(scrutTag, i32.const(tag))
-                  case tag :: rest =>
-                    rest.foldLeft[Expr](i32.eq(scrutTag, i32.const(tag))): (acc, candidateTag) =>
-                      i32.or(acc, i32.eq(scrutTag, i32.const(candidateTag)))
-                  case Nil =>
-                    lastWords(s"Expected class $clsBlkMemberSym to have at least one accepted runtime tag")
-
-                S(`if`(
-                  condition = isStructCompatible,
-                  ifTrue = `if`(
-                    condition = tagMatches,
-                    ifTrue = blockInstr(
-                      label = S(armLabel),
-                      children = Seq(armBodyExpr, br(matchLabel)),
-                      resultTypes = Seq.empty,
-                    ),
-                    ifFalse = N,
-                    resultTypes = Seq.empty,
-                  ),
-                  ifFalse = N,
-                  resultTypes = Seq.empty,
-                ))
-              case Case.Tup(len, inf) =>
-                val arrayRefType = RefType(HeapType.Array, nullable = true)
-                val isArrayTest = ref.test(getScrutExpr, arrayRefType)
-
-                // Length check
-                val scrutArray = ref.cast(getScrutExpr, arrayRefType)
-                val arrayLength = array.len(scrutArray)
-                val lengthTest = if inf then
-                  i32.ge_u(arrayLength, i32.const(len))
-                else
-                  i32.eq(arrayLength, i32.const(len))
-
-                val testExpr = i32.and(isArrayTest, lengthTest)
-                val bodyExpr = returningTerm(body)
-                val armBodyExpr = lowerMatchBody(bodyExpr)
-                val armLabelSym = TempSymbol(N, "arm")
-                val armLabel = scope.allocateName(armLabelSym)
-                S(`if`(
-                  condition = testExpr,
-                  ifTrue = blockInstr(
-                    label = S(armLabel),
-                    children = Seq(armBodyExpr, br(matchLabel)),
-                    resultTypes = Seq.empty,
-                  ),
-                  ifFalse = N,
-                  resultTypes = Seq.empty,
-                ))
-              case _ =>
-                break(errExpr(
-                  Ls(msg"WatBuilder::returningTerm for Match(...) with case `${cse.toString}` not implemented yet" ->
-                    N),
-                  extraInfo = S(cse.toString),
-                ))
-            end match
-
-          val defaultExpr =
-            val rawDefaultExpr = dflt match
-              case S(defaultBody) => returningTerm(defaultBody)
-              case N => nop
-            lowerMatchBody(rawDefaultExpr)
-
-          // Generate the match block
-          val matchBlock = blockInstr(
-            label = S(matchLabel),
-            children = matchResInitExpr.toSeq ++ armExprs :+ defaultExpr,
-            resultTypes = Seq.empty,
+        if tailMode then
+          Instructions.block(
+            label = N,
+            children = Seq(
+              matchBlock,
+              local.get(matchResLocal.get, RefType.anyref),
+            ),
+            resultTypes = Seq(Result(RefType.anyref)),
           )
-
-          if tailMode then
-            Instructions.block(
-              label = N,
-              children = Seq(
-                matchBlock,
-                local.get(matchResLocal.get, RefType.anyref),
-              ),
-              resultTypes = Seq(Result(RefType.anyref)),
-            )
-          else
-            val rstExpr = returningTerm(rst)
-            Instructions.block(
-              label = N,
-              children = Seq(matchBlock, rstExpr),
-              resultTypes = rstExpr.resultTypes.flatMap(ty => ty.asValType.map(Result(_))),
-            )
+        else
+          val rstExpr = returningTerm(rst)
+          Instructions.block(
+            label = N,
+            children = Seq(matchBlock, rstExpr),
+            resultTypes = rstExpr.resultTypes.flatMap(ty => ty.asValType.map(Result(_))),
+          )
 
       // * Try/finally lowering is intentionally rejected for now: the previous implementation required `exnref` support
       // * which can only be enabled with the `--experimental-wasm-exnref` flag.

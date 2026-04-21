@@ -351,9 +351,31 @@ end TagInfo
 enum WasmIntrinsicType:
   case TupleArray(mutable: Bool)
 
+/** Class containing identifiers of labels to jump to when breaking or continuing from a control flow structure.
+  *
+  * @param breakLabel
+  *   The identifier of the label to jump to for exiting the control flow structure, e.g. for `break` statements.
+  * @param continueLabel
+  *   The identifier of the label to jump to for continuing the control flow structure, e.g. for `continue` statements
+  *   in loops. This is `None` for non-loop control flow structures.
+  */
+case class LabelTarget(breakLabel: Str, continueLabel: Opt[Str])
+
 object FunctionCtx:
 
   def funcCtx(using funcCtx: FunctionCtx): FunctionCtx = funcCtx
+
+  /** Context for tracking control flow jump targets.
+    *
+    * @param scp
+    *   [[Scope]] for generating WAT identifiers of labels in this control flow context.
+    * @param breakLabel
+    *   The label to jump to for exiting this control flow context, e.g. for `break` statements.
+    * @param continueLabel
+    *   The label to jump to for continuing this control flow context, e.g. for `continue` statements in loops. This is
+    *   `None` for non-loop contexts.
+    */
+  private case class ControlFlowCtx(scp: Scope, breakLabel: LabelSymbol, continueLabel: Opt[LabelSymbol])
 
 /** Context associated with codegen for a Wasm function.
   *
@@ -377,6 +399,7 @@ class FunctionCtx(_params: Ls[ParamList], thisSym: Opt[InnerSymbol])(using Raise
       dis -> SymIdx(localScp.addToBindings(dis, "this", shadow = false))
     thisParam.toSeq ++ _params.flatMap(_.paramSyms).map(p => p -> SymIdx(localScp.allocateName(p)))
   private val _locals = ArrayBuf.empty[Local]
+  private var labels = ListMap.empty[LabelSymbol, FunctionCtx.ControlFlowCtx]
 
   /** Adds a Wasm local into this context.
     *
@@ -403,6 +426,38 @@ class FunctionCtx(_params: Ls[ParamList], thisSym: Opt[InnerSymbol])(using Raise
     * identifier.
     */
   def locals: Seq[Local -> SymIdx] = _locals.map(l => l -> SymIdx(localScp.lookup_!(l, N))).toSeq
+
+  /** Pushes a label target for the dynamic extent of `body` and pops it afterwards.
+    *
+    * The `body` function is given a [[LabelTarget]] containing the `break` and `continue` labels corresponding to
+    * `label`.
+    *
+    * @param hasContinueLabel
+    *   Indicates whether a `continue` label should be generated for this control flow context, e.g. for loops.
+    */
+  def withLabel[T](label: LabelSymbol, hasContinueLabel: Bool)(body: LabelTarget => T): T =
+    val ctrlFlowCtx = FunctionCtx.ControlFlowCtx(
+      scp = labels.lastOption.fold(Scope.empty(Scope.Cfg.default))(_._2.scp.nest),
+      breakLabel = label,
+      continueLabel = if hasContinueLabel then S(LabelSymbol(N, s"${label.nme}_cont")) else N,
+    )
+    labels += label -> ctrlFlowCtx
+    val res = body:
+      LabelTarget(
+        breakLabel = ctrlFlowCtx.scp.allocateName(label),
+        continueLabel = ctrlFlowCtx.continueLabel.map(cl => ctrlFlowCtx.scp.allocateName(cl)),
+      )
+    labels = labels.init
+    res
+
+  /** Looks up the nearest in-scope target for `label`. */
+  def lookupLabel(label: LabelSymbol): Opt[LabelTarget] =
+    labels.lastOption.flatMap: (_, ctrlFlowCtx) =>
+      ctrlFlowCtx.scp.lookup(label).map: labelId =>
+        LabelTarget(
+          breakLabel = labelId,
+          continueLabel = labels(label).continueLabel.map(cl => labels.last._2.scp.lookup_!(cl, N)),
+        )
 end FunctionCtx
   
 /** Generates a function body, providing an instance of [[FunctionCtx]] for parameter and locals tracking.
@@ -421,11 +476,6 @@ object Ctx:
   case class SingletonInfo(
       globalName: Str,
       globalTy: RefType,
-  )
-
-  case class LabelTarget(
-      breakLabel: Str,
-      continueLabel: Opt[Str],
   )
 
   val binaryOps: Map[Str, (Expr, Expr) => Expr] = Map(
@@ -507,7 +557,6 @@ class Ctx extends ToWat:
   private val cachedFunctionImports = MutMap.empty[(Str, Str), FuncIdx]
   private val cachedGlobalImports = MutMap.empty[(Str, Str), GlobalIdx]
 
-  private var labelTargets = Nil: List[(LabelSymbol, Ctx.LabelTarget)]
   private val singletonByBms = MutMap.empty[BlockMemberSymbol, Ctx.SingletonInfo]
   private val singletonByIsym = MutMap.empty[ModuleOrObjectSymbol, Ctx.SingletonInfo]
   private val singletonInitActions = ArrayBuf.empty[Expr]
@@ -526,18 +575,6 @@ class Ctx extends ToWat:
     globalEntry match
       case globalInfo: GlobalInfo => ExternType.Global(globalInfo.id, globalInfo.globalType)
       case globalImport: Import[ExternType.Global] => globalImport.externType
-
-  /** Pushes a label target for the dynamic extent of `body` and pops it afterwards. */
-  def withLabel[T](label: LabelSymbol, target: Ctx.LabelTarget)(body: => T): T =
-    labelTargets = (label, target) :: labelTargets
-    val res = body
-    labelTargets = labelTargets.tail
-    res
-
-  /** Looks up the nearest in-scope target for `label`. */
-  def lookupLabel(label: LabelSymbol): Opt[Ctx.LabelTarget] =
-    labelTargets.collectFirst:
-      case (sym, target) if sym eq label => target
 
   /** Returns a new number to be used as an object tag. */
   def getFreshObjectTag(): Int =
