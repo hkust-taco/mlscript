@@ -343,14 +343,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       suffix: Str,
       params: Seq[Local -> SymIdx],
       sym: Opt[Symbol],
-      id: Opt[Str],
+      id: Opt[SymIdx],
       exportName: Opt[Str],
   )(using Ctx, Raise, Scope): Unit =
     val funcTy = declareClassFuncType(defn, suffix, params)
     ctx.addFunc(
       sym,
       FuncInfo(
-        id = SymIdx(id.orElse(exportName).getOrElse(scope.allocateName(TempSymbol(N, s"${defn.sym.nme}_$suffix")))),
+        id = id getOrElse:
+          SymIdx(exportName getOrElse:
+            scope.allocateName(TempSymbol(N, s"${defn.sym.nme}_$suffix")))
+        ,
         typeUse = TypeUse(funcTy),
         params = params,
         resultTypes = Seq(Result(RefType.anyref)),
@@ -371,7 +374,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       .optionIf: sym =>
         !(defn.k is syntax.Obj) && sym.nameIsMeaningful
       .map: sym =>
-        s"${sym.nme}_init"
+        SymIdx(s"${sym.nme}_init")
     predeclareClassFunc(defn, "init", initParams, S(initFuncSym(defn.sym)), initId, N)
 
   /** Declares one top-level class constructor. */
@@ -383,7 +386,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       .optionIf: sym =>
         !(defn.k is syntax.Obj) && sym.nameIsMeaningful
       .map: sym =>
-        s"${sym.nme}_ctor"
+        SymIdx(s"${sym.nme}_ctor")
     val ctorExportName = defn.sym
       .optionIf: sym =>
         !(defn.k is syntax.Obj) && sym.nameIsMeaningful
