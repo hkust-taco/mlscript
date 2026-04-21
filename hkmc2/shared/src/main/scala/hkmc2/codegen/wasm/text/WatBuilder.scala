@@ -118,14 +118,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     returningTerm(Define(unitDefn, End("")))
 
     val typeInfo = ctx.getTypeInfo_!(unitDefn.sym)
-    val singletonInfo = ctx.getSingletonInfo(unitDefn.sym).getOrElse:
+    val singletonInfo = ctx.getSingletonInfo(unitDefn.sym) getOrElse:
       lastWords("Missing singleton metadata for synthetic Unit object")
     // Record session metadata for the synthetic Unit singleton.
     summon[SessionExportCtx].emit(SessionClass(
       sym = unitDefn.sym,
       typeInfo = typeInfo,
-      runtimeTags = ctx.getAllRuntimeTags(unitDefn.sym)
-        .getOrElse(LinkedHashSet(ctx.getRuntimeClassTag_!(unitDefn.sym))),
+      runtimeTags = ctx.getAllRuntimeTags(unitDefn.sym) getOrElse:
+        LinkedHashSet(ctx.getRuntimeClassTag_!(unitDefn.sym))
+      ,
       aliasSyms = singletonOwner.toSeq,
     ))
     summon[SessionExportCtx].emit(SessionSingleton(
@@ -265,8 +266,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val parentTypeIdx =
       if defn.parentPath.isEmpty then baseObjectTypeIdx
       else
-        ctx.getType_!(resolveParentSym(defn).getOrElse:
-          lastWords(s"Expected resolved parent class symbol when predeclaring ${defn.sym.nme}"))
+        ctx.getType_!(
+          resolveParentSym(defn) getOrElse:
+            lastWords(s"Expected resolved parent class symbol when predeclaring ${defn.sym.nme}"),
+        )
     val inheritedFields = ctx.getTypeInfo_!(parentTypeIdx).compType match
       case struct: StructType => struct.fields
       case other => lastWords(s"Parent type must be a struct, found ${other.toWat.mkString()}")
@@ -300,7 +303,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       resolveParentSym(defn).foreach: parentSym =>
         childrenBySym(parentSym) += defn.sym
     orderedDefns.reverseIterator.foreach: defn =>
-      val ownTag = ctx.getTypeInfo_!(defn.sym).objectTag.getOrElse:
+      val ownTag = ctx.getTypeInfo_!(defn.sym).objectTag getOrElse:
         lastWords(s"Expected class ${defn.sym} to have an object tag")
       val childTags = childrenBySym(defn.sym).flatMap: childSym =>
         ctx.getAllRuntimeTags(childSym).getOrElse(lastWords("unreachable"))
@@ -316,10 +319,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val funcTyId = defn.sym
       .optionIf: sym =>
         !isSingletonObj && sym.nameIsMeaningful
-      .map: sym =>
+      .fold(scope.allocateName(TempSymbol(N, s"${defn.sym.nme}_$suffix"))): sym =>
         s"${sym.nme}_$suffix"
-      .getOrElse:
-        scope.allocateName(TempSymbol(N, s"${defn.sym.nme}_$suffix"))
     ctx.addType(
       sym = N,
       TypeInfo(
@@ -514,7 +515,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       .optionIf: sym =>
         !(ownerCls.k is syntax.Obj) && sym.nameIsMeaningful
       .map: sym =>
-        s"${sym.nme}_${methodDefn.sym.nme}"
+        SymIdx(s"${sym.nme}_${methodDefn.sym.nme}")
     predeclareClassFunc(ownerCls, methodDefn.sym.nme, methodParams, S(methodDefn.sym), methodId, N)
 
   /** Declares placeholders for all methods on one top-level class. */
@@ -905,10 +906,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val symToField = structInfo.compType match
       case ty: StructType => ty.fieldsBySym
       case _ => lastWords(s"Cannot select field from non-struct type: ${structInfo.compType.toWat.mkString()}")
-    val fieldIdx = symToField.get(sym).map(_.id).getOrElse:
-      lastWords(
-        s"Missing field `${sym.toString}` in struct `${thisSym.toString}` with type `${structInfo.toWat.mkString()}`",
-      )
+    val fieldIdx = symToField.get(sym).fold(lastWords(
+      s"Missing field `${sym.toString}` in struct `${thisSym.toString}` with type `${structInfo.toWat.mkString()}`",
+    )): field =>
+      field.id
     FieldIdx(SymIdx(fieldIdx))
   end fieldSelect
 
@@ -1584,7 +1585,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                           case Nil => ctorAuxParams
                       case Some(_) => ctorAuxParams
 
-                    val tagValue = typeinfo.objectTag.getOrElse:
+                    val tagValue = typeinfo.objectTag getOrElse:
                       lastWords(s"Expected class ${clsLikeDefn.sym} to have an object tag")
 
                     val initFuncRef = initFuncSym(clsLikeDefn.sym)
@@ -1679,8 +1680,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       summon[SessionExportCtx].emit(SessionClass(
                         sym = clsLikeDefn.sym,
                         typeInfo = typeinfo,
-                        runtimeTags = ctx.getAllRuntimeTags(clsLikeDefn.sym)
-                          .getOrElse(LinkedHashSet(tagValue)),
+                        runtimeTags = ctx.getAllRuntimeTags(clsLikeDefn.sym).getOrElse(LinkedHashSet(tagValue)),
                         aliasSyms = clsLikeDefn.isym match
                           case mos: ModuleOrObjectSymbol => mos :: Nil
                           case _ => Nil,
@@ -1794,7 +1794,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           case LabelTarget(breakLabel, continueLabel) =>
             val bodyExpr = returningTerm(body)
             val bodyStmt = asStatement(bodyExpr)
-    
+
             if loop then
               blockInstr(
                 label = S(breakLabel),
@@ -1887,7 +1887,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         ))
 
                   case Case.Cls(cls, _) =>
-                    val clsBlkMemberSym = cls.asBlkMember.getOrElse:
+                    val clsBlkMemberSym = cls.asBlkMember getOrElse:
                       break(errExpr(
                         Ls(msg"Could not resolve BlockMemberSymbol for class pattern" -> cls.toLoc),
                         extraInfo = S(s"ClassLikeSymbol: ${cls.toString}"),
@@ -1895,13 +1895,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     val clsTypeIdx = ctx.getType_!(clsBlkMemberSym)
                     val typeinfo = ctx.getTypeInfo_!(clsTypeIdx)
 
-                    val expectedTag = typeinfo.objectTag.getOrElse:
+                    val expectedTag = typeinfo.objectTag getOrElse:
                       lastWords(s"Expected class $clsBlkMemberSym to have an object tag")
 
                     // TODO (https://github.com/orgs/hkust-taco/projects/14/views/1?pane=issue&itemId=174476970):
                     // replace with RTTI ancestry checks once each object carries runtime type information.
-                    val matchTags = ctx.getAllRuntimeTags(clsBlkMemberSym)
-                      .getOrElse(LinkedHashSet(expectedTag))
+                    val matchTags = ctx.getAllRuntimeTags(clsBlkMemberSym).getOrElse(LinkedHashSet(expectedTag))
 
                     val scrutExpr = getScrutExpr
                     val isStructCompatible = ref.test(scrutExpr, baseObjectRefType(nullable = true))
