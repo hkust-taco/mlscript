@@ -452,8 +452,8 @@ class FunctionCtx(_params: Ls[ParamList], thisSym: Opt[InnerSymbol])(using Raise
 
   /** Looks up the nearest in-scope target for `label`. */
   def lookupLabel(label: LabelSymbol): Opt[LabelTarget] =
-    labels.last._2.scp.lookup(label)
-      .map: labelId =>
+    labels.lastOption.flatMap: (_, ctrlFlowCtx) =>
+      ctrlFlowCtx.scp.lookup(label).map: labelId =>
         LabelTarget(
           breakLabel = labelId,
           continueLabel = labels(label).continueLabel.map(cl => labels.last._2.scp.lookup_!(cl, N)),
