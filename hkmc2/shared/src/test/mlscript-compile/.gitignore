@@ -3,3 +3,4 @@
 !/Runtime.mjs
 !/RuntimeJS.mjs
 !/apps/parsing/vendors/railroad/railroad.mjs
+!/NoFreeze.mjs
