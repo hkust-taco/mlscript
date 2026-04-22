@@ -89,9 +89,9 @@ end HeapType
 type ValType = NumType | VecType | RefType
 
 /** A Wasm parameter clause. Appears in function signatures. */
-case class Param(id: Str, valtype: ValType) extends ToWat:
+case class Param(id: SymIdx, valtype: ValType) extends ToWat:
   def toWat: Document =
-    doc"(param $$$id ${valtype.toWat})"
+    doc"(param ${id.toWat} ${valtype.toWat})"
 
 /** A Wasm result clause. Appears in function signatures and some instructions. */
 case class Result(valtype: ValType) extends ToWat:
@@ -164,13 +164,6 @@ case class TypeUse(typeIdx: TypeIdx) extends ToWat:
   def toWat: Document = doc"(type ${typeIdx.toWat})"
 
 sealed abstract class Index extends ToWat
-
-/** A numeric index. */
-@deprecated(
-  "NumIdx is only used for internal bookkeeping and should not be used in WAT generation; Use SymIdx instead.",
-)
-case class NumIdx(val index: Int) extends Index:
-  def toWat: Document = doc"${index.toString}"
 
 /** A symbolic identifier. */
 case class SymIdx(val id: Str) extends Index:

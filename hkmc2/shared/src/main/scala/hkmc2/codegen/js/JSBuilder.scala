@@ -26,7 +26,7 @@ abstract class CodeBuilder:
   type Context
   
 
-class JSBuilder(using TL, State, Ctx, Config) extends CodeBuilder:
+class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   import JSBuilder.*
   
   def checkMLsCalls: Bool = false

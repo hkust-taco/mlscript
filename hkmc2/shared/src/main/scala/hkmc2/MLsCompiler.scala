@@ -106,11 +106,12 @@ class MLsCompiler
             blk0.stats),
         blk0.res
       )
+      val effectiveConfig = Config.extractConfigFromStats(blk)
       val low = ltl.givenIn:
-        new codegen.Lowering()
+        new codegen.Lowering()(using effectiveConfig)
           with codegen.LoweringSelSanityChecks
       val jsb = ltl.givenIn:
-        codegen.js.JSBuilder()
+        codegen.js.JSBuilder(using effectiveConfig)
       val le_0 = low.program(blk)
       val nme = file.baseName
       val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)

@@ -15,7 +15,6 @@ import semantics.{
 import text.Param as WasmParam
 import Instructions.*
 
-import scala.annotation.{nowarn, targetName}
 import scala.collection.immutable.ListMap
 import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap, LinkedHashSet}
 import scala.reflect.ClassTag
@@ -188,9 +187,9 @@ object SessionExportCtx:
 class FuncInfo(
     val id: SymIdx,
     val typeUse: TypeUse,
-    params: Seq[Local -> Str],
+    params: Seq[Local -> SymIdx],
     val resultTypes: Seq[Result],
-    locals: Seq[Local -> Str],
+    locals: Seq[Local -> SymIdx],
     val body: Expr,
     val exportName: Opt[Str],
 ) extends ToWat:
@@ -211,9 +210,9 @@ class FuncInfo(
   def this(
       sym: BlockMemberSymbol,
       typeUse: TypeUse,
-      params: Seq[Local -> Str],
+      params: Seq[Local -> SymIdx],
       nResults: Int,
-      locals: Seq[Local -> Str],
+      locals: Seq[Local -> SymIdx],
       body: Expr,
   )(using Raise, Scope) = this(
     SymIdx(sym.optionIf(_.nameIsMeaningful).fold(summon[Scope].allocateName(sym))(_.nme)),
@@ -228,9 +227,9 @@ class FuncInfo(
   def this(
       id: Opt[SymIdx],
       typeUse: TypeUse,
-      params: Seq[Local -> Str],
+      params: Seq[Local -> SymIdx],
       nResults: Int,
-      locals: Seq[Local -> Str],
+      locals: Seq[Local -> SymIdx],
       body: Expr,
       `export`: Opt[Str],
   )(using Raise, Scope, State) = this(
@@ -245,7 +244,7 @@ class FuncInfo(
 
   /** Returns the type of this function as a [[SignatureType]]. */
   def getSignatureType: SignatureType = SignatureType(
-    params = params.map((_, varNme) => WasmParam(varNme, RefType.anyref)),
+    params = params.map((_, paramIdx) => WasmParam(paramIdx, RefType.anyref)),
     results = resultTypes,
   )
 
@@ -257,7 +256,7 @@ class FuncInfo(
         getSignatureType.toWat.surroundUnlessEmpty(doc" ")
       } #{ ${
         locals.map: p =>
-          doc"(local $$${p._2} ${RefType.anyref.toWat})"
+          doc"(local ${p._2.toWat} ${RefType.anyref.toWat})"
         .mkDocument(doc" # ").surroundUnlessEmpty(doc" # ")
       } # ${body.toWat} #} )"""
 end FuncInfo
@@ -590,30 +589,11 @@ class Ctx extends ToWat:
       namedTypes(_) = typeInfo
     TypeIdx(id)
 
-  @deprecated("Use the overload without `resolveSymIdx` instead.")
-  def getType(typeref: TypeIdx | BlockMemberSymbol, resolveSymIdx: Bool): Opt[TypeIdx] =
-    if resolveSymIdx then
-      typeref match
-        case TypeIdx(idx @ SymIdx(_)) =>
-          types.zipWithIndex.collectFirst:
-            case ((symIdx, _), i) if symIdx == idx => TypeIdx(NumIdx(i))
-        case typeidx: TypeIdx => S(typeidx)
-        case sym: BlockMemberSymbol =>
-          namedTypes.get(sym).flatMap: typeInfo =>
-            types.zipWithIndex.collectFirst:
-              case ((_, ti), i) if ti === typeInfo => TypeIdx(NumIdx(i))
-    else getType(typeref)
-
   /** Returns the [[TypeIdx]] of the given `typeref`.
     */
   def getType(typeref: TypeIdx | BlockMemberSymbol): Opt[TypeIdx] = typeref match
     case typeidx: TypeIdx => S(typeidx)
     case sym: BlockMemberSymbol => getTypeInfo(typeref).map(ti => TypeIdx(ti.id))
-
-  @deprecated("Use the overload without `resolveSymIdx` instead.")
-  def getType_!(typeref: TypeIdx | BlockMemberSymbol, resolveSymIdx: Bool): TypeIdx =
-    getType(typeref, resolveSymIdx).getOrElse:
-      lastWords(s"Missing type definition for ${typeref.prettyString}")
 
   /** Same as [[getType]] but throws an exception when the `typeref` is not found. */
   def getType_!(typeref: TypeIdx | BlockMemberSymbol): TypeIdx =
@@ -621,9 +601,7 @@ class Ctx extends ToWat:
       lastWords(s"Missing type definition for ${typeref.prettyString}")
 
   /** Returns the [[TypeInfo]] instance associated with the given `typeref`. */
-  @nowarn("cat=deprecation")
   def getTypeInfo(typeref: TypeIdx | BlockMemberSymbol): Opt[TypeInfo] = typeref match
-    case TypeIdx(NumIdx(idx)) => types.drop(idx).headOption.map(_._2)
     case TypeIdx(idx @ SymIdx(nme)) => types.get(idx)
     case sym: BlockMemberSymbol => namedTypes.get(sym)
 
@@ -640,13 +618,6 @@ class Ctx extends ToWat:
   def getAllRuntimeTags(sym: BlockMemberSymbol): Opt[LinkedHashSet[Int]] =
     runtimeClassTags.get(sym)
 
-  @deprecated("Use the `Import[ExternType.Func]` overload instead.")
-  def addFunctionImport(sym: Opt[Symbol], funcImport: FuncImport): FuncIdx =
-    addFunctionImport(
-      sym,
-      Import(funcImport.module, funcImport.name, ExternType.Func(funcImport.id, TypeUse(funcImport.typeIdx))),
-    )
-
   /** Adds a function import into this context.
     *
     * Returns the function index in the global function index space.
@@ -657,14 +628,6 @@ class Ctx extends ToWat:
     sym.foreach:
       namedFuncs(_) = funcImport
     FuncIdx(id)
-
-  @deprecated("Use the `Import[ExternType.Func]` overload instead.")
-  @targetName("getOrCreateFuncImport")
-  def getOrCreateFunctionImport(
-      module: Str,
-      name: Str,
-  )(createImport: => FuncImport): FuncIdx =
-    cachedFunctionImports.getOrElseUpdate((module, name), addFunctionImport(N, createImport))
 
   /** Returns the cached function import for (`module`, `name`), creating it with `createImport` if needed.
     */
@@ -719,11 +682,6 @@ class Ctx extends ToWat:
         cachedMemoryImport(key) = SymIdx(name)
   end ensureMemoryImport
 
-  /** Returns the minimum page requirement of memory import (`module`, `name`) if present. */
-  @deprecated("Use `getMemoryImport` instead to get the full memory import information.")
-  def getMemoryImportMinPages(module: Str, name: Str): Opt[Int] =
-    getMemoryImport(module, name).map(_.memType.lim.min)
-
   /** Returns the memory import information for the given (`module`, `name`) tuple if present. */
   def getMemoryImport(module: Str, name: Str): Opt[ExternType.Mem] =
     memories.collectFirst:
@@ -751,20 +709,6 @@ class Ctx extends ToWat:
       (id -> ElemSegment.Declare(id, refType -> Seq(ref.func(idx, refType))))
     idx
 
-  @deprecated("Use the overload without `resolveSymIdx` instead.")
-  def getFunc(funcref: FuncIdx | Symbol, resolveSymIdx: Bool): Opt[FuncIdx] =
-    if resolveSymIdx then
-      funcref match
-        case FuncIdx(idx @ SymIdx(_)) =>
-          funcs.zipWithIndex.collectFirst:
-            case ((symIdx, _), i) if symIdx == idx => FuncIdx(NumIdx(i))
-        case funcidx: FuncIdx => S(funcidx)
-        case sym: Symbol =>
-          namedFuncs.get(sym).flatMap: funcInfo =>
-            funcs.zipWithIndex.collectFirst:
-              case ((_, fi), i) if fi === funcInfo => FuncIdx(NumIdx(i))
-    else getFunc(funcref)
-
   /** Returns the [[FuncIdx]] of the given `funcref`.
     */
   def getFunc(funcref: FuncIdx | Symbol): Opt[FuncIdx] = funcref match
@@ -775,19 +719,12 @@ class Ctx extends ToWat:
           case fi: FuncInfo => FuncIdx(fi.id)
           case imp: Import[ExternType.Func] => FuncIdx(imp.externType.id)
 
-  @deprecated("Use the overload without `resolveSymIdx` instead.")
-  def getFunc_!(funcref: FuncIdx | Symbol, resolveSymIdx: Bool): FuncIdx =
-    getFunc(funcref, resolveSymIdx).getOrElse:
-      lastWords(s"Missing function definition for ${funcref.prettyString}")
-
   /** Same as [[getFunc]] but throws an exception when the `funcref` is not found. */
   def getFunc_!(funcref: FuncIdx | Symbol): FuncIdx =
     getFunc(funcref).getOrElse:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
-  @nowarn("cat=deprecation")
   private def getFuncEntry(funcref: FuncIdx | Symbol): Opt[FuncInfo | Import[ExternType.Func]] = funcref match
-    case FuncIdx(NumIdx(idx)) => funcs.drop(idx).headOption.map(_._2)
     case FuncIdx(idx @ SymIdx(_)) => funcs.get(idx)
     case funcref: Symbol => namedFuncs.get(funcref)
 
@@ -824,10 +761,8 @@ class Ctx extends ToWat:
     getGlobal(globalref).getOrElse:
       lastWords(s"Missing global definition for ${globalref.prettyString}")
 
-  @nowarn("cat=deprecation")
   private def getGlobalEntry(globalref: GlobalIdx | Symbol): Opt[GlobalInfo | Import[ExternType.Global]] =
     globalref match
-      case GlobalIdx(NumIdx(idx)) => globals.drop(idx.toInt).headOption.map(_._2)
       case GlobalIdx(idx @ SymIdx(_)) => globals.get(idx)
       case sym: Symbol => namedGlobals.get(sym)
 
