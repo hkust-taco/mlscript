@@ -53,8 +53,7 @@ new! Option.Some(1)
 //│ = Some(1)
 
 
-import "../../mlscript-compile/wasm/SimpleTarget.mjs"
-//│ SimpleTarget = 42
+import "../../mlscript-compile/wasm/SimpleTarget.mls"
 
-SimpleTarget + 1
-//│ = 43
+SimpleTarget.value + 1
+//│ = NaN

@@ -1,0 +1,7 @@
+#config(target: CompilationTarget.Wasm)
+
+import "./SimpleTarget.mls"
+
+module ImportValue with ...
+
+val value = SimpleTarget.value + 1

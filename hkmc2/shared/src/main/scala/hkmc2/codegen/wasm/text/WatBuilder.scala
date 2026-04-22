@@ -72,7 +72,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       && defn.auxParams.isEmpty
       && (!(defn.k is syntax.Obj) || defn.parentPath.isEmpty)
       && (!(defn.k is syntax.Obj) || defn.methods.isEmpty)
-      && defn.companion.isEmpty
+      && defn.companion.forall(_.methods.isEmpty)
 
   /** Returns singleton metadata when `sym` resolves to a registered singleton object. */
   private def singletonInfoFor(sym: Local)(using Ctx): Opt[SingletonInfo] =
@@ -902,7 +902,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val symToField = structInfo.compType match
       case ty: StructType => ty.fieldsBySym
       case _ => lastWords(s"Cannot select field from non-struct type: ${structInfo.compType.toWat.mkString()}")
-    
+
     // Try direct lookup first
     val fieldIdx = symToField.get(sym).map(_.id).getOrElse:
       // If direct lookup fails, try matching by qualified name
@@ -1568,8 +1568,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       break(errUnimplExpr("parentPath.nonEmpty for object"))
                     if isSingletonObj && clsLikeDefn.methods.nonEmpty then
                       break(errUnimplExpr("methods.nonEmpty for object"))
+                    // TODO: Support companion object methods (currently only companion fields are allowed)
                     if clsLikeDefn.companion.isDefined then
-                      break(errUnimplExpr("companion.isDefined"))
+                      val companion = clsLikeDefn.companion.get
+                      if companion.methods.nonEmpty then
+                        break(errUnimplExpr("companion.methods.nonEmpty"))
 
                     val ctorAuxParams = clsLikeDefn.auxParams.map: ps =>
                       ps.params.map: p =>
@@ -1799,7 +1802,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           case LabelTarget(breakLabel, continueLabel) =>
             val bodyExpr = returningTerm(body)
             val bodyStmt = asStatement(bodyExpr)
-    
+
             if loop then
               Instructions.block(
                 label = S(breakLabel),
