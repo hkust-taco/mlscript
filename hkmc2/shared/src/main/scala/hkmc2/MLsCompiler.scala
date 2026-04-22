@@ -11,6 +11,8 @@ import hkmc2.semantics.*
 import hkmc2.syntax.Keyword.`override`
 import semantics.Elaborator.{Ctx, State}
 
+import codegen.wasm.text.{WasmCompilation, WasmDependency}
+
 
 class ParserSetup(file: io.Path, dbgParsing: Bool)(using state: Elaborator.State, raise: Raise, cctx: CompilerCtx):
   
@@ -54,6 +56,8 @@ class MLsCompiler
     (using cctx: CompilerCtx, config: Config):
   import paths.*
 
+
+
   /** Module metadata collected during elaboration. */
   private case class ModuleInfo(
       file: io.Path,
@@ -61,18 +65,6 @@ class MLsCompiler
       exportedSymbol: Opt[BlockMemberSymbol],
       effectiveCfg: Config,
       hasQuote: Bool,
-  )
-
-  /** A Wasm module imported as a dependency. */
-  private case class WasmDependency(
-      importPath: Str,
-      compiled: codegen.wasm.text.CompiledWasmModule,
-  )
-
-  /** Result of compiling a module to Wasm with its dependencies. */
-  private case class WasmCompilation(
-      compiled: codegen.wasm.text.CompiledWasmModule,
-      dependencies: Seq[WasmDependency],
   )
 
   // TODO adapt logic

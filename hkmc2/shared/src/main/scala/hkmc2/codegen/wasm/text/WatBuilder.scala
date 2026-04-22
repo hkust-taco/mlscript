@@ -903,17 +903,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case ty: StructType => ty.fieldsBySym
       case _ => lastWords(s"Cannot select field from non-struct type: ${structInfo.compType.toWat.mkString()}")
 
-    // Try direct lookup first
     val fieldIdx = symToField.get(sym).map(_.id).getOrElse:
-      // If direct lookup fails, try matching by qualified name
-      val symQualName = sym.toString
-      symToField.collectFirst:
-        case (fieldSym, field) if fieldSym.toString == symQualName => field.id
-      .getOrElse:
-        val availableFields = symToField.keys.iterator.map(_.toString).toSeq.sorted.mkString(", ")
-        lastWords(
-          s"Missing field `${sym.toString}` in struct `${thisSym.toString}` with type `${structInfo.toWat.mkString()}`. Available fields: $availableFields",
-        )
+      lastWords(
+        s"Missing field `${sym.toString}` in struct `${thisSym.toString}` with type `${structInfo.toWat.mkString()}`",
+      )
     FieldIdx(SymIdx(fieldIdx))
   end fieldSelect
 

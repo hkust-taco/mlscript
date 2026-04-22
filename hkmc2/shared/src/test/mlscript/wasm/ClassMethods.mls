@@ -170,7 +170,7 @@ c.Counter#inc().Counter#double().Counter#get()
 
 :todo
 let d = Counter(c.Counter#get())
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))`. Available fields: term:$tag, term:Counter/x
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))`
 
 :todo
 d.Counter#inc().Counter#double().Counter#get()

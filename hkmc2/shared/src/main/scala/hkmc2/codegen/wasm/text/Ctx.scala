@@ -138,10 +138,38 @@ final case class CompiledWasmModule(
     sessionExports: Seq[SessionBinding],
 )
 
+/** A Wasm module imported as a dependency.
+  *
+  * @param importPath
+  *   the import statement's path as written in the source
+  * @param compiled
+  *   the successfully compiled Wasm module
+  */
+final case class WasmDependency(
+    importPath: Str,
+    compiled: CompiledWasmModule,
+)
+
+/** Result of compiling a module to Wasm with its dependencies.
+  *
+  * @param compiled
+  *   the successfully compiled Wasm module
+  * @param dependencies
+  *   all imported `.mls` modules compiled to Wasm
+  */
+final case class WasmCompilation(
+    compiled: CompiledWasmModule,
+    dependencies: Seq[WasmDependency],
+)
+
 /** Context for collecting session exports from a Wasm module.
   *
   * @param moduleName
   *   The module name used for identifying exports in dependent modules.
+  * @param symbolsToExport
+  *   The symbols from the current module that should be recorded as session exports.
+  * @param collectedBindings
+  *   The session bindings accumulated while compiling the current module.
   */
 final class SessionExportCtx(
     val moduleName: Str,
@@ -459,7 +487,7 @@ class FunctionCtx(_params: Ls[ParamList], thisSym: Opt[InnerSymbol])(using Raise
           continueLabel = labels(label).continueLabel.map(cl => labels.last._2.scp.lookup_!(cl, N)),
         )
 end FunctionCtx
-  
+
 /** Generates a function body, providing an instance of [[FunctionCtx]] for parameter and locals tracking.
   *
   * Returns the result of the `mkBody` function along with the [[FunctionCtx]].
@@ -863,7 +891,7 @@ class Ctx extends ToWat:
 
   /** Checks whether the global variable scope contains the variable `sym`. */
   def containsGlobal(sym: Symbol): Bool = namedGlobals.contains(sym)
-  
+
   /** Returns all globals in this context. */
   def getGlobals: Seq[Symbol] = namedGlobals.keys.toSeq
 
