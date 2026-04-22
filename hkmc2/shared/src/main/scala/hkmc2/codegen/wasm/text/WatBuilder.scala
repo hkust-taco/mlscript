@@ -629,7 +629,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   /** Allocates a fresh temp local (typed `anyref`) and returns its `LocalIdx`.
     */
   private def mkTempLocal(base: Str)(using Ctx, FunctionCtx, Scope, Raise): LocalIdx =
-    funcCtx.addLocal(VarSymbol(Ident(base)))
+    funcCtx.addLocal(TempSymbol(N, base))
 
   /** Binds constructor self (`thisSym`) to the Wasm local name `this` in the current function context.
     */
@@ -1253,7 +1253,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     */
   private def createIntrinsicFunc(
       name: Str,
-      params: Seq[VarSymbol -> SymIdx],
+      params: Seq[TempSymbol -> SymIdx],
       body: Expr,
       exportName: Opt[Str],
   )(using Ctx, Raise, Scope): FuncIdx =
@@ -1310,9 +1310,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   /** Creates parameters for an intrinsic.
     */
-  private def mkIntrinsicParams(name: Str, suffixes: Seq[Str]): Seq[VarSymbol -> SymIdx] =
+  private def mkIntrinsicParams(name: Str, suffixes: Seq[Str]): Seq[TempSymbol -> SymIdx] =
     suffixes.map: suffix =>
-      val sym = VarSymbol(Ident(suffix))
+      val sym = TempSymbol(N, suffix)
       sym -> SymIdx(suffix)
 
   /** Loads the local `name` as an `anyref`.
