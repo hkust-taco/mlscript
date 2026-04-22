@@ -1187,7 +1187,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           case TermDefinition(k = syntax.Fun) => warn(a, S(msg"Only functions with a body may be marked as @tailrec."))
           case _ => warn(a)
         
-      case Annot.Modifier(syntax.Keyword.`public` | syntax.Keyword.`private`) => ()
+      case Annot.Modifier(syntax.Keyword.`public` | syntax.Keyword.`private` | syntax.Keyword.`virtual`) => ()
       case Annot.Modifier(syntax.Keyword("staged")) => ()
       case _: Annot.Config => () // Config annotations are handled during FunDefn creation
       case annot => warn(annot)
