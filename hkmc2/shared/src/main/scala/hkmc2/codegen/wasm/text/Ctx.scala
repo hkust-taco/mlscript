@@ -349,6 +349,7 @@ end TagInfo
 
 enum WasmIntrinsicType:
   case TupleArray(mutable: Bool)
+  case VirtualMethod(arity: Int)
 
 /** Class containing identifiers of labels to jump to when breaking or continuing from a control flow structure.
   *
@@ -477,6 +478,11 @@ object Ctx:
       globalTy: RefType,
   )
 
+  case class VirtualTable(
+      virtualMethods: List[BlockMemberSymbol],
+      virtualMethodSlots: Map[BlockMemberSymbol, Int],
+  )
+
   val binaryOps: Map[Str, (Expr, Expr) => Expr] = Map(
     "plus_impl" -> i32.add,
     "minus_impl" -> i32.sub,
@@ -558,8 +564,10 @@ class Ctx extends ToWat:
 
   private val singletonByBms = MutMap.empty[BlockMemberSymbol, Ctx.SingletonInfo]
   private val singletonByIsym = MutMap.empty[ModuleOrObjectSymbol, Ctx.SingletonInfo]
+  private val typeInfoInitActions = ArrayBuf.empty[Expr]
   private val singletonInitActions = ArrayBuf.empty[Expr]
   private val runtimeClassTags = MutMap.empty[BlockMemberSymbol, LinkedHashSet[Int]]
+  private val virtualTables = MutMap.empty[BlockMemberSymbol, Ctx.VirtualTable]
 
   private def imports: Seq[Import[?]] =
     val importedFuncs = funcs.collect:
@@ -617,6 +625,14 @@ class Ctx extends ToWat:
   /** Returns the class' runtime tag together with descendant class tags for `sym`. */
   def getAllRuntimeTags(sym: BlockMemberSymbol): Opt[LinkedHashSet[Int]] =
     runtimeClassTags.get(sym)
+
+  /** Records the derived virtual-dispatch layout for `sym`. */
+  def registerVirtualTable(sym: BlockMemberSymbol, info: Ctx.VirtualTable): Unit =
+    virtualTables(sym) = info
+
+  /** Returns the derived virtual-dispatch layout for `sym`. */
+  def getVirtualTable(sym: BlockMemberSymbol): Opt[Ctx.VirtualTable] =
+    virtualTables.get(sym)
 
   /** Adds a function import into this context.
     *
@@ -822,6 +838,13 @@ class Ctx extends ToWat:
   ): Unit =
     singletonByBms(bms) = info
     isym.foreach(singletonByIsym(_) = info)
+
+  /** Appends one shared class-`typeinfo` initialization action for synthesized module start code. */
+  def addTypeInfoInitAction(action: Expr): Unit =
+    typeInfoInitActions += action
+
+  /** Returns the shared class-`typeinfo` initialization actions. */
+  def getTypeInfoInitActions: Seq[Expr] = typeInfoInitActions.toSeq
 
   /** Appends one eager singleton initialization action for synthesized module start code. */
   def addSingletonInitAction(action: Expr): Unit =

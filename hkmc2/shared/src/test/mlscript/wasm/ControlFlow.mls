@@ -14,16 +14,19 @@ let i = 0 in
   i
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)))))
 //│   (type $lt_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type $Unit (sub $Object (struct (field $$tag (mut i32)))))
+//│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)))))
+//│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)))))
 //│   (type $Unit_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $Unit_ctor (func (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
 //│   (import "system" "lt_impl" (func $lt_impl (type $lt_impl)))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
+//│   (global $Unit_typeinfo (mut (ref null $Unit_typeinfo)) (ref.null $Unit_typeinfo))
 //│   (global $Unit$inst (export "Unit$inst") (mut (ref null $Unit)) (ref.null $Unit))
 //│   (func $Unit_init1 (type $Unit_init) (param $this (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
@@ -36,6 +39,10 @@ let i = 0 in
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $Unit))
+//│       (struct.set $Unit $$typeinfo
+//│         (ref.cast (ref $Unit)
+//│           (local.get $this))
+//│         (global.get $Unit_typeinfo))
 //│       (struct.set $Unit $$tag
 //│         (ref.cast (ref $Unit)
 //│           (local.get $this))
@@ -47,6 +54,12 @@ let i = 0 in
 //│         (local.get $this))))
 //│   (func $start1 (type $start)
 //│     (block
+//│       (global.set $Unit_typeinfo
+//│         (struct.new_default $Unit_typeinfo))
+//│       (struct.set $Unit_typeinfo $$tag
+//│         (ref.cast (ref $Unit_typeinfo)
+//│           (global.get $Unit_typeinfo))
+//│         (i32.const 1))
 //│       (global.set $Unit$inst
 //│         (ref.cast (ref null $Unit)
 //│           (call $Unit_ctor1)))))
@@ -186,7 +199,8 @@ fun tailMatchAllValue(x) =
 tailMatchAllValue(1)
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)))))
 //│   (type $tailMatchAllValue1 (func (param $x (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (func $tailMatchAllValue (export "tailMatchAllValue") (type $tailMatchAllValue1) (param $x (ref null any)) (result (ref null any))

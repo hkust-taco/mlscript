@@ -43,14 +43,20 @@ if Bar(true) is
   else 2
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type $Bar (sub $Object (struct (field $$tag (mut i32)) (field $y (mut (ref null any))))))
-//│   (type $Baz (sub $Object (struct (field $$tag (mut i32)) (field $z (mut (ref null any))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)))))
+//│   (type $Bar_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)))))
+//│   (type $Baz_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)))))
+//│   (type $Bar (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)) (field $y (mut (ref null any))))))
+//│   (type $Baz (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)) (field $z (mut (ref null any))))))
 //│   (type $Bar_init (func (param $this (ref null any)) (param $y (ref null any)) (result (ref null any))))
 //│   (type $Baz_init (func (param $this (ref null any)) (param $z (ref null any)) (result (ref null any))))
 //│   (type $Bar_ctor (func (param $y (ref null any)) (result (ref null any))))
 //│   (type $Baz_ctor (func (param $z (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
+//│   (type $start (func))
+//│   (global $Bar_typeinfo (mut (ref null $Bar_typeinfo)) (ref.null $Bar_typeinfo))
+//│   (global $Baz_typeinfo (mut (ref null $Baz_typeinfo)) (ref.null $Baz_typeinfo))
 //│   (func $Bar_init (type $Bar_init) (param $this (ref null any)) (param $y (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -78,6 +84,10 @@ if Bar(true) is
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $Bar))
+//│       (struct.set $Bar $$typeinfo
+//│         (ref.cast (ref $Bar)
+//│           (local.get $this))
+//│         (global.get $Bar_typeinfo))
 //│       (struct.set $Bar $$tag
 //│         (ref.cast (ref $Bar)
 //│           (local.get $this))
@@ -93,6 +103,10 @@ if Bar(true) is
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $Baz))
+//│       (struct.set $Baz $$typeinfo
+//│         (ref.cast (ref $Baz)
+//│           (local.get $this))
+//│         (global.get $Baz_typeinfo))
 //│       (struct.set $Baz $$tag
 //│         (ref.cast (ref $Baz)
 //│           (local.get $this))
@@ -103,6 +117,20 @@ if Bar(true) is
 //│           (local.get $z)))
 //│       (return
 //│         (local.get $this))))
+//│   (func $start1 (type $start)
+//│     (block
+//│       (global.set $Bar_typeinfo
+//│         (struct.new_default $Bar_typeinfo))
+//│       (struct.set $Bar_typeinfo $$tag
+//│         (ref.cast (ref $Bar_typeinfo)
+//│           (global.get $Bar_typeinfo))
+//│         (i32.const 1))
+//│       (global.set $Baz_typeinfo
+//│         (struct.new_default $Baz_typeinfo))
+//│       (struct.set $Baz_typeinfo $$tag
+//│         (ref.cast (ref $Baz_typeinfo)
+//│           (global.get $Baz_typeinfo))
+//│         (i32.const 2))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $scrut (ref null any))
 //│     (local $a (ref null any))
@@ -197,7 +225,9 @@ if Bar(true) is
 //│   (elem $Baz_init declare func $Baz_init)
 //│   (elem $Bar_ctor declare func $Bar_ctor)
 //│   (elem $Baz_ctor declare func $Baz_ctor)
-//│   (elem $entry declare func $entry))
+//│   (elem $start1 declare func $start1)
+//│   (elem $entry declare func $entry)
+//│   (start $start1))
 //│ Wasm result:
 //│ = 3
 

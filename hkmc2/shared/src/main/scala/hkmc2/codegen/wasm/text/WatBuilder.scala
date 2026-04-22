@@ -46,12 +46,16 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   type Context = Ctx
 
+  private val typeInfoBaseSym: BlockMemberSymbol = BlockMemberSymbol("TypeInfoBase", Nil)
   private val baseObjectSym: BlockMemberSymbol = BlockMemberSymbol("Object", Nil)
+  private val typeInfoFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$typeinfo"))
   private val tagFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$tag"))
 
   private case class StringLitInfo(offset: Int, byteLen: Int, watBytes: Str)
   private val stringLits: LinkedHashMap[Str, StringLitInfo] = LinkedHashMap.empty
   private val initFuncSyms: LinkedHashMap[BlockMemberSymbol, BlockMemberSymbol] = LinkedHashMap.empty
+  private val typeInfoTypeIdxs: LinkedHashMap[BlockMemberSymbol, TypeIdx] = LinkedHashMap.empty
+  private val typeInfoGlobals: LinkedHashMap[BlockMemberSymbol, GlobalIdx] = LinkedHashMap.empty
   private var nextStringDataOffset: Int = 0
 
   private def baseObjectTypeIdx(using Ctx): TypeIdx =
@@ -61,6 +65,16 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ctx.getTypeInfo_!(baseObjectSym).compType match
       case struct: StructType => struct
       case other => lastWords(s"Base Object type must be a struct, found ${other.toWat.mkString()}")
+
+  private def baseObjectTypeInfoFieldIdx(using Ctx): FieldIdx =
+    val fieldId = baseObjectStruct.fields.collectFirst:
+      case (sym, field) if sym == typeInfoFieldSym => field.id
+    FieldIdx(SymIdx(fieldId.get))
+
+  private def baseObjectTagFieldIdx(using Ctx): FieldIdx =
+    val fieldId = baseObjectStruct.fields.collectFirst:
+      case (sym, field) if sym == tagFieldSym => field.id
+    FieldIdx(SymIdx(fieldId.get))
 
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
@@ -111,9 +125,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     if ctx.containsSingleton(unitDefn.sym) then return
 
     if ctx.getType(unitDefn.sym).isEmpty then
+      predeclareClassTypeInfoType(unitDefn)
+      predeclareClassTypeInfoGlobal(unitDefn)
       predeclareClassType(unitDefn)
       predeclareClassInit(unitDefn)
       predeclareClassConstructor(unitDefn)
+      registerClassTypeInfoInitAction(unitDefn)
 
     returningTerm(Define(unitDefn, End("")))
 
@@ -261,6 +278,45 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ordered.toList
   end sortTopLevelClasses
 
+  /** Returns the elaborated source methods for this class. */
+  private def semanticMethodDefs(defn: ClsLikeDefn)(using Raise): List[TermDefinition] =
+    val clsDef = defn.isym.defn.get.asInstanceOf[hkmc2.semantics.ClassLikeDef]
+    clsDef.body.methods.filter(_.body.nonEmpty)
+
+  /** True when a method introduces a new virtual slot at its declaring class if not already inherited. */
+  private def declaresVirtualSlot(methodDef: TermDefinition): Bool =
+    methodDef.annotations.exists:
+      case Annot.Modifier(syntax.Keyword.`virtual`) => true
+      case _ => false
+
+  /** Computes one derived virtual-table layout for one top-level class. */
+  private def predeclareClassVirtualTable(defn: ClsLikeDefn)(using Ctx, Raise): Unit =
+    val parentVirtualTable = resolveParentSym(defn).flatMap(ctx.getVirtualTable)
+      .getOrElse(Ctx.VirtualTable(Nil, Map.empty))
+    val virtualMethods = ArrayBuf.from(parentVirtualTable.virtualMethods)
+    val virtualMethodSlots = LinkedHashMap.from(parentVirtualTable.virtualMethodSlots)
+
+    semanticMethodDefs(defn).foreach: methodDef =>
+      val slotIdx = virtualMethodSlots.iterator.collectFirst:
+        case (sym, idx) if sym.nme == methodDef.sym.nme => idx
+      slotIdx match
+        case S(slot) =>
+          virtualMethods(slot) = methodDef.sym
+          virtualMethodSlots(methodDef.sym) = slot
+        case N if declaresVirtualSlot(methodDef) =>
+          val slot = virtualMethods.size
+          virtualMethods += methodDef.sym
+          virtualMethodSlots(methodDef.sym) = slot
+        case N => ()
+
+    ctx.registerVirtualTable(
+      defn.sym,
+      Ctx.VirtualTable(
+        virtualMethods = virtualMethods.toList,
+        virtualMethodSlots = virtualMethodSlots.toMap,
+      ),
+    )
+
   /** Declares one supported top-level class type for early wasm registration. */
   private def predeclareClassType(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
     val parentTypeIdx =
@@ -334,6 +390,28 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     )
   end declareClassFuncType
 
+  /** Returns the shared erased Wasm function signature for a virtual method arity, including `this`. */
+  private def virtualMethodSignature(arity: Int): FunctionType =
+    FunctionType(
+      params = (0 until arity).map: idx =>
+        WasmParam(SymIdx(if idx == 0 then "this" else s"arg$idx"), RefType.anyref),
+      results = Seq(Result(RefType.anyref)),
+    )
+
+  /** Declares (and caches) the shared Wasm function type for a virtual method arity, including `this`. */
+  private def virtualMethodFuncType(arity: Int)(using Ctx, Raise, Scope): TypeIdx =
+    ctx.getOrCreateWasmIntrinsicType(WasmIntrinsicType.VirtualMethod(arity)):
+      val typeId = scope.allocateName(TempSymbol(N, s"virtual$arity"))
+      ctx.addType(
+        sym = N,
+        TypeInfo(
+          id = SymIdx(typeId),
+          virtualMethodSignature(arity),
+          objectTag = N,
+        ),
+      )
+  end virtualMethodFuncType
+
   /** Returns the symbol used to predeclare and later overwrite a class init function. */
   private def initFuncSym(sym: BlockMemberSymbol): BlockMemberSymbol =
     initFuncSyms.getOrElseUpdate(sym, BlockMemberSymbol(s"${sym.nme}_init", Nil, nameIsMeaningful = false))
@@ -348,6 +426,19 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       exportName: Opt[Str],
   )(using Ctx, Raise, Scope): Unit =
     val funcTy = declareClassFuncType(defn, suffix, params)
+    predeclareClassFuncWithType(defn, suffix, params, sym, id, exportName, funcTy)
+  end predeclareClassFunc
+
+  /** Registers a placeholder class-associated function using a predeclared Wasm function type. */
+  private def predeclareClassFuncWithType(
+      defn: ClsLikeDefn,
+      suffix: Str,
+      params: Seq[Local -> SymIdx],
+      sym: Opt[Symbol],
+      id: Opt[SymIdx],
+      exportName: Opt[Str],
+      funcTy: TypeIdx,
+  )(using Ctx, Raise, Scope): Unit =
     ctx.addFunc(
       sym,
       FuncInfo(
@@ -363,7 +454,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         exportName = exportName,
       ),
     )
-  end predeclareClassFunc
+  end predeclareClassFuncWithType
 
   /** Declares one top-level class init function. */
   private def predeclareClassInit(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
@@ -505,6 +596,88 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case _: SessionClass => ()
   end registerSessionImports
 
+  /** Predeclares the per-class `typeinfo` struct type for one supported top-level class. */
+  private def predeclareClassTypeInfoType(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
+    val parentTypeInfoIdx =
+      if defn.parentPath.isEmpty then ctx.getType_!(typeInfoBaseSym)
+      else typeInfoTypeIdxs(resolveParentSym(defn).get)
+
+    val inheritedFields = ctx.getTypeInfo_!(parentTypeInfoIdx).compType match
+      case struct: StructType => struct.fields
+
+    val parentVirtualMethodCount = resolveParentSym(defn).flatMap(ctx.getVirtualTable)
+      .fold(0)(_.virtualMethods.size)
+    val currentVirtualMethods = ctx.getVirtualTable(defn.sym).fold(Nil)(_.virtualMethods)
+    val newSlotFields = currentVirtualMethods.zipWithIndex.drop(parentVirtualMethodCount).map: (methodSym, slot) =>
+      val methodDefn = defn.methods.find(_.sym == methodSym).get
+      val arity = 1 + methodDefn.params.headOption.fold(0)(_.params.size)
+      val fieldSym = TermSymbol(syntax.MutVal, owner = N, Ident(s"slot$slot"))
+      fieldSym -> Field(
+        RefType(virtualMethodFuncType(arity), nullable = true),
+        mutable = true,
+        id = s"slot$slot",
+      )
+
+    val typeInfoType = ctx.addType(
+      sym = N,
+      TypeInfo(
+        id = SymIdx(s"${defn.sym.nme}_typeinfo"),
+        StructType(fields = inheritedFields ++ newSlotFields, parents = Seq(parentTypeInfoIdx)),
+        objectTag = N,
+      ),
+    )
+    typeInfoTypeIdxs(defn.sym) = typeInfoType
+  end predeclareClassTypeInfoType
+
+  /** Predeclares the shared runtime `typeinfo` global for one supported top-level class. */
+  private def predeclareClassTypeInfoGlobal(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
+    val typeInfoTypeIdx = typeInfoTypeIdxs(defn.sym)
+    val globalSym = BlockMemberSymbol(s"${defn.sym.nme}_typeinfo", Nil, nameIsMeaningful = false)
+    val globalTy = RefType(typeInfoTypeIdx, nullable = true)
+    val globalIdx = ctx.addGlobal(
+      globalSym,
+      GlobalInfo(
+        id = SymIdx(scope.allocateName(globalSym)),
+        globalType = GlobalType(globalTy, mutable = true),
+        init = ref.`null`(typeInfoTypeIdx),
+        exportName = N,
+      ),
+    )
+    typeInfoGlobals(defn.sym) = globalIdx
+  end predeclareClassTypeInfoGlobal
+
+  /** Registers one start-time initialization sequence that allocates and fills the shared class `typeinfo` object. */
+  private def registerClassTypeInfoInitAction(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
+    val typeInfoTypeIdx = typeInfoTypeIdxs(defn.sym)
+    val typeInfoGlobalIdx = typeInfoGlobals(defn.sym)
+    val typeInfoGlobalTy = ctx.getGlobalType_!(typeInfoGlobalIdx).globalType.valType match
+      case refTy: RefType => refTy
+    val typeInfoRef = ref.cast(
+      global.get(typeInfoGlobalIdx, typeInfoGlobalTy),
+      RefType(typeInfoTypeIdx, nullable = false),
+    )
+    val tagValue = ctx.getTypeInfo_!(defn.sym).objectTag.get
+    val virtualMethods = ctx.getVirtualTable(defn.sym).fold(Nil)(_.virtualMethods)
+    val initActions = Seq(
+      global.set(typeInfoGlobalIdx, struct.new_default(typeInfoTypeIdx)),
+      struct.set(
+        FieldIdx(SymIdx(tagFieldSym.nme)),
+        typeInfoRef,
+        i32.const(tagValue),
+      ),
+    ) ++ virtualMethods.zipWithIndex.map { (methodSym, slot) =>
+      struct.set(
+        FieldIdx(SymIdx(s"slot$slot")),
+        typeInfoRef,
+        ref.func(
+          ctx.getFunc_!(methodSym),
+          RefType(ctx.getFuncTypeUse_!(methodSym).typeIdx, nullable = false),
+        ),
+      )
+    }
+    initActions.foreach(ctx.addTypeInfoInitAction)
+  end registerClassTypeInfoInitAction
+
   /** Declares one top-level class method. */
   private def predeclareMethod(methodDefn: FunDefn, ownerCls: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
     val methodParams = (ownerCls.isym -> SymIdx("this")) +:
@@ -516,7 +689,19 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         !(ownerCls.k is syntax.Obj) && sym.nameIsMeaningful
       .map: sym =>
         SymIdx(s"${sym.nme}_${methodDefn.sym.nme}")
-    predeclareClassFunc(ownerCls, methodDefn.sym.nme, methodParams, S(methodDefn.sym), methodId, N)
+    ctx.getVirtualTable(ownerCls.sym).flatMap(_.virtualMethodSlots.get(methodDefn.sym)) match
+      case S(_) =>
+        predeclareClassFuncWithType(
+          ownerCls,
+          methodDefn.sym.nme,
+          methodParams,
+          S(methodDefn.sym),
+          methodId,
+          N,
+          virtualMethodFuncType(methodParams.size),
+        )
+      case N =>
+        predeclareClassFunc(ownerCls, methodDefn.sym.nme, methodParams, S(methodDefn.sym), methodId, N)
 
   /** Declares placeholders for all methods on one top-level class. */
   private def predeclareClassMethods(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
@@ -918,6 +1103,52 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     sym.asBlkMember.filter: methodSym =>
       methodSym.asTrm.exists(_.owner.exists(_.asCls.isDefined)) && ctx.getFunc(methodSym).nonEmpty
 
+  /** Lowers a class method call, using virtual dispatch only when the selected owner class has a virtual slot. */
+  private def lowerClassMethodCall(
+      qual: Path,
+      methodSym: BlockMemberSymbol,
+      args: Seq[Arg],
+  )(using Ctx, FunctionCtx, Raise, Scope, SessionExportCtx): Expr =
+    val ownerCls = fieldOwner(methodSym).get
+    ctx.getVirtualTable(ownerCls).flatMap(_.virtualMethodSlots.get(methodSym)) match
+      case S(slot) =>
+        val ownerTypeInfoIdx = typeInfoTypeIdxs(ownerCls)
+        val receiverTmp = mkTempLocal("receiver")
+        val receiverExpr = local.set(receiverTmp, result(qual))
+        val receiverRef = local.get(receiverTmp, RefType.anyref)
+        val ownerTypeInfoRef = ref.cast(
+          struct.get(
+            baseObjectTypeInfoFieldIdx,
+            ref.cast(receiverRef, baseObjectRefType(nullable = false)),
+            RefType.anyref,
+          ),
+          RefType(ownerTypeInfoIdx, nullable = false),
+        )
+        val virtualArity = 1 + args.size
+        val virtualMethodTypeIdx = virtualMethodFuncType(virtualArity)
+        val methodRef = struct.get(
+          FieldIdx(SymIdx(s"slot$slot")),
+          ownerTypeInfoRef,
+          RefType(virtualMethodTypeIdx, nullable = true),
+        )
+        val virtualCall = call_ref(
+          target = methodRef,
+          operands = receiverRef +: args.map(argument),
+          typeIdx = virtualMethodTypeIdx,
+          funcType = virtualMethodSignature(virtualArity),
+        )
+        blockInstr(
+          label = N,
+          children = Seq(receiverExpr, virtualCall),
+          resultTypes = Seq(Result(RefType.anyref)),
+        )
+      case N =>
+        call(
+          funcidx = ctx.getFunc_!(methodSym),
+          operands = result(qual) +: args.map(argument),
+          returnTypes = Seq(Result(RefType.anyref)),
+        )
+
   def result(r: codegen.Result)(using Ctx, FunctionCtx, Raise, Scope, SessionExportCtx): Expr = r match
     case Value.This(sym) =>
       // TODO(Derppening): Add type tracking and refinement for locals, remove the `ref.cast`
@@ -970,11 +1201,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     case Call(sel @ Select(qual, _), args) if sel.symbol.flatMap(predeclaredClassMethodSym).nonEmpty =>
       val methodSym = sel.symbol.flatMap(predeclaredClassMethodSym).get
-      call(
-        funcidx = ctx.getFunc_!(methodSym),
-        operands = result(qual) +: args.map(argument),
-        returnTypes = Seq(Result(RefType.anyref)),
-      )
+      lowerClassMethodCall(qual, methodSym, args)
 
     case c @ Call(fun, args) =>
       wasmIntrinsicName(fun) match
@@ -1057,11 +1284,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           val methodSym = predeclaredClassMethodSym(selSym).get
           methodSym.asTrm.flatMap(_.defn) match
             case S(defn: TermDefinition) if defn.params.isEmpty =>
-              call(
-                funcidx = ctx.getFunc_!(methodSym),
-                operands = Seq(result(qual)),
-                returnTypes = Seq(Result(RefType.anyref)),
-              )
+              lowerClassMethodCall(qual, methodSym, Nil)
             case _ =>
               errExpr(
                 Ls(
@@ -1587,6 +1810,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
                     val tagValue = typeinfo.objectTag getOrElse:
                       lastWords(s"Expected class ${clsLikeDefn.sym} to have an object tag")
+                    val typeInfoGlobalIdx = typeInfoGlobals(clsLikeDefn.sym)
+                    val typeInfoGlobalTy = ctx.getGlobalType_!(typeInfoGlobalIdx).globalType.valType
 
                     val initFuncRef = initFuncSym(clsLikeDefn.sym)
                     val (ctorCode, ctorFnCtx) = genFuncBody(clsLikeDefn.paramsOpt.toList, thisSym = N):
@@ -1602,7 +1827,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         Seq(
                           local.set(thisVar, struct.new_default(typeref)),
                           struct.set(
-                            FieldIdx(SymIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id)),
+                            baseObjectTypeInfoFieldIdx,
+                            ref.cast(
+                              local.get(thisVar, RefType.anyref),
+                              RefType(typeref, nullable = false),
+                            ),
+                            global.get(typeInfoGlobalIdx, typeInfoGlobalTy),
+                          ),
+                          struct.set(
+                            baseObjectTagFieldIdx,
                             ref.cast(
                               local.get(thisVar, RefType.anyref),
                               RefType(typeref, nullable = false),
@@ -1911,7 +2144,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     // Safe to cast and extract tag since ref.test passed
                     val scrutAsObject = ref.cast(scrutExpr, baseObjectRefType(nullable = false))
                     val scrutTag = struct.get(
-                      FieldIdx(SymIdx(typeinfo.compType.asInstanceOf[StructType].fields(0)._2.id)),
+                      baseObjectTagFieldIdx,
                       scrutAsObject,
                       I32Type,
                     )
@@ -2072,12 +2305,24 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     def compiledModule(entryName: Str): CompiledWasmModule =
       CompiledWasmModule(ctx.toWat, entryName, systemMemMinPages, sessionExportCtx.collectedBindings.toSeq)
 
-    // Create base Object struct with tag field that all other structs will inherit
+    ctx.addType(
+      sym = S(typeInfoBaseSym),
+      TypeInfo(
+        id = SymIdx("TypeInfoBase"),
+        StructType(Seq(tagFieldSym -> Field(I32Type, mutable = true, id = "$tag"))),
+        objectTag = N,
+      ),
+    )
+
+    // Create base Object struct with typeinfo and tag fields that all other structs will inherit
     ctx.addType(
       sym = S(baseObjectSym),
       TypeInfo(
         id = SymIdx("Object"),
-        StructType(Seq(tagFieldSym -> Field(I32Type, mutable = true, id = "$tag"))),
+        StructType(Seq(
+          typeInfoFieldSym -> Field(RefType.anyref, mutable = true, id = "$typeinfo"),
+          tagFieldSym -> Field(I32Type, mutable = true, id = "$tag"),
+        )),
         objectTag = S(ctx.getFreshObjectTag() ensuring (_ == 0)),
       ),
     )
@@ -2102,11 +2347,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             case _: ErrorReport => break(compiledModule("entry"))
             case _ => ()
         val ordered = sortTopLevelClasses(collectTopLevelClassDefns(p.main))
+        ordered.foreach(predeclareClassVirtualTable)
+        ordered.foreach(predeclareClassTypeInfoType)
+        ordered.foreach(predeclareClassTypeInfoGlobal)
         ordered.foreach(predeclareClassType)
         predeclareClassTags(ordered)
         ordered.foreach(predeclareClassInit)
         ordered.foreach(predeclareClassConstructor)
         ordered.foreach(predeclareClassMethods)
+        ordered.foreach(registerClassTypeInfoInitAction)
 
       // Compile the entry function under a dedicated local scope so that any temp locals introduced
       // during codegen (e.g., via `local.tee`) are declared in the entry function.
@@ -2145,8 +2394,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               memuse = N,
             ))
 
-      val singletonInitActions = ctx.getSingletonInitActions
-      if singletonInitActions.nonEmpty then
+      val initActions = ctx.getTypeInfoInitActions ++ ctx.getSingletonInitActions
+      if initActions.nonEmpty then
         val initTy = ctx.addType(
           sym = N,
           TypeInfo(
@@ -2157,7 +2406,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         )
         val initBody = blockInstr(
           label = N,
-          children = singletonInitActions.toSeq,
+          children = initActions,
           resultTypes = Seq.empty,
         )
         val initFn = ctx.addFunc(
