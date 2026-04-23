@@ -122,8 +122,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       lastWords("Missing singleton metadata for synthetic Unit object")
     // Record session metadata for the synthetic Unit singleton.
     summon[SessionExportCtx].emit(SessionClass(
-      sym = unitDefn.sym,
-      typeInfo = typeInfo,
+      sym = typeInfo.sym,
+      compType = typeInfo.compType,
+      objectTag = typeInfo.objectTag,
       runtimeTags = ctx.getAllRuntimeTags(unitDefn.sym) getOrElse:
         LinkedHashSet(ctx.getRuntimeClassTag_!(unitDefn.sym))
       ,
@@ -281,14 +282,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val allFields = inheritedFields ++ classFields
     val runtimeTag = ctx.getFreshObjectTag()
 
-    ctx.addType(
-      sym = S(defn.sym),
-      typeInfo = TypeInfo(
-        sym = defn.sym,
-        compType = StructType(fields = allFields, parents = Seq(parentTypeIdx)),
-        objectTag = S(runtimeTag),
-      ),
-    )
+    ctx.addType(TypeInfo(
+      sym = defn.sym,
+      idPrefix = N,
+      compType = StructType(fields = allFields, parents = Seq(parentTypeIdx)),
+      objectTag = S(runtimeTag),
+    ))
     ctx.registerRuntimeClassTags(defn.sym, LinkedHashSet(runtimeTag))
   end predeclareClassType
 
@@ -316,22 +315,16 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       params: Seq[Local -> SymIdx],
   )(using Ctx, Raise, Scope): TypeIdx =
     val isSingletonObj = defn.k is syntax.Obj
-    val funcTyId = defn.sym
-      .optionIf: sym =>
-        !isSingletonObj && sym.nameIsMeaningful
-      .fold(scope.allocateName(TempSymbol(N, s"${defn.sym.nme}_$suffix"))): sym =>
-        s"${sym.nme}_$suffix"
-    ctx.addType(
-      sym = N,
-      TypeInfo(
-        id = SymIdx(funcTyId),
-        FunctionType(
-          params = params.map(p => WasmParam(p._2, RefType.anyref)),
-          results = Seq(Result(RefType.anyref)),
-        ),
-        objectTag = N,
+    val funcTySym = TempSymbol(N, s"${defn.sym.nme}_$suffix")
+    ctx.addType(TypeInfo(
+      sym = funcTySym,
+      idPrefix = N,
+      FunctionType(
+        params = params.map(p => WasmParam(p._2, RefType.anyref)),
+        results = Seq(Result(RefType.anyref)),
       ),
-    )
+      objectTag = N,
+    ))
   end declareClassFuncType
 
   /** Returns the symbol used to predeclare and later overwrite a class init function. */
@@ -461,18 +454,21 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   )(using Ctx, Raise, Scope): Unit =
     sessionImports.foreach:
       case cls: SessionClass =>
-        if ctx.getType(cls.sym).isEmpty then
-          ctx.addType(sym = S(cls.sym), typeInfo = cls.typeInfo)
-        ctx.registerRuntimeClassTags(cls.sym, cls.runtimeTags)
-      case _ => ()
+        cls.sym match
+          case bms: BlockMemberSymbol =>
+            ctx.addType(TypeInfo(sym = bms, idPrefix = N, compType = cls.compType, objectTag = cls.objectTag))
+            ctx.registerRuntimeClassTags(bms, cls.runtimeTags)
+          case _ =>
+      case _ =>
 
     sessionImports.foreach:
       case func: SessionFunc =>
+        // If the function symbol comes from a class or module, generate a TempSymbol to avoid symbol collision with
+        // the class/module itself
+        val funcTySym: BlockMemberSymbol | TempSymbol =
+          if func.sym.asClsOrMod.isDefined then TempSymbol(N, func.sym.nme) else func.sym
         val funcName = scope.allocateOrGetName(func.sym)
-        val typeIdx = ctx.addType(
-          sym = N,
-          TypeInfo(id = N, func.funcType),
-        )
+        val typeIdx = ctx.addType(TypeInfo(sym = funcTySym, idPrefix = N, compType = func.funcType, objectTag = N))
         ctx.addFunctionImport(
           S(func.sym),
           WasmImport(
@@ -502,7 +498,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           ),
         )
         ctx.registerSingleton(singleton.blockSym, singleton.objectSym, SingletonInfo(globalName, singleton.globalTy))
-      case _: SessionClass => ()
+      case _: SessionClass =>
   end registerSessionImports
 
   /** Declares one top-level class method. */
@@ -533,19 +529,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   /** Gets (and caches) the exception tag used for MLX `throw`. */
   private def exnTagIdx(using Ctx, Raise, Scope): TagIdx =
-    val symNme = scope.allocateName(TempSymbol(N, "mlx_exn"))
+    val sym = TempSymbol(N, "mlx_exn")
     ctx.getOrCreateWasmIntrinsicTag(
       "mlx_exn",
       ctx.addTag(TagInfo(
         id = SymIdx("mlx_exn"),
-        typeUse = TypeUse(ctx.addType(
-          sym = N,
-          TypeInfo(
-            id = SymIdx(symNme),
-            FunctionType(params = Seq(WasmParam(SymIdx("ex"), RefType.anyref)), results = Seq.empty),
-            objectTag = S(ctx.getFreshObjectTag()),
-          ),
-        )),
+        typeUse = TypeUse(ctx.addType(TypeInfo(
+          sym,
+          idPrefix = N,
+          FunctionType(params = Seq(WasmParam(SymIdx("ex"), RefType.anyref)), results = Seq.empty),
+          objectTag = S(ctx.getFreshObjectTag()),
+        ))),
       )),
     )
 
@@ -586,18 +580,16 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       module = ExternIntrinsics.SystemModule,
       name = ExternIntrinsics.StringFromUtf16ImportName,
     ):
-      val importTyNme = scope.allocateName(TempSymbol(N, ExternIntrinsics.StringFromUtf16ImportName))
-      val importTy = ctx.addType(
-        sym = N,
-        TypeInfo(
-          id = SymIdx(importTyNme),
-          FunctionType(
-            params = Seq(WasmParam(SymIdx("glob_offset"), RefType.anyref), WasmParam(SymIdx("len"), RefType.anyref)),
-            results = Seq(Result(RefType.anyref)),
-          ),
-          objectTag = N,
+      val importTySym = TempSymbol(N, ExternIntrinsics.StringFromUtf16ImportName)
+      val importTy = ctx.addType(TypeInfo(
+        sym = importTySym,
+        idPrefix = N,
+        compType = FunctionType(
+          params = Seq(WasmParam(SymIdx("glob_offset"), RefType.anyref), WasmParam(SymIdx("len"), RefType.anyref)),
+          results = Seq(Result(RefType.anyref)),
         ),
-      )
+        objectTag = N,
+      ))
       WasmImport(
         module = ExternIntrinsics.SystemModule,
         name = ExternIntrinsics.StringFromUtf16ImportName,
@@ -614,14 +606,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ctx.getOrCreateWasmIntrinsicType(WasmIntrinsicType.TupleArray(mutable = mut)):
       val suffix = if mut then "Mut" else ""
       val sym = BlockMemberSymbol(s"TupleArray$suffix", Nil)
-      ctx.addType(
-        sym = S(sym),
-        TypeInfo(
-          sym,
-          ArrayType(elemType = RefType.anyref, mutable = mut),
-          objectTag = N,
-        ),
-      )
+      ctx.addType(TypeInfo(
+        sym,
+        idPrefix = N,
+        ArrayType(elemType = RefType.anyref, mutable = mut),
+        objectTag = N,
+      ))
 
   /** Allocates a fresh temp local (typed `anyref`) and returns its `LocalIdx`.
     */
@@ -1209,17 +1199,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     if binaryOps.contains(name) then Seq("lhs", "rhs") else Seq("arg")
 
   private def declareIntrinsicType(name: Str)(using Ctx, Raise, Scope): TypeIdx =
-    ctx.addType(
-      sym = N,
-      TypeInfo(
-        id = SymIdx(scope.allocateName(TempSymbol(N, name))),
-        FunctionType(
-          params = intrinsicParamSuffixes(name).map(nme => WasmParam(SymIdx(nme), RefType.anyref)),
-          results = Seq(Result(RefType.anyref)),
-        ),
-        objectTag = N,
+    ctx.addType(TypeInfo(
+      sym = TempSymbol(N, name),
+      idPrefix = N,
+      compType = FunctionType(
+        params = intrinsicParamSuffixes(name).map(nme => WasmParam(SymIdx(nme), RefType.anyref)),
+        results = Seq(Result(RefType.anyref)),
       ),
-    )
+      objectTag = N,
+    ))
 
   /** Creates a binary Int31 intrinsic with two parameters and body built from `op`.
     */
@@ -1503,9 +1491,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     val (bodyWat, fnCtx) = setupFunction(N, ps, result)
                     if sym.nameIsMeaningful then
                       val funcTy = ctx.addType(
-                        sym = N,
                         TypeInfo(
-                          id = SymIdx(scope.allocateName(TempSymbol(N, sym.nme))),
+                          sym,
+                          idPrefix = N,
                           FunctionType(
                             params = fnCtx.params.map(p => WasmParam(p._2, RefType.anyref)),
                             results = Seq.fill(bodyWat.resultTypes.length)(Result(RefType.anyref)),
@@ -1679,7 +1667,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     if summon[SessionExportCtx].shouldExport(clsLikeDefn.sym) then
                       summon[SessionExportCtx].emit(SessionClass(
                         sym = clsLikeDefn.sym,
-                        typeInfo = typeinfo,
+                        compType = typeinfo.compType,
+                        objectTag = typeinfo.objectTag,
                         runtimeTags = ctx.getAllRuntimeTags(clsLikeDefn.sym).getOrElse(LinkedHashSet(tagValue)),
                         aliasSyms = clsLikeDefn.isym match
                           case mos: ModuleOrObjectSymbol => mos :: Nil
@@ -2073,14 +2062,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       CompiledWasmModule(ctx.toWat, entryName, systemMemMinPages, sessionExportCtx.collectedBindings.toSeq)
 
     // Create base Object struct with tag field that all other structs will inherit
-    ctx.addType(
-      sym = S(baseObjectSym),
-      TypeInfo(
-        id = SymIdx("Object"),
-        StructType(Seq(tagFieldSym -> Field(I32Type, mutable = true, id = "$tag"))),
-        objectTag = S(ctx.getFreshObjectTag() ensuring (_ == 0)),
-      ),
-    )
+    ctx.addType(TypeInfo(
+      sym = baseObjectSym,
+      idPrefix = N,
+      StructType(Seq(tagFieldSym -> Field(I32Type, mutable = true, id = "$tag"))),
+      objectTag = S(ctx.getFreshObjectTag() ensuring (_ == 0)),
+    ))
 
     registerSessionImports(sessionImports)
 
@@ -2117,14 +2104,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       val entrySym = BlockMemberSymbol("entry", Nil)
       val entryNme = scope.allocateName(entrySym)
 
-      val entryFnTy = ctx.addType(
-        sym = N,
-        TypeInfo(
-          id = SymIdx(scope.allocateName(TempSymbol(N, entryNme))),
-          FunctionType(params = Seq.empty, results = Seq(Result(RefType.anyref))),
-          objectTag = N,
-        ),
-      )
+      val entryFnTy = ctx.addType(TypeInfo(
+        sym = TempSymbol(N, entryNme),
+        idPrefix = N,
+        FunctionType(params = Seq.empty, results = Seq(Result(RefType.anyref))),
+        objectTag = N,
+      ))
       val entryFnInfo = FuncInfo(
         id = SymIdx(entryNme),
         typeUse = TypeUse(entryFnTy),
@@ -2147,14 +2132,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
       val singletonInitActions = ctx.getSingletonInitActions
       if singletonInitActions.nonEmpty then
-        val initTy = ctx.addType(
-          sym = N,
-          TypeInfo(
-            id = SymIdx(scope.allocateName(TempSymbol(N, "start"))),
-            FunctionType(params = Seq.empty, results = Seq.empty),
-            objectTag = N,
-          ),
-        )
+        val initTy = ctx.addType(TypeInfo(
+          sym = TempSymbol(N, "start"),
+          idPrefix = N,
+          FunctionType(params = Seq.empty, results = Seq.empty),
+          objectTag = N,
+        ))
         val initBody = blockInstr(
           label = N,
           children = singletonInitActions.toSeq,

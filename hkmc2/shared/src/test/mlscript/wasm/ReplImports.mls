@@ -27,11 +27,11 @@ counter
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type $entry1 (func (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
 //│   (import "repl" "counter" (global $counter (mut (ref null any))))
 //│   (import "repl" "step" (global $step (mut (ref null any))))
-//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $tmp
@@ -56,9 +56,9 @@ unit
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $Unit (sub $Object (struct (field $$tag (mut i32)))))
-//│   (type $entry1 (func (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
 //│   (import "repl" "Unit$inst" (global $Unit (mut (ref null $Unit))))
-//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (global.get $Unit))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:

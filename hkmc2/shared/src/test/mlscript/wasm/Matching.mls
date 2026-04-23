@@ -50,7 +50,7 @@ if Bar(true) is
 //│   (type $Baz_init (func (param $this (ref null any)) (param $z (ref null any)) (result (ref null any))))
 //│   (type $Bar_ctor (func (param $y (ref null any)) (result (ref null any))))
 //│   (type $Baz_ctor (func (param $z (ref null any)) (result (ref null any))))
-//│   (type $entry1 (func (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
 //│   (func $Bar_init (type $Bar_init) (param $this (ref null any)) (param $y (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -103,7 +103,7 @@ if Bar(true) is
 //│           (local.get $z)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $scrut (ref null any))
 //│     (local $a (ref null any))
 //│     (local $b (ref null any))

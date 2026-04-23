@@ -1,5 +1,6 @@
 package hkmc2
-package codegen.wasm
+package codegen
+package wasm
 package text
 
 import mlscript.utils.*, shorthands.*
@@ -18,6 +19,11 @@ extension (doc: Document)
   ): Document =
     doc.optionUnless(_.isEmpty).fold(doc): doc =>
       doc"$prefix$doc$postfix"
+
+extension (scp: Scope)
+  /** Convenience function for [[Scope.allocateOrGetName]] with an optional prefix. */
+  private[text] def allocateOrGetNamePrefixed(sym: Local, idPrefix: Opt[Str])(using Raise): Str =
+    scp.allocateOrGetName(sym, idPrefix.fold("")(prefix => s"${prefix}_"))
 
 /** Trait indicating a WAT representation is available. */
 trait ToWat:

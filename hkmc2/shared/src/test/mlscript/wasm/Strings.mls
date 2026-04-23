@@ -20,12 +20,12 @@ let dup2 = "dup"
 //│   (type $mlx_str_from_utf16 (func (param $glob_offset (ref null any)) (param $len (ref null any)) (result (ref null any))))
 //│   (type $TupleArray (array (ref null any)))
 //│   (type $TupleArrayMut (array (mut (ref null any))))
-//│   (type $entry1 (func (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
 //│   (import "system" "mlx_str_from_utf16" (func $mlx_str_from_utf16 (type $mlx_str_from_utf16)))
 //│   (import "system" "mem" (memory $mem 1))
 //│   (global $dup1 (export "dup1") (mut (ref null any)) (ref.null any))
 //│   (global $dup2 (export "dup2") (mut (ref null any)) (ref.null any))
-//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $tuple (ref null any))
 //│     (block (result (ref null any))
@@ -91,10 +91,10 @@ if true then id(1) else s2
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $mlx_str_from_utf16 (func (param $glob_offset (ref null any)) (param $len (ref null any)) (result (ref null any))))
-//│   (type $entry1 (func (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
 //│   (import "system" "mlx_str_from_utf16" (func $mlx_str_from_utf16 (type $mlx_str_from_utf16)))
 //│   (import "system" "mem" (memory $mem 1))
-//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (call $mlx_str_from_utf16
 //│       (ref.i31
 //│         (i32.const 0))

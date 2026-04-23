@@ -45,7 +45,7 @@ object SessionBinding:
   *   The Wasm function type expected by the import.
   */
 final case class SessionFunc(
-    sym: Symbol,
+    sym: BlockMemberSymbol,
     moduleName: Str,
     exportName: Str,
     funcType: FunctionType,
@@ -87,8 +87,9 @@ final case class SessionGlobal(
   *   Additional symbols that should resolve to this class binding.
   */
 final case class SessionClass(
-    sym: BlockMemberSymbol,
-    typeInfo: TypeInfo,
+    sym: Symbol,
+    compType: CompType,
+    objectTag: Opt[Int],
     runtimeTags: LinkedHashSet[Int],
     aliasSyms: Seq[Local] = Nil,
 ) extends SessionBinding:
@@ -298,28 +299,25 @@ end MemInfo
   *
   * Each instance of [[TypeInfo]] represents a single type definition in a WebAssembly module.
   *
-  * @param id
-  *   Symbolic identifier for the type.
+  * @param sym
+  *   The source [[Symbol]] which this type is generated from.
+  * @param idPrefix
+  *   An optional prefix for the symbolic identifier of this type. If provided, the type name will be prepended with
+  *   `${idPrefix}_`.
   * @param compType
   *   The composite type this type definition represents.
   * @param objectTag
   *   An optional object tag number associated with this type.
   */
-class TypeInfo(val id: SymIdx, val compType: CompType, val objectTag: Opt[Int]) extends ToWat:
+final case class TypeInfo(
+    val sym: BlockMemberSymbol | TempSymbol,
+    val idPrefix: Opt[Str],
+    val compType: CompType,
+    val objectTag: Opt[Int],
+)(using Ctx, Raise) extends ToWat:
 
-  /** @param sym
-    *   The source [[BlockMemberSymbol]] which this type is generated from.
-    * @param compType
-    *   The composite type this type definition represents.
-    */
-  def this(sym: BlockMemberSymbol, compType: CompType, objectTag: Opt[Int])(using Raise, Scope) = this(
-    SymIdx(sym.optionIf(_.nameIsMeaningful).fold(summon[Scope].allocateName(sym))(_.nme)),
-    compType,
-    objectTag,
-  )
-
-  def this(id: Opt[SymIdx], compType: CompType)(using Raise, Scope, State) =
-    this(id.getOrElse(SymIdx(summon[Scope].allocateName(TempSymbol(N, "")))), compType, N)
+  /** Symbolic identifier for the type. */
+  val id = SymIdx(summon[Ctx].typeScp.allocateOrGetNamePrefixed(sym, idPrefix))
 
   def toWat: Document = doc"(type ${id.toWat} ${compType.toWat})"
 
@@ -450,7 +448,7 @@ class FunctionCtx(_params: Ls[ParamList], thisSym: Opt[InnerSymbol])(using Raise
           continueLabel = labels(label).continueLabel.map(cl => labels.last._2.scp.lookup_!(cl, N)),
         )
 end FunctionCtx
-  
+
 /** Generates a function body, providing an instance of [[FunctionCtx]] for parameter and locals tracking.
   *
   * Returns the result of the `mkBody` function along with the [[FunctionCtx]].
@@ -490,7 +488,7 @@ object Ctx:
   val wasmIntrinsicArities: Map[Str, Int] = (binaryOps.keys.map(_ -> 2) ++ unaryOps.keys.map(_ -> 1)).toMap
   val wasmIntrinsicNameSet: Set[Str] = wasmIntrinsicArities.keySet
 
-  def empty: Ctx = Ctx()
+  def empty(using State): Ctx = Ctx()
 
   def ctx(using ctx: Ctx): Ctx = ctx
 
@@ -501,9 +499,12 @@ object Ctx:
 end Ctx
 
 /** Context for [[WatBuilder]]. */
-class Ctx extends ToWat:
+class Ctx(using State) extends ToWat:
 
   import Ctx.prettyString
+
+  /** [[Scope]] for generating WAT identifiers of types. */
+  private[text] val typeScp = Scope.empty(Scope.Cfg.default)
 
   /** [[ListMap]] containing all type definitions in the module mapped by their symbolic identifiers. */
   private var types = ListMap.empty[SymIdx, TypeInfo]
@@ -574,11 +575,12 @@ class Ctx extends ToWat:
     tag
 
   /** Adds a type into this context. */
-  def addType(sym: Opt[BlockMemberSymbol], typeInfo: TypeInfo): TypeIdx =
+  def addType(typeInfo: TypeInfo): TypeIdx =
     val id = typeInfo.id
-    types = types + (id -> typeInfo)
-    sym.foreach:
-      namedTypes(_) = typeInfo
+    types += (id -> typeInfo)
+    typeInfo.sym match
+      case bms: BlockMemberSymbol => namedTypes(bms) = typeInfo
+      case _ =>
     TypeIdx(id)
 
   /** Returns the [[TypeIdx]] of the given `typeref`.

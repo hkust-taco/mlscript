@@ -57,15 +57,15 @@ foo() + foo()
 //│ Wat:
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type $foo1 (func (result (ref null any))))
+//│   (type $foo (func (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type $entry1 (func (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
-//│   (func $foo (export "foo") (type $foo1) (result (ref null any))
+//│   (func $foo (export "foo") (type $foo) (result (ref null any))
 //│     (return
 //│       (ref.i31
 //│         (i32.const 42))))
-//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $foo (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $tmp1 (ref null any))
@@ -117,7 +117,7 @@ class Foo(val a)
 //│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $a (mut (ref null any))))))
 //│   (type $Foo_init (func (param $this (ref null any)) (param $a (ref null any)) (result (ref null any))))
 //│   (type $Foo_ctor (func (param $a (ref null any)) (result (ref null any))))
-//│   (type $entry1 (func (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
 //│   (func $Foo_init (type $Foo_init) (param $this (ref null any)) (param $a (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -144,7 +144,7 @@ class Foo(val a)
 //│           (local.get $a)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -179,7 +179,7 @@ class Foo(val x) with
 //│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
 //│   (type $Foo_init (func (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))))
 //│   (type $Foo_ctor (func (param $x (ref null any)) (result (ref null any))))
-//│   (type $entry1 (func (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
 //│   (func $Foo_init (type $Foo_init) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -213,7 +213,7 @@ class Foo(val x) with
 //│           (local.get $x)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -243,10 +243,10 @@ O.y
 //│   (type $O (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
 //│   (type $O_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $O_ctor (func (result (ref null any))))
-//│   (type $entry1 (func (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
 //│   (type $start (func))
 //│   (global $O$inst (export "O$inst") (mut (ref null $O)) (ref.null $O))
-//│   (func $O_init1 (type $O_init) (param $this (ref null any)) (result (ref null any))
+//│   (func $O_init (type $O_init) (param $this (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
 //│       (block
@@ -265,7 +265,7 @@ O.y
 //│           (nop)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $O_ctor1 (type $O_ctor) (result (ref null any))
+//│   (func $O_ctor (type $O_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -275,26 +275,26 @@ O.y
 //│           (local.get $this))
 //│         (i32.const 1))
 //│       (drop
-//│         (call $O_init1
+//│         (call $O_init
 //│           (local.get $this)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $start1 (type $start)
+//│   (func $start (type $start)
 //│     (block
 //│       (global.set $O$inst
 //│         (ref.cast (ref null $O)
-//│           (call $O_ctor1)))))
-//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│           (call $O_ctor)))))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
 //│       (struct.get $O $y
 //│         (ref.cast (ref $O)
 //│           (global.get $O$inst)))))
-//│   (elem $O_init1 declare func $O_init1)
-//│   (elem $O_ctor1 declare func $O_ctor1)
-//│   (elem $start1 declare func $start1)
+//│   (elem $O_init declare func $O_init)
+//│   (elem $O_ctor declare func $O_ctor)
+//│   (elem $start declare func $start)
 //│   (elem $entry declare func $entry)
-//│   (start $start1))
+//│   (start $start))
 //│ Wasm result:
 //│ = 1
 
