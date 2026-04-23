@@ -46,10 +46,19 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   type Context = Ctx
 
+  /** Synthetic base struct symbol for shared runtime type information objects. */
   private val typeInfoBaseSym: BlockMemberSymbol = BlockMemberSymbol("TypeInfoBase", Nil)
+
+  /** Synthetic base struct symbol for all heap-allocated class instances. */
   private val baseObjectSym: BlockMemberSymbol = BlockMemberSymbol("Object", Nil)
+
+  /** Synthetic field symbol for the object-header pointer to a class's shared RTTI object. */
   private val typeInfoFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$typeinfo"))
+
+  /** Synthetic field symbol for the runtime class tag stored in RTTI. */
   private val tagFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$tag"))
+
+  /** Synthetic field symbol for the direct-parent RTTI link used by runtime subtype checks. */
   private val parentFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$parent"))
 
   private case class StringLitInfo(offset: Int, byteLen: Int, watBytes: Str)
@@ -59,23 +68,28 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private val typeInfoGlobals: LinkedHashMap[BlockMemberSymbol, GlobalIdx] = LinkedHashMap.empty
   private var nextStringDataOffset: Int = 0
 
+  /** Returns the Wasm type index of the synthetic base object header struct. */
   private def baseObjectTypeIdx(using Ctx): TypeIdx =
     ctx.getType_!(baseObjectSym)
 
+  /** Returns the Wasm type index of the synthetic base RTTI struct. */
   private def typeInfoBaseTypeIdx(using Ctx): TypeIdx =
     ctx.getType_!(typeInfoBaseSym)
 
+  /** Resolves the field index for a symbolic field inside a previously registered struct type. */
   private def structFieldIdx(typeSym: BlockMemberSymbol, fieldSym: TermSymbol)(using Ctx): FieldIdx =
     val fieldId = ctx.getTypeInfo_!(typeSym).compType match
       case struct: StructType => struct.fields.collectFirst:
         case (sym, field) if sym == fieldSym => field.id
     FieldIdx(SymIdx(fieldId.get))
 
+  /** Loads the shared RTTI global for `sym` when that class has one in the current compilation session. */
   private def getClassTypeInfoGlobal(sym: BlockMemberSymbol)(using Ctx): Opt[Expr] =
     typeInfoGlobals.get(sym).map: globalIdx =>
       val globalTy = ctx.getGlobalType_!(globalIdx).globalType.valType
       global.get(globalIdx, globalTy)
 
+  /** Reads the RTTI pointer stored in an object's common header. */
   private def readObjectTypeInfo(objRef: Expr)(using Ctx): Expr =
     struct.get(
       structFieldIdx(baseObjectSym, typeInfoFieldSym),
@@ -83,6 +97,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       RefType.anyref,
     )
 
+  /** Follows one direct-parent RTTI link from a shared class `typeinfo` object. */
   private def readTypeInfoParent(typeInfoRef: Expr)(using Ctx): Expr =
     struct.get(
       structFieldIdx(typeInfoBaseSym, parentFieldSym),
@@ -90,6 +105,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       RefType.anyref,
     )
 
+  /** Reads the runtime class tag from an object's shared RTTI. */
   private def readRuntimeTag(objRef: Expr)(using Ctx): Expr =
     val typeInfoRef = ref.cast(
       readObjectTypeInfo(objRef),
@@ -101,9 +117,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       I32Type,
     )
 
+  /** Builds the reference type for the synthetic base object header struct. */
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
 
+  /** Returns `1` when `scrutTypeInfo` is equal to or descends from `targetTypeInfo`, else `0`. */
   private def isSubtypeByTypeInfo(
       scrutTypeInfo: Expr,
       targetTypeInfo: Expr,
