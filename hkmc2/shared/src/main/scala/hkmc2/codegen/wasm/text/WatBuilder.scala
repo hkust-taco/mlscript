@@ -100,7 +100,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ctor = End(""),
       companion = N,
       bufferable = N,
-    )(N)
+    )(N, isStaged = false)
 
   /** Registers the synthetic `Unit` singleton. */
   private def RegisterUnitSingleton()(using Ctx, FunctionCtx, Raise, Scope, SessionExportCtx): Unit =

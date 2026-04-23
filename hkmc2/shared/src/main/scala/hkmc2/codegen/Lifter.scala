@@ -33,7 +33,7 @@ object Lifter:
     def gatherUsed: List[Defn] = l.collect:
       case l: Lazy[?] if !l.isEmpty => l.force_!
       case d: Defn => d
-    
+
   /**
     * Describes previously defined locals and definitions which could possibly be accessed or mutated by particular definition.
     * Here, a "previously defined" local or definition means it is accessible to the particular definition (which we call `d`), 
@@ -560,7 +560,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         case (acc, (_, _, vd)) => Define(vd, acc),
       N,
       N,
-    )(N)
+    )(N, isStaged = false)
     
     (defn, sortedVars.iterator.map(x => (x.ctorSyms.local, x.valDefn.tsym)).toList)
   
@@ -609,7 +609,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           case Some(_) => die 
           case None => N
         
-        k(newCls.copy(companion = newComp)(newCls.configOverride))
+        k(newCls.copy(companion = newComp)(newCls.configOverride, newCls.isStaged))
       case _ => super.applyDefn(defn)(k)
 
   /**
@@ -806,6 +806,11 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val captureArgs = capturesOrdered.map(c => ctx.capturesMap(c).asArg)
       val localArgs = passedSymsOrdered.map(l => ctx.symbolsMap(l).asArg)
       defnsArgs ::: captureArgs ::: localArgs
+
+    final lazy val liftedFromStagedModule: Bool =
+      node.allAncestors.exists:
+        case ScopeNode(ScopedObject.Companion(comp, _), _, _) => comp.isStaged
+        case _ => false
   
   /* MIXINS */
   
@@ -881,7 +886,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       val rewritten = rewriter.rewrite(obj.fun.body)
       val withCapture = addExtraSyms(rewritten)
-      LifterResult(obj.fun.copy(body = withCapture)(obj.fun.forceTailRec, obj.fun.configOverride, obj.fun.visibility), rewriter.extraDefns.toList)
+      LifterResult(obj.fun.copy(body = withCapture)(obj.fun.forceTailRec, obj.fun.configOverride, obj.fun.visibility, obj.fun.isStaged), rewriter.extraDefns.toList)
   
   class RewrittenClassCtor(override val obj: ScopedObject.ClassCtor)(using ctx: LifterCtxNew) extends RewrittenScope[Unit](obj):
     override lazy val capturePath: Path = lastWords("tried to create a capture class for a class ctor")
@@ -911,7 +916,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         preCtor = rewrittenPrector,
         privateFields = appendCaptureField(liftedObjsOrdered.map(liftedObjsSyms) ::: obj.cls.privateFields),
         methods = newMtds,
-      )(obj.cls.configOverride)
+      )(obj.cls.configOverride, obj.cls.isStaged)
       LifterResult(newCls, rewriterCtor.extraDefns.toList ::: rewriterPreCtor.extraDefns.toList ::: extras)
 
   class RewrittenCompanion(override val obj: ScopedObject.Companion)(using ctx: LifterCtxNew)
@@ -974,7 +979,11 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val rewriter = new BlockRewriter
       val newBod = rewriter.rewrite(fun.body)
       val withCapture = addExtraSyms(newBod)
-      val newDefn = fun.copy(owner = N, sym = mainSym, dSym = mainDsym, params = newPlists, body = withCapture)(fun.forceTailRec, fun.configOverride, fun.visibility)
+      val newDefn = fun.copy(owner = N, sym = mainSym, dSym = mainDsym, params = newPlists, body = withCapture)(
+        fun.forceTailRec,
+        fun.configOverride,
+        fun.visibility,
+        fun.isStaged || liftedFromStagedModule)
       LifterResult(newDefn, rewriter.extraDefns.toList)
     
     // Definition with the auxiliary parameters merged into the second parameter list.
@@ -1004,7 +1013,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         auxDsym,
         newPlists,
         bod
-      )(false, N, fun.visibility)
+      )(false, N, fun.visibility, isStaged = false)
     
     private val aux = Lazy[Defn](mkAuxDefn)
     
@@ -1130,7 +1139,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         if clsIsParamless then auxParamList :: Nil
         else auxParamList :: main :: Nil
       
-      FunDefn(N, flattenedSym, flattenedDSym, paramLists, bod)(false, N, Visibility.Public)
+      FunDefn(N, flattenedSym, flattenedDSym, paramLists, bod)(false, N, Visibility.Public, isStaged = false)
     
     private val flat = Lazy[Defn](mkFlattenedDefn)
     
@@ -1218,7 +1227,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         privateFields = appendCaptureField(extraPrivSyms ::: obj.cls.privateFields),
         methods = newMtds,
         auxParams = newAuxList
-      )(obj.cls.configOverride)
+      )(obj.cls.configOverride, obj.cls.isStaged || liftedFromStagedModule)
       val extrasDefns = rewriterCtor.extraDefns.toList ::: rewriterPreCtor.extraDefns.toList ::: extras
       LifterResult(newCls, flat :: extrasDefns)
   

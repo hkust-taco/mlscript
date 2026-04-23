@@ -234,7 +234,7 @@ sealed abstract class Block extends Product:
           val newBody = d.body.flattened
           if newBody is d.body
           then d
-          else d.copy(body = newBody)(forceTailRec = d.forceTailRec, configOverride = d.configOverride, visibility = d.visibility)
+          else d.copy(body = newBody)(forceTailRec = d.forceTailRec, configOverride = d.configOverride, visibility = d.visibility, isStaged = d.isStaged)
         case v: ValDefn => v
         case c: ClsLikeDefn =>
           val newPreCtor = c.preCtor.flattened
@@ -242,7 +242,7 @@ sealed abstract class Block extends Product:
           def flattenMethods(ms: List[FunDefn]) = ms.mapConserve:
             case f@FunDefn(owner, sym, dSym, params, body) =>
               val newBody = body.flattened
-              if newBody is body then f else f.copy(body = newBody)(forceTailRec = f.forceTailRec, configOverride = f.configOverride, visibility = f.visibility)
+              if newBody is body then f else f.copy(body = newBody)(forceTailRec = f.forceTailRec, configOverride = f.configOverride, visibility = f.visibility, isStaged = f.isStaged)
           val newMethods = flattenMethods(c.methods)
           val newCompanion = c.companion.mapConserve: c =>
             val newCtor = c.ctor.flattened
@@ -259,7 +259,7 @@ sealed abstract class Block extends Product:
             ctor = newCtor,
             methods = newMethods,
             companion = newCompanion,
-          )(c.configOverride)
+          )(c.configOverride, c.isStaged)
       
       val newRest = rest.flatten(k)
       if (newDefn is defn) && (newRest is rest)
@@ -450,14 +450,14 @@ object HandleBlock:
   )(using Elaborator.State, Elaborator.Ctx) =
     val sym = new BlockMemberSymbol("handleBlock$", Nil, false)
 
-    val bodyDefn = FunDefn.withFreshSymbol(N, sym, PlainParamList(Nil) :: Nil, body)(false, N, Visibility.Public)
+    val bodyDefn = FunDefn.withFreshSymbol(N, sym, PlainParamList(Nil) :: Nil, body)(false, N, Visibility.Public, isStaged = false)
     
     val handlerMtds = handlers.map: handler =>
       val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
       val fDef = FunDefn.withFreshSymbol(
         N, sym, PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil) :: Nil,
         handler.body
-        )(false, N, Visibility.Public)
+        )(false, N, Visibility.Public, isStaged = false)
       val rSym = TempSymbol(N, "suspendRes")
       FunDefn.withFreshSymbol(
         S(cls),
@@ -465,7 +465,7 @@ object HandleBlock:
         handler.params,
         Scoped(Set(sym, rSym), Define(
           fDef,
-          Return(suspend(cls.asPath, Value.Ref(sym, S(fDef.dSym))), false))))(false, N, Visibility.Public)
+          Return(suspend(cls.asPath, Value.Ref(sym, S(fDef.dSym))), false))))(false, N, Visibility.Public, isStaged = false)
 
     val clsDefn = ClsLikeDefn(
       N, // no owner
@@ -480,7 +480,7 @@ object HandleBlock:
       End(),
       N,
       N,
-    )(N)
+    )(N, isStaged = false)
 
     blockBuilder
       .scopedVars(Set(clsDefn.sym, sym))
@@ -509,6 +509,7 @@ object HandleBlock:
 sealed abstract class Defn:
   val innerSym: Opt[MemberSymbol]
   val sym: BlockMemberSymbol
+  val isStaged: Bool
   def isOwned: Bool = owner.isDefined
   def owner: Opt[InnerSymbol]
   
@@ -565,14 +566,15 @@ final case class FunDefn(
     val forceTailRec: Bool,
     val configOverride: Opt[Config],
     val visibility: Visibility,
+    val isStaged: Bool,
 ) extends Defn:
   val innerSym = N
   val asPath = Value.Ref(sym, S(dSym))
 object FunDefn:
-  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(forceTailRec: Bool, configOverride: Opt[Config], visibility: Visibility)(using State) =
+  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(forceTailRec: Bool, configOverride: Opt[Config], visibility: Visibility, isStaged: Bool)(using State) =
     val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
     sym.tsym = S(tSym)
-    FunDefn(owner, sym, tSym, params, body)(forceTailRec, configOverride, visibility)
+    FunDefn(owner, sym, tSym, params, body)(forceTailRec, configOverride, visibility, isStaged)
 
 final case class ValDefn(
     tsym: TermSymbol,
@@ -583,6 +585,7 @@ final case class ValDefn(
 ) extends Defn:
   val innerSym = S(tsym)
   val owner: Opt[InnerSymbol] = tsym.owner
+  val isStaged: Bool = false
 
 
 object ValDefn:
@@ -649,6 +652,7 @@ final case class ClsLikeDefn(
     bufferable: Option[Bool],
 )(
     val configOverride: Opt[Config],
+    val isStaged: Bool,
 ) extends Defn:
   require(k isnt syntax.Mod)
   val innerSym = S(isym.asMemSym)
@@ -661,6 +665,7 @@ final case class ClsLikeBody(
     privateFields: Ls[TermSymbol],
     publicFields: Ls[BlockMemberSymbol -> TermSymbol],
     ctor: Block,
+    isStaged: Bool,
 ):
   def subBlocks: Ls[Block] =
     ctor :: methods.flatMap(_.subBlocks)

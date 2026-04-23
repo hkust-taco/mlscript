@@ -343,18 +343,18 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
     // TODO: remove it. only for test
     val debug = (k: Block) => call(sym, Nil)(fnPrintCode(_)(k))
-    val newFun = f.copy(sym = genSym, dSym = dSym, params = Ls(PlainParamList(Nil)), body = newBody)(false, f.configOverride, f.visibility)
+    val newFun = f.copy(sym = genSym, dSym = dSym, params = Ls(PlainParamList(Nil)), body = newBody)(false, f.configOverride, f.visibility, false)
     (newFun, debug)
 
   override def applyBlock(b: Block): Block = super.applyBlock(b) match
     // find modules with staged annotation
-    case Define(c: ClsLikeDefn, rest) if c.companion.exists(_.isym.defn.exists(_.hasStagedModifier.isDefined)) =>
+    case Define(c: ClsLikeDefn, rest) if c.companion.exists(_.isStaged) =>
       val sym = c.sym.subst
       val companion = c.companion.get
       val (stagedMethods, debugPrintCode) = companion.methods
         .map(applyFunDefnInner)
         .unzip
-      val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(PlainParamList(Nil)), companion.ctor)(false, N, Visibility.Public)
+      val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(PlainParamList(Nil)), companion.ctor)(false, N, Visibility.Public, false)
       val (stagedCtor, ctorPrint) = applyFunDefnInner(ctor)
 
       val unit = State.runtimeSymbol.asPath.selSN("Unit")
@@ -368,7 +368,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
             val (stagedMethods, debugPrintCode) = c.methods
               .map(applyFunDefnInner)
               .unzip
-            val newModule = c.copy(methods = c.methods ++ stagedMethods)(c.configOverride)
+            val newModule = c.copy(methods = c.methods ++ stagedMethods)(c.configOverride, false)
             Define(newModule, rest)
           case b => b
       val newCtor = genCls.applyBlock(companion.ctor)
@@ -376,7 +376,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
         methods = stagedCtor :: companion.methods ++ stagedMethods,
         ctor = Begin(newCtor, debugCont(End())),
       )
-      val newModule = c.copy(sym = sym, companion = S(newCompanion))(c.configOverride)
+      val newModule = c.copy(sym = sym, companion = S(newCompanion))(c.configOverride, false)
       Define(newModule, rest)
     case b => b
 
