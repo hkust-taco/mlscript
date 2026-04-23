@@ -323,6 +323,14 @@ object Instructions:
       resultType = S(I32Type),
     )
 
+    /** Creates a `ref.eq` instruction. */
+    def eq(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
+      mnemonic = "ref.eq",
+      instrargs = Seq.empty,
+      stackargs = Seq(lhs, rhs),
+      resultType = S(I32Type),
+    )
+
     /** Creates a `ref.func` instruction. */
     def func(idx: FuncIdx, ty: RefType): FoldedInstr = FoldedInstr(
       mnemonic = "ref.func",

@@ -9,7 +9,7 @@ let topB = 2
 topA + topB
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
@@ -41,7 +41,7 @@ fun chain(x) =
 chain(1)
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $chain1 (func (param $x (ref null any)) (result (ref null any))))
@@ -131,9 +131,9 @@ class Foo(val a, val b)
 (new Foo(42, 1)).Foo#a
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
-//│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)))))
+//│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
 //│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $a (mut (ref null any))) (field $b (mut (ref null any))))))
 //│   (type $Foo_init (func (param $this (ref null any)) (param $a (ref null any)) (param $b (ref null any)) (result (ref null any))))
 //│   (type $Foo_ctor (func (param $a (ref null any)) (param $b (ref null any)) (result (ref null any))))
@@ -179,7 +179,11 @@ class Foo(val a, val b)
 //│       (struct.set $Foo_typeinfo $$tag
 //│         (ref.cast (ref $Foo_typeinfo)
 //│           (global.get $Foo_typeinfo))
-//│         (i32.const 1))))
+//│         (i32.const 1))
+//│       (struct.set $Foo_typeinfo $$parent
+//│         (ref.cast (ref $Foo_typeinfo)
+//│           (global.get $Foo_typeinfo))
+//│         (ref.null $TypeInfoBase))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null any))

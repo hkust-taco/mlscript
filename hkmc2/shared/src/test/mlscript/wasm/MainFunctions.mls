@@ -30,7 +30,7 @@ let x = 2
 throw x
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
 //│   (type $mlx_exn (func (param $ex (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))

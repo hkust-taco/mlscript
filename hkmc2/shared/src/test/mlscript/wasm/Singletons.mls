@@ -11,10 +11,10 @@ object Bar with
 Bar.y
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
-//│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)))))
-//│   (type $Bar_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)))))
+//│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $Bar_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
 //│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $x (mut (ref null any))))))
 //│   (type $Bar (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $y (mut (ref null any))))))
 //│   (type $Foo_init (func (param $this (ref null any)) (result (ref null any))))
@@ -87,12 +87,20 @@ Bar.y
 //│         (ref.cast (ref $Foo_typeinfo)
 //│           (global.get $Foo_typeinfo))
 //│         (i32.const 1))
+//│       (struct.set $Foo_typeinfo $$parent
+//│         (ref.cast (ref $Foo_typeinfo)
+//│           (global.get $Foo_typeinfo))
+//│         (ref.null $TypeInfoBase))
 //│       (global.set $Bar_typeinfo
 //│         (struct.new_default $Bar_typeinfo))
 //│       (struct.set $Bar_typeinfo $$tag
 //│         (ref.cast (ref $Bar_typeinfo)
 //│           (global.get $Bar_typeinfo))
 //│         (i32.const 2))
+//│       (struct.set $Bar_typeinfo $$parent
+//│         (ref.cast (ref $Bar_typeinfo)
+//│           (global.get $Bar_typeinfo))
+//│         (ref.null $TypeInfoBase))
 //│       (global.set $Foo$inst
 //│         (ref.cast (ref null $Foo)
 //│           (call $Foo_ctor1)))

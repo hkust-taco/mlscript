@@ -50,6 +50,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private val baseObjectSym: BlockMemberSymbol = BlockMemberSymbol("Object", Nil)
   private val typeInfoFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$typeinfo"))
   private val tagFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$tag"))
+  private val parentFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$parent"))
 
   private case class StringLitInfo(offset: Int, byteLen: Int, watBytes: Str)
   private val stringLits: LinkedHashMap[Str, StringLitInfo] = LinkedHashMap.empty
@@ -64,40 +65,100 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def typeInfoBaseTypeIdx(using Ctx): TypeIdx =
     ctx.getType_!(typeInfoBaseSym)
 
-  private def baseObjectStruct(using Ctx): StructType =
-    ctx.getTypeInfo_!(baseObjectSym).compType match
-      case struct: StructType => struct
-      case other => lastWords(s"Base Object type must be a struct, found ${other.toWat.mkString()}")
-
-  private def baseObjectTypeInfoFieldIdx(using Ctx): FieldIdx =
-    val fieldId = baseObjectStruct.fields.collectFirst:
-      case (sym, field) if sym == typeInfoFieldSym => field.id
-    FieldIdx(SymIdx(fieldId.get))
-
-  private def typeInfoBaseTagFieldIdx(using Ctx): FieldIdx =
-    val fieldId = ctx.getTypeInfo_!(typeInfoBaseSym).compType match
+  private def structFieldIdx(typeSym: BlockMemberSymbol, fieldSym: TermSymbol)(using Ctx): FieldIdx =
+    val fieldId = ctx.getTypeInfo_!(typeSym).compType match
       case struct: StructType => struct.fields.collectFirst:
-        case (sym, field) if sym == tagFieldSym => field.id
+        case (sym, field) if sym == fieldSym => field.id
     FieldIdx(SymIdx(fieldId.get))
+
+  private def getClassTypeInfoGlobal(sym: BlockMemberSymbol)(using Ctx): Opt[Expr] =
+    typeInfoGlobals.get(sym).map: globalIdx =>
+      val globalTy = ctx.getGlobalType_!(globalIdx).globalType.valType
+      global.get(globalIdx, globalTy)
+
+  private def readObjectTypeInfo(objRef: Expr)(using Ctx): Expr =
+    struct.get(
+      structFieldIdx(baseObjectSym, typeInfoFieldSym),
+      ref.cast(objRef, baseObjectRefType(nullable = false)),
+      RefType.anyref,
+    )
+
+  private def readTypeInfoParent(typeInfoRef: Expr)(using Ctx): Expr =
+    struct.get(
+      structFieldIdx(typeInfoBaseSym, parentFieldSym),
+      ref.cast(typeInfoRef, RefType(typeInfoBaseTypeIdx, nullable = false)),
+      RefType.anyref,
+    )
 
   private def readRuntimeTag(objRef: Expr)(using Ctx): Expr =
-    val objectRef = ref.cast(objRef, baseObjectRefType(nullable = false))
     val typeInfoRef = ref.cast(
-      struct.get(
-        baseObjectTypeInfoFieldIdx,
-        objectRef,
-        RefType.anyref,
-      ),
+      readObjectTypeInfo(objRef),
       RefType(typeInfoBaseTypeIdx, nullable = false),
     )
     struct.get(
-      typeInfoBaseTagFieldIdx,
+      structFieldIdx(typeInfoBaseSym, tagFieldSym),
       typeInfoRef,
       I32Type,
     )
 
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
+
+  private def isSubtypeByTypeInfo(
+      scrutTypeInfo: Expr,
+      targetTypeInfo: Expr,
+  )(using Ctx, FunctionCtx, Raise, Scope): Expr =
+    val currentTmp = mkTempLocal("currentTypeInfo")
+    val targetTmp = mkTempLocal("targetTypeInfo")
+    val resultTmp = mkTempLocal("typeInfoMatch")
+    val endLabel = scope.allocateName(TempSymbol(N, "typeInfoEnd"))
+    val loopLabel = scope.allocateName(TempSymbol(N, "typeInfoLoop"))
+    blockInstr(
+      label = N,
+      children = Seq(
+        local.set(currentTmp, scrutTypeInfo),
+        local.set(targetTmp, targetTypeInfo),
+        local.set(resultTmp, ref.i31(i32.const(0))),
+        blockInstr(
+          label = S(endLabel),
+          children = Seq(
+            loopInstr(
+              label = S(loopLabel),
+              children = Seq(
+                `if`(
+                  condition = ref.is_null(getLocalAnyref(currentTmp)),
+                  ifTrue = br(endLabel),
+                  ifFalse = N,
+                  resultTypes = Seq.empty,
+                ),
+                `if`(
+                  condition = ref.eq(
+                    ref.cast(getLocalAnyref(currentTmp), RefType(HeapType.Eq, nullable = true)),
+                    ref.cast(getLocalAnyref(targetTmp), RefType(HeapType.Eq, nullable = true)),
+                  ),
+                  ifTrue = blockInstr(
+                    label = N,
+                    children = Seq(
+                      local.set(resultTmp, ref.i31(i32.const(1))),
+                      br(endLabel),
+                    ),
+                    resultTypes = Seq.empty,
+                  ),
+                  ifFalse = N,
+                  resultTypes = Seq.empty,
+                ),
+                local.set(currentTmp, readTypeInfoParent(getLocalAnyref(currentTmp))),
+                br(loopLabel),
+              ),
+              resultTypes = Seq.empty,
+            ),
+          ),
+          resultTypes = Seq.empty,
+        ),
+        i31.get(ref.cast(getLocalAnyref(resultTmp), RefType.i31ref), signed = true),
+      ),
+      resultTypes = Seq(Result(I32Type)),
+    )
 
   /** True if this top-level class can be declared as a Wasm struct type. */
   private def isSupportedTopLevelClass(defn: ClsLikeDefn): Bool =
@@ -677,6 +738,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       RefType(typeInfoTypeIdx, nullable = false),
     )
     val tagValue = ctx.getTypeInfo_!(defn.sym).objectTag.get
+    val parentTypeInfo =
+      if defn.parentPath.isEmpty then ref.`null`(typeInfoBaseTypeIdx)
+      else getClassTypeInfoGlobal(resolveParentSym(defn).get).get
     val virtualMethods = ctx.getVirtualTable(defn.sym).fold(Nil)(_.virtualMethods)
     val initActions = Seq(
       global.set(typeInfoGlobalIdx, struct.new_default(typeInfoTypeIdx)),
@@ -684,6 +748,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         FieldIdx(SymIdx(tagFieldSym.nme)),
         typeInfoRef,
         i32.const(tagValue),
+      ),
+      struct.set(
+        structFieldIdx(typeInfoBaseSym, parentFieldSym),
+        typeInfoRef,
+        parentTypeInfo,
       ),
     ) ++ virtualMethods.zipWithIndex.map { (methodSym, slot) =>
       struct.set(
@@ -1138,7 +1207,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         val receiverRef = local.get(receiverTmp, RefType.anyref)
         val ownerTypeInfoRef = ref.cast(
           struct.get(
-            baseObjectTypeInfoFieldIdx,
+            structFieldIdx(baseObjectSym, typeInfoFieldSym),
             ref.cast(receiverRef, baseObjectRefType(nullable = false)),
             RefType.anyref,
           ),
@@ -1847,7 +1916,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         Seq(
                           local.set(thisVar, struct.new_default(typeref)),
                           struct.set(
-                            baseObjectTypeInfoFieldIdx,
+                            structFieldIdx(baseObjectSym, typeInfoFieldSym),
                             ref.cast(
                               local.get(thisVar, RefType.anyref),
                               RefType(typeref, nullable = false),
@@ -2137,38 +2206,31 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         Ls(msg"Could not resolve BlockMemberSymbol for class pattern" -> cls.toLoc),
                         extraInfo = S(s"ClassLikeSymbol: ${cls.toString}"),
                       ))
-                    val clsTypeIdx = ctx.getType_!(clsBlkMemberSym)
-                    val typeinfo = ctx.getTypeInfo_!(clsTypeIdx)
-
-                    val expectedTag = typeinfo.objectTag getOrElse:
-                      lastWords(s"Expected class $clsBlkMemberSym to have an object tag")
-
-                    // TODO (https://github.com/orgs/hkust-taco/projects/14/views/1?pane=issue&itemId=174476970):
-                    // replace with RTTI ancestry checks once each object carries runtime type information.
-                    val matchTags = ctx.getAllRuntimeTags(clsBlkMemberSym).getOrElse(LinkedHashSet(expectedTag))
-
                     val scrutExpr = getScrutExpr
                     val isStructCompatible = ref.test(scrutExpr, baseObjectRefType(nullable = true))
+                    val classMatchExpr = getClassTypeInfoGlobal(clsBlkMemberSym) match
+                      case S(targetRtti) =>
+                        val scrutRtti = readObjectTypeInfo(scrutExpr)
+                        isSubtypeByTypeInfo(scrutRtti, targetRtti)
+                      case N =>
+                        val expectedTag = ctx.getTypeInfo_!(ctx.getType_!(clsBlkMemberSym)).objectTag getOrElse:
+                          lastWords(s"Expected class $clsBlkMemberSym to have an object tag")
+                        val matchTags = ctx.getAllRuntimeTags(clsBlkMemberSym).getOrElse(LinkedHashSet(expectedTag))
+                        val scrutTag = readRuntimeTag(scrutExpr)
+                        matchTags.iterator
+                          .map(tag => i32.eq(scrutTag, i32.const(tag)))
+                          .reduceLeftOption(i32.or)
+                          .getOrElse(i32.const(0))
 
                     val bodyExpr = returningTerm(body)
                     val armBodyExpr = lowerMatchBody(bodyExpr)
-
-                    // Safe to cast and extract tag since ref.test passed
-                    val scrutTag = readRuntimeTag(scrutExpr)
-                    val tagMatches = matchTags.toList match
-                      case tag :: Nil => i32.eq(scrutTag, i32.const(tag))
-                      case tag :: rest =>
-                        rest.foldLeft[Expr](i32.eq(scrutTag, i32.const(tag))): (acc, candidateTag) =>
-                          i32.or(acc, i32.eq(scrutTag, i32.const(candidateTag)))
-                      case Nil =>
-                        lastWords(s"Expected class $clsBlkMemberSym to have at least one accepted runtime tag")
 
                     funcCtx.withLabel(LabelSymbol(N, "arm"), hasContinueLabel = false):
                       case LabelTarget(armLabel, _) =>
                         S(`if`(
                           condition = isStructCompatible,
                           ifTrue = `if`(
-                            condition = tagMatches,
+                            condition = classMatchExpr,
                             ifTrue = blockInstr(
                               label = S(armLabel),
                               children = Seq(armBodyExpr, br(matchLabel)),
@@ -2316,7 +2378,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       sym = S(typeInfoBaseSym),
       TypeInfo(
         id = SymIdx("TypeInfoBase"),
-        StructType(Seq(tagFieldSym -> Field(I32Type, mutable = true, id = "$tag"))),
+        StructType(Seq(
+          tagFieldSym -> Field(I32Type, mutable = true, id = "$tag"),
+          parentFieldSym -> Field(RefType.anyref, mutable = true, id = "$parent"),
+        )),
         objectTag = N,
       ),
     )
