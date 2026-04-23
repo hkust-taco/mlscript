@@ -154,22 +154,22 @@ class MLsCompiler
 
   /** Compiles a module to JavaScript and writes the `.mjs` file. */
   private def emitJs(
-      file: io.Path,
+      module: ModuleInfo,
       wd: io.Path,
       program: codegen.Program,
-      exportedSymbol: Opt[BlockMemberSymbol],
   )(using Raise, Elaborator.State, Elaborator.Ctx): Unit =
-    val jsb = ltl.givenIn:
-      codegen.js.JSBuilder()
-    val baseScp: utils.Scope =
-      utils.Scope.empty(utils.Scope.Cfg.default)
-    // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.
-    // * Having `module id"import" with ...` in `prelude.mls` will generate `globalThis.import` that is undefined.
-    baseScp.addToBindings(Elaborator.State.importSymbol, "import", shadow = false)
-    val nestedScp = baseScp.nest
-    val je = nestedScp.givenIn:
-      jsb.program(program, exportedSymbol, wd)
-    cctx.fs.write(file.up / io.RelPath(s"${file.baseName}.mjs"), je.stripBreaks.mkString(100))
+    module.effectiveCfg.givenIn:
+      val jsb = ltl.givenIn:
+        codegen.js.JSBuilder()
+      val baseScp: utils.Scope =
+        utils.Scope.empty(utils.Scope.Cfg.default)
+      // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.
+      // * Having `module id"import" with ...` in `prelude.mls` will generate `globalThis.import` that is undefined.
+      baseScp.addToBindings(Elaborator.State.importSymbol, "import", shadow = false)
+      val nestedScp = baseScp.nest
+      val je = nestedScp.givenIn:
+        jsb.program(program, module.exportedSymbol, wd)
+      cctx.fs.write(module.file.up / io.RelPath(s"${module.file.baseName}.mjs"), je.stripBreaks.mkString(100))
 
   /** Generates JavaScript glue code for instantiating and importing a Wasm module. */
   private def wasmGlue(
@@ -374,7 +374,7 @@ class MLsCompiler
       module.effectiveCfg.target match
         case CompilationTarget.JS =>
           given Raise = mkRaise(file)
-          emitJs(file, wd, lowerModule(module), module.exportedSymbol)
+          emitJs(module, wd, lowerModule(module))
         case CompilationTarget.Wasm =>
           emitWasm(module, newCtx, mutable.Map.empty)
 

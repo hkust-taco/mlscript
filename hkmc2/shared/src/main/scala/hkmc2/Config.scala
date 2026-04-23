@@ -113,6 +113,14 @@ object Config:
   
   case class Inliner(inlineThreshold: Int)
 
+  def extractConfigFromStats(prgm: semantics.Term.Blk)(using Config) =
+    // Extract cumulative config modifications from SetConfig statements
+    val configModify = prgm.stats.collect:
+      case sc: semantics.SetConfig => sc.modify
+    .foldLeft(identity[Config]): (acc, modify) =>
+      cfg => modify(acc(cfg))
+    configModify(config)
+
 end Config
 
 
