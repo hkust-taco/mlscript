@@ -12,7 +12,7 @@ import mlscript.utils.*, shorthands.*
 import semantics.*
 import semantics.Elaborator.{State, Ctx, ctx}
 
-import syntax.{Literal, Tree}
+import syntax.{Keyword, Literal, Tree}
 
 // it should be possible to cache some common constructions (End, Option) into the context
 // this avoids having to rebuild the same shapes everytime they are needed
@@ -343,7 +343,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
     // TODO: remove it. only for test
     val debug = (k: Block) => call(sym, Nil)(fnPrintCode(_)(k))
-    val newFun = f.copy(sym = genSym, dSym = dSym, params = Ls(PlainParamList(Nil)), body = newBody)(false, f.configOverride, f.visibility, false)
+    val newFun = f.copy(sym = genSym, dSym = dSym, params = Ls(PlainParamList(Nil)), body = newBody)(false, f.configOverride, f.annotations)
     (newFun, debug)
 
   override def applyBlock(b: Block): Block = super.applyBlock(b) match
@@ -354,7 +354,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
       val (stagedMethods, debugPrintCode) = companion.methods
         .map(applyFunDefnInner)
         .unzip
-      val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(PlainParamList(Nil)), companion.ctor)(false, N, Visibility.Public, false)
+      val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(PlainParamList(Nil)), companion.ctor)(false, N, Nil)
       val (stagedCtor, ctorPrint) = applyFunDefnInner(ctor)
 
       val unit = State.runtimeSymbol.asPath.selSN("Unit")
@@ -368,7 +368,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
             val (stagedMethods, debugPrintCode) = c.methods
               .map(applyFunDefnInner)
               .unzip
-            val newModule = c.copy(methods = c.methods ++ stagedMethods)(c.configOverride, false)
+            val newModule = c.copy(methods = c.methods ++ stagedMethods)(c.configOverride, Nil)
             Define(newModule, rest)
           case b => b
       val newCtor = genCls.applyBlock(companion.ctor)
@@ -376,7 +376,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
         methods = stagedCtor :: companion.methods ++ stagedMethods,
         ctor = Begin(newCtor, debugCont(End())),
       )
-      val newModule = c.copy(sym = sym, companion = S(newCompanion))(c.configOverride, false)
+      val newModule = c.copy(sym = sym, companion = S(newCompanion))(c.configOverride, Nil)
       Define(newModule, rest)
     case b => b
 
