@@ -248,7 +248,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme))
               val cfgOverride = td.extraAnnotations.collectFirst:
                 case Annot.Config(modify) => modify(config)
-              Define(FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(td.extraAnnotations.contains(Annot.TailRec), cfgOverride, td.annotations),
+              Define(FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(cfgOverride, td.annotations),
                 blockImpl(stats, res))
             case syntax.Ins =>
               // Implicit instances are not parameterized for now.
@@ -326,7 +326,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                 case (sym, params, split) =>
                   val paramLists = params :: Nil
                   val bodyBlock = inScopedBlock(ucs.Normalization(this)(split)(Ret))
-                  FunDefn.withFreshSymbol(N, sym, paramLists, bodyBlock)(forceTailRec = false, configOverride = N, annotations = Nil)
+                  FunDefn.withFreshSymbol(N, sym, paramLists, bodyBlock)(configOverride = N, annotations = Nil)
               // The return type is intended to be consistent with `gatherMembers`
               (mtds, Nil, Nil, End())
             case _ => gatherMembers(defn.body)
@@ -705,7 +705,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       else
         val lamSym = new BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
-        val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyBlock)(forceTailRec = false, configOverride = N, annotations = Nil)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyBlock)(configOverride = N, annotations = Nil)
         Define(
           lamDef,
           k(lamDef.asPath))
@@ -983,7 +983,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           reportAnnotations(td, td.extraAnnotations)
           val cfgOverride = td.extraAnnotations.collectFirst:
             case Annot.Config(modify) => modify(config)
-          FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(td.extraAnnotations.contains(Annot.TailRec), cfgOverride, td.annotations)
+          FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(cfgOverride, td.annotations)
     val publicFlds = clsBody.publicFlds.map(f => f.sym -> f.tsym)
     val privateFlds = clsBody.nonMethods.collect:
       case decl @ LetDecl(sym: TermSymbol, annotations) =>
@@ -1061,7 +1061,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case Lambda(params, body) =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
-        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(forceTailRec = false, configOverride = N, annotations = Nil)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(configOverride = N, annotations = Nil)
         Define(lamDef, k(lamDef.asPath))
       case r =>
         val l = loweringCtx.registerTempSymbol(N)

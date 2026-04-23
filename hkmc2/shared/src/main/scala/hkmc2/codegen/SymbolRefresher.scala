@@ -106,9 +106,9 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
       val body2 = applyFunBodyLikeBlock(fun.body)
       for s <- oldParamSyms do mapping.remove(s)
       if newlyCreated then
-        Scoped(Set.single(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride, fun.annotations)))
+        Scoped(Set.single(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.configOverride, fun.annotations)))
       else
-        k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride, fun.annotations))
+        k(FunDefn(N, sym2, dSym2, params2, body2)(fun.configOverride, fun.annotations))
     case defn @ ValDefn(tsym, sym, rhs) =>
       val (tsym2, sym2) = mapping.get(sym) match
         case None =>
@@ -266,7 +266,7 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
         ParamList(pl.flags, pl.params.map(handleParam), pl.restParam.map(handleParam))
       val newBody = applyFunBodyLikeBlock(m.body)
       methodParamOlds.foreach(mapping.remove)
-      FunDefn(S(newIsym), newMsym, newDsym, newParams, newBody)(m.forceTailRec, m.configOverride, m.annotations)
+      FunDefn(S(newIsym), newMsym, newDsym, newParams, newBody)(m.configOverride, m.annotations)
   
   override def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
     val hd = toRemoveSymbols.head

@@ -26,7 +26,7 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
     )
     val defSym = new BlockMemberSymbol("Function$", Nil, false)
     val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), params :: Nil,
-      Return(Call(p, params.params.map(_.sym.asPath.asArg))(true, false, false), false))(false, N, annotations = Nil)
+      Return(Call(p, params.params.map(_.sym.asPath.asArg))(true, false, false), false))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
       Some(Select(Value.Ref(State.globalThisSymbol, Some(State.globalThisSymbol)), Tree.Ident("Function"))(Some(ctx.builtins.Function))),
       callDef :: Nil, Nil, Nil, Return(Call(Value.Ref(State.builtinOpsMap("super")), Nil)(false, false, false), true), End(), None, None)(N, Nil)
@@ -99,10 +99,10 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
           case head :: rest =>
             val newBody = rec(rest)
             val funSym = new BlockMemberSymbol("lambda$", Nil, false)
-            val funDef = FunDefn.withFreshSymbol(None, funSym, head :: Nil, newBody)(false, N, annotations = Nil)
+            val funDef = FunDefn.withFreshSymbol(None, funSym, head :: Nil, newBody)(N, annotations = Nil)
             Scoped(Set(funSym), Define(funDef, Return(Value.Ref(funDef.sym, Some(funDef.dSym)), false)))
           case Nil => fd.body
-        FunDefn.withFreshSymbol(fd.owner, fd.sym, head :: Nil, rec(tail))(fd.forceTailRec, fd.configOverride, fd.annotations)
+        FunDefn.withFreshSymbol(fd.owner, fd.sym, head :: Nil, rec(tail))(fd.configOverride, fd.annotations)
 
   def transform(b: Block): Block =
     val desugared = new DesugarMultipleParamList().applyBlock(b)

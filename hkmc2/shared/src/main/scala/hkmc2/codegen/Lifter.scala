@@ -886,7 +886,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       val rewritten = rewriter.rewrite(obj.fun.body)
       val withCapture = addExtraSyms(rewritten)
-      LifterResult(obj.fun.copy(body = withCapture)(obj.fun.forceTailRec, obj.fun.configOverride, obj.fun.annotations), rewriter.extraDefns.toList)
+      LifterResult(obj.fun.copy(body = withCapture)(obj.fun.configOverride, obj.fun.annotations), rewriter.extraDefns.toList)
   
   class RewrittenClassCtor(override val obj: ScopedObject.ClassCtor)(using ctx: LifterCtxNew) extends RewrittenScope[Unit](obj):
     override lazy val capturePath: Path = lastWords("tried to create a capture class for a class ctor")
@@ -980,7 +980,6 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val newBod = rewriter.rewrite(fun.body)
       val withCapture = addExtraSyms(newBod)
       val newDefn = fun.copy(owner = N, sym = mainSym, dSym = mainDsym, params = newPlists, body = withCapture)(
-        fun.forceTailRec,
         fun.configOverride,
         if liftedFromStagedModule && !fun.isStaged then Annot.Modifier(Keyword.`staged`) :: fun.annotations
         else fun.annotations)
@@ -1013,7 +1012,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         auxDsym,
         newPlists,
         bod
-      )(false, N,
+      )(N,
         if fun.visibility is Visibility.Private then Annot.Modifier(Keyword.`private`) :: Nil
         else Nil)
     
@@ -1141,7 +1140,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         if clsIsParamless then auxParamList :: Nil
         else auxParamList :: main :: Nil
       
-      FunDefn(N, flattenedSym, flattenedDSym, paramLists, bod)(false, N, annotations = Nil)
+      FunDefn(N, flattenedSym, flattenedDSym, paramLists, bod)(N, annotations = Nil)
     
     private val flat = Lazy[Defn](mkFlattenedDefn)
     

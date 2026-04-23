@@ -188,7 +188,7 @@ class BlockTransformer(subst: SymbolSubst):
     val params2 = fun.params.mapConserve(applyParamList)
     val body2 = applyFunBodyLikeBlock(fun.body)
     if (own2 is fun.owner) && (sym2 is fun.sym) && (dSym2 is fun.dSym) && (params2 is fun.params) && (body2 is fun.body)
-      then fun else FunDefn(own2, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride, fun.annotations)
+      then fun else FunDefn(own2, sym2, dSym2, params2, body2)(fun.configOverride, fun.annotations)
   
   def applyValDefn(defn: ValDefn)(k: ValDefn => Block): Block =
     val ValDefn(tsym, sym, rhs) = defn
@@ -312,5 +312,4 @@ class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst
 // to traverse sub-blocks while using this class to perform more complicated transformations on the blocks themselves.
 class BlockDataTransformer(subst: SymbolSubst) extends BlockTransformerShallow(subst):
   override def applySubBlock(b: Block): Block = b
-
 
