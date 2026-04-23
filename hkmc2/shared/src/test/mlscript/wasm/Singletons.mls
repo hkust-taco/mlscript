@@ -12,11 +12,11 @@ Bar.y
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
 //│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)))))
 //│   (type $Bar_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)))))
-//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)) (field $x (mut (ref null any))))))
-//│   (type $Bar (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)) (field $y (mut (ref null any))))))
+//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $x (mut (ref null any))))))
+//│   (type $Bar (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $y (mut (ref null any))))))
 //│   (type $Foo_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $Bar_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $Foo_ctor (func (result (ref null any))))
@@ -60,10 +60,6 @@ Bar.y
 //│         (ref.cast (ref $Foo)
 //│           (local.get $this))
 //│         (global.get $Foo_typeinfo))
-//│       (struct.set $Foo $$tag
-//│         (ref.cast (ref $Foo)
-//│           (local.get $this))
-//│         (i32.const 1))
 //│       (drop
 //│         (call $Foo_init1
 //│           (local.get $this)))
@@ -78,10 +74,6 @@ Bar.y
 //│         (ref.cast (ref $Bar)
 //│           (local.get $this))
 //│         (global.get $Bar_typeinfo))
-//│       (struct.set $Bar $$tag
-//│         (ref.cast (ref $Bar)
-//│           (local.get $this))
-//│         (i32.const 2))
 //│       (drop
 //│         (call $Bar_init1
 //│           (local.get $this)))

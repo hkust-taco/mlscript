@@ -44,11 +44,11 @@ if Bar(true) is
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
 //│   (type $Bar_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)))))
 //│   (type $Baz_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)))))
-//│   (type $Bar (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)) (field $y (mut (ref null any))))))
-//│   (type $Baz (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)) (field $z (mut (ref null any))))))
+//│   (type $Bar (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $y (mut (ref null any))))))
+//│   (type $Baz (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $z (mut (ref null any))))))
 //│   (type $Bar_init (func (param $this (ref null any)) (param $y (ref null any)) (result (ref null any))))
 //│   (type $Baz_init (func (param $this (ref null any)) (param $z (ref null any)) (result (ref null any))))
 //│   (type $Bar_ctor (func (param $y (ref null any)) (result (ref null any))))
@@ -88,10 +88,6 @@ if Bar(true) is
 //│         (ref.cast (ref $Bar)
 //│           (local.get $this))
 //│         (global.get $Bar_typeinfo))
-//│       (struct.set $Bar $$tag
-//│         (ref.cast (ref $Bar)
-//│           (local.get $this))
-//│         (i32.const 1))
 //│       (drop
 //│         (call $Bar_init
 //│           (local.get $this)
@@ -107,10 +103,6 @@ if Bar(true) is
 //│         (ref.cast (ref $Baz)
 //│           (local.get $this))
 //│         (global.get $Baz_typeinfo))
-//│       (struct.set $Baz $$tag
-//│         (ref.cast (ref $Baz)
-//│           (local.get $this))
-//│         (i32.const 2))
 //│       (drop
 //│         (call $Baz_init
 //│           (local.get $this)
@@ -158,9 +150,11 @@ if Bar(true) is
 //│                 (then
 //│                   (if
 //│                     (i32.eq
-//│                       (struct.get $Object $$tag
-//│                         (ref.cast (ref $Object)
-//│                           (local.get $scrut)))
+//│                       (struct.get $TypeInfoBase $$tag
+//│                         (ref.cast (ref $TypeInfoBase)
+//│                           (struct.get $Object $$typeinfo
+//│                             (ref.cast (ref $Object)
+//│                               (local.get $scrut)))))
 //│                       (i32.const 1))
 //│                     (then
 //│                       (block $arm
@@ -200,9 +194,11 @@ if Bar(true) is
 //│                 (then
 //│                   (if
 //│                     (i32.eq
-//│                       (struct.get $Object $$tag
-//│                         (ref.cast (ref $Object)
-//│                           (local.get $scrut)))
+//│                       (struct.get $TypeInfoBase $$tag
+//│                         (ref.cast (ref $TypeInfoBase)
+//│                           (struct.get $Object $$typeinfo
+//│                             (ref.cast (ref $Object)
+//│                               (local.get $scrut)))))
 //│                       (i32.const 2))
 //│                     (then
 //│                       (block $arm

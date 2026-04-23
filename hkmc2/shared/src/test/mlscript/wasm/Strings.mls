@@ -17,7 +17,7 @@ let dup2 = "dup"
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
 //│   (type $mlx_str_from_utf16 (func (param $glob_offset (ref null any)) (param $len (ref null any)) (result (ref null any))))
 //│   (type $TupleArray (array (ref null any)))
 //│   (type $TupleArrayMut (array (mut (ref null any))))
@@ -91,7 +91,7 @@ if true then id(1) else s2
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
 //│   (type $mlx_str_from_utf16 (func (param $glob_offset (ref null any)) (param $len (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (import "system" "mlx_str_from_utf16" (func $mlx_str_from_utf16 (type $mlx_str_from_utf16)))

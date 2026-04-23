@@ -61,6 +61,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def baseObjectTypeIdx(using Ctx): TypeIdx =
     ctx.getType_!(baseObjectSym)
 
+  private def typeInfoBaseTypeIdx(using Ctx): TypeIdx =
+    ctx.getType_!(typeInfoBaseSym)
+
   private def baseObjectStruct(using Ctx): StructType =
     ctx.getTypeInfo_!(baseObjectSym).compType match
       case struct: StructType => struct
@@ -71,10 +74,27 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case (sym, field) if sym == typeInfoFieldSym => field.id
     FieldIdx(SymIdx(fieldId.get))
 
-  private def baseObjectTagFieldIdx(using Ctx): FieldIdx =
-    val fieldId = baseObjectStruct.fields.collectFirst:
-      case (sym, field) if sym == tagFieldSym => field.id
+  private def typeInfoBaseTagFieldIdx(using Ctx): FieldIdx =
+    val fieldId = ctx.getTypeInfo_!(typeInfoBaseSym).compType match
+      case struct: StructType => struct.fields.collectFirst:
+        case (sym, field) if sym == tagFieldSym => field.id
     FieldIdx(SymIdx(fieldId.get))
+
+  private def readRuntimeTag(objRef: Expr)(using Ctx): Expr =
+    val objectRef = ref.cast(objRef, baseObjectRefType(nullable = false))
+    val typeInfoRef = ref.cast(
+      struct.get(
+        baseObjectTypeInfoFieldIdx,
+        objectRef,
+        RefType.anyref,
+      ),
+      RefType(typeInfoBaseTypeIdx, nullable = false),
+    )
+    struct.get(
+      typeInfoBaseTagFieldIdx,
+      typeInfoRef,
+      I32Type,
+    )
 
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
@@ -1834,14 +1854,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                             ),
                             global.get(typeInfoGlobalIdx, typeInfoGlobalTy),
                           ),
-                          struct.set(
-                            baseObjectTagFieldIdx,
-                            ref.cast(
-                              local.get(thisVar, RefType.anyref),
-                              RefType(typeref, nullable = false),
-                            ),
-                            i32.const(tagValue),
-                          ),
                           drop(initCall),
                           `return`(S(local.get(thisVar, RefType(typeref, nullable = false)))),
                         ),
@@ -2142,12 +2154,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     val armBodyExpr = lowerMatchBody(bodyExpr)
 
                     // Safe to cast and extract tag since ref.test passed
-                    val scrutAsObject = ref.cast(scrutExpr, baseObjectRefType(nullable = false))
-                    val scrutTag = struct.get(
-                      baseObjectTagFieldIdx,
-                      scrutAsObject,
-                      I32Type,
-                    )
+                    val scrutTag = readRuntimeTag(scrutExpr)
                     val tagMatches = matchTags.toList match
                       case tag :: Nil => i32.eq(scrutTag, i32.const(tag))
                       case tag :: rest =>
@@ -2314,14 +2321,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ),
     )
 
-    // Create base Object struct with typeinfo and tag fields that all other structs will inherit
+    // Create base Object struct with typeinfo field that all other structs will inherit
     ctx.addType(
       sym = S(baseObjectSym),
       TypeInfo(
         id = SymIdx("Object"),
         StructType(Seq(
           typeInfoFieldSym -> Field(RefType.anyref, mutable = true, id = "$typeinfo"),
-          tagFieldSym -> Field(I32Type, mutable = true, id = "$tag"),
         )),
         objectTag = S(ctx.getFreshObjectTag() ensuring (_ == 0)),
       ),

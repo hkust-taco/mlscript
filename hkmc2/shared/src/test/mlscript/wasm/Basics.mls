@@ -57,7 +57,7 @@ foo() + foo()
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
 //│   (type $foo1 (func (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
@@ -115,9 +115,9 @@ class Foo(val a)
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
 //│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)))))
-//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)) (field $a (mut (ref null any))))))
+//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $a (mut (ref null any))))))
 //│   (type $Foo_init (func (param $this (ref null any)) (param $a (ref null any)) (result (ref null any))))
 //│   (type $Foo_ctor (func (param $a (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
@@ -143,10 +143,6 @@ class Foo(val a)
 //│         (ref.cast (ref $Foo)
 //│           (local.get $this))
 //│         (global.get $Foo_typeinfo))
-//│       (struct.set $Foo $$tag
-//│         (ref.cast (ref $Foo)
-//│           (local.get $this))
-//│         (i32.const 1))
 //│       (drop
 //│         (call $Foo_init
 //│           (local.get $this)
@@ -195,9 +191,9 @@ class Foo(val x) with
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
 //│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)))))
-//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
+//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
 //│   (type $Foo_init (func (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))))
 //│   (type $Foo_ctor (func (param $x (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
@@ -230,10 +226,6 @@ class Foo(val x) with
 //│         (ref.cast (ref $Foo)
 //│           (local.get $this))
 //│         (global.get $Foo_typeinfo))
-//│       (struct.set $Foo $$tag
-//│         (ref.cast (ref $Foo)
-//│           (local.get $this))
-//│         (i32.const 1))
 //│       (drop
 //│         (call $Foo_init
 //│           (local.get $this)
@@ -277,9 +269,9 @@ O.y
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
 //│   (type $O_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)))))
-//│   (type $O (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
+//│   (type $O (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
 //│   (type $O_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $O_ctor (func (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
@@ -314,10 +306,6 @@ O.y
 //│         (ref.cast (ref $O)
 //│           (local.get $this))
 //│         (global.get $O_typeinfo))
-//│       (struct.set $O $$tag
-//│         (ref.cast (ref $O)
-//│           (local.get $this))
-//│         (i32.const 1))
 //│       (drop
 //│         (call $O_init1
 //│           (local.get $this)))
@@ -354,6 +342,6 @@ fun bar() = 42
 fun foo() = bar
 foo()()
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.354: 	fun foo() = bar
+//│ ║  l.342: 	fun foo() = bar
 //│ ╙──       	            ^^^
 //│ ═══[COMPILATION ERROR] Expected static function reference in Call(...) expression

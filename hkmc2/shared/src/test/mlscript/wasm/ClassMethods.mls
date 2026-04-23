@@ -11,9 +11,9 @@ a.A#get() + A(2).get()
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
 //│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)))))
-//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)) (field $x (mut (ref null any))))))
+//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $x (mut (ref null any))))))
 //│   (type $A_init (func (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))))
 //│   (type $A_ctor (func (param $x (ref null any)) (result (ref null any))))
 //│   (type $A_get (func (param $this (ref null any)) (result (ref null any))))
@@ -43,10 +43,6 @@ a.A#get() + A(2).get()
 //│         (ref.cast (ref $A)
 //│           (local.get $this))
 //│         (global.get $A_typeinfo))
-//│       (struct.set $A $$tag
-//│         (ref.cast (ref $A)
-//│           (local.get $this))
-//│         (i32.const 1))
 //│       (drop
 //│         (call $A_init
 //│           (local.get $this)
@@ -188,12 +184,12 @@ c.Counter#inc().Counter#double().Counter#get()
 
 :todo
 let d = Counter(c.Counter#get())
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $$tag (mut i32)) (field $x (mut (ref null any))))))`
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $x (mut (ref null any))))))`
 
 :todo
 d.Counter#inc().Counter#double().Counter#get()
 //│ ╔══[COMPILATION ERROR] Cannot find variable `d` (VarSymbol) in local or global scope.
-//│ ║  l.190: 	let d = Counter(c.Counter#get())
+//│ ║  l.186: 	let d = Counter(c.Counter#get())
 //│ ╙──       	    ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Counter`
 
@@ -214,5 +210,5 @@ class A(val x) with
   fun get() = x
 A(1).get
 //│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
-//│ ║  l.215: 	A(1).get
+//│ ║  l.211: 	A(1).get
 //│ ╙──       	    ^^^^
