@@ -314,10 +314,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       suffix: Str,
       params: Seq[Local -> SymIdx],
   )(using Ctx, Raise, Scope): TypeIdx =
-    val isSingletonObj = defn.k is syntax.Obj
-    val funcTySym = TempSymbol(N, s"${defn.sym.nme}_$suffix")
     ctx.addType(TypeInfo(
-      sym = funcTySym,
+      sym = TempSymbol(N, s"${defn.sym.nme}_$suffix"),
       idPrefix = N,
       FunctionType(
         params = params.map(p => WasmParam(p._2, RefType.anyref)),
@@ -325,38 +323,30 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ),
       objectTag = N,
     ))
-  end declareClassFuncType
 
   /** Returns the symbol used to predeclare and later overwrite a class init function. */
   private def initFuncSym(sym: BlockMemberSymbol): BlockMemberSymbol =
-    initFuncSyms.getOrElseUpdate(sym, BlockMemberSymbol(s"${sym.nme}_init", Nil, nameIsMeaningful = false))
+    initFuncSyms.getOrElseUpdate(sym, BlockMemberSymbol("init", Nil, nameIsMeaningful = false))
 
   /** Registers a placeholder class-associated function so later lowering can overwrite it. */
   private def predeclareClassFunc(
       defn: ClsLikeDefn,
       suffix: Str,
       params: Seq[Local -> SymIdx],
-      sym: Opt[Symbol],
-      id: Opt[SymIdx],
+      sym: BlockMemberSymbol,
       exportName: Opt[Str],
   )(using Ctx, Raise, Scope): Unit =
     val funcTy = declareClassFuncType(defn, suffix, params)
-    ctx.addFunc(
+    ctx.addFunc(FuncInfo(
       sym,
-      FuncInfo(
-        id = id getOrElse:
-          SymIdx(exportName getOrElse:
-            scope.allocateName(TempSymbol(N, s"${defn.sym.nme}_$suffix")))
-        ,
-        typeUse = TypeUse(funcTy),
-        params = params,
-        resultTypes = Seq(Result(RefType.anyref)),
-        locals = Seq.empty,
-        body = ref.`null`(ctx.getType_!(defn.sym)),
-        exportName = exportName,
-      ),
-    )
-  end predeclareClassFunc
+      idPrefix = S(defn.sym.nme),
+      typeUse = TypeUse(funcTy),
+      params = params,
+      resultTypes = Seq(Result(RefType.anyref)),
+      locals = Seq.empty,
+      body = ref.`null`(ctx.getType_!(defn.sym)),
+      exportName = exportName,
+    ))
 
   /** Declares one top-level class init function. */
   private def predeclareClassInit(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
@@ -364,28 +354,18 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       defn.paramsOpt.fold(Nil): ps =>
         ps.params.map: p =>
           p.sym -> SymIdx(p.sym.nme)
-    val initId = defn.sym
-      .optionIf: sym =>
-        !(defn.k is syntax.Obj) && sym.nameIsMeaningful
-      .map: sym =>
-        SymIdx(s"${sym.nme}_init")
-    predeclareClassFunc(defn, "init", initParams, S(initFuncSym(defn.sym)), initId, N)
+    predeclareClassFunc(defn, "init", initParams, initFuncSym(defn.sym), N)
 
   /** Declares one top-level class constructor. */
   private def predeclareClassConstructor(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
     val ctorParams = defn.paramsOpt.fold(Nil): ps =>
       ps.params.map: p =>
         p.sym -> SymIdx(p.sym.nme)
-    val ctorId = defn.sym
-      .optionIf: sym =>
-        !(defn.k is syntax.Obj) && sym.nameIsMeaningful
-      .map: sym =>
-        SymIdx(s"${sym.nme}_ctor")
     val ctorExportName = defn.sym
       .optionIf: sym =>
         !(defn.k is syntax.Obj) && sym.nameIsMeaningful
       .map(_.nme)
-    predeclareClassFunc(defn, "ctor", ctorParams, S(defn.sym), ctorId, ctorExportName)
+    predeclareClassFunc(defn, "ctor", ctorParams, defn.sym, ctorExportName)
 
   /** Collects the symbols that should live in mutable globals so later REPL blocks can import them.
     *
@@ -507,12 +487,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       methodDefn.params.headOption.fold(Nil): ps =>
         ps.params.map: p =>
           p.sym -> SymIdx(p.sym.nme)
-    val methodId = ownerCls.sym
-      .optionIf: sym =>
-        !(ownerCls.k is syntax.Obj) && sym.nameIsMeaningful
-      .map: sym =>
-        SymIdx(s"${sym.nme}_${methodDefn.sym.nme}")
-    predeclareClassFunc(ownerCls, methodDefn.sym.nme, methodParams, S(methodDefn.sym), methodId, N)
+    predeclareClassFunc(ownerCls, methodDefn.sym.nme, methodParams, methodDefn.sym, N)
 
   /** Declares placeholders for all methods on one top-level class. */
   private def predeclareClassMethods(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
@@ -1244,7 +1219,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   )(using Ctx, Raise, Scope): FuncIdx =
     val funcTy = declareIntrinsicType(name)
     val funcInfo = FuncInfo(
-      id = SymIdx(scope.allocateName(TempSymbol(N, name))),
+      sym = TempSymbol(N, name),
+      idPrefix = N,
       typeUse = TypeUse(funcTy),
       params = params,
       locals = Seq.empty,
@@ -1252,8 +1228,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       resultTypes = Seq(Result(RefType.anyref)),
       exportName = exportName,
     )
-    ctx.addFunc(N, funcInfo)
-  end createIntrinsicFunc
+    ctx.addFunc(funcInfo)
 
   def intrinsicSupportModule()(using Raise, Scope): Document =
     val ctx = Ctx.empty
@@ -1502,16 +1477,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         ),
                       )
 
-                      val funcInfo =
-                        FuncInfo(
-                          sym,
-                          typeUse = TypeUse(funcTy),
-                          params = ps.params.zip(fnCtx.params.map(_._2)).map((p, idx) => p.sym -> idx),
-                          nResults = bodyWat.resultTypes.length,
-                          locals = fnCtx.locals,
-                          body = bodyWat,
-                        )
-                      ctx.addFunc(S(defn.sym), funcInfo)
+                      val funcInfo = FuncInfo(
+                        sym,
+                        idPrefix = N,
+                        typeUse = TypeUse(funcTy),
+                        params = ps.params.zip(fnCtx.params.map(_._2)).map((p, idx) => p.sym -> idx),
+                        resultTypes = Seq.fill(bodyWat.resultTypes.length)(Result(RefType.anyref)),
+                        locals = fnCtx.locals,
+                        body = bodyWat,
+                        exportName = sym.optionIf(_.nameIsMeaningful).map(_.nme),
+                      )
+                      ctx.addFunc(funcInfo)
                       if summon[SessionExportCtx].shouldExport(defn.sym) then
                         summon[SessionExportCtx].emit(SessionFunc(
                           sym = defn.sym,
@@ -1608,32 +1584,28 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       else break(errUnimplExpr("newCtorAuxParams.nonEmpty"))
 
                     val predeclaredInit = ctx.getFuncInfo_!(initFuncRef)
-                    ctx.addFunc(
-                      S(initFuncRef),
-                      FuncInfo(
-                        id = predeclaredInit.id,
-                        typeUse = predeclaredInit.typeUse,
-                        params = initFnCtx.params,
-                        resultTypes = initWat.resultTypes.map(ty => Result(ty.asValType_!)),
-                        locals = initFnCtx.locals,
-                        body = initWat,
-                        exportName = predeclaredInit.exportName,
-                      ),
-                    )
+                    ctx.addFunc(FuncInfo(
+                      sym = initFuncRef,
+                      idPrefix = S(clsLikeDefn.sym.nme),
+                      typeUse = predeclaredInit.typeUse,
+                      params = initFnCtx.params,
+                      resultTypes = initWat.resultTypes.map(ty => Result(ty.asValType_!)),
+                      locals = initFnCtx.locals,
+                      body = initWat,
+                      exportName = predeclaredInit.exportName,
+                    ))
 
                     val predeclaredCtor = ctx.getFuncInfo_!(clsLikeDefn.sym)
-                    ctx.addFunc(
-                      S(clsLikeDefn.sym),
-                      FuncInfo(
-                        id = predeclaredCtor.id,
-                        typeUse = predeclaredCtor.typeUse,
-                        params = ctorFnCtx.params,
-                        resultTypes = ctorAux.resultTypes.map(ty => Result(ty.asValType_!)),
-                        locals = ctorFnCtx.locals,
-                        body = ctorAux,
-                        exportName = predeclaredCtor.exportName,
-                      ),
-                    )
+                    ctx.addFunc(FuncInfo(
+                      sym = clsLikeDefn.sym,
+                      idPrefix = S(clsLikeDefn.sym.nme),
+                      typeUse = predeclaredCtor.typeUse,
+                      params = ctorFnCtx.params,
+                      resultTypes = ctorAux.resultTypes.map(ty => Result(ty.asValType_!)),
+                      locals = ctorFnCtx.locals,
+                      body = ctorAux,
+                      exportName = predeclaredCtor.exportName,
+                    ))
 
                     def overwriteMethod(
                         sym: BlockMemberSymbol,
@@ -1642,18 +1614,16 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     ): Unit =
                       val (bodyWat, fnCtx) = setupFunction(S(clsLikeDefn.isym), ps, bod)
                       val predeclaredMethod = ctx.getFuncInfo_!(sym)
-                      ctx.addFunc(
-                        S(sym),
-                        FuncInfo(
-                          id = predeclaredMethod.id,
-                          typeUse = predeclaredMethod.typeUse,
-                          params = fnCtx.params,
-                          resultTypes = Seq.fill(bodyWat.resultTypes.length)(Result(RefType.anyref)),
-                          locals = fnCtx.locals,
-                          body = bodyWat,
-                          exportName = predeclaredMethod.exportName,
-                        ),
-                      )
+                      ctx.addFunc(FuncInfo(
+                        sym,
+                        idPrefix = S(clsLikeDefn.sym.nme),
+                        typeUse = predeclaredMethod.typeUse,
+                        params = fnCtx.params,
+                        resultTypes = Seq.fill(bodyWat.resultTypes.length)(Result(RefType.anyref)),
+                        locals = fnCtx.locals,
+                        body = bodyWat,
+                        exportName = predeclaredMethod.exportName,
+                      ))
 
                     clsLikeDefn.methods.foreach:
                       case FunDefn(_, sym, _, Nil, bod) =>
@@ -2102,22 +2072,22 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         normalizeEntryExpr(rawEntryFnExpr, p.main.isAbortive)
 
       val entrySym = BlockMemberSymbol("entry", Nil)
-      val entryNme = scope.allocateName(entrySym)
 
       val entryFnTy = ctx.addType(TypeInfo(
-        sym = TempSymbol(N, entryNme),
+        sym = entrySym,
         idPrefix = N,
         FunctionType(params = Seq.empty, results = Seq(Result(RefType.anyref))),
         objectTag = N,
       ))
       val entryFnInfo = FuncInfo(
-        id = SymIdx(entryNme),
+        sym = entrySym,
+        idPrefix = N,
         typeUse = TypeUse(entryFnTy),
         params = Seq.empty,
         resultTypes = Seq(Result(RefType.anyref)),
         locals = entryFnCtx.locals,
         body = entryFnExpr,
-        exportName = S(entryNme),
+        exportName = S(entrySym.nme),
       )
 
       if stringLits.nonEmpty then
@@ -2143,24 +2113,22 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           children = singletonInitActions.toSeq,
           resultTypes = Seq.empty,
         )
-        val initFn = ctx.addFunc(
-          sym = N,
-          FuncInfo(
-            id = SymIdx(scope.allocateName(TempSymbol(N, "start"))),
-            typeUse = TypeUse(initTy),
-            params = Seq.empty,
-            resultTypes = Seq.empty,
-            locals = Seq.empty,
-            body = initBody,
-            exportName = N,
-          ),
-        )
+        val initFn = ctx.addFunc(FuncInfo(
+          sym = TempSymbol(N, "start"),
+          idPrefix = N,
+          typeUse = TypeUse(initTy),
+          params = Seq.empty,
+          resultTypes = Seq.empty,
+          locals = Seq.empty,
+          body = initBody,
+          exportName = N,
+        ))
         ctx.setStartFunc(initFn)
       end if
 
-      ctx.addFunc(S(entrySym), entryFnInfo)
+      ctx.addFunc(entryFnInfo)
 
-      compiledModule(entryNme)
+      compiledModule(entrySym.nme)
   end program
 
   def blockPreamble(ss: Iterable[Symbol])(using Ctx, FunctionCtx, Raise, Scope): Seq[Local] =

@@ -19,7 +19,7 @@
 //│       (nop)
 //│       (return
 //│         (local.get $this))))
-//│   (func $Unit_ctor (type $Unit_ctor) (result (ref null any))
+//│   (func $Unit_Unit (type $Unit_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -37,11 +37,11 @@
 //│     (block
 //│       (global.set $Unit$inst
 //│         (ref.cast (ref null $Unit)
-//│           (call $Unit_ctor)))))
+//│           (call $Unit_Unit)))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (global.get $Unit$inst))
 //│   (elem $Unit_init declare func $Unit_init)
-//│   (elem $Unit_ctor declare func $Unit_ctor)
+//│   (elem $Unit_Unit declare func $Unit_Unit)
 //│   (elem $start declare func $start)
 //│   (elem $entry declare func $entry)
 //│   (start $start))

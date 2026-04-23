@@ -161,9 +161,11 @@ final class SessionExportCtx(
   *
   * Each instance of [[FuncInfo]] represents a single function definition in a WebAssembly module.
   *
-  * @param id
-  *   Symbolic identifier for the function. If the function is anonymous, `id` should be generated from a fresh name
-  *   allocated in the current scope.
+  * @param sym
+  *   The source [[Symbol]] which this function is generated from.
+  * @param idPrefix
+  *   An optional prefix for the symbolic identifier of this function. If provided, the function name will be prepended
+  *   with `${idPrefix}_`.
   * @param typeUse
   *   [[TypeUse]] of the function's type in the module's type section.
   * @param params
@@ -178,62 +180,18 @@ final class SessionExportCtx(
   *   Optional export name.
   */
 class FuncInfo(
-    val id: SymIdx,
+    val sym: BlockMemberSymbol | TempSymbol,
+    val idPrefix: Opt[Str],
     val typeUse: TypeUse,
-    params: Seq[Local -> SymIdx],
+    val params: Seq[Local -> SymIdx],
     val resultTypes: Seq[Result],
-    locals: Seq[Local -> SymIdx],
+    val locals: Seq[Local -> SymIdx],
     val body: Expr,
     val exportName: Opt[Str],
-) extends ToWat:
+)(using Ctx, Raise) extends ToWat:
 
-  /** @param sym
-    *   The source [[BlockMemberSymbol]] which this function is generated from.
-    * @param typeIdx
-    *   Index of the function's type in the module's type section.
-    * @param params
-    *   [[Seq]] of parameter local variables and their names.
-    * @param nResults
-    *   Number of results the function returns.
-    * @param locals
-    *   [[Seq]] of local variables (excluding parameters) and their names.
-    * @param body
-    *   The expression of the function body.
-    */
-  def this(
-      sym: BlockMemberSymbol,
-      typeUse: TypeUse,
-      params: Seq[Local -> SymIdx],
-      nResults: Int,
-      locals: Seq[Local -> SymIdx],
-      body: Expr,
-  )(using Raise, Scope) = this(
-    SymIdx(sym.optionIf(_.nameIsMeaningful).fold(summon[Scope].allocateName(sym))(_.nme)),
-    typeUse,
-    params,
-    Seq.fill(nResults)(Result(RefType.anyref)),
-    locals,
-    body,
-    sym.optionIf(_.nameIsMeaningful).map(_.nme),
-  )
-
-  def this(
-      id: Opt[SymIdx],
-      typeUse: TypeUse,
-      params: Seq[Local -> SymIdx],
-      nResults: Int,
-      locals: Seq[Local -> SymIdx],
-      body: Expr,
-      `export`: Opt[Str],
-  )(using Raise, Scope, State) = this(
-    id.getOrElse(SymIdx(summon[Scope].allocateName(TempSymbol(N, "")))),
-    typeUse,
-    params,
-    Seq.fill(nResults)(Result(RefType.anyref)),
-    locals,
-    body,
-    `export`,
-  )
+  /** Symbolic identifier for the function. */
+  val id = SymIdx(summon[Ctx].funcScp.allocateOrGetNamePrefixed(sym, idPrefix))
 
   /** Returns the type of this function as a [[SignatureType]]. */
   def getSignatureType: SignatureType = SignatureType(
@@ -518,6 +476,9 @@ class Ctx(using State) extends ToWat:
   /** [[ListMap]] containing all element segments in the module. */
   private var elemSegments = ListMap.empty[SymIdx, ElemSegment]
 
+  /** [[Scope]] for generating WAT identifiers of functions. */
+  private[text] val funcScp = Scope.empty(Scope.Cfg.default)
+
   /** [[ListMap]] containing all function definitions and imports in the module mapped by their symbolic identifiers. */
   private var funcs = ListMap.empty[SymIdx, FuncInfo | Import[ExternType.Func]]
 
@@ -692,11 +653,12 @@ class Ctx(using State) extends ToWat:
     TagIdx(id)
 
   /** Adds a function into this context. */
-  def addFunc(sym: Opt[Symbol], funcInfo: FuncInfo): FuncIdx =
+  def addFunc(funcInfo: FuncInfo): FuncIdx =
     val id = funcInfo.id
     funcs = funcs + (id -> funcInfo)
-    sym.foreach:
-      namedFuncs(_) = funcInfo
+    funcInfo.sym match
+      case bms: BlockMemberSymbol => namedFuncs(bms) = funcInfo
+      case _ =>
     val idx = FuncIdx(funcInfo.id)
     val refType = RefType(funcInfo.typeUse.typeIdx, nullable = false)
     elemSegments = elemSegments +

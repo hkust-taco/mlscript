@@ -73,7 +73,7 @@ if Bar(true) is
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (func $Bar_ctor (export "Bar") (type $Bar_ctor) (param $y (ref null any)) (result (ref null any))
+//│   (func $Bar_Bar (export "Bar") (type $Bar_ctor) (param $y (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -88,7 +88,7 @@ if Bar(true) is
 //│           (local.get $y)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $Baz_ctor (export "Baz") (type $Baz_ctor) (param $z (ref null any)) (result (ref null any))
+//│   (func $Baz_Baz (export "Baz") (type $Baz_ctor) (param $z (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -117,7 +117,7 @@ if Bar(true) is
 //│         (nop)
 //│         (block (result (ref null any))
 //│           (local.set $scrut
-//│             (call $Bar_ctor
+//│             (call $Bar_Bar
 //│               (ref.i31
 //│                 (i32.const 1))))
 //│           (block (result (ref null any))
@@ -195,8 +195,8 @@ if Bar(true) is
 //│             (local.get $matchRes))))))
 //│   (elem $Bar_init declare func $Bar_init)
 //│   (elem $Baz_init declare func $Baz_init)
-//│   (elem $Bar_ctor declare func $Bar_ctor)
-//│   (elem $Baz_ctor declare func $Baz_ctor)
+//│   (elem $Bar_Bar declare func $Bar_Bar)
+//│   (elem $Baz_Baz declare func $Baz_Baz)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3
