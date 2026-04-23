@@ -155,14 +155,6 @@ final class SessionExportCtx(
 
   def freshCollector(): SessionExportCtx =
     SessionExportCtx(symbolsToExport, ArrayBuf.empty)
-end SessionExportCtx
-
-object SessionExportCtx:
-  def apply(
-      symbolsToExport: Set[Local],
-      collectedBindings: ArrayBuf[SessionBinding],
-  ): SessionExportCtx =
-    new SessionExportCtx(symbolsToExport, collectedBindings)
 
 /** A Wasm function and its associated information.
   *
