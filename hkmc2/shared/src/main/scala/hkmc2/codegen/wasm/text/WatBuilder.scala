@@ -78,10 +78,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   /** Resolves the field index for a symbolic field inside a previously registered struct type. */
   private def structFieldIdx(typeSym: BlockMemberSymbol, fieldSym: TermSymbol)(using Ctx): FieldIdx =
-    val fieldId = ctx.getTypeInfo_!(typeSym).compType match
-      case struct: StructType => struct.fields.collectFirst:
-        case (sym, field) if sym == fieldSym => field.id
-    FieldIdx(SymIdx(fieldId.get))
+    ctx.getTypeInfo_!(typeSym).compType match
+      case struct: StructType =>
+        struct.fields.collectFirst:
+          case (sym, field) if sym == fieldSym => FieldIdx(SymIdx(field.id))
+        .getOrElse:
+          lastWords(s"missing struct field $fieldSym in registered struct type $typeSym")
+      case other =>
+        lastWords(s"expected registered struct type for $typeSym when resolving field $fieldSym, found $other")
 
   /** Loads the shared RTTI global for `sym` when that class has one in the current compilation session. */
   private def getClassTypeInfoGlobal(sym: BlockMemberSymbol)(using Ctx): Opt[Expr] =
@@ -2225,7 +2229,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         extraInfo = S(s"ClassLikeSymbol: ${cls.toString}"),
                       ))
                     val scrutExpr = getScrutExpr
-                    val isStructCompatible = ref.test(scrutExpr, baseObjectRefType(nullable = true))
+                    val isStructCompatible = ref.test(scrutExpr, baseObjectRefType(nullable = false))
                     val classMatchExpr = getClassTypeInfoGlobal(clsBlkMemberSym) match
                       case S(targetRtti) =>
                         val scrutRtti = readObjectTypeInfo(scrutExpr)

@@ -266,7 +266,7 @@ B() is A
 //│               (local.set $matchRes
 //│                 (ref.null any))
 //│               (if
-//│                 (ref.test (ref null $Object)
+//│                 (ref.test (ref $Object)
 //│                   (local.get $scrut))
 //│                 (then
 //│                   (if

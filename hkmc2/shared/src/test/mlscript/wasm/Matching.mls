@@ -159,7 +159,7 @@ if Bar(true) is
 //│               (local.set $matchRes
 //│                 (ref.null any))
 //│               (if
-//│                 (ref.test (ref null $Object)
+//│                 (ref.test (ref $Object)
 //│                   (local.get $scrut))
 //│                 (then
 //│                   (if
@@ -233,7 +233,7 @@ if Bar(true) is
 //│                                 (local.get $matchRes1)))))
 //│                         (br $match))))))
 //│               (if
-//│                 (ref.test (ref null $Object)
+//│                 (ref.test (ref $Object)
 //│                   (local.get $scrut))
 //│                 (then
 //│                   (if
