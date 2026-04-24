@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+  <link rel="icon" href="data:,">
   <link href="
 https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
 " rel="stylesheet">
@@ -32,6 +33,16 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
     </div>
     <div id="output"></div>
   </div>
+  <dialog id="error-dialog" class="error-dialog" aria-labelledby="error-title">
+    <form method="dialog" class="error-dialog__panel">
+      <header class="error-dialog__header">
+        <h2 id="error-title">Parser Error</h2>
+        <button class="error-dialog__close" aria-label="Close error dialog">×</button>
+      </header>
+      <p id="error-message" class="error-dialog__message"></p>
+      <pre id="error-stack" class="error-dialog__stack"></pre>
+    </form>
+  </dialog>
   <div id="syntax-diagrams">
     <section id="precedence-table">
       <h2>Precedence Table</h2>
@@ -146,6 +157,65 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
 
     #editor:focus {
       outline: none;
+    }
+
+    .error-dialog {
+      width: min(56rem, calc(100vw - 2rem));
+      border: 2px solid #991b1b;
+      padding: 0;
+      background: #fff7f7;
+      color: #450a0a;
+      box-shadow: 0 1rem 3rem rgba(0, 0, 0, .35);
+    }
+
+    .error-dialog::backdrop {
+      background: rgba(20, 0, 0, .45);
+    }
+
+    .error-dialog__panel {
+      margin: 0;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+    }
+
+    .error-dialog__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-bottom: .75rem;
+      border-bottom: 1px solid #fecaca;
+    }
+
+    .error-dialog__close {
+      width: 2rem;
+      height: 2rem;
+      border: 1px solid #991b1b;
+      background: #fee2e2;
+      color: #450a0a;
+      font-size: 1.25rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .error-dialog__message {
+      margin: 0;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .error-dialog__stack {
+      margin: 0;
+      max-height: 45vh;
+      overflow: auto;
+      padding: .75rem;
+      border: 1px solid #fecaca;
+      background: #fff;
+      font-family: var(--monospace);
+      font-size: .875rem;
+      white-space: pre-wrap;
     }
     
     .select {

@@ -23,7 +23,7 @@ module ParseRuleVisualizer with ...
 val tracer = new TreeTracer.TreeTracer()
 
 let defaultKinds = tuple of
-  "type", "term", "typevar", "ident"
+  "type", "term", "binding", "typevar", "ident"
   "literal", "string-literal", "integer-literal", "decimal-literal", "boolean-literal"
 
 let renderedKinds = new Set of defaultKinds

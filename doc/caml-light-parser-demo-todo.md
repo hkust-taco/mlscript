@@ -100,9 +100,9 @@ stack trace.
 
 | ID | Status | Task | Memo | Commit Requirement |
 | --- | --- | --- | --- | --- |
-| W1-01 | Pending | Reproduce current console failures on built-in examples. | `doc/caml-light-parser-demo/web-demo-error-dialog.md` | Commit after task done. |
-| W1-02 | Pending | Add visible dialog-based error reporting with stack trace formatting. | Same memo | Same commit. |
-| W1-03 | Pending | Verify the dialog appears for failures and does not obscure successful output. | Same memo | Same commit. |
+| W1-01 | Done | Reproduce current console failures on built-in examples. | `doc/caml-light-parser-demo/web-demo-error-dialog.md` | Commit after task done. |
+| W1-02 | Done | Add visible dialog-based error reporting with stack trace formatting. | Same memo | Same commit. |
+| W1-03 | Done | Verify the dialog appears for failures and does not obscure successful output. | Same memo | Same commit. |
 
 ## Phase 5: Web Demo Example Integration
 
