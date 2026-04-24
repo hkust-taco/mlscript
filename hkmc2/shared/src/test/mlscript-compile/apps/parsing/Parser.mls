@@ -171,7 +171,11 @@ fun parse(tokens) =
       // * the non-keyword case
       None then
         let symbolic = Token.symbolic(token)
-        if not allowOperators and symbolic then
+        if allowOperators and symbolic and token is Token.Symbol(name) and
+          Keywords.opPrecOpt(name) is Some(_) then
+            consume
+            cont(Tree.Application(Tree.Reference(name, true), parseKind(kindName, Keywords.prefixPrec)), prec)
+        else if not allowOperators and symbolic then
           Tree.error("symbolic identifiers are disallowed in kind \"" + kindName + "\"")
         else
           consume

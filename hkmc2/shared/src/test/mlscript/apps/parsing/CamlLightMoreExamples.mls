@@ -1201,3 +1201,309 @@ let rec add queue priority item =
 //│ > «let remove_top = function Empty -> raise Empty_queue | QueueNode (priority, item, Empty, Empty) -> Empty | QueueNode (priority, item, left, Empty) -> left | QueueNode (priority, item, Empty, right) -> right | QueueNode (priority, item, QueueNode (left_priority, left_item, left_left, left_right), QueueNode (right_priority, right_item, right_left, right_right)) -> if left_priority < right_priority then QueueNode (left_priority, left_item, remove_top (QueueNode (left_priority, left_item, left_left, left_right)), QueueNode (right_priority, right_item, right_left, right_right)) then QueueNode (right_priority, right_item, QueueNode (left_priority, left_item, left_left, left_right), remove_top (QueueNode (right_priority, right_item, right_left, right_right)))»
 //│ > «let extract = function Empty -> raise Empty_queue | QueueNode (priority, item, left, right) -> (priority, item, remove_top (QueueNode (priority, item, left, right)))»
 //│ > «let add queue priority item = match queue with Empty -> QueueNode (priority, item, Empty, Empty) | QueueNode (priority1, item1, left, right) -> if priority <= priority1 then QueueNode (priority, item, add right priority1 item1, left) then QueueNode (priority1, item1, add right priority item, left)»
+
+// sources/examples/basics/wc.ml
+// =============================
+
+example of """
+:tree
+let chars = ref 0
+and words = ref 0
+and lines = ref 0
+;;
+type state = Inside_word | Outside_word;;
+let count_channel input_channel =
+  let rec count status =
+    let c = input_char input_channel in
+    incr chars;
+    match c with
+    | `\n` ->
+        incr lines; count Outside_word
+    | ` ` ->
+        count Outside_word
+    | `\t` ->
+        count Outside_word
+    | _ ->
+        if status = Outside_word then begin incr words; () end;
+        count Inside_word
+  in
+    try
+      count Outside_word
+    with End_of_file ->
+      ()
+;;
+let count_file name =
+  let ic = open_in name in
+  count_channel ic;
+  close_in ic
+;;
+let print_result () =
+  print_int !chars; print_string " characters, ";
+  print_int !words; print_string " words, ";
+  print_int !lines; print_string " lines";
+  print_newline()
+;;
+let count name =
+  count_file name;
+  print_result ()
+;;
+if sys__interactive then () else
+try
+  if vect_length sys__command_line <= 1 then
+    count_channel std_in
+  else
+    for i = 1 to vect_length sys__command_line - 1 do
+      count_file sys__command_line.(i)
+    done;
+  print_result ()
+with sys__Sys_error s ->
+  print_string "I/O error: ";
+  print_string s;
+  print_newline()
+;;
+"""
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "chars"
+//│ >       rhs = Application:
+//│ >         callee = Reference of "ref"
+//│ >         argument = Literal#Integer of "0"
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "words"
+//│ >       rhs = Application:
+//│ >         callee = Reference of "ref"
+//│ >         argument = Literal#Integer of "0"
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "lines"
+//│ >       rhs = Application:
+//│ >         callee = Reference of "ref"
+//│ >         argument = Literal#Integer of "0"
+//│ >   body = None
+//│ > Define:
+//│ >   kind = Type
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "state"
+//│ >       rhs = Infix:
+//│ >         op = Keyword(`|`, N/A, N/A)
+//│ >         lhs = Reference of "Inside_word"
+//│ >         rhs = Reference of "Outside_word"
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "count_channel"
+//│ >         argument = Reference of "input_channel"
+//│ >       rhs = LetIn:
+//│ >         bindings = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`=`, 16, 16)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "count"
+//│ >               argument = Reference of "status"
+//│ >             rhs = LetIn:
+//│ >               bindings = Stack of 
+//│ >                 Infix:
+//│ >                   op = Keyword(`=`, 16, 16)
+//│ >                   lhs = Reference of "c"
+//│ >                   rhs = Application:
+//│ >                     callee = Reference of "input_char"
+//│ >                     argument = Reference of "input_channel"
+//│ >               body = Some of Sequence of Stack of 
+//│ >                 Application:
+//│ >                   callee = Reference of "incr"
+//│ >                   argument = Reference of "chars"
+//│ >                 Match:
+//│ >                   scrutinee = Reference("c", false)
+//│ >                   branches = Stack of 
+//│ >                     Infix:
+//│ >                       op = Keyword(`->`, 5, 3)
+//│ >                       lhs = Literal#Character of "\n"
+//│ >                       rhs = Sequence of Stack of 
+//│ >                         Application:
+//│ >                           callee = Reference of "incr"
+//│ >                           argument = Reference of "lines"
+//│ >                         Application:
+//│ >                           callee = Reference of "count"
+//│ >                           argument = Reference of "Outside_word"
+//│ >                     Infix:
+//│ >                       op = Keyword(`->`, 5, 3)
+//│ >                       lhs = Literal#Character of " "
+//│ >                       rhs = Application:
+//│ >                         callee = Reference of "count"
+//│ >                         argument = Reference of "Outside_word"
+//│ >                     Infix:
+//│ >                       op = Keyword(`->`, 5, 3)
+//│ >                       lhs = Literal#Character of "\t"
+//│ >                       rhs = Application:
+//│ >                         callee = Reference of "count"
+//│ >                         argument = Reference of "Outside_word"
+//│ >                     Infix:
+//│ >                       op = Keyword(`->`, 5, 3)
+//│ >                       lhs = Reference of "_"
+//│ >                       rhs = Ternary:
+//│ >                         name = Keyword(`if`, 10, 9)
+//│ >                         lhs = Infix:
+//│ >                           op = Keyword(`=`, 16, 16)
+//│ >                           lhs = Reference of "status"
+//│ >                           rhs = Reference of "Outside_word"
+//│ >                         rhs = Sequence of Stack of 
+//│ >                           Sequence of Stack of 
+//│ >                             Application:
+//│ >                               callee = Reference of "incr"
+//│ >                               argument = Reference of "words"
+//│ >                             Tuple of Nil
+//│ >                           Application:
+//│ >                             callee = Reference of "count"
+//│ >                             argument = Reference of "Inside_word"
+//│ >                         body = None
+//│ >         body = Some of Try:
+//│ >           body = Application:
+//│ >             callee = Reference of "count"
+//│ >             argument = Reference of "Outside_word"
+//│ >           branches = Stack of 
+//│ >             Infix:
+//│ >               op = Keyword(`->`, 5, 3)
+//│ >               lhs = Reference of "End_of_file"
+//│ >               rhs = Tuple of Nil
+//│ >   body = None
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "count_file"
+//│ >         argument = Reference of "name"
+//│ >       rhs = LetIn:
+//│ >         bindings = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`=`, 16, 16)
+//│ >             lhs = Reference of "ic"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "open_in"
+//│ >               argument = Reference of "name"
+//│ >         body = Some of Sequence of Stack of 
+//│ >           Application:
+//│ >             callee = Reference of "count_channel"
+//│ >             argument = Reference of "ic"
+//│ >           Application:
+//│ >             callee = Reference of "close_in"
+//│ >             argument = Reference of "ic"
+//│ >   body = None
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "print_result"
+//│ >         argument = Tuple of Nil
+//│ >       rhs = Sequence of Stack of 
+//│ >         Application:
+//│ >           callee = Reference of "print_int"
+//│ >           argument = Application:
+//│ >             callee = Reference of "!"
+//│ >             argument = Reference of "chars"
+//│ >         Application:
+//│ >           callee = Reference of "print_string"
+//│ >           argument = Literal#String of " characters, "
+//│ >         Application:
+//│ >           callee = Reference of "print_int"
+//│ >           argument = Application:
+//│ >             callee = Reference of "!"
+//│ >             argument = Reference of "words"
+//│ >         Application:
+//│ >           callee = Reference of "print_string"
+//│ >           argument = Literal#String of " words, "
+//│ >         Application:
+//│ >           callee = Reference of "print_int"
+//│ >           argument = Application:
+//│ >             callee = Reference of "!"
+//│ >             argument = Reference of "lines"
+//│ >         Application:
+//│ >           callee = Reference of "print_string"
+//│ >           argument = Literal#String of " lines"
+//│ >         Application:
+//│ >           callee = Reference of "print_newline"
+//│ >           argument = Tuple of Nil
+//│ >   body = None
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "count"
+//│ >         argument = Reference of "name"
+//│ >       rhs = Sequence of Stack of 
+//│ >         Application:
+//│ >           callee = Reference of "count_file"
+//│ >           argument = Reference of "name"
+//│ >         Application:
+//│ >           callee = Reference of "print_result"
+//│ >           argument = Tuple of Nil
+//│ >   body = None
+//│ > Ternary:
+//│ >   name = Keyword(`if`, 10, 9)
+//│ >   lhs = Reference of "sys__interactive"
+//│ >   rhs = Tuple of Nil
+//│ >   body = Some of Try:
+//│ >     body = Ternary:
+//│ >       name = Keyword(`if`, 10, 9)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "<="
+//│ >         argument = Stack of 
+//│ >           Application:
+//│ >             callee = Reference of "vect_length"
+//│ >             argument = Reference of "sys__command_line"
+//│ >           Literal#Integer of "1"
+//│ >       rhs = Application:
+//│ >         callee = Reference of "count_channel"
+//│ >         argument = Reference of "std_in"
+//│ >       body = Some of Sequence of Stack of 
+//│ >         For:
+//│ >           head = Reference of "i"
+//│ >           start = Literal#Integer of "1"
+//│ >           end = Application:
+//│ >             callee = Reference of "-"
+//│ >             argument = Stack of 
+//│ >               Application:
+//│ >                 callee = Reference of "vect_length"
+//│ >                 argument = Reference of "sys__command_line"
+//│ >               Literal#Integer of "1"
+//│ >           body = Application:
+//│ >             callee = Reference of "count_file"
+//│ >             argument = Infix:
+//│ >               op = Keyword(`.`, 26, 26)
+//│ >               lhs = Reference of "sys__command_line"
+//│ >               rhs = Reference of "i"
+//│ >         Application:
+//│ >           callee = Reference of "print_result"
+//│ >           argument = Tuple of Nil
+//│ >     branches = Stack of 
+//│ >       Infix:
+//│ >         op = Keyword(`->`, 5, 3)
+//│ >         lhs = Application:
+//│ >           callee = Reference of "sys__Sys_error"
+//│ >           argument = Reference of "s"
+//│ >         rhs = Sequence of Stack of 
+//│ >           Application:
+//│ >             callee = Reference of "print_string"
+//│ >             argument = Literal#String of "I/O error: "
+//│ >           Application:
+//│ >             callee = Reference of "print_string"
+//│ >             argument = Reference of "s"
+//│ >           Application:
+//│ >             callee = Reference of "print_newline"
+//│ >             argument = Tuple of Nil
+//│ > «let chars = ref 0 and words = ref 0 and lines = ref 0»
+//│ > «type state = Inside_word | Outside_word»
+//│ > «let count_channel input_channel = let count status = let c = input_char input_channel in incr chars; match c with `\n` -> incr lines; count Outside_word | ` ` -> count Outside_word | `\t` -> count Outside_word | _ -> if status = Outside_word then incr words; (); count Inside_word then None in try count Outside_word with End_of_file -> ()»
+//│ > «let count_file name = let ic = open_in name in count_channel ic; close_in ic»
+//│ > «let print_result () = print_int (!chars); print_string " char…"; print_int (!words); print_string " word…"; print_int (!lines); print_string " line…"; print_newline ()»
+//│ > «let count name = count_file name; print_result ()»
+//│ > «if sys__interactive then () then try if vect_length sys__command_line <= 1 then count_channel std_in then for i = 1 to vect_length sys__command_line - 1 do count_file sys__command_line.i done; print_result () with sys__Sys_error s -> print_string "I/O e…"; print_string s; print_newline ()»

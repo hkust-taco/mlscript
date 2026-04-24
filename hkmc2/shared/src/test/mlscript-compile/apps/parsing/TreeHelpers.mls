@@ -65,6 +65,7 @@ fun showAsTree(thing) =
     LiteralKind.Integer then tuple of "Integer", []
     LiteralKind.Decimal then tuple of "Decimal", []
     LiteralKind.String then tuple of "String", []
+    LiteralKind.Character then tuple of "Character", []
     LiteralKind.Boolean then tuple of "Boolean", []
     [x, y] then tuple of "Pair", [["first", go(x)], ["second", go(y)]]
     else tuple of "Unknown", [["JSON.stringify(_)", JSON.stringify(something)]]

@@ -169,7 +169,7 @@ val termRule = rule of
       name: "while end", process: idFirst
       choices: tuple of keyword(Keywords._done)()
   // `for` term
-  keyword(Keywords._for) of term of
+  keyword(Keywords._for) of reference("binding") of
     name: "`for` head"
     process: (head, startEndBody) => Tree.For(head, ...startEndBody)
     choices: tuple of keyword(Keywords._equal) of term of
@@ -246,7 +246,7 @@ val termRule = rule of
         process: (rhs, _) => lhs => Tree.Infix(Keywords._colon, lhs, rhs)
         name: "right-hand side type"
       // Symbolic infix operators.
-      infix(Keywords.opPrecOpt, "term") of
+      infix(Keywords.infixOpPrecOpt, "term") of
         name: "symbolic operator right-hand side"
       // Application: <expr> <expr>
       term of

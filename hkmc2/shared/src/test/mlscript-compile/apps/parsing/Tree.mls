@@ -104,6 +104,7 @@ module Tree with
       Literal(LiteralKind.String, value) and
         value.length > 5 then JSON.stringify(value.slice(0, 5)).slice(0, -1) + "…\""
         else JSON.stringify(value)
+      Literal(LiteralKind.Character, value) then "`" + JSON.stringify(value).slice(1, -1) + "`"
       Literal(_, value) then value
       Match(scrutinee, branches) then mkStr of
         if scrutinee is Empty then "function " else

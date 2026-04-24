@@ -184,3 +184,8 @@ fun opPrecOpt(opStr) = if
       leftPrec
       rightPrec + (if lastChar is RightAssociative then -1 else 0)
   else None
+
+fun infixOpPrecOpt(opStr) = if
+  opStr is "!" then None
+  opStr is "~" then None
+  else opPrecOpt(opStr)

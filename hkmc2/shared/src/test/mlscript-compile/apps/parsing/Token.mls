@@ -20,6 +20,7 @@ module LiteralKind with
     Integer
     Decimal
     String
+    Character
     Boolean
 
 abstract class Token with
@@ -91,6 +92,8 @@ fun decimal(literal, endIndex)(using llt: LineLookupTable) =
     endIndex - literal.length, endIndex, llt
 fun string(literal, startIndex, endIndex)(using llt: LineLookupTable) =
   Literal(LiteralKind.String, literal).withLocation(startIndex, endIndex, llt)
+fun character(literal, startIndex, endIndex)(using llt: LineLookupTable) =
+  Literal(LiteralKind.Character, literal).withLocation(startIndex, endIndex, llt)
 fun boolean(literal, endIndex)(using llt: LineLookupTable) =
   Literal(LiteralKind.Boolean, literal).withLocation of
     endIndex - literal.length, endIndex, llt

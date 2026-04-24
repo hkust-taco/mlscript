@@ -191,6 +191,27 @@ fun lex(str: Str, options) =
           // TODO report missing quote
           set terminated = true
     [idx, Token.string(content, startIndex, idx)]
+
+  fun character(idx: Int, startIndex: Int): [Int, TokenType] =
+    let
+      content = ""
+      contentFound = false
+    if char(idx) is
+      Some("\\") and escape(idx + 1) is [idx', chOpt] then
+        if chOpt is Some(ch) do
+          set
+            content = ch
+            contentFound = true
+        set idx = idx'
+      Some(ch) then
+        set
+          content = ch
+          contentFound = true
+          idx += 1
+      None then ()
+    if contentFound and char(idx) is Some("`") then
+      [idx + 1, Token.character(content, startIndex, idx + 1)]
+    else [idx, Token.error(startIndex, idx)]
   
   fun number(idx: Int, head: Str) = if
     head is "0" and char(idx) is
@@ -225,6 +246,8 @@ fun lex(str: Str, options) =
       Char.Whitespace and whitespace(idx) is idx' then
         go(idx', Token.space(idx, idx'))
       "\"" then go_tup(string(idx + 1))
+      "`" and char(idx + 1) is Some("\\") then go_tup(character(idx + 1, idx))
+      "`" and char(idx + 2) is Some("`") then go_tup(character(idx + 1, idx))
       Bracket as b then go(idx + 1, Token.symbol(b, idx))
       "/" then go_tup(comment(idx + 1))
       Operator as ch then go_tup(operator(idx + 1, ch))
