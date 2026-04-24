@@ -113,3 +113,185 @@ end
 //│ >               argument = Tuple of Nil
 //│ > «let fib n = if n < 2 then 1 then fib (n - 1) + fib (n - 2)»
 //│ > «if sys__interactive then () then if vect_length sys__command_line <> 2 then print_string "Usage…"; print_newline () then try print_int (fib (int_of_string sys__command_line . 1)); print_newline () with Failure "int_o…" -> print_string "Bad i…"; print_newline ()»
+
+// sources/examples/basics/sieve.ml
+// ================================
+
+example of """
+:tree
+let rec interval min max =
+  if min > max then [] else min :: interval (succ min) max
+;;
+let rec filter p = function
+  | [] -> []
+  | a :: r -> if p a then a :: filter p r else filter p r
+;;
+let remove_multiples_of n =
+  filter (fun m -> m mod n <> 0)
+;;
+let sieve max =
+  let rec filter_again = function
+  | [] -> []
+  | n :: r ->
+      if n * n > max then n :: r else n :: filter_again (remove_multiples_of n r)
+  in
+    filter_again (interval 2 max)
+;;
+"""
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 3, 3)
+//│ >       lhs = Application:
+//│ >         callee = Application:
+//│ >           callee = Reference of "interval"
+//│ >           argument = Reference of "min"
+//│ >         argument = Reference of "max"
+//│ >       rhs = Ternary:
+//│ >         name = Keyword(`if`, 10, 9)
+//│ >         lhs = Application:
+//│ >           callee = Reference of ">"
+//│ >           argument = Stack of 
+//│ >             Reference of "min"
+//│ >             Reference of "max"
+//│ >         rhs = Bracketed#Square of Sequence of Nil
+//│ >         body = Some of Application:
+//│ >           callee = Reference of "::"
+//│ >           argument = Stack of 
+//│ >             Reference of "min"
+//│ >             Application:
+//│ >               callee = Application:
+//│ >                 callee = Reference of "interval"
+//│ >                 argument = Application:
+//│ >                   callee = Reference of "succ"
+//│ >                   argument = Reference of "min"
+//│ >               argument = Reference of "max"
+//│ >   body = None
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 3, 3)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "filter"
+//│ >         argument = Reference of "p"
+//│ >       rhs = Match:
+//│ >         scrutinee = Empty()
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Bracketed#Square of Sequence of Nil
+//│ >             rhs = Bracketed#Square of Sequence of Nil
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "::"
+//│ >               argument = Stack of 
+//│ >                 Reference of "a"
+//│ >                 Reference of "r"
+//│ >             rhs = Ternary:
+//│ >               name = Keyword(`if`, 10, 9)
+//│ >               lhs = Application:
+//│ >                 callee = Reference of "p"
+//│ >                 argument = Reference of "a"
+//│ >               rhs = Application:
+//│ >                 callee = Reference of "::"
+//│ >                 argument = Stack of 
+//│ >                   Reference of "a"
+//│ >                   Application:
+//│ >                     callee = Application:
+//│ >                       callee = Reference of "filter"
+//│ >                       argument = Reference of "p"
+//│ >                     argument = Reference of "r"
+//│ >               body = Some of Application:
+//│ >                 callee = Application:
+//│ >                   callee = Reference of "filter"
+//│ >                   argument = Reference of "p"
+//│ >                 argument = Reference of "r"
+//│ >   body = None
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 3, 3)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "remove_multiples_of"
+//│ >         argument = Reference of "n"
+//│ >       rhs = Application:
+//│ >         callee = Reference of "filter"
+//│ >         argument = Lambda:
+//│ >           params = Stack of 
+//│ >             Reference of "m"
+//│ >           body = Application:
+//│ >             callee = Reference of "<>"
+//│ >             argument = Stack of 
+//│ >               Application:
+//│ >                 callee = Application:
+//│ >                   callee = Reference of "m"
+//│ >                   argument = Reference of "mod"
+//│ >                 argument = Reference of "n"
+//│ >               Literal#Integer of "0"
+//│ >   body = None
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 3, 3)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "sieve"
+//│ >         argument = Reference of "max"
+//│ >       rhs = LetIn:
+//│ >         bindings = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`=`, 3, 3)
+//│ >             lhs = Reference of "filter_again"
+//│ >             rhs = Match:
+//│ >               scrutinee = Empty()
+//│ >               branches = Stack of 
+//│ >                 Infix:
+//│ >                   op = Keyword(`->`, 5, 3)
+//│ >                   lhs = Bracketed#Square of Sequence of Nil
+//│ >                   rhs = Bracketed#Square of Sequence of Nil
+//│ >                 Infix:
+//│ >                   op = Keyword(`->`, 5, 3)
+//│ >                   lhs = Application:
+//│ >                     callee = Reference of "::"
+//│ >                     argument = Stack of 
+//│ >                       Reference of "n"
+//│ >                       Reference of "r"
+//│ >                   rhs = Ternary:
+//│ >                     name = Keyword(`if`, 10, 9)
+//│ >                     lhs = Application:
+//│ >                       callee = Reference of ">"
+//│ >                       argument = Stack of 
+//│ >                         Application:
+//│ >                           callee = Reference of "*"
+//│ >                           argument = Stack of 
+//│ >                             Reference of "n"
+//│ >                             Reference of "n"
+//│ >                         Reference of "max"
+//│ >                     rhs = Application:
+//│ >                       callee = Reference of "::"
+//│ >                       argument = Stack of 
+//│ >                         Reference of "n"
+//│ >                         Reference of "r"
+//│ >                     body = Some of Application:
+//│ >                       callee = Reference of "::"
+//│ >                       argument = Stack of 
+//│ >                         Reference of "n"
+//│ >                         Application:
+//│ >                           callee = Reference of "filter_again"
+//│ >                           argument = Application:
+//│ >                             callee = Application:
+//│ >                               callee = Reference of "remove_multiples_of"
+//│ >                               argument = Reference of "n"
+//│ >                             argument = Reference of "r"
+//│ >         body = Some of Application:
+//│ >           callee = Reference of "filter_again"
+//│ >           argument = Application:
+//│ >             callee = Application:
+//│ >               callee = Reference of "interval"
+//│ >               argument = Literal#Integer of "2"
+//│ >             argument = Reference of "max"
+//│ >   body = None
+//│ > «let interval min max = if min > max then [] then min :: interval (succ min) max»
+//│ > «let filter p = function [] -> [] | a :: r -> if p a then a :: filter p r then filter p r»
+//│ > «let remove_multiples_of n = filter (fun m -> m mod n <> 0)»
+//│ > «let sieve max = let filter_again = function [] -> [] | n :: r -> if n * n > max then n :: r then n :: filter_again (remove_multiples_of n r) in filter_again (interval 2 max)»

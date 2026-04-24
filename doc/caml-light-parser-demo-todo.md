@@ -71,7 +71,7 @@ For each example:
 | Example | Status | Memo | Commit Requirement |
 | --- | --- | --- | --- |
 | 1/10 | Done | `doc/caml-light-parser-demo/example-01.md` | Commit after done. |
-| 2/10 | Pending | `doc/caml-light-parser-demo/example-02.md` | Commit after done. |
+| 2/10 | Done | `doc/caml-light-parser-demo/example-02.md` | Commit after done. |
 | 3/10 | Pending | `doc/caml-light-parser-demo/example-03.md` | Commit after done. |
 | 4/10 | Pending | `doc/caml-light-parser-demo/example-04.md` | Commit after done. |
 | 5/10 | Pending | `doc/caml-light-parser-demo/example-05.md` | Commit after done. |
