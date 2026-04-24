@@ -9,6 +9,16 @@
 https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
 " rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/typeface-inconsolata@1.1.13/index.min.css" rel="stylesheet">
+  <script type="importmap">
+    {
+      "imports": {
+        "fs": "/browser-shims/fs.mjs",
+        "path": "/browser-shims/path.mjs",
+        "process": "/browser-shims/process.mjs",
+        "url": "/browser-shims/url.mjs"
+      }
+    }
+  </script>
 </head>
 
 <body>
@@ -23,6 +33,10 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
     <div id="output"></div>
   </div>
   <div id="syntax-diagrams">
+    <section id="precedence-table">
+      <h2>Precedence Table</h2>
+      <main></main>
+    </section>
     <h2>Syntax Diagrams</h2>
     <main></main>
   </div>
@@ -64,12 +78,37 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
       gap: 1rem;
     }
 
+    #precedence-table {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
     #syntax-diagrams main {
       padding: 1rem;
       /* min-height: 0;
       flex: 1; */
       /* overflow: auto; */
       border: 1px solid #000;
+    }
+
+    .precedence-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--monospace);
+      font-size: 0.95rem;
+    }
+
+    .precedence-table th,
+    .precedence-table td {
+      padding: 0.35rem 0.5rem;
+      border: 1px solid #000;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .precedence-table th {
+      background: #f0f0f0;
     }
 
     #input,

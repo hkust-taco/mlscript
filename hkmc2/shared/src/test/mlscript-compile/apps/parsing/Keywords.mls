@@ -103,6 +103,8 @@ let precMap = makePrecMap of
   "" // applications
   "."
 
+fun operatorPrecedenceMap = precMap
+
 // The largest precedence value of all operators.
 val periodPrec = precMap |> MutMap.get(".") |> Option.unsafe.get
 

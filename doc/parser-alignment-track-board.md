@@ -61,8 +61,8 @@ For any code-changing task:
 | 7 | PA-07 | Done | P2 | Low | Documentation | Write a proposal for built-in terminal syntax kinds beyond `ident` and `typevar`, especially `literal` and `string-literal`. |
 | 8 | PA-08 | Done | P1 | High | High | Align dynamic extension directives with the paper's `#keyword` and `#extend` syntax and replacement-expression scheme. |
 | 9 | PA-09 | Done | P2 | Medium | Investigation | Investigate whether Caml Light prefix operators have precedence; do not implement prefix precedence until this is resolved. |
-| 10 | PA-10 | Ready | P2 | Medium | Low | Add a generated precedence-table renderer and wire it into the web demo. |
-| 11 | PA-11 | Deferred | P3 | High | High | Simplify AST names and shapes to match the paper, including `Tree.Reference`, `Tree.Application`, and token naming cleanup. |
+| 10 | PA-10 | Done | P2 | Medium | Low | Add a generated precedence-table renderer and wire it into the web demo. |
+| 11 | PA-11 | Ready | P3 | High | High | Simplify AST names and shapes to match the paper, including `Tree.Reference`, `Tree.Application`, and token naming cleanup. |
 | 12 | PA-12 | Deferred | P3 | High | High | Future work: introduce `pattern` as a separate syntax kind with dedicated rules. |
 
 ## Task Cards
@@ -322,6 +322,7 @@ Acceptance criteria:
 
 - The web demo displays railroad diagrams and a precedence table.
 - Dynamic keyword additions appear in the table after parsing directives.
+- Symbolic operator character precedence and `Choice.Infix` rows are included.
 
 Likely files:
 
@@ -377,5 +378,5 @@ Likely files:
 
 ## Next Fix
 
-Continue with PA-10. It is independent presentation work in the web demo and can
-be implemented without changing the parser core.
+Continue with PA-11. It is high-churn naming work, so keep edits mechanical and
+review generated snapshot changes carefully.

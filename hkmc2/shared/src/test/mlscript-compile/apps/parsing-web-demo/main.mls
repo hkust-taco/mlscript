@@ -22,6 +22,8 @@ import "../../Predef.mls"
 import "../parsing/TreeHelpers.mls"
 import "../parsing/Extension.mls"
 import "../parsing/ParseRuleVisualizer.mls"
+import "../parsing/ParseRule.mls"
+import "../parsing/Keywords.mls"
 import "../parsing/Rules.mls"
 import "../parsing/vendors/railroad/railroad.mjs"
 import "./Examples.mls"
@@ -29,6 +31,7 @@ import "./Examples.mls"
 open XML { elem }
 open Predef
 open Option { Some, None }
+open ParseRule { Choice }
 open Examples
 
 module Main with ...
@@ -183,10 +186,90 @@ fun makeFigures(entries) = entries
     elem("figure") of elem("figcaption")(name), svg
   Iter.joined("")
 
+fun escapeHtml(value) =
+  value.toString()
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("\"", "&quot;")
+
+fun renderCell(tagName, value) = elem(tagName) of escapeHtml(value)
+
+fun precedenceLabel(value) = if value is
+  Some(value) then value.toString()
+  None then "N/A"
+
+fun rowSortKey(left, right) = if left is
+  Some(value) then value
+  None and right is Some(value) then value
+  else Keywords.INT_MIN
+
+fun addPrecedenceRow(rows, name, source, left, right, note) =
+  rows.push of
+    name: name
+    source: source
+    left: precedenceLabel(left)
+    right: precedenceLabel(right)
+    note: note
+    sortKey: rowSortKey(left, right)
+  ()
+
+fun addKeywordRows(rows) = Keywords.all Iter.each of case [_, keyword] then
+  addPrecedenceRow(rows, keyword.name, "keyword", keyword.leftPrec, keyword.rightPrec, "")
+
+fun addSymbolicOperatorRows(rows) = Keywords.operatorPrecedenceMap Iter.each of case [op, _] then
+  if Keywords.opPrecOpt(op) is Some([leftPrec, rightPrec]) do
+    addPrecedenceRow(rows, op, "symbolic operator", Some(leftPrec), Some(rightPrec), "derived from operator spelling")
+
+fun addParserRows(rows) =
+  addPrecedenceRow(rows, "prefix application", "parser", Some(Keywords.prefixPrec), Some(Keywords.prefixPrec), "symbolic identifier followed by an operand")
+  addPrecedenceRow(rows, "application", "parser", Some(Keywords.appPrec), Some(Keywords.appPrec), "term followed by term")
+
+fun addInfixChoiceRows(rows) =
+  fun visitRule(ownerName, rule) = rule.choices Iter.fromStack() Iter.each of choice =>
+    if choice is
+      Choice.Keyword(_, rest) then visitRule(ownerName, rest)
+      Choice.Ref(_, _, _, rest) then visitRule(ownerName, rest)
+      Choice.Infix(_, rhsKind, _, rest) then
+        addPrecedenceRow(rows, "<operator> <" + rhsKind + ">", "rule choice", None, None, "from " + ownerName)
+        visitRule(ownerName, rest)
+      Choice.End then ()
+  Rules.syntaxKinds Iter.each of case [kindName, rule] then visitRule(kindName, rule)
+
+fun precedenceRows() =
+  let rows = mut []
+  addKeywordRows(rows)
+  addSymbolicOperatorRows(rows)
+  addParserRows(rows)
+  addInfixChoiceRows(rows)
+  rows.sort of (a, b) =>
+    if a.sortKey == b.sortKey then a.name.localeCompare(b.name)
+    else b.sortKey - a.sortKey
+  rows
+
+fun renderPrecedenceRow(row) = elem("tr") of
+  renderCell("td", row.name)
+  renderCell("td", row.source)
+  renderCell("td", row.left)
+  renderCell("td", row.right)
+  renderCell("td", row.note)
+
+fun renderPrecedenceTable() = elem("table", "class": "precedence-table") of
+  elem("thead") of elem("tr") of
+    renderCell("th", "Form")
+    renderCell("th", "Source")
+    renderCell("th", "Left bp")
+    renderCell("th", "Right bp")
+    renderCell("th", "Notes")
+  elem("tbody") of precedenceRows()
+    Iter.mapping(renderPrecedenceRow)
+    Iter.joined("")
+
 fun displayRules() =
   open ParseRuleVisualizer
   open Rules
   reset()
+  set query("#precedence-table>main").innerHTML = renderPrecedenceTable()
   set query("#syntax-diagrams>main").innerHTML = StrOps.concat of
     elem("h3") of "Term"
     makeFigures of render(railroad, "term", termRule)
