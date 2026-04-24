@@ -898,3 +898,306 @@ let read_bit input =
 //│ > «let write_bit output bit = buffer.value <- buffer.value lor bit lsl buffer.nbits; buffer.nbits <- buffer.nbits + 1; if buffer.nbits >= 8 then output_char output (char_of_int buffer.value); buffer.value <- 0; buffer.nbits <- 0 then None»
 //│ > «let finish output = if buffer.nbits > 0 then output_char output (char_of_int buffer.value) then None»
 //│ > «let read_bit input = if buffer.nbits <= 0 then buffer.value <- int_of_char (input_char input); buffer.nbits <- 8; let result = buffer.value land 1 in buffer.value <- buffer.value lsr 1; buffer.nbits <- buffer.nbits - 1; result then None»
+
+// sources/examples/compress/fileprio.ml
+// ======================================
+
+example of """
+:tree
+type 'a t = Empty | QueueNode of int * 'a * 'a t * 'a t;;
+exception Empty_queue;;
+let empty = Empty;;
+let rec remove_top = function
+  | Empty -> raise Empty_queue
+  | QueueNode(priority, item, Empty, Empty) -> Empty
+  | QueueNode(priority, item, left, Empty) -> left
+  | QueueNode(priority, item, Empty, right) -> right
+  | QueueNode(priority, item,
+              QueueNode(left_priority, left_item, left_left, left_right),
+              QueueNode(right_priority, right_item, right_left, right_right)) ->
+      if left_priority < right_priority
+      then QueueNode(left_priority, left_item,
+                     remove_top (QueueNode(left_priority, left_item, left_left, left_right)),
+                     QueueNode(right_priority, right_item, right_left, right_right))
+      else QueueNode(right_priority, right_item,
+                     QueueNode(left_priority, left_item, left_left, left_right),
+                     remove_top (QueueNode(right_priority, right_item, right_left, right_right)))
+;;
+let extract = function
+  | Empty -> raise Empty_queue
+  | QueueNode(priority, item, left, right) ->
+      (priority, item, remove_top (QueueNode(priority, item, left, right)))
+;;
+let rec add queue priority item =
+  match queue with
+  | Empty -> QueueNode(priority, item, Empty, Empty)
+  | QueueNode(priority1, item1, left, right) ->
+      if priority <= priority1
+      then QueueNode(priority, item, add right priority1 item1, left)
+      else QueueNode(priority1, item1, add right priority item, left)
+;;
+"""
+//│ > Define:
+//│ >   kind = Type
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "t"
+//│ >         argument = Tuple of Stack of 
+//│ >           Reference of "'a"
+//│ >       rhs = Infix:
+//│ >         op = Keyword(`|`, N/A, N/A)
+//│ >         lhs = Reference of "Empty"
+//│ >         rhs = Infix:
+//│ >           op = Keyword(`of`, N/A, N/A)
+//│ >           lhs = Reference of "QueueNode"
+//│ >           rhs = Infix:
+//│ >             op = Keyword(`*`, 22, 22)
+//│ >             lhs = Infix:
+//│ >               op = Keyword(`*`, 22, 22)
+//│ >               lhs = Infix:
+//│ >                 op = Keyword(`*`, 22, 22)
+//│ >                 lhs = Reference of "int"
+//│ >                 rhs = Reference of "'a"
+//│ >               rhs = Application:
+//│ >                 callee = Reference of "t"
+//│ >                 argument = Reference of "'a"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "t"
+//│ >               argument = Reference of "'a"
+//│ > Define:
+//│ >   kind = Exception
+//│ >   items = Stack of 
+//│ >     Reference of "Empty_queue"
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "empty"
+//│ >       rhs = Reference of "Empty"
+//│ >   body = None
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "remove_top"
+//│ >       rhs = Match:
+//│ >         scrutinee = Empty()
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Reference of "Empty"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "raise"
+//│ >               argument = Reference of "Empty_queue"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "QueueNode"
+//│ >               argument = Tuple of Stack of 
+//│ >                 Reference of "priority"
+//│ >                 Reference of "item"
+//│ >                 Reference of "Empty"
+//│ >                 Reference of "Empty"
+//│ >             rhs = Reference of "Empty"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "QueueNode"
+//│ >               argument = Tuple of Stack of 
+//│ >                 Reference of "priority"
+//│ >                 Reference of "item"
+//│ >                 Reference of "left"
+//│ >                 Reference of "Empty"
+//│ >             rhs = Reference of "left"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "QueueNode"
+//│ >               argument = Tuple of Stack of 
+//│ >                 Reference of "priority"
+//│ >                 Reference of "item"
+//│ >                 Reference of "Empty"
+//│ >                 Reference of "right"
+//│ >             rhs = Reference of "right"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "QueueNode"
+//│ >               argument = Tuple of Stack of 
+//│ >                 Reference of "priority"
+//│ >                 Reference of "item"
+//│ >                 Application:
+//│ >                   callee = Reference of "QueueNode"
+//│ >                   argument = Tuple of Stack of 
+//│ >                     Reference of "left_priority"
+//│ >                     Reference of "left_item"
+//│ >                     Reference of "left_left"
+//│ >                     Reference of "left_right"
+//│ >                 Application:
+//│ >                   callee = Reference of "QueueNode"
+//│ >                   argument = Tuple of Stack of 
+//│ >                     Reference of "right_priority"
+//│ >                     Reference of "right_item"
+//│ >                     Reference of "right_left"
+//│ >                     Reference of "right_right"
+//│ >             rhs = Ternary:
+//│ >               name = Keyword(`if`, 10, 9)
+//│ >               lhs = Application:
+//│ >                 callee = Reference of "<"
+//│ >                 argument = Stack of 
+//│ >                   Reference of "left_priority"
+//│ >                   Reference of "right_priority"
+//│ >               rhs = Application:
+//│ >                 callee = Reference of "QueueNode"
+//│ >                 argument = Tuple of Stack of 
+//│ >                   Reference of "left_priority"
+//│ >                   Reference of "left_item"
+//│ >                   Application:
+//│ >                     callee = Reference of "remove_top"
+//│ >                     argument = Application:
+//│ >                       callee = Reference of "QueueNode"
+//│ >                       argument = Tuple of Stack of 
+//│ >                         Reference of "left_priority"
+//│ >                         Reference of "left_item"
+//│ >                         Reference of "left_left"
+//│ >                         Reference of "left_right"
+//│ >                   Application:
+//│ >                     callee = Reference of "QueueNode"
+//│ >                     argument = Tuple of Stack of 
+//│ >                       Reference of "right_priority"
+//│ >                       Reference of "right_item"
+//│ >                       Reference of "right_left"
+//│ >                       Reference of "right_right"
+//│ >               body = Some of Application:
+//│ >                 callee = Reference of "QueueNode"
+//│ >                 argument = Tuple of Stack of 
+//│ >                   Reference of "right_priority"
+//│ >                   Reference of "right_item"
+//│ >                   Application:
+//│ >                     callee = Reference of "QueueNode"
+//│ >                     argument = Tuple of Stack of 
+//│ >                       Reference of "left_priority"
+//│ >                       Reference of "left_item"
+//│ >                       Reference of "left_left"
+//│ >                       Reference of "left_right"
+//│ >                   Application:
+//│ >                     callee = Reference of "remove_top"
+//│ >                     argument = Application:
+//│ >                       callee = Reference of "QueueNode"
+//│ >                       argument = Tuple of Stack of 
+//│ >                         Reference of "right_priority"
+//│ >                         Reference of "right_item"
+//│ >                         Reference of "right_left"
+//│ >                         Reference of "right_right"
+//│ >   body = None
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "extract"
+//│ >       rhs = Match:
+//│ >         scrutinee = Empty()
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Reference of "Empty"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "raise"
+//│ >               argument = Reference of "Empty_queue"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "QueueNode"
+//│ >               argument = Tuple of Stack of 
+//│ >                 Reference of "priority"
+//│ >                 Reference of "item"
+//│ >                 Reference of "left"
+//│ >                 Reference of "right"
+//│ >             rhs = Tuple of Stack of 
+//│ >               Reference of "priority"
+//│ >               Reference of "item"
+//│ >               Application:
+//│ >                 callee = Reference of "remove_top"
+//│ >                 argument = Application:
+//│ >                   callee = Reference of "QueueNode"
+//│ >                   argument = Tuple of Stack of 
+//│ >                     Reference of "priority"
+//│ >                     Reference of "item"
+//│ >                     Reference of "left"
+//│ >                     Reference of "right"
+//│ >   body = None
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Application:
+//│ >           callee = Application:
+//│ >             callee = Reference of "add"
+//│ >             argument = Reference of "queue"
+//│ >           argument = Reference of "priority"
+//│ >         argument = Reference of "item"
+//│ >       rhs = Match:
+//│ >         scrutinee = Reference("queue", false)
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Reference of "Empty"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "QueueNode"
+//│ >               argument = Tuple of Stack of 
+//│ >                 Reference of "priority"
+//│ >                 Reference of "item"
+//│ >                 Reference of "Empty"
+//│ >                 Reference of "Empty"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "QueueNode"
+//│ >               argument = Tuple of Stack of 
+//│ >                 Reference of "priority1"
+//│ >                 Reference of "item1"
+//│ >                 Reference of "left"
+//│ >                 Reference of "right"
+//│ >             rhs = Ternary:
+//│ >               name = Keyword(`if`, 10, 9)
+//│ >               lhs = Application:
+//│ >                 callee = Reference of "<="
+//│ >                 argument = Stack of 
+//│ >                   Reference of "priority"
+//│ >                   Reference of "priority1"
+//│ >               rhs = Application:
+//│ >                 callee = Reference of "QueueNode"
+//│ >                 argument = Tuple of Stack of 
+//│ >                   Reference of "priority"
+//│ >                   Reference of "item"
+//│ >                   Application:
+//│ >                     callee = Application:
+//│ >                       callee = Application:
+//│ >                         callee = Reference of "add"
+//│ >                         argument = Reference of "right"
+//│ >                       argument = Reference of "priority1"
+//│ >                     argument = Reference of "item1"
+//│ >                   Reference of "left"
+//│ >               body = Some of Application:
+//│ >                 callee = Reference of "QueueNode"
+//│ >                 argument = Tuple of Stack of 
+//│ >                   Reference of "priority1"
+//│ >                   Reference of "item1"
+//│ >                   Application:
+//│ >                     callee = Application:
+//│ >                       callee = Application:
+//│ >                         callee = Reference of "add"
+//│ >                         argument = Reference of "right"
+//│ >                       argument = Reference of "priority"
+//│ >                     argument = Reference of "item"
+//│ >                   Reference of "left"
+//│ >   body = None
+//│ > «type t ('a) = Empty | QueueNode of int * 'a * t 'a * t 'a»
+//│ > «exception Empty_queue»
+//│ > «let empty = Empty»
+//│ > «let remove_top = function Empty -> raise Empty_queue | QueueNode (priority, item, Empty, Empty) -> Empty | QueueNode (priority, item, left, Empty) -> left | QueueNode (priority, item, Empty, right) -> right | QueueNode (priority, item, QueueNode (left_priority, left_item, left_left, left_right), QueueNode (right_priority, right_item, right_left, right_right)) -> if left_priority < right_priority then QueueNode (left_priority, left_item, remove_top (QueueNode (left_priority, left_item, left_left, left_right)), QueueNode (right_priority, right_item, right_left, right_right)) then QueueNode (right_priority, right_item, QueueNode (left_priority, left_item, left_left, left_right), remove_top (QueueNode (right_priority, right_item, right_left, right_right)))»
+//│ > «let extract = function Empty -> raise Empty_queue | QueueNode (priority, item, left, right) -> (priority, item, remove_top (QueueNode (priority, item, left, right)))»
+//│ > «let add queue priority item = match queue with Empty -> QueueNode (priority, item, Empty, Empty) | QueueNode (priority1, item1, left, right) -> if priority <= priority1 then QueueNode (priority, item, add right priority1 item1, left) then QueueNode (priority1, item1, add right priority item, left)»
