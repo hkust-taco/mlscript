@@ -284,12 +284,18 @@ final case class TypeInfo(
   * In Wasm, a `tag` names an exception kind and points to a function type that describes the payload values carried by
   * `throw tag ...` and extracted by matching `catch tag ...`.
   *
-  * @param id
-  *   Symbolic identifier for the tag.
   * @param typeUse
   *   The function type referenced by this tag.
+  * @param sym
+  *   The source [[Symbol]] which this tag is generated from.
+  * @param idPrefix
+  *   An optional prefix for the symbolic identifier of this tag. If provided, the tag name will be prepended with
+  *   `${idPrefix}_`.
   */
-class TagInfo(val id: SymIdx, val typeUse: TypeUse) extends ToWat:
+class TagInfo(val typeUse: TypeUse, val sym: Symbol, val idPrefix: Opt[Str])(using Ctx, Raise) extends ToWat:
+
+  /** Symbolic identifier for the tag. */
+  val id: SymIdx = SymIdx(summon[Ctx].tagScp.allocateOrGetNamePrefixed(sym, idPrefix))
 
   def toWat: Document =
     doc"""(tag ${id.toWat} (export "${id.id}") ${typeUse.toWat})"""
@@ -493,6 +499,9 @@ class Ctx(using State) extends ToWat:
 
   /** [[ListMap]] containing all memory definitions and imports in the module mapped by their symbolic identifiers. */
   private var memories = ListMap.empty[SymIdx, MemInfo | Import[ExternType.Mem]]
+  
+  /** [[Scope]] for generating WAT identifiers of tags. */
+  private[text] val tagScp = Scope.empty(Scope.Cfg.default)
 
   /** [[ListMap]] containing all tag definitions in the module. */
   private var tags = ListMap.empty[SymIdx, TagInfo]
@@ -667,7 +676,8 @@ class Ctx(using State) extends ToWat:
       case _ =>
     val idx = FuncIdx(funcInfo.id)
     val refType = RefType(funcInfo.typeUse.typeIdx, nullable = false)
-    elemSegments = elemSegments + (id -> ElemSegment.Declare(refType -> Seq(ref.func(idx, refType)), funcInfo.sym, funcInfo.idPrefix))
+    elemSegments = elemSegments +
+      (id -> ElemSegment.Declare(refType -> Seq(ref.func(idx, refType)), funcInfo.sym, funcInfo.idPrefix))
     idx
 
   /** Returns the [[FuncIdx]] of the given `funcref`.
