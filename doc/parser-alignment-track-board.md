@@ -58,8 +58,8 @@ For any code-changing task:
 | 5 | PA-05 | Done | P1 | Medium | Medium | Split the parameterized `expr`/`exprCont` pair into explicit `expr`/`exprCont` and `typeExpr`/`typeExprCont` pairs. |
 | 6 | PA-06 | Done | P1 | High | High | Add the paper's `Infix` choice so symbolic infix operators are represented in rules instead of hard-coded in `exprCont`. |
 | 7 | PA-07 | Done | P2 | Low | Documentation | Write a proposal for built-in terminal syntax kinds beyond `ident` and `typevar`, especially `literal` and `string-literal`. |
-| 8 | PA-08 | Ready | P1 | High | High | Align dynamic extension directives with the paper's `#keyword` and `#extend` syntax and replacement-expression scheme. |
-| 9 | PA-09 | Deferred | P2 | Medium | Investigation | Investigate whether Caml Light prefix operators have precedence; do not implement prefix precedence until this is resolved. |
+| 8 | PA-08 | Done | P1 | High | High | Align dynamic extension directives with the paper's `#keyword` and `#extend` syntax and replacement-expression scheme. |
+| 9 | PA-09 | Ready | P2 | Medium | Investigation | Investigate whether Caml Light prefix operators have precedence; do not implement prefix precedence until this is resolved. |
 | 10 | PA-10 | Deferred | P2 | Medium | Low | Add a generated precedence-table renderer and wire it into the web demo. |
 | 11 | PA-11 | Deferred | P3 | High | High | Simplify AST names and shapes to match the paper, including `Tree.Reference`, `Tree.Application`, and token naming cleanup. |
 | 12 | PA-12 | Deferred | P3 | High | High | Future work: introduce `pattern` as a separate syntax kind with dedicated rules. |
@@ -267,6 +267,11 @@ Acceptance criteria:
   compatibility tests if we choose a transition period.
 - `Extension.mls` no longer centers on `parseChoiceTree` returning a function
   identifier application.
+- Closed literal terminal kinds are available to dynamic extensions:
+  `literal`, `string-literal`, `integer-literal`, `decimal-literal`, and
+  `boolean-literal`.
+- `#extend` creates a target syntax kind when the target is not closed and does
+  not already exist, so a separate `#newCategory` directive is unnecessary.
 
 Likely files:
 
@@ -369,5 +374,5 @@ Likely files:
 
 ## Next Fix
 
-Start with PA-01. It is the least risky concrete parser correction, and it gives
-us a clean first test pass before changing the core rule representation.
+Continue with PA-09. It is an investigation task and should settle the prefix
+operator question before any remaining presentation or naming cleanup work.

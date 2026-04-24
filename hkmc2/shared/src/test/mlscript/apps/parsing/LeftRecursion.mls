@@ -10,9 +10,9 @@ import "../../../mlscript-compile/apps/parsing/Keywords.mls"
 open Test { example }
 
 example of """
-#newKeyword ("count", Some 5, Some 5)
-#newKeyword ("base", None, None)
-#newKeyword ("incr", None, None)
+#keyword "count" 5 5
+#keyword "base" None None
+#keyword "incr" None None
 """
 //│ > 
 
@@ -21,16 +21,11 @@ print of Keywords.extended |> MutMap.valuesIterator |. Iter.joined("\n")
 //│ > Keyword(`base`, N/A, N/A)
 //│ > Keyword(`incr`, N/A, N/A)
 
-example of """
-#newCategory "counting"
-"""
-//│ > 
-
 // <counting> ::= <counting> "incr" | "base"
 example of """
-#extendCategory "counting", [ "counting", keyword("incr") ], succ
-#extendCategory "counting", [ keyword("base") ], zero
-#extendCategory "term", [ keyword("count"), "counting" ], result
+#extend ["counting", [ ["counting", "value"], keyword("incr") ], [succ value]]
+#extend ["counting", [ keyword("base") ], [zero]]
+#extend ["term", [ keyword("count"), ["counting", "value"] ], [result value]]
 """
 //│ > 
 

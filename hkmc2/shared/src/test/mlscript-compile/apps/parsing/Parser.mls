@@ -43,6 +43,17 @@ fun parse(tokens) =
   fun parseKind(kind: Str, prec: Int): TreeT = if
     kind is "type" then typeExpr(prec)
     kind is "term" then expr(prec)
+    // built-in kinds: literals
+    kind is "literal" then if tokens is
+      Token.Literal(kind, value) :: _ then
+        consume
+        Tree.Literal(kind, value)
+      token :: _ then Tree.error("expect a literal but found " + token)
+      Nil then Tree.error("expect a literal but found the end of input")
+    kind is "string-literal" then parseLiteralKind(kind, Token.LiteralKind.String)
+    kind is "integer-literal" then parseLiteralKind(kind, Token.LiteralKind.Integer)
+    kind is "decimal-literal" then parseLiteralKind(kind, Token.LiteralKind.Decimal)
+    kind is "boolean-literal" then parseLiteralKind(kind, Token.LiteralKind.Boolean)
     // built-in kinds: plain identifiers
     kind is "ident" then if tokens is
       Token.Identifier(name, false) :: _ and Keywords.all |> MutMap.get(name) is None then
@@ -70,7 +81,14 @@ fun parse(tokens) =
             set shouldParse = false
       tree
     else throw Error("Unknown syntax kind: \"" + kind + "\"")
-  
+
+  fun parseLiteralKind(kindName: Str, expectedKind): TreeT = if tokens is
+    Token.Literal(kind, value) :: _ and kind == expectedKind then
+      consume
+      Tree.Literal(kind, value)
+    token :: _ then Tree.error("expect a " + kindName + " but found " + token)
+    Nil then Tree.error("expect a " + kindName + " but found the end of input")
+
   fun parseRule(prec: Int, rule) = tracer.trace of
     "parsing rule \"" + rule.name + "\" with precedence " + prec
     result => "parsed rule \"" + rule.name + "\": " + result Tree.summary()
@@ -278,13 +296,10 @@ fun parse(tokens) =
   fun handleDirective(tree: TreeT, acc: TreeT) = if tree is
     // Call the corresponding handler for the directive.
     Tree.Define(Tree.DefineKind.Directive, [name, body] :: Nil) as tree and name is
-      Tree.Ident("newKeyword", _) then
+      Tree.Ident("keyword", _) then
         Extension.extendKeyword(body)
         modCont(acc)
-      Tree.Ident("newCategory", _) then
-        Extension.newCategory(body)
-        modCont(acc)
-      Tree.Ident("extendCategory", _) then
+      Tree.Ident("extend", _) then
         Extension.extendCategory(body)
         modCont(acc)
       else

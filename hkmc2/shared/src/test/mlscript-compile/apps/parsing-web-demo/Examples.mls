@@ -38,15 +38,13 @@ let rec join_lines l1 l2 l3 =
 examples |> MutMap.insert of
   "extensible"
   name: "Extensible Syntax"
-  source: """#newKeyword ("hello", Some 3, Some 3)
-#newKeyword ("goodbye", None, None)
+  source: """#keyword "hello" 3 3
+#keyword "goodbye" None None
+
+#extend ["greeting", [ keyword("hello"), ["string-literal", "name"], ["greeting", "tail"] ], [foo name tail]]
+#extend ["greeting", [ keyword("goodbye") ], [bar]]
   
-#newCategory("greeting")
-  
-#extendCategory("greeting", [ keyword("hello"), "term", "greeting" ], foo)
-#extendCategory("greeting", [ keyword("goodbye") ], bar)
-  
-#extendCategory("decl", [ "greeting" ], baz)
+#extend ["decl", [ ["greeting", "value"] ], [baz value]]
   
   
 hello "Rob" hello "Bob" goodbye

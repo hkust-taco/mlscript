@@ -29,7 +29,7 @@ Add these closed terminal syntax kinds to `parseKind`:
 | `literal` | any `Token.Literal(kind, value)` | `Tree.Literal(kind, value)` |
 | `string-literal` | `Token.Literal(Token.LiteralKind.String, value)` | `Tree.Literal(Token.LiteralKind.String, value)` |
 | `integer-literal` | `Token.Literal(Token.LiteralKind.Integer, value)` | `Tree.Literal(Token.LiteralKind.Integer, value)` |
-| `float-literal` | `Token.Literal(Token.LiteralKind.Float, value)` | `Tree.Literal(Token.LiteralKind.Float, value)` |
+| `decimal-literal` | `Token.Literal(Token.LiteralKind.Decimal, value)` | `Tree.Literal(Token.LiteralKind.Decimal, value)` |
 | `boolean-literal` | `Token.Literal(Token.LiteralKind.Boolean, value)` | `Tree.Literal(Token.LiteralKind.Boolean, value)` |
 
 These should remain closed categories, like `ident` and `typevar`; users should
@@ -67,7 +67,7 @@ with a message that distinguishes unknown syntax kinds from unsupported labels.
 - `literal`
 - `string-literal`
 - `integer-literal`
-- `float-literal`
+- `decimal-literal`
 - `boolean-literal`
 
 They should not generate follow-up diagrams, because they have no rule body.
