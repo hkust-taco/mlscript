@@ -123,6 +123,13 @@ val _equal = keyword("=", charPrecOpt("="), charPrecOpt("="))
 
 val _asterisk = keyword of "*", charPrecOpt("*"), charPrecOpt("*")
 val _equalequal = keyword of "==", charPrecOpt("="), charPrecOpt("=")
+val _mod = keyword of "mod", charPrecOpt("*"), charPrecOpt("*")
+val _land = keyword of "land", charPrecOpt("&"), charPrecOpt("&")
+val _lor = keyword of "lor", charPrecOpt("|"), charPrecOpt("|")
+val _lxor = keyword of "lxor", charPrecOpt("|"), charPrecOpt("|")
+val _lsl = keyword of "lsl", charPrecOpt("*"), charPrecOpt("*")
+val _lsr = keyword of "lsr", charPrecOpt("*"), charPrecOpt("*")
+val _asr = keyword of "asr", charPrecOpt("*"), charPrecOpt("*")
 
 let bracketPrec = Some(maxOperatorPrec + 1)
 

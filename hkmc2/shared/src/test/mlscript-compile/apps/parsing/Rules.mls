@@ -103,6 +103,10 @@ fun makeInfixChoice(kw: Keywords.Keyword, rhsKind: Str, compose: (Tree, Tree) ->
     process: (rhs, _) => lhs => compose(lhs, rhs)
     name: "operator `" + kw.name + "` right-hand side"
 
+fun makeNamedOperatorChoice(kw: Keywords.Keyword) =
+  makeInfixChoice of kw, "term", (lhs, rhs) =>
+    Tree.Application(Tree.Reference(kw.name, true), lhs :: rhs :: Nil)
+
 fun makeBracketRule(fields) = // opening, closing, kind, wrapContent
   // Pass the error message of closing bracket to the content.
   keyword(fields.opening) of reference(fields.kind) of
@@ -218,6 +222,14 @@ val termRule = rule of
       // Comparison: <expr> * <expr>
       makeInfixChoice of Keywords._asterisk, "term", (lhs, rhs) =>
         Tree.Application(Tree.Reference("*", true), lhs :: rhs :: Nil)
+      // Alphabetic infix operators, such as `mod`, `land`, and `lsl`.
+      makeNamedOperatorChoice(Keywords._mod)
+      makeNamedOperatorChoice(Keywords._land)
+      makeNamedOperatorChoice(Keywords._lor)
+      makeNamedOperatorChoice(Keywords._lxor)
+      makeNamedOperatorChoice(Keywords._lsl)
+      makeNamedOperatorChoice(Keywords._lsr)
+      makeNamedOperatorChoice(Keywords._asr)
       // Selection: <expr> "." <identifier>
       // Access: <expr> "." "(" <expr> ")"
       keyword(Keywords._period) of
