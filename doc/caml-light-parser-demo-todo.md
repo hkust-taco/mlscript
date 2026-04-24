@@ -43,11 +43,11 @@ implementation until the user confirms that this plan is acceptable.
 
 | ID | Status | Task |
 | --- | --- | --- |
-| P1-01 | Pending | Visit the official Caml Light site at `https://caml.inria.fr/caml-light/`. |
-| P1-02 | Pending | Find the official Caml Light GitHub repository from that site. |
-| P1-03 | Pending | Clone the repository into a temporary folder outside this repo. |
-| P1-04 | Pending | Inventory candidate example files, including multi-file examples and French-named examples. |
-| P1-05 | Pending | Choose at least 10 examples that are meaningful and likely portable. |
+| P1-01 | Done | Visit the official Caml Light site at `https://caml.inria.fr/caml-light/`. |
+| P1-02 | Done | Find the official Caml Light source/examples repository or archive path. |
+| P1-03 | Done | Clone the repository into a temporary folder outside this repo. |
+| P1-04 | Done | Inventory candidate example files, including multi-file examples and French-named examples. |
+| P1-05 | Done | Choose at least 10 examples that are meaningful and likely portable. |
 
 ## Phase 2: Port 10 Caml Light Examples
 
