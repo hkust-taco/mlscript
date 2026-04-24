@@ -41,7 +41,7 @@ fun listLike(fields) =
     choices: tuple of end(Nil), mkTail of reference(fields.tail) of
       process: idFirst, name: "more " + fields.name + "s"
 
-define("let-bindings") of term of
+define("let-bindings") of reference("binding") of
   process: (lhs, rhsBindings) => if rhsBindings is [rhs, bindings] then
     Tree.Infix(Keywords._equal, lhs, rhs) :: bindings
   name: "left-hand side"
@@ -212,6 +212,9 @@ val termRule = rule of
       // Comparison: <expr> == <expr>
       makeInfixChoice of Keywords._equalequal, "term", (lhs, rhs) =>
         Tree.Infix(Keywords._equalequal, lhs, rhs)
+      // Equality: <expr> = <expr>
+      makeInfixChoice of Keywords._equal, "term", (lhs, rhs) =>
+        Tree.Infix(Keywords._equal, lhs, rhs)
       // Comparison: <expr> * <expr>
       makeInfixChoice of Keywords._asterisk, "term", (lhs, rhs) =>
         Tree.Application(Tree.Reference("*", true), lhs :: rhs :: Nil)

@@ -33,7 +33,7 @@ end
 //│ > LetIn:
 //│ >   bindings = Stack of 
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
+//│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Application:
 //│ >         callee = Reference of "fib"
 //│ >         argument = Reference of "n"
@@ -141,7 +141,7 @@ let sieve max =
 //│ > LetIn:
 //│ >   bindings = Stack of 
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
+//│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Application:
 //│ >         callee = Application:
 //│ >           callee = Reference of "interval"
@@ -170,7 +170,7 @@ let sieve max =
 //│ > LetIn:
 //│ >   bindings = Stack of 
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
+//│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Application:
 //│ >         callee = Reference of "filter"
 //│ >         argument = Reference of "p"
@@ -211,7 +211,7 @@ let sieve max =
 //│ > LetIn:
 //│ >   bindings = Stack of 
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
+//│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Application:
 //│ >         callee = Reference of "remove_multiples_of"
 //│ >         argument = Reference of "n"
@@ -233,14 +233,14 @@ let sieve max =
 //│ > LetIn:
 //│ >   bindings = Stack of 
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
+//│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Application:
 //│ >         callee = Reference of "sieve"
 //│ >         argument = Reference of "max"
 //│ >       rhs = LetIn:
 //│ >         bindings = Stack of 
 //│ >           Infix:
-//│ >             op = Keyword(`=`, 3, 3)
+//│ >             op = Keyword(`=`, 16, 16)
 //│ >             lhs = Reference of "filter_again"
 //│ >             rhs = Match:
 //│ >               scrutinee = Empty()
@@ -295,3 +295,144 @@ let sieve max =
 //│ > «let filter p = function [] -> [] | a :: r -> if p a then a :: filter p r then filter p r»
 //│ > «let remove_multiples_of n = filter (fun m -> m mod n <> 0)»
 //│ > «let sieve max = let filter_again = function [] -> [] | n :: r -> if n * n > max then n :: r then n :: filter_again (remove_multiples_of n r) in filter_again (interval 2 max)»
+
+// sources/examples/grep/ensent.ml
+// ===============================
+
+example of """
+:tree
+type t == int list;;
+let empty = [];;
+let rec belongs n = function
+  | [] -> false
+  | m :: rest ->
+      if m = n then true else
+        if m > n then false else belongs n rest
+;;
+let rec add n = function
+  | [] -> [n]
+  | m :: rest ->
+      if m = n then m :: rest else
+        if m > n then n :: m :: rest else m :: add n rest
+;;
+"""
+//│ > Define:
+//│ >   kind = Type
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`==`, 16, 16)
+//│ >       lhs = Reference of "t"
+//│ >       rhs = Application:
+//│ >         callee = Reference of "list"
+//│ >         argument = Reference of "int"
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "empty"
+//│ >       rhs = Bracketed#Square of Sequence of Nil
+//│ >   body = None
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "belongs"
+//│ >         argument = Reference of "n"
+//│ >       rhs = Match:
+//│ >         scrutinee = Empty()
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Bracketed#Square of Sequence of Nil
+//│ >             rhs = Literal#Boolean of "false"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "::"
+//│ >               argument = Stack of 
+//│ >                 Reference of "m"
+//│ >                 Reference of "rest"
+//│ >             rhs = Ternary:
+//│ >               name = Keyword(`if`, 10, 9)
+//│ >               lhs = Infix:
+//│ >                 op = Keyword(`=`, 16, 16)
+//│ >                 lhs = Reference of "m"
+//│ >                 rhs = Reference of "n"
+//│ >               rhs = Literal#Boolean of "true"
+//│ >               body = Some of Ternary:
+//│ >                 name = Keyword(`if`, 10, 9)
+//│ >                 lhs = Application:
+//│ >                   callee = Reference of ">"
+//│ >                   argument = Stack of 
+//│ >                     Reference of "m"
+//│ >                     Reference of "n"
+//│ >                 rhs = Literal#Boolean of "false"
+//│ >                 body = Some of Application:
+//│ >                   callee = Application:
+//│ >                     callee = Reference of "belongs"
+//│ >                     argument = Reference of "n"
+//│ >                   argument = Reference of "rest"
+//│ >   body = None
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "add"
+//│ >         argument = Reference of "n"
+//│ >       rhs = Match:
+//│ >         scrutinee = Empty()
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Bracketed#Square of Sequence of Nil
+//│ >             rhs = Bracketed#Square of Reference of "n"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "::"
+//│ >               argument = Stack of 
+//│ >                 Reference of "m"
+//│ >                 Reference of "rest"
+//│ >             rhs = Ternary:
+//│ >               name = Keyword(`if`, 10, 9)
+//│ >               lhs = Infix:
+//│ >                 op = Keyword(`=`, 16, 16)
+//│ >                 lhs = Reference of "m"
+//│ >                 rhs = Reference of "n"
+//│ >               rhs = Application:
+//│ >                 callee = Reference of "::"
+//│ >                 argument = Stack of 
+//│ >                   Reference of "m"
+//│ >                   Reference of "rest"
+//│ >               body = Some of Ternary:
+//│ >                 name = Keyword(`if`, 10, 9)
+//│ >                 lhs = Application:
+//│ >                   callee = Reference of ">"
+//│ >                   argument = Stack of 
+//│ >                     Reference of "m"
+//│ >                     Reference of "n"
+//│ >                 rhs = Application:
+//│ >                   callee = Reference of "::"
+//│ >                   argument = Stack of 
+//│ >                     Reference of "n"
+//│ >                     Application:
+//│ >                       callee = Reference of "::"
+//│ >                       argument = Stack of 
+//│ >                         Reference of "m"
+//│ >                         Reference of "rest"
+//│ >                 body = Some of Application:
+//│ >                   callee = Reference of "::"
+//│ >                   argument = Stack of 
+//│ >                     Reference of "m"
+//│ >                     Application:
+//│ >                       callee = Application:
+//│ >                         callee = Reference of "add"
+//│ >                         argument = Reference of "n"
+//│ >                       argument = Reference of "rest"
+//│ >   body = None
+//│ > «type t == list int»
+//│ > «let empty = []»
+//│ > «let belongs n = function [] -> false | m :: rest -> if m = n then true then if m > n then false then belongs n rest»
+//│ > «let add n = function [] -> [n] | m :: rest -> if m = n then m :: rest then if m > n then n :: m :: rest then m :: add n rest»

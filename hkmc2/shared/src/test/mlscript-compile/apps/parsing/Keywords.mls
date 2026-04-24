@@ -53,7 +53,6 @@ val _semicolon = keyword(";", semiPrec, basePrec)
 val _comma = keyword(",", commaPrec, semiPrec)
 let eqPrec = nextPrec
 let ascPrec = nextPrec
-val _equal = keyword("=", eqPrec, eqPrec)
 val _and = keyword("and", None, currPrec)
 val _bar = keyword of "|", None, None
 val _thinArrow = keyword of "->", nextPrec, eqPrec
@@ -119,6 +118,8 @@ val prefixPrec = appPrec - 1
 fun charPrec(op) = precMap |> MutMap.get(op) |> Option.unsafe.get
 
 fun charPrecOpt(op) = precMap |> MutMap.get(op)
+
+val _equal = keyword("=", charPrecOpt("="), charPrecOpt("="))
 
 val _asterisk = keyword of "*", charPrecOpt("*"), charPrecOpt("*")
 val _equalequal = keyword of "==", charPrecOpt("="), charPrecOpt("=")
