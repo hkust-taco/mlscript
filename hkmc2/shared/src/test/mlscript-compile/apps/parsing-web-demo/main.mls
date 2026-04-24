@@ -20,6 +20,7 @@ import "../../XML.mls"
 import "../../Option.mls"
 import "../../Runtime.mls"
 import "../../Predef.mls"
+import "../../MutMap.mls"
 import "../parsing/TreeHelpers.mls"
 import "../parsing/Extension.mls"
 import "../parsing/ParseRuleVisualizer.mls"
@@ -67,7 +68,7 @@ editor.addEventListener of "keydown", event =>
     set editor.selectionStart = editor.selectionEnd
 
 selector.addEventListener of "change", event =>
-  if examples.get(selector.value) is
+  if examples |> MutMap.get(selector.value) is
     Some(example) do set editor.value = example.source
     None do showError of new Error of "Example \"" + selector.value + "\" not found"
 
@@ -98,61 +99,9 @@ fun hideError() =
   if errorDialog.open do errorDialog.close()
 
 fun firstErrorInStack(trees) =
-  trees Iter.fromStack() Iter.firstDefined(firstTreeError)
-
-fun firstErrorInPair(item) = if item is
-  Tree as tree then firstTreeError(tree)
-  [lhs, rhs] then if firstTreeError(lhs) is
-    Some(message) then Some(message)
-    None then firstTreeError(rhs)
-  else None
-
-fun firstTreeError(tree) = if tree is
-  Tree.Error(_, message) then Some(message)
-  Tree.Bracketed(_, inner) then firstTreeError(inner)
-  Tree.Modified(modifier, subject) then if firstTreeError(modifier) is
-    Some(message) then Some(message)
-    None then firstTreeError(subject)
-  Tree.Tuple(trees) then firstErrorInStack(trees)
-  Tree.Sequence(trees) then firstErrorInStack(trees)
-  Tree.Match(scrutinee, branches) then if firstTreeError(scrutinee) is
-    Some(message) then Some(message)
-    None then firstErrorInStack(branches)
-  Tree.Try(body, branches) then if firstTreeError(body) is
-    Some(message) then Some(message)
-    None then firstErrorInStack(branches)
-  Tree.Lambda(params, body) then if firstErrorInStack(params) is
-    Some(message) then Some(message)
-    None then firstTreeError(body)
-  Tree.Application(callee, argument) then if firstTreeError(callee) is
-    Some(message) then Some(message)
-    None then firstTreeError(argument)
-  Tree.Infix(_, lhs, rhs) then if firstTreeError(lhs) is
-    Some(message) then Some(message)
-    None then firstTreeError(rhs)
-  Tree.Define(_, items) then
-    items Iter.fromStack() Iter.firstDefined(firstErrorInPair)
-  Tree.LetIn(bindings, body) then if firstErrorInStack(bindings) is
-    Some(message) then Some(message)
-    None and body is Some(body) then firstTreeError(body)
-    else None
-  Tree.While(cond, body) then if firstTreeError(cond) is
-    Some(message) then Some(message)
-    None then firstTreeError(body)
-  Tree.For(head, start, finish, body) then if firstTreeError(head) is
-    Some(message) then Some(message)
-    None then if firstTreeError(start) is
-      Some(message) then Some(message)
-      None then if firstTreeError(finish) is
-        Some(message) then Some(message)
-        None then firstTreeError(body)
-  Tree.Ternary(_, lhs, rhs, body) then if firstTreeError(lhs) is
-    Some(message) then Some(message)
-    None then if firstTreeError(rhs) is
-      Some(message) then Some(message)
-      None and body is Some(body) then firstTreeError(body)
-      else None
-  else None
+  trees Iter.fromStack() Iter.firstDefined of tree =>
+    let summary = tree Tree.summary()
+    if summary.indexOf("⚠") >= 0 then Some(summary) else None
 
 parseButton.addEventListener of "click", event =>
   Runtime.try_catch of

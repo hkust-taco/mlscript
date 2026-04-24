@@ -111,9 +111,9 @@ web demo, and verify that each can be parsed correctly there.
 
 | ID | Status | Task | Memo | Commit Requirement |
 | --- | --- | --- | --- | --- |
-| W2-01 | Pending | Add the 10 Caml Light examples to the web-demo examples list. | `doc/caml-light-parser-demo/web-demo-example-imports.md` | Commit after task done. |
-| W2-02 | Pending | Add the 2 extensible parser examples to the web-demo examples list. | Same memo | Same commit. |
-| W2-03 | Pending | Test the web demo in a browser and confirm all imported examples parse. | Same memo | Same commit. |
+| W2-01 | Done | Add the 10 Caml Light examples to the web-demo examples list. | `doc/caml-light-parser-demo/web-demo-example-imports.md` | Commit after task done. |
+| W2-02 | Done | Add the 2 extensible parser examples to the web-demo examples list. | Same memo | Same commit. |
+| W2-03 | Done | Test the web demo in a browser and confirm all imported examples parse. | Same memo | Same commit. |
 
 ## Phase 6: Final Validation
 
