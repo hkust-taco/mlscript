@@ -806,7 +806,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val captureArgs = capturesOrdered.map(c => ctx.capturesMap(c).asArg)
       val localArgs = passedSymsOrdered.map(l => ctx.symbolsMap(l).asArg)
       defnsArgs ::: captureArgs ::: localArgs
-
+    
     final lazy val liftedFromStagedModule: Bool =
       node.allAncestors.exists:
         case ScopeNode(ScopedObject.Companion(comp, _), _, _) => comp.isStaged
