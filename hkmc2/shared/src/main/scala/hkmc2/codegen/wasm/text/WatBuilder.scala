@@ -2094,10 +2094,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         stringLits.foreach: (s, lit) =>
           if lit.byteLen > 0 then
             ctx.addDataSegment(DataSegment.Active(
-              id = SymIdx(scope.allocateName(TempSymbol(N, s.take(WatBuilder.StringConstantIdentMaxLength)))),
               offset = i32.const(lit.offset),
               bytes = lit.watBytes,
               memuse = N,
+              sym = TempSymbol(N, s.take(WatBuilder.StringConstantIdentMaxLength)),
+              idPrefix = N,
             ))
 
       val singletonInitActions = ctx.getSingletonInitActions

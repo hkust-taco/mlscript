@@ -6,7 +6,7 @@ package text
 import mlscript.utils.*, shorthands.*
 
 import document.*
-import semantics.{DefinitionSymbol, Elaborator, TempSymbol}, Elaborator.State
+import semantics.{DefinitionSymbol, Elaborator, Symbol, TempSymbol}, Elaborator.State
 import utils.Scope
 
 import scala.collection.Map
@@ -263,26 +263,35 @@ case class MemUse(memidx: MemIdx) extends ToWat:
 
 object DataSegment:
   object Passive:
-    def apply(id: SymIdx, bytes: Str): Passive = new Passive(id, Seq(bytes))
+    def apply(bytes: Str, sym: Symbol, idPrefix: Opt[Str])(using Ctx, Raise): Passive =
+      new Passive(Seq(bytes), sym, idPrefix)
 
   /** A passive data segment, which is not associated with any memory and must be explicitly loaded with `memory.init`.
     */
-  case class Passive(override val id: SymIdx, bytes: Seq[Str]) extends DataSegment(id, bytes):
+  case class Passive(bytes: Seq[Str], override val sym: Symbol, override val idPrefix: Opt[Str])(using Ctx, Raise)
+      extends DataSegment(bytes, sym, idPrefix):
     def toWat: Document =
       doc"(data ${id.toWat}${bytes.map(s => s"\"$s\"").mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
 
   object Active:
-    def apply(id: SymIdx, offset: Expr, bytes: Str, memuse: Opt[MemUse]): Active =
-      new Active(id, offset, Seq(bytes), memuse)
+    def apply(
+        offset: Expr,
+        bytes: Str,
+        memuse: Opt[MemUse],
+        sym: Symbol,
+        idPrefix: Opt[Str],
+    )(using Ctx, Raise): Active =
+      new Active(offset, Seq(bytes), memuse, sym, idPrefix)
 
   /** An active data segment, which is automatically copied into a memory given by `memuse` and `offset`.
     */
   case class Active(
-      override val id: SymIdx,
       offset: Expr,
       bytes: Seq[Str],
       memuse: Opt[MemUse],
-  ) extends DataSegment(id, bytes):
+      override val sym: Symbol,
+      override val idPrefix: Opt[Str],
+  )(using Ctx, Raise) extends DataSegment(bytes, sym, idPrefix):
     def toWat: Document =
       doc"(data ${id.toWat}${
           memuse.fold(doc"")(memuse => doc" ${memuse.toWat}")
@@ -290,12 +299,16 @@ object DataSegment:
           bytes.map(s => s"\"$s\"").mkDocument(doc" ").surroundUnlessEmpty(doc" ")
         })"
 
-  def apply(offsetExpr: Expr, bytes: Str)(using Raise, Scope, State): Active =
-    new Active(SymIdx(summon[Scope].allocateName(TempSymbol(N, ""))), offsetExpr, Seq(bytes), N)
+  def apply(offsetExpr: Expr, bytes: Str, sym: Symbol, idPrefix: Opt[Str])(using Ctx, Raise, Scope, State): Active =
+    new Active(offsetExpr, Seq(bytes), N, sym, idPrefix)
 end DataSegment
 
 /** A data segment entry. */
-sealed abstract class DataSegment(val id: SymIdx, bytes: Seq[Str]) extends ToWat
+sealed abstract class DataSegment(bytes: Seq[Str], val sym: Symbol, val idPrefix: Opt[Str])(using Ctx, Raise)
+    extends ToWat:
+
+  /** Symbolic identifier for the data segment. */
+  val id = SymIdx(summon[Ctx].dataSegmentScp.allocateOrGetNamePrefixed(sym, idPrefix))
 
 object ElemSegment:
   /** A passive element segment, which is not associated with any table and must be explicitly initialized with

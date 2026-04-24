@@ -469,6 +469,9 @@ class Ctx(using State) extends ToWat:
 
   /** [[MutMap]] containing type symbols mapped to their corresponding [[TypeInfo]] instance. */
   private val namedTypes = MutMap.empty[BlockMemberSymbol, TypeInfo]
+  
+  /** [[Scope]] for generating WAT identifiers of data segments. */
+  private[text] val dataSegmentScp = Scope.empty(Scope.Cfg.default)
 
   /** [[ListMap]] containing all data segments in the module. */
   private var dataSegments = ListMap.empty[SymIdx, DataSegment]
