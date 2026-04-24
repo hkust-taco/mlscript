@@ -225,7 +225,7 @@ val termRule = rule of
       term of
         process: (argument, _) => callee => Tree.App(callee, argument)
         name: "application argument"
-        outerPrec: Keywords.appPrec
+        bp: Keywords.appPrec
 
 // Prefix rules and infix rules for types.
 val typeRule = rule of
@@ -258,7 +258,7 @@ val typeRule = rule of
       // Application: <type> <type>
       typeExpr of
         process: (callee, _) => argument => Tree.App(callee, argument)
-        outerPrec: Keywords.appPrec
+        bp: Keywords.appPrec
 
 define("type-arguments-tail") of keyword(Keywords._comma) of listLike of
   head: "type", tail: "type-arguments-tail", name: "type argument"

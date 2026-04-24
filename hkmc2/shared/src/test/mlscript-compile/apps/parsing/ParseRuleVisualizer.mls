@@ -55,7 +55,7 @@ fun render[T](rr, title: Str, rule: ParseRule.ParseRule[T]) =
           optional then rr.Optional(optionalPart) sequence(latterPart)
           else optionalPart sequence(latterPart)
         None then latterPart
-    Choice.Ref(kind, _, outerPrec, innerPrec, rest) then
+    Choice.Ref(kind, _, bp, rest) then
       tracer.print of "found Choice.Ref to " + kind
       if renderedKinds.has(kind) is false do
         referencedKinds.add of kind

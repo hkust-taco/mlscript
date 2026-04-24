@@ -68,7 +68,7 @@ fun parse(tokens) =
     // * other rule-based kinds
     syntaxKinds |> MutMap.get(kind) is Some(rule) then
       let tree = parseRule(prec, rule)
-      if rule.refChoice is Some(Ref(kind', process, None, None, rest)) and kind == kind' do
+      if rule.refChoice is Some(Ref(kind', process, None, rest)) and kind == kind' do
         let shouldParse = true
         while shouldParse do
           let tree' = parseRule(prec, rest)
@@ -100,11 +100,10 @@ fun parse(tokens) =
           do tracer.print of "\"" + name + "\" is not a keyword", source.line
     other :: _ and
       do tracer.print of "the current rule is " + rule.display
-      rule.refChoice is Some(Ref(kind, process, outerPrec, innerPrec, rest)) and
+      rule.refChoice is Some(Ref(kind, process, bp, rest)) and
         do tracer.print of "try to parse kind \"" + kind + "\" at " + TokenHelpers.preview(tokens), source.line
-        let outerPrec' = outerPrec Option.getOrElse(Keywords.maxKeywordPrec)
-        let innerPrec' = innerPrec Option.getOrElse(prec)
-        outerPrec' > prec and
+        let bp' = bp Option.getOrElse(Keywords.maxKeywordPrec)
+        bp' > prec and
           let acc = parseKind(kind, prec)
           acc Tree.nonEmptyError() and parseRule(prec, rest) is
             Tree.Error(_, message) as tree then
@@ -169,7 +168,7 @@ fun parse(tokens) =
   
   fun exprCont(acc: TreeT, prec: Int, options) = if tokens is
     let infix = options.rule.refChoice Option.flatMap of case
-      Ref(kind, process, None, None, rest) and kind == options.kind then
+      Ref(kind, process, None, rest) and kind == options.kind then
         { process: process, rule: rest }
       else throw Error("Kind " + options.kind + " does not have infix rules")
     do tracer.print of ">>> " + options.kind + "Cont " + prec + " " + acc Tree.summary() + " <<<", source.line
@@ -180,14 +179,13 @@ fun parse(tokens) =
       infix.rule.keywordChoices |> MutMap.get(name) is Some(rule) and
         do tracer.print of "keyword `" + name + "` is found in infix rules", source.line
         keyword.leftPrecOrMin > prec and rule.refChoice is
-          Some(Ref(kind, process, outerPrec, innerPrec, rest)) and
+          Some(Ref(kind, process, bp, rest)) and
             do tracer.print of "try to parse kind \"" + kind + "\" at " + TokenHelpers.preview(tokens), source.line
-            let outerPrec' = outerPrec Option.getOrElse(Keywords.maxOperatorPrec)
-            let innerPrec' = innerPrec Option.getOrElse(outerPrec')
-            outerPrec' > prec then
+            let bp' = bp Option.getOrElse(Keywords.maxOperatorPrec)
+            bp' > prec then
               consume
               let rhs = parseKind(kind, keyword.rightPrecOrMin)
-              let restRes = parseRule(innerPrec', rest)
+              let restRes = parseRule(bp', rest)
               infix.process(acc, process(rhs, restRes)) exprCont(prec, options)
           None then acc
       do tracer.print of "keyword `" + name + "` does not have infix rules", source.line
@@ -206,12 +204,11 @@ fun parse(tokens) =
     // * the case of application
     do tracer.print of "not a keyword", source.line
     token :: _ and infix.rule.refChoice is
-      Some(Ref(kind, process, outerPrec, innerPrec, rest)) and
-        do tracer.print of "found reference to " + kind + " with outerPrec = " + outerPrec, source.line
-        let outerPrec' = outerPrec Option.getOrElse(Keywords.maxOperatorPrec)
-        let innerPrec' = innerPrec Option.getOrElse(outerPrec')
-        outerPrec' > prec and
-          parseKind(kind, innerPrec Option.getOrElse(outerPrec')) is
+      Some(Ref(kind, process, bp, rest)) and
+        do tracer.print of "found reference to " + kind + " with bp = " + bp, source.line
+        let bp' = bp Option.getOrElse(Keywords.maxOperatorPrec)
+        bp' > prec and
+          parseKind(kind, bp') is
             Tree.Empty then
               do tracer.print of "nothing was parsed", source.line
               acc
@@ -220,7 +217,7 @@ fun parse(tokens) =
               acc
             rhs then
               do tracer.print of "parsed " + rhs Tree.summary(), source.line
-              let restRes = parseRule(innerPrec', rest)
+              let restRes = parseRule(bp', rest)
               infix.process(acc, process(rhs, restRes)) exprCont(prec, options)
         do tracer.print of "the outer precedence is less than " + prec, source.line
         else acc

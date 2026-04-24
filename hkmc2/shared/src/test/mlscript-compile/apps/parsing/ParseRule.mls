@@ -21,8 +21,7 @@ module Choice with
   data class Ref[A, B](
       kind: Str,
       process: (Tree, B) -> A,
-      outerPrec: Option[Int],
-      innerPrec: Option[Int],
+      bp: Option[Int],
       rest: ParseRule[B]
   ) extends Choice[A]
   
@@ -94,8 +93,7 @@ module Choice with
     Ref of
       kind
       fields shouldHaveFunction("process", tuple, "Choice.reference")
-      fields shouldHaveInt("outerPrec", "Choice.reference")
-      fields shouldHaveInt("innerPrec", "Choice.reference")
+      fields shouldHaveInt("bp", "Choice.reference")
       fields shouldHaveRuleLike("choices", ruleName, "Choice.reference")
   
   val term = reference("term")
@@ -123,8 +121,8 @@ module Choice with
   
   fun map[A, B](choice: Choice[A], op: A -> B): Choice[B] = if choice is
     Keyword(keyword, rest) then Keyword(keyword, rest.map(op))
-    Ref(kind, process, outerPrec, innerPrec, rest) then
-      Ref(kind, (x, y) => op(process(x, y)), outerPrec, innerPrec, rest)
+    Ref(kind, process, bp, rest) then
+      Ref(kind, (x, y) => op(process(x, y)), bp, rest)
     Siding(init, optional, rest, process) then
       Siding(init, optional, rest, (x, y) => op(process(x, y)))
     End(value) then End(op(value))
@@ -163,12 +161,12 @@ data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
       Iter.fromStack()
       Iter.mapping of case
         Keyword(keyword, rest') then [Keyword(keyword, go(rest'))]
-        Ref(kind, process, outerPrec, innerPrec, rest') then
+        Ref(kind, process, bp, rest') then
           let process' = (lhs, rhsInnerResult) => if
             rhsInnerResult is [rhs, innerResult] then
               [process(lhs, rhs), innerResult]
             do check(false, "illgeal result from inner")
-          [Ref(kind, process', outerPrec, innerPrec, go(rest'))]
+          [Ref(kind, process', bp, go(rest'))]
         End(value) then rest.choices
           Iter.fromStack()
           Iter.mapping of choice => choice Choice.map(result => [value, result])
@@ -223,16 +221,16 @@ data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
     Iter.firstDefined of case
       Ref as ref then Some(ref)
       Siding(init, optional, rest, process) and
-        init.refChoice is Some(Ref(k, process', op, ip, rest')) then
+        init.refChoice is Some(Ref(k, process', bp, rest')) then
           let process''(exprRes, pairRes) =
             if pairRes is [restRes', restRes] then
               process(process'(exprRes, restRes'), restRes)
           let rest'' = rest'.andThen(rest, tuple)
-          Some of Ref(k, process'', op, ip, rest'')
-        optional and rest.refChoice is Some(Ref(k, process', op, ip, rest')) then
+          Some of Ref(k, process'', bp, rest'')
+        optional and rest.refChoice is Some(Ref(k, process', bp, rest')) then
           let process''(exprRes, restRes) =
             process(None, process'(exprRes, restRes))
-          Some of Ref(k, process'', op, ip, rest')
+          Some of Ref(k, process'', bp, rest')
       else None
   
   fun refChoice = _refChoice.get()
@@ -250,7 +248,7 @@ data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
     fun displayChoice[A](choice: Choice[A]) = if choice is
       Choice.Keyword(keyword, rest) then
         "\"" + keyword.name + "\"" + tail(rest).1
-      Choice.Ref(kind, _, _, _, rest) then
+      Choice.Ref(kind, _, _, rest) then
         "<" + kind + ">" + tail(rest).1
       Choice.Siding(init, opt, rest, _) then
         let init' = go(init, false).1

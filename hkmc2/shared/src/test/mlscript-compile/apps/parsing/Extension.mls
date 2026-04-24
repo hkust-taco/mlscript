@@ -56,10 +56,10 @@ fun extendCategory(choiceBodyTree: Tree) =
         // refers to another category in the beginning. If so, we inline the
         // referenced category's choices into the current choice.
         OpenCategory and choice is
-          Choice.Ref(refKindName, process, outerPrec, innerPrec, rest) and
+          Choice.Ref(refKindName, process, bp, rest) and
             Rules.syntaxKinds |> MutMap.get(refKindName) is Some(refRule) then
               // TODO: The `process` function should be applied to the referenced rule.
-              // TODO: How to handle `outerPrec` and `innerPrec`?
+              // TODO: How to handle `bp`?
               rule.extendChoices of refRule.andThen(rest, process).choices
             else
               // The referenced category is not found in the map. Stop.
