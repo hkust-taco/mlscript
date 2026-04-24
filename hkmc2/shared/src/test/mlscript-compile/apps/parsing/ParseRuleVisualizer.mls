@@ -47,14 +47,6 @@ fun render[T](rr, title: Str, rule: ParseRule.ParseRule[T]) =
     Choice.Keyword(keyword, rest) then
       tracer.print of "found Choice.Keyword"
       Some of rr.Terminal(keyword.name) sequence(renderRule(rest))
-    Choice.Siding(rule, optional, rest, _) then
-      tracer.print of "found Choice.Siding"
-      Some of if renderRule(rule) is
-        let latterPart = renderRule(rest)
-        Some(optionalPart) and
-          optional then rr.Optional(optionalPart) sequence(latterPart)
-          else optionalPart sequence(latterPart)
-        None then latterPart
     Choice.Ref(kind, _, bp, rest) then
       tracer.print of "found Choice.Ref to " + kind
       if renderedKinds.has(kind) is false do

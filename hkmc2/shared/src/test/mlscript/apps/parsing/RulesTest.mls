@@ -74,13 +74,13 @@ print of Keywords.all |> MutMap.valuesIterator |. Iter.joined("\n")
 
 print of Rules.termRule.display
 //│ > <prefix rules for expressions> ::= 
-//│ >   | "let" ["rec"] <let-bindings> ["in" <term>]
+//│ >   | "let" ("rec" <let-bindings> ["in" <term>] | <let-bindings> ["in" <term>])
 //│ >   | "fun" <term> "->" <term>
-//│ >   | "match" <term> "with" ["|"] <term> "->" <term> ["|" <simple-matching>]
-//│ >   | "function" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "match" <term> "with" ("|" <term> "->" <term> ["|" <simple-matching>] | <term> "->" <term> ["|" <simple-matching>])
+//│ >   | "function" ("|" <term> "->" <term> ["|" <simple-matching>] | <term> "->" <term> ["|" <simple-matching>])
 //│ >   | "if" <term> "then" <term> ["else" <term>]
 //│ >   | "while" <term> "do" <term> "done"
-//│ >   | "for" <term> "=" <term> ("to" | "downto") <term> "do" <term> "done"
+//│ >   | "for" <term> "=" <term> ("to" <term> "do" <term> "done" | "downto" <term> "do" <term> "done")
 //│ >   | "(" <term> ")"
 //│ >   | "[" <term> "]"
 //│ >   | "{" <term> "}"
@@ -94,7 +94,7 @@ print of Rules.typeRule.display
 
 print of Rules.declRule.display
 //│ > <prefix rules for module items> ::= 
-//│ >   | "let" ["rec"] <let-bindings>
+//│ >   | "let" ("rec" <let-bindings> | <let-bindings>)
 //│ >   | "type" <typedefs>
 //│ >   | "exception" <constr-decls>
 //│ >   | "#" <ident> <term>
@@ -123,13 +123,13 @@ Rules.syntaxKinds
 //│ >   | "(" <typevar> <type-params-tail> ")"
 //│ > <type-params-tail> ::= "," <typevar> <type-params-tail>
 //│ > <prefix rules for expressions> ::= 
-//│ >   | "let" ["rec"] <let-bindings> ["in" <term>]
+//│ >   | "let" ("rec" <let-bindings> ["in" <term>] | <let-bindings> ["in" <term>])
 //│ >   | "fun" <term> "->" <term>
-//│ >   | "match" <term> "with" ["|"] <term> "->" <term> ["|" <simple-matching>]
-//│ >   | "function" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "match" <term> "with" ("|" <term> "->" <term> ["|" <simple-matching>] | <term> "->" <term> ["|" <simple-matching>])
+//│ >   | "function" ("|" <term> "->" <term> ["|" <simple-matching>] | <term> "->" <term> ["|" <simple-matching>])
 //│ >   | "if" <term> "then" <term> ["else" <term>]
 //│ >   | "while" <term> "do" <term> "done"
-//│ >   | "for" <term> "=" <term> ("to" | "downto") <term> "do" <term> "done"
+//│ >   | "for" <term> "=" <term> ("to" <term> "do" <term> "done" | "downto" <term> "do" <term> "done")
 //│ >   | "(" <term> ")"
 //│ >   | "[" <term> "]"
 //│ >   | "{" <term> "}"
@@ -139,7 +139,7 @@ Rules.syntaxKinds
 //│ >   | "(" <type> (<type-arguments-tail> ")" <ident> | ")" [<ident>])
 //│ >   | <type> ("->" <type> | "*" <type> | <type>)
 //│ > <prefix rules for module items> ::= 
-//│ >   | "let" ["rec"] <let-bindings>
+//│ >   | "let" ("rec" <let-bindings> | <let-bindings>)
 //│ >   | "type" <typedefs>
 //│ >   | "exception" <constr-decls>
 //│ >   | "#" <ident> <term>

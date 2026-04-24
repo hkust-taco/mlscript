@@ -11,7 +11,7 @@ import "./ParseRule.mls"
 open Predef
 open Option
 open Stack
-open ParseRule { Choice, rule }
+open ParseRule { Choice, rule, siding }
 open Token { Curly, Square, Round }
 
 open Choice { keyword, reference, term, typeExpr, ident, typeVar, end }
@@ -54,7 +54,7 @@ define("let-bindings") of term of
 
 fun makeLetBindings(hasInClause: Bool) =
   let intro = "let binding: "
-  keyword(Keywords._let) of Choice.siding of
+  keyword(Keywords._let) of siding of
     optional: true
     init: keyword(Keywords._rec)()
     rest: reference("let-bindings") of
@@ -126,13 +126,13 @@ val termRule = rule of
   keyword(Keywords._match) of term of
     process: Tree.Match
     name: "pattern matching scrutinee"
-    choices: tuple of keyword(Keywords._with) of Choice.siding of
+    choices: tuple of keyword(Keywords._with) of siding of
       optional: true
       init: keyword(Keywords._bar)()
       rest: getRuleByKind("simple-matching")
       process: idSecond
   // `function` term
-  keyword(Keywords._function) of Choice.siding of
+  keyword(Keywords._function) of siding of
     optional: true
     init: keyword(Keywords._bar)()
     rest: getRuleByKind("simple-matching")
@@ -162,7 +162,7 @@ val termRule = rule of
     choices: tuple of keyword(Keywords._equal) of term of
       process: (start, endBody) => [start, ...endBody]
       name: "`for` `to` or `downto` keyword"
-      choices: tuple of Choice.siding of
+      choices: tuple of siding of
         init: tuple of keyword(Keywords._to)(), keyword(Keywords._downto)()
         rest: term of
           name: "`for` `do` keyword"
