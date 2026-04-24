@@ -1498,7 +1498,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   // Guard against unsupported features
                   def errUnimplExpr(cond: Str): Nothing = break(errExpr(
                     Ls(
-                      msg"WatBackend::returningTerm for ClsLikeDefn(...) where `$cond` not implemented yet" ->
+                      msg"WatBuilder::returningTerm for ClsLikeDefn(...) where `$cond` not implemented yet" ->
                         clsLikeDefn.sym.toLoc,
                     ),
                     extraInfo = S(defn.showAsTree),
