@@ -444,37 +444,31 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         // the class/module itself
         val funcTySym: BlockMemberSymbol | TempSymbol =
           if func.sym.asClsOrMod.isDefined then TempSymbol(N, func.sym.nme) else func.sym
-        val funcName = scope.allocateOrGetName(func.sym)
         val typeIdx = ctx.addType(TypeInfo(sym = funcTySym, idPrefix = N, compType = func.funcType, objectTag = N))
-        ctx.addFunctionImport(
-          S(func.sym),
-          WasmImport(
-            func.moduleName,
-            func.exportName,
-            ExternType.Func(SymIdx(funcName), TypeUse(typeIdx)),
-          ),
-        )
+        ctx.addFunctionImport(WasmImport(
+          func.moduleName,
+          func.exportName,
+          ExternType.Func(TypeUse(typeIdx), func.sym, idPrefix = N),
+        ))
       case glob: SessionGlobal =>
-        val globalName = scope.allocateOrGetName(glob.sym)
-        ctx.addGlobalImport(
-          S(glob.sym),
-          WasmImport(
-            glob.moduleName,
-            glob.exportName,
-            ExternType.Global(SymIdx(globalName), glob.globalType),
-          ),
-        )
+        ctx.addGlobalImport(WasmImport(
+          glob.moduleName,
+          glob.exportName,
+          ExternType.Global(glob.globalType, glob.sym, idPrefix = N),
+        ))
       case singleton: SessionSingleton =>
-        val globalName = scope.allocateOrGetName(singleton.blockSym)
-        ctx.addGlobalImport(
-          S(singleton.blockSym),
-          WasmImport(
-            singleton.moduleName,
-            singleton.exportName,
-            ExternType.Global(SymIdx(globalName), GlobalType(singleton.globalTy, mutable = true)),
-          ),
+        val globalExtern =
+          ExternType.Global(GlobalType(singleton.globalTy, mutable = true), singleton.blockSym, idPrefix = N)
+        ctx.addGlobalImport(WasmImport(
+          singleton.moduleName,
+          singleton.exportName,
+          globalExtern,
+        ))
+        ctx.registerSingleton(
+          singleton.blockSym,
+          singleton.objectSym,
+          SingletonInfo(globalExtern.id.id, singleton.globalTy),
         )
-        ctx.registerSingleton(singleton.blockSym, singleton.objectSym, SingletonInfo(globalName, singleton.globalTy))
       case _: SessionClass =>
   end registerSessionImports
 
@@ -567,8 +561,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         module = ExternIntrinsics.SystemModule,
         name = ExternIntrinsics.StringFromUtf16ImportName,
         externType = ExternType.Func(
-          id = SymIdx(ExternIntrinsics.StringFromUtf16ImportName),
           typeUse = TypeUse(importTy),
+          sym = importTySym,
+          idPrefix = N,
         ),
       )
   end getOrLoadStrCtorFunction
@@ -1152,14 +1147,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   private def importIntrinsic(name: Str)(using Ctx, Raise, Scope): FuncIdx =
     val typeIdx = declareIntrinsicType(name)
-    ctx.addFunctionImport(
-      N,
-      WasmImport(
-        ExternIntrinsics.SystemModule,
-        name,
-        ExternType.Func(SymIdx(name), TypeUse(typeIdx)),
-      ),
-    )
+    ctx.addFunctionImport(WasmImport(
+      ExternIntrinsics.SystemModule,
+      name,
+      ExternType.Func(TypeUse(typeIdx), TempSymbol(N, name), idPrefix = N),
+    ))
 
   /** Creates the intrinsic definition for `name`.
     */

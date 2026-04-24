@@ -504,6 +504,9 @@ class Ctx(using State) extends ToWat:
   /** [[MutMap]] containing function symbols mapped to the corresponding [[FuncInfo]] or [[Import]] instance. */
   private val namedFuncs = MutMap.empty[Symbol, FuncInfo | Import[ExternType.Func]]
 
+  /** [[Scope]] for generating WAT identifiers of memories. */
+  private[text] val memoryScp = Scope.empty(Scope.Cfg.default)
+
   /** [[ListMap]] containing all memory definitions and imports in the module mapped by their symbolic identifiers. */
   private var memories = ListMap.empty[SymIdx, MemInfo | Import[ExternType.Mem]]
   
@@ -549,9 +552,12 @@ class Ctx(using State) extends ToWat:
       case (_, imp: Import[ExternType.Mem]) => imp
     (importedFuncs ++ importedGlobals ++ importedMems).toSeq
 
-  private def globalExternType(globalEntry: GlobalInfo | Import[ExternType.Global]): ExternType.Global =
+  private def globalExternType(globalEntry: GlobalInfo | Import[ExternType.Global])(using
+      Ctx,
+      Raise,
+  ): ExternType.Global =
     globalEntry match
-      case globalInfo: GlobalInfo => ExternType.Global(globalInfo.id, globalInfo.globalType)
+      case globalInfo: GlobalInfo => ExternType.Global(globalInfo.globalType, globalInfo.sym, idPrefix = N)
       case globalImport: Import[ExternType.Global] => globalImport.externType
 
   /** Returns a new number to be used as an object tag. */
@@ -602,11 +608,10 @@ class Ctx(using State) extends ToWat:
     *
     * Returns the function index in the global function index space.
     */
-  def addFunctionImport(sym: Opt[Symbol], funcImport: Import[ExternType.Func]): FuncIdx =
+  def addFunctionImport(funcImport: Import[ExternType.Func]): FuncIdx =
     val id = funcImport.externType.id
     funcs = funcs + (id -> funcImport)
-    sym.foreach:
-      namedFuncs(_) = funcImport
+    namedFuncs(funcImport.externType.sym) = funcImport
     FuncIdx(id)
 
   /** Returns the cached function import for (`module`, `name`), creating it with `createImport` if needed.
@@ -615,17 +620,16 @@ class Ctx(using State) extends ToWat:
       module: Str,
       name: Str,
   )(createImport: => Import[ExternType.Func]): FuncIdx =
-    cachedFunctionImports.getOrElseUpdate((module, name), addFunctionImport(N, createImport))
+    cachedFunctionImports.getOrElseUpdate((module, name), addFunctionImport(createImport))
 
   /** Adds a global import into this context.
     *
     * Returns the global index in the global index space.
     */
-  def addGlobalImport(sym: Opt[Symbol], globalImport: Import[ExternType.Global]): GlobalIdx =
+  def addGlobalImport(globalImport: Import[ExternType.Global]): GlobalIdx =
     val id = globalImport.externType.id
     globals = globals + (id -> globalImport)
-    sym.foreach:
-      namedGlobals(_) = globalImport
+    namedGlobals(globalImport.externType.sym) = globalImport
     GlobalIdx(id)
 
   /** Returns the cached global import for (`module`, `name`), creating it with `createImport` if needed.
@@ -634,12 +638,12 @@ class Ctx(using State) extends ToWat:
       module: Str,
       name: Str,
   )(createImport: => Import[ExternType.Global]): GlobalIdx =
-    cachedGlobalImports.getOrElseUpdate((module, name), addGlobalImport(N, createImport))
+    cachedGlobalImports.getOrElseUpdate((module, name), addGlobalImport(createImport))
 
   /** Adds or updates a memory import. If the import already exists, its minimum pages are increased to at least
     * `minPages`.
     */
-  def ensureMemoryImport(module: Str, name: Str, minPages: Int): Unit =
+  def ensureMemoryImport(module: Str, name: Str, minPages: Int)(using Ctx, Raise): Unit =
     val key = module -> name
     cachedMemoryImport.get(key) match
       case S(idx) =>
@@ -654,12 +658,19 @@ class Ctx(using State) extends ToWat:
             (idx -> Import(
               module,
               name,
-              ExternType.Mem(SymIdx(name), MemType(existing.externType.memType.lim.copy(min = minPages))),
+              ExternType.Mem(
+                MemType(existing.externType.memType.lim.copy(min = minPages)),
+                sym = existing.externType.sym,
+                idPrefix = existing.externType.idPrefix,
+              ),
             ))
       case N =>
         val id = SymIdx(name)
-        memories = memories + (id -> Import(module, name, ExternType.Mem(id, MemType(Limits(minPages)))))
+        memories = memories +
+          (id ->
+            Import(module, name, ExternType.Mem(MemType(Limits(minPages)), sym = TempSymbol(N, name), idPrefix = N)))
         cachedMemoryImport(key) = SymIdx(name)
+    end match
   end ensureMemoryImport
 
   /** Returns the memory import information for the given (`module`, `name`) tuple if present. */
@@ -731,14 +742,14 @@ class Ctx(using State) extends ToWat:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
   /** Returns the [[GlobalIdx]] of the given `globalref`. */
-  def getGlobal(globalref: GlobalIdx | Symbol): Opt[GlobalIdx] = globalref match
+  def getGlobal(globalref: GlobalIdx | Symbol)(using Ctx, Raise): Opt[GlobalIdx] = globalref match
     case globalidx: GlobalIdx => S(globalidx)
     case sym: Symbol =>
       namedGlobals.get(sym).map: globalEntry =>
         GlobalIdx(globalExternType(globalEntry).id)
 
   /** Same as [[getGlobal]] but throws an exception when the `globalref` is not found. */
-  def getGlobal_!(globalref: GlobalIdx | Symbol): GlobalIdx =
+  def getGlobal_!(globalref: GlobalIdx | Symbol)(using Ctx, Raise): GlobalIdx =
     getGlobal(globalref).getOrElse:
       lastWords(s"Missing global definition for ${globalref.prettyString}")
 
@@ -748,11 +759,11 @@ class Ctx(using State) extends ToWat:
       case sym: Symbol => namedGlobals.get(sym)
 
   /** Returns the global extern metadata associated with the given `globalref`. */
-  def getGlobalType(globalref: GlobalIdx | Symbol): Opt[ExternType.Global] =
+  def getGlobalType(globalref: GlobalIdx | Symbol)(using Ctx, Raise): Opt[ExternType.Global] =
     getGlobalEntry(globalref).map(globalExternType)
 
   /** Same as [[getGlobalType]] but throws an exception when the `globalref` is not found. */
-  def getGlobalType_!(globalref: GlobalIdx | Symbol): ExternType.Global =
+  def getGlobalType_!(globalref: GlobalIdx | Symbol)(using Ctx, Raise): ExternType.Global =
     getGlobalType(globalref).getOrElse:
       lastWords(s"Missing global definition for ${globalref.prettyString}")
 

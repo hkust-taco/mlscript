@@ -231,19 +231,34 @@ case class GlobalType(valType: ValType, mutable: Bool) extends ToWat:
 
 object ExternType:
   /** An linear memory entry that is externally addressable. */
-  case class Mem(override val id: SymIdx, memType: MemType) extends ExternType(id):
+  case class Mem(memType: MemType, override val sym: Symbol, idPrefix: Opt[Str])(using Ctx, Raise)
+      extends ExternType(sym):
+
+    val id: SymIdx = SymIdx(summon[Ctx].memoryScp.allocateOrGetNamePrefixed(sym, idPrefix))
+
     def toWat: Document = doc"""(memory ${id.toWat} ${memType.toWat})"""
 
   /** An function entry that is externally addressable. */
-  case class Func(override val id: SymIdx, typeUse: TypeUse) extends ExternType(id):
+  case class Func(typeUse: TypeUse, override val sym: Symbol, idPrefix: Opt[Str])(using Ctx, Raise)
+      extends ExternType(sym):
+
+    val id: SymIdx = SymIdx(summon[Ctx].funcScp.allocateOrGetNamePrefixed(sym, idPrefix))
+
     def toWat: Document = doc"""(func ${id.toWat} ${typeUse.toWat})"""
 
   /** A global entry that is externally addressable. */
-  case class Global(override val id: SymIdx, globalType: GlobalType) extends ExternType(id):
-    def toWat: Document =
-      doc"""(global ${id.toWat} ${globalType.toWat})"""
+  case class Global(globalType: GlobalType, override val sym: Symbol, idPrefix: Opt[Str])(using Ctx, Raise)
+      extends ExternType(sym):
 
-sealed abstract class ExternType(val id: SymIdx) extends ToWat
+    val id: SymIdx = SymIdx(summon[Ctx].globalScp.allocateOrGetNamePrefixed(sym, idPrefix))
+
+    def toWat: Document = doc"""(global ${id.toWat} ${globalType.toWat})"""
+end ExternType
+
+sealed abstract class ExternType(val sym: Symbol) extends ToWat:
+
+  /** Symbolic identifier for the extern declaration. */
+  val id: SymIdx
 
 /** A memory import entry. */
 @deprecated("Use `Import` with `ExternType.Mem` instead.")
