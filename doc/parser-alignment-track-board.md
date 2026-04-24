@@ -57,8 +57,8 @@ For any code-changing task:
 | 4 | PA-04 | Done | P1 | Medium | Medium | Add an explicit `afterRef` helper and route continuation loops through it. |
 | 5 | PA-05 | Done | P1 | Medium | Medium | Split the parameterized `expr`/`exprCont` pair into explicit `expr`/`exprCont` and `typeExpr`/`typeExprCont` pairs. |
 | 6 | PA-06 | Done | P1 | High | High | Add the paper's `Infix` choice so symbolic infix operators are represented in rules instead of hard-coded in `exprCont`. |
-| 7 | PA-07 | Ready | P2 | Low | Documentation | Write a proposal for built-in terminal syntax kinds beyond `ident` and `typevar`, especially `literal` and `string-literal`. |
-| 8 | PA-08 | Blocked by PA-02, PA-04, PA-07 | P1 | High | High | Align dynamic extension directives with the paper's `#keyword` and `#extend` syntax and replacement-expression scheme. |
+| 7 | PA-07 | Done | P2 | Low | Documentation | Write a proposal for built-in terminal syntax kinds beyond `ident` and `typevar`, especially `literal` and `string-literal`. |
+| 8 | PA-08 | Ready | P1 | High | High | Align dynamic extension directives with the paper's `#keyword` and `#extend` syntax and replacement-expression scheme. |
 | 9 | PA-09 | Deferred | P2 | Medium | Investigation | Investigate whether Caml Light prefix operators have precedence; do not implement prefix precedence until this is resolved. |
 | 10 | PA-10 | Deferred | P2 | Medium | Low | Add a generated precedence-table renderer and wire it into the web demo. |
 | 11 | PA-11 | Deferred | P3 | High | High | Simplify AST names and shapes to match the paper, including `Tree.Reference`, `Tree.Application`, and token naming cleanup. |
