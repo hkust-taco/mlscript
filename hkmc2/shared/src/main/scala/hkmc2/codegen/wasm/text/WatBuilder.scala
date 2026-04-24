@@ -145,25 +145,24 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       typeref: TypeIdx,
   )(using Ctx, Raise, Scope): Unit =
     if ctx.containsSingleton(clsLikeDefn.sym) then return
-
+  
     val globalSym = BlockMemberSymbol(s"${clsLikeDefn.sym.nme}$$inst", Nil, nameIsMeaningful = false)
-    val globalName = scope.allocateName(globalSym)
     val globalTy = RefType(typeref, nullable = true)
-    val info = SingletonInfo(globalName, globalTy)
+
+    val globalInfo = GlobalInfo(
+      globalType = GlobalType(globalTy, mutable = true),
+      init = ref.`null`(typeref),
+      exportName = S(globalSym.nme),
+      sym = globalSym,
+      idPrefix = N,
+    )
+    val globalIdx = ctx.addGlobal(globalInfo)
+
     val singletonOwner = clsLikeDefn.isym match
       case mos: ModuleOrObjectSymbol => S(mos)
       case _ => N
+    val info = SingletonInfo(globalInfo.id.id, globalTy)
     ctx.registerSingleton(clsLikeDefn.sym, singletonOwner, info)
-
-    val globalIdx = ctx.addGlobal(
-      globalSym,
-      GlobalInfo(
-        id = SymIdx(globalName),
-        globalType = GlobalType(globalTy, mutable = true),
-        init = ref.`null`(typeref),
-        exportName = S(globalName),
-      ),
-    )
 
     val ctorCall = call(
       funcidx = ctx.getFunc_!(clsLikeDefn.sym),
@@ -411,15 +410,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   )(using Ctx, Raise, Scope, SessionExportCtx): Unit =
     if ctx.containsGlobal(sym) then return
     val exportName = sym.nme
-    ctx.addGlobal(
+    ctx.addGlobal(GlobalInfo(
+      globalType = GlobalType(RefType.anyref, mutable = true),
+      init = ref.`null`(HeapType.Any),
+      exportName = S(exportName),
       sym,
-      GlobalInfo(
-        id = SymIdx(scope.allocateOrGetName(sym)),
-        globalType = GlobalType(RefType.anyref, mutable = true),
-        init = ref.`null`(HeapType.Any),
-        exportName = S(exportName),
-      ),
-    )
+      idPrefix = N,
+    ))
     summon[SessionExportCtx].emit(SessionGlobal(
       sym = sym,
       moduleName = SessionBinding.ReplModuleName,
@@ -829,7 +826,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             funcCtx.lookupLocal(l) match
               case S(localIdx) => local.get(localIdx, RefType.anyref)
               case N if ctx.containsGlobal(l) =>
-                global.get(GlobalIdx(SymIdx(scope.lookup_!(l, l.toLoc))), ctx.getGlobalType_!(l).globalType.valType)
+                global.get(ctx.getGlobal_!(l), ctx.getGlobalType_!(l).globalType.valType)
               case _ =>
                 errExpr(
                   Ls(

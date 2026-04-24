@@ -216,21 +216,28 @@ end FuncInfo
   *
   * Each instance of [[GlobalInfo]] represents a single global definition in a WebAssembly module.
   *
-  * @param id
-  *   Symbolic identifier for the global.
   * @param globalType
   *   The type of the global.
   * @param init
   *   The initializer expression for the global.
   * @param exportName
   *   Optional export name.
+  * @param sym
+  *   The source [[Symbol]] which this global is generated from.
+  * @param idPrefix
+  *   An optional prefix for the symbolic identifier of this global. If provided, the global name will be prepended with
+  *   `${idPrefix}_`.
   */
 class GlobalInfo(
-    val id: SymIdx,
     val globalType: GlobalType,
     val init: Expr,
     val exportName: Opt[Str],
-) extends ToWat:
+    val sym: Symbol,
+    idPrefix: Opt[Str],
+)(using Ctx, Raise) extends ToWat:
+
+  /** Symbolic identifier for the global. */
+  val id: SymIdx = SymIdx(summon[Ctx].globalScp.allocateOrGetNamePrefixed(sym, idPrefix))
 
   def toWat: Document =
     doc"""(global ${id.toWat}${
@@ -506,6 +513,9 @@ class Ctx(using State) extends ToWat:
   /** [[ListMap]] containing all tag definitions in the module. */
   private var tags = ListMap.empty[SymIdx, TagInfo]
 
+  /** [[Scope]] for generating WAT identifiers of globals. */
+  private[text] val globalScp = Scope.empty(Scope.Cfg.default)
+
   /** [[ListMap]] containing all global definitions and imports in the module. */
   private var globals = ListMap.empty[SymIdx, GlobalInfo | Import[ExternType.Global]]
 
@@ -757,15 +767,15 @@ class Ctx(using State) extends ToWat:
       lastWords(s"Missing global definition for ${globalref.prettyString}")
 
   /** Adds a new variable into the global variable scope. */
-  def addGlobal(sym: Symbol, globalInfo: GlobalInfo): GlobalIdx =
+  def addGlobal(globalInfo: GlobalInfo): GlobalIdx =
     val id = globalInfo.id
     globals = globals + (id -> globalInfo)
-    namedGlobals(sym) = globalInfo
+    namedGlobals(globalInfo.sym) = globalInfo
     GlobalIdx(id)
 
   /** Adds a [[Seq]] of variables into the global variable scope. */
-  def addGlobals(globalDefs: Seq[Symbol -> GlobalInfo]): Seq[GlobalIdx] =
-    globalDefs.map(addGlobal.tupled)
+  def addGlobals(globalDefs: Seq[GlobalInfo]): Seq[GlobalIdx] =
+    globalDefs.map(addGlobal)
 
   /** Checks whether the global variable scope contains the variable `sym`. */
   def containsGlobal(sym: Symbol): Bool = namedGlobals.contains(sym)
