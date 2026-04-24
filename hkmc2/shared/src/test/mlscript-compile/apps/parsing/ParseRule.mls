@@ -25,6 +25,13 @@ module Choice with
       rest: ParseRule[B]
   ) extends Choice[A]
   
+  data class Infix[A, B](
+      op: Str -> Option[[Int, Int]],
+      rhsKind: Str,
+      process: (Str, Tree, B) -> A,
+      rest: ParseRule[B]
+  ) extends Choice[A]
+
   data class End[A](value: A) extends Choice[A]
   
   fun choiceArray(item, name, index) = if
@@ -85,6 +92,16 @@ module Choice with
       fields shouldHaveInt("bp", "Choice.reference")
       fields shouldHaveRuleLike("choices", ruleName, "Choice.reference")
   
+  fun infix(op, rhsKind: Str)(fields: Object) =
+    let ruleName = fields shouldHaveStr("name", "symbolic operator right-hand side", "Choice.infix")
+    let defaultProcess = (opName, rhs, _) =>
+      lhs => Tree.App(Tree.Ident(opName, true), lhs :: rhs :: Nil)
+    Infix of
+      op
+      rhsKind
+      fields shouldHaveFunction("process", defaultProcess, "Choice.infix")
+      fields shouldHaveRuleLike("choices", ruleName, "Choice.infix")
+
   val term = reference("term")
   val typeExpr = reference("type")
   val ident = reference("ident")
@@ -96,6 +113,8 @@ module Choice with
     Keyword(keyword, rest) then Keyword(keyword, rest.map(op))
     Ref(kind, process, bp, rest) then
       Ref(kind, (x, y) => op(process(x, y)), bp, rest)
+    Infix(opInfo, rhsKind, process, rest) then
+      Infix(opInfo, rhsKind, (opName, rhs, y) => op(process(opName, rhs, y)), rest)
     End(value) then End(op(value))
 
 data class Lazy[out A](init: () -> A) with
@@ -119,7 +138,7 @@ fun lazy(init) = new Lazy of init
 // =============================================
 
 data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
-  open Choice { Keyword, Ref, End }
+  open Choice { Keyword, Ref, Infix, End }
   
   fun map[B](op: A -> B) =
     new mut ParseRule of name, choices
@@ -138,6 +157,12 @@ data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
               [process(lhs, rhs), innerResult]
             do check(false, "illgeal result from inner")
           [Ref(kind, process', bp, go(rest'))]
+        Infix(op, rhsKind, process, rest') then
+          let process' = (opName, rhs, rhsInnerResult) => if
+            rhsInnerResult is [infixResult, innerResult] then
+              [process(opName, rhs, infixResult), innerResult]
+            do check(false, "illegal result from inner")
+          [Infix(op, rhsKind, process', go(rest'))]
         End(value) then rest.choices
           Iter.fromStack()
           Iter.mapping of choice => choice Choice.map(result => [value, result])
@@ -174,6 +199,14 @@ data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
   
   fun refChoice = _refChoice.get()
   
+  let _infixChoice = lazy of () => choices
+    Iter.fromStack()
+    Iter.firstDefined of case
+      Infix as infix then Some(infix)
+      else None
+
+  fun infixChoice = _infixChoice.get()
+
   let _afterRef = lazy of () => refChoice Option.flatMap of case
     Ref(kind, process, None, rest) then Some of tuple of
       kind
@@ -190,6 +223,7 @@ data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
     _endChoice.reset()
     _keywordChoices.reset()
     _refChoice.reset()
+    _infixChoice.reset()
     _afterRef.reset()
     this
   
@@ -201,6 +235,8 @@ data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
         "\"" + keyword.name + "\"" + tail(rest).1
       Choice.Ref(kind, _, _, rest) then
         "<" + kind + ">" + tail(rest).1
+      Choice.Infix(_, rhsKind, _, rest) then
+        "<operator> <" + rhsKind + ">" + tail(rest).1
       Choice.End then ""
       other then "<unknown:" + other + ">"
     

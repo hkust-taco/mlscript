@@ -53,6 +53,12 @@ fun render[T](rr, title: Str, rule: ParseRule.ParseRule[T]) =
         referencedKinds.add of kind
       Some of rr.NonTerminal(kind, href: "#" + kind)
         sequence(renderRule(rest))
+    Choice.Infix(_, rhsKind, _, rest) then
+      tracer.print of "found Choice.Infix to " + rhsKind
+      if renderedKinds.has(rhsKind) is false do
+        referencedKinds.add of rhsKind
+      Some of rr.Sequence(rr.Terminal("operator"), rr.NonTerminal(rhsKind, href: "#" + rhsKind))
+        sequence(renderRule(rest))
   fun renderRule(rule: ParseRule.ParseRule[T]) = tracer.trace of
     "renderRule <<< " + rule.name
     result => "renderRule >>> "

@@ -14,7 +14,7 @@ open Stack
 open ParseRule { Choice, rule, siding }
 open Token { Curly, Square, Round }
 
-open Choice { keyword, reference, term, typeExpr, ident, typeVar, end }
+open Choice { keyword, reference, infix, term, typeExpr, ident, typeVar, end }
 
 type Opt[A] = Some[A] | None
 
@@ -221,6 +221,9 @@ val termRule = rule of
       keyword(Keywords._colon) of typeExpr of
         process: (rhs, _) => lhs => Tree.Infix(Keywords._colon, lhs, rhs)
         name: "right-hand side type"
+      // Symbolic infix operators.
+      infix(Keywords.opPrecOpt, "term") of
+        name: "symbolic operator right-hand side"
       // Application: <expr> <expr>
       term of
         process: (argument, _) => callee => Tree.App(callee, argument)

@@ -58,5 +58,5 @@ Rules.getRuleByKind("term").display print()
 //│ >   | "[" <term> "]"
 //│ >   | "{" <term> "}"
 //│ >   | "begin" <term> "end"
-//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <operator> <term> | <term>)
 //│ >   | "count" <counting>

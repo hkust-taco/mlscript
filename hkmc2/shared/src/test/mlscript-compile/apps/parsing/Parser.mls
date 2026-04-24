@@ -19,7 +19,6 @@ open Option
 open Stack
 open ParseRule { Choice }
 open Choice { Ref }
-open Keywords { opPrecOpt }
 open Rules { termRule, typeRule, declRule, syntaxKinds }
 
 type Opt[A] = Some[A] | None
@@ -177,7 +176,6 @@ fun parse(tokens) =
       kindName: Str,
       rule,
       allowOperators: Bool,
-      rhsExpr,
       cont
   ) = if tokens is
     let infix = rule.afterRef Option.flatMap of case
@@ -205,17 +203,45 @@ fun parse(tokens) =
           None then acc
       do tracer.print of "keyword `" + name + "` does not have infix rules", source.line
     // * the case of infix operators (non-keywords)
-    Token.Identifier(name, true) :: _ and Keywords.all |> MutMap.get(name) is None and allowOperators and
-      do tracer.print of "found an operator \"" + name + "\"", source.line
-      opPrecOpt(name) is Some([leftPrec, rightPrec]) and
-        do tracer.print of "leftPrec = " + leftPrec + "; rightPrec = " + rightPrec, source.line
-        leftPrec > prec then
-          consume
-          let op = Tree.Ident(name, true)
-          let rhs = rhsExpr(rightPrec)
-          cont(Tree.App(op, acc :: rhs :: Nil), prec)
-        else
-          acc
+    Token.Identifier(name, true) :: _ and Keywords.all |> MutMap.get(name) is None and allowOperators then
+      tracer.print of "found an operator \"" + name + "\"", source.line
+      if infix.rule.infixChoice is
+        Some(Choice.Infix(opInfo, rhsKind, process, rest)) and
+          opInfo(name) is Some([leftPrec, rightPrec]) then
+            do tracer.print of "leftPrec = " + leftPrec + "; rightPrec = " + rightPrec, source.line
+            if leftPrec > prec then
+              consume
+              let rhs = parseKind(rhsKind, rightPrec)
+              let restRes = parseRule(leftPrec, rest)
+              if process(name, rhs, restRes) is Some(next) then
+                cont(next(acc), prec)
+              else acc
+            else acc
+        else if tokens is
+          token :: _ and infix.rule.refChoice is
+            Some(Ref(kind, process, bp, rest)) and
+              do tracer.print of "found reference to " + kind + " with bp = " + bp, source.line
+              let bp' = bp Option.getOrElse(Keywords.maxOperatorPrec)
+              bp' > prec and
+                parseKind(kind, bp') is
+                  Tree.Empty then
+                    do tracer.print of "nothing was parsed", source.line
+                    acc
+                  Tree.Error then
+                    do tracer.print of "cannot parse more", source.line
+                    acc
+                  rhs then
+                    do tracer.print of "parsed " + rhs Tree.summary(), source.line
+                    let restRes = parseRule(bp', rest)
+                    if process(rhs, restRes) is Some(next) then
+                      cont(next(acc), prec)
+                    else acc
+              do tracer.print of "the outer precedence is less than " + prec, source.line
+              else acc
+            None then
+              tracer.print of "cannot consume " + token, source.line
+              acc
+          Nil then acc
     // * the case of application
     do tracer.print of "not a keyword", source.line
     token :: _ and infix.rule.refChoice is
@@ -244,10 +270,10 @@ fun parse(tokens) =
     Nil then acc
 
   fun exprCont(acc: TreeT, prec: Int): TreeT =
-    parseCont(acc, prec, "term", termRule, true, expr, exprCont)
+    parseCont(acc, prec, "term", termRule, true, exprCont)
 
   fun typeExprCont(acc: TreeT, prec: Int): TreeT =
-    parseCont(acc, prec, "type", typeRule, false, typeExpr, typeExprCont)
+    parseCont(acc, prec, "type", typeRule, false, typeExprCont)
 
   fun handleDirective(tree: TreeT, acc: TreeT) = if tree is
     // Call the corresponding handler for the directive.

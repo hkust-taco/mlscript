@@ -85,7 +85,7 @@ print of Rules.termRule.display
 //│ >   | "[" <term> "]"
 //│ >   | "{" <term> "}"
 //│ >   | "begin" <term> "end"
-//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <operator> <term> | <term>)
 
 print of Rules.typeRule.display
 //│ > <rules for types> ::= 
@@ -134,7 +134,7 @@ Rules.syntaxKinds
 //│ >   | "[" <term> "]"
 //│ >   | "{" <term> "}"
 //│ >   | "begin" <term> "end"
-//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <operator> <term> | <term>)
 //│ > <rules for types> ::= 
 //│ >   | "(" <type> (<type-arguments-tail> ")" <ident> | ")" [<ident>])
 //│ >   | <type> ("->" <type> | "*" <type> | <type>)

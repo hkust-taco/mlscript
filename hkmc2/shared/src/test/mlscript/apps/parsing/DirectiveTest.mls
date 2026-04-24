@@ -60,7 +60,7 @@ Rules.getRuleByKind("term").display print()
 //│ >   | "[" <term> "]"
 //│ >   | "{" <term> "}"
 //│ >   | "begin" <term> "end"
-//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <operator> <term> | <term>)
 //│ >   | "hello" <lol>
 //│ >   | "world"
 
@@ -113,6 +113,6 @@ Rules.getRuleByKind("term").display print()
 //│ >   | "[" <term> "]"
 //│ >   | "{" <term> "}"
 //│ >   | "begin" <term> "end"
-//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <operator> <term> | <term>)
 //│ >   | "hello" <lol>
 //│ >   | "world"
