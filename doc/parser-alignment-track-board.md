@@ -51,7 +51,7 @@ For any code-changing task:
 
 | Order | ID | Status | Priority | Difficulty | Code Impact | Item |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | PA-01 | Ready | P0 | Low | Low | Audit registered keywords and remove `class` plus any other truly unused registered keywords. |
+| 1 | PA-01 | Done | P0 | Low | Low | Audit registered keywords and remove `class` plus any other truly unused registered keywords. |
 | 2 | PA-02 | Ready | P1 | Medium | Medium | Collapse `Choice.Ref` from `outerPrec`/`innerPrec` to one optional binding-power field. |
 | 3 | PA-03 | Blocked by PA-02 | P1 | Medium | Medium | Replace `Choice.Siding` with standalone helper-generated rules and remove the `Siding` constructor from the rule model. |
 | 4 | PA-04 | Blocked by PA-02, PA-03 | P1 | Medium | Medium | Add an explicit `afterRef` helper and route continuation loops through it. |

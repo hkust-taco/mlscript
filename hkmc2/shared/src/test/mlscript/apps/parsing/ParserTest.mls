@@ -4,6 +4,9 @@ import "../../../mlscript-compile/apps/parsing/Test.mls"
 
 open Test { example }
 
+example of "class"
+//│ > «class»
+
 example of "(x) => x"
 //│ > «x => x»
 
@@ -455,5 +458,4 @@ mkStr of "A", x is Str
 //│ Assertion failed
 //│ 
 //│ = "Afalse"
-
 

@@ -47,7 +47,6 @@ fun nextPrec =
   Some(prec)
 let basePrec = currPrec // the lowest precedence
 val _terminator = keyword(";;", basePrec, basePrec)
-val _class = keyword("class", None, basePrec)
 let semiPrec = nextPrec
 let commaPrec = nextPrec
 val _semicolon = keyword(";", semiPrec, basePrec)
@@ -68,7 +67,6 @@ val _do = keyword of "do", None, None
 val _done = keyword of "done", None, None
 val _of = keyword of "of", None, None
 val _with = keyword("with", None, currPrec)
-val _case = keyword("case", None, currPrec)
 let thenPrec = nextPrec
 val _if = keyword("if", nextPrec, thenPrec)
 val _leftArrow = keyword of "<-", thenPrec, thenPrec
@@ -76,10 +74,8 @@ val _then = keyword("then", thenPrec, thenPrec)
 val _else = keyword("else", thenPrec, thenPrec)
 val _let = keyword("let", eqPrec, semiPrec)
 val _in = keyword("in", thenPrec, thenPrec)
-val _true = keyword("true", None, None)
-val _false = keyword("false", None, None)
 // val _fatArrow = keyword of "=>", nextPrec, eqPrec
-val _as = keyword("as", nextPrec, currPrec)
+let maxKeywordLevel = nextPrec
 val _fun = keyword("fun", currPrec, _thinArrow.leftPrec)
 val _function = keyword("function", currPrec, eqPrec)
 val _type = keyword("type", currPrec, None)
