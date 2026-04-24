@@ -48,6 +48,8 @@ fun showAsTree(thing) =
     Tree.Literal(k, v) then tuple of ("Literal#" + go(k) + " of " + go(v)), []
     Tree.Match(scrutinee, branches) then tuple of
       "Match", [["scrutinee", scrutinee], ["branches", go(branches)]]
+    Tree.Try(body, branches) then tuple of
+      "Try", [["body", go(body)], ["branches", go(branches)]]
     Tree.Application(c, a) then tuple of "Application", [["callee", go(c)], ["argument", go(a)]]
     Tree.Infix(op, lhs, rhs) then tuple of
       "Infix", [["op", go(op)], ["lhs", go(lhs)], ["rhs", go(rhs)]]

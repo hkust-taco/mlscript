@@ -45,6 +45,7 @@ module Tree with
       Sequence(trees: Stack[Tree]) extends Tree
       Literal(kind, value) extends Tree
       Match(scrutinee: Tree, branches: Stack[Tree]) extends Tree
+      Try(body: Tree, branches: Stack[Tree]) extends Tree
       Lambda(params: Stack[Tree], body: Tree) extends Tree
       Application(callee: Tree, argument: Tree) extends Tree
       Infix(op: Keywords.Keyword, lhs: Tree, rhs: Tree) extends Tree
@@ -71,6 +72,7 @@ module Tree with
       Sequence then 1
       Literal then INT_MAX
       Match then 2
+      Try then 2
       Application(callee, _) and callee is
         Reference(op, true) and opPrec(op) is [leftPrec, rightPrec] and
           side then rightPrec
@@ -106,6 +108,9 @@ module Tree with
       Match(scrutinee, branches) then mkStr of
         if scrutinee is Empty then "function " else
           "match " + go(scrutinee) + " with "
+        branches Iter.fromStack() Iter.mapping(go) Iter.joined(" | ")
+      Try(body, branches) then mkStr of
+        "try ", go(body), " with ",
         branches Iter.fromStack() Iter.mapping(go) Iter.joined(" | ")
       // Function application for binary operators.
       Application(Reference(op, true), lhs :: rhs :: Nil) then

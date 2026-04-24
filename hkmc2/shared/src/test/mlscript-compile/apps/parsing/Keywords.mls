@@ -67,6 +67,7 @@ val _do = keyword of "do", None, None
 val _done = keyword of "done", None, None
 val _of = keyword of "of", None, None
 val _with = keyword("with", None, currPrec)
+val _try = keyword("try", _match.leftPrec, basePrec)
 let thenPrec = nextPrec
 val _if = keyword("if", nextPrec, thenPrec)
 val _leftArrow = keyword of "<-", thenPrec, thenPrec

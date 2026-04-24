@@ -90,6 +90,8 @@ fun substitute(tree, env) = if tree is
   Tree.Sequence(trees) then Tree.Sequence(mapTreeStack(trees, env))
   Tree.Match(scrutinee, branches) then
     Tree.Match(substitute(scrutinee, env), mapTreeStack(branches, env))
+  Tree.Try(body, branches) then
+    Tree.Try(substitute(body, env), mapTreeStack(branches, env))
   Tree.Lambda(params, body) then
     Tree.Lambda(mapTreeStack(params, env), substitute(body, env))
   Tree.Application(callee, argument) then

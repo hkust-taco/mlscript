@@ -137,6 +137,15 @@ val termRule = rule of
     init: keyword(Keywords._bar)()
     rest: getRuleByKind("simple-matching")
     process: (_, branches) => Tree.Match(Tree.empty, branches)
+  // `try`-`with` term
+  keyword(Keywords._try) of term of
+    process: Tree.Try
+    name: "try body"
+    choices: tuple of keyword(Keywords._with) of siding of
+      optional: true
+      init: keyword(Keywords._bar)()
+      rest: getRuleByKind("simple-matching")
+      process: idSecond
   // `if`-`then`-`else` term
   keyword(Keywords._if) of term of
     process: (tst, conAlt) => if conAlt is [con, alt] then
