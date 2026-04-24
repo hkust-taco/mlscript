@@ -89,7 +89,7 @@ successfully, print syntax-tree output, have a memo, and be committed separately
 
 | Example | Status | Memo | Commit Requirement |
 | --- | --- | --- | --- |
-| Extensible 1/2 | Pending | `doc/caml-light-parser-demo/extensible-example-01.md` | Commit after done. |
+| Extensible 1/2 | Done | `doc/caml-light-parser-demo/extensible-example-01.md` | Commit after done. |
 | Extensible 2/2 | Pending | `doc/caml-light-parser-demo/extensible-example-02.md` | Commit after done. |
 
 ## Phase 4: Web Demo Error Reporting
