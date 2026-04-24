@@ -1012,9 +1012,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         auxDsym,
         newPlists,
         bod
-      )(N,
-        if fun.visibility is Visibility.Private then Annot.Modifier(Keyword.`private`) :: Nil
-        else Nil)
+      )(N, fun.annotations)
     
     private val aux = Lazy[Defn](mkAuxDefn)
     
