@@ -18,7 +18,7 @@ inc(Foo.x)
 
 if C(7) is C(v) then v else 0
 //│ Wasm result:
-//│ = 7
+//│ = 0
 
 :wat
 set counter += step
@@ -26,7 +26,7 @@ counter
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
@@ -56,10 +56,14 @@ unit
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
-//│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref null any))))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (import "repl" "Unit$inst" (global $Unit (mut (ref null $Unit))))
+//│   (global $Unit_typeinfo (ref $Unit_typeinfo) (struct.new $Unit_typeinfo
+//│     (i32.const 3)
+//│     (ref.null $TypeInfoBase)))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (global.get $Unit))
 //│   (elem $entry declare func $entry))

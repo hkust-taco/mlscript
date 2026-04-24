@@ -11,18 +11,19 @@ a.A#get() + A(2).get()
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
-//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $x (mut (ref null any))))))
+//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))) (field $x (mut (ref null any))))))
 //│   (type $A_init (func (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))))
 //│   (type $A_ctor (func (param $x (ref null any)) (result (ref null any))))
 //│   (type $A_get (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (type $start (func))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
 //│   (global $a (export "a") (mut (ref null any)) (ref.null any))
-//│   (global $A_typeinfo (mut (ref null $A_typeinfo)) (ref.null $A_typeinfo))
+//│   (global $A_typeinfo (ref $A_typeinfo) (struct.new $A_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
 //│   (func $A_init (type $A_init) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -54,18 +55,6 @@ a.A#get() + A(2).get()
 //│       (struct.get $A $x
 //│         (ref.cast (ref $A)
 //│           (local.get $this)))))
-//│   (func $start1 (type $start)
-//│     (block
-//│       (global.set $A_typeinfo
-//│         (struct.new_default $A_typeinfo))
-//│       (struct.set $A_typeinfo $$tag
-//│         (ref.cast (ref $A_typeinfo)
-//│           (global.get $A_typeinfo))
-//│         (i32.const 1))
-//│       (struct.set $A_typeinfo $$parent
-//│         (ref.cast (ref $A_typeinfo)
-//│           (global.get $A_typeinfo))
-//│         (ref.null $TypeInfoBase))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $tmp1 (ref null any))
@@ -96,9 +85,7 @@ a.A#get() + A(2).get()
 //│   (elem $A_init declare func $A_init)
 //│   (elem $A_ctor declare func $A_ctor)
 //│   (elem $A_get declare func $A_get)
-//│   (elem $start1 declare func $start1)
-//│   (elem $entry declare func $entry)
-//│   (start $start1))
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3
 
@@ -188,12 +175,12 @@ c.Counter#inc().Counter#double().Counter#get()
 
 :todo
 let d = Counter(c.Counter#get())
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $x (mut (ref null any))))))`
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))) (field $x (mut (ref null any))))))`
 
 :todo
 d.Counter#inc().Counter#double().Counter#get()
 //│ ╔══[COMPILATION ERROR] Cannot find variable `d` (VarSymbol) in local or global scope.
-//│ ║  l.190: 	let d = Counter(c.Counter#get())
+//│ ║  l.177: 	let d = Counter(c.Counter#get())
 //│ ╙──       	    ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Counter`
 
@@ -214,5 +201,5 @@ class A(val x) with
   fun get() = x
 A(1).get
 //│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
-//│ ║  l.215: 	A(1).get
+//│ ║  l.202: 	A(1).get
 //│ ╙──       	    ^^^^

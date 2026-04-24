@@ -23,38 +23,33 @@ callF(B())
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $virtual2 (func (param $this (ref null any)) (param $arg1 (ref null any)) (result (ref null any))))
 //│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))) (field $slot0 (mut (ref null $virtual2))))))
-//│   (type $B_typeinfo (sub $A_typeinfo (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))) (field $slot0 (mut (ref null $virtual2))))))
-//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref null any))))))
-//│   (type $B (sub $A (struct (field $$typeinfo (mut (ref null any))))))
+//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $A_init (func (param $this (ref null any)) (result (ref null any))))
-//│   (type $B_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $A_ctor (func (result (ref null any))))
+//│   (type $B_typeinfo (sub $A_typeinfo (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))) (field $slot0 (mut (ref null $virtual2))))))
+//│   (type $B (sub $A (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $B_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $B_ctor (func (result (ref null any))))
 //│   (type $callF1 (func (param $a (ref null any)) (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $times_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (type $start (func))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
 //│   (import "system" "times_impl" (func $times_impl (type $times_impl)))
-//│   (global $A_typeinfo (mut (ref null $A_typeinfo)) (ref.null $A_typeinfo))
-//│   (global $B_typeinfo (mut (ref null $B_typeinfo)) (ref.null $B_typeinfo))
+//│   (global $A_typeinfo (ref $A_typeinfo) (struct.new $A_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)
+//│     (ref.func $A_f)))
+//│   (global $B_typeinfo (ref $B_typeinfo) (struct.new $B_typeinfo
+//│     (i32.const 2)
+//│     (global.get $A_typeinfo)
+//│     (ref.func $B_f)))
 //│   (func $A_init (type $A_init) (param $this (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
-//│       (nop)
-//│       (return
-//│         (local.get $this))))
-//│   (func $B_init (type $B_init) (param $this (ref null any)) (result (ref null any))
-//│     (block (result (ref null any))
-//│       (block
-//│         (nop)
-//│         (drop
-//│           (call $A_init
-//│             (local.get $this))))
 //│       (nop)
 //│       (return
 //│         (local.get $this))))
@@ -72,6 +67,22 @@ callF(B())
 //│           (local.get $this)))
 //│       (return
 //│         (local.get $this))))
+//│   (func $A_f (type $virtual2) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
+//│     (return
+//│       (call $plus_impl
+//│         (local.get $x)
+//│         (ref.i31
+//│           (i32.const 1)))))
+//│   (func $B_init (type $B_init) (param $this (ref null any)) (result (ref null any))
+//│     (block (result (ref null any))
+//│       (block
+//│         (nop)
+//│         (drop
+//│           (call $A_init
+//│             (local.get $this))))
+//│       (nop)
+//│       (return
+//│         (local.get $this))))
 //│   (func $B_ctor (export "B") (type $B_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
@@ -86,12 +97,6 @@ callF(B())
 //│           (local.get $this)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $A_f (type $virtual2) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
-//│     (return
-//│       (call $plus_impl
-//│         (local.get $x)
-//│         (ref.i31
-//│           (i32.const 1)))))
 //│   (func $B_f (type $virtual2) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
 //│     (return
 //│       (call $times_impl
@@ -113,36 +118,6 @@ callF(B())
 //│               (struct.get $Object $$typeinfo
 //│                 (ref.cast (ref $Object)
 //│                   (local.get $receiver)))))))))
-//│   (func $start1 (type $start)
-//│     (block
-//│       (global.set $A_typeinfo
-//│         (struct.new_default $A_typeinfo))
-//│       (struct.set $A_typeinfo $$tag
-//│         (ref.cast (ref $A_typeinfo)
-//│           (global.get $A_typeinfo))
-//│         (i32.const 1))
-//│       (struct.set $A_typeinfo $$parent
-//│         (ref.cast (ref $A_typeinfo)
-//│           (global.get $A_typeinfo))
-//│         (ref.null $TypeInfoBase))
-//│       (struct.set $A_typeinfo $slot0
-//│         (ref.cast (ref $A_typeinfo)
-//│           (global.get $A_typeinfo))
-//│         (ref.func $A_f))
-//│       (global.set $B_typeinfo
-//│         (struct.new_default $B_typeinfo))
-//│       (struct.set $B_typeinfo $$tag
-//│         (ref.cast (ref $B_typeinfo)
-//│           (global.get $B_typeinfo))
-//│         (i32.const 2))
-//│       (struct.set $B_typeinfo $$parent
-//│         (ref.cast (ref $B_typeinfo)
-//│           (global.get $B_typeinfo))
-//│         (global.get $A_typeinfo))
-//│       (struct.set $B_typeinfo $slot0
-//│         (ref.cast (ref $B_typeinfo)
-//│           (global.get $B_typeinfo))
-//│         (ref.func $B_f))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $callF (ref null any))
 //│     (local $tmp (ref null any))
@@ -177,15 +152,13 @@ callF(B())
 //│                               (local.get $receiver))))))))
 //│                 (local.get $inlinedVal))))))))
 //│   (elem $A_init declare func $A_init)
-//│   (elem $B_init declare func $B_init)
 //│   (elem $A_ctor declare func $A_ctor)
-//│   (elem $B_ctor declare func $B_ctor)
 //│   (elem $A_f declare func $A_f)
+//│   (elem $B_init declare func $B_init)
+//│   (elem $B_ctor declare func $B_ctor)
 //│   (elem $B_f declare func $B_f)
 //│   (elem $callF declare func $callF)
-//│   (elem $start1 declare func $start1)
-//│   (elem $entry declare func $entry)
-//│   (start $start1))
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 10
 
@@ -193,7 +166,7 @@ callF(B())
 class A(val a) with
   virtual fun f(x) = x + a
 class B(val b) extends A(b) with
-  fun f(x) = x * b
+  virtual fun f(x) = x * b
 class C(val c) extends B(c) with
   fun f(x) = x - c
 C(3).f(5)

@@ -421,6 +421,14 @@ object Instructions:
   end global
 
   object struct:
+    /** Creates a `struct.new` instruction. */
+    def `new`(ty: TypeIdx, fields: Seq[Expr]): FoldedInstr = FoldedInstr(
+      mnemonic = "struct.new",
+      instrargs = Seq(ty.toWat),
+      stackargs = fields,
+      resultType = S(RefType(ty, nullable = false)),
+    )
+
     /** Creates a `struct.new_default` instruction. */
     def new_default(ty: TypeIdx): FoldedInstr = FoldedInstr(
       mnemonic = "struct.new_default",

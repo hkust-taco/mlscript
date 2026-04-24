@@ -81,15 +81,18 @@ final case class SessionGlobal(
   *   The block member symbol of the class.
   * @param typeInfo
   *   The Wasm type information that must be recreated in importing modules.
-  * @param runtimeTags
-  *   The class' runtime tag together with descendant class tags.
+  * @param rttiTypeInfo
+  *   The RTTI struct type information that must be recreated in importing modules.
+  * @param parentSym
+  *   Optional direct parent class symbol used to rebuild the local RTTI ancestry chain in importing modules.
   * @param aliasSyms
   *   Additional symbols that should resolve to this class binding.
   */
 final case class SessionClass(
     sym: BlockMemberSymbol,
     typeInfo: TypeInfo,
-    runtimeTags: LinkedHashSet[Int],
+    rttiTypeInfo: TypeInfo,
+    parentSym: Opt[BlockMemberSymbol],
     aliasSyms: Seq[Local] = Nil,
 ) extends SessionBinding:
   def bindingKey: Str = s"class:${sym.uid}"
@@ -564,9 +567,7 @@ class Ctx extends ToWat:
 
   private val singletonByBms = MutMap.empty[BlockMemberSymbol, Ctx.SingletonInfo]
   private val singletonByIsym = MutMap.empty[ModuleOrObjectSymbol, Ctx.SingletonInfo]
-  private val typeInfoInitActions = ArrayBuf.empty[Expr]
   private val singletonInitActions = ArrayBuf.empty[Expr]
-  private val runtimeClassTags = MutMap.empty[BlockMemberSymbol, LinkedHashSet[Int]]
   private val virtualTables = MutMap.empty[BlockMemberSymbol, Ctx.VirtualTable]
 
   private def imports: Seq[Import[?]] =
@@ -617,14 +618,6 @@ class Ctx extends ToWat:
   def getTypeInfo_!(typeref: TypeIdx | BlockMemberSymbol): TypeInfo =
     getTypeInfo(typeref).getOrElse:
       lastWords(s"Missing type definition for ${typeref.prettyString}")
-
-  /** Records the class' runtime tag together with descendant class tags for `sym`. */
-  def registerRuntimeClassTags(sym: BlockMemberSymbol, tags: LinkedHashSet[Int]): Unit =
-    runtimeClassTags(sym) = tags
-
-  /** Returns the class' runtime tag together with descendant class tags for `sym`. */
-  def getAllRuntimeTags(sym: BlockMemberSymbol): Opt[LinkedHashSet[Int]] =
-    runtimeClassTags.get(sym)
 
   /** Records the derived virtual-dispatch layout for `sym`. */
   def registerVirtualTable(sym: BlockMemberSymbol, info: Ctx.VirtualTable): Unit =
@@ -839,28 +832,12 @@ class Ctx extends ToWat:
     singletonByBms(bms) = info
     isym.foreach(singletonByIsym(_) = info)
 
-  /** Appends one shared class-`typeinfo` initialization action for synthesized module start code. */
-  def addTypeInfoInitAction(action: Expr): Unit =
-    typeInfoInitActions += action
-
-  /** Returns the shared class-`typeinfo` initialization actions. */
-  def getTypeInfoInitActions: Seq[Expr] = typeInfoInitActions.toSeq
-
   /** Appends one eager singleton initialization action for synthesized module start code. */
   def addSingletonInitAction(action: Expr): Unit =
     singletonInitActions += action
 
   /** Returns the singleton initialization actions in deterministic insertion order. */
   def getSingletonInitActions: Seq[Expr] = singletonInitActions.toSeq
-
-  /** Returns the runtime class tag for `sym`. */
-  def getRuntimeClassTag(sym: BlockMemberSymbol): Opt[Int] =
-    getAllRuntimeTags(sym).flatMap(_.headOption)
-
-  /** Same as [[getRuntimeClassTag]] but throws if no runtime tag is known. */
-  def getRuntimeClassTag_!(sym: BlockMemberSymbol): Int =
-    getRuntimeClassTag(sym).getOrElse:
-      lastWords(s"Missing runtime class tag for `${sym.toString}`")
 
   /** Configures the module start function. */
   def setStartFunc(funcIdx: FuncIdx): Unit =

@@ -57,7 +57,7 @@ foo() + foo()
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $foo1 (func (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
@@ -115,14 +115,15 @@ class Foo(val a)
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
-//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $a (mut (ref null any))))))
+//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))) (field $a (mut (ref null any))))))
 //│   (type $Foo_init (func (param $this (ref null any)) (param $a (ref null any)) (result (ref null any))))
 //│   (type $Foo_ctor (func (param $a (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (type $start (func))
-//│   (global $Foo_typeinfo (mut (ref null $Foo_typeinfo)) (ref.null $Foo_typeinfo))
+//│   (global $Foo_typeinfo (ref $Foo_typeinfo) (struct.new $Foo_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
 //│   (func $Foo_init (type $Foo_init) (param $this (ref null any)) (param $a (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -149,18 +150,6 @@ class Foo(val a)
 //│           (local.get $a)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $start1 (type $start)
-//│     (block
-//│       (global.set $Foo_typeinfo
-//│         (struct.new_default $Foo_typeinfo))
-//│       (struct.set $Foo_typeinfo $$tag
-//│         (ref.cast (ref $Foo_typeinfo)
-//│           (global.get $Foo_typeinfo))
-//│         (i32.const 1))
-//│       (struct.set $Foo_typeinfo $$parent
-//│         (ref.cast (ref $Foo_typeinfo)
-//│           (global.get $Foo_typeinfo))
-//│         (ref.null $TypeInfoBase))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null any))
@@ -175,9 +164,7 @@ class Foo(val a)
 //│             (local.get $tmp))))))
 //│   (elem $Foo_init declare func $Foo_init)
 //│   (elem $Foo_ctor declare func $Foo_ctor)
-//│   (elem $start1 declare func $start1)
-//│   (elem $entry declare func $entry)
-//│   (start $start1))
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 42
 
@@ -195,14 +182,15 @@ class Foo(val x) with
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
-//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
+//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
 //│   (type $Foo_init (func (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))))
 //│   (type $Foo_ctor (func (param $x (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (type $start (func))
-//│   (global $Foo_typeinfo (mut (ref null $Foo_typeinfo)) (ref.null $Foo_typeinfo))
+//│   (global $Foo_typeinfo (ref $Foo_typeinfo) (struct.new $Foo_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
 //│   (func $Foo_init (type $Foo_init) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -236,18 +224,6 @@ class Foo(val x) with
 //│           (local.get $x)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $start1 (type $start)
-//│     (block
-//│       (global.set $Foo_typeinfo
-//│         (struct.new_default $Foo_typeinfo))
-//│       (struct.set $Foo_typeinfo $$tag
-//│         (ref.cast (ref $Foo_typeinfo)
-//│           (global.get $Foo_typeinfo))
-//│         (i32.const 1))
-//│       (struct.set $Foo_typeinfo $$parent
-//│         (ref.cast (ref $Foo_typeinfo)
-//│           (global.get $Foo_typeinfo))
-//│         (ref.null $TypeInfoBase))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null any))
@@ -262,9 +238,7 @@ class Foo(val x) with
 //│             (local.get $tmp))))))
 //│   (elem $Foo_init declare func $Foo_init)
 //│   (elem $Foo_ctor declare func $Foo_ctor)
-//│   (elem $start1 declare func $start1)
-//│   (elem $entry declare func $entry)
-//│   (start $start1))
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 42
 
@@ -277,14 +251,16 @@ O.y
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null any))))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $O_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
-//│   (type $O (sub $Object (struct (field $$typeinfo (mut (ref null any))) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
+//│   (type $O (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
 //│   (type $O_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $O_ctor (func (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
-//│   (global $O_typeinfo (mut (ref null $O_typeinfo)) (ref.null $O_typeinfo))
+//│   (global $O_typeinfo (ref $O_typeinfo) (struct.new $O_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
 //│   (global $O$inst (export "O$inst") (mut (ref null $O)) (ref.null $O))
 //│   (func $O_init1 (type $O_init) (param $this (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
@@ -321,16 +297,6 @@ O.y
 //│         (local.get $this))))
 //│   (func $start1 (type $start)
 //│     (block
-//│       (global.set $O_typeinfo
-//│         (struct.new_default $O_typeinfo))
-//│       (struct.set $O_typeinfo $$tag
-//│         (ref.cast (ref $O_typeinfo)
-//│           (global.get $O_typeinfo))
-//│         (i32.const 1))
-//│       (struct.set $O_typeinfo $$parent
-//│         (ref.cast (ref $O_typeinfo)
-//│           (global.get $O_typeinfo))
-//│         (ref.null $TypeInfoBase))
 //│       (global.set $O$inst
 //│         (ref.cast (ref null $O)
 //│           (call $O_ctor1)))))
@@ -354,6 +320,6 @@ fun bar() = 42
 fun foo() = bar
 foo()()
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.354: 	fun foo() = bar
+//│ ║  l.320: 	fun foo() = bar
 //│ ╙──       	            ^^^
 //│ ═══[COMPILATION ERROR] Expected static function reference in Call(...) expression
