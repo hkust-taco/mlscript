@@ -38,3 +38,32 @@ route POST "/users" create_user
 //│ >   argument = Reference of "create_user"
 //│ > «Route Get "/user…" list_users»
 //│ > «Route Post "/user…" create_user»
+
+// Workflow steps
+// ==============
+
+example of """
+:tree
+#keyword "workflow" None None
+#keyword "step" None None
+#keyword "next" None None
+#keyword "done" None None
+#extend ["steps", [ keyword("step"), ["string-literal", "name"], keyword("next"), ["steps", "tail"] ], [Cons name tail]]
+#extend ["steps", [ keyword("done") ], [Nil]]
+#extend ["decl", [ keyword("workflow"), ["ident", "name"], ["steps", "steps"] ], [Workflow name steps]]
+workflow deploy step "build" next step "test" next done
+"""
+//│ > Application:
+//│ >   callee = Application:
+//│ >     callee = Reference of "Workflow"
+//│ >     argument = Reference of "deploy"
+//│ >   argument = Application:
+//│ >     callee = Application:
+//│ >       callee = Reference of "Cons"
+//│ >       argument = Literal#String of "build"
+//│ >     argument = Application:
+//│ >       callee = Application:
+//│ >         callee = Reference of "Cons"
+//│ >         argument = Literal#String of "test"
+//│ >       argument = Reference of "Nil"
+//│ > «Workflow deploy (Cons "build" (Cons "test" Nil))»
