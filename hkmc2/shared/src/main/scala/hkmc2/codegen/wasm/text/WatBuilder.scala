@@ -122,6 +122,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     // Record session metadata for the synthetic Unit singleton.
     summon[SessionExportCtx].emit(SessionClass(
       sym = typeInfo.sym,
+      idPrefix = typeInfo.idPrefix,
       compType = typeInfo.compType,
       objectTag = typeInfo.objectTag,
       runtimeTags = ctx.getAllRuntimeTags(unitDefn.sym) getOrElse:
@@ -131,6 +132,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ))
     summon[SessionExportCtx].emit(SessionSingleton(
       blockSym = unitDefn.sym,
+      idPrefix = N,
       objectSym = singletonOwner,
       moduleName = SessionBinding.ReplModuleName,
       exportName = singletonInfo.globalName,
@@ -409,15 +411,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   )(using Ctx, Raise, SessionExportCtx): Unit =
     if ctx.containsGlobal(sym) then return
     val exportName = sym.nme
-    ctx.addGlobal(GlobalInfo(
+    val globalInfo = GlobalInfo(
       globalType = GlobalType(RefType.anyref, mutable = true),
       init = ref.`null`(HeapType.Any),
       exportName = S(exportName),
       sym,
       idPrefix = N,
-    ))
+    )
+    ctx.addGlobal(globalInfo)
     summon[SessionExportCtx].emit(SessionGlobal(
       sym = sym,
+      idPrefix = globalInfo.idPrefix,
       moduleName = SessionBinding.ReplModuleName,
       exportName = exportName,
       globalType = GlobalType(RefType.anyref, mutable = true),
@@ -432,7 +436,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case cls: SessionClass =>
         cls.sym match
           case bms: BlockMemberSymbol =>
-            ctx.addType(TypeInfo(sym = bms, idPrefix = N, compType = cls.compType, objectTag = cls.objectTag))
+            ctx.addType(TypeInfo(
+              sym = bms,
+              idPrefix = cls.idPrefix,
+              compType = cls.compType,
+              objectTag = cls.objectTag,
+            ))
             ctx.registerRuntimeClassTags(bms, cls.runtimeTags)
           case _ =>
       case _ =>
@@ -443,7 +452,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         // the class/module itself
         val funcTySym: BlockMemberSymbol | TempSymbol =
           if func.sym.asClsOrMod.isDefined then TempSymbol(N, func.sym.nme) else func.sym
-        val typeIdx = ctx.addType(TypeInfo(sym = funcTySym, idPrefix = N, compType = func.funcType, objectTag = N))
+        val typeIdx =
+          ctx.addType(TypeInfo(sym = funcTySym, idPrefix = func.idPrefix, compType = func.funcType, objectTag = N))
         ctx.addFunctionImport(WasmImport(
           func.moduleName,
           func.exportName,
@@ -453,11 +463,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         ctx.addGlobalImport(WasmImport(
           glob.moduleName,
           glob.exportName,
-          ExternType.Global(glob.globalType, glob.sym, idPrefix = N),
+          ExternType.Global(glob.globalType, glob.sym, idPrefix = glob.idPrefix),
         ))
       case singleton: SessionSingleton =>
         val globalExtern =
-          ExternType.Global(GlobalType(singleton.globalTy, mutable = true), singleton.blockSym, idPrefix = N)
+          ExternType.Global(
+            GlobalType(singleton.globalTy, mutable = true),
+            singleton.blockSym,
+            idPrefix = singleton.idPrefix,
+          )
         ctx.addGlobalImport(WasmImport(
           singleton.moduleName,
           singleton.exportName,
@@ -1479,6 +1493,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     if summon[SessionExportCtx].shouldExport(defn.sym) then
                       summon[SessionExportCtx].emit(SessionFunc(
                         sym = defn.sym,
+                        idPrefix = funcInfo.idPrefix,
                         moduleName = SessionBinding.ReplModuleName,
                         exportName = sym.nme,
                         funcType = FunctionType(funcInfo.getSignatureType),
@@ -1584,7 +1599,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   ))
 
                   val predeclaredCtor = ctx.getFuncInfo_!(clsLikeDefn.sym)
-                  ctx.addFunc(FuncInfo(
+                  val ctorFuncInfo = FuncInfo(
                     sym = clsLikeDefn.sym,
                     idPrefix = S(clsLikeDefn.sym.nme),
                     typeUse = predeclaredCtor.typeUse,
@@ -1593,7 +1608,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     locals = ctorFnCtx.locals,
                     body = ctorAux,
                     exportName = predeclaredCtor.exportName,
-                  ))
+                  )
+                  ctx.addFunc(ctorFuncInfo)
 
                   def overwriteMethod(
                       sym: BlockMemberSymbol,
@@ -1625,6 +1641,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   if summon[SessionExportCtx].shouldExport(clsLikeDefn.sym) then
                     summon[SessionExportCtx].emit(SessionClass(
                       sym = clsLikeDefn.sym,
+                      idPrefix = typeinfo.idPrefix,
                       compType = typeinfo.compType,
                       objectTag = typeinfo.objectTag,
                       runtimeTags = ctx.getAllRuntimeTags(clsLikeDefn.sym).getOrElse(LinkedHashSet(tagValue)),
@@ -1635,6 +1652,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     if !isSingletonObj && clsLikeDefn.sym.nameIsMeaningful then
                       summon[SessionExportCtx].emit(SessionFunc(
                         sym = clsLikeDefn.sym,
+                        idPrefix = ctorFuncInfo.idPrefix,
                         moduleName = SessionBinding.ReplModuleName,
                         exportName = clsLikeDefn.sym.nme,
                         funcType = FunctionType(
@@ -1654,6 +1672,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                           case _ => N
                         summon[SessionExportCtx].emit(SessionSingleton(
                           blockSym = clsLikeDefn.sym,
+                          idPrefix = typeinfo.idPrefix,
                           objectSym = singletonOwner,
                           moduleName = SessionBinding.ReplModuleName,
                           exportName = info.globalName,

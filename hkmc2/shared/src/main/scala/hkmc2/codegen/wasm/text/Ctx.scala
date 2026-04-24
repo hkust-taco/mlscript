@@ -46,6 +46,7 @@ object SessionBinding:
   */
 final case class SessionFunc(
     sym: BlockMemberSymbol,
+    idPrefix: Opt[Str],
     moduleName: Str,
     exportName: Str,
     funcType: FunctionType,
@@ -67,6 +68,7 @@ final case class SessionFunc(
   */
 final case class SessionGlobal(
     sym: Symbol,
+    idPrefix: Opt[Str],
     moduleName: Str,
     exportName: Str,
     globalType: GlobalType,
@@ -88,6 +90,7 @@ final case class SessionGlobal(
   */
 final case class SessionClass(
     sym: Symbol,
+    idPrefix: Opt[Str],
     compType: CompType,
     objectTag: Opt[Int],
     runtimeTags: LinkedHashSet[Int],
@@ -112,6 +115,7 @@ final case class SessionClass(
 final case class SessionSingleton(
     blockSym: BlockMemberSymbol,
     objectSym: Opt[ModuleOrObjectSymbol],
+    idPrefix: Opt[Str],
     moduleName: Str,
     exportName: Str,
     globalTy: RefType,
@@ -233,7 +237,7 @@ class GlobalInfo(
     val init: Expr,
     val exportName: Opt[Str],
     val sym: Symbol,
-    idPrefix: Opt[Str],
+    val idPrefix: Opt[Str],
 )(using Ctx, Raise) extends ToWat:
 
   /** Symbolic identifier for the global. */
