@@ -436,3 +436,148 @@ let rec add n = function
 //│ > «let empty = []»
 //│ > «let belongs n = function [] -> false | m :: rest -> if m = n then true then if m > n then false then belongs n rest»
 //│ > «let add n = function [] -> [n] | m :: rest -> if m = n then m :: rest then if m > n then n :: m :: rest then m :: add n rest»
+
+// sources/examples/pascal/valeur.ml
+// ==================================
+
+example of """
+:tree
+let int_val = function
+  | Int n -> n
+  | _ -> raise(Runtime_error "integer expected")
+and bool_val = function
+  | Bool b -> b
+  | _ -> raise(Runtime_error "boolean expected")
+and array_val = function
+  | Array(lower, values) -> (lower, values)
+  | _ -> raise(Runtime_error "array expected")
+;;
+let print_value v =
+  print_int(int_val v); print_newline()
+;;
+let read_value () =
+  let input = read_line() in
+  try Int(int_of_string input)
+  with Failure _ -> raise(Runtime_error "read error")
+;;
+"""
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "int_val"
+//│ >       rhs = Match:
+//│ >         scrutinee = Empty()
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "Int"
+//│ >               argument = Reference of "n"
+//│ >             rhs = Reference of "n"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Reference of "_"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "raise"
+//│ >               argument = Application:
+//│ >                 callee = Reference of "Runtime_error"
+//│ >                 argument = Literal#String of "integer expected"
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "bool_val"
+//│ >       rhs = Match:
+//│ >         scrutinee = Empty()
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "Bool"
+//│ >               argument = Reference of "b"
+//│ >             rhs = Reference of "b"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Reference of "_"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "raise"
+//│ >               argument = Application:
+//│ >                 callee = Reference of "Runtime_error"
+//│ >                 argument = Literal#String of "boolean expected"
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "array_val"
+//│ >       rhs = Match:
+//│ >         scrutinee = Empty()
+//│ >         branches = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "Array"
+//│ >               argument = Tuple of Stack of 
+//│ >                 Reference of "lower"
+//│ >                 Reference of "values"
+//│ >             rhs = Tuple of Stack of 
+//│ >               Reference of "lower"
+//│ >               Reference of "values"
+//│ >           Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Reference of "_"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "raise"
+//│ >               argument = Application:
+//│ >                 callee = Reference of "Runtime_error"
+//│ >                 argument = Literal#String of "array expected"
+//│ >   body = None
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "print_value"
+//│ >         argument = Reference of "v"
+//│ >       rhs = Sequence of Stack of 
+//│ >         Application:
+//│ >           callee = Reference of "print_int"
+//│ >           argument = Application:
+//│ >             callee = Reference of "int_val"
+//│ >             argument = Reference of "v"
+//│ >         Application:
+//│ >           callee = Reference of "print_newline"
+//│ >           argument = Tuple of Nil
+//│ >   body = None
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "read_value"
+//│ >         argument = Tuple of Nil
+//│ >       rhs = LetIn:
+//│ >         bindings = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`=`, 16, 16)
+//│ >             lhs = Reference of "input"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "read_line"
+//│ >               argument = Tuple of Nil
+//│ >         body = Some of Try:
+//│ >           body = Application:
+//│ >             callee = Reference of "Int"
+//│ >             argument = Application:
+//│ >               callee = Reference of "int_of_string"
+//│ >               argument = Reference of "input"
+//│ >           branches = Stack of 
+//│ >             Infix:
+//│ >               op = Keyword(`->`, 5, 3)
+//│ >               lhs = Application:
+//│ >                 callee = Reference of "Failure"
+//│ >                 argument = Reference of "_"
+//│ >               rhs = Application:
+//│ >                 callee = Reference of "raise"
+//│ >                 argument = Application:
+//│ >                   callee = Reference of "Runtime_error"
+//│ >                   argument = Literal#String of "read error"
+//│ >   body = None
+//│ > «let int_val = function Int n -> n | _ -> raise (Runtime_error "integ…") and bool_val = function Bool b -> b | _ -> raise (Runtime_error "boole…") and array_val = function Array (lower, values) -> (lower, values) | _ -> raise (Runtime_error "array…")»
+//│ > «let print_value v = print_int (int_val v); print_newline ()»
+//│ > «let read_value () = let input = read_line () in try Int (int_of_string input) with Failure _ -> raise (Runtime_error "read …")»
