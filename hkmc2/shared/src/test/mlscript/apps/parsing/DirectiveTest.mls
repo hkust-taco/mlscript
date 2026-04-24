@@ -48,14 +48,15 @@ Rules.getRuleByKind("term").display print()
 //│ >   | "fun" <term> "->" <term>
 //│ >   | "match" <term> "with" ("|" <term> "->" <term> ["|" <simple-matching>] | <term> "->" <term> ["|" <simple-matching>])
 //│ >   | "function" ("|" <term> "->" <term> ["|" <simple-matching>] | <term> "->" <term> ["|" <simple-matching>])
+//│ >   | "try" <term> "with" ("|" <term> "->" <term> ["|" <simple-matching>] | <term> "->" <term> ["|" <simple-matching>])
 //│ >   | "if" <term> "then" <term> ["else" <term>]
 //│ >   | "while" <term> "do" <term> "done"
-//│ >   | "for" <term> "=" <term> ("to" <term> "do" <term> "done" | "downto" <term> "do" <term> "done")
+//│ >   | "for" <binding> "=" <term> ("to" <term> "do" <term> "done" | "downto" <term> "do" <term> "done")
 //│ >   | "(" <term> ")"
 //│ >   | "[" <term> "]"
 //│ >   | "{" <term> "}"
 //│ >   | "begin" <term> "end"
-//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <operator> <term> | <term>)
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "=" <term> | "*" <term> | "mod" <term> | "land" <term> | "lor" <term> | "lxor" <term> | "lsl" <term> | "lsr" <term> | "asr" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <operator> <term> | <term>)
 //│ >   | "hello" <lol>
 //│ >   | "world"
 
@@ -98,14 +99,15 @@ Rules.getRuleByKind("term").display print()
 //│ >   | "fun" <term> "->" <term>
 //│ >   | "match" <term> "with" ("|" <term> "->" <term> ["|" <simple-matching>] | <term> "->" <term> ["|" <simple-matching>])
 //│ >   | "function" ("|" <term> "->" <term> ["|" <simple-matching>] | <term> "->" <term> ["|" <simple-matching>])
+//│ >   | "try" <term> "with" ("|" <term> "->" <term> ["|" <simple-matching>] | <term> "->" <term> ["|" <simple-matching>])
 //│ >   | "if" <term> "then" <term> ["else" <term>]
 //│ >   | "while" <term> "do" <term> "done"
-//│ >   | "for" <term> "=" <term> ("to" <term> "do" <term> "done" | "downto" <term> "do" <term> "done")
+//│ >   | "for" <binding> "=" <term> ("to" <term> "do" <term> "done" | "downto" <term> "do" <term> "done")
 //│ >   | "(" <term> ")"
 //│ >   | "[" <term> "]"
 //│ >   | "{" <term> "}"
 //│ >   | "begin" <term> "end"
-//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <operator> <term> | <term>)
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "=" <term> | "*" <term> | "mod" <term> | "land" <term> | "lor" <term> | "lxor" <term> | "lsl" <term> | "lsr" <term> | "asr" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <operator> <term> | <term>)
 //│ >   | "hello" <lol>
 //│ >   | "world"
 

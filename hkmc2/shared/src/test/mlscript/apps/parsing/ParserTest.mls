@@ -43,7 +43,7 @@ let x: int -> int -> int = fun x y -> x + y
 //│ > LetIn:
 //│ >   bindings = Stack of 
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
+//│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Infix:
 //│ >         op = Keyword(`:`, 4, 3)
 //│ >         lhs = Reference of "x"
@@ -100,9 +100,7 @@ example of "square (sin pi) +. square (cos pi)"
 //│ > «square (sin pi) +. square (cos pi)»
 
 example of "(1 < 2) = false"
-//│ > «1 < 2»
-//│ > «⚠»
-//│ > «⚠»
+//│ > «1 < 2 = false»
 
 example of "let cat s1 s2 = s1 ^ \" \" ^ s2"
 //│ > «let cat s1 s2 = s1 ^ " " ^ s2»
@@ -354,7 +352,7 @@ let x = !true
 //│ > LetIn:
 //│ >   bindings = Stack of 
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
+//│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Reference of "x"
 //│ >       rhs = Application:
 //│ >         callee = Reference of "!"
@@ -423,7 +421,7 @@ a:;
 example of """
 let sub = (-);;
 """
-//│ > «let sub = -»
+//│ > «let sub = -{}»
 
 example of """
 :tree

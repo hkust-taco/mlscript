@@ -16,7 +16,7 @@ done
 //│ > LetIn:
 //│ >   bindings = Stack of 
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
+//│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Reference of "x"
 //│ >       rhs = Literal#Integer of "0"
 //│ >   body = Some of While:

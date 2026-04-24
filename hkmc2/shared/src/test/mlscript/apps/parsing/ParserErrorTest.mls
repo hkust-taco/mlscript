@@ -32,7 +32,7 @@ and test' = Bar' | Test' | Foo'
 //│ >   kind = Type
 //│ >   items = Stack of 
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
+//│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Reference of "test"
 //│ >       rhs = Infix:
 //│ >         op = Keyword(`|`, N/A, N/A)
@@ -42,7 +42,7 @@ and test' = Bar' | Test' | Foo'
 //│ >           lhs = Reference of "Test"
 //│ >           rhs = Reference of "Foo"
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
+//│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Reference of "test'"
 //│ >       rhs = Infix:
 //│ >         op = Keyword(`|`, N/A, N/A)
@@ -68,12 +68,12 @@ example of """
 //│ >           callee = Reference of "-"
 //│ >           argument = Literal#Integer of "2"
 //│ >         Application:
-//│ >           callee = Reference of "~"
-//│ >           argument = Stack of 
-//│ >             Literal#Integer of "3"
-//│ >             Literal#Integer of "2"
+//│ >           callee = Literal#Integer of "3"
+//│ >           argument = Application:
+//│ >             callee = Reference of "~"
+//│ >             argument = Literal#Integer of "2"
 //│ >     Literal#Integer of "3"
-//│ > «(-2) * 3 ~ 2 * 3»
+//│ > «(-2) * 3 (~2) * 3»
 
 example of """
 :tree
@@ -83,7 +83,7 @@ let foo = -2 * 3
 //│ > LetIn:
 //│ >   bindings = Stack of 
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
+//│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Reference of "foo"
 //│ >       rhs = Application:
 //│ >         callee = Reference of "*"

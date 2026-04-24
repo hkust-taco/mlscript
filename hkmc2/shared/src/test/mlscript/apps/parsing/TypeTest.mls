@@ -161,7 +161,7 @@ type 'a option = Some of 'a | None
 //│ >   kind = Type
 //│ >   items = Stack of 
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
+//│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Application:
 //│ >         callee = Reference of "option"
 //│ >         argument = Tuple of Stack of 
@@ -183,7 +183,7 @@ type 'a tree = Leaf | Node of 'a tree * 'a * 'a tree
 //│ >   kind = Type
 //│ >   items = Stack of 
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
+//│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Application:
 //│ >         callee = Reference of "tree"
 //│ >         argument = Tuple of Stack of 
@@ -233,7 +233,7 @@ and t' = Int of int | List of t list
 //│ >   kind = Type
 //│ >   items = Stack of 
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
+//│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Reference of "t"
 //│ >       rhs = Bracketed#Curly of Sequence of Stack of 
 //│ >         Infix:
@@ -245,7 +245,7 @@ and t' = Int of int | List of t list
 //│ >           lhs = Reference of "substance"
 //│ >           rhs = Reference of "t'"
 //│ >     Infix:
-//│ >       op = Keyword(`=`, 3, 3)
+//│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Reference of "t'"
 //│ >       rhs = Infix:
 //│ >         op = Keyword(`|`, N/A, N/A)

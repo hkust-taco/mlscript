@@ -119,8 +119,8 @@ web demo, and verify that each can be parsed correctly there.
 
 | ID | Status | Task |
 | --- | --- | --- |
-| V-01 | Pending | Run focused parser compile tests. |
-| V-02 | Pending | Run focused parser and web-demo DiffTests. |
+| V-01 | Done | Run focused parser compile tests. |
+| V-02 | Done | Run focused parser and web-demo DiffTests. |
 | V-03 | Pending | Run browser verification for the web demo. |
 | V-04 | Pending | Run `hkmc2AllTests/test`. |
 | V-05 | Pending | Confirm `git status --short` is clean after the final commit. |
