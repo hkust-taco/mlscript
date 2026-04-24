@@ -581,3 +581,35 @@ let read_value () =
 //│ > «let int_val = function Int n -> n | _ -> raise (Runtime_error "integ…") and bool_val = function Bool b -> b | _ -> raise (Runtime_error "boole…") and array_val = function Array (lower, values) -> (lower, values) | _ -> raise (Runtime_error "array…")»
 //│ > «let print_value v = print_int (int_val v); print_newline ()»
 //│ > «let read_value () = let input = read_line () in try Int (int_of_string input) with Failure _ -> raise (Runtime_error "read …")»
+
+// sources/examples/picomach/code.ml
+// ==================================
+
+example of """
+:tree
+let register_count = 32
+and sp = 30
+and ra = 31
+and word_size = 4
+;;
+"""
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "register_count"
+//│ >       rhs = Literal#Integer of "32"
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "sp"
+//│ >       rhs = Literal#Integer of "30"
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "ra"
+//│ >       rhs = Literal#Integer of "31"
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "word_size"
+//│ >       rhs = Literal#Integer of "4"
+//│ >   body = None
+//│ > «let register_count = 32 and sp = 30 and ra = 31 and word_size = 4»
