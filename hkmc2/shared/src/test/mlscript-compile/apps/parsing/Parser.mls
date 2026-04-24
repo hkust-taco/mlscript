@@ -56,16 +56,16 @@ fun parse(tokens) =
     kind is "boolean-literal" then parseLiteralKind(kind, Token.LiteralKind.Boolean)
     // built-in kinds: plain identifiers
     kind is "ident" then if tokens is
-      Token.Identifier(name, false) :: _ and Keywords.all |> MutMap.get(name) is None then
+      Token.Reference(name) :: _ and Keywords.all |> MutMap.get(name) is None then
         consume
-        Tree.Ident(name, false)
+        Tree.Reference(name, false)
       token :: _ then Tree.error("expect an identifier but found " + token)
       Nil then Tree.error("expect an identifier but found the end of input")
     // built-in kinds: type variables
     kind is "typevar" then if tokens is
-      Token.Identifier(name, false) :: _ and name.at(0) is "'" then
+      Token.Reference(name) :: _ and name.at(0) is "'" then
         consume
-        Tree.Ident(name, false)
+        Tree.Reference(name, false)
       token :: _ then Tree.error("expect a type variable but found " + token)
       Nil then Tree.error("expect a type variable but found the end of input")
     // * other rule-based kinds
@@ -93,8 +93,8 @@ fun parse(tokens) =
     "parsing rule \"" + rule.name + "\" with precedence " + prec
     result => "parsed rule \"" + rule.name + "\": " + result Tree.summary()
     () => if tokens is...
-    Token.Identifier(name, _) :: _ and
-      do tracer.print of "found an identifier \"" + name + "\"", source.line
+    token :: _ and Token.name(token) is Some(name) and
+      do tracer.print of "found a token named \"" + name + "\"", source.line
       Keywords.all |> MutMap.get(name) is Some(keyword) and
         do tracer.print of keyword.toString(), source.line
         do tracer.print of "keyword choices: ", rule.keywordChoices
@@ -154,7 +154,7 @@ fun parse(tokens) =
     kindName + " <<< " + prec + " " + TokenHelpers.preview(tokens)
     result => kindName + " >>> " + result Tree.summary()
     () => if tokens is ...
-    Token.Identifier(name, symbolic) :: _ and Keywords.all |> MutMap.get(name) is
+    token :: _ and Token.name(token) is Some(name) and Keywords.all |> MutMap.get(name) is
       // * the keyword case
       Some(keyword) and rule.keywordChoices |> MutMap.get(name) is
         Some(rule) and
@@ -169,11 +169,12 @@ fun parse(tokens) =
           Tree.empty
       // * the non-keyword case
       None then
+        let symbolic = Token.symbolic(token)
         if not allowOperators and symbolic then
           Tree.error("symbolic identifiers are disallowed in kind \"" + kindName + "\"")
         else
           consume
-          cont(Tree.Ident(name, symbolic), prec)
+          cont(Tree.Reference(name, symbolic), prec)
     // * the literal case
     Token.Literal(kind, literal) :: _ and allowLiterals then
       consume
@@ -203,7 +204,7 @@ fun parse(tokens) =
     do tracer.print of ">>> " + kindName + "Cont " + prec + " " + acc Tree.summary() + " <<<", source.line
     // * the case of infix keyword rules
     do tracer.print of "check keyword " + TokenHelpers.preview(tokens), source.line
-    Token.Identifier(name, _) :: _ and Keywords.all |> MutMap.get(name) is Some(keyword) and
+    token :: _ and Token.name(token) is Some(name) and Keywords.all |> MutMap.get(name) is Some(keyword) and
       do tracer.print of "found a keyword: " + name, source.line
       infix.rule.keywordChoices |> MutMap.get(name) is Some(rule) and
         do tracer.print of "keyword `" + name + "` is found in infix rules", source.line
@@ -221,7 +222,7 @@ fun parse(tokens) =
           None then acc
       do tracer.print of "keyword `" + name + "` does not have infix rules", source.line
     // * the case of infix operators (non-keywords)
-    Token.Identifier(name, true) :: _ and Keywords.all |> MutMap.get(name) is None and allowOperators then
+    Token.Symbol(name) :: _ and Keywords.all |> MutMap.get(name) is None and allowOperators then
       tracer.print of "found an operator \"" + name + "\"", source.line
       if infix.rule.infixChoice is
         Some(Choice.Infix(opInfo, rhsKind, process, rest)) and
@@ -296,10 +297,10 @@ fun parse(tokens) =
   fun handleDirective(tree: TreeT, acc: TreeT) = if tree is
     // Call the corresponding handler for the directive.
     Tree.Define(Tree.DefineKind.Directive, [name, body] :: Nil) as tree and name is
-      Tree.Ident("keyword", _) then
+      Tree.Reference("keyword", _) then
         Extension.extendKeyword(body)
         modCont(acc)
-      Tree.Ident("extend", _) then
+      Tree.Reference("extend", _) then
         Extension.extendCategory(body)
         modCont(acc)
       else
@@ -308,10 +309,10 @@ fun parse(tokens) =
   
   fun mod(acc: StackT[TreeT]) = if tokens is
     do tracer.print of ">>>>>> mod <<<<<<", source.line
-    Token.Identifier(";;", _) :: _ then
+    Token.Symbol(";;") :: _ then
       consume
       mod
-    Token.Identifier(name, _) :: _ and
+    token :: _ and Token.name(token) is Some(name) and
       Keywords.all |> MutMap.get(name) is Some(keyword) and
         // First, try if the keyword is the prefix of the term.
         termRule.keywordChoices |> MutMap.get(name) is Some(rule) then
@@ -330,7 +331,7 @@ fun parse(tokens) =
   
   fun modCont(acc: StackT[TreeT]) = if tokens is
     do tracer.print of ">>>>>> modCont <<<<<< " + TokenHelpers.preview(tokens), source.line
-    Token.Identifier(";;", _) :: _ then consume; acc mod()
+    Token.Symbol(";;") :: _ then consume; acc mod()
     _ :: _ then parseRule(0, declRule) handleDirective(acc)
     Nil then acc reverse()
   

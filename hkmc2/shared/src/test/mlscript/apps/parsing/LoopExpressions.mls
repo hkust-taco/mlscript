@@ -17,28 +17,28 @@ done
 //│ >   bindings = Stack of 
 //│ >     Infix:
 //│ >       op = Keyword(`=`, 3, 3)
-//│ >       lhs = Ident of "x"
+//│ >       lhs = Reference of "x"
 //│ >       rhs = Literal#Integer of "0"
 //│ >   body = Some of While:
-//│ >     condition = App:
-//│ >       callee = Ident of "<"
+//│ >     condition = Application:
+//│ >       callee = Reference of "<"
 //│ >       argument = Stack of 
-//│ >         Ident of "x"
+//│ >         Reference of "x"
 //│ >         Literal#Integer of "10"
 //│ >     body = Sequence of Stack of 
-//│ >       App:
-//│ >         callee = Ident of "print_int"
-//│ >         argument = Ident of "x"
-//│ >       App:
-//│ >         callee = Ident of "print_newline"
+//│ >       Application:
+//│ >         callee = Reference of "print_int"
+//│ >         argument = Reference of "x"
+//│ >       Application:
+//│ >         callee = Reference of "print_newline"
 //│ >         argument = Tuple of Nil
 //│ >       Infix:
 //│ >         op = Keyword(`<-`, 9, 9)
-//│ >         lhs = Ident of "x"
-//│ >         rhs = App:
-//│ >           callee = Ident of "+"
+//│ >         lhs = Reference of "x"
+//│ >         rhs = Application:
+//│ >           callee = Reference of "+"
 //│ >           argument = Stack of 
-//│ >             Ident of "x"
+//│ >             Reference of "x"
 //│ >             Literal#Integer of "1"
 //│ > «let x = 0 in while x < 10 do print_int x; print_newline (); x <- x + 1 done»
 
@@ -49,10 +49,10 @@ for i = 0 to 10 do
 done
 """
 //│ > For:
-//│ >   head = Ident of "i"
+//│ >   head = Reference of "i"
 //│ >   start = Literal#Integer of "0"
 //│ >   end = Literal#Integer of "10"
-//│ >   body = App:
-//│ >     callee = Ident of "print"
-//│ >     argument = Ident of "i"
+//│ >   body = Application:
+//│ >     callee = Reference of "print"
+//│ >     argument = Reference of "i"
 //│ > «for i = 0 to 10 do print i done»

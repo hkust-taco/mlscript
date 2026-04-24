@@ -37,7 +37,7 @@ fun showAsTree(thing) =
     Tree.Empty then ["Empty", []]
     Tree.Error(Tree.Empty, m) then tuple of "Error", [["message", go(m)]]
     Tree.Error(t, m) then tuple of "Error", [["tree", go(t)], ["message", go(m)]]
-    Tree.Ident(n, _) then tuple of "Ident", [["name", go(n)]]
+    Tree.Reference(n, _) then tuple of "Reference", [["name", go(n)]]
     Tree.Bracketed(k, items) then tuple of
       "Bracketed#" + k.toString(), [["items", go(items)]]
     Tree.Underscore() then tuple of "Underscore", []
@@ -48,7 +48,7 @@ fun showAsTree(thing) =
     Tree.Literal(k, v) then tuple of ("Literal#" + go(k) + " of " + go(v)), []
     Tree.Match(scrutinee, branches) then tuple of
       "Match", [["scrutinee", scrutinee], ["branches", go(branches)]]
-    Tree.App(c, a) then tuple of "App", [["callee", go(c)], ["argument", go(a)]]
+    Tree.Application(c, a) then tuple of "Application", [["callee", go(c)], ["argument", go(a)]]
     Tree.Infix(op, lhs, rhs) then tuple of
       "Infix", [["op", go(op)], ["lhs", go(lhs)], ["rhs", go(rhs)]]
     Tree.Define(k, i) then tuple of "Define", [["kind", k.toString()], ["items", go(i)]]

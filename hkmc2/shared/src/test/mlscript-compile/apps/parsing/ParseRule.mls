@@ -95,7 +95,7 @@ module Choice with
   fun infix(op, rhsKind: Str)(fields: Object) =
     let ruleName = fields shouldHaveStr("name", "symbolic operator right-hand side", "Choice.infix")
     let defaultProcess = (opName, rhs, _) =>
-      lhs => Tree.App(Tree.Ident(opName, true), lhs :: rhs :: Nil)
+      lhs => Tree.Application(Tree.Reference(opName, true), lhs :: rhs :: Nil)
     Infix of
       op
       rhsKind

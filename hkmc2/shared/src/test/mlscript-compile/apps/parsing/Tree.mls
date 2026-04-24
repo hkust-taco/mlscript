@@ -38,7 +38,7 @@ module Tree with
       Empty() extends Tree
       Error(tree: Tree, message: Str) extends Tree
       Bracketed(kind: BracketKind, tree: Tree) extends Tree
-      Ident(name: Str, symbolic: Bool) extends Tree
+      Reference(name: Str, symbolic: Bool) extends Tree
       Underscore() extends Tree
       Modified(modifier, subject) extends Tree
       Tuple(trees: Stack[Tree]) extends Tree
@@ -46,7 +46,7 @@ module Tree with
       Literal(kind, value) extends Tree
       Match(scrutinee: Tree, branches: Stack[Tree]) extends Tree
       Lambda(params: Stack[Tree], body: Tree) extends Tree
-      App(callee: Tree, argument: Tree) extends Tree
+      Application(callee: Tree, argument: Tree) extends Tree
       Infix(op: Keywords.Keyword, lhs: Tree, rhs: Tree) extends Tree
       // `items` is separated by `and`
       Define(kind: DefineKind.DefineKind, items: Stack[[Tree, Tree]]) extends Tree
@@ -64,15 +64,15 @@ module Tree with
       Empty then INT_MAX
       Error(tree, _) then prec(tree, side)
       Bracketed(_, _) then INT_MAX
-      Ident then INT_MAX
+      Reference then INT_MAX
       Underscore then INT_MAX
       Modified then 1
       Tuple then INT_MAX
       Sequence then 1
       Literal then INT_MAX
       Match then 2
-      App(callee, _) and callee is
-        Ident(op, true) and opPrec(op) is [leftPrec, rightPrec] and
+      Application(callee, _) and callee is
+        Reference(op, true) and opPrec(op) is [leftPrec, rightPrec] and
           side then rightPrec
           else leftPrec
         else Keywords.appPrec
@@ -94,7 +94,7 @@ module Tree with
         Token.Square then "[" + go(tree) + "]"
         Token.Curly then "{" + go(tree) + "}"
         Token.Angle then "<" + go(tree) + ">"
-      Ident(name, _) then name
+      Reference(name, _) then name
       Underscore() then "_"
       Modified(modifier, subject) then go(modifier) + " " + go(subject)
       Tuple(trees) then "(" + trees Iter.fromStack() Iter.mapping(go) Iter.joined(", ") + ")"
@@ -108,21 +108,21 @@ module Tree with
           "match " + go(scrutinee) + " with "
         branches Iter.fromStack() Iter.mapping(go) Iter.joined(" | ")
       // Function application for binary operators.
-      App(Ident(op, true), lhs :: rhs :: Nil) then
+      Application(Reference(op, true), lhs :: rhs :: Nil) then
         if opPrec(op) is [leftPrec, rightPrec] then fold(+) of
           par of go(lhs), prec(lhs, false) < leftPrec
           " ", op, " "
           par of go(rhs), prec(rhs, true) < rightPrec
       // Unary expressions
-      App(Ident(op, true), arg) then mkStr of
+      Application(Reference(op, true), arg) then mkStr of
         op
         par of go(arg), prec(arg, false) <= Keywords.prefixPrec
       // Function application
-      App(callee, argument) then mkStr of
+      Application(callee, argument) then mkStr of
         go(callee)
         " "
         par of go(argument), prec(argument, false) <= Keywords.appPrec
-      Infix(Keywords.Keyword(".", _, _), target, Ident(field, _)) then
+      Infix(Keywords.Keyword(".", _, _), target, Reference(field, _)) then
         if opPrec(".") is [leftPrec, _] then mkStr of
           par of go(target), prec(target, false) < leftPrec
           "."

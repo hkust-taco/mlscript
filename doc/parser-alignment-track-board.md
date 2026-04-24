@@ -62,7 +62,7 @@ For any code-changing task:
 | 8 | PA-08 | Done | P1 | High | High | Align dynamic extension directives with the paper's `#keyword` and `#extend` syntax and replacement-expression scheme. |
 | 9 | PA-09 | Done | P2 | Medium | Investigation | Investigate whether Caml Light prefix operators have precedence; do not implement prefix precedence until this is resolved. |
 | 10 | PA-10 | Done | P2 | Medium | Low | Add a generated precedence-table renderer and wire it into the web demo. |
-| 11 | PA-11 | Ready | P3 | High | High | Simplify AST names and shapes to match the paper, including `Tree.Reference`, `Tree.Application`, and token naming cleanup. |
+| 11 | PA-11 | Done | P3 | High | High | Simplify AST names and shapes to match the paper, including `Tree.Reference`, `Tree.Application`, and token naming cleanup. |
 | 12 | PA-12 | Deferred | P3 | High | High | Future work: introduce `pattern` as a separate syntax kind with dedicated rules. |
 
 ## Task Cards
@@ -348,6 +348,11 @@ Acceptance criteria:
 
 - Paper examples and source names agree where practical.
 - Golden output changes are reviewed as intentional naming churn.
+- Implemented mechanical source rename from `Tree.Ident`/`Tree.App` to
+  `Tree.Reference`/`Tree.Application`.
+- Split lexer tokens from `Token.Identifier(name, symbolic)` into
+  `Token.Reference(name)` and `Token.Symbol(name)`, keeping parser keyword
+  lookup shared through token-name helpers.
 
 Likely files:
 
@@ -378,5 +383,6 @@ Likely files:
 
 ## Next Fix
 
-Continue with PA-11. It is high-churn naming work, so keep edits mechanical and
-review generated snapshot changes carefully.
+No remaining current-pass parser-alignment task is ready. PA-12 remains
+deferred because the response requests a future dedicated pattern syntax-kind
+pass rather than changing pattern parsing now.

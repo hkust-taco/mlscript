@@ -18,13 +18,13 @@ open ParseRule { Choice }
 module Extension with ...
 
 fun isDiagramDirective(tree: Tree) = tree is
-  Tree.Define(Tree.DefineKind.Directive, [Tree.Ident("diagram", _), _] :: Nil)
+  Tree.Define(Tree.DefineKind.Directive, [Tree.Reference("diagram", _), _] :: Nil)
 
 fun parsePrecedenceTree(tree: Tree) = if tree is
-  Tree.Ident("None", _) then None
+  Tree.Reference("None", _) then None
   Tree.Literal(Token.LiteralKind.Integer, value) then
     Some(parseInt(value, 10))
-  Tree.App(Tree.Ident("Some", _), Tree.Literal(Token.LiteralKind.Integer, value)) then
+  Tree.Application(Tree.Reference("Some", _), Tree.Literal(Token.LiteralKind.Integer, value)) then
     Some(parseInt(value, 10))
   else
     print of "expect None or an integer literal but found " + tree Tree.summary()
@@ -38,7 +38,7 @@ fun extendKeyword(tree: Tree) =
       Keywords.keyword(name, leftPrec', rightPrec')
     else print of "expect a string literal but found " + keyword
   else if tree is
-    Tree.App(Tree.App(Tree.Literal(Token.LiteralKind.String, name), leftPrec), rightPrec) then
+    Tree.Application(Tree.Application(Tree.Literal(Token.LiteralKind.String, name), leftPrec), rightPrec) then
       let leftPrec' = parsePrecedenceTree(leftPrec)
       let rightPrec' = parsePrecedenceTree(rightPrec)
       Keywords.keyword(name, leftPrec', rightPrec')
@@ -82,7 +82,7 @@ fun mapTreeStack(trees, env) = trees
   Iter.toStack()
 
 fun substitute(tree, env) = if tree is
-  Tree.Ident(name, false) and lookupEnv(name, env) is Some(value) then value
+  Tree.Reference(name, false) and lookupEnv(name, env) is Some(value) then value
   Tree.Bracketed(kind, inner) then Tree.Bracketed(kind, substitute(inner, env))
   Tree.Modified(modifier, subject) then
     Tree.Modified(substitute(modifier, env), substitute(subject, env))
@@ -92,8 +92,8 @@ fun substitute(tree, env) = if tree is
     Tree.Match(substitute(scrutinee, env), mapTreeStack(branches, env))
   Tree.Lambda(params, body) then
     Tree.Lambda(mapTreeStack(params, env), substitute(body, env))
-  Tree.App(callee, argument) then
-    Tree.App(substitute(callee, env), substitute(argument, env))
+  Tree.Application(callee, argument) then
+    Tree.Application(substitute(callee, env), substitute(argument, env))
   Tree.Infix(op, lhs, rhs) then
     Tree.Infix(op, substitute(lhs, env), substitute(rhs, env))
   Tree.Define(kind, items) then
@@ -122,7 +122,7 @@ fun syntaxElements(tree: Tree) = if tree is
   else None
 
 fun parseSyntaxElement(targetKind: Str, element: Tree, rest: Choice[Stack[[Str, Tree]]]) = if element is
-  Tree.App(Tree.Ident("keyword", _), Tree.Literal(LiteralKind.String, name)) and
+  Tree.Application(Tree.Reference("keyword", _), Tree.Literal(LiteralKind.String, name)) and
     Keywords.all |> MutMap.get(name) is Some(keyword) then
       Some of Choice.keyword(keyword)(rest)
   Tree.Bracketed(Token.Square, Tree.Tuple(Tree.Literal(LiteralKind.String, kindName) :: Tree.Literal(LiteralKind.String, label) :: Nil)) and

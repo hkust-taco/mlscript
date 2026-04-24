@@ -46,24 +46,24 @@ let x: int -> int -> int = fun x y -> x + y
 //│ >       op = Keyword(`=`, 3, 3)
 //│ >       lhs = Infix:
 //│ >         op = Keyword(`:`, 4, 3)
-//│ >         lhs = Ident of "x"
+//│ >         lhs = Reference of "x"
 //│ >         rhs = Infix:
 //│ >           op = Keyword(`->`, 5, 3)
-//│ >           lhs = Ident of "int"
+//│ >           lhs = Reference of "int"
 //│ >           rhs = Infix:
 //│ >             op = Keyword(`->`, 5, 3)
-//│ >             lhs = Ident of "int"
-//│ >             rhs = Ident of "int"
+//│ >             lhs = Reference of "int"
+//│ >             rhs = Reference of "int"
 //│ >       rhs = Lambda:
 //│ >         params = Stack of 
-//│ >           App:
-//│ >             callee = Ident of "x"
-//│ >             argument = Ident of "y"
-//│ >         body = App:
-//│ >           callee = Ident of "+"
+//│ >           Application:
+//│ >             callee = Reference of "x"
+//│ >             argument = Reference of "y"
+//│ >         body = Application:
+//│ >           callee = Reference of "+"
 //│ >           argument = Stack of 
-//│ >             Ident of "x"
-//│ >             Ident of "y"
+//│ >             Reference of "x"
+//│ >             Reference of "y"
 //│ >   body = None
 //│ > «let x : int -> int -> int = fun x y -> x + y»
 
@@ -210,46 +210,46 @@ let translate p dx dy =
 //│ > «let translate p dx dy = p.x <- p.x +. dx; p.y <- p.y +. dy»
 
 example of """:tree f x.y """
-//│ > App:
-//│ >   callee = Ident of "f"
+//│ > Application:
+//│ >   callee = Reference of "f"
 //│ >   argument = Infix:
 //│ >     op = Keyword(`.`, 26, 26)
-//│ >     lhs = Ident of "x"
-//│ >     rhs = Ident of "y"
+//│ >     lhs = Reference of "x"
+//│ >     rhs = Reference of "y"
 //│ > «f x.y»
 
 example of """:tree f x.y.z x.y """
-//│ > App:
-//│ >   callee = App:
-//│ >     callee = Ident of "f"
+//│ > Application:
+//│ >   callee = Application:
+//│ >     callee = Reference of "f"
 //│ >     argument = Infix:
 //│ >       op = Keyword(`.`, 26, 26)
 //│ >       lhs = Infix:
 //│ >         op = Keyword(`.`, 26, 26)
-//│ >         lhs = Ident of "x"
-//│ >         rhs = Ident of "y"
-//│ >       rhs = Ident of "z"
+//│ >         lhs = Reference of "x"
+//│ >         rhs = Reference of "y"
+//│ >       rhs = Reference of "z"
 //│ >   argument = Infix:
 //│ >     op = Keyword(`.`, 26, 26)
-//│ >     lhs = Ident of "x"
-//│ >     rhs = Ident of "y"
+//│ >     lhs = Reference of "x"
+//│ >     rhs = Reference of "y"
 //│ > «f x.y.z x.y»
 
 example of """:tree f x.y.z x.y """
-//│ > App:
-//│ >   callee = App:
-//│ >     callee = Ident of "f"
+//│ > Application:
+//│ >   callee = Application:
+//│ >     callee = Reference of "f"
 //│ >     argument = Infix:
 //│ >       op = Keyword(`.`, 26, 26)
 //│ >       lhs = Infix:
 //│ >         op = Keyword(`.`, 26, 26)
-//│ >         lhs = Ident of "x"
-//│ >         rhs = Ident of "y"
-//│ >       rhs = Ident of "z"
+//│ >         lhs = Reference of "x"
+//│ >         rhs = Reference of "y"
+//│ >       rhs = Reference of "z"
 //│ >   argument = Infix:
 //│ >     op = Keyword(`.`, 26, 26)
-//│ >     lhs = Ident of "x"
-//│ >     rhs = Ident of "y"
+//│ >     lhs = Reference of "x"
+//│ >     rhs = Reference of "y"
 //│ > «f x.y.z x.y»
 
 example of "()"
@@ -337,27 +337,27 @@ example of """
 ~2 * 3
 let x = !true
 """
-//│ > App:
-//│ >   callee = Ident of "*"
+//│ > Application:
+//│ >   callee = Reference of "*"
 //│ >   argument = Stack of 
-//│ >     App:
-//│ >       callee = Ident of "-"
+//│ >     Application:
+//│ >       callee = Reference of "-"
 //│ >       argument = Literal#Integer of "2"
 //│ >     Literal#Integer of "3"
-//│ > App:
-//│ >   callee = Ident of "*"
+//│ > Application:
+//│ >   callee = Reference of "*"
 //│ >   argument = Stack of 
-//│ >     App:
-//│ >       callee = Ident of "~"
+//│ >     Application:
+//│ >       callee = Reference of "~"
 //│ >       argument = Literal#Integer of "2"
 //│ >     Literal#Integer of "3"
 //│ > LetIn:
 //│ >   bindings = Stack of 
 //│ >     Infix:
 //│ >       op = Keyword(`=`, 3, 3)
-//│ >       lhs = Ident of "x"
-//│ >       rhs = App:
-//│ >         callee = Ident of "!"
+//│ >       lhs = Reference of "x"
+//│ >       rhs = Application:
+//│ >         callee = Reference of "!"
 //│ >         argument = Literal#Boolean of "true"
 //│ >   body = None
 //│ > «(-2) * 3»
@@ -380,8 +380,8 @@ x.y <- 0
 //│ >   op = Keyword(`<-`, 9, 9)
 //│ >   lhs = Infix:
 //│ >     op = Keyword(`.`, 26, 26)
-//│ >     lhs = Ident of "x"
-//│ >     rhs = Ident of "y"
+//│ >     lhs = Reference of "x"
+//│ >     rhs = Reference of "y"
 //│ >   rhs = Literal#Integer of "0"
 //│ > «x.y <- 0»
 
@@ -391,28 +391,28 @@ f expr .( expr ) <- expr
 """
 //│ > Infix:
 //│ >   op = Keyword(`<-`, 9, 9)
-//│ >   lhs = App:
-//│ >     callee = Ident of "f"
+//│ >   lhs = Application:
+//│ >     callee = Reference of "f"
 //│ >     argument = Infix:
 //│ >       op = Keyword(`.`, 26, 26)
-//│ >       lhs = Ident of "expr"
-//│ >       rhs = Ident of "expr"
-//│ >   rhs = Ident of "expr"
+//│ >       lhs = Reference of "expr"
+//│ >       rhs = Reference of "expr"
+//│ >   rhs = Reference of "expr"
 //│ > «f expr.expr <- expr»
 
 example of """
 :tree
 f (expr .( expr ) <- expr)
 """
-//│ > App:
-//│ >   callee = Ident of "f"
+//│ > Application:
+//│ >   callee = Reference of "f"
 //│ >   argument = Infix:
 //│ >     op = Keyword(`<-`, 9, 9)
 //│ >     lhs = Infix:
 //│ >       op = Keyword(`.`, 26, 26)
-//│ >       lhs = Ident of "expr"
-//│ >       rhs = Ident of "expr"
-//│ >     rhs = Ident of "expr"
+//│ >       lhs = Reference of "expr"
+//│ >       rhs = Reference of "expr"
+//│ >     rhs = Reference of "expr"
 //│ > «f (expr.expr <- expr)»
 
 example of """
@@ -429,10 +429,10 @@ example of """
 :tree
 f -1
 """
-//│ > App:
-//│ >   callee = Ident of "-"
+//│ > Application:
+//│ >   callee = Reference of "-"
 //│ >   argument = Stack of 
-//│ >     Ident of "f"
+//│ >     Reference of "f"
 //│ >     Literal#Integer of "1"
 //│ > «f - 1»
 
@@ -440,12 +440,12 @@ example of """
 :tree
 f :: -1
 """
-//│ > App:
-//│ >   callee = Ident of "::"
+//│ > Application:
+//│ >   callee = Reference of "::"
 //│ >   argument = Stack of 
-//│ >     Ident of "f"
-//│ >     App:
-//│ >       callee = Ident of "-"
+//│ >     Reference of "f"
+//│ >     Application:
+//│ >       callee = Reference of "-"
 //│ >       argument = Literal#Integer of "1"
 //│ > «f :: -1»
 

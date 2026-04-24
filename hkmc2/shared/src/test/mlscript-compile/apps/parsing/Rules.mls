@@ -205,7 +205,7 @@ val termRule = rule of
         Tree.Infix(Keywords._equalequal, lhs, rhs)
       // Comparison: <expr> * <expr>
       makeInfixChoice of Keywords._asterisk, "term", (lhs, rhs) =>
-        Tree.App(Tree.Ident("*", true), lhs :: rhs :: Nil)
+        Tree.Application(Tree.Reference("*", true), lhs :: rhs :: Nil)
       // Selection: <expr> "." <identifier>
       // Access: <expr> "." "(" <expr> ")"
       keyword(Keywords._period) of
@@ -226,7 +226,7 @@ val termRule = rule of
         name: "symbolic operator right-hand side"
       // Application: <expr> <expr>
       term of
-        process: (argument, _) => callee => Tree.App(callee, argument)
+        process: (argument, _) => callee => Tree.Application(callee, argument)
         name: "application argument"
         bp: Keywords.appPrec
 
@@ -236,8 +236,8 @@ val typeRule = rule of
   // "(" <type> { "," <type> } ")" [ <ident> ]
   keyword(Keywords._leftRound) of typeExpr of
     process: (headArg, tailArgsCtor) => if tailArgsCtor is
-      [tailArgs, ctor] then Tree.App(ctor, Tree.Tuple(headArg :: tailArgs))
-      Some(ctor) then Tree.App(ctor, headArg)
+      [tailArgs, ctor] then Tree.Application(ctor, Tree.Tuple(headArg :: tailArgs))
+      Some(ctor) then Tree.Application(ctor, headArg)
       None then headArg
     name: "the first type in the parentheses"
     choices: tuple of
@@ -260,7 +260,7 @@ val typeRule = rule of
         Tree.Infix(Keywords._asterisk, lhs, rhs)
       // Application: <type> <type>
       typeExpr of
-        process: (callee, _) => argument => Tree.App(callee, argument)
+        process: (callee, _) => argument => Tree.Application(callee, argument)
         bp: Keywords.appPrec
 
 define("type-arguments-tail") of keyword(Keywords._comma) of listLike of
@@ -331,7 +331,7 @@ define("constr-decls") of listLike of
 define("typedef-lhs") of reference("type-params") of
   process: (params, ident) => if params is
     Nil then ident
-    else Tree.App(ident, Tree.Tuple(params))
+    else Tree.Application(ident, Tree.Tuple(params))
   name: "the type parameters"
   choices: tuple of ident of process: idFirst, name: "the type identifier"
 

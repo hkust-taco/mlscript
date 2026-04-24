@@ -62,14 +62,25 @@ data
     Space() extends Token
     Error() extends Token
     Comment(content: Str) extends Token
-    Identifier(name: Str, symbolic: Bool) extends Token
+    Reference(name: Str) extends Token
+    Symbol(name: Str) extends Token
     Literal(kind, literal: Str) extends Token
 
 fun same(a, b) = if
   a is Space and b is Space then true
   a is Comment(c) and b is Comment(c') then c == c'
-  a is Identifier(n, s) and b is Identifier(n', s') then n == n' and s == s'
+  a is Reference(n) and b is Reference(n') then n == n'
+  a is Symbol(n) and b is Symbol(n') then n == n'
   a is Literal(k, l) and b is Literal(k', l') then k == k' and l == l'
+  else false
+
+fun name(token) = if token is
+  Reference(name) then Some(name)
+  Symbol(name) then Some(name)
+  else None
+
+fun symbolic(token) = if token is
+  Symbol then true
   else false
 
 fun integer(literal, endIndex)(using llt: LineLookupTable) =
@@ -84,10 +95,10 @@ fun boolean(literal, endIndex)(using llt: LineLookupTable) =
   Literal(LiteralKind.Boolean, literal).withLocation of
     endIndex - literal.length, endIndex, llt
 fun identifier(name, endIndex)(using llt: LineLookupTable) =
-  Identifier(name, false).withLocation of
+  Reference(name).withLocation of
     endIndex - name.length, endIndex, llt
 fun symbol(name, endIndex)(using llt: LineLookupTable) =
-  Identifier(name, true).withLocation of
+  Symbol(name).withLocation of
     endIndex - name.length, endIndex, llt
 fun comment(content, startIndex, endIndex)(using llt: LineLookupTable) =
   Comment(content).withLocation(startIndex, endIndex, llt)
@@ -100,14 +111,16 @@ fun summary(token) = if token is
   Space then "␠"
   Error then "⚠"
   Comment(_) then "\uD83D\uDCAC" // The text ballon emoji.
-  Identifier(name, _) then name
+  Reference(name) then name
+  Symbol(name) then name
   Literal(_, literal) then literal
 
 fun display(token) = (if token is
   Space then "space"
   Error then "error"
   Comment then "comment"
-  Identifier(name, _) then "identifier `" + name + "`"
+  Reference(name) then "reference `" + name + "`"
+  Symbol(name) then "symbol `" + name + "`"
   Literal(kind, value) then mkStr of
     kind.toString().toLowerCase()
     " "
