@@ -1507,3 +1507,141 @@ with sys__Sys_error s ->
 //│ > «let print_result () = print_int (!chars); print_string " char…"; print_int (!words); print_string " word…"; print_int (!lines); print_string " line…"; print_newline ()»
 //│ > «let count name = count_file name; print_result ()»
 //│ > «if sys__interactive then () then try if vect_length sys__command_line <= 1 then count_channel std_in then for i = 1 to vect_length sys__command_line - 1 do count_file sys__command_line.i done; print_result () with sys__Sys_error s -> print_string "I/O e…"; print_string s; print_newline ()»
+
+// sources/examples/showsort/bubble.ml
+// ====================================
+
+example of """
+:tree
+let sort context =
+  let ordered = ref true in
+  let rec sweep i =
+    if i + 1 >= vect_length context.array then
+      if !ordered then
+        Finished
+      else begin
+        ordered := false;
+        sweep 0
+      end
+    else
+      Pause(fun () ->
+        if context.array.(i + 1) < context.array.(i) then begin
+          exchange context i (i + 1);
+          ordered := false
+        end;
+        sweep(i + 1))
+  in sweep 0
+;;
+"""
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "sort"
+//│ >         argument = Reference of "context"
+//│ >       rhs = LetIn:
+//│ >         bindings = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`=`, 16, 16)
+//│ >             lhs = Reference of "ordered"
+//│ >             rhs = Application:
+//│ >               callee = Reference of "ref"
+//│ >               argument = Literal#Boolean of "true"
+//│ >         body = Some of LetIn:
+//│ >           bindings = Stack of 
+//│ >             Infix:
+//│ >               op = Keyword(`=`, 16, 16)
+//│ >               lhs = Application:
+//│ >                 callee = Reference of "sweep"
+//│ >                 argument = Reference of "i"
+//│ >               rhs = Ternary:
+//│ >                 name = Keyword(`if`, 10, 9)
+//│ >                 lhs = Application:
+//│ >                   callee = Reference of ">="
+//│ >                   argument = Stack of 
+//│ >                     Application:
+//│ >                       callee = Reference of "+"
+//│ >                       argument = Stack of 
+//│ >                         Reference of "i"
+//│ >                         Literal#Integer of "1"
+//│ >                     Application:
+//│ >                       callee = Reference of "vect_length"
+//│ >                       argument = Infix:
+//│ >                         op = Keyword(`.`, 26, 26)
+//│ >                         lhs = Reference of "context"
+//│ >                         rhs = Reference of "array"
+//│ >                 rhs = Ternary:
+//│ >                   name = Keyword(`if`, 10, 9)
+//│ >                   lhs = Application:
+//│ >                     callee = Reference of "!"
+//│ >                     argument = Reference of "ordered"
+//│ >                   rhs = Reference of "Finished"
+//│ >                   body = Some of Sequence of Stack of 
+//│ >                     Application:
+//│ >                       callee = Reference of ":="
+//│ >                       argument = Stack of 
+//│ >                         Reference of "ordered"
+//│ >                         Literal#Boolean of "false"
+//│ >                     Application:
+//│ >                       callee = Reference of "sweep"
+//│ >                       argument = Literal#Integer of "0"
+//│ >                 body = Some of Application:
+//│ >                   callee = Reference of "Pause"
+//│ >                   argument = Lambda:
+//│ >                     params = Stack of 
+//│ >                       Tuple of Nil
+//│ >                     body = Ternary:
+//│ >                       name = Keyword(`if`, 10, 9)
+//│ >                       lhs = Application:
+//│ >                         callee = Reference of "<"
+//│ >                         argument = Stack of 
+//│ >                           Infix:
+//│ >                             op = Keyword(`.`, 26, 26)
+//│ >                             lhs = Infix:
+//│ >                               op = Keyword(`.`, 26, 26)
+//│ >                               lhs = Reference of "context"
+//│ >                               rhs = Reference of "array"
+//│ >                             rhs = Application:
+//│ >                               callee = Reference of "+"
+//│ >                               argument = Stack of 
+//│ >                                 Reference of "i"
+//│ >                                 Literal#Integer of "1"
+//│ >                           Infix:
+//│ >                             op = Keyword(`.`, 26, 26)
+//│ >                             lhs = Infix:
+//│ >                               op = Keyword(`.`, 26, 26)
+//│ >                               lhs = Reference of "context"
+//│ >                               rhs = Reference of "array"
+//│ >                             rhs = Reference of "i"
+//│ >                       rhs = Sequence of Stack of 
+//│ >                         Sequence of Stack of 
+//│ >                           Application:
+//│ >                             callee = Application:
+//│ >                               callee = Application:
+//│ >                                 callee = Reference of "exchange"
+//│ >                                 argument = Reference of "context"
+//│ >                               argument = Reference of "i"
+//│ >                             argument = Application:
+//│ >                               callee = Reference of "+"
+//│ >                               argument = Stack of 
+//│ >                                 Reference of "i"
+//│ >                                 Literal#Integer of "1"
+//│ >                           Application:
+//│ >                             callee = Reference of ":="
+//│ >                             argument = Stack of 
+//│ >                               Reference of "ordered"
+//│ >                               Literal#Boolean of "false"
+//│ >                         Application:
+//│ >                           callee = Reference of "sweep"
+//│ >                           argument = Application:
+//│ >                             callee = Reference of "+"
+//│ >                             argument = Stack of 
+//│ >                               Reference of "i"
+//│ >                               Literal#Integer of "1"
+//│ >                       body = None
+//│ >           body = Some of Application:
+//│ >             callee = Reference of "sweep"
+//│ >             argument = Literal#Integer of "0"
+//│ >   body = None
+//│ > «let sort context = let ordered = ref true in let sweep i = if i + 1 >= vect_length context.array then if !ordered then Finished then ordered := false; sweep 0 then Pause (fun () -> if context.array . i + 1 < context.array.i then exchange context i (i + 1); ordered := false; sweep (i + 1) then None) in sweep 0»
