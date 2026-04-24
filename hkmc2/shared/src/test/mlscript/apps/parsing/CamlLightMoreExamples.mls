@@ -1645,3 +1645,168 @@ let sort context =
 //│ >             argument = Literal#Integer of "0"
 //│ >   body = None
 //│ > «let sort context = let ordered = ref true in let sweep i = if i + 1 >= vect_length context.array then if !ordered then Finished then ordered := false; sweep 0 then Pause (fun () -> if context.array . i + 1 < context.array.i then exchange context i (i + 1); ordered := false; sweep (i + 1) then None) in sweep 0»
+
+// sources/examples/showsort/insertion.ml
+// =======================================
+
+example of """
+:tree
+let sort context =
+  let rec loop_outer i =
+    if i >= vect_length context.array then Finished else
+    let value_i = context.array.(i) in
+    let rec loop_inner j =
+      if j < 1 then begin
+        assign context j value_i;
+        loop_outer (i + 1)
+      end else
+        Pause(fun () ->
+          if value_i >= context.array.(j - 1) then begin
+            assign context j value_i;
+            loop_outer (i + 1)
+          end else begin
+            assign context j context.array.(j - 1);
+            loop_inner (j - 1)
+          end)
+    in loop_inner i
+  in loop_outer 1
+;;
+"""
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Application:
+//│ >         callee = Reference of "sort"
+//│ >         argument = Reference of "context"
+//│ >       rhs = LetIn:
+//│ >         bindings = Stack of 
+//│ >           Infix:
+//│ >             op = Keyword(`=`, 16, 16)
+//│ >             lhs = Application:
+//│ >               callee = Reference of "loop_outer"
+//│ >               argument = Reference of "i"
+//│ >             rhs = Ternary:
+//│ >               name = Keyword(`if`, 10, 9)
+//│ >               lhs = Application:
+//│ >                 callee = Reference of ">="
+//│ >                 argument = Stack of 
+//│ >                   Reference of "i"
+//│ >                   Application:
+//│ >                     callee = Reference of "vect_length"
+//│ >                     argument = Infix:
+//│ >                       op = Keyword(`.`, 26, 26)
+//│ >                       lhs = Reference of "context"
+//│ >                       rhs = Reference of "array"
+//│ >               rhs = Reference of "Finished"
+//│ >               body = Some of LetIn:
+//│ >                 bindings = Stack of 
+//│ >                   Infix:
+//│ >                     op = Keyword(`=`, 16, 16)
+//│ >                     lhs = Reference of "value_i"
+//│ >                     rhs = Infix:
+//│ >                       op = Keyword(`.`, 26, 26)
+//│ >                       lhs = Infix:
+//│ >                         op = Keyword(`.`, 26, 26)
+//│ >                         lhs = Reference of "context"
+//│ >                         rhs = Reference of "array"
+//│ >                       rhs = Reference of "i"
+//│ >                 body = Some of LetIn:
+//│ >                   bindings = Stack of 
+//│ >                     Infix:
+//│ >                       op = Keyword(`=`, 16, 16)
+//│ >                       lhs = Application:
+//│ >                         callee = Reference of "loop_inner"
+//│ >                         argument = Reference of "j"
+//│ >                       rhs = Ternary:
+//│ >                         name = Keyword(`if`, 10, 9)
+//│ >                         lhs = Application:
+//│ >                           callee = Reference of "<"
+//│ >                           argument = Stack of 
+//│ >                             Reference of "j"
+//│ >                             Literal#Integer of "1"
+//│ >                         rhs = Sequence of Stack of 
+//│ >                           Application:
+//│ >                             callee = Application:
+//│ >                               callee = Application:
+//│ >                                 callee = Reference of "assign"
+//│ >                                 argument = Reference of "context"
+//│ >                               argument = Reference of "j"
+//│ >                             argument = Reference of "value_i"
+//│ >                           Application:
+//│ >                             callee = Reference of "loop_outer"
+//│ >                             argument = Application:
+//│ >                               callee = Reference of "+"
+//│ >                               argument = Stack of 
+//│ >                                 Reference of "i"
+//│ >                                 Literal#Integer of "1"
+//│ >                         body = Some of Application:
+//│ >                           callee = Reference of "Pause"
+//│ >                           argument = Lambda:
+//│ >                             params = Stack of 
+//│ >                               Tuple of Nil
+//│ >                             body = Ternary:
+//│ >                               name = Keyword(`if`, 10, 9)
+//│ >                               lhs = Application:
+//│ >                                 callee = Reference of ">="
+//│ >                                 argument = Stack of 
+//│ >                                   Reference of "value_i"
+//│ >                                   Infix:
+//│ >                                     op = Keyword(`.`, 26, 26)
+//│ >                                     lhs = Infix:
+//│ >                                       op = Keyword(`.`, 26, 26)
+//│ >                                       lhs = Reference of "context"
+//│ >                                       rhs = Reference of "array"
+//│ >                                     rhs = Application:
+//│ >                                       callee = Reference of "-"
+//│ >                                       argument = Stack of 
+//│ >                                         Reference of "j"
+//│ >                                         Literal#Integer of "1"
+//│ >                               rhs = Sequence of Stack of 
+//│ >                                 Application:
+//│ >                                   callee = Application:
+//│ >                                     callee = Application:
+//│ >                                       callee = Reference of "assign"
+//│ >                                       argument = Reference of "context"
+//│ >                                     argument = Reference of "j"
+//│ >                                   argument = Reference of "value_i"
+//│ >                                 Application:
+//│ >                                   callee = Reference of "loop_outer"
+//│ >                                   argument = Application:
+//│ >                                     callee = Reference of "+"
+//│ >                                     argument = Stack of 
+//│ >                                       Reference of "i"
+//│ >                                       Literal#Integer of "1"
+//│ >                               body = Some of Sequence of Stack of 
+//│ >                                 Application:
+//│ >                                   callee = Application:
+//│ >                                     callee = Application:
+//│ >                                       callee = Reference of "assign"
+//│ >                                       argument = Reference of "context"
+//│ >                                     argument = Reference of "j"
+//│ >                                   argument = Infix:
+//│ >                                     op = Keyword(`.`, 26, 26)
+//│ >                                     lhs = Infix:
+//│ >                                       op = Keyword(`.`, 26, 26)
+//│ >                                       lhs = Reference of "context"
+//│ >                                       rhs = Reference of "array"
+//│ >                                     rhs = Application:
+//│ >                                       callee = Reference of "-"
+//│ >                                       argument = Stack of 
+//│ >                                         Reference of "j"
+//│ >                                         Literal#Integer of "1"
+//│ >                                 Application:
+//│ >                                   callee = Reference of "loop_inner"
+//│ >                                   argument = Application:
+//│ >                                     callee = Reference of "-"
+//│ >                                     argument = Stack of 
+//│ >                                       Reference of "j"
+//│ >                                       Literal#Integer of "1"
+//│ >                   body = Some of Application:
+//│ >                     callee = Reference of "loop_inner"
+//│ >                     argument = Reference of "i"
+//│ >         body = Some of Application:
+//│ >           callee = Reference of "loop_outer"
+//│ >           argument = Literal#Integer of "1"
+//│ >   body = None
+//│ > «let sort context = let loop_outer i = if i >= vect_length context.array then Finished then let value_i = context.array.i in let loop_inner j = if j < 1 then assign context j value_i; loop_outer (i + 1) then Pause (fun () -> if value_i >= context.array . j - 1 then assign context j value_i; loop_outer (i + 1) then assign context j context.array . j - 1; loop_inner (j - 1)) in loop_inner i in loop_outer 1»
