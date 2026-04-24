@@ -475,6 +475,9 @@ class Ctx(using State) extends ToWat:
 
   /** [[ListMap]] containing all data segments in the module. */
   private var dataSegments = ListMap.empty[SymIdx, DataSegment]
+  
+  /** [[Scope]] for generating WAT identifiers of element segments. */
+  private[text] val elemSegmentScp = Scope.empty(Scope.Cfg.default)
 
   /** [[ListMap]] containing all element segments in the module. */
   private var elemSegments = ListMap.empty[SymIdx, ElemSegment]
@@ -656,7 +659,7 @@ class Ctx(using State) extends ToWat:
     TagIdx(id)
 
   /** Adds a function into this context. */
-  def addFunc(funcInfo: FuncInfo): FuncIdx =
+  def addFunc(funcInfo: FuncInfo)(using Ctx, Raise): FuncIdx =
     val id = funcInfo.id
     funcs = funcs + (id -> funcInfo)
     funcInfo.sym match
@@ -664,8 +667,7 @@ class Ctx(using State) extends ToWat:
       case _ =>
     val idx = FuncIdx(funcInfo.id)
     val refType = RefType(funcInfo.typeUse.typeIdx, nullable = false)
-    elemSegments = elemSegments +
-      (id -> ElemSegment.Declare(id, refType -> Seq(ref.func(idx, refType))))
+    elemSegments = elemSegments + (id -> ElemSegment.Declare(refType -> Seq(ref.func(idx, refType)), funcInfo.sym, funcInfo.idPrefix))
     idx
 
   /** Returns the [[FuncIdx]] of the given `funcref`.

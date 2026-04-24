@@ -315,32 +315,43 @@ object ElemSegment:
     * `table.init`.
     */
   case class Passive(
-      override val id: SymIdx,
       override val elemlist: RefType -> Seq[Expr],
-  ) extends ElemSegment(id, elemlist):
+      override val sym: Symbol,
+      override val idPrefix: Opt[Str],
+  )(using Ctx, Raise) extends ElemSegment(elemlist, sym, idPrefix):
     def toWat: Document = doc"(elem ${id.toWat} ${abbrevElemList})"
 
   /** An active element segment, which is automatically copied into a table given by `offset. */
   case class Active(
-      override val id: SymIdx,
       offset: Expr,
       override val elemlist: RefType -> Seq[Expr],
       // TODO(Derppening): Add `tableuse` here if/when we support multiple tables.
-  ) extends ElemSegment(id, elemlist):
+      override val sym: Symbol,
+      override val idPrefix: Opt[Str],
+  )(using Ctx, Raise) extends ElemSegment(elemlist, sym, idPrefix):
     def toWat: Document = doc"(elem ${id.toWat} ${offset.toWat} ${abbrevElemList})"
 
   /** A declarative element segment, which is used to forward declare references present in the code (such as using
     * `ref.func`).
     */
   case class Declare(
-      override val id: SymIdx,
       override val elemlist: RefType -> Seq[Expr],
-  ) extends ElemSegment(id, elemlist):
+      override val sym: Symbol,
+      override val idPrefix: Opt[Str],
+  )(using Ctx, Raise) extends ElemSegment(elemlist, sym, idPrefix):
     def toWat: Document = doc"(elem ${id.toWat} declare ${abbrevElemList})"
 end ElemSegment
 
 /** An element segment entry. */
-sealed abstract class ElemSegment(val id: SymIdx, val elemlist: RefType -> Seq[Expr]) extends ToWat:
+sealed abstract class ElemSegment(
+    val elemlist: RefType -> Seq[Expr],
+    val sym: Symbol,
+    val idPrefix: Opt[Str],
+)(using Ctx, Raise) extends ToWat:
+
+  /** Symbolic identifier for the element segment. */
+  val id = SymIdx(summon[Ctx].dataSegmentScp.allocateOrGetNamePrefixed(sym, idPrefix))
+
   /** Applies abbreviations on the `elemlist` if a simpler replacement is available. */
   protected def abbrevElemList: Document =
     if elemlist._2.forall(_.mnemonic == "ref.func") then
@@ -353,6 +364,7 @@ sealed abstract class ElemSegment(val id: SymIdx, val elemlist: RefType -> Seq[E
         }"
     else
       doc"${elemlist._1.toWat}${elemlist._2.map(_.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")}"
+end ElemSegment
 
 /** An abstraction over a generic WebAssembly instructions.
   */
