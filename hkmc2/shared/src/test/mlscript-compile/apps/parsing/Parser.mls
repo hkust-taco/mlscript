@@ -30,13 +30,6 @@ module Parser with ...
 
 val tracer = new TreeTracer.TreeTracer
 
-let termOptions =
-  kind: "term", rule: termRule
-  allowOperators: true, allowLiterals: true
-let typeOptions =
-  kind: "type", rule: typeRule
-  allowOperators: false, allowLiterals: true, 
-
 fun parse(tokens) =
   let counter = 0
   
@@ -49,8 +42,8 @@ fun parse(tokens) =
       tracer.print of "consume: the end of input"
   
   fun parseKind(kind: Str, prec: Int): TreeT = if
-    kind is "type" then expr(prec, typeOptions)
-    kind is "term" then expr(prec, termOptions)
+    kind is "type" then typeExpr(prec)
+    kind is "term" then expr(prec)
     // built-in kinds: plain identifiers
     kind is "ident" then if tokens is
       Token.Identifier(name, false) :: _ and Keywords.all |> MutMap.get(name) is None then
@@ -133,17 +126,24 @@ fun parse(tokens) =
         tracer.print of "no end choice but found the end of input", source.line
         Tree.error("unexpected end of input")
   
-  fun expr(prec: Int, options): TreeT = tracer.trace of
-    options.kind + " <<< " + prec + " " + TokenHelpers.preview(tokens)
-    result => options.kind + " >>> " + result Tree.summary()
+  fun parseAtom(
+      prec: Int,
+      kindName: Str,
+      rule,
+      allowOperators: Bool,
+      allowLiterals: Bool,
+      cont
+  ): TreeT = tracer.trace of
+    kindName + " <<< " + prec + " " + TokenHelpers.preview(tokens)
+    result => kindName + " >>> " + result Tree.summary()
     () => if tokens is ...
     Token.Identifier(name, symbolic) :: _ and Keywords.all |> MutMap.get(name) is
       // * the keyword case
-      Some(keyword) and options.rule.keywordChoices |> MutMap.get(name) is
+      Some(keyword) and rule.keywordChoices |> MutMap.get(name) is
         Some(rule) and
           keyword.leftPrecOrMin > prec then
             consume
-            parseRule(keyword.rightPrecOrMax, rule) exprCont(prec, options)
+            cont(parseRule(keyword.rightPrecOrMax, rule), prec)
           else
             tracer.print of "the left precedence of \"" + name + "\" is less", source.line
             Tree.empty
@@ -152,25 +152,39 @@ fun parse(tokens) =
           Tree.empty
       // * the non-keyword case
       None then
-        if not options.allowOperators and symbolic then
-          Tree.error("symbolic identifiers are disallowed in kind \"" + options.kind + "\"")
+        if not allowOperators and symbolic then
+          Tree.error("symbolic identifiers are disallowed in kind \"" + kindName + "\"")
         else
           consume
-          Tree.Ident(name, symbolic) exprCont(prec, options)
+          cont(Tree.Ident(name, symbolic), prec)
     // * the literal case
-    Token.Literal(kind, literal) :: _ and options.allowLiterals then
+    Token.Literal(kind, literal) :: _ and allowLiterals then
       consume
-      Tree.Literal(kind, literal) exprCont(prec, options)
+      cont(Tree.Literal(kind, literal), prec)
     // * other cases
     token :: _ then Tree.error("unrecognized token: " + token)
     Nil then Tree.error("unexpected end of input")
-  
-  fun exprCont(acc: TreeT, prec: Int, options) = if tokens is
-    let infix = options.rule.afterRef Option.flatMap of case
-      [kind, rest] and kind == options.kind then
+
+  fun expr(prec: Int): TreeT =
+    parseAtom(prec, "term", termRule, true, true, exprCont)
+
+  fun typeExpr(prec: Int): TreeT =
+    parseAtom(prec, "type", typeRule, false, true, typeExprCont)
+
+  fun parseCont(
+      acc: TreeT,
+      prec: Int,
+      kindName: Str,
+      rule,
+      allowOperators: Bool,
+      rhsExpr,
+      cont
+  ) = if tokens is
+    let infix = rule.afterRef Option.flatMap of case
+      [kind, rest] and kind == kindName then
         { rule: rest }
-      else throw Error("Kind " + options.kind + " does not have infix rules")
-    do tracer.print of ">>> " + options.kind + "Cont " + prec + " " + acc Tree.summary() + " <<<", source.line
+      else throw Error("Kind " + kindName + " does not have infix rules")
+    do tracer.print of ">>> " + kindName + "Cont " + prec + " " + acc Tree.summary() + " <<<", source.line
     // * the case of infix keyword rules
     do tracer.print of "check keyword " + TokenHelpers.preview(tokens), source.line
     Token.Identifier(name, _) :: _ and Keywords.all |> MutMap.get(name) is Some(keyword) and
@@ -185,21 +199,21 @@ fun parse(tokens) =
               consume
               let rhs = parseKind(kind, keyword.rightPrecOrMin)
               let restRes = parseRule(bp', rest)
-              if process(rhs, restRes) is Some(cont) then
-                cont(acc) exprCont(prec, options)
+              if process(rhs, restRes) is Some(next) then
+                cont(next(acc), prec)
               else acc
           None then acc
       do tracer.print of "keyword `" + name + "` does not have infix rules", source.line
     // * the case of infix operators (non-keywords)
-    Token.Identifier(name, true) :: _ and Keywords.all |> MutMap.get(name) is None and options.allowOperators and
+    Token.Identifier(name, true) :: _ and Keywords.all |> MutMap.get(name) is None and allowOperators and
       do tracer.print of "found an operator \"" + name + "\"", source.line
       opPrecOpt(name) is Some([leftPrec, rightPrec]) and
         do tracer.print of "leftPrec = " + leftPrec + "; rightPrec = " + rightPrec, source.line
         leftPrec > prec then
           consume
           let op = Tree.Ident(name, true)
-          let rhs = expr(rightPrec, termOptions)
-          Tree.App(op, acc :: rhs :: Nil) exprCont(prec, options)
+          let rhs = rhsExpr(rightPrec)
+          cont(Tree.App(op, acc :: rhs :: Nil), prec)
         else
           acc
     // * the case of application
@@ -219,8 +233,8 @@ fun parse(tokens) =
             rhs then
               do tracer.print of "parsed " + rhs Tree.summary(), source.line
               let restRes = parseRule(bp', rest)
-              if process(rhs, restRes) is Some(cont) then
-                cont(acc) exprCont(prec, options)
+              if process(rhs, restRes) is Some(next) then
+                cont(next(acc), prec)
               else acc
         do tracer.print of "the outer precedence is less than " + prec, source.line
         else acc
@@ -228,7 +242,13 @@ fun parse(tokens) =
         tracer.print of "cannot consume " + token, source.line
         acc
     Nil then acc
-  
+
+  fun exprCont(acc: TreeT, prec: Int): TreeT =
+    parseCont(acc, prec, "term", termRule, true, expr, exprCont)
+
+  fun typeExprCont(acc: TreeT, prec: Int): TreeT =
+    parseCont(acc, prec, "type", typeRule, false, typeExpr, typeExprCont)
+
   fun handleDirective(tree: TreeT, acc: TreeT) = if tree is
     // Call the corresponding handler for the directive.
     Tree.Define(Tree.DefineKind.Directive, [name, body] :: Nil) as tree and name is
@@ -254,7 +274,7 @@ fun parse(tokens) =
       Keywords.all |> MutMap.get(name) is Some(keyword) and
         // First, try if the keyword is the prefix of the term.
         termRule.keywordChoices |> MutMap.get(name) is Some(rule) then
-          let tree = expr(0, termOptions)
+          let tree = expr(0)
           if tree is Tree.LetIn(bindings, Tree.Empty) then
             // If the body is empty, then this is a let-definition.
             modCont of Tree.Define(Tree.DefineKind.Let(false), bindings) :: acc
@@ -264,7 +284,7 @@ fun parse(tokens) =
         declRule.keywordChoices |> MutMap.get(name) is Some(rule) then
           consume
           parseRule(0, rule) handleDirective(acc)
-    _ :: _ then modCont of expr(0, termOptions) :: acc
+    _ :: _ then modCont of expr(0) :: acc
     Nil then acc reverse()
   
   fun modCont(acc: StackT[TreeT]) = if tokens is
