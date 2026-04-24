@@ -174,11 +174,23 @@ data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
   
   fun refChoice = _refChoice.get()
   
+  let _afterRef = lazy of () => refChoice Option.flatMap of case
+    Ref(kind, process, None, rest) then Some of tuple of
+      kind
+      rest.map of result => if result is
+        Tree.Empty then None
+        Tree.Error then None
+        else Some of acc => process(acc, result)
+    else None
+
+  fun afterRef = _afterRef.get()
+
   fun extendChoices(newChoices: Stack[Choice[A]]) =
     set choices = choices ::: newChoices
     _endChoice.reset()
     _keywordChoices.reset()
     _refChoice.reset()
+    _afterRef.reset()
     this
   
   // Display parse rules as a tree in a BNF-like format.

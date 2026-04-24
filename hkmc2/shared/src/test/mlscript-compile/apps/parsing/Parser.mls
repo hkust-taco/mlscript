@@ -68,13 +68,12 @@ fun parse(tokens) =
     // * other rule-based kinds
     syntaxKinds |> MutMap.get(kind) is Some(rule) then
       let tree = parseRule(prec, rule)
-      if rule.refChoice is Some(Ref(kind', process, None, rest)) and kind == kind' do
+      if rule.afterRef is Some([kind', rest]) and kind == kind' do
         let shouldParse = true
         while shouldParse do
-          let tree' = parseRule(prec, rest)
-          if tree' Tree.nonEmpty() then
+          if parseRule(prec, rest) is Some(cont) then
             tracer.print of ">>> " + kind + "Cont " + prec + " " + tree Tree.summary() + " <<<", source.line
-            set tree = process(tree, tree')
+            set tree = cont(tree)
           else
             set shouldParse = false
       tree
@@ -167,9 +166,9 @@ fun parse(tokens) =
     Nil then Tree.error("unexpected end of input")
   
   fun exprCont(acc: TreeT, prec: Int, options) = if tokens is
-    let infix = options.rule.refChoice Option.flatMap of case
-      Ref(kind, process, None, rest) and kind == options.kind then
-        { process: process, rule: rest }
+    let infix = options.rule.afterRef Option.flatMap of case
+      [kind, rest] and kind == options.kind then
+        { rule: rest }
       else throw Error("Kind " + options.kind + " does not have infix rules")
     do tracer.print of ">>> " + options.kind + "Cont " + prec + " " + acc Tree.summary() + " <<<", source.line
     // * the case of infix keyword rules
@@ -186,7 +185,9 @@ fun parse(tokens) =
               consume
               let rhs = parseKind(kind, keyword.rightPrecOrMin)
               let restRes = parseRule(bp', rest)
-              infix.process(acc, process(rhs, restRes)) exprCont(prec, options)
+              if process(rhs, restRes) is Some(cont) then
+                cont(acc) exprCont(prec, options)
+              else acc
           None then acc
       do tracer.print of "keyword `" + name + "` does not have infix rules", source.line
     // * the case of infix operators (non-keywords)
@@ -218,7 +219,9 @@ fun parse(tokens) =
             rhs then
               do tracer.print of "parsed " + rhs Tree.summary(), source.line
               let restRes = parseRule(bp', rest)
-              infix.process(acc, process(rhs, restRes)) exprCont(prec, options)
+              if process(rhs, restRes) is Some(cont) then
+                cont(acc) exprCont(prec, options)
+              else acc
         do tracer.print of "the outer precedence is less than " + prec, source.line
         else acc
       None then

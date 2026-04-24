@@ -54,8 +54,8 @@ For any code-changing task:
 | 1 | PA-01 | Done | P0 | Low | Low | Audit registered keywords and remove `class` plus any other truly unused registered keywords. |
 | 2 | PA-02 | Done | P1 | Medium | Medium | Collapse `Choice.Ref` from `outerPrec`/`innerPrec` to one optional binding-power field. |
 | 3 | PA-03 | Done | P1 | Medium | Medium | Replace `Choice.Siding` with standalone helper-generated rules and remove the `Siding` constructor from the rule model. |
-| 4 | PA-04 | Ready | P1 | Medium | Medium | Add an explicit `afterRef` helper and route continuation loops through it. |
-| 5 | PA-05 | Blocked by PA-04 | P1 | Medium | Medium | Split the parameterized `expr`/`exprCont` pair into explicit `expr`/`exprCont` and `typeExpr`/`typeExprCont` pairs. |
+| 4 | PA-04 | Done | P1 | Medium | Medium | Add an explicit `afterRef` helper and route continuation loops through it. |
+| 5 | PA-05 | Ready | P1 | Medium | Medium | Split the parameterized `expr`/`exprCont` pair into explicit `expr`/`exprCont` and `typeExpr`/`typeExprCont` pairs. |
 | 6 | PA-06 | Blocked by PA-02, PA-04 | P1 | High | High | Add the paper's `Infix` choice so symbolic infix operators are represented in rules instead of hard-coded in `exprCont`. |
 | 7 | PA-07 | Ready | P2 | Low | Documentation | Write a proposal for built-in terminal syntax kinds beyond `ident` and `typevar`, especially `literal` and `string-literal`. |
 | 8 | PA-08 | Blocked by PA-02, PA-04, PA-07 | P1 | High | High | Align dynamic extension directives with the paper's `#keyword` and `#extend` syntax and replacement-expression scheme. |
