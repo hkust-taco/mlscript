@@ -40,7 +40,7 @@ let lire_bit entree =
 ## Adapted Example
 
 ```ocaml
-type buffer = { value: int; nbits: int };;
+type buffer = { mutable value: int; mutable nbits: int };;
 let buffer = { value = 0; nbits = 0 };;
 let initialize () = buffer.value <- 0; buffer.nbits <- 0;;
 let write_bit output bit =
@@ -72,12 +72,12 @@ let read_bit input =
 
 - Translated French identifiers to English.
 - Replaced `val` with `value` to avoid using a reserved-looking field name.
-- Omitted the type-level `mutable` annotations. The parser currently records
-  record labels and field mutation syntax, but does not have a dedicated
-  mutability node in type declarations.
+- Restored the type-level `mutable` annotations after adding parser support for
+  mutable record labels.
 
 ## Parser Fixes
 
 - Added general keyword-level infix parsing for Caml Light alphabetic operators:
   `mod`, `land`, `lor`, `lxor`, `lsl`, `lsr`, and `asr`.
 - This also corrected the previously ported sieve example's `m mod n` tree.
+- Added type-level mutable record label parsing.

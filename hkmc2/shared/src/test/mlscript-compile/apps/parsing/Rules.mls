@@ -380,7 +380,12 @@ define("typedef-rhs") of keyword(Keywords._equalequal) of typeExpr of
   process: (rhs, _) => lhs => Tree.Infix(Keywords._equalequal, lhs, rhs)
   name: "type alias body"
 
-define("label-decl") of typeExpr of
+define("label-name") of ident of process: id
+define("label-name") of keyword(Keywords._mutable) of ident of
+  process: (label, _) => Tree.Modified(Tree.Reference("mutable", false), label)
+  name: "mutable label name"
+
+define("label-decl") of reference("label-name") of
   process: Tree.infix of Keywords._colon
   name: "label-decl name"
   choices: tuple of keyword(Keywords._colon) of typeExpr of

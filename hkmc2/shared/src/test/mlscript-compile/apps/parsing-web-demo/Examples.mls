@@ -146,7 +146,7 @@ and word_size = 4
 examples |> MutMap.insert of
   "caml-bit-buffer"
   name: "Caml Light: Bit Buffer"
-  source: """type buffer = { value: int; nbits: int };;
+  source: """type buffer = { mutable value: int; mutable nbits: int };;
 let buffer = { value = 0; nbits = 0 };;
 let initialize () = buffer.value <- 0; buffer.nbits <- 0;;
 let write_bit output bit =

@@ -613,7 +613,7 @@ and word_size = 4
 
 example of """
 :tree
-type buffer = { value: int; nbits: int };;
+type buffer = { mutable value: int; mutable nbits: int };;
 let buffer = { value = 0; nbits = 0 };;
 let initialize () = buffer.value <- 0; buffer.nbits <- 0;;
 let write_bit output bit =
@@ -649,11 +649,15 @@ let read_bit input =
 //│ >       rhs = Bracketed#Curly of Sequence of Stack of 
 //│ >         Infix:
 //│ >           op = Keyword(`:`, 4, 3)
-//│ >           lhs = Reference of "value"
+//│ >           lhs = Modified:
+//│ >             modifier = Reference of "mutable"
+//│ >             subject = Reference of "value"
 //│ >           rhs = Reference of "int"
 //│ >         Infix:
 //│ >           op = Keyword(`:`, 4, 3)
-//│ >           lhs = Reference of "nbits"
+//│ >           lhs = Modified:
+//│ >             modifier = Reference of "mutable"
+//│ >             subject = Reference of "nbits"
 //│ >           rhs = Reference of "int"
 //│ > Define:
 //│ >   kind = Let(false)
@@ -886,7 +890,7 @@ let read_bit input =
 //│ >                     Literal#Integer of "1"
 //│ >               Reference of "result"
 //│ >         body = None
-//│ > «type buffer = {value : int; nbits : int}»
+//│ > «type buffer = {mutable value : int; mutable nbits : int}»
 //│ > «let buffer = value = 0; nbits = 0»
 //│ > «let initialize () = buffer.value <- 0; buffer.nbits <- 0»
 //│ > «let write_bit output bit = buffer.value <- buffer.value lor bit lsl buffer.nbits; buffer.nbits <- buffer.nbits + 1; if buffer.nbits >= 8 then output_char output (char_of_int buffer.value); buffer.value <- 0; buffer.nbits <- 0 then None»

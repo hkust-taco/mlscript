@@ -13,7 +13,7 @@ examples Iter.each of case entry then
   print of "Testing example: " + entry.name
   Test.example of entry.source
 //│ > Testing example: Caml Light: Bit Buffer
-//│ > «type buffer = {value : int; nbits : int}»
+//│ > «type buffer = {mutable value : int; mutable nbits : int}»
 //│ > «let buffer = value = 0; nbits = 0»
 //│ > «let initialize () = buffer.value <- 0; buffer.nbits <- 0»
 //│ > «let write_bit output bit = buffer.value <- buffer.value lor bit lsl buffer.nbits; buffer.nbits <- buffer.nbits + 1; if buffer.nbits >= 8 then output_char output (char_of_int buffer.value); buffer.value <- 0; buffer.nbits <- 0 then None»

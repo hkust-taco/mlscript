@@ -82,6 +82,7 @@ val _function = keyword("function", currPrec, eqPrec)
 val _type = keyword("type", currPrec, None)
 val _exception = keyword("exception", currPrec, None)
 val _rec = keyword("rec", currPrec, eqPrec)
+val _mutable = keyword("mutable", None, None)
 val _hash = keyword("#", None, None)
 val maxKeywordPrec = prec
 

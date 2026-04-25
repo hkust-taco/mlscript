@@ -60,6 +60,7 @@ print of Keywords.all |> MutMap.valuesIterator |. Iter.joined("\n")
 //│ > Keyword(`type`, 11, N/A)
 //│ > Keyword(`exception`, 11, N/A)
 //│ > Keyword(`rec`, 11, 3)
+//│ > Keyword(`mutable`, N/A, N/A)
 //│ > Keyword(`#`, N/A, N/A)
 //│ > Keyword(`.`, 26, 26)
 //│ > Keyword(`=`, 16, 16)
@@ -124,7 +125,10 @@ Rules.syntaxKinds
 //│ > <typedef-rhs> ::= 
 //│ >   | "=" (<variants> | "{" <label-decls> "}")
 //│ >   | "==" <type>
-//│ > <label-decl> ::= <type> ":" <type>
+//│ > <label-name> ::= 
+//│ >   | <ident>
+//│ >   | "mutable" <ident>
+//│ > <label-decl> ::= <label-name> ":" <type>
 //│ > <label-decls> ::= <label-decl> [";" <label-decls>]
 //│ > <constr-decls> ::= <constr-decl> ["|" <constr-decls>]
 //│ > <typedef-lhs> ::= <type-params> <ident>
