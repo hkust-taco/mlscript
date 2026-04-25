@@ -355,7 +355,10 @@ example of """
 :tree
 -2 * 3
 ;;
-~2 * 3
+-. 2.0 *. 3.0
+;;
+!f x
+;;
 let x = !true
 """
 //│ > Application:
@@ -366,12 +369,17 @@ let x = !true
 //│ >       argument = Literal#Integer of "2"
 //│ >     Literal#Integer of "3"
 //│ > Application:
-//│ >   callee = Reference of "*"
+//│ >   callee = Reference of "*."
 //│ >   argument = Stack of 
 //│ >     Application:
-//│ >       callee = Reference of "~"
-//│ >       argument = Literal#Integer of "2"
-//│ >     Literal#Integer of "3"
+//│ >       callee = Reference of "-."
+//│ >       argument = Literal#Decimal of "2.0"
+//│ >     Literal#Decimal of "3.0"
+//│ > Application:
+//│ >   callee = Application:
+//│ >     callee = Reference of "!"
+//│ >     argument = Reference of "f"
+//│ >   argument = Reference of "x"
 //│ > Define:
 //│ >   kind = Let(false)
 //│ >   items = Stack of 
@@ -382,7 +390,8 @@ let x = !true
 //│ >         callee = Reference of "!"
 //│ >         argument = Literal#Boolean of "true"
 //│ > «(-2) * 3»
-//│ > «~2 * 3»
+//│ > «(-.2.0) *. 3.0»
+//│ > «!f x»
 //│ > «let x = !true»
 
 example of """
@@ -439,7 +448,7 @@ f (expr .( expr ) <- expr)
 example of """
 a:;
 """
-//│ > «a :;»
+//│ > «a»
 
 example of """
 let sub = (-);;

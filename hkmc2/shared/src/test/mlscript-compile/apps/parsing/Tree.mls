@@ -122,7 +122,7 @@ module Tree with
       // Unary expressions
       Application(Reference(op, true), arg) then mkStr of
         op
-        par of go(arg), prec(arg, false) <= Keywords.prefixPrec
+        par of go(arg), prec(arg, false) <= Keywords.prefixOpPrec(op)
       // Function application
       Application(callee, argument) then mkStr of
         go(callee)

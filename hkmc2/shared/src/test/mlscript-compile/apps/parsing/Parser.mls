@@ -176,9 +176,14 @@ fun parse(tokens) =
           consume
           cont(Tree.Underscore(), prec)
         else if allowOperators and symbolic and token is Token.Symbol(name) and
-          Keywords.opPrecOpt(name) is Some(_) then
+          Keywords.prefixOpPrecOpt(name) is Some(prefixPrec) then
             consume
-            cont(Tree.Application(Tree.Reference(name, true), parseKind(kindName, Keywords.prefixPrec)), prec)
+            cont(Tree.Application(Tree.Reference(name, true), parseKind(kindName, prefixPrec)), prec)
+        else if allowOperators and symbolic and token is Token.Symbol(name) then
+          consume
+          if tokens is _ :: _ do
+            parseKind(kindName, Keywords.prefixPrec)
+          Tree.error("unexpected prefix operator `" + name + "`")
         else if not allowOperators and symbolic then
           Tree.error("symbolic identifiers are disallowed in kind \"" + kindName + "\"")
         else

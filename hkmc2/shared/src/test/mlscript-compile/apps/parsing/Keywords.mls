@@ -114,6 +114,7 @@ val _period = keyword of ".", Some(periodPrec), Some(periodPrec)
 val maxOperatorPrec = periodPrec
 val appPrec = maxOperatorPrec - 1
 val prefixPrec = appPrec - 1
+val bangPrefixPrec = maxOperatorPrec + 1
 
 // Get the precedence of a single character operator.
 fun charPrec(op) = precMap |> MutMap.get(op) |> Option.unsafe.get
@@ -190,6 +191,14 @@ fun infixOpPrecOpt(opStr) = if
   opStr is "!" then None
   opStr is "~" then None
   else opPrecOpt(opStr)
+
+fun prefixOpPrecOpt(opStr) = if
+  opStr is "!" then Some(bangPrefixPrec)
+  opStr is "-" then Some(prefixPrec)
+  opStr is "-." then Some(prefixPrec)
+  else None
+
+fun prefixOpPrec(opStr) = prefixOpPrecOpt(opStr) Option.getOrElse(prefixPrec)
 
 fun patternInfixOpPrecOpt(opStr) = if
   opStr is "::" then opPrecOpt(opStr)

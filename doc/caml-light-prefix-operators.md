@@ -29,24 +29,21 @@ ordinary identifier application. For example, prefix `-` maps to `minus`, and
 prefix `-.` maps to `minus_float`. This is a fixed syntax class in Caml Light,
 not a general user-defined prefix-operator declaration mechanism.
 
-The local parser already has behavior that covers the visible Caml Light cases:
-`ParserTest.mls` includes `-2 * 3` and `let x = !true`. The implementation
-currently accepts symbolic identifiers in term position, then the normal
-application continuation binds the following atom. Pretty-printing uses
-`Keywords.prefixPrec`, and `Keywords.mls` sets that precedence below
-application and above lower infix operators.
+The local parser originally had behavior that covered the visible Caml Light
+cases: `ParserTest.mls` included `-2 * 3` and `let x = !true`. That behavior
+was broader than Caml Light, because symbolic identifiers in term position could
+act like prefix applications. For example, `~2 * 3` parsed as a symbolic prefix
+application even though Caml Light's grammar does not list `~` as a prefix
+operator.
 
-One local behavior is intentionally broader than Caml Light: the parser accepts
-`~2 * 3` as a symbolic prefix application because symbolic identifiers are
-allowed as terms. Caml Light's grammar does not list `~` as a prefix operator.
+The implementation now uses a fixed prefix set for Caml Light: `-`, `-.`, and
+`!`. Prefix `-` and `-.` keep the existing prefix precedence below application,
+while `!` has a tighter precedence than selection and application, matching the
+manual's ordering.
 
 ## Conclusion
 
-Caml Light does have prefix precedence. No immediate parser change is needed for
-this alignment pass because the current parser already handles the existing test
-coverage for prefix `-` and `!`, and adding a new general prefix-operator rule
-would go beyond Caml Light's fixed prefix syntax.
-
-If this is revisited later, the conservative target is not arbitrary prefix
-operators. It is a small explicit rule for Caml Light's fixed prefix forms:
-`-`, `-.`, and `!`, with the manual's precedence ordering preserved.
+Caml Light does have prefix precedence. The parser now implements the
+conservative target: a small explicit rule for Caml Light's fixed prefix forms
+`-`, `-.`, and `!`, with the manual's precedence ordering preserved. It does
+not add a general arbitrary-prefix-operator mechanism.
