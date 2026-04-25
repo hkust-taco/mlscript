@@ -8,13 +8,17 @@ module TreeTracer with ...
 class TreeTracer with
   mut val steps = 0
   mut val enabled = false
+  mut val messages = []
+  fun write(line: Str) =
+    messages.push(line)
+    console.log(line)
   fun output(outie, innie, innieAlt, message) = if enabled do
     let lines = message.split("\n")
     lines.forEach of (line, i, xs) => if
       let postfix = if lines.length > 1 then " ↵" else ""
-      i is 0 then console.log(outie + innie + line + postfix)
-      i + 1 == lines.length then console.log(outie + innieAlt + line)
-      else console.log(outie + innieAlt + line + postfix)
+      i is 0 then write(outie + innie + line + postfix)
+      i + 1 == lines.length then write(outie + innieAlt + line)
+      else write(outie + innieAlt + line + postfix)
   fun enter(...pieces) =
     output of
       if steps > 0 then "│ ".repeat(steps - 1) + "├─" else ""
@@ -43,4 +47,6 @@ class TreeTracer with
     val result = thunk()
     leave of makeOutro of result
     result
-  fun reset() = set steps = 0
+  fun reset() = set
+    steps = 0
+    messages = []

@@ -14,6 +14,7 @@
 import "../parsing/Parser.mls"
 import "../parsing/Lexer.mls"
 import "../parsing/Tree.mls"
+import "../parsing/TokenHelpers.mls"
 import "../../StrOps.mls"
 import "../../Iter.mls"
 import "../../XML.mls"
@@ -42,7 +43,10 @@ let query = document.querySelector.bind(document)
 let editor = query("#editor")
 let selector = query("select#example")
 let parseButton = query("button#parse")
+let traceToggle = query("#trace-toggle")
 let outputPanel = query("#output")
+let tokensOutput = query("#tokens-output")
+let traceOutput = query("#trace-output")
 let errorDialog = query("#error-dialog")
 let errorMessage = query("#error-message")
 let errorStack = query("#error-stack")
@@ -71,6 +75,23 @@ selector.addEventListener of "change", event =>
   if examples |> MutMap.get(selector.value) is
     Some(example) do set editor.value = example.source
     None do showError of new Error of "Example \"" + selector.value + "\" not found"
+
+let tabButtons = document.querySelectorAll("[data-tab]")
+let tabPanels = document.querySelectorAll("[data-tab-panel]")
+
+fun activateTab(name: Str) =
+  tabButtons.forEach of button =>
+    let active = button.dataset.tab == name
+    button.classList.toggle("is-active", active)
+    button.setAttribute("aria-selected", if active then "true" else "false")
+  tabPanels.forEach of panel =>
+    let active = panel.dataset.tabPanel == name
+    panel.classList.toggle("is-active", active)
+    set panel.hidden = active is false
+
+tabButtons.forEach of button =>
+  button.addEventListener of "click", _ => activateTab(button.dataset.tab)
+activateTab("tree")
 
 fun errorName(error) =
   if error.name is undefined then "Error" else error.name.toString()
@@ -110,7 +131,13 @@ parseButton.addEventListener of "click", event =>
       Extension.resetParserState()
       let tokens = Lexer.lex(editor.value, noWhitespace: true)
       set outputPanel.innerHTML = ""
+      set tokensOutput.textContent = TokenHelpers.panorama(tokens)
+      set traceOutput.textContent = ""
+      Parser.tracer.reset()
+      set Parser.tracer.enabled = traceToggle.checked
       let trees = Parser.parse(tokens)
+      set Parser.tracer.enabled = false
+      set traceOutput.textContent = Parser.tracer.messages.join("\n")
       if firstErrorInStack(trees) is
         Some(message) then
           showError(new Error("Parse produced an error tree: " + message))
@@ -123,6 +150,8 @@ parseButton.addEventListener of "click", event =>
               set collapsibleTree.textContent = TreeHelpers.showAsTree(tree)
               outputPanel.appendChild of collapsibleTree
     error =>
+      set Parser.tracer.enabled = false
+      set traceOutput.textContent = Parser.tracer.messages.join("\n")
       showError(error)
 
 let indentRegex = new RegExp("""^(\s*)""")
