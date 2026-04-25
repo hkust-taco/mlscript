@@ -84,7 +84,7 @@ Goal: fix the two major web-demo correctness issues first.
 | ID | Status | Task | Commit Label |
 | --- | --- | --- | --- |
 | W1-01 | Done | Isolate parser state per parse so extension keywords/categories from one parse cannot leak into the next parse unless an explicit keep-state mode is added. | `Web W1` |
-| W1-02 | Pending | Refresh extension diagrams and the precedence table clearly after every successful parse that changes or depends on grammar extensions. | `Web W1` |
+| W1-02 | Done | Refresh extension diagrams and the precedence table clearly after every successful parse that changes or depends on grammar extensions. | `Web W1` |
 
 ## Phase W2: Web Demo Minor Tasks
 
@@ -139,5 +139,5 @@ handoff.
 
 ## Current Stop Point
 
-Phase W1-01 is complete. Continue with extension diagram refresh task W1-02
+Phase W1 is complete. Continue with minor web-demo diagnostics task W2-01
 unless a truly fatal error occurs.

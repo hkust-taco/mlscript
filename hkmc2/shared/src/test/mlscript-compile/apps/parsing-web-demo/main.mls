@@ -111,14 +111,17 @@ parseButton.addEventListener of "click", event =>
       let tokens = Lexer.lex(editor.value, noWhitespace: true)
       set outputPanel.innerHTML = ""
       let trees = Parser.parse(tokens)
-      if firstErrorInStack(trees) is Some(message) do
-        showError(new Error("Parse produced an error tree: " + message))
-      trees Iter.fromStack() Iter.each of tree => if
-        Extension.isDiagramDirective(tree) then displayRules()
-        else
-          let collapsibleTree = document.createElement("collapsible-tree")
-          set collapsibleTree.textContent = TreeHelpers.showAsTree(tree)
-          outputPanel.appendChild of collapsibleTree
+      if firstErrorInStack(trees) is
+        Some(message) then
+          showError(new Error("Parse produced an error tree: " + message))
+        None then
+          displayRules()
+          trees Iter.fromStack() Iter.each of tree => if
+            Extension.isDiagramDirective(tree) then ()
+            else
+              let collapsibleTree = document.createElement("collapsible-tree")
+              set collapsibleTree.textContent = TreeHelpers.showAsTree(tree)
+              outputPanel.appendChild of collapsibleTree
     error =>
       showError(error)
 
