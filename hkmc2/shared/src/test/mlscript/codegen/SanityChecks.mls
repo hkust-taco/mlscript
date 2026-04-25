@@ -188,6 +188,7 @@ globalThis.x()
 module M with
   data class A(x) with
     fun f(y) = x + y
+  fun g(x, y) = x + y
 
 :ssjs
 :re
@@ -247,3 +248,24 @@ M.A(1).f(0)
 
 
 
+:ssjs
+M.g(1, 2)
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ block$res24 = runtime.checkCall(M1.g(1, 2)); undefined
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+
+val outFilePath = "out/test.md"
+//│ outFilePath = "out/test.md"
+
+:sjs
+fun w(txt) =
+  fs.writeFileSync(outFilePath, txt)
+  // ()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let w;
+//│ w = function w(txt) { return runtime.safeCall(globalThis.fs.writeFileSync(outFilePath, txt)) };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+w("whoops")
