@@ -129,7 +129,7 @@ handoff.
 
 | ID | Status | Task |
 | --- | --- | --- |
-| V-01 | Pending | Run `hkmc2JVM/test` before focused parser/runtime testing in this work session. |
+| V-01 | Done | Run `hkmc2JVM/test` before focused parser/runtime testing in this work session. |
 | V-02 | Pending | Run focused parser compile tests after parser changes. |
 | V-03 | Pending | Run focused parser DiffTests after parser/test output changes and commit intentional golden output. |
 | V-04 | Pending | Run focused web-demo compile tests after web-demo changes. |
