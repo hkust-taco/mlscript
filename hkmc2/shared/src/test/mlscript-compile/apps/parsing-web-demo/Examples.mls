@@ -5,10 +5,14 @@ open Predef
 module Examples with...
 
 val examples = MutMap.empty
+val camlLightRepo = "https://github.com/camllight/camllight"
+fun camlLightUrl(path: Str) = camlLightRepo + "/blob/master/" + path
 
 examples |> MutMap.insert of
   "hanoi"
   name: "Hanoi from Caml Light"
+  origin: "Adapted from Caml Light sources/examples/hanoi/hanoi.ml"
+  originUrl: camlLightUrl("sources/examples/hanoi/hanoi.ml")
   source: """let spaces n = make_string n " ";;
 let disk size =
     let right_half = make_string size ">"
@@ -38,6 +42,7 @@ let rec join_lines l1 l2 l3 =
 examples |> MutMap.insert of
   "extensible"
   name: "Extensible Syntax"
+  origin: "Local greeting syntax extension demo"
   source: """#keyword "hello" 3 3
 #keyword "goodbye" None None
 
@@ -55,6 +60,8 @@ hello "Rob" hello "Bob" goodbye
 examples |> MutMap.insert of
   "caml-fibonacci"
   name: "Caml Light: Fibonacci"
+  origin: "Adapted from Caml Light sources/examples/basics/fib.ml"
+  originUrl: camlLightUrl("sources/examples/basics/fib.ml")
   source: """let rec fib n =
   if n < 2 then 1 else fib(n-1) + fib(n-2)
 ;;
@@ -75,6 +82,8 @@ end
 examples |> MutMap.insert of
   "caml-sieve"
   name: "Caml Light: Sieve"
+  origin: "Adapted from Caml Light sources/examples/basics/sieve.ml"
+  originUrl: camlLightUrl("sources/examples/basics/sieve.ml")
   source: """let rec interval min max =
   if min > max then [] else min :: interval (succ min) max
 ;;
@@ -97,6 +106,8 @@ let sieve max =
 examples |> MutMap.insert of
   "caml-integer-sets"
   name: "Caml Light: Integer Sets"
+  origin: "Adapted from Caml Light sources/examples/grep/ensent.ml"
+  originUrl: camlLightUrl("sources/examples/grep/ensent.ml")
   source: """type t == int list;;
 let empty = [];;
 let rec belongs n = function
@@ -115,6 +126,8 @@ let rec add n = function
 examples |> MutMap.insert of
   "caml-pascal-values"
   name: "Caml Light: Pascal Values"
+  origin: "Adapted from Caml Light sources/examples/pascal/valeur.ml"
+  originUrl: camlLightUrl("sources/examples/pascal/valeur.ml")
   source: """#open "interp";;
 let int_val = function
   | Int n -> n
@@ -138,6 +151,8 @@ let read_value () =
 examples |> MutMap.insert of
   "caml-picomach-constants"
   name: "Caml Light: Picomach Constants"
+  origin: "Adapted from Caml Light sources/examples/picomach/code.ml"
+  originUrl: camlLightUrl("sources/examples/picomach/code.ml")
   source: """let register_count = 32
 and sp = 30
 and ra = 31
@@ -147,6 +162,8 @@ and word_size = 4
 examples |> MutMap.insert of
   "caml-bit-buffer"
   name: "Caml Light: Bit Buffer"
+  origin: "Adapted from Caml Light sources/examples/compress/esbit.ml"
+  originUrl: camlLightUrl("sources/examples/compress/esbit.ml")
   source: """type buffer = { mutable val: int; mutable nbits: int };;
 let buffer = { val = 0; nbits = 0 };;
 let initialize () = buffer.val <- 0; buffer.nbits <- 0;;
@@ -177,6 +194,8 @@ let read_bit input =
 examples |> MutMap.insert of
   "caml-priority-queue"
   name: "Caml Light: Priority Queue"
+  origin: "Adapted from Caml Light sources/examples/compress/fileprio.ml"
+  originUrl: camlLightUrl("sources/examples/compress/fileprio.ml")
   source: """type 'a t = Empty | QueueNode of int * 'a * 'a t * 'a t;;
 exception Empty_queue;;
 let empty = Empty;;
@@ -213,6 +232,8 @@ let rec add queue priority item =
 examples |> MutMap.insert of
   "caml-word-count"
   name: "Caml Light: Word Count"
+  origin: "Adapted from Caml Light sources/examples/basics/wc.ml"
+  originUrl: camlLightUrl("sources/examples/basics/wc.ml")
   source: """let chars = ref 0
 and words = ref 0
 and lines = ref 0
@@ -269,6 +290,8 @@ with sys__Sys_error s ->
 examples |> MutMap.insert of
   "caml-bubble-sort"
   name: "Caml Light: Bubble Sort"
+  origin: "Adapted from Caml Light sources/examples/showsort/bubble.ml"
+  originUrl: camlLightUrl("sources/examples/showsort/bubble.ml")
   source: """#open "animation";;
 let sort context =
   let ordered = ref true in
@@ -293,6 +316,8 @@ let sort context =
 examples |> MutMap.insert of
   "caml-insertion-sort"
   name: "Caml Light: Insertion Sort"
+  origin: "Adapted from Caml Light sources/examples/showsort/insertion.ml"
+  originUrl: camlLightUrl("sources/examples/showsort/insertion.ml")
   source: """#open "animation";;
 let sort context =
   let rec loop_outer i =
@@ -318,6 +343,7 @@ let sort context =
 examples |> MutMap.insert of
   "extensible-routes"
   name: "Extensible: Routes"
+  origin: "Local route declaration syntax extension demo"
   source: """#keyword "route" None None
 #keyword "GET" None None
 #keyword "POST" None None
@@ -330,6 +356,7 @@ route POST "/users" create_user"""
 examples |> MutMap.insert of
   "extensible-workflow"
   name: "Extensible: Workflow"
+  origin: "Local workflow syntax extension demo"
   source: """#keyword "workflow" None None
 #keyword "step" None None
 #keyword "next" None None

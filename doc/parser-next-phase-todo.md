@@ -110,7 +110,7 @@ Goal: do only the requested provenance subset.
 
 | ID | Status | Task | Commit Label |
 | --- | --- | --- | --- |
-| W4-01 | Pending | After selecting an example, show a nearby message naming the original example it was adapted from and linking to the original GitHub repository. | `Web W4` |
+| W4-01 | Done | After selecting an example, show a nearby message naming the original example it was adapted from and linking to the original GitHub repository. | `Web W4` |
 | W4-02 | Deferred | Do not implement a built-in browser regression command in this phase. | None |
 
 ## Phase D1: Future Work Documentation
@@ -139,5 +139,5 @@ handoff.
 
 ## Current Stop Point
 
-Phase W3 is complete. Continue with limited provenance task W4-01
+Phase W4 is complete. Continue with future-work documentation task D1-01
 unless a truly fatal error occurs.

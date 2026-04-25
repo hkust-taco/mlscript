@@ -42,6 +42,9 @@ module Main with ...
 let query = document.querySelector.bind(document)
 let editor = query("#editor")
 let selector = query("select#example")
+let provenance = query("#example-provenance")
+let provenanceText = query("#example-provenance span")
+let provenanceLink = query("#example-provenance a")
 let parseButton = query("button#parse")
 let copyButton = query("#copy-output")
 let traceToggle = query("#trace-toggle")
@@ -54,6 +57,19 @@ let errorMessage = query("#error-message")
 let errorLocation = query("#error-location")
 let errorStack = query("#error-stack")
 
+fun loadExample(example) =
+  set editor.value = example.source
+  if example.origin is undefined then
+    set provenance.hidden = true
+  else
+    set provenanceText.textContent = example.origin
+    set provenance.hidden = false
+    if example.originUrl is undefined then
+      set provenanceLink.hidden = true
+    else
+      set provenanceLink.hidden = false
+      set provenanceLink.href = example.originUrl
+
 examples Iter.each of case [key, example] then
   let option = document.createElement of "option"
   set option.value = key
@@ -61,7 +77,7 @@ examples Iter.each of case [key, example] then
   selector.appendChild of option
   // Load the first example.
   if editor.value is "" do
-    set editor.value = example.source
+    loadExample(example)
 
 // Make pressing <kbd>Tab</kbd> add two spaces at the caret's position.
 editor.addEventListener of "keydown", event =>
@@ -76,7 +92,7 @@ editor.addEventListener of "keydown", event =>
 
 selector.addEventListener of "change", event =>
   if examples |> MutMap.get(selector.value) is
-    Some(example) do set editor.value = example.source
+    Some(example) do loadExample(example)
     None do showError(new Error("Example \"" + selector.value + "\" not found"), None)
 
 let tabButtons = document.querySelectorAll("[data-tab]")

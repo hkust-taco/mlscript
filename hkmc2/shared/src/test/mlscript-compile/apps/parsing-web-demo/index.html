@@ -32,6 +32,10 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
       <header class="toolbar">
         <button class="button" id="parse">Parse</button>
         <select class="select" id="example"></select>
+        <span id="example-provenance" class="provenance" hidden>
+          <span></span>
+          <a target="_blank" rel="noreferrer">GitHub</a>
+        </span>
         <label class="toggle"><input id="trace-toggle" type="checkbox"> Trace</label>
       </header>
       <textarea id="editor" spellcheck="false" autocapitalize="off"></textarea>
@@ -374,6 +378,27 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
       gap: 0.25rem;
       line-height: 1.5;
       white-space: nowrap;
+    }
+
+    .provenance {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      min-width: 12rem;
+      font-size: 0.875rem;
+      color: #4b5563;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .provenance span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .provenance a {
+      color: var(--accent);
+      font-weight: 600;
     }
 
     .button {
