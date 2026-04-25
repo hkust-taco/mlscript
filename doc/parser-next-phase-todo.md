@@ -119,8 +119,8 @@ Goal: document the remaining future items not assigned to implementation now.
 
 | ID | Status | Task | Commit Label |
 | --- | --- | --- | --- |
-| D1-01 | Pending | Write a separate Markdown document elaborating the future/reserved items from `Future Or Maybe Items Still Not Implemented`. | `Docs D1` |
-| D1-02 | Pending | Include optional `symbol` terminal kind, character-literal terminal kind if not implemented, term/type Pratt-pair unification, and any skipped reserved-keyword field-name work. Do not include `doc/Parsing.md`. | `Docs D1` |
+| D1-01 | Done | Write a separate Markdown document elaborating the future/reserved items from `Future Or Maybe Items Still Not Implemented`. | `Docs D1` |
+| D1-02 | Done | Include optional `symbol` terminal kind, character-literal terminal kind if not implemented, term/type Pratt-pair unification, and any skipped reserved-keyword field-name work. Do not include `doc/Parsing.md`. | `Docs D1` |
 
 ## Phase V: Validation
 
@@ -139,5 +139,5 @@ handoff.
 
 ## Current Stop Point
 
-Phase W4 is complete. Continue with future-work documentation task D1-01
-unless a truly fatal error occurs.
+Implementation tasks are complete. Continue with browser verification and full
+test-suite validation unless a truly fatal error occurs.
