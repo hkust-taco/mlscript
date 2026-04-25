@@ -160,7 +160,7 @@ id(Cls(1, 2)).f(3, 4)(5)
 //│ });
 //│ tmp8 = runtime.checkCall(Cls5(1, 2));
 //│ tmp9 = runtime.checkCall(Predef.id(tmp8));
-//│ tmp10 = tmp9.f(3, 4);
+//│ tmp10 = runtime.safeCall(tmp9.f(3, 4));
 //│ block$res12 = runtime.safeCall(tmp10(5));
 //│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -204,7 +204,7 @@ if M.A(1).y is
 //│ }
 //│ scrut = selRes1;
 //│ x1 = scrut;
-//│ scrut1 = Predef.equals(x1, 1);
+//│ scrut1 = runtime.checkCall(Predef.equals(x1, 1));
 //│ if (scrut1 === true) { block$res17 = x1; undefined } else { block$res17 = 0; undefined }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
