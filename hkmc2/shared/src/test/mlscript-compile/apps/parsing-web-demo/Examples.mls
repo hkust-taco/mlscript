@@ -147,29 +147,29 @@ and word_size = 4
 examples |> MutMap.insert of
   "caml-bit-buffer"
   name: "Caml Light: Bit Buffer"
-  source: """type buffer = { mutable value: int; mutable nbits: int };;
-let buffer = { value = 0; nbits = 0 };;
-let initialize () = buffer.value <- 0; buffer.nbits <- 0;;
+  source: """type buffer = { mutable val: int; mutable nbits: int };;
+let buffer = { val = 0; nbits = 0 };;
+let initialize () = buffer.val <- 0; buffer.nbits <- 0;;
 let write_bit output bit =
-  buffer.value <- buffer.value lor (bit lsl buffer.nbits);
+  buffer.val <- buffer.val lor (bit lsl buffer.nbits);
   buffer.nbits <- buffer.nbits + 1;
   if buffer.nbits >= 8 then begin
-    output_char output (char_of_int buffer.value);
-    buffer.value <- 0;
+    output_char output (char_of_int buffer.val);
+    buffer.val <- 0;
     buffer.nbits <- 0
   end
 ;;
 let finish output =
   if buffer.nbits > 0 then
-    output_char output (char_of_int buffer.value)
+    output_char output (char_of_int buffer.val)
 ;;
 let read_bit input =
   if buffer.nbits <= 0 then begin
-    buffer.value <- int_of_char(input_char input);
+    buffer.val <- int_of_char(input_char input);
     buffer.nbits <- 8
   end;
-  let result = buffer.value land 1 in
-  buffer.value <- buffer.value lsr 1;
+  let result = buffer.val land 1 in
+  buffer.val <- buffer.val lsr 1;
   buffer.nbits <- buffer.nbits - 1;
   result
 ;;"""

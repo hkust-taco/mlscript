@@ -40,29 +40,29 @@ let lire_bit entree =
 ## Adapted Example
 
 ```ocaml
-type buffer = { mutable value: int; mutable nbits: int };;
-let buffer = { value = 0; nbits = 0 };;
-let initialize () = buffer.value <- 0; buffer.nbits <- 0;;
+type buffer = { mutable val: int; mutable nbits: int };;
+let buffer = { val = 0; nbits = 0 };;
+let initialize () = buffer.val <- 0; buffer.nbits <- 0;;
 let write_bit output bit =
-  buffer.value <- buffer.value lor (bit lsl buffer.nbits);
+  buffer.val <- buffer.val lor (bit lsl buffer.nbits);
   buffer.nbits <- buffer.nbits + 1;
   if buffer.nbits >= 8 then begin
-    output_char output (char_of_int buffer.value);
-    buffer.value <- 0;
+    output_char output (char_of_int buffer.val);
+    buffer.val <- 0;
     buffer.nbits <- 0
   end
 ;;
 let finish output =
   if buffer.nbits > 0 then
-    output_char output (char_of_int buffer.value)
+    output_char output (char_of_int buffer.val)
 ;;
 let read_bit input =
   if buffer.nbits <= 0 then begin
-    buffer.value <- int_of_char(input_char input);
+    buffer.val <- int_of_char(input_char input);
     buffer.nbits <- 8
   end;
-  let result = buffer.value land 1 in
-  buffer.value <- buffer.value lsr 1;
+  let result = buffer.val land 1 in
+  buffer.val <- buffer.val lsr 1;
   buffer.nbits <- buffer.nbits - 1;
   result
 ;;
@@ -71,7 +71,8 @@ let read_bit input =
 ## Adaptation Notes
 
 - Translated French identifiers to English.
-- Replaced `val` with `value` to avoid using a reserved-looking field name.
+- Restored the original `val` field name after confirming field names are
+  parsed as labels in record types, record values, and field selections.
 - Restored the type-level `mutable` annotations after adding parser support for
   mutable record labels.
 
@@ -81,3 +82,5 @@ let read_bit input =
   `mod`, `land`, `lor`, `lxor`, `lsl`, `lsr`, and `asr`.
 - This also corrected the previously ported sieve example's `m mod n` tree.
 - Added type-level mutable record label parsing.
+- Verified that the existing label parsing path already accepts the
+  reserved-looking `val` field name without broad parser changes.

@@ -621,29 +621,29 @@ and word_size = 4
 
 example of """
 :tree
-type buffer = { mutable value: int; mutable nbits: int };;
-let buffer = { value = 0; nbits = 0 };;
-let initialize () = buffer.value <- 0; buffer.nbits <- 0;;
+type buffer = { mutable val: int; mutable nbits: int };;
+let buffer = { val = 0; nbits = 0 };;
+let initialize () = buffer.val <- 0; buffer.nbits <- 0;;
 let write_bit output bit =
-  buffer.value <- buffer.value lor (bit lsl buffer.nbits);
+  buffer.val <- buffer.val lor (bit lsl buffer.nbits);
   buffer.nbits <- buffer.nbits + 1;
   if buffer.nbits >= 8 then begin
-    output_char output (char_of_int buffer.value);
-    buffer.value <- 0;
+    output_char output (char_of_int buffer.val);
+    buffer.val <- 0;
     buffer.nbits <- 0
   end
 ;;
 let finish output =
   if buffer.nbits > 0 then
-    output_char output (char_of_int buffer.value)
+    output_char output (char_of_int buffer.val)
 ;;
 let read_bit input =
   if buffer.nbits <= 0 then begin
-    buffer.value <- int_of_char(input_char input);
+    buffer.val <- int_of_char(input_char input);
     buffer.nbits <- 8
   end;
-  let result = buffer.value land 1 in
-  buffer.value <- buffer.value lsr 1;
+  let result = buffer.val land 1 in
+  buffer.val <- buffer.val lsr 1;
   buffer.nbits <- buffer.nbits - 1;
   result
 ;;
@@ -659,7 +659,7 @@ let read_bit input =
 //│ >           op = Keyword(`:`, 4, 3)
 //│ >           lhs = Modified:
 //│ >             modifier = Reference of "mutable"
-//│ >             subject = Reference of "value"
+//│ >             subject = Reference of "val"
 //│ >           rhs = Reference of "int"
 //│ >         Infix:
 //│ >           op = Keyword(`:`, 4, 3)
@@ -676,7 +676,7 @@ let read_bit input =
 //│ >       rhs = Sequence of Stack of 
 //│ >         Infix:
 //│ >           op = Keyword(`=`, 16, 16)
-//│ >           lhs = Reference of "value"
+//│ >           lhs = Reference of "val"
 //│ >           rhs = Literal#Integer of "0"
 //│ >         Infix:
 //│ >           op = Keyword(`=`, 16, 16)
@@ -696,7 +696,7 @@ let read_bit input =
 //│ >           lhs = Infix:
 //│ >             op = Keyword(`.`, 26, 26)
 //│ >             lhs = Reference of "buffer"
-//│ >             rhs = Reference of "value"
+//│ >             rhs = Reference of "val"
 //│ >           rhs = Literal#Integer of "0"
 //│ >         Infix:
 //│ >           op = Keyword(`<-`, 9, 9)
@@ -721,14 +721,14 @@ let read_bit input =
 //│ >           lhs = Infix:
 //│ >             op = Keyword(`.`, 26, 26)
 //│ >             lhs = Reference of "buffer"
-//│ >             rhs = Reference of "value"
+//│ >             rhs = Reference of "val"
 //│ >           rhs = Application:
 //│ >             callee = Reference of "lor"
 //│ >             argument = Stack of 
 //│ >               Infix:
 //│ >                 op = Keyword(`.`, 26, 26)
 //│ >                 lhs = Reference of "buffer"
-//│ >                 rhs = Reference of "value"
+//│ >                 rhs = Reference of "val"
 //│ >               Application:
 //│ >                 callee = Reference of "lsl"
 //│ >                 argument = Stack of 
@@ -771,13 +771,13 @@ let read_bit input =
 //│ >                 argument = Infix:
 //│ >                   op = Keyword(`.`, 26, 26)
 //│ >                   lhs = Reference of "buffer"
-//│ >                   rhs = Reference of "value"
+//│ >                   rhs = Reference of "val"
 //│ >             Infix:
 //│ >               op = Keyword(`<-`, 9, 9)
 //│ >               lhs = Infix:
 //│ >                 op = Keyword(`.`, 26, 26)
 //│ >                 lhs = Reference of "buffer"
-//│ >                 rhs = Reference of "value"
+//│ >                 rhs = Reference of "val"
 //│ >               rhs = Literal#Integer of "0"
 //│ >             Infix:
 //│ >               op = Keyword(`<-`, 9, 9)
@@ -814,7 +814,7 @@ let read_bit input =
 //│ >             argument = Infix:
 //│ >               op = Keyword(`.`, 26, 26)
 //│ >               lhs = Reference of "buffer"
-//│ >               rhs = Reference of "value"
+//│ >               rhs = Reference of "val"
 //│ >         body = None
 //│ > Define:
 //│ >   kind = Let(false)
@@ -841,7 +841,7 @@ let read_bit input =
 //│ >               lhs = Infix:
 //│ >                 op = Keyword(`.`, 26, 26)
 //│ >                 lhs = Reference of "buffer"
-//│ >                 rhs = Reference of "value"
+//│ >                 rhs = Reference of "val"
 //│ >               rhs = Application:
 //│ >                 callee = Reference of "int_of_char"
 //│ >                 argument = Application:
@@ -865,7 +865,7 @@ let read_bit input =
 //│ >                     Infix:
 //│ >                       op = Keyword(`.`, 26, 26)
 //│ >                       lhs = Reference of "buffer"
-//│ >                       rhs = Reference of "value"
+//│ >                       rhs = Reference of "val"
 //│ >                     Literal#Integer of "1"
 //│ >             body = Some of Sequence of Stack of 
 //│ >               Infix:
@@ -873,14 +873,14 @@ let read_bit input =
 //│ >                 lhs = Infix:
 //│ >                   op = Keyword(`.`, 26, 26)
 //│ >                   lhs = Reference of "buffer"
-//│ >                   rhs = Reference of "value"
+//│ >                   rhs = Reference of "val"
 //│ >                 rhs = Application:
 //│ >                   callee = Reference of "lsr"
 //│ >                   argument = Stack of 
 //│ >                     Infix:
 //│ >                       op = Keyword(`.`, 26, 26)
 //│ >                       lhs = Reference of "buffer"
-//│ >                       rhs = Reference of "value"
+//│ >                       rhs = Reference of "val"
 //│ >                     Literal#Integer of "1"
 //│ >               Infix:
 //│ >                 op = Keyword(`<-`, 9, 9)
@@ -898,12 +898,12 @@ let read_bit input =
 //│ >                     Literal#Integer of "1"
 //│ >               Reference of "result"
 //│ >         body = None
-//│ > «type buffer = {mutable value : int; mutable nbits : int}»
-//│ > «let buffer = value = 0; nbits = 0»
-//│ > «let initialize () = buffer.value <- 0; buffer.nbits <- 0»
-//│ > «let write_bit output bit = buffer.value <- buffer.value lor bit lsl buffer.nbits; buffer.nbits <- buffer.nbits + 1; if buffer.nbits >= 8 then output_char output (char_of_int buffer.value); buffer.value <- 0; buffer.nbits <- 0 then None»
-//│ > «let finish output = if buffer.nbits > 0 then output_char output (char_of_int buffer.value) then None»
-//│ > «let read_bit input = if buffer.nbits <= 0 then buffer.value <- int_of_char (input_char input); buffer.nbits <- 8; let result = buffer.value land 1 in buffer.value <- buffer.value lsr 1; buffer.nbits <- buffer.nbits - 1; result then None»
+//│ > «type buffer = {mutable val : int; mutable nbits : int}»
+//│ > «let buffer = val = 0; nbits = 0»
+//│ > «let initialize () = buffer.val <- 0; buffer.nbits <- 0»
+//│ > «let write_bit output bit = buffer.val <- buffer.val lor bit lsl buffer.nbits; buffer.nbits <- buffer.nbits + 1; if buffer.nbits >= 8 then output_char output (char_of_int buffer.val); buffer.val <- 0; buffer.nbits <- 0 then None»
+//│ > «let finish output = if buffer.nbits > 0 then output_char output (char_of_int buffer.val) then None»
+//│ > «let read_bit input = if buffer.nbits <= 0 then buffer.val <- int_of_char (input_char input); buffer.nbits <- 8; let result = buffer.val land 1 in buffer.val <- buffer.val lsr 1; buffer.nbits <- buffer.nbits - 1; result then None»
 
 // sources/examples/compress/fileprio.ml
 // ======================================

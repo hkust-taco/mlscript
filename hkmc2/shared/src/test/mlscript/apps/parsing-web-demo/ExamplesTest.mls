@@ -13,12 +13,12 @@ examples Iter.each of case entry then
   print of "Testing example: " + entry.name
   Test.example of entry.source
 //│ > Testing example: Caml Light: Bit Buffer
-//│ > «type buffer = {mutable value : int; mutable nbits : int}»
-//│ > «let buffer = value = 0; nbits = 0»
-//│ > «let initialize () = buffer.value <- 0; buffer.nbits <- 0»
-//│ > «let write_bit output bit = buffer.value <- buffer.value lor bit lsl buffer.nbits; buffer.nbits <- buffer.nbits + 1; if buffer.nbits >= 8 then output_char output (char_of_int buffer.value); buffer.value <- 0; buffer.nbits <- 0 then None»
-//│ > «let finish output = if buffer.nbits > 0 then output_char output (char_of_int buffer.value) then None»
-//│ > «let read_bit input = if buffer.nbits <= 0 then buffer.value <- int_of_char (input_char input); buffer.nbits <- 8; let result = buffer.value land 1 in buffer.value <- buffer.value lsr 1; buffer.nbits <- buffer.nbits - 1; result then None»
+//│ > «type buffer = {mutable val : int; mutable nbits : int}»
+//│ > «let buffer = val = 0; nbits = 0»
+//│ > «let initialize () = buffer.val <- 0; buffer.nbits <- 0»
+//│ > «let write_bit output bit = buffer.val <- buffer.val lor bit lsl buffer.nbits; buffer.nbits <- buffer.nbits + 1; if buffer.nbits >= 8 then output_char output (char_of_int buffer.val); buffer.val <- 0; buffer.nbits <- 0 then None»
+//│ > «let finish output = if buffer.nbits > 0 then output_char output (char_of_int buffer.val) then None»
+//│ > «let read_bit input = if buffer.nbits <= 0 then buffer.val <- int_of_char (input_char input); buffer.nbits <- 8; let result = buffer.val land 1 in buffer.val <- buffer.val lsr 1; buffer.nbits <- buffer.nbits - 1; result then None»
 //│ > Testing example: Caml Light: Bubble Sort
 //│ > «#open "anima…"»
 //│ > «let sort context = let ordered = ref true in let sweep i = if i + 1 >= vect_length context.array then if !ordered then Finished then ordered := false; sweep 0 then Pause (fun () -> if context.array . i + 1 < context.array.i then exchange context i (i + 1); ordered := false; sweep (i + 1) then None) in sweep 0»
