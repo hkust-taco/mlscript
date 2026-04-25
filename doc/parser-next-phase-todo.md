@@ -133,11 +133,26 @@ handoff.
 | V-02 | Done | Run focused parser compile tests after parser changes. |
 | V-03 | Done | Run focused parser DiffTests after parser/test output changes and commit intentional golden output. |
 | V-04 | Done | Run focused web-demo compile tests after web-demo changes. |
-| V-05 | Pending | Verify web-demo behavior in a browser when UI behavior changes. |
-| V-06 | Pending | Run `hkmc2AllTests/test` before final handoff. |
-| V-07 | Pending | Confirm `git status --short` is clean after the final commit. |
+| V-05 | Done | Verify web-demo behavior in a browser when UI behavior changes. |
+| V-06 | Done | Run `hkmc2AllTests/test` before final handoff. |
+| V-07 | Done | Confirm `git status --short` is clean after the final commit. |
+
+Validation notes:
+
+- Browser verification was completed for the parser web demo with the generated
+  app assets: built-in Caml Light examples parsed, extensible examples parsed,
+  diagrams refreshed after parsing, provenance appeared beside selected
+  examples, and parser errors surfaced in the dialog with source locations.
+- `hkmc2AllTests/test` was run successfully on 2026-04-25 with the project
+  DiffTest CI timeout enabled and CI fatal warnings disabled for the local run:
+  `env CI=true sbt "set ThisBuild / scalacOptions -= \"-Wconf:any:error\""
+  "set ThisBuild / scalacOptions += \"-Wconf:any:warning\"" hkmc2AllTests/test`.
+- The plain local 30-second DiffTest timeout had produced timing-only failures
+  in a few long-running parallel DiffTests. Those tests passed when rerun
+  directly, and the full suite passed with the 60-second DiffTest timeout.
+- No generated `.mls` golden-output changes were left after the final full
+  test run.
 
 ## Current Stop Point
 
-Implementation tasks are complete. Continue with browser verification and full
-test-suite validation unless a truly fatal error occurs.
+All implementation and validation tasks in this board are complete.
