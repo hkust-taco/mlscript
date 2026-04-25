@@ -30,7 +30,7 @@ examples Iter.each of case entry then
 //│ > «type t == list int»
 //│ > «let empty = []»
 //│ > «let belongs n = function [] -> false | m :: rest -> if m = n then true then if m > n then false then belongs n rest»
-//│ > «let add n = function [] -> [n] | m :: rest -> if m = n then m :: rest then if m > n then n :: m :: rest then m :: add n rest»
+//│ > «let add n = function [] -> [n] | m :: rest as set -> if m = n then set then if m > n then n :: set then m :: add n rest»
 //│ > Testing example: Caml Light: Pascal Values
 //│ > «let int_val = function Int n -> n | _ -> raise (Runtime_error "integ…") and bool_val = function Bool b -> b | _ -> raise (Runtime_error "boole…") and array_val = function Array (lower, values) -> (lower, values) | _ -> raise (Runtime_error "array…")»
 //│ > «let print_value v = print_int (int_val v); print_newline ()»
@@ -41,18 +41,18 @@ examples Iter.each of case entry then
 //│ > «type t ('a) = Empty | QueueNode of int * 'a * t 'a * t 'a»
 //│ > «exception Empty_queue»
 //│ > «let empty = Empty»
-//│ > «let remove_top = function Empty -> raise Empty_queue | QueueNode (priority, item, Empty, Empty) -> Empty | QueueNode (priority, item, left, Empty) -> left | QueueNode (priority, item, Empty, right) -> right | QueueNode (priority, item, QueueNode (left_priority, left_item, left_left, left_right), QueueNode (right_priority, right_item, right_left, right_right)) -> if left_priority < right_priority then QueueNode (left_priority, left_item, remove_top (QueueNode (left_priority, left_item, left_left, left_right)), QueueNode (right_priority, right_item, right_left, right_right)) then QueueNode (right_priority, right_item, QueueNode (left_priority, left_item, left_left, left_right), remove_top (QueueNode (right_priority, right_item, right_left, right_right)))»
-//│ > «let extract = function Empty -> raise Empty_queue | QueueNode (priority, item, left, right) -> (priority, item, remove_top (QueueNode (priority, item, left, right)))»
+//│ > «let remove_top = function Empty -> raise Empty_queue | QueueNode (priority, item, Empty, Empty) -> Empty | QueueNode (priority, item, left, Empty) -> left | QueueNode (priority, item, Empty, right) -> right | QueueNode (priority, item, QueueNode (left_priority, left_item, _, _) as left, QueueNode (right_priority, right_item, _, _) as right) -> if left_priority < right_priority then QueueNode (left_priority, left_item, remove_top left, right) then QueueNode (right_priority, right_item, left, remove_top right)»
+//│ > «let extract = function Empty -> raise Empty_queue | QueueNode (priority, item, _, _) as queue -> (priority, item, remove_top queue)»
 //│ > «let add queue priority item = match queue with Empty -> QueueNode (priority, item, Empty, Empty) | QueueNode (priority1, item1, left, right) -> if priority <= priority1 then QueueNode (priority, item, add right priority1 item1, left) then QueueNode (priority1, item1, add right priority item, left)»
 //│ > Testing example: Caml Light: Sieve
 //│ > «let interval min max = if min > max then [] then min :: interval (succ min) max»
 //│ > «let filter p = function [] -> [] | a :: r -> if p a then a :: filter p r then filter p r»
 //│ > «let remove_multiples_of n = filter (fun m -> (m mod n) <> 0)»
-//│ > «let sieve max = let filter_again = function [] -> [] | n :: r -> if n * n > max then n :: r then n :: filter_again (remove_multiples_of n r) in filter_again (interval 2 max)»
+//│ > «let sieve max = let filter_again = function [] -> [] | n :: r as l -> if n * n > max then l then n :: filter_again (remove_multiples_of n r) in filter_again (interval 2 max)»
 //│ > Testing example: Caml Light: Word Count
 //│ > «let chars = ref 0 and words = ref 0 and lines = ref 0»
 //│ > «type state = Inside_word | Outside_word»
-//│ > «let count_channel input_channel = let count status = let c = input_char input_channel in incr chars; match c with `\n` -> incr lines; count Outside_word | ` ` -> count Outside_word | `\t` -> count Outside_word | _ -> if status = Outside_word then incr words; (); count Inside_word then None in try count Outside_word with End_of_file -> ()»
+//│ > «let count_channel input_channel = let count status = let c = input_char input_channel in incr chars; match c with `\n` -> incr lines; count Outside_word | ` ` | `\t` -> count Outside_word | _ -> if status = Outside_word then incr words; (); count Inside_word then None in try count Outside_word with End_of_file -> ()»
 //│ > «let count_file name = let ic = open_in name in count_channel ic; close_in ic»
 //│ > «let print_result () = print_int (!chars); print_string " char…"; print_int (!words); print_string " word…"; print_int (!lines); print_string " line…"; print_newline ()»
 //│ > «let count name = count_file name; print_result ()»

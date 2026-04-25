@@ -44,9 +44,9 @@ Rules.getRuleByKind("term").display print()
 //│ > <prefix rules for expressions> ::= 
 //│ >   | "let" ("rec" <let-bindings> ["in" <term>] | <let-bindings> ["in" <term>])
 //│ >   | "fun" <term> "->" <term>
-//│ >   | "match" <term> "with" ("|" <term> "->" <term> ["|" <simple-matching>] | <term> "->" <term> ["|" <simple-matching>])
-//│ >   | "function" ("|" <term> "->" <term> ["|" <simple-matching>] | <term> "->" <term> ["|" <simple-matching>])
-//│ >   | "try" <term> "with" ("|" <term> "->" <term> ["|" <simple-matching>] | <term> "->" <term> ["|" <simple-matching>])
+//│ >   | "match" <term> "with" ("|" <pattern> "->" <term> ["|" <simple-matching>] | <pattern> "->" <term> ["|" <simple-matching>])
+//│ >   | "function" ("|" <pattern> "->" <term> ["|" <simple-matching>] | <pattern> "->" <term> ["|" <simple-matching>])
+//│ >   | "try" <term> "with" ("|" <pattern> "->" <term> ["|" <simple-matching>] | <pattern> "->" <term> ["|" <simple-matching>])
 //│ >   | "if" <term> "then" <term> ["else" <term>]
 //│ >   | "while" <term> "do" <term> "done"
 //│ >   | "for" <binding> "=" <term> ("to" <term> "do" <term> "done" | "downto" <term> "do" <term> "done")

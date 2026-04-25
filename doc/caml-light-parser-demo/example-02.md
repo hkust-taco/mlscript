@@ -50,8 +50,8 @@ let remove_multiples_of n =
 let sieve max =
   let rec filter_again = function
   | [] -> []
-  | n :: r ->
-      if n * n > max then n :: r else n :: filter_again (remove_multiples_of n r)
+  | n :: r as l ->
+      if n * n > max then l else n :: filter_again (remove_multiples_of n r)
   in
     filter_again (interval 2 max)
 ;;
@@ -60,12 +60,11 @@ let sieve max =
 ## Adaptation Notes
 
 - Kept the core sieve implementation and omitted the command-line wrapper.
-- Replaced `n::r as l` with `n :: r` and reconstructed `n :: r` in the branch,
-  because the current pattern parser still treats patterns as terms and `as`
-  patterns are future dedicated-pattern work.
+- Restored the original `n :: r as l` alias after adding dedicated pattern
+  parsing with `as` alias support.
 - Removed blank lines inside the test block so HKMC2 DiffTests keep the whole
   multiline string in one block.
 
 ## Parser Fixes
 
-- None.
+- Added dedicated pattern parsing with `as` alias support.

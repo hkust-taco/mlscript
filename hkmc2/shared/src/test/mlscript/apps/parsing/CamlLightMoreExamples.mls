@@ -132,8 +132,8 @@ let remove_multiples_of n =
 let sieve max =
   let rec filter_again = function
   | [] -> []
-  | n :: r ->
-      if n * n > max then n :: r else n :: filter_again (remove_multiples_of n r)
+  | n :: r as l ->
+      if n * n > max then l else n :: filter_again (remove_multiples_of n r)
   in
     filter_again (interval 2 max)
 ;;
@@ -251,11 +251,14 @@ let sieve max =
 //│ >                   rhs = Bracketed#Square of Sequence of Nil
 //│ >                 Infix:
 //│ >                   op = Keyword(`->`, 5, 3)
-//│ >                   lhs = Application:
-//│ >                     callee = Reference of "::"
-//│ >                     argument = Stack of 
-//│ >                       Reference of "n"
-//│ >                       Reference of "r"
+//│ >                   lhs = Infix:
+//│ >                     op = Keyword(`as`, 4, 4)
+//│ >                     lhs = Application:
+//│ >                       callee = Reference of "::"
+//│ >                       argument = Stack of 
+//│ >                         Reference of "n"
+//│ >                         Reference of "r"
+//│ >                     rhs = Reference of "l"
 //│ >                   rhs = Ternary:
 //│ >                     name = Keyword(`if`, 10, 9)
 //│ >                     lhs = Application:
@@ -267,11 +270,7 @@ let sieve max =
 //│ >                             Reference of "n"
 //│ >                             Reference of "n"
 //│ >                         Reference of "max"
-//│ >                     rhs = Application:
-//│ >                       callee = Reference of "::"
-//│ >                       argument = Stack of 
-//│ >                         Reference of "n"
-//│ >                         Reference of "r"
+//│ >                     rhs = Reference of "l"
 //│ >                     body = Some of Application:
 //│ >                       callee = Reference of "::"
 //│ >                       argument = Stack of 
@@ -294,7 +293,7 @@ let sieve max =
 //│ > «let interval min max = if min > max then [] then min :: interval (succ min) max»
 //│ > «let filter p = function [] -> [] | a :: r -> if p a then a :: filter p r then filter p r»
 //│ > «let remove_multiples_of n = filter (fun m -> (m mod n) <> 0)»
-//│ > «let sieve max = let filter_again = function [] -> [] | n :: r -> if n * n > max then n :: r then n :: filter_again (remove_multiples_of n r) in filter_again (interval 2 max)»
+//│ > «let sieve max = let filter_again = function [] -> [] | n :: r as l -> if n * n > max then l then n :: filter_again (remove_multiples_of n r) in filter_again (interval 2 max)»
 
 // sources/examples/grep/ensent.ml
 // ===============================
@@ -311,9 +310,9 @@ let rec belongs n = function
 ;;
 let rec add n = function
   | [] -> [n]
-  | m :: rest ->
-      if m = n then m :: rest else
-        if m > n then n :: m :: rest else m :: add n rest
+  | m :: rest as set ->
+      if m = n then set else
+        if m > n then n :: set else m :: add n rest
 ;;
 """
 //│ > Define:
@@ -390,22 +389,21 @@ let rec add n = function
 //│ >             rhs = Bracketed#Square of Reference of "n"
 //│ >           Infix:
 //│ >             op = Keyword(`->`, 5, 3)
-//│ >             lhs = Application:
-//│ >               callee = Reference of "::"
-//│ >               argument = Stack of 
-//│ >                 Reference of "m"
-//│ >                 Reference of "rest"
+//│ >             lhs = Infix:
+//│ >               op = Keyword(`as`, 4, 4)
+//│ >               lhs = Application:
+//│ >                 callee = Reference of "::"
+//│ >                 argument = Stack of 
+//│ >                   Reference of "m"
+//│ >                   Reference of "rest"
+//│ >               rhs = Reference of "set"
 //│ >             rhs = Ternary:
 //│ >               name = Keyword(`if`, 10, 9)
 //│ >               lhs = Infix:
 //│ >                 op = Keyword(`=`, 16, 16)
 //│ >                 lhs = Reference of "m"
 //│ >                 rhs = Reference of "n"
-//│ >               rhs = Application:
-//│ >                 callee = Reference of "::"
-//│ >                 argument = Stack of 
-//│ >                   Reference of "m"
-//│ >                   Reference of "rest"
+//│ >               rhs = Reference of "set"
 //│ >               body = Some of Ternary:
 //│ >                 name = Keyword(`if`, 10, 9)
 //│ >                 lhs = Application:
@@ -417,11 +415,7 @@ let rec add n = function
 //│ >                   callee = Reference of "::"
 //│ >                   argument = Stack of 
 //│ >                     Reference of "n"
-//│ >                     Application:
-//│ >                       callee = Reference of "::"
-//│ >                       argument = Stack of 
-//│ >                         Reference of "m"
-//│ >                         Reference of "rest"
+//│ >                     Reference of "set"
 //│ >                 body = Some of Application:
 //│ >                   callee = Reference of "::"
 //│ >                   argument = Stack of 
@@ -435,7 +429,7 @@ let rec add n = function
 //│ > «type t == list int»
 //│ > «let empty = []»
 //│ > «let belongs n = function [] -> false | m :: rest -> if m = n then true then if m > n then false then belongs n rest»
-//│ > «let add n = function [] -> [n] | m :: rest -> if m = n then m :: rest then if m > n then n :: m :: rest then m :: add n rest»
+//│ > «let add n = function [] -> [n] | m :: rest as set -> if m = n then set then if m > n then n :: set then m :: add n rest»
 
 // sources/examples/pascal/valeur.ml
 // ==================================
@@ -477,7 +471,7 @@ let read_value () =
 //│ >             rhs = Reference of "n"
 //│ >           Infix:
 //│ >             op = Keyword(`->`, 5, 3)
-//│ >             lhs = Reference of "_"
+//│ >             lhs = Underscore
 //│ >             rhs = Application:
 //│ >               callee = Reference of "raise"
 //│ >               argument = Application:
@@ -497,7 +491,7 @@ let read_value () =
 //│ >             rhs = Reference of "b"
 //│ >           Infix:
 //│ >             op = Keyword(`->`, 5, 3)
-//│ >             lhs = Reference of "_"
+//│ >             lhs = Underscore
 //│ >             rhs = Application:
 //│ >               callee = Reference of "raise"
 //│ >               argument = Application:
@@ -521,7 +515,7 @@ let read_value () =
 //│ >               Reference of "values"
 //│ >           Infix:
 //│ >             op = Keyword(`->`, 5, 3)
-//│ >             lhs = Reference of "_"
+//│ >             lhs = Underscore
 //│ >             rhs = Application:
 //│ >               callee = Reference of "raise"
 //│ >               argument = Application:
@@ -571,7 +565,7 @@ let read_value () =
 //│ >               op = Keyword(`->`, 5, 3)
 //│ >               lhs = Application:
 //│ >                 callee = Reference of "Failure"
-//│ >                 argument = Reference of "_"
+//│ >                 argument = Underscore
 //│ >               rhs = Application:
 //│ >                 callee = Reference of "raise"
 //│ >                 argument = Application:
@@ -913,20 +907,20 @@ let rec remove_top = function
   | QueueNode(priority, item, left, Empty) -> left
   | QueueNode(priority, item, Empty, right) -> right
   | QueueNode(priority, item,
-              QueueNode(left_priority, left_item, left_left, left_right),
-              QueueNode(right_priority, right_item, right_left, right_right)) ->
+              (QueueNode(left_priority, left_item, _, _) as left),
+              (QueueNode(right_priority, right_item, _, _) as right)) ->
       if left_priority < right_priority
       then QueueNode(left_priority, left_item,
-                     remove_top (QueueNode(left_priority, left_item, left_left, left_right)),
-                     QueueNode(right_priority, right_item, right_left, right_right))
+                     remove_top left,
+                     right)
       else QueueNode(right_priority, right_item,
-                     QueueNode(left_priority, left_item, left_left, left_right),
-                     remove_top (QueueNode(right_priority, right_item, right_left, right_right)))
+                     left,
+                     remove_top right)
 ;;
 let extract = function
   | Empty -> raise Empty_queue
-  | QueueNode(priority, item, left, right) ->
-      (priority, item, remove_top (QueueNode(priority, item, left, right)))
+  | QueueNode(priority, item, _, _) as queue ->
+      (priority, item, remove_top queue)
 ;;
 let rec add queue priority item =
   match queue with
@@ -947,7 +941,7 @@ let rec add queue priority item =
 //│ >         argument = Tuple of Stack of 
 //│ >           Reference of "'a"
 //│ >       rhs = Infix:
-//│ >         op = Keyword(`|`, N/A, N/A)
+//│ >         op = Keyword(`|`, 4, 4)
 //│ >         lhs = Reference of "Empty"
 //│ >         rhs = Infix:
 //│ >           op = Keyword(`of`, N/A, N/A)
@@ -1028,20 +1022,26 @@ let rec add queue priority item =
 //│ >               argument = Tuple of Stack of 
 //│ >                 Reference of "priority"
 //│ >                 Reference of "item"
-//│ >                 Application:
-//│ >                   callee = Reference of "QueueNode"
-//│ >                   argument = Tuple of Stack of 
-//│ >                     Reference of "left_priority"
-//│ >                     Reference of "left_item"
-//│ >                     Reference of "left_left"
-//│ >                     Reference of "left_right"
-//│ >                 Application:
-//│ >                   callee = Reference of "QueueNode"
-//│ >                   argument = Tuple of Stack of 
-//│ >                     Reference of "right_priority"
-//│ >                     Reference of "right_item"
-//│ >                     Reference of "right_left"
-//│ >                     Reference of "right_right"
+//│ >                 Infix:
+//│ >                   op = Keyword(`as`, 4, 4)
+//│ >                   lhs = Application:
+//│ >                     callee = Reference of "QueueNode"
+//│ >                     argument = Tuple of Stack of 
+//│ >                       Reference of "left_priority"
+//│ >                       Reference of "left_item"
+//│ >                       Underscore
+//│ >                       Underscore
+//│ >                   rhs = Reference of "left"
+//│ >                 Infix:
+//│ >                   op = Keyword(`as`, 4, 4)
+//│ >                   lhs = Application:
+//│ >                     callee = Reference of "QueueNode"
+//│ >                     argument = Tuple of Stack of 
+//│ >                       Reference of "right_priority"
+//│ >                       Reference of "right_item"
+//│ >                       Underscore
+//│ >                       Underscore
+//│ >                   rhs = Reference of "right"
 //│ >             rhs = Ternary:
 //│ >               name = Keyword(`if`, 10, 9)
 //│ >               lhs = Application:
@@ -1056,41 +1056,17 @@ let rec add queue priority item =
 //│ >                   Reference of "left_item"
 //│ >                   Application:
 //│ >                     callee = Reference of "remove_top"
-//│ >                     argument = Application:
-//│ >                       callee = Reference of "QueueNode"
-//│ >                       argument = Tuple of Stack of 
-//│ >                         Reference of "left_priority"
-//│ >                         Reference of "left_item"
-//│ >                         Reference of "left_left"
-//│ >                         Reference of "left_right"
-//│ >                   Application:
-//│ >                     callee = Reference of "QueueNode"
-//│ >                     argument = Tuple of Stack of 
-//│ >                       Reference of "right_priority"
-//│ >                       Reference of "right_item"
-//│ >                       Reference of "right_left"
-//│ >                       Reference of "right_right"
+//│ >                     argument = Reference of "left"
+//│ >                   Reference of "right"
 //│ >               body = Some of Application:
 //│ >                 callee = Reference of "QueueNode"
 //│ >                 argument = Tuple of Stack of 
 //│ >                   Reference of "right_priority"
 //│ >                   Reference of "right_item"
-//│ >                   Application:
-//│ >                     callee = Reference of "QueueNode"
-//│ >                     argument = Tuple of Stack of 
-//│ >                       Reference of "left_priority"
-//│ >                       Reference of "left_item"
-//│ >                       Reference of "left_left"
-//│ >                       Reference of "left_right"
+//│ >                   Reference of "left"
 //│ >                   Application:
 //│ >                     callee = Reference of "remove_top"
-//│ >                     argument = Application:
-//│ >                       callee = Reference of "QueueNode"
-//│ >                       argument = Tuple of Stack of 
-//│ >                         Reference of "right_priority"
-//│ >                         Reference of "right_item"
-//│ >                         Reference of "right_left"
-//│ >                         Reference of "right_right"
+//│ >                     argument = Reference of "right"
 //│ >   body = None
 //│ > LetIn:
 //│ >   bindings = Stack of 
@@ -1108,25 +1084,22 @@ let rec add queue priority item =
 //│ >               argument = Reference of "Empty_queue"
 //│ >           Infix:
 //│ >             op = Keyword(`->`, 5, 3)
-//│ >             lhs = Application:
-//│ >               callee = Reference of "QueueNode"
-//│ >               argument = Tuple of Stack of 
-//│ >                 Reference of "priority"
-//│ >                 Reference of "item"
-//│ >                 Reference of "left"
-//│ >                 Reference of "right"
+//│ >             lhs = Infix:
+//│ >               op = Keyword(`as`, 4, 4)
+//│ >               lhs = Application:
+//│ >                 callee = Reference of "QueueNode"
+//│ >                 argument = Tuple of Stack of 
+//│ >                   Reference of "priority"
+//│ >                   Reference of "item"
+//│ >                   Underscore
+//│ >                   Underscore
+//│ >               rhs = Reference of "queue"
 //│ >             rhs = Tuple of Stack of 
 //│ >               Reference of "priority"
 //│ >               Reference of "item"
 //│ >               Application:
 //│ >                 callee = Reference of "remove_top"
-//│ >                 argument = Application:
-//│ >                   callee = Reference of "QueueNode"
-//│ >                   argument = Tuple of Stack of 
-//│ >                     Reference of "priority"
-//│ >                     Reference of "item"
-//│ >                     Reference of "left"
-//│ >                     Reference of "right"
+//│ >                 argument = Reference of "queue"
 //│ >   body = None
 //│ > LetIn:
 //│ >   bindings = Stack of 
@@ -1198,8 +1171,8 @@ let rec add queue priority item =
 //│ > «type t ('a) = Empty | QueueNode of int * 'a * t 'a * t 'a»
 //│ > «exception Empty_queue»
 //│ > «let empty = Empty»
-//│ > «let remove_top = function Empty -> raise Empty_queue | QueueNode (priority, item, Empty, Empty) -> Empty | QueueNode (priority, item, left, Empty) -> left | QueueNode (priority, item, Empty, right) -> right | QueueNode (priority, item, QueueNode (left_priority, left_item, left_left, left_right), QueueNode (right_priority, right_item, right_left, right_right)) -> if left_priority < right_priority then QueueNode (left_priority, left_item, remove_top (QueueNode (left_priority, left_item, left_left, left_right)), QueueNode (right_priority, right_item, right_left, right_right)) then QueueNode (right_priority, right_item, QueueNode (left_priority, left_item, left_left, left_right), remove_top (QueueNode (right_priority, right_item, right_left, right_right)))»
-//│ > «let extract = function Empty -> raise Empty_queue | QueueNode (priority, item, left, right) -> (priority, item, remove_top (QueueNode (priority, item, left, right)))»
+//│ > «let remove_top = function Empty -> raise Empty_queue | QueueNode (priority, item, Empty, Empty) -> Empty | QueueNode (priority, item, left, Empty) -> left | QueueNode (priority, item, Empty, right) -> right | QueueNode (priority, item, QueueNode (left_priority, left_item, _, _) as left, QueueNode (right_priority, right_item, _, _) as right) -> if left_priority < right_priority then QueueNode (left_priority, left_item, remove_top left, right) then QueueNode (right_priority, right_item, left, remove_top right)»
+//│ > «let extract = function Empty -> raise Empty_queue | QueueNode (priority, item, _, _) as queue -> (priority, item, remove_top queue)»
 //│ > «let add queue priority item = match queue with Empty -> QueueNode (priority, item, Empty, Empty) | QueueNode (priority1, item1, left, right) -> if priority <= priority1 then QueueNode (priority, item, add right priority1 item1, left) then QueueNode (priority1, item1, add right priority item, left)»
 
 // sources/examples/basics/wc.ml
@@ -1219,9 +1192,7 @@ let count_channel input_channel =
     match c with
     | `\n` ->
         incr lines; count Outside_word
-    | ` ` ->
-        count Outside_word
-    | `\t` ->
+    | ` ` | `\t` ->
         count Outside_word
     | _ ->
         if status = Outside_word then begin incr words; () end;
@@ -1290,7 +1261,7 @@ with sys__Sys_error s ->
 //│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Reference of "state"
 //│ >       rhs = Infix:
-//│ >         op = Keyword(`|`, N/A, N/A)
+//│ >         op = Keyword(`|`, 4, 4)
 //│ >         lhs = Reference of "Inside_word"
 //│ >         rhs = Reference of "Outside_word"
 //│ > LetIn:
@@ -1334,19 +1305,16 @@ with sys__Sys_error s ->
 //│ >                           argument = Reference of "Outside_word"
 //│ >                     Infix:
 //│ >                       op = Keyword(`->`, 5, 3)
-//│ >                       lhs = Literal#Character of " "
+//│ >                       lhs = Infix:
+//│ >                         op = Keyword(`|`, 4, 4)
+//│ >                         lhs = Literal#Character of " "
+//│ >                         rhs = Literal#Character of "\t"
 //│ >                       rhs = Application:
 //│ >                         callee = Reference of "count"
 //│ >                         argument = Reference of "Outside_word"
 //│ >                     Infix:
 //│ >                       op = Keyword(`->`, 5, 3)
-//│ >                       lhs = Literal#Character of "\t"
-//│ >                       rhs = Application:
-//│ >                         callee = Reference of "count"
-//│ >                         argument = Reference of "Outside_word"
-//│ >                     Infix:
-//│ >                       op = Keyword(`->`, 5, 3)
-//│ >                       lhs = Reference of "_"
+//│ >                       lhs = Underscore
 //│ >                       rhs = Ternary:
 //│ >                         name = Keyword(`if`, 10, 9)
 //│ >                         lhs = Infix:
@@ -1502,7 +1470,7 @@ with sys__Sys_error s ->
 //│ >             argument = Tuple of Nil
 //│ > «let chars = ref 0 and words = ref 0 and lines = ref 0»
 //│ > «type state = Inside_word | Outside_word»
-//│ > «let count_channel input_channel = let count status = let c = input_char input_channel in incr chars; match c with `\n` -> incr lines; count Outside_word | ` ` -> count Outside_word | `\t` -> count Outside_word | _ -> if status = Outside_word then incr words; (); count Inside_word then None in try count Outside_word with End_of_file -> ()»
+//│ > «let count_channel input_channel = let count status = let c = input_char input_channel in incr chars; match c with `\n` -> incr lines; count Outside_word | ` ` | `\t` -> count Outside_word | _ -> if status = Outside_word then incr words; (); count Inside_word then None in try count Outside_word with End_of_file -> ()»
 //│ > «let count_file name = let ic = open_in name in count_channel ic; close_in ic»
 //│ > «let print_result () = print_int (!chars); print_string " char…"; print_int (!words); print_string " word…"; print_int (!lines); print_string " line…"; print_newline ()»
 //│ > «let count name = count_file name; print_result ()»

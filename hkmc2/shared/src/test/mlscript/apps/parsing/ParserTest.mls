@@ -138,6 +138,16 @@ function (0, 0) -> "both zero"
 """
 //│ > «function (0, 0) -> "both …" | (0, _) -> "first…" | (_, 0) -> "secon…" | (_, _) -> "neith…"»
 
+example of """
+function m :: rest as set -> set
+"""
+//│ > «function m :: rest as set -> set»
+
+example of """
+match c with ` ` | `\t` -> whitespace | _ -> other
+"""
+//│ > «match c with ` ` | `\t` -> whitespace | _ -> other»
+
 example of "if f x then y else z"
 //│ > «if f x then y then z»
 
@@ -456,4 +466,3 @@ mkStr of "A", x is Str
 //│ Assertion failed
 //│ 
 //│ = "Afalse"
-

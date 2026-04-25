@@ -49,20 +49,20 @@ let rec remove_top = function
   | QueueNode(priority, item, left, Empty) -> left
   | QueueNode(priority, item, Empty, right) -> right
   | QueueNode(priority, item,
-              QueueNode(left_priority, left_item, left_left, left_right),
-              QueueNode(right_priority, right_item, right_left, right_right)) ->
+              (QueueNode(left_priority, left_item, _, _) as left),
+              (QueueNode(right_priority, right_item, _, _) as right)) ->
       if left_priority < right_priority
       then QueueNode(left_priority, left_item,
-                     remove_top (QueueNode(left_priority, left_item, left_left, left_right)),
-                     QueueNode(right_priority, right_item, right_left, right_right))
+                     remove_top left,
+                     right)
       else QueueNode(right_priority, right_item,
-                     QueueNode(left_priority, left_item, left_left, left_right),
-                     remove_top (QueueNode(right_priority, right_item, right_left, right_right)))
+                     left,
+                     remove_top right)
 ;;
 let extract = function
   | Empty -> raise Empty_queue
-  | QueueNode(priority, item, left, right) ->
-      (priority, item, remove_top (QueueNode(priority, item, left, right)))
+  | QueueNode(priority, item, _, _) as queue ->
+      (priority, item, remove_top queue)
 ;;
 let rec add queue priority item =
   match queue with
@@ -79,9 +79,10 @@ let rec add queue priority item =
 - Translated French names to English.
 - Added a local `Empty_queue` exception declaration because the original uses a
   cross-file exception.
-- Replaced `as` patterns with explicit reconstruction of the matched queue
-  nodes. Pattern aliases are documented as deferred parser work.
+- Restored the priority-queue `as` patterns after adding dedicated pattern
+  parsing with alias support. The original wildcard subpatterns now remain as
+  wildcards instead of being converted into named reconstruction variables.
 
 ## Parser Fixes
 
-- None.
+- Added dedicated pattern parsing with `as` alias support.

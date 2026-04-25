@@ -39,9 +39,9 @@ let rec belongs n = function
 ;;
 let rec add n = function
   | [] -> [n]
-  | m :: rest ->
-      if m = n then m :: rest else
-        if m > n then n :: m :: rest else m :: add n rest
+  | m :: rest as set ->
+      if m = n then set else
+        if m > n then n :: set else m :: add n rest
 ;;
 ```
 
@@ -49,8 +49,8 @@ let rec add n = function
 
 - Translated French names: `vide` to `empty`, `appartient` to `belongs`,
   `reste` to `rest`, and `ajoute` to `add`.
-- Replaced `m :: reste as ens` with `m :: rest` and reconstructed the list in
-  the branches, because `as` patterns are deferred future pattern work.
+- Restored the source's alias pattern shape as `m :: rest as set` after adding
+  dedicated pattern parsing with `as` alias support.
 
 ## Parser Fixes
 
@@ -62,3 +62,4 @@ let rec add n = function
   bindings and tuple-style left-hand sides.
 - Propagated the binding stop marker through same-kind recursive references so
   binding patterns do not accidentally consume the `=` as expression equality.
+- Added dedicated pattern parsing with `as` alias support.

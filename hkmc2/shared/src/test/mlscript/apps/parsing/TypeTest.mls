@@ -167,7 +167,7 @@ type 'a option = Some of 'a | None
 //│ >         argument = Tuple of Stack of 
 //│ >           Reference of "'a"
 //│ >       rhs = Infix:
-//│ >         op = Keyword(`|`, N/A, N/A)
+//│ >         op = Keyword(`|`, 4, 4)
 //│ >         lhs = Infix:
 //│ >           op = Keyword(`of`, N/A, N/A)
 //│ >           lhs = Reference of "Some"
@@ -189,7 +189,7 @@ type 'a tree = Leaf | Node of 'a tree * 'a * 'a tree
 //│ >         argument = Tuple of Stack of 
 //│ >           Reference of "'a"
 //│ >       rhs = Infix:
-//│ >         op = Keyword(`|`, N/A, N/A)
+//│ >         op = Keyword(`|`, 4, 4)
 //│ >         lhs = Reference of "Leaf"
 //│ >         rhs = Infix:
 //│ >           op = Keyword(`of`, N/A, N/A)
@@ -248,7 +248,7 @@ and t' = Int of int | List of t list
 //│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Reference of "t'"
 //│ >       rhs = Infix:
-//│ >         op = Keyword(`|`, N/A, N/A)
+//│ >         op = Keyword(`|`, 4, 4)
 //│ >         lhs = Infix:
 //│ >           op = Keyword(`of`, N/A, N/A)
 //│ >           lhs = Reference of "Int"

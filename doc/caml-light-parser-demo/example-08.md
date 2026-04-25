@@ -88,9 +88,7 @@ let count_channel input_channel =
     match c with
     | `\n` ->
         incr lines; count Outside_word
-    | ` ` ->
-        count Outside_word
-    | `\t` ->
+    | ` ` | `\t` ->
         count Outside_word
     | _ ->
         if status = Outside_word then begin incr words; () end;
@@ -140,9 +138,8 @@ with sys__Sys_error s ->
 
 - Renamed `in_channel` to `input_channel` to avoid the `in` keyword prefix in an
   identifier-like name.
-- Split the original alternative pattern `` ` ` | `\t` `` into two match
-  branches because pattern alternatives within one branch are deferred parser
-  work.
+- Restored the original alternative pattern `` ` ` | `\t` `` after adding
+  dedicated pattern parsing for alternatives inside one branch.
 
 ## Parser Fixes
 
@@ -152,3 +149,4 @@ with sys__Sys_error s ->
   mode used for let-binding left-hand sides.
 - Split prefix-only symbolic operators such as `!` from the generic symbolic
   infix path, so dereference parses as a prefix expression.
+- Added dedicated pattern parsing for alternatives inside one branch.

@@ -41,6 +41,24 @@ fun listLike(fields) =
     choices: tuple of end(Nil), mkTail of reference(fields.tail) of
       process: idFirst, name: "more " + fields.name + "s"
 
+fun makeInfixChoice(kw: Keywords.Keyword, rhsKind: Str, compose: (Tree, Tree) -> Tree) =
+  keyword(kw) of reference(rhsKind) of
+    process: (rhs, _) => lhs => compose(lhs, rhs)
+    name: "operator `" + kw.name + "` right-hand side"
+
+fun makeNamedOperatorChoice(kw: Keywords.Keyword) =
+  makeInfixChoice of kw, "term", (lhs, rhs) =>
+    Tree.Application(Tree.Reference(kw.name, true), lhs :: rhs :: Nil)
+
+fun makeBracketRule(fields) = // opening, closing, kind, wrapContent
+  // Pass the error message of closing bracket to the content.
+  keyword(fields.opening) of reference(fields.kind) of
+    process: (tree: Tree, next: Tree) => if next is
+      Tree.Error(Tree.Empty, msg) then fields.wrapContent(tree) Tree.Error(msg)
+      Tree.Empty                  then fields.wrapContent(tree)
+    name: fields.kind + " in bracket"
+    choices: tuple of keyword(fields.closing) of end of Tree.empty
+
 define("let-bindings") of reference("binding") of
   process: (lhs, rhsBindings) => if rhsBindings is [rhs, bindings] then
     Tree.Infix(Keywords._equal, lhs, rhs) :: bindings
@@ -69,12 +87,46 @@ fun makeLetBindings(hasInClause: Bool) =
 
 let letExpression = makeLetBindings(true)
 
-define("simple-matching") of term of
+val patternRule = rule of
+  "rules for patterns"
+  // Choices for brackets
+  makeBracketRule of
+    opening: Keywords._leftRound, closing: Keywords._rightRound, kind: "pattern"
+    wrapContent: (tree) => if tree is Tree.Empty then Tree.Tuple(Nil) else tree
+  makeBracketRule of
+    opening: Keywords._leftSquare, closing: Keywords._rightSquare, kind: "pattern"
+    wrapContent: (tree) => Tree.Bracketed of Square, if tree is
+      Tree.Empty then Tree.Sequence(Nil)
+      else tree
+  reference("pattern") of
+    process: pipeInto
+    choices: tuple of
+      // Pattern alternatives, such as `A | B`.
+      makeInfixChoice of Keywords._bar, "pattern", (lhs, rhs) =>
+        Tree.Infix(Keywords._bar, lhs, rhs)
+      // Tuple patterns.
+      makeInfixChoice of Keywords._comma, "pattern", (lhs, rhs) => if rhs is
+        Tree.Tuple(tail) then Tree.Tuple(lhs :: tail)
+        else Tree.Tuple(lhs :: rhs :: Nil)
+      // Pattern aliases, such as `pattern as name`.
+      keyword(Keywords._as) of ident of
+        process: (alias, _) => subject => Tree.Infix(Keywords._as, subject, alias)
+        name: "pattern alias"
+      // Caml Light list cons patterns.
+      infix(Keywords.patternInfixOpPrecOpt, "pattern") of
+        name: "pattern operator right-hand side"
+      // Constructor application patterns.
+      reference("pattern") of
+        process: (argument, _) => callee => Tree.Application(callee, argument)
+        name: "pattern argument"
+        bp: Keywords.appPrec
+
+define("simple-matching") of reference("pattern") of
   process: (lhs, rhsTail) => if rhsTail is
     [rhs, tail] then Tree.Infix(Keywords._thinArrow, lhs, rhs) :: tail
     // TODO: Better error handling?
     
-  name: "case body"
+  name: "case pattern"
   choices: tuple of keyword(Keywords._thinArrow) of term of
     name: "rhs"
     choices: tuple of
@@ -82,11 +134,13 @@ define("simple-matching") of term of
       keyword(Keywords._bar) of reference("simple-matching") of
         process: idFirst, name: "simple-matching tail"
 
-define("pattern-list") of term of
+define("pattern-list") of reference("pattern") of
   process: (head, tail) => head :: tail
   name: "pattern"
-  choices: tuple of reference("pattern-list") of
-    process: idFirst, name: "pattern list tail"
+  choices: tuple of
+    end of Nil
+    reference("pattern-list") of
+      process: idFirst, name: "pattern list tail"
 
 define("multiple-matching") of reference("pattern-list") of
   process: Tree.infix of Keywords._thinArrow
@@ -97,24 +151,6 @@ define("multiple-matching") of reference("pattern-list") of
       end of Nil
       keyword(Keywords._bar) of reference("multiple-matching") of
         process: idFirst, name: "multiple-matching tail"
-
-fun makeInfixChoice(kw: Keywords.Keyword, rhsKind: Str, compose: (Tree, Tree) -> Tree) =
-  keyword(kw) of reference(rhsKind) of
-    process: (rhs, _) => lhs => compose(lhs, rhs)
-    name: "operator `" + kw.name + "` right-hand side"
-
-fun makeNamedOperatorChoice(kw: Keywords.Keyword) =
-  makeInfixChoice of kw, "term", (lhs, rhs) =>
-    Tree.Application(Tree.Reference(kw.name, true), lhs :: rhs :: Nil)
-
-fun makeBracketRule(fields) = // opening, closing, kind, wrapContent
-  // Pass the error message of closing bracket to the content.
-  keyword(fields.opening) of reference(fields.kind) of
-    process: (tree: Tree, next: Tree) => if next is
-      Tree.Error(Tree.Empty, msg) then fields.wrapContent(tree) Tree.Error(msg)
-      Tree.Empty                  then fields.wrapContent(tree)
-    name: fields.kind + " in bracket"
-    choices: tuple of keyword(fields.closing) of end of Tree.empty
 
 // Prefix rules and infix rules for expressions.
 val termRule = rule of
@@ -392,4 +428,5 @@ val declRule = rule of
 
 syntaxKinds |> MutMap.insert of "term", termRule
 syntaxKinds |> MutMap.insert of "type", typeRule
+syntaxKinds |> MutMap.insert of "pattern", patternRule
 syntaxKinds |> MutMap.insert of "decl", declRule

@@ -88,8 +88,8 @@ let remove_multiples_of n =
 let sieve max =
   let rec filter_again = function
   | [] -> []
-  | n :: r ->
-      if n * n > max then n :: r else n :: filter_again (remove_multiples_of n r)
+  | n :: r as l ->
+      if n * n > max then l else n :: filter_again (remove_multiples_of n r)
   in
     filter_again (interval 2 max)
 ;;"""
@@ -107,9 +107,9 @@ let rec belongs n = function
 ;;
 let rec add n = function
   | [] -> [n]
-  | m :: rest ->
-      if m = n then m :: rest else
-        if m > n then n :: m :: rest else m :: add n rest
+  | m :: rest as set ->
+      if m = n then set else
+        if m > n then n :: set else m :: add n rest
 ;;"""
 
 examples |> MutMap.insert of
@@ -185,20 +185,20 @@ let rec remove_top = function
   | QueueNode(priority, item, left, Empty) -> left
   | QueueNode(priority, item, Empty, right) -> right
   | QueueNode(priority, item,
-              QueueNode(left_priority, left_item, left_left, left_right),
-              QueueNode(right_priority, right_item, right_left, right_right)) ->
+              (QueueNode(left_priority, left_item, _, _) as left),
+              (QueueNode(right_priority, right_item, _, _) as right)) ->
       if left_priority < right_priority
       then QueueNode(left_priority, left_item,
-                     remove_top (QueueNode(left_priority, left_item, left_left, left_right)),
-                     QueueNode(right_priority, right_item, right_left, right_right))
+                     remove_top left,
+                     right)
       else QueueNode(right_priority, right_item,
-                     QueueNode(left_priority, left_item, left_left, left_right),
-                     remove_top (QueueNode(right_priority, right_item, right_left, right_right)))
+                     left,
+                     remove_top right)
 ;;
 let extract = function
   | Empty -> raise Empty_queue
-  | QueueNode(priority, item, left, right) ->
-      (priority, item, remove_top (QueueNode(priority, item, left, right)))
+  | QueueNode(priority, item, _, _) as queue ->
+      (priority, item, remove_top queue)
 ;;
 let rec add queue priority item =
   match queue with
@@ -224,9 +224,7 @@ let count_channel input_channel =
     match c with
     | `\n` ->
         incr lines; count Outside_word
-    | ` ` ->
-        count Outside_word
-    | `\t` ->
+    | ` ` | `\t` ->
         count Outside_word
     | _ ->
         if status = Outside_word then begin incr words; () end;

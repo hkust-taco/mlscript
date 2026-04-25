@@ -54,7 +54,8 @@ val _comma = keyword(",", commaPrec, semiPrec)
 let eqPrec = nextPrec
 let ascPrec = nextPrec
 val _and = keyword("and", None, currPrec)
-val _bar = keyword of "|", None, None
+val _bar = keyword("|", ascPrec, ascPrec)
+val _as = keyword("as", ascPrec, ascPrec)
 val _thinArrow = keyword of "->", nextPrec, eqPrec
 val _colon = keyword(":", ascPrec, eqPrec)
 val _match = keyword("match", nextPrec, currPrec)
@@ -189,3 +190,7 @@ fun infixOpPrecOpt(opStr) = if
   opStr is "!" then None
   opStr is "~" then None
   else opPrecOpt(opStr)
+
+fun patternInfixOpPrecOpt(opStr) = if
+  opStr is "::" then opPrecOpt(opStr)
+  else None

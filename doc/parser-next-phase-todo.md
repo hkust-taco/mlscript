@@ -50,10 +50,10 @@ Goal: complete all three high-priority pattern items from
 
 | ID | Status | Task | Commit Label |
 | --- | --- | --- | --- |
-| P1-01 | Pending | Introduce a dedicated `pattern` syntax kind with dedicated parser rules instead of parsing patterns through `term`. | `Parser P1` |
-| P1-02 | Pending | Support pattern aliases such as `p as x`, then restore/adapt Caml Light examples that previously removed `as` aliases. | `Parser P1` |
-| P1-03 | Pending | Support pattern alternatives inside one branch, such as a space-character case sharing a branch with a tab-character case, then restore/adapt the Word Count example. | `Parser P1` |
-| P1-04 | Pending | Add or update focused parser DiffTests for the new pattern behavior and commit generated output. | `Parser P1` |
+| P1-01 | Done | Introduce a dedicated `pattern` syntax kind with dedicated parser rules instead of parsing patterns through `term`. | `Parser P1` |
+| P1-02 | Done | Support pattern aliases such as `p as x`, then restore/adapt Caml Light examples that previously removed `as` aliases. | `Parser P1` |
+| P1-03 | Done | Support pattern alternatives inside one branch, such as a space-character case sharing a branch with a tab-character case, then restore/adapt the Word Count example. | `Parser P1` |
+| P1-04 | Done | Add or update focused parser DiffTests for the new pattern behavior and commit generated output. | `Parser P1` |
 
 ## Phase P2: Parser Cleanup
 
@@ -130,14 +130,14 @@ handoff.
 | ID | Status | Task |
 | --- | --- | --- |
 | V-01 | Done | Run `hkmc2JVM/test` before focused parser/runtime testing in this work session. |
-| V-02 | Pending | Run focused parser compile tests after parser changes. |
-| V-03 | Pending | Run focused parser DiffTests after parser/test output changes and commit intentional golden output. |
-| V-04 | Pending | Run focused web-demo compile tests after web-demo changes. |
+| V-02 | Done | Run focused parser compile tests after parser changes. |
+| V-03 | Done | Run focused parser DiffTests after parser/test output changes and commit intentional golden output. |
+| V-04 | Done | Run focused web-demo compile tests after web-demo changes. |
 | V-05 | Pending | Verify web-demo behavior in a browser when UI behavior changes. |
 | V-06 | Pending | Run `hkmc2AllTests/test` before final handoff. |
 | V-07 | Pending | Confirm `git status --short` is clean after the final commit. |
 
 ## Current Stop Point
 
-Approved by the user. Proceed through all phases without stopping unless a
+Phase P1 is complete and ready to commit. Continue with Phase P2 next unless a
 truly fatal error occurs.

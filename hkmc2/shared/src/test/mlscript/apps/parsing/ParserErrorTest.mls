@@ -35,20 +35,20 @@ and test' = Bar' | Test' | Foo'
 //│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Reference of "test"
 //│ >       rhs = Infix:
-//│ >         op = Keyword(`|`, N/A, N/A)
+//│ >         op = Keyword(`|`, 4, 4)
 //│ >         lhs = Reference of "Bar"
 //│ >         rhs = Infix:
-//│ >           op = Keyword(`|`, N/A, N/A)
+//│ >           op = Keyword(`|`, 4, 4)
 //│ >           lhs = Reference of "Test"
 //│ >           rhs = Reference of "Foo"
 //│ >     Infix:
 //│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Reference of "test'"
 //│ >       rhs = Infix:
-//│ >         op = Keyword(`|`, N/A, N/A)
+//│ >         op = Keyword(`|`, 4, 4)
 //│ >         lhs = Reference of "Bar'"
 //│ >         rhs = Infix:
-//│ >           op = Keyword(`|`, N/A, N/A)
+//│ >           op = Keyword(`|`, 4, 4)
 //│ >           lhs = Reference of "Test'"
 //│ >           rhs = Reference of "Foo'"
 //│ > «type test = Bar | Test | Foo and test' = Bar' | Test' | Foo'»

@@ -19,7 +19,7 @@ open Option
 open Stack
 open ParseRule { Choice }
 open Choice { Ref }
-open Rules { termRule, typeRule, declRule, syntaxKinds }
+open Rules { termRule, typeRule, patternRule, declRule, syntaxKinds }
 
 type Opt[A] = Some[A] | None
 type TreeT = Tree
@@ -44,6 +44,7 @@ fun parse(tokens) =
     kind is "type" then typeExpr(prec)
     kind is "term" then expr(prec)
     kind is "binding" then bindingExpr(prec)
+    kind is "pattern" then patternExpr(prec)
     // built-in kinds: literals
     kind is "literal" then if tokens is
       Token.Literal(kind, value) :: _ then
@@ -171,7 +172,10 @@ fun parse(tokens) =
       // * the non-keyword case
       None then
         let symbolic = Token.symbolic(token)
-        if allowOperators and symbolic and token is Token.Symbol(name) and
+        if kindName == "pattern" and token is Token.Reference("_") then
+          consume
+          cont(Tree.Underscore(), prec)
+        else if allowOperators and symbolic and token is Token.Symbol(name) and
           Keywords.opPrecOpt(name) is Some(_) then
             consume
             cont(Tree.Application(Tree.Reference(name, true), parseKind(kindName, Keywords.prefixPrec)), prec)
@@ -193,6 +197,9 @@ fun parse(tokens) =
 
   fun typeExpr(prec: Int): TreeT =
     parseAtom(prec, "type", typeRule, false, true, typeExprCont)
+
+  fun patternExpr(prec: Int): TreeT =
+    parseAtom(prec, "pattern", patternRule, true, true, patternExprCont)
 
   fun bindingExpr(prec: Int): TreeT =
     parseAtom(prec, "term", termRule, true, true, bindingExprCont)
@@ -230,9 +237,9 @@ fun parse(tokens) =
     do tracer.print of "check keyword " + TokenHelpers.preview(tokens), source.line
     token :: _ and Token.name(token) is Some(name) and Keywords.all |> MutMap.get(name) is Some(keyword) and
       do tracer.print of "found a keyword: " + name, source.line
-      infix.rule.keywordChoices |> MutMap.get(name) is Some(rule) and
+      infix.rule.keywordChoices |> MutMap.get(name) is Some(keywordRule) and
         do tracer.print of "keyword `" + name + "` is found in infix rules", source.line
-        keyword.leftPrecOrMin > prec and rule.refChoice is
+        keyword.leftPrecOrMin > prec and keywordRule.refChoice is
           Some(Ref(kind, process, bp, rest)) and
             do tracer.print of "try to parse kind \"" + kind + "\" at " + TokenHelpers.preview(tokens), source.line
             let bp' = bp Option.getOrElse(Keywords.maxOperatorPrec)
@@ -317,6 +324,9 @@ fun parse(tokens) =
 
   fun typeExprCont(acc: TreeT, prec: Int): TreeT =
     parseCont(acc, prec, "type", typeRule, false, None, typeExprCont)
+
+  fun patternExprCont(acc: TreeT, prec: Int): TreeT =
+    parseCont(acc, prec, "pattern", patternRule, true, Some("->"), patternExprCont)
 
   fun bindingExprCont(acc: TreeT, prec: Int): TreeT =
     parseCont(acc, prec, "term", termRule, true, Some("="), bindingExprCont)
