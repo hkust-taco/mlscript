@@ -217,9 +217,9 @@ and words = ref 0
 and lines = ref 0
 ;;
 type state = Inside_word | Outside_word;;
-let count_channel input_channel =
+let count_channel in_channel =
   let rec count status =
-    let c = input_char input_channel in
+    let c = input_char in_channel in
     incr chars;
     match c with
     | `\n` ->

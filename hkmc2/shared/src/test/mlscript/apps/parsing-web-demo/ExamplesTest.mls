@@ -52,7 +52,7 @@ examples Iter.each of case entry then
 //│ > Testing example: Caml Light: Word Count
 //│ > «let chars = ref 0 and words = ref 0 and lines = ref 0»
 //│ > «type state = Inside_word | Outside_word»
-//│ > «let count_channel input_channel = let count status = let c = input_char input_channel in incr chars; match c with `\n` -> incr lines; count Outside_word | ` ` | `\t` -> count Outside_word | _ -> if status = Outside_word then incr words; (); count Inside_word then None in try count Outside_word with End_of_file -> ()»
+//│ > «let count_channel in_channel = let count status = let c = input_char in_channel in incr chars; match c with `\n` -> incr lines; count Outside_word | ` ` | `\t` -> count Outside_word | _ -> if status = Outside_word then incr words; (); count Inside_word then None in try count Outside_word with End_of_file -> ()»
 //│ > «let count_file name = let ic = open_in name in count_channel ic; close_in ic»
 //│ > «let print_result () = print_int (!chars); print_string " char…"; print_int (!words); print_string " word…"; print_int (!lines); print_string " line…"; print_newline ()»
 //│ > «let count name = count_file name; print_result ()»

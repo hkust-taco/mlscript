@@ -81,9 +81,9 @@ and lines = ref 0
 
 type state = Inside_word | Outside_word;;
 
-let count_channel input_channel =
+let count_channel in_channel =
   let rec count status =
-    let c = input_char input_channel in
+    let c = input_char in_channel in
     incr chars;
     match c with
     | `\n` ->
@@ -136,8 +136,8 @@ with sys__Sys_error s ->
 
 ## Adaptation Notes
 
-- Renamed `in_channel` to `input_channel` to avoid the `in` keyword prefix in an
-  identifier-like name.
+- Restored the original `in_channel` identifier after confirming keyword
+  matching is exact and does not split identifier prefixes.
 - Restored the original alternative pattern `` ` ` | `\t` `` after adding
   dedicated pattern parsing for alternatives inside one branch.
 
@@ -150,3 +150,5 @@ with sys__Sys_error s ->
 - Split prefix-only symbolic operators such as `!` from the generic symbolic
   infix path, so dereference parses as a prefix expression.
 - Added dedicated pattern parsing for alternatives inside one branch.
+- Added a regression through this example for identifiers that contain keyword
+  text, such as `in_channel`.

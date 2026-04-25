@@ -1189,9 +1189,9 @@ and words = ref 0
 and lines = ref 0
 ;;
 type state = Inside_word | Outside_word;;
-let count_channel input_channel =
+let count_channel in_channel =
   let rec count status =
-    let c = input_char input_channel in
+    let c = input_char in_channel in
     incr chars;
     match c with
     | `\n` ->
@@ -1275,7 +1275,7 @@ with sys__Sys_error s ->
 //│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Application:
 //│ >         callee = Reference of "count_channel"
-//│ >         argument = Reference of "input_channel"
+//│ >         argument = Reference of "in_channel"
 //│ >       rhs = LetIn:
 //│ >         bindings = Stack of 
 //│ >           Infix:
@@ -1290,7 +1290,7 @@ with sys__Sys_error s ->
 //│ >                   lhs = Reference of "c"
 //│ >                   rhs = Application:
 //│ >                     callee = Reference of "input_char"
-//│ >                     argument = Reference of "input_channel"
+//│ >                     argument = Reference of "in_channel"
 //│ >               body = Some of Sequence of Stack of 
 //│ >                 Application:
 //│ >                   callee = Reference of "incr"
@@ -1474,7 +1474,7 @@ with sys__Sys_error s ->
 //│ >             argument = Tuple of Nil
 //│ > «let chars = ref 0 and words = ref 0 and lines = ref 0»
 //│ > «type state = Inside_word | Outside_word»
-//│ > «let count_channel input_channel = let count status = let c = input_char input_channel in incr chars; match c with `\n` -> incr lines; count Outside_word | ` ` | `\t` -> count Outside_word | _ -> if status = Outside_word then incr words; (); count Inside_word then None in try count Outside_word with End_of_file -> ()»
+//│ > «let count_channel in_channel = let count status = let c = input_char in_channel in incr chars; match c with `\n` -> incr lines; count Outside_word | ` ` | `\t` -> count Outside_word | _ -> if status = Outside_word then incr words; (); count Inside_word then None in try count Outside_word with End_of_file -> ()»
 //│ > «let count_file name = let ic = open_in name in count_channel ic; close_in ic»
 //│ > «let print_result () = print_int (!chars); print_string " char…"; print_int (!words); print_string " word…"; print_int (!lines); print_string " line…"; print_newline ()»
 //│ > «let count name = count_file name; print_result ()»
