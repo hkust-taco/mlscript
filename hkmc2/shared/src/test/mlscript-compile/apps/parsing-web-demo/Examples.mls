@@ -115,7 +115,8 @@ let rec add n = function
 examples |> MutMap.insert of
   "caml-pascal-values"
   name: "Caml Light: Pascal Values"
-  source: """let int_val = function
+  source: """#open "interp";;
+let int_val = function
   | Int n -> n
   | _ -> raise(Runtime_error "integer expected")
 and bool_val = function
@@ -268,7 +269,8 @@ with sys__Sys_error s ->
 examples |> MutMap.insert of
   "caml-bubble-sort"
   name: "Caml Light: Bubble Sort"
-  source: """let sort context =
+  source: """#open "animation";;
+let sort context =
   let ordered = ref true in
   let rec sweep i =
     if i + 1 >= vect_length context.array then
@@ -291,7 +293,8 @@ examples |> MutMap.insert of
 examples |> MutMap.insert of
   "caml-insertion-sort"
   name: "Caml Light: Insertion Sort"
-  source: """let sort context =
+  source: """#open "animation";;
+let sort context =
   let rec loop_outer i =
     if i >= vect_length context.array then Finished else
     let value_i = context.array.(i) in

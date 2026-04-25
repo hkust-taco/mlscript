@@ -73,7 +73,7 @@ Goal: remove example adaptations that were only needed because of parser bugs.
 | --- | --- | --- | --- |
 | F1-01 | Done | Support `mutable` annotations in type-level record fields. | `Fix F1` |
 | F1-02 | Done | Fix the lexer/parser misunderstanding of identifiers like `in_channel`; `in` must not be treated as a keyword prefix inside a longer identifier. | `Fix F1` |
-| F1-03 | Pending | Model Caml Light `#open` directives rather than removing them from examples. | `Fix F1` |
+| F1-03 | Done | Model Caml Light `#open` directives rather than removing them from examples. | `Fix F1` |
 | F1-04 | Pending | Investigate support for reserved keywords as field names, especially `val`; implement only if it is a small localized change. If it requires broad parser architecture changes, mark `Skipped` and document why. | `Fix F1` |
 | F1-05 | Pending | Restore affected Caml Light examples toward their original source where the new support allows it. | `Fix F1` |
 
@@ -139,5 +139,5 @@ handoff.
 
 ## Current Stop Point
 
-Phase F1-02 is complete and ready to commit. Continue with F1-03 next unless a
+Phase F1-03 is complete and ready to commit. Continue with F1-04 next unless a
 truly fatal error occurs.

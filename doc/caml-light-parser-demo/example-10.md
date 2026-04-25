@@ -38,6 +38,7 @@ let sort gc =
 ## Adapted Example
 
 ```ocaml
+#open "animation";;
 let sort context =
   let rec loop_outer i =
     if i >= vect_length context.array then Finished else
@@ -62,11 +63,12 @@ let sort context =
 
 ## Adaptation Notes
 
-- Removed the `#open "animation"` bootstrap directive.
+- Restored the `#open "animation"` bootstrap directive now that the parser
+  models Caml Light source directives.
 - Renamed `gc`, `loop1`, `loop2`, and `val_i` to more descriptive English
   names in the adapted syntax tree.
 - Added spaces around arithmetic operators; no parser workaround was required.
 
 ## Parser Fixes
 
-- None.
+- Added source-level `#open` directive parsing.

@@ -436,6 +436,7 @@ let rec add n = function
 
 example of """
 :tree
+#open "interp";;
 let int_val = function
   | Int n -> n
   | _ -> raise(Runtime_error "integer expected")
@@ -455,6 +456,12 @@ let read_value () =
   with Failure _ -> raise(Runtime_error "read error")
 ;;
 """
+//│ > Define:
+//│ >   kind = Directive
+//│ >   items = Stack of 
+//│ >     Pair:
+//│ >       first = Reference of "open"
+//│ >       second = Literal#String of "interp"
 //│ > Define:
 //│ >   kind = Let(false)
 //│ >   items = Stack of 
@@ -572,6 +579,7 @@ let read_value () =
 //│ >                 argument = Application:
 //│ >                   callee = Reference of "Runtime_error"
 //│ >                   argument = Literal#String of "read error"
+//│ > «#open "inter…"»
 //│ > «let int_val = function Int n -> n | _ -> raise (Runtime_error "integ…") and bool_val = function Bool b -> b | _ -> raise (Runtime_error "boole…") and array_val = function Array (lower, values) -> (lower, values) | _ -> raise (Runtime_error "array…")»
 //│ > «let print_value v = print_int (int_val v); print_newline ()»
 //│ > «let read_value () = let input = read_line () in try Int (int_of_string input) with Failure _ -> raise (Runtime_error "read …")»
@@ -1485,6 +1493,7 @@ with sys__Sys_error s ->
 
 example of """
 :tree
+#open "animation";;
 let sort context =
   let ordered = ref true in
   let rec sweep i =
@@ -1505,6 +1514,12 @@ let sort context =
   in sweep 0
 ;;
 """
+//│ > Define:
+//│ >   kind = Directive
+//│ >   items = Stack of 
+//│ >     Pair:
+//│ >       first = Reference of "open"
+//│ >       second = Literal#String of "animation"
 //│ > Define:
 //│ >   kind = Let(false)
 //│ >   items = Stack of 
@@ -1616,6 +1631,7 @@ let sort context =
 //│ >           body = Some of Application:
 //│ >             callee = Reference of "sweep"
 //│ >             argument = Literal#Integer of "0"
+//│ > «#open "anima…"»
 //│ > «let sort context = let ordered = ref true in let sweep i = if i + 1 >= vect_length context.array then if !ordered then Finished then ordered := false; sweep 0 then Pause (fun () -> if context.array . i + 1 < context.array.i then exchange context i (i + 1); ordered := false; sweep (i + 1) then None) in sweep 0»
 
 // sources/examples/showsort/insertion.ml
@@ -1623,6 +1639,7 @@ let sort context =
 
 example of """
 :tree
+#open "animation";;
 let sort context =
   let rec loop_outer i =
     if i >= vect_length context.array then Finished else
@@ -1644,6 +1661,12 @@ let sort context =
   in loop_outer 1
 ;;
 """
+//│ > Define:
+//│ >   kind = Directive
+//│ >   items = Stack of 
+//│ >     Pair:
+//│ >       first = Reference of "open"
+//│ >       second = Literal#String of "animation"
 //│ > Define:
 //│ >   kind = Let(false)
 //│ >   items = Stack of 
@@ -1781,4 +1804,5 @@ let sort context =
 //│ >         body = Some of Application:
 //│ >           callee = Reference of "loop_outer"
 //│ >           argument = Literal#Integer of "1"
+//│ > «#open "anima…"»
 //│ > «let sort context = let loop_outer i = if i >= vect_length context.array then Finished then let value_i = context.array.i in let loop_inner j = if j < 1 then assign context j value_i; loop_outer (i + 1) then Pause (fun () -> if value_i >= context.array . j - 1 then assign context j value_i; loop_outer (i + 1) then assign context j context.array . j - 1; loop_inner (j - 1)) in loop_inner i in loop_outer 1»

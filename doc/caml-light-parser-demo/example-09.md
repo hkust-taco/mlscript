@@ -37,6 +37,7 @@ let sort gc =
 ## Adapted Example
 
 ```ocaml
+#open "animation";;
 let sort context =
   let ordered = ref true in
   let rec sweep i =
@@ -60,11 +61,13 @@ let sort context =
 
 ## Adaptation Notes
 
-- Removed the `#open "animation"` bootstrap directive.
+- Restored the `#open "animation"` bootstrap directive now that the parser
+  models Caml Light source directives.
 - Renamed the short `gc` parameter to `context` for readability in the
   generated tree.
 - Added spaces around arithmetic operators; no semantic rewrite was needed.
 
 ## Parser Fixes
 
-- None. The prefix `!` fix from example 8 is used by this example.
+- The prefix `!` fix from example 8 is used by this example.
+- Added source-level `#open` directive parsing.

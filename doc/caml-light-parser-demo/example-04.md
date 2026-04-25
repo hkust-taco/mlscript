@@ -33,6 +33,7 @@ let lire_valeur () =
 ## Adapted Example
 
 ```ocaml
+#open "interp";;
 let int_val = function
   | Int n -> n
   | _ -> raise(Runtime_error "integer expected")
@@ -55,11 +56,13 @@ let read_value () =
 
 ## Adaptation Notes
 
-- Removed the `#open "interp"` bootstrap directive.
+- Restored the `#open "interp"` bootstrap directive now that the parser models
+  Caml Light source directives.
 - Translated French identifiers and diagnostic strings to English.
 - Replaced accented source identifiers with ASCII names.
 
 ## Parser Fixes
 
-- None. The parser changes from example 3 already cover the `try`/`with` and
+- The parser changes from example 3 already cover the `try`/`with` and
   equality-related syntax used by this example.
+- Added source-level `#open` directive parsing.

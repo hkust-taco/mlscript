@@ -20,11 +20,13 @@ examples Iter.each of case entry then
 //│ > «let finish output = if buffer.nbits > 0 then output_char output (char_of_int buffer.value) then None»
 //│ > «let read_bit input = if buffer.nbits <= 0 then buffer.value <- int_of_char (input_char input); buffer.nbits <- 8; let result = buffer.value land 1 in buffer.value <- buffer.value lsr 1; buffer.nbits <- buffer.nbits - 1; result then None»
 //│ > Testing example: Caml Light: Bubble Sort
+//│ > «#open "anima…"»
 //│ > «let sort context = let ordered = ref true in let sweep i = if i + 1 >= vect_length context.array then if !ordered then Finished then ordered := false; sweep 0 then Pause (fun () -> if context.array . i + 1 < context.array.i then exchange context i (i + 1); ordered := false; sweep (i + 1) then None) in sweep 0»
 //│ > Testing example: Caml Light: Fibonacci
 //│ > «let rec fib n = if n < 2 then 1 then fib (n - 1) + fib (n - 2)»
 //│ > «if sys__interactive then () then if vect_length sys__command_line <> 2 then print_string "Usage…"; print_newline () then try print_int (fib (int_of_string sys__command_line . 1)); print_newline () with Failure "int_o…" -> print_string "Bad i…"; print_newline ()»
 //│ > Testing example: Caml Light: Insertion Sort
+//│ > «#open "anima…"»
 //│ > «let sort context = let loop_outer i = if i >= vect_length context.array then Finished then let value_i = context.array.i in let loop_inner j = if j < 1 then assign context j value_i; loop_outer (i + 1) then Pause (fun () -> if value_i >= context.array . j - 1 then assign context j value_i; loop_outer (i + 1) then assign context j context.array . j - 1; loop_inner (j - 1)) in loop_inner i in loop_outer 1»
 //│ > Testing example: Caml Light: Integer Sets
 //│ > «type t == list int»
@@ -32,6 +34,7 @@ examples Iter.each of case entry then
 //│ > «let rec belongs n = function [] -> false | m :: rest -> if m = n then true then if m > n then false then belongs n rest»
 //│ > «let rec add n = function [] -> [n] | m :: rest as set -> if m = n then set then if m > n then n :: set then m :: add n rest»
 //│ > Testing example: Caml Light: Pascal Values
+//│ > «#open "inter…"»
 //│ > «let int_val = function Int n -> n | _ -> raise (Runtime_error "integ…") and bool_val = function Bool b -> b | _ -> raise (Runtime_error "boole…") and array_val = function Array (lower, values) -> (lower, values) | _ -> raise (Runtime_error "array…")»
 //│ > «let print_value v = print_int (int_val v); print_newline ()»
 //│ > «let read_value () = let input = read_line () in try Int (int_of_string input) with Failure _ -> raise (Runtime_error "read …")»
