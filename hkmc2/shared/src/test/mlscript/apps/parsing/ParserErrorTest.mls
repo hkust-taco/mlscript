@@ -80,8 +80,9 @@ example of """
 let foo = -2 * 3
 2 * 3
 """
-//│ > LetIn:
-//│ >   bindings = Stack of 
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
 //│ >     Infix:
 //│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Reference of "foo"
@@ -98,7 +99,6 @@ let foo = -2 * 3
 //│ >                 callee = Literal#Integer of "3"
 //│ >                 argument = Literal#Integer of "2"
 //│ >           Literal#Integer of "3"
-//│ >   body = None
 //│ > «let foo = (-2) * 3 2 * 3»
 
 

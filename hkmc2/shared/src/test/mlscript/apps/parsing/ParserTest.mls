@@ -40,8 +40,9 @@ example of """
 :tree
 let x: int -> int -> int = fun x y -> x + y
 """
-//│ > LetIn:
-//│ >   bindings = Stack of 
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
 //│ >     Infix:
 //│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Infix:
@@ -64,7 +65,6 @@ let x: int -> int -> int = fun x y -> x + y
 //│ >           argument = Stack of 
 //│ >             Reference of "x"
 //│ >             Reference of "y"
-//│ >   body = None
 //│ > «let x : int -> int -> int = fun x y -> x + y»
 
 example of "(1 + 2) * 3"
@@ -75,6 +75,19 @@ example of "1 + 2 ** 5 * 4"
 
 example of "let zero = 0 in zero"
 //│ > «let zero = 0 in zero»
+
+example of """
+:tree
+let rec top = 1
+"""
+//│ > Define:
+//│ >   kind = Let(true)
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 16, 16)
+//│ >       lhs = Reference of "top"
+//│ >       rhs = Literal#Integer of "1"
+//│ > «let rec top = 1»
 
 example of """
 let one = 1 in
@@ -325,7 +338,7 @@ let rec even =
 and odd =
   function 0 -> false | n -> even (n - 1)
 """
-//│ > «let even = function 0 -> true | n -> odd (n - 1) and odd = function 0 -> false | n -> even (n - 1)»
+//│ > «let rec even = function 0 -> true | n -> odd (n - 1) and odd = function 0 -> false | n -> even (n - 1)»
 
 example of """
 let a = 0
@@ -359,15 +372,15 @@ let x = !true
 //│ >       callee = Reference of "~"
 //│ >       argument = Literal#Integer of "2"
 //│ >     Literal#Integer of "3"
-//│ > LetIn:
-//│ >   bindings = Stack of 
+//│ > Define:
+//│ >   kind = Let(false)
+//│ >   items = Stack of 
 //│ >     Infix:
 //│ >       op = Keyword(`=`, 16, 16)
 //│ >       lhs = Reference of "x"
 //│ >       rhs = Application:
 //│ >         callee = Reference of "!"
 //│ >         argument = Literal#Boolean of "true"
-//│ >   body = None
 //│ > «(-2) * 3»
 //│ > «~2 * 3»
 //│ > «let x = !true»

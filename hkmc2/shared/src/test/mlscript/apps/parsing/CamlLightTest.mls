@@ -187,8 +187,8 @@ end;;
 //│ > «let disk size = let right_half = make_string size ">" and left_half = make_string size "<" in left_half ^ "|" ^ right_half»
 //│ > «let disk_number n largest_disk_size = let white_part = spaces (largest_disk_size + 1 - n) in white_part ^ disk n ^ white_part»
 //│ > «let peg_base largest_disk_size = let half = make_string largest_disk_size "_" in " " ^ half ^ "|" ^ half ^ " "»
-//│ > «let peg largest_disk_size = function (0, []) -> [] | (0, head :: rest) -> disk_number head largest_disk_size :: peg largest_disk_size (0, rest) | (offset, lst) -> disk_number 0 largest_disk_size :: peg largest_disk_size (offset - 1, lst)»
-//│ > «let join_lines l1 l2 l3 = match (l1, l2, l3) with ([], [], []) -> [] | (t1 :: r1, t2 :: r2, t3 :: r3) -> t1 ^ t2 ^ t3 :: join_lines r1 r2 r3 | _ -> failwith "join_…"»
+//│ > «let rec peg largest_disk_size = function (0, []) -> [] | (0, head :: rest) -> disk_number head largest_disk_size :: peg largest_disk_size (0, rest) | (offset, lst) -> disk_number 0 largest_disk_size :: peg largest_disk_size (offset - 1, lst)»
+//│ > «let rec join_lines l1 l2 l3 = match (l1, l2, l3) with ([], [], []) -> [] | (t1 :: r1, t2 :: r2, t3 :: r3) -> t1 ^ t2 ^ t3 :: join_lines r1 r2 r3 | _ -> failwith "join_…"»
 //│ > «let print_line line = print_string line; print_newline ()»
 //│ > «let print_game num_disks start middle end_ = let drawing = join_lines (peg num_disks start) (peg num_disks middle) (peg num_disks end_) in do_list print_line drawing; let b = peg_base num_disks in print_line (b ^ b ^ b)»
 //│ > «let add_disk disk (offset, disks) = (offset - 1, disk :: disks)»

@@ -61,7 +61,7 @@ Goal: finish the two medium/low parser cleanup items after pattern work.
 
 | ID | Status | Task | Commit Label |
 | --- | --- | --- | --- |
-| P2-01 | Pending | Clean up top-level `let` handling so it no longer relies on the current manual `Tree.LetIn(..., Tree.Empty)` repair path where practical. | `Parser P2` |
+| P2-01 | Done | Clean up top-level `let` handling so it no longer relies on the current manual `Tree.LetIn(..., Tree.Empty)` repair path where practical. | `Parser P2` |
 | P2-02 | Pending | Implement the conservative Caml Light fixed prefix-operator rule for `-`, `-.`, and `!`, avoiding a broad arbitrary-prefix-operator mechanism. | `Parser P2` |
 | P2-03 | Pending | Add or update tests for top-level `let` and fixed prefix behavior. | `Parser P2` |
 
@@ -139,5 +139,5 @@ handoff.
 
 ## Current Stop Point
 
-Phase P1 is complete and ready to commit. Continue with Phase P2 next unless a
+Phase P2-01 is complete and ready to commit. Continue with P2-02 next unless a
 truly fatal error occurs.

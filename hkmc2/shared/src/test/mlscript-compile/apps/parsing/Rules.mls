@@ -41,6 +41,12 @@ fun listLike(fields) =
     choices: tuple of end(Nil), mkTail of reference(fields.tail) of
       process: idFirst, name: "more " + fields.name + "s"
 
+fun letTree(recOpt, bindingAndBody) = if bindingAndBody is
+  [bindings, Some(_) as body] then Tree.LetIn(bindings, body)
+  [bindings, None] then
+    let recursive = if recOpt is Some(_) then true else false
+    Tree.Define(Tree.DefineKind.Let(recursive), bindings)
+
 fun makeInfixChoice(kw: Keywords.Keyword, rhsKind: Str, compose: (Tree, Tree) -> Tree) =
   keyword(kw) of reference(rhsKind) of
     process: (rhs, _) => lhs => compose(lhs, rhs)
@@ -76,14 +82,14 @@ fun makeLetBindings(hasInClause: Bool) =
     optional: true
     init: keyword(Keywords._rec)()
     rest: reference("let-bindings") of
-      process: Tree.LetIn, name: "let-bindings"
+      process: (bindings, body) => [bindings, body], name: "let-bindings"
       choices:
         if hasInClause then tuple of
           keyword(Keywords._in) of term of
             process: someFirst, name: intro + "body"
           end of None
         else tuple of end of None
-    process: idSecond
+    process: letTree
 
 let letExpression = makeLetBindings(true)
 

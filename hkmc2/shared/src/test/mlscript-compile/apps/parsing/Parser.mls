@@ -353,12 +353,7 @@ fun parse(tokens) =
       Keywords.all |> MutMap.get(name) is Some(keyword) and
         // First, try if the keyword is the prefix of the term.
         termRule.keywordChoices |> MutMap.get(name) is Some(rule) then
-          let tree = expr(0)
-          if tree is Tree.LetIn(bindings, Tree.Empty) then
-            // If the body is empty, then this is a let-definition.
-            modCont of Tree.Define(Tree.DefineKind.Let(false), bindings) :: acc
-          else
-            modCont of tree :: acc
+          modCont of expr(0) :: acc
         // Then try to parse according to the rules of the definition.
         declRule.keywordChoices |> MutMap.get(name) is Some(rule) then
           consume

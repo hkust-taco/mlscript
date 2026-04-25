@@ -307,7 +307,7 @@ let rec remove x = function
             N (m, l, remove m r)
 """
 //│ > «type bst ('a) = E | N of 'a * bst 'a * bst 'a»
-//│ > «let insert x = function E -> N (x, E, E) | N (y, l, r) -> if x < y then N (y, insert x l, r) then N (y, l, insert x r)»
-//│ > «let min_elt = function E -> failwith "min_e…" | N (x, E, _) -> x | N (_, l, _) -> min_elt l»
-//│ > «let remove x = function E -> E | N (y, l, r) -> if x < y then N (y, remove x l, r) then if x > y then N (y, l, remove x r) then match (l, r) with (E, _) -> r | (_, E) -> l | _ -> let m = min_elt r in N (m, l, remove m r)»
+//│ > «let rec insert x = function E -> N (x, E, E) | N (y, l, r) -> if x < y then N (y, insert x l, r) then N (y, l, insert x r)»
+//│ > «let rec min_elt = function E -> failwith "min_e…" | N (x, E, _) -> x | N (_, l, _) -> min_elt l»
+//│ > «let rec remove x = function E -> E | N (y, l, r) -> if x < y then N (y, remove x l, r) then if x > y then N (y, l, remove x r) then match (l, r) with (E, _) -> r | (_, E) -> l | _ -> let m = min_elt r in N (m, l, remove m r)»
 
