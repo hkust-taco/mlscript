@@ -101,7 +101,7 @@ Goal: make the demo easier to use and more presentable.
 
 | ID | Status | Task | Commit Label |
 | --- | --- | --- | --- |
-| W3-01 | Pending | Make output easier to compare and reuse; choose a practical design for raw output, copying, or similar controls. | `Web W3` |
+| W3-01 | Done | Make output easier to compare and reuse; choose a practical design for raw output, copying, or similar controls. | `Web W3` |
 | W3-02 | Pending | Improve prototype-level polish: title, labels, responsive layout, parse status, and general presentation. | `Web W3` |
 
 ## Phase W4: Web Demo Limited Provenance
@@ -139,5 +139,5 @@ handoff.
 
 ## Current Stop Point
 
-Phase W2 is complete. Continue with web-demo reuse/polish task W3-01
+Phase W3-01 is complete. Continue with web-demo polish task W3-02
 unless a truly fatal error occurs.

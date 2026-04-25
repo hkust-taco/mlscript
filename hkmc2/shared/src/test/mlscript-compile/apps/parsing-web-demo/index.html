@@ -38,6 +38,7 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
         <button class="tab" data-tab="tokens" type="button">Tokens</button>
         <button class="tab" data-tab="trace" type="button">Trace</button>
         <button class="tab" data-tab="diagrams" type="button">Diagrams</button>
+        <button class="button copy-button" id="copy-output" type="button">Copy</button>
       </nav>
       <section class="tab-panel is-active" data-tab-panel="tree">
         <div id="output"></div>
@@ -150,6 +151,7 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
       padding: 0.5rem 0.5rem 0;
       background: #f0f0f0;
       border-bottom: 1px solid #000;
+      align-items: flex-end;
     }
 
     .tab {
@@ -165,6 +167,11 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
       background: #ffffff;
       font-weight: 700;
       transform: translateY(1px);
+    }
+
+    .copy-button {
+      margin-left: auto;
+      margin-bottom: 0.5rem;
     }
 
     .tab-panel {

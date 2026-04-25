@@ -43,6 +43,7 @@ let query = document.querySelector.bind(document)
 let editor = query("#editor")
 let selector = query("select#example")
 let parseButton = query("button#parse")
+let copyButton = query("#copy-output")
 let traceToggle = query("#trace-toggle")
 let outputPanel = query("#output")
 let tokensOutput = query("#tokens-output")
@@ -79,8 +80,13 @@ selector.addEventListener of "change", event =>
 
 let tabButtons = document.querySelectorAll("[data-tab]")
 let tabPanels = document.querySelectorAll("[data-tab-panel]")
+let activeTab = "tree"
+let treeOutputText = ""
+let tokensOutputText = ""
+let traceOutputText = ""
 
 fun activateTab(name: Str) =
+  set activeTab = name
   tabButtons.forEach of button =>
     let active = button.dataset.tab == name
     button.classList.toggle("is-active", active)
@@ -93,6 +99,19 @@ fun activateTab(name: Str) =
 tabButtons.forEach of button =>
   button.addEventListener of "click", _ => activateTab(button.dataset.tab)
 activateTab("tree")
+
+fun activeOutputText() = if activeTab is
+  "tree" then treeOutputText
+  "tokens" then tokensOutputText
+  "trace" then traceOutputText
+  "diagrams" then query("#syntax-diagrams").textContent
+  else ""
+
+copyButton.addEventListener of "click", _ =>
+  let text = activeOutputText()
+  document.defaultView.navigator.clipboard.writeText(text)
+  set copyButton.textContent = "Copied"
+  document.defaultView.setTimeout(() => set copyButton.textContent = "Copy", 1200)
 
 fun errorName(error) =
   if error.name is undefined then "Error" else error.name.toString()
@@ -149,18 +168,22 @@ parseButton.addEventListener of "click", event =>
       Parser.resetErrorReports()
       let tokens = Lexer.lex(editor.value, noWhitespace: true)
       set outputPanel.innerHTML = ""
-      set tokensOutput.textContent = TokenHelpers.panorama(tokens)
+      set treeOutputText = ""
+      set tokensOutputText = TokenHelpers.panorama(tokens)
+      set tokensOutput.textContent = tokensOutputText
       set traceOutput.textContent = ""
       Parser.tracer.reset()
       set Parser.tracer.enabled = traceToggle.checked
       let trees = Parser.parse(tokens)
       set Parser.tracer.enabled = false
-      set traceOutput.textContent = Parser.tracer.messages.join("\n")
+      set traceOutputText = Parser.tracer.messages.join("\n")
+      set traceOutput.textContent = traceOutputText
       if firstErrorInStack(trees) is
         Some(message) then
           showError(new Error("Parse produced an error tree: " + message), Parser.firstErrorReport())
         None then
           displayRules()
+          set treeOutputText = trees Iter.fromStack() Iter.mapping(TreeHelpers.showAsTree) Iter.joined("\n")
           trees Iter.fromStack() Iter.each of tree => if
             Extension.isDiagramDirective(tree) then ()
             else
