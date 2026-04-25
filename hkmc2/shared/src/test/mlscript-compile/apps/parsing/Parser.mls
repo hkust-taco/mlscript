@@ -28,8 +28,33 @@ type StackT[A] = Stack.Cons[A] | Stack.Nil
 module Parser with ...
 
 val tracer = new TreeTracer.TreeTracer
+val errorReports = mut []
+
+fun resetErrorReports() =
+  errorReports.splice(0, errorReports.length)
+  ()
+
+fun firstErrorReport() =
+  if errorReports.length > 0 then Some(errorReports.at(0)) else None
+
+fun recordError(message: Str, tokenOpt) =
+  errorReports.push of
+    message: message
+    location:
+      if tokenOpt is Some(token) then token.location
+      else None
+  ()
+
+fun errorWithoutLocation(message: Str) =
+  recordError(message, None)
+  Tree.error(message)
+
+fun errorAtToken(token: Token.Token, message: Str) =
+  recordError(message, Some(token))
+  Tree.error(message)
 
 fun parse(tokens) =
+  resetErrorReports()
   let counter = 0
   
   fun consume =
@@ -50,8 +75,8 @@ fun parse(tokens) =
       Token.Literal(kind, value) :: _ then
         consume
         Tree.Literal(kind, value)
-      token :: _ then Tree.error("expect a literal but found " + token)
-      Nil then Tree.error("expect a literal but found the end of input")
+      token :: _ then errorAtToken(token, "expect a literal but found " + token)
+      Nil then errorWithoutLocation("expect a literal but found the end of input")
     kind is "string-literal" then parseLiteralKind(kind, Token.LiteralKind.String)
     kind is "integer-literal" then parseLiteralKind(kind, Token.LiteralKind.Integer)
     kind is "decimal-literal" then parseLiteralKind(kind, Token.LiteralKind.Decimal)
@@ -61,15 +86,15 @@ fun parse(tokens) =
       Token.Reference(name) :: _ and Keywords.all |> MutMap.get(name) is None then
         consume
         Tree.Reference(name, false)
-      token :: _ then Tree.error("expect an identifier but found " + token)
-      Nil then Tree.error("expect an identifier but found the end of input")
+      token :: _ then errorAtToken(token, "expect an identifier but found " + token)
+      Nil then errorWithoutLocation("expect an identifier but found the end of input")
     // built-in kinds: type variables
     kind is "typevar" then if tokens is
       Token.Reference(name) :: _ and name.at(0) is "'" then
         consume
         Tree.Reference(name, false)
-      token :: _ then Tree.error("expect a type variable but found " + token)
-      Nil then Tree.error("expect a type variable but found the end of input")
+      token :: _ then errorAtToken(token, "expect a type variable but found " + token)
+      Nil then errorWithoutLocation("expect a type variable but found the end of input")
     // * other rule-based kinds
     syntaxKinds |> MutMap.get(kind) is Some(rule) then
       let tree = parseRule(prec, rule)
@@ -88,8 +113,8 @@ fun parse(tokens) =
     Token.Literal(kind, value) :: _ and kind == expectedKind then
       consume
       Tree.Literal(kind, value)
-    token :: _ then Tree.error("expect a " + kindName + " but found " + token)
-    Nil then Tree.error("expect a " + kindName + " but found the end of input")
+    token :: _ then errorAtToken(token, "expect a " + kindName + " but found " + token)
+    Nil then errorWithoutLocation("expect a " + kindName + " but found the end of input")
 
   fun parseRule(prec: Int, rule) = tracer.trace of
     "parsing rule \"" + rule.name + "\" with precedence " + prec
@@ -138,12 +163,12 @@ fun parse(tokens) =
       do tracer.print of "no end choice", source.line
       else
         consume
-        Tree.error("unexpected token " + render(other)) // TODO: Pretty-print the token.
+        errorAtToken(other, "unexpected token " + render(other)) // TODO: Pretty-print the token.
     Nil and rule.endChoice is
       Some(value) then value
       None then
         tracer.print of "no end choice but found the end of input", source.line
-        Tree.error("unexpected end of input")
+        errorWithoutLocation("unexpected end of input")
   
   fun parseAtom(
       prec: Int,
@@ -183,9 +208,9 @@ fun parse(tokens) =
           consume
           if tokens is _ :: _ do
             parseKind(kindName, Keywords.prefixPrec)
-          Tree.error("unexpected prefix operator `" + name + "`")
+          errorAtToken(token, "unexpected prefix operator `" + name + "`")
         else if not allowOperators and symbolic then
-          Tree.error("symbolic identifiers are disallowed in kind \"" + kindName + "\"")
+          errorAtToken(token, "symbolic identifiers are disallowed in kind \"" + kindName + "\"")
         else
           consume
           cont(Tree.Reference(name, symbolic), prec)
@@ -194,8 +219,8 @@ fun parse(tokens) =
       consume
       cont(Tree.Literal(kind, literal), prec)
     // * other cases
-    token :: _ then Tree.error("unrecognized token: " + token)
-    Nil then Tree.error("unexpected end of input")
+    token :: _ then errorAtToken(token, "unrecognized token: " + token)
+    Nil then errorWithoutLocation("unexpected end of input")
 
   fun expr(prec: Int): TreeT =
     parseAtom(prec, "term", termRule, true, true, exprCont)
@@ -381,5 +406,6 @@ fun parse(tokens) =
     token :: _ then
       let message = "expect EOF instead of " + token
       tracer.print of message, source.line
+      recordError(message, Some(token))
       tree Tree.Error(message)
     Nil then tree

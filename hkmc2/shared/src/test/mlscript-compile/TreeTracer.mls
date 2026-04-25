@@ -8,7 +8,7 @@ module TreeTracer with ...
 class TreeTracer with
   mut val steps = 0
   mut val enabled = false
-  mut val messages = []
+  mut val messages = mut []
   fun write(line: Str) =
     messages.push(line)
     console.log(line)
@@ -49,4 +49,4 @@ class TreeTracer with
     result
   fun reset() = set
     steps = 0
-    messages = []
+    messages = mut []

@@ -93,7 +93,7 @@ Goal: improve debugging and diagnostics with a small footprint.
 | ID | Status | Task | Commit Label |
 | --- | --- | --- | --- |
 | W2-01 | Done | Add tabs for syntax tree, tokens, parser trace/debug information, and rule diagrams. Keep parser tracing changes minimal and avoid large parser-code growth. | `Web W2` |
-| W2-02 | Pending | Improve errors with source locations and inline highlighting. Prefer a small lexer change that records original token positions and passes that information through where nodes/errors are created. | `Web W2` |
+| W2-02 | Done | Improve errors with source locations and inline highlighting. Prefer a small lexer change that records original token positions and passes that information through where nodes/errors are created. | `Web W2` |
 
 ## Phase W3: Web Demo UI Refurbish
 
@@ -139,5 +139,5 @@ handoff.
 
 ## Current Stop Point
 
-Phase W2-01 is complete. Continue with source-location diagnostics task W2-02
+Phase W2 is complete. Continue with web-demo reuse/polish task W3-01
 unless a truly fatal error occurs.

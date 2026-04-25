@@ -49,6 +49,7 @@ let tokensOutput = query("#tokens-output")
 let traceOutput = query("#trace-output")
 let errorDialog = query("#error-dialog")
 let errorMessage = query("#error-message")
+let errorLocation = query("#error-location")
 let errorStack = query("#error-stack")
 
 examples Iter.each of case [key, example] then
@@ -74,7 +75,7 @@ editor.addEventListener of "keydown", event =>
 selector.addEventListener of "change", event =>
   if examples |> MutMap.get(selector.value) is
     Some(example) do set editor.value = example.source
-    None do showError of new Error of "Example \"" + selector.value + "\" not found"
+    None do showError(new Error("Example \"" + selector.value + "\" not found"), None)
 
 let tabButtons = document.querySelectorAll("[data-tab]")
 let tabPanels = document.querySelectorAll("[data-tab-panel]")
@@ -110,8 +111,24 @@ fun stackText(error) =
       Iter.filtering(line => line.length > 0)
       Iter.joined("\n")
 
-fun showError(error) =
+fun locationText(location) =
+  let start = location.lookupTable.lookup(location.start)
+  let end = location.lookupTable.lookup(location.end)
+  "Line " + start.0 + ", column " + start.1 + " to line " + end.0 + ", column " + end.1
+
+fun highlightLocation(location) =
+  editor.focus()
+  editor.setSelectionRange(location.start, Math.max(location.end, location.start + 1))
+
+fun showError(error, reportOpt) =
   set errorMessage.textContent = errorName(error) + ": " + errorMessageText(error)
+  if reportOpt is Some(report) and report.location is Some(location) then
+    set errorLocation.textContent = locationText(location)
+    set errorLocation.hidden = false
+    highlightLocation(location)
+  else
+    set errorLocation.textContent = ""
+    set errorLocation.hidden = true
   set errorStack.textContent = stackText(error)
   if errorDialog.open do errorDialog.close()
   errorDialog.showModal()
@@ -129,6 +146,7 @@ parseButton.addEventListener of "click", event =>
     () =>
       hideError()
       Extension.resetParserState()
+      Parser.resetErrorReports()
       let tokens = Lexer.lex(editor.value, noWhitespace: true)
       set outputPanel.innerHTML = ""
       set tokensOutput.textContent = TokenHelpers.panorama(tokens)
@@ -140,7 +158,7 @@ parseButton.addEventListener of "click", event =>
       set traceOutput.textContent = Parser.tracer.messages.join("\n")
       if firstErrorInStack(trees) is
         Some(message) then
-          showError(new Error("Parse produced an error tree: " + message))
+          showError(new Error("Parse produced an error tree: " + message), Parser.firstErrorReport())
         None then
           displayRules()
           trees Iter.fromStack() Iter.each of tree => if
@@ -152,7 +170,7 @@ parseButton.addEventListener of "click", event =>
     error =>
       set Parser.tracer.enabled = false
       set traceOutput.textContent = Parser.tracer.messages.join("\n")
-      showError(error)
+      showError(error, Parser.firstErrorReport())
 
 let indentRegex = new RegExp("""^(\s*)""")
 
@@ -355,4 +373,4 @@ fun displayRules() =
 
 Runtime.try_catch of
   () => displayRules()
-  error => showError(error)
+  error => showError(error, None)

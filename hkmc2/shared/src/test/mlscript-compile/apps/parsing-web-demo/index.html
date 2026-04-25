@@ -67,6 +67,7 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
         <button class="error-dialog__close" aria-label="Close error dialog">×</button>
       </header>
       <p id="error-message" class="error-dialog__message"></p>
+      <p id="error-location" class="error-dialog__location" hidden></p>
       <pre id="error-stack" class="error-dialog__stack"></pre>
     </form>
   </dialog>
@@ -265,6 +266,14 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
       margin: 0;
       font-weight: 700;
       overflow-wrap: anywhere;
+    }
+
+    .error-dialog__location {
+      margin: 0;
+      padding: .5rem .75rem;
+      border-left: 4px solid #dc2626;
+      background: #fee2e2;
+      font-family: var(--monospace);
     }
 
     .error-dialog__stack {

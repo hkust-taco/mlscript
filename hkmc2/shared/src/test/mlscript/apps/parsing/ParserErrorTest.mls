@@ -1,7 +1,11 @@
 :js
 
+import "../../../mlscript-compile/Option.mls"
+import "../../../mlscript-compile/apps/parsing/Lexer.mls"
+import "../../../mlscript-compile/apps/parsing/Parser.mls"
 import "../../../mlscript-compile/apps/parsing/Test.mls"
 
+open Option { Some, None }
 open Test { example }
 
 example of ":tree ((x) ==> x"
@@ -17,6 +21,21 @@ example of ":tree ((x) ==> x))"
 //│ > Error of "unexpected token Symbol(\")\")"
 //│ > «x ==> x»
 //│ > «⚠»
+
+fun checkErrorLocation() =
+  let tokens = Lexer.lex("id fun\nx", noWhitespace: true)
+  Parser.parse(tokens)
+  if Parser.firstErrorReport() is
+    Some(report) and report.location is Some(location) then
+      let start = location.lookupTable.lookup(location.start)
+      let end = location.lookupTable.lookup(location.end)
+      print of report.message
+      print of "start=" + start.0 + ":" + start.1 + "; end=" + end.0 + ":" + end.1
+    else print of "missing parser error location"
+
+checkErrorLocation()
+//│ > unexpected token Reference("fun")
+//│ > start=1:4; end=1:7
 
 example of """
 type a = b and b = c
