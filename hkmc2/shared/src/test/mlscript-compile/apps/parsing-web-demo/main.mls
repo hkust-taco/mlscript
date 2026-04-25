@@ -107,6 +107,7 @@ parseButton.addEventListener of "click", event =>
   Runtime.try_catch of
     () =>
       hideError()
+      Extension.resetParserState()
       let tokens = Lexer.lex(editor.value, noWhitespace: true)
       set outputPanel.innerHTML = ""
       let trees = Parser.parse(tokens)

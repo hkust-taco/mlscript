@@ -226,6 +226,15 @@ data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
     _infixChoice.reset()
     _afterRef.reset()
     this
+
+  fun resetChoices(newChoices: Stack[Choice[A]]) =
+    set choices = newChoices
+    _endChoice.reset()
+    _keywordChoices.reset()
+    _refChoice.reset()
+    _infixChoice.reset()
+    _afterRef.reset()
+    this
   
   // Display parse rules as a tree in a BNF-like format.
   fun display =

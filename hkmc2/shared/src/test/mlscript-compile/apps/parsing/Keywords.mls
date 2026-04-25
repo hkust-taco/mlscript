@@ -146,10 +146,21 @@ val _begin = keyword of "begin", bracketPrec, basePrec
 val _end = keyword of "end", basePrec, None
 
 let builtinKeywords = new Set(all |> MutMap.keysIterator)
+let builtinKeywordEntries = all Iter.toArray()
 fun extended = all
   Iter.filtering of case [k, _] then builtinKeywords.has(k) is false
   Iter.toArray()
   MutMap.toMap()
+
+fun resetExtensions() =
+  all
+    Iter.mapping of case [name, _] then name
+    Iter.toArray()
+    Iter.each of name =>
+      if builtinKeywords.has(name) is false do
+        all |> MutMap.delete(name)
+  builtinKeywordEntries Iter.each of case [name, keyword] then
+    all |> MutMap.insert(name, keyword)
 
 pattern Letter = "a" ..= "z" | "A" ..= "Z"
 

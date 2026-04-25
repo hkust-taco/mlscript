@@ -20,6 +20,10 @@ module Extension with ...
 fun isDiagramDirective(tree: Tree) = tree is
   Tree.Define(Tree.DefineKind.Directive, [Tree.Reference("diagram", _), _] :: Nil)
 
+fun resetParserState() =
+  Keywords.resetExtensions()
+  Rules.resetExtensions()
+
 fun parsePrecedenceTree(tree: Tree) = if tree is
   Tree.Reference("None", _) then None
   Tree.Literal(Token.LiteralKind.Integer, value) then

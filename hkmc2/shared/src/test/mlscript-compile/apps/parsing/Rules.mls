@@ -441,3 +441,20 @@ syntaxKinds |> MutMap.insert of "term", termRule
 syntaxKinds |> MutMap.insert of "type", typeRule
 syntaxKinds |> MutMap.insert of "pattern", patternRule
 syntaxKinds |> MutMap.insert of "decl", declRule
+
+let builtinSyntaxKinds = new Set(syntaxKinds |> MutMap.keysIterator)
+let builtinRuleChoices = syntaxKinds
+  Iter.mapping of case [kindName, rule] then [kindName, rule.choices]
+  Iter.toArray()
+
+fun resetExtensions() =
+  syntaxKinds
+    Iter.mapping of case [kindName, _] then kindName
+    Iter.toArray()
+    Iter.each of kindName =>
+      if builtinSyntaxKinds.has(kindName) is false do
+        syntaxKinds |> MutMap.delete(kindName)
+  builtinRuleChoices Iter.each of case [kindName, choices] then
+    if syntaxKinds |> MutMap.get(kindName) is Some(rule) do
+      rule.resetChoices(choices)
+  extendedKinds.clear()
