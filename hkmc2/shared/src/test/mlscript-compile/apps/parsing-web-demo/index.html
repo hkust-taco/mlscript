@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Generalized Pratt Parser Demo</title>
   <link rel="icon" href="data:,">
   <link href="
 https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
@@ -23,6 +23,10 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
 </head>
 
 <body>
+  <header class="app-header">
+    <h1>Generalized Pratt Parser</h1>
+    <span id="parse-status" class="status">Ready</span>
+  </header>
   <div id="app">
     <div id="input">
       <header class="toolbar">
@@ -76,11 +80,19 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
   <style>
     :root {
       --monospace: Inconsolata, Menlo, Consolas, 'Courier New', Courier, monospace;
+      --border: #c8d0d9;
+      --panel: #ffffff;
+      --panel-muted: #f3f6f9;
+      --text: #1f2937;
+      --accent: #2563eb;
+      --error: #dc2626;
     }
 
     body {
       font-size: 16px;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      color: var(--text);
+      background: #eef2f7;
     }
 
     h2 {
@@ -92,9 +104,55 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
       margin: 0;
     }
 
+    .app-header {
+      height: 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0 1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    .app-header h1 {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 700;
+    }
+
+    .status {
+      min-width: 6rem;
+      padding: 0.25rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--panel-muted);
+      text-align: center;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .status.is-running {
+      border-color: #f59e0b;
+      background: #fffbeb;
+      color: #92400e;
+    }
+
+    .status.is-ok {
+      border-color: #16a34a;
+      background: #f0fdf4;
+      color: #166534;
+    }
+
+    .status.is-error {
+      border-color: var(--error);
+      background: #fef2f2;
+      color: #991b1b;
+    }
+
     #app {
       width: 100vw;
-      height: calc(100vh - 4rem);
+      height: calc(100vh - 3.5rem);
       display: flex;
       flex-direction: row;
       padding: 1rem;
@@ -123,8 +181,11 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
     #input,
     #results {
       flex: 1;
-      border: 1px solid #000;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--panel);
       min-width: 0;
+      overflow: hidden;
     }
 
     #input {
@@ -136,8 +197,8 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
       display: flex;
       gap: 0.5rem;
       padding: 0.5rem;
-      background: #f0f0f0;
-      border-bottom: 1px solid #000;
+      background: var(--panel-muted);
+      border-bottom: 1px solid var(--border);
     }
 
     #results {
@@ -149,22 +210,22 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
       display: flex;
       gap: 0.25rem;
       padding: 0.5rem 0.5rem 0;
-      background: #f0f0f0;
-      border-bottom: 1px solid #000;
+      background: var(--panel-muted);
+      border-bottom: 1px solid var(--border);
       align-items: flex-end;
     }
 
     .tab {
       line-height: 1.5;
-      border: 1px solid #000;
+      border: 1px solid var(--border);
       border-bottom: none;
-      background: #fff;
+      background: var(--panel);
       padding: 0.125rem 0.75rem;
       cursor: pointer;
     }
 
     .tab.is-active {
-      background: #ffffff;
+      background: var(--panel);
       font-weight: 700;
       transform: translateY(1px);
     }
@@ -211,7 +272,7 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
 
     #syntax-diagrams main {
       padding: 1rem;
-      border: 1px solid #000;
+      border: 1px solid var(--border);
       overflow: auto;
     }
 
@@ -298,7 +359,7 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
     .select {
       line-height: 1.5;
       background: #ffffff;
-      border: 1px solid #000;
+      border: 1px solid var(--border);
       box-shadow: rgb(187, 187, 187) 2px 2px 0px 0px;
     }
     
@@ -318,7 +379,8 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
     .button {
       line-height: 1.5;
       background: rgb(153, 197, 255);
-      border: 1px solid #000;
+      border: 1px solid #0f3d7a;
+      color: #0b1f3a;
       box-shadow: rgb(187, 187, 187) 2px 2px 0px 0px;
     }
 
@@ -446,6 +508,24 @@ https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
 
     svg.railroad-diagram g.diagram-text:hover path.diagram-text {
       fill: #eee;
+    }
+
+    @media (max-width: 900px) {
+      #app {
+        height: auto;
+        min-height: calc(100vh - 3.5rem);
+        flex-direction: column;
+      }
+
+      #input,
+      #results {
+        min-height: 24rem;
+      }
+
+      #input .toolbar,
+      .tabs {
+        flex-wrap: wrap;
+      }
     }
   </style>
 </body>

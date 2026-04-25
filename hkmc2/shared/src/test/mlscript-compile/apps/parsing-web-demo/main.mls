@@ -45,6 +45,7 @@ let selector = query("select#example")
 let parseButton = query("button#parse")
 let copyButton = query("#copy-output")
 let traceToggle = query("#trace-toggle")
+let parseStatus = query("#parse-status")
 let outputPanel = query("#output")
 let tokensOutput = query("#tokens-output")
 let traceOutput = query("#trace-output")
@@ -113,6 +114,17 @@ copyButton.addEventListener of "click", _ =>
   set copyButton.textContent = "Copied"
   document.defaultView.setTimeout(() => set copyButton.textContent = "Copy", 1200)
 
+fun setStatus(kind: Str, text: Str) =
+  set parseStatus.textContent = text
+  set parseStatus.className = "status " + kind
+
+fun visibleTreeCount(trees) =
+  let visible = trees
+    Iter.fromStack()
+    Iter.filtering(tree => Extension.isDiagramDirective(tree) is false)
+    Iter.toArray()
+  visible.length
+
 fun errorName(error) =
   if error.name is undefined then "Error" else error.name.toString()
 
@@ -163,6 +175,7 @@ fun firstErrorInStack(trees) =
 parseButton.addEventListener of "click", event =>
   Runtime.try_catch of
     () =>
+      setStatus("is-running", "Parsing")
       hideError()
       Extension.resetParserState()
       Parser.resetErrorReports()
@@ -180,10 +193,13 @@ parseButton.addEventListener of "click", event =>
       set traceOutput.textContent = traceOutputText
       if firstErrorInStack(trees) is
         Some(message) then
+          setStatus("is-error", "Error")
           showError(new Error("Parse produced an error tree: " + message), Parser.firstErrorReport())
         None then
           displayRules()
           set treeOutputText = trees Iter.fromStack() Iter.mapping(TreeHelpers.showAsTree) Iter.joined("\n")
+          let count = visibleTreeCount(trees)
+          setStatus("is-ok", "Parsed " + count.toString() + if count == 1 then " tree" else " trees")
           trees Iter.fromStack() Iter.each of tree => if
             Extension.isDiagramDirective(tree) then ()
             else
@@ -193,6 +209,7 @@ parseButton.addEventListener of "click", event =>
     error =>
       set Parser.tracer.enabled = false
       set traceOutput.textContent = Parser.tracer.messages.join("\n")
+      setStatus("is-error", "Error")
       showError(error, Parser.firstErrorReport())
 
 let indentRegex = new RegExp("""^(\s*)""")
