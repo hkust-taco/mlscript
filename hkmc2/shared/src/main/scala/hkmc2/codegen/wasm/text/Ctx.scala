@@ -254,12 +254,15 @@ end GlobalInfo
   *
   * Each instance of [[MemInfo]] represents a single memory definition in a WebAssembly module.
   *
-  * @param id
-  *   Symbolic identifier for the memory.
+  * @param sym
+  *   The source [[Symbol]] which this memory is generated from.
   * @param memType
   *   The type of the memory.
   */
-class MemInfo(val id: SymIdx, val memType: MemType) extends ToWat:
+class MemInfo(val sym: Symbol, val memType: MemType)(using Ctx, Raise) extends ToWat:
+
+  /** Symbolic identifier for the global. */
+  val id: SymIdx = SymIdx(summon[Ctx].memoryScp.allocateOrGetNamePrefixed(sym, N))
 
   def toWat: Document = doc"(memory ${id.toWat} ${memType.toWat})"
 end MemInfo
