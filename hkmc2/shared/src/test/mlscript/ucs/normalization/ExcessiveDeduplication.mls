@@ -82,14 +82,14 @@ if
 //│         break split_root$
 //│       }
 //│       if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
-//│         element0$ = runtime.Tuple.get(y, 0);
+//│         element0$ = runtime.checkCall(runtime.Tuple.get(y, 0));
 //│         b = element0$;
 //│       } else {
 //│         break split_default$
 //│       }
 //│     } else {
 //│       if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
-//│         element0$ = runtime.Tuple.get(y, 0);
+//│         element0$ = runtime.checkCall(runtime.Tuple.get(y, 0));
 //│         b = element0$;
 //│       } else {
 //│         break split_default$
