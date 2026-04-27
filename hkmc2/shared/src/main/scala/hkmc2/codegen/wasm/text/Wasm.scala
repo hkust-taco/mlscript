@@ -365,7 +365,7 @@ sealed abstract class ElemSegment(
 )(using Ctx, Raise) extends ToWat:
 
   /** Symbolic identifier for the element segment. */
-  val id = SymIdx(summon[Ctx].dataSegmentScp.allocateOrGetNamePrefixed(sym, idPrefix))
+  val id = SymIdx(summon[Ctx].elemSegmentScp.allocateOrGetNamePrefixed(sym, idPrefix))
 
   /** Applies abbreviations on the `elemlist` if a simpler replacement is available. */
   protected def abbrevElemList: Document =
