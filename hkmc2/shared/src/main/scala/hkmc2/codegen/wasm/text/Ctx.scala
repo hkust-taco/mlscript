@@ -46,7 +46,7 @@ object SessionBinding:
   */
 final case class SessionFunc(
     sym: BlockMemberSymbol,
-    idPrefix: Opt[Str],
+    wrapId: Opt[Str] -> Opt[Str],
     moduleName: Str,
     exportName: Str,
     funcType: FunctionType,
@@ -68,7 +68,7 @@ final case class SessionFunc(
   */
 final case class SessionGlobal(
     sym: Symbol,
-    idPrefix: Opt[Str],
+    wrapId: Opt[Str] -> Opt[Str],
     moduleName: Str,
     exportName: Str,
     globalType: GlobalType,
@@ -90,7 +90,7 @@ final case class SessionGlobal(
   */
 final case class SessionClass(
     sym: BlockMemberSymbol,
-    idPrefix: Opt[Str],
+    wrapId: Opt[Str] -> Opt[Str],
     compType: CompType,
     objectTag: Opt[Int],
     runtimeTags: LinkedHashSet[Int],
@@ -115,7 +115,7 @@ final case class SessionClass(
 final case class SessionSingleton(
     blockSym: BlockMemberSymbol,
     objectSym: Opt[ModuleOrObjectSymbol],
-    idPrefix: Opt[Str],
+    wrapId: Opt[Str] -> Opt[Str],
     moduleName: Str,
     exportName: Str,
     globalTy: RefType,
@@ -167,9 +167,8 @@ final class SessionExportCtx(
   *
   * @param sym
   *   The source [[Symbol]] which this function is generated from.
-  * @param idPrefix
-  *   An optional prefix for the symbolic identifier of this function. If provided, the function name will be prepended
-  *   with `${idPrefix}_`.
+  * @param wrapId
+  *   An pair of optional strings for adding a prefix and suffix to the generated identifier of this function.
   * @param typeUse
   *   [[TypeUse]] of the function's type in the module's type section.
   * @param params
@@ -185,7 +184,7 @@ final class SessionExportCtx(
   */
 class FuncInfo(
     val sym: BlockMemberSymbol | TempSymbol,
-    val idPrefix: Opt[Str],
+    val wrapId: Opt[Str] -> Opt[Str],
     val typeUse: TypeUse,
     val params: Seq[Local -> SymIdx],
     val resultTypes: Seq[Result],
@@ -194,8 +193,18 @@ class FuncInfo(
     val exportName: Opt[Str],
 )(using Ctx, Raise) extends ToWat:
 
+  def this(
+    sym: BlockMemberSymbol | TempSymbol,
+    typeUse: TypeUse,
+    params: Seq[Local -> SymIdx],
+    resultTypes: Seq[Result],
+    locals: Seq[Local -> SymIdx],
+    body: Expr,
+    exportName: Opt[Str],
+  )(using Ctx, Raise) = this(sym, N -> N, typeUse, params, resultTypes, locals, body, exportName)
+
   /** Symbolic identifier for the function. */
-  val id = SymIdx(summon[Ctx].funcScp.allocateOrGetNamePrefixed(sym, idPrefix))
+  val id = SymIdx(summon[Ctx].funcScp.allocateOrGetNameWrapped(sym, wrapId))
 
   /** Returns the type of this function as a [[SignatureType]]. */
   def getSignatureType: SignatureType = SignatureType(
@@ -228,20 +237,22 @@ end FuncInfo
   *   Optional export name.
   * @param sym
   *   The source [[Symbol]] which this global is generated from.
-  * @param idPrefix
-  *   An optional prefix for the symbolic identifier of this global. If provided, the global name will be prepended with
-  *   `${idPrefix}_`.
+  * @param wrapId
+  *   An pair of optional strings for adding a prefix and suffix to the generated identifier of this global.
   */
 class GlobalInfo(
     val globalType: GlobalType,
     val init: Expr,
     val exportName: Opt[Str],
     val sym: Symbol,
-    val idPrefix: Opt[Str],
+    val wrapId: Opt[Str] -> Opt[Str],
 )(using Ctx, Raise) extends ToWat:
 
+  def this(globalType: GlobalType, init: Expr, exportName: Opt[Str], sym: Symbol)(using Ctx, Raise) =
+    this(globalType, init, exportName, sym, N -> N)
+
   /** Symbolic identifier for the global. */
-  val id: SymIdx = SymIdx(summon[Ctx].globalScp.allocateOrGetNamePrefixed(sym, idPrefix))
+  val id: SymIdx = SymIdx(summon[Ctx].globalScp.allocateOrGetNameWrapped(sym, wrapId))
 
   def toWat: Document =
     doc"""(global ${id.toWat}${
@@ -258,11 +269,15 @@ end GlobalInfo
   *   The source [[Symbol]] which this memory is generated from.
   * @param memType
   *   The type of the memory.
+  * @param wrapId
+  *   An pair of optional strings for adding a prefix and suffix to the generated identifier of this memory.
   */
-class MemInfo(val sym: Symbol, val memType: MemType)(using Ctx, Raise) extends ToWat:
+class MemInfo(val sym: Symbol, val memType: MemType, val wrapId: Opt[Str] -> Opt[Str])(using Ctx, Raise) extends ToWat:
+
+  def this(sym: Symbol, memType: MemType)(using Ctx, Raise) = this(sym, memType, N -> N)
 
   /** Symbolic identifier for the global. */
-  val id: SymIdx = SymIdx(summon[Ctx].memoryScp.allocateOrGetNamePrefixed(sym, N))
+  val id: SymIdx = SymIdx(summon[Ctx].memoryScp.allocateOrGetNameWrapped(sym, wrapId))
 
   def toWat: Document = doc"(memory ${id.toWat} ${memType.toWat})"
 end MemInfo
@@ -273,23 +288,28 @@ end MemInfo
   *
   * @param sym
   *   The source [[Symbol]] which this type is generated from.
-  * @param idPrefix
-  *   An optional prefix for the symbolic identifier of this type. If provided, the type name will be prepended with
-  *   `${idPrefix}_`.
+  * @param wrapId
+  *   An pair of optional strings for adding a prefix and suffix to the generated identifier of this type.
   * @param compType
   *   The composite type this type definition represents.
   * @param objectTag
   *   An optional object tag number associated with this type.
   */
-final case class TypeInfo(
+final class TypeInfo(
     val sym: BlockMemberSymbol | TempSymbol,
-    val idPrefix: Opt[Str],
+    val wrapId: Opt[Str] -> Opt[Str],
     val compType: CompType,
     val objectTag: Opt[Int],
 )(using Ctx, Raise) extends ToWat:
 
+  def this(
+    sym: BlockMemberSymbol | TempSymbol,
+    compType: CompType,
+    objectTag: Opt[Int],
+  )(using Ctx, Raise) = this(sym, N -> N, compType, objectTag)
+
   /** Symbolic identifier for the type. */
-  val id = SymIdx(summon[Ctx].typeScp.allocateOrGetNamePrefixed(sym, idPrefix))
+  val id = SymIdx(summon[Ctx].typeScp.allocateOrGetNameWrapped(sym, wrapId))
 
   def toWat: Document = doc"(type ${id.toWat} ${compType.toWat})"
 
@@ -302,14 +322,13 @@ final case class TypeInfo(
   *   The function type referenced by this tag.
   * @param sym
   *   The source [[Symbol]] which this tag is generated from.
-  * @param idPrefix
-  *   An optional prefix for the symbolic identifier of this tag. If provided, the tag name will be prepended with
-  *   `${idPrefix}_`.
   */
-class TagInfo(val typeUse: TypeUse, val sym: Symbol, val idPrefix: Opt[Str])(using Ctx, Raise) extends ToWat:
+class TagInfo(val typeUse: TypeUse, val sym: Symbol, val wrapId: Opt[Str] -> Opt[Str])(using Ctx, Raise) extends ToWat:
+
+  def this(sym: Symbol, typeUse: TypeUse)(using Ctx, Raise) = this(typeUse, sym, N -> N)
 
   /** Symbolic identifier for the tag. */
-  val id: SymIdx = SymIdx(summon[Ctx].tagScp.allocateOrGetNamePrefixed(sym, idPrefix))
+  val id: SymIdx = SymIdx(summon[Ctx].tagScp.allocateOrGetNameWrapped(sym, wrapId))
 
   def toWat: Document =
     doc"""(tag ${id.toWat} (export "${id.id}") ${typeUse.toWat})"""
@@ -564,7 +583,7 @@ class Ctx(using State) extends ToWat:
       Raise,
   ): ExternType.Global =
     globalEntry match
-      case globalInfo: GlobalInfo => ExternType.Global(globalInfo.globalType, globalInfo.sym, idPrefix = N)
+      case globalInfo: GlobalInfo => ExternType.Global(globalInfo.globalType, globalInfo.sym)
       case globalImport: Import[ExternType.Global] => globalImport.externType
 
   /** Returns a new number to be used as an object tag. */
@@ -668,14 +687,14 @@ class Ctx(using State) extends ToWat:
               ExternType.Mem(
                 MemType(existing.externType.memType.lim.copy(min = minPages)),
                 sym = existing.externType.sym,
-                idPrefix = existing.externType.idPrefix,
+                wrapId = existing.externType.wrapId,
               ),
             ))
       case N =>
         val id = SymIdx(name)
         memories = memories +
           (id ->
-            Import(module, name, ExternType.Mem(MemType(Limits(minPages)), sym = TempSymbol(N, name), idPrefix = N)))
+            Import(module, name, ExternType.Mem(MemType(Limits(minPages)), sym = TempSymbol(N, name))))
         cachedMemoryImport(key) = SymIdx(name)
     end match
   end ensureMemoryImport
@@ -705,7 +724,7 @@ class Ctx(using State) extends ToWat:
     val idx = FuncIdx(funcInfo.id)
     val refType = RefType(funcInfo.typeUse.typeIdx, nullable = false)
     elemSegments = elemSegments +
-      (id -> ElemSegment.Declare(refType -> Seq(ref.func(idx, refType)), funcInfo.sym, funcInfo.idPrefix))
+      (id -> ElemSegment.Declare(refType -> Seq(ref.func(idx, refType)), funcInfo.sym, funcInfo.wrapId))
     idx
 
   /** Returns the [[FuncIdx]] of the given `funcref`.

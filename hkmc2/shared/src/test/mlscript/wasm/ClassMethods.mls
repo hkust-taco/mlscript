@@ -30,7 +30,7 @@ a.A#get() + A(2).get()
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (func $A_A (export "A") (type $A_ctor) (param $x (ref null any)) (result (ref null any))
+//│   (func $A_ctor (export "A") (type $A_ctor) (param $x (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -58,7 +58,7 @@ a.A#get() + A(2).get()
 //│       (nop)
 //│       (block (result (ref null any))
 //│         (global.set $a
-//│           (call $A_A
+//│           (call $A_ctor
 //│             (ref.i31
 //│               (i32.const 1))))
 //│         (block (result (ref null any))
@@ -67,7 +67,7 @@ a.A#get() + A(2).get()
 //│               (global.get $a)))
 //│           (block (result (ref null any))
 //│             (local.set $tmp1
-//│               (call $A_A
+//│               (call $A_ctor
 //│                 (ref.i31
 //│                   (i32.const 2))))
 //│             (block (result (ref null any))
@@ -78,7 +78,7 @@ a.A#get() + A(2).get()
 //│                 (local.get $tmp)
 //│                 (local.get $tmp2))))))))
 //│   (elem $A_init declare func $A_init)
-//│   (elem $A_A declare func $A_A)
+//│   (elem $A_ctor declare func $A_ctor)
 //│   (elem $A_get declare func $A_get)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:

@@ -46,7 +46,7 @@ Bar.y
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (func $Foo_Foo (type $Foo_ctor) (result (ref null any))
+//│   (func $Foo_ctor (type $Foo_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -60,7 +60,7 @@ Bar.y
 //│           (local.get $this)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $Bar_Bar (type $Bar_ctor) (result (ref null any))
+//│   (func $Bar_ctor (type $Bar_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -78,10 +78,10 @@ Bar.y
 //│     (block
 //│       (global.set $Foo$inst
 //│         (ref.cast (ref null $Foo)
-//│           (call $Foo_Foo)))
+//│           (call $Foo_ctor)))
 //│       (global.set $Bar$inst
 //│         (ref.cast (ref null $Bar)
-//│           (call $Bar_Bar)))))
+//│           (call $Bar_ctor)))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -92,8 +92,8 @@ Bar.y
 //│             (global.get $Bar$inst))))))
 //│   (elem $Foo_init declare func $Foo_init)
 //│   (elem $Bar_init declare func $Bar_init)
-//│   (elem $Foo_Foo declare func $Foo_Foo)
-//│   (elem $Bar_Bar declare func $Bar_Bar)
+//│   (elem $Foo_ctor declare func $Foo_ctor)
+//│   (elem $Bar_ctor declare func $Bar_ctor)
 //│   (elem $start declare func $start)
 //│   (elem $entry declare func $entry)
 //│   (start $start))
