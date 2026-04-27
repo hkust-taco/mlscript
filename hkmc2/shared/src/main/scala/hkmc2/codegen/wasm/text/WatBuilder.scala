@@ -121,7 +121,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       lastWords("Missing singleton metadata for synthetic Unit object")
     // Record session metadata for the synthetic Unit singleton.
     summon[SessionExportCtx].emit(SessionClass(
-      sym = typeInfo.sym,
+      sym = unitDefn.sym,
       idPrefix = typeInfo.idPrefix,
       compType = typeInfo.compType,
       objectTag = typeInfo.objectTag,
@@ -434,16 +434,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   )(using Ctx, Raise): Unit =
     sessionImports.foreach:
       case cls: SessionClass =>
-        cls.sym match
-          case bms: BlockMemberSymbol =>
-            ctx.addType(TypeInfo(
-              sym = bms,
-              idPrefix = cls.idPrefix,
-              compType = cls.compType,
-              objectTag = cls.objectTag,
-            ))
-            ctx.registerRuntimeClassTags(bms, cls.runtimeTags)
-          case _ =>
+        ctx.addType(TypeInfo(
+          sym = cls.sym,
+          idPrefix = cls.idPrefix,
+          compType = cls.compType,
+          objectTag = cls.objectTag,
+        ))
+        ctx.registerRuntimeClassTags(cls.sym, cls.runtimeTags)
       case _ =>
 
     sessionImports.foreach:

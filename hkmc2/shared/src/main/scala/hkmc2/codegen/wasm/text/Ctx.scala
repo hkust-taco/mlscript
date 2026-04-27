@@ -89,7 +89,7 @@ final case class SessionGlobal(
   *   Additional symbols that should resolve to this class binding.
   */
 final case class SessionClass(
-    sym: Symbol,
+    sym: BlockMemberSymbol,
     idPrefix: Opt[Str],
     compType: CompType,
     objectTag: Opt[Int],
