@@ -77,7 +77,7 @@ let Predef1;
         Predef.meta = this
       }
       static codegen(t, file) {
-        return Term.codegen(t, file)
+        return runtime.safeCall(Term.codegen(t, file))
       } 
       static print(t) {
         return runtime.safeCall(Term.print(t))
@@ -143,7 +143,7 @@ let Predef1;
   } 
   static call(receiver, f) {
     return (...args) => {
-      return f.call(receiver, ...args)
+      return runtime.safeCall(f.call(receiver, ...args))
     }
   } 
   static equals(a, b) {
@@ -314,10 +314,10 @@ let Predef1;
     return instance
   } 
   static enterHandleBlock(handler, body) {
-    return Runtime.enterHandleBlock(handler, body)
+    return runtime.safeCall(Runtime.enterHandleBlock(handler, body))
   } 
   static raiseUnhandledEffect() {
-    return Runtime.mkEffect(Runtime.FatalEffect, null)
+    return runtime.safeCall(Runtime.mkEffect(Runtime.FatalEffect, null))
   }
   toString() { return runtime.render(this); }
   static [definitionMetadata] = ["class", "Predef"]; 

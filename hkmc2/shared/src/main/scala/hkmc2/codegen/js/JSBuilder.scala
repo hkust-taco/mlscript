@@ -135,12 +135,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         doc"${l.nme}(${argsDoc})"
       else errExpr(msg"Illegal arity for builtin symbol '${l.nme}'")
     
-    case Call(s @ Select(_, id), lhs :: rhs :: Nil) =>
-      Elaborator.ctx.builtins.getBuiltinOp(id.name) match
-        case S(jsOp) =>
-          val res = doc"${operand(lhs)} ${jsOp} ${operand(rhs)}"
-          if needsParens(jsOp) then doc"(${res})" else res
-        case N => doc"${result(s)}(${(argument(lhs) :: argument(rhs) :: Nil).mkDocument(", ")})"
+    case Call(s @ Select(_, Elaborator.ctx.builtins.BuiltInOpIdent(jsOp)), lhs :: rhs :: Nil) =>
+      val res = doc"${operand(lhs)} ${jsOp} ${operand(rhs)}"
+      if needsParens(jsOp) then doc"(${res})" else res
     case c @ Call(fun, args) =>
       val base = subexpression(fun)
       val argsDoc = args.map(argument).mkDocument(", ")

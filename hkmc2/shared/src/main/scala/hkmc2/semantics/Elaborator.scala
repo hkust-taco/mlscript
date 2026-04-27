@@ -216,6 +216,9 @@ object Elaborator:
         val handle_suspension = assumeObject("handle_suspension")
       def getBuiltinOp(op: Str): Opt[Str] =
         if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
+      object BuiltInOpIdent:
+        def unapply(id: Ident): Opt[Str] =
+          getBuiltinOp(id.name)
       /** Classes that do not use `instanceof` in pattern matching. */
       val virtualClasses = Set(Int, Num, Str, Bool, TypedArray)
   
