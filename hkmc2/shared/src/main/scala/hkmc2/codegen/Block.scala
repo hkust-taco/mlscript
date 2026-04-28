@@ -571,8 +571,8 @@ final case class FunDefn(
 ) extends Defn:
   val innerSym = N
   val asPath = Value.Ref(sym, S(dSym))
-  def forceTailRec: Bool = annotations.contains(Annot.TailRec)
-  def visibility: Visibility = annotations.collectFirst:
+  lazy val forceTailRec: Bool = annotations.contains(Annot.TailRec)
+  lazy val visibility: Visibility = annotations.collectFirst:
     case Annot.Modifier(Keyword.`private`) => Visibility.Private
     case Annot.Modifier(Keyword.`public`) => Visibility.Public
   .getOrElse(Visibility.Public)
