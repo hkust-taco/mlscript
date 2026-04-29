@@ -1,0 +1,34 @@
+:js
+
+
+import "../../mlscript-compile/Example.mls" as AnotherExample
+
+
+:e
+Example.inc(0)
+//│ ╔══[COMPILATION ERROR] Name not found: Example
+//│ ║  l.8: 	Example.inc(0)
+//│ ╙──     	^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+:expect 1
+AnotherExample.inc(0)
+//│ = 1
+
+
+:silent
+import "../../mlscript-compile/Example.mjs" as JSExample
+
+
+:e
+Example.inc(0)
+//│ ╔══[COMPILATION ERROR] Name not found: Example
+//│ ║  l.25: 	Example.inc(0)
+//│ ╙──      	^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+:expect 1
+JSExample.inc(0)
+//│ = 1

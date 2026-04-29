@@ -387,7 +387,22 @@ class ParseRules(using State):
     prefixed(`not`),
     prefixed(`new!`),
     prefixed(`throw`),
-    prefixed(`import`), // TODO improve – only allow strings
+    keepKw(`import`):
+      ParseRule("'import' keyword"):
+        Expr(
+          ParseRule("'import' path")(
+            keepKw(`as`)(
+              ParseRule("'import' alias"):
+                Expr(ParseRule("'import' alias name")(end(()))):
+                  case (alias, ()) => alias
+            ).map(S(_)),
+            end(N),
+          )
+        ) { case (path, alias) => path -> alias }
+    .map:
+      case (kw, (path, S((asKw, alias)))) => PrefixApp(kw, InfixApp(path, asKw, alias))
+      case (kw, (path, N)) => PrefixApp(kw, path)
+    ,
     modified(`virtual`),
     modified(`override`),
     modified(`declare`),
