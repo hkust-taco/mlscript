@@ -392,7 +392,7 @@ class ParseRules(using State):
         Expr(
           ParseRule("'import' path")(
             keepKw(`as`)(
-              ParseRule("ímport'-'as' keywords"):
+              ParseRule("'import'-'as' keywords"):
                 Expr(ParseRule("'import' alias")(end(()))):
                   case (alias, ()) => alias
             ).map(S(_)),
