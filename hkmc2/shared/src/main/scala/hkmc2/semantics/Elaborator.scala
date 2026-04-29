@@ -1088,6 +1088,7 @@ extends Importer with ucs.SplitElaborator:
         reportUnusedAnnotations
         val pathAndAlias = arg match
           case InfixApp(pathArg, Keywrd(Keyword.`as`), alias: Ident) => S((pathArg, S(alias)))
+          case InfixApp(pathArg, Keywrd(Keyword.`as`), Error()) => N
           case InfixApp(_, Keywrd(Keyword.`as`), badAlias) =>
             raise(ErrorReport(
               msg"Expected identifier after 'as' in import statement" ->

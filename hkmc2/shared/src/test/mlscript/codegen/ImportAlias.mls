@@ -31,19 +31,15 @@ JSExample.inc(0)
 
 
 :pe
-:e
 import "../../mlscript-compile/Example.mls" as
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.35: 	import "../../mlscript-compile/Example.mls" as
-//│ ╙──      	                                              ^
-//│ ╔══[COMPILATION ERROR] Expected identifier after 'as' in import statement
-//│ ║  l.35: 	import "../../mlscript-compile/Example.mls" as
+//│ ║  l.34: 	import "../../mlscript-compile/Example.mls" as
 //│ ╙──      	                                              ^
 
 :e
 import "../../mlscript-compile/Example.mls" as "Examle"
 //│ ╔══[COMPILATION ERROR] Expected identifier after 'as' in import statement
-//│ ║  l.44: 	import "../../mlscript-compile/Example.mls" as "Examle"
+//│ ║  l.40: 	import "../../mlscript-compile/Example.mls" as "Examle"
 //│ ╙──      	                                               ^^^^^^^^
 
 import "../../mlscript-compile/Example.mls"
