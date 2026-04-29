@@ -9,7 +9,7 @@ import hkmc2.Message.MessageContext
 import hkmc2.{semantics => sem}
 import hkmc2.semantics.{Term => st}
 
-import syntax.{Literal, Tree, SpreadKind}
+import syntax.{Literal, Tree, SpreadKind, Keyword}
 import semantics.*
 import semantics.Term.*
 import sem.Elaborator.State
@@ -234,7 +234,7 @@ sealed abstract class Block extends Product:
           val newBody = d.body.flattened
           if newBody is d.body
           then d
-          else d.copy(body = newBody)(forceTailRec = d.forceTailRec, configOverride = d.configOverride, visibility = d.visibility)
+          else d.copy(body = newBody)(configOverride = d.configOverride, annotations = d.annotations)
         case v: ValDefn => v
         case c: ClsLikeDefn =>
           val newPreCtor = c.preCtor.flattened
@@ -242,7 +242,7 @@ sealed abstract class Block extends Product:
           def flattenMethods(ms: List[FunDefn]) = ms.mapConserve:
             case f@FunDefn(owner, sym, dSym, params, body) =>
               val newBody = body.flattened
-              if newBody is body then f else f.copy(body = newBody)(forceTailRec = f.forceTailRec, configOverride = f.configOverride, visibility = f.visibility)
+              if newBody is body then f else f.copy(body = newBody)(configOverride = f.configOverride, annotations = f.annotations)
           val newMethods = flattenMethods(c.methods)
           val newCompanion = c.companion.mapConserve: c =>
             val newCtor = c.ctor.flattened
@@ -259,7 +259,7 @@ sealed abstract class Block extends Product:
             ctor = newCtor,
             methods = newMethods,
             companion = newCompanion,
-          )(c.configOverride)
+          )(c.configOverride, c.annotations)
       
       val newRest = rest.flatten(k)
       if (newDefn is defn) && (newRest is rest)
@@ -450,14 +450,14 @@ object HandleBlock:
   )(using Elaborator.State, Elaborator.Ctx) =
     val sym = new BlockMemberSymbol("handleBlock$", Nil, false)
 
-    val bodyDefn = FunDefn.withFreshSymbol(N, sym, PlainParamList(Nil) :: Nil, body)(false, N, Visibility.Public)
+    val bodyDefn = FunDefn.withFreshSymbol(N, sym, PlainParamList(Nil) :: Nil, body)(N, annotations = Nil)
     
     val handlerMtds = handlers.map: handler =>
       val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
       val fDef = FunDefn.withFreshSymbol(
         N, sym, PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil) :: Nil,
         handler.body
-        )(false, N, Visibility.Public)
+        )(N, annotations = Nil)
       val rSym = TempSymbol(N, "suspendRes")
       FunDefn.withFreshSymbol(
         S(cls),
@@ -465,7 +465,7 @@ object HandleBlock:
         handler.params,
         Scoped(Set(sym, rSym), Define(
           fDef,
-          Return(suspend(cls.asPath, Value.Ref(sym, S(fDef.dSym))), false))))(false, N, Visibility.Public)
+          Return(suspend(cls.asPath, Value.Ref(sym, S(fDef.dSym))), false))))(N, annotations = Nil)
 
     val clsDefn = ClsLikeDefn(
       N, // no owner
@@ -480,7 +480,7 @@ object HandleBlock:
       End(),
       N,
       N,
-    )(N)
+    )(N, Nil)
 
     blockBuilder
       .scopedVars(Set(clsDefn.sym, sym))
@@ -509,6 +509,10 @@ object HandleBlock:
 sealed abstract class Defn:
   val innerSym: Opt[MemberSymbol]
   val sym: BlockMemberSymbol
+  val annotations: Ls[Annot]
+  def isStaged: Bool = annotations.exists:
+    case Annot.Modifier(Keyword.`staged`) => true
+    case _ => false
   def isOwned: Bool = owner.isDefined
   def owner: Opt[InnerSymbol]
   
@@ -562,17 +566,21 @@ final case class FunDefn(
     params: Ls[ParamList],
     body: Block,
   )(
-    val forceTailRec: Bool,
     val configOverride: Opt[Config],
-    val visibility: Visibility,
+    val annotations: Ls[Annot],
 ) extends Defn:
   val innerSym = N
   val asPath = Value.Ref(sym, S(dSym))
+  lazy val forceTailRec: Bool = annotations.contains(Annot.TailRec)
+  lazy val visibility: Visibility = annotations.collectFirst:
+    case Annot.Modifier(Keyword.`private`) => Visibility.Private
+    case Annot.Modifier(Keyword.`public`) => Visibility.Public
+  .getOrElse(Visibility.Public)
 object FunDefn:
-  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(forceTailRec: Bool, configOverride: Opt[Config], visibility: Visibility)(using State) =
+  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
     val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
     sym.tsym = S(tSym)
-    FunDefn(owner, sym, tSym, params, body)(forceTailRec, configOverride, visibility)
+    FunDefn(owner, sym, tSym, params, body)(configOverride, annotations)
 
 final case class ValDefn(
     tsym: TermSymbol,
@@ -580,6 +588,7 @@ final case class ValDefn(
     rhs: Path,
 )(
     val configOverride: Opt[Config],
+    val annotations: Ls[Annot],
 ) extends Defn:
   val innerSym = S(tsym)
   val owner: Opt[InnerSymbol] = tsym.owner
@@ -592,9 +601,10 @@ object ValDefn:
       sym: BlockMemberSymbol,
       rhs: Path,
       configOverride: Opt[Config],
+      annotations: Ls[Annot],
     )(using State)
     : ValDefn =
-      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme)), sym = sym, rhs = rhs)(configOverride)
+      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme)), sym = sym, rhs = rhs)(configOverride, annotations)
 
 
 /*
@@ -649,6 +659,7 @@ final case class ClsLikeDefn(
     bufferable: Option[Bool],
 )(
     val configOverride: Opt[Config],
+    val annotations: Ls[Annot],
 ) extends Defn:
   require(k isnt syntax.Mod)
   val innerSym = S(isym.asMemSym)
@@ -661,7 +672,11 @@ final case class ClsLikeBody(
     privateFields: Ls[TermSymbol],
     publicFields: Ls[BlockMemberSymbol -> TermSymbol],
     ctor: Block,
+    annotations: Ls[Annot],
 ):
+  def isStaged: Bool = annotations.exists:
+    case Annot.Modifier(Keyword.`staged`) => true
+    case _ => false
   def subBlocks: Ls[Block] =
     ctor :: methods.flatMap(_.subBlocks)
   lazy val freeVars: Set[Local] =
@@ -880,5 +895,4 @@ def blockBuilder: Block => Block = identity
 
 extension (l: Local)
   def asPath: Path = Value.Ref(l, N)
-
 

@@ -447,7 +447,7 @@ class TailRecOpt(using State, TL, Raise):
           Call(sel, args)(true, false, false),
           false
         )
-        FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(false, N, f.visibility)
+        FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(N, f.annotations)
     
     val params =
       val initial = paramSyms.map(Param.simple(_))
@@ -457,7 +457,7 @@ class TailRecOpt(using State, TL, Raise):
     val loopDefn = FunDefn(
       owner, bms, dSym,
       PlainParamList(params) :: Nil,
-      loop)(false, N, Visibility.Public) // Q: maybe should be Private?
+      loop)(N, annotations = Nil) // Q: maybe should be Private?
     
     if funs.size === 1 then (N, loopDefn :: Nil)
     else (S(loopDefn), rewrittenFuns)
@@ -495,13 +495,13 @@ class TailRecOpt(using State, TL, Raise):
       val companion = c.companion.map: comp =>
         val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
         comp.copy(methods = cMtds)
-      c.copy(companion = companion)(c.configOverride)
+      c.copy(companion = companion)(c.configOverride, c.annotations)
     else
       val mtds = optFunctionsFlat(c.methods, S(c.isym))
       val companion = c.companion.map: comp =>
         val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
         comp.copy(methods = cMtds)
-      c.copy(methods = mtds, companion = companion)(c.configOverride)
+      c.copy(methods = mtds, companion = companion)(c.configOverride, c.annotations)
   
   def transform(b: Block) =
     /* To avoid `x` being overridden in the following when the lifter is not run:

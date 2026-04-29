@@ -79,19 +79,20 @@ class BufferableTransform()(using Ctx, State, Raise):
               val blk = mkFieldReplacer(buf, idx, symMap).applyBlock(f.body)
               FunDefn(f.owner, f.sym, TermSymbol(f.dSym.k, f.dSym.owner, f.dSym.id), PlainParamList(
                 Param(FldFlags.empty, buf, N, Modulefulness.none) :: Param(FldFlags.empty, idx, N, Modulefulness.none) :: Nil) :: newParams,
-                if isCtor then Begin(blk, Return(idx.asPath, false)) else blk)(forceTailRec = f.forceTailRec, configOverride = f.configOverride, visibility = f.visibility)
+                if isCtor then Begin(blk, Return(idx.asPath, false)) else blk)(configOverride = f.configOverride, annotations = f.annotations)
             val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
                 S(companionSym), 
                 BlockMemberSymbol("ctor", Nil, false), 
                 cls.paramsOpt.toList,
                 Begin(cls.preCtor, cls.ctor),
-              )(false, N, Visibility.Public), true)
+              )(N, annotations = Nil), true)
             val fakeCompanion = ClsLikeBody(
               companionSym,
               fakeCtor :: cls.methods.map(transformFunDefn(_, false)),
               Nil,
               clsSizeSym -> clsSizeTermSym :: Nil,
-              Define(ValDefn(clsSizeTermSym, clsSizeSym, Value.Lit(Tree.IntLit(fields.size)))(N), End()),
+              Define(ValDefn(clsSizeTermSym, clsSizeSym, Value.Lit(Tree.IntLit(fields.size)))(N, Nil), End()),
+              annotations = Nil,
             )
             k:
               ClsLikeDefn(
@@ -110,6 +111,6 @@ class BufferableTransform()(using Ctx, State, Raise):
                 if bufferable then cls.ctor else End(),
                 S(fakeCompanion),
                 cls.bufferable,
-              )(cls.configOverride)
+              )(cls.configOverride, cls.annotations)
         case _ => super.applyDefn(defn)(k)
     transformer.applyBlock(blk)
