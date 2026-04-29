@@ -43,13 +43,13 @@ if Bar(true) is
   else 2
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
-//│   (type $Bar_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $Bar_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Bar (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))) (field $y (mut (ref null any))))))
 //│   (type $Bar_init (func (param $this (ref null any)) (param $y (ref null any)) (result (ref null any))))
 //│   (type $Bar_ctor (func (param $y (ref null any)) (result (ref null any))))
-//│   (type $Baz_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $Baz_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Baz (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))) (field $z (mut (ref null any))))))
 //│   (type $Baz_init (func (param $this (ref null any)) (param $z (ref null any)) (result (ref null any))))
 //│   (type $Baz_ctor (func (param $z (ref null any)) (result (ref null any))))
@@ -119,10 +119,12 @@ if Bar(true) is
 //│     (local $arg$Baz$0$ (ref null any))
 //│     (local $arg$Bar$0$ (ref null any))
 //│     (local $matchRes (ref null any))
+//│     (local $scrut1 (ref null any))
 //│     (local $currentTypeInfo (ref null any))
 //│     (local $targetTypeInfo (ref null any))
 //│     (local $typeInfoMatch (ref null any))
 //│     (local $matchRes1 (ref null any))
+//│     (local $scrut2 (ref null any))
 //│     (local $currentTypeInfo1 (ref null any))
 //│     (local $targetTypeInfo1 (ref null any))
 //│     (local $typeInfoMatch1 (ref null any))
@@ -140,15 +142,18 @@ if Bar(true) is
 //│               (local.set $matchRes
 //│                 (ref.null any))
 //│               (if
-//│                 (ref.test (ref $Object)
-//│                   (local.get $scrut))
+//│                 (block (result i32)
+//│                   (local.set $scrut1
+//│                     (local.get $scrut))
+//│                   (ref.test (ref $Object)
+//│                     (local.get $scrut1)))
 //│                 (then
 //│                   (if
 //│                     (block (result i32)
 //│                       (local.set $currentTypeInfo
 //│                         (struct.get $Object $$typeinfo
 //│                           (ref.cast (ref $Object)
-//│                             (local.get $scrut))))
+//│                             (local.get $scrut1))))
 //│                       (local.set $targetTypeInfo
 //│                         (global.get $Bar_typeinfo))
 //│                       (local.set $typeInfoMatch
@@ -214,27 +219,30 @@ if Bar(true) is
 //│                                 (local.get $matchRes1)))))
 //│                         (br $match))))))
 //│               (if
-//│                 (ref.test (ref $Object)
-//│                   (local.get $scrut))
+//│                 (block (result i32)
+//│                   (local.set $scrut2
+//│                     (local.get $scrut))
+//│                   (ref.test (ref $Object)
+//│                     (local.get $scrut2)))
 //│                 (then
 //│                   (if
 //│                     (block (result i32)
 //│                       (local.set $currentTypeInfo1
 //│                         (struct.get $Object $$typeinfo
 //│                           (ref.cast (ref $Object)
-//│                             (local.get $scrut))))
+//│                             (local.get $scrut2))))
 //│                       (local.set $targetTypeInfo1
 //│                         (global.get $Baz_typeinfo))
 //│                       (local.set $typeInfoMatch1
 //│                         (ref.i31
 //│                           (i32.const 0)))
-//│                       (block $typeInfoEnd1
-//│                         (loop $typeInfoLoop1
+//│                       (block $typeInfoEnd
+//│                         (loop $typeInfoLoop
 //│                           (if
 //│                             (ref.is_null
 //│                               (local.get $currentTypeInfo1))
 //│                             (then
-//│                               (br $typeInfoEnd1)))
+//│                               (br $typeInfoEnd)))
 //│                           (if
 //│                             (ref.eq
 //│                               (ref.cast (ref null eq)
@@ -246,12 +254,12 @@ if Bar(true) is
 //│                                 (local.set $typeInfoMatch1
 //│                                   (ref.i31
 //│                                     (i32.const 1)))
-//│                                 (br $typeInfoEnd1))))
+//│                                 (br $typeInfoEnd))))
 //│                           (local.set $currentTypeInfo1
 //│                             (struct.get $TypeInfoBase $$parent
 //│                               (ref.cast (ref $TypeInfoBase)
 //│                                 (local.get $currentTypeInfo1))))
-//│                           (br $typeInfoLoop1)))
+//│                           (br $typeInfoLoop)))
 //│                       (i31.get_s
 //│                         (ref.cast (ref null i31)
 //│                           (local.get $typeInfoMatch1))))

@@ -25,7 +25,7 @@ set counter += step
 counter
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
@@ -55,10 +55,10 @@ unit
 ()
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
-//│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (import "repl" "Unit$inst" (global $Unit (mut (ref null $Unit))))
 //│   (global $Unit_typeinfo (ref $Unit_typeinfo) (struct.new $Unit_typeinfo

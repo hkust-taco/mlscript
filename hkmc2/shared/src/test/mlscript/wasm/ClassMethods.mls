@@ -10,9 +10,9 @@ let a = A(1)
 a.A#get() + A(2).get()
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
-//│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))) (field $x (mut (ref null any))))))
 //│   (type $A_init (func (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))))
 //│   (type $A_ctor (func (param $x (ref null any)) (result (ref null any))))

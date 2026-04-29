@@ -352,6 +352,7 @@ end TagInfo
 
 enum WasmIntrinsicType:
   case TupleArray(mutable: Bool)
+  /** Shared erased Wasm function type for virtual methods with the given arity, including `this`. */
   case VirtualMethod(arity: Int)
 
 /** Class containing identifiers of labels to jump to when breaking or continuing from a control flow structure.
@@ -481,6 +482,13 @@ object Ctx:
       globalTy: RefType,
   )
 
+  /** Derived virtual-dispatch layout for one class.
+    *
+    * @param virtualMethods
+    *   Slot-ordered method symbols, used when declaring and initializing RTTI slot fields.
+    * @param virtualMethodSlots
+    *   Reverse lookup from a resolved method symbol to its virtual slot index.
+    */
   case class VirtualTable(
       virtualMethods: List[BlockMemberSymbol],
       virtualMethodSlots: Map[BlockMemberSymbol, Int],

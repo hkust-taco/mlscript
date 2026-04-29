@@ -26,13 +26,13 @@ class Parent(val x)
 c.Parent#x
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
-//│   (type $Parent_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $Parent_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Parent (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))) (field $x (mut (ref null any))))))
 //│   (type $Parent_init (func (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))))
 //│   (type $Parent_ctor (func (param $x (ref null any)) (result (ref null any))))
-//│   (type $Child_typeinfo (sub $Parent_typeinfo (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $Child_typeinfo (sub $Parent_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Child (sub $Parent (struct (field $$typeinfo (mut (ref null $TypeInfoBase))) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
 //│   (type $Child_init (func (param $this (ref null any)) (param $y (ref null any)) (result (ref null any))))
 //│   (type $Child_ctor (func (param $y (ref null any)) (result (ref null any))))
@@ -147,13 +147,13 @@ class B() extends A()
 B() is A
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
-//│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $A_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $A_ctor (func (result (ref null any))))
-//│   (type $B_typeinfo (sub $A_typeinfo (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $B_typeinfo (sub $A_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $B (sub $A (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $B_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $B_ctor (func (result (ref null any))))
@@ -211,6 +211,7 @@ B() is A
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $scrut (ref null any))
 //│     (local $matchRes (ref null any))
+//│     (local $scrut1 (ref null any))
 //│     (local $currentTypeInfo (ref null any))
 //│     (local $targetTypeInfo (ref null any))
 //│     (local $typeInfoMatch (ref null any))
@@ -226,15 +227,18 @@ B() is A
 //│               (local.set $matchRes
 //│                 (ref.null any))
 //│               (if
-//│                 (ref.test (ref $Object)
-//│                   (local.get $scrut))
+//│                 (block (result i32)
+//│                   (local.set $scrut1
+//│                     (local.get $scrut))
+//│                   (ref.test (ref $Object)
+//│                     (local.get $scrut1)))
 //│                 (then
 //│                   (if
 //│                     (block (result i32)
 //│                       (local.set $currentTypeInfo
 //│                         (struct.get $Object $$typeinfo
 //│                           (ref.cast (ref $Object)
-//│                             (local.get $scrut))))
+//│                             (local.get $scrut1))))
 //│                       (local.set $targetTypeInfo
 //│                         (global.get $A_typeinfo))
 //│                       (local.set $typeInfoMatch
@@ -351,17 +355,17 @@ class A
 class B
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
-//│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $A_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $A_ctor (func (result (ref null any))))
-//│   (type $B_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $B_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $B (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $B_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $B_ctor (func (result (ref null any))))
-//│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag (mut i32)) (field $$parent (mut (ref null any))))))
+//│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $Unit_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $Unit_ctor (func (result (ref null any))))
@@ -467,5 +471,5 @@ class B
 class A extends B
 class B extends A
 //│ ╔══[COMPILATION ERROR] Inheritance cycles are not supported.
-//│ ║  l.467: 	class A extends B
+//│ ║  l.471: 	class A extends B
 //│ ╙──       	^^^^^^^^^^^^^^^^^

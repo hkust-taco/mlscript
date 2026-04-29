@@ -98,7 +98,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     struct.get(
       structFieldIdx(baseObjectSym, typeInfoFieldSym),
       ref.cast(objRef, baseObjectRefType(nullable = false)),
-      RefType(typeInfoBaseTypeIdx, nullable = true),
+      RefType(typeInfoBaseTypeIdx, nullable = false),
     )
 
   /** Follows one direct-parent RTTI reference from a shared class `typeinfo` object. */
@@ -106,19 +106,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     struct.get(
       structFieldIdx(typeInfoBaseSym, parentFieldSym),
       ref.cast(typeInfoRef, RefType(typeInfoBaseTypeIdx, nullable = false)),
-      RefType.anyref,
-    )
-
-  /** Reads the runtime class tag from an object's shared RTTI. */
-  private def readRuntimeTag(objRef: Expr)(using Ctx): Expr =
-    val typeInfoRef = ref.cast(
-      readObjectTypeInfo(objRef),
-      RefType(typeInfoBaseTypeIdx, nullable = false),
-    )
-    struct.get(
-      structFieldIdx(typeInfoBaseSym, tagFieldSym),
-      typeInfoRef,
-      I32Type,
+      RefType(typeInfoBaseTypeIdx, nullable = true),
     )
 
   /** Builds the reference type for the synthetic base object header struct. */
@@ -133,54 +121,54 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val currentTmp = mkTempLocal("currentTypeInfo")
     val targetTmp = mkTempLocal("targetTypeInfo")
     val resultTmp = mkTempLocal("typeInfoMatch")
-    val endLabel = scope.allocateName(TempSymbol(N, "typeInfoEnd"))
-    val loopLabel = scope.allocateName(TempSymbol(N, "typeInfoLoop"))
-    blockInstr(
-      label = N,
-      children = Seq(
-        local.set(currentTmp, scrutTypeInfo),
-        local.set(targetTmp, targetTypeInfo),
-        local.set(resultTmp, ref.i31(i32.const(0))),
+    funcCtx.withLabel(LabelSymbol(N, "typeInfoEnd"), hasContinueLabel = false): endTarget =>
+      funcCtx.withLabel(LabelSymbol(N, "typeInfoLoop"), hasContinueLabel = true): loopTarget =>
         blockInstr(
-          label = S(endLabel),
+          label = N,
           children = Seq(
-            loopInstr(
-              label = S(loopLabel),
+            local.set(currentTmp, scrutTypeInfo),
+            local.set(targetTmp, targetTypeInfo),
+            local.set(resultTmp, ref.i31(i32.const(0))),
+            blockInstr(
+              label = S(endTarget.breakLabel),
               children = Seq(
-                `if`(
-                  condition = ref.is_null(getLocalAnyref(currentTmp)),
-                  ifTrue = br(endLabel),
-                  ifFalse = N,
-                  resultTypes = Seq.empty,
-                ),
-                `if`(
-                  condition = ref.eq(
-                    ref.cast(getLocalAnyref(currentTmp), RefType(HeapType.Eq, nullable = true)),
-                    ref.cast(getLocalAnyref(targetTmp), RefType(HeapType.Eq, nullable = true)),
-                  ),
-                  ifTrue = blockInstr(
-                    label = N,
-                    children = Seq(
-                      local.set(resultTmp, ref.i31(i32.const(1))),
-                      br(endLabel),
+                loopInstr(
+                  label = S(loopTarget.breakLabel),
+                  children = Seq(
+                    `if`(
+                      condition = ref.is_null(getLocalAnyref(currentTmp)),
+                      ifTrue = br(endTarget.breakLabel),
+                      ifFalse = N,
+                      resultTypes = Seq.empty,
                     ),
-                    resultTypes = Seq.empty,
+                    `if`(
+                      condition = ref.eq(
+                        ref.cast(getLocalAnyref(currentTmp), RefType(HeapType.Eq, nullable = true)),
+                        ref.cast(getLocalAnyref(targetTmp), RefType(HeapType.Eq, nullable = true)),
+                      ),
+                      ifTrue = blockInstr(
+                        label = N,
+                        children = Seq(
+                          local.set(resultTmp, ref.i31(i32.const(1))),
+                          br(endTarget.breakLabel),
+                        ),
+                        resultTypes = Seq.empty,
+                      ),
+                      ifFalse = N,
+                      resultTypes = Seq.empty,
+                    ),
+                    local.set(currentTmp, readTypeInfoParent(getLocalAnyref(currentTmp))),
+                    br(loopTarget.breakLabel),
                   ),
-                  ifFalse = N,
                   resultTypes = Seq.empty,
                 ),
-                local.set(currentTmp, readTypeInfoParent(getLocalAnyref(currentTmp))),
-                br(loopLabel),
               ),
               resultTypes = Seq.empty,
             ),
+            i31.get(ref.cast(getLocalAnyref(resultTmp), RefType.i31ref), signed = true),
           ),
-          resultTypes = Seq.empty,
-        ),
-        i31.get(ref.cast(getLocalAnyref(resultTmp), RefType.i31ref), signed = true),
-      ),
-      resultTypes = Seq(Result(I32Type)),
-    )
+          resultTypes = Seq(Result(I32Type)),
+        )
 
   /** True if this top-level class can be declared as a Wasm struct type. */
   private def isSupportedTopLevelClass(defn: ClsLikeDefn): Bool =
@@ -2219,9 +2207,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         Ls(msg"Could not resolve BlockMemberSymbol for class pattern" -> cls.toLoc),
                         extraInfo = S(s"ClassLikeSymbol: ${cls.toString}"),
                       ))
-                    val scrutExpr = getScrutExpr
-                    val isStructCompatible = ref.test(scrutExpr, baseObjectRefType(nullable = false))
-                    val scrutRtti = readObjectTypeInfo(scrutExpr)
+                    val scrutTmp = mkTempLocal("scrut")
+                    val scrutExpr = local.set(scrutTmp, getScrutExpr)
+                    val scrutRef = getLocalAnyref(scrutTmp)
+                    val isStructCompatible = ref.test(scrutRef, baseObjectRefType(nullable = false))
+                    val scrutRtti = readObjectTypeInfo(scrutRef)
                     val targetRtti = getClassTypeInfoGlobal(clsBlkMemberSym).get
                     val classMatchExpr = isSubtypeByTypeInfo(scrutRtti, targetRtti)
 
@@ -2231,7 +2221,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     funcCtx.withLabel(LabelSymbol(N, "arm"), hasContinueLabel = false):
                       case LabelTarget(armLabel, _) =>
                         S(`if`(
-                          condition = isStructCompatible,
+                          condition = blockInstr(
+                            label = N,
+                            children = Seq(scrutExpr, isStructCompatible),
+                            resultTypes = Seq(Result(I32Type)),
+                          ),
                           ifTrue = `if`(
                             condition = classMatchExpr,
                             ifTrue = blockInstr(
@@ -2377,19 +2371,20 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     def compiledModule(entryName: Str): CompiledWasmModule =
       CompiledWasmModule(ctx.toWat, entryName, systemMemMinPages, sessionExportCtx.collectedBindings.toSeq)
 
+    // Create the two Wasm intrinsic struct types shared across class lowering:
+    // the base RTTI layout (`TypeInfoBase`) and the base object layout (`Object`).
     ctx.addType(
       sym = S(typeInfoBaseSym),
       TypeInfo(
         id = SymIdx("TypeInfoBase"),
         StructType(Seq(
-          tagFieldSym -> Field(I32Type, mutable = true, id = "$tag"),
-          parentFieldSym -> Field(RefType.anyref, mutable = true, id = "$parent"),
+          tagFieldSym -> Field(I32Type, mutable = false, id = "$tag"),
+          parentFieldSym -> Field(RefType(TypeIdx(SymIdx("TypeInfoBase")), nullable = true), mutable = false, id = "$parent"),
         )),
         objectTag = N,
       ),
     )
 
-    // Create base Object struct with typeinfo field that all other structs will inherit
     ctx.addType(
       sym = S(baseObjectSym),
       TypeInfo(
