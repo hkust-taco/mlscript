@@ -1086,7 +1086,7 @@ extends Importer with ucs.SplitElaborator:
             go(sts, Nil, acc)
       case (m @ PrefixApp(Keywrd(Keyword.`import`), arg)) :: sts =>
         reportUnusedAnnotations
-        val parsedImport = arg match
+        val pathAndAlias = arg match
           case InfixApp(pathArg, Keywrd(Keyword.`as`), alias: Ident) => S((pathArg, S(alias)))
           case InfixApp(_, Keywrd(Keyword.`as`), badAlias) =>
             raise(ErrorReport(
@@ -1094,7 +1094,7 @@ extends Importer with ucs.SplitElaborator:
               badAlias.toLoc :: Nil))
             N
           case pathArg => S((pathArg, N))
-        val (newCtx, newAcc) = parsedImport match
+        val (newCtx, newAcc) = pathAndAlias match
           case S((StrLit(path), alias)) =>
             val stmt = importPath(path, alias).withLocOf(m)
             (ctx + (stmt.sym.nme -> stmt.sym),
@@ -1104,7 +1104,7 @@ extends Importer with ucs.SplitElaborator:
               msg"Expected string literal after 'import' keyword" ->
               pathArg.toLoc :: Nil))
             (ctx, acc)
-          case _ => // errors have been reported above.
+          case N => // errors have been reported above.
             (ctx, acc)
         newCtx.givenIn:
           go(sts, Nil, newAcc)

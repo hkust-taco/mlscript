@@ -43,6 +43,13 @@ import "../../mlscript-compile/Example.mls" as
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
+:e
+import "../../mlscript-compile/Example.mls" as "Examle"
+//│ ╔══[COMPILATION ERROR] Expected identifier after 'as' in import statement
+//│ ║  l.47: 	import "../../mlscript-compile/Example.mls" as "Examle"
+//│ ╙──      	                                               ^^^^^^^^
+
+
 import "../../mlscript-compile/Example.mls"
 
 
