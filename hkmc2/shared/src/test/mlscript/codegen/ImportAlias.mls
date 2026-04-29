@@ -3,14 +3,12 @@
 
 import "../../mlscript-compile/Example.mls" as AnotherExample
 
-
 :e
 Example.inc(0)
 //│ ╔══[COMPILATION ERROR] Name not found: Example
-//│ ║  l.8: 	Example.inc(0)
+//│ ║  l.7: 	Example.inc(0)
 //│ ╙──     	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
 
 :expect 1
 AnotherExample.inc(0)
@@ -20,14 +18,12 @@ AnotherExample.inc(0)
 :silent
 import "../../mlscript-compile/Example.mjs" as JSExample
 
-
 :e
 Example.inc(0)
 //│ ╔══[COMPILATION ERROR] Name not found: Example
-//│ ║  l.25: 	Example.inc(0)
+//│ ║  l.22: 	Example.inc(0)
 //│ ╙──      	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
 
 :expect 1
 JSExample.inc(0)
@@ -35,24 +31,25 @@ JSExample.inc(0)
 
 
 :pe
-:re
+:e
 import "../../mlscript-compile/Example.mls" as
-//│ ╔══[PARSE ERROR] Expected expression after 'import'-'as' keywords; found end of input instead
-//│ ║  l.39: 	import "../../mlscript-compile/Example.mls" as
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
+//│ ║  l.35: 	import "../../mlscript-compile/Example.mls" as
 //│ ╙──      	                                              ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
+//│ ╔══[COMPILATION ERROR] Expected identifier after 'as' in import statement
+//│ ║  l.35: 	import "../../mlscript-compile/Example.mls" as
+//│ ╙──      	                                              ^
 
 :e
 import "../../mlscript-compile/Example.mls" as "Examle"
 //│ ╔══[COMPILATION ERROR] Expected identifier after 'as' in import statement
-//│ ║  l.47: 	import "../../mlscript-compile/Example.mls" as "Examle"
+//│ ║  l.44: 	import "../../mlscript-compile/Example.mls" as "Examle"
 //│ ╙──      	                                               ^^^^^^^^
 
-
 import "../../mlscript-compile/Example.mls"
-
 
 :expect 1
 Example.inc(0)
 //│ = 1
+
+
