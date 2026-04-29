@@ -90,7 +90,8 @@ class MLsCompiler
       val elab = Elaborator(etl, wd, newCtx)
       val parsed = mainParse.resultBlk
       val (blk0, _) = elab.importFrom(parsed)
-      val resolver = Resolver(rtl)
+      val effectiveConfig = Config.extractConfigFromStats(blk0)
+      val resolver = Resolver(rtl)(using summon[Raise], summon[State], summon[Ctx], effectiveConfig)
       resolver.traverseBlock(blk0)(using Resolver.ICtx.empty)
       def findQuote(t: semantics.Statement): Bool = t match
         case Term.Quoted(_) | Term.Unquoted(_) => true
@@ -106,7 +107,6 @@ class MLsCompiler
             blk0.stats),
         blk0.res
       )
-      val effectiveConfig = Config.extractConfigFromStats(blk)
       val low = ltl.givenIn:
         new codegen.Lowering()(using effectiveConfig)
           with codegen.LoweringSelSanityChecks
