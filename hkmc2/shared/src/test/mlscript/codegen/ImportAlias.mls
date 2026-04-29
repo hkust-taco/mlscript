@@ -37,7 +37,7 @@ JSExample.inc(0)
 :pe
 :re
 import "../../mlscript-compile/Example.mls" as
-//│ ╔══[PARSE ERROR] Expected expression after ímport'-'as' keywords; found end of input instead
+//│ ╔══[PARSE ERROR] Expected expression after 'import'-'as' keywords; found end of input instead
 //│ ║  l.39: 	import "../../mlscript-compile/Example.mls" as
 //│ ╙──      	                                              ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
