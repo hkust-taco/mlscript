@@ -32,3 +32,20 @@ Example.inc(0)
 :expect 1
 JSExample.inc(0)
 //│ = 1
+
+
+:pe
+:re
+import "../../mlscript-compile/Example.mls" as
+//│ ╔══[PARSE ERROR] Expected expression after ímport'-'as' keywords; found end of input instead
+//│ ║  l.39: 	import "../../mlscript-compile/Example.mls" as
+//│ ╙──      	                                              ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+import "../../mlscript-compile/Example.mls"
+
+
+:expect 1
+Example.inc(0)
+//│ = 1
