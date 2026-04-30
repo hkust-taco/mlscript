@@ -34,7 +34,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
   
   def wrapStackSafe(body: Block, resSym: Local, rest: Block) =
     val bodSym = BlockMemberSymbol("‹stack safe body›", Nil, false)
-    val bodFun = FunDefn.withFreshSymbol(N, bodSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil, body)(forceTailRec = false, configOverride = N, visibility = Visibility.Public)
+    val bodFun = FunDefn.withFreshSymbol(N, bodSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil, body)(configOverride = N, annotations = Nil)
     Scoped(Set.single(bodSym),
       Define(bodFun, Assign(resSym, Call(runStackSafePath, intLit(depthLimit).asArg :: bodSym.asPath.asArg :: Nil)(true, true, false), rest))
     )
@@ -113,7 +113,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
         ctor,
         mod.map(rewriteObjBody(_, isTopLevel)),
         bufferable,
-      )(defn.configOverride)
+      )(defn.configOverride, defn.annotations)
   
   def rewriteObjBody(defn: ClsLikeBody, isTopLevel: Bool): ClsLikeBody =
     ClsLikeBody(
@@ -124,6 +124,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
       if isTopLevel then
         if config.effectHandlers.exists(_.doNotInstrumentTopLevelModCtor) then defn.ctor else transformTopLevel(defn.ctor)
       else rewriteBlk(defn.ctor, R(defn.isym)),
+      defn.annotations,
     )
 
   // fnOrCls points us to the doUnwind function
@@ -153,6 +154,6 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
 
 
   def rewriteFn(defn: FunDefn) = 
-    FunDefn(defn.owner, defn.sym, defn.dSym, defn.params, rewriteBlk(defn.body, L(defn.sym)))(defn.forceTailRec, defn.configOverride, defn.visibility)
+    FunDefn(defn.owner, defn.sym, defn.dSym, defn.params, rewriteBlk(defn.body, L(defn.sym)))(defn.configOverride, defn.annotations)
 
   def transformTopLevel(b: Block) = transform(b, TempSymbol(N), true)

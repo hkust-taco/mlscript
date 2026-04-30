@@ -1,0 +1,223 @@
+:js
+:ftc
+:sir
+:staging
+
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ import Predef; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+staged fun direct() = 1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let direct⁰; define direct⁰ as staged fun direct¹() { return 1 }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+staged module LiftedNested with
+  fun f() =
+    fun g() = 1
+    g()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g⁰, LiftedNested⁰;
+//│ define g⁰ as staged fun g¹() {
+//│   return 1
+//│ };
+//│ define LiftedNested⁰ as class LiftedNested¹
+//│ staged module LiftedNested² {
+//│   constructor {
+//│     let tmp, tmp1, tmp2, tmp3;
+//│     set tmp2 = LiftedNested².this.ctor$_instr﹖();
+//│     set tmp3 = Block⁰.printCode﹖(tmp2);
+//│     set tmp = LiftedNested².this.f_instr﹖();
+//│     set tmp1 = Block⁰.printCode﹖(tmp);
+//│     runtime⁰.Unit﹖
+//│   }
+//│   method ctor$_instr⁰ = fun ctor$_instr¹() {
+//│     let end, tmp, tmp1, tmp2, tmp3;
+//│     set end = Block⁰.End﹖();
+//│     set tmp = Block⁰.Symbol﹖("ctor$");
+//│     set tmp1 = [];
+//│     set tmp2 = [tmp1];
+//│     set tmp3 = Block⁰.FunDefn﹖(tmp, tmp2, end, true);
+//│     return tmp3
+//│   }
+//│   method f⁰ = fun f¹() {
+//│     return g¹()
+//│   }
+//│   method f_instr⁰ = fun f_instr¹() {
+//│     let sym, var1, tmp, app, return1, tmp1, tmp2, tmp3, tmp4;
+//│     set sym = Block⁰.Symbol﹖("g");
+//│     set var1 = Block⁰.ValueRef﹖(sym);
+//│     set tmp = [];
+//│     set app = Block⁰.Call﹖(var1, tmp);
+//│     set return1 = Block⁰.Return﹖(app, false);
+//│     set tmp1 = Block⁰.Symbol﹖("f");
+//│     set tmp2 = [];
+//│     set tmp3 = [tmp2];
+//│     set tmp4 = Block⁰.FunDefn﹖(tmp1, tmp3, return1, true);
+//│     return tmp4
+//│   }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > fun ctor_() = ()
+//│ > fun f() = g()
+
+
+staged module LiftedLambda with
+  fun foo(x) = y => x + y
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let LiftedLambda⁰, lambda⁰, Function$⁰;
+//│ define lambda⁰ as staged fun lambda¹(x, y) {
+//│   return +⁰(x, y)
+//│ };
+//│ define Function$⁰ as staged class Function$¹ {
+//│   private val x⁰;
+//│   constructor(x) {
+//│     super⁰();
+//│     set x⁰ = x;
+//│     end
+//│   }
+//│   method call⁰ = fun call¹(y) {
+//│     return lambda¹(x⁰, y)
+//│   }
+//│ };
+//│ define LiftedLambda⁰ as class LiftedLambda¹
+//│ staged module LiftedLambda² {
+//│   constructor {
+//│     let tmp, tmp1, tmp2, tmp3;
+//│     set tmp2 = LiftedLambda².this.ctor$_instr﹖();
+//│     set tmp3 = Block⁰.printCode﹖(tmp2);
+//│     set tmp = LiftedLambda².this.foo_instr﹖();
+//│     set tmp1 = Block⁰.printCode﹖(tmp);
+//│     runtime⁰.Unit﹖
+//│   }
+//│   method ctor$_instr² = fun ctor$_instr³() {
+//│     let end, tmp, tmp1, tmp2, tmp3;
+//│     set end = Block⁰.End﹖();
+//│     set tmp = Block⁰.Symbol﹖("ctor$");
+//│     set tmp1 = [];
+//│     set tmp2 = [tmp1];
+//│     set tmp3 = Block⁰.FunDefn﹖(tmp, tmp2, end, true);
+//│     return tmp3
+//│   }
+//│   method foo⁰ = fun foo¹(x) {
+//│     let tmp;
+//│     set tmp = new Function$¹(x);
+//│     return tmp
+//│   }
+//│   method foo_instr⁰ = fun foo_instr¹() {
+//│     let x, tmp, sym, tmp1, sym1, var1, tmp2, tmp3, sym2, tmp4, tmp5, sym3, var2, tmp6, inst, sym4, tmp7, return1, assign, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13;
+//│     set sym = Block⁰.Symbol﹖("tmp");
+//│     set tmp1 = [sym];
+//│     set sym1 = Block⁰.Symbol﹖("x");
+//│     set var1 = Block⁰.ValueRef﹖(sym1);
+//│     set tmp2 = Block⁰.Arg﹖(var1);
+//│     set tmp3 = option⁰.None﹖;
+//│     set sym2 = Block⁰.Symbol﹖("x1");
+//│     set tmp4 = [sym2];
+//│     set tmp5 = [tmp4];
+//│     set sym3 = Block⁰.ConcreteClassSymbol﹖("Function$", Function$⁰, tmp3, tmp5);
+//│     set var2 = Block⁰.ValueRef﹖(sym3);
+//│     set tmp6 = [tmp2];
+//│     set inst = Block⁰.Instantiate﹖(var2, tmp6);
+//│     set sym4 = Block⁰.Symbol﹖("tmp");
+//│     set tmp7 = Block⁰.ValueRef﹖(sym4);
+//│     set tmp = tmp7;
+//│     set return1 = Block⁰.Return﹖(tmp7, false);
+//│     set assign = Block⁰.Assign﹖(sym4, inst, return1);
+//│     set tmp8 = Block⁰.Scoped﹖(tmp1, assign);
+//│     set tmp9 = Block⁰.Symbol﹖("x");
+//│     set tmp10 = Block⁰.Symbol﹖("foo");
+//│     set tmp11 = [tmp9];
+//│     set tmp12 = [tmp11];
+//│     set tmp13 = Block⁰.FunDefn﹖(tmp10, tmp12, tmp8, true);
+//│     return tmp13
+//│   }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > fun ctor_() = ()
+//│ > fun foo(x) =
+//│ >   let {tmp}
+//│ >   tmp = new Function_(x)
+//│ >   tmp
+
+
+staged module LiftedMultParams with
+  fun foo(x)(y) = x + y
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let LiftedMultParams⁰, lambda$⁰, Function$²;
+//│ define lambda$⁰ as staged fun lambda$¹(x, y) {
+//│   return +⁰(x, y)
+//│ };
+//│ define Function$² as staged class Function$³ {
+//│   private val x¹;
+//│   constructor(x) {
+//│     super⁰();
+//│     set x¹ = x;
+//│     end
+//│   }
+//│   method call² = fun call³(y) {
+//│     return lambda$¹(x¹, y)
+//│   }
+//│ };
+//│ define LiftedMultParams⁰ as class LiftedMultParams¹
+//│ staged module LiftedMultParams² {
+//│   constructor {
+//│     let tmp, tmp1, tmp2, tmp3;
+//│     set tmp2 = LiftedMultParams².this.ctor$_instr﹖();
+//│     set tmp3 = Block⁰.printCode﹖(tmp2);
+//│     set tmp = LiftedMultParams².this.foo_instr﹖();
+//│     set tmp1 = Block⁰.printCode﹖(tmp);
+//│     runtime⁰.Unit﹖
+//│   }
+//│   method ctor$_instr⁴ = fun ctor$_instr⁵() {
+//│     let end, tmp, tmp1, tmp2, tmp3;
+//│     set end = Block⁰.End﹖();
+//│     set tmp = Block⁰.Symbol﹖("ctor$");
+//│     set tmp1 = [];
+//│     set tmp2 = [tmp1];
+//│     set tmp3 = Block⁰.FunDefn﹖(tmp, tmp2, end, true);
+//│     return tmp3
+//│   }
+//│   method foo² = fun foo³(x) {
+//│     let tmp;
+//│     set tmp = new Function$³(x);
+//│     return tmp
+//│   }
+//│   method foo_instr² = fun foo_instr³() {
+//│     let x, tmp, sym, tmp1, sym1, var1, tmp2, tmp3, sym2, tmp4, tmp5, sym3, var2, tmp6, inst, sym4, tmp7, return1, assign, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13;
+//│     set sym = Block⁰.Symbol﹖("tmp");
+//│     set tmp1 = [sym];
+//│     set sym1 = Block⁰.Symbol﹖("x");
+//│     set var1 = Block⁰.ValueRef﹖(sym1);
+//│     set tmp2 = Block⁰.Arg﹖(var1);
+//│     set tmp3 = option⁰.None﹖;
+//│     set sym2 = Block⁰.Symbol﹖("x1");
+//│     set tmp4 = [sym2];
+//│     set tmp5 = [tmp4];
+//│     set sym3 = Block⁰.ConcreteClassSymbol﹖("Function$", Function$², tmp3, tmp5);
+//│     set var2 = Block⁰.ValueRef﹖(sym3);
+//│     set tmp6 = [tmp2];
+//│     set inst = Block⁰.Instantiate﹖(var2, tmp6);
+//│     set sym4 = Block⁰.Symbol﹖("tmp");
+//│     set tmp7 = Block⁰.ValueRef﹖(sym4);
+//│     set tmp = tmp7;
+//│     set return1 = Block⁰.Return﹖(tmp7, false);
+//│     set assign = Block⁰.Assign﹖(sym4, inst, return1);
+//│     set tmp8 = Block⁰.Scoped﹖(tmp1, assign);
+//│     set tmp9 = Block⁰.Symbol﹖("x");
+//│     set tmp10 = Block⁰.Symbol﹖("foo");
+//│     set tmp11 = [tmp9];
+//│     set tmp12 = [tmp11];
+//│     set tmp13 = Block⁰.FunDefn﹖(tmp10, tmp12, tmp8, true);
+//│     return tmp13
+//│   }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > fun ctor_() = ()
+//│ > fun foo(x) =
+//│ >   let {tmp}
+//│ >   tmp = new Function_(x)
+//│ >   tmp
