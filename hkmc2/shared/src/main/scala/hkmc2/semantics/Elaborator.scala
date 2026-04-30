@@ -1086,7 +1086,7 @@ extends Importer with ucs.SplitElaborator:
             go(sts, Nil, acc)
       case (m @ PrefixApp(Keywrd(Keyword.`import`), arg)) :: sts =>
         reportUnusedAnnotations
-        val pathAndAlias = arg match
+        val pathAndAlias: Opt[(Tree, Opt[Ident])] = arg match
           case InfixApp(pathArg, Keywrd(Keyword.`as`), alias: Ident) => S((pathArg, S(alias)))
           case InfixApp(pathArg, Keywrd(Keyword.`as`), Error()) => N
           case InfixApp(_, Keywrd(Keyword.`as`), badAlias) =>
