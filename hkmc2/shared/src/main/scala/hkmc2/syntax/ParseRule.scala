@@ -387,7 +387,7 @@ class ParseRules(using State):
     prefixed(`not`),
     prefixed(`new!`),
     prefixed(`throw`),
-    prefixed(`import`), // TODO improve – only allow strings
+    prefixed(`import`),
     modified(`virtual`),
     modified(`override`),
     modified(`declare`),
