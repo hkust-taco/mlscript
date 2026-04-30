@@ -370,8 +370,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     given Ctx = curCtx
-    val effectiveConfig = Config.extractConfigFromStats(trm)
-    val resolver = Resolver(rtl)(using summon[Raise], summon[State], summon[Ctx], effectiveConfig)
+    given Config = Config.extractConfigFromStats(trm)
+    val resolver = Resolver(rtl)
     curICtx = resolver.traverseBlock(trm)(using curICtx)
     
     if showResolve.isSet then

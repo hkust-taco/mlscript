@@ -90,46 +90,46 @@ class MLsCompiler
       val elab = Elaborator(etl, wd, newCtx)
       val parsed = mainParse.resultBlk
       val (blk0, _) = elab.importFrom(parsed)
-      val effectiveConfig = Config.extractConfigFromStats(blk0)
-      val resolver = Resolver(rtl)(using summon[Raise], summon[State], summon[Ctx], effectiveConfig)
-      resolver.traverseBlock(blk0)(using Resolver.ICtx.empty)
-      def findQuote(t: semantics.Statement): Bool = t match
-        case Term.Quoted(_) | Term.Unquoted(_) => true
-        case Term.Ref(sym) => sym === State.termSymbol
-        case _ => t.subTerms.exists(findQuote)
-      val hasQuote = findQuote(blk0)
-      val blk = new Term.Blk(
-        Import(State.runtimeSymbol, runtimeFile.toString, runtimeFile) ::
-          // Only import `Term.mls` when necessary.
-          (if hasQuote then
-            Import(State.termSymbol, termFile.toString, termFile) :: blk0.stats
-          else
-            blk0.stats),
-        blk0.res
-      )
-      val low = ltl.givenIn:
-        new codegen.Lowering()(using effectiveConfig)
-          with codegen.LoweringSelSanityChecks
-      val jsb = ltl.givenIn:
-        codegen.js.JSBuilder(using effectiveConfig)
-      val le_0 = low.program(blk)
-      val nme = file.baseName
-      val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
-      val le_1 = ltl.givenIn:
-        codegen.BlockSimplifier(exportedSymbol.toSet)(le_0)
-      val le_2 = ltl.givenIn:
-        codegen.DeadParamElim(le_1)
-      val baseScp: utils.Scope =
-        utils.Scope.empty(utils.Scope.Cfg.default)
-      // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.
-      // * Having `module id"import" with ...` in `prelude.mls` will generate `globalThis.import` that is undefined.
-      baseScp.addToBindings(Elaborator.State.importSymbol, "import", shadow = false)
-      val nestedScp = baseScp.nest
-      val je = nestedScp.givenIn:
-        jsb.program(le_2, exportedSymbol, wd)
-      val jsStr = je.stripBreaks.mkString(100)
-      val out = file.up / io.RelPath(file.baseName + ".mjs")
-      cctx.fs.write(out, jsStr)
+      Config.extractConfigFromStats(blk0).givenIn:
+        val resolver = Resolver(rtl)
+        resolver.traverseBlock(blk0)(using Resolver.ICtx.empty)
+        def findQuote(t: semantics.Statement): Bool = t match
+          case Term.Quoted(_) | Term.Unquoted(_) => true
+          case Term.Ref(sym) => sym === State.termSymbol
+          case _ => t.subTerms.exists(findQuote)
+        val hasQuote = findQuote(blk0)
+        val blk = new Term.Blk(
+          Import(State.runtimeSymbol, runtimeFile.toString, runtimeFile) ::
+            // Only import `Term.mls` when necessary.
+            (if hasQuote then
+              Import(State.termSymbol, termFile.toString, termFile) :: blk0.stats
+            else
+              blk0.stats),
+          blk0.res
+        )
+        val low = ltl.givenIn:
+          new codegen.Lowering()
+            with codegen.LoweringSelSanityChecks
+        val jsb = ltl.givenIn:
+          codegen.js.JSBuilder()
+        val le_0 = low.program(blk)
+        val nme = file.baseName
+        val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
+        val le_1 = ltl.givenIn:
+          codegen.BlockSimplifier(exportedSymbol.toSet)(le_0)
+        val le_2 = ltl.givenIn:
+          codegen.DeadParamElim(le_1)
+        val baseScp: utils.Scope =
+          utils.Scope.empty(utils.Scope.Cfg.default)
+        // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.
+        // * Having `module id"import" with ...` in `prelude.mls` will generate `globalThis.import` that is undefined.
+        baseScp.addToBindings(Elaborator.State.importSymbol, "import", shadow = false)
+        val nestedScp = baseScp.nest
+        val je = nestedScp.givenIn:
+          jsb.program(le_2, exportedSymbol, wd)
+        val jsStr = je.stripBreaks.mkString(100)
+        val out = file.up / io.RelPath(file.baseName + ".mjs")
+        cctx.fs.write(out, jsStr)
   
   
 end MLsCompiler
