@@ -110,9 +110,11 @@ class CompilerTest extends AnyFunSuite:
 
     assert(fs.exists(Path("/simpleWasm.mjs")), "Glue JavaScript file should be generated")
     assert(fs.exists(Path("/simpleWasm.wat")), "WAT file should be generated")
+    assert(fs.exists(Path("/RuntimeWASM.mjs")), "Shared Wasm runtime helper should be generated")
+    assert(fs.exists(Path("/RuntimeWASM.wat")), "Shared Wasm intrinsic WAT should be generated")
 
     val glue = fs.read("/simpleWasm.mjs")
-    assert(glue.contains("binaryenCompileToModule"), "Glue code should instantiate the WAT module")
+    assert(glue.contains("__mlx_compileWatFromUrl"), "Glue code should load module WAT from file")
     assert(glue.contains("export const __mlx_wasm"), "Glue code should expose the internal wasm loader")
     assert(glue.contains("export default"), "Glue code should export the module result by default")
 

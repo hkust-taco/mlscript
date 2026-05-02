@@ -25,13 +25,13 @@ let i = 0 in
 //│   (import "system" "lt_impl" (func $lt_impl (type $lt_impl)))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
 //│   (global $Unit$inst (export "Unit$inst") (mut (ref null $Unit)) (ref.null $Unit))
-//│   (func $Unit_init1 (type $Unit_init) (param $this (ref null any)) (result (ref null any))
+//│   (func $Unit_init (export "Unit_init") (type $Unit_init) (param $this (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
 //│       (nop)
 //│       (return
 //│         (local.get $this))))
-//│   (func $Unit_ctor1 (type $Unit_ctor) (result (ref null any))
+//│   (func $Unit_ctor (export "Unit_ctor") (type $Unit_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -41,7 +41,7 @@ let i = 0 in
 //│           (local.get $this))
 //│         (i32.const 1))
 //│       (drop
-//│         (call $Unit_init1
+//│         (call $Unit_init
 //│           (local.get $this)))
 //│       (return
 //│         (local.get $this))))
@@ -49,7 +49,7 @@ let i = 0 in
 //│     (block
 //│       (global.set $Unit$inst
 //│         (ref.cast (ref null $Unit)
-//│           (call $Unit_ctor1)))))
+//│           (call $Unit_ctor)))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $i (ref null any))
 //│     (local $scrut (ref null any))
@@ -101,8 +101,8 @@ let i = 0 in
 //│                         (global.get $Unit$inst))))
 //│                   (local.get $matchRes))))))
 //│         (local.get $i))))
-//│   (elem $Unit_init1 declare func $Unit_init1)
-//│   (elem $Unit_ctor1 declare func $Unit_ctor1)
+//│   (elem $Unit_init declare func $Unit_init)
+//│   (elem $Unit_ctor declare func $Unit_ctor)
 //│   (elem $start1 declare func $start1)
 //│   (elem $entry declare func $entry)
 //│   (start $start1))

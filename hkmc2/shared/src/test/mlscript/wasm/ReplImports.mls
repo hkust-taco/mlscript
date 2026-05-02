@@ -12,7 +12,22 @@ let unit = ()
 //│ Wasm result:
 //│ = {}
 
+:wat
 inc(Foo.x)
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))
+//│   (type $inc (func (param $x (ref null any)) (result (ref null any))))
+//│   (type $entry1 (func (result (ref null any))))
+//│   (import "repl" "inc" (func $inc (type $inc)))
+//│   (import "repl" "Foo$inst" (global $Foo (mut (ref null $Foo))))
+//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│     (call $inc
+//│       (struct.get $Foo $x
+//│         (ref.cast (ref $Foo)
+//│           (global.get $Foo)))))
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 2
 
@@ -56,7 +71,11 @@ unit
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $Unit (sub $Object (struct (field $$tag (mut i32)))))
+//│   (type $Unit_init (func (param $this (ref null any)) (result (ref null any))))
+//│   (type $Unit_ctor (func (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
+//│   (import "repl" "Unit_init" (func $Unit_init (type $Unit_init)))
+//│   (import "repl" "Unit_ctor" (func $Unit (type $Unit_ctor)))
 //│   (import "repl" "Unit$inst" (global $Unit (mut (ref null $Unit))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (global.get $Unit))

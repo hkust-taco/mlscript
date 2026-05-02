@@ -29,13 +29,13 @@
           (local.get $this)))
       (return
         (local.get $this))))
-  (func $Unit_init1 (type $Unit_init) (param $this (ref null any)) (result (ref null any))
+  (func $Unit_init (export "Unit_init") (type $Unit_init) (param $this (ref null any)) (result (ref null any))
     (block (result (ref null any))
       (nop)
       (nop)
       (return
         (local.get $this))))
-  (func $Unit_ctor1 (type $Unit_ctor) (result (ref null any))
+  (func $Unit_ctor (export "Unit_ctor") (type $Unit_ctor) (result (ref null any))
     (local $this (ref null any))
     (block (result (ref null any))
       (local.set $this
@@ -45,7 +45,7 @@
           (local.get $this))
         (i32.const 2))
       (drop
-        (call $Unit_init1
+        (call $Unit_init
           (local.get $this)))
       (return
         (local.get $this))))
@@ -53,7 +53,7 @@
     (block
       (global.set $Unit$inst
         (ref.cast (ref null $Unit)
-          (call $Unit_ctor1)))))
+          (call $Unit_ctor)))))
   (func $entry (export "entry") (type $entry1) (result (ref null any))
     (block (result (ref null any))
       (block
@@ -62,8 +62,8 @@
       (global.get $Unit$inst)))
   (elem $SimpleTarget_init declare func $SimpleTarget_init)
   (elem $SimpleTarget_ctor declare func $SimpleTarget_ctor)
-  (elem $Unit_init1 declare func $Unit_init1)
-  (elem $Unit_ctor1 declare func $Unit_ctor1)
+  (elem $Unit_init declare func $Unit_init)
+  (elem $Unit_ctor declare func $Unit_ctor)
   (elem $start1 declare func $start1)
   (elem $entry declare func $entry)
   (start $start1))

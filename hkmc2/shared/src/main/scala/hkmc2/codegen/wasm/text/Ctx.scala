@@ -49,9 +49,10 @@ final case class SessionFunc(
     moduleName: Str,
     exportName: Str,
     funcType: FunctionType,
+    aliasSyms: Seq[Local],
 ) extends SessionBinding:
   def bindingKey: Str = s"func:$moduleName:$exportName"
-  def bindingSyms: Seq[Local] = sym :: Nil
+  def bindingSyms: Seq[Local] = sym +: aliasSyms
   override def exportNameOpt: Opt[Str] = S(exportName)
 
 /** Metadata for an exported global that later Wasm REPL modules can import.
@@ -136,61 +137,6 @@ final case class CompiledWasmModule(
     systemMemMinPages: Int,
     sessionExports: Seq[SessionBinding],
 )
-
-/** A Wasm module imported as a dependency.
-  *
-  * @param importPath
-  *   the import statement's path as written in the source
-  * @param compiled
-  *   the successfully compiled Wasm module
-  */
-final case class WasmDependency(
-    importPath: Str,
-    compiled: CompiledWasmModule,
-)
-
-/** Result of compiling a module to Wasm with its dependencies.
-  *
-  * @param compiled
-  *   the successfully compiled Wasm module
-  * @param dependencies
-  *   all imported `.mls` modules compiled to Wasm
-  */
-final case class WasmCompilation(
-    compiled: CompiledWasmModule,
-    dependencies: Seq[WasmDependency],
-)
-
-/** Context for collecting session exports from a Wasm module.
-  *
-  * @param moduleName
-  *   The module name used for identifying exports in dependent modules.
-  * @param symbolsToExport
-  *   The symbols from the current module that should be recorded as session exports.
-  * @param collectedBindings
-  *   The session bindings accumulated while compiling the current module.
-  */
-final class SessionExportCtx(
-    val moduleName: Str,
-    val symbolsToExport: Set[Local],
-    val collectedBindings: ArrayBuf[SessionBinding],
-):
-  def shouldExport(sym: Local): Bool = symbolsToExport(sym)
-
-  def emit(binding: SessionBinding): Unit =
-    collectedBindings += binding
-
-  def freshCollector(): SessionExportCtx =
-    SessionExportCtx(moduleName, symbolsToExport, ArrayBuf.empty)
-end SessionExportCtx
-
-object SessionExportCtx:
-  def apply(
-      moduleName: Str,
-      symbolsToExport: Set[Local],
-      collectedBindings: ArrayBuf[SessionBinding],
-  ): SessionExportCtx =
-    new SessionExportCtx(moduleName, symbolsToExport, collectedBindings)
 
 /** A Wasm function and its associated information.
   *
