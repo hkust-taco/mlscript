@@ -352,30 +352,30 @@ class MLsCompiler
       val elab = Elaborator(etl, wd, newCtx)
       val parsed = mainParse.resultBlk
       val (blk0, _) = elab.importFrom(parsed)
-      val resolver = Resolver(rtl)
-      resolver.traverseBlock(blk0)(using Resolver.ICtx.empty)
-      def findQuote(t: semantics.Statement): Bool = t match
-        case Term.Quoted(_) | Term.Unquoted(_) => true
-        case Term.Ref(sym) => sym === State.termSymbol
-        case _ => t.subTerms.exists(findQuote)
-      val hasQuote = findQuote(blk0)
-      val exportedSymbol = parsed.definedSymbols.find(_._1 === file.baseName).map(_._2)
-      val preservedSymbols = preservedSymbolsFor(exportedSymbol)
       val effectiveCfg = Config.extractConfigFromStats(blk0)
-      val blk = effectiveCfg.target match
-        case CompilationTarget.JS =>
-          new Term.Blk(
-            Import(State.runtimeSymbol, runtimeFile.toString, runtimeFile) ::
-              // Only import `Term.mls` when necessary.
-              (if hasQuote then
-                Import(State.termSymbol, termFile.toString, termFile) :: blk0.stats
-              else
-                blk0.stats),
-            blk0.res
-          )
-        case CompilationTarget.Wasm =>
-          blk0
       effectiveCfg.givenIn:
+        val resolver = Resolver(rtl)
+        resolver.traverseBlock(blk0)(using Resolver.ICtx.empty)
+        def findQuote(t: semantics.Statement): Bool = t match
+          case Term.Quoted(_) | Term.Unquoted(_) => true
+          case Term.Ref(sym) => sym === State.termSymbol
+          case _ => t.subTerms.exists(findQuote)
+        val hasQuote = findQuote(blk0)
+        val exportedSymbol = parsed.definedSymbols.find(_._1 === file.baseName).map(_._2)
+        val preservedSymbols = preservedSymbolsFor(exportedSymbol)
+        val blk = effectiveCfg.target match
+          case CompilationTarget.JS =>
+            new Term.Blk(
+              Import(State.runtimeSymbol, runtimeFile.toString, runtimeFile) ::
+                // Only import `Term.mls` when necessary.
+                (if hasQuote then
+                  Import(State.termSymbol, termFile.toString, termFile) :: blk0.stats
+                else
+                  blk0.stats),
+              blk0.res
+            )
+          case CompilationTarget.Wasm =>
+            blk0
         val low = ltl.givenIn:
           new codegen.Lowering()
             with codegen.LoweringSelSanityChecks
@@ -390,6 +390,6 @@ class MLsCompiler
           case CompilationTarget.Wasm =>
             emitWasm(file, le_2, exportedSymbol, preservedSymbols, newCtx, mutable.Map.empty)
 
-
+            
 end MLsCompiler
 

@@ -430,13 +430,13 @@ class BlockSimplifier(symbolsToPreserve: Set[Local])(using DebugPrinter, State, 
               val newBdy = applyBlock(fun.body)
               newFunctionBody(fun.dSym) = S(newBdy)
               if newBdy is fun.body then fun else
-              FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, newBdy)(fun.forceTailRec, fun.configOverride, fun.visibility)
+              FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, newBdy)(fun.configOverride, fun.annotations)
             case S(N) =>
               // The expansion of the function body itself reaches its own definition, which is impossible
               lastWords("Function body contains its own definition.")
             case S(S(blk)) =>
               if blk is fun.body then fun else
-              FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, blk)(fun.forceTailRec, fun.configOverride, fun.visibility)
+              FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, blk)(fun.configOverride, fun.annotations)
         
         override def applyResult(r: Result)(k: Result => Block): Block = r match
           case Call(TermSymbolPath(ts), args) if m.contains(ts) =>

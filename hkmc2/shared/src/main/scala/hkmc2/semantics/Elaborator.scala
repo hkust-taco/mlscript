@@ -216,6 +216,9 @@ object Elaborator:
         val handle_suspension = assumeObject("handle_suspension")
       def getBuiltinOp(op: Str): Opt[Str] =
         if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
+      object BuiltInOpIdent:
+        def unapply(id: Ident): Opt[Str] =
+          getBuiltinOp(id.name)
       /** Classes that do not use `instanceof` in pattern matching. */
       val virtualClasses = Set(Int, Num, Str, Bool, TypedArray)
   
@@ -1093,15 +1096,26 @@ extends Importer with ucs.SplitElaborator:
             go(sts, Nil, acc)
       case (m @ PrefixApp(Keywrd(Keyword.`import`), arg)) :: sts =>
         reportUnusedAnnotations
-        val (newCtx, newAcc) = arg match
-          case StrLit(path) =>
-            val stmt = importPath(path).withLocOf(m)
+        val pathAndAlias: Opt[(Tree, Opt[Ident])] = arg match
+          case InfixApp(pathArg, Keywrd(Keyword.`as`), alias: Ident) => S((pathArg, S(alias)))
+          case InfixApp(pathArg, Keywrd(Keyword.`as`), Error()) => N
+          case InfixApp(_, Keywrd(Keyword.`as`), badAlias) =>
+            raise(ErrorReport(
+              msg"Expected identifier after 'as' in import statement" ->
+              badAlias.toLoc :: Nil))
+            N
+          case pathArg => S((pathArg, N))
+        val (newCtx, newAcc) = pathAndAlias match
+          case S((StrLit(path), alias)) =>
+            val stmt = importPath(path, alias).withLocOf(m)
             (ctx + (stmt.sym.nme -> stmt.sym),
-            stmt :: acc)
-          case _ =>
+              stmt :: acc)
+          case S((pathArg, _)) =>
             raise(ErrorReport(
               msg"Expected string literal after 'import' keyword" ->
-              arg.toLoc :: Nil))
+              pathArg.toLoc :: Nil))
+            (ctx, acc)
+          case N => // errors have been reported above.
             (ctx, acc)
         newCtx.givenIn:
           go(sts, Nil, newAcc)

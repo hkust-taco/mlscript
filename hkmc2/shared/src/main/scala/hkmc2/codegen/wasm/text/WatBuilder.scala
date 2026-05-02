@@ -110,7 +110,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ctor = End(""),
       companion = N,
       bufferable = N,
-    )(N)
+    )(N, Nil)
 
   private def ensureSyntheticUnitPredeclared()(using Ctx, Raise, Scope): Unit =
     val unitDefn = syntheticUnitDefn

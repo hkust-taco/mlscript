@@ -188,7 +188,7 @@ class BlockTransformer(subst: SymbolSubst):
     val params2 = fun.params.mapConserve(applyParamList)
     val body2 = applyFunBodyLikeBlock(fun.body)
     if (own2 is fun.owner) && (sym2 is fun.sym) && (dSym2 is fun.dSym) && (params2 is fun.params) && (body2 is fun.body)
-      then fun else FunDefn(own2, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride, fun.visibility)
+      then fun else FunDefn(own2, sym2, dSym2, params2, body2)(fun.configOverride, fun.annotations)
   
   def applyValDefn(defn: ValDefn)(k: ValDefn => Block): Block =
     val ValDefn(tsym, sym, rhs) = defn
@@ -196,7 +196,7 @@ class BlockTransformer(subst: SymbolSubst):
     val sym2 = sym.subst
     applyPath(rhs): rhs2 =>
       if (tsym2 is tsym) && (sym2 is sym) && (rhs2 is rhs)
-        then k(defn) else k(ValDefn(tsym2, sym2, rhs2)(defn.configOverride))
+        then k(defn) else k(ValDefn(tsym2, sym2, rhs2)(defn.configOverride, defn.annotations))
   
   def applyPublicField(f: BlockMemberSymbol -> TermSymbol): BlockMemberSymbol -> TermSymbol =
     val f_1_2 = f._1.subst
@@ -213,7 +213,7 @@ class BlockTransformer(subst: SymbolSubst):
         (privateFields2 is defn.privateFields) &&
         (publicFields2 is defn.publicFields) &&
         (ctor2 is defn.ctor)
-      then defn else ClsLikeBody(isym2, methods2, privateFields2, publicFields2, ctor2)
+      then defn else ClsLikeBody(isym2, methods2, privateFields2, publicFields2, ctor2, defn.annotations)
     
   def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
     case defn: FunDefn => k(applyFunDefn(defn))
@@ -245,7 +245,7 @@ class BlockTransformer(subst: SymbolSubst):
               (preCtor2 is preCtor) && (ctor2 is ctor) &&
               (mod2 is mod)
             then defn else ClsLikeDefn(own2, isym2, sym2, ctorSym2, kind, paramsOpt2, 
-              auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2, bufferable)(defn.configOverride)
+              auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2, bufferable)(defn.configOverride, defn.annotations)
       parentPath match
       case Some(pp) => applyPath(pp): pp2 =>
         helper:
@@ -312,5 +312,4 @@ class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst
 // to traverse sub-blocks while using this class to perform more complicated transformations on the blocks themselves.
 class BlockDataTransformer(subst: SymbolSubst) extends BlockTransformerShallow(subst):
   override def applySubBlock(b: Block): Block = b
-
 
