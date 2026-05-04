@@ -11,9 +11,10 @@ a.A#get() + A(2).get()
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $typeinfo_accessor (func (result (ref $TypeInfoBase))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $typeinfo_accessor))))))
 //│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))) (field $x (mut (ref null any))))))
+//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref null $typeinfo_accessor))) (field $x (mut (ref null any))))))
 //│   (type $A_init (func (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))))
 //│   (type $A_ctor (func (param $x (ref null any)) (result (ref null any))))
 //│   (type $A_get (func (param $this (ref null any)) (result (ref null any))))
@@ -21,9 +22,7 @@ a.A#get() + A(2).get()
 //│   (type $entry1 (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
 //│   (global $a (export "a") (mut (ref null any)) (ref.null any))
-//│   (global $A_typeinfo (ref $A_typeinfo) (struct.new $A_typeinfo
-//│     (i32.const 1)
-//│     (ref.null $TypeInfoBase)))
+//│   (global $A_typeinfo (mut (ref null any)) (ref.null any))
 //│   (func $A_init (type $A_init) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -43,7 +42,7 @@ a.A#get() + A(2).get()
 //│       (struct.set $A $$typeinfo
 //│         (ref.cast (ref $A)
 //│           (local.get $this))
-//│         (global.get $A_typeinfo))
+//│         (ref.func $A_typeinfo_get))
 //│       (drop
 //│         (call $A_init
 //│           (local.get $this)
@@ -55,6 +54,18 @@ a.A#get() + A(2).get()
 //│       (struct.get $A $x
 //│         (ref.cast (ref $A)
 //│           (local.get $this)))))
+//│   (func $A_typeinfo_get (export "A_typeinfo_get") (type $typeinfo_accessor) (result (ref $TypeInfoBase))
+//│     (block (result (ref $TypeInfoBase))
+//│       (if
+//│         (ref.is_null
+//│           (global.get $A_typeinfo))
+//│         (then
+//│           (global.set $A_typeinfo
+//│             (struct.new $A_typeinfo
+//│               (i32.const 1)
+//│               (ref.null $TypeInfoBase)))))
+//│       (ref.cast (ref $TypeInfoBase)
+//│         (global.get $A_typeinfo))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $tmp1 (ref null any))
@@ -85,6 +96,7 @@ a.A#get() + A(2).get()
 //│   (elem $A_init declare func $A_init)
 //│   (elem $A_ctor declare func $A_ctor)
 //│   (elem $A_get declare func $A_get)
+//│   (elem $A_typeinfo_get declare func $A_typeinfo_get)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3
@@ -175,12 +187,12 @@ c.Counter#inc().Counter#double().Counter#get()
 
 :todo
 let d = Counter(c.Counter#get())
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))) (field $x (mut (ref null any))))))`
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref null $typeinfo_accessor))) (field $x (mut (ref null any))))))`
 
 :todo
 d.Counter#inc().Counter#double().Counter#get()
 //│ ╔══[COMPILATION ERROR] Cannot find variable `d` (VarSymbol) in local or global scope.
-//│ ║  l.177: 	let d = Counter(c.Counter#get())
+//│ ║  l.189: 	let d = Counter(c.Counter#get())
 //│ ╙──       	    ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Counter`
 
@@ -201,5 +213,5 @@ class A(val x) with
   fun get() = x
 A(1).get
 //│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
-//│ ║  l.202: 	A(1).get
+//│ ║  l.214: 	A(1).get
 //│ ╙──       	    ^^^^

@@ -7,16 +7,15 @@
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $typeinfo_accessor (func (result (ref $TypeInfoBase))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $typeinfo_accessor))))))
 //│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref null $typeinfo_accessor))))))
 //│   (type $Unit_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $Unit_ctor (func (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (type $start (func))
-//│   (global $Unit_typeinfo (ref $Unit_typeinfo) (struct.new $Unit_typeinfo
-//│     (i32.const 1)
-//│     (ref.null $TypeInfoBase)))
+//│   (global $Unit_typeinfo (mut (ref null any)) (ref.null any))
 //│   (global $Unit$inst (export "Unit$inst") (mut (ref null $Unit)) (ref.null $Unit))
 //│   (func $Unit_init1 (type $Unit_init) (param $this (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
@@ -32,12 +31,24 @@
 //│       (struct.set $Unit $$typeinfo
 //│         (ref.cast (ref $Unit)
 //│           (local.get $this))
-//│         (global.get $Unit_typeinfo))
+//│         (ref.func $Unit_typeinfo_get))
 //│       (drop
 //│         (call $Unit_init1
 //│           (local.get $this)))
 //│       (return
 //│         (local.get $this))))
+//│   (func $Unit_typeinfo_get (export "Unit_typeinfo_get") (type $typeinfo_accessor) (result (ref $TypeInfoBase))
+//│     (block (result (ref $TypeInfoBase))
+//│       (if
+//│         (ref.is_null
+//│           (global.get $Unit_typeinfo))
+//│         (then
+//│           (global.set $Unit_typeinfo
+//│             (struct.new $Unit_typeinfo
+//│               (i32.const 1)
+//│               (ref.null $TypeInfoBase)))))
+//│       (ref.cast (ref $TypeInfoBase)
+//│         (global.get $Unit_typeinfo))))
 //│   (func $start1 (type $start)
 //│     (block
 //│       (global.set $Unit$inst
@@ -47,6 +58,7 @@
 //│     (global.get $Unit$inst))
 //│   (elem $Unit_init1 declare func $Unit_init1)
 //│   (elem $Unit_ctor1 declare func $Unit_ctor1)
+//│   (elem $Unit_typeinfo_get declare func $Unit_typeinfo_get)
 //│   (elem $start1 declare func $start1)
 //│   (elem $entry declare func $entry)
 //│   (start $start1))
@@ -90,7 +102,8 @@ x
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $typeinfo_accessor (func (result (ref $TypeInfoBase))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $typeinfo_accessor))))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (global $x (export "x") (mut (ref null any)) (ref.null any))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
