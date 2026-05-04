@@ -18,7 +18,7 @@ class Importer:
   self: Elaborator =>
   import tl.*
   
-  def importPath(path: Str)(using cfg: Config): Import =
+  def importPath(path: Str, alias: Opt[syntax.Tree.Ident])(using cfg: Config): Import =
     // log(s"pwd: ${os.pwd}")
     // log(s"wd: ${wd}")
     
@@ -28,7 +28,7 @@ class Importer:
       else wd / io.RelPath(path)
     
     val nme = file.baseName
-    val id = new syntax.Tree.Ident(nme) // TODO loc
+    val id = alias.getOrElse(new syntax.Tree.Ident(nme)) // TODO loc
     
     lazy val sym = TermSymbol(LetBind, N, id)
     
@@ -52,12 +52,16 @@ class Importer:
           false
       } =>
         
-        val sym = tl.trace(s">>> Importing $file"):
+        val importedSym = tl.trace(s">>> Importing $file"):
           given TL = tl
           val artifact = cctx.getElaboratedBlock(file, prelude)
           artifact.tree.definedSymbols.find(_._1 === nme) match
           case Some(nme -> imsym) => imsym
           case None => lastWords(s"File $file does not define a symbol named $nme")
+        val sym = alias.fold(importedSym): alias =>
+          val res = BlockMemberSymbol(alias.name, importedSym.trees, importedSym.nameIsMeaningful)
+          res.tsym = importedSym.tsym
+          res
         
         val jsFile = file.up / io.RelPath(file.baseName + ".mjs")
         Import(sym, jsFile.toString, jsFile)

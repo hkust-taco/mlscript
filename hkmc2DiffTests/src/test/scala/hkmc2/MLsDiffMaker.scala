@@ -7,7 +7,7 @@ import utils.*
 
 import hkmc2.semantics.{Elaborator, Resolver, Resolvable, Symbol, SymbolPrinter}
 
-import semantics.Elaborator.Ctx
+import semantics.Elaborator.{Ctx, State}
 
 abstract class MLsDiffMaker extends DiffMaker:
   
@@ -370,6 +370,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     given Ctx = curCtx
+    given Config = Config.extractConfigFromStats(trm)
     val resolver = Resolver(rtl)
     curICtx = resolver.traverseBlock(trm)(using curICtx)
     

@@ -1,7 +1,9 @@
 #config(noFreeze: true)
+#config(noModuleCheck: true)
 
 module NoFreeze with
   class Foo(val x)
 
   fun foo() = new Foo(0)
+  fun bar() = NoFreeze."foo"()
 
