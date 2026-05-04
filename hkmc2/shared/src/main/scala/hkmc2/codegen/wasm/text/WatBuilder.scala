@@ -497,13 +497,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   )(using Ctx, Raise): Unit =
     ctx.addFunc(FuncInfo(
       sym,
+      wrapId = if sym.asClsOrMod.isDefined then (N -> S("ctor")) else (S(defn.sym.nme) -> N),
       typeUse = TypeUse(funcTy),
       params = params,
       resultTypes = Seq(Result(RefType.anyref)),
       locals = Seq.empty,
       body = ref.`null`(ctx.getType_!(defn.sym)),
       exportName = exportName,
-      wrapId = if sym.asClsOrMod.isDefined then (N -> S("ctor")) else (S(defn.sym.nme) -> N),
     ))
   end predeclareClassFuncWithType
 
@@ -1729,235 +1729,238 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           case defn: (FunDefn | ClsLikeDefn) =>
             val res = boundary:
               defn match
-                  case FunDefn(params = Nil) =>
-                    lastWords("cannot generate function with no parameter list")
-                  case fd @ FunDefn(own, sym, dSym, ps :: pss, bod) =>
-                    if own.nonEmpty then
-                      break(errExpr(
-                        Ls(
-                          msg"WatBuilder::returningTerm for Define(...) with `owner.nonEmpty` not implemented yet" ->
-                            defn.sym.toLoc,
-                        ),
-                        extraInfo = S(defn.showAsTree),
-                      ))
-                    val result = pss.foldRight(bod):
-                      case (ps, block) =>
-                        Return(Lambda(ps, block), false)
-                    val (bodyWat, fnCtx) = setupFunction(N, ps, result)
-                    if sym.nameIsMeaningful then
-                      val funcTy = ctx.addType(TypeInfo(
+                case FunDefn(params = Nil) =>
+                  lastWords("cannot generate function with no parameter list")
+                case fd @ FunDefn(own, sym, dSym, ps :: pss, bod) =>
+                  if own.nonEmpty then
+                    break(errExpr(
+                      Ls(
+                        msg"WatBuilder::returningTerm for Define(...) with `owner.nonEmpty` not implemented yet" ->
+                          defn.sym.toLoc,
+                      ),
+                      extraInfo = S(defn.showAsTree),
+                    ))
+
+                  val result = pss.foldRight(bod):
+                    case (ps, block) =>
+                      Return(Lambda(ps, block), false)
+                  val (bodyWat, fnCtx) = setupFunction(N, ps, result)
+                  if sym.nameIsMeaningful then
+                    val funcTy = ctx.addType(
+                      TypeInfo(
                         sym = TempSymbol(N, sym.nme),
                         compType = FunctionType(
                           params = fnCtx.params.map(p => WasmParam(p._2, RefType.anyref)),
                           results = Seq.fill(bodyWat.resultTypes.length)(Result(RefType.anyref)),
                         ),
                         objectTag = N,
-                      ))
-
-                      val funcInfo = FuncInfo(
-                        sym,
-                        typeUse = TypeUse(funcTy),
-                        params = ps.params.zip(fnCtx.params.map(_._2)).map((p, idx) => p.sym -> idx),
-                        resultTypes = Seq.fill(bodyWat.resultTypes.length)(Result(RefType.anyref)),
-                        locals = fnCtx.locals,
-                        body = bodyWat,
-                        exportName = sym.optionIf(_.nameIsMeaningful).map(_.nme),
-                      )
-                      ctx.addFunc(funcInfo)
-                      if summon[SessionExportCtx].shouldExport(defn.sym) then
-                        summon[SessionExportCtx].emit(SessionFunc(
-                          sym = defn.sym,
-                          wrapId = funcInfo.wrapId,
-                          moduleName = SessionBinding.ReplModuleName,
-                          exportName = sym.nme,
-                          funcType = FunctionType(funcInfo.getSignatureType),
-                        ))
-
-                      nop
-                    else
-                      errExpr(
-                        Ls(
-                          msg"WatBuilder::returningTerm for FunDefn(...) where `!sym.nameIsMeaningful` not implemented yet" ->
-                            defn.sym.toLoc,
-                        ),
-                        extraInfo = S(defn.showAsTree),
-                      )
-                    end if
-                  case clsLikeDefn: ClsLikeDefn =>
-                    def errUnimplExpr(cond: Str): Nothing = break(errExpr(
-                      Ls(
-                        msg"WatBuilder::returningTerm for ClsLikeDefn(...) where `$cond` not implemented yet" ->
-                          clsLikeDefn.sym.toLoc,
                       ),
-                      extraInfo = S(defn.showAsTree),
-                    ))
-                    val isSingletonObj = clsLikeDefn.k is syntax.Obj
-                    if clsLikeDefn.owner.nonEmpty then
-                      break(errUnimplExpr("owner.nonEmpty"))
-                    if !(clsLikeDefn.k is syntax.Cls) && !isSingletonObj then
-                      break(errUnimplExpr("unsupported ClsLikeDefn kind"))
-                    if isSingletonObj && clsLikeDefn.paramsOpt.nonEmpty then
-                      break(errUnimplExpr("paramsOpt.nonEmpty for object"))
-                    if clsLikeDefn.auxParams.nonEmpty then
-                      break(errUnimplExpr("auxParams.nonEmpty"))
-                    if isSingletonObj && clsLikeDefn.parentPath.nonEmpty then
-                      break(errUnimplExpr("parentPath.nonEmpty for object"))
-                    if isSingletonObj && clsLikeDefn.methods.nonEmpty then
-                      break(errUnimplExpr("methods.nonEmpty for object"))
-                    if clsLikeDefn.companion.isDefined then
-                      break(errUnimplExpr("companion.isDefined"))
-
-                    val ctorAuxParams = clsLikeDefn.auxParams.map: ps =>
-                      ps.params.map: p =>
-                        p -> errUnimplExpr("auxParams.nonEmpty")
-
-                    val typeref = ctx.getType_!(clsLikeDefn.sym)
-                    val typeinfo = ctx.getTypeInfo_!(typeref)
-
-                    val (initWat, initFnCtx) = setupInitLocals(clsLikeDefn)
-
-                    val newCtorAuxParams = clsLikeDefn.paramsOpt match
-                      case None => ctorAuxParams match
-                          case head :: next => next
-                          case Nil => ctorAuxParams
-                      case Some(_) => ctorAuxParams
-
-                    val tagValue = typeinfo.objectTag getOrElse:
-                      lastWords(s"Expected class ${clsLikeDefn.sym} to have an object tag")
-
-                    val initFuncRef = initFuncSym(clsLikeDefn.sym)
-                    val (ctorCode, ctorFnCtx) = genFuncBody(clsLikeDefn.paramsOpt.toList, thisSym = N):
-                      val thisVar = bindCtorThis(clsLikeDefn.isym)
-                      val initCall = call(
-                        funcidx = ctx.getFunc_!(initFuncRef),
-                        operands = local.get(thisVar, RefType.anyref) +:
-                          funcCtx.params.map((_, nme) => getLocalAnyref(LocalIdx(nme))),
-                        returnTypes = Seq(Result(RefType.anyref)),
-                      )
-                      blockInstr(
-                        label = N,
-                        Seq(
-                          local.set(thisVar, struct.new_default(typeref)),
-                          struct.set(
-                            structFieldIdx(baseObjectSym, typeInfoFieldSym),
-                            ref.cast(
-                              local.get(thisVar, RefType.anyref),
-                              RefType(typeref, nullable = false),
-                            ),
-                            getClassTypeInfoGlobal(clsLikeDefn.sym).get,
-                          ),
-                          drop(initCall),
-                          `return`(S(local.get(thisVar, RefType(typeref, nullable = false)))),
-                        ),
-                        resultTypes = Seq(Result(RefType.anyref)),
-                      )
-
-                    val ctorAux =
-                      if newCtorAuxParams.isEmpty then ctorCode
-                      else break(errUnimplExpr("newCtorAuxParams.nonEmpty"))
-
-                    val predeclaredInit = ctx.getFuncInfo_!(initFuncRef)
-                    ctx.addFunc(FuncInfo(
-                      sym = initFuncRef,
-                      wrapId = S(clsLikeDefn.sym.nme) -> N,
-                      typeUse = predeclaredInit.typeUse,
-                      params = initFnCtx.params,
-                      resultTypes = initWat.resultTypes.map(ty => Result(ty.asValType_!)),
-                      locals = initFnCtx.locals,
-                      body = initWat,
-                      exportName = predeclaredInit.exportName,
-                    ))
-
-                    val predeclaredCtor = ctx.getFuncInfo_!(clsLikeDefn.sym)
-                    val ctorFuncInfo = FuncInfo(
-                      sym = clsLikeDefn.sym,
-                      wrapId = S(clsLikeDefn.sym.nme) -> N,
-                      typeUse = predeclaredCtor.typeUse,
-                      params = ctorFnCtx.params,
-                      resultTypes = ctorAux.resultTypes.map(ty => Result(ty.asValType_!)),
-                      locals = ctorFnCtx.locals,
-                      body = ctorAux,
-                      exportName = predeclaredCtor.exportName,
                     )
-                    ctx.addFunc(ctorFuncInfo)
 
-                    def overwriteMethod(
-                        sym: BlockMemberSymbol,
-                        ps: ParamList,
-                        bod: Block,
-                    ): Unit =
-                      val (bodyWat, fnCtx) = setupFunction(S(clsLikeDefn.isym), ps, bod)
-                      val predeclaredMethod = ctx.getFuncInfo_!(sym)
-                      ctx.addFunc(FuncInfo(
-                        sym,
-                        wrapId = S(clsLikeDefn.sym.nme) -> N,
-                        typeUse = predeclaredMethod.typeUse,
-                        params = fnCtx.params,
-                        resultTypes = Seq.fill(bodyWat.resultTypes.length)(Result(RefType.anyref)),
-                        locals = fnCtx.locals,
-                        body = bodyWat,
-                        exportName = predeclaredMethod.exportName,
+                    val funcInfo = FuncInfo(
+                      sym,
+                      typeUse = TypeUse(funcTy),
+                      params = ps.params.zip(fnCtx.params.map(_._2)).map((p, idx) => p.sym -> idx),
+                      resultTypes = Seq.fill(bodyWat.resultTypes.length)(Result(RefType.anyref)),
+                      locals = fnCtx.locals,
+                      body = bodyWat,
+                      exportName = sym.optionIf(_.nameIsMeaningful).map(_.nme),
+                    )
+                    ctx.addFunc(funcInfo)
+                    if summon[SessionExportCtx].shouldExport(defn.sym) then
+                      summon[SessionExportCtx].emit(SessionFunc(
+                        sym = defn.sym,
+                        wrapId = funcInfo.wrapId,
+                        moduleName = SessionBinding.ReplModuleName,
+                        exportName = sym.nme,
+                        funcType = FunctionType(funcInfo.getSignatureType),
                       ))
-
-                    clsLikeDefn.methods.foreach:
-                      case FunDefn(_, sym, _, Nil, bod) =>
-                        overwriteMethod(sym, PlainParamList(Nil), bod)
-                      case FunDefn(_, sym, _, ps :: Nil, bod) =>
-                        overwriteMethod(sym, ps, bod)
-                      case methodDefn =>
-                        lastWords(
-                          s"Class method `$methodDefn` with multiple parameter lists should be rejected in predeclaration pass",
-                        )
-                    if summon[SessionExportCtx].shouldExport(clsLikeDefn.sym) then
-                      val rttiTypeInfo = ctx.getTypeInfo_!(typeInfoTypeIdxs(clsLikeDefn.sym))
-                      val rttiGlobalInfo = ctx.getGlobalInfo_!(typeInfoGlobals(clsLikeDefn.sym))
-                      summon[SessionExportCtx].emit(SessionClass(
-                        sym = clsLikeDefn.sym,
-                        wrapId = typeinfo.wrapId,
-                        compType = typeinfo.compType,
-                        objectTag = typeinfo.objectTag,
-                        rttiTypeInfo = rttiTypeInfo,
-                        rttiGlobalExportName = rttiGlobalInfo.exportName.get,
-                        aliasSyms = clsLikeDefn.isym match
-                          case mos: ModuleOrObjectSymbol => mos :: Nil
-                          case _ => Nil,
-                      ))
-                      if !isSingletonObj && clsLikeDefn.sym.nameIsMeaningful then
-                        summon[SessionExportCtx].emit(SessionFunc(
-                          sym = clsLikeDefn.sym,
-                          wrapId = ctorFuncInfo.wrapId,
-                          moduleName = SessionBinding.ReplModuleName,
-                          exportName = clsLikeDefn.sym.nme,
-                          funcType = FunctionType(
-                            SignatureType(
-                              params = ctorFnCtx.params.map(p => WasmParam(p._2, RefType.anyref)),
-                              results = Seq(Result(RefType.anyref)),
-                            ),
-                          ),
-                        ))
-                    end if
-                    if isSingletonObj then
-                      registerSingletonInit(clsLikeDefn, typeref)
-                      if summon[SessionExportCtx].shouldExport(clsLikeDefn.sym) then
-                        ctx.getSingletonInfo(clsLikeDefn.sym).foreach: info =>
-                          val singletonOwner = clsLikeDefn.isym match
-                            case mos: ModuleOrObjectSymbol => S(mos)
-                            case _ => N
-                          summon[SessionExportCtx].emit(SessionSingleton(
-                            blockSym = clsLikeDefn.sym,
-                            wrapId = typeinfo.wrapId,
-                            objectSym = singletonOwner,
-                            moduleName = SessionBinding.ReplModuleName,
-                            exportName = info.globalName,
-                            globalTy = info.globalTy,
-                          ))
 
                     nop
-                  case defn =>
+                  else
                     errExpr(
-                      Ls(msg"WatBuilder::returningTerm for Define(...) not implemented yet" -> defn.sym.toLoc),
+                      Ls(
+                        msg"WatBuilder::returningTerm for FunDefn(...) where `!sym.nameIsMeaningful` not implemented yet" ->
+                          defn.sym.toLoc,
+                      ),
                       extraInfo = S(defn.showAsTree),
                     )
+                  end if
+                case clsLikeDefn: ClsLikeDefn =>
+                  def errUnimplExpr(cond: Str): Nothing = break(errExpr(
+                    Ls(
+                      msg"WatBuilder::returningTerm for ClsLikeDefn(...) where `$cond` not implemented yet" ->
+                        clsLikeDefn.sym.toLoc,
+                    ),
+                    extraInfo = S(defn.showAsTree),
+                  ))
+                  val isSingletonObj = clsLikeDefn.k is syntax.Obj
+                  if clsLikeDefn.owner.nonEmpty then
+                    break(errUnimplExpr("owner.nonEmpty"))
+                  if !(clsLikeDefn.k is syntax.Cls) && !isSingletonObj then
+                    break(errUnimplExpr("unsupported ClsLikeDefn kind"))
+                  if isSingletonObj && clsLikeDefn.paramsOpt.nonEmpty then
+                    break(errUnimplExpr("paramsOpt.nonEmpty for object"))
+                  if clsLikeDefn.auxParams.nonEmpty then
+                    break(errUnimplExpr("auxParams.nonEmpty"))
+                  if isSingletonObj && clsLikeDefn.parentPath.nonEmpty then
+                    break(errUnimplExpr("parentPath.nonEmpty for object"))
+                  if isSingletonObj && clsLikeDefn.methods.nonEmpty then
+                    break(errUnimplExpr("methods.nonEmpty for object"))
+                  if clsLikeDefn.companion.isDefined then
+                    break(errUnimplExpr("companion.isDefined"))
+
+                  val ctorAuxParams = clsLikeDefn.auxParams.map: ps =>
+                    ps.params.map: p =>
+                      p -> errUnimplExpr("auxParams.nonEmpty")
+
+                  val typeref = ctx.getType_!(clsLikeDefn.sym)
+                  val typeinfo = ctx.getTypeInfo_!(typeref)
+
+                  val (initWat, initFnCtx) = setupInitLocals(clsLikeDefn)
+
+                  val newCtorAuxParams = clsLikeDefn.paramsOpt match
+                    case None => ctorAuxParams match
+                        case head :: next => next
+                        case Nil => ctorAuxParams
+                    case Some(_) => ctorAuxParams
+
+                  val tagValue = typeinfo.objectTag getOrElse:
+                    lastWords(s"Expected class ${clsLikeDefn.sym} to have an object tag")
+
+                  val initFuncRef = initFuncSym(clsLikeDefn.sym)
+                  val (ctorCode, ctorFnCtx) = genFuncBody(clsLikeDefn.paramsOpt.toList, thisSym = N):
+                    val thisVar = bindCtorThis(clsLikeDefn.isym)
+                    val initCall = call(
+                      funcidx = ctx.getFunc_!(initFuncRef),
+                      operands = local.get(thisVar, RefType.anyref) +:
+                        funcCtx.params.map((_, nme) => getLocalAnyref(LocalIdx(nme))),
+                      returnTypes = Seq(Result(RefType.anyref)),
+                    )
+                    blockInstr(
+                      label = N,
+                      Seq(
+                        local.set(thisVar, struct.new_default(typeref)),
+                        struct.set(
+                          structFieldIdx(baseObjectSym, typeInfoFieldSym),
+                          ref.cast(
+                            local.get(thisVar, RefType.anyref),
+                            RefType(typeref, nullable = false),
+                          ),
+                          getClassTypeInfoGlobal(clsLikeDefn.sym).get,
+                        ),
+                        drop(initCall),
+                        `return`(S(local.get(thisVar, RefType(typeref, nullable = false)))),
+                      ),
+                      resultTypes = Seq(Result(RefType.anyref)),
+                    )
+
+                  val ctorAux =
+                    if newCtorAuxParams.isEmpty then ctorCode
+                    else break(errUnimplExpr("newCtorAuxParams.nonEmpty"))
+
+                  val predeclaredInit = ctx.getFuncInfo_!(initFuncRef)
+                  ctx.addFunc(FuncInfo(
+                    sym = initFuncRef,
+                    wrapId = S(clsLikeDefn.sym.nme) -> N,
+                    typeUse = predeclaredInit.typeUse,
+                    params = initFnCtx.params,
+                    resultTypes = initWat.resultTypes.map(ty => Result(ty.asValType_!)),
+                    locals = initFnCtx.locals,
+                    body = initWat,
+                    exportName = predeclaredInit.exportName,
+                  ))
+
+                  val predeclaredCtor = ctx.getFuncInfo_!(clsLikeDefn.sym)
+                  val ctorFuncInfo = FuncInfo(
+                    sym = clsLikeDefn.sym,
+                    wrapId = S(clsLikeDefn.sym.nme) -> N,
+                    typeUse = predeclaredCtor.typeUse,
+                    params = ctorFnCtx.params,
+                    resultTypes = ctorAux.resultTypes.map(ty => Result(ty.asValType_!)),
+                    locals = ctorFnCtx.locals,
+                    body = ctorAux,
+                    exportName = predeclaredCtor.exportName,
+                  )
+                  ctx.addFunc(ctorFuncInfo)
+
+                  def overwriteMethod(
+                      sym: BlockMemberSymbol,
+                      ps: ParamList,
+                      bod: Block,
+                  ): Unit =
+                    val (bodyWat, fnCtx) = setupFunction(S(clsLikeDefn.isym), ps, bod)
+                    val predeclaredMethod = ctx.getFuncInfo_!(sym)
+                    ctx.addFunc(FuncInfo(
+                      sym,
+                      wrapId = S(clsLikeDefn.sym.nme) -> N,
+                      typeUse = predeclaredMethod.typeUse,
+                      params = fnCtx.params,
+                      resultTypes = Seq.fill(bodyWat.resultTypes.length)(Result(RefType.anyref)),
+                      locals = fnCtx.locals,
+                      body = bodyWat,
+                      exportName = predeclaredMethod.exportName,
+                    ))
+
+                  clsLikeDefn.methods.foreach:
+                    case FunDefn(_, sym, _, Nil, bod) =>
+                      overwriteMethod(sym, PlainParamList(Nil), bod)
+                    case FunDefn(_, sym, _, ps :: Nil, bod) =>
+                      overwriteMethod(sym, ps, bod)
+                    case methodDefn =>
+                      lastWords(
+                        s"Class method `$methodDefn` with multiple parameter lists should be rejected in predeclaration pass",
+                      )
+                  if summon[SessionExportCtx].shouldExport(clsLikeDefn.sym) then
+                    val rttiTypeInfo = ctx.getTypeInfo_!(typeInfoTypeIdxs(clsLikeDefn.sym))
+                    val rttiGlobalInfo = ctx.getGlobalInfo_!(typeInfoGlobals(clsLikeDefn.sym))
+                    summon[SessionExportCtx].emit(SessionClass(
+                      sym = clsLikeDefn.sym,
+                      wrapId = typeinfo.wrapId,
+                      compType = typeinfo.compType,
+                      objectTag = typeinfo.objectTag,
+                      rttiTypeInfo = rttiTypeInfo,
+                      rttiGlobalExportName = rttiGlobalInfo.exportName.get,
+                      aliasSyms = clsLikeDefn.isym match
+                        case mos: ModuleOrObjectSymbol => mos :: Nil
+                        case _ => Nil,
+                    ))
+                    if !isSingletonObj && clsLikeDefn.sym.nameIsMeaningful then
+                      summon[SessionExportCtx].emit(SessionFunc(
+                        sym = clsLikeDefn.sym,
+                        wrapId = ctorFuncInfo.wrapId,
+                        moduleName = SessionBinding.ReplModuleName,
+                        exportName = clsLikeDefn.sym.nme,
+                        funcType = FunctionType(
+                          SignatureType(
+                            params = ctorFnCtx.params.map(p => WasmParam(p._2, RefType.anyref)),
+                            results = Seq(Result(RefType.anyref)),
+                          ),
+                        ),
+                      ))
+                  end if
+                  if isSingletonObj then
+                    registerSingletonInit(clsLikeDefn, typeref)
+                    if summon[SessionExportCtx].shouldExport(clsLikeDefn.sym) then
+                      ctx.getSingletonInfo(clsLikeDefn.sym).foreach: info =>
+                        val singletonOwner = clsLikeDefn.isym match
+                          case mos: ModuleOrObjectSymbol => S(mos)
+                          case _ => N
+                        summon[SessionExportCtx].emit(SessionSingleton(
+                          blockSym = clsLikeDefn.sym,
+                          wrapId = typeinfo.wrapId,
+                          objectSym = singletonOwner,
+                          moduleName = SessionBinding.ReplModuleName,
+                          exportName = info.globalName,
+                          globalTy = info.globalTy,
+                        ))
+
+                  nop
+                case defn =>
+                  errExpr(
+                    Ls(msg"WatBuilder::returningTerm for Define(...) not implemented yet" -> defn.sym.toLoc),
+                    extraInfo = S(defn.showAsTree),
+                  )
               end match
 
             val rstBlk = returningTerm(rst)
