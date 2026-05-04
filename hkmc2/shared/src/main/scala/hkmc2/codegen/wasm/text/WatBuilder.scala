@@ -313,7 +313,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       params: Seq[Local -> SymIdx],
   )(using Ctx, Raise): TypeIdx =
     ctx.addType(TypeInfo(
-      sym = TempSymbol(N, s"${defn.sym.nme}_$suffix"),
+      sym = TempSymbol(N, defn.sym.nme),
+      wrapId = N -> S(suffix),
       FunctionType(
         params = params.map(p => WasmParam(p._2, RefType.anyref)),
         results = Seq(Result(RefType.anyref)),
@@ -443,8 +444,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case func: SessionFunc =>
         // If the function symbol comes from a class or module, generate a TempSymbol to avoid symbol collision with
         // the class/module itself
-        val funcTySym: BlockMemberSymbol | TempSymbol =
-          if func.sym.asClsOrMod.isDefined then TempSymbol(N, func.sym.nme) else func.sym
+        val funcTySym = TempSymbol(N, func.sym.nme)
         val typeIdx =
           ctx.addType(TypeInfo(sym = funcTySym, wrapId = func.wrapId, compType = func.funcType, objectTag = N))
         ctx.addFunctionImport(WasmImport(
@@ -1456,7 +1456,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   if sym.nameIsMeaningful then
                     val funcTy = ctx.addType(
                       TypeInfo(
-                        sym,
+                        sym = TempSymbol(N, sym.nme),
                         FunctionType(
                           params = fnCtx.params.map(p => WasmParam(p._2, RefType.anyref)),
                           results = Seq.fill(bodyWat.resultTypes.length)(Result(RefType.anyref)),
@@ -2065,7 +2065,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       val entrySym = BlockMemberSymbol("entry", Nil)
 
       val entryFnTy = ctx.addType(TypeInfo(
-        sym = entrySym,
+        sym = TempSymbol(N, entrySym.nme),
         FunctionType(params = Seq.empty, results = Seq(Result(RefType.anyref))),
         objectTag = N,
       ))
