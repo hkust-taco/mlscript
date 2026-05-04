@@ -253,13 +253,13 @@ end GlobalInfo
   * Each instance of [[MemInfo]] represents a single memory definition in a WebAssembly module.
   *
   * @param sym
-  *   The source [[Symbol]] which this memory is generated from.
+  *   The source [[TempSymbol]] which this memory is generated from.
   * @param memType
   *   The type of the memory.
   * @param wrapId
   *   An pair of optional strings for adding a prefix and suffix to the generated identifier of this memory.
   */
-class MemInfo(val sym: Symbol, val memType: MemType, val wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise)
+class MemInfo(val sym: TempSymbol, val memType: MemType, val wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise)
     extends ToWat:
 
   /** Symbolic identifier for the global. */
