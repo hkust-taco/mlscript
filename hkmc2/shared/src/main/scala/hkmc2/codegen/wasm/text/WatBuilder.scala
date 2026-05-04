@@ -216,7 +216,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case mos: ModuleOrObjectSymbol => S(mos)
       case _ => N
     if ctx.containsSingleton(unitDefn.sym) then return
-    given Scope = Scope.empty(Scope.Cfg.default)
 
     if ctx.getType(unitDefn.sym).isEmpty then
       predeclareClassTypeInfoType(unitDefn)
@@ -855,7 +854,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   /** Compiles a class init body under its own Wasm-local frame with explicit `this`. */
   private def setupInitLocals(
       clsLikeDefn: ClsLikeDefn,
-  )(using Ctx, Raise, Scope, SessionExportCtx): (Expr, FunctionCtx) =
+  )(using Ctx, Raise, SessionExportCtx): (Expr, FunctionCtx) =
     genFuncBody(clsLikeDefn.paramsOpt.toList, thisSym = S(clsLikeDefn.isym)):
       val thisVar = funcCtx.lookupLocal_!(clsLikeDefn.isym, N)
       val preCtorWat = compilePreCtor(clsLikeDefn, thisVar)
@@ -876,7 +875,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def compilePreCtor(
       clsLikeDefn: ClsLikeDefn,
       thisVar: LocalIdx,
-  )(using Ctx, FunctionCtx, Raise, Scope, SessionExportCtx): Expr =
+  )(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr =
     def withRest(block: NonBlockTail, rest: Block): Block = block match
       case Scoped(syms, _) => Scoped(syms, rest)
       case Begin(sub, _) => Begin(sub, rest)
@@ -938,7 +937,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def normalizeEntryExpr(
       expr: Expr,
       isAbortive: Bool,
-  )(using Ctx, FunctionCtx, Raise, Scope, SessionExportCtx): Expr =
+  )(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr =
     if expr.resultTypes.isEmpty && !isAbortive then
       blockInstr(
         label = N,
@@ -1579,8 +1578,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         case S(_) => drop(expr)
         case N => expr
 
-  def returningTerm(t: Block)(using Ctx, FunctionCtx, Raise, Scope, SessionExportCtx): Expr =
-    val scope = summon[Scope]
+  def returningTerm(t: Block)(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr =
     t match
       case Assign(l, r, rst) if l is State.noSymbol =>
         val rExpr = result(r)
@@ -1729,9 +1727,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 )
 
           case defn: (FunDefn | ClsLikeDefn) =>
-            val res = scope.nest givenIn:
-              boundary:
-                defn match
+            val res = boundary:
+              defn match
                   case FunDefn(params = Nil) =>
                     lastWords("cannot generate function with no parameter list")
                   case fd @ FunDefn(own, sym, dSym, ps :: pss, bod) =>
@@ -1961,7 +1958,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       Ls(msg"WatBuilder::returningTerm for Define(...) not implemented yet" -> defn.sym.toLoc),
                       extraInfo = S(defn.showAsTree),
                     )
-                end match
+              end match
 
             val rstBlk = returningTerm(rst)
             blockInstr(
@@ -2287,7 +2284,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     val ctx = Ctx.empty
     given Ctx = ctx
-    given scope: Scope = Scope.empty(Scope.Cfg.default)
 
     def systemMemMinPages: Int =
       ctx.getMemoryImport(
@@ -2405,40 +2401,28 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       compiledModule(entrySym.nme)
   end program
 
-  def blockPreamble(ss: Iterable[Symbol])(using Ctx, FunctionCtx, Raise, Scope): Seq[Local] =
-    val scope = summon[Scope]
-    val vars = ss.filter(sym =>
-      scope.lookup(sym).toSeq.isEmpty
-        && !ctx.containsGlobal(sym)
-        && ctx.getFunc(sym).isEmpty,
-    ).toSeq
-      .toArray
-      .sortBy(_.uid)
-      .iterator
-      .map: l =>
-        scope.allocateName(l)
-        l
-      .toSeq
-    vars.foreach: v =>
-      funcCtx.addLocal(v)
-    vars
+  def blockPreamble(ss: Iterable[Symbol])(using Ctx, FunctionCtx, Raise): Unit =
+    ss.toArray.sortBy(_.uid).toSeq.filter: sym =>
+      !ctx.containsGlobal(sym) && ctx.getFunc(sym).isEmpty
+    .foreach: sym =>
+      funcCtx.addLocal(sym)
 
   def nonNestedScoped(
       blk: Block,
-  )(k: Block => Expr)(using Ctx, FunctionCtx, Raise, Scope, SessionExportCtx): Expr = blk match
+  )(k: Block => Expr)(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr = blk match
     case Scoped(syms, body) =>
       blockPreamble(syms.view.filter(body.freeVars))
       k(body)
     case _ => k(blk)
 
-  def block(t: Block)(using Ctx, FunctionCtx, Raise, Scope, SessionExportCtx): Expr =
+  def block(t: Block)(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr =
     nonNestedScoped(t)(returningTerm)
 
   def setupFunction(
       thisParam: Opt[InnerSymbol],
       params: ParamList,
       body: Block,
-  )(using Ctx, Raise, Scope, SessionExportCtx): (Expr, FunctionCtx) =
+  )(using Ctx, Raise, SessionExportCtx): (Expr, FunctionCtx) =
     genFuncBody(params :: Nil, thisSym = thisParam):
       block(body)
 
