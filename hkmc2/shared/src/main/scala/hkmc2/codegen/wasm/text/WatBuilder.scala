@@ -1787,6 +1787,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     )
                   end if
                 case clsLikeDefn: ClsLikeDefn =>
+                  // Guard against unsupported features
                   def errUnimplExpr(cond: Str): Nothing = break(errExpr(
                     Ls(
                       msg"WatBuilder::returningTerm for ClsLikeDefn(...) where `$cond` not implemented yet" ->
@@ -1814,11 +1815,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     ps.params.map: p =>
                       p -> errUnimplExpr("auxParams.nonEmpty")
 
+                  // Use the symbolic type reference (e.g. `$Foo`) in emitted WAT for readability.
+                  // Numeric indices are only needed for `$tag` values.
                   val typeref = ctx.getType_!(clsLikeDefn.sym)
                   val typeinfo = ctx.getTypeInfo_!(typeref)
 
                   val (initWat, initFnCtx) = setupInitLocals(clsLikeDefn)
 
+                  // * If there are no ctor params, pop one param list off the aux params
                   val newCtorAuxParams = clsLikeDefn.paramsOpt match
                     case None => ctorAuxParams match
                         case head :: next => next
@@ -1956,6 +1960,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         ))
 
                   nop
+
                 case defn =>
                   errExpr(
                     Ls(msg"WatBuilder::returningTerm for Define(...) not implemented yet" -> defn.sym.toLoc),
