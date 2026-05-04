@@ -216,6 +216,7 @@ declare val Infinity
 declare class Promise
 declare val Promise
 declare object WebAssembly with
+  declare object Instance
   declare class Memory
   declare object Module with
     fun
