@@ -66,7 +66,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private val initFuncSyms: LinkedHashMap[BlockMemberSymbol, BlockMemberSymbol] = LinkedHashMap.empty
   private val typeInfoTypeIdxs: LinkedHashMap[BlockMemberSymbol, TypeIdx] = LinkedHashMap.empty
   private val typeInfoGlobals: LinkedHashMap[BlockMemberSymbol, GlobalIdx] = LinkedHashMap.empty
-  private val typeInfoAccessorSyms: LinkedHashMap[BlockMemberSymbol, BlockMemberSymbol] = LinkedHashMap.empty
   private var nextStringDataOffset: Int = 0
 
   /** Returns the Wasm type index of the synthetic base object header struct. */
@@ -90,41 +89,19 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   /** Loads this module's RTTI singleton for `sym`, if one has been registered. */
   private def getClassTypeInfoGlobal(sym: BlockMemberSymbol)(using Ctx): Opt[Expr] =
-    typeInfoAccessorSyms.get(sym).map: accessorSym =>
-      call(
-        funcidx = ctx.getFunc_!(accessorSym),
-        operands = Seq.empty,
-        returnTypes = Seq(Result(RefType(typeInfoBaseTypeIdx, nullable = false))),
-      )
-
-  /** Returns the Wasm function signature used by RTTI accessor functions. */
-  private def typeInfoAccessorSignature(using Ctx): FunctionType =
-    FunctionType(params = Seq.empty, results = Seq(Result(RefType(typeInfoBaseTypeIdx, nullable = false))))
-
-  /** Declares (and caches) the shared Wasm function type used by RTTI accessor functions. */
-  private def typeInfoAccessorFuncType()(using Ctx, Raise, Scope): TypeIdx =
-    ctx.getOrCreateWasmIntrinsicType(WasmIntrinsicType.TypeInfoAccessor):
-      val typeId = scope.allocateName(TempSymbol(N, "typeinfo_accessor"))
-      ctx.addType(
-        sym = N,
-        TypeInfo(
-          id = SymIdx(typeId),
-          typeInfoAccessorSignature,
-          objectTag = N,
-        ),
-      )
+    typeInfoGlobals.get(sym).map: globalIdx =>
+      val globalTy = ctx.getGlobalType_!(globalIdx).globalType.valType
+      global.get(globalIdx, globalTy)
 
   /** Reads the RTTI pointer stored in an object's common header. */
-  private def readObjectTypeInfo(objRef: Expr)(using Ctx, Raise, Scope): Expr =
-    call_ref(
-      target = struct.get(
+  private def readObjectTypeInfo(objRef: Expr)(using Ctx): Expr =
+    ref.cast(
+      struct.get(
         structFieldIdx(baseObjectSym, typeInfoFieldSym),
         ref.cast(objRef, baseObjectRefType(nullable = false)),
-        RefType(typeInfoAccessorFuncType(), nullable = true),
+        RefType(typeInfoBaseTypeIdx, nullable = true),
       ),
-      operands = Seq.empty,
-      typeIdx = typeInfoAccessorFuncType(),
-      funcType = typeInfoAccessorSignature,
+      RefType(typeInfoBaseTypeIdx, nullable = false),
     )
 
   /** Follows one direct-parent RTTI reference from a shared class `typeinfo` object. */
@@ -247,13 +224,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       predeclareClassInit(unitDefn)
       predeclareClassConstructor(unitDefn)
       predeclareClassTypeInfoGlobal(unitDefn)
-      predeclareClassTypeInfoAccessor(unitDefn)
 
     returningTerm(Define(unitDefn, End("")))
 
     val typeInfo = ctx.getTypeInfo_!(unitDefn.sym)
     val unitRttiTypeInfo = ctx.getTypeInfo_!(typeInfoTypeIdxs(unitDefn.sym))
-    val unitTypeInfoAccessorInfo = ctx.getFuncInfo_!(typeInfoAccessorSyms(unitDefn.sym))
+    val unitTypeInfoGlobalInfo = ctx.getGlobalInfo_!(typeInfoGlobals(unitDefn.sym))
     val singletonInfo = ctx.getSingletonInfo(unitDefn.sym) getOrElse:
       lastWords("Missing singleton metadata for synthetic Unit object")
     // Record session metadata for the synthetic Unit singleton.
@@ -261,8 +237,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       sym = unitDefn.sym,
       typeInfo = typeInfo,
       rttiTypeInfo = unitRttiTypeInfo,
-      rttiAccessorExportName = unitTypeInfoAccessorInfo.exportName.get,
-      parentSym = N,
+      rttiGlobalExportName = unitTypeInfoGlobalInfo.exportName.get,
       aliasSyms = singletonOwner.toSeq,
     ))
     summon[SessionExportCtx].emit(SessionSingleton(
@@ -594,7 +569,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     predeclareClassConstructor(defn)
     predeclareClassMethods(defn)
     predeclareClassTypeInfoGlobal(defn)
-    predeclareClassTypeInfoAccessor(defn)
 
   /** Collects the symbols that should live in mutable globals so later REPL blocks can import them.
     *
@@ -706,19 +680,19 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case cls: SessionClass =>
         val typeInfoTypeIdx = ctx.addType(sym = N, typeInfo = cls.rttiTypeInfo)
         typeInfoTypeIdxs(cls.sym) = typeInfoTypeIdx
-        val accessorSym = BlockMemberSymbol(scope.allocateName(TempSymbol(N, cls.rttiAccessorExportName)), Nil, nameIsMeaningful = false)
-        ctx.addFunctionImport(
-          S(accessorSym),
+        val globalSym = BlockMemberSymbol(ctx.getTypeInfo_!(typeInfoTypeIdx).id.id, Nil, nameIsMeaningful = false)
+        val globalIdx = ctx.addGlobalImport(
+          S(globalSym),
           WasmImport(
             SessionBinding.ReplModuleName,
-            cls.rttiAccessorExportName,
-            ExternType.Func(
-              SymIdx(scope.allocateOrGetName(accessorSym)),
-              TypeUse(typeInfoAccessorFuncType()),
+            cls.rttiGlobalExportName,
+            ExternType.Global(
+              SymIdx(scope.allocateOrGetName(globalSym)),
+              GlobalType(RefType(typeInfoTypeIdx, nullable = false), mutable = false),
             ),
           ),
         )
-        typeInfoAccessorSyms(cls.sym) = accessorSym
+        typeInfoGlobals(cls.sym) = globalIdx
   end registerSessionImports
 
   /** Predeclares the per-class `typeinfo` struct type for one supported top-level class. */
@@ -758,33 +732,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     typeInfoTypeIdxs(defn.sym) = typeInfoType
   end predeclareClassTypeInfoType
 
-  /** Predeclares the global used by one class RTTI accessor function. */
-  private def predeclareClassTypeInfoGlobal(defn: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
+  /** Predeclares the shared runtime `typeinfo` global for one supported top-level class. */
+  private def predeclareClassTypeInfoGlobal(defn: ClsLikeDefn)(using Ctx, Raise, Scope, SessionExportCtx): Unit =
     val typeInfoTypeIdx = typeInfoTypeIdxs(defn.sym)
     val typeInfoTypeId = ctx.getTypeInfo_!(typeInfoTypeIdx).id.id
-    val globalSym = BlockMemberSymbol(typeInfoTypeId, Nil, nameIsMeaningful = false)
-    val globalIdx = ctx.addGlobal(
-      globalSym,
-      GlobalInfo(
-        id = SymIdx(scope.allocateName(globalSym)),
-        globalType = GlobalType(RefType.anyref, mutable = true),
-        init = ref.`null`(HeapType.Any),
-        exportName = N,
-      ),
-    )
-    typeInfoGlobals(defn.sym) = globalIdx
-
-  /** Declares the no-arg function that returns the shared RTTI object for one top-level class. */
-  private def predeclareClassTypeInfoAccessor(defn: ClsLikeDefn)(using Ctx, Raise, Scope, SessionExportCtx): Unit =
-    val typeInfoTypeIdx = typeInfoTypeIdxs(defn.sym)
-    val typeInfoTypeId = ctx.getTypeInfo_!(typeInfoTypeIdx).id.id
-    val accessorSym = BlockMemberSymbol(s"${typeInfoTypeId}_get", Nil, nameIsMeaningful = false)
-    val exportName =
-      if summon[SessionExportCtx].shouldExport(defn.sym) || defn.sym == syntheticUnitDefn.sym then S(accessorSym.nme)
-      else N
-    val accessorTypeIdx = typeInfoAccessorFuncType()
-    val globalIdx = typeInfoGlobals(defn.sym)
-    val globalTy = ctx.getGlobalType_!(globalIdx).globalType.valType
     val tagValue = ctx.getTypeInfo_!(defn.sym).objectTag.get
     val parentTypeInfo =
       if defn.parentPath.isEmpty then ref.`null`(typeInfoBaseTypeIdx)
@@ -798,31 +749,19 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         ctx.getFunc_!(methodSym),
         RefType(ctx.getFuncTypeUse_!(methodSym).typeIdx, nullable = false),
       )
-    ctx.addFunc(
-      S(accessorSym),
-      FuncInfo(
-        id = SymIdx(scope.allocateName(accessorSym)),
-        typeUse = TypeUse(accessorTypeIdx),
-        params = Seq.empty,
-        resultTypes = Seq(Result(RefType(typeInfoBaseTypeIdx, nullable = false))),
-        locals = Seq.empty,
-        body = blockInstr(
-          label = N,
-          children = Seq(
-            `if`(
-              condition = ref.is_null(global.get(globalIdx, globalTy)),
-              ifTrue = global.set(globalIdx, struct.`new`(typeInfoTypeIdx, initFields)),
-              ifFalse = N,
-              resultTypes = Seq.empty,
-            ),
-            ref.cast(global.get(globalIdx, globalTy), RefType(typeInfoBaseTypeIdx, nullable = false)),
-          ),
-          resultTypes = Seq(Result(RefType(typeInfoBaseTypeIdx, nullable = false))),
-        ),
-        exportName = exportName,
+    val globalSym = BlockMemberSymbol(typeInfoTypeId, Nil, nameIsMeaningful = false)
+    val globalIdx = ctx.addGlobal(
+      globalSym,
+      GlobalInfo(
+        id = SymIdx(scope.allocateName(globalSym)),
+        globalType = GlobalType(RefType(typeInfoTypeIdx, nullable = false), mutable = false),
+        init = struct.`new`(typeInfoTypeIdx, initFields),
+        exportName =
+          if summon[SessionExportCtx].shouldExport(defn.sym) || defn.sym == syntheticUnitDefn.sym then S(typeInfoTypeId)
+          else N,
       ),
     )
-    typeInfoAccessorSyms(defn.sym) = accessorSym
+    typeInfoGlobals(defn.sym) = globalIdx
 
   /** Declares one top-level class method. */
   private def predeclareMethod(methodDefn: FunDefn, ownerCls: ClsLikeDefn)(using Ctx, Raise, Scope): Unit =
@@ -1969,10 +1908,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                               local.get(thisVar, RefType.anyref),
                               RefType(typeref, nullable = false),
                             ),
-                            ref.func(
-                              ctx.getFunc_!(typeInfoAccessorSyms(clsLikeDefn.sym)),
-                              RefType(typeInfoAccessorFuncType(), nullable = false),
-                            ),
+                            getClassTypeInfoGlobal(clsLikeDefn.sym).get,
                           ),
                           drop(initCall),
                           `return`(S(local.get(thisVar, RefType(typeref, nullable = false)))),
@@ -2043,13 +1979,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         )
                     if summon[SessionExportCtx].shouldExport(clsLikeDefn.sym) then
                       val rttiTypeInfo = ctx.getTypeInfo_!(typeInfoTypeIdxs(clsLikeDefn.sym))
-                      val rttiAccessorInfo = ctx.getFuncInfo_!(typeInfoAccessorSyms(clsLikeDefn.sym))
+                      val rttiGlobalInfo = ctx.getGlobalInfo_!(typeInfoGlobals(clsLikeDefn.sym))
                       summon[SessionExportCtx].emit(SessionClass(
                         sym = clsLikeDefn.sym,
                         typeInfo = typeinfo,
                         rttiTypeInfo = rttiTypeInfo,
-                        rttiAccessorExportName = rttiAccessorInfo.exportName.get,
-                        parentSym = resolveParentSym(clsLikeDefn),
+                        rttiGlobalExportName = rttiGlobalInfo.exportName.get,
                         aliasSyms = clsLikeDefn.isym match
                           case mos: ModuleOrObjectSymbol => mos :: Nil
                           case _ => Nil,
@@ -2444,7 +2379,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       TypeInfo(
         id = SymIdx("Object"),
         StructType(Seq(
-          typeInfoFieldSym -> Field(RefType(typeInfoAccessorFuncType(), nullable = true), mutable = true, id = "$typeinfo"),
+          typeInfoFieldSym -> Field(RefType(typeInfoBaseTypeIdx, nullable = true), mutable = true, id = "$typeinfo"),
         )),
         objectTag = S(ctx.getFreshObjectTag() ensuring (_ == 0)),
       ),

@@ -26,8 +26,7 @@ counter
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $typeinfo_accessor (func (result (ref $TypeInfoBase))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $typeinfo_accessor))))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry1 (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
@@ -57,12 +56,11 @@ unit
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $typeinfo_accessor (func (result (ref $TypeInfoBase))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $typeinfo_accessor))))))
-//│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref null $typeinfo_accessor))))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
 //│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $entry1 (func (result (ref null any))))
-//│   (import "repl" "Unit_typeinfo_get" (func $Unit_typeinfo_get1 (type $typeinfo_accessor)))
+//│   (import "repl" "Unit_typeinfo" (global $Unit_typeinfo (ref $Unit_typeinfo)))
 //│   (import "repl" "Unit$inst" (global $Unit (mut (ref null $Unit))))
 //│   (func $entry (export "entry") (type $entry1) (result (ref null any))
 //│     (global.get $Unit))

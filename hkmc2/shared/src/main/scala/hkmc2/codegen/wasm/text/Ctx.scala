@@ -83,10 +83,8 @@ final case class SessionGlobal(
   *   The Wasm type information that must be recreated in importing modules.
   * @param rttiTypeInfo
   *   The RTTI struct type information that must be recreated in importing modules.
-  * @param rttiAccessorExportName
-  *   The export name of the per-class RTTI accessor function to import from prior REPL modules.
-  * @param parentSym
-  *   Optional direct parent class symbol used to rebuild the local RTTI ancestry chain in importing modules.
+  * @param rttiGlobalExportName
+  *   The export name of the per-class RTTI global to import from prior REPL modules.
   * @param aliasSyms
   *   Additional symbols that should resolve to this class binding.
   */
@@ -94,13 +92,12 @@ final case class SessionClass(
     sym: BlockMemberSymbol,
     typeInfo: TypeInfo,
     rttiTypeInfo: TypeInfo,
-    rttiAccessorExportName: Str,
-    parentSym: Opt[BlockMemberSymbol],
+    rttiGlobalExportName: Str,
     aliasSyms: Seq[Local] = Nil,
 ) extends SessionBinding:
   def bindingKey: Str = s"class:${sym.uid}"
   def bindingSyms: Seq[Local] = sym +: aliasSyms
-  override def exportNameOpt: Opt[Str] = S(rttiAccessorExportName)
+  override def exportNameOpt: Opt[Str] = S(rttiGlobalExportName)
 
 /** Metadata for a singleton object's backing global made visible to later Wasm REPL modules.
   *
@@ -358,8 +355,6 @@ enum WasmIntrinsicType:
   case TupleArray(mutable: Bool)
   /** Shared erased Wasm function type for virtual methods with the given arity, including `this`. */
   case VirtualMethod(arity: Int)
-  /** Shared erased Wasm function type for per-class RTTI accessor functions. */
-  case TypeInfoAccessor
 
 /** Class containing identifiers of labels to jump to when breaking or continuing from a control flow structure.
   *
