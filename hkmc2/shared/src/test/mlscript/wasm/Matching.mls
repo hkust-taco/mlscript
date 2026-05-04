@@ -53,7 +53,7 @@ if Bar(true) is
 //│   (type $Baz (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))) (field $z (mut (ref null any))))))
 //│   (type $Baz_init (func (param $this (ref null any)) (param $z (ref null any)) (result (ref null any))))
 //│   (type $Baz_ctor (func (param $z (ref null any)) (result (ref null any))))
-//│   (type $entry1 (func (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
 //│   (global $Bar_typeinfo (export "Bar_typeinfo") (ref $Bar_typeinfo) (struct.new $Bar_typeinfo
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
@@ -112,7 +112,7 @@ if Bar(true) is
 //│           (local.get $z)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $scrut (ref null any))
 //│     (local $a (ref null any))
 //│     (local $b (ref null any))
