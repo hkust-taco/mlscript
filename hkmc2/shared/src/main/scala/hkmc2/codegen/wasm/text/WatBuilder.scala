@@ -314,12 +314,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   )(using Ctx, Raise): TypeIdx =
     ctx.addType(TypeInfo(
       sym = TempSymbol(N, defn.sym.nme),
-      wrapId = N -> S(suffix),
       FunctionType(
         params = params.map(p => WasmParam(p._2, RefType.anyref)),
         results = Seq(Result(RefType.anyref)),
       ),
       objectTag = N,
+      wrapId = N -> S(suffix),
     ))
 
   /** Returns the symbol used to predeclare and later overwrite a class init function. */
@@ -433,7 +433,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case cls: SessionClass =>
         ctx.addType(TypeInfo(
           sym = cls.sym,
-          wrapId = cls.wrapId ,
+          wrapId = cls.wrapId,
           compType = cls.compType,
           objectTag = cls.objectTag,
         ))
@@ -2084,7 +2084,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           if lit.byteLen > 0 then
             ctx.addDataSegment(DataSegment.Active(
               offset = i32.const(lit.offset),
-              bytes = lit.watBytes,
+              bytes = Seq(lit.watBytes),
               memuse = N,
               sym = TempSymbol(N, s.take(WatBuilder.StringConstantIdentMaxLength)),
             ))

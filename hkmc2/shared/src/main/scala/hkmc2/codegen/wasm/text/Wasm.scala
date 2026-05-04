@@ -235,11 +235,8 @@ case class GlobalType(valType: ValType, mutable: Bool) extends ToWat:
     else valType.toWat
 
 object ExternType:
-  object Mem:
-    def apply(memType: MemType, sym: Symbol)(using Ctx, Raise): Mem = new Mem(memType, sym, N -> N)
-    
   /** An linear memory entry that is externally addressable. */
-  case class Mem(memType: MemType, override val sym: Symbol, wrapId: Opt[Str] -> Opt[Str])(using Ctx, Raise)
+  case class Mem(memType: MemType, override val sym: Symbol, wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise)
       extends ExternType(sym):
 
     val id: SymIdx = SymIdx(summon[Ctx].memoryScp.allocateOrGetNameWrapped(sym, wrapId))
@@ -247,10 +244,7 @@ object ExternType:
     def toWat: Document = doc"""(memory ${id.toWat} ${memType.toWat})"""
 
   /** An function entry that is externally addressable. */
-  object Func:
-    def apply(typeUse: TypeUse, sym: Symbol)(using Ctx, Raise): Func = new Func(typeUse, sym, N -> N)
-    
-  case class Func(typeUse: TypeUse, override val sym: Symbol, wrapId: Opt[Str] -> Opt[Str])(using Ctx, Raise)
+  case class Func(typeUse: TypeUse, override val sym: Symbol, wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise)
       extends ExternType(sym):
 
     val id: SymIdx = SymIdx(summon[Ctx].funcScp.allocateOrGetNameWrapped(sym, wrapId))
@@ -258,11 +252,11 @@ object ExternType:
     def toWat: Document = doc"""(func ${id.toWat} ${typeUse.toWat})"""
 
   /** A global entry that is externally addressable. */
-  object Global:
-    def apply(globalType: GlobalType, sym: Symbol)(using Ctx, Raise): Global = new Global(globalType, sym, N -> N)
-    
-  case class Global(globalType: GlobalType, override val sym: Symbol, wrapId: Opt[Str] -> Opt[Str])(using Ctx, Raise)
-      extends ExternType(sym):
+  case class Global(
+      globalType: GlobalType,
+      override val sym: Symbol,
+      wrapId: Opt[Str] -> Opt[Str] = N -> N,
+  )(using Ctx, Raise) extends ExternType(sym):
 
     val id: SymIdx = SymIdx(summon[Ctx].globalScp.allocateOrGetNameWrapped(sym, wrapId))
 
@@ -291,38 +285,14 @@ case class MemUse(memidx: MemIdx) extends ToWat:
   def toWat: Document = doc"(memory ${memidx.toWat})"
 
 object DataSegment:
-  object Passive:
-    def apply(bytes: Str, sym: Symbol, wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise): Passive =
-      new Passive(Seq(bytes), sym, wrapId)
-    def apply(bytes: Seq[Str], sym: Symbol)(using Ctx, Raise): Passive = new Passive(bytes, sym, N -> N)
-    
   /** A passive data segment, which is not associated with any memory and must be explicitly loaded with `memory.init`.
     */
-  case class Passive(bytes: Seq[Str], override val sym: Symbol, wrapId: Opt[Str] -> Opt[Str])(using Ctx, Raise)
+  case class Passive(bytes: Seq[Str], override val sym: Symbol, wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise)
       extends DataSegment(bytes, sym, wrapId):
     
     def toWat: Document =
       doc"(data ${id.toWat}${bytes.map(s => s"\"$s\"").mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
 
-  object Active:
-  
-    def apply(
-        offset: Expr,
-        bytes: Str,
-        memuse: Opt[MemUse],
-        sym: Symbol,
-        wrapId: Opt[Str] -> Opt[Str] = N -> N,
-    )(using Ctx, Raise): Active =
-      new Active(offset, Seq(bytes), memuse, sym, wrapId)
-    
-    def apply(
-        offset: Expr,
-        bytes: Seq[Str],
-        memuse: Opt[MemUse],
-        sym: Symbol,
-    )(using Ctx, Raise): Active =
-      new Active(offset, bytes, memuse, sym, N -> N)
-    
   /** An active data segment, which is automatically copied into a memory given by `memuse` and `offset`.
     */
   case class Active(
@@ -330,7 +300,7 @@ object DataSegment:
       bytes: Seq[Str],
       memuse: Opt[MemUse],
       override val sym: Symbol,
-      wrapId: Opt[Str] -> Opt[Str],
+      wrapId: Opt[Str] -> Opt[Str] = N -> N,
   )(using Ctx, Raise) extends DataSegment(bytes, sym, wrapId):
 
     def toWat: Document =
@@ -339,9 +309,6 @@ object DataSegment:
         } ${offset.toWat}${
           bytes.map(s => s"\"$s\"").mkDocument(doc" ").surroundUnlessEmpty(doc" ")
         })"
-
-  def apply(offsetExpr: Expr, bytes: Str, sym: Symbol, wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise): Active =
-    new Active(offsetExpr, Seq(bytes), N, sym, wrapId)
 end DataSegment
 
 /** A data segment entry. */
@@ -352,44 +319,35 @@ sealed abstract class DataSegment(bytes: Seq[Str], val sym: Symbol, wrapId: Opt[
   val id = SymIdx(summon[Ctx].dataSegmentScp.allocateOrGetNameWrapped(sym, wrapId))
 
 object ElemSegment:
-  object Passive:
-    def apply(elemlist: RefType -> Seq[Expr], sym: Symbol)(using Ctx, Raise): Passive = new Passive(elemlist, sym, N -> N)
   /** A passive element segment, which is not associated with any table and must be explicitly initialized with
     * `table.init`.
     */
   case class Passive(
       override val elemlist: RefType -> Seq[Expr],
       override val sym: Symbol,
-      wrapId: Opt[Str] -> Opt[Str],
+      wrapId: Opt[Str] -> Opt[Str] = N -> N,
   )(using Ctx, Raise) extends ElemSegment(elemlist, sym, wrapId):
   
     def toWat: Document = doc"(elem ${id.toWat} ${abbrevElemList})"
 
-  object Active:
-    def apply(offset: Expr, elemlist: RefType -> Seq[Expr], sym: Symbol)(using Ctx, Raise): Active =
-      new Active(offset, elemlist, sym, N -> N)
-  
   /** An active element segment, which is automatically copied into a table given by `offset. */
   case class Active(
       offset: Expr,
       override val elemlist: RefType -> Seq[Expr],
       // TODO(Derppening): Add `tableuse` here if/when we support multiple tables.
       override val sym: Symbol,
-      wrapId: Opt[Str] -> Opt[Str],
+      wrapId: Opt[Str] -> Opt[Str] = N -> N,
   )(using Ctx, Raise) extends ElemSegment(elemlist, sym, wrapId):
   
     def toWat: Document = doc"(elem ${id.toWat} ${offset.toWat} ${abbrevElemList})"
 
-  object Declare:
-    def apply(elemlist: RefType -> Seq[Expr], sym: Symbol)(using Ctx, Raise): Declare = new Declare(elemlist, sym, N -> N)
-    
   /** A declarative element segment, which is used to forward declare references present in the code (such as using
     * `ref.func`).
     */
   case class Declare(
       override val elemlist: RefType -> Seq[Expr],
       override val sym: Symbol,
-      wrapId: Opt[Str] -> Opt[Str],
+      wrapId: Opt[Str] -> Opt[Str] = N -> N,
   )(using Ctx, Raise) extends ElemSegment(elemlist, sym, wrapId):
   
     def toWat: Document = doc"(elem ${id.toWat} declare ${abbrevElemList})"

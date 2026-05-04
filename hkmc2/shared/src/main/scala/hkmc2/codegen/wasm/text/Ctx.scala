@@ -184,24 +184,14 @@ final class SessionExportCtx(
   */
 class FuncInfo(
     val sym: BlockMemberSymbol | TempSymbol,
-    val wrapId: Opt[Str] -> Opt[Str],
     val typeUse: TypeUse,
     val params: Seq[Local -> SymIdx],
     val resultTypes: Seq[Result],
     val locals: Seq[Local -> SymIdx],
     val body: Expr,
     val exportName: Opt[Str],
+    val wrapId: Opt[Str] -> Opt[Str] = N -> N,
 )(using Ctx, Raise) extends ToWat:
-
-  def this(
-    sym: BlockMemberSymbol | TempSymbol,
-    typeUse: TypeUse,
-    params: Seq[Local -> SymIdx],
-    resultTypes: Seq[Result],
-    locals: Seq[Local -> SymIdx],
-    body: Expr,
-    exportName: Opt[Str],
-  )(using Ctx, Raise) = this(sym, N -> N, typeUse, params, resultTypes, locals, body, exportName)
 
   /** Symbolic identifier for the function. */
   val id = SymIdx(summon[Ctx].funcScp.allocateOrGetNameWrapped(sym, wrapId))
@@ -245,11 +235,8 @@ class GlobalInfo(
     val init: Expr,
     val exportName: Opt[Str],
     val sym: Symbol,
-    val wrapId: Opt[Str] -> Opt[Str],
+    val wrapId: Opt[Str] -> Opt[Str] = N -> N,
 )(using Ctx, Raise) extends ToWat:
-
-  def this(globalType: GlobalType, init: Expr, exportName: Opt[Str], sym: Symbol)(using Ctx, Raise) =
-    this(globalType, init, exportName, sym, N -> N)
 
   /** Symbolic identifier for the global. */
   val id: SymIdx = SymIdx(summon[Ctx].globalScp.allocateOrGetNameWrapped(sym, wrapId))
@@ -272,9 +259,8 @@ end GlobalInfo
   * @param wrapId
   *   An pair of optional strings for adding a prefix and suffix to the generated identifier of this memory.
   */
-class MemInfo(val sym: Symbol, val memType: MemType, val wrapId: Opt[Str] -> Opt[Str])(using Ctx, Raise) extends ToWat:
-
-  def this(sym: Symbol, memType: MemType)(using Ctx, Raise) = this(sym, memType, N -> N)
+class MemInfo(val sym: Symbol, val memType: MemType, val wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise)
+    extends ToWat:
 
   /** Symbolic identifier for the global. */
   val id: SymIdx = SymIdx(summon[Ctx].memoryScp.allocateOrGetNameWrapped(sym, wrapId))
@@ -297,16 +283,10 @@ end MemInfo
   */
 final class TypeInfo(
     val sym: BlockMemberSymbol | TempSymbol,
-    val wrapId: Opt[Str] -> Opt[Str],
     val compType: CompType,
     val objectTag: Opt[Int],
+    val wrapId: Opt[Str] -> Opt[Str] = N -> N,
 )(using Ctx, Raise) extends ToWat:
-
-  def this(
-    sym: BlockMemberSymbol | TempSymbol,
-    compType: CompType,
-    objectTag: Opt[Int],
-  )(using Ctx, Raise) = this(sym, N -> N, compType, objectTag)
 
   /** Symbolic identifier for the type. */
   val id = SymIdx(summon[Ctx].typeScp.allocateOrGetNameWrapped(sym, wrapId))
@@ -323,9 +303,8 @@ final class TypeInfo(
   * @param sym
   *   The source [[Symbol]] which this tag is generated from.
   */
-class TagInfo(val typeUse: TypeUse, val sym: Symbol, val wrapId: Opt[Str] -> Opt[Str])(using Ctx, Raise) extends ToWat:
-
-  def this(sym: Symbol, typeUse: TypeUse)(using Ctx, Raise) = this(typeUse, sym, N -> N)
+class TagInfo(val typeUse: TypeUse, val sym: Symbol, val wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise)
+    extends ToWat:
 
   /** Symbolic identifier for the tag. */
   val id: SymIdx = SymIdx(summon[Ctx].tagScp.allocateOrGetNameWrapped(sym, wrapId))
