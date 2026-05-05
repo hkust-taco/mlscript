@@ -79,7 +79,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         case S(_) | N => lhs
       case _ => lhs
 
-  inline def apply(split: Split): Split = normalize(split)(using VarSet(), JoinPointCtx.empty)._1
+  inline def apply(split: Split): Split =
+    given SpecializedSplitCtx = SpecializedSplitCtx()
+    val (normalized, refs) = normalize(split)(using VarSet(), JoinPointCtx.empty)
+    bindSpecializedJoinPoints(normalized, refs)
 
   /**
     * Normalize a split by specializing branches that test the same scrutinee
@@ -93,11 +96,25 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     *         that the caller (an enclosing `normalizeImpl`) can place the
     *         `LetSplit` at the lowest common ancestor.
     */
-  private def normalize(split: Split)(using vs: VarSet, jpctx: JoinPointCtx): (Split, Set[SplitSymbol]) = trace(
+  private def normalize(split: Split)(using vs: VarSet, jpctx: JoinPointCtx, spctx: SpecializedSplitCtx): (Split, Set[SplitSymbol]) = trace(
     pre = s"normalize <<< ${split.prettyPrint}",
     post = (res: (Split, Set[SplitSymbol])) => "normalize >>> " + res._1.prettyPrint,
   ):
     normalizeImpl(split)
+
+  private def shouldShareJoinPoint(body: Split, refCount: Int): Bool =
+    refCount > 1 && (config.patMatConsequentSharingThreshold match
+      case S(threshold) => body.size * 2 > threshold
+      case N => false)
+
+  private def bindSpecializedJoinPoints(split: Split, refs: Set[SplitSymbol])(using spctx: SpecializedSplitCtx): Split =
+    refs.iterator.filter(spctx.contains).foldLeft(split):
+      case (acc, sym) =>
+        val refCount = acc.countUseSplit(sym)
+        if shouldShareJoinPoint(sym.body, refCount) then
+          Split.LetSplit(sym, acc)
+        else
+          inlineUseSplit(acc, sym, sym.body)
   
   extension (split: Split)
     /** Check if any branch in the split tests the given scrutinee. */
@@ -150,7 +167,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
   /** Workhorse of `normalize`. Returns the same pair: the normalized split
     * and the set of unbound `SplitSymbol`s whose `LetSplit` placement is
     * deferred to an ancestor. */
-  private def normalizeImpl(split: Split)(using vs: VarSet, jpctx: JoinPointCtx): (Split, Set[SplitSymbol]) = split match
+  private def normalizeImpl(split: Split)(using vs: VarSet, jpctx: JoinPointCtx, spctx: SpecializedSplitCtx): (Split, Set[SplitSymbol]) = split match
     case Split.Cons(Branch(scrutinee, pattern, consequent), alternative) =>
       log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
       if alternative.isTrivial || alternative.referencesScrutinee(scrutinee) then
@@ -182,9 +199,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
           // the alternative is referenced more than once AND it's large enough
           // to be worth a join point, per the configured threshold.
           val refCount = whenTrue.countUseSplit(sym)
-          val shouldShare = refCount > 1 && (config.patMatConsequentSharingThreshold match
-            case S(threshold) => normalizedAlt.size * 2 > threshold
-            case N => false)
+          val shouldShare = shouldShareJoinPoint(normalizedAlt, refCount)
           if shouldShare then
             (Split.LetSplit(sym, Branch(scrutinee, pattern, whenTrue) ~: useSplit), trueRefs - sym)
           else
@@ -213,7 +228,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       val (normalizedTail, refs) = normalizeImpl(tail)
       (Split.LetSplit(sym, normalizedTail), refs)
     case split @ Split.UseSplit(sym) =>
-      (split, if jpctx.contains(sym) then Set(sym) else Set.empty)
+      (split, if jpctx.contains(sym) || spctx.contains(sym) then Set(sym) else Set.empty)
   
   /**
     * Specialize `split` with the assumption that `scrutinee` matches `pattern`.
@@ -248,7 +263,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       mode: Mode,
       scrutinee: Term.Ref,
       pattern: FlatPattern
-  )(using VarSet): Opt[Split] = trace(
+  )(using VarSet, SpecializedSplitCtx): Opt[Split] = trace(
     pre = s"S$mode <<< ${scrutinee.showDbg} is ${pattern.showDbg} : ${split.prettyPrint}",
     post = (r: Opt[Split]) => s"S$mode >>> ${r.fold("(unchanged)")(_.prettyPrint)}"
   ):
@@ -327,13 +342,25 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       case split @ Split.UseSplit(sym) =>
         log(s"CASE UseSplit ${sym.nme}")
         // UseSplit references a shared body. If the body mentions the current
-        // scrutinee, inline it and specialize; otherwise keep the reference.
-        // When rec returns N (body unchanged), the UseSplit is preserved to
-        // maintain sharing via the join point.
-        if sym.body.referencesScrutinee(scrutinee) then
-          rec(sym.body)
-        else N
+        // scrutinee, specialize it once and reuse the specialized split for
+        // all identical uses in this specialization pass; otherwise keep the
+        // reference. When rec returns N (body unchanged), the original UseSplit
+        // is preserved to maintain sharing via the original join point.
+        if !sym.body.referencesScrutinee(scrutinee) then N
+        else summon[SpecializedSplitCtx].get(sym, mode, scrutinee, pattern) match
+          case S(S(specializedSym)) => S(Split.UseSplit(specializedSym))
+          case S(N) => N
+          case N =>
+            rec(sym.body) match
+              case N =>
+                summon[SpecializedSplitCtx].put(sym, mode, scrutinee, pattern, N)
+                N
+              case S(specializedBody) =>
+                val specializedSym = new SplitSymbol(specializedBody, sym.nme)
+                summon[SpecializedSplitCtx].put(sym, mode, scrutinee, pattern, S(specializedSym))
+                S(Split.UseSplit(specializedSym))
     end rec
+
     rec(split)(using mode, summon)
   
   private def aliasBindings(p: FlatPattern, q: FlatPattern): Split => Split = (p, q) match
@@ -491,7 +518,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         res
       lazy val tSym = TermSymbol.fromFunBms(f, N)
       val normalized = tl.scoped("ucs:normalize"):
-        normalize(inputSplit)(using VarSet(), JoinPointCtx.empty)._1
+        given SpecializedSplitCtx = SpecializedSplitCtx()
+        val (normalizedSplit, refs) = normalize(inputSplit)(using VarSet(), JoinPointCtx.empty)
+        bindSpecializedJoinPoints(normalizedSplit, refs)
       tl.scoped("ucs:normalized"):
         tl.log(s"Normalized:\n${normalized.prettyPrint}")
       lazy val assignResult = (r: Result) =>
@@ -667,6 +696,47 @@ object Normalization:
     def contains(sym: SplitSymbol): Bool = pending.contains(sym)
   object JoinPointCtx:
     val empty: JoinPointCtx = JoinPointCtx(Set.empty)
+
+  final case class SpecializedSplitEntry(
+      sym: SplitSymbol,
+      mode: Mode,
+      scrutinee: Term.Ref,
+      pattern: FlatPattern,
+      result: Opt[SplitSymbol]
+  )
+
+  final class SpecializedSplitCtx:
+    private val entries = collection.mutable.ListBuffer.empty[SpecializedSplitEntry]
+    private val symbols = collection.mutable.HashSet.empty[SplitSymbol]
+
+    def contains(sym: SplitSymbol): Bool = symbols.contains(sym)
+
+    def get(
+        sym: SplitSymbol,
+        mode: Mode,
+        scrutinee: Term.Ref,
+        pattern: FlatPattern
+    ): Opt[Opt[SplitSymbol]] =
+      entries.find(entry =>
+        (entry.sym eq sym) &&
+          entry.mode == mode &&
+          (entry.scrutinee === scrutinee) &&
+          entry.pattern == pattern
+      ).map(_.result)
+
+    def put(
+        sym: SplitSymbol,
+        mode: Mode,
+        scrutinee: Term.Ref,
+        pattern: FlatPattern,
+        result: Opt[SplitSymbol]
+    ): Unit =
+      entries += SpecializedSplitEntry(sym, mode, scrutinee, pattern, result)
+      result.foreach: symbol =>
+        symbols += symbol
+
+  object SpecializedSplitCtx:
+    def apply(): SpecializedSplitCtx = new SpecializedSplitCtx
 
   /** Specialization mode */
   enum Mode:
