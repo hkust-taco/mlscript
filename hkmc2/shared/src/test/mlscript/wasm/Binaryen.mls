@@ -5,16 +5,16 @@
 // Helper functions
 import "binaryen"
 fun compileWatToWasm(wat) = 
-  let mod = binaryen.parseText of wat
+  let mod = binaryen.parseText(wat)
   mod.setFeatures(binaryen.Features.All)
-  Predef.js_assert of mod.validate()
+  assert mod.validate() != false
   val modBuf = mod.emitBinary()
   mod.dispose()
   modBuf
 fun instantiateWasm(wasm, importObj) = 
-  assert WebAssembly.validate of wasm
-  let mod = new! WebAssembly.Module of wasm
-  let inst = new! WebAssembly.Instance of mod, importObj
+  assert WebAssembly.validate(wasm)
+  let mod = new! WebAssembly.Module(wasm)
+  let inst = new! WebAssembly.Instance(mod, importObj)
   inst
 
 
@@ -46,50 +46,44 @@ inst.exports.main() |> print
 let mod = new! binaryen.Module()
 mod.setFeatures(binaryen.Features.All)
 let fooTb = new! binaryen.TypeBuilder(1)
-fooTb.setStructType(0, [
+fooTb.setStructType of 0, tuple of
     (
-        "type": binaryen.i32
-        packedType: binaryen.notPacked
-        mutable: false
-    ),
+      "type": binaryen.i32
+      packedType: binaryen.notPacked
+      mutable: false
+    )
     (
-        "type": binaryen.i31ref
-        packedType: binaryen.notPacked
-        mutable: false
-    ),
-])
-let foo = fooTb.buildAndDispose().[0]
+      "type": binaryen.i31ref
+      packedType: binaryen.notPacked
+      mutable: false
+    )
+let foo = fooTb.buildAndDispose().0
 mod.addFunction of
-  "main",
-  binaryen.none,
-  binaryen.i32,
-  [foo], 
+  "main"
+  binaryen.none
+  binaryen.i32
+  [foo]
   mod.block of
-    null,
-    [
-      mod.local.set of
-        0,
+    null
+    tuple of
+      mod.local.set of 0,
         mod.struct.new of
-          [
-            mod.i32.const(1),
+          tuple of
+            mod.i32.const(1)
             mod.ref.i31 of
-              mod.i32.const of 2,
-          ],
-          foo,
+              mod.i32.const of 2
+          foo
       mod.i32.add of
-        mod.struct.get of 
-          0,
-          mod.local.get(0, foo),
-          foo,
-          false,
+        mod.struct.get of 0,
+          mod.local.get(0, foo)
+          foo
+          false
         mod.i31.get_s of
-          mod.struct.get of
-            1,
-            mod.local.get(0, foo),
-            foo,
-            false,
-    ],
-    binaryen.i32,
+          mod.struct.get of 1,
+            mod.local.get(0, foo)
+            foo
+            false
+    binaryen.i32
 mod.addFunctionExport of "main", "main"
 Predef.js_assert of mod.validate()
 let wasmMod = mod.emitBinary()
