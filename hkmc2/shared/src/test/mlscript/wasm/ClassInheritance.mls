@@ -27,13 +27,13 @@ c.Parent#x
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $Parent_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Parent (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))) (field $x (mut (ref null any))))))
+//│   (type $Parent (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))
 //│   (type $Parent_init (func (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))))
 //│   (type $Parent_ctor (func (param $x (ref null any)) (result (ref null any))))
 //│   (type $Child_typeinfo (sub $Parent_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Child (sub $Parent (struct (field $$typeinfo (mut (ref null $TypeInfoBase))) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
+//│   (type $Child (sub $Parent (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
 //│   (type $Child_init (func (param $this (ref null any)) (param $y (ref null any)) (result (ref null any))))
 //│   (type $Child_ctor (func (param $y (ref null any)) (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
@@ -61,11 +61,9 @@ c.Parent#x
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
-//│         (struct.new_default $Parent))
-//│       (struct.set $Parent $$typeinfo
-//│         (ref.cast (ref $Parent)
-//│           (local.get $this))
-//│         (global.get $Parent_typeinfo))
+//│         (struct.new $Parent
+//│           (global.get $Parent_typeinfo)
+//│           (ref.null any)))
 //│       (drop
 //│         (call $Parent_init
 //│           (local.get $this)
@@ -99,11 +97,10 @@ c.Parent#x
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
-//│         (struct.new_default $Child))
-//│       (struct.set $Child $$typeinfo
-//│         (ref.cast (ref $Child)
-//│           (local.get $this))
-//│         (global.get $Child_typeinfo))
+//│         (struct.new $Child
+//│           (global.get $Child_typeinfo)
+//│           (ref.null any)
+//│           (ref.null any)))
 //│       (drop
 //│         (call $Child_init
 //│           (local.get $this)
@@ -148,13 +145,13 @@ B() is A
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $A_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $A_ctor (func (result (ref null any))))
 //│   (type $B_typeinfo (sub $A_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $B (sub $A (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $B (sub $A (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $B_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $B_ctor (func (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
@@ -174,11 +171,8 @@ B() is A
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
-//│         (struct.new_default $A))
-//│       (struct.set $A $$typeinfo
-//│         (ref.cast (ref $A)
-//│           (local.get $this))
-//│         (global.get $A_typeinfo))
+//│         (struct.new $A
+//│           (global.get $A_typeinfo)))
 //│       (drop
 //│         (call $A_init
 //│           (local.get $this)))
@@ -198,11 +192,8 @@ B() is A
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
-//│         (struct.new_default $B))
-//│       (struct.set $B $$typeinfo
-//│         (ref.cast (ref $B)
-//│           (local.get $this))
-//│         (global.get $B_typeinfo))
+//│         (struct.new $B
+//│           (global.get $B_typeinfo)))
 //│       (drop
 //│         (call $B_init
 //│           (local.get $this)))
@@ -232,22 +223,21 @@ B() is A
 //│                   (if
 //│                     (block (result i32)
 //│                       (local.set $currentTypeInfo
-//│                         (ref.cast (ref $TypeInfoBase)
-//│                           (struct.get $Object $$typeinfo
-//│                             (ref.cast (ref $Object)
-//│                               (local.get $scrut)))))
+//│                         (struct.get $Object $$typeinfo
+//│                           (ref.cast (ref $Object)
+//│                             (local.get $scrut))))
 //│                       (local.set $targetTypeInfo
 //│                         (global.get $A_typeinfo))
 //│                       (local.set $typeInfoMatch
 //│                         (ref.i31
 //│                           (i32.const 0)))
-//│                       (block $typeInfoEnd
-//│                         (loop $typeInfoLoop
+//│                       (block $typeInfo
+//│                         (loop $typeInfo_cont
 //│                           (if
 //│                             (ref.is_null
 //│                               (local.get $currentTypeInfo))
 //│                             (then
-//│                               (br $typeInfoEnd)))
+//│                               (br $typeInfo)))
 //│                           (if
 //│                             (ref.eq
 //│                               (ref.cast (ref null eq)
@@ -259,12 +249,12 @@ B() is A
 //│                                 (local.set $typeInfoMatch
 //│                                   (ref.i31
 //│                                     (i32.const 1)))
-//│                                 (br $typeInfoEnd))))
+//│                                 (br $typeInfo))))
 //│                           (local.set $currentTypeInfo
 //│                             (struct.get $TypeInfoBase $$parent
 //│                               (ref.cast (ref $TypeInfoBase)
 //│                                 (local.get $currentTypeInfo))))
-//│                           (br $typeInfoLoop)))
+//│                           (br $typeInfo_cont)))
 //│                       (i31.get_s
 //│                         (ref.cast (ref null i31)
 //│                           (local.get $typeInfoMatch))))
@@ -353,17 +343,17 @@ class B
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $A_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $A_ctor (func (result (ref null any))))
 //│   (type $B_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $B (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $B (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $B_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $B_ctor (func (result (ref null any))))
 //│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $Unit_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $Unit_ctor (func (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
@@ -388,11 +378,8 @@ class B
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
-//│         (struct.new_default $A))
-//│       (struct.set $A $$typeinfo
-//│         (ref.cast (ref $A)
-//│           (local.get $this))
-//│         (global.get $A_typeinfo))
+//│         (struct.new $A
+//│           (global.get $A_typeinfo)))
 //│       (drop
 //│         (call $A_init
 //│           (local.get $this)))
@@ -408,11 +395,8 @@ class B
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
-//│         (struct.new_default $B))
-//│       (struct.set $B $$typeinfo
-//│         (ref.cast (ref $B)
-//│           (local.get $this))
-//│         (global.get $B_typeinfo))
+//│         (struct.new $B
+//│           (global.get $B_typeinfo)))
 //│       (drop
 //│         (call $B_init
 //│           (local.get $this)))
@@ -428,11 +412,8 @@ class B
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
-//│         (struct.new_default $Unit))
-//│       (struct.set $Unit $$typeinfo
-//│         (ref.cast (ref $Unit)
-//│           (local.get $this))
-//│         (global.get $Unit_typeinfo))
+//│         (struct.new $Unit
+//│           (global.get $Unit_typeinfo)))
 //│       (drop
 //│         (call $Unit_init
 //│           (local.get $this)))
@@ -468,5 +449,5 @@ class B
 class A extends B
 class B extends A
 //│ ╔══[COMPILATION ERROR] Inheritance cycles are not supported.
-//│ ║  l.468: 	class A extends B
+//│ ║  l.449: 	class A extends B
 //│ ╙──       	^^^^^^^^^^^^^^^^^

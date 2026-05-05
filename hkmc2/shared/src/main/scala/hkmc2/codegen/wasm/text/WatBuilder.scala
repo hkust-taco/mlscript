@@ -94,12 +94,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   /** Reads the RTTI pointer stored in an object's common header. */
   private def readObjectTypeInfo(objRef: Expr)(using Ctx): Expr =
-    ref.cast(
-      struct.get(
-        structFieldIdx(baseObjectSym, typeInfoFieldSym),
-        ref.cast(objRef, baseObjectRefType(nullable = false)),
-        RefType(typeInfoBaseTypeIdx, nullable = true),
-      ),
+    struct.get(
+      structFieldIdx(baseObjectSym, typeInfoFieldSym),
+      ref.cast(objRef, baseObjectRefType(nullable = false)),
       RefType(typeInfoBaseTypeIdx, nullable = false),
     )
 
@@ -115,6 +112,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
 
+  /** Returns the default Wasm value for one struct field when eagerly constructing an object instance. */
+  private def defaultStructFieldValue(field: Field)(using Ctx, Raise): Expr = field.ty match
+    case refTy: RefType if refTy.nullable => ref.`null`(refTy.heapType)
+    case refTy: RefType =>
+      lastWords(s"non-null ref field `${field.id}` requires an explicit initializer")
+    case other =>
+      lastWords(s"unsupported default field type `${other.toWat.mkString()}` for eager object construction")
+
   /** Returns `1` when `scrutTypeInfo` is equal to or descends from `targetTypeInfo`, else `0`. */
   private def isSubtypeByTypeInfo(
       scrutTypeInfo: Expr,
@@ -123,8 +128,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val currentTmp = mkTempLocal("currentTypeInfo")
     val targetTmp = mkTempLocal("targetTypeInfo")
     val resultTmp = mkTempLocal("typeInfoMatch")
-    funcCtx.withLabel(LabelSymbol(N, "typeInfoEnd"), hasContinueLabel = false): endTarget =>
-      funcCtx.withLabel(LabelSymbol(N, "typeInfoLoop"), hasContinueLabel = true): loopTarget =>
+    funcCtx.withLabel(LabelSymbol(N, "typeInfo"), hasContinueLabel = true):
+      case LabelTarget(breakLabel, S(continueLabel)) =>
         blockInstr(
           label = N,
           children = Seq(
@@ -132,14 +137,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             local.set(targetTmp, targetTypeInfo),
             local.set(resultTmp, ref.i31(i32.const(0))),
             blockInstr(
-              label = S(endTarget.breakLabel),
+              label = S(breakLabel),
               children = Seq(
                 loopInstr(
-                  label = S(loopTarget.breakLabel),
+                  label = S(continueLabel),
                   children = Seq(
                     `if`(
                       condition = ref.is_null(getLocalAnyref(currentTmp)),
-                      ifTrue = br(endTarget.breakLabel),
+                      ifTrue = br(breakLabel),
                       ifFalse = N,
                       resultTypes = Seq.empty,
                     ),
@@ -152,7 +157,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                         label = N,
                         children = Seq(
                           local.set(resultTmp, ref.i31(i32.const(1))),
-                          br(endTarget.breakLabel),
+                          br(breakLabel),
                         ),
                         resultTypes = Seq.empty,
                       ),
@@ -160,7 +165,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       resultTypes = Seq.empty,
                     ),
                     local.set(currentTmp, readTypeInfoParent(getLocalAnyref(currentTmp))),
-                    br(loopTarget.breakLabel),
+                    br(continueLabel),
                   ),
                   resultTypes = Seq.empty,
                 ),
@@ -171,6 +176,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           ),
           resultTypes = Seq(Result(I32Type)),
         )
+      case LabelTarget(_, N) =>
+        lastWords("unreachable: loop-based RTTI traversal expects a continue label")
 
   /** True if this top-level class can be declared as a Wasm struct type. */
   private def isSupportedTopLevelClass(defn: ClsLikeDefn): Bool =
@@ -372,10 +379,28 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ordered.toList
   end sortTopLevelClasses
 
+  /** Returns the elaborated semantic class definition for this lowered class. */
+  private def semanticClassDef(defn: ClsLikeDefn)(using Raise): hkmc2.semantics.ClassLikeDef =
+    defn.isym.defn match
+      case S(clsDef: hkmc2.semantics.ClassLikeDef) => clsDef
+      case _ =>
+        lastWords(s"Expected lowered class `${defn.sym}` to retain its semantic class definition")
+
   /** Returns the elaborated source methods for this class. */
   private def semanticMethodDefs(defn: ClsLikeDefn)(using Raise): List[TermDefinition] =
-    val clsDef = defn.isym.defn.get.asInstanceOf[hkmc2.semantics.ClassLikeDef]
-    clsDef.body.methods.filter(_.body.nonEmpty)
+    semanticClassDef(defn).body.methods.filter(_.body.nonEmpty)
+
+  /** Resolves the exact overridden parent method symbol for `methodDef`, if any. */
+  private def overriddenParentMethodSym(
+      defn: ClsLikeDefn,
+      methodDef: TermDefinition,
+  )(using Raise): Opt[BlockMemberSymbol] =
+    resolveParentSym(defn).flatMap(_.asClsOrMod.flatMap(_.defn)) match
+      case S(parentDef: hkmc2.semantics.ClassLikeDef) =>
+        parentDef.body.members.get(methodDef.sym.nme).flatMap(_.asTrm.flatMap(_.defn)) match
+          case S(parentMethodDef: TermDefinition) if parentMethodDef.k is syntax.Fun => S(parentMethodDef.sym)
+          case _ => N
+      case _ => N
 
   /** True when a method introduces a new virtual slot at its declaring class if not already inherited. */
   private def declaresVirtualSlot(methodDef: TermDefinition): Bool =
@@ -391,8 +416,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val virtualMethodSlots = LinkedHashMap.from(parentVirtualTable.virtualMethodSlots)
 
     semanticMethodDefs(defn).foreach: methodDef =>
-      val slotIdx = virtualMethodSlots.iterator.collectFirst:
-        case (sym, idx) if sym.nme == methodDef.sym.nme => idx
+      val slotIdx = overriddenParentMethodSym(defn, methodDef).flatMap(parentVirtualTable.virtualMethodSlots.get)
       slotIdx match
         case S(slot) =>
           virtualMethods(slot) = methodDef.sym
@@ -1831,6 +1855,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
                   val tagValue = typeinfo.objectTag getOrElse:
                     lastWords(s"Expected class ${clsLikeDefn.sym} to have an object tag")
+                  val instanceFields = typeinfo.compType match
+                    case struct: StructType =>
+                      struct.fields match
+                        case (_, typeInfoField) +: rest =>
+                          getClassTypeInfoGlobal(clsLikeDefn.sym).get +: rest.map((_, field) =>
+                            defaultStructFieldValue(field),
+                          )
+                        case Nil =>
+                          lastWords(s"Expected instance struct for ${clsLikeDefn.sym} to include $$typeinfo header")
+                    case other =>
+                      lastWords(s"Expected struct type for ${clsLikeDefn.sym}, found ${other.toWat.mkString()}")
 
                   val initFuncRef = initFuncSym(clsLikeDefn.sym)
                   val (ctorCode, ctorFnCtx) = genFuncBody(clsLikeDefn.paramsOpt.toList, thisSym = N):
@@ -1844,15 +1879,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     blockInstr(
                       label = N,
                       Seq(
-                        local.set(thisVar, struct.new_default(typeref)),
-                        struct.set(
-                          structFieldIdx(baseObjectSym, typeInfoFieldSym),
-                          ref.cast(
-                            local.get(thisVar, RefType.anyref),
-                            RefType(typeref, nullable = false),
-                          ),
-                          getClassTypeInfoGlobal(clsLikeDefn.sym).get,
-                        ),
+                        local.set(thisVar, struct.`new`(typeref, instanceFields)),
                         drop(initCall),
                         `return`(S(local.get(thisVar, RefType(typeref, nullable = false)))),
                       ),
@@ -2320,7 +2347,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ctx.addType(TypeInfo(
       sym = baseObjectSym,
       compType = StructType(Seq(
-        typeInfoFieldSym -> Field(RefType(typeInfoBaseTypeIdx, nullable = true), mutable = true, id = "$typeinfo"),
+        typeInfoFieldSym -> Field(RefType(typeInfoBaseTypeIdx, nullable = false), mutable = true, id = "$typeinfo"),
       )),
       objectTag = S(ctx.getFreshObjectTag() ensuring (_ == 0)),
     ))

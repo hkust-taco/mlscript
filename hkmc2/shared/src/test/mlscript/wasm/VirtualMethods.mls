@@ -23,14 +23,14 @@ callF(B())
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $virtual2 (func (param $this (ref null any)) (param $arg1 (ref null any)) (result (ref null any))))
 //│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual2))))))
-//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $A_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $A_ctor (func (result (ref null any))))
 //│   (type $B_typeinfo (sub $A_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual2))))))
-//│   (type $B (sub $A (struct (field $$typeinfo (mut (ref null $TypeInfoBase))))))
+//│   (type $B (sub $A (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $B_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $B_ctor (func (result (ref null any))))
 //│   (type $callF (func (param $a (ref null any)) (result (ref null any))))
@@ -57,11 +57,8 @@ callF(B())
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
-//│         (struct.new_default $A))
-//│       (struct.set $A $$typeinfo
-//│         (ref.cast (ref $A)
-//│           (local.get $this))
-//│         (global.get $A_typeinfo))
+//│         (struct.new $A
+//│           (global.get $A_typeinfo)))
 //│       (drop
 //│         (call $A_init
 //│           (local.get $this)))
@@ -87,11 +84,8 @@ callF(B())
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
-//│         (struct.new_default $B))
-//│       (struct.set $B $$typeinfo
-//│         (ref.cast (ref $B)
-//│           (local.get $this))
-//│         (global.get $B_typeinfo))
+//│         (struct.new $B
+//│           (global.get $B_typeinfo)))
 //│       (drop
 //│         (call $B_init
 //│           (local.get $this)))
@@ -115,10 +109,9 @@ callF(B())
 //│             (i32.const 5))
 //│           (struct.get $A_typeinfo $slot0
 //│             (ref.cast (ref $A_typeinfo)
-//│               (ref.cast (ref $TypeInfoBase)
-//│                 (struct.get $Object $$typeinfo
-//│                   (ref.cast (ref $Object)
-//│                     (local.get $receiver))))))))))
+//│               (struct.get $Object $$typeinfo
+//│                 (ref.cast (ref $Object)
+//│                   (local.get $receiver)))))))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $callF (ref null any))
 //│     (local $tmp (ref null any))
@@ -148,10 +141,9 @@ callF(B())
 //│                         (i32.const 5))
 //│                       (struct.get $A_typeinfo $slot0
 //│                         (ref.cast (ref $A_typeinfo)
-//│                           (ref.cast (ref $TypeInfoBase)
-//│                             (struct.get $Object $$typeinfo
-//│                               (ref.cast (ref $Object)
-//│                                 (local.get $receiver)))))))))
+//│                           (struct.get $Object $$typeinfo
+//│                             (ref.cast (ref $Object)
+//│                               (local.get $receiver))))))))
 //│                 (local.get $inlinedVal))))))))
 //│   (elem $A_init declare func $A_init)
 //│   (elem $A_ctor declare func $A_ctor)
@@ -174,3 +166,17 @@ class C(val c) extends B(c) with
 C(3).f(5)
 //│ Wasm result:
 //│ = 2
+
+
+class A() with
+  virtual fun f() = 1
+class B() extends A() with
+  virtual fun g() = 2
+class C() extends B() with
+  fun f() = 10
+  fun g() = 20
+fun callF(a: A) = a.f()
+fun callG(b: B) = b.g()
+callF(C()) + callG(C())
+//│ Wasm result:
+//│ = 21
