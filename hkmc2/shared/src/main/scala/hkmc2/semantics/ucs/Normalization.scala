@@ -123,8 +123,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         (scrutinee === thatScrutinee) || continuation.referencesScrutinee(scrutinee) || tail.referencesScrutinee(scrutinee)
       case Split.Let(_, _, tail) => tail.referencesScrutinee(scrutinee)
       case Split.Else(_) | Split.End => false
-      case Split.LetSplit(_, tail) => tail.referencesScrutinee(scrutinee)
-      case Split.UseSplit(_) => false
+      case Split.LetSplit(sym, tail) =>
+        sym.body.referencesScrutinee(scrutinee) || tail.referencesScrutinee(scrutinee)
+      case Split.UseSplit(sym) => sym.body.referencesScrutinee(scrutinee)
 
     /** Check if a split is trivial (not worth creating a join point for). */
     private def isTrivial: Bool = split match
@@ -138,12 +139,12 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         cons.countUseSplit(sym) + tail.countUseSplit(sym)
       case Split.Let(_, _, tail) => tail.countUseSplit(sym)
       case Split.Else(_) | Split.End => 0
-      case Split.LetSplit(_, tail) => tail.countUseSplit(sym)
+      case Split.LetSplit(s, tail) => s.body.countUseSplit(sym) + tail.countUseSplit(sym)
       case Split.UseSplit(s) => if s eq sym then 1 else 0
 
     /** Whether every leaf of `split` unconditionally transfers control away
       * (no fall-through). `End` compiles to `throw`, explicit `return`/`throw`
-      * terms are abortive, and `UseSplit` compiles to a `Break`. */
+      * terms are abortive, and `UseSplit` transfers to its referenced body. */
     private def alwaysTerminates: Bool = split match
       case Split.End => true
       case Split.Else(t) => t match
@@ -152,8 +153,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       case Split.Cons(Branch(_, _, cons), tail) =>
         cons.alwaysTerminates && tail.alwaysTerminates
       case Split.Let(_, _, tail) => tail.alwaysTerminates
-      case Split.LetSplit(_, tail) => tail.alwaysTerminates
-      case Split.UseSplit(_) => true
+      case Split.LetSplit(sym, tail) => sym.body.alwaysTerminates && tail.alwaysTerminates
+      case Split.UseSplit(sym) => sym.body.alwaysTerminates
 
   /** Replace all `UseSplit(sym)` references in `split` with a duplicate of `body`. */
   private def inlineUseSplit(split: Split, sym: SplitSymbol, body: Split): Split = split match
