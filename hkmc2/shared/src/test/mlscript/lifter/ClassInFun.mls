@@ -1,5 +1,7 @@
 :lift
 :js
+:noInline
+// :deadParamElim off // used to be `off` because lifter changes the parameter lists and DPE used to look at the original ones
 
 // This test was previously used to demonstrate immutable captures names are not properly discriminated,
 // but handler no longer occur before lifting so this now yield the correct result.
@@ -149,17 +151,15 @@ f().foo()
 //│   }
 //│ };
 //│ define f² as fun f³() {
-//│   let x, y, z, w, tmp1, scope0$cap, tmp2, tmp3;
+//│   let x, y, z, w, tmp1, scope0$cap;
 //│   set scope0$cap = new mut Capture$scope0²(z, w);
 //│   set x = 1;
 //│   set y = 10;
 //│   set scope0$cap.z$0 = 10;
 //│   set scope0$cap.w$1 = 1000;
-//│   set tmp2 = new Bad²();
-//│   set tmp1 = tmp2(scope0$cap);
+//│   set tmp1 = new Bad²()(scope0$cap);
 //│   do tmp1.foo³();
-//│   set tmp3 = new Good²();
-//│   return tmp3(scope0$cap, x, y)
+//│   return new Good²()(scope0$cap, x, y)
 //│ };
 //│ set tmp = f³();
 //│ tmp.foo﹖()
@@ -247,9 +247,6 @@ let res = f(0)
 res.a
 res.b
 //│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched param list lengths List() vs List(term:A/r)
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched ctor arg and cls param sizes
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 //│ ═══[RUNTIME ERROR] ReferenceError: r is not defined
@@ -344,27 +341,22 @@ fun main(x) =
 //│   }
 //│ };
 //│ define main² as fun main³(x) {
-//│   let c, d, e, tmp, tmp1, tmp2;
-//│   set tmp = new mut C⁷(123);
-//│   set c = tmp(x);
+//│   let c, d, e;
+//│   set c = new mut C⁷(123)(x);
 //│   set c.a = 0;
 //│   set c.b = "hi";
-//│   set tmp1 = new C⁷(456);
-//│   set d = tmp1(x);
+//│   set d = new C⁷(456)(x);
 //│   set d.a = 0;
-//│   set tmp2 = new C⁷(789);
-//│   set e = tmp2(x);
+//│   set e = new C⁷(789)(x);
 //│   set e.a = 0;
 //│   return [c.a﹖, c.b﹖, d.a﹖, e.a﹖, c.get﹖, d.get﹖, e.get﹖]
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:fixme // * The JS code-gen currently doesn't properly freeze classes with curried parameter lists
 :expect [0, "hi", 456, 789, 42, 498, 831]
 main(42)
-//│ ═══[RUNTIME ERROR] Expected: '[0, "hi", 456, 789, 42, 498, 831]', got: '[0, "hi", 0, 0, 42, 42, 42]'
-//│ = [0, "hi", 0, 0, 42, 42, 42]
+//│ = [0, "hi", 456, 789, 42, 498, 831]
 
 // * The lifted class above should behave the same as the equivalent top-level class below:
 
@@ -387,5 +379,18 @@ set e.a = 0
 :expect [0, "hi", 456, 789, 42, 498, 831]
 [c.a, c.b, d.a, e.a, c.get, d.get, e.get]
 //│ = [0, "hi", 456, 789, 42, 498, 831]
+
+
+// This used to raise a softTODO in DPE
+// The error is because the type tree for classes store parameter list arity information,
+// but the lifter modifies this information, and the equality is enforced by the middle-end
+// flow analysis, which is used by dead param elimination. It would be a pain to change all the
+// class symbols because they could be nested in other symbols at an arbitrary depth.
+// :fixme
+:deadParamElim 
+fun f(x) =
+  class A(y) with
+    fun get = x + y
+  new A(2)
 
 

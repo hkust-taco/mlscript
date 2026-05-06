@@ -913,8 +913,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     def splitSuperTail(block: Block): Opt[Block -> Ls[Arg]] = block match
       case End(_) => N
-      case Return(Call(Value.Ref(bs: BuiltinSymbol, _), args), true) if bs eq State.builtinOpsMap("super") =>
-        S(End("") -> args)
+      case Return(Call(Value.Ref(bs: BuiltinSymbol, _), argss), true) if bs eq State.builtinOpsMap("super") =>
+        S(End("") -> argss.flatten)
       case b: NonBlockTail =>
         splitSuperTail(b.rest).map: (prefix, args) =>
           withRest(b, prefix) -> args
@@ -1252,11 +1252,23 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       else
         errExpr(Ls(msg"Cannot call non-binary builtin symbol '${l.nme}'" -> r.toLoc))
 
-    case Call(sel @ Select(qual, _), args) if sel.symbol.flatMap(predeclaredClassMethodSym).nonEmpty =>
+    case Call(sel @ Select(qual, _), argss) if sel.symbol.flatMap(predeclaredClassMethodSym).nonEmpty =>
+      if argss.length > 1 then
+        return errExpr(
+          Ls(msg"WatBuilder::result for Call(...) with multiple argument lists is not supported yet" -> r.toLoc),
+          extraInfo = S(r.toString),
+        )
+      val args = argss.flatten
       val methodSym = sel.symbol.flatMap(predeclaredClassMethodSym).get
       lowerClassMethodCall(qual, methodSym, args)
 
-    case c @ Call(fun, args) =>
+    case c @ Call(fun, argss) =>
+      if argss.length > 1 then
+        return errExpr(
+          Ls(msg"WatBuilder::result for Call(...) with multiple argument lists is not supported yet" -> c.toLoc),
+          extraInfo = S(c.toString),
+        )
+      val args = argss.flatten
       wasmIntrinsicName(fun) match
         case S(intrName) =>
           val expectedArity = wasmIntrinsicArities(intrName)
@@ -1389,7 +1401,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           extraInfo = S(dyn),
         )
 
-    case Instantiate(_, cls, as) =>
+    case Instantiate(_, cls, argss) =>
+      if argss.length > 1 then
+        return errExpr(
+          Ls(msg"WatBuilder::result for Instantiate(...) with multiple argument lists is not supported yet" -> r.toLoc),
+          extraInfo = S(r.toString),
+        )
+      val as = argss.flatten
       cls match
         // TODO: Implement proper lowering for Errors with unit payloads.
         case Select(Value.Ref(sym, _), id)

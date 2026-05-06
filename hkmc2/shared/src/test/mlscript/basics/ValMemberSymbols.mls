@@ -110,6 +110,8 @@ case A as a then a.x
 // :ssjs
 :sir
 :lift
+// TODO: remove this flag when the lifter problem is resolved (see: the end of ClassInFun.mls)
+:deadParamElim off
 fun foo(x, y) =
   class A(val u) with { val v = y }
   let a = new A(x)
@@ -127,12 +129,7 @@ fun foo(x, y) =
 //│     end
 //│   }
 //│ };
-//│ define foo⁰ as fun foo¹(x, y) {
-//│   let a, tmp;
-//│   set tmp = new A⁸(x);
-//│   set a = tmp(y);
-//│   return [a, a.u¹, a.v¹]
-//│ };
+//│ define foo⁰ as fun foo¹(x, y) { let a; set a = new A⁸(x)(y); return [a, a.u¹, a.v¹] };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

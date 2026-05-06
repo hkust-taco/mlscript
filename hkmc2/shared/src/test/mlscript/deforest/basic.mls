@@ -20,8 +20,8 @@ let useless = if lsit is [a, b] then 0
 //│ deforest > >>> fusing >>>
 //│ deforest > Tuple(false,List(Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(1))))) ->
 //│ deforest > 	Ref(lsit,None)
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(lsit,None)), Arg(None,Lit(IntLit(0)))))
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(lsit,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(List(Arg(None,Ref(lsit,None)), Arg(None,Lit(IntLit(0))))))
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(List(Arg(None,Ref(lsit,None)), Arg(None,Lit(IntLit(1))))))
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lsit⁰, useless⁰, a⁰, b⁰, element1$, element0$, tmp, $lsit_tup2⁰, $lsit_rest⁰, tup2_0, tup2_1;
@@ -52,7 +52,7 @@ fun c(x) = if x is
   X(x) then x
 c(p())
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:X,Some(term:X/X)),List(Arg(None,Ref(member:O,Some(object:O))))) ->
+//│ deforest > Call(Ref(member:X,Some(term:X/X)),List(List(Arg(None,Ref(member:O,Some(object:O)))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(a))
 //│ deforest > <<< fusing <<<
@@ -66,10 +66,10 @@ fun f(x) = if x is
   X(Y(y)) then y
 f(p())
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:X,Some(term:X/X)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > Call(Ref(member:X,Some(term:X/X)),List(List(Arg(None,Ref(tmp:tmp,None))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(a))
-//│ deforest > Call(Ref(member:Y,Some(term:Y/Y)),List(Arg(None,Ref(member:O,Some(object:O))))) ->
+//│ deforest > Call(Ref(member:Y,Some(term:Y/Y)),List(List(Arg(None,Ref(member:O,Some(object:O)))))) ->
 //│ deforest > 	Ref(tmp:arg$X$0$,None)
 //│ deforest > 	Select(Ref(tmp:arg$X$0$,None),Ident(b))
 //│ deforest > <<< fusing <<<
@@ -156,10 +156,10 @@ fun f(x, res) = if x is
       Y(y) then res + tmp
 f(p(), 2)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:X,Some(term:X/X)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > Call(Ref(member:X,Some(term:X/X)),List(List(Arg(None,Ref(tmp:tmp,None))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(a))
-//│ deforest > Call(Ref(member:Y,Some(term:Y/Y)),List(Arg(None,Ref(member:O,Some(object:O))))) ->
+//│ deforest > Call(Ref(member:Y,Some(term:Y/Y)),List(List(Arg(None,Ref(member:O,Some(object:O)))))) ->
 //│ deforest > 	Ref(a,None)
 //│ deforest > 	Select(Ref(a,None),Ident(b))
 //│ deforest > <<< fusing <<<
@@ -177,10 +177,10 @@ fun f(x, y, res) = if x is
         res + tmp + a
 f(X(1), Y(2), 3)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Y,Some(term:Y/Y)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > Call(Ref(member:Y,Some(term:Y/Y)),List(List(Arg(None,Lit(IntLit(2)))))) ->
 //│ deforest > 	Ref(y,None)
 //│ deforest > 	Select(Ref(y,None),Ident(b))
-//│ deforest > Call(Ref(member:X,Some(term:X/X)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > Call(Ref(member:X,Some(term:X/X)),List(List(Arg(None,Lit(IntLit(1)))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(a))
 //│ deforest > <<< fusing <<<
@@ -192,16 +192,16 @@ fun c(x, d) = if x is
   X(a) then c(X(a), d)
 () => c(X(3), 2)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:X,Some(term:X/X)),List(Arg(None,Ref(a,None)))) ->
+//│ deforest > Call(Ref(member:X,Some(term:X/X)),List(List(Arg(None,Ref(a,None))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(a))
-//│ deforest > Call(Ref(member:X,Some(term:X/X)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > Call(Ref(member:X,Some(term:X/X)),List(List(Arg(None,Lit(IntLit(3)))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(a))
-//│ deforest > Call(Ref(member:X,Some(term:X/X)),List(Arg(None,Ref(a,None)))) ->
+//│ deforest > Call(Ref(member:X,Some(term:X/X)),List(List(Arg(None,Ref(a,None))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(a))
-//│ deforest > Call(Ref(member:X,Some(term:X/X)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > Call(Ref(member:X,Some(term:X/X)),List(List(Arg(None,Lit(IntLit(3)))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(a))
 //│ deforest > <<< fusing <<<
@@ -229,8 +229,8 @@ if [1, 2] is
 //│ deforest > >>> fusing >>>
 //│ deforest > Tuple(false,List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))))) ->
 //│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(tmp:scrut,None)), Arg(None,Lit(IntLit(0)))))
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(tmp:scrut,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(List(Arg(None,Ref(tmp:scrut,None)), Arg(None,Lit(IntLit(0))))))
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(List(Arg(None,Ref(tmp:scrut,None)), Arg(None,Lit(IntLit(1))))))
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let scrut, a², b², element1$, element0$, $scrut_tup2⁰, $scrut_rest⁰, tup2_0, tup2_1;
@@ -259,8 +259,8 @@ f([1,2])
 //│ deforest > >>> fusing >>>
 //│ deforest > Tuple(false,List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))))) ->
 //│ deforest > 	Ref(x,None)
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(x,None)), Arg(None,Lit(IntLit(0)))))
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(x,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(List(Arg(None,Ref(x,None)), Arg(None,Lit(IntLit(0))))))
+//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(List(Arg(None,Ref(x,None)), Arg(None,Lit(IntLit(1))))))
 //│ deforest > <<< fusing <<<
 //│ = 3
 
@@ -291,7 +291,7 @@ fun f(x) = if x is
   A(x) then x
 f(A(1))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(List(Arg(None,Lit(IntLit(1)))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(x))
 //│ deforest > <<< fusing <<<
@@ -303,7 +303,7 @@ fun f(x) = if x is
   A(a) then x.A#x + a
 f(A(1))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(List(Arg(None,Lit(IntLit(1)))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(x))
 //│ deforest > 	Select(Ref(x,None),Ident(x))
@@ -316,10 +316,10 @@ fun f(x) = if x is
   A(x) then 2
 f(A(2)) + f(A(3))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(List(Arg(None,Lit(IntLit(3)))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(List(Arg(None,Lit(IntLit(2)))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(x))
 //│ deforest > <<< fusing <<<
@@ -333,16 +333,16 @@ if localFuse(3) is
   B(a) then a
 localFuse(4)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(List(Arg(None,Ref(x,None))))) ->
 //│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(List(Arg(None,Ref(x,None))))) ->
 //│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(List(Arg(None,Ref(x,None))))) ->
 //│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
-//│ deforest > Call(Ref(member:B,Some(term:B/B)),List(Arg(None,Ref(y,None)))) ->
+//│ deforest > Call(Ref(member:B,Some(term:B/B)),List(List(Arg(None,Ref(y,None))))) ->
 //│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
 //│ deforest > <<< fusing <<<
@@ -369,7 +369,7 @@ let x = if A(0) is
 let f() = x
 f()
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(List(Arg(None,Lit(IntLit(0)))))) ->
 //│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > <<< fusing <<<
 //│ = 1
@@ -384,11 +384,11 @@ fun dtor(x) = if x is
   A then inner(B(4), x.A#x)
 dtor(A(B(0)))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:B,Some(term:B/B)),List(Arg(None,Lit(IntLit(4))))) ->
+//│ deforest > Call(Ref(member:B,Some(term:B/B)),List(List(Arg(None,Lit(IntLit(4)))))) ->
 //│ deforest > 	Ref(y,None)
-//│ deforest > Call(Ref(member:B,Some(term:B/B)),List(Arg(None,Lit(IntLit(4))))) ->
+//│ deforest > Call(Ref(member:B,Some(term:B/B)),List(List(Arg(None,Lit(IntLit(4)))))) ->
 //│ deforest > 	Ref(y,None)
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(List(Arg(None,Ref(tmp:tmp,None))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(x))
 //│ deforest > <<< fusing <<<

@@ -69,14 +69,23 @@ new (id(C))
 data class C(x, y)
 
 
-// TODO: dead param elimination cannot yet handle this
-// mismatch of the number of arguments and class parameters
-:todo
-new! C
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched ctor arg and cls param sizes
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
-//│ = C(undefined, undefined)
+// Note: mismatched number of arguments and class parameters
+// (dead param elimination cannot yet handle this and used to throw a softTODO here)
+// :todo
+let f = new! C()
+//│ f = C(undefined, undefined)
+
+let f = new! C
+//│ f = fun f
+
+f(1, 2)
+//│ = C(1, 2)
+
+let f = x => new! (id(C))(x, x)
+//│ f = fun f
+
+f(1)
+//│ = C(1, 1)
 
 new! C(1, 2)
 //│ = C(1, 2)

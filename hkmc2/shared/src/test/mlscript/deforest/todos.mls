@@ -41,16 +41,16 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(x,None)
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(List(Arg(None,Ref(tmp:tmp,None))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(List(Arg(None,Ref(tmp:tmp,None))))) ->
 //│ deforest > 	Ref(tmp:arg$AA$0$,None)
 //│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(10))))) ->
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(List(Arg(None,Lit(IntLit(10)))))) ->
 //│ deforest > 	Ref(tmp:arg$AA$0$,None)
 //│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(10))))) ->
+//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(List(Arg(None,Lit(IntLit(10)))))) ->
 //│ deforest > 	Ref(tmp:arg$AA$0$,None)
 //│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
 //│ deforest > <<< fusing <<<
@@ -241,10 +241,10 @@ fun test() =
     Global(x) then Local(x + 1)
 test()
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Global,Some(term:Global/Global)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > Call(Ref(member:Global,Some(term:Global/Global)),List(List(Arg(None,Lit(IntLit(1)))))) ->
 //│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
-//│ deforest > Call(Ref(member:Global,Some(term:Global/Global)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > Call(Ref(member:Global,Some(term:Global/Global)),List(List(Arg(None,Lit(IntLit(1)))))) ->
 //│ deforest > 	Ref(tmp:scrut,None)
 //│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
 //│ deforest > <<< fusing <<<

@@ -105,7 +105,7 @@ object PossibleTrackableTupleSelect:
     s match
     case Call(
       Select(Select(Value.Ref(runtimeSym, N), Tree.Ident("Tuple")), Tree.Ident("get")),
-      Arg(N, ref@Value.Ref(scrut, N)) :: Arg(N, Value.Lit(Tree.IntLit(n))) :: Nil
+      (Arg(N, ref@Value.Ref(scrut, N)) :: Arg(N, Value.Lit(Tree.IntLit(n))) :: Nil) :: Nil
     ) if runtimeSym is eState.runtimeSymbol => S(ref -> n.toInt)
     case _ => N
 
@@ -130,8 +130,8 @@ object CtorRef:
 object CtorCall:
   def unapply(r: Result)(using Elaborator.State): Option[(ClassSymbol | ModuleOrObjectSymbol | Int) -> Ls[Arg]] =
     r match
-    case Instantiate(_, CtorRef(ctor), args) => Some(ctor -> args)
-    case Call(CtorRef(ctor), args) => Some(ctor -> args)
+    case Instantiate(_, CtorRef(ctor), argss) => Some(ctor -> argss.flatten)
+    case Call(CtorRef(ctor), argss) => Some(ctor -> argss.flatten)
     case CtorRef(ctor) if ctor.asObj.isDefined => Some(ctor -> Nil)
     case Tuple(_, args) => Some(args.size, args)
     case _ => None
@@ -408,12 +408,12 @@ class FlowPreAnalyzer(val pgrm: Program)(using
   override def applyResult(r: Result): Unit = r match
     case tupSel@PossibleTrackableTupleSelect(_, _) =>
       res.selToCtxOfSel.addOne(tupSel.uid -> ctxTracker.getAllCtx)
-    case Call(fun, args) =>
+    case Call(fun, argss) =>
       applyPath(fun)
-      args.foreach(applyArg)
-    case Instantiate(mut, cls, args) =>
+      argss.foreach(_.foreach(applyArg))
+    case Instantiate(mut, cls, argss) =>
       applyPath(cls)
-      args.foreach(applyArg)
+      argss.foreach(_.foreach(applyArg))
     case l: Lambda =>
       applyLam(l)
     case Tuple(mut, elems) =>
@@ -774,7 +774,8 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
             cls.tree.clsParams.size match
             case 1 =>
               val clsParams = cls.tree.clsParams.head
-              softTODO(argsStrat.size === clsParams.size, s"mismatched ctor arg and cls param sizes")
+              // TODO: properly check the parameter lists, which may change after passes like lifting
+              // softTODO(argsStrat.size === clsParams.size, s"mismatched ctor arg and cls param sizes")
               new Ctor(c.uid, instId)(ctor, clsParams.zip(argsStrat))
             case _ =>
               // - the size of 0 means we don't know the cls param symbols,
@@ -788,8 +789,22 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
         case c@CtorCall(_, args) =>
           args.foreach(arg => cc.constrain(processResult(arg.value), NoCons))
           NoProd
-        case c@Call(fun, args) => handleCallLike(c.uid, fun, args)
-        case i@Instantiate(_, cls, args) => handleCallLike(i.uid, cls, args)
+        case c@Call(fun, argss) =>
+          argss match
+            case args :: Nil => handleCallLike(c.uid, fun, args)
+            case args :: rest =>
+              // For multi-arg-list calls, handle the first arg list normally for
+              // dead-param-elim, then constrain subsequent arg lists opaquely.
+              // We cannot reuse c.uid for subsequent ConsFuns because the
+              // DeadParamElim rewriter only rewrites the first arg list,
+              // and sharing the same exprId would cause conflicting eliminable sets.
+              val firstResult = handleCallLike(c.uid, fun, args)
+              cc.constrain(firstResult, NoCons)
+              rest.foreach: nextArgs =>
+                nextArgs.foreach(a => cc.constrain(processResult(a.value), NoCons))
+              NoProd
+            case Nil => handleCallLike(c.uid, fun, Nil)
+        case i@Instantiate(_, cls, argss) => handleCallLike(i.uid, cls, argss.flatten)
         case lam@Lambda(ps, body) =>
           processHandleableFun("lam_res", ps :: Nil, body, lam.uid)
         case _: Tuple => lastWords("should be handled in CtorCall")

@@ -1,0 +1,98 @@
+:js
+
+
+:soir
+fun foo(x)(y) = z => x + y + z
+foo(1)(2)(3)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let foo⁰, baseCall;
+//│ define foo⁰ as fun foo¹(x)(y) {
+//│   let lambda;
+//│   define lambda as fun lambda⁰(z) {
+//│     let tmp;
+//│     set tmp = +⁰(x, y);
+//│     return +⁰(tmp, z)
+//│   };
+//│   return lambda⁰
+//│ };
+//│ set baseCall = foo¹(1)(2);
+//│ baseCall(3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 6
+
+:sir
+:soir
+:lift
+fun foo(x)(y) = z => x + y + z
+foo(1)(2)(3)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let foo², baseCall, lambda¹, lambda$⁰;
+//│ define lambda$⁰ as fun lambda$¹(x, y)(z) {
+//│   return lambda²(x, y, z)
+//│ };
+//│ define lambda¹ as fun lambda²(x, y, z) {
+//│   let tmp;
+//│   set tmp = +⁰(x, y);
+//│   return +⁰(tmp, z)
+//│ };
+//│ define foo² as fun foo³(x)(y) {
+//│   let lambda$here;
+//│   set lambda$here = lambda$¹(x, y);
+//│   return lambda$here
+//│ };
+//│ set baseCall = foo³(1)(2);
+//│ baseCall(3)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let foo², baseCall, lambda¹, lambda$⁰;
+//│ define lambda$⁰ as fun lambda$¹(x, y)(z) {
+//│   let x1, y1, z1, inlinedVal, tmp;
+//│   set x1 = x;
+//│   set y1 = y;
+//│   set z1 = z;
+//│   set tmp = +⁰(x1, y1);
+//│   set inlinedVal = +⁰(tmp, z1);
+//│   return inlinedVal
+//│ };
+//│ define foo² as fun foo³(x)(y) {
+//│   let lambda$here;
+//│   set lambda$here = lambda$¹(x, y);
+//│   return lambda$here
+//│ };
+//│ set baseCall = foo³(1)(2);
+//│ baseCall(3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 6
+
+
+fun loudly(x) =
+  print("hi", x)
+  x
+
+fun foo(x)(y) =
+  print("hello")
+  z =>
+    print("world")
+    a => print(x, y, z, a)
+
+// * Notice that the side effects should happen in the correct order
+:sir
+foo(loudly(1))(loudly(2))(loudly(3))(loudly(4))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, baseCall, tmp2, callPrefix, tmp3;
+//│ set tmp = loudly⁰(1);
+//│ set tmp1 = loudly⁰(2);
+//│ set baseCall = foo⁴(tmp)(tmp1);
+//│ set tmp2 = loudly⁰(3);
+//│ set callPrefix = baseCall(tmp2);
+//│ set tmp3 = loudly⁰(4);
+//│ callPrefix(tmp3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > hi 1
+//│ > hi 2
+//│ > hello
+//│ > hi 3
+//│ > world
+//│ > hi 4
+//│ > 1 2 3 4
+
+

@@ -170,9 +170,12 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
   def print(result: Result)(using Scope): Document =
     (if !showPurity || result.isPure then "" else "!") ::
     result.match
-    case Call(fun, args) => doc"${print(fun)}(${args.map(print).mkDocument(", ")})"
-    case Instantiate(mut, cls, args) =>
-      doc"new ${if mut then "mut " else ""}${print(cls)}(${args.map(print).mkDocument(", ")})"
+    case Call(fun, argss) =>
+      val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
+      doc"${print(fun)}${chainedArgs}"
+    case Instantiate(mut, cls, argss) =>
+      val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
+      doc"new ${if mut then "mut " else ""}${print(cls)}${chainedArgs}"
     case Lambda(params, body) =>
       scope.nest.givenIn:
         val allParams =

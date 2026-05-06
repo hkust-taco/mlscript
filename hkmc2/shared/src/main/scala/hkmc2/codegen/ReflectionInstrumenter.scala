@@ -62,7 +62,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
   // isMlsFun is probably always true?
   def call(fun: Path, args: Ls[ArgWrappable], isMlsFun: Bool = true, symName: Str = "tmp")(k: Path => Block): Block =
-    assign(Call(fun, args.map(asArg))(isMlsFun, false, false), symName)(k)
+    assign(Call(fun, args.map(asArg) ne_:: Nil)(isMlsFun, false, false), symName)(k)
 
   // helpers for instrumenting Block
 
@@ -195,16 +195,24 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
       transformArgs(elems): xs =>
         tuple(xs.map(_._1)): codes =>
           blockCtor("Tuple", Ls(codes), "tup")(k)
-    case Instantiate(mut, cls, args) =>
+    case Instantiate(mut, cls, argss) =>
       assert(!mut, "mutable instantiation not supported")
-      transformArgs(args): xs =>
-        transformPath(cls): cls =>
-          tuple(xs.map(_._1)): codes =>
-            blockCtor("Instantiate", Ls(cls, codes), "inst")(k)
+      argss match
+        case Nil =>
+          raise(ErrorReport(msg"Instantiate with no argument lists not supported in staged module." -> r.toLoc :: Nil))
+          End()
+        case args :: Nil =>
+          transformArgs(args): xs =>
+            transformPath(cls): cls =>
+              tuple(xs.map(_._1)): codes =>
+                blockCtor("Instantiate", Ls(cls, codes), "inst")(k)
+        case args :: restArgss =>
+          raise(ErrorReport(msg"Instantiate with multiple argument lists not supported in staged module." -> r.toLoc :: Nil))
+          End()
     // desugar Runtime.Tuple.get into Select
-    case Call(fun, Ls(Arg(_, scrut), Arg(_, Value.Lit(Tree.IntLit(idx))))) if fun == State.runtimeSymbol.asPath.selSN("Tuple").selSN("get") =>
+    case Call(fun, Ls(Arg(_, scrut), Arg(_, Value.Lit(Tree.IntLit(idx)))) :: _) if fun == State.runtimeSymbol.asPath.selSN("Tuple").selSN("get") =>
       transformPath(Select(scrut, Tree.Ident(idx.toString()))(N))(k)
-    case Call(fun, args) =>
+    case Call(fun, argss) =>
       val stagedFunPath = fun match
         case s @ Select(qual, Tree.Ident(name)) => s.symbol.flatMap({
             case t: TermSymbol => t.owner.flatMap({ case sym: DefinitionSymbol[?] =>
@@ -216,11 +224,16 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           })
         case _ => N
 
-      val newFun = stagedFunPath.getOrElse(fun)
-      transformPath(newFun): fun =>
-        transformArgs(args): args =>
-          tuple(args.map(_._1)): tup =>
-            blockCtor("Call", Ls(fun, tup), "app")(k)
+      argss match
+        case args :: Nil =>
+          val newFun = stagedFunPath.getOrElse(fun)
+          transformPath(newFun): fun =>
+            transformArgs(args): args =>
+              tuple(args.map(_._1)): tup =>
+                blockCtor("Call", Ls(fun, tup), "app")(k)
+        case args :: restArgss =>
+          raise(ErrorReport(msg"Call with multiple argument lists not supported in staged module." -> r.toLoc :: Nil))
+          End()
     case _ =>
       raise(ErrorReport(msg"Other Results not supported in staged module: ${r.getClass.toString()}" -> r.toLoc :: Nil))
       End()

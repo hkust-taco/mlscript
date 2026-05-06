@@ -28,7 +28,7 @@ fun main() =
   let f = () => sum(p)
   f() + f()
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(h))
 //│ deforest > 	Select(Ref(x,None),Ident(t))
@@ -49,7 +49,7 @@ consumer of
   case Many(Once(v)) then v
   Many(Once(10))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Once,Some(term:Once/Once)),List(Arg(None,Lit(IntLit(10))))) ->
+//│ deforest > Call(Ref(member:Once,Some(term:Once/Once)),List(List(Arg(None,Lit(IntLit(10)))))) ->
 //│ deforest > 	Ref(tmp:arg$Many$0$,None)
 //│ deforest > 	Select(Ref(tmp:arg$Many$0$,None),Ident(x))
 //│ deforest > <<< fusing <<<
@@ -72,7 +72,7 @@ consume(sum, enumFrom(3))
 //│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(x,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(h))
 //│ deforest > 	Select(Ref(x,None),Ident(t))
@@ -99,10 +99,10 @@ cons of
   case Inner(a) then a + 1
   prod(10)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Outter,Some(term:Outter/Outter)),List(Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > Call(Ref(member:Outter,Some(term:Outter/Outter)),List(List(Arg(None,Ref(tmp:tmp,None))))) ->
 //│ deforest > 	Ref(p,None)
 //│ deforest > 	Select(Ref(p,None),Ident(x))
-//│ deforest > Call(Ref(member:Inner,Some(term:Inner/Inner)),List(Arg(None,Ref(x,None)))) ->
+//│ deforest > Call(Ref(member:Inner,Some(term:Inner/Inner)),List(List(Arg(None,Ref(x,None))))) ->
 //│ deforest > 	Ref(caseScrut,None)
 //│ deforest > 	Select(Ref(caseScrut,None),Ident(x))
 //│ deforest > <<< fusing <<<

@@ -62,23 +62,23 @@ appendThree of
   id(3 :: 4 :: Nil)
   id(5 :: 6 :: Nil)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(h,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(List(Arg(None,Ref(h,None)), Arg(None,Ref(tmp:tmp,None))))) ->
 //│ deforest > 	Ref(xs,None)
 //│ deforest > 	Select(Ref(xs,None),Ident(h))
 //│ deforest > 	Select(Ref(xs,None),Ident(t))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(xs,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(h,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(List(Arg(None,Ref(h,None)), Arg(None,Ref(tmp:tmp,None))))) ->
 //│ deforest > 	Ref(xs,None)
 //│ deforest > 	Select(Ref(xs,None),Ident(h))
 //│ deforest > 	Select(Ref(xs,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(h,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(List(Arg(None,Ref(h,None)), Arg(None,Ref(tmp:tmp,None))))) ->
 //│ deforest > 	Ref(xs,None)
 //│ deforest > 	Select(Ref(xs,None),Ident(h))
 //│ deforest > 	Select(Ref(xs,None),Ident(t))
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(xs,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(h,None)), Arg(None,Ref(tmp:tmp,None)))) ->
+//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(List(Arg(None,Ref(h,None)), Arg(None,Ref(tmp:tmp,None))))) ->
 //│ deforest > 	Ref(xs,None)
 //│ deforest > 	Select(Ref(xs,None),Ident(h))
 //│ deforest > 	Select(Ref(xs,None),Ident(t))

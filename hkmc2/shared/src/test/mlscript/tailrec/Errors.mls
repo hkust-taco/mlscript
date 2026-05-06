@@ -129,3 +129,29 @@ fun foo() = foo()
 //│ ╔══[COMPILATION ERROR] This @tailrec function was not processed by the tail-call optimizer.
 //│ ║  l.128: 	fun foo() = foo()
 //│ ╙──       	    ^^^
+
+:e
+fun f =
+  @tailcall id(2)
+//│ ╔══[COMPILATION ERROR] Only functions in this compilation unit may be marked @tailcall.
+//│ ║  l.135: 	  @tailcall id(2)
+//│ ╙──       	            ^^^^^
+
+:e
+fun f(x)(y) =
+  @tailcall f(x)
+//│ ╔══[COMPILATION ERROR] Only fully applied calls may be marked @tailcall.
+//│ ║  l.142: 	  @tailcall f(x)
+//│ ╙──       	            ^^^^
+
+:e
+fun f(x)() =
+  @tailcall g(x)(0)
+fun g(x)(y) =
+  @tailcall f(x)
+//│ ╔══[COMPILATION ERROR] Only fully applied calls may be marked @tailcall.
+//│ ║  l.151: 	  @tailcall f(x)
+//│ ╙──       	            ^^^^
+//│ ╔══[COMPILATION ERROR] This call is not optimized as it does not directly recurse through its parent function.
+//│ ║  l.149: 	  @tailcall g(x)(0)
+//│ ╙──       	            ^^^^^^^

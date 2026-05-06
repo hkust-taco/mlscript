@@ -268,21 +268,21 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
       end rewriteArgs
       
       r match
-      case c@Call(fun, args) if args.forall(_.spread.isEmpty) =>
+      case c@Call(fun, args :: restArgss) if args.forall(_.spread.isEmpty) =>
         val eliminable = deadParamElimSolver.eliminableCallSiteArgsById(c.uid, instId)
         applyPath(fun): fun2 =>
           rewriteArgs(args, eliminable): args2 =>
             k(
               if (fun2 is fun) && (args2 is args) then c
-              else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLocOf(c)
+              else Call(fun2, args2 ne_:: restArgss)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLocOf(c)
             )
-      case i@Instantiate(mut, cls, args) if args.forall(_.spread.isEmpty) =>
+      case i@Instantiate(mut, cls, args :: restArgss) if args.forall(_.spread.isEmpty) =>
         val eliminable = deadParamElimSolver.eliminableCallSiteArgsById(i.uid, instId)
         applyPath(cls): cls2 =>
           rewriteArgs(args, eliminable): args2 =>
             k(
               if (cls2 is cls) && (args2 is args) then i
-              else Instantiate(mut, cls2, args2).withLocOf(i)
+              else Instantiate(mut, cls2, args2 :: restArgss).withLocOf(i)
             )
       case _ => super.applyResult(r)(k)
     

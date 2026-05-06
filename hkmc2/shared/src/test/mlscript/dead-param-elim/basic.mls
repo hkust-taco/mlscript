@@ -30,10 +30,9 @@ private fun f(a)(b) = 0
 f(1)(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
-//│ dead-param-elim > prodfun f#1 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁴, tmp; define f⁴ as fun f⁵()() { return 0 }; set tmp = f⁵(); tmp()
+//│ let f⁴; define f⁴ as fun f⁵()(b) { return 0 }; f⁵()(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -88,10 +87,9 @@ f(1, 2)
 private fun f(a)(b) = a
 f(1)(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#1 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹⁴, tmp; define f¹⁴ as fun f¹⁵(a)() { return a }; set tmp = f¹⁵(1); tmp()
+//│ let f¹⁴; define f¹⁴ as fun f¹⁵(a)(b) { return a }; f¹⁵(1)(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -102,7 +100,7 @@ f(1)(2)
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹⁶, tmp; define f¹⁶ as fun f¹⁷()(b) { return b }; set tmp = f¹⁷(); tmp(2)
+//│ let f¹⁶; define f¹⁶ as fun f¹⁷()(b) { return b }; f¹⁷()(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 

@@ -433,10 +433,10 @@ object Begin:
 object HandleBlock:
 
   def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx): Result =
-    Call(Value.Ref(Elaborator.ctx.builtins.runtime.suspend, N), tag.asArg :: handlerFun.asArg :: Nil)(true, true, false)
+    Call(Value.Ref(Elaborator.ctx.builtins.runtime.suspend, N), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(true, true, false)
 
   def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx): Result =
-    Call(Value.Ref(Elaborator.ctx.builtins.runtime.handle_suspension, N), tag.asArg :: bodyFun.asArg :: Nil)(true, true, false)
+    Call(Value.Ref(Elaborator.ctx.builtins.runtime.handle_suspension, N), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(true, true, false)
   
   private def create(
       lhs: Local,
@@ -476,7 +476,7 @@ object HandleBlock:
       N, Nil,
       S(par), handlerMtds, Nil, Nil,
       // Apparently, the lifter is not happy with any assignment in the preCtor...
-      Return(Call(Value.Ref(State.builtinOpsMap("super")), args.map(_.asArg))(true, true, false), true),
+      Return(Call(Value.Ref(State.builtinOpsMap("super")), args.map(_.asArg) ne_:: Nil)(true, true, false), true),
       End(),
       N,
       N,
@@ -485,7 +485,7 @@ object HandleBlock:
     blockBuilder
       .scopedVars(Set(clsDefn.sym, sym))
       .define(clsDefn)
-      .assign(lhs, Instantiate(mut = true, Value.Ref(clsDefn.sym, S(cls)), Nil))
+      .assign(lhs, Instantiate(mut = true, Value.Ref(clsDefn.sym, S(cls)), Nil :: Nil))
       .define(bodyDefn)
       .assign(res, handleSuspension(lhs.asPath, Value.Ref(bodyDefn.sym, S(bodyDefn.dSym))))
       .rest(rest)
@@ -743,8 +743,8 @@ sealed abstract class Result extends AutoLocated:
     case _: Value => true
     case sel @ Select(q, n) =>
       q.isPure && sel.symbol.exists(_.isPure)
-    case Call(Value.Ref(bs: BuiltinSymbol, _), as) if bs.isPure =>
-      as.forall(_.value.isPure)
+    case Call(Value.Ref(bs: BuiltinSymbol, _), ass) if bs.isPure =>
+      ass.forall(_.forall(_.value.isPure))
     case Record(mut, args) => args.forall(_.value.isPure)
     case Tuple(mut, elems) => elems.forall(_.value.isPure)
     // case Instantiate(mut, cls, args) => // TODO?
@@ -755,8 +755,8 @@ sealed abstract class Result extends AutoLocated:
   // * is from some different place (with a different Origin), such as the location attached to symbols.
   // * That's why for example, we're not adding the `l` of `Value.Ref` to the children list.
   protected def children: Vector[Located] = this match
-    case Call(fun, args) => fun +: args.iterator.map(_.value).toVector
-    case Instantiate(mut, cls, args) => cls +: args.iterator.map(_.value).toVector
+    case Call(fun, argss) => fun +: argss.iterator.flatten.map(_.value).toVector
+    case Instantiate(mut, cls, argss) => cls +: argss.iterator.flatten.map(_.value).toVector
     case Select(qual, name) => Vector.double(qual, name)
     case DynSelect(qual, fld, arrayIdx) => Vector.double(qual, fld)
     case Lambda(params, body) => Vector.single(params)
@@ -768,16 +768,16 @@ sealed abstract class Result extends AutoLocated:
   
   // TODO rm Lam from values and thus the need for this method
   def subBlocks: Ls[Block] = this match
-    case Call(fun, args) => fun.subBlocks ::: args.flatMap(_.value.subBlocks)
-    case Instantiate(mut, cls, args) => args.flatMap(_.value.subBlocks)
+    case Call(fun, argss) => fun.subBlocks ::: argss.flatten.flatMap(_.value.subBlocks)
+    case Instantiate(mut, cls, argss) => argss.flatten.flatMap(_.value.subBlocks)
     case Select(qual, name) => qual.subBlocks
     case Lambda(params, body) => body :: Nil
     case Tuple(mut, elems) => elems.flatMap(_.value.subBlocks)
     case _ => Nil
   
   lazy val freeVars: Set[Local] = this match
-    case Call(fun, args) => fun.freeVars ++ args.flatMap(_.value.freeVars).toSet
-    case Instantiate(mut, cls, args) => cls.freeVars ++ args.flatMap(_.value.freeVars).toSet
+    case Call(fun, argss) => fun.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
+    case Instantiate(mut, cls, argss) => cls.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
     case Select(qual, name) => qual.freeVars 
     case Lambda(params, body) => body.freeVars -- params.paramSyms
     case Tuple(mut, elems) => elems.flatMap(_.value.freeVars).toSet
@@ -789,8 +789,8 @@ sealed abstract class Result extends AutoLocated:
     case DynSelect(qual, fld, arrayIdx) => qual.freeVars ++ fld.freeVars
   
   lazy val freeVarsLLIR: Set[Local] = this match
-    case Call(fun, args) => fun.freeVarsLLIR ++ args.flatMap(_.value.freeVarsLLIR).toSet
-    case Instantiate(mut, cls, args) => cls.freeVarsLLIR ++ args.flatMap(_.value.freeVarsLLIR).toSet
+    case Call(fun, argss) => fun.freeVarsLLIR ++ argss.flatten.flatMap(_.value.freeVarsLLIR).toSet
+    case Instantiate(mut, cls, argss) => cls.freeVarsLLIR ++ argss.flatten.flatMap(_.value.freeVarsLLIR).toSet
     case Select(qual, name) => qual.freeVarsLLIR 
     case Lambda(params, body) => body.freeVarsLLIR -- params.paramSyms
     case Tuple(mut, elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
@@ -817,9 +817,9 @@ type Local = Symbol
  * regardless of whether the check for effect is inserted or not.
  * Note that the check for effect is inserted during HandlerLowering and setting this to true
  * after handler is lowered does not have any effect on the code generation. */
-case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffects: Bool, val explicitTailCall: Bool) extends Result
+case class Call(fun: Path, argss: NELs[Ls[Arg]])(val isMlsFun: Bool, val mayRaiseEffects: Bool, val explicitTailCall: Bool) extends Result
 
-case class Instantiate(mut: Bool, cls: Path, args: Ls[Arg]) extends Result
+case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]]) extends Result
 
 case class Lambda(params: ParamList, body: Block) extends Result
 
@@ -833,6 +833,10 @@ sealed abstract class Path extends TrivialResult:
   def sel(id: Tree.Ident, sym: DefinitionSymbol[?]): Path = Select(this, id)(S(sym))
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
   def asArg = Arg(spread = N, this)
+  def targetSymbol: Opt[DefinitionSymbol[?]] = this match
+    case sel: Select => sel.symbol
+    case Value.Ref(l, d) => d
+    case _ => N
 
 /**
  * @param symbol The symbol representing the definition that the selection refers to, if known.

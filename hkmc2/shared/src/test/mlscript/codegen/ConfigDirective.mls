@@ -176,7 +176,7 @@ data class Pair(a, b)
 fun fstConfig(p) = if p is Pair(x, y) then x
 fstConfig(Pair(1, 2))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Pair,Some(term:Pair/Pair)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > Call(Ref(member:Pair,Some(term:Pair/Pair)),List(List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2)))))) ->
 //│ deforest > 	Ref(p,None)
 //│ deforest > 	Select(Ref(p,None),Ident(a))
 //│ deforest > 	Select(Ref(p,None),Ident(b))

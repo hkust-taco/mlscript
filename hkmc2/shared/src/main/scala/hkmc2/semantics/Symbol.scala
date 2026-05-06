@@ -411,12 +411,12 @@ sealed trait InnerSymbol(using State) extends Symbol:
   // Ideally, InnerSymbol should extend DefinitionSymbol, but that requires us to specify the type
   // parameter to all occurrences of InnerSymbol. So, we use a self-type annotation instead to
   // ensure that any implementation of InnerSymbol is also a DefinitionSymbol.
-  self: DefinitionSymbol[?] =>
+  self: DefinitionSymbol[? <: ClassLikeDef] =>
   val privatesScope: Scope = Scope.empty(Scope.Cfg.default) // * Scope for private members of this symbol
   val thisProxy: TempSymbol = TempSymbol(N, s"this$$$nme")
   def subst(using SymbolSubst): InnerSymbol
-  def asDefnSym: DefinitionSymbol[?] & InnerSymbol = this match
-    case d: DefinitionSymbol[?] => d
+  def asDefnSym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol = this match
+    case d: DefinitionSymbol[? <: ClassLikeDef] => d
 
 trait IdentifiedSymbol extends Symbol:
   val id: Tree.Ident

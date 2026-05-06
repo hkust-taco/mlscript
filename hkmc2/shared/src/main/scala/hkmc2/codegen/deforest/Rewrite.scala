@@ -358,7 +358,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
     def mkReturnCall(target: (BlockMemberSymbol, TermSymbol), args: Ls[Symbol]): Block =
       Return(Call(
         Value.Ref(target._1, S(target._2)),
-        args.map(a => Arg(N, a.toValueRef))
+        args.map(a => Arg(N, a.toValueRef)) ne_:: Nil
       )(true, false, false), false)
     
     class Rewriter(instId: InstantiationId) extends BlockTransformer(_symSubst):
@@ -456,7 +456,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
           val callWithFvs = dtorBranchFnFvs(scrut.uid.toCtorDtorId)
           applyPath(scrut): newScrut =>
             Return(
-              Call(newScrut, callWithFvs.map(s => Arg(N, s.toValueRef)))(true, false, false),
+              Call(newScrut, callWithFvs.map(s => Arg(N, s.toValueRef)) ne_:: Nil)(true, false, false),
               false)
         case Break(label) =>
           val labelRestFunId = label.withInstId(instId)

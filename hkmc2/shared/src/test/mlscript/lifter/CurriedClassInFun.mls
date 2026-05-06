@@ -24,7 +24,7 @@ a.getX()
 // * Notice how the capture parameter `f$cap` is inserted before the aux param `z` but after the main param `y`
 :soir
 fun f(x) =
-  class A(val y)(z) with
+  class A(val y)(val z) with
     fun newA() = new A(y + 1)(z + 1)
     fun foo() =
       set x += 1
@@ -33,29 +33,24 @@ fun f(x) =
   [new A(x + 1)(x + 2), A, A(x + 1), A(x + 1)(x + 2)]
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let A⁰, f⁰, Capture$f⁰, A$⁰;
-//│ define A$⁰ as fun A$¹(f$cap)(y) {
-//│   let tmp;
-//│   set tmp = new A¹(y);
-//│   return tmp(f$cap)
+//│ define A$⁰ as fun A$¹(f$cap)(y)(z) {
+//│   return new A¹(y)(f$cap)(z)
 //│ };
 //│ define A⁰ as class A¹(y) {
 //│   private val f$cap⁰;
-//│   private val z⁰;
 //│   val y⁰;
+//│   val z⁰;
 //│   constructor A²(f$cap)(z) {
 //│     set f$cap⁰ = f$cap;
 //│     define y⁰ as val y¹ = y;
-//│     set z⁰ = z;
+//│     define z⁰ as val z¹ = z;
 //│     end
 //│   }
 //│   method newA⁰ = fun newA¹() {
-//│     let tmp, tmp1, tmp2, tmp3, tmp4;
+//│     let tmp, tmp1;
 //│     set tmp = +⁰(A¹.this.y¹, 1);
-//│     set tmp4 = new A¹(tmp);
-//│     set tmp1 = tmp4(f$cap⁰);
-//│     set tmp2 = +⁰(z⁰, 1);
-//│     set tmp3 = tmp1(tmp2);
-//│     return tmp3
+//│     set tmp1 = +⁰(A¹.this.z¹, 1);
+//│     return new A¹(tmp)(f$cap⁰)(tmp1)
 //│   }
 //│   method foo⁰ = fun foo¹() {
 //│     let tmp;
@@ -74,23 +69,18 @@ fun f(x) =
 //│   }
 //│ };
 //│ define f⁰ as fun f¹(x) {
-//│   let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, f$cap, tmp10, tmp11, tmp12, A$here;
+//│   let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, f$cap, A$here;
 //│   set f$cap = new mut Capture$f²(x);
 //│   set tmp = +⁰(f$cap.x$0⁰, 1);
-//│   set tmp10 = new A¹(tmp);
-//│   set tmp1 = tmp10(f$cap);
-//│   set tmp2 = +⁰(f$cap.x$0⁰, 2);
-//│   set tmp3 = tmp1(tmp2);
-//│   set tmp4 = +⁰(f$cap.x$0⁰, 1);
-//│   set tmp11 = new A¹(tmp4);
-//│   set tmp5 = tmp11(f$cap);
-//│   set tmp6 = +⁰(f$cap.x$0⁰, 1);
-//│   set tmp12 = new A¹(tmp6);
-//│   set tmp7 = tmp12(f$cap);
-//│   set tmp8 = +⁰(f$cap.x$0⁰, 2);
-//│   set tmp9 = tmp7(tmp8);
+//│   set tmp1 = +⁰(f$cap.x$0⁰, 2);
+//│   set tmp2 = new A¹(tmp)(f$cap)(tmp1);
+//│   set tmp3 = +⁰(f$cap.x$0⁰, 1);
+//│   set tmp4 = new A¹(tmp3)(f$cap);
+//│   set tmp5 = +⁰(f$cap.x$0⁰, 1);
+//│   set tmp6 = +⁰(f$cap.x$0⁰, 2);
+//│   set tmp7 = new A¹(tmp5)(f$cap)(tmp6);
 //│   set A$here = A$¹(f$cap);
-//│   return [tmp3, A$here, tmp5, tmp9]
+//│   return [tmp2, A$here, tmp4, tmp7]
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -111,8 +101,27 @@ b.foo()
 res.1(10)(20).foo()
 //│ = 3
 
-res.2(20).foo()
+let a1 = res.2(20)
+//│ a1 = A(1)
+
+a1.foo()
 //│ = 4
+
+:expect 20
+a1.z
+//│ = 20
+
+let a2 = res.2(30)
+//│ a2 = A(1)
+
+a2.z
+//│ = 30
+
+:fixme
+:expect 20
+a1.z
+//│ ═══[RUNTIME ERROR] Expected: '20', got: '30'
+//│ = 30
 
 a.getX()
 //│ = 4

@@ -38,11 +38,11 @@ class BufferableTransform()(using Ctx, State, Raise):
             def mkFieldReplacer(buf: Local, baseIdx: Local, symMap: Map[Symbol, Symbol]) =
               def getOffset(off: Int)(k: Path => Block): Block =
                 val idxSymbol = new TempSymbol(N, "idx")
-                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asPath, baseIdx.asPath.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil)(true, false, false),
+                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asPath, (baseIdx.asPath.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil) ne_:: Nil)(true, false, false),
                   k(DynSelect(buf.asPath.selSN("buf"), idxSymbol.asPath, true))))
               def assignToOffset(off: Int, r: Result, rst: Block) =
                 val idxSymbol = new TempSymbol(N, "idx")
-                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asPath, baseIdx.asPath.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil)(true, false, false),
+                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asPath, (baseIdx.asPath.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil) ne_:: Nil)(true, false, false),
                   AssignDynField(buf.asPath.selSN("buf"), idxSymbol.asPath, true, r, applyBlock(rst))))
               new BlockTransformer(SymbolSubst.Id):
                 override def applyLocal(sym: Local): Local = symMap.getOrElse(sym, sym)
