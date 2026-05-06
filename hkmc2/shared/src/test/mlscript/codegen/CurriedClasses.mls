@@ -1,0 +1,81 @@
+:js
+
+
+// * The code-gen of curried classes is currently a bit crazy and unnecessary.
+// * It was intended to make interop better, but it turned out to be a surprising semantic footgun,
+// * as partially-applied class constructors will share the same "this" object, resulting in unexpected mutations!
+// * TODO: Compile differently and forbid the use of curried classes as first-class values.
+
+
+:sjs
+class A(val x)(val y)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let A1;
+//│ A1 = function A(x) {
+//│   return (y) => {
+//│     return globalThis.Object.freeze(new A.class(x)(y));
+//│   }
+//│ };
+//│ (class A {
+//│   static {
+//│     A1.class = this
+//│   }
+//│   constructor(x) {
+//│     return (y) => {
+//│       this.x = x;
+//│       this.y = y;
+//│       return this;
+//│     }
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A", ["x"]]; 
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+let w = new A(1)
+//│ w = fun w
+
+let h = w(2)
+h.y
+//│ = 2
+//│ h = A(1)
+
+:expect 3
+let h2 = w(3)
+h2.y
+//│ = 3
+//│ h2 = A(1)
+
+// * This used to return 3, but we now make sure instantiations are always saturated
+:expect 2
+h.y
+//│ = 2
+
+
+// * First-class class value; FIXME: should be forbidden
+let a = A.class
+//│ a = class A
+
+// * Dynamic instantiation
+let w = new! a(1)
+//│ w = fun
+
+let h = w(2)
+h.y
+//│ = 2
+//│ h = A(1)
+
+:expect 3
+let h2 = w(3)
+h2.y
+//│ = 3
+//│ h2 = A(1)
+
+:re // * Bad bad bad!
+:expect 2
+h.y
+//│ ═══[RUNTIME ERROR] Expected: '2', got: '3'
+//│ = 3
+
+

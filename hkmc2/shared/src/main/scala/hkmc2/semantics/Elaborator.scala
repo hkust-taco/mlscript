@@ -826,8 +826,6 @@ extends Importer with ucs.SplitElaborator:
     case TypeDef(k, head, rhs) =>
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
       Term.Error
-    case Modified(Keyword.`in` | Keyword.`out`, body) =>
-      subterm(body)
     case Modified(Keywrd(Keyword.`mut`), body: Block) =>
       blockOrRcd(body, hasResult = true) match
       case (Blk(Nil, Term.UnitVal()), ctx) =>
