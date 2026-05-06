@@ -448,7 +448,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       // `return`/`throw`, `UseSplit` → break, or `End` → throw), no value
       // can flow into `cont`, so the exit-label wrapper is unnecessary even
       // when `cont` is not a TailOp.
-      if (cont eq Ret) || (cont eq Thrw) ||
+      if (cont eq Ret) || (cont eq Thrw) || (form is IfLikeForm.While) ||
           (sym.body.alwaysTerminates && tail.alwaysTerminates) then
         val bodyBlock = lowerSplit(sym.body, cont)
         Label(joinLabel, false, lowerSplit(tail, cont), bodyBlock)

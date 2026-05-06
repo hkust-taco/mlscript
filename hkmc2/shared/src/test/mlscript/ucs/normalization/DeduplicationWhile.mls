@@ -17,19 +17,17 @@ while true and true and false do print(1) else print(2)
 //│   lbl: while (true) {
 //│     let scrut, scrut1, scrut2;
 //│     scrut = true;
-//│     σ$x: {
-//│       if (scrut === true) {
-//│         scrut2 = true;
-//│         if (scrut2 === true) {
-//│           scrut1 = false;
-//│           if (scrut1 === true) {
-//│             Predef.print(1);
-//│             break σ$x
-//│           }
+//│     if (scrut === true) {
+//│       scrut2 = true;
+//│       if (scrut2 === true) {
+//│         scrut1 = false;
+//│         if (scrut1 === true) {
+//│           Predef.print(1);
+//│           continue lbl
 //│         }
 //│       }
-//│       Predef.print(2);
 //│     }
+//│     Predef.print(2);
 //│     continue lbl;
 //│   }
 //│ });
@@ -103,26 +101,24 @@ while x > 0 and x ===
 //│     scrut5 = x1 > 0;
 //│     if (scrut5 === true) {
 //│       scrut6 = x1 === 1;
-//│       σ$x: {
-//│         if (scrut6 === true) {
-//│           scrut8 = false;
-//│           if (scrut8 === true) {
-//│             scrut7 = false;
-//│             if (scrut7 === true) {
-//│               Predef.print("A");
-//│               break σ$x
-//│             }
-//│           }
-//│         }
-//│         scrut9 = x1 === 2;
-//│         if (scrut9 === true) {
-//│           scrut10 = false;
-//│           if (scrut10 === true) {
-//│             Predef.print("B");
+//│       if (scrut6 === true) {
+//│         scrut8 = false;
+//│         if (scrut8 === true) {
+//│           scrut7 = false;
+//│           if (scrut7 === true) {
+//│             Predef.print("A");
+//│             continue lbl
 //│           }
 //│         }
 //│       }
-//│       continue lbl
+//│       scrut9 = x1 === 2;
+//│       if (scrut9 === true) {
+//│         scrut10 = false;
+//│         if (scrut10 === true) {
+//│           Predef.print("B");
+//│           continue lbl
+//│         }
+//│       }
 //│     }
 //│     break;
 //│   }
