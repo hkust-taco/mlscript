@@ -17,9 +17,6 @@ Foo(123)
 //│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
 //│ ║  l.16: 	Foo(123)
 //│ ╙──      	   ^^^^^
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'FlowAnalysis.scala:981'
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = Foo(123, undefined)
 
 

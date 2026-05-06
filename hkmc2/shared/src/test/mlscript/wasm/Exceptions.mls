@@ -10,9 +10,9 @@ throw 1
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $mlx_exn (func (param $ex (ref null any))))
-//│   (type $entry1 (func (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
 //│   (tag $mlx_exn (export "mlx_exn") (type $mlx_exn))
-//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (throw $mlx_exn
 //│       (ref.i31
 //│         (i32.const 1))))

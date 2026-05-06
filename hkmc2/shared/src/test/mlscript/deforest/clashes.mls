@@ -1,8 +1,6 @@
 :js
 :deforest
 
-//│ deforest > >>> fusing >>>
-//│ deforest > <<< fusing <<<
 
 data class A(x)
 //│ deforest > >>> fusing >>>

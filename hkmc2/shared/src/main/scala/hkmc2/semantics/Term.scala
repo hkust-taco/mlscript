@@ -52,6 +52,12 @@ enum Annot extends AutoLocated:
     case TailCall => TailCall
     case c: Config => c
 
+object Annot:
+  
+  val Private = Modifier(Keyword.`private`)
+  
+end Annot
+
 type AnySelTerm = AnySel & Resolvable
 
 sealed trait AnySel extends ResolvableImpl:
@@ -1317,8 +1323,8 @@ extends AutoLocated:
   def foreach(f: Param => Unit): Unit = (params.iterator ++ restParam).foreach(f)
   def paramCountLB: Int = params.length
   def paramCountUB: Bool = restParam.isEmpty
-  def paramSyms = params.map(_.sym) ++ restParam.map(_.sym)
-  def allParams = params ++ restParam.toList
+  lazy val paramSyms = params.map(_.sym) ++ restParam.map(_.sym)
+  lazy val allParams = params ++ restParam.toList
   def subTerms: Ls[Term] = params.flatMap(_.subTerms) ++ restParam.toList.flatMap(_.subTerms)
   def show(using Scope, ShowCfg, Raise): Document =
     flags.show

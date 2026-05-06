@@ -12,7 +12,7 @@ import mlscript.utils.*, shorthands.*
 import semantics.*
 import semantics.Elaborator.{State, Ctx, ctx}
 
-import syntax.{Literal, Tree}
+import syntax.{Keyword, Literal, Tree}
 
 // it should be possible to cache some common constructions (End, Option) into the context
 // this avoids having to rebuild the same shapes everytime they are needed
@@ -62,7 +62,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
   // isMlsFun is probably always true?
   def call(fun: Path, args: Ls[ArgWrappable], isMlsFun: Bool = true, symName: Str = "tmp")(k: Path => Block): Block =
-    assign(Call(fun, args.map(asArg))(isMlsFun, false, false), symName)(k)
+    assign(Call(fun, args.map(asArg) ne_:: Nil)(isMlsFun, false, false), symName)(k)
 
   // helpers for instrumenting Block
 
@@ -195,16 +195,24 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
       transformArgs(elems): xs =>
         tuple(xs.map(_._1)): codes =>
           blockCtor("Tuple", Ls(codes), "tup")(k)
-    case Instantiate(mut, cls, args) =>
+    case Instantiate(mut, cls, argss) =>
       assert(!mut, "mutable instantiation not supported")
-      transformArgs(args): xs =>
-        transformPath(cls): cls =>
-          tuple(xs.map(_._1)): codes =>
-            blockCtor("Instantiate", Ls(cls, codes), "inst")(k)
+      argss match
+        case Nil =>
+          raise(ErrorReport(msg"Instantiate with no argument lists not supported in staged module." -> r.toLoc :: Nil))
+          End()
+        case args :: Nil =>
+          transformArgs(args): xs =>
+            transformPath(cls): cls =>
+              tuple(xs.map(_._1)): codes =>
+                blockCtor("Instantiate", Ls(cls, codes), "inst")(k)
+        case args :: restArgss =>
+          raise(ErrorReport(msg"Instantiate with multiple argument lists not supported in staged module." -> r.toLoc :: Nil))
+          End()
     // desugar Runtime.Tuple.get into Select
-    case Call(fun, Ls(Arg(_, scrut), Arg(_, Value.Lit(Tree.IntLit(idx))))) if fun == State.runtimeSymbol.asPath.selSN("Tuple").selSN("get") =>
+    case Call(fun, Ls(Arg(_, scrut), Arg(_, Value.Lit(Tree.IntLit(idx)))) :: _) if fun == State.runtimeSymbol.asPath.selSN("Tuple").selSN("get") =>
       transformPath(Select(scrut, Tree.Ident(idx.toString()))(N))(k)
-    case Call(fun, args) =>
+    case Call(fun, argss) =>
       val stagedFunPath = fun match
         case s @ Select(qual, Tree.Ident(name)) => s.symbol.flatMap({
             case t: TermSymbol => t.owner.flatMap({ case sym: DefinitionSymbol[?] =>
@@ -216,11 +224,16 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           })
         case _ => N
 
-      val newFun = stagedFunPath.getOrElse(fun)
-      transformPath(newFun): fun =>
-        transformArgs(args): args =>
-          tuple(args.map(_._1)): tup =>
-            blockCtor("Call", Ls(fun, tup), "app")(k)
+      argss match
+        case args :: Nil =>
+          val newFun = stagedFunPath.getOrElse(fun)
+          transformPath(newFun): fun =>
+            transformArgs(args): args =>
+              tuple(args.map(_._1)): tup =>
+                blockCtor("Call", Ls(fun, tup), "app")(k)
+        case args :: restArgss =>
+          raise(ErrorReport(msg"Call with multiple argument lists not supported in staged module." -> r.toLoc :: Nil))
+          End()
     case _ =>
       raise(ErrorReport(msg"Other Results not supported in staged module: ${r.getClass.toString()}" -> r.toLoc :: Nil))
       End()
@@ -343,18 +356,18 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
     // TODO: remove it. only for test
     val debug = (k: Block) => call(sym, Nil)(fnPrintCode(_)(k))
-    val newFun = f.copy(sym = genSym, dSym = dSym, params = Ls(PlainParamList(Nil)), body = newBody)(false, f.configOverride, f.visibility)
+    val newFun = f.copy(sym = genSym, dSym = dSym, params = Ls(PlainParamList(Nil)), body = newBody)(f.configOverride, f.annotations)
     (newFun, debug)
 
   override def applyBlock(b: Block): Block = super.applyBlock(b) match
     // find modules with staged annotation
-    case Define(c: ClsLikeDefn, rest) if c.companion.exists(_.isym.defn.exists(_.hasStagedModifier.isDefined)) =>
+    case Define(c: ClsLikeDefn, rest) if c.companion.exists(_.isStaged) =>
       val sym = c.sym.subst
       val companion = c.companion.get
       val (stagedMethods, debugPrintCode) = companion.methods
         .map(applyFunDefnInner)
         .unzip
-      val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(PlainParamList(Nil)), companion.ctor)(false, N, Visibility.Public)
+      val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(PlainParamList(Nil)), companion.ctor)(N, Nil)
       val (stagedCtor, ctorPrint) = applyFunDefnInner(ctor)
 
       val unit = State.runtimeSymbol.asPath.selSN("Unit")
@@ -368,7 +381,9 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
             val (stagedMethods, debugPrintCode) = c.methods
               .map(applyFunDefnInner)
               .unzip
-            val newModule = c.copy(methods = c.methods ++ stagedMethods)(c.configOverride)
+            val newModule = c.copy(methods = c.methods ++ stagedMethods)(c.configOverride, c.annotations.filter:
+              case Annot.Modifier(Keyword.`staged`) => false
+              case _ => true)
             Define(newModule, rest)
           case b => b
       val newCtor = genCls.applyBlock(companion.ctor)
@@ -376,7 +391,9 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
         methods = stagedCtor :: companion.methods ++ stagedMethods,
         ctor = Begin(newCtor, debugCont(End())),
       )
-      val newModule = c.copy(sym = sym, companion = S(newCompanion))(c.configOverride)
+      val newModule = c.copy(sym = sym, companion = S(newCompanion))(c.configOverride, c.annotations.filter:
+        case Annot.Modifier(Keyword.`staged`) => false
+        case _ => true)
       Define(newModule, rest)
     case b => b
 

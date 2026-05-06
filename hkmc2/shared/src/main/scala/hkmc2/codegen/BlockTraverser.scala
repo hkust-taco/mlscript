@@ -47,14 +47,6 @@ class BlockTraverser:
     case b @ AssignField(l, n, r, rst) =>
       applyPath(l); applyResult(r); applySubBlock(rst); b.symbol.foreach(_.traverse)
     case Define(defn, rst) => applyDefn(defn); applySubBlock(rst)
-    case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
-      applyLocal(l)
-      applyLocal(res)
-      applyPath(par)
-      args.foreach(applyPath)
-      hdr.foreach(applyHandler)
-      applySubBlock(bod)
-      applySubBlock(rst)
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
       applyPath(lhs)
       applyResult(rhs)
@@ -63,8 +55,8 @@ class BlockTraverser:
     case Scoped(_, body) => applySubBlock(body)
   
   def applyResult(r: Result): Unit = r match
-    case r @ Call(fun, args) => applyPath(fun); args.foreach(applyArg)
-    case Instantiate(mut, cls, args) => applyPath(cls); args.foreach(applyArg)
+    case r @ Call(fun, argss) => applyPath(fun); argss.foreach(_.foreach(applyArg))
+    case Instantiate(mut, cls, argss) => applyPath(cls); argss.foreach(_.foreach(applyArg))
     case l @ Lambda(params, body) => applyLam(l)
     case Tuple(mut, elems) => elems.foreach(applyArg)
     case Record(mut, fields) => fields.foreach:
@@ -160,17 +152,6 @@ class BlockTraverserShallow extends BlockTraverser:
     case _: ValDefn => super.applyDefn(defn)
   
   override def applyHandler(hdr: Handler): Unit = ()
-  
-  override def applyBlock(b: Block): Unit = b match
-    case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
-      applyLocal(l)
-      applyLocal(res)
-      applyPath(par)
-      args.foreach(applyPath)
-      cls.traverse
-      hdr.foreach(applyHandler)
-      applySubBlock(rst)
-    case _ => super.applyBlock(b)
 
 class BlockDataTraverser extends BlockTraverserShallow:
   override def applySubBlock(b: Block): Unit = ()

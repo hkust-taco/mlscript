@@ -60,8 +60,8 @@ fun test(x) =
     fun bar = x
   B()
 test(0).toString()
-//│ ═══[RUNTIME ERROR] Expected: '"B()"', got: '"(x) => {       this.#x = x;       return this;     }"'
-//│ = "(x) => {       this.#x = x;       return this;     }"
+//│ ═══[RUNTIME ERROR] Expected: '"B()"', got: '"(x1) => {       this.#x = x1;       return this;     }"'
+//│ = "(x1) => {       this.#x = x1;       return this;     }"
 
 // In fact, the correct way (using the current "constructor returns a lambda" hack) is this:
 // return (params) => {

@@ -139,7 +139,7 @@ Foo::n(foo, 2)
 //│ lambda9 = (undefined, function (self7, ...args7) {
 //│   return runtime.safeCall(self7.n(...args7))
 //│ });
-//│ lambda9(foo, 2)
+//│ runtime.safeCall(lambda9(foo, 2))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 125
 

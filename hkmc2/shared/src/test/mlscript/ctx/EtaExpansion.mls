@@ -31,14 +31,7 @@ using Num = 0.42
 :sir
 let f1 = foo
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f1⁰, f1¹;
-//│ define f1¹ as fun f1²() {
-//│   let tmp;
-//│   set tmp = foo⁰();
-//│   return tmp(instance$Ident(Int)⁰)
-//│ };
-//│ set f1⁰ = f1²;
-//│ end
+//│ let f1⁰, f1¹; define f1¹ as fun f1²() { return foo⁰()(instance$Ident(Int)⁰) }; set f1⁰ = f1²; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f1 = fun f1
 
@@ -54,14 +47,7 @@ f1()
 :sir
 let f2 = bar
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f2⁰, f2¹;
-//│ define f2¹ as fun f2²(x) {
-//│   let tmp;
-//│   set tmp = bar⁰(x);
-//│   return tmp(instance$Ident(Int)⁰)
-//│ };
-//│ set f2⁰ = f2²;
-//│ end
+//│ let f2⁰, f2¹; define f2¹ as fun f2²(x) { return bar⁰(x)(instance$Ident(Int)⁰) }; set f2⁰ = f2²; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f2 = fun f2
 
@@ -81,11 +67,7 @@ let f3 = baz
 //│ define f3¹ as fun f3²(x) {
 //│   let lambda;
 //│   define lambda as fun lambda⁰(y) {
-//│     let tmp, tmp1, tmp2;
-//│     set tmp = baz⁰(x);
-//│     set tmp1 = tmp(instance$Ident(Int)⁰);
-//│     set tmp2 = tmp1(y);
-//│     return tmp2(instance$Ident(Num)⁰)
+//│     return baz⁰(x)(instance$Ident(Int)⁰)(y)(instance$Ident(Num)⁰)
 //│   };
 //│   return lambda⁰
 //│ };
@@ -102,7 +84,7 @@ f3(43)(44)
 :sir
 foo()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp; set tmp = foo⁰(); tmp(instance$Ident(Int)⁰)
+//│ foo⁰()(instance$Ident(Int)⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42]
 
@@ -110,7 +92,7 @@ foo()
 :sir
 bar(0.42)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp; set tmp = bar⁰(0.42); tmp(instance$Ident(Int)⁰)
+//│ bar⁰(0.42)(instance$Ident(Int)⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [0.42, 42]
 
@@ -130,11 +112,7 @@ module Test with
 //│   }
 //│   method main⁰ = fun main¹(tmp) {
 //│     let lambda;
-//│     define lambda as fun lambda¹(j) {
-//│       let tmp1;
-//│       set tmp1 = Test².this.test¹(j);
-//│       return tmp1(tmp)
-//│     };
+//│     define lambda as fun lambda¹(j) { return Test².this.test¹(j)(tmp) };
 //│     return lambda¹
 //│   }
 //│ };

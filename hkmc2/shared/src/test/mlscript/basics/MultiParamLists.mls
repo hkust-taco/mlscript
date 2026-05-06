@@ -29,7 +29,7 @@ fun f(n1: Int)(n2: Int): Int =  (10 * n1 + n2)
 
 f(4)(2)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp; tmp = f1(4); runtime.safeCall(tmp(2))
+//│ f1(4)(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -39,11 +39,11 @@ fun f(n1: Int)(n2: Int)(n3: Int): Int = 10 * (10 * n1 + n2) + n3
 //│ f2 = function f(n1) {
 //│   return (n2) => {
 //│     return (n3) => {
-//│       let tmp1, tmp2, tmp3;
-//│       tmp1 = 10 * n1;
-//│       tmp2 = tmp1 + n2;
-//│       tmp3 = 10 * tmp2;
-//│       return tmp3 + n3
+//│       let tmp, tmp1, tmp2;
+//│       tmp = 10 * n1;
+//│       tmp1 = tmp + n2;
+//│       tmp2 = 10 * tmp1;
+//│       return tmp2 + n3
 //│     }
 //│   }
 //│ };
@@ -51,7 +51,7 @@ fun f(n1: Int)(n2: Int)(n3: Int): Int = 10 * (10 * n1 + n2) + n3
 
 f(4)(2)(0)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp1, tmp2; tmp1 = f2(4); tmp2 = runtime.safeCall(tmp1(2)); runtime.safeCall(tmp2(0))
+//│ f2(4)(2)(0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 420
 
@@ -62,13 +62,13 @@ fun f(n1: Int)(n2: Int)(n3: Int)(n4: Int): Int = 10 * (10 * (10 * n1 + n2) + n3)
 //│   return (n2) => {
 //│     return (n3) => {
 //│       return (n4) => {
-//│         let tmp3, tmp4, tmp5, tmp6, tmp7;
-//│         tmp3 = 10 * n1;
-//│         tmp4 = tmp3 + n2;
-//│         tmp5 = 10 * tmp4;
-//│         tmp6 = tmp5 + n3;
-//│         tmp7 = 10 * tmp6;
-//│         return tmp7 + n4
+//│         let tmp, tmp1, tmp2, tmp3, tmp4;
+//│         tmp = 10 * n1;
+//│         tmp1 = tmp + n2;
+//│         tmp2 = 10 * tmp1;
+//│         tmp3 = tmp2 + n3;
+//│         tmp4 = 10 * tmp3;
+//│         return tmp4 + n4
 //│       }
 //│     }
 //│   }
@@ -77,11 +77,7 @@ fun f(n1: Int)(n2: Int)(n3: Int)(n4: Int): Int = 10 * (10 * (10 * n1 + n2) + n3)
 
 f(3)(0)(3)(1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp3, tmp4, tmp5;
-//│ tmp3 = f3(3);
-//│ tmp4 = runtime.safeCall(tmp3(0));
-//│ tmp5 = runtime.safeCall(tmp4(3));
-//│ runtime.safeCall(tmp5(1))
+//│ f3(3)(0)(3)(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3031
 

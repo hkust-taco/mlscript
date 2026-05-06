@@ -7,7 +7,7 @@ import utils.*
 
 import hkmc2.semantics.{Elaborator, Resolver, Resolvable, Symbol, SymbolPrinter}
 
-import semantics.Elaborator.Ctx
+import semantics.Elaborator.{Ctx, State}
 
 abstract class MLsDiffMaker extends DiffMaker:
   
@@ -287,7 +287,21 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"Error: $d")
       ()
     if file != preludeFile then
-      given Config = mkConfig
+      val cfg = mkConfig
+      given Config = cfg.copy(
+        deforest = cfg.deforest.map: d =>
+          d.copy(config = d.config.copy(
+            debug = false,
+            logAccumulator = false,
+            logNonAffine = false
+          )),
+        deadParamElim = cfg.deadParamElim.map: d =>
+          d.copy(config = d.config.copy(
+            debug = false,
+            logAccumulator = false,
+            logNonAffine = false
+          ))
+      )
       processTrees(
         PrefixApp(Keywrd(`import`), StrLit(predefFile.toString))
         :: Open(Ident("Predef"))
@@ -414,6 +428,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     given Ctx = curCtx
+    given Config = Config.extractConfigFromStats(trm)
     val resolver = Resolver(rtl)
     curICtx = resolver.traverseBlock(trm)(using curICtx)
     

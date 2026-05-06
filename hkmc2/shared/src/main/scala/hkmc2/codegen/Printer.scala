@@ -117,24 +117,25 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
       .mkDocument("")
   
   def print(defn: Defn)(using Scope): Document = defn match
-    case FunDefn(own, sym, dSym, paramss, body) =>
+    case fun @ FunDefn(own, sym, dSym, paramss, body) =>
       scope.nest.givenIn:
         val docParams = printParamLists(paramss)
         val docBody = print(body)
-        doc"fun ${print(dSym)}${docParams} ${bracedbk(docBody)}"
+        val docStaged = if fun.isStaged then doc"staged " else doc""
+        doc"${docStaged}fun ${print(dSym)}${docParams} ${bracedbk(docBody)}"
     case ValDefn(tsym, sym, rhs) =>
       doc"val ${print(tsym)} = ${print(rhs)}"
-    case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, methods,
+    case cls @ ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable)
     => scope.nest.givenIn:
       val ctorParams = printParamLists(paramsOpt.toList)
-      val docStaged = if isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
+      val docStaged = if cls.isStaged then doc"staged " else doc""
       val docBody = print(privateFields, publicFields, methods, auxParams, S(preCtor), ctor, ctorSym)
       val clsType = k.str
       val docCls = doc"${docStaged}${clsType} ${print(isym)}${ctorParams}${docBody}"
       val docModule = mod match
         case Some(mod) =>
-          val docStaged = if mod.isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
+          val docStaged = if mod.isStaged then doc"staged " else doc""
           val docBody = print(mod.privateFields, mod.publicFields, mod.methods, Nil, N, mod.ctor, N)
           doc" # ${docStaged}module ${print(mod.isym)}${docBody}"
         case None => doc""
@@ -169,9 +170,12 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
   def print(result: Result)(using Scope): Document =
     (if !showPurity || result.isPure then "" else "!") ::
     result.match
-    case Call(fun, args) => doc"${print(fun)}(${args.map(print).mkDocument(", ")})"
-    case Instantiate(mut, cls, args) =>
-      doc"new ${if mut then "mut " else ""}${print(cls)}(${args.map(print).mkDocument(", ")})"
+    case Call(fun, argss) =>
+      val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
+      doc"${print(fun)}${chainedArgs}"
+    case Instantiate(mut, cls, argss) =>
+      val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
+      doc"new ${if mut then "mut " else ""}${print(cls)}${chainedArgs}"
     case Lambda(params, body) =>
       scope.nest.givenIn:
         val allParams =

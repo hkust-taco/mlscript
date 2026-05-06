@@ -1,8 +1,6 @@
 :js
 :deforest
 
-//│ deforest > >>> fusing >>>
-//│ deforest > <<< fusing <<<
 object Nil
 data class (::) Cons(h, t)
 data class Pair(a, b)

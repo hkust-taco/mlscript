@@ -106,9 +106,9 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
       val body2 = applyFunBodyLikeBlock(fun.body)
       for s <- oldParamSyms do mapping.remove(s)
       if newlyCreated then
-        Scoped(Set.single(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride, fun.visibility)))
+        Scoped(Set.single(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.configOverride, fun.annotations)))
       else
-        k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride, fun.visibility))
+        k(FunDefn(N, sym2, dSym2, params2, body2)(fun.configOverride, fun.annotations))
     case defn @ ValDefn(tsym, sym, rhs) =>
       val (tsym2, sym2) = mapping.get(sym) match
         case None =>
@@ -120,7 +120,7 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
           (bms.tsym.get, bms)
         case _ => die
       applyPath(rhs): rhs2 =>
-        k(ValDefn(tsym2, sym2, rhs2)(defn.configOverride))
+        k(ValDefn(tsym2, sym2, rhs2)(defn.configOverride, defn.annotations))
     case defn: ClsLikeDefn =>
       val hd = toRemoveSymbols.head
       val oldIsym = defn.isym
@@ -177,7 +177,7 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
       def buildResult(newParentPath: Opt[Path]): Block =
         val newDefn = ClsLikeDefn(newOwn, newIsym, newSym, newCtorSym, defn.k,
           newParamsOpt, newAuxParams, newParentPath, newMethods,
-          newPrivateFields, newPublicFields, newPreCtor, newCtor, newMod, defn.bufferable)(defn.configOverride)
+          newPrivateFields, newPublicFields, newPreCtor, newCtor, newMod, defn.bufferable)(defn.configOverride, defn.annotations)
         if newlyCreatedSym then
           Scoped(Set.single(newSym), k(newDefn))
         else
@@ -266,7 +266,7 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
         ParamList(pl.flags, pl.params.map(handleParam), pl.restParam.map(handleParam))
       val newBody = applyFunBodyLikeBlock(m.body)
       methodParamOlds.foreach(mapping.remove)
-      FunDefn(S(newIsym), newMsym, newDsym, newParams, newBody)(m.forceTailRec, m.configOverride, m.visibility)
+      FunDefn(S(newIsym), newMsym, newDsym, newParams, newBody)(m.configOverride, m.annotations)
   
   override def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
     val hd = toRemoveSymbols.head
@@ -283,4 +283,4 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
     val newMethods = freshenMethods(defn.methods, oldIsym, newIsym)
     val newCtor = applyFunBodyLikeBlock(defn.ctor)
 
-    ClsLikeBody(newIsym, newMethods, newPrivateFields, newPublicFields, newCtor)
+    ClsLikeBody(newIsym, newMethods, newPrivateFields, newPublicFields, newCtor, defn.annotations)
