@@ -977,6 +977,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case Split.LetSplit(sym, tail) => setupSymbol(sym): r1 =>
       loweringCtx.collectScopedSym(sym)
       val l1, l2 = loweringCtx.registerTempSymbol(N)
+      // The quoted `SplitSymbol` is the binder for both the quoted body and any
+      // quoted `UseSplit`s in the tail. Bind it before quoting either side so the
+      // generated `LetSplit` and `UseSplit` terms share the same symbol value.
       blockBuilder.assign(sym, r1)
         .chain(b => quoteSplit(sym.body)(r2 => Assign(l1, r2, b)))
         .chain(b => quoteSplit(tail)(r3 => Assign(l2, r3, b)))

@@ -6,14 +6,22 @@ import syntax.*, Elaborator.State, ucs.FlatPattern
 import scala.collection.mutable.{Map as MutMap}
 
 final case class Branch(scrutinee: Term.Ref, pattern: FlatPattern, continuation: Split) extends AutoLocated:
+  /** Clone this branch and the split continuation below it. */
   def mkClone(using State): Branch =
     mkClone(MutMap.empty)
 
+  /** Clone this branch while sharing the split-symbol renaming map with the
+    * enclosing split. `LetSplit`/`UseSplit` pairs inside the continuation are
+    * local binders/references, so all continuations in the same copied split must
+    * agree on the same fresh symbols. */
   private[semantics] def mkClone(freshSplitSymbols: MutMap[SplitSymbol, SplitSymbol])(using State): Branch =
     val scrutineeClone = new Term.Ref(scrutinee.sym)
         (Tree.Ident(scrutinee.tree.name), scrutinee.refNum, scrutinee.typ)
     Branch(scrutineeClone, pattern.mkClone, continuation.mkClone(freshSplitSymbols))
 
+  /** Duplicate this branch during split rewriting. Unlike `mkClone`, this keeps
+    * the existing scrutinee and pattern nodes, but it still has to thread the
+    * split-symbol renaming map through the continuation. */
   private[semantics] def duplicate(freshSplitSymbols: MutMap[SplitSymbol, SplitSymbol]): Branch =
     Branch(scrutinee, pattern, continuation.duplicate(freshSplitSymbols))
   
@@ -38,9 +46,21 @@ enum Split extends AutoLocated with ProductWithTail:
   
   inline def ~:(head: Branch): Split = Split.Cons(head, this)
   
+  /** Clone this split in the `mkClone` sense used by term cloning.
+    *
+    * `LetSplit` and `UseSplit` form a binder/reference pair. A cloned split must
+    * therefore create fresh symbols for `LetSplit`s and rewrite the corresponding
+    * `UseSplit`s. Uses of symbols declared outside the cloned subtree are left
+    * pointing to their original symbol. */
   def mkClone(using State): Split =
     mkClone(MutMap.empty)
 
+  /** Internal recursive implementation of `mkClone`.
+    *
+    * The `freshSplitSymbols` map records the fresh symbol allocated for each
+    * copied `LetSplit`. A `LetSplit` installs its fresh symbol before cloning the
+    * body and tail, so copied `UseSplit`s that refer to the old symbol point at
+    * the same new declaration. */
   private[semantics] def mkClone(freshSplitSymbols: MutMap[SplitSymbol, SplitSymbol])(using State): Split = this match
     case Cons(head, tail) => Cons(head.mkClone(freshSplitSymbols), tail.mkClone(freshSplitSymbols))
     case Let(sym, term, tail) => Let(sym, term.mkClone, tail.mkClone(freshSplitSymbols))
@@ -63,9 +83,20 @@ enum Split extends AutoLocated with ProductWithTail:
     if this != End then _duplicated = true
     this
   
+  /** Duplicate this split during desugaring or normalization.
+    *
+    * This is intentionally cheaper than `mkClone`: terms, scrutinees, and
+    * patterns are shared. `LetSplit` symbols are still freshened, because a
+    * duplicated split may be spliced beside the original and must not bind or
+    * call the original join point accidentally. */
   def duplicate: Split =
     duplicate(MutMap.empty)
 
+  /** Internal recursive implementation of `duplicate`.
+    *
+    * The same `freshSplitSymbols` map is threaded through branch continuations,
+    * join-point bodies, and join-point tails, keeping every duplicated
+    * declaration/use pair consistent. */
   private[semantics] def duplicate(freshSplitSymbols: MutMap[SplitSymbol, SplitSymbol]): Split =
     (this match
       case Cons(head, tail) => Cons(head.duplicate(freshSplitSymbols), tail.duplicate(freshSplitSymbols))
