@@ -66,15 +66,15 @@ true || loudTrue
 :sjs
 fold(||)(0, false, 42, 123)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda, tmp2;
+//│ let lambda, callPrefix;
 //│ lambda = (undefined, function (arg1, arg2) {
 //│   if (arg1 === false) {
 //│     return arg2
 //│   }
 //│   return true;
 //│ });
-//│ tmp2 = runtime.safeCall(Predef.fold(lambda));
-//│ runtime.safeCall(tmp2(0, false, 42, 123))
+//│ callPrefix = runtime.safeCall(Predef.fold(lambda));
+//│ runtime.safeCall(callPrefix(0, false, 42, 123))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 

@@ -191,10 +191,8 @@ Bar(1)
 //│     Bar1.class = this
 //│   }
 //│   constructor(x) {
-//│     let tmp;
 //│     this.x = x;
-//│     tmp = this.foo();
-//│     runtime.safeCall(tmp());
+//│     this.foo()();
 //│   }
 //│   foo() {
 //│     return () => {

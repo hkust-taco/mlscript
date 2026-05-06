@@ -114,6 +114,11 @@ fun f(x) =
 //│   }
 //│   main: while (true) {
 //│     switch (pc) {
+//│       case 2:
+//│         runtime.resumeValue;
+//│         pc = 1;
+//│       case 1:
+//│         return runtime.Unit;
 //│       case 0:
 //│         if (x === true) {
 //│           let z1, inlinedVal;
@@ -127,12 +132,6 @@ fun f(x) =
 //│           }
 //│           return runtime.unwind(f4, 2, "ScopedBlocksAndHandlers.mls:103:7", null, null, 1, 1, x, 0);
 //│         }
-//│         pc = 1;
-//│         continue main;
-//│       case 1:
-//│         return runtime.Unit;
-//│       case 2:
-//│         runtime.resumeValue;
 //│         pc = 1;
 //│         continue main;
 //│     }

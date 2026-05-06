@@ -12,14 +12,12 @@ module A with
 //│   static {
 //│     A1 = this
 //│   }
-//│   static #A_mod$cap;
 //│   static f(x) {
 //│     if (x instanceof Option.Some.class) {
 //│       return true
 //│     }
 //│     return false;
 //│   }
-//│   #A$cap;
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 
 //│ });

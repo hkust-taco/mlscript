@@ -45,9 +45,11 @@ hi(0)
 //│       if (scrut === true) {
 //│         return 0
 //│       }
-//│       tmp2 = n - 1;
-//│       n = tmp2;
-//│       continue loopLabel;
+//│       {
+//│         tmp2 = n - 1;
+//│         n = tmp2;
+//│         continue loopLabel;
+//│       }
 //│     }
 //│     return runtime.unwind(hi, -1, "TailCallOptimization.mls:31:1", null, null, 1, 1, n, 0);
 //│   }

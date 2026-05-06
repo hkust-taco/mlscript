@@ -32,7 +32,6 @@ data class Lol(h) with
 //│       runtime.illegalEffect("in a constructor");
 //│     }
 //│   }
-//│   #Lol$cap;
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Lol", ["h"]]; 
 //│ });

@@ -34,7 +34,7 @@ c.Parent#x
 //│   (type $Parent_ctor (func (param $x (ref null any)) (result (ref null any))))
 //│   (type $Child_ctor (func (param $y (ref null any)) (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type $entry1 (func (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
 //│   (global $c (export "c") (mut (ref null any)) (ref.null any))
 //│   (func $Parent_init (type $Parent_init) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
@@ -101,7 +101,7 @@ c.Parent#x
 //│           (local.get $y)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (global.set $c
 //│         (call $Child_ctor
@@ -214,7 +214,7 @@ class B
 //│   (type $Unit (sub $Object (struct (field $$tag (mut i32)))))
 //│   (type $Unit_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $Unit_ctor (func (result (ref null any))))
-//│   (type $entry1 (func (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
 //│   (type $start (func))
 //│   (global $Unit$inst (export "Unit$inst") (mut (ref null $Unit)) (ref.null $Unit))
 //│   (func $A_init (type $A_init) (param $this (ref null any)) (result (ref null any))
@@ -257,13 +257,13 @@ class B
 //│           (local.get $this)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $Unit_init1 (type $Unit_init) (param $this (ref null any)) (result (ref null any))
+//│   (func $Unit_init (type $Unit_init) (param $this (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
 //│       (nop)
 //│       (return
 //│         (local.get $this))))
-//│   (func $Unit_ctor1 (type $Unit_ctor) (result (ref null any))
+//│   (func $Unit_Unit (type $Unit_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -273,16 +273,16 @@ class B
 //│           (local.get $this))
 //│         (i32.const 3))
 //│       (drop
-//│         (call $Unit_init1
+//│         (call $Unit_init
 //│           (local.get $this)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $start1 (type $start)
+//│   (func $start (type $start)
 //│     (block
 //│       (global.set $Unit$inst
 //│         (ref.cast (ref null $Unit)
-//│           (call $Unit_ctor1)))))
-//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│           (call $Unit_Unit)))))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (block
 //│         (nop)
@@ -294,11 +294,11 @@ class B
 //│   (elem $B_init declare func $B_init)
 //│   (elem $A_ctor declare func $A_ctor)
 //│   (elem $B_ctor declare func $B_ctor)
-//│   (elem $Unit_init1 declare func $Unit_init1)
-//│   (elem $Unit_ctor1 declare func $Unit_ctor1)
-//│   (elem $start1 declare func $start1)
+//│   (elem $Unit_init declare func $Unit_init)
+//│   (elem $Unit_Unit declare func $Unit_Unit)
+//│   (elem $start declare func $start)
 //│   (elem $entry declare func $entry)
-//│   (start $start1))
+//│   (start $start))
 //│ Wasm result:
 //│ = {}
 

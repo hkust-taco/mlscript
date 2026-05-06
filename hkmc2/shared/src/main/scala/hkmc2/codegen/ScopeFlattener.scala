@@ -1,6 +1,8 @@
 package hkmc2
 package codegen
 
+import scala.collection.mutable
+
 import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
 
@@ -21,17 +23,20 @@ class ScopeFlattener extends BlockTransformer(new SymbolSubst):
       super.applyBlock(b)
     case _ => super.applyBlock(b)
   
-  private var scopedSymForCurrentFun: Option[collection.mutable.Set[Symbol]] = None
+  private var scopedSymForCurrentFun: Opt[mutable.Set[Symbol]] = N
   override def applyFunBodyLikeBlock(b: Block): Block =
     val prevScopedSymForCurrentFun = scopedSymForCurrentFun
     val resBlk = b match
       case Scoped(syms, body) =>
-        scopedSymForCurrentFun = Some(collection.mutable.Set.from(syms))
+        val tmp = mutable.Set.from(syms)
+        scopedSymForCurrentFun = S(tmp)
         val newBody = applySubBlock(body)
-        new Scoped(scopedSymForCurrentFun.get, newBody)
+        if (newBody is body) && tmp.sizeCompare(syms) === 0
+        then b
+        else Scoped(tmp, newBody)
       case _ =>
-        val tmp = collection.mutable.Set.empty[Symbol]
-        scopedSymForCurrentFun = Some(tmp)
+        val tmp = mutable.Set.empty[Symbol]
+        scopedSymForCurrentFun = S(tmp)
         val newBlk = applySubBlock(b)
         Scoped(tmp, newBlk)
     scopedSymForCurrentFun = prevScopedSymForCurrentFun
@@ -40,8 +45,8 @@ class ScopeFlattener extends BlockTransformer(new SymbolSubst):
   override def applyScopedBlock(b: Block): Block = b match
     case Scoped(syms, body) =>
       scopedSymForCurrentFun match
-        case None => super.applyScopedBlock(b)
-        case Some(scopedForCurrentFun) =>
+        case N => super.applyScopedBlock(b)
+        case S(scopedForCurrentFun) =>
           scopedForCurrentFun.addAll(syms)
           super.applySubBlock(body)
     case _ => super.applySubBlock(b)

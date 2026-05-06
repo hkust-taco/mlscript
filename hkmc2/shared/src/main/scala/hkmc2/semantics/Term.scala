@@ -52,6 +52,12 @@ enum Annot extends AutoLocated:
     case TailCall => TailCall
     case c: Config => c
 
+object Annot:
+  
+  val Private = Modifier(Keyword.`private`)
+  
+end Annot
+
 type AnySelTerm = AnySel & Resolvable
 
 sealed trait AnySel extends ResolvableImpl:
@@ -901,6 +907,9 @@ final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
   * Records a function that modifies the current compiler configuration. */
 final case class SetConfig(modify: hkmc2.Config => hkmc2.Config) extends Statement
 
+enum Visibility:
+  case Public, Private
+
 /**
  * isMethod: if the term is a method (as opposed to a function)
  */
@@ -964,6 +973,10 @@ final case class TermDefinition(
   require(k is tsym.k)
   def bsym: BlockMemberSymbol = sym
   val owner = tsym.owner
+  def visibility: Visibility = annotations.collectFirst:
+    case Annot.Modifier(Keyword.`private`) => Visibility.Private
+    case Annot.Modifier(Keyword.`public`) => Visibility.Public
+  .getOrElse(Visibility.Public)
   def extraAnnotations: Ls[Annot] = annotations.filter:
     case Annot.Modifier(Keyword.`declare` | Keyword.`abstract`) => false
     case _ => true
@@ -1310,8 +1323,8 @@ extends AutoLocated:
   def foreach(f: Param => Unit): Unit = (params.iterator ++ restParam).foreach(f)
   def paramCountLB: Int = params.length
   def paramCountUB: Bool = restParam.isEmpty
-  def paramSyms = params.map(_.sym) ++ restParam.map(_.sym)
-  def allParams = params ++ restParam.toList
+  lazy val paramSyms = params.map(_.sym) ++ restParam.map(_.sym)
+  lazy val allParams = params ++ restParam.toList
   def subTerms: Ls[Term] = params.flatMap(_.subTerms) ++ restParam.toList.flatMap(_.subTerms)
   def show(using Scope, ShowCfg, Raise): Document =
     flags.show

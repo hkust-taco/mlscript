@@ -92,25 +92,28 @@ sum(10000)
 //│       loop main:
 //│         match pc
 //│           0 =>
-//│             set scrut = ===⁰(n, 0);
-//│             match scrut
-//│               true =>
-//│                 return 0
-//│               else
-//│                 let res;
-//│                 set tmp1 = -⁰(n, 1);
-//│                 set res = sum¹(tmp1);
-//│                 set runtime⁰.stackDepth = curDepth;
-//│                 set runtime⁰.resumeValue = res;
-//│                 match runtime⁰.curEffect﹖
-//│                   null =>
-//│                     set pc = 1;
-//│                     continue main
-//│                   else
-//│                     let res1;
-//│                     return runtime⁰.unwind﹖(sum¹, 1, "StackSafetyLift.mls:70:9", null, null, 1, 1, n, 0)
-//│                 end
+//│             block brk0:
+//│               set scrut = ===⁰(n, 0);
+//│               match scrut
+//│                 true =>
+//│                   return 0
+//│                 else
+//│                   let res;
+//│                   set tmp1 = -⁰(n, 1);
+//│                   set res = sum¹(tmp1);
+//│                   set runtime⁰.stackDepth = curDepth;
+//│                   set runtime⁰.resumeValue = res;
+//│                   match runtime⁰.curEffect﹖
+//│                     null =>
+//│                       break brk0
+//│                     else
+//│                       let res1;
+//│                       return runtime⁰.unwind﹖(sum¹, 1, "StackSafetyLift.mls:70:9", null, null, 1, 1, n, 0)
+//│                   end
+//│               end
+//│             set pc = 1;
 //│             end
+//│         match pc
 //│           1 =>
 //│             set tmp2 = runtime⁰.resumeValue﹖;
 //│             return +⁰(n, tmp2)

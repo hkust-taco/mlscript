@@ -10,3 +10,132 @@
 
 
 
+:sjs
+class A(val x)(val y)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let A1;
+//│ A1 = function A(x) {
+//│   return (y) => {
+//│     return globalThis.Object.freeze(new A.class(x)(y));
+//│   }
+//│ };
+//│ (class A {
+//│   static {
+//│     A1.class = this
+//│   }
+//│   constructor(x) {
+//│     return (y) => {
+//│       this.x = x;
+//│       this.y = y;
+//│       return this;
+//│     }
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A", ["x"]]; 
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+let w = new A(1)
+//│ w = fun w
+
+let h = w(2)
+h.y
+//│ = 2
+//│ h = A(1)
+
+
+let h2 = w(3)
+h2.y
+//│ = 3
+//│ h2 = A(1)
+
+
+h.y
+//│ = 2
+
+
+
+
+// :dl
+:sir
+:soir
+:lift
+// :dl
+// :ssjs
+fun foo(x)(y) = z => x + y + z
+foo(1)(2)(3)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let foo⁰, baseCall, lambda⁰, lambda$⁰;
+//│ define lambda$⁰ as fun lambda$¹(x, y)(z) {
+//│   return lambda¹(x, y, z)
+//│ };
+//│ define lambda⁰ as fun lambda¹(x, y, z) {
+//│   let tmp;
+//│   set tmp = +⁰(x, y);
+//│   return +⁰(tmp, z)
+//│ };
+//│ define foo⁰ as fun foo¹(x)(y) {
+//│   let lambda$here;
+//│   set lambda$here = lambda$¹(x, y);
+//│   return lambda$here
+//│ };
+//│ set baseCall = foo¹(1)(2);
+//│ baseCall(3)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let foo⁰, baseCall, lambda⁰, lambda$⁰;
+//│ define lambda$⁰ as fun lambda$¹(x, y)(z) {
+//│   let x1, y1, z1, inlinedVal, tmp;
+//│   set x1 = x;
+//│   set y1 = y;
+//│   set z1 = z;
+//│   set tmp = +⁰(x1, y1);
+//│   set inlinedVal = +⁰(tmp, z1);
+//│   return inlinedVal
+//│ };
+//│ define foo⁰ as fun foo¹(x)(y) {
+//│   let lambda$here;
+//│   set lambda$here = lambda$¹(x, y);
+//│   return lambda$here
+//│ };
+//│ set baseCall = foo¹(1)(2);
+//│ baseCall(3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 6
+
+
+fun loudly(x) =
+  print("hi", x)
+  x
+
+fun foo(x)(y) =
+  print("hello")
+  z =>
+    print("world")
+    a => print(x, y, z, a)
+
+:sir
+foo(loudly(1))(loudly(2))(loudly(3))(loudly(4))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, baseCall, tmp2, callPrefix, tmp3;
+//│ set tmp = loudly⁰(1);
+//│ set tmp1 = loudly⁰(2);
+//│ set baseCall = foo²(tmp)(tmp1);
+//│ set tmp2 = loudly⁰(3);
+//│ set callPrefix = baseCall(tmp2);
+//│ set tmp3 = loudly⁰(4);
+//│ callPrefix(tmp3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > hi 1
+//│ > hi 2
+//│ > hello
+//│ > hi 3
+//│ > world
+//│ > hi 4
+//│ > 1 2 3 4
+
+
+
+
+
+
+

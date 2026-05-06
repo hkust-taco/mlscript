@@ -210,11 +210,11 @@ fun a() =
 //│     return 1
 //│   };
 //│   c = function c() {
-//│     let d, tmp1, tmp2;
+//│     let d, tmp, tmp1;
 //│     d = function d() { return 2 };
-//│     tmp1 = b();
-//│     tmp2 = d();
-//│     return tmp1 + tmp2
+//│     tmp = b();
+//│     tmp1 = d();
+//│     return tmp + tmp1
 //│   };
 //│   return c
 //│ };
@@ -261,11 +261,11 @@ fun c() =
 //│     return 1
 //│   };
 //│   d = function d() {
-//│     let e, tmp3, tmp4;
+//│     let e, tmp, tmp1;
 //│     e = function e() { return 1 };
-//│     tmp3 = e();
-//│     tmp4 = f();
-//│     return tmp3 + tmp4
+//│     tmp = e();
+//│     tmp1 = f();
+//│     return tmp + tmp1
 //│   };
 //│   return d()
 //│ };
@@ -319,6 +319,6 @@ foo(Foo(42))
 
 :re
 foo(Foo(42))()
-//│ ═══[RUNTIME ERROR] TypeError: tmp6 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: baseCall3 is not a function
 
 
