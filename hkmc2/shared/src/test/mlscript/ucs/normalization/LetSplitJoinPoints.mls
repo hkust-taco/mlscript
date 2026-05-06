@@ -272,6 +272,47 @@ f8(1, 0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "fallback"
 
+// * Join-point threshold scales with the number of references: this fallback
+// * is small enough that two references would not pass threshold 2, but three
+// * surviving references should still be shared.
+:sir
+:patMatConsequentSharingThreshold 2
+fun f8b(x, y, z) = if
+  x is 0 and y is 0 and z is 0 then "all zero"
+  else "fallback"
+f8b(0, 0, 0)
+f8b(0, 0, 1)
+f8b(0, 1, 0)
+f8b(1, 0, 0)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f8b⁰;
+//│ define f8b⁰ as fun f8b¹(x, y, z) {
+//│   block σ:
+//│     match x
+//│       0 =>
+//│         match y
+//│           0 =>
+//│             match z
+//│               0 =>
+//│                 return "all zero"
+//│               else
+//│                 break σ
+//│             end
+//│           else
+//│             break σ
+//│         end
+//│       else
+//│         break σ
+//│     end
+//│   return "fallback"
+//│ };
+//│ do f8b¹(0, 0, 0);
+//│ do f8b¹(0, 0, 1);
+//│ do f8b¹(0, 1, 0);
+//│ f8b¹(1, 0, 0)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = "fallback"
+
 
 // === Normalized IR checks ===
 

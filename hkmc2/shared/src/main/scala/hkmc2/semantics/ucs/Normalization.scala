@@ -104,7 +104,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
 
   private def shouldShareJoinPoint(body: Split, refCount: Int): Bool =
     refCount > 1 && (config.patMatConsequentSharingThreshold match
-      case S(threshold) => body.size * 2 > threshold
+      case S(threshold) => body.size * refCount > threshold
       case N => false)
 
   private def bindSpecializedJoinPoints(split: Split, refs: Set[SplitSymbol])(using spctx: SpecializedSplitCtx): Split =
