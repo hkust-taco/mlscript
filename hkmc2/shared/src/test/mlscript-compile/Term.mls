@@ -27,6 +27,8 @@ class Split with
   constructor
     Cons(val head: Branch, val tail: Split)
     Let(val sym: Symbol, val term: Term, val tail: Split)
+    LetSplit(val sym: Symbol, val body: Split, val tail: Split)
+    UseSplit(val sym: Symbol)
     Else(val default: Term)
     End
 
@@ -119,6 +121,11 @@ fun showSplit(s, ctx, isCont) =
       let nest = ctx.nest
       let freshName = nest.add(sym)
       StrOps.concat of "let ", freshName, " = ", show(term, nest), "\n", showSplit(split, nest, false)
+    LetSplit(sym, body, split) then
+      let nest = ctx.nest
+      let freshName = nest.add(sym)
+      StrOps.concat of "let-split ", freshName, " =\n", indent(showSplit(body, nest, false), "  ", true), "\n", showSplit(split, nest, false)
+    UseSplit(sym) then StrOps.concat of "$", ctx.get(sym)
     Else(term) then
       if isCont then show(term, ctx)
       else StrOps.concat of "else ", show(term, ctx)
@@ -169,4 +176,3 @@ fun codegen(t, file) =
   let newData = StrOps.concat of dependencies.join("\n"), "\n", code
   if newData != originData do
     fs.writeFileSync(file, newData, "utf8")
-

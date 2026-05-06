@@ -974,14 +974,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       val l = loweringCtx.registerTempSymbol(N)
       Assign(l, r, setupTerm("Else", Value.Ref(l) :: Nil)(k))
     case Split.End => setupTerm("End", Nil)(k)
-    case Split.LetSplit(sym, tail) =>
-      quoteSplit(sym.body): r1 =>
-        val l1 = loweringCtx.registerTempSymbol(N)
-        blockBuilder.assign(l1, r1)
-          .chain(b => quoteSplit(tail)(r2 => Assign(loweringCtx.registerTempSymbol(N), r2, b)))
-          .rest(setupTerm("LetSplit", Value.Ref(l1) :: Nil)(k))
+    case Split.LetSplit(sym, tail) => setupSymbol(sym): r1 =>
+      loweringCtx.collectScopedSym(sym)
+      val l1, l2 = loweringCtx.registerTempSymbol(N)
+      blockBuilder.assign(sym, r1)
+        .chain(b => quoteSplit(sym.body)(r2 => Assign(l1, r2, b)))
+        .chain(b => quoteSplit(tail)(r3 => Assign(l2, r3, b)))
+        .rest(setupTerm("LetSplit", Value.Ref(sym, N) :: Value.Ref(l1) :: Value.Ref(l2) :: Nil)(k))
     case Split.UseSplit(sym) =>
-      setupTerm("UseSplit", Nil)(k)
+      setupTerm("UseSplit", Value.Ref(sym, N) :: Nil)(k)
 
   lazy val setupFilename: Path =
     val state = summon[State]
@@ -1469,4 +1470,3 @@ object MergeMatchArmTransformer extends BlockTransformer(SymbolSubst.Id):
               dfltRewritten.fold(restRewritten)(Begin(_, restRewritten)) |> some, rest)
       case _ => m
     case b => b
-
