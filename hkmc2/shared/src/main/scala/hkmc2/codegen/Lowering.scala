@@ -1071,8 +1071,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case sc: SetConfig => sc.modify
     .foldLeft(identity[Config]): (acc, modify) =>
       cfg => modify(acc(cfg))
-    val effectiveConfig = configModify(config)
-    
+    given effectiveConfig: Config = configModify(config)
+
     // * Update mutable flags to reflect the effective config before block lowering
     lowerHandlers = effectiveConfig.effectHandlers.isDefined
     lift = effectiveConfig.liftDefns.isDefined
@@ -1090,17 +1090,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       effectiveConfig.deforest match
         case None => desug
         case Some(dCfg) =>
-          /*
-          // * For some weird reason (Scala bug?),
-          // * the version below leads to a stack overflows during its initialization
-          given TraceLogger with
-            override def doTrace: Bool = dCfg.debug
-            override def emitDbg(str: Str): Unit = outterTl.emitDbg(s"deforest > $str")
-          */
-          (new TraceLogger:
-            override def doTrace: Bool = dCfg.debug
-            override def emitDbg(str: Str): Unit = outterTl.emitDbg(s"deforest > $str")
-          ).givenIn:
+          flowAnalysis.FlowAnalysis.mkTraceLogger(dCfg.config, "deforest > ", outterTl).givenIn:
             deforest.Deforest(Program(imps.map(imp => imp.sym -> imp.str), desug)).main
     
     val handlerPaths = new HandlerPaths

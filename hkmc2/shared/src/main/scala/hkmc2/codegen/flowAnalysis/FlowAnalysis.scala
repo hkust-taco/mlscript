@@ -12,9 +12,14 @@ import scala.collection.mutable.{Set as MutSet, Map as MutMap, LinkedHashMap, Li
 
 
 object FlowAnalysis:
+  object TraceScope:
+    val nonAffineSyms = "flow-analysis/non-affine"
+    val accumulatorSyms = "flow-analysis/accumulator"
+
   class State:
     val resultToResultId = new java.util.IdentityHashMap[Result, Uid[Result]].asScala
     val resultIdToResult = mutable.Map.empty[Uid[Result], Result]
+    val stratVarIdToState = mutable.Map.empty[StratVarId, StratVarState]
     object ResultUidState extends Uid.Result.State
   
     extension (instId: InstantiationId)
@@ -45,11 +50,30 @@ object FlowAnalysis:
         case Some(id) => id
   
   
-  def apply(pgrm: Program, mono: Bool)(using TraceLogger, Elaborator.State, Raise) =
+  def apply(
+    pgrm: Program,
+    mono: Bool,
+    nonAffineTracking: Bool,
+    accumulatorTracking: Bool,
+  )(using TraceLogger, Elaborator.State, Raise) =
     given State = new State
     val pre = new FlowPreAnalyzer(pgrm)
-    val constrCol = new FlowConstraintsCollector(pre, mono)
+    val constrCol = new FlowConstraintsCollector(pre, mono, nonAffineTracking, accumulatorTracking)
     new FlowConstraintSolver(constrCol)
+
+  def mkTraceLogger(
+    cfg: Config.FlowAnalysisConfig,
+    prefix: Str,
+    outerTl: TL,
+  ): TraceLogger =
+    new TraceLogger(using outerTl.debugPrinter):
+      override def doTrace: Bool = scope match
+        case S(TraceScope.nonAffineSyms) => cfg.logNonAffine
+        case S(TraceScope.accumulatorSyms) => cfg.logAccumulator
+        case _ => cfg.debug
+
+      override def emitDbg(str: Str): Unit =
+        outerTl.emitDbg(s"$prefix$str")
     
 end FlowAnalysis
 
@@ -59,6 +83,7 @@ type InstantiationId = Ls[ResultId]
 type CtorCls = ClassLikeSymbol | Int
 type SelField = TermSymbol | Int
 type FunId = (funSym: Symbol, whichParamList: Int) | ResultId
+type OriginId = ResultId | FunId
 
 object RefLike:
   private def classCtorSymbol(sym: Symbol)(using Elaborator.State): Opt[ClassSymbol | ModuleOrObjectSymbol] =
@@ -149,13 +174,17 @@ class StratVarState(val uid: StratVarId, val name: Str, val generatedForFun: Opt
   override def toString(): String = s"${if name.isEmpty() then "$stratvar" else name}@${uid}@$generatedForFun"
 
 object StratVarState:
-  def freshVar(nme: String)(using vuid: Uid.StratVar.State): StratVarState =
+  def freshVar(nme: String)(using vuid: Uid.StratVar.State, fState: FlowAnalysis.State): StratVarState =
     val newId = vuid.nextUid
-    StratVarState(newId, nme, N)
-  def freshVar(nme: String, generatedForFun: TermSymbol)(using vuid: Uid.StratVar.State): StratVarState =
+    val stratVar = StratVarState(newId, nme, N)
+    fState.stratVarIdToState(newId) = stratVar
+    stratVar
+  def freshVar(nme: String, generatedForFun: TermSymbol)(using vuid: Uid.StratVar.State, fState: FlowAnalysis.State): StratVarState =
     val newId = vuid.nextUid
-    StratVarState(newId, s"${nme}_for_${generatedForFun.nme}", S(generatedForFun))
-  def freshVar(nme: String, forFunOpt: Opt[TermSymbol])(using vuid: Uid.StratVar.State): StratVarState =
+    val stratVar = StratVarState(newId, s"${nme}_for_${generatedForFun.nme}", S(generatedForFun))
+    fState.stratVarIdToState(newId) = stratVar
+    stratVar
+  def freshVar(nme: String, forFunOpt: Opt[TermSymbol])(using vuid: Uid.StratVar.State, fState: FlowAnalysis.State): StratVarState =
     forFunOpt match
     case None => freshVar(nme)
     case Some(forFun) => freshVar(nme, forFun)
@@ -167,19 +196,31 @@ trait StratVar(s: StratVarState):
   def uid = s.uid
 
 sealed abstract class ProdStrat
+sealed abstract class ConsStrat
+
+sealed trait StratWithOrigin[A <: OriginId]:
+  def exprId: A
+  def instantiationId: Opt[InstantiationId]
+  def concreteId: ConcreteId[A] = ConcreteId(exprId, instantiationId.get)
+
+sealed trait MarkerProdStrat extends ProdStrat
+sealed trait MarkerConsStrat extends ConsStrat
+
 case class ProdVar(s: StratVarState) extends ProdStrat with StratVar(s)
+
 class ProdFun(
-  val funId: FunId,
+  val exprId: FunId,
   val instantiationId: Opt[InstantiationId]
 )(
   val params: Ls[ConsStrat],
   val restParam: Opt[ConsStrat],
-  val res: ProdStrat
-) extends ProdStrat:
+  val res: ProdStrat,
+  val capturedVarUpperbound: ProdVar
+) extends ProdStrat with StratWithOrigin[FunId]:
   override def toString(): String =
     s"(${params.map(_.toString()).mkString(", ")}) -> ${res.toString()}"
 
-case object NoProd extends ProdStrat
+case object NoProd extends MarkerProdStrat
 
 class Ctor(
   val exprId: ResultId,
@@ -187,23 +228,33 @@ class Ctor(
 )(
   val ctor: CtorCls,
   val args: Ls[SelField -> ProdStrat]
-) extends ProdStrat with ToCtorDtorId(exprId, instantiationId):
+) extends ProdStrat with StratWithOrigin[ResultId]:
   override def toString(): String =
     s"$ctor(${args.map(_.toString()).mkString(", ")})"
 
-sealed abstract class ConsStrat
+
 case class ConsVar(s: StratVarState) extends ConsStrat with StratVar(s)
+
 class ConsFun(
   val exprId: ResultId,
   val instantiationId: Opt[InstantiationId]
 )(
   val params: Ls[ProdStrat],
   val res: ConsStrat
-) extends ConsStrat:
+) extends ConsStrat with StratWithOrigin[ResultId]:
   override def toString(): String =
     s"(${params.map(_.toString()).mkString(", ")}) -> ${res.toString()}"
 
-case object NoCons extends ConsStrat
+case object NoCons extends MarkerConsStrat
+
+case object NonAffine extends MarkerConsStrat
+
+case object Accumulator extends MarkerConsStrat
+
+case class IntoParam(s: StratVarState) extends ConsStrat
+
+case class PossibleAccumulator(s: StratVarState) extends ConsStrat
+
 
 class FieldSel(
   val exprId: ResultId,
@@ -212,18 +263,18 @@ class FieldSel(
   val field: SelField,
   val selectsFrom: CtorCls,
   val consVar: ConsVar
-) extends ConsStrat with ToCtorDtorId(exprId, instantiationId)
+) extends ConsStrat with StratWithOrigin[ResultId]
 
 class Dtor(
-  val scrutExprId: ResultId,
+  val exprId: ResultId,
   val instantiationId: Opt[InstantiationId]
-) extends ConsStrat with ToCtorDtorId(scrutExprId, instantiationId)
+) extends ConsStrat with StratWithOrigin[ResultId]
 
-sealed trait ToCtorDtorId(exprId: ResultId, instId: Opt[InstantiationId]):
-  def toCtorDtorId = CtorDtorId(exprId, instId.get)
+case class ConcreteId[A <: OriginId](exprId: A, instId: InstantiationId):
+  def pp(using FlowAnalysis.State): Str = exprId match
+    case (sym: Symbol, idx: Int) => s"${sym.nme}#$idx"
+    case r: ResultId => s"${r.getResult}"
 
-case class CtorDtorId(exprId: ResultId, instId: InstantiationId):
-  def pp(using FlowAnalysis.State) = s"${exprId.getResult}"
 
 type ConcreteProducer = Ctor
 type ConcreteConsumer = Dtor | FieldSel
@@ -239,12 +290,21 @@ class FlowPreAnalyzer(val pgrm: Program)(using
   given stratVarUidState: Uid.StratVar.State = new Uid.StratVar.State
   import StratVarState.freshVar
   
+  private case class CaptureTrackingInfo(
+    locallyDefined: MutSet[Symbol],
+    captured: LinkedHashSet[Symbol],
+    outer: Opt[CaptureTrackingInfo]
+  )
+  private var currentCaptureFrame: Opt[CaptureTrackingInfo] = N
+  private var currentAffinityCount = res.affinityCounts
+  
+  
   ctxTracker.inTopLvl:
     applyBlock(pgrm.main)
   
   object res:
     val primitiveStratVar = StratVarState.freshVar("unknown")
-    val rootFunDefns = LinkedHashSet.empty[FunDefn]
+    val rootFunDefns = LinkedHashMap.empty[TermSymbol, FunDefn]
     val funSymToFunDefn = MutMap.empty[TermSymbol, FunDefn]
     val matchScrutToMatchBlock = MutMap.empty[ResultId, Match]
     val labelSymToLabelBlk = MutMap.empty[Symbol, Label]
@@ -253,13 +313,22 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     val selToCtxOfSel = MutMap.empty[ResultId, Ls[InCtx]]
     val modSymToBms = MutMap.empty[Symbol, BlockMemberSymbol]
     val generatedProdVars = MutMap.empty[Symbol, StratVarState]
-    lazy val rootFunSyms: collection.Set[TermSymbol] = rootFunDefns.map(_.dSym).toSet
+    val capturedVars = MutMap.empty[TermSymbol | ResultId, LinkedHashSet[Symbol]]
+    val affinityCounts = MutMap.empty[Symbol, Int].withDefaultValue(0)
     def getEnclosingMatchesForSel(selExprId: ResultId) =
       selToCtxOfSel.get(selExprId).fold(Iterator.empty):
         _.iterator
         .collect:
           case InCtx.MtchBody(m, cse) => m.scrut.uid -> cse
-        
+    lazy val nonAffineSyms: Set[Symbol] = affinityCounts
+      .iterator
+      .collect:
+        case (sym, n) if n > 1 => sym
+      .filterNot:
+        case ts: TermSymbol => rootFunDefns.contains(ts)
+        case _ => false
+      .toSet
+
   end res
   
   enum InCtx:
@@ -270,6 +339,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     case ClsPreCtor(cls: ClsLikeDefn)
     case ClsCtor(cls: ClsLikeDefn)
     case Fn(f: FunDefn)
+    case Lam(lam: Lambda)
     case LblBody(l: Label)
     case MtchBody(m: Match, cse: Opt[CtorCls])
     case BegnBody(b: Begin)
@@ -311,23 +381,33 @@ class FlowPreAnalyzer(val pgrm: Program)(using
       withCtx(InCtx.Fn(fun))(body):
         res.funSymToFunDefn(fun.dSym) = fun
         if isTopLvlLikeFunCtx(ctx) then
-          res.rootFunDefns.add(fun)
+          res.rootFunDefns.addOne(fun.dSym -> fun)
     
     inline def inLabelBody(label: Label)(inline body: => Any) =
       withCtx(InCtx.LblBody(label))(body):
         res.labelSymToLabelBlk.addOne(label.label -> label)
         res.labelSymToCtxOfLabel.addOne(label.label -> ctx)
     
-    inline def inMatchBody(m: Match, cse: Opt[CtorCls])(inline body: => Any) =
+    inline def inMatchBody(m: Match, cse: Opt[CtorCls])(inline body: => Any): Unit =
       withCtx(InCtx.MtchBody(m, cse))(body):
         res.matchScrutToMatchBlock.addOne(m.scrut.uid -> m)
         res.matchScrutToCtxOfMatch.addOne(m.scrut.uid -> ctx)
+    
+    def isEnclosingMatchScrutSym(sym: Symbol): Boolean =
+      ctx.exists:
+        case InCtx.MtchBody(m, _) => m.scrut match
+          case Value.Ref(s, disamb) => disamb.getOrElse(s) is sym
+          case _ => false
+        case _ => false
     
     inline def inBeginBody(begin: Begin)(inline body: => Any) =
       withCtx(InCtx.BegnBody(begin))(body)()
     
     inline def inScoped(scpd: Scoped)(inline body: => Any) =
       withCtx(InCtx.Scped(scpd))(body)()
+    
+    inline def inLam(lam: Lambda)(inline body: => Any) =
+      withCtx(InCtx.Lam(lam))(body)()
     
     inline def inTopLvl(inline body: => Any) =
       assert(ctx.isEmpty)
@@ -350,26 +430,80 @@ class FlowPreAnalyzer(val pgrm: Program)(using
   
   end ctxTracker
   
+  private def recordAffinityUse(l: Symbol, disamb: Opt[DefinitionSymbol[?]]): Unit =
+    def isClassCtorSym(sym: Symbol): Bool =
+      sym.asTrm.exists: tSym =>
+        tSym.owner
+          .flatMap(_.asCls)
+          .flatMap(_.defn)
+          .flatMap(_.ctorSym)
+          .exists(_ is tSym)
+    val processedSymbol =
+      disamb.getOrElse(l) match
+      case _: NoSymbol | _: LabelSymbol | _: BuiltinSymbol => N
+      case _: ClassSymbol | _: ModuleOrObjectSymbol | _: PatternSymbol | _: TypeAliasSymbol => N
+      case _: TopLevelSymbol => N
+      case sym: TermSymbol =>
+        if isClassCtorSym(sym) then N else S(sym)
+      case bms: BlockMemberSymbol =>
+        if bms.asCls.nonEmpty || bms.asModOrObj.nonEmpty || bms.asPat.nonEmpty || bms.asAls.nonEmpty
+        then N
+        else
+          val trmOrBms = bms.asTrm.getOrElse(bms)
+          if isClassCtorSym(trmOrBms) then N else S(trmOrBms)
+      case sym => S(sym)
+    processedSymbol.foreach: sym =>
+      currentAffinityCount(sym) = currentAffinityCount(sym) + 1
+
+  private def recordRefInCaptures(l: Symbol): Unit =
+    currentCaptureFrame.foreach: frame =>
+      if !frame.locallyDefined.contains(l) then
+        frame.captured += l
+
+  private def inCaptureFrame(owner: TermSymbol | ResultId, locallyDefined: MutSet[Symbol])(body: => Unit): Unit =
+    val frame = CaptureTrackingInfo(locallyDefined, LinkedHashSet.empty, currentCaptureFrame)
+    currentCaptureFrame = S(frame)
+    body
+    currentCaptureFrame = frame.outer
+    currentCaptureFrame.foreach: outer =>
+      outer.captured ++= frame.captured.iterator.filterNot(outer.locallyDefined.contains)
+    res.capturedVars(owner) = frame.captured
+  
   override def applyBlock(b: Block): Unit = b match
     case scpd@Scoped(syms, body) =>
       for s <- syms do
         s match
         case s: BlockMemberSymbol => ()
         case _ => ctxTracker.registerStratVar(s, s.nme)
+      val CaptureTrackingInfo = currentCaptureFrame
+      CaptureTrackingInfo.foreach(_.locallyDefined ++= syms)
       ctxTracker.inScoped(scpd):
         applyBlock(body)
+      CaptureTrackingInfo.foreach(_.locallyDefined --= syms)
     case m@Match(scrut, arms, dflt, rest) =>
       applyPath(scrut)
+      val outerAffinityCount = currentAffinityCount
+      val mergedBranchUsage = MutMap.empty[Symbol, Int].withDefaultValue(0)
       for (cse, body) <- arms do
         val cseCls = cse match
           case Case.Cls(cls, _) => S(cls)
           case Case.Tup(n, false) => S(n)
           case _ => N
+        currentAffinityCount = MutMap.empty[Symbol, Int].withDefaultValue(0)
         ctxTracker.inMatchBody(m, cseCls):
           applyBlock(body)
+        for (sym, n) <- currentAffinityCount do
+          mergedBranchUsage(sym) = mergedBranchUsage(sym).max(n)
+        currentAffinityCount = outerAffinityCount
       for dft <- dflt do
+        currentAffinityCount = MutMap.empty[Symbol, Int].withDefaultValue(0)
         ctxTracker.inMatchBody(m, N):
           applyBlock(dft)
+        for (sym, n) <- currentAffinityCount do
+          mergedBranchUsage(sym) = mergedBranchUsage(sym).max(n)
+        currentAffinityCount = outerAffinityCount
+      for (sym, n) <- mergedBranchUsage do
+        currentAffinityCount(sym) = currentAffinityCount(sym) + n
       applyBlock(rest)
     case Return(res, implct) => applyResult(res)
     case lbl@Label(label, loop, body, rest) =>
@@ -381,6 +515,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
         applyBlock(sub)
       applyBlock(rest)
     case Assign(lhs, rhs, rest) =>
+      recordRefInCaptures(lhs)
       applyResult(rhs)
       applyBlock(rest)
     case Define(defn, rest) =>
@@ -434,21 +569,43 @@ class FlowPreAnalyzer(val pgrm: Program)(using
       applyPath(qual); applyPath(fld)
     case p@TrackableFieldSelect(qual, _ -> _) =>
         res.selToCtxOfSel.addOne(p.uid -> ctxTracker.getAllCtx)
-        applyPath(qual)
+        qual match
+          case Value.Ref(l, disamb)
+            if ctxTracker.isEnclosingMatchScrutSym(disamb.getOrElse(l)) =>
+              recordRefInCaptures(disamb.getOrElse(l))
+          case _ => applyPath(qual)
     case p: Select =>
       super.applyPath(p)
     case v: Value => applyValue(v)
   
   override def applyValue(v: Value): Unit = v match
-    case Value.Ref(l, disamb) => ()
+    case Value.Ref(l, disamb) =>
+      recordRefInCaptures(disamb.getOrElse(l))
+      recordAffinityUse(l, disamb)
     case Value.This(sym) => ()
     case Value.Lit(lit) => ()
   
   override def applyFunDefn(fun: FunDefn): Unit =
+    val scope = MutSet.empty[Symbol]
+    scope += fun.sym
+    scope += fun.dSym
+    for pl <- fun.params do
+      pl.params.foreach(p => scope += p.sym)
+      pl.restParam.foreach(p => scope += p.sym)
     ctxTracker.inFun(fun):
-      ctxTracker.registerStratVar(fun.dSym, fun.sym.nme)
-      fun.params.foreach(applyParamList)
-      applyBlock(fun.body)
+      inCaptureFrame(fun.dSym, scope):
+        ctxTracker.registerStratVar(fun.dSym, fun.sym.nme)
+        fun.params.foreach(applyParamList)
+        applyBlock(fun.body)
+  
+  override def applyLam(lam: Lambda): Unit =
+    val scope = MutSet.empty[Symbol]
+    lam.params.params.foreach(p => scope += p.sym)
+    lam.params.restParam.foreach(p => scope += p.sym)
+    ctxTracker.inLam(lam):
+      inCaptureFrame(lam.uid, scope):
+        applyParamList(lam.params)
+        applyBlock(lam.body)
   
   override def applyValDefn(defn: ValDefn): Unit =
     ctxTracker.registerStratVar(defn.tsym, defn.tsym.nme)
@@ -494,7 +651,12 @@ class FlowPreAnalyzer(val pgrm: Program)(using
   
 end FlowPreAnalyzer
 
-class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool):
+class FlowConstraintsCollector(
+  val preAnalyzer: FlowPreAnalyzer,
+  val mono: Bool,
+  val nonAffineTracking: Bool,
+  val accumulatorTracking: Bool,
+):
   given FlowPreAnalyzer = preAnalyzer
   given Uid.StratVar.State = preAnalyzer.stratVarUidState
   given Raise = preAnalyzer.raise
@@ -527,17 +689,17 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
       val sccInOrder: Ls[Ls[TermSymbol]] =
         import algorithms.partitionScc
         var edges = Ls.empty[(TermSymbol, TermSymbol)]
-        for f <- preAnalyzer.res.rootFunDefns do
+        for (_, f) <- preAnalyzer.res.rootFunDefns do
           object CollectAllReferredFun extends BlockTraverser:
             override def applyPath(p: Path) = p match
               case FunRef(callee) =>
-                if preAnalyzer.res.rootFunDefns.exists(_.dSym is callee) then
+                if preAnalyzer.res.rootFunDefns.contains(callee) then
                   edges = (f.dSym -> callee) :: edges
               case _ => ()
           CollectAllReferredFun.applyBlock(f.body)
         partitionScc(
           edges,
-          preAnalyzer.res.rootFunDefns.map(_.dSym)
+          preAnalyzer.res.rootFunDefns.keys
         ).reverse
       end sccInOrder
       for
@@ -547,7 +709,8 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
 
       // compute strat scheme for each scc group
       for groupedFuns <- sccInOrder do
-        (new ConstraintsCollector(Some(funToSccRep(groupedFuns.head).get))).givenIn: cc ?=>
+        val groupRep = funToSccRep(groupedFuns.head).get
+        (new ConstraintsCollector(Some(groupRep))).givenIn: cc ?=>
           for funSym <- groupedFuns do
             val fun = preAnalyzer.res.funSymToFunDefn(funSym)
             val thisFunVar = generatedProdVars(fun.dSym)
@@ -557,6 +720,12 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
               fun.body,
               (fun.dSym, -1))
             cc.constrain(funProdStrat, thisFunVar.asConsStrat)
+          if nonAffineTracking then
+            for
+              sym <- preAnalyzer.res.nonAffineSyms
+              stratVar <- preAnalyzer.res.generatedProdVars.get(sym)
+              if stratVar.generatedForFun.flatMap(funToSccRep).contains(groupRep)
+            do cc.constrain(stratVar.asProdStrat, NonAffine)
           for funSym <- groupedFuns do
             funsToProdStratScheme(funSym) = ProdStratScheme(generatedProdVars(funSym), cc.constraints)
     end if
@@ -567,15 +736,25 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
       cc.constrain(NoProd, preAnalyzer.res.primitiveStratVar.asConsStrat)
       processBlock(preAnalyzer.pgrm.main)(using cc, NoCons)
 
+      // emit NonAffine for non-affine syms that don't belong to any scc:
+      // in mono mode there are no SCC collectors, so all go here;
+      // in poly mode, only syms with no root fun are emitted here,
+      // the rest were emitted inside their owning SCC's scheme collector above
+      if nonAffineTracking then
+        for
+          sym <- preAnalyzer.res.nonAffineSyms
+          stratVar <- preAnalyzer.res.generatedProdVars.get(sym)
+          if mono || stratVar.generatedForFun.isEmpty
+        do cc.constrain(stratVar.asProdStrat, NonAffine)
+
       if mono then
         for
-          fun <- preAnalyzer.res.rootFunDefns
+          (_, fun) <- preAnalyzer.res.rootFunDefns
           if fun.visibility is Visibility.Public
         do
           cc.constrain(generatedProdVars(fun.dSym).asProdStrat, NoCons)
       else
-        for fun <- preAnalyzer.res.rootFunDefns do
-          val funSym = fun.dSym
+        for (funSym, fun) <- preAnalyzer.res.rootFunDefns do
           val pScheme = funsToProdStratScheme(funSym)
           val synthesizedRefUid =
             Value.Ref(preAnalyzer.res.funSymToFunDefn(funSym).sym, S(funSym)).uid
@@ -602,10 +781,11 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
       def duplicateProdStrat(s: ProdStrat): ProdStrat = s match
         case ProdVar(s) => duplicateVarState(s).asProdStrat
         case p: ProdFun =>
-          new ProdFun(p.funId, updateInstantiationId(p.instantiationId))(
+          new ProdFun(p.exprId, updateInstantiationId(p.instantiationId))(
             p.params.map(duplicateConsStrat),
             p.restParam.map(duplicateConsStrat),
-            duplicateProdStrat(p.res))
+            duplicateProdStrat(p.res),
+            duplicateVarState(p.capturedVarUpperbound.s).asProdStrat)
         case NoProd => NoProd
         case c: Ctor => new Ctor(c.exprId, updateInstantiationId(c.instantiationId))(
           c.ctor,
@@ -617,58 +797,68 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
             c.params.map(duplicateProdStrat),
             duplicateConsStrat(c.res))
         case NoCons => NoCons
+        case NonAffine => NonAffine
+        case Accumulator => Accumulator
+        case PossibleAccumulator(s) => PossibleAccumulator(duplicateVarState(s))
+        case IntoParam(s) => IntoParam(duplicateVarState(s))
         case fSel: FieldSel =>
           new FieldSel(fSel.exprId, updateInstantiationId(fSel.instantiationId))(
             fSel.field,
             fSel.selectsFrom,
             duplicateVarState(fSel.consVar.s).asConsStrat)
-        case dtor: Dtor => new Dtor(dtor.scrutExprId, updateInstantiationId(dtor.instantiationId))
+        case dtor: Dtor => new Dtor(dtor.exprId, updateInstantiationId(dtor.instantiationId))
       val newProd = duplicateVarState(pScheme.s).asProdStrat
       pScheme.constraints.foreach: (p, c) =>
         cc.constrain(duplicateProdStrat(p), duplicateConsStrat(c))
       newProd
     
-    enum OpaqueBoundary:
-      case Input, Output, Both
-    
     extension (v: StratVarState)
-      def constrainOpaque(boundary: OpaqueBoundary)(using cc: ConstraintsCollector): Unit =
-        boundary match
-        case OpaqueBoundary.Input => cc.constrain(NoProd, v.asConsStrat)
-        case OpaqueBoundary.Output => cc.constrain(v.asProdStrat, NoCons)
-        case OpaqueBoundary.Both =>
-          cc.constrain(NoProd, v.asConsStrat)
-          cc.constrain(v.asProdStrat, NoCons)
+      def constrainOpaque(using cc: ConstraintsCollector): Unit =
+        cc.constrain(NoProd, v.asConsStrat)
+        cc.constrain(v.asProdStrat, NoCons)
     
     def mkFunProdStrat(
       params: Ls[ParamList],
-      rootFunId: FunId,
-      res: ProdStrat
+      funLamId: FunId,
+      res: ProdStrat,
+      capturedSyms: collection.Set[Symbol]
     )(using cc: ConstraintsCollector): ProdStrat =
       def paramListFunId(whichParamList: Int): FunId =
-        rootFunId match
-          case (sym: Symbol, _) => (sym, whichParamList)
+        funLamId match
+          case (sym: Symbol, -1) => (sym, whichParamList)
           case lambdaExprId: ResultId =>
             assert(whichParamList == 0)
             lambdaExprId
       params.zipWithIndex.foldRight[ProdStrat](res):
         case ((ps, whichParamList), acc) =>
-          new ProdFun(paramListFunId(whichParamList), cc.instId)(
+          val plFunId = paramListFunId(whichParamList)
+          val capUB = freshVar(s"cap_ub_$plFunId", cc.forFunGroup).asProdStrat
+          for
+            v <- capturedSyms
+            capturedSymStrat <- generatedProdVars.get(v)
+          do
+            cc.constrain(capturedSymStrat.asProdStrat, capUB.asConsStrat)
+          new ProdFun(plFunId, cc.instId)(
             ps.params.map(p => generatedProdVars(p.sym).asConsStrat),
             ps.restParam.map(p => generatedProdVars(p.sym).asConsStrat),
-            acc)
+            acc,
+            capUB)
     
     def processHandleableFun(
       resName: String,
       params: Ls[ParamList],
       body: Block,
-      rootFunId: FunId
+      funLamId: FunId
     )(using cc: ConstraintsCollector): ProdStrat =
       val res = freshVar(resName, cc.forFunGroup)
       params.foreach:
         _.restParam.foreach: p =>
-          generatedProdVars(p.sym).constrainOpaque(OpaqueBoundary.Both)
-      val funProdStrat = mkFunProdStrat(params, rootFunId, res.asProdStrat)
+          generatedProdVars(p.sym).constrainOpaque
+      val capturedSyms = funLamId match
+        case (sym: TermSymbol, _) => preAnalyzer.res.capturedVars(sym)
+        case lamExprId: ResultId => preAnalyzer.res.capturedVars(lamExprId)
+        case other => lastWords(s"unexpected funLamId shape: $other")
+      val funProdStrat = mkFunProdStrat(params, funLamId, res.asProdStrat, capturedSyms)
       processBlock(body)(using cc, res.asConsStrat)
       funProdStrat
     
@@ -676,7 +866,7 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
       cc.constrain(processResult(r), NoCons)
     
     def processHandleableFunDefn(fun: FunDefn)(using cc: ConstraintsCollector): Unit =
-      if mono || !preAnalyzer.res.rootFunSyms(fun.dSym) then
+      if mono || !preAnalyzer.res.rootFunDefns.contains(fun.dSym) then
         val funProdStrat = processHandleableFun(
           s"${fun.dSym.nme}_res",
           fun.params,
@@ -685,17 +875,17 @@ class FlowConstraintsCollector(val preAnalyzer: FlowPreAnalyzer, val mono: Bool)
         cc.constrain(funProdStrat, generatedProdVars(fun.dSym).asConsStrat)
     
     def processClsLikeDefn(cls: ClsLikeDefn)(using cc: ConstraintsCollector): Unit =
-      cls.privateFields.foreach(sym => generatedProdVars(sym).constrainOpaque(OpaqueBoundary.Both))
+      cls.privateFields.foreach(sym => generatedProdVars(sym).constrainOpaque)
       cls.publicFields.foreach: (_, tsym) =>
-        generatedProdVars(tsym).constrainOpaque(OpaqueBoundary.Both)
+        generatedProdVars(tsym).constrainOpaque
       cls.methods.foreach: fun =>
         processBlock(fun.body)(using cc, NoCons)
       processBlock(cls.preCtor)(using cc, NoCons)
       processBlock(cls.ctor)(using cc, NoCons)
       cls.companion.foreach: mod =>
-        mod.privateFields.foreach(sym => generatedProdVars(sym).constrainOpaque(OpaqueBoundary.Both))
+        mod.privateFields.foreach(sym => generatedProdVars(sym).constrainOpaque)
         mod.publicFields.foreach: (_, tsym) =>
-          generatedProdVars(tsym).constrainOpaque(OpaqueBoundary.Both)
+          generatedProdVars(tsym).constrainOpaque
         mod.methods.foreach: fun =>
           processHandleableFunDefn(fun)
         processBlock(mod.ctor)(using cc, NoCons)
@@ -844,39 +1034,55 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   given fState: FlowAnalysis.State = collector.fState
   given eState: Elaborator.State = collector.eState
   given preAnalyzer: FlowPreAnalyzer = collector.preAnalyzer
+  given Raise = preAnalyzer.raise
   
   
-  val ctorDests = LinkedHashMap.empty[ConcreteProducer, Set[ConcreteConsumer | NoCons.type]].withDefaultValue(Set.empty)
-  val dtorSrcs = LinkedHashMap.empty[ConcreteConsumer, Set[ConcreteProducer | NoProd.type]].withDefaultValue(Set.empty)
-  val funDests = LinkedHashMap.empty[ProdFun, Set[ConsFun | NoCons.type]].withDefaultValue(Set.empty)
-  val funSrcs = LinkedHashMap.empty[ConsFun, Set[ProdFun | NoProd.type]].withDefaultValue(Set.empty)
+  val ctorDests = LinkedHashMap.empty[ConcreteProducer, Set[ConcreteConsumer | MarkerConsStrat]].withDefaultValue(Set.empty)
+  val dtorSrcs = LinkedHashMap.empty[ConcreteConsumer, Set[ConcreteProducer | MarkerProdStrat]].withDefaultValue(Set.empty)
+  val funDests = LinkedHashMap.empty[ProdFun, Set[ConsFun | MarkerConsStrat]].withDefaultValue(Set.empty)
+  val funSrcs = LinkedHashMap.empty[ConsFun, Set[ProdFun | MarkerProdStrat]].withDefaultValue(Set.empty)
   
   val upperBounds = MutMap.empty[StratVarId, Ls[ConsStrat]].withDefaultValue(Nil)
   val lowerBounds = MutMap.empty[StratVarId, Ls[ProdStrat]].withDefaultValue(Nil)
   
+  private def logNonAffineSyms: Unit =
+    tl.scoped(FlowAnalysis.TraceScope.nonAffineSyms):
+      tl.log(">>> non-affine syms >>>")
+      val outputRes =
+        for
+          case (uid, bounds) <- upperBounds
+          if bounds.contains(NonAffine)
+          stratVar <- fState.stratVarIdToState.get(uid)
+        yield s"${stratVar.name}@$uid"
+      for nonAffine <- outputRes.toSortedSet do
+        tl.log(nonAffine)
+      tl.log("<<< non-affine syms <<<")
+  
+  private def logAccumulatorSyms: Unit =
+    tl.scoped(FlowAnalysis.TraceScope.accumulatorSyms):
+      tl.log(">>> accumulator syms >>>")
+      def showAccumulatorSym(uid: StratVarId, bounds: Ls[ConsStrat]): Opt[Str] =
+        bounds
+          .collectFirst:
+            case PossibleAccumulator(s) if s.uid === uid => s.name
+            case IntoParam(s) if s.uid === uid => s.name
+          .map: nme =>
+            s"$nme@$uid"
+      val outputRes =
+        for
+          case (uid, bounds) <- upperBounds
+          if bounds.contains(Accumulator)
+          accumulatorSym <- showAccumulatorSym(uid, bounds)
+        yield accumulatorSym
+      for accumulator <- outputRes.toSortedSet do
+        tl.log(accumulator)
+      tl.log("<<< accumulator syms <<<")
+  
   locally {
     val cache = MutSet.empty[ProdStrat -> ConsStrat]
     def hasConcreteInstantiationId(prodOrCons: ProdStrat | ConsStrat): Boolean = prodOrCons match
-      case p: Ctor => p.instantiationId.isDefined
-      case p: ProdFun => p.instantiationId.isDefined
-      case c: Dtor => c.instantiationId.isDefined
-      case c: FieldSel => c.instantiationId.isDefined
-      case c: ConsFun => c.instantiationId.isDefined
+      case s: StratWithOrigin[?] => s.instantiationId.isDefined
       case _ => true
-    def recordFlow[P, C](
-      dests: collection.mutable.Map[P, Set[C | NoCons.type]],
-      srcs: collection.mutable.Map[C, Set[P | NoProd.type]]
-    )(producer: P, consumer: C): Unit =
-      dests(producer) = dests(producer) + consumer
-      srcs(consumer) = srcs(consumer) + producer
-    def recordNoCons[P, C](
-      dests: collection.mutable.Map[P, Set[C | NoCons.type]]
-    )(producer: P): Unit =
-      dests(producer) = dests(producer) + NoCons
-    def recordNoProd[P, C](
-      srcs: collection.mutable.Map[C, Set[P | NoProd.type]]
-    )(consumer: C): Unit =
-      srcs(consumer) = srcs(consumer) + NoProd
     def handle(constraint: ProdStrat -> ConsStrat): Unit = if cache.add(constraint) then
       assert:
         val (prod, cons) = constraint
@@ -884,45 +1090,77 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         hasConcreteInstantiationId(cons)
       constraint match
       case (c: Ctor, d: Dtor) =>
-        recordFlow(ctorDests, dtorSrcs)(c, d)
+        ctorDests(c) += d
+        dtorSrcs(d) += c
       case (c: Ctor, d: FieldSel) =>
         if d.selectsFrom === c.ctor then
-          recordFlow(ctorDests, dtorSrcs)(c, d)
+          ctorDests(c) += d
+          dtorSrcs(d) += c
           handle(
             c.args.find(_._1 is d.field).get._2,
             d.consVar)
       case (c: Ctor, NoCons) =>
-        recordNoCons(ctorDests)(c)
+        ctorDests(c) += NoCons
         for (_, argProd) <- c.args do handle(argProd, NoCons)
+      case (c: Ctor, x@(NonAffine | Accumulator)) =>
+        ctorDests(c) += x
+        for (_, argProd) <- c.args do handle(argProd, x)
+      case (c: Ctor, i@IntoParam(s)) =>
+        for (_, argProd) <- c.args do handle(argProd, PossibleAccumulator(s))
+      case (c: Ctor, p@PossibleAccumulator(s)) =>
+        for (_, argProd) <- c.args do handle(argProd, p)
       case (p: ProdFun, c: ConsFun) =>
-        recordFlow(funDests, funSrcs)(p, c)
-        c.params.take(p.params.size).lazyZip(p.params).foreach((argC, argP) => handle(argC -> argP))
+        funDests(p) += c
+        funSrcs(c) += p
+        val tracksAccumulator = collector.accumulatorTracking
+        
+        c.params.take(p.params.size).lazyZip(p.params).foreach: (argC, argP) =>
+          handle(argC -> argP)
+          if tracksAccumulator then argP match
+            case ConsVar(s) => handle(argC, IntoParam(s))
+            case _ => ()
         for
           restCons <- p.restParam
           arg <- c.params.drop(p.params.size)
-        do handle(arg, restCons)
+        do
+          handle(arg, restCons)
+          if tracksAccumulator then restCons match
+            case ConsVar(s) => handle(arg, IntoParam(s))
+            case _ => ()
         handle(p.res, c.res)
       case (p: ProdFun, NoCons) =>
-        recordNoCons(funDests)(p)
+        funDests(p) += NoCons
         for a <- p.params do handle(NoProd, a)
         p.restParam.foreach(r => handle(NoProd, r))
         handle(p.res, NoCons)
+      case (p: ProdFun, x@(NonAffine | Accumulator)) =>
+        funDests(p) += x
+        handle(p.capturedVarUpperbound, x)
+      case (p: ProdFun, i@IntoParam(s)) =>
+        handle(p.capturedVarUpperbound, PossibleAccumulator(s))
+      case (p: ProdFun, c@PossibleAccumulator(s)) =>
+        handle(p.capturedVarUpperbound, c)
       case (NoProd, d: Dtor) =>
-        recordNoProd(dtorSrcs)(d)
+        dtorSrcs(d) += NoProd
       case (NoProd, sel: FieldSel) =>
-        recordNoProd(dtorSrcs)(sel)
+        dtorSrcs(sel) += NoProd
         handle(NoProd, sel.consVar)
       case (NoProd, c: ConsFun) =>
-        recordNoProd(funSrcs)(c)
+        funSrcs(c) += NoProd
         for a <- c.params do handle(a, NoCons)
         handle(NoProd, c.res)
       case (p: ProdVar, c: ConsVar) =>
         upperBounds(p.s.uid) ::= c
-        for l <- lowerBounds(p.s.uid) do handle(l, c)
         lowerBounds(c.s.uid) ::= p
+        for l <- lowerBounds(p.s.uid) do handle(l, c)
         for u <- upperBounds(c.s.uid) do handle(p, u)
       case (p: ProdVar, c) =>
         upperBounds(p.s.uid) ::= c
+        c match
+          case PossibleAccumulator(s) if p.s === s =>
+            upperBounds(p.s.uid) ::= Accumulator
+            for l <- lowerBounds(p.s.uid) do handle(l, Accumulator)
+          case _ => ()
         for l <- lowerBounds(p.s.uid) do handle(l, c)
       case (p, c: ConsVar) =>
         lowerBounds(c.s.uid) ::= p
@@ -932,4 +1170,9 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
     
     for c <- collector.allConstraints do handle(c)
   }
+  
+  logNonAffineSyms
+  logAccumulatorSyms
+
+
 end FlowConstraintSolver

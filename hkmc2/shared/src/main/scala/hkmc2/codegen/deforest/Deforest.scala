@@ -8,6 +8,8 @@ import semantics.*
 import scala.collection.mutable.{Set as MutSet, Map as MutMap, LinkedHashMap}
 import hkmc2.codegen.flowAnalysis.*
 
+type CtorDtorId = ConcreteId[ResultId]
+
 sealed abstract class FinalDest
 case class FinalDestMatch(dtor: CtorDtorId, sels: Set[CtorDtorId]) extends FinalDest
 case class FinalDestSel(dtors: Set[CtorDtorId], field: SelField) extends FinalDest
@@ -20,7 +22,7 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver):
 
   private def selAndDtorIsSameConsumer(dtor: CtorDtorId, sels: Iterable[CtorDtorId]): Boolean =
     sels.forall:
-      case CtorDtorId(selExpr, instId) =>
+      case ConcreteId(selExpr, instId) =>
         instId == dtor.instId &&
         preAnalyzer.res.getEnclosingMatchesForSel(selExpr).exists(_._1 == dtor.exprId) &&
         selExpr.getResult.matches:
@@ -32,10 +34,11 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver):
   val fusingDtorInfo = MutMap.empty[CtorDtorId, ConcreteConsumer]
   
   locally {
-    def mergeDests(dests: Set[ConcreteConsumer | NoCons.type]): Opt[FinalDest] =
+    def mergeDests(dests: Set[ConcreteConsumer | MarkerConsStrat]): Opt[FinalDest] =
       def selsSelectingTheSameSymbol(sels: Set[FieldSel]) =
         sels.map(s => s.field).size == 1
-      if dests.contains(NoCons) then N
+      if dests.exists(_.isInstanceOf[MarkerConsStrat]) then
+        N
       else
         val (dtors, sels) = dests.partitionMap:
           case d: Dtor => Left(d)
@@ -43,20 +46,19 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver):
           case _ => die
         if dtors.size == 0 && selsSelectingTheSameSymbol(sels) then
           S(FinalDestSel(
-            sels.map(_.toCtorDtorId),
+            sels.map(_.concreteId),
             sels.head.field
           ))
         else if dtors.size != 1 then N
         else
           val dtor = dtors.head
           if selAndDtorIsSameConsumer(
-            dtor.toCtorDtorId,
-            sels.map(s => s.toCtorDtorId)
+            dtor.concreteId,
+            sels.map(s => s.concreteId)
           ) then
             S(FinalDestMatch(
-              CtorDtorId(dtor.scrutExprId, dtor.instantiationId.get),
-              sels.map: s =>
-                CtorDtorId(s.exprId, s.instantiationId.get)
+              dtor.concreteId,
+              sels.map(_.concreteId)
             ))
           else N
     end mergeDests
@@ -87,16 +89,16 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver):
       (ctor, dests) <- constraintSolver.ctorDests
       if !toRemoveCtor(ctor)
     do
-      finalCtorDests(ctor.toCtorDtorId) = mergeDests(dests).get
-      fusingCtorInfo(ctor.toCtorDtorId) = ctor
+      finalCtorDests(ctor.concreteId) = mergeDests(dests).get
+      fusingCtorInfo(ctor.concreteId) = ctor
     for
       (dtor, srcs) <- constraintSolver.dtorSrcs
       if !toRemoveDtor(dtor)
     do
-      finalDtorSrcs(dtor.toCtorDtorId) =
+      finalDtorSrcs(dtor.concreteId) =
         // srcs are always ConcreteProducers after constraint solving
-        srcs.map(_.asInstanceOf[ConcreteProducer].toCtorDtorId)
-      fusingDtorInfo(dtor.toCtorDtorId) = dtor
+        srcs.map(_.asInstanceOf[ConcreteProducer].concreteId)
+      fusingDtorInfo(dtor.concreteId) = dtor
   }
 
   tl.log(">>> fusing >>>")
@@ -120,7 +122,13 @@ object Deforest:
     eState: Elaborator.State,
   ): Program =
     // TODO: handle see through imported modules
-    val flowAnalysisRes = FlowAnalysis(p, mono = cfg.deforest.exists(_.mono))
+    val dCfg = cfg.deforest.get
+    val flowAnalysisRes = FlowAnalysis(
+      p,
+      mono = dCfg.mono,
+      nonAffineTracking = dCfg.effectiveTrackNonAffine,
+      accumulatorTracking = dCfg.effectiveTrackAccumulator,
+    )
     val solver = new DeforestFusionSolver(flowAnalysisRes)
     if solver.finalCtorDests.isEmpty && solver.finalDtorSrcs.isEmpty then p
     else

@@ -82,6 +82,20 @@ abstract class MLsDiffMaker extends DiffMaker:
 
   def mkConfig: Config =
     import Config.*
+    def parseFlags(raw: Opt[Str]): Set[Str] =
+      raw.getOrElse("").split("\\s+").filter(_.nonEmpty).toSet
+    def reportUnknownFlags(optionName: Str, flags: Set[Str], knownFlags: Set[Str]): Unit =
+      val unknownFlags = flags -- knownFlags
+      if unknownFlags.nonEmpty then
+        output(s"$errMarker Unknown '$optionName' flags: ${unknownFlags.toList.sorted.mkString(", ")}")
+    def reportExclusiveFlagConflict(optionName: Str, flags: Set[Str], positive: Str, negative: Str): Unit =
+      if flags.contains(positive) && flags.contains(negative) then
+        output(s"$errMarker '$optionName' flags '$positive' and '$negative' conflict")
+    def resolveFlag(flags: Set[Str], positive: Str, negative: Str, default: Bool): Bool =
+      if flags.contains(positive) then true
+      else if flags.contains(negative) then false
+      else default
+
     if stackSafe.isSet && effectHandlers.isUnset then
       output(s"$errMarker Option ':stackSafe' requires ':effectHandlers' to be set")
     if !effectHandlers.get.forall(effectHandlersOptions.contains(_)) then
@@ -123,33 +137,66 @@ abstract class MLsDiffMaker extends DiffMaker:
       rewriteWhileLoops = rewriteWhile.isSet,
       tailRecOpt = !noTailRecOpt.isSet,
       deforest = Opt.when(deforest.isSet):
-        Deforest(
+        val flags = parseFlags(deforest.get)
+        val knownFlags = Set(
+          "mono",
+          "trackNonAffine",
+          "noTrackNonAffine",
+          "trackAccumulator",
+          "noTrackAccumulator",
+          "logNonAffine",
+          "noLogNonAffine",
+          "logAccumulator",
+          "noLogAccumulator",
+        )
+        reportUnknownFlags(":deforest", flags, knownFlags)
+        reportExclusiveFlagConflict(":deforest", flags, "trackNonAffine", "noTrackNonAffine")
+        reportExclusiveFlagConflict(":deforest", flags, "trackAccumulator", "noTrackAccumulator")
+        reportExclusiveFlagConflict(":deforest", flags, "logNonAffine", "noLogNonAffine")
+        reportExclusiveFlagConflict(":deforest", flags, "logAccumulator", "noLogAccumulator")
+        Deforest(FlowAnalysisConfig(
           debug = true,
-          mono = deforest.get.exists(_.contains("mono"))),
+          mono = flags.contains("mono"),
+          trackNonAffine = resolveFlag(flags, "trackNonAffine", "noTrackNonAffine", default = true),
+          trackAccumulator = resolveFlag(flags, "trackAccumulator", "noTrackAccumulator", default = flags.contains("logAccumulator")),
+          logNonAffine = resolveFlag(flags, "logNonAffine", "noLogNonAffine", default = false),
+          logAccumulator = resolveFlag(flags, "logAccumulator", "noLogAccumulator", default = false),
+        )),
       inlining = Opt.when(!noInlineOpt.isSet)(Config.Inliner(inlineThreshold.get.getOrElse(1))),
       qqEnabled = importQQ.isSet,
       funcToCls = funcToCls.isSet,
       commentGeneratedCode = debug.isSet,
       noFreeze = noFreeze.isSet,
       noModuleCheck = noModuleCheck.isSet,
-      deadParamElim = {
-        if deadParamElim.isUnset then S(DeadParamElim(debug = false, mono = true))
+      deadParamElim =
+        if deadParamElim.isUnset then S(DeadParamElim.default)
         else
-          val value = deadParamElim.get.getOrElse("")
-          val flags = value.split("\\s+").filter(_.nonEmpty).toSet
-          val unknownFlags = flags -- Set("debug", "mono", "poly", "off")
-          if unknownFlags.nonEmpty then
-            output(s"$errMarker Unknown ':deadParamElim' flags: ${unknownFlags.mkString(", ")}")
-          if flags.contains("mono") && flags.contains("poly") then
-            output(s"$errMarker ':deadParamElim' flags 'mono' and 'poly' conflict")
-          if flags.contains("off") && (flags & Set("debug", "mono", "poly")).nonEmpty then
+          val flags = parseFlags(deadParamElim.get)
+          val knownFlags = Set(
+            "debug", "mono", "poly", "off",
+            "trackNonAffine", "noTrackNonAffine",
+            "trackAccumulator", "noTrackAccumulator",
+            "logNonAffine", "noLogNonAffine",
+            "logAccumulator", "noLogAccumulator",
+          )
+          reportUnknownFlags(":deadParamElim", flags, knownFlags)
+          reportExclusiveFlagConflict(":deadParamElim", flags, "mono", "poly")
+          reportExclusiveFlagConflict(":deadParamElim", flags, "trackNonAffine", "noTrackNonAffine")
+          reportExclusiveFlagConflict(":deadParamElim", flags, "trackAccumulator", "noTrackAccumulator")
+          reportExclusiveFlagConflict(":deadParamElim", flags, "logNonAffine", "noLogNonAffine")
+          reportExclusiveFlagConflict(":deadParamElim", flags, "logAccumulator", "noLogAccumulator")
+          if flags.contains("off") && (flags - "off").nonEmpty then
             output(s"$errMarker ':deadParamElim off' conflicts with other flags")
           if flags.contains("off") then N
-          else S(DeadParamElim(
-            debug = flags.contains("debug"),
-            mono = !flags.contains("poly")
-          ))
-      },
+          else
+            S(DeadParamElim(FlowAnalysisConfig(
+              debug = flags.contains("debug"),
+              mono = !flags.contains("poly"),
+              trackNonAffine = resolveFlag(flags, "trackNonAffine", "noTrackNonAffine", DeadParamElim.default.trackNonAffine),
+              trackAccumulator = resolveFlag(flags, "trackAccumulator", "noTrackAccumulator", DeadParamElim.default.trackAccumulator),
+              logNonAffine = resolveFlag(flags, "logNonAffine", "noLogNonAffine", default = false),
+              logAccumulator = resolveFlag(flags, "logAccumulator", "noLogAccumulator", default = false),
+            ))),
     )
   
   

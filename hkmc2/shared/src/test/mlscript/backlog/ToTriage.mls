@@ -238,7 +238,7 @@ data class FooSpd(...args)
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 
 FooSpd(1, 2, 3).args
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'FlowAnalysis.scala:791'
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'FlowAnalysis.scala:981'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'args' yielded 'undefined'
@@ -254,7 +254,7 @@ if FooSpd(1, 2, 3) is FooSpd(...args) then args
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found one argument.
 //│ ║  l.247: 	if FooSpd(1, 2, 3) is FooSpd(...args) then args
 //│ ╙──       	                      ^^^^^^
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'FlowAnalysis.scala:791'
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'FlowAnalysis.scala:981'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -263,7 +263,7 @@ if FooSpd(1, 2, 3) is FooSpd(a, b, c) then [a, b, c]
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found three arguments.
 //│ ║  l.262: 	if FooSpd(1, 2, 3) is FooSpd(a, b, c) then [a, b, c]
 //│ ╙──       	                             ^^^^^^^
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'FlowAnalysis.scala:791'
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'FlowAnalysis.scala:981'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -272,7 +272,7 @@ if FooSpd(1, 2, 3) is FooSpd(arg) then arg
 //│ ╔══[COMPILATION ERROR] The constructor does not take any arguments but found one argument.
 //│ ║  l.271: 	if FooSpd(1, 2, 3) is FooSpd(arg) then arg
 //│ ╙──       	                             ^^^
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'FlowAnalysis.scala:791'
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'FlowAnalysis.scala:981'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ ═══[RUNTIME ERROR] Error: match error

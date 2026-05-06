@@ -714,8 +714,6 @@ g(A, AA(3))
 //│ deforest > >>> fusing >>>
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(k,None)
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	term:AA/aa
 //│ deforest > <<< fusing <<<
 //│ = 9
 

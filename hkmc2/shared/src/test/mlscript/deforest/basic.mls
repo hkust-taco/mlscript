@@ -179,9 +179,6 @@ fun f(x, y, res) = if x is
         res + tmp + a
 f(X(1), Y(2), 3)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Y,Some(term:Y/Y)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(y,None)
-//│ deforest > 	Select(Ref(y,None),Ident(b))
 //│ deforest > Call(Ref(member:X,Some(term:X/X)),List(Arg(None,Lit(IntLit(1))))) ->
 //│ deforest > 	Ref(x,None)
 //│ deforest > 	Select(Ref(x,None),Ident(a))
