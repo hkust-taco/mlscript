@@ -3,12 +3,19 @@ package semantics
 
 import mlscript.utils.*, shorthands.*
 import syntax.*, Elaborator.State, ucs.FlatPattern
+import scala.collection.mutable.{Map as MutMap}
 
 final case class Branch(scrutinee: Term.Ref, pattern: FlatPattern, continuation: Split) extends AutoLocated:
   def mkClone(using State): Branch =
+    mkClone(MutMap.empty)
+
+  private[semantics] def mkClone(freshSplitSymbols: MutMap[SplitSymbol, SplitSymbol])(using State): Branch =
     val scrutineeClone = new Term.Ref(scrutinee.sym)
         (Tree.Ident(scrutinee.tree.name), scrutinee.refNum, scrutinee.typ)
-    Branch(scrutineeClone, pattern.mkClone, continuation.mkClone)
+    Branch(scrutineeClone, pattern.mkClone, continuation.mkClone(freshSplitSymbols))
+
+  private[semantics] def duplicate(freshSplitSymbols: MutMap[SplitSymbol, SplitSymbol]): Branch =
+    Branch(scrutinee, pattern, continuation.duplicate(freshSplitSymbols))
   
   override def children: Vector[Located] = Vector.triple(scrutinee, pattern, continuation)
   
@@ -31,13 +38,20 @@ enum Split extends AutoLocated with ProductWithTail:
   
   inline def ~:(head: Branch): Split = Split.Cons(head, this)
   
-  def mkClone(using State): Split = this match
-    case Cons(head, tail) => Cons(head.mkClone, tail.mkClone)
-    case Let(sym, term, tail) => Let(sym, term.mkClone, tail.mkClone)
+  def mkClone(using State): Split =
+    mkClone(MutMap.empty)
+
+  private[semantics] def mkClone(freshSplitSymbols: MutMap[SplitSymbol, SplitSymbol])(using State): Split = this match
+    case Cons(head, tail) => Cons(head.mkClone(freshSplitSymbols), tail.mkClone(freshSplitSymbols))
+    case Let(sym, term, tail) => Let(sym, term.mkClone, tail.mkClone(freshSplitSymbols))
     case Else(default) => Else(default.mkClone)
     case End => End
-    case LetSplit(sym, tail) => LetSplit(sym, tail.mkClone)
-    case UseSplit(sym) => UseSplit(sym)
+    case LetSplit(sym, tail) =>
+      val freshSym = new SplitSymbol(End, sym.nme)
+      freshSplitSymbols += sym -> freshSym
+      freshSym.body = sym.body.mkClone(freshSplitSymbols)
+      LetSplit(freshSym, tail.mkClone(freshSplitSymbols))
+    case UseSplit(sym) => UseSplit(freshSplitSymbols.getOrElse(sym, sym))
   
   /** Used to indicate whether the `Split` was duplicated during desugaring or
     * normalization. */
@@ -50,13 +64,20 @@ enum Split extends AutoLocated with ProductWithTail:
     this
   
   def duplicate: Split =
+    duplicate(MutMap.empty)
+
+  private[semantics] def duplicate(freshSplitSymbols: MutMap[SplitSymbol, SplitSymbol]): Split =
     (this match
-      case Cons(head, tail) => Cons(head, tail.duplicate)
-      case Let(name, term, tail) => Let(name, term, tail.duplicate)
+      case Cons(head, tail) => Cons(head.duplicate(freshSplitSymbols), tail.duplicate(freshSplitSymbols))
+      case Let(name, term, tail) => Let(name, term, tail.duplicate(freshSplitSymbols))
       case Else(default) => Else(default)
       case End => End
-      case LetSplit(sym, tail) => LetSplit(sym, tail.duplicate)
-      case UseSplit(sym) => UseSplit(sym)).setDuplicated
+      case LetSplit(sym, tail) =>
+        val freshSym = new SplitSymbol(End, sym.nme)(using sym.getState)
+        freshSplitSymbols += sym -> freshSym
+        freshSym.body = sym.body.duplicate(freshSplitSymbols)
+        LetSplit(freshSym, tail.duplicate(freshSplitSymbols))
+      case UseSplit(sym) => UseSplit(freshSplitSymbols.getOrElse(sym, sym))).setDuplicated
   
   lazy val isFull: Bool = this match
     case Split.Cons(_, tail) => tail.isFull
