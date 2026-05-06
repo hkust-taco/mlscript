@@ -7,6 +7,7 @@ import mlscript.utils.*, shorthands.*
 import semantics.*
 import scala.collection.mutable.{Set as MutSet, Map as MutMap, LinkedHashMap}
 import hkmc2.codegen.flowAnalysis.*
+import hkmc2.utils.Scope
 
 type CtorDtorId = ConcreteId[ResultId]
 
@@ -14,11 +15,24 @@ sealed abstract class FinalDest
 case class FinalDestMatch(dtor: CtorDtorId, sels: Set[CtorDtorId]) extends FinalDest
 case class FinalDestSel(dtors: Set[CtorDtorId], field: SelField) extends FinalDest
 
-class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver):
+class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val cfg: Config):
   given preAnalyzer: FlowPreAnalyzer = constraintSolver.preAnalyzer
   given fState: FlowAnalysis.State = constraintSolver.fState
   given eState: Elaborator.State = constraintSolver.eState
   given tl: TraceLogger = constraintSolver.tl
+  given Raise = preAnalyzer.raise
+
+  private def pp(id: CtorDtorId): Str =
+    val scope = Scope.empty(Scope.Cfg.default)
+    given Scope = scope
+    given ShowCfg = ShowCfg.internal
+    given SymbolPrinter = new SymbolPrinter(scope)
+    new codegen.Printer().print(id.exprId.getResult).mkString()
+
+  private def pp(field: SelField): Str =
+    field match
+      case field: TermSymbol => field.nme
+      case idx: Int => idx.toString
 
   private def selAndDtorIsSameConsumer(dtor: CtorDtorId, sels: Iterable[CtorDtorId]): Boolean =
     sels.forall:
@@ -103,13 +117,13 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver):
 
   tl.log(">>> fusing >>>")
   for case (c, dest) <- finalCtorDests do
-    tl.log(s"${c.pp} ->")
+    tl.log(s"${pp(c)} ->")
     dest match
     case FinalDestMatch(dtor, sels) =>
-      tl.log(s"\t${dtor.pp}")
-      for s <- sels.toSeq.sortBy(_.exprId) do tl.log(s"\t${s.pp}")
+      tl.log(s"\tmatch: ${pp(dtor)}")
+      for s <- sels.toSeq.sortBy(_.exprId) do tl.log(s"\tfields: ${pp(s)}")
     case FinalDestSel(dtors, field) =>
-      tl.log(s"\t${field}")
+      tl.log(s"\tselect: ${pp(field)}")
   tl.log("<<< fusing <<<")
 end DeforestFusionSolver
 

@@ -46,12 +46,12 @@ fun bar(v) = if v is
   B then 2
 foo(bar, 123)
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(v,None)
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(v,None)
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(v,None)
+//│ deforest > B ->
+//│ deforest > 	match: v
+//│ deforest > A ->
+//│ deforest > 	match: v
+//│ deforest > A ->
+//│ deforest > 	match: v
 //│ deforest > <<< fusing <<<
 //│ = 1
 

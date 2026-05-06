@@ -35,9 +35,9 @@ c(AA(3))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(p,None)
-//│ deforest > 	Select(Ref(p,None),Ident(x))
+//│ deforest > AA(3) ->
+//│ deforest > 	match: p
+//│ deforest > 	fields: p.x
 //│ deforest > <<< fusing <<<
 //│ = 3
 
@@ -48,11 +48,11 @@ c(AA(7))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(7))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > 	Select(Ref(x,None),Ident(x))
+//│ deforest > AA(7) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > 	fields: x.x1
+//│ deforest > 	fields: x.x1
 //│ deforest > <<< fusing <<<
 //│ = 14
 
@@ -86,12 +86,12 @@ affine_branched(AA(0), AA(1), (y) => if y is AA(x) then x + 2)
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(y,None)
-//│ deforest > 	Select(Ref(y,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(0))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
+//│ deforest > AA(1) ->
+//│ deforest > 	match: y
+//│ deforest > 	fields: y.x
+//│ deforest > AA(0) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
 //│ deforest > <<< fusing <<<
 //│ = 3
 
@@ -135,9 +135,9 @@ c(AA(0), AA(3))
 //│ deforest > x_for_c@33
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(0))))) ->
-//│ deforest > 	Ref(k,None)
-//│ deforest > 	Select(Ref(k,None),Ident(x))
+//│ deforest > AA(0) ->
+//│ deforest > 	match: k
+//│ deforest > 	fields: k.x
 //│ deforest > <<< fusing <<<
 //│ = 9
 
@@ -215,9 +215,9 @@ nest_consume(nest_pickB, nest_prod(10))
 //│ deforest > x_for_nest_prod@31
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(p,None)
-//│ deforest > 	Select(Ref(p,None),Ident(x))
+//│ deforest > AA(tmp) ->
+//│ deforest > 	match: p
+//│ deforest > 	fields: p.x
 //│ deforest > <<< fusing <<<
 //│ = 22
 
@@ -259,16 +259,16 @@ length(append(id(1 :: Nil), 2 :: Nil))
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(h,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(2))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
+//│ deforest > Cons(h, tmp) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Cons(2, Nil) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Nil ->
+//│ deforest > 	match: ls
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -290,16 +290,16 @@ length(ping(id(1 :: 2 :: Nil), 3 :: 4 :: Nil))
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(3))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(4))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
+//│ deforest > Cons(3, tmp) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Cons(4, Nil) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Nil ->
+//│ deforest > 	match: ls
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -320,12 +320,12 @@ sum(append(id(Nil), Nil), 0)
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(h,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
+//│ deforest > Nil ->
+//│ deforest > 	match: ls
+//│ deforest > Cons(h, tmp) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
 //│ deforest > <<< fusing <<<
 //│ = 0
 

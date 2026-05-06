@@ -9,13 +9,13 @@ data class B(a, b, c, d, e)
 if B(1,2,3,4,5) is
   B(a,b,c,d,e) then 0
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:B,Some(term:B/B)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(3))), Arg(None,Lit(IntLit(4))), Arg(None,Lit(IntLit(5))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(a))
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(b))
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(c))
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(d))
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(e))
+//│ deforest > B(1, 2, 3, 4, 5) ->
+//│ deforest > 	match: scrut
+//│ deforest > 	fields: scrut.a
+//│ deforest > 	fields: scrut.b
+//│ deforest > 	fields: scrut.c
+//│ deforest > 	fields: scrut.d
+//│ deforest > 	fields: scrut.e
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let scrut, e⁰, a⁰, b⁰, c⁰, d⁰, arg$B$0$, arg$B$1$, arg$B$2$, arg$B$3$, arg$B$4$, $scrut_B⁰, $scrut_rest⁰, B_a, B_b, B_c, B_d, B_e;
@@ -53,24 +53,24 @@ fun c2(x) = if x is
   A(A(A(A(A(A(a)))))) then a
 c2 of A(A(A(A(A(A(1))))))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(a))
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
+//│ deforest > A(tmp) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.a
+//│ deforest > A(tmp) ->
+//│ deforest > 	match: arg$A$0$
+//│ deforest > 	fields: arg$A$0$.a
+//│ deforest > A(tmp) ->
+//│ deforest > 	match: arg$A$0$
+//│ deforest > 	fields: arg$A$0$.a
+//│ deforest > A(tmp) ->
+//│ deforest > 	match: arg$A$0$
+//│ deforest > 	fields: arg$A$0$.a
+//│ deforest > A(tmp) ->
+//│ deforest > 	match: arg$A$0$
+//│ deforest > 	fields: arg$A$0$.a
+//│ deforest > A(1) ->
+//│ deforest > 	match: arg$A$0$
+//│ deforest > 	fields: arg$A$0$.a
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let c2⁰, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, c2_21$c2⁰, c2_21$x_A⁰, c2_21$x_rest⁰, c2_21$split_default$_rest⁰, c2_21$split_root$_rest⁰, c2_21$arg$A$0$_A⁰, c2_21$arg$A$0$_rest⁰, c2_21$arg$A$0$_A¹, c2_21$arg$A$0$_rest¹, c2_21$arg$A$0$_A², c2_21$arg$A$0$_rest², c2_21$arg$A$0$_A³, c2_21$arg$A$0$_rest³, c2_21$arg$A$0$_A⁴, c2_21$arg$A$0$_rest⁴, A_a, A_a1, A_a2, A_a3, A_a4, A_a5;

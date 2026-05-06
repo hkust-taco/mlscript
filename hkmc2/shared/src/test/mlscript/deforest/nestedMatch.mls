@@ -37,15 +37,15 @@ fun g(x) = if x is
 let a = AA(AA(3))
 f(a, 2) + g(a) + f(BB(3), 2) + f(AA(AA(4)), 5)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(4))))) ->
-//│ deforest > 	Ref(a,None)
-//│ deforest > 	Select(Ref(a,None),Ident(x))
-//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
+//│ deforest > AA(tmp) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > AA(4) ->
+//│ deforest > 	match: a
+//│ deforest > 	fields: a.x
+//│ deforest > BB(3) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
 //│ deforest > <<< fusing <<<
 //│ = 37
 //│ a = AA(AA(3))
@@ -61,18 +61,18 @@ fun f(x, y) =
   n + 2 + y
 f(AA(AA(3)), 9) + f(AA(AA(4)), 10)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(4))))) ->
-//│ deforest > 	Ref(a,None)
-//│ deforest > 	Select(Ref(a,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(a,None)
-//│ deforest > 	Select(Ref(a,None),Ident(x))
+//│ deforest > AA(tmp) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > AA(4) ->
+//│ deforest > 	match: a
+//│ deforest > 	fields: a.x
+//│ deforest > AA(tmp) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > AA(3) ->
+//│ deforest > 	match: a
+//│ deforest > 	fields: a.x
 //│ deforest > <<< fusing <<<
 //│ = 30
 
@@ -87,12 +87,12 @@ fun f(x) =
   n + 2
 f(AA(AA(3)))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(a,None)
-//│ deforest > 	Select(Ref(a,None),Ident(x))
+//│ deforest > AA(tmp) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > AA(3) ->
+//│ deforest > 	match: a
+//│ deforest > 	fields: a.x
 //│ deforest > <<< fusing <<<
 //│ = 5
 
@@ -105,18 +105,18 @@ fun f(x) =
   t + 3
 f(AA(AA(A))) + f(AA(AA(A)))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
-//│ deforest > 	Ref(tmp:arg$AA$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
-//│ deforest > 	Ref(tmp:arg$AA$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
+//│ deforest > AA(tmp) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > AA(A) ->
+//│ deforest > 	match: arg$AA$0$
+//│ deforest > 	fields: arg$AA$0$.x
+//│ deforest > AA(tmp) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > AA(A) ->
+//│ deforest > 	match: arg$AA$0$
+//│ deforest > 	fields: arg$AA$0$.x
 //│ deforest > <<< fusing <<<
 //│ = "A3A3"
 
@@ -127,12 +127,12 @@ fun c2(x) = if x is
   AA(AA(a)) then a
 c2(AA(AA(0)))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(0))))) ->
-//│ deforest > 	Ref(tmp:arg$AA$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
+//│ deforest > AA(tmp) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > AA(0) ->
+//│ deforest > 	match: arg$AA$0$
+//│ deforest > 	fields: arg$AA$0$.x
 //│ deforest > <<< fusing <<<
 //│ = 0
 
@@ -143,14 +143,14 @@ fun f(a) = if a is
   AA(BB(B)) then 3
 f(AA(BB(B)))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(a,None)
-//│ deforest > 	Select(Ref(a,None),Ident(x))
-//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Ref(member:B,Some(object:B))))) ->
-//│ deforest > 	Ref(tmp:arg$AA$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(tmp:arg$BB$0$,None)
+//│ deforest > AA(tmp) ->
+//│ deforest > 	match: a
+//│ deforest > 	fields: a.x
+//│ deforest > BB(B) ->
+//│ deforest > 	match: arg$AA$0$
+//│ deforest > 	fields: arg$AA$0$.x
+//│ deforest > B ->
+//│ deforest > 	match: arg$BB$0$
 //│ deforest > <<< fusing <<<
 //│ = 3
 
@@ -165,24 +165,24 @@ fun test(x, y, z, i) = if x is
     m + n
 test(AA(1), AA(2), BB(3), 4) + test(AA(1), AA(2), BB(3), 4)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(z,None)
-//│ deforest > 	Select(Ref(z,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(y,None)
-//│ deforest > 	Select(Ref(y,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(z,None)
-//│ deforest > 	Select(Ref(z,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(y,None)
-//│ deforest > 	Select(Ref(y,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
+//│ deforest > BB(3) ->
+//│ deforest > 	match: z
+//│ deforest > 	fields: z.x
+//│ deforest > AA(2) ->
+//│ deforest > 	match: y
+//│ deforest > 	fields: y.x
+//│ deforest > AA(1) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > BB(3) ->
+//│ deforest > 	match: z
+//│ deforest > 	fields: z.x
+//│ deforest > AA(2) ->
+//│ deforest > 	match: y
+//│ deforest > 	fields: y.x
+//│ deforest > AA(1) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
 //│ deforest > <<< fusing <<<
 //│ = 10
 
@@ -201,14 +201,14 @@ fun aa(x) = AA(x)
 let cc = CC("cc")
 f1(aa(BB(cc))) + f2(aa(BB(CC(0)))) + f3(cc)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Ref(cc,None)))) ->
-//│ deforest > 	Ref(x1,None)
-//│ deforest > 	Select(Ref(x1,None),Ident(x))
+//│ deforest > AA(x) ->
+//│ deforest > 	match: x
+//│ deforest > AA(x) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > BB(cc) ->
+//│ deforest > 	match: x1
+//│ deforest > 	fields: x1.x
 //│ deforest > <<< fusing <<<
 //│ = "ccf2f3cc"
 //│ cc = CC("cc")
@@ -224,11 +224,11 @@ fun c(x, y) = if x is
 let y = A
 c(AA(2), y)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(y,None)
+//│ deforest > AA(2) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > A ->
+//│ deforest > 	match: y
 //│ deforest > <<< fusing <<<
 //│ = 4
 //│ y = fun y6
@@ -244,10 +244,10 @@ fun c2(y) = if y is A then 3
 let y = A
 c(AA(2), y) + c2(y)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > 	Select(Ref(x,None),Ident(x))
+//│ deforest > AA(2) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > 	fields: x.x1
 //│ deforest > <<< fusing <<<
 //│ = 9
 //│ y = A
@@ -265,11 +265,11 @@ fun f(a) = if a is
 let p = AA(AA(AA("10")))
 test(p) + f(p) + test(AA(A))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(tmp:arg$AA$0$,None)
+//│ deforest > AA(A) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > A ->
+//│ deforest > 	match: arg$AA$0$
 //│ deforest > <<< fusing <<<
 //│ = "105035"
 //│ p = AA(AA(AA("10")))
@@ -291,30 +291,30 @@ fun f(x, y) =
 let aa = AA(3)
 f(aa, 3) + f(aa, 4)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(tmp,None)
-//│ deforest > 	Select(Ref(tmp,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(tmp,None)
-//│ deforest > 	Select(Ref(tmp,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(tmp,None)
-//│ deforest > 	Select(Ref(tmp,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
+//│ deforest > BB(tmp) ->
+//│ deforest > 	match: tmp
+//│ deforest > 	fields: tmp.x
+//│ deforest > AA(2) ->
+//│ deforest > 	match: scrut
+//│ deforest > 	fields: scrut.x
+//│ deforest > AA(3) ->
+//│ deforest > 	match: scrut
+//│ deforest > BB(tmp) ->
+//│ deforest > 	match: tmp
+//│ deforest > 	fields: tmp.x
+//│ deforest > AA(2) ->
+//│ deforest > 	match: scrut
+//│ deforest > 	fields: scrut.x
+//│ deforest > AA(3) ->
+//│ deforest > 	match: scrut
+//│ deforest > BB(tmp) ->
+//│ deforest > 	match: tmp
+//│ deforest > 	fields: tmp.x
+//│ deforest > AA(2) ->
+//│ deforest > 	match: scrut
+//│ deforest > 	fields: scrut.x
+//│ deforest > AA(3) ->
+//│ deforest > 	match: scrut
 //│ deforest > <<< fusing <<<
 //│ = 13
 //│ aa = AA(3)
@@ -332,24 +332,24 @@ fun test(n, p, q) =
         AA(y) then k + y
 test(3, AA(2), AA(3)) + test(3, AA(2), AA(3))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(0))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(0))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(q,None)
-//│ deforest > 	Select(Ref(q,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(p,None)
-//│ deforest > 	Select(Ref(p,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(0))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(q,None)
-//│ deforest > 	Select(Ref(q,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(p,None)
-//│ deforest > 	Select(Ref(p,None),Ident(x))
+//│ deforest > AA(0) ->
+//│ deforest > 	match: scrut
+//│ deforest > AA(0) ->
+//│ deforest > 	match: scrut
+//│ deforest > AA(3) ->
+//│ deforest > 	match: q
+//│ deforest > 	fields: q.x
+//│ deforest > AA(2) ->
+//│ deforest > 	match: p
+//│ deforest > 	fields: p.x
+//│ deforest > AA(0) ->
+//│ deforest > 	match: scrut
+//│ deforest > AA(3) ->
+//│ deforest > 	match: q
+//│ deforest > 	fields: q.x
+//│ deforest > AA(2) ->
+//│ deforest > 	match: p
+//│ deforest > 	fields: p.x
 //│ deforest > <<< fusing <<<
 //│ = 16
 
@@ -372,18 +372,18 @@ let a = A
 fun c(a) = if a is A then 0
 test(1, AA(2), AA(3), a) + test(2, AA(2), AA(3), a) + c(a)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(q,None)
-//│ deforest > 	Select(Ref(q,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(p,None)
-//│ deforest > 	Select(Ref(p,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(q,None)
-//│ deforest > 	Select(Ref(q,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(p,None)
-//│ deforest > 	Select(Ref(p,None),Ident(x))
+//│ deforest > AA(3) ->
+//│ deforest > 	match: q
+//│ deforest > 	fields: q.x
+//│ deforest > AA(2) ->
+//│ deforest > 	match: p
+//│ deforest > 	fields: p.x
+//│ deforest > AA(3) ->
+//│ deforest > 	match: q
+//│ deforest > 	fields: q.x
+//│ deforest > AA(2) ->
+//│ deforest > 	match: p
+//│ deforest > 	fields: p.x
 //│ deforest > <<< fusing <<<
 //│ = 13
 //│ a = A
@@ -402,24 +402,24 @@ fun test(x, y, z, i) =
   k + i
 test(AA(1), AA(2), BB(3), 4) + test(AA(1), AA(2), BB(3), 4)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(z,None)
-//│ deforest > 	Select(Ref(z,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(y,None)
-//│ deforest > 	Select(Ref(y,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(z,None)
-//│ deforest > 	Select(Ref(z,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(y,None)
-//│ deforest > 	Select(Ref(y,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
+//│ deforest > BB(3) ->
+//│ deforest > 	match: z
+//│ deforest > 	fields: z.x
+//│ deforest > AA(2) ->
+//│ deforest > 	match: y
+//│ deforest > 	fields: y.x
+//│ deforest > AA(1) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > BB(3) ->
+//│ deforest > 	match: z
+//│ deforest > 	fields: z.x
+//│ deforest > AA(2) ->
+//│ deforest > 	match: y
+//│ deforest > 	fields: y.x
+//│ deforest > AA(1) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
 //│ deforest > <<< fusing <<<
 //│ = 18
 
@@ -437,24 +437,24 @@ fun test(x, y, z, i) =
   k + i
 test(AA(1), AA(2), BB(3), 4) + test(AA(1), BB(2), BB(3), 4)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(z,None)
-//│ deforest > 	Select(Ref(z,None),Ident(x))
-//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(y,None)
-//│ deforest > 	Select(Ref(y,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(z,None)
-//│ deforest > 	Select(Ref(z,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(y,None)
-//│ deforest > 	Select(Ref(y,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
+//│ deforest > BB(3) ->
+//│ deforest > 	match: z
+//│ deforest > 	fields: z.x
+//│ deforest > BB(2) ->
+//│ deforest > 	match: y
+//│ deforest > 	fields: y.x
+//│ deforest > AA(1) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > BB(3) ->
+//│ deforest > 	match: z
+//│ deforest > 	fields: z.x
+//│ deforest > AA(2) ->
+//│ deforest > 	match: y
+//│ deforest > 	fields: y.x
+//│ deforest > AA(1) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
 //│ deforest > <<< fusing <<<
 //│ = 10
 
@@ -470,20 +470,20 @@ fun c(x) = if x is AA then 0
 fun p(x) = AA(x)
 test(p(BB(3))) + test(p(CC(3))) + c(p(A))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:CC,Some(term:CC/CC)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(tmp:arg$AA$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(x,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:BB,Some(term:BB/BB)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(tmp:arg$AA$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
+//│ deforest > AA(x) ->
+//│ deforest > 	match: x
+//│ deforest > AA(x) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > CC(3) ->
+//│ deforest > 	match: arg$AA$0$
+//│ deforest > 	fields: arg$AA$0$.x
+//│ deforest > AA(x) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > BB(3) ->
+//│ deforest > 	match: arg$AA$0$
+//│ deforest > 	fields: arg$AA$0$.x
 //│ deforest > <<< fusing <<<
 //│ = 12
 
@@ -505,25 +505,25 @@ fun f(x, y, z, k) =
         AA then m + k
 f(AA(3), 3, true, 10) + f(AA(5), 4, false, 20)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(5))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(x,None)
+//│ deforest > AA(2) ->
+//│ deforest > 	match: scrut
+//│ deforest > 	fields: scrut.x
+//│ deforest > AA(3) ->
+//│ deforest > 	match: scrut
+//│ deforest > AA(2) ->
+//│ deforest > 	match: scrut
+//│ deforest > 	fields: scrut.x
+//│ deforest > AA(3) ->
+//│ deforest > 	match: scrut
+//│ deforest > AA(5) ->
+//│ deforest > 	match: x
+//│ deforest > AA(2) ->
+//│ deforest > 	match: scrut
+//│ deforest > 	fields: scrut.x
+//│ deforest > AA(3) ->
+//│ deforest > 	match: scrut
+//│ deforest > AA(3) ->
+//│ deforest > 	match: x
 //│ deforest > <<< fusing <<<
 //│ = 41
 
@@ -558,14 +558,14 @@ fun test(a, b) =
   print(x)
 test(B, B) + test(A, A)
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(a,None)
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(b,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(a,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(b,None)
+//│ deforest > A ->
+//│ deforest > 	match: a
+//│ deforest > A ->
+//│ deforest > 	match: b
+//│ deforest > B ->
+//│ deforest > 	match: a
+//│ deforest > B ->
+//│ deforest > 	match: b
 //│ deforest > <<< fusing <<<
 //│ > B
 //│ > 1
@@ -585,16 +585,16 @@ fun sum(ls) = if ls is
   h :: t then h + sum(t)
 sum(prodDouble(4))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
+//│ deforest > Cons(n, tmp) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Cons(n, tmp) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Nil ->
+//│ deforest > 	match: ls
 //│ deforest > <<< fusing <<<
 //│ = 20
 

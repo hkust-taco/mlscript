@@ -29,66 +29,66 @@ fun lscomp1(ls) = if ls is
   else Nil
 lscomp1(zip(enumFromTo(1, 3), enumFromTo(2, 4)))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(a,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(xs_zip,None)
-//│ deforest > 	Select(Ref(xs_zip,None),Ident(h))
-//│ deforest > 	Select(Ref(xs_zip,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(xs_zip,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(a,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ys_zip,None)
-//│ deforest > 	Select(Ref(ys_zip,None),Ident(h))
-//│ deforest > 	Select(Ref(ys_zip,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ys_zip,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls2,None)
-//│ deforest > 	Select(Ref(ls2,None),Ident(h))
-//│ deforest > 	Select(Ref(ls2,None),Ident(t))
-//│ deforest > Call(Ref(member:Pair,Some(term:Pair/Pair)),List(Arg(None,Ref(x,None)), Arg(None,Ref(y,None)))) ->
-//│ deforest > 	Ref(tmp:arg$Cons$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$Cons$0$,None),Ident(a))
-//│ deforest > 	Select(Ref(tmp:arg$Cons$0$,None),Ident(b))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls2,None)
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls2,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(a,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(xs_zip,None)
-//│ deforest > 	Select(Ref(xs_zip,None),Ident(h))
-//│ deforest > 	Select(Ref(xs_zip,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(xs_zip,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(a,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ys_zip,None)
-//│ deforest > 	Select(Ref(ys_zip,None),Ident(h))
-//│ deforest > 	Select(Ref(ys_zip,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ys_zip,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls2,None)
-//│ deforest > 	Select(Ref(ls2,None),Ident(h))
-//│ deforest > 	Select(Ref(ls2,None),Ident(t))
-//│ deforest > Call(Ref(member:Pair,Some(term:Pair/Pair)),List(Arg(None,Ref(x,None)), Arg(None,Ref(y,None)))) ->
-//│ deforest > 	Ref(tmp:arg$Cons$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$Cons$0$,None),Ident(a))
-//│ deforest > 	Select(Ref(tmp:arg$Cons$0$,None),Ident(b))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls2,None)
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls2,None)
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ys_zip,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(a,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ys_zip,None)
-//│ deforest > 	Select(Ref(ys_zip,None),Ident(h))
-//│ deforest > 	Select(Ref(ys_zip,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(xs_zip,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(a,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(xs_zip,None)
-//│ deforest > 	Select(Ref(xs_zip,None),Ident(h))
-//│ deforest > 	Select(Ref(xs_zip,None),Ident(t))
+//│ deforest > Cons(a, tmp) ->
+//│ deforest > 	match: xs_zip
+//│ deforest > 	fields: xs_zip.h
+//│ deforest > 	fields: xs_zip.t
+//│ deforest > Nil ->
+//│ deforest > 	match: xs_zip
+//│ deforest > Cons(a, tmp) ->
+//│ deforest > 	match: ys_zip
+//│ deforest > 	fields: ys_zip.h
+//│ deforest > 	fields: ys_zip.t
+//│ deforest > Nil ->
+//│ deforest > 	match: ys_zip
+//│ deforest > Cons(tmp, tmp1) ->
+//│ deforest > 	match: ls2
+//│ deforest > 	fields: ls2.h
+//│ deforest > 	fields: ls2.t
+//│ deforest > Pair(x, y) ->
+//│ deforest > 	match: arg$Cons$0$
+//│ deforest > 	fields: arg$Cons$0$.a
+//│ deforest > 	fields: arg$Cons$0$.b
+//│ deforest > Nil ->
+//│ deforest > 	match: ls2
+//│ deforest > Nil ->
+//│ deforest > 	match: ls2
+//│ deforest > Cons(a, tmp) ->
+//│ deforest > 	match: xs_zip
+//│ deforest > 	fields: xs_zip.h
+//│ deforest > 	fields: xs_zip.t
+//│ deforest > Nil ->
+//│ deforest > 	match: xs_zip
+//│ deforest > Cons(a, tmp) ->
+//│ deforest > 	match: ys_zip
+//│ deforest > 	fields: ys_zip.h
+//│ deforest > 	fields: ys_zip.t
+//│ deforest > Nil ->
+//│ deforest > 	match: ys_zip
+//│ deforest > Cons(tmp, tmp1) ->
+//│ deforest > 	match: ls2
+//│ deforest > 	fields: ls2.h
+//│ deforest > 	fields: ls2.t
+//│ deforest > Pair(x, y) ->
+//│ deforest > 	match: arg$Cons$0$
+//│ deforest > 	fields: arg$Cons$0$.a
+//│ deforest > 	fields: arg$Cons$0$.b
+//│ deforest > Nil ->
+//│ deforest > 	match: ls2
+//│ deforest > Nil ->
+//│ deforest > 	match: ls2
+//│ deforest > Nil ->
+//│ deforest > 	match: ys_zip
+//│ deforest > Cons(a, tmp) ->
+//│ deforest > 	match: ys_zip
+//│ deforest > 	fields: ys_zip.h
+//│ deforest > 	fields: ys_zip.t
+//│ deforest > Nil ->
+//│ deforest > 	match: xs_zip
+//│ deforest > Cons(a, tmp) ->
+//│ deforest > 	match: xs_zip
+//│ deforest > 	fields: xs_zip.h
+//│ deforest > 	fields: xs_zip.t
 //│ deforest > <<< fusing <<<
 //│ = Cons(Pair(1, 3), Cons(Pair(2, 4), Cons(Pair(3, 5), Nil)))
 
@@ -107,92 +107,92 @@ fun f1(a1) = if a1 is
   else Nil
 concatMap(f1, Pair(5, 10) :: Nil)
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(xs,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(xs,None)
-//│ deforest > 	Select(Ref(xs,None),Ident(h))
-//│ deforest > 	Select(Ref(xs,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(xs,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Pair,Some(term:Pair/Pair)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(a2,None)
-//│ deforest > 	Select(Ref(a2,None),Ident(a))
-//│ deforest > 	Select(Ref(a2,None),Ident(b))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Pair,Some(term:Pair/Pair)),List(Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(a2,None)
-//│ deforest > 	Select(Ref(a2,None),Ident(a))
-//│ deforest > 	Select(Ref(a2,None),Ident(b))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Pair,Some(term:Pair/Pair)),List(Arg(None,Ref(a,None)), Arg(None,Ref(b,None)))) ->
-//│ deforest > 	Ref(a2,None)
-//│ deforest > 	Select(Ref(a2,None),Ident(a))
-//│ deforest > 	Select(Ref(a2,None),Ident(b))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(xs,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(xs,None)
-//│ deforest > 	Select(Ref(xs,None),Ident(h))
-//│ deforest > 	Select(Ref(xs,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(xs,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Pair,Some(term:Pair/Pair)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(a2,None)
-//│ deforest > 	Select(Ref(a2,None),Ident(a))
-//│ deforest > 	Select(Ref(a2,None),Ident(b))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Pair,Some(term:Pair/Pair)),List(Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(3))))) ->
-//│ deforest > 	Ref(a2,None)
-//│ deforest > 	Select(Ref(a2,None),Ident(a))
-//│ deforest > 	Select(Ref(a2,None),Ident(b))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Pair,Some(term:Pair/Pair)),List(Arg(None,Ref(a,None)), Arg(None,Ref(b,None)))) ->
-//│ deforest > 	Ref(a2,None)
-//│ deforest > 	Select(Ref(a2,None),Ident(a))
-//│ deforest > 	Select(Ref(a2,None),Ident(b))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(xs,None)
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(xs,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(h,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(xs,None)
-//│ deforest > 	Select(Ref(xs,None),Ident(h))
-//│ deforest > 	Select(Ref(xs,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Call(Ref(member:Pair,Some(term:Pair/Pair)),List(Arg(None,Lit(IntLit(5))), Arg(None,Lit(IntLit(10))))) ->
-//│ deforest > 	Ref(a1,None)
-//│ deforest > 	Select(Ref(a1,None),Ident(a))
-//│ deforest > 	Select(Ref(a1,None),Ident(b))
+//│ deforest > Nil ->
+//│ deforest > 	match: xs
+//│ deforest > Cons(tmp, Nil) ->
+//│ deforest > 	match: xs
+//│ deforest > 	fields: xs.h
+//│ deforest > 	fields: xs.t
+//│ deforest > Nil ->
+//│ deforest > 	match: xs
+//│ deforest > Cons(tmp, tmp1) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Pair(1, 3) ->
+//│ deforest > 	match: a2
+//│ deforest > 	fields: a2.a
+//│ deforest > 	fields: a2.b
+//│ deforest > Cons(tmp, tmp1) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Pair(2, 3) ->
+//│ deforest > 	match: a2
+//│ deforest > 	fields: a2.a
+//│ deforest > 	fields: a2.b
+//│ deforest > Cons(tmp, Nil) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Pair(a, b) ->
+//│ deforest > 	match: a2
+//│ deforest > 	fields: a2.a
+//│ deforest > 	fields: a2.b
+//│ deforest > Nil ->
+//│ deforest > 	match: ls
+//│ deforest > Nil ->
+//│ deforest > 	match: xs
+//│ deforest > Cons(tmp, Nil) ->
+//│ deforest > 	match: xs
+//│ deforest > 	fields: xs.h
+//│ deforest > 	fields: xs.t
+//│ deforest > Nil ->
+//│ deforest > 	match: xs
+//│ deforest > Cons(tmp, tmp1) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Pair(1, 3) ->
+//│ deforest > 	match: a2
+//│ deforest > 	fields: a2.a
+//│ deforest > 	fields: a2.b
+//│ deforest > Cons(tmp, tmp1) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Pair(2, 3) ->
+//│ deforest > 	match: a2
+//│ deforest > 	fields: a2.a
+//│ deforest > 	fields: a2.b
+//│ deforest > Cons(tmp, Nil) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Pair(a, b) ->
+//│ deforest > 	match: a2
+//│ deforest > 	fields: a2.a
+//│ deforest > 	fields: a2.b
+//│ deforest > Nil ->
+//│ deforest > 	match: ls
+//│ deforest > Nil ->
+//│ deforest > 	match: xs
+//│ deforest > Nil ->
+//│ deforest > 	match: xs
+//│ deforest > Cons(h, tmp) ->
+//│ deforest > 	match: xs
+//│ deforest > 	fields: xs.h
+//│ deforest > 	fields: xs.t
+//│ deforest > Cons(tmp, Nil) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Nil ->
+//│ deforest > 	match: ls
+//│ deforest > Pair(5, 10) ->
+//│ deforest > 	match: a1
+//│ deforest > 	fields: a1.a
+//│ deforest > 	fields: a1.b
 //│ deforest > <<< fusing <<<
 //│ = Cons(Pair(5, 1), Cons(Pair(5, 2), Cons(Pair(5, 5), Nil)))
 
@@ -207,16 +207,16 @@ fun lscomp2(ls2, h1, t1) = if ls2 is
   Nil then lscomp1(t1, ls2)
 lscomp1(1 :: 2 :: Nil, 3 :: 4 :: Nil)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls1,None)
-//│ deforest > 	Select(Ref(ls1,None),Ident(h))
-//│ deforest > 	Select(Ref(ls1,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(2))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(ls1,None)
-//│ deforest > 	Select(Ref(ls1,None),Ident(h))
-//│ deforest > 	Select(Ref(ls1,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls1,None)
+//│ deforest > Cons(1, tmp) ->
+//│ deforest > 	match: ls1
+//│ deforest > 	fields: ls1.h
+//│ deforest > 	fields: ls1.t
+//│ deforest > Cons(2, Nil) ->
+//│ deforest > 	match: ls1
+//│ deforest > 	fields: ls1.h
+//│ deforest > 	fields: ls1.t
+//│ deforest > Nil ->
+//│ deforest > 	match: ls1
 //│ deforest > <<< fusing <<<
 //│ = Cons(Pair(1, 3), Cons(Pair(1, 4), Nil))
 
@@ -229,22 +229,22 @@ if A is
   A then lscomp(1 :: 2 :: 3 :: Nil)
   B then Nil
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(2))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(3))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(member:A,Some(object:A))
+//│ deforest > Cons(1, tmp) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Cons(2, tmp) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Cons(3, Nil) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Nil ->
+//│ deforest > 	match: ls
+//│ deforest > A ->
+//│ deforest > 	match: A
 //│ deforest > <<< fusing <<<
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
@@ -262,34 +262,34 @@ fun h() =
   lscomp1(1 :: 2 :: 3 :: Nil)
 h()
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(2))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(3))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(2))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(3))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
+//│ deforest > Cons(1, tmp) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Cons(2, tmp) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Cons(3, Nil) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Nil ->
+//│ deforest > 	match: ls
+//│ deforest > Cons(1, tmp) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Cons(2, tmp) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Cons(3, Nil) ->
+//│ deforest > 	match: ls
+//│ deforest > 	fields: ls.h
+//│ deforest > 	fields: ls.t
+//│ deforest > Nil ->
+//│ deforest > 	match: ls
 //│ deforest > <<< fusing <<<
 //│ = Cons(
 //│   [1, 1],

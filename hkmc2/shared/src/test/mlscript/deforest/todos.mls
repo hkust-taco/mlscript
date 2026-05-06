@@ -41,17 +41,17 @@ fun f(a) = if a is
 let p = AA(AA(AA(10)))
 test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(tmp:arg$AA$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(10))))) ->
-//│ deforest > 	Ref(tmp:arg$AA$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
+//│ deforest > B ->
+//│ deforest > 	match: x
+//│ deforest > AA(tmp) ->
+//│ deforest > 	match: x
+//│ deforest > 	fields: x.x1
+//│ deforest > AA(tmp) ->
+//│ deforest > 	match: arg$AA$0$
+//│ deforest > 	fields: arg$AA$0$.x
+//│ deforest > AA(10) ->
+//│ deforest > 	match: arg$AA$0$
+//│ deforest > 	fields: arg$AA$0$.x
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let test⁰, f⁰, p⁰, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_31$test⁰, test_31$x_dflt⁰, test_31$x_rest⁰, test_28$test⁰, test_28$x_AA⁰, test_28$x_rest⁰, test_28$arg$AA$0$_AA⁰, test_28$arg$AA$0$_rest⁰, test_28$arg$AA$0$_AA¹, test_28$arg$AA$0$_rest¹, AA_x, AA_x1, AA_x2, deforest$lam;
@@ -194,12 +194,12 @@ fun test() =
     Global(x) then Local(x + 1)
 test()
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Global,Some(term:Global/Global)),List(Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
-//│ deforest > Call(Ref(member:Global,Some(term:Global/Global)),List(Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
+//│ deforest > Global(1) ->
+//│ deforest > 	match: scrut
+//│ deforest > 	fields: scrut.x
+//│ deforest > Global(1) ->
+//│ deforest > 	match: scrut
+//│ deforest > 	fields: scrut.x
 //│ deforest > <<< fusing <<<
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
 
@@ -222,10 +222,10 @@ test()
 fun f(x) = if x is A then 1
 f(A) + f(A)
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(x,None)
+//│ deforest > A ->
+//│ deforest > 	match: x
+//│ deforest > A ->
+//│ deforest > 	match: x
 //│ deforest > <<< fusing <<<
 //│ = 2
 
