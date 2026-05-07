@@ -24,9 +24,9 @@ final case class Branch(scrutinee: Term.Ref, pattern: FlatPattern, continuation:
     * split-symbol renaming map through the continuation. */
   private[semantics] def duplicate(freshSplitSymbols: MutMap[SplitSymbol, SplitSymbol]): Branch =
     Branch(scrutinee, pattern, continuation.duplicate(freshSplitSymbols))
-  
+
   override def children: Vector[Located] = Vector.triple(scrutinee, pattern, continuation)
-  
+
   def showDbg(using DebugPrinter): String = s"${scrutinee.sym.nme} is ${pattern.showDbg} -> { ${continuation.showDbg} }"
 
 object Branch:
@@ -124,7 +124,7 @@ enum Split extends AutoLocated with ProductWithTail:
     case Split.End => true
     case Split.LetSplit(_, tail) => tail.isEmpty
     case Split.UseSplit(sym) => sym.body.isEmpty
-  
+
   /** Approximate tree size, used to decide whether sharing via `LetSplit` is
     * worthwhile compared to inlining (see `patMatConsequentSharingThreshold`). */
   lazy val size: Int = this match
