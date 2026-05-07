@@ -392,6 +392,7 @@ object DeadParamElim:
     tl: TL,
     raise: Raise,
     eState: Elaborator.State,
+    symbolPrinter: SymbolPrinter,
   ): Program =
     cfg.deadParamElim match
       case None => p

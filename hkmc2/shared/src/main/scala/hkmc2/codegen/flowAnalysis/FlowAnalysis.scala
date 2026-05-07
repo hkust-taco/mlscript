@@ -55,7 +55,7 @@ object FlowAnalysis:
     mono: Bool,
     nonAffineTracking: Bool,
     accumulatorTracking: Bool,
-  )(using TraceLogger, Elaborator.State, Raise) =
+  )(using TraceLogger, Elaborator.State, Raise, SymbolPrinter) =
     given State = new State
     val pre = new FlowPreAnalyzer(pgrm)
     val constrCol = new FlowConstraintsCollector(pre, mono, nonAffineTracking, accumulatorTracking)
@@ -285,7 +285,8 @@ class FlowPreAnalyzer(val pgrm: Program)(using
   val tl: TraceLogger,
   val eState: Elaborator.State,
   val fState: FlowAnalysis.State,
-  val raise: Raise
+  val raise: Raise,
+  val symbolPrinter: SymbolPrinter
 ) extends BlockTraverser:
   given stratVarUidState: Uid.StratVar.State = new Uid.StratVar.State
   import StratVarState.freshVar

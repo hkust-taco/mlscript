@@ -22,11 +22,10 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val
   given tl: TraceLogger = constraintSolver.tl
   given Raise = preAnalyzer.raise
 
+  private given Scope = Scope.empty(Scope.Cfg.default)
   private def pp(id: CtorDtorId): Str =
-    val scope = Scope.empty(Scope.Cfg.default)
-    given Scope = scope
     given ShowCfg = ShowCfg.internal
-    given SymbolPrinter = new SymbolPrinter(scope)
+    given SymbolPrinter = constraintSolver.preAnalyzer.symbolPrinter
     new codegen.Printer().print(id.exprId.getResult).mkString()
 
   private def pp(field: SelField): Str =
@@ -134,6 +133,7 @@ object Deforest:
     tl: TL,
     raise: Raise,
     eState: Elaborator.State,
+    symbolPrinter: SymbolPrinter,
   ): Program =
     // TODO: handle see through imported modules
     val dCfg = cfg.deforest.getOrElse(lastWords("deforestation is disabled in Config"))

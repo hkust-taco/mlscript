@@ -83,7 +83,7 @@ object Lowering:
   
 import Lowering.*
 
-class Lowering()(using Config, TL, Raise, State, Ctx):
+class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   
   extension (t: Term)
     def instantiated = t match

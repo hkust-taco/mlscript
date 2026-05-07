@@ -55,12 +55,6 @@ class MLsCompiler
   
   
   
-  // TODO adapt logic
-  given DebugPrinter = new DebugPrinter
-  val etl = new TraceLogger{override def doTrace: Bool = false}
-  val ltl = new TraceLogger{override def doTrace: Bool = false}
-  // val ltl = new TraceLogger{override def doTrace: Bool = true}
-  val rtl = new TraceLogger{override def doTrace: Bool = false}
   
   
   var dbgParsing = false
@@ -75,6 +69,20 @@ class MLsCompiler
     
     given Elaborator.State = new Elaborator.State:
       override def dbg: Bool = dbgElab
+    
+    // TODO adapt logic
+    given SymbolPrinter = new SymbolPrinter(
+      Scope.empty(Scope.Cfg.default.copy(
+        escapeChars = false,
+        useSuperscripts = true,
+        includeZero = true,
+      ))
+    )
+    val etl = new TraceLogger{override def doTrace: Bool = false}
+    val ltl = new TraceLogger{override def doTrace: Bool = false}
+    // val ltl = new TraceLogger{override def doTrace: Bool = true}
+    val rtl = new TraceLogger{override def doTrace: Bool = false}
+    
     
     val preludeParse = ParserSetup(preludeFile, dbgParsing)
     val mainParse = ParserSetup(file, dbgParsing)
