@@ -9,7 +9,7 @@ final case class Branch(scrutinee: Term.Ref, pattern: FlatPattern, continuation:
   /** Clone this branch and the split continuation below it. */
   def mkClone(using State): Branch =
     mkClone(MutMap.empty)
-
+  
   /** Clone this branch while sharing the split-symbol renaming map with the
     * enclosing split. `LetSplit`/`UseSplit` pairs inside the continuation are
     * local binders/references, so all continuations in the same copied split must
@@ -18,15 +18,15 @@ final case class Branch(scrutinee: Term.Ref, pattern: FlatPattern, continuation:
     val scrutineeClone = new Term.Ref(scrutinee.sym)
         (Tree.Ident(scrutinee.tree.name), scrutinee.refNum, scrutinee.typ)
     Branch(scrutineeClone, pattern.mkClone, continuation.mkClone(freshSplitSymbols))
-
+  
   /** Duplicate this branch during split rewriting. Unlike `mkClone`, this keeps
     * the existing scrutinee and pattern nodes, but it still has to thread the
     * split-symbol renaming map through the continuation. */
   private[semantics] def duplicate(freshSplitSymbols: MutMap[SplitSymbol, SplitSymbol]): Branch =
     Branch(scrutinee, pattern, continuation.duplicate(freshSplitSymbols))
-
+  
   override def children: Vector[Located] = Vector.triple(scrutinee, pattern, continuation)
-
+  
   def showDbg(using DebugPrinter): String = s"${scrutinee.sym.nme} is ${pattern.showDbg} -> { ${continuation.showDbg} }"
 
 object Branch:
