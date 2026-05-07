@@ -31,9 +31,9 @@ c(AA(3))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > AA(3) ->
-//│ deforest > 	match: p
-//│ deforest > 	fields: p.x
+//│ deforest > AA⁰(3) ->
+//│ deforest > 	match: p⁰
+//│ deforest > 	fields: p⁰.x⁰
 //│ deforest > <<< fusing <<<
 //│ = 3
 
@@ -44,11 +44,11 @@ c(AA(7))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > AA(7) ->
-//│ deforest > 	match: x
-//│ deforest > 	fields: x.x1
-//│ deforest > 	fields: x.x1
-//│ deforest > 	fields: x.x1
+//│ deforest > AA⁰(7) ->
+//│ deforest > 	match: x¹
+//│ deforest > 	fields: x¹.x⁰
+//│ deforest > 	fields: x¹.x⁰
+//│ deforest > 	fields: x¹.x⁰
 //│ deforest > <<< fusing <<<
 //│ = 14
 
@@ -82,12 +82,12 @@ affine_branched(AA(0), AA(1), (y) => if y is AA(x) then x + 2)
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > AA(1) ->
-//│ deforest > 	match: y
-//│ deforest > 	fields: y.x
-//│ deforest > AA(0) ->
-//│ deforest > 	match: x
-//│ deforest > 	fields: x.x1
+//│ deforest > AA⁰(1) ->
+//│ deforest > 	match: y⁰
+//│ deforest > 	fields: y⁰.x⁰
+//│ deforest > AA⁰(0) ->
+//│ deforest > 	match: x²
+//│ deforest > 	fields: x².x⁰
 //│ deforest > <<< fusing <<<
 //│ = 3
 
@@ -131,9 +131,9 @@ c(AA(0), AA(3))
 //│ deforest > x_for_c@33
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > AA(0) ->
-//│ deforest > 	match: k
-//│ deforest > 	fields: k.x
+//│ deforest > AA⁰(0) ->
+//│ deforest > 	match: k⁰
+//│ deforest > 	fields: k⁰.x⁰
 //│ deforest > <<< fusing <<<
 //│ = 9
 
@@ -211,9 +211,9 @@ nest_consume(nest_pickB, nest_prod(10))
 //│ deforest > x_for_nest_prod@31
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > AA(tmp) ->
-//│ deforest > 	match: p
-//│ deforest > 	fields: p.x
+//│ deforest > AA⁰(tmp⁰) ->
+//│ deforest > 	match: p¹
+//│ deforest > 	fields: p¹.x⁰
 //│ deforest > <<< fusing <<<
 //│ = 22
 
@@ -255,16 +255,16 @@ length(append(id(1 :: Nil), 2 :: Nil))
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > Cons(h, tmp) ->
-//│ deforest > 	match: ls
-//│ deforest > 	fields: ls.h
-//│ deforest > 	fields: ls.t
-//│ deforest > Cons(2, Nil) ->
-//│ deforest > 	match: ls
-//│ deforest > 	fields: ls.h
-//│ deforest > 	fields: ls.t
-//│ deforest > Nil ->
-//│ deforest > 	match: ls
+//│ deforest > Cons⁰(h⁰, tmp¹) ->
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h¹
+//│ deforest > 	fields: ls⁰.t⁰
+//│ deforest > Cons⁰(2, Nil⁰) ->
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h¹
+//│ deforest > 	fields: ls⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁰
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -286,16 +286,16 @@ length(ping(id(1 :: 2 :: Nil), 3 :: 4 :: Nil))
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > Cons(3, tmp) ->
-//│ deforest > 	match: ls
-//│ deforest > 	fields: ls.h
-//│ deforest > 	fields: ls.t
-//│ deforest > Cons(4, Nil) ->
-//│ deforest > 	match: ls
-//│ deforest > 	fields: ls.h
-//│ deforest > 	fields: ls.t
-//│ deforest > Nil ->
-//│ deforest > 	match: ls
+//│ deforest > Cons⁰(3, tmp²) ->
+//│ deforest > 	match: ls¹
+//│ deforest > 	fields: ls¹.h¹
+//│ deforest > 	fields: ls¹.t⁰
+//│ deforest > Cons⁰(4, Nil⁰) ->
+//│ deforest > 	match: ls¹
+//│ deforest > 	fields: ls¹.h¹
+//│ deforest > 	fields: ls¹.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls¹
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -316,12 +316,12 @@ sum(append(id(Nil), Nil), 0)
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil ->
-//│ deforest > 	match: ls
-//│ deforest > Cons(h, tmp) ->
-//│ deforest > 	match: ls
-//│ deforest > 	fields: ls.h
-//│ deforest > 	fields: ls.t
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls²
+//│ deforest > Cons⁰(h², tmp³) ->
+//│ deforest > 	match: ls²
+//│ deforest > 	fields: ls².h¹
+//│ deforest > 	fields: ls².t⁰
 //│ deforest > <<< fusing <<<
 //│ = 0
 

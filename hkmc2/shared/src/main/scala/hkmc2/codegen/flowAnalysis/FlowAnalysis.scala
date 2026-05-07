@@ -203,6 +203,8 @@ sealed trait StratWithOrigin[A <: OriginId]:
   def instantiationId: Opt[InstantiationId]
   def concreteId: ConcreteId[A] = ConcreteId(exprId, instantiationId.get)
 
+// strategies for constraint endpoints that do not represent real producer/consumer
+// but mark some properties (unknown, non-affine, etc.) of the corresponding upper/lower bounds.
 sealed trait MarkerProdStrat extends ProdStrat
 sealed trait MarkerConsStrat extends ConsStrat
 
@@ -220,7 +222,7 @@ class ProdFun(
   override def toString(): String =
     s"(${params.map(_.toString()).mkString(", ")}) -> ${res.toString()}"
 
-case object NoProd extends MarkerProdStrat
+case object UnknownProd extends MarkerProdStrat
 
 class Ctor(
   val exprId: ResultId,
@@ -245,7 +247,7 @@ class ConsFun(
   override def toString(): String =
     s"(${params.map(_.toString()).mkString(", ")}) -> ${res.toString()}"
 
-case object NoCons extends MarkerConsStrat
+case object UnknownCons extends MarkerConsStrat
 
 case object NonAffine extends MarkerConsStrat
 
@@ -728,9 +730,9 @@ class FlowConstraintsCollector(
 
     // collect constraints from the top-level block
     globalCollector.givenIn: cc ?=>
-      cc.constrain(preAnalyzer.res.primitiveStratVar.asProdStrat, NoCons)
-      cc.constrain(NoProd, preAnalyzer.res.primitiveStratVar.asConsStrat)
-      processBlock(preAnalyzer.pgrm.main)(using cc, NoCons)
+      cc.constrain(preAnalyzer.res.primitiveStratVar.asProdStrat, UnknownCons)
+      cc.constrain(UnknownProd, preAnalyzer.res.primitiveStratVar.asConsStrat)
+      processBlock(preAnalyzer.pgrm.main)(using cc, UnknownCons)
 
       if nonAffineTracking then
         for
@@ -744,14 +746,14 @@ class FlowConstraintsCollector(
           (_, fun) <- preAnalyzer.res.rootFunDefns
           if fun.visibility is Visibility.Public
         do
-          cc.constrain(generatedProdVars(fun.dSym).asProdStrat, NoCons)
+          cc.constrain(generatedProdVars(fun.dSym).asProdStrat, UnknownCons)
       else
         for (funSym, fun) <- preAnalyzer.res.rootFunDefns do
           val pScheme = funsToProdStratScheme(funSym)
           val synthesizedRefUid =
             Value.Ref(preAnalyzer.res.funSymToFunDefn(funSym).sym, S(funSym)).uid
           val selfProd = pScheme.instantiate(synthesizedRefUid, funSym)
-          cc.constrain(selfProd, NoCons)
+          cc.constrain(selfProd, UnknownCons)
           val selfInstId = synthesizedRefUid :: Nil
           synthesizedInstIdToFunSym(selfInstId) = funSym
     
@@ -778,7 +780,7 @@ class FlowConstraintsCollector(
             p.restParam.map(duplicateConsStrat),
             duplicateProdStrat(p.res),
             duplicateVarState(p.capturedVarUpperbound.s).asProdStrat)
-        case NoProd => NoProd
+        case UnknownProd => UnknownProd
         case c: Ctor => new Ctor(c.exprId, updateInstantiationId(c.instantiationId))(
           c.ctor,
           c.args.map((a, b) => a -> duplicateProdStrat(b)))
@@ -788,7 +790,7 @@ class FlowConstraintsCollector(
           new ConsFun(c.exprId, updateInstantiationId(c.instantiationId))(
             c.params.map(duplicateProdStrat),
             duplicateConsStrat(c.res))
-        case NoCons => NoCons
+        case UnknownCons => UnknownCons
         case NonAffine => NonAffine
         case Accumulator => Accumulator
         case PossibleAccumulator(s) => PossibleAccumulator(duplicateVarState(s))
@@ -806,8 +808,8 @@ class FlowConstraintsCollector(
     
     extension (v: StratVarState)
       def constrainOpaque(using cc: ConstraintsCollector): Unit =
-        cc.constrain(NoProd, v.asConsStrat)
-        cc.constrain(v.asProdStrat, NoCons)
+        cc.constrain(UnknownProd, v.asConsStrat)
+        cc.constrain(v.asProdStrat, UnknownCons)
     
     def mkFunProdStrat(
       resName: String,
@@ -860,19 +862,19 @@ class FlowConstraintsCollector(
       cls.publicFields.foreach: (_, tsym) =>
         generatedProdVars(tsym).constrainOpaque
       cls.methods.foreach: fun =>
-        processBlock(fun.body)(using cc, NoCons)
-      processBlock(cls.preCtor)(using cc, NoCons)
-      processBlock(cls.ctor)(using cc, NoCons)
+        processBlock(fun.body)(using cc, UnknownCons)
+      processBlock(cls.preCtor)(using cc, UnknownCons)
+      processBlock(cls.ctor)(using cc, UnknownCons)
       cls.companion.foreach: mod =>
         mod.privateFields.foreach(sym => generatedProdVars(sym).constrainOpaque)
         mod.publicFields.foreach: (_, tsym) =>
           generatedProdVars(tsym).constrainOpaque
         mod.methods.foreach: fun =>
           processFunctionDefn(fun)
-        processBlock(mod.ctor)(using cc, NoCons)
+        processBlock(mod.ctor)(using cc, UnknownCons)
     
     def constrainOpaqueResult(r: Result)(using cc: ConstraintsCollector): Unit =
-      cc.constrain(processResult(r), NoCons)
+      cc.constrain(processResult(r), UnknownCons)
 
     def processBlock(b: Block)(using cc: ConstraintsCollector, blkRes: ConsStrat): Unit =
       val instId = cc.instId
@@ -931,9 +933,9 @@ class FlowConstraintsCollector(
         val fStrat = processResult(f)
         val argsStrat = args.map(a => processResult(a.value))
         if args.exists(_.spread.isDefined) then
-          cc.constrain(fStrat, NoCons)
-          argsStrat.foreach(arg => cc.constrain(arg, NoCons))
-          NoProd
+          cc.constrain(fStrat, UnknownCons)
+          argsStrat.foreach(arg => cc.constrain(arg, UnknownCons))
+          UnknownProd
         else
           val callRes = freshVar("call_res", cc.forFunGroup)
           cc.constrain(fStrat, new ConsFun(callExprId, instId)(argsStrat, callRes.asConsStrat))
@@ -962,13 +964,13 @@ class FlowConstraintsCollector(
               // so we constrain args with NoCons and this CtorCall gives NoProd
               // - if size > 1, we cannot handle multiple parameter class flow now,
               //   constrain args with NoCons and this CtorCall gives NoProd
-              for a <- argsStrat do cc.constrain(a, NoCons)
-              NoProd
+              for a <- argsStrat do cc.constrain(a, UnknownCons)
+              UnknownProd
           case _: ModuleOrObjectSymbol => new Ctor(c.uid, instId)(ctor, Nil)
           case tupSize: Int => new Ctor(c.uid, instId)(tupSize, (0 until tupSize).zip(argsStrat).toList)
         case c@CtorCall(_, args) =>
-          args.foreach(arg => cc.constrain(processResult(arg.value), NoCons))
-          NoProd
+          args.foreach(arg => cc.constrain(processResult(arg.value), UnknownCons))
+          UnknownProd
         case c@Call(fun, argss) =>
           argss match
             case args :: Nil => handleCallLike(c.uid, fun, args)
@@ -979,10 +981,10 @@ class FlowConstraintsCollector(
               // DeadParamElim rewriter only rewrites the first arg list,
               // and sharing the same exprId would cause conflicting eliminable sets.
               val firstResult = handleCallLike(c.uid, fun, args)
-              cc.constrain(firstResult, NoCons)
+              cc.constrain(firstResult, UnknownCons)
               rest.foreach: nextArgs =>
-                nextArgs.foreach(a => cc.constrain(processResult(a.value), NoCons))
-              NoProd
+                nextArgs.foreach(a => cc.constrain(processResult(a.value), UnknownCons))
+              UnknownProd
             case Nil => handleCallLike(c.uid, fun, Nil)
         case i@Instantiate(_, cls, argss) => handleCallLike(i.uid, cls, argss.flatten)
         case lam@Lambda(ps, body) =>
@@ -991,12 +993,12 @@ class FlowConstraintsCollector(
         case Record(_, fields) =>
           fields.foreach:
             case RcdArg(idx, value) =>
-              idx.foreach(p => cc.constrain(processResult(p), NoCons))
-              cc.constrain(processResult(value), NoCons)
-          NoProd
+              idx.foreach(p => cc.constrain(processResult(p), UnknownCons))
+              cc.constrain(processResult(value), UnknownCons)
+          UnknownProd
         case p: Path =>
           p match
-          case CtorRef(ctor) => NoProd
+          case CtorRef(ctor) => UnknownProd
           case refSite@FunRef(f) =>
             funsToProdStratScheme.get(f) match
             case Some(fScheme) =>
@@ -1004,19 +1006,19 @@ class FlowConstraintsCollector(
             case None => generatedProdVars(f).asProdStrat
           case refLk@RefLike(sym) =>
             refLk match
-              case Select(p, _) => cc.constrain(processResult(p), NoCons)
+              case Select(p, _) => cc.constrain(processResult(p), UnknownCons)
               case _ => ()
             generatedProdVars(sym).asProdStrat
           case _: Value.Ref => lastWords("already handled in `RefLike` case")
           case Select(qual, name) =>
-            cc.constrain(processResult(qual), NoCons)
-            NoProd
+            cc.constrain(processResult(qual), UnknownCons)
+            UnknownProd
           case DynSelect(qual, fld, arrayIdx) =>
-            cc.constrain(processResult(qual), NoCons)
-            cc.constrain(processResult(fld), NoCons)
-            NoProd
-          case Value.This(sym) => NoProd
-          case Value.Lit(lit) => NoProd
+            cc.constrain(processResult(qual), UnknownCons)
+            cc.constrain(processResult(fld), UnknownCons)
+            UnknownProd
+          case Value.This(sym) => UnknownProd
+          case Value.Lit(lit) => UnknownProd
   }
 end FlowConstraintsCollector
 
@@ -1090,9 +1092,9 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
           handle(
             c.args.find(_._1 is d.field).get._2,
             d.consVar)
-      case (c: Ctor, NoCons) =>
-        ctorDests(c) += NoCons
-        for (_, argProd) <- c.args do handle(argProd, NoCons)
+      case (c: Ctor, UnknownCons) =>
+        ctorDests(c) += UnknownCons
+        for (_, argProd) <- c.args do handle(argProd, UnknownCons)
       case (c: Ctor, x@(NonAffine | Accumulator)) =>
         ctorDests(c) += x
         for (_, argProd) <- c.args do handle(argProd, x)
@@ -1119,11 +1121,11 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
             case ConsVar(s) => handle(arg, IntoParam(s))
             case _ => ()
         handle(p.res, c.res)
-      case (p: ProdFun, NoCons) =>
-        funDests(p) += NoCons
-        for a <- p.params do handle(NoProd, a)
-        p.restParam.foreach(r => handle(NoProd, r))
-        handle(p.res, NoCons)
+      case (p: ProdFun, UnknownCons) =>
+        funDests(p) += UnknownCons
+        for a <- p.params do handle(UnknownProd, a)
+        p.restParam.foreach(r => handle(UnknownProd, r))
+        handle(p.res, UnknownCons)
       case (p: ProdFun, x@(NonAffine | Accumulator)) =>
         funDests(p) += x
         handle(p.capturedVarUpperbound, x)
@@ -1131,15 +1133,15 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         handle(p.capturedVarUpperbound, PossibleAccumulator(s))
       case (p: ProdFun, c@PossibleAccumulator(s)) =>
         handle(p.capturedVarUpperbound, c)
-      case (NoProd, d: Dtor) =>
-        dtorSrcs(d) += NoProd
-      case (NoProd, sel: FieldSel) =>
-        dtorSrcs(sel) += NoProd
-        handle(NoProd, sel.consVar)
-      case (NoProd, c: ConsFun) =>
-        funSrcs(c) += NoProd
-        for a <- c.params do handle(a, NoCons)
-        handle(NoProd, c.res)
+      case (UnknownProd, d: Dtor) =>
+        dtorSrcs(d) += UnknownProd
+      case (UnknownProd, sel: FieldSel) =>
+        dtorSrcs(sel) += UnknownProd
+        handle(UnknownProd, sel.consVar)
+      case (UnknownProd, c: ConsFun) =>
+        funSrcs(c) += UnknownProd
+        for a <- c.params do handle(a, UnknownCons)
+        handle(UnknownProd, c.res)
       case (p: ProdVar, c: ConsVar) =>
         upperBounds(p.s.uid) ::= c
         lowerBounds(c.s.uid) ::= p

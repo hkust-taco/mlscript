@@ -84,7 +84,7 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val
     val consRoots =
       for
         (dtor, srcs) <- constraintSolver.dtorSrcs
-        if srcs.contains(NoProd)
+        if srcs.contains(UnknownProd)
       yield dtor
 
     val result = FlowWebComputation[ConcreteProducer, ConcreteConsumer](
