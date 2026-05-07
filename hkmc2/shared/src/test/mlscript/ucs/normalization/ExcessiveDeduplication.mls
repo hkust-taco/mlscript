@@ -46,8 +46,9 @@ if
 //│ = 0
 
 
-// * Currently, dedup' is implemented by hash-consing after the fact, which doesn't work when bindings are involved;
-// * it fails here:
+// * The last split is `y is [b] then ...`. It was duplicated because it serves
+// * as the alternative split when `x` or `z` fails. Now we bind the split to a
+// * split symbol and use it as the alternative splits of `x` and `z`.
 :ssjs
 :ucs normalized
 if
@@ -89,7 +90,7 @@ if
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
-// * What we want is a way of let-binding split tails (ie, join points), as in:
+// * The original draft of let-split constructs:
 // >  if
 // >    let-split $j =
 // >      y is Some(argument0$) and
@@ -104,7 +105,8 @@ if
 // >    $j
 
 
-// * Contemplate this absolutely horrendous code (before optimization):
+// * The lowered IR keeps a `set scrut = false` from `if false do ()`. The optimizer
+// * drops it:
 :sir
 :soir
 :sjs
