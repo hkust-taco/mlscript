@@ -208,7 +208,7 @@ class LabelSymbol(val trm: Opt[Term], name: Str = "lbl")(using State) extends Lo
 /** Symbol representing a named split (join point) introduced during normalization.
   * The `body` field holds the shared split that this symbol references.
   * The `label` field is set during lowering to the corresponding LabelSymbol. */
-class SplitSymbol(var body: Split, name: Str = "split")(using State) extends LocalSymbol:
+class SplitSymbol(val body: Split, name: Str = "split")(using State) extends LocalSymbol:
   var label: Opt[LabelSymbol] = N
   def nme = name
   def subst(using s: SymbolSubst): SplitSymbol = this // SplitSymbols are not substituted

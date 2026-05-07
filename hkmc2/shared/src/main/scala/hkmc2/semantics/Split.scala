@@ -112,6 +112,17 @@ enum Split extends AutoLocated with ProductWithTail:
     case Split.End => Set.empty
     case Split.LetSplit(sym, tail) => sym.body.freeVars ++ tail.freeVars
     case Split.UseSplit(sym) => sym.body.freeVars
+
+  /** Free split symbols: those appearing in `UseSplit` references that no
+    * enclosing `LetSplit` binds. */
+  lazy val freeSplitSyms: Set[SplitSymbol] = this match
+    case Split.Cons(Branch(_, _, continuation), tail) =>
+      continuation.freeSplitSyms ++ tail.freeSplitSyms
+    case Split.Let(_, _, tail) => tail.freeSplitSyms
+    case Split.Else(_) | Split.End => Set.empty
+    case Split.LetSplit(sym, tail) =>
+      (sym.body.freeSplitSyms ++ tail.freeSplitSyms) - sym
+    case Split.UseSplit(sym) => sym.body.freeSplitSyms + sym
   
   final def showDbg(using DebugPrinter): String = this match
     case Split.Cons(head, tail) => s"${head.showDbg}; ${tail.showDbg}"

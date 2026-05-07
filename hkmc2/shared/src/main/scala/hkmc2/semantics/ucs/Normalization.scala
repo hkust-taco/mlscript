@@ -79,23 +79,17 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         case S(_) | N => lhs
       case _ => lhs
 
-  inline def apply(split: Split): Split = normalize(split)(using VarSet(), JoinPointCtx.empty)._1
+  inline def apply(split: Split): Split = normalize(split)(using VarSet())
 
   /**
     * Normalize a split by specializing branches that test the same scrutinee
     * and introducing join points (`LetSplit`/`UseSplit`) to share duplicated
-    * alternatives.
-    *
-    * @param split the split to normalize
-    * @return a pair of (1) the normalized split and (2) the set of `SplitSymbol`s
-    *         whose `UseSplit` references survive in the result but whose `LetSplit`
-    *         bindings have not yet been placed — these are propagated upward so
-    *         that the caller (an enclosing `normalizeImpl`) can place the
-    *         `LetSplit` at the lowest common ancestor.
+    * alternatives. Whether a candidate join point survives is decided by
+    * inspecting the result's `freeSplitSyms`.
     */
-  private def normalize(split: Split)(using vs: VarSet, jpctx: JoinPointCtx): (Split, Set[SplitSymbol]) = trace(
+  private def normalize(split: Split)(using vs: VarSet): Split = trace(
     pre = s"normalize <<< ${split.prettyPrint}",
-    post = (res: (Split, Set[SplitSymbol])) => "normalize >>> " + res._1.prettyPrint,
+    post = (res: Split) => "normalize >>> " + res.prettyPrint,
   ):
     normalizeImpl(split)
   
@@ -124,10 +118,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     case Split.LetSplit(s, tail) => Split.LetSplit(s, inlineUseSplit(tail, sym, body))
     case Split.UseSplit(s) => if s eq sym then body.duplicate else split
 
-  /** Workhorse of `normalize`. Returns the same pair: the normalized split
-    * and the set of unbound `SplitSymbol`s whose `LetSplit` placement is
-    * deferred to an ancestor. */
-  private def normalizeImpl(split: Split)(using vs: VarSet, jpctx: JoinPointCtx): (Split, Set[SplitSymbol]) = split match
+  /** Workhorse of `normalize`. Returns the normalized split. Whether a
+    * candidate join point survives normalization is decided by inspecting
+    * `freeSplitSyms` of the recursive result. */
+  private def normalizeImpl(split: Split)(using vs: VarSet): Split = split match
     case Split.Cons(Branch(scrutinee, pattern, consequent), alternative) =>
       log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
       if alternative.isTrivial || alternative.referencesScrutinee(scrutinee) then
@@ -137,22 +131,22 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         // sharing unsound). Duplicate and specialize separately.
         // TODO: detect when both specializations agree and share even here.
         val positiveSplit = consequent ++ alternative.duplicate
-        val (whenTrue, trueRefs) = normalize(specialize(positiveSplit, +, scrutinee, pattern).getOrElse(positiveSplit))
+        val whenTrue = normalize(specialize(positiveSplit, +, scrutinee, pattern).getOrElse(positiveSplit))
         val negativeSplit = alternative
-        val (whenFalse, falseRefs) = normalizeImpl(specialize(negativeSplit, -, scrutinee, pattern).getOrElse(negativeSplit).clearFallback)
-        (Branch(scrutinee, pattern, whenTrue) ~: whenFalse, trueRefs | falseRefs)
+        val whenFalse = normalizeImpl(specialize(negativeSplit, -, scrutinee, pattern).getOrElse(negativeSplit).clearFallback)
+        Branch(scrutinee, pattern, whenTrue) ~: whenFalse
       else
         // The alternative doesn't reference the same scrutinee, so specialization
         // is a no-op on the alternative. Create a join point symbol wrapping
         // the normalized alternative; append UseSplit as a placeholder fallback
         // in the consequent, then check whether specialization + normalization
         // kept or discarded it.
-        val (normalizedAlt, _) = normalize(alternative)(using vs, JoinPointCtx.empty)
+        val normalizedAlt = normalize(alternative)
         val sym = new SplitSymbol(normalizedAlt, "σ")
         val useSplit = Split.UseSplit(sym)
         val combinedSplit = consequent ++ useSplit
-        val (whenTrue, trueRefs) = normalize(specialize(combinedSplit, +, scrutinee, pattern).getOrElse(combinedSplit))(using vs, jpctx + sym)
-        if trueRefs.contains(sym) then
+        val whenTrue = normalize(specialize(combinedSplit, +, scrutinee, pattern).getOrElse(combinedSplit))
+        if whenTrue.freeSplitSyms.contains(sym) then
           // The UseSplit survived in the true branch, meaning the alternative
           // is reachable from both sides. Decide whether sharing via LetSplit
           // is worthwhile based on the consequent sharing threshold.
@@ -160,33 +154,29 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             case S(threshold) => normalizedAlt.size * 2 > threshold
             case N => false
           if shouldShare then
-            (Split.LetSplit(sym, Branch(scrutinee, pattern, whenTrue) ~: useSplit), trueRefs - sym)
+            Split.LetSplit(sym, Branch(scrutinee, pattern, whenTrue) ~: useSplit)
           else
             // The alternative is too small to justify sharing — inline UseSplit
             // references back into the true branch.
             val inlinedTrue = inlineUseSplit(whenTrue, sym, normalizedAlt)
-            (Branch(scrutinee, pattern, inlinedTrue) ~: normalizedAlt, trueRefs - sym)
+            Branch(scrutinee, pattern, inlinedTrue) ~: normalizedAlt
         else
           // The consequent was exhaustive after specialization, so the UseSplit
           // was discarded. No sharing needed — use the alternative directly
           // as the false branch.
-          (Branch(scrutinee, pattern, whenTrue) ~: normalizedAlt, trueRefs)
+          Branch(scrutinee, pattern, whenTrue) ~: normalizedAlt
     case Split.Let(v, _, tail) if vs has v =>
       log(s"LET: SKIP already declared scrutinee $v")
       normalizeImpl(tail)
     case Split.Let(v, rhs, tail) =>
       log(s"LET: $v")
-      val (normalizedTail, refs) = normalizeImpl(tail)(using vs + v, jpctx)
-      (Split.Let(v, rhs, normalizedTail), refs)
+      Split.Let(v, rhs, normalizeImpl(tail)(using vs + v))
     case split @ Split.Else(default) =>
       log(s"DFLT: ${default.showDbg}")
-      (split, Set.empty)
-    case Split.End => (Split.End, Set.empty)
-    case Split.LetSplit(sym, tail) =>
-      val (normalizedTail, refs) = normalizeImpl(tail)
-      (Split.LetSplit(sym, normalizedTail), refs)
-    case split @ Split.UseSplit(sym) =>
-      (split, if jpctx.contains(sym) then Set(sym) else Set.empty)
+      split
+    case Split.End => Split.End
+    case Split.LetSplit(sym, tail) => Split.LetSplit(sym, normalizeImpl(tail))
+    case split @ Split.UseSplit(_) => split
   
   /**
     * Specialize `split` with the assumption that `scrutinee` matches `pattern`.
@@ -461,7 +451,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         res
       lazy val tSym = TermSymbol.fromFunBms(f, N)
       val normalized = tl.scoped("ucs:normalize"):
-        normalize(inputSplit)(using VarSet(), JoinPointCtx.empty)._1
+        normalize(inputSplit)(using VarSet())
       tl.scoped("ucs:normalized"):
         tl.log(s"Normalized:\n${normalized.prettyPrint}")
       lazy val assignResult = (r: Result) =>
@@ -629,14 +619,6 @@ object Normalization:
 
   object VarSet:
     def apply(): VarSet = VarSet(Set())
-
-  /** Immutable context tracking pending join point symbols whose LetSplit
-    * placement is deferred to the lowest common ancestor of their UseSplit references. */
-  case class JoinPointCtx(pending: Set[SplitSymbol]):
-    def +(sym: SplitSymbol): JoinPointCtx = JoinPointCtx(pending + sym)
-    def contains(sym: SplitSymbol): Bool = pending.contains(sym)
-  object JoinPointCtx:
-    val empty: JoinPointCtx = JoinPointCtx(Set.empty)
 
   /** Specialization mode */
   enum Mode:
