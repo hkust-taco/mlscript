@@ -124,7 +124,7 @@ enum Split extends AutoLocated with ProductWithTail:
     case Split.End => true
     case Split.LetSplit(_, tail) => tail.isEmpty
     case Split.UseSplit(sym) => sym.body.isEmpty
-
+  
   /** Approximate tree size, used to decide whether sharing via `LetSplit` is
     * worthwhile compared to inlining (see `patMatConsequentSharingThreshold`). */
   lazy val size: Int = this match
