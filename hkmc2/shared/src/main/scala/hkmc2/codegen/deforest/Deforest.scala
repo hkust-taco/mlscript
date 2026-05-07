@@ -136,7 +136,7 @@ object Deforest:
     eState: Elaborator.State,
   ): Program =
     // TODO: handle see through imported modules
-    val dCfg = cfg.deforest.get
+    val dCfg = cfg.deforest.getOrElse(lastWords("deforestation is disabled in Config"))
     val flowAnalysisRes = FlowAnalysis(
       p,
       mono = dCfg.mono,

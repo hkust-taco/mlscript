@@ -13,8 +13,8 @@ import scala.collection.mutable.{Set as MutSet, Map as MutMap, LinkedHashMap, Li
 
 object FlowAnalysis:
   object TraceScope:
-    val nonAffineSyms = "flow-analysis/non-affine"
-    val accumulatorSyms = "flow-analysis/accumulator"
+    val NonAffineSyms = "flow-analysis/non-affine"
+    val AccumulatorSym = "flow-analysis/accumulator"
 
   class State:
     val resultToResultId = new java.util.IdentityHashMap[Result, Uid[Result]].asScala
@@ -68,8 +68,8 @@ object FlowAnalysis:
   ): TraceLogger =
     new TraceLogger(using outerTl.debugPrinter):
       override def doTrace: Bool = scope match
-        case S(TraceScope.nonAffineSyms) => cfg.logNonAffine
-        case S(TraceScope.accumulatorSyms) => cfg.logAccumulator
+        case S(TraceScope.NonAffineSyms) => cfg.logNonAffine
+        case S(TraceScope.AccumulatorSym) => cfg.logAccumulator
         case _ => cfg.debug
 
       override def emitDbg(str: Str): Unit =
@@ -290,12 +290,15 @@ class FlowPreAnalyzer(val pgrm: Program)(using
   given stratVarUidState: Uid.StratVar.State = new Uid.StratVar.State
   import StratVarState.freshVar
   
+  // Records the local definitions and captured variables of the current
+  // nested function/lambda.
+  // This tracking of captured variables is needed for propagating non-affine
+  // information through ProdFuns.
   private case class CaptureTrackingInfo(
     locallyDefined: MutSet[Symbol],
-    captured: LinkedHashSet[Symbol],
-    outer: Opt[CaptureTrackingInfo]
+    captured: LinkedHashSet[Symbol]
   )
-  private var currentCaptureFrame: Opt[CaptureTrackingInfo] = N
+  private var currentCaptureInfo: Opt[CaptureTrackingInfo] = N
   private var currentAffinityCount = res.affinityCounts
   
   
@@ -378,7 +381,13 @@ class FlowPreAnalyzer(val pgrm: Program)(using
       withCtx(InCtx.Mod(mod))(body)()
     
     inline def inFun(fun: FunDefn)(inline body: => Any) =
-      withCtx(InCtx.Fn(fun))(body):
+      val locallyDefined = MutSet.empty[Symbol]
+      locallyDefined += fun.sym
+      locallyDefined += fun.dSym
+      for pl <- fun.params do
+        pl.params.foreach(p => locallyDefined += p.sym)
+        pl.restParam.foreach(p => locallyDefined += p.sym)
+      withCtx(InCtx.Fn(fun))(withCaptureInfo(fun.dSym, locallyDefined)(body)):
         res.funSymToFunDefn(fun.dSym) = fun
         if isTopLvlLikeFunCtx(ctx) then
           res.rootFunDefns.addOne(fun.dSym -> fun)
@@ -407,7 +416,10 @@ class FlowPreAnalyzer(val pgrm: Program)(using
       withCtx(InCtx.Scped(scpd))(body)()
     
     inline def inLam(lam: Lambda)(inline body: => Any) =
-      withCtx(InCtx.Lam(lam))(body)()
+      val locallyDefined = MutSet.empty[Symbol]
+      lam.params.params.foreach(p => locallyDefined += p.sym)
+      lam.params.restParam.foreach(p => locallyDefined += p.sym)
+      withCtx(InCtx.Lam(lam))(withCaptureInfo(lam.uid, locallyDefined)(body))()
     
     inline def inTopLvl(inline body: => Any) =
       assert(ctx.isEmpty)
@@ -456,18 +468,19 @@ class FlowPreAnalyzer(val pgrm: Program)(using
       currentAffinityCount(sym) = currentAffinityCount(sym) + 1
 
   private def recordRefInCaptures(l: Symbol): Unit =
-    currentCaptureFrame.foreach: frame =>
-      if !frame.locallyDefined.contains(l) then
-        frame.captured += l
+    currentCaptureInfo.foreach: capInfo =>
+      if !capInfo.locallyDefined.contains(l) then
+        capInfo.captured += l
 
-  private def inCaptureFrame(owner: TermSymbol | ResultId, locallyDefined: MutSet[Symbol])(body: => Unit): Unit =
-    val frame = CaptureTrackingInfo(locallyDefined, LinkedHashSet.empty, currentCaptureFrame)
-    currentCaptureFrame = S(frame)
+  private def withCaptureInfo(owner: TermSymbol | ResultId, locallyDefined: MutSet[Symbol])(body: => Any): Unit =
+    val outerCapInfo = currentCaptureInfo
+    val newCapInfo = CaptureTrackingInfo(locallyDefined, LinkedHashSet.empty)
+    currentCaptureInfo = S(newCapInfo)
     body
-    currentCaptureFrame = frame.outer
-    currentCaptureFrame.foreach: outer =>
-      outer.captured ++= frame.captured.iterator.filterNot(outer.locallyDefined.contains)
-    res.capturedVars(owner) = frame.captured
+    currentCaptureInfo = outerCapInfo
+    outerCapInfo.foreach: outer =>
+      outer.captured ++= newCapInfo.captured.iterator.filterNot(outer.locallyDefined.contains)
+    res.capturedVars(owner) = newCapInfo.captured
   
   override def applyBlock(b: Block): Unit = b match
     case scpd@Scoped(syms, body) =>
@@ -475,11 +488,10 @@ class FlowPreAnalyzer(val pgrm: Program)(using
         s match
         case s: BlockMemberSymbol => ()
         case _ => ctxTracker.registerStratVar(s, s.nme)
-      val CaptureTrackingInfo = currentCaptureFrame
-      CaptureTrackingInfo.foreach(_.locallyDefined ++= syms)
+      currentCaptureInfo.foreach(_.locallyDefined ++= syms)
       ctxTracker.inScoped(scpd):
         applyBlock(body)
-      CaptureTrackingInfo.foreach(_.locallyDefined --= syms)
+      currentCaptureInfo.foreach(_.locallyDefined --= syms)
     case m@Match(scrut, arms, dflt, rest) =>
       applyPath(scrut)
       val outerAffinityCount = currentAffinityCount
@@ -562,12 +574,12 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     case DynSelect(qual, fld, arrayIdx) =>
       applyPath(qual); applyPath(fld)
     case p@TrackableFieldSelect(qual, _ -> _) =>
-        res.selToCtxOfSel.addOne(p.uid -> ctxTracker.getAllCtx)
-        qual match
-          case Value.Ref(l, disamb)
-            if ctxTracker.isEnclosingMatchScrutSym(disamb.getOrElse(l)) =>
-              recordRefInCaptures(disamb.getOrElse(l))
-          case _ => applyPath(qual)
+      res.selToCtxOfSel.addOne(p.uid -> ctxTracker.getAllCtx)
+      qual match
+      case Value.Ref(l, disamb)
+        if ctxTracker.isEnclosingMatchScrutSym(disamb.getOrElse(l)) =>
+          recordRefInCaptures(disamb.getOrElse(l))
+      case _ => applyPath(qual)
     case p: Select =>
       super.applyPath(p)
     case v: Value => applyValue(v)
@@ -580,26 +592,15 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     case Value.Lit(lit) => ()
   
   override def applyFunDefn(fun: FunDefn): Unit =
-    val scope = MutSet.empty[Symbol]
-    scope += fun.sym
-    scope += fun.dSym
-    for pl <- fun.params do
-      pl.params.foreach(p => scope += p.sym)
-      pl.restParam.foreach(p => scope += p.sym)
     ctxTracker.inFun(fun):
-      inCaptureFrame(fun.dSym, scope):
-        ctxTracker.registerStratVar(fun.dSym, fun.sym.nme)
-        fun.params.foreach(applyParamList)
-        applyBlock(fun.body)
+      ctxTracker.registerStratVar(fun.dSym, fun.sym.nme)
+      fun.params.foreach(applyParamList)
+      applyBlock(fun.body)
   
   override def applyLam(lam: Lambda): Unit =
-    val scope = MutSet.empty[Symbol]
-    lam.params.params.foreach(p => scope += p.sym)
-    lam.params.restParam.foreach(p => scope += p.sym)
     ctxTracker.inLam(lam):
-      inCaptureFrame(lam.uid, scope):
-        applyParamList(lam.params)
-        applyBlock(lam.body)
+      applyParamList(lam.params)
+      applyBlock(lam.body)
   
   override def applyValDefn(defn: ValDefn): Unit =
     ctxTracker.registerStratVar(defn.tsym, defn.tsym.nme)
@@ -704,11 +705,11 @@ class FlowConstraintsCollector(
       // compute strat scheme for each scc group
       for groupedFuns <- sccInOrder do
         val groupRep = funToSccRep(groupedFuns.head).get
-        (new ConstraintsCollector(Some(groupRep))).givenIn: cc ?=>
+        new ConstraintsCollector(Some(groupRep)).givenIn: cc ?=>
           for funSym <- groupedFuns do
             val fun = preAnalyzer.res.funSymToFunDefn(funSym)
             val thisFunVar = generatedProdVars(fun.dSym)
-            val funProdStrat = processHandleableFun(
+            val funProdStrat = mkFunProdStrat(
               s"${funSym.nme}_res",
               fun.params,
               fun.body,
@@ -730,10 +731,6 @@ class FlowConstraintsCollector(
       cc.constrain(NoProd, preAnalyzer.res.primitiveStratVar.asConsStrat)
       processBlock(preAnalyzer.pgrm.main)(using cc, NoCons)
 
-      // emit NonAffine for non-affine syms that don't belong to any scc:
-      // in mono mode there are no SCC collectors, so all go here;
-      // in poly mode, only syms with no root fun are emitted here,
-      // the rest were emitted inside their owning SCC's scheme collector above
       if nonAffineTracking then
         for
           sym <- preAnalyzer.res.nonAffineSyms
@@ -812,10 +809,10 @@ class FlowConstraintsCollector(
         cc.constrain(v.asProdStrat, NoCons)
     
     def mkFunProdStrat(
+      resName: String,
       params: Ls[ParamList],
-      funLamId: FunId,
-      res: ProdStrat,
-      capturedSyms: collection.Set[Symbol]
+      body: Block,
+      funLamId: FunId
     )(using cc: ConstraintsCollector): ProdStrat =
       def paramListFunId(whichParamList: Int): FunId =
         funLamId match
@@ -823,7 +820,15 @@ class FlowConstraintsCollector(
           case lambdaExprId: ResultId =>
             assert(whichParamList == 0)
             lambdaExprId
-      params.zipWithIndex.foldRight[ProdStrat](res):
+      val capturedSyms = funLamId match
+        case (sym: TermSymbol, _) => preAnalyzer.res.capturedVars(sym)
+        case lamExprId: ResultId => preAnalyzer.res.capturedVars(lamExprId)
+        case other => lastWords(s"unexpected funLamId shape: $other")
+      val res = freshVar(resName, cc.forFunGroup)
+      params.foreach:
+        _.restParam.foreach: p =>
+          generatedProdVars(p.sym).constrainOpaque
+      val funValueStrat = params.zipWithIndex.foldRight[ProdStrat](res.asProdStrat):
         case ((ps, whichParamList), acc) =>
           val plFunId = paramListFunId(whichParamList)
           val capUB = freshVar(s"cap_ub_$plFunId", cc.forFunGroup).asProdStrat
@@ -837,31 +842,12 @@ class FlowConstraintsCollector(
             ps.restParam.map(p => generatedProdVars(p.sym).asConsStrat),
             acc,
             capUB)
-    
-    def processHandleableFun(
-      resName: String,
-      params: Ls[ParamList],
-      body: Block,
-      funLamId: FunId
-    )(using cc: ConstraintsCollector): ProdStrat =
-      val res = freshVar(resName, cc.forFunGroup)
-      params.foreach:
-        _.restParam.foreach: p =>
-          generatedProdVars(p.sym).constrainOpaque
-      val capturedSyms = funLamId match
-        case (sym: TermSymbol, _) => preAnalyzer.res.capturedVars(sym)
-        case lamExprId: ResultId => preAnalyzer.res.capturedVars(lamExprId)
-        case other => lastWords(s"unexpected funLamId shape: $other")
-      val funProdStrat = mkFunProdStrat(params, funLamId, res.asProdStrat, capturedSyms)
       processBlock(body)(using cc, res.asConsStrat)
-      funProdStrat
-    
-    def constrainOpaqueResult(r: Result)(using cc: ConstraintsCollector): Unit =
-      cc.constrain(processResult(r), NoCons)
-    
-    def processHandleableFunDefn(fun: FunDefn)(using cc: ConstraintsCollector): Unit =
+      funValueStrat
+
+    def processFunctionDefn(fun: FunDefn)(using cc: ConstraintsCollector): Unit =
       if mono || !preAnalyzer.res.rootFunDefns.contains(fun.dSym) then
-        val funProdStrat = processHandleableFun(
+        val funProdStrat = mkFunProdStrat(
           s"${fun.dSym.nme}_res",
           fun.params,
           fun.body,
@@ -881,9 +867,12 @@ class FlowConstraintsCollector(
         mod.publicFields.foreach: (_, tsym) =>
           generatedProdVars(tsym).constrainOpaque
         mod.methods.foreach: fun =>
-          processHandleableFunDefn(fun)
+          processFunctionDefn(fun)
         processBlock(mod.ctor)(using cc, NoCons)
     
+    def constrainOpaqueResult(r: Result)(using cc: ConstraintsCollector): Unit =
+      cc.constrain(processResult(r), NoCons)
+
     def processBlock(b: Block)(using cc: ConstraintsCollector, blkRes: ConsStrat): Unit =
       val instId = cc.instId
       b match
@@ -928,7 +917,7 @@ class FlowConstraintsCollector(
           val rhsStrat = processResult(rhs)
           cc.constrain(rhsStrat, generatedProdVars(tsym).asConsStrat)
         case fun: FunDefn =>
-          processHandleableFunDefn(fun)
+          processFunctionDefn(fun)
         case cls: ClsLikeDefn =>
           processClsLikeDefn(cls)
         processBlock(rest)
@@ -996,7 +985,7 @@ class FlowConstraintsCollector(
             case Nil => handleCallLike(c.uid, fun, Nil)
         case i@Instantiate(_, cls, argss) => handleCallLike(i.uid, cls, argss.flatten)
         case lam@Lambda(ps, body) =>
-          processHandleableFun("lam_res", ps :: Nil, body, lam.uid)
+          mkFunProdStrat("lam_res", ps :: Nil, body, lam.uid)
         case _: Tuple => lastWords("should be handled in CtorCall")
         case Record(_, fields) =>
           fields.foreach:
@@ -1047,7 +1036,7 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   val lowerBounds = MutMap.empty[StratVarId, Ls[ProdStrat]].withDefaultValue(Nil)
   
   private def logNonAffineSyms: Unit =
-    tl.scoped(FlowAnalysis.TraceScope.nonAffineSyms):
+    tl.scoped(FlowAnalysis.TraceScope.NonAffineSyms):
       tl.log(">>> non-affine syms >>>")
       val outputRes =
         for
@@ -1060,7 +1049,7 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
       tl.log("<<< non-affine syms <<<")
   
   private def logAccumulatorSyms: Unit =
-    tl.scoped(FlowAnalysis.TraceScope.accumulatorSyms):
+    tl.scoped(FlowAnalysis.TraceScope.AccumulatorSym):
       tl.log(">>> accumulator syms >>>")
       def showAccumulatorSym(uid: StratVarId, bounds: Ls[ConsStrat]): Opt[Str] =
         bounds
@@ -1158,7 +1147,7 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
       case (p: ProdVar, c) =>
         upperBounds(p.s.uid) ::= c
         c match
-          case PossibleAccumulator(s) if p.s === s =>
+          case PossibleAccumulator(s) if p.s is s =>
             upperBounds(p.s.uid) ::= Accumulator
             for l <- lowerBounds(p.s.uid) do handle(l, Accumulator)
           case _ => ()

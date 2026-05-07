@@ -80,6 +80,19 @@ abstract class MLsDiffMaker extends DiffMaker:
   val patMatConsequentSharingThreshold = Command("patMatConsequentSharingThreshold")(_.trim.toInt)
   val deadParamElim = Command("deadParamElim")(_.trim)
 
+  private val DeforestKnownFlags = Set(
+    "mono",
+    "trackNonAffine",
+    "noTrackNonAffine",
+    "trackAccumulator",
+    "noTrackAccumulator",
+    "logNonAffine",
+    "noLogNonAffine",
+    "logAccumulator",
+    "noLogAccumulator",
+  )
+  private val DeadParamElimKnownFlags = Set("debug", "mono", "poly", "off")
+  
   def mkConfig: Config =
     import Config.*
     def parseFlags(raw: Opt[Str]): Set[Str] =
@@ -138,18 +151,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       tailRecOpt = !noTailRecOpt.isSet,
       deforest = Opt.when(deforest.isSet):
         val flags = parseFlags(deforest.get)
-        val knownFlags = Set(
-          "mono",
-          "trackNonAffine",
-          "noTrackNonAffine",
-          "trackAccumulator",
-          "noTrackAccumulator",
-          "logNonAffine",
-          "noLogNonAffine",
-          "logAccumulator",
-          "noLogAccumulator",
-        )
-        reportUnknownFlags(":deforest", flags, knownFlags)
+        reportUnknownFlags(":deforest", flags, DeforestKnownFlags)
         reportExclusiveFlagConflict(":deforest", flags, "trackNonAffine", "noTrackNonAffine")
         reportExclusiveFlagConflict(":deforest", flags, "trackAccumulator", "noTrackAccumulator")
         reportExclusiveFlagConflict(":deforest", flags, "logNonAffine", "noLogNonAffine")
@@ -172,19 +174,8 @@ abstract class MLsDiffMaker extends DiffMaker:
         if deadParamElim.isUnset then S(DeadParamElim.default)
         else
           val flags = parseFlags(deadParamElim.get)
-          val knownFlags = Set(
-            "debug", "mono", "poly", "off",
-            "trackNonAffine", "noTrackNonAffine",
-            "trackAccumulator", "noTrackAccumulator",
-            "logNonAffine", "noLogNonAffine",
-            "logAccumulator", "noLogAccumulator",
-          )
-          reportUnknownFlags(":deadParamElim", flags, knownFlags)
+          reportUnknownFlags(":deadParamElim", flags, DeadParamElimKnownFlags)
           reportExclusiveFlagConflict(":deadParamElim", flags, "mono", "poly")
-          reportExclusiveFlagConflict(":deadParamElim", flags, "trackNonAffine", "noTrackNonAffine")
-          reportExclusiveFlagConflict(":deadParamElim", flags, "trackAccumulator", "noTrackAccumulator")
-          reportExclusiveFlagConflict(":deadParamElim", flags, "logNonAffine", "noLogNonAffine")
-          reportExclusiveFlagConflict(":deadParamElim", flags, "logAccumulator", "noLogAccumulator")
           if flags.contains("off") && (flags - "off").nonEmpty then
             output(s"$errMarker ':deadParamElim off' conflicts with other flags")
           if flags.contains("off") then N
@@ -192,10 +183,10 @@ abstract class MLsDiffMaker extends DiffMaker:
             S(DeadParamElim(FlowAnalysisConfig(
               debug = flags.contains("debug"),
               mono = !flags.contains("poly"),
-              trackNonAffine = resolveFlag(flags, "trackNonAffine", "noTrackNonAffine", DeadParamElim.default.trackNonAffine),
-              trackAccumulator = resolveFlag(flags, "trackAccumulator", "noTrackAccumulator", DeadParamElim.default.trackAccumulator),
-              logNonAffine = resolveFlag(flags, "logNonAffine", "noLogNonAffine", default = false),
-              logAccumulator = resolveFlag(flags, "logAccumulator", "noLogAccumulator", default = false),
+              trackNonAffine = false,
+              trackAccumulator = false,
+              logNonAffine = false,
+              logAccumulator = false,
             ))),
     )
   
