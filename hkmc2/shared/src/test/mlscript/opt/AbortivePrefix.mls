@@ -58,12 +58,25 @@ fun f =
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+// * The trailing `???` puts the `if` in non-tail position, so `LetSplit` lowering
+// * adds a `σ$x` exit-label around the let-split. Every consequent returns, so no
+// * consequent breaks from `σ$x`. The optimizer removes it.
+:ucs normalized
 :sir
 :soir
 fun f =
   if true and false then return "1"
   else return "2 long long long long long long long long long long long long long long"
   (???)
+//│ Normalized:
+//│ >  ‹if|while›
+//│ >    let tmp:scrut = true
+//│ >    let-split σ = else return "2 long long long long long long long long long long long long long long"
+//│ >    tmp:scrut is true and
+//│ >      let tmp:scrut = false
+//│ >      tmp:scrut is true then return "1"
+//│ >      $σ
+//│ >    $σ
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let f²;
 //│ define f² as fun f³() {
