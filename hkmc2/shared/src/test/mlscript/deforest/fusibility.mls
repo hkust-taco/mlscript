@@ -375,3 +375,50 @@ alias_then_patmat(Cons(12, 13))
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = 37
+
+
+
+// * FIXME: should detect that the `x` field is NON-affine
+// *  (the patmat special handling should be refined)
+fun foo(a) =
+  if a is
+    AA then a.AA#x() + a.AA#x()
+foo of AA of () => 1
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> accumulator syms >>>
+//│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > AA⁰(lambda⁰) ->
+//│ deforest > 	match: a⁰
+//│ deforest > 	fields: a⁰.x⁰
+//│ deforest > 	fields: a⁰.x⁰
+//│ deforest > <<< fusing <<<
+//│ = 2
+
+// * Indeed, the above is equivalent to:
+fun foo(a) =
+  if a is
+    AA then
+      let f = a.AA#x
+      f() + f()
+foo of AA of () => 1
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:lambda,0)_for_lambda@19
+//│ deforest > f_for_foo@21
+//│ deforest > f_for_foo@34
+//│ deforest > lambda_for_lambda@17
+//│ deforest > sel_res_for_foo@31
+//│ deforest > sel_res_for_foo@44
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> accumulator syms >>>
+//│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > AA⁰(lambda¹) ->
+//│ deforest > 	match: a¹
+//│ deforest > 	fields: a¹.x⁰
+//│ deforest > <<< fusing <<<
+//│ = 2
+
+
+
