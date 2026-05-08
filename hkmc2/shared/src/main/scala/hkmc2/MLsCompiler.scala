@@ -55,8 +55,6 @@ class MLsCompiler
   
   
   
-  
-  
   var dbgParsing = false
   var dbgElab = false
   
@@ -82,7 +80,6 @@ class MLsCompiler
     val ltl = new TraceLogger{override def doTrace: Bool = false}
     // val ltl = new TraceLogger{override def doTrace: Bool = true}
     val rtl = new TraceLogger{override def doTrace: Bool = false}
-    
     
     val preludeParse = ParserSetup(preludeFile, dbgParsing)
     val mainParse = ParserSetup(file, dbgParsing)
