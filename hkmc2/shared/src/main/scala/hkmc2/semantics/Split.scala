@@ -112,7 +112,9 @@ enum Split extends AutoLocated with ProductWithTail:
     case Split.End => Set.empty
     case Split.LetSplit(sym, tail) => sym.body.freeVars ++ tail.freeVars
     case Split.UseSplit(sym) => sym.body.freeVars
-
+  
+  infix def uses(sym: SplitSymbol): Bool = freeSplitSyms.contains(sym)
+  
   /** Free split symbols: those appearing in `UseSplit` references that no
     * enclosing `LetSplit` binds. */
   lazy val freeSplitSyms: Set[SplitSymbol] = this match
@@ -169,6 +171,7 @@ object Split:
   import ups.SplitCompiler, SplitCompiler.{MakeConsequent, Scrut, SymbolScrut}
   import Term.Ref
   
+  /** Desugar a `SimpleSplit` into a `Split`. */
   def from(rootSplit: SS)(using tl: TL)(using Ctx, Raise, State): Split =
     val compiler = new SplitCompiler()
     val scrutCache = MutMap.empty[Ref, Scrut]

@@ -28,7 +28,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       these.isFallback = false
       these
 
-    def ++(those: Split): Split =
+    def ++(those: => Split): Split =
       if these.isFull then
         log("tail is discarded")
         these
@@ -109,6 +109,11 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       case Split.UseSplit(_) => true
       case _ => false
 
+    /** Specialize this split under the given assumption, falling back to the
+      * unchanged split when specialization is a no-op. */
+    private def specialized(mode: Mode, scrutinee: Term.Ref, pattern: FlatPattern)(using VarSet): Split =
+      specialize(split, mode, scrutinee, pattern).getOrElse(split)
+
   /** Replace all `UseSplit(sym)` references in `split` with a duplicate of `body`. */
   private def inlineUseSplit(split: Split, sym: SplitSymbol, body: Split): Split = split match
     case Split.Cons(Branch(scrut, pat, cons), tail) =>
@@ -124,47 +129,47 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
   private def normalizeImpl(split: Split)(using vs: VarSet): Split = split match
     case Split.Cons(Branch(scrutinee, pattern, consequent), alternative) =>
       log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
-      if alternative.isTrivial || alternative.referencesScrutinee(scrutinee) then
-        // The alternative is trivial (End or UseSplit — no code worth sharing),
-        // or it references the same scrutinee (so positive and negative
-        // specialization may transform it differently on each side, making
-        // sharing unsound). Duplicate and specialize separately.
-        // TODO: detect when both specializations agree and share even here.
-        val positiveSplit = consequent ++ alternative.duplicate
-        val whenTrue = normalize(specialize(positiveSplit, +, scrutinee, pattern).getOrElse(positiveSplit))
-        val negativeSplit = alternative
-        val whenFalse = normalizeImpl(specialize(negativeSplit, -, scrutinee, pattern).getOrElse(negativeSplit).clearFallback)
-        Branch(scrutinee, pattern, whenTrue) ~: whenFalse
-      else
-        // The alternative doesn't reference the same scrutinee, so specialization
-        // is a no-op on the alternative. Create a join point symbol wrapping
-        // the normalized alternative; append UseSplit as a placeholder fallback
-        // in the consequent, then check whether specialization + normalization
-        // kept or discarded it.
-        val normalizedAlt = normalize(alternative)
-        val sym = new SplitSymbol(normalizedAlt, "σ")
-        val useSplit = Split.UseSplit(sym)
-        val combinedSplit = consequent ++ useSplit
-        val whenTrue = normalize(specialize(combinedSplit, +, scrutinee, pattern).getOrElse(combinedSplit))
-        if whenTrue.freeSplitSyms.contains(sym) then
-          // The UseSplit survived in the true branch, meaning the alternative
-          // is reachable from both sides. Decide whether sharing via LetSplit
-          // is worthwhile based on the consequent sharing threshold.
-          val shouldShare = config.patMatConsequentSharingThreshold match
-            case S(threshold) => normalizedAlt.size * 2 > threshold
-            case N => false
-          if shouldShare then
-            Split.LetSplit(sym, Branch(scrutinee, pattern, whenTrue) ~: useSplit)
+      val specializedConsequent = consequent.specialized(+, scrutinee, pattern)
+      if specializedConsequent.isFull then
+        // The positive specialization of the consequent ends with `Else` or
+        // `UseSplit`. By the definition of `++`, any tail appended to it is
+        // dropped, so no fallback is needed on the positive side.
+        log("FULL: positive consequent is full, no fallback needed")
+        val negativeAlternative = alternative.specialized(-, scrutinee, pattern).clearFallback
+        Branch(scrutinee, pattern, normalize(specializedConsequent)) ~: normalize(negativeAlternative)
+      else (specialize(alternative, +, scrutinee, pattern), specialize(alternative, -, scrutinee, pattern)) match
+        case (N, N) =>
+          // Both ± specializations leave the alternative unchanged, so the
+          // positive fallback and the negative branch normalize to the same
+          // split. Bind that split as a join point and let `freeSplitSyms`
+          // decide whether the `UseSplit` survives.
+          log("SHARE?: alternative unchanged by ± specialization")
+          val normalizedAlternative = normalize(alternative)
+          val splitSymbol = new SplitSymbol(normalizedAlternative, "σ")
+          val useSplit = Split.UseSplit(splitSymbol)
+          val whenTrue = normalize(specializedConsequent ++ useSplit)
+          if whenTrue.freeSplitSyms.contains(splitSymbol) then
+            val shouldShare = config.patMatConsequentSharingThreshold match
+              case S(threshold) => normalizedAlternative.size * 2 > threshold
+              case N => false
+            if shouldShare then
+              log(s"SHARE: let-split ${splitSymbol.nme}, body size ${normalizedAlternative.size}")
+              Split.LetSplit(splitSymbol, Branch(scrutinee, pattern, whenTrue) ~: useSplit)
+            else
+              log(s"INLINE: body size ${normalizedAlternative.size} below threshold")
+              Branch(scrutinee, pattern, inlineUseSplit(whenTrue, splitSymbol, normalizedAlternative)) ~: normalizedAlternative
           else
-            // The alternative is too small to justify sharing — inline UseSplit
-            // references back into the true branch.
-            val inlinedTrue = inlineUseSplit(whenTrue, sym, normalizedAlt)
-            Branch(scrutinee, pattern, inlinedTrue) ~: normalizedAlt
-        else
-          // The consequent was exhaustive after specialization, so the UseSplit
-          // was discarded. No sharing needed — use the alternative directly
-          // as the false branch.
-          Branch(scrutinee, pattern, whenTrue) ~: normalizedAlt
+            log(s"ABSORB: positive consequent absorbed $$${splitSymbol.nme}, no sharing")
+            Branch(scrutinee, pattern, whenTrue) ~: normalizedAlternative
+        case (S(positiveAlternative), S(negativeAlternative)) =>
+          log("DUP: pos≠, neg≠")
+          Branch(scrutinee, pattern, normalize(specializedConsequent ++ positiveAlternative)) ~: normalize(negativeAlternative.clearFallback)
+        case (S(positiveAlternative), N) =>
+          log("DUP: pos≠, neg=")
+          Branch(scrutinee, pattern, normalize(specializedConsequent ++ positiveAlternative)) ~: normalize(alternative.clearFallback)
+        case (N, S(negativeAlternative)) =>
+          log("DUP: pos=, neg≠")
+          Branch(scrutinee, pattern, normalize(specializedConsequent ++ alternative.duplicate)) ~: normalize(negativeAlternative.clearFallback)
     case Split.Let(v, _, tail) if vs has v =>
       log(s"LET: SKIP already declared scrutinee $v")
       normalizeImpl(tail)
