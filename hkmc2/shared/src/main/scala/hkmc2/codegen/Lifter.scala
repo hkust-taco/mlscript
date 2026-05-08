@@ -550,7 +550,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     
     val defn = ClsLikeDefn(
       None, clsSym, BlockMemberSymbol(nme, Nil),
-      S(TermSymbol(syntax.Fun, S(clsSym), clsSym.id)),
+      S(ClassCtorSymbol(syntax.Fun, S(clsSym), clsSym.id)),
       syntax.Cls,
       N,
       PlainParamList(sortedVars.iterator.map(_.param).toList) :: Nil, None, Nil, Nil, 

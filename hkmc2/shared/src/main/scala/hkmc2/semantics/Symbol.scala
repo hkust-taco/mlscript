@@ -325,6 +325,15 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   
   def subst(using sub: SymbolSubst): TermSymbol = sub.mapTermSym(this)
 
+
+class ClassCtorSymbol(
+  k: TermDefKind,
+  owner: Opt[InnerSymbol],
+  id: Tree.Ident
+)(using State) extends TermSymbol(k, owner, id):
+  override def subst(using sub: SymbolSubst): ClassCtorSymbol = sub.mapClassCtorSym(this)
+
+
 object TermSymbol:
   def fromFunBms(b: BlockMemberSymbol, owner: Opt[InnerSymbol])(using State) =
     TermSymbol(syntax.Fun, owner, Tree.Ident(b.nme))

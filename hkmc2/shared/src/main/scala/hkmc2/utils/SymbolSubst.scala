@@ -10,6 +10,7 @@ class SymbolSubst:
   def mapInstSym(s: InstSymbol): InstSymbol = s
   def mapBuiltInSym(s: BuiltinSymbol): BuiltinSymbol = s
   def mapTermSym(s: TermSymbol): TermSymbol = s
+  def mapClassCtorSym(s: ClassCtorSymbol): ClassCtorSymbol = s
   def mapCtorSym(s: CtorSymbol): CtorSymbol = s
   def mapClsSym(s: ClassSymbol): ClassSymbol = s
   def mapModuleSym(s: ModuleOrObjectSymbol): ModuleOrObjectSymbol = s
