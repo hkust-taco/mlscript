@@ -384,7 +384,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     defn.isym.defn match
       case S(clsDef: hkmc2.semantics.ClassLikeDef) => clsDef
       case _ =>
-        lastWords(s"Expected lowered class `${defn.sym}` to retain its semantic class definition")
+        lastWords(s"Expected definition of class `${defn.sym}` to be present")
 
   /** Returns the elaborated source methods for this class. */
   private def semanticMethodDefs(defn: ClsLikeDefn)(using Raise): List[TermDefinition] =
