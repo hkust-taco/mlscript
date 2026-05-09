@@ -172,6 +172,8 @@ and then use one of the following commands.
 - `hkmc2DiffTests/test` for running only the main diff-tests, in `hkmc2/shared/src/test/mlscript`.
 - `hkmc2MainTests/test` for running the above two.
 - `hkmc2AppsTests/test` for running the applications compile and diff tests.
+- `hkmc2PackagesTest/test` for compiling the packages in `hkmc2/shared/src/test/mlscript-packages`.
+  Each folder represents a package, which can be imported directly using its name.
 - `hkmc2NofibTests/test` for running the nofib compile and diff tests.
 - `hkmc2WasmTests/test` for running the wasm compile and diff tests.
 - `hkmc2MostTests/test` for running all of the above.
@@ -220,7 +222,6 @@ Links to the individual paper artifact repositories are provided at the correspo
   used v1 with the current Scala-like syntax.
 * [**OOPSLA '25**] [A Lightweight Type-and-Effect System for Invalidation Safety](https://cse.hkust.edu.hk/~parreaux/publication/oopsla25/)
   used hkmc2.
-
 
 
 

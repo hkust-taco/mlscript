@@ -1,55 +1,51 @@
 package hkmc2
 
-import org.scalatest.{funsuite, funspec, ParallelTestExecution}
-import org.scalatest.time._
-import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
+import org.scalatest.{funspec, ParallelTestExecution}
 
 import mlscript.utils.*, shorthands.*
 import io.PlatformPath.given
 
-import AppTestRunner.given
-import hkmc2.codegen.Local
-import hkmc2.io.Path
 import hkmc2.io.FileSystem
 
 /**
-  * A simple test runner that compiles apps written in MLscript.
+  * A simple test runner that compiles packages written in MLscript.
   */
-class AppTestRunner
+class PackageTestRunner
   extends funspec.AnyFunSpec
   // with ParallelTestExecution // Can `MLsCompiler` handle parallel compilation?
   // with TimeLimitedTests // TODO
 :
-  import AppTestRunner.*
+  import PackageTestRunner.*
+  import PackageTestRunner.given
   
   private val inParallel = isInstanceOf[ParallelTestExecution]
   
   // val timeLimit = TimeLimit
   
-  for appDir <- os.list(appsDir).filter(os.isDir) do
-    val allFiles = os.walk(appDir).filter(os.isFile).filter(_.ext == "mls").toSeq
-    val appName = appDir.baseName
+  for packageDir <- os.list(packagesDir).filter(os.isDir) do
+    val allFiles = os.walk(packageDir).filter(os.isFile).filter(_.ext == "mls").toSeq
+    val packageName = packageDir.baseName
     
-    // The compiler context is created per app to avoid interference.
-    given cctx: CompilerCtx = CompilerCtx.fresh(fs, AppModuleResolver(appDir))
+    // The compiler context is created per package to avoid interference.
+    given cctx: CompilerCtx = CompilerCtx.fresh(fs, PackageModuleResolver(packageDir))
     // We might need to read `Config` from a config file later.
     given Config = Config.default(mainTestDir)
     
-    val wrap: (=> Unit) => Unit = body => AppTestRunner.synchronized(body)
+    val wrap: (=> Unit) => Unit = body => PackageTestRunner.synchronized(body)
     val report = ReportFormatter(System.out.println, colorize = true, wrap = Some(wrap))
     val compiler = MLsCompiler(paths, mkRaise = report.mkRaise)
     
-    describe(s"$appName (${"file" countBy allFiles.size})"):
+    describe(s"$packageName (${"file" countBy allFiles.size})"):
     
       allFiles.foreach: file =>
-        val relativeName = file.relativeTo(appDir).toString()
+        val relativeName = file.relativeTo(packageDir).toString()
         
         it(relativeName):
           
-          AppTestRunner.synchronized:
-            println(s"Compiling: [${fansi.Bold.On(appName)}] ${fansi.Color.Green(relativeName)}")
+          PackageTestRunner.synchronized:
+            println(s"Compiling: [${fansi.Bold.On(packageName)}] ${fansi.Color.Green(relativeName)}")
           
-          assert(true, s"Placeholder test for app: $relativeName")
+          assert(true, s"Placeholder test for package: $relativeName")
 
           compiler.compileModule(file)
           
@@ -57,12 +53,12 @@ class AppTestRunner
             fail(s"Unexpected diagnostic at: " +
               report.badLines.distinct.sorted
                 .map("\n\t"+relativeName+"."+file.ext+":"+_).mkString(", "))
-end AppTestRunner
+end PackageTestRunner
 
-object AppTestRunner:
+object PackageTestRunner:
   
-  val mainTestDir = os.pwd / "hkmc2" / "shared" / "src" / "test"
-  val appsDir = mainTestDir / "mlscript-apps"
+  val mainTestDir = TestFolders.mainTestDir(os.pwd)
+  val packagesDir = TestFolders.packagesTestDir(os.pwd)
   val stdlibDir = mainTestDir / "mlscript-compile"
   
   val paths = new MLsCompiler.Paths:
@@ -79,11 +75,11 @@ object AppTestRunner:
   
   // We may use a different module resolver for URL modules in browsers. For
   // example, `import "https://esm.sh/nanoid"` should be accepted.
-  class AppModuleResolver(appDir: os.Path) extends LocalModuleResolver(vendors, N):
-    private val appVendorDir = appDir / "vendor"
+  class PackageModuleResolver(packageDir: os.Path) extends LocalModuleResolver(vendors, N):
+    private val packageVendorDir = packageDir / "vendor"
     
     private def getVendoredPath(moduleName: Str): io.Path =
-      val dir = appVendorDir / moduleName
+      val dir = packageVendorDir / moduleName
       if os.exists(dir) then
         if os.isDir(dir) then dir
         else
@@ -92,4 +88,4 @@ object AppTestRunner:
         os.makeDir.all(dir)
         dir
   
-end AppTestRunner
+end PackageTestRunner

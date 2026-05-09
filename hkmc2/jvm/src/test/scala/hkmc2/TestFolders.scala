@@ -24,9 +24,9 @@ object TestFolders:
   def compileTestDir(wd: os.Path): os.Path =
     mainTestDir(wd)/"mlscript-compile"
   
-  /** The apps test directory: `hkmc2/shared/src/test/mlscript-apps`. */
-  def appsTestDir(wd: os.Path): os.Path =
-    mainTestDir(wd)/"mlscript-apps"
+  /** The packages test directory: `hkmc2/shared/src/test/mlscript-packages`. */
+  def packagesTestDir(wd: os.Path): os.Path =
+    mainTestDir(wd)/"mlscript-packages"
   
   // ——— Diff test subdirectories excluded from the main DiffTestRunner ———
   
@@ -43,9 +43,9 @@ object TestFolders:
     diffTestDir(wd)/"wasm"
   
   /** Diff test directories that are always excluded (staging, mlscript-compile,
-    * mlscript-apps). */
+    * mlscript-packages). */
   def alwaysExcludedDiffDirs(wd: os.Path): Ls[os.Path] =
-    (diffTestDir(wd)/"ucs"/"staging") :: compileTestDir(wd) :: appsTestDir(wd) :: Nil
+    (diffTestDir(wd)/"ucs"/"staging") :: compileTestDir(wd) :: packagesTestDir(wd) :: Nil
   
   /** All diff test directories excluded from the main DiffTestRunner. */
   def mainExcludedDiffDirs(wd: os.Path): Ls[os.Path] =
