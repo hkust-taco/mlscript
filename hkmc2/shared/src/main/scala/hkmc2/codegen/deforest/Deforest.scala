@@ -22,10 +22,10 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val
   given tl: TraceLogger = constraintSolver.tl
   given Raise = preAnalyzer.raise
 
-  private given Scope = Scope.empty(Scope.Cfg.default)
   private def pp(id: CtorDtorId): Str =
     given ShowCfg = ShowCfg.internal
-    given SymbolPrinter = constraintSolver.preAnalyzer.symbolPrinter
+    given symbolPrinter: SymbolPrinter = constraintSolver.preAnalyzer.symbolPrinter
+    given dbgScope: Scope = symbolPrinter.dbgScp
     new codegen.Printer().print(id.exprId.getResult).mkString()
 
   private def pp(field: SelField): Str =

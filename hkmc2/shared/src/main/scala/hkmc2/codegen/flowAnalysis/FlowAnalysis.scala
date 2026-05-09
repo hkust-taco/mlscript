@@ -732,6 +732,11 @@ class FlowConstraintsCollector(
       cc.constrain(UnknownProd, preAnalyzer.res.primitiveStratVar.asConsStrat)
       processBlock(preAnalyzer.pgrm.main)(using cc, UnknownCons)
 
+      // this places non-affine constraints correctly:
+      // - in mono mode there are no per-scc collectors,
+      // so the global collector gets all the relevant non-affine constraints;
+      // - in poly mode, non-affine constraints on scc-owned symbols are handled
+      // in their scc strat scheme, and the global collector collects the remaining constriants
       if nonAffineTracking then
         for
           sym <- preAnalyzer.res.nonAffineSyms
