@@ -445,33 +445,15 @@ class FlowPreAnalyzer(val pgrm: Program)(using
   
   end ctxTracker
   
-  private def recordAffinityUse(l: Symbol, disamb: Opt[DefinitionSymbol[?]]): Unit =
-    def isClassCtorSym(sym: Symbol): Bool =
-      sym.asTrm.exists: tSym =>
-        tSym.owner
-          .flatMap(_.asCls)
-          .flatMap(_.defn)
-          .flatMap(_.ctorSym)
-          .exists(_ is tSym)
-    val processedSymbol =
-      disamb.getOrElse(l) match
-      case _: NoSymbol | _: LabelSymbol | _: BuiltinSymbol => N
-      case _: ClassSymbol | _: ModuleOrObjectSymbol | _: PatternSymbol | _: TypeAliasSymbol => N
-      case _: TopLevelSymbol => N
-      case sym: TermSymbol =>
-        if isClassCtorSym(sym) then N else S(sym)
-      case bms: BlockMemberSymbol =>
-        if bms.asCls.nonEmpty || bms.asModOrObj.nonEmpty || bms.asPat.nonEmpty || bms.asAls.nonEmpty
-        then N
-        else
-          val trmOrBms = bms.asTrm.getOrElse(bms)
-          if isClassCtorSym(trmOrBms) then N else S(trmOrBms)
-      case sym => S(sym)
-    processedSymbol.foreach: sym =>
-      currentAffinityCount(sym) = currentAffinityCount(sym) + 1
-
-  private def recordRefInCaptures(l: Symbol): Unit =
-    currentCaptureInfo.foreach: capInfo =>
+  private def recordAffinityUse(s: BlockLocalSymbol | TermSymbol): Unit =
+    s match
+    case _: ClassCtorSymbol => ()
+    case _ => currentAffinityCount(s) = currentAffinityCount(s) + 1
+  
+  private def recordRefInCaptures(l: BlockLocalSymbol | TermSymbol): Unit =
+    (l, currentCaptureInfo) match
+    case (_: ClassCtorSymbol, _) | (_, N) => ()
+    case (_, S(capInfo)) =>
       if !capInfo.locallyDefined.contains(l) then
         capInfo.captured += l
 
@@ -530,7 +512,9 @@ class FlowPreAnalyzer(val pgrm: Program)(using
         applyBlock(sub)
       applyBlock(rest)
     case Assign(lhs, rhs, rest) =>
-      recordRefInCaptures(lhs)
+      lhs match
+        case l: (BlockLocalSymbol | TermSymbol) => recordRefInCaptures(l)
+        case _ => ()
       applyResult(rhs)
       applyBlock(rest)
     case Define(defn, rest) =>
@@ -573,30 +557,43 @@ class FlowPreAnalyzer(val pgrm: Program)(using
         case RcdArg(idx, value) => idx.foreach(applyPath); applyPath(value)
     case p: Path => applyPath(p)
   
+  private def applyValueRef(v: Value.Ref, recordAffinity: Bool) =
+    val Value.Ref(l, disamb) = v
+    (l, disamb) match
+    case (_: BlockMemberSymbol, S(s: TermSymbol)) =>
+      recordRefInCaptures(s)
+      if recordAffinity then recordAffinityUse(s)
+    case (s: TermSymbol, N) =>
+      recordRefInCaptures(s)
+      if recordAffinity then recordAffinityUse(s)
+    case (s: BlockLocalSymbol, N) =>
+      recordRefInCaptures(s)
+      if recordAffinity then recordAffinityUse(s)
+    case _ => ()
+  
   override def applyPath(p: Path): Unit = p match
     case DynSelect(qual, fld, arrayIdx) =>
       applyPath(qual); applyPath(fld)
     case p@TrackableFieldSelect(qual, _ -> _) =>
       res.selToCtxOfSel.addOne(p.uid -> ctxTracker.getAllCtx)
       qual match
-      case Value.Ref(l, disamb)
+      case v@Value.Ref(l, disamb)
         if ctxTracker.isEnclosingMatchScrutSym(disamb.getOrElse(l)) =>
-          recordRefInCaptures(disamb.getOrElse(l))
+          applyValueRef(v, recordAffinity = false)
       case _ => applyPath(qual)
     case p: Select =>
       super.applyPath(p)
     case v: Value => applyValue(v)
   
   override def applyValue(v: Value): Unit = v match
-    case Value.Ref(l, disamb) =>
-      recordRefInCaptures(disamb.getOrElse(l))
-      recordAffinityUse(l, disamb)
+    case v@Value.Ref(l, disamb) => applyValueRef(v, recordAffinity = true)
     case Value.This(sym) => ()
     case Value.Lit(lit) => ()
   
   override def applyFunDefn(fun: FunDefn): Unit =
     ctxTracker.inFun(fun):
       ctxTracker.registerStratVar(fun.dSym, fun.sym.nme)
+      currentCaptureInfo.foreach(_.locallyDefined += fun.dSym)
       fun.params.foreach(applyParamList)
       applyBlock(fun.body)
   
@@ -607,6 +604,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
   
   override def applyValDefn(defn: ValDefn): Unit =
     ctxTracker.registerStratVar(defn.tsym, defn.tsym.nme)
+    currentCaptureInfo.foreach(_.locallyDefined += defn.tsym)
     applyPath(defn.rhs)
   
   override def applyParamList(pl: ParamList): Unit =
