@@ -448,7 +448,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
   private def recordAffinityUse(s: BlockLocalSymbol | TermSymbol): Unit =
     s match
     case _: ClassCtorSymbol => ()
-    case _ => currentAffinityCount(s) = currentAffinityCount(s) + 1
+    case _ => currentAffinityCount(s) += 1
   
   private def recordRefInCaptures(l: BlockLocalSymbol | TermSymbol): Unit =
     (l, currentCaptureInfo) match
