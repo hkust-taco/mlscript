@@ -26,17 +26,18 @@ class Importer:
         val id = alias.getOrElse(new syntax.Tree.Ident(moduleName)) // TODO loc
         val sym = TermSymbol(LetBind, N, id)
         Import(sym, specifier, wd / io.RelPath(rawPath.value)) // hmm, the third arg is dummy???
-      case S(ModuleResolver.ResolvedModule.File(_, actualFile, moduleName)) =>
+      case S(ModuleResolver.ResolvedModule.File(sourceFile, targetFile, moduleName)) =>
         // The specifier is resolved to a file path.
-        importFile(rawPath, actualFile, moduleName, alias)
+        importFile(rawPath, sourceFile, targetFile, moduleName, alias)
       case N =>
         // The specifier could not be resolved. We treat it as a file path.
         val actualFile =
           if rawPath.value.startsWith("/") then io.Path(rawPath.value)
           else wd / io.RelPath(rawPath.value)
-        importFile(rawPath, actualFile, actualFile.baseName, alias)
+        val targetFile = cctx.moduleResolver.targetPathForSource(actualFile).getOrElse(actualFile)
+        importFile(rawPath, actualFile, targetFile, actualFile.baseName, alias)
   
-  private def importFile(rawPath: StrLit, actualFile: io.Path, nme: Str, alias: Opt[syntax.Tree.Ident])(using cfg: Config): Import =
+  private def importFile(rawPath: StrLit, actualFile: io.Path, targetFile: io.Path, nme: Str, alias: Opt[syntax.Tree.Ident])(using cfg: Config): Import =
     val id = alias.getOrElse(new syntax.Tree.Ident(nme)) // TODO loc
     
     lazy val sym = TermSymbol(LetBind, N, id)
@@ -48,7 +49,7 @@ class Importer:
       actualFile.ext match
       
       case "mjs" | "js" =>
-        Import(sym, actualFile.toString, actualFile)
+        Import(sym, targetFile.toString, targetFile)
         
       case "mls" if {
         !cctx.beingCompiled.contains(actualFile) `||`:
@@ -70,7 +71,9 @@ class Importer:
           res.tsym = importedSym.tsym
           res
         
-        val jsFile = actualFile.up / io.RelPath(actualFile.baseName + ".mjs")
+        val jsFile =
+          if targetFile.ext === "mjs" then targetFile
+          else targetFile.up / io.RelPath(targetFile.baseName + ".mjs")
         Import(sym, jsFile.toString, jsFile)
         
       case _ =>

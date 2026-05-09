@@ -69,8 +69,14 @@ class MLsCompiler
   
   
   def compileModule(file: io.Path): Unit =
+    compileModule(file, N)
+  
+  /** Compile a MLscript module into JavaScript with the given output path. */
+  def compileModule(file: io.Path, outputFile: Opt[io.Path]): Unit =
     
     val wd = file.up
+    val out = outputFile.getOrElse(file.up / io.RelPath(file.baseName + ".mjs"))
+    val outputWd = out.up
     
     given Raise = mkRaise(file)
     
@@ -127,9 +133,8 @@ class MLsCompiler
       baseScp.addToBindings(Elaborator.State.importSymbol, "import", shadow = false)
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
-        jsb.program(le_2, exportedSymbol, wd)
+        jsb.program(le_2, exportedSymbol, outputWd)
       val jsStr = je.stripBreaks.mkString(100)
-      val out = file.up / io.RelPath(file.baseName + ".mjs")
       cctx.fs.write(out, jsStr)
       }
   

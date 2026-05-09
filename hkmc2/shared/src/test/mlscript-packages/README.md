@@ -1,34 +1,65 @@
 # MLscript Packages
 
-This is the directory for packages.
+Each direct child directory is treated as one package. For example,
+`mlscript-packages/web-ide` defines the package named `web-ide`.
+
+The first package-resolution goal is small: packages can import
+outside source trees through explicit vendoring, while relative imports inside
+a package keep their current behavior.
 
 ## Package Manifest File
 
 Each package's directory should contain a manifest file `manifest.json`.
-The file will be written in `.mlson` (MLscript Object Notation) in the future.
+The file will be written in `.mlson` (_MLscript Object Notation_) in the future.
 
-### Vendor Paths: `vendors: Array[{prefix: Str, path: Str, files: Array[Str]}]`
-
-This option specifies which source code files from outside the package need to be vendored into the current package.
-Each element in the array has three properties: `prefix`, `path`, and `files`,
-indicating that all files in the `path` directory matching the glob patterns in `files`
-can be imported using `prefix` + the file's path relative to `path`.
-
-For example, the following entry allows users to import all `.mls` files
-(but not recursively)
-in `mlscript-compile` folder by prefixing the filename with `@std/`.
+Minimal shape:
 
 ```json
 {
+  "name": "web-ide",
+  "main": "editor/Highlight.mls",
+  "moduleName": "Highlight",
   "vendors": [
-    {"prefix": "@std/", "path": "../../mlscript-compile", files: ["*.mls"]}
+    {
+      "prefix": "std/",
+      "path": "../../mlscript-compile",
+      "files": ["Predef.mls"]
+    }
   ]
 }
 ```
 
-The array of vendors is matched in order,
-and each import path will be rewritten using the first entry it matches.
+Required fields:
 
-Note that when compiling each package,
-the compiler will actively compile all matched files.
-Therefore, you need to specify the glob patterns in `files` as precisely as possible. Currently, only `*` and `**` glob patterns are supported.
+- `name`: package name. This should match the package directory name.
+- `main`: entry `.mls` file for `import "package-name"`.
+- `moduleName`: MLscript symbol expected to be defined by the entry file.
+
+Optional fields:
+
+- `vendors`: external source roots made available to this package.
+
+## Vendoring
+
+`vendors` is the package interdependency mechanism. It is intentionally not an
+npm-style dependency graph: a package explicitly chooses which source roots and
+which entry files it vendors.
+
+Each vendor entry has:
+- `prefix`: import prefix visible to this package.
+- `path`: source root, relative to the current package directory.
+- `files`: initial `.mls` files or glob patterns under `path`.
+
+For each vendor entry, the package compiler:
+1. starts from the `.mls` files matched by `files`;
+2. recursively follows their `.mls` imports;
+3. compiles the transitive `.mls` closure into `.mjs` files under
+  `vendors/<prefix>/` in the current package;
+4. copies all `.js`/`.mjs` files under the declared vendor roots as static
+  assets, without analyzing their imports;
+5. leaves the generated `.mjs` files untracked by version control.
+
+If a JavaScript asset would be copied to the same path as a compiled `.mls`
+output, the compiled `.mls` output wins.
+
+The package's own `.mls` files still compile beside themselves.

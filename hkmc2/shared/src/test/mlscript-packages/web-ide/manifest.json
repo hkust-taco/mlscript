@@ -1,5 +1,6 @@
 {
-  "resolve": {
-    "@std/*": "../../mlscript-compile/*"
-  }
+  "name": "web-ide",
+  "main": "editor/Highlight.mls",
+  "moduleName": "Highlight",
+  "vendors": []
 }

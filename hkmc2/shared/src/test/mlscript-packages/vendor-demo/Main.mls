@@ -1,0 +1,5 @@
+import "support/Root.mls"
+
+module VendorDemo with ...
+
+fun answer = Root.answer

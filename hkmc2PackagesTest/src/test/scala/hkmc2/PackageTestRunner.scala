@@ -12,22 +12,28 @@ import hkmc2.io.FileSystem
   */
 class PackageTestRunner
   extends funspec.AnyFunSpec
-  // with ParallelTestExecution // Can `MLsCompiler` handle parallel compilation?
-  // with TimeLimitedTests // TODO
+  // with ParallelTestExecution // Support parallel compilation in the future.
+  // with TimeLimitedTests // Support time limits when necessary.
 :
   import PackageTestRunner.*
   import PackageTestRunner.given
   
   private val inParallel = isInstanceOf[ParallelTestExecution]
   
-  // val timeLimit = TimeLimit
-  
   for packageDir <- os.list(packagesDir).filter(os.isDir) do
-    val allFiles = os.walk(packageDir).filter(os.isFile).filter(_.ext == "mls").toSeq
+    val allFiles = os.walk(packageDir)
+      .filter(os.isFile)
+      .filter(_.ext == "mls")
+      .filter(file => !file.startsWith(packageDir / "vendors"))
+      .toSeq
     val packageName = packageDir.baseName
+    val manifest = PackageManifest.read(packageDir)
+    val moduleResolver = PackageModuleResolver(packageDir, manifest, S(nodeModulesPath))
+    val vendoredSources = moduleResolver.vendoredSources.toSeq
+    val copiedVendorFiles = moduleResolver.copiedVendorFiles.toSeq
     
     // The compiler context is created per package to avoid interference.
-    given cctx: CompilerCtx = CompilerCtx.fresh(fs, PackageModuleResolver(packageDir))
+    given cctx: CompilerCtx = CompilerCtx.fresh(fs, moduleResolver)
     // We might need to read `Config` from a config file later.
     given Config = Config.default(mainTestDir)
     
@@ -37,6 +43,23 @@ class PackageTestRunner
     
     describe(s"$packageName (${"file" countBy allFiles.size})"):
     
+      if vendoredSources.nonEmpty || copiedVendorFiles.nonEmpty then
+        it("vendors"):
+          os.remove.all(packageDir / "vendors")
+          copiedVendorFiles.foreach: file =>
+            os.makeDir.all(file.target / os.up)
+            os.copy.over(file.source, file.target)
+            
+          vendoredSources.foreach: file =>
+            os.makeDir.all(file.target / os.up)
+            PackageTestRunner.synchronized:
+              println(s"Vendoring: [${fansi.Bold.On(packageName)}] ${fansi.Color.Green(file.source.toString)}")
+            compiler.compileModule(file.source, S(file.target))
+            assert(os.exists(file.target), s"Expected vendored artifact at ${file.target}")
+          
+          copiedVendorFiles.foreach: file =>
+            assert(os.exists(file.target), s"Expected copied vendor artifact at ${file.target}")
+          
       allFiles.foreach: file =>
         val relativeName = file.relativeTo(packageDir).toString()
         
@@ -46,7 +69,7 @@ class PackageTestRunner
             println(s"Compiling: [${fansi.Bold.On(packageName)}] ${fansi.Color.Green(relativeName)}")
           
           assert(true, s"Placeholder test for package: $relativeName")
-
+          
           compiler.compileModule(file)
           
           if report.badLines.nonEmpty then
@@ -69,23 +92,5 @@ object PackageTestRunner:
   val nodeModulesPath = os.pwd / "node_modules"
   
   given fs: FileSystem = io.FileSystem.default
-  
-  // TODO: Read from `manifest.json`.
-  val vendors = LocalModuleResolver.Vendor("std/", stdlibDir, Ls("*.mls")) :: Nil
-  
-  // We may use a different module resolver for URL modules in browsers. For
-  // example, `import "https://esm.sh/nanoid"` should be accepted.
-  class PackageModuleResolver(packageDir: os.Path) extends LocalModuleResolver(vendors, N):
-    private val packageVendorDir = packageDir / "vendor"
-    
-    private def getVendoredPath(moduleName: Str): io.Path =
-      val dir = packageVendorDir / moduleName
-      if os.exists(dir) then
-        if os.isDir(dir) then dir
-        else
-          throw new Exception(s"The vendored module path is not a directory: $dir")
-      else
-        os.makeDir.all(dir)
-        dir
   
 end PackageTestRunner

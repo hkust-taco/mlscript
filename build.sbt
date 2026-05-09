@@ -114,6 +114,7 @@ lazy val hkmc2PackagesTest = project.in(file("hkmc2PackagesTest"))
 
     libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
     libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
+    libraryDependencies += "com.lihaoyi" %% "ujson" % "4.4.3",
 
     Test / test := (Test / testOnly).toTask(" hkmc2.PackageTestRunner").value,
 
