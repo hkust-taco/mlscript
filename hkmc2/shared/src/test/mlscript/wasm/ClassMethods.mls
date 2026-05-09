@@ -10,8 +10,10 @@ let a = A(1)
 a.A#get() + A(2).get()
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type $A (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))
 //│   (type $A_init (func (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))))
 //│   (type $A_ctor (func (param $x (ref null any)) (result (ref null any))))
 //│   (type $A_get (func (param $this (ref null any)) (result (ref null any))))
@@ -19,6 +21,9 @@ a.A#get() + A(2).get()
 //│   (type $entry (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
 //│   (global $a (export "a") (mut (ref null any)) (ref.null any))
+//│   (global $A_typeinfo (export "A_typeinfo") (ref $A_typeinfo) (struct.new $A_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
 //│   (func $A_init (type $A_init) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -34,11 +39,9 @@ a.A#get() + A(2).get()
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
-//│         (struct.new_default $A))
-//│       (struct.set $A $$tag
-//│         (ref.cast (ref $A)
-//│           (local.get $this))
-//│         (i32.const 1))
+//│         (struct.new $A
+//│           (global.get $A_typeinfo)
+//│           (ref.null any)))
 //│       (drop
 //│         (call $A_init
 //│           (local.get $this)
@@ -170,12 +173,12 @@ c.Counter#inc().Counter#double().Counter#get()
 
 :todo
 let d = Counter(c.Counter#get())
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))`
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))`
 
 :todo
 d.Counter#inc().Counter#double().Counter#get()
 //│ ╔══[COMPILATION ERROR] Cannot find variable `d` (VarSymbol) in local or global scope.
-//│ ║  l.172: 	let d = Counter(c.Counter#get())
+//│ ║  l.175: 	let d = Counter(c.Counter#get())
 //│ ╙──       	    ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Counter`
 
@@ -196,5 +199,5 @@ class A(val x) with
   fun get() = x
 A(1).get
 //│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
-//│ ║  l.197: 	A(1).get
+//│ ║  l.200: 	A(1).get
 //│ ╙──       	    ^^^^

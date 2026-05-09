@@ -51,7 +51,8 @@ let c = [10, 20, 30, 40]
 c.[3]
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $TupleArray (array (ref null any)))
 //│   (type $TupleArrayMut (array (mut (ref null any))))
 //│   (type $entry (func (result (ref null any))))

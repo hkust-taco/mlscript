@@ -9,7 +9,8 @@ let topB = 2
 topA + topB
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
@@ -40,7 +41,8 @@ fun chain(x) =
 chain(1)
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $chain (func (param $x (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
@@ -129,11 +131,16 @@ class Foo(val a, val b)
 (new Foo(42, 1)).Foo#a
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $a (mut (ref null any))) (field $b (mut (ref null any))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $a (mut (ref null any))) (field $b (mut (ref null any))))))
 //│   (type $Foo_init (func (param $this (ref null any)) (param $a (ref null any)) (param $b (ref null any)) (result (ref null any))))
 //│   (type $Foo_ctor (func (param $a (ref null any)) (param $b (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
+//│   (global $Foo_typeinfo (export "Foo_typeinfo") (ref $Foo_typeinfo) (struct.new $Foo_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
 //│   (func $Foo_init (type $Foo_init) (param $this (ref null any)) (param $a (ref null any)) (param $b (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -154,11 +161,10 @@ class Foo(val a, val b)
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
-//│         (struct.new_default $Foo))
-//│       (struct.set $Foo $$tag
-//│         (ref.cast (ref $Foo)
-//│           (local.get $this))
-//│         (i32.const 1))
+//│         (struct.new $Foo
+//│           (global.get $Foo_typeinfo)
+//│           (ref.null any)
+//│           (ref.null any)))
 //│       (drop
 //│         (call $Foo_init
 //│           (local.get $this)

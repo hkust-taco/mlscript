@@ -387,6 +387,7 @@ extends Importer with ucs.SplitElaborator:
       | Keyword.`declare`
       | Keyword.`data`
       | Keyword.`staged`
+      | Keyword.`virtual`
       | Keyword.`public`
       | Keyword.`private`
     )) => S(Annot.Modifier(kw))

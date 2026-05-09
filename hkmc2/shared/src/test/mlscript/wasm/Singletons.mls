@@ -11,15 +11,24 @@ object Bar with
 Bar.y
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))
-//│   (type $Bar (sub $Object (struct (field $$tag (mut i32)) (field $y (mut (ref null any))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))
 //│   (type $Foo_init (func (param $this (ref null any)) (result (ref null any))))
-//│   (type $Bar_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $Foo_ctor (func (result (ref null any))))
+//│   (type $Bar_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Bar (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $y (mut (ref null any))))))
+//│   (type $Bar_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $Bar_ctor (func (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
 //│   (type $start (func))
+//│   (global $Foo_typeinfo (export "Foo_typeinfo") (ref $Foo_typeinfo) (struct.new $Foo_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
+//│   (global $Bar_typeinfo (export "Bar_typeinfo") (ref $Bar_typeinfo) (struct.new $Bar_typeinfo
+//│     (i32.const 2)
+//│     (ref.null $TypeInfoBase)))
 //│   (global $Foo$inst (export "Foo$inst") (mut (ref null $Foo)) (ref.null $Foo))
 //│   (global $Bar$inst (export "Bar$inst") (mut (ref null $Bar)) (ref.null $Bar))
 //│   (func $Foo_init (type $Foo_init) (param $this (ref null any)) (result (ref null any))
@@ -34,6 +43,18 @@ Bar.y
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
+//│   (func $Foo_ctor (type $Foo_ctor) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new $Foo
+//│           (global.get $Foo_typeinfo)
+//│           (ref.null any)))
+//│       (drop
+//│         (call $Foo_init
+//│           (local.get $this)))
+//│       (return
+//│         (local.get $this))))
 //│   (func $Bar_init (type $Bar_init) (param $this (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -46,29 +67,13 @@ Bar.y
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (func $Foo_ctor (type $Foo_ctor) (result (ref null any))
-//│     (local $this (ref null any))
-//│     (block (result (ref null any))
-//│       (local.set $this
-//│         (struct.new_default $Foo))
-//│       (struct.set $Foo $$tag
-//│         (ref.cast (ref $Foo)
-//│           (local.get $this))
-//│         (i32.const 1))
-//│       (drop
-//│         (call $Foo_init
-//│           (local.get $this)))
-//│       (return
-//│         (local.get $this))))
 //│   (func $Bar_ctor (type $Bar_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
-//│         (struct.new_default $Bar))
-//│       (struct.set $Bar $$tag
-//│         (ref.cast (ref $Bar)
-//│           (local.get $this))
-//│         (i32.const 2))
+//│         (struct.new $Bar
+//│           (global.get $Bar_typeinfo)
+//│           (ref.null any)))
 //│       (drop
 //│         (call $Bar_init
 //│           (local.get $this)))
@@ -91,8 +96,8 @@ Bar.y
 //│           (ref.cast (ref $Bar)
 //│             (global.get $Bar$inst))))))
 //│   (elem $Foo_init declare func $Foo_init)
-//│   (elem $Bar_init declare func $Bar_init)
 //│   (elem $Foo_ctor declare func $Foo_ctor)
+//│   (elem $Bar_init declare func $Bar_init)
 //│   (elem $Bar_ctor declare func $Bar_ctor)
 //│   (elem $start declare func $start)
 //│   (elem $entry declare func $entry)

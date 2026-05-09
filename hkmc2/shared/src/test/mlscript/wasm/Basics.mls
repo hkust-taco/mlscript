@@ -56,7 +56,8 @@ fun foo() = 42
 foo() + foo()
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $foo (func (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
@@ -113,11 +114,16 @@ class Foo(val a)
 (new Foo(42)).Foo#a
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $a (mut (ref null any))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $a (mut (ref null any))))))
 //│   (type $Foo_init (func (param $this (ref null any)) (param $a (ref null any)) (result (ref null any))))
 //│   (type $Foo_ctor (func (param $a (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
+//│   (global $Foo_typeinfo (export "Foo_typeinfo") (ref $Foo_typeinfo) (struct.new $Foo_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
 //│   (func $Foo_init (type $Foo_init) (param $this (ref null any)) (param $a (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -133,11 +139,9 @@ class Foo(val a)
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
-//│         (struct.new_default $Foo))
-//│       (struct.set $Foo $$tag
-//│         (ref.cast (ref $Foo)
-//│           (local.get $this))
-//│         (i32.const 1))
+//│         (struct.new $Foo
+//│           (global.get $Foo_typeinfo)
+//│           (ref.null any)))
 //│       (drop
 //│         (call $Foo_init
 //│           (local.get $this)
@@ -175,11 +179,16 @@ class Foo(val x) with
 (new Foo(42)).Foo#y
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
 //│   (type $Foo_init (func (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))))
 //│   (type $Foo_ctor (func (param $x (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
+//│   (global $Foo_typeinfo (export "Foo_typeinfo") (ref $Foo_typeinfo) (struct.new $Foo_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
 //│   (func $Foo_init (type $Foo_init) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -202,11 +211,10 @@ class Foo(val x) with
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
-//│         (struct.new_default $Foo))
-//│       (struct.set $Foo $$tag
-//│         (ref.cast (ref $Foo)
-//│           (local.get $this))
-//│         (i32.const 1))
+//│         (struct.new $Foo
+//│           (global.get $Foo_typeinfo)
+//│           (ref.null any)
+//│           (ref.null any)))
 //│       (drop
 //│         (call $Foo_init
 //│           (local.get $this)
@@ -239,12 +247,17 @@ object O with
 O.y
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type $O (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $O_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $O (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
 //│   (type $O_init (func (param $this (ref null any)) (result (ref null any))))
 //│   (type $O_ctor (func (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
 //│   (type $start (func))
+//│   (global $O_typeinfo (export "O_typeinfo") (ref $O_typeinfo) (struct.new $O_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)))
 //│   (global $O$inst (export "O$inst") (mut (ref null $O)) (ref.null $O))
 //│   (func $O_init (type $O_init) (param $this (ref null any)) (result (ref null any))
 //│     (block (result (ref null any))
@@ -269,11 +282,10 @@ O.y
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
-//│         (struct.new_default $O))
-//│       (struct.set $O $$tag
-//│         (ref.cast (ref $O)
-//│           (local.get $this))
-//│         (i32.const 1))
+//│         (struct.new $O
+//│           (global.get $O_typeinfo)
+//│           (ref.null any)
+//│           (ref.null any)))
 //│       (drop
 //│         (call $O_init
 //│           (local.get $this)))
@@ -304,6 +316,6 @@ fun bar() = 42
 fun foo() = bar
 foo()()
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.304: 	fun foo() = bar
+//│ ║  l.316: 	fun foo() = bar
 //│ ╙──       	            ^^^
 //│ ═══[COMPILATION ERROR] Expected static function reference in Call(...) expression

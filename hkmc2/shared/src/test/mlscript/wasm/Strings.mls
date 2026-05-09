@@ -16,7 +16,8 @@ let dup2 = "dup"
 [dup1, dup2].[1]
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $mlx_str_from_utf16 (func (param $glob_offset (ref null any)) (param $len (ref null any)) (result (ref null any))))
 //│   (type $TupleArray (array (ref null any)))
 //│   (type $TupleArrayMut (array (mut (ref null any))))
@@ -89,7 +90,8 @@ if true then id(1) else s2
 "abcdefghijklmnopqrstuvwxyz"
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $mlx_str_from_utf16 (func (param $glob_offset (ref null any)) (param $len (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
 //│   (import "system" "mlx_str_from_utf16" (func $mlx_str_from_utf16 (type $mlx_str_from_utf16)))
