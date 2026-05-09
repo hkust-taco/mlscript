@@ -5,7 +5,6 @@ import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import semantics.*
-import os.write.over
 
 
 // Default implementation: nothing is transformed
@@ -13,15 +12,33 @@ class BlockTransformer(subst: SymbolSubst):
   
   given SymbolSubst = subst
   
+  def applyProgram(prog: Program): Program =
+    val imports2 = prog.imports.mapConserve(applyImport)
+    val main2 = applyMainBlock(prog.main)
+    if (imports2 is prog.imports) && (main2 is prog.main) then prog
+    else Program(imports2, main2)
+  
+  def applyMainBlock(main: Block): Block =
+    applyBlock(main)
+  
+  def applyImport(imp: Local -> Str): Local -> Str =
+    val (l, s) = imp
+    val l2 = applyLocal(l)
+    if l2 is l then imp else l2 -> s
+  
   def applySubBlock(b: Block): Block = applyBlock(b)
+
+  /** Called for any sub block not in the `rest` position (when `rest` is nonempty).
+    * This is not called for Label body or function body. */
+  def applySubBlockNonTail(b: Block): Block = applySubBlock(b)
   
   def applyBlock(b: Block): Block = b match
-    case _: End => b
+    case _: End | _: Unreachable => b
     case Break(lbl) =>
-      val lbl2 = applyLocal(lbl)
+      val lbl2 = lbl.subst
       if lbl2 is lbl then b else Break(lbl2)
     case Continue(lbl) =>
-      val lbl2 = applyLocal(lbl)
+      val lbl2 = lbl.subst
       if lbl2 is lbl then b else Continue(lbl2)
     case Return(res, implct) =>
       applyResult(res): res2 =>
@@ -30,33 +47,36 @@ class BlockTransformer(subst: SymbolSubst):
       applyResult(exc): exc2 =>
         if exc2 is exc then b else Throw(exc2)
     case Match(scrut, arms, dflt, rst) =>
+      def applySub(b: Block) = if rst.isEmpty then applySubBlock(b) else applySubBlockNonTail(b)
       applyPath(scrut): scrut2 =>
         applyListOf(
           arms,
           (tup, k) =>
             val (cse, blk) = tup
-            val blk2 = applySubBlock(blk)
+            val blk2 = applySub(blk)
             applyCase(cse): cse2 =>
               if (cse2 is cse) && (blk is blk2) then k(tup) else k(cse2 -> blk2)
         ): arms2 =>
-            val dflt2 = dflt.mapConserve(applySubBlock)
+            val dflt2 = dflt.mapConserve(applySub)
             val rst2 = applySubBlock(rst)
             if (scrut2 is scrut) &&
                 (arms2 is arms) &&
                 (dflt2 is dflt) && (rst2 is rst)
               then b else Match(scrut2, arms2, dflt2, rst2)
     case Label(lbl, loop, bod, rst) =>
-      val lbl2 = applyLocal(lbl)
+      val lbl2 = lbl.subst
       val bod2 = if loop then applyScopedBlock(bod) else applySubBlock(bod)
       val rst2 = applySubBlock(rst)
       if (lbl2 is lbl) && (bod2 is bod) && (rst2 is rst) then b else Label(lbl2, loop, bod2, rst2)
     case Begin(sub, rst) =>
-      val sub2 = applySubBlock(sub)
+      def applySub(b: Block) = if rst.isEmpty then applySubBlock(b) else applySubBlockNonTail(b)
+      val sub2 = applySub(sub)
       val rst2 = applySubBlock(rst)
       if (sub2 is sub) && (rst2 is rst) then b else Begin(sub2, rst2)
     case TryBlock(sub, fin, rst) =>
-      val sub2 = applySubBlock(sub)
-      val fin2 = applySubBlock(fin)
+      def applySub(b: Block) = if rst.isEmpty then applySubBlock(b) else applySubBlockNonTail(b)
+      val sub2 = applySub(sub)
+      val fin2 = applySub(fin)
       val rst2 = applySubBlock(rst)
       if (sub2 is sub) && (fin2 is fin) && (rst2 is rst) then b else TryBlock(sub2, fin2, rst2)
     case Assign(l, r, rst) =>
@@ -75,18 +95,6 @@ class BlockTransformer(subst: SymbolSubst):
       applyDefn(defn): defn2 =>
         val rst2 = applySubBlock(rst)
         if (defn2 is defn) && (rst2 is rst) then b else Define(defn2, rst2)
-    case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
-      val l2 = applyLocal(l)
-      val res2 = applyLocal(res)
-      applyPath(par): par2 =>
-        applyListOf(args, applyPath(_)(_)): args2 =>
-          val cls2 = cls.subst
-          val hdr2 = hdr.mapConserve(applyHandler)
-          val bod2 = applySubBlock(bod)
-          val rst2 = applySubBlock(rst)
-          if (l2 is l) && (res2 is res) && (par2 is par) && (args2 is args) &&
-              (cls2 is cls) && (hdr2 is hdr) && (bod2 is bod) && (rst2 is rst)
-            then b else HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod2, rst2)
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
       applyResult(rhs): rhs2 =>
         applyPath(lhs): lhs2 =>
@@ -129,44 +137,53 @@ class BlockTransformer(subst: SymbolSubst):
   
   def applyArgs(args: List[Arg])(k: List[Arg] => Block): Block =
     applyListOf(args, applyArg(_)(_))(k)
+
+  def applyArgss(argss: NELs[List[Arg]])(k: NELs[List[Arg]] => Block): Block =
+    applyListOf(argss, applyArgs(_)(_)): newArgss =>
+      k(newArgss.ne_!)
+  
+  def applyArgss(argss: List[List[Arg]])(k: List[List[Arg]] => Block): Block =
+    applyListOf(argss, applyArgs(_)(_))(k)
   
   def applyResult(r: Result)(k: Result => Block): Block =
     r match
-    case r @ Call(fun, args) =>
+    case r @ Call(fun, argss) =>
       applyPath(fun): fun2 =>
-        applyArgs(args): args2 =>
-          k(if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects, r.explicitTailCall))
-    case Instantiate(mut, cls, args) =>
+        applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
+          k(if (fun2 is fun) && (argss2 is argss) then r
+            else Call(fun2, argss2.ne_!)(r.isMlsFun, r.mayRaiseEffects, r.explicitTailCall).withLocOf(r))
+    case Instantiate(mut, cls, argss) =>
       applyPath(cls): cls2 =>
-        applyArgs(args): args2 =>
-          k(if (cls2 is cls) && (args2 is args) then r else Instantiate(mut, cls2, args2))
+        applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
+          k(if (cls2 is cls) && (argss2 is argss) then r
+            else Instantiate(mut, cls2, argss2).withLocOf(r))
     case l: Lambda => k(applyLam(l))
     case Tuple(mut, elems) =>
       applyArgs(elems): elems2 =>
-        k(if (elems2 is elems) then r else Tuple(mut, elems2))
+        k(if (elems2 is elems) then r else Tuple(mut, elems2).withLocOf(r))
     case Record(mut, fields) =>
       applyRcdArgs(fields): fields2 =>
-        k(if fields2 is fields then r else Record(mut, fields2))
-    case p: Path => applyPath(p)(k)  
+        k(if fields2 is fields then r else Record(mut, fields2).withLocOf(r))
+    case p: Path => applyPath(p)(k)
   
   def applyPath(p: Path)(k: Path => Block): Block = p match
     case DynSelect(qual, fld, arrayIdx) =>
       applyPath(qual): qual2 =>
         applyPath(fld): fld2 =>
-          k(if (qual2 is qual) && (fld2 is fld) then p else DynSelect(qual2, fld2, arrayIdx))
+          k(if (qual2 is qual) && (fld2 is fld) then p else DynSelect(qual2, fld2, arrayIdx).withLocOf(p))
     case p @ Select(qual, name) =>
       applyPath(qual): qual2 =>
         val sym2 = p.symbol.mapConserve(_.subst)
-        k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2))
+        k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2).withLocOf(p))
     case v: Value => applyValue(v)(k)
   
   def applyValue(v: Value)(k: Value => Block) = v match
     case Value.Ref(l, disamb) =>
-      val l2 = l.subst
-      k(if (l2 is l) then v else Value.Ref(l2, disamb))
+      val l2 = applyLocal(l)
+      k(if (l2 is l) then v else Value.Ref(l2, disamb).withLocOf(v))
     case Value.This(sym) =>
       val sym2 = sym.subst
-      k(if (sym2 is sym) then v else Value.This(sym2))
+      k(if (sym2 is sym) then v else Value.This(sym2).withLocOf(v))
     case Value.Lit(lit) => k(v)
   
   def applyLocal(sym: Local): Local = sym.subst
@@ -178,7 +195,7 @@ class BlockTransformer(subst: SymbolSubst):
     val params2 = fun.params.mapConserve(applyParamList)
     val body2 = applyFunBodyLikeBlock(fun.body)
     if (own2 is fun.owner) && (sym2 is fun.sym) && (dSym2 is fun.dSym) && (params2 is fun.params) && (body2 is fun.body)
-      then fun else FunDefn(own2, sym2, dSym2, params2, body2)(fun.forceTailRec)
+      then fun else FunDefn(own2, sym2, dSym2, params2, body2)(fun.configOverride, fun.annotations)
   
   def applyValDefn(defn: ValDefn)(k: ValDefn => Block): Block =
     val ValDefn(tsym, sym, rhs) = defn
@@ -186,40 +203,46 @@ class BlockTransformer(subst: SymbolSubst):
     val sym2 = sym.subst
     applyPath(rhs): rhs2 =>
       if (tsym2 is tsym) && (sym2 is sym) && (rhs2 is rhs)
-        then k(defn) else k(ValDefn(tsym2, sym2, rhs2))
+        then k(defn) else k(ValDefn(tsym2, sym2, rhs2)(defn.configOverride, defn.annotations))
+  
+  def applyPublicField(f: BlockMemberSymbol -> TermSymbol): BlockMemberSymbol -> TermSymbol =
+    val f_1_2 = f._1.subst
+    val f_2_2 = f._2.subst
+    if (f_1_2 is f._1) && (f_2_2 is f._2) then f else f_1_2 -> f_2_2
   
   def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
     val isym2 = defn.isym.subst
     val methods2 = defn.methods.mapConserve(applyFunDefn)
     val privateFields2 = defn.privateFields.mapConserve(_.subst)
-    val publicFields2 = defn.publicFields.mapConserve(f => f._1.subst -> f._2.subst)
+    val publicFields2 = defn.publicFields.mapConserve(applyPublicField)
     val ctor2 = applyFunBodyLikeBlock(defn.ctor)
     if (methods2 is defn.methods) &&
         (privateFields2 is defn.privateFields) &&
         (publicFields2 is defn.publicFields) &&
         (ctor2 is defn.ctor)
-      then defn else ClsLikeBody(isym2, methods2, privateFields2, publicFields2, ctor2)
+      then defn else ClsLikeBody(isym2, methods2, privateFields2, publicFields2, ctor2, defn.annotations)
     
   def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
     case defn: FunDefn => k(applyFunDefn(defn))
     case defn: ValDefn => applyValDefn(defn)(k)
-    case ClsLikeDefn(own, isym, sym, kind, paramsOpt, auxParams, parentPath, methods,
+    case defn @ ClsLikeDefn(own, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable)
     =>
       val own2 = own.mapConserve(_.subst)
       val isym2 = isym.subst
       val sym2 = sym.subst
+      val ctorSym2 = ctorSym.mapConserve(_.subst)
       val paramsOpt2 = paramsOpt.mapConserve(applyParamList)
       val auxParams2 = auxParams.mapConserve(applyParamList)
-      val withoutParentPath = (parentPath2: Opt[Path]) =>
+      def helper(parentPath2: Opt[Path]) =
         val methods2 = methods.mapConserve(applyFunDefn)
         val privateFields2 = privateFields.mapConserve(_.subst)
-        val publicFields2 = publicFields.mapConserve(f => f._1.subst -> f._2.subst)
+        val publicFields2 = publicFields.mapConserve(applyPublicField)
         val preCtor2 = applyFunBodyLikeBlock(preCtor)
         val ctor2 = applyFunBodyLikeBlock(ctor)
         val mod2 = mod.mapConserve(applyObjBody)
         k:
-          if (own2 is own) && (isym2 is isym) && (sym2 is sym) &&
+          if (own2 is own) && (isym2 is isym) && (sym2 is sym) && (ctorSym2 is ctorSym) &&
               (paramsOpt2 is paramsOpt) &&
               (auxParams2 is auxParams) &&
               (parentPath2 is parentPath) &&
@@ -228,13 +251,13 @@ class BlockTransformer(subst: SymbolSubst):
               (publicFields2 is publicFields) &&
               (preCtor2 is preCtor) && (ctor2 is ctor) &&
               (mod2 is mod)
-            then defn else ClsLikeDefn(own2, isym2, sym2, kind, paramsOpt2, 
-              auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2, bufferable)
+            then defn else ClsLikeDefn(own2, isym2, sym2, ctorSym2, kind, paramsOpt2, 
+              auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2, bufferable)(defn.configOverride, defn.annotations)
       parentPath match
-        case Some(pp) => applyPath(pp): pp2 =>
-          withoutParentPath:
-            if pp2 is pp then parentPath else Some(pp2)
-        case None => withoutParentPath(parentPath)
+      case Some(pp) => applyPath(pp): pp2 =>
+        helper:
+          if pp2 is pp then parentPath else Some(pp2)
+      case None => helper(parentPath)
       
   
   def applyArg(arg: Arg)(k: Arg => Block): Block =
@@ -284,29 +307,16 @@ class BlockTransformer(subst: SymbolSubst):
 
 class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst):
   override def applyLam(lam: Lambda) = lam
-  override def applyFunDefn(fun: FunDefn): FunDefn = fun
+  // Note: no need to override things like applyFunDefn, as they are only called by applyDefn
   override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
     case _: FunDefn | _: ClsLikeDefn => k(defn)
     case _: ValDefn => super.applyDefn(defn)(k)
   
   override def applyHandler(hdr: Handler): Handler = hdr
-  
-  override def applyBlock(b: Block): Block = b match
-    case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
-      val l2 = applyLocal(l)
-      val res2 = applyLocal(res)
-      applyPath(par): par2 =>
-        applyListOf(args, applyPath(_)(_)): args2 =>
-          val cls2 = cls.subst
-          val hdr2 = hdr.mapConserve(applyHandler)
-          val rst2 = applySubBlock(rst)
-          if (l2 is l) && (res2 is res) && (par2 is par) && (args2 is args) &&
-              (cls2 is cls) && (hdr2 is hdr) && (rst2 is rst)
-            then b else HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod, rst2)
-    case _ => super.applyBlock(b)
 
 // Does not traverse into sub-blocks or definitions. The purpose of this is is to only rewrite a block's data, i.e. 
 // paths, values, cases, etc. within a block. Can be used in tandem with `BlockTransformer` or `BlockTransformerShallow` 
 // to traverse sub-blocks while using this class to perform more complicated transformations on the blocks themselves.
 class BlockDataTransformer(subst: SymbolSubst) extends BlockTransformerShallow(subst):
   override def applySubBlock(b: Block): Block = b
+

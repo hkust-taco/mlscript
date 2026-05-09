@@ -18,10 +18,14 @@ Example.pubFun
 :e
 :re
 Example.privFun
-//│ ╔══[ERROR] Module 'Example' does not contain member 'privFun'
+//│ ╔══[COMPILATION ERROR] Module 'Example' does not contain member 'privFun'
 //│ ║  l.20: 	Example.privFun
 //│ ╙──      	       ^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'privFun' yielded 'undefined'
+
+:re
+Example.assertFail()
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (mlscript-compile/Example.mls:27)
 
 
 let n = 42
@@ -29,8 +33,9 @@ let n = 42
 
 :sjs
 n / 2
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ n / 2
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 21
 
 
@@ -40,15 +45,17 @@ open Example
 
 :sjs
 inc / 2
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ Example.funnySlash(Example.inc, 2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
 :sjs
 :re
 n / 2
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ Example.funnySlash(n, 2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
 funnySlash(inc, 123)
@@ -63,10 +70,14 @@ test("hello")
 test / (inc / 123)
 //│ = "int"
 
+// Note: `/` is left-associative, so `test / inc / 123` parses as `(test / inc) / 123`,
+// which errors because `funnySlash(test, inc)` does not return a valid function.
+:re
 test / inc / 123
-//│ = "int"
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
+:re
 test / inc / 123 * 0.5
-//│ = "num"
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
 

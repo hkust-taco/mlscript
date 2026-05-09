@@ -149,8 +149,7 @@ fun filtering(xs, op) =
       set next = iterator.next()
     if next.done then
       Result.Done
-    else
-      Result.Next of next.value
+    else Result.Next of next.value
 
 fun withFilter(op) = _ filtering(op)
 
@@ -277,4 +276,5 @@ fun fromStack(stack) = Iterable of () =>
 
 fun toStack(xs) = xs rightFolded of Nil, Cons
 
-fun isArrayLike = _ is Array | IterableBase
+// Important: This function is used by runtime directly. Do not call any function or make any lambda here.
+fun isArrayLike(xs) = xs is Array | IterableBase

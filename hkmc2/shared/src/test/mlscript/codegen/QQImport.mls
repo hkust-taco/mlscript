@@ -1,88 +1,48 @@
 :js
 :qq
 
-//│ Term = class Term {
-//│   Symbol: fun Symbol { class: class Symbol },
-//│   Pattern: class Pattern,
-//│   LitPattern: fun LitPattern { class: class LitPattern },
-//│   Var: fun Var { class: class Var },
-//│   ClassLike: fun ClassLike { class: class ClassLike },
-//│   Tuple: fun Tuple { class: class Tuple },
-//│   Record: fun Record { class: class Record },
-//│   Branch: fun Branch { class: class Branch },
-//│   Split: class Split,
-//│   Cons: fun Cons { class: class Cons },
-//│   Let: fun Let { class: class Let },
-//│   Else: fun Else { class: class Else },
-//│   End: class End,
-//│   Keyword: class Keyword { If: If, While: While },
-//│   Statement: class Statement,
-//│   LetDecl: fun LetDecl { class: class LetDecl },
-//│   DefineVar: fun DefineVar { class: class DefineVar },
-//│   Term: class Term,
-//│   Lit: fun Lit { class: class Lit },
-//│   Builtin: fun Builtin { class: class Builtin },
-//│   Ref: fun Ref { class: class Ref },
-//│   CSRef: fun CSRef { class: class CSRef },
-//│   App: fun App { class: class App },
-//│   Sel: fun Sel { class: class Sel },
-//│   DynSel: fun DynSel { class: class DynSel },
-//│   Tup: fun Tup { class: class Tup },
-//│   IfLike: fun IfLike { class: class IfLike },
-//│   Lam: fun Lam { class: class Lam },
-//│   Blk: fun Blk { class: class Blk },
-//│   New: fun New { class: class New },
-//│   Region: fun Region { class: class Region },
-//│   RegRef: fun RegRef { class: class RegRef },
-//│   Assgn: fun Assgn { class: class Assgn },
-//│   Deref: fun Deref { class: class Deref },
-//│   SetRef: fun SetRef { class: class SetRef },
-//│   Ret: fun Ret { class: class Ret },
-//│   Throw: fun Throw { class: class Throw },
-//│   Try: fun Try { class: class Try },
-//│   Context: fun Context { class: class Context }
-//│ }
 
-Term.print
+
+meta.print
 //│ = fun print
 
 
-Term.print(`42)
+meta.print(`42)
 //│ > 42
 
 
-Term.print(`+)
+meta.print(`+)
 //│ > +
 
 
-Term.print(`1 `+ `2)
+meta.print(`1 `+ `2)
 //│ > (+)(1, 2)
 
 
-Term.print(x `=> x)
+meta.print(x `=> x)
 //│ > (x_0) =>
 //│ >   x_0
 
 
-Term.print((x, y) `=> x `+ y)
+meta.print((x, y) `=> x `+ y)
 //│ > (x_0, y_0) =>
 //│ >   (+)(x_0, y_0)
 
 
-Term.print(`let x = `42 `in x)
+meta.print(`let x = `42 `in x)
 //│ > let x_0
 //│ > x_0 = 42
 //│ > x_0
 
 
-Term.print(`if `true then `true else `false)
+meta.print(`if `true then `true else `false)
 //│ > if 
 //│ >   let scrut_0 = true
 //│ >   scrut_0 is true then true
 //│ >   else false
 
 
-Term.print(x `=> `if x `=== `0.0 then `1.0 else x)
+meta.print(x `=> `if x `=== `0.0 then `1.0 else x)
 //│ > (x_0) =>
 //│ >   if 
 //│ >     let scrut_0 = (===)(x_0, 0)
@@ -112,7 +72,7 @@ QuoteInc.res(42)
 import "../../mlscript-compile/CSP.mls"
 
 
-Term.codegen(CSP.foo(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPFoo.mls")
+meta.codegen(CSP.foo(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPFoo.mls")
 
 
 import "../../mlscript-compile/quotes/CSPFoo.mls"
@@ -122,7 +82,7 @@ CSPFoo.res
 //│ = 124
 
 
-Term.codegen(CSP.bar(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPBar.mls")
+meta.codegen(CSP.bar(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPBar.mls")
 
 
 import "../../mlscript-compile/quotes/CSPBar.mls"
@@ -132,7 +92,7 @@ CSPBar.res
 //│ = 1
 
 
-Term.codegen(CSP.baz(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPBaz.mls")
+meta.codegen(CSP.baz(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPBaz.mls")
 
 
 import "../../mlscript-compile/quotes/CSPBaz.mls"
@@ -178,3 +138,10 @@ safeDiv(10, 3, 0)
 safeDiv(10, 0, -1)
 //│ = -1
 
+
+QuoteExample2.genOpened()
+
+import "../../mlscript-compile/quotes/Opened.mls"
+
+Opened.res
+//│ = false

@@ -1,0 +1,189 @@
+:js
+
+// Test: Tail-recursive function with single parameter list works correctly
+:expect 5050
+fun sum(n, acc) = if n == 0 then acc else sum(n - 1, n + acc)
+sum(100, 0)
+//│ = 5050
+
+// Test: Curried function with multiple parameter lists — properly lowered as
+// a multi-param-list function, so the self-recursive tail call is recognized
+// and optimized by TailRecOpt.
+:expect 500500
+:sir
+@tailrec
+fun loop(x)(y) =
+  if x == 0 then y
+  else loop(x - 1)(y + x)
+loop(1000)(0)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let loop⁰, loop$tailrec⁰;
+//│ define loop$tailrec⁰ as fun loop$tailrec¹(x, y) {
+//│   loop loopLabel:
+//│     let scrut, tmp, tmp1;
+//│     set scrut = Predef⁰.equals⁰(x, 0);
+//│     match scrut
+//│       true =>
+//│         return y
+//│       else
+//│         set tmp = -⁰(x, 1);
+//│         set tmp1 = +⁰(y, x);
+//│         set x = tmp;
+//│         set y = tmp1;
+//│         continue loopLabel
+//│     end
+//│   end
+//│ };
+//│ define loop⁰ as fun loop¹(x)(y) { return loop$tailrec¹(x, y) };
+//│ loop¹(1000)(0)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 500500
+
+// Test: Function with multiple parameter lists, non-annotated (should still optimize to a loop)
+:sir
+:expect 100
+fun count(start)(stop) =
+  if start == stop then start
+  else count(start + 1)(stop)
+count(0)(100)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let count⁰, count$tailrec⁰;
+//│ define count$tailrec⁰ as fun count$tailrec¹(start, stop) {
+//│   loop loopLabel:
+//│     let scrut, tmp;
+//│     set scrut = Predef⁰.equals⁰(start, stop);
+//│     match scrut
+//│       true =>
+//│         return start
+//│       else
+//│         set tmp = +⁰(start, 1);
+//│         set start = tmp;
+//│         continue loopLabel
+//│     end
+//│   end
+//│ };
+//│ define count⁰ as fun count¹(start)(stop) { return count$tailrec¹(start, stop) };
+//│ count¹(0)(100)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 100
+
+// Test: Mutually recursive functions with multiple parameter lists
+:sir
+fun even(n)(dummy) = if n == 0 then [true, dummy] else odd(n - 1)(dummy + 1)
+fun odd(n)(dummy) = if n == 0 then [false, dummy] else even(n - 1)(dummy + 1)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let even⁰, odd⁰, even_odd⁰;
+//│ define even_odd⁰ as fun even_odd¹(id, param0, param1) {
+//│   loop loopLabel:
+//│     match id
+//│       0 =>
+//│         let scrut, tmp, tmp1;
+//│         set scrut = Predef⁰.equals⁰(param0, 0);
+//│         match scrut
+//│           true =>
+//│             return [true, param1]
+//│           else
+//│             set tmp = -⁰(param0, 1);
+//│             set tmp1 = +⁰(param1, 1);
+//│             set param0 = tmp;
+//│             set param1 = tmp1;
+//│             set id = 1;
+//│             continue loopLabel
+//│         end
+//│       1 =>
+//│         let scrut, tmp, tmp1;
+//│         set scrut = Predef⁰.equals⁰(param0, 0);
+//│         match scrut
+//│           true =>
+//│             return [false, param1]
+//│           else
+//│             set tmp = -⁰(param0, 1);
+//│             set tmp1 = +⁰(param1, 1);
+//│             set param0 = tmp;
+//│             set param1 = tmp1;
+//│             set id = 0;
+//│             continue loopLabel
+//│         end
+//│       else
+//│         end
+//│     end
+//│   end
+//│ };
+//│ define even⁰ as fun even¹(n)(dummy) {
+//│   return even_odd¹(0, n, dummy)
+//│ };
+//│ define odd⁰ as fun odd¹(n)(dummy) { return even_odd¹(1, n, dummy) };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [true, 10]
+even(10)(0)
+//│ = [true, 10]
+
+:expect [false, 9]
+even(9)(0)
+//│ = [false, 9]
+
+
+// Spreads
+
+// This is the same as a test in `TailRecOpt.mls` but with some parameters separated and changed.
+:sir
+fun f(n)(a, b, c, d, ...e)(m) =
+  if n > 0 then @tailcall g(n)(m + 1)
+  else [e, m]
+fun g(n)(m) =
+  @tailcall f(n - 1)(...[1, 2], 3, ...[3, 4], ...[5, n], 7, n)(m)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f⁰, g⁰, f_g⁰;
+//│ define f_g⁰ as fun f_g¹(id, param0, param1, param2, param3, param4, param5, param6) {
+//│   loop loopLabel:
+//│     match id
+//│       0 =>
+//│         let scrut, tmp;
+//│         set scrut = >⁰(param0, 0);
+//│         match scrut
+//│           true =>
+//│             set tmp = +⁰(param6, 1);
+//│             set param1 = tmp;
+//│             set id = 1;
+//│             continue loopLabel
+//│           else
+//│             return [param5, param6]
+//│         end
+//│       1 =>
+//│         let tmp, tmp1, tmp2, tmp3, param1_tmp, argList, param0_tmp, sliceRes;
+//│         set tmp = -⁰(param0, 1);
+//│         set tmp1 = [1, 2];
+//│         set tmp2 = [3, 4];
+//│         set tmp3 = [5, param0];
+//│         set param1_tmp = param1;
+//│         set param0_tmp = param0;
+//│         set param0 = tmp;
+//│         set argList = [...tmp1, 3, ...tmp2, ...tmp3, 7, param0_tmp];
+//│         set sliceRes = runtime⁰.Tuple⁰.slice⁰(argList, 4, 0);
+//│         set param1 = argList.0;
+//│         set param2 = argList.1;
+//│         set param3 = argList.2;
+//│         set param4 = argList.3;
+//│         set param5 = sliceRes;
+//│         set param6 = param1_tmp;
+//│         set id = 0;
+//│         continue loopLabel
+//│       else
+//│         end
+//│     end
+//│   end
+//│ };
+//│ define f⁰ as fun f¹(n)(a, b, c, d, ...e)(m) {
+//│   return f_g¹(0, n, a, b, c, d, e, m)
+//│ };
+//│ define g⁰ as fun g¹(n)(m) {
+//│   return f_g¹(1, n, m, undefined, undefined, undefined, undefined, undefined)
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [[4, 5, 1, 7, 1], 9]
+g(10)(0)
+//│ = [[4, 5, 1, 7, 1], 9]

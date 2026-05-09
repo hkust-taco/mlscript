@@ -1,0 +1,158 @@
+import "./NofibPrelude.mls"
+import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
+open NofibPrelude
+
+
+module cichelli with ...
+
+
+
+val keys = 
+  nofibStringToList("case") :: nofibStringToList("class") :: nofibStringToList("data") :: nofibStringToList("default") :: nofibStringToList("deriving") :: nofibStringToList("else") ::
+  nofibStringToList("hiding") ::  nofibStringToList("if") :: nofibStringToList("import") :: nofibStringToList("in") :: nofibStringToList("infix") :: nofibStringToList("infixl") :: nofibStringToList("instance") ::
+  nofibStringToList("interface") :: nofibStringToList("let") :: nofibStringToList("module") :: nofibStringToList("of") :: nofibStringToList("renaming") :: nofibStringToList("then") :: nofibStringToList("to") ::
+  nofibStringToList("type") :: nofibStringToList("where") :: Nil
+//│ keys = [["c","a","s","e"],["c","l","a","s","s"],["d","a","t","a"],["d","e","f","a","u","l","t"],["d","e","r","i","v","i","n","g"],["e","l","s","e"],["h","i","d","i","n","g"],["i","f"],["i","m","p","o","r","t"],["i","n"],["i","n","f","i","x"],["i","n","f","i","x","l"],["i","n","s","t","a","n","c","e"],["i","n","t","e","r","f","a","c","e"],["l","e","t"],["m","o","d","u","l","e"],["o","f"],["r","e","n","a","m","i","n","g"],["t","h","e","n"],["t","o"],["t","y","p","e"],["w","h","e","r","e"]]
+
+fun enumFromTo_lz(a, b) = lazy of () =>
+  if a <= b then LzCons(a, enumFromTo_lz(a + 1, b)) else LzNil
+
+fun last(ls) =
+  fun go(h, t) = if t is
+    Nil then h
+    head :: t then go(head, t)
+  if ls is
+    h :: t then go(h, t)
+    else throw Error("last: empty list")
+
+data class K(s: String, c1: Char, c2: Char, i: Int)
+
+data class H(f: Option[Int], s: Option[Int], ls: List[Int])
+
+fun ends(k) = if k is K(_, a, z, _) then a :: z :: Nil
+
+fun assoc(x, yz) = if yz is
+  [y, z] :: yzs then if x === y then z else assoc(x, yzs)
+  else throw Error("assoc: not found")
+
+fun assocm(x, yz) = if yz is
+  [y, z] :: yzs then if x === y then Some(z) else assocm(x, yzs)
+  else None
+
+fun histins(x, yns) = if yns is
+  [y, n] :: yns then if x === y then [y, n + 1] :: yns else [y, n] :: histins(x, yns)
+  else [x, 1] :: Nil
+
+fun histo(ls) = foldr(cichelli.histins, Nil, ls)
+
+fun subset(xs, ys) = all(x => inList(x, ys), xs)
+
+fun union(xs, ys) =
+  fun lscomp(ls) = if ls is
+    Nil then Nil
+    h :: t and
+      not(inList(h, xs)) then h :: lscomp(t)
+      else lscomp(t)
+  append(xs, lscomp(ys))
+
+fun attribkeys(ks) = map(k => K(k, head(k), cichelli.last(k), listLen(k)), ks)
+
+val numberofkeys = listLen(keys)
+//│ numberofkeys = 22
+
+fun minm(x, y) = if x is
+  None then y
+  Some(x) then min(x, y)
+
+fun maxm(x, y) = if x is
+  None then y
+  Some(x) then max(x, y)
+
+fun hash(cvs, k) = if k is K(_, a, z, n) then n + assoc(a, cvs) + assoc(z, cvs)
+
+fun select(p, x, ts_fs) = if ts_fs is [ts, fs] and
+  p(x) then [x :: ts, fs]
+  else [ts, x :: fs]
+
+fun partition_(p, ls) = foldr((x, y) => select(p, x, y), [Nil, Nil], ls)
+
+fun freqsorted(x) = x
+
+fun blocked_(ds, ls) = if ls is
+  Nil then Nil
+  k :: ks then
+    let ds_ = union(ds, ends(k))
+    if partition_(x => subset(ends(x), ds_), ks) is [det, rest] then
+      k :: (det +: blocked_(ds_, rest))
+
+fun blocked(ls) = blocked_(Nil, ls)
+
+val freqtab = histo(concat(map(ends, attribkeys(keys))))
+//│ freqtab = [["e", 8],["w", 1],["t", 6],["o", 2],["n", 2],["g", 3],["r", 1],["f", 2],["m", 1],["l", 2],["i", 7],["x", 1],["h", 1],["d", 3],["a", 1],["s", 1],["c", 2]]
+
+val maxval = listLen(freqtab)
+//│ maxval = 17
+
+abstract class Status[T]: NotEver | YesIts[T]
+
+data
+  class
+    NotEver(i: Int) extends Status[Nothing]
+    YesIts[T](i: Int, t: T) extends Status[T]
+
+fun hinsert(h, hh) = if hh is H(lo, hi, hs) then
+  let lo_ = minm(lo, h)
+  let hi_ = maxm(hi, h)
+  if inList(h, hs) || (1 + hi_ - lo_) > numberofkeys
+  then None
+  else Some(H(Some(lo_), Some(hi_), h :: hs))
+
+fun first(k, ls) = if force(ls) is
+  LzNil then NotEver(k)
+  LzCons(a, l) and a is
+    YesIts(leaves, y) then YesIts(k + leaves, y)
+    NotEver(leaves) then first(k + leaves, l)
+
+fun firstSuccess(f, possibles) = first(0, map_lz(f, possibles))
+
+fun findhash_(keyHashSet, charAssocs, ks) = if ks is
+  Nil then YesIts(1, charAssocs)
+  K(s, a, z, n) :: ks then
+    fun tryy(newAssocs) =
+      let newCharAssocs = newAssocs +: charAssocs
+      if hinsert(hash(newCharAssocs, K(s, a, z, n)), keyHashSet) is
+        None then NotEver(1)
+        Some(newKeyHashSet) then findhash_(newKeyHashSet, newCharAssocs, ks)
+    if [assocm(a, charAssocs), assocm(z, charAssocs)] is
+      [None, None] and
+        a === z then firstSuccess(m => tryy([a, m] :: Nil), enumFromTo_lz(0, maxval))
+        else
+          fun lscomp1(ls1) = lazy of () =>
+            if force(ls1) is
+              LzNil then LzNil
+              LzCons(m, ms) then
+                fun lscomp2(ls2) =
+                  if force(ls2) is
+                    LzNil then lscomp1(ms)
+                    LzCons(n, ns) then lazy of () => LzCons([m, n], lscomp2(ns))
+                force(lscomp2(enumFromTo_lz(0, maxval)))
+          firstSuccess(case { [m, n] then tryy([a, m] :: [z, n] :: Nil) }, lscomp1(enumFromTo_lz(0, maxval)))
+      [None, Some(zc)] then firstSuccess(m => tryy([a, m] :: Nil), enumFromTo_lz(0, maxval))
+      [Some(ac), None] then firstSuccess(n => tryy([z, n] :: Nil), enumFromTo_lz(0, maxval))
+      [Some(ac), Some(zc)] then tryy(Nil)
+
+fun findhash(keys) = findhash_(H(None, None, Nil), Nil, keys)
+
+fun freq(c) = assoc(c, freqtab)
+
+fun morefreq(k1, k2) = if
+  k1 is K(_, a, x, _) and k2 is K(_, b, y, _) then (freq(a) + freq(x)) > (freq(b) + freq(y))
+
+fun cichelli_(n) =
+  let attribkeys_ = attribkeys(keys +: take(intMod(n, 2), keys))
+  let hashkeys = blocked(freqsorted(attribkeys_))
+  findhash(hashkeys)
+
+fun prog(n) = cichelli_(n)
+
+fun main() = prog(6).toString()

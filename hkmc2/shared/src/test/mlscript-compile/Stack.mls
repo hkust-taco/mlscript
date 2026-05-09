@@ -22,12 +22,14 @@ fun reverse(xs) = reverseAndAppend(xs, Nil)
 fun fromArray(arr) =
   let 
     ls = Nil
-    i = 0
-    len = arr.length
-  while i < len do 
+    i = arr.length - 1
+  while i >= 0 do 
     ls = arr.at(i) :: ls
-    set i += 1
+    set i -= 1
   ls
+
+fun toArray(xs) =
+  xs reverse() toReverseArray()
 
 fun toReverseArray(xs) =
   let
@@ -45,8 +47,8 @@ fun zip(...xss) =
       h2 :: t2 then go(h2 :: heads, t2 :: tails)(t)
       Nil then go(heads, tails)(t)
     Nil and heads is
-      Nil then assert(tails is Nil); Nil
-      else heads toReverseArray() :: go(Nil, Nil) of tails reverse()
+      Nil then (assert tails is Nil, Nil) // * TODO: improve syntax (parens are currently needed)
+      else heads toArray() :: go(Nil, Nil) of tails reverse()
   go(Nil, Nil) of fromArray(xss)
 
 // * Non-recursive efficient internally-mutable list concatenation.

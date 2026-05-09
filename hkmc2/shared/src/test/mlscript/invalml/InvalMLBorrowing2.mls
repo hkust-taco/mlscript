@@ -1,0 +1,83 @@
+:invalml
+
+
+class Reg[Rg, Br]
+
+fun letreg: [E, Res] -> ([Rg] -> Reg[Rg, E] ->{E | Rg} Res) ->{E} Res
+
+fun subreg: [E, Rg, Br, Res] -> Reg[Rg, Br] -> ([Rg2] -> Reg[Rg2 & ~Rg, E] ->{E | Rg2} Res) ->{E} Res
+
+fun read: [Rg, Br] -> Reg[Rg, Br] ->{Br} Int
+fun write: [Rg, Br] -> Reg[Rg, Br] ->{Rg} Int
+
+
+fun borrow: [Rg, Br, Res] -> Reg[Rg, Br] ->{Rg} (() ->{Br} Res) ->{Br} Res
+
+letreg of r =>
+  read(r)
+  borrow(r) of () =>
+    read(r)
+  write(r)
+//│ Type: Int
+
+:e
+letreg of r =>
+  read(r)
+  borrow(r) of () =>
+    write(r)
+    read(r)
+  write(r)
+//│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.24: 	letreg of r =>
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.25: 	  read(r)
+//│ ║        	^^^^^^^^^
+//│ ║  l.26: 	  borrow(r) of () =>
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.27: 	    write(r)
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.28: 	... (more lines omitted) ...
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'E  <:  ⊥
+//│ ╟── because: cannot constrain  'Rg  <:  ⊥
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Int
+
+
+fun borrow: [Rg, Br, Res] -> Reg[Rg, Br] ->{Rg} (() ->{Br | ~Rg} Res) ->{Br} Res
+
+letreg of r =>
+  read(r)
+  borrow(r) of () =>
+    read(r)
+  write(r)
+//│ Type: Int
+
+
+:e
+letreg of r =>
+  read(r)
+  borrow(r) of () =>
+    write(r)
+    read(r)
+  write(r)
+//│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.58: 	letreg of r =>
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.59: 	  read(r)
+//│ ║        	^^^^^^^^^
+//│ ║  l.60: 	  borrow(r) of () =>
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.61: 	    write(r)
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.62: 	... (more lines omitted) ...
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'E  <:  ⊥
+//│ ╟── because: cannot constrain  'Rg  <:  ⊥
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Int
+
+
+// * TODO...
+
+

@@ -1,0 +1,17 @@
+:js
+
+
+:w
+@config(tailRecOpt: false) "hi"
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ╟── This annotation is not supported on string literal terms.
+//│ ║  l.5: 	@config(tailRecOpt: false) "hi"
+//│ ╙──     	                           ^^^^
+//│ = "hi"
+
+// TODO: report useless `tailRecOpt` config annotation on non-function term
+:breakme
+@config(tailRecOpt: false) val x = 1
+//│ x = 1
+
+

@@ -33,6 +33,6 @@ tuple(123, 456)
 //│ ╔══[PARSE ERROR] Unexpected period here
 //│ ║  l.29: 	123 |> tuple(., 456)
 //│ ╙──      	             ^
-//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

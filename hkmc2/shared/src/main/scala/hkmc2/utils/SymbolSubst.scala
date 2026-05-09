@@ -17,3 +17,8 @@ class SymbolSubst:
   def mapPatSym(s: PatternSymbol): PatternSymbol = s
   def mapTopLevelSym(s: TopLevelSymbol): TopLevelSymbol = s
   def mapErrorSym(s: ErrorSymbol): ErrorSymbol = s
+  def mapLabelSym(s: LabelSymbol): LabelSymbol = s
+
+object SymbolSubst:
+  object Id extends SymbolSubst
+

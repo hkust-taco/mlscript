@@ -29,7 +29,7 @@ fun (.!.) call(receiver, f)(arg) = f.call(receiver, arg)
 :pt
 :sjs
 Example .!. oops(2)
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ App:
 //│   lhs = OpApp:
 //│     lhs = Ident of "Example"
@@ -38,8 +38,9 @@ Example .!. oops(2)
 //│       Ident of "oops"
 //│   rhs = Tup of Ls of 
 //│     IntLit of 2
-//│ JS (unsanitized):
-//│ let tmp; tmp = call(Example1, oops); runtime.safeCall(tmp(2))
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ call(Example1, oops)(2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [2, 1]
 
 Example.!. oops(2)
@@ -57,12 +58,12 @@ id(Example) .!. oops(2)
 data class Example2(val a) with
   val a = 1
   fun f(inc) = Example2(a + inc)
-//│ ╔══[ERROR] Duplicate definition of member named 'a'.
+//│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'a'.
 //│ ╟── Defined at: 
-//│ ║  l.57: 	data class Example2(val a) with
+//│ ║  l.58: 	data class Example2(val a) with
 //│ ║        	                        ^
 //│ ╟── Defined at: 
-//│ ║  l.58: 	  val a = 1
+//│ ║  l.59: 	  val a = 1
 //│ ╙──      	  ^^^^^^^^^
 
 let oops2 = Example2(0).("f")
@@ -77,12 +78,10 @@ Example2(1).!. oops2(2).!. oops2(2)
 (new Example2(1)) .!. oops2(2)
 //│ = Example2(1)
 
-:todo
 new Example2(1)
   .!. oops2(2)
 //│ = Example2(1)
 
-:todo
 new Example2(1)
   .!. oops2(2)
   .!. oops2(2)
@@ -96,7 +95,7 @@ fun (.>) call(receiver, f)(arg) = f.call(receiver, arg)
 :sjs
 :re
 Example .> oops(2)
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ OpApp:
 //│   lhs = Ident of "Example"
 //│   op = Ident of ".>"
@@ -105,8 +104,9 @@ Example .> oops(2)
 //│       lhs = Ident of "oops"
 //│       rhs = Tup of Ls of 
 //│         IntLit of 2
-//│ JS (unsanitized):
-//│ let tmp22; tmp22 = runtime.safeCall(oops(2)); call1(Example1, tmp22)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let tmp10; tmp10 = runtime.safeCall(oops(2)); call1(Example1, tmp10)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 
 // * Note:

@@ -14,11 +14,22 @@ print of
 //│ > 123
 
 
+// * Interesting quirk:
+
+print of ...
+[1, 2]
+//│ > [1, 2]
+
+print of ...
+  [1, 2]
+//│ > 1 2
+
+
 if true do...
 
 if true do...
-1
-//│ = 1
+print(1)
+//│ > 1
 
 
 module Option with ...
@@ -40,7 +51,7 @@ module A with
   
   val b = 2
   
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ TypeDef:
 //│   k = Mod
 //│   head = InfixApp:
@@ -61,8 +72,7 @@ module A with
 //│               k = ImmutVal
 //│               head = Ident of "b"
 //│               rhs = S of IntLit of 2
-//│         rhs = N
-//│   rhs = N
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 fun test(x) =
@@ -78,11 +88,11 @@ x =>
   1
 let bar = 1
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.76: 	x =>
+//│ ║  l.86: 	x =>
 //│ ║        	^^^^
-//│ ║  l.77: 	  if false then 0 else...
+//│ ║  l.87: 	  if false then 0 else...
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.78: 	  1
+//│ ║  l.88: 	  1
 //│ ╙──      	^^^
 //│ bar = 1
 
@@ -95,12 +105,14 @@ bar
 x => if false then 0 else...
   1
 let foo = 1
-//│ ╔══[ERROR] Illegal position for '...' spread operator.
-//│ ║  l.95: 	x => if false then 0 else...
-//│ ╙──      	                         ^^^
+//│ ╔══[COMPILATION ERROR] Illegal position for '...' spread operator.
+//│ ║  l.105: 	x => if false then 0 else...
+//│ ╙──       	                         ^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.95: 	x => if false then 0 else...
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.105: 	x => if false then 0 else...
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.106: 	  1
+//│ ╙──       	^^^
 //│ foo = 1
 
 

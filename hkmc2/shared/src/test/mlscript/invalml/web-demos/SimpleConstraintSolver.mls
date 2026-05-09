@@ -1,0 +1,420 @@
+:invalml
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+// * In this file, we implement a simple constraint solver, originally presented in https://doi.org/10.1145/3410225
+// * We only implement int type, function types, and type variables for simplicity
+
+// *** infrastructures
+
+fun nt(b) = if b then false else true
+fun (;) seq(_, res) = res
+fun id(x) = x
+
+fun println: Any -> ()
+fun (~) concat: (Str, Str) -> Str
+fun toString: Any -> Str
+fun (===) streq: (Str, Str) -> Bool
+fun error() = error()
+
+class PairOf[out A, out B] with
+  constructor
+    Pair(fst: A, snd: B)
+
+class Option[out A] with
+  constructor
+    None()
+    Some(value: A)
+
+class List[out A] with
+  constructor
+    Nil()
+    Cons(head: A, tail: List[A])
+
+fun fold(x, xs, f) = if xs is
+  Nil() then x
+  Cons(y, ys) then fold(f(x, y), ys, f)
+
+fun map(xs, f) = if xs is
+  Nil() then Nil()
+  Cons(x, xs) then Cons(f(x), map(xs, f))
+
+fun each(xs, f) = if xs is
+  Nil() then ()
+  Cons(x, xs) then f(x); each(xs, f)
+
+fun find(xs, f) = if xs is
+  Nil() then None()
+  Cons(x, xs) then
+    if f(x) then Some(x)
+    else find(xs, f)
+
+class ArrayList[T, out R]
+class Iter[T, out R]
+class HashMap[K, V, out R]
+class MapIter[T, out R]
+
+// fun empty:   [A, R] -> Region[R] ->{R} ArrayList[out A, out R]  // TODO investigate: why does this break things?
+fun empty: [A, R] -> Region[out R] ->{R} ArrayList[A, out R]
+fun clear: [A, R] -> (ArrayList[A, out R]) ->{R} ()
+fun push: [A, R] -> (ArrayList[A, R], A) ->{R} ()
+fun len: [A, R] -> (ArrayList[A, R]) ->{R} Int
+fun iter: [Res, R, E extends ~R, T] -> (ArrayList[T, R], [S] -> Iter[T, S] ->{S | E} Res) ->{E | R} Res
+fun next: [T, S] -> Iter[T, S] ->{S} Option[T]
+fun whileDo: [R] -> (() ->{R} Bool) ->{R} ()
+fun foreach: [E, R, T] -> (Iter[T, R], T ->{E} ()) ->{R | E} ()
+fun max(x, y) = if x < y then y else x
+
+
+fun mkHashMap: [R, K, V] -> (Region[out R], K -> Str) ->{R} HashMap[K, V, R]
+fun getOrUpdate: [R, K, V, E] -> (HashMap[K, V, R], K, () ->{E} V) ->{E | R} V
+fun hasOrUpdate: [R, K, V, E] -> (HashMap[K, V, R], K, () ->{E} V) ->{E | R} ()
+fun iterMap: [Res, R, E extends ~R, K, V] -> (HashMap[K, V, R], [S] -> MapIter[V, S] ->{S | E} Res) ->{E | R} Res
+fun nextVal: [T, S] -> MapIter[T, S] ->{S} Option[T]
+fun hasKey: [K, V, R] -> (HashMap[K, V, R], K) ->{R} Bool
+fun add: [K, V, R] -> (HashMap[K, V, R], K, V) ->{R} ()
+fun values: [E, R, T] -> (MapIter[T, R], T ->{E} ()) ->{R | E} ()
+
+// *** simple constraint solver
+
+
+// Unif contains a type variable's id, lower bounds, and upper bounds.
+class Type[out R] with
+  constructor
+    IntType()
+    FunctionType(lhs: Type[R], rhs: Type[R])
+    RecordType(fields: List[PairOf[Str, Type[R]]])
+    TypeVariable(id: Str, level: Int, lowerBounds: ArrayList[Type[R], R], upperBounds: ArrayList[Type[R], R])
+    
+
+fun isSimpl(ty) = if ty is
+  FunctionType(_, _) then false
+  else true
+
+
+fun ty2Str(ty) = if ty is
+  IntType() then "Int"
+  FunctionType(lhs, rhs) then
+    let ls = if isSimpl(lhs) then ty2Str(lhs) else "(" ~ ty2Str(lhs) ~ ")"
+    ls ~ " -> " ~ ty2Str(rhs)
+  RecordType(fields) then "{ " ~ fold("", fields, (s, p) => if p is Pair(n, t) then s ~ n ~ ": " ~ ty2Str(t) ~ ", ") ~ "}"
+  TypeVariable(name, level, _, _) then name ~ "_" ~ toString(level)
+
+// fun levelOf: [R] -> Type[R] -> Int
+fun levelOf(ty) = if ty is
+  IntType() then 0
+  FunctionType(lhs, rhs) then max(levelOf(lhs), levelOf(rhs))
+  RecordType(fields) then fold(0, fields, (r, p) => if p is Pair(_, t) then max(r, levelOf(t)))
+  TypeVariable(_, level, _, _) then level
+
+fun report(lhs, rhs) =
+  println("Cannot constrain " ~ ty2Str(lhs) ~ " <: " ~ ty2Str(rhs) ~ "!")
+
+
+fun extrude: [outer, R extends outer] -> (Type[R], Bool, Int, (Str, Int) ->{R} Type[R], HashMap[PairOf[Type[R], PairOf[Int, Bool]], Type[R], R]) ->{R} Type[R]
+fun extrude(ty, pol, lvl, freshVar, cache) = getOrUpdate of cache, Pair(ty, Pair(lvl, pol)), () =>
+  if levelOf(ty) <= lvl then ty
+  else if ty is
+    IntType() then ty
+    FunctionType(lhs, rhs) then
+      FunctionType(extrude(lhs, nt(pol), lvl, freshVar, cache), extrude(rhs, pol, lvl, freshVar, cache))
+    RecordType(fields) then
+      RecordType(map(fields, p => if p is Pair(name, ty) then Pair(name, extrude(ty, pol, lvl, freshVar, cache))))
+    TypeVariable(name, level, lb, ub) then
+      let nc = freshVar(name ~ "'" ~ (if pol then "+" else "-"), lvl)
+      if pol then
+        push(ub, nc)
+        let nlb = if nc is
+          TypeVariable(_, _, lb, _) then lb
+          else error() // impossible
+        region r in
+          let nbd = empty(r)
+          iter of lb, it => foreach(it, b => push(nbd, b))
+          iter of nbd, it => foreach(it, b => push(nlb, extrude(b, pol, lvl, freshVar, cache)))
+      else
+        push(lb, nc)
+        let nub = if nc is
+          TypeVariable(_, _, _, ub) then ub
+          else error() // impossible
+        region r in
+          let nbd = empty(r)
+          iter of ub, it => foreach(it, b => push(nbd, b))
+          iter of nbd, it => foreach(it, b => push(nub, extrude(b, pol, lvl, freshVar, cache)))
+      nc
+
+// fun solve: [outer, R extends outer] -> (List[PairOf[Type[R], Type[R]]], (Str, Int) ->{R} Type[R], HashMap[PairOf[Type[R], Type[R]], Any, R], () ->{R} HashMap[PairOf[Type[R], PairOf[Int, Bool]], Type[R], R]) ->{R} ()
+fun solve(constraints, freshVar, cache, genExtrCache) = if constraints is
+  Nil() then ()
+  Cons(c, cs) then if c is
+    Pair(lhs, rhs) then hasOrUpdate of cache, c, () =>
+      if lhs is
+        IntType() then if rhs is
+          IntType() then solve(cs, freshVar, cache, genExtrCache)
+          TypeVariable(name, level, lb, ub) then
+            push(lb, lhs)
+            region r in
+              let ncs = r.ref cs
+              iter(ub, it => foreach(it, b => ncs := Cons(Pair(lhs, b), !(ncs)); ()))
+              solve(!(ncs), freshVar, cache, genExtrCache)
+          else report(lhs, rhs)
+        FunctionType(arg, res) then if rhs is
+          FunctionType(arg', res') then
+            solve(Cons(Pair(arg', arg), Cons(Pair(res, res'), cs)), freshVar, cache, genExtrCache)
+          TypeVariable(name, level, lb, ub) then
+            if levelOf(lhs) <= level then
+              push(lb, lhs)
+              region r in
+                let ncs = r.ref cs
+                iter(ub, it => foreach(it, b => ncs := Cons(Pair(lhs, b), !(ncs)); ()))
+                solve(!(ncs), freshVar, cache, genExtrCache)
+            else
+              let lhs' = extrude(lhs, true, level, freshVar, genExtrCache())
+              solve(Cons(Pair(lhs', rhs), cs), freshVar, cache, genExtrCache)
+          else report(lhs, rhs)
+        RecordType(flds) then if rhs is
+          RecordType(flds') then each(flds', p' =>
+            if p' is Pair(n', t') then
+              if find(flds, p => if p is Pair(n, t) then n === n') is
+                Some(p) then if p is Pair(n, t) then solve(Cons(Pair(t, t'), cs), freshVar, cache, genExtrCache)
+                None() then println("Missing field " ~ n' ~ " in " ~ ty2Str(lhs))
+            )
+          TypeVariable(name, level, lb, ub) then
+            if levelOf(lhs) <= level then
+              push(lb, lhs)
+              region r in
+                let ncs = r.ref cs
+                iter(ub, it => foreach(it, b => ncs := Cons(Pair(lhs, b), !(ncs)); ()))
+                solve(!(ncs), freshVar, cache, genExtrCache)
+            else
+              let lhs' = extrude(lhs, true, level, freshVar, genExtrCache())
+              solve(Cons(Pair(lhs', rhs), cs), freshVar, cache, genExtrCache)
+          else report(lhs, rhs)
+        TypeVariable(name, level, lb, ub) then
+          if levelOf(rhs) <= level then
+            push(ub, rhs)
+            region r in
+              let ncs = r.ref cs
+              iter(lb, it => foreach(it, b => ncs := Cons(Pair(b, rhs), !(ncs)); ()))
+              solve(!(ncs), freshVar, cache, genExtrCache)
+          else
+            let rhs' = extrude(rhs, false, level, freshVar, genExtrCache())
+            solve(Cons(Pair(lhs, rhs'), cs), freshVar, cache, genExtrCache)
+
+
+fun freshVar(r, ctx, name, lvl) =
+  if (nt of hasKey(ctx, name)) then
+    add(ctx, name, 1)
+    TypeVariable(name, lvl, empty(r), empty(r))
+  else
+    region r2 in
+      let i = r2.ref 0
+      let res = r2.ref None()
+      whileDo of () =>
+        let nn = name ~ toString(!(i))
+        if (nt of hasKey(ctx, nn)) then
+          res := Some(TypeVariable(nn, lvl, empty(r), empty(r)))
+          add(ctx, nn, 1)
+          false
+        else
+          i := !(i) + 1
+          true
+      if !(res) is
+        Some(v) then v
+        else error()
+
+
+fun genHash(r) =
+  mkHashMap(r, p => if p is Pair(x, y) then ty2Str(x) ~ " <: " ~ ty2Str(y))
+
+fun genExtrHash(r) =
+  () => mkHashMap(r, t => if t is Pair(ty, p) then if p is Pair(lvl, pol) then ty2Str(ty) ~ (if pol then "+_" else "-_") ~ toString(lvl))
+
+fun printBounds(tv) = if tv is
+  TypeVariable(name, level, lb, ub) then
+    iter of lb, it =>
+      foreach of it, b => println("  " ~ ty2Str(b) ~ " <: " ~ ty2Str(tv))
+    iter of ub, it =>
+      foreach of it, b => println("  " ~ ty2Str(tv) ~ " <: " ~ ty2Str(b))
+  else ()
+
+// fun printRes: [outer, R extends outer] -> (Type[R], Type[R]) ->{R} ()
+fun printRes(lhs, rhs) =
+  println(ty2Str(lhs) ~ " <: " ~ ty2Str(rhs))
+  region r in
+    let tvs = mkHashMap(r, s => s)
+    // fun go: [outer, R extends outer, S extends outer] -> (Type[R], HashMap[Str, Type[R], S]) ->{R | S} ()
+    fun go(t, tvs) = if t is
+        IntType() then ()
+        FunctionType(lhs, rhs) then go(lhs, tvs); go(rhs, tvs)
+        RecordType(fields) then each(fields, p => if p is Pair(_, t) then go(t, tvs))
+        TypeVariable(name, level, lb, ub) then
+          getOrUpdate of tvs, name ~ toString(level), () =>
+            region r2 in
+              let tmp = empty(r2)
+              iter of lb, it => foreach(it, ty => push(tmp, ty))
+              iter of ub, it => foreach(it, ty => push(tmp, ty))
+            t
+          ()
+    go(lhs, tvs); go(rhs, tvs)
+    println("where: ")
+    iterMap of tvs, it =>
+      values of it, printBounds
+
+// *** error example
+
+// if we call the `solve` function during the iteration, the `solve` function
+// can only handle the cases where no allocation is required (i.e., no type variables)
+// fun TODO() = TODO()
+// fun wrongSolve(constraints, freshVar, cache, genExtrCache) = if constraints is
+//   Nil() then ()
+//   Cons(c, cs) then if c is
+//     Pair(lhs, rhs) then hasOrUpdate of cache, c, () =>
+//       if lhs is
+//         IntType() then TODO()
+//         FunctionType(arg, res) then TODO()
+//         RecordType(flds) then TODO()
+//         TypeVariable(name, level, lb, ub) then
+//           if levelOf(rhs) <= level then
+//             push(ub, rhs)
+//             iter(lb, it => foreach(it, b => solve(Cons(Pair(b, rhs), Nil()), freshVar, cache, genExtrCache)))
+//             solve(cs, freshVar, cache, genExtrCache)
+//           else
+//             let rhs' = extrude(rhs, false, level, freshVar, genExtrCache())
+//             solve(Cons(Pair(lhs, rhs'), cs), freshVar, cache, genExtrCache)
+
+
+// The error' version of `solve` function can only be used for constraints without type variables
+// wrongSolve(Cons(Pair(IntType, IntType), Nil()))
+
+// Calling the `wrongSolve` function to solve constraints involving type variables will lead to type errors
+// region r in
+//   let ctx = mkHashMap(r, s => s)
+//   let a = freshVar(r, ctx, "a", 1)
+//   let b = freshVar(r, ctx, "a", 1)
+//   let lhs = a
+//   let rhs = b
+//   wrongSolve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+//   printRes(lhs, rhs)
+
+// *** examples
+
+region r in
+  let ctx = mkHashMap(r, s => s)
+  let lhs = FunctionType(IntType(), IntType())
+  let rhs = IntType()
+  solve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+
+region r in
+  let ctx = mkHashMap(r, s => s)
+  let lhs = FunctionType(IntType(), IntType())
+  let a = freshVar(r, ctx, "a", 1)
+  let rhs = FunctionType(a, a)
+  solve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+  printRes(lhs, rhs)
+
+
+region r in
+  let ctx = mkHashMap(r, s => s)
+  let lhs = RecordType(Cons(Pair("a", IntType()), Cons(Pair("b", FunctionType(IntType(), IntType())), Nil())))
+  let a = freshVar(r, ctx, "a", 1)
+  let b = freshVar(r, ctx, "b", 1)
+  let rhs = RecordType(Cons(Pair("a", a), Cons(Pair("b", b), Nil())))
+  solve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+  printRes(lhs, rhs)
+
+
+region r in
+  let ctx = mkHashMap(r, s => s)
+  let a = freshVar(r, ctx, "a", 1)
+  let b = freshVar(r, ctx, "b", 1)
+  let lhs = a
+  let rhs = b
+  solve(Cons(Pair(lhs, rhs), Cons(Pair(rhs, lhs), Nil())), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+  printRes(lhs, rhs)
+  printRes(rhs, lhs)
+
+
+region r in
+  let ctx = mkHashMap(r, s => s)
+  let lhs = RecordType(Cons(Pair("a", IntType()), Cons(Pair("b", FunctionType(IntType(), IntType())), Nil())))
+  let b = freshVar(r, ctx, "b", 1)
+  let rhs = RecordType(Cons(Pair("b", b), Nil()))
+  solve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+  printRes(lhs, rhs)
+
+
+region r in
+  let ctx = mkHashMap(r, s => s)
+  let a = freshVar(r, ctx, "a", 1)
+  let b = freshVar(r, ctx, "b", 1)
+  let lhs = FunctionType(IntType(), a)
+  let rhs = FunctionType(IntType(), b)
+  if a is
+    TypeVariable(_, _, _, ub) then push(ub, lhs)
+    else error() // impossible
+  if b is
+    TypeVariable(_, _, lb, _) then push(lb, rhs)
+    else error() // impossible
+  solve(Cons(Pair(a, b), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+  printRes(a, b)
+
+
+region r in
+  let ctx = mkHashMap(r, s => s)
+  let a = freshVar(r, ctx, "a", 1)
+  let lhs = a
+  let rhs = FunctionType(IntType(), IntType())
+  if a is
+    TypeVariable(_, _, lb, ub) then push(lb, IntType())
+    else error() // impossible
+  solve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+
+
+region r in
+  let ctx = mkHashMap(r, s => s)
+  let a = freshVar(r, ctx, "a", 1)
+  let b = freshVar(r, ctx, "b", 2)
+  let lhs = FunctionType(IntType(), a)
+  let rhs = FunctionType(IntType(), b)
+  solve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+  printRes(lhs, rhs)
+
+
+region r in
+  let ctx = mkHashMap(r, s => s)
+  let a = freshVar(r, ctx, "a", 1)
+  let b = freshVar(r, ctx, "a", 1)
+  let lhs = a
+  let rhs = b
+  solve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+  printRes(lhs, rhs)
+
+
+region r in
+  let ctx = mkHashMap(r, s => s)
+  let a = freshVar(r, ctx, "a", 1)
+  let b = freshVar(r, ctx, "b", 2)
+  let lhs = a
+  let rhs = FunctionType(b, FunctionType(b, b))
+  solve(Cons(Pair(lhs, rhs), Nil()), (n, l) => freshVar(r, ctx, n, l), genHash(r), genExtrHash(r))
+  printRes(lhs, rhs)
+
+
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+
+
+// ––––––––– TO IMPROVE LATER –––––––––
+
+fun test(x) = case
+  IntType() then ()
+  FunctionType(l1, r1) then ()
+  RecordType(f) then ()
+  TypeVariable(id, lvl, lbs, ubs) then clear(ubs)
+
+// FIXME: why is this not simplified more? (((Type[out 'TypeVariable] ∧ Type[?]) ∧ Type[?]) ∧ Type[?])
+test
+//│ Type: ['TypeVariable] -> ⊤ -> ((((Type[out 'TypeVariable] ∧ Type[?]) ∧ Type[?]) ∧ Type[?]) ->{'TypeVariable} ())
+
+

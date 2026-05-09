@@ -18,7 +18,7 @@ new
 new
   Foo
   Foo
-//│ ╔══[ERROR] Expected a statically known class; found block.
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found block.
 //│ ║  l.20: 	  Foo
 //│ ║        	  ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
@@ -32,7 +32,7 @@ new
 :re
 new
   Foo()
-//│ ╔══[ERROR] Expected a statically known class; found application.
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found application.
 //│ ║  l.34: 	  Foo()
 //│ ║        	  ^^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
@@ -42,7 +42,7 @@ new
 new
   Foo
     ()
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (unit).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (unit).
 //│ ║  l.44: 	    ()
 //│ ╙──      	    ^^
 //│ = Foo
@@ -53,7 +53,7 @@ new
 new
   Foo
   ()
-//│ ╔══[ERROR] Expected a statically known class; found block.
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found block.
 //│ ║  l.55: 	  ()
 //│ ║        	  ^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
@@ -65,7 +65,7 @@ new
 :e
 new Foo
   ()
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (unit).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (unit).
 //│ ║  l.67: 	  ()
 //│ ╙──      	  ^^
 //│ = Foo

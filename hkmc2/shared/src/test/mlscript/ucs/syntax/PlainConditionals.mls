@@ -76,20 +76,20 @@ fun foo(x) = x is { Pair, Int }
 fun foo(x) = x is
   Pair(a, b) and a > b
   Int
-//│ ╔══[ERROR] Unrecognized pattern (infix operator 'and').
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator 'and').
 //│ ║  l.77: 	  Pair(a, b) and a > b
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^
 
 
 :e
 fun foo(x) = x is Pair(a, b) | Int
-//│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
+//│ ╔══[COMPILATION ERROR] Found an inconsistent variable in disjunction patterns.
 //│ ║  l.85: 	fun foo(x) = x is Pair(a, b) | Int
 //│ ║        	                       ^
 //│ ╟── The variable is missing from this sub-pattern.
 //│ ║  l.85: 	fun foo(x) = x is Pair(a, b) | Int
 //│ ╙──      	                               ^^^
-//│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
+//│ ╔══[COMPILATION ERROR] Found an inconsistent variable in disjunction patterns.
 //│ ║  l.85: 	fun foo(x) = x is Pair(a, b) | Int
 //│ ║        	                          ^
 //│ ╟── The variable is missing from this sub-pattern.

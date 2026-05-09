@@ -1,0 +1,11 @@
+:invalml
+
+
+// :d
+let i = 1
+
+let i = 1
+i
+//│ Type: Int
+
+

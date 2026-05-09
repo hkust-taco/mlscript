@@ -33,7 +33,7 @@ class AppTestRunner
     // The compiler context is created per app to avoid interference.
     given cctx: CompilerCtx = CompilerCtx.fresh(fs, AppModuleResolver(appDir))
     // We might need to read `Config` from a config file later.
-    given Config = Config.default
+    given Config = Config.default(mainTestDir)
     
     val wrap: (=> Unit) => Unit = body => AppTestRunner.synchronized(body)
     val report = ReportFormatter(System.out.println, colorize = true, wrap = Some(wrap))

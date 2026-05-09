@@ -1,0 +1,353 @@
+
+:global
+:invalml
+
+class IntList with
+  constructor
+    Nil
+    Cons(x: Int, xs: IntList)
+
+Nil
+//│ Type: IntList
+
+Cons(1, Cons(2, Cons(3, Nil)))
+//│ Type: IntList
+
+
+:e
+class Foo with
+  constructor
+    Bar(x)
+//│ ╔══[COMPILATION ERROR] Invalid ADT parameter.
+//│ ║  l.20: 	    Bar(x)
+//│ ╙──      	        ^
+
+
+:e
+Nil(1)
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.27: 	Nil(1)
+//│ ║        	^^^^^^
+//│ ╙── because: cannot constrain  IntList  <:  (Int) ->{'eff} ('app)
+//│ Type: ⊥
+
+:e
+Nil()
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.35: 	Nil()
+//│ ║        	^^^^^
+//│ ╙── because: cannot constrain  IntList  <:  () ->{'eff} ('app)
+//│ Type: ⊥
+
+
+:e
+Cons("1", Nil)
+//│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
+//│ ║  l.44: 	Cons("1", Nil)
+//│ ║        	     ^^^
+//│ ╙── because: cannot constrain  Str  <:  Int
+//│ Type: IntList
+
+
+class Option[T] with
+  constructor
+    None
+    Some(x: T)
+
+
+None
+//│ Type: Option[in ⊤ out ⊥]
+
+Some(42)
+//│ Type: Option[in ⊤ out Int]
+
+Some(false)
+//│ Type: Option[in ⊤ out Bool]
+
+
+class Fun[T, S] with
+  constructor
+    Pure(f: T -> S)
+
+
+Pure(x => x + 1)
+//│ Type: Fun[in Int out ⊥, in ⊤ out Int]
+
+
+class Value[T] with
+  constructor
+    IntVal(x: Int) extends Value[out Int]
+    BoolVal(x: Bool) extends Value[out Bool]
+
+IntVal(42)
+//│ Type: Value[out Int]
+
+BoolVal(false)
+//│ Type: Value[out Bool]
+
+:e
+IntVal("1")
+//│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
+//│ ║  l.89: 	IntVal("1")
+//│ ║        	       ^^^
+//│ ╙── because: cannot constrain  Str  <:  Int
+//│ Type: Value[out Int]
+
+class Expr[T] with
+  constructor
+    Lit[S](x: S) extends Expr[out S]
+    Var[S](nme: Str) extends Expr[out S]
+    Add(lhs: Expr[out Int], rhs: Expr[out Int]) extends Expr[out Int]
+    Lam[U, V](f: Expr[out U] -> Expr[out V]) extends Expr[out U -> V]
+    App[U, V](f: Expr[out U -> V], a: Expr[out U]) extends Expr[out V]
+
+let a = Lit(42)
+a
+//│ Type: Expr[out Int]
+
+let f = Lam(x => Add(x, Lit(1)))
+f
+//│ Type: Expr[out Int -> Int]
+
+:e
+Lam(42)
+//│ ╔══[COMPILATION ERROR] Type error in integer literal with expected type (Expr[out 'U]) ->{⊥} Expr[out 'V]
+//│ ║  l.113: 	Lam(42)
+//│ ║         	    ^^
+//│ ╙── because: cannot constrain  Int  <:  (Expr[in ⊥ out 'U]) ->{⊥} (Expr[in ⊥ out 'V])
+//│ Type: Expr[out ⊤ -> ⊥]
+
+App(f, a)
+//│ Type: Expr[out Int]
+
+
+let b = Lit(true)
+b
+//│ Type: Expr[out Bool]
+
+:e
+App(f, b)
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type Expr[out 'U]
+//│ ║  l.129: 	App(f, b)
+//│ ║         	       ^
+//│ ╟── because: cannot constrain  Expr[in ⊥ out 'S]  <:  Expr[in ⊥ out 'U]
+//│ ╟── because: cannot constrain  'S  <:  'U
+//│ ╟── because: cannot constrain  'S  <:  'U1
+//│ ╟── because: cannot constrain  Bool  <:  'U1
+//│ ╙── because: cannot constrain  Bool  <:  Int
+//│ Type: Expr[out Int]
+
+
+fun sum(xs) =
+  if xs is
+    Nil then 0
+    Cons(x, xs) then x + sum(xs)
+sum
+//│ Type: IntList -> Int
+
+
+sum(Cons(1, Cons(2, Cons(3, Cons(4, Nil)))))
+//│ Type: Int
+
+
+:e
+fun badSum(xs) =
+  if xs is
+    Cons(x, xs) then x + badSum(xs)
+//│ ╔══[COMPILATION ERROR] Expect 2 cases, but 1 got.
+//│ ║  l.156: 	    Cons(x, xs) then x + badSum(xs)
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+fun badSum(xs) =
+  if xs is
+    Cons(x, xs) then x + badSum(xs)
+    Cons(x, xs) then x + badSum(xs)
+//│ ╔══[COMPILATION ERROR] Duplicate match branches.
+//│ ║  l.164: 	    Cons(x, xs) then x + badSum(xs)
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.165: 	    Cons(x, xs) then x + badSum(xs)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Expect 2 cases, but 1 got.
+//│ ║  l.164: 	    Cons(x, xs) then x + badSum(xs)
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.165: 	    Cons(x, xs) then x + badSum(xs)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+fun getOrElse(m, d) =
+  if m is
+    Some(x) then x
+    None then d
+getOrElse
+//│ Type: ['d, 'Some] -> (Option[?] ∧ Option[out 'Some], 'd) -> ('Some ∨ 'd)
+
+
+getOrElse(Some(42), 0)
+//│ Type: Int
+
+getOrElse(None, false)
+//│ Type: Bool
+
+getOrElse(Some(42), "42")
+//│ Type: Int ∨ Str
+
+
+if IntVal(1) is
+  IntVal(x) then 1
+  BoolVal(x) then 0
+//│ Type: Int
+
+
+fun toBool(v) =
+  if v is
+    IntVal(x) then x > 0
+    BoolVal(x) then x
+toBool
+//│ Type: Value[?] -> Bool
+
+toBool(IntVal(1))
+//│ Type: Bool
+
+
+class MyMap[K, V] with
+  constructor
+    Empty
+    Pair(k: K, v: V, rest: MyMap[out K, out V])
+
+fun newMap(k, v) = Pair(k, v, Empty)
+newMap
+//│ Type: ['k, 'v] -> ('k, 'v) -> MyMap[in ⊤ out 'k, in ⊤ out 'v]
+
+fun insert(m, k, v) = Pair(k, v, m)
+insert
+//│ Type: ['k, 'v, 'K, 'V] -> (MyMap[out 'K, out 'V], 'k, 'v) -> MyMap[in ⊤ out 'K, in ⊤ out 'V]
+//│ Where:
+//│   'k <: 'K
+//│   'v <: 'V
+
+
+fun getOrElse: [K, V] -> (MyMap[out K, out V], K, V) -> V
+fun getOrElse(m, k, d) =
+  if m is
+    Empty then d
+    Pair(k', v, r) then (if k == k' then v else getOrElse(r, k, d))
+
+let incMap1 = newMap(1, 2)
+incMap1
+//│ Type: MyMap[in ⊤ out Int, in ⊤ out Int]
+
+let incMap2 = insert(incMap1, 2, 3)
+incMap2
+//│ Type: MyMap[in ⊤ out Int, in ⊤ out Int]
+
+getOrElse(incMap2, 3, 4)
+//│ Type: Int
+
+
+fun toString: Any -> Str
+
+fun concat: (Str, Str) -> Str
+
+fun print: [T] -> Expr[out T] -> Str
+fun print(e) = 
+  if e is
+    Lit(x) then toString(x)
+    Var(nme) then nme
+    Add(lhs, rhs) then concat(print(lhs), concat(" + ", print(rhs)))
+    Lam(f) then
+      let v = Var("arg") in concat(print(v), concat(" => ", print(f(v))))
+    App(f, a) then concat(print(f), concat(" ", print(a)))
+
+let p = Lam(x => Add(x, Lit(1)))
+p
+//│ Type: Expr[out Int -> Int]
+
+let a = App(p, Lit(2))
+a
+//│ Type: Expr[out Int]
+
+print(p)
+print(a)
+//│ Type: Str
+
+
+:e
+fun foo(x) =
+  if x is
+    Some(x) then 1
+    None then 0
+    42 then 42
+//│ ╔══[COMPILATION ERROR] Mixing ADT pattern matching and general matching is not supported yet.
+//│ ║  l.280: 	    42 then 42
+//│ ╙──       	    ^^^^^^^^^^
+//│ ═══[COMPILATION ERROR] Variable not found: arg$Some$0$
+
+
+fun foo(x) =
+  if x is
+    Some(x) then x
+    else 0
+
+
+class List[out T] with
+  constructor
+    Nil
+    Cons(x: T, xs: List[T])
+
+
+Cons(42, Nil)
+//│ Type: List[out Int]
+
+
+fun foo: [T] -> T -> List[T]
+foo
+//│ Type: ['T] -> ('T) ->{⊥} List[out 'T]
+
+
+class Bar[in T] with
+  constructor
+    B(f: T -> Int)
+
+
+B(x => x + 1)
+//│ Type: Bar[in Int]
+
+
+fun bar: [T] -> (T, Bar[T]) -> Int
+bar
+//│ Type: ['T] -> ('T, Bar[in 'T]) ->{⊥} Int
+
+
+class Option[out T] with
+  constructor
+    None
+    Some(x: T)
+
+
+fun headOpt(xs) = if xs is
+  Nil then None
+  Cons(x, xs) then Some(x)
+headOpt
+//│ Type: ['Cons] -> (List[out 'Cons] ∧ List[?]) -> (Option[⊥] ∨ Option[out 'Cons])
+
+
+headOpt(Nil)
+//│ Type: Option[⊥]
+
+headOpt(Cons(42, Nil))
+//│ Type: Option[⊥] ∨ Option[out Int]
+
+
+fun getOrElse(v, d) = if v is
+   Some(x) then x
+   else d
+getOrElse
+//│ Type: ['d, 'Some] -> (Option[out 'Some], 'd) -> ('Some ∨ 'd)
+
+
+getOrElse(headOpt(Nil), "foo")
+//│ Type: Str
+
+getOrElse(headOpt(Cons(42, Nil)), 1)
+//│ Type: Int

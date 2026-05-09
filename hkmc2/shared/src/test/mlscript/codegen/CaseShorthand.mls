@@ -6,34 +6,55 @@ case x then x
 
 :sjs
 case { x then x }
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda1; lambda1 = (undefined, function (caseScrut) { let x; x = caseScrut; return x }); lambda1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 :sjs
 x => if x is
   0 then true
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda2;
 //│ lambda2 = (undefined, function (x) {
 //│   if (x === 0) {
 //│     return true
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
 //│ lambda2
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 :sjs
 case 0 then true
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda3;
 //│ lambda3 = (undefined, function (caseScrut) {
 //│   if (caseScrut === 0) {
 //│     return true
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
 //│ lambda3
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
+
+
+// * Note: `case`/`do` works analogously to `if`/`do`
+:sjs
+case
+  0 do print(1)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let lambda4;
+//│ lambda4 = (undefined, function (caseScrut) {
+//│   if (caseScrut === 0) { Predef.print(1); return runtime.Unit }
+//│   return runtime.Unit;
+//│ });
+//│ lambda4
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
 
 (case x then x) of 1
 //│ = 1
@@ -52,23 +73,26 @@ case 0 then true
 
 :todo // TODO: support this braceless syntax?
 case [x] then x, [] then 0
-//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.54: 	case [x] then x, [] then 0
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.75: 	case [x] then x, [] then 0
 //│ ╙──      	                 ^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.54: 	case [x] then x, [] then 0
+//│ ║  l.75: 	case [x] then x, [] then 0
 //│ ╙──      	^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :sjs
 case
   0 then true
   _ then false
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda11;
-//│ lambda11 = (undefined, function (caseScrut) {
-//│   if (caseScrut === 0) { return true } else { return false }
+//│ lambda11 = (undefined, function (caseScrut1) {
+//│   if (caseScrut1 === 0) { return true }
+//│   return false;
 //│ });
 //│ lambda11
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 data class Some(value)
@@ -78,17 +102,17 @@ object None
 val isDefined = case
   Some then true
   None then false
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let isDefined, lambda12;
-//│ lambda12 = (undefined, function (caseScrut) {
-//│   if (caseScrut instanceof Some1.class) {
+//│ lambda12 = (undefined, function (caseScrut1) {
+//│   if (caseScrut1 instanceof Some1.class) {
 //│     return true
-//│   } else if (caseScrut instanceof None1.class) {
+//│   } else if (caseScrut1 instanceof None1.class) {
 //│     return false
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
 //│ isDefined = lambda12;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ isDefined = fun
 

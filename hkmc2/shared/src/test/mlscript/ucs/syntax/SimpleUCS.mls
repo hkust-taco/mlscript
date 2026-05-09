@@ -84,7 +84,7 @@ fun f(x, y, z) =
     A then "oui"
 
 
-:todo // Note: should report missing final else clause.
+:breakme // Note: should report missing final else clause.
 :e
 fun f(x, y) =
   if x is
@@ -198,7 +198,7 @@ fun f(x) =
   if x is
     0 ::
       Nil() then "oh"
-//│ ╔══[ERROR] Unrecognized pattern split (operator application).
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (operator application).
 //│ ║  l.199: 	    0 ::
 //│ ║         	    ^^^^
 //│ ║  l.200: 	      Nil() then "oh"

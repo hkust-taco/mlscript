@@ -1,0 +1,92 @@
+:js
+:staging
+
+staged module M with
+  class C with
+    fun f() = 1
+    fun g() = f()
+//│ > fun ctor_() =
+//│ >   class C with
+//│ >     fun f() = 1
+//│ >     fun g() = C.f()
+
+staged module A with
+  fun f() = 1
+module B with
+  fun f() = 1
+class C(val a, b)(c)(d)
+staged module D with
+  class E
+  fun f() =
+    A.f()
+    B.f()
+  fun matching() =
+    1 is Int
+    1 is C
+//│ > fun ctor_() = ()
+//│ > fun f() = 1
+//│ > fun ctor_() =
+//│ >   class E
+//│ > fun f() =
+//│ >   A.f_gen()
+//│ >   B.f()
+//│ > fun matching() =
+//│ >   let {scrut, scrut1, tmp}
+//│ >   scrut = 1
+//│ >   if scrut is
+//│ >     Int then
+//│ >       tmp = true
+//│ >     else
+//│ >       tmp = false
+//│ >   scrut1 = 1
+//│ >   if scrut1 is
+//│ >     C then true
+//│ >     else false
+
+module A with
+  module B with
+    class C(a)
+staged module M with
+  class E
+  fun f() = 
+    D.E
+    A.B.C
+    A.B.C(1)
+    E
+//│ > fun ctor_() =
+//│ >   class E
+//│ > fun f() =
+//│ >   A.B.C(1)
+//│ >   M.E
+
+:e
+staged module M with
+  fun g()() = 1
+//│ ╔══[COMPILATION ERROR] :ftc must be enabled to desugar functions with multiple parameter lists.
+//│ ║  l.64: 	  fun g()() = 1
+//│ ╙──      	  ^^^^^^^^^^^^^
+//│ > fun ctor_() = ()
+//│ > fun g()() = 1
+
+:ftc
+staged module M with
+  fun f() = x => x
+  fun g()() = 1
+//│ > fun ctor_() = ()
+//│ > fun f() =
+//│ >   let {tmp}
+//│ >   tmp = new Function_
+//│ >   tmp
+//│ > fun g() =
+//│ >   let {tmp1}
+//│ >   tmp1 = new Function_1
+//│ >   tmp1
+
+// TODO: these need to be printed, somehow:
+:noModuleCheck
+let x = M."f_instr"().body.rest.rhs.cls.l.value
+let y = M."g_instr"().body.rest.rhs.cls.l.value
+//│ x = class Function$
+//│ y = class Function$
+(new x).call(2)
+//│ = 2

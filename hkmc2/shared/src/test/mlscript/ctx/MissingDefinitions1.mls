@@ -4,7 +4,7 @@ fun f: Any -> Any
 
 :e
 g(5)
-//│ ╔══[ERROR] Name not found: g
+//│ ╔══[COMPILATION ERROR] Name not found: g
 //│ ║  l.6: 	g(5)
 //│ ╙──     	^
 

@@ -1,0 +1,30 @@
+:invalml
+
+
+data class Option[out A](inspect: [E, Res] -> (() ->{E} Res, A ->{E} Res) ->{E} Res)
+
+opt => opt.Option#inspect
+//│ Type: (Option[out 'A]) ->{⊥} ['E, 'Res] -> (() ->{'E} 'Res, ('A) ->{'E} 'Res) ->{'E} 'Res
+
+opt => opt.Option#inspect(
+  () => 42
+  n => n + 1
+)
+//│ Type: (Option[out Int]) ->{⊥} Int
+
+opt => opt.Option#inspect of () => 42, n => n + 1
+//│ Type: (Option[out Int]) ->{⊥} Int
+
+opt => opt.Option#inspect of
+  () => 42
+  n => n + 1
+//│ Type: (Option[out Int]) ->{⊥} Int
+
+
+opt => opt as Option[out Int]
+//│ Type: (Option[out Int]) ->{⊥} Option[out Int]
+
+opt => (opt as Option[Int]) as Option[Int | Str]
+//│ Type: (Option[out Int ∨ Str] ∧ Option[out Int]) ->{⊥} Option[out Int ∨ Str]
+
+

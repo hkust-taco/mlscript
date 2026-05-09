@@ -57,6 +57,7 @@ class MLsCompiler
   
   
   // TODO adapt logic
+  given DebugPrinter = new DebugPrinter
   val etl = new TraceLogger{override def doTrace: Bool = false}
   val ltl = new TraceLogger{override def doTrace: Bool = false}
   // val ltl = new TraceLogger{override def doTrace: Bool = true}
@@ -90,6 +91,7 @@ class MLsCompiler
       val elab = Elaborator(etl, wd, newCtx)
       val parsed = mainParse.resultBlk
       val (blk0, _) = elab.importFrom(parsed)
+      Config.extractConfigFromStats(blk0).givenIn {
       val resolver = Resolver(rtl)
       resolver.traverseBlock(blk0)(using Resolver.ICtx.empty)
       def findQuote(t: semantics.Statement): Bool = t match
@@ -111,20 +113,25 @@ class MLsCompiler
           with codegen.LoweringSelSanityChecks
       val jsb = ltl.givenIn:
         codegen.js.JSBuilder()
-      val le = low.program(blk)
+      val le_0 = low.program(blk)
+      val nme = file.baseName
+      val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
+      val le_1 = ltl.givenIn:
+        codegen.BlockSimplifier(exportedSymbol.toSet)(le_0)
+      val le_2 = ltl.givenIn:
+        codegen.DeadParamElim(le_1)
       val baseScp: utils.Scope =
-        utils.Scope.empty
+        utils.Scope.empty(utils.Scope.Cfg.default)
       // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.
       // * Having `module id"import" with ...` in `prelude.mls` will generate `globalThis.import` that is undefined.
       baseScp.addToBindings(Elaborator.State.importSymbol, "import", shadow = false)
       val nestedScp = baseScp.nest
-      val nme = file.baseName
-      val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
       val je = nestedScp.givenIn:
-        jsb.program(le, exportedSymbol, wd)
+        jsb.program(le_2, exportedSymbol, wd)
       val jsStr = je.stripBreaks.mkString(100)
       val out = file.up / io.RelPath(file.baseName + ".mjs")
       cctx.fs.write(out, jsStr)
+      }
   
   
 end MLsCompiler

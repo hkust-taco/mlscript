@@ -7,7 +7,7 @@ import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
 import hkmc2.utils.SymbolSubst
 
-import syntax.{Literal, Tree, ParamBind}
+import syntax.{Literal, Tree}
 import semantics.*
 import semantics.Elaborator.{Ctx, ctx}
 import semantics.Elaborator.State
@@ -16,7 +16,7 @@ import hkmc2.syntax.Tree.DummyTypeDef
 
 class BufferableTransform()(using Ctx, State, Raise):
   def transform(blk: Block): Block =
-    val transformer = new BlockTransformer(SymbolSubst()):
+    val transformer = new BlockTransformer(SymbolSubst.Id):
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case cls: ClsLikeDefn if cls.k is syntax.Cls =>
           cls.bufferable.fold(super.applyDefn(defn)(k)): bufferable =>
@@ -26,16 +26,26 @@ class BufferableTransform()(using Ctx, State, Raise):
             val pubFieldMap: Map[Symbol, Symbol] = cls.publicFields.toMap
             val fields = cls.privateFields ++ cls.publicFields.map(_._2)
             val fieldMap: Map[Symbol, Int] = fields.zipWithIndex.toMap
-            def mkFieldReplacer(buf: Local, baseIdx: Local) =
+            def mkSymbolReplacer(params: List[ParamList]): (List[ParamList], Map[Symbol, Symbol]) =
+              val allVars = params.flatMap(_.allParams).map(_.sym)
+              val varMap = allVars
+                .map: sym =>
+                  (sym, VarSymbol(sym.id))
+                .toMap
+              def mapParam(p: Param) =
+                Param(p.flags, varMap(p.sym), p.sign, p.modulefulness)
+              (params.map(pl => ParamList(pl.flags, pl.params.map(mapParam), pl.restParam.map(mapParam))), varMap.toMap)
+            def mkFieldReplacer(buf: Local, baseIdx: Local, symMap: Map[Symbol, Symbol]) =
               def getOffset(off: Int)(k: Path => Block): Block =
                 val idxSymbol = new TempSymbol(N, "idx")
-                Assign(idxSymbol, Call(State.builtinOpsMap("+").asPath, baseIdx.asPath.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil)(true, false, false),
-                  k(DynSelect(buf.asPath.selSN("buf"), idxSymbol.asPath, true)))
+                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asPath, (baseIdx.asPath.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil) ne_:: Nil)(true, false, false),
+                  k(DynSelect(buf.asPath.selSN("buf"), idxSymbol.asPath, true))))
               def assignToOffset(off: Int, r: Result, rst: Block) =
                 val idxSymbol = new TempSymbol(N, "idx")
-                Assign(idxSymbol, Call(State.builtinOpsMap("+").asPath, baseIdx.asPath.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil)(true, false, false),
-                  AssignDynField(buf.asPath.selSN("buf"), idxSymbol.asPath, true, r, applyBlock(rst)))
-              new BlockTransformer(SymbolSubst()):
+                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asPath, (baseIdx.asPath.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil) ne_:: Nil)(true, false, false),
+                  AssignDynField(buf.asPath.selSN("buf"), idxSymbol.asPath, true, r, applyBlock(rst))))
+              new BlockTransformer(SymbolSubst.Id):
+                override def applyLocal(sym: Local): Local = symMap.getOrElse(sym, sym)
                 override def applyBlock(b: Block): Block = b match
                   case Assign(l, r, rst) =>
                     fieldMap.get(l).fold(super.applyBlock(b)): off =>
@@ -65,28 +75,31 @@ class BufferableTransform()(using Ctx, State, Raise):
             def transformFunDefn(f: FunDefn, isCtor: Bool): FunDefn =
               val buf = VarSymbol(new Tree.Ident("buf"))
               val idx = VarSymbol(new Tree.Ident("idx"))
-              val blk = mkFieldReplacer(buf, idx).applyBlock(f.body)
-              FunDefn(f.owner, f.sym, f.dSym, PlainParamList(
-                Param(FldFlags.empty, buf, N, Modulefulness.none) :: Param(FldFlags.empty, idx, N, Modulefulness.none) :: Nil) :: f.params,
-                if isCtor then Begin(blk, Return(idx.asPath, false)) else blk)(forceTailRec = f.forceTailRec)
+              val (newParams, symMap) = mkSymbolReplacer(f.params)
+              val blk = mkFieldReplacer(buf, idx, symMap).applyBlock(f.body)
+              FunDefn(f.owner, f.sym, TermSymbol(f.dSym.k, f.dSym.owner, f.dSym.id), PlainParamList(
+                Param(FldFlags.empty, buf, N, Modulefulness.none) :: Param(FldFlags.empty, idx, N, Modulefulness.none) :: Nil) :: newParams,
+                if isCtor then Begin(blk, Return(idx.asPath, false)) else blk)(configOverride = f.configOverride, annotations = f.annotations)
             val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
                 S(companionSym), 
                 BlockMemberSymbol("ctor", Nil, false), 
                 cls.paramsOpt.toList,
                 Begin(cls.preCtor, cls.ctor),
-              )(false), true)
+              )(N, annotations = Nil), true)
             val fakeCompanion = ClsLikeBody(
               companionSym,
               fakeCtor :: cls.methods.map(transformFunDefn(_, false)),
               Nil,
               clsSizeSym -> clsSizeTermSym :: Nil,
-              Define(ValDefn(clsSizeTermSym, clsSizeSym, Value.Lit(Tree.IntLit(fields.size))), End()),
+              Define(ValDefn(clsSizeTermSym, clsSizeSym, Value.Lit(Tree.IntLit(fields.size)))(N, Nil), End()),
+              annotations = Nil,
             )
             k:
               ClsLikeDefn(
                 cls.owner,
                 cls.isym,
                 cls.sym,
+                cls.ctorSym,
                 cls.k,
                 if bufferable then cls.paramsOpt else N,
                 if bufferable then cls.auxParams else Nil,
@@ -98,6 +111,6 @@ class BufferableTransform()(using Ctx, State, Raise):
                 if bufferable then cls.ctor else End(),
                 S(fakeCompanion),
                 cls.bufferable,
-              )
+              )(cls.configOverride, cls.annotations)
         case _ => super.applyDefn(defn)(k)
     transformer.applyBlock(blk)

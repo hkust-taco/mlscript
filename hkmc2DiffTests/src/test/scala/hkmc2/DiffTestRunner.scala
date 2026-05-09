@@ -33,13 +33,16 @@ object DiffTestRunner:
     // val dir = workingDir/"hkmc2"/"shared"/"src"/"test"/"mlscript"
     
     val dir = workingDir/"hkmc2"/"shared"/"src"/"test"
+    
+    // To be overridden in subproject-specific State classes
+    def testDir: os.Path = dir
     val nodeModulesPath = workingDir/"node_modules"
     
     val cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, LocalModuleResolver(dir/"mlscript-compile", S(nodeModulesPath)))
     
     val validExt = Set("mls")
     
-    val allFiles = os.walk(dir)
+    val allFiles = os.walk(testDir)
       .filter(_.toIO.isFile)
       .filter(_.ext in validExt)
     
@@ -86,9 +89,12 @@ end DiffTestRunner
 
 class DiffTestRunner
   extends DiffTestRunnerBase(DiffTestRunner.State)
-  with ParallelTestExecution
+  with ParallelTestExecution:
+  
+  override protected def excludedDiffDirs: Ls[os.Path] =
+    TestFolders.mainExcludedDiffDirs(state.workingDir)
 
-class DiffTestRunnerBase(state: DiffTestRunner.State)
+class DiffTestRunnerBase(val state: DiffTestRunner.State)
   extends funsuite.AnyFunSuite
   with TimeLimitedTests
 :
@@ -110,11 +116,12 @@ class DiffTestRunnerBase(state: DiffTestRunner.State)
       // * with ugly `Thread.isInterrupted` checks everywhere...
       testThread.stop()
   
+  protected def excludedDiffDirs: Ls[os.Path] =
+    TestFolders.alwaysExcludedDiffDirs(state.workingDir)
+  
   protected lazy val diffTestFiles = allFiles.filter: file =>
     (
-      !file.segments.contains("staging") // Exclude staging test files
-      && !file.segments.contains("mlscript-apps")
-      && !file.segments.contains("mlscript-compile")
+      !TestFolders.isExcluded(file, excludedDiffDirs)
       && filter(file.relativeTo(state.workingDir))
     )
   

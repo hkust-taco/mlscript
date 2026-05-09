@@ -5,8 +5,9 @@ class C
 
 :sjs
 new! C
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ globalThis.Object.freeze(new C1())
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = C
 
 let c = C
@@ -30,15 +31,16 @@ f(c)
 :pt
 :re
 new! id(C)
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ App:
 //│   lhs = PrefixApp:
 //│     kw = Keywrd of keyword 'new!'
 //│     rhs = Ident of "id"
 //│   rhs = Tup of Ls of 
 //│     Ident of "C"
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ globalThis.Object.freeze(new Predef.id(C1))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: Predef.id is not a constructor
 
 // * Ok (as in JS)
@@ -49,16 +51,16 @@ new! (id(C))
 :e
 :re
 new id(C)
-//│ ╔══[ERROR] Expected a statically known class; found selection.
-//│ ║  l.51: 	new id(C)
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found selection.
+//│ ║  l.53: 	new id(C)
 //│ ║        	    ^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] TypeError: Predef.id is not a constructor
 
 :e
 new (id(C))
-//│ ╔══[ERROR] Expected a statically known class; found application.
-//│ ║  l.59: 	new (id(C))
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found application.
+//│ ║  l.61: 	new (id(C))
 //│ ║        	     ^^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ = C
@@ -66,8 +68,24 @@ new (id(C))
 
 data class C(x, y)
 
-new! C
-//│ = C(undefined, undefined)
+
+// Note: mismatched number of arguments and class parameters
+// (dead param elimination cannot yet handle this and used to throw a softTODO here)
+// :todo
+let f = new! C()
+//│ f = C(undefined, undefined)
+
+let f = new! C
+//│ f = fun f
+
+f(1, 2)
+//│ = C(1, 2)
+
+let f = x => new! (id(C))(x, x)
+//│ f = fun f
+
+f(1)
+//│ = C(1, 1)
 
 new! C(1, 2)
 //│ = C(1, 2)

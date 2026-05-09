@@ -1,0 +1,26 @@
+:js
+
+open annotations
+
+data class Pair[A, B](first: A, second: B)
+pattern NumPair = Pair(Num, Num)
+pattern SumPair = Pair((Num as x), (Num as y)) => x + y
+
+// TLDR: This file tests the case where a compiled pattern's result is bound
+// with `as`, but the pattern itself does not involve any transformations.
+//
+// `toNumPair` should still compile without creating `MatchSuccess` or
+// `MatchFailure`: all matchers should return Boolean values, and the use site
+// should set the output binding `s` to the original scrutinee `t`.
+//
+// `toSumPair` is the counterexample: because it has a transform and the use
+// site binds the pattern's output, it still creates `MatchSuccess` and
+// `MatchFailure`.
+
+// :sir
+fun toNumPair(t) = if t is (@compile NumPair) as s then s else null
+
+
+// :sir
+fun toSumPair(t) = if t is (@compile SumPair) as s then s else null
+

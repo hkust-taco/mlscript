@@ -1,5 +1,6 @@
 :js
 :effectHandlers
+:lift
 
 import "../../mlscript-compile/Stack.mls"
 open Stack

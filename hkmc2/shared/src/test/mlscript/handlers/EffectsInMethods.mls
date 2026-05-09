@@ -1,5 +1,7 @@
 :js
 :effectHandlers
+:lift
+
 
 
 abstract class Effect with

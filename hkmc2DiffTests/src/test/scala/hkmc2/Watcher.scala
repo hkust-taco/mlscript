@@ -16,7 +16,12 @@ import io.FileSystem, io.PlatformPath.given
 
 // Note: when SBT's `fork` is set to `false`, the path should be `File("hkmc2/")` instead...
 // * Only the first path can contain tests. The other paths are only watched for source changes.
-object MainWatcher extends Watcher(File("../hkmc2/shared/src") :: File("./src") :: Nil):
+object MainWatcher extends Watcher(
+    File("../hkmc2/shared/src") ::
+    File("./src") ::
+    // File("../hkmc2Benchmarks/src") ::
+    Nil
+):
   def main(args: Array[String]): Unit = run
 
 class Watcher(dirs: Ls[File]):
@@ -105,12 +110,19 @@ class Watcher(dirs: Ls[File]):
       val path = os.Path(file.pathAsString)
       val basePath = path.segments.drop(dirPaths.head.segmentCount).toList.init
       val relativeName = basePath.map(_ + "/").mkString + path.baseName
+      val rootPath = os.pwd/os.up
+      val testBasePath = rootPath/"hkmc2"/"shared"/"src"/"test"
+      val preludePath = testBasePath/"mlscript"/"decls"/"Prelude.mls"
+      val predefPath = testBasePath/"mlscript-compile"/"Predef.mls"
       val isModuleFile = path.segments.contains("mlscript-compile")
       if isModuleFile
       then
-        given Config = Config.default
+        given Config = Config.default(testBasePath)
         MLsCompiler(
-          paths = compilerPaths,
+          paths = new MLsCompiler.Paths:
+            val preludeFile = preludePath
+            val runtimeFile = testBasePath/"mlscript-compile"/"Runtime.mjs"
+            val termFile = testBasePath/"mlscript-compile"/"Term.mjs",
           mkRaise = ReportFormatter(System.out.println, colorize = true).mkRaise
         ).compileModule(path)
       else

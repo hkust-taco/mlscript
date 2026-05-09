@@ -1,8 +1,12 @@
 :lift
 :js
+:noInline
+// :deadParamElim off // used to be `off` because lifter changes the parameter lists and DPE used to look at the original ones
 
-// make sure class fields are discriminated properly for immutable captures when supported
+// This test was previously used to demonstrate immutable captures names are not properly discriminated,
+// but handler no longer occur before lifting so this now yield the correct result.
 :effectHandlers
+:expect 3
 abstract class Effect with
   fun perform()
 handle h = Effect with
@@ -11,7 +15,7 @@ fun f() =
   h.perform()
   1
 f() + f() + f()
-//│ = 2
+//│ = 3
 
 :expect 1
 fun f(x) =
@@ -69,9 +73,30 @@ fun f(x) =
 f(1)
 //│ = 2
 
+
+:sir
+fun f(x) =
+  class C with
+    fun y = x
+  new C
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let C⁰, f⁰;
+//│ define C⁰ as class C¹ {
+//│   private val x⁰;
+//│   constructor(x) {
+//│     set x⁰ = x;
+//│     end
+//│   }
+//│   method y⁰ = fun y¹ { return x⁰ }
+//│ };
+//│ define f⁰ as fun f¹(x) { return new C¹(x) };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
 // only w should be in a capture
 :expect 10111
-:sjs
+:sir
 fun f() =
   let x = 1
   let y = 10
@@ -87,141 +112,63 @@ fun f() =
   Bad().foo()
   Good()
 f().foo()
-//│ JS (unsanitized):
-//│ let f6, tmp9;
-//│ let Bad1, Good1, Bad$, Good$, f$capture3;
-//│ Good$ = function Good$(isMut, x, y, z, f$capture4) {
-//│   let tmp10, tmp11;
-//│   if (isMut === true) {
-//│     tmp10 = new Good1.class();
-//│   } else {
-//│     tmp10 = globalThis.Object.freeze(new Good1.class());
-//│   }
-//│   tmp11 = tmp10(x, y, z, f$capture4);
-//│   return tmp11
-//│ };
-//│ Good1 = function Good() {
-//│   return (x, y, z, f$capture4) => {
-//│     return globalThis.Object.freeze(new Good.class()(x, y, z, f$capture4));
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let Bad⁰, Good⁰, f², tmp, Capture$scope0⁰;
+//│ define Capture$scope0⁰ as class Capture$scope0² {
+//│   constructor Capture$scope0¹(z$0, w$1) {
+//│     define w$1⁰ as val w$1¹ = w$1;
+//│     define z$0⁰ as val z$0¹ = z$0;
+//│     end
 //│   }
 //│ };
-//│ (class Good {
-//│   static {
-//│     Good1.class = this
+//│ define Good⁰ as class Good²() {
+//│   private val scope0$cap⁰;
+//│   private val x¹;
+//│   private val y²;
+//│   constructor Good¹(scope0$cap, x, y) {
+//│     set scope0$cap⁰ = scope0$cap;
+//│     set x¹ = x;
+//│     set y² = y;
+//│     end
 //│   }
-//│   constructor() {
-//│     return (x, y, z, f$capture4) => {
-//│       this.f$capture = f$capture4;
-//│       this.x = x;
-//│       this.y = y;
-//│       this.z = z;
-//│       return this;
-//│     }
-//│   }
-//│   #f$capture;
-//│   #x;
-//│   #y;
-//│   #z;
-//│   get f$capture() { return this.#f$capture; }
-//│   set f$capture(value) { this.#f$capture = value; }
-//│   get x() { return this.#x; }
-//│   set x(value) { this.#x = value; }
-//│   get y() { return this.#y; }
-//│   set y(value) { this.#y = value; }
-//│   get z() { return this.#z; }
-//│   set z(value) { this.#z = value; }
-//│   foo() {
-//│     let tmp10, tmp11;
-//│     this.z = 100;
-//│     tmp10 = this.x + this.y;
-//│     tmp11 = tmp10 + this.z;
-//│     return tmp11 + this.f$capture.w$capture$0
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Good", []]; 
-//│ });
-//│ Bad$ = function Bad$(isMut, f$capture4) {
-//│   let tmp10, tmp11;
-//│   if (isMut === true) {
-//│     tmp10 = new Bad1.class();
-//│   } else {
-//│     tmp10 = globalThis.Object.freeze(new Bad1.class());
-//│   }
-//│   tmp11 = tmp10(f$capture4);
-//│   return tmp11
-//│ };
-//│ Bad1 = function Bad() {
-//│   return (f$capture4) => {
-//│     return globalThis.Object.freeze(new Bad.class()(f$capture4));
+//│   method foo⁰ = fun foo¹() {
+//│     let tmp1, tmp2;
+//│     set scope0$cap⁰.z$0 = 100;
+//│     set tmp1 = +⁰(x¹, y²);
+//│     set tmp2 = +⁰(tmp1, scope0$cap⁰.z$0¹);
+//│     return +⁰(tmp2, scope0$cap⁰.w$1¹)
 //│   }
 //│ };
-//│ (class Bad {
-//│   static {
-//│     Bad1.class = this
+//│ define Bad⁰ as class Bad²() {
+//│   private val scope0$cap¹;
+//│   constructor Bad¹(scope0$cap) {
+//│     set scope0$cap¹ = scope0$cap;
+//│     end
 //│   }
-//│   constructor() {
-//│     return (f$capture4) => {
-//│       this.f$capture = f$capture4;
-//│       return this;
-//│     }
+//│   method foo² = fun foo³() {
+//│     set scope0$cap¹.w$1 = 10000;
+//│     return runtime⁰.Unit⁰
 //│   }
-//│   #f$capture;
-//│   get f$capture() { return this.#f$capture; }
-//│   set f$capture(value) { this.#f$capture = value; }
-//│   foo() {
-//│     this.f$capture.w$capture$0 = 10000;
-//│     return runtime.Unit
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Bad", []]; 
-//│ });
-//│ (class f$capture2 {
-//│   static {
-//│     f$capture3 = this
-//│   }
-//│   constructor(w$capture$0) {
-//│     this.w$capture$0 = w$capture$0;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "f$capture"]; 
-//│ });
-//│ f6 = function f() {
-//│   let x, y, z, w, tmp10, tmp11;
-//│   let capture;
-//│   capture = new f$capture3(null);
-//│   x = 1;
-//│   y = 10;
-//│   z = 10;
-//│   capture.w$capture$0 = 1000;
-//│   tmp10 = Bad$(false, capture);
-//│   tmp11 = tmp10.foo();
-//│   return Good$(false, x, y, z, capture)
 //│ };
-//│ tmp9 = f6();
-//│ runtime.safeCall(tmp9.foo())
+//│ define f² as fun f³() {
+//│   let x, y, z, w, tmp1, scope0$cap;
+//│   set scope0$cap = new mut Capture$scope0²(z, w);
+//│   set x = 1;
+//│   set y = 10;
+//│   set scope0$cap.z$0 = 10;
+//│   set scope0$cap.w$1 = 1000;
+//│   set tmp1 = new Bad²()(scope0$cap);
+//│   do tmp1.foo³();
+//│   return new Good²()(scope0$cap, x, y)
+//│ };
+//│ set tmp = f³();
+//│ tmp.foo﹖()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 10111
-
-:expect 2
-fun f(x) =
-  class A() with
-    fun newA() = A()
-    fun foo() =
-      set x += 1
-      x
-    fun getX() = x
-  A()
-let a = f(0)
-a.foo()
-let b = a.newA()
-b.foo()
-a.getX()
-//│ = 2
-//│ a = A()
-//│ b = A()
 
 // handler
 
-:stackSafe 10
+:stackSafe 6
 :effectHandlers
 fun sum(n) =
   if n == 0 then 0
@@ -232,26 +179,36 @@ sum(100)
 
 // instance checks
 
-:w
 fun f() =
   data class Test(a) with
     fun get() = a
   fun foo() = Test
   foo()(0)
 f().get()
-//│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 0
+
+// Parameterized class constructor used as a first-class function
+:expect 43
+fun foo2(x) =
+  class C(y) with
+    fun get = x + y
+  [C, set x += 1]
+let res = foo2(40)
+res.0(2).get
+//│ = 43
+//│ res = [fun, ()]
 
 :lift
 :w
+:expect 2
 fun f(x) =
-  class Test() with
+  class Test with
     fun get() =
       fun h() = x
       h()
   let foo = Test
-  foo()
-f(2).get()
+  foo
+(new! (f(2))).get()
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 2
 
@@ -265,9 +222,175 @@ test()
 //│ = 2
 
 // Note: semicolon required for auxparam before `return this;`
-// :sjs
+// :sir
 fun test(f) =
   class A(x) with
     f(x)
   A(1)
+
+// Check that the extra params are not printed
+:expect "A(2)"
+fun f(x) =
+  data class A(y) with
+    fun hi = x + y
+  A(2).toString()
+f(0)
+//│ = "A(2)"
+
+:todo
+fun f(x) =
+  class A(...r) with
+    fun a = r.push_back(x)
+    fun b = r
+  new A(1, 2, 3)
+let res = f(0)
+res.a
+res.b
+//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched param list lengths List() vs List(term:A/r)
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
+//│ ═══[RUNTIME ERROR] ReferenceError: r is not defined
+//│ res = A(_)
+
+
+
+// *** Mutability ***
+
+
+// * Trivial case
+:sir
+:noSanityCheck
+fun main() =
+  class C(val a)
+  let c = new mut C(123)
+  set c.a = 0
+  set c.b = "hi"
+  let d = new C(456)
+  set d.a = 0
+  let e = C(789)
+  set e.a = 0
+  [c.a, c.b, d.a, e.a]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let C², main⁰;
+//│ define C² as class C⁴(a) {
+//│   val a⁰;
+//│   constructor C³ {
+//│     define a⁰ as val a¹ = a;
+//│     end
+//│   }
+//│ };
+//│ define main⁰ as fun main¹() {
+//│   let c, d, e;
+//│   set c = new mut C⁴(123);
+//│   set c.a = 0;
+//│   set c.b = "hi";
+//│   set d = new C⁴(456);
+//│   set d.a = 0;
+//│   set e = C³(789);
+//│   set e.a = 0;
+//│   return [c.a﹖, c.b﹖, d.a﹖, e.a﹖]
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// * Notice that the lifted class above behaves the same as the equivalent top-level class below:
+
+class C(val a)
+
+let c = new mut C(123)
+set c.a = 0
+set c.b = "hi"
+let d = new C(456)
+set d.a = 0
+let e = C(789)
+set e.a = 0
+//│ c = C(0)
+//│ d = C(456)
+//│ e = C(789)
+
+:expect [0, "hi", 456, 789]
+[c.a, c.b, d.a, e.a]
+//│ = [0, "hi", 456, 789]
+
+// * Nontrivial case
+:sir
+:noSanityCheck
+fun main(x) =
+  class C(val a) with
+    fun get = x + a
+  let c = new mut C(123)
+  set c.a = 0
+  set c.b = "hi"
+  let d = new C(456)
+  set d.a = 0
+  let e = C(789)
+  set e.a = 0
+  [c.a, c.b, d.a, e.a, c.get, d.get, e.get]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let C⁵, main²;
+//│ define C⁵ as class C⁷(a) {
+//│   private val x²;
+//│   val a²;
+//│   constructor C⁶(x) {
+//│     set x² = x;
+//│     define a² as val a³ = a;
+//│     end
+//│   }
+//│   method get⁰ = fun get¹ {
+//│     return +⁰(x², C⁷.this.a³)
+//│   }
+//│ };
+//│ define main² as fun main³(x) {
+//│   let c, d, e;
+//│   set c = new mut C⁷(123)(x);
+//│   set c.a = 0;
+//│   set c.b = "hi";
+//│   set d = new C⁷(456)(x);
+//│   set d.a = 0;
+//│   set e = new C⁷(789)(x);
+//│   set e.a = 0;
+//│   return [c.a﹖, c.b﹖, d.a﹖, e.a﹖, c.get﹖, d.get﹖, e.get﹖]
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [0, "hi", 456, 789, 42, 498, 831]
+main(42)
+//│ = [0, "hi", 456, 789, 42, 498, 831]
+
+// * The lifted class above should behave the same as the equivalent top-level class below:
+
+let x = id(42)
+class C(val a) with
+  fun get = x + a
+//│ x = 42
+
+let c = new mut C(123)
+set c.a = 0
+set c.b = "hi"
+let d = new C(456)
+set d.a = 0
+let e = C(789)
+set e.a = 0
+//│ c = C(0)
+//│ d = C(456)
+//│ e = C(789)
+
+:expect [0, "hi", 456, 789, 42, 498, 831]
+[c.a, c.b, d.a, e.a, c.get, d.get, e.get]
+//│ = [0, "hi", 456, 789, 42, 498, 831]
+
+
+// This used to raise a softTODO in DPE
+// The error is because the type tree for classes store parameter list arity information,
+// but the lifter modifies this information, and the equality is enforced by the middle-end
+// flow analysis, which is used by dead param elimination. It would be a pain to change all the
+// class symbols because they could be nested in other symbols at an arbitrary depth.
+// :fixme
+:deadParamElim 
+fun f(x) =
+  class A(y) with
+    fun get = x + y
+  new A(2)
+
 

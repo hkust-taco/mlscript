@@ -1,0 +1,79 @@
+:js
+
+
+import "../../../mlscript-compile/Stack.mls"
+open Stack
+
+
+
+pattern Ident = ("a" ..= "z") ~ (Ident | "")
+
+data class Expr with
+  constructor
+    Id(name: Str)
+    Op(lhs: Expr, op: Str, rhs: Expr)
+
+
+pattern Parse =
+  | ((Ident as name) :: rest)                     => Id(name) :: rest
+  | ((Expr as e1) :: "+" :: (Expr as e2) :: rest) => Op(e1, "+", e2) :: rest
+  | ((Expr as e1) :: "+" :: (Parse as rest))      => e1 :: "+" :: rest
+  | ("(" :: (Expr as e) :: ")" :: rest)           => e :: rest
+  | ("(" :: (Parse as rest))                      => "(" :: rest
+
+fun parse(tokens) =
+  while tokens is
+    Parse as stack do
+      set tokens = stack
+  print of ...
+    if tokens is
+      (Expr as e) :: Nil then ["Success:", e]
+      toks then ["Failure: can't parse:", toks]
+
+
+parse(Nil)
+//│ > Failure: can't parse: Nil
+
+parse("x" :: Nil)
+//│ > Success: Id("x")
+
+let input = "x" :: "+" :: "y" :: Nil
+//│ input = Cons("x", Cons("+", Cons("y", Nil)))
+
+parse(input)
+//│ > Success: Op(Id("x"), "+", Id("y"))
+
+if input is Parse as rest then rest
+//│ = Cons(Id("x"), Cons("+", Cons("y", Nil)))
+
+parse("(" :: "x" :: ")" :: Nil)
+//│ > Success: Id("x")
+
+parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ > Success: Op(Id("a"), "+", Op(Id("x"), "+", Id("y")))
+
+parse("a" :: "+" :: "(" :: "b" :: "+" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ > Success: Op(Id("a"), "+", Op(Op(Id("b"), "+", Id("x")), "+", Id("y")))
+
+parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ > Success: Op(Id("a"), "+", Op(Id("b"), "+", Op(Id("x"), "+", Id("y"))))
+
+
+// ———
+
+
+// TODO improve: confusing errors for wrong code
+:e
+pattern Parse =
+  (
+    ((Str as name) :: rest) => Id(name) :: rest
+    ((Expr as e) :: "+" :: (Expr as e) :: rest) => Op(e, "+", e) :: rest
+  )
+//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
+//│ ║  l.69: 	    ((Str as name) :: rest) => Id(name) :: rest
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
+//│ ║  l.70: 	    ((Expr as e) :: "+" :: (Expr as e) :: rest) => Op(e, "+", e) :: rest
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+

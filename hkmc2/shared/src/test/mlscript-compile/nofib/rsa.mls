@@ -1,0 +1,81 @@
+import "./NofibPrelude.mls"
+import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
+open NofibPrelude
+
+
+module rsa with ...
+
+
+
+fun z_of_int(x) = globalThis.BigInt(x)
+fun string_of_z(x) = nofibStringToList(x + "")
+fun z_add(x, y) = x + y
+fun z_mul(x, y) = x * y
+fun z_sub(x, y) = x - y
+fun z_div(x, y) = x / y
+fun z_mod(x, y) = x % y
+fun z_equal(x, y) = x === y
+fun z_sqr(x) = x * x
+fun int_if_char(c) = c.codePointAt(0)
+
+val const0 = z_of_int(0)
+//│ const0 = 0
+
+val const31 = z_of_int(31)
+//│ const31 = 31
+
+val const1 = z_of_int(1)
+//│ const1 = 1
+
+val const2 = z_of_int(2)
+//│ const2 = 2
+
+val const128 = z_of_int(128)
+//│ const128 = 128
+
+fun hash(str) = foldl of
+  (acc, c) => z_add(z_of_int(int_if_char(c)), z_mul(acc, const31))
+  const0
+  str
+
+fun and_(ls) = if ls is
+  Nil then true
+  h :: t and
+    h then and_(t)
+    else false
+
+fun unlines(ls) = concat of map(l => l +: ("\n" :: Nil), ls)
+
+fun even(a) = z_mod(a, const2) === const0
+
+fun code(ls) = foldl of
+  (x, y) => z_add(z_mul(const128, x), z_of_int(int_if_char(y)))
+  const0
+  ls
+
+fun collect(n, xs) = if
+  n === 0 then Nil
+  xs is Nil then Nil
+  else take(n, xs) :: collect(n, leave(n, xs))
+
+fun size(n) = intDiv(listLen(string_of_z(n)) * 47, 100)
+
+fun encrypt(n, e, s) = unlines of map of
+  c => string_of_z(power(e, n, code(c)))
+  collect(size(n), s)
+fun power(n, m, x) = if
+  z_equal(n, const0) then const1
+  even(n) then z_mod(z_sqr(power(z_div(n, const2), m, x)), m)
+  else z_mod(z_mul(x, power(z_sub(n, const1), m, x)), m)
+
+val intput = nofibStringToList of fs.readFileSync("./hkmc2/shared/src/test/mlscript/nofib/input/rsa.faststdin").toString()
+//│ intput = ["m","o","d","u","l","e"," ","R","s","a"," ","(","e","n","c","r","y","p","t",","," ","d","e","c","r","y","p","t",","," ","m","a","k","e","K","e","y","s",")","\n","w","h","e","r","e","\n","\n","\n","e","n","c","r","y","p","t",","," ","d","e","c","r","y","p","t"," ",":",":"," ","I","n","t","e","g","e","r"," ","-",">"," ","I","n","t","e","g","e","r"," ","-",">"," ","S","t","r","i","n","g"," ","-",">"," ","S","t","r","i","n","g","\n","e","n","c","r","y","p","t"," ","n"," ","e"," ","="," ","u","n","l","i","n","e","s"," ","."," ","m","a","p"," ","(","s","h","o","w"," ","."," ","p","o","w","e","r"," ","e"," ","n"," ","."," ","c","o","d","e",")"," ","."," ","c","o","l","l","e","c","t"," ","(","s","i","z","e"," ","n",")","\n","d","e","c","r","y","p","t"," ","n"," ","d"," ","="," ","c","o","n","c","a","t"," ","."," ","m","a","p"," ","(","d","e","c","o","d","e"," ","."," ","p","o","w","e","r"," ","d"," ","n"," ","."," ","r","e","a","d",")"," ","."," ","l","i","n","e","s","\n","\n","-","-","-","-","-","-","-","-"," ","C","o","n","v","e","r","t","i","n","g"," ","b","e","t","w","e","e","n"," ","S","t","r","i","n","g","s"," ","a","n","d"," ","I","n","t","e","g","e","r","s"," ","-","-","-","-","-","-","-","-","-","-","-","\n","\n","c","o","d","e"," ",":",":"," ","S","t","r","i","n","g"," ","-",">"," ","I","n","t","e","g","e","r","\n","c","o","d","e"," ","="," ","f","o","l","d","l"," ","a","c","c","u","m"," ","0","\n"," "," ","w","h","e","r","e"," ","a","c","c","u","m"," ","x"," ","y"," ","="," ","(","1","2","8"," ","*"," ","x",")"," ","+"," ","f","r","o","m","I","n","t","e","g","r","a","l"," ","(","f","r","o","m","E","n","u","m"," ","y",")","\n"]
+
+fun testRsa_nofib(_) = hash(encrypt(
+  z_of_int("2036450659413645137870851576872812267542175329986469156678671505255564383842535488743101632280716717779536712424613501441720195827856504007305662157107"),
+  z_of_int("387784473137902876992546516170169092918207676456888779623592396031349415024943784869634893342729620092877891356118467738167515879252473323905128540213"),
+  intput
+))
+
+fun main() = testRsa_nofib(0)
+

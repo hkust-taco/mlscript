@@ -11,7 +11,7 @@ StrOps.{~}("a", "b")
 
 :e
 StrOps.{~}("a", "b", "c")
-//│ ╔══[ERROR] Expected 2 arguments, got 3
+//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 3
 //│ ║  l.13: 	StrOps.{~}("a", "b", "c")
 //│ ╙──      	          ^^^^^^^^^^^^^^^
 //│ = "ab"
@@ -30,11 +30,12 @@ StrOps.~
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
 //│ ║  l.29: 	StrOps.~
 //│ ╙──      	        ^
-//│ ╔══[ERROR] Name not found: .~
+//│ ╔══[COMPILATION ERROR] Name not found: .~
 //│ ║  l.29: 	StrOps.~
 //│ ╙──      	      ^^
-//│ ╔══[ERROR] Unexpected moduleful reference of type StrOps.
+//│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type StrOps.
 //│ ║  l.29: 	StrOps.~
 //│ ╙──      	^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

@@ -1,0 +1,39 @@
+:invalml
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+// * This files includes the exception handling extension of InvalML.
+
+class Exc[T]
+
+fun (;) seq(_, res) = res
+
+fun raise: [T, P extends Exc[T]] -> (P, T) ->{P} Nothing
+fun hdle: [Res, E, T] -> ([P extends Exc[T]] -> (P) ->{E | P} Res, T ->{E} Res) ->{E} Res
+fun print: Str -> Unit
+fun noExc: [E extends ~Exc[in Nothing out Any], Res] -> (() ->{E} Res) ->{E} Res
+
+
+hdle(e => raise(e, "oops!"), msg => print(msg))
+
+// Error! The payload type is incorrect.
+// hdle(e => raise(e, 42), msg => print(msg))
+
+
+fun div(x, y) =
+  hdle(e => if y is 0 then raise(e, "div-by-zero!") else x / y, msg => print(msg); 0)
+
+
+hdle(e1 => hdle(e2 => raise(e1, "oops!"), msg => print(msg)), msg => print(msg))
+hdle(e1 => hdle(e2 => raise(e2, "oops!"), msg => print(msg)), msg => print(msg))
+hdle(e1 => hdle(e2 => raise(e1, "oops!"), msg => raise(e1, msg)), msg => print(msg))
+
+
+noExc(() => 42)
+noExc(() => hdle(e => raise(e, "oops!"), msg => print(msg)))
+
+// Error! No exception is allowed.
+// hdle(e => noExc(() => raise(e, "oops!")), msg => print(msg))
+
+//│ ————————————————————————————————————————————————————————————————————————————————

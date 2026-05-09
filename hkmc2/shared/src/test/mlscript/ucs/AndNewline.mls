@@ -1,0 +1,33 @@
+:js
+
+
+// Bug fix: `and` on its own line in `if` condition should work
+if
+  true
+  and
+  true do
+    print("ok")
+//│ > ok
+
+// `and` at end of line (always worked):
+if
+  true and
+  true do
+    print("ok2")
+//│ > ok2
+
+// Same-line version (always worked):
+if
+  true and
+    true do
+      print("ok3")
+//│ > ok3
+
+// false-and case
+if
+  true
+  and
+  false do
+    print("should not print")
+
+

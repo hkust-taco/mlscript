@@ -1,0 +1,351 @@
+import "./NofibPrelude.mls"
+import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
+open NofibPrelude
+
+
+module eliza with ...
+
+
+
+fun toUpper(c) = c.toUpperCase()
+
+fun lz_map(f, ls) = lazy of () =>
+  if ls is
+    Nil then LzNil
+    h :: t then LzCons(f(h), lz_map(f, t))
+
+fun append_lz(xs, ys) = if xs is
+  Nil then force(ys)
+  h :: t then lazy of () => LzCons(h, append_lz(t, ys))
+
+fun cycle(xs) = append_lz(xs, lazy of () => cycle(xs))
+
+fun isSpace(c) = c === " "
+
+fun words(s) = if leaveWhile(eliza.isSpace, s) is
+  Nil then Nil
+  h2h :: t2t and
+    break_(eliza.isSpace, h2h :: t2t) is [w, s_] then w :: eliza.words(s_)
+
+fun unwords(ws) =
+  fun go(ws) = if ws is
+    Nil then Nil
+    w :: ws then " " :: w +: go(ws)
+  if ws is
+    Nil then Nil
+    w :: ws then w +: go(ws)
+
+fun null_lz(ls) = if force(ls) is
+  LzNil then true
+  LzCons(h, t) then false
+
+fun trim(ls) =
+  fun cons(x, xs) = if inList(x, nofibStringToList(" .!?,")) and null_(xs) then Nil else x :: xs
+  foldr(cons, Nil, leaveWhile(x => inList(x, nofibStringToList(" .!?,")), ls))
+
+fun repeated(kt_rp) = if kt_rp is [kt, r :: rp] then [r, [kt, rp]]
+
+fun newKeyTab(kt_, kt_rp) = if kt_rp is [kt, rp] then [kt_, rp]
+
+fun keyTabOf(kt_rp) = if kt_rp is [kt, rp] then kt
+
+fun makeResponse(cs, us) = if cs is
+  "?" :: cs_ then cs_ +: nofibStringToList(" ") +: us +: nofibStringToList("?")
+  "." :: cs_ then cs_ +: nofibStringToList(" ") +: us +: nofibStringToList(".")
+  else cs
+
+val repeatMsgs = Predef.id of
+  nofibStringToList("Why did you repeat yourself?") ::
+  nofibStringToList("Do you expect a different answer by repeating yourself?") ::
+  nofibStringToList("Come, come, elucidate your thoughts.") ::
+  nofibStringToList("Please don't repeat yourself!") ::
+  Nil
+//│ repeatMsgs = [["W","h","y"," ","d","i","d"," ","y","o","u"," ","r","e","p","e","a","t"," ","y","o","u","r","s","e","l","f","?"],["D","o"," ","y","o","u"," ","e","x","p","e","c","t"," ","a"," ","d","i","f","f","e","r","e","n","t"," ","a","n","s","w","e","r"," ","b","y"," ","r","e","p","e","a","t","i","n","g"," ","y","o","u","r","s","e","l","f","?"],["C","o","m","e",","," ","c","o","m","e",","," ","e","l","u","c","i","d","a","t","e"," ","y","o","u","r"," ","t","h","o","u","g","h","t","s","."],["P","l","e","a","s","e"," ","d","o","n","'","t"," ","r","e","p","e","a","t"," ","y","o","u","r","s","e","l","f","!"]]
+
+val respMsgs =
+  let canYou = nofibStringToList("?Don_t you believe that I can") ::
+    nofibStringToList("?Perhaps you would like to be able to") ::
+    nofibStringToList("?You want me to be able to") ::
+    Nil
+  let canI = nofibStringToList("?Perhaps you don_t want to") ::
+    nofibStringToList("?Do you want to be able to") ::
+    Nil
+  let youAre = nofibStringToList("?What makes you think I am") ::
+    nofibStringToList("?Does it please you to believe I am") ::
+    nofibStringToList("?Perhaps you would like to be") ::
+    nofibStringToList("?Do you sometimes wish you were") ::
+    Nil
+  let iDont = nofibStringToList("?Don_t you really") ::
+    nofibStringToList("?Why don_t you") ::
+    nofibStringToList("?Do you wish to be able to") ::
+    nofibStringToList("Does that trouble you?") ::
+    Nil
+  let iFeel = nofibStringToList("Tell me more about such feelings.") ::
+    nofibStringToList("?Do you often feel") ::
+    nofibStringToList("?Do you enjoy feeling") ::
+    Nil
+  let whyDont = nofibStringToList("?Do you really believe I don't") ::
+    nofibStringToList(".Perhaps in good time I will") ::
+    nofibStringToList("?Do you want me to") ::
+    Nil
+  let whyCant = nofibStringToList("?Do you think you should be able to") ::
+    nofibStringToList("?Why can't you") ::
+    Nil
+  let areYou = nofibStringToList("?Why are you interested in whether or not I am") ::
+    nofibStringToList("?Would you prefer if I were not") ::
+    nofibStringToList("?Perhaps in your fantasies I am") ::
+    Nil
+  let iCant = nofibStringToList("?How do you know you can't") ::
+    nofibStringToList("Have you tried?") ::
+    nofibStringToList("?Perhaps you can now") ::
+    Nil
+  let iAm = nofibStringToList("?Did you come to me because you are") ::
+    nofibStringToList("?How long have you been") ::
+    nofibStringToList("?Do you believe it is normal to be") ::
+    nofibStringToList("?Do you enjoy being") ::
+    Nil
+  let you = nofibStringToList("We were discussing you --not me.") ::
+    nofibStringToList("?Oh,") ::
+    nofibStringToList("You're not really talking about me, are you?") ::
+    Nil
+  let yes = nofibStringToList("You seem quite positive.") ::
+    nofibStringToList("Are you Sure?") ::
+    nofibStringToList("I see.") ::
+    nofibStringToList("I understand.") ::
+    Nil
+  let no = nofibStringToList("Are you saying no just to be negative?") ::
+    nofibStringToList("You are being a bit negative.") ::
+    nofibStringToList("Why not?") ::
+    nofibStringToList("Are you sure?") ::
+    nofibStringToList("Why no?") ::
+    Nil
+  let computer = nofibStringToList("Do computers worry you?") ::
+    nofibStringToList("Are you talking about me in particular?") ::
+    nofibStringToList("Are you frightened by machines?") ::
+    nofibStringToList("Why do you mention computers?") ::
+    nofibStringToList("What do you think machines have to do with your problems?") ::
+    nofibStringToList("Don't you think computers can help people?") ::
+    nofibStringToList("What is it about machines that worries you?") ::
+    Nil
+  let iWant = nofibStringToList("?Why do you want") ::
+    nofibStringToList("?What would it mean to you if you got") ::
+    nofibStringToList("?Suppose you got") ::
+    nofibStringToList("?What if you never got") ::
+    nofibStringToList(".I sometimes also want") ::
+    Nil
+  let question = nofibStringToList("Why do you ask?") ::
+    nofibStringToList("Does that question interest you?") ::
+    nofibStringToList("What answer would please you the most?") ::
+    nofibStringToList("What do you think?") ::
+    nofibStringToList("Are such questions on your mind often?") ::
+    nofibStringToList("What is it that you really want to know?") ::
+    nofibStringToList("Have you asked anyone else?") ::
+    nofibStringToList("Have you asked such questions before?") ::
+    nofibStringToList("What else comes to mind when you ask that?") ::
+    Nil
+  let name = nofibStringToList("Names don't interest me.") ::
+    nofibStringToList("I don't care about names --please go on.") ::
+    Nil
+  let because = nofibStringToList("Is that the real reason?") ::
+    nofibStringToList("Don't any other reasons come to mind?") ::
+    nofibStringToList("Does that reason explain anything else?") ::
+    nofibStringToList("What other reasons might there be?") ::
+    Nil
+  let sorry = nofibStringToList("Please don't apologise!") ::
+    nofibStringToList("Apologies are not necessary.") ::
+    nofibStringToList("What feelings do you have when you apologise?") ::
+    nofibStringToList("Don't be so defensive!") ::
+    Nil
+  let dream = nofibStringToList("What does that dream suggest to you?") ::
+    nofibStringToList("Do you dream often?") ::
+    nofibStringToList("What persons appear in your dreams?") ::
+    nofibStringToList("Are you disturbed by your dreams?") ::
+    Nil
+  let hello = nofibStringToList("How do you...please state your problem.") ::
+    Nil
+  let maybe = nofibStringToList("You don't seem quite certain.") ::
+    nofibStringToList("Why the uncertain tone?") ::
+    nofibStringToList("Can't you be more positive?") ::
+    nofibStringToList("You aren't sure?") ::
+    nofibStringToList("Don't you know?") ::
+    Nil
+  let your = nofibStringToList("?Why are you concerned about my") ::
+    nofibStringToList("?What about your own") ::
+    Nil
+  let always = nofibStringToList("Can you think of a specific example?") ::
+    nofibStringToList("When?") ::
+    nofibStringToList("What are you thinking of?") ::
+    nofibStringToList("Really, always?") ::
+    Nil
+  let think = nofibStringToList("Do you really think so?") ::
+    nofibStringToList("?But you are not sure you") ::
+    nofibStringToList("?Do you doubt you") ::
+    Nil
+  let alike = nofibStringToList("In what way?") ::
+    nofibStringToList("What resemblence do you see?") ::
+    nofibStringToList("What does the similarity suggest to you?") ::
+    nofibStringToList("What other connections do you see?") ::
+    nofibStringToList("Cound there really be some connection?") ::
+    nofibStringToList("How?") ::
+    Nil
+  let friend = nofibStringToList("Why do you bring up the topic of friends?") ::
+    nofibStringToList("Do your friends worry you?") ::
+    nofibStringToList("Do your friends pick on you?") ::
+    nofibStringToList("Are you sure you have any friends?") ::
+    nofibStringToList("Do you impose on your friends?") ::
+    nofibStringToList("Perhaps your love for friends worries you.") ::
+    Nil
+  let nokeyMsgs = nofibStringToList("I'm not sure I understand you fully.") ::
+    nofibStringToList("What does that suggest to you?") ::
+    nofibStringToList("I see.") ::
+    nofibStringToList("Can you elaborate on that?") ::
+    nofibStringToList("Say, do you have any psychological problems?") ::
+    Nil
+  Predef.id of
+    [nofibStringToList("CAN YOU"), canYou] ::
+    [nofibStringToList("CAN I"), canI] ::
+    [nofibStringToList("YOU ARE"), youAre] ::
+    [nofibStringToList("YOU'RE"), youAre] ::
+    [nofibStringToList("I DON'T"), iDont] ::
+    [nofibStringToList("I FEEL"), iFeel] ::
+    [nofibStringToList("WHY DON'T YOU"), whyDont] ::
+    [nofibStringToList("WHY CAN'T I"), whyCant] ::
+    [nofibStringToList("ARE YOU"), areYou] ::
+    [nofibStringToList("I CAN'T"), iCant] ::
+    [nofibStringToList("I AM"), iAm] ::
+    [nofibStringToList("I'M"), iAm] ::
+    [nofibStringToList("YOU"), you] ::
+    [nofibStringToList("YES"), yes] ::
+    [nofibStringToList("NO"), no] ::
+    [nofibStringToList("COMPUTER"), computer] ::
+    [nofibStringToList("COMPUTERS"), computer] ::
+    [nofibStringToList("I WANT"), iWant] ::
+    [nofibStringToList("WHAT"), question] ::
+    [nofibStringToList("HOW"), question] ::
+    [nofibStringToList("WHO"), question] ::
+    [nofibStringToList("WHERE"), question] ::
+    [nofibStringToList("WHEN"), question] ::
+    [nofibStringToList("NAME"), name] ::
+    [nofibStringToList("WHY"), question] ::
+    [nofibStringToList("CAUSE"), because] ::
+    [nofibStringToList("BECAUSE"), because] ::
+    [nofibStringToList("DREAM"), dream] ::
+    [nofibStringToList("SORRY"), sorry] ::
+    [nofibStringToList("HI"), hello] ::
+    [nofibStringToList("DREAMS"), dream] ::
+    [nofibStringToList("MAYBE"), maybe] ::
+    [nofibStringToList("HELLO"), hello] ::
+    [nofibStringToList("ALWAYS"), always] ::
+    [nofibStringToList("YOUR"), your] ::
+    [nofibStringToList("ALIKE"), alike] ::
+    [nofibStringToList("THINK"), think] ::
+    [nofibStringToList("FRIENDS"), friend] ::
+    [nofibStringToList("FRIEND"), friend] ::
+    [Nil, nokeyMsgs] ::
+    Nil
+//│ respMsgs = [[["C","A","N"," ","Y","O","U"], [["?","D","o","n","_","t"," ","y","o","u"," ","b","e","l","i","e","v","e"," ","t","h","a","t"," ","I"," ","c","a","n"],["?","P","e","r","h","a","p","s"," ","y","o","u"," ","w","o","u","l","d"," ","l","i","k","e"," ","t","o"," ","b","e"," ","a","b","l","e"," ","t","o"],["?","Y","o","u"," ","w","a","n","t"," ","m","e"," ","t","o"," ","b","e"," ","a","b","l","e"," ","t","o"]]],[["C","A","N"," ","I"], [["?","P","e","r","h","a","p","s"," ","y","o","u"," ","d","o","n","_","t"," ","w","a","n","t"," ","t","o"],["?","D","o"," ","y","o","u"," ","w","a","n","t"," ","t","o"," ","b","e"," ","a","b","l","e"," ","t","o"]]],[["Y","O","U"," ","A","R","E"], [["?","W","h","a","t"," ","m","a","k","e","s"," ","y","o","u"," ","t","h","i","n","k"," ","I"," ","a","m"],["?","D","o","e","s"," ","i","t"," ","p","l","e","a","s","e"," ","y","o","u"," ","t","o"," ","b","e","l","i","e","v","e"," ","I"," ","a","m"],["?","P","e","r","h","a","p","s"," ","y","o","u"," ","w","o","u","l","d"," ","l","i","k","e"," ","t","o"," ","b","e"],["?","D","o"," ","y","o","u"," ","s","o","m","e","t","i","m","e","s"," ","w","i","s","h"," ","y","o","u"," ","w","e","r","e"]]],[["Y","O","U","'","R","E"], [["?","W","h","a","t"," ","m","a","k","e","s"," ","y","o","u"," ","t","h","i","n","k"," ","I"," ","a","m"],["?","D","o","e","s"," ","i","t"," ","p","l","e","a","s","e"," ","y","o","u"," ","t","o"," ","b","e","l","i","e","v","e"," ","I"," ","a","m"],["?","P","e","r","h","a","p","s"," ","y","o","u"," ","w","o","u","l","d"," ","l","i","k","e"," ","t","o"," ","b","e"],["?","D","o"," ","y","o","u"," ","s","o","m","e","t","i","m","e","s"," ","w","i","s","h"," ","y","o","u"," ","w","e","r","e"]]],[["I"," ","D","O","N","'","T"], [["?","D","o","n","_","t"," ","y","o","u"," ","r","e","a","l","l","y"],["?","W","h","y"," ","d","o","n","_","t"," ","y","o","u"],["?","D","o"," ","y","o","u"," ","w","i","s","h"," ","t","o"," ","b","e"," ","a","b","l","e"," ","t","o"],["D","o","e","s"," ","t","h","a","t"," ","t","r","o","u","b","l","e"," ","y","o","u","?"]]],[["I"," ","F","E","E","L"], [["T","e","l","l"," ","m","e"," ","m","o","r","e"," ","a","b","o","u","t"," ","s","u","c","h"," ","f","e","e","l","i","n","g","s","."],["?","D","o"," ","y","o","u"," ","o","f","t","e","n"," ","f","e","e","l"],["?","D","o"," ","y","o","u"," ","e","n","j","o","y"," ","f","e","e","l","i","n","g"]]],[["W","H","Y"," ","D","O","N","'","T"," ","Y","O","U"], [["?","D","o"," ","y","o","u"," ","r","e","a","l","l","y"," ","b","e","l","i","e","v","e"," ","I"," ","d","o","n","'","t"],[".","P","e","r","h","a","p","s"," ","i","n"," ","g","o","o","d"," ","t","i","m","e"," ","I"," ","w","i","l","l"],["?","D","o"," ","y","o","u"," ","w","a","n","t"," ","m","e"," ","t","o"]]],[["W","H","Y"," ","C","A","N","'","T"," ","I"], [["?","D","o"," ","y","o","u"," ","t","h","i","n","k"," ","y","o","u"," ","s","h","o","u","l","d"," ","b","e"," ","a","b","l","e"," ","t","o"],["?","W","h","y"," ","c","a","n","'","t"," ","y","o","u"]]],[["A","R","E"," ","Y","O","U"], [["?","W","h","y"," ","a","r","e"," ","y","o","u"," ","i","n","t","e","r","e","s","t","e","d"," ","i","n"," ","w","h","e","t","h","e","r"," ","o","r"," ","n","o","t"," ","I"," ","a","m"],["?","W","o","u","l","d"," ","y","o","u"," ","p","r","e","f","e","r"," ","i","f"," ","I"," ","w","e","r","e"," ","n","o","t"],["?","P","e","r","h","a","p","s"," ","i","n"," ","y","o","u","r"," ","f","a","n","t","a","s","i","e","s"," ","I"," ","a","m"]]],[["I"," ","C","A","N","'","T"], [["?","H","o","w"," ","d","o"," ","y","o","u"," ","k","n","o","w"," ","y","o","u"," ","c","a","n","'","t"],["H","a","v","e"," ","y","o","u"," ","t","r","i","e","d","?"],["?","P","e","r","h","a","p","s"," ","y","o","u"," ","c","a","n"," ","n","o","w"]]],[["I"," ","A","M"], [["?","D","i","d"," ","y","o","u"," ","c","o","m","e"," ","t","o"," ","m","e"," ","b","e","c","a","u","s","e"," ","y","o","u"," ","a","r","e"],["?","H","o","w"," ","l","o","n","g"," ","h","a","v","e"," ","y","o","u"," ","b","e","e","n"],["?","D","o"," ","y","o","u"," ","b","e","l","i","e","v","e"," ","i","t"," ","i","s"," ","n","o","r","m","a","l"," ","t","o"," ","b","e"],["?","D","o"," ","y","o","u"," ","e","n","j","o","y"," ","b","e","i","n","g"]]],[["I","'","M"], [["?","D","i","d"," ","y","o","u"," ","c","o","m","e"," ","t","o"," ","m","e"," ","b","e","c","a","u","s","e"," ","y","o","u"," ","a","r","e"],["?","H","o","w"," ","l","o","n","g"," ","h","a","v","e"," ","y","o","u"," ","b","e","e","n"],["?","D","o"," ","y","o","u"," ","b","e","l","i","e","v","e"," ","i","t"," ","i","s"," ","n","o","r","m","a","l"," ","t","o"," ","b","e"],["?","D","o"," ","y","o","u"," ","e","n","j","o","y"," ","b","e","i","n","g"]]],[["Y","O","U"], [["W","e"," ","w","e","r","e"," ","d","i","s","c","u","s","s","i","n","g"," ","y","o","u"," ","-","-","n","o","t"," ","m","e","."],["?","O","h",","],["Y","o","u","'","r","e"," ","n","o","t"," ","r","e","a","l","l","y"," ","t","a","l","k","i","n","g"," ","a","b","o","u","t"," ","m","e",","," ","a","r","e"," ","y","o","u","?"]]],[["Y","E","S"], [["Y","o","u"," ","s","e","e","m"," ","q","u","i","t","e"," ","p","o","s","i","t","i","v","e","."],["A","r","e"," ","y","o","u"," ","S","u","r","e","?"],["I"," ","s","e","e","."],["I"," ","u","n","d","e","r","s","t","a","n","d","."]]],[["N","O"], [["A","r","e"," ","y","o","u"," ","s","a","y","i","n","g"," ","n","o"," ","j","u","s","t"," ","t","o"," ","b","e"," ","n","e","g","a","t","i","v","e","?"],["Y","o","u"," ","a","r","e"," ","b","e","i","n","g"," ","a"," ","b","i","t"," ","n","e","g","a","t","i","v","e","."],["W","h","y"," ","n","o","t","?"],["A","r","e"," ","y","o","u"," ","s","u","r","e","?"],["W","h","y"," ","n","o","?"]]],[["C","O","M","P","U","T","E","R"], [["D","o"," ","c","o","m","p","u","t","e","r","s"," ","w","o","r","r","y"," ","y","o","u","?"],["A","r","e"," ","y","o","u"," ","t","a","l","k","i","n","g"," ","a","b","o","u","t"," ","m","e"," ","i","n"," ","p","a","r","t","i","c","u","l","a","r","?"],["A","r","e"," ","y","o","u"," ","f","r","i","g","h","t","e","n","e","d"," ","b","y"," ","m","a","c","h","i","n","e","s","?"],["W","h","y"," ","d","o"," ","y","o","u"," ","m","e","n","t","i","o","n"," ","c","o","m","p","u","t","e","r","s","?"],["W","h","a","t"," ","d","o"," ","y","o","u"," ","t","h","i","n","k"," ","m","a","c","h","i","n","e","s"," ","h","a","v","e"," ","t","o"," ","d","o"," ","w","i","t","h"," ","y","o","u","r"," ","p","r","o","b","l","e","m","s","?"],["D","o","n","'","t"," ","y","o","u"," ","t","h","i","n","k"," ","c","o","m","p","u","t","e","r","s"," ","c","a","n"," ","h","e","l","p"," ","p","e","o","p","l","e","?"],["W","h","a","t"," ","i","s"," ","i","t"," ","a","b","o","u","t"," ","m","a","c","h","i","n","e","s"," ","t","h","a","t"," ","w","o","r","r","i","e","s"," ","y","o","u","?"]]],[["C","O","M","P","U","T","E","R","S"], [["D","o"," ","c","o","m","p","u","t","e","r","s"," ","w","o","r","r","y"," ","y","o","u","?"],["A","r","e"," ","y","o","u"," ","t","a","l","k","i","n","g"," ","a","b","o","u","t"," ","m","e"," ","i","n"," ","p","a","r","t","i","c","u","l","a","r","?"],["A","r","e"," ","y","o","u"," ","f","r","i","g","h","t","e","n","e","d"," ","b","y"," ","m","a","c","h","i","n","e","s","?"],["W","h","y"," ","d","o"," ","y","o","u"," ","m","e","n","t","i","o","n"," ","c","o","m","p","u","t","e","r","s","?"],["W","h","a","t"," ","d","o"," ","y","o","u"," ","t","h","i","n","k"," ","m","a","c","h","i","n","e","s"," ","h","a","v","e"," ","t","o"," ","d","o"," ","w","i","t","h"," ","y","o","u","r"," ","p","r","o","b","l","e","m","s","?"],["D","o","n","'","t"," ","y","o","u"," ","t","h","i","n","k"," ","c","o","m","p","u","t","e","r","s"," ","c","a","n"," ","h","e","l","p"," ","p","e","o","p","l","e","?"],["W","h","a","t"," ","i","s"," ","i","t"," ","a","b","o","u","t"," ","m","a","c","h","i","n","e","s"," ","t","h","a","t"," ","w","o","r","r","i","e","s"," ","y","o","u","?"]]],[["I"," ","W","A","N","T"], [["?","W","h","y"," ","d","o"," ","y","o","u"," ","w","a","n","t"],["?","W","h","a","t"," ","w","o","u","l","d"," ","i","t"," ","m","e","a","n"," ","t","o"," ","y","o","u"," ","i","f"," ","y","o","u"," ","g","o","t"],["?","S","u","p","p","o","s","e"," ","y","o","u"," ","g","o","t"],["?","W","h","a","t"," ","i","f"," ","y","o","u"," ","n","e","v","e","r"," ","g","o","t"],[".","I"," ","s","o","m","e","t","i","m","e","s"," ","a","l","s","o"," ","w","a","n","t"]]],[["W","H","A","T"], [["W","h","y"," ","d","o"," ","y","o","u"," ","a","s","k","?"],["D","o","e","s"," ","t","h","a","t"," ","q","u","e","s","t","i","o","n"," ","i","n","t","e","r","e","s","t"," ","y","o","u","?"],["W","h","a","t"," ","a","n","s","w","e","r"," ","w","o","u","l","d"," ","p","l","e","a","s","e"," ","y","o","u"," ","t","h","e"," ","m","o","s","t","?"],["W","h","a","t"," ","d","o"," ","y","o","u"," ","t","h","i","n","k","?"],["A","r","e"," ","s","u","c","h"," ","q","u","e","s","t","i","o","n","s"," ","o","n"," ","y","o","u","r"," ","m","i","n","d"," ","o","f","t","e","n","?"],["W","h","a","t"," ","i","s"," ","i","t"," ","t","h","a","t"," ","y","o","u"," ","r","e","a","l","l","y"," ","w","a","n","t"," ","t","o"," ","k","n","o","w","?"],["H","a","v","e"," ","y","o","u"," ","a","s","k","e","d"," ","a","n","y","o","n","e"," ","e","l","s","e","?"],["H","a","v","e"," ","y","o","u"," ","a","s","k","e","d"," ","s","u","c","h"," ","q","u","e","s","t","i","o","n","s"," ","b","e","f","o","r","e","?"],["W","h","a","t"," ","e","l","s","e"," ","c","o","m","e","s"," ","t","o"," ","m","i","n","d"," ","w","h","e","n"," ","y","o","u"," ","a","s","k"," ","t","h","a","t","?"]]],[["H","O","W"], [["W","h","y"," ","d","o"," ","y","o","u"," ","a","s","k","?"],["D","o","e","s"," ","t","h","a","t"," ","q","u","e","s","t","i","o","n"," ","i","n","t","e","r","e","s","t"," ","y","o","u","?"],["W","h","a","t"," ","a","n","s","w","e","r"," ","w","o","u","l","d"," ","p","l","e","a","s","e"," ","y","o","u"," ","t","h","e"," ","m","o","s","t","?"],["W","h","a","t"," ","d","o"," ","y","o","u"," ","t","h","i","n","k","?"],["A","r","e"," ","s","u","c","h"," ","q","u","e","s","t","i","o","n","s"," ","o","n"," ","y","o","u","r"," ","m","i","n","d"," ","o","f","t","e","n","?"],["W","h","a","t"," ","i","s"," ","i","t"," ","t","h","a","t"," ","y","o","u"," ","r","e","a","l","l","y"," ","w","a","n","t"," ","t","o"," ","k","n","o","w","?"],["H","a","v","e"," ","y","o","u"," ","a","s","k","e","d"," ","a","n","y","o","n","e"," ","e","l","s","e","?"],["H","a","v","e"," ","y","o","u"," ","a","s","k","e","d"," ","s","u","c","h"," ","q","u","e","s","t","i","o","n","s"," ","b","e","f","o","r","e","?"],["W","h","a","t"," ","e","l","s","e"," ","c","o","m","e","s"," ","t","o"," ","m","i","n","d"," ","w","h","e","n"," ","y","o","u"," ","a","s","k"," ","t","h","a","t","?"]]],[["W","H","O"], [["W","h","y"," ","d","o"," ","y","o","u"," ","a","s","k","?"],["D","o","e","s"," ","t","h","a","t"," ","q","u","e","s","t","i","o","n"," ","i","n","t","e","r","e","s","t"," ","y","o","u","?"],["W","h","a","t"," ","a","n","s","w","e","r"," ","w","o","u","l","d"," ","p","l","e","a","s","e"," ","y","o","u"," ","t","h","e"," ","m","o","s","t","?"],["W","h","a","t"," ","d","o"," ","y","o","u"," ","t","h","i","n","k","?"],["A","r","e"," ","s","u","c","h"," ","q","u","e","s","t","i","o","n","s"," ","o","n"," ","y","o","u","r"," ","m","i","n","d"," ","o","f","t","e","n","?"],["W","h","a","t"," ","i","s"," ","i","t"," ","t","h","a","t"," ","y","o","u"," ","r","e","a","l","l","y"," ","w","a","n","t"," ","t","o"," ","k","n","o","w","?"],["H","a","v","e"," ","y","o","u"," ","a","s","k","e","d"," ","a","n","y","o","n","e"," ","e","l","s","e","?"],["H","a","v","e"," ","y","o","u"," ","a","s","k","e","d"," ","s","u","c","h"," ","q","u","e","s","t","i","o","n","s"," ","b","e","f","o","r","e","?"],["W","h","a","t"," ","e","l","s","e"," ","c","o","m","e","s"," ","t","o"," ","m","i","n","d"," ","w","h","e","n"," ","y","o","u"," ","a","s","k"," ","t","h","a","t","?"]]],[["W","H","E","R","E"], [["W","h","y"," ","d","o"," ","y","o","u"," ","a","s","k","?"],["D","o","e","s"," ","t","h","a","t"," ","q","u","e","s","t","i","o","n"," ","i","n","t","e","r","e","s","t"," ","y","o","u","?"],["W","h","a","t"," ","a","n","s","w","e","r"," ","w","o","u","l","d"," ","p","l","e","a","s","e"," ","y","o","u"," ","t","h","e"," ","m","o","s","t","?"],["W","h","a","t"," ","d","o"," ","y","o","u"," ","t","h","i","n","k","?"],["A","r","e"," ","s","u","c","h"," ","q","u","e","s","t","i","o","n","s"," ","o","n"," ","y","o","u","r"," ","m","i","n","d"," ","o","f","t","e","n","?"],["W","h","a","t"," ","i","s"," ","i","t"," ","t","h","a","t"," ","y","o","u"," ","r","e","a","l","l","y"," ","w","a","n","t"," ","t","o"," ","k","n","o","w","?"],["H","a","v","e"," ","y","o","u"," ","a","s","k","e","d"," ","a","n","y","o","n","e"," ","e","l","s","e","?"],["H","a","v","e"," ","y","o","u"," ","a","s","k","e","d"," ","s","u","c","h"," ","q","u","e","s","t","i","o","n","s"," ","b","e","f","o","r","e","?"],["W","h","a","t"," ","e","l","s","e"," ","c","o","m","e","s"," ","t","o"," ","m","i","n","d"," ","w","h","e","n"," ","y","o","u"," ","a","s","k"," ","t","h","a","t","?"]]],[["W","H","E","N"], [["W","h","y"," ","d","o"," ","y","o","u"," ","a","s","k","?"],["D","o","e","s"," ","t","h","a","t"," ","q","u","e","s","t","i","o","n"," ","i","n","t","e","r","e","s","t"," ","y","o","u","?"],["W","h","a","t"," ","a","n","s","w","e","r"," ","w","o","u","l","d"," ","p","l","e","a","s","e"," ","y","o","u"," ","t","h","e"," ","m","o","s","t","?"],["W","h","a","t"," ","d","o"," ","y","o","u"," ","t","h","i","n","k","?"],["A","r","e"," ","s","u","c","h"," ","q","u","e","s","t","i","o","n","s"," ","o","n"," ","y","o","u","r"," ","m","i","n","d"," ","o","f","t","e","n","?"],["W","h","a","t"," ","i","s"," ","i","t"," ","t","h","a","t"," ","y","o","u"," ","r","e","a","l","l","y"," ","w","a","n","t"," ","t","o"," ","k","n","o","w","?"],["H","a","v","e"," ","y","o","u"," ","a","s","k","e","d"," ","a","n","y","o","n","e"," ","e","l","s","e","?"],["H","a","v","e"," ","y","o","u"," ","a","s","k","e","d"," ","s","u","c","h"," ","q","u","e","s","t","i","o","n","s"," ","b","e","f","o","r","e","?"],["W","h","a","t"," ","e","l","s","e"," ","c","o","m","e","s"," ","t","o"," ","m","i","n","d"," ","w","h","e","n"," ","y","o","u"," ","a","s","k"," ","t","h","a","t","?"]]],[["N","A","M","E"], [["N","a","m","e","s"," ","d","o","n","'","t"," ","i","n","t","e","r","e","s","t"," ","m","e","."],["I"," ","d","o","n","'","t"," ","c","a","r","e"," ","a","b","o","u","t"," ","n","a","m","e","s"," ","-","-","p","l","e","a","s","e"," ","g","o"," ","o","n","."]]],[["W","H","Y"], [["W","h","y"," ","d","o"," ","y","o","u"," ","a","s","k","?"],["D","o","e","s"," ","t","h","a","t"," ","q","u","e","s","t","i","o","n"," ","i","n","t","e","r","e","s","t"," ","y","o","u","?"],["W","h","a","t"," ","a","n","s","w","e","r"," ","w","o","u","l","d"," ","p","l","e","a","s","e"," ","y","o","u"," ","t","h","e"," ","m","o","s","t","?"],["W","h","a","t"," ","d","o"," ","y","o","u"," ","t","h","i","n","k","?"],["A","r","e"," ","s","u","c","h"," ","q","u","e","s","t","i","o","n","s"," ","o","n"," ","y","o","u","r"," ","m","i","n","d"," ","o","f","t","e","n","?"],["W","h","a","t"," ","i","s"," ","i","t"," ","t","h","a","t"," ","y","o","u"," ","r","e","a","l","l","y"," ","w","a","n","t"," ","t","o"," ","k","n","o","w","?"],["H","a","v","e"," ","y","o","u"," ","a","s","k","e","d"," ","a","n","y","o","n","e"," ","e","l","s","e","?"],["H","a","v","e"," ","y","o","u"," ","a","s","k","e","d"," ","s","u","c","h"," ","q","u","e","s","t","i","o","n","s"," ","b","e","f","o","r","e","?"],["W","h","a","t"," ","e","l","s","e"," ","c","o","m","e","s"," ","t","o"," ","m","i","n","d"," ","w","h","e","n"," ","y","o","u"," ","a","s","k"," ","t","h","a","t","?"]]],[["C","A","U","S","E"], [["I","s"," ","t","h","a","t"," ","t","h","e"," ","r","e","a","l"," ","r","e","a","s","o","n","?"],["D","o","n","'","t"," ","a","n","y"," ","o","t","h","e","r"," ","r","e","a","s","o","n","s"," ","c","o","m","e"," ","t","o"," ","m","i","n","d","?"],["D","o","e","s"," ","t","h","a","t"," ","r","e","a","s","o","n"," ","e","x","p","l","a","i","n"," ","a","n","y","t","h","i","n","g"," ","e","l","s","e","?"],["W","h","a","t"," ","o","t","h","e","r"," ","r","e","a","s","o","n","s"," ","m","i","g","h","t"," ","t","h","e","r","e"," ","b","e","?"]]],[["B","E","C","A","U","S","E"], [["I","s"," ","t","h","a","t"," ","t","h","e"," ","r","e","a","l"," ","r","e","a","s","o","n","?"],["D","o","n","'","t"," ","a","n","y"," ","o","t","h","e","r"," ","r","e","a","s","o","n","s"," ","c","o","m","e"," ","t","o"," ","m","i","n","d","?"],["D","o","e","s"," ","t","h","a","t"," ","r","e","a","s","o","n"," ","e","x","p","l","a","i","n"," ","a","n","y","t","h","i","n","g"," ","e","l","s","e","?"],["W","h","a","t"," ","o","t","h","e","r"," ","r","e","a","s","o","n","s"," ","m","i","g","h","t"," ","t","h","e","r","e"," ","b","e","?"]]],[["D","R","E","A","M"], [["W","h","a","t"," ","d","o","e","s"," ","t","h","a","t"," ","d","r","e","a","m"," ","s","u","g","g","e","s","t"," ","t","o"," ","y","o","u","?"],["D","o"," ","y","o","u"," ","d","r","e","a","m"," ","o","f","t","e","n","?"],["W","h","a","t"," ","p","e","r","s","o","n","s"," ","a","p","p","e","a","r"," ","i","n"," ","y","o","u","r"," ","d","r","e","a","m","s","?"],["A","r","e"," ","y","o","u"," ","d","i","s","t","u","r","b","e","d"," ","b","y"," ","y","o","u","r"," ","d","r","e","a","m","s","?"]]],[["S","O","R","R","Y"], [["P","l","e","a","s","e"," ","d","o","n","'","t"," ","a","p","o","l","o","g","i","s","e","!"],["A","p","o","l","o","g","i","e","s"," ","a","r","e"," ","n","o","t"," ","n","e","c","e","s","s","a","r","y","."],["W","h","a","t"," ","f","e","e","l","i","n","g","s"," ","d","o"," ","y","o","u"," ","h","a","v","e"," ","w","h","e","n"," ","y","o","u"," ","a","p","o","l","o","g","i","s","e","?"],["D","o","n","'","t"," ","b","e"," ","s","o"," ","d","e","f","e","n","s","i","v","e","!"]]],[["H","I"], [["H","o","w"," ","d","o"," ","y","o","u",".",".",".","p","l","e","a","s","e"," ","s","t","a","t","e"," ","y","o","u","r"," ","p","r","o","b","l","e","m","."]]],[["D","R","E","A","M","S"], [["W","h","a","t"," ","d","o","e","s"," ","t","h","a","t"," ","d","r","e","a","m"," ","s","u","g","g","e","s","t"," ","t","o"," ","y","o","u","?"],["D","o"," ","y","o","u"," ","d","r","e","a","m"," ","o","f","t","e","n","?"],["W","h","a","t"," ","p","e","r","s","o","n","s"," ","a","p","p","e","a","r"," ","i","n"," ","y","o","u","r"," ","d","r","e","a","m","s","?"],["A","r","e"," ","y","o","u"," ","d","i","s","t","u","r","b","e","d"," ","b","y"," ","y","o","u","r"," ","d","r","e","a","m","s","?"]]],[["M","A","Y","B","E"], [["Y","o","u"," ","d","o","n","'","t"," ","s","e","e","m"," ","q","u","i","t","e"," ","c","e","r","t","a","i","n","."],["W","h","y"," ","t","h","e"," ","u","n","c","e","r","t","a","i","n"," ","t","o","n","e","?"],["C","a","n","'","t"," ","y","o","u"," ","b","e"," ","m","o","r","e"," ","p","o","s","i","t","i","v","e","?"],["Y","o","u"," ","a","r","e","n","'","t"," ","s","u","r","e","?"],["D","o","n","'","t"," ","y","o","u"," ","k","n","o","w","?"]]],[["H","E","L","L","O"], [["H","o","w"," ","d","o"," ","y","o","u",".",".",".","p","l","e","a","s","e"," ","s","t","a","t","e"," ","y","o","u","r"," ","p","r","o","b","l","e","m","."]]],[["A","L","W","A","Y","S"], [["C","a","n"," ","y","o","u"," ","t","h","i","n","k"," ","o","f"," ","a"," ","s","p","e","c","i","f","i","c"," ","e","x","a","m","p","l","e","?"],["W","h","e","n","?"],["W","h","a","t"," ","a","r","e"," ","y","o","u"," ","t","h","i","n","k","i","n","g"," ","o","f","?"],["R","e","a","l","l","y",","," ","a","l","w","a","y","s","?"]]],[["Y","O","U","R"], [["?","W","h","y"," ","a","r","e"," ","y","o","u"," ","c","o","n","c","e","r","n","e","d"," ","a","b","o","u","t"," ","m","y"],["?","W","h","a","t"," ","a","b","o","u","t"," ","y","o","u","r"," ","o","w","n"]]],[["A","L","I","K","E"], [["I","n"," ","w","h","a","t"," ","w","a","y","?"],["W","h","a","t"," ","r","e","s","e","m","b","l","e","n","c","e"," ","d","o"," ","y","o","u"," ","s","e","e","?"],["W","h","a","t"," ","d","o","e","s"," ","t","h","e"," ","s","i","m","i","l","a","r","i","t","y"," ","s","u","g","g","e","s","t"," ","t","o"," ","y","o","u","?"],["W","h","a","t"," ","o","t","h","e","r"," ","c","o","n","n","e","c","t","i","o","n","s"," ","d","o"," ","y","o","u"," ","s","e","e","?"],["C","o","u","n","d"," ","t","h","e","r","e"," ","r","e","a","l","l","y"," ","b","e"," ","s","o","m","e"," ","c","o","n","n","e","c","t","i","o","n","?"],["H","o","w","?"]]],[["T","H","I","N","K"], [["D","o"," ","y","o","u"," ","r","e","a","l","l","y"," ","t","h","i","n","k"," ","s","o","?"],["?","B","u","t"," ","y","o","u"," ","a","r","e"," ","n","o","t"," ","s","u","r","e"," ","y","o","u"],["?","D","o"," ","y","o","u"," ","d","o","u","b","t"," ","y","o","u"]]],[["F","R","I","E","N","D","S"], [["W","h","y"," ","d","o"," ","y","o","u"," ","b","r","i","n","g"," ","u","p"," ","t","h","e"," ","t","o","p","i","c"," ","o","f"," ","f","r","i","e","n","d","s","?"],["D","o"," ","y","o","u","r"," ","f","r","i","e","n","d","s"," ","w","o","r","r","y"," ","y","o","u","?"],["D","o"," ","y","o","u","r"," ","f","r","i","e","n","d","s"," ","p","i","c","k"," ","o","n"," ","y","o","u","?"],["A","r","e"," ","y","o","u"," ","s","u","r","e"," ","y","o","u"," ","h","a","v","e"," ","a","n","y"," ","f","r","i","e","n","d","s","?"],["D","o"," ","y","o","u"," ","i","m","p","o","s","e"," ","o","n"," ","y","o","u","r"," ","f","r","i","e","n","d","s","?"],["P","e","r","h","a","p","s"," ","y","o","u","r"," ","l","o","v","e"," ","f","o","r"," ","f","r","i","e","n","d","s"," ","w","o","r","r","i","e","s"," ","y","o","u","."]]],[["F","R","I","E","N","D"], [["W","h","y"," ","d","o"," ","y","o","u"," ","b","r","i","n","g"," ","u","p"," ","t","h","e"," ","t","o","p","i","c"," ","o","f"," ","f","r","i","e","n","d","s","?"],["D","o"," ","y","o","u","r"," ","f","r","i","e","n","d","s"," ","w","o","r","r","y"," ","y","o","u","?"],["D","o"," ","y","o","u","r"," ","f","r","i","e","n","d","s"," ","p","i","c","k"," ","o","n"," ","y","o","u","?"],["A","r","e"," ","y","o","u"," ","s","u","r","e"," ","y","o","u"," ","h","a","v","e"," ","a","n","y"," ","f","r","i","e","n","d","s","?"],["D","o"," ","y","o","u"," ","i","m","p","o","s","e"," ","o","n"," ","y","o","u","r"," ","f","r","i","e","n","d","s","?"],["P","e","r","h","a","p","s"," ","y","o","u","r"," ","l","o","v","e"," ","f","o","r"," ","f","r","i","e","n","d","s"," ","w","o","r","r","i","e","s"," ","y","o","u","."]]],[[], [["I","'","m"," ","n","o","t"," ","s","u","r","e"," ","I"," ","u","n","d","e","r","s","t","a","n","d"," ","y","o","u"," ","f","u","l","l","y","."],["W","h","a","t"," ","d","o","e","s"," ","t","h","a","t"," ","s","u","g","g","e","s","t"," ","t","o"," ","y","o","u","?"],["I"," ","s","e","e","."],["C","a","n"," ","y","o","u"," ","e","l","a","b","o","r","a","t","e"," ","o","n"," ","t","h","a","t","?"],["S","a","y",","," ","d","o"," ","y","o","u"," ","h","a","v","e"," ","a","n","y"," ","p","s","y","c","h","o","l","o","g","i","c","a","l"," ","p","r","o","b","l","e","m","s","?"]]]]
+
+val initial =
+  fun lscomp(ls) = if ls is
+    Nil then Nil
+    [k, rs] :: t then [eliza.words(k), eliza.cycle(rs)] :: lscomp(t)
+  [lscomp(eliza.respMsgs), eliza.cycle(eliza.repeatMsgs)]
+//│ initial = [[[[["C","A","N"],["Y","O","U"]], Lazy([function])],[[["C","A","N"],["I"]], Lazy([function])],[[["Y","O","U"],["A","R","E"]], Lazy([function])],[[["Y","O","U","'","R","E"]], Lazy([function])],[[["I"],["D","O","N","'","T"]], Lazy([function])],[[["I"],["F","E","E","L"]], Lazy([function])],[[["W","H","Y"],["D","O","N","'","T"],["Y","O","U"]], Lazy([function])],[[["W","H","Y"],["C","A","N","'","T"],["I"]], Lazy([function])],[[["A","R","E"],["Y","O","U"]], Lazy([function])],[[["I"],["C","A","N","'","T"]], Lazy([function])],[[["I"],["A","M"]], Lazy([function])],[[["I","'","M"]], Lazy([function])],[[["Y","O","U"]], Lazy([function])],[[["Y","E","S"]], Lazy([function])],[[["N","O"]], Lazy([function])],[[["C","O","M","P","U","T","E","R"]], Lazy([function])],[[["C","O","M","P","U","T","E","R","S"]], Lazy([function])],[[["I"],["W","A","N","T"]], Lazy([function])],[[["W","H","A","T"]], Lazy([function])],[[["H","O","W"]], Lazy([function])],[[["W","H","O"]], Lazy([function])],[[["W","H","E","R","E"]], Lazy([function])],[[["W","H","E","N"]], Lazy([function])],[[["N","A","M","E"]], Lazy([function])],[[["W","H","Y"]], Lazy([function])],[[["C","A","U","S","E"]], Lazy([function])],[[["B","E","C","A","U","S","E"]], Lazy([function])],[[["D","R","E","A","M"]], Lazy([function])],[[["S","O","R","R","Y"]], Lazy([function])],[[["H","I"]], Lazy([function])],[[["D","R","E","A","M","S"]], Lazy([function])],[[["M","A","Y","B","E"]], Lazy([function])],[[["H","E","L","L","O"]], Lazy([function])],[[["A","L","W","A","Y","S"]], Lazy([function])],[[["Y","O","U","R"]], Lazy([function])],[[["A","L","I","K","E"]], Lazy([function])],[[["T","H","I","N","K"]], Lazy([function])],[[["F","R","I","E","N","D","S"]], Lazy([function])],[[["F","R","I","E","N","D"]], Lazy([function])],[[], Lazy([function])]], Lazy([function])]
+
+fun prefix(xxs, yys) = if xxs is
+  Nil then true
+  x :: xs and
+    force(yys) is
+      LzNil then false
+      LzCons(y, ys) then listEq(x, y) && prefix(xs, ys)
+
+fun tails(xs) = lazy of () =>
+  if xs is
+    Nil then LzNil
+    xss then LzCons(xss, tails(tail(xss)))
+
+fun ucase(ls) = map(toUpper, ls)
+
+val conjugates =
+  let oneways = [nofibStringToList("me"), nofibStringToList("you")] :: Nil
+  let bothways = [nofibStringToList("are"), nofibStringToList("am")] ::
+    [nofibStringToList("we're"), nofibStringToList("was")] ::
+    [nofibStringToList("you"), nofibStringToList("I")] ::
+    [nofibStringToList("your"), nofibStringToList("my")] ::
+    [nofibStringToList("I've"), nofibStringToList("you've")] ::
+    [nofibStringToList("I'm"), nofibStringToList("you're")] ::
+    Nil
+  fun prepare(ls) = map(case { [w, r] then [ucase(w), r] }, ls)
+  fun lscomp(ls) = if ls is
+    Nil then Nil
+    [x, y] :: t then ([x, y] :: [y, x] :: Nil) :: lscomp(t)
+  prepare(oneways +: concat(lscomp(bothways)))
+//│ conjugates = [[["M","E"], ["y","o","u"]],[["A","R","E"], ["a","m"]],[["A","M"], ["a","r","e"]],[["W","E","'","R","E"], ["w","a","s"]],[["W","A","S"], ["w","e","'","r","e"]],[["Y","O","U"], ["I"]],[["I"], ["y","o","u"]],[["Y","O","U","R"], ["m","y"]],[["M","Y"], ["y","o","u","r"]],[["I","'","V","E"], ["y","o","u","'","v","e"]],[["Y","O","U","'","V","E"], ["I","'","v","e"]],[["I","'","M"], ["y","o","u","'","r","e"]],[["Y","O","U","'","R","E"], ["I","'","m"]]]
+
+fun conjug(d, w) =
+  fun maybe(d, xs) = if null_(xs) then d else xs
+  fun conj(w) =
+    fun lscomp(ls) = if ls is
+      Nil then Nil
+      [w_, m] :: t and
+        listEq(ucase(w), w_) then m :: lscomp(t)
+        else lscomp(t)
+    head(lscomp(conjugates) +: w :: Nil)
+  fun trailingI(ls) =
+    fun cons(x, xs) =
+      if listEq(x, nofibStringToList("I")) && null_(xs)
+      then nofibStringToList("me") :: Nil
+      else x :: xs
+    foldr(cons, Nil, ls)
+  unwords(trailingI(map(conj, maybe(d, w))))
+
+fun replies(key, l) =
+  map_lz of
+    x => conjug(l, leave(listLen(key), x))
+    filter_lz of
+      ls => prefix(key, lz_map(ucase, ls))
+      tails(l)
+
+fun answer(st, l) =
+  fun cons(e, r_es) = if r_es is [r, es] then [r, e :: es]
+  fun ans(e_es, l) = if e_es is
+    [key, a_as] :: es and force(a_as) is LzCons(a, as_) then
+      let rs = replies(key, l)
+      if null_lz(rs)
+      then cons([key, a_as], ans(es, l))
+      else [makeResponse(a, head_lz(rs)), [key, as_] :: es]
+  if ans(keyTabOf(st), l) is [response, kt] then [response, newKeyTab(kt, st)]
+
+fun session(rs, prev, ls) = if ls is
+  Nil then Nil
+  l :: ls and
+    (if listEqBy(listEq, prev, l) then repeated(rs) else answer(rs, l)) is [response, rs_] then
+      response +: nofibStringToList("\n\n") +: session(rs_, l, ls)
+
+fun testEliza_nofib(n) =
+  let input = Predef.id of
+    nofibStringToList("Are we alone?") ::
+    nofibStringToList("That the Roswell event was actually an alien encounter. Do you agreed?") ::
+    nofibStringToList("But why not talk about you, its more fun.") ::
+    nofibStringToList("I dont ask, you do") ::
+    nofibStringToList("do ray me") ::
+    nofibStringToList("Nop, thats because your a computer") ::
+    nofibStringToList("you dont") ::
+    nofibStringToList("Oh, a paranoid computer, ehh?") ::
+    nofibStringToList("Tell me about *your* mother") ::
+    nofibStringToList("No, what what was she like?") ::
+    nofibStringToList("I'm asking questions, not you") ::
+    nofibStringToList("no") ::
+    nofibStringToList("yes") ::
+    nofibStringToList("but I'm not") ::
+    Nil
+  map of
+    i => session of
+      initial
+      Nil
+      filter of
+        x => not(null_(x))
+        map(x => eliza.words(trim(x)), take(intMod(i, 20), input))
+    enumFromTo(1, n)
+
+fun main() = map(x => nofibListToString(x), testEliza_nofib(20)).toString()

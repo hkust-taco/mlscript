@@ -3,7 +3,7 @@
 
 
 x and y
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ InfixApp:
 //│   lhs = Ident of "x"
 //│   kw = Keywrd of keyword 'and'
@@ -11,7 +11,7 @@ x and y
 
 x
   and y
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ InfixApp:
 //│   lhs = Ident of "x"
 //│   kw = Keywrd of keyword 'and'
@@ -19,7 +19,7 @@ x
 
 if x
   and y then z
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
@@ -33,7 +33,7 @@ if x
 if x
   and y then z
   else d
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
 //│   split = Block of Ls of 
@@ -50,7 +50,7 @@ if x
 
 if x is
   A and y then z
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
@@ -69,7 +69,7 @@ if x is
   A(u, v, w)
     and y then z
   B then C
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
@@ -98,7 +98,7 @@ if x is
     and v is
       B then z
   B then C
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
@@ -137,7 +137,7 @@ if x is
 //│ ║         	            ^
 //│ ║  l.133: 	    B then z
 //│ ╙──       	^^^^
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
@@ -170,7 +170,7 @@ if x is
     and v is B
     and w is B then z
   B then C
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
@@ -208,7 +208,7 @@ if x is
     and v is B then z
     and w is B then z
   B then C
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
@@ -217,28 +217,28 @@ if x is
 //│     rhs = Block of Ls of 
 //│       InfixApp:
 //│         lhs = InfixApp:
-//│           lhs = InfixApp:
-//│             lhs = App:
-//│               lhs = Ident of "A"
-//│               rhs = Tup of Ls of 
-//│                 Ident of "u"
-//│                 Ident of "v"
-//│                 Ident of "w"
-//│             kw = Keywrd of keyword 'and'
-//│             rhs = InfixApp:
-//│               lhs = Ident of "v"
-//│               kw = Keywrd of keyword 'is'
-//│               rhs = Ident of "B"
-//│           kw = Keywrd of keyword 'then'
+//│           lhs = App:
+//│             lhs = Ident of "A"
+//│             rhs = Tup of Ls of 
+//│               Ident of "u"
+//│               Ident of "v"
+//│               Ident of "w"
+//│           kw = Keywrd of keyword 'and'
 //│           rhs = InfixApp:
+//│             lhs = Ident of "v"
+//│             kw = Keywrd of keyword 'is'
+//│             rhs = Ident of "B"
+//│         kw = Keywrd of keyword 'then'
+//│         rhs = InfixApp:
+//│           lhs = InfixApp:
 //│             lhs = Ident of "z"
 //│             kw = Keywrd of keyword 'and'
 //│             rhs = InfixApp:
 //│               lhs = Ident of "w"
 //│               kw = Keywrd of keyword 'is'
 //│               rhs = Ident of "B"
-//│         kw = Keywrd of keyword 'then'
-//│         rhs = Ident of "z"
+//│           kw = Keywrd of keyword 'then'
+//│           rhs = Ident of "z"
 //│       InfixApp:
 //│         lhs = Ident of "B"
 //│         kw = Keywrd of keyword 'then'

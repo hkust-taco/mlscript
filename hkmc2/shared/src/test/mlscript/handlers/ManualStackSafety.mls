@@ -1,5 +1,6 @@
 :js
 :effectHandlers
+:lift
 
 // * This file demonstrates the handler-based mechanism of our stack safety implementation
 // * by manually applying the transformation of a recursive factorial function

@@ -3,7 +3,7 @@ import org.scalajs.linker.interface.OutputPatterns
 
 enablePlugins(ScalaJSPlugin)
 
-val scala3Version = "3.7.4"
+val scala3Version = "3.8.3"
 val directoryWatcherVersion = "0.18.0"
 val scalaTestVersion = "3.2.19"
 
@@ -72,7 +72,7 @@ lazy val hkmc2JVM = hkmc2.jvm
 lazy val hkmc2JS = hkmc2.js
 
 lazy val hkmc2DiffTests = project.in(file("hkmc2DiffTests"))
-  .dependsOn(hkmc2JVM)
+  .dependsOn(hkmc2JVM % "compile->compile;test->test")
   .settings(
     scalaVersion := scala3Version,
     
@@ -82,10 +82,46 @@ lazy val hkmc2DiffTests = project.in(file("hkmc2DiffTests"))
     Test/run/fork := true, // so that CTRL+C actually terminates the watcher
   )
 
+/** Helper to create test subprojects that compile `.mls` files then run diff tests.
+  * Each subproject depends on `hkmc2JVM` and `hkmc2DiffTests` for shared test infrastructure,
+  * and uses `Def.sequential` to guarantee compile tests complete before diff tests start. */
+def hkmc2TestSubproject(dirName: String, compileRunner: String, diffRunner: String): Project =
+  Project(dirName, file(dirName))
+    .dependsOn(hkmc2JVM % "compile->compile;test->test")
+    .dependsOn(hkmc2DiffTests % "compile->compile;test->test")
+    .settings(
+      scalaVersion := scala3Version,
+      
+      libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
+      libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
+      
+      Test / test := Def.sequential(
+        (Test / testOnly).toTask(s" hkmc2.$compileRunner"),
+        (Test / testOnly).toTask(s" hkmc2.$diffRunner"),
+      ).value,
+      
+      Test/run/fork := true, // so that CTRL+C actually terminates the watcher
+    )
+
+lazy val hkmc2NofibTests = hkmc2TestSubproject("hkmc2NofibTests", "NofibCompileTestRunner", "NofibDiffTestRunner")
+lazy val hkmc2AppsTests = hkmc2TestSubproject("hkmc2AppsTests", "AppsCompileTestRunner", "AppsDiffTestRunner")
+lazy val hkmc2WasmTests = hkmc2TestSubproject("hkmc2WasmTests", "WasmCompileTestRunner", "WasmDiffTestRunner")
+
+lazy val hkmc2MainTests = project.in(file("hkmc2MainTests"))
+  .settings(
+    Test / test := (
+      (hkmc2DiffTests / Test / test)
+        .dependsOn(hkmc2JVM / Test / test)
+    ).value
+  )
+
 lazy val hkmc2MostTests = project.in(file("hkmc2MostTests"))
   .settings(
     Test / test := (
       (hkmc2DiffTests / Test / test)
+        .dependsOn(hkmc2NofibTests / Test / test)
+        .dependsOn(hkmc2AppsTests / Test / test)
+        .dependsOn(hkmc2WasmTests / Test / test)
         .dependsOn(hkmc2JVM / Test / test)
     ).value
   )
@@ -94,8 +130,12 @@ lazy val hkmc2AllTests = project.in(file("hkmc2AllTests"))
   .settings(
     Test / test := (
       (hkmc2DiffTests / Test / test)
+        .dependsOn(hkmc2NofibTests / Test / test)
+        .dependsOn(hkmc2AppsTests / Test / test)
+        .dependsOn(hkmc2WasmTests / Test / test)
         .dependsOn(hkmc2JVM / Test / test)
         .dependsOn(hkmc2JS / Test / test)
+        .dependsOn(hkmc2Benchmarks / Test / compile)
     ).value
   )
 
@@ -122,7 +162,7 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
       JavaSerializable, Serializable, Product, ToString,
       LeakingSealed, Overloading,
       Option2Iterable, IterableOps, ListAppend, SeqApply,
-      TripleQuestionMark,
+      TripleQuestionMark, PartialFunctionApply,
     ),
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.12" % Test,
     libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.3.1",

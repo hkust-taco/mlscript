@@ -11,15 +11,13 @@ import hkmc2.syntax.Tree
 object LambdaRewriter:
   
   def desugar(b: Block)(using State) =
-    val transformer = new BlockTransformer(SymbolSubst()):
+    val transformer = new BlockTransformer(SymbolSubst.Id):
       override def applyResult(r: Result)(k: Result => Block): Block = r match
-        case lam: Lambda => 
+        case lam: Lambda =>
           val sym = BlockMemberSymbol("lambda", Nil, nameIsMeaningful = false)
-          val tSym = TermSymbol.fromFunBms(sym, N)
-          val lamDefn =
-            val Lambda(params, body) = super.applyLam(lam)
-            FunDefn(N, sym, tSym, params :: Nil, body)(false)
-          Scoped(Set(sym), Define(lamDefn, k(Value.Ref(sym, S(tSym)))))
+          val Lambda(params, body) = super.applyLam(lam)
+          val lamDefn = FunDefn.withFreshSymbol(N, sym, params :: Nil, body)(N, annotations = Nil)
+          Scoped(Set.single(sym), Define(lamDefn, k(lamDefn.asPath)))
         case _ => super.applyResult(r)(k)
       
       override def applyBlock(b: Block): Block = b match
@@ -27,14 +25,14 @@ object LambdaRewriter:
           val newSym = BlockMemberSymbol(lhs.nme, Nil,
             nameIsMeaningful = true // TODO: lhs.nme is not always meaningful
           )
-          val defn = FunDefn.withFreshSymbol(N, newSym, params :: Nil, applyBlock(body))(false)
+          val defn = FunDefn.withFreshSymbol(N, newSym, params :: Nil, applyBlock(body))(N, annotations = Nil)
           val blk = blockBuilder
             .define(defn)
             .assign(lhs, defn.asPath)
             .rest(applyBlock(rest))
-          Scoped(Set(newSym), blk)
+          Scoped(Set.single(newSym), blk)
         case _ => super.applyBlock(b)
     
     transformer.applyBlock(b)
   
-
+  

@@ -1,0 +1,67 @@
+:invalml
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+
+// * This file contains examples in the paper
+
+class ArrayList[A, R]
+class List[A]
+class Iter[T, R]
+
+fun mkArrayList : [R, T] -> (Region[out R]) ->{R} ArrayList[T, R]
+fun add : [R, T] -> (ArrayList[T, R], T) ->{R} ()
+fun clear : [R, T] -> ArrayList[T, R] ->{R} ()
+fun foreach : [E, R, T] -> (Iter[T, R], T ->{E} ()) -> {R | E} ()
+fun iter : [Res, R, E extends ~R, T] -> (ArrayList[T, R], [I] -> Iter[T, I] ->{I | E} Res) ->{E | R} Res
+fun map: [T, S, E] -> (List[out T], T ->{E} S) ->{E} List[out S]
+
+fun println: Any -> ()
+fun (;) seq(_, res) = res
+
+region r in // This is used to delimit the scope of mutation
+  let xs = mkArrayList(r) // Creates a new mutable list in r egion r
+  add(xs, "1"); add(xs, "2"); add(xs, "3");
+  iter(xs, it => foreach(it , e => println(e)))
+
+// region r in // This is used to delimit the scope of mutation
+//   let xs = mkArrayList(r) // Creates a new mutable list in r egion r
+//   add(xs, "1"); add(xs, "2"); add(xs, "3");
+//   iter(xs, it => foreach(it , e => println (e); clear (xs)))
+
+fun mapi: [A, B, E] -> (List[out A], (Int, A) ->{E} B) ->{E} List[out B]
+fun mapi(xs, f) =
+  region r in
+    let index = r.ref 0 in map(xs, x => let res = f(!(index), x) in index := !(index) + 1; res)
+
+
+fun f: [R1, R2 extends ~R1] -> (Region[out R1], Region[out R2]) ->{R1 | R2} Int
+
+
+// region r1 in
+//   let g = (r => region r2 in f(r, r2)) in (region r3 in g(r3))
+
+
+region r1 in
+  fun g: [outer, R extends outer] -> Region[out R] ->{R} Int
+  fun g(r) = region r2 in f(r, r2)
+  region r3 in g(r3)
+
+
+region r in
+  let a1 = mkArrayList(r) in add(a1, 12); add(a1, 34);
+  iter of a1, it1 =>
+    region s in
+      let a2 = mkArrayList(s)
+      foreach of it1, v1 => add(a2 , v1)
+      iter of a2, it2 => foreach of it2 , v2 => println(v2)
+      clear(a2)
+
+
+// region r in
+//   let a = mkArrayList(r) in add(a, 12); add(a, 34);
+//   iter of a, it =>
+//     foreach of it, v => println(v); clear(a)
+
+//│ ————————————————————————————————————————————————————————————————————————————————

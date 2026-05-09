@@ -1,0 +1,18 @@
+:js
+
+
+// https://github.com/hkust-taco/mlscript/issues/151#issuecomment-3235677951
+
+module BaseLib0 with
+  class Foo(val x)
+
+module DerivedLib1 with
+  val BaseLib: module BaseLib0 = BaseLib0
+  fun testFoo = case
+    BaseLib.Foo then 1
+    _ then 0
+
+DerivedLib1.testFoo(new DerivedLib1.BaseLib.Foo(123))
+//│ = 1
+
+

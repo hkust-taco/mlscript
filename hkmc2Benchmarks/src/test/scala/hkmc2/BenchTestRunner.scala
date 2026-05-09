@@ -9,18 +9,16 @@ import io.PlatformPath.given
 
 object BenchTestState extends DiffTestRunner.State:
 
-  override val allFiles = os.walk(os.pwd/"hkmc2Benchmarks"/"src"/"test"/"bench")
-    .filter(_.toIO.isFile)
-    .filter(_.ext == "mls")
+  override def testDir = workingDir/"hkmc2Benchmarks"/"src"/"test"/"bench"
 
   override val TimeLimit = Span(1, Hour)
 
-class BenchTestRunner(using CompilerCtx)
+class BenchTestRunner
   extends DiffTestRunnerBase(BenchTestState)
   with ParallelTestExecution
 :
   override protected def createDiffMaker
       (file: Path, preludePath: Path, predefPath: Path, relativeName: String)
       : DiffMaker =
-    new BenchDiffMaker((os.pwd/"hkmc2Benchmarks").toString, file, preludePath, predefPath, relativeName)
+    new BenchDiffMaker(state.workingDir.toString, file, preludePath, predefPath, relativeName)(using state.cctx)
 

@@ -8,7 +8,7 @@ import "./Token.mls"
 import "./Tree.mls"
 
 open Option { Some, None }
-open Predef { assert, tuple }
+open Predef { check, tuple }
 open Stack
 
 module ParseRule with ...
@@ -48,7 +48,7 @@ module Choice with
   let ensureChoices(xs, name) = xs
     Iter.zippingWithIndex()
     Iter.each of case [item, index] then
-      assert(item is Choice, name + ": element [" + index + "] is not Choice")
+      check(item is Choice, name + ": element [" + index + "] is not Choice")
   
   // Shorthands for constructing rule choices.
   fun keyword(keyword)(...choices) =
@@ -104,8 +104,8 @@ module Choice with
   val typeVar = reference("typevar")
   
   fun optional(init, rest) =
-    assert(init is ParseRule, "Choice.optional: init is not ParseRule")
-    assert(rest is ParseRule, "Choice.optional: rest is not ParseRule")
+    check(init is ParseRule, "Choice.optional: init is not ParseRule")
+    check(rest is ParseRule, "Choice.optional: rest is not ParseRule")
     Siding(init, true, rest, tuple)
   
   fun siding(fields) =
@@ -167,7 +167,7 @@ data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
           let process' = (lhs, rhsInnerResult) => if
             rhsInnerResult is [rhs, innerResult] then
               [process(lhs, rhs), innerResult]
-            do assert(false, "illgeal result from inner")
+            do check(false, "illgeal result from inner")
           [Ref(kind, process', outerPrec, innerPrec, go(rest'))]
         End(value) then rest.choices
           Iter.fromStack()
@@ -175,7 +175,7 @@ data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
         Siding(rule, optional, rest', process) then
           let process' = (initRes, restRes) => if
             restRes is [restRes', innerRes] then [process(initRes, restRes'), innerRes]
-            do assert(false, "illegal result from inner")
+            do check(false, "illegal result from inner")
           [Siding(rule, optional, go(rest'), process')]
       Iter.flattening()
       Iter.toStack()

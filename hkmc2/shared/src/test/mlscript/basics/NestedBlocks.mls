@@ -10,7 +10,7 @@ object Foo with
 :e
 :re
 Foo.x
-//│ ╔══[ERROR] Object 'Foo' does not contain member 'x'
+//│ ╔══[COMPILATION ERROR] Object 'Foo' does not contain member 'x'
 //│ ║  l.12: 	Foo.x
 //│ ╙──      	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
@@ -29,7 +29,7 @@ object Oops with
     val fakeField = 1
     print(fakeField)
   print(this.fakeField) // shouldn't work!
-//│ ╔══[ERROR] Object 'Oops' does not contain member 'fakeField'
+//│ ╔══[COMPILATION ERROR] Object 'Oops' does not contain member 'fakeField'
 //│ ║  l.31: 	  print(this.fakeField) // shouldn't work!
 //│ ╙──      	        ^^^^^^^^^^^^^^
 //│ > 1
@@ -38,7 +38,7 @@ object Oops with
 :e
 :re
 Oops.fakeField
-//│ ╔══[ERROR] Object 'Oops' does not contain member 'fakeField'
+//│ ╔══[COMPILATION ERROR] Object 'Oops' does not contain member 'fakeField'
 //│ ║  l.40: 	Oops.fakeField
 //│ ╙──      	    ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'fakeField' yielded 'undefined'

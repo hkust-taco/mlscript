@@ -5,7 +5,7 @@ let bm = benchmark
 module Benchmark with...
 
 val benchmark = bm
-let prefixPath = "src/test/logs/"
+let prefixPath = "hkmc2Benchmarks/src/test/logs/"
 
 fun mkSuite() = new! mut bm.Suite()
 
@@ -17,4 +17,4 @@ fun runSuite(suite) =
 
 fun writeResults(suite, path) =
   let jsonStr = JSON.stringify(suite.map((res, _, _) => res), null, 2)
-  fs.writeFile(prefixPath + path, jsonStr, (err) => err)
+  fs.writeFileSync(prefixPath + path, jsonStr)

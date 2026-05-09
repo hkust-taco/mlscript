@@ -35,18 +35,20 @@ M.Foo ::n (foo, 2)
 
 :e
 M.Foo:: n(foo, 2)
-//│ ╔══[ERROR] Name not found: ::
+//│ ╔══[COMPILATION ERROR] Name not found: ::
 //│ ║  l.37: 	M.Foo:: n(foo, 2)
 //│ ╙──      	     ^^
-//│ ╔══[ERROR] Name not found: n
+//│ ╔══[COMPILATION ERROR] Name not found: n
 //│ ║  l.37: 	M.Foo:: n(foo, 2)
 //│ ╙──      	        ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :sjs
 let m = M.Foo::m
-//│ JS (unsanitized):
-//│ let m, m1; m1 = function m(self, ...args) { return self.m(...args) }; m = m1;
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let m, m1; m1 = function m(self5, ...args5) { return self5.m(...args5) }; m = m1;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ m = fun m
 
 m(foo)
@@ -75,21 +77,21 @@ do
 // * This one still succeeds at runtime because the JS backend discards the class info
 :e
 foo.Foo#m()
-//│ ╔══[ERROR] Name not found: Foo
-//│ ║  l.77: 	foo.Foo#m()
+//│ ╔══[COMPILATION ERROR] Name not found: Foo
+//│ ║  l.79: 	foo.Foo#m()
 //│ ╙──      	   ^^^^
-//│ ╔══[ERROR] Identifier `Foo` does not name a known class symbol.
-//│ ║  l.77: 	foo.Foo#m()
+//│ ╔══[COMPILATION ERROR] Identifier `Foo` does not name a known class symbol.
+//│ ║  l.79: 	foo.Foo#m()
 //│ ╙──      	   ^^^^
-//│ ═══[ERROR] Expected a statically known class; found ‹error›.
+//│ ═══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
 //│ = 124
 
 :e
 :re
 foo.M.Foo::m()
-//│ ╔══[ERROR] Selection is not a known class.
-//│ ║  l.89: 	foo.M.Foo::m()
-//│ ║        	^^^
+//│ ╔══[COMPILATION ERROR] Selection is not a known class.
+//│ ║  l.91: 	foo.M.Foo::m()
+//│ ║        	^^^^^^^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 1 argument but got 0
@@ -97,46 +99,48 @@ foo.M.Foo::m()
 :e
 :re
 foo.M.Foo#m()
-//│ ╔══[ERROR] Name not found: Foo
-//│ ║  l.99: 	foo.M.Foo#m()
-//│ ╙──      	     ^^^^
-//│ ╔══[ERROR] Identifier `Foo` does not name a known class symbol.
-//│ ║  l.99: 	foo.M.Foo#m()
-//│ ╙──      	     ^^^^
-//│ ═══[ERROR] Expected a statically known class; found ‹error›.
+//│ ╔══[COMPILATION ERROR] Name not found: Foo
+//│ ║  l.101: 	foo.M.Foo#m()
+//│ ╙──       	     ^^^^
+//│ ╔══[COMPILATION ERROR] Identifier `Foo` does not name a known class symbol.
+//│ ║  l.101: 	foo.M.Foo#m()
+//│ ╙──       	     ^^^^
+//│ ═══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'M' yielded 'undefined'
 
 :e
 Foo::m
-//│ ╔══[ERROR] Name not found: Foo
-//│ ║  l.110: 	Foo::m
+//│ ╔══[COMPILATION ERROR] Name not found: Foo
+//│ ║  l.112: 	Foo::m
 //│ ╙──       	^^^
-//│ ╔══[ERROR] Identifier is not a known class.
-//│ ║  l.110: 	Foo::m
+//│ ╔══[COMPILATION ERROR] Identifier is not a known class.
+//│ ║  l.112: 	Foo::m
 //│ ║         	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ ═══[ERROR] Expected a statically known class; found ‹error›.
+//│ ═══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
 //│ = fun
 
 :e
 :sjs
+:noInline
 Foo::n(foo, 2)
-//│ ╔══[ERROR] Name not found: Foo
-//│ ║  l.124: 	Foo::n(foo, 2)
+//│ ╔══[COMPILATION ERROR] Name not found: Foo
+//│ ║  l.127: 	Foo::n(foo, 2)
 //│ ╙──       	^^^
-//│ ╔══[ERROR] Identifier is not a known class.
-//│ ║  l.124: 	Foo::n(foo, 2)
+//│ ╔══[COMPILATION ERROR] Identifier is not a known class.
+//│ ║  l.127: 	Foo::n(foo, 2)
 //│ ║         	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ ═══[ERROR] Expected a statically known class; found ‹error›.
-//│ JS (unsanitized):
+//│ ═══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda9;
-//│ lambda9 = (undefined, function (self, ...args) {
-//│   return runtime.safeCall(self.n(...args))
+//│ lambda9 = (undefined, function (self7, ...args7) {
+//│   return runtime.safeCall(self7.n(...args7))
 //│ });
-//│ lambda9(foo, 2)
+//│ runtime.safeCall(lambda9(foo, 2))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 125
 
 

@@ -10,7 +10,7 @@ class Keyword(
     val leftPrec: Opt[Int],
     val rightPrec: Opt[Int],
     
-    /** If the operator can be used infix, can it be done on a newline (witth no indent)?
+    /** If the operator can be used infix, can it be done on a newline (with no indent)?
         For instance, if `via` has `canStartInfixOnNewLine`, then one can write:
           foo
           via f
@@ -55,7 +55,7 @@ object Keyword:
   val `with` = Keyword("with", curPrec, curPrec)
   
   val `val` = Keyword("val", N, curPrec)
-  
+
   val eqPrec = nextPrec
   val ascPrec = nextPrec // * `x => x : T` should parsed as `x => (x : T)`
   val `=` = Keyword("=", eqPrec, eqPrec)
@@ -66,15 +66,23 @@ object Keyword:
   
   val `if` = Keyword("if", N, nextPrec)
   val `while` = Keyword("while", N, curPrec)
+  val `assert` = Keyword("assert", N, curPrec)
+  type `assert` = `assert`.type
   
   val `case` = Keyword("case", N, curPrec)
   
   val thenPrec = nextPrec
-  val `then` = Keyword("then", thenPrec, thenPrec)
-  val `do` = Keyword("do", thenPrec, thenPrec)
-  val `drop` = Keyword("drop", thenPrec, thenPrec)
+  val `then` = Keyword("then", thenPrec, eqPrec)
+  val `do` = Keyword("do", thenPrec, eqPrec)
+  val `drop` = Keyword("drop", thenPrec, eqPrec)
   
-  val `else` = Keyword("else", nextPrec, curPrec)
+  val `else` = Keyword("else", N, eqPrec)
+  type `else` = `else`.type
+  
+  val `return` = Keyword("return", N, curPrec)
+  val `throw` = Keyword("throw", N, curPrec)
+  val `import` = Keyword("import", N, curPrec)
+  
   val `fun` = Keyword("fun", N, N)
   // val `val` = Keyword("val", N, N)
   val `var` = Keyword("var", N, N)
@@ -118,9 +126,6 @@ object Keyword:
   val `false` = Keyword("false", N, N)
   val `public` = Keyword("public", N, N)
   val `private` = Keyword("private", N, N)
-  val `return` = Keyword("return", N, curPrec)
-  val `throw` = Keyword("throw", N, curPrec)
-  val `import` = Keyword("import", N, curPrec)
   val `this` = Keyword("this", N, N)
   val `outer` = Keyword("outer", N, N)
   val `pattern` = Keyword("pattern", N, N)
@@ -135,7 +140,7 @@ object Keyword:
   // * Currently, the precedence of normal operators starts at the maximum precedence of keywords,
   // * so we need to start the precedence of `=>` to account for that.
   val `=>` = Keyword("=>", S(maxPrec.get + charPrecList.length), eqPrec)
-  
+
   // * `new` is a strange keyword:
   // * it has a very high precedence that sits between that of selection and that of application.
   // * Indeed, `new Foo().bar` should parse as `(new Foo()).bar`, not `new (Foo().bar)`,
@@ -146,6 +151,19 @@ object Keyword:
   val `new!` = Keyword("new!", N, newRightPrec)
   val `mut` = Keyword("mut", N, newRightPrec)
   
+  // * `#` is both a prefix keyword (for directives like `#config(...)`)
+  // * and an infix operator (for disambiguation like `Lazy#get()`).
+  // * It has very high left precedence (like selection) when used as infix.
+  // * The right precedence is set to the same level (very tight) so that infix `#`
+  // * only picks up the immediately following identifier, e.g., `arr.Cls#d.f()`
+  // * parses as `App(Sel(InfixApp(Sel(arr, Cls), #, d), f), ())`.
+  // * In prefix position, this means `#config` only gets the name; `(args)` is
+  // * consumed by `exprCont` and the elaborator reconstructs the directive.
+  // * `canStartInfixOnNewLine = false` prevents it from being parsed as infix
+  // * when it appears on a new line after an expression.
+  val hashSelPrec = S(maxPrec.get + charPrecList.length)
+  val `#` = Keyword("#", hashSelPrec, hashSelPrec, canStartInfixOnNewLine = false)
+  
   val __ = Keyword("_", N, N)
   
   val modifiers = Set(
@@ -155,16 +173,17 @@ object Keyword:
     `do`.type | `drop`.type | `not`.type | `new!`.type | `else`.type | `return`.type | `throw`.type | `import`.type
   
   type Infix =
-    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type | `where`.type | `with`.type |
-    `and`.type | `or`.type | `then`.type | `else`.type
+    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type |
+    `where`.type | `with`.type | `and`.type | `or`.type | `then`.type | `else`.type | `#`.type
   
   type InfixSplittable =
-    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type | `where`.type | `with`.type |
-    `of`.type
+    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type |
+    `where`.type | `with`.type | `of`.type
   
   type Ellipsis = `...`.type | `..`.type
   
   type IfLike = `if`.type | `while`.type
+  type SplitLike = IfLike | `case`.type
   
   type LetLike = `let`.type | `set`.type
   

@@ -17,6 +17,6 @@ data Foo(x: Int)
 //│ ╔══[COMPILATION ERROR] Symbol 'Int' is virtual (i.e., "compiler fiction"); cannot be used as a term
 //│ ║  l.12: 	data Foo(x: Int)
 //│ ╙──      	            ^^^
-//│ = Foo(undefined)
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

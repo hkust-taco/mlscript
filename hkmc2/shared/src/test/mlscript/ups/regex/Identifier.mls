@@ -137,7 +137,7 @@ pattern Word = Letter ~ (Word | "")
 
 :e
 fun isWord(x) = x is @compile Word
-//│ ╔══[ERROR] String concatenation is not supported in pattern compilation.
+//│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
 //│ ║  l.120: 	pattern Word = Letter ~ (Word | "")
 //│ ╙──       	               ^^^^^^^^^^^^^^^^^^^
 

@@ -1,0 +1,15 @@
+:invalml
+
+
+class Foo[out A]
+
+(x: Foo[Int]) => (x as Foo[Int | Str])
+//│ Type: (Foo[out Int]) ->{⊥} Foo[out Int ∨ Str]
+
+
+class Foo[in A]
+
+(x: Foo[Int]) => (x as Foo[Int & Str])
+//│ Type: (Foo[in Int]) ->{⊥} Foo[in Int ∧ Str]
+
+

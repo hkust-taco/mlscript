@@ -3,37 +3,37 @@
 
 fun foo(x){f} =
   f(x)
-//│ ╔══[ERROR] Expected a valid function definition head; found block instead
+//│ ╔══[COMPILATION ERROR] Expected a valid function definition head; found block instead
 //│ ║  l.4: 	fun foo(x){f} =
 //│ ╙──     	          ^^^
 
 foo(1){x => x}
-//│ ╔══[ERROR] Name not found: foo
+//│ ╔══[COMPILATION ERROR] Name not found: foo
 //│ ║  l.10: 	foo(1){x => x}
 //│ ╙──      	^^^
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (infix operator '=>').
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (infix operator '=>').
 //│ ║  l.10: 	foo(1){x => x}
 //│ ╙──      	       ^^^^^^
 
 foo(1)
   x => x
-//│ ╔══[ERROR] Name not found: foo
+//│ ╔══[COMPILATION ERROR] Name not found: foo
 //│ ║  l.18: 	foo(1)
 //│ ╙──      	^^^
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (infix operator '=>').
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (infix operator '=>').
 //│ ║  l.19: 	  x => x
 //│ ╙──      	  ^^^^^^
 
 foo(1) { x => x }
-//│ ╔══[ERROR] Name not found: foo
+//│ ╔══[COMPILATION ERROR] Name not found: foo
 //│ ║  l.27: 	foo(1) { x => x }
 //│ ╙──      	^^^
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (infix operator '=>').
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (infix operator '=>').
 //│ ║  l.27: 	foo(1) { x => x }
 //│ ╙──      	         ^^^^^^
 
 foo(1) with x => x
-//│ ╔══[ERROR] Unexpected infix use of keyword 'with' here
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'with' here
 //│ ║  l.35: 	foo(1) with x => x
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
 

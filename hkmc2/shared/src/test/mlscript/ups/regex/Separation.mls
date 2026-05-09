@@ -3,11 +3,11 @@
 import "../../../mlscript-compile/Iter.mls"
 
 pattern TailLines(pattern L) =
-  (("\n" ~ (Lines(L) as t)) => t) |
-  ("" => [])
+  | ("\n" ~ (Lines(L) as t)) => t
+  | "" => []
 pattern Lines(pattern L) = 
-  ((((L as h) ~ (TailLines(L) as t)) => [h, ...t])) |
-  ("" => [])
+  | (((L as h) ~ (TailLines(L) as t)) => [h, ...t])
+  | "" => []
 
 :expect true
 "hello" is Lines("hello")
@@ -29,7 +29,7 @@ pattern Integer = Digit ~ (Integer | "")
 //│ = true
 
 Integer.unapplyStringPrefix("123")
-//│ = MatchSuccess(["123", ""], {})
+//│ = MatchSuccess(["123", ""], null)
 
 // Beautiful!
 "123\n456\n789" is Lines of Integer
@@ -46,7 +46,7 @@ parseIntegers of "123\n456\n789"
 // We may need a shorthand syntax to obtain the result of pattern matching.
 // `t through P` means match `t` against `P` and returns the result.
 "123\n456\n789" through Lines(Integer) // ==> [123, 456, 789]
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
 //│ ║  l.48: 	"123\n456\n789" through Lines(Integer) // ==> [123, 456, 789]
 //│ ╙──      	                ^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: Lines1 is not a function

@@ -1,0 +1,93 @@
+:invalml
+
+
+
+fun letreg: [E,Res] -> ([R] -> Region[out R] ->{E | R} Res) ->{E} Res
+
+letreg
+//│ Type: ['E, 'Res] -> (['R] -> (Region[out 'R]) ->{'E ∨ 'R} 'Res) ->{'E} 'Res
+
+letreg(r => r)
+//│ Type: Region[?]
+
+:e
+letreg(r => r).ref 1
+//│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.14: 	letreg(r => r).ref 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'reg ∨ 'E  <:  ⊥
+//│ ╟── because: cannot constrain  'reg  <:  ⊥
+//│ ╟── because: cannot constrain  'R  <:  ⊥
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Ref[Int, ?]
+
+letreg(r => r.ref 1)
+//│ Type: Ref[Int, ?]
+
+letreg(r => !(r.ref 1))
+//│ Type: Int
+
+:e
+!(letreg(r => r.ref 1))
+//│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.31: 	!(letreg(r => r.ref 1))
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'reg ∨ 'E  <:  ⊥
+//│ ╟── because: cannot constrain  'reg  <:  ⊥
+//│ ╟── because: cannot constrain  'reg1  <:  ⊥
+//│ ╟── because: cannot constrain  'R  <:  ⊥
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Int
+
+letreg of r =>
+  let x = r.ref 1
+  x := !(x) + 1
+  !(x)
+//│ Type: Int
+
+let f = letreg(r => arg => r.ref arg)
+
+f
+//│ Type: 'arg ->{⊤} Ref['arg, ?]
+
+:e
+letreg(r => arg => r.ref arg)(0)
+//│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.54: 	letreg(r => arg => r.ref arg)(0)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'eff ∨ 'E  <:  ⊥
+//│ ╟── because: cannot constrain  'eff  <:  ⊥
+//│ ╟── because: cannot constrain  'reg  <:  ⊥
+//│ ╟── because: cannot constrain  'R  <:  ⊥
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Ref['arg, ?]
+//│ Where:
+//│   Int <: 'arg
+
+
+
+// * An incorrect one, just for testing the error:
+
+fun letreg: [E,Res] -> ([R] -> Region[out R] -> Res) ->{E} Res
+
+:e
+letreg(r => r.ref 1)
+//│ ╔══[COMPILATION ERROR] Type error in function literal with expected type (Region[out R]) ->{⊥} 'Res
+//│ ║  l.74: 	letreg(r => r.ref 1)
+//│ ║        	       ^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'reg  <:  ⊥
+//│ ╙── because: cannot constrain  R  <:  ⊥
+//│ Type: Ref[Int, ?]
+
+:e
+letreg(r => !(r.ref 1))
+//│ ╔══[COMPILATION ERROR] Type error in function literal with expected type (Region[out R]) ->{⊥} 'Res
+//│ ║  l.83: 	letreg(r => !(r.ref 1))
+//│ ║        	       ^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'reg ∨ 'reg1  <:  ⊥
+//│ ╟── because: cannot constrain  'reg  <:  ⊥
+//│ ╟── because: cannot constrain  'reg1  <:  ⊥
+//│ ╙── because: cannot constrain  R  <:  ⊥
+//│ Type: Int
+
+

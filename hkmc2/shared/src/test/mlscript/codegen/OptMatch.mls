@@ -9,15 +9,17 @@ object None
 fun isDefined(x) = if x is
   Some then true
   None then false
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let isDefined;
 //│ isDefined = function isDefined(x) {
 //│   if (x instanceof Some1.class) {
 //│     return true
 //│   } else if (x instanceof None1.class) {
 //│     return false
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 isDefined(Some(1))
 //│ = true
@@ -30,20 +32,18 @@ isDefined(None)
 val isDefined = case
   Some(_) then true
   None    then false
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let isDefined1, lambda;
 //│ lambda = (undefined, function (caseScrut) {
-//│   let argument0$;
 //│   if (caseScrut instanceof Some1.class) {
-//│     argument0$ = caseScrut.value;
 //│     return true
 //│   } else if (caseScrut instanceof None1.class) {
 //│     return false
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
 //│ isDefined1 = lambda;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ isDefined = fun
 
 isDefined(Some(1))

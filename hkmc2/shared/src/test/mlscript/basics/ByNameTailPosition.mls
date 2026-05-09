@@ -1,0 +1,15 @@
+:js
+
+// `baz()` should be a call in tail position (like `print(1)`), not bound to a variable
+:sir
+fun baz = print(1)
+fun bar() = baz
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let bar⁰, baz⁰;
+//│ define baz⁰ as fun baz¹() {
+//│   return Predef⁰.print⁰(1)
+//│ };
+//│ define bar⁰ as fun bar¹() { return baz¹() };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+

@@ -7,14 +7,14 @@ fun process(e) =
   if e is
     Numb(n) and n > 0 then n
     Numb(m) then n
-//│ ╔══[ERROR] Name not found: n
+//│ ╔══[COMPILATION ERROR] Name not found: n
 //│ ║  l.9: 	    Numb(m) then n
 //│ ╙──     	                 ^
 
 
 :re
 process(Numb(-10))
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 fun process(e, n) =
   if e is
@@ -41,16 +41,16 @@ fun process(e) =
     Pair(Vec(xs), Vec(ys)) then n
     Pair(Vec(n),  Numb(n)) then n
     Pair(Numb(n), Vec(n))  then n
-//│ ╔══[ERROR] Name not found: n
+//│ ╔══[COMPILATION ERROR] Name not found: n
 //│ ║  l.41: 	    Pair(Vec(xs), Vec(ys)) then n
 //│ ╙──      	                                ^
-//│ ╔══[ERROR] Duplicated pattern variable.
+//│ ╔══[COMPILATION ERROR] Duplicated pattern variable.
 //│ ║  l.42: 	    Pair(Vec(n),  Numb(n)) then n
 //│ ║        	                       ^
 //│ ╟── The previous definition is as follows.
 //│ ║  l.42: 	    Pair(Vec(n),  Numb(n)) then n
 //│ ╙──      	             ^
-//│ ╔══[ERROR] Duplicated pattern variable.
+//│ ╔══[COMPILATION ERROR] Duplicated pattern variable.
 //│ ║  l.43: 	    Pair(Numb(n), Vec(n))  then n
 //│ ║        	                      ^
 //│ ╟── The previous definition is as follows.
@@ -63,7 +63,7 @@ fun process(e) =
 fun process(e) =
   if e is
     Pair(Numb(n), Numb(n)) then n
-//│ ╔══[ERROR] Duplicated pattern variable.
+//│ ╔══[COMPILATION ERROR] Duplicated pattern variable.
 //│ ║  l.65: 	    Pair(Numb(n), Numb(n)) then n
 //│ ║        	                       ^
 //│ ╟── The previous definition is as follows.

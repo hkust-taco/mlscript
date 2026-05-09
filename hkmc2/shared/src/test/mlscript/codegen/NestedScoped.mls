@@ -5,40 +5,31 @@
 
 
 // * Flattened
-:lot
+:sir
 :sjs
 scope.locally of 42
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ 42
-//│ Lowered:
-//│ Program:
-//│   imports = Nil
-//│   main = Return:
-//│     res = Lit of IntLit of 42
-//│     implct = true
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ 42
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
 
+:sir
+let x = 42 in x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let x⁰; set x⁰ = 42; x⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
 // * Flattened
-:lot
-:sjs
+:sir
 scope.locally of
   let x = 42 in x
-//│ JS (unsanitized):
-//│ let x; x = 42; x
-//│ Lowered:
-//│ Program:
-//│   imports = Nil
-//│   main = Scoped:
-//│     syms = HashSet(x)
-//│     body = Assign:
-//│       lhs = x
-//│       rhs = Lit of IntLit of 42
-//│       rest = Return: \
-//│       res = Ref:
-//│         l = x
-//│         disamb = N
-//│       implct = true
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let x¹; set x¹ = 42; x¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
 
@@ -50,34 +41,25 @@ scope.locally of (
 //│ = 42
 
 
-:lot
+:sir
 // :sjs
 scope.locally of scope.locally of (
   let x = 42
   x
 )
-//│ Lowered:
-//│ Program:
-//│   imports = Nil
-//│   main = Scoped:
-//│     syms = Set(x)
-//│     body = Assign:
-//│       lhs = x
-//│       rhs = Lit of IntLit of 42
-//│       rest = Return: \
-//│       res = Ref:
-//│         l = x
-//│         disamb = N
-//│       implct = true
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let x²; set x² = 42; x²
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
 
 
 :e
 x
-//│ ╔══[ERROR] Name not found: x
-//│ ║  l.77: 	x
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.58: 	x
 //│ ╙──      	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 fun foo(x) =
@@ -101,13 +83,16 @@ fun f() =
   else
     let b = 5
     b + 9
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f;
 //│ f = function f() {
 //│   let scrut, b;
 //│   scrut = true;
-//│   if (scrut === true) { let a; a = 4; return a + 4 } else { b = 5; return b + 9 }
+//│   if (scrut === true) { let a; a = 4; return a + 4 }
+//│   b = 5;
+//│   return b + 9;
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 f()
@@ -125,13 +110,15 @@ fun f() =
       let b = 5
       b + 9
     )
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f1;
 //│ f1 = function f() {
 //│   let scrut, a;
 //│   scrut = false;
-//│   if (scrut === true) { a = 4; return a + 4 } else { let b; b = 5; return b + 9 }
+//│   if (scrut === true) { a = 4; return a + 4 }
+//│   { let b; b = 5; return b + 9; }
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 f()
@@ -166,26 +153,29 @@ fun foo(x, y) =
 :ge
 scope.locally()
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.167: 	scope.locally()
+//│ ║  l.154: 	scope.locally()
 //│ ╙──       	^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.174: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
+//│ ║  l.162: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╙──       	^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :e
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in x)
-//│ ╔══[ERROR] Name not found: x
-//│ ║  l.182: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.171: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	                                                 ^
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.182: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.171: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 let z = 114
@@ -217,20 +207,20 @@ fun f(x) =
       let z = () => 3
       z
     )
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f2;
-//│ f2 = function f(x3) {
-//│   let y3;
-//│   if (x3 === true) {
+//│ f2 = function f(x4) {
+//│   if (x4 === true) {
 //│     let z2, z3;
-//│     y3 = 2;
 //│     z3 = function z() {
 //│       return 3
 //│     };
 //│     z2 = z3;
 //│     return z2
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 
@@ -254,14 +244,16 @@ let x = 3
 fun f(x) =
   if x then
     () => 4
-//│ JS (unsanitized):
-//│ let f4;
-//│ f4 = function f(x4) {
-//│   if (x4 === true) {
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f3;
+//│ f3 = function f(x5) {
+//│   if (x5 === true) {
 //│     let lambda1;
 //│     lambda1 = (undefined, function () {
 //│       return 4
 //│     });
 //│     return lambda1
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

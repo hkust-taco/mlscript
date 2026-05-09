@@ -3,13 +3,13 @@
 
 :e
 pattern P
-//│ ╔══[ERROR] Pattern definitions must have a body.
+//│ ╔══[COMPILATION ERROR] Pattern definitions must have a body.
 //│ ║  l.5: 	pattern P
 //│ ╙──     	^^^^^^^^^
 
 :e
 pattern Foo1[A]: ...
-//│ ╔══[ERROR] Pattern definitions must have a body.
+//│ ╔══[COMPILATION ERROR] Pattern definitions must have a body.
 //│ ║  l.11: 	pattern Foo1[A]: ...
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 
@@ -19,7 +19,7 @@ pattern Foo2[pattern A]: ...
 
 :e
 pattern Foo(pattern T)
-//│ ╔══[ERROR] Pattern definitions must have a body.
+//│ ╔══[COMPILATION ERROR] Pattern definitions must have a body.
 //│ ║  l.21: 	pattern Foo(pattern T)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
 

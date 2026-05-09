@@ -45,8 +45,9 @@ r.foo
 
 :sjs
 let r = {}
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let r3; r3 = runtime.Unit;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ r = ()
 
 :re
@@ -75,8 +76,8 @@ r.foo
 
 :e
 mut()
-//│ ╔══[ERROR] Illegal position for 'mut' modifier.
-//│ ║  l.77: 	mut()
+//│ ╔══[COMPILATION ERROR] Illegal position for 'mut' modifier.
+//│ ║  l.78: 	mut()
 //│ ╙──      	^^^
 
 

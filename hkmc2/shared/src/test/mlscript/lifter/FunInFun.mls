@@ -2,16 +2,9 @@
 :js
 
 
-:fixme
 fun foo =
   let x
   fun bar = x
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
-//│ ║  l.8: 	  fun bar = x
-//│ ║       	            ^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.7: 	  let x
-//│ ╙──     	      ^
 
 :expect 12
 fun foo =
@@ -58,7 +51,7 @@ f(1, 2)
 //│ = 9
 
 :expect 5
-:sjs
+:sir
 fun f(used1, unused1) =
   let used2 = unused1
   fun g(g_arg) =
@@ -68,55 +61,50 @@ fun f(used1, unused1) =
   let foo = g
   foo(used2) + unused2
 f(1, 2)
-//│ JS (unsanitized):
-//│ let f3;
-//│ let g1, g$3;
-//│ g$3 = function g$(used1, used2, g_arg) {
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g⁰, f⁰, g$⁰;
+//│ define g$⁰ as fun g$¹(used1, used2)(g_arg) {
+//│   return g¹(used1, used2, g_arg)
+//│ };
+//│ define g⁰ as fun g¹(used1, used2, g_arg) {
 //│   let used3;
-//│   used3 = 2;
-//│   return used1 + used2
+//│   set used3 = 2;
+//│   return +⁰(used1, used2)
 //│ };
-//│ g1 = function g(used1, used2) {
-//│   return (g_arg) => {
-//│     return g$3(used1, used2, g_arg)
-//│   }
+//│ define f⁰ as fun f¹(used1, unused1) {
+//│   let used2, unused2, foo, tmp, g$here;
+//│   set used2 = unused1;
+//│   set unused2 = 2;
+//│   set g$here = g$¹(used1, used2);
+//│   set foo = g$here;
+//│   set tmp = foo(used2);
+//│   return +⁰(tmp, unused2)
 //│ };
-//│ f3 = function f(used1, unused1) {
-//│   let used2, unused2, foo2, tmp1;
-//│   let g$here;
-//│   used2 = unused1;
-//│   unused2 = 2;
-//│   g$here = runtime.safeCall(g1(used1, used2));
-//│   foo2 = g$here;
-//│   tmp1 = runtime.safeCall(foo2(used2));
-//│   return tmp1 + unused2
-//│ };
-//│ f3(1, 2)
+//│ f¹(1, 2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
 
 // preserve order
-:sjs
+:sir
 fun f(a1, a2, a3, a4, a5, a6) =
   fun g = a1 + a2 + a3 + a4 + a5 + a6  
   g
 f(1,2,3,4,5,6)
-//│ JS (unsanitized):
-//│ let f4;
-//│ let g$4;
-//│ g$4 = function g$(a1, a2, a3, a4, a5, a6) {
-//│   let tmp1, tmp2, tmp3, tmp4;
-//│   tmp1 = a1 + a2;
-//│   tmp2 = tmp1 + a3;
-//│   tmp3 = tmp2 + a4;
-//│   tmp4 = tmp3 + a5;
-//│   return tmp4 + a6
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g², f²;
+//│ define g² as fun g³(a1, a2, a3, a4, a5, a6) {
+//│   let tmp, tmp1, tmp2, tmp3;
+//│   set tmp = +⁰(a1, a2);
+//│   set tmp1 = +⁰(tmp, a3);
+//│   set tmp2 = +⁰(tmp1, a4);
+//│   set tmp3 = +⁰(tmp2, a5);
+//│   return +⁰(tmp3, a6)
 //│ };
-//│ f4 = function f(a1, a2, a3, a4, a5, a6) {
-//│   let g2, tmp1;
-//│   tmp1 = g$4(a1, a2, a3, a4, a5, a6);
-//│   return tmp1
+//│ define f² as fun f³(a1, a2, a3, a4, a5, a6) {
+//│   return g³(a1, a2, a3, a4, a5, a6)
 //│ };
-//│ f4(1, 2, 3, 4, 5, 6)
+//│ f³(1, 2, 3, 4, 5, 6)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 21
 
 :expect "01"
@@ -176,7 +164,7 @@ a.toString() + b + c + d
 //│ ret = Tuple(Tuple(fun, fun), fun)
 
 // some variables mutated, some not
-:sjs
+:sir
 :expect 7
 fun f(unused, immutable, mutated) =
   fun g() =
@@ -186,36 +174,31 @@ fun f(unused, immutable, mutated) =
   let a = g()
   a + h() + unused
 f(1, 2, 1000)
-//│ JS (unsanitized):
-//│ let f7;
-//│ let h$2, g$6, f$capture5;
-//│ g$6 = function g$(immutable, f$capture6) {
-//│   f$capture6.mutated$capture$0 = 2;
-//│   return immutable + f$capture6.mutated$capture$0
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g⁴, h⁰, f⁴, Capture$f⁰;
+//│ define g⁴ as fun g⁵(f$cap, immutable) {
+//│   set f$cap.mutated$0 = 2;
+//│   return +⁰(immutable, f$cap.mutated$0⁰)
 //│ };
-//│ h$2 = function h$(f$capture6) {
-//│   return f$capture6.mutated$capture$0
+//│ define h⁰ as fun h¹(f$cap) {
+//│   return f$cap.mutated$0⁰
 //│ };
-//│ (class f$capture4 {
-//│   static {
-//│     f$capture5 = this
+//│ define Capture$f⁰ as class Capture$f² {
+//│   constructor Capture$f¹(mutated$0) {
+//│     define mutated$0¹ as val mutated$0⁰ = mutated$0;
+//│     end
 //│   }
-//│   constructor(mutated$capture$0) {
-//│     this.mutated$capture$0 = mutated$capture$0;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "f$capture"]; 
-//│ });
-//│ f7 = function f(unused, immutable, mutated) {
-//│   let g3, h2, a1, tmp8, tmp9;
-//│   let capture;
-//│   capture = new f$capture5(mutated);
-//│   a1 = g$6(immutable, capture);
-//│   tmp8 = h$2(capture);
-//│   tmp9 = a1 + tmp8;
-//│   return tmp9 + unused
 //│ };
-//│ f7(1, 2, 1000)
+//│ define f⁴ as fun f⁵(unused, immutable, mutated) {
+//│   let a, tmp, tmp1, f$cap;
+//│   set f$cap = new mut Capture$f²(mutated);
+//│   set a = g⁵(f$cap, immutable);
+//│   set tmp = h¹(f$cap);
+//│   set tmp1 = +⁰(a, tmp);
+//│   return +⁰(tmp1, unused)
+//│ };
+//│ f⁵(1, 2, 1000)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 7
 
 // if used as a higher order function, pass closures
@@ -262,7 +245,7 @@ fun g() =
 g()
 //│ = 3
 
-:sjs
+:sir
 fun g() =
   let y = 0
   fun f(x) =
@@ -277,45 +260,38 @@ fun g() =
     x
   f
 g()(1)
-//│ JS (unsanitized):
-//│ let g6, tmp8;
-//│ let f14, f$1, h$4, g$capture1;
-//│ h$4 = function h$(x1, k, g$capture2) {
-//│   k = 5;
-//│   x1 = 4;
-//│   return x1 + g$capture2.y$capture$0
-//│ };
-//│ f$1 = function f$(g$capture2, x1) {
-//│   let h3, k;
-//│   k = 4;
-//│   g$capture2.y$capture$0 = 2;
-//│   return x1
-//│ };
-//│ f14 = function f(g$capture2) {
-//│   return (x1) => {
-//│     return f$1(g$capture2, x1)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let h², f⁶, g⁶, baseCall, Capture$scope0⁰, f$⁰;
+//│ define Capture$scope0⁰ as class Capture$scope0² {
+//│   constructor Capture$scope0¹(y$0) {
+//│     define y$0⁰ as val y$0¹ = y$0;
+//│     end
 //│   }
 //│ };
-//│ (class g$capture {
-//│   static {
-//│     g$capture1 = this
-//│   }
-//│   constructor(y$capture$0) {
-//│     this.y$capture$0 = y$capture$0;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "g$capture"]; 
-//│ });
-//│ g6 = function g() {
-//│   let y1;
-//│   let capture, f$here;
-//│   capture = new g$capture1(null);
-//│   capture.y$capture$0 = 0;
-//│   f$here = runtime.safeCall(f14(capture));
+//│ define h² as fun h³(scope0$cap, x, k) {
+//│   set k = 5;
+//│   set x = 4;
+//│   return +⁰(x, scope0$cap.y$0¹)
+//│ };
+//│ define f$⁰ as fun f$¹(scope0$cap)(x) {
+//│   return f⁷(scope0$cap, x)
+//│ };
+//│ define f⁶ as fun f⁷(scope0$cap, x) {
+//│   let k;
+//│   set k = 4;
+//│   set scope0$cap.y$0 = 2;
+//│   return x
+//│ };
+//│ define g⁶ as fun g⁷() {
+//│   let y, scope0$cap, f$here;
+//│   set scope0$cap = new mut Capture$scope0²(y);
+//│   set scope0$cap.y$0 = 0;
+//│   set f$here = f$¹(scope0$cap);
 //│   return f$here
 //│ };
-//│ tmp8 = g6();
-//│ runtime.safeCall(tmp8(1))
+//│ set baseCall = g⁷();
+//│ baseCall(1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 :expect 2
@@ -382,13 +358,48 @@ fun f(es, vs) =
     val fld = v'
   new A
 
+// f should not have a capture
+:expect 1
+:sir
+fun f(x) =
+  fun g() =
+    set x += 1
+    x
+  if true do return g()
+  set x += 1
+  x
+f(0)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g⁸, f⁸;
+//│ define g⁸ as fun g⁹(x) {
+//│   let tmp;
+//│   set tmp = +⁰(x, 1);
+//│   set x = tmp;
+//│   return x
+//│ };
+//│ define f⁸ as fun f⁹(x) {
+//│   let scrut, tmp;
+//│   set scrut = true;
+//│   match scrut
+//│     true =>
+//│       return g⁹(x)
+//│     else
+//│       set tmp = +⁰(x, 1);
+//│       set x = tmp;
+//│       return x
+//│   end
+//│ };
+//│ f⁹(0)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
 // try to avoid creating multiple closures
 
 fun f(x) =
   fun g() = x
   [g, g]
 
-:sjs
+:sir
 fun f(x) =
   let y
   fun g() = y
@@ -398,73 +409,63 @@ fun f(x) =
   else
     set y = 2
     [g, g]
-//│ JS (unsanitized):
-//│ let f23;
-//│ let g12, g$14;
-//│ g$14 = function g$(y1) {
-//│   return y1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g¹⁰, f¹⁰, g$²;
+//│ define g$² as fun g$³(y)() {
+//│   return g¹¹(y)
 //│ };
-//│ g12 = function g(y1) {
-//│   return () => {
-//│     return g$14(y1)
-//│   }
+//│ define g¹⁰ as fun g¹¹(y) {
+//│   return y
 //│ };
-//│ f23 = function f(x1) {
-//│   let y1, scrut;
-//│   let g$here;
-//│   scrut = x1 < 0;
-//│   if (scrut === true) {
-//│     y1 = 1;
-//│     g$here = runtime.safeCall(g12(y1));
-//│     return globalThis.Object.freeze([
-//│       g$here,
-//│       g$here
-//│     ])
-//│   } else {
-//│     y1 = 2;
-//│     g$here = runtime.safeCall(g12(y1));
-//│     return globalThis.Object.freeze([ g$here, g$here ])
-//│   }
+//│ define f¹⁰ as fun f¹¹(x) {
+//│   let y, scrut, g$here;
+//│   set scrut = <⁰(x, 0);
+//│   match scrut
+//│     true =>
+//│       set y = 1;
+//│       set g$here = g$³(y);
+//│       return [g$here, g$here]
+//│     else
+//│       set y = 2;
+//│       set g$here = g$³(y);
+//│       return [g$here, g$here]
+//│   end
 //│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:sjs
+:sir
 fun f(x) =
   fun g() = x
   let a = g
   set x += 1
   [a, g]
-//│ JS (unsanitized):
-//│ let f24;
-//│ let g13, g$15, f$capture17;
-//│ g$15 = function g$(f$capture18) {
-//│   return f$capture18.x$capture$0
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let g¹², f¹², Capture$f³, g$⁴;
+//│ define g$⁴ as fun g$⁵(f$cap)() {
+//│   return g¹³(f$cap)
 //│ };
-//│ g13 = function g(f$capture18) {
-//│   return () => {
-//│     return g$15(f$capture18)
+//│ define g¹² as fun g¹³(f$cap) {
+//│   return f$cap.x$0⁰
+//│ };
+//│ define Capture$f³ as class Capture$f⁵ {
+//│   constructor Capture$f⁴(x$0) {
+//│     define x$0¹ as val x$0⁰ = x$0;
+//│     end
 //│   }
 //│ };
-//│ (class f$capture16 {
-//│   static {
-//│     f$capture17 = this
-//│   }
-//│   constructor(x$capture$0) {
-//│     this.x$capture$0 = x$capture$0;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "f$capture"]; 
-//│ });
-//│ f24 = function f(x1) {
-//│   let a1, tmp11;
-//│   let capture, g$here;
-//│   capture = new f$capture17(x1);
-//│   g$here = runtime.safeCall(g13(capture));
-//│   a1 = g$here;
-//│   tmp11 = capture.x$capture$0 + 1;
-//│   capture.x$capture$0 = tmp11;
-//│   g$here = runtime.safeCall(g13(capture));
-//│   return globalThis.Object.freeze([ a1, g$here ])
+//│ define f¹² as fun f¹³(x) {
+//│   let a, tmp, f$cap, g$here;
+//│   set f$cap = new mut Capture$f⁵(x);
+//│   set g$here = g$⁵(f$cap);
+//│   set a = g$here;
+//│   set tmp = +⁰(f$cap.x$0⁰, 1);
+//│   set f$cap.x$0 = tmp;
+//│   set g$here = g$⁵(f$cap);
+//│   return [a, g$here]
 //│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // Can be avoided in `h` by passing the initialized closure, but this is more complicated
 // Note that automatically rewriting `fun h() = g` to `fun h() = a` would resolve this,
@@ -483,3 +484,68 @@ fun f(x) =
   else
     g
   g
+
+// Spread arguments
+
+:expect [1]
+fun f(x) =
+  fun g(...rest) = 
+    print(x)
+    rest
+  let a = g
+  a(1)
+f(2)
+//│ > 2
+//│ = [1]
+
+fun f(...args) =
+  () =>
+    print("test")
+    f(...args)
+f(100)()()()
+//│ > test
+//│ > test
+//│ > test
+//│ = fun
+
+
+data class Some(x)
+
+// This test generates a function that is not defined directly within the scoped block introducing its symbol,
+// i.e. it is defined another scope nested within the scoped block. This checks that that the function symbol
+// is removed properly from that socpe.
+let _refChoice = () => if
+  0 is Some(0) then
+    let process''(pairRes) =
+      if pairRes is [restRes] then 0
+  true then
+    let process''() = 0
+_refChoice
+//│ = fun
+//│ _refChoice = fun
+
+:expect 2
+fun f =
+  fun g(x) = x()
+  fun h() = 2
+  g(h)
+f
+//│ = 2
+
+:expect 2
+fun f =
+  class A(x) with
+    fun foo = x()
+  fun h() = 2
+  new A(h)
+f.foo
+//│ = 2
+
+:expect 2
+fun f =
+  class A(x) with
+    fun foo = x()
+  fun h() = 2
+  A(h)
+f.foo
+//│ = 2

@@ -1,0 +1,70 @@
+:invalml
+
+
+:fixme // parsing
+fun f x = f
+//│ ╔══[COMPILATION ERROR] Invalid function definition head: unexpected identifier in this position
+//│ ║  l.5: 	fun f x = f
+//│ ╙──     	      ^
+//│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for f
+//│ ║  l.5: 	fun f x = f
+//│ ╙──     	          ^
+
+:e
+f
+//│ ╔══[COMPILATION ERROR] Variable not found: f
+//│ ║  l.14: 	f
+//│ ╙──      	^
+//│ Type: ⊥
+
+:e
+x
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.21: 	x
+//│ ╙──      	^
+//│ Type: ⊥
+
+fun f(x) = f
+f
+//│ Type: ['f] -> ⊤ -> (⊤ -> 'f)
+//│ Where:
+//│   ⊤ -> 'f <: 'f
+
+fun f(x) = f(x)
+f
+//│ Type: ⊤ -> ⊥
+
+:todo
+fun f(x) = f(x.a)
+//│ ╔══[COMPILATION ERROR] Term shape not yet supported by InvalML: Sel(Ref(x),Ident(a))
+//│ ║  l.38: 	fun f(x) = f(x.a)
+//│ ╙──      	             ^^^
+
+
+data class Foo[A](a: A)
+
+:todo proper error
+Foo(123)
+//│ ╔══[COMPILATION ERROR] Variable not found: Foo
+//│ ║  l.47: 	Foo(123)
+//│ ╙──      	^^^
+//│ Type: ⊥
+
+new Foo(123)
+//│ Type: Foo['A]
+//│ Where:
+//│   Int <: 'A
+
+:todo proper error
+fun f(x) = f(Foo.a(x))
+//│ ╔══[COMPILATION ERROR] Term shape not yet supported by InvalML: Sel(Ref(member:Foo),Ident(a))
+//│ ║  l.59: 	fun f(x) = f(Foo.a(x))
+//│ ╙──      	             ^^^^^
+
+fun f(x) = f(x.Foo#a)
+f
+//│ Type: ['x] -> Foo[out 'x] -> ⊥
+//│ Where:
+//│   'x <: Foo[out 'x]
+
+

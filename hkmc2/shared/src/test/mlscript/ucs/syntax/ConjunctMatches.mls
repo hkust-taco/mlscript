@@ -15,7 +15,7 @@
 // - is should have higher precedence than and
 if
   x is A and y is B and c is Z then 1
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
 //│   split = Block of Ls of 
@@ -43,7 +43,7 @@ if
 // we should also parse the following case.
 if
   x is A and (y is B and c is Z) then 1
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'
 //│   split = Block of Ls of 

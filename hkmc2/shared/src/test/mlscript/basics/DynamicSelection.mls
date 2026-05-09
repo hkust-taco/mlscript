@@ -1,12 +1,4 @@
 :js
-// :de
-// :sjs
-// :pt
-// :elt
-
-:global
-// :d
-// :todo
 
 
 let r =
@@ -16,10 +8,11 @@ let r =
 
 :pt
 r!a
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ DynAccess:
 //│   obj = Ident of "r"
 //│   fld = Ident of "a"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 r!("a")
@@ -31,28 +24,31 @@ r !a
 :e
 :fixme
 r! a
-//│ ╔══[ERROR] Name not found: a
-//│ ║  l.33: 	r! a
+//│ ╔══[COMPILATION ERROR] Name not found: a
+//│ ║  l.26: 	r! a
 //│ ╙──      	   ^
 //│ ╔══[COMPILATION ERROR] Builtin '!' is not a binary operator
-//│ ║  l.33: 	r! a
+//│ ║  l.26: 	r! a
 //│ ╙──      	^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 :fixme
 r ! a
-//│ ╔══[ERROR] Name not found: a
-//│ ║  l.43: 	r ! a
+//│ ╔══[COMPILATION ERROR] Name not found: a
+//│ ║  l.37: 	r ! a
 //│ ╙──      	    ^
 //│ ╔══[COMPILATION ERROR] Builtin '!' is not a binary operator
-//│ ║  l.43: 	r ! a
+//│ ║  l.37: 	r ! a
 //│ ╙──      	^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // * Note: artifact from BbML/InvalML
 :sjs
 !(r)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ r.value
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
 
@@ -74,45 +70,43 @@ t![0]
 t.1
 //│ = 2
 
-:pe
 t.01
-//│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.78: 	t.01
-//│ ╙──      	 ^
-//│ = [1, 2, 3]
+//│ = 2
 
 
 :w
 :fixme // * Strange that this is treated as a statement
 !(1,2)
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.87: 	!(1,2)
+//│ ║  l.79: 	!(1,2)
 //│ ╙──      	  ^
-//│ > try { block$res15 = 2.value; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > try { block$res15 = 2.value; undefined; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                     ^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
 
 :ge
 (!)(1,2)
 //│ ╔══[COMPILATION ERROR] Builtin '!' is not a binary operator
-//│ ║  l.96: 	(!)(1,2)
+//│ ║  l.88: 	(!)(1,2)
 //│ ╙──      	^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot call non-binary builtin symbol '!'
 //│ ═══[RUNTIME ERROR] Error: Cannot call non-binary builtin symbol '!'
 
 :sjs
 (!)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda; lambda = (undefined, function (arg) { return ! arg }); lambda
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 :fixme
 !1
 //│ ╔══[PARSE ERROR] Expected an expression; found dynamic selector instead
-//│ ║  l.110: 	!1
+//│ ║  l.103: 	!1
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found dynamic selector instead
-//│ ║  l.110: 	!1
+//│ ║  l.103: 	!1
 //│ ╙──       	^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

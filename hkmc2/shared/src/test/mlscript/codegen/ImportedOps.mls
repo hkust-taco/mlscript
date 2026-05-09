@@ -10,10 +10,11 @@ open M
 fun foo() =
   "a" ~ "b" ~ "c"
 foo()
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo;
 //│ foo = function foo() { let tmp; tmp = M1.concat("a", "b"); return M1.concat(tmp, "c") };
 //│ foo()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "abc"
 
 let name = "_"

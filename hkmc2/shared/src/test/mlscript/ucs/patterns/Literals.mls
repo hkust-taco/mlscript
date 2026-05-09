@@ -72,3 +72,13 @@ fun dual_patterns(x, y) =
     x is "none" and y is "some" then 1
     x is "some" and y is "some" then 2
     x is "none" and y is "none" then 3
+
+
+:fixme // TODO
+() is ()
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern (unit).
+//│ ║  l.78: 	() is ()
+//│ ╙──      	      ^^
+//│ = true
+
+

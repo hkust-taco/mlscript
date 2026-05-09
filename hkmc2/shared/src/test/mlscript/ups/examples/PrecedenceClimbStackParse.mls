@@ -1,0 +1,159 @@
+:js
+
+
+import "../../../mlscript-compile/Stack.mls"
+open Stack
+
+
+
+pattern Ident = ("a" ..= "z") ~ (Ident | "")
+
+data class Subexpr with
+  constructor
+    Id(name: Str)
+    Op(lhs: Subexpr, op: Str, rhs: Subexpr)
+data class Expr(sub: Subexpr, prec: Int)
+
+
+pattern AtPrec(str, prec) = str as (
+  | ( "+" => 5 )
+  | ( "*" => 2 )
+  ) as prec
+
+fun f(x) = if x is AtPrec(op, p) then [op, p]
+f("+")
+//│ = ["+", 5]
+f("*")
+//│ = ["*", 2]
+
+
+pattern ParseStep =
+  | (Ident(name) :: rest) =>
+      Expr(Id(name), 0) :: rest
+  | (Expr(e1, p1) :: AtPrec(op, p) :: rest where p1 < p) =>
+      Expr(e1, p) :: op :: rest
+  | (Expr(e1, p1) :: AtPrec(op, p) :: Expr(e2, p2) :: rest where p1 >= p and p2 >= p) =>
+      Expr(Op(e1, op, e2), p) :: rest
+  | ((Expr as e1) :: AtPrec(op, _) :: ParseStep(rest)) =>
+      e1 :: op :: rest
+  | ((Expr as e1) :: AtPrec(op, p) :: Expr(e2, p2) :: rest where p2 < p) =>
+      e1 :: op :: Expr(e2, p) :: rest
+  | ("(" :: Expr(e, p) :: ")" :: rest) =>
+      Expr(e, 0) :: rest
+  | ("(" :: ParseStep(rest)) =>
+      "(" :: rest
+
+pattern Parse = (ParseStep as Parse) | (
+    | ((Expr as e) :: Nil) => ["Success:", e]
+    | toks => ["Failure: can't parse:", toks]
+  )
+
+fun parse(tokens) = print of ...
+  if tokens is Parse(res) then res
+
+
+parse(Nil)
+//│ > Failure: can't parse: Nil
+
+parse("x" :: Nil)
+//│ > Success: Expr(Id("x"), 0)
+
+let input = "x" :: "+" :: "y" :: Nil
+//│ input = Cons("x", Cons("+", Cons("y", Nil)))
+
+parse(input)
+//│ > Success: Expr(Op(Id("x"), "+", Id("y")), 5)
+
+if input is ParseStep as rest then rest
+//│ = Cons(Expr(Id("x"), 0), Cons("+", Cons("y", Nil)))
+
+parse("(" :: "x" :: ")" :: Nil)
+//│ > Success: Expr(Id("x"), 0)
+
+parse("a" :: "*" :: "x" :: "+" :: "y" :: Nil)
+//│ > Success: Expr(Op(Op(Id("a"), "*", Id("x")), "+", Id("y")), 5)
+
+parse("a" :: "+" :: "x" :: "*" :: "y" :: Nil)
+//│ > Success: Expr(Op(Id("a"), "+", Op(Id("x"), "*", Id("y"))), 5)
+
+parse("(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ > Success: Expr(Op(Id("x"), "+", Id("y")), 0)
+
+parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ > Success: Expr(Op(Id("a"), "+", Op(Id("x"), "+", Id("y"))), 5)
+
+parse("a" :: "+" :: "(" :: "b" :: "+" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ > Success: Expr(Op(Id("a"), "+", Op(Op(Id("b"), "+", Id("x")), "+", Id("y"))), 5)
+
+:silent
+let input = "a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil
+
+parse(input)
+//│ > Success: Expr(Op(Id("a"), "+", Op(Id("b"), "+", Op(Id("x"), "+", Id("y")))), 5)
+
+
+
+// * These also work:
+
+
+pattern Parse = (ParseStep as Parse) | _
+fun parse(tokens) = print of ...
+  if tokens is Parse(res) and res is
+    (Expr as e) :: Nil then ["Success:", e]
+    toks then ["Failure: can't parse:", toks]
+
+parse(input)
+//│ > Success: Expr(Op(Id("a"), "+", Op(Id("b"), "+", Op(Id("x"), "+", Id("y")))), 5)
+
+
+fun parse(tokens) =
+  fun go = case
+    ParseStep as stack then go(stack)
+    (Expr as e) :: Nil then ["Success:", e]
+    toks then ["Failure: can't parse:", toks]
+  print of ...go(tokens)
+
+parse(input)
+//│ > Success: Expr(Op(Id("a"), "+", Op(Id("b"), "+", Op(Id("x"), "+", Id("y")))), 5)
+
+
+
+// * Other related example definitions:
+
+
+pattern AtPrec =
+  | ( "+" => 5 )
+  | ( "*" => 2 )
+
+assert "+" is AtPrec(n), n
+//│ = 5
+
+fun f(x) =
+  assert x is str as AtPrec as prec
+  [str, prec]
+
+f("+")
+//│ = ["+", 5]
+f("*")
+//│ = ["*", 2]
+
+// * Note: this fails due to `,` terminating the function scope...
+:e
+fun f(x) = assert x is str as AtPrec as prec, [str, prec]
+//│ ╔══[COMPILATION ERROR] Name not found: str
+//│ ║  l.142: 	fun f(x) = assert x is str as AtPrec as prec, [str, prec]
+//│ ╙──       	                                               ^^^
+//│ ╔══[COMPILATION ERROR] Name not found: prec
+//│ ║  l.142: 	fun f(x) = assert x is str as AtPrec as prec, [str, prec]
+//│ ╙──       	                                                    ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+pattern Oper(str, prec) = str as AtPrec as prec
+
+assert "+" is Oper as p, p
+//│ = ["+", 5]
+
+assert "+" is Oper(s, p), [s, p]
+//│ = ["+", 5]
+

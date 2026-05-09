@@ -7,44 +7,51 @@ module C with
 
 :rt
 C()
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Nil
-//│   res = App{typ=class:C}:
-//│     lhs = Resolved{sym=term:class:C.C}:
-//│       t = Ref{sym=member:C} of member:C
-//│       sym = term:class:C.C
+//│   res = App{typ=class:C⁰}:
+//│     lhs = Resolved{sym=term:C⁰/C¹}:
+//│       t = Ref{sym=member:C²} of member:C²
+//│       sym = term:C⁰/C¹
 //│     rhs = Tup of Nil
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = C()
+
+:sir
+let f = new C
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f⁰, f¹; define f¹ as fun f²() { return new C⁰() }; set f⁰ = f²; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ f = fun f
+
+f()
 //│ = C()
 
 :rt
-new C
-//│ Resolved tree:
-//│ Blk:
-//│   stats = Nil
-//│   res = New{typ=class:C}:
-//│     cls = Resolved{sym=class:C}:
-//│       t = Ref{sym=member:C} of member:C
-//│       sym = class:C
-//│     args = Nil
-//│     rft = N
-//│ = C()
-
 new C()
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   res = New{typ=class:C⁰}:
+//│     cls = Resolved{sym=class:C⁰}:
+//│       t = Ref{sym=member:C²} of member:C²
+//│       sym = class:C⁰
+//│     args = Ls of 
+//│       Tup of Nil
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = C()
 
 :rt
 C.empty
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Nil
-//│   res = Resolved{sym=term:module:C.empty}:
-//│     t = Sel{sym=member:empty}:
-//│       prefix = Resolved{sym=module:C,typ=module:C}:
-//│         t = Ref{sym=member:C} of member:C
-//│         sym = module:C
+//│   res = Resolved{sym=term:C³/empty⁰}:
+//│     t = Sel{sym=member:empty¹}:
+//│       prefix = Resolved{sym=module:C³,typ=module:C³}:
+//│         t = Ref{sym=member:C²} of member:C²
+//│         sym = module:C³
 //│       nme = Ident of "empty"
-//│     sym = term:module:C.empty
+//│     sym = term:C³/empty⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 :breakme // TODO: should be an error, down the line, when we resolve all selections statically
@@ -60,16 +67,16 @@ module C with
 
 :rt
 C.empty
-//│ Resolved tree:
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   stats = Nil
-//│   res = Resolved{sym=term:module:C.empty}:
-//│     t = Sel{sym=member:empty}:
-//│       prefix = Resolved{sym=module:C,typ=module:C}:
-//│         t = Ref{sym=member:C} of member:C
-//│         sym = module:C
+//│   res = Resolved{sym=term:C⁴/empty²}:
+//│     t = Sel{sym=member:empty³}:
+//│       prefix = Resolved{sym=module:C⁴,typ=module:C⁴}:
+//│         t = Ref{sym=member:C⁵} of member:C⁵
+//│         sym = module:C⁴
 //│       nme = Ident of "empty"
-//│     sym = term:module:C.empty
+//│     sym = term:C⁴/empty²
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 
@@ -94,7 +101,7 @@ class Foo() with // the class definition is moved to the location of its compani
 set state += 1
 module Foo with
   val res = Foo().foo
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo1, tmp1;
 //│ tmp1 = state + 1;
 //│ state = tmp1;
@@ -105,7 +112,6 @@ module Foo with
 //│   static {
 //│     Foo1.class = this
 //│   }
-//│   constructor() {}
 //│   static {
 //│     let tmp2;
 //│     tmp2 = Foo1();
@@ -117,6 +123,7 @@ module Foo with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", []]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 11
 Foo.res

@@ -7,7 +7,7 @@ object Test with
 
 :e
 let f = Test.foo
-//│ ╔══[ERROR] [debinding error] Method 'foo' cannot be accessed without being called.
+//│ ╔══[COMPILATION ERROR] [debinding error] Method 'foo' cannot be accessed without being called.
 //│ ║  l.9: 	let f = Test.foo
 //│ ╙──     	            ^^^^
 //│ f = fun foo

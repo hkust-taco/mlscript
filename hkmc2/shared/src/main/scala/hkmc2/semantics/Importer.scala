@@ -18,26 +18,26 @@ class Importer:
   self: Elaborator =>
   import tl.*
   
-  def importPath(rawPath: StrLit)(using cfg: Config): Import =
+  def importPath(rawPath: StrLit, alias: Opt[syntax.Tree.Ident])(using cfg: Config): Import =
     cctx.moduleResolver.tryResolveModulePath(rawPath.value) match
       case S(ModuleResolver.ResolvedModule.Verbatim(specifier, moduleName)) =>
         // The path resolves to a platform dependent specifier, which is NOT a
         // path and should be used as-is, e.g., Node.js built-in modules.
-        val id = new syntax.Tree.Ident(moduleName) // TODO loc
+        val id = alias.getOrElse(new syntax.Tree.Ident(moduleName)) // TODO loc
         val sym = TermSymbol(LetBind, N, id)
         Import(sym, specifier, wd / io.RelPath(rawPath.value)) // hmm, the third arg is dummy???
       case S(ModuleResolver.ResolvedModule.File(_, actualFile, moduleName)) =>
         // The specifier is resolved to a file path.
-        importFile(rawPath, actualFile, moduleName)
+        importFile(rawPath, actualFile, moduleName, alias)
       case N =>
         // The specifier could not be resolved. We treat it as a file path.
         val actualFile =
           if rawPath.value.startsWith("/") then io.Path(rawPath.value)
           else wd / io.RelPath(rawPath.value)
-        importFile(rawPath, actualFile, actualFile.baseName)
+        importFile(rawPath, actualFile, actualFile.baseName, alias)
   
-  private def importFile(rawPath: StrLit, actualFile: io.Path, nme: Str)(using cfg: Config): Import =
-    val id = new syntax.Tree.Ident(nme) // TODO loc
+  private def importFile(rawPath: StrLit, actualFile: io.Path, nme: Str, alias: Opt[syntax.Tree.Ident])(using cfg: Config): Import =
+    val id = alias.getOrElse(new syntax.Tree.Ident(nme)) // TODO loc
     
     lazy val sym = TermSymbol(LetBind, N, id)
     
@@ -59,12 +59,16 @@ class Importer:
           false
       } =>
         
-        val sym = tl.trace(s">>> Importing $actualFile"):
+        val importedSym = tl.trace(s">>> Importing $actualFile"):
           given TL = tl
           val artifact = cctx.getElaboratedBlock(actualFile, prelude)
           artifact.tree.definedSymbols.find(_._1 === nme) match
           case Some(nme -> imsym) => imsym
           case None => lastWords(s"File $actualFile does not define a symbol named $nme")
+        val sym = alias.fold(importedSym): alias =>
+          val res = BlockMemberSymbol(alias.name, importedSym.trees, importedSym.nameIsMeaningful)
+          res.tsym = importedSym.tsym
+          res
         
         val jsFile = actualFile.up / io.RelPath(actualFile.baseName + ".mjs")
         Import(sym, jsFile.toString, jsFile)

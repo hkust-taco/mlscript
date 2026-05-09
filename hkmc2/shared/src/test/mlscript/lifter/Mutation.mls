@@ -5,43 +5,37 @@
 let xs = mut []
 //│ xs = []
 
-:sjs
+:sir
 fun foo() =
   let x = 1
   fun bar() = x
   xs.push(bar)
   set x = 2
-//│ JS (unsanitized):
-//│ let foo;
-//│ let bar, bar$, foo$capture1;
-//│ bar$ = function bar$(foo$capture2) {
-//│   return foo$capture2.x$capture$0
-//│ };
-//│ bar = function bar(foo$capture2) {
-//│   return () => {
-//│     return bar$(foo$capture2)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let bar⁰, foo⁰, Capture$scope0⁰, bar$⁰;
+//│ define Capture$scope0⁰ as class Capture$scope0² {
+//│   constructor Capture$scope0¹(x$0) {
+//│     define x$0⁰ as val x$0¹ = x$0;
+//│     end
 //│   }
 //│ };
-//│ (class foo$capture {
-//│   static {
-//│     foo$capture1 = this
-//│   }
-//│   constructor(x$capture$0) {
-//│     this.x$capture$0 = x$capture$0;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "foo$capture"]; 
-//│ });
-//│ foo = function foo() {
-//│   let x, tmp;
-//│   let capture, bar$here;
-//│   capture = new foo$capture1(null);
-//│   capture.x$capture$0 = 1;
-//│   bar$here = runtime.safeCall(bar(capture));
-//│   tmp = runtime.safeCall(xs.push(bar$here));
-//│   capture.x$capture$0 = 2;
-//│   return runtime.Unit
+//│ define bar$⁰ as fun bar$¹(scope0$cap)() {
+//│   return bar¹(scope0$cap)
 //│ };
+//│ define bar⁰ as fun bar¹(scope0$cap) {
+//│   return scope0$cap.x$0¹
+//│ };
+//│ define foo⁰ as fun foo¹() {
+//│   let x, scope0$cap, bar$here;
+//│   set scope0$cap = new mut Capture$scope0²(x);
+//│   set scope0$cap.x$0 = 1;
+//│   set bar$here = bar$¹(scope0$cap);
+//│   do xs⁰.push﹖(bar$here);
+//│   set scope0$cap.x$0 = 2;
+//│   return runtime⁰.Unit⁰
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 2
 foo()
@@ -52,7 +46,7 @@ xs.0()
 let xs = mut []
 //│ xs = []
 
-// :sjs
+// :sir
 fun foo() =
   let x
   fun bar() = x
@@ -65,27 +59,19 @@ xs.0()
 //│ = 2
 
 
-:fixme
 fun foo() =
   let x
   fun bar() =
     x = 2
   [bar, () => x]
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
-//│ ║  l.73: 	  [bar, () => x]
-//│ ║        	              ^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.70: 	  let x
-//│ ╙──      	      ^
 
-:fixme
+
 :expect 2
 let b_x = foo()
 b_x.0()
 b_x.1()
-//│ ═══[RUNTIME ERROR] ReferenceError: x is not defined
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
-//│ b_x = [fun bar, fun]
+//│ = 2
+//│ b_x = [fun, fun]
 
 
 fun foo() =
@@ -102,16 +88,17 @@ b_x.1()
 //│ b_x = [fun, fun]
 
 
-:sjs
+:sir
 fun foo() =
   fun bar() =
     let x
     x
   bar
-//│ JS (unsanitized):
-//│ let foo4;
-//│ let bar4;
-//│ bar4 = function bar() { let x; return x };
-//│ foo4 = function foo() { return bar4 };
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let bar², foo²;
+//│ define bar² as fun bar³() { let x; return x };
+//│ define foo² as fun foo³() { return bar³ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

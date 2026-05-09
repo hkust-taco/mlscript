@@ -10,13 +10,13 @@ data class Node[T](left: Node[T], value: T, right: Node[T])
 // The patterns generate trees that have odd or even numbers of node `A`.
 
 pattern OddTree =
-  A |
-  Node(EvenTree, A, EvenTree) | Node(OddTree, A, OddTree) |
-  Node(EvenTree, B, OddTree) | Node(OddTree, B, EvenTree)
+  | A
+  | Node(EvenTree, A, EvenTree) | Node(OddTree, A, OddTree)
+  | Node(EvenTree, B, OddTree) | Node(OddTree, B, EvenTree)
 pattern EvenTree =
-  B |
-  Node(EvenTree, A, OddTree) | Node(OddTree, A, EvenTree) |
-  Node(EvenTree, B, EvenTree) | Node(OddTree, B, OddTree)
+  | B
+  | Node(EvenTree, A, OddTree) | Node(OddTree, A, EvenTree)
+  | Node(EvenTree, B, EvenTree) | Node(OddTree, B, OddTree)
 
 fun a(lc, rc) = Node(lc, A, rc)
 

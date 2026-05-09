@@ -7,6 +7,7 @@
 //│ 
 //│ Interpreted:
 //│ undefined
+// :ge
 :sllir
 fun add(x) = y => x + y
 fun add_curried(x)(y) = x + y
@@ -38,6 +39,7 @@ add(1)(2)
 //│ Interpreted:
 //│ 3
 
+// :ge
 fun add4(a, b) = (c, d) => a + b + c + d
 fun add4_curried(a, b)(c, d) = a + b + c + d
 add4(1, 2)(3, 4)
@@ -46,6 +48,7 @@ add4(1, 2)(3, 4)
 //│ Interpreted:
 //│ 10
 
+// :ge
 fun add(a, b) = a + b
 fun dummy() = add
 dummy()(1, 2)

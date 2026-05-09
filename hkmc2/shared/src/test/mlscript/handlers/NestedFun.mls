@@ -1,5 +1,6 @@
 :js
 :effectHandlers
+:lift
 
 
 fun foo(f) =
@@ -11,6 +12,7 @@ fun foo(f) =
   bar()
   set y += 1
   lam()
+
 
 :expect 3
 handle h = Object with

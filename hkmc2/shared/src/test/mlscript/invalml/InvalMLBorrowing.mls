@@ -1,0 +1,186 @@
+:invalml
+
+
+class Reg[Rg, Br]
+
+fun letreg: [E, Res] -> ([Rg] -> Reg[Rg, E] ->{E | Rg} Res) ->{E} Res
+
+fun use_: [Rg, Br] -> Reg[Rg, Br] ->{Rg} Int
+
+
+class MutVec[A, Rg, Br]
+
+fun mkVec: [A, Rg, Br] -> Reg[Rg, Br] -> MutVec[A, Rg, Br]
+
+fun clear: [A, Rg, Br] -> MutVec[A, Rg, Br] ->{Rg} Int
+
+class Iter[A, Rg]
+
+fun iterate: [A, Rg, Br, Res] -> MutVec[A, Rg, Br] -> ([L] -> Iter[A, Br | L] ->{Br | L} Res) ->{Br} Res
+
+fun integers: [Rg, Br, Res] -> Reg[Rg, Br] ->{Rg} (Iter[Int, Br] ->{Br} Res) ->{Br} Res
+
+
+fun next: [A, Br] -> Iter[A, Br] ->{Br} A
+
+letreg(r => r)
+//│ Type: Reg[?, 'E]
+//│ Where:
+//│   'E <: ⊥
+
+letreg of r =>
+  let b = mkVec(r)
+  clear(b)
+  iterate(b) of it =>
+    next(it)
+    123
+  clear(b)
+  r
+//│ Type: Reg[?, 'E]
+//│ Where:
+//│   'E <: ⊥
+
+
+// * Non-lexical borrowing pattern encoded with a thunk
+:w
+letreg of r =>
+  let b = mkVec(r)
+  clear(b)
+  let k = iterate(b) of it =>
+    next(it)
+    123
+    if next(it) > 0 then () => 0 else () => clear(b)
+  k()
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.51: 	    123
+//│ ╙──      	    ^^^
+//│ Type: Int
+
+:w
+:e
+letreg of r =>
+  let b = mkVec(r)
+  clear(b)
+  let k = iterate(b) of it =>
+    next(it)
+    123
+    () => next(it)
+  k()
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.66: 	    123
+//│ ╙──      	    ^^^
+//│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.61: 	letreg of r =>
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.62: 	  let b = mkVec(r)
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.63: 	  clear(b)
+//│ ║        	^^^^^^^^^^
+//│ ║  l.64: 	  let k = iterate(b) of it =>
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.65: 	... (more lines omitted) ...
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'E  <:  ⊥
+//│ ╟── because: cannot constrain  ¬'Rg  <:  ⊥
+//│ ╟── because: cannot constrain  ⊤  <:  'Rg
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: ⊥
+
+:e
+letreg of r =>
+  let b = mkVec(r)
+  clear(b)
+  iterate(b) of it =>
+    next(it)
+    clear(b)
+    123
+  clear(b)
+  r
+//│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.90: 	letreg of r =>
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.91: 	  let b = mkVec(r)
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.92: 	  clear(b)
+//│ ║        	^^^^^^^^^^
+//│ ║  l.93: 	  iterate(b) of it =>
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.94: 	... (more lines omitted) ...
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'E  <:  ⊥
+//│ ╟── because: cannot constrain  'Rg  <:  ⊥
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Reg[?, 'E]
+//│ Where:
+//│   ⊤ <: 'E
+//│   'E <: ⊥
+
+
+letreg of r =>
+  use_(r)
+  integers(r) of it =>
+    next(it)
+  use_(r)
+  r
+//│ Type: Reg[?, 'E]
+//│ Where:
+//│   'E <: ⊥
+
+:e
+letreg of r =>
+  use_(r)
+  integers(r) of it =>
+    use_(r)
+    next(it)
+  use_(r)
+  r
+//│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.130: 	letreg of r =>
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.131: 	  use_(r)
+//│ ║         	^^^^^^^^^
+//│ ║  l.132: 	  integers(r) of it =>
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.133: 	    use_(r)
+//│ ║         	^^^^^^^^^^^
+//│ ║  l.134: 	... (more lines omitted) ...
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'E  <:  ⊥
+//│ ╟── because: cannot constrain  'Rg  <:  ⊥
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Reg[?, 'E]
+//│ Where:
+//│   ⊤ <: 'E
+//│   'E <: ⊥
+
+letreg of r0 =>
+  letreg of r1 =>
+    integers(r1) of it =>
+      use_(r0)
+      next(it)
+    use_(r1)
+    r1
+//│ Type: Reg[?, in 'E]
+//│ Where:
+//│   'E <: ⊥
+
+
+// * Can leak the iterator
+:w
+fun iterate_unsafe: [A, Rg, Br, Res] -> MutVec[A, Rg, Br] -> (Iter[A, Br] ->{Br} Res) ->{Br} Res
+// * Eg:
+letreg of r =>
+  let b = mkVec(r)
+  clear(b)
+  let k = iterate_unsafe(b) of it =>
+    next(it)
+    123
+    () => next(it)
+  clear(b)
+  k()
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.177: 	    123
+//│ ╙──       	    ^^^
+//│ Type: ⊥
+
+

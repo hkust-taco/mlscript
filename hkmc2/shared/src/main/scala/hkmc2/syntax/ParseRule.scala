@@ -178,7 +178,7 @@ class ParseRules(using State):
       case (kw, (lhs, rhs, body)) => LetLike(kw, lhs, rhs, body)
     }
   
-  def ifLike(kw: `if`.type | `while`.type): Alt[Tree] =
+  def ifLike(kw: Keyword.IfLike): Alt[Tree] =
     Kw(kw)(
       ParseRule(s"'${kw.name}' keyword")(
         Expr(
@@ -213,12 +213,12 @@ class ParseRules(using State):
         Expr(
           ParseRule(s"${kind.desc} head")(
             discardKw(`=`):
-              ParseRule(s"${kind.desc} declaration equals sign"):
-                Expr(
+              ParseRule(s"${kind.desc} declaration equals sign")(
+                exprOrBlk(
                   ParseRule(s"${kind.desc} declaration right-hand side")(
                     end(())
                   )
-                ) { case (rhs, ()) => S(rhs) },
+                ) { case (rhs, ()) => S(rhs) }*),
             end(N),
           )
         ) { (lhs, rhs) => TypeDef(kind, lhs, rhs) }
@@ -289,6 +289,24 @@ class ParseRules(using State):
     },
     ifLike(`if`),
     ifLike(`while`),
+    Kw(`assert`)(
+      ParseRule(s"'assert' keyword")(
+        exprOrBlk(
+          ParseRule(s"'assert' expression")(
+            end(N),
+            Kw(`else`)(
+              ParseRule(s"`else` keyword")(
+                exprOrBlk(ParseRule(s"`else` expression")(end(()))):
+                  discard
+                *
+              )
+            ) {  case (elsKw, default) => S((elsKw, default)) }
+          )
+        )(_ -> _)*
+      )
+    ):
+      case (kw, (rhs, els)) => Assert(kw, rhs, N, els)
+    ,
     Kw(`else`)(
       ParseRule("`else` clause")(
         Expr(ParseRule("`else` expression")(end(())))(discard),
@@ -361,7 +379,7 @@ class ParseRules(using State):
         // *   >   print("returning...")
         // *   >   x
         // * is terated as a keyword stutter: { return print("returning..."); return x }
-        exprOrBlk(ParseRule(s"'return' body")(end(()))):
+        end(Unt()) :: exprOrBlk(ParseRule(s"'return' body")(end(()))):
           discard
         *)
     ) { case (kw, body) => Tree.PrefixApp(kw, body) },
@@ -369,7 +387,7 @@ class ParseRules(using State):
     prefixed(`not`),
     prefixed(`new!`),
     prefixed(`throw`),
-    prefixed(`import`), // TODO improve – only allow strings
+    prefixed(`import`),
     modified(`virtual`),
     modified(`override`),
     modified(`declare`),
@@ -384,6 +402,15 @@ class ParseRules(using State):
     singleKw(`null`)(UnitLit(true)),
     singleKw(`this`)(Ident("this")),
     singleKw(Keyword.__)(Under()),
+    Kw(`#`)(
+      ParseRule(s"'#' directive keyword")(
+        Expr(ParseRule(s"'#' directive body")(end(()))){ case (body, ()) => body }
+      )
+    ) { case (kw, body) =>
+      body match
+        case App(prefix, args) => Directive(prefix, args).mkLocWith(kw)
+        case _ => Directive(body, Tup(Nil)).mkLocWith(kw)
+    },
     standaloneExpr,
   )
   
@@ -442,13 +469,13 @@ class ParseRules(using State):
     makeInfixRule(`is`),
     makeInfixRule(`as`),
     makeInfixRule(`then`),
-    // makeInfixRule(`else`),
     makeInfixRule(`:`),
     makeInfixRule(`extends`),
     makeInfixRule(`restricts`),
     makeInfixRule(`do`),
     makeInfixRule(`where`),
     makeInfixRule(`with`),
+    makeInfixRule(`#`),
   )
 
 end ParseRules

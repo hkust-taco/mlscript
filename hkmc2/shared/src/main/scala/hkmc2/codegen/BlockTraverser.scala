@@ -5,7 +5,7 @@ import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import semantics.*
-import os.write.over
+
 
 // These all work like BlockTransformer and its derivatives, but do not rewrite the block. See BlockTransformer.scala.
 // Please use this instead of BlockTransformer for static analysis.
@@ -15,12 +15,21 @@ class BlockTraverser:
   extension (sym: Symbol)
     inline def traverse: Unit = applySymbol(sym)
   
+  
+  def applyProgram(prog: Program): Unit =
+    prog.imports.foreach(applyImport)
+    applyBlock(prog.main)
+  
+  def applyImport(imp: Local -> Str): Unit =
+    applyLocal(imp._1)
+  
+  
   def applySymbol(sym: Symbol): Unit = ()
   
   def applySubBlock(b: Block): Unit = applyBlock(b)
   
   def applyBlock(b: Block): Unit = b match
-    case _: End => ()
+    case _: End | _: Unreachable => ()
     case Break(lbl) => applyLocal(lbl)
     case Continue(lbl) => applyLocal(lbl)
     case Return(res, implct) => applyResult(res)
@@ -38,14 +47,6 @@ class BlockTraverser:
     case b @ AssignField(l, n, r, rst) =>
       applyPath(l); applyResult(r); applySubBlock(rst); b.symbol.foreach(_.traverse)
     case Define(defn, rst) => applyDefn(defn); applySubBlock(rst)
-    case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
-      applyLocal(l)
-      applyLocal(res)
-      applyPath(par)
-      args.foreach(applyPath)
-      hdr.foreach(applyHandler)
-      applySubBlock(bod)
-      applySubBlock(rst)
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
       applyPath(lhs)
       applyResult(rhs)
@@ -54,8 +55,8 @@ class BlockTraverser:
     case Scoped(_, body) => applySubBlock(body)
   
   def applyResult(r: Result): Unit = r match
-    case r @ Call(fun, args) => applyPath(fun); args.foreach(applyArg)
-    case Instantiate(mut, cls, args) =>; applyPath(cls); args.foreach(applyArg)
+    case r @ Call(fun, argss) => applyPath(fun); argss.foreach(_.foreach(applyArg))
+    case Instantiate(mut, cls, argss) => applyPath(cls); argss.foreach(_.foreach(applyArg))
     case l @ Lambda(params, body) => applyLam(l)
     case Tuple(mut, elems) => elems.foreach(applyArg)
     case Record(mut, fields) => fields.foreach:
@@ -70,7 +71,9 @@ class BlockTraverser:
     case v: Value => applyValue(v)
   
   def applyValue(v: Value): Unit = v match
-    case Value.Ref(l, disamb) => l.traverse
+    case Value.Ref(l, disamb) =>
+      l.traverse
+      disamb.foreach(_.traverse)
     case Value.This(sym) => sym.traverse
     case Value.Lit(lit) => ()
   
@@ -90,12 +93,13 @@ class BlockTraverser:
   def applyDefn(defn: Defn): Unit = defn match
     case defn: FunDefn => applyFunDefn(defn)
     case defn: ValDefn => applyValDefn(defn)
-    case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentPath, methods,
+    case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable)
     =>
       own.foreach(_.traverse)
       isym.traverse
       sym.traverse
+      ctorSym.foreach(_.traverse)
       paramsOpt.foreach(applyParamList)
       auxParams.foreach(applyParamList)
       parentPath.foreach(applyPath)
@@ -105,9 +109,9 @@ class BlockTraverser:
         f._1.traverse; f._2.traverse
       applySubBlock(preCtor)
       applySubBlock(ctor)
-      mod.foreach(applyClsLikeBody)
+      mod.foreach(applyCompanionModule)
   
-  def applyClsLikeBody(b: ClsLikeBody): Unit =
+  def applyCompanionModule(b: ClsLikeBody): Unit =
     b.isym.traverse
     b.methods.foreach(applyFunDefn)
     b.privateFields.foreach(_.traverse)
@@ -148,17 +152,6 @@ class BlockTraverserShallow extends BlockTraverser:
     case _: ValDefn => super.applyDefn(defn)
   
   override def applyHandler(hdr: Handler): Unit = ()
-  
-  override def applyBlock(b: Block): Unit = b match
-    case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
-      applyLocal(l)
-      applyLocal(res)
-      applyPath(par)
-      args.foreach(applyPath)
-      cls.traverse
-      hdr.foreach(applyHandler)
-      applySubBlock(rst)
-    case _ => super.applyBlock(b)
 
 class BlockDataTraverser extends BlockTraverserShallow:
   override def applySubBlock(b: Block): Unit = ()

@@ -22,9 +22,8 @@ pattern SimpleJoin = ("abc" | "xyz") ~ ("def" | "")
 "abcxyzdef" is SimpleJoin
 //│ = false
 
-:todo
-// If we want to get rid of exponential blowup here, we need to memoize the
-// entire sub-split instead of the innermost consequents.
+// TODO: If we want to get rid of exponential blowup here, we need to memoize the
+//  entire sub-split instead of the innermost consequents.
 pattern Exponential = ("a" | "b") ~ ("c" | "d") ~ ("e" | "f") ~ ("g" | "h") // ~ ("i" | "j") ~ ("k" | "l") ~ ("m" | "n") ~ ("o" | "p") ~ ("q" | "r") ~ ("s" | "t") ~ ("u" | "v") ~ ("w" | "x") ~ ("y" | "z")
 
 :expect true

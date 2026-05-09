@@ -1,0 +1,49 @@
+:js
+:deadParamElim debug
+
+
+
+
+:lift
+:soir
+:expect 1
+:noInline
+private fun f(used, unused) =
+  class C with
+    fun get() = used
+  new C
+f(1, 2).get()
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let C⁰, f⁰, tmp;
+//│ define C⁰ as class C¹ {
+//│   private val used⁰;
+//│   constructor(used) {
+//│     set used⁰ = used;
+//│     end
+//│   }
+//│   method get⁰ = fun get¹() {
+//│     return used⁰
+//│   }
+//│ };
+//│ define f⁰ as fun f¹(used) { return new C¹(used) };
+//│ set tmp = f¹(1);
+//│ tmp.get﹖()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+
+
+
+
+:js
+:lift
+private fun foo(y) =
+  class M with
+    fun bar() = set y = 2
+  (new M).bar()
+foo(10)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<

@@ -14,22 +14,22 @@
 fun typeTerm(_, set ctx) =
   print(ctx)
   ctx = 123
-//│ ╔══[ERROR] Expected a valid parameter, found set
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found set
 //│ ║  l.14: 	fun typeTerm(_, set ctx) =
 //│ ╙──      	                    ^^^
-//│ ╔══[ERROR] Name not found: ctx
+//│ ╔══[COMPILATION ERROR] Name not found: ctx
 //│ ║  l.15: 	  print(ctx)
 //│ ╙──      	        ^^^
-//│ ╔══[ERROR] Name not found: ctx
+//│ ╔══[COMPILATION ERROR] Name not found: ctx
 //│ ║  l.16: 	  ctx = 123
 //│ ╙──      	  ^^^
 
 fun typeTerm(_, let ctx) =
   ctx = 123
-//│ ╔══[ERROR] Expected a valid parameter, found let
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found let
 //│ ║  l.27: 	fun typeTerm(_, let ctx) =
 //│ ╙──      	                    ^^^
-//│ ╔══[ERROR] Name not found: ctx
+//│ ╔══[COMPILATION ERROR] Name not found: ctx
 //│ ║  l.28: 	  ctx = 123
 //│ ╙──      	  ^^^
 

@@ -2,6 +2,7 @@ package hkmc2
 
 import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*
 
 
 
@@ -15,14 +16,25 @@ class Outputter(val out: java.io.PrintWriter):
   val diff3MidMarker = "|||||||" // * Appears under `git config merge.conflictstyle diff3` (https://stackoverflow.com/a/18131595/1518588)
   val diffEndMarker = ">>>>>>>"
 
-  val exitMarker = "=" * 100
+  val ColWidth = 100
+  val exitMarker = "=" * ColWidth
   val blockSeparator = "—" * 80
   
   val fullBlockSeparator = outputMarker + blockSeparator
   
+  /** Tracks the net difference between lines written to the output and lines
+    * consumed from the original file so far. Adding a new output line (via
+    * [[apply]]) increments it; consuming an original output line (starting
+    * with [[outputMarker]]) decrements it. This is used to adjust block
+    * line numbers so they refer to positions in the output file rather than
+    * the original, avoiding the need for a second run to stabilize them. */
+  var linesDelta: Int = 0
+  
   def apply(str: String) =
     // out.println(outputMarker + str)
-    str.splitSane('\n').foreach(l => out.println(outputMarker + l))
+    val ls = str.splitSane('\n')
+    linesDelta += ls.size
+    ls.foreach(l => out.println(outputMarker + l))
 
 
 
@@ -37,6 +49,9 @@ abstract class DiffMaker:
   def processOrigin(origin: Origin)(using Raise): Unit
   
   
+  val dbgPrinter: DebugPrinter
+  given dbgPrinter.type = dbgPrinter
+  
   
   def doFail(blockLineNum: Int, msg: String): Unit =
     System.err.println(fansi.Color.Red("FAILURE: ").toString + msg)
@@ -50,7 +65,7 @@ abstract class DiffMaker:
       case N => ()
     mkExtraInfo() match
       case S(info: Product) => output(s"FAILURE INFO: ${info.showAsTree}")
-      case S(info) => output(s"FAILURE INFO: $info")
+      case S(info) => output(s"FAILURE INFO: ${info.showAsPlain}")
       case N => ()
     doFail(blockLineNum, s"unexpected $what at $relativeName.${file.ext}:" + blockLineNum)
   
@@ -83,7 +98,9 @@ abstract class DiffMaker:
     line =>
       val commentIndex = line.indexOf("//")
       val body = if commentIndex == -1 then line else line.take(commentIndex)
-      assert(body.forall(_.isWhitespace))
+      // assert(body.forall(_.isWhitespace))
+      if !body.forall(_.isWhitespace) then
+        output(s"/!\\ Warning: non-empty body for command '$name' is ignored: '$body'")
       k()
     ):
     def set: Unit = setCurrentValue(k())
@@ -106,9 +123,11 @@ abstract class DiffMaker:
   )
   
   val fixme = Command("fixme")(_ => ())
-  val breakme = Command("breakme")(_ => ())
   val todo = Command("todo")(_ => ())
-  def tolerateErrors = fixme.isSet || todo.isSet
+  val breakme = Command("breakme")(_ => ())
+  val ignore = Command("ignore")(_ => ())
+  def expectErrors = fixme.isSet || todo.isSet
+  def tolerateErrors = expectErrors || ignore.isSet
   
   val fullExceptionStack = NullaryCommand("s")
   
@@ -116,10 +135,12 @@ abstract class DiffMaker:
   val debug = NullaryCommand("d")
   
   val expectParseErrors = NullaryCommand("pe")
-  val expectTypeErrors = NullaryCommand("e")
+  val expectTypeErrors = NullaryCommand("te")
+  val expectTypeOrCodeGenErrors = NullaryCommand("e")
   val expectRuntimeErrors = NullaryCommand("re")
   val expectCodeGenErrors = NullaryCommand("ge")
-  def expectRuntimeOrCodeGenErrors = expectRuntimeErrors.isSet || expectCodeGenErrors.isSet
+  def expectRuntimeOrCodeGenErrors =
+    expectRuntimeErrors.isSet || expectCodeGenErrors.isSet || expectTypeOrCodeGenErrors.isSet
   val allowRuntimeErrors = NullaryCommand("allowRuntimeErrors")
   val expectWarnings = NullaryCommand("w")
   val showRelativeLineNums = NullaryCommand("showRelativeLineNums")
@@ -145,6 +166,13 @@ abstract class DiffMaker:
   val output = Outputter(out)
   val report = ReportFormatter(output(_), colorize = false)
   
+  var printedSeparatedSection = false
+  def outputSeparator(title: Str): Unit =
+    printedSeparatedSection = true
+    val totalSepLen = output.ColWidth - title.length - 4
+    val preSepLen = output.ColWidth/5 - title.length/2
+    output("—" * preSepLen + s"| $title |" + "—" * (totalSepLen - preSepLen))
+  
   val failures = mutable.Buffer.empty[Int]
   val unmergedChanges = mutable.Buffer.empty[Int]
   
@@ -165,11 +193,12 @@ abstract class DiffMaker:
   
   
   def processBlock(origin: Origin): Unit =
+    printedSeparatedSection = false
     val globalStartLineNum = origin.startLineNum
     val blockLineNum = origin.startLineNum
     // * ^ In previous DiffTest versions, these two could be different due to relative line numbers
     
-    var parseErrors, typeErrors, compilationErrors, runtimeErrors, warnings = 0
+    var parseErrors, typeErrors, compilationErrors, runtimeErrors, warnings, internalErrors = 0
     
     val raise: Raise = d =>
       d.kind match
@@ -194,7 +223,7 @@ abstract class DiffMaker:
             unexpected("type error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
         case Diagnostic.Source.Compilation =>
           compilationErrors += 1
-          if expectCodeGenErrors.isUnset && !tolerateErrors then
+          if expectCodeGenErrors.isUnset && expectTypeOrCodeGenErrors.isUnset && !tolerateErrors then
             failures += globalStartLineNum
             unexpected("compilation error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
         case Diagnostic.Source.Runtime =>
@@ -208,33 +237,45 @@ abstract class DiffMaker:
           failures += globalStartLineNum
           unexpected("warning", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
       case Diagnostic.Kind.Internal =>
+        internalErrors += 1
         if !tolerateErrors then
           failures += globalStartLineNum
-        // unexpected("internal error", blockLineNum)
-        throw d
+          unexpected("internal error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
+        // throw d
+      if fullExceptionStack.isSet then
+        d.printStackTrace()
       report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
     
     processOrigin(origin)(using raise)
     
     // Note: when `todo` is set, we allow the lack of errors.
     // Use `todo` when the errors are expected but not yet implemented.
-    if expectParseErrors.isSet && parseErrors === 0 && todo.isUnset && breakme.isUnset then
+    if expectParseErrors.isSet && parseErrors === 0 && ignore.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of parse error", blockLineNum, N, () => N)
-    if expectTypeErrors.isSet && typeErrors === 0 && todo.isUnset && breakme.isUnset then
+    if expectTypeErrors.isSet && typeErrors === 0 && ignore.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of type error", blockLineNum, N, () => N)
-    if expectCodeGenErrors.isSet && compilationErrors === 0 && todo.isUnset && breakme.isUnset then
+    if expectCodeGenErrors.isSet && compilationErrors === 0 && ignore.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of compilation error", blockLineNum, N, () => N)
-    if expectRuntimeErrors.isSet && runtimeErrors === 0 && todo.isUnset && breakme.isUnset then
+    else if expectTypeOrCodeGenErrors.isSet && (compilationErrors + typeErrors) === 0 && ignore.isUnset && breakme.isUnset then
+      failures += globalStartLineNum
+      unexpected("lack of compilation or type error", blockLineNum, N, () => N)
+    if expectRuntimeErrors.isSet && runtimeErrors === 0 && ignore.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of runtime error", blockLineNum, N, () => N)
-    if expectWarnings.isSet && warnings === 0 && todo.isUnset && breakme.isUnset then
+    if expectWarnings.isSet && warnings === 0 && ignore.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of warnings", blockLineNum, N, () => N)
     
-    if fixme.isSet && (parseErrors + typeErrors + compilationErrors + runtimeErrors + warnings) === 0 then
+    if expectErrors && (
+        + parseErrors
+        + typeErrors
+        + compilationErrors
+        + runtimeErrors
+        + warnings
+        + internalErrors) === 0 then
       failures += globalStartLineNum
       unexpected("lack of error to fix", blockLineNum, N, () => N)
   
@@ -273,7 +314,9 @@ abstract class DiffMaker:
       
       rec(ls)
     case line :: ls if line.startsWith(output.outputMarker) //|| line.startsWith(oldOutputMarker)
-      => rec(ls)
+      =>
+      output.linesDelta -= 1
+      rec(ls)
     case line :: ls if line.startsWith("//") =>
       out.println(line)
       rec(ls)
@@ -313,7 +356,7 @@ abstract class DiffMaker:
       val processedBlockStr = processedBlock.mkString
       val fph = new FastParseHelpers(block)
       
-      val origin = Origin(file, blockLineNum, fph)
+      val origin = Origin(file, blockLineNum + output.linesDelta, fph)
       
       try
         

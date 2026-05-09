@@ -4,9 +4,10 @@
 
 :fixme
 let x: Int
-//│ ╔══[ERROR] Unsupported let binding shape
+//│ ╔══[COMPILATION ERROR] Unsupported let binding shape
 //│ ║  l.6: 	let x: Int
 //│ ╙──     	    ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 let x
 //│ x = undefined
@@ -47,8 +48,9 @@ test(1, 2)
 :sjs
 :re
 1 ++ 1
-//│ JS (unsanitized):
-//│ let tmp2; tmp2 = test(); tmp2(1, 1)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let tmp1; tmp1 = test(); runtime.safeCall(tmp1(1, 1))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: test is not a function
 
 
@@ -56,6 +58,6 @@ declare class C
 
 :re
 new C
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'C' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] TypeError: globalThis.C is not a constructor
 
 

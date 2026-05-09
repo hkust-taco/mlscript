@@ -71,7 +71,7 @@ package object symbol {
   trait ClassLikeSymbol extends TypeSymbol {
     val parentTypeNames: Ls[Var]
 
-    private val _baseClassLikeSymbols: Lazy[SortedSet[ClassLikeSymbol]] = new mlscript.utils.Lazy({
+    private val _baseClassLikeSymbols: Lazy[SortedSet[ClassLikeSymbol]] = mlscript.utils.Lazy({
       implicit val ord: Ordering[ClassLikeSymbol] = new Ordering[ClassLikeSymbol] {
         override def compare(x: ClassLikeSymbol, y: ClassLikeSymbol): Int =
           x.name.compareTo(y.name)
@@ -84,7 +84,7 @@ package object symbol {
         parentClassLikeSymbols.iterator.flatMap(_.baseClassLikeSymbols))
     })
 
-    lazy val baseClassLikeSymbols: SortedSet[ClassLikeSymbol] = _baseClassLikeSymbols.get_!
+    lazy val baseClassLikeSymbols: SortedSet[ClassLikeSymbol] = _baseClassLikeSymbols.force_!
 
     def <:<(that: ClassLikeSymbol): Bool =
       this === that || baseClassLikeSymbols.contains(that)

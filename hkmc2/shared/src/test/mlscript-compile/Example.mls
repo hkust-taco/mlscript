@@ -23,3 +23,21 @@ fun test(x) = if x is
   else "other"
 
 
+fun assertFail() =
+  assert false
+
+
+class Test(val field: Int)
+
+module Test with
+  fun next(self: Test) = Test(self.field + 1)
+
+val t = new Test(123)
+
+
+// Example of inheritance
+abstract class Base
+class Child1 extends Base
+class Child2 extends Base
+
+

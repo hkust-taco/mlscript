@@ -241,7 +241,7 @@ fun render(target, ...args) =
       itemIndentationLength =
         if indent is null then 0 else (level + 1) * indent.length
     let skipNonEnumerable() =
-      while i < length and entries.[i].1.enumerable is false then set i += 1 else ()
+      while i < length and entries.[i].1.enumerable is false do set i += 1
     let done() = i >= length
     let next(isFirst: Bool, prefixLength: Int) =
       let
@@ -251,7 +251,7 @@ fun render(target, ...args) =
       set i += 1
       let keyStr = if key noNeedForQuotes() then key else renderValue(key, 0, 0, 0)
       if desc is
-        (:value) do
+        (:value) then
           let
             dryRunStartPos = prefixLength + // base length
               (if isFirst then 0 else 2) + // ", "
@@ -260,12 +260,13 @@ fun render(target, ...args) =
               then itemIndentationLength else dryRunStartPos
             valueStr = renderValue(value, level + 1, keyStr.length + 2, valueStartPos)
           [keyStr, valueStr]
-        (get: getter, "set": setter) do
+        (get: getter, "set": setter) then
           let valueStr = if
             setter is undefined then "[Getter]"
             getter is undefined then "[Setter]"
             else "[Getter/Setter]"
           [keyStr, valueStr]
+        else [keyStr, "‹Non-data property›"] // LP: not sure what to do (thsi was proposed by Copilot...)
     skipNonEnumerable()
     renderRecordLike of
       done, next, level, keyLength, startPos, symbolsForObject, isRefinement

@@ -6,23 +6,20 @@ import "../../mlscript-compile/Option.mls"
 :sjs
 module A with
   fun f(x) = x is Option.Some
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A1;
 //│ (class A {
 //│   static {
 //│     A1 = this
 //│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
 //│   static f(x) {
 //│     if (x instanceof Option.Some.class) {
 //│       return true
-//│     } else {
-//│       return false
 //│     }
+//│     return false;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

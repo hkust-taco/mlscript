@@ -1,0 +1,101 @@
+import "./NofibPrelude.mls"
+import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
+open NofibPrelude
+
+module calendar with ...
+
+
+
+fun unlines(ls) = concat(map(x => x +: ("\n" :: Nil), ls))
+
+fun height(p) = listLen(p)
+
+fun width(p) = listLen(head(p))
+
+fun stack(ls) = foldr1((a, b) => a +: b, ls)
+
+fun spread(ls) = foldr1((a, b) => zipWith((a, b) => a +: b, a, b), ls)
+
+fun emptyPic(hw) = if hw is [h, w] then replicate(h, replicate(w, " "))
+
+fun groop(n, xs) = if xs is
+  Nil then Nil
+  else take(n, xs) :: groop(n, leave(n, xs))
+
+fun block(n, t)  = stack(map(spread, groop(n, t)))
+
+fun blockT(n, t) = stack(map(stack, groop(n, t)))
+
+fun lframe(mn, p) = if mn is [m,n] then
+  let h = height(p)
+  let w = width(p)
+  zipWith(append, p, emptyPic([h, n - w])) +: emptyPic([m - h, n])
+
+fun leap(year) = if
+  intMod(year, 100) == 0 then intMod(year, 400) == 0
+  else intMod(year, 4) == 0
+
+fun monthLengths(year) =
+  let feb = if leap(year) then 29 else 28
+  31 :: feb :: 31 :: 30 :: 31 :: 30 :: 31 :: 31 :: 30 :: 31 :: 30 :: 31 :: Nil
+
+val monthNames =
+  nofibStringToList("January") ::
+  nofibStringToList("February") ::
+  nofibStringToList("March") ::
+  nofibStringToList("April") ::
+  nofibStringToList("May") ::
+  nofibStringToList("June") ::
+  nofibStringToList("July") ::
+  nofibStringToList("August") ::
+  nofibStringToList("September") ::
+  nofibStringToList("October") ::
+  nofibStringToList("November") ::
+  nofibStringToList("December") :: Nil
+//│ monthNames = [["J","a","n","u","a","r","y"],["F","e","b","r","u","a","r","y"],["M","a","r","c","h"],["A","p","r","i","l"],["M","a","y"],["J","u","n","e"],["J","u","l","y"],["A","u","g","u","s","t"],["S","e","p","t","e","m","b","e","r"],["O","c","t","o","b","e","r"],["N","o","v","e","m","b","e","r"],["D","e","c","e","m","b","e","r"]]
+
+fun jan1st(year) =
+  let last = year - 1
+  intMod(year + intDiv(last, 4) - intDiv(last, 100) + intDiv(last, 400), 7)
+
+fun firstDays(year) =
+  take(12, map(x => intMod(x, 7), scanl((a, b) => a + b, jan1st(year), monthLengths(year))))
+
+fun space(n) = replicate(n, " ")
+
+fun ljustify(n, s) = s +: space(n - listLen(s))
+
+fun rjustify(n, s) = space(n - listLen(s)) +: s
+
+fun date(ml, d) = if (d < 1) || (ml < d) then nofibStringToList("   ") :: Nil else rjustify(3, nofibStringToList(stringOfInt(d))) :: Nil
+
+fun dates(fd, ml) = map(d => date(ml, d), enumFromTo(1 - fd, 42 - fd))
+
+fun cjustify(n, s) =
+  let m = n - listLen(s)
+  let halfm = intDiv(m, 2)
+  space(halfm) +: s +: space(m - halfm)
+
+fun cal(year) =
+  let side = emptyPic([8, 2])
+  let end = emptyPic([1, 25])
+  let daynames = nofibStringToList(" Su Mo Tu We Th Fr Sa") :: Nil
+  fun banner(yr) = cjustify(75, nofibStringToList(stringOfInt(yr))) :: emptyPic([1, 75])
+  fun body(yr) = block(3, map(x => pad(pic(x)), months(yr)))
+  fun pic(mnfdml) = if mnfdml is [mn, fd, ml] then title(mn) +: table(fd, ml)
+  fun pad(p) = zipWith(append, zipWith(append, side, p), side) +: end
+  fun title(mn) = cjustify(21, mn) :: Nil
+  fun table(fd, ml) = daynames +: entries(fd, ml)
+  fun entries(fd, ml) = block(7, dates(fd, ml))
+  fun months(yer) = zip3(monthNames, firstDays(yer), monthLengths(yer))
+
+  unlines(banner(year) +: body(year))
+
+fun testCalendar_nofib(n) = map(x => cal(x), enumFromTo(1993, 1993 + n))
+
+
+// NOTE: original input: 1000
+fun main() =
+  nofibListToString of concat of testCalendar_nofib(0)
+
+

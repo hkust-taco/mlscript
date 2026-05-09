@@ -1,0 +1,78 @@
+import "./NofibPrelude.mls"
+import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
+open NofibPrelude
+
+module treejoin with ...
+
+
+
+fun isSpace(c) = c === " " || c === "\n"
+
+fun isDigit(c) =
+  let n = c.codePointAt(0)
+  in n >= 48 && n <= 57
+
+abstract class Tree[E]: Node | Leaf | Empty
+
+data
+  class
+    Node[E](k: Int, l: Tree[E], r: Tree[E]) extends Tree[E]
+    Leaf[E](k: Int, e: E) extends Tree[E]
+
+object Empty extends Tree
+
+fun insertT(k, e, t) = if t is
+  Node(k_, l, r) and
+    k <= k_ then Node(k_, insertT(k, e, l), r)
+    else Node(k_, l, insertT(k, e, r))
+  Leaf(k_, k__) then
+    let l_ = Leaf(k, e)
+    if k
+      < k_ then Node(k, l_, Leaf(k_, k__))
+      > k_ then Node(k_, Leaf(k_, k__), l_)
+      else throw Error("already exist")
+  Empty then Leaf(k, e)
+
+fun lookupT(k, t) = if t is
+  Node(k_, l, r) and
+    k <= k_ then lookupT(k, l)
+    else lookupT(k, r)
+  Leaf(k_, e) then if k === k_ then Some(e) else None
+  Empty then None
+
+fun readInt(s) =
+  fun readInt_(n, cs) = if cs is
+    c :: cs_ and
+      isDigit(c) then readInt_(n * 10 + c.codePointAt(0) - 48, cs_)
+      else let s_ = leaveWhile(isSpace, c :: cs) in [n, s_]
+    else
+      let s_ = leaveWhile(isSpace, cs) in [n, s_]
+  readInt_(0, s)
+
+fun join(t1, t2, j) = if
+  t1 is Empty then j
+  t2 is Empty then j
+  t1 is Leaf(k, [a, b, c]) and lookupT(c, t2) is
+    None then j
+    Some([d, e, f]) then insertT(c, [a, b, c, d, e], j)
+  t1 is Node(k, l, r) then join(l, t2, join(r, t2, j))
+
+fun readTree(fk, s, t) = if
+  s is Nil then t
+  readInt(s) is [f, s_] and
+    readInt(s_) is [g, s__] and
+      readInt(s__) is [h, s___] then
+        let e = [f, g, h]
+        let k = fk(e)
+        readTree(fk, s___, insertT(k, e, t))
+
+
+fun testTreejoin_nofib(n) =
+  let c1 = nofibStringToList of fs.readFileSync("./hkmc2/shared/src/test/mlscript/nofib/input/1500.1").toString()
+  let c2 = nofibStringToList of fs.readFileSync("./hkmc2/shared/src/test/mlscript/nofib/input/1500.2").toString()
+  let a = readTree(case { [xx, _, _] then xx }, c1, Empty)
+  let b = readTree(case { [xx, _, _] then xx }, c2, Empty)
+  join(a, b, Empty)
+
+fun main() = testTreejoin_nofib(0).toString()
+

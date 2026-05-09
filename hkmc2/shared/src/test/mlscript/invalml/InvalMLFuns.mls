@@ -1,0 +1,81 @@
+:invalml
+
+
+fun f(x, y) = x(y)
+f
+//│ Type: ['y, 'eff, 'app] -> ('y ->{'eff} 'app, 'y) ->{'eff} 'app
+
+
+f((x => x), 42)
+//│ Type: Int
+
+f(x => x, 42)
+//│ Type: Int
+
+
+fun id: [A] -> A -> A
+
+id as [A] -> A -> A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
+
+id(id) as [A] -> A -> A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
+
+
+
+data class Nil()
+data class Cons[A, B](val car: A, val cdr: B)
+data class Ls[A](prim: [R] -> (() -> R, (A, Ls[A]) -> R) -> R)
+
+fun nil() = new Ls((n, _) => n())
+fun cons(p, q) = new Ls((n, r) => r(p, q))
+fun from(x) = x.Ls#prim(() => new Nil, (x, y) => new Cons(x, from(y)))
+fun to(x) = if x is
+  Nil then nil()
+  Cons then cons(x.Cons#car, to(x.Cons#cdr))
+
+let foo = nil() from()
+foo
+//│ Type: Cons['A, 'B] ∨ Nil
+//│ Where:
+//│   ⊥ <: 'A
+//│   Cons['A, 'B] <: 'R
+//│   Nil <: 'R
+//│   'R <: 'B
+
+
+foo to()
+//│ Type: Ls['A] ∨ Ls['A1]
+//│ Where:
+//│   ⊥ <: 'A
+//│   'A <: 'A1
+//│   ⊥ <: 'A1
+//│   'A1 <: 'A
+
+
+fun (;) seq(_, res) = res
+
+fun foo: [R1, R2] -> (Region[R1], Region[R2], Int ->{R1 & ~R2} (), Int ->{R2 & ~R1} ()) ->{R1 | R2} () 
+fun foo(r1, r2, f, g) =
+  f(123); g(456)
+
+foo
+//│ Type: ['R1, 'R2] -> (Region['R1], Region['R2], (Int) ->{'R1 ∧ ¬'R2} (), (Int) ->{'R2 ∧ ¬'R1} ()) ->{'R1 ∨ 'R2} ()
+
+
+:e
+fun foo[outer, R <: outer](r1: Region[R]) =
+  region r2 in 42
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter outer binding
+//│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──      	        ^^^^^
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter operator application
+//│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──      	               ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: R
+//│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──      	                                      ^
+//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ═══[COMPILATION ERROR] Expected a type, got ‹error›
+//│ ═══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
+//│ ═══[COMPILATION ERROR] Invalid type

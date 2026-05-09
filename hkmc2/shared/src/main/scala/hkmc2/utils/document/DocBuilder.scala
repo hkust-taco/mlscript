@@ -18,7 +18,7 @@ case class DocBuilder(NEST_COUNT: Int = DEFAULT_NEST_COUNT) {
 
   /** Appends a document to the builder */
   def +=(d: Document) = thisret {
-    nestedDocs push (nestedDocs.pop :: d)
+    nestedDocs push (nestedDocs.pop() :: d)
   }
 
   /** Append a document with a conditional break (breaks in a group are only rendered if the group does not fit on one line) */
@@ -37,7 +37,7 @@ case class DocBuilder(NEST_COUNT: Int = DEFAULT_NEST_COUNT) {
   def nest(f: => Unit) = thisret {
     nestedDocs push empty
     f
-    this += Document.nest(nestedDocs.pop, NEST_COUNT)
+    this += Document.nest(nestedDocs.pop(), NEST_COUNT)
   }
 
   /**

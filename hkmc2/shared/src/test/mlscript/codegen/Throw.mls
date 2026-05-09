@@ -30,8 +30,13 @@ fun f(x) =
   let y = throw Error("e")
   return y
 f(1)
-//│ JS (unsanitized):
-//│ let f2; f2 = function f(x) { let y; throw globalThis.Error("e") }; f2(1)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f2;
+//│ f2 = function f(x) {
+//│   throw runtime.safeCall(globalThis.Error("e"))
+//│ };
+//│ throw runtime.safeCall(globalThis.Error("e"))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: e
 
 
@@ -40,12 +45,16 @@ f(1)
 fun f(x) =
   throw (if x then Error("x") else Error("y"))
 f(false)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f3;
 //│ f3 = function f(x) {
-//│   if (x === true) { throw globalThis.Error("x") } else { throw globalThis.Error("y") }
+//│   if (x === true) {
+//│     throw runtime.safeCall(globalThis.Error("x"))
+//│   }
+//│   throw runtime.safeCall(globalThis.Error("y"));
 //│ };
 //│ f3(false)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: y
 
 
@@ -53,13 +62,38 @@ f(false)
 :sjs
 if false then throw 0
 throw 1
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let scrut;
 //│ scrut = false;
-//│ if (scrut === true) {
-//│   throw 0
-//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
-//│ /* unreachable */
+//│ if (scrut === true) { throw 0 }
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: match error
+
+
+
+import "../../mlscript-compile/Runtime.mls"
+
+fun foo(e) =
+  Runtime.try_catch of
+    () => throw e
+    case
+      Str as o then "caught " + o
+      else
+        print("caught something else")
+        throw e // rethrow the original error
+
+foo("hello")
+//│ = "caught hello"
+
+:re
+foo(42)
+//│ > caught something else
+//│ ═══[RUNTIME ERROR] 42
+
+:re
+foo(Error("hi"))
+//│ > caught something else
+//│ ═══[RUNTIME ERROR] Error: hi
 
 

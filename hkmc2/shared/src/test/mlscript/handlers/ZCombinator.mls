@@ -1,6 +1,7 @@
 :js
 :effectHandlers
-:stackSafe 1000
+:lift
+:stackSafe
 
 fun selfApp(f) = f(f)
 
@@ -23,7 +24,7 @@ fact(10)
 fact(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
-:stackSafe 1000
+:stackSafe
 fun mkrec(g) =
   selfApp of self =>
     g of y => selfApp(self)(y)
@@ -34,7 +35,7 @@ let fact = mkrec of self => x =>
   else self(x - 1) * x
 //│ fact = fun
 
-:stackSafe 1000
+:stackSafe
 fact(10000)
 //│ = Infinity
 
@@ -44,7 +45,7 @@ fact(10000)
 fact(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
-:stackSafe 1000
+:stackSafe
 fact(10000)
 //│ = Infinity
 
@@ -54,7 +55,7 @@ fact(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
 
-:stackSafe 5
+:stackSafe 6
 set selfApp = f => f(f)
 
 :expect 3628800
@@ -62,21 +63,21 @@ fact(10)
 //│ = 3628800
 
 
-:stackSafe 10
+:stackSafe 6
 set selfApp = f => f(f)
 
 fact(1000)
 //│ = Infinity
 
 // simplified version without lambdas for easier debugging
-:stackSafe 5
+:stackSafe 6
 fun mkrec(g) =
   fun a(self) =
     fun b(y) = selfApp(self)(y)
     g(b)
   selfApp(a)
 
-:stackSafe 5
+:stackSafe 6
 import "../../mlscript-compile/Runtime.mls"
 let fact =
   fun a(self) =
@@ -87,10 +88,10 @@ let fact =
         x * prev
     b
   mkrec(a)
-//│ fact = fun b
+//│ fact = fun
 
 :expect 3628800
-:stackSafe 5
+:stackSafe 6
 fact(10)
 //│ > resumed: 1
 //│ > resumed: 2

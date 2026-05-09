@@ -1,0 +1,43 @@
+:js
+:staging
+
+staged module TempVariable with
+  fun f() =
+    let x
+    let x
+    x
+//│ > fun ctor_() = ()
+//│ > fun f() =
+//│ >   let {x, x1}
+//│ >   x1
+
+staged module DupeFunctionName with
+  fun f() = 1
+//│ > fun ctor_() = ()
+//│ > fun f() = 1
+
+class C(val x)
+
+staged module Selection with
+  fun f(x) =
+    x.call()
+    C(1).x is Bool
+//│ > fun ctor_() = ()
+//│ > fun f(x) =
+//│ >   let {scrut, tmp}
+//│ >   x.call()
+//│ >   tmp = C(1)
+//│ >   scrut = tmp.x
+//│ >   if scrut is
+//│ >     Bool then true
+//│ >     else false
+
+staged module DupeClass with
+  class C(val y)
+  fun f() = C(1).y
+//│ > fun ctor_() =
+//│ >   class C(y)
+//│ > fun f() =
+//│ >   let {tmp}
+//│ >   tmp = DupeClass.C(1)
+//│ >   tmp.y

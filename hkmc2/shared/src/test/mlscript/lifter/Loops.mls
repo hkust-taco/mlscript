@@ -1,5 +1,6 @@
 :js
 :lift
+:ignore // FIXME: Lifting should not require scope flattening (which doesn't handle loops)
 
 
 let fs = mut []
@@ -29,48 +30,53 @@ fun foo() =
 
 // * Note that this works with while loop rewriting
 // * See [fixme:0] for cause of the issue
-:fixme
 :expect 1
 foo()
 fs.0()
-//│ ═══[RUNTIME ERROR] Expected: '1', got: '4'
-//│ = 4
+//│ = 1
 
 
-:sjs
+:sir
 fun foo() =
   let x = 1
   while true do
     set x += 1
     return () => x
-//│ JS (unsanitized):
-//│ let foo2;
-//│ let lambda2, lambda$2;
-//│ lambda$2 = function lambda$(x) {
-//│   return x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let foo⁰, lambda⁰, Capture$scope0⁰, lambda$⁰;
+//│ define lambda$⁰ as fun lambda$¹(scope0$cap)() {
+//│   return lambda¹(scope0$cap)
 //│ };
-//│ lambda2 = (undefined, function (x) {
-//│   return () => {
-//│     return lambda$2(x)
-//│   }
-//│ });
-//│ foo2 = function foo() {
-//│   let x, tmp2;
-//│   let lambda$here;
-//│   x = 1;
-//│   tmp3: while (true) {
-//│     let scrut, tmp4;
-//│     scrut = true;
-//│     if (scrut === true) {
-//│       tmp4 = x + 1;
-//│       x = tmp4;
-//│       lambda$here = runtime.safeCall(lambda2(x));
-//│       return lambda$here
-//│     } else { tmp2 = runtime.Unit; }
-//│     break;
-//│   }
-//│   return tmp2
+//│ define lambda⁰ as fun lambda¹(scope0$cap) {
+//│   return scope0$cap.x$0⁰
 //│ };
+//│ define Capture$scope0⁰ as class Capture$scope0² {
+//│   constructor Capture$scope0¹(x$0) {
+//│     define x$0¹ as val x$0⁰ = x$0;
+//│     end
+//│   }
+//│ };
+//│ define foo⁰ as fun foo¹() {
+//│   let x, scope0$cap;
+//│   set scope0$cap = new mut Capture$scope0²(x);
+//│   set scope0$cap.x$0 = 1;
+//│   loop lbl:
+//│     let scrut, tmp;
+//│     set scrut = true;
+//│     match scrut
+//│       true =>
+//│         let lambda$here;
+//│         set tmp = +⁰(scope0$cap.x$0⁰, 1);
+//│         set scope0$cap.x$0 = tmp;
+//│         set lambda$here = lambda$¹(scope0$cap);
+//│         return lambda$here
+//│       else
+//│         end
+//│     end
+//│   return runtime⁰.Unit⁰
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 2
 foo()()

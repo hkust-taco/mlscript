@@ -149,6 +149,7 @@ f5()
 //│ Interpreted:
 //│ 5
 
+// :fixme // wat
 :sllir
 fun test() =
   if true do test()
@@ -159,7 +160,7 @@ fun test() =
 //│     case x of
 //│       Lit(BoolLit(true)) =>
 //│         let* (x1) = test() in
-//│         x1
+//│         undefined
 //│       _ =>
 //│         undefined
 //│   def j() =
@@ -178,12 +179,12 @@ fun test() =
 //│     case x of
 //│       Lit(BoolLit(true)) =>
 //│         let* (x1) = test() in
-//│         jump j(x1)
+//│         let x2 = +(x1,1) in
+//│         x2
 //│       _ =>
 //│         panic "match error"
-//│   def j(tmp) =
-//│     let x2 = +(tmp,1) in
-//│     x2
+//│   def j() =
+//│     undefined
 //│   def entry() =
 //│     undefined
 //│   entry = entry
@@ -206,16 +207,14 @@ f()
 //│     case x1 of
 //│       Lit(BoolLit(true)) =>
 //│         let x2 = +(x,1) in
-//│         let x3 = undefined in
-//│         jump j(x2)
+//│         x2
 //│       _ =>
-//│         let x4 = undefined in
-//│         jump j(x)
-//│   def j(x5) =
-//│     x5
+//│         x
+//│   def j() =
+//│     undefined
 //│   def entry() =
-//│     let* (x6) = f() in
-//│     x6
+//│     let* (x3) = f() in
+//│     x3
 //│   entry = entry
 //│ 
 //│ Interpreted:

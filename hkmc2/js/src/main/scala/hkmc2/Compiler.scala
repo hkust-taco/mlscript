@@ -16,7 +16,7 @@ import scala.collection.mutable.{ArrayBuffer, Buffer}
 
 @JSExportTopLevel("Compiler")
 class Compiler(paths: MLsCompiler.Paths)(using cctx: CompilerCtx):
-  private given Config = Config.default
+  private given Config = Config.default(io.Path("/"))
   
   private var pathDiagnosticsMap = MutMap.empty[Str, (Int, Buffer[Diagnostic])]
   

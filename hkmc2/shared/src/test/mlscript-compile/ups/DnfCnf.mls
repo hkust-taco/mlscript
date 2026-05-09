@@ -1,0 +1,32 @@
+open annotations
+
+module DnfCnf with ...
+
+class Formula with
+  constructor
+    Var(val name: Str)
+    Pred(val name: Str, val arg: Formula)
+    And(val left: Formula, val right: Formula)
+    Or(val left: Formula, val right: Formula)
+
+pattern Dnf(pattern P) = Or(Dnf(P), Dnf(P)) | Atoms(P)
+
+pattern Atoms(pattern P) = And(Atoms(P), Atoms(P)) | Atom(P)
+
+pattern Atom(pattern P) = Pred(_, P) | Var
+
+pattern Cnf(pattern P) = And(Cnf(P), Cnf(P))
+
+pattern DnfOrCnf = Dnf(DnfOrCnf) | Cnf(DnfOrCnf)
+
+pattern DnfAndCnf = Dnf(DnfAndCnf) & Cnf(DnfAndCnf)
+
+fun isDnfOrCnf_naive(t) = t is DnfOrCnf
+fun isDnfOrCnf_optimized(t) =
+  if t is (@compile DnfOrCnf) as s then s else ()
+fun isDnfOrCnf_optimized_matchOnly(t) = t is @compile DnfOrCnf
+
+fun isDnfAndCnf_naive(t) = t is DnfAndCnf
+fun isDnfAndCnf_optimized(t) =
+  if t is (@compile DnfAndCnf) as s then s else ()
+fun isDnfAndCnf_optimized_matchOnly(t) = t is @compile DnfAndCnf

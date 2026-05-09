@@ -1,0 +1,62 @@
+:js
+:silent
+
+
+// Comment to run the benchmarks
+:exit
+====================================================================================================
+
+
+import "./mlscript-compile/Benchmark.mls"
+open Benchmark
+
+
+let suite = mkSuite()
+
+
+
+import "../../../../hkmc2/shared/src/test/mlscript-compile/nofib/rsa.mls"
+suite.add("rsa", () => rsa.main())
+
+
+// =======================
+
+
+import "../../../../hkmc2/shared/src/test/mlscript-compile/nofib/scc.mls"
+suite.add("scc", () => scc.main())
+
+
+// =======================
+
+
+import "../../../../hkmc2/shared/src/test/mlscript-compile/nofib/secretary.mls"
+suite.add("secretary", () => secretary.main())
+
+
+// =======================
+
+
+import "../../../../hkmc2/shared/src/test/mlscript-compile/nofib/sorting.mls"
+suite.add("sorting", () => sorting.main())
+
+
+// =======================
+
+
+import "../../../../hkmc2/shared/src/test/mlscript-compile/nofib/sphere.mls"
+suite.add("sphere", () => sphere.main())
+
+
+// =======================
+
+
+// need more stack
+// import "../../../../hkmc2/shared/src/test/mlscript-compile/nofib/treejoin.mls"
+// suite.add("treejoin", () => treejoin.main())
+
+
+
+
+
+runSuite(suite)
+writeResults(suite, "nofibs3.json")

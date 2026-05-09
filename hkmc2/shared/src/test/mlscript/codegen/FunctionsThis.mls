@@ -5,14 +5,15 @@
 val x = 2
 fun foo() =
   x + 1
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo, x; foo = function foo() { return x + 1 }; x = 2;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ x = 2
 
 :sjs
 class Test with
   print(foo())
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Test1;
 //│ (class Test {
 //│   static {
@@ -26,6 +27,7 @@ class Test with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Test"]; 
 //│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 new Test
 //│ > 3

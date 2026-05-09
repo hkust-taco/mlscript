@@ -1,0 +1,35 @@
+:invalml
+
+
+fun id(x) = x
+
+id(1)
+//│ Type: Int
+
+id
+//│ Type: ['x] -> 'x -> 'x
+
+id(true)
+//│ Type: Bool
+
+id
+//│ Type: ['x] -> 'x -> 'x
+
+
+fun id(x) = x
+
+id as [A] -> A -> A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
+
+
+(y => y) as [A] -> A -> A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
+
+fun id(x) = x
+(y => id(y)) as [A] -> A -> A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
+
+
+
+
+

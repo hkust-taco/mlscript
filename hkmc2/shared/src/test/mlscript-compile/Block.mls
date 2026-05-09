@@ -1,0 +1,204 @@
+import "./Predef.mls"
+import "./Option.mls"
+import "./StrOps.mls"
+import "./Runtime.mls"
+
+open Predef
+open StrOps
+open Option
+
+module Block with...
+
+type Opt[A] = Option[A]
+
+// dependancies referenced in Block classes, referencing implementation in Term.mls
+
+type Literal = null | undefined | Str | Int | Num | Bool
+
+type ParamList = Array[Symbol]
+
+class Symbol(val name: Str)
+// this is so that we're able to retrieve information about the class from the symbol
+class ClassSymbol(val name: Str) extends Symbol(name)
+class VirtualClassSymbol(val name: Str) extends ClassSymbol(name)
+class ConcreteClassSymbol(val name: Str, val value: Class, val paramsOpt: Opt[ParamList], val auxParams: Array[ParamList]) extends ClassSymbol(name)
+class ModuleSymbol(val name: Str, val value: Class) extends Symbol(name)
+class NoSymbol() extends Symbol("$no_symbol$")
+class Arm(val cse: Case, val body: Block)
+
+fun isPrimitiveType(sym: Symbol) =
+  if sym.name is
+    "Str" then true
+    "Int" then true
+    "Num" then true
+    "Bool" then true
+    else false
+
+fun isPrimitiveTypeOf(sym: Symbol, l: Literal) =
+  if [sym.name, l] is
+    ["Str", l] and l is Str then true
+    ["Int", i] and i is Int then true
+    ["Num", n] and n is Num then true
+    ["Bool", b] and b is Bool then true
+    else false
+
+
+// Classes defined in Block.scala
+
+class Arg(val value: Path) 
+
+class Case with
+  constructor
+    Lit(val lit: Literal)
+    Cls(val cls: Symbol, val path: Path)
+    Tup(val len: Int)
+
+class Result with 
+  constructor
+    Call(val _fun: Path, val args: Array[Arg])
+    Instantiate(val cls: Path, val args: Array[Arg]) // assume immutable
+    Tuple(val elems: Array[Arg]) // assume immutable
+
+class Path extends Result with
+  constructor
+    Select(val qual: Path, val name: Symbol)
+    DynSelect(val qual: Path, val fld: Path, val arrayIdx: Bool) // is arrayIdx used?
+    ValueRef(val l: Symbol)
+    ValueLit(val lit: Literal)
+
+class Defn with 
+  constructor 
+    ValDefn(val owner: Opt[Symbol], val sym: Symbol, val rhs: Path)
+    ClsLikeDefn(val sym: ConcreteClassSymbol, val methods: Array[FunDefn], val companion: Opt[ClsLikeBody]) // companion unused
+    FunDefn(val sym: Symbol, val params: Array[ParamList], val body: Block)
+
+class ClsLikeBody(val isym: Symbol, val methods: Array[FunDefn], val publicFields: Array[[Symbol, Symbol]]) // unused
+
+class Block with
+  constructor
+    Match(val scrut: Path, val arms: Array[Arm], val dflt: Opt[Block], val rest: Block)
+    Return(val res: Result, val implct: Bool)
+    Assign(val lhs: Symbol, val rhs: Result, val rest: Block)
+    Define(val defn: Defn, val rest: Block)
+    Scoped(val symbols: Array[Symbol], val rest: Block)
+    End()
+  
+fun concat(b1: Block, b2: Block) = if b1 is
+  Match(scrut, arms, dflt, rest) then Match(scrut, arms, dflt, concat(rest, b2))
+  Return(res, implct) then b1
+  Assign(lhs, rhs, rest) then Assign(lhs, rhs, concat(rest, b2))
+  Define(defn, rest) then Define(defn, concat(rest, b2))
+  Scoped(symbols, rest) then Scoped(symbols, concat(rest, b2))
+  End() then b2
+
+fun indent(s: Str) = s.replaceAll("\n", "\n  ")
+
+fun showLiteral(l: Literal) =
+  if l is 
+    undefined then "undefined"
+    null then "null"
+    Str then "\"" + l.toString() + "\""
+    else l.toString()
+
+fun showSymbol(s: Symbol) = s.name.replaceAll("$", "_")
+
+fun showPath(p: Path): Str =
+  if p is
+    // avoids needing to import the runtime module
+    Select(ValueRef(Symbol("runtime")), ModuleSymbol("Unit", Runtime.Unit)) then "()"
+    Select(qual, name) then showPath(qual) + "." + showSymbol(name)
+    DynSelect(qual, fld, false) then showPath(qual) + ".(" + showPath(fld) + ")"
+    DynSelect(qual, fld, true) then showPath(qual) + ".[" + showPath(fld) + "]"
+    ValueRef(l) then showSymbol(l)
+    ValueLit(lit) then showLiteral(lit)
+
+fun showArg(arg: Arg) =
+  showPath(arg.value)
+
+fun showArgs(args: Array[Arg]) =
+  args.map(showArg).join(", ")
+
+fun showResult(r: Result): Str =
+  if r is
+    Path then showPath(r)
+    Call(fun_, args) and
+      // use infix to avoid parsing + and - as taking a unary argument
+      args is [lhs, rhs] and fun_ is
+        ValueRef(Symbol("+")) then showArg(lhs) + " + " + showArg(rhs)
+        ValueRef(Symbol("-")) then showArg(lhs) + " - " + showArg(rhs)
+      else showPath(fun_) + "(" + showArgs(args) + ")"
+    Instantiate(cls, args) then "new " + showPath(cls) + (if args.length != 0 then "(" + showArgs(args) + ")" else "")
+    Tuple(elems) then "[" + showArgs(elems) + "]"
+    _ then "<unknown result>"
+
+// Case (match arm patterns)
+fun showCase(c) =
+  if c is
+    Lit(l) then showLiteral(l)
+    Cls(cls, _) then showSymbol(cls)
+    Tup(len) then "[" + Array(len).fill("_").join(", ") + "]"
+    _ then "<unknown case>"
+
+fun showArm(a) =
+  showCase(a.cse) + " then" + (if a.body is Return then " " else "\n  ") + indent(showBlock(a.body))
+
+fun showParams(p: ParamList) =
+  "(" + p.map(showSymbol(_)).join(", ") + ")"
+
+fun showParamsOpt(p) =
+  if p is
+    Some(s) then showParams(s)
+    None then ""
+
+fun showParamList(ps: Array[ParamList]) =
+  ps.map(showParams).join("")
+
+fun showDefn(d: Defn): Str =
+  if d is
+    FunDefn(sym, ps, body) then
+      "fun " + showSymbol(sym) + showParamList(ps) + " =" +
+      (if body is Return | End then " " else "\n  ") + indent(showBlock(body))
+    ClsLikeDefn(sym, methods, _) then
+      "class " + showSymbol(sym) + showParamsOpt(sym.paramsOpt)
+        + indent((if methods is [] then "" else " with\n") + methods.map(showDefn).join("\n"))
+    // TODO: used to represent assignments in constructors, which still need some adjustments
+    ValDefn(owner, sym, rhs) then
+      "val " + showSymbol(sym) + " = " + showPath(rhs)
+    _ then "<unknown defn: " + d.toString() + " >"
+
+fun showBlock(b) =
+  if b is
+    Assign(lhs, rhs, rest) then
+      (if lhs is NoSymbol then "" else showSymbol(lhs) + " = ")
+        + showResult(rhs) + showRestBlock(rest)
+    Define(d, rest) then
+      showDefn(d) + showRestBlock(rest)
+    Return(res, _) then
+      showResult(res)
+    Match(scrut, arms, dflt, rest) then
+      "if " + showPath(scrut) + " is"
+      + indent("\n" + arms.map(showArm).join("\n"))
+      + if dflt is Some(db) then indent("\nelse" + indent((if db is Return then " " else "\n") + showBlock(db))) else ""
+      + showRestBlock(rest)
+    Scoped(symbols, rest) then
+      // initialize symbols
+      "let {" + symbols.map(showSymbol).join(", ") + "}" + showRestBlock(rest)
+    End() then "()"
+    _ then "<unknown block>" + b
+
+// removes trailing newline
+fun showRestBlock(b : Block): Str =
+  if b is End then "" else "\n" + showBlock(b)
+
+fun show(x) =
+  if x is
+    Symbol then showSymbol(x)
+    Path then showPath(x)
+    Result then showResult(x)
+    Case then showCase(x)
+    Defn then showDefn(x)
+    Block then showBlock(x)
+  else
+    "<unknown>"
+
+fun printCode(x) = print(show(x))

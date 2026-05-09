@@ -37,7 +37,7 @@ fun stronglyConnComp(es, vs) =
       x => new_range(es, x)
       [Nil, Nil]
       vs
-//│ ═══[COMPILATION ERROR] Name not found: $runtime
+//│ ═══[COMPILATION ERROR] Name not found: tmp:runtime
 //│ Stopped due to an error during the Llir generation
 
 

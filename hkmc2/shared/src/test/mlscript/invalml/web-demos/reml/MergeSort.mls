@@ -1,0 +1,122 @@
+:invalml
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+// * This file includes the implementation for merge sorting,
+// * executed sequentially or in parallel.
+// * Adapted from https://doi.org/10.5281/zenodo.8425443
+
+
+// *** infrastructures
+
+
+declare class Array[T, R]
+
+
+class Pair[T, S] with
+  constructor
+    Pr(fst: T, snd: S)
+
+
+fun
+  mkArray: [T, R] -> Region[out R] ->{R} Array[T, out R]
+  push: [T, R] -> (Array[in T, out R], T) ->{R} ()
+  unshift: [T, R] -> (Array[in T, out R], T) ->{R} ()
+  map: [T, S, R, E extends ~R] -> (Array[out T, out R], T ->{E} S) ->{E | R} Array[S, out R]
+  foreach: [T, R, E extends ~R] -> (Array[out T, out R], T ->{E} ()) ->{E | R} ()
+  len: [R] -> Array[in Nothing out Any, out R] ->{R} Int
+  at: [T, R] -> (Array[out T, out R], Int) ->{R} T
+  slice: [T, R] -> (Array[out T, out R], Int) ->{R} Array[out T, out R]
+  concat: [T, R1, R2, R3] -> (Region[out R3], Array[in T, out R1], Array[out T, out R2]) ->{R1 | R2 | R3} Array[T, out R3]
+
+
+// Matching on js array is not supported yet.
+// This helper function is equivalent to `if xs is Cons(x, xs) then fh(x, xs) else fn(xs)`
+fun matchOne(xs, fn, fh) =
+  if len(xs) is 0 then fn(xs)
+  else fh(at(xs, 0), slice(xs, 1))
+
+// Matching on js array is not supported yet.
+// This helper function is equivalent to
+// `if xs is Cons(x, Cons(y, ys)) then f2(x, y, ys) else if xs is Cons(x, xs) then f1(x, xs) else fn(xs)`
+// fun matchTwo: [T, R, E1, E2, E3, S] -> (Array[out T, out R], Array[out T, out R] ->{E1} S, T ->{E2} S, (T, T, Array[out T, out R]) ->{E3} S) ->{E1 | E2 | E3 | R} S
+fun matchTwo(xs, fn, f1, f2) =
+  if len(xs) is 0 then fn(xs)
+  else if len(xs) is 1 then f1(at(xs, 0))
+  else f2(at(xs, 0), at(xs, 1), slice(xs, 2))
+
+fun (;) seq(_, res) = res
+
+fun println: Any -> ()
+fun forkJoin: [T, S, P, E1, E2 extends ~E1, E3] ->
+  (() ->{E1} T, () ->{E2} S, (T, S) ->{E3} P) ->{E1 | E2 | E3} P
+
+
+// *** pmsort implementation
+
+// Split the given array into two sub-arrays.
+// Region r1 and r2 indicate where the two sub-arrays should be stored.
+fun split(xs, r1, r2) =
+  fun rs(xs, ys, zs) =
+    matchTwo of xs, _ => Pr(ys, zs), x => push(ys, x); Pr(ys, zs), (x1, x2, r) => push(ys, x1); push(zs, x2); rs(r, ys, zs)
+  rs(xs, mkArray(r1), mkArray(r2))
+
+
+// Merge arr1 and arr2. The result is stored in region r.
+// fun merge: [T, R1, R2, R] -> (Array[out T, out R1], Array[out T, out R2], Region[R]) ->{R1 | R2 | R} Array[T, out R]
+fun merge(arr1, arr2, r) =
+  fun recm(xs, ys, acc) =
+    matchOne of xs, _ => concat(r, acc, ys), (x, rx) =>
+      matchOne of ys, _ => concat(r, acc, xs), (y, ry) =>
+        if x < y then push(acc, x); recm(rx, ys, acc)
+        else push(acc, y); recm(xs, ry, acc)
+  recm(arr1, arr2, mkArray(r))
+
+
+// Merge sort in single thread.
+fun smsort(xs, r) =
+  matchTwo of xs, _ => mkArray(r), x => let res = mkArray(r) in push(res, x); res, (_, _, _) =>
+    let p = split(xs, r, r) in
+      if p is Pr(fst, snd) then merge(smsort(fst, r), smsort(snd, r), r)
+
+
+// Wrong version! Sub-arrays cannot be stored in the same region!
+// fun pmsort: [R1, R2] -> (Array[out Int, out R1], Region[R2]) ->{R1 | R2} Array[Int, out R2]
+// fun pmsort(xs, r) =
+//   matchTwo of xs, _ => mkArray(r), x => let res = mkArray(r) in push(res, x); res, (_, _, _) =>
+//     let p = split(xs, r, r) in
+//       if p is Pr(fst, snd) then
+//         forkJoin(_ => pmsort(fst, r), pmsort(snd, r), (r1, r2) => merge(r1, r2, r))
+
+
+// Merge sort in parallel.
+fun pmsort: [R1, R2] -> (Array[out Int, out R1], Region[out R2]) ->{R1 | R2} Array[Int, out R2]
+fun pmsort(xs, r) =
+  matchTwo of xs, _ => mkArray(r), x => let res = mkArray(r) in push(res, x); res, (_, _, _) =>
+    region r1 in
+      region r2 in
+        let p = split(xs, r1, r2) in
+          if p is Pr(fst, snd) then
+            forkJoin(() => pmsort(fst, r1), () => pmsort(snd, r2), (rx, ry) => merge(rx, ry, r))
+
+
+// *** simple tests
+
+region r in
+  let arr = mkArray(r)
+  push(arr, 10)
+  push(arr, 23)
+  push(arr, 13)
+  push(arr, 4)
+  smsort(arr, r)
+
+region r in
+  let arr = mkArray(r)
+  push(arr, 10)
+  push(arr, 23)
+  push(arr, 13)
+  push(arr, 4)
+  pmsort(arr, r)
+//│ Type: Array[Int, ?]
+//│ ————————————————————————————————————————————————————————————————————————————————

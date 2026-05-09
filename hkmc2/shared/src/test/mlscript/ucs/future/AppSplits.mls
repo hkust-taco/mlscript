@@ -11,7 +11,7 @@ fun foo(x) = x > 1
 if foo of
   0 then "a"
   1 then "b"
-//│ ╔══[ERROR] Unrecognized term split (application)
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (application)
 //│ ║  l.11: 	if foo of
 //│ ║        	   ^^^^^^
 //│ ║  l.12: 	  0 then "a"
@@ -21,36 +21,30 @@ if foo of
 //│ ═══[RUNTIME ERROR] Error: match error
 
 :todo
-:pe
 :e
 :re
 if foo of 1,
   0 then "a"
   1 then "b"
-//│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.28: 	  0 then "a"
-//│ ╙──      	  ^
-//│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.28: 	  0 then "a"
-//│ ╙──      	  ^
-//│ ╔══[ERROR] Unrecognized term split (application)
-//│ ║  l.27: 	if foo of 1,
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (application)
+//│ ║  l.26: 	if foo of 1,
 //│ ║        	   ^^^^^^^^^
-//│ ║  l.28: 	  0 then "a"
-//│ ╙──      	^^
+//│ ║  l.27: 	  0 then "a"
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.28: 	  1 then "b"
+//│ ╙──      	^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 :todo
-:pe
 :e
 :re
 if foo
   (0) then "a"
   (1) then "b"
-//│ ╔══[ERROR] Unrecognized term split (juxtaposition)
-//│ ║  l.47: 	if foo
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (juxtaposition)
+//│ ║  l.41: 	if foo
 //│ ║        	   ^^^
-//│ ║  l.48: 	  (0) then "a"
+//│ ║  l.42: 	  (0) then "a"
 //│ ╙──      	^^
 //│ ═══[RUNTIME ERROR] Error: match error
 

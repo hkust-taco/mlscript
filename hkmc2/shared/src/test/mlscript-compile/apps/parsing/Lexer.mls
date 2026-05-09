@@ -1,3 +1,4 @@
+#config(liftDefns: Some(LiftDefns))
 
 import "../../Predef.mls"
 
@@ -64,37 +65,34 @@ fun lex(str: Str, options) =
   // Consume a sequence of characters that satisfy a predicate.
   // The function returns the accumulated string and the following index.
   fun take(pred: Str -> Bool, idx: Int, acc: Str): [Int, Str] =
-    while (char of idx) is Some(ch) and pred(ch)
-      then
-        set
-          idx += 1
-          acc += ch
-      else [idx, acc]
+    while (char of idx) is Some(ch) and pred(ch) do
+      set
+        idx += 1
+        acc += ch
+    [idx, acc]
   
   fun whitespace(idx: Int): Int =
-    while char(idx) is Some(Char.Whitespace)
-      then set idx = idx + 1
-      else idx
+    while char(idx) is Some(Char.Whitespace) do
+      set idx = idx + 1
+    idx
   
   fun digits(idx: Int, acc: Str) =
-    while char(idx) is Some(Char.Digit as ch)
-      then
-        set idx = idx + 1
-        set acc = acc + ch
-      else [idx, acc]
-  
-  fun hex(idx: Int, acc: Str) =
-    while char(idx) is Some(Char.Digit as ch)
-      then
-        set idx = idx + 1
-        set acc = acc + ch
-      else [idx, acc]
-  
-  fun identifier(idx: Int, acc: Str) =
-    while char(idx) is Some(IdentifierBody as ch) then
+    while char(idx) is Some(Char.Digit as ch) do
       set idx = idx + 1
       set acc = acc + ch
-    else tuple of
+    [idx, acc]
+  
+  fun hex(idx: Int, acc: Str) =
+    while char(idx) is Some(Char.Digit as ch) do
+      set idx = idx + 1
+      set acc = acc + ch
+    [idx, acc]
+  
+  fun identifier(idx: Int, acc: Str) =
+    while char(idx) is Some(IdentifierBody as ch) do
+      set idx = idx + 1
+      set acc = acc + ch
+    tuple of
       idx
       if acc is
         "true" then Token.boolean("true", idx)
@@ -102,12 +100,11 @@ fun lex(str: Str, options) =
         else Token.identifier(acc, idx)
   
   fun operator(idx: Int, acc: Str) =
-    while char(idx) is Some(Operator as ch)
-      then
-        set idx = idx + 1
-        set acc = acc + ch
-      else [idx, Token.symbol(acc, idx)]
-      
+    while char(idx) is Some(Operator as ch) do
+      set idx = idx + 1
+      set acc = acc + ch
+    [idx, Token.symbol(acc, idx)]
+    
   fun comment(idx: Int) =
     let start = idx
     let content = ""
@@ -115,10 +112,10 @@ fun lex(str: Str, options) =
       Some("/") then
         set idx = idx + 1
         while char(idx) is Some(ch)
-          and ch !== "\n" then
+          and ch !== "\n" do
             set idx = idx + 1
             set content = content + ch
-          else [idx, Token.comment(content, start, idx)]
+        [idx, Token.comment(content, start, idx)]
       Some("*") then
         let terminated = false
         set idx = idx + 1
@@ -129,11 +126,10 @@ fun lex(str: Str, options) =
           Some(ch) then
             set idx = idx + 1
             set content = content + ch
-          else
-            if terminated then
-              [idx, Token.comment(content, start, idx)]
-            else
-              [idx, Token.error(start, idx)]
+        if terminated then
+          [idx, Token.comment(content, start, idx)]
+        else
+          [idx, Token.error(start, idx)]
       else operator(idx, "/")
   
   fun scanHexDigits(idx: Int, lim: Int, acc: Int, cnt: Int): [Int, Int, Int] =
@@ -221,24 +217,27 @@ fun lex(str: Str, options) =
         Token.Space then scan(idx, acc)
       else scan(idx, tok :: acc)
     
+    fun go_tup(tup: [Int, TokenType]) = go(tup.0, tup.1)
+    
     if char(idx) is
       None then reverse of acc
-      Some(Char.Whitespace) and whitespace(idx) is idx' then
+      Some(ch) and ch is...
+      Char.Whitespace and whitespace(idx) is idx' then
         go(idx', Token.space(idx, idx'))
-      Some("\"") then go(...string(idx + 1))
-      Some(Bracket as b) then go(idx + 1, Token.symbol(b, idx))
-      Some("/") then go(...comment(idx + 1))
-      Some(Operator as ch) then go(...operator(idx + 1, ch))
-      Some(Char.Digit as ch) then go(...number(idx + 1, ch))
-      Some(IdentifierStart as ch) then go(...identifier(idx + 1, ch))
-      Some(IdentifierQuote as quote)
+      "\"" then go_tup(string(idx + 1))
+      Bracket as b then go(idx + 1, Token.symbol(b, idx))
+      "/" then go_tup(comment(idx + 1))
+      Operator as ch then go_tup(operator(idx + 1, ch))
+      Char.Digit as ch then go_tup(number(idx + 1, ch))
+      IdentifierStart as ch then go_tup(identifier(idx + 1, ch))
+      IdentifierQuote as quote
         and char(idx + 1) is Some(IdentifierStart as ch)
         and identifier(idx + 2, quote + ch) is [idx', token] and
           token is Token.Identifier(name, _) then
             go(idx', Token.identifier(name, idx))
           else go(idx + 1, Token.error(idx, idx + 1))
-      Some(other) then
-        print("Unrecognized character: '" ~ other ~ "'")
+      else
+        print("Unrecognized character: '" ~ ch ~ "'")
         go(idx + 1, Token.error(idx, idx + 1))
   
   scan(0, Nil)

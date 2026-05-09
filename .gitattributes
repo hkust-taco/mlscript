@@ -1,2 +1,4 @@
 * eol=lf
 bin/mlscript-opt.js linguist-vendored
+*.mjs linguist-generated
+hkmc2/shared/src/test/mlscript-compile/RuntimeJS.mjs -linguist-generated

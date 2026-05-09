@@ -19,28 +19,22 @@ foo(1)
 //│ _mlsValue _mls_entry2();
 //│ _mlsValue _mls_foo(_mlsValue);
 //│ _mlsValue _mls_entry();
-//│ _mlsValue _mls_j(_mlsValue);
+//│ _mlsValue _mls_j();
 //│ _mlsValue _mls_entry1();
 //│ _mlsValue _mls_bar(_mlsValue);
-//│ _mlsValue _mls_bar(_mlsValue _mls_x8) {
+//│ _mlsValue _mls_bar(_mlsValue _mls_x6) {
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x7 = (_mls_x8 + _mlsValue::fromIntLit(1));
-//│   _mls_retval = _mls_x7;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j(_mlsValue _mls_x1) {
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x = (_mls_x1 + _mlsValue::fromIntLit(1));
-//│   _mls_retval = _mls_x;
+//│   auto _mls_x5 = (_mls_x6 + _mlsValue::fromIntLit(1));
+//│   _mls_retval = _mls_x5;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_entry2() {
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x9 = _mls_foo(_mlsValue::fromIntLit(1));
-//│   _mls_retval = _mls_x9;
+//│   auto _mls_x7 = _mls_foo(_mlsValue::fromIntLit(1));
+//│   _mls_retval = _mls_x7;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_entry1() {
+//│ _mlsValue _mls_j() {
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mlsValue::create<_mls_Unit>();
 //│   return _mls_retval;
@@ -52,16 +46,21 @@ foo(1)
 //│ }
 //│ _mlsValue _mls_foo(_mlsValue _mls_a) {
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x2 = _mlsValue::create<_mls_Unit>();
-//│   auto _mls_x3 = (_mls_a > _mlsValue::fromIntLit(0));
-//│   if (_mlsValue::isIntLit(_mls_x3, 1)) {
-//│     auto _mls_x5 = _mlsValue::fromIntLit(1);
-//│     auto _mls_x6 = _mlsValue::create<_mls_Unit>();
-//│     _mls_retval = _mls_j(_mls_x5);
+//│   auto _mls_x = _mlsValue::create<_mls_Unit>();
+//│   auto _mls_x1 = (_mls_a > _mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isIntLit(_mls_x1, 1)) {
+//│     auto _mls_x3 = _mlsValue::fromIntLit(1);
+//│     auto _mls_x4 = (_mls_x3 + _mlsValue::fromIntLit(1));
+//│     _mls_retval = _mls_x4;
 //│   } else {
-//│     auto _mls_x4 = _mlsValue::create<_mls_Unit>();
-//│     _mls_retval = _mls_j(_mls_x2);
+//│     auto _mls_x2 = (_mls_x + _mlsValue::fromIntLit(1));
+//│     _mls_retval = _mls_x2;
 //│   }
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_entry1() {
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mlsValue::create<_mls_Unit>();
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain() { return _mls_entry2(); }

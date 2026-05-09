@@ -1,0 +1,19 @@
+:invalml
+
+
+
+(x => x(x)) (x => x(x))
+//│ Type: ⊥
+
+
+fun f(x) = x(x)
+
+f
+//│ Type: ['x, 'eff, 'app] -> ('x ->{'eff} 'app) ->{'eff} 'app
+//│ Where:
+//│   'x <: 'x ->{'eff} 'app
+
+f(f)
+//│ Type: ⊥
+
+

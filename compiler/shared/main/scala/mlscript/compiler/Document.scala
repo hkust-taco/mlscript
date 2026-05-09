@@ -20,16 +20,16 @@ enum Document:
         if (first && s.nonEmpty) sb.append("  " * ind)
         sb.append(s)
       case Indented(doc) =>
-        rec(doc)(ind + 1, first)
+        rec(doc)(using ind + 1, first)
       case Unindented(doc) =>
         assume(ind > 0)
-        rec(doc)(ind - 1, first)
+        rec(doc)(using ind - 1, first)
       case Lined(Nil, _) => // skip
       case Lined(docs, sep) =>
         rec(docs.head)
         docs.tail foreach { doc =>
-          rec(sep)(ind, false)
-          rec(doc)(ind, false)
+          rec(sep)(using ind, false)
+          rec(doc)(using ind, false)
         }
       case Stacked(Nil, _) => // skip
       case Stacked(docs, emptyLines) =>
@@ -37,11 +37,11 @@ enum Document:
         docs.tail foreach { doc =>
           sb.append("\n")
           if (emptyLines) sb.append("\n")
-          rec(doc)(ind, true)
+          rec(doc)(using ind, true)
         }
     }
 
-    rec(this)(0, true)
+    rec(this)(using 0, true)
     sb.toString
   }
 

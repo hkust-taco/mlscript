@@ -7,7 +7,7 @@
 :todo
 fun Foo() = 1
 module Foo with { val x = 1 }
-//│ ╔══[ERROR] Not yet supported: overloading of function 'Foo'
+//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
 //│ ║  l.8: 	fun Foo() = 1
 //│ ║       	^^^^^^^^^^^^^
 //│ ╟── with module of the same name

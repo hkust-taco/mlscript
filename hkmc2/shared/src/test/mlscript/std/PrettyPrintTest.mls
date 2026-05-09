@@ -201,7 +201,7 @@ set testKey.w = 0, show of testMap
 set testKey.a = 42, show of testMap
 //│ > Map(1) {{x: 0, y: 0, z: 0, w: 0, a: 42} => {x: 0, y: 0, z: 0, w: 0, a: 42}}
 
-:todo
+// TODO
 set testKey.b = 404, show of testMap
 //│ > Map(1) {                                                                  ┊
 //│ >   {x: 0, y: 0, z: 0, w: 0, a: 42, b: 404} => {x: 0, y: 0, z: 0, w: 0, a: 42, b: 404}

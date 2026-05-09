@@ -14,81 +14,54 @@ sum(100)
 //│ = 5050
 
 // preserve tail calls
-// MUST see "return hi1(tmp)" in the output
-:stackSafe 5
+// MUST see "return hi(tmp1)" in the output
+:stackSafe 6
 :effectHandlers
 :expect 0
-:sjs
+:sir
 fun hi(n) =
   if n === 0 then 0
   else hi(n - 1)
 hi(0)
-//│ JS (unsanitized):
-//│ let hi;
-//│ let Cont$func$hi$1, res, $_stack$_safe$_body$_, doUnwind$, Cont$func$hi$$;
-//│ Cont$func$hi$$ = function Cont$func$hi$$(isMut, n, pc) {
-//│   let tmp, tmp1;
-//│   if (isMut === true) {
-//│     tmp = new Cont$func$hi$1(pc);
-//│   } else {
-//│     tmp = globalThis.Object.freeze(new Cont$func$hi$1(pc));
-//│   }
-//│   tmp1 = tmp(n);
-//│   return tmp1
-//│ };
-//│ (class Cont$func$hi$ extends runtime.FunctionContFrame.class {
-//│   static {
-//│     Cont$func$hi$1 = this
-//│   }
-//│   constructor(pc) {
-//│     return (n) => {
-//│       let tmp;
-//│       tmp = super(null);
-//│       this.n = n;
-//│       this.pc = pc;
-//│       return this;
-//│     }
-//│   }
-//│   #n;
-//│   get n() { return this.#n; }
-//│   set n(value) { this.#n = value; }
-//│   resume(value$) {
-//│     return hi(this.n)
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Cont$func$hi$"]; 
-//│ });
-//│ doUnwind$ = function doUnwind$(n, res1, pc) {
-//│   res1.contTrace.last.next = Cont$func$hi$$(true, n, pc);
-//│   res1.contTrace.last = res1.contTrace.last.next;
-//│   return res1
-//│ };
-//│ hi = function hi(n) {
-//│   let scrut, tmp;
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let hi⁰, tmp, ‹stack safe body›⁰;
+//│ do runtime⁰.resetEffects﹖();
+//│ define hi⁰ as fun hi¹(n) {
 //│   let stackDelayRes;
-//│   runtime.stackDepth = runtime.stackDepth + 1;
-//│   stackDelayRes = runtime.checkDepth();
-//│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return doUnwind$(n, stackDelayRes, 0)
-//│   }
-//│   scrut = n === 0;
-//│   if (scrut === true) {
-//│     return 0
-//│   } else {
-//│     tmp = n - 1;
-//│     return hi(tmp)
-//│   }
+//│   set runtime⁰.stackDepth = +⁰(runtime⁰.stackDepth﹖, 1);
+//│   set stackDelayRes = runtime⁰.checkDepth﹖();
+//│   match runtime⁰.curEffect﹖
+//│     null =>
+//│       let scrut, tmp1;
+//│       set scrut = ===⁰(n, 0);
+//│       match scrut
+//│         true =>
+//│           return 0
+//│         else
+//│           let res;
+//│           set tmp1 = -⁰(n, 1);
+//│           return hi¹(tmp1)
+//│       end
+//│     else
+//│       return runtime⁰.unwind﹖(hi¹, -1, "StackSafetyLift.mls:22:1", null, null, 1, 1, n, 0)
+//│   end
 //│ };
-//│ $_stack$_safe$_body$_ = (undefined, function () {
-//│   return hi(0)
-//│ });
-//│ res = runtime.runStackSafe(5, $_stack$_safe$_body$_);
-//│ if (res instanceof runtime.EffectSig.class) { res = runtime.topLevelEffect(res, false); }
-//│ res
+//│ define ‹stack safe body›⁰ as fun ‹stack safe body›¹() {
+//│   return hi¹(0)
+//│ };
+//│ set tmp = runtime⁰.runStackSafe﹖(6, ‹stack safe body›⁰);
+//│ match runtime⁰.curEffect﹖
+//│   null =>
+//│     tmp
+//│   else
+//│     set tmp = runtime⁰.topLevelEffect﹖(false);
+//│     tmp
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
-:sjs
-:stackSafe 1000
+:sir
+:stackSafe
 :effectHandlers
 :expect 50005000
 fun sum(n) =
@@ -96,94 +69,74 @@ fun sum(n) =
   else
     n + sum(n - 1)
 sum(10000)
-//│ JS (unsanitized):
-//│ let sum1;
-//│ let Cont$func$sum$1, res1, $_stack$_safe$_body$_1, doUnwind$1, Cont$func$sum$$;
-//│ Cont$func$sum$$ = function Cont$func$sum$$(isMut, n, tmp, pc) {
-//│   let tmp1, tmp2;
-//│   if (isMut === true) {
-//│     tmp1 = new Cont$func$sum$1(pc);
-//│   } else {
-//│     tmp1 = globalThis.Object.freeze(new Cont$func$sum$1(pc));
-//│   }
-//│   tmp2 = tmp1(n, tmp);
-//│   return tmp2
-//│ };
-//│ (class Cont$func$sum$ extends runtime.FunctionContFrame.class {
-//│   static {
-//│     Cont$func$sum$1 = this
-//│   }
-//│   constructor(pc) {
-//│     return (n, tmp) => {
-//│       let tmp1;
-//│       tmp1 = super(null);
-//│       this.n = n;
-//│       this.tmp = tmp;
-//│       this.pc = pc;
-//│       return this;
-//│     }
-//│   }
-//│   #n;
-//│   #tmp;
-//│   get n() { return this.#n; }
-//│   set n(value) { this.#n = value; }
-//│   get tmp() { return this.#tmp; }
-//│   set tmp(value) { this.#tmp = value; }
-//│   resume(value$) {
-//│     let curDepth;
-//│     curDepth = runtime.stackDepth;
-//│     if (this.pc === 1) {
-//│       this.tmp = value$;
-//│     }
-//│     contLoop: while (true) {
-//│       runtime.stackDepth = curDepth;
-//│       switch (this.pc) {
-//│         case 0:
-//│           return sum1(this.n);
-//│           break;
-//│         case 1:
-//│           return this.n + this.tmp;
-//│           break;
-//│       }
-//│       break;
-//│     }
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Cont$func$sum$"]; 
-//│ });
-//│ doUnwind$1 = function doUnwind$(n, tmp, res2, pc) {
-//│   res2.contTrace.last.next = Cont$func$sum$$(true, n, tmp, pc);
-//│   res2.contTrace.last = res2.contTrace.last.next;
-//│   return res2
-//│ };
-//│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1;
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let sum⁰, tmp, ‹stack safe body›²;
+//│ do runtime⁰.resetEffects﹖();
+//│ define sum⁰ as fun sum¹(n) {
 //│   let curDepth, stackDelayRes;
-//│   curDepth = runtime.stackDepth;
-//│   runtime.stackDepth = runtime.stackDepth + 1;
-//│   stackDelayRes = runtime.checkDepth();
-//│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return doUnwind$1(n, tmp1, stackDelayRes, 0)
-//│   }
-//│   scrut = n === 0;
-//│   if (scrut === true) {
-//│     return 0
-//│   } else {
-//│     tmp = n - 1;
-//│     tmp1 = sum1(tmp);
-//│     runtime.stackDepth = curDepth;
-//│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       return doUnwind$1(n, tmp1, tmp1, 1)
-//│     }
-//│     return n + tmp1
-//│   }
+//│   set runtime⁰.stackDepth = +⁰(runtime⁰.stackDepth﹖, 1);
+//│   set curDepth = runtime⁰.stackDepth﹖;
+//│   set stackDelayRes = runtime⁰.checkDepth﹖();
+//│   match runtime⁰.curEffect﹖
+//│     null =>
+//│       let scrut, tmp1, tmp2, pc;
+//│       match runtime⁰.resumePc﹖
+//│         -1 =>
+//│           set pc = 0;
+//│           end
+//│         else
+//│           let saveOffset;
+//│           set pc = runtime⁰.resumePc﹖;
+//│           set runtime⁰.resumePc = -1;
+//│           end
+//│       loop main:
+//│         match pc
+//│           0 =>
+//│             block brk0:
+//│               set scrut = ===⁰(n, 0);
+//│               match scrut
+//│                 true =>
+//│                   return 0
+//│                 else
+//│                   let res;
+//│                   set tmp1 = -⁰(n, 1);
+//│                   set res = sum¹(tmp1);
+//│                   set runtime⁰.stackDepth = curDepth;
+//│                   set runtime⁰.resumeValue = res;
+//│                   match runtime⁰.curEffect﹖
+//│                     null =>
+//│                       break brk0
+//│                     else
+//│                       let res1;
+//│                       return runtime⁰.unwind﹖(sum¹, 1, "StackSafetyLift.mls:70:9", null, null, 1, 1, n, 0)
+//│                   end
+//│               end
+//│             set pc = 1;
+//│             end
+//│         match pc
+//│           1 =>
+//│             set tmp2 = runtime⁰.resumeValue﹖;
+//│             return +⁰(n, tmp2)
+//│           else
+//│             end
+//│         end
+//│       end
+//│     else
+//│       return runtime⁰.unwind﹖(sum¹, -1, "StackSafetyLift.mls:67:1", null, null, 1, 1, n, 0)
+//│   end
 //│ };
-//│ $_stack$_safe$_body$_1 = (undefined, function () {
-//│   return sum1(10000)
-//│ });
-//│ res1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
-//│ if (res1 instanceof runtime.EffectSig.class) { res1 = runtime.topLevelEffect(res1, false); }
-//│ res1
+//│ define ‹stack safe body›² as fun ‹stack safe body›³() {
+//│   return sum¹(10000)
+//│ };
+//│ set tmp = runtime⁰.runStackSafe﹖(1000, ‹stack safe body›²);
+//│ match runtime⁰.curEffect﹖
+//│   null =>
+//│     tmp
+//│   else
+//│     set tmp = runtime⁰.topLevelEffect﹖(false);
+//│     tmp
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 50005000
 
 // stack-overflows without :stackSafe
@@ -196,7 +149,7 @@ sum(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
 :effectHandlers
-:stackSafe 100
+:stackSafe 6
 mut val ctr = 0
 fun dummy(x) = x
 fun foo(f) = 
@@ -208,7 +161,7 @@ foo(foo)
 //│ = 0
 //│ ctr = 10001
 
-:stackSafe 1000
+:stackSafe
 :effectHandlers
 :expect 50005000
 val foo =
@@ -235,11 +188,11 @@ abstract class Eff with
 
 // functions and lambdas inside handlers
 :effectHandlers
-:stackSafe 100
+:stackSafe 6
 :expect 50005000
-fun foo(h) = h.perform
+fun foo(h) = h.perform()
 handle h = Eff with
-  fun perform(resume) =
+  fun perform()(resume) =
     let f = ()
     set f = n =>
       if n <= 0 then 0
@@ -250,17 +203,17 @@ foo(h)
 
 // function call and defn inside handler
 :effectHandlers
-:stackSafe 100
+:stackSafe 6
 :expect 50005000
 handle h = Eff with
-  fun perform(resume) =
+  fun perform()(resume) =
     let f = ()
     set f = n =>
       if n <= 0 then 0
       else n + f(n-1)
     resume(f(10000))
 in
-  fun foo(h) = h.perform
+  fun foo(h) = h.perform()
   foo(h)
 //│ = 50005000
 
@@ -279,24 +232,33 @@ foo(h)
 
 :effectHandlers
 :stackSafe
-:sjs
+:sir
 fun max(a, b) = if a < b then b else a
-//│ JS (unsanitized):
-//│ let max;
-//│ max = function max(a, b) {
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let max⁰;
+//│ do runtime⁰.resetEffects﹖();
+//│ define max⁰ as fun max¹(a, b) {
 //│   let scrut;
-//│   scrut = a < b;
-//│   if (scrut === true) { return b } else { return a }
+//│   set scrut = <⁰(a, b);
+//│   match scrut
+//│     true =>
+//│       return b
+//│     else
+//│       return a
+//│   end
 //│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
-:sjs
+:sir
 :stackSafe 42
 fun hi(n) = n
 hi(0)
 //│ /!!!\ Option ':stackSafe' requires ':effectHandlers' to be set
-//│ JS (unsanitized):
-//│ let hi1; hi1 = function hi(n) { return n }; hi1(0)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let hi²; define hi² as fun hi³(n) { return n }; hi³(0)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 :stackSafe 42
@@ -305,7 +267,7 @@ hi(0)
 //│ = 0
 
 
-:stackSafe 1000
+:stackSafe
 :effectHandlers
 :expect 100010000
 fun sum(n) =

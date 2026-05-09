@@ -1,0 +1,182 @@
+
+:global
+:wasm
+
+
+class A() with
+  virtual fun f(x) = x + 1
+class B() extends A() with
+  virtual fun g() = 0
+  fun f(x) = x * 2
+B().f(5)
+//│ Wasm result:
+//│ = 10
+
+
+:wat
+class A() with
+  virtual fun f(x) = x + 1
+class B() extends A() with
+  fun f(x) = x * 2
+fun callF(a: A) = a.f(5)
+callF(B())
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $virtual2 (func (param $this (ref null any)) (param $arg1 (ref null any)) (result (ref null any))))
+//│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual2))))))
+//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $A_init (func (param $this (ref null any)) (result (ref null any))))
+//│   (type $A_ctor (func (result (ref null any))))
+//│   (type $B_typeinfo (sub $A_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual2))))))
+//│   (type $B (sub $A (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $B_init (func (param $this (ref null any)) (result (ref null any))))
+//│   (type $B_ctor (func (result (ref null any))))
+//│   (type $callF (func (param $a (ref null any)) (result (ref null any))))
+//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $times_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
+//│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
+//│   (import "system" "times_impl" (func $times_impl (type $times_impl)))
+//│   (global $A_typeinfo (export "A_typeinfo") (ref $A_typeinfo) (struct.new $A_typeinfo
+//│     (i32.const 1)
+//│     (ref.null $TypeInfoBase)
+//│     (ref.func $A_f)))
+//│   (global $B_typeinfo (export "B_typeinfo") (ref $B_typeinfo) (struct.new $B_typeinfo
+//│     (i32.const 2)
+//│     (global.get $A_typeinfo)
+//│     (ref.func $B_f)))
+//│   (func $A_init (type $A_init) (param $this (ref null any)) (result (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (nop)
+//│       (return
+//│         (local.get $this))))
+//│   (func $A_ctor (export "A") (type $A_ctor) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new $A
+//│           (global.get $A_typeinfo)))
+//│       (drop
+//│         (call $A_init
+//│           (local.get $this)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $A_f (type $virtual2) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
+//│     (return
+//│       (call $plus_impl
+//│         (local.get $x)
+//│         (ref.i31
+//│           (i32.const 1)))))
+//│   (func $B_init (type $B_init) (param $this (ref null any)) (result (ref null any))
+//│     (block (result (ref null any))
+//│       (block
+//│         (nop)
+//│         (drop
+//│           (call $A_init
+//│             (local.get $this))))
+//│       (nop)
+//│       (return
+//│         (local.get $this))))
+//│   (func $B_ctor (export "B") (type $B_ctor) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new $B
+//│           (global.get $B_typeinfo)))
+//│       (drop
+//│         (call $B_init
+//│           (local.get $this)))
+//│       (return
+//│         (local.get $this))))
+//│   (func $B_f (type $virtual2) (param $this (ref null any)) (param $x (ref null any)) (result (ref null any))
+//│     (return
+//│       (call $times_impl
+//│         (local.get $x)
+//│         (ref.i31
+//│           (i32.const 2)))))
+//│   (func $callF (export "callF") (type $callF) (param $a (ref null any)) (result (ref null any))
+//│     (local $receiver (ref null any))
+//│     (return
+//│       (block (result (ref null any))
+//│         (local.set $receiver
+//│           (local.get $a))
+//│         (call_ref $virtual2
+//│           (local.get $receiver)
+//│           (ref.i31
+//│             (i32.const 5))
+//│           (struct.get $A_typeinfo $slot0
+//│             (ref.cast (ref $A_typeinfo)
+//│               (struct.get $Object $$typeinfo
+//│                 (ref.cast (ref $Object)
+//│                   (local.get $receiver)))))))))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
+//│     (local $callF (ref null any))
+//│     (local $tmp (ref null any))
+//│     (local $a (ref null any))
+//│     (local $inlinedVal (ref null any))
+//│     (local $receiver (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (block (result (ref null any))
+//│         (nop)
+//│         (block (result (ref null any))
+//│           (nop)
+//│           (block (result (ref null any))
+//│             (local.set $tmp
+//│               (call $B_ctor))
+//│             (block (result (ref null any))
+//│               (local.set $a
+//│                 (local.get $tmp))
+//│               (block (result (ref null any))
+//│                 (local.set $inlinedVal
+//│                   (block (result (ref null any))
+//│                     (local.set $receiver
+//│                       (local.get $a))
+//│                     (call_ref $virtual2
+//│                       (local.get $receiver)
+//│                       (ref.i31
+//│                         (i32.const 5))
+//│                       (struct.get $A_typeinfo $slot0
+//│                         (ref.cast (ref $A_typeinfo)
+//│                           (struct.get $Object $$typeinfo
+//│                             (ref.cast (ref $Object)
+//│                               (local.get $receiver))))))))
+//│                 (local.get $inlinedVal))))))))
+//│   (elem $A_init declare func $A_init)
+//│   (elem $A_ctor declare func $A_ctor)
+//│   (elem $A_f declare func $A_f)
+//│   (elem $B_init declare func $B_init)
+//│   (elem $B_ctor declare func $B_ctor)
+//│   (elem $B_f declare func $B_f)
+//│   (elem $callF declare func $callF)
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = 10
+
+
+class A(val a) with
+  virtual fun f(x) = x + a
+class B(val b) extends A(b) with
+  virtual fun f(x) = x * b
+class C(val c) extends B(c) with
+  fun f(x) = x - c
+C(3).f(5)
+//│ Wasm result:
+//│ = 2
+
+
+class A() with
+  virtual fun f() = 1
+class B() extends A() with
+  virtual fun g() = 2
+class C() extends B() with
+  fun f() = 10
+  fun g() = 20
+fun callF(a: A) = a.f()
+fun callG(b: B) = b.g()
+callF(C()) + callG(C())
+//│ Wasm result:
+//│ = 21

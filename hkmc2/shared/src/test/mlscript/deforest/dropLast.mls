@@ -1,0 +1,116 @@
+:js
+
+data class (::) Cons(h, t)
+data object Nil
+
+
+fun lseq(l1, l2) = if
+  l1 is Nil and l2 is Nil then true
+  l1 is x :: xs and l2 is y :: ys and x == y then lseq(xs, ys)
+  else false
+
+
+
+:deforest
+fun dl(ls) = if ls is
+  Nil then Nil
+  x :: Nil then Nil
+  x :: xs then x :: dl(xs)
+fun fix(x) =
+  let res = dl(x)
+  if lseq(res, x) then res
+  else
+    fix(res)
+fix
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = fun fix
+
+
+
+
+:deforest
+fun dl(ls) = if ls is
+  Nil then Nil
+  x :: Nil then Nil
+  x :: xs then x :: dl(xs)
+fun fix(x, fuel) =
+  let res = dl(x)
+  if fuel == 0 then res
+  else
+    fix(res, fuel - 1)
+fix
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = fun fix
+
+
+
+:deforest
+fun dl(ls) = if ls is
+  Nil then Nil
+  x :: xs then dlHelper(x, xs)
+fun dlHelper(prev, rest) = if rest is
+  Nil then Nil
+  h :: t then prev :: dlHelper(h, t)
+fun fix(x, fuel) =
+  let res = dl(x)
+  if fuel == 0 then res
+  else
+    fix(res, fuel - 1)
+fix
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = fun fix
+
+
+
+
+:deforest
+:expect Nil
+fun dlHelper(prev, rest) = if rest is
+  Nil then Nil
+  h :: t then prev :: dlHelper(h, t)
+fun fix(x, fuel) =
+  let res = dlHelper(-1, x)
+  if fuel == 0 then res
+  else
+    fix(res, fuel - 1)
+id(fix(Nil, 1000))
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = Nil
+
+
+
+
+
+:deforest
+:expect Nil
+fun dlHelper(prev, rest) = if rest is
+  Nil then Nil
+  h :: t then prev :: dlHelper(h, t)
+fun fix(x) =
+  if x is
+    Nil then Nil
+    x :: xs then fix(dlHelper(x, xs))
+fix(2 :: 3 :: Nil)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = Nil
+
+
+
+
+
+
+
+:deforest
+:expect Nil
+fun f(x) = if x is
+  Nil then Nil
+fun loop(l, n) = if n > 0 then loop(f(l), n - 1) else l
+id(loop(Nil, 2))
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = Nil

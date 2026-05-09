@@ -18,7 +18,7 @@ fun test(a) =
       fun h(e) = [a, b, d, e]
       h(d)
   Inner(42)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test1;
 //│ test1 = function test(a) {
 //│   let Inner1;
@@ -30,9 +30,8 @@ fun test(a) =
 //│       Inner1.class = this
 //│     }
 //│     constructor(b) {
-//│       let tmp;
 //│       this.b = b;
-//│       tmp = Predef.print(a);
+//│       Predef.print(a);
 //│     }
 //│     f(c) {
 //│       return globalThis.Object.freeze([
@@ -42,23 +41,22 @@ fun test(a) =
 //│       ])
 //│     } 
 //│     g(d) {
-//│       let h;
-//│       const this$Inner = this;
-//│       h = function h(e) {
-//│         return globalThis.Object.freeze([
-//│           a,
-//│           this$Inner.b,
-//│           d,
-//│           e
-//│         ])
-//│       };
-//│       return h(d)
+//│       let e, inlinedVal;
+//│       e = d;
+//│       inlinedVal = globalThis.Object.freeze([
+//│         a,
+//│         this.b,
+//│         d,
+//│         e
+//│       ]);
+//│       return inlinedVal
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Inner", ["b"]]; 
 //│   });
 //│   return Inner1(42)
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let i = test(100)
 //│ > 100
@@ -78,7 +76,7 @@ fun test(a) =
   data class C2(b) with
     print of [a, b]
   [C1(1), C2(2)]
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test2;
 //│ test2 = function test(a) {
 //│   let C11, C21, tmp, tmp1;
@@ -124,6 +122,7 @@ fun test(a) =
 //│   tmp1 = C21(2);
 //│   return globalThis.Object.freeze([ tmp, tmp1 ])
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 test(123)
 //│ > [123, 1]
@@ -131,7 +130,9 @@ test(123)
 //│ = [C1(1), C2(2)]
 
 
+// Inlining is disabled to test this proxy
 :sjs
+:noInline
 data class Foo(a) with
   fun foo() =
     fun bar() = a
@@ -140,7 +141,7 @@ data class Foo(a) with
     baz()
   foo()
 Foo(123)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo1;
 //│ Foo1 = function Foo(a) {
 //│   return globalThis.Object.freeze(new Foo.class(a));
@@ -154,7 +155,7 @@ Foo(123)
 //│     this.foo();
 //│   }
 //│   foo() {
-//│     let bar, baz, tmp;
+//│     let bar, baz;
 //│     const this$Foo = this;
 //│     bar = function bar() {
 //│       return this$Foo.a
@@ -162,13 +163,14 @@ Foo(123)
 //│     baz = function baz() {
 //│       return this$Foo.a
 //│     };
-//│     tmp = bar();
+//│     bar();
 //│     return baz()
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", ["a"]]; 
 //│ });
 //│ Foo1(123)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Foo(123)
 
 :sjs
@@ -179,7 +181,7 @@ data class Bar(x) with
     bar()
   foo()()
 Bar(1)
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Bar1;
 //│ Bar1 = function Bar(x) {
 //│   return globalThis.Object.freeze(new Bar.class(x));
@@ -189,23 +191,19 @@ Bar(1)
 //│     Bar1.class = this
 //│   }
 //│   constructor(x) {
-//│     let tmp;
 //│     this.x = x;
-//│     tmp = this.foo();
-//│     runtime.safeCall(tmp());
+//│     this.foo()();
 //│   }
 //│   foo() {
 //│     return () => {
-//│       let bar;
-//│       const this$Bar = this;
-//│       bar = function bar() {
-//│         return this$Bar.x
-//│       };
-//│       return bar()
+//│       let inlinedVal;
+//│       inlinedVal = this.x;
+//│       return inlinedVal
 //│     }
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Bar", ["x"]]; 
 //│ });
 //│ Bar1(1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Bar(1)

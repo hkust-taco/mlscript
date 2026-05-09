@@ -98,21 +98,23 @@ let // a
 :pe
 let
   // a
-//│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of block instead
+//│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of input instead
 //│ ║  l.100: 	  // a
-//│ ╙──       	^^
+//│ ╙──       	  ^
 //│ Parsed:
+//│ 	Error()
 
 :pe
 let
   // a
 1
-//│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of block instead
-//│ ║  l.108: 	  // a
-//│ ║         	^^^^^^
-//│ ║  l.109: 	1
-//│ ╙──       	^
+//│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found new line instead
+//│ ║  l.109: 	  // a
+//│ ║         	      ^
+//│ ║  l.110: 	1
+//│ ╙──       	
 //│ Parsed:
+//│ 	Error()
 //│ 	IntLit(1)
 
 
@@ -181,9 +183,9 @@ let
 x = 1
 in x
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found new line instead
-//│ ║  l.180: 	let
+//│ ║  l.182: 	let
 //│ ║         	   ^
-//│ ║  l.181: 	x = 1
+//│ ║  l.183: 	x = 1
 //│ ╙──       	
 //│ Parsed:
 //│ 	Error()
@@ -204,7 +206,7 @@ let a = 1 in b
 let
   with
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found 'with' keyword instead
-//│ ║  l.205: 	  with
+//│ ║  l.207: 	  with
 //│ ╙──       	  ^^^^
 //│ Parsed:
 //│ 	Error()
@@ -256,7 +258,7 @@ x => let x = 1
 :pe
 if
 //│ ╔══[PARSE ERROR] Expected expression or block after 'if' keyword; found end of input instead
-//│ ║  l.257: 	if
+//│ ║  l.259: 	if
 //│ ╙──       	  ^
 //│ Parsed:
 //│ 	Error()

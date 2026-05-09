@@ -13,8 +13,6 @@ import compiler.ir.Node._
 
 DOCUMENTATION OF SEMANTICS OF @tailcall and @tailrec
 
-FIXME: This doc is a bit outdated, as we have not ported the "modulo-cons" optimization yet.
-
 @tailcall: Used to annotate specific function calls. Calls annotated with @tailcall 
 must be tail calls or tail modulo-cons calls. These calls must be optimized to not
 consume additional stack space. If such an optimization is not possible, then the
@@ -170,7 +168,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
     letCallNode: Option[LetCall],
     letCtorNode: Option[LetCtorNodeInfo],
     containingCtors: Set[Name]
-  ) = searchOptCalls(next)(acc, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors - nme) 
+  ) = searchOptCalls(next)(using acc, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors - nme) 
 
   // same here...
   def invalidateAndCont(body: Node)(implicit
@@ -184,14 +182,14 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
     containingCtors: Set[Name]
   ) =
     letCallNode match
-      case None => searchOptCalls(body)(acc, src, scc, start, None, None, None, Set()) // invalidate everything that's been discovered
+      case None => searchOptCalls(body)(using acc, src, scc, start, None, None, None, Set()) // invalidate everything that's been discovered
       case Some(x: LetCall) =>
         val LetCall(_, defn, _, isTailRec, _) = x
         if isTailRec then 
           raise(ErrorReport(List(msg"not a tail call" -> x.loc), true, Diagnostic.Compilation))
 
         val newAcc = acc + NormalCallInfo(src, defn.expectDefn)(x.loc)
-        searchOptCalls(body)(newAcc, src, scc, start, None, None, None, Set()) // invalidate everything that's been discovered
+        searchOptCalls(body)(using newAcc, src, scc, start, None, None, None, Set()) // invalidate everything that's been discovered
   
   @tailrec
   private def searchOptCalls(node: Node)(implicit
@@ -276,7 +274,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
                     shadowAndCont(body, name) // does not use, OK to ignore this one
                   else 
                     // add this name to the list of constructors containing the call
-                    searchOptCalls(body)(acc, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors + name) 
+                    searchOptCalls(body)(using acc, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors + name) 
                 else
                   // it does use it, further analyse
                   letCtorNode match
@@ -295,7 +293,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
                       val fieldName = clsInfo.expectClass.fields(ctorArgIndex)
                       
                       // populate required values
-                      searchOptCalls(body)(acc, src, scc, start, calledDefn, letCallNode, Some(LetCtorNodeInfo(x, y, clsInfo.expectClass, name, fieldName, ctorArgIndex)), Set(name))
+                      searchOptCalls(body)(using acc, src, scc, start, calledDefn, letCallNode, Some(LetCtorNodeInfo(x, y, clsInfo.expectClass, name, fieldName, ctorArgIndex)), Set(name))
                     case Some(_) =>
                       // another constructor is already using the call. Not OK
 
@@ -347,7 +345,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
       case LetMethodCall(names, cls, method, args, body) =>
         // method call is unresolved, just ignore it
         // `containingCtors -- names.toSet` takes care of variable shadowing
-        searchOptCalls(body)(acc, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors -- names.toSet)
+        searchOptCalls(body)(using acc, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors -- names.toSet)
       case x @ LetCall(names, defn, args, isTailRec, body) =>
         val callInScc = scc.contains(defn.expectDefn)
         
@@ -383,7 +381,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
             case None => // OK, we may use this LetCall as the mod cons
               // For now, only optimize functions which return one value
               if callInScc && defn.expectDefn.resultNum == 1 && restIsPure then
-                searchOptCalls(body)(acc, src, scc, start, Some(defn.expectDefn), Some(x), None, Set())
+                searchOptCalls(body)(using acc, src, scc, start, Some(defn.expectDefn), Some(x), None, Set())
               else
                 if isTailRec then
                   if !restIsPure then
@@ -393,7 +391,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
                   
                 // Treat this as a normal call
                 val newMap = updateMapSimple(NormalCallInfo(src, defn.expectDefn)(x.loc))
-                searchOptCalls(body)(newMap, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors)
+                searchOptCalls(body)(using newMap, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors)
             case Some(y: LetCall) =>
               val LetCall(namesOld, defnOld, argsOld, isTailRecOld, bodyOld) = y
               if isTailRecOld then
@@ -419,7 +417,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
                   raise(ErrorReport(List(msg"not a tail call" -> y.loc), true, Diagnostic.Compilation)) 
                 // Treat new call as a normal call
                 val newMap = updateMapSimple(NormalCallInfo(src, defn.expectDefn)(x.loc))
-                searchOptCalls(body)(newMap, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors) // OK
+                searchOptCalls(body)(using newMap, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors) // OK
               else
                 // only include mod cons calls that have one return value
                 if callInScc && defn.expectDefn.resultNum == 1 && restIsPure then 
@@ -429,7 +427,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
                     
                   // Treat the old call as a normal call
                   val newMap = updateMapSimple(NormalCallInfo(src, defnOld.expectDefn)(y.loc))
-                  searchOptCalls(body)(newMap, src, scc, start, Some(defn.expectDefn), Some(x), None, Set())
+                  searchOptCalls(body)(using newMap, src, scc, start, Some(defn.expectDefn), Some(x), None, Set())
                 else
                   if isTailRec then
                     if !restIsPure then
@@ -440,7 +438,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
                   
                   // Treat this as a normal call
                   val newMap = updateMapSimple(NormalCallInfo(src, defn.expectDefn)(x.loc))
-                  searchOptCalls(body)(acc, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors -- names)
+                  searchOptCalls(body)(using newMap, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors -- names)
 
   // checks whether a list of names is equal to a list of trivial expressions referencing those names
   private def argsListEqual(names: List[Name], exprs: List[TrivialExpr]) =
@@ -464,31 +462,31 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
     case _ => false
 
   private def discoverOptCallsNode(node: Node)(implicit src: Defn, scc: Set[Defn], acc: Set[CallInfo]): Set[CallInfo] = 
-    searchOptCalls(node)(acc, src, scc, node, None, None, None, Set()) match
+    searchOptCalls(node)(using acc, src, scc, node, None, None, None, Set()) match
       case Left(acc) => acc
-      case Right(nodes) => nodes.foldLeft(acc)((acc, node) => discoverOptCallsNode(node)(src, scc, acc))
+      case Right(nodes) => nodes.foldLeft(acc)((acc, node) => discoverOptCallsNode(node)(using src, scc, acc))
 
   private def discoverOptCalls(defn: Defn, jps: Set[Defn])(implicit scc: Set[Defn], acc: Set[CallInfo]): Set[CallInfo] =
     val combined = jps + defn
-    combined.foldLeft(acc)((acc, defn_) => discoverOptCallsNode(defn_.body)(defn, scc, acc))
+    combined.foldLeft(acc)((acc, defn_) => discoverOptCallsNode(defn_.body)(using defn, scc, acc))
 
   private def searchCalls(node: Node)(implicit src: Defn, acc: Map[Int, Set[Defn]]): Map[Int, Set[Defn]] =
     node match
       case Result(res) => acc
       case Jump(defn, args) => acc
-      case Case(scrut, cases, default) => cases.foldLeft(default.fold(acc)(x => searchCalls(x)(src, acc)))((acc, item) => searchCalls(item._2)(src, acc))
+      case Case(scrut, cases, default) => cases.foldLeft(default.fold(acc)(x => searchCalls(x)(using src, acc)))((acc, item) => searchCalls(item._2)(using src, acc))
       case LetExpr(name, expr, body) => searchCalls(body)
       case LetMethodCall(names, cls, method, args, body) => searchCalls(body)
       case LetCall(names, defn, args, isTailRec, body) => 
         val newSet = acc.get(src.id) match
           case None => Set(defn.expectDefn)
           case Some(defns) => defns + defn.expectDefn
-        searchCalls(body)(src, acc + (src.id -> newSet))
+        searchCalls(body)(using src, acc + (src.id -> newSet))
     
 
   private def discoverCalls(defn: Defn, jps: Set[Defn])(implicit acc: Map[Int, Set[Defn]]): Map[Int, Set[Defn]] =
     val combined = jps + defn
-    combined.foldLeft(acc)((acc, defn_) => searchCalls(defn_.body)(defn, acc))
+    combined.foldLeft(acc)((acc, defn_) => searchCalls(defn_.body)(using defn, acc))
   
   // Partions a tail recursive call graph into strongly connected components
   // Refernece: https://en.wikipedia.org/wiki/Strongly_connected_component
@@ -510,7 +508,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
     val inital = Map[Int, Set[Defn]]()
     val joinPoints = defns.map(d => (d.defn.id -> discoverJoinPoints(d.defn.body, Set()))).toMap
     val allJoinPoints = joinPoints.values.flatMap(x => x).toSet
-    val edges = defns.foldLeft(inital)((acc, defn) => discoverCalls(defn.defn, joinPoints(defn.defn.id))(acc)).withDefaultValue(Set())
+    val edges = defns.foldLeft(inital)((acc, defn) => discoverCalls(defn.defn, joinPoints(defn.defn.id))(using acc)).withDefaultValue(Set())
 
     var ctr = 0
     // nodes, edges
@@ -565,7 +563,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
 
         val categorizedEdges = scc
           .foldLeft(Set[CallInfo]())(
-            (calls, defn) => discoverOptCalls(defn.defn, joinPoints(defn.defn.id))(sccDefns, calls)
+            (calls, defn) => discoverOptCalls(defn.defn, joinPoints(defn.defn.id))(using sccDefns, calls)
           )
           .filter(c => sccDefns.contains(c.getDefn))
 
@@ -702,7 +700,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
       
       val ctxBranch = LetExpr(
         Name("field"), Expr.Select(appCtxName, CTX_CLASS_REF, "field"),
-        makeSwitch(Name("field"), assignmentCases.tail, assignmentCases.head._2)(trueClass, falseClass)
+        makeSwitch(Name("field"), assignmentCases.tail, assignmentCases.head._2)(using trueClass, falseClass)
       ).attachTag(tag)
       
       val idBranch = Result(List(Expr.Ref(appValName))).attachTag(tag)
@@ -779,7 +777,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
       // `ctx` parameter at the start.
       def transformNode(node: Node): Node = 
         modConsBranches.get(node.tag.inner) match
-          case Some(call) => transformModConsBranch(node)(call)
+          case Some(call) => transformModConsBranch(node)(using call)
           case None => node match
             case Result(res) => 
               makeRet(res.head)
@@ -1050,7 +1048,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
         (defn.id, transformed)
       )
 
-      val newNode = makeSwitch(trName, valsAndNodes.tail, valsAndNodes.head._2)(trueClass, falseClass)
+      val newNode = makeSwitch(trName, valsAndNodes.tail, valsAndNodes.head._2)(using trueClass, falseClass)
 
       val jpDefn = Defn(jpId, jpName, stackFrame, resultNum, newNode, false)
 
@@ -1064,7 +1062,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
   
   private def partition(defns: Set[Defn]): List[ScComponent] = 
     val nodeMap: Map[Int, DefnNode] = defns.foldLeft(Map.empty)((m, d) => m + (d.id -> DefnNode(d)))
-    partitionNodes(nodeMap).map(_.removeMetadata)
+    partitionNodes(using nodeMap).map(_.removeMetadata)
 
   private def optimizeParition(component: ScComponent, classes: Set[ClassInfo]): Set[Defn] =
     val trFn = component.nodes.find { _.isTailRec }.headOption

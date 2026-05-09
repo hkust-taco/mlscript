@@ -9,7 +9,7 @@ import hkmc2.Message.MessageContext
 import hkmc2.{semantics => sem}
 import hkmc2.semantics.{Term => st}
 
-import syntax.{Literal, Tree}
+import syntax.{Literal, Tree, SpreadKind, Keyword}
 import semantics.*
 import semantics.Term.*
 import sem.Elaborator.State
@@ -29,54 +29,28 @@ sealed abstract class Block extends Product:
     case _: End => true
     case _ => false
   
-  /** This variation of `definedVars` excludes the `syms` in `Scoped` blocks.
-    * It is used in JSBuilder now: names are allocated in JSBuilder for these `definedVarsNoScoped` symbols.
-    * This is needed now because
-    *   - there are symbols that are not collected in the `Scoped` blocks (due to some passes that have not yet been adapted to Scoped),
-    *     and they still need to be allocated a name in JSBuilder
-    *   - if we don't exlude the `Scoped` symbols, they may be allocated a name
-    *     prematurely and decalred in wrong places, e.g. symbols inside while bodies
-    *     may be declared in an outer level
-    */
-  lazy val definedVarsNoScoped: Set[Local] = this match
-    case _: Return | _: Throw => Set.empty
-    case Begin(sub, rst) => sub.definedVarsNoScoped ++ rst.definedVarsNoScoped
-    case Assign(l: TermSymbol, r, rst) => rst.definedVarsNoScoped
-    case Assign(l, r, rst) => rst.definedVarsNoScoped + l
-    case AssignField(l, n, r, rst) => rst.definedVarsNoScoped
-    case AssignDynField(l, n, ai, r, rst) => rst.definedVarsNoScoped
-    case Match(scrut, arms, dflt, rst) =>
-      arms.flatMap(_._2.definedVarsNoScoped).toSet ++ dflt.toList.flatMap(_.definedVarsNoScoped) ++ rst.definedVarsNoScoped
-    case End(_) => Set.empty
-    case Break(_) => Set.empty
-    case Continue(_) => Set.empty
-    case Define(defn, rst) =>
-      val rest = rst.definedVarsNoScoped
-      if defn.isOwned then rest else rest + defn.sym
-    // Note that the handler's LHS and body are not part of the current block, so we do not consider them here.
-    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVarsNoScoped + res
-    case TryBlock(sub, fin, rst) => sub.definedVarsNoScoped ++ fin.definedVarsNoScoped ++ rst.definedVarsNoScoped
-    case Label(lbl, _, bod, rst) => bod.definedVarsNoScoped ++ rst.definedVarsNoScoped
-    case Scoped(syms, body) => body.definedVarsNoScoped -- syms
   lazy val isAbortive: Bool = this match
     case _: End => false
-    case _: Throw | _: Break | _: Continue => true
+    case _: Throw | _: Break | _: Continue | _: Unreachable => true
     case ret: Return => !ret.implct
     case Begin(sub, rst) => sub.isAbortive || rst.isAbortive
     case Assign(_, _, rst) => rst.isAbortive
     case AssignField(_, _, _, rst) => rst.isAbortive
     case AssignDynField(_, _, _, _, rst) => rst.isAbortive
-    case Match(_, arms, dflt, rst) => rst.isAbortive
+    case Match(_, arms, dflt, rst) => rst.isAbortive || arms.forall(_._2.isAbortive) && dflt.exists(_.isAbortive)
     case Define(_, rst) => rst.isAbortive
     case TryBlock(sub, fin, rst) => rst.isAbortive || sub.isAbortive || fin.isAbortive
-    case Label(_, _, bod, rst) => rst.isAbortive
-    case HandleBlock(_, _, _, _, _, handlers, body, rst) => rst.isAbortive
+    case Label(sym, loop, bod, rst) =>
+      // * Note: the body may be abortive for the reason of breaking to the rest!
+      // * So we can't really use the result of bod.isAbortive even when `loop` is false.
+      rst.isAbortive
     case Scoped(_, body) => body.isAbortive
   
-  // * Note: there is a good chance that historical users of `definedVars` do not properly respect Scoped blocks
-  // * and should adapt their logic to use `definedVarsNoScoped` instead.
+  // * Note: it seems most historical uses of `definedVars` would be better removed,
+  // * now that we properly put everything in proper Scoped blocks;
+  // * and `definedVars` itself should be removed.
   lazy val definedVars: Set[Local] = this match
-    case _: Return | _: Throw => Set.empty
+    case _: Return | _: Throw | _: Unreachable => Set.empty
     case Begin(sub, rst) => sub.definedVars ++ rst.definedVars
     case Assign(l: TermSymbol, r, rst) => rst.definedVars
     case Assign(l, r, rst) => rst.definedVars + l
@@ -90,14 +64,12 @@ sealed abstract class Block extends Product:
     case Define(defn, rst) =>
       val rest = rst.definedVars
       if defn.isOwned then rest else rest + defn.sym
-    // Note that the handler's LHS and body are not part of the current block, so we do not consider them here.
-    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVars + res
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, _, bod, rst) => bod.definedVars ++ rst.definedVars
-    case Scoped(syms, body) => body.definedVars
+    case Scoped(syms, body) => body.definedVars ++ syms
   
   lazy val size: Int = this match
-    case _: Return | _: Throw | _: End | _: Break | _: Continue => 1
+    case _: Return | _: Throw | _: End | _: Break | _: Continue | _: Unreachable => 1
     case Begin(sub, rst) => sub.size + rst.size
     case Assign(_, _, rst) => 1 + rst.size
     case AssignField(_, _, _, rst) => 1 + rst.size
@@ -107,29 +79,17 @@ sealed abstract class Block extends Product:
     case Define(_, rst) => 1 + rst.size
     case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
     case Label(_, _, bod, rst) => 1 + bod.size + rst.size
-    case HandleBlock(lhs, res, par, args, cls, handlers, bdy, rst) => 1 + handlers.map(_.body.size).sum + bdy.size + rst.size
     case Scoped(_, body) => body.size
   
-  // TODO conserve if no changes
-  def mapTail(f: BlockTail => Block): Block = this match
-    case Scoped(syms, body) => Scoped(syms, body.mapTail(f))
-    case b: BlockTail => f(b)
-    case Begin(sub, rst) => Begin(sub, rst.mapTail(f))
-    case Assign(lhs, rhs, rst) => Assign(lhs, rhs, rst.mapTail(f))
-    case Define(defn, rst) => Define(defn, rst.mapTail(f))
-    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
-      HandleBlock(lhs, res, par, args, cls, handlers.map(h => Handler(h.sym, h.resumeSym, h.params, h.body)), body, rest.mapTail(f))
-    case Match(scrut, arms, dflt, rst: End) =>
-      Match(scrut, arms.map(_ -> _.mapTail(f)), dflt.map(_.mapTail(f)), rst)
-    case Match(scrut, arms, dflt, rst) =>
-      Match(scrut, arms, dflt, rst.mapTail(f))
-    case Label(label, loop, body, rest) => Label(label, loop, body.mapTail(f), rest.mapTail(f))
-    case af @ AssignField(lhs, nme, rhs, rest) =>
-      AssignField(lhs, nme, rhs, rest.mapTail(f))(af.symbol)
-    case adf @ AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
-      AssignDynField(lhs, fld, arrayIdx, rhs, rest.mapTail(f))
-    case tb @ TryBlock(sub, fin, rest) =>
-      TryBlock(sub, fin, rest.mapTail(f))
+  
+  // TODO: make patmat use unreach
+  
+  def mapReturn(f: Return => Block): Block =
+    new BlockTransformerShallow(SymbolSubst.Id):
+      override def applyBlock(b: Block): Block = b match
+        case ret: Return => f(ret)
+        case _ => super.applyBlock(b)
+    .applyBlock(this)
   
   lazy val freeVars: Set[Local] = this match
     case Match(scrut, arms, dflt, rest) =>
@@ -139,18 +99,17 @@ sealed abstract class Block extends Product:
     case Return(res, implct) => res.freeVars
     case Throw(exc) => exc.freeVars
     case Label(label, _, body, rest) => (body.freeVars - label) ++ rest.freeVars 
-    case Break(label) => Set(label)
-    case Continue(label) => Set(label)
+    case Break(label) => Set.single(label)
+    case Continue(label) => Set.single(label)
     case Begin(sub, rest) => sub.freeVars ++ rest.freeVars
     case TryBlock(sub, finallyDo, rest) => sub.freeVars ++ finallyDo.freeVars ++ rest.freeVars
-    case Assign(lhs, rhs, rest) => Set(lhs) ++ rhs.freeVars ++ rest.freeVars
+    case Assign(lhs, rhs, rest) => Set.single(lhs) ++ rhs.freeVars ++ rest.freeVars
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVars ++ rhs.freeVars ++ rest.freeVars
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVars ++ fld.freeVars ++ rhs.freeVars ++ rest.freeVars
     case Define(defn, rest) => defn.freeVars ++ rest.freeVars
-    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
-      (bod.freeVars - lhs) ++ rst.freeVars ++ hdr.flatMap(_.freeVars)
     case Scoped(syms, body) => body.freeVars
     case End(msg) => Set.empty
+    case Unreachable(msg) => Set.empty
   
   lazy val freeVarsLLIR: Set[Local] = this match
     case Match(scrut, arms, dflt, rest) =>
@@ -168,10 +127,9 @@ sealed abstract class Block extends Product:
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVarsLLIR ++ rhs.freeVarsLLIR ++ rest.freeVarsLLIR
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVarsLLIR ++ fld.freeVarsLLIR ++ rhs.freeVarsLLIR ++ rest.freeVarsLLIR
     case Define(defn, rest) => defn.freeVarsLLIR ++ (rest.freeVarsLLIR - defn.sym)
-    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
-      (bod.freeVarsLLIR - lhs) ++ rst.freeVarsLLIR ++ hdr.flatMap(_.freeVarsLLIR)
     case Scoped(syms, body) => body.freeVarsLLIR
     case End(msg) => Set.empty
+    case Unreachable(msg) => Set.empty
   
   lazy val subBlocks: Ls[Block] = this match
     case Match(p, arms, dflt, rest) => p.subBlocks ++ arms.map(_._2) ++ dflt.toList :+ rest
@@ -181,7 +139,6 @@ sealed abstract class Block extends Product:
     case AssignField(_, _, rhs, rest) => rhs.subBlocks ::: rest :: Nil
     case AssignDynField(_, _, _, rhs, rest) => rhs.subBlocks ::: rest :: Nil
     case Define(d, rest) => d.subBlocks ::: rest :: Nil
-    case HandleBlock(_, _, par, args, _, handlers, body, rest) => par.subBlocks ++ args.flatMap(_.subBlocks) ++ handlers.map(_.body) :+ body :+ rest
     case Label(_, _, body, rest) => body :: rest :: Nil
     case Scoped(_, body) => body :: Nil
     
@@ -189,7 +146,7 @@ sealed abstract class Block extends Product:
     case Return(r, _) => r.subBlocks
     case Throw(r) => r.subBlocks
     
-    case _: Return | _: Throw | _: Break | _: Continue | _: End => Nil
+    case _: Return | _: Throw | _: Break | _: Continue | _: End | _: Unreachable => Nil
   
   // Moves definitions in a block to the top. Only scans the top-level definitions of the block;
   // i.e, definitions inside other definitions are not moved out. Definitions inside `match`/`if`
@@ -203,7 +160,7 @@ sealed abstract class Block extends Product:
         preserve: Defn => Bool = _ => false
       ): (Block, List[Defn]) =
     var defns: List[Defn] = Nil
-    val transformer = new BlockTransformerShallow(SymbolSubst()):
+    val transformer = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyBlock(b: Block): Block = b match
         case Define(defn, rest) if !ignore(defn) => defn match
           case v: ValDefn => super.applyBlock(b)
@@ -224,13 +181,14 @@ sealed abstract class Block extends Product:
   lazy val flattened: Block = this.flatten(identity)
   
   private def flatten(k: End => Block): Block = this match
+    
     case Match(scrut, arms, dflt, rest) =>
       val newRest = rest.flatten(k)
       val newArms = arms.mapConserve: arm =>
         val newBody = arm._2.flattened
         if newBody is arm._2 then arm else (arm._1, newBody)
-      val newDflt = dflt.map(_.flattened)
-      if (newRest is rest) && (newArms is arms) && (dflt is newDflt)
+      val newDflt = dflt.mapConserve(_.flattened)
+      if (newRest is rest) && (newArms is arms) && (newDflt is dflt)
       then this
       else Match(scrut, newArms, newDflt, newRest)
       
@@ -258,7 +216,7 @@ sealed abstract class Block extends Product:
       then this
       else Assign(lhs, rhs, newRest)
       
-    case a@AssignField(lhs, nme, rhs, rest) =>
+    case a @ AssignField(lhs, nme, rhs, rest) =>
       val newRest = rest.flatten(k)
       if newRest is rest
       then this
@@ -276,34 +234,38 @@ sealed abstract class Block extends Product:
           val newBody = d.body.flattened
           if newBody is d.body
           then d
-          else d.copy(body = newBody)(forceTailRec = d.forceTailRec)
+          else d.copy(body = newBody)(configOverride = d.configOverride, annotations = d.annotations)
         case v: ValDefn => v
         case c: ClsLikeDefn =>
           val newPreCtor = c.preCtor.flattened
           val newCtor = c.ctor.flattened
-          val newMethods = c.methods.mapConserve:
+          def flattenMethods(ms: List[FunDefn]) = ms.mapConserve:
             case f@FunDefn(owner, sym, dSym, params, body) =>
               val newBody = body.flattened
-              if newBody is body then f else f.copy(body = newBody)(forceTailRec = f.forceTailRec)
-          if (newPreCtor is c.preCtor) && (newCtor is c.ctor) && (newMethods is c.methods)
+              if newBody is body then f else f.copy(body = newBody)(configOverride = f.configOverride, annotations = f.annotations)
+          val newMethods = flattenMethods(c.methods)
+          val newCompanion = c.companion.mapConserve: c =>
+            val newCtor = c.ctor.flattened
+            val newMethods = flattenMethods(c.methods)
+            if (newCtor is c.ctor) && (newMethods is c.methods) then c
+              else c.copy(ctor = newCtor, methods = newMethods)
+          if (newPreCtor is c.preCtor)
+          && (newCtor is c.ctor)
+          && (newMethods is c.methods)
+          && (newCompanion is c.companion)
           then c
-          else c.copy(preCtor = newPreCtor, ctor = newCtor, methods = newMethods)
+          else c.copy(
+            preCtor = newPreCtor,
+            ctor = newCtor,
+            methods = newMethods,
+            companion = newCompanion,
+          )(c.configOverride, c.annotations)
       
       val newRest = rest.flatten(k)
       if (newDefn is defn) && (newRest is rest)
       then this
       else Define(newDefn, newRest)
     
-    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
-      val newHandlers = handlers.mapConserve: h =>
-        val newBody = h.body.flattened
-        if newBody is h.body then h else h.copy(body = newBody)
-      val newBody = body.flattened
-      val newRest = rest.flatten(k)
-      if (newHandlers is handlers) && (newBody is body) && (newRest is rest)
-      then this
-      else HandleBlock(lhs, res, par, args, cls, newHandlers, newBody, newRest)
-
     case Scoped(syms, body) =>
       val newBody = body.flatten(k)
       if newBody is body
@@ -317,66 +279,94 @@ end Block
 
 sealed abstract class BlockTail extends Block
 
+sealed abstract trait NonBlockTail:
+  val rest: Block
+
 case class Match(
   scrut: Path,
   arms: Ls[Case -> Block],
   dflt: Opt[Block],
   rest: Block,
-) extends Block with ProductWithTail
+) extends Block with ProductWithTail with NonBlockTail
 
-// * `implct`: whether it's a JS implicit return, without the `return` keyword
-// * TODO could just remove this flag and add a flag in Scope instead
+// * `implct`: metadata indicating whether this is a JS implicit return, without the `return` keyword.
+// * This is currenlty only used for the main blocks of modules and diff-test blocks;
+// * for all intents and purposes, one can view an implicit return as a normal return.
+// * I would remove it, but it helps print cleaner outputs for diff tests (eg, using `:sir`).
 case class Return(res: Result, implct: Bool) extends BlockTail
 
 case class Throw(exc: Result) extends BlockTail
 
-case class Label(label: Local, loop: Bool, body: Block, rest: Block) extends Block
+case class Label(label: LabelSymbol, loop: Bool, body: Block, rest: Block)
+extends Block with NonBlockTail with ProductWithTail
 
-case class Break(label: Local) extends BlockTail
-case class Continue(label: Local) extends BlockTail
+case class Break(label: LabelSymbol) extends BlockTail
+case class Continue(label: LabelSymbol) extends BlockTail
 
 
-case class Scoped(syms: collection.Set[Local], body: Block) extends BlockTail
+case class Scoped(syms: collection.Set[Local], body: Block)
+extends Block with NonBlockTail:
+  val rest = body
 
 // TODO: remove this form?
-case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail
+case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail with NonBlockTail
 
-case class TryBlock(sub: Block, finallyDo: Block, rest: Block) extends Block with ProductWithTail
+case class TryBlock(sub: Block, finallyDo: Block, rest: Block) extends Block with ProductWithTail with NonBlockTail
 
-case class Assign(lhs: Local, rhs: Result, rest: Block) extends Block with ProductWithTail
+case class Assign(lhs: Local, rhs: Result, rest: Block) extends Block with ProductWithTail with NonBlockTail
 // case class Assign(lhs: Path, rhs: Result, rest: Block) extends Block with ProductWithTail
 
-case class AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(val symbol: Opt[MemberSymbol]) extends Block with ProductWithTail
+case class AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(val symbol: Opt[MemberSymbol])
+  extends Block with ProductWithTail with NonBlockTail
 
-case class AssignDynField(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, rest: Block) extends Block with ProductWithTail
+case class AssignDynField(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, rest: Block)
+  extends Block with ProductWithTail with NonBlockTail
 
-case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail
+case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail with NonBlockTail
 
 inline def whenValidatingIR(inline code: => Unit): Unit =
   () // code // * uncomment to run on-the fly IR validations
   
 object Label:
-  def apply(label: Local, loop: Bool, body: Block, rest: Block): Block = rest match
-    case Scoped(syms, rest) => Scoped(syms, Label(label, loop, body, rest))
-    case _ => new Label(label, loop, body, rest)
+  def apply(label: LabelSymbol, loop: Bool, body: Block, rest: Block): Block = body match
+    case _: Unreachable => body
+    case _ =>
+      rest match
+      case Scoped(syms, rest) => Scoped(syms, Label(label, loop, body, rest))
+      case _ => new Label(label, loop, body, rest)
 object Scoped:
   def apply(syms: collection.Set[Local], body: Block): Block = body match
+    case _: Unreachable => body
+    case _ if syms.isEmpty => body
     case Scoped(syms2, body) =>
-      if syms2.isEmpty && syms.isEmpty then Scoped(Set.empty, body)
-      else
-        whenValidatingIR:
-          assert(!syms2.exists(syms.contains), "overlapping symbols in nested Scoped")
-        Scoped(syms ++ syms2, body)
+      whenValidatingIR:
+        assert(!syms2.exists(syms.contains), "overlapping symbols in nested Scoped")
+      Scoped(syms ++ syms2, body)
     case _ =>
-      if syms.isEmpty then body else new Scoped(syms, body)
+      new Scoped(syms, body)
 object TryBlock:
-  def apply(sub: Block, finallyDo: Block, rest: Block): Block = rest match
-    case Scoped(syms, body) => Scoped(syms, TryBlock(sub, finallyDo, body))
-    case _ => new TryBlock(sub, finallyDo, rest)
+  def apply(body: Block, finallyDo: Block, rest: Block): Block =
+    body match
+    case _: Unreachable => body
+    case _ =>
+      rest match
+      case Scoped(syms, innerRest) => Scoped(syms, TryBlock(body, finallyDo, innerRest))
+      case _ => new TryBlock(body, finallyDo, rest)
 object Assign:
   def apply(lhs: Local, rhs: Result, rest: Block): Block = rest match
+    case _: Unreachable =>
+      if rhs.isPure then rest else new Assign(lhs, rhs, rest)
     case Scoped(syms, body) => Scoped(syms, Assign(lhs, rhs, body))
-    case _ => new Assign(lhs, rhs, rest)
+    case _ =>
+      lhs match
+      case _: NoSymbol =>
+        if rhs.isPure then rest else new Assign(lhs, rhs, rest)
+      case _ => new Assign(lhs, rhs, rest)
+  def discard(res: Result, rest: Block)(using State): Block =
+    res match
+    case _: Value | _: Lambda => rest
+    case p: Path if p.isPure => rest
+    case r => Assign(State.noSymbol, r, rest)
 object AssignField:
   def apply(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(symbol: Opt[MemberSymbol]): Block = rest match
     case Scoped(syms, body) => Scoped(syms, AssignField(lhs, nme, rhs, body)(symbol))
@@ -391,13 +381,34 @@ object Define:
     case _ => new Define(defn, rest)
 
 object Match:
-  def apply(scrut: Path, arms: Ls[Case -> Block], dflt: Opt[Block], rest: Block): Block = dflt match
+  def apply(scrut: Path, _arms: Ls[Case -> Block], _dflt: Opt[Block], rest: Block): Block =
+    val emptyDflt = _dflt.forall(_.isEmpty)
+    val dflt = if emptyDflt then N else _dflt
+    val arms = if emptyDflt then _arms.filterNot(_._2.isEmpty) else _arms
+    if arms.isEmpty && scrut.isPure then dflt.fold(rest)(Begin(_, rest))
+    else dflt match
     case S(Match(`scrut`, arms2, dflt2, _: End)) => // TODO: also handle non-End rest (may require a join point)
-      // * Currently, this branch does not seem used, because the UCS already does a good job at merging matches
+      // * Currently, this branch does not seem used often (or at all?),
+      // * because the UCS and (especially) MergeMatchArmTransformer already do a good job at merging matches
       Match(scrut, arms ::: arms2, dflt2, rest)
     case _ =>
-      if !rest.isEmpty && arms.forall(_._2.isAbortive) && dflt.exists(_.isAbortive)
-      then new Match(scrut, arms, dflt, End("unreachable"))
+      val numNonAbortive = arms.count(!_._2.isAbortive)
+      def mapDflt = dflt match
+        case S(d) => S(if d.isAbortive then d else Begin(d, rest))
+        case N => S(rest)
+      if numNonAbortive === 0 then
+        if rest.isEmpty then new Match(scrut, arms, mapDflt, rest)
+        else new Match(scrut, arms, mapDflt, End("(Unreachable:) rest of abortive match"))
+      else if numNonAbortive === 1 && dflt.exists(_.isAbortive) || rest.size <= 1 then
+        new Match(scrut,
+          arms.map: a =>
+            if a._2.isAbortive then a else (a._1, Begin(a._2, rest)),
+          mapDflt,
+          // * We used to produce an `Unreachable` here, but that got in the way of the useless-break optimization;
+          // * Indeed, `L: { match scrut { C => break L }; end }` can no longer be optimized
+          // * if we replace `end` with `unreachable`, since the break is no longer jumping over nothing,
+          // * ie no longer in tail position of the label (trying to treat it as such is unsound).
+          End("Rest moved to non-abortive branch(es)"))
       else rest match
         case Scoped(syms, body) => Scoped(syms, Match(scrut, arms, dflt, body))
         case _ => new Match(scrut, arms, dflt, rest)
@@ -405,6 +416,7 @@ object Match:
 object Begin:
   def apply(sub: Block, rest: Block): Block =
     if sub.isEmpty then rest
+    else if rest.isEmpty then sub
     else if sub.isAbortive then sub
     else (sub, rest) match
       case (Scoped(symsSub, bodySub), Scoped(symsRest, bodyRest)) =>
@@ -418,18 +430,66 @@ object Begin:
       case _ => new Begin(sub, rest)
 
 
-case class HandleBlock(
-    lhs: Local,
-    res: Local,
-    par: Path,
-    args: Ls[Path],
-    cls: ClassSymbol,
-    handlers: Ls[Handler],
-    body: Block,
-    rest: Block
-) extends Block with ProductWithTail
-
 object HandleBlock:
+
+  def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx): Result =
+    Call(Value.Ref(Elaborator.ctx.builtins.runtime.suspend, N), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(true, true, false)
+
+  def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx): Result =
+    Call(Value.Ref(Elaborator.ctx.builtins.runtime.handle_suspension, N), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(true, true, false)
+  
+  private def create(
+      lhs: Local,
+      res: Local,
+      par: Path,
+      args: Ls[Path],
+      cls: ClassSymbol,
+      handlers: Ls[Handler],
+      body: Block,
+      rest: Block
+  )(using Elaborator.State, Elaborator.Ctx) =
+    val sym = new BlockMemberSymbol("handleBlock$", Nil, false)
+
+    val bodyDefn = FunDefn.withFreshSymbol(N, sym, PlainParamList(Nil) :: Nil, body)(N, annotations = Nil)
+    
+    val handlerMtds = handlers.map: handler =>
+      val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
+      val fDef = FunDefn.withFreshSymbol(
+        N, sym, PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil) :: Nil,
+        handler.body
+        )(N, annotations = Nil)
+      val rSym = TempSymbol(N, "suspendRes")
+      FunDefn.withFreshSymbol(
+        S(cls),
+        handler.sym,
+        handler.params,
+        Scoped(Set(sym, rSym), Define(
+          fDef,
+          Return(suspend(cls.asPath, Value.Ref(sym, S(fDef.dSym))), false))))(N, annotations = Nil)
+
+    val clsDefn = ClsLikeDefn(
+      N, // no owner
+      cls,
+      BlockMemberSymbol(cls.id.name, Nil),
+      N,
+      syntax.Cls,
+      N, Nil,
+      S(par), handlerMtds, Nil, Nil,
+      // Apparently, the lifter is not happy with any assignment in the preCtor...
+      Return(Call(Value.Ref(State.builtinOpsMap("super")), args.map(_.asArg) ne_:: Nil)(true, true, false), true),
+      End(),
+      N,
+      N,
+    )(N, Nil)
+
+    blockBuilder
+      .scopedVars(Set(clsDefn.sym, sym))
+      .define(clsDefn)
+      .assign(lhs, Instantiate(mut = true, Value.Ref(clsDefn.sym, S(cls)), Nil :: Nil))
+      .define(bodyDefn)
+      .assign(res, handleSuspension(lhs.asPath, Value.Ref(bodyDefn.sym, S(bodyDefn.dSym))))
+      .rest(rest)
+  
   def apply(
       lhs: Local,
       res: Local,
@@ -439,18 +499,31 @@ object HandleBlock:
       handlers: Ls[Handler],
       body: Block,
       rest: Block
-    ) =
+    )(using Elaborator.State, Elaborator.Ctx) =
   rest match
   case Scoped(syms, rest) =>
-    Scoped(syms, new HandleBlock(lhs, res, par, args, cls, handlers, body, rest))
-  case _ => new HandleBlock(lhs, res, par, args, cls, handlers, body, rest)
+    Scoped(syms, create(lhs, res, par, args, cls, handlers, body, rest))
+  case _ => create(lhs, res, par, args, cls, handlers, body, rest)
 
 
 sealed abstract class Defn:
   val innerSym: Opt[MemberSymbol]
   val sym: BlockMemberSymbol
+  val annotations: Ls[Annot]
+  def isStaged: Bool = annotations.exists:
+    case Annot.Modifier(Keyword.`staged`) => true
+    case _ => false
   def isOwned: Bool = owner.isDefined
   def owner: Opt[InnerSymbol]
+  
+  /** Whether this definition as a statement has any side effect (if unused). */
+  def isPure: Bool = this match
+    case vd: ValDefn => vd.rhs.isPure && vd.tsym.owner.isEmpty
+    case fd: FunDefn => fd.owner.isEmpty
+    case c: ClsLikeDefn =>
+      // * Simple heuristic. TODO: check the purity of the ctor somehow? (ignore pure local field inits)
+      c.companion.isEmpty
+        && (!(c.k is syntax.Obj) || c.ctor.isEmpty)
   
   def subBlocks: Ls[Block] = this match
     case FunDefn(body = body) => body :: Nil
@@ -463,18 +536,21 @@ sealed abstract class Defn:
   // * At some point we'll want to make `Local` more specific than `Symbol` to express this
   // * in the type system.
   lazy val freeVars: Set[Local] = this match
-    case FunDefn(own, sym, dSym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
-    case ValDefn(tsym, sym, rhs) => rhs.freeVars
-    case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
+    case FunDefn(own, sym, dSym, params, body) =>
+      body.freeVars -- params.flatMap(_.paramSyms) ++ sym.optionIf(own.isEmpty)
+    case ValDefn(tsym, sym, rhs) => rhs.freeVars ++ sym.optionIf(tsym.owner.isEmpty)
+    case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, 
         methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
       preCtor.freeVars
-        ++ ctor.freeVars ++ methods.flatMap(_.freeVars) ++ stat.iterator.flatMap(_.freeVars)
+        ++ ctor.freeVars ++ methods.flatMap(_.freeVars)
         -- auxParams.flatMap(_.paramSyms)
+        ++ stat.iterator.flatMap(_.freeVars)
+        ++ sym.optionIf(own.isEmpty)
   
   lazy val freeVarsLLIR: Set[Local] = this match
     case FunDefn(own, sym, dSym, params, body) => body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym
     case ValDefn(tsym, sym, rhs) => rhs.freeVarsLLIR
-    case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
+    case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, 
         methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
       preCtor.freeVarsLLIR
         ++ ctor.freeVarsLLIR ++ methods.flatMap(_.freeVarsLLIR) ++ stat.iterator.flatMap(_.freeVarsLLIR)
@@ -490,18 +566,29 @@ final case class FunDefn(
     params: Ls[ParamList],
     body: Block,
   )(
-    val forceTailRec: Bool,
+    val configOverride: Opt[Config],
+    val annotations: Ls[Annot],
 ) extends Defn:
   val innerSym = N
   val asPath = Value.Ref(sym, S(dSym))
+  lazy val forceTailRec: Bool = annotations.contains(Annot.TailRec)
+  lazy val visibility: Visibility = annotations.collectFirst:
+    case Annot.Modifier(Keyword.`private`) => Visibility.Private
+    case Annot.Modifier(Keyword.`public`) => Visibility.Public
+  .getOrElse(Visibility.Public)
 object FunDefn:
-  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(forceTailRec: Bool)(using State) =
-    FunDefn(owner, sym, TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme)), params, body)(forceTailRec)
+  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
+    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
+    sym.tsym = S(tSym)
+    FunDefn(owner, sym, tSym, params, body)(configOverride, annotations)
 
 final case class ValDefn(
     tsym: TermSymbol,
     sym: BlockMemberSymbol,
     rhs: Path,
+)(
+    val configOverride: Opt[Config],
+    val annotations: Ls[Annot],
 ) extends Defn:
   val innerSym = S(tsym)
   val owner: Opt[InnerSymbol] = tsym.owner
@@ -513,9 +600,11 @@ object ValDefn:
       k: syntax.Val,
       sym: BlockMemberSymbol,
       rhs: Path,
+      configOverride: Opt[Config],
+      annotations: Ls[Annot],
     )(using State)
     : ValDefn =
-      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme)), sym = sym, rhs = rhs)
+      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme)), sym = sym, rhs = rhs)(configOverride, annotations)
 
 
 /*
@@ -556,6 +645,7 @@ final case class ClsLikeDefn(
     owner: Opt[InnerSymbol],
     isym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol,
     sym: BlockMemberSymbol,
+    ctorSym: Opt[TermSymbol],
     k: syntax.ClsLikeKind,
     paramsOpt: Opt[ParamList],
     auxParams: List[ParamList],
@@ -567,6 +657,9 @@ final case class ClsLikeDefn(
     ctor: Block,
     companion: Opt[ClsLikeBody],
     bufferable: Option[Bool],
+)(
+    val configOverride: Opt[Config],
+    val annotations: Ls[Annot],
 ) extends Defn:
   require(k isnt syntax.Mod)
   val innerSym = S(isym.asMemSym)
@@ -579,7 +672,11 @@ final case class ClsLikeBody(
     privateFields: Ls[TermSymbol],
     publicFields: Ls[BlockMemberSymbol -> TermSymbol],
     ctor: Block,
+    annotations: Ls[Annot],
 ):
+  def isStaged: Bool = annotations.exists:
+    case Annot.Modifier(Keyword.`staged`) => true
+    case _ => false
   def subBlocks: Ls[Block] =
     ctor :: methods.flatMap(_.subBlocks)
   lazy val freeVars: Set[Local] =
@@ -612,6 +709,8 @@ final case class Handler(
  * or the end of a non-returning function or a REPL block */
 case class End(msg: Str = "") extends BlockTail with ProductWithTail
 
+case class Unreachable(cause: Str) extends BlockTail with ProductWithTail
+
 enum Case:
   case Lit(lit: Literal)
   case Cls(cls: ClassLikeSymbol, path: Path)
@@ -640,13 +739,24 @@ sealed abstract class Result extends AutoLocated:
 // sealed abstract class Result extends AutoLocated with ProductWithExtraInfo:
 //   def extraInfo: Str = toLoc.toString
   
+  lazy val isPure: Bool = this match
+    case _: Value => true
+    case sel @ Select(q, n) =>
+      q.isPure && sel.symbol.exists(_.isPure)
+    case Call(Value.Ref(bs: BuiltinSymbol, _), ass) if bs.isPure =>
+      ass.forall(_.forall(_.value.isPure))
+    case Record(mut, args) => args.forall(_.value.isPure)
+    case Tuple(mut, elems) => elems.forall(_.value.isPure)
+    // case Instantiate(mut, cls, args) => // TODO?
+    case _ => false
+  
   // * Note: this function is used to piece together a location;
   // * for the location to be valid, we should NOT have it include children whose location
   // * is from some different place (with a different Origin), such as the location attached to symbols.
   // * That's why for example, we're not adding the `l` of `Value.Ref` to the children list.
   protected def children: Vector[Located] = this match
-    case Call(fun, args) => fun +: args.iterator.map(_.value).toVector
-    case Instantiate(mut, cls, args) => cls +: args.iterator.map(_.value).toVector
+    case Call(fun, argss) => fun +: argss.iterator.flatten.map(_.value).toVector
+    case Instantiate(mut, cls, argss) => cls +: argss.iterator.flatten.map(_.value).toVector
     case Select(qual, name) => Vector.double(qual, name)
     case DynSelect(qual, fld, arrayIdx) => Vector.double(qual, fld)
     case Lambda(params, body) => Vector.single(params)
@@ -658,16 +768,16 @@ sealed abstract class Result extends AutoLocated:
   
   // TODO rm Lam from values and thus the need for this method
   def subBlocks: Ls[Block] = this match
-    case Call(fun, args) => fun.subBlocks ::: args.flatMap(_.value.subBlocks)
-    case Instantiate(mut, cls, args) => args.flatMap(_.value.subBlocks)
+    case Call(fun, argss) => fun.subBlocks ::: argss.flatten.flatMap(_.value.subBlocks)
+    case Instantiate(mut, cls, argss) => argss.flatten.flatMap(_.value.subBlocks)
     case Select(qual, name) => qual.subBlocks
     case Lambda(params, body) => body :: Nil
     case Tuple(mut, elems) => elems.flatMap(_.value.subBlocks)
     case _ => Nil
   
   lazy val freeVars: Set[Local] = this match
-    case Call(fun, args) => fun.freeVars ++ args.flatMap(_.value.freeVars).toSet
-    case Instantiate(mut, cls, args) => cls.freeVars ++ args.flatMap(_.value.freeVars).toSet
+    case Call(fun, argss) => fun.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
+    case Instantiate(mut, cls, argss) => cls.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
     case Select(qual, name) => qual.freeVars 
     case Lambda(params, body) => body.freeVars -- params.paramSyms
     case Tuple(mut, elems) => elems.flatMap(_.value.freeVars).toSet
@@ -679,8 +789,8 @@ sealed abstract class Result extends AutoLocated:
     case DynSelect(qual, fld, arrayIdx) => qual.freeVars ++ fld.freeVars
   
   lazy val freeVarsLLIR: Set[Local] = this match
-    case Call(fun, args) => fun.freeVarsLLIR ++ args.flatMap(_.value.freeVarsLLIR).toSet
-    case Instantiate(mut, cls, args) => cls.freeVarsLLIR ++ args.flatMap(_.value.freeVarsLLIR).toSet
+    case Call(fun, argss) => fun.freeVarsLLIR ++ argss.flatten.flatMap(_.value.freeVarsLLIR).toSet
+    case Instantiate(mut, cls, argss) => cls.freeVarsLLIR ++ argss.flatten.flatMap(_.value.freeVarsLLIR).toSet
     case Select(qual, name) => qual.freeVarsLLIR 
     case Lambda(params, body) => body.freeVarsLLIR -- params.paramSyms
     case Tuple(mut, elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
@@ -707,9 +817,9 @@ type Local = Symbol
  * regardless of whether the check for effect is inserted or not.
  * Note that the check for effect is inserted during HandlerLowering and setting this to true
  * after handler is lowered does not have any effect on the code generation. */
-case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffects: Bool, val explicitTailCall: Bool) extends Result
+case class Call(fun: Path, argss: NELs[Ls[Arg]])(val isMlsFun: Bool, val mayRaiseEffects: Bool, val explicitTailCall: Bool) extends Result
 
-case class Instantiate(mut: Bool, cls: Path, args: Ls[Arg]) extends Result
+case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]]) extends Result
 
 case class Lambda(params: ParamList, body: Block) extends Result
 
@@ -723,12 +833,16 @@ sealed abstract class Path extends TrivialResult:
   def sel(id: Tree.Ident, sym: DefinitionSymbol[?]): Path = Select(this, id)(S(sym))
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
   def asArg = Arg(spread = N, this)
+  def targetSymbol: Opt[DefinitionSymbol[?]] = this match
+    case sel: Select => sel.symbol
+    case Value.Ref(l, d) => d
+    case _ => N
 
 /**
  * @param symbol The symbol representing the definition that the selection refers to, if known.
  */
 case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol[?]]) extends Path with ProductWithExtraInfo:
-  def extraInfo: Str = symbol.map(s => s"sym=${s}").mkString
+  def extraInfo(using DebugPrinter): Str = symbol.map(s => s"sym=${s.showAsPlain}").mkString
 
 case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool) extends Path
 
@@ -741,8 +855,8 @@ enum Value extends Path with ProductWithExtraInfo:
   case This(sym: InnerSymbol) // TODO rm – just use Ref
   case Lit(lit: Literal)
   
-  override def extraInfo: Str = this match
-    case Ref(l, disamb) => disamb.map(s => s"disamb=${s}").mkString
+  override def extraInfo(using DebugPrinter): Str = this match
+    case Ref(l, disamb) => disamb.map(s => s"disamb=${s.showAsPlain}").mkString
     case _ => ""
 
 object Value:
@@ -753,7 +867,7 @@ object Value:
     // * If the ref is a symbol that does not refer to a definition, then there is no disambiguation.
     def apply(l: TempSymbol | VarSymbol | BuiltinSymbol): Ref = Ref(l, N)
 
-case class Arg(spread: Opt[Bool], value: Path)
+case class Arg(spread: Opt[SpreadKind], value: Path)
 
 // * `IndxdArg(S(idx), value)` represents a key-value pair in a record `(idx): value`
 // * `IndxdArg(N, value)` represents a spread element in a record `...value`
@@ -767,15 +881,17 @@ extension (k: Block => Block)
   def transform(f: (Block => Block) => (Block => Block)) = f(k)
   
   def assign(l: Local, r: Result) = k.chain(Assign(l, r, _))
+  def assignScoped(l: Local, r: Result) = k.scopedVars(Set.single(l)).assign(l, r)
   def assignFieldN(lhs: Path, nme: Tree.Ident, rhs: Result) = k.chain(AssignField(lhs, nme, rhs, _)(N))
-  def break(l: Local): Block = k.rest(Break(l))
-  def continue(l: Local): Block = k.rest(Continue(l))
+  def break(l: LabelSymbol): Block = k.rest(Break(l))
+  def continue(l: LabelSymbol): Block = k.rest(Continue(l))
   def define(defn: Defn) = k.chain(Define(defn, _))
   def end = k.rest(End())
   def ifthen(scrut: Path, cse: Case, trm: Block, els: Opt[Block] = N): Block => Block =
     k.chain(Match(scrut, cse -> trm :: Nil, els, _))
-  def label(label: Local, loop: Bool, body: Block) = k.chain(Label(label, loop, body, _))
+  def label(label: LabelSymbol, loop: Bool, body: Block) = k.chain(Label(label, loop, body, _))
   def ret(r: Result) = k.rest(Return(r, false))
+  def scopedVars(s: collection.Set[Local]) = k.chain(Scoped(s, _))
   def staticif(b: Boolean, f: (Block => Block) => (Block => Block)) = if b then k.transform(f) else k
   def foldLeft[A](xs: Iterable[A])(f: (Block => Block, A) => Block => Block) = xs.foldLeft(k)(f)
 
@@ -783,5 +899,4 @@ def blockBuilder: Block => Block = identity
 
 extension (l: Local)
   def asPath: Path = Value.Ref(l, N)
-
 

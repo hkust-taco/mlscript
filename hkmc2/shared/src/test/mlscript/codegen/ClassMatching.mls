@@ -8,14 +8,15 @@ object None
 
 :sjs
 if Some(0) is Some(x) then x
-//│ JS (unsanitized):
-//│ let scrut, x, argument0$;
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let scrut, x, arg$Some$0$;
 //│ scrut = Some1(0);
 //│ if (scrut instanceof Some1.class) {
-//│   argument0$ = scrut.value;
-//│   x = argument0$;
+//│   arg$Some$0$ = scrut.value;
+//│   x = arg$Some$0$;
 //│   x
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 
@@ -25,13 +26,14 @@ let s = Some(0)
 :sjs
 if s is
   Some(x) then x
-//│ JS (unsanitized):
-//│ let x1, argument0$1;
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let x1, arg$Some$0$1;
 //│ if (s instanceof Some1.class) {
-//│   argument0$1 = s.value;
-//│   x1 = argument0$1;
+//│   arg$Some$0$1 = s.value;
+//│   x1 = arg$Some$0$1;
 //│   x1
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 if s is
@@ -39,12 +41,58 @@ if s is
   None then 1
 //│ = 0
 
+:sir
+:soir
 :re
 if s is
   Some(1) then 0
   None then 1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let arg$Some$0$, tmp;
+//│ block split_root$:
+//│   block split_default$:
+//│     match s⁰
+//│       Some⁰ =>
+//│         set arg$Some$0$ = s⁰.value⁰;
+//│         match arg$Some$0$
+//│           1 =>
+//│             set tmp = 0;
+//│             break split_root$
+//│           else
+//│             break split_default$
+//│         end
+//│       None⁰ =>
+//│         set tmp = 1;
+//│         break split_root$
+//│       else
+//│         break split_default$
+//│     end
+//│   throw new globalThis⁰.Error⁰("match error")
+//│ tmp
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let arg$Some$0$, tmp;
+//│ match s⁰
+//│   Some⁰ =>
+//│     set arg$Some$0$ = s⁰.value⁰;
+//│     match arg$Some$0$
+//│       1 =>
+//│         begin
+//│           set tmp = 0;
+//│           end;
+//│         tmp
+//│       else
+//│         throw new globalThis⁰.Error⁰("match error")
+//│     end
+//│   None⁰ =>
+//│     set tmp = 1;
+//│     tmp
+//│   else
+//│     throw new globalThis⁰.Error⁰("match error")
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: match error
 
+:expect 0
 if s is
   Some then s.value
 //│ = 0
@@ -52,17 +100,19 @@ if s is
 
 :sjs
 x => if x is Some(x) then x
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda;
 //│ lambda = (undefined, function (x3) {
-//│   let x4, argument0$4;
+//│   let x4, arg$Some$0$4;
 //│   if (x3 instanceof Some1.class) {
-//│     argument0$4 = x3.value;
-//│     x4 = argument0$4;
+//│     arg$Some$0$4 = x3.value;
+//│     x4 = arg$Some$0$4;
 //│     return x4
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
 //│ lambda
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 
@@ -117,31 +167,22 @@ fun f(x) = if x is
   Some(x) and x > 0 then 42
   None then "ok"
   else print("oops")
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f4;
 //│ f4 = function f(x3) {
-//│   let x4, scrut1, argument0$4, tmp5;
-//│   split_root$1: {
-//│     split_1$: {
-//│       if (x3 instanceof Some1.class) {
-//│         argument0$4 = x3.value;
-//│         x4 = argument0$4;
-//│         scrut1 = x4 > 0;
-//│         if (scrut1 === true) {
-//│           tmp5 = 42;
-//│           break split_root$1
-//│         } else {
-//│           break split_1$
-//│         }
-//│       } else if (x3 instanceof None1.class) {
-//│         tmp5 = "ok";
-//│         break split_root$1
-//│       } else { break split_1$ }
+//│   let x4, scrut1, arg$Some$0$4;
+//│   if (x3 instanceof Some1.class) {
+//│     arg$Some$0$4 = x3.value;
+//│     x4 = arg$Some$0$4;
+//│     scrut1 = x4 > 0;
+//│     if (scrut1 === true) {
+//│       return 42
 //│     }
-//│     tmp5 = Predef.print("oops");
-//│   }
-//│   return tmp5
+//│     return Predef.print("oops");
+//│   } else if (x3 instanceof None1.class) { return "ok" }
+//│   return Predef.print("oops");
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 f(Some(0))
 //│ > oops
@@ -163,22 +204,24 @@ data class Pair[out A, out B](fst: A, snd: B)
 fun f(x) = if x is
   Some(u) then u
   Pair(a, b) then a + b
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f5;
 //│ f5 = function f(x3) {
-//│   let u, a, b, argument0$4, argument1$;
+//│   let u, a, b, arg$Pair$0$, arg$Pair$1$, arg$Some$0$4;
 //│   if (x3 instanceof Some1.class) {
-//│     argument0$4 = x3.value;
-//│     u = argument0$4;
+//│     arg$Some$0$4 = x3.value;
+//│     u = arg$Some$0$4;
 //│     return u
 //│   } else if (x3 instanceof Pair1.class) {
-//│     argument0$4 = x3.fst;
-//│     argument1$ = x3.snd;
-//│     b = argument1$;
-//│     a = argument0$4;
+//│     arg$Pair$0$ = x3.fst;
+//│     arg$Pair$1$ = x3.snd;
+//│     b = arg$Pair$1$;
+//│     a = arg$Pair$0$;
 //│     return a + b
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 f(Some(123))
 //│ = 123
@@ -193,29 +236,26 @@ fun f(x) = print of if x is
   Some(0) then "0"
   None then "ok"
   else "oops"
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f6;
 //│ f6 = function f(x3) {
-//│   let argument0$4, tmp9;
-//│   split_root$1: {
-//│     split_1$: {
-//│       if (x3 instanceof Some1.class) {
-//│         argument0$4 = x3.value;
-//│         if (argument0$4 === 0) {
-//│           tmp9 = "0";
-//│           break split_root$1
-//│         } else {
-//│           break split_1$
-//│         }
-//│       } else if (x3 instanceof None1.class) {
-//│         tmp9 = "ok";
-//│         break split_root$1
-//│       } else { break split_1$ }
+//│   let arg$Some$0$4, tmp9;
+//│   if (x3 instanceof Some1.class) {
+//│     arg$Some$0$4 = x3.value;
+//│     if (arg$Some$0$4 === 0) {
+//│       tmp9 = "0";
+//│       return Predef.print(tmp9)
 //│     }
 //│     tmp9 = "oops";
+//│     return Predef.print(tmp9);
+//│   } else if (x3 instanceof None1.class) {
+//│     tmp9 = "ok";
+//│     return Predef.print(tmp9)
 //│   }
-//│   return Predef.print(tmp9)
+//│   tmp9 = "oops";
+//│   return Predef.print(tmp9);
 //│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 f(Some(0))
 //│ > 0

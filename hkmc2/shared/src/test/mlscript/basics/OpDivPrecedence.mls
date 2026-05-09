@@ -1,0 +1,28 @@
+:js
+
+// Division should have the same precedence as multiplication
+
+:expect 101
+100 + 100 / 100
+//│ = 101
+
+:expect 300
+100 * 3 + 0
+//│ = 300
+
+:expect 300
+0 + 100 * 3
+//│ = 300
+
+:expect 50
+100 / 2 + 0
+//│ = 50
+
+:expect 50
+0 + 100 / 2
+//│ = 50
+
+:expect 50
+200 / 2 / 2
+//│ = 50
+

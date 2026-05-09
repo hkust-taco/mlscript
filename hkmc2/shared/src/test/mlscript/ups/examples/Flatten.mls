@@ -13,9 +13,9 @@ fun list(...elements) = elements Iter.toStack()
 // concatenate the output with the tail. If the head cannot be flattened, it
 // would just append the head to the flattened tail.
 pattern Flatten =
-  (Nil => Nil) |
-  (((Flatten as hd) :: (Flatten as tl)) => hd ::: tl) |
-  ((hd :: (Flatten as tl)) => hd :: tl)
+  | Nil => Nil
+  | ((Flatten as hd) :: (Flatten as tl)) => hd ::: tl
+  | (hd :: (Flatten as tl)) => hd :: tl
 
 fun flatten__naive(xs) =
   if xs is Flatten as ys then

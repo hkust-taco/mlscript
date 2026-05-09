@@ -22,7 +22,7 @@ sealed trait Literal extends AutoLocated:
   val idStr: Str = this match
     case IntLit(value) => value.toString
     case DecLit(value) => value.toString
-    case StrLit(value) => value.iterator.map: // TODO dedup logi with `JSBuilder.makeStringLiteral`?
+    case StrLit(value) => value.iterator.map: // TODO dedup logic with `JSBuilder.makeStringLiteral`?
         case '\b' => "\\b" case '\t' => "\\t" case '\n' => "\\n" case '\r' => "\\r"
         case '\f' => "\\f" case '"' => "\\\"" case '\\' => "\\\\"
         case c if c.isControl => f"\\u${c.toInt}%04x"
@@ -44,6 +44,9 @@ sealed trait Literal extends AutoLocated:
 
 enum SpreadKind:
   case Eager, Lazy
+  def isEager: Bool = this match
+    case Eager => true
+    case Lazy => false
   def str: Str = this match
     case Eager => "..."
     case Lazy => ".."
@@ -94,6 +97,7 @@ enum Tree extends AutoLocated:
   case ProperNew(body: Opt[Tree], rft: Opt[Block]) // * A desugared version of New that sets it right – eg new(C(123))
   case DynamicNew(cls: Tree) // * Dynamic version – eg new! C(123)
   case IfLike(kw: Keywrd[Keyword.IfLike], split: Tree)
+  case Assert(kw: Keywrd[Keyword.`assert`], cond: Tree, thn: Opt[Tree], els: Opt[Keywrd[Keyword.`else`] -> Tree])
   case SplitPoint()
   case OpSplit(lhs: Tree, ops_rhss: Ls[Tree]) // * the rhss trees are expressions rooted in `SplitPoint`s
   case Case(kw: Keywrd[Keyword.`case`.type], branches: Tree)
@@ -103,6 +107,7 @@ enum Tree extends AutoLocated:
   case Outer(name: Opt[Tree])
   case Spread(kw: Keywrd[Keyword.Ellipsis], body: Opt[Tree])
   case Annotated(annotation: Tree, target: Tree)
+  case Directive(prefix: Tree, body: Tree)
   case Constructor(decl: Tree)
   /** Represents a term that has already been elaborated. When desugaring
    *  operator splits in the UCS, the `lhs` of `OpSplit` has already been elaborated
@@ -143,13 +148,14 @@ enum Tree extends AutoLocated:
     case ProperNew(body, rft) => body.toVector ++ rft.toVector
     case DynamicNew(body) => Vector.single(body)
     case IfLike(_, split) => Vector.single(split)
+    case Assert(_, cond, thn, els) => cond +: (thn.toVector ++ els.toList.map(_._2))
     case Case(_, bs) => Vector.single(bs)
     case Region(name, body) => Vector.double(name, body)
     case RegRef(reg, value) => Vector.double(reg, value)
     case Effectful(eff, body) => Vector.double(eff, body)
     case Outer(name) => name.toVector
     case TyTup(tys) => tys.toVector
-    case Sel(prefix, name) => Vector.single(prefix)
+    case Sel(prefix, name) => Vector.double(prefix, name)
     case SynthSel(prefix, name) => Vector.single(prefix)
     case DynAccess(prefix, fld) => Vector.double(prefix, fld)
     case Open(bod) => Vector.single(bod)
@@ -157,6 +163,7 @@ enum Tree extends AutoLocated:
     case Def(lhs, rhs) => Vector.double(lhs, rhs)
     case Spread(kw, body) => Vector.single(kw) ++ body.toVector
     case Annotated(annotation, target) => Vector.double(annotation, target)
+    case Directive(prefix, body) => Vector.double(prefix, body)
     case Constructor(decl) => Vector.single(decl)
     case MemberProj(cls, name) => Vector.single(cls)
     case Keywrd(kw) => Vector.empty
@@ -208,6 +215,7 @@ enum Tree extends AutoLocated:
     case Def(lhs, rhs) => "defining assignment"
     case Spread(_, _) => "spread"
     case Annotated(_, _) => "annotated"
+    case Directive(_, _) => "directive"
     case Open(_) => "open"
     case Constructor(_) => "constructor"
     case MemberProj(_, _) => "member projection"
@@ -227,6 +235,13 @@ enum Tree extends AutoLocated:
   
   lazy val desugared: Tree = this match
     
+    case Ident(name) if name.startsWith("'") =>
+      StrLit(name.drop(1)).withLocOf(this)
+    case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
+      InfixApp(lhs.desugared, Keywrd(Keyword.`:`), rhs.desugared)
+    case Sel(pre, nme) if nme.name.startsWith("'") =>
+      DynAccess(pre.desugared, StrLit(nme.name.drop(1)).withLocOf(nme)).withLocOf(this)
+    
     case Pun(false, id) =>
       InfixApp(id, Keywrd(Keyword.`:`), id)
     
@@ -244,6 +259,12 @@ enum Tree extends AutoLocated:
         case Modified(kw @ Keywrd(Keyword.`abstract`), s) =>
           Annotated(kw, s.desugared)
         case Modified(kw @ Keywrd(Keyword.`staged`), s) =>
+          Annotated(kw, s.desugared)
+        case Modified(kw @ Keywrd(Keyword.`virtual`), s) =>
+          Annotated(kw, s.desugared)
+        case Modified(kw @ Keywrd(Keyword.`public`), s) =>
+          Annotated(kw, s.desugared)
+        case Modified(kw @ Keywrd(Keyword.`private`), s) =>
           Annotated(kw, s.desugared)
         case Modified(kw @ Keywrd(Keyword.`mut`), TermDef(ImmutVal, anme, rhs)) =>
           TermDef(MutVal, anme, rhs).withLocOf(this).desugared
@@ -413,28 +434,28 @@ object OuterKind:
 
 // Please don't put any of these on the same line...
 case object BlockKind extends OuterKind("block")
-sealed abstract class DeclKind(desc: Str)(using Line) extends OuterKind(desc)
-sealed abstract class TermDefKind(val str: Str, desc: Str)(using Line) extends DeclKind(desc)
+sealed abstract class DeclKind(val str: Str, desc: Str)(using Line) extends OuterKind(desc)
+sealed abstract class TermDefKind(str: Str, desc: Str)(using Line) extends DeclKind(str, desc)
 sealed abstract class ValLike(str: Str, desc: Str)(using Line) extends TermDefKind(str, desc)
 sealed abstract class Val(str: Str, desc: Str)(using Line) extends ValLike(str, desc)
 case object ImmutVal extends Val("val", "value")
 case object MutVal extends Val("mut val", "mutable value")
 case object LetBind extends ValLike("let", "let binding")
 case object HandlerBind extends TermDefKind("handler", "handler binding")
-case object ParamBind extends ValLike("", "parameter")
 case object Fun extends TermDefKind("fun", "function")
 case object Ins extends TermDefKind("using", "implicit instance")
-sealed abstract class TypeDefKind(desc: Str)(using Line) extends DeclKind(desc)
+sealed abstract class TypeDefKind(str: Str, desc: Str)(using Line) extends DeclKind(str, desc)
 sealed trait ObjDefKind
 sealed trait ClsLikeKind extends ObjDefKind:
+  val str: Str
   val desc: Str
-case object Cls extends TypeDefKind("class") with ClsLikeKind
-case object Trt extends TypeDefKind("trait") with ObjDefKind
-case object Mxn extends TypeDefKind("mixin")
-case object Als extends TypeDefKind("type alias")
-case object Pat extends TypeDefKind("pattern") with ClsLikeKind
-case object Obj extends TypeDefKind("object") with ClsLikeKind
-case object Mod extends TypeDefKind("module") with ClsLikeKind
+case object Cls extends TypeDefKind("class", "class") with ClsLikeKind
+case object Trt extends TypeDefKind("trait", "trait") with ObjDefKind
+case object Mxn extends TypeDefKind("mixin", "mixin") with ObjDefKind
+case object Als extends TypeDefKind("type", "type alias") with ObjDefKind
+case object Pat extends TypeDefKind("pattern", "pattern") with ClsLikeKind
+case object Obj extends TypeDefKind("object", "object") with ClsLikeKind
+case object Mod extends TypeDefKind("module", "module") with ClsLikeKind
 
 
 
@@ -556,14 +577,16 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
     case _ =>
       Map.empty
   
-  lazy val clsParams: Ls[TermSymbol] =
-    this.paramLists.headOption.fold(Nil): tup =>
+  lazy val clsParams: Ls[Ls[TermSymbol]] =
+    this.paramLists.map: tup =>
       val pts = tup.fields
       val inUsing = pts.headOption.exists(_.isModified(Ins))
-      pts.flatMap(_.asParam(inUsing = inUsing).toOption).map:
-        case ParamTree(spd = S(_)) => lastWords("spreads are not allowed in class parameters")
-        case ParamTree(ident = id) => TermSymbol(ParamBind, symbol.asClsLike, id)
+      pts.flatMap(_.desugared.asParam(inUsing = inUsing).toOption).map:
+        // case ParamTree(spd = S(_)) => lastWords("spreads are not allowed in class parameters") // TODO: properly report this in Elaborator
+        case pt @ ParamTree(ident = id) =>
+          val k = if pt.flags.mut then MutVal else ImmutVal
+          TermSymbol(k, symbol.asClsLike, id)
       .toList
     
-  lazy val allSymbols = definedSymbols ++ clsParams.map(s => s.nme -> s).toMap
+  lazy val allSymbols = definedSymbols ++ clsParams.flatten.map(s => s.nme -> s).toMap
 

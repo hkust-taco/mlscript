@@ -3,26 +3,30 @@
 
 :sjs
 drop id(2 + 2)
-//│ JS (unsanitized):
-//│ let tmp, tmp1; tmp = 2 + 2; tmp1 = Predef.id(tmp); runtime.Unit
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let tmp; tmp = 2 + 2; Predef.id(tmp); runtime.Unit
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
+:sir
 :sjs
 drop { a: 0, b: 1 }
-//│ JS (unsanitized):
-//│ let a, b, tmp2, tmp3;
-//│ a = 0;
-//│ tmp2 = globalThis.Object.freeze({
-//│   a: a
-//│ });
-//│ b = 1;
-//│ tmp3 = globalThis.Object.freeze({ b: b });
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ runtime.Unit
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let a⁰, b⁰, tmp, tmp1;
+//│ set a⁰ = 0;
+//│ set tmp = { "a": a⁰ };
+//│ set b⁰ = 1;
+//│ set tmp1 = { "b": b⁰ };
+//│ runtime⁰.Unit⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :sjs
 let discard = drop _
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let discard, discard1; discard1 = function discard(_0) { return runtime.Unit }; discard = discard1;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ discard = fun discard
 
 discard of { a: 0, b: 1 }
@@ -36,7 +40,7 @@ drop
 do
   id
   id
-//│ Parsed tree:
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ PrefixApp:
 //│   kw = Keywrd of keyword 'drop'
 //│   rhs = Ident of "id"
@@ -48,5 +52,6 @@ do
 //│   rhs = Block of Ls of 
 //│     Ident of "id"
 //│     Ident of "id"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

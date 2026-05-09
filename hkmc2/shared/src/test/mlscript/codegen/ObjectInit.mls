@@ -1,0 +1,44 @@
+:js
+
+
+fun f = print(A)
+object A with
+  f // A is not fully initialized yet but can still be accessed
+  val x = 1
+//│ > A {}
+
+// * By contrast:
+fun f = print(A)
+class Acls with
+  f // A is not accessible at all here
+  val x = 1
+val A = new Acls
+//│ > undefined
+//│ A = Acls { x: 1 }
+
+// * We still need an initialization checker to catch things like this:
+fun f = print(A.x)
+object A with
+  f
+  val x = 1
+//│ > undefined
+
+
+fun f = print(A, A.x)
+object A with
+  f
+  val x = 1
+  f
+//│ > A5 {} undefined
+//│ > A5 { x: 1 } 1
+
+f
+//│ > A { x: 1, class: object A } 1
+
+object A with
+  print(B)
+object B
+//│ > undefined
+
+
+

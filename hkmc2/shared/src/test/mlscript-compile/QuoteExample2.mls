@@ -1,5 +1,6 @@
 import "./Term.mls"
 import "./QuoteExample.mls"
+import "./QuoteExample1.mls"
 
 
 module QuoteExample2 with
@@ -12,3 +13,5 @@ module QuoteExample2 with
     Term.codegen(QuoteExample.gib(12), "./hkmc2/shared/src/test/mlscript-compile/quotes/Gib12.mls")
   fun genSafeDiv() =
     Term.codegen(QuoteExample.safeDiv(), "./hkmc2/shared/src/test/mlscript-compile/quotes/SafeDiv.mls")
+  fun genOpened() =
+    Term.codegen(QuoteExample1.foo(), "./hkmc2/shared/src/test/mlscript-compile/quotes/Opened.mls")

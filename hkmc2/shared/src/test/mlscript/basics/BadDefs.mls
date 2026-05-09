@@ -14,29 +14,32 @@ x
 
 :sjs
 val ++ = 0
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let $_$_; $_$_ = 0;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ++ = 0
 
 :sjs
 ++
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ $_$_
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 
 :e
 val ++ y = 1
-//│ ╔══[ERROR] Invalid value definition head: unexpected identifier in this position
-//│ ║  l.29: 	val ++ y = 1
+//│ ╔══[COMPILATION ERROR] Invalid value definition head: unexpected identifier in this position
+//│ ║  l.31: 	val ++ y = 1
 //│ ╙──      	       ^
 //│ ++ = 1
 
 :e
 y
-//│ ╔══[ERROR] Name not found: y
-//│ ║  l.36: 	y
+//│ ╔══[COMPILATION ERROR] Name not found: y
+//│ ║  l.38: 	y
 //│ ╙──      	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 ++
 //│ = 1
@@ -44,21 +47,22 @@ y
 
 :e
 fun ++ z = 0
-//│ ╔══[ERROR] Invalid function definition head: unexpected identifier in this position
-//│ ║  l.46: 	fun ++ z = 0
+//│ ╔══[COMPILATION ERROR] Invalid function definition head: unexpected identifier in this position
+//│ ║  l.49: 	fun ++ z = 0
 //│ ╙──      	       ^
 
 :sjs
 ++
-//│ JS (unsanitized):
-//│ let tmp; tmp = $_$_2(); tmp
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ $_$_2()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
 
 :e
 fun (class Lol) foo = 0
-//│ ╔══[ERROR] This type definition is not a valid symbolic name
-//│ ║  l.59: 	fun (class Lol) foo = 0
+//│ ╔══[COMPILATION ERROR] This type definition is not a valid symbolic name
+//│ ║  l.63: 	fun (class Lol) foo = 0
 //│ ╙──      	     ^^^^^^^^^
 
 foo
@@ -66,8 +70,9 @@ foo
 
 :e
 Lol
-//│ ╔══[ERROR] Name not found: Lol
-//│ ║  l.68: 	Lol
+//│ ╔══[COMPILATION ERROR] Name not found: Lol
+//│ ║  l.72: 	Lol
 //│ ╙──      	^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

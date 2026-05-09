@@ -1,23 +1,6 @@
 :js
 :lift
-:todo
-
-
-// The following are problems with lifting functions inside other functions.
-
-
-// Lifting functions with spread arguments is broken.
-:expect [1]
-fun f(x) =
-  fun g(...rest) = 
-    print(x)
-    rest
-  let a = g
-  a(1)
-f(2)
-//│ > 2
-//│ ═══[RUNTIME ERROR] Expected: '[1]', got: '[]'
-//│ = []
+:ignore
 
 // The following are problems with lifting classes inside other definitions.
 
@@ -53,7 +36,7 @@ A(1).getA()
 class Test
 fun hello() =
   class Test2 extends Test
-  2
+  new Test2
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
 
 // This is due to subclasses not calling `super` with the required locals. The analysis to
@@ -68,9 +51,27 @@ test(2)
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'get' yielded 'undefined'
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
+// This is due to `super` not being called with multiple parameter lists.
+:expect "B()"
+fun test(x) =
+  class A() with
+    fun get = x
+  class B() extends A() with
+    fun bar = x
+  B()
+test(0).toString()
+//│ ═══[RUNTIME ERROR] Expected: '"B()"', got: '"(x1) => {       this.#x = x1;       return this;     }"'
+//│ = "(x1) => {       this.#x = x1;       return this;     }"
+
+// In fact, the correct way (using the current "constructor returns a lambda" hack) is this:
+// return (params) => {
+//   let ret = super(parentMainParams)(parentAuxParams);
+//   // ctor
+//   return ret;
+// }
+
 /// The following are related to first-class classes, instance checks, and private fields. ///
 
-:w
 :expect 1
 fun f(used1, unused1) =
   fun g(g_arg) =
@@ -83,7 +84,6 @@ fun f(used1, unused1) =
   let foo = Test
   foo(unused1)
 f(1, 2).get()
-//│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 1
 
 
@@ -95,21 +95,17 @@ fun foo1(x, n) =
   if n > 0 then res + foo1(C(), n - 1) else ""
 //│ ═══[WARNING] Cannot yet lift class/module `C` as it is used in an instance check.
 
-:todo // should return the function that creates C instances
-:w
 fun foo2() =
   class C()
   C
-//│ ═══[WARNING] Cannot yet lift class `C` as it is used as a first-class class.
 
 :w
 fun foo3() =
-  class C()
-  fun f = C()
+  class C
+  fun f = new C
   C
 //│ ═══[WARNING] Cannot yet lift class `C` as it is used as a first-class class.
 
-:todo
 :expect "NN"
 foo1(0, 2)
 //│ = "NN"
@@ -127,27 +123,6 @@ test(2)
 //│ ═══[WARNING] Cannot yet lift definition `B` as it extends an unliftable class.
 //│ = 2
 
-:expect 2
-class A(a) with
-  let x = 2
-  fun f() =
-    fun g() = x
-    g()
-A(2).f()
-//│ ═══[COMPILATION ERROR] Uses of private fields cannot yet be lifted.
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
-
-:expect 2
-module M with
-  let x = 2
-  fun f() =
-    fun g() = x
-    g
-M.f()()
-//│ ═══[COMPILATION ERROR] Uses of private fields cannot yet be lifted.
-//│ ═══[RUNTIME ERROR] Expected: '2', got: '()'
-
 /// The following are related to modules and objects. ///
 
 :todo
@@ -158,7 +133,9 @@ fun foo(x, y) =
       set y = 2
       x + y + test
   M.foo()
-//│ ═══[WARNING] Modules are not yet lifted.
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.130: 	  module M with
+//│ ╙──       	         ^
 
 :expect 14
 foo(10, 0)
@@ -171,20 +148,22 @@ fun foo(x, y) =
       x + y
   fun foo = M.foo()
   foo
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'M$'
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.145: 	  module M with
+//│ ╙──       	         ^
 
 :expect 12
 foo(10, 0)
-//│ ═══[RUNTIME ERROR] ReferenceError: M$ is not defined
-//│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
+//│ = 12
 
 
 data class A(x) with
   module M with
     fun getB() = x
   fun getA() = M.getB()
-//│ ═══[WARNING] Modules are not yet lifted.
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.161: 	  module M with
+//│ ╙──       	         ^
 
 :expect 2
 A(2).getA()
@@ -198,15 +177,19 @@ fun foo(x) =
   class Bar extends Foo
   (new Bar).self2
 foo(2)
-//│ ╔══[ERROR] Expected a statically known class; found reference of type Foo.
-//│ ║  l.198: 	  class Bar extends Foo
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference of type Foo.
+//│ ║  l.177: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'Foo$'
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.174: 	  object Foo with
+//│ ╙──       	         ^^^
+//│ ═══[WARNING] Cannot yet lift definition `Bar` as it extends an expression.
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
 
 // `h` is lifted out, but then cannot access the BlockMemberSymbol M.
 :fixme
+:noInline
 :w
 fun f =
   module M with
@@ -214,7 +197,20 @@ fun f =
       fun h = M.g
       h
   M.g
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ /!!!\ Uncaught error: hkmc2.InternalError: `this` not in scope: class:M
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.195: 	  module M with
+//│ ╙──       	         ^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'M'
+//│ ║  l.197: 	      fun h = M.g
+//│ ║         	              ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.195: 	  module M with
+//│ ║         	         ^^^^^^
+//│ ║  l.196: 	    fun g =
+//│ ║         	^^^^^^^^^^^
+//│ ║  l.197: 	      fun h = M.g
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.198: 	      h
+//│ ╙──       	^^^^^^^
 
 

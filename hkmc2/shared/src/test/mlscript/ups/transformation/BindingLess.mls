@@ -1,0 +1,84 @@
+:js
+
+import "../../../mlscript-compile/Char.mls"
+import "../../../mlscript-compile/Stack.mls"
+
+open Char { AnyChar }
+open Stack
+
+open annotations
+
+pattern Inc = (Int as x) => x + 1
+
+data class Pair[A, B](fst: A, snd: B)
+
+pattern IncFst = Pair(Inc, _)
+
+let ps = Pair("hello", "world")
+//│ ps = Pair("hello", "world")
+
+let pi = Pair(1, 2)
+//│ pi = Pair(1, 2)
+
+fun foo(p) = if p is IncFst as q then q else p
+
+:expect true
+ps == foo(ps)
+//│ = true
+
+:expect false
+pi == foo(pi)
+//│ = false
+
+fun foo(p) = if p is (@compile IncFst) as q then q else p
+
+:expect true
+ps == foo(ps)
+//│ = true
+
+:expect false
+pi == foo(pi)
+//│ = false
+
+:expect false
+ps is IncFst
+//│ = false
+
+:expect true
+pi is IncFst
+//│ = true
+
+:expect false
+ps is @compile IncFst
+//│ = false
+
+:expect true
+pi is @compile IncFst
+//│ = true
+
+pattern ToUppercase =
+  | ("a" => "A") | ("b" => "B") | ("c" => "C")
+  | ("d" => "D") | ("e" => "E") | ("f" => "F")
+  | ("g" => "G") | ("h" => "H") | ("i" => "I") | ("j" => "J")
+  | ("k" => "K") | ("l" => "L") | ("m" => "M") | ("n" => "N")
+  | ("o" => "O") | ("p" => "P") | ("q" => "Q") | ("r" => "R")
+  | ("s" => "S") | ("t" => "T") | ("u" => "U") | ("v" => "V")
+  | ("w" => "W") | ("x" => "X") | ("y" => "Y") | ("z" => "Z")
+  | AnyChar
+
+pattern ToUppercaseList = Nil | (ToUppercase :: ToUppercaseList)
+
+fun toUppercaseList(input) = if input is ToUppercaseList as output then output
+
+toUppercaseList of "a" :: "X" :: "c" :: Nil
+//│ = Cons("A", Cons("X", Cons("C", Nil)))
+
+pattern ToUppercaseString = ToUppercase ~ (ToUppercaseString | "")
+
+fun toUppercase(input) = if input is ToUppercaseString as output then output
+
+toUppercase of "abc"
+//│ = "ABC"
+
+toUppercase of "ThIs Is AlTeRnAtInG cApS!"
+//│ = "THIS IS ALTERNATING CAPS!"

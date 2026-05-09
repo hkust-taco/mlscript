@@ -30,7 +30,7 @@ fun flags(tokens) =
     Token.Identifier(":", _) :: Token.Identifier(Flag as flag, _) :: tail then
       result.add(flag)
       set tokens = tail
-    else [result, tokens]
+  [result, tokens]
 
 fun example(...lines) =
   let

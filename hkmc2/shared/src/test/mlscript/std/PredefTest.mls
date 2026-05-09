@@ -9,7 +9,7 @@ id(123)
 :e
 :re
 id()
-//│ ╔══[ERROR] Expected 1 arguments, got 0
+//│ ╔══[COMPILATION ERROR] Expected 1 arguments, got 0
 //│ ║  l.11: 	id()
 //│ ╙──      	  ^^
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
@@ -102,8 +102,9 @@ tuple passing(1, 2, 3) of 4, 5, 6
 :re
 :sjs
 ???
-//│ JS (unsanitized):
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ Predef.notImplementedError
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Not implemented
 
 :re
@@ -159,7 +160,7 @@ fold(+) of
   3
 //│ = 6
 
-:todo
+:breakme
 :re
 :e
 fold(+)()
@@ -181,11 +182,11 @@ foldr(tuple)(0, 1, 2, 3)
 //│ = [0, [1, [2, 3]]]
 
 :todo
-:re
 foldr(+)()
-//│ ╔══[ERROR] Expected at least 1 arguments, got 0
+//│ ╔══[COMPILATION ERROR] Expected at least 1 arguments, got 0
 //│ ║  l.185: 	foldr(+)()
 //│ ╙──       	        ^^
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
 // An alternative implementation of foldr
