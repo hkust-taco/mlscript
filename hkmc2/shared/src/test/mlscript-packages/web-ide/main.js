@@ -1,7 +1,7 @@
 import * as MLscript from "./build/MLscript.mjs";
 import fs from "./filesystem/fs.mjs";
 import persistent from "./filesystem/persistent.mjs";
-import { execute, terminate } from "./execution/runner.js";
+import runner from "./execution/runner.mjs";
 import { compile } from "./compiler/index.js";
 
 try {
@@ -97,7 +97,7 @@ document.addEventListener("execute-requested", async function (event) {
   }
   const mjsFilePath = filePath.replace(/\.mls$/, ".mjs");
   if (fs.pathExists(mjsFilePath)) {
-    execute(mjsFilePath);
+    runner.execute(mjsFilePath);
   } else {
     // If the compiled file does not exist, we first compile it.
     // TODO: Show this message using a toast notification.
@@ -107,7 +107,7 @@ document.addEventListener("execute-requested", async function (event) {
     compile(targetPaths, allFiles).then(() => {
       markAsCompiled(targetPaths);
       if (fs.pathExists(mjsFilePath)) {
-        execute(mjsFilePath);
+        runner.execute(mjsFilePath);
       } else {
         // TODO: Show this error message using a toast notification.
         console.error(
@@ -119,7 +119,7 @@ document.addEventListener("execute-requested", async function (event) {
   }
 });
 
-document.addEventListener("terminate-requested", terminate);
+document.addEventListener("terminate-requested", () => runner.terminate());
 
 // Handle navigation to file location from diagnostics
 document.addEventListener("open-file-at-location", (e) => {

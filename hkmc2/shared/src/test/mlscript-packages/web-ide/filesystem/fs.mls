@@ -348,14 +348,16 @@ fun getAttr(path, key) =
     else undefined
 
 fun removeAttr(path, key) =
-  if findNode(path) is
-    (FileNode | FolderNode) as node then
-      let existed = globalThis.Reflect.has(node.attrs, key)
+  let node = findNode(path)
+  if
+    node is (FileNode | FolderNode) as node and globalThis.Reflect.has(node.attrs, key) then
       globalThis.Reflect.deleteProperty(node.attrs, key)
-      if existed do
-        updateChangeTime(node)
-        notifyAttr(path, node, key, undefined)
-      existed
+      updateChangeTime(node)
+      notifyAttr(path, node, key, undefined)
+      true
+    node is (FileNode | FolderNode) as node then
+      globalThis.Reflect.deleteProperty(node.attrs, key)
+      false
     else false
 
 fun setReadonly(path, readonlyFlag) =

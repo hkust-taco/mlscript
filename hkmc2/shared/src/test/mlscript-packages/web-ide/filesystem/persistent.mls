@@ -12,13 +12,11 @@ fun isAbsent(value) = if
   else false
 
 fun isFile(node) = if
-  isAbsent(node) then false
-  node.("type") is "file" then true
+  isAbsent(node) is false and node.("type") is "file" then true
   else false
 
 fun isStandardLibraryNode(node) = if
-  isAbsent(node) then false
-  node.attrs.("std") is true then true
+  isAbsent(node) is false and node.attrs.("std") is true then true
   else false
 
 fun persistedKey(path) =
