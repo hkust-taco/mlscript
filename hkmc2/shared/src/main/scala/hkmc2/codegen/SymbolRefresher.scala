@@ -145,7 +145,10 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
 
       val newCtorSym: Opt[ClassCtorSymbol] = defn.ctorSym.map: cs =>
         assert(!mapping.isDefinedAt(cs))
-        val ncs = new ClassCtorSymbol(cs.k, S(newIsym), cs.id)
+        val newOwner = newIsym match
+          case cls: ClassSymbol => cls
+          case _ => lastWords(s"ClassCtorSymbol for non-class: $newIsym")
+        val ncs = new ClassCtorSymbol(cs.k, S(newOwner), cs.id)
         mapping(cs) = ncs
         hd += cs
         ncs

@@ -327,8 +327,8 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
 
 
 class ClassCtorSymbol(
-  k: TermDefKind,
-  owner: Opt[InnerSymbol],
+  override val k: syntax.Fun.type,
+  override val owner: S[ClassSymbol],
   id: Tree.Ident
 )(using State) extends TermSymbol(k, owner, id):
   override def subst(using sub: SymbolSubst): ClassCtorSymbol = sub.mapClassCtorSym(this)
