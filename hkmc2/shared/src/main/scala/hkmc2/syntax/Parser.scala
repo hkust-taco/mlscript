@@ -159,28 +159,37 @@ abstract class Parser(
   protected var indent = 0
   private var _cur: Ls[TokLoc] = preprocessTokens(tokens)
   
-  private def preprocessTokens(tokens: Ls[TokLoc]): Ls[TokLoc] = tokens match
-    case (IDENT("new", false), l1) :: (IDENT("!", true), l2) :: rest =>
-      (IDENT("new!", false), l1 ++ l2) :: preprocessTokens(rest)
-    // * Remove empty indented sections
-    case (BRACKETS(Indent, toks), _) :: rest
-    if toks.forall:
-      case (NEWLINE | SPACE, _) => true
-      case _ => false
-    =>
-      preprocessTokens(rest)
-    // * Expands end-of-line suspensions that introduce implied indentation,
-    // * skipping NOISE tokens between `...` and NEWLINE (eg `... // hello\n body`)
-    // * Note: using `NEWLINE_COMMA` instead of `NEWLINE` causes misparsing of things like `fun foo(..., ...)`
-    case (SUSPENSION(true), l0) :: NOISE((NEWLINE, l1) :: rest) =>
-      val outerLoc = l0.left ++ rest.lastOption.map(_._2.right)
-      val innerLoc = l1.right ++ rest.lastOption.map(_._2.left)
-      BRACKETS(Indent, preprocessTokens(rest))(innerLoc) -> outerLoc :: Nil
-    case tl :: rest =>
-      val rest2 = preprocessTokens(rest)
-      if rest2 is rest then tokens
-      else tl :: rest2
-    case Nil => tokens
+  // Keep the top-level scan iterative: Scala.js can overflow the browser stack
+  // when recursively preprocessing large standard-library token streams.
+  private def preprocessTokens(tokens: Ls[TokLoc]): Ls[TokLoc] =
+    val out = List.newBuilder[TokLoc]
+    var cur = tokens
+    var done = false
+    while !done do cur match
+      case (IDENT("new", false), l1) :: (IDENT("!", true), l2) :: rest =>
+        out += ((IDENT("new!", false), l1 ++ l2))
+        cur = rest
+      // * Remove empty indented sections
+      case (BRACKETS(Indent, toks), _) :: rest
+      if toks.forall:
+        case (NEWLINE | SPACE, _) => true
+        case _ => false
+      =>
+        cur = rest
+      // * Expands end-of-line suspensions that introduce implied indentation,
+      // * skipping NOISE tokens between `...` and NEWLINE (eg `... // hello\n body`)
+      // * Note: using `NEWLINE_COMMA` instead of `NEWLINE` causes misparsing of things like `fun foo(..., ...)`
+      case (SUSPENSION(true), l0) :: NOISE((NEWLINE, l1) :: rest) =>
+        val outerLoc = l0.left ++ rest.lastOption.map(_._2.right)
+        val innerLoc = l1.right ++ rest.lastOption.map(_._2.left)
+        out += (BRACKETS(Indent, preprocessTokens(rest))(innerLoc) -> outerLoc)
+        done = true
+      case tl :: rest =>
+        out += tl
+        cur = rest
+      case Nil =>
+        done = true
+    out.result()
   
   private def wrap[R](args: => Any)(using l: Line, n: Name)(mkRes: => R): R =
     printDbg(s"@ ${n.value}${args match {
