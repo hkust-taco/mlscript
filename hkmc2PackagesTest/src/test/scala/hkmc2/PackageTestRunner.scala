@@ -53,7 +53,7 @@ class PackageTestRunner
           vendoredSources.foreach: file =>
             os.makeDir.all(file.target / os.up)
             PackageTestRunner.synchronized:
-              println(s"Vendoring: [${fansi.Bold.On(packageName)}] ${fansi.Color.Green(file.source.toString)}")
+              println(s"Vendoring: [${fansi.Bold.On(packageName)}] ${fansi.Color.Green(displayPath(file.source))}")
             compiler.compileModule(file.source, S(file.target))
             assert(os.exists(file.target), s"Expected vendored artifact at ${file.target}")
           
@@ -83,6 +83,11 @@ object PackageTestRunner:
   val mainTestDir = TestFolders.mainTestDir(os.pwd)
   val packagesDir = TestFolders.packagesTestDir(os.pwd)
   val stdlibDir = mainTestDir / "mlscript-compile"
+  
+  def displayPath(path: os.Path): Str =
+    if path.startsWith(mainTestDir) then path.relativeTo(mainTestDir).toString
+    else if path.startsWith(os.pwd) then path.relativeTo(os.pwd).toString
+    else path.toString
   
   def pathsForPackage(packageDir: os.Path): MLsCompiler.Paths = new MLsCompiler.Paths:
     val preludeFile = mainTestDir / "mlscript" / "decls" / "Prelude.mls"
