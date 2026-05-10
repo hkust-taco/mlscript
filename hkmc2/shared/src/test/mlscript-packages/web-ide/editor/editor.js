@@ -3,7 +3,7 @@ import { javascript } from 'https://esm.sh/@codemirror/lang-javascript@6.2.4';
 import { StreamLanguage } from 'https://esm.sh/@codemirror/language@6.11.3';
 import { vscodeLight as theme } from "https://esm.sh/@uiw/codemirror-theme-vscode";
 import Highlight from "./Highlight.mjs";
-import { write } from "../filesystem/fs.js";
+import fs from "../filesystem/fs.mjs";
 
 export function createEditor(container, initialContent, filePath, extension, readonly = false) {
   // Determine language based on file extension
@@ -30,7 +30,7 @@ export function createEditor(container, initialContent, filePath, extension, rea
         if (update.docChanged) {
           // Auto-save on content change
           const newContent = update.state.doc.toString();
-          write(filePath, newContent);
+          fs.write(filePath, newContent);
         }
       }),
       readonly ? EditorView.editable.of(false) : [],

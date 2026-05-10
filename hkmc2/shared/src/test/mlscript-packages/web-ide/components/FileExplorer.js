@@ -1,4 +1,4 @@
-import { fileTree, subscribe, createFile } from '../filesystem/fs.js';
+import fs from '../filesystem/fs.mjs';
 import { restorePanelWidth, savePanelWidth } from './PanelPersistence.js';
 import './FileTooltip.js';
 import './ResizeHandle.js';
@@ -28,7 +28,7 @@ class FileExplorer extends HTMLElement {
     document.addEventListener("open-files-changed", this.handleOpenFilesChanged);
 
     // Subscribe to file system changes
-    this.unsubscribe = subscribe((event) => {
+    this.unsubscribe = fs.subscribe((event) => {
       // Only update tree on structural changes at root level
       if (event.type === 'create' || event.type === 'delete' || event.type === 'rename') {
         // Check if this is a root-level change
@@ -114,7 +114,7 @@ class FileExplorer extends HTMLElement {
     if (!treeView) return;
 
     // Filter root-level files to hide .mjs files that have a corresponding .mls file
-    const filteredRootNodes = this.filterMjsFiles(fileTree);
+    const filteredRootNodes = this.filterMjsFiles(fs.fileTree);
     const newRootPaths = new Set();
 
     // Build set of expected root paths
@@ -139,7 +139,7 @@ class FileExplorer extends HTMLElement {
       if (!treeNode) {
         // Create new root node, passing fileTree as the parent
         treeNode = document.createElement('tree-node');
-        treeNode.setData(node, path, fileTree);
+        treeNode.setData(node, path, fs.fileTree);
         this.rootNodes.set(path, treeNode);
 
         // Insert at correct position
@@ -151,7 +151,7 @@ class FileExplorer extends HTMLElement {
         }
       } else {
         // Update existing node's data, passing fileTree as the parent
-        treeNode.setData(node, path, fileTree);
+        treeNode.setData(node, path, fs.fileTree);
 
         // Ensure correct order
         const currentPosition = Array.from(treeView.children).indexOf(treeNode);
@@ -235,7 +235,7 @@ class FileExplorer extends HTMLElement {
         }
 
         const path = `/${parts.join('/')}`;
-        const success = createFile(path, '', { force: true });
+        const success = fs.createFile(path, '', { force: true });
 
         if (success) {
           // File created successfully, clean up

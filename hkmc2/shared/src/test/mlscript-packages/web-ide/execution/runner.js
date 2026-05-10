@@ -1,4 +1,4 @@
-import { getAllFiles } from "../filesystem/fs.js";
+import fs from "../filesystem/fs.mjs";
 
 /**
  * The latest execution instance. It is `null` if there is no execution.
@@ -54,7 +54,7 @@ export function execute(mainPath) {
   latestExecution = execution;
 
   function run() {
-    const files = getAllFiles();
+    const files = fs.getAllFiles();
     console.log("[VM] Files:", Object.keys(files));
     execution.worker.postMessage({ type: 'run', id, mainPath, files });
   }

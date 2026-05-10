@@ -1,6 +1,6 @@
 import * as MLscript from "./build/MLscript.mjs";
-import * as fs from "./filesystem/fs.js";
-import { loadPersistedFiles } from "./filesystem/persistent.js";
+import fs from "./filesystem/fs.mjs";
+import persistent from "./filesystem/persistent.mjs";
 import { execute, terminate } from "./execution/runner.js";
 import { compile } from "./compiler/index.js";
 
@@ -30,7 +30,7 @@ try {
 }
 
 // Load persisted user files from localStorage.
-if (loadPersistedFiles() === 0) {
+if (persistent.loadPersistedFiles() === 0) {
   fs.createFile("/main.mls", `import "./std/Predef.mls"
 
 open Predef
@@ -96,7 +96,7 @@ document.addEventListener("execute-requested", async function (event) {
     return;
   }
   const mjsFilePath = filePath.replace(/\.mls$/, ".mjs");
-  if (fs.exists(mjsFilePath)) {
+  if (fs.pathExists(mjsFilePath)) {
     execute(mjsFilePath);
   } else {
     // If the compiled file does not exist, we first compile it.
@@ -106,7 +106,7 @@ document.addEventListener("execute-requested", async function (event) {
 
     compile(targetPaths, allFiles).then(() => {
       markAsCompiled(targetPaths);
-      if (fs.exists(mjsFilePath)) {
+      if (fs.pathExists(mjsFilePath)) {
         execute(mjsFilePath);
       } else {
         // TODO: Show this error message using a toast notification.

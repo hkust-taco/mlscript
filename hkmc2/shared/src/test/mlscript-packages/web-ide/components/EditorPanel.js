@@ -1,4 +1,4 @@
-import { subscribe, read, stat } from "../filesystem/fs.js";
+import fs from "../filesystem/fs.mjs";
 import { createEditor } from "../editor/editor.js";
 import "./FileTooltip.js";
 
@@ -30,7 +30,7 @@ class EditorPanel extends HTMLElement {
     this.setupTabBarScrolling();
 
     // Subscribe to file system changes
-    this.unsubscribe = subscribe((event) => {
+    this.unsubscribe = fs.subscribe((event) => {
       // Update content of open tabs if files are modified
       if (
         event.type === "write" ||
@@ -58,7 +58,7 @@ class EditorPanel extends HTMLElement {
             } else if (event.type === "write") {
               // Reload content if file was modified externally
               const currentContent = tab.editorView.state.doc.toString();
-              const fileContent = read(event.path);
+              const fileContent = fs.read(event.path);
 
               if (fileContent !== null && fileContent !== currentContent) {
                 // Update content while preserving cursor position
@@ -293,10 +293,10 @@ class EditorPanel extends HTMLElement {
       editorDiv.className = "editor-codemirror";
 
       // Load file content from fs
-      const content = read(filePath);
+      const content = fs.read(filePath);
       const initialContent = content !== null ? content : "";
       const extension = filePath.match(/\.(\w+)$/)?.[1] ?? "";
-      const nodeInfo = stat(filePath);
+      const nodeInfo = fs.stat(filePath);
       const isReadonly = !!nodeInfo?.readonly;
       const attrs = nodeInfo?.attrs || {};
       const editorView = createEditor(

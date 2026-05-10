@@ -1,4 +1,4 @@
-import { subscribe, stat } from '../filesystem/fs.js';
+import fs from '../filesystem/fs.mjs';
 
 // Tree Node Custom Element (Reactive)
 class TreeNode extends HTMLElement {
@@ -43,7 +43,7 @@ class TreeNode extends HTMLElement {
 
   connectedCallback() {
     // Subscribe to file system changes
-    this.unsubscribe = subscribe((event) => {
+    this.unsubscribe = fs.subscribe((event) => {
       // Handle different event types
       if (event.type === 'create' || event.type === 'delete') {
         // Structural change - need to update children
@@ -244,10 +244,10 @@ class TreeNode extends HTMLElement {
     let children;
     if (isRoot) {
       // Root level - stat('/') returns the fileTree array directly
-      const rootArray = stat('/');
+      const rootArray = fs.stat('/');
       children = Array.isArray(rootArray) ? rootArray : [];
     } else {
-      const parentNode = stat(parentPath);
+      const parentNode = fs.stat(parentPath);
       if (!parentNode || parentNode.type !== 'folder') {
         return false;
       }

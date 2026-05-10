@@ -1,4 +1,4 @@
-import * as fs from "../filesystem/fs.js";
+import fs from "../filesystem/fs.mjs";
 
 // We put the compiler on the worker as well because the MLscript compiler takes
 // more time when handling multiple files. If it runs directly here, it would

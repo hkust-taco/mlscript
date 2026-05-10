@@ -1,4 +1,4 @@
-import { read } from "../filesystem/fs.js";
+import fs from "../filesystem/fs.mjs";
 import { restorePanelWidth, savePanelWidth } from './PanelPersistence.js';
 import './ResizeHandle.js';
 
@@ -122,7 +122,7 @@ class ReservedPanel extends HTMLElement {
       if (!diagnostics || diagnostics.length === 0) return;
 
       // Read the file content for extracting code snippets
-      const fileContent = read(path);
+      const fileContent = fs.read(path);
 
       const fileId = `file-${fileIndex}`;
       const isFileCollapsed = this.collapsedFiles.has(fileId);

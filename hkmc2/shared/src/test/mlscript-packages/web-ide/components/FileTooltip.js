@@ -1,4 +1,4 @@
-import { stat } from "../filesystem/fs.js";
+import fs from "../filesystem/fs.mjs";
 import {
   computePosition,
   shift,
@@ -98,7 +98,7 @@ class FileTooltip extends HTMLElement {
 
   buildContent({ path, name, sizeOverride }) {
     if (!path) return null;
-    const node = stat(path);
+    const node = fs.stat(path);
     if (!node) return null;
 
     const size =
