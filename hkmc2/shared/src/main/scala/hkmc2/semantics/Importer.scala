@@ -19,7 +19,7 @@ class Importer:
   import tl.*
   
   def importPath(rawPath: StrLit, alias: Opt[syntax.Tree.Ident])(using cfg: Config): Import =
-    cctx.moduleResolver.tryResolveModulePath(rawPath.value) match
+    cctx.moduleResolver.tryResolveModulePath(rawPath.value, wd) match
       case S(ModuleResolver.ResolvedModule.Verbatim(specifier, moduleName)) =>
         // The path resolves to a platform dependent specifier, which is NOT a
         // path and should be used as-is, e.g., Node.js built-in modules.

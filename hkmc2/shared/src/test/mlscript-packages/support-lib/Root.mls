@@ -1,5 +1,0 @@
-import "./Util.mls"
-
-module Root with ...
-
-fun answer = Util.answer + 1

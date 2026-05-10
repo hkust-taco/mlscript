@@ -16,14 +16,19 @@ Minimal shape:
 
 ```json
 {
-  "name": "web-ide",
-  "main": "editor/Highlight.mls",
-  "moduleName": "Highlight",
+  "name": "recursive-descent-parsing",
+  "main": "RecursiveDescent.mls",
+  "moduleName": "RecursiveDescent",
   "vendors": [
     {
       "prefix": "std/",
       "path": "../../mlscript-compile",
-      "files": ["Predef.mls"]
+      "files": ["Predef.mls", "Stack.mls", "Option.mls"]
+    },
+    {
+      "prefix": "gpp/",
+      "path": "../generalized-pratt-parsing",
+      "files": ["Token.mls"]
     }
   ]
 }
@@ -61,5 +66,14 @@ For each vendor entry, the package compiler:
 
 If a JavaScript asset would be copied to the same path as a compiled `.mls`
 output, the compiled `.mls` output wins.
+
+The compiler injects `Runtime.mjs` into every
+generated JavaScript module.
+We place this file at `vendors/std/` of each package.
+
+When vendored code imports another package, package tests read that package's
+manifest too. Each package is copied into the current package's
+`vendors/` directory at most once, and all generated imports point to that same
+copy.
 
 The package's own `.mls` files still compile beside themselves.

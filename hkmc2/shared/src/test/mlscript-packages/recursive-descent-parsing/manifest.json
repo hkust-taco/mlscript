@@ -1,0 +1,19 @@
+{
+  "name": "recursive-descent-parsing",
+  "main": "RecursiveDescent.mls",
+  "moduleName": "RecursiveDescent",
+  "vendors": [
+    {
+      "prefix": "std/",
+      "path": "../../mlscript-compile",
+      "files": [
+        "Predef.mls",
+        "Stack.mls",
+        "Option.mls",
+        "Iter.mls",
+        "StrOps.mls"
+      ]
+    },
+    {"prefix": "gpp/", "path": "../generalized-pratt-parsing", "files": ["Token.mls"]}
+  ]
+}

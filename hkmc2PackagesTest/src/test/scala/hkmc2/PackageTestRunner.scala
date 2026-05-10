@@ -28,7 +28,7 @@ class PackageTestRunner
       .toSeq
     val packageName = packageDir.baseName
     val manifest = PackageManifest.read(packageDir)
-    val moduleResolver = PackageModuleResolver(packageDir, manifest, S(nodeModulesPath))
+    val moduleResolver = PackageModuleResolver(packageDir, manifest, S(nodeModulesPath), stdlibDir)
     val vendoredSources = moduleResolver.vendoredSources.toSeq
     val copiedVendorFiles = moduleResolver.copiedVendorFiles.toSeq
     
@@ -39,7 +39,7 @@ class PackageTestRunner
     
     val wrap: (=> Unit) => Unit = body => PackageTestRunner.synchronized(body)
     val report = ReportFormatter(System.out.println, colorize = true, wrap = Some(wrap))
-    val compiler = MLsCompiler(paths, mkRaise = report.mkRaise)
+    val compiler = MLsCompiler(pathsForPackage(packageDir), mkRaise = report.mkRaise)
     
     describe(s"$packageName (${"file" countBy allFiles.size})"):
     
@@ -84,10 +84,10 @@ object PackageTestRunner:
   val packagesDir = TestFolders.packagesTestDir(os.pwd)
   val stdlibDir = mainTestDir / "mlscript-compile"
   
-  val paths = new MLsCompiler.Paths:
+  def pathsForPackage(packageDir: os.Path): MLsCompiler.Paths = new MLsCompiler.Paths:
     val preludeFile = mainTestDir / "mlscript" / "decls" / "Prelude.mls"
-    val runtimeFile = stdlibDir / "Runtime.mjs"
-    val termFile = stdlibDir / "Term.mjs"
+    val runtimeFile = PackageModuleResolver.runtimeTarget(packageDir)
+    val termFile = PackageModuleResolver.termTarget(packageDir)
   
   val nodeModulesPath = os.pwd / "node_modules"
   

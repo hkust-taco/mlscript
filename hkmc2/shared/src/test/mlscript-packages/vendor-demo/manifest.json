@@ -1,8 +1,0 @@
-{
-  "name": "vendor-demo",
-  "main": "Main.mls",
-  "moduleName": "VendorDemo",
-  "vendors": [
-    {"prefix": "support/", "path": "../support-lib", "files": ["Root.mls"]}
-  ]
-}

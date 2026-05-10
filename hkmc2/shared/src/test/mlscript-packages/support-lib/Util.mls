@@ -1,3 +1,0 @@
-module Util with ...
-
-fun answer = 41
