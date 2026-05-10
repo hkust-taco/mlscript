@@ -63,6 +63,21 @@ class Compiler(paths: MLsCompiler.Paths)(using cctx: CompilerCtx):
     pathDiagnosticsMap = MutMap.empty
     perFileDiagnostics
 
+/** JS-facing wrapper for browser workers.
+  *
+  * The regular `Compiler` needs a Scala `CompilerCtx`. This wrapper builds it
+  * from the browser's virtual filesystem. Module resolution is delegated to
+  * `WebModuleResolver`, which is currently minimal.
+  */
+@JSExportTopLevel("BrowserCompiler")
+class BrowserCompiler(fs: DummyFileSystem, paths: MLsCompiler.Paths):
+  private given CompilerCtx = CompilerCtx.fresh(fs, WebModuleResolver())
+  private val compiler = Compiler(paths)
+
+  @JSExport
+  def compile(filePath: Str): js.Array[js.Dynamic] =
+    compiler.compile(filePath)
+
 @JSExportTopLevel("Paths")
 final class Paths(prelude: Str, runtime: Str, term: Str, std: Str) extends MLsCompiler.Paths:
   val preludeFile = Path(prelude)

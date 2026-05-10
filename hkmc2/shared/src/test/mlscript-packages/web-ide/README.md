@@ -10,6 +10,11 @@ and sandbox execution in local browser.
 
 ## Getting Started
 
-- Run `sbt hkmc2JS / fastOptJS` before starting using the web demo.
-  This command compiles the MLscript compiler to JavaScript.
-     
+- Run `sbt hkmc2JVM/test` first.
+  This generates the standard library `.mjs` files used by the demo.
+- Run `sbt hkmc2JS/fastOptJS`.
+  This compiles the MLscript compiler to JavaScript
+  and embeds the standard library sources for the browser.
+- Copy `hkmc2/js/target/scala-3.8.3/hkmc2-fastopt/`
+  into this package's ignored `build/` folder.
+- Serve this folder with a static web server.

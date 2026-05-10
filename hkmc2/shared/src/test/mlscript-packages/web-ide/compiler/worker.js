@@ -6,6 +6,8 @@ let filesStore = {};
 
 /** Maintain a set of modified paths. @type {Set<string>} */
 let modifiedFiles = new Set();
+let fileTimestamps = {};
+let timestamp = 0;
 
 function createVirtualFileSystem() {
   return {
@@ -18,12 +20,16 @@ function createVirtualFileSystem() {
 
     write(path, content) {
       filesStore[path] = content;
+      fileTimestamps[path] = ++timestamp;
       modifiedFiles.add(path);
-      return true;
     },
 
     exists(path) {
       return path in filesStore;
+    },
+
+    getLastChangedTimestamp(path) {
+      return fileTimestamps[path] ?? 0;
     },
   };
 }
@@ -37,10 +43,11 @@ function initializeCompiler() {
     const paths = new MLscript.Paths(
       "/std/Prelude.mls",
       "/std/Runtime.mjs",
-      "/std/Term.mjs"
+      "/std/Term.mjs",
+      "/std"
     );
     
-    compiler = new MLscript.Compiler(dummyFileSystem, paths);
+    compiler = new MLscript.BrowserCompiler(dummyFileSystem, paths);
   }
 }
 
@@ -52,11 +59,11 @@ self.addEventListener("message", function (e) {
 
   if (type === "compile") {
     try {
-      initializeCompiler();
-      
       filesStore = allFiles;
-
+      fileTimestamps = Object.fromEntries(Object.keys(filesStore).map((path) => [path, 0]));
       modifiedFiles.clear();
+      compiler = null;
+      initializeCompiler();
 
       const diagnosticsPerFile = [];
       for (const filePath of filePaths) {

@@ -69,10 +69,10 @@ compilerWorker.addEventListener("error", function (error) {
 /**
  * Compile the given MLscript files using the compiler worker.
  *
- * Currently, we also need to pass all MLscript files in the file system to the
- * worker because there is no simple way to share the file system between the
- * main thread and the worker. The current approach works even when the number
- * of files is not too large.
+ * Currently, we also need to pass all compiler-visible `.mls` and `.mjs` files
+ * to the worker because there is no simple way to share the file system between
+ * the main thread and the worker. The current approach works even when the
+ * number of files is not too large.
  *
  * Calling this function will also dispatch compilation status change events:
  * - `"running"` when compilation starts,
@@ -86,7 +86,7 @@ compilerWorker.addEventListener("error", function (error) {
  *
  * @param {string[]} filePaths the list of file paths to compile
  * @param {Record<string, string>} allFiles
- *    all MLscript source files in the file system
+ *    all compiler-visible source and JavaScript module files in the file system
  * @returns {Promise<{ result: string, changes: Record<string, string> }>}
  *    compilation result and changed files
  */

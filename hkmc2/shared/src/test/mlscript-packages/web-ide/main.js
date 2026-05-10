@@ -48,10 +48,11 @@ print of "Press Ctrl-E to execute."
  * @param {string} targetPath the file path that triggered the compile request
  */
 function collectFilesForCompilation(targetPath) {
-  const files = fs.getAllFiles((path) => path.endsWith(".mls"));
+  const files = fs.getAllFiles((path) => path.endsWith(".mls") || path.endsWith(".mjs"));
   const targetPaths = new Set(
     Object.keys(files).filter((p) => {
       const node = fs.stat(p);
+      if (!p.endsWith(".mls")) return false;
       if (node?.attrs?.std) return false;
       return node?.attrs?.compiled !== true;
     })

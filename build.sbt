@@ -64,6 +64,48 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
       _.withModuleKind(ModuleKind.ESModule)
         .withOutputPatterns(OutputPatterns.fromJSFile("MLscript.mjs"))
     },
+    Compile / sourceGenerators += Def.task {
+      val rootDir = (ThisBuild / baseDirectory).value
+      val stdDir = rootDir / "hkmc2" / "shared" / "src" / "test" / "mlscript-compile"
+      val declsDir = rootDir / "hkmc2" / "shared" / "src" / "test" / "mlscript" / "decls"
+      val out = (Compile / sourceManaged).value / "hkmc2" / "WebIDEStd.scala"
+      val preludeFile = declsDir / "Prelude.mls"
+      val stdFiles = ((stdDir * "*.mls") +++ (stdDir * "*.mjs")).get
+        .filterNot(_.getName == "Prelude.mls")
+        .sortBy(_.getName)
+
+      def scalaString(value: String): String =
+        "\"" + value.flatMap {
+          case '\\' => "\\\\"
+          case '"' => "\\\""
+          case '\n' => "\\n"
+          case '\r' => "\\r"
+          case '\t' => "\\t"
+          case c if c.isControl => f"\\u${c.toInt}%04x"
+          case c => c.toString
+        } + "\""
+
+      val entries = stdFiles.map { file =>
+        s"""js.Array(${scalaString("/std/" + file.getName)}, ${scalaString(IO.read(file))})"""
+      }
+      val source =
+        s"""|package hkmc2
+            |
+            |import scala.scalajs.js
+            |import scala.scalajs.js.annotation.JSExportTopLevel
+            |
+            |object WebIDEStd:
+            |  @JSExportTopLevel("std")
+            |  val std: js.Dynamic = js.Dynamic.literal(
+            |    prelude = ${scalaString(IO.read(preludeFile))},
+            |    files = js.Array(
+            |      ${entries.mkString(",\n      ")}
+            |    )
+            |  )
+            |""".stripMargin
+      IO.write(out, source)
+      Seq(out)
+    }.taskValue,
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.2.0",
   )
   .dependsOn(core)
