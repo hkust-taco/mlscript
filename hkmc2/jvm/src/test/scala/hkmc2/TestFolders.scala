@@ -86,3 +86,4 @@ object TestFolders:
     compileTestDir(wd)/"wasm" :: Nil
   
 end TestFolders
+

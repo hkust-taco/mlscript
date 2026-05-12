@@ -221,3 +221,7 @@ Links to the individual paper artifact repositories are provided at the correspo
   used v1 with the current Scala-like syntax.
 * [**OOPSLA '25**] [A Lightweight Type-and-Effect System for Invalidation Safety](https://cse.hkust.edu.hk/~parreaux/publication/oopsla25/)
   used hkmc2.
+
+
+
+
