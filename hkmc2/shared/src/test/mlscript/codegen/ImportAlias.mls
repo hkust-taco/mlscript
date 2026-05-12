@@ -1,0 +1,51 @@
+:js
+
+
+import "../../mlscript-compile/Example.mls" as AnotherExample
+
+:e
+Example.inc(0)
+//│ ╔══[COMPILATION ERROR] Name not found: Example
+//│ ║  l.7: 	Example.inc(0)
+//│ ╙──     	^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect 1
+AnotherExample.inc(0)
+//│ = 1
+
+
+:silent
+import "../../mlscript-compile/Example.mjs" as JSExample
+
+:e
+Example.inc(0)
+//│ ╔══[COMPILATION ERROR] Name not found: Example
+//│ ║  l.22: 	Example.inc(0)
+//│ ╙──      	^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect 1
+JSExample.inc(0)
+//│ = 1
+
+
+:pe
+import "../../mlscript-compile/Example.mls" as
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
+//│ ║  l.34: 	import "../../mlscript-compile/Example.mls" as
+//│ ╙──      	                                              ^
+
+:e
+import "../../mlscript-compile/Example.mls" as "Examle"
+//│ ╔══[COMPILATION ERROR] Expected identifier after 'as' in import statement
+//│ ║  l.40: 	import "../../mlscript-compile/Example.mls" as "Examle"
+//│ ╙──      	                                               ^^^^^^^^
+
+import "../../mlscript-compile/Example.mls"
+
+:expect 1
+Example.inc(0)
+//│ = 1
+
+

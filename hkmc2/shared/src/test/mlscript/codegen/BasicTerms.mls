@@ -52,9 +52,10 @@ print("Hi")
 //│           l = member:Predef¹
 //│           disamb = S of module:Predef⁰
 //│         name = Ident of "print"
-//│       args = Ls of 
-//│         Arg:
-//│           value = Lit of StrLit of "Hi"
+//│       argss = Ls of 
+//│         Ls of 
+//│           Arg:
+//│             value = Lit of StrLit of "Hi"
 //│     rest = Return: \
 //│     res = Lit of IntLit of 2
 //│     implct = true

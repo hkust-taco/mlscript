@@ -37,7 +37,7 @@
 //│   runtime.checkArgs("", 1, false, arguments.length);
 //│   return runtime.safeCall(self.x(...args))
 //│ });
-//│ block$res2 = runtime.checkCall(lambda1());
+//│ block$res2 = runtime.safeCall(lambda1());
 //│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 1 argument but got 0

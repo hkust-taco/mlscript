@@ -15,35 +15,35 @@ let suite = mkSuite()
 
 
 
-import "../../test/bench/mlscript-compile/nofib/rsa.mls"
+import "../../../../hkmc2/shared/src/test/mlscript-compile/nofib/rsa.mls"
 suite.add("rsa", () => rsa.main())
 
 
 // =======================
 
 
-import "../../test/bench/mlscript-compile/nofib/scc.mls"
+import "../../../../hkmc2/shared/src/test/mlscript-compile/nofib/scc.mls"
 suite.add("scc", () => scc.main())
 
 
 // =======================
 
 
-import "../../test/bench/mlscript-compile/nofib/secretary.mls"
+import "../../../../hkmc2/shared/src/test/mlscript-compile/nofib/secretary.mls"
 suite.add("secretary", () => secretary.main())
 
 
 // =======================
 
 
-import "../../test/bench/mlscript-compile/nofib/sorting.mls"
+import "../../../../hkmc2/shared/src/test/mlscript-compile/nofib/sorting.mls"
 suite.add("sorting", () => sorting.main())
 
 
 // =======================
 
 
-import "../../test/bench/mlscript-compile/nofib/sphere.mls"
+import "../../../../hkmc2/shared/src/test/mlscript-compile/nofib/sphere.mls"
 suite.add("sphere", () => sphere.main())
 
 
@@ -51,7 +51,7 @@ suite.add("sphere", () => sphere.main())
 
 
 // need more stack
-// import "../../test/bench/mlscript-compile/nofib/treejoin.mls"
+// import "../../../../hkmc2/shared/src/test/mlscript-compile/nofib/treejoin.mls"
 // suite.add("treejoin", () => treejoin.main())
 
 

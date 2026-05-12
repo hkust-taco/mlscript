@@ -46,6 +46,16 @@ object ScopeData:
       case _ => super.applyDefn(defn)
   type ScopedInfo = DefinitionSymbol[?] | LabelSymbol | ScopeUID | Unit
 
+  given Ordering[ScopedInfo] with
+    def compare(x: ScopedInfo, y: ScopedInfo): Int = (x, y) match
+      case (a: Symbol, b: Symbol) => Ordering[Uid[Symbol]].compare(a.uid, b.uid)
+      case (_: Symbol, _) => -1
+      case (_, _: Symbol) => 1
+      case ((), ()) => 0
+      case ((), _) => -1
+      case (_, ()) => 1
+      case (a: Int, b: Int) => a compare b // ScopeUID is Int inside ScopeData
+
   // ScopeData requires the set of ignored scopes to compute certain things, but
   // the lifter requires the scope tree to generate the metadata. To solve this,
   // we generate the scope tree then populate the metadata later.

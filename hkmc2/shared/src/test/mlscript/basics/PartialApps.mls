@@ -113,17 +113,19 @@ passTo(1, add(., 1) @ _ + _)(2)
 :sjs
 let f = add(_, 1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f, f1; f1 = function f(_0) { let tmp12; tmp12 = add(); return tmp12(_0, 1) }; f = f1;
+//│ let f, f1;
+//│ f1 = function f(_0) { let tmp1; tmp1 = add(); return runtime.safeCall(tmp1(_0, 1)) };
+//│ f = f1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = fun f
 
 :fixme
 let f = add(., 1)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.121: 	let f = add(., 1)
+//│ ║  l.123: 	let f = add(., 1)
 //│ ╙──       	            ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.121: 	let f = add(., 1)
+//│ ║  l.123: 	let f = add(., 1)
 //│ ╙──       	            ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ f = undefined

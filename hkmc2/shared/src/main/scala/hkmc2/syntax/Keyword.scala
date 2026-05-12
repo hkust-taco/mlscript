@@ -79,6 +79,10 @@ object Keyword:
   val `else` = Keyword("else", N, eqPrec)
   type `else` = `else`.type
   
+  val `return` = Keyword("return", N, curPrec)
+  val `throw` = Keyword("throw", N, curPrec)
+  val `import` = Keyword("import", N, curPrec)
+  
   val `fun` = Keyword("fun", N, N)
   // val `val` = Keyword("val", N, N)
   val `var` = Keyword("var", N, N)
@@ -122,9 +126,6 @@ object Keyword:
   val `false` = Keyword("false", N, N)
   val `public` = Keyword("public", N, N)
   val `private` = Keyword("private", N, N)
-  val `return` = Keyword("return", N, curPrec)
-  val `throw` = Keyword("throw", N, curPrec)
-  val `import` = Keyword("import", N, curPrec)
   val `this` = Keyword("this", N, N)
   val `outer` = Keyword("outer", N, N)
   val `pattern` = Keyword("pattern", N, N)

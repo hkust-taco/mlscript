@@ -95,18 +95,6 @@ class BlockTransformer(subst: SymbolSubst):
       applyDefn(defn): defn2 =>
         val rst2 = applySubBlock(rst)
         if (defn2 is defn) && (rst2 is rst) then b else Define(defn2, rst2)
-    case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
-      val l2 = applyLocal(l)
-      val res2 = applyLocal(res)
-      applyPath(par): par2 =>
-        applyListOf(args, applyPath(_)(_)): args2 =>
-          val cls2 = cls.subst
-          val hdr2 = hdr.mapConserve(applyHandler)
-          val bod2 = applySubBlock(bod)
-          val rst2 = applySubBlock(rst)
-          if (l2 is l) && (res2 is res) && (par2 is par) && (args2 is args) &&
-              (cls2 is cls) && (hdr2 is hdr) && (bod2 is bod) && (rst2 is rst)
-            then b else HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod2, rst2)
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
       applyResult(rhs): rhs2 =>
         applyPath(lhs): lhs2 =>
@@ -149,19 +137,26 @@ class BlockTransformer(subst: SymbolSubst):
   
   def applyArgs(args: List[Arg])(k: List[Arg] => Block): Block =
     applyListOf(args, applyArg(_)(_))(k)
+
+  def applyArgss(argss: NELs[List[Arg]])(k: NELs[List[Arg]] => Block): Block =
+    applyListOf(argss, applyArgs(_)(_)): newArgss =>
+      k(newArgss.ne_!)
+  
+  def applyArgss(argss: List[List[Arg]])(k: List[List[Arg]] => Block): Block =
+    applyListOf(argss, applyArgs(_)(_))(k)
   
   def applyResult(r: Result)(k: Result => Block): Block =
     r match
-    case r @ Call(fun, args) =>
+    case r @ Call(fun, argss) =>
       applyPath(fun): fun2 =>
-        applyArgs(args): args2 =>
-          k(if (fun2 is fun) && (args2 is args) then r
-            else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects, r.explicitTailCall).withLocOf(r))
-    case Instantiate(mut, cls, args) =>
+        applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
+          k(if (fun2 is fun) && (argss2 is argss) then r
+            else Call(fun2, argss2.ne_!)(r.isMlsFun, r.mayRaiseEffects, r.explicitTailCall).withLocOf(r))
+    case Instantiate(mut, cls, argss) =>
       applyPath(cls): cls2 =>
-        applyArgs(args): args2 =>
-          k(if (cls2 is cls) && (args2 is args) then r
-            else Instantiate(mut, cls2, args2).withLocOf(r))
+        applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
+          k(if (cls2 is cls) && (argss2 is argss) then r
+            else Instantiate(mut, cls2, argss2).withLocOf(r))
     case l: Lambda => k(applyLam(l))
     case Tuple(mut, elems) =>
       applyArgs(elems): elems2 =>
@@ -200,7 +195,7 @@ class BlockTransformer(subst: SymbolSubst):
     val params2 = fun.params.mapConserve(applyParamList)
     val body2 = applyFunBodyLikeBlock(fun.body)
     if (own2 is fun.owner) && (sym2 is fun.sym) && (dSym2 is fun.dSym) && (params2 is fun.params) && (body2 is fun.body)
-      then fun else FunDefn(own2, sym2, dSym2, params2, body2)(fun.forceTailRec, fun.configOverride)
+      then fun else FunDefn(own2, sym2, dSym2, params2, body2)(fun.configOverride, fun.annotations)
   
   def applyValDefn(defn: ValDefn)(k: ValDefn => Block): Block =
     val ValDefn(tsym, sym, rhs) = defn
@@ -208,7 +203,7 @@ class BlockTransformer(subst: SymbolSubst):
     val sym2 = sym.subst
     applyPath(rhs): rhs2 =>
       if (tsym2 is tsym) && (sym2 is sym) && (rhs2 is rhs)
-        then k(defn) else k(ValDefn(tsym2, sym2, rhs2)(defn.configOverride))
+        then k(defn) else k(ValDefn(tsym2, sym2, rhs2)(defn.configOverride, defn.annotations))
   
   def applyPublicField(f: BlockMemberSymbol -> TermSymbol): BlockMemberSymbol -> TermSymbol =
     val f_1_2 = f._1.subst
@@ -225,7 +220,7 @@ class BlockTransformer(subst: SymbolSubst):
         (privateFields2 is defn.privateFields) &&
         (publicFields2 is defn.publicFields) &&
         (ctor2 is defn.ctor)
-      then defn else ClsLikeBody(isym2, methods2, privateFields2, publicFields2, ctor2)
+      then defn else ClsLikeBody(isym2, methods2, privateFields2, publicFields2, ctor2, defn.annotations)
     
   def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
     case defn: FunDefn => k(applyFunDefn(defn))
@@ -257,7 +252,7 @@ class BlockTransformer(subst: SymbolSubst):
               (preCtor2 is preCtor) && (ctor2 is ctor) &&
               (mod2 is mod)
             then defn else ClsLikeDefn(own2, isym2, sym2, ctorSym2, kind, paramsOpt2, 
-              auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2, bufferable)(defn.configOverride)
+              auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2, bufferable)(defn.configOverride, defn.annotations)
       parentPath match
       case Some(pp) => applyPath(pp): pp2 =>
         helper:
@@ -318,25 +313,10 @@ class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst
     case _: ValDefn => super.applyDefn(defn)(k)
   
   override def applyHandler(hdr: Handler): Handler = hdr
-  
-  override def applyBlock(b: Block): Block = b match
-    case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
-      val l2 = applyLocal(l)
-      val res2 = applyLocal(res)
-      applyPath(par): par2 =>
-        applyListOf(args, applyPath(_)(_)): args2 =>
-          val cls2 = cls.subst
-          val hdr2 = hdr.mapConserve(applyHandler)
-          val rst2 = applySubBlock(rst)
-          if (l2 is l) && (res2 is res) && (par2 is par) && (args2 is args) &&
-              (cls2 is cls) && (hdr2 is hdr) && (rst2 is rst)
-            then b else HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod, rst2)
-    case _ => super.applyBlock(b)
 
 // Does not traverse into sub-blocks or definitions. The purpose of this is is to only rewrite a block's data, i.e. 
 // paths, values, cases, etc. within a block. Can be used in tandem with `BlockTransformer` or `BlockTransformerShallow` 
 // to traverse sub-blocks while using this class to perform more complicated transformations on the blocks themselves.
 class BlockDataTransformer(subst: SymbolSubst) extends BlockTransformerShallow(subst):
   override def applySubBlock(b: Block): Block = b
-
 

@@ -211,8 +211,14 @@ object Elaborator:
         val bufferable = assumeObject("bufferable")
       object scope extends VirtualModule(assumeBuiltinMod("scope")):
         val locally = assumeObject("locally")
+      object runtime extends VirtualModule(assumeBuiltinMod("runtime")):
+        val suspend = assumeObject("suspend")
+        val handle_suspension = assumeObject("handle_suspension")
       def getBuiltinOp(op: Str): Opt[Str] =
         if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
+      object BuiltInOpIdent:
+        def unapply(id: Ident): Opt[Str] =
+          getBuiltinOp(id.name)
       /** Classes that do not use `instanceof` in pattern matching. */
       val virtualClasses = Set(Int, Num, Str, Bool, TypedArray)
   
@@ -295,7 +301,7 @@ object Elaborator:
         Param(flag, VarSymbol(Ident("output")), N, Modulefulness(N)(false)) ::
         Param(flag, VarSymbol(Ident("bindings")), N, Modulefulness(N)(false)) ::
         Nil)
-      val ctsym = TermSymbol(Fun, S(cs), cs.id)
+      val ctsym = ClassCtorSymbol(Fun, S(cs), cs.id)
       cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, Nil), S(ctsym),
         Nil, ps, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
       cs -> ts
@@ -306,7 +312,7 @@ object Elaborator:
       val ts = TermSymbol(syntax.Fun, N, id)
       val flag = FldFlags.empty.copy(isVal = true)
       val ps = PlainParamList(Param(flag, VarSymbol(Ident("errors")), N, Modulefulness(N)(false)) :: Nil)
-      val ctsym = TermSymbol(Fun, S(cs), cs.id)
+      val ctsym = ClassCtorSymbol(Fun, S(cs), cs.id)
       cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, td :: Nil), S(ctsym),
         Nil, ps, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
       cs -> ts
@@ -376,7 +382,15 @@ extends Importer with ucs.SplitElaborator:
     case _ => N
   
   def annot(tree: Tree): Ctxl[Opt[Annot]] = tree match
-    case Keywrd(kw @ (Keyword.`abstract` | Keyword.`declare` | Keyword.`data` | Keyword.`staged`)) => S(Annot.Modifier(kw))
+    case Keywrd(kw @ (
+      Keyword.`abstract`
+      | Keyword.`declare`
+      | Keyword.`data`
+      | Keyword.`staged`
+      | Keyword.`virtual`
+      | Keyword.`public`
+      | Keyword.`private`
+    )) => S(Annot.Modifier(kw))
     case App(Ident("config"), Tup(args)) =>
       val modify = ConfigParser.parseOverrides(args)
       S(Annot.Config(modify))
@@ -813,8 +827,6 @@ extends Importer with ucs.SplitElaborator:
     case TypeDef(k, head, rhs) =>
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
       Term.Error
-    case Modified(Keyword.`in` | Keyword.`out`, body) =>
-      subterm(body)
     case Modified(Keywrd(Keyword.`mut`), body: Block) =>
       blockOrRcd(body, hasResult = true) match
       case (Blk(Nil, Term.UnitVal()), ctx) =>
@@ -1073,15 +1085,26 @@ extends Importer with ucs.SplitElaborator:
             go(sts, Nil, acc)
       case (m @ PrefixApp(Keywrd(Keyword.`import`), arg)) :: sts =>
         reportUnusedAnnotations
-        val (newCtx, newAcc) = arg match
-          case StrLit(path) =>
-            val stmt = importPath(path).withLocOf(m)
+        val pathAndAlias: Opt[(Tree, Opt[Ident])] = arg match
+          case InfixApp(pathArg, Keywrd(Keyword.`as`), alias: Ident) => S((pathArg, S(alias)))
+          case InfixApp(pathArg, Keywrd(Keyword.`as`), Error()) => N
+          case InfixApp(_, Keywrd(Keyword.`as`), badAlias) =>
+            raise(ErrorReport(
+              msg"Expected identifier after 'as' in import statement" ->
+              badAlias.toLoc :: Nil))
+            N
+          case pathArg => S((pathArg, N))
+        val (newCtx, newAcc) = pathAndAlias match
+          case S((StrLit(path), alias)) =>
+            val stmt = importPath(path, alias).withLocOf(m)
             (ctx + (stmt.sym.nme -> stmt.sym),
-            stmt :: acc)
-          case _ =>
+              stmt :: acc)
+          case S((pathArg, _)) =>
             raise(ErrorReport(
               msg"Expected string literal after 'import' keyword" ->
-              arg.toLoc :: Nil))
+              pathArg.toLoc :: Nil))
+            (ctx, acc)
+          case N => // errors have been reported above.
             (ctx, acc)
         newCtx.givenIn:
           go(sts, Nil, newAcc)
@@ -1302,7 +1325,8 @@ extends Importer with ucs.SplitElaborator:
           softAssert(pss.sizeCompare(td.clsParams) === 0,
             s"mismatched parameter list numbers ${pss} vs ${td.clsParams}")
           val fields: Ls[Statement] = pss.zip(td.clsParams).flatMap: (ps, cps) =>
-            softAssert(ps.params.sizeCompare(cps) === 0,
+            // TODO: handle this gracefully (could be caused by erroneous input code)
+            softTODO(ps.params.sizeCompare(cps) === 0,
               s"mismatched param list lengths ${ps.params} vs ${cps}")
             ps.params.zip(cps).flatMap: (p, cp) =>
               // For class-like types, "desugar" the parameters into additional class fields.
@@ -1458,7 +1482,7 @@ extends Importer with ucs.SplitElaborator:
               val comp = sym.asMod
               log(s"Companion: ${comp}")
               val tsym = if pss.nonEmpty then
-                val ctsym = TermSymbol(Fun, S(clsSym), clsSym.id)
+                val ctsym = ClassCtorSymbol(Fun, S(clsSym), clsSym.id)
                 val ctdef =
                   TermDefinition(
                     Fun,

@@ -1,5 +1,7 @@
 :js
 
+open annotations
+
 
 // ——— ——— ———
 
@@ -19,17 +21,38 @@ pattern Bin =
 
 fun f(x) = if x is Bin as res then res
 
-:fixme // TODO support
+:todo
 :expect [false]
 f([0])
 //│ ═══[RUNTIME ERROR] Expected: '[false]', got: '[0]'
 //│ = [0]
 
-:fixme // TODO support
+:todo
 :expect [true]
 f([1])
 //│ ═══[RUNTIME ERROR] Expected: '[true]', got: '[1]'
 //│ = [1]
+
+// ——— ——— ———
+
+pattern Parse = 0
+
+let tokens
+//│ tokens = undefined
+
+// Works:
+if tokens is @compile Parse as stack do print(stack)
+
+:fixme // Should be a "name not found"
+if tokens is
+  @compile Parse as stack do print(stack)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'stack'
+//│ ║  l.48: 	  @compile Parse as stack do print(stack)
+//│ ╙──      	                                   ^^^^^
+
+// What's actually intended:
+if tokens is
+  (@compile Parse) as stack do print(stack)
 
 // ——— ——— ———
 

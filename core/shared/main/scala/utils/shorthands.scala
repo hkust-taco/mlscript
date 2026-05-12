@@ -15,6 +15,8 @@ object shorthands {
   type Ls[+A] = List[A]
   val Ls: List.type = List
   
+  type NELs[+A] = ::[A]
+  
   type Str = String
   
   type Ite[+A] = Iterator[A]

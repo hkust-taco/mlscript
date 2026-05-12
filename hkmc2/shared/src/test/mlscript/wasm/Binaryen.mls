@@ -1,0 +1,93 @@
+:js
+:silent
+
+
+// Helper functions
+import "binaryen"
+fun compileWatToWasm(wat) = 
+  let mod = binaryen.parseText(wat)
+  mod.setFeatures(binaryen.Features.All)
+  assert mod.validate() != false
+  val modBuf = mod.emitBinary()
+  mod.dispose()
+  modBuf
+fun instantiateWasm(wasm, importObj) = 
+  assert WebAssembly.validate(wasm)
+  let mod = new! WebAssembly.Module(wasm)
+  let inst = new! WebAssembly.Instance(mod, importObj)
+  inst
+
+
+// Parsing a WAT, compiling it to a Wasm bianry, and executing it
+let wasmMod = compileWatToWasm of 
+    """
+    (module
+        (type $Foo (struct (field $i i32) (field $r i31ref)))
+        (func (export "main") (result i32)
+            (local $tmp (ref $Foo))
+            (block (result i32)
+                (local.set $tmp 
+                    (struct.new $Foo
+                        (i32.const 1)
+                        (ref.i31 (i32.const 2))))
+                (i32.add
+                    (struct.get $Foo $i
+                        (local.get $tmp))
+                    (i31.get_s
+                        (struct.get $Foo $r 
+                            (local.get $tmp)))))))
+    """
+let inst = instantiateWasm of wasmMod, {}
+inst.exports.main() |> print
+//│ > 3
+
+
+// Building a module using Binaryen APIs, and executing it
+let mod = new! binaryen.Module()
+mod.setFeatures(binaryen.Features.All)
+let fooTb = new! binaryen.TypeBuilder(1)
+fooTb.setStructType of 0, tuple of
+    (
+      "type": binaryen.i32
+      packedType: binaryen.notPacked
+      mutable: false
+    )
+    (
+      "type": binaryen.i31ref
+      packedType: binaryen.notPacked
+      mutable: false
+    )
+let foo = fooTb.buildAndDispose().0
+mod.addFunction of
+  "main"
+  binaryen.none
+  binaryen.i32
+  [foo]
+  mod.block of
+    null
+    tuple of
+      mod.local.set of 0,
+        mod.struct.new of
+          tuple of
+            mod.i32.const(1)
+            mod.ref.i31 of
+              mod.i32.const of 2
+          foo
+      mod.i32.add of
+        mod.struct.get of 0,
+          mod.local.get(0, foo)
+          foo
+          false
+        mod.i31.get_s of
+          mod.struct.get of 1,
+            mod.local.get(0, foo)
+            foo
+            false
+    binaryen.i32
+mod.addFunctionExport of "main", "main"
+Predef.js_assert of mod.validate()
+let wasmMod = mod.emitBinary()
+mod.dispose()
+let inst = instantiateWasm of wasmMod, {}
+inst.exports.main() |> print
+//│ > 3

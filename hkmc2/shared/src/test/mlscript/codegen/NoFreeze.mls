@@ -1,7 +1,7 @@
 :js
 
 :ssjs
-class Foo(x)
+class Foo(val x)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let Foo1;
 //│ Foo1 = function Foo(x) {
@@ -11,15 +11,17 @@ class Foo(x)
 //│   static {
 //│     Foo1.class = this
 //│   }
-//│   #x;
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", [null]]; 
+//│   static [definitionMetadata] = ["class", "Foo", ["x"]]; 
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :ssjs
 :noFreeze
-class Foo(x)
+class Foo(val x)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let Foo3;
 //│ Foo3 = function Foo(x) {
@@ -29,9 +31,11 @@ class Foo(x)
 //│   static {
 //│     Foo3.class = this
 //│   }
-//│   #x;
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", [null]]; 
+//│   static [definitionMetadata] = ["class", "Foo", ["x"]]; 
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -42,7 +46,7 @@ let foo = new Foo(1)
 //│ let foo;
 //│ foo = globalThis.Object.freeze(new Foo3.class(1));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ foo = Foo(_)
+//│ foo = Foo(1)
 
 :ssjs
 :noFreeze
@@ -51,5 +55,22 @@ let foo = new Foo(1)
 //│ let foo1;
 //│ foo1 = (new Foo3.class(1));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ foo = Foo(_)
+//│ foo = Foo(1)
 
+
+set foo.x = 42
+
+:expect 42
+foo.x
+//│ = 42
+
+import "../../mlscript-compile/NoFreeze.mls"
+
+let foo = NoFreeze.foo()
+//│ foo = Foo(0)
+
+set foo.x = 42
+
+:expect 42
+foo.x
+//│ = 42

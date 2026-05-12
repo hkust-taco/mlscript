@@ -24,7 +24,6 @@ x => x
 //│   return x
 //│ };
 //│ define Function$⁰ as class Function$¹ {
-//│   private val Function$$cap⁰;
 //│   method call⁰ = fun call¹(x) { return lambda¹(x) }
 //│ };
 //│ set tmp = new Function$¹();
@@ -37,7 +36,7 @@ x => x
 :noInline
 x => x
 //│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
-//│ ║  l.38: 	x => x
+//│ ║  l.37: 	x => x
 //│ ╙──      	^
 //│ = class anonymous
 
@@ -75,7 +74,6 @@ bar(foo)
 //│   return f.call﹖(0)
 //│ };
 //│ define Function$² as class Function$³ {
-//│   private val Function$$cap¹;
 //│   method call² = fun call³(x) { return foo¹(x) }
 //│ };
 //│ set tmp = new Function$³();
@@ -98,12 +96,12 @@ let f = foo in bar(f)
 bar([foo].0)
 bar([foo, x => x].1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if 0 is a function.
-//│ ║  l.98: 	bar([foo].0)
+//│ ║  l.96: 	bar([foo].0)
 //│ ╙──      	         ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 0$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
 //│ ╔══[COMPILATION ERROR] Cannot determine if 1 is a function.
-//│ ║  l.99: 	bar([foo, x => x].1)
+//│ ║  l.97: 	bar([foo, x => x].1)
 //│ ╙──      	                 ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 1$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
@@ -120,7 +118,7 @@ bar([foo, x => x].(i))
 :ge
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.121: 	[foo, x => x].(i)(0)
+//│ ║  l.119: 	[foo, x => x].(i)(0)
 //│ ╙──       	               ^
 
 
@@ -134,10 +132,10 @@ let foo = Foo()
 foo.("f")(0)
 foo.("h")(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.134: 	foo.("f")(0)
+//│ ║  l.132: 	foo.("f")(0)
 //│ ╙──       	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.135: 	foo.("h")(1)
+//│ ║  l.133: 	foo.("h")(1)
 //│ ╙──       	^^^^^^^^
 //│ = 0
 //│ foo = Foo()
@@ -157,7 +155,6 @@ Foo(1).foo(x => x - 1)
 //│   return -⁰(x, 1)
 //│ };
 //│ define Function$⁴ as class Function$⁵ {
-//│   private val Function$$cap²;
 //│   method call⁴ = fun call⁵(x) { return lambda⁵(x) }
 //│ };
 //│ set tmp1 = new Function$⁵();
@@ -171,23 +168,22 @@ Foo(1).foo(x => x - 1)
 fun foo() = x => x
 foo()(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo³, tmp, lambda⁶, Function$⁶;
+//│ let foo³, baseCall, lambda⁶, Function$⁶;
 //│ define lambda⁶ as fun lambda⁷(x) {
 //│   return x
 //│ };
 //│ define Function$⁶ as class Function$⁷ {
-//│   private val Function$$cap³;
 //│   method call⁶ = fun call⁷(x) {
 //│     return lambda⁷(x)
 //│   }
 //│ };
 //│ define foo³ as fun foo⁴() {
-//│   let tmp1;
-//│   set tmp1 = new Function$⁷();
-//│   return tmp1
+//│   let tmp;
+//│   set tmp = new Function$⁷();
+//│   return tmp
 //│ };
-//│ set tmp = foo⁴();
-//│ tmp.call﹖(1)
+//│ set baseCall = foo⁴();
+//│ baseCall.call﹖(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -226,32 +222,16 @@ module Foo with
   class Bar(y) with
     fun bar(z) = x => x + y + z 
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let Foo¹, lambda⁸, Function$⁸, Function$$⁰;
-//│ define Function$$⁰ as fun Function$$¹(isMut, y, z) {
-//│   let tmp;
-//│   match isMut
-//│     true =>
-//│       begin
-//│         set tmp = new mut Function$⁹(y, z);
-//│         end;
-//│       return tmp
-//│     else
-//│       begin
-//│         set tmp = new Function$⁹(y, z);
-//│         end;
-//│       return tmp
-//│   end
-//│ };
+//│ let Foo¹, lambda⁸, Function$⁸;
 //│ define lambda⁸ as fun lambda⁹(y, z, x) {
 //│   let tmp;
 //│   set tmp = +⁰(x, y);
 //│   return +⁰(tmp, z)
 //│ };
-//│ define Function$⁸ as class Function$⁹(y, z) {
-//│   private val Function$$cap⁴;
+//│ define Function$⁸ as class Function$⁹ {
 //│   private val y⁰;
 //│   private val z⁰;
-//│   constructor {
+//│   constructor(y, z) {
 //│     super⁰();
 //│     set y⁰ = y;
 //│     set z⁰ = z;
@@ -261,14 +241,10 @@ module Foo with
 //│     return lambda⁹(y⁰, z⁰, x)
 //│   }
 //│ };
-//│ define Foo¹ as class Foo² {
-//│   private val Foo$cap⁰;
-//│ }
+//│ define Foo¹ as class Foo²
 //│ module Foo³ {
-//│   private val Foo_mod$cap⁰;
 //│   constructor {
 //│     define Bar⁰ as class Bar²(y) {
-//│       private val Bar$cap⁰;
 //│       private val y¹;
 //│       constructor Bar¹ {
 //│         set y¹ = y;
@@ -276,7 +252,7 @@ module Foo with
 //│       }
 //│       method bar² = fun bar³(z) {
 //│         let tmp;
-//│         set tmp = Function$$¹(false, y¹, z);
+//│         set tmp = new Function$⁹(y¹, z);
 //│         return tmp
 //│       }
 //│     };
@@ -304,7 +280,6 @@ y => x + y
 //│   return +⁰(x¹, y)
 //│ };
 //│ define Function$¹⁰ as class Function$¹¹ {
-//│   private val Function$$cap⁵;
 //│   method call¹⁰ = fun call¹¹(y) { return lambda¹¹(y) }
 //│ };
 //│ set tmp = new Function$¹¹();
@@ -399,7 +374,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.400: 	foo.f(0)
+//│ ║  l.375: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -417,7 +392,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.418: 	foo.x(0)
+//│ ║  l.393: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 
@@ -485,29 +460,13 @@ f(1)(2)
 :sir
 fun foo(x)(y) = x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo⁵, lambda$⁰, Function$¹², Function$$²;
-//│ define Function$$² as fun Function$$³(isMut, x) {
-//│   let tmp;
-//│   match isMut
-//│     true =>
-//│       begin
-//│         set tmp = new mut Function$¹³(x);
-//│         end;
-//│       return tmp
-//│     else
-//│       begin
-//│         set tmp = new Function$¹³(x);
-//│         end;
-//│       return tmp
-//│   end
-//│ };
+//│ let foo⁵, lambda$⁰, Function$¹²;
 //│ define lambda$⁰ as fun lambda$¹(x, y) {
 //│   return +⁰(x, y)
 //│ };
-//│ define Function$¹² as class Function$¹³(x) {
-//│   private val Function$$cap⁶;
+//│ define Function$¹² as class Function$¹³ {
 //│   private val x²;
-//│   constructor {
+//│   constructor(x) {
 //│     super⁰();
 //│     set x² = x;
 //│     end
@@ -516,7 +475,7 @@ fun foo(x)(y) = x + y
 //│     return lambda$¹(x², y)
 //│   }
 //│ };
-//│ define foo⁵ as fun foo⁶(x) { let tmp; set tmp = Function$$³(false, x); return tmp };
+//│ define foo⁵ as fun foo⁶(x) { let tmp; set tmp = new Function$¹³(x); return tmp };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -554,8 +513,9 @@ foo(tuple)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Function$¹⁴, tmp;
 //│ define Function$¹⁴ as class Function$¹⁵ {
-//│   private val Function$$cap⁷;
-//│   method call¹⁴ = fun call¹⁵() { return Predef⁰.tuple⁰() }
+//│   method call¹⁴ = fun call¹⁵(...xs) {
+//│     return Predef⁰.tuple⁰()
+//│   }
 //│ };
 //│ set tmp = new Function$¹⁵();
 //│ foo⁷(tmp)

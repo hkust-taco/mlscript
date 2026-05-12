@@ -260,6 +260,12 @@ enum Tree extends AutoLocated:
           Annotated(kw, s.desugared)
         case Modified(kw @ Keywrd(Keyword.`staged`), s) =>
           Annotated(kw, s.desugared)
+        case Modified(kw @ Keywrd(Keyword.`virtual`), s) =>
+          Annotated(kw, s.desugared)
+        case Modified(kw @ Keywrd(Keyword.`public`), s) =>
+          Annotated(kw, s.desugared)
+        case Modified(kw @ Keywrd(Keyword.`private`), s) =>
+          Annotated(kw, s.desugared)
         case Modified(kw @ Keywrd(Keyword.`mut`), TermDef(ImmutVal, anme, rhs)) =>
           TermDef(MutVal, anme, rhs).withLocOf(this).desugared
         case _ => m
