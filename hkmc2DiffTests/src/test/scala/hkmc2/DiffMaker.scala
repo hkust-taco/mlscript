@@ -285,8 +285,11 @@ abstract class DiffMaker:
   
   
   
+  final def rec(lines: List[String]): Unit =
+    rec(lines, false, false)
+  
   @annotation.tailrec
-  final def rec(lines: List[String], pendingOutputSeparator: Bool = false, mayNeedOutputSeparator: Bool = false): Unit = lines match
+  final def rec(lines: List[String], pendingOutputSeparator: Bool, mayNeedOutputSeparator: Bool): Unit = lines match
     case "" :: Nil => // To prevent adding an extra newline at the end
     case (line @ "") :: ls if consumeEmptyLines.isUnset =>
       out.println(line)
@@ -381,7 +384,7 @@ abstract class DiffMaker:
         output(output.blockSeparator)
         consumeEmptyLines.unset
       
-      rec(lines.drop(block.size), mayNeedOutputSeparator = !blockProducedOutput)
+      rec(lines.drop(block.size), false, !blockProducedOutput)
       
     case Nil =>
   
