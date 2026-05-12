@@ -176,7 +176,7 @@ and then use one of the following commands.
 - `hkmc2WasmTests/test` for running the wasm compile and diff tests.
 - `hkmc2LlirTests/test` for running the llir diff tests.
 - `hkmc2MostTests/test` for running all of the above except llir.
-- `hkmc2AllTests/test` for running the default full hkmc2 suite except llir, including ScalaJS-compiled tests.
+- `hkmc2AllTests/test` for running all default hkmc2 tests except llir, including ScalaJS-compiled tests.
 - `~hkmc2DiffTests/Test/run` for running the test watcher,
   which updates test files as you save them and recompiles the Scala sources automatically on change.
 - `test` for compiling all JVM and JS subprojects
@@ -221,4 +221,3 @@ Links to the individual paper artifact repositories are provided at the correspo
   used v1 with the current Scala-like syntax.
 * [**OOPSLA '25**] [A Lightweight Type-and-Effect System for Invalidation Safety](https://cse.hkust.edu.hk/~parreaux/publication/oopsla25/)
   used hkmc2.
-
