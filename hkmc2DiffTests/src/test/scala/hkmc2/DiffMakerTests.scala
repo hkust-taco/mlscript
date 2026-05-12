@@ -23,7 +23,7 @@ class DiffMakerTests extends AnyFunSuite:
   
   private def rewrite(source: String): String =
     val dir = os.Path(Files.createTempDirectory("diff-maker-tests").toString)
-    val testFile = dir / "Test.mls"
+    val testFile = dir / s"Test-${System.nanoTime}.mls"
     os.write.over(testFile, source)
     val compilerCtx = CompilerCtx.fresh(FileSystem.default)
     try

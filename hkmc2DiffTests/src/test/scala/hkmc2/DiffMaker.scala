@@ -288,10 +288,9 @@ abstract class DiffMaker:
   final def rec(lines: List[String]): Unit =
     rec(lines, false, false)
   
-  // `pendingOutputSeparator` remembers that we consumed old `//│ ` lines that were the
-  // only separator after a block with no fresh output, so the next block still needs one.
-  // `mayNeedOutputSeparator` tracks whether the most recently processed block produced no
-  // output, which only becomes actionable if we then consume old output lines.
+  // When a block emits no fresh output, `mayNeedOutputSeparator` becomes true.
+  // If the next consumed original lines are old `//│ ` lines, `pendingOutputSeparator`
+  // latches true so the next real block gets one synthetic `//│ ` line before it.
   @annotation.tailrec
   final def rec(lines: List[String], pendingOutputSeparator: Bool, mayNeedOutputSeparator: Bool): Unit = lines match
     case "" :: Nil => // To prevent adding an extra newline at the end
@@ -327,9 +326,8 @@ abstract class DiffMaker:
     case line :: ls if line.startsWith(output.outputMarker) //|| line.startsWith(oldOutputMarker)
       =>
       output.linesDelta -= 1
-      // Once old output lines are being consumed after a no-output block, keep the pending
-      // separator request latched until we either emit it before the next block or hit some
-      // other structural separator that resets the state via one-argument `rec`.
+      // Consuming old output after a no-output block latches the pending separator
+      // until we either emit it before the next block or reset state by calling `rec(ls)`.
       rec(ls, pendingOutputSeparator || mayNeedOutputSeparator, mayNeedOutputSeparator)
     case line :: ls if line.startsWith("//") =>
       out.println(line)
