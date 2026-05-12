@@ -373,7 +373,9 @@ abstract class DiffMaker:
       val beforeOutputLines = output.linesDelta
       
       try
+        
         processBlock(origin)
+        
       catch
         case oh_noes: ThreadDeath => throw oh_noes
         case err: Throwable =>
@@ -422,3 +424,5 @@ abstract class DiffMaker:
   
   
 end DiffMaker
+
+
