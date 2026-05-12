@@ -33,7 +33,7 @@ class DiffMakerTests extends AnyFunSuite:
     finally
       os.remove.all(dir)
   
-  test("preserves an empty output separator between adjacent blocks") {
+  test("preserves an output separator line between adjacent blocks") {
     val input =
       """fun f() = 1
         |//│ old A
@@ -54,7 +54,7 @@ class DiffMakerTests extends AnyFunSuite:
     assert(rewrite(rewritten) === expected)
   }
   
-  test("does not add an empty separator when the previous block still has output") {
+  test("does not add a separator line when the previous block still has output") {
     val input =
       """1
         |//│ old 1
