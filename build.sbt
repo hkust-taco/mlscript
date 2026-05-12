@@ -85,7 +85,7 @@ lazy val hkmc2DiffTests = project.in(file("hkmc2DiffTests"))
 /** Helper to create test subprojects that compile `.mls` files then run diff tests.
   * Each subproject depends on `hkmc2JVM` and `hkmc2DiffTests` for shared test infrastructure.
   * When a compile runner is provided, `Def.sequential` guarantees it completes before diff tests start. */
-def hkmc2TestSubprojectImpl(dirName: String, compileRunner: Option[String], diffRunner: String): Project = {
+def hkmc2TestSubproject(dirName: String, compileRunner: Option[String], diffRunner: String): Project = {
   val testTask = compileRunner match {
     case Some(runner) =>
       Def.sequential(
@@ -111,16 +111,10 @@ def hkmc2TestSubprojectImpl(dirName: String, compileRunner: Option[String], diff
     )
 }
 
-def hkmc2TestSubproject(dirName: String, compileRunner: String, diffRunner: String): Project =
-  hkmc2TestSubprojectImpl(dirName, Some(compileRunner), diffRunner)
-
-def hkmc2TestSubproject(dirName: String, diffRunner: String): Project =
-  hkmc2TestSubprojectImpl(dirName, None, diffRunner)
-
-lazy val hkmc2NofibTests = hkmc2TestSubproject("hkmc2NofibTests", "NofibCompileTestRunner", "NofibDiffTestRunner")
-lazy val hkmc2AppsTests = hkmc2TestSubproject("hkmc2AppsTests", "AppsCompileTestRunner", "AppsDiffTestRunner")
-lazy val hkmc2WasmTests = hkmc2TestSubproject("hkmc2WasmTests", "WasmCompileTestRunner", "WasmDiffTestRunner")
-lazy val hkmc2LlirTests = hkmc2TestSubproject("hkmc2LlirTests", "LlirDiffTestRunner")
+lazy val hkmc2NofibTests = hkmc2TestSubproject("hkmc2NofibTests", Some("NofibCompileTestRunner"), "NofibDiffTestRunner")
+lazy val hkmc2AppsTests = hkmc2TestSubproject("hkmc2AppsTests", Some("AppsCompileTestRunner"), "AppsDiffTestRunner")
+lazy val hkmc2WasmTests = hkmc2TestSubproject("hkmc2WasmTests", Some("WasmCompileTestRunner"), "WasmDiffTestRunner")
+lazy val hkmc2LlirTests = hkmc2TestSubproject("hkmc2LlirTests", None, "LlirDiffTestRunner")
 
 lazy val hkmc2MainTests = project.in(file("hkmc2MainTests"))
   .settings(

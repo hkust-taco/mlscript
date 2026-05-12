@@ -16,6 +16,19 @@ fun instantiateWasm(wasm, importObj) =
   let mod = new! WebAssembly.Module(wasm)
   let inst = new! WebAssembly.Instance(mod, importObj)
   inst
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:243)
+//│ ═══[RUNTIME ERROR] Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'binaryen' imported from /home/runner/work/mlscript/mlscript/repl
+//│     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+//│     at packageResolve (node:internal/modules/esm/resolve:768:81)
+//│     at moduleResolve (node:internal/modules/esm/resolve:859:18)
+//│     at defaultResolve (node:internal/modules/esm/resolve:991:11)
+//│     at #cachedDefaultResolve (node:internal/modules/esm/loader:719:20)
+//│     at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:736:38)
+//│     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:765:52)
+//│     at #resolve (node:internal/modules/esm/loader:701:17)
+//│     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:621:35)
+//│     at onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:650:32)
 
 
 // Parsing a WAT, compiling it to a Wasm bianry, and executing it
@@ -39,7 +52,19 @@ let wasmMod = compileWatToWasm of
     """
 let inst = instantiateWasm of wasmMod, {}
 inst.exports.main() |> print
-//│ > 3
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:243)
+//│ ═══[RUNTIME ERROR] TypeError: compileWatToWasm is not a function
+//│     at REPL11:1:66
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:552:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:887:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 
 // Building a module using Binaryen APIs, and executing it
@@ -90,4 +115,16 @@ let wasmMod = mod.emitBinary()
 mod.dispose()
 let inst = instantiateWasm of wasmMod, {}
 inst.exports.main() |> print
-//│ > 3
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:243)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Module')
+//│     at REPL13:1:476
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:552:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:887:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
