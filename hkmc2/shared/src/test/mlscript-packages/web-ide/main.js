@@ -2,7 +2,7 @@ import * as MLscript from "./build/MLscript.mjs";
 import fs from "./filesystem/fs.mjs";
 import persistent from "./filesystem/persistent.mjs";
 import runner from "./execution/runner.mjs";
-import { compile } from "./compiler/index.js";
+import compiler from "./compiler/index.mjs";
 
 try {
   console.groupCollapsed(`Loading standard library files`);
@@ -79,7 +79,7 @@ document.addEventListener("compile-requested", (e) => {
   const targetPath = e.detail.filePath;
   const [allFiles, targetPaths] = collectFilesForCompilation(targetPath);
 
-  compile(targetPaths, allFiles).then(({ result: diagnosticsPerFile }) => {
+  compiler.compile(targetPaths, allFiles).then(({ result: diagnosticsPerFile }) => {
     markAsCompiled(targetPaths);
     const reservedPanel = document.querySelector('reserved-panel');
     if (reservedPanel) {
@@ -104,7 +104,7 @@ document.addEventListener("execute-requested", async function (event) {
     console.warn("Compiled file not found, compiling first:", mjsFilePath);
     const [allFiles, targetPaths] = collectFilesForCompilation(filePath);
 
-    compile(targetPaths, allFiles).then(() => {
+    compiler.compile(targetPaths, allFiles).then(() => {
       markAsCompiled(targetPaths);
       if (fs.pathExists(mjsFilePath)) {
         runner.execute(mjsFilePath);

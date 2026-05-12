@@ -1,0 +1,142 @@
+import "../filesystem/fs.mls"
+
+module index with...
+
+fun workerOptions() =
+  let options = new mut Object
+  set options.("type") = "module"
+  options
+
+val compilerWorker = globalThis.Reflect.construct(globalThis.Worker, ["/compiler/worker.mjs", workerOptions()])
+
+val callbackMap = new Map()
+
+fun isAbsent(value) = if
+  value is null then true
+  value is undefined then true
+  value === () then true
+  else false
+
+fun statusDetail(status) =
+  let detail = new mut Object
+  set detail.status = status
+  detail
+
+fun statusEventOptions(status) =
+  let options = new mut Object
+  set options.detail = statusDetail(status)
+  options
+
+fun dispatchStatus(status) =
+  let event = globalThis.Reflect.construct(globalThis.CustomEvent, ["compilation-status-change", statusEventOptions(status)])
+  globalThis.document.dispatchEvent(event)
+
+fun callbackRecord(resolve, reject) =
+  let callbacks = new mut Object
+  set
+    callbacks.resolve = resolve
+    callbacks.reject = reject
+  callbacks
+
+fun successResult(diagnostics, changes) =
+  let result = new mut Object
+  set
+    result.result = diagnostics
+    result.changes = changes
+  result
+
+fun compilePayload(id, filePaths, allFiles) =
+  let payload = new mut Object
+  set
+    payload.id = id
+    payload.filePaths = filePaths
+    payload.allFiles = allFiles
+  payload
+
+fun compileMessage(id, filePaths, allFiles) =
+  let message = new mut Object
+  set
+    message.("type") = "compile"
+    message.payload = compilePayload(id, filePaths, allFiles)
+  message
+
+fun diagnosticsFrom(result) = if
+  isAbsent(result) then result
+  isAbsent(result.diagnostics) then result
+  else result.diagnostics
+
+fun compiledFilesFrom(result) = if
+  isAbsent(result) then []
+  isAbsent(result.compiledFiles) then []
+  else result.compiledFiles
+
+fun applyChanges(changes) =
+  globalThis.Object.entries(changes).forEach of (entry, ...) =>
+    fs.write(entry.at(0), entry.at(1))
+
+fun markCompiledFiles(compiledFiles) =
+  compiledFiles
+    .filter((path, ...) => typeof(path) === "string" and path.endsWith(".mls"))
+    .forEach((path, ...) => fs.setAttr(path, "compiled", true))
+
+fun resolveCallback(id, diagnostics, changes) =
+  let callbacks = callbackMap.get(id)
+  if
+    isAbsent(callbacks) then globalThis.console.error("[Compiler] No callback found for id:", id)
+    else
+      callbacks.resolve(successResult(diagnostics, changes))
+      callbackMap.delete(id)
+
+fun rejectCallback(id, name, message, stack) =
+  let callbacks = callbackMap.get(id)
+  if
+    isAbsent(callbacks) then globalThis.console.error("[Compiler] No callback found for id:", id)
+    else
+      let error = globalThis.Reflect.construct(globalThis.Error, [message])
+      set
+        error.name = name
+        error.stack = stack
+      callbacks.reject(error)
+      callbackMap.delete(id)
+
+fun handleCompileSuccess(message) =
+  let result = message.result
+  let changes = message.changes
+  let diagnostics = diagnosticsFrom(result)
+  globalThis.console.log("[Compiler] Result:", diagnostics)
+  applyChanges(changes)
+  markCompiledFiles(compiledFilesFrom(result))
+  dispatchStatus("done")
+  resolveCallback(message.id, diagnostics, changes)
+
+fun handleCompileError(message) =
+  globalThis.console.error("[Compiler] " + message.name + ": " + message.message)
+  globalThis.console.error(message.stack)
+  dispatchStatus("error")
+  rejectCallback(message.id, message.name, message.message, message.stack)
+
+fun handleWorkerMessage(event) =
+  let message = event.data
+  globalThis.console.log("[Compiler Worker] Message received:", message)
+  if
+    message.("type") === "compile-success" then handleCompileSuccess(message)
+    message.("type") === "compile-error" then handleCompileError(message)
+    else globalThis.console.warn("[Compiler Worker] Unknown message type:", message.("type"))
+
+fun handleWorkerError(error) =
+  globalThis.console.error("[Compiler Worker] Worker error:", error)
+
+compilerWorker.addEventListener("message", handleWorkerMessage)
+compilerWorker.addEventListener("error", handleWorkerError)
+
+fun makeUniqueID() =
+  let nonce = globalThis.Math.floor(globalThis.Math.random() * 65535).toString(16).padStart(4, "0")
+  globalThis.Reflect.construct(globalThis.Date, []).toISOString() + "_" + nonce
+
+fun compile(filePaths, allFiles) =
+  globalThis.Reflect.construct(globalThis.Promise, [(resolve, reject) =>
+    dispatchStatus("running")
+    let id = makeUniqueID()
+    callbackMap.set(id, callbackRecord(resolve, reject))
+    compilerWorker.postMessage(compileMessage(id, filePaths, allFiles))
+  ])

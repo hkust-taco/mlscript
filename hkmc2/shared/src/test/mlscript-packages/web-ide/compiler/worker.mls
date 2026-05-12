@@ -1,0 +1,152 @@
+module compilerWorker with...
+
+let compiler = null
+let filesStore = new mut Object
+let modifiedFiles = new Set()
+let fileTimestamps = new mut Object
+let timestamp = 0
+let MLscriptPromise = null
+
+fun isAbsent(value) = if
+  value is null then true
+  value is undefined then true
+  value === () then true
+  else false
+
+fun dynamicImport(specifier) =
+  let importModule = globalThis.Function("specifier", "return import(specifier)")
+  importModule(specifier)
+
+fun loadMLscript() =
+  if
+    MLscriptPromise is null then
+      set MLscriptPromise = dynamicImport("../build/MLscript.mjs")
+      MLscriptPromise
+    else MLscriptPromise
+
+fun readVirtualFile(path) =
+  if globalThis.Reflect.has(filesStore, path) then filesStore.(path)
+  else throw globalThis.Reflect.construct(globalThis.Error, ["File not found: " + path])
+
+fun writeVirtualFile(path, content) =
+  set
+    filesStore.(path) = content
+    timestamp += 1
+    fileTimestamps.(path) = timestamp
+  modifiedFiles.add(path)
+
+fun virtualFileExists(path) =
+  globalThis.Reflect.has(filesStore, path)
+
+fun lastChangedTimestamp(path) = if
+  globalThis.Reflect.has(fileTimestamps, path) then fileTimestamps.(path)
+  else 0
+
+fun createVirtualFileSystem() =
+  let virtualFS = new mut Object
+  set
+    virtualFS.read = readVirtualFile
+    virtualFS.write = writeVirtualFile
+    virtualFS.exists = virtualFileExists
+    virtualFS.getLastChangedTimestamp = lastChangedTimestamp
+  virtualFS
+
+fun compilerPaths(MLscript) =
+  globalThis.Reflect.construct(MLscript.Paths, [
+    "/std/Prelude.mls",
+    "/std/Runtime.mjs",
+    "/std/Term.mjs",
+    "/std"
+  ])
+
+fun initializeCompiler(MLscript) =
+  if compiler is null do
+    let virtualFS = createVirtualFileSystem()
+    let dummyFileSystem = globalThis.Reflect.construct(MLscript.DummyFileSystem, [virtualFS])
+    set compiler = globalThis.Reflect.construct(MLscript.BrowserCompiler, [dummyFileSystem, compilerPaths(MLscript)])
+
+fun timestampEntries(files) =
+  globalThis.Object.keys(files).map(path => [path, 0])
+
+fun resetCompilerState(allFiles) =
+  set
+    filesStore = allFiles
+    fileTimestamps = globalThis.Object.fromEntries(timestampEntries(filesStore))
+    compiler = null
+  modifiedFiles.clear()
+
+fun compileFiles(filePaths) =
+  let diagnosticsPerFile = mut []
+  filePaths.forEach of (filePath, ...) =>
+    diagnosticsPerFile.push(...compiler.compile(filePath))
+  diagnosticsPerFile
+
+fun collectChanges() =
+  let changes = new mut Object
+  modifiedFiles.forEach of (path, ...) =>
+    set changes.(path) = filesStore.(path)
+  changes
+
+fun successResult(diagnosticsPerFile, filePaths) =
+  let result = new mut Object
+  set
+    result.diagnostics = diagnosticsPerFile
+    result.compiledFiles = filePaths
+  result
+
+fun successMessage(id, diagnosticsPerFile, filePaths, changes) =
+  let message = new mut Object
+  set
+    message.("type") = "compile-success"
+    message.id = id
+    message.result = successResult(diagnosticsPerFile, filePaths)
+    message.changes = changes
+  message
+
+fun errorMessage(id, error) =
+  let message = new mut Object
+  set
+    message.("type") = "compile-error"
+    message.id = id
+    message.name = error.name
+    message.message = error.message
+    message.stack = error.stack
+  message
+
+fun postCompileError(id, error) =
+  globalThis.self.postMessage(errorMessage(id, error))
+
+fun runCompile(MLscript, id, allFiles, filePaths) =
+  resetCompilerState(allFiles)
+  initializeCompiler(MLscript)
+  let diagnosticsPerFile = compileFiles(filePaths)
+  let changes = collectChanges()
+  globalThis.self.postMessage(successMessage(id, diagnosticsPerFile, filePaths, changes))
+
+fun handleLoadedCompiler(MLscript, id, payload) =
+  js.try_catch(
+    () => runCompile(MLscript, id, payload.allFiles, payload.filePaths),
+    error => postCompileError(id, error),
+  )
+
+fun handleCompileRequest(payload) =
+  let id = payload.id
+  let promise = loadMLscript()
+  let loaded = MLscript => handleLoadedCompiler(MLscript, id, payload)
+  let failed = error => postCompileError(id, error)
+  promise.then(loaded).("catch")(failed)
+
+fun unknownMessage(kind) =
+  let message = new mut Object
+  set
+    message.("type") = "error"
+    message.error = "Unknown message type: " + kind
+  message
+
+fun handleMessage(event) =
+  let message = event.data
+  if
+    message.("type") === "compile" then handleCompileRequest(message.payload)
+    else globalThis.self.postMessage(unknownMessage(message.("type")))
+
+globalThis.self.addEventListener("message", handleMessage)
