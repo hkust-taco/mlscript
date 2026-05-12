@@ -30,19 +30,7 @@ topA + topB
 //│           (global.get $topB)))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (WasmDiffMaker.scala:164)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'binaryenPrintFuncRes')
-//│     at REPL36:1:33
-//│     at REPL36:2:4
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = 3
 
 
 :wat
@@ -88,19 +76,7 @@ chain(1)
 //│   (elem $chain declare func $chain)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (WasmDiffMaker.scala:164)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'binaryenPrintFuncRes')
-//│     at REPL37:1:33
-//│     at REPL37:2:4
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = 5
 
 
 fun ifLocals(flag) =
@@ -113,19 +89,7 @@ fun ifLocals(flag) =
 ifLocals(true)
 ifLocals(false)
 //│ Wasm result:
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (WasmDiffMaker.scala:164)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'binaryenPrintFuncRes')
-//│     at REPL38:1:33
-//│     at REPL38:2:4
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = 22
 
 
 fun litMatch(x) =
@@ -143,19 +107,7 @@ litMatch(0)
 litMatch(1)
 litMatch(9)
 //│ Wasm result:
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (WasmDiffMaker.scala:164)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'binaryenPrintFuncRes')
-//│     at REPL39:1:33
-//│     at REPL39:2:4
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = 30
 
 
 fun nestedInArm(x) =
@@ -171,19 +123,7 @@ fun nestedInArm(x) =
       0
 nestedInArm(0)
 //│ Wasm result:
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (WasmDiffMaker.scala:164)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'binaryenPrintFuncRes')
-//│     at REPL40:1:33
-//│     at REPL40:2:4
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = 42
 
 
 :wat
@@ -250,16 +190,4 @@ class Foo(val a, val b)
 //│   (elem $Foo_ctor declare func $Foo_ctor)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (WasmDiffMaker.scala:164)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'binaryenPrintFuncRes')
-//│     at REPL41:1:33
-//│     at REPL41:2:4
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = 42

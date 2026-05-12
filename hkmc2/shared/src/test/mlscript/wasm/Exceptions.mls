@@ -19,18 +19,18 @@ throw 1
 //│         (i32.const 1))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'binaryenPrintFuncRes')
+//│ ═══[RUNTIME ERROR] 1
 
 :re
 let x = 2
 throw x
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'binaryenPrintFuncRes')
+//│ ═══[RUNTIME ERROR] 2
 
 :re
 throw false
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'binaryenPrintFuncRes')
+//│ ═══[RUNTIME ERROR] 0
 
 :ge
 let x = 1

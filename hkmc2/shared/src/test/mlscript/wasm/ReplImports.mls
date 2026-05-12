@@ -10,93 +10,46 @@ val step = 2
 let counter = 1
 let unit = ()
 //│ Wasm result:
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (WasmDiffMaker.scala:164)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'binaryenPrintFuncRes')
-//│     at REPL36:1:33
-//│     at REPL36:2:4
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = {}
 
 inc(Foo.x)
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: errExpr (WatBuilder.scala:1297)
-//│ FAILURE INFO: Ref(member:inc,Some(term:inc))
-//│ ╔══[COMPILATION ERROR] Expected static function reference in Call(...) expression
-//│ ║  l.27: 	inc(Foo.x)
-//│ ╙──      	^^^
+//│ Wasm result:
+//│ = 2
 
 if C(7) is C(v) then v else 0
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: errExpr (WatBuilder.scala:1297)
-//│ FAILURE INFO: Ref(member:C,Some(term:C/C))
-//│ ╔══[COMPILATION ERROR] Expected static function reference in Call(...) expression
-//│ ║  l.35: 	if C(7) is C(v) then v else 0
-//│ ╙──      	   ^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: None.get
-//│ 	at: scala.None$.get(Option.scala:628)
-//│ 	at: scala.None$.get(Option.scala:628)
-//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.$anonfun$82(WatBuilder.scala:2195)
-//│ 	at: scala.collection.immutable.List.flatMap(List.scala:287)
-//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.$anonfun$81(WatBuilder.scala:2156)
-//│ 	at: hkmc2.codegen.wasm.text.FunctionCtx.withLabel(Ctx.scala:423)
-//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.returningTerm(WatBuilder.scala:2154)
-//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.returningTerm(WatBuilder.scala:1650)
-//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.block$$anonfun$1(WatBuilder.scala:2472)
-//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.nonNestedScoped(WatBuilder.scala:2468)
+//│ Wasm result:
+//│ = 7
 
 :wat
 set counter += step
 counter
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: errExpr (WatBuilder.scala:1118)
-//│ FAILURE INFO: Locals: List((tmp:tmp,SymIdx(tmp)))
-//│ Globals: List()
-//│ ╔══[COMPILATION ERROR] Cannot find variable `counter` (VarSymbol) in local or global scope.
-//│ ║  l.10: 	let counter = 1
-//│ ╙──      	    ^^^^^^^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: errExpr (WatBuilder.scala:1118)
-//│ FAILURE INFO: Locals: List((tmp:tmp,SymIdx(tmp)))
-//│ Globals: List()
-//│ ╔══[COMPILATION ERROR] Cannot find variable `member:step` (BlockMemberSymbol) in local or global scope.
-//│ ║  l.9: 	val step = 2
-//│ ╙──     	^^^^^^^^^^^^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: errExpr (WatBuilder.scala:1118)
-//│ FAILURE INFO: Locals: List((tmp:tmp,SymIdx(tmp)))
-//│ Globals: List()
-//│ ╔══[COMPILATION ERROR] Cannot find variable `counter` (VarSymbol) in local or global scope.
-//│ ║  l.10: 	let counter = 1
-//│ ╙──      	    ^^^^^^^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Expected `global.*` or `local.*` when compiling instruction for `counter`, but got unreachable
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:239)
-//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.returningTerm(WatBuilder.scala:1647)
-//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.returningTerm(WatBuilder.scala:1650)
-//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.block$$anonfun$1(WatBuilder.scala:2472)
-//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.nonNestedScoped(WatBuilder.scala:2468)
-//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.block(WatBuilder.scala:2472)
-//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.$anonfun$86(WatBuilder.scala:2398)
-//│ 	at: hkmc2.codegen.wasm.text.Ctx$package$.genFuncBody(Ctx.scala:447)
-//│ 	at: hkmc2.codegen.wasm.text.WatBuilder.program(WatBuilder.scala:2399)
-//│ 	at: hkmc2.WasmDiffMaker.processIRBlock(WasmDiffMaker.scala:106)
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
+//│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
+//│   (import "repl" "counter" (global $counter (mut (ref null any))))
+//│   (import "repl" "step" (global $step (mut (ref null any))))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
+//│     (local $tmp (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $tmp
+//│         (call $plus_impl
+//│           (global.get $counter)
+//│           (global.get $step)))
+//│       (block (result (ref null any))
+//│         (global.set $counter
+//│           (local.get $tmp))
+//│         (global.get $counter))))
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = 3
 
 unit
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: errExpr (WatBuilder.scala:1118)
-//│ FAILURE INFO: Locals: List()
-//│ Globals: List()
-//│ ╔══[COMPILATION ERROR] Cannot find variable `unit` (VarSymbol) in local or global scope.
-//│ ║  l.11: 	let unit = ()
-//│ ╙──      	    ^^^^
+//│ Wasm result:
+//│ = {}
 
 :wat
 ()
@@ -104,56 +57,13 @@ unit
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $Unit_init (func (param $this (ref null any)) (result (ref null any))))
-//│   (type $Unit_ctor (func (result (ref null any))))
+//│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $entry (func (result (ref null any))))
-//│   (type $start (func))
-//│   (global $Unit_typeinfo (export "Unit_typeinfo") (ref $Unit_typeinfo) (struct.new $Unit_typeinfo
-//│     (i32.const 1)
-//│     (ref.null $TypeInfoBase)))
-//│   (global $Unit$inst (export "Unit$inst") (mut (ref null $Unit)) (ref.null $Unit))
-//│   (func $Unit_init (type $Unit_init) (param $this (ref null any)) (result (ref null any))
-//│     (block (result (ref null any))
-//│       (nop)
-//│       (nop)
-//│       (return
-//│         (local.get $this))))
-//│   (func $Unit_Unit (type $Unit_ctor) (result (ref null any))
-//│     (local $this (ref null any))
-//│     (block (result (ref null any))
-//│       (local.set $this
-//│         (struct.new $Unit
-//│           (global.get $Unit_typeinfo)))
-//│       (drop
-//│         (call $Unit_init
-//│           (local.get $this)))
-//│       (return
-//│         (local.get $this))))
-//│   (func $start (type $start)
-//│     (block
-//│       (global.set $Unit$inst
-//│         (ref.cast (ref null $Unit)
-//│           (call $Unit_Unit)))))
+//│   (import "repl" "Unit_typeinfo" (global $Unit_typeinfo (ref $Unit_typeinfo)))
+//│   (import "repl" "Unit$inst" (global $Unit (mut (ref null $Unit))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (global.get $Unit$inst))
-//│   (elem $Unit_init declare func $Unit_init)
-//│   (elem $Unit_Unit declare func $Unit_Unit)
-//│   (elem $start declare func $start)
-//│   (elem $entry declare func $entry)
-//│   (start $start))
+//│     (global.get $Unit))
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (WasmDiffMaker.scala:164)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'binaryenPrintFuncRes')
-//│     at REPL37:1:33
-//│     at REPL37:2:4
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = {}

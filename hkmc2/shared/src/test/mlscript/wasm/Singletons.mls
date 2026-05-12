@@ -103,19 +103,7 @@ Bar.y
 //│   (elem $entry declare func $entry)
 //│   (start $start))
 //│ Wasm result:
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (WasmDiffMaker.scala:164)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'binaryenPrintFuncRes')
-//│     at REPL36:1:33
-//│     at REPL36:2:4
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = 2
 
 
 
@@ -123,19 +111,7 @@ object Example with
   val a = [10, 20]
 Example.a.[1]
 //│ Wasm result:
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (WasmDiffMaker.scala:164)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'binaryenPrintFuncRes')
-//│     at REPL37:1:33
-//│     at REPL37:2:4
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = 20
 
 
 object O with
@@ -143,16 +119,4 @@ object O with
   val gy = x
 O.gy
 //│ Wasm result:
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (WasmDiffMaker.scala:164)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'binaryenPrintFuncRes')
-//│     at REPL38:1:33
-//│     at REPL38:2:4
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = 1
