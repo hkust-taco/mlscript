@@ -166,6 +166,10 @@ abstract class DiffMaker:
   val output = Outputter(out)
   val report = ReportFormatter(output(_), colorize = false)
   
+  private def emitOutputSeparator(): Unit =
+    output.linesDelta += 1
+    out.println(output.outputMarker)
+  
   var printedSeparatedSection = false
   def outputSeparator(title: Str): Unit =
     printedSeparatedSection = true
@@ -281,15 +285,18 @@ abstract class DiffMaker:
   
   
   
+  // When a block emits no fresh output, `mayNeedOutputSeparator` becomes true.
+  // If the next consumed original lines are old `//│ ` lines, `pendingOutputSeparator`
+  // latches true so the next real block gets one synthetic `//│ ` line before it.
   @annotation.tailrec
-  final def rec(lines: List[String]): Unit = lines match
+  final def rec(lines: List[String], pendingOutputSeparator: Bool, mayNeedOutputSeparator: Bool): Unit = lines match
     case "" :: Nil => // To prevent adding an extra newline at the end
     case (line @ "") :: ls if consumeEmptyLines.isUnset =>
       out.println(line)
       if initCmd.isSet then
         init()
       resetCommands
-      rec(ls)
+      rec(ls, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
     case ":exit" :: ls =>
       out.println(":exit")
       out.println(output.exitMarker)
@@ -312,14 +319,20 @@ abstract class DiffMaker:
           failures += allLines.size - lines.size + 1
           output("/!\\ Unrecognized command: " + cmd)
       
-      rec(ls)
+      rec(ls, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
     case line :: ls if line.startsWith(output.outputMarker) //|| line.startsWith(oldOutputMarker)
       =>
       output.linesDelta -= 1
-      rec(ls)
+      // Consuming old output after a no-output block latches the pending separator
+      // until we either emit it before the next block or hit a structural separator.
+      rec(
+        ls,
+        pendingOutputSeparator = pendingOutputSeparator || mayNeedOutputSeparator,
+        mayNeedOutputSeparator = mayNeedOutputSeparator,
+      )
     case line :: ls if line.startsWith("//") =>
       out.println(line)
-      rec(ls)
+      rec(ls, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
     case begLine :: ls if begLine.startsWith(output.diffBegMarker) => // Check if there are unmerged git conflicts
       val diff = ls.takeWhile(l => !l.startsWith(output.diffEndMarker))
       assert(diff.exists(_.startsWith(output.diffMidMarker)), diff)
@@ -341,9 +354,9 @@ abstract class DiffMaker:
         out.println(hdo)
       }
       if hasBlankLines then resetCommands
-      rec(rest.tail)
+      rec(rest.tail, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
     case l :: ls =>
-      
+      if pendingOutputSeparator then emitOutputSeparator()
       val blockLineNum = allLines.size - lines.size + 1
       
       val block = (l :: ls.takeWhile(l => (l.nonEmpty || consumeEmptyLines.isSet) && !(
@@ -357,6 +370,7 @@ abstract class DiffMaker:
       val fph = new FastParseHelpers(block)
       
       val origin = Origin(file, blockLineNum + output.linesDelta, fph)
+      val beforeOutputLines = output.linesDelta
       
       try
         
@@ -372,11 +386,16 @@ abstract class DiffMaker:
           // println(err.getCause())
           uncaught(err)
       
+      val blockProducedOutput = output.linesDelta > beforeOutputLines
       if consumeEmptyLines.isSet then
         output(output.blockSeparator)
         consumeEmptyLines.unset
       
-      rec(lines.drop(block.size))
+      rec(
+        lines.drop(block.size),
+        pendingOutputSeparator = false,
+        mayNeedOutputSeparator = !blockProducedOutput,
+      )
       
     case Nil =>
   
@@ -384,7 +403,7 @@ abstract class DiffMaker:
   
   def run(): Unit =
     val starttime = System.currentTimeMillis()
-    try rec(allLines) finally
+    try rec(allLines, pendingOutputSeparator = false, mayNeedOutputSeparator = false) finally
       val endtime = System.currentTimeMillis()
       val duration = (endtime - starttime).toString
       println(s"${fansi.Color.Cyan.escape}Processed in ${Console.BOLD}${
