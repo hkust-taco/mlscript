@@ -285,9 +285,6 @@ abstract class DiffMaker:
   
   
   
-  final def rec(lines: List[String]): Unit =
-    rec(lines, false, false)
-  
   // When a block emits no fresh output, `mayNeedOutputSeparator` becomes true.
   // If the next consumed original lines are old `//│ ` lines, `pendingOutputSeparator`
   // latches true so the next real block gets one synthetic `//│ ` line before it.
@@ -299,7 +296,7 @@ abstract class DiffMaker:
       if initCmd.isSet then
         init()
       resetCommands
-      rec(ls)
+      rec(ls, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
     case ":exit" :: ls =>
       out.println(":exit")
       out.println(output.exitMarker)
@@ -322,16 +319,20 @@ abstract class DiffMaker:
           failures += allLines.size - lines.size + 1
           output("/!\\ Unrecognized command: " + cmd)
       
-      rec(ls)
+      rec(ls, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
     case line :: ls if line.startsWith(output.outputMarker) //|| line.startsWith(oldOutputMarker)
       =>
       output.linesDelta -= 1
       // Consuming old output after a no-output block latches the pending separator
-      // until we either emit it before the next block or reset state by calling `rec(ls)`.
-      rec(ls, pendingOutputSeparator || mayNeedOutputSeparator, mayNeedOutputSeparator)
+      // until we either emit it before the next block or hit a structural separator.
+      rec(
+        ls,
+        pendingOutputSeparator = pendingOutputSeparator || mayNeedOutputSeparator,
+        mayNeedOutputSeparator = mayNeedOutputSeparator,
+      )
     case line :: ls if line.startsWith("//") =>
       out.println(line)
-      rec(ls)
+      rec(ls, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
     case begLine :: ls if begLine.startsWith(output.diffBegMarker) => // Check if there are unmerged git conflicts
       val diff = ls.takeWhile(l => !l.startsWith(output.diffEndMarker))
       assert(diff.exists(_.startsWith(output.diffMidMarker)), diff)
@@ -353,10 +354,9 @@ abstract class DiffMaker:
         out.println(hdo)
       }
       if hasBlankLines then resetCommands
-      rec(rest.tail)
+      rec(rest.tail, pendingOutputSeparator = false, mayNeedOutputSeparator = false)
     case l :: ls =>
       if pendingOutputSeparator then emitOutputSeparator()
-      
       val blockLineNum = allLines.size - lines.size + 1
       
       val block = (l :: ls.takeWhile(l => (l.nonEmpty || consumeEmptyLines.isSet) && !(
@@ -389,7 +389,11 @@ abstract class DiffMaker:
         output(output.blockSeparator)
         consumeEmptyLines.unset
       
-      rec(lines.drop(block.size), false, !blockProducedOutput)
+      rec(
+        lines.drop(block.size),
+        pendingOutputSeparator = false,
+        mayNeedOutputSeparator = !blockProducedOutput,
+      )
       
     case Nil =>
   
@@ -397,7 +401,7 @@ abstract class DiffMaker:
   
   def run(): Unit =
     val starttime = System.currentTimeMillis()
-    try rec(allLines) finally
+    try rec(allLines, pendingOutputSeparator = false, mayNeedOutputSeparator = false) finally
       val endtime = System.currentTimeMillis()
       val duration = (endtime - starttime).toString
       println(s"${fansi.Color.Cyan.escape}Processed in ${Console.BOLD}${
