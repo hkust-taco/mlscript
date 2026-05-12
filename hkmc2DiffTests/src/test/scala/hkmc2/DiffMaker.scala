@@ -166,6 +166,10 @@ abstract class DiffMaker:
   val output = Outputter(out)
   val report = ReportFormatter(output(_), colorize = false)
   
+  private def emitOutputSeparator(): Unit =
+    output.linesDelta += 1
+    out.println(output.outputMarker)
+  
   var printedSeparatedSection = false
   def outputSeparator(title: Str): Unit =
     printedSeparatedSection = true
@@ -282,7 +286,7 @@ abstract class DiffMaker:
   
   
   @annotation.tailrec
-  final def rec(lines: List[String]): Unit = lines match
+  final def rec(lines: List[String], pendingOutputSeparator: Bool = false, mayNeedOutputSeparator: Bool = false): Unit = lines match
     case "" :: Nil => // To prevent adding an extra newline at the end
     case (line @ "") :: ls if consumeEmptyLines.isUnset =>
       out.println(line)
@@ -316,7 +320,7 @@ abstract class DiffMaker:
     case line :: ls if line.startsWith(output.outputMarker) //|| line.startsWith(oldOutputMarker)
       =>
       output.linesDelta -= 1
-      rec(ls)
+      rec(ls, pendingOutputSeparator || mayNeedOutputSeparator, mayNeedOutputSeparator)
     case line :: ls if line.startsWith("//") =>
       out.println(line)
       rec(ls)
@@ -343,6 +347,7 @@ abstract class DiffMaker:
       if hasBlankLines then resetCommands
       rec(rest.tail)
     case l :: ls =>
+      if pendingOutputSeparator then emitOutputSeparator()
       
       val blockLineNum = allLines.size - lines.size + 1
       
@@ -357,11 +362,10 @@ abstract class DiffMaker:
       val fph = new FastParseHelpers(block)
       
       val origin = Origin(file, blockLineNum + output.linesDelta, fph)
+      val beforeOutputLines = output.linesDelta
       
       try
-        
         processBlock(origin)
-        
       catch
         case oh_noes: ThreadDeath => throw oh_noes
         case err: Throwable =>
@@ -372,11 +376,12 @@ abstract class DiffMaker:
           // println(err.getCause())
           uncaught(err)
       
+      val blockProducedOutput = output.linesDelta > beforeOutputLines
       if consumeEmptyLines.isSet then
         output(output.blockSeparator)
         consumeEmptyLines.unset
       
-      rec(lines.drop(block.size))
+      rec(lines.drop(block.size), mayNeedOutputSeparator = !blockProducedOutput)
       
     case Nil =>
   
@@ -405,5 +410,3 @@ abstract class DiffMaker:
   
   
 end DiffMaker
-
-
