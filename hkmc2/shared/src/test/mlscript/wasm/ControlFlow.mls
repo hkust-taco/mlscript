@@ -36,7 +36,7 @@ let i = 0 in
 //│       (nop)
 //│       (return
 //│         (local.get $this))))
-//│   (func $Unit_Unit (type $Unit_ctor) (result (ref null any))
+//│   (func $Unit_Unit (export "Unit_ctor") (type $Unit_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this

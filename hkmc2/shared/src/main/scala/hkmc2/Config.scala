@@ -212,6 +212,18 @@ object ConfigParser:
         source = Diagnostic.Source.Compilation))
       N
 
+  private def parseCompilationTarget(tree: Tree)(using Raise): Opt[CompilationTarget] =
+    tree.deparenthesized match
+      case Sel(Ident("CompilationTarget"), Ident("JS")) | Ident("JS") =>
+        S(CompilationTarget.JS)
+      case Sel(Ident("CompilationTarget"), Ident("Wasm")) | Ident("Wasm") =>
+        S(CompilationTarget.Wasm)
+      case _ =>
+        raise(ErrorReport(
+          msg"Expected CompilationTarget.JS or CompilationTarget.Wasm" -> tree.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation))
+        N
+
   /** Parse the `None`/`Some(...)` syntax for optional config fields.
     * Also accepts unwrapped values as a convenience (treated as `Some(value)`). */
   private def parseOpt[A](tree: Tree)(parseInner: Tree => Opt[A])(using Raise): Opt[Opt[A]] = tree match
@@ -362,6 +374,9 @@ object ConfigParser:
       case N => identity
     case "commentGeneratedCode" => parseBool(value) match
       case S(v) => _.copy(commentGeneratedCode = v)
+      case N => identity
+    case "target" => parseCompilationTarget(value) match
+      case S(v) => _.copy(target = v)
       case N => identity
     case "effectHandlers" =>
       cfg =>

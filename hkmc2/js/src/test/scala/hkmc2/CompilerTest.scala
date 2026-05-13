@@ -8,6 +8,11 @@ import scala.scalajs.js.annotation._
 import scala.scalajs.js.Dynamic.global
 
 class CompilerTest extends AnyFunSuite:
+  private def hasErrors(diagnostics: js.Array[js.Dynamic]): Bool =
+    diagnostics.exists: perFile =>
+      val fileDiagnostics = perFile.diagnostics.asInstanceOf[js.Array[js.Dynamic]]
+      fileDiagnostics.exists(_.kind is "error")
+
   private def loadStandardLibrary(): Map[String, String] =
     val projectRoot = node.process.cwd()
     val compilePath = node.path.join(projectRoot, "hkmc2", "shared", "src", "test", "mlscript-compile")
@@ -57,10 +62,7 @@ class CompilerTest extends AnyFunSuite:
     
     val diagnostics = compiler.compile(inputPath)
     
-    val hasErrors = diagnostics.exists: perFile =>
-      val fileDiagnostics = perFile.diagnostics.asInstanceOf[scala.scalajs.js.Array[scala.scalajs.js.Dynamic]]
-      fileDiagnostics.exists(_.kind is "error")
-    assert(!hasErrors, "Compilation should succeed without errors")
+    assert(!hasErrors(diagnostics), "Compilation should succeed without errors")
     
     val outputExists = fs.exists(Path(outputPath))
     assert(outputExists, "Output JavaScript file should be generated")
@@ -92,6 +94,32 @@ class CompilerTest extends AnyFunSuite:
     
     assert(fs.exists(Path("/Foo.mjs")), "First output should exist")
     assert(fs.exists(Path("/Bar.mjs")), "Second output should exist")
+
+  test("compiler emits wasm artifacts for a wasm-targeted program"):
+    val (fs, compiler) = createCompiler()
+
+    fs.write("/simpleWasm.mls",
+      """|#config(target: CompilationTarget.Wasm)
+         |
+         |40 + 2
+         |""".stripMargin)
+
+    val diagnostics = compiler.compile("/simpleWasm.mls")
+
+    assert(!hasErrors(diagnostics), "Compilation should succeed without errors")
+
+    assert(fs.exists(Path("/simpleWasm.mjs")), "Glue JavaScript file should be generated")
+    assert(fs.exists(Path("/simpleWasm.wat")), "WAT file should be generated")
+    assert(fs.exists(Path("/RuntimeWASM.mjs")), "Shared Wasm runtime helper should be generated")
+    assert(fs.exists(Path("/RuntimeWASM.wat")), "Shared Wasm intrinsic WAT should be generated")
+
+    val glue = fs.read("/simpleWasm.mjs")
+    assert(glue.contains("__mlx_compileWatFromUrl"), "Glue code should load module WAT from file")
+    assert(glue.contains("export const __mlx_wasm"), "Glue code should expose the internal wasm loader")
+    assert(glue.contains("export default"), "Glue code should export the module result by default")
+
+    val wat = fs.read("/simpleWasm.wat")
+    assert(wat.contains("(module"), "Generated WAT should contain a module")
   
   test("compiler can report errors"):
     val (fs, compiler) = createCompiler()
@@ -102,8 +130,4 @@ class CompilerTest extends AnyFunSuite:
     
     assert(diagnostics.length is 1, "Should report diagnostics for only one file")
     
-    val hasErrors = diagnostics.exists: perFile =>
-      val fileDiagnostics = perFile.diagnostics.asInstanceOf[scala.scalajs.js.Array[scala.scalajs.js.Dynamic]]
-      fileDiagnostics.exists(_.kind is "error")
-    
-    assert(hasErrors, "Compilation should report errors")
+    assert(hasErrors(diagnostics), "Compilation should report errors")

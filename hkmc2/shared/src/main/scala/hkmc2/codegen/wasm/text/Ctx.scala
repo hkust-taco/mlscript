@@ -50,9 +50,10 @@ final case class SessionFunc(
     moduleName: Str,
     exportName: Str,
     funcType: FunctionType,
+    aliasSyms: Seq[Local],
 ) extends SessionBinding:
   def bindingKey: Str = s"func:$moduleName:$exportName"
-  def bindingSyms: Seq[Local] = sym :: Nil
+  def bindingSyms: Seq[Local] = sym +: aliasSyms
   override def exportNameOpt: Opt[Str] = S(exportName)
 
 /** Metadata for an exported global that later Wasm REPL modules can import.
@@ -149,25 +150,6 @@ final case class CompiledWasmModule(
     systemMemMinPages: Int,
     sessionExports: Seq[SessionBinding],
 )
-
-/** Context used while collecting REPL/session exports for a single Wasm module.
-  *
-  * @param symbolsToExport
-  *   The symbols from the current module that should be recorded as session exports.
-  * @param collectedBindings
-  *   The session bindings accumulated while compiling the current module.
-  */
-final class SessionExportCtx(
-    val symbolsToExport: Set[Local],
-    val collectedBindings: ArrayBuf[SessionBinding],
-):
-  def shouldExport(sym: Local): Bool = symbolsToExport(sym)
-
-  def emit(binding: SessionBinding): Unit =
-    collectedBindings += binding
-
-  def freshCollector(): SessionExportCtx =
-    SessionExportCtx(symbolsToExport, ArrayBuf.empty)
 
 /** A Wasm function and its associated information.
   *
@@ -816,7 +798,7 @@ class Ctx(using State) extends ToWat:
 
   /** Checks whether the global variable scope contains the variable `sym`. */
   def containsGlobal(sym: Symbol): Bool = namedGlobals.contains(sym)
-  
+
   /** Returns all globals in this context. */
   def getGlobals: Seq[Symbol] = namedGlobals.keys.toSeq
 

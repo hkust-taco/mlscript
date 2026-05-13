@@ -54,7 +54,7 @@ class Importer:
         
         val importedSym = tl.trace(s">>> Importing $file"):
           given TL = tl
-          val artifact = cctx.getElaboratedBlock(file, prelude)
+          val artifact = cctx.getElaboratedBlock(file, prelude, cfg.target is CompilationTarget.Wasm)
           artifact.tree.definedSymbols.find(_._1 === nme) match
           case Some(nme -> imsym) => imsym
           case None => lastWords(s"File $file does not define a symbol named $nme")

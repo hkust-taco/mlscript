@@ -1,4 +1,5 @@
 *.mjs
+*.wat
 !/Predef.mjs
 !/Runtime.mjs
 !/RuntimeJS.mjs

@@ -8,7 +8,7 @@ import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
 import hkmc2.Message.MessageContext
 import hkmc2.io
-import utils.TraceLogger
+import utils.TL
 
 import semantics.*
 import Elaborator.*
@@ -34,7 +34,7 @@ class CompilerCtx(
     CompilerCtx(S(newFile, this), beingCompiled + newFile, fs, cache)
   
   def getElaboratedBlock
-        (file: io.Path, prelude: Ctx)
+        (file: io.Path, prelude: Ctx, full: Bool)
         (using TL, Raise, Config)
         : Artifact =
     
@@ -62,18 +62,28 @@ class CompilerCtx(
         given CompilerCtx = this
         ParserSetup(file, dbgParsing = false)
       val resBlk = parse.resultBlk
-      given Elaborator.Ctx = prelude.copy(mode = Mode.Light).nestLocal("prelude")
+      val mode = if full then Mode.Full else Mode.Light
+      given Elaborator.Ctx = prelude.copy(mode = mode).nestLocal("prelude")
       val elab =
         given CompilerCtx = derive(parse.origin.fileName)
         Elaborator(tl, file.up, prelude)
-      val elabbed = elab.importFrom(resBlk)
-      Artifact(resBlk, elabbed._1, lastMod)
+      val (blk, _) = elab.importFrom(resBlk)
+      // Resolve once here so cached terms are not mutated again by later passes
+      // (diamond imports would otherwise re-run Resolver and trip expand()).
+      Resolver(summon[TL])(using summon[Raise], summon[State], summon[Ctx], summon[Config])
+        .traverseBlock(blk)(using Resolver.ICtx.empty)
+      Artifact(resBlk, blk, lastMod, full)
     
     cache.upsert(file):
       case N => mk
       case cur @ S(art) =>
-        if art.lastChangedTimestamp < lastMod then mk
+        if art.lastChangedTimestamp < lastMod || !art.mode && full then mk
         else art
+
+  def getCachedElaboratedBlock(file: io.Path, full: Bool): Opt[Artifact] =
+    val lastMod = fs.getLastChangedTimestamp(file)
+    cache.elabCache.get(file).filter: art =>
+      art.lastChangedTimestamp >= lastMod && (art.mode || !full)
   
   
 object CompilerCtx:
@@ -88,7 +98,12 @@ end CompilerCtx
 
 object CompilerCache:
   
-  class Artifact(val tree: syntax.Tree.Block, val term: semantics.Term.Blk, val lastChangedTimestamp: Long)
+  class Artifact(
+      val tree: syntax.Tree.Block,
+      val term: semantics.Term.Blk,
+      val lastChangedTimestamp: Long,
+      val mode: Bool,
+  )
   
 end CompilerCache
 
