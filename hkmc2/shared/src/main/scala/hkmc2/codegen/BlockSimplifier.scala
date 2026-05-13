@@ -485,14 +485,20 @@ class BlockSimplifier
         // TODO: fix the rest of the compiler so this invariant actually holds
         // assert(!atLabelBegin.contains(label) && !atLabelEnd.contains(label))
         
+        // * Loops always go through a dry run, but crucially,
+        // * when in dry-run mode, loops do NOT go through normal processing,
+        // * so that we only go through the whole program at most twice
+        // * (not exponentially many times).
         if loop then
           atLabelBegin.put(label, assignedResults)
+          // * Would seem to make sense to make the below `impossible`, but it doesn't work,
+          // * even if we add `atLabelEnd.put(label, merge(atLabelEnd(label), assignedResults))`
+          // * after the `applyBlock` call. Not entirely sure why.
           atLabelEnd.put(label, emptyAssignedResults)
           val oldDryRun = inDryRun
           inDryRun = true
           applyBlock(body)
           inDryRun = oldDryRun
-          // assignedResults = merge(assignedResults, atLabelEnd(label))
           assignedResults = merge(assignedResults, atLabelBegin(label))
         if !loop || !inDryRun then
           val newBody = applyBlock(body)
@@ -514,6 +520,7 @@ class BlockSimplifier
           super.applyBlock(b)
         
       case Break(label) =>
+        // TODO: this is probably only needed when `!inDryRun`?
         atLabelEnd.put(label, merge(assignedResults, atLabelEnd(label)))
         makeImpossibleAfter:
           super.applyBlock(b)
