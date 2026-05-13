@@ -43,35 +43,35 @@ printLexed of """
 "\n\r\t\b"
 """
 //│ > space at 1:1-2:1
-//│ > string "hello, world" at 2:15-2:15
+//│ > string "hello, world" at 2:2-2:15
 //│ > space at 2:15-3:1
-//│ > string "Hello, world" at 3:51-3:51
+//│ > string "Hello, world" at 3:2-3:51
 //│ > space at 3:51-4:1
-//│ > string "Hello, world" at 4:75-4:75
+//│ > string "Hello, world" at 4:2-4:75
 //│ > space at 4:75-5:1
-//│ > string "Hello, world" at 5:75-5:75
+//│ > string "Hello, world" at 5:2-5:75
 //│ > space at 5:75-6:1
-//│ > string "😀" at 6:12-6:12
+//│ > string "😀" at 6:2-6:12
 //│ > space at 6:12-6:13
 //│ > comment at 6:14-6:18
 //│ > space at 6:18-7:1
-//│ > string "😁" at 7:12-7:12
+//│ > string "😁" at 7:2-7:12
 //│ > space at 7:12-7:13
 //│ > comment at 7:14-7:18
 //│ > space at 7:18-8:1
-//│ > string "😂" at 8:12-8:12
+//│ > string "😂" at 8:2-8:12
 //│ > space at 8:12-8:13
 //│ > comment at 8:14-8:18
 //│ > space at 8:18-9:1
-//│ > string "😃" at 9:12-9:12
+//│ > string "😃" at 9:2-9:12
 //│ > space at 9:12-9:13
 //│ > comment at 9:14-9:18
 //│ > space at 9:18-10:1
-//│ > string "😄" at 10:12-10:12
+//│ > string "😄" at 10:2-10:12
 //│ > space at 10:12-10:13
 //│ > comment at 10:14-10:18
 //│ > space at 10:18-11:1
-//│ > string "\n\r\t\b" at 11:11-11:11
+//│ > string "\n\r\t\b" at 11:2-11:11
 //│ > space at 11:11-12:1
 
 // Ill-formed Strings
@@ -80,12 +80,12 @@ printLexed of """
 printLexed of """
 "hello, world.   """
 //│ > space at 1:1-2:1
-//│ > string "hello, world.   " at 2:18-2:18
+//│ > string "hello, world.   " at 2:2-2:18
 
 printLexed of """
 "hello, \world"""
 //│ > space at 1:1-2:1
-//│ > string "hello, world" at 2:15-2:15
+//│ > string "hello, world" at 2:2-2:15
 
 printLexed of """let v' =
   let a, b = (1, 2) in a + b"""
@@ -177,7 +177,7 @@ printLexed of lines of
 //│ > space at 4:30-5:3
 //│ > identifier `|` at 5:3-5:4
 //│ > space at 5:4-5:5
-//│ > string "true" at 5:11-5:11
+//│ > string "true" at 5:6-5:11
 //│ > space at 5:11-5:12
 //│ > identifier `->` at 5:12-5:14
 //│ > space at 5:14-5:15
@@ -185,7 +185,7 @@ printLexed of lines of
 //│ > space at 5:19-6:3
 //│ > identifier `|` at 6:3-6:4
 //│ > space at 6:4-6:5
-//│ > string "false" at 6:12-6:12
+//│ > string "false" at 6:6-6:12
 //│ > space at 6:12-6:13
 //│ > identifier `->` at 6:13-6:15
 //│ > space at 6:15-6:16
@@ -202,7 +202,7 @@ printLexed of lines of
 //│ > identifier `(` at 7:15-7:16
 //│ > identifier `Invalid_argument` at 7:17-7:33
 //│ > space at 7:33-7:34
-//│ > string "bool_of_string" at 7:50-7:50
+//│ > string "bool_of_string" at 7:35-7:50
 //│ > identifier `)` at 7:49-7:50
 
 // It turns out that OCaml identifiers' apostrophes are not limited to the end.
