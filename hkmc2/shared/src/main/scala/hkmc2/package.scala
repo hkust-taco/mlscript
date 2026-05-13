@@ -7,8 +7,17 @@ import hkmc2.utils.*
 import hkmc2.Message.MessageContext
 
 
-extension [A](a: A)
-  infix inline def givenIn[R](inline k: A ?=> R) = k(using a)
+extension [A](x: A)
+  infix inline def givenIn[R](inline k: A ?=> R) = k(using x)
+  infix inline def ne_::(xs: Ls[A]): NELs[A] = new ::(x, xs)
+
+extension [A](xs: Ls[A])
+  def ne_! : NELs[A] = xs match
+    case Nil => throw new IllegalArgumentException("Cannot convert an empty list to a non-empty list.")
+    case xs: NELs[A] => xs
+  inline def ne_? : Opt[NELs[A]] = xs match
+    case Nil => N
+    case xs: NELs[A] => S(xs)
 
 
 // * Valid identifiers for the members of module and class-like definitions

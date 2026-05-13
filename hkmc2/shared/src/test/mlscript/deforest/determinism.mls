@@ -9,27 +9,27 @@ data class B(a, b, c, d, e)
 if B(1,2,3,4,5) is
   B(a,b,c,d,e) then 0
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:B,Some(term:B/B)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(3))), Arg(None,Lit(IntLit(4))), Arg(None,Lit(IntLit(5))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(a))
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(b))
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(c))
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(d))
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(e))
+//│ deforest > B⁰(1, 2, 3, 4, 5) ->
+//│ deforest > 	match: scrut⁰
+//│ deforest > 	fields: scrut⁰.a⁰
+//│ deforest > 	fields: scrut⁰.b⁰
+//│ deforest > 	fields: scrut⁰.c⁰
+//│ deforest > 	fields: scrut⁰.d⁰
+//│ deforest > 	fields: scrut⁰.e⁰
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut, e⁰, a⁰, b⁰, c⁰, d⁰, arg$B$0$, arg$B$1$, arg$B$2$, arg$B$3$, arg$B$4$, $scrut_B⁰, $scrut_rest⁰, B_a, B_b, B_c, B_d, B_e;
+//│ let scrut, e¹, a¹, b¹, c¹, d¹, arg$B$0$, arg$B$1$, arg$B$2$, arg$B$3$, arg$B$4$, $scrut_B⁰, $scrut_rest⁰, B_a, B_b, B_c, B_d, B_e;
 //│ define $scrut_B⁰ as fun $scrut_B¹(B_a1, B_b1, B_c1, B_d1, B_e1) {
 //│   set arg$B$0$ = B_a1;
 //│   set arg$B$1$ = B_b1;
 //│   set arg$B$2$ = B_c1;
 //│   set arg$B$3$ = B_d1;
 //│   set arg$B$4$ = B_e1;
-//│   set e⁰ = arg$B$4$;
-//│   set d⁰ = arg$B$3$;
-//│   set c⁰ = arg$B$2$;
-//│   set b⁰ = arg$B$1$;
-//│   set a⁰ = arg$B$0$;
+//│   set e¹ = arg$B$4$;
+//│   set d¹ = arg$B$3$;
+//│   set c¹ = arg$B$2$;
+//│   set b¹ = arg$B$1$;
+//│   set a¹ = arg$B$0$;
 //│   return 0
 //│ };
 //│ define $scrut_rest⁰ as fun $scrut_rest¹() {
@@ -53,24 +53,24 @@ fun c2(x) = if x is
   A(A(A(A(A(A(a)))))) then a
 c2 of A(A(A(A(A(A(1))))))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(a))
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
-//│ deforest > Call(Ref(member:A,Some(term:A/A)),List(Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(tmp:arg$A$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$A$0$,None),Ident(a))
+//│ deforest > A⁰(tmp⁰) ->
+//│ deforest > 	match: x⁰
+//│ deforest > 	fields: x⁰.a²
+//│ deforest > A⁰(tmp¹) ->
+//│ deforest > 	match: arg$A$0$⁰
+//│ deforest > 	fields: arg$A$0$⁰.a²
+//│ deforest > A⁰(tmp²) ->
+//│ deforest > 	match: arg$A$0$¹
+//│ deforest > 	fields: arg$A$0$¹.a²
+//│ deforest > A⁰(tmp³) ->
+//│ deforest > 	match: arg$A$0$²
+//│ deforest > 	fields: arg$A$0$².a²
+//│ deforest > A⁰(tmp⁴) ->
+//│ deforest > 	match: arg$A$0$³
+//│ deforest > 	fields: arg$A$0$³.a²
+//│ deforest > A⁰(1) ->
+//│ deforest > 	match: arg$A$0$⁴
+//│ deforest > 	fields: arg$A$0$⁴.a²
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let c2⁰, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, c2_21$c2⁰, c2_21$x_A⁰, c2_21$x_rest⁰, c2_21$split_default$_rest⁰, c2_21$split_root$_rest⁰, c2_21$arg$A$0$_A⁰, c2_21$arg$A$0$_rest⁰, c2_21$arg$A$0$_A¹, c2_21$arg$A$0$_rest¹, c2_21$arg$A$0$_A², c2_21$arg$A$0$_rest², c2_21$arg$A$0$_A³, c2_21$arg$A$0$_rest³, c2_21$arg$A$0$_A⁴, c2_21$arg$A$0$_rest⁴, A_a, A_a1, A_a2, A_a3, A_a4, A_a5;
@@ -136,23 +136,23 @@ c2 of A(A(A(A(A(A(1))))))
 //│   block split_root$:
 //│     block split_default$:
 //│       match x
-//│         A⁰ =>
-//│           set arg$A$0$ = x.a¹;
+//│         A¹ =>
+//│           set arg$A$0$ = x.a²;
 //│           match arg$A$0$
-//│             A⁰ =>
-//│               set arg$A$0$1 = arg$A$0$.a¹;
+//│             A¹ =>
+//│               set arg$A$0$1 = arg$A$0$.a²;
 //│               match arg$A$0$1
-//│                 A⁰ =>
-//│                   set arg$A$0$2 = arg$A$0$1.a¹;
+//│                 A¹ =>
+//│                   set arg$A$0$2 = arg$A$0$1.a²;
 //│                   match arg$A$0$2
-//│                     A⁰ =>
-//│                       set arg$A$0$3 = arg$A$0$2.a¹;
+//│                     A¹ =>
+//│                       set arg$A$0$3 = arg$A$0$2.a²;
 //│                       match arg$A$0$3
-//│                         A⁰ =>
-//│                           set arg$A$0$4 = arg$A$0$3.a¹;
+//│                         A¹ =>
+//│                           set arg$A$0$4 = arg$A$0$3.a²;
 //│                           match arg$A$0$4
-//│                             A⁰ =>
-//│                               set arg$A$0$5 = arg$A$0$4.a¹;
+//│                             A¹ =>
+//│                               set arg$A$0$5 = arg$A$0$4.a²;
 //│                               set a = arg$A$0$5;
 //│                               return a
 //│                             else

@@ -61,9 +61,6 @@ x.r
 //│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched param list lengths List() vs List(term:A/r)
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched ctor arg and cls param sizes
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'r' yielded 'undefined'
 //│ ═══[RUNTIME ERROR] Expected: '[1, 2, 3]', got: 'undefined'
 //│ x = A(undefined)
@@ -74,9 +71,6 @@ data class A(...r) with
   fun getR = r
 new A(1, 2, 3).getR
 //│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched param list lengths List() vs List(term:A/r)
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched ctor arg and cls param sizes
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 //│ ═══[RUNTIME ERROR] ReferenceError: r is not defined

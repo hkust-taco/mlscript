@@ -1,5 +1,7 @@
 :js
 :lift
+// NOTE: due to conflict between flow analysis and lifter
+:deadParamElim off
 
 :sir
 data class A(x) with
@@ -26,12 +28,7 @@ data class A(x) with
 //│     define x¹ as val x⁰ = x;
 //│     end
 //│   }
-//│   method getA⁰ = fun getA¹() {
-//│     let tmp, tmp1;
-//│     set tmp1 = new B²(2);
-//│     set tmp = tmp1(A³.this);
-//│     return tmp.getB¹()
-//│   }
+//│   method getA⁰ = fun getA¹() { let tmp; set tmp = new B²(2)(A³.this); return tmp.getB¹() }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

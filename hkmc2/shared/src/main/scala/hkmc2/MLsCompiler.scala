@@ -224,7 +224,7 @@ class MLsCompiler
       file: io.Path,
       prelude: Ctx,
       memo: mutable.Map[io.Path, Opt[CompiledWasmModule]],
-  )(using State, CompilerCtx): Opt[CompiledWasmModule] =
+  )(using State, CompilerCtx, SymbolPrinter): Opt[CompiledWasmModule] =
     memo.get(file) match
       case S(cached) => cached
       case N =>
@@ -282,7 +282,7 @@ class MLsCompiler
       preservedSymbols: Set[codegen.Local],
       prelude: Ctx,
       memo: mutable.Map[io.Path, Opt[CompiledWasmModule]],
-  )(using Raise, State, CompilerCtx): Opt[CompiledWasmModule] =
+  )(using Raise, State, CompilerCtx, SymbolPrinter): Opt[CompiledWasmModule] =
     val moduleDir = file.up
     val moduleBaseName = file.baseName
     val edges = mutable.ArrayBuffer.empty[(Str, Str)]
@@ -337,6 +337,19 @@ class MLsCompiler
     
     given Elaborator.State = new Elaborator.State:
       override def dbg: Bool = dbgElab
+    
+    // TODO adapt logic
+    given SymbolPrinter = new SymbolPrinter(
+      Scope.empty(Scope.Cfg.default.copy(
+        escapeChars = false,
+        useSuperscripts = true,
+        includeZero = true,
+      ))
+    )
+    val etl = new TraceLogger{override def doTrace: Bool = false}
+    val ltl = new TraceLogger{override def doTrace: Bool = false}
+    // val ltl = new TraceLogger{override def doTrace: Bool = true}
+    val rtl = new TraceLogger{override def doTrace: Bool = false}
     
     val preludeParse = ParserSetup(preludeFile, dbgParsing)
     val mainParse = ParserSetup(file, dbgParsing)

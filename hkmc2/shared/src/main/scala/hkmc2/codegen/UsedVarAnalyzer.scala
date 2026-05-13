@@ -398,51 +398,60 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
             do
               reqCapture += l
               hasMutator += l
+        
+        def handleScopeRef(s: ScopedInfo) = scopeInfos.get(s) match
+          case None => // super.applyPath(p)
+          case Some(defn) =>
+            val isModOrObj = defn.obj match
+              case c: ScopedObject.Companion => true
+              case c: ScopedObject.Class => c.isObj
+              case _ => false
+            if isModOrObj then () //super.applyPath(p)
+            else
+              val AccessInfo(accessed, muted, refd) = accessMapWithIgnored(s)
+              val muts = muted.intersect(thisVars)
+              val reads = accessed.intersect(thisVars) -- muts
+              // this is a naked reference, we assume things it mutates always needs a capture
+              for l <- muts do
+                reqCapture += l
+                hasMutator += l
+              for l <- reads do
+                if hasMutator.contains(l) then
+                  reqCapture += l
+                if mutated.contains(l) && !linearVars.contains(l) then
+                  reqCapture += l
+                hasReader += l
+              // if this defn calls another defn that creates a class or has a naked reference to a
+              // function, we must capture the latter's mutated variables in a capture, as arbitrarily
+              // many mutators could be created from it
+              for
+                sym <- refd
+                l <- accessMapWithIgnored(sym).mutated
+              do
+                reqCapture += l
+                hasMutator += l
 
         override def applyResult(r: Result): Unit = 
           r match
-          case Call(RefOfBms(_, SDSym(d), _), args) =>
-            args.foreach(super.applyArg(_))
-            handleCalledScope(d)
-          case Instantiate(mut, RefOfBms(_, SDSym(d), _), args) =>
-            args.foreach(super.applyArg)
+          case Call(RefOfBms(_, SDSym(d), _), argss) =>
+            argss.foreach(_.foreach(super.applyArg(_)))
+            val numArgLists = scopeData.getNode(d).obj match
+              case ScopedObject.Func(fun, _) => fun.params.size.min(1)
+              case ScopedObject.Class(c, false) => c.paramsOpt.map(_.params.size).getOrElse(0).min(1)
+              case ScopedObject.ClassCtor(c) => c.paramsOpt.map(_.params.size).getOrElse(0).min(1)
+              case _ => die
+            
+            // Partial call; the resulting object requiring access to the scope may linger
+            if numArgLists != argss.size then handleScopeRef(d)
+             // Fully applied, we can treat it as a call
+            else handleCalledScope(d)
+          case Instantiate(mut, RefOfBms(_, SDSym(d), _), argss) =>
+            argss.foreach(_.foreach(super.applyArg(_)))
             handleCalledScope(d)
           case _ => super.applyResult(r)
         
         override def applyPath(p: Path): Unit = p match
-          case RefOfBms(_, SDSym(d), _) =>
-            scopeInfos.get(d) match
-            case None => super.applyPath(p)
-            case Some(defn) =>
-              val isModOrObj = defn.obj match
-                case c: ScopedObject.Companion => true
-                case c: ScopedObject.Class => c.isObj
-                case _ => false
-              if isModOrObj then super.applyPath(p)
-              else
-                val AccessInfo(accessed, muted, refd) = accessMapWithIgnored(d)
-                val muts = muted.intersect(thisVars)
-                val reads = accessed.intersect(thisVars) -- muts
-                // this is a naked reference, we assume things it mutates always needs a capture
-                for l <- muts do
-                  reqCapture += l
-                  hasMutator += l
-                for l <- reads do
-                  if hasMutator.contains(l) then
-                    reqCapture += l
-                  if mutated.contains(l) && !linearVars.contains(l) then
-                    reqCapture += l
-                  hasReader += l
-                // if this defn calls another defn that creates a class or has a naked reference to a
-                // function, we must capture the latter's mutated variables in a capture, as arbitrarily
-                // many mutators could be created from it
-                for
-                  sym <- refd
-                  l <- accessMapWithIgnored(sym).mutated
-                do
-                  reqCapture += l
-                  hasMutator += l
-          
+          case RefOfBms(_, SDSym(d), _) => handleScopeRef(d)          
           case Value.Ref(l, _) =>
             if hasMutator.contains(l) then reqCapture += (l)
           case _ => super.applyPath(p)

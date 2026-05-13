@@ -1,0 +1,53 @@
+:js
+:noInline
+
+// Test: Dead parameter elimination with multiple parameter lists
+:deadParamElim
+:soir
+private fun f(a)(b) = a
+f(42)(99)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f⁰; define f⁰ as fun f¹(a)(b) { return a }; f¹(42)(99)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+// Test: Both params dead across two parameter lists
+:deadParamElim
+:soir
+private fun g(x)(y) = 0
+g(1)(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let g⁰; define g⁰ as fun g¹()(y) { return 0 }; g¹()(2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 0
+
+// Test: Dead param in second list only
+:deadParamElim
+:soir
+private fun h(x)(y) = x
+h(5)(10)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let h⁰; define h⁰ as fun h¹(x)(y) { return x }; h¹(5)(10)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 5
+
+// Test: Dead param in first list only
+:deadParamElim
+:soir
+private fun j(x)(y) = y
+j(5)(10)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let j⁰; define j⁰ as fun j¹()(y) { return y }; j¹()(10)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 10
+
+// Test: Three parameter lists, middle one dead
+:deadParamElim
+:soir
+private fun k(a)(b)(c) = a + c
+k(1)(2)(3)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let k⁰; define k⁰ as fun k¹(a)(b)(c) { return +⁰(a, c) }; k¹(1)(2)(3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 4
+

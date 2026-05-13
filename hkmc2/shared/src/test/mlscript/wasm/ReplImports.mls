@@ -16,13 +16,16 @@ let unit = ()
 inc(Foo.x)
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))
 //│   (type $inc (func (param $x (ref null any)) (result (ref null any))))
-//│   (type $entry1 (func (result (ref null any))))
+//│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $entry (func (result (ref null any))))
 //│   (import "repl" "inc" (func $inc (type $inc)))
+//│   (import "repl" "Foo_typeinfo" (global $Foo_typeinfo (ref $Foo_typeinfo)))
 //│   (import "repl" "Foo$inst" (global $Foo (mut (ref null $Foo))))
-//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (call $inc
 //│       (struct.get $Foo $x
 //│         (ref.cast (ref $Foo)
@@ -40,13 +43,14 @@ set counter += step
 counter
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type $entry1 (func (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
 //│   (import "repl" "counter" (global $counter (mut (ref null any))))
 //│   (import "repl" "step" (global $step (mut (ref null any))))
-//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $tmp
@@ -69,15 +73,16 @@ unit
 ()
 //│ Wat:
 //│ (module
-//│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type $Unit (sub $Object (struct (field $$tag (mut i32)))))
-//│   (type $Unit_init (func (param $this (ref null any)) (result (ref null any))))
-//│   (type $Unit_ctor (func (result (ref null any))))
-//│   (type $entry1 (func (result (ref null any))))
-//│   (import "repl" "Unit_init" (func $Unit_init (type $Unit_init)))
-//│   (import "repl" "Unit_ctor" (func $Unit (type $Unit_ctor)))
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Unit_Unit (func (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
+//│   (import "repl" "Unit_ctor" (func $Unit_Unit (type $Unit_Unit)))
+//│   (import "repl" "Unit_typeinfo" (global $Unit_typeinfo (ref $Unit_typeinfo)))
 //│   (import "repl" "Unit$inst" (global $Unit (mut (ref null $Unit))))
-//│   (func $entry (export "entry") (type $entry1) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (global.get $Unit))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:

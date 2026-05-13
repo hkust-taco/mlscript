@@ -39,23 +39,20 @@ fun f(a) = if a is
 let p = AA(AA(AA(10)))
 test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(tmp:arg$AA$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(10))))) ->
-//│ deforest > 	Ref(tmp:arg$AA$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
-//│ deforest > Call(Ref(member:AA,Some(term:AA/AA)),List(Arg(None,Lit(IntLit(10))))) ->
-//│ deforest > 	Ref(tmp:arg$AA$0$,None)
-//│ deforest > 	Select(Ref(tmp:arg$AA$0$,None),Ident(x))
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁰
+//│ deforest > AA⁰(tmp⁰) ->
+//│ deforest > 	match: x⁰
+//│ deforest > 	fields: x⁰.x¹
+//│ deforest > AA⁰(tmp¹) ->
+//│ deforest > 	match: arg$AA$0$⁰
+//│ deforest > 	fields: arg$AA$0$⁰.x¹
+//│ deforest > AA⁰(10) ->
+//│ deforest > 	match: arg$AA$0$¹
+//│ deforest > 	fields: arg$AA$0$¹.x¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let test⁰, f⁰, p⁰, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_31$test⁰, test_31$x_dflt⁰, test_31$x_rest⁰, test_28$test⁰, test_28$x_AA⁰, test_28$x_rest⁰, test_28$arg$AA$0$_AA⁰, test_28$arg$AA$0$_rest⁰, test_28$arg$AA$0$_AA¹, test_28$arg$AA$0$_rest¹, test_20$test⁰, test_20$arg$AA$0$_AA⁰, test_20$arg$AA$0$_rest⁰, test_20$arg$AA$0$_rest¹, test_20$x_rest⁰, AA_x, AA_x1, AA_x2, AA_x3, deforest$lam;
+//│ let test⁰, f⁰, p⁰, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_31$test⁰, test_31$x_dflt⁰, test_31$x_rest⁰, test_28$test⁰, test_28$x_AA⁰, test_28$x_rest⁰, test_28$arg$AA$0$_AA⁰, test_28$arg$AA$0$_rest⁰, test_28$arg$AA$0$_AA¹, test_28$arg$AA$0$_rest¹, AA_x, AA_x1, AA_x2, deforest$lam;
 //│ define test_31$test⁰ as fun test_31$test¹(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
 //│   return x(tmp11, t, tmp11, tmp12, tmp13, tmp14, tmp15)
@@ -64,52 +61,23 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
 //│   return x(t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15, t, tmp11, tmp12, tmp13, tmp14, tmp15)
 //│ };
-//│ define test_20$test⁰ as fun test_20$test¹(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
-//│   match x
-//│     AA⁰ =>
-//│       set arg$AA$0$ = x.x⁰;
-//│       match arg$AA$0$
-//│         AA⁰ =>
-//│           set arg$AA$0$1 = arg$AA$0$.x⁰;
-//│           return arg$AA$0$1(a, arg$AA$0$2, tmp11, t, tmp11, tmp12, tmp13, tmp14, tmp15)
-//│         else
-//│           set tmp11 = 4;
-//│           end
-//│       end
-//│     else
-//│       set tmp11 = 4;
-//│       end
-//│   set t = tmp11;
-//│   set tmp12 = *⁰(5, 4);
-//│   set tmp13 = +⁰(t, tmp12);
-//│   set tmp14 = -⁰(tmp13, 3);
-//│   set tmp15 = +⁰(tmp14, 2);
-//│   return -⁰(tmp15, 1)
-//│ };
 //│ define test_31$x_dflt⁰ as fun test_31$x_dflt¹(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
 //│   set fv_tmp1 = 4;
 //│   return test_31$x_rest¹(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
 //│ };
-//│ define test_28$x_AA⁰ as fun test_28$x_AA¹(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, AA_x4) {
-//│   set fv_arg$AA$0$ = AA_x4;
+//│ define test_28$x_AA⁰ as fun test_28$x_AA¹(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, AA_x3) {
+//│   set fv_arg$AA$0$ = AA_x3;
 //│   return fv_arg$AA$0$(fv_t1, fv_a, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9)
 //│ };
-//│ define test_28$arg$AA$0$_AA⁰ as fun test_28$arg$AA$0$_AA²(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, AA_x4) {
-//│   set fv_arg$AA$0$ = AA_x4;
+//│ define test_28$arg$AA$0$_AA⁰ as fun test_28$arg$AA$0$_AA²(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, AA_x3) {
+//│   set fv_arg$AA$0$ = AA_x3;
 //│   return fv_arg$AA$0$(fv_a, fv_arg$AA$0$1, fv_tmp5, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9)
 //│ };
-//│ define test_28$arg$AA$0$_AA¹ as fun test_28$arg$AA$0$_AA³(fv_a, fv_arg$AA$0$, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, AA_x4) {
-//│   set fv_arg$AA$0$ = AA_x4;
+//│ define test_28$arg$AA$0$_AA¹ as fun test_28$arg$AA$0$_AA³(fv_a, fv_arg$AA$0$, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, AA_x3) {
+//│   set fv_arg$AA$0$ = AA_x3;
 //│   set fv_a = fv_arg$AA$0$;
 //│   set fv_tmp1 = fv_a;
 //│   return test_28$arg$AA$0$_rest²(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
-//│ };
-//│ define test_20$arg$AA$0$_AA⁰ as fun test_20$arg$AA$0$_AA¹(fv_a, fv_arg$AA$0$, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5, AA_x4) {
-//│   set fv_arg$AA$0$ = AA_x4;
-//│   set fv_a = fv_arg$AA$0$;
-//│   set fv_tmp1 = fv_a;
-//│   return test_20$arg$AA$0$_rest²(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
 //│ };
 //│ define test_31$x_rest⁰ as fun test_31$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
 //│   set fv_t = fv_tmp;
@@ -133,31 +101,17 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ define test_28$arg$AA$0$_rest¹ as fun test_28$arg$AA$0$_rest²(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
 //│   return test_28$arg$AA$0$_rest³(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
 //│ };
-//│ define test_20$arg$AA$0$_rest⁰ as fun test_20$arg$AA$0$_rest²(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
-//│   return test_20$arg$AA$0$_rest³(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
-//│ };
-//│ define test_20$arg$AA$0$_rest¹ as fun test_20$arg$AA$0$_rest³(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
-//│   return test_20$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
-//│ };
-//│ define test_20$x_rest⁰ as fun test_20$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
-//│   set fv_t = fv_tmp;
-//│   set fv_tmp1 = *⁰(5, 4);
-//│   set fv_tmp2 = +⁰(fv_t, fv_tmp1);
-//│   set fv_tmp3 = -⁰(fv_tmp2, 3);
-//│   set fv_tmp4 = +⁰(fv_tmp3, 2);
-//│   return -⁰(fv_tmp4, 1)
-//│ };
 //│ define test⁰ as fun test¹(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
 //│   match x
-//│     AA⁰ =>
-//│       set arg$AA$0$ = x.x⁰;
+//│     AA¹ =>
+//│       set arg$AA$0$ = x.x¹;
 //│       match arg$AA$0$
-//│         AA⁰ =>
-//│           set arg$AA$0$1 = arg$AA$0$.x⁰;
+//│         AA¹ =>
+//│           set arg$AA$0$1 = arg$AA$0$.x¹;
 //│           match arg$AA$0$1
-//│             AA⁰ =>
-//│               set arg$AA$0$2 = arg$AA$0$1.x⁰;
+//│             AA¹ =>
+//│               set arg$AA$0$2 = arg$AA$0$1.x¹;
 //│               set a = arg$AA$0$2;
 //│               set tmp11 = a;
 //│               end
@@ -184,10 +138,10 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   block split_root$:
 //│     block split_default$:
 //│       match a
-//│         AA⁰ =>
-//│           set arg$AA$0$ = a.x⁰;
+//│         AA¹ =>
+//│           set arg$AA$0$ = a.x¹;
 //│           match arg$AA$0$
-//│             AA⁰ =>
+//│             AA¹ =>
 //│               return 0
 //│             else
 //│               break split_default$
@@ -198,26 +152,23 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│     throw new globalThis⁰.Error⁰("match error")
 //│   return runtime⁰.Unit⁰
 //│ };
-//│ set AA_x = 10;
-//│ set tmp = (fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5) => {
-//│   return test_20$arg$AA$0$_AA¹(fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, AA_x)
-//│ };
-//│ set tmp1 = AA¹(tmp);
-//│ set p⁰ = AA¹(tmp1);
-//│ set tmp2 = test_20$test¹(p⁰);
+//│ set tmp = AA⁰(10);
+//│ set tmp1 = AA⁰(tmp);
+//│ set p⁰ = AA⁰(tmp1);
+//│ set tmp2 = test¹(p⁰);
 //│ set tmp3 = f¹(p⁰);
 //│ set tmp4 = +⁰(tmp2, tmp3);
-//│ set AA_x1 = 10;
+//│ set AA_x = 10;
 //│ set tmp5 = (fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5) => {
-//│   return test_28$arg$AA$0$_AA³(fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, AA_x1)
+//│   return test_28$arg$AA$0$_AA³(fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_tmp, fv_ctorLam_t, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_tmp5, AA_x)
 //│ };
-//│ set AA_x2 = tmp5;
+//│ set AA_x1 = tmp5;
 //│ set tmp6 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_t1, fv_ctorLam_tmp5, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9) => {
-//│   return test_28$arg$AA$0$_AA²(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_t1, fv_ctorLam_tmp5, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, AA_x2)
+//│   return test_28$arg$AA$0$_AA²(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_t1, fv_ctorLam_tmp5, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, AA_x1)
 //│ };
-//│ set AA_x3 = tmp6;
+//│ set AA_x2 = tmp6;
 //│ set tmp7 = (fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_arg$AA$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_t1, fv_ctorLam_tmp5, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9) => {
-//│   return test_28$x_AA¹(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_arg$AA$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_t1, fv_ctorLam_tmp5, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, AA_x3)
+//│   return test_28$x_AA¹(fv_ctorLam_t, fv_ctorLam_a, fv_ctorLam_arg$AA$0$, fv_ctorLam_arg$AA$0$1, fv_ctorLam_arg$AA$0$2, fv_ctorLam_tmp, fv_ctorLam_tmp1, fv_ctorLam_tmp2, fv_ctorLam_tmp3, fv_ctorLam_tmp4, fv_ctorLam_t1, fv_ctorLam_tmp5, fv_ctorLam_tmp6, fv_ctorLam_tmp7, fv_ctorLam_tmp8, fv_ctorLam_tmp9, AA_x2)
 //│ };
 //│ set tmp8 = test_28$test¹(tmp7);
 //│ set tmp9 = +⁰(tmp4, tmp8);
@@ -228,7 +179,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ +⁰(tmp9, tmp10)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 78
-//│ p = AA(AA(fun tmp))
+//│ p = AA(AA(AA(10)))
 
 
 // TODO: rewriting does not handle properly classes nested in functions yet
@@ -241,12 +192,12 @@ fun test() =
     Global(x) then Local(x + 1)
 test()
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Global,Some(term:Global/Global)),List(Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
-//│ deforest > Call(Ref(member:Global,Some(term:Global/Global)),List(Arg(None,Lit(IntLit(1))))) ->
-//│ deforest > 	Ref(tmp:scrut,None)
-//│ deforest > 	Select(Ref(tmp:scrut,None),Ident(x))
+//│ deforest > Global⁰(1) ->
+//│ deforest > 	match: scrut⁰
+//│ deforest > 	fields: scrut⁰.x²
+//│ deforest > Global⁰(1) ->
+//│ deforest > 	match: scrut⁰
+//│ deforest > 	fields: scrut⁰.x²
 //│ deforest > <<< fusing <<<
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
 
@@ -269,10 +220,10 @@ test()
 fun f(x) = if x is A then 1
 f(A) + f(A)
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(x,None)
+//│ deforest > A⁰ ->
+//│ deforest > 	match: x³
+//│ deforest > A⁰ ->
+//│ deforest > 	match: x³
 //│ deforest > <<< fusing <<<
 //│ = 2
 

@@ -25,8 +25,10 @@ hi(0)
 //│     if (scrut === true) {
 //│       return 0
 //│     }
-//│     tmp1 = n - 1;
-//│     return hi(tmp1);
+//│     {
+//│       tmp1 = n - 1;
+//│       return hi(tmp1);
+//│     }
 //│   }
 //│   return runtime.unwind(hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0);
 //│ };
@@ -68,22 +70,24 @@ sum(10000)
 //│         if (scrut === true) {
 //│           return 0
 //│         }
-//│         let res;
-//│         tmp2 = n - 1;
-//│         res = sum(tmp2);
-//│         runtime.stackDepth = curDepth;
-//│         runtime.resumeValue = res;
-//│         if (runtime.curEffect === null) {
-//│           pc = 1;
-//│         } else {
-//│           return runtime.unwind(sum, 1, "StackSafety.mls:47:9", null, null, 1, 1, n, 0)
+//│         {
+//│           let res;
+//│           tmp2 = n - 1;
+//│           res = sum(tmp2);
+//│           runtime.stackDepth = curDepth;
+//│           runtime.resumeValue = res;
+//│           if (runtime.curEffect === null) {
+//│             pc = 1;
+//│           } else {
+//│             return runtime.unwind(sum, 1, "StackSafety.mls:49:9", null, null, 1, 1, n, 0)
+//│           }
 //│         }
 //│       case 1:
 //│         tmp3 = runtime.resumeValue;
 //│         return n + tmp3;
 //│     }
 //│   } else {
-//│     return runtime.unwind(sum, -1, "StackSafety.mls:44:1", null, null, 1, 1, n, 0)
+//│     return runtime.unwind(sum, -1, "StackSafety.mls:46:1", null, null, 1, 1, n, 0)
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_1 = (undefined, function () {

@@ -30,10 +30,9 @@ private fun f(a)(b) = 0
 f(1)(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
-//│ dead-param-elim > prodfun f#1 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁴, tmp; define f⁴ as fun f⁵()() { return 0 }; set tmp = f⁵(); tmp()
+//│ let f⁴; define f⁴ as fun f⁵()(b) { return 0 }; f⁵()(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -88,10 +87,9 @@ f(1, 2)
 private fun f(a)(b) = a
 f(1)(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#1 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹⁴, tmp; define f¹⁴ as fun f¹⁵(a)() { return a }; set tmp = f¹⁵(1); tmp()
+//│ let f¹⁴; define f¹⁴ as fun f¹⁵(a)(b) { return a }; f¹⁵(1)(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -102,7 +100,7 @@ f(1)(2)
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹⁶, tmp; define f¹⁶ as fun f¹⁷()(b) { return b }; set tmp = f¹⁷(); tmp(2)
+//│ let f¹⁶; define f¹⁶ as fun f¹⁷()(b) { return b }; f¹⁷()(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
@@ -291,3 +289,70 @@ f(2)
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ > 2
 //│ = [3, 4]
+
+
+
+// DPE is on by default, no debug output
+:soir
+private fun noFlag(a) = 0
+noFlag(42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun noFlag#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let noFlag⁰; define noFlag⁰ as fun noFlag¹() { return 0 }; noFlag¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 0
+
+
+:deadParamElim
+private fun bareFlag(a) = 0
+bareFlag(42)
+//│ = 0
+
+
+:deadParamElim mono debug
+private fun monoDebug(a) = 0
+monoDebug(42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun monoDebug#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+
+
+:deadParamElim debug mono
+:soir
+private fun debugMono(a) = 0
+debugMono(42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun debugMono#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let debugMono⁰; define debugMono⁰ as fun debugMono¹() { return 0 }; debugMono¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 0
+
+
+:deadParamElim mono poly
+private fun conflictTest(a) = 0
+conflictTest(42)
+//│ /!!!\ ':deadParamElim' flags 'mono' and 'poly' conflict
+//│ = 0
+
+// :deadParamElim off — disable DPE, dead param should NOT be eliminated
+:deadParamElim off
+:soir
+private fun dpeOff(a) = 0
+dpeOff(42)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let dpeOff⁰; define dpeOff⁰ as fun dpeOff¹(a) { return 0 }; dpeOff¹(42)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 0
+
+
+
+:deadParamElim foo
+private fun unknownFlag(a) = 0
+unknownFlag(42)
+//│ /!!!\ Unknown ':deadParamElim' flags: foo
+//│ = 0

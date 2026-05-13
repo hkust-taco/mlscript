@@ -234,12 +234,9 @@ _ - _ of 1, 2
 :sjs
 1 \ (_ - 2)()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda40, tmp22;
-//│ lambda40 = (undefined, function (_05) {
-//│   return _05 - 2
-//│ });
-//│ tmp22 = Predef.passTo(1, lambda40);
-//│ runtime.safeCall(tmp22())
+//│ let lambda40;
+//│ lambda40 = (undefined, function (_05) { return _05 - 2 });
+//│ Predef.passTo(1, lambda40)()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = -1
 
@@ -252,13 +249,13 @@ _ - _ of 1, 2
 :w
 let f = if _ then 1 else 0
 //│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
-//│ ║  l.253: 	let f = if _ then 1 else 0
+//│ ║  l.250: 	let f = if _ then 1 else 0
 //│ ║         	             ^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.253: 	let f = if _ then 1 else 0
+//│ ║  l.250: 	let f = if _ then 1 else 0
 //│ ╙──       	                    ^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f15, tmp24; tmp24 = 1; f15 = tmp24;
+//│ let f15, tmp20; tmp20 = 1; f15 = tmp20;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = 1
 

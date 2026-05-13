@@ -55,8 +55,8 @@ class BlockTraverser:
     case Scoped(_, body) => applySubBlock(body)
   
   def applyResult(r: Result): Unit = r match
-    case r @ Call(fun, args) => applyPath(fun); args.foreach(applyArg)
-    case Instantiate(mut, cls, args) => applyPath(cls); args.foreach(applyArg)
+    case r @ Call(fun, argss) => applyPath(fun); argss.foreach(_.foreach(applyArg))
+    case Instantiate(mut, cls, argss) => applyPath(cls); argss.foreach(_.foreach(applyArg))
     case l @ Lambda(params, body) => applyLam(l)
     case Tuple(mut, elems) => elems.foreach(applyArg)
     case Record(mut, fields) => fields.foreach:

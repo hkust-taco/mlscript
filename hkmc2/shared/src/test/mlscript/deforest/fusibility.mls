@@ -1,0 +1,424 @@
+:js
+:deforest logNonAffine
+
+data class (::) Cons(h, t)
+data object Nil
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+
+data class AA(x)
+data class BB(x)
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+
+data class Many(x)
+data class Once(x)
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+
+
+
+
+// just one use of `p`, fuse away
+fun c(p) = if p is AA(v) then v
+c(AA(3))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > AA⁰(3) ->
+//│ deforest > 	match: p⁰
+//│ deforest > 	fields: p⁰.x⁰
+//│ deforest > <<< fusing <<<
+//│ = 3
+
+
+// selects on the enclosing match scrut don't count as extra uses of the scrut
+fun c(x) = if x is AA(_) then x.AA#x + x.AA#x
+c(AA(7))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > AA⁰(7) ->
+//│ deforest > 	match: x¹
+//│ deforest > 	fields: x¹.x⁰
+//│ deforest > 	fields: x¹.x⁰
+//│ deforest > 	fields: x¹.x⁰
+//│ deforest > <<< fusing <<<
+//│ = 14
+
+
+fun c(p) =
+  let cl = () => if p is AA(v) then v
+  cl() + cl()
+c(AA(7))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:lambda,0)_for_c@31
+//│ deforest > cap_ub_(term:lambda,0)_for_c@49
+//│ deforest > cl_for_c@20
+//│ deforest > cl_for_c@38
+//│ deforest > lambda_for_c@29
+//│ deforest > lambda_for_c@47
+//│ deforest > p_for_c@21
+//│ deforest > p_for_c@39
+//│ deforest > tmp@1
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 14
+
+
+// `y` shows up in two arms
+fun affine_branched(x, y, cons_y) = if x is
+  AA(_) then cons_y(y)
+  BB(_) then cons_y(y)
+  else 0
+affine_branched(AA(0), AA(1), (y) => if y is AA(x) then x + 2)
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > AA⁰(1) ->
+//│ deforest > 	match: y⁰
+//│ deforest > 	fields: y⁰.x⁰
+//│ deforest > AA⁰(0) ->
+//│ deforest > 	match: x²
+//│ deforest > 	fields: x².x⁰
+//│ deforest > <<< fusing <<<
+//│ = 3
+
+
+
+fun c(x) = if x is AA(_) then 0
+let p = AA(10)
+c(p) + c(p)
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > p@1
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 0
+//│ p = AA(10)
+
+
+fun c(p) = if p is AA(v) then v
+fun apply(f, x) = f(x) + f(x)
+apply(c, AA(3))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > c_for_c@30
+//│ deforest > cap_ub_(term:c,0)_for_c@33
+//│ deforest > f_for_apply@22
+//│ deforest > f_for_apply@49
+//│ deforest > tmp@1
+//│ deforest > x_for_apply@21
+//│ deforest > x_for_apply@48
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 6
+
+
+
+fun c(k, x) = if k is AA(_) then x.AA#x + x.AA#x + x.AA#x
+c(AA(0), AA(3))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > tmp@2
+//│ deforest > x_for_c@18
+//│ deforest > x_for_c@33
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > AA⁰(0) ->
+//│ deforest > 	match: k⁰
+//│ deforest > 	fields: k⁰.x⁰
+//│ deforest > <<< fusing <<<
+//│ = 9
+
+
+
+
+// `y` is matched as scrut once AND referenced inside a closure body —
+// even though the closure is never called, the syntactic ref still counts
+fun c(y) = if y is AA(_) then
+  let _d = () => y
+  0
+c(AA(1))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > tmp@1
+//│ deforest > y_for_c@14
+//│ deforest > y_for_c@26
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 0
+
+
+// non-affinity propagates through nested ctors
+fun c1(x) = if x is AA(AA(AA(v))) then v else 0
+fun c2(x) = if x is AA(AA(_)) then 1 else 0
+let p = AA(AA(AA(10)))
+c1(p) + c2(p)
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > p@5
+//│ deforest > tmp@1
+//│ deforest > tmp@2
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 11
+//│ p = AA(AA(AA(10)))
+
+
+
+
+
+fun c1(p) = if p is Many(_) then 3
+fun c2(p) = if p is Many(Once(v)) then v
+fun apply(f, g, p) = f(p) + g(p)
+apply(c1, c2, Many(Once(10)))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > p_for_apply@32
+//│ deforest > p_for_apply@78
+//│ deforest > tmp@1
+//│ deforest > tmp@2
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 13
+
+
+// nested ctors can differ: outer is one-shot but inner is consumed twice,
+// so outer fuses and inner doesn't
+fun nest_prod(x) = AA(BB(x))
+fun nest_consume(f, p) = if p is AA(i) then f(i) + f(i)
+fun nest_pickB(p) = if p is BB(b) then b + 1
+nest_consume(nest_pickB, nest_prod(10))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > arg$AA$0$_for_nest_consume@48
+//│ deforest > arg$AA$0$_for_nest_consume@77
+//│ deforest > cap_ub_(term:nest_pickB,0)_for_nest_pickB@53
+//│ deforest > f_for_nest_consume@37
+//│ deforest > f_for_nest_consume@66
+//│ deforest > i_for_nest_consume@38
+//│ deforest > i_for_nest_consume@67
+//│ deforest > nest_pickB_for_nest_pickB@50
+//│ deforest > sel_res_for_nest_consume@49
+//│ deforest > sel_res_for_nest_consume@78
+//│ deforest > tmp_for_nest_prod@34
+//│ deforest > x_for_nest_prod@31
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > AA⁰(tmp⁰) ->
+//│ deforest > 	match: p¹
+//│ deforest > 	fields: p¹.x⁰
+//│ deforest > <<< fusing <<<
+//│ = 22
+
+
+// accumulator
+:deforest logAccumulator logNonAffine
+fun length(ls) = if ls is
+  h :: t then 1 + length(t)
+  Nil then 0
+fun from(n, acc) = if n == 0 then acc else from(n - 1, n :: acc)
+length(from(5, Nil))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > call_res_for_from@35
+//│ deforest > call_res_for_from@76
+//│ deforest > n_for_from@28
+//│ deforest > n_for_from@69
+//│ deforest > tmp_for_from@33
+//│ deforest > tmp_for_from@74
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> accumulator syms >>>
+//│ deforest > acc_for_from@29
+//│ deforest > acc_for_from@70
+//│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 5
+
+
+// `ys` should not be considered as an accumulator here
+fun length(ls) = if ls is
+  h :: t then 1 + length(t)
+  Nil then 0
+fun append(xs, ys) = if xs is
+  h :: t then h :: append(t, ys)
+  Nil then ys
+length(append(id(1 :: Nil), 2 :: Nil))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> accumulator syms >>>
+//│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > Cons⁰(h⁰, tmp¹) ->
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h¹
+//│ deforest > 	fields: ls⁰.t⁰
+//│ deforest > Cons⁰(2, Nil⁰) ->
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h¹
+//│ deforest > 	fields: ls⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁰
+//│ deforest > <<< fusing <<<
+//│ = 2
+
+
+
+// `b` should not be considered as an accumulator here
+fun length(ls) = if ls is
+  h :: t then 1 + length(t)
+  Nil then 0
+fun ping(a, b) = if a is
+  h :: t then pong(t, b)
+  Nil then b
+fun pong(a, b) = if a is
+  h :: t then ping(t, b)
+  Nil then b
+length(ping(id(1 :: 2 :: Nil), 3 :: 4 :: Nil))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> accumulator syms >>>
+//│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > Cons⁰(3, tmp²) ->
+//│ deforest > 	match: ls¹
+//│ deforest > 	fields: ls¹.h¹
+//│ deforest > 	fields: ls¹.t⁰
+//│ deforest > Cons⁰(4, Nil⁰) ->
+//│ deforest > 	match: ls¹
+//│ deforest > 	fields: ls¹.h¹
+//│ deforest > 	fields: ls¹.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls¹
+//│ deforest > <<< fusing <<<
+//│ = 2
+
+
+
+
+
+// `ys` is not an accumulator
+fun append(xs, ys) = if xs is
+  h :: t then h :: append(t, ys)
+  Nil then ys
+fun sum(ls, acc) = if ls is
+  h :: t then sum(t, h + acc)
+  Nil then acc
+sum(append(id(Nil), Nil), 0)
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> accumulator syms >>>
+//│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls²
+//│ deforest > Cons⁰(h², tmp³) ->
+//│ deforest > 	match: ls²
+//│ deforest > 	fields: ls².h¹
+//│ deforest > 	fields: ls².t⁰
+//│ deforest > <<< fusing <<<
+//│ = 0
+
+
+
+// TODO: ys is still detected to be an accumulator while it's actually not...
+// this is because:
+// 1. `append` returns `ys` directly in its second branch
+// 2. `flatten` returns `append` result directly in its first branch
+// so in the flow analysis,
+// `append(h, flatten(t))`
+// === `append(h, append_res)`
+// === `append(h, h :: append(t, ys))`
+// === `append(h, h :: ys)`
+// which then means the flow analysis sees
+// the spurious flow `h :: ys` --> `ys`
+fun length(ls) = if ls is
+  h :: t then 1 + length(t)
+  Nil then 0
+fun append(xs, ys) = if xs is
+  h :: t then h :: append(t, ys)
+  Nil then ys
+fun flatten(xss) = if xss is
+  h :: t then append(h, flatten(t))
+  Nil then Nil
+length(flatten(id((1 :: Nil) :: Nil)))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> accumulator syms >>>
+//│ deforest > ys_for_append_for_flatten@150
+//│ deforest > ys_for_append_for_flatten@78
+//│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 1
+
+
+// TODO: y is aliased with x,
+// so affinity marks `x` as non affine
+fun alias_then_patmat(x) =
+  let y = x
+  if x is Cons(a, b) then a + b + y.Cons#h
+alias_then_patmat(Cons(12, 13))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > tmp@1
+//│ deforest > x_for_alias_then_patmat@19
+//│ deforest > x_for_alias_then_patmat@36
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> accumulator syms >>>
+//│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 37
+
+
+
+// * FIXME: should detect that the `x` field is NON-affine
+// *  (the patmat special handling should be refined)
+fun foo(a) =
+  if a is
+    AA then a.AA#x() + a.AA#x()
+foo of AA of () => 1
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> accumulator syms >>>
+//│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > AA⁰(lambda⁰) ->
+//│ deforest > 	match: a⁰
+//│ deforest > 	fields: a⁰.x⁰
+//│ deforest > 	fields: a⁰.x⁰
+//│ deforest > <<< fusing <<<
+//│ = 2
+
+// * Indeed, the above is equivalent to:
+fun foo(a) =
+  if a is
+    AA then
+      let f = a.AA#x
+      f() + f()
+foo of AA of () => 1
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:lambda,0)_for_lambda@19
+//│ deforest > f_for_foo@21
+//│ deforest > f_for_foo@34
+//│ deforest > lambda_for_lambda@17
+//│ deforest > sel_res_for_foo@31
+//│ deforest > sel_res_for_foo@44
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> accumulator syms >>>
+//│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > AA⁰(lambda¹) ->
+//│ deforest > 	match: a¹
+//│ deforest > 	fields: a¹.x⁰
+//│ deforest > <<< fusing <<<
+//│ = 2
+
+
+

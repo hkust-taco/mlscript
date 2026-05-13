@@ -261,7 +261,7 @@ fun g() =
   f
 g()(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let h², f⁶, g⁶, tmp, Capture$scope0⁰, f$⁰;
+//│ let h², f⁶, g⁶, baseCall, Capture$scope0⁰, f$⁰;
 //│ define Capture$scope0⁰ as class Capture$scope0² {
 //│   constructor Capture$scope0¹(y$0) {
 //│     define y$0⁰ as val y$0¹ = y$0;
@@ -289,8 +289,8 @@ g()(1)
 //│   set f$here = f$¹(scope0$cap);
 //│   return f$here
 //│ };
-//│ set tmp = g⁷();
-//│ tmp(1)
+//│ set baseCall = g⁷();
+//│ baseCall(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 

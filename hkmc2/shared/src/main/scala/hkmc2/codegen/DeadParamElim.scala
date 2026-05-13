@@ -10,34 +10,27 @@ import hkmc2.syntax.Fun
 import scala.collection.mutable.{Set as MutSet, Map as MutMap, LinkedHashMap, Buffer}
 
 
-type ConcreteFunId = FunId -> InstantiationId
-type ConcreteCallSiteId = ResultId -> InstantiationId
+type ConcreteFunId = ConcreteId[FunId]
+type ConcreteCallSiteId = ConcreteId[ResultId]
 
 
 class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
-  
   given tl: TraceLogger = constraintSolver.tl
   given fState: FlowAnalysis.State = constraintSolver.fState
   given eState: Elaborator.State = constraintSolver.eState
 
   val collector: FlowConstraintsCollector = constraintSolver.collector
-  val funDests: collection.Map[ProdFun, Set[ConsFun | NoCons.type]] =
+  val funDests: collection.Map[ProdFun, Set[ConsFun | MarkerConsStrat]] =
     constraintSolver.funDests
-  val funSrcs: collection.Map[ConsFun, Set[ProdFun | NoProd.type]] =
+  val funSrcs: collection.Map[ConsFun, Set[ProdFun | MarkerProdStrat]] =
     constraintSolver.funSrcs
-
-  extension (prodFun: ProdFun)
-    def concreteId: ConcreteFunId = prodFun.funId -> prodFun.instantiationId.get
-  
-  extension (consFun: ConsFun)
-    def concreteId: ConcreteCallSiteId = consFun.exprId -> consFun.instantiationId.get
   
   // handle clashes for dead param elim
   val (liveParams, liveCallSiteParams) =
     def isSyntheticRoot(prodFun: ProdFun): Bool =
       val instId = prodFun.instantiationId.get
       collector.synthesizedInstIdToFunSym.get(instId).exists: rootFunSym =>
-        prodFun.funId match
+        prodFun.exprId match
           case (funSym: TermSymbol, _) =>
             (collector.funToSccRep(funSym), collector.funToSccRep(rootFunSym)) match
             case S(rep1) -> S(rep2) => rep1 is rep2
@@ -48,20 +41,24 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
     val prodRoots = Buffer.empty[(ProdFun, Int)]
     val consRoots = Buffer.empty[(ConsFun, Int)]
     for (prodFun, dests) <- funDests do
-      if isSyntheticRoot(prodFun) || dests.contains(NoCons) then
+      if isSyntheticRoot(prodFun) || dests.contains(UnknownCons) then
         prodFun.params.indices.foreach: i =>
           prodRoots += prodFun -> i
       else
         prodFun.params.zipWithIndex.foreach:
           case (ConsVar(s), i) =>
             val ubs = constraintSolver.upperBounds(s.uid)
-            if ubs.exists(!_.isInstanceOf[ConsVar]) then
-              prodRoots += prodFun -> i
+            if ubs.exists:
+              case _: ConsVar => false
+              case _: IntoParam => false
+              case NonAffine | Accumulator => false
+              case _ => true
+            then prodRoots += prodFun -> i
           case (_, i) =>
             prodRoots += prodFun -> i
 
     for (consFun, srcs) <- funSrcs do
-      if srcs.contains(NoProd) then
+      if srcs.contains(UnknownProd) then
         consFun.params.indices.foreach: i =>
           consRoots += consFun -> i
       else
@@ -128,7 +125,7 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
           case Lambda(_, _) => s"lambda@$exprId"
           case _ => showRefSite(exprId)
       val inst = prodFun.instantiationId.fold("")(instId => s" @ ${showInstId(instId)}")
-      s"prodfun ${showFunId(prodFun.funId)}$inst"
+      s"prodfun ${showFunId(prodFun.exprId)}$inst"
     end showProdFun
     
     assert(eliminableCallSiteArgsById.nonEmpty === eliminableParamsById.nonEmpty)
@@ -176,7 +173,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
     end mkNewPolyFnSyms
     
     for
-      (_, instId) <-
+      case ConcreteId(_, instId) <-
         deadParamElimSolver.eliminableParamsById.keysIterator ++
         deadParamElimSolver.eliminableCallSiteArgsById.keysIterator
       path <- instId.inits
@@ -212,7 +209,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
       val params2 = params.zipWithIndex.map:
         case (pl, whichParamList) =>
           val (pl2, removed2) =
-            filterParamList(pl, deadParamElimSolver.eliminableParamsById((funSym, whichParamList), instId))
+            filterParamList(pl, deadParamElimSolver.eliminableParamsById(ConcreteId((funSym, whichParamList), instId)))
           if pl2 isnt pl then changed = true
           removed ++= removed2
           pl2
@@ -268,26 +265,26 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
       end rewriteArgs
       
       r match
-      case c@Call(fun, args) if args.forall(_.spread.isEmpty) =>
-        val eliminable = deadParamElimSolver.eliminableCallSiteArgsById(c.uid, instId)
+      case c@Call(fun, args :: restArgss) if args.forall(_.spread.isEmpty) =>
+        val eliminable = deadParamElimSolver.eliminableCallSiteArgsById(ConcreteId(c.uid, instId))
         applyPath(fun): fun2 =>
           rewriteArgs(args, eliminable): args2 =>
             k(
               if (fun2 is fun) && (args2 is args) then c
-              else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLocOf(c)
+              else Call(fun2, args2 ne_:: restArgss)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLocOf(c)
             )
-      case i@Instantiate(mut, cls, args) if args.forall(_.spread.isEmpty) =>
-        val eliminable = deadParamElimSolver.eliminableCallSiteArgsById(i.uid, instId)
+      case i@Instantiate(mut, cls, args :: restArgss) if args.forall(_.spread.isEmpty) =>
+        val eliminable = deadParamElimSolver.eliminableCallSiteArgsById(ConcreteId(i.uid, instId))
         applyPath(cls): cls2 =>
           rewriteArgs(args, eliminable): args2 =>
             k(
               if (cls2 is cls) && (args2 is args) then i
-              else Instantiate(mut, cls2, args2).withLocOf(i)
+              else Instantiate(mut, cls2, args2 :: restArgss).withLocOf(i)
             )
       case _ => super.applyResult(r)(k)
     
     override def applyLam(lam: Lambda): Lambda =
-      val (params2, removed) = filterParamList(lam.params, deadParamElimSolver.eliminableParamsById(lam.uid, instId))
+      val (params2, removed) = filterParamList(lam.params, deadParamElimSolver.eliminableParamsById(ConcreteId(lam.uid, instId)))
       val body2 = withEliminatedParams(removed):
         applyFunBodyLikeBlock(lam.body)
       if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)
@@ -320,7 +317,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
     def filterFunParams(funSym: TermSymbol, params: Ls[ParamList], instId: InstantiationId): Ls[ParamList] =
       params.zipWithIndex.map:
         case (pl, whichParamList) =>
-          filterParamList(pl, deadParamElimSolver.eliminableParamsById((funSym, whichParamList), instId))
+          filterParamList(pl, deadParamElimSolver.eliminableParamsById(ConcreteId((funSym, whichParamList), instId)))
     end filterFunParams
     
     class RefreshSymbol(existingMapping: Map[Symbol, Symbol]) extends SymbolRefresher(existingMapping):
@@ -395,16 +392,19 @@ object DeadParamElim:
     tl: TL,
     raise: Raise,
     eState: Elaborator.State,
+    symbolPrinter: SymbolPrinter,
   ): Program =
     cfg.deadParamElim match
       case None => p
       case Some(dCfg) =>
         val outerTl = tl
-        (new TraceLogger:
-          override def doTrace: Bool = dCfg.debug
-          override def emitDbg(str: Str): Unit = outerTl.emitDbg(s"dead-param-elim > $str")
-        ).givenIn:
-          val flowAnalysisRes = FlowAnalysis(p, mono = dCfg.mono)
+        FlowAnalysis.mkTraceLogger(dCfg.config, "dead-param-elim > ", outerTl).givenIn:
+          val flowAnalysisRes = FlowAnalysis(
+            p,
+            mono = dCfg.mono,
+            nonAffineTracking = dCfg.effectiveTrackNonAffine,
+            accumulatorTracking = dCfg.effectiveTrackAccumulator,
+          )
           val deadParamElimSolver = new DeadParamElimSolver(flowAnalysisRes)
           if deadParamElimSolver.eliminableParamsById.isEmpty
             && deadParamElimSolver.eliminableCallSiteArgsById.isEmpty

@@ -301,7 +301,7 @@ object Elaborator:
         Param(flag, VarSymbol(Ident("output")), N, Modulefulness(N)(false)) ::
         Param(flag, VarSymbol(Ident("bindings")), N, Modulefulness(N)(false)) ::
         Nil)
-      val ctsym = TermSymbol(Fun, S(cs), cs.id)
+      val ctsym = ClassCtorSymbol(Fun, S(cs), cs.id)
       cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, Nil), S(ctsym),
         Nil, ps, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
       cs -> ts
@@ -312,7 +312,7 @@ object Elaborator:
       val ts = TermSymbol(syntax.Fun, N, id)
       val flag = FldFlags.empty.copy(isVal = true)
       val ps = PlainParamList(Param(flag, VarSymbol(Ident("errors")), N, Modulefulness(N)(false)) :: Nil)
-      val ctsym = TermSymbol(Fun, S(cs), cs.id)
+      val ctsym = ClassCtorSymbol(Fun, S(cs), cs.id)
       cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, td :: Nil), S(ctsym),
         Nil, ps, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
       cs -> ts
@@ -387,6 +387,7 @@ extends Importer with ucs.SplitElaborator:
       | Keyword.`declare`
       | Keyword.`data`
       | Keyword.`staged`
+      | Keyword.`virtual`
       | Keyword.`public`
       | Keyword.`private`
     )) => S(Annot.Modifier(kw))
@@ -836,8 +837,6 @@ extends Importer with ucs.SplitElaborator:
     case TypeDef(k, head, rhs) =>
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
       Term.Error
-    case Modified(Keyword.`in` | Keyword.`out`, body) =>
-      subterm(body)
     case Modified(Keywrd(Keyword.`mut`), body: Block) =>
       blockOrRcd(body, hasResult = true) match
       case (Blk(Nil, Term.UnitVal()), ctx) =>
@@ -1493,7 +1492,7 @@ extends Importer with ucs.SplitElaborator:
               val comp = sym.asMod
               log(s"Companion: ${comp}")
               val tsym = if pss.nonEmpty then
-                val ctsym = TermSymbol(Fun, S(clsSym), clsSym.id)
+                val ctsym = ClassCtorSymbol(Fun, S(clsSym), clsSym.id)
                 val ctdef =
                   TermDefinition(
                     Fun,

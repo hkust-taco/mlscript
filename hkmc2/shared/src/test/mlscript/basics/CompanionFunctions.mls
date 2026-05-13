@@ -17,9 +17,6 @@ Foo(123)
 //│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
 //│ ║  l.16: 	Foo(123)
 //│ ╙──      	   ^^^^^
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched ctor arg and cls param sizes
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 //│ = Foo(123, undefined)
 
 

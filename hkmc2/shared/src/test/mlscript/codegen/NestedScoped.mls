@@ -116,9 +116,7 @@ fun f() =
 //│   let scrut, a;
 //│   scrut = false;
 //│   if (scrut === true) { a = 4; return a + 4 }
-//│   let b;
-//│   b = 5;
-//│   return b + 9;
+//│   { let b; b = 5; return b + 9; }
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -155,7 +153,7 @@ fun foo(x, y) =
 :ge
 scope.locally()
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.156: 	scope.locally()
+//│ ║  l.154: 	scope.locally()
 //│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -163,7 +161,7 @@ scope.locally()
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.164: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
+//│ ║  l.162: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -172,10 +170,10 @@ scope.locally of (let x = 1 in x), (let y = 2 in y)
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.173: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.171: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	                                                 ^
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.173: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.171: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

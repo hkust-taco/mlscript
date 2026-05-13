@@ -23,12 +23,12 @@ fun map(f, ls_map) = if ls_map is
 let c = Cons(1, Nil)
 map(x => x + 1, c)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(ls_map,None)
-//│ deforest > 	Select(Ref(ls_map,None),Ident(h))
-//│ deforest > 	Select(Ref(ls_map,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls_map,None)
+//│ deforest > Cons⁰(1, Nil⁰) ->
+//│ deforest > 	match: ls_map⁰
+//│ deforest > 	fields: ls_map⁰.h⁰
+//│ deforest > 	fields: ls_map⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls_map⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(2, Nil)
 //│ c = fun c
@@ -40,12 +40,12 @@ fun map(f, ls_map) = if ls_map is
 fun c(a) = Cons(a, Nil)
 map(x => x + 1, c(1))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(a,None)), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(ls_map,None)
-//│ deforest > 	Select(Ref(ls_map,None),Ident(h))
-//│ deforest > 	Select(Ref(ls_map,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls_map,None)
+//│ deforest > Cons⁰(a⁰, Nil⁰) ->
+//│ deforest > 	match: ls_map¹
+//│ deforest > 	fields: ls_map¹.h⁰
+//│ deforest > 	fields: ls_map¹.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls_map¹
 //│ deforest > <<< fusing <<<
 //│ = Cons(2, Nil)
 
@@ -56,16 +56,16 @@ fun map(ls, f) = if ls is
   h :: t then f(h) :: map(t, f)
 map(1 :: 2 :: Nil, x => x + 1)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(2))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
+//│ deforest > Cons⁰(1, tmp⁰) ->
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h⁰
+//│ deforest > 	fields: ls⁰.t⁰
+//│ deforest > Cons⁰(2, Nil⁰) ->
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h⁰
+//│ deforest > 	fields: ls⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(2, Cons(3, Nil))
 
@@ -76,12 +76,12 @@ fun sum(ls) = if ls is
 fun enum(n) = if n > 0 then n :: enum(n - 1) else Nil
 sum(enum(3))
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls¹
+//│ deforest > Cons⁰(n⁰, tmp¹) ->
+//│ deforest > 	match: ls¹
+//│ deforest > 	fields: ls¹.h⁰
+//│ deforest > 	fields: ls¹.t⁰
 //│ deforest > <<< fusing <<<
 //│ = 6
 
@@ -92,12 +92,12 @@ fun map(ls, f) = if ls is
   h :: t then f(h) :: map(t, f)
 map(map(id(1 :: 2 :: Nil), x => x + 1), x => x * 2)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
+//│ deforest > Cons⁰(tmp², tmp³) ->
+//│ deforest > 	match: ls²
+//│ deforest > 	fields: ls².h⁰
+//│ deforest > 	fields: ls².t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls²
 //│ deforest > <<< fusing <<<
 //│ = Cons(4, Cons(6, Nil))
 
@@ -108,12 +108,12 @@ fun map(f, ls) = if ls is
 fun enum(a) = if a < 0 then Nil else a :: enum(a - 1)
 map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
+//│ deforest > Cons⁰(tmp⁴, tmp⁵) ->
+//│ deforest > 	match: ls³
+//│ deforest > 	fields: ls³.h⁰
+//│ deforest > 	fields: ls³.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls³
 //│ deforest > <<< fusing <<<
 //│ = Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
 
@@ -131,30 +131,30 @@ fun cons1(a1) = if a1 is
   h :: t then h + cons1(t)
 cons(f(0)) + cons1(f(1))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(x,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(a1,None)
-//│ deforest > 	Select(Ref(a1,None),Ident(h))
-//│ deforest > 	Select(Ref(a1,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(y,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(a1,None)
-//│ deforest > 	Select(Ref(a1,None),Ident(h))
-//│ deforest > 	Select(Ref(a1,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(a1,None)
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(a1,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(x,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(a,None)
-//│ deforest > 	Select(Ref(a,None),Ident(h))
-//│ deforest > 	Select(Ref(a,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(y,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(a,None)
-//│ deforest > 	Select(Ref(a,None),Ident(h))
-//│ deforest > 	Select(Ref(a,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(a,None)
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(a,None)
+//│ deforest > Cons⁰(x⁰, tmp⁶) ->
+//│ deforest > 	match: a1⁰
+//│ deforest > 	fields: a1⁰.h⁰
+//│ deforest > 	fields: a1⁰.t⁰
+//│ deforest > Cons⁰(y⁰, tmp⁷) ->
+//│ deforest > 	match: a1⁰
+//│ deforest > 	fields: a1⁰.h⁰
+//│ deforest > 	fields: a1⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: a1⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: a1⁰
+//│ deforest > Cons⁰(x⁰, tmp⁶) ->
+//│ deforest > 	match: a¹
+//│ deforest > 	fields: a¹.h⁰
+//│ deforest > 	fields: a¹.t⁰
+//│ deforest > Cons⁰(y⁰, tmp⁷) ->
+//│ deforest > 	match: a¹
+//│ deforest > 	fields: a¹.h⁰
+//│ deforest > 	fields: a¹.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: a¹
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: a¹
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -172,12 +172,12 @@ fun f1(ls1) = if ls1 is
   Nil then 2
 f1(to(4))
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls1,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls1,None)
-//│ deforest > 	Select(Ref(ls1,None),Ident(h))
-//│ deforest > 	Select(Ref(ls1,None),Ident(t))
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls1⁰
+//│ deforest > Cons⁰(n¹, tmp⁸) ->
+//│ deforest > 	match: ls1⁰
+//│ deforest > 	fields: ls1⁰.h⁰
+//│ deforest > 	fields: ls1⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ = 12
 
@@ -189,22 +189,22 @@ fun succ(x) = x + 1
 fun double(x) = x * 2
 map(map(1 :: 2 :: Nil, succ), double)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(2))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
+//│ deforest > Cons⁰(tmp⁹, tmp¹⁰) ->
+//│ deforest > 	match: ls⁴
+//│ deforest > 	fields: ls⁴.h⁰
+//│ deforest > 	fields: ls⁴.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁴
+//│ deforest > Cons⁰(1, tmp¹¹) ->
+//│ deforest > 	match: ls⁴
+//│ deforest > 	fields: ls⁴.h⁰
+//│ deforest > 	fields: ls⁴.t⁰
+//│ deforest > Cons⁰(2, Nil⁰) ->
+//│ deforest > 	match: ls⁴
+//│ deforest > 	fields: ls⁴.h⁰
+//│ deforest > 	fields: ls⁴.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁴
 //│ deforest > <<< fusing <<<
 //│ = Cons(4, Cons(6, Nil))
 
@@ -219,18 +219,18 @@ fun f2(ls) = if ls is
 fun wrap(n) = to(n)
 f1(wrap(4)) + f2(wrap(5))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
+//│ deforest > Cons⁰(n², tmp¹²) ->
+//│ deforest > 	match: ls⁵
+//│ deforest > 	fields: ls⁵.h⁰
+//│ deforest > 	fields: ls⁵.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁵
+//│ deforest > Cons⁰(n², tmp¹²) ->
+//│ deforest > 	match: ls⁶
+//│ deforest > 	fields: ls⁶.h⁰
+//│ deforest > 	fields: ls⁶.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁶
 //│ deforest > <<< fusing <<<
 //│ = 10
 
@@ -244,24 +244,24 @@ fun f2(ls, acc) = if ls is
   h :: t then f2(t, acc + h + 1)
 f1(to(4, Nil), 0) + f2(to(5, Nil), 0) + f1(to(6, Nil), 0)
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(acc,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(acc,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(n,None)), Arg(None,Ref(acc,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁷
+//│ deforest > Cons⁰(n³, acc⁰) ->
+//│ deforest > 	match: ls⁷
+//│ deforest > 	fields: ls⁷.h⁰
+//│ deforest > 	fields: ls⁷.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁸
+//│ deforest > Cons⁰(n³, acc⁰) ->
+//│ deforest > 	match: ls⁸
+//│ deforest > 	fields: ls⁸.h⁰
+//│ deforest > 	fields: ls⁸.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁷
+//│ deforest > Cons⁰(n³, acc⁰) ->
+//│ deforest > 	match: ls⁷
+//│ deforest > 	fields: ls⁷.h⁰
+//│ deforest > 	fields: ls⁷.t⁰
 //│ deforest > <<< fusing <<<
 //│ = 51
 
@@ -274,28 +274,28 @@ fun double(x) = x * 2
 fun triple(x) = x * 3
 map(map(map(1 :: 2 :: Nil, succ), double), triple)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(2))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
+//│ deforest > Cons⁰(tmp¹³, tmp¹⁴) ->
+//│ deforest > 	match: ls⁹
+//│ deforest > 	fields: ls⁹.h⁰
+//│ deforest > 	fields: ls⁹.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁹
+//│ deforest > Cons⁰(tmp¹³, tmp¹⁴) ->
+//│ deforest > 	match: ls⁹
+//│ deforest > 	fields: ls⁹.h⁰
+//│ deforest > 	fields: ls⁹.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁹
+//│ deforest > Cons⁰(1, tmp¹⁵) ->
+//│ deforest > 	match: ls⁹
+//│ deforest > 	fields: ls⁹.h⁰
+//│ deforest > 	fields: ls⁹.t⁰
+//│ deforest > Cons⁰(2, Nil⁰) ->
+//│ deforest > 	match: ls⁹
+//│ deforest > 	fields: ls⁹.h⁰
+//│ deforest > 	fields: ls⁹.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁹
 //│ deforest > <<< fusing <<<
 //│ = Cons(12, Cons(18, Nil))
 
@@ -314,12 +314,12 @@ fun incr(x) = x + 1
 fun double(x) = x * 2
 map1(incr, map(double, id(mk(5))))
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls_map1,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls_map1,None)
-//│ deforest > 	Select(Ref(ls_map1,None),Ident(h))
-//│ deforest > 	Select(Ref(ls_map1,None),Ident(t))
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls_map1⁰
+//│ deforest > Cons⁰(tmp¹⁶, tmp¹⁷) ->
+//│ deforest > 	match: ls_map1⁰
+//│ deforest > 	fields: ls_map1⁰.h⁰
+//│ deforest > 	fields: ls_map1⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(11, Cons(9, Cons(7, Cons(5, Cons(3, Cons(1, Nil))))))
 
@@ -332,12 +332,12 @@ fun map(ls) = if ls is
   h :: t then (h + 4) :: map(t)
 map(enumFromTo(1, 4))
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(a,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls¹⁰
+//│ deforest > Cons⁰(a², tmp¹⁸) ->
+//│ deforest > 	match: ls¹⁰
+//│ deforest > 	fields: ls¹⁰.h⁰
+//│ deforest > 	fields: ls¹⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(5, Cons(6, Cons(7, Nil)))
 
@@ -348,12 +348,12 @@ fun sum(ls) = if ls is
   h :: t then h + sum(t)
 sum(enumFromTo(1,10))
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(a,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls¹¹
+//│ deforest > Cons⁰(a³, tmp¹⁹) ->
+//│ deforest > 	match: ls¹¹
+//│ deforest > 	fields: ls¹¹.h⁰
+//│ deforest > 	fields: ls¹¹.t⁰
 //│ deforest > <<< fusing <<<
 //│ = 45
 
@@ -365,12 +365,12 @@ fun map(f, ls) =
     h :: t then f(h) :: map(f, t)
 map(x => x + 4, enumFromTo(1, 4))
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(a,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls¹²
+//│ deforest > Cons⁰(a⁴, tmp²⁰) ->
+//│ deforest > 	match: ls¹²
+//│ deforest > 	fields: ls¹².h⁰
+//│ deforest > 	fields: ls¹².t⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(5, Cons(6, Cons(7, Nil)))
 
@@ -383,12 +383,12 @@ fun map(f, ls) =
   )(f)
 map(x => x + 4, enumFromTo(1, 4))
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(a,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls¹³
+//│ deforest > Cons⁰(a⁵, tmp²¹) ->
+//│ deforest > 	match: ls¹³
+//│ deforest > 	fields: ls¹³.h⁰
+//│ deforest > 	fields: ls¹³.t⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(5, Cons(6, Cons(7, Nil)))
 
@@ -401,12 +401,12 @@ fun sum(ls, a) = if ls is
   h :: t then sum(t, h + a)
 sum(enumFromTo(1, 10), 0)
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(a,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls,None)
-//│ deforest > 	Select(Ref(ls,None),Ident(h))
-//│ deforest > 	Select(Ref(ls,None),Ident(t))
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls¹⁴
+//│ deforest > Cons⁰(a⁶, tmp²²) ->
+//│ deforest > 	match: ls¹⁴
+//│ deforest > 	fields: ls¹⁴.h⁰
+//│ deforest > 	fields: ls¹⁴.t⁰
 //│ deforest > <<< fusing <<<
 //│ = 45
 
@@ -423,12 +423,12 @@ fun rev(xs_rev, acc) = if xs_rev is
   Nil then acc
 map(incr, rev(id(mk(5)), Nil))
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(xs_map,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(x,None)), Arg(None,Ref(acc,None)))) ->
-//│ deforest > 	Ref(xs_map,None)
-//│ deforest > 	Select(Ref(xs_map,None),Ident(h))
-//│ deforest > 	Select(Ref(xs_map,None),Ident(t))
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: xs_map⁰
+//│ deforest > Cons⁰(x¹, acc¹) ->
+//│ deforest > 	match: xs_map⁰
+//│ deforest > 	fields: xs_map⁰.h⁰
+//│ deforest > 	fields: xs_map⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 
@@ -445,12 +445,12 @@ fun rev(xs_rev, acc) = if xs_rev is
   Nil then acc
 rev(map(incr, id(mk(3))), Nil)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(xs_rev,None)
-//│ deforest > 	Select(Ref(xs_rev,None),Ident(h))
-//│ deforest > 	Select(Ref(xs_rev,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(xs_rev,None)
+//│ deforest > Cons⁰(tmp²³, tmp²⁴) ->
+//│ deforest > 	match: xs_rev⁰
+//│ deforest > 	fields: xs_rev⁰.h⁰
+//│ deforest > 	fields: xs_rev⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: xs_rev⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Nil))))
 
@@ -499,12 +499,12 @@ fun flatten(ls_flatten) = if ls_flatten is
   x :: xs then append(x, flatten(xs))
 sum(flatten(id(mk2d(4))))
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ls_sum,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(x,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ls_sum,None)
-//│ deforest > 	Select(Ref(ls_sum,None),Ident(h))
-//│ deforest > 	Select(Ref(ls_sum,None),Ident(t))
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls_sum⁰
+//│ deforest > Cons⁰(x², tmp²⁵) ->
+//│ deforest > 	match: ls_sum⁰
+//│ deforest > 	fields: ls_sum⁰.h⁰
+//│ deforest > 	fields: ls_sum⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ = 20
 
@@ -518,22 +518,22 @@ fun rev(a, ys) = if ys is
   Nil then a
 count(0, rev(Nil, 1 :: 2 :: Nil))
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(xs,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(h,None)), Arg(None,Ref(a,None)))) ->
-//│ deforest > 	Ref(xs,None)
-//│ deforest > 	Select(Ref(xs,None),Ident(h))
-//│ deforest > 	Select(Ref(xs,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ys,None)
-//│ deforest > 	Select(Ref(ys,None),Ident(h))
-//│ deforest > 	Select(Ref(ys,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(2))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(ys,None)
-//│ deforest > 	Select(Ref(ys,None),Ident(h))
-//│ deforest > 	Select(Ref(ys,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ys,None)
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: xs⁰
+//│ deforest > Cons⁰(h¹, a⁷) ->
+//│ deforest > 	match: xs⁰
+//│ deforest > 	fields: xs⁰.h⁰
+//│ deforest > 	fields: xs⁰.t⁰
+//│ deforest > Cons⁰(1, tmp²⁶) ->
+//│ deforest > 	match: ys⁰
+//│ deforest > 	fields: ys⁰.h⁰
+//│ deforest > 	fields: ys⁰.t⁰
+//│ deforest > Cons⁰(2, Nil⁰) ->
+//│ deforest > 	match: ys⁰
+//│ deforest > 	fields: ys⁰.h⁰
+//│ deforest > 	fields: ys⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ys⁰
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -559,20 +559,20 @@ fun map(f, xs_map) = if xs_map is
   x :: xs then f(x) :: map(f, xs)
 map(x => if x is A then 1 else 0, A :: B :: Nil)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(member:A,Some(object:A))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(xs_map,None)
-//│ deforest > 	Select(Ref(xs_map,None),Ident(h))
-//│ deforest > 	Select(Ref(xs_map,None),Ident(t))
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Ref(member:B,Some(object:B))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(xs_map,None)
-//│ deforest > 	Select(Ref(xs_map,None),Ident(h))
-//│ deforest > 	Select(Ref(xs_map,None),Ident(t))
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(xs_map,None)
+//│ deforest > Cons⁰(A⁰, tmp²⁷) ->
+//│ deforest > 	match: xs_map¹
+//│ deforest > 	fields: xs_map¹.h⁰
+//│ deforest > 	fields: xs_map¹.t⁰
+//│ deforest > A⁰ ->
+//│ deforest > 	match: x³
+//│ deforest > Cons⁰(B⁰, Nil⁰) ->
+//│ deforest > 	match: xs_map¹
+//│ deforest > 	fields: xs_map¹.h⁰
+//│ deforest > 	fields: xs_map¹.t⁰
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x³
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: xs_map¹
 //│ deforest > <<< fusing <<<
 //│ = Cons(1, Cons(0, Nil))
 
@@ -588,35 +588,35 @@ fun c(x) = if x is
   L then L
 c(T(A, T(B, L, L), T(A, L, L)))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:T,Some(term:T/T)),List(Arg(None,Ref(member:A,Some(object:A))), Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(n))
-//│ deforest > 	Select(Ref(x,None),Ident(l))
-//│ deforest > 	Select(Ref(x,None),Ident(r))
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(n,None)
-//│ deforest > Call(Ref(member:T,Some(term:T/T)),List(Arg(None,Ref(member:A,Some(object:A))), Arg(None,Ref(member:L,Some(object:L))), Arg(None,Ref(member:L,Some(object:L))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(n))
-//│ deforest > 	Select(Ref(x,None),Ident(l))
-//│ deforest > 	Select(Ref(x,None),Ident(r))
-//│ deforest > Ref(member:A,Some(object:A)) ->
-//│ deforest > 	Ref(n,None)
-//│ deforest > Ref(member:L,Some(object:L)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:L,Some(object:L)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Call(Ref(member:T,Some(term:T/T)),List(Arg(None,Ref(member:B,Some(object:B))), Arg(None,Ref(member:L,Some(object:L))), Arg(None,Ref(member:L,Some(object:L))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(n))
-//│ deforest > 	Select(Ref(x,None),Ident(l))
-//│ deforest > 	Select(Ref(x,None),Ident(r))
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(n,None)
-//│ deforest > Ref(member:L,Some(object:L)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:L,Some(object:L)) ->
-//│ deforest > 	Ref(x,None)
+//│ deforest > T⁰(A⁰, tmp²⁸, tmp²⁹) ->
+//│ deforest > 	match: x⁴
+//│ deforest > 	fields: x⁴.n⁴
+//│ deforest > 	fields: x⁴.l⁰
+//│ deforest > 	fields: x⁴.r⁰
+//│ deforest > A⁰ ->
+//│ deforest > 	match: n⁵
+//│ deforest > T⁰(A⁰, L⁰, L⁰) ->
+//│ deforest > 	match: x⁴
+//│ deforest > 	fields: x⁴.n⁴
+//│ deforest > 	fields: x⁴.l⁰
+//│ deforest > 	fields: x⁴.r⁰
+//│ deforest > A⁰ ->
+//│ deforest > 	match: n⁵
+//│ deforest > L⁰ ->
+//│ deforest > 	match: x⁴
+//│ deforest > L⁰ ->
+//│ deforest > 	match: x⁴
+//│ deforest > T⁰(B⁰, L⁰, L⁰) ->
+//│ deforest > 	match: x⁴
+//│ deforest > 	fields: x⁴.n⁴
+//│ deforest > 	fields: x⁴.l⁰
+//│ deforest > 	fields: x⁴.r⁰
+//│ deforest > B⁰ ->
+//│ deforest > 	match: n⁵
+//│ deforest > L⁰ ->
+//│ deforest > 	match: x⁴
+//│ deforest > L⁰ ->
+//│ deforest > 	match: x⁴
 //│ deforest > <<< fusing <<<
 //│ = T(0, T(1, L, L), T(0, L, L))
 
@@ -629,28 +629,28 @@ fun max(ms, m) = if ms is
   Nil then m
 max(3 :: 2 :: 4 :: 1 :: 0 :: Nil, 0)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(3))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ms,None)
-//│ deforest > 	Select(Ref(ms,None),Ident(h))
-//│ deforest > 	Select(Ref(ms,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(2))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ms,None)
-//│ deforest > 	Select(Ref(ms,None),Ident(h))
-//│ deforest > 	Select(Ref(ms,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(4))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ms,None)
-//│ deforest > 	Select(Ref(ms,None),Ident(h))
-//│ deforest > 	Select(Ref(ms,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(ms,None)
-//│ deforest > 	Select(Ref(ms,None),Ident(h))
-//│ deforest > 	Select(Ref(ms,None),Ident(t))
-//│ deforest > Call(Ref(member:Cons,Some(term:Cons/Cons)),List(Arg(None,Lit(IntLit(0))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
-//│ deforest > 	Ref(ms,None)
-//│ deforest > 	Select(Ref(ms,None),Ident(h))
-//│ deforest > 	Select(Ref(ms,None),Ident(t))
-//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
-//│ deforest > 	Ref(ms,None)
+//│ deforest > Cons⁰(3, tmp³⁰) ->
+//│ deforest > 	match: ms⁰
+//│ deforest > 	fields: ms⁰.h⁰
+//│ deforest > 	fields: ms⁰.t⁰
+//│ deforest > Cons⁰(2, tmp³¹) ->
+//│ deforest > 	match: ms⁰
+//│ deforest > 	fields: ms⁰.h⁰
+//│ deforest > 	fields: ms⁰.t⁰
+//│ deforest > Cons⁰(4, tmp³²) ->
+//│ deforest > 	match: ms⁰
+//│ deforest > 	fields: ms⁰.h⁰
+//│ deforest > 	fields: ms⁰.t⁰
+//│ deforest > Cons⁰(1, tmp³³) ->
+//│ deforest > 	match: ms⁰
+//│ deforest > 	fields: ms⁰.h⁰
+//│ deforest > 	fields: ms⁰.t⁰
+//│ deforest > Cons⁰(0, Nil⁰) ->
+//│ deforest > 	match: ms⁰
+//│ deforest > 	fields: ms⁰.h⁰
+//│ deforest > 	fields: ms⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ms⁰
 //│ deforest > <<< fusing <<<
 //│ = 4
 
@@ -742,18 +742,18 @@ fun h2() = g2()
 fun g2() = f()
 f
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(member:B,Some(object:B))
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(member:B,Some(object:B))
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(member:B,Some(object:B))
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(member:B,Some(object:B))
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(member:B,Some(object:B))
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(member:B,Some(object:B))
+//│ deforest > B⁰ ->
+//│ deforest > 	match: B⁰
+//│ deforest > B⁰ ->
+//│ deforest > 	match: B⁰
+//│ deforest > B⁰ ->
+//│ deforest > 	match: B⁰
+//│ deforest > B⁰ ->
+//│ deforest > 	match: B⁰
+//│ deforest > B⁰ ->
+//│ deforest > 	match: B⁰
+//│ deforest > B⁰ ->
+//│ deforest > 	match: B⁰
 //│ deforest > <<< fusing <<<
 //│ = fun f_9$f
 
@@ -799,66 +799,66 @@ fun f() =
   [g1(), g2(), g3(), g4(), h(B)]
 f
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
 //│ deforest > <<< fusing <<<
 //│ = fun f_17$f
 
@@ -873,22 +873,22 @@ fun f() =
   [g1(), g2()]
 f
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁶
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁶
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁶
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁶
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁶
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁶
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁶
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁶
 //│ deforest > <<< fusing <<<
 //│ = fun f_9$f
 
@@ -904,25 +904,25 @@ fun f() =
   [() => h(B), () => h(B), () => h(B), () => h(B), h(B)]
 f
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > Ref(member:B,Some(object:B)) ->
-//│ deforest > 	Ref(x,None)
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
 //│ deforest > <<< fusing <<<
 //│ = fun f_13$f

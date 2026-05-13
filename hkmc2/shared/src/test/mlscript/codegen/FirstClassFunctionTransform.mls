@@ -168,7 +168,7 @@ Foo(1).foo(x => x - 1)
 fun foo() = x => x
 foo()(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo³, tmp, lambda⁶, Function$⁶;
+//│ let foo³, baseCall, lambda⁶, Function$⁶;
 //│ define lambda⁶ as fun lambda⁷(x) {
 //│   return x
 //│ };
@@ -178,12 +178,12 @@ foo()(1)
 //│   }
 //│ };
 //│ define foo³ as fun foo⁴() {
-//│   let tmp1;
-//│   set tmp1 = new Function$⁷();
-//│   return tmp1
+//│   let tmp;
+//│   set tmp = new Function$⁷();
+//│   return tmp
 //│ };
-//│ set tmp = foo⁴();
-//│ tmp.call﹖(1)
+//│ set baseCall = foo⁴();
+//│ baseCall.call﹖(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 

@@ -31,15 +31,15 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
   
   extension (restFunId: RestFunId) def withoutInstId: MatchOrLabelId =
     restFunId match
-    case CtorDtorId(exprId, instId) => exprId
+    case ConcreteId(exprId, instId) => exprId
     case l: LabelId => l._1
   extension (restFunId: RestFunId) def getInstId = restFunId match
-    case CtorDtorId(exprId, instId) => instId
+    case ConcreteId(exprId, instId) => instId
     case l: LabelId => l._2
   extension (matchOrLabelId: MatchOrLabelId) def withInstId(instId: InstantiationId): RestFunId =
     matchOrLabelId match
     case l: LabelSymbol => l -> instId
-    case scrutId => CtorDtorId(scrutId.asInstanceOf[ResultId], instId)
+    case scrutId: ResultId => ConcreteId(scrutId, instId)
   extension (vs: Ls[VarSymbol]) def asParamList: ParamList =
     ParamList(ParamListFlags.empty, vs.map(Param.simple), N)
   extension (c: CtorCls) def ctorClsName: String = c match
@@ -242,7 +242,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         traverser.freeVars
         
     class FreeVarTraverser(ctx: collection.Set[Symbol], instId: InstantiationId) extends BlockTraverser:
-      extension (resId: ResultId) def toCtorDtorId = CtorDtorId(resId, instId)
+      extension (resId: ResultId) def concreteId = ConcreteId(resId, instId)
       val inCtx = MutSet.from[Symbol]:
         ctx
         ++ newPolyFnSyms.values.flatMap(_.values.unzip._1)
@@ -256,7 +256,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
       val freeVars = MutSet.empty[Symbol]
       
       private def handleTrackableSel(s: Result) =
-        val toBeSubstSymbol = branchSelSyms(s.uid.toCtorDtorId)
+        val toBeSubstSymbol = branchSelSyms(s.uid.concreteId)
         if !inCtx(toBeSubstSymbol) then freeVars.add(toBeSubstSymbol)
       
       override def applyValue(v: Value): Unit =
@@ -266,7 +266,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
       
       override def applyResult(r: Result): Unit =
         r match
-        case s@TrackableSelect(_, _, _) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
+        case s@TrackableSelect(_, _, _) if branchSelSyms.isDefinedAt(s.uid.concreteId) =>
           handleTrackableSel(s)
         case Lambda(params, body) =>
           for p <- params.allParams do inCtx.add(p.sym)
@@ -276,15 +276,15 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
       
       override def applyPath(p: Path): Unit =
         p match
-        case s@TrackableSelect(_, _, _) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
+        case s@TrackableSelect(_, _, _) if branchSelSyms.isDefinedAt(s.uid.concreteId) =>
           handleTrackableSel(s)
         case _ => super.applyPath(p)
       
       override def applyBlock(b: Block): Unit =
         b match
-        case m: Match if solver.finalDtorSrcs.isDefinedAt(m.scrut.uid.toCtorDtorId) =>
+        case m: Match if solver.finalDtorSrcs.isDefinedAt(m.scrut.uid.concreteId) =>
           for
-            fv <- fvsForDtor(m.scrut.uid.toCtorDtorId)
+            fv <- fvsForDtor(m.scrut.uid.concreteId)
             if !inCtx(fv)
           do freeVars.add(fv)
           super.applyPath(m.scrut)
@@ -358,11 +358,11 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
     def mkReturnCall(target: (BlockMemberSymbol, TermSymbol), args: Ls[Symbol]): Block =
       Return(Call(
         Value.Ref(target._1, S(target._2)),
-        args.map(a => Arg(N, a.toValueRef))
+        args.map(a => Arg(N, a.toValueRef)) ne_:: Nil
       )(true, false, false), false)
     
     class Rewriter(instId: InstantiationId) extends BlockTransformer(_symSubst):
-      extension (resId: ResultId) def toCtorDtorId = CtorDtorId(resId, instId)
+      extension (resId: ResultId) def concreteId = ConcreteId(resId, instId)
       
       private def ctorLamFvs(ctorId: CtorDtorId): Ls[VarSymbol] =
         // only for ctors that are fused with a match
@@ -382,9 +382,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
       override def applyResult(r: Result)(k: Result => Block): Block =
         r match
         case s@TrackableSelect(from, _, _) =>
-          if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) then
-            k(Value.Ref(branchSelSyms(s.uid.toCtorDtorId)))
-          else if solver.finalDtorSrcs.contains(s.uid.toCtorDtorId) then
+          if branchSelSyms.isDefinedAt(s.uid.concreteId) then
+            k(Value.Ref(branchSelSyms(s.uid.concreteId)))
+          else if solver.finalDtorSrcs.contains(s.uid.concreteId) then
             applyPath(from)(k)
           else
             super.applyResult(r)(k)
@@ -396,21 +396,21 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
               new TempSymbol(N, s"${clsNme}_${f.fieldName}")
           end mkCtorFieldSyms
           
-          solver.finalCtorDests.get(ctor.uid.toCtorDtorId) match
+          solver.finalCtorDests.get(ctor.uid.concreteId) match
           case None => super.applyResult(ctor)(k)
           case Some(FinalDestSel(_, field)) =>
-            val ctorInfo = solver.fusingCtorInfo(ctor.uid.toCtorDtorId)
+            val ctorInfo = solver.fusingCtorInfo(ctor.uid.concreteId)
             val idx = ctorInfo.args.unzip._1.indexOf(field)
-            val fieldSyms = mkCtorFieldSyms(ctor.uid.toCtorDtorId)
+            val fieldSyms = mkCtorFieldSyms(ctor.uid.concreteId)
             args.zip(fieldSyms).foldRight(k(Value.Ref(fieldSyms(idx)))):
               case (Arg(N, a) -> s, rest) =>
                 applyPath(a): fusedField =>
                   Scoped(Set.single(s), Assign(s, fusedField, rest))
               case _ => TODO("spread args are not supported")
           case Some(_: FinalDestMatch) =>
-            val fieldSyms = mkCtorFieldSyms(ctor.uid.toCtorDtorId)
-            val (branchBms, branchTermSym) = branchFunSyms(ctorWhichBranch(ctor.uid.toCtorDtorId))
-            val ctorLamParams = ctorLamFvs(ctor.uid.toCtorDtorId)
+            val fieldSyms = mkCtorFieldSyms(ctor.uid.concreteId)
+            val (branchBms, branchTermSym) = branchFunSyms(ctorWhichBranch(ctor.uid.concreteId))
+            val ctorLamParams = ctorLamFvs(ctor.uid.concreteId)
             val callBranchFun =
               Lambda(
                 ctorLamParams.asParamList,
@@ -427,10 +427,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         case ref@FunRef(f) if newPolyFnSyms.isDefinedAt(newRefId(ref.uid, f)) =>
           val (bms, tSym) = newPolyFnSyms(newRefId(ref.uid, f))(f)
           k(Value.Ref(bms, S(tSym)))
-        case ctor@CtorCall(_, args) if solver.finalCtorDests.isDefinedAt(ctor.uid.toCtorDtorId) =>
+        case ctor@CtorCall(_, args) if solver.finalCtorDests.isDefinedAt(ctor.uid.concreteId) =>
           assert(args.isEmpty)
-          val (branchBms, branchTermSym) = branchFunSyms(ctorWhichBranch(ctor.uid.toCtorDtorId))
-          val ctorLamParams = ctorLamFvs(ctor.uid.toCtorDtorId)
+          val (branchBms, branchTermSym) = branchFunSyms(ctorWhichBranch(ctor.uid.concreteId))
+          val ctorLamParams = ctorLamFvs(ctor.uid.concreteId)
           val lambdaSym = new TempSymbol(N, "deforest$lam")
           Scoped(
             Set.single(lambdaSym),
@@ -442,9 +442,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
               k(Value.Ref(lambdaSym, N)))
           )
         case s@TrackableSelect(from, _, _) =>
-          if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) then
-            k(Value.Ref(branchSelSyms(s.uid.toCtorDtorId)))
-          else if solver.finalDtorSrcs.contains(s.uid.toCtorDtorId) then
+          if branchSelSyms.isDefinedAt(s.uid.concreteId) then
+            k(Value.Ref(branchSelSyms(s.uid.concreteId)))
+          else if solver.finalDtorSrcs.contains(s.uid.concreteId) then
             applyPath(from)(k)
           else
             super.applyPath(s)(k)
@@ -452,11 +452,11 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
       
       override def applyBlock(b: Block): Block =
         b match
-        case m@Match(scrut, _, _, _) if solver.finalDtorSrcs.isDefinedAt(scrut.uid.toCtorDtorId) =>
-          val callWithFvs = dtorBranchFnFvs(scrut.uid.toCtorDtorId)
+        case m@Match(scrut, _, _, _) if solver.finalDtorSrcs.isDefinedAt(scrut.uid.concreteId) =>
+          val callWithFvs = dtorBranchFnFvs(scrut.uid.concreteId)
           applyPath(scrut): newScrut =>
             Return(
-              Call(newScrut, callWithFvs.map(s => Arg(N, s.toValueRef)))(true, false, false),
+              Call(newScrut, callWithFvs.map(s => Arg(N, s.toValueRef)) ne_:: Nil)(true, false, false),
               false)
         case Break(label) =>
           val labelRestFunId = label.withInstId(instId)

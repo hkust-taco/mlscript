@@ -205,6 +205,35 @@ fun f(x) =
     @tailcall f(x)
   @tailcall g()
 
+// Ensure y is set using x_tmp and x is assigned to x_tmp
+:sir
+fun f(x, y) =
+  if x == 0 then 0
+  else
+    f(x - 1, x)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f⁴;
+//│ define f⁴ as fun f⁵(x, y) {
+//│   loop loopLabel:
+//│     let scrut, tmp;
+//│     set scrut = Predef⁰.equals⁰(x, 0);
+//│     match scrut
+//│       true =>
+//│         return 0
+//│       else
+//│         let x_tmp;
+//│         set tmp = -⁰(x, 1);
+//│         set x_tmp = x;
+//│         set x = tmp;
+//│         set y = x_tmp;
+//│         continue loopLabel
+//│     end
+//│   end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
 // Make sure variables accessed by nested functions or classes are re-defined in a new scope in the while loop
 :expect 2
 let lam = () => 0
@@ -255,10 +284,10 @@ module A with
     @tailcall g(x - 1)
 A.f(10000)
 //│ ╔══[COMPILATION ERROR] This tail call exits the current scope and is not optimized.
-//│ ║  l.254: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
+//│ ║  l.283: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
 //│ ╙──       	                                              ^^^^
 //│ ╔══[COMPILATION ERROR] This tail call exits the current scope and is not optimized.
-//│ ║  l.255: 	    @tailcall g(x - 1)
+//│ ║  l.284: 	    @tailcall g(x - 1)
 //│ ╙──       	              ^^^^^^^^
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
@@ -285,12 +314,12 @@ class A with
   fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 (new A).f(10)
 //│ ╔══[COMPILATION ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.284: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.313: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	                                                      ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Class methods may not yet be marked @tailrec.
-//│ ║  l.284: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.313: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	               ^
 //│ ╔══[COMPILATION ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.285: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
+//│ ║  l.314: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 //│ ╙──       	                                             ^^^^^^^^
 //│ = 0

@@ -52,12 +52,12 @@ f(2, 3, 4)
 fun f2(x, y) = x + y
 id(f2)(2)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let f21, tmp;
+//│ let f21, baseCall;
 //│ f21 = function f2(x1, y1) {
 //│   return x1 + y1
 //│ };
-//│ tmp = Predef.id(f21);
-//│ block$res5 = runtime.safeCall(tmp(2));
+//│ baseCall = Predef.id(f21);
+//│ block$res5 = runtime.safeCall(baseCall(2));
 //│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
@@ -66,8 +66,8 @@ id(f2)(2)
 :re
 id(f)(2)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let tmp1;
-//│ tmp1 = runtime.checkCall(Predef.id(f1)); block$res6 = runtime.safeCall(tmp1(2)); undefined
+//│ let baseCall1;
+//│ baseCall1 = runtime.checkCall(Predef.id(f1)); block$res6 = runtime.safeCall(baseCall1(2)); undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
@@ -77,18 +77,18 @@ id(f)(2)
 fun f(x)(y, z) = x + y + z
 id(f)(3)(4)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let f3, tmp2, tmp3;
+//│ let f3, baseCall2, callPrefix;
 //│ f3 = function f(x1) {
 //│   runtime.checkArgs("f", 1, true, arguments.length);
 //│   return (y1, z) => {
-//│     let tmp4;
-//│     tmp4 = x1 + y1;
-//│     return tmp4 + z
+//│     let tmp;
+//│     tmp = x1 + y1;
+//│     return tmp + z
 //│   }
 //│ };
-//│ tmp2 = runtime.checkCall(Predef.id(f3));
-//│ tmp3 = runtime.safeCall(tmp2(3));
-//│ block$res7 = runtime.safeCall(tmp3(4));
+//│ baseCall2 = runtime.checkCall(Predef.id(f3));
+//│ callPrefix = runtime.safeCall(baseCall2(3));
+//│ block$res7 = runtime.safeCall(callPrefix(4));
 //│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
@@ -131,7 +131,7 @@ data class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
 id(Cls(1, 2)).f(3, 4)(5)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let Cls5, tmp8, tmp9, tmp10;
+//│ let Cls5, tmp4, tmp5, callPrefix1;
 //│ Cls5 = function Cls(x1, y1) {
 //│   return globalThis.Object.freeze(new Cls.class(x1, y1));
 //│ };
@@ -147,21 +147,21 @@ id(Cls(1, 2)).f(3, 4)(5)
 //│   f(z, p) {
 //│     runtime.checkArgs("f", 2, true, arguments.length);
 //│     return (q, s) => {
-//│       let tmp11, tmp12, tmp13, tmp14;
-//│       tmp11 = this.x + this.y;
-//│       tmp12 = tmp11 + z;
-//│       tmp13 = tmp12 + p;
-//│       tmp14 = tmp13 + q;
-//│       return tmp14 + s
+//│       let tmp6, tmp7, tmp8, tmp9;
+//│       tmp6 = this.x + this.y;
+//│       tmp7 = tmp6 + z;
+//│       tmp8 = tmp7 + p;
+//│       tmp9 = tmp8 + q;
+//│       return tmp9 + s
 //│     }
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Cls", ["x", "y"]]; 
 //│ });
-//│ tmp8 = runtime.checkCall(Cls5(1, 2));
-//│ tmp9 = runtime.checkCall(Predef.id(tmp8));
-//│ tmp10 = runtime.safeCall(tmp9.f(3, 4));
-//│ block$res12 = runtime.safeCall(tmp10(5));
+//│ tmp4 = runtime.checkCall(Cls5(1, 2));
+//│ tmp5 = runtime.checkCall(Predef.id(tmp4));
+//│ callPrefix1 = runtime.safeCall(tmp5.f(3, 4));
+//│ block$res12 = runtime.safeCall(callPrefix1(5));
 //│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
@@ -196,10 +196,10 @@ if M.A(1).y is
   x and x == 1 then x
   else 0
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let scrut, x1, scrut1, tmp11, selRes1;
-//│ tmp11 = runtime.checkCall(M1.A(1));
-//│ selRes1 = tmp11.y;
-//│ tmp11.y$__checkNotMethod;
+//│ let scrut, x1, scrut1, tmp6, selRes1;
+//│ tmp6 = runtime.checkCall(M1.A(1));
+//│ selRes1 = tmp6.y;
+//│ tmp6.y$__checkNotMethod;
 //│ if (selRes1 === undefined) {
 //│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"))
 //│ }
@@ -238,7 +238,7 @@ M.A(2).y > 1
 // :ssjs
 :re
 M.A(1).g(0)
-//│ ═══[RUNTIME ERROR] TypeError: tmp16.g is not a function
+//│ ═══[RUNTIME ERROR] TypeError: tmp11.g is not a function
 
 
 

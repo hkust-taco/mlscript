@@ -1,0 +1,95 @@
+:js
+
+
+class Foo(val x)(val y)
+
+
+:sjs
+class Bar(val a)(val d) extends Foo(a)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Bar1;
+//│ Bar1 = function Bar(a) {
+//│   return (d) => {
+//│     return globalThis.Object.freeze(new Bar.class(a)(d));
+//│   }
+//│ };
+//│ (class Bar extends Foo1.class {
+//│   static {
+//│     Bar1.class = this
+//│   }
+//│   constructor(a) {
+//│     return (d) => {
+//│       super(a);
+//│       this.a = a;
+//│       this.d = d;
+//│       return this;
+//│     }
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar", ["a"]]; 
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+let b = Bar(123)(1234)
+//│ b = fun { a: 123, d: 1234 }
+
+b.a
+//│ = 123
+
+let c = b(100)
+//│ c = Bar(undefined)
+
+:fixme
+c.a
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
+
+:fixme
+Bar(123)(1234)(100).a
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
+
+[c.x, c.y]
+//│ = [123, 100]
+
+let b0 = Bar
+//│ b0 = fun Bar { class: class Bar }
+
+let b1 = b0(123)
+//│ b1 = fun
+
+:re
+b1.a
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
+
+let b = b1(1234)
+//│ b = fun { a: 123, d: 1234 }
+
+b.a
+//│ = 123
+
+let c = b(100)
+//│ c = Bar(undefined)
+
+:fixme
+c.a
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
+
+[c.x, c.y]
+//│ = [123, 100]
+
+
+:todo
+class Baz(a)(val d) extends Foo(a)(a + 1)
+//│ ╔══[COMPILATION ERROR] Extending a class with multiple parameter lists is not supported
+//│ ║  l.81: 	class Baz(a)(val d) extends Foo(a)(a + 1)
+//│ ╙──      	                            ^^^^^^^^^^^^^
+
+let b = Baz(123)(1234)
+//│ b = fun { d: 1234 }
+
+let c = b(100)
+//│ c = Baz(_)
+
+[c.x, c.y]
+//│ = [123, 100]
+
+

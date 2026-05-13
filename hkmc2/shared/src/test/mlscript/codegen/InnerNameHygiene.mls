@@ -66,12 +66,7 @@ fun g() =
 //│ };
 //│ g2 = function g() {
 //│   let h1;
-//│   h1 = function h1(x) {
-//│     let tmp1, tmp2;
-//│     tmp1 = h(x);
-//│     tmp2 = h1(x);
-//│     return tmp1 + tmp2
-//│   };
+//│   h1 = function h1(x) { let tmp, tmp1; tmp = h(x); tmp1 = h1(x); return tmp + tmp1 };
 //│   return h1
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

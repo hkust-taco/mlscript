@@ -137,19 +137,26 @@ class BlockTransformer(subst: SymbolSubst):
   
   def applyArgs(args: List[Arg])(k: List[Arg] => Block): Block =
     applyListOf(args, applyArg(_)(_))(k)
+
+  def applyArgss(argss: NELs[List[Arg]])(k: NELs[List[Arg]] => Block): Block =
+    applyListOf(argss, applyArgs(_)(_)): newArgss =>
+      k(newArgss.ne_!)
+  
+  def applyArgss(argss: List[List[Arg]])(k: List[List[Arg]] => Block): Block =
+    applyListOf(argss, applyArgs(_)(_))(k)
   
   def applyResult(r: Result)(k: Result => Block): Block =
     r match
-    case r @ Call(fun, args) =>
+    case r @ Call(fun, argss) =>
       applyPath(fun): fun2 =>
-        applyArgs(args): args2 =>
-          k(if (fun2 is fun) && (args2 is args) then r
-            else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects, r.explicitTailCall).withLocOf(r))
-    case Instantiate(mut, cls, args) =>
+        applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
+          k(if (fun2 is fun) && (argss2 is argss) then r
+            else Call(fun2, argss2.ne_!)(r.isMlsFun, r.mayRaiseEffects, r.explicitTailCall).withLocOf(r))
+    case Instantiate(mut, cls, argss) =>
       applyPath(cls): cls2 =>
-        applyArgs(args): args2 =>
-          k(if (cls2 is cls) && (args2 is args) then r
-            else Instantiate(mut, cls2, args2).withLocOf(r))
+        applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
+          k(if (cls2 is cls) && (argss2 is argss) then r
+            else Instantiate(mut, cls2, argss2).withLocOf(r))
     case l: Lambda => k(applyLam(l))
     case Tuple(mut, elems) =>
       applyArgs(elems): elems2 =>

@@ -176,10 +176,10 @@ data class Pair(a, b)
 fun fstConfig(p) = if p is Pair(x, y) then x
 fstConfig(Pair(1, 2))
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Pair,Some(term:Pair/Pair)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))))) ->
-//│ deforest > 	Ref(p,None)
-//│ deforest > 	Select(Ref(p,None),Ident(a))
-//│ deforest > 	Select(Ref(p,None),Ident(b))
+//│ deforest > Pair⁰(1, 2) ->
+//│ deforest > 	match: p⁰
+//│ deforest > 	fields: p⁰.a⁰
+//│ deforest > 	fields: p⁰.b⁰
 //│ deforest > <<< fusing <<<
 //│ = 1
 
@@ -188,3 +188,22 @@ fstConfig(Pair(1, 2))
 fun fstConfig(p) = if p is Pair(x, y) then x
 fstConfig(Pair(1, 2))
 //│ = 1
+
+
+#config(deforest: Some(Deforest(debug: false, logNonAffine: true)))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > <<< non-affine syms <<<
+
+fun fst(p) = if p is Pair(x, y) then x
+fun applyTwice(f, x) = f(x) + f(x)
+applyTwice(fst, Pair(1, 2))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:fst,0)_for_fst@36
+//│ deforest > f_for_applyTwice@25
+//│ deforest > f_for_applyTwice@58
+//│ deforest > fst_for_fst@33
+//│ deforest > tmp@1
+//│ deforest > x_for_applyTwice@24
+//│ deforest > x_for_applyTwice@57
+//│ deforest > <<< non-affine syms <<<
+//│ = 2

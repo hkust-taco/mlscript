@@ -32,12 +32,13 @@ x + 1
 //│       res = Call:
 //│         fun = Ref:
 //│           l = builtin:+⁰
-//│         args = Ls of 
-//│           Arg:
-//│             value = Ref:
-//│               l = x⁰
-//│           Arg:
-//│             value = Lit of IntLit of 1
+//│         argss = Ls of 
+//│           Ls of 
+//│             Arg:
+//│               value = Ref:
+//│                 l = x⁰
+//│             Arg:
+//│               value = Lit of IntLit of 1
 //│       implct = true
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let x⁰; set x⁰ = 1; +⁰(x⁰, 1)

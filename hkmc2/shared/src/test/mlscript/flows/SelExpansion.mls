@@ -64,7 +64,7 @@ f.foo
 //│     f⁰  <~  Foo()
 //│     f⁰  ~>  {a: ⋅a⁰}  {a: ⋅a¹}  {foo: ⋅foo⁰}
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ Foo1.foo(f)
+//│ runtime.safeCall(Foo1.foo(f))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 123
 
@@ -230,7 +230,7 @@ new AA.BB.CC().getX
 //│ where
 //│     
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp4; tmp4 = globalThis.Object.freeze(new AA1.BB.CC()); AA1.BB.CC.getX(tmp4)
+//│ let tmp4; tmp4 = globalThis.Object.freeze(new AA1.BB.CC()); runtime.safeCall(AA1.BB.CC.getX(tmp4))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 

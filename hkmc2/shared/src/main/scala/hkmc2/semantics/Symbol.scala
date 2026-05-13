@@ -325,6 +325,15 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   
   def subst(using sub: SymbolSubst): TermSymbol = sub.mapTermSym(this)
 
+
+class ClassCtorSymbol(
+  override val k: syntax.Fun.type,
+  override val owner: S[ClassSymbol],
+  id: Tree.Ident
+)(using State) extends TermSymbol(k, owner, id):
+  override def subst(using sub: SymbolSubst): ClassCtorSymbol = sub.mapClassCtorSym(this)
+
+
 object TermSymbol:
   def fromFunBms(b: BlockMemberSymbol, owner: Opt[InnerSymbol])(using State) =
     TermSymbol(syntax.Fun, owner, Tree.Ident(b.nme))
@@ -411,12 +420,12 @@ sealed trait InnerSymbol(using State) extends Symbol:
   // Ideally, InnerSymbol should extend DefinitionSymbol, but that requires us to specify the type
   // parameter to all occurrences of InnerSymbol. So, we use a self-type annotation instead to
   // ensure that any implementation of InnerSymbol is also a DefinitionSymbol.
-  self: DefinitionSymbol[?] =>
+  self: DefinitionSymbol[? <: ClassLikeDef] =>
   val privatesScope: Scope = Scope.empty(Scope.Cfg.default) // * Scope for private members of this symbol
   val thisProxy: TempSymbol = TempSymbol(N, s"this$$$nme")
   def subst(using SymbolSubst): InnerSymbol
-  def asDefnSym: DefinitionSymbol[?] & InnerSymbol = this match
-    case d: DefinitionSymbol[?] => d
+  def asDefnSym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol = this match
+    case d: DefinitionSymbol[? <: ClassLikeDef] => d
 
 trait IdentifiedSymbol extends Symbol:
   val id: Tree.Ident

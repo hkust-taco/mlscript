@@ -42,12 +42,12 @@ fun f(a) = if a is
   else D
 (x => 0)(f(f(C)))
 //│ deforest > >>> fusing >>>
-//│ deforest > Ref(member:C,Some(object:C)) ->
-//│ deforest > 	Ref(a,None)
-//│ deforest > Ref(member:D,Some(object:D)) ->
-//│ deforest > 	Ref(a,None)
-//│ deforest > Ref(member:C,Some(object:C)) ->
-//│ deforest > 	Ref(a,None)
+//│ deforest > C⁰ ->
+//│ deforest > 	match: a⁰
+//│ deforest > D⁰ ->
+//│ deforest > 	match: a⁰
+//│ deforest > C⁰ ->
+//│ deforest > 	match: a⁰
 //│ deforest > <<< fusing <<<
 //│ = 0
 
@@ -76,12 +76,12 @@ fun modSome(x, m) = if x is
   None then None
 modSome(Some(17), 3)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Some,Some(term:Some/Some)),List(Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
-//│ deforest > Call(Ref(member:Some,Some(term:Some/Some)),List(Arg(None,Lit(IntLit(17))))) ->
-//│ deforest > 	Ref(x,None)
-//│ deforest > 	Select(Ref(x,None),Ident(x))
+//│ deforest > Some⁰(tmp⁰) ->
+//│ deforest > 	match: x⁰
+//│ deforest > 	fields: x⁰.x¹
+//│ deforest > Some⁰(17) ->
+//│ deforest > 	match: x⁰
+//│ deforest > 	fields: x⁰.x¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let modSome⁰, tmp, modSome_12$modSome⁰, modSome_12$x_Some⁰, modSome_12$x_rest⁰, Some_x;
@@ -114,7 +114,7 @@ modSome(Some(17), 3)
 //│     let n, scrut, arg$Some$0$, tmp1, tmp2;
 //│     match x
 //│       Some¹ =>
-//│         set arg$Some$0$ = x.x⁰;
+//│         set arg$Some$0$ = x.x¹;
 //│         set n = arg$Some$0$;
 //│         set scrut = >=⁰(n, m);
 //│         match scrut
@@ -163,13 +163,13 @@ fun zipWith(xsys, f) = if xsys is
   [Nil, Nil] then Nil
 zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ deforest > >>> fusing >>>
-//│ deforest > Tuple(false,List(Arg(None,Ref(tx,None)), Arg(None,Ref(ty,None)))) ->
-//│ deforest > 	Ref(xsys,None)
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys,None)), Arg(None,Lit(IntLit(0)))))
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys,None)), Arg(None,Lit(IntLit(1)))))
-//│ deforest > Tuple(false,List(Arg(None,Ref(tmp:tmp,None)), Arg(None,Ref(tmp:tmp,None)))) ->
-//│ deforest > 	Ref(xsys,None)
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys,None)), Arg(None,Lit(IntLit(0)))))
-//│ deforest > 	Call(Select(Select(Ref(tmp:runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(xsys,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > [tx⁰, ty⁰] ->
+//│ deforest > 	match: xsys⁰
+//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(xsys⁰, 0)
+//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(xsys⁰, 1)
+//│ deforest > [tmp¹, tmp²] ->
+//│ deforest > 	match: xsys⁰
+//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(xsys⁰, 0)
+//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(xsys⁰, 1)
 //│ deforest > <<< fusing <<<
 //│ = Nil
