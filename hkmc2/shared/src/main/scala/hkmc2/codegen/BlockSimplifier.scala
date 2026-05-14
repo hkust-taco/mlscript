@@ -601,18 +601,18 @@ class BlockSimplifier
           var curAssigned = oldAssigned
           
           val arms2 = if gaveUp then arms else arms.filterConserve: (pat, body) =>
-            @inline def regChange =
-              registerChange(s"Arm ${pat.showDbg} is unreachable because")
+            @inline def regChange(reason: Str) =
+              registerChange(s"Arm ${pat.showDbg} is unreachable. Reason: ${reason}")
               false
             pat match
             case Case.Lit(lit) => 
-              shapes.contains(lit) && { shapes -= lit; true } || regChange
+              shapes.contains(lit) && { shapes -= lit; true } || regChange("Impossible literal")
             case Case.Cls(sym, _) =>
               
               // FIXME: take inheritance into account
               // FIXME: take lit <: virual-cls into account (such as true <: Bool)
               
-              shapes.contains(sym) && { shapes -= sym; true } || regChange
+              shapes.contains(sym) && { shapes -= sym; true } || regChange("Impossible instanceof")
             case _ => true
           
           if !gaveUp then log(s"Filtered arms: ${arms2.map(_._1)}")
