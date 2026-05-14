@@ -1,38 +1,40 @@
 :js
-:ignore
 
 
-// TODO: would be nice to be able to define our own labels with the following syntax
+do exit:
+  if true do exit.break 42
+  0
 
 
-let x = 0
-//│ x = 0
-
-do label:
-  if x == 0 do label.break 42
-  print("Not zero!")
-  x
-//│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.12: 	  if x == 0 do label.break 42
-//│ ╙──      	                           ^^
-//│ ╔══[COMPILATION ERROR] Name not found: label
-//│ ║  l.12: 	  if x == 0 do label.break 42
-//│ ╙──      	               ^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+let i = 0 in do loop:
+  if i >= 3 do loop.break i
+  set i += 1
+  loop.continue
 
 
-let i = 10 in do
-  label1:
-    if i <= 0 do label1.break ()
-    print("Still > 0:", i)
-    set i -= 1
-  label2: // this is implicitly nested in label1
-    label1.continue
-//│ ╔══[COMPILATION ERROR] Name not found: label1
-//│ ║  l.26: 	    if i <= 0 do label1.break ()
-//│ ╙──      	                 ^^^^^^
-//│ > Still > 0: 10
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'continue' yielded 'undefined'
+let i = 0 in do outer:
+  do inner:
+    if i >= 4 do outer.break i
+    set i += 1
+    outer.continue
 
+
+:e
+missing.break 1
+
+
+:e
+do lbl:
+  lbl.continue(1)
+
+
+:e
+do lbl:
+  lbl.break(1, 2)
+
+
+:e
+lbl:
+  lbl.break 1
 
 

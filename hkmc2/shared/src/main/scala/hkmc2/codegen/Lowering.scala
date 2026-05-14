@@ -613,6 +613,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       returnedTerm(res)
     case st.Throw(res) =>
       term(res)(Thrw)
+    case st.Label(label, result, body) =>
+      loweringCtx.collectScopedSyms(label, result)
+      Label(
+        label,
+        loop = true,
+        term_nonTail(body)(r => Assign(result, r, Break(label))),
+        k(Value.Ref(result))
+      )
+    case st.Break(label, result, value) =>
+      value match
+        case S(v) => term(v)(r => Assign(result, r, Break(label)))
+        case N => Assign(result, Value.Lit(Tree.UnitLit(false)), Break(label))
+    case st.Continue(label) =>
+      Continue(label)
     case st.Asc(lhs, rhs) =>
       term(lhs, inStmtPos = inStmtPos)(k)
     case st.Tup(fs) =>
@@ -1451,4 +1465,3 @@ object MergeMatchArmTransformer extends BlockTransformer(SymbolSubst.Id):
               dfltRewritten.fold(restRewritten)(Begin(_, restRewritten)) |> some, rest)
       case _ => m
     case b => b
-

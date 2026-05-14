@@ -75,17 +75,18 @@ object Elaborator:
       parent: Opt[Ctx],
       env: Map[Str, Ctx.Elem],
       mode: Mode,
+      labels: Map[Str, LabelSymbol -> TempSymbol],
   ):
     
     override def toString: Str = s"${parent.fold("")(_.toString+"/")}${outer.showDbg}"
     
     lazy val scope: SrcScope = SrcScope(outer, parent.map(_.scope))
     
-    def +(local: Str -> Symbol): Ctx = copy(outer, env = env + local.mapSecond(Ctx.RefElem(_)))
+    def +(local: Str -> Symbol): Ctx = copy(env = env + local.mapSecond(Ctx.RefElem(_)))
     def ++(locals: IterableOnce[Str -> Symbol]): Ctx =
-      copy(outer, env = env ++ locals.mapValues(Ctx.RefElem(_)))
+      copy(env = env ++ locals.mapValues(Ctx.RefElem(_)))
     def elem_++(locals: IterableOnce[Str -> Ctx.Elem]): Ctx =
-      copy(outer, env = env ++ locals.iterator.filter: kv =>
+      copy(env = env ++ locals.iterator.filter: kv =>
         // * Imports should not shadow symbols defined in the same scope;
         // * but they should be allowed to shadow previous imports.
         env.get(kv._1).forall(_.isImport))
@@ -99,12 +100,17 @@ object Elaborator:
           nme -> elem
       )
     
-    def nest(outerCtx: OuterCtx): Ctx = Ctx(outerCtx, Some(this), Map.empty, mode)
+    def withLabel(label: Str, labelSym: LabelSymbol, resultSym: TempSymbol): Ctx =
+      copy(labels = labels + (label -> (labelSym -> resultSym)))
+    
+    def nest(outerCtx: OuterCtx): Ctx = Ctx(outerCtx, Some(this), Map.empty, mode, Map.empty)
     def nestLocal(nameHint: Str): Ctx = nest(OuterCtx.LocalScope(nameHint))
     def nestInner(inner: InnerSymbol): Ctx = nest(OuterCtx.InnerScope(inner))
     
     def get(name: Str): Opt[Ctx.Elem] =
       env.get(name).orElse(parent.flatMap(_.get(name)))
+    def getLabel(name: Str): Opt[LabelSymbol -> TempSymbol] =
+      labels.get(name).orElse(parent.flatMap(_.getLabel(name)))
     def getOuter: Opt[InnerSymbol] = outer.inner.orElse(parent.flatMap(_.getOuter))
     def getNonLocalRetHandler: Opt[TempSymbol] = outer match
       case OuterCtx.Function(sym) => S(sym)
@@ -243,7 +249,7 @@ object Elaborator:
           new Ident(nme).withLocOf(id))(symOpt, FlowSymbol.synthSel(nme), N, S(summon))
       def symbol = symOpt
     given Conversion[Symbol, Elem] = RefElem(_)
-    val empty: Ctx = Ctx(OuterCtx.LocalScope("top-level"), N, Map.empty, Mode.Full)
+    val empty: Ctx = Ctx(OuterCtx.LocalScope("top-level"), N, Map.empty, Mode.Full, Map.empty)
     
   enum Mode:
     case Full
@@ -630,6 +636,30 @@ extends Importer with ucs.SplitElaborator:
         case (acc, rhs) =>
           rhs.splitOn(acc)
       subterm(tree)
+    case tree @ App(Sel(labelId @ Ident(labelName), nme @ Ident("break")), Tup(args)) =>
+      ctx.getLabel(labelName) match
+      case S((labelSym, resultSym)) =>
+        val value = args match
+          case Nil => N
+          case arg :: Nil => S(subterm(arg))
+          case _ =>
+            raise(ErrorReport(msg"Label break expects at most one argument." -> tree.toLoc :: Nil))
+            N
+        Term.Break(labelSym, resultSym, value)
+      case N =>
+        raise(ErrorReport(msg"Unknown label: ${labelName}" -> labelId.toLoc :: Nil))
+        Term.Error
+    case tree @ App(Sel(labelId @ Ident(labelName), nme @ Ident("continue")), Tup(args)) =>
+      ctx.getLabel(labelName) match
+      case S((labelSym, _)) =>
+        if args.nonEmpty then
+          raise(ErrorReport(msg"Label continue does not take arguments." -> tree.toLoc :: Nil))
+          Term.Error
+        else
+          Term.Continue(labelSym)
+      case N =>
+        raise(ErrorReport(msg"Unknown label: ${labelName}" -> labelId.toLoc :: Nil))
+        Term.Error
     case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol.app()
       val lt = subterm(lhs, inAppPrefix = true)
@@ -648,6 +678,20 @@ extends Importer with ucs.SplitElaborator:
       Term.SynthSel(preTrm, nme)(sym, FlowSymbol.synthSel(nme.name), N, S(summon)).withLocOf(tree)
     case Sel(Empty(), nme) =>
       Term.LeadingDotSel(nme)(S(summon)).withLocOf(tree)
+    case Sel(labelId @ Ident(labelName), nme @ Ident("break")) =>
+      ctx.getLabel(labelName) match
+      case S((labelSym, resultSym)) =>
+        Term.Break(labelSym, resultSym, N)
+      case N =>
+        raise(ErrorReport(msg"Unknown label: ${labelName}" -> labelId.toLoc :: Nil))
+        Term.Error
+    case Sel(labelId @ Ident(labelName), nme @ Ident("continue")) =>
+      ctx.getLabel(labelName) match
+      case S((labelSym, _)) =>
+        Term.Continue(labelSym)
+      case N =>
+        raise(ErrorReport(msg"Unknown label: ${labelName}" -> labelId.toLoc :: Nil))
+        Term.Error
     case Sel(pre, nme) =>
       val preTrm = subterm(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
@@ -799,6 +843,12 @@ extends Importer with ucs.SplitElaborator:
         Term.Error
     case PrefixApp(kw @ Keywrd(Keyword.`throw`), body) =>
       Term.Throw(subterm(body)).mkLocWith(kw)
+    case PrefixApp(kw @ Keywrd(Keyword.`do`), InfixApp(labelId: Ident, Keywrd(Keyword.`:`), body)) =>
+      val labelSym = new LabelSymbol(N, labelId.name)
+      val resultSym = new TempSymbol(N, s"${labelId.name}$result")
+      val bodyTerm = ctx.withLabel(labelId.name, labelSym, resultSym).givenIn:
+        subterm(body)
+      Term.Label(labelSym, resultSym, bodyTerm).mkLocWith(kw, labelId)
     case PrefixApp(kw @ Keywrd(Keyword.`do`), body) =>
       Blk(subterm(body) :: Nil, unit).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`drop`), body) =>
