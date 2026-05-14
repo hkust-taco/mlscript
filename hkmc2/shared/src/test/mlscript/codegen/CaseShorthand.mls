@@ -7,7 +7,7 @@ case x then x
 :sjs
 case { x then x }
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda1; lambda1 = (undefined, function (caseScrut) { let x; x = caseScrut; return x }); lambda1
+//│ let lambda1; lambda1 = (undefined, function (caseScrut) { return caseScrut }); lambda1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -87,8 +87,8 @@ case
   _ then false
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda11;
-//│ lambda11 = (undefined, function (caseScrut1) {
-//│   if (caseScrut1 === 0) { return true }
+//│ lambda11 = (undefined, function (caseScrut) {
+//│   if (caseScrut === 0) { return true }
 //│   return false;
 //│ });
 //│ lambda11
@@ -104,10 +104,10 @@ val isDefined = case
   None then false
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let isDefined, lambda12;
-//│ lambda12 = (undefined, function (caseScrut1) {
-//│   if (caseScrut1 instanceof Some1.class) {
+//│ lambda12 = (undefined, function (caseScrut) {
+//│   if (caseScrut instanceof Some1.class) {
 //│     return true
-//│   } else if (caseScrut1 instanceof None1.class) {
+//│   } else if (caseScrut instanceof None1.class) {
 //│     return false
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));

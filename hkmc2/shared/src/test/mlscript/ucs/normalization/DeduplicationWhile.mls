@@ -15,13 +15,9 @@ while true and true and false do print(1) else print(2)
 //│ let lambda1;
 //│ lambda1 = (undefined, function () {
 //│   lbl: while (true) {
-//│     let scrut, scrut1, scrut2;
-//│     scrut = true;
-//│     if (scrut === true) {
-//│       scrut2 = true;
-//│       if (scrut2 === true) {
-//│         scrut1 = false;
-//│         if (scrut1 === true) {
+//│     if (true === true) {
+//│       if (true === true) {
+//│         if (false === true) {
 //│           Predef.print(1);
 //│           continue lbl
 //│         }
@@ -56,26 +52,26 @@ while x > 0 and x ===
 //│ let lambda2;
 //│ lambda2 = (undefined, function (x1) {
 //│   lbl: while (true) {
-//│     let scrut5, scrut6, scrut7, scrut8, scrut9;
+//│     let scrut, scrut1, scrut2, scrut3, scrut4;
 //│     split_root$1: {
 //│       split_1$1: {
 //│         split_2$1: {
-//│           scrut5 = x1 > 0;
-//│           if (scrut5 === true) {
-//│             scrut6 = x1 === 1;
-//│             if (scrut6 === true) {
+//│           scrut = x1 > 0;
+//│           if (scrut === true) {
+//│             scrut1 = x1 === 1;
+//│             if (scrut1 === true) {
 //│               break split_1$1
 //│             }
-//│             scrut7 = x1 === 2;
-//│             if (scrut7 === true) {
+//│             scrut2 = x1 === 2;
+//│             if (scrut2 === true) {
 //│               break split_1$1
 //│             }
-//│             scrut8 = x1 === 3;
-//│             if (scrut8 === true) {
+//│             scrut3 = x1 === 3;
+//│             if (scrut3 === true) {
 //│               break split_2$1
 //│             }
-//│             scrut9 = x1 === 4;
-//│             if (scrut9 === true) {
+//│             scrut4 = x1 === 4;
+//│             if (scrut4 === true) {
 //│               break split_2$1
 //│             }
 //│             break split_root$1;
@@ -105,44 +101,41 @@ while x > 0 and x ===
 //│ let lambda3;
 //│ lambda3 = (undefined, function (x1) {
 //│   lbl: while (true) {
-//│     let scrut5, scrut6, scrut7, scrut8, scrut9, scrut10;
+//│     let scrut, scrut1, scrut2;
 //│     split_root$1: {
 //│       split_1$1: {
-//│         scrut5 = x1 > 0;
-//│         if (scrut5 === true) {
-//│           scrut6 = x1 === 1;
-//│           if (scrut6 === true) {
-//│             scrut8 = false;
-//│             if (scrut8 === true) {
-//│               scrut7 = false;
-//│               if (scrut7 === true) {
+//│         scrut = x1 > 0;
+//│         if (scrut === true) {
+//│           scrut1 = x1 === 1;
+//│           if (scrut1 === true) {
+//│             if (false === true) {
+//│               if (false === true) {
 //│                 Predef.print("A");
 //│                 continue lbl
 //│               }
-//│               scrut9 = x1 === 2;
-//│               if (scrut9 === true) {
-//│                 scrut10 = false;
-//│                 if (scrut10 === true) {
+//│               scrut2 = x1 === 2;
+//│               if (scrut2 === true) {
+//│                 if (false === true) {
 //│                   break split_1$1
 //│                 }
 //│               }
-//│             } else {
-//│               scrut9 = x1 === 2;
-//│               if (scrut9 === true) {
-//│                 scrut10 = false;
-//│                 if (scrut10 === true) {
-//│                   break split_1$1
-//│                 }
-//│               }
+//│               break split_root$1;
 //│             }
-//│             break split_root$1
+//│             scrut2 = x1 === 2;
+//│             if (scrut2 === true) {
+//│               if (false === true) {
+//│                 break split_1$1
+//│               }
+//│               break split_root$1
+//│             }
+//│             break split_root$1;
 //│           }
-//│           scrut9 = x1 === 2;
-//│           if (scrut9 === true) {
-//│             scrut10 = false;
-//│             if (scrut10 === true) {
+//│           scrut2 = x1 === 2;
+//│           if (scrut2 === true) {
+//│             if (false === true) {
 //│               break split_1$1
 //│             }
+//│             break split_root$1;
 //│           }
 //│           break split_root$1;
 //│         }

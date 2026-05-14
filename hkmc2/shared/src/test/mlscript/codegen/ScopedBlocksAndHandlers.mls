@@ -105,7 +105,7 @@ fun f(x) =
 //│ let f4;
 //│ runtime.resetEffects();
 //│ f4 = function f(x) {
-//│   let z, pc;
+//│   let pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
@@ -121,11 +121,7 @@ fun f(x) =
 //│         return runtime.Unit;
 //│       case 0:
 //│         if (x === true) {
-//│           let z1, inlinedVal;
-//│           z = 3;
-//│           z1 = z;
-//│           inlinedVal = z1;
-//│           runtime.resumeValue = inlinedVal;
+//│           runtime.resumeValue = 3;
 //│           if (runtime.curEffect === null) {
 //│             pc = 2;
 //│             continue main

@@ -175,8 +175,8 @@ if y is
 //│ deforest > 	match: x⁶
 //│ deforest > <<< fusing <<<
 //│ = 2
-//│ x = fun x11
-//│ y = fun y
+//│ x = fun x9
+//│ y = fun y1
 
 
 :expect 3
@@ -259,8 +259,8 @@ if y is
 //│ deforest > 	match: x⁸
 //│ deforest > <<< fusing <<<
 //│ = 2
-//│ x = fun x13
-//│ y = fun y1
+//│ x = fun x10
+//│ y = fun y2
 
 
 
@@ -534,7 +534,7 @@ test(p)
 //│ deforest > 	fields: arg$AA$0$¹.c⁰
 //│ deforest > <<< fusing <<<
 //│ = 141
-//│ p = fun tmp60
+//│ p = fun tmp40
 
 
 :expect 141
@@ -556,7 +556,7 @@ test(p, id(CCC(123)))
 //│ deforest > 	fields: x²¹.aa⁰
 //│ deforest > <<< fusing <<<
 //│ = 141
-//│ p = fun tmp62
+//│ p = fun tmp42
 
 
 :sir
@@ -1063,7 +1063,7 @@ f1(one) + f2(one) + f3(two)
 //│ deforest > <<< fusing <<<
 //│ = 10
 //│ one = AA(1)
-//│ two = fun inlinedVal91
+//│ two = fun inlinedVal82
 
 
 :expect 4

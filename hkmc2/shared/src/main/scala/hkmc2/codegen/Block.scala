@@ -29,6 +29,51 @@ sealed abstract class Block extends Product:
     case _: End => true
     case _ => false
   
+  def showDbg(using DebugPrinter): Str = this match
+    case End(msg) => s"End(${msg})"
+    case Unreachable(msg) => s"Unreachable(${msg})"
+    case Break(lbl) => s"Break(${lbl.showDbg})"
+    case Continue(lbl) => s"Continue(${lbl.showDbg})"
+    case Return(res, implct) => s"Return(${res.showDbg}, implct = $implct)"
+    case Match(scrut, arms, dflt, rest) =>
+      val armsStr = arms.map((pat, arm) => s"case ${pat.showDbg} => ${arm.showDbg}").mkString("\n")
+      val dfltStr = dflt.map(d => s"default => ${d.showDbg}\n").getOrElse("")
+      s"""|Match(${scrut.showDbg}) {
+          |$armsStr
+          |$dfltStr
+          |}
+          |${rest.showDbg}""".stripMargin
+    case Label(lbl, loop, body, rest) =>
+      s"""|Label(${lbl.showDbg}, loop = $loop) {
+          |${body.showDbg}
+          |}
+          |${rest.showDbg}""".stripMargin
+    case Begin(sub, rest) =>
+      s"""|Begin {
+          |${sub.showDbg}
+          |}
+          |${rest.showDbg}""".stripMargin
+    case TryBlock(sub, finallyDo, rest) =>
+      s"""|Try {
+          |${sub.showDbg}
+          |} finally {
+          |${finallyDo.showDbg}
+          |}
+          |${rest.showDbg}""".stripMargin
+    case Assign(lhs, rhs, rest) =>
+      s"""|Assign(${lhs.showDbg} = ${rhs.showDbg})
+          |${rest.showDbg}""".stripMargin
+    case AssignField(lhs, nme, rhs, rest) =>
+      s"""|AssignField(${lhs.showDbg}.${nme} = ${rhs.showDbg})
+          |${rest.showDbg}""".stripMargin
+    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+      val access = if arrayIdx then s"[${fld.showDbg}]" else s".${fld.showDbg}"
+      s"""|AssignDynField(${lhs.showDbg}$access = ${rhs.showDbg})
+          |${rest.showDbg}""".stripMargin
+    case Define(defn, rest) =>
+      s"""|Define(${defn.showDbg})
+          |${rest.showDbg}""".stripMargin
+  
   lazy val isAbortive: Bool = this match
     case _: End => false
     case _: Throw | _: Break | _: Continue | _: Unreachable => true
@@ -107,7 +152,7 @@ sealed abstract class Block extends Product:
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVars ++ rhs.freeVars ++ rest.freeVars
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVars ++ fld.freeVars ++ rhs.freeVars ++ rest.freeVars
     case Define(defn, rest) => defn.freeVars ++ rest.freeVars
-    case Scoped(syms, body) => body.freeVars
+    case Scoped(syms, body) => body.freeVars -- syms
     case End(msg) => Set.empty
     case Unreachable(msg) => Set.empty
   
@@ -387,6 +432,8 @@ object Match:
     val arms = if emptyDflt then _arms.filterNot(_._2.isEmpty) else _arms
     if arms.isEmpty && scrut.isPure then dflt.fold(rest)(Begin(_, rest))
     else dflt match
+    case S(Unreachable(_)) if scrut.isPure && arms.sizeCompare(1) === 0 =>
+      Begin(arms.head._2, rest)
     case S(Match(`scrut`, arms2, dflt2, _: End)) => // TODO: also handle non-End rest (may require a join point)
       // * Currently, this branch does not seem used often (or at all?),
       // * because the UCS and (especially) MergeMatchArmTransformer already do a good job at merging matches
@@ -516,6 +563,11 @@ sealed abstract class Defn:
   def isOwned: Bool = owner.isDefined
   def owner: Opt[InnerSymbol]
   
+  def showDbg(using DebugPrinter): Str = this match
+    case vd: ValDefn => s"ValDefn(${vd.sym.showDbg} = ${vd.rhs.showDbg})"
+    case fd: FunDefn => s"FunDefn(${fd.sym.showDbg}(...))"
+    case c: ClsLikeDefn => s"ClsLikeDefn(${c.sym.showDbg}, ...)"
+  
   /** Whether this definition as a statement has any side effect (if unused). */
   def isPure: Bool = this match
     case vd: ValDefn => vd.rhs.isPure && vd.tsym.owner.isEmpty
@@ -546,6 +598,7 @@ sealed abstract class Defn:
         -- auxParams.flatMap(_.paramSyms)
         ++ stat.iterator.flatMap(_.freeVars)
         ++ sym.optionIf(own.isEmpty)
+        ++ parentSym.iterator.flatMap(_.freeVars)
   
   lazy val freeVarsLLIR: Set[Local] = this match
     case FunDefn(own, sym, dSym, params, body) => body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym
@@ -719,7 +772,13 @@ enum Case:
     * @param safe true will omit the instanceof Object check
   */
   case Field(name: Tree.Ident, safe: Bool)
-
+  
+  def showDbg(using DebugPrinter): Str = this match
+    case Lit(lit) => lit.idStr
+    case Cls(cls, path) => s"Cls(${cls.showDbg}, ${path.showDbg})"
+    case Tup(len, inf) => s"Tup($len, $inf)"
+    case Field(name, safe) => s"Field(${name.showDbg}, $safe)"
+  
   lazy val freeVars: Set[Local] = this match
     case Lit(_) => Set.empty
     case Cls(_, path) => path.freeVars
@@ -738,6 +797,20 @@ sealed abstract class Result extends AutoLocated:
 // // * Used for debugging locations:
 // sealed abstract class Result extends AutoLocated with ProductWithExtraInfo:
 //   def extraInfo: Str = toLoc.toString
+  
+  def showDbg(using DebugPrinter): Str = this match
+    case Value.Ref(l, disamb) => s"${l.showAsPlain}${disamb.fold("")(s => s"‹${s.showAsPlain}›")}"
+    case Value.This(sym) => s"this[${sym.showAsPlain}]"
+    case Value.Lit(lit) => lit.idStr
+    case Select(q, n) => s"Select(${q.showDbg}, ${n.showDbg})"
+    case DynSelect(q, fld, arrayIdx) => s"DynSelect(${q.showDbg}, ${fld.showDbg}, $arrayIdx)"
+    case Call(fun, argss) => s"Call(${fun.showDbg}, [${
+      argss.map(_.map(a => a.value.showDbg).mkString("[", ", ", "]")).mkString(", ")}])"
+    case Lambda(params, body) => s"Lambda(${params.showDbg}, ${body.showDbg})"
+    case Record(mut, args) => s"Record($mut, [${args.map(a => s"${a.showDbg} = ${a.value.showDbg}").mkString(", ")}])"
+    case Tuple(mut, elems) => s"Tuple($mut, [${elems.map(_.value.showDbg).mkString(", ")}])"
+    case Instantiate(mut, cls, argss) => s"Instantiate($mut, ${cls.showDbg}, [${
+      argss.map(_.map(a => a.value.showDbg).mkString("[", ", ", "]")).mkString(", ")}])"
   
   lazy val isPure: Bool = this match
     case _: Value => true
@@ -834,8 +907,8 @@ sealed abstract class Path extends TrivialResult:
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
   def asArg = Arg(spread = N, this)
   def targetSymbol: Opt[DefinitionSymbol[?]] = this match
+    case ref: Value.Ref => ref.disamb
     case sel: Select => sel.symbol
-    case Value.Ref(l, d) => d
     case _ => N
 
 /**
@@ -873,6 +946,8 @@ case class Arg(spread: Opt[SpreadKind], value: Path)
 // * `IndxdArg(N, value)` represents a spread element in a record `...value`
 case class RcdArg(idx: Opt[Path], value: Path):
   def spread: Bool = idx.isEmpty
+  def showDbg(using DebugPrinter): Str =
+    if spread then s"...${value.showDbg}" else s"(${idx.get.showDbg}): ${value.showDbg}"
 
 extension (k: Block => Block)
   

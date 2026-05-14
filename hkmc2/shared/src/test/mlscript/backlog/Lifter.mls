@@ -29,7 +29,7 @@ data class A(x) with
     let t = this
     t.B(2).getB()
 A(1).getA()
-//│ ═══[RUNTIME ERROR] TypeError: t.B is not a function
+//│ ═══[RUNTIME ERROR] TypeError: this.B is not a function
 //│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
 
 // This is due to the order of classes after lifting
@@ -60,8 +60,8 @@ fun test(x) =
     fun bar = x
   B()
 test(0).toString()
-//│ ═══[RUNTIME ERROR] Expected: '"B()"', got: '"(x1) => {       this.#x = x1;       return this;     }"'
-//│ = "(x1) => {       this.#x = x1;       return this;     }"
+//│ ═══[RUNTIME ERROR] Expected: '"B()"', got: '"(x) => {       this.#x = x;       return this;     }"'
+//│ = "(x) => {       this.#x = x;       return this;     }"
 
 // In fact, the correct way (using the current "constructor returns a lambda" hack) is this:
 // return (params) => {

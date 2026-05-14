@@ -8,7 +8,7 @@ x =>
   let y = x
   y
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda; lambda = (undefined, function (x) { let y; y = x; return y }); lambda
+//│ let lambda; lambda = (undefined, function (x) { return x }); lambda
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

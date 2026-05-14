@@ -35,7 +35,7 @@ set x += 1 in print(x)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let old, tmp1, tmp2, tmp3;
 //│ old = x1;
-//│ try { tmp2 = x1 + 1; x1 = tmp2; tmp3 = Predef.print(x1); tmp1 = tmp3; } finally { x1 = old; }
+//│ try { tmp2 = x1 + 1; x1 = tmp2; tmp3 = Predef.print(tmp2); tmp1 = tmp3; } finally { x1 = old; }
 //│ tmp1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 2
@@ -75,7 +75,7 @@ example()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let example2;
 //│ example2 = function example() {
-//│   let x2, get_x, old1, tmp4, tmp5, tmp6, get_x1;
+//│   let x2, get_x, old1, tmp4, tmp5, get_x1;
 //│   x2 = 0;
 //│   get_x1 = function get_x() {
 //│     return x2
@@ -83,17 +83,20 @@ example()
 //│   get_x = get_x1;
 //│   old1 = x2;
 //│   try {
-//│     tmp4 = x2 + 1;
-//│     x2 = tmp4;
-//│     Predef.print(x2);
-//│     tmp5 = runtime.safeCall(get_x());
-//│     Predef.print(tmp5);
+//│     {
+//│       let inlinedVal;
+//│       tmp4 = x2 + 1;
+//│       x2 = tmp4;
+//│       Predef.print(x2);
+//│       inlinedVal = x2;
+//│       Predef.print(inlinedVal);
+//│     }
 //│   } finally {
 //│     x2 = old1;
 //│   }
 //│   Predef.print(x2);
-//│   tmp6 = runtime.safeCall(get_x());
-//│   return Predef.print(tmp6)
+//│   tmp5 = runtime.safeCall(get_x());
+//│   return Predef.print(tmp5)
 //│ };
 //│ example2()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -102,7 +105,7 @@ example()
 //│ > 0
 //│ > 0
 
-:sjs
+:soir
 fun example() =
   let x = 0
   let get_x() = x
@@ -112,32 +115,32 @@ fun example() =
   print(get_x())
   y
 example()
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let example3;
-//│ example3 = function example() {
-//│   let x2, get_x, y, old1, tmp4, tmp5, tmp6, tmp7, tmp8, get_x1;
-//│   x2 = 0;
-//│   get_x1 = function get_x() {
-//│     return x2
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let example⁰;
+//│ define example⁰ as fun example¹() {
+//│   let x, get_x, old, tmp, tmp1, tmp2, tmp3, get_x1;
+//│   set x = 0;
+//│   define get_x1 as fun get_x⁰() {
+//│     return x
 //│   };
-//│   get_x = get_x1;
-//│   old1 = x2;
-//│   try {
-//│     tmp5 = x2 + 1;
-//│     x2 = tmp5;
-//│     tmp6 = Predef.print(x2);
-//│     tmp7 = (tmp6 , x2);
-//│     tmp4 = tmp7;
-//│   } finally {
-//│     x2 = old1;
-//│   }
-//│   y = tmp4;
-//│   Predef.print(x2);
-//│   tmp8 = runtime.safeCall(get_x());
-//│   Predef.print(tmp8);
-//│   return y
+//│   set get_x = get_x⁰;
+//│   set old = x;
+//│   try
+//│     set tmp1 = +⁰(x, 1);
+//│     set x = tmp1;
+//│     do Predef⁰.print⁰(x);
+//│     set tmp2 = x;
+//│     set tmp = tmp2;
+//│     end
+//│   finally
+//│     set x = old;
+//│     end;
+//│     do Predef⁰.print⁰(x);
+//│   set tmp3 = get_x();
+//│   do Predef⁰.print⁰(tmp3);
+//│   return tmp
 //│ };
-//│ example3()
+//│ example¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ > 0

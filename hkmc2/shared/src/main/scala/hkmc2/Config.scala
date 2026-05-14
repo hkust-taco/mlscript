@@ -29,6 +29,7 @@ case class Config(
   tailRecOpt: Bool,
   deforest: Opt[Deforest],
   inlining: Opt[Inliner],
+  deadBranchRemoval: Bool,
   qqEnabled: Bool,
   funcToCls: Bool,
   commentGeneratedCode: Bool,
@@ -69,6 +70,7 @@ object Config:
     tailRecOpt = true,
     deforest = N,
     inlining = S(Inliner(1)),
+    deadBranchRemoval = default.deadBranchRemoval,
     qqEnabled = false,
     funcToCls = false,
     commentGeneratedCode = false,
@@ -78,8 +80,9 @@ object Config:
   )
   object default:
     val patMatConsequentSharingThreshold = S(15)
+    val deadBranchRemoval = false // TODO
   
-  case class SanityChecks(light: Bool)
+  case class SanityChecks(light: Bool, checkUnreachable: Bool)
   
   case class EffectHandlers(
     debug: Bool,
@@ -383,7 +386,7 @@ object ConfigParser:
           case S(v) => cfg.copy(deadParamElim = v)
           case N => cfg
     case "sanityChecks" =>
-      parseOpt(value)(_ => S(Config.SanityChecks(light = true))) match
+      parseOpt(value)(_ => S(Config.SanityChecks(light = true, checkUnreachable = true))) match
         case S(v) => _.copy(sanityChecks = v)
         case N => identity
     case "patMatConsequentSharingThreshold" =>
@@ -394,6 +397,10 @@ object ConfigParser:
       parseOpt(value)(parseInt) match
         case S(v) => _.copy(inlining = v.map(Inliner.apply))
         case _ => identity
+    case "deadBranchRemoval" =>
+      parseBool(value) match
+        case S(v) => _.copy(deadBranchRemoval = v)
+        case N => identity
     case _ =>
       raise(ErrorReport(
         msg"Unknown config field '${name}'" -> value.toLoc :: Nil,

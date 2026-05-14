@@ -3,6 +3,12 @@ name: hkmc2-difftests
 description: Work with HKMC2 DiffTests where golden snapshots are embedded in `.mls` files as `//│ ...` lines and updated in place by the test runner. Use when editing or reviewing files under `hkmc2/shared/src/test/**/*.mls`, running `hkmc2DiffTests` or watcher loops, diagnosing mismatches between diagnostics and expectations (`:e`, `:re`, `:expect`, etc.), or deciding whether rewritten snapshot lines should be committed.
 ---
 
+
+# General
+
+Please review `/AGENTS.md`.
+
+
 # HKMC2 DiffTests
 
 Run HKMC2 inline golden-file tests and treat file rewrites as first-class test output.

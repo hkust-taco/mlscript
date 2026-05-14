@@ -157,10 +157,27 @@ id(0
 //│ ═══[RUNTIME ERROR] TypeError: baseCall3 is not a function
 
 
+:soir
 fun test2() =
   fun funny = (case
     0 then 1)
   funny
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let test2⁰;
+//│ define test2⁰ as fun test2¹() {
+//│   let funny, lambda;
+//│   define lambda as fun lambda⁰(caseScrut) {
+//│     match caseScrut
+//│       0 =>
+//│         return 1
+//│       else
+//│         throw new globalThis⁰.Error⁰("match error")
+//│     end
+//│   };
+//│   return lambda⁰
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 test2()(0)
 //│ = 1

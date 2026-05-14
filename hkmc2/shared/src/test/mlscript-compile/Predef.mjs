@@ -89,6 +89,12 @@ let Predef1;
   static id(x) {
     return x
   } 
+  static hide(x) {
+    return x
+  } 
+  static get maybe() {
+    return Predef.hide(true);
+  } 
   static apply(f, ...args) {
     return runtime.safeCall(f(...args))
   } 
@@ -105,14 +111,12 @@ let Predef1;
     return runtime.safeCall(f(x))
   } 
   static tap(x, f) {
-    let tmp;
-    tmp = runtime.safeCall(f(x));
-    return (tmp , x)
+    runtime.safeCall(f(x));
+    return x
   } 
   static pat(f, x) {
-    let tmp;
-    tmp = runtime.safeCall(f(x));
-    return (tmp , x)
+    runtime.safeCall(f(x));
+    return x
   } 
   static alsoDo(x, eff) {
     return x
@@ -147,7 +151,7 @@ let Predef1;
     }
   } 
   static equals(a, b) {
-    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, scrut10, scrut11, lambda, lambda1, tmp, tmp1, tmp2;
+    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, lambda, lambda1, tmp, tmp1;
     scrut = a === b;
     if (scrut === true) {
       return true
@@ -157,9 +161,9 @@ let Predef1;
         scrut1 = a.length === b.length;
         if (scrut1 === true) {
           lambda = (undefined, function (a1, i) {
-            let tmp3;
-            tmp3 = runtime.safeCall(b.at(i));
-            return Predef.equals(a1, tmp3)
+            let tmp2;
+            tmp2 = runtime.safeCall(b.at(i));
+            return Predef.equals(a1, tmp2)
           });
           return runtime.safeCall(a.every(lambda))
         }
@@ -167,26 +171,26 @@ let Predef1;
     }
     scrut2 = a !== undefined;
     if (scrut2 === true) {
-      scrut11 = a !== null;
-      if (scrut11 === true) {
-        scrut10 = b !== undefined;
-        if (scrut10 === true) {
-          scrut9 = b !== null;
-          if (scrut9 === true) {
+      scrut9 = a !== null;
+      if (scrut9 === true) {
+        scrut8 = b !== undefined;
+        if (scrut8 === true) {
+          scrut7 = b !== null;
+          if (scrut7 === true) {
             ac = a.constructor;
             scrut3 = ac !== undefined;
             if (scrut3 === true) {
-              scrut7 = ac === b.constructor;
-              if (scrut7 === true) {
+              scrut6 = ac === b.constructor;
+              if (scrut6 === true) {
                 md = ac[Predef.Symbols.definitionMetadata];
                 scrut4 = md !== undefined;
                 if (scrut4 === true) {
                   lambda1 = (undefined, function (field) {
-                    let scrut12, scrut13;
-                    scrut12 = field !== null;
-                    if (scrut12 === true) {
-                      scrut13 = Predef.equals(a[field], b[field]);
-                      if (scrut13 === true) {
+                    let scrut10, scrut11;
+                    scrut10 = field !== null;
+                    if (scrut10 === true) {
+                      scrut11 = Predef.equals(a[field], b[field]);
+                      if (scrut11 === true) {
                         return true
                       }
                       return false;
@@ -202,8 +206,7 @@ let Predef1;
                 } else {
                   tmp = false;
                 }
-                scrut6 = tmp;
-                if (scrut6 === true) {
+                if (tmp === true) {
                   tmp1 = true;
                 } else {
                   tmp1 = false;
@@ -214,25 +217,18 @@ let Predef1;
             } else {
               tmp1 = false;
             }
-            scrut8 = tmp1;
-            if (scrut8 === true) {
-              tmp2 = true;
-            } else {
-              tmp2 = false;
+            if (tmp1 === true) {
+              return true
             }
-            return tmp2
+            return false;
           }
-          tmp2 = false;
-          return tmp2;
+          return false;
         }
-        tmp2 = false;
-        return tmp2;
+        return false;
       }
-      tmp2 = false;
-      return tmp2;
+      return false;
     }
-    tmp2 = false;
-    return tmp2;
+    return false;
   } 
   static nequals(a, b) {
     let tmp;
@@ -284,7 +280,7 @@ let Predef1;
         if (scrut1 === true) {
           tmp = i - 1;
           i = tmp;
-          tmp1 = runtime.safeCall(rest.at(i));
+          tmp1 = runtime.safeCall(rest.at(tmp));
           tmp2 = runtime.safeCall(f(tmp1, init));
           init = tmp2;
           continue lbl
@@ -297,15 +293,15 @@ let Predef1;
   static mkStr(...xs) {
     let lambda, callPrefix;
     lambda = (undefined, function (acc, x) {
-      let tmp, tmp1, tmp2;
+      let tmp, tmp1;
       if (typeof x === 'string') {
         tmp = true;
       } else {
         tmp = false;
       }
-      tmp1 = Predef.check(tmp);
-      tmp2 = acc + x;
-      return (tmp1 , tmp2)
+      Predef.check(tmp);
+      tmp1 = acc + x;
+      return tmp1
     });
     callPrefix = runtime.safeCall(Predef.fold(lambda));
     return runtime.safeCall(callPrefix(...xs))

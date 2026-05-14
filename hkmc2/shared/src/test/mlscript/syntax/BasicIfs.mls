@@ -46,10 +46,10 @@ if 0 is
 
 let foo =
   if true then
-    ""
+    "T"
   else
-    ""
-//│ foo = ""
+    "F"
+//│ foo = "T"
 
 if 0 is 0 then
   1

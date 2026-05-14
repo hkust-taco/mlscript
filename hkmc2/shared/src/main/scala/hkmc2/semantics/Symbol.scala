@@ -21,6 +21,9 @@ abstract class Symbol(using State) extends Located:
   
   val uid: Uid[Symbol] = State.suid.nextUid
   
+  def showDbg(using DebugPrinter): Str =
+    this.showAsPlain
+  
   def showPlainName(using scp: Scope): hkmc2.document.Document =
     import hkmc2.document.*
     scp.allocateOrGetName(this)(using throw _)
@@ -192,6 +195,7 @@ object FlowSymbol:
   
 end FlowSymbol
 
+sealed trait LocalVarSymbol extends LocalSymbol
 sealed trait LocalSymbol extends Symbol:
   def subst(using s: SymbolSubst): LocalSymbol
 sealed trait NamedSymbol extends Symbol:
@@ -209,7 +213,7 @@ abstract class BlockLocalSymbol(name: Str)(using State) extends FlowSymbol(name)
   self: LocalSymbol => // * using `with LocalSymbol` in the `extends` clause makes Scala think there's a bad override
   var decl: Opt[Declaration] = N
 
-class TempSymbol(val trm: Opt[Term], dbgNme: Str = "tmp")(using State) extends BlockLocalSymbol(dbgNme) with LocalSymbol:
+class TempSymbol(val trm: Opt[Term], dbgNme: Str = "tmp")(using State) extends BlockLocalSymbol(dbgNme) with LocalVarSymbol:
   // val nameHints: MutSet[Str] = MutSet.empty // * May be useful later?
   override def toLoc: Option[Loc] = trm.flatMap(_.toLoc)
   override def prefix: Str = "tmp:"
@@ -225,7 +229,7 @@ class InstSymbol(val origin: Symbol)(using State) extends LocalSymbol:
   def subst(using sub: SymbolSubst): InstSymbol = sub.mapInstSym(this)
 
 
-class VarSymbol(val id: Ident)(using State) extends BlockLocalSymbol(id.name) with NamedSymbol with LocalSymbol:
+class VarSymbol(val id: Ident)(using State) extends BlockLocalSymbol(id.name) with NamedSymbol with LocalVarSymbol:
   val name: Str = id.name
   override def toLoc: Opt[Loc] = id.toLoc
   // override def toString: Str = s"$name@$uid"
