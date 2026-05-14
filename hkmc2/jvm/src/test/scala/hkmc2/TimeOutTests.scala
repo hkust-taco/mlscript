@@ -11,7 +11,9 @@ abstract class TimeOutTests
   with ParallelTestExecution
   with TimeLimitedTests
 :
-
+  
+  // * Note: ScalaTest creates one instance of the class per test that runs in parallel.
+  // * So this state is not actually shared, and is not a concurrency issue.
   var testName: Str = "‹unknown›"
   override def withFixture(test: NoArgTest) =
     testName = test.name

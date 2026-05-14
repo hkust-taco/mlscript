@@ -209,7 +209,7 @@ class BlockSimplifier
     override def applyValue(v: Value)(k: Value => Block) = v match
       // * Replace with `undefined` those references to local variables that are never assigned
       case Value.Ref(loc, N) if localVars.contains(loc) && !definedVars.contains(loc) =>
-        registerChange("TODO: description")
+        registerChange(s"${loc.showDbg} is never assigned; replacing read with undefined")
         if !symbolsToPreserve(loc) then removedLocals += loc
         k(Value.Lit(syntax.Tree.UnitLit(false)))
       case _ => super.applyValue(v)(k)
@@ -230,14 +230,14 @@ class BlockSimplifier
         || symbolsToPreserve(defn.sym)
         then super.applyBlock(b)
         else
-          registerChange("TODO: description")
+          registerChange(s"rm unused pure defn ${defn.sym.showDbg}")
           removedLocals += defn.sym
           applyBlock(rest)
         
       // * Simplify labelled blocks
       case Label(lbl, loop, bod, rst) =>
         if !BrokenLabels.analyze(bod).contains(lbl) && AbortiveAnalysis.analyze(bod) && !rst.isInstanceOf[Unreachable] then
-          registerChange("TODO: description")
+          registerChange(s"label ${lbl.showDbg} body is abortive; rest is unreachable")
           val unr = Unreachable("Rest of abortive labelled block")
           if usedLabels.contains(lbl)
           then Label(lbl, loop, nestLabelCtx(applyBlock(bod)), unr)
@@ -252,13 +252,13 @@ class BlockSimplifier
             val rst2 = applySubBlock(rst)
             if (lbl2 is lbl) && (bod2 is bod) && (rst2 is rst) then b else Label(lbl2, loop, bod2, rst2)
           else
-            registerChange("TODO: description")
+            registerChange(s"rm unused label ${lbl.showDbg}")
             Begin(nestLabelCtx(applyBlock(bod)), applyBlock(rst))
       
       // * Remove useless break
       case Break(label) if tailLabels.contains(label) =>
         log(s"Break ${label} is eliminated: current tail label list is ${tailLabels}")
-        registerChange("TODO: description")
+        registerChange(s"rm tail-position break ${label.showDbg}")
         End()
       
       case x => super.applyBlock(x)
@@ -654,6 +654,9 @@ class BlockSimplifier
         val res = super.applyScopedBlock(b)
         syms.foreach:
           case sym: LocalVar =>
+            // * Note: it's crucial to reset the symbols to `uninitialized` when the scope ends,
+            // * otherwise they could be picked up by transitive assignments rewriting.
+            // * This reassignment makes them ineligible.
             assignedResults += sym -> Uninitialized
           case _ =>
         res
@@ -997,7 +1000,7 @@ class BlockSimplifier
           blk match
           case Define(defn: FunDefn, rest) if m(defn.dSym).canBeInlineEliminated =>
             log(s"Inline elimination: ${defn.dSym}")
-            registerChange("TODO: description")
+            registerChange(s"rm inline-eliminated function ${defn.dSym.showDbg}")
             applyBlock(rest)
           case _ => super.applyBlock(blk)
         
@@ -1034,7 +1037,7 @@ class BlockSimplifier
                 case N =>
                   super.applyResult(r)(k)
                 case S(matchedArgs) =>
-                  registerChange("TODO: description")
+                  registerChange(s"inline call ${ts.showDbg}")
                   log(s"Inline call for ${ts}, with args ${argss}")
                   val extraArgss = argss.drop(info.defn.params.length)
                   def go(acc: Block => Block, args: List[(VarSymbol, Result)], mapping: Map[Symbol, Symbol]): Block =
