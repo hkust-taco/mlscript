@@ -15,7 +15,7 @@ do root:
 do root:
   let escape = () => root.continue
   escape()
-//│ ╔══[COMPILATION ERROR] Label continue cannot cross function boundaries.
+//│ ╔══[COMPILATION ERROR] Non-local label continue is not supported: continuing across function boundaries would require re-entering a captured continuation; only escape-style non-local label break is supported.
 //│ ║  l.16: 	  let escape = () => root.continue
 //│ ╙──      	                     ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -59,7 +59,7 @@ fun continueFromNestedFunctionWithEffects() =
     fun escape() = root.continue
     escape()
 continueFromNestedFunctionWithEffects()
-//│ ╔══[COMPILATION ERROR] Label continue cannot cross function boundaries.
+//│ ╔══[COMPILATION ERROR] Non-local label continue is not supported: continuing across function boundaries would require re-entering a captured continuation; only escape-style non-local label break is supported.
 //│ ║  l.59: 	    fun escape() = root.continue
 //│ ╙──      	                   ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

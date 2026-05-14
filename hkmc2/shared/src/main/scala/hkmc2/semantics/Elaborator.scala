@@ -838,7 +838,9 @@ extends Importer with ucs.SplitElaborator:
       case LabelLookup.Found(binding) =>
         Term.Continue(binding.labelSymbol)
       case LabelLookup.AcrossBoundary(_, _, _) =>
-        raise(ErrorReport(msg"Label continue cannot cross function boundaries." -> labelId.toLoc :: Nil))
+        raise(ErrorReport(
+          msg"Non-local label continue is not supported: continuing across function boundaries would require re-entering a captured continuation; only escape-style non-local label break is supported."
+            -> labelId.toLoc :: Nil))
         Term.Error
       case LabelLookup.NotFound =>
         elaborateSelection(tree, labelId, nme)
