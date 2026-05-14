@@ -82,26 +82,27 @@ object Elaborator:
     
     lazy val scope: SrcScope = SrcScope(outer, parent.map(_.scope))
     
-    def +(local: Str -> Symbol): Ctx = copy(env = env + local.mapSecond(Ctx.RefElem(_)))
+    def +(local: Str -> Symbol): Ctx =
+      copy(outer = outer, parent = parent, env = env + local.mapSecond(Ctx.RefElem(_)), mode = mode, labels = labels)
     def ++(locals: IterableOnce[Str -> Symbol]): Ctx =
-      copy(env = env ++ locals.mapValues(Ctx.RefElem(_)))
+      copy(outer = outer, parent = parent, env = env ++ locals.mapValues(Ctx.RefElem(_)), mode = mode, labels = labels)
     def elem_++(locals: IterableOnce[Str -> Ctx.Elem]): Ctx =
-      copy(env = env ++ locals.iterator.filter: kv =>
+      copy(outer = outer, parent = parent, env = env ++ locals.iterator.filter: kv =>
         // * Imports should not shadow symbols defined in the same scope;
         // * but they should be allowed to shadow previous imports.
-        env.get(kv._1).forall(_.isImport))
+        env.get(kv._1).forall(_.isImport), mode = mode, labels = labels)
     
     def withMembers(members: Iterable[Str -> MemberSymbol]): Ctx =
-      copy(env = env ++ members.map:
+      copy(outer = outer, parent = parent, env = env ++ members.map:
         case (nme, sym) =>
           val elem = outer.inner match
             case S(outer) => Ctx.SelElem(outer, sym.nme, S(sym), isImport = false)
             case N => Ctx.RefElem(sym)
           nme -> elem
-      )
+      , mode = mode, labels = labels)
     
     def withLabel(label: Str, labelSym: LabelSymbol, resultSym: TempSymbol): Ctx =
-      copy(labels = labels + (label -> (labelSym -> resultSym)))
+      copy(outer = outer, parent = parent, env = env, mode = mode, labels = labels + (label -> (labelSym -> resultSym)))
     
     def nest(outerCtx: OuterCtx): Ctx = Ctx(outerCtx, Some(this), Map.empty, mode, Map.empty)
     def nestLocal(nameHint: Str): Ctx = nest(OuterCtx.LocalScope(nameHint))
@@ -429,6 +430,33 @@ extends Importer with ucs.SplitElaborator:
   
   def subterm(tree: Tree, inAppPrefix: Bool = false, inTyAppPrefix: Bool = false): Ctxl[UnderCtx ?=> Term] =
   trace[Term](s"Elab subterm ${tree.showDbg}", r => s"~> $r"):
+    def elaborateSelection(tree: Tree, pre: Tree, nme: Ident): Term =
+      val preTrm = subterm(pre)
+      val sym = resolveField(nme, preTrm.symbol, nme)
+      sym match
+      // * Enforcing [invariant:1]
+      case S(ms: BlockMemberSymbol)
+        // FIXME[Harry]: move the check to resolver because preTrm's symbol may not be resolved yet.
+        if
+          // * If we're selecting a parameterized class method without applying it, an error should be reported.
+          // * Note that module methods are fine to select without applying, since they don't use `this`.
+          !inAppPrefix && ms.isParameterizedMethod && !preTrm.symbol.exists(_.existsModuleful)
+      =>
+        raise:
+          ErrorReport(
+            msg"[debinding error] Method '${nme.name}' cannot be accessed without being called." -> nme.toLoc :: Nil)
+      case S(_) | N => ()
+      if sym.contains(ctx.builtins.source.line) then
+        val loc = tree.toLoc.getOrElse(???)
+        val (line, _, _) = loc.origin.fph.getLineColAt(loc.spanStart)
+        Term.Lit(IntLit(loc.origin.startLineNum + line))
+      else if sym.contains(ctx.builtins.source.name) then
+        Term.Lit(StrLit(ctx.getOuter.map(_.nme).getOrElse("")))
+      else if sym.contains(ctx.builtins.source.file) then
+        val loc = tree.toLoc.getOrElse(???)
+        Term.Lit(StrLit(loc.origin.fileName.toString))
+      else
+        Term.Sel(preTrm, nme)(sym, FlowSymbol.sel(nme.name), N, S(summon))
     tree.desugared match
     case Trm(term) => term
     case unt @ Unt() => unit.withLocOf(unt)
@@ -687,80 +715,15 @@ extends Importer with ucs.SplitElaborator:
       case S((labelSym, resultSym)) =>
         Term.Break(labelSym, resultSym, N)
       case N =>
-        val preTrm = subterm(labelId)
-        val sym = resolveField(nme, preTrm.symbol, nme)
-        sym match
-        case S(ms: BlockMemberSymbol)
-          if !inAppPrefix && ms.isParameterizedMethod && !preTrm.symbol.exists(_.existsModuleful)
-        =>
-          raise:
-            ErrorReport(
-              msg"[debinding error] Method '${nme.name}' cannot be accessed without being called." -> nme.toLoc :: Nil)
-        case S(_) | N => ()
-        if sym.contains(ctx.builtins.source.line) then
-          val loc = tree.toLoc.getOrElse(???)
-          val (line, _, _) = loc.origin.fph.getLineColAt(loc.spanStart)
-          Term.Lit(IntLit(loc.origin.startLineNum + line))
-        else if sym.contains(ctx.builtins.source.name) then
-          Term.Lit(StrLit(ctx.getOuter.map(_.nme).getOrElse("")))
-        else if sym.contains(ctx.builtins.source.file) then
-          val loc = tree.toLoc.getOrElse(???)
-          Term.Lit(StrLit(loc.origin.fileName.toString))
-        else
-          Term.Sel(preTrm, nme)(sym, FlowSymbol.sel(nme.name), N, S(summon))
+        elaborateSelection(tree, labelId, nme)
     case Sel(labelId @ Ident(labelName), nme @ Ident("continue")) =>
       ctx.getLabel(labelName) match
       case S((labelSym, _)) =>
         Term.Continue(labelSym)
       case N =>
-        val preTrm = subterm(labelId)
-        val sym = resolveField(nme, preTrm.symbol, nme)
-        sym match
-        case S(ms: BlockMemberSymbol)
-          if !inAppPrefix && ms.isParameterizedMethod && !preTrm.symbol.exists(_.existsModuleful)
-        =>
-          raise:
-            ErrorReport(
-              msg"[debinding error] Method '${nme.name}' cannot be accessed without being called." -> nme.toLoc :: Nil)
-        case S(_) | N => ()
-        if sym.contains(ctx.builtins.source.line) then
-          val loc = tree.toLoc.getOrElse(???)
-          val (line, _, _) = loc.origin.fph.getLineColAt(loc.spanStart)
-          Term.Lit(IntLit(loc.origin.startLineNum + line))
-        else if sym.contains(ctx.builtins.source.name) then
-          Term.Lit(StrLit(ctx.getOuter.map(_.nme).getOrElse("")))
-        else if sym.contains(ctx.builtins.source.file) then
-          val loc = tree.toLoc.getOrElse(???)
-          Term.Lit(StrLit(loc.origin.fileName.toString))
-        else
-          Term.Sel(preTrm, nme)(sym, FlowSymbol.sel(nme.name), N, S(summon))
+        elaborateSelection(tree, labelId, nme)
     case Sel(pre, nme) =>
-      val preTrm = subterm(pre)
-      val sym = resolveField(nme, preTrm.symbol, nme)
-      sym match
-      // * Enforcing [invariant:1]
-      case S(ms: BlockMemberSymbol)
-        // FIXME[Harry]: move the check to resolver because preTrm's symbol may not be resolved yet.
-        if
-          // * If we're selecting a parameterized class method without applying it, an error should be reported.
-          // * Note that module methods are fine to select without applying, since they don't use `this`.
-          !inAppPrefix && ms.isParameterizedMethod && !preTrm.symbol.exists(_.existsModuleful)
-        =>
-        raise:
-          ErrorReport(
-            msg"[debinding error] Method '${nme.name}' cannot be accessed without being called." -> nme.toLoc :: Nil)
-      case S(_) | N => ()
-      if sym.contains(ctx.builtins.source.line) then
-        val loc = tree.toLoc.getOrElse(???)
-        val (line, _, _) = loc.origin.fph.getLineColAt(loc.spanStart)
-        Term.Lit(IntLit(loc.origin.startLineNum + line))
-      else if sym.contains(ctx.builtins.source.name) then
-        Term.Lit(StrLit(ctx.getOuter.map(_.nme).getOrElse("")))
-      else if sym.contains(ctx.builtins.source.file) then
-        val loc = tree.toLoc.getOrElse(???)
-        Term.Lit(StrLit(loc.origin.fileName.toString))
-      else
-        Term.Sel(preTrm, nme)(sym, FlowSymbol.sel(nme.name), N, S(summon))
+      elaborateSelection(tree, pre, nme)
     case MemberProj(ct, nme) =>
       val c = subterm(ct)
       val f = c.symbol.flatMap(_.asCls) match
