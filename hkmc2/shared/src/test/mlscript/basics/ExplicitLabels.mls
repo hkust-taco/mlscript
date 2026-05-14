@@ -89,3 +89,48 @@ let i = 0 in let steps = 0 in do done:
       set j += 1
 //│ = 102
 
+
+// * Label operations should still resolve labels when a normal name with the same spelling exists.
+let loop = 10 in do loop:
+  if loop == 10 do loop.break(loop)
+  0
+//│ = 10
+
+
+// * Normal name references should still resolve to normal names when a label with the same spelling exists.
+do lbl:
+  let lbl = 5
+  lbl
+//│ = 5
+
+
+// * Nested labels in a plain `do` block should be handled; later labels are nested in earlier ones.
+let i = 3 in do
+  label1:
+    if i <= 0 do label1.break(())
+    print("Still > 0:", i)
+    set i -= 1
+  label2:
+    label1.continue
+//│ > Still > 0: 3
+//│ > Still > 0: 2
+//│ > Still > 0: 1
+
+
+// * A plain `do` block with a single label clause should desugar to the explicit-label form.
+let x = 123 in do
+  only:
+    only.break(x)
+//│ = 123
+
+
+// * Mixed blocks should not be treated as implicit label-clause syntax.
+:e
+do
+  let x = 1
+  only:
+    only.break(x)
+//│ ╔══[COMPILATION ERROR] Name not found: only
+//│ ║  l.132: 	    only.break(x)
+//│ ╙──       	    ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

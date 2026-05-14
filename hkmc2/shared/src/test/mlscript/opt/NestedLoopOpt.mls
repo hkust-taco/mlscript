@@ -241,7 +241,6 @@ print(labelContinueFiltersPath(4))
 
 
 // * Breaking from nested loops to an outer label should compose with folded break values.
-:js
 fun nestedBreakCarriesFoldedValue(limit) =
   let i = 0
   do done:

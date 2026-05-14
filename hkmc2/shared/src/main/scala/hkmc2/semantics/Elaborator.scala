@@ -103,23 +103,23 @@ object Elaborator:
     lazy val scope: SrcScope = SrcScope(outer, parent.map(_.scope))
     
     def +(local: Str -> Symbol): Ctx =
-      copy(outer = outer, parent = parent, env = env + local.mapSecond(Ctx.RefElem(_)), mode = mode, labels = labels)
+      copy(env = env + local.mapSecond(Ctx.RefElem(_)))
     def ++(locals: IterableOnce[Str -> Symbol]): Ctx =
-      copy(outer = outer, parent = parent, env = env ++ locals.mapValues(Ctx.RefElem(_)), mode = mode, labels = labels)
+      copy(env = env ++ locals.mapValues(Ctx.RefElem(_)))
     def elem_++(locals: IterableOnce[Str -> Ctx.Elem]): Ctx =
-      copy(outer = outer, parent = parent, env = env ++ locals.iterator.filter: kv =>
+      copy(env = env ++ locals.iterator.filter: kv =>
         // * Imports should not shadow symbols defined in the same scope;
         // * but they should be allowed to shadow previous imports.
-        env.get(kv._1).forall(_.isImport), mode = mode, labels = labels)
+        env.get(kv._1).forall(_.isImport))
     
     def withMembers(members: Iterable[Str -> MemberSymbol]): Ctx =
-      copy(outer = outer, parent = parent, env = env ++ members.map:
+      copy(env = env ++ members.map:
         case (nme, sym) =>
           val elem = outer.inner match
             case S(outer) => Ctx.SelElem(outer, sym.nme, S(sym), isImport = false)
             case N => Ctx.RefElem(sym)
           nme -> elem
-      , mode = mode, labels = labels)
+      )
     
     def withLabel(
         label: Str,
@@ -127,12 +127,7 @@ object Elaborator:
         resultSym: TempSymbol,
         nonLocalBreakHandlerSym: TempSymbol,
     ): Ctx =
-      copy(
-        outer = outer,
-        parent = parent,
-        env = env,
-        mode = mode,
-        labels = labels + (label -> LabelBinding(labelSym, resultSym, nonLocalBreakHandlerSym)))
+      copy(labels = labels + (label -> LabelBinding(labelSym, resultSym, nonLocalBreakHandlerSym)))
     
     def nest(outerCtx: OuterCtx): Ctx = Ctx(outerCtx, Some(this), Map.empty, mode, Map.empty)
     def nestLocal(nameHint: Str): Ctx = nest(OuterCtx.LocalScope(nameHint))
@@ -525,6 +520,29 @@ extends Importer with ucs.SplitElaborator:
       val rt = subterm(Tup(args), inAppPrefix = false, inTyAppPrefix = false)
       Term.App(lt, rt)(tree, N, sym)
     
+    def maybeLabelClause(tree: Tree): Opt[(Ident, Tree)] = tree match
+      case InfixApp(id: Ident, Keywrd(Keyword.`:`), rhs) => S(id -> rhs)
+      case _ => N
+    
+    def desugarImplicitDoLabels(tree: Tree): Tree = tree match
+      case PrefixApp(kw @ Keywrd(Keyword.`do`), Block(sts)) =>
+        val labelClauses = sts.map(maybeLabelClause)
+        if labelClauses.forall(_.nonEmpty) && labelClauses.nonEmpty then
+          val clauses = labelClauses.map(_.get)
+          val nestedClause = clauses.foldRight[Opt[Tree]](N):
+            case ((labelId, labelBody), N) =>
+              S(InfixApp(labelId, Keywrd(Keyword.`:`), labelBody))
+            case ((labelId, labelBody), S(innerClause)) =>
+              val nestedDo = PrefixApp(new Keywrd(Keyword.`do`).withLocOf(kw), innerClause)
+              val newLabelBody = labelBody match
+                case Block(innerStmts) => Block(innerStmts :+ nestedDo)
+                case other => Block(other :: nestedDo :: Nil)
+              S(InfixApp(labelId, Keywrd(Keyword.`:`), newLabelBody))
+          PrefixApp(kw, nestedClause.get)
+        else
+          tree
+      case _ => tree
+    
     def elaborateSelection(tree: Tree, pre: Tree, nme: Ident): Term =
       val preTrm = subterm(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
@@ -552,7 +570,7 @@ extends Importer with ucs.SplitElaborator:
         Term.Lit(StrLit(loc.origin.fileName.toString))
       else
         Term.Sel(preTrm, nme)(sym, FlowSymbol.sel(nme.name), N, S(summon))
-    tree.desugared match
+    desugarImplicitDoLabels(tree.desugared) match
     case Trm(term) => term
     case unt @ Unt() => unit.withLocOf(unt)
     case Bra(k, e) =>
