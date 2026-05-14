@@ -1,0 +1,65 @@
+:js
+
+
+:e
+do root:
+  fun escape() = root.break(42)
+  escape()
+//│ ╔══[COMPILATION ERROR] Non-local label breaks are only supported with effect handlers enabled.
+//│ ║  l.6: 	  fun escape() = root.break(42)
+//│ ╙──     	                 ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+:e
+do root:
+  let escape = () => root.continue
+  escape()
+//│ ╔══[COMPILATION ERROR] Label continue cannot cross function boundaries.
+//│ ║  l.16: 	  let escape = () => root.continue
+//│ ╙──      	                     ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+:effectHandlers
+:lift
+fun breakFromNestedFunctionWithEffects() =
+  do root:
+    fun escape() = root.break(42)
+    escape()
+breakFromNestedFunctionWithEffects()
+//│ = 42
+
+
+:effectHandlers
+:lift
+fun breakFromNestedLambdaWithEffects() =
+  do root:
+    let escape = () => root.break(42)
+    escape()
+breakFromNestedLambdaWithEffects()
+//│ = 42
+
+
+:effectHandlers
+:lift
+fun breakFromNestedFunctionAndLambdaWithEffects() =
+  do root:
+    fun makeBreaker() = () => root.break(7)
+    makeBreaker()()
+breakFromNestedFunctionAndLambdaWithEffects()
+//│ = 7
+
+
+:e
+:effectHandlers
+:lift
+fun continueFromNestedFunctionWithEffects() =
+  do root:
+    fun escape() = root.continue
+    escape()
+continueFromNestedFunctionWithEffects()
+//│ ╔══[COMPILATION ERROR] Label continue cannot cross function boundaries.
+//│ ║  l.59: 	    fun escape() = root.continue
+//│ ╙──      	                   ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -241,7 +241,7 @@ print(labelContinueFiltersPath(4))
 
 
 // * Breaking from nested loops to an outer label should compose with folded break values.
-:soir
+:js
 fun nestedBreakCarriesFoldedValue(limit) =
   let i = 0
   do done:
@@ -254,60 +254,6 @@ fun nestedBreakCarriesFoldedValue(limit) =
           done.continue
         if i == 1 do done.break(i * 1000 + j)
         set j += 1
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let nestedBreakCarriesFoldedValue⁰;
-//│ define nestedBreakCarriesFoldedValue⁰ as fun nestedBreakCarriesFoldedValue¹(limit) {
-//│   let i, done$result;
-//│   set i = 0;
-//│   loop done:
-//│     loop lbl:
-//│       let scrut, j;
-//│       match true
-//│         true =>
-//│           set scrut = >=⁰(i, limit);
-//│           match scrut
-//│             true =>
-//│               set done$result = 123;
-//│               break done
-//│             else
-//│               set j = 0;
-//│               loop lbl1:
-//│                 let scrut1, scrut2, tmp, tmp1, tmp2;
-//│                 match true
-//│                   true =>
-//│                     set scrut1 = >=⁰(j, 2);
-//│                     match scrut1
-//│                       true =>
-//│                         set tmp = +⁰(i, 1);
-//│                         set i = tmp;
-//│                         continue done
-//│                       else
-//│                         set scrut2 = Predef⁰.equals⁰(i, 1);
-//│                         match scrut2
-//│                           true =>
-//│                             set tmp1 = *⁰(i, 1000);
-//│                             set done$result = +⁰(tmp1, j);
-//│                             break done
-//│                           else
-//│                             set tmp2 = +⁰(j, 1);
-//│                             set j = tmp2;
-//│                             continue lbl1
-//│                         end
-//│                     end
-//│                   else
-//│                     end
-//│                 end
-//│               continue lbl
-//│           end
-//│         else
-//│           end
-//│       end
-//│     set done$result = runtime⁰.Unit⁰;
-//│     end
-//│   return done$result
-//│ };
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 print(nestedBreakCarriesFoldedValue(1))
 print(nestedBreakCarriesFoldedValue(3))

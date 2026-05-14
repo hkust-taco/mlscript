@@ -468,6 +468,43 @@ extends Importer with ucs.SplitElaborator:
         case _ => ()
         S(Annot.Trm(trm))
   
+  /** Build a single-method `ret` effect handler around `body` for non-local control flow.
+    * The generated handler method receives `value` and uses `methodBody` to construct its term.
+    */
+  private def mkSingleMethodEffectHandle(
+      handlerSymbol: TempSymbol,
+      effectClassName: Str,
+      methodBody: VarSymbol => Term,
+      body: Term,
+  )(using State): Term =
+    val clsSym = ClassSymbol(DummyTypeDef(Cls), Ident(effectClassName))
+    val valueSym = VarSymbol(Ident("value"))
+    val resumeSym = VarSymbol(Ident("resume"))
+    val mtdSym = BlockMemberSymbol("ret", Nil, true)
+    val tsym = TermSymbol(Fun, N, Ident("ret"))
+    val td = TermDefinition(
+      Fun, mtdSym, tsym, PlainParamList(Param(FldFlags.empty, valueSym, N, Modulefulness.none) :: Nil) :: Nil,
+      N, N, S(methodBody(valueSym)), TermDefFlags.empty, Modulefulness.none, Nil, N)
+    tsym.defn = S(td)
+    mtdSym.tsym = S(tsym)
+    val htd = HandlerTermDefinition(resumeSym, td)
+    Term.Handle(handlerSymbol, state.nonLocalRetHandlerTrm, Nil, clsSym, htd :: Nil, body)
+  
+  /** Build a non-local `ret` invocation on `handlerSymbol`, passing a single argument term. */
+  private def mkNonLocalEffectInvocation(
+      handlerSymbol: TempSymbol,
+      callSiteId: Ident,
+      argTree: Tup,
+      argTerm: Term,
+  )(using Ctx): Term =
+    val rs = FlowSymbol.app()
+    val retMtdTree = new Ident("ret")
+    Term.App(
+      Term.Sel(handlerSymbol.ref(callSiteId), retMtdTree)(
+        S(state.nonLocalRet), FlowSymbol.sel(callSiteId.name), N, S(summon)),
+      Term.Tup(PlainFld(argTerm) :: Nil)(argTree),
+    )(App(Sel(callSiteId, retMtdTree), argTree), N, rs)
+  
   def term(tree: Tree): Ctxl[Term] =
   trace[Term](s"Elab term ${tree.showDbg}", r => s"~> $r"):
     val unders = mutable.ArrayBuffer.empty[VarSymbol]
@@ -481,6 +518,13 @@ extends Importer with ucs.SplitElaborator:
   
   def subterm(tree: Tree, inAppPrefix: Bool = false, inTyAppPrefix: Bool = false): Ctxl[UnderCtx ?=> Term] =
   trace[Term](s"Elab subterm ${tree.showDbg}", r => s"~> $r"):
+    /** Fallback to a normal selection + application when label-specific handling does not apply. */
+    def mkLabelSelectionApp(tree: App, labelId: Ident, nme: Ident, args: Ls[Tree]): Term =
+      val sym = FlowSymbol.app()
+      val lt = subterm(Sel(labelId, nme), inAppPrefix = true)
+      val rt = subterm(Tup(args), inAppPrefix = false, inTyAppPrefix = false)
+      Term.App(lt, rt)(tree, N, sym)
+    
     def elaborateSelection(tree: Tree, pre: Tree, nme: Ident): Term =
       val preTrm = subterm(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
@@ -716,11 +760,6 @@ extends Importer with ucs.SplitElaborator:
           rhs.splitOn(acc)
       subterm(tree)
     case tree @ App(Sel(labelId @ Ident(labelName), nme @ Ident("break")), Tup(args)) =>
-      val mkFallbackApp: Term =
-        val sym = FlowSymbol.app()
-        val lt = subterm(Sel(labelId, nme), inAppPrefix = true)
-        val rt = subterm(Tup(args))
-        Term.App(lt, rt)(tree, N, sym)
       val value = args match
         case Nil => N
         case arg :: Nil => S(subterm(arg))
@@ -730,24 +769,20 @@ extends Importer with ucs.SplitElaborator:
       ctx.lookupLabel(labelName) match
       case LabelLookup.Found(binding) =>
         Term.Break(binding.labelSymbol, binding.resultSymbol, value)
-      case LabelLookup.AcrossBoundary(binding, crossedFunction, _) =>
-        if !crossedFunction then
-          mkFallbackApp
-        else if config.effectHandlers.isEmpty then
-          mkFallbackApp
+      case LabelLookup.AcrossBoundary(binding, _, _) =>
+        if config.effectHandlers.isEmpty then
+          mkLabelSelectionApp(tree, labelId, nme, args)
         else
-          val rs = FlowSymbol.app()
-          val breakMtdTree = new Ident("ret")
-          val breakMtdSelTree = Sel(new Ident("break").withLocOf(labelId), breakMtdTree)
           val argTree = new Tup(args)
-          val argTerm = value.getOrElse(Term.UnitVal())
-          Term.App(
-            Term.Sel(binding.nonLocalBreakHandlerSymbol.ref(labelId), breakMtdTree)(
-              S(state.nonLocalRet), FlowSymbol.sel(labelId.name), N, S(summon)),
-            Term.Tup(PlainFld(argTerm) :: Nil)(argTree),
-          )(App(breakMtdSelTree, argTree), N, rs)
+          val callSiteId = new Ident("break").withLocOf(labelId)
+          mkNonLocalEffectInvocation(
+            binding.nonLocalBreakHandlerSymbol,
+            callSiteId,
+            argTree,
+            value.getOrElse(Term.UnitVal()),
+          )
       case LabelLookup.NotFound =>
-        mkFallbackApp
+        mkLabelSelectionApp(tree, labelId, nme, args)
     case tree @ App(Sel(labelId @ Ident(labelName), nme @ Ident("continue")), Tup(args)) =>
       ctx.lookupLabel(labelName) match
       case LabelLookup.Found(binding) =>
@@ -756,16 +791,8 @@ extends Importer with ucs.SplitElaborator:
           Term.Error
         else
           Term.Continue(binding.labelSymbol)
-      case LabelLookup.AcrossBoundary(_, _, _) =>
-        val sym = FlowSymbol.app()
-        val lt = subterm(Sel(labelId, nme), inAppPrefix = true)
-        val rt = subterm(Tup(args))
-        Term.App(lt, rt)(tree, N, sym)
-      case LabelLookup.NotFound =>
-        val sym = FlowSymbol.app()
-        val lt = subterm(Sel(labelId, nme), inAppPrefix = true)
-        val rt = subterm(Tup(args))
-        Term.App(lt, rt)(tree, N, sym)
+      case LabelLookup.AcrossBoundary(_, _, _) | LabelLookup.NotFound =>
+        mkLabelSelectionApp(tree, labelId, nme, args)
     case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol.app()
       val lt = subterm(lhs, inAppPrefix = true)
@@ -788,22 +815,14 @@ extends Importer with ucs.SplitElaborator:
       ctx.lookupLabel(labelName) match
       case LabelLookup.Found(binding) =>
         Term.Break(binding.labelSymbol, binding.resultSymbol, N)
-      case LabelLookup.AcrossBoundary(binding, crossedFunction, _) =>
-        if !crossedFunction then
-          raise(ErrorReport(msg"Label break cannot cross lambda or handler boundaries." -> labelId.toLoc :: Nil))
-          Term.Error
-        else if config.effectHandlers.isEmpty then
+      case LabelLookup.AcrossBoundary(binding, _, _) =>
+        if config.effectHandlers.isEmpty then
           raise(ErrorReport(msg"Non-local label breaks are only supported with effect handlers enabled." -> labelId.toLoc :: Nil))
           Term.Error
         else
-          val rs = FlowSymbol.app()
-          val breakMtdTree = new Ident("ret")
           val argTree = new Tup(Nil)
-          Term.App(
-            Term.Sel(binding.nonLocalBreakHandlerSymbol.ref(labelId), breakMtdTree)(
-              S(state.nonLocalRet), FlowSymbol.sel(labelId.name), N, S(summon)),
-            Term.Tup(PlainFld(Term.UnitVal()) :: Nil)(argTree),
-          )(App(Sel(new Ident("break").withLocOf(labelId), breakMtdTree), argTree), N, rs)
+          val callSiteId = new Ident("break").withLocOf(labelId)
+          mkNonLocalEffectInvocation(binding.nonLocalBreakHandlerSymbol, callSiteId, argTree, Term.UnitVal())
       case LabelLookup.NotFound =>
         elaborateSelection(tree, labelId, nme)
     case Sel(labelId @ Ident(labelName), nme @ Ident("continue")) =>
@@ -921,14 +940,9 @@ extends Importer with ucs.SplitElaborator:
             ErrorReport(msg"Non-local return statements are only supported with effect handlers enabled." -> tree.toLoc :: Nil)
           Term.Error
         else
-          val rs = FlowSymbol.app()
-          val retMtdTree = new Ident("ret")
           val argTree = new Tup(body :: Nil)
-          val dummyIdent = new Ident("return").withLocOf(kw)
-          Term.App(
-            Term.Sel(sym.ref(dummyIdent), retMtdTree)(S(state.nonLocalRet), FlowSymbol.sel(dummyIdent.name), N, S(summon)),
-            Term.Tup(PlainFld(subterm(body)) :: Nil)(argTree)
-          )(App(Sel(dummyIdent, retMtdTree), argTree), N, rs)
+          val callSiteId = new Ident("return").withLocOf(kw)
+          mkNonLocalEffectInvocation(sym, callSiteId, argTree, subterm(body))
       case ReturnHandler.NotInFunction =>
         raise:
           ErrorReport(msg"Return statements are not allowed outside of functions." -> tree.toLoc :: Nil)
@@ -949,18 +963,12 @@ extends Importer with ucs.SplitElaborator:
         subterm(body)
       val wrappedBodyTerm =
         if nonLocalBreakHandlerSym.directRefs.isEmpty then bodyTerm else
-          val clsSym = ClassSymbol(DummyTypeDef(Cls), Ident("NonLocalBreakEffect"))
-          val valueSym = VarSymbol(Ident("value"))
-          val resumeSym = VarSymbol(Ident("resume"))
-          val mtdSym = BlockMemberSymbol("ret", Nil, true)
-          val tsym = TermSymbol(Fun, N, Ident("ret"))
-          val td = TermDefinition(
-            Fun, mtdSym, tsym, PlainParamList(Param(FldFlags.empty, valueSym, N, Modulefulness.none) :: Nil) :: Nil,
-            N, N, S(valueSym.ref(Ident("value"))), TermDefFlags.empty, Modulefulness.none, Nil, N)
-          tsym.defn = S(td)
-          mtdSym.tsym = S(tsym)
-          val htd = HandlerTermDefinition(resumeSym, td)
-          Term.Handle(nonLocalBreakHandlerSym, state.nonLocalRetHandlerTrm, Nil, clsSym, htd :: Nil, bodyTerm)
+          mkSingleMethodEffectHandle(
+            nonLocalBreakHandlerSym,
+            "NonLocalBreakEffect",
+            valueSym => valueSym.ref(Ident("value")),
+            bodyTerm,
+          )
       Term.Label(labelSym, resultSym, wrappedBodyTerm).mkLocWith(kw, labelId)
     case PrefixApp(kw @ Keywrd(Keyword.`do`), body) =>
       Blk(subterm(body) :: Nil, unit).mkLocWith(kw)
@@ -1390,18 +1398,12 @@ extends Importer with ucs.SplitElaborator:
                   newCtx.nest(OuterCtx.Function(nonLocalRetHandler)).givenIn: newCtx ?=>
                     val b = term(rhs)(using newCtx)
                     if nonLocalRetHandler.directRefs.isEmpty then b else
-                      val clsSym = ClassSymbol(DummyTypeDef(Cls), Ident("‹non-local return effect›"))
-                      val valueSym = VarSymbol(Ident("value"))
-                      val resumeSym = VarSymbol(Ident("resume"))
-                      val mtdSym = BlockMemberSymbol("ret", Nil, true)
-                      val tsym = TermSymbol(Fun, N, Ident("ret"))
-                      val td = TermDefinition(
-                        Fun, mtdSym, tsym, PlainParamList(Param(FldFlags.empty, valueSym, N, Modulefulness.none) :: Nil) :: Nil,
-                        N, N, S(valueSym.ref(Ident("value"))), TermDefFlags.empty, Modulefulness.none, Nil, N)
-                      tsym.defn = S(td)
-                      mtdSym.tsym = S(tsym)
-                      val htd = HandlerTermDefinition(resumeSym, td)
-                      Term.Handle(nonLocalRetHandler, state.nonLocalRetHandlerTrm, Nil, clsSym, htd :: Nil, b)
+                      mkSingleMethodEffectHandle(
+                        nonLocalRetHandler,
+                        "‹non-local return effect›",
+                        valueSym => valueSym.ref(Ident("value")),
+                        b,
+                      )
               val r = FlowSymbol(s"‹result of ${sym}›")
               
               val mfn = st match
