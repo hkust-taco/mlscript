@@ -1,0 +1,37 @@
+:js
+
+
+let emptyItemCount = 0
+let c() = (set emptyItemCount += 1)
+in
+  c()
+  if
+    emptyItemCount > 0 then
+      let emptyItemCount' = emptyItemCount
+      set emptyItemCount = 0
+      print(emptyItemCount')
+//│ > 1
+//│ emptyItemCount = 0
+
+
+:noInline
+:soir
+let emptyItemCount = 1
+fun next() =
+    let emptyItemCount' = emptyItemCount
+    set emptyItemCount = 0
+    print(emptyItemCount')
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let next⁰, emptyItemCount⁰;
+//│ define next⁰ as fun next¹() {
+//│   let emptyItemCount';
+//│   set emptyItemCount' = emptyItemCount⁰;
+//│   set emptyItemCount⁰ = 0;
+//│   return Predef⁰.print⁰(emptyItemCount')
+//│ };
+//│ set emptyItemCount⁰ = 1;
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ emptyItemCount = 1
+
+

@@ -31,3 +31,24 @@ x // folded into the `else`; no longer observe the value `2`
 //│ y = 1
 
 
+// * Reading an uninitialized top-level variable yields undefined.
+// :dopt
+:soir
+let x
+print(x)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let x⁰; Predef⁰.print⁰(undefined)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > undefined
+//│ x = undefined
+
+// * Keep the uninitialized binding visible to the following block.
+let x
+//│ x = undefined
+
+// :dopt
+:soir
+if x is 0 do print()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ match x¹ 0 => do Predef⁰.print⁰(); runtime⁰.Unit⁰ else runtime⁰.Unit⁰ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
