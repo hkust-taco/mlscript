@@ -22,6 +22,7 @@ pattern AtPrec(str, prec) = str as (
 
 fun f(x) = if x is AtPrec(op, p) then [op, p]
 f("+")
+//│ = ["+", 5]
 f("*")
 //│ = ["*", 2]
 
@@ -132,6 +133,7 @@ fun f(x) =
   [str, prec]
 
 f("+")
+//│ = ["+", 5]
 f("*")
 //│ = ["*", 2]
 
@@ -139,10 +141,10 @@ f("*")
 :e
 fun f(x) = assert x is str as AtPrec as prec, [str, prec]
 //│ ╔══[COMPILATION ERROR] Name not found: str
-//│ ║  l.140: 	fun f(x) = assert x is str as AtPrec as prec, [str, prec]
+//│ ║  l.142: 	fun f(x) = assert x is str as AtPrec as prec, [str, prec]
 //│ ╙──       	                                               ^^^
 //│ ╔══[COMPILATION ERROR] Name not found: prec
-//│ ║  l.140: 	fun f(x) = assert x is str as AtPrec as prec, [str, prec]
+//│ ║  l.142: 	fun f(x) = assert x is str as AtPrec as prec, [str, prec]
 //│ ╙──       	                                                    ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

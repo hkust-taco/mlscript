@@ -180,6 +180,7 @@ pattern AtPrec =
 
 fun f(x) = if x is str as AtPrec as prec then [str, prec]
 f("+")
+//│ = ["+", 2]
 f("*")
 //│ = ["*", 5]
 
@@ -207,7 +208,7 @@ if p is Crazy(a, b, c, d, e, f, g) then
 :re
 if p is Crazy(a, b, c, d, e, f) then 42
 //│ ╔══[COMPILATION ERROR] Expected seven extraction arguments, but found only six arguments.
-//│ ║  l.208: 	if p is Crazy(a, b, c, d, e, f) then 42
+//│ ║  l.209: 	if p is Crazy(a, b, c, d, e, f) then 42
 //│ ╙──       	              ^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -215,7 +216,7 @@ if p is Crazy(a, b, c, d, e, f) then 42
 :re
 if p is Crazy(all) then 42
 //│ ╔══[COMPILATION ERROR] Expected seven extraction arguments, but found only one argument.
-//│ ║  l.216: 	if p is Crazy(all) then 42
+//│ ║  l.217: 	if p is Crazy(all) then 42
 //│ ╙──       	              ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 

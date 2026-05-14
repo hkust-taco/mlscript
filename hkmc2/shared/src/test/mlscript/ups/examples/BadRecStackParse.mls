@@ -58,6 +58,7 @@ parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
 
 // * Notice: wrong assoc.
 parse("a" :: "+" :: "(" :: "b" :: "+" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ = {Success: Op(Id("a"), "+", Op(Id("b"), "+", Op(Id("x"), "+", Id("y"))))}
 // * It parses the same as:
 parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
 //│ = {Success: Op(Id("a"), "+", Op(Id("b"), "+", Op(Id("x"), "+", Id("y"))))}
