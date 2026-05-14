@@ -2,7 +2,6 @@
 
 
 // * Assignments from an inner loop can affect the outer loop condition.
-:sir
 :soir
 fun innerUpdatesOuterCondition() =
   let x = 2
@@ -12,37 +11,6 @@ fun innerUpdatesOuterCondition() =
       set x -= 1
       set y -= 1
   x
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let innerUpdatesOuterCondition⁰;
-//│ define innerUpdatesOuterCondition⁰ as fun innerUpdatesOuterCondition¹() {
-//│   let x;
-//│   set x = 2;
-//│   loop lbl:
-//│     let scrut, y;
-//│     set scrut = >⁰(x, 0);
-//│     match scrut
-//│       true =>
-//│         set y = 1;
-//│         loop lbl1:
-//│           let scrut1, tmp, tmp1;
-//│           set scrut1 = >⁰(y, 0);
-//│           match scrut1
-//│             true =>
-//│               set tmp = -⁰(x, 1);
-//│               set x = tmp;
-//│               set tmp1 = -⁰(y, 1);
-//│               set y = tmp1;
-//│               continue lbl1
-//│             else
-//│               end
-//│           end
-//│         continue lbl
-//│       else
-//│         end
-//│     end
-//│   return x
-//│ };
-//│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let innerUpdatesOuterCondition⁰;
 //│ define innerUpdatesOuterCondition⁰ as fun innerUpdatesOuterCondition¹() {
@@ -81,7 +49,6 @@ innerUpdatesOuterCondition()
 
 
 // * The outer body must account for inner-loop zero-iteration and loop-back states.
-:sir
 :soir
 fun nestedLoopBackPost(flag) =
   let x = 1
@@ -93,34 +60,6 @@ fun nestedLoopBackPost(flag) =
     print(x)
     set flag = false
   x
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let nestedLoopBackPost⁰;
-//│ define nestedLoopBackPost⁰ as fun nestedLoopBackPost¹(flag) {
-//│   let x;
-//│   set x = 1;
-//│   loop lbl:
-//│     let inner;
-//│     match flag
-//│       true =>
-//│         set inner = flag;
-//│         loop lbl1:
-//│           match inner
-//│             true =>
-//│               set x = 2;
-//│               set inner = false;
-//│               continue lbl1
-//│             else
-//│               end
-//│           end
-//│         do Predef⁰.print⁰(x);
-//│         set flag = false;
-//│         continue lbl
-//│       else
-//│         end
-//│     end
-//│   return x
-//│ };
-//│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let nestedLoopBackPost⁰;
 //│ define nestedLoopBackPost⁰ as fun nestedLoopBackPost¹(flag) {
@@ -159,7 +98,6 @@ print(nestedLoopBackPost(true))
 
 
 // * A returning path in an inner loop must not leak its assignment into the outer loop exit.
-:sir
 :soir
 fun innerReturnDoesNotPolluteOuterExit(flag) =
   let x = 1
@@ -169,32 +107,6 @@ fun innerReturnDoesNotPolluteOuterExit(flag) =
       return x
     set flag = false
   x
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let innerReturnDoesNotPolluteOuterExit⁰;
-//│ define innerReturnDoesNotPolluteOuterExit⁰ as fun innerReturnDoesNotPolluteOuterExit¹(flag) {
-//│   let x;
-//│   set x = 1;
-//│   loop lbl:
-//│     match flag
-//│       true =>
-//│         loop lbl1:
-//│           let scrut;
-//│           set scrut = true;
-//│           match scrut
-//│             true =>
-//│               set x = 2;
-//│               return x
-//│             else
-//│               end
-//│           end
-//│         set flag = false;
-//│         continue lbl
-//│       else
-//│         end
-//│     end
-//│   return x
-//│ };
-//│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let innerReturnDoesNotPolluteOuterExit⁰;
 //│ define innerReturnDoesNotPolluteOuterExit⁰ as fun innerReturnDoesNotPolluteOuterExit¹(flag) {
@@ -226,7 +138,6 @@ print(innerReturnDoesNotPolluteOuterExit(true))
 
 
 // * Inner and outer loops can both skip, so the final value must merge several paths.
-:sir
 :soir
 fun nestedInnerMaySkip(flag, innerFlag) =
   let x = 1
@@ -236,31 +147,6 @@ fun nestedInnerMaySkip(flag, innerFlag) =
       set innerFlag = false
     set flag = false
   x
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let nestedInnerMaySkip⁰;
-//│ define nestedInnerMaySkip⁰ as fun nestedInnerMaySkip¹(flag, innerFlag) {
-//│   let x;
-//│   set x = 1;
-//│   loop lbl:
-//│     match flag
-//│       true =>
-//│         loop lbl1:
-//│           match innerFlag
-//│             true =>
-//│               set x = 2;
-//│               set innerFlag = false;
-//│               continue lbl1
-//│             else
-//│               end
-//│           end
-//│         set flag = false;
-//│         continue lbl
-//│       else
-//│         end
-//│     end
-//│   return x
-//│ };
-//│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let nestedInnerMaySkip⁰;
 //│ define nestedInnerMaySkip⁰ as fun nestedInnerMaySkip¹(flag, innerFlag) {

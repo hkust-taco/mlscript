@@ -7,11 +7,7 @@ data class C(a)
 data class D(b)
 data class E(c)
 
-:soir
 if true then 1 else 0
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ 1
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 // * Properly removes the `D` branch and the whole match
@@ -39,29 +35,10 @@ if C(123) is
 //│ > 123
 
 // :dopt
-:soir
 let c = if hide(true) then C(123) else D(456)
 in if c is
   C(x) then print(x)
   else print("?")
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let scrut, tmp, arg$C$0$;
-//│ set scrut = Predef⁰.hide⁰(true);
-//│ match scrut
-//│   true =>
-//│     set tmp = C⁰(123);
-//│     end
-//│   else
-//│     set tmp = D⁰(456);
-//│     end
-//│ match tmp
-//│   C¹ =>
-//│     set arg$C$0$ = tmp.a⁰;
-//│     Predef⁰.print⁰(arg$C$0$)
-//│   else
-//│     Predef⁰.print⁰("?")
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 123
 
 // * Properly removes the `E` branch

@@ -10,42 +10,8 @@
 
 
 // TODO: improve (currently takes multiple iterations)
-:dopt
 :soir
 2 + 2 * 3 > 0
-//│ ⬤ Simplif. iter. 1
-//│ Captured variables: HashSet()
-//│ !! Change triggered { Evaluating builtin * with args 2, 3 ~> 6 }
-//│ ▶ VP:
-//│ >  let tmp, tmp1; set tmp = 6; set tmp1 = +⁰(2, tmp); >⁰(tmp1, 0)
-//│ ⬤ Simplif. iter. 2
-//│ Captured variables: HashSet()
-//│ !! Change triggered { tmp:tmp⁰ ~> 6 }
-//│ ▶ VP:
-//│ >  let tmp, tmp1; set tmp = 6; set tmp1 = +⁰(2, 6); >⁰(tmp1, 0)
-//│ ⬤ Simplif. iter. 3
-//│ !! Change triggered { rm tmp:tmp⁰ = 6 }
-//│ ▶ DCE:
-//│ >  let tmp; set tmp = +⁰(2, 6); >⁰(tmp, 0)
-//│ Captured variables: HashSet()
-//│ !! Change triggered { Evaluating builtin + with args 2, 6 ~> 8 }
-//│ ▶ VP:
-//│ >  let tmp; set tmp = 8; >⁰(tmp, 0)
-//│ ⬤ Simplif. iter. 4
-//│ Captured variables: HashSet()
-//│ !! Change triggered { tmp:tmp¹ ~> 8 }
-//│ ▶ VP:
-//│ >  let tmp; set tmp = 8; >⁰(8, 0)
-//│ ⬤ Simplif. iter. 5
-//│ !! Change triggered { rm tmp:tmp¹ = 8 }
-//│ ▶ DCE:
-//│ >  >⁰(8, 0)
-//│ Captured variables: HashSet()
-//│ !! Change triggered { Evaluating builtin > with args 8, 0 ~> true }
-//│ ▶ VP:
-//│ >  true
-//│ ⬤ Simplif. iter. 6
-//│ Captured variables: HashSet()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ true
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

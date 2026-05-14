@@ -59,35 +59,12 @@ fun f =
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:sir
+// * Note: removed from here as well
 :soir
 fun f =
   if true and false then return "1"
   else return "2 long long long long long long long long long long long long long long"
   ???
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f²;
-//│ define f² as fun f³() {
-//│   let scrut, scrut1;
-//│   block split_root$:
-//│     block split_1$:
-//│       set scrut = true;
-//│       match scrut
-//│         true =>
-//│           set scrut1 = false;
-//│           match scrut1
-//│             true =>
-//│               return "1"
-//│             else
-//│               break split_1$
-//│           end
-//│         else
-//│           break split_1$
-//│       end
-//│     return "2 long long long long long long long long long long long long long long"
-//│   return Predef⁰.notImplementedError⁰
-//│ };
-//│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f²;
 //│ define f² as fun f³() {

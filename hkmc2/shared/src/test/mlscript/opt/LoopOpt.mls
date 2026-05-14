@@ -2,90 +2,33 @@
 
 
 // :sir
-:soir
 // :dopt
 () =>
   let x = 1
   while x != 0 do
     print(x)
   // x = 0
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let lambda⁰;
-//│ define lambda⁰ as fun lambda¹() {
-//│   loop lbl:
-//│     let scrut;
-//│     set scrut = Predef⁰.nequals⁰(1, 0);
-//│     match scrut
-//│       true =>
-//│         do Predef⁰.print⁰(1);
-//│         continue lbl
-//│       else
-//│         end
-//│     end
-//│   return runtime⁰.Unit⁰
-//│ };
-//│ lambda¹
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
-:soir
 // :dopt
 () =>
   let x = 1
   while x != 0 do
     print(x)
     x = 0
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let lambda²;
-//│ define lambda² as fun lambda³() {
-//│   let x;
-//│   set x = 1;
-//│   loop lbl:
-//│     let scrut;
-//│     set scrut = Predef⁰.nequals⁰(x, 0);
-//│     match scrut
-//│       true =>
-//│         do Predef⁰.print⁰(x);
-//│         set x = 0;
-//│         continue lbl
-//│       else
-//│         end
-//│     end
-//│   return runtime⁰.Unit⁰
-//│ };
-//│ lambda³
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 
 
-:soir
 fun f() =
   let x = 1
   while hide(false) do
     set x = hide(2)
     return 1
   x
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰;
-//│ define f⁰ as fun f¹() {
-//│   let scrut;
-//│   set scrut = Predef⁰.hide⁰(false);
-//│   match scrut
-//│     true =>
-//│       do Predef⁰.hide⁰(2);
-//│       return 1
-//│     else
-//│       return 1
-//│   end
-//│ };
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 
-:sir
-:soir
 fun f() =
   let x = 1
   if hide(false) do
@@ -96,120 +39,31 @@ fun f() =
     print(1)
     return x
   return x
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f²;
-//│ define f² as fun f³() {
-//│   let x, scrut, scrut1, tmp, tmp1, tmp2;
-//│   set x = 1;
-//│   set scrut = Predef⁰.hide⁰(false);
-//│   match scrut
-//│     true =>
-//│       set scrut1 = Predef⁰.hide⁰(true);
-//│       match scrut1
-//│         true =>
-//│           set tmp = Predef⁰.hide⁰(2);
-//│           set x = tmp;
-//│           set tmp1 = runtime⁰.Unit⁰;
-//│           end
-//│         else
-//│           set tmp2 = Predef⁰.hide⁰(3);
-//│           set x = tmp2;
-//│           set tmp1 = runtime⁰.Unit⁰;
-//│           end
-//│       do Predef⁰.print⁰(1);
-//│       return x
-//│     else
-//│       return x
-//│   end
-//│ };
-//│ end
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f²;
-//│ define f² as fun f³() {
-//│   let x, scrut, scrut1, tmp, tmp1;
-//│   set x = 1;
-//│   set scrut = Predef⁰.hide⁰(false);
-//│   match scrut
-//│     true =>
-//│       set scrut1 = Predef⁰.hide⁰(true);
-//│       match scrut1
-//│         true =>
-//│           set tmp = Predef⁰.hide⁰(2);
-//│           set x = tmp;
-//│           end
-//│         else
-//│           set tmp1 = Predef⁰.hide⁰(3);
-//│           set x = tmp1;
-//│           end
-//│       do Predef⁰.print⁰(1);
-//│       return x
-//│     else
-//│       return 1
-//│   end
-//│ };
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 f()
 //│ = 1
 
 
-:soir
 fun foo() =
   let x = 1
   if true then return ()
   x
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰;
-//│ define foo⁰ as fun foo¹() {
-//│   match true
-//│     true =>
-//│       return runtime⁰.Unit⁰
-//│     else
-//│       throw new globalThis⁰.Error⁰("match error")
-//│   end
-//│ };
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 
 
 // :dopt
-:sir
-:soir
 fun foo() =
   let x = 1
   if true do
     set x = 2
     return ()
   x
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo²;
-//│ define foo² as fun foo³() {
-//│   let x, scrut;
-//│   set x = 1;
-//│   set scrut = true;
-//│   match scrut
-//│     true =>
-//│       set x = 2;
-//│       return runtime⁰.Unit⁰
-//│     else
-//│       return x
-//│   end
-//│ };
-//│ end
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo²;
-//│ define foo² as fun foo³() { match true true => return runtime⁰.Unit⁰ else return 1 end };
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 
 
 // * The post-loop state must merge the zero-iteration value with values from loop-back edges.
-:sir
 :soir
 fun loopBackPost(flag) =
   let x = 1
@@ -217,23 +71,6 @@ fun loopBackPost(flag) =
     set x = 2
     set flag = false
   x
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let loopBackPost⁰;
-//│ define loopBackPost⁰ as fun loopBackPost¹(flag) {
-//│   let x;
-//│   set x = 1;
-//│   loop lbl:
-//│     match flag
-//│       true =>
-//│         set x = 2;
-//│         set flag = false;
-//│         continue lbl
-//│       else
-//│         end
-//│     end
-//│   return x
-//│ };
-//│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let loopBackPost⁰;
 //│ define loopBackPost⁰ as fun loopBackPost¹(flag) {
@@ -260,7 +97,6 @@ print(loopBackPost(true))
 
 
 // * The `else` branch sees assignments that reached the next iteration.
-:sir
 :soir
 fun loopElseReturn(flag) =
   let x = 1
@@ -269,23 +105,6 @@ fun loopElseReturn(flag) =
       set x = 2
       set flag = false
     else return x
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let loopElseReturn⁰;
-//│ define loopElseReturn⁰ as fun loopElseReturn¹(flag) {
-//│   let x;
-//│   set x = 1;
-//│   loop lbl:
-//│     match flag
-//│       true =>
-//│         set x = 2;
-//│         set flag = false;
-//│         continue lbl
-//│       else
-//│         return x
-//│     end
-//│   return runtime⁰.Unit⁰
-//│ };
-//│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let loopElseReturn⁰;
 //│ define loopElseReturn⁰ as fun loopElseReturn¹(flag) {
