@@ -18,6 +18,8 @@ import semantics.*
   */
 class ScopeFlattener extends BlockTransformer(new SymbolSubst):
   override def applyBlock(b: Block): Block = b match
+    // Effect-handler-based control-flow rewrites can leave loop labels at this stage.
+    // We still recurse and flatten scopes instead of crashing on those labels.
     case Label(_, _, _, _) =>
       super.applyBlock(b)
     case _ => super.applyBlock(b)
@@ -49,4 +51,3 @@ class ScopeFlattener extends BlockTransformer(new SymbolSubst):
           scopedForCurrentFun.addAll(syms)
           super.applySubBlock(body)
     case _ => super.applySubBlock(b)
-

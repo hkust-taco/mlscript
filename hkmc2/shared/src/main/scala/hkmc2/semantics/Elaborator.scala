@@ -60,12 +60,21 @@ object Elaborator:
       case InnerScope(inner) => S(inner)
       case _ => N
   
+  /** Label metadata threaded through elaboration.
+    * `nonLocalBreakHandlerSymbol` is used when lowering non-local label breaks
+    * via effect handlers.
+    */
   final case class LabelBinding(
       labelSymbol: LabelSymbol,
       resultSymbol: TempSymbol,
       nonLocalBreakHandlerSymbol: TempSymbol,
   )
   
+  /** Result of label lookup:
+    * - `Found`: label is in direct lexical scope
+    * - `AcrossBoundary`: label exists but crossing function/lambda/handler boundaries is required
+    * - `NotFound`: no such label
+    */
   enum LabelLookup:
     case Found(binding: LabelBinding)
     case AcrossBoundary(binding: LabelBinding, crossedFunction: Bool, crossedLambdaOrHandler: Bool)
@@ -723,11 +732,9 @@ extends Importer with ucs.SplitElaborator:
         Term.Break(binding.labelSymbol, binding.resultSymbol, value)
       case LabelLookup.AcrossBoundary(binding, crossedFunction, _) =>
         if !crossedFunction then
-          raise(ErrorReport(msg"Label break cannot cross lambda or handler boundaries." -> labelId.toLoc :: Nil))
-          Term.Error
+          mkFallbackApp
         else if config.effectHandlers.isEmpty then
-          raise(ErrorReport(msg"Non-local label breaks are only supported with effect handlers enabled." -> labelId.toLoc :: Nil))
-          Term.Error
+          mkFallbackApp
         else
           val rs = FlowSymbol.app()
           val breakMtdTree = new Ident("ret")
@@ -750,8 +757,10 @@ extends Importer with ucs.SplitElaborator:
         else
           Term.Continue(binding.labelSymbol)
       case LabelLookup.AcrossBoundary(_, _, _) =>
-        raise(ErrorReport(msg"Label continue cannot cross function boundaries." -> labelId.toLoc :: Nil))
-        Term.Error
+        val sym = FlowSymbol.app()
+        val lt = subterm(Sel(labelId, nme), inAppPrefix = true)
+        val rt = subterm(Tup(args))
+        Term.App(lt, rt)(tree, N, sym)
       case LabelLookup.NotFound =>
         val sym = FlowSymbol.app()
         val lt = subterm(Sel(labelId, nme), inAppPrefix = true)
@@ -940,7 +949,7 @@ extends Importer with ucs.SplitElaborator:
         subterm(body)
       val wrappedBodyTerm =
         if nonLocalBreakHandlerSym.directRefs.isEmpty then bodyTerm else
-          val clsSym = ClassSymbol(DummyTypeDef(Cls), Ident("‹non-local break effect›"))
+          val clsSym = ClassSymbol(DummyTypeDef(Cls), Ident("NonLocalBreakEffect"))
           val valueSym = VarSymbol(Ident("value"))
           val resumeSym = VarSymbol(Ident("resume"))
           val mtdSym = BlockMemberSymbol("ret", Nil, true)
