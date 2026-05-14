@@ -63,22 +63,22 @@ fun continueFromNestedFunctionWithEffects() =
     loop()
 continueFromNestedFunctionWithEffects()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let loop⁰, continueFromNestedFunctionWithEffects⁰, handleBlock$⁰, NonLocalBreakEffectret⁰, NonLocalBreakEffect⁰, handleBlock$¹, NonLocalContinueEffectret⁰, NonLocalContinueEffect⁰, Capture$scope0⁰, handleBlock$$⁰, handleBlock$$¹, NonLocalBreakEffectret$⁰, NonLocalContinueEffectret$⁰, tmp;
+//│ let loop⁰, continueFromNestedFunctionWithEffects⁰, handleBlock$⁰, NonLocalLabelEffectbreak⁰, NonLocalLabelEffectcontinue⁰, NonLocalLabelEffect⁰, Capture$scope0⁰, handleBlock$$⁰, NonLocalLabelEffectbreak$⁰, NonLocalLabelEffectcontinue$⁰, tmp;
 //│ do runtime⁰.resetEffects﹖();
-//│ define NonLocalContinueEffectret$⁰ as fun NonLocalContinueEffectret$¹(scope0$cap)(resume) {
-//│   return NonLocalContinueEffectret¹(scope0$cap, resume)
+//│ define NonLocalLabelEffectcontinue$⁰ as fun NonLocalLabelEffectcontinue$¹(scope0$cap)(resume) {
+//│   return NonLocalLabelEffectcontinue¹(scope0$cap, resume)
 //│ };
-//│ define NonLocalContinueEffectret⁰ as fun NonLocalContinueEffectret¹(scope0$cap, resume) {
+//│ define NonLocalLabelEffectcontinue⁰ as fun NonLocalLabelEffectcontinue¹(scope0$cap, resume) {
 //│   set scope0$cap.nonLocalContinueFlag$root$2 = true;
 //│   return runtime⁰.Unit⁰
 //│ };
-//│ define NonLocalBreakEffectret$⁰ as fun NonLocalBreakEffectret$¹(value)(resume) {
-//│   return NonLocalBreakEffectret¹(value, resume)
+//│ define NonLocalLabelEffectbreak$⁰ as fun NonLocalLabelEffectbreak$¹(value)(resume) {
+//│   return NonLocalLabelEffectbreak¹(value, resume)
 //│ };
-//│ define NonLocalBreakEffectret⁰ as fun NonLocalBreakEffectret¹(value, resume) {
+//│ define NonLocalLabelEffectbreak⁰ as fun NonLocalLabelEffectbreak¹(value, resume) {
 //│   return value
 //│ };
-//│ define loop⁰ as fun loop¹(scope0$cap, nonLocalBreakHandler$root) {
+//│ define loop⁰ as fun loop¹(scope0$cap) {
 //│   let scrut, tmp1, pc;
 //│   match runtime⁰.resumePc﹖
 //│     -1 =>
@@ -99,18 +99,18 @@ continueFromNestedFunctionWithEffects()
 //│       1 =>
 //│         set tmp1 = +⁰(scope0$cap.i$0⁰, 1);
 //│         set scope0$cap.i$0 = tmp1;
-//│         return scope0$cap.nonLocalContinueHandler$root$1⁰.ret﹖(runtime⁰.Unit⁰)
+//│         return scope0$cap.nonLocalHandler$root$1⁰.continue﹖()
 //│       0 =>
 //│         set scrut = >=⁰(scope0$cap.i$0⁰, 3);
 //│         match scrut
 //│           true =>
-//│             set runtime⁰.resumeValue = nonLocalBreakHandler$root.ret﹖(scope0$cap.i$0⁰);
+//│             set runtime⁰.resumeValue = scope0$cap.nonLocalHandler$root$1⁰.break﹖(scope0$cap.i$0⁰);
 //│             match runtime⁰.curEffect﹖
 //│               null =>
 //│                 set pc = 2;
 //│                 continue main
 //│               else
-//│                 return runtime⁰.unwind﹖(loop¹, 2, "NonLocalLabelControlFlow.mls:60:20", null, null, 1, 2, scope0$cap, nonLocalBreakHandler$root, 0)
+//│                 return runtime⁰.unwind﹖(loop¹, 2, "NonLocalLabelControlFlow.mls:60:20", null, null, 1, 1, scope0$cap, 0)
 //│             end
 //│           else
 //│             set pc = 1;
@@ -121,23 +121,10 @@ continueFromNestedFunctionWithEffects()
 //│     end
 //│   end
 //│ };
-//│ define handleBlock$$¹ as fun handleBlock$$²(scope0$cap, nonLocalBreakHandler$root)() {
-//│   return handleBlock$²(scope0$cap, nonLocalBreakHandler$root)
+//│ define handleBlock$$⁰ as fun handleBlock$$¹(scope0$cap)() {
+//│   return handleBlock$¹(scope0$cap)
 //│ };
-//│ define NonLocalBreakEffect⁰ as class NonLocalBreakEffect¹ {
-//│   method ret⁰ = fun ret¹(value) {
-//│     let suspendRes, NonLocalBreakEffectret$here;
-//│     set NonLocalBreakEffectret$here = NonLocalBreakEffectret$¹(value);
-//│     return runtime⁰.mkEffect﹖(NonLocalBreakEffect¹.this, NonLocalBreakEffectret$here)
-//│   }
-//│ };
-//│ define handleBlock$⁰ as fun handleBlock$²(scope0$cap, nonLocalBreakHandler$root) {
-//│   return loop¹(scope0$cap, nonLocalBreakHandler$root)
-//│ };
-//│ define handleBlock$$⁰ as fun handleBlock$$³(scope0$cap)() {
-//│   return handleBlock$³(scope0$cap)
-//│ };
-//│ define NonLocalContinueEffect⁰ as class NonLocalContinueEffect¹ {
+//│ define NonLocalLabelEffect⁰ as class NonLocalLabelEffect¹ {
 //│   private val scope0$cap⁰;
 //│   constructor(scope0$cap) {
 //│     let tmp1;
@@ -152,57 +139,30 @@ continueFromNestedFunctionWithEffects()
 //│     set scope0$cap⁰ = scope0$cap;
 //│     end
 //│   }
-//│   method ret² = fun ret³(value) {
-//│     let suspendRes, NonLocalContinueEffectret$here;
-//│     set NonLocalContinueEffectret$here = NonLocalContinueEffectret$¹(scope0$cap⁰);
-//│     return runtime⁰.mkEffect﹖(NonLocalContinueEffect¹.this, NonLocalContinueEffectret$here)
+//│   method break⁰ = fun break¹(value) {
+//│     let suspendRes, NonLocalLabelEffectbreak$here;
+//│     set NonLocalLabelEffectbreak$here = NonLocalLabelEffectbreak$¹(value);
+//│     return runtime⁰.mkEffect﹖(NonLocalLabelEffect¹.this, NonLocalLabelEffectbreak$here)
+//│   }
+//│   method continue⁰ = fun continue¹() {
+//│     let suspendRes, NonLocalLabelEffectcontinue$here;
+//│     set NonLocalLabelEffectcontinue$here = NonLocalLabelEffectcontinue$¹(scope0$cap⁰);
+//│     return runtime⁰.mkEffect﹖(NonLocalLabelEffect¹.this, NonLocalLabelEffectcontinue$here)
 //│   }
 //│ };
-//│ define handleBlock$¹ as fun handleBlock$³(scope0$cap) {
-//│   let nonLocalBreakHandler$root, tmp1, handleBlock$$here, pc;
-//│   match runtime⁰.resumePc﹖
-//│     -1 =>
-//│       set pc = 0;
-//│       end
-//│     else
-//│       let saveOffset;
-//│       set pc = runtime⁰.resumePc﹖;
-//│       set runtime⁰.resumePc = -1;
-//│       end
-//│   loop main:
-//│     match pc
-//│       0 =>
-//│         block brk0:
-//│           set nonLocalBreakHandler$root = new mut NonLocalBreakEffect¹();
-//│           set handleBlock$$here = handleBlock$$²(scope0$cap, nonLocalBreakHandler$root);
-//│           set runtime⁰.resumeValue = runtime⁰.enterHandleBlock﹖(nonLocalBreakHandler$root, handleBlock$$here);
-//│           match runtime⁰.curEffect﹖
-//│             null =>
-//│               break brk0
-//│             else
-//│               return runtime⁰.unwind﹖(handleBlock$³, 1, null, null, null, 1, 1, scope0$cap, 0)
-//│           end
-//│         set pc = 1;
-//│         end
-//│     match pc
-//│       1 =>
-//│         set tmp1 = runtime⁰.resumeValue﹖;
-//│         return tmp1
-//│       else
-//│         end
-//│     end
-//│   end
+//│ define handleBlock$⁰ as fun handleBlock$¹(scope0$cap) {
+//│   return loop¹(scope0$cap)
 //│ };
 //│ define Capture$scope0⁰ as class Capture$scope0² {
-//│   constructor Capture$scope0¹(i$0, nonLocalContinueHandler$root$1, nonLocalContinueFlag$root$2) {
+//│   constructor Capture$scope0¹(i$0, nonLocalHandler$root$1, nonLocalContinueFlag$root$2) {
 //│     define nonLocalContinueFlag$root$2⁰ as val nonLocalContinueFlag$root$2¹ = nonLocalContinueFlag$root$2;
-//│     define nonLocalContinueHandler$root$1¹ as val nonLocalContinueHandler$root$1⁰ = nonLocalContinueHandler$root$1;
+//│     define nonLocalHandler$root$1¹ as val nonLocalHandler$root$1⁰ = nonLocalHandler$root$1;
 //│     define i$0¹ as val i$0⁰ = i$0;
 //│     end
 //│   }
 //│ };
 //│ define continueFromNestedFunctionWithEffects⁰ as fun continueFromNestedFunctionWithEffects¹() {
-//│   let i, root$result, nonLocalContinueHandler$root, nonLocalContinueFlag$root, tmp1, scope0$cap, handleBlock$$here, pc;
+//│   let i, root$result, nonLocalHandler$root, nonLocalContinueFlag$root, tmp1, scope0$cap, handleBlock$$here, pc;
 //│   match runtime⁰.resumePc﹖
 //│     -1 =>
 //│       set pc = 0;
@@ -217,7 +177,7 @@ continueFromNestedFunctionWithEffects()
 //│   loop main:
 //│     match pc
 //│       0 =>
-//│         set scope0$cap = new mut Capture$scope0²(i, nonLocalContinueHandler$root, nonLocalContinueFlag$root);
+//│         set scope0$cap = new mut Capture$scope0²(i, nonLocalHandler$root, nonLocalContinueFlag$root);
 //│         set scope0$cap.i$0 = 0;
 //│         set pc = 1;
 //│         end
@@ -225,9 +185,9 @@ continueFromNestedFunctionWithEffects()
 //│       1 =>
 //│         block brk1:
 //│           set scope0$cap.nonLocalContinueFlag$root$2 = false;
-//│           set scope0$cap.nonLocalContinueHandler$root$1 = new mut NonLocalContinueEffect⁰(scope0$cap);
-//│           set handleBlock$$here = handleBlock$$³(scope0$cap);
-//│           set runtime⁰.resumeValue = runtime⁰.enterHandleBlock﹖(scope0$cap.nonLocalContinueHandler$root$1⁰, handleBlock$$here);
+//│           set scope0$cap.nonLocalHandler$root$1 = new mut NonLocalLabelEffect⁰(scope0$cap);
+//│           set handleBlock$$here = handleBlock$$¹(scope0$cap);
+//│           set runtime⁰.resumeValue = runtime⁰.enterHandleBlock﹖(scope0$cap.nonLocalHandler$root$1⁰, handleBlock$$here);
 //│           match runtime⁰.curEffect﹖
 //│             null =>
 //│               break brk1
