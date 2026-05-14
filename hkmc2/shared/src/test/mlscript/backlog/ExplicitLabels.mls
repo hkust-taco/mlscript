@@ -94,7 +94,10 @@ let i = 0 in let steps = 0 in do done:
 do root:
   fun escape() = root.break(42)
   escape()
-//│ ╔══[COMPILATION ERROR] Name not found: root
+//│ ╔══[COMPILATION ERROR] Non-local label breaks are only supported with effect handlers enabled.
+//│ ║  l.95: 	  fun escape() = root.break(42)
+//│ ╙──      	                 ^^^^
+//│ ╔══[COMPILATION ERROR] Non-local label breaks are only supported with effect handlers enabled.
 //│ ║  l.95: 	  fun escape() = root.break(42)
 //│ ╙──      	                 ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -104,7 +107,34 @@ do root:
 do root:
   let escape = () => root.continue
   escape()
-//│ ╔══[COMPILATION ERROR] Name not found: root
-//│ ║  l.105: 	  let escape = () => root.continue
+//│ ╔══[COMPILATION ERROR] Label continue cannot cross function boundaries.
+//│ ║  l.108: 	  let escape = () => root.continue
 //│ ╙──       	                     ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+:effectHandlers
+:lift
+fun breakFromNestedFunctionWithEffects() =
+  do root:
+    fun escape() = root.break(42)
+    escape()
+breakFromNestedFunctionWithEffects()
+//│ = 42
+
+
+:e
+:effectHandlers
+:lift
+fun breakFromNestedLambdaWithEffects() =
+  do root:
+    let escape = () => root.break(42)
+    escape()
+breakFromNestedLambdaWithEffects()
+//│ ╔══[COMPILATION ERROR] Label break cannot cross lambda or handler boundaries.
+//│ ║  l.131: 	    let escape = () => root.break(42)
+//│ ╙──       	                       ^^^^
+//│ ╔══[COMPILATION ERROR] Label break cannot cross lambda or handler boundaries.
+//│ ║  l.131: 	    let escape = () => root.break(42)
+//│ ╙──       	                       ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

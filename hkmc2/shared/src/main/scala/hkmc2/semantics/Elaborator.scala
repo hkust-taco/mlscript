@@ -60,6 +60,17 @@ object Elaborator:
       case InnerScope(inner) => S(inner)
       case _ => N
   
+  final case class LabelBinding(
+      labelSymbol: LabelSymbol,
+      resultSymbol: TempSymbol,
+      nonLocalBreakHandlerSymbol: TempSymbol,
+  )
+  
+  enum LabelLookup:
+    case Found(binding: LabelBinding)
+    case AcrossBoundary(binding: LabelBinding, crossedFunction: Bool, crossedLambdaOrHandler: Bool)
+    case NotFound
+  
   enum ReturnHandler:
     case Required(handler: TempSymbol)
     case Direct
@@ -75,7 +86,7 @@ object Elaborator:
       parent: Opt[Ctx],
       env: Map[Str, Ctx.Elem],
       mode: Mode,
-      labels: Map[Str, LabelSymbol -> TempSymbol],
+      labels: Map[Str, LabelBinding],
   ):
     
     override def toString: Str = s"${parent.fold("")(_.toString+"/")}${outer.showDbg}"
@@ -101,8 +112,18 @@ object Elaborator:
           nme -> elem
       , mode = mode, labels = labels)
     
-    def withLabel(label: Str, labelSym: LabelSymbol, resultSym: TempSymbol): Ctx =
-      copy(outer = outer, parent = parent, env = env, mode = mode, labels = labels + (label -> (labelSym -> resultSym)))
+    def withLabel(
+        label: Str,
+        labelSym: LabelSymbol,
+        resultSym: TempSymbol,
+        nonLocalBreakHandlerSym: TempSymbol,
+    ): Ctx =
+      copy(
+        outer = outer,
+        parent = parent,
+        env = env,
+        mode = mode,
+        labels = labels + (label -> LabelBinding(labelSym, resultSym, nonLocalBreakHandlerSym)))
     
     def nest(outerCtx: OuterCtx): Ctx = Ctx(outerCtx, Some(this), Map.empty, mode, Map.empty)
     def nestLocal(nameHint: Str): Ctx = nest(OuterCtx.LocalScope(nameHint))
@@ -110,11 +131,29 @@ object Elaborator:
     
     def get(name: Str): Opt[Ctx.Elem] =
       env.get(name).orElse(parent.flatMap(_.get(name)))
-    def getLabel(name: Str): Opt[LabelSymbol -> TempSymbol] =
-      labels.get(name).orElse:
-        outer match
-          case _: (OuterCtx.Function | OuterCtx.LambdaOrHandlerBlock.type) => N
-          case _ => parent.flatMap(_.getLabel(name))
+    def lookupLabel(name: Str): LabelLookup =
+      @tailrec
+      def go(
+          current: Opt[Ctx],
+          crossedFunction: Bool,
+          crossedLambdaOrHandler: Bool,
+      ): LabelLookup = current match
+        case N => LabelLookup.NotFound
+        case S(ctx) =>
+          ctx.labels.get(name) match
+            case S(binding) =>
+              if crossedFunction || crossedLambdaOrHandler
+              then LabelLookup.AcrossBoundary(binding, crossedFunction, crossedLambdaOrHandler)
+              else LabelLookup.Found(binding)
+            case N =>
+              val nextCrossedFunction = crossedFunction || (ctx.outer match
+                case _: OuterCtx.Function => true
+                case _ => false)
+              val nextCrossedLambdaOrHandler = crossedLambdaOrHandler || (ctx.outer match
+                case OuterCtx.LambdaOrHandlerBlock => true
+                case _ => false)
+              go(ctx.parent, nextCrossedFunction, nextCrossedLambdaOrHandler)
+      go(S(this), false, false)
     def getOuter: Opt[InnerSymbol] = outer.inner.orElse(parent.flatMap(_.getOuter))
     def getNonLocalRetHandler: Opt[TempSymbol] = outer match
       case OuterCtx.Function(sym) => S(sym)
@@ -668,29 +707,52 @@ extends Importer with ucs.SplitElaborator:
           rhs.splitOn(acc)
       subterm(tree)
     case tree @ App(Sel(labelId @ Ident(labelName), nme @ Ident("break")), Tup(args)) =>
-      ctx.getLabel(labelName) match
-      case S((labelSym, resultSym)) =>
-        val value = args match
-          case Nil => N
-          case arg :: Nil => S(subterm(arg))
-          case _ =>
-            raise(ErrorReport(msg"Label break expects at most one argument." -> tree.toLoc :: Nil))
-            N
-        Term.Break(labelSym, resultSym, value)
-      case N =>
+      val mkFallbackApp: Term =
         val sym = FlowSymbol.app()
         val lt = subterm(Sel(labelId, nme), inAppPrefix = true)
         val rt = subterm(Tup(args))
         Term.App(lt, rt)(tree, N, sym)
+      val value = args match
+        case Nil => N
+        case arg :: Nil => S(subterm(arg))
+        case _ =>
+          raise(ErrorReport(msg"Label break expects at most one argument." -> tree.toLoc :: Nil))
+          N
+      ctx.lookupLabel(labelName) match
+      case LabelLookup.Found(binding) =>
+        Term.Break(binding.labelSymbol, binding.resultSymbol, value)
+      case LabelLookup.AcrossBoundary(binding, crossedFunction, _) =>
+        if !crossedFunction then
+          raise(ErrorReport(msg"Label break cannot cross lambda or handler boundaries." -> labelId.toLoc :: Nil))
+          Term.Error
+        else if config.effectHandlers.isEmpty then
+          raise(ErrorReport(msg"Non-local label breaks are only supported with effect handlers enabled." -> labelId.toLoc :: Nil))
+          Term.Error
+        else
+          val rs = FlowSymbol.app()
+          val breakMtdTree = new Ident("ret")
+          val breakMtdSelTree = Sel(new Ident("break").withLocOf(labelId), breakMtdTree)
+          val argTree = new Tup(args)
+          val argTerm = value.getOrElse(Term.UnitVal())
+          Term.App(
+            Term.Sel(binding.nonLocalBreakHandlerSymbol.ref(labelId), breakMtdTree)(
+              S(state.nonLocalRet), FlowSymbol.sel(labelId.name), N, S(summon)),
+            Term.Tup(PlainFld(argTerm) :: Nil)(argTree),
+          )(App(breakMtdSelTree, argTree), N, rs)
+      case LabelLookup.NotFound =>
+        mkFallbackApp
     case tree @ App(Sel(labelId @ Ident(labelName), nme @ Ident("continue")), Tup(args)) =>
-      ctx.getLabel(labelName) match
-      case S((labelSym, _)) =>
+      ctx.lookupLabel(labelName) match
+      case LabelLookup.Found(binding) =>
         if args.nonEmpty then
           raise(ErrorReport(msg"Label continue does not take arguments." -> tree.toLoc :: Nil))
           Term.Error
         else
-          Term.Continue(labelSym)
-      case N =>
+          Term.Continue(binding.labelSymbol)
+      case LabelLookup.AcrossBoundary(_, _, _) =>
+        raise(ErrorReport(msg"Label continue cannot cross function boundaries." -> labelId.toLoc :: Nil))
+        Term.Error
+      case LabelLookup.NotFound =>
         val sym = FlowSymbol.app()
         val lt = subterm(Sel(labelId, nme), inAppPrefix = true)
         val rt = subterm(Tup(args))
@@ -714,16 +776,35 @@ extends Importer with ucs.SplitElaborator:
     case Sel(Empty(), nme) =>
       Term.LeadingDotSel(nme)(S(summon)).withLocOf(tree)
     case Sel(labelId @ Ident(labelName), nme @ Ident("break")) =>
-      ctx.getLabel(labelName) match
-      case S((labelSym, resultSym)) =>
-        Term.Break(labelSym, resultSym, N)
-      case N =>
+      ctx.lookupLabel(labelName) match
+      case LabelLookup.Found(binding) =>
+        Term.Break(binding.labelSymbol, binding.resultSymbol, N)
+      case LabelLookup.AcrossBoundary(binding, crossedFunction, _) =>
+        if !crossedFunction then
+          raise(ErrorReport(msg"Label break cannot cross lambda or handler boundaries." -> labelId.toLoc :: Nil))
+          Term.Error
+        else if config.effectHandlers.isEmpty then
+          raise(ErrorReport(msg"Non-local label breaks are only supported with effect handlers enabled." -> labelId.toLoc :: Nil))
+          Term.Error
+        else
+          val rs = FlowSymbol.app()
+          val breakMtdTree = new Ident("ret")
+          val argTree = new Tup(Nil)
+          Term.App(
+            Term.Sel(binding.nonLocalBreakHandlerSymbol.ref(labelId), breakMtdTree)(
+              S(state.nonLocalRet), FlowSymbol.sel(labelId.name), N, S(summon)),
+            Term.Tup(PlainFld(Term.UnitVal()) :: Nil)(argTree),
+          )(App(Sel(new Ident("break").withLocOf(labelId), breakMtdTree), argTree), N, rs)
+      case LabelLookup.NotFound =>
         elaborateSelection(tree, labelId, nme)
     case Sel(labelId @ Ident(labelName), nme @ Ident("continue")) =>
-      ctx.getLabel(labelName) match
-      case S((labelSym, _)) =>
-        Term.Continue(labelSym)
-      case N =>
+      ctx.lookupLabel(labelName) match
+      case LabelLookup.Found(binding) =>
+        Term.Continue(binding.labelSymbol)
+      case LabelLookup.AcrossBoundary(_, _, _) =>
+        raise(ErrorReport(msg"Label continue cannot cross function boundaries." -> labelId.toLoc :: Nil))
+        Term.Error
+      case LabelLookup.NotFound =>
         elaborateSelection(tree, labelId, nme)
     case Sel(pre, nme) =>
       elaborateSelection(tree, pre, nme)
@@ -854,9 +935,24 @@ extends Importer with ucs.SplitElaborator:
     case PrefixApp(kw @ Keywrd(Keyword.`do`), InfixApp(labelId: Ident, Keywrd(Keyword.`:`), body)) =>
       val labelSym = new LabelSymbol(N, labelId.name)
       val resultSym = new TempSymbol(N, s"${labelId.name}$$result")
-      val bodyTerm = ctx.withLabel(labelId.name, labelSym, resultSym).givenIn:
+      val nonLocalBreakHandlerSym = TempSymbol(N, s"nonLocalBreakHandler$$${labelId.name}")
+      val bodyTerm = ctx.withLabel(labelId.name, labelSym, resultSym, nonLocalBreakHandlerSym).givenIn:
         subterm(body)
-      Term.Label(labelSym, resultSym, bodyTerm).mkLocWith(kw, labelId)
+      val wrappedBodyTerm =
+        if nonLocalBreakHandlerSym.directRefs.isEmpty then bodyTerm else
+          val clsSym = ClassSymbol(DummyTypeDef(Cls), Ident("‹non-local break effect›"))
+          val valueSym = VarSymbol(Ident("value"))
+          val resumeSym = VarSymbol(Ident("resume"))
+          val mtdSym = BlockMemberSymbol("ret", Nil, true)
+          val tsym = TermSymbol(Fun, N, Ident("ret"))
+          val td = TermDefinition(
+            Fun, mtdSym, tsym, PlainParamList(Param(FldFlags.empty, valueSym, N, Modulefulness.none) :: Nil) :: Nil,
+            N, N, S(valueSym.ref(Ident("value"))), TermDefFlags.empty, Modulefulness.none, Nil, N)
+          tsym.defn = S(td)
+          mtdSym.tsym = S(tsym)
+          val htd = HandlerTermDefinition(resumeSym, td)
+          Term.Handle(nonLocalBreakHandlerSym, state.nonLocalRetHandlerTrm, Nil, clsSym, htd :: Nil, bodyTerm)
+      Term.Label(labelSym, resultSym, wrappedBodyTerm).mkLocWith(kw, labelId)
     case PrefixApp(kw @ Keywrd(Keyword.`do`), body) =>
       Blk(subterm(body) :: Nil, unit).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`drop`), body) =>

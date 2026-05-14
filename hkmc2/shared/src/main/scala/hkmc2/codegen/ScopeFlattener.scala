@@ -18,8 +18,7 @@ import semantics.*
   */
 class ScopeFlattener extends BlockTransformer(new SymbolSubst):
   override def applyBlock(b: Block): Block = b match
-    case Label(_, loop, _, _) =>
-      assert(!loop, "loops should be rewritten to functions before scope flattening")
+    case Label(_, _, _, _) =>
       super.applyBlock(b)
     case _ => super.applyBlock(b)
   
@@ -50,5 +49,4 @@ class ScopeFlattener extends BlockTransformer(new SymbolSubst):
           scopedForCurrentFun.addAll(syms)
           super.applySubBlock(body)
     case _ => super.applySubBlock(b)
-
 
