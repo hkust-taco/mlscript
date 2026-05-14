@@ -525,7 +525,18 @@ class BlockSimplifier
         makeImpossibleAfter:
           super.applyBlock(b)
         
-      case _: Return =>
+      case TryBlock(sub, finallyDo, rest) =>
+        val sub2 = applyBlock(sub)
+        val finallyDo2 =
+          // * This block might be executed from an unknown point in the previous block,
+          // * so we have to be conservative and not propagate any information.
+          assignedResults = emptyAssignedResults
+          applyBlock(finallyDo)
+        val rest2 = applySubBlock(rest)
+        if (sub2 is sub) && (finallyDo2 is finallyDo) && (rest2 is rest) then b
+        else TryBlock(sub2, finallyDo2, rest2)
+        
+      case _: Return | _: Throw | _: Unreachable =>
         makeImpossibleAfter:
           super.applyBlock(b)
         

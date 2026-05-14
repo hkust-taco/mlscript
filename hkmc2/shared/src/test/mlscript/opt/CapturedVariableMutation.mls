@@ -33,6 +33,8 @@ fun next() =
   let emptyItemCount' = emptyItemCount
   set emptyItemCount = 0
   print(emptyItemCount')
-//│ emptyItemCount = 1
+next()
+//│ > 1
+//│ emptyItemCount = 0
 
 
