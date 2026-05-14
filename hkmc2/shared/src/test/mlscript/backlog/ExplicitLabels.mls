@@ -2,39 +2,56 @@
 
 
 do exit:
-  if true do exit.break 42
+  if true do exit.break(42)
   0
+//│ = 42
 
 
 let i = 0 in do loop:
-  if i >= 3 do loop.break i
+  if i >= 3 do loop.break(i)
   set i += 1
   loop.continue
+//│ = 3
 
 
-let i = 0 in do outer:
+let i = 0 in do outLoop:
   do inner:
-    if i >= 4 do outer.break i
+    if i >= 4 do outLoop.break(i)
     set i += 1
-    outer.continue
+    outLoop.continue
+//│ = 4
 
 
 :e
-missing.break 1
+missing.break(1)
+//│ ╔══[COMPILATION ERROR] Name not found: missing
+//│ ║  l.26: 	missing.break(1)
+//│ ╙──      	^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :e
 do lbl:
   lbl.continue(1)
+//│ ╔══[COMPILATION ERROR] Label continue does not take arguments.
+//│ ║  l.35: 	  lbl.continue(1)
+//│ ╙──      	  ^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :e
 do lbl:
   lbl.break(1, 2)
+//│ ╔══[COMPILATION ERROR] Label break expects at most one argument.
+//│ ║  l.44: 	  lbl.break(1, 2)
+//│ ╙──      	  ^^^^^^^^^^^^^^^
 
 
 :e
 lbl:
-  lbl.break 1
-
-
+  lbl.break(1)
+//│ ╔══[COMPILATION ERROR] Name not found: lbl
+//│ ║  l.52: 	  lbl.break(1)
+//│ ╙──      	  ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ lbl = undefined

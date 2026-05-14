@@ -647,8 +647,10 @@ extends Importer with ucs.SplitElaborator:
             N
         Term.Break(labelSym, resultSym, value)
       case N =>
-        raise(ErrorReport(msg"Unknown label: ${labelName}" -> labelId.toLoc :: Nil))
-        Term.Error
+        val sym = FlowSymbol.app()
+        val lt = subterm(Sel(labelId, nme), inAppPrefix = true)
+        val rt = subterm(Tup(args))
+        Term.App(lt, rt)(tree, N, sym)
     case tree @ App(Sel(labelId @ Ident(labelName), nme @ Ident("continue")), Tup(args)) =>
       ctx.getLabel(labelName) match
       case S((labelSym, _)) =>
@@ -658,8 +660,10 @@ extends Importer with ucs.SplitElaborator:
         else
           Term.Continue(labelSym)
       case N =>
-        raise(ErrorReport(msg"Unknown label: ${labelName}" -> labelId.toLoc :: Nil))
-        Term.Error
+        val sym = FlowSymbol.app()
+        val lt = subterm(Sel(labelId, nme), inAppPrefix = true)
+        val rt = subterm(Tup(args))
+        Term.App(lt, rt)(tree, N, sym)
     case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol.app()
       val lt = subterm(lhs, inAppPrefix = true)
@@ -683,15 +687,53 @@ extends Importer with ucs.SplitElaborator:
       case S((labelSym, resultSym)) =>
         Term.Break(labelSym, resultSym, N)
       case N =>
-        raise(ErrorReport(msg"Unknown label: ${labelName}" -> labelId.toLoc :: Nil))
-        Term.Error
+        val preTrm = subterm(labelId)
+        val sym = resolveField(nme, preTrm.symbol, nme)
+        sym match
+        case S(ms: BlockMemberSymbol)
+          if !inAppPrefix && ms.isParameterizedMethod && !preTrm.symbol.exists(_.existsModuleful)
+        =>
+          raise:
+            ErrorReport(
+              msg"[debinding error] Method '${nme.name}' cannot be accessed without being called." -> nme.toLoc :: Nil)
+        case S(_) | N => ()
+        if sym.contains(ctx.builtins.source.line) then
+          val loc = tree.toLoc.getOrElse(???)
+          val (line, _, _) = loc.origin.fph.getLineColAt(loc.spanStart)
+          Term.Lit(IntLit(loc.origin.startLineNum + line))
+        else if sym.contains(ctx.builtins.source.name) then
+          Term.Lit(StrLit(ctx.getOuter.map(_.nme).getOrElse("")))
+        else if sym.contains(ctx.builtins.source.file) then
+          val loc = tree.toLoc.getOrElse(???)
+          Term.Lit(StrLit(loc.origin.fileName.toString))
+        else
+          Term.Sel(preTrm, nme)(sym, FlowSymbol.sel(nme.name), N, S(summon))
     case Sel(labelId @ Ident(labelName), nme @ Ident("continue")) =>
       ctx.getLabel(labelName) match
       case S((labelSym, _)) =>
         Term.Continue(labelSym)
       case N =>
-        raise(ErrorReport(msg"Unknown label: ${labelName}" -> labelId.toLoc :: Nil))
-        Term.Error
+        val preTrm = subterm(labelId)
+        val sym = resolveField(nme, preTrm.symbol, nme)
+        sym match
+        case S(ms: BlockMemberSymbol)
+          if !inAppPrefix && ms.isParameterizedMethod && !preTrm.symbol.exists(_.existsModuleful)
+        =>
+          raise:
+            ErrorReport(
+              msg"[debinding error] Method '${nme.name}' cannot be accessed without being called." -> nme.toLoc :: Nil)
+        case S(_) | N => ()
+        if sym.contains(ctx.builtins.source.line) then
+          val loc = tree.toLoc.getOrElse(???)
+          val (line, _, _) = loc.origin.fph.getLineColAt(loc.spanStart)
+          Term.Lit(IntLit(loc.origin.startLineNum + line))
+        else if sym.contains(ctx.builtins.source.name) then
+          Term.Lit(StrLit(ctx.getOuter.map(_.nme).getOrElse("")))
+        else if sym.contains(ctx.builtins.source.file) then
+          val loc = tree.toLoc.getOrElse(???)
+          Term.Lit(StrLit(loc.origin.fileName.toString))
+        else
+          Term.Sel(preTrm, nme)(sym, FlowSymbol.sel(nme.name), N, S(summon))
     case Sel(pre, nme) =>
       val preTrm = subterm(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
@@ -845,7 +887,7 @@ extends Importer with ucs.SplitElaborator:
       Term.Throw(subterm(body)).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`do`), InfixApp(labelId: Ident, Keywrd(Keyword.`:`), body)) =>
       val labelSym = new LabelSymbol(N, labelId.name)
-      val resultSym = new TempSymbol(N, s"${labelId.name}$result")
+      val resultSym = new TempSymbol(N, s"${labelId.name}$$result")
       val bodyTerm = ctx.withLabel(labelId.name, labelSym, resultSym).givenIn:
         subterm(body)
       Term.Label(labelSym, resultSym, bodyTerm).mkLocWith(kw, labelId)

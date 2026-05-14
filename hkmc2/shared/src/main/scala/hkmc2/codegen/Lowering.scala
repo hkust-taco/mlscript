@@ -16,7 +16,7 @@ import codegen.ReflectionInstrumenter
 import semantics.*, ucs.FlatPattern
 import hkmc2.{semantics => sem}
 import semantics.{Term => st}
-import semantics.Term.{Throw => _, *}
+import semantics.Term.{Throw => _, Label => _, Break => _, Continue => _, *}
 import semantics.Elaborator.{State, Ctx, ctx}
 
 import syntax.{Literal, Tree, SpreadKind}
@@ -614,7 +614,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case st.Throw(res) =>
       term(res)(Thrw)
     case st.Label(label, result, body) =>
-      loweringCtx.collectScopedSyms(label, result)
+      loweringCtx.collectScopedSym(result)
       Label(
         label,
         loop = true,
