@@ -31,10 +31,18 @@ missing.break(1)
 
 
 :e
+missing.continue
+//│ ╔══[COMPILATION ERROR] Name not found: missing
+//│ ║  l.34: 	missing.continue
+//│ ╙──      	^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+:e
 do lbl:
   lbl.continue(1)
 //│ ╔══[COMPILATION ERROR] Label continue does not take arguments.
-//│ ║  l.35: 	  lbl.continue(1)
+//│ ║  l.43: 	  lbl.continue(1)
 //│ ╙──      	  ^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -43,7 +51,7 @@ do lbl:
 do lbl:
   lbl.break(1, 2)
 //│ ╔══[COMPILATION ERROR] Label break expects at most one argument.
-//│ ║  l.44: 	  lbl.break(1, 2)
+//│ ║  l.52: 	  lbl.break(1, 2)
 //│ ╙──      	  ^^^^^^^^^^^^^^^
 
 
@@ -51,7 +59,7 @@ do lbl:
 lbl:
   lbl.break(1)
 //│ ╔══[COMPILATION ERROR] Name not found: lbl
-//│ ║  l.52: 	  lbl.break(1)
+//│ ║  l.60: 	  lbl.break(1)
 //│ ╙──      	  ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ lbl = undefined
