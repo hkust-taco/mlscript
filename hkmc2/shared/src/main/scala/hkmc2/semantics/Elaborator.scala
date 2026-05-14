@@ -68,6 +68,8 @@ object Elaborator:
       labelSymbol: LabelSymbol,
       resultSymbol: TempSymbol,
       nonLocalBreakHandlerSymbol: TempSymbol,
+      nonLocalContinueHandlerSymbol: TempSymbol,
+      nonLocalContinueFlagSymbol: TempSymbol,
   )
   
   /** Result of label lookup:
@@ -125,10 +127,13 @@ object Elaborator:
         labelSym: LabelSymbol,
         resultSym: TempSymbol,
         nonLocalBreakHandlerSym: TempSymbol,
+        nonLocalContinueHandlerSym: TempSymbol,
+        nonLocalContinueFlagSym: TempSymbol,
     ): Ctx =
       copy(
         env = env + (labelSym.nme -> Ctx.RefElem(labelSym)),
-        labels = labels + (labelSym -> LabelBinding(labelSym, resultSym, nonLocalBreakHandlerSym))
+        labels = labels + (labelSym -> LabelBinding(
+          labelSym, resultSym, nonLocalBreakHandlerSym, nonLocalContinueHandlerSym, nonLocalContinueFlagSym))
       )
     
     def nest(outerCtx: OuterCtx): Ctx = Ctx(outerCtx, Some(this), Map.empty, mode, Map.empty)
@@ -513,6 +518,39 @@ extends Importer with ucs.SplitElaborator:
       Term.Tup(PlainFld(argTerm) :: Nil)(argTree),
     )(App(Sel(callSiteId, retMtdTree), argTree), N, rs)
   
+  private def mkNonLocalContinueInvocation(
+      binding: LabelBinding,
+      labelId: Ident,
+      argTree: Tup,
+  )(using Ctx): Term =
+    val callSiteId = new Ident("continue").withLocOf(labelId)
+    mkNonLocalEffectInvocation(binding.nonLocalContinueHandlerSymbol, callSiteId, argTree, Term.UnitVal())
+  
+  private def wrapNonLocalLabelHandlers(
+      body: Term,
+      nonLocalBreakHandlerSym: TempSymbol,
+      nonLocalContinueHandlerSym: TempSymbol,
+      nonLocalContinueFlagSym: TempSymbol,
+  )(using State): Term =
+    val withBreakHandler =
+      if nonLocalBreakHandlerSym.directRefs.isEmpty then body else
+        mkSingleMethodEffectHandle(
+          nonLocalBreakHandlerSym,
+          "NonLocalBreakEffect",
+          valueSym => valueSym.ref(Ident("value")),
+          body,
+        )
+    if nonLocalContinueHandlerSym.directRefs.isEmpty then withBreakHandler else
+      mkSingleMethodEffectHandle(
+        nonLocalContinueHandlerSym,
+        "NonLocalContinueEffect",
+        _ => Term.Blk(
+          Term.Assgn(nonLocalContinueFlagSym.ref(), Term.Lit(Tree.BoolLit(true))) :: Nil,
+          Term.UnitVal()
+        ),
+        withBreakHandler,
+      )
+  
   def term(tree: Tree): Ctxl[Term] =
   trace[Term](s"Elab term ${tree.showDbg}", r => s"~> $r"):
     val unders = mutable.ArrayBuffer.empty[VarSymbol]
@@ -799,7 +837,16 @@ extends Importer with ucs.SplitElaborator:
           Term.Error
         else
           Term.Continue(binding.labelSymbol)
-      case LabelLookup.AcrossBoundary(_, _, _) | LabelLookup.NotFound =>
+      case LabelLookup.AcrossBoundary(binding, _, _) =>
+        if args.nonEmpty then
+          raise(ErrorReport(msg"Label continue does not take arguments." -> tree.toLoc :: Nil))
+          Term.Error
+        else if config.effectHandlers.isEmpty then
+          raise(ErrorReport(msg"Non-local label continues are only supported with effect handlers enabled." -> labelId.toLoc :: Nil))
+          Term.Error
+        else
+          mkNonLocalContinueInvocation(binding, labelId, new Tup(args))
+      case LabelLookup.NotFound =>
         mkLabelSelectionApp(tree, labelId, nme, args)
     case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol.app()
@@ -837,11 +884,12 @@ extends Importer with ucs.SplitElaborator:
       ctx.lookupLabel(labelName) match
       case LabelLookup.Found(binding) =>
         Term.Continue(binding.labelSymbol)
-      case LabelLookup.AcrossBoundary(_, _, _) =>
-        raise(ErrorReport(
-          msg"Non-local label continue is not supported: continuing across function boundaries would require re-entering a captured continuation; only escape-style non-local label break is supported."
-            -> labelId.toLoc :: Nil))
-        Term.Error
+      case LabelLookup.AcrossBoundary(binding, _, _) =>
+        if config.effectHandlers.isEmpty then
+          raise(ErrorReport(msg"Non-local label continues are only supported with effect handlers enabled." -> labelId.toLoc :: Nil))
+          Term.Error
+        else
+          mkNonLocalContinueInvocation(binding, labelId, new Tup(Nil))
       case LabelLookup.NotFound =>
         elaborateSelection(tree, labelId, nme)
     case Sel(pre, nme) =>
@@ -969,17 +1017,14 @@ extends Importer with ucs.SplitElaborator:
       val labelSym = new LabelSymbol(N, labelId.name)
       val resultSym = new TempSymbol(N, s"${labelId.name}$$result")
       val nonLocalBreakHandlerSym = TempSymbol(N, s"nonLocalBreakHandler$$${labelId.name}")
-      val bodyTerm = ctx.withLabel(labelSym, resultSym, nonLocalBreakHandlerSym).givenIn:
+      val nonLocalContinueHandlerSym = TempSymbol(N, s"nonLocalContinueHandler$$${labelId.name}")
+      val nonLocalContinueFlagSym = TempSymbol(N, s"nonLocalContinueFlag$$${labelId.name}")
+      val bodyTerm = ctx.withLabel(
+        labelSym, resultSym, nonLocalBreakHandlerSym, nonLocalContinueHandlerSym, nonLocalContinueFlagSym).givenIn:
         subterm(body)
-      val wrappedBodyTerm =
-        if nonLocalBreakHandlerSym.directRefs.isEmpty then bodyTerm else
-          mkSingleMethodEffectHandle(
-            nonLocalBreakHandlerSym,
-            "NonLocalBreakEffect",
-            valueSym => valueSym.ref(Ident("value")),
-            bodyTerm,
-          )
-      Term.Label(labelSym, resultSym, wrappedBodyTerm).mkLocWith(kw, labelId)
+      val wrappedBodyTerm = wrapNonLocalLabelHandlers(
+        bodyTerm, nonLocalBreakHandlerSym, nonLocalContinueHandlerSym, nonLocalContinueFlagSym)
+      Term.Label(labelSym, resultSym, wrappedBodyTerm, S(nonLocalContinueFlagSym)).mkLocWith(kw, labelId)
     case PrefixApp(kw @ Keywrd(Keyword.`do`), body) =>
       Blk(subterm(body) :: Nil, unit).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`drop`), body) =>

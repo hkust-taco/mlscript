@@ -613,12 +613,30 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       returnedTerm(res)
     case st.Throw(res) =>
       term(res)(Thrw)
-    case st.Label(label, result, body) =>
+    case st.Label(label, result, body, nonLocalContinueFlag) =>
       loweringCtx.collectScopedSym(result)
+      nonLocalContinueFlag.foreach(loweringCtx.collectScopedSym)
+      val bodyBlock =
+        nonLocalContinueFlag match
+          case N =>
+            term_nonTail(body)(r => Assign(result, r, Break(label)))
+          case S(continueFlag) =>
+            Assign(
+              continueFlag,
+              Value.Lit(Tree.BoolLit(false)),
+              term_nonTail(body){ r =>
+                Match(
+                  Value.Ref(continueFlag),
+                  (Case.Lit(Tree.BoolLit(true)) -> Continue(label)) :: Nil,
+                  S(Assign(result, r, Break(label))),
+                  End("label continue-flag dispatch")
+                )
+              }
+            )
       Label(
         label,
         loop = true,
-        term_nonTail(body)(r => Assign(result, r, Break(label))),
+        bodyBlock,
         k(Value.Ref(result))
       )
     case st.Break(label, result, value) =>
@@ -1465,4 +1483,5 @@ object MergeMatchArmTransformer extends BlockTransformer(SymbolSubst.Id):
               dfltRewritten.fold(restRewritten)(Begin(_, restRewritten)) |> some, rest)
       case _ => m
     case b => b
+
 

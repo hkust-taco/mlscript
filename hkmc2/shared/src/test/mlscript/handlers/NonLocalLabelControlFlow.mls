@@ -15,7 +15,7 @@ do root:
 do root:
   let escape = () => root.continue
   escape()
-//│ ╔══[COMPILATION ERROR] Non-local label continue is not supported: continuing across function boundaries would require re-entering a captured continuation; only escape-style non-local label break is supported.
+//│ ╔══[COMPILATION ERROR] Non-local label continues are only supported with effect handlers enabled.
 //│ ║  l.16: 	  let escape = () => root.continue
 //│ ╙──      	                     ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -51,15 +51,41 @@ breakFromNestedFunctionAndLambdaWithEffects()
 //│ = 7
 
 
-:e
 :effectHandlers
 :lift
 fun continueFromNestedFunctionWithEffects() =
-  do root:
-    fun escape() = root.continue
-    escape()
+  let i = 0 in do root:
+    fun loop() =
+      if i >= 3 do root.break(i)
+      set i += 1
+      root.continue
+    loop()
 continueFromNestedFunctionWithEffects()
-//│ ╔══[COMPILATION ERROR] Non-local label continue is not supported: continuing across function boundaries would require re-entering a captured continuation; only escape-style non-local label break is supported.
-//│ ║  l.59: 	    fun escape() = root.continue
-//│ ╙──      	                   ^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = 3
+
+
+:effectHandlers
+:lift
+fun continueFromNestedLambdaWithEffects() =
+  let i = 0 in do root:
+    let loop = () =>
+      if i >= 2 do root.break(i)
+      set i += 1
+      root.continue
+    loop()
+continueFromNestedLambdaWithEffects()
+//│ = 2
+
+
+:effectHandlers
+:lift
+fun continueFromNestedFunctionAndLambdaWithEffects() =
+  let i = 0 in do root:
+    fun mkContinue() =
+      () =>
+        if i >= 4 do root.break(i)
+        set i += 1
+        root.continue
+    mkContinue()()
+continueFromNestedFunctionAndLambdaWithEffects()
+//│ = 4
