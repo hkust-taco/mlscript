@@ -59,7 +59,6 @@ arr is MultiSet(3, _)
 arr is MultiSet(3, MultiSet(1, MultiSet(2, Nil)))
 //│ = true
 arr is MultiSet(3, MultiSet(0, _))
-arr is MultiSet(3, MultiSet(0, _))
 //│ = false
 
 :fixme
