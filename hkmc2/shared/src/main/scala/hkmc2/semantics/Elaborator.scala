@@ -111,7 +111,10 @@ object Elaborator:
     def get(name: Str): Opt[Ctx.Elem] =
       env.get(name).orElse(parent.flatMap(_.get(name)))
     def getLabel(name: Str): Opt[LabelSymbol -> TempSymbol] =
-      labels.get(name).orElse(parent.flatMap(_.getLabel(name)))
+      labels.get(name).orElse:
+        outer match
+          case _: (OuterCtx.Function | OuterCtx.LambdaOrHandlerBlock.type) => N
+          case _ => parent.flatMap(_.getLabel(name))
     def getOuter: Opt[InnerSymbol] = outer.inner.orElse(parent.flatMap(_.getOuter))
     def getNonLocalRetHandler: Opt[TempSymbol] = outer match
       case OuterCtx.Function(sym) => S(sym)

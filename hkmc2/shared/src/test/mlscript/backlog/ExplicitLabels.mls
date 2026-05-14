@@ -63,3 +63,48 @@ lbl:
 //│ ╙──      	  ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ lbl = undefined
+
+
+let i = 0 in let total = 0 in do exitLbl:
+  if i >= 3 do exitLbl.break(total)
+  let j = 0
+  do inner:
+    if j >= 3 do inner.break(())
+    if j == 1 do inner.break(())
+    set total += i * 10 + j
+    set j += 1
+    inner.continue
+  set i += 1
+  exitLbl.continue
+//│ = 30
+
+
+let i = 0 in let steps = 0 in do done:
+  while true do
+    set i += 1
+    let j = 0
+    while true do
+      set steps += 1
+      if j == 1 do done.break(i * 100 + steps)
+      set j += 1
+//│ = 102
+
+
+:e
+do root:
+  fun escape() = root.break(42)
+  escape()
+//│ ╔══[COMPILATION ERROR] Name not found: root
+//│ ║  l.95: 	  fun escape() = root.break(42)
+//│ ╙──      	                 ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+:e
+do root:
+  let escape = () => root.continue
+  escape()
+//│ ╔══[COMPILATION ERROR] Name not found: root
+//│ ║  l.105: 	  let escape = () => root.continue
+//│ ╙──       	                     ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

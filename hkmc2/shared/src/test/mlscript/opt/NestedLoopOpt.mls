@@ -180,3 +180,136 @@ print(nestedInnerMaySkip(true, true))
 //│ > 1
 //│ > 1
 //│ > 2
+
+
+// * Label-based continue should preserve path-sensitive value propagation in nested control flow.
+:soir
+fun labelContinueFiltersPath(limit) =
+  let i = 0
+  let acc = 0
+  do loop:
+    if i >= limit do loop.break(acc)
+    if i % 2 == 0 do
+      set i += 1
+      loop.continue
+    set acc += 10
+    set i += 1
+    loop.continue
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let labelContinueFiltersPath⁰;
+//│ define labelContinueFiltersPath⁰ as fun labelContinueFiltersPath¹(limit) {
+//│   let i, acc, loop$result, scrut, scrut1, tmp, tmp1, tmp2, tmp3;
+//│   set i = 0;
+//│   set acc = 0;
+//│   loop loop:
+//│     set scrut = >=⁰(i, limit);
+//│     match scrut
+//│       true =>
+//│         set loop$result = acc;
+//│         end
+//│       else
+//│         set tmp = %⁰(i, 2);
+//│         set scrut1 = Predef⁰.equals⁰(tmp, 0);
+//│         match scrut1
+//│           true =>
+//│             set tmp1 = +⁰(i, 1);
+//│             set i = tmp1;
+//│             continue loop
+//│           else
+//│             set tmp2 = +⁰(acc, 10);
+//│             set acc = tmp2;
+//│             set tmp3 = +⁰(i, 1);
+//│             set i = tmp3;
+//│             continue loop
+//│         end
+//│     end
+//│   return loop$result
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+print(labelContinueFiltersPath(0))
+print(labelContinueFiltersPath(1))
+print(labelContinueFiltersPath(2))
+print(labelContinueFiltersPath(3))
+print(labelContinueFiltersPath(4))
+//│ > 0
+//│ > 0
+//│ > 10
+//│ > 10
+//│ > 20
+
+
+// * Breaking from nested loops to an outer label should compose with folded break values.
+:soir
+fun nestedBreakCarriesFoldedValue(limit) =
+  let i = 0
+  do done:
+    while true do
+      if i >= limit do done.break(100 + 23)
+      let j = 0
+      while true do
+        if j >= 2 do
+          set i += 1
+          done.continue
+        if i == 1 do done.break(i * 1000 + j)
+        set j += 1
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let nestedBreakCarriesFoldedValue⁰;
+//│ define nestedBreakCarriesFoldedValue⁰ as fun nestedBreakCarriesFoldedValue¹(limit) {
+//│   let i, done$result;
+//│   set i = 0;
+//│   loop done:
+//│     loop lbl:
+//│       let scrut, j;
+//│       match true
+//│         true =>
+//│           set scrut = >=⁰(i, limit);
+//│           match scrut
+//│             true =>
+//│               set done$result = 123;
+//│               break done
+//│             else
+//│               set j = 0;
+//│               loop lbl1:
+//│                 let scrut1, scrut2, tmp, tmp1, tmp2;
+//│                 match true
+//│                   true =>
+//│                     set scrut1 = >=⁰(j, 2);
+//│                     match scrut1
+//│                       true =>
+//│                         set tmp = +⁰(i, 1);
+//│                         set i = tmp;
+//│                         continue done
+//│                       else
+//│                         set scrut2 = Predef⁰.equals⁰(i, 1);
+//│                         match scrut2
+//│                           true =>
+//│                             set tmp1 = *⁰(i, 1000);
+//│                             set done$result = +⁰(tmp1, j);
+//│                             break done
+//│                           else
+//│                             set tmp2 = +⁰(j, 1);
+//│                             set j = tmp2;
+//│                             continue lbl1
+//│                         end
+//│                     end
+//│                   else
+//│                     end
+//│                 end
+//│               continue lbl
+//│           end
+//│         else
+//│           end
+//│       end
+//│     set done$result = runtime⁰.Unit⁰;
+//│     end
+//│   return done$result
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+print(nestedBreakCarriesFoldedValue(1))
+print(nestedBreakCarriesFoldedValue(3))
+//│ > 123
+//│ > 1000
