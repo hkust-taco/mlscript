@@ -338,7 +338,7 @@ enum Term extends Statement:
   case SetRef(ref: Term, value: Term)
   case Ret(result: Term)
   case Throw(result: Term)
-  case Label(label: LabelSymbol, result: TempSymbol, body: Term, nonLocalContinueFlag: Opt[TempSymbol])
+  case Label(label: LabelSymbol, result: TempSymbol, body: Term, hasNonLocalContinueDispatch: Bool)
   case Break(label: LabelSymbol, result: TempSymbol, value: Opt[Term])
   case Continue(label: LabelSymbol)
   case Try(body: Term, finallyDo: Term)
@@ -497,7 +497,7 @@ enum Term extends Statement:
       case SetRef(ref, value) => SetRef(ref.mkClone, value.mkClone)
       case Ret(result) => Ret(result.mkClone)
       case Throw(result) => Throw(result.mkClone)
-      case Label(label, result, body, nonLocalContinueFlag) => Label(label, result, body.mkClone, nonLocalContinueFlag)
+      case Label(label, result, body, hasNonLocalContinueDispatch) => Label(label, result, body.mkClone, hasNonLocalContinueDispatch)
       case Break(label, result, value) => Break(label, result, value.map(_.mkClone))
       case Continue(label) => Continue(label)
       case Try(body, finallyDo) => Try(body.mkClone, finallyDo.mkClone)
@@ -1408,6 +1408,5 @@ trait BlkImpl:
     (stats ::: (res match
       case Lit(Tree.UnitLit(false)) => Nil
       case res => res :: Nil)).map(_.show).mkDocument(doc", # ")
-
 
 

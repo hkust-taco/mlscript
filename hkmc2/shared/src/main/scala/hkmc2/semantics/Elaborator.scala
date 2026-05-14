@@ -67,7 +67,6 @@ object Elaborator:
       nonLocalHandlerSymbol: TempSymbol,
       nonLocalBreakMethodMarker: TempSymbol,
       nonLocalContinueMethodMarker: TempSymbol,
-      nonLocalContinueFlagSymbol: TempSymbol,
   )
   
   /** Result of label lookup:
@@ -127,12 +126,11 @@ object Elaborator:
         nonLocalHandlerSym: TempSymbol,
         nonLocalBreakMethodMarker: TempSymbol,
         nonLocalContinueMethodMarker: TempSymbol,
-        nonLocalContinueFlagSym: TempSymbol,
     ): Ctx =
       copy(
         env = env + (labelSym.nme -> Ctx.RefElem(labelSym)),
         labels = labels + (labelSym -> LabelBinding(
-          labelSym, resultSym, nonLocalHandlerSym, nonLocalBreakMethodMarker, nonLocalContinueMethodMarker, nonLocalContinueFlagSym))
+          labelSym, resultSym, nonLocalHandlerSym, nonLocalBreakMethodMarker, nonLocalContinueMethodMarker))
       )
     
     def nest(outerCtx: OuterCtx): Ctx = Ctx(outerCtx, Some(this), Map.empty, mode, Map.empty)
@@ -496,6 +494,9 @@ extends Importer with ucs.SplitElaborator:
     methodMarker.ref(callSiteId)
     ()
   
+  private def nonLocalContinueSentinel(using Ctx): Term =
+    State.runtimeSymbol.ref().selNoSym("Continue")
+  
   /** Build an effect handler around `body` for non-local control flow. */
   private def mkEffectHandle(
       handlerSymbol: TempSymbol,
@@ -557,16 +558,12 @@ extends Importer with ucs.SplitElaborator:
       nonLocalHandlerSym: TempSymbol,
       nonLocalBreakMethodMarker: TempSymbol,
       nonLocalContinueMethodMarker: TempSymbol,
-      nonLocalContinueFlagSym: TempSymbol,
-  )(using State): Term =
+  )(using State, Ctx): Term =
     val methods =
       (if nonLocalBreakMethodMarker.directRefs.isEmpty then Nil else
         EffectHandlerMethodSpec("break", S("value"), requireEffectMethodValue("break", _)) :: Nil) :::
       (if nonLocalContinueMethodMarker.directRefs.isEmpty then Nil else
-        EffectHandlerMethodSpec("continue", N, _ => Term.Blk(
-          Term.Assgn(nonLocalContinueFlagSym.ref(), Term.Lit(Tree.BoolLit(true))) :: Nil,
-          Term.UnitVal()
-        )) :: Nil)
+        EffectHandlerMethodSpec("continue", N, _ => nonLocalContinueSentinel) :: Nil)
     if methods.isEmpty then body else
       mkEffectHandle(nonLocalHandlerSym, "NonLocalLabelEffect", methods, body)
   
@@ -1038,13 +1035,12 @@ extends Importer with ucs.SplitElaborator:
       val nonLocalHandlerSym = TempSymbol(N, s"nonLocalHandler$$${labelId.name}")
       val nonLocalBreakMethodMarker = TempSymbol(N, s"nonLocalBreakMethod$$${labelId.name}")
       val nonLocalContinueMethodMarker = TempSymbol(N, s"nonLocalContinueMethod$$${labelId.name}")
-      val nonLocalContinueFlagSym = TempSymbol(N, s"nonLocalContinueFlag$$${labelId.name}")
       val bodyTerm = ctx.withLabel(
-        labelSym, resultSym, nonLocalHandlerSym, nonLocalBreakMethodMarker, nonLocalContinueMethodMarker, nonLocalContinueFlagSym).givenIn:
+        labelSym, resultSym, nonLocalHandlerSym, nonLocalBreakMethodMarker, nonLocalContinueMethodMarker).givenIn:
         subterm(body)
       val wrappedBodyTerm = wrapNonLocalLabelHandlers(
-        bodyTerm, nonLocalHandlerSym, nonLocalBreakMethodMarker, nonLocalContinueMethodMarker, nonLocalContinueFlagSym)
-      Term.Label(labelSym, resultSym, wrappedBodyTerm, S(nonLocalContinueFlagSym)).mkLocWith(kw, labelId)
+        bodyTerm, nonLocalHandlerSym, nonLocalBreakMethodMarker, nonLocalContinueMethodMarker)
+      Term.Label(labelSym, resultSym, wrappedBodyTerm, nonLocalContinueMethodMarker.directRefs.nonEmpty).mkLocWith(kw, labelId)
     case PrefixApp(kw @ Keywrd(Keyword.`do`), body) =>
       Blk(subterm(body) :: Nil, unit).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`drop`), body) =>

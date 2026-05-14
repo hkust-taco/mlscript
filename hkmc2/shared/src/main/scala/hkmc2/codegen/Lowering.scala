@@ -613,26 +613,33 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       returnedTerm(res)
     case st.Throw(res) =>
       term(res)(Thrw)
-    case st.Label(label, result, body, nonLocalContinueFlag) =>
+    case st.Label(label, result, body, hasNonLocalContinueDispatch) =>
       loweringCtx.collectScopedSym(result)
-      nonLocalContinueFlag.foreach(loweringCtx.collectScopedSym)
       val bodyBlock =
-        nonLocalContinueFlag match
-          case N =>
-            term_nonTail(body)(r => Assign(result, r, Break(label)))
-          case S(continueFlag) =>
+        if !hasNonLocalContinueDispatch then
+          term_nonTail(body)(r => Assign(result, r, Break(label)))
+        else
+          val bodyResult = loweringCtx.registerTempSymbol(N, "labelBodyResult")
+          val isContinue = loweringCtx.registerTempSymbol(N, "labelContinueDispatch")
+          term_nonTail(body){ r =>
             Assign(
-              continueFlag,
-              Value.Lit(Tree.BoolLit(false)),
-              term_nonTail(body){ r =>
+              bodyResult,
+              r,
+              Assign(
+                isContinue,
+                Call(
+                  State.builtinOpsMap("===").asPath,
+                  (Value.Ref(bodyResult).asArg :: Value.Ref(State.runtimeSymbol).selSN("Continue").asArg :: Nil) ne_:: Nil,
+                )(true, false, false),
                 Match(
-                  Value.Ref(continueFlag),
+                  Value.Ref(isContinue),
                   (Case.Lit(Tree.BoolLit(true)) -> Continue(label)) :: Nil,
-                  S(Assign(result, r, Break(label))),
-                  End("label continue-flag dispatch")
+                  S(Assign(result, Value.Ref(bodyResult), Break(label))),
+                  End("label continue-sentinel dispatch")
                 )
-              }
+              )
             )
+          }
       Label(
         label,
         loop = true,
@@ -1483,5 +1490,4 @@ object MergeMatchArmTransformer extends BlockTransformer(SymbolSubst.Id):
               dfltRewritten.fold(restRewritten)(Begin(_, restRewritten)) |> some, rest)
       case _ => m
     case b => b
-
-
+ 

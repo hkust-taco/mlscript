@@ -55,6 +55,20 @@ let Runtime1;
       [prettyPrint]() { return this.toString(); }
       static [definitionMetadata] = ["object", "Unit"]; 
     });
+    (class Continue {
+      static {
+        new this
+      }
+      constructor() {
+        Runtime.Continue = this;
+        Object.defineProperty(this, "class", {
+          value: Continue
+        });
+        globalThis.Object.freeze(this);
+      }
+      toString() { return runtime.render(this); }
+      static [definitionMetadata] = ["object", "Continue"]; 
+    });
     (class LoopEnd {
       static {
         new this

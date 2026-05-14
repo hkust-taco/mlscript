@@ -10,6 +10,9 @@ module Runtime with ...
 object Unit with
   fun toString() = "()"
 
+// This object is used as a marker for non-local label continues.
+object Continue
+
 // This object is used as a marker for the end of a while loop in the compiled codegen.
 // It is possible for the loop body to contain a return statement,
 // in which case we want to distinguish between returning from the loop body and loop termination.
