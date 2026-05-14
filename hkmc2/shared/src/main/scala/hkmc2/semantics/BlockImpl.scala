@@ -10,6 +10,9 @@ import hkmc2.syntax.{PossiblyAnnotated, TypeOrTermDef}
 trait BlockImpl(using Elaborator.State):
   self: Block =>
   
+  def appended(stmt: Tree): Block =
+    Block(stmts :+ stmt)
+  
   val desugStmts =
     def desug(stmts: Ls[Tree]): Ls[Tree] =
       stmts match

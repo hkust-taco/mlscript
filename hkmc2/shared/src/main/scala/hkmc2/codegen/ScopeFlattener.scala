@@ -51,3 +51,5 @@ class ScopeFlattener extends BlockTransformer(new SymbolSubst):
           scopedForCurrentFun.addAll(syms)
           super.applySubBlock(body)
     case _ => super.applySubBlock(b)
+
+

@@ -95,7 +95,7 @@ object Elaborator:
       parent: Opt[Ctx],
       env: Map[Str, Ctx.Elem],
       mode: Mode,
-      labels: Map[Str, LabelBinding],
+      labels: Map[LabelSymbol, LabelBinding],
   ):
     
     override def toString: Str = s"${parent.fold("")(_.toString+"/")}${outer.showDbg}"
@@ -122,12 +122,14 @@ object Elaborator:
       )
     
     def withLabel(
-        label: Str,
         labelSym: LabelSymbol,
         resultSym: TempSymbol,
         nonLocalBreakHandlerSym: TempSymbol,
     ): Ctx =
-      copy(labels = labels + (label -> LabelBinding(labelSym, resultSym, nonLocalBreakHandlerSym)))
+      copy(
+        env = env + (labelSym.nme -> Ctx.RefElem(labelSym)),
+        labels = labels + (labelSym -> LabelBinding(labelSym, resultSym, nonLocalBreakHandlerSym))
+      )
     
     def nest(outerCtx: OuterCtx): Ctx = Ctx(outerCtx, Some(this), Map.empty, mode, Map.empty)
     def nestLocal(nameHint: Str): Ctx = nest(OuterCtx.LocalScope(nameHint))
@@ -144,11 +146,22 @@ object Elaborator:
       ): LabelLookup = current match
         case N => LabelLookup.NotFound
         case S(ctx) =>
-          ctx.labels.get(name) match
-            case S(binding) =>
-              if crossedFunction || crossedLambdaOrHandler
-              then LabelLookup.AcrossBoundary(binding, crossedFunction, crossedLambdaOrHandler)
-              else LabelLookup.Found(binding)
+          ctx.env.get(name) match
+            case S(elem) =>
+              elem.symbol match
+                case S(labelSym: LabelSymbol) =>
+                  ctx.labels.get(labelSym) match
+                    case S(binding) =>
+                      if crossedFunction || crossedLambdaOrHandler
+                      then LabelLookup.AcrossBoundary(binding, crossedFunction, crossedLambdaOrHandler)
+                      else LabelLookup.Found(binding)
+                    case N =>
+                      // Defensive internal consistency check. This path should be unreachable:
+                      // every label inserted into `env` via `withLabel` is inserted into
+                      // `labels` in the same step. If this fires, context construction is broken.
+                      lastWords(s"Missing label binding for symbol ${labelSym.nme} in context ${ctx.outer.showDbg}.")
+                case _ =>
+                  LabelLookup.NotFound
             case N =>
               val nextCrossedFunction = crossedFunction || (ctx.outer match
                 case _: OuterCtx.Function => true
@@ -520,29 +533,6 @@ extends Importer with ucs.SplitElaborator:
       val rt = subterm(Tup(args), inAppPrefix = false, inTyAppPrefix = false)
       Term.App(lt, rt)(tree, N, sym)
     
-    def maybeLabelClause(tree: Tree): Opt[(Ident, Tree)] = tree match
-      case InfixApp(id: Ident, Keywrd(Keyword.`:`), rhs) => S(id -> rhs)
-      case _ => N
-    
-    def desugarImplicitDoLabels(tree: Tree): Tree = tree match
-      case PrefixApp(kw @ Keywrd(Keyword.`do`), Block(sts)) =>
-        val labelClauses = sts.map(maybeLabelClause)
-        if labelClauses.forall(_.nonEmpty) && labelClauses.nonEmpty then
-          val clauses = labelClauses.map(_.get)
-          val nestedClause = clauses.foldRight[Opt[Tree]](N):
-            case ((labelId, labelBody), N) =>
-              S(InfixApp(labelId, Keywrd(Keyword.`:`), labelBody))
-            case ((labelId, labelBody), S(innerClause)) =>
-              val nestedDo = PrefixApp(new Keywrd(Keyword.`do`).withLocOf(kw), innerClause)
-              val newLabelBody = labelBody match
-                case Block(innerStmts) => Block(innerStmts :+ nestedDo)
-                case other => Block(other :: nestedDo :: Nil)
-              S(InfixApp(labelId, Keywrd(Keyword.`:`), newLabelBody))
-          PrefixApp(kw, nestedClause.get)
-        else
-          tree
-      case _ => tree
-    
     def elaborateSelection(tree: Tree, pre: Tree, nme: Ident): Term =
       val preTrm = subterm(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
@@ -570,7 +560,7 @@ extends Importer with ucs.SplitElaborator:
         Term.Lit(StrLit(loc.origin.fileName.toString))
       else
         Term.Sel(preTrm, nme)(sym, FlowSymbol.sel(nme.name), N, S(summon))
-    desugarImplicitDoLabels(tree.desugared) match
+    tree.desugared match
     case Trm(term) => term
     case unt @ Unt() => unit.withLocOf(unt)
     case Bra(k, e) =>
@@ -977,7 +967,7 @@ extends Importer with ucs.SplitElaborator:
       val labelSym = new LabelSymbol(N, labelId.name)
       val resultSym = new TempSymbol(N, s"${labelId.name}$$result")
       val nonLocalBreakHandlerSym = TempSymbol(N, s"nonLocalBreakHandler$$${labelId.name}")
-      val bodyTerm = ctx.withLabel(labelId.name, labelSym, resultSym, nonLocalBreakHandlerSym).givenIn:
+      val bodyTerm = ctx.withLabel(labelSym, resultSym, nonLocalBreakHandlerSym).givenIn:
         subterm(body)
       val wrappedBodyTerm =
         if nonLocalBreakHandlerSym.directRefs.isEmpty then bodyTerm else

@@ -90,18 +90,25 @@ let i = 0 in let steps = 0 in do done:
 //│ = 102
 
 
-// * Label operations should still resolve labels when a normal name with the same spelling exists.
+// * Labels and variables share the same namespace; inner label bindings can shadow outer variables.
 let loop = 10 in do loop:
-  if loop == 10 do loop.break(loop)
-  0
-//│ = 10
+  if true do loop.break(())
+  loop.continue
 
 
-// * Normal name references should still resolve to normal names when a label with the same spelling exists.
+// * Variables can shadow labels in the same namespace.
 do lbl:
   let lbl = 5
   lbl
 //│ = 5
+
+
+// * If a variable shadows a label, label control-flow selection should no longer resolve as a label op.
+:re
+do lbl:
+  let lbl = 5
+  lbl.break
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'break' yielded 'undefined'
 
 
 // * Nested labels in a plain `do` block should be handled; later labels are nested in earlier ones.
@@ -131,6 +138,6 @@ do
   only:
     only.break(x)
 //│ ╔══[COMPILATION ERROR] Name not found: only
-//│ ║  l.132: 	    only.break(x)
+//│ ║  l.139: 	    only.break(x)
 //│ ╙──       	    ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

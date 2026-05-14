@@ -239,6 +239,33 @@ enum Tree extends AutoLocated:
       StrLit(name.drop(1)).withLocOf(this)
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
       InfixApp(lhs.desugared, Keywrd(Keyword.`:`), rhs.desugared)
+    case PrefixApp(kw @ Keywrd(Keyword.`do`), Block(sts))
+    if sts.nonEmpty
+    =>
+      def collectAll[A](opts: Ls[Opt[A]]): Opt[Ls[A]] =
+        if opts.forall(_.nonEmpty) then S(opts.map(_.get)) else N
+      val labelClauseOpts = sts.map:
+        case InfixApp(labelId: Ident, Keywrd(Keyword.`:`), body) => S(labelId -> body)
+        case _ => N
+      collectAll(labelClauseOpts) match
+      case S(clauses) =>
+        // Only prefix clauses need to host an additional nested `do`; the last clause is the innermost.
+        val prefixClauseOpts = clauses.dropRight(1).map:
+          case (labelId, labelBody: Block) => S(labelId -> labelBody)
+          case _ => N
+        collectAll(prefixClauseOpts) match
+        case S(prefix) =>
+          val (lastId, lastBody) = clauses.last
+          // Build `label1: ...; label2: ...; label3: ...` into nested implicit form where
+          // each prefix label body appends `do labelNext: ...` as its final statement.
+          val nestedClause = prefix.foldRight[Tree](InfixApp(lastId, Keywrd(Keyword.`:`), lastBody)):
+            case ((labelId, labelBody), innerClause) =>
+              val nestedDo = PrefixApp(new Keywrd(Keyword.`do`).withLocOf(kw), innerClause)
+              val newLabelBody = labelBody.appended(nestedDo)
+              InfixApp(labelId, Keywrd(Keyword.`:`), newLabelBody)
+          PrefixApp(kw, nestedClause).withLocOf(this)
+        case N => this
+      case N => this
     case Sel(pre, nme) if nme.name.startsWith("'") =>
       DynAccess(pre.desugared, StrLit(nme.name.drop(1)).withLocOf(nme)).withLocOf(this)
     
@@ -589,4 +616,3 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
       .toList
     
   lazy val allSymbols = definedSymbols ++ clsParams.flatten.map(s => s.nme -> s).toMap
-
