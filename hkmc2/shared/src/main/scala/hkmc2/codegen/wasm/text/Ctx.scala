@@ -798,7 +798,7 @@ class Ctx(using State) extends ToWat:
 
   /** Checks whether the global variable scope contains the variable `sym`. */
   def containsGlobal(sym: Symbol): Bool = namedGlobals.contains(sym)
-
+  
   /** Returns all globals in this context. */
   def getGlobals: Seq[Symbol] = namedGlobals.keys.toSeq
 
