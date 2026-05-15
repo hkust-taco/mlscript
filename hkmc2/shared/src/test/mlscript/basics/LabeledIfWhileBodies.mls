@@ -1,0 +1,37 @@
+:js
+
+
+let
+  i = 0
+  j = 0
+while i < 10 do
+  outerLbl:
+    set i += 1
+    set j = i
+    while j > 0 do
+      set j += 1
+      if j > 5 do outerLbl.break
+i * 100 + j
+//│ = 1011
+//│ i = 10
+//│ j = 11
+
+
+let value =
+  if true then
+    exitLbl:
+      exitLbl.break(42)
+  else
+    0
+in value
+//│ = 42
+
+
+let value =
+  if false then
+    0
+  else
+    exitLbl:
+      exitLbl.break(24)
+in value
+//│ = 24

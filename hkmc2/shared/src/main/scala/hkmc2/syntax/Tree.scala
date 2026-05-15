@@ -233,10 +233,51 @@ enum Tree extends AutoLocated:
   
   def showDbg: Str = toString // TODO
   
+  private def mkImplicitDoLabel(tree: Tree): Tree =
+    PrefixApp(new Keywrd(Keyword.`do`).withLocOf(tree), tree).withLocOf(tree)
+  
+  private def desugSplitLikeConsequent(tree: Tree): Tree = tree match
+    case labelClause @ InfixApp(_: Ident, Keywrd(Keyword.`:`), _) =>
+      mkImplicitDoLabel(labelClause)
+    case block: Block =>
+      desugSplitLikeLabelBody(block)
+    case other => other
+  
+  private def desugSplitLikeLabelBody(split: Tree): Tree = split match
+    case stmt @ InfixApp(lhs, kw @ Keywrd(Keyword.`do`), rhs) =>
+      val rhs2 = desugSplitLikeConsequent(rhs)
+      if rhs2 is rhs then stmt else InfixApp(lhs, kw, rhs2).withLocOf(stmt)
+    case stmt @ InfixApp(lhs, kw @ Keywrd(Keyword.`then`), rhs) =>
+      val rhs2 = desugSplitLikeConsequent(rhs)
+      if rhs2 is rhs then stmt else InfixApp(lhs, kw, rhs2).withLocOf(stmt)
+    case els @ PrefixApp(elsKw @ Keywrd(Keyword.`else`), rhs) =>
+      val rhs2 = desugSplitLikeConsequent(rhs)
+      if rhs2 is rhs then els else PrefixApp(elsKw, rhs2).withLocOf(els)
+    case block @ Block(stmts) =>
+      val newStmts = stmts.mapConserve:
+        case labelClause @ InfixApp(_: Ident, Keywrd(Keyword.`:`), _) =>
+          mkImplicitDoLabel(labelClause)
+        case stmt @ InfixApp(lhs, kw @ Keywrd(Keyword.`do`), rhs) =>
+          val rhs2 = desugSplitLikeConsequent(rhs)
+          if rhs2 is rhs then stmt else InfixApp(lhs, kw, rhs2).withLocOf(stmt)
+        case stmt @ InfixApp(lhs, kw @ Keywrd(Keyword.`then`), rhs) =>
+          val rhs2 = desugSplitLikeConsequent(rhs)
+          if rhs2 is rhs then stmt else InfixApp(lhs, kw, rhs2).withLocOf(stmt)
+        case els @ PrefixApp(elsKw @ Keywrd(Keyword.`else`), rhs) =>
+          val rhs2 = desugSplitLikeConsequent(rhs)
+          if rhs2 is rhs then els else PrefixApp(elsKw, rhs2).withLocOf(els)
+        case stmt => stmt
+      block.withStmts(newStmts)
+    case labelClause @ InfixApp(_: Ident, Keywrd(Keyword.`:`), _) =>
+      mkImplicitDoLabel(labelClause)
+    case other => other
+  
   lazy val desugared: Tree = this match
-    
     case Ident(name) if name.startsWith("'") =>
       StrLit(name.drop(1)).withLocOf(this)
+    case IfLike(kw, split) =>
+      val split2 = desugSplitLikeLabelBody(split)
+      if split2 is split then this else IfLike(kw, split2).withLocOf(this)
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
       InfixApp(lhs.desugared, Keywrd(Keyword.`:`), rhs.desugared)
     case PrefixApp(kw @ Keywrd(Keyword.`do`), Block(sts))

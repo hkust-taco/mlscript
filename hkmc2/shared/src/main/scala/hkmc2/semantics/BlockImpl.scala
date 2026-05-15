@@ -10,8 +10,11 @@ import hkmc2.syntax.{PossiblyAnnotated, TypeOrTermDef}
 trait BlockImpl(using Elaborator.State):
   self: Block =>
   
+  def withStmts(newStmts: Ls[Tree]): Block =
+    if newStmts is stmts then this else Block(newStmts).withLocOf(this)
+  
   def appended(stmt: Tree): Block =
-    Block(stmts :+ stmt)
+    withStmts(stmts :+ stmt)
   
   val desugStmts =
     def desug(stmts: Ls[Tree]): Ls[Tree] =
@@ -107,5 +110,4 @@ trait BlockImpl(using Elaborator.State):
       .toArray.sortBy(_._1)
   
 end BlockImpl
-
 

@@ -13,28 +13,46 @@ import semantics.*
   *   because certain passes, such as the handler lowering, rely on knowing all the local
   *   variables of each function.
   * - Loop labels are also safe to flatten right before handler lowering as long as their bodies
-  *   do not contain lambdas; otherwise locals could be moved out of scope incorrectly.
-  *   This pass must therefore still run after the lifter, which is the pass that needs updating
-  *   before more general loop-label flattening becomes valid.
+  *   do not contain nested lambdas, functions, handlers, or classes; otherwise locals could be
+  *   moved out of scope incorrectly. This pass must therefore still run after the lifter, which
+  *   is the pass that needs updating before more general loop-label flattening becomes valid.
   */
 class ScopeFlattener extends BlockTransformer(new SymbolSubst):
-  /** Returns whether a loop-label body contains any lambda, stopping at the first one found. */
-  private def loopLabelContainsLambda(b: Block): Bool =
-    object lambdaDetector extends BlockTraverser:
-      var found = false
-      override def applySubBlock(b: Block): Unit =
-        if !found then super.applySubBlock(b)
-      override def applyLam(l: Lambda): Unit =
-        found = true
-    lambdaDetector.applyBlock(b)
-    lambdaDetector.found
+  private var nestedScopedDefsAllowed = true
+  
+  private def withNestedScopedDefsAllowed[A](allowed: Bool)(body: => A): A =
+    val prevNestedScopedDefsAllowed = nestedScopedDefsAllowed
+    nestedScopedDefsAllowed = allowed
+    try body
+    finally nestedScopedDefsAllowed = prevNestedScopedDefsAllowed
+  
+  private def assertNestedScopedDefsAllowed(kind: Str): Unit =
+    assert(nestedScopedDefsAllowed,
+      s"ScopeFlattener cannot flatten loop labels whose bodies contain nested $kind; lift them before flattening")
   
   override def applyBlock(b: Block): Block = b match
     case Label(_, loop, body, _) =>
-      assert(!loop || !loopLabelContainsLambda(body),
-        "ScopeFlattener cannot flatten loop labels whose bodies contain lambdas; lift them before flattening")
-      super.applyBlock(b)
+      if loop then withNestedScopedDefsAllowed(false)(super.applyBlock(b))
+      else super.applyBlock(b)
     case _ => super.applyBlock(b)
+  
+  override def applyLam(lam: Lambda): Lambda =
+    assertNestedScopedDefsAllowed("lambdas")
+    super.applyLam(lam)
+  
+  override def applyHandler(hdr: Handler): Handler =
+    assertNestedScopedDefsAllowed("handlers")
+    super.applyHandler(hdr)
+  
+  override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
+    case _: FunDefn =>
+      assertNestedScopedDefsAllowed("functions")
+      super.applyDefn(defn)(k)
+    case _: ClsLikeDefn =>
+      assertNestedScopedDefsAllowed("classes")
+      super.applyDefn(defn)(k)
+    case _ =>
+      super.applyDefn(defn)(k)
   
   private var scopedSymForCurrentFun: Opt[mutable.Set[Symbol]] = N
   override def applyFunBodyLikeBlock(b: Block): Block =
@@ -63,4 +81,3 @@ class ScopeFlattener extends BlockTransformer(new SymbolSubst):
           scopedForCurrentFun.addAll(syms)
           super.applySubBlock(body)
     case _ => super.applySubBlock(b)
-
