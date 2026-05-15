@@ -66,15 +66,7 @@ continueFromNestedFunctionWithEffects()
 //│ let loop⁰, continueFromNestedFunctionWithEffects⁰, handleBlock$⁰, NonLocalLabelEffectbreak⁰, NonLocalLabelEffectcontinue⁰, NonLocalLabelEffect⁰, Capture$scope0⁰, handleBlock$$⁰, NonLocalLabelEffectbreak$⁰, tmp;
 //│ do runtime⁰.resetEffects﹖();
 //│ define NonLocalLabelEffectcontinue⁰ as fun NonLocalLabelEffectcontinue¹(resume) {
-//│   let selRes;
-//│   set selRes = runtime⁰.Continue﹖;
-//│   do runtime⁰.Continue$__checkNotMethod﹖;
-//│   match selRes
-//│     undefined =>
-//│       throw new globalThis⁰.Error﹖("Access to required field 'Continue' yielded 'undefined'")
-//│     else
-//│       return selRes
-//│   end
+//│   return runtime⁰.Continue﹖
 //│ };
 //│ define NonLocalLabelEffectbreak$⁰ as fun NonLocalLabelEffectbreak$¹(value)(resume) {
 //│   return NonLocalLabelEffectbreak¹(value, resume)
@@ -114,7 +106,7 @@ continueFromNestedFunctionWithEffects()
 //│                 set pc = 2;
 //│                 continue main
 //│               else
-//│                 return runtime⁰.unwind﹖(loop¹, 2, "NonLocalLabelControlFlow.mls:60:20", null, null, 1, 1, scope0$cap, 0)
+//│                 return runtime⁰.unwind﹖(loop¹, 2, "NonLocalLabelControlFlow.mls:60:24", null, null, 1, 1, scope0$cap, 0)
 //│             end
 //│           else
 //│             set pc = 1;

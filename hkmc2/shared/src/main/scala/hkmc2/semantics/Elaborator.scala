@@ -76,7 +76,7 @@ object Elaborator:
     */
   enum LabelLookup:
     case Found(binding: LabelBinding)
-    case AcrossBoundary(binding: LabelBinding, crossedFunction: Bool, crossedLambdaOrHandler: Bool)
+    case AcrossBoundary(binding: LabelBinding)
     case NotFound
   
   enum ReturnHandler:
@@ -155,7 +155,7 @@ object Elaborator:
                   ctx.labels.get(labelSym) match
                     case S(binding) =>
                       if crossedFunction || crossedLambdaOrHandler
-                      then LabelLookup.AcrossBoundary(binding, crossedFunction, crossedLambdaOrHandler)
+                      then LabelLookup.AcrossBoundary(binding)
                       else LabelLookup.Found(binding)
                     case N =>
                       // Defensive internal consistency check. This path should be unreachable:
@@ -494,11 +494,12 @@ extends Importer with ucs.SplitElaborator:
     methodMarker.ref(callSiteId)
     ()
   
+  /** Use a synthesized selection so the sentinel object can be referenced without field-access sanity checks. */
   private def nonLocalContinueSentinel(using Ctx): Term =
-    State.runtimeSymbol.ref().selNoSym("Continue")
+    State.runtimeSymbol.ref().selNoSym("Continue", synth = true)
   
   /** Build an effect handler around `body` for non-local control flow. */
-  private def mkEffectHandle(
+  private def mkEffectHandleAbortive(
       handlerSymbol: TempSymbol,
       effectClassName: Str,
       methods: Ls[EffectHandlerMethodSpec],
@@ -547,11 +548,10 @@ extends Importer with ucs.SplitElaborator:
   
   private def mkNonLocalContinueInvocation(
       binding: LabelBinding,
-      labelId: Ident,
+      nme: Ident,
   )(using Ctx): Term =
-    val callSiteId = new Ident("continue").withLocOf(labelId)
-    markEffectMethodUsed(binding.nonLocalContinueMethodMarker, callSiteId)
-    mkNonLocalEffectInvocation(binding.nonLocalHandlerSymbol, "continue", callSiteId, Nil, Nil)
+    markEffectMethodUsed(binding.nonLocalContinueMethodMarker, nme)
+    mkNonLocalEffectInvocation(binding.nonLocalHandlerSymbol, "continue", nme, Nil, Nil)
   
   private def wrapNonLocalLabelHandlers(
       body: Term,
@@ -565,7 +565,7 @@ extends Importer with ucs.SplitElaborator:
       (if nonLocalContinueMethodMarker.directRefs.isEmpty then Nil else
         EffectHandlerMethodSpec("continue", N, _ => nonLocalContinueSentinel) :: Nil)
     if methods.isEmpty then body else
-      mkEffectHandle(nonLocalHandlerSym, "NonLocalLabelEffect", methods, body)
+      mkEffectHandleAbortive(nonLocalHandlerSym, "NonLocalLabelEffect", methods, body)
   
   def term(tree: Tree): Ctxl[Term] =
   trace[Term](s"Elab term ${tree.showDbg}", r => s"~> $r"):
@@ -831,16 +831,15 @@ extends Importer with ucs.SplitElaborator:
       ctx.lookupLabel(labelName) match
       case LabelLookup.Found(binding) =>
         Term.Break(binding.labelSymbol, binding.resultSymbol, value)
-      case LabelLookup.AcrossBoundary(binding, _, _) =>
+      case LabelLookup.AcrossBoundary(binding) =>
         if config.effectHandlers.isEmpty then
           mkLabelSelectionApp(tree, labelId, nme, args)
         else
-          val callSiteId = new Ident("break").withLocOf(labelId)
-          markEffectMethodUsed(binding.nonLocalBreakMethodMarker, callSiteId)
+          markEffectMethodUsed(binding.nonLocalBreakMethodMarker, nme)
           mkNonLocalEffectInvocation(
             binding.nonLocalHandlerSymbol,
             "break",
-            callSiteId,
+            nme,
             args,
             value.toList,
           )
@@ -854,7 +853,7 @@ extends Importer with ucs.SplitElaborator:
           Term.Error
         else
           Term.Continue(binding.labelSymbol)
-      case LabelLookup.AcrossBoundary(binding, _, _) =>
+      case LabelLookup.AcrossBoundary(binding) =>
         if args.nonEmpty then
           raise(ErrorReport(msg"Label continue does not take arguments." -> tree.toLoc :: Nil))
           Term.Error
@@ -862,7 +861,7 @@ extends Importer with ucs.SplitElaborator:
           raise(ErrorReport(msg"Non-local label continues are only supported with effect handlers enabled." -> labelId.toLoc :: Nil))
           Term.Error
         else
-          mkNonLocalContinueInvocation(binding, labelId)
+          mkNonLocalContinueInvocation(binding, nme)
       case LabelLookup.NotFound =>
         mkLabelSelectionApp(tree, labelId, nme, args)
     case tree @ App(lhs, rhs) =>
@@ -887,26 +886,25 @@ extends Importer with ucs.SplitElaborator:
       ctx.lookupLabel(labelName) match
       case LabelLookup.Found(binding) =>
         Term.Break(binding.labelSymbol, binding.resultSymbol, N)
-      case LabelLookup.AcrossBoundary(binding, _, _) =>
+      case LabelLookup.AcrossBoundary(binding) =>
         if config.effectHandlers.isEmpty then
           raise(ErrorReport(msg"Non-local label breaks are only supported with effect handlers enabled." -> labelId.toLoc :: Nil))
           Term.Error
         else
-          val callSiteId = new Ident("break").withLocOf(labelId)
-          markEffectMethodUsed(binding.nonLocalBreakMethodMarker, callSiteId)
-          mkNonLocalEffectInvocation(binding.nonLocalHandlerSymbol, "break", callSiteId, Nil, Term.UnitVal() :: Nil)
+          markEffectMethodUsed(binding.nonLocalBreakMethodMarker, nme)
+          mkNonLocalEffectInvocation(binding.nonLocalHandlerSymbol, "break", nme, Nil, Term.UnitVal() :: Nil)
       case LabelLookup.NotFound =>
         elaborateSelection(tree, labelId, nme)
     case Sel(labelId @ Ident(labelName), nme @ Ident("continue")) =>
       ctx.lookupLabel(labelName) match
       case LabelLookup.Found(binding) =>
         Term.Continue(binding.labelSymbol)
-      case LabelLookup.AcrossBoundary(binding, _, _) =>
+      case LabelLookup.AcrossBoundary(binding) =>
         if config.effectHandlers.isEmpty then
           raise(ErrorReport(msg"Non-local label continues are only supported with effect handlers enabled." -> labelId.toLoc :: Nil))
           Term.Error
         else
-          mkNonLocalContinueInvocation(binding, labelId)
+          mkNonLocalContinueInvocation(binding, nme)
       case LabelLookup.NotFound =>
         elaborateSelection(tree, labelId, nme)
     case Sel(pre, nme) =>
@@ -1469,7 +1467,7 @@ extends Importer with ucs.SplitElaborator:
                   newCtx.nest(OuterCtx.Function(nonLocalRetHandler)).givenIn: newCtx ?=>
                     val b = term(rhs)(using newCtx)
                     if nonLocalRetHandler.directRefs.isEmpty then b else
-                      mkEffectHandle(
+                      mkEffectHandleAbortive(
                         nonLocalRetHandler,
                         "‹non-local return effect›",
                         EffectHandlerMethodSpec("ret", S("value"), requireEffectMethodValue("ret", _)) :: Nil,

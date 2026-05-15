@@ -426,10 +426,12 @@ enum Term extends Statement:
       val defsFree = defs.iterator.flatMap(d => Term.termDefFreeVars(d.td)).toSet
       val bodyFree = body.freeVars - lhs.nme
       rhsFree ++ argsFree ++ defsFree ++ bodyFree
-    case Label(_, _, body, _) => body.freeVars
+    case Label(_, result, body, _) =>
+      val bodyFree = body.freeVars
+      if bodyFree(result.nme) then bodyFree - result.nme else bodyFree
     case Forall(_, _, body) => body.freeVars
     case Error | Missing | _: Lit | _: UnitVal | _: LeadingDotSel | _: Continue => Set.empty
-    case Break(_, _, value) => value.iterator.flatMap(_.freeVars).toSet
+    case Break(_, result, value) => value.iterator.flatMap(_.freeVars).toSet + result.nme
     case _ => subTerms.iterator.flatMap(_.freeVars).toSet
 
   def sel(id: Tree.Ident, sym: Opt[MemberSymbol])(using State, Elaborator.Ctx): Sel =
@@ -1408,5 +1410,4 @@ trait BlkImpl:
     (stats ::: (res match
       case Lit(Tree.UnitLit(false)) => Nil
       case res => res :: Nil)).map(_.show).mkDocument(doc", # ")
-
 
