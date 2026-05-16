@@ -9,7 +9,7 @@ This tracker follows `docs/web-ide-mlscript-rewrite-workflow.md`.
 - [x] `components/ConsolePanel.js` -> `components/ConsolePanel.mls`
 - [x] `components/ToolbarPanel.js` -> `components/ToolbarPanel.mls`
 - [x] `components/TreeNode.js` -> `components/TreeNode.mls`
-- [ ] `components/FileExplorer.js`
+- [x] `components/FileExplorer.js` -> `components/FileExplorer.mls`
 - [ ] `components/ReservedPanel.js`
 - [ ] `editor/editor.js`
 - [ ] `components/EditorPanel.js`
@@ -18,7 +18,7 @@ This tracker follows `docs/web-ide-mlscript-rewrite-workflow.md`.
 
 ## Current Step
 
-Next: `components/FileExplorer.js`.
+Next: `components/ReservedPanel.js`.
 
 ## Verification
 
@@ -32,3 +32,5 @@ Next: `components/FileExplorer.js`.
 - Headless browser smoke from `http://127.0.0.1:8128/index.html?toolbar=20260517b` loaded `ToolbarPanel.mjs`, did not load `ToolbarPanel.js`, dispatched compile for `/main.mls`, updated status/button states, showed and hid the status tooltip, and executed the default program.
 - `timeout 300s sbt "hkmc2PackagesTest/testOnly hkmc2.PackageTestRunner -- -z web-ide"` passed after `TreeNode.mls`.
 - Headless browser smoke from `http://127.0.0.1:8129/index.html?treenode=20260517b` loaded `TreeNode.mjs`, did not load `TreeNode.js`, opened source and compiled-output files from the tree, hid paired `.mjs` entries, updated folder children, removed stale `.mjs` buttons, and executed the default program.
+- `timeout 300s sbt "hkmc2PackagesTest/testOnly hkmc2.PackageTestRunner -- -z web-ide"` passed after `FileExplorer.mls`.
+- Headless browser smoke from `http://127.0.0.1:8130/index.html?fileexplorer=20260517a` loaded `FileExplorer.mjs`, did not load `FileExplorer.js`, toggled sidebar collapse, created and opened a new file through the UI, showed and hid the tree tooltip, compiled `main.mls`, and executed the default program.
