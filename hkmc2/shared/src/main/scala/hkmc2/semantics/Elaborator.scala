@@ -892,7 +892,7 @@ extends Importer with ucs.SplitElaborator:
           Term.Error
         else
           markEffectMethodUsed(binding.nonLocalBreakMethodMarker, nme)
-          mkNonLocalEffectInvocation(binding.nonLocalHandlerSymbol, "break", nme, Nil, Term.UnitVal() :: Nil)
+          mkNonLocalEffectInvocation(binding.nonLocalHandlerSymbol, "break", nme, Nil, Nil)
       case LabelLookup.NotFound =>
         elaborateSelection(tree, labelId, nme)
     case Sel(labelId @ Ident(labelName), nme @ Ident("continue")) =>
