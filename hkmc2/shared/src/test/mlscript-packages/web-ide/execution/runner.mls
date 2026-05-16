@@ -89,7 +89,7 @@ fun makeExecution(id) =
   let execution = new mut Object
   set
     execution.id = id
-    execution.worker = new Worker("execution/worker.js", workerOptions())
+    execution.worker = new Worker("execution/worker.mjs", workerOptions())
     execution.isRunning = false
     execution.startTime = null
   execution

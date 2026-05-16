@@ -13,12 +13,12 @@ This tracker follows `docs/web-ide-mlscript-rewrite-workflow.md`.
 - [x] `components/ReservedPanel.js` -> `components/ReservedPanel.mls`
 - [x] `editor/editor.js` -> `editor/editor.mls`
 - [x] `components/EditorPanel.js` -> `components/EditorPanel.mls`
-- [ ] `execution/worker.js`
+- [x] `execution/worker.js` -> `execution/worker.mls`
 - [ ] `main.js`
 
 ## Current Step
 
-Next: `execution/worker.js`.
+Next: `main.js`.
 
 ## Verification
 
@@ -40,3 +40,5 @@ Next: `execution/worker.js`.
 - Headless browser smoke from `http://127.0.0.1:8131/index.html?editor=1778962677` loaded `editor.mjs`, did not load `editor.js`, created mutable CodeMirror editor views, autosaved edits, compiled and executed edited `main.mls`, and kept readonly std-file edits from persisting.
 - `timeout 300s sbt "hkmc2PackagesTest/testOnly hkmc2.PackageTestRunner -- -z web-ide"` passed after `EditorPanel.mls`.
 - Headless browser smoke from `http://127.0.0.1:8131/index.html?editor-panel=1778963227` loaded `EditorPanel.mjs`, did not load `EditorPanel.js`, kept public tab state, opened files, synchronized write/rename/delete filesystem events, navigated to a line, handled keyboard compile/execute, disabled std tabs, and closed a tab with Ctrl-W.
+- `timeout 300s sbt "hkmc2PackagesTest/testOnly hkmc2.PackageTestRunner -- -z web-ide"` passed after `execution/worker.mls`.
+- Headless browser smoke from `http://127.0.0.1:8131/index.html?worker2=1778964086` loaded `execution/worker.mjs`, did not load `execution/worker.js`, compiled and executed `main.mls`, loaded SES/Endo worker dependencies, resolved VM module imports, and forwarded execution console output with no browser console errors.

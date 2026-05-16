@@ -1,0 +1,193 @@
+import "../common/JS.mls"
+
+open JS { Absent }
+
+module worker with...
+
+let ModuleSource = null
+let Compartment = null
+
+fun dynamicImport(specifier) =
+  let importModule = Function("specifier", "return import(specifier)")
+  importModule(specifier)
+
+fun message(kind, payload) =
+  let message = new mut Object
+  set
+    message.("type") = kind
+    message.payload = payload
+  message
+
+fun post(kind, payload) =
+  self.postMessage(message(kind, payload))
+
+fun errorStack(error) =
+  if
+    error is Absent then ""
+    error.stack is ~Absent then error.stack
+    else String(error)
+
+fun errorMessage(error) =
+  if
+    error is Absent then "Unknown error"
+    error.message is ~Absent then error.message
+    else String(error)
+
+fun dependencyErrorPayload(error) =
+  "Failed to load worker dependencies: " + errorMessage(error) + "\n" + errorStack(error)
+
+fun requireDependency(value, dependencyName) =
+  if value is Absent do throw new Error(dependencyName + " not found after loading worker dependencies")
+
+fun finishDependencyLoad(endoModuleSource) =
+  set ModuleSource = endoModuleSource.ModuleSource
+  requireDependency(Compartment, "Compartment constructor")
+  requireDependency(ModuleSource, "ModuleSource")
+  post("ready", null)
+
+fun loadEndoModuleSource(sesModule) =
+  if self.Compartment is
+    ~Absent as compartment then set Compartment = compartment
+    else set Compartment = sesModule.Compartment
+  let promise = dynamicImport("https://esm.sh/@endo/module-source@1.3.3")
+  promise.then(finishDependencyLoad)
+
+fun handleDependencyError(error) =
+  post("error", dependencyErrorPayload(error))
+  throw error
+
+fun loadDependencies() =
+  let promise = dynamicImport("https://esm.sh/ses@1.14.0")
+  promise.then(loadEndoModuleSource).("catch")(handleDependencyError)
+
+fun normalizePath(path) =
+  let parts = mut []
+  let segments = path.split("/")
+  let i = 0
+  while i < segments.length do
+    let part = segments.at(i)
+    if
+      part === "" then ()
+      part === "." then ()
+      part === ".." then
+        if parts.length > 0 do parts.pop()
+      else parts.push(part)
+    set i += 1
+  "/" + parts.join("/")
+
+fun resolveRelative(specifier, referrer) =
+  let idx = referrer.lastIndexOf("/")
+  let dir = if idx === -1 then "/" else referrer.slice(0, idx + 1)
+  normalizePath(dir + specifier)
+
+fun workerGlobalError(message, source, lineno, colno, error) =
+  let details = new mut Object
+  set
+    details.message = message
+    details.source = source
+    details.lineno = lineno
+    details.colno = colno
+    details.error = error
+  console.error("[Worker global error]", details)
+  post("error", "Uncaught error in worker: " + message + "\n" + errorStack(error))
+  true
+
+fun unhandledRejection(event) =
+  console.error("[Worker unhandled rejection]", event.reason)
+  post("error", "Unhandled promise rejection: " + errorStack(event.reason))
+  event.preventDefault()
+
+fun consolePayload(kind, args) =
+  post(kind, args)
+
+fun vmLog(...args) =
+  consolePayload("console.log", args)
+
+fun vmError(...args) =
+  consolePayload("console.error", args)
+
+fun vmWarn(...args) =
+  consolePayload("console.warn", args)
+
+fun vmConsole() =
+  let vm = new mut Object
+  set
+    vm.log = vmLog
+    vm.error = vmError
+    vm.warn = vmWarn
+  vm
+
+fun endowments() =
+  let scope = new mut Object
+  set
+    scope.console = vmConsole()
+    scope.fetch = self.fetch
+    scope.structuredClone = self.structuredClone
+  scope
+
+fun resolveHook(moduleSpecifier, moduleReferrer) =
+  post("log", "Resolving module: " + moduleSpecifier + " from " + moduleReferrer)
+  if
+    moduleSpecifier.startsWith("./") then resolveRelative(moduleSpecifier, moduleReferrer)
+    moduleSpecifier.startsWith("../") then resolveRelative(moduleSpecifier, moduleReferrer)
+    moduleSpecifier.startsWith("/") then normalizePath(moduleSpecifier)
+    else moduleSpecifier
+
+fun importHook(fileMap, fullSpecifier) =
+  let path = normalizePath(fullSpecifier)
+  let src = fileMap.get(path)
+  if src is Absent then throw new Error("Module not found: " + path)
+  else
+    post("log", "Importing module: " + path)
+    Reflect.construct(ModuleSource, [src, path])
+
+fun compartmentOptions(fileMap) =
+  let options = new mut Object
+  set
+    options.resolveHook = resolveHook
+    options.importHook = fullSpecifier => importHook(fileMap, fullSpecifier)
+  options
+
+fun makeCompartment(fileMap) =
+  let modules = new mut Object
+  Reflect.construct(Compartment, [
+    endowments(),
+    modules,
+    compartmentOptions(fileMap),
+  ])
+
+fun runDone(_) =
+  post("done", null)
+
+fun runError(error) =
+  let msg = if error.stack is ~Absent then String(error.stack) else String(error)
+  post("error", Object.keys(error))
+  post("error", msg)
+
+fun runMain(mainPath, files) =
+  post("log", "Message received...")
+  let fileMap = new Map(Object.entries(files))
+  let compartment = makeCompartment(fileMap)
+  post("log", "Importing the main module...")
+  compartment.import(normalizePath(mainPath)).then(runDone).("catch")(runError)
+
+fun messageHandlerError(error) =
+  let msg = "Error in worker message handler: " + errorStack(error)
+  console.error(msg)
+  post("error", msg)
+
+fun handleMessageData(messageData) =
+  if messageData.("type") === "run" do runMain(messageData.mainPath, messageData.files)
+
+fun handleMessage(event) =
+  js.try_catch(
+    () => handleMessageData(event.data),
+    messageHandlerError,
+  )
+
+set
+  self.onerror = workerGlobalError
+  self.onunhandledrejection = unhandledRejection
+  self.onmessage = handleMessage
+
+loadDependencies()
