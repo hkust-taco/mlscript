@@ -1,0 +1,551 @@
+import "../filesystem/fs.mls"
+import "../editor/editor.mls"
+import "./FileTooltip.mls" as fileTooltipModule
+import "../common/JS.mls"
+
+open JS { Absent }
+
+class EditorPanel extends HTMLElement with
+  set
+    this.openTabs = new Map()
+    this.activeTabId = null
+    this.tabCounter = 0
+    this.tabTooltipTimeout = null
+    this.tabTooltipPendingTarget = null
+    this.tabTooltipHoverTarget = null
+    this.unsubscribe = null
+    this.resizeObserver = null
+    this.updateArrowVisibility = null
+  this.emitOpenFilesChange()
+
+  fun connectedCallback() =
+    this.render()
+    this.setupEventListeners()
+    this.setupTabBarScrolling()
+    let panel = this
+    set this.unsubscribe = fs.subscribe(event => panel.handleFsEvent(event), undefined)
+
+  fun disconnectedCallback() =
+    if this.unsubscribe is ~Absent do this.unsubscribe()
+    if this.resizeObserver is ~Absent do this.resizeObserver.disconnect()
+    Array.from(this.openTabs.values()).forEach((tab, ...) =>
+      if tab.editorView is ~Absent do tab.editorView.destroy()
+    )
+
+  fun render() =
+    set this.innerHTML = """
+      <div class="tab-bar-wrapper">
+        <button class="tab-scroll-arrow tab-scroll-left" aria-label="Scroll tabs left">&lsaquo;</button>
+        <div class="tab-bar"></div>
+        <button class="tab-scroll-arrow tab-scroll-right" aria-label="Scroll tabs right">&rsaquo;</button>
+        <file-tooltip class="tab-tooltip"></file-tooltip>
+      </div>
+      <div class="editor-container">
+        <div class="empty-state">Open a file to start editing</div>
+      </div>
+    """
+
+  fun pathsDetail(paths) =
+    let detail = new mut Object
+    set detail.paths = paths
+    detail
+
+  fun eventOptions(detail) =
+    let options = new mut Object
+    set options.detail = detail
+    options
+
+  fun bubbleEventOptions(detail) =
+    let options = new mut Object
+    set
+      options.bubbles = true
+      options.detail = detail
+    options
+
+  fun emitOpenFilesChange() =
+    let paths = Array.from(this.openTabs.values()).map((tab, ...) => tab.path)
+    document.dispatchEvent(new CustomEvent("open-files-changed", eventOptions(pathsDetail(paths))))
+
+  fun shouldHandleFsEvent(kind) =
+    if
+      kind === "write" then true
+      kind === "delete" then true
+      kind === "rename" then true
+      kind === "readonly" then true
+      kind === "attr" then true
+      else false
+
+  fun nodeAttrs(event) =
+    if
+      event.node is Absent then new mut Object
+      event.node.attrs is Absent then new mut Object
+      else event.node.attrs
+
+  fun updateTabContent(tab, path) =
+    let currentContent = tab.editorView.state.doc.toString()
+    let fileContent = fs.read(path)
+    if
+      fileContent is Absent then ()
+      fileContent === currentContent then ()
+      else
+        let changes = new mut Object
+        set
+          changes.from = 0
+          changes.to = tab.editorView.state.doc.length
+          changes.insert = fileContent
+        let updateOptions = new mut Object
+        set updateOptions.changes = changes
+        let transaction = tab.editorView.state.update(updateOptions)
+        tab.editorView.dispatch(transaction)
+
+  fun handleFsEventForTab(tabId, tab, event) =
+    if tab.path === event.path do
+      let kind = event.("type")
+      if
+        kind === "delete" then this.closeTab(tabId)
+        kind === "rename" then
+          set
+            tab.name = event.node.name
+            tab.path = event.newPath
+          this.updateDisplay()
+        kind === "readonly" then
+          set tab.readonly = event.readonly
+          this.updateDisplay()
+        kind === "attr" then
+          set tab.attrs = nodeAttrs(event)
+          this.updateDisplay()
+        kind === "write" then updateTabContent(tab, event.path)
+        else ()
+
+  fun handleFsEvent(event) =
+    if shouldHandleFsEvent(event.("type")) do
+      Array.from(this.openTabs.entries()).forEach((entry, ...) =>
+        this.handleFsEventForTab(entry.at(0), entry.at(1), event)
+      )
+
+  fun activeTab() =
+    if
+      this.activeTabId is Absent then null
+      else this.openTabs.get(this.activeTabId)
+
+  fun activeFilePath() =
+    let tab = activeTab()
+    if tab is Absent then null else tab.path
+
+  fun filePathDetail(path) =
+    let detail = new mut Object
+    set detail.filePath = path
+    detail
+
+  fun dispatchCompile() =
+    document.dispatchEvent(new CustomEvent("compile-requested", bubbleEventOptions(filePathDetail(activeFilePath()))))
+
+  fun dispatchExecute() =
+    let tab = activeTab()
+    if tab is ~Absent do
+      document.dispatchEvent(new CustomEvent("execute-requested", bubbleEventOptions(filePathDetail(tab.path))))
+
+  fun isKey(event, lower, upper) =
+    if
+      event.key === lower then true
+      event.key === upper then true
+      else false
+
+  fun handleShortcut(event) =
+    let isMac = window.navigator.platform.toUpperCase().indexOf("MAC") >= 0
+    let isCmdOrCtrl = if isMac then event.metaKey else event.ctrlKey
+    if isCmdOrCtrl do
+      if
+        isKey(event, "s", "S") then
+          event.preventDefault()
+          dispatchCompile()
+        isKey(event, "e", "E") then
+          event.preventDefault()
+          dispatchExecute()
+        isKey(event, "b", "B") then
+          event.preventDefault()
+          if document.querySelector("file-explorer") is
+            ~null as fileExplorer do fileExplorer.toggleCollapse()
+        else ()
+    if event.ctrlKey and isKey(event, "w", "W") do
+      event.preventDefault()
+      if this.activeTabId is ~Absent do this.closeTab(this.activeTabId)
+
+  fun setupEventListeners() =
+    let panel = this
+    window.addEventListener("file-open", event =>
+      panel.openFile(event.detail.path, event.detail.fileName)
+    )
+    document.addEventListener("keydown", event => panel.handleShortcut(event))
+
+  fun showArrow(arrow) =
+    if arrow.classList.contains("visible") is false do
+      set arrow.style.display = "flex"
+      arrow.offsetHeight
+      arrow.classList.add("visible")
+
+  fun hideArrow(arrow) =
+    if arrow.classList.contains("visible") do
+      arrow.classList.remove("visible")
+      let hideLater = () =>
+        if arrow.classList.contains("visible") is false do
+          set arrow.style.display = "none"
+      window.setTimeout(hideLater, 200)
+
+  fun setupTabBarScrolling() =
+    let tabBar = this.querySelector(".tab-bar")
+    let leftArrow = this.querySelector(".tab-scroll-left")
+    let rightArrow = this.querySelector(".tab-scroll-right")
+    let scrollInterval = null
+    let scrollSpeed = 3
+    tabBar.addEventListener("wheel", event =>
+      event.preventDefault()
+      set tabBar.scrollLeft += event.deltaY
+    )
+    let startScrollLeft = () =>
+      if scrollInterval is Absent do
+        let scrollLeft = () => set tabBar.scrollLeft -= scrollSpeed
+        set scrollInterval = window.setInterval(scrollLeft, 10)
+    let startScrollRight = () =>
+      if scrollInterval is Absent do
+        let scrollRight = () => set tabBar.scrollLeft += scrollSpeed
+        set scrollInterval = window.setInterval(scrollRight, 10)
+    let stopScroll = () =>
+      if scrollInterval is ~Absent do
+        window.clearInterval(scrollInterval)
+        set scrollInterval = null
+    leftArrow.addEventListener("mouseenter", startScrollLeft)
+    leftArrow.addEventListener("mouseleave", stopScroll)
+    rightArrow.addEventListener("mouseenter", startScrollRight)
+    rightArrow.addEventListener("mouseleave", stopScroll)
+    set this.updateArrowVisibility = () =>
+      let hasOverflow = tabBar.scrollWidth > tabBar.clientWidth
+      let isAtStart = tabBar.scrollLeft === 0
+      let isAtEnd = tabBar.scrollLeft >= tabBar.scrollWidth - tabBar.clientWidth - 1
+      if
+        hasOverflow and isAtStart then hideArrow(leftArrow)
+        hasOverflow then showArrow(leftArrow)
+        else hideArrow(leftArrow)
+      if
+        hasOverflow and isAtEnd then hideArrow(rightArrow)
+        hasOverflow then showArrow(rightArrow)
+        else hideArrow(rightArrow)
+    tabBar.addEventListener("scroll", this.updateArrowVisibility)
+    set this.resizeObserver = Reflect.construct(window.ResizeObserver, [this.updateArrowVisibility])
+    this.resizeObserver.observe(tabBar)
+    window.setTimeout(this.updateArrowVisibility, 0)
+
+  fun existingTabIdFor(filePath) =
+    let existingTabId = null
+    Array.from(this.openTabs.entries()).forEach((entry, ...) =>
+      if existingTabId is Absent do
+        if entry.at(1).path === filePath do
+          set existingTabId = entry.at(0)
+    )
+    existingTabId
+
+  fun extensionFor(filePath) =
+    let matched = filePath.match(new RegExp("\\.(\\w+)$"))
+    if matched is Absent then "" else matched.at(1)
+
+  fun attrsOrEmpty(nodeInfo) =
+    if
+      nodeInfo is Absent then new mut Object
+      nodeInfo.attrs is Absent then new mut Object
+      else nodeInfo.attrs
+
+  fun isReadonlyNode(nodeInfo) =
+    if
+      nodeInfo is Absent then false
+      else nodeInfo.readonly is true
+
+  fun tabRecord(fileName, filePath, editorDiv, editorView, isReadonly, attrs) =
+    let tab = new mut Object
+    set
+      tab.name = fileName
+      tab.path = filePath
+      tab.editorDiv = editorDiv
+      tab.editorView = editorView
+      tab.readonly = isReadonly
+      tab.attrs = attrs
+    tab
+
+  fun openFile(filePath, fileName) =
+    let existingTabId = existingTabIdFor(filePath)
+    if
+      existingTabId is ~Absent then
+        this.switchTab(existingTabId)
+        existingTabId
+      else
+        let tabId = "tab-" + this.tabCounter
+        set this.tabCounter += 1
+        let editorDiv = document.createElement("div")
+        set editorDiv.className = "editor-codemirror"
+        let content = fs.read(filePath)
+        let initialContent = if content is Absent then "" else content
+        let extension = extensionFor(filePath)
+        let nodeInfo = fs.stat(filePath)
+        let isReadonly = isReadonlyNode(nodeInfo)
+        let attrs = attrsOrEmpty(nodeInfo)
+        let editorView = editor.createEditor(editorDiv, initialContent, filePath, extension, isReadonly)
+        this.openTabs.set(tabId, tabRecord(fileName, filePath, editorDiv, editorView, isReadonly, attrs))
+        if this.querySelector(".editor-container") is
+          ~null as editorContainer do editorContainer.appendChild(editorDiv)
+        this.switchTab(tabId)
+        this.updateDisplay()
+        this.emitOpenFilesChange()
+        tabId
+
+  fun openFileAtLine(filePath, line) =
+    let fileName = filePath.split("/").pop()
+    let tabId = this.openFile(filePath, fileName)
+    let tab = this.openTabs.get(tabId)
+    if
+      tab is Absent then ()
+      tab.editorView is Absent then ()
+      else
+        let linePos = tab.editorView.state.doc.line(line)
+        let selection = new mut Object
+        set
+          selection.anchor = linePos.from
+          selection.head = linePos.from
+        let options = new mut Object
+        set
+          options.selection = selection
+          options.scrollIntoView = true
+        tab.editorView.dispatch(options)
+        tab.editorView.focus()
+
+  fun switchTab(tabId) =
+    Array.from(this.openTabs.values()).forEach((tab, ...) =>
+      tab.editorDiv.classList.remove("active")
+    )
+    let selectedTab = this.openTabs.get(tabId)
+    if selectedTab is ~Absent do
+      selectedTab.editorDiv.classList.add("active")
+      set this.activeTabId = tabId
+      selectedTab.editorView.focus()
+    this.updateDisplay()
+    this.scrollTabIntoView(tabId)
+
+  fun closeTab(tabId) =
+    let tab = this.openTabs.get(tabId)
+    if tab is ~Absent do
+      if tab.editorView is ~Absent do tab.editorView.destroy()
+      tab.editorDiv.remove()
+      this.openTabs.delete(tabId)
+      if this.activeTabId === tabId do
+        let remainingTabs = Array.from(this.openTabs.keys())
+        if
+          remainingTabs.length > 0 then this.switchTab(remainingTabs.at(remainingTabs.length - 1))
+          else
+            set this.activeTabId = null
+            this.notifyActiveTabChange(null)
+    this.updateDisplay()
+    this.emitOpenFilesChange()
+
+  fun tabLogInfo(reason) =
+    let info = new mut Object
+    set
+      info.reason = reason
+      info.pendingTargetPath = if this.tabTooltipPendingTarget is Absent then null else this.tabTooltipPendingTarget.dataset.path
+      info.hoverTargetPath = if this.tabTooltipHoverTarget is Absent then null else this.tabTooltipHoverTarget.dataset.path
+    info
+
+  fun clearTabTooltip(reason) =
+    let tooltip = this.querySelector("file-tooltip.tab-tooltip")
+    console.log("[tab-tooltip] hide", tabLogInfo(reason))
+    if this.tabTooltipTimeout is ~Absent do
+      window.clearTimeout(this.tabTooltipTimeout)
+      set this.tabTooltipTimeout = null
+    set
+      this.tabTooltipPendingTarget = null
+      this.tabTooltipHoverTarget = null
+    if tooltip is ~Absent do tooltip.hide()
+
+  fun baseNameHtml(tabName, lastDot) =
+    if
+      lastDot > 0 then
+        let baseName = tabName.substring(0, lastDot)
+        let extension = tabName.substring(lastDot)
+        """<span class="tab-basename">""" + baseName + """</span><span class="tab-extension">""" + extension + """</span>"""
+      else """<span class="tab-basename">""" + tabName + """</span>"""
+
+  fun tabHtml(tabId, tab) =
+    let isActive = tabId === this.activeTabId
+    let activeClass = if isActive then "active" else ""
+    let lockHtml = if tab.readonly then """<i class="tab-lock icon-lock"></i>""" else ""
+    let lastDot = tab.name.lastIndexOf(".")
+    let nameHtml = baseNameHtml(tab.name, lastDot)
+    """
+          <div class="tab """ + activeClass + """" data-tab-id="""" + tabId + """" data-path="""" + tab.path + """">
+            <span class="tab-name">
+              """ + lockHtml + """
+              <span class="tab-name-text">""" + nameHtml + """</span>
+            </span>
+            <button class="tab-close" data-tab-id="""" + tabId + """"><i class="icon-x"></i></button>
+          </div>
+        """
+
+  fun tabsHtml() =
+    Array.from(this.openTabs.entries()).map((entry, ...) =>
+      tabHtml(entry.at(0), entry.at(1))
+    ).join("")
+
+  fun tabForElement(tabEl) =
+    this.openTabs.get(tabEl.getAttribute("data-tab-id"))
+
+  fun tooltipInfo(tab) =
+    let info = new mut Object
+    set
+      info.path = tab.path
+      info.name = tab.name
+      info.size = tab.editorView.state.doc.length
+      info.placement = "bottom"
+    info
+
+  fun tabHoverLog(tabEl, reason) =
+    let info = new mut Object
+    set
+      info.reason = reason
+      info.tabId = tabEl.getAttribute("data-tab-id")
+      info.path = tabEl.dataset.path
+      info.pendingTargetPath = if this.tabTooltipPendingTarget is Absent then null else this.tabTooltipPendingTarget.dataset.path
+      info.hoverTargetPath = if this.tabTooltipHoverTarget is Absent then null else this.tabTooltipHoverTarget.dataset.path
+    info
+
+  fun tabShowLog(tabEl, reason, tooltip) =
+    let info = tabHoverLog(tabEl, reason)
+    set info.visible = tooltip.classList.contains("visible")
+    info
+
+  fun showTooltip(tabEl, reason, tooltip) =
+    let tab = tabForElement(tabEl)
+    if tab is ~Absent do
+      console.log("[tab-tooltip] show", tabShowLog(tabEl, reason, tooltip))
+      tooltip.show(tabEl, tooltipInfo(tab))
+
+  fun setupNameScroll(container) =
+    if
+      container is Absent then ()
+      container.dataset.scrollInit is ~Absent then ()
+      else
+        let textEl = container.querySelector(".tab-name-text")
+        if textEl is ~Absent do
+          set container.dataset.scrollInit = "true"
+          let start = () =>
+            let distance = textEl.scrollWidth - container.clientWidth + 16
+            if distance > 0 do
+              let duration = Math.min(12, Math.max(4, distance / 40))
+              textEl.style.setProperty("--scroll-distance", distance + "px")
+              textEl.style.setProperty("--scroll-duration", duration + "s")
+              textEl.classList.add("scrolling")
+          let stop = () =>
+            textEl.classList.remove("scrolling")
+            textEl.style.removeProperty("--scroll-distance")
+            textEl.style.removeProperty("--scroll-duration")
+          container.addEventListener("mouseenter", start)
+          container.addEventListener("mouseleave", stop)
+          container.addEventListener("focus", start)
+          container.addEventListener("blur", stop)
+
+  fun setupTabElement(tabEl, tooltip) =
+    let panel = this
+    setupNameScroll(tabEl.querySelector(".tab-name"))
+    tabEl.addEventListener("click", event =>
+      if event.target.closest(".tab-close") is Absent do
+        panel.switchTab(tabEl.getAttribute("data-tab-id"))
+    )
+    tabEl.addEventListener("mouseenter", () =>
+      set panel.tabTooltipHoverTarget = tabEl
+      console.log("[tab-tooltip] mouseenter", panel.tabHoverLog(tabEl, "mouseenter"))
+    )
+    tabEl.addEventListener("mousemove", () =>
+      if
+        panel.tabTooltipHoverTarget !== tabEl then ()
+        tooltip is Absent then ()
+        tooltip.classList.contains("visible") then showTooltip(tabEl, "already-visible", tooltip)
+        panel.tabTooltipPendingTarget === tabEl then ()
+        else
+          if panel.tabTooltipTimeout is ~Absent do window.clearTimeout(panel.tabTooltipTimeout)
+          set panel.tabTooltipPendingTarget = tabEl
+          console.log("[tab-tooltip] schedule show", panel.tabHoverLog(tabEl, "schedule"))
+          let showLater = () =>
+            if panel.tabTooltipHoverTarget === tabEl do
+              showTooltip(tabEl, "delay-elapsed", tooltip)
+              set
+                panel.tabTooltipPendingTarget = null
+                panel.tabTooltipTimeout = null
+          set panel.tabTooltipTimeout = window.setTimeout(showLater, 5000)
+    )
+    tabEl.addEventListener("mouseleave", () => panel.clearTabTooltip("mouseleave"))
+
+  fun setupCloseButton(btn) =
+    let panel = this
+    btn.addEventListener("click", event =>
+      event.stopPropagation()
+      panel.closeTab(btn.getAttribute("data-tab-id"))
+    )
+
+  fun updateDisplay() =
+    let tabBar = this.querySelector(".tab-bar")
+    let emptyState = this.querySelector(".empty-state")
+    let tooltip = this.querySelector("file-tooltip.tab-tooltip")
+    this.clearTabTooltip("rebuild-tab-bar")
+    set tabBar.innerHTML = tabsHtml()
+    if
+      this.openTabs.size === 0 then emptyState.classList.remove("hidden")
+      else emptyState.classList.add("hidden")
+    this.notifyActiveTabChange(if this.activeTabId is Absent then null else this.openTabs.get(this.activeTabId))
+    this.emitOpenFilesChange()
+    tabBar.querySelectorAll(".tab").forEach((tabEl, ...) =>
+      setupTabElement(tabEl, tooltip)
+    )
+    tabBar.querySelectorAll(".tab-close").forEach((btn, ...) =>
+      setupCloseButton(btn)
+    )
+    tabBar.addEventListener("scroll", () => this.clearTabTooltip("tab-bar-scroll"))
+    if this.updateArrowVisibility is ~Absent do
+      window.setTimeout(this.updateArrowVisibility, 0)
+
+  fun scrollOptions(left) =
+    let options = new mut Object
+    set
+      options.left = left
+      options.behavior = "smooth"
+    options
+
+  fun scrollTabIntoView(tabId) =
+    let scrollLater = () =>
+      let tabBar = this.querySelector(".tab-bar")
+      let tabElement = this.querySelector(".tab[data-tab-id=\"" + tabId + "\"]")
+      if
+        tabBar is Absent then ()
+        tabElement is Absent then ()
+        else
+          let tabBarRect = tabBar.getBoundingClientRect()
+          let tabRect = tabElement.getBoundingClientRect()
+          let isVisible = tabRect.left >= tabBarRect.left and tabRect.right <= tabBarRect.right
+          if isVisible is false do
+            let scrollOffset = tabElement.offsetLeft - tabBar.offsetLeft - 20
+            tabBar.scrollTo(scrollOptions(scrollOffset))
+    window.setTimeout(scrollLater, 0)
+
+  fun isStdTab(tab) =
+    if
+      tab is Absent then false
+      tab.attrs is Absent then false
+      tab.attrs.std is true then true
+      else false
+
+  fun activeTabDetail(tab) =
+    let detail = new mut Object
+    set
+      detail.path = if tab is Absent then null else tab.path
+      detail.isStd = isStdTab(tab)
+    detail
+
+  fun notifyActiveTabChange(tab) =
+    document.dispatchEvent(new CustomEvent("active-tab-changed", eventOptions(activeTabDetail(tab))))
+
+customElements.define("editor-panel", EditorPanel)
