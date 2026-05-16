@@ -14,11 +14,11 @@ This tracker follows `docs/web-ide-mlscript-rewrite-workflow.md`.
 - [x] `editor/editor.js` -> `editor/editor.mls`
 - [x] `components/EditorPanel.js` -> `components/EditorPanel.mls`
 - [x] `execution/worker.js` -> `execution/worker.mls`
-- [ ] `main.js`
+- [x] `main.js` -> `main.mls`
 
 ## Current Step
 
-Next: `main.js`.
+Done: all tracked hand-written Web IDE JavaScript files have been rewritten, and final full verification passed.
 
 ## Verification
 
@@ -42,3 +42,6 @@ Next: `main.js`.
 - Headless browser smoke from `http://127.0.0.1:8131/index.html?editor-panel=1778963227` loaded `EditorPanel.mjs`, did not load `EditorPanel.js`, kept public tab state, opened files, synchronized write/rename/delete filesystem events, navigated to a line, handled keyboard compile/execute, disabled std tabs, and closed a tab with Ctrl-W.
 - `timeout 300s sbt "hkmc2PackagesTest/testOnly hkmc2.PackageTestRunner -- -z web-ide"` passed after `execution/worker.mls`.
 - Headless browser smoke from `http://127.0.0.1:8131/index.html?worker2=1778964086` loaded `execution/worker.mjs`, did not load `execution/worker.js`, compiled and executed `main.mls`, loaded SES/Endo worker dependencies, resolved VM module imports, and forwarded execution console output with no browser console errors.
+- `timeout 300s sbt "hkmc2PackagesTest/testOnly hkmc2.PackageTestRunner -- -z web-ide"` passed after `main.mls`.
+- Headless browser smoke from `http://127.0.0.1:8131/index.html?main=1778964426` loaded `main.mjs`, did not load `main.js`, cleared persisted files, bootstrapped the default `main.mls`, compiled and executed it, and reported no browser console errors.
+- `timeout 1800s sbt hkmc2AllTests/test` passed after all hand-written Web IDE JavaScript files were rewritten.

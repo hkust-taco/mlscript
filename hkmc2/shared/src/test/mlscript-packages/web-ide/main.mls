@@ -1,0 +1,171 @@
+import "./build/MLscript.mjs" as MLscript
+import "./filesystem/fs.mls"
+import "./filesystem/persistent.mls"
+import "./execution/runner.mls"
+import "./compiler/index.mls"
+import "./common/JS.mls"
+
+open JS { Absent }
+
+module main with...
+
+fun folderAttrs() =
+  let attrs = new mut Object
+  set attrs.collapsed = true
+  attrs
+
+fun standardAttrs() =
+  let attrs = new mut Object
+  set
+    attrs.std = true
+    attrs.compiled = true
+  attrs
+
+fun createStandardFile(path, content) =
+  console.log("Loading file: \"" + path + "\"")
+  fs.createFile(path, content,
+    force: true,
+    readonly: true,
+    attrs: standardAttrs(),
+  )
+
+fun loadStandardLibraryBody() =
+  fs.createFolder("/std", force: true, attrs: folderAttrs())
+  fs.createFile("/std/Prelude.mls", MLscript.std.prelude,
+    force: true,
+    readonly: true,
+    attrs: standardAttrs(),
+  )
+  MLscript.std.files.forEach of (entry, ...) =>
+    createStandardFile(entry.at(0), entry.at(1))
+
+fun loadStandardLibrary() =
+  console.groupCollapsed("Loading standard library files")
+  js.try_catch(
+    () =>
+      loadStandardLibraryBody()
+      console.groupEnd(),
+    error =>
+      console.groupEnd()
+      throw error,
+  )
+
+let defaultMainSource = "import \"./std/Predef.mls\"\n\n" +
+  "open Predef\n\n" +
+  "print of \"Welcome to MLscript Web IDE!\"\n" +
+  "print of \"============================\"\n\n" +
+  "print of \"Press Ctrl-S to compile.\"\n" +
+  "print of \"Press Ctrl-E to execute.\"\n"
+
+fun ensureDefaultMainFile() =
+  if persistent.loadPersistedFiles() === 0 do
+    fs.createFile("/main.mls", defaultMainSource, force: true)
+
+fun attrsOf(node) =
+  if
+    node is Absent then null
+    node.attrs is Absent then null
+    else node.attrs
+
+fun isStandardNode(node) =
+  if attrsOf(node) is
+    null then false
+    ~null as attrs and attrs.("std") is true then true
+    else false
+
+fun isCompiledNode(node) =
+  if attrsOf(node) is
+    null then false
+    ~null as attrs and attrs.("compiled") is true then true
+    else false
+
+fun shouldCompile(path) =
+  let node = fs.stat(path)
+  if
+    path.endsWith(".mls") is false then false
+    isStandardNode(node) then false
+    isCompiledNode(node) then false
+    else true
+
+fun isCompilationFile(path) =
+  if
+    path.endsWith(".mls") then true
+    path.endsWith(".mjs") then true
+    else false
+
+fun filesForCompilation() =
+  fs.getAllFiles((path, ...) => isCompilationFile(path))
+
+fun collectFilesForCompilation(targetPath) =
+  let files = filesForCompilation()
+  let targets = new Set(Object.keys(files).filter((path, ...) => shouldCompile(path)))
+  if targetPath is ~Absent and targetPath !== "" do targets.add(targetPath)
+  [files, Array.from(targets)]
+
+fun markPathCompiled(path) =
+  let node = fs.stat(path)
+  if isStandardNode(node) is false do fs.setAttr(path, "compiled", true)
+
+fun markAsCompiled(paths) =
+  paths.forEach((path, ...) => markPathCompiled(path))
+
+fun reservedPanel() =
+  document.querySelector("reserved-panel")
+
+fun setDiagnostics(diagnosticsPerFile) =
+  if reservedPanel() is
+    ~null as panel do panel.setDiagnostics(diagnosticsPerFile)
+
+fun compileSuccess(targetPaths, response) =
+  markAsCompiled(targetPaths)
+  setDiagnostics(response.result)
+
+fun compileTarget(targetPath) =
+  let collected = collectFilesForCompilation(targetPath)
+  let allFiles = collected.at(0)
+  let targetPaths = collected.at(1)
+  index.compile(targetPaths, allFiles).then(response => compileSuccess(targetPaths, response))
+
+fun handleCompileRequested(event) =
+  compileTarget(event.detail.filePath)
+
+fun compiledPath(filePath) =
+  if
+    filePath.endsWith(".mls") then filePath.slice(0, filePath.length - 4) + ".mjs"
+    else filePath
+
+fun runCompiledFile(mjsPath) =
+  if fs.pathExists(mjsPath) then runner.execute(mjsPath)
+  else console.error("Compiled file not found after compilation:", mjsPath)
+
+fun compileThenExecute(filePath, mjsPath) =
+  console.warn("Compiled file not found, compiling first:", mjsPath)
+  let collected = collectFilesForCompilation(filePath)
+  let allFiles = collected.at(0)
+  let targetPaths = collected.at(1)
+  index.compile(targetPaths, allFiles).then(_ =>
+    markAsCompiled(targetPaths)
+    runCompiledFile(mjsPath)
+  )
+
+fun handleExecuteRequested(event) =
+  let filePath = event.detail.filePath
+  if
+    typeof(filePath) !== "string" then console.error("Invalid file path for execution:", filePath)
+    else
+      let mjsPath = compiledPath(filePath)
+      if fs.pathExists(mjsPath) then runner.execute(mjsPath)
+      else compileThenExecute(filePath, mjsPath)
+
+fun handleOpenFileAtLocation(event) =
+  let editorPanel = document.querySelector("editor-panel")
+  if editorPanel is
+    ~null as panel do panel.openFileAtLine(event.detail.filePath, event.detail.line)
+
+loadStandardLibrary()
+ensureDefaultMainFile()
+
+document.addEventListener("compile-requested", handleCompileRequested)
+document.addEventListener("execute-requested", handleExecuteRequested)
+document.addEventListener("terminate-requested", () => runner.terminate())
+document.addEventListener("open-file-at-location", handleOpenFileAtLocation)
