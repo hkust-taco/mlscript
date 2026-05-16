@@ -1,0 +1,150 @@
+import "../common/JS.mls"
+
+open JS { Absent }
+
+class ResizeHandle extends HTMLElement with
+  let isResizing = false
+  let startX = 0
+  let startY = 0
+  let startSize = 0
+  let documentMouseMove = null
+  let documentMouseUp = null
+
+  fun connectedCallback() =
+    this.render()
+    this.attachEventListeners()
+
+  fun direction() =
+    if this.getAttribute("direction") is
+      ~Absent as value then value
+      else "horizontal"
+
+  fun side(defaultSide) =
+    if this.getAttribute("side") is
+      ~Absent as value then value
+      else defaultSide
+
+  fun intAttribute(name, fallback) =
+    if this.getAttribute(name) is
+      ~Absent as value then
+        let parsed = parseInt(value, 10)
+        if isNaN(parsed) then fallback else parsed
+      else fallback
+
+  fun isNaN(value) =
+    value !== value
+
+  fun render() =
+    let dir = this.direction()
+    set
+      this.className = "resize-handle resize-handle-" + dir
+      this.innerHTML = """<div class="resize-handle-indicator"></div>"""
+
+  fun attachEventListeners() =
+    this.addEventListener("mousedown", event => this.startResize(event))
+
+  fun targetElement() =
+    if this.getAttribute("target") is
+      ~Absent as target and target !== "" then document.querySelector(target)
+      else this.parentElement
+
+  fun startResize(event) =
+    event.preventDefault()
+    let dir = this.direction()
+    let target = this.targetElement()
+    if target is ~Absent do
+      set
+        isResizing = true
+        startX = event.clientX
+        startY = event.clientY
+        startSize = if dir === "horizontal" then target.offsetWidth else target.offsetHeight
+        document.body.style.cursor = if dir === "horizontal" then "ew-resize" else "ns-resize"
+        document.body.style.userSelect = "none"
+      this.classList.add("active")
+      set
+        documentMouseMove = event => this.handleResize(event, target, dir)
+        documentMouseUp = () => this.stopResize(target)
+      document.addEventListener("mousemove", documentMouseMove)
+      document.addEventListener("mouseup", documentMouseUp)
+
+  fun clamp(value, minSize, maxSize) =
+    Math.max(minSize, Math.min(maxSize, value))
+
+  fun setHorizontalSize(target, width) =
+    let container = document.querySelector(".app-container")
+    if
+      target.tagName.toLowerCase() === "file-explorer" then
+        container.style.setProperty("--file-explorer-width", width + "px")
+        target.setAttribute("width", width)
+      target.tagName.toLowerCase() === "reserved-panel" then
+        container.style.setProperty("--reserved-panel-width", width + "px")
+        target.setAttribute("width", width)
+      else ()
+
+  fun setVerticalSize(target, height) =
+    set
+      target.style.height = height + "px"
+      target.style.minHeight = height + "px"
+      target.style.maxHeight = height + "px"
+    target.setAttribute("height", height)
+
+  fun resizeDetail(target) =
+    let detail = new mut Object
+    set
+      detail.width = target.offsetWidth
+      detail.height = target.offsetHeight
+    detail
+
+  fun resizeEventOptions(target) =
+    let options = new mut Object
+    set options.detail = resizeDetail(target)
+    options
+
+  fun dispatchPanelResize(target) =
+    target.dispatchEvent(new CustomEvent("panel-resize", resizeEventOptions(target)))
+
+  fun handleResize(event, target, dir) =
+    if isResizing do
+      let minSize = this.intAttribute("min-size", 150)
+      let maxSize = this.intAttribute("max-size", 600)
+      if
+        dir === "horizontal" then
+          let deltaX = event.clientX - startX
+          let newWidth = if
+            this.side("left") === "left" then startSize + deltaX
+            else startSize - deltaX
+          setHorizontalSize(target, clamp(newWidth, minSize, maxSize))
+        else
+          let deltaY = event.clientY - startY
+          let newHeight = if
+            this.side("top") === "top" then startSize - deltaY
+            else startSize + deltaY
+          setVerticalSize(target, clamp(newHeight, minSize, maxSize))
+      dispatchPanelResize(target)
+
+  fun stopResize(target) =
+    set
+      isResizing = false
+      document.body.style.cursor = ""
+      document.body.style.userSelect = ""
+    this.classList.remove("active")
+    if documentMouseMove is ~Absent do
+      document.removeEventListener("mousemove", documentMouseMove)
+    if documentMouseUp is ~Absent do
+      document.removeEventListener("mouseup", documentMouseUp)
+    set
+      documentMouseMove = null
+      documentMouseUp = null
+    this.saveSize(target)
+
+  fun saveSize(target) =
+    if target is ~Absent and target.saveSizeToStorage is ~Absent do
+      if
+        this.direction() === "horizontal" then
+          let width = parseInt(target.getAttribute("width"), 10)
+          if isNaN(width) is false do target.saveSizeToStorage(width)
+        else
+          let height = parseInt(target.getAttribute("height"), 10)
+          if isNaN(height) is false do target.saveSizeToStorage(height)
+
+customElements.define("resize-handle", ResizeHandle)

@@ -1,7 +1,7 @@
 import fs from '../filesystem/fs.mjs';
 import PanelPersistence from './PanelPersistence.mjs';
 import './FileTooltip.mjs';
-import './ResizeHandle.js';
+import './ResizeHandle.mjs';
 
 // File Explorer Custom Element
 class FileExplorer extends HTMLElement {

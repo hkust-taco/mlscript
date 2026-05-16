@@ -1,5 +1,5 @@
 import PanelPersistence from './PanelPersistence.mjs';
-import './ResizeHandle.js';
+import './ResizeHandle.mjs';
 
 // Console Panel Custom Element
 class ConsolePanel extends HTMLElement {

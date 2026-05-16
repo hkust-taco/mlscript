@@ -1,6 +1,6 @@
 import fs from "../filesystem/fs.mjs";
 import PanelPersistence from './PanelPersistence.mjs';
-import './ResizeHandle.js';
+import './ResizeHandle.mjs';
 
 // Reserved Panel Custom Element
 class ReservedPanel extends HTMLElement {
