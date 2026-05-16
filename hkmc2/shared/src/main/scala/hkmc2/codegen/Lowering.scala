@@ -617,7 +617,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       def hasLocalContinue(term: st): Bool = term match
         case st.Continue(`label`) => true
         case _ => term.subTerms.iterator.exists(hasLocalContinue)
-      
       loweringCtx.collectScopedSym(result)
       val bodyBlock =
         if !hasNonLocalContinueDispatch then
@@ -625,7 +624,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         else
           val bodyResult = loweringCtx.registerTempSymbol(N, "labelBodyResult")
           val isContinue = loweringCtx.registerTempSymbol(N, "labelContinueDispatch")
-          term_nonTail(body){ r =>
+          term_nonTail(body): r =>
             Assign(
               bodyResult,
               r,
@@ -643,7 +642,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
                 )
               )
             )
-          }
       Label(
         label,
         loop = hasLocalContinue(body),

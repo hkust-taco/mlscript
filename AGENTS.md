@@ -39,3 +39,6 @@ You should _never_ remove pre-existing empty lines as part of your changes;
 this includes empty lines at the very end of files,
 which are left for easier future editing by programmers.
 
+**Important:** When working on a PR, make sure to check the diff of the whole PR (including all commits)
+to ensure that no needless empty-line changes are included in the PR. If you find any, please remove them.
+

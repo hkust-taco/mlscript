@@ -5,24 +5,35 @@
 do root:
   fun escape() = root.break(42)
   escape()
-//│ ╔══[COMPILATION ERROR] Non-local label breaks are only supported with effect handlers enabled.
+//│ ╔══[COMPILATION ERROR] Non-local 'break' is only supported with effect handlers enabled.
 //│ ║  l.6: 	  fun escape() = root.break(42)
 //│ ╙──     	                 ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+:e
+do root:
+  fun escape() = root.break
+  escape()
+//│ ╔══[COMPILATION ERROR] Non-local 'break' is only supported with effect handlers enabled.
+//│ ║  l.15: 	  fun escape() = root.break
+//│ ╙──      	                 ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 do root:
   let escape = () => root.continue
   escape()
-//│ ╔══[COMPILATION ERROR] Non-local label continues are only supported with effect handlers enabled.
-//│ ║  l.16: 	  let escape = () => root.continue
+//│ ╔══[COMPILATION ERROR] Non-local 'continue' is only supported with effect handlers enabled.
+//│ ║  l.24: 	  let escape = () => root.continue
 //│ ╙──      	                     ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
+:global
 :effectHandlers
 :lift
+
+
 fun breakFromNestedFunctionWithEffects() =
   do root:
     fun escape() = root.break(42)
@@ -31,8 +42,6 @@ breakFromNestedFunctionWithEffects()
 //│ = 42
 
 
-:effectHandlers
-:lift
 fun breakFromNestedLambdaWithEffects() =
   do root:
     let escape = () => root.break(42)
@@ -41,8 +50,6 @@ breakFromNestedLambdaWithEffects()
 //│ = 42
 
 
-:effectHandlers
-:lift
 fun breakFromNestedFunctionAndLambdaWithEffects() =
   do root:
     fun makeBreaker() = () => root.break(7)
@@ -52,8 +59,6 @@ breakFromNestedFunctionAndLambdaWithEffects()
 
 
 :sir
-:effectHandlers
-:lift
 fun continueFromNestedFunctionWithEffects() =
   let i = 0 in do root:
     fun loop() =
@@ -112,7 +117,7 @@ continueFromNestedFunctionWithEffects()
 //│                 set pc = 2;
 //│                 continue main
 //│               else
-//│                 return runtime⁰.unwind﹖(loop¹, 2, "NonLocalLabelControlFlow.mls:60:24", null, null, 1, 2, scope0$cap, nonLocalHandler$root, 0)
+//│                 return runtime⁰.unwind﹖(loop¹, 2, "NonLocalLabelControlFlow.mls:65:24", null, null, 1, 2, scope0$cap, nonLocalHandler$root, 0)
 //│             end
 //│           else
 //│             set pc = 1;
@@ -207,8 +212,6 @@ continueFromNestedFunctionWithEffects()
 //│ = 3
 
 
-:effectHandlers
-:lift
 fun continueFromNestedLambdaWithEffects() =
   let i = 0 in do root:
     let loop = () =>
@@ -220,8 +223,6 @@ continueFromNestedLambdaWithEffects()
 //│ = 2
 
 
-:effectHandlers
-:lift
 fun continueFromNestedFunctionAndLambdaWithEffects() =
   let i = 0 in do root:
     fun mkContinue() =
@@ -232,3 +233,5 @@ fun continueFromNestedFunctionAndLambdaWithEffects() =
     mkContinue()()
 continueFromNestedFunctionAndLambdaWithEffects()
 //│ = 4
+
+

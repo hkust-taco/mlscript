@@ -544,7 +544,7 @@ extends Importer with ucs.SplitElaborator:
       Term.Sel(handlerSymbol.ref(callSiteId), mtdTree)(
         S(state.nonLocalRet), FlowSymbol.sel(callSiteId.name), N, S(summon)),
       Term.Tup(argTerms.map(term => PlainFld(term)))(argTree),
-    )(App(Sel(callSiteId, mtdTree), argTree), N, rs)
+    )(Tree.DummyApp, N, rs)
   
   private def mkNonLocalContinueInvocation(
       binding: LabelBinding,
@@ -580,16 +580,17 @@ extends Importer with ucs.SplitElaborator:
   
   def subterm(tree: Tree, inAppPrefix: Bool = false, inTyAppPrefix: Bool = false): Ctxl[UnderCtx ?=> Term] =
   trace[Term](s"Elab subterm ${tree.showDbg}", r => s"~> $r"):
+    
     /** Fallback to a normal selection + application when label-specific handling does not apply. */
-    def mkLabelSelectionApp(tree: App, labelId: Ident, nme: Ident, args: Ls[Tree]): Term =
+    def mkNonLabelSelectionApp(tree: App, sel: Sel, args: Ls[Tree]): Term =
       val sym = FlowSymbol.app()
-      val lt = subterm(Sel(labelId, nme), inAppPrefix = true)
+      val lt = subterm(sel, inAppPrefix = true)
       val rt = subterm(Tup(args), inAppPrefix = false, inTyAppPrefix = false)
       Term.App(lt, rt)(tree, N, sym)
     
-    def elaborateSelection(tree: Tree, pre: Tree, nme: Ident): Term =
-      val preTrm = subterm(pre)
-      val sym = resolveField(nme, preTrm.symbol, nme)
+    def elaborateSelection(tree: Sel): Term =
+      val preTrm = subterm(tree.prefix)
+      val sym = resolveField(tree.name, preTrm.symbol, tree.name)
       sym match
       // * Enforcing [invariant:1]
       case S(ms: BlockMemberSymbol)
@@ -601,7 +602,8 @@ extends Importer with ucs.SplitElaborator:
       =>
         raise:
           ErrorReport(
-            msg"[debinding error] Method '${nme.name}' cannot be accessed without being called." -> nme.toLoc :: Nil)
+            msg"[debinding error] Method '${tree.name.name}' cannot be accessed without being called."
+              -> tree.name.toLoc :: Nil)
       case S(_) | N => ()
       if sym.contains(ctx.builtins.source.line) then
         val loc = tree.toLoc.getOrElse(???)
@@ -613,7 +615,8 @@ extends Importer with ucs.SplitElaborator:
         val loc = tree.toLoc.getOrElse(???)
         Term.Lit(StrLit(loc.origin.fileName.toString))
       else
-        Term.Sel(preTrm, nme)(sym, FlowSymbol.sel(nme.name), N, S(summon))
+        Term.Sel(preTrm, tree.name)(sym, FlowSymbol.sel(tree.name.name), N, S(summon))
+    
     tree.desugared match
     case Trm(term) => term
     case unt @ Unt() => unit.withLocOf(unt)
@@ -821,19 +824,19 @@ extends Importer with ucs.SplitElaborator:
         case (acc, rhs) =>
           rhs.splitOn(acc)
       subterm(tree)
-    case tree @ App(Sel(labelId @ Ident(labelName), nme @ Ident("break")), Tup(args)) =>
+    case tree @ App(sel @ Sel(labelId @ Ident(labelName), nme @ Ident("break")), Tup(args)) =>
       val value = args match
         case Nil => N
         case arg :: Nil => S(subterm(arg))
         case _ =>
-          raise(ErrorReport(msg"Label break expects at most one argument." -> tree.toLoc :: Nil))
+          raise(ErrorReport(msg"'break' expects at most one argument." -> tree.toLoc :: Nil))
           N
       ctx.lookupLabel(labelName) match
       case LabelLookup.Found(binding) =>
         Term.Break(binding.labelSymbol, binding.resultSymbol, value)
       case LabelLookup.AcrossBoundary(binding) =>
         if config.effectHandlers.isEmpty then
-          mkLabelSelectionApp(tree, labelId, nme, args)
+          mkNonLabelSelectionApp(tree, sel, args)
         else
           markEffectMethodUsed(binding.nonLocalBreakMethodMarker, nme)
           mkNonLocalEffectInvocation(
@@ -844,26 +847,25 @@ extends Importer with ucs.SplitElaborator:
             value.toList,
           )
       case LabelLookup.NotFound =>
-        mkLabelSelectionApp(tree, labelId, nme, args)
-    case tree @ App(Sel(labelId @ Ident(labelName), nme @ Ident("continue")), Tup(args)) =>
+        mkNonLabelSelectionApp(tree, sel, args)
+    case tree @ App(sel @ Sel(labelId @ Ident(labelName), nme @ Ident("continue")), Tup(args)) =>
+      def checkNoArgs: Unit = if args.nonEmpty then raise:
+        ErrorReport(msg"'continue' does not take arguments." -> tree.toLoc :: Nil)
       ctx.lookupLabel(labelName) match
       case LabelLookup.Found(binding) =>
-        if args.nonEmpty then
-          raise(ErrorReport(msg"Label continue does not take arguments." -> tree.toLoc :: Nil))
-          Term.Error
-        else
-          Term.Continue(binding.labelSymbol)
+        checkNoArgs
+        Term.Continue(binding.labelSymbol)
       case LabelLookup.AcrossBoundary(binding) =>
-        if args.nonEmpty then
-          raise(ErrorReport(msg"Label continue does not take arguments." -> tree.toLoc :: Nil))
-          Term.Error
-        else if config.effectHandlers.isEmpty then
-          raise(ErrorReport(msg"Non-local label continues are only supported with effect handlers enabled." -> labelId.toLoc :: Nil))
+        checkNoArgs
+        if config.effectHandlers.isEmpty then
+          raise:
+            ErrorReport(msg"Non-local 'continue' is only supported with effect handlers enabled."
+              -> labelId.toLoc :: Nil)
           Term.Error
         else
           mkNonLocalContinueInvocation(binding, nme)
       case LabelLookup.NotFound =>
-        mkLabelSelectionApp(tree, labelId, nme, args)
+        mkNonLabelSelectionApp(tree, sel, args)
     case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol.app()
       val lt = subterm(lhs, inAppPrefix = true)
@@ -882,33 +884,37 @@ extends Importer with ucs.SplitElaborator:
       Term.SynthSel(preTrm, nme)(sym, FlowSymbol.synthSel(nme.name), N, S(summon)).withLocOf(tree)
     case Sel(Empty(), nme) =>
       Term.LeadingDotSel(nme)(S(summon)).withLocOf(tree)
-    case Sel(labelId @ Ident(labelName), nme @ Ident("break")) =>
+    case sel @ Sel(labelId @ Ident(labelName), nme @ Ident("break")) =>
       ctx.lookupLabel(labelName) match
       case LabelLookup.Found(binding) =>
         Term.Break(binding.labelSymbol, binding.resultSymbol, N)
       case LabelLookup.AcrossBoundary(binding) =>
         if config.effectHandlers.isEmpty then
-          raise(ErrorReport(msg"Non-local label breaks are only supported with effect handlers enabled." -> labelId.toLoc :: Nil))
+          raise:
+            ErrorReport(msg"Non-local 'break' is only supported with effect handlers enabled."
+              -> labelId.toLoc :: Nil)
           Term.Error
         else
           markEffectMethodUsed(binding.nonLocalBreakMethodMarker, nme)
           mkNonLocalEffectInvocation(binding.nonLocalHandlerSymbol, "break", nme, Nil, Nil)
       case LabelLookup.NotFound =>
-        elaborateSelection(tree, labelId, nme)
-    case Sel(labelId @ Ident(labelName), nme @ Ident("continue")) =>
+        elaborateSelection(sel)
+    case sel @ Sel(labelId @ Ident(labelName), nme @ Ident("continue")) =>
       ctx.lookupLabel(labelName) match
       case LabelLookup.Found(binding) =>
         Term.Continue(binding.labelSymbol)
       case LabelLookup.AcrossBoundary(binding) =>
         if config.effectHandlers.isEmpty then
-          raise(ErrorReport(msg"Non-local label continues are only supported with effect handlers enabled." -> labelId.toLoc :: Nil))
+          raise:
+            ErrorReport(msg"Non-local 'continue' is only supported with effect handlers enabled."
+              -> labelId.toLoc :: Nil)
           Term.Error
         else
           mkNonLocalContinueInvocation(binding, nme)
       case LabelLookup.NotFound =>
-        elaborateSelection(tree, labelId, nme)
-    case Sel(pre, nme) =>
-      elaborateSelection(tree, pre, nme)
+        elaborateSelection(sel)
+    case sel @ Sel(pre, nme) =>
+      elaborateSelection(sel)
     case MemberProj(ct, nme) =>
       val c = subterm(ct)
       val f = c.symbol.flatMap(_.asCls) match

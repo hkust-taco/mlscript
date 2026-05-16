@@ -45,18 +45,18 @@ missing.continue
 
 
 :e
-do lbl:
+() => do lbl:
   lbl.continue(1)
-//│ ╔══[COMPILATION ERROR] Label continue does not take arguments.
+//│ ╔══[COMPILATION ERROR] 'continue' does not take arguments.
 //│ ║  l.49: 	  lbl.continue(1)
 //│ ╙──      	  ^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = fun
 
 
 :e
 do lbl:
   lbl.break(1, 2)
-//│ ╔══[COMPILATION ERROR] Label break expects at most one argument.
+//│ ╔══[COMPILATION ERROR] 'break' expects at most one argument.
 //│ ║  l.58: 	  lbl.break(1, 2)
 //│ ╙──      	  ^^^^^^^^^^^^^^^
 
