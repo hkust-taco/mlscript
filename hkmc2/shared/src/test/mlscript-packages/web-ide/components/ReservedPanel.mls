@@ -1,0 +1,407 @@
+import "../filesystem/fs.mls"
+import "./PanelPersistence.mls"
+import "./ResizeHandle.mls"
+import "../common/JS.mls"
+
+open JS { Absent }
+
+class ReservedPanel extends HTMLElement with
+  let isCollapsed = false
+  let collapsedFiles = new Set()
+  let collapsedDiagnostics = new Set()
+
+  fun connectedCallback() =
+    this.render()
+    this.attachEventListeners()
+    this.restoreSizeFromStorage()
+
+  fun restoreSizeFromStorage() =
+    PanelPersistence.restorePanelWidth(this, "reserved-panel-width", 150, 600)
+
+  fun saveSizeToStorage(width) =
+    PanelPersistence.savePanelWidth("reserved-panel-width", width)
+
+  fun render() =
+    set this.innerHTML = """
+      <resize-handle direction="horizontal" side="right" min-size="150" max-size="600"></resize-handle>
+      <div class="header">
+        <h2>Diagnostics</h2>
+        <button class="collapse-btn" title="Toggle panel">
+          <i class="icon-arrow-right-to-line"></i>
+        </button>
+      </div>
+      <div class="content">
+        <div class="empty-state">
+          <i class="icon-circle-check-big"></i>
+          <span>No diagnostics yet</span>
+        </div>
+      </div>
+    """
+
+  fun getKindIcon(kind) =
+    if
+      kind === "error" then "icon-circle-x"
+      kind === "warning" then "icon-triangle-alert"
+      kind === "internal" then "icon-bug"
+      else "icon-circle-alert"
+
+  fun getSourceOrder(source) =
+    if
+      source === "lexing" then 1
+      source === "parsing" then 2
+      source === "typing" then 3
+      source === "compilation" then 4
+      source === "runtime" then 5
+      else 999
+
+  fun lineColumn(line, column) =
+    let result = new mut Object
+    set
+      result.line = line
+      result.column = column
+    result
+
+  fun getLineAndColumn(text, offset) =
+    let lines = text.substring(0, offset).split("\n")
+    lineColumn(lines.length, lines.at(lines.length - 1).length + 1)
+
+  fun snippetLine(lineNumber, content) =
+    let line = new mut Object
+    set
+      line.lineNumber = lineNumber
+      line.content = content
+    line
+
+  fun snippetResult(startPos, endPos, lines) =
+    let snippet = new mut Object
+    set
+      snippet.startLine = startPos.line
+      snippet.startColumn = startPos.column
+      snippet.endLine = endPos.line
+      snippet.endColumn = endPos.column
+      snippet.lines = lines
+    snippet
+
+  fun extractCodeSnippet(text, start, endOffset) =
+    let startPos = this.getLineAndColumn(text, start)
+    let endPos = this.getLineAndColumn(text, endOffset)
+    let sourceLines = text.split("\n")
+    let snippetLines = mut []
+    let i = startPos.line - 1
+    while i < endPos.line do
+      if i < sourceLines.length do
+        snippetLines.push(snippetLine(i + 1, sourceLines.at(i)))
+      set i += 1
+    snippetResult(startPos, endPos, snippetLines)
+
+  fun hasDiagnostics(diagnosticsPerFile) =
+    if
+      diagnosticsPerFile is Absent then false
+      else diagnosticsPerFile.some((file, ...) =>
+        if
+          file.diagnostics is Absent then false
+          else file.diagnostics.length > 0
+      )
+
+  fun setDiagnostics(diagnosticsPerFile) =
+    if this.querySelector(".content") is
+      ~null as content do
+        if hasDiagnostics(diagnosticsPerFile) is false then
+          set content.innerHTML = """
+            <div class="success-state">
+              <i class="icon-circle-check"></i>
+              <span>Everything works fine!</span>
+            </div>
+          """
+        else
+          set content.innerHTML = diagnosticsHtml(diagnosticsPerFile)
+          this.attachDiagnosticListeners()
+
+  fun diagnosticsHtml(diagnosticsPerFile) =
+    let html = """<div class="diagnostics-container">"""
+    diagnosticsPerFile.forEach((fileData, fileIndex) =>
+      if
+        fileData.diagnostics is Absent then ()
+        fileData.diagnostics.length === 0 then ()
+        else set html += fileDiagnosticsHtml(fileData, fileIndex)
+    )
+    set html += "</div>"
+    html
+
+  fun fileDiagnosticsHtml(fileData, fileIndex) =
+    let filePath = fileData.path
+    let diagnostics = fileData.diagnostics
+    let fileContent = fs.read(filePath)
+    let fileId = "file-" + fileIndex
+    let isFileCollapsed = collapsedFiles.has(fileId)
+    let sortedDiagnostics = Array.from(diagnostics).sort((a, b) =>
+      getSourceOrder(a.source) - getSourceOrder(b.source)
+    )
+    let fileToggleClass = if isFileCollapsed then "icon-chevron-right" else "icon-chevron-down"
+    let html = """<div class="file-diagnostics" data-file-id="""" + fileId + """">"""
+    set html += """<div class="file-header" data-file-id="""" + fileId + """">"""
+    set html += """<i class="file-toggle-icon """ + fileToggleClass + """"></i>"""
+    set html += """<span class="file-path">""" + escapeHtml(filePath) + """</span>"""
+    set html += """<button class="collapse-all-btn" data-file-id="""" + fileId + """" title="Collapse/Expand all diagnostics">"""
+    set html += """<i class="icon-list-chevrons-down-up"></i>"""
+    set html += """</button>"""
+    set html += """<span class="file-diagnostic-count">""" + diagnostics.length + """</span>"""
+    set html += """</div>"""
+    if isFileCollapsed is false do
+      set html += """<div class="file-diagnostic-list">"""
+      sortedDiagnostics.forEach((diagnostic, diagIndex) =>
+        set html += diagnosticHtml(fileId, filePath, diagnostic, diagIndex, fileContent)
+      )
+      set html += """</div>"""
+    set html += """</div>"""
+    html
+
+  fun diagnosticHtml(fileId, filePath, diagnostic, diagIndex, fileContent) =
+    let kind = diagnostic.kind
+    let source = diagnostic.source
+    let mainMessage = diagnostic.mainMessage
+    let allMessages = diagnostic.allMessages
+    let diagId = fileId + "-diag-" + diagIndex
+    let isDiagCollapsed = collapsedDiagnostics.has(diagId)
+    let diagToggleClass = if isDiagCollapsed then "icon-chevron-right" else "icon-chevron-down"
+    let html = """<div class="diagnostic diagnostic-""" + kind + """" data-diag-id="""" + diagId + """" data-main-message="""" + escapeHtml(mainMessage) + """">"""
+    set html += """<div class="diagnostic-summary" data-diag-id="""" + diagId + """">"""
+    set html += """<div class="diagnostic-header">"""
+    set html += """<i class="diagnostic-icon """ + getKindIcon(kind) + """"></i>"""
+    set html += """<span class="diagnostic-label">"""
+    set html += """<span class="diagnostic-kind">""" + escapeHtml(capitalize(kind)) + """</span>"""
+    set html += """<span class="diagnostic-source">(""" + escapeHtml(capitalize(source)) + """)</span>"""
+    set html += """</span>"""
+    set html += """<i class="diagnostic-toggle-icon """ + diagToggleClass + """"></i>"""
+    set html += """</div>"""
+    if isDiagCollapsed do
+      set html += """<div class="diagnostic-main-message">""" + escapeHtml(mainMessage) + """</div>"""
+    set html += """</div>"""
+    if
+      isDiagCollapsed then ()
+      allMessages is Absent then ()
+      allMessages.length === 0 then ()
+      else
+        set html += """<div class="diagnostic-details">"""
+        allMessages.forEach((message, ...) =>
+          set html += diagnosticMessageHtml(filePath, message, fileContent)
+        )
+        set html += """</div>"""
+    set html += """</div>"""
+    html
+
+  fun capitalize(text) =
+    text.charAt(0).toUpperCase() + text.slice(1)
+
+  fun diagnosticMessageHtml(filePath, message, fileContent) =
+    let html = """<div class="diagnostic-message">"""
+    if message.messageBits is ~Absent and message.messageBits.length > 0 do
+      set html += """<div class="message-content">"""
+      message.messageBits.forEach((bit, ...) =>
+        if
+          bit.code is ~Absent then
+            set html += """<code class="message-code">""" + escapeHtml(bit.code) + """</code>"""
+          bit.text is ~Absent then
+            set html += """<span class="message-text">""" + escapeHtml(bit.text) + """</span>"""
+          else ()
+      )
+      set html += """</div>"""
+    if
+      message.location is Absent then ()
+      fileContent is Absent then ()
+      fileContent === "" then ()
+      else
+        let snippet = extractCodeSnippet(fileContent, message.location.start, message.location.end)
+        set html += codeSnippetHtml(snippet, filePath)
+    set html += """</div>"""
+    html
+
+  fun codeSnippetHtml(snippet, fileDataPath) =
+    let html = """<div class="code-snippet">"""
+    set html += """<div class="code-snippet-header">"""
+    set html += """<span class="snippet-location">Line """ + snippet.startLine + ":" + snippet.startColumn + """</span>"""
+    set html += """<button class="goto-location-btn" data-file-path="""" + escapeHtml(fileDataPath) + """" data-line="""" + snippet.startLine + """" title="Go to location">"""
+    set html += """<i class="icon-locate"></i>"""
+    set html += """</button>"""
+    set html += """</div>"""
+    snippet.lines.forEach((line, ...) =>
+      set html += codeLineHtml(line, snippet)
+    )
+    set html += """</div>"""
+    html
+
+  fun codeLineHtml(line, snippet) =
+    let lineNumber = line.lineNumber
+    let content = line.content
+    let html = """<div class="code-line">"""
+    set html += """<span class="line-number">""" + lineNumber + """</span>"""
+    set html += """<pre class="line-content">"""
+    set html += highlightedContent(lineNumber, content, snippet)
+    set html += """</pre>"""
+    set html += """</div>"""
+    html
+
+  fun highlightedContent(lineNumber, content, snippet) =
+    if
+      lineNumber === snippet.startLine and lineNumber === snippet.endLine then
+        let before = content.substring(0, snippet.startColumn - 1)
+        let highlighted = content.substring(snippet.startColumn - 1, snippet.endColumn - 1)
+        let after = content.substring(snippet.endColumn - 1)
+        escapeHtml(before) + """<mark class="highlight">""" + escapeHtml(highlighted) + """</mark>""" + escapeHtml(after)
+      lineNumber === snippet.startLine then
+        let before = content.substring(0, snippet.startColumn - 1)
+        let highlighted = content.substring(snippet.startColumn - 1)
+        escapeHtml(before) + """<mark class="highlight">""" + escapeHtml(highlighted) + """</mark>"""
+      lineNumber === snippet.endLine then
+        let highlighted = content.substring(0, snippet.endColumn - 1)
+        let after = content.substring(snippet.endColumn - 1)
+        """<mark class="highlight">""" + escapeHtml(highlighted) + """</mark>""" + escapeHtml(after)
+      lineNumber > snippet.startLine and lineNumber < snippet.endLine then
+        """<mark class="highlight">""" + escapeHtml(content) + """</mark>"""
+      else escapeHtml(content)
+
+  fun attachDiagnosticListeners() =
+    this.querySelectorAll(".file-header").forEach((header, ...) =>
+      header.addEventListener("click", event => this.toggleFileDiagnostics(event.currentTarget))
+    )
+    this.querySelectorAll(".diagnostic-summary").forEach((summary, ...) =>
+      summary.addEventListener("click", event => this.toggleDiagnostic(event.currentTarget))
+    )
+    this.querySelectorAll(".goto-location-btn").forEach((btn, ...) =>
+      btn.addEventListener("click", event => this.gotoLocation(event))
+    )
+    this.querySelectorAll(".collapse-all-btn").forEach((btn, ...) =>
+      btn.addEventListener("click", event => this.toggleAllDiagnostics(event))
+    )
+
+  fun toggleFileDiagnostics(header) =
+    let fileId = header.dataset.fileId
+    toggleSet(collapsedFiles, fileId)
+    if this.querySelector(".file-diagnostics[data-file-id=\"" + fileId + "\"]") is
+      ~null as fileBlock do
+        let list = fileBlock.querySelector(".file-diagnostic-list")
+        let icon = header.querySelector(".file-toggle-icon")
+        if list is ~Absent do
+          set list.style.display = if list.style.display === "none" then "block" else "none"
+        if icon is ~Absent do
+          set icon.className = if
+            icon.classList.contains("icon-chevron-right") then "file-toggle-icon icon-chevron-down"
+            else "file-toggle-icon icon-chevron-right"
+
+  fun toggleSet(collection, key) =
+    if
+      collection.has(key) then collection.delete(key)
+      else collection.add(key)
+
+  fun toggleDiagnostic(summary) =
+    let diagId = summary.dataset.diagId
+    if this.querySelector(".diagnostic[data-diag-id=\"" + diagId + "\"]") is
+      ~null as diagnostic do
+        let details = diagnostic.querySelector(".diagnostic-details")
+        let mainMessage = summary.querySelector(".diagnostic-main-message")
+        let toggleIcon = summary.querySelector(".diagnostic-toggle-icon")
+        if
+          collapsedDiagnostics.has(diagId) then
+            collapsedDiagnostics.delete(diagId)
+            if details is ~Absent do set details.style.display = "block"
+            if mainMessage is ~Absent do mainMessage.remove()
+            if toggleIcon is ~Absent do set toggleIcon.className = "diagnostic-toggle-icon icon-chevron-down"
+          else
+            collapsedDiagnostics.add(diagId)
+            if details is ~Absent do set details.style.display = "none"
+            if mainMessage is Absent do
+              let message = document.createElement("div")
+              set
+                message.className = "diagnostic-main-message"
+                message.textContent = diagnostic.dataset.mainMessage
+              summary.appendChild(message)
+            if toggleIcon is ~Absent do set toggleIcon.className = "diagnostic-toggle-icon icon-chevron-right"
+
+  fun gotoLocation(event) =
+    event.stopPropagation()
+    let filePath = event.currentTarget.dataset.filePath
+    let line = parseInt(event.currentTarget.dataset.line, 10)
+    let detail = new mut Object
+    set
+      detail.filePath = filePath
+      detail.line = line
+    let options = new mut Object
+    set options.detail = detail
+    document.dispatchEvent(new CustomEvent("open-file-at-location", options))
+
+  fun toggleAllDiagnostics(event) =
+    event.stopPropagation()
+    let panel = this
+    let btn = event.currentTarget
+    let fileId = btn.dataset.fileId
+    if this.querySelector(".file-diagnostics[data-file-id=\"" + fileId + "\"]") is
+      ~null as fileBlock do
+        let diagnostics = fileBlock.querySelectorAll(".diagnostic")
+        let icon = btn.querySelector("i")
+        if allDiagnosticsCollapsed(diagnostics) then
+          diagnostics.forEach((diagnostic, ...) => panel.expandDiagnostic(diagnostic))
+          if icon is ~Absent do set icon.className = "icon-list-chevrons-down-up"
+        else
+          diagnostics.forEach((diagnostic, ...) => panel.collapseDiagnostic(diagnostic))
+          if icon is ~Absent do set icon.className = "icon-list-chevrons-up-down"
+
+  fun allDiagnosticsCollapsed(diagnostics) =
+    let allCollapsed = true
+    diagnostics.forEach((diagnostic, ...) =>
+      if collapsedDiagnostics.has(diagnostic.dataset.diagId) is false do
+        set allCollapsed = false
+    )
+    allCollapsed
+
+  fun expandDiagnostic(diagnostic) =
+    let diagId = diagnostic.dataset.diagId
+    collapsedDiagnostics.delete(diagId)
+    if diagnostic.querySelector(".diagnostic-details") is
+      ~null as details do set details.style.display = "block"
+    if diagnostic.querySelector(".diagnostic-main-message") is
+      ~null as mainMessage do mainMessage.remove()
+    if diagnostic.querySelector(".diagnostic-toggle-icon") is
+      ~null as toggleIcon do set toggleIcon.className = "diagnostic-toggle-icon icon-chevron-down"
+
+  fun collapseDiagnostic(diagnostic) =
+    let diagId = diagnostic.dataset.diagId
+    collapsedDiagnostics.add(diagId)
+    let summary = diagnostic.querySelector(".diagnostic-summary")
+    let details = diagnostic.querySelector(".diagnostic-details")
+    let mainMessage = summary.querySelector(".diagnostic-main-message")
+    if details is ~Absent do set details.style.display = "none"
+    if mainMessage is Absent do
+      let message = document.createElement("div")
+      set
+        message.className = "diagnostic-main-message"
+        message.textContent = diagnostic.dataset.mainMessage
+      summary.appendChild(message)
+    if diagnostic.querySelector(".diagnostic-toggle-icon") is
+      ~null as toggleIcon do set toggleIcon.className = "diagnostic-toggle-icon icon-chevron-right"
+
+  fun escapeHtml(text) =
+    let div = document.createElement("div")
+    set div.textContent = text
+    div.innerHTML
+
+  fun toggleCollapse() =
+    set isCollapsed = isCollapsed is false
+    this.classList.toggle("collapsed", isCollapsed)
+    restoreWidthIfExpanded(document.querySelector(".app-container"))
+
+  fun restoreWidthIfExpanded(container) =
+    if
+      isCollapsed then ()
+      container is Absent then ()
+      else
+        let width = this.getAttribute("width")
+        if
+          width is ~Absent and width !== "" then container.style.setProperty("--reserved-panel-width", width + "px")
+          else container.style.removeProperty("--reserved-panel-width")
+
+  fun attachEventListeners() =
+    let panel = this
+    if this.querySelector(".collapse-btn") is
+      ~null as collapseBtn do collapseBtn.addEventListener("click", () => panel.toggleCollapse())
+
+customElements.define("reserved-panel", ReservedPanel)
