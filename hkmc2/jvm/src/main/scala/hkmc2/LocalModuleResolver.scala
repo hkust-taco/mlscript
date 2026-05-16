@@ -54,7 +54,7 @@ class LocalModuleResolver(vendors: Ls[Vendor], nodeModulesPath: Opt[io.Path])(us
       case S(resolved) => resolved
   
   def tryResolveModulePath(path: Str): Opt[ResolvedModule] =
-    tryVerbatim(path) orElse tryFile(path)
+    ModuleResolver.tryResolveUrl(path) orElse tryVerbatim(path) orElse tryFile(path)
 
 object LocalModuleResolver:
   def apply(stdPath: io.Path, nodeModulesPath: Opt[io.Path] = N)(using fs: io.FileSystem): LocalModuleResolver =

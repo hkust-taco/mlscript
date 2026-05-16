@@ -23,6 +23,22 @@ trait ModuleResolver:
   def targetPathForSource(sourcePath: io.Path): Opt[io.Path] = N
 
 object ModuleResolver:
+  def isUrlModuleSpecifier(path: Str): Bool =
+    path.startsWith("https://") || path.startsWith("http://")
+  
+  def urlModuleName(path: Str): Str =
+    val withoutFragment = path.takeWhile(ch => ch =/= '#' && ch =/= '?').stripSuffix("/")
+    val lastSegment = withoutFragment.split('/').lastOption.getOrElse("module")
+    val sanitized = lastSegment.map:
+      case ch if ch.isLetterOrDigit || ch === '_' || ch === '$' => ch
+      case _ => '_'
+    val nonEmpty = if sanitized.isEmpty then "module" else sanitized
+    if nonEmpty.headOption.exists(_.isDigit) then "_" + nonEmpty else nonEmpty
+  
+  def tryResolveUrl(path: Str): Opt[ResolvedModule.Verbatim] =
+    // For URLs, we just return the path as-is.
+    if isUrlModuleSpecifier(path) then S(ResolvedModule.Verbatim(path, urlModuleName(path)))
+    else N
   
   /** The result of module resolution. */
   enum ResolvedModule:
@@ -47,5 +63,3 @@ object ModuleResolver:
       * @param moduleName the module's name, to be used as the identifier.
       */
     case File(sourcePath: io.Path, targetPath: io.Path, moduleName: Str)
-
-// TODO: WebModuleResolver that can resolve URL imports.
