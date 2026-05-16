@@ -1,6 +1,6 @@
 import fs from '../filesystem/fs.mjs';
 import { restorePanelWidth, savePanelWidth } from './PanelPersistence.js';
-import './FileTooltip.js';
+import './FileTooltip.mjs';
 import './ResizeHandle.js';
 
 // File Explorer Custom Element

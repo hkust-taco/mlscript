@@ -1,0 +1,210 @@
+import "../filesystem/fs.mls"
+import "https://esm.sh/@floating-ui/dom" { computePosition, shift, offset }
+
+module fileTooltip with...
+
+fun isAbsent(value) = if
+  value is null then true
+  value is undefined then true
+  value === () then true
+  else false
+
+fun textOf(value) =
+  globalThis.String(value)
+
+fun escapeChar(ch) = if
+  ch === "&" then "&amp;"
+  ch === "<" then "&lt;"
+  ch === ">" then "&gt;"
+  ch === "\"" then "&quot;"
+  ch === "'" then "&#39;"
+  else ch
+
+fun escapeHtml(value) =
+  let text = textOf(value)
+  let result = ""
+  let i = 0
+  while i < text.length do
+    set result += escapeChar(text.charAt(i))
+    set i += 1
+  result
+
+fun attrFallback(value) = if
+  isAbsent(value) then "-"
+  typeof(value) === "object" then globalThis.JSON.stringify(value)
+  value === true then "true"
+  value === false then "false"
+  else textOf(value)
+
+fun relativeTimeOptions() =
+  let options = new mut Object
+  set options.numeric = "auto"
+  options
+
+fun makeRelativeTimeFormatter() = if
+  isAbsent(globalThis.Intl) then null
+  isAbsent(globalThis.Intl.RelativeTimeFormat) then null
+  else globalThis.Reflect.construct(globalThis.Intl.RelativeTimeFormat, [undefined, relativeTimeOptions()])
+
+fun dateFrom(value) =
+  globalThis.Reflect.construct(globalThis.Date, [value])
+
+class FileTooltip extends HTMLElement with
+  let relativeTimeFormatter = makeRelativeTimeFormatter()
+  let showRequestId = 0
+  
+  fun connectedCallback() =
+    this.classList.add("file-tooltip")
+    this.setAttribute("role", "tooltip")
+  
+  fun formatRelativeTime(timestamp) =
+    if
+      isAbsent(relativeTimeFormatter) then ""
+      globalThis.Number.isFinite(timestamp) is false then ""
+      else
+        let divisions = [
+          (amount: 60, unit: "seconds"),
+          (amount: 60, unit: "minutes"),
+          (amount: 24, unit: "hours"),
+          (amount: 7, unit: "days"),
+          (amount: 4.34524, unit: "weeks"),
+          (amount: 12, unit: "months"),
+          (amount: globalThis.Number.POSITIVE_INFINITY, unit: "years"),
+        ]
+        let duration = (timestamp - globalThis.Date.now()) / 1000
+        let result = ""
+        let i = 0
+        while result === "" and i < divisions.length do
+          let division = divisions.at(i)
+          if globalThis.Math.abs(duration) < division.amount then
+            set result = relativeTimeFormatter.format(
+              globalThis.Math.round(duration),
+              division.unit.slice(0, -1),
+            )
+          else
+            set duration /= division.amount
+            set i += 1
+        result
+  
+  fun formatTimestamp(value) =
+    if globalThis.Number.isFinite(value) is false then "-"
+    else
+      let absolute = dateFrom(value).toLocaleString(undefined,
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      )
+      let relative = this.formatRelativeTime(value)
+      if
+        relative !== "" then absolute + " - " + relative
+        else absolute
+  
+  fun formatSize(size) =
+    if
+      globalThis.Number.isFinite(size) is false then "-"
+      size < 0 then "-"
+      size === 1 then "1 byte"
+      size < 1024 then textOf(size) + " bytes"
+      let kb = size / 1024
+      kb < 1024 then kb.toFixed(1) + " KB"
+      else (kb / 1024).toFixed(1) + " MB"
+  
+  fun attrText(attrs) =
+    if
+      isAbsent(attrs) then "-"
+      globalThis.Object.keys(attrs).length === 0 then "-"
+      else globalThis.Object.entries(attrs)
+        .map((entry, ...) =>
+          entry.at(0) + ": " + escapeHtml(attrFallback(entry.at(1)))
+        )
+        .join(", ")
+  
+  fun displayName(path, node, name) =
+    if
+      isAbsent(name) is false and name !== "" then name
+      isAbsent(node.name) is false and node.name !== "" then node.name
+      else path.split("/").pop()
+  
+  fun fileSize(node, sizeOverride) =
+    if
+      isAbsent(sizeOverride) is false then sizeOverride
+      typeof(node.content) === "string" then node.content.length
+      else undefined
+  
+  fun tooltipContent(path, name, sizeOverride) =
+    if
+      isAbsent(path) then null
+      path !== "" then
+        let node = fs.stat(path)
+        if isAbsent(node) then null
+        else
+          let size = fileSize(node, sizeOverride)
+          let attrs = attrText(node.attrs)
+          let shownName = displayName(path, node, name)
+          """
+      <div class="tooltip-grid">
+        <div class="tooltip-label">Name</div>
+        <div class="tooltip-value">""" + escapeHtml(shownName) + """</div>
+        <div class="tooltip-label">Path</div>
+        <div class="tooltip-value">""" + escapeHtml(path) + """</div>
+        <div class="tooltip-label">Size</div>
+        <div class="tooltip-value">""" + this.formatSize(size) + """</div>
+        <div class="tooltip-label">Modified</div>
+        <div class="tooltip-value">""" + this.formatTimestamp(node.mtime) + """</div>
+        <div class="tooltip-label">Created</div>
+        <div class="tooltip-value">""" + this.formatTimestamp(node.birthtime) + """</div>
+        <div class="tooltip-label">Readonly</div>
+        <div class="tooltip-value">""" + (if node.readonly then "Yes" else "No") + """</div>
+        <div class="tooltip-label">Attributes</div>
+        <div class="tooltip-value">""" + attrs + """</div>
+      </div>
+    """
+      else null
+  
+  fun show(targetEl, optionsArg) =
+    let options = if isAbsent(optionsArg) then new Object else optionsArg
+    let path = options.path
+    let name = options.name
+    let placement = if
+      isAbsent(options.placement) then "right"
+      else options.placement
+    let content = this.tooltipContent(path, name, options.size)
+    if isAbsent(content) is false and isAbsent(targetEl) is false do
+      globalThis.console.log("[file-tooltip] request show",
+        path: path,
+        name: name,
+        placement: placement,
+        targetPath: if isAbsent(targetEl.dataset) then undefined else targetEl.dataset.path,
+        targetName: if isAbsent(targetEl.dataset) then undefined else targetEl.dataset.name,
+      )
+      set this.innerHTML = content
+      set this.dataset.placement = placement
+      set showRequestId += 1
+      let requestId = showRequestId
+      computePosition(targetEl, this,
+        placement: placement,
+        strategy: "fixed",
+        middleware: [shift(padding: 5), offset(8)],
+      ).then(position =>
+        if requestId === showRequestId do
+          set
+            this.style.top = position.y + "px"
+            this.style.left = position.x + "px"
+          this.classList.add("visible")
+          globalThis.console.log("[file-tooltip] shown",
+            path: path,
+            placement: placement,
+            x: position.x,
+            y: position.y,
+          )
+      )
+  
+  fun hide() =
+    set showRequestId += 1
+    this.classList.remove("visible")
+    globalThis.Reflect.deleteProperty(this.dataset, "placement")
+    globalThis.console.log("[file-tooltip] hide")
+
+customElements.define("file-tooltip", FileTooltip)

@@ -1,6 +1,6 @@
 import fs from "../filesystem/fs.mjs";
 import { createEditor } from "../editor/editor.js";
-import "./FileTooltip.js";
+import "./FileTooltip.mjs";
 
 // Editor Panel Custom Element
 class EditorPanel extends HTMLElement {
