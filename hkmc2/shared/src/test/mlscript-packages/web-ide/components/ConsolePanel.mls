@@ -1,0 +1,158 @@
+import "./PanelPersistence.mls"
+import "./ResizeHandle.mls"
+import "../common/JS.mls"
+
+open JS { Absent }
+
+class ConsolePanel extends HTMLElement with
+  let messages = mut []
+  let isCollapsed = false
+  let preserveLogs = false
+
+  fun connectedCallback() =
+    this.render()
+    this.attachEventListeners()
+    this.restoreSizeFromStorage()
+
+  fun restoreSizeFromStorage() =
+    PanelPersistence.restorePanelHeight(this, "console-panel-height", 100, 600)
+
+  fun saveSizeToStorage(height) =
+    PanelPersistence.savePanelHeight("console-panel-height", height)
+
+  fun render() =
+    set this.innerHTML = """
+      <resize-handle direction="vertical" side="top" min-size="100" max-size="600"></resize-handle>
+      <div class="header">
+        <div class="header-left">
+          <h2>Console</h2>
+          <label class="preserve-logs-label" title="Preserve logs between executions">
+            <input type="checkbox" class="preserve-logs-checkbox" />
+            <span>Preserve logs</span>
+          </label>
+          <button class="clear-btn" title="Clear console">
+            <i class="icon-square-x"></i>
+            <span>Clear</span>
+          </button>
+        </div>
+        <button class="collapse-btn" title="Toggle panel">
+          <i class="icon-arrow-down-to-line"></i>
+        </button>
+      </div>
+      <div class="console-content"></div>
+    """
+
+  fun message(kind, args) =
+    let message = new mut Object
+    set
+      message.kind = kind
+      message.content = args
+      message.timestamp = new Date()
+    message
+
+  fun log(kind, ...args) =
+    let entry = message(kind, args)
+    messages.push(entry)
+    this.appendMessage(entry)
+
+  fun stringifyArg(arg) =
+    if typeof(arg) === "object" then
+      js.try_catch(
+        () => JSON.stringify(arg, null, 2),
+        error => String(arg),
+      )
+    else String(arg)
+
+  fun formattedContent(message) =
+    message.content.map(arg => stringifyArg(arg)).join(" ")
+
+  fun iconClassName(kind) =
+    if
+      kind === "error" then "icon-x"
+      kind === "warn" then "icon-triangle-alert"
+      kind === "info" then "icon-info"
+      else "icon-chevron-right"
+
+  fun messageHtml(message) =
+    """
+      <span class="console-icon"><i class='""" + iconClassName(message.kind) + """'></i></span>
+      <span class="console-text">""" + this.escapeHtml(formattedContent(message)) + """</span>
+    """
+
+  fun appendMessage(message) =
+    if this.querySelector(".console-content") is
+      ~null as consoleContent do
+        let messageEl = document.createElement("div")
+        set
+          messageEl.className = "console-message console-" + message.kind
+          messageEl.innerHTML = messageHtml(message)
+        consoleContent.appendChild(messageEl)
+        set consoleContent.scrollTop = consoleContent.scrollHeight
+
+  fun escapeHtml(text) =
+    let div = document.createElement("div")
+    set div.textContent = text
+    div.innerHTML
+
+  fun clear() =
+    if preserveLogs is false do
+      set messages = mut []
+      if this.querySelector(".console-content") is
+        ~null as consoleContent do set consoleContent.innerHTML = ""
+
+  fun valueOrEmpty(value) =
+    if value is Absent then "" else value
+
+  fun saveCurrentSize() =
+    set
+      this.dataset.lastHeight = valueOrEmpty(this.style.height)
+      this.dataset.lastMinHeight = valueOrEmpty(this.style.minHeight)
+      this.dataset.lastMaxHeight = valueOrEmpty(this.style.maxHeight)
+      this.style.height = "40px"
+      this.style.minHeight = "40px"
+      this.style.maxHeight = "40px"
+      this.style.flexBasis = "40px"
+      this.style.flexGrow = "0"
+      this.style.flexShrink = "0"
+
+  fun restoreSavedSize() =
+    let lastHeight = this.dataset.lastHeight
+    let lastMinHeight = this.dataset.lastMinHeight
+    let lastMaxHeight = this.dataset.lastMaxHeight
+    if
+      lastHeight is ~Absent and lastHeight !== "" and lastHeight !== "40px" then
+        set
+          this.style.height = lastHeight
+          this.style.minHeight = valueOrEmpty(lastMinHeight)
+          this.style.maxHeight = valueOrEmpty(lastMaxHeight)
+          this.style.flexBasis = lastHeight
+      else
+        set
+          this.style.height = ""
+          this.style.minHeight = ""
+          this.style.maxHeight = ""
+          this.style.flexBasis = ""
+          this.style.flexGrow = ""
+          this.style.flexShrink = ""
+
+  fun toggleCollapse() =
+    set isCollapsed = isCollapsed is false
+    if
+      isCollapsed then saveCurrentSize()
+      else restoreSavedSize()
+    this.classList.toggle("collapsed", isCollapsed)
+
+  fun setPreserveLogs(value) =
+    set preserveLogs = value
+
+  fun attachEventListeners() =
+    let panel = this
+    if panel.querySelector(".clear-btn") is
+      ~null as clearBtn do clearBtn.addEventListener("click", () => panel.clear())
+    if panel.querySelector(".collapse-btn") is
+      ~null as collapseBtn do collapseBtn.addEventListener("click", () => panel.toggleCollapse())
+    if panel.querySelector(".preserve-logs-checkbox") is
+      ~null as preserveLogsCheckbox do
+        preserveLogsCheckbox.addEventListener("change", event => panel.setPreserveLogs(event.target.checked))
+
+customElements.define("console-panel", ConsolePanel)
