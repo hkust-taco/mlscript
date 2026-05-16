@@ -1,41 +1,38 @@
 import "./fs.mls"
+import "../common/JS.mls"
+
+open JS { Absent }
 
 module persistent with...
 
 val FS_PREFIX = "mlscript-fs:"
 val FS_PATHS_KEY = "mlscript-fs-paths"
 
-fun isAbsent(value) = if
-  value is null then true
-  value is undefined then true
-  value === () then true
-  else false
-
 fun isFile(node) = if
-  isAbsent(node) is false and node.("type") is "file" then true
+  node is ~Absent and node.("type") is "file" then true
   else false
 
 fun isStandardLibraryNode(node) = if
-  isAbsent(node) is false and node.attrs.("std") is true then true
+  node is ~Absent and node.attrs.("std") is true then true
   else false
 
 fun persistedKey(path) =
   FS_PREFIX + path
 
 fun getPersistedPaths() =
-  let storedText = globalThis.localStorage.getItem(FS_PATHS_KEY)
+  let storedText = localStorage.getItem(FS_PATHS_KEY)
   if
-    isAbsent(storedText) then new Set()
-    else new Set(globalThis.JSON.parse(storedText))
+    storedText is Absent then new Set()
+    else new Set(JSON.parse(storedText))
 
 fun savePersistedPaths(paths) =
-  globalThis.localStorage.setItem(FS_PATHS_KEY, globalThis.JSON.stringify(globalThis.Array.from(paths)))
+  localStorage.setItem(FS_PATHS_KEY, JSON.stringify(Array.from(paths)))
 
 fun loadPersistedFile(path) =
-  let storedText = globalThis.localStorage.getItem(persistedKey(path))
+  let storedText = localStorage.getItem(persistedKey(path))
   if
-    isAbsent(storedText) then null
-    else globalThis.JSON.parse(storedText)
+    storedText is Absent then null
+    else JSON.parse(storedText)
 
 fun fileData(node) =
   content: node.content
@@ -47,7 +44,7 @@ fun fileData(node) =
   attrs: node.attrs
 
 fun saveFile(path, node) =
-  globalThis.localStorage.setItem(persistedKey(path), globalThis.JSON.stringify(fileData(node)))
+  localStorage.setItem(persistedKey(path), JSON.stringify(fileData(node)))
 
 fun rememberFile(paths, path, node) =
   if isFile(node) do
@@ -57,13 +54,13 @@ fun rememberFile(paths, path, node) =
 
 fun forgetFile(paths, path, node) =
   if isFile(node) do
-    globalThis.localStorage.removeItem(persistedKey(path))
+    localStorage.removeItem(persistedKey(path))
     paths.delete(path)
     savePersistedPaths(paths)
 
 fun moveFile(paths, path, newPath, node) =
-  if isFile(node) and isAbsent(newPath) is false do
-    globalThis.localStorage.removeItem(persistedKey(path))
+  if isFile(node) and newPath is ~Absent do
+    localStorage.removeItem(persistedKey(path))
     saveFile(newPath, node)
     paths.delete(path)
     paths.add(newPath)
@@ -81,7 +78,7 @@ fun restoreTimestamps(node, fileData) =
     node.birthtime = fileData.birthtime
 
 fun restoreFile(path, fileData) =
-  globalThis.console.log("Restoring file: \"" + path + "\"")
+  console.log("Restoring file: \"" + path + "\"")
   fs.createFile(path, fileData.content,
     force: true,
     readonly: fileData.readonly,
@@ -94,13 +91,13 @@ fun restoreFile(path, fileData) =
 fun loadPersistedFiles() =
   let counter = 0
   let paths = getPersistedPaths()
-  globalThis.console.groupCollapsed("Loading persisted files from localStorage")
+  console.groupCollapsed("Loading persisted files from localStorage")
   paths.forEach of (path, ...) =>
     if loadPersistedFile(path) is
       Object as fileData do
         restoreFile(path, fileData)
         set counter += 1
-  globalThis.console.groupEnd()
+  console.groupEnd()
   counter
 
 fun persistChange(event) =

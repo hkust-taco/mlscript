@@ -1,16 +1,13 @@
 import "../filesystem/fs.mls"
+import "../common/JS.mls"
 import "https://esm.sh/@floating-ui/dom" { computePosition, shift, offset }
+
+open JS { Absent }
 
 module fileTooltip with...
 
-fun isAbsent(value) = if
-  value is null then true
-  value is undefined then true
-  value === () then true
-  else false
-
 fun textOf(value) =
-  globalThis.String(value)
+  String(value)
 
 fun escapeChar(ch) = if
   ch === "&" then "&amp;"
@@ -30,8 +27,8 @@ fun escapeHtml(value) =
   result
 
 fun attrFallback(value) = if
-  isAbsent(value) then "-"
-  typeof(value) === "object" then globalThis.JSON.stringify(value)
+  value is Absent then "-"
+  typeof(value) === "object" then JSON.stringify(value)
   value === true then "true"
   value === false then "false"
   else textOf(value)
@@ -42,12 +39,12 @@ fun relativeTimeOptions() =
   options
 
 fun makeRelativeTimeFormatter() = if
-  isAbsent(globalThis.Intl) then null
-  isAbsent(globalThis.Intl.RelativeTimeFormat) then null
-  else globalThis.Reflect.construct(globalThis.Intl.RelativeTimeFormat, [undefined, relativeTimeOptions()])
+  Intl is Absent then null
+  Intl.RelativeTimeFormat is Absent then null
+  else Reflect.construct(Intl.RelativeTimeFormat, [undefined, relativeTimeOptions()])
 
 fun dateFrom(value) =
-  globalThis.Reflect.construct(globalThis.Date, [value])
+  new Date(value)
 
 class FileTooltip extends HTMLElement with
   let relativeTimeFormatter = makeRelativeTimeFormatter()
@@ -59,8 +56,8 @@ class FileTooltip extends HTMLElement with
   
   fun formatRelativeTime(timestamp) =
     if
-      isAbsent(relativeTimeFormatter) then ""
-      globalThis.Number.isFinite(timestamp) is false then ""
+      relativeTimeFormatter is Absent then ""
+      Number.isFinite(timestamp) is false then ""
       else
         let divisions = [
           (amount: 60, unit: "seconds"),
@@ -69,16 +66,16 @@ class FileTooltip extends HTMLElement with
           (amount: 7, unit: "days"),
           (amount: 4.34524, unit: "weeks"),
           (amount: 12, unit: "months"),
-          (amount: globalThis.Number.POSITIVE_INFINITY, unit: "years"),
+          (amount: Number.POSITIVE_INFINITY, unit: "years"),
         ]
-        let duration = (timestamp - globalThis.Date.now()) / 1000
+        let duration = (timestamp - Date.now()) / 1000
         let result = ""
         let i = 0
         while result === "" and i < divisions.length do
           let division = divisions.at(i)
-          if globalThis.Math.abs(duration) < division.amount then
+          if Math.abs(duration) < division.amount then
             set result = relativeTimeFormatter.format(
-              globalThis.Math.round(duration),
+              Math.round(duration),
               division.unit.slice(0, -1),
             )
           else
@@ -87,7 +84,7 @@ class FileTooltip extends HTMLElement with
         result
   
   fun formatTimestamp(value) =
-    if globalThis.Number.isFinite(value) is false then "-"
+    if Number.isFinite(value) is false then "-"
     else
       let absolute = dateFrom(value).toLocaleString(undefined,
         year: "numeric",
@@ -103,7 +100,7 @@ class FileTooltip extends HTMLElement with
   
   fun formatSize(size) =
     if
-      globalThis.Number.isFinite(size) is false then "-"
+      Number.isFinite(size) is false then "-"
       size < 0 then "-"
       size === 1 then "1 byte"
       size < 1024 then textOf(size) + " bytes"
@@ -113,9 +110,9 @@ class FileTooltip extends HTMLElement with
   
   fun attrText(attrs) =
     if
-      isAbsent(attrs) then "-"
-      globalThis.Object.keys(attrs).length === 0 then "-"
-      else globalThis.Object.entries(attrs)
+      attrs is Absent then "-"
+      Object.keys(attrs).length === 0 then "-"
+      else Object.entries(attrs)
         .map((entry, ...) =>
           entry.at(0) + ": " + escapeHtml(attrFallback(entry.at(1)))
         )
@@ -123,22 +120,22 @@ class FileTooltip extends HTMLElement with
   
   fun displayName(path, node, name) =
     if
-      isAbsent(name) is false and name !== "" then name
-      isAbsent(node.name) is false and node.name !== "" then node.name
+      name is ~Absent and name !== "" then name
+      node.name is ~Absent and node.name !== "" then node.name
       else path.split("/").pop()
   
   fun fileSize(node, sizeOverride) =
     if
-      isAbsent(sizeOverride) is false then sizeOverride
+      sizeOverride is ~Absent then sizeOverride
       typeof(node.content) === "string" then node.content.length
       else undefined
   
   fun tooltipContent(path, name, sizeOverride) =
     if
-      isAbsent(path) then null
+      path is Absent then null
       path !== "" then
         let node = fs.stat(path)
-        if isAbsent(node) then null
+        if node is Absent then null
         else
           let size = fileSize(node, sizeOverride)
           let attrs = attrText(node.attrs)
@@ -164,20 +161,20 @@ class FileTooltip extends HTMLElement with
       else null
   
   fun show(targetEl, optionsArg) =
-    let options = if isAbsent(optionsArg) then new Object else optionsArg
+    let options = if optionsArg is Absent then new Object else optionsArg
     let path = options.path
     let name = options.name
     let placement = if
-      isAbsent(options.placement) then "right"
+      options.placement is Absent then "right"
       else options.placement
     let content = this.tooltipContent(path, name, options.size)
-    if isAbsent(content) is false and isAbsent(targetEl) is false do
-      globalThis.console.log("[file-tooltip] request show",
+    if content is ~Absent and targetEl is ~Absent do
+      console.log("[file-tooltip] request show",
         path: path,
         name: name,
         placement: placement,
-        targetPath: if isAbsent(targetEl.dataset) then undefined else targetEl.dataset.path,
-        targetName: if isAbsent(targetEl.dataset) then undefined else targetEl.dataset.name,
+        targetPath: if targetEl.dataset is Absent then undefined else targetEl.dataset.path,
+        targetName: if targetEl.dataset is Absent then undefined else targetEl.dataset.name,
       )
       set this.innerHTML = content
       set this.dataset.placement = placement
@@ -193,7 +190,7 @@ class FileTooltip extends HTMLElement with
             this.style.top = position.y + "px"
             this.style.left = position.x + "px"
           this.classList.add("visible")
-          globalThis.console.log("[file-tooltip] shown",
+          console.log("[file-tooltip] shown",
             path: path,
             placement: placement,
             x: position.x,
@@ -204,7 +201,7 @@ class FileTooltip extends HTMLElement with
   fun hide() =
     set showRequestId += 1
     this.classList.remove("visible")
-    globalThis.Reflect.deleteProperty(this.dataset, "placement")
-    globalThis.console.log("[file-tooltip] hide")
+    Reflect.deleteProperty(this.dataset, "placement")
+    console.log("[file-tooltip] hide")
 
 customElements.define("file-tooltip", FileTooltip)

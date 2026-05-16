@@ -1,14 +1,11 @@
 import "../filesystem/fs.mls"
+import "../common/JS.mls"
+
+open JS { Absent }
 
 module runner with...
 
 let latestExecution = null
-
-fun isAbsent(value) = if
-  value is null then true
-  value is undefined then true
-  value === () then true
-  else false
 
 fun workerOptions() =
   let options = new mut Object
@@ -30,14 +27,14 @@ fun customEventOptions(status, runningTime) =
   options
 
 fun dispatchStatusChange(status, runningTime) =
-  let event = globalThis.Reflect.construct(globalThis.CustomEvent, ["execution-status-change", customEventOptions(status, runningTime)])
-  globalThis.window.dispatchEvent(event)
+  let event = new CustomEvent("execution-status-change", customEventOptions(status, runningTime))
+  window.dispatchEvent(event)
 
 fun consolePanel() =
-  globalThis.document.querySelector("console-panel")
+  document.querySelector("console-panel")
 
 fun reservedPanel() =
-  globalThis.document.querySelector("reserved-panel")
+  document.querySelector("reserved-panel")
 
 fun clearConsolePanel() =
   if consolePanel() is
@@ -65,12 +62,12 @@ fun workerErrorDetails(event) =
 
 fun errorStack(error) =
   if
-    isAbsent(error) then null
-    isAbsent(error.stack) then null
+    error is Absent then null
+    error.stack is Absent then null
     else error.stack
 
 fun appendWorkerLocation(panel, event) =
-  if isAbsent(event.filename) is false do
+  if event.filename is ~Absent do
     panel.log("error", "  at " + event.filename + ":" + event.lineno + ":" + event.colno)
 
 fun appendWorkerStack(panel, event) =
@@ -79,12 +76,12 @@ fun appendWorkerStack(panel, event) =
 
 fun workerErrorMessage(event) =
   let message = "Worker Error:\n"
-  if isAbsent(event.message) is false do set message += "Message: " + event.message + "\n"
-  if isAbsent(event.filename) is false do set message += "File: " + event.filename + "\n"
-  if isAbsent(event.lineno) is false do set message += "Line: " + event.lineno + ":" + event.colno + "\n"
+  if event.message is ~Absent do set message += "Message: " + event.message + "\n"
+  if event.filename is ~Absent do set message += "File: " + event.filename + "\n"
+  if event.lineno is ~Absent do set message += "Line: " + event.lineno + ":" + event.colno + "\n"
   if errorStack(event.error) is
     ~null as stack do set message += "\nStack:\n" + stack
-  if isAbsent(event.error) is false and isAbsent(errorStack(event.error)) do
+  if event.error is ~Absent and errorStack(event.error) is Absent do
     set message += "\nStack:\n" + event.error
   message
 
@@ -92,14 +89,14 @@ fun makeExecution(id) =
   let execution = new mut Object
   set
     execution.id = id
-    execution.worker = globalThis.Reflect.construct(globalThis.Worker, ["execution/worker.js", workerOptions()])
+    execution.worker = new Worker("execution/worker.js", workerOptions())
     execution.isRunning = false
     execution.startTime = null
   execution
 
 fun run(execution, id, mainPath) =
   let files = fs.getAllFiles(undefined)
-  globalThis.console.log("[VM] Files:", globalThis.Object.keys(files))
+  console.log("[VM] Files:", Object.keys(files))
   execution.worker.postMessage(runMessage(id, mainPath, files))
 
 fun isOutdated(id) =
@@ -109,13 +106,14 @@ fun isOutdated(id) =
     else false
 
 fun handleVmConsole(kind, logMethod, payload) =
+  // Dynamic selection on declared module `console` is rejected by codegen.
   globalThis.console.(logMethod)("[Execution]", ...payload)
   if consolePanel() is
     ~null as panel do panel.log(kind, ...payload)
 
 fun handleWorkerMessage(execution, id, mainPath, event) =
   if isOutdated(id) then
-    globalThis.console.error("Received message from outdated worker, terminating it.")
+    console.error("Received message from outdated worker, terminating it.")
     execution.worker.terminate()
   else
     let messageData = event.data
@@ -123,23 +121,23 @@ fun handleWorkerMessage(execution, id, mainPath, event) =
     let payload = messageData.payload
     if
       kind === "ready" then
-        globalThis.console.log("[VM]", "Ready to run.")
+        console.log("[VM]", "Ready to run.")
         set
           execution.isRunning = true
-          execution.startTime = globalThis.Date.now()
+          execution.startTime = Date.now()
         dispatchStatusChange("running", null)
         run(execution, id, mainPath)
-      kind === "log" then globalThis.console.log("[VM]", payload)
+      kind === "log" then console.log("[VM]", payload)
       kind === "error" then
-        globalThis.console.error("[VM]", payload)
+        console.error("[VM]", payload)
         set execution.isRunning = false
         dispatchStatusChange("error", null)
       kind === "done" then
-        globalThis.console.log("[VM]", payload)
+        console.log("[VM]", payload)
         set execution.isRunning = false
         let runningTime = if
-          isAbsent(execution.startTime) then null
-          else globalThis.Date.now() - execution.startTime
+          execution.startTime is Absent then null
+          else Date.now() - execution.startTime
         dispatchStatusChange("done", runningTime)
       kind === "console.log" then handleVmConsole("log", "log", payload)
       kind === "console.error" then handleVmConsole("error", "error", payload)
@@ -147,13 +145,13 @@ fun handleWorkerMessage(execution, id, mainPath, event) =
       else ()
 
 fun handleWorkerError(execution, event) =
-  globalThis.console.error("[Worker error event]", workerErrorDetails(event))
+  console.error("[Worker error event]", workerErrorDetails(event))
   set execution.isRunning = false
   dispatchStatusChange("fatal", null)
   if consolePanel() is
     ~null as panel do
       let message = if
-        isAbsent(event.message) then "Unknown error"
+        event.message is Absent then "Unknown error"
         else event.message
       panel.log("error", "Worker Error: " + message)
       appendWorkerLocation(panel, event)
@@ -162,7 +160,7 @@ fun handleWorkerError(execution, event) =
     ~null as panel do panel.setOutput(workerErrorMessage(event))
 
 fun handleMessageError(execution, event) =
-  globalThis.console.error("[Worker message error]", event)
+  console.error("[Worker message error]", event)
   set execution.isRunning = false
   dispatchStatusChange("fatal", null)
   if consolePanel() is
@@ -174,10 +172,10 @@ fun cleanupPreviousExecution() =
   if
     latestExecution is null then true
     latestExecution is ~null as execution and execution.isRunning then
-      globalThis.console.log("The previous execution is still running. Stop it before starting a new one.")
+      console.log("The previous execution is still running. Stop it before starting a new one.")
       false
     latestExecution is ~null as execution then
-      globalThis.console.log("Clean up the previous execution.")
+      console.log("Clean up the previous execution.")
       execution.worker.terminate()
       set latestExecution = null
       true
@@ -186,8 +184,8 @@ fun cleanupPreviousExecution() =
 fun execute(mainPath) =
   if cleanupPreviousExecution() do
     clearConsolePanel()
-    globalThis.console.log("[VM] Starting new execution for " + mainPath)
-    let id = globalThis.Date.now().toString()
+    console.log("[VM] Starting new execution for " + mainPath)
+    let id = Date.now().toString()
     let execution = makeExecution(id)
     set latestExecution = execution
     set execution.worker.onmessage = event => handleWorkerMessage(execution, id, mainPath, event)
@@ -197,7 +195,7 @@ fun execute(mainPath) =
 fun terminate() =
   if latestExecution is
     ~null as execution and execution.isRunning do
-      globalThis.console.log("[VM] Terminating worker...")
+      console.log("[VM] Terminating worker...")
       execution.worker.terminate()
       set execution.isRunning = false
       dispatchStatusChange("aborted", null)

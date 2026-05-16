@@ -1,0 +1,4 @@
+module JS with...
+
+// MLscript does not currently accept `()` in pattern aliases.
+pattern Absent = null | undefined

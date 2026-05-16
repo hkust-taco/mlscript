@@ -1,3 +1,7 @@
+import "../common/JS.mls"
+
+open JS { Absent }
+
 module fs with...
 
 abstract class FsNode: FileNode | FolderNode
@@ -30,45 +34,35 @@ val fileTree = mut []
 
 let listeners = new Set()
 
-fun isAbsent(value) = if
-  value is null then true
-  value is undefined then true
-  value === () then true
-  else false
-
 fun objectOrEmpty(value) = if
-  value is null then new mut Object
-  value is undefined then new mut Object
-  value === () then new mut Object
+  value is Absent then new mut Object
   else value
 
 fun textOrEmpty(value) = if
-  value is null then ""
-  value is undefined then ""
-  value === () then ""
+  value is Absent then ""
   else value
 
 fun splitPath(path) =
   path.replace(new RegExp("^/"), "").split("/").filter((part, ...) => part !== "")
 
 fun timestamps() =
-  let now = globalThis.Date.now()
+  let now = Date.now()
   atime: now
   mtime: now
   ctime: now
   birthtime: now
 
 fun updateAccessTime(node) =
-  set node.atime = globalThis.Date.now()
+  set node.atime = Date.now()
 
 fun updateModifyTime(node) =
-  let now = globalThis.Date.now()
+  let now = Date.now()
   set
     node.mtime = now
     node.ctime = now
 
 fun updateChangeTime(node) =
-  set node.ctime = globalThis.Date.now()
+  set node.ctime = Date.now()
 
 fun makeEvent(kind, path, node) =
   let event = new mut Object
@@ -186,6 +180,11 @@ fun write(path, content) =
       notifyChange(makeEvent("write", path, node))
       true
     else false
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:534)
+//│ ╔══[COMPILATION ERROR] Name not found: createFile
+//│ ║  l.174: 	    null then createFile(path, content, force: true)
+//│ ╙──       	              ^^^^^^^^^^
 
 fun ensureFolders(parentPath) =
   let segments = parentPath.split("/")
@@ -197,6 +196,11 @@ fun ensureFolders(parentPath) =
     if pathExists(currentPath) is false do
       createFolder(currentPath, new mut Object)
     set i += 1
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:534)
+//│ ╔══[COMPILATION ERROR] Name not found: createFolder
+//│ ║  l.197: 	      createFolder(currentPath, new mut Object)
+//│ ╙──       	      ^^^^^^^^^^^^
 
 fun parentForNewFile(parentPath, options) =
   if
@@ -307,9 +311,7 @@ fun stat(path) =
 
 fun acceptsFile(predicate, path, node) =
   if
-    predicate is null then true
-    predicate is undefined then true
-    predicate === () then true
+    predicate is Absent then true
     typeof(predicate) === "function" then predicate(path, node)
     else false
 
@@ -350,13 +352,13 @@ fun getAttr(path, key) =
 fun removeAttr(path, key) =
   let node = findNode(path)
   if
-    node is (FileNode | FolderNode) as node and globalThis.Reflect.has(node.attrs, key) then
-      globalThis.Reflect.deleteProperty(node.attrs, key)
+    node is (FileNode | FolderNode) as node and Reflect.has(node.attrs, key) then
+      Reflect.deleteProperty(node.attrs, key)
       updateChangeTime(node)
       notifyAttr(path, node, key, undefined)
       true
     node is (FileNode | FolderNode) as node then
-      globalThis.Reflect.deleteProperty(node.attrs, key)
+      Reflect.deleteProperty(node.attrs, key)
       false
     else false
 
