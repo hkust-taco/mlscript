@@ -1,0 +1,105 @@
+import "https://esm.sh/codemirror@6.0.1" { EditorView, basicSetup }
+import "https://esm.sh/@codemirror/lang-javascript@6.2.4" { javascript }
+import "https://esm.sh/@codemirror/language@6.11.3" { StreamLanguage }
+import "https://esm.sh/@uiw/codemirror-theme-vscode" { vscodeLight as theme }
+import "./Highlight.mls"
+import "../filesystem/fs.mls"
+
+module editor with...
+
+fun rootRule() =
+  let rule = new mut Object
+  set
+    rule.height = "100%"
+    rule.fontSize = "14px"
+  rule
+
+fun scrollerRule() =
+  let rule = new mut Object
+  set rule.overflow = "auto"
+  rule
+
+fun contentRule() =
+  let rule = new mut Object
+  set
+    rule.caretColor = "var(--sand-12)"
+    rule.fontFamily = "'Google Sans Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace"
+  rule
+
+fun cursorRule() =
+  let rule = new mut Object
+  set rule.borderLeftColor = "var(--sand-12)"
+  rule
+
+fun guttersRule() =
+  let rule = new mut Object
+  set
+    rule.backgroundColor = "var(--sand-2)"
+    rule.color = "var(--sand-11)"
+    rule.borderRight = "1px solid var(--sand-6)"
+  rule
+
+fun activeLineGutterRule() =
+  let rule = new mut Object
+  set rule.backgroundColor = "var(--sand-2)"
+  rule
+
+fun editorThemeSpec() =
+  let spec = new mut Object
+  set
+    spec.("&") = rootRule()
+    spec.(".cm-scroller") = scrollerRule()
+    spec.(".cm-content") = contentRule()
+    spec.(".cm-lineNumbers") = contentRule()
+    spec.(".cm-cursor") = cursorRule()
+    spec.(".cm-editor .cm-gutters") = guttersRule()
+    spec.(".cm-activeLineGutter") = activeLineGutterRule()
+  spec
+
+fun languageExtensions(extension) =
+  let extensions = mut [theme]
+  if
+    extension === "mjs" then
+      extensions.push(javascript())
+    extension === "js" then
+      extensions.push(javascript())
+    extension === "mls" then
+      extensions.push(StreamLanguage.define(Highlight.mlscript))
+    else ()
+  extensions
+
+fun readonlyExtension(isReadonly) =
+  if isReadonly then EditorView.editable.of(false) else []
+
+fun saveOnChange(filePath, isReadonly) =
+  EditorView.updateListener.of(update =>
+    if
+      isReadonly then ()
+      update.docChanged then
+        let newContent = update.state.doc.toString()
+        fs.write(filePath, newContent)
+      else ()
+  )
+
+fun editorExtensions(filePath, extension, isReadonly) =
+  let extensions = mut [basicSetup]
+  languageExtensions(extension).forEach((extension, ...) =>
+    extensions.push(extension)
+  )
+  extensions.push(saveOnChange(filePath, isReadonly))
+  extensions.push(readonlyExtension(isReadonly))
+  extensions.push(EditorView.theme(editorThemeSpec()))
+  extensions
+
+fun editorOptions(container, initialContent, filePath, extension, isReadonly) =
+  let options = new mut Object
+  set
+    options.doc = initialContent
+    options.extensions = editorExtensions(filePath, extension, isReadonly)
+    options.parent = container
+  options
+
+fun createEditor(container, initialContent, filePath, extension, isReadonly) =
+  Reflect.construct(EditorView, [
+    editorOptions(container, initialContent, filePath, extension, isReadonly),
+  ])

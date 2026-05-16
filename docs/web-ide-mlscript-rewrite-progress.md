@@ -11,14 +11,14 @@ This tracker follows `docs/web-ide-mlscript-rewrite-workflow.md`.
 - [x] `components/TreeNode.js` -> `components/TreeNode.mls`
 - [x] `components/FileExplorer.js` -> `components/FileExplorer.mls`
 - [x] `components/ReservedPanel.js` -> `components/ReservedPanel.mls`
-- [ ] `editor/editor.js`
+- [x] `editor/editor.js` -> `editor/editor.mls`
 - [ ] `components/EditorPanel.js`
 - [ ] `execution/worker.js`
 - [ ] `main.js`
 
 ## Current Step
 
-Next: `editor/editor.js`.
+Next: `components/EditorPanel.js`.
 
 ## Verification
 
@@ -36,3 +36,5 @@ Next: `editor/editor.js`.
 - Headless browser smoke from `http://127.0.0.1:8130/index.html?fileexplorer=20260517a` loaded `FileExplorer.mjs`, did not load `FileExplorer.js`, toggled sidebar collapse, created and opened a new file through the UI, showed and hid the tree tooltip, compiled `main.mls`, and executed the default program.
 - `timeout 300s sbt "hkmc2PackagesTest/testOnly hkmc2.PackageTestRunner -- -z web-ide"` passed after `ReservedPanel.mls`.
 - Headless browser smoke from `http://127.0.0.1:8131/index.html?reserved-panel=1778962322` loaded `ReservedPanel.mjs`, did not load `ReservedPanel.js`, compiled and executed `main.mls`, rendered diagnostics, and exercised goto, diagnostic toggle, file toggle, collapse-all, and panel collapse behavior.
+- `timeout 300s sbt "hkmc2PackagesTest/testOnly hkmc2.PackageTestRunner -- -z web-ide"` passed after `editor/editor.mls`.
+- Headless browser smoke from `http://127.0.0.1:8131/index.html?editor=1778962677` loaded `editor.mjs`, did not load `editor.js`, created mutable CodeMirror editor views, autosaved edits, compiled and executed edited `main.mls`, and kept readonly std-file edits from persisting.

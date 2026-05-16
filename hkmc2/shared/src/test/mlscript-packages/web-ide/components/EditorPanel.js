@@ -1,5 +1,5 @@
 import fs from "../filesystem/fs.mjs";
-import { createEditor } from "../editor/editor.js";
+import editor from "../editor/editor.mjs";
 import "./FileTooltip.mjs";
 
 // Editor Panel Custom Element
@@ -299,7 +299,7 @@ class EditorPanel extends HTMLElement {
       const nodeInfo = fs.stat(filePath);
       const isReadonly = !!nodeInfo?.readonly;
       const attrs = nodeInfo?.attrs || {};
-      const editorView = createEditor(
+      const editorView = editor.createEditor(
         editorDiv,
         initialContent,
         filePath,
