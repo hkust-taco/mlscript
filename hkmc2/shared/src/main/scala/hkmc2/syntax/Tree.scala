@@ -234,31 +234,29 @@ enum Tree extends AutoLocated:
   def showDbg: Str = toString // TODO
   
   lazy val desugared: Tree =
+    
     object LabelClause:
       def unapply(tree: Tree): Opt[(Ident, Tree)] = tree match
         case InfixApp(labelId: Ident, Keywrd(Keyword.`:`), body) => S(labelId -> body)
         case _ => N
     
-    def mkImplicitDoLabel(tree: Tree): Tree =
-      PrefixApp(new Keywrd(Keyword.`do`).withLocOf(tree), tree).withLocOf(tree)
-    
-    def rewriteImplicitSplitDoBody(tree: Tree): Tree = tree match
-      case LabelClause(_, _) =>
-        mkImplicitDoLabel(tree)
-      case block @ Block(stmts) =>
-        block.withStmts(stmts.mapConserve:
-          case labelClause @ LabelClause(_, _) => mkImplicitDoLabel(labelClause)
-          case stmt => stmt
-        )
-      case _ => tree
-    
     def rewriteImplicitSplitLabels(tree: Tree): Tree = tree match
       case stmt @ InfixApp(lhs, kw @ Keywrd(Keyword.`do`), rhs) =>
-        val rhs2 = rewriteImplicitSplitDoBody(rhs)
-        if rhs2 is rhs then stmt else InfixApp(lhs, kw, rhs2).withLocOf(stmt)
+        def mkImplicitDoLabel(tree: Tree): Tree =
+          PrefixApp(new Keywrd(Keyword.`do`).withLocOf(kw), tree)
+        val rhs2 = rhs match
+          case LabelClause(_, _) =>
+            mkImplicitDoLabel(rhs)
+          case block @ Block(stmts) =>
+            block.withStmts(stmts.mapConserve:
+              case labelClause @ LabelClause(_, _) => mkImplicitDoLabel(labelClause)
+              case stmt => stmt
+            )
+          case _ => return stmt
+        InfixApp(lhs, kw, rhs2).withLocOf(stmt)
       case block @ Block(stmts) =>
         block.withStmts(stmts.mapConserve:
-          case stmt @ InfixApp(_, Keywrd(Keyword.`do`), _) => rewriteImplicitSplitLabels(stmt)
+          case stmt @ InfixApp(_, kw, _) => rewriteImplicitSplitLabels(stmt)
           case stmt => stmt
         )
       case _ => tree
@@ -293,7 +291,7 @@ enum Tree extends AutoLocated:
           val nestedClause = prefix.foldRight[Tree](InfixApp(lastId, Keywrd(Keyword.`:`), lastBody)):
             case ((labelId, labelBody), innerClause) =>
               val nestedDo = PrefixApp(new Keywrd(Keyword.`do`).withLocOf(kw), innerClause)
-              val newLabelBody = labelBody.appended(nestedDo)
+              val newLabelBody = labelBody :+ nestedDo
               InfixApp(labelId, Keywrd(Keyword.`:`), newLabelBody)
           PrefixApp(kw, nestedClause).withLocOf(this)
         case N => this

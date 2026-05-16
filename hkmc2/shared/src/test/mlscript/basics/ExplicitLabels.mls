@@ -7,6 +7,12 @@ do exit:
 //│ = 42
 
 
+do exit: exit.break(42)
+//│ = 42
+
+do {}
+
+
 let i = 0 in do loop:
   if i >= 3 do loop.break(i)
   set i += 1
@@ -25,7 +31,7 @@ let i = 0 in do outLoop:
 :e
 missing.break(1)
 //│ ╔══[COMPILATION ERROR] Name not found: missing
-//│ ║  l.26: 	missing.break(1)
+//│ ║  l.32: 	missing.break(1)
 //│ ╙──      	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -33,7 +39,7 @@ missing.break(1)
 :e
 missing.continue
 //│ ╔══[COMPILATION ERROR] Name not found: missing
-//│ ║  l.34: 	missing.continue
+//│ ║  l.40: 	missing.continue
 //│ ╙──      	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -42,7 +48,7 @@ missing.continue
 do lbl:
   lbl.continue(1)
 //│ ╔══[COMPILATION ERROR] Label continue does not take arguments.
-//│ ║  l.43: 	  lbl.continue(1)
+//│ ║  l.49: 	  lbl.continue(1)
 //│ ╙──      	  ^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -51,7 +57,7 @@ do lbl:
 do lbl:
   lbl.break(1, 2)
 //│ ╔══[COMPILATION ERROR] Label break expects at most one argument.
-//│ ║  l.52: 	  lbl.break(1, 2)
+//│ ║  l.58: 	  lbl.break(1, 2)
 //│ ╙──      	  ^^^^^^^^^^^^^^^
 
 
@@ -59,7 +65,7 @@ do lbl:
 lbl:
   lbl.break(1)
 //│ ╔══[COMPILATION ERROR] Name not found: lbl
-//│ ║  l.60: 	  lbl.break(1)
+//│ ║  l.66: 	  lbl.break(1)
 //│ ╙──      	  ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ lbl = undefined
@@ -138,6 +144,6 @@ do
   only:
     only.break(x)
 //│ ╔══[COMPILATION ERROR] Name not found: only
-//│ ║  l.139: 	    only.break(x)
+//│ ║  l.145: 	    only.break(x)
 //│ ╙──       	    ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
