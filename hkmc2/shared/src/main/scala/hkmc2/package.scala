@@ -7,9 +7,10 @@ import hkmc2.utils.*
 import hkmc2.Message.MessageContext
 
 
-extension [A](x: A)
-  infix inline def givenIn[R](inline k: A ?=> R) = k(using x)
-  infix inline def ne_::(xs: Ls[A]): NELs[A] = new ::(x, xs)
+extension [A](a: A)
+  infix inline def givenIn[R](inline k: A ?=> R) = k(using a)
+  def abbreviate: Str = a.toString.truncate(100, "[...]")
+  infix inline def ne_::(xs: Ls[A]): NELs[A] = new ::(a, xs)
 
 extension [A](xs: Ls[A])
   def ne_! : NELs[A] = xs match

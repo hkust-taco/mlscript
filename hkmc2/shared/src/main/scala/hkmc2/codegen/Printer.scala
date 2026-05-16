@@ -55,7 +55,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
     case Begin(sub, rest) =>
       doc"begin #{  # ${print(sub)}; #}  # ${print(rest)}"
     case TryBlock(sub, finallyDo, rest) =>
-      doc"try #{  # ${print(sub)} #  #} finally #  #{ ${print(finallyDo)}; #  #} ${print(rest)}"
+      doc"try #{  # ${print(sub)} #}  # finally #{  # ${print(finallyDo)}; #  #} ${print(rest)}"
     case Assign(_: NoSymbol, rhs, rest) =>
       doc"do ${print(rhs)}; # ${print(rest)}"
     case Assign(lhs, rhs, rest) =>
@@ -150,7 +150,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
     if arg.spread.nonEmpty
       then doc"...${doc}"
       else doc
-
+  
   def print(value: Value)(using Scope): Document = value match
     case Value.Ref(l: InnerSymbol, N) => doc"${print(l)}.this"
     case Value.Ref(l, N) => print(l)

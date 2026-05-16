@@ -27,3 +27,18 @@ Never use default arguments in core business logic. Default arguments should be 
 
 Do not remove existing `end` markers.
 
+
+## Editing Style
+
+Never strip indentation whitespace.
+
+Empty lines in this project are usually significant.
+They help to visually identify blocks and groups of blocks of code
+(multiple empty lines separates groups of blocks hierarchically).
+You should _never_ remove pre-existing empty lines as part of your changes;
+this includes empty lines at the very end of files,
+which are left for easier future editing by programmers.
+
+**Important:** When working on a PR, make sure to check the diff of the whole PR (including all commits)
+to ensure that no needless empty-line changes are included in the PR. If you find any, please remove them.
+

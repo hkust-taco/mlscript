@@ -35,15 +35,12 @@ x `=>
   print(x)
   x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x1, tmp6, tmp7, arr2;
-//│ tmp6 = globalThis.Object.freeze(new Term.Symbol("x"));
-//│ x1 = globalThis.Object.freeze(new Term.Ref(tmp6));
+//│ let x1, tmp5, arr2;
+//│ tmp5 = globalThis.Object.freeze(new Term.Symbol("x"));
+//│ x1 = globalThis.Object.freeze(new Term.Ref(tmp5));
 //│ Predef.print(x1);
-//│ arr2 = globalThis.Object.freeze([
-//│   tmp6
-//│ ]);
-//│ tmp7 = x1;
-//│ globalThis.Object.freeze(new Term.Lam(arr2, tmp7))
+//│ arr2 = globalThis.Object.freeze([ tmp5 ]);
+//│ globalThis.Object.freeze(new Term.Lam(arr2, x1))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Ref(Symbol("x"))
 //│ = Lam([Symbol("x")], Ref(Symbol("x")))
@@ -78,20 +75,19 @@ f`(`0)
 :sjs
 `if `true then `true else `false
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut, tmp28, tmp29, tmp30, tmp31, tmp32, tmp33, tmp34, tmp35, tmp36, tmp37, tmp38;
-//│ tmp28 = globalThis.Object.freeze(new Term.Symbol("scrut"));
-//│ scrut = globalThis.Object.freeze(new Term.Ref(tmp28));
-//│ tmp29 = globalThis.Object.freeze(new Term.Lit(true));
-//│ tmp32 = scrut;
-//│ tmp33 = globalThis.Object.freeze(new Term.LitPattern(true));
-//│ tmp38 = globalThis.Object.freeze(new Term.Lit(true));
-//│ tmp34 = globalThis.Object.freeze(new Term.Else(tmp38));
-//│ tmp35 = globalThis.Object.freeze(new Term.Branch(tmp32, tmp33, tmp34));
-//│ tmp37 = globalThis.Object.freeze(new Term.Lit(false));
-//│ tmp36 = globalThis.Object.freeze(new Term.Else(tmp37));
-//│ tmp30 = globalThis.Object.freeze(new Term.Cons(tmp35, tmp36));
-//│ tmp31 = globalThis.Object.freeze(new Term.Let(tmp28, tmp29, tmp30));
-//│ globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp31))
+//│ let scrut, tmp23, tmp24, tmp25, tmp26, tmp27, tmp28, tmp29, tmp30, tmp31, tmp32;
+//│ tmp23 = globalThis.Object.freeze(new Term.Symbol("scrut"));
+//│ scrut = globalThis.Object.freeze(new Term.Ref(tmp23));
+//│ tmp24 = globalThis.Object.freeze(new Term.Lit(true));
+//│ tmp27 = globalThis.Object.freeze(new Term.LitPattern(true));
+//│ tmp32 = globalThis.Object.freeze(new Term.Lit(true));
+//│ tmp28 = globalThis.Object.freeze(new Term.Else(tmp32));
+//│ tmp29 = globalThis.Object.freeze(new Term.Branch(scrut, tmp27, tmp28));
+//│ tmp31 = globalThis.Object.freeze(new Term.Lit(false));
+//│ tmp30 = globalThis.Object.freeze(new Term.Else(tmp31));
+//│ tmp25 = globalThis.Object.freeze(new Term.Cons(tmp29, tmp30));
+//│ tmp26 = globalThis.Object.freeze(new Term.Let(tmp23, tmp24, tmp25));
+//│ globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp26))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = IfLike(
 //│   If,
@@ -125,7 +121,7 @@ x `=> `if x `=== `0.0 then `1.0 else x
 :fixme // TODO: error doesn't make much sense (see https://github.com/hkust-taco/mlscript/pull/368#discussion_r2635074722)
 x `=> `if x `== `0.0 then `1.0 else x
 //│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.equals is only allowed in compiled files due to the lack of `import.meta` in REPL mode.
-//│ ║  l.126: 	x `=> `if x `== `0.0 then `1.0 else x
+//│ ║  l.122: 	x `=> `if x `== `0.0 then `1.0 else x
 //│ ╙──       	             ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -133,7 +129,7 @@ x `=> `if x `== `0.0 then `1.0 else x
 :ge
 `id`(`42)
 //│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.id is only allowed in compiled files due to the lack of `import.meta` in REPL mode.
-//│ ║  l.134: 	`id`(`42)
+//│ ║  l.130: 	`id`(`42)
 //│ ╙──       	 ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

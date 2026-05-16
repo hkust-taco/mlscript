@@ -1,0 +1,40 @@
+:js
+
+
+:soir
+let emptyItemCount = 0
+let c() = (set emptyItemCount += 1)
+in
+  c()
+  if
+    emptyItemCount > 0 then
+      let emptyItemCount' = emptyItemCount
+      set emptyItemCount = 0
+      print(emptyItemCount')
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let emptyItemCount⁰, c⁰;
+//│ set emptyItemCount⁰ = 0;
+//│ set emptyItemCount⁰ = 1;
+//│ match true
+//│   true =>
+//│     set emptyItemCount⁰ = 0;
+//│     Predef⁰.print⁰(1)
+//│   else
+//│     throw new globalThis⁰.Error⁰("match error")
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 1
+//│ emptyItemCount = 0
+
+
+:noInline
+let emptyItemCount = 1
+fun next() =
+  let emptyItemCount' = emptyItemCount
+  set emptyItemCount = 0
+  print(emptyItemCount')
+next()
+//│ > 1
+//│ emptyItemCount = 0
+
+

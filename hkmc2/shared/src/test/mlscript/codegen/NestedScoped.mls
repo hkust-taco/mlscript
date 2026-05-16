@@ -73,7 +73,7 @@ foo(1)
 
 
 // * Not flattened: in conditional arms
-:sjs
+:sir
 fun f() =
   if true then
     scope.locally of (
@@ -83,15 +83,22 @@ fun f() =
   else
     let b = 5
     b + 9
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f;
-//│ f = function f() {
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f⁰;
+//│ define f⁰ as fun f¹() {
 //│   let scrut, b;
-//│   scrut = true;
-//│   if (scrut === true) { let a; a = 4; return a + 4 }
-//│   b = 5;
-//│   return b + 9;
+//│   set scrut = true;
+//│   match scrut
+//│     true =>
+//│       let a;
+//│       set a = 4;
+//│       return +⁰(a, 4)
+//│     else
+//│       set b = 5;
+//│       return +⁰(b, 9)
+//│   end
 //│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -111,13 +118,7 @@ fun f() =
       b + 9
     )
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f1;
-//│ f1 = function f() {
-//│   let scrut, a;
-//│   scrut = false;
-//│   if (scrut === true) { a = 4; return a + 4 }
-//│   { let b; b = 5; return b + 9; }
-//│ };
+//│ let f1; f1 = function f() { if (false === true) { return 8 } return 14; };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -153,7 +154,7 @@ fun foo(x, y) =
 :ge
 scope.locally()
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.154: 	scope.locally()
+//│ ║  l.155: 	scope.locally()
 //│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -161,7 +162,7 @@ scope.locally()
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.162: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
+//│ ║  l.163: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -170,10 +171,10 @@ scope.locally of (let x = 1 in x), (let y = 2 in y)
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.171: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.172: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	                                                 ^
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.171: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.172: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -209,13 +210,12 @@ fun f(x) =
     )
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f2;
-//│ f2 = function f(x4) {
-//│   if (x4 === true) {
-//│     let z2, z3;
-//│     z3 = function z() {
+//│ f2 = function f(x) {
+//│   if (x === true) {
+//│     let z2;
+//│     z2 = function z() {
 //│       return 3
 //│     };
-//│     z2 = z3;
 //│     return z2
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -246,8 +246,8 @@ fun f(x) =
     () => 4
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f3;
-//│ f3 = function f(x5) {
-//│   if (x5 === true) {
+//│ f3 = function f(x1) {
+//│   if (x1 === true) {
 //│     let lambda1;
 //│     lambda1 = (undefined, function () {
 //│       return 4

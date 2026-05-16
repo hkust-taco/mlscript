@@ -80,14 +80,11 @@ t.01
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.79: 	!(1,2)
 //│ ╙──      	  ^
-//│ > try { block$res15 = 2.value; undefined; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                     ^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
 
 :ge
 (!)(1,2)
 //│ ╔══[COMPILATION ERROR] Builtin '!' is not a binary operator
-//│ ║  l.88: 	(!)(1,2)
+//│ ║  l.85: 	(!)(1,2)
 //│ ╙──      	^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot call non-binary builtin symbol '!'
 //│ ═══[RUNTIME ERROR] Error: Cannot call non-binary builtin symbol '!'
@@ -102,10 +99,10 @@ t.01
 :fixme
 !1
 //│ ╔══[PARSE ERROR] Expected an expression; found dynamic selector instead
-//│ ║  l.103: 	!1
+//│ ║  l.100: 	!1
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found dynamic selector instead
-//│ ║  l.103: 	!1
+//│ ║  l.100: 	!1
 //│ ╙──       	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

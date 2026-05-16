@@ -44,7 +44,7 @@ if [0, 0] is P(a, Bit, b) then "values: " + a + ", " + b
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'a'
 //│ ║  l.43: 	if [0, 0] is P(a, Bit, b) then "values: " + a + ", " + b
 //│ ╙──      	                                            ^
-//│ = "values: 0, 0"
+//│ ═══[RUNTIME ERROR] ReferenceError: a is not defined
 
 pattern S(a, pattern Q, b) = [Q as a, Q as b]
 
@@ -60,8 +60,9 @@ fun f(x) = if x is S(Bit, a, b) then [a, b]
 //│ ║  l.58: 	fun f(x) = if x is S(Bit, a, b) then [a, b]
 //│ ╙──      	                                      ^
 
+:re
 f([0, 0])
-//│ = [0, 0]
+//│ ═══[RUNTIME ERROR] ReferenceError: a is not defined
 
 // The last thing to note is that if there is only one pattern parameter, it
 // will not be put into a tuple.
@@ -84,7 +85,7 @@ if 0 is Q'(Bit) as y then y
 // Similarly, it cannot be written like this:
 if 0 is Q'(Bit, y) then y
 //│ ╔══[COMPILATION ERROR] Expected zero extraction arguments, but found one argument.
-//│ ║  l.85: 	if 0 is Q'(Bit, y) then y
+//│ ║  l.86: 	if 0 is Q'(Bit, y) then y
 //│ ╙──      	           ^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -97,7 +98,7 @@ pattern CaptureBit(value) = Bit as value
 // discarded unless the user makes the discard explicit with `as _`.
 if 0 is CaptureBit(ZeroToOne) then "discarded implicitly"
 //│ ╔══[WARNING] This extraction argument's transformation result is discarded by pattern `CaptureBit`.
-//│ ║  l.98: 	if 0 is CaptureBit(ZeroToOne) then "discarded implicitly"
+//│ ║  l.99: 	if 0 is CaptureBit(ZeroToOne) then "discarded implicitly"
 //│ ║        	                   ^^^^^^^^^
 //│ ╙── Write `... as _` to discard it explicitly.
 //│ = "discarded implicitly"

@@ -56,14 +56,6 @@ class MLsCompiler
   
   
   
-  // TODO adapt logic
-  given DebugPrinter = new DebugPrinter
-  val etl = new TraceLogger{override def doTrace: Bool = false}
-  val ltl = new TraceLogger{override def doTrace: Bool = false}
-  // val ltl = new TraceLogger{override def doTrace: Bool = true}
-  val rtl = new TraceLogger{override def doTrace: Bool = false}
-  
-  
   var dbgParsing = false
   var dbgElab = false
   
@@ -82,6 +74,20 @@ class MLsCompiler
     
     given Elaborator.State = new Elaborator.State:
       override def dbg: Bool = dbgElab
+    
+    // TODO adapt logic
+    given SymbolPrinter = new SymbolPrinter(
+      Scope.empty(Scope.Cfg.default.copy(
+        escapeChars = false,
+        useSuperscripts = true,
+        includeZero = true,
+      ))
+    )
+    val etl = new TraceLogger{override def doTrace: Bool = false}
+    val ltl = new TraceLogger{override def doTrace: Bool = false}
+    val dtl = new TraceLogger{override def doTrace: Bool = false}
+    // val ltl = new TraceLogger{override def doTrace: Bool = true}
+    val rtl = new TraceLogger{override def doTrace: Bool = false}
     
     val preludeParse = ParserSetup(preludeFile, dbgParsing)
     val mainParse = ParserSetup(file, dbgParsing)
@@ -119,13 +125,15 @@ class MLsCompiler
           with codegen.LoweringSelSanityChecks
       val jsb = ltl.givenIn:
         codegen.js.JSBuilder()
-      val le_0 = low.program(blk)
+      val lowered = low.program(blk)
+      var optimized = lowered
       val nme = file.baseName
       val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
-      val le_1 = ltl.givenIn:
-        codegen.BlockSimplifier(exportedSymbol.toSet)(le_0)
-      val le_2 = ltl.givenIn:
-        codegen.DeadParamElim(le_1)
+      optimized =
+        val printer = (p: codegen.Program) => p.showAsTree // TODO: proper printing like in diff-tests
+        codegen.BlockSimplifier(exportedSymbol.toSet, dtl, printer)(optimized)
+      ltl.givenIn:
+        optimized = codegen.DeadParamElim(optimized)
       val baseScp: utils.Scope =
         utils.Scope.empty(utils.Scope.Cfg.default)
       // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.
@@ -133,7 +141,7 @@ class MLsCompiler
       baseScp.addToBindings(Elaborator.State.importSymbol, "import", shadow = false)
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
-        jsb.program(le_2, exportedSymbol, outputWd)
+        jsb.program(optimized, exportedSymbol, outputWd)
       val jsStr = je.stripBreaks.mkString(100)
       cctx.fs.write(out, jsStr)
       }

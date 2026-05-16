@@ -155,7 +155,7 @@ if true do
   h1.perform(())
 str
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let str, scrut, h11, handleBlock$9, Handler$h2$perform1, Handler$h2$3, handleBlock$10, Handler$h1$perform1, Handler$h1$3, handleBlock$$2, Handler$h2$perform$1, Handler$h1$perform$1;
+//│ let str, h11, handleBlock$9, Handler$h2$perform1, Handler$h2$3, handleBlock$10, Handler$h1$perform1, Handler$h1$3, handleBlock$$2, Handler$h2$perform$1, Handler$h1$perform$1;
 //│ runtime.resetEffects();
 //│ Handler$h1$perform$1 = function Handler$h1$perform$(arg) {
 //│   return (k) => {
@@ -313,8 +313,7 @@ str
 //│   }
 //│ });
 //│ str = "";
-//│ scrut = true;
-//│ if (scrut === true) {
+//│ if (true === true) {
 //│   h11 = new Handler$h1$3();
 //│   runtime.enterHandleBlock(h11, handleBlock$10);
 //│   if (runtime.curEffect === null) { str } else { runtime.topLevelEffect(false); str }

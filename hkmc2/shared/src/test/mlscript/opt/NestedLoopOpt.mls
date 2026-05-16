@@ -1,0 +1,260 @@
+:js
+
+
+// * Assignments from an inner loop can affect the outer loop condition.
+:soir
+fun innerUpdatesOuterCondition() =
+  let x = 2
+  while x > 0 do
+    let y = 1
+    while y > 0 do
+      set x -= 1
+      set y -= 1
+  x
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let innerUpdatesOuterCondition⁰;
+//│ define innerUpdatesOuterCondition⁰ as fun innerUpdatesOuterCondition¹() {
+//│   let x;
+//│   set x = 2;
+//│   loop lbl:
+//│     let scrut, y;
+//│     set scrut = >⁰(x, 0);
+//│     match scrut
+//│       true =>
+//│         set y = 1;
+//│         loop lbl1:
+//│           let scrut1, tmp, tmp1;
+//│           set scrut1 = >⁰(y, 0);
+//│           match scrut1
+//│             true =>
+//│               set tmp = -⁰(x, 1);
+//│               set x = tmp;
+//│               set tmp1 = -⁰(y, 1);
+//│               set y = tmp1;
+//│               continue lbl1
+//│             else
+//│               end
+//│           end
+//│         continue lbl
+//│       else
+//│         end
+//│     end
+//│   return x
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+innerUpdatesOuterCondition()
+//│ = 0
+
+
+// * The outer body must account for inner-loop zero-iteration and loop-back states.
+:soir
+fun nestedLoopBackPost(flag) =
+  let x = 1
+  while flag do
+    let inner = flag
+    while inner do
+      set x = 2
+      set inner = false
+    print(x)
+    set flag = false
+  x
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let nestedLoopBackPost⁰;
+//│ define nestedLoopBackPost⁰ as fun nestedLoopBackPost¹(flag) {
+//│   let x;
+//│   set x = 1;
+//│   loop lbl:
+//│     let inner;
+//│     match flag
+//│       true =>
+//│         set inner = flag;
+//│         loop lbl1:
+//│           match inner
+//│             true =>
+//│               set x = 2;
+//│               set inner = false;
+//│               continue lbl1
+//│             else
+//│               end
+//│           end
+//│         do Predef⁰.print⁰(x);
+//│         set flag = false;
+//│         continue lbl
+//│       else
+//│         end
+//│     end
+//│   return x
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+print(nestedLoopBackPost(false))
+print(nestedLoopBackPost(true))
+//│ > 1
+//│ > 2
+//│ > 2
+
+
+// * A returning path in an inner loop must not leak its assignment into the outer loop exit.
+:soir
+fun innerReturnDoesNotPolluteOuterExit(flag) =
+  let x = 1
+  while flag do
+    while true do
+      set x = 2
+      return x
+    set flag = false
+  x
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let innerReturnDoesNotPolluteOuterExit⁰;
+//│ define innerReturnDoesNotPolluteOuterExit⁰ as fun innerReturnDoesNotPolluteOuterExit¹(flag) {
+//│   let x;
+//│   set x = 1;
+//│   loop lbl:
+//│     match flag
+//│       true =>
+//│         match true
+//│           true =>
+//│             set x = 2;
+//│             return 2
+//│           else
+//│             set flag = false;
+//│             continue lbl
+//│         end
+//│       else
+//│         end
+//│     end
+//│   return x
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+print(innerReturnDoesNotPolluteOuterExit(false))
+print(innerReturnDoesNotPolluteOuterExit(true))
+//│ > 1
+//│ > 2
+
+
+// * Inner and outer loops can both skip, so the final value must merge several paths.
+:soir
+fun nestedInnerMaySkip(flag, innerFlag) =
+  let x = 1
+  while flag do
+    while innerFlag do
+      set x = 2
+      set innerFlag = false
+    set flag = false
+  x
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let nestedInnerMaySkip⁰;
+//│ define nestedInnerMaySkip⁰ as fun nestedInnerMaySkip¹(flag, innerFlag) {
+//│   let x;
+//│   set x = 1;
+//│   loop lbl:
+//│     match flag
+//│       true =>
+//│         loop lbl1:
+//│           match innerFlag
+//│             true =>
+//│               set x = 2;
+//│               set innerFlag = false;
+//│               continue lbl1
+//│             else
+//│               end
+//│           end
+//│         set flag = false;
+//│         continue lbl
+//│       else
+//│         end
+//│     end
+//│   return x
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+print(nestedInnerMaySkip(false, false))
+print(nestedInnerMaySkip(true, false))
+print(nestedInnerMaySkip(true, true))
+//│ > 1
+//│ > 1
+//│ > 2
+
+
+// * Label-based continue should preserve path-sensitive value propagation in nested control flow.
+:soir
+fun labelContinueFiltersPath(limit) =
+  let i = 0
+  let acc = 0
+  do loop:
+    if i >= limit do loop.break(acc)
+    if i % 2 == 0 do
+      set i += 1
+      loop.continue
+    set acc += 10
+    set i += 1
+    loop.continue
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let labelContinueFiltersPath⁰;
+//│ define labelContinueFiltersPath⁰ as fun labelContinueFiltersPath¹(limit) {
+//│   let i, acc, loop$result, scrut, scrut1, tmp, tmp1, tmp2, tmp3;
+//│   set i = 0;
+//│   set acc = 0;
+//│   loop loop:
+//│     set scrut = >=⁰(i, limit);
+//│     match scrut
+//│       true =>
+//│         set loop$result = acc;
+//│         end
+//│       else
+//│         set tmp = %⁰(i, 2);
+//│         set scrut1 = Predef⁰.equals⁰(tmp, 0);
+//│         match scrut1
+//│           true =>
+//│             set tmp1 = +⁰(i, 1);
+//│             set i = tmp1;
+//│             continue loop
+//│           else
+//│             set tmp2 = +⁰(acc, 10);
+//│             set acc = tmp2;
+//│             set tmp3 = +⁰(i, 1);
+//│             set i = tmp3;
+//│             continue loop
+//│         end
+//│     end
+//│   return loop$result
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+print(labelContinueFiltersPath(0))
+print(labelContinueFiltersPath(1))
+print(labelContinueFiltersPath(2))
+print(labelContinueFiltersPath(3))
+print(labelContinueFiltersPath(4))
+//│ > 0
+//│ > 0
+//│ > 10
+//│ > 10
+//│ > 20
+
+
+// * Breaking from nested loops to an outer label should compose with folded break values.
+fun nestedBreakCarriesFoldedValue(limit) =
+  let i = 0
+  do done:
+    while true do
+      if i >= limit do done.break(100 + 23)
+      let j = 0
+      while true do
+        if j >= 2 do
+          set i += 1
+          done.continue
+        if i == 1 do done.break(i * 1000 + j)
+        set j += 1
+
+print(nestedBreakCarriesFoldedValue(1))
+print(nestedBreakCarriesFoldedValue(3))
+//│ > 123
+//│ > 1000

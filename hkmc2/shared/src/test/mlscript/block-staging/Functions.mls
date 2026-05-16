@@ -1,6 +1,7 @@
 :js
 :staging
 
+:noOpt // To expose the problem
 :fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)
 :checkIR
 staged module Expressions with
@@ -8,7 +9,7 @@ staged module Expressions with
     let x = 42
     x
 //│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
-//│ ║  l.8: 	    let x = 42
+//│ ║  l.9: 	    let x = 42
 //│ ╙──     	        ^
 //│ > fun ctor_() = ()
 //│ > fun lit() =
@@ -223,10 +224,10 @@ staged module LabelBreak with
     else 2
 //│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.Label.
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
-//│ ║  l.217: 	    let x = 1
+//│ ║  l.218: 	    let x = 1
 //│ ║         	        ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.217: 	    let x = 1
+//│ ║  l.218: 	    let x = 1
 //│ ╙──       	        ^
 //│ > fun ctor_() = ()
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
@@ -239,7 +240,7 @@ staged module A with
   fun g() = {1 : 2}
 //│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.AssignField
 //│ ╔══[COMPILATION ERROR] Other Results not supported in staged module: class hkmc2.codegen.Record
-//│ ║  l.239: 	  fun g() = {1 : 2}
+//│ ║  l.240: 	  fun g() = {1 : 2}
 //│ ╙──       	                 ^
 //│ > fun ctor_() =
 //│ >   x = C(1)

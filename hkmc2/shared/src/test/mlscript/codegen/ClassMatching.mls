@@ -9,12 +9,11 @@ object None
 :sjs
 if Some(0) is Some(x) then x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut, x, arg$Some$0$;
+//│ let scrut, arg$Some$0$;
 //│ scrut = Some1(0);
 //│ if (scrut instanceof Some1.class) {
 //│   arg$Some$0$ = scrut.value;
-//│   x = arg$Some$0$;
-//│   x
+//│   arg$Some$0$
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
@@ -27,11 +26,10 @@ let s = Some(0)
 if s is
   Some(x) then x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x1, arg$Some$0$1;
+//│ let arg$Some$0$1;
 //│ if (s instanceof Some1.class) {
 //│   arg$Some$0$1 = s.value;
-//│   x1 = arg$Some$0$1;
-//│   x1
+//│   arg$Some$0$1
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
@@ -70,22 +68,18 @@ if s is
 //│   throw new globalThis⁰.Error⁰("match error")
 //│ tmp
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let arg$Some$0$, tmp;
+//│ let arg$Some$0$;
 //│ match s⁰
 //│   Some⁰ =>
 //│     set arg$Some$0$ = s⁰.value⁰;
 //│     match arg$Some$0$
 //│       1 =>
-//│         begin
-//│           set tmp = 0;
-//│           end;
-//│         tmp
+//│         0
 //│       else
 //│         throw new globalThis⁰.Error⁰("match error")
 //│     end
 //│   None⁰ =>
-//│     set tmp = 1;
-//│     tmp
+//│     1
 //│   else
 //│     throw new globalThis⁰.Error⁰("match error")
 //│ end
@@ -102,12 +96,11 @@ if s is
 x => if x is Some(x) then x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda;
-//│ lambda = (undefined, function (x3) {
-//│   let x4, arg$Some$0$4;
-//│   if (x3 instanceof Some1.class) {
-//│     arg$Some$0$4 = x3.value;
-//│     x4 = arg$Some$0$4;
-//│     return x4
+//│ lambda = (undefined, function (x) {
+//│   let arg$Some$0$4;
+//│   if (x instanceof Some1.class) {
+//│     arg$Some$0$4 = x.value;
+//│     return arg$Some$0$4
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
@@ -169,17 +162,16 @@ fun f(x) = if x is
   else print("oops")
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f4;
-//│ f4 = function f(x3) {
-//│   let x4, scrut1, arg$Some$0$4;
-//│   if (x3 instanceof Some1.class) {
-//│     arg$Some$0$4 = x3.value;
-//│     x4 = arg$Some$0$4;
-//│     scrut1 = x4 > 0;
+//│ f4 = function f(x) {
+//│   let scrut1, arg$Some$0$4;
+//│   if (x instanceof Some1.class) {
+//│     arg$Some$0$4 = x.value;
+//│     scrut1 = arg$Some$0$4 > 0;
 //│     if (scrut1 === true) {
 //│       return 42
 //│     }
 //│     return Predef.print("oops");
-//│   } else if (x3 instanceof None1.class) { return "ok" }
+//│   } else if (x instanceof None1.class) { return "ok" }
 //│   return Predef.print("oops");
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -206,18 +198,15 @@ fun f(x) = if x is
   Pair(a, b) then a + b
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f5;
-//│ f5 = function f(x3) {
-//│   let u, a, b, arg$Pair$0$, arg$Pair$1$, arg$Some$0$4;
-//│   if (x3 instanceof Some1.class) {
-//│     arg$Some$0$4 = x3.value;
-//│     u = arg$Some$0$4;
-//│     return u
-//│   } else if (x3 instanceof Pair1.class) {
-//│     arg$Pair$0$ = x3.fst;
-//│     arg$Pair$1$ = x3.snd;
-//│     b = arg$Pair$1$;
-//│     a = arg$Pair$0$;
-//│     return a + b
+//│ f5 = function f(x) {
+//│   let arg$Pair$0$, arg$Pair$1$, arg$Some$0$4;
+//│   if (x instanceof Some1.class) {
+//│     arg$Some$0$4 = x.value;
+//│     return arg$Some$0$4
+//│   } else if (x instanceof Pair1.class) {
+//│     arg$Pair$0$ = x.fst;
+//│     arg$Pair$1$ = x.snd;
+//│     return arg$Pair$0$ + arg$Pair$1$
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
@@ -238,22 +227,16 @@ fun f(x) = print of if x is
   else "oops"
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f6;
-//│ f6 = function f(x3) {
-//│   let arg$Some$0$4, tmp9;
-//│   if (x3 instanceof Some1.class) {
-//│     arg$Some$0$4 = x3.value;
+//│ f6 = function f(x) {
+//│   let arg$Some$0$4;
+//│   if (x instanceof Some1.class) {
+//│     arg$Some$0$4 = x.value;
 //│     if (arg$Some$0$4 === 0) {
-//│       tmp9 = "0";
-//│       return Predef.print(tmp9)
+//│       return Predef.print("0")
 //│     }
-//│     tmp9 = "oops";
-//│     return Predef.print(tmp9);
-//│   } else if (x3 instanceof None1.class) {
-//│     tmp9 = "ok";
-//│     return Predef.print(tmp9)
-//│   }
-//│   tmp9 = "oops";
-//│   return Predef.print(tmp9);
+//│     return Predef.print("oops");
+//│   } else if (x instanceof None1.class) { return Predef.print("ok") }
+//│   return Predef.print("oops");
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

@@ -19,14 +19,13 @@ if
   x then 0
   y then 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp;
-//│ if (x !== true) {
-//│   if (y !== true) {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│ if (x === true) {
+//│   0
+//│ } else {
+//│   if (y === true) {
+//│     0
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ }
-//│ tmp = 0;
-//│ tmp
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -73,12 +72,12 @@ if
 //│ >        x = 1
 //│ >        builtin:+⁰(x⁰, b⁰)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let b, x1, element0$, tmp1;
+//│ let b, element0$, tmp;
 //│ split_root$: {
 //│   split_default$: {
 //│     if (x === true) {
 //│       if (z === true) {
-//│         tmp1 = 1;
+//│         tmp = 1;
 //│         break split_root$
 //│       }
 //│       if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
@@ -95,13 +94,12 @@ if
 //│         break split_default$
 //│       }
 //│     }
-//│     x1 = 1;
-//│     tmp1 = x1 + b;
+//│     tmp = 1 + b;
 //│     break split_root$;
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ }
-//│ block$res4 = tmp1;
+//│ block$res4 = tmp;
 //│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1

@@ -1,10 +1,13 @@
 :js
 
+#config(deadBranchRemoval: true)
+
+
 :soir
 fun f() = 0
 f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰, inlinedVal; define f⁰ as fun f¹() { return 0 }; set inlinedVal = 0; inlinedVal
+//│ let f⁰; define f⁰ as fun f¹() { return 0 }; 0
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -12,11 +15,7 @@ f()
 fun f(x) = x
 f(100)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f², x⁰, inlinedVal;
-//│ define f² as fun f³(x) { return x };
-//│ set x⁰ = 100;
-//│ set inlinedVal = x⁰;
-//│ inlinedVal
+//│ let f²; define f² as fun f³(x) { return x }; 100
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 100
 
@@ -27,12 +26,7 @@ fun f() =
   done
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f⁴;
-//│ define f⁴ as fun f⁵() {
-//│   let done, done1;
-//│   define done1 as fun done⁰(x) { return x };
-//│   set done = done⁰;
-//│   return done
-//│ };
+//│ define f⁴ as fun f⁵() { let done; define done as fun done⁰(x) { return x }; return done⁰ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -43,25 +37,38 @@ fun f(a, b, c) = a + b + c
 print(f(1, 2, 3))
 print(f(1, 2, ...[1]))
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁶, tmp, tmp1, tmp2, a⁰, b⁰, c⁰, inlinedVal, tmp3;
+//│ let f⁶, tmp, tmp1;
 //│ define f⁶ as fun f⁷(a, b, c) {
-//│   let tmp4;
-//│   set tmp4 = +⁰(a, b);
-//│   return +⁰(tmp4, c)
+//│   let tmp2;
+//│   set tmp2 = +⁰(a, b);
+//│   return +⁰(tmp2, c)
 //│ };
-//│ set a⁰ = 1;
-//│ set b⁰ = 2;
-//│ set c⁰ = 3;
-//│ set tmp3 = +⁰(a⁰, b⁰);
-//│ set inlinedVal = +⁰(tmp3, c⁰);
-//│ set tmp = inlinedVal;
-//│ do Predef⁰.print⁰(tmp);
-//│ set tmp1 = [1];
-//│ set tmp2 = f⁷(1, 2, ...tmp1);
-//│ Predef⁰.print⁰(tmp2)
+//│ do Predef⁰.print⁰(6);
+//│ set tmp = [1];
+//│ set tmp1 = f⁷(1, 2, ...tmp);
+//│ Predef⁰.print⁰(tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 6
 //│ > 4
+
+// TODO: should be inlined
+:soir
+:expect [1, [2, 3, 4]]
+fun f(x, ...ys) = [x, ys]
+let
+  us = [1, 2, 3]
+  v = 4
+f(...us, v)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f⁸, us⁰, v⁰;
+//│ define f⁸ as fun f⁹(x, ...ys) { return [x, ys] };
+//│ set us⁰ = [1, 2, 3];
+//│ set v⁰ = 4;
+//│ f⁹(...us⁰, 4)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [1, [2, 3, 4]]
+//│ us = [1, 2, 3]
+//│ v = 4
 
 
 :soir
@@ -72,16 +79,16 @@ fun f(a, ...b) =
 f(1, ...[2])
 f(1, ...[2], ...[3])
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁸, tmp, tmp1, tmp2;
-//│ define f⁸ as fun f⁹(a, ...b) {
+//│ let f¹⁰, tmp, tmp1, tmp2;
+//│ define f¹⁰ as fun f¹¹(a, ...b) {
 //│   do Predef⁰.print⁰(a);
 //│   return Predef⁰.print⁰(b)
 //│ };
 //│ set tmp = [2];
-//│ do f⁹(1, ...tmp);
+//│ do f¹¹(1, ...tmp);
 //│ set tmp1 = [2];
 //│ set tmp2 = [3];
-//│ f⁹(1, ...tmp1, ...tmp2)
+//│ f¹¹(1, ...tmp1, ...tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ > [2]
@@ -99,31 +106,22 @@ f(1, 2)
 f(1, 2, 3)
 f(1, 2, 3, 4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹⁰, a¹, b¹, c¹, a², b², c², a³, b³, c³, inlinedVal, tmp, tmp1, tmp2;
-//│ define f¹⁰ as fun f¹¹(a, b, ...c) {
-//│   let tmp3;
-//│   set tmp3 = +⁰(a, b);
-//│   do Predef⁰.print⁰(tmp3);
+//│ let f¹², c⁰, c¹, c², inlinedVal;
+//│ define f¹² as fun f¹³(a, b, ...c) {
+//│   let tmp;
+//│   set tmp = +⁰(a, b);
+//│   do Predef⁰.print⁰(tmp);
 //│   return Predef⁰.print⁰(c)
 //│ };
-//│ set a¹ = 1;
-//│ set b¹ = 2;
-//│ set c¹ = mut [];
-//│ set tmp2 = +⁰(a¹, b¹);
-//│ do Predef⁰.print⁰(tmp2);
+//│ set c⁰ = mut [];
+//│ do Predef⁰.print⁰(3);
+//│ do Predef⁰.print⁰(c⁰);
+//│ set c¹ = mut [3];
+//│ do Predef⁰.print⁰(3);
 //│ do Predef⁰.print⁰(c¹);
-//│ set a² = 1;
-//│ set b² = 2;
-//│ set c² = mut [3];
-//│ set tmp1 = +⁰(a², b²);
-//│ do Predef⁰.print⁰(tmp1);
-//│ do Predef⁰.print⁰(c²);
-//│ set a³ = 1;
-//│ set b³ = 2;
-//│ set c³ = mut [3, 4];
-//│ set tmp = +⁰(a³, b³);
-//│ do Predef⁰.print⁰(tmp);
-//│ set inlinedVal = Predef⁰.print⁰(c³);
+//│ set c² = mut [3, 4];
+//│ do Predef⁰.print⁰(3);
+//│ set inlinedVal = Predef⁰.print⁰(c²);
 //│ inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 3
@@ -143,24 +141,24 @@ f(1, ...[2, 3])
 f(1, 2, ...[3])
 f(1, 2, 3, ...[4])
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f6, tmp10, tmp11, tmp12;
-//│ f6 = function f(a4, b4, ...c4) {
-//│   let tmp13;
-//│   tmp13 = a4 + b4;
-//│   Predef.print(tmp13);
-//│   return Predef.print(c4)
+//│ let f7, tmp5, tmp6, tmp7;
+//│ f7 = function f(a, b, ...c3) {
+//│   let tmp8;
+//│   tmp8 = a + b;
+//│   Predef.print(tmp8);
+//│   return Predef.print(c3)
 //│ };
-//│ tmp10 = globalThis.Object.freeze([
+//│ tmp5 = globalThis.Object.freeze([
 //│   2,
 //│   3
 //│ ]);
-//│ f6(1, ...tmp10);
-//│ tmp11 = globalThis.Object.freeze([
+//│ f7(1, ...tmp5);
+//│ tmp6 = globalThis.Object.freeze([
 //│   3
 //│ ]);
-//│ f6(1, 2, ...tmp11);
-//│ tmp12 = globalThis.Object.freeze([ 4 ]);
-//│ f6(1, 2, 3, ...tmp12)
+//│ f7(1, 2, ...tmp6);
+//│ tmp7 = globalThis.Object.freeze([ 4 ]);
+//│ f7(1, 2, 3, ...tmp7)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 3
 //│ > [3]
@@ -180,18 +178,21 @@ fun f() =
   g(true)
 f()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f7;
-//│ f7 = function f() {
-//│   let x1, inlinedVal4;
-//│   x1 = true;
-//│   if (x1 === true) {
-//│     inlinedVal4 = true;
-//│     return inlinedVal4
-//│   }
-//│   inlinedVal4 = false;
-//│   return inlinedVal4;
-//│ };
-//│ f7()
+//│ let f8; f8 = function f() { return true }; true
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = true
+
+:inlineThreshold 10
+:soir
+:expect true
+fun f() =
+  fun g(x) =
+    if x is true do return true
+    return false
+  g(g(true))
+f()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f¹⁴; define f¹⁴ as fun f¹⁵() { return true }; true
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 
@@ -223,7 +224,7 @@ module A with
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let A⁰;
 //│ define A⁰ as class A¹
-//│ module A² { method f¹² = fun f¹³() { return 1 } method g⁰ = fun g¹() { return A².f¹³() } };
+//│ module A² { method f¹⁶ = fun f¹⁷() { return 1 } method g⁰ = fun g¹() { return A².f¹⁷() } };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -231,22 +232,22 @@ module A with
 // Inlining limits
 :soir
 :inlineThreshold 10
-fun f() = if false do f() + 1
+fun f() = if hide(false) do f() + 1
 f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹⁴;
-//│ define f¹⁴ as fun f¹⁵() {
+//│ let f¹⁸;
+//│ define f¹⁸ as fun f¹⁹() {
 //│   let scrut;
-//│   set scrut = false;
+//│   set scrut = Predef⁰.hide⁰(false);
 //│   match scrut
 //│     true =>
-//│       do f¹⁵();
+//│       do f¹⁹();
 //│       return runtime⁰.Unit⁰
 //│     else
 //│       return runtime⁰.Unit⁰
 //│   end
 //│ };
-//│ f¹⁵()
+//│ f¹⁹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -256,7 +257,7 @@ fun g() =
   fun f() = f()
   f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let g²; define g² as fun g³() { let f; define f as fun f¹⁶() { return f¹⁶() }; return f¹⁶() }; end
+//│ let g²; define g² as fun g³() { let f; define f as fun f²⁰() { return f²⁰() }; return f²⁰() }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

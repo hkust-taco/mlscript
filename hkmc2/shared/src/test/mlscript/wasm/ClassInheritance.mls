@@ -108,7 +108,6 @@ c.Parent#x + (c is Parent)
 //│       (return
 //│         (local.get $this))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (local $tmp (ref null any))
 //│     (local $matchRes (ref null any))
 //│     (local $currentTypeInfo (ref null any))
 //│     (local $targetTypeInfo (ref null any))
@@ -171,26 +170,20 @@ c.Parent#x + (c is Parent)
 //│                     (then
 //│                       (block $arm
 //│                         (local.set $matchRes
-//│                           (block (result (ref null any))
-//│                             (local.set $tmp
-//│                               (ref.i31
-//│                                 (i32.const 1)))
-//│                             (call $plus_impl
-//│                               (struct.get $Parent $x
-//│                                 (ref.cast (ref $Parent)
-//│                                   (global.get $c)))
-//│                               (local.get $tmp))))
+//│                           (call $plus_impl
+//│                             (struct.get $Parent $x
+//│                               (ref.cast (ref $Parent)
+//│                                 (global.get $c)))
+//│                             (ref.i31
+//│                               (i32.const 1))))
 //│                         (br $match))))))
 //│               (local.set $matchRes
-//│                 (block (result (ref null any))
-//│                   (local.set $tmp
-//│                     (ref.i31
-//│                       (i32.const 0)))
-//│                   (call $plus_impl
-//│                     (struct.get $Parent $x
-//│                       (ref.cast (ref $Parent)
-//│                         (global.get $c)))
-//│                     (local.get $tmp)))))
+//│                 (call $plus_impl
+//│                   (struct.get $Parent $x
+//│                     (ref.cast (ref $Parent)
+//│                       (global.get $c)))
+//│                   (ref.i31
+//│                     (i32.const 0)))))
 //│             (local.get $matchRes))))))
 //│   (elem $Parent_init declare func $Parent_init)
 //│   (elem $Parent_ctor declare func $Parent_ctor)
@@ -288,5 +281,5 @@ class B
 class A extends B
 class B extends A
 //│ ╔══[COMPILATION ERROR] Inheritance cycles are not supported.
-//│ ║  l.288: 	class A extends B
+//│ ║  l.281: 	class A extends B
 //│ ╙──       	^^^^^^^^^^^^^^^^^

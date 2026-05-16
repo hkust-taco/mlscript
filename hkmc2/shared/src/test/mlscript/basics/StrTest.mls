@@ -8,7 +8,7 @@ open StrOps
 :sjs
 "a" is Str
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut; scrut = "a"; if (typeof scrut === 'string') { true } else { false }
+//│ if (typeof "a" === 'string') { true } else { false }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 

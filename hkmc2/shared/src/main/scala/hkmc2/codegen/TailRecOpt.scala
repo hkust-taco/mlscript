@@ -390,7 +390,7 @@ class TailRecOpt(using State, TL, Raise):
                     case (sym1, Value.Ref(sym2, _)) if sym1 === sym2 => sym1
                   case CallArgsResult.ForceSpread => List.empty
               assignedSyms --= selfAssigns
-                
+              
               
               // Algorithm: Apply the args from right to left, but have the resulting assignment order
               // be left to right.

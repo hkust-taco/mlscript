@@ -80,6 +80,7 @@ pattern BiasedOr2 =
   | Some((x => x + 2) as res) => res
 
 :fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)
+:noOpt
 :checkIR
 fun biasedOr2__compiled(x) = if x is (@compile BiasedOr2) as output then output
 //│ ═══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once

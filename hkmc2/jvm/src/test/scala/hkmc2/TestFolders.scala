@@ -42,6 +42,10 @@ object TestFolders:
   def wasmDiffDir(wd: os.Path): os.Path =
     diffTestDir(wd)/"wasm"
   
+  /** Diff test subdirectories that belong to the hkmc2LlirTests project. */
+  def llirDiffDir(wd: os.Path): os.Path =
+    diffTestDir(wd)/"llir"
+  
   /** Diff test directories that are always excluded (staging, mlscript-compile,
     * mlscript-packages). */
   def alwaysExcludedDiffDirs(wd: os.Path): Ls[os.Path] =
@@ -52,6 +56,7 @@ object TestFolders:
     nofibDiffDir(wd) ::
     appsDiffDir(wd) ::
     wasmDiffDir(wd) ::
+    llirDiffDir(wd) ::
     alwaysExcludedDiffDirs(wd)
   
   /** Check whether a file should be excluded from the given list of excluded

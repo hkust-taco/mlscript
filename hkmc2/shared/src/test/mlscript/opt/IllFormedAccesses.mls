@@ -1,0 +1,63 @@
+:js
+
+
+
+:noOpt
+:soir
+let x in
+  if hide(false) do
+    x = 1
+  print("don't inline cont.")
+  print(x)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let x⁰, scrut;
+//│ set scrut = Predef⁰.hide⁰(false);
+//│ match scrut
+//│   true =>
+//│     set x⁰ = 1;
+//│     end
+//│ do Predef⁰.print⁰("don't inline cont.");
+//│ Predef⁰.print⁰(x⁰)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > don't inline cont.
+//│ > undefined
+
+// * Undefined behavior (accessing uninitialized variable); behavior change is legal
+// * Later, we'll catch this in the type system.
+:soir
+let x in
+  if hide(false) do
+    x = 1
+  print("don't inline cont.")
+  print(x)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ do Predef⁰.hide⁰(false); do Predef⁰.print⁰("don't inline cont."); Predef⁰.print⁰(1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > don't inline cont.
+//│ > 1
+
+
+:soir
+let x = undefined in
+  if hide(false) do
+    x = 1
+  print("don't inline cont.")
+  print(x)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let x¹, scrut;
+//│ set x¹ = undefined;
+//│ set scrut = Predef⁰.hide⁰(false);
+//│ match scrut
+//│   true =>
+//│     set x¹ = 1;
+//│     end
+//│ do Predef⁰.print⁰("don't inline cont.");
+//│ Predef⁰.print⁰(x¹)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > don't inline cont.
+//│ > undefined
+
+
+
+
+

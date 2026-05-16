@@ -11,10 +11,10 @@ fun test(a)(b) =
   if a is Pair(x, y) then x + y + b
 test(Pair(1, 2))(3)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Pair,Some(term:Pair/Pair)),List(List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2)))))) ->
-//│ deforest > 	Ref(a,None)
-//│ deforest > 	Select(Ref(a,None),Ident(x))
-//│ deforest > 	Select(Ref(a,None),Ident(y))
+//│ deforest > Pair⁰(1, 2) ->
+//│ deforest > 	match: a⁰
+//│ deforest > 	fields: a⁰.x⁰
+//│ deforest > 	fields: a⁰.y⁰
 //│ deforest > <<< fusing <<<
 //│ = 6
 
@@ -27,9 +27,9 @@ fun unbox(b)(offset) =
   if b is Box(v) then v + offset
 unbox(Box(10))(5)
 //│ deforest > >>> fusing >>>
-//│ deforest > Call(Ref(member:Box,Some(term:Box/Box)),List(List(Arg(None,Lit(IntLit(10)))))) ->
-//│ deforest > 	Ref(b,None)
-//│ deforest > 	Select(Ref(b,None),Ident(v))
+//│ deforest > Box⁰(10) ->
+//│ deforest > 	match: b⁰
+//│ deforest > 	fields: b⁰.v⁰
 //│ deforest > <<< fusing <<<
 //│ = 15
 

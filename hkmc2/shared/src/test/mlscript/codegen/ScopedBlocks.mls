@@ -28,13 +28,13 @@ fun g(x, y, z) =
       (_ + a)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let g;
-//│ g = function g(x1, y1, z) {
-//│   let a, tmp1, tmp2;
+//│ g = function g(x1, y, z) {
+//│   let a, tmp, tmp1;
 //│   if (x1 === true) {
-//│     tmp1 = 0;
+//│     tmp = 0;
 //│   } else {
-//│     if (y1 === true) {
-//│       tmp1 = 0;
+//│     if (y === true) {
+//│       tmp = 0;
 //│     } else {
 //│       if (z === true) {
 //│         let lambda;
@@ -42,14 +42,14 @@ fun g(x, y, z) =
 //│         lambda = (undefined, function (_0) {
 //│           return _0 + a
 //│         });
-//│         tmp1 = lambda;
+//│         tmp = lambda;
 //│       } else {
 //│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│       }
 //│     }
 //│   }
-//│   tmp2 = 4 * tmp1;
-//│   return 3 + tmp2
+//│   tmp1 = 4 * tmp;
+//│   return 3 + tmp1
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -165,7 +165,7 @@ fun f(x) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f7;
 //│ f7 = function f(x1) {
-//│   let while1, tmp2, tmp3;
+//│   let while1, tmp1, tmp2;
 //│   while1 = (undefined, function () {
 //│     if (x1 === true) {
 //│       Predef.print(x1);
@@ -173,9 +173,9 @@ fun f(x) =
 //│     }
 //│     return runtime.LoopEnd;
 //│   });
-//│   tmp2 = while1();
-//│   tmp3 = tmp2 !== runtime.LoopEnd;
-//│   if (tmp3 === true) { return tmp2 }
+//│   tmp1 = while1();
+//│   tmp2 = tmp1 !== runtime.LoopEnd;
+//│   if (tmp2 === true) { return tmp1 }
 //│   return runtime.Unit;
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -199,14 +199,11 @@ data class Baz(z) extends Bar(z * 1) with
 //│     Baz1.class = this
 //│   }
 //│   constructor(z) {
-//│     let tmp2;
-//│     tmp2 = z * 1;
-//│     super(tmp2);
-//│     let tmp3, tmp4;
+//│     let tmp1;
+//│     tmp1 = z * 1;
+//│     super(tmp1);
 //│     this.z = z;
-//│     tmp3 = 1 + 2;
-//│     tmp4 = tmp3 + 3;
-//│     this.k = tmp4;
+//│     this.k = 6;
 //│   }
 //│   get baz() {
 //│     return this.bar * 2;

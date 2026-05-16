@@ -111,9 +111,8 @@ else foo = 1
 //│ ║  l.108: 	then foo = 0
 //│ ╙──       	         ^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let foo1, scrut;
-//│ scrut = true;
-//│ if (scrut === true) {
+//│ let foo1;
+//│ if (true === true) {
 //│   block$res14 = undefined;
 //│   undefined
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
@@ -127,9 +126,8 @@ then
 else
   foo = 1
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let foo2, scrut1;
-//│ scrut1 = true;
-//│ if (scrut1 === true) {
+//│ let foo2;
+//│ if (true === true) {
 //│   foo2 = 0;
 //│   block$res15 = runtime.Unit;
 //│   undefined
@@ -164,7 +162,7 @@ foo
 :fixme
 fun f() = foo = 0
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.165: 	fun f() = foo = 0
+//│ ║  l.163: 	fun f() = foo = 0
 //│ ╙──       	              ^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f4;

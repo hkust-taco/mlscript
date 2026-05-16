@@ -1,0 +1,68 @@
+:js
+
+
+let x = hide(1)
+in print(x)
+//│ > 1
+
+// :dopt
+:soir
+let x
+in
+  set x = hide(2)
+  print(x)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp; set tmp = Predef⁰.hide⁰(2); Predef⁰.print⁰(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 2
+
+:soir
+let x = 1
+in
+  set x = hide(2)
+  print(x)
+  set x = hide(3)
+  set x = hide(4)
+  set x += 1
+  print(x)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, tmp2;
+//│ set tmp = Predef⁰.hide⁰(2);
+//│ do Predef⁰.print⁰(tmp);
+//│ do Predef⁰.hide⁰(3);
+//│ set tmp1 = Predef⁰.hide⁰(4);
+//│ set tmp2 = +⁰(tmp1, 1);
+//│ Predef⁰.print⁰(tmp2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 2
+//│ > 5
+
+
+// TODO: rm dead assignment
+fun f(x) =
+  x = 1
+  42
+
+
+// :dopt
+:soir
+fun main =
+  let x
+  x = 1
+  x = 2
+  x
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let main⁰; define main⁰ as fun main¹() { return 2 }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+
+// :dopt
+// :sir
+let x = if maybe then 1 else 1
+print(x)
+//│ > 1
+//│ x = 1
+
+
+

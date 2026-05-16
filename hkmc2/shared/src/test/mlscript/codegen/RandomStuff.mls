@@ -6,12 +6,7 @@
 fun foo() = if false do foo()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo;
-//│ foo = function foo() {
-//│   let scrut;
-//│   scrut = false;
-//│   if (scrut === true) { foo(); return runtime.Unit }
-//│   return runtime.Unit;
-//│ };
+//│ foo = function foo() { if (false === true) { foo(); return runtime.Unit } return runtime.Unit; };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 // * ...but this is (so it's tailrec-optimized)
 :sjs
@@ -19,12 +14,7 @@ fun foo() = if false do return foo()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo1;
 //│ foo1 = function foo() {
-//│   loopLabel: while (true) {
-//│     let scrut;
-//│     scrut = false;
-//│     if (scrut === true) { continue loopLabel }
-//│     return runtime.Unit;
-//│   }
+//│   loopLabel: while (true) { if (false === true) { continue loopLabel } return runtime.Unit; }
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -100,11 +90,11 @@ do
 let foo = 1
 fun foo(x) = foo
 //│ ╔══[COMPILATION ERROR] Name 'foo' is already used
-//│ ║  l.100: 	let foo = 1
-//│ ║         	    ^^^^^^^
+//│ ║  l.90: 	let foo = 1
+//│ ║        	    ^^^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.101: 	fun foo(x) = foo
-//│ ╙──       	^^^^^^^^^^^^^^^^
+//│ ║  l.91: 	fun foo(x) = foo
+//│ ╙──      	^^^^^^^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo4; foo4 = 1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

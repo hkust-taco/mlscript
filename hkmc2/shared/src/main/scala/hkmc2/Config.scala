@@ -29,6 +29,7 @@ case class Config(
   tailRecOpt: Bool,
   deforest: Opt[Deforest],
   inlining: Opt[Inliner],
+  deadBranchRemoval: Bool,
   qqEnabled: Bool,
   funcToCls: Bool,
   commentGeneratedCode: Bool,
@@ -69,6 +70,7 @@ object Config:
     tailRecOpt = true,
     deforest = N,
     inlining = S(Inliner(1)),
+    deadBranchRemoval = default.deadBranchRemoval,
     qqEnabled = false,
     funcToCls = false,
     commentGeneratedCode = false,
@@ -78,8 +80,9 @@ object Config:
   )
   object default:
     val patMatConsequentSharingThreshold = S(15)
+    val deadBranchRemoval = false // TODO
   
-  case class SanityChecks(light: Bool)
+  case class SanityChecks(light: Bool, checkUnreachable: Bool)
   
   case class EffectHandlers(
     debug: Bool,
@@ -102,14 +105,62 @@ object Config:
     )
   
   case class LiftDefns() // there may be other settings in the future, having it as a case class now
-  
-  case class Deforest(val debug: Boolean, val mono: Boolean)
-  object Deforest:
-    val default = Deforest(true, false)
 
-  case class DeadParamElim(val debug: Boolean, val mono: Boolean)
+  case class FlowAnalysisConfig(
+    debug: Bool,
+    mono: Bool,
+    trackNonAffine: Bool,
+    trackAccumulator: Bool,
+    logNonAffine: Bool,
+    logAccumulator: Bool,
+  ):
+    def effectiveTrackNonAffine: Bool =
+      trackNonAffine || logNonAffine
+
+    def effectiveTrackAccumulator: Bool =
+      trackAccumulator || logAccumulator
+  
+  case class Deforest(config: FlowAnalysisConfig):
+    export config.{
+      debug,
+      mono,
+      trackNonAffine,
+      trackAccumulator,
+      logNonAffine,
+      logAccumulator,
+      effectiveTrackNonAffine,
+      effectiveTrackAccumulator,
+    }
+  object Deforest:
+    val default = Deforest(FlowAnalysisConfig(
+      debug = true,
+      mono = false,
+      trackNonAffine = true,
+      trackAccumulator = false,
+      logNonAffine = false,
+      logAccumulator = false,
+    ))
+
+  case class DeadParamElim(config: FlowAnalysisConfig):
+    export config.{
+      debug,
+      mono,
+      trackNonAffine,
+      trackAccumulator,
+      logNonAffine,
+      logAccumulator,
+      effectiveTrackNonAffine,
+      effectiveTrackAccumulator,
+    }
   object DeadParamElim:
-    val default = DeadParamElim(false, true)
+    val default = DeadParamElim(FlowAnalysisConfig(
+      debug = false,
+      mono = true,
+      trackNonAffine = false,
+      trackAccumulator = false,
+      logNonAffine = false,
+      logAccumulator = false,
+    ))
   
   case class Inliner(inlineThreshold: Int)
 
@@ -225,51 +276,69 @@ object ConfigParser:
         source = Diagnostic.Source.Compilation))
       N
 
-  private def parseDeforest(tree: Tree, current: Opt[Config.Deforest])(using Raise): Opt[Config.Deforest] = tree match
-    case BoolLit(true) | Ident("true") | Ident("Deforest") =>
-      S(current.getOrElse(Config.Deforest.default))
-    case App(Ident("Deforest"), Tup(args)) =>
-      val base = current.getOrElse(Config.Deforest.default)
+  private def parseFlowAnalysisConfig(
+    tree: Tree,
+    passName: Str,
+    current: Opt[FlowAnalysisConfig],
+    default: FlowAnalysisConfig,
+  )(using Raise): Opt[FlowAnalysisConfig] =
+    val base = current.getOrElse(default)
+    tree match
+    case App(Ident(name), Tup(args)) if name == passName =>
       var debug = base.debug
       var mono = base.mono
+      var trackNonAffine = base.trackNonAffine
+      var trackAccumulator = base.trackAccumulator
+      var logNonAffine = base.logNonAffine
+      var logAccumulator = base.logAccumulator
       args.foreach:
         case InfixApp(Ident("debug"), Keywrd(Keyword.`:`), value) =>
           parseBool(value).foreach(v => debug = v)
         case InfixApp(Ident("mono"), Keywrd(Keyword.`:`), value) =>
           parseBool(value).foreach(v => mono = v)
+        case InfixApp(Ident("trackNonAffine"), Keywrd(Keyword.`:`), value) =>
+          parseBool(value).foreach(v => trackNonAffine = v)
+        case InfixApp(Ident("trackAccumulator"), Keywrd(Keyword.`:`), value) =>
+          parseBool(value).foreach(v => trackAccumulator = v)
+        case InfixApp(Ident("logNonAffine"), Keywrd(Keyword.`:`), value) =>
+          parseBool(value).foreach(v => logNonAffine = v)
+        case InfixApp(Ident("logAccumulator"), Keywrd(Keyword.`:`), value) =>
+          parseBool(value).foreach(v => logAccumulator = v)
         case other =>
           raise(ErrorReport(
-            msg"Unsupported Deforest argument" -> other.toLoc :: Nil,
+            msg"Unsupported ${passName} argument" -> other.toLoc :: Nil,
             source = Diagnostic.Source.Compilation))
-      S(Config.Deforest(debug, mono))
+      S(Config.FlowAnalysisConfig(
+        debug,
+        mono,
+        trackNonAffine,
+        trackAccumulator,
+        logNonAffine,
+        logAccumulator,
+      ))
     case _ =>
       raise(ErrorReport(
-        msg"Expected Deforest(...), Deforest, or true" -> tree.toLoc :: Nil,
+        msg"Expected ${passName}(...)" -> tree.toLoc :: Nil,
         source = Diagnostic.Source.Compilation))
       N
 
-  private def parseDeadParamElim(tree: Tree, current: Opt[Config.DeadParamElim])(using Raise): Opt[Config.DeadParamElim] = tree match
-    case BoolLit(true) | Ident("true") | Ident("DeadParamElim") =>
-      S(current.getOrElse(Config.DeadParamElim.default))
-    case App(Ident("DeadParamElim"), Tup(args)) =>
-      val base = current.getOrElse(Config.DeadParamElim.default)
-      var debug = base.debug
-      var mono = base.mono
-      args.foreach:
-        case InfixApp(Ident("debug"), Keywrd(Keyword.`:`), value) =>
-          parseBool(value).foreach(v => debug = v)
-        case InfixApp(Ident("mono"), Keywrd(Keyword.`:`), value) =>
-          parseBool(value).foreach(v => mono = v)
-        case other =>
-          raise(ErrorReport(
-            msg"Unsupported DeadParamElim argument" -> other.toLoc :: Nil,
-            source = Diagnostic.Source.Compilation))
-      S(Config.DeadParamElim(debug, mono))
-    case _ =>
-      raise(ErrorReport(
-        msg"Expected DeadParamElim(...), DeadParamElim, or true" -> tree.toLoc :: Nil,
-        source = Diagnostic.Source.Compilation))
-      N
+  private def parseDeforest(tree: Tree, current: Opt[Config.Deforest])(using Raise): Opt[Config.Deforest] =
+    parseFlowAnalysisConfig(
+      tree,
+      "Deforest",
+      current.map(_.config),
+      Config.Deforest.default.config
+    ).map:
+      Config.Deforest.apply
+
+  private def parseDeadParamElim(tree: Tree, current: Opt[Config.DeadParamElim])(using Raise): Opt[Config.DeadParamElim] =
+    parseFlowAnalysisConfig(
+      tree,
+      "DeadParamElim",
+      current.map(_.config),
+      Config.DeadParamElim.default.config
+    ).map:
+      Config.DeadParamElim.apply
   
   /** Parse a single field override like `tailRecOpt: false`. */
   private def parseField(name: Str, value: Tree)(using Raise): Config => Config = name match
@@ -317,7 +386,7 @@ object ConfigParser:
           case S(v) => cfg.copy(deadParamElim = v)
           case N => cfg
     case "sanityChecks" =>
-      parseOpt(value)(_ => S(Config.SanityChecks(light = true))) match
+      parseOpt(value)(_ => S(Config.SanityChecks(light = true, checkUnreachable = true))) match
         case S(v) => _.copy(sanityChecks = v)
         case N => identity
     case "patMatConsequentSharingThreshold" =>
@@ -328,6 +397,10 @@ object ConfigParser:
       parseOpt(value)(parseInt) match
         case S(v) => _.copy(inlining = v.map(Inliner.apply))
         case _ => identity
+    case "deadBranchRemoval" =>
+      parseBool(value) match
+        case S(v) => _.copy(deadBranchRemoval = v)
+        case N => identity
     case _ =>
       raise(ErrorReport(
         msg"Unknown config field '${name}'" -> value.toLoc :: Nil,

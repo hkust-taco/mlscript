@@ -11,9 +11,7 @@
 //│ let lambda;
 //│ lambda = (undefined, function () {
 //│   lbl: while (true) {
-//│     let scrut;
-//│     scrut = false;
-//│     if (scrut === true) {
+//│     if (false === true) {
 //│       Predef.print(1);
 //│       continue lbl
 //│     }
