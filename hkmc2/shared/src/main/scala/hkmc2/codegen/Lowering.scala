@@ -614,6 +614,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case st.Throw(res) =>
       term(res)(Thrw)
     case st.Label(label, result, body, hasNonLocalContinueDispatch) =>
+      def hasLocalContinue(term: st): Bool = term match
+        case st.Continue(`label`) => true
+        case _ => term.subTerms.iterator.exists(hasLocalContinue)
+      
       loweringCtx.collectScopedSym(result)
       val bodyBlock =
         if !hasNonLocalContinueDispatch then
@@ -642,7 +646,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           }
       Label(
         label,
-        loop = true,
+        loop = hasLocalContinue(body),
         bodyBlock,
         k(Value.Ref(result))
       )
