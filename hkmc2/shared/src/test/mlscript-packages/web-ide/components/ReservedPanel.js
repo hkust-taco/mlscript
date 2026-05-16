@@ -1,5 +1,5 @@
 import fs from "../filesystem/fs.mjs";
-import { restorePanelWidth, savePanelWidth } from './PanelPersistence.js';
+import PanelPersistence from './PanelPersistence.mjs';
 import './ResizeHandle.js';
 
 // Reserved Panel Custom Element
@@ -18,11 +18,11 @@ class ReservedPanel extends HTMLElement {
   }
 
   restoreSizeFromStorage() {
-    restorePanelWidth(this, 'reserved-panel-width', 150, 600);
+    PanelPersistence.restorePanelWidth(this, 'reserved-panel-width', 150, 600);
   }
 
   saveSizeToStorage(width) {
-    savePanelWidth('reserved-panel-width', width);
+    PanelPersistence.savePanelWidth('reserved-panel-width', width);
   }
 
   render() {

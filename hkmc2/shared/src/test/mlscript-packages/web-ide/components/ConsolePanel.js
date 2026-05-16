@@ -1,4 +1,4 @@
-import { restorePanelHeight, savePanelHeight } from './PanelPersistence.js';
+import PanelPersistence from './PanelPersistence.mjs';
 import './ResizeHandle.js';
 
 // Console Panel Custom Element
@@ -17,11 +17,11 @@ class ConsolePanel extends HTMLElement {
   }
 
   restoreSizeFromStorage() {
-    restorePanelHeight(this, 'console-panel-height', 100, 600);
+    PanelPersistence.restorePanelHeight(this, 'console-panel-height', 100, 600);
   }
 
   saveSizeToStorage(height) {
-    savePanelHeight('console-panel-height', height);
+    PanelPersistence.savePanelHeight('console-panel-height', height);
   }
 
   render() {

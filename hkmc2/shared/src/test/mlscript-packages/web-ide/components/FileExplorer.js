@@ -1,5 +1,5 @@
 import fs from '../filesystem/fs.mjs';
-import { restorePanelWidth, savePanelWidth } from './PanelPersistence.js';
+import PanelPersistence from './PanelPersistence.mjs';
 import './FileTooltip.mjs';
 import './ResizeHandle.js';
 
@@ -42,11 +42,11 @@ class FileExplorer extends HTMLElement {
   }
 
   restoreSizeFromStorage() {
-    restorePanelWidth(this, 'file-explorer-width', 150, 600);
+    PanelPersistence.restorePanelWidth(this, 'file-explorer-width', 150, 600);
   }
 
   saveSizeToStorage(width) {
-    savePanelWidth('file-explorer-width', width);
+    PanelPersistence.savePanelWidth('file-explorer-width', width);
   }
 
   disconnectedCallback() {
