@@ -1,0 +1,240 @@
+import "../common/JS.mls"
+import "https://esm.sh/@floating-ui/dom" { computePosition, shift, offset }
+
+open JS { Absent }
+
+class ToolbarPanel extends HTMLElement with
+  let status = "idle"
+  let runningTime = null
+  let startTime = null
+  let isCompiling = false
+  let isStdActive = false
+
+  fun connectedCallback() =
+    this.render()
+    this.attachEventListeners()
+    let panel = this
+    window.addEventListener("execution-status-change", event =>
+      panel.setStatus(event.detail.status, event.detail.runningTime)
+    )
+    document.addEventListener("compilation-status-change", event =>
+      panel.setCompilationStatus(event.detail.status)
+    )
+    document.addEventListener("active-tab-changed", event =>
+      panel.setActiveFileMeta(event.detail)
+    )
+
+  fun setStatus(nextStatus, nextRunningTime) =
+    set
+      status = nextStatus
+      runningTime = nextRunningTime
+    this.updateStatusIndicator()
+
+  fun setTerminateDisplay(terminateBtn, display) =
+    if terminateBtn is ~Absent do set terminateBtn.style.display = display
+
+  fun setTooltipText(tooltip, text) =
+    if tooltip is ~Absent do set tooltip.textContent = text
+
+  fun runningTooltip() =
+    let startedAt = new Date(startTime).toLocaleTimeString()
+    "Execution started at " + startedAt + "."
+
+  fun doneStatusText() =
+    if runningTime is Absent then "Done"
+    else "Done (" + runningTime + "ms)"
+
+  fun doneTooltip() =
+    if runningTime is Absent then "Execution completed successfully."
+    else "Execution completed successfully in " + runningTime + "ms."
+
+  fun setIdleStatus(statusLight, statusText, terminateBtn, tooltip) =
+    statusLight.classList.add("status-idle")
+    set statusText.textContent = "Not running"
+    setTerminateDisplay(terminateBtn, "none")
+    setTooltipText(tooltip, "No execution is currently running.")
+
+  fun setRunningStatus(statusLight, statusText, terminateBtn, tooltip) =
+    statusLight.classList.add("status-running")
+    set statusText.textContent = "Running..."
+    setTerminateDisplay(terminateBtn, "inline-block")
+    setTooltipText(tooltip, runningTooltip())
+
+  fun setDoneStatus(statusLight, statusText, terminateBtn, tooltip) =
+    statusLight.classList.add("status-done")
+    set statusText.textContent = doneStatusText()
+    setTerminateDisplay(terminateBtn, "none")
+    setTooltipText(tooltip, doneTooltip())
+
+  fun setErrorStatus(statusLight, statusText, terminateBtn, tooltip) =
+    statusLight.classList.add("status-error")
+    set statusText.textContent = "Error"
+    setTerminateDisplay(terminateBtn, "none")
+    setTooltipText(tooltip, "Execution encountered an error.")
+
+  fun setAbortedStatus(statusLight, statusText, terminateBtn, tooltip) =
+    statusLight.classList.add("status-aborted")
+    set statusText.textContent = "Aborted"
+    setTerminateDisplay(terminateBtn, "none")
+    setTooltipText(tooltip, "Execution was aborted by the user.")
+
+  fun setFatalStatus(statusLight, statusText, terminateBtn, tooltip) =
+    statusLight.classList.add("status-fatal")
+    set statusText.textContent = "Fatal error"
+    setTerminateDisplay(terminateBtn, "none")
+    setTooltipText(tooltip, "A fatal error occurred during execution.")
+
+  fun updateStatusIndicator() =
+    let statusLight = this.querySelector(".status-light")
+    let statusText = this.querySelector(".status-text")
+    let terminateBtn = this.querySelector("#terminate")
+    let tooltip = this.querySelector(".status-tooltip")
+    if
+      statusLight is Absent then ()
+      statusText is Absent then ()
+      else
+        set statusLight.className = "status-light"
+        if
+          status === "idle" then setIdleStatus(statusLight, statusText, terminateBtn, tooltip)
+          status === "running" then setRunningStatus(statusLight, statusText, terminateBtn, tooltip)
+          status === "done" then setDoneStatus(statusLight, statusText, terminateBtn, tooltip)
+          status === "error" then setErrorStatus(statusLight, statusText, terminateBtn, tooltip)
+          status === "aborted" then setAbortedStatus(statusLight, statusText, terminateBtn, tooltip)
+          status === "fatal" then setFatalStatus(statusLight, statusText, terminateBtn, tooltip)
+          else ()
+
+  fun render() =
+    set this.innerHTML = """
+      <div class="title">MLscript Web IDE</div>
+      <div class="status-container">
+        <div class="status-light status-idle"></div>
+        <span class="status-text">Not running</span>
+      </div>
+      <div class="status-tooltip" role="tooltip">
+        No execution is currently running.
+      </div>
+      <div class="actions">
+        <button id="compile" class="compile-btn">
+          <i class="icon-binary"></i>
+          Compile
+        </button>
+        <button id="execute" class="compile-btn">
+          <i class="icon-play"></i>
+          Execute
+        </button>
+        <button id="terminate" class="terminate-btn" style="display: none;">Terminate</button>
+      </div>
+    """
+
+  fun getActiveFilePath() =
+    let editorPanel = document.querySelector("editor-panel")
+    if
+      editorPanel is Absent then null
+      editorPanel.activeTabId is Absent then null
+      editorPanel.openTabs is Absent then null
+      else
+        let activeTab = editorPanel.openTabs.get(editorPanel.activeTabId)
+        if activeTab is Absent then null else activeTab.path
+
+  fun fileEventDetail() =
+    let detail = new mut Object
+    set detail.filePath = this.getActiveFilePath()
+    detail
+
+  fun fileEventOptions() =
+    let options = new mut Object
+    set
+      options.bubbles = true
+      options.detail = fileEventDetail()
+    options
+
+  fun bubbleEventOptions() =
+    let options = new mut Object
+    set options.bubbles = true
+    options
+
+  fun handleCompile() =
+    this.dispatchEvent(new CustomEvent("compile-requested", fileEventOptions()))
+
+  fun handleExecute() =
+    this.dispatchEvent(new CustomEvent("execute-requested", fileEventOptions()))
+
+  fun handleTerminate() =
+    this.dispatchEvent(new CustomEvent("terminate-requested", bubbleEventOptions()))
+
+  fun setCompilationStatus(nextStatus) =
+    set isCompiling = nextStatus === "running"
+    this.updateCompileButton()
+    this.updateExecuteButton()
+
+  fun setActiveFileMeta(meta) =
+    set isStdActive = if
+      meta is Absent then false
+      meta.isStd is Absent then false
+      else meta.isStd === true
+    this.updateCompileButton()
+    this.updateExecuteButton()
+
+  fun updateCompileButton() =
+    if this.querySelector("#compile") is
+      ~null as compileBtn do
+        if
+          isCompiling then
+            set compileBtn.disabled = true
+            compileBtn.classList.add("loading")
+            set compileBtn.innerHTML = """
+              <i class="icon-loader"></i>
+              Compiling...
+            """
+          else
+            set compileBtn.disabled = isStdActive
+            compileBtn.classList.remove("loading")
+            compileBtn.classList.toggle("disabled", isStdActive)
+            set compileBtn.innerHTML = """
+              <i class="icon-binary"></i>
+              Compile
+            """
+
+  fun updateExecuteButton() =
+    if this.querySelector("#execute") is
+      ~null as executeBtn do
+        set executeBtn.disabled = isStdActive
+        executeBtn.classList.toggle("disabled", isStdActive)
+
+  fun showTooltip(statusContainer, statusTooltip) =
+    set statusTooltip.style.display = "block"
+    computePosition(statusContainer, statusTooltip,
+      placement: "bottom",
+      middleware: [shift(padding: 5), offset(4)],
+    ).then(position =>
+      set
+        statusTooltip.style.top = position.y + "px"
+        statusTooltip.style.left = position.x + "px"
+    )
+
+  fun hideTooltip(statusTooltip) =
+    set statusTooltip.style.display = "none"
+
+  fun attachButtonListeners(panel) =
+    if panel.querySelector("#compile") is
+      ~null as compileBtn do compileBtn.addEventListener("click", () => panel.handleCompile())
+    if panel.querySelector("#execute") is
+      ~null as executeBtn do executeBtn.addEventListener("click", () => panel.handleExecute())
+    if panel.querySelector("#terminate") is
+      ~null as terminateBtn do terminateBtn.addEventListener("click", () => panel.handleTerminate())
+
+  fun attachStatusTooltip(panel) =
+    let statusContainer = panel.querySelector(".status-container")
+    let statusTooltip = panel.querySelector(".status-tooltip")
+    if statusContainer is ~Absent and statusTooltip is ~Absent do
+      statusContainer.addEventListener("mouseenter", () => panel.showTooltip(statusContainer, statusTooltip))
+      statusContainer.addEventListener("mouseleave", () => panel.hideTooltip(statusTooltip))
+      statusContainer.addEventListener("focus", () => panel.showTooltip(statusContainer, statusTooltip))
+      statusContainer.addEventListener("blur", () => panel.hideTooltip(statusTooltip))
+
+  fun attachEventListeners() =
+    let panel = this
+    attachButtonListeners(panel)
+    attachStatusTooltip(panel)
+
+customElements.define("toolbar-panel", ToolbarPanel)
