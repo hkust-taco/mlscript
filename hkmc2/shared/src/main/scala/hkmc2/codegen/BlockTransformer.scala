@@ -21,10 +21,9 @@ class BlockTransformer(subst: SymbolSubst):
   def applyMainBlock(main: Block): Block =
     applyBlock(main)
   
-  def applyImport(imp: Local -> Str): Local -> Str =
-    val (l, s) = imp
-    val l2 = applyLocal(l)
-    if l2 is l then imp else l2 -> s
+  def applyImport(imp: ImportSpec): ImportSpec =
+    val l2 = applyLocal(imp.local)
+    if l2 is imp.local then imp else imp.copy(local = l2)
   
   def applySubBlock(b: Block): Block = applyBlock(b)
 

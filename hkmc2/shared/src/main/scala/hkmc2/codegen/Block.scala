@@ -14,11 +14,9 @@ import semantics.*
 import semantics.Term.*
 import sem.Elaborator.State
 
+case class ImportSpec(local: Local, specifier: Str, kind: ImportKind)
 
-case class Program(
-  imports: Ls[Local -> Str],
-  main: Block,
-)
+case class Program(imports: Ls[ImportSpec], main: Block)
 
 
 sealed abstract class Block extends Product:

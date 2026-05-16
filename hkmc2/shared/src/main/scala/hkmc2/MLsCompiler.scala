@@ -106,10 +106,10 @@ class MLsCompiler
         case _ => t.subTerms.exists(findQuote)
       val hasQuote = findQuote(blk0)
       val blk = new Term.Blk(
-        Import(State.runtimeSymbol, runtimeFile.toString, runtimeFile) ::
+        Import(State.runtimeSymbol, runtimeFile.toString, runtimeFile, ImportKind.Default) ::
           // Only import `Term.mls` when necessary.
           (if hasQuote then
-            Import(State.termSymbol, termFile.toString, termFile) :: blk0.stats
+            Import(State.termSymbol, termFile.toString, termFile, ImportKind.Default) :: blk0.stats
           else
             blk0.stats),
         blk0.res

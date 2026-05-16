@@ -11,34 +11,52 @@ import hkmc2.io
 import utils.TraceLogger
 
 import Elaborator.*
-import hkmc2.syntax.{LetBind, Tree}, Tree.StrLit
+import hkmc2.syntax.{LetBind, Tree}, Tree.{Ident, StrLit}
 
+enum ImportSelection:
+  case Default(alias: Opt[Ident])
+  case Namespace(alias: Ident)
+  case Named(imported: Ident, alias: Opt[Ident])
 
 class Importer:
   self: Elaborator =>
   import tl.*
+  import ImportKind.{Default as DefaultImport, Namespace as NamespaceImport, Named as NamedImport}
+  import ImportSelection.{Default as DefaultSelection, Namespace as NamespaceSelection, Named as NamedSelection}
   
-  def importPath(rawPath: StrLit, alias: Opt[syntax.Tree.Ident])(using cfg: Config): Import =
+  def importPath(rawPath: StrLit, selection: ImportSelection)(using cfg: Config): Import =
     cctx.moduleResolver.tryResolveModulePath(rawPath.value, wd) match
       case S(ModuleResolver.ResolvedModule.Verbatim(specifier, moduleName)) =>
         // The path resolves to a platform dependent specifier, which is NOT a
         // path and should be used as-is, e.g., Node.js built-in modules.
-        val id = alias.getOrElse(new syntax.Tree.Ident(moduleName)) // TODO loc
+        val id = localId(selection, moduleName)
         val sym = TermSymbol(LetBind, N, id)
-        Import(sym, specifier, wd / io.RelPath(rawPath.value)) // hmm, the third arg is dummy???
+        Import(sym, specifier, wd / io.RelPath(moduleName), importKind(selection, moduleName))
       case S(ModuleResolver.ResolvedModule.File(sourceFile, targetFile, moduleName)) =>
         // The specifier is resolved to a file path.
-        importFile(rawPath, sourceFile, targetFile, moduleName, alias)
+        importFile(rawPath, sourceFile, targetFile, moduleName, selection)
       case N =>
         // The specifier could not be resolved. We treat it as a file path.
         val actualFile =
           if rawPath.value.startsWith("/") then io.Path(rawPath.value)
           else wd / io.RelPath(rawPath.value)
         val targetFile = cctx.moduleResolver.targetPathForSource(actualFile).getOrElse(actualFile)
-        importFile(rawPath, actualFile, targetFile, actualFile.baseName, alias)
+        importFile(rawPath, actualFile, targetFile, actualFile.baseName, selection)
   
-  private def importFile(rawPath: StrLit, actualFile: io.Path, targetFile: io.Path, nme: Str, alias: Opt[syntax.Tree.Ident])(using cfg: Config): Import =
-    val id = alias.getOrElse(new syntax.Tree.Ident(nme)) // TODO loc
+  private def localId(selection: ImportSelection, moduleName: Str): Ident = selection match
+    case DefaultSelection(alias) => alias.getOrElse(new Ident(moduleName)) // TODO loc
+    case NamespaceSelection(alias) => alias
+    case NamedSelection(imported, alias) => alias.getOrElse(imported)
+  
+  private def importKind(selection: ImportSelection, moduleName: Str): ImportKind = selection match
+    case DefaultSelection(_) => DefaultImport
+    case NamespaceSelection(_) => NamespaceImport
+    case NamedSelection(imported, _) =>
+      if imported.name === moduleName then DefaultImport else NamedImport(imported.name)
+  
+  private def importFile(rawPath: StrLit, actualFile: io.Path, targetFile: io.Path, nme: Str, selection: ImportSelection)(using cfg: Config): Import =
+    val id = localId(selection, nme)
+    val kind = importKind(selection, nme)
     
     lazy val sym = TermSymbol(LetBind, N, id)
     
@@ -49,7 +67,7 @@ class Importer:
       actualFile.ext match
       
       case "mjs" | "js" =>
-        Import(sym, targetFile.toString, targetFile)
+        Import(sym, targetFile.toString, targetFile, kind)
         
       case "mls" if {
         !cctx.beingCompiled.contains(actualFile) `||`:
@@ -63,25 +81,41 @@ class Importer:
         val importedSym = tl.trace(s">>> Importing $actualFile"):
           given TL = tl
           val artifact = cctx.getElaboratedBlock(actualFile, prelude)
-          artifact.tree.definedSymbols.find(_._1 === nme) match
-          case Some(nme -> imsym) => imsym
-          case None => lastWords(s"File $actualFile does not define a symbol named $nme")
-        val sym = alias.fold(importedSym): alias =>
-          val res = BlockMemberSymbol(alias.name, importedSym.trees, importedSym.nameIsMeaningful)
-          res.tsym = importedSym.tsym
-          res
+          kind match
+          case DefaultImport =>
+            artifact.tree.definedSymbols.find(_._1 === nme) match
+            case Some(nme -> imsym) => imsym
+            case None => lastWords(s"File $actualFile does not define a symbol named $nme")
+          case NamespaceImport =>
+            sym
+          case NamedImport(importedName) =>
+            raise:
+              ErrorReport(
+                msg"Named imports from MLscript sources currently support only the default module name '$nme'" ->
+                  rawPath.toLoc :: Nil)
+            sym
+        val selectedSym = (selection, importedSym) match
+          case (DefaultSelection(S(alias)), base: BlockMemberSymbol) =>
+            val res = BlockMemberSymbol(alias.name, base.trees, base.nameIsMeaningful)
+            res.tsym = base.tsym
+            res
+          case (NamedSelection(_, S(alias)), base: BlockMemberSymbol) if kind === DefaultImport =>
+            val res = BlockMemberSymbol(alias.name, base.trees, base.nameIsMeaningful)
+            res.tsym = base.tsym
+            res
+          case _ => importedSym
         
         val jsFile =
           if targetFile.ext === "mjs" then targetFile
           else targetFile.up / io.RelPath(targetFile.baseName + ".mjs")
-        Import(sym, jsFile.toString, jsFile)
+        Import(selectedSym, jsFile.toString, jsFile, kind)
         
       case _ =>
         if actualFile.ext =/= "mls" then raise:
           ErrorReport(msg"Unsupported file type" -> rawPath.toLoc :: Nil)
-        Import(sym, rawPath.value, actualFile)
+        Import(sym, rawPath.value, actualFile, kind)
       
     else
       raise:
         ErrorReport(msg"Cannot resolve the import path ${actualFile.toString}" -> rawPath.toLoc :: Nil)
-      Import(sym, rawPath.value, actualFile)
+      Import(sym, rawPath.value, actualFile, kind)

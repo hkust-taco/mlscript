@@ -637,7 +637,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
           case (modDef: ModuleOrObjectDef) :: stats =>
             typeNames.add(modDef.sym.nme)
             goStats(stats)
-          case Import(sym, str, pth) :: stats =>
+          case Import(sym, str, pth, kind) :: stats =>
             goStats(stats) // TODO:
           case stat :: _ =>
             TODO(stat)

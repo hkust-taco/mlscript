@@ -1085,25 +1085,46 @@ extends Importer with ucs.SplitElaborator:
             go(sts, Nil, acc)
       case (m @ PrefixApp(Keywrd(Keyword.`import`), arg)) :: sts =>
         reportUnusedAnnotations
-        val pathAndAlias: Opt[(Tree, Opt[Ident])] = arg match
-          case InfixApp(pathArg, Keywrd(Keyword.`as`), alias: Ident) => S((pathArg, S(alias)))
+        def importMember(tree: Tree): Opt[ImportSelection] = tree match
+          case id: Ident => S(ImportSelection.Named(id, N))
+          case InfixApp(imported: Ident, Keywrd(Keyword.`as`), alias: Ident) =>
+            S(ImportSelection.Named(imported, S(alias)))
+          case InfixApp(imported: Ident, Keywrd(Keyword.`as`), Error()) => N
+          case InfixApp(_, Keywrd(Keyword.`as`), badAlias) =>
+            raise(ErrorReport(
+              msg"Expected identifier after 'as' in import statement" ->
+              badAlias.toLoc :: Nil))
+            N
+          case badMember =>
+            raise(ErrorReport(
+              msg"Expected identifier in import member list" ->
+              badMember.toLoc :: Nil))
+            N
+        val parsedImports: Opt[Ls[(Tree, ImportSelection)]] = arg match
+          case Jux(pathArg, Block(members)) =>
+            S(members.flatMap: member =>
+              importMember(member).map(pathArg -> _).toList)
+          case InfixApp(pathArg, Keywrd(Keyword.`as`), alias: Ident) =>
+            S((pathArg, ImportSelection.Namespace(alias)) :: Nil)
           case InfixApp(pathArg, Keywrd(Keyword.`as`), Error()) => N
           case InfixApp(_, Keywrd(Keyword.`as`), badAlias) =>
             raise(ErrorReport(
               msg"Expected identifier after 'as' in import statement" ->
               badAlias.toLoc :: Nil))
             N
-          case pathArg => S((pathArg, N))
-        val (newCtx, newAcc) = pathAndAlias match
-          case S((path: StrLit, alias)) =>
-            val stmt = importPath(path, alias).withLocOf(m)
-            (ctx + (stmt.sym.nme -> stmt.sym),
-              stmt :: acc)
-          case S((pathArg, _)) =>
-            raise(ErrorReport(
-              msg"Expected string literal after 'import' keyword" ->
-              pathArg.toLoc :: Nil))
-            (ctx, acc)
+          case pathArg => S((pathArg, ImportSelection.Default(N)) :: Nil)
+        val (newCtx, newAcc) = parsedImports match
+          case S(imports) =>
+            imports.foldLeft(ctx -> acc):
+              case ((nextCtx, nextAcc), (path: StrLit, selection)) =>
+                val stmt = importPath(path, selection).withLocOf(m)
+                (nextCtx + (stmt.sym.nme -> stmt.sym),
+                  stmt :: nextAcc)
+              case ((nextCtx, nextAcc), (pathArg, _)) =>
+                raise(ErrorReport(
+                  msg"Expected string literal after 'import' keyword" ->
+                  pathArg.toLoc :: Nil))
+                (nextCtx, nextAcc)
           case N => // errors have been reported above.
             (ctx, acc)
         newCtx.givenIn:

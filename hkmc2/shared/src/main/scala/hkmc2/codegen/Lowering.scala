@@ -1202,7 +1202,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             override def doTrace: Bool = dCfg.debug
             override def emitDbg(str: Str): Unit = outterTl.emitDbg(s"deforest > $str")
           ).givenIn:
-            deforest.Deforest(Program(imps.map(imp => imp.sym -> imp.str), desug)).main
+            deforest.Deforest(Program(imps.map(imp => ImportSpec(imp.sym, imp.str, imp.kind)), desug)).main
     
     val handlerPaths = new HandlerPaths
     
@@ -1241,7 +1241,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       else staged
     
     Program(
-      imps.map(imp => imp.sym -> imp.str),
+      imps.map(imp => ImportSpec(imp.sym, imp.str, imp.kind)),
       res
     )
   

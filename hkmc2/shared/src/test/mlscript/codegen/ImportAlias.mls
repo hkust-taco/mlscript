@@ -1,7 +1,7 @@
 :js
 
 
-import "../../mlscript-compile/Example.mls" as AnotherExample
+import "../../mlscript-compile/Example.mls" { Example as AnotherExample }
 
 :e
 Example.inc(0)
@@ -16,7 +16,7 @@ AnotherExample.inc(0)
 
 
 :silent
-import "../../mlscript-compile/Example.mjs" as JSExample
+import "../../mlscript-compile/Example.mjs" { Example as JSExample }
 
 :e
 Example.inc(0)
