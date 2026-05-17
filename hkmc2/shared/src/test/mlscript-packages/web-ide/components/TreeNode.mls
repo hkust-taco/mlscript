@@ -4,20 +4,19 @@ import "../common/JS.mls"
 open JS { Absent }
 
 fun emptyElements() =
-  let elements = new mut Object
-  set
-    elements.fileItem = null
-    elements.fileNameText = null
-    elements.compiledDot = null
-    elements.details = null
-    elements.summary = null
-    elements.childrenContainer = null
-    elements.fileIcon = null
-    elements.fileName = null
-    elements.mjsButton = null
-    elements.folderIcon = null
-    elements.folderName = null
-  elements
+  mut {
+    fileItem: null,
+    fileNameText: null,
+    compiledDot: null,
+    details: null,
+    summary: null,
+    childrenContainer: null,
+    fileIcon: null,
+    fileName: null,
+    mjsButton: null,
+    folderIcon: null,
+    folderName: null
+  }
 
 fun parentPathOf(path) =
   path.substring(0, path.lastIndexOf("/"))
@@ -262,18 +261,10 @@ class TreeNode extends HTMLElement with
       else "file"
 
   fun fileOpenDetail(openPath, fileName) =
-    let detail = new mut Object
-    set
-      detail.path = openPath
-      detail.fileName = fileName
-    detail
+    mut { path: openPath, :fileName }
 
   fun fileOpenOptions(openPath, fileName) =
-    let options = new mut Object
-    set
-      options.detail = fileOpenDetail(openPath, fileName)
-      options.bubbles = true
-    options
+    mut { detail: fileOpenDetail(openPath, fileName), bubbles: true }
 
   fun dispatchFileOpen(openPath, fileName) =
     this.dispatchEvent(new CustomEvent("file-open", fileOpenOptions(openPath, fileName)))

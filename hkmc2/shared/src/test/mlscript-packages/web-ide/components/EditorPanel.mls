@@ -46,21 +46,13 @@ class EditorPanel extends HTMLElement with
     """
 
   fun pathsDetail(paths) =
-    let detail = new mut Object
-    set detail.paths = paths
-    detail
+    mut { :paths }
 
   fun eventOptions(detail) =
-    let options = new mut Object
-    set options.detail = detail
-    options
+    mut { :detail }
 
   fun bubbleEventOptions(detail) =
-    let options = new mut Object
-    set
-      options.bubbles = true
-      options.detail = detail
-    options
+    mut { bubbles: true, :detail }
 
   fun emitOpenFilesChange() =
     let paths = Array.from(this.openTabs.values()).map((tab, ...) => tab.path)
@@ -77,8 +69,8 @@ class EditorPanel extends HTMLElement with
 
   fun nodeAttrs(event) =
     if
-      event.node is Absent then new mut Object
-      event.node.attrs is Absent then new mut Object
+      event.node is Absent then mut {}
+      event.node.attrs is Absent then mut {}
       else event.node.attrs
 
   fun updateTabContent(tab, path) =
@@ -88,13 +80,8 @@ class EditorPanel extends HTMLElement with
       fileContent is Absent then ()
       fileContent === currentContent then ()
       else
-        let changes = new mut Object
-        set
-          changes.from = 0
-          changes.to = tab.editorView.state.doc.length
-          changes.insert = fileContent
-        let updateOptions = new mut Object
-        set updateOptions.changes = changes
+        let changes = mut { from: 0, to: tab.editorView.state.doc.length, insert: fileContent }
+        let updateOptions = mut { :changes }
         let transaction = tab.editorView.state.update(updateOptions)
         tab.editorView.dispatch(transaction)
 
@@ -133,9 +120,7 @@ class EditorPanel extends HTMLElement with
     if tab is Absent then null else tab.path
 
   fun filePathDetail(path) =
-    let detail = new mut Object
-    set detail.filePath = path
-    detail
+    mut { filePath: path }
 
   fun dispatchCompile() =
     document.dispatchEvent(new CustomEvent("compile-requested", bubbleEventOptions(filePathDetail(activeFilePath()))))
@@ -250,8 +235,8 @@ class EditorPanel extends HTMLElement with
 
   fun attrsOrEmpty(nodeInfo) =
     if
-      nodeInfo is Absent then new mut Object
-      nodeInfo.attrs is Absent then new mut Object
+      nodeInfo is Absent then mut {}
+      nodeInfo.attrs is Absent then mut {}
       else nodeInfo.attrs
 
   fun isReadonlyNode(nodeInfo) =
@@ -260,15 +245,14 @@ class EditorPanel extends HTMLElement with
       else nodeInfo.readonly is true
 
   fun tabRecord(fileName, filePath, editorDiv, editorView, isReadonly, attrs) =
-    let tab = new mut Object
-    set
-      tab.name = fileName
-      tab.path = filePath
-      tab.editorDiv = editorDiv
-      tab.editorView = editorView
-      tab.readonly = isReadonly
-      tab.attrs = attrs
-    tab
+    mut {
+      name: fileName,
+      path: filePath,
+      :editorDiv,
+      :editorView,
+      readonly: isReadonly,
+      :attrs
+    }
 
   fun openFile(filePath, fileName) =
     let existingTabId = existingTabIdFor(filePath)
@@ -305,14 +289,8 @@ class EditorPanel extends HTMLElement with
       tab.editorView is Absent then ()
       else
         let linePos = tab.editorView.state.doc.line(line)
-        let selection = new mut Object
-        set
-          selection.anchor = linePos.from
-          selection.head = linePos.from
-        let options = new mut Object
-        set
-          options.selection = selection
-          options.scrollIntoView = true
+        let selection = mut { anchor: linePos.from, head: linePos.from }
+        let options = mut { :selection, scrollIntoView: true }
         tab.editorView.dispatch(options)
         tab.editorView.focus()
 
@@ -345,12 +323,11 @@ class EditorPanel extends HTMLElement with
     this.emitOpenFilesChange()
 
   fun tabLogInfo(reason) =
-    let info = new mut Object
-    set
-      info.reason = reason
-      info.pendingTargetPath = if this.tabTooltipPendingTarget is Absent then null else this.tabTooltipPendingTarget.dataset.path
-      info.hoverTargetPath = if this.tabTooltipHoverTarget is Absent then null else this.tabTooltipHoverTarget.dataset.path
-    info
+    mut {
+      :reason,
+      pendingTargetPath: if this.tabTooltipPendingTarget is Absent then null else this.tabTooltipPendingTarget.dataset.path,
+      hoverTargetPath: if this.tabTooltipHoverTarget is Absent then null else this.tabTooltipHoverTarget.dataset.path
+    }
 
   fun clearTabTooltip(reason) =
     let tooltip = this.querySelector("file-tooltip.tab-tooltip")
@@ -396,23 +373,21 @@ class EditorPanel extends HTMLElement with
     this.openTabs.get(tabEl.getAttribute("data-tab-id"))
 
   fun tooltipInfo(tab) =
-    let info = new mut Object
-    set
-      info.path = tab.path
-      info.name = tab.name
-      info.size = tab.editorView.state.doc.length
-      info.placement = "bottom"
-    info
+    mut {
+      path: tab.path,
+      name: tab.name,
+      size: tab.editorView.state.doc.length,
+      placement: "bottom"
+    }
 
   fun tabHoverLog(tabEl, reason) =
-    let info = new mut Object
-    set
-      info.reason = reason
-      info.tabId = tabEl.getAttribute("data-tab-id")
-      info.path = tabEl.dataset.path
-      info.pendingTargetPath = if this.tabTooltipPendingTarget is Absent then null else this.tabTooltipPendingTarget.dataset.path
-      info.hoverTargetPath = if this.tabTooltipHoverTarget is Absent then null else this.tabTooltipHoverTarget.dataset.path
-    info
+    mut {
+      :reason,
+      tabId: tabEl.getAttribute("data-tab-id"),
+      path: tabEl.dataset.path,
+      pendingTargetPath: if this.tabTooltipPendingTarget is Absent then null else this.tabTooltipPendingTarget.dataset.path,
+      hoverTargetPath: if this.tabTooltipHoverTarget is Absent then null else this.tabTooltipHoverTarget.dataset.path
+    }
 
   fun tabShowLog(tabEl, reason, tooltip) =
     let info = tabHoverLog(tabEl, reason)
@@ -509,11 +484,7 @@ class EditorPanel extends HTMLElement with
       window.setTimeout(this.updateArrowVisibility, 0)
 
   fun scrollOptions(left) =
-    let options = new mut Object
-    set
-      options.left = left
-      options.behavior = "smooth"
-    options
+    mut { :left, behavior: "smooth" }
 
   fun scrollTabIntoView(tabId) =
     let scrollLater = () =>
@@ -539,11 +510,7 @@ class EditorPanel extends HTMLElement with
       else false
 
   fun activeTabDetail(tab) =
-    let detail = new mut Object
-    set
-      detail.path = if tab is Absent then null else tab.path
-      detail.isStd = isStdTab(tab)
-    detail
+    mut { path: if tab is Absent then null else tab.path, isStd: isStdTab(tab) }
 
   fun notifyActiveTabChange(tab) =
     document.dispatchEvent(new CustomEvent("active-tab-changed", eventOptions(activeTabDetail(tab))))

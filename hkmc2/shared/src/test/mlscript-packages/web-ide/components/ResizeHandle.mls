@@ -89,16 +89,10 @@ class ResizeHandle extends HTMLElement with
     target.setAttribute("height", height)
 
   fun resizeDetail(target) =
-    let detail = new mut Object
-    set
-      detail.width = target.offsetWidth
-      detail.height = target.offsetHeight
-    detail
+    mut { width: target.offsetWidth, height: target.offsetHeight }
 
   fun resizeEventOptions(target) =
-    let options = new mut Object
-    set options.detail = resizeDetail(target)
-    options
+    mut { detail: resizeDetail(target) }
 
   fun dispatchPanelResize(target) =
     target.dispatchEvent(new CustomEvent("panel-resize", resizeEventOptions(target)))

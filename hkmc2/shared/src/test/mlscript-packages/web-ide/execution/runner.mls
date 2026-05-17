@@ -8,23 +8,13 @@ module runner with...
 let latestExecution = null
 
 fun workerOptions() =
-  let options = new mut Object
-  set options.("type") = "module"
-  options
+  mut { "type": "module" }
 
 fun statusDetail(status, runningTime) =
-  let detail = new mut Object
-  set
-    detail.status = status
-    detail.runningTime = runningTime
-  detail
+  mut { :status, :runningTime }
 
 fun customEventOptions(status, runningTime) =
-  let options = new mut Object
-  set
-    options.detail = statusDetail(status, runningTime)
-    options.bubbles = true
-  options
+  mut { detail: statusDetail(status, runningTime), bubbles: true }
 
 fun dispatchStatusChange(status, runningTime) =
   let event = new CustomEvent("execution-status-change", customEventOptions(status, runningTime))
@@ -41,24 +31,17 @@ fun clearConsolePanel() =
     ~null as panel do panel.clear()
 
 fun runMessage(id, mainPath, files) =
-  let message = new mut Object
-  set
-    message.("type") = "run"
-    message.id = id
-    message.mainPath = mainPath
-    message.files = files
-  message
+  mut { "type": "run", :id, :mainPath, :files }
 
 fun workerErrorDetails(event) =
-  let details = new mut Object
-  set
-    details.message = event.message
-    details.filename = event.filename
-    details.lineno = event.lineno
-    details.colno = event.colno
-    details.error = event.error
-    details.fullEvent = event
-  details
+  mut {
+    message: event.message,
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno,
+    error: event.error,
+    fullEvent: event
+  }
 
 fun errorStack(error) =
   if
@@ -86,13 +69,12 @@ fun workerErrorMessage(event) =
   message
 
 fun makeExecution(id) =
-  let execution = new mut Object
-  set
-    execution.id = id
-    execution.worker = new Worker("execution/worker.mjs", workerOptions())
-    execution.isRunning = false
-    execution.startTime = null
-  execution
+  mut {
+    :id,
+    worker: new Worker("execution/worker.mjs", workerOptions()),
+    isRunning: false,
+    startTime: null
+  }
 
 fun run(execution, id, mainPath) =
   let files = fs.getAllFiles(undefined)

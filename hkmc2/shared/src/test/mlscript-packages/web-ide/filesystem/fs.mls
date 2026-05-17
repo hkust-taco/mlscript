@@ -35,7 +35,7 @@ val fileTree = mut []
 let listeners = new Set()
 
 fun objectOrEmpty(value) = if
-  value is Absent then new mut Object
+  value is Absent then mut {}
   else value
 
 fun textOrEmpty(value) = if
@@ -65,12 +65,7 @@ fun updateChangeTime(node) =
   set node.ctime = Date.now()
 
 fun makeEvent(kind, path, node) =
-  let event = new mut Object
-  set
-    event.("type") = kind
-    event.path = path
-    event.node = node
-  event
+  mut { "type": kind, :path, :node }
 
 fun notifyChange(event) =
   listeners.forEach((listener, ...) => listener(event))
@@ -83,11 +78,7 @@ fun notifyAttr(path, node, key, value) =
   notifyChange(event)
 
 fun makeParentResult(parent, index) =
-  let result = new mut Object
-  set
-    result.parent = parent
-    result.index = index
-  result
+  mut { :parent, :index }
 
 fun sortNodes(nodes) =
   nodes.sort((a, b) => if
@@ -180,11 +171,6 @@ fun write(path, content) =
       notifyChange(makeEvent("write", path, node))
       true
     else false
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:534)
-//│ ╔══[COMPILATION ERROR] Name not found: createFile
-//│ ║  l.174: 	    null then createFile(path, content, force: true)
-//│ ╙──       	              ^^^^^^^^^^
 
 fun ensureFolders(parentPath) =
   let segments = parentPath.split("/")
@@ -194,13 +180,8 @@ fun ensureFolders(parentPath) =
     let segment = segments.at(i)
     set currentPath += "/" + segment
     if pathExists(currentPath) is false do
-      createFolder(currentPath, new mut Object)
+      createFolder(currentPath, mut {})
     set i += 1
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:534)
-//│ ╔══[COMPILATION ERROR] Name not found: createFolder
-//│ ║  l.197: 	      createFolder(currentPath, new mut Object)
-//│ ╙──       	      ^^^^^^^^^^^^
 
 fun parentForNewFile(parentPath, options) =
   if
@@ -227,7 +208,7 @@ fun createFile(path, contentArg, optionsArg) =
     parent is null then false
     else
       let stamp = timestamps()
-      let attrs = Object.assign(new mut Object, objectOrEmpty(options.("attrs")))
+      let attrs = Object.assign(mut {}, objectOrEmpty(options.("attrs")))
       setDefaultCompiled(fileName, attrs)
       let node = new mut FileNode(
         fileName,
@@ -331,7 +312,7 @@ fun collectFiles(nodes, currentPath, predicate, result) =
         collectFiles(children, nodePath, predicate, result)
 
 fun getAllFiles(predicate) =
-  let result = new mut Object
+  let result = mut {}
   collectFiles(fileTree, "", predicate, result)
   result
 

@@ -55,32 +55,23 @@ class ReservedPanel extends HTMLElement with
       else 999
 
   fun lineColumn(line, column) =
-    let result = new mut Object
-    set
-      result.line = line
-      result.column = column
-    result
+    mut { :line, :column }
 
   fun getLineAndColumn(text, offset) =
     let lines = text.substring(0, offset).split("\n")
     lineColumn(lines.length, lines.at(lines.length - 1).length + 1)
 
   fun snippetLine(lineNumber, content) =
-    let line = new mut Object
-    set
-      line.lineNumber = lineNumber
-      line.content = content
-    line
+    mut { :lineNumber, :content }
 
   fun snippetResult(startPos, endPos, lines) =
-    let snippet = new mut Object
-    set
-      snippet.startLine = startPos.line
-      snippet.startColumn = startPos.column
-      snippet.endLine = endPos.line
-      snippet.endColumn = endPos.column
-      snippet.lines = lines
-    snippet
+    mut {
+      startLine: startPos.line,
+      startColumn: startPos.column,
+      endLine: endPos.line,
+      endColumn: endPos.column,
+      :lines
+    }
 
   fun extractCodeSnippet(text, start, endOffset) =
     let startPos = this.getLineAndColumn(text, start)
@@ -321,12 +312,8 @@ class ReservedPanel extends HTMLElement with
     event.stopPropagation()
     let filePath = event.currentTarget.dataset.filePath
     let line = parseInt(event.currentTarget.dataset.line, 10)
-    let detail = new mut Object
-    set
-      detail.filePath = filePath
-      detail.line = line
-    let options = new mut Object
-    set options.detail = detail
+    let detail = mut { :filePath, :line }
+    let options = mut { :detail }
     document.dispatchEvent(new CustomEvent("open-file-at-location", options))
 
   fun toggleAllDiagnostics(event) =

@@ -8,53 +8,40 @@ import "../filesystem/fs.mls"
 module editor with...
 
 fun rootRule() =
-  let rule = new mut Object
-  set
-    rule.height = "100%"
-    rule.fontSize = "14px"
-  rule
+  mut { height: "100%", fontSize: "14px" }
 
 fun scrollerRule() =
-  let rule = new mut Object
-  set rule.overflow = "auto"
-  rule
+  mut { overflow: "auto" }
 
 fun contentRule() =
-  let rule = new mut Object
-  set
-    rule.caretColor = "var(--sand-12)"
-    rule.fontFamily = "'Google Sans Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace"
-  rule
+  mut {
+    caretColor: "var(--sand-12)",
+    fontFamily: "'Google Sans Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace"
+  }
 
 fun cursorRule() =
-  let rule = new mut Object
-  set rule.borderLeftColor = "var(--sand-12)"
-  rule
+  mut { borderLeftColor: "var(--sand-12)" }
 
 fun guttersRule() =
-  let rule = new mut Object
-  set
-    rule.backgroundColor = "var(--sand-2)"
-    rule.color = "var(--sand-11)"
-    rule.borderRight = "1px solid var(--sand-6)"
-  rule
+  mut {
+    backgroundColor: "var(--sand-2)",
+    color: "var(--sand-11)",
+    borderRight: "1px solid var(--sand-6)"
+  }
 
 fun activeLineGutterRule() =
-  let rule = new mut Object
-  set rule.backgroundColor = "var(--sand-2)"
-  rule
+  mut { backgroundColor: "var(--sand-2)" }
 
 fun editorThemeSpec() =
-  let spec = new mut Object
-  set
-    spec.("&") = rootRule()
-    spec.(".cm-scroller") = scrollerRule()
-    spec.(".cm-content") = contentRule()
-    spec.(".cm-lineNumbers") = contentRule()
-    spec.(".cm-cursor") = cursorRule()
-    spec.(".cm-editor .cm-gutters") = guttersRule()
-    spec.(".cm-activeLineGutter") = activeLineGutterRule()
-  spec
+  mut {
+    "&": rootRule(),
+    ".cm-scroller": scrollerRule(),
+    ".cm-content": contentRule(),
+    ".cm-lineNumbers": contentRule(),
+    ".cm-cursor": cursorRule(),
+    ".cm-editor .cm-gutters": guttersRule(),
+    ".cm-activeLineGutter": activeLineGutterRule()
+  }
 
 fun languageExtensions(extension) =
   let extensions = mut [theme]
@@ -92,12 +79,11 @@ fun editorExtensions(filePath, extension, isReadonly) =
   extensions
 
 fun editorOptions(container, initialContent, filePath, extension, isReadonly) =
-  let options = new mut Object
-  set
-    options.doc = initialContent
-    options.extensions = editorExtensions(filePath, extension, isReadonly)
-    options.parent = container
-  options
+  mut {
+    doc: initialContent,
+    extensions: editorExtensions(filePath, extension, isReadonly),
+    parent: container
+  }
 
 fun createEditor(container, initialContent, filePath, extension, isReadonly) =
   Reflect.construct(EditorView, [

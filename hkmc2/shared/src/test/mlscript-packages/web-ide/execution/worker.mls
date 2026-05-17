@@ -12,11 +12,7 @@ fun dynamicImport(specifier) =
   importModule(specifier)
 
 fun message(kind, payload) =
-  let message = new mut Object
-  set
-    message.("type") = kind
-    message.payload = payload
-  message
+  mut { "type": kind, :payload }
 
 fun post(kind, payload) =
   self.postMessage(message(kind, payload))
@@ -81,13 +77,7 @@ fun resolveRelative(specifier, referrer) =
   normalizePath(dir + specifier)
 
 fun workerGlobalError(message, source, lineno, colno, error) =
-  let details = new mut Object
-  set
-    details.message = message
-    details.source = source
-    details.lineno = lineno
-    details.colno = colno
-    details.error = error
+  let details = mut { :message, :source, :lineno, :colno, :error }
   console.error("[Worker global error]", details)
   post("error", "Uncaught error in worker: " + message + "\n" + errorStack(error))
   true
@@ -110,20 +100,14 @@ fun vmWarn(...args) =
   consolePayload("console.warn", args)
 
 fun vmConsole() =
-  let vm = new mut Object
-  set
-    vm.log = vmLog
-    vm.error = vmError
-    vm.warn = vmWarn
-  vm
+  mut { log: vmLog, error: vmError, warn: vmWarn }
 
 fun endowments() =
-  let scope = new mut Object
-  set
-    scope.console = vmConsole()
-    scope.fetch = self.fetch
-    scope.structuredClone = self.structuredClone
-  scope
+  mut {
+    console: vmConsole(),
+    fetch: self.fetch,
+    structuredClone: self.structuredClone
+  }
 
 fun resolveHook(moduleSpecifier, moduleReferrer) =
   post("log", "Resolving module: " + moduleSpecifier + " from " + moduleReferrer)
@@ -142,14 +126,13 @@ fun importHook(fileMap, fullSpecifier) =
     Reflect.construct(ModuleSource, [src, path])
 
 fun compartmentOptions(fileMap) =
-  let options = new mut Object
-  set
-    options.resolveHook = resolveHook
-    options.importHook = fullSpecifier => importHook(fileMap, fullSpecifier)
-  options
+  mut {
+    resolveHook: resolveHook,
+    importHook: fullSpecifier => importHook(fileMap, fullSpecifier)
+  }
 
 fun makeCompartment(fileMap) =
-  let modules = new mut Object
+  let modules = mut {}
   Reflect.construct(Compartment, [
     endowments(),
     modules,

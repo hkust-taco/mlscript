@@ -137,21 +137,13 @@ class ToolbarPanel extends HTMLElement with
         if activeTab is Absent then null else activeTab.path
 
   fun fileEventDetail() =
-    let detail = new mut Object
-    set detail.filePath = this.getActiveFilePath()
-    detail
+    mut { filePath: this.getActiveFilePath() }
 
   fun fileEventOptions() =
-    let options = new mut Object
-    set
-      options.bubbles = true
-      options.detail = fileEventDetail()
-    options
+    mut { bubbles: true, detail: fileEventDetail() }
 
   fun bubbleEventOptions() =
-    let options = new mut Object
-    set options.bubbles = true
-    options
+    mut { bubbles: true }
 
   fun handleCompile() =
     this.dispatchEvent(new CustomEvent("compile-requested", fileEventOptions()))

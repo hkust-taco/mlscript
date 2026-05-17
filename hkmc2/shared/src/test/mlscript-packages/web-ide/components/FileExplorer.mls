@@ -10,9 +10,7 @@ fun basenameWithoutExt(name) =
   name.slice(0, -4)
 
 fun forceOptions() =
-  let options = new mut Object
-  set options.force = true
-  options
+  mut { force: true }
 
 class FileExplorer extends HTMLElement with
   let isCollapsed = false
@@ -237,18 +235,10 @@ class FileExplorer extends HTMLElement with
       set newFileInput = null
 
   fun fileOpenDetail(path, fileName) =
-    let detail = new mut Object
-    set
-      detail.path = path
-      detail.fileName = fileName
-    detail
+    mut { :path, :fileName }
 
   fun fileOpenOptions(path, fileName) =
-    let options = new mut Object
-    set
-      options.detail = fileOpenDetail(path, fileName)
-      options.bubbles = true
-    options
+    mut { detail: fileOpenDetail(path, fileName), bubbles: true }
 
   fun dispatchFileOpen(path, fileName) =
     this.dispatchEvent(new CustomEvent("file-open", fileOpenOptions(path, fileName)))
@@ -302,11 +292,7 @@ class FileExplorer extends HTMLElement with
       else target.dataset.name
 
   fun tooltipOptions(targetPath, targetName) =
-    let options = new mut Object
-    set
-      options.path = targetPath
-      options.name = targetName
-    options
+    mut { path: targetPath, name: targetName }
 
   fun showTooltipIfActive(currentTarget, tooltip) =
     if

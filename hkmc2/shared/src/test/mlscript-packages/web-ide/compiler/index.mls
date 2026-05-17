@@ -6,56 +6,33 @@ open JS { Absent }
 module index with...
 
 fun workerOptions() =
-  let options = new mut Object
-  set options.("type") = "module"
-  options
+  mut { "type": "module" }
 
 val compilerWorker = new Worker("/compiler/worker.mjs", workerOptions())
 
 val callbackMap = new Map()
 
 fun statusDetail(status) =
-  let detail = new mut Object
-  set detail.status = status
-  detail
+  mut { :status }
 
 fun statusEventOptions(status) =
-  let options = new mut Object
-  set options.detail = statusDetail(status)
-  options
+  mut { detail: statusDetail(status) }
 
 fun dispatchStatus(status) =
   let event = new CustomEvent("compilation-status-change", statusEventOptions(status))
   document.dispatchEvent(event)
 
 fun callbackRecord(resolve, reject) =
-  let callbacks = new mut Object
-  set
-    callbacks.resolve = resolve
-    callbacks.reject = reject
-  callbacks
+  mut { :resolve, :reject }
 
 fun successResult(diagnostics, changes) =
-  let result = new mut Object
-  set
-    result.result = diagnostics
-    result.changes = changes
-  result
+  mut { result: diagnostics, :changes }
 
 fun compilePayload(id, filePaths, allFiles) =
-  let payload = new mut Object
-  set
-    payload.id = id
-    payload.filePaths = filePaths
-    payload.allFiles = allFiles
-  payload
+  mut { :id, :filePaths, :allFiles }
 
 fun compileMessage(id, filePaths, allFiles) =
-  let message = new mut Object
-  set
-    message.("type") = "compile"
-    message.payload = compilePayload(id, filePaths, allFiles)
-  message
+  mut { "type": "compile", payload: compilePayload(id, filePaths, allFiles) }
 
 fun diagnosticsFrom(result) = if
   result is Absent then result

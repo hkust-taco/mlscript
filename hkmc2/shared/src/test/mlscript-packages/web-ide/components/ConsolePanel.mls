@@ -43,12 +43,7 @@ class ConsolePanel extends HTMLElement with
     """
 
   fun message(kind, args) =
-    let message = new mut Object
-    set
-      message.kind = kind
-      message.content = args
-      message.timestamp = new Date()
-    message
+    mut { :kind, content: args, timestamp: new Date() }
 
   fun log(kind, ...args) =
     let entry = message(kind, args)

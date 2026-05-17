@@ -21,16 +21,10 @@ fun loadMLscript() =
   dynamicImport("./build/MLscript.mjs").then(loaded => compilerModule(loaded))
 
 fun folderAttrs() =
-  let attrs = new mut Object
-  set attrs.collapsed = true
-  attrs
+  mut { collapsed: true }
 
 fun standardAttrs() =
-  let attrs = new mut Object
-  set
-    attrs.std = true
-    attrs.compiled = true
-  attrs
+  mut { std: true, compiled: true }
 
 fun createStandardFile(path, content) =
   console.log("Loading file: \"" + path + "\"")

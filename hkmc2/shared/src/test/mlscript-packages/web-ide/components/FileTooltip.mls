@@ -34,9 +34,7 @@ fun attrFallback(value) = if
   else textOf(value)
 
 fun relativeTimeOptions() =
-  let options = new mut Object
-  set options.numeric = "auto"
-  options
+  mut { numeric: "auto" }
 
 fun makeRelativeTimeFormatter() = if
   Intl is Absent then null
