@@ -1,13 +1,13 @@
 module Highlight with...
 
-let makeWordRegex(...words) = new RegExp of "^(?:" + words.join("|") + ")$"
+let makeWordRegex(...words) = new RegExp("^(?:" + words.join("|") + ")$")
 
 let keywords = makeWordRegex of
   "val", "class", "trait", "type", "pattern", "object",
   "this", "super", "true", "false", "null", "undefined",
   "forall", "declare", "where", "with", "fun", "let"
 
-let moduleKeywords = makeWordRegex of "module", "open", "import"
+let moduleKeywords = makeWordRegex("module", "open", "import")
 
 let controlKeywords = makeWordRegex of
   "if", "then", "else", "case", "while", "do", "throw", "return"
@@ -16,21 +16,21 @@ let operatorKeywords = makeWordRegex of
   "and", "or", "not", "set", "new", "new!",
   "restricts", "extends", "in", "as", "is", "of"
 
-let modifiers = makeWordRegex of "mut", "abstract", "data"
+let modifiers = makeWordRegex("mut", "abstract", "data")
 
 let types = makeWordRegex of
   "Int", "Bool", "String", "Unit", "Num", "Nothing", "Anything",
   "Object", "Array", "Function", "Error", "List", "Option", "Some", "None"
 
-let digit = new RegExp of "[\\d.]"
+let digit = new RegExp("[\\d.]")
 
-let operator = new RegExp of "[+\\-*/%<>=!&|^~\\.]"
+let operator = new RegExp("[+\\-*/%<>=!&|^~\\.]")
 
-let identiferStart = new RegExp of "[$\\w_]"
+let identiferStart = new RegExp("[$\\w_]")
 
-let identiferPart = new RegExp of "[$\\w\\d_]"
+let identiferPart = new RegExp("[$\\w\\d_]")
 
-let capitalized = new RegExp of "^[A-Z]"
+let capitalized = new RegExp("^[A-Z]")
 
 fun normal(stream, state) = if
   let ch = stream.next()

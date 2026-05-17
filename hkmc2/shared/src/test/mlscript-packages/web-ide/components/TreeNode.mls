@@ -67,10 +67,10 @@ class TreeNode extends HTMLElement with
           textEl.classList.remove("scrolling")
           textEl.style.removeProperty("--scroll-distance")
           textEl.style.removeProperty("--scroll-duration")
-        container.addEventListener of "mouseenter", start
-        container.addEventListener of "mouseleave", stop
-        container.addEventListener of "focus", start
-        container.addEventListener of "blur", stop
+        container.addEventListener("mouseenter", start)
+        container.addEventListener("mouseleave", stop)
+        container.addEventListener("focus", start)
+        container.addEventListener("blur", stop)
 
   fun connectedCallback() =
     let treeNode = this
@@ -261,7 +261,7 @@ class TreeNode extends HTMLElement with
     mut { detail: fileOpenDetail(openPath, fileName), bubbles: true }
 
   fun dispatchFileOpen(openPath, fileName) =
-    this.dispatchEvent(new CustomEvent of "file-open", fileOpenOptions(openPath, fileName))
+    this.dispatchEvent(new CustomEvent("file-open", fileOpenOptions(openPath, fileName)))
 
   fun render() =
     if
@@ -371,7 +371,7 @@ class TreeNode extends HTMLElement with
       elements.summary.appendChild(elements.folderName)
       elements.details.appendChild(elements.summary)
       elements.details.appendChild(elements.childrenContainer)
-      elements.details.addEventListener of "toggle", () => treeNode.updateFolderIcon()
+      elements.details.addEventListener("toggle", () => treeNode.updateFolderIcon())
       this.appendChild(elements.details)
 
   fun updateFolderIcon() =

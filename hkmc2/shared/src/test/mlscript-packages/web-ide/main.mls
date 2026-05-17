@@ -18,7 +18,7 @@ fun compilerModule(loaded) =
     else loaded.("default")
 
 fun loadMLscript() =
-  dynamicImport("./build/MLscript.mjs").then of loaded => compilerModule(loaded)
+  dynamicImport("./build/MLscript.mjs").then(loaded => compilerModule(loaded))
 
 fun folderAttrs() =
   mut { collapsed: true }
@@ -130,7 +130,7 @@ fun compileTarget(targetPath) =
     collected = collectFilesForCompilation(targetPath)
     allFiles = collected.at(0)
     targetPaths = collected.at(1)
-  index.compile(targetPaths, allFiles).then of response => compileSuccess(targetPaths, response)
+  index.compile(targetPaths, allFiles).then(response => compileSuccess(targetPaths, response))
 
 fun isMlsPath(path) =
   typeof(path) is "string" and path.endsWith(".mls")
@@ -250,18 +250,18 @@ fun setupSidebarRails() =
       setSidebarState(container, "right", activePanel(container, "right"), not container.classList.contains("right-sidebar-closed"))
       document.querySelectorAll(".activity-button[data-sidebar-side]").forEach of (button, ...) =>
         setupSidebarButton(button, container)
-      document.addEventListener of "sidebar-toggle-requested", event => handleSidebarToggleRequested(container, event)
+      document.addEventListener("sidebar-toggle-requested", event => handleSidebarToggleRequested(container, event))
 
 fun start(compiler) =
   loadStandardLibrary(compiler)
   ensureDefaultMainFile()
   
-  document.addEventListener of "compile-requested", handleCompileRequested
-  document.addEventListener of "execute-requested", handleExecuteRequested
-  document.addEventListener of "terminate-requested", () => runner.terminate()
-  document.addEventListener of "open-file-at-location", handleOpenFileAtLocation
+  document.addEventListener("compile-requested", handleCompileRequested)
+  document.addEventListener("execute-requested", handleExecuteRequested)
+  document.addEventListener("terminate-requested", () => runner.terminate())
+  document.addEventListener("open-file-at-location", handleOpenFileAtLocation)
 
 setupSidebarRails()
 
-let startPromise = loadMLscript().then of compiler => start(compiler)
-startPromise.("catch") of error => console.error("Failed to load MLscript compiler:", error)
+let startPromise = loadMLscript().then(compiler => start(compiler))
+startPromise.("catch")(error => console.error("Failed to load MLscript compiler:", error))

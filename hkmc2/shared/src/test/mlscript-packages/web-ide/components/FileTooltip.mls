@@ -40,7 +40,7 @@ fun relativeTimeOptions() =
 fun makeRelativeTimeFormatter() = if
   Intl is Absent then null
   Intl.RelativeTimeFormat is Absent then null
-  else Reflect.construct of Intl.RelativeTimeFormat, [undefined, relativeTimeOptions()]
+  else Reflect.construct(Intl.RelativeTimeFormat, [undefined, relativeTimeOptions()])
 
 fun dateFrom(value) =
   new Date(value)

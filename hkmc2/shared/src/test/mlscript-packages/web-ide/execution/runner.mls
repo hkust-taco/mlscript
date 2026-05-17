@@ -17,7 +17,7 @@ fun customEventOptions(status, runningTime) =
   mut { detail: statusDetail(status, runningTime), bubbles: true }
 
 fun dispatchStatusChange(status, runningTime) =
-  let event = new CustomEvent of "execution-status-change", customEventOptions(status, runningTime)
+  let event = new CustomEvent("execution-status-change", customEventOptions(status, runningTime))
   window.dispatchEvent(event)
 
 fun consolePanel() =
@@ -172,7 +172,7 @@ fun execute(mainPath) =
     set latestExecution = execution
     set execution.worker.onmessage = event => handleWorkerMessage(execution, id, mainPath, event)
     set execution.worker.onerror = event => handleWorkerError(execution, event)
-    execution.worker.addEventListener of "messageerror", event => handleMessageError(execution, event)
+    execution.worker.addEventListener("messageerror", event => handleMessageError(execution, event))
 
 fun terminate() =
   if latestExecution is

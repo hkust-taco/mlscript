@@ -31,7 +31,7 @@ class FileExplorer extends HTMLElement with
     this.restoreSizeFromStorage()
     let explorer = this
     set openFilesChangedListener = event => explorer.handleOpenFilesChanged(event)
-    document.addEventListener of "open-files-changed", openFilesChangedListener
+    document.addEventListener("open-files-changed", openFilesChangedListener)
     set unsubscribe = fs.subscribe(event => explorer.handleFsEvent(event), undefined)
 
   fun restoreSizeFromStorage() =
@@ -46,7 +46,7 @@ class FileExplorer extends HTMLElement with
       window.clearTimeout(tooltipTimeout)
       set tooltipTimeout = null
     if openFilesChangedListener is ~Absent do
-      document.removeEventListener of "open-files-changed", openFilesChangedListener
+      document.removeEventListener("open-files-changed", openFilesChangedListener)
 
   fun render() =
     set this.innerHTML = """
@@ -168,9 +168,9 @@ class FileExplorer extends HTMLElement with
         treeView.insertBefore(fileEntry, treeView.firstChild)
         set newFileInput = input
         input.focus()
-        input.addEventListener of "keydown", event => explorer.handleNewFileKeydown(event, input)
+        input.addEventListener("keydown", event => explorer.handleNewFileKeydown(event, input))
         input.addEventListener of "blur", () =>
-          window.setTimeout of () => explorer.cancelIfCreatingFile(), 200
+          window.setTimeout(() => explorer.cancelIfCreatingFile(), 200)
 
   fun cancelIfCreatingFile() =
     if isCreatingFile do this.cancelCreatingFile()
@@ -236,12 +236,12 @@ class FileExplorer extends HTMLElement with
     mut { detail: fileOpenDetail(path, fileName), bubbles: true }
 
   fun dispatchFileOpen(path, fileName) =
-    this.dispatchEvent(new CustomEvent of "file-open", fileOpenOptions(path, fileName))
+    this.dispatchEvent(new CustomEvent("file-open", fileOpenOptions(path, fileName)))
 
   fun attachEventListeners() =
     let explorer = this
     if this.querySelector(".create-file-button") is
-      ~null as createFileBtn do createFileBtn.addEventListener of "click", () => explorer.startCreatingFile()
+      ~null as createFileBtn do createFileBtn.addEventListener("click", () => explorer.startCreatingFile())
 
   fun attachTooltipHandlers() =
     let
@@ -252,10 +252,10 @@ class FileExplorer extends HTMLElement with
       tooltip is Absent then ()
       else
         let explorer = this
-        treeView.addEventListener of "mouseover", event => explorer.handleTreeMouseOver(event, treeView, tooltip)
-        treeView.addEventListener of "mouseout", event => explorer.handleTreeMouseOut(event, tooltip)
-        treeView.addEventListener of "scroll", () => explorer.hideTooltip(tooltip)
-        this.addEventListener of "mouseleave", () => explorer.hideTooltip(tooltip)
+        treeView.addEventListener("mouseover", event => explorer.handleTreeMouseOver(event, treeView, tooltip))
+        treeView.addEventListener("mouseout", event => explorer.handleTreeMouseOut(event, tooltip))
+        treeView.addEventListener("scroll", () => explorer.hideTooltip(tooltip))
+        this.addEventListener("mouseleave", () => explorer.hideTooltip(tooltip))
 
   fun hideTooltip(tooltip) =
     if tooltipTimeout is ~Absent do

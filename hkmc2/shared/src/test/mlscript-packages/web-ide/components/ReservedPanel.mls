@@ -251,13 +251,13 @@ class ReservedPanel extends HTMLElement with
 
   fun attachDiagnosticListeners() =
     this.querySelectorAll(".file-header").forEach of (header, ...) =>
-      header.addEventListener of "click", event => this.toggleFileDiagnostics(event.currentTarget)
+      header.addEventListener("click", event => this.toggleFileDiagnostics(event.currentTarget))
     this.querySelectorAll(".diagnostic-summary").forEach of (summary, ...) =>
-      summary.addEventListener of "click", event => this.toggleDiagnostic(event.currentTarget)
+      summary.addEventListener("click", event => this.toggleDiagnostic(event.currentTarget))
     this.querySelectorAll(".goto-location-btn").forEach of (btn, ...) =>
-      btn.addEventListener of "click", event => this.gotoLocation(event)
+      btn.addEventListener("click", event => this.gotoLocation(event))
     this.querySelectorAll(".collapse-all-btn").forEach of (btn, ...) =>
-      btn.addEventListener of "click", event => this.toggleAllDiagnostics(event)
+      btn.addEventListener("click", event => this.toggleAllDiagnostics(event))
 
   fun toggleFileDiagnostics(header) =
     let fileId = header.dataset.fileId
@@ -311,7 +311,7 @@ class ReservedPanel extends HTMLElement with
       line = parseInt(event.currentTarget.dataset.line, 10)
       detail = mut { :filePath, :line }
       options = mut { :detail }
-    document.dispatchEvent(new CustomEvent of "open-file-at-location", options)
+    document.dispatchEvent(new CustomEvent("open-file-at-location", options))
 
   fun toggleAllDiagnostics(event) =
     event.stopPropagation()

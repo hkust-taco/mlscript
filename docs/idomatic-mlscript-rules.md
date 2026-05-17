@@ -16,7 +16,7 @@
 - [x] Use `do` instead of `then ... else ()`
 - [x] Prefer quoted identifiers for symbol-like fields and values
 - [x] Drop braces from multiline object literals
-- [ ] Do not overuse `of`
+- [x] Do not overuse `of`
 
 ## Rules
 

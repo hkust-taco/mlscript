@@ -57,11 +57,11 @@ class EditorPanel extends HTMLElement with
     mut { :side, :panel }
 
   fun dispatchSidebarToggle(side, panel) =
-    document.dispatchEvent(new CustomEvent of "sidebar-toggle-requested", eventOptions(sidebarToggleDetail(side, panel)))
+    document.dispatchEvent(new CustomEvent("sidebar-toggle-requested", eventOptions(sidebarToggleDetail(side, panel))))
 
   fun emitOpenFilesChange() =
     let paths = Array.from(this.openTabs.values()).map((tab, ...) => tab.path)
-    document.dispatchEvent(new CustomEvent of "open-files-changed", eventOptions(pathsDetail(paths)))
+    document.dispatchEvent(new CustomEvent("open-files-changed", eventOptions(pathsDetail(paths))))
 
   fun shouldHandleFsEvent(kind) =
     kind is "write" | "delete" | "rename" | "readonly" | "attr"
@@ -123,12 +123,12 @@ class EditorPanel extends HTMLElement with
     mut { filePath: path }
 
   fun dispatchCompile() =
-    document.dispatchEvent(new CustomEvent of "compile-requested", bubbleEventOptions(filePathDetail(activeFilePath())))
+    document.dispatchEvent(new CustomEvent("compile-requested", bubbleEventOptions(filePathDetail(activeFilePath()))))
 
   fun dispatchExecute() =
     let tab = activeTab()
     if tab is ~Absent do
-      document.dispatchEvent(new CustomEvent of "execute-requested", bubbleEventOptions(filePathDetail(tab.path)))
+      document.dispatchEvent(new CustomEvent("execute-requested", bubbleEventOptions(filePathDetail(tab.path))))
 
   fun isKey(event, lower, upper) =
     if
@@ -160,7 +160,7 @@ class EditorPanel extends HTMLElement with
     let panel = this
     window.addEventListener of "file-open", event =>
       panel.openFile(event.detail.path, event.detail.fileName)
-    document.addEventListener of "keydown", event => panel.handleShortcut(event)
+    document.addEventListener("keydown", event => panel.handleShortcut(event))
 
   fun showArrow(arrow) = if not arrow.classList.contains("visible") do
     set arrow.style.display = "flex"
@@ -173,7 +173,7 @@ class EditorPanel extends HTMLElement with
       let hideLater = () =>
         if not arrow.classList.contains("visible") do
           set arrow.style.display = "none"
-      window.setTimeout of hideLater, 200
+      window.setTimeout(hideLater, 200)
 
   fun setupTabBarScrolling() =
     let
@@ -188,19 +188,19 @@ class EditorPanel extends HTMLElement with
     let startScrollLeft = () =>
       if scrollInterval is Absent do
         let scrollLeft = () => set tabBar.scrollLeft -= scrollSpeed
-        set scrollInterval = window.setInterval of scrollLeft, 10
+        set scrollInterval = window.setInterval(scrollLeft, 10)
     let startScrollRight = () =>
       if scrollInterval is Absent do
         let scrollRight = () => set tabBar.scrollLeft += scrollSpeed
-        set scrollInterval = window.setInterval of scrollRight, 10
+        set scrollInterval = window.setInterval(scrollRight, 10)
     let stopScroll = () =>
       if scrollInterval is ~Absent do
         window.clearInterval(scrollInterval)
         set scrollInterval = null
-    leftArrow.addEventListener of "mouseenter", startScrollLeft
-    leftArrow.addEventListener of "mouseleave", stopScroll
-    rightArrow.addEventListener of "mouseenter", startScrollRight
-    rightArrow.addEventListener of "mouseleave", stopScroll
+    leftArrow.addEventListener("mouseenter", startScrollLeft)
+    leftArrow.addEventListener("mouseleave", stopScroll)
+    rightArrow.addEventListener("mouseenter", startScrollRight)
+    rightArrow.addEventListener("mouseleave", stopScroll)
     set this.updateArrowVisibility = () =>
       let
         hasOverflow = tabBar.scrollWidth > tabBar.clientWidth
@@ -214,10 +214,10 @@ class EditorPanel extends HTMLElement with
         hasOverflow and isAtEnd then hideArrow(rightArrow)
         hasOverflow then showArrow(rightArrow)
         else hideArrow(rightArrow)
-    tabBar.addEventListener of "scroll", this.updateArrowVisibility
-    set this.resizeObserver = Reflect.construct of window.ResizeObserver, [this.updateArrowVisibility]
+    tabBar.addEventListener("scroll", this.updateArrowVisibility)
+    set this.resizeObserver = Reflect.construct(window.ResizeObserver, [this.updateArrowVisibility])
     this.resizeObserver.observe(tabBar)
-    window.setTimeout of this.updateArrowVisibility, 0
+    window.setTimeout(this.updateArrowVisibility, 0)
 
   fun existingTabIdFor(filePath) =
     let existingTabId = null
@@ -416,10 +416,10 @@ class EditorPanel extends HTMLElement with
             textEl.classList.remove("scrolling")
             textEl.style.removeProperty("--scroll-distance")
             textEl.style.removeProperty("--scroll-duration")
-          container.addEventListener of "mouseenter", start
-          container.addEventListener of "mouseleave", stop
-          container.addEventListener of "focus", start
-          container.addEventListener of "blur", stop
+          container.addEventListener("mouseenter", start)
+          container.addEventListener("mouseleave", stop)
+          container.addEventListener("focus", start)
+          container.addEventListener("blur", stop)
 
   fun setupTabElement(tabEl, tooltip) =
     let panel = this
@@ -446,8 +446,8 @@ class EditorPanel extends HTMLElement with
               set
                 panel.tabTooltipPendingTarget = null
                 panel.tabTooltipTimeout = null
-          set panel.tabTooltipTimeout = window.setTimeout of showLater, 5000
-    tabEl.addEventListener of "mouseleave", () => panel.clearTabTooltip("mouseleave")
+          set panel.tabTooltipTimeout = window.setTimeout(showLater, 5000)
+    tabEl.addEventListener("mouseleave", () => panel.clearTabTooltip("mouseleave"))
 
   fun setupCloseButton(btn) =
     let panel = this
@@ -471,9 +471,9 @@ class EditorPanel extends HTMLElement with
       setupTabElement(tabEl, tooltip)
     tabBar.querySelectorAll(".tab-close").forEach of (btn, ...) =>
       setupCloseButton(btn)
-    tabBar.addEventListener of "scroll", () => this.clearTabTooltip("tab-bar-scroll")
+    tabBar.addEventListener("scroll", () => this.clearTabTooltip("tab-bar-scroll"))
     if this.updateArrowVisibility is ~Absent do
-      window.setTimeout of this.updateArrowVisibility, 0
+      window.setTimeout(this.updateArrowVisibility, 0)
 
   fun scrollOptions(left) =
     mut { :left, behavior: "smooth" }
@@ -494,7 +494,7 @@ class EditorPanel extends HTMLElement with
           if not isVisible do
             let scrollOffset = tabElement.offsetLeft - tabBar.offsetLeft - 20
             tabBar.scrollTo(scrollOptions(scrollOffset))
-    window.setTimeout of scrollLater, 0
+    window.setTimeout(scrollLater, 0)
 
   fun isStdTab(tab) =
     if
@@ -507,6 +507,6 @@ class EditorPanel extends HTMLElement with
     mut { path: if tab is Absent then null else tab.path, isStd: isStdTab(tab) }
 
   fun notifyActiveTabChange(tab) =
-    document.dispatchEvent(new CustomEvent of "active-tab-changed", eventOptions(activeTabDetail(tab)))
+    document.dispatchEvent(new CustomEvent("active-tab-changed", eventOptions(activeTabDetail(tab))))
 
 customElements.define("editor-panel", EditorPanel)

@@ -19,7 +19,7 @@ fun statusEventOptions(status) =
   mut { detail: statusDetail(status) }
 
 fun dispatchStatus(status) =
-  let event = new CustomEvent of "compilation-status-change", statusEventOptions(status)
+  let event = new CustomEvent("compilation-status-change", statusEventOptions(status))
   document.dispatchEvent(event)
 
 fun callbackRecord(resolve, reject) =
@@ -100,8 +100,8 @@ fun handleWorkerMessage(event) =
 fun handleWorkerError(error) =
   console.error("[Compiler Worker] Worker error:", error)
 
-compilerWorker.addEventListener of "message", handleWorkerMessage
-compilerWorker.addEventListener of "error", handleWorkerError
+compilerWorker.addEventListener("message", handleWorkerMessage)
+compilerWorker.addEventListener("error", handleWorkerError)
 
 fun makeUniqueID() =
   let nonce = Math.floor(Math.random() * 65535).toString(16).padStart(4, "0")
