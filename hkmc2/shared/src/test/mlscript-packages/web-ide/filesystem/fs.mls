@@ -65,7 +65,7 @@ fun updateChangeTime(node) =
   set node.ctime = Date.now()
 
 fun makeEvent(kind, path, node) =
-  mut { "type": kind, :path, :node }
+  mut { 'type: kind, :path, :node }
 
 fun notifyChange(event) =
   listeners.forEach of (listener, ...) => listener(event)

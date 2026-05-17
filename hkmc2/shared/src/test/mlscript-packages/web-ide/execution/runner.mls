@@ -8,7 +8,7 @@ module runner with...
 let latestExecution = null
 
 fun workerOptions() =
-  mut { "type": "module" }
+  mut { 'type: 'module }
 
 fun statusDetail(status, runningTime) =
   mut { :status, :runningTime }
@@ -31,7 +31,7 @@ fun clearConsolePanel() =
     ~null as panel do panel.clear()
 
 fun runMessage(id, mainPath, files) =
-  mut { "type": "run", :id, :mainPath, :files }
+  mut { 'type: 'run, :id, :mainPath, :files }
 
 fun workerErrorDetails(event) =
   mut {

@@ -12,7 +12,7 @@ fun dynamicImport(specifier) =
   importModule(specifier)
 
 fun message(kind, payload) =
-  mut { "type": kind, :payload }
+  mut { 'type: kind, :payload }
 
 fun post(kind, payload) =
   self.postMessage(message(kind, payload))

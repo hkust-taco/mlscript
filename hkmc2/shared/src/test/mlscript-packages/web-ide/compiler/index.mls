@@ -6,7 +6,7 @@ open JS { Absent }
 module index with...
 
 fun workerOptions() =
-  mut { "type": "module" }
+  mut { 'type: 'module }
 
 val compilerWorker = new Worker("/compiler/worker.mjs", workerOptions())
 
@@ -32,7 +32,7 @@ fun compilePayload(id, filePaths, allFiles) =
   mut { :id, :filePaths, :allFiles }
 
 fun compileMessage(id, filePaths, allFiles) =
-  mut { "type": "compile", payload: compilePayload(id, filePaths, allFiles) }
+  mut { 'type: 'compile, payload: compilePayload(id, filePaths, allFiles) }
 
 fun diagnosticsFrom(result) = if
   result is Absent then result

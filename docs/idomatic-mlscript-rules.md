@@ -14,7 +14,7 @@
 - [x] Organize consecutive `let` bindings using splits
 - [x] Prefer `not` over `is false`
 - [x] Use `do` instead of `then ... else ()`
-- [ ] Prefer quoted identifiers for symbol-like fields and values
+- [x] Prefer quoted identifiers for symbol-like fields and values
 - [ ] Drop braces from multiline object literals
 - [ ] Do not overuse `of`
 

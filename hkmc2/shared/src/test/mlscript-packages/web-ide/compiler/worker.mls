@@ -40,7 +40,7 @@ fun createVirtualFileSystem() =
   mut {
     read: readVirtualFile,
     write: writeVirtualFile,
-    "exists": virtualFileExists,
+    'exists: virtualFileExists,
     getLastChangedTimestamp: lastChangedTimestamp
   }
 
@@ -86,7 +86,7 @@ fun successResult(diagnosticsPerFile, filePaths) =
 
 fun successMessage(id, diagnosticsPerFile, filePaths, changes) =
   mut {
-    "type": "compile-success",
+    'type: "compile-success",
     :id,
     result: successResult(diagnosticsPerFile, filePaths),
     :changes
@@ -94,7 +94,7 @@ fun successMessage(id, diagnosticsPerFile, filePaths, changes) =
 
 fun errorMessage(id, error) =
   mut {
-    "type": "compile-error",
+    'type: "compile-error",
     :id,
     name: error.name,
     message: error.message,
@@ -128,7 +128,7 @@ fun handleCompileRequest(payload) =
   handled.("catch") of failed
 
 fun unknownMessage(kind) =
-  mut { "type": "error", error: "Unknown message type: " + kind }
+  mut { 'type: 'error, error: "Unknown message type: " + kind }
 
 fun handleMessage(event) =
   let message = event.data
