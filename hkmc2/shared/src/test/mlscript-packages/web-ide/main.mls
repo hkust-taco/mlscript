@@ -180,6 +180,78 @@ fun handleOpenFileAtLocation(event) =
   if editorPanel is
     ~null as panel do panel.openFileAtLine(event.detail.filePath, event.detail.line)
 
+fun defaultSidebarPanel(side) =
+  if side is
+    "right" then "diagnostics"
+    else "files"
+
+fun sideClosedClass(side) =
+  if side is
+    "right" then "right-sidebar-closed"
+    else "left-sidebar-closed"
+
+fun activePanelAttribute(side) =
+  "data-" + side + "-active-panel"
+
+fun activePanel(container, side) =
+  let value = container.getAttribute(activePanelAttribute(side))
+  if
+    value is ~Absent and value !== "" then value
+    else defaultSidebarPanel(side)
+
+fun sidebarPanelSelector(side) =
+  ".sidebar-panel[data-sidebar-side=\"" + side + "\"][data-sidebar-panel]"
+
+fun sidebarButtonSelector(side) =
+  ".activity-button[data-sidebar-side=\"" + side + "\"]"
+
+fun panelIsActive(panel, panelName, isOpen) =
+  if isOpen then panel.dataset.sidebarPanel === panelName else false
+
+fun setSidebarButtons(side, panelName, isOpen) =
+  document.querySelectorAll(sidebarButtonSelector(side)).forEach of (button, ...) =>
+    let isActive = panelIsActive(button, panelName, isOpen)
+    button.classList.toggle("active", isActive)
+    button.setAttribute("aria-pressed", if isActive then "true" else "false")
+
+fun setSidebarPanels(side, panelName, isOpen) =
+  document.querySelectorAll(sidebarPanelSelector(side)).forEach of (panel, ...) =>
+    panel.classList.toggle("active", panelIsActive(panel, panelName, isOpen))
+
+fun setSidebarState(container, side, panelName, isOpen) =
+  container.setAttribute(activePanelAttribute(side), panelName)
+  container.classList.toggle(sideClosedClass(side), isOpen is false)
+  setSidebarPanels(side, panelName, isOpen)
+  setSidebarButtons(side, panelName, isOpen)
+
+fun toggleSidebarTab(container, side, panelName) =
+  let
+    currentPanel = activePanel(container, side)
+    isOpen = container.classList.contains(sideClosedClass(side)) is false
+  if
+    currentPanel === panelName and isOpen then setSidebarState(container, side, panelName, false)
+    else setSidebarState(container, side, panelName, true)
+
+fun setupSidebarButton(button, container) =
+  button.addEventListener of "click", () =>
+    toggleSidebarTab(container, button.dataset.sidebarSide, button.dataset.sidebarPanel)
+
+fun handleSidebarToggleRequested(container, event) =
+  if event.detail is ~Absent do
+    let
+      side = if event.detail.side is ~Absent then event.detail.side else "left"
+      panelName = if event.detail.panel is ~Absent then event.detail.panel else defaultSidebarPanel(side)
+    toggleSidebarTab(container, side, panelName)
+
+fun setupSidebarRails() =
+  if document.querySelector(".app-container") is
+    ~null as container do
+      setSidebarState(container, "left", activePanel(container, "left"), container.classList.contains("left-sidebar-closed") is false)
+      setSidebarState(container, "right", activePanel(container, "right"), container.classList.contains("right-sidebar-closed") is false)
+      document.querySelectorAll(".activity-button[data-sidebar-side]").forEach of (button, ...) =>
+        setupSidebarButton(button, container)
+      document.addEventListener of "sidebar-toggle-requested", event => handleSidebarToggleRequested(container, event)
+
 fun start(compiler) =
   loadStandardLibrary(compiler)
   ensureDefaultMainFile()
@@ -188,6 +260,8 @@ fun start(compiler) =
   document.addEventListener of "execute-requested", handleExecuteRequested
   document.addEventListener of "terminate-requested", () => runner.terminate()
   document.addEventListener of "open-file-at-location", handleOpenFileAtLocation
+
+setupSidebarRails()
 
 let startPromise = loadMLscript().then of compiler => start(compiler)
 startPromise.("catch") of error => console.error("Failed to load MLscript compiler:", error)

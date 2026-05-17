@@ -32,19 +32,139 @@ body {
 
 .app-container {
   display: grid;
-  grid-template-columns: var(--file-explorer-width, 250px) 1fr var(--reserved-panel-width, 300px);
+  grid-template-columns:
+    var(--activity-rail-width, 44px)
+    var(--file-explorer-width, 250px)
+    minmax(0, 1fr)
+    var(--reserved-panel-width, 300px)
+    var(--activity-rail-width, 44px);
   flex: 1;
   min-height: 0;
+  overflow: hidden;
   gap: 0;
   background: var(--sand-1);
 }
 
-.app-container:has(file-explorer.collapsed) {
-  --file-explorer-width: 40px;
+.app-container.left-sidebar-closed {
+  --file-explorer-width: 0px;
 }
 
-.app-container:has(reserved-panel.collapsed) {
-  --reserved-panel-width: 40px;
+.app-container.right-sidebar-closed {
+  --reserved-panel-width: 0px;
+}
+
+.activity-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: var(--activity-rail-width, 44px);
+  padding: 6px 5px;
+  background: var(--sand-2);
+  border-color: var(--sand-6);
+  min-height: 0;
+}
+
+.activity-rail-left {
+  grid-column: 1;
+  border-right: 1px solid var(--sand-6);
+}
+
+.activity-rail-right {
+  grid-column: 5;
+  border-left: 1px solid var(--sand-6);
+}
+
+.activity-button {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--sand-11);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.activity-button:hover {
+  color: var(--sand-12);
+  background: var(--sand-4);
+}
+
+.activity-button.active {
+  color: var(--sand-12);
+  background: var(--sand-5);
+  border-color: var(--sand-7);
+}
+
+.activity-button i {
+  width: 1rem;
+  height: 1rem;
+}
+
+.sidebar-panel:not(.active),
+.app-container.left-sidebar-closed .left-sidebar-panel,
+.app-container.right-sidebar-closed .right-sidebar-panel {
+  display: none;
+}
+
+.left-sidebar-panel {
+  grid-column: 2;
+}
+
+.right-sidebar-panel {
+  grid-column: 4;
+}
+
+.sidebar-placeholder {
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--sand-1);
+}
+
+.sidebar-placeholder.left-sidebar-panel {
+  border-right: 1px solid var(--sand-6);
+}
+
+.sidebar-placeholder.right-sidebar-panel {
+  border-left: 1px solid var(--sand-6);
+}
+
+.sidebar-placeholder.active {
+  display: flex;
+}
+
+.sidebar-placeholder-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--sand-2);
+  border-bottom: 1px solid var(--sand-6);
+  height: var(--panel-header-height);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--sand-12);
+}
+
+.sidebar-placeholder-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--sand-10);
+  font-size: 0.875rem;
+}
+
+.sidebar-placeholder-content i {
+  font-size: 1.25rem;
 }
 
 /* File Explorer */
@@ -54,6 +174,8 @@ file-explorer {
   background: var(--sand-1);
   border-right: 1px solid var(--sand-6);
   position: relative;
+  min-width: 0;
+  min-height: 0;
 }
 
 file-explorer .header {
@@ -105,6 +227,7 @@ file-explorer .button:hover {
 
 file-explorer .tree-view {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 8px;
@@ -283,12 +406,15 @@ file-explorer .new-file-input::placeholder {
 
 /* Editor Panel */
 editor-panel {
+  grid-column: 3;
   display: flex;
   flex-direction: column;
   background: var(--sand-1);
   overflow: hidden;
   border-left: none;
   border-right: none;
+  min-width: 0;
+  min-height: 0;
 }
 
 editor-panel .tab-bar-wrapper {
@@ -541,6 +667,7 @@ file-tooltip .tooltip-value {
 
 editor-panel .editor-container {
   flex: 1;
+  min-height: 0;
   position: relative;
   overflow: hidden;
 }
@@ -737,6 +864,8 @@ reserved-panel {
   background: var(--sand-1);
   border-left: 1px solid var(--sand-6);
   position: relative;
+  min-width: 0;
+  min-height: 0;
 }
 
 reserved-panel .header {
@@ -776,6 +905,7 @@ reserved-panel .collapse-btn:hover {
 
 reserved-panel .content {
   flex: 1;
+  min-height: 0;
   position: relative;
   color: var(--sand-11);
   font-size: 0.875rem;

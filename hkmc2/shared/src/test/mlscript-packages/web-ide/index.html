@@ -50,7 +50,7 @@
       href="https://cdn.jsdelivr.net/npm/lucide-static@0.556.0/font/lucide.css"
     />
 
-    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./style.css?v=ui-pass-002" />
 
     <!-- Each of the following files registers a custom element. -->
     <script type="module" src="./components/ResizeHandle.mjs"></script>
@@ -66,9 +66,39 @@
     <div class="app-layout">
       <toolbar-panel class="toolbar"></toolbar-panel>
       <div class="app-container">
-        <file-explorer class="sidebar"></file-explorer>
+        <aside class="activity-rail activity-rail-left" aria-label="Left sidebar">
+          <button class="activity-button active" data-sidebar-side="left" data-sidebar-panel="files" aria-label="Files" aria-pressed="true" title="Files">
+            <i class="icon-files"></i>
+          </button>
+          <button class="activity-button" data-sidebar-side="left" data-sidebar-panel="version-control" aria-label="Version Control" aria-pressed="false" title="Version Control">
+            <i class="icon-git-branch"></i>
+          </button>
+        </aside>
+        <file-explorer class="sidebar-panel left-sidebar-panel active" data-sidebar-side="left" data-sidebar-panel="files"></file-explorer>
+        <section class="sidebar-placeholder sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="version-control" aria-label="Version Control">
+          <div class="sidebar-placeholder-header">Version Control</div>
+          <div class="sidebar-placeholder-content">
+            <i class="icon-git-branch"></i>
+            <span>No repository status</span>
+          </div>
+        </section>
         <editor-panel class="editor"></editor-panel>
-        <reserved-panel class="reserved"></reserved-panel>
+        <reserved-panel class="sidebar-panel right-sidebar-panel active" data-sidebar-side="right" data-sidebar-panel="diagnostics"></reserved-panel>
+        <section class="sidebar-placeholder sidebar-panel right-sidebar-panel" data-sidebar-side="right" data-sidebar-panel="compiler-logs" aria-label="Compiler Logs">
+          <div class="sidebar-placeholder-header">Compiler Logs</div>
+          <div class="sidebar-placeholder-content">
+            <i class="icon-scroll-text"></i>
+            <span>No compiler logs</span>
+          </div>
+        </section>
+        <aside class="activity-rail activity-rail-right" aria-label="Right sidebar">
+          <button class="activity-button active" data-sidebar-side="right" data-sidebar-panel="diagnostics" aria-label="Diagnostics" aria-pressed="true" title="Diagnostics">
+            <i class="icon-circle-alert"></i>
+          </button>
+          <button class="activity-button" data-sidebar-side="right" data-sidebar-panel="compiler-logs" aria-label="Compiler Logs" aria-pressed="false" title="Compiler Logs">
+            <i class="icon-scroll-text"></i>
+          </button>
+        </aside>
       </div>
       <console-panel class="console"></console-panel>
     </div>

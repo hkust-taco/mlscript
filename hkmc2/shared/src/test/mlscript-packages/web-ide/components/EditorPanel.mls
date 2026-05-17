@@ -53,6 +53,12 @@ class EditorPanel extends HTMLElement with
   fun bubbleEventOptions(detail) =
     mut { bubbles: true, :detail }
 
+  fun sidebarToggleDetail(side, panel) =
+    mut { :side, :panel }
+
+  fun dispatchSidebarToggle(side, panel) =
+    document.dispatchEvent(new CustomEvent of "sidebar-toggle-requested", eventOptions(sidebarToggleDetail(side, panel)))
+
   fun emitOpenFilesChange() =
     let paths = Array.from(this.openTabs.values()).map((tab, ...) => tab.path)
     document.dispatchEvent(new CustomEvent of "open-files-changed", eventOptions(pathsDetail(paths)))
@@ -144,8 +150,7 @@ class EditorPanel extends HTMLElement with
           dispatchExecute()
         isKey(event, "b", "B") then
           event.preventDefault()
-          if document.querySelector("file-explorer") is
-            ~null as fileExplorer do fileExplorer.toggleCollapse()
+          dispatchSidebarToggle("left", "files")
         else ()
     if event.ctrlKey and isKey(event, "w", "W") do
       event.preventDefault()

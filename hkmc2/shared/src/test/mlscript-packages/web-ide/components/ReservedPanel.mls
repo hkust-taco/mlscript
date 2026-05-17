@@ -27,9 +27,6 @@ class ReservedPanel extends HTMLElement with
       <resize-handle direction="horizontal" side="right" min-size="150" max-size="600"></resize-handle>
       <div class="header">
         <h2>Diagnostics</h2>
-        <button class="collapse-btn" title="Toggle panel">
-          <i class="icon-arrow-right-to-line"></i>
-        </button>
       </div>
       <div class="content">
         <div class="empty-state">
@@ -396,8 +393,6 @@ class ReservedPanel extends HTMLElement with
           else container.style.removeProperty("--reserved-panel-width")
 
   fun attachEventListeners() =
-    let panel = this
-    if this.querySelector(".collapse-btn") is
-      ~null as collapseBtn do collapseBtn.addEventListener of "click", () => panel.toggleCollapse()
+    ()
 
 customElements.define("reserved-panel", ReservedPanel)

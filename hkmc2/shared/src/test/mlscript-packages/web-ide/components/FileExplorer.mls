@@ -55,9 +55,6 @@ class FileExplorer extends HTMLElement with
         <button class="button create-file-button" title="Create new file">
           <i class="icon-file-plus"></i>
         </button>
-        <button class="button collapse-button" title="Toggle sidebar">
-          <i class="icon-arrow-left-to-line"></i>
-        </button>
       </div>
       <div class="tree-view"></div>
       <file-tooltip class="tree-tooltip"></file-tooltip>
@@ -245,8 +242,6 @@ class FileExplorer extends HTMLElement with
 
   fun attachEventListeners() =
     let explorer = this
-    if this.querySelector(".collapse-button") is
-      ~null as collapseBtn do collapseBtn.addEventListener of "click", () => explorer.toggleCollapse()
     if this.querySelector(".create-file-button") is
       ~null as createFileBtn do createFileBtn.addEventListener of "click", () => explorer.startCreatingFile()
 
