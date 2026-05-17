@@ -135,7 +135,13 @@ class FileExplorer extends HTMLElement with
   fun toggleCollapse() =
     set isCollapsed = isCollapsed is false
     this.classList.toggle("collapsed", isCollapsed)
-    restoreWidthIfExpanded(document.querySelector(".app-container"))
+    syncWidthForCollapseState(document.querySelector(".app-container"))
+
+  fun syncWidthForCollapseState(container) =
+    if
+      container is Absent then ()
+      isCollapsed then container.style.removeProperty("--file-explorer-width")
+      else restoreWidthIfExpanded(container)
 
   fun restoreWidthIfExpanded(container) =
     if
