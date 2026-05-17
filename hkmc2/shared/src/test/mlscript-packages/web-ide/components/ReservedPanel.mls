@@ -6,9 +6,10 @@ import "../common/JS.mls"
 open JS { Absent }
 
 class ReservedPanel extends HTMLElement with
-  let isCollapsed = false
-  let collapsedFiles = new Set()
-  let collapsedDiagnostics = new Set()
+  let
+    isCollapsed = false
+    collapsedFiles = new Set()
+    collapsedDiagnostics = new Set()
 
   fun connectedCallback() =
     this.render()
@@ -74,11 +75,12 @@ class ReservedPanel extends HTMLElement with
     }
 
   fun extractCodeSnippet(text, start, endOffset) =
-    let startPos = this.getLineAndColumn(text, start)
-    let endPos = this.getLineAndColumn(text, endOffset)
-    let sourceLines = text.split("\n")
-    let snippetLines = mut []
-    let i = startPos.line - 1
+    let
+      startPos = this.getLineAndColumn(text, start)
+      endPos = this.getLineAndColumn(text, endOffset)
+      sourceLines = text.split("\n")
+      snippetLines = mut []
+      i = startPos.line - 1
     while i < endPos.line do
       if i < sourceLines.length do
         snippetLines.push(snippetLine(i + 1, sourceLines.at(i)))
@@ -118,16 +120,17 @@ class ReservedPanel extends HTMLElement with
     html
 
   fun fileDiagnosticsHtml(fileData, fileIndex) =
-    let filePath = fileData.path
-    let diagnostics = fileData.diagnostics
-    let fileContent = fs.read(filePath)
-    let fileId = "file-" + fileIndex
-    let isFileCollapsed = collapsedFiles.has(fileId)
-    let sortedDiagnostics = Array.from(diagnostics).sort((a, b) =>
-      getSourceOrder(a.source) - getSourceOrder(b.source)
-    )
-    let fileToggleClass = if isFileCollapsed then "icon-chevron-right" else "icon-chevron-down"
-    let html = """<div class="file-diagnostics" data-file-id="""" + fileId + """">"""
+    let
+      filePath = fileData.path
+      diagnostics = fileData.diagnostics
+      fileContent = fs.read(filePath)
+      fileId = "file-" + fileIndex
+      isFileCollapsed = collapsedFiles.has(fileId)
+      sortedDiagnostics = Array.from(diagnostics).sort((a, b) =>
+        getSourceOrder(a.source) - getSourceOrder(b.source)
+      )
+      fileToggleClass = if isFileCollapsed then "icon-chevron-right" else "icon-chevron-down"
+      html = """<div class="file-diagnostics" data-file-id="""" + fileId + """">"""
     set html += """<div class="file-header" data-file-id="""" + fileId + """">"""
     set html += """<i class="file-toggle-icon """ + fileToggleClass + """"></i>"""
     set html += """<span class="file-path">""" + escapeHtml(filePath) + """</span>"""
@@ -145,14 +148,15 @@ class ReservedPanel extends HTMLElement with
     html
 
   fun diagnosticHtml(fileId, filePath, diagnostic, diagIndex, fileContent) =
-    let kind = diagnostic.kind
-    let source = diagnostic.source
-    let mainMessage = diagnostic.mainMessage
-    let allMessages = diagnostic.allMessages
-    let diagId = fileId + "-diag-" + diagIndex
-    let isDiagCollapsed = collapsedDiagnostics.has(diagId)
-    let diagToggleClass = if isDiagCollapsed then "icon-chevron-right" else "icon-chevron-down"
-    let html = """<div class="diagnostic diagnostic-""" + kind + """" data-diag-id="""" + diagId + """" data-main-message="""" + escapeHtml(mainMessage) + """">"""
+    let
+      kind = diagnostic.kind
+      source = diagnostic.source
+      mainMessage = diagnostic.mainMessage
+      allMessages = diagnostic.allMessages
+      diagId = fileId + "-diag-" + diagIndex
+      isDiagCollapsed = collapsedDiagnostics.has(diagId)
+      diagToggleClass = if isDiagCollapsed then "icon-chevron-right" else "icon-chevron-down"
+      html = """<div class="diagnostic diagnostic-""" + kind + """" data-diag-id="""" + diagId + """" data-main-message="""" + escapeHtml(mainMessage) + """">"""
     set html += """<div class="diagnostic-summary" data-diag-id="""" + diagId + """">"""
     set html += """<div class="diagnostic-header">"""
     set html += """<i class="diagnostic-icon """ + getKindIcon(kind) + """"></i>"""
@@ -216,9 +220,10 @@ class ReservedPanel extends HTMLElement with
     html
 
   fun codeLineHtml(line, snippet) =
-    let lineNumber = line.lineNumber
-    let content = line.content
-    let html = """<div class="code-line">"""
+    let
+      lineNumber = line.lineNumber
+      content = line.content
+      html = """<div class="code-line">"""
     set html += """<span class="line-number">""" + lineNumber + """</span>"""
     set html += """<pre class="line-content">"""
     set html += highlightedContent(lineNumber, content, snippet)
@@ -229,17 +234,20 @@ class ReservedPanel extends HTMLElement with
   fun highlightedContent(lineNumber, content, snippet) =
     if
       lineNumber === snippet.startLine and lineNumber === snippet.endLine then
-        let before = content.substring(0, snippet.startColumn - 1)
-        let highlighted = content.substring(snippet.startColumn - 1, snippet.endColumn - 1)
-        let after = content.substring(snippet.endColumn - 1)
+        let
+          before = content.substring(0, snippet.startColumn - 1)
+          highlighted = content.substring(snippet.startColumn - 1, snippet.endColumn - 1)
+          after = content.substring(snippet.endColumn - 1)
         escapeHtml(before) + """<mark class="highlight">""" + escapeHtml(highlighted) + """</mark>""" + escapeHtml(after)
       lineNumber === snippet.startLine then
-        let before = content.substring(0, snippet.startColumn - 1)
-        let highlighted = content.substring(snippet.startColumn - 1)
+        let
+          before = content.substring(0, snippet.startColumn - 1)
+          highlighted = content.substring(snippet.startColumn - 1)
         escapeHtml(before) + """<mark class="highlight">""" + escapeHtml(highlighted) + """</mark>"""
       lineNumber === snippet.endLine then
-        let highlighted = content.substring(0, snippet.endColumn - 1)
-        let after = content.substring(snippet.endColumn - 1)
+        let
+          highlighted = content.substring(0, snippet.endColumn - 1)
+          after = content.substring(snippet.endColumn - 1)
         """<mark class="highlight">""" + escapeHtml(highlighted) + """</mark>""" + escapeHtml(after)
       lineNumber > snippet.startLine and lineNumber < snippet.endLine then
         """<mark class="highlight">""" + escapeHtml(content) + """</mark>"""
@@ -260,8 +268,9 @@ class ReservedPanel extends HTMLElement with
     toggleSet(collapsedFiles, fileId)
     if this.querySelector(".file-diagnostics[data-file-id=\"" + fileId + "\"]") is
       ~null as fileBlock do
-        let list = fileBlock.querySelector(".file-diagnostic-list")
-        let icon = header.querySelector(".file-toggle-icon")
+        let
+          list = fileBlock.querySelector(".file-diagnostic-list")
+          icon = header.querySelector(".file-toggle-icon")
         if list is ~Absent do
           set list.style.display = if list.style.display === "none" then "block" else "none"
         if icon is ~Absent do
@@ -278,9 +287,10 @@ class ReservedPanel extends HTMLElement with
     let diagId = summary.dataset.diagId
     if this.querySelector(".diagnostic[data-diag-id=\"" + diagId + "\"]") is
       ~null as diagnostic do
-        let details = diagnostic.querySelector(".diagnostic-details")
-        let mainMessage = summary.querySelector(".diagnostic-main-message")
-        let toggleIcon = summary.querySelector(".diagnostic-toggle-icon")
+        let
+          details = diagnostic.querySelector(".diagnostic-details")
+          mainMessage = summary.querySelector(".diagnostic-main-message")
+          toggleIcon = summary.querySelector(".diagnostic-toggle-icon")
         if
           collapsedDiagnostics.has(diagId) then
             collapsedDiagnostics.delete(diagId)
@@ -300,21 +310,24 @@ class ReservedPanel extends HTMLElement with
 
   fun gotoLocation(event) =
     event.stopPropagation()
-    let filePath = event.currentTarget.dataset.filePath
-    let line = parseInt(event.currentTarget.dataset.line, 10)
-    let detail = mut { :filePath, :line }
-    let options = mut { :detail }
+    let
+      filePath = event.currentTarget.dataset.filePath
+      line = parseInt(event.currentTarget.dataset.line, 10)
+      detail = mut { :filePath, :line }
+      options = mut { :detail }
     document.dispatchEvent(new CustomEvent of "open-file-at-location", options)
 
   fun toggleAllDiagnostics(event) =
     event.stopPropagation()
-    let panel = this
-    let btn = event.currentTarget
-    let fileId = btn.dataset.fileId
+    let
+      panel = this
+      btn = event.currentTarget
+      fileId = btn.dataset.fileId
     if this.querySelector(".file-diagnostics[data-file-id=\"" + fileId + "\"]") is
       ~null as fileBlock do
-        let diagnostics = fileBlock.querySelectorAll(".diagnostic")
-        let icon = btn.querySelector("i")
+        let
+          diagnostics = fileBlock.querySelectorAll(".diagnostic")
+          icon = btn.querySelector("i")
         if allDiagnosticsCollapsed(diagnostics) then
           diagnostics.forEach of (diagnostic, ...) => panel.expandDiagnostic(diagnostic)
           if icon is ~Absent do set icon.className = "icon-list-chevrons-down-up"
@@ -342,9 +355,10 @@ class ReservedPanel extends HTMLElement with
   fun collapseDiagnostic(diagnostic) =
     let diagId = diagnostic.dataset.diagId
     collapsedDiagnostics.add(diagId)
-    let summary = diagnostic.querySelector(".diagnostic-summary")
-    let details = diagnostic.querySelector(".diagnostic-details")
-    let mainMessage = summary.querySelector(".diagnostic-main-message")
+    let
+      summary = diagnostic.querySelector(".diagnostic-summary")
+      details = diagnostic.querySelector(".diagnostic-details")
+      mainMessage = summary.querySelector(".diagnostic-main-message")
     if details is ~Absent do set details.style.display = "none"
     if mainMessage is Absent do
       let message = document.createElement("div")

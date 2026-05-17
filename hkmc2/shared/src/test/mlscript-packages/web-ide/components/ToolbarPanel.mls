@@ -4,11 +4,12 @@ import "https://esm.sh/@floating-ui/dom" { computePosition, shift, offset }
 open JS { Absent }
 
 class ToolbarPanel extends HTMLElement with
-  let status = "idle"
-  let runningTime = null
-  let startTime = null
-  let isCompiling = false
-  let isStdActive = false
+  let
+    status = "idle"
+    runningTime = null
+    startTime = null
+    isCompiling = false
+    isStdActive = false
 
   fun connectedCallback() =
     this.render()
@@ -82,10 +83,11 @@ class ToolbarPanel extends HTMLElement with
     setTooltipText(tooltip, "A fatal error occurred during execution.")
 
   fun updateStatusIndicator() =
-    let statusLight = this.querySelector(".status-light")
-    let statusText = this.querySelector(".status-text")
-    let terminateBtn = this.querySelector("#terminate")
-    let tooltip = this.querySelector(".status-tooltip")
+    let
+      statusLight = this.querySelector(".status-light")
+      statusText = this.querySelector(".status-text")
+      terminateBtn = this.querySelector("#terminate")
+      tooltip = this.querySelector(".status-tooltip")
     if
       statusLight is Absent then ()
       statusText is Absent then ()
@@ -212,8 +214,9 @@ class ToolbarPanel extends HTMLElement with
       ~null as terminateBtn do terminateBtn.addEventListener of "click", () => panel.handleTerminate()
 
   fun attachStatusTooltip(panel) =
-    let statusContainer = panel.querySelector(".status-container")
-    let statusTooltip = panel.querySelector(".status-tooltip")
+    let
+      statusContainer = panel.querySelector(".status-container")
+      statusTooltip = panel.querySelector(".status-tooltip")
     if statusContainer is ~Absent and statusTooltip is ~Absent do
       statusContainer.addEventListener of "mouseenter", () => panel.showTooltip(statusContainer, statusTooltip)
       statusContainer.addEventListener of "mouseleave", () => panel.hideTooltip(statusTooltip)

@@ -96,8 +96,9 @@ fun blockComment(stream, state) =
   "comment"
 
 fun stringContent(stream, state) =
-  let shouldStop = false
-  let escaped = false
+  let
+    shouldStop = false
+    escaped = false
   while shouldStop is false do
     if stream.next() is ~null as ch and
       ch is "\"" and escaped is false then

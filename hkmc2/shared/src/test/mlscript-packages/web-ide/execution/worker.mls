@@ -53,14 +53,16 @@ fun handleDependencyError(error) =
   throw error
 
 fun loadDependencies() =
-  let promise = dynamicImport("https://esm.sh/ses@1.14.0")
-  let handled = promise.then of loadEndoModuleSource
+  let
+    promise = dynamicImport("https://esm.sh/ses@1.14.0")
+    handled = promise.then of loadEndoModuleSource
   handled.("catch") of handleDependencyError
 
 fun normalizePath(path) =
-  let parts = mut []
-  let segments = path.split("/")
-  let i = 0
+  let
+    parts = mut []
+    segments = path.split("/")
+    i = 0
   while i < segments.length do
     let part = segments.at(i)
     if part is
@@ -72,8 +74,9 @@ fun normalizePath(path) =
   "/" + parts.join("/")
 
 fun resolveRelative(specifier, referrer) =
-  let idx = referrer.lastIndexOf("/")
-  let dir = if idx === -1 then "/" else referrer.slice(0, idx + 1)
+  let
+    idx = referrer.lastIndexOf("/")
+    dir = if idx === -1 then "/" else referrer.slice(0, idx + 1)
   normalizePath(dir + specifier)
 
 fun workerGlobalError(message, source, lineno, colno, error) =
@@ -118,8 +121,9 @@ fun resolveHook(moduleSpecifier, moduleReferrer) =
     else moduleSpecifier
 
 fun importHook(fileMap, fullSpecifier) =
-  let path = normalizePath(fullSpecifier)
-  let src = fileMap.get(path)
+  let
+    path = normalizePath(fullSpecifier)
+    src = fileMap.get(path)
   if src is Absent then throw new Error of "Module not found: " + path
   else
     post("log", "Importing module: " + path)
@@ -149,8 +153,9 @@ fun runError(error) =
 
 fun runMain(mainPath, files) =
   post("log", "Message received...")
-  let fileMap = new Map(Object.entries(files))
-  let compartment = makeCompartment(fileMap)
+  let
+    fileMap = new Map(Object.entries(files))
+    compartment = makeCompartment(fileMap)
   post("log", "Importing the main module...")
   let handled = compartment.import(normalizePath(mainPath)).then of runDone
   handled.("catch") of runError

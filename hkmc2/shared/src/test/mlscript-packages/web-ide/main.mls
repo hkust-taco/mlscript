@@ -102,9 +102,10 @@ fun filesForCompilation() =
   fs.getAllFiles((path, ...) => isCompilationFile(path))
 
 fun collectFilesForCompilation(targetPath) =
-  let files = filesForCompilation()
-  let compilePaths = Object.keys(files).filter of (path, ...) => shouldCompile(path)
-  let targets = new Set(compilePaths)
+  let
+    files = filesForCompilation()
+    compilePaths = Object.keys(files).filter of (path, ...) => shouldCompile(path)
+    targets = new Set(compilePaths)
   if targetPath is ~Absent and targetPath !== "" do targets.add(targetPath)
   [files, Array.from(targets)]
 
@@ -127,9 +128,10 @@ fun compileSuccess(targetPaths, response) =
   setDiagnostics(response.result)
 
 fun compileTarget(targetPath) =
-  let collected = collectFilesForCompilation(targetPath)
-  let allFiles = collected.at(0)
-  let targetPaths = collected.at(1)
+  let
+    collected = collectFilesForCompilation(targetPath)
+    allFiles = collected.at(0)
+    targetPaths = collected.at(1)
   index.compile(targetPaths, allFiles).then of response => compileSuccess(targetPaths, response)
 
 fun handleCompileRequested(event) =
@@ -146,9 +148,10 @@ fun runCompiledFile(mjsPath) =
 
 fun compileThenExecute(filePath, mjsPath) =
   console.warn("Compiled file not found, compiling first:", mjsPath)
-  let collected = collectFilesForCompilation(filePath)
-  let allFiles = collected.at(0)
-  let targetPaths = collected.at(1)
+  let
+    collected = collectFilesForCompilation(filePath)
+    allFiles = collected.at(0)
+    targetPaths = collected.at(1)
   index.compile(targetPaths, allFiles).then of _ =>
     markAsCompiled(targetPaths)
     runCompiledFile(mjsPath)

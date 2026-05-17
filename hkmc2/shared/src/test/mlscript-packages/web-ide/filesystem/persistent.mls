@@ -89,8 +89,9 @@ fun restoreFile(path, fileData) =
   true
 
 fun loadPersistedFiles() =
-  let counter = 0
-  let paths = getPersistedPaths()
+  let
+    counter = 0
+    paths = getPersistedPaths()
   console.groupCollapsed("Loading persisted files from localStorage")
   paths.forEach of (path, ...) =>
     if loadPersistedFile(path) is

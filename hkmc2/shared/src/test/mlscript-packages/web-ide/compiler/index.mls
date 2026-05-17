@@ -73,9 +73,10 @@ fun rejectCallback(id, name, message, stack) =
       callbackMap.delete(id)
 
 fun handleCompileSuccess(message) =
-  let result = message.result
-  let changes = message.changes
-  let diagnostics = diagnosticsFrom(result)
+  let
+    result = message.result
+    changes = message.changes
+    diagnostics = diagnosticsFrom(result)
   console.log("[Compiler] Result:", diagnostics)
   applyChanges(changes)
   markCompiledFiles(compiledFilesFrom(result))

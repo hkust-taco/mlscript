@@ -11,7 +11,7 @@
   - [x] Saves a level of indentation
   - [x] Combine the techniques together
 - [x] Get rid of parenthesis of function calls using `of` keywords
-- [ ] Organize consecutive `let` bindings using splits
+- [x] Organize consecutive `let` bindings using splits
 
 ## Rules
 

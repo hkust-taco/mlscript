@@ -5,9 +5,10 @@ import "../common/JS.mls"
 open JS { Absent }
 
 class ConsolePanel extends HTMLElement with
-  let messages = mut []
-  let isCollapsed = false
-  let preserveLogs = false
+  let
+    messages = mut []
+    isCollapsed = false
+    preserveLogs = false
 
   fun connectedCallback() =
     this.render()
@@ -111,9 +112,10 @@ class ConsolePanel extends HTMLElement with
       this.style.flexShrink = "0"
 
   fun restoreSavedSize() =
-    let lastHeight = this.dataset.lastHeight
-    let lastMinHeight = this.dataset.lastMinHeight
-    let lastMaxHeight = this.dataset.lastMaxHeight
+    let
+      lastHeight = this.dataset.lastHeight
+      lastMinHeight = this.dataset.lastMinHeight
+      lastMaxHeight = this.dataset.lastMaxHeight
     if
       lastHeight is ~Absent and lastHeight !== "" and lastHeight !== "40px" then
         set

@@ -42,12 +42,13 @@ fun attrIsTrue(node, name) =
     else attrs.(name) === true
 
 class TreeNode extends HTMLElement with
-  let node = null
-  let path = ""
-  let parentFolderNode = null
-  let elements = emptyElements()
-  let childTreeNodes = new Map()
-  let unsubscribe = null
+  let
+    node = null
+    path = ""
+    parentFolderNode = null
+    elements = emptyElements()
+    childTreeNodes = new Map()
+    unsubscribe = null
 
   fun setupNameScroll(container, textEl) =
     if
@@ -119,11 +120,13 @@ class TreeNode extends HTMLElement with
 
   fun updateMjsButtonForSiblingEvent(eventPath) =
     if node is ~Absent as current and current.("type") is "file" and current.name.endsWith(".mls") do
-      let eventParentPath = parentPathOf(eventPath)
-      let myParentPath = parentPathOf(path)
+      let
+        eventParentPath = parentPathOf(eventPath)
+        myParentPath = parentPathOf(path)
       if eventParentPath === myParentPath and eventPath.endsWith(".mjs") do
-        let eventBasename = basenameWithoutExt(fileNameOf(eventPath))
-        let myBasename = basenameWithoutExt(current.name)
+        let
+          eventBasename = basenameWithoutExt(fileNameOf(eventPath))
+          myBasename = basenameWithoutExt(current.name)
         if eventBasename === myBasename do this.render()
 
   fun updateName() =
@@ -144,13 +147,15 @@ class TreeNode extends HTMLElement with
       node.("type") !== "folder" then ()
       elements.childrenContainer is Absent then ()
       else
-        let filteredChildren = filterMjsFiles(childrenOf(node))
-        let newChildPaths = new Set()
+        let
+          filteredChildren = filterMjsFiles(childrenOf(node))
+          newChildPaths = new Set()
         filteredChildren.forEach of (child, ...) =>
           newChildPaths.add(childPath(child))
         Array.from(childTreeNodes.entries()).forEach of (entry, ...) =>
-          let existingPath = entry.at(0)
-          let childElement = entry.at(1)
+          let
+            existingPath = entry.at(0)
+            childElement = entry.at(1)
           if newChildPaths.has(existingPath) is false do
             childElement.remove()
             childTreeNodes.delete(existingPath)
@@ -194,8 +199,9 @@ class TreeNode extends HTMLElement with
       else hasSiblingMjsFile(node.name)
 
   fun hasSiblingMjsFile(name) =
-    let mjsFileName = basenameWithoutExt(name) + ".mjs"
-    let children = parentChildren()
+    let
+      mjsFileName = basenameWithoutExt(name) + ".mjs"
+      children = parentChildren()
     children.some of (child, ...) =>
       child.("type") is "file" and child.name === mjsFileName
 
@@ -235,8 +241,9 @@ class TreeNode extends HTMLElement with
   fun getMjsPath() =
     if this.hasMjsFile() is false then null
     else
-      let mjsFileName = basenameWithoutExt(node.name) + ".mjs"
-      let pathParts = path.split("/")
+      let
+        mjsFileName = basenameWithoutExt(node.name) + ".mjs"
+        pathParts = path.split("/")
       set pathParts.(pathParts.length - 1) = mjsFileName
       pathParts.join("/")
 
@@ -301,12 +308,13 @@ class TreeNode extends HTMLElement with
     updateMjsButton(current)
 
   fun updateCompiledDot(current) =
-    let isStd = attrIsTrue(current, "std")
-    let isCompiled = attrIsTrue(current, "compiled")
-    let needsCompile = if
-      isCompiled then false
-      isStd then false
-      else true
+    let
+      isStd = attrIsTrue(current, "std")
+      isCompiled = attrIsTrue(current, "compiled")
+      needsCompile = if
+        isCompiled then false
+        isStd then false
+        else true
     elements.compiledDot.classList.toggle("hidden", isStd)
     elements.compiledDot.classList.toggle("needs-compile", needsCompile)
     set elements.compiledDot.title = if
@@ -343,8 +351,9 @@ class TreeNode extends HTMLElement with
 
   fun ensureFolderElements(current) =
     if elements.details is Absent do
-      let treeNode = this
-      let isCollapsed = attrIsTrue(current, "collapsed")
+      let
+        treeNode = this
+        isCollapsed = attrIsTrue(current, "collapsed")
       set
         elements.details = document.createElement("details")
         elements.summary = document.createElement("summary")

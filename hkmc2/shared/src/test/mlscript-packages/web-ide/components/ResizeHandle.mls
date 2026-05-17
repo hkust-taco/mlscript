@@ -3,12 +3,13 @@ import "../common/JS.mls"
 open JS { Absent }
 
 class ResizeHandle extends HTMLElement with
-  let isResizing = false
-  let startX = 0
-  let startY = 0
-  let startSize = 0
-  let documentMouseMove = null
-  let documentMouseUp = null
+  let
+    isResizing = false
+    startX = 0
+    startY = 0
+    startSize = 0
+    documentMouseMove = null
+    documentMouseUp = null
 
   fun connectedCallback() =
     this.render()
@@ -50,8 +51,9 @@ class ResizeHandle extends HTMLElement with
 
   fun startResize(event) =
     event.preventDefault()
-    let dir = this.direction()
-    let target = this.targetElement()
+    let
+      dir = this.direction()
+      target = this.targetElement()
     if target is ~Absent do
       set
         isResizing = true
@@ -99,20 +101,23 @@ class ResizeHandle extends HTMLElement with
 
   fun handleResize(event, target, dir) =
     if isResizing do
-      let minSize = this.intAttribute("min-size", 150)
-      let maxSize = this.intAttribute("max-size", 600)
+      let
+        minSize = this.intAttribute("min-size", 150)
+        maxSize = this.intAttribute("max-size", 600)
       if dir is
         "horizontal" then
-          let deltaX = event.clientX - startX
-          let newWidth = if
-            this.side("left") is "left" then startSize + deltaX
-            else startSize - deltaX
+          let
+            deltaX = event.clientX - startX
+            newWidth = if
+              this.side("left") is "left" then startSize + deltaX
+              else startSize - deltaX
           setHorizontalSize(target, clamp(newWidth, minSize, maxSize))
         else
-          let deltaY = event.clientY - startY
-          let newHeight = if
-            this.side("top") is "top" then startSize - deltaY
-            else startSize + deltaY
+          let
+            deltaY = event.clientY - startY
+            newHeight = if
+              this.side("top") is "top" then startSize - deltaY
+              else startSize + deltaY
           setVerticalSize(target, clamp(newHeight, minSize, maxSize))
       dispatchPanelResize(target)
 

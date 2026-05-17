@@ -67,15 +67,17 @@ class EditorPanel extends HTMLElement with
       else event.node.attrs
 
   fun updateTabContent(tab, path) =
-    let currentContent = tab.editorView.state.doc.toString()
-    let fileContent = fs.read(path)
+    let
+      currentContent = tab.editorView.state.doc.toString()
+      fileContent = fs.read(path)
     if
       fileContent is Absent then ()
       fileContent === currentContent then ()
       else
-        let changes = mut { from: 0, to: tab.editorView.state.doc.length, insert: fileContent }
-        let updateOptions = mut { :changes }
-        let transaction = tab.editorView.state.update(updateOptions)
+        let
+          changes = mut { from: 0, to: tab.editorView.state.doc.length, insert: fileContent }
+          updateOptions = mut { :changes }
+          transaction = tab.editorView.state.update(updateOptions)
         tab.editorView.dispatch(transaction)
 
   fun handleFsEventForTab(tabId, tab, event) =
@@ -129,8 +131,9 @@ class EditorPanel extends HTMLElement with
       else false
 
   fun handleShortcut(event) =
-    let isMac = window.navigator.platform.toUpperCase().indexOf("MAC") >= 0
-    let isCmdOrCtrl = if isMac then event.metaKey else event.ctrlKey
+    let
+      isMac = window.navigator.platform.toUpperCase().indexOf("MAC") >= 0
+      isCmdOrCtrl = if isMac then event.metaKey else event.ctrlKey
     if isCmdOrCtrl do
       if
         isKey(event, "s", "S") then
@@ -168,11 +171,12 @@ class EditorPanel extends HTMLElement with
       window.setTimeout of hideLater, 200
 
   fun setupTabBarScrolling() =
-    let tabBar = this.querySelector(".tab-bar")
-    let leftArrow = this.querySelector(".tab-scroll-left")
-    let rightArrow = this.querySelector(".tab-scroll-right")
-    let scrollInterval = null
-    let scrollSpeed = 3
+    let
+      tabBar = this.querySelector(".tab-bar")
+      leftArrow = this.querySelector(".tab-scroll-left")
+      rightArrow = this.querySelector(".tab-scroll-right")
+      scrollInterval = null
+      scrollSpeed = 3
     tabBar.addEventListener of "wheel", event =>
       event.preventDefault()
       set tabBar.scrollLeft += event.deltaY
@@ -193,9 +197,10 @@ class EditorPanel extends HTMLElement with
     rightArrow.addEventListener of "mouseenter", startScrollRight
     rightArrow.addEventListener of "mouseleave", stopScroll
     set this.updateArrowVisibility = () =>
-      let hasOverflow = tabBar.scrollWidth > tabBar.clientWidth
-      let isAtStart = tabBar.scrollLeft === 0
-      let isAtEnd = tabBar.scrollLeft >= tabBar.scrollWidth - tabBar.clientWidth - 1
+      let
+        hasOverflow = tabBar.scrollWidth > tabBar.clientWidth
+        isAtStart = tabBar.scrollLeft === 0
+        isAtEnd = tabBar.scrollLeft >= tabBar.scrollWidth - tabBar.clientWidth - 1
       if
         hasOverflow and isAtStart then hideArrow(leftArrow)
         hasOverflow then showArrow(leftArrow)
@@ -252,13 +257,14 @@ class EditorPanel extends HTMLElement with
         set this.tabCounter += 1
         let editorDiv = document.createElement("div")
         set editorDiv.className = "editor-codemirror"
-        let content = fs.read(filePath)
-        let initialContent = if content is Absent then "" else content
-        let extension = extensionFor(filePath)
-        let nodeInfo = fs.stat(filePath)
-        let isReadonly = isReadonlyNode(nodeInfo)
-        let attrs = attrsOrEmpty(nodeInfo)
-        let editorView = editor.createEditor(editorDiv, initialContent, filePath, extension, isReadonly)
+        let
+          content = fs.read(filePath)
+          initialContent = if content is Absent then "" else content
+          extension = extensionFor(filePath)
+          nodeInfo = fs.stat(filePath)
+          isReadonly = isReadonlyNode(nodeInfo)
+          attrs = attrsOrEmpty(nodeInfo)
+          editorView = editor.createEditor(editorDiv, initialContent, filePath, extension, isReadonly)
         this.openTabs.set(tabId, tabRecord(fileName, filePath, editorDiv, editorView, isReadonly, attrs))
         if this.querySelector(".editor-container") is
           ~null as editorContainer do editorContainer.appendChild(editorDiv)
@@ -268,16 +274,18 @@ class EditorPanel extends HTMLElement with
         tabId
 
   fun openFileAtLine(filePath, line) =
-    let fileName = filePath.split("/").pop()
-    let tabId = this.openFile(filePath, fileName)
-    let tab = this.openTabs.get(tabId)
+    let
+      fileName = filePath.split("/").pop()
+      tabId = this.openFile(filePath, fileName)
+      tab = this.openTabs.get(tabId)
     if
       tab is Absent then ()
       tab.editorView is Absent then ()
       else
-        let linePos = tab.editorView.state.doc.line(line)
-        let selection = mut { anchor: linePos.from, head: linePos.from }
-        let options = mut { :selection, scrollIntoView: true }
+        let
+          linePos = tab.editorView.state.doc.line(line)
+          selection = mut { anchor: linePos.from, head: linePos.from }
+          options = mut { :selection, scrollIntoView: true }
         tab.editorView.dispatch(options)
         tab.editorView.focus()
 
@@ -329,17 +337,19 @@ class EditorPanel extends HTMLElement with
   fun baseNameHtml(tabName, lastDot) =
     if
       lastDot > 0 then
-        let baseName = tabName.substring(0, lastDot)
-        let extension = tabName.substring(lastDot)
+        let
+          baseName = tabName.substring(0, lastDot)
+          extension = tabName.substring(lastDot)
         """<span class="tab-basename">""" + baseName + """</span><span class="tab-extension">""" + extension + """</span>"""
       else """<span class="tab-basename">""" + tabName + """</span>"""
 
   fun tabHtml(tabId, tab) =
-    let isActive = tabId === this.activeTabId
-    let activeClass = if isActive then "active" else ""
-    let lockHtml = if tab.readonly then """<i class="tab-lock icon-lock"></i>""" else ""
-    let lastDot = tab.name.lastIndexOf(".")
-    let nameHtml = baseNameHtml(tab.name, lastDot)
+    let
+      isActive = tabId === this.activeTabId
+      activeClass = if isActive then "active" else ""
+      lockHtml = if tab.readonly then """<i class="tab-lock icon-lock"></i>""" else ""
+      lastDot = tab.name.lastIndexOf(".")
+      nameHtml = baseNameHtml(tab.name, lastDot)
     """
           <div class="tab """ + activeClass + """" data-tab-id="""" + tabId + """" data-path="""" + tab.path + """">
             <span class="tab-name">
@@ -445,9 +455,10 @@ class EditorPanel extends HTMLElement with
       panel.closeTab(btn.getAttribute("data-tab-id"))
 
   fun updateDisplay() =
-    let tabBar = this.querySelector(".tab-bar")
-    let emptyState = this.querySelector(".empty-state")
-    let tooltip = this.querySelector("file-tooltip.tab-tooltip")
+    let
+      tabBar = this.querySelector(".tab-bar")
+      emptyState = this.querySelector(".empty-state")
+      tooltip = this.querySelector("file-tooltip.tab-tooltip")
     this.clearTabTooltip("rebuild-tab-bar")
     set tabBar.innerHTML = tabsHtml()
     if
@@ -468,15 +479,17 @@ class EditorPanel extends HTMLElement with
 
   fun scrollTabIntoView(tabId) =
     let scrollLater = () =>
-      let tabBar = this.querySelector(".tab-bar")
-      let tabElement = this.querySelector(".tab[data-tab-id=\"" + tabId + "\"]")
+      let
+        tabBar = this.querySelector(".tab-bar")
+        tabElement = this.querySelector(".tab[data-tab-id=\"" + tabId + "\"]")
       if
         tabBar is Absent then ()
         tabElement is Absent then ()
         else
-          let tabBarRect = tabBar.getBoundingClientRect()
-          let tabRect = tabElement.getBoundingClientRect()
-          let isVisible = tabRect.left >= tabBarRect.left and tabRect.right <= tabBarRect.right
+          let
+            tabBarRect = tabBar.getBoundingClientRect()
+            tabRect = tabElement.getBoundingClientRect()
+            isVisible = tabRect.left >= tabBarRect.left and tabRect.right <= tabBarRect.right
           if isVisible is false do
             let scrollOffset = tabElement.offsetLeft - tabBar.offsetLeft - 20
             tabBar.scrollTo(scrollOptions(scrollOffset))

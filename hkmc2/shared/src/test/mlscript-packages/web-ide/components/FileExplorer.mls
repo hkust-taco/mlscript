@@ -13,15 +13,16 @@ fun forceOptions() =
   mut { force: true }
 
 class FileExplorer extends HTMLElement with
-  let isCollapsed = false
-  let rootNodes = new Map()
-  let isCreatingFile = false
-  let newFileInput = null
-  let tooltipTimeout = null
-  let activeTooltipTarget = null
-  let openFiles = new Set()
-  let unsubscribe = null
-  let openFilesChangedListener = null
+  let
+    isCollapsed = false
+    rootNodes = new Map()
+    isCreatingFile = false
+    newFileInput = null
+    tooltipTimeout = null
+    activeTooltipTarget = null
+    openFiles = new Set()
+    unsubscribe = null
+    openFilesChangedListener = null
 
   fun connectedCallback() =
     this.render()
@@ -99,13 +100,15 @@ class FileExplorer extends HTMLElement with
   fun updateTree() =
     if this.querySelector(".tree-view") is
       ~null as treeView do
-        let filteredRootNodes = filterMjsFiles(fs.fileTree)
-        let newRootPaths = new Set()
+        let
+          filteredRootNodes = filterMjsFiles(fs.fileTree)
+          newRootPaths = new Set()
         filteredRootNodes.forEach of (node, ...) =>
           newRootPaths.add(rootPath(node))
         Array.from(rootNodes.entries()).forEach of (entry, ...) =>
-          let existingPath = entry.at(0)
-          let element = entry.at(1)
+          let
+            existingPath = entry.at(0)
+            element = entry.at(1)
           if newRootPaths.has(existingPath) is false do
             element.remove()
             rootNodes.delete(existingPath)
@@ -149,9 +152,10 @@ class FileExplorer extends HTMLElement with
       ~null as treeView do
         let explorer = this
         set isCreatingFile = true
-        let fileEntry = document.createElement("div")
-        let fileIcon = document.createElement("i")
-        let input = document.createElement("input")
+        let
+          fileEntry = document.createElement("div")
+          fileIcon = document.createElement("i")
+          input = document.createElement("input")
         set
           fileEntry.className = "file-item new-file-entry"
           fileIcon.className = "file-icon icon-file-code"
@@ -194,9 +198,10 @@ class FileExplorer extends HTMLElement with
     if
       fileName is "" then cancelCreatingFile()
       else
-        let normalizedInput = normalizeInputPath(fileName)
-        let parts = normalizedInput.split("/").filter of (part, ...) => part !== ""
-        let hasInvalidPart = parts.some of (part, ...) => invalidPathPart(part)
+        let
+          normalizedInput = normalizeInputPath(fileName)
+          parts = normalizedInput.split("/").filter of (part, ...) => part !== ""
+          hasInvalidPart = parts.some of (part, ...) => invalidPathPart(part)
         if
           parts.length is 0 then
             window.alert("Please enter a valid file name (e.g. path/to/file.mls)")
@@ -205,8 +210,9 @@ class FileExplorer extends HTMLElement with
             window.alert("File name cannot contain \".\" or \"..\" path segments")
             input.focus()
           else
-            let path = "/" + parts.join("/")
-            let success = fs.createFile(path, "", forceOptions())
+            let
+              path = "/" + parts.join("/")
+              success = fs.createFile(path, "", forceOptions())
             if
               success then
                 cancelCreatingFile()
@@ -239,8 +245,9 @@ class FileExplorer extends HTMLElement with
       ~null as createFileBtn do createFileBtn.addEventListener of "click", () => explorer.startCreatingFile()
 
   fun attachTooltipHandlers() =
-    let treeView = this.querySelector(".tree-view")
-    let tooltip = this.querySelector("file-tooltip.tree-tooltip")
+    let
+      treeView = this.querySelector(".tree-view")
+      tooltip = this.querySelector("file-tooltip.tree-tooltip")
     if
       treeView is Absent then ()
       tooltip is Absent then ()

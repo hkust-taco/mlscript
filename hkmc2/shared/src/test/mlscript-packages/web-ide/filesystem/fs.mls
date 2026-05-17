@@ -87,8 +87,9 @@ fun sortNodes(nodes) =
     else a.name.localeCompare(b.name))
 
 fun findChild(nodes, name) =
-  let result = null
-  let i = 0
+  let
+    result = null
+    i = 0
   while i < nodes.length do
     let node = nodes.at(i)
     if result is null and node.name === name do
@@ -97,8 +98,9 @@ fun findChild(nodes, name) =
   result
 
 fun indexOfChild(nodes, name) =
-  let result = -1
-  let i = 0
+  let
+    result = -1
+    i = 0
   while i < nodes.length do
     let node = nodes.at(i)
     if result < 0 and node.name === name do
@@ -128,9 +130,10 @@ fun findParent(path) =
   let parts = splitPath(path)
   if
     parts.length is 0 then null
-    let parentPath = parts.slice(0, -1).join("/")
-    let childName = parts.at(parts.length - 1)
-    let parent = parentChildren(parentPath)
+    let
+      parentPath = parts.slice(0, -1).join("/")
+      childName = parts.at(parts.length - 1)
+      parent = parentChildren(parentPath)
     parent is null then null
     let index = indexOfChild(parent, childName)
     index >= 0 then makeParentResult(parent, index)
@@ -173,9 +176,10 @@ fun write(path, content) =
     else false
 
 fun ensureFolders(parentPath) =
-  let segments = parentPath.split("/")
-  let currentPath = ""
-  let i = 0
+  let
+    segments = parentPath.split("/")
+    currentPath = ""
+    i = 0
   while i < segments.length do
     let segment = segments.at(i)
     set currentPath += "/" + segment
@@ -198,17 +202,20 @@ fun setDefaultCompiled(fileName, attrs) =
 fun createFile(path, contentArg, optionsArg) =
   if
     pathExists(path) then false
-    let content = textOrEmpty(contentArg)
-    let options = objectOrEmpty(optionsArg)
-    let parts = splitPath(path)
+    let
+      content = textOrEmpty(contentArg)
+      options = objectOrEmpty(optionsArg)
+      parts = splitPath(path)
     parts.length is 0 then false
-    let fileName = parts.at(parts.length - 1)
-    let parentPath = parts.slice(0, -1).join("/")
-    let parent = parentForNewFile(parentPath, options)
+    let
+      fileName = parts.at(parts.length - 1)
+      parentPath = parts.slice(0, -1).join("/")
+      parent = parentForNewFile(parentPath, options)
     parent is null then false
     else
-      let stamp = timestamps()
-      let attrs = Object.assign of mut {}, objectOrEmpty(options.("attrs"))
+      let
+        stamp = timestamps()
+        attrs = Object.assign of mut {}, objectOrEmpty(options.("attrs"))
       setDefaultCompiled(fileName, attrs)
       let node = new mut FileNode(
         fileName,
@@ -228,25 +235,28 @@ fun createFile(path, contentArg, optionsArg) =
 fun createFolder(path, optionsArg) =
   if
     pathExists(path) then false
-    let options = objectOrEmpty(optionsArg)
-    let parts = splitPath(path)
+    let
+      options = objectOrEmpty(optionsArg)
+      parts = splitPath(path)
     parts.length is 0 then false
-    let folderName = parts.at(parts.length - 1)
-    let parentPath = parts.slice(0, -1).join("/")
-    let parent = parentChildren(parentPath)
+    let
+      folderName = parts.at(parts.length - 1)
+      parentPath = parts.slice(0, -1).join("/")
+      parent = parentChildren(parentPath)
     parent is null then false
     else
-      let stamp = timestamps()
-      let node = new mut FolderNode(
-        folderName,
-        mut [],
-        options.("readonly") is true,
-        stamp.atime,
-        stamp.mtime,
-        stamp.ctime,
-        stamp.birthtime,
-        objectOrEmpty(options.("attrs")),
-      )
+      let
+        stamp = timestamps()
+        node = new mut FolderNode(
+          folderName,
+          mut [],
+          options.("readonly") is true,
+          stamp.atime,
+          stamp.mtime,
+          stamp.ctime,
+          stamp.birthtime,
+          objectOrEmpty(options.("attrs")),
+        )
       parent.push(node)
       sortNodes(parent)
       notifyChange(makeEvent("create", path, node))
@@ -257,9 +267,10 @@ fun remove(path) =
     let result = findParent(path)
     result is null then false
     else
-      let parent = result.parent
-      let index = result.index
-      let node = parent.at(index)
+      let
+        parent = result.parent
+        index = result.index
+        node = parent.at(index)
       parent.splice(index, 1)
       notifyChange(makeEvent("delete", path, node))
       true
@@ -268,8 +279,9 @@ fun rename(path, newName) =
   if
     let node = findNode(path)
     node is null then false
-    let parts = splitPath(path)
-    let newPath = "/" + parts.slice(0, -1).concat([newName]).join("/")
+    let
+      parts = splitPath(path)
+      newPath = "/" + parts.slice(0, -1).concat([newName]).join("/")
     pathExists(newPath) then false
     else
       let oldName = node.name
@@ -361,10 +373,11 @@ fun subscribe(pathOrCallback, callback) =
       listeners.add(listener)
       () => listeners.delete(listener)
     typeof(pathOrCallback) is "string" and typeof(callback) is "function" then
-      let path = pathOrCallback
-      let listener = event =>
-        if eventTouches(event, path) do
-          callback(event)
+      let
+        path = pathOrCallback
+        listener = event =>
+          if eventTouches(event, path) do
+            callback(event)
       listeners.add(listener)
       () => listeners.delete(listener)
     else throw Error("Invalid arguments: expected subscribe(callback) or subscribe(path, callback)")

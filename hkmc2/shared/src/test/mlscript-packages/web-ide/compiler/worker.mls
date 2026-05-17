@@ -54,8 +54,9 @@ fun compilerPaths(MLscript) =
 
 fun initializeCompiler(MLscript) =
   if compiler is null do
-    let virtualFS = createVirtualFileSystem()
-    let dummyFileSystem = Reflect.construct of MLscript.DummyFileSystem, [virtualFS]
+    let
+      virtualFS = createVirtualFileSystem()
+      dummyFileSystem = Reflect.construct of MLscript.DummyFileSystem, [virtualFS]
     set compiler = Reflect.construct of MLscript.BrowserCompiler, [dummyFileSystem, compilerPaths(MLscript)]
 
 fun timestampEntries(files) =
@@ -106,8 +107,9 @@ fun postCompileError(id, error) =
 fun runCompile(MLscript, id, allFiles, filePaths) =
   resetCompilerState(allFiles)
   initializeCompiler(MLscript)
-  let diagnosticsPerFile = compileFiles(filePaths)
-  let changes = collectChanges()
+  let
+    diagnosticsPerFile = compileFiles(filePaths)
+    changes = collectChanges()
   self.postMessage(successMessage(id, diagnosticsPerFile, filePaths, changes))
 
 fun handleLoadedCompiler(MLscript, id, payload) =
@@ -117,11 +119,12 @@ fun handleLoadedCompiler(MLscript, id, payload) =
   )
 
 fun handleCompileRequest(payload) =
-  let id = payload.id
-  let promise = loadMLscript()
-  let loaded = MLscript => handleLoadedCompiler(MLscript, id, payload)
-  let failed = error => postCompileError(id, error)
-  let handled = promise.then of loaded
+  let
+    id = payload.id
+    promise = loadMLscript()
+    loaded = MLscript => handleLoadedCompiler(MLscript, id, payload)
+    failed = error => postCompileError(id, error)
+    handled = promise.then of loaded
   handled.("catch") of failed
 
 fun unknownMessage(kind) =

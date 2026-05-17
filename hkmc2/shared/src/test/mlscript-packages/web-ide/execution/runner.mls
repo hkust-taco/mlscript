@@ -98,9 +98,10 @@ fun handleWorkerMessage(execution, id, mainPath, event) =
     console.error("Received message from outdated worker, terminating it.")
     execution.worker.terminate()
   else
-    let messageData = event.data
-    let kind = messageData.("type")
-    let payload = messageData.payload
+    let
+      messageData = event.data
+      kind = messageData.("type")
+      payload = messageData.payload
     if kind is
       "ready" then
         console.log("[VM]", "Ready to run.")
@@ -167,8 +168,9 @@ fun execute(mainPath) =
   if cleanupPreviousExecution() do
     clearConsolePanel()
     console.log("[VM] Starting new execution for " + mainPath)
-    let id = Date.now().toString()
-    let execution = makeExecution(id)
+    let
+      id = Date.now().toString()
+      execution = makeExecution(id)
     set latestExecution = execution
     set execution.worker.onmessage = event => handleWorkerMessage(execution, id, mainPath, event)
     set execution.worker.onerror = event => handleWorkerError(execution, event)

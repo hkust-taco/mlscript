@@ -18,9 +18,10 @@ fun escapeChar(ch) = if ch is
   else ch
 
 fun escapeHtml(value) =
-  let text = textOf(value)
-  let result = ""
-  let i = 0
+  let
+    text = textOf(value)
+    result = ""
+    i = 0
   while i < text.length do
     set result += escapeChar(text.charAt(i))
     set i += 1
@@ -45,8 +46,9 @@ fun dateFrom(value) =
   new Date(value)
 
 class FileTooltip extends HTMLElement with
-  let relativeTimeFormatter = makeRelativeTimeFormatter()
-  let showRequestId = 0
+  let
+    relativeTimeFormatter = makeRelativeTimeFormatter()
+    showRequestId = 0
   
   fun connectedCallback() =
     this.classList.add("file-tooltip")
@@ -66,9 +68,10 @@ class FileTooltip extends HTMLElement with
           (amount: 12, unit: "months"),
           (amount: Number.POSITIVE_INFINITY, unit: "years"),
         ]
-        let duration = (timestamp - Date.now()) / 1000
-        let result = ""
-        let i = 0
+        let
+          duration = (timestamp - Date.now()) / 1000
+          result = ""
+          i = 0
         while result === "" and i < divisions.length do
           let division = divisions.at(i)
           if Math.abs(duration) < division.amount then
@@ -135,9 +138,10 @@ class FileTooltip extends HTMLElement with
         let node = fs.stat(path)
         if node is Absent then null
         else
-          let size = fileSize(node, sizeOverride)
-          let attrs = attrText(node.attrs)
-          let shownName = displayName(path, node, name)
+          let
+            size = fileSize(node, sizeOverride)
+            attrs = attrText(node.attrs)
+            shownName = displayName(path, node, name)
           """
       <div class="tooltip-grid">
         <div class="tooltip-label">Name</div>
@@ -159,13 +163,14 @@ class FileTooltip extends HTMLElement with
       else null
   
   fun show(targetEl, optionsArg) =
-    let options = if optionsArg is Absent then new Object else optionsArg
-    let path = options.path
-    let name = options.name
-    let placement = if
-      options.placement is Absent then "right"
-      else options.placement
-    let content = this.tooltipContent(path, name, options.size)
+    let
+      options = if optionsArg is Absent then new Object else optionsArg
+      path = options.path
+      name = options.name
+      placement = if
+        options.placement is Absent then "right"
+        else options.placement
+      content = this.tooltipContent(path, name, options.size)
     if content is ~Absent and targetEl is ~Absent do
       console.log("[file-tooltip] request show",
         path: path,
