@@ -7,38 +7,26 @@ import "../filesystem/fs.mls"
 
 module editor with...
 
-fun rootRule() =
-  mut { height: "100%", fontSize: "14px" }
-
-fun scrollerRule() =
-  mut { overflow: "auto" }
-
-fun contentRule() =
-  mut
+fun editorThemeSpec() = mut
+  "&": mut
+    height: "100%"
+    fontSize: "14px"
+  ".cm-scroller": mut
+    overflow: "auto"
+  ".cm-content": mut
     caretColor: "var(--sand-12)"
     fontFamily: "'Google Sans Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace"
-
-fun cursorRule() =
-  mut { borderLeftColor: "var(--sand-12)" }
-
-fun guttersRule() =
-  mut
+  ".cm-lineNumbers": mut
+    caretColor: "var(--sand-12)"
+    fontFamily: "'Google Sans Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace"
+  ".cm-cursor": mut
+    borderLeftColor: "var(--sand-12)"
+  ".cm-editor .cm-gutters": mut
     backgroundColor: "var(--sand-2)"
     color: "var(--sand-11)"
     borderRight: "1px solid var(--sand-6)"
-
-fun activeLineGutterRule() =
-  mut { backgroundColor: "var(--sand-2)" }
-
-fun editorThemeSpec() =
-  mut
-    "&": rootRule()
-    ".cm-scroller": scrollerRule()
-    ".cm-content": contentRule()
-    ".cm-lineNumbers": contentRule()
-    ".cm-cursor": cursorRule()
-    ".cm-editor .cm-gutters": guttersRule()
-    ".cm-activeLineGutter": activeLineGutterRule()
+  ".cm-activeLineGutter": mut
+    backgroundColor: "var(--sand-2)"
 
 fun languageExtensions(extension) =
   let extensions = mut [theme]
