@@ -10,6 +10,7 @@ class ToolbarPanel extends HTMLElement with
     startTime = null
     isCompiling = false
     isStdActive = false
+    isMlsActive = false
 
   fun connectedCallback() =
     this.render()
@@ -163,8 +164,15 @@ class ToolbarPanel extends HTMLElement with
       meta is Absent then false
       meta.isStd is Absent then false
       else meta.isStd === true
+    set isMlsActive = if
+      meta is Absent then false
+      meta.path is Absent then false
+      else meta.path.endsWith(".mls")
     this.updateCompileButton()
     this.updateExecuteButton()
+
+  fun canCompileActiveFile() =
+    isStdActive is false and isMlsActive
 
   fun updateCompileButton() =
     if this.querySelector("#compile") is
@@ -178,9 +186,9 @@ class ToolbarPanel extends HTMLElement with
               Compiling...
             """
           else
-            set compileBtn.disabled = isStdActive
+            set compileBtn.disabled = canCompileActiveFile() is false
             compileBtn.classList.remove("loading")
-            compileBtn.classList.toggle("disabled", isStdActive)
+            compileBtn.classList.toggle("disabled", canCompileActiveFile() is false)
             set compileBtn.innerHTML = """
               <i class="icon-binary"></i>
               Compile

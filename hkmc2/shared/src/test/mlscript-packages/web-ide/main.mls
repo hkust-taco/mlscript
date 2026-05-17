@@ -134,8 +134,15 @@ fun compileTarget(targetPath) =
     targetPaths = collected.at(1)
   index.compile(targetPaths, allFiles).then of response => compileSuccess(targetPaths, response)
 
+fun isMlsPath(path) =
+  typeof(path) is "string" and path.endsWith(".mls")
+
 fun handleCompileRequested(event) =
-  compileTarget(event.detail.filePath)
+  let filePath = event.detail.filePath
+  if
+    isMlsPath(filePath) then compileTarget(filePath)
+    else console.warn("Compile skipped: active file is not an .mls file:", filePath)
+
 
 fun compiledPath(filePath) =
   if
