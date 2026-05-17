@@ -1170,9 +1170,9 @@ reserved-panel .goto-location-btn i {
 
 /* Toolbar */
 toolbar-panel {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   padding: 8px 16px;
   background: var(--sand-2);
   border-bottom: 1px solid var(--sand-6);
@@ -1182,6 +1182,8 @@ toolbar-panel {
 }
 
 toolbar-panel .title {
+  justify-self: start;
+  min-width: 0;
   font-size: 1.125rem;
   font-weight: 600;
   color: var(--sand-12);
@@ -1190,6 +1192,8 @@ toolbar-panel .title {
 }
 
 toolbar-panel .status-container {
+  grid-column: 2;
+  justify-self: center;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1264,6 +1268,7 @@ toolbar-panel .status-tooltip {
 }
 
 toolbar-panel .actions {
+  justify-self: end;
   display: flex;
   gap: 8px;
 }
