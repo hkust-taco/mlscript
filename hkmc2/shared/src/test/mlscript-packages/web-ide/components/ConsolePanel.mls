@@ -139,6 +139,16 @@ class ConsolePanel extends HTMLElement with
       else restoreSavedSize()
     this.classList.toggle("collapsed", isCollapsed)
 
+  fun shouldExpand() =
+    if isCollapsed then true
+    else this.classList.contains("collapsed")
+
+  fun expand() =
+    if shouldExpand() do
+      set isCollapsed = false
+      restoreSavedSize()
+      this.classList.remove("collapsed")
+
   fun setPreserveLogs(value) =
     set preserveLogs = value
 

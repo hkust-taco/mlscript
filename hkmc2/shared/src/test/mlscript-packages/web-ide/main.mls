@@ -161,7 +161,12 @@ fun compileThenExecute(filePath, mjsPath) =
     markAsCompiled(targetPaths)
     runCompiledFile(mjsPath)
 
+fun expandConsolePanel() =
+  if document.querySelector("console-panel") is
+    ~null as panel do panel.expand()
+
 fun handleExecuteRequested(event) =
+  expandConsolePanel()
   let filePath = event.detail.filePath
   if
     typeof(filePath) is ~"string" then console.error("Invalid file path for execution:", filePath)
