@@ -18,7 +18,7 @@ fun compilerModule(loaded) =
     else loaded.("default")
 
 fun loadMLscript() =
-  dynamicImport("./build/MLscript.mjs").then(loaded => compilerModule(loaded))
+  dynamicImport("./build/MLscript.mjs").then of loaded => compilerModule(loaded)
 
 fun folderAttrs() =
   mut { collapsed: true }
@@ -103,7 +103,8 @@ fun filesForCompilation() =
 
 fun collectFilesForCompilation(targetPath) =
   let files = filesForCompilation()
-  let targets = new Set(Object.keys(files).filter((path, ...) => shouldCompile(path)))
+  let compilePaths = Object.keys(files).filter of (path, ...) => shouldCompile(path)
+  let targets = new Set(compilePaths)
   if targetPath is ~Absent and targetPath !== "" do targets.add(targetPath)
   [files, Array.from(targets)]
 
@@ -112,7 +113,7 @@ fun markPathCompiled(path) =
   if isStandardNode(node) is false do fs.setAttr(path, "compiled", true)
 
 fun markAsCompiled(paths) =
-  paths.forEach((path, ...) => markPathCompiled(path))
+  paths.forEach of (path, ...) => markPathCompiled(path)
 
 fun reservedPanel() =
   document.querySelector("reserved-panel")
@@ -129,7 +130,7 @@ fun compileTarget(targetPath) =
   let collected = collectFilesForCompilation(targetPath)
   let allFiles = collected.at(0)
   let targetPaths = collected.at(1)
-  index.compile(targetPaths, allFiles).then(response => compileSuccess(targetPaths, response))
+  index.compile(targetPaths, allFiles).then of response => compileSuccess(targetPaths, response)
 
 fun handleCompileRequested(event) =
   compileTarget(event.detail.filePath)
@@ -148,10 +149,9 @@ fun compileThenExecute(filePath, mjsPath) =
   let collected = collectFilesForCompilation(filePath)
   let allFiles = collected.at(0)
   let targetPaths = collected.at(1)
-  index.compile(targetPaths, allFiles).then(_ =>
+  index.compile(targetPaths, allFiles).then of _ =>
     markAsCompiled(targetPaths)
     runCompiledFile(mjsPath)
-  )
 
 fun handleExecuteRequested(event) =
   let filePath = event.detail.filePath
@@ -171,9 +171,10 @@ fun start(compiler) =
   loadStandardLibrary(compiler)
   ensureDefaultMainFile()
   
-  document.addEventListener("compile-requested", handleCompileRequested)
-  document.addEventListener("execute-requested", handleExecuteRequested)
-  document.addEventListener("terminate-requested", () => runner.terminate())
-  document.addEventListener("open-file-at-location", handleOpenFileAtLocation)
+  document.addEventListener of "compile-requested", handleCompileRequested
+  document.addEventListener of "execute-requested", handleExecuteRequested
+  document.addEventListener of "terminate-requested", () => runner.terminate()
+  document.addEventListener of "open-file-at-location", handleOpenFileAtLocation
 
-loadMLscript().then(compiler => start(compiler)).("catch")(error => console.error("Failed to load MLscript compiler:", error))
+let startPromise = loadMLscript().then of compiler => start(compiler)
+startPromise.("catch") of error => console.error("Failed to load MLscript compiler:", error)

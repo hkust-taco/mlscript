@@ -14,15 +14,12 @@ class ToolbarPanel extends HTMLElement with
     this.render()
     this.attachEventListeners()
     let panel = this
-    window.addEventListener("execution-status-change", event =>
+    window.addEventListener of "execution-status-change", event =>
       panel.setStatus(event.detail.status, event.detail.runningTime)
-    )
-    document.addEventListener("compilation-status-change", event =>
+    document.addEventListener of "compilation-status-change", event =>
       panel.setCompilationStatus(event.detail.status)
-    )
-    document.addEventListener("active-tab-changed", event =>
+    document.addEventListener of "active-tab-changed", event =>
       panel.setActiveFileMeta(event.detail)
-    )
 
   fun setStatus(nextStatus, nextRunningTime) =
     set
@@ -146,13 +143,13 @@ class ToolbarPanel extends HTMLElement with
     mut { bubbles: true }
 
   fun handleCompile() =
-    this.dispatchEvent(new CustomEvent("compile-requested", fileEventOptions()))
+    this.dispatchEvent(new CustomEvent of "compile-requested", fileEventOptions())
 
   fun handleExecute() =
-    this.dispatchEvent(new CustomEvent("execute-requested", fileEventOptions()))
+    this.dispatchEvent(new CustomEvent of "execute-requested", fileEventOptions())
 
   fun handleTerminate() =
-    this.dispatchEvent(new CustomEvent("terminate-requested", bubbleEventOptions()))
+    this.dispatchEvent(new CustomEvent of "terminate-requested", bubbleEventOptions())
 
   fun setCompilationStatus(nextStatus) =
     set isCompiling = nextStatus === "running"
@@ -198,31 +195,30 @@ class ToolbarPanel extends HTMLElement with
     computePosition(statusContainer, statusTooltip,
       placement: "bottom",
       middleware: [shift(padding: 5), offset(4)],
-    ).then(position =>
+    ).then of position =>
       set
         statusTooltip.style.top = position.y + "px"
         statusTooltip.style.left = position.x + "px"
-    )
 
   fun hideTooltip(statusTooltip) =
     set statusTooltip.style.display = "none"
 
   fun attachButtonListeners(panel) =
     if panel.querySelector("#compile") is
-      ~null as compileBtn do compileBtn.addEventListener("click", () => panel.handleCompile())
+      ~null as compileBtn do compileBtn.addEventListener of "click", () => panel.handleCompile()
     if panel.querySelector("#execute") is
-      ~null as executeBtn do executeBtn.addEventListener("click", () => panel.handleExecute())
+      ~null as executeBtn do executeBtn.addEventListener of "click", () => panel.handleExecute()
     if panel.querySelector("#terminate") is
-      ~null as terminateBtn do terminateBtn.addEventListener("click", () => panel.handleTerminate())
+      ~null as terminateBtn do terminateBtn.addEventListener of "click", () => panel.handleTerminate()
 
   fun attachStatusTooltip(panel) =
     let statusContainer = panel.querySelector(".status-container")
     let statusTooltip = panel.querySelector(".status-tooltip")
     if statusContainer is ~Absent and statusTooltip is ~Absent do
-      statusContainer.addEventListener("mouseenter", () => panel.showTooltip(statusContainer, statusTooltip))
-      statusContainer.addEventListener("mouseleave", () => panel.hideTooltip(statusTooltip))
-      statusContainer.addEventListener("focus", () => panel.showTooltip(statusContainer, statusTooltip))
-      statusContainer.addEventListener("blur", () => panel.hideTooltip(statusTooltip))
+      statusContainer.addEventListener of "mouseenter", () => panel.showTooltip(statusContainer, statusTooltip)
+      statusContainer.addEventListener of "mouseleave", () => panel.hideTooltip(statusTooltip)
+      statusContainer.addEventListener of "focus", () => panel.showTooltip(statusContainer, statusTooltip)
+      statusContainer.addEventListener of "blur", () => panel.hideTooltip(statusTooltip)
 
   fun attachEventListeners() =
     let panel = this

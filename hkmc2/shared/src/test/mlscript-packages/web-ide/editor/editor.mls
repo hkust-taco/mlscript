@@ -57,20 +57,18 @@ fun readonlyExtension(isReadonly) =
   if isReadonly then EditorView.editable.of(false) else []
 
 fun saveOnChange(filePath, isReadonly) =
-  EditorView.updateListener.of(update =>
+  EditorView.updateListener.of of update =>
     if
       isReadonly then ()
       update.docChanged then
         let newContent = update.state.doc.toString()
         fs.write(filePath, newContent)
       else ()
-  )
 
 fun editorExtensions(filePath, extension, isReadonly) =
   let extensions = mut [basicSetup]
-  languageExtensions(extension).forEach((extension, ...) =>
+  languageExtensions(extension).forEach of (extension, ...) =>
     extensions.push(extension)
-  )
   extensions.push(saveOnChange(filePath, isReadonly))
   extensions.push(readonlyExtension(isReadonly))
   extensions.push(EditorView.theme(editorThemeSpec()))
@@ -84,6 +82,6 @@ fun editorOptions(container, initialContent, filePath, extension, isReadonly) =
   }
 
 fun createEditor(container, initialContent, filePath, extension, isReadonly) =
-  Reflect.construct(EditorView, [
+  Reflect.construct of EditorView, [
     editorOptions(container, initialContent, filePath, extension, isReadonly),
-  ])
+  ]

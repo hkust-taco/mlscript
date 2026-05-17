@@ -67,10 +67,10 @@ class TreeNode extends HTMLElement with
           textEl.classList.remove("scrolling")
           textEl.style.removeProperty("--scroll-distance")
           textEl.style.removeProperty("--scroll-duration")
-        container.addEventListener("mouseenter", start)
-        container.addEventListener("mouseleave", stop)
-        container.addEventListener("focus", start)
-        container.addEventListener("blur", stop)
+        container.addEventListener of "mouseenter", start
+        container.addEventListener of "mouseleave", stop
+        container.addEventListener of "focus", start
+        container.addEventListener of "blur", stop
 
   fun connectedCallback() =
     let treeNode = this
@@ -146,17 +146,15 @@ class TreeNode extends HTMLElement with
       else
         let filteredChildren = filterMjsFiles(childrenOf(node))
         let newChildPaths = new Set()
-        filteredChildren.forEach((child, ...) =>
+        filteredChildren.forEach of (child, ...) =>
           newChildPaths.add(childPath(child))
-        )
-        Array.from(childTreeNodes.entries()).forEach((entry, ...) =>
+        Array.from(childTreeNodes.entries()).forEach of (entry, ...) =>
           let existingPath = entry.at(0)
           let childElement = entry.at(1)
           if newChildPaths.has(existingPath) is false do
             childElement.remove()
             childTreeNodes.delete(existingPath)
-        )
-        filteredChildren.forEach((child, index) =>
+        filteredChildren.forEach of (child, index) =>
           let nextPath = childPath(child)
           if
             childTreeNodes.has(nextPath) is false then
@@ -175,21 +173,18 @@ class TreeNode extends HTMLElement with
                 let nextChild = elements.childrenContainer.children.(index)
                 if nextChild !== childElement do
                   elements.childrenContainer.insertBefore(childElement, nextChild)
-        )
 
   fun filterMjsFiles(children) =
     let mlsFiles = new Set()
-    children.forEach((child, ...) =>
+    children.forEach of (child, ...) =>
       if child.("type") is "file" and child.name.endsWith(".mls") do
         mlsFiles.add(basenameWithoutExt(child.name))
-    )
-    children.filter((child, ...) =>
+    children.filter of (child, ...) =>
       if
         child.("type") is "file" and child.name.endsWith(".mjs") then
           let basename = basenameWithoutExt(child.name)
           mlsFiles.has(basename) is false
         else true
-    )
 
   fun hasMjsFile() =
     if
@@ -201,9 +196,8 @@ class TreeNode extends HTMLElement with
   fun hasSiblingMjsFile(name) =
     let mjsFileName = basenameWithoutExt(name) + ".mjs"
     let children = parentChildren()
-    children.some((child, ...) =>
+    children.some of (child, ...) =>
       child.("type") is "file" and child.name === mjsFileName
-    )
 
   fun parentChildren() =
     if
@@ -228,9 +222,8 @@ class TreeNode extends HTMLElement with
   fun updateOpenState(openFiles) =
     if openFiles is ~Absent do
       updateOwnOpenState(openFiles)
-      Array.from(childTreeNodes.values()).forEach((child, ...) =>
+      Array.from(childTreeNodes.values()).forEach of (child, ...) =>
         child.updateOpenState(openFiles)
-      )
 
   fun updateOwnOpenState(openFiles) =
     if
@@ -262,7 +255,7 @@ class TreeNode extends HTMLElement with
     mut { detail: fileOpenDetail(openPath, fileName), bubbles: true }
 
   fun dispatchFileOpen(openPath, fileName) =
-    this.dispatchEvent(new CustomEvent("file-open", fileOpenOptions(openPath, fileName)))
+    this.dispatchEvent(new CustomEvent of "file-open", fileOpenOptions(openPath, fileName))
 
   fun render() =
     if
@@ -286,9 +279,8 @@ class TreeNode extends HTMLElement with
         elements.compiledDot.className = "compiled-dot"
       elements.fileName.appendChild(elements.fileNameText)
       setupNameScroll(elements.fileName, elements.fileNameText)
-      elements.fileName.addEventListener("click", () =>
+      elements.fileName.addEventListener of "click", () =>
         treeNode.dispatchFileOpen(treeNode.currentPath(), treeNode.currentNodeName())
-      )
       elements.fileItem.appendChild(elements.fileIcon)
       elements.fileItem.appendChild(elements.fileName)
       elements.fileItem.appendChild(elements.compiledDot)
@@ -336,13 +328,12 @@ class TreeNode extends HTMLElement with
         elements.mjsButton.className = "mjs-button"
         elements.mjsButton.textContent = ".mjs"
         elements.mjsButton.title = "Open compiled .mjs file"
-      elements.mjsButton.addEventListener("click", event =>
+      elements.mjsButton.addEventListener of "click", event =>
         event.stopPropagation()
         let mjsPath = treeNode.getMjsPath()
         if mjsPath is ~Absent do
           let basename = basenameWithoutExt(treeNode.currentNodeName())
           treeNode.dispatchFileOpen(mjsPath, basename + ".mjs")
-      )
       elements.fileItem.appendChild(elements.mjsButton)
 
   fun removeMjsButton() =
@@ -372,7 +363,7 @@ class TreeNode extends HTMLElement with
       elements.summary.appendChild(elements.folderName)
       elements.details.appendChild(elements.summary)
       elements.details.appendChild(elements.childrenContainer)
-      elements.details.addEventListener("toggle", () => treeNode.updateFolderIcon())
+      elements.details.addEventListener of "toggle", () => treeNode.updateFolderIcon()
       this.appendChild(elements.details)
 
   fun updateFolderIcon() =

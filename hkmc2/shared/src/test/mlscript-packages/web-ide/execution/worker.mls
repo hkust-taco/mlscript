@@ -33,7 +33,7 @@ fun dependencyErrorPayload(error) =
   "Failed to load worker dependencies: " + errorMessage(error) + "\n" + errorStack(error)
 
 fun requireDependency(value, dependencyName) =
-  if value is Absent do throw new Error(dependencyName + " not found after loading worker dependencies")
+  if value is Absent do throw new Error of dependencyName + " not found after loading worker dependencies"
 
 fun finishDependencyLoad(endoModuleSource) =
   set ModuleSource = endoModuleSource.ModuleSource
@@ -46,7 +46,7 @@ fun loadEndoModuleSource(sesModule) =
     ~Absent as compartment then set Compartment = compartment
     else set Compartment = sesModule.Compartment
   let promise = dynamicImport("https://esm.sh/@endo/module-source@1.3.3")
-  promise.then(finishDependencyLoad)
+  promise.then of finishDependencyLoad
 
 fun handleDependencyError(error) =
   post("error", dependencyErrorPayload(error))
@@ -54,7 +54,8 @@ fun handleDependencyError(error) =
 
 fun loadDependencies() =
   let promise = dynamicImport("https://esm.sh/ses@1.14.0")
-  promise.then(loadEndoModuleSource).("catch")(handleDependencyError)
+  let handled = promise.then of loadEndoModuleSource
+  handled.("catch") of handleDependencyError
 
 fun normalizePath(path) =
   let parts = mut []
@@ -119,10 +120,10 @@ fun resolveHook(moduleSpecifier, moduleReferrer) =
 fun importHook(fileMap, fullSpecifier) =
   let path = normalizePath(fullSpecifier)
   let src = fileMap.get(path)
-  if src is Absent then throw new Error("Module not found: " + path)
+  if src is Absent then throw new Error of "Module not found: " + path
   else
     post("log", "Importing module: " + path)
-    Reflect.construct(ModuleSource, [src, path])
+    Reflect.construct of ModuleSource, [src, path]
 
 fun compartmentOptions(fileMap) =
   mut {
@@ -132,11 +133,11 @@ fun compartmentOptions(fileMap) =
 
 fun makeCompartment(fileMap) =
   let modules = mut {}
-  Reflect.construct(Compartment, [
+  Reflect.construct of Compartment, [
     endowments(),
     modules,
     compartmentOptions(fileMap),
-  ])
+  ]
 
 fun runDone(_) =
   post("done", null)
@@ -151,7 +152,8 @@ fun runMain(mainPath, files) =
   let fileMap = new Map(Object.entries(files))
   let compartment = makeCompartment(fileMap)
   post("log", "Importing the main module...")
-  compartment.import(normalizePath(mainPath)).then(runDone).("catch")(runError)
+  let handled = compartment.import(normalizePath(mainPath)).then of runDone
+  handled.("catch") of runError
 
 fun messageHandlerError(error) =
   let msg = "Error in worker message handler: " + errorStack(error)

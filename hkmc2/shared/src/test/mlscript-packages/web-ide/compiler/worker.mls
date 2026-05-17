@@ -45,18 +45,18 @@ fun createVirtualFileSystem() =
   }
 
 fun compilerPaths(MLscript) =
-  Reflect.construct(MLscript.Paths, [
+  Reflect.construct of MLscript.Paths, [
     "/std/Prelude.mls",
     "/std/Runtime.mjs",
     "/std/Term.mjs",
     "/std"
-  ])
+  ]
 
 fun initializeCompiler(MLscript) =
   if compiler is null do
     let virtualFS = createVirtualFileSystem()
-    let dummyFileSystem = Reflect.construct(MLscript.DummyFileSystem, [virtualFS])
-    set compiler = Reflect.construct(MLscript.BrowserCompiler, [dummyFileSystem, compilerPaths(MLscript)])
+    let dummyFileSystem = Reflect.construct of MLscript.DummyFileSystem, [virtualFS]
+    set compiler = Reflect.construct of MLscript.BrowserCompiler, [dummyFileSystem, compilerPaths(MLscript)]
 
 fun timestampEntries(files) =
   Object.keys(files).map(path => [path, 0])
@@ -121,7 +121,8 @@ fun handleCompileRequest(payload) =
   let promise = loadMLscript()
   let loaded = MLscript => handleLoadedCompiler(MLscript, id, payload)
   let failed = error => postCompileError(id, error)
-  promise.then(loaded).("catch")(failed)
+  let handled = promise.then of loaded
+  handled.("catch") of failed
 
 fun unknownMessage(kind) =
   mut { "type": "error", error: "Unknown message type: " + kind }
@@ -132,4 +133,4 @@ fun handleMessage(event) =
     "compile" then handleCompileRequest(message.payload)
     else self.postMessage(unknownMessage(message.("type")))
 
-self.addEventListener("message", handleMessage)
+self.addEventListener of "message", handleMessage

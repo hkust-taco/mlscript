@@ -39,7 +39,7 @@ fun relativeTimeOptions() =
 fun makeRelativeTimeFormatter() = if
   Intl is Absent then null
   Intl.RelativeTimeFormat is Absent then null
-  else Reflect.construct(Intl.RelativeTimeFormat, [undefined, relativeTimeOptions()])
+  else Reflect.construct of Intl.RelativeTimeFormat, [undefined, relativeTimeOptions()]
 
 fun dateFrom(value) =
   new Date(value)
@@ -182,7 +182,7 @@ class FileTooltip extends HTMLElement with
         placement: placement,
         strategy: "fixed",
         middleware: [shift(padding: 5), offset(8)],
-      ).then(position =>
+      ).then of position =>
         if requestId === showRequestId do
           set
             this.style.top = position.y + "px"
@@ -194,7 +194,6 @@ class FileTooltip extends HTMLElement with
             x: position.x,
             y: position.y,
           )
-      )
   
   fun hide() =
     set showRequestId += 1

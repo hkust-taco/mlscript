@@ -143,11 +143,11 @@ class ConsolePanel extends HTMLElement with
   fun attachEventListeners() =
     let panel = this
     if panel.querySelector(".clear-btn") is
-      ~null as clearBtn do clearBtn.addEventListener("click", () => panel.clear())
+      ~null as clearBtn do clearBtn.addEventListener of "click", () => panel.clear()
     if panel.querySelector(".collapse-btn") is
-      ~null as collapseBtn do collapseBtn.addEventListener("click", () => panel.toggleCollapse())
+      ~null as collapseBtn do collapseBtn.addEventListener of "click", () => panel.toggleCollapse()
     if panel.querySelector(".preserve-logs-checkbox") is
       ~null as preserveLogsCheckbox do
-        preserveLogsCheckbox.addEventListener("change", event => panel.setPreserveLogs(event.target.checked))
+        preserveLogsCheckbox.addEventListener of "change", event => panel.setPreserveLogs(event.target.checked)
 
 customElements.define("console-panel", ConsolePanel)

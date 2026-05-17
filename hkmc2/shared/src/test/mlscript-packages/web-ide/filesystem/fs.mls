@@ -43,7 +43,7 @@ fun textOrEmpty(value) = if
   else value
 
 fun splitPath(path) =
-  path.replace(new RegExp("^/"), "").split("/").filter((part, ...) => part !== "")
+  path.replace(new RegExp("^/"), "").split("/").filter of (part, ...) => part !== ""
 
 fun timestamps() =
   let now = Date.now()
@@ -68,7 +68,7 @@ fun makeEvent(kind, path, node) =
   mut { "type": kind, :path, :node }
 
 fun notifyChange(event) =
-  listeners.forEach((listener, ...) => listener(event))
+  listeners.forEach of (listener, ...) => listener(event)
 
 fun notifyAttr(path, node, key, value) =
   let event = makeEvent("attr", path, node)
@@ -208,7 +208,7 @@ fun createFile(path, contentArg, optionsArg) =
     parent is null then false
     else
       let stamp = timestamps()
-      let attrs = Object.assign(mut {}, objectOrEmpty(options.("attrs")))
+      let attrs = Object.assign of mut {}, objectOrEmpty(options.("attrs"))
       setDefaultCompiled(fileName, attrs)
       let node = new mut FileNode(
         fileName,

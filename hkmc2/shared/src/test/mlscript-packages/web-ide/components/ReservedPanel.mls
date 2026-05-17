@@ -88,11 +88,10 @@ class ReservedPanel extends HTMLElement with
   fun hasDiagnostics(diagnosticsPerFile) =
     if
       diagnosticsPerFile is Absent then false
-      else diagnosticsPerFile.some((file, ...) =>
+      else diagnosticsPerFile.some of (file, ...) =>
         if
           file.diagnostics is Absent then false
           else file.diagnostics.length > 0
-      )
 
   fun setDiagnostics(diagnosticsPerFile) =
     if this.querySelector(".content") is
@@ -110,12 +109,11 @@ class ReservedPanel extends HTMLElement with
 
   fun diagnosticsHtml(diagnosticsPerFile) =
     let html = """<div class="diagnostics-container">"""
-    diagnosticsPerFile.forEach((fileData, fileIndex) =>
+    diagnosticsPerFile.forEach of (fileData, fileIndex) =>
       if
         fileData.diagnostics is Absent then ()
         fileData.diagnostics.length === 0 then ()
         else set html += fileDiagnosticsHtml(fileData, fileIndex)
-    )
     set html += "</div>"
     html
 
@@ -140,9 +138,8 @@ class ReservedPanel extends HTMLElement with
     set html += """</div>"""
     if isFileCollapsed is false do
       set html += """<div class="file-diagnostic-list">"""
-      sortedDiagnostics.forEach((diagnostic, diagIndex) =>
+      sortedDiagnostics.forEach of (diagnostic, diagIndex) =>
         set html += diagnosticHtml(fileId, filePath, diagnostic, diagIndex, fileContent)
-      )
       set html += """</div>"""
     set html += """</div>"""
     html
@@ -174,9 +171,8 @@ class ReservedPanel extends HTMLElement with
       allMessages.length === 0 then ()
       else
         set html += """<div class="diagnostic-details">"""
-        allMessages.forEach((message, ...) =>
+        allMessages.forEach of (message, ...) =>
           set html += diagnosticMessageHtml(filePath, message, fileContent)
-        )
         set html += """</div>"""
     set html += """</div>"""
     html
@@ -188,14 +184,13 @@ class ReservedPanel extends HTMLElement with
     let html = """<div class="diagnostic-message">"""
     if message.messageBits is ~Absent and message.messageBits.length > 0 do
       set html += """<div class="message-content">"""
-      message.messageBits.forEach((bit, ...) =>
+      message.messageBits.forEach of (bit, ...) =>
         if
           bit.code is ~Absent then
             set html += """<code class="message-code">""" + escapeHtml(bit.code) + """</code>"""
           bit.text is ~Absent then
             set html += """<span class="message-text">""" + escapeHtml(bit.text) + """</span>"""
           else ()
-      )
       set html += """</div>"""
     if
       message.location is Absent then ()
@@ -215,9 +210,8 @@ class ReservedPanel extends HTMLElement with
     set html += """<i class="icon-locate"></i>"""
     set html += """</button>"""
     set html += """</div>"""
-    snippet.lines.forEach((line, ...) =>
+    snippet.lines.forEach of (line, ...) =>
       set html += codeLineHtml(line, snippet)
-    )
     set html += """</div>"""
     html
 
@@ -252,18 +246,14 @@ class ReservedPanel extends HTMLElement with
       else escapeHtml(content)
 
   fun attachDiagnosticListeners() =
-    this.querySelectorAll(".file-header").forEach((header, ...) =>
-      header.addEventListener("click", event => this.toggleFileDiagnostics(event.currentTarget))
-    )
-    this.querySelectorAll(".diagnostic-summary").forEach((summary, ...) =>
-      summary.addEventListener("click", event => this.toggleDiagnostic(event.currentTarget))
-    )
-    this.querySelectorAll(".goto-location-btn").forEach((btn, ...) =>
-      btn.addEventListener("click", event => this.gotoLocation(event))
-    )
-    this.querySelectorAll(".collapse-all-btn").forEach((btn, ...) =>
-      btn.addEventListener("click", event => this.toggleAllDiagnostics(event))
-    )
+    this.querySelectorAll(".file-header").forEach of (header, ...) =>
+      header.addEventListener of "click", event => this.toggleFileDiagnostics(event.currentTarget)
+    this.querySelectorAll(".diagnostic-summary").forEach of (summary, ...) =>
+      summary.addEventListener of "click", event => this.toggleDiagnostic(event.currentTarget)
+    this.querySelectorAll(".goto-location-btn").forEach of (btn, ...) =>
+      btn.addEventListener of "click", event => this.gotoLocation(event)
+    this.querySelectorAll(".collapse-all-btn").forEach of (btn, ...) =>
+      btn.addEventListener of "click", event => this.toggleAllDiagnostics(event)
 
   fun toggleFileDiagnostics(header) =
     let fileId = header.dataset.fileId
@@ -314,7 +304,7 @@ class ReservedPanel extends HTMLElement with
     let line = parseInt(event.currentTarget.dataset.line, 10)
     let detail = mut { :filePath, :line }
     let options = mut { :detail }
-    document.dispatchEvent(new CustomEvent("open-file-at-location", options))
+    document.dispatchEvent(new CustomEvent of "open-file-at-location", options)
 
   fun toggleAllDiagnostics(event) =
     event.stopPropagation()
@@ -326,18 +316,17 @@ class ReservedPanel extends HTMLElement with
         let diagnostics = fileBlock.querySelectorAll(".diagnostic")
         let icon = btn.querySelector("i")
         if allDiagnosticsCollapsed(diagnostics) then
-          diagnostics.forEach((diagnostic, ...) => panel.expandDiagnostic(diagnostic))
+          diagnostics.forEach of (diagnostic, ...) => panel.expandDiagnostic(diagnostic)
           if icon is ~Absent do set icon.className = "icon-list-chevrons-down-up"
         else
-          diagnostics.forEach((diagnostic, ...) => panel.collapseDiagnostic(diagnostic))
+          diagnostics.forEach of (diagnostic, ...) => panel.collapseDiagnostic(diagnostic)
           if icon is ~Absent do set icon.className = "icon-list-chevrons-up-down"
 
   fun allDiagnosticsCollapsed(diagnostics) =
     let allCollapsed = true
-    diagnostics.forEach((diagnostic, ...) =>
+    diagnostics.forEach of (diagnostic, ...) =>
       if collapsedDiagnostics.has(diagnostic.dataset.diagId) is false do
         set allCollapsed = false
-    )
     allCollapsed
 
   fun expandDiagnostic(diagnostic) =
@@ -389,6 +378,6 @@ class ReservedPanel extends HTMLElement with
   fun attachEventListeners() =
     let panel = this
     if this.querySelector(".collapse-btn") is
-      ~null as collapseBtn do collapseBtn.addEventListener("click", () => panel.toggleCollapse())
+      ~null as collapseBtn do collapseBtn.addEventListener of "click", () => panel.toggleCollapse()
 
 customElements.define("reserved-panel", ReservedPanel)

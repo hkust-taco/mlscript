@@ -41,7 +41,7 @@ class ResizeHandle extends HTMLElement with
       this.innerHTML = """<div class="resize-handle-indicator"></div>"""
 
   fun attachEventListeners() =
-    this.addEventListener("mousedown", event => this.startResize(event))
+    this.addEventListener of "mousedown", event => this.startResize(event)
 
   fun targetElement() =
     if this.getAttribute("target") is
@@ -64,8 +64,8 @@ class ResizeHandle extends HTMLElement with
       set
         documentMouseMove = event => this.handleResize(event, target, dir)
         documentMouseUp = () => this.stopResize(target)
-      document.addEventListener("mousemove", documentMouseMove)
-      document.addEventListener("mouseup", documentMouseUp)
+      document.addEventListener of "mousemove", documentMouseMove
+      document.addEventListener of "mouseup", documentMouseUp
 
   fun clamp(value, minSize, maxSize) =
     Math.max(minSize, Math.min(maxSize, value))
@@ -95,7 +95,7 @@ class ResizeHandle extends HTMLElement with
     mut { detail: resizeDetail(target) }
 
   fun dispatchPanelResize(target) =
-    target.dispatchEvent(new CustomEvent("panel-resize", resizeEventOptions(target)))
+    target.dispatchEvent(new CustomEvent of "panel-resize", resizeEventOptions(target))
 
   fun handleResize(event, target, dir) =
     if isResizing do
@@ -123,9 +123,9 @@ class ResizeHandle extends HTMLElement with
       document.body.style.userSelect = ""
     this.classList.remove("active")
     if documentMouseMove is ~Absent do
-      document.removeEventListener("mousemove", documentMouseMove)
+      document.removeEventListener of "mousemove", documentMouseMove
     if documentMouseUp is ~Absent do
-      document.removeEventListener("mouseup", documentMouseUp)
+      document.removeEventListener of "mouseup", documentMouseUp
     set
       documentMouseMove = null
       documentMouseUp = null

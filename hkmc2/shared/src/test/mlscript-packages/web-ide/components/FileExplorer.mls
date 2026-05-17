@@ -30,7 +30,7 @@ class FileExplorer extends HTMLElement with
     this.restoreSizeFromStorage()
     let explorer = this
     set openFilesChangedListener = event => explorer.handleOpenFilesChanged(event)
-    document.addEventListener("open-files-changed", openFilesChangedListener)
+    document.addEventListener of "open-files-changed", openFilesChangedListener
     set unsubscribe = fs.subscribe(event => explorer.handleFsEvent(event), undefined)
 
   fun restoreSizeFromStorage() =
@@ -45,7 +45,7 @@ class FileExplorer extends HTMLElement with
       window.clearTimeout(tooltipTimeout)
       set tooltipTimeout = null
     if openFilesChangedListener is ~Absent do
-      document.removeEventListener("open-files-changed", openFilesChangedListener)
+      document.removeEventListener of "open-files-changed", openFilesChangedListener
 
   fun render() =
     set this.innerHTML = """
@@ -83,17 +83,15 @@ class FileExplorer extends HTMLElement with
 
   fun filterMjsFiles(children) =
     let mlsFiles = new Set()
-    children.forEach((child, ...) =>
+    children.forEach of (child, ...) =>
       if child.("type") is "file" and child.name.endsWith(".mls") do
         mlsFiles.add(basenameWithoutExt(child.name))
-    )
-    children.filter((child, ...) =>
+    children.filter of (child, ...) =>
       if
         child.("type") is "file" and child.name.endsWith(".mjs") then
           let basename = basenameWithoutExt(child.name)
           mlsFiles.has(basename) is false
         else true
-    )
 
   fun rootPath(node) =
     "/" + node.name
@@ -103,17 +101,15 @@ class FileExplorer extends HTMLElement with
       ~null as treeView do
         let filteredRootNodes = filterMjsFiles(fs.fileTree)
         let newRootPaths = new Set()
-        filteredRootNodes.forEach((node, ...) =>
+        filteredRootNodes.forEach of (node, ...) =>
           newRootPaths.add(rootPath(node))
-        )
-        Array.from(rootNodes.entries()).forEach((entry, ...) =>
+        Array.from(rootNodes.entries()).forEach of (entry, ...) =>
           let existingPath = entry.at(0)
           let element = entry.at(1)
           if newRootPaths.has(existingPath) is false do
             element.remove()
             rootNodes.delete(existingPath)
-        )
-        filteredRootNodes.forEach((node, index) =>
+        filteredRootNodes.forEach of (node, index) =>
           let path = rootPath(node)
           if
             rootNodes.has(path) is false then
@@ -131,7 +127,6 @@ class FileExplorer extends HTMLElement with
               if currentPosition !== index do
                 let nextChild = treeView.children.(index)
                 if nextChild !== treeNode do treeView.insertBefore(treeNode, nextChild)
-        )
         this.updateOpenFlags()
 
   fun toggleCollapse() =
@@ -168,10 +163,9 @@ class FileExplorer extends HTMLElement with
         treeView.insertBefore(fileEntry, treeView.firstChild)
         set newFileInput = input
         input.focus()
-        input.addEventListener("keydown", event => explorer.handleNewFileKeydown(event, input))
-        input.addEventListener("blur", () =>
-          window.setTimeout(() => explorer.cancelIfCreatingFile(), 200)
-        )
+        input.addEventListener of "keydown", event => explorer.handleNewFileKeydown(event, input)
+        input.addEventListener of "blur", () =>
+          window.setTimeout of () => explorer.cancelIfCreatingFile(), 200
 
   fun cancelIfCreatingFile() =
     if isCreatingFile do this.cancelCreatingFile()
@@ -201,12 +195,13 @@ class FileExplorer extends HTMLElement with
       fileName is "" then cancelCreatingFile()
       else
         let normalizedInput = normalizeInputPath(fileName)
-        let parts = normalizedInput.split("/").filter((part, ...) => part !== "")
+        let parts = normalizedInput.split("/").filter of (part, ...) => part !== ""
+        let hasInvalidPart = parts.some of (part, ...) => invalidPathPart(part)
         if
           parts.length is 0 then
             window.alert("Please enter a valid file name (e.g. path/to/file.mls)")
             input.focus()
-          parts.some((part, ...) => invalidPathPart(part)) then
+          hasInvalidPart then
             window.alert("File name cannot contain \".\" or \"..\" path segments")
             input.focus()
           else
@@ -234,14 +229,14 @@ class FileExplorer extends HTMLElement with
     mut { detail: fileOpenDetail(path, fileName), bubbles: true }
 
   fun dispatchFileOpen(path, fileName) =
-    this.dispatchEvent(new CustomEvent("file-open", fileOpenOptions(path, fileName)))
+    this.dispatchEvent(new CustomEvent of "file-open", fileOpenOptions(path, fileName))
 
   fun attachEventListeners() =
     let explorer = this
     if this.querySelector(".collapse-button") is
-      ~null as collapseBtn do collapseBtn.addEventListener("click", () => explorer.toggleCollapse())
+      ~null as collapseBtn do collapseBtn.addEventListener of "click", () => explorer.toggleCollapse()
     if this.querySelector(".create-file-button") is
-      ~null as createFileBtn do createFileBtn.addEventListener("click", () => explorer.startCreatingFile())
+      ~null as createFileBtn do createFileBtn.addEventListener of "click", () => explorer.startCreatingFile()
 
   fun attachTooltipHandlers() =
     let treeView = this.querySelector(".tree-view")
@@ -251,10 +246,10 @@ class FileExplorer extends HTMLElement with
       tooltip is Absent then ()
       else
         let explorer = this
-        treeView.addEventListener("mouseover", event => explorer.handleTreeMouseOver(event, treeView, tooltip))
-        treeView.addEventListener("mouseout", event => explorer.handleTreeMouseOut(event, tooltip))
-        treeView.addEventListener("scroll", () => explorer.hideTooltip(tooltip))
-        this.addEventListener("mouseleave", () => explorer.hideTooltip(tooltip))
+        treeView.addEventListener of "mouseover", event => explorer.handleTreeMouseOver(event, treeView, tooltip)
+        treeView.addEventListener of "mouseout", event => explorer.handleTreeMouseOut(event, tooltip)
+        treeView.addEventListener of "scroll", () => explorer.hideTooltip(tooltip)
+        this.addEventListener of "mouseleave", () => explorer.hideTooltip(tooltip)
 
   fun hideTooltip(tooltip) =
     if tooltipTimeout is ~Absent do
@@ -273,10 +268,9 @@ class FileExplorer extends HTMLElement with
           hideTooltip(tooltip)
           set activeTooltipTarget = target
         let currentTarget = target
-        set tooltipTimeout = window.setTimeout(
+        set tooltipTimeout = window.setTimeout of
           () => this.showTooltipIfActive(currentTarget, tooltip),
           5000,
-        )
 
   fun tooltipName(target) =
     if
@@ -303,8 +297,7 @@ class FileExplorer extends HTMLElement with
       else hideTooltip(tooltip)
 
   fun updateOpenFlags() =
-    Array.from(rootNodes.values()).forEach((treeNode, ...) =>
+    Array.from(rootNodes.values()).forEach of (treeNode, ...) =>
       treeNode.updateOpenState(openFiles)
-    )
 
 customElements.define("file-explorer", FileExplorer)
