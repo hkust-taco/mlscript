@@ -106,11 +106,10 @@ fun vmConsole() =
   mut { log: vmLog, error: vmError, warn: vmWarn }
 
 fun endowments() =
-  mut {
-    console: vmConsole(),
-    fetch: self.fetch,
-    structuredClone: self.structuredClone
-  }
+  mut
+    console: vmConsole()
+    fetch: (self.fetch)
+    structuredClone: (self.structuredClone)
 
 fun resolveHook(moduleSpecifier, moduleReferrer) =
   post("log", "Resolving module: " + moduleSpecifier + " from " + moduleReferrer)
@@ -130,10 +129,9 @@ fun importHook(fileMap, fullSpecifier) =
     Reflect.construct of ModuleSource, [src, path]
 
 fun compartmentOptions(fileMap) =
-  mut {
-    resolveHook: resolveHook,
+  mut
+    resolveHook: resolveHook
     importHook: fullSpecifier => importHook(fileMap, fullSpecifier)
-  }
 
 fun makeCompartment(fileMap) =
   let modules = mut {}

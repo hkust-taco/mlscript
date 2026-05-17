@@ -242,14 +242,13 @@ class EditorPanel extends HTMLElement with
       else nodeInfo.readonly is true
 
   fun tabRecord(fileName, filePath, editorDiv, editorView, isReadonly, attrs) =
-    mut {
-      name: fileName,
-      path: filePath,
-      :editorDiv,
-      :editorView,
-      readonly: isReadonly,
+    mut
+      name: fileName
+      path: filePath
+      :editorDiv
+      :editorView
+      readonly: isReadonly
       :attrs
-    }
 
   fun openFile(filePath, fileName) =
     let existingTabId = existingTabIdFor(filePath)
@@ -322,11 +321,10 @@ class EditorPanel extends HTMLElement with
     this.emitOpenFilesChange()
 
   fun tabLogInfo(reason) =
-    mut {
-      :reason,
-      pendingTargetPath: if this.tabTooltipPendingTarget is Absent then null else this.tabTooltipPendingTarget.dataset.path,
+    mut
+      :reason
+      pendingTargetPath: if this.tabTooltipPendingTarget is Absent then null else this.tabTooltipPendingTarget.dataset.path
       hoverTargetPath: if this.tabTooltipHoverTarget is Absent then null else this.tabTooltipHoverTarget.dataset.path
-    }
 
   fun clearTabTooltip(reason) =
     let tooltip = this.querySelector("file-tooltip.tab-tooltip")
@@ -374,21 +372,19 @@ class EditorPanel extends HTMLElement with
     this.openTabs.get(tabEl.getAttribute("data-tab-id"))
 
   fun tooltipInfo(tab) =
-    mut {
-      path: tab.path,
-      name: tab.name,
-      size: tab.editorView.state.doc.length,
+    mut
+      path: (tab.path)
+      name: (tab.name)
+      size: (tab.editorView.state.doc.length)
       placement: "bottom"
-    }
 
   fun tabHoverLog(tabEl, reason) =
-    mut {
-      :reason,
-      tabId: tabEl.getAttribute("data-tab-id"),
-      path: tabEl.dataset.path,
-      pendingTargetPath: if this.tabTooltipPendingTarget is Absent then null else this.tabTooltipPendingTarget.dataset.path,
+    mut
+      :reason
+      tabId: tabEl.getAttribute("data-tab-id")
+      path: (tabEl.dataset.path)
+      pendingTargetPath: if this.tabTooltipPendingTarget is Absent then null else this.tabTooltipPendingTarget.dataset.path
       hoverTargetPath: if this.tabTooltipHoverTarget is Absent then null else this.tabTooltipHoverTarget.dataset.path
-    }
 
   fun tabShowLog(tabEl, reason, tooltip) =
     let info = tabHoverLog(tabEl, reason)

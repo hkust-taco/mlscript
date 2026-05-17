@@ -15,7 +15,7 @@
 - [x] Prefer `not` over `is false`
 - [x] Use `do` instead of `then ... else ()`
 - [x] Prefer quoted identifiers for symbol-like fields and values
-- [ ] Drop braces from multiline object literals
+- [x] Drop braces from multiline object literals
 - [ ] Do not overuse `of`
 
 ## Rules

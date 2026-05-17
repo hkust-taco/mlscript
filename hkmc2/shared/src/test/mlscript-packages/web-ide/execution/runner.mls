@@ -34,14 +34,13 @@ fun runMessage(id, mainPath, files) =
   mut { 'type: 'run, :id, :mainPath, :files }
 
 fun workerErrorDetails(event) =
-  mut {
-    message: event.message,
-    filename: event.filename,
-    lineno: event.lineno,
-    colno: event.colno,
-    error: event.error,
+  mut
+    message: (event.message)
+    filename: (event.filename)
+    lineno: (event.lineno)
+    colno: (event.colno)
+    error: (event.error)
     fullEvent: event
-  }
 
 fun errorStack(error) =
   if
@@ -69,12 +68,11 @@ fun workerErrorMessage(event) =
   message
 
 fun makeExecution(id) =
-  mut {
-    :id,
-    worker: new Worker("execution/worker.mjs", workerOptions()),
-    isRunning: false,
+  mut
+    :id
+    worker: new Worker("execution/worker.mjs", workerOptions())
+    isRunning: false
     startTime: null
-  }
 
 fun run(execution, id, mainPath) =
   let files = fs.getAllFiles(undefined)

@@ -4,19 +4,18 @@ import "../common/JS.mls"
 open JS { Absent }
 
 fun emptyElements() =
-  mut {
-    fileItem: null,
-    fileNameText: null,
-    compiledDot: null,
-    details: null,
-    summary: null,
-    childrenContainer: null,
-    fileIcon: null,
-    fileName: null,
-    mjsButton: null,
-    folderIcon: null,
+  mut
+    fileItem: null
+    fileNameText: null
+    compiledDot: null
+    details: null
+    summary: null
+    childrenContainer: null
+    fileIcon: null
+    fileName: null
+    mjsButton: null
+    folderIcon: null
     folderName: null
-  }
 
 fun parentPathOf(path) =
   path.substring(0, path.lastIndexOf("/"))

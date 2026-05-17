@@ -14,34 +14,31 @@ fun scrollerRule() =
   mut { overflow: "auto" }
 
 fun contentRule() =
-  mut {
-    caretColor: "var(--sand-12)",
+  mut
+    caretColor: "var(--sand-12)"
     fontFamily: "'Google Sans Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace"
-  }
 
 fun cursorRule() =
   mut { borderLeftColor: "var(--sand-12)" }
 
 fun guttersRule() =
-  mut {
-    backgroundColor: "var(--sand-2)",
-    color: "var(--sand-11)",
+  mut
+    backgroundColor: "var(--sand-2)"
+    color: "var(--sand-11)"
     borderRight: "1px solid var(--sand-6)"
-  }
 
 fun activeLineGutterRule() =
   mut { backgroundColor: "var(--sand-2)" }
 
 fun editorThemeSpec() =
-  mut {
-    "&": rootRule(),
-    ".cm-scroller": scrollerRule(),
-    ".cm-content": contentRule(),
-    ".cm-lineNumbers": contentRule(),
-    ".cm-cursor": cursorRule(),
-    ".cm-editor .cm-gutters": guttersRule(),
+  mut
+    "&": rootRule()
+    ".cm-scroller": scrollerRule()
+    ".cm-content": contentRule()
+    ".cm-lineNumbers": contentRule()
+    ".cm-cursor": cursorRule()
+    ".cm-editor .cm-gutters": guttersRule()
     ".cm-activeLineGutter": activeLineGutterRule()
-  }
 
 fun languageExtensions(extension) =
   let extensions = mut [theme]
@@ -73,11 +70,10 @@ fun editorExtensions(filePath, extension, isReadonly) =
   extensions
 
 fun editorOptions(container, initialContent, filePath, extension, isReadonly) =
-  mut {
-    doc: initialContent,
-    extensions: editorExtensions(filePath, extension, isReadonly),
+  mut
+    doc: initialContent
+    extensions: editorExtensions(filePath, extension, isReadonly)
     parent: container
-  }
 
 fun createEditor(container, initialContent, filePath, extension, isReadonly) =
   Reflect.construct of EditorView, [

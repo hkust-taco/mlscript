@@ -37,12 +37,11 @@ fun lastChangedTimestamp(path) = if
   else 0
 
 fun createVirtualFileSystem() =
-  mut {
-    read: readVirtualFile,
-    write: writeVirtualFile,
-    'exists: virtualFileExists,
+  mut
+    read: readVirtualFile
+    write: writeVirtualFile
+    'exists: virtualFileExists
     getLastChangedTimestamp: lastChangedTimestamp
-  }
 
 fun compilerPaths(MLscript) =
   Reflect.construct of MLscript.Paths, [
@@ -85,21 +84,19 @@ fun successResult(diagnosticsPerFile, filePaths) =
   mut { diagnostics: diagnosticsPerFile, compiledFiles: filePaths }
 
 fun successMessage(id, diagnosticsPerFile, filePaths, changes) =
-  mut {
-    'type: "compile-success",
-    :id,
-    result: successResult(diagnosticsPerFile, filePaths),
+  mut
+    'type: "compile-success"
+    :id
+    result: successResult(diagnosticsPerFile, filePaths)
     :changes
-  }
 
 fun errorMessage(id, error) =
-  mut {
-    'type: "compile-error",
-    :id,
-    name: error.name,
-    message: error.message,
-    stack: error.stack
-  }
+  mut
+    'type: "compile-error"
+    :id
+    name: (error.name)
+    message: (error.message)
+    stack: (error.stack)
 
 fun postCompileError(id, error) =
   self.postMessage(errorMessage(id, error))
