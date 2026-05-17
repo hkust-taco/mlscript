@@ -157,12 +157,10 @@ let Runtime1;
         return runtime.safeCall(xs.slice(i, tmp))
       } 
       static lazySlice(xs, i, j) {
-        let callPrefix;
-        callPrefix = runtime.safeCall(LazyArray.dropLeftRight(i, j));
-        return runtime.safeCall(callPrefix(xs))
+        return LazyArray.dropLeftRight(i, j)(xs)
       } 
       static lazyConcat(...args) {
-        return runtime.safeCall(LazyArray.__concat(...args))
+        return LazyArray.__concat(...args)
       } 
       static get(xs, i) {
         let scrut, scrut1, tmp;
@@ -178,7 +176,7 @@ let Runtime1;
         return xs.at(i);
       } 
       static isArrayLike(xs) {
-        return runtime.safeCall(Iter.isArrayLike(xs))
+        return Iter.isArrayLike(xs)
       }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "Tuple"]; 

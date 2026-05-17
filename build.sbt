@@ -194,13 +194,13 @@ lazy val hkmc2MostTests = project.in(file("hkmc2MostTests"))
 
 lazy val hkmc2AllTests = project.in(file("hkmc2AllTests"))
   .settings(
-    Test / test := (
+    Test / test := Def.sequential(
+      hkmc2JVM / Test / test, // prepares compile-test `.mjs` outputs used by JS tests
       (hkmc2DiffTests / Test / test)
         .dependsOn(hkmc2NofibTests / Test / test)
         .dependsOn(hkmc2AppsTests / Test / test)
         .dependsOn(hkmc2PackagesTest / Test / test)
         .dependsOn(hkmc2WasmTests / Test / test)
-        .dependsOn(hkmc2JVM / Test / test)
         .dependsOn(hkmc2JS / Test / test)
         .dependsOn(hkmc2Benchmarks / Test / compile)
     ).value

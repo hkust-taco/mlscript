@@ -1,4 +1,3 @@
-import "./build/MLscript.mjs" as MLscript
 import "./filesystem/fs.mls"
 import "./filesystem/persistent.mls"
 import "./execution/runner.mls"
@@ -8,6 +7,18 @@ import "./common/JS.mls"
 open JS { Absent }
 
 module main with...
+
+fun dynamicImport(specifier) =
+  let importModule = Function("specifier", "return import(specifier)")
+  importModule(specifier)
+
+fun compilerModule(loaded) =
+  if
+    loaded.("default") is Absent then loaded
+    else loaded.("default")
+
+fun loadMLscript() =
+  dynamicImport("./build/MLscript.mjs").then(loaded => compilerModule(loaded))
 
 fun folderAttrs() =
   let attrs = new mut Object
@@ -29,21 +40,21 @@ fun createStandardFile(path, content) =
     attrs: standardAttrs(),
   )
 
-fun loadStandardLibraryBody() =
+fun loadStandardLibraryBody(compiler) =
   fs.createFolder("/std", force: true, attrs: folderAttrs())
-  fs.createFile("/std/Prelude.mls", MLscript.std.prelude,
+  fs.createFile("/std/Prelude.mls", compiler.std.prelude,
     force: true,
     readonly: true,
     attrs: standardAttrs(),
   )
-  MLscript.std.files.forEach of (entry, ...) =>
+  compiler.std.files.forEach of (entry, ...) =>
     createStandardFile(entry.at(0), entry.at(1))
 
-fun loadStandardLibrary() =
+fun loadStandardLibrary(compiler) =
   console.groupCollapsed("Loading standard library files")
   js.try_catch(
     () =>
-      loadStandardLibraryBody()
+      loadStandardLibraryBody(compiler)
       console.groupEnd(),
     error =>
       console.groupEnd()
@@ -162,10 +173,13 @@ fun handleOpenFileAtLocation(event) =
   if editorPanel is
     ~null as panel do panel.openFileAtLine(event.detail.filePath, event.detail.line)
 
-loadStandardLibrary()
-ensureDefaultMainFile()
+fun start(compiler) =
+  loadStandardLibrary(compiler)
+  ensureDefaultMainFile()
+  
+  document.addEventListener("compile-requested", handleCompileRequested)
+  document.addEventListener("execute-requested", handleExecuteRequested)
+  document.addEventListener("terminate-requested", () => runner.terminate())
+  document.addEventListener("open-file-at-location", handleOpenFileAtLocation)
 
-document.addEventListener("compile-requested", handleCompileRequested)
-document.addEventListener("execute-requested", handleExecuteRequested)
-document.addEventListener("terminate-requested", () => runner.terminate())
-document.addEventListener("open-file-at-location", handleOpenFileAtLocation)
+loadMLscript().then(compiler => start(compiler)).("catch")(error => console.error("Failed to load MLscript compiler:", error))

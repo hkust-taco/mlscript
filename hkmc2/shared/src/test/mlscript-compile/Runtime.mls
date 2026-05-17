@@ -1,7 +1,7 @@
 import "./RuntimeJS.mjs"
 import "./Rendering.mls"
-import "./LazyArray.mjs"
-import "./Iter.mjs"
+import "./LazyArray.mls"
+import "./Iter.mls"
 
 
 module Runtime with ...
