@@ -30,7 +30,6 @@ fun createStandardFile(path, content) =
   console.log("Loading file: \"" + path + "\"")
   fs.createFile(path, content,
     force: true,
-    readonly: true,
     attrs: standardAttrs(),
   )
 
@@ -38,7 +37,6 @@ fun loadStandardLibraryBody(compiler) =
   fs.createFolder("/std", force: true, attrs: folderAttrs())
   fs.createFile("/std/Prelude.mls", compiler.std.prelude,
     force: true,
-    readonly: true,
     attrs: standardAttrs(),
   )
   compiler.std.files.forEach of (entry, ...) =>
