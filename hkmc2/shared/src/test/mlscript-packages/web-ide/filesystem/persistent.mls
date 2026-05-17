@@ -102,7 +102,7 @@ fun loadPersistedFiles() =
   counter
 
 fun persistChange(event) =
-  if isStandardLibraryNode(event.node) is false do
+  if not isStandardLibraryNode(event.node) do
     let paths = getPersistedPaths()
     if event.("type") is
       "create" | "write" then rememberFile(paths, event.path, event.node)

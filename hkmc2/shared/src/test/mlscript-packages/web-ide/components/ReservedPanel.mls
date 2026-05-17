@@ -95,7 +95,7 @@ class ReservedPanel extends HTMLElement with
   fun setDiagnostics(diagnosticsPerFile) =
     if this.querySelector(".content") is
       ~null as content do
-        if hasDiagnostics(diagnosticsPerFile) is false then
+        if not hasDiagnostics(diagnosticsPerFile) then
           set content.innerHTML = """
             <div class="success-state">
               <i class="icon-circle-check"></i>
@@ -136,7 +136,7 @@ class ReservedPanel extends HTMLElement with
     set html += """</button>"""
     set html += """<span class="file-diagnostic-count">""" + diagnostics.length + """</span>"""
     set html += """</div>"""
-    if isFileCollapsed is false do
+    if not isFileCollapsed do
       set html += """<div class="file-diagnostic-list">"""
       sortedDiagnostics.forEach of (diagnostic, diagIndex) =>
         set html += diagnosticHtml(fileId, filePath, diagnostic, diagIndex, fileContent)
@@ -335,7 +335,7 @@ class ReservedPanel extends HTMLElement with
   fun allDiagnosticsCollapsed(diagnostics) =
     let allCollapsed = true
     diagnostics.forEach of (diagnostic, ...) =>
-      if collapsedDiagnostics.has(diagnostic.dataset.diagId) is false do
+      if not collapsedDiagnostics.has(diagnostic.dataset.diagId) do
         set allCollapsed = false
     allCollapsed
 
@@ -372,7 +372,7 @@ class ReservedPanel extends HTMLElement with
     div.innerHTML
 
   fun toggleCollapse() =
-    set isCollapsed = isCollapsed is false
+    set isCollapsed = not isCollapsed
     this.classList.toggle("collapsed", isCollapsed)
     syncWidthForCollapseState(document.querySelector(".app-container"))
 

@@ -172,7 +172,7 @@ class ToolbarPanel extends HTMLElement with
     this.updateExecuteButton()
 
   fun canCompileActiveFile() =
-    isStdActive is false and isMlsActive
+    not isStdActive and isMlsActive
 
   fun updateCompileButton() =
     if this.querySelector("#compile") is
@@ -186,9 +186,9 @@ class ToolbarPanel extends HTMLElement with
               Compiling...
             """
           else
-            set compileBtn.disabled = canCompileActiveFile() is false
+            set compileBtn.disabled = not canCompileActiveFile()
             compileBtn.classList.remove("loading")
-            compileBtn.classList.toggle("disabled", canCompileActiveFile() is false)
+            compileBtn.classList.toggle("disabled", not canCompileActiveFile())
             set compileBtn.innerHTML = """
               <i class="icon-binary"></i>
               Compile

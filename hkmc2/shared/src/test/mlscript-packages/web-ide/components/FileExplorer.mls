@@ -88,7 +88,7 @@ class FileExplorer extends HTMLElement with
       if
         child.("type") is "file" and child.name.endsWith(".mjs") then
           let basename = basenameWithoutExt(child.name)
-          mlsFiles.has(basename) is false
+          not mlsFiles.has(basename)
         else true
 
   fun rootPath(node) =
@@ -106,13 +106,13 @@ class FileExplorer extends HTMLElement with
           let
             existingPath = entry.at(0)
             element = entry.at(1)
-          if newRootPaths.has(existingPath) is false do
+          if not newRootPaths.has(existingPath) do
             element.remove()
             rootNodes.delete(existingPath)
         filteredRootNodes.forEach of (node, index) =>
           let path = rootPath(node)
           if
-            rootNodes.has(path) is false then
+            not rootNodes.has(path) then
               let treeNode = document.createElement("tree-node")
               treeNode.setData(node, path, fs.fileTree)
               rootNodes.set(path, treeNode)
@@ -130,7 +130,7 @@ class FileExplorer extends HTMLElement with
         this.updateOpenFlags()
 
   fun toggleCollapse() =
-    set isCollapsed = isCollapsed is false
+    set isCollapsed = not isCollapsed
     this.classList.toggle("collapsed", isCollapsed)
     syncWidthForCollapseState(document.querySelector(".app-container"))
 
@@ -151,7 +151,7 @@ class FileExplorer extends HTMLElement with
           else container.style.removeProperty("--file-explorer-width")
 
   fun startCreatingFile() =
-    if isCreatingFile is false and this.querySelector(".tree-view") is
+    if not isCreatingFile and this.querySelector(".tree-view") is
       ~null as treeView do
         let explorer = this
         set isCreatingFile = true
@@ -270,7 +270,7 @@ class FileExplorer extends HTMLElement with
     let target = event.target.closest(".file-item, summary")
     if
       target is Absent then ()
-      treeView.contains(target) is false then ()
+      not treeView.contains(target) then ()
       else
         if activeTooltipTarget !== target do
           hideTooltip(tooltip)

@@ -12,6 +12,11 @@
   - [x] Combine the techniques together
 - [x] Get rid of parenthesis of function calls using `of` keywords
 - [x] Organize consecutive `let` bindings using splits
+- [x] Prefer `not` over `is false`
+- [ ] Use `do` instead of `then ... else ()`
+- [ ] Prefer quoted identifiers for symbol-like fields and values
+- [ ] Drop braces from multiline object literals
+- [ ] Do not overuse `of`
 
 ## Rules
 
@@ -292,4 +297,101 @@ After:
       rightArrow = this.querySelector(".tab-scroll-right")
       scrollInterval = null
       scrollSpeed = 3
+```
+
+### Additional rewrite patterns from PR review
+
+#### Prefer `not` over `is false`
+
+Use `not X` for boolean negation.
+
+Before:
+
+```mlscript
+  if arrow.classList.contains("visible") is false do
+    set arrow.style.display = "flex"
+```
+
+After:
+
+```mlscript
+  if not arrow.classList.contains("visible") do
+    set arrow.style.display = "flex"
+```
+
+#### Use `do` instead of `then ... else ()`
+
+When the conditional only performs an action and the `else` branch is `()`,
+make it a `do` conditional.
+
+Before:
+
+```mlscript
+  if shouldUpdate then
+    this.updateDisplay()
+  else ()
+```
+
+After:
+
+```mlscript
+  if shouldUpdate do
+    this.updateDisplay()
+```
+
+#### Prefer quoted identifiers for symbol-like fields and values
+
+When both an object field name and its value are symbol-like strings, use quoted
+identifiers instead of string literals.
+
+Before:
+
+```mlscript
+  mut { "type": "module" }
+```
+
+After:
+
+```mlscript
+  mut { 'type: 'module }
+```
+
+#### Drop braces from multiline object literals
+
+When an object literal spans multiple lines, indentation can delimit the fields.
+
+Before:
+
+```mlscript
+  mut {
+    'type: 'compile-success
+    id: id
+    changes: changes
+  }
+```
+
+After:
+
+```mlscript
+  mut
+    'type: 'compile-success
+    id: id
+    changes: changes
+```
+
+#### Do not overuse `of`
+
+Use `of` when it removes noisy parentheses in a multiline or nested call. For
+simple flat calls, ordinary parentheses are clearer.
+
+Before:
+
+```mlscript
+  window.setTimeout of hideLater, 200
+```
+
+After:
+
+```mlscript
+  window.setTimeout(hideLater, 200)
 ```

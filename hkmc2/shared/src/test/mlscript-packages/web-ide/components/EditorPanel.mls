@@ -162,7 +162,7 @@ class EditorPanel extends HTMLElement with
       panel.openFile(event.detail.path, event.detail.fileName)
     document.addEventListener of "keydown", event => panel.handleShortcut(event)
 
-  fun showArrow(arrow) = if arrow.classList.contains("visible") is false do
+  fun showArrow(arrow) = if not arrow.classList.contains("visible") do
     set arrow.style.display = "flex"
     arrow.offsetHeight
     arrow.classList.add("visible")
@@ -171,7 +171,7 @@ class EditorPanel extends HTMLElement with
     if arrow.classList.contains("visible") do
       arrow.classList.remove("visible")
       let hideLater = () =>
-        if arrow.classList.contains("visible") is false do
+        if not arrow.classList.contains("visible") do
           set arrow.style.display = "none"
       window.setTimeout of hideLater, 200
 
@@ -495,7 +495,7 @@ class EditorPanel extends HTMLElement with
             tabBarRect = tabBar.getBoundingClientRect()
             tabRect = tabElement.getBoundingClientRect()
             isVisible = tabRect.left >= tabBarRect.left and tabRect.right <= tabBarRect.right
-          if isVisible is false do
+          if not isVisible do
             let scrollOffset = tabElement.offsetLeft - tabBar.offsetLeft - 20
             tabBar.scrollTo(scrollOptions(scrollOffset))
     window.setTimeout of scrollLater, 0

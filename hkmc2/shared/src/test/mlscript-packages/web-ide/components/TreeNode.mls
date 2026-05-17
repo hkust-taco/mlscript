@@ -156,13 +156,13 @@ class TreeNode extends HTMLElement with
           let
             existingPath = entry.at(0)
             childElement = entry.at(1)
-          if newChildPaths.has(existingPath) is false do
+          if not newChildPaths.has(existingPath) do
             childElement.remove()
             childTreeNodes.delete(existingPath)
         filteredChildren.forEach of (child, index) =>
           let nextPath = childPath(child)
           if
-            childTreeNodes.has(nextPath) is false then
+            not childTreeNodes.has(nextPath) then
               let newChildElement = document.createElement("tree-node")
               newChildElement.setData(child, nextPath, node)
               childTreeNodes.set(nextPath, newChildElement)
@@ -188,14 +188,14 @@ class TreeNode extends HTMLElement with
       if
         child.("type") is "file" and child.name.endsWith(".mjs") then
           let basename = basenameWithoutExt(child.name)
-          mlsFiles.has(basename) is false
+          not mlsFiles.has(basename)
         else true
 
   fun hasMjsFile() =
     if
       node is Absent then false
       node.("type") !== "file" then false
-      node.name.endsWith(".mls") is false then false
+      not node.name.endsWith(".mls") then false
       else hasSiblingMjsFile(node.name)
 
   fun hasSiblingMjsFile(name) =
@@ -239,7 +239,7 @@ class TreeNode extends HTMLElement with
       else elements.fileItem.classList.toggle("open-in-editor", openFiles.has(path))
 
   fun getMjsPath() =
-    if this.hasMjsFile() is false then null
+    if not this.hasMjsFile() then null
     else
       let
         mjsFileName = basenameWithoutExt(node.name) + ".mjs"
@@ -360,7 +360,7 @@ class TreeNode extends HTMLElement with
         elements.folderIcon = document.createElement("i")
         elements.folderName = document.createElement("span")
         elements.childrenContainer = document.createElement("div")
-        elements.details.open = isCollapsed is false
+        elements.details.open = not isCollapsed
         elements.summary.dataset.path = path
         elements.summary.dataset.name = current.name + "/"
         elements.folderIcon.className = if isCollapsed then "folder-icon icon-folder" else "folder-icon icon-folder-open"

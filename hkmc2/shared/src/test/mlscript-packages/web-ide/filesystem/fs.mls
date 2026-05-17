@@ -153,7 +153,7 @@ fun read(path) =
 
 fun shouldMarkUncompiled(node) =
   if
-    node.name.endsWith(".mls") is false then false
+    not node.name.endsWith(".mls") then false
     node.attrs.("std") is true then false
     node.attrs.("compiled") is false then false
     else true
@@ -183,7 +183,7 @@ fun ensureFolders(parentPath) =
   while i < segments.length do
     let segment = segments.at(i)
     set currentPath += "/" + segment
-    if pathExists(currentPath) is false do
+    if not pathExists(currentPath) do
       createFolder(currentPath, mut {})
     set i += 1
 

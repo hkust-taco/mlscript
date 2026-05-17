@@ -141,9 +141,9 @@ class ResizeHandle extends HTMLElement with
       if
         this.direction() === "horizontal" then
           let width = parseInt(target.getAttribute("width"), 10)
-          if isNaN(width) is false do target.saveSizeToStorage(width)
+          if not isNaN(width) do target.saveSizeToStorage(width)
         else
           let height = parseInt(target.getAttribute("height"), 10)
-          if isNaN(height) is false do target.saveSizeToStorage(height)
+          if not isNaN(height) do target.saveSizeToStorage(height)
 
 customElements.define("resize-handle", ResizeHandle)

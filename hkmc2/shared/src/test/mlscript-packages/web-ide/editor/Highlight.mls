@@ -85,7 +85,7 @@ fun normal(stream, state) = if
 
 fun blockComment(stream, state) =
   let shouldStop = false
-  while shouldStop is false do
+  while not shouldStop do
     if stream.next() is ~null as ch and
       ch is "*" and stream.eat("/") is Str then
         set {state.parse = normal, shouldStop = true}
@@ -99,12 +99,12 @@ fun stringContent(stream, state) =
   let
     shouldStop = false
     escaped = false
-  while shouldStop is false do
+  while not shouldStop do
     if stream.next() is ~null as ch and
-      ch is "\"" and escaped is false then
+      ch is "\"" and not escaped then
         set {state.parse = normal, shouldStop = true}
       else
-        set escaped = escaped is false and ch is "\\"
+        set escaped = not escaped and ch is "\\"
     else set shouldStop = true
   "string"
 

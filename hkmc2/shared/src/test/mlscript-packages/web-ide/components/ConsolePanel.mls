@@ -91,7 +91,7 @@ class ConsolePanel extends HTMLElement with
     div.innerHTML
 
   fun clear() =
-    if preserveLogs is false do
+    if not preserveLogs do
       set messages = mut []
       if this.querySelector(".console-content") is
         ~null as consoleContent do set consoleContent.innerHTML = ""
@@ -133,7 +133,7 @@ class ConsolePanel extends HTMLElement with
           this.style.flexShrink = ""
 
   fun toggleCollapse() =
-    set isCollapsed = isCollapsed is false
+    set isCollapsed = not isCollapsed
     if
       isCollapsed then saveCurrentSize()
       else restoreSavedSize()

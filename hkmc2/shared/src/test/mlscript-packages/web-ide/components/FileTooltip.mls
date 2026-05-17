@@ -57,7 +57,7 @@ class FileTooltip extends HTMLElement with
   fun formatRelativeTime(timestamp) =
     if
       relativeTimeFormatter is Absent then ""
-      Number.isFinite(timestamp) is false then ""
+      not Number.isFinite(timestamp) then ""
       else
         let divisions = [
           (amount: 60, unit: "seconds"),
@@ -85,7 +85,7 @@ class FileTooltip extends HTMLElement with
         result
   
   fun formatTimestamp(value) =
-    if Number.isFinite(value) is false then "-"
+    if not Number.isFinite(value) then "-"
     else
       let absolute = dateFrom(value).toLocaleString(undefined,
         year: "numeric",
@@ -101,7 +101,7 @@ class FileTooltip extends HTMLElement with
   
   fun formatSize(size) =
     if
-      Number.isFinite(size) is false then "-"
+      not Number.isFinite(size) then "-"
       size < 0 then "-"
       size === 1 then "1 byte"
       size < 1024 then textOf(size) + " bytes"
