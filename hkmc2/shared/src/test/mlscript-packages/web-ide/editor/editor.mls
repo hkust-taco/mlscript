@@ -58,12 +58,9 @@ fun readonlyExtension(isReadonly) =
 
 fun saveOnChange(filePath, isReadonly) =
   EditorView.updateListener.of of update =>
-    if
-      isReadonly then ()
-      update.docChanged then
-        let newContent = update.state.doc.toString()
-        fs.write(filePath, newContent)
-      else ()
+    if not isReadonly and update.docChanged do
+      let newContent = update.state.doc.toString()
+      fs.write(filePath, newContent)
 
 fun editorExtensions(filePath, extension, isReadonly) =
   let extensions = mut [basicSetup]

@@ -13,7 +13,7 @@
 - [x] Get rid of parenthesis of function calls using `of` keywords
 - [x] Organize consecutive `let` bindings using splits
 - [x] Prefer `not` over `is false`
-- [ ] Use `do` instead of `then ... else ()`
+- [x] Use `do` instead of `then ... else ()`
 - [ ] Prefer quoted identifiers for symbol-like fields and values
 - [ ] Drop braces from multiline object literals
 - [ ] Do not overuse `of`
