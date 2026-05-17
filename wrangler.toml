@@ -1,6 +1,7 @@
 name = "mlscript-web-ide"
 compatibility_date = "2026-05-18"
 workers_dev = false
+preview_urls = true
 
 [assets]
 directory = "hkmc2/shared/src/test/mlscript-packages/web-ide"

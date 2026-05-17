@@ -1,0 +1,74 @@
+name: Web IDE Preview
+
+on:
+  push:
+    branches-ignore:
+      - hkmc2
+    paths:
+      - .github/workflows/web-ide-preview.yml
+      - wrangler.toml
+      - hkmc2/shared/src/test/mlscript-packages/web-ide/**
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - uses: rrbutani/use-nix-shell-action@v1
+        with:
+          devShell: .#default
+      - name: Install npm dependencies (TypeScript, Binaryen, etc.)
+        run: npm ci
+      - name: Run Web IDE package test
+        run: |
+          sbt -J-Xmx4096M -J-Xss8M hkmc2JVM/test "hkmc2PackagesTest/testOnly hkmc2.PackageTestRunner -- -z web-ide"
+      - name: Check no changes
+        run: |
+          git update-index -q --refresh
+          git diff-files -p --exit-code
+      - name: Build Web IDE deploy assets
+        run: |
+          sbt -J-Xmx4096M -J-Xss8M hkmc2JS/fastOptJS
+          rm -rf hkmc2/shared/src/test/mlscript-packages/web-ide/build
+          mkdir -p hkmc2/shared/src/test/mlscript-packages/web-ide/build
+          cp -R hkmc2/js/target/scala-*/hkmc2-fastopt/. hkmc2/shared/src/test/mlscript-packages/web-ide/build/
+      - name: Compute preview alias
+        id: preview_alias
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const workerName = "mlscript-web-ide";
+          const maxAliasLength = 63 - workerName.length - 1;
+          const branchName = process.env.GITHUB_REF_NAME || "preview";
+          let alias = branchName
+            .toLowerCase()
+            .replace(/[^a-z0-9-]+/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^-+|-+$/g, "");
+          if (!alias) alias = "preview";
+          if (!/^[a-z]/.test(alias)) alias = `branch-${alias}`;
+          if (alias.length > maxAliasLength) {
+            alias = alias.slice(0, maxAliasLength).replace(/-+$/g, "");
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `alias=${alias}\n`);
+          console.log(`Preview alias: ${alias}`);
+          NODE
+      - name: Enable Web IDE preview URLs
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          curl --fail -X POST \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data '{"enabled":false,"previews_enabled":true}' \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/mlscript-web-ide/subdomain"
+      - name: Upload Web IDE preview to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4.29.0"
+          command: versions upload --preview-alias ${{ steps.preview_alias.outputs.alias }} --config wrangler.toml
