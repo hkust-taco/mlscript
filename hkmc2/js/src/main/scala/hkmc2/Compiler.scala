@@ -72,7 +72,7 @@ class Compiler(paths: MLsCompiler.Paths)(using cctx: CompilerCtx):
 @JSExportTopLevel("BrowserCompiler")
 class BrowserCompiler(fs: DummyFileSystem, paths: MLsCompiler.Paths):
   private given CompilerCtx = CompilerCtx.fresh(fs, WebModuleResolver())
-  private val compiler = Compiler(paths)
+  private val compiler = new Compiler(paths)
 
   @JSExport
   def compile(filePath: Str): js.Array[js.Dynamic] =
