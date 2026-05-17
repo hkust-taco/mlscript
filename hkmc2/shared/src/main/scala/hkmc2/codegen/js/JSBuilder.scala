@@ -744,13 +744,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   def worksheet(p: Program)(using Raise, Scope): (Document, Document) =
     reserveNames(p)
     lazy val imps = p.imports.map: i =>
+      val importPrefix = doc"""${getVar(i.local, N)} = await import("${i.specifier}")"""
       i.kind match
-      case ImportKind.Default =>
-        doc"""${getVar(i.local, N)} = await import("${i.specifier}").then(m => m.default ?? m);"""
-      case ImportKind.Namespace =>
-        doc"""${getVar(i.local, N)} = await import("${i.specifier}");"""
+      case ImportKind.Default => importPrefix :: doc".then(m => m.default ?? m);"
+      case ImportKind.Namespace => importPrefix :: doc";"
       case ImportKind.Named(importedName) =>
-        doc"""${getVar(i.local, N)} = await import("${i.specifier}").then(m => m[${makeStringLiteral(importedName)}]);"""
+        importPrefix :: doc".then(m => m[${makeStringLiteral(importedName)}]);"
     p.main match
     case Scoped(syms, body) =>
       val fvs = body.freeVars
