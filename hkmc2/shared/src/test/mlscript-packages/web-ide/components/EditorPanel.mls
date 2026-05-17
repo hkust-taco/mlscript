@@ -59,13 +59,7 @@ class EditorPanel extends HTMLElement with
     document.dispatchEvent(new CustomEvent("open-files-changed", eventOptions(pathsDetail(paths))))
 
   fun shouldHandleFsEvent(kind) =
-    if
-      kind === "write" then true
-      kind === "delete" then true
-      kind === "rename" then true
-      kind === "readonly" then true
-      kind === "attr" then true
-      else false
+    kind is "write" | "delete" | "rename" | "readonly" | "attr"
 
   fun nodeAttrs(event) =
     if
@@ -86,23 +80,23 @@ class EditorPanel extends HTMLElement with
         tab.editorView.dispatch(transaction)
 
   fun handleFsEventForTab(tabId, tab, event) =
-    if tab.path === event.path do
-      let kind = event.("type")
-      if
-        kind === "delete" then this.closeTab(tabId)
-        kind === "rename" then
+    if
+      tab.path !== event.path then ()
+      event.("type") is
+        "delete" then this.closeTab(tabId)
+        "rename" then
           set
             tab.name = event.node.name
             tab.path = event.newPath
           this.updateDisplay()
-        kind === "readonly" then
+        "readonly" then
           set tab.readonly = event.readonly
           this.updateDisplay()
-        kind === "attr" then
+        "attr" then
           set tab.attrs = nodeAttrs(event)
           this.updateDisplay()
-        kind === "write" then updateTabContent(tab, event.path)
-        else ()
+        "write" then updateTabContent(tab, event.path)
+      else ()
 
   fun handleFsEvent(event) =
     if shouldHandleFsEvent(event.("type")) do
@@ -163,11 +157,10 @@ class EditorPanel extends HTMLElement with
     )
     document.addEventListener("keydown", event => panel.handleShortcut(event))
 
-  fun showArrow(arrow) =
-    if arrow.classList.contains("visible") is false do
-      set arrow.style.display = "flex"
-      arrow.offsetHeight
-      arrow.classList.add("visible")
+  fun showArrow(arrow) = if arrow.classList.contains("visible") is false do
+    set arrow.style.display = "flex"
+    arrow.offsetHeight
+    arrow.classList.add("visible")
 
   fun hideArrow(arrow) =
     if arrow.classList.contains("visible") do
@@ -223,9 +216,8 @@ class EditorPanel extends HTMLElement with
   fun existingTabIdFor(filePath) =
     let existingTabId = null
     Array.from(this.openTabs.entries()).forEach((entry, ...) =>
-      if existingTabId is Absent do
-        if entry.at(1).path === filePath do
-          set existingTabId = entry.at(0)
+      if existingTabId is Absent and entry.at(1).path === filePath do
+        set existingTabId = entry.at(0)
     )
     existingTabId
 

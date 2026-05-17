@@ -63,7 +63,7 @@ let defaultMainSource = "import \"./std/Predef.mls\"\n\n" +
   "print of \"Press Ctrl-E to execute.\"\n"
 
 fun ensureDefaultMainFile() =
-  if persistent.loadPersistedFiles() === 0 do
+  if persistent.loadPersistedFiles() is 0 do
     fs.createFile("/main.mls", defaultMainSource, force: true)
 
 fun attrsOf(node) =
@@ -156,7 +156,7 @@ fun compileThenExecute(filePath, mjsPath) =
 fun handleExecuteRequested(event) =
   let filePath = event.detail.filePath
   if
-    typeof(filePath) !== "string" then console.error("Invalid file path for execution:", filePath)
+    typeof(filePath) is ~"string" then console.error("Invalid file path for execution:", filePath)
     else
       let mjsPath = compiledPath(filePath)
       if fs.pathExists(mjsPath) then runner.execute(mjsPath)

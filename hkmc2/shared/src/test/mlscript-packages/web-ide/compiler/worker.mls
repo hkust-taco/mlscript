@@ -128,8 +128,8 @@ fun unknownMessage(kind) =
 
 fun handleMessage(event) =
   let message = event.data
-  if
-    message.("type") === "compile" then handleCompileRequest(message.payload)
+  if message.("type") is
+    "compile" then handleCompileRequest(message.payload)
     else self.postMessage(unknownMessage(message.("type")))
 
 self.addEventListener("message", handleMessage)

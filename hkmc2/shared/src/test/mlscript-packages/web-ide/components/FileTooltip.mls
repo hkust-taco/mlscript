@@ -9,12 +9,12 @@ module fileTooltip with...
 fun textOf(value) =
   String(value)
 
-fun escapeChar(ch) = if
-  ch === "&" then "&amp;"
-  ch === "<" then "&lt;"
-  ch === ">" then "&gt;"
-  ch === "\"" then "&quot;"
-  ch === "'" then "&#39;"
+fun escapeChar(ch) = if ch is
+  "&" then "&amp;"
+  "<" then "&lt;"
+  ">" then "&gt;"
+  "\"" then "&quot;"
+  "'" then "&#39;"
   else ch
 
 fun escapeHtml(value) =
@@ -28,9 +28,9 @@ fun escapeHtml(value) =
 
 fun attrFallback(value) = if
   value is Absent then "-"
-  typeof(value) === "object" then JSON.stringify(value)
-  value === true then "true"
-  value === false then "false"
+  typeof(value) is "object" then JSON.stringify(value)
+  value is true then "true"
+  value is false then "false"
   else textOf(value)
 
 fun relativeTimeOptions() =
@@ -125,7 +125,7 @@ class FileTooltip extends HTMLElement with
   fun fileSize(node, sizeOverride) =
     if
       sizeOverride is ~Absent then sizeOverride
-      typeof(node.content) === "string" then node.content.length
+      typeof(node.content) is "string" then node.content.length
       else undefined
   
   fun tooltipContent(path, name, sizeOverride) =

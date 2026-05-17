@@ -103,14 +103,11 @@ fun loadPersistedFiles() =
 fun persistChange(event) =
   if isStandardLibraryNode(event.node) is false do
     let paths = getPersistedPaths()
-    let kind = event.("type")
-    if
-      kind === "create" then rememberFile(paths, event.path, event.node)
-      kind === "write" then rememberFile(paths, event.path, event.node)
-      kind === "delete" then forgetFile(paths, event.path, event.node)
-      kind === "rename" then moveFile(paths, event.path, event.newPath, event.node)
-      kind === "attr" then updateFile(event.path, event.node)
-      kind === "readonly" then updateFile(event.path, event.node)
+    if event.("type") is
+      "create" | "write" then rememberFile(paths, event.path, event.node)
+      "delete" then forgetFile(paths, event.path, event.node)
+      "rename" then moveFile(paths, event.path, event.newPath, event.node)
+      "attr" | "readonly" then updateFile(event.path, event.node)
       else ()
 
 fs.subscribe(persistChange, undefined)

@@ -73,26 +73,23 @@ class FileExplorer extends HTMLElement with
     this.updateOpenFlags()
 
   fun handleFsEvent(event) =
-    let kind = event.("type")
-    if
-      kind === "create" then updateTreeForRootEvent(event)
-      kind === "delete" then updateTreeForRootEvent(event)
-      kind === "rename" then updateTreeForRootEvent(event)
+    if event.("type") is
+      "create" | "delete" | "rename" then updateTreeForRootEvent(event)
       else ()
 
   fun updateTreeForRootEvent(event) =
     let pathParts = event.path.replace(new RegExp("^/"), "").split("/")
-    if pathParts.length === 1 do this.updateTree()
+    if pathParts.length is 1 do this.updateTree()
 
   fun filterMjsFiles(children) =
     let mlsFiles = new Set()
     children.forEach((child, ...) =>
-      if child.("type") === "file" and child.name.endsWith(".mls") do
+      if child.("type") is "file" and child.name.endsWith(".mls") do
         mlsFiles.add(basenameWithoutExt(child.name))
     )
     children.filter((child, ...) =>
       if
-        child.("type") === "file" and child.name.endsWith(".mjs") then
+        child.("type") is "file" and child.name.endsWith(".mjs") then
           let basename = basenameWithoutExt(child.name)
           mlsFiles.has(basename) is false
         else true
@@ -153,39 +150,38 @@ class FileExplorer extends HTMLElement with
           else container.style.removeProperty("--file-explorer-width")
 
   fun startCreatingFile() =
-    if isCreatingFile is false do
-      if this.querySelector(".tree-view") is
-        ~null as treeView do
-          let explorer = this
-          set isCreatingFile = true
-          let fileEntry = document.createElement("div")
-          let fileIcon = document.createElement("i")
-          let input = document.createElement("input")
-          set
-            fileEntry.className = "file-item new-file-entry"
-            fileIcon.className = "file-icon icon-file-code"
-            input.("type") = "text"
-            input.className = "new-file-input"
-            input.placeholder = "path/to/file.mls"
-          fileEntry.appendChild(fileIcon)
-          fileEntry.appendChild(input)
-          treeView.insertBefore(fileEntry, treeView.firstChild)
-          set newFileInput = input
-          input.focus()
-          input.addEventListener("keydown", event => explorer.handleNewFileKeydown(event, input))
-          input.addEventListener("blur", () =>
-            window.setTimeout(() => explorer.cancelIfCreatingFile(), 200)
-          )
+    if isCreatingFile is false and this.querySelector(".tree-view") is
+      ~null as treeView do
+        let explorer = this
+        set isCreatingFile = true
+        let fileEntry = document.createElement("div")
+        let fileIcon = document.createElement("i")
+        let input = document.createElement("input")
+        set
+          fileEntry.className = "file-item new-file-entry"
+          fileIcon.className = "file-icon icon-file-code"
+          input.("type") = "text"
+          input.className = "new-file-input"
+          input.placeholder = "path/to/file.mls"
+        fileEntry.appendChild(fileIcon)
+        fileEntry.appendChild(input)
+        treeView.insertBefore(fileEntry, treeView.firstChild)
+        set newFileInput = input
+        input.focus()
+        input.addEventListener("keydown", event => explorer.handleNewFileKeydown(event, input))
+        input.addEventListener("blur", () =>
+          window.setTimeout(() => explorer.cancelIfCreatingFile(), 200)
+        )
 
   fun cancelIfCreatingFile() =
     if isCreatingFile do this.cancelCreatingFile()
 
   fun handleNewFileKeydown(event, input) =
-    if
-      event.key === "Enter" then
+    if event.key is
+      "Enter" then
         event.preventDefault()
         submitNewFile(input)
-      event.key === "Escape" then
+      "Escape" then
         event.preventDefault()
         cancelCreatingFile()
       else ()
@@ -197,20 +193,17 @@ class FileExplorer extends HTMLElement with
       .replace(new RegExp("/+$"), "")
 
   fun invalidPathPart(part) =
-    if
-      part === "." then true
-      part === ".." then true
-      else false
+    part is "." | ".."
 
   fun submitNewFile(input) =
     let fileName = input.value.trim()
     if
-      fileName === "" then cancelCreatingFile()
+      fileName is "" then cancelCreatingFile()
       else
         let normalizedInput = normalizeInputPath(fileName)
         let parts = normalizedInput.split("/").filter((part, ...) => part !== "")
         if
-          parts.length === 0 then
+          parts.length is 0 then
             window.alert("Please enter a valid file name (e.g. path/to/file.mls)")
             input.focus()
           parts.some((part, ...) => invalidPathPart(part)) then
@@ -298,7 +291,7 @@ class FileExplorer extends HTMLElement with
     if
       activeTooltipTarget !== currentTarget then ()
       currentTarget.dataset.path is Absent then ()
-      currentTarget.dataset.path === "" then ()
+      currentTarget.dataset.path is "" then ()
       else tooltip.show(currentTarget, tooltipOptions(currentTarget.dataset.path, tooltipName(currentTarget)))
 
   fun handleTreeMouseOut(event, tooltip) =

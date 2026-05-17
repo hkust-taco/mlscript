@@ -50,7 +50,7 @@ fun applyChanges(changes) =
 
 fun markCompiledFiles(compiledFiles) =
   compiledFiles
-    .filter((path, ...) => typeof(path) === "string" and path.endsWith(".mls"))
+    .filter((path, ...) => typeof(path) is "string" and path.endsWith(".mls"))
     .forEach((path, ...) => fs.setAttr(path, "compiled", true))
 
 fun resolveCallback(id, diagnostics, changes) =
@@ -92,9 +92,9 @@ fun handleCompileError(message) =
 fun handleWorkerMessage(event) =
   let message = event.data
   console.log("[Compiler Worker] Message received:", message)
-  if
-    message.("type") === "compile-success" then handleCompileSuccess(message)
-    message.("type") === "compile-error" then handleCompileError(message)
+  if message.("type") is
+    "compile-success" then handleCompileSuccess(message)
+    "compile-error" then handleCompileError(message)
     else console.warn("[Compiler Worker] Unknown message type:", message.("type"))
 
 fun handleWorkerError(error) =

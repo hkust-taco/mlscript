@@ -57,8 +57,8 @@ class ResizeHandle extends HTMLElement with
         isResizing = true
         startX = event.clientX
         startY = event.clientY
-        startSize = if dir === "horizontal" then target.offsetWidth else target.offsetHeight
-        document.body.style.cursor = if dir === "horizontal" then "ew-resize" else "ns-resize"
+        startSize = if dir is "horizontal" then target.offsetWidth else target.offsetHeight
+        document.body.style.cursor = if dir is "horizontal" then "ew-resize" else "ns-resize"
         document.body.style.userSelect = "none"
       this.classList.add("active")
       set
@@ -101,17 +101,17 @@ class ResizeHandle extends HTMLElement with
     if isResizing do
       let minSize = this.intAttribute("min-size", 150)
       let maxSize = this.intAttribute("max-size", 600)
-      if
-        dir === "horizontal" then
+      if dir is
+        "horizontal" then
           let deltaX = event.clientX - startX
           let newWidth = if
-            this.side("left") === "left" then startSize + deltaX
+            this.side("left") is "left" then startSize + deltaX
             else startSize - deltaX
           setHorizontalSize(target, clamp(newWidth, minSize, maxSize))
         else
           let deltaY = event.clientY - startY
           let newHeight = if
-            this.side("top") === "top" then startSize - deltaY
+            this.side("top") is "top" then startSize - deltaY
             else startSize + deltaY
           setVerticalSize(target, clamp(newHeight, minSize, maxSize))
       dispatchPanelResize(target)

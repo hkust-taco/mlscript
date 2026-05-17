@@ -62,10 +62,9 @@ fun normalizePath(path) =
   let i = 0
   while i < segments.length do
     let part = segments.at(i)
-    if
-      part === "" then ()
-      part === "." then ()
-      part === ".." then
+    if part is
+      "" | "." then ()
+      ".." then
         if parts.length > 0 do parts.pop()
       else parts.push(part)
     set i += 1
@@ -160,7 +159,7 @@ fun messageHandlerError(error) =
   post("error", msg)
 
 fun handleMessageData(messageData) =
-  if messageData.("type") === "run" do runMain(messageData.mainPath, messageData.files)
+  if messageData.("type") is "run" do runMain(messageData.mainPath, messageData.files)
 
 fun handleMessage(event) =
   js.try_catch(

@@ -51,7 +51,7 @@ class ConsolePanel extends HTMLElement with
     this.appendMessage(entry)
 
   fun stringifyArg(arg) =
-    if typeof(arg) === "object" then
+    if typeof(arg) is "object" then
       js.try_catch(
         () => JSON.stringify(arg, null, 2),
         error => String(arg),
@@ -62,10 +62,10 @@ class ConsolePanel extends HTMLElement with
     message.content.map(arg => stringifyArg(arg)).join(" ")
 
   fun iconClassName(kind) =
-    if
-      kind === "error" then "icon-x"
-      kind === "warn" then "icon-triangle-alert"
-      kind === "info" then "icon-info"
+    if kind is
+      "error" then "icon-x"
+      "warn" then "icon-triangle-alert"
+      "info" then "icon-info"
       else "icon-chevron-right"
 
   fun messageHtml(message) =

@@ -5,11 +5,11 @@
 - [x] Use object literals instead of manual field assignments
   - [x] Empty mutable objects
   - [x] Mutable objects with fields
-- [ ] Utilize the Ultimate Conditional Syntax
-  - [ ] Equality tests
-  - [ ] Get rid of nested `if` using `and`
-  - [ ] Saves a level of indentation
-  - [ ] Combine the techniques together
+- [x] Utilize the Ultimate Conditional Syntax
+  - [x] Equality tests
+  - [x] Get rid of nested `if` using `and`
+  - [x] Saves a level of indentation
+  - [x] Combine the techniques together
 - [ ] Get rid of parenthesis of function calls using `of` keywords
 - [ ] Organize consecutive `let` bindings using splits
 

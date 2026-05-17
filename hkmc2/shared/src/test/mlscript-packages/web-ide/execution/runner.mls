@@ -101,29 +101,29 @@ fun handleWorkerMessage(execution, id, mainPath, event) =
     let messageData = event.data
     let kind = messageData.("type")
     let payload = messageData.payload
-    if
-      kind === "ready" then
+    if kind is
+      "ready" then
         console.log("[VM]", "Ready to run.")
         set
           execution.isRunning = true
           execution.startTime = Date.now()
         dispatchStatusChange("running", null)
         run(execution, id, mainPath)
-      kind === "log" then console.log("[VM]", payload)
-      kind === "error" then
+      "log" then console.log("[VM]", payload)
+      "error" then
         console.error("[VM]", payload)
         set execution.isRunning = false
         dispatchStatusChange("error", null)
-      kind === "done" then
+      "done" then
         console.log("[VM]", payload)
         set execution.isRunning = false
         let runningTime = if
           execution.startTime is Absent then null
           else Date.now() - execution.startTime
         dispatchStatusChange("done", runningTime)
-      kind === "console.log" then handleVmConsole("log", "log", payload)
-      kind === "console.error" then handleVmConsole("error", "error", payload)
-      kind === "console.warn" then handleVmConsole("warn", "warn", payload)
+      "console.log" then handleVmConsole("log", "log", payload)
+      "console.error" then handleVmConsole("error", "error", payload)
+      "console.warn" then handleVmConsole("warn", "warn", payload)
       else ()
 
 fun handleWorkerError(execution, event) =

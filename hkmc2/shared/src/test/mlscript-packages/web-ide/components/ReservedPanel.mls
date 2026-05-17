@@ -39,19 +39,19 @@ class ReservedPanel extends HTMLElement with
     """
 
   fun getKindIcon(kind) =
-    if
-      kind === "error" then "icon-circle-x"
-      kind === "warning" then "icon-triangle-alert"
-      kind === "internal" then "icon-bug"
+    if kind is
+      "error" then "icon-circle-x"
+      "warning" then "icon-triangle-alert"
+      "internal" then "icon-bug"
       else "icon-circle-alert"
 
   fun getSourceOrder(source) =
-    if
-      source === "lexing" then 1
-      source === "parsing" then 2
-      source === "typing" then 3
-      source === "compilation" then 4
-      source === "runtime" then 5
+    if source is
+      "lexing" then 1
+      "parsing" then 2
+      "typing" then 3
+      "compilation" then 4
+      "runtime" then 5
       else 999
 
   fun lineColumn(line, column) =

@@ -94,13 +94,13 @@ class ToolbarPanel extends HTMLElement with
       statusText is Absent then ()
       else
         set statusLight.className = "status-light"
-        if
-          status === "idle" then setIdleStatus(statusLight, statusText, terminateBtn, tooltip)
-          status === "running" then setRunningStatus(statusLight, statusText, terminateBtn, tooltip)
-          status === "done" then setDoneStatus(statusLight, statusText, terminateBtn, tooltip)
-          status === "error" then setErrorStatus(statusLight, statusText, terminateBtn, tooltip)
-          status === "aborted" then setAbortedStatus(statusLight, statusText, terminateBtn, tooltip)
-          status === "fatal" then setFatalStatus(statusLight, statusText, terminateBtn, tooltip)
+        if status is
+          "idle" then setIdleStatus(statusLight, statusText, terminateBtn, tooltip)
+          "running" then setRunningStatus(statusLight, statusText, terminateBtn, tooltip)
+          "done" then setDoneStatus(statusLight, statusText, terminateBtn, tooltip)
+          "error" then setErrorStatus(statusLight, statusText, terminateBtn, tooltip)
+          "aborted" then setAbortedStatus(statusLight, statusText, terminateBtn, tooltip)
+          "fatal" then setFatalStatus(statusLight, statusText, terminateBtn, tooltip)
           else ()
 
   fun render() =

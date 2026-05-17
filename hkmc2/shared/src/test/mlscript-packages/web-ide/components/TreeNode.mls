@@ -95,13 +95,10 @@ class TreeNode extends HTMLElement with
     if node is Absent then "" else node.name
 
   fun handleFsEvent(event) =
-    let kind = event.("type")
-    if
-      kind === "create" then handleStructuralEvent(event)
-      kind === "delete" then handleStructuralEvent(event)
-      kind === "rename" then handleRenameEvent(event)
-      kind === "readonly" then handleRefreshEvent(event)
-      kind === "attr" then handleRefreshEvent(event)
+    if event.("type") is
+      "create" | "delete" then handleStructuralEvent(event)
+      "rename" then handleRenameEvent(event)
+      "readonly" | "attr" then handleRefreshEvent(event)
       else ()
 
   fun handleStructuralEvent(event) =
@@ -116,12 +113,12 @@ class TreeNode extends HTMLElement with
     if event.path === path do this.render()
 
   fun updateFolderForChildEvent(eventPath) =
-    if node is ~Absent as current and current.("type") === "folder" do
+    if node is ~Absent as current and current.("type") is "folder" do
       let eventParentPath = parentPathOf(eventPath)
       if eventParentPath === path do this.updateChildren()
 
   fun updateMjsButtonForSiblingEvent(eventPath) =
-    if node is ~Absent as current and current.("type") === "file" and current.name.endsWith(".mls") do
+    if node is ~Absent as current and current.("type") is "file" and current.name.endsWith(".mls") do
       let eventParentPath = parentPathOf(eventPath)
       let myParentPath = parentPathOf(path)
       if eventParentPath === myParentPath and eventPath.endsWith(".mjs") do
@@ -139,7 +136,7 @@ class TreeNode extends HTMLElement with
       else ()
 
   fun childPath(child) =
-    if path === "" then child.name else path + "/" + child.name
+    if path is "" then child.name else path + "/" + child.name
 
   fun updateChildren() =
     if
@@ -183,12 +180,12 @@ class TreeNode extends HTMLElement with
   fun filterMjsFiles(children) =
     let mlsFiles = new Set()
     children.forEach((child, ...) =>
-      if child.("type") === "file" and child.name.endsWith(".mls") do
+      if child.("type") is "file" and child.name.endsWith(".mls") do
         mlsFiles.add(basenameWithoutExt(child.name))
     )
     children.filter((child, ...) =>
       if
-        child.("type") === "file" and child.name.endsWith(".mjs") then
+        child.("type") is "file" and child.name.endsWith(".mjs") then
           let basename = basenameWithoutExt(child.name)
           mlsFiles.has(basename) is false
         else true
@@ -205,7 +202,7 @@ class TreeNode extends HTMLElement with
     let mjsFileName = basenameWithoutExt(name) + ".mjs"
     let children = parentChildren()
     children.some((child, ...) =>
-      child.("type") === "file" and child.name === mjsFileName
+      child.("type") is "file" and child.name === mjsFileName
     )
 
   fun parentChildren() =
@@ -252,12 +249,10 @@ class TreeNode extends HTMLElement with
 
   fun getFileIcon(fileName) =
     let ext = fileName.substring(fileName.lastIndexOf("."))
-    if
-      ext === ".mls" then "file-code"
-      ext === ".mjs" then "file-code"
-      ext === ".js" then "file-code"
-      ext === ".json" then "braces"
-      ext === ".md" then "file-text"
+    if ext is
+      ".mls" | ".mjs" | ".js" then "file-code"
+      ".json" then "braces"
+      ".md" then "file-text"
       else "file"
 
   fun fileOpenDetail(openPath, fileName) =
@@ -272,8 +267,8 @@ class TreeNode extends HTMLElement with
   fun render() =
     if
       node is Absent then ()
-      node.("type") === "file" then renderFile(node)
-      node.("type") === "folder" then renderFolder(node)
+      node.("type") is "file" then renderFile(node)
+      node.("type") is "folder" then renderFolder(node)
       else ()
 
   fun ensureFileElements() =
@@ -328,10 +323,10 @@ class TreeNode extends HTMLElement with
       else "Needs compile"
 
   fun updateMjsButton(current) =
-    if current.name.endsWith(".mls") do
-      if
-        hasMjsFile() then ensureMjsButton(current)
-        else removeMjsButton()
+    if
+      current.name.endsWith(".mls") and hasMjsFile() then ensureMjsButton(current)
+      current.name.endsWith(".mls") then removeMjsButton()
+      else ()
 
   fun ensureMjsButton(current) =
     if elements.mjsButton is Absent do

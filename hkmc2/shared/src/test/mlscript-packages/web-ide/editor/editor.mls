@@ -45,12 +45,10 @@ fun editorThemeSpec() =
 
 fun languageExtensions(extension) =
   let extensions = mut [theme]
-  if
-    extension === "mjs" then
+  if extension is
+    "mjs" | "js" then
       extensions.push(javascript())
-    extension === "js" then
-      extensions.push(javascript())
-    extension === "mls" then
+    "mls" then
       extensions.push(StreamLanguage.define(Highlight.mlscript))
     else ()
   extensions
