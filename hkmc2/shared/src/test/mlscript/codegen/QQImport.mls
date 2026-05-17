@@ -2,7 +2,7 @@
 :qq
 
 :silent
-import "../../mlscript-compile/Term.mjs"
+import "../../mlscript-compile/Term.mls"
 
 module meta with
   fun codegen(t, file) = Term.codegen(t, file)
