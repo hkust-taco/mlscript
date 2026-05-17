@@ -29,23 +29,21 @@ class ToolbarPanel extends HTMLElement with
       runningTime = nextRunningTime
     this.updateStatusIndicator()
 
-  fun setTerminateDisplay(terminateBtn, display) =
-    if terminateBtn is ~Absent do set terminateBtn.style.display = display
+  fun setTerminateDisplay(terminateBtn, display) = if terminateBtn is ~Absent do set terminateBtn.style.display = display
 
-  fun setTooltipText(tooltip, text) =
-    if tooltip is ~Absent do set tooltip.textContent = text
+  fun setTooltipText(tooltip, text) = if tooltip is ~Absent do set tooltip.textContent = text
 
   fun runningTooltip() =
     let startedAt = new Date(startTime).toLocaleTimeString()
     "Execution started at " + startedAt + "."
 
-  fun doneStatusText() =
-    if runningTime is Absent then "Done"
-    else "Done (" + runningTime + "ms)"
+  fun doneStatusText() = if runningTime is
+    Absent then "Done"
+    ~Absent as time then "Done (" + time + "ms)"
 
-  fun doneTooltip() =
-    if runningTime is Absent then "Execution completed successfully."
-    else "Execution completed successfully in " + runningTime + "ms."
+  fun doneTooltip() = if runningTime is
+    Absent then "Execution completed successfully."
+    ~Absent as time then "Execution completed successfully in " + time + "ms."
 
   fun setIdleStatus(statusLight, statusText, terminateBtn, tooltip) =
     statusLight.classList.add("status-idle")
@@ -134,7 +132,9 @@ class ToolbarPanel extends HTMLElement with
       editorPanel.openTabs is Absent then null
       else
         let activeTab = editorPanel.openTabs.get(editorPanel.activeTabId)
-        if activeTab is Absent then null else activeTab.path
+        if activeTab is
+          Absent then null
+          ~Absent as tab then tab.path
 
   fun fileEventDetail() =
     mut { filePath: this.getActiveFilePath() }
@@ -174,8 +174,7 @@ class ToolbarPanel extends HTMLElement with
   fun canCompileActiveFile() =
     not isStdActive and isMlsActive
 
-  fun updateCompileButton() =
-    if this.querySelector("#compile") is
+  fun updateCompileButton() = if this.querySelector("#compile") is
       ~null as compileBtn do
         if
           isCompiling then
@@ -194,8 +193,7 @@ class ToolbarPanel extends HTMLElement with
               Compile
             """
 
-  fun updateExecuteButton() =
-    if this.querySelector("#execute") is
+  fun updateExecuteButton() = if this.querySelector("#execute") is
       ~null as executeBtn do
         set executeBtn.disabled = isStdActive
         executeBtn.classList.toggle("disabled", isStdActive)

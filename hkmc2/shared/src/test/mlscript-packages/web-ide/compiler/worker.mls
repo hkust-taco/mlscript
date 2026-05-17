@@ -11,15 +11,13 @@ fun dynamicImport(specifier) =
   let importModule = Function("specifier", "return import(specifier)")
   importModule(specifier)
 
-fun loadMLscript() =
-  if
-    MLscriptPromise is null then
-      set MLscriptPromise = dynamicImport("../build/MLscript.mjs")
-      MLscriptPromise
-    else MLscriptPromise
+fun loadMLscript() = if MLscriptPromise is
+  null then
+    set MLscriptPromise = dynamicImport("../build/MLscript.mjs")
+    MLscriptPromise
+  promise then promise
 
-fun readVirtualFile(path) =
-  if Reflect.has(filesStore, path) then filesStore.(path)
+fun readVirtualFile(path) = if Reflect.has(filesStore, path) then filesStore.(path)
   else throw new Error("File not found: " + path)
 
 fun writeVirtualFile(path, content) =
@@ -51,12 +49,11 @@ fun compilerPaths(MLscript) =
     "/std"
   ]
 
-fun initializeCompiler(MLscript) =
-  if compiler is null do
-    let
-      virtualFS = createVirtualFileSystem()
-      dummyFileSystem = Reflect.construct(MLscript.DummyFileSystem, [virtualFS])
-    set compiler = Reflect.construct(MLscript.BrowserCompiler, [dummyFileSystem, compilerPaths(MLscript)])
+fun initializeCompiler(MLscript) = if compiler is null do
+  let
+    virtualFS = createVirtualFileSystem()
+    dummyFileSystem = Reflect.construct(MLscript.DummyFileSystem, [virtualFS])
+  set compiler = Reflect.construct(MLscript.BrowserCompiler, [dummyFileSystem, compilerPaths(MLscript)])
 
 fun timestampEntries(files) =
   Object.keys(files).map(path => [path, 0])
@@ -86,14 +83,16 @@ fun successResult(diagnosticsPerFile, filePaths) =
 fun successMessage(id, diagnosticsPerFile, filePaths, changes) =
   mut
     'type: "compile-success"
-    :id
+    // BUG: `:field` puns currently miscompile in multiline `mut` records here.
+    id: id
     result: successResult(diagnosticsPerFile, filePaths)
-    :changes
+    changes: changes
 
 fun errorMessage(id, error) =
   mut
     'type: "compile-error"
-    :id
+    // BUG: `:field` puns currently miscompile in multiline `mut` records here.
+    id: id
     name: (error.name)
     message: (error.message)
     stack: (error.stack)
@@ -131,6 +130,6 @@ fun handleMessage(event) =
   let message = event.data
   if message.("type") is
     "compile" then handleCompileRequest(message.payload)
-    else self.postMessage(unknownMessage(message.("type")))
+    kind then self.postMessage(unknownMessage(kind))
 
 self.addEventListener("message", handleMessage)

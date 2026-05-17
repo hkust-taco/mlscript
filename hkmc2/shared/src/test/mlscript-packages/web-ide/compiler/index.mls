@@ -36,13 +36,15 @@ fun compileMessage(id, filePaths, allFiles) =
 
 fun diagnosticsFrom(result) = if
   result is Absent then result
-  result.diagnostics is Absent then result
-  else result.diagnostics
+  result.diagnostics is
+    Absent then result
+    diagnostics then diagnostics
 
 fun compiledFilesFrom(result) = if
   result is Absent then []
-  result.compiledFiles is Absent then []
-  else result.compiledFiles
+  result.compiledFiles is
+    Absent then []
+    compiledFiles then compiledFiles
 
 fun applyChanges(changes) =
   Object.entries(changes).forEach of (entry, ...) =>
@@ -52,25 +54,21 @@ fun markCompiledFiles(compiledFiles) =
   let mlsFiles = compiledFiles.filter of (path, ...) => typeof(path) is "string" and path.endsWith(".mls")
   mlsFiles.forEach of (path, ...) => fs.setAttr(path, "compiled", true)
 
-fun resolveCallback(id, diagnostics, changes) =
-  let callbacks = callbackMap.get(id)
-  if
-    callbacks is Absent then console.error("[Compiler] No callback found for id:", id)
-    else
-      callbacks.resolve(successResult(diagnostics, changes))
-      callbackMap.delete(id)
+fun resolveCallback(id, diagnostics, changes) = if callbackMap.get(id) is
+  Absent then console.error("[Compiler] No callback found for id:", id)
+  callbacks then
+    callbacks.resolve(successResult(diagnostics, changes))
+    callbackMap.delete(id)
 
-fun rejectCallback(id, name, message, stack) =
-  let callbacks = callbackMap.get(id)
-  if
-    callbacks is Absent then console.error("[Compiler] No callback found for id:", id)
-    else
-      let error = new Error(message)
-      set
-        error.name = name
-        error.stack = stack
-      callbacks.reject(error)
-      callbackMap.delete(id)
+fun rejectCallback(id, name, message, stack) = if callbackMap.get(id) is
+  Absent then console.error("[Compiler] No callback found for id:", id)
+  callbacks then
+    let error = new Error(message)
+    set
+      error.name = name
+      error.stack = stack
+    callbacks.reject(error)
+    callbackMap.delete(id)
 
 fun handleCompileSuccess(message) =
   let

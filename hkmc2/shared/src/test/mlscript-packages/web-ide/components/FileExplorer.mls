@@ -41,12 +41,12 @@ class FileExplorer extends HTMLElement with
     PanelPersistence.savePanelWidth("file-explorer-width", width)
 
   fun disconnectedCallback() =
-    if unsubscribe is ~Absent do unsubscribe()
-    if tooltipTimeout is ~Absent do
-      window.clearTimeout(tooltipTimeout)
+    if unsubscribe is ~Absent as removeSubscription do removeSubscription()
+    if tooltipTimeout is ~Absent as timeout do
+      window.clearTimeout(timeout)
       set tooltipTimeout = null
-    if openFilesChangedListener is ~Absent do
-      document.removeEventListener("open-files-changed", openFilesChangedListener)
+    if openFilesChangedListener is ~Absent as listener do
+      document.removeEventListener("open-files-changed", listener)
 
   fun render() =
     set this.innerHTML = """
@@ -70,8 +70,7 @@ class FileExplorer extends HTMLElement with
     set openFiles = new Set(paths)
     this.updateOpenFlags()
 
-  fun handleFsEvent(event) =
-    if event.("type") is "create" | "delete" | "rename" do updateTreeForRootEvent(event)
+  fun handleFsEvent(event) = if event.("type") is "create" | "delete" | "rename" do updateTreeForRootEvent(event)
 
   fun updateTreeForRootEvent(event) =
     let pathParts = event.path.replace(new RegExp("^/"), "").split("/")
@@ -92,98 +91,92 @@ class FileExplorer extends HTMLElement with
   fun rootPath(node) =
     "/" + node.name
 
-  fun updateTree() =
-    if this.querySelector(".tree-view") is
-      ~null as treeView do
+  fun updateTree() = if this.querySelector(".tree-view") is
+    ~null as treeView do
+      let
+        filteredRootNodes = filterMjsFiles(fs.fileTree)
+        newRootPaths = new Set()
+      filteredRootNodes.forEach of (node, ...) =>
+        newRootPaths.add(rootPath(node))
+      Array.from(rootNodes.entries()).forEach of (entry, ...) =>
         let
-          filteredRootNodes = filterMjsFiles(fs.fileTree)
-          newRootPaths = new Set()
-        filteredRootNodes.forEach of (node, ...) =>
-          newRootPaths.add(rootPath(node))
-        Array.from(rootNodes.entries()).forEach of (entry, ...) =>
-          let
-            existingPath = entry.at(0)
-            element = entry.at(1)
-          if not newRootPaths.has(existingPath) do
-            element.remove()
-            rootNodes.delete(existingPath)
-        filteredRootNodes.forEach of (node, index) =>
-          let path = rootPath(node)
-          if
-            not rootNodes.has(path) then
-              let treeNode = document.createElement("tree-node")
-              treeNode.setData(node, path, fs.fileTree)
-              rootNodes.set(path, treeNode)
+          existingPath = entry.at(0)
+          element = entry.at(1)
+        if not newRootPaths.has(existingPath) do
+          element.remove()
+          rootNodes.delete(existingPath)
+      filteredRootNodes.forEach of (node, index) =>
+        let path = rootPath(node)
+        if
+          not rootNodes.has(path) then
+            let treeNode = document.createElement("tree-node")
+            treeNode.setData(node, path, fs.fileTree)
+            rootNodes.set(path, treeNode)
+            let nextChild = treeView.children.(index)
+            if nextChild is
+              ~Absent as child then treeView.insertBefore(treeNode, child)
+              Absent then treeView.appendChild(treeNode)
+          else
+            let treeNode = rootNodes.get(path)
+            treeNode.setData(node, path, fs.fileTree)
+            let currentPosition = Array.from(treeView.children).indexOf(treeNode)
+            if currentPosition !== index do
               let nextChild = treeView.children.(index)
-              if
-                nextChild is ~Absent then treeView.insertBefore(treeNode, nextChild)
-                else treeView.appendChild(treeNode)
-            else
-              let treeNode = rootNodes.get(path)
-              treeNode.setData(node, path, fs.fileTree)
-              let currentPosition = Array.from(treeView.children).indexOf(treeNode)
-              if currentPosition !== index do
-                let nextChild = treeView.children.(index)
-                if nextChild !== treeNode do treeView.insertBefore(treeNode, nextChild)
-        this.updateOpenFlags()
+              if nextChild !== treeNode do treeView.insertBefore(treeNode, nextChild)
+      this.updateOpenFlags()
 
   fun toggleCollapse() =
     set isCollapsed = not isCollapsed
     this.classList.toggle("collapsed", isCollapsed)
     syncWidthForCollapseState(document.querySelector(".app-container"))
 
-  fun syncWidthForCollapseState(container) =
-    if
-      container is Absent then ()
-      isCollapsed then container.style.removeProperty("--file-explorer-width")
-      else restoreWidthIfExpanded(container)
+  fun syncWidthForCollapseState(container) = if
+    container is Absent then ()
+    isCollapsed then container.style.removeProperty("--file-explorer-width")
+    else restoreWidthIfExpanded(container)
 
-  fun restoreWidthIfExpanded(container) =
-    if
-      isCollapsed then ()
-      container is Absent then ()
-      else
-        let width = this.getAttribute("width")
-        if
-          width is ~Absent and width !== "" then container.style.setProperty("--file-explorer-width", width + "px")
-          else container.style.removeProperty("--file-explorer-width")
+  fun restoreWidthIfExpanded(container) = if
+    isCollapsed then ()
+    container is Absent then ()
+    else
+      let width = this.getAttribute("width")
+      if width is
+        Absent | "" then container.style.removeProperty("--file-explorer-width")
+        ~Absent as savedWidth then container.style.setProperty("--file-explorer-width", savedWidth + "px")
 
-  fun startCreatingFile() =
-    if not isCreatingFile and this.querySelector(".tree-view") is
-      ~null as treeView do
-        let explorer = this
-        set isCreatingFile = true
-        let
-          fileEntry = document.createElement("div")
-          fileIcon = document.createElement("i")
-          input = document.createElement("input")
-        set
-          fileEntry.className = "file-item new-file-entry"
-          fileIcon.className = "file-icon icon-file-code"
-          input.("type") = "text"
-          input.className = "new-file-input"
-          input.placeholder = "path/to/file.mls"
-        fileEntry.appendChild(fileIcon)
-        fileEntry.appendChild(input)
-        treeView.insertBefore(fileEntry, treeView.firstChild)
-        set newFileInput = input
-        input.focus()
-        input.addEventListener("keydown", event => explorer.handleNewFileKeydown(event, input))
-        input.addEventListener of "blur", () =>
-          window.setTimeout(() => explorer.cancelIfCreatingFile(), 200)
+  fun startCreatingFile() = if not isCreatingFile and this.querySelector(".tree-view") is
+    ~null as treeView do
+      let explorer = this
+      set isCreatingFile = true
+      let
+        fileEntry = document.createElement("div")
+        fileIcon = document.createElement("i")
+        input = document.createElement("input")
+      set
+        fileEntry.className = "file-item new-file-entry"
+        fileIcon.className = "file-icon icon-file-code"
+        input.("type") = "text"
+        input.className = "new-file-input"
+        input.placeholder = "path/to/file.mls"
+      fileEntry.appendChild(fileIcon)
+      fileEntry.appendChild(input)
+      treeView.insertBefore(fileEntry, treeView.firstChild)
+      set newFileInput = input
+      input.focus()
+      input.addEventListener("keydown", event => explorer.handleNewFileKeydown(event, input))
+      input.addEventListener of "blur", () =>
+        window.setTimeout(() => explorer.cancelIfCreatingFile(), 200)
 
-  fun cancelIfCreatingFile() =
-    if isCreatingFile do this.cancelCreatingFile()
+  fun cancelIfCreatingFile() = if isCreatingFile do this.cancelCreatingFile()
 
-  fun handleNewFileKeydown(event, input) =
-    if event.key is
-      "Enter" then
-        event.preventDefault()
-        submitNewFile(input)
-      "Escape" then
-        event.preventDefault()
-        cancelCreatingFile()
-      else ()
+  fun handleNewFileKeydown(event, input) = if event.key is
+    "Enter" then
+      event.preventDefault()
+      submitNewFile(input)
+    "Escape" then
+      event.preventDefault()
+      cancelCreatingFile()
+    else ()
 
   fun normalizeInputPath(fileName) =
     fileName
@@ -222,12 +215,11 @@ class FileExplorer extends HTMLElement with
                 window.alert("Failed to create file. File may already exist.")
                 input.focus()
 
-  fun cancelCreatingFile() =
-    if isCreatingFile do
-      set isCreatingFile = false
-      if this.querySelector(".new-file-entry") is
-        ~null as entry do entry.remove()
-      set newFileInput = null
+  fun cancelCreatingFile() = if isCreatingFile do
+    set isCreatingFile = false
+    if this.querySelector(".new-file-entry") is
+      ~null as entry do entry.remove()
+    set newFileInput = null
 
   fun fileOpenDetail(path, fileName) =
     mut { :path, :fileName }
@@ -258,8 +250,8 @@ class FileExplorer extends HTMLElement with
         this.addEventListener("mouseleave", () => explorer.hideTooltip(tooltip))
 
   fun hideTooltip(tooltip) =
-    if tooltipTimeout is ~Absent do
-      window.clearTimeout(tooltipTimeout)
+    if tooltipTimeout is ~Absent as timeout do
+      window.clearTimeout(timeout)
       set tooltipTimeout = null
     tooltip.hide()
     set activeTooltipTarget = null
@@ -278,29 +270,26 @@ class FileExplorer extends HTMLElement with
           () => this.showTooltipIfActive(currentTarget, tooltip),
           5000,
 
-  fun tooltipName(target) =
-    if
-      target.dataset.name is Absent then target.textContent.trim()
-      target.dataset.name === "" then target.textContent.trim()
-      else target.dataset.name
+  fun tooltipName(target) = if target.dataset.name is
+    Absent | "" then target.textContent.trim()
+    ~Absent as name then name
 
   fun tooltipOptions(targetPath, targetName) =
     mut { path: targetPath, name: targetName }
 
-  fun showTooltipIfActive(currentTarget, tooltip) =
-    if
-      activeTooltipTarget !== currentTarget then ()
-      currentTarget.dataset.path is Absent then ()
-      currentTarget.dataset.path is "" then ()
-      else tooltip.show(currentTarget, tooltipOptions(currentTarget.dataset.path, tooltipName(currentTarget)))
+  fun showTooltipIfActive(currentTarget, tooltip) = if currentTarget.dataset.path is
+    Absent | "" then ()
+    ~Absent as targetPath and activeTooltipTarget === currentTarget then tooltip.show(currentTarget, tooltipOptions(targetPath, tooltipName(currentTarget)))
+    else ()
 
-  fun handleTreeMouseOut(event, tooltip) =
-    if
-      activeTooltipTarget is Absent then ()
+  fun handleTreeMouseOut(event, tooltip) = if activeTooltipTarget is
+    Absent then ()
+    ~Absent as tooltipTarget then
       let related = event.relatedTarget
-      related is ~Absent and activeTooltipTarget.contains(related) then ()
-      related is ~Absent and related.closest(".file-item, summary") === activeTooltipTarget then ()
-      else hideTooltip(tooltip)
+      if related is
+        ~Absent as nextTarget and tooltipTarget.contains(nextTarget) then ()
+        ~Absent as nextTarget and nextTarget.closest(".file-item, summary") === tooltipTarget then ()
+        else hideTooltip(tooltip)
 
   fun updateOpenFlags() =
     Array.from(rootNodes.values()).forEach of (treeNode, ...) =>

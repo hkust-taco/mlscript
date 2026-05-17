@@ -17,17 +17,17 @@ fun message(kind, payload) =
 fun post(kind, payload) =
   self.postMessage(message(kind, payload))
 
-fun errorStack(error) =
-  if
-    error is Absent then ""
-    error.stack is ~Absent then error.stack
-    else String(error)
+fun errorStack(error) = if
+  error is Absent then ""
+  error.stack is
+    Absent then String(error)
+    stack then stack
 
-fun errorMessage(error) =
-  if
-    error is Absent then "Unknown error"
-    error.message is ~Absent then error.message
-    else String(error)
+fun errorMessage(error) = if
+  error is Absent then "Unknown error"
+  error.message is
+    Absent then String(error)
+    message then message
 
 fun dependencyErrorPayload(error) =
   "Failed to load worker dependencies: " + errorMessage(error) + "\n" + errorStack(error)
@@ -43,8 +43,8 @@ fun finishDependencyLoad(endoModuleSource) =
 
 fun loadEndoModuleSource(sesModule) =
   if self.Compartment is
-    ~Absent as compartment then set Compartment = compartment
-    else set Compartment = sesModule.Compartment
+    Absent then set Compartment = sesModule.Compartment
+    compartment then set Compartment = compartment
   let promise = dynamicImport("https://esm.sh/@endo/module-source@1.3.3")
   promise.then(finishDependencyLoad)
 

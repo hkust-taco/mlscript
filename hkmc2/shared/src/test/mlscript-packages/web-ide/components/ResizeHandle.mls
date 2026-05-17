@@ -15,22 +15,19 @@ class ResizeHandle extends HTMLElement with
     this.render()
     this.attachEventListeners()
 
-  fun direction() =
-    if this.getAttribute("direction") is
-      ~Absent as value then value
-      else "horizontal"
+  fun direction() = if this.getAttribute("direction") is
+    Absent then "horizontal"
+    value then value
 
-  fun side(defaultSide) =
-    if this.getAttribute("side") is
-      ~Absent as value then value
-      else defaultSide
+  fun side(defaultSide) = if this.getAttribute("side") is
+    Absent then defaultSide
+    value then value
 
-  fun intAttribute(name, fallback) =
-    if this.getAttribute(name) is
-      ~Absent as value then
-        let parsed = parseInt(value, 10)
-        if isNaN(parsed) then fallback else parsed
-      else fallback
+  fun intAttribute(name, fallback) = if this.getAttribute(name) is
+    Absent then fallback
+    value then
+      let parsed = parseInt(value, 10)
+      if isNaN(parsed) then fallback else parsed
 
   fun isNaN(value) =
     value !== value
@@ -44,10 +41,10 @@ class ResizeHandle extends HTMLElement with
   fun attachEventListeners() =
     this.addEventListener("mousedown", event => this.startResize(event))
 
-  fun targetElement() =
-    if this.getAttribute("target") is
-      ~Absent as target and target !== "" then document.querySelector(target)
-      else this.parentElement
+  fun targetElement() = if this.getAttribute("target") is
+    Absent then this.parentElement
+    target and target !== "" then document.querySelector(target)
+    else this.parentElement
 
   fun startResize(event) =
     event.preventDefault()

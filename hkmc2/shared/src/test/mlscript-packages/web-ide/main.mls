@@ -12,10 +12,9 @@ fun dynamicImport(specifier) =
   let importModule = Function("specifier", "return import(specifier)")
   importModule(specifier)
 
-fun compilerModule(loaded) =
-  if
-    loaded.("default") is Absent then loaded
-    else loaded.("default")
+fun compilerModule(loaded) = if loaded.("default") is
+  Absent then loaded
+  defaultModule then defaultModule
 
 fun loadMLscript() =
   dynamicImport("./build/MLscript.mjs").then(loaded => compilerModule(loaded))
@@ -64,23 +63,21 @@ fun ensureDefaultMainFile() =
   if persistent.loadPersistedFiles() is 0 do
     fs.createFile("/main.mls", defaultMainSource, force: true)
 
-fun attrsOf(node) =
-  if
-    node is Absent then null
-    node.attrs is Absent then null
-    else node.attrs
+fun attrsOf(node) = if
+  node is Absent then null
+  node.attrs is
+    Absent then null
+    attrs then attrs
 
-fun isStandardNode(node) =
-  if attrsOf(node) is
-    null then false
-    ~null as attrs and attrs.("std") is true then true
-    else false
+fun isStandardNode(node) = if attrsOf(node) is
+  null then false
+  attrs and attrs.("std") is true then true
+  else false
 
-fun isCompiledNode(node) =
-  if attrsOf(node) is
-    null then false
-    ~null as attrs and attrs.("compiled") is true then true
-    else false
+fun isCompiledNode(node) = if attrsOf(node) is
+  null then false
+  attrs and attrs.("compiled") is true then true
+  else false
 
 fun shouldCompile(path) =
   let node = fs.stat(path)
@@ -90,11 +87,10 @@ fun shouldCompile(path) =
     isCompiledNode(node) then false
     else true
 
-fun isCompilationFile(path) =
-  if
-    path.endsWith(".mls") then true
-    path.endsWith(".mjs") then true
-    else false
+fun isCompilationFile(path) = if
+  path.endsWith(".mls") then true
+  path.endsWith(".mjs") then true
+  else false
 
 fun filesForCompilation() =
   fs.getAllFiles((path, ...) => isCompilationFile(path))
@@ -142,10 +138,9 @@ fun handleCompileRequested(event) =
     else console.warn("Compile skipped: active file is not an .mls file:", filePath)
 
 
-fun compiledPath(filePath) =
-  if
-    filePath.endsWith(".mls") then filePath.slice(0, filePath.length - 4) + ".mjs"
-    else filePath
+fun compiledPath(filePath) = if
+  filePath.endsWith(".mls") then filePath.slice(0, filePath.length - 4) + ".mjs"
+  else filePath
 
 fun runCompiledFile(mjsPath) =
   if fs.pathExists(mjsPath) then runner.execute(mjsPath)
@@ -180,23 +175,22 @@ fun handleOpenFileAtLocation(event) =
   if editorPanel is
     ~null as panel do panel.openFileAtLine(event.detail.filePath, event.detail.line)
 
-fun defaultSidebarPanel(side) =
-  if side is
-    "right" then "diagnostics"
-    else "files"
+fun defaultSidebarPanel(side) = if side is
+  "right" then "diagnostics"
+  else "files"
 
-fun sideClosedClass(side) =
-  if side is
-    "right" then "right-sidebar-closed"
-    else "left-sidebar-closed"
+fun sideClosedClass(side) = if side is
+  "right" then "right-sidebar-closed"
+  else "left-sidebar-closed"
 
 fun activePanelAttribute(side) =
   "data-" + side + "-active-panel"
 
 fun activePanel(container, side) =
   let value = container.getAttribute(activePanelAttribute(side))
-  if
-    value is ~Absent and value !== "" then value
+  if value is
+    Absent then defaultSidebarPanel(side)
+    panel and panel !== "" then panel
     else defaultSidebarPanel(side)
 
 fun sidebarPanelSelector(side) =

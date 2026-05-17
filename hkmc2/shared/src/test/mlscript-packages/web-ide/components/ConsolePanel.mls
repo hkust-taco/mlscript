@@ -51,8 +51,8 @@ class ConsolePanel extends HTMLElement with
     messages.push(entry)
     this.appendMessage(entry)
 
-  fun stringifyArg(arg) =
-    if typeof(arg) is "object" then
+  fun stringifyArg(arg) = if typeof(arg) is
+    "object" then
       js.try_catch(
         () => JSON.stringify(arg, null, 2),
         error => String(arg),
@@ -62,12 +62,11 @@ class ConsolePanel extends HTMLElement with
   fun formattedContent(message) =
     message.content.map(arg => stringifyArg(arg)).join(" ")
 
-  fun iconClassName(kind) =
-    if kind is
-      "error" then "icon-x"
-      "warn" then "icon-triangle-alert"
-      "info" then "icon-info"
-      else "icon-chevron-right"
+  fun iconClassName(kind) = if kind is
+    "error" then "icon-x"
+    "warn" then "icon-triangle-alert"
+    "info" then "icon-info"
+    else "icon-chevron-right"
 
   fun messageHtml(message) =
     """
@@ -75,29 +74,28 @@ class ConsolePanel extends HTMLElement with
       <span class="console-text">""" + this.escapeHtml(formattedContent(message)) + """</span>
     """
 
-  fun appendMessage(message) =
-    if this.querySelector(".console-content") is
-      ~null as consoleContent do
-        let messageEl = document.createElement("div")
-        set
-          messageEl.className = "console-message console-" + message.kind
-          messageEl.innerHTML = messageHtml(message)
-        consoleContent.appendChild(messageEl)
-        set consoleContent.scrollTop = consoleContent.scrollHeight
+  fun appendMessage(message) = if this.querySelector(".console-content") is
+    ~null as consoleContent do
+      let messageEl = document.createElement("div")
+      set
+        messageEl.className = "console-message console-" + message.kind
+        messageEl.innerHTML = messageHtml(message)
+      consoleContent.appendChild(messageEl)
+      set consoleContent.scrollTop = consoleContent.scrollHeight
 
   fun escapeHtml(text) =
     let div = document.createElement("div")
     set div.textContent = text
     div.innerHTML
 
-  fun clear() =
-    if not preserveLogs do
-      set messages = mut []
-      if this.querySelector(".console-content") is
-        ~null as consoleContent do set consoleContent.innerHTML = ""
+  fun clear() = if not preserveLogs do
+    set messages = mut []
+    if this.querySelector(".console-content") is
+      ~null as consoleContent do set consoleContent.innerHTML = ""
 
-  fun valueOrEmpty(value) =
-    if value is Absent then "" else value
+  fun valueOrEmpty(value) = if value is
+    Absent then ""
+    present then present
 
   fun saveCurrentSize() =
     set
@@ -116,14 +114,8 @@ class ConsolePanel extends HTMLElement with
       lastHeight = this.dataset.lastHeight
       lastMinHeight = this.dataset.lastMinHeight
       lastMaxHeight = this.dataset.lastMaxHeight
-    if
-      lastHeight is ~Absent and lastHeight !== "" and lastHeight !== "40px" then
-        set
-          this.style.height = lastHeight
-          this.style.minHeight = valueOrEmpty(lastMinHeight)
-          this.style.maxHeight = valueOrEmpty(lastMaxHeight)
-          this.style.flexBasis = lastHeight
-      else
+    if lastHeight is
+      Absent then
         set
           this.style.height = ""
           this.style.minHeight = ""
@@ -131,6 +123,28 @@ class ConsolePanel extends HTMLElement with
           this.style.flexBasis = ""
           this.style.flexGrow = ""
           this.style.flexShrink = ""
+      "" then
+        set
+          this.style.height = ""
+          this.style.minHeight = ""
+          this.style.maxHeight = ""
+          this.style.flexBasis = ""
+          this.style.flexGrow = ""
+          this.style.flexShrink = ""
+      "40px" then
+        set
+          this.style.height = ""
+          this.style.minHeight = ""
+          this.style.maxHeight = ""
+          this.style.flexBasis = ""
+          this.style.flexGrow = ""
+          this.style.flexShrink = ""
+      savedHeight then
+        set
+          this.style.height = savedHeight
+          this.style.minHeight = valueOrEmpty(lastMinHeight)
+          this.style.maxHeight = valueOrEmpty(lastMaxHeight)
+          this.style.flexBasis = savedHeight
 
   fun toggleCollapse() =
     set isCollapsed = not isCollapsed
@@ -139,15 +153,14 @@ class ConsolePanel extends HTMLElement with
       else restoreSavedSize()
     this.classList.toggle("collapsed", isCollapsed)
 
-  fun shouldExpand() =
-    if isCollapsed then true
+  fun shouldExpand() = if
+    isCollapsed then true
     else this.classList.contains("collapsed")
 
-  fun expand() =
-    if shouldExpand() do
-      set isCollapsed = false
-      restoreSavedSize()
-      this.classList.remove("collapsed")
+  fun expand() = if shouldExpand() do
+    set isCollapsed = false
+    restoreSavedSize()
+    this.classList.remove("collapsed")
 
   fun setPreserveLogs(value) =
     set preserveLogs = value

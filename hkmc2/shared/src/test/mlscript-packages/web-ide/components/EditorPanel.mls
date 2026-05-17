@@ -26,10 +26,16 @@ class EditorPanel extends HTMLElement with
     set this.unsubscribe = fs.subscribe(event => panel.handleFsEvent(event), undefined)
 
   fun disconnectedCallback() =
-    if this.unsubscribe is ~Absent do this.unsubscribe()
-    if this.resizeObserver is ~Absent do this.resizeObserver.disconnect()
+    if this.unsubscribe is
+      Absent then ()
+      unsubscribe then unsubscribe()
+    if this.resizeObserver is
+      Absent then ()
+      resizeObserver then resizeObserver.disconnect()
     Array.from(this.openTabs.values()).forEach of (tab, ...) =>
-      if tab.editorView is ~Absent do tab.editorView.destroy()
+      if tab.editorView is
+        Absent then ()
+        editorView then editorView.destroy()
 
   fun render() =
     set this.innerHTML = """
@@ -66,11 +72,10 @@ class EditorPanel extends HTMLElement with
   fun shouldHandleFsEvent(kind) =
     kind is "write" | "delete" | "rename" | "readonly" | "attr"
 
-  fun nodeAttrs(event) =
-    if
-      event.node is Absent then mut {}
-      event.node.attrs is Absent then mut {}
-      else event.node.attrs
+  fun nodeAttrs(event) = if
+    event.node is Absent then mut {}
+    event.node.attrs is Absent then mut {}
+    else event.node.attrs
 
   fun updateTabContent(tab, path) =
     let
@@ -86,38 +91,38 @@ class EditorPanel extends HTMLElement with
           transaction = tab.editorView.state.update(updateOptions)
         tab.editorView.dispatch(transaction)
 
-  fun handleFsEventForTab(tabId, tab, event) =
-    if
-      tab.path !== event.path then ()
-      event.("type") is
-        "delete" then this.closeTab(tabId)
-        "rename" then
-          set
-            tab.name = event.node.name
-            tab.path = event.newPath
-          this.updateDisplay()
-        "readonly" then
-          set tab.readonly = event.readonly
-          this.updateDisplay()
-        "attr" then
-          set tab.attrs = nodeAttrs(event)
-          this.updateDisplay()
-        "write" then updateTabContent(tab, event.path)
-      else ()
+  fun handleFsEventForTab(tabId, tab, event) = if
+    tab.path !== event.path then ()
+    event.("type") is
+      "delete" then this.closeTab(tabId)
+      "rename" then
+        set
+          tab.name = event.node.name
+          tab.path = event.newPath
+        this.updateDisplay()
+      "readonly" then
+        set tab.readonly = event.readonly
+        this.updateDisplay()
+      "attr" then
+        set tab.attrs = nodeAttrs(event)
+        this.updateDisplay()
+      "write" then updateTabContent(tab, event.path)
+    else ()
 
-  fun handleFsEvent(event) =
-    if shouldHandleFsEvent(event.("type")) do
-      Array.from(this.openTabs.entries()).forEach of (entry, ...) =>
-        this.handleFsEventForTab(entry.at(0), entry.at(1), event)
+  fun handleFsEvent(event) = if shouldHandleFsEvent(event.("type")) do
+    Array.from(this.openTabs.entries()).forEach of (entry, ...) =>
+      this.handleFsEventForTab(entry.at(0), entry.at(1), event)
 
-  fun activeTab() =
-    if
-      this.activeTabId is Absent then null
-      else this.openTabs.get(this.activeTabId)
+  fun activeTab() = if this.activeTabId is
+      Absent then null
+      tabId then this.openTabs.get(tabId)
+
+  fun tabPath(tab) = if tab is
+      Absent then null
+      activeTab then activeTab.path
 
   fun activeFilePath() =
-    let tab = activeTab()
-    if tab is Absent then null else tab.path
+    tabPath(activeTab())
 
   fun filePathDetail(path) =
     mut { filePath: path }
@@ -125,13 +130,12 @@ class EditorPanel extends HTMLElement with
   fun dispatchCompile() =
     document.dispatchEvent(new CustomEvent("compile-requested", bubbleEventOptions(filePathDetail(activeFilePath()))))
 
-  fun dispatchExecute() =
-    let tab = activeTab()
-    if tab is ~Absent do
-      document.dispatchEvent(new CustomEvent("execute-requested", bubbleEventOptions(filePathDetail(tab.path))))
+  fun dispatchExecute() = if activeTab() is
+      Absent then ()
+      activeTab then
+        document.dispatchEvent(new CustomEvent("execute-requested", bubbleEventOptions(filePathDetail(activeTab.path))))
 
-  fun isKey(event, lower, upper) =
-    if
+  fun isKey(event, lower, upper) = if
       event.key === lower then true
       event.key === upper then true
       else false
@@ -154,7 +158,9 @@ class EditorPanel extends HTMLElement with
         else ()
     if event.ctrlKey and isKey(event, "w", "W") do
       event.preventDefault()
-      if this.activeTabId is ~Absent do this.closeTab(this.activeTabId)
+      if this.activeTabId is
+        Absent then ()
+        tabId then this.closeTab(tabId)
 
   fun setupEventListeners() =
     let panel = this
@@ -167,8 +173,7 @@ class EditorPanel extends HTMLElement with
     arrow.offsetHeight
     arrow.classList.add("visible")
 
-  fun hideArrow(arrow) =
-    if arrow.classList.contains("visible") do
+  fun hideArrow(arrow) = if arrow.classList.contains("visible") do
       arrow.classList.remove("visible")
       let hideLater = () =>
         if not arrow.classList.contains("visible") do
@@ -194,9 +199,11 @@ class EditorPanel extends HTMLElement with
         let scrollRight = () => set tabBar.scrollLeft += scrollSpeed
         set scrollInterval = window.setInterval(scrollRight, 10)
     let stopScroll = () =>
-      if scrollInterval is ~Absent do
-        window.clearInterval(scrollInterval)
-        set scrollInterval = null
+      if scrollInterval is
+        Absent then ()
+        interval then
+          window.clearInterval(interval)
+          set scrollInterval = null
     leftArrow.addEventListener("mouseenter", startScrollLeft)
     leftArrow.addEventListener("mouseleave", stopScroll)
     rightArrow.addEventListener("mouseenter", startScrollRight)
@@ -226,37 +233,33 @@ class EditorPanel extends HTMLElement with
         set existingTabId = entry.at(0)
     existingTabId
 
-  fun extensionFor(filePath) =
-    let matched = filePath.match(new RegExp("\\.(\\w+)$"))
-    if matched is Absent then "" else matched.at(1)
+  fun extensionFor(filePath) = if filePath.match(new RegExp("\\.(\\w+)$")) is
+      Absent then ""
+      matchResult then matchResult.at(1)
 
-  fun attrsOrEmpty(nodeInfo) =
-    if
+  fun attrsOrEmpty(nodeInfo) = if
       nodeInfo is Absent then mut {}
       nodeInfo.attrs is Absent then mut {}
       else nodeInfo.attrs
 
-  fun isReadonlyNode(nodeInfo) =
-    if
-      nodeInfo is Absent then false
-      else nodeInfo.readonly is true
+  fun isReadonlyNode(nodeInfo) = if nodeInfo is
+      Absent then false
+      node then node.readonly is true
 
   fun tabRecord(fileName, filePath, editorDiv, editorView, isReadonly, attrs) =
     mut
       name: fileName
       path: filePath
-      :editorDiv
-      :editorView
+      // BUG: `:field` puns currently miscompile in multiline `mut` records here.
+      editorDiv: editorDiv
+      editorView: editorView
       readonly: isReadonly
-      :attrs
+      attrs: attrs
 
   fun openFile(filePath, fileName) =
     let existingTabId = existingTabIdFor(filePath)
-    if
-      existingTabId is ~Absent then
-        this.switchTab(existingTabId)
-        existingTabId
-      else
+    if existingTabId is
+      Absent then
         let tabId = "tab-" + this.tabCounter
         set this.tabCounter += 1
         let editorDiv = document.createElement("div")
@@ -275,6 +278,9 @@ class EditorPanel extends HTMLElement with
         this.switchTab(tabId)
         this.updateDisplay()
         this.emitOpenFilesChange()
+        tabId
+      tabId then
+        this.switchTab(tabId)
         tabId
 
   fun openFileAtLine(filePath, line) =
@@ -297,48 +303,61 @@ class EditorPanel extends HTMLElement with
     Array.from(this.openTabs.values()).forEach of (tab, ...) =>
       tab.editorDiv.classList.remove("active")
     let selectedTab = this.openTabs.get(tabId)
-    if selectedTab is ~Absent do
-      selectedTab.editorDiv.classList.add("active")
-      set this.activeTabId = tabId
-      selectedTab.editorView.focus()
+    if selectedTab is
+      Absent then ()
+      tab then
+        tab.editorDiv.classList.add("active")
+        set this.activeTabId = tabId
+        tab.editorView.focus()
     this.updateDisplay()
     this.scrollTabIntoView(tabId)
 
   fun closeTab(tabId) =
     let tab = this.openTabs.get(tabId)
-    if tab is ~Absent do
-      if tab.editorView is ~Absent do tab.editorView.destroy()
-      tab.editorDiv.remove()
-      this.openTabs.delete(tabId)
-      if this.activeTabId === tabId do
-        let remainingTabs = Array.from(this.openTabs.keys())
-        if
-          remainingTabs.length > 0 then this.switchTab(remainingTabs.at(remainingTabs.length - 1))
-          else
-            set this.activeTabId = null
-            this.notifyActiveTabChange(null)
+    if tab is
+      Absent then ()
+      closingTab then
+        if closingTab.editorView is
+          Absent then ()
+          editorView then editorView.destroy()
+        closingTab.editorDiv.remove()
+        this.openTabs.delete(tabId)
+        if this.activeTabId === tabId do
+          let remainingTabs = Array.from(this.openTabs.keys())
+          if
+            remainingTabs.length > 0 then this.switchTab(remainingTabs.at(remainingTabs.length - 1))
+            else
+              set this.activeTabId = null
+              this.notifyActiveTabChange(null)
     this.updateDisplay()
     this.emitOpenFilesChange()
+
+  fun tabTargetPath(target) = if target is
+      Absent then null
+      tabTarget then tabTarget.dataset.path
 
   fun tabLogInfo(reason) =
     mut
       :reason
-      pendingTargetPath: if this.tabTooltipPendingTarget is Absent then null else this.tabTooltipPendingTarget.dataset.path
-      hoverTargetPath: if this.tabTooltipHoverTarget is Absent then null else this.tabTooltipHoverTarget.dataset.path
+      pendingTargetPath: tabTargetPath(this.tabTooltipPendingTarget)
+      hoverTargetPath: tabTargetPath(this.tabTooltipHoverTarget)
 
   fun clearTabTooltip(reason) =
     let tooltip = this.querySelector("file-tooltip.tab-tooltip")
     console.log("[tab-tooltip] hide", tabLogInfo(reason))
-    if this.tabTooltipTimeout is ~Absent do
-      window.clearTimeout(this.tabTooltipTimeout)
-      set this.tabTooltipTimeout = null
+    if this.tabTooltipTimeout is
+      Absent then ()
+      timeout then
+        window.clearTimeout(timeout)
+        set this.tabTooltipTimeout = null
     set
       this.tabTooltipPendingTarget = null
       this.tabTooltipHoverTarget = null
-    if tooltip is ~Absent do tooltip.hide()
+    if tooltip is
+      Absent then ()
+      tooltip then tooltip.hide()
 
-  fun baseNameHtml(tabName, lastDot) =
-    if
+  fun baseNameHtml(tabName, lastDot) = if
       lastDot > 0 then
         let
           baseName = tabName.substring(0, lastDot)
@@ -383,43 +402,44 @@ class EditorPanel extends HTMLElement with
       :reason
       tabId: tabEl.getAttribute("data-tab-id")
       path: (tabEl.dataset.path)
-      pendingTargetPath: if this.tabTooltipPendingTarget is Absent then null else this.tabTooltipPendingTarget.dataset.path
-      hoverTargetPath: if this.tabTooltipHoverTarget is Absent then null else this.tabTooltipHoverTarget.dataset.path
+      pendingTargetPath: tabTargetPath(this.tabTooltipPendingTarget)
+      hoverTargetPath: tabTargetPath(this.tabTooltipHoverTarget)
 
   fun tabShowLog(tabEl, reason, tooltip) =
     let info = tabHoverLog(tabEl, reason)
     set info.visible = tooltip.classList.contains("visible")
     info
 
-  fun showTooltip(tabEl, reason, tooltip) =
-    let tab = tabForElement(tabEl)
-    if tab is ~Absent do
-      console.log("[tab-tooltip] show", tabShowLog(tabEl, reason, tooltip))
-      tooltip.show(tabEl, tooltipInfo(tab))
+  fun showTooltip(tabEl, reason, tooltip) = if tabForElement(tabEl) is
+      Absent then ()
+      tab then
+        console.log("[tab-tooltip] show", tabShowLog(tabEl, reason, tooltip))
+        tooltip.show(tabEl, tooltipInfo(tab))
 
-  fun setupNameScroll(container) =
-    if
+  fun setupNameScroll(container) = if
       container is Absent then ()
       container.dataset.scrollInit is ~Absent then ()
       else
         let textEl = container.querySelector(".tab-name-text")
-        if textEl is ~Absent do
-          set container.dataset.scrollInit = "true"
-          let start = () =>
-            let distance = textEl.scrollWidth - container.clientWidth + 16
-            if distance > 0 do
-              let duration = Math.min(12, Math.max(4, distance / 40))
-              textEl.style.setProperty("--scroll-distance", distance + "px")
-              textEl.style.setProperty("--scroll-duration", duration + "s")
-              textEl.classList.add("scrolling")
-          let stop = () =>
-            textEl.classList.remove("scrolling")
-            textEl.style.removeProperty("--scroll-distance")
-            textEl.style.removeProperty("--scroll-duration")
-          container.addEventListener("mouseenter", start)
-          container.addEventListener("mouseleave", stop)
-          container.addEventListener("focus", start)
-          container.addEventListener("blur", stop)
+        if textEl is
+          Absent then ()
+          textEl then
+            set container.dataset.scrollInit = "true"
+            let start = () =>
+              let distance = textEl.scrollWidth - container.clientWidth + 16
+              if distance > 0 do
+                let duration = Math.min(12, Math.max(4, distance / 40))
+                textEl.style.setProperty("--scroll-distance", distance + "px")
+                textEl.style.setProperty("--scroll-duration", duration + "s")
+                textEl.classList.add("scrolling")
+            let stop = () =>
+              textEl.classList.remove("scrolling")
+              textEl.style.removeProperty("--scroll-distance")
+              textEl.style.removeProperty("--scroll-duration")
+            container.addEventListener("mouseenter", start)
+            container.addEventListener("mouseleave", stop)
+            container.addEventListener("focus", start)
+            container.addEventListener("blur", stop)
 
   fun setupTabElement(tabEl, tooltip) =
     let panel = this
@@ -437,7 +457,9 @@ class EditorPanel extends HTMLElement with
         tooltip.classList.contains("visible") then showTooltip(tabEl, "already-visible", tooltip)
         panel.tabTooltipPendingTarget === tabEl then ()
         else
-          if panel.tabTooltipTimeout is ~Absent do window.clearTimeout(panel.tabTooltipTimeout)
+          if panel.tabTooltipTimeout is
+            Absent then ()
+            timeout then window.clearTimeout(timeout)
           set panel.tabTooltipPendingTarget = tabEl
           console.log("[tab-tooltip] schedule show", panel.tabHoverLog(tabEl, "schedule"))
           let showLater = () =>
@@ -465,15 +487,16 @@ class EditorPanel extends HTMLElement with
     if
       this.openTabs.size === 0 then emptyState.classList.remove("hidden")
       else emptyState.classList.add("hidden")
-    this.notifyActiveTabChange(if this.activeTabId is Absent then null else this.openTabs.get(this.activeTabId))
+    this.notifyActiveTabChange(activeTab())
     this.emitOpenFilesChange()
     tabBar.querySelectorAll(".tab").forEach of (tabEl, ...) =>
       setupTabElement(tabEl, tooltip)
     tabBar.querySelectorAll(".tab-close").forEach of (btn, ...) =>
       setupCloseButton(btn)
     tabBar.addEventListener("scroll", () => this.clearTabTooltip("tab-bar-scroll"))
-    if this.updateArrowVisibility is ~Absent do
-      window.setTimeout(this.updateArrowVisibility, 0)
+    if this.updateArrowVisibility is
+      Absent then ()
+      updateArrowVisibility then window.setTimeout(updateArrowVisibility, 0)
 
   fun scrollOptions(left) =
     mut { :left, behavior: "smooth" }
@@ -496,15 +519,14 @@ class EditorPanel extends HTMLElement with
             tabBar.scrollTo(scrollOptions(scrollOffset))
     window.setTimeout(scrollLater, 0)
 
-  fun isStdTab(tab) =
-    if
+  fun isStdTab(tab) = if
       tab is Absent then false
       tab.attrs is Absent then false
       tab.attrs.std is true then true
       else false
 
   fun activeTabDetail(tab) =
-    mut { path: if tab is Absent then null else tab.path, isStd: isStdTab(tab) }
+    mut { path: tabPath(tab), isStd: isStdTab(tab) }
 
   fun notifyActiveTabChange(tab) =
     document.dispatchEvent(new CustomEvent("active-tab-changed", eventOptions(activeTabDetail(tab))))

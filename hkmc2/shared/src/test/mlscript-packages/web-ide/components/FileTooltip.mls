@@ -54,38 +54,36 @@ class FileTooltip extends HTMLElement with
     this.classList.add("file-tooltip")
     this.setAttribute("role", "tooltip")
   
-  fun formatRelativeTime(timestamp) =
-    if
-      relativeTimeFormatter is Absent then ""
-      not Number.isFinite(timestamp) then ""
-      else
-        let divisions = [
-          (amount: 60, unit: "seconds"),
-          (amount: 60, unit: "minutes"),
-          (amount: 24, unit: "hours"),
-          (amount: 7, unit: "days"),
-          (amount: 4.34524, unit: "weeks"),
-          (amount: 12, unit: "months"),
-          (amount: Number.POSITIVE_INFINITY, unit: "years"),
-        ]
-        let
-          duration = (timestamp - Date.now()) / 1000
-          result = ""
-          i = 0
-        while result === "" and i < divisions.length do
-          let division = divisions.at(i)
-          if Math.abs(duration) < division.amount then
-            set result = relativeTimeFormatter.format(
-              Math.round(duration),
-              division.unit.slice(0, -1),
-            )
-          else
-            set duration /= division.amount
-            set i += 1
-        result
+  fun formatRelativeTime(timestamp) = if
+    relativeTimeFormatter is Absent then ""
+    not Number.isFinite(timestamp) then ""
+    else
+      let divisions = [
+        (amount: 60, unit: "seconds"),
+        (amount: 60, unit: "minutes"),
+        (amount: 24, unit: "hours"),
+        (amount: 7, unit: "days"),
+        (amount: 4.34524, unit: "weeks"),
+        (amount: 12, unit: "months"),
+        (amount: Number.POSITIVE_INFINITY, unit: "years"),
+      ]
+      let
+        duration = (timestamp - Date.now()) / 1000
+        result = ""
+        i = 0
+      while result === "" and i < divisions.length do
+        let division = divisions.at(i)
+        if Math.abs(duration) < division.amount then
+          set result = relativeTimeFormatter.format(
+            Math.round(duration),
+            division.unit.slice(0, -1),
+          )
+        else
+          set duration /= division.amount
+          set i += 1
+      result
   
-  fun formatTimestamp(value) =
-    if not Number.isFinite(value) then "-"
+  fun formatTimestamp(value) = if not Number.isFinite(value) then "-"
     else
       let absolute = dateFrom(value).toLocaleString(undefined,
         year: "numeric",
@@ -99,50 +97,45 @@ class FileTooltip extends HTMLElement with
         relative !== "" then absolute + " - " + relative
         else absolute
   
-  fun formatSize(size) =
-    if
-      not Number.isFinite(size) then "-"
-      size < 0 then "-"
-      size === 1 then "1 byte"
-      size < 1024 then textOf(size) + " bytes"
-      let kb = size / 1024
-      kb < 1024 then kb.toFixed(1) + " KB"
-      else (kb / 1024).toFixed(1) + " MB"
+  fun formatSize(size) = if
+    not Number.isFinite(size) then "-"
+    size < 0 then "-"
+    size === 1 then "1 byte"
+    size < 1024 then textOf(size) + " bytes"
+    let kb = size / 1024
+    kb < 1024 then kb.toFixed(1) + " KB"
+    else (kb / 1024).toFixed(1) + " MB"
   
-  fun attrText(attrs) =
-    if
-      attrs is Absent then "-"
-      Object.keys(attrs).length === 0 then "-"
-      else Object.entries(attrs)
-        .map((entry, ...) =>
-          entry.at(0) + ": " + escapeHtml(attrFallback(entry.at(1)))
-        )
-        .join(", ")
+  fun attrText(attrs) = if
+    attrs is Absent then "-"
+    Object.keys(attrs).length === 0 then "-"
+    else Object.entries(attrs)
+      .map((entry, ...) =>
+        entry.at(0) + ": " + escapeHtml(attrFallback(entry.at(1)))
+      )
+      .join(", ")
   
-  fun displayName(path, node, name) =
-    if
-      name is ~Absent and name !== "" then name
-      node.name is ~Absent and node.name !== "" then node.name
-      else path.split("/").pop()
+  fun displayName(path, node, name) = if
+    name is ~Absent and name !== "" then name
+    node.name is ~Absent and node.name !== "" then node.name
+    else path.split("/").pop()
   
-  fun fileSize(node, sizeOverride) =
-    if
-      sizeOverride is ~Absent then sizeOverride
-      typeof(node.content) is "string" then node.content.length
-      else undefined
+  fun fileSize(node, sizeOverride) = if
+    sizeOverride is ~Absent then sizeOverride
+    typeof(node.content) is "string" then node.content.length
+    else undefined
   
-  fun tooltipContent(path, name, sizeOverride) =
-    if
-      path is Absent then null
-      path !== "" then
-        let node = fs.stat(path)
-        if node is Absent then null
-        else
-          let
-            size = fileSize(node, sizeOverride)
-            attrs = attrText(node.attrs)
-            shownName = displayName(path, node, name)
-          """
+  fun tooltipContent(path, name, sizeOverride) = if
+    path is Absent then null
+    path !== "" then
+      let node = fs.stat(path)
+      if node is Absent then null
+      else
+        let
+          size = fileSize(node, sizeOverride)
+          attrs = attrText(node.attrs)
+          shownName = displayName(path, node, name)
+        """
       <div class="tooltip-grid">
         <div class="tooltip-label">Name</div>
         <div class="tooltip-value">""" + escapeHtml(shownName) + """</div>
@@ -160,7 +153,7 @@ class FileTooltip extends HTMLElement with
         <div class="tooltip-value">""" + attrs + """</div>
       </div>
     """
-      else null
+    else null
   
   fun show(targetEl, optionsArg) =
     let

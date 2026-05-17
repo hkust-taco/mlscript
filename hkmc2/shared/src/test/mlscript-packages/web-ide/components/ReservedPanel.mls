@@ -83,13 +83,12 @@ class ReservedPanel extends HTMLElement with
       set i += 1
     snippetResult(startPos, endPos, snippetLines)
 
-  fun hasDiagnostics(diagnosticsPerFile) =
-    if
-      diagnosticsPerFile is Absent then false
-      else diagnosticsPerFile.some of (file, ...) =>
-        if
-          file.diagnostics is Absent then false
-          else file.diagnostics.length > 0
+  fun hasDiagnostics(diagnosticsPerFile) = if diagnosticsPerFile is
+    Absent then false
+    files then files.some of (file, ...) =>
+      if file.diagnostics is
+        Absent then false
+        diagnostics then diagnostics.length > 0
 
   fun setDiagnostics(diagnosticsPerFile) =
     if this.querySelector(".content") is
@@ -227,27 +226,26 @@ class ReservedPanel extends HTMLElement with
     set html += """</div>"""
     html
 
-  fun highlightedContent(lineNumber, content, snippet) =
-    if
-      lineNumber === snippet.startLine and lineNumber === snippet.endLine then
-        let
-          before = content.substring(0, snippet.startColumn - 1)
-          highlighted = content.substring(snippet.startColumn - 1, snippet.endColumn - 1)
-          after = content.substring(snippet.endColumn - 1)
-        escapeHtml(before) + """<mark class="highlight">""" + escapeHtml(highlighted) + """</mark>""" + escapeHtml(after)
-      lineNumber === snippet.startLine then
-        let
-          before = content.substring(0, snippet.startColumn - 1)
-          highlighted = content.substring(snippet.startColumn - 1)
-        escapeHtml(before) + """<mark class="highlight">""" + escapeHtml(highlighted) + """</mark>"""
-      lineNumber === snippet.endLine then
-        let
-          highlighted = content.substring(0, snippet.endColumn - 1)
-          after = content.substring(snippet.endColumn - 1)
-        """<mark class="highlight">""" + escapeHtml(highlighted) + """</mark>""" + escapeHtml(after)
-      lineNumber > snippet.startLine and lineNumber < snippet.endLine then
-        """<mark class="highlight">""" + escapeHtml(content) + """</mark>"""
-      else escapeHtml(content)
+  fun highlightedContent(lineNumber, content, snippet) = if
+    lineNumber === snippet.startLine and lineNumber === snippet.endLine then
+      let
+        before = content.substring(0, snippet.startColumn - 1)
+        highlighted = content.substring(snippet.startColumn - 1, snippet.endColumn - 1)
+        after = content.substring(snippet.endColumn - 1)
+      escapeHtml(before) + """<mark class="highlight">""" + escapeHtml(highlighted) + """</mark>""" + escapeHtml(after)
+    lineNumber === snippet.startLine then
+      let
+        before = content.substring(0, snippet.startColumn - 1)
+        highlighted = content.substring(snippet.startColumn - 1)
+      escapeHtml(before) + """<mark class="highlight">""" + escapeHtml(highlighted) + """</mark>"""
+    lineNumber === snippet.endLine then
+      let
+        highlighted = content.substring(0, snippet.endColumn - 1)
+        after = content.substring(snippet.endColumn - 1)
+      """<mark class="highlight">""" + escapeHtml(highlighted) + """</mark>""" + escapeHtml(after)
+    lineNumber > snippet.startLine and lineNumber < snippet.endLine then
+      """<mark class="highlight">""" + escapeHtml(content) + """</mark>"""
+    else escapeHtml(content)
 
   fun attachDiagnosticListeners() =
     this.querySelectorAll(".file-header").forEach of (header, ...) =>
@@ -274,10 +272,9 @@ class ReservedPanel extends HTMLElement with
             icon.classList.contains("icon-chevron-right") then "file-toggle-icon icon-chevron-down"
             else "file-toggle-icon icon-chevron-right"
 
-  fun toggleSet(collection, key) =
-    if
-      collection.has(key) then collection.delete(key)
-      else collection.add(key)
+  fun toggleSet(collection, key) = if
+    collection.has(key) then collection.delete(key)
+    else collection.add(key)
 
   fun toggleDiagnostic(summary) =
     let diagId = summary.dataset.diagId
@@ -375,21 +372,19 @@ class ReservedPanel extends HTMLElement with
     this.classList.toggle("collapsed", isCollapsed)
     syncWidthForCollapseState(document.querySelector(".app-container"))
 
-  fun syncWidthForCollapseState(container) =
-    if
-      container is Absent then ()
-      isCollapsed then container.style.removeProperty("--reserved-panel-width")
-      else restoreWidthIfExpanded(container)
+  fun syncWidthForCollapseState(container) = if
+    container is Absent then ()
+    isCollapsed then container.style.removeProperty("--reserved-panel-width")
+    else restoreWidthIfExpanded(container)
 
-  fun restoreWidthIfExpanded(container) =
-    if
-      isCollapsed then ()
-      container is Absent then ()
-      else
-        let width = this.getAttribute("width")
-        if
-          width is ~Absent and width !== "" then container.style.setProperty("--reserved-panel-width", width + "px")
-          else container.style.removeProperty("--reserved-panel-width")
+  fun restoreWidthIfExpanded(container) = if
+    isCollapsed then ()
+    container is Absent then ()
+    else
+      let width = this.getAttribute("width")
+      if
+        width is ~Absent and width !== "" then container.style.setProperty("--reserved-panel-width", width + "px")
+        else container.style.removeProperty("--reserved-panel-width")
 
   fun attachEventListeners() =
     ()

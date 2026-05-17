@@ -10,6 +10,8 @@
   - [x] Get rid of nested `if` using `and`
   - [x] Saves a level of indentation
   - [x] Combine the techniques together
+  - [x] Factor repeated scrutinees inside flat UCS
+  - [x] Reorganize complementary patterns
 - [x] Get rid of parenthesis of function calls using `of` keywords
 - [x] Organize consecutive `let` bindings using splits
 - [x] Prefer `not` over `is false`
@@ -252,6 +254,67 @@ Step 4: The scrutinee can be an expression.
       "write" then updateTabContent(tab, event.path)
       else ()
 ```
+
+#### Case 5: Factor repeated scrutinees inside flat UCS
+
+Before:
+
+```mlscript
+  fun select(x, y) =
+    if
+      x is A then a
+      x is B then b
+      y is C then c
+      y is D then d
+      else e
+```
+
+After:
+
+```mlscript
+  fun select(x, y) = if
+    x is
+      A then a
+      B then b
+    y is
+      C then c
+      D then d
+    else e
+```
+
+1. If the whole function body is a UCS expression, begin the `if` on the function definition line.
+2. When multiple branches test the same scrutinee with `is`, split after `is` and group the corresponding patterns under that scrutinee.
+3. Keep the result as one flat UCS expression. Do not introduce nested `if` expressions for later scrutinees; UCS can switch scrutinees in the same conditional.
+
+#### Case 6: Reorganize complementary patterns
+
+Before:
+
+```mlscript
+  fun fromMaybe(x) = if x is
+    Some(value) then value
+    ~Some(_) then default
+```
+
+After:
+
+```mlscript
+  fun fromMaybe(x) = if x is
+    Some(value) then value
+    _ then default
+```
+
+When the fallback branch needs the value:
+
+```mlscript
+  fun handle(x) = if x is
+    Absent then missing()
+    value then present(value)
+```
+
+1. When you see opposite patterns such as `P` and `~P`, recognize that they partition the cases.
+2. Reorganize the match around the positive pattern and the remaining cases instead of mechanically preserving the negated pattern.
+3. If the remaining branch needs the value, bind it with a variable pattern. A variable pattern matches the remaining value and gives it a local name.
 
 ### Get rid of parenthesis of function calls using `of` keywords
 

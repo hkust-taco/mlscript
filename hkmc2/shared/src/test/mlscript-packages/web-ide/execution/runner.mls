@@ -42,11 +42,10 @@ fun workerErrorDetails(event) =
     error: (event.error)
     fullEvent: event
 
-fun errorStack(error) =
-  if
-    error is Absent then null
-    error.stack is Absent then null
-    else error.stack
+fun errorStack(error) = if
+  error is Absent then null
+  error.stack is Absent then null
+  else error.stack
 
 fun appendWorkerLocation(panel, event) =
   if event.filename is ~Absent do
@@ -79,11 +78,10 @@ fun run(execution, id, mainPath) =
   console.log("[VM] Files:", Object.keys(files))
   execution.worker.postMessage(runMessage(id, mainPath, files))
 
-fun isOutdated(id) =
-  if
-    latestExecution is null then true
-    latestExecution is ~null as execution and execution.id !== id then true
-    else false
+fun isOutdated(id) = if latestExecution is
+  null then true
+  execution and execution.id !== id then true
+  else false
 
 fun handleVmConsole(kind, logMethod, payload) =
   // Dynamic selection on declared module `console` is rejected by codegen.
@@ -149,38 +147,35 @@ fun handleMessageError(execution, event) =
   if reservedPanel() is
     ~null as panel do panel.setOutput("Worker Message Error: Failed to deserialize message from worker")
 
-fun cleanupPreviousExecution() =
-  if
-    latestExecution is null then true
-    latestExecution is ~null as execution and execution.isRunning then
+fun cleanupPreviousExecution() = if latestExecution is
+  null then true
+  execution and
+    execution.isRunning then
       console.log("The previous execution is still running. Stop it before starting a new one.")
       false
-    latestExecution is ~null as execution then
+    else
       console.log("Clean up the previous execution.")
       execution.worker.terminate()
       set latestExecution = null
       true
-    else true
 
-fun execute(mainPath) =
-  if cleanupPreviousExecution() do
-    clearConsolePanel()
-    console.log("[VM] Starting new execution for " + mainPath)
-    let
-      id = Date.now().toString()
-      execution = makeExecution(id)
-    set latestExecution = execution
-    set execution.worker.onmessage = event => handleWorkerMessage(execution, id, mainPath, event)
-    set execution.worker.onerror = event => handleWorkerError(execution, event)
-    execution.worker.addEventListener("messageerror", event => handleMessageError(execution, event))
+fun execute(mainPath) = if cleanupPreviousExecution() do
+  clearConsolePanel()
+  console.log("[VM] Starting new execution for " + mainPath)
+  let
+    id = Date.now().toString()
+    execution = makeExecution(id)
+  set latestExecution = execution
+  set execution.worker.onmessage = event => handleWorkerMessage(execution, id, mainPath, event)
+  set execution.worker.onerror = event => handleWorkerError(execution, event)
+  execution.worker.addEventListener("messageerror", event => handleMessageError(execution, event))
 
-fun terminate() =
-  if latestExecution is
-    ~null as execution and execution.isRunning do
-      console.log("[VM] Terminating worker...")
-      execution.worker.terminate()
-      set execution.isRunning = false
-      dispatchStatusChange("aborted", null)
-      if consolePanel() is
-        ~null as panel do panel.log("warn", "Execution terminated by user")
-      set latestExecution = null
+fun terminate() = if latestExecution is
+  ~null as execution and execution.isRunning do
+    console.log("[VM] Terminating worker...")
+    execution.worker.terminate()
+    set execution.isRunning = false
+    dispatchStatusChange("aborted", null)
+    if consolePanel() is
+      ~null as panel do panel.log("warn", "Execution terminated by user")
+    set latestExecution = null

@@ -34,23 +34,24 @@ let capitalized = new RegExp("^[A-Z]")
 
 fun normal(stream, state) = if
   let ch = stream.next()
-  ch is "/" and
-    stream.eat("/") is Str then
-      stream.skipToEnd()
-      "comment"
-    stream.eat("*") is Str then
-      set state.parse = blockComment
+  ch is
+    "/" and
+      stream.eat("/") is Str then
+        stream.skipToEnd()
+        "comment"
+      stream.eat("*") is Str then
+        set state.parse = blockComment
+        state.parse(stream, state)
+    "\"" then
+      set state.parse = stringContent
       state.parse(stream, state)
-  ch is "\"" then
-    set state.parse = stringContent
-    state.parse(stream, state)
+    "=" and stream.eat(">") is Str then "operator"
   digit.test(ch) then
     stream.eatWhile(digit)
     "number"
   operator.test(ch) then
     stream.eatWhile(operator)
     "operator"
-  ch is "=" and stream.eat(">") is Str then "operator"
   identiferStart.test(ch) and
     do stream.eatWhile(identiferPart)
     let word = stream.current()
@@ -86,13 +87,13 @@ fun normal(stream, state) = if
 fun blockComment(stream, state) =
   let shouldStop = false
   while not shouldStop do
-    if stream.next() is ~null as ch and
-      ch is "*" and stream.eat("/") is Str then
+    if stream.next() is
+      null then
+        set shouldStop = true
+      "*" and stream.eat("/") is Str then
         set {state.parse = normal, shouldStop = true}
       else
         set shouldStop = false
-    else
-      set shouldStop = true
   "comment"
 
 fun stringContent(stream, state) =
@@ -100,21 +101,21 @@ fun stringContent(stream, state) =
     shouldStop = false
     escaped = false
   while not shouldStop do
-    if stream.next() is ~null as ch and
-      ch is "\"" and not escaped then
+    if stream.next() is
+      null then
+        set shouldStop = true
+      "\"" and not escaped then
         set {state.parse = normal, shouldStop = true}
-      else
+      ch then
         set escaped = not escaped and ch is "\\"
-    else set shouldStop = true
   "string"
 
 fun startState() = mut { parse: normal, lastKeyword: null }
 
-fun token(stream, state) =
-  if stream.eatSpace() then
-    null
-  else
-    state.parse(stream, state)
+fun token(stream, state) = if stream.eatSpace() then
+  null
+else
+  state.parse(stream, state)
 
 val mlscript =
   name: "mlscript"

@@ -8,12 +8,14 @@ module persistent with...
 val FS_PREFIX = "mlscript-fs:"
 val FS_PATHS_KEY = "mlscript-fs-paths"
 
-fun isFile(node) = if
-  node is ~Absent and node.("type") is "file" then true
+fun isFile(node) = if node is
+  Absent then false
+  value and value.("type") is "file" then true
   else false
 
-fun isStandardLibraryNode(node) = if
-  node is ~Absent and node.attrs.("std") is true then true
+fun isStandardLibraryNode(node) = if node is
+  Absent then false
+  value and value.attrs.("std") is true then true
   else false
 
 fun persistedKey(path) =
@@ -21,18 +23,18 @@ fun persistedKey(path) =
 
 fun getPersistedPaths() =
   let storedText = localStorage.getItem(FS_PATHS_KEY)
-  if
-    storedText is Absent then new Set()
-    else new Set(JSON.parse(storedText))
+  if storedText is
+    Absent then new Set()
+    text then new Set(JSON.parse(text))
 
 fun savePersistedPaths(paths) =
   localStorage.setItem(FS_PATHS_KEY, JSON.stringify(Array.from(paths)))
 
 fun loadPersistedFile(path) =
   let storedText = localStorage.getItem(persistedKey(path))
-  if
-    storedText is Absent then null
-    else JSON.parse(storedText)
+  if storedText is
+    Absent then null
+    text then JSON.parse(text)
 
 fun fileData(node) =
   content: node.content

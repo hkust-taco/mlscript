@@ -108,23 +108,21 @@ fun indexOfChild(nodes, name) =
     set i += 1
   result
 
-fun findFrom(nodes, parts, index) =
-  if
-    index >= parts.length then nodes
-    let node = findChild(nodes, parts.at(index))
-    node is FileNode and index === parts.length - 1 then node
-    node is FolderNode(_, children, _, _, _, _, _, _) and index === parts.length - 1 then node
-    node is FolderNode(_, children, _, _, _, _, _, _) then findFrom(children, parts, index + 1)
-    else null
+fun findFrom(nodes, parts, index) = if
+  index >= parts.length then nodes
+  let node = findChild(nodes, parts.at(index))
+  node is FileNode and index === parts.length - 1 then node
+  node is FolderNode(_, children, _, _, _, _, _, _) and index === parts.length - 1 then node
+  node is FolderNode(_, children, _, _, _, _, _, _) then findFrom(children, parts, index + 1)
+  else null
 
 fun findNode(path) =
   findFrom(fileTree, splitPath(path), 0)
 
-fun parentChildren(parentPath) =
-  if
-    parentPath is "" then fileTree
-    findNode("/" + parentPath) is FolderNode(_, children, _, _, _, _, _, _) then children
-    else null
+fun parentChildren(parentPath) = if
+  parentPath is "" then fileTree
+  findNode("/" + parentPath) is FolderNode(_, children, _, _, _, _, _, _) then children
+  else null
 
 fun findParent(path) =
   let parts = splitPath(path)
@@ -139,24 +137,21 @@ fun findParent(path) =
     index >= 0 then makeParentResult(parent, index)
     else null
 
-fun pathExists(path) =
-  if findNode(path) is
-    null then false
-    else true
+fun pathExists(path) = if findNode(path) is
+  null then false
+  else true
 
-fun read(path) =
-  if findNode(path) is
-    FileNode(_, content, _, _, _, _, _, _) as node then
-      updateAccessTime(node)
-      textOrEmpty(content)
-    else throw Error("File not found: " + path)
+fun read(path) = if findNode(path) is
+  FileNode(_, content, _, _, _, _, _, _) as node then
+    updateAccessTime(node)
+    textOrEmpty(content)
+  else throw Error("File not found: " + path)
 
-fun shouldMarkUncompiled(node) =
-  if
-    not node.name.endsWith(".mls") then false
-    node.attrs.("std") is true then false
-    node.attrs.("compiled") is false then false
-    else true
+fun shouldMarkUncompiled(node) = if
+  not node.name.endsWith(".mls") then false
+  node.attrs.("std") is true then false
+  node.attrs.("compiled") is false then false
+  else true
 
 fun markUncompiled(path, node) =
   if shouldMarkUncompiled(node) do
@@ -187,132 +182,124 @@ fun ensureFolders(parentPath) =
       createFolder(currentPath, mut {})
     set i += 1
 
-fun parentForNewFile(parentPath, options) =
-  if
-    parentPath is "" then fileTree
-    options.("force") is true then
-      ensureFolders(parentPath)
-      parentChildren(parentPath)
-    else parentChildren(parentPath)
+fun parentForNewFile(parentPath, options) = if
+  parentPath is "" then fileTree
+  options.("force") is true then
+    ensureFolders(parentPath)
+    parentChildren(parentPath)
+  else parentChildren(parentPath)
 
 fun setDefaultCompiled(fileName, attrs) =
   if fileName.endsWith(".mls") and attrs.("compiled") is undefined do
     set attrs.("compiled") = attrs.("std") is true
 
-fun createFile(path, contentArg, optionsArg) =
-  if
-    pathExists(path) then false
+fun createFile(path, contentArg, optionsArg) = if
+  pathExists(path) then false
+  let
+    content = textOrEmpty(contentArg)
+    options = objectOrEmpty(optionsArg)
+    parts = splitPath(path)
+  parts.length is 0 then false
+  let
+    fileName = parts.at(parts.length - 1)
+    parentPath = parts.slice(0, -1).join("/")
+    parent = parentForNewFile(parentPath, options)
+  parent is null then false
+  else
     let
-      content = textOrEmpty(contentArg)
-      options = objectOrEmpty(optionsArg)
-      parts = splitPath(path)
-    parts.length is 0 then false
+      stamp = timestamps()
+      attrs = Object.assign(mut {}, objectOrEmpty(options.("attrs")))
+    setDefaultCompiled(fileName, attrs)
+    let node = new mut FileNode(
+      fileName,
+      content,
+      options.("readonly") is true,
+      stamp.atime,
+      stamp.mtime,
+      stamp.ctime,
+      stamp.birthtime,
+      attrs,
+    )
+    parent.push(node)
+    sortNodes(parent)
+    notifyChange(makeEvent("create", path, node))
+    true
+
+fun createFolder(path, optionsArg) = if
+  pathExists(path) then false
+  let
+    options = objectOrEmpty(optionsArg)
+    parts = splitPath(path)
+  parts.length is 0 then false
+  let
+    folderName = parts.at(parts.length - 1)
+    parentPath = parts.slice(0, -1).join("/")
+    parent = parentChildren(parentPath)
+  parent is null then false
+  else
     let
-      fileName = parts.at(parts.length - 1)
-      parentPath = parts.slice(0, -1).join("/")
-      parent = parentForNewFile(parentPath, options)
-    parent is null then false
-    else
-      let
-        stamp = timestamps()
-        attrs = Object.assign(mut {}, objectOrEmpty(options.("attrs")))
-      setDefaultCompiled(fileName, attrs)
-      let node = new mut FileNode(
-        fileName,
-        content,
+      stamp = timestamps()
+      node = new mut FolderNode(
+        folderName,
+        mut [],
         options.("readonly") is true,
         stamp.atime,
         stamp.mtime,
         stamp.ctime,
         stamp.birthtime,
-        attrs,
+        objectOrEmpty(options.("attrs")),
       )
-      parent.push(node)
-      sortNodes(parent)
-      notifyChange(makeEvent("create", path, node))
-      true
+    parent.push(node)
+    sortNodes(parent)
+    notifyChange(makeEvent("create", path, node))
+    true
 
-fun createFolder(path, optionsArg) =
-  if
-    pathExists(path) then false
+fun remove(path) = if
+  let result = findParent(path)
+  result is null then false
+  else
     let
-      options = objectOrEmpty(optionsArg)
-      parts = splitPath(path)
-    parts.length is 0 then false
-    let
-      folderName = parts.at(parts.length - 1)
-      parentPath = parts.slice(0, -1).join("/")
-      parent = parentChildren(parentPath)
-    parent is null then false
-    else
-      let
-        stamp = timestamps()
-        node = new mut FolderNode(
-          folderName,
-          mut [],
-          options.("readonly") is true,
-          stamp.atime,
-          stamp.mtime,
-          stamp.ctime,
-          stamp.birthtime,
-          objectOrEmpty(options.("attrs")),
-        )
-      parent.push(node)
-      sortNodes(parent)
-      notifyChange(makeEvent("create", path, node))
-      true
+      parent = result.parent
+      index = result.index
+      node = parent.at(index)
+    parent.splice(index, 1)
+    notifyChange(makeEvent("delete", path, node))
+    true
 
-fun remove(path) =
-  if
-    let result = findParent(path)
-    result is null then false
-    else
-      let
-        parent = result.parent
-        index = result.index
-        node = parent.at(index)
-      parent.splice(index, 1)
-      notifyChange(makeEvent("delete", path, node))
-      true
+fun rename(path, newName) = if
+  let node = findNode(path)
+  node is null then false
+  let
+    parts = splitPath(path)
+    newPath = "/" + parts.slice(0, -1).concat([newName]).join("/")
+  pathExists(newPath) then false
+  else
+    let oldName = node.name
+    set node.name = newName
+    updateChangeTime(node)
+    let event = makeEvent("rename", path, node)
+    set
+      event.newPath = newPath
+      event.oldName = oldName
+    notifyChange(event)
+    true
 
-fun rename(path, newName) =
-  if
-    let node = findNode(path)
-    node is null then false
-    let
-      parts = splitPath(path)
-      newPath = "/" + parts.slice(0, -1).concat([newName]).join("/")
-    pathExists(newPath) then false
-    else
-      let oldName = node.name
-      set node.name = newName
-      updateChangeTime(node)
-      let event = makeEvent("rename", path, node)
-      set
-        event.newPath = newPath
-        event.oldName = oldName
-      notifyChange(event)
-      true
-
-fun list(path) =
-  if findNode(path) is
-    FolderNode(_, children, _, _, _, _, _, _) then children
-    else null
+fun list(path) = if findNode(path) is
+  FolderNode(_, children, _, _, _, _, _, _) then children
+  else null
 
 fun stat(path) =
   findNode(path)
 
-fun acceptsFile(predicate, path, node) =
-  if
-    predicate is Absent then true
-    typeof(predicate) is "function" then predicate(path, node)
-    else false
+fun acceptsFile(predicate, path, node) = if
+  predicate is Absent then true
+  typeof(predicate) is "function" then predicate(path, node)
+  else false
 
-fun eventTouches(event, path) =
-  if
-    event.path === path then true
-    event.newPath === path then true
-    else false
+fun eventTouches(event, path) = if
+  event.path === path then true
+  event.newPath === path then true
+  else false
 
 fun collectFiles(nodes, currentPath, predicate, result) =
   nodes.forEach of (node, ...) =>
@@ -344,13 +331,13 @@ fun getAttr(path, key) =
 
 fun removeAttr(path, key) =
   let node = findNode(path)
-  if
-    node is (FileNode | FolderNode) as node and Reflect.has(node.attrs, key) then
+  if node is
+    (FileNode | FolderNode) as node and Reflect.has(node.attrs, key) then
       Reflect.deleteProperty(node.attrs, key)
       updateChangeTime(node)
       notifyAttr(path, node, key, undefined)
       true
-    node is (FileNode | FolderNode) as node then
+    (FileNode | FolderNode) as node then
       Reflect.deleteProperty(node.attrs, key)
       false
     else false
@@ -366,18 +353,17 @@ fun setReadonly(path, readonlyFlag) =
       true
     else false
 
-fun subscribe(pathOrCallback, callback) =
-  if
-    typeof(pathOrCallback) is "function" then
-      let listener = pathOrCallback
-      listeners.add(listener)
-      () => listeners.delete(listener)
-    typeof(pathOrCallback) is "string" and typeof(callback) is "function" then
-      let
-        path = pathOrCallback
-        listener = event =>
-          if eventTouches(event, path) do
-            callback(event)
-      listeners.add(listener)
-      () => listeners.delete(listener)
-    else throw Error("Invalid arguments: expected subscribe(callback) or subscribe(path, callback)")
+fun subscribe(pathOrCallback, callback) = if
+  typeof(pathOrCallback) is "function" then
+    let listener = pathOrCallback
+    listeners.add(listener)
+    () => listeners.delete(listener)
+  typeof(pathOrCallback) is "string" and typeof(callback) is "function" then
+    let
+      path = pathOrCallback
+      listener = event =>
+        if eventTouches(event, path) do
+          callback(event)
+    listeners.add(listener)
+    () => listeners.delete(listener)
+  else throw Error("Invalid arguments: expected subscribe(callback) or subscribe(path, callback)")
