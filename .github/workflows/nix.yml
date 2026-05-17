@@ -30,3 +30,18 @@ jobs:
       - name: Fail if tests failed
         if: steps.run_test.outcome == 'failure'
         run: exit 1
+      - name: Build Web IDE deploy assets
+        if: github.event_name == 'push' && github.ref == 'refs/heads/hkmc2'
+        run: |
+          sbt -J-Xmx4096M -J-Xss8M hkmc2JS/fastOptJS
+          rm -rf hkmc2/shared/src/test/mlscript-packages/web-ide/build
+          mkdir -p hkmc2/shared/src/test/mlscript-packages/web-ide/build
+          cp -R hkmc2/js/target/scala-*/hkmc2-fastopt/. hkmc2/shared/src/test/mlscript-packages/web-ide/build/
+      - name: Deploy Web IDE to Cloudflare Workers
+        if: github.event_name == 'push' && github.ref == 'refs/heads/hkmc2'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4.18.0"
+          command: deploy --config wrangler.toml
