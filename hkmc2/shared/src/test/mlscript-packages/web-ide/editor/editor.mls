@@ -1,6 +1,6 @@
 import "https://esm.sh/codemirror@6.0.1" { EditorView, basicSetup }
 import "https://esm.sh/@codemirror/lang-javascript@6.2.4" { javascript }
-import "https://esm.sh/@codemirror/language@6.11.3" { StreamLanguage }
+import "https://esm.sh/@codemirror/language@6.11.3" { StreamLanguage, defaultHighlightStyle, syntaxHighlighting }
 import "https://esm.sh/@uiw/codemirror-theme-vscode" { vscodeLight as theme }
 import "./Highlight.mls"
 import "../filesystem/fs.mls"
@@ -67,6 +67,7 @@ fun saveOnChange(filePath, isReadonly) =
 
 fun editorExtensions(filePath, extension, isReadonly) =
   let extensions = mut [basicSetup]
+  extensions.push(syntaxHighlighting(defaultHighlightStyle))
   languageExtensions(extension).forEach of (extension, ...) =>
     extensions.push(extension)
   extensions.push(saveOnChange(filePath, isReadonly))
