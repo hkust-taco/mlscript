@@ -142,7 +142,7 @@ class FileExplorer extends HTMLElement with
       let width = this.getAttribute("width")
       if width is
         Absent | "" then container.style.removeProperty("--file-explorer-width")
-        ~Absent as savedWidth then container.style.setProperty("--file-explorer-width", savedWidth + "px")
+        savedWidth then container.style.setProperty("--file-explorer-width", savedWidth + "px")
 
   fun startCreatingFile() = if not isCreatingFile and this.querySelector(".tree-view") is
     ~null as treeView do
@@ -269,7 +269,7 @@ class FileExplorer extends HTMLElement with
 
   fun tooltipName(target) = if target.dataset.name is
     Absent | "" then target.textContent.trim()
-    ~Absent as name then name
+    name then name
 
   fun tooltipOptions(targetPath, targetName) =
     mut { path: targetPath, name: targetName }

@@ -14,7 +14,7 @@
   - [x] Reorganize complementary patterns
   - [x] Avoid redundant wildcard arguments in negated constructor patterns
   - [x] Use `~Absent ... do` for optional effects
-  - [ ] Use `else` or variable patterns for plain complement fallback
+  - [x] Use `else` or variable patterns for plain complement fallback
 - [x] Get rid of parenthesis of function calls using `of` keywords
 - [x] Organize consecutive `let` bindings using splits
 - [x] Prefer `not` over `is false`

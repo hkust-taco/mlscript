@@ -39,11 +39,11 @@ class ToolbarPanel extends HTMLElement with
 
   fun doneStatusText() = if runningTime is
     Absent then "Done"
-    ~Absent as time then "Done (" + time + "ms)"
+    time then "Done (" + time + "ms)"
 
   fun doneTooltip() = if runningTime is
     Absent then "Execution completed successfully."
-    ~Absent as time then "Execution completed successfully in " + time + "ms."
+    time then "Execution completed successfully in " + time + "ms."
 
   fun setIdleStatus(statusLight, statusText, terminateBtn, tooltip) =
     statusLight.classList.add("status-idle")
