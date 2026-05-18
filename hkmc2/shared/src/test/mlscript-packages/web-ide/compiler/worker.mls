@@ -93,9 +93,9 @@ fun errorMessage(id, error) =
     'type: "compile-error"
     // BUG: `:field` puns currently miscompile in multiline `mut` records here.
     id: id
-    name: (error.name)
-    message: (error.message)
-    stack: (error.stack)
+    name: error.name
+    message: error.message
+    stack: error.stack
 
 fun postCompileError(id, error) =
   self.postMessage(errorMessage(id, error))

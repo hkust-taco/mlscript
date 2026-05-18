@@ -64,11 +64,12 @@ class ReservedPanel extends HTMLElement with
 
   fun snippetResult(startPos, endPos, lines) =
     mut
-      startLine: (startPos.line)
-      startColumn: (startPos.column)
-      endLine: (endPos.line)
-      endColumn: (endPos.column)
-      :lines
+      startLine: startPos.line
+      startColumn: startPos.column
+      endLine: endPos.line
+      endColumn: endPos.column
+      // BUG: A following `:field` pun misparses after dotted field values here.
+      lines: lines
 
   fun extractCodeSnippet(text, start, endOffset) =
     let

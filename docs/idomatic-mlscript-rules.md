@@ -23,7 +23,7 @@
 - [x] Prefer quoted field selection for keyword-like fields
 - [x] Drop braces from multiline object literals
 - [x] Drop unnecessary end-of-line commas
-- [ ] Drop unnecessary parentheses around selections
+- [x] Drop unnecessary parentheses around selections
 - [x] Do not overuse `of`
 
 ## Rules

@@ -378,16 +378,16 @@ class EditorPanel extends HTMLElement with
 
   fun tooltipInfo(tab) =
     mut
-      path: (tab.path)
-      name: (tab.name)
-      size: (tab.editorView.state.doc.length)
+      path: tab.path
+      name: tab.name
+      size: tab.editorView.state.doc.length
       placement: "bottom"
 
   fun tabHoverLog(tabEl, reason) =
     mut
       :reason
       tabId: tabEl.getAttribute("data-tab-id")
-      path: (tabEl.dataset.path)
+      path: tabEl.dataset.path
       pendingTargetPath: tabTargetPath(this.tabTooltipPendingTarget)
       hoverTargetPath: tabTargetPath(this.tabTooltipHoverTarget)
 

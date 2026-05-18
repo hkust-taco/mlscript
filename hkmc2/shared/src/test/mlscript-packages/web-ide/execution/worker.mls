@@ -108,8 +108,8 @@ fun vmConsole() =
 fun endowments() =
   mut
     console: vmConsole()
-    fetch: (self.fetch)
-    structuredClone: (self.structuredClone)
+    fetch: self.fetch
+    structuredClone: self.structuredClone
 
 fun resolveHook(moduleSpecifier, moduleReferrer) =
   post("log", "Resolving module: " + moduleSpecifier + " from " + moduleReferrer)

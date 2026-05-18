@@ -35,11 +35,11 @@ fun runMessage(id, mainPath, files) =
 
 fun workerErrorDetails(event) =
   mut
-    message: (event.message)
-    filename: (event.filename)
-    lineno: (event.lineno)
-    colno: (event.colno)
-    error: (event.error)
+    message: event.message
+    filename: event.filename
+    lineno: event.lineno
+    colno: event.colno
+    error: event.error
     fullEvent: event
 
 fun errorStack(error) = if
