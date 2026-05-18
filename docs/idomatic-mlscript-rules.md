@@ -12,12 +12,18 @@
   - [x] Combine the techniques together
   - [x] Factor repeated scrutinees inside flat UCS
   - [x] Reorganize complementary patterns
+  - [ ] Avoid redundant wildcard arguments in negated constructor patterns
+  - [ ] Use `~Absent ... do` for optional effects
+  - [ ] Use `else` or variable patterns for plain complement fallback
 - [x] Get rid of parenthesis of function calls using `of` keywords
 - [x] Organize consecutive `let` bindings using splits
 - [x] Prefer `not` over `is false`
 - [x] Use `do` instead of `then ... else ()`
 - [x] Prefer quoted identifiers for symbol-like fields and values
+- [ ] Prefer quoted field selection for keyword-like fields
 - [x] Drop braces from multiline object literals
+- [ ] Drop unnecessary end-of-line commas
+- [ ] Drop unnecessary parentheses around selections
 - [x] Do not overuse `of`
 
 ## Rules
@@ -457,4 +463,136 @@ After:
 
 ```mlscript
   window.setTimeout(hideLater, 200)
+```
+
+#### Avoid redundant wildcard arguments in negated constructor patterns
+
+When a negated constructor pattern only tests that a value is not built by that
+constructor, omit unused wildcard arguments.
+
+Before:
+
+```mlscript
+  fun fromMaybe(x) = if x is
+    Some(value) then value
+    ~Some(_) then default
+```
+
+After:
+
+```mlscript
+  fun fromMaybe(x) = if x is
+    Some(value) then value
+    ~Some then default
+```
+
+#### Use `~Absent ... do` for optional effects
+
+When one branch of a conditional is `Absent then ()` and the other branch only
+performs an effect, keep only the present case and use `do`.
+
+Before:
+
+```mlscript
+  if this.unsubscribe is
+    Absent then ()
+    unsubscribe then unsubscribe()
+```
+
+After:
+
+```mlscript
+  if this.unsubscribe is ~Absent as unsubscribe do
+    unsubscribe()
+```
+
+#### Prefer quoted field selection for keyword-like fields
+
+When selecting a field whose name is keyword-like, prefer quoted field selection
+over string-indexed selection.
+
+Before:
+
+```mlscript
+  event.("type")
+```
+
+After:
+
+```mlscript
+  event.'type
+```
+
+#### Drop unnecessary end-of-line commas
+
+When indentation already separates flat entries and no nested block is being
+introduced, omit end-of-line commas.
+
+Before:
+
+```mlscript
+  let divisions = [
+    (amount: 60, unit: "seconds"),
+    (amount: 60, unit: "minutes"),
+  ]
+```
+
+After:
+
+```mlscript
+  let divisions = [
+    (amount: 60, unit: "seconds")
+    (amount: 60, unit: "minutes")
+  ]
+```
+
+#### Drop unnecessary parentheses around selections
+
+Do not wrap simple field selections in parentheses unless precedence requires
+it.
+
+Before:
+
+```mlscript
+  mut
+    startLine: (startPos.line)
+    startColumn: (startPos.column)
+```
+
+After:
+
+```mlscript
+  mut
+    startLine: startPos.line
+    startColumn: startPos.column
+```
+
+#### Use `else` or variable patterns for plain complement fallback
+
+When a second pattern is only the complement of the first and does not add a
+meaningful test, use `else` or a variable pattern instead of spelling out the
+negated pattern.
+
+Before:
+
+```mlscript
+  fun childrenOf(node) = if node.children is
+    Absent then []
+    ~Absent as children then children
+```
+
+After:
+
+```mlscript
+  fun childrenOf(node) = if node.children is
+    Absent then []
+    else node.children
+```
+
+If the fallback branch needs a local name, bind it directly:
+
+```mlscript
+  fun childrenOf(node) = if node.children is
+    Absent then []
+    children then children
 ```
