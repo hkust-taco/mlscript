@@ -94,7 +94,7 @@ class TreeNode extends HTMLElement with
     Absent then ""
     ~Absent as current then current.name
 
-  fun handleFsEvent(event) = if event.("type") is
+  fun handleFsEvent(event) = if event.'type is
     "create" | "delete" then handleStructuralEvent(event)
     "rename" then handleRenameEvent(event)
     "readonly" | "attr" then handleRefreshEvent(event)
@@ -111,11 +111,11 @@ class TreeNode extends HTMLElement with
   fun handleRefreshEvent(event) =
     if event.path === path do this.render()
 
-  fun updateFolderForChildEvent(eventPath) = if node is ~Absent as current and current.("type") is "folder" do
+  fun updateFolderForChildEvent(eventPath) = if node is ~Absent as current and current.'type is "folder" do
     let eventParentPath = parentPathOf(eventPath)
     if eventParentPath === path do this.updateChildren()
 
-  fun updateMjsButtonForSiblingEvent(eventPath) = if node is ~Absent as current and current.("type") is "file" and current.name.endsWith(".mls") do
+  fun updateMjsButtonForSiblingEvent(eventPath) = if node is ~Absent as current and current.'type is "file" and current.name.endsWith(".mls") do
     let
       eventParentPath = parentPathOf(eventPath)
       myParentPath = parentPathOf(path)
@@ -127,7 +127,7 @@ class TreeNode extends HTMLElement with
 
   fun updateName() = if
     node is Absent then ()
-    node.("type") is
+    node.'type is
       "file" and elements.fileItem is ~Absent then
         set elements.fileItem.textContent = node.name
       "folder" and elements.summary is ~Absent then
@@ -138,7 +138,7 @@ class TreeNode extends HTMLElement with
 
   fun updateChildren() = if
     node is Absent then ()
-    node.("type") !== "folder" then ()
+    node.'type !== "folder" then ()
     elements.childrenContainer is Absent then ()
     else
       let
@@ -176,18 +176,18 @@ class TreeNode extends HTMLElement with
   fun filterMjsFiles(children) =
     let mlsFiles = new Set()
     children.forEach of (child, ...) =>
-      if child.("type") is "file" and child.name.endsWith(".mls") do
+      if child.'type is "file" and child.name.endsWith(".mls") do
         mlsFiles.add(basenameWithoutExt(child.name))
     children.filter of (child, ...) =>
       if
-        child.("type") is "file" and child.name.endsWith(".mjs") then
+        child.'type is "file" and child.name.endsWith(".mjs") then
           let basename = basenameWithoutExt(child.name)
           not mlsFiles.has(basename)
         else true
 
   fun hasMjsFile() = if node is
     Absent then false
-    ~Absent as current and current.("type") !== "file" then false
+    ~Absent as current and current.'type !== "file" then false
     ~Absent as current and not current.name.endsWith(".mls") then false
     ~Absent as current then hasSiblingMjsFile(current.name)
 
@@ -196,12 +196,12 @@ class TreeNode extends HTMLElement with
       mjsFileName = basenameWithoutExt(name) + ".mjs"
       children = parentChildren()
     children.some of (child, ...) =>
-      child.("type") is "file" and child.name === mjsFileName
+      child.'type is "file" and child.name === mjsFileName
 
   fun parentChildren() = if parentFolderNode is
     Absent then dynamicParentChildren()
     ~Absent as current and Array.isArray(current) then current
-    ~Absent as current and current.("type") === "folder" then childrenOf(current)
+    ~Absent as current and current.'type === "folder" then childrenOf(current)
     ~Absent then []
 
   fun dynamicParentChildren() =
@@ -214,7 +214,7 @@ class TreeNode extends HTMLElement with
         let parentNode = fs.stat(parentPath)
         if parentNode is
           Absent then []
-          ~Absent as current and current.("type") !== "folder" then []
+          ~Absent as current and current.'type !== "folder" then []
           ~Absent as current then childrenOf(current)
 
   fun updateOpenState(openFiles) = if openFiles is ~Absent as currentOpenFiles do
@@ -224,7 +224,7 @@ class TreeNode extends HTMLElement with
 
   fun updateOwnOpenState(openFiles) = if node is
     Absent then ()
-    ~Absent as current and current.("type") !== "file" then ()
+    ~Absent as current and current.'type !== "file" then ()
     ~Absent and elements.fileItem is Absent then ()
     ~Absent then elements.fileItem.classList.toggle("open-in-editor", openFiles.has(path))
 
@@ -255,7 +255,7 @@ class TreeNode extends HTMLElement with
 
   fun render() = if
     node is Absent then ()
-    node.("type") is
+    node.'type is
       "file" then renderFile(node)
       "folder" then renderFolder(node)
       else ()

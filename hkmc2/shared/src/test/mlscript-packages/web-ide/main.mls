@@ -12,7 +12,7 @@ fun dynamicImport(specifier) =
   let importModule = Function("specifier", "return import(specifier)")
   importModule(specifier)
 
-fun compilerModule(loaded) = if loaded.("default") is
+fun compilerModule(loaded) = if loaded.'default is
   Absent then loaded
   defaultModule then defaultModule
 
@@ -258,4 +258,4 @@ fun start(compiler) =
 setupSidebarRails()
 
 let startPromise = loadMLscript().then(compiler => start(compiler))
-startPromise.("catch")(error => console.error("Failed to load MLscript compiler:", error))
+startPromise.'catch(error => console.error("Failed to load MLscript compiler:", error))

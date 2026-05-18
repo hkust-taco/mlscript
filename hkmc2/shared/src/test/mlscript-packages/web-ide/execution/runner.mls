@@ -96,7 +96,7 @@ fun handleWorkerMessage(execution, id, mainPath, event) =
   else
     let
       messageData = event.data
-      kind = messageData.("type")
+      kind = messageData.'type
       payload = messageData.payload
     if kind is
       "ready" then

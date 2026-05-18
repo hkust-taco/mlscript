@@ -70,7 +70,7 @@ class FileExplorer extends HTMLElement with
     set openFiles = new Set(paths)
     this.updateOpenFlags()
 
-  fun handleFsEvent(event) = if event.("type") is "create" | "delete" | "rename" do updateTreeForRootEvent(event)
+  fun handleFsEvent(event) = if event.'type is "create" | "delete" | "rename" do updateTreeForRootEvent(event)
 
   fun updateTreeForRootEvent(event) =
     let pathParts = event.path.replace(new RegExp("^/"), "").split("/")
@@ -79,11 +79,11 @@ class FileExplorer extends HTMLElement with
   fun filterMjsFiles(children) =
     let mlsFiles = new Set()
     children.forEach of (child, ...) =>
-      if child.("type") is "file" and child.name.endsWith(".mls") do
+      if child.'type is "file" and child.name.endsWith(".mls") do
         mlsFiles.add(basenameWithoutExt(child.name))
     children.filter of (child, ...) =>
       if
-        child.("type") is "file" and child.name.endsWith(".mjs") then
+        child.'type is "file" and child.name.endsWith(".mjs") then
           let basename = basenameWithoutExt(child.name)
           not mlsFiles.has(basename)
         else true
@@ -155,7 +155,7 @@ class FileExplorer extends HTMLElement with
       set
         fileEntry.className = "file-item new-file-entry"
         fileIcon.className = "file-icon icon-file-code"
-        input.("type") = "text"
+        input.'type = "text"
         input.className = "new-file-input"
         input.placeholder = "path/to/file.mls"
       fileEntry.appendChild(fileIcon)

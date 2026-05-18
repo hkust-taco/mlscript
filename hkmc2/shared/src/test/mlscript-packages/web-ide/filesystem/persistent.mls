@@ -10,7 +10,7 @@ val FS_PATHS_KEY = "mlscript-fs-paths"
 
 fun isFile(node) = if node is
   Absent then false
-  value and value.("type") is "file" then true
+  value and value.'type is "file" then true
   else false
 
 fun isStandardLibraryNode(node) = if node is
@@ -106,7 +106,7 @@ fun loadPersistedFiles() =
 fun persistChange(event) =
   if not isStandardLibraryNode(event.node) do
     let paths = getPersistedPaths()
-    if event.("type") is
+    if event.'type is
       "create" | "write" then rememberFile(paths, event.path, event.node)
       "delete" then forgetFile(paths, event.path, event.node)
       "rename" then moveFile(paths, event.path, event.newPath, event.node)

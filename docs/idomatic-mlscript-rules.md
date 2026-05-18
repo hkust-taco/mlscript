@@ -20,7 +20,7 @@
 - [x] Prefer `not` over `is false`
 - [x] Use `do` instead of `then ... else ()`
 - [x] Prefer quoted identifiers for symbol-like fields and values
-- [ ] Prefer quoted field selection for keyword-like fields
+- [x] Prefer quoted field selection for keyword-like fields
 - [x] Drop braces from multiline object literals
 - [ ] Drop unnecessary end-of-line commas
 - [ ] Drop unnecessary parentheses around selections

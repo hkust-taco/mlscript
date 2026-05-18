@@ -121,14 +121,14 @@ fun handleCompileRequest(payload) =
     loaded = MLscript => handleLoadedCompiler(MLscript, id, payload)
     failed = error => postCompileError(id, error)
     handled = promise.then(loaded)
-  handled.("catch")(failed)
+  handled.'catch(failed)
 
 fun unknownMessage(kind) =
   mut { 'type: 'error, error: "Unknown message type: " + kind }
 
 fun handleMessage(event) =
   let message = event.data
-  if message.("type") is
+  if message.'type is
     "compile" then handleCompileRequest(message.payload)
     kind then self.postMessage(unknownMessage(kind))
 

@@ -16,7 +16,7 @@ data class FileNode(
   mut val birthtime,
   mut val attrs,
 ) extends FsNode with
-  set this.("type") = "file"
+  set this.'type = "file"
 
 data class FolderNode(
   mut val name,
@@ -28,7 +28,7 @@ data class FolderNode(
   mut val birthtime,
   mut val attrs,
 ) extends FsNode with
-  set this.("type") = "folder"
+  set this.'type = "folder"
 
 val fileTree = mut []
 

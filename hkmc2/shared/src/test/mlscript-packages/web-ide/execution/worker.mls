@@ -56,7 +56,7 @@ fun loadDependencies() =
   let
     promise = dynamicImport("https://esm.sh/ses@1.14.0")
     handled = promise.then(loadEndoModuleSource)
-  handled.("catch")(handleDependencyError)
+  handled.'catch(handleDependencyError)
 
 fun normalizePath(path) =
   let
@@ -156,7 +156,7 @@ fun runMain(mainPath, files) =
     compartment = makeCompartment(fileMap)
   post("log", "Importing the main module...")
   let handled = compartment.import(normalizePath(mainPath)).then(runDone)
-  handled.("catch")(runError)
+  handled.'catch(runError)
 
 fun messageHandlerError(error) =
   let msg = "Error in worker message handler: " + errorStack(error)
@@ -164,7 +164,7 @@ fun messageHandlerError(error) =
   post("error", msg)
 
 fun handleMessageData(messageData) =
-  if messageData.("type") is "run" do runMain(messageData.mainPath, messageData.files)
+  if messageData.'type is "run" do runMain(messageData.mainPath, messageData.files)
 
 fun handleMessage(event) =
   js.try_catch(

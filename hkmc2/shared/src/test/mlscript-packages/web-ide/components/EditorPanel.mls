@@ -90,7 +90,7 @@ class EditorPanel extends HTMLElement with
 
   fun handleFsEventForTab(tabId, tab, event) = if
     tab.path !== event.path then ()
-    event.("type") is
+    event.'type is
       "delete" then this.closeTab(tabId)
       "rename" then
         set
@@ -106,7 +106,7 @@ class EditorPanel extends HTMLElement with
       "write" then updateTabContent(tab, event.path)
     else ()
 
-  fun handleFsEvent(event) = if shouldHandleFsEvent(event.("type")) do
+  fun handleFsEvent(event) = if shouldHandleFsEvent(event.'type) do
     Array.from(this.openTabs.entries()).forEach of (entry, ...) =>
       this.handleFsEventForTab(entry.at(0), entry.at(1), event)
 
