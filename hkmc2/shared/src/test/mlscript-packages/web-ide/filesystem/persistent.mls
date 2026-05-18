@@ -61,11 +61,11 @@ fun forgetFile(paths, path, node) =
     savePersistedPaths(paths)
 
 fun moveFile(paths, path, newPath, node) =
-  if isFile(node) and newPath is ~Absent do
+  if isFile(node) and newPath is ~Absent as nextPath do
     localStorage.removeItem(persistedKey(path))
-    saveFile(newPath, node)
+    saveFile(nextPath, node)
     paths.delete(path)
-    paths.add(newPath)
+    paths.add(nextPath)
     savePersistedPaths(paths)
 
 fun updateFile(path, node) =

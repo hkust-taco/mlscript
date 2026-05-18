@@ -100,7 +100,7 @@ fun collectFilesForCompilation(targetPath) =
     files = filesForCompilation()
     compilePaths = Object.keys(files).filter of (path, ...) => shouldCompile(path)
     targets = new Set(compilePaths)
-  if targetPath is ~Absent and targetPath !== "" do targets.add(targetPath)
+  if targetPath is ~Absent as path and path !== "" do targets.add(path)
   [files, Array.from(targets)]
 
 fun markPathCompiled(path) =
@@ -231,10 +231,10 @@ fun setupSidebarButton(button, container) =
     toggleSidebarTab(container, button.dataset.sidebarSide, button.dataset.sidebarPanel)
 
 fun handleSidebarToggleRequested(container, event) =
-  if event.detail is ~Absent do
+  if event.detail is ~Absent as detail do
     let
-      side = if event.detail.side is ~Absent then event.detail.side else "left"
-      panelName = if event.detail.panel is ~Absent then event.detail.panel else defaultSidebarPanel(side)
+      side = if detail.side is ~Absent then detail.side else "left"
+      panelName = if detail.panel is ~Absent then detail.panel else defaultSidebarPanel(side)
     toggleSidebarTab(container, side, panelName)
 
 fun setupSidebarRails() =

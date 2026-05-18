@@ -107,10 +107,8 @@ class ReservedPanel extends HTMLElement with
   fun diagnosticsHtml(diagnosticsPerFile) =
     let html = """<div class="diagnostics-container">"""
     diagnosticsPerFile.forEach of (fileData, fileIndex) =>
-      if
-        fileData.diagnostics is Absent then ()
-        fileData.diagnostics.length === 0 then ()
-        else set html += fileDiagnosticsHtml(fileData, fileIndex)
+      if fileData.diagnostics is ~Absent as diagnostics and diagnostics.length > 0 do
+        set html += fileDiagnosticsHtml(fileData, fileIndex)
     set html += "</div>"
     html
 

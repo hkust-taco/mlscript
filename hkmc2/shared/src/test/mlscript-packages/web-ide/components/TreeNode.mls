@@ -77,7 +77,7 @@ class TreeNode extends HTMLElement with
     this.render()
 
   fun disconnectedCallback() =
-    if unsubscribe is ~Absent do unsubscribe()
+    if unsubscribe is ~Absent as unsubscribeCallback do unsubscribeCallback()
     childTreeNodes.clear()
 
   fun setData(nextNode, nextPath, nextParentFolderNode) =
@@ -217,10 +217,10 @@ class TreeNode extends HTMLElement with
           ~Absent as current and current.("type") !== "folder" then []
           ~Absent as current then childrenOf(current)
 
-  fun updateOpenState(openFiles) = if openFiles is ~Absent do
-    updateOwnOpenState(openFiles)
+  fun updateOpenState(openFiles) = if openFiles is ~Absent as currentOpenFiles do
+    updateOwnOpenState(currentOpenFiles)
     Array.from(childTreeNodes.values()).forEach of (child, ...) =>
-      child.updateOpenState(openFiles)
+      child.updateOpenState(currentOpenFiles)
 
   fun updateOwnOpenState(openFiles) = if node is
     Absent then ()
@@ -325,13 +325,13 @@ class TreeNode extends HTMLElement with
     elements.mjsButton.addEventListener of "click", event =>
       event.stopPropagation()
       let mjsPath = treeNode.getMjsPath()
-      if mjsPath is ~Absent do
+      if mjsPath is ~Absent as mjsFilePath do
         let basename = basenameWithoutExt(treeNode.currentNodeName())
-        treeNode.dispatchFileOpen(mjsPath, basename + ".mjs")
+        treeNode.dispatchFileOpen(mjsFilePath, basename + ".mjs")
     elements.fileItem.appendChild(elements.mjsButton)
 
-  fun removeMjsButton() = if elements.mjsButton is ~Absent do
-    elements.mjsButton.remove()
+  fun removeMjsButton() = if elements.mjsButton is ~Absent as mjsButton do
+    mjsButton.remove()
     set elements.mjsButton = null
 
   fun ensureFolderElements(current) = if elements.details is Absent do

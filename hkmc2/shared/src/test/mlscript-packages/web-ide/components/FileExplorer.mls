@@ -258,17 +258,14 @@ class FileExplorer extends HTMLElement with
 
   fun handleTreeMouseOver(event, treeView, tooltip) =
     let target = event.target.closest(".file-item, summary")
-    if
-      target is Absent then ()
-      not treeView.contains(target) then ()
-      else
-        if activeTooltipTarget !== target do
-          hideTooltip(tooltip)
-          set activeTooltipTarget = target
-        let currentTarget = target
-        set tooltipTimeout = window.setTimeout of
-          () => this.showTooltipIfActive(currentTarget, tooltip),
-          5000,
+    if target is ~Absent as targetElement and treeView.contains(targetElement) do
+      if activeTooltipTarget !== targetElement do
+        hideTooltip(tooltip)
+        set activeTooltipTarget = targetElement
+      let currentTarget = targetElement
+      set tooltipTimeout = window.setTimeout of
+        () => this.showTooltipIfActive(currentTarget, tooltip),
+        5000,
 
   fun tooltipName(target) = if target.dataset.name is
     Absent | "" then target.textContent.trim()
@@ -277,14 +274,12 @@ class FileExplorer extends HTMLElement with
   fun tooltipOptions(targetPath, targetName) =
     mut { path: targetPath, name: targetName }
 
-  fun showTooltipIfActive(currentTarget, tooltip) = if currentTarget.dataset.path is
-    Absent | "" then ()
-    ~Absent as targetPath and activeTooltipTarget === currentTarget then tooltip.show(currentTarget, tooltipOptions(targetPath, tooltipName(currentTarget)))
-    else ()
+  fun showTooltipIfActive(currentTarget, tooltip) =
+    if currentTarget.dataset.path is ~Absent as targetPath and targetPath !== "" and activeTooltipTarget === currentTarget do
+      tooltip.show(currentTarget, tooltipOptions(targetPath, tooltipName(currentTarget)))
 
-  fun handleTreeMouseOut(event, tooltip) = if activeTooltipTarget is
-    Absent then ()
-    ~Absent as tooltipTarget then
+  fun handleTreeMouseOut(event, tooltip) =
+    if activeTooltipTarget is ~Absent as tooltipTarget do
       let related = event.relatedTarget
       if related is
         ~Absent as nextTarget and tooltipTarget.contains(nextTarget) then ()

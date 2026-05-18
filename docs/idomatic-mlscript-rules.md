@@ -13,7 +13,7 @@
   - [x] Factor repeated scrutinees inside flat UCS
   - [x] Reorganize complementary patterns
   - [x] Avoid redundant wildcard arguments in negated constructor patterns
-  - [ ] Use `~Absent ... do` for optional effects
+  - [x] Use `~Absent ... do` for optional effects
   - [ ] Use `else` or variable patterns for plain complement fallback
 - [x] Get rid of parenthesis of function calls using `of` keywords
 - [x] Organize consecutive `let` bindings using splits

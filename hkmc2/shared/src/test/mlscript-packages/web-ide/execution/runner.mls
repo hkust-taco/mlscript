@@ -48,8 +48,8 @@ fun errorStack(error) = if
   else error.stack
 
 fun appendWorkerLocation(panel, event) =
-  if event.filename is ~Absent do
-    panel.log("error", "  at " + event.filename + ":" + event.lineno + ":" + event.colno)
+  if event.filename is ~Absent as filename do
+    panel.log("error", "  at " + filename + ":" + event.lineno + ":" + event.colno)
 
 fun appendWorkerStack(panel, event) =
   if errorStack(event.error) is
@@ -57,13 +57,13 @@ fun appendWorkerStack(panel, event) =
 
 fun workerErrorMessage(event) =
   let message = "Worker Error:\n"
-  if event.message is ~Absent do set message += "Message: " + event.message + "\n"
-  if event.filename is ~Absent do set message += "File: " + event.filename + "\n"
-  if event.lineno is ~Absent do set message += "Line: " + event.lineno + ":" + event.colno + "\n"
+  if event.message is ~Absent as messageText do set message += "Message: " + messageText + "\n"
+  if event.filename is ~Absent as filename do set message += "File: " + filename + "\n"
+  if event.lineno is ~Absent as lineno do set message += "Line: " + lineno + ":" + event.colno + "\n"
   if errorStack(event.error) is
     ~null as stack do set message += "\nStack:\n" + stack
-  if event.error is ~Absent and errorStack(event.error) is Absent do
-    set message += "\nStack:\n" + event.error
+  if event.error is ~Absent as error and errorStack(error) is Absent do
+    set message += "\nStack:\n" + error
   message
 
 fun makeExecution(id) =

@@ -26,16 +26,13 @@ class EditorPanel extends HTMLElement with
     set this.unsubscribe = fs.subscribe(event => panel.handleFsEvent(event), undefined)
 
   fun disconnectedCallback() =
-    if this.unsubscribe is
-      Absent then ()
-      unsubscribe then unsubscribe()
-    if this.resizeObserver is
-      Absent then ()
-      resizeObserver then resizeObserver.disconnect()
+    if this.unsubscribe is ~Absent as unsubscribe do
+      unsubscribe()
+    if this.resizeObserver is ~Absent as resizeObserver do
+      resizeObserver.disconnect()
     Array.from(this.openTabs.values()).forEach of (tab, ...) =>
-      if tab.editorView is
-        Absent then ()
-        editorView then editorView.destroy()
+      if tab.editorView is ~Absent as editorView do
+        editorView.destroy()
 
   fun render() =
     set this.innerHTML = """
@@ -158,9 +155,8 @@ class EditorPanel extends HTMLElement with
         else ()
     if event.ctrlKey and isKey(event, "w", "W") do
       event.preventDefault()
-      if this.activeTabId is
-        Absent then ()
-        tabId then this.closeTab(tabId)
+      if this.activeTabId is ~Absent as tabId do
+        this.closeTab(tabId)
 
   fun setupEventListeners() =
     let panel = this
@@ -199,11 +195,9 @@ class EditorPanel extends HTMLElement with
         let scrollRight = () => set tabBar.scrollLeft += scrollSpeed
         set scrollInterval = window.setInterval(scrollRight, 10)
     let stopScroll = () =>
-      if scrollInterval is
-        Absent then ()
-        interval then
-          window.clearInterval(interval)
-          set scrollInterval = null
+      if scrollInterval is ~Absent as interval do
+        window.clearInterval(interval)
+        set scrollInterval = null
     leftArrow.addEventListener("mouseenter", startScrollLeft)
     leftArrow.addEventListener("mouseleave", stopScroll)
     rightArrow.addEventListener("mouseenter", startScrollRight)
@@ -303,32 +297,27 @@ class EditorPanel extends HTMLElement with
     Array.from(this.openTabs.values()).forEach of (tab, ...) =>
       tab.editorDiv.classList.remove("active")
     let selectedTab = this.openTabs.get(tabId)
-    if selectedTab is
-      Absent then ()
-      tab then
-        tab.editorDiv.classList.add("active")
-        set this.activeTabId = tabId
-        tab.editorView.focus()
+    if selectedTab is ~Absent as tab do
+      tab.editorDiv.classList.add("active")
+      set this.activeTabId = tabId
+      tab.editorView.focus()
     this.updateDisplay()
     this.scrollTabIntoView(tabId)
 
   fun closeTab(tabId) =
     let tab = this.openTabs.get(tabId)
-    if tab is
-      Absent then ()
-      closingTab then
-        if closingTab.editorView is
-          Absent then ()
-          editorView then editorView.destroy()
-        closingTab.editorDiv.remove()
-        this.openTabs.delete(tabId)
-        if this.activeTabId === tabId do
-          let remainingTabs = Array.from(this.openTabs.keys())
-          if
-            remainingTabs.length > 0 then this.switchTab(remainingTabs.at(remainingTabs.length - 1))
-            else
-              set this.activeTabId = null
-              this.notifyActiveTabChange(null)
+    if tab is ~Absent as closingTab do
+      if closingTab.editorView is ~Absent as editorView do
+        editorView.destroy()
+      closingTab.editorDiv.remove()
+      this.openTabs.delete(tabId)
+      if this.activeTabId === tabId do
+        let remainingTabs = Array.from(this.openTabs.keys())
+        if
+          remainingTabs.length > 0 then this.switchTab(remainingTabs.at(remainingTabs.length - 1))
+          else
+            set this.activeTabId = null
+            this.notifyActiveTabChange(null)
     this.updateDisplay()
     this.emitOpenFilesChange()
 
@@ -345,17 +334,14 @@ class EditorPanel extends HTMLElement with
   fun clearTabTooltip(reason) =
     let tooltip = this.querySelector("file-tooltip.tab-tooltip")
     console.log("[tab-tooltip] hide", tabLogInfo(reason))
-    if this.tabTooltipTimeout is
-      Absent then ()
-      timeout then
-        window.clearTimeout(timeout)
-        set this.tabTooltipTimeout = null
+    if this.tabTooltipTimeout is ~Absent as timeout do
+      window.clearTimeout(timeout)
+      set this.tabTooltipTimeout = null
     set
       this.tabTooltipPendingTarget = null
       this.tabTooltipHoverTarget = null
-    if tooltip is
-      Absent then ()
-      tooltip then tooltip.hide()
+    if tooltip is ~Absent as tooltipElement do
+      tooltipElement.hide()
 
   fun baseNameHtml(tabName, lastDot) = if
       lastDot > 0 then
@@ -410,36 +396,32 @@ class EditorPanel extends HTMLElement with
     set info.visible = tooltip.classList.contains("visible")
     info
 
-  fun showTooltip(tabEl, reason, tooltip) = if tabForElement(tabEl) is
-      Absent then ()
-      tab then
-        console.log("[tab-tooltip] show", tabShowLog(tabEl, reason, tooltip))
-        tooltip.show(tabEl, tooltipInfo(tab))
+  fun showTooltip(tabEl, reason, tooltip) = if tabForElement(tabEl) is ~Absent as tab do
+    console.log("[tab-tooltip] show", tabShowLog(tabEl, reason, tooltip))
+    tooltip.show(tabEl, tooltipInfo(tab))
 
   fun setupNameScroll(container) = if
       container is Absent then ()
       container.dataset.scrollInit is ~Absent then ()
       else
         let textEl = container.querySelector(".tab-name-text")
-        if textEl is
-          Absent then ()
-          textEl then
-            set container.dataset.scrollInit = "true"
-            let start = () =>
-              let distance = textEl.scrollWidth - container.clientWidth + 16
-              if distance > 0 do
-                let duration = Math.min(12, Math.max(4, distance / 40))
-                textEl.style.setProperty("--scroll-distance", distance + "px")
-                textEl.style.setProperty("--scroll-duration", duration + "s")
-                textEl.classList.add("scrolling")
-            let stop = () =>
-              textEl.classList.remove("scrolling")
-              textEl.style.removeProperty("--scroll-distance")
-              textEl.style.removeProperty("--scroll-duration")
-            container.addEventListener("mouseenter", start)
-            container.addEventListener("mouseleave", stop)
-            container.addEventListener("focus", start)
-            container.addEventListener("blur", stop)
+        if textEl is ~Absent as textElement do
+          set container.dataset.scrollInit = "true"
+          let start = () =>
+            let distance = textElement.scrollWidth - container.clientWidth + 16
+            if distance > 0 do
+              let duration = Math.min(12, Math.max(4, distance / 40))
+              textElement.style.setProperty("--scroll-distance", distance + "px")
+              textElement.style.setProperty("--scroll-duration", duration + "s")
+              textElement.classList.add("scrolling")
+          let stop = () =>
+            textElement.classList.remove("scrolling")
+            textElement.style.removeProperty("--scroll-distance")
+            textElement.style.removeProperty("--scroll-duration")
+          container.addEventListener("mouseenter", start)
+          container.addEventListener("mouseleave", stop)
+          container.addEventListener("focus", start)
+          container.addEventListener("blur", stop)
 
   fun setupTabElement(tabEl, tooltip) =
     let panel = this
@@ -457,9 +439,8 @@ class EditorPanel extends HTMLElement with
         tooltip.classList.contains("visible") then showTooltip(tabEl, "already-visible", tooltip)
         panel.tabTooltipPendingTarget === tabEl then ()
         else
-          if panel.tabTooltipTimeout is
-            Absent then ()
-            timeout then window.clearTimeout(timeout)
+          if panel.tabTooltipTimeout is ~Absent as timeout do
+            window.clearTimeout(timeout)
           set panel.tabTooltipPendingTarget = tabEl
           console.log("[tab-tooltip] schedule show", panel.tabHoverLog(tabEl, "schedule"))
           let showLater = () =>
@@ -494,9 +475,8 @@ class EditorPanel extends HTMLElement with
     tabBar.querySelectorAll(".tab-close").forEach of (btn, ...) =>
       setupCloseButton(btn)
     tabBar.addEventListener("scroll", () => this.clearTabTooltip("tab-bar-scroll"))
-    if this.updateArrowVisibility is
-      Absent then ()
-      updateArrowVisibility then window.setTimeout(updateArrowVisibility, 0)
+    if this.updateArrowVisibility is ~Absent as updateArrowVisibility do
+      window.setTimeout(updateArrowVisibility, 0)
 
   fun scrollOptions(left) =
     mut { :left, behavior: "smooth" }
