@@ -136,9 +136,9 @@ fun compartmentOptions(fileMap) =
 fun makeCompartment(fileMap) =
   let modules = mut {}
   Reflect.construct of Compartment, [
-    endowments(),
-    modules,
-    compartmentOptions(fileMap),
+    endowments()
+    modules
+    compartmentOptions(fileMap)
   ]
 
 fun runDone(_) =
@@ -168,8 +168,8 @@ fun handleMessageData(messageData) =
 
 fun handleMessage(event) =
   js.try_catch(
-    () => handleMessageData(event.data),
-    messageHandlerError,
+    () => handleMessageData(event.data)
+    messageHandlerError
   )
 
 set

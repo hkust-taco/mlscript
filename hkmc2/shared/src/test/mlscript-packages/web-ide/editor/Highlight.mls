@@ -3,8 +3,8 @@ module Highlight with...
 let makeWordRegex(...words) = new RegExp("^(?:" + words.join("|") + ")$")
 
 let keywords = makeWordRegex of
-  "val", "class", "trait", "type", "pattern", "object",
-  "this", "super", "true", "false", "null", "undefined",
+  "val", "class", "trait", "type", "pattern", "object"
+  "this", "super", "true", "false", "null", "undefined"
   "forall", "declare", "where", "with", "fun", "let"
 
 let moduleKeywords = makeWordRegex("module", "open", "import")
@@ -13,13 +13,13 @@ let controlKeywords = makeWordRegex of
   "if", "then", "else", "case", "while", "do", "throw", "return"
 
 let operatorKeywords = makeWordRegex of
-  "and", "or", "not", "set", "new", "new!",
+  "and", "or", "not", "set", "new", "new!"
   "restricts", "extends", "in", "as", "is", "of"
 
 let modifiers = makeWordRegex("mut", "abstract", "data")
 
 let types = makeWordRegex of
-  "Int", "Bool", "String", "Unit", "Num", "Nothing", "Anything",
+  "Int", "Bool", "String", "Unit", "Num", "Nothing", "Anything"
   "Object", "Array", "Function", "Error", "List", "Option", "Some", "None"
 
 let digit = new RegExp("[\\d.]")

@@ -264,8 +264,8 @@ class FileExplorer extends HTMLElement with
         set activeTooltipTarget = targetElement
       let currentTarget = targetElement
       set tooltipTimeout = window.setTimeout of
-        () => this.showTooltipIfActive(currentTarget, tooltip),
-        5000,
+        () => this.showTooltipIfActive(currentTarget, tooltip)
+        5000
 
   fun tooltipName(target) = if target.dataset.name is
     Absent | "" then target.textContent.trim()

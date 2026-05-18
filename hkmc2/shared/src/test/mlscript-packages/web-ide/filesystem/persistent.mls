@@ -82,9 +82,9 @@ fun restoreTimestamps(node, fileData) =
 fun restoreFile(path, fileData) =
   console.log("Restoring file: \"" + path + "\"")
   fs.createFile(path, fileData.content,
-    force: true,
-    readonly: fileData.readonly,
-    attrs: fileData.attrs,
+    force: true
+    readonly: fileData.readonly
+    attrs: fileData.attrs
   )
   if fs.findNode(path) is
     ~null as node do restoreTimestamps(node, fileData)

@@ -110,8 +110,8 @@ fun runCompile(MLscript, id, allFiles, filePaths) =
 
 fun handleLoadedCompiler(MLscript, id, payload) =
   js.try_catch(
-    () => runCompile(MLscript, id, payload.allFiles, payload.filePaths),
-    error => postCompileError(id, error),
+    () => runCompile(MLscript, id, payload.allFiles, payload.filePaths)
+    error => postCompileError(id, error)
   )
 
 fun handleCompileRequest(payload) =

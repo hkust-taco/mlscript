@@ -7,26 +7,26 @@ module fs with...
 abstract class FsNode: FileNode | FolderNode
 
 data class FileNode(
-  mut val name,
-  mut val content,
-  mut val readonly,
-  mut val atime,
-  mut val mtime,
-  mut val ctime,
-  mut val birthtime,
-  mut val attrs,
+  mut val name
+  mut val content
+  mut val readonly
+  mut val atime
+  mut val mtime
+  mut val ctime
+  mut val birthtime
+  mut val attrs
 ) extends FsNode with
   set this.'type = "file"
 
 data class FolderNode(
-  mut val name,
-  mut val children,
-  mut val readonly,
-  mut val atime,
-  mut val mtime,
-  mut val ctime,
-  mut val birthtime,
-  mut val attrs,
+  mut val name
+  mut val children
+  mut val readonly
+  mut val atime
+  mut val mtime
+  mut val ctime
+  mut val birthtime
+  mut val attrs
 ) extends FsNode with
   set this.'type = "folder"
 
@@ -211,14 +211,14 @@ fun createFile(path, contentArg, optionsArg) = if
       attrs = Object.assign(mut {}, objectOrEmpty(options.("attrs")))
     setDefaultCompiled(fileName, attrs)
     let node = new mut FileNode(
-      fileName,
-      content,
-      options.("readonly") is true,
-      stamp.atime,
-      stamp.mtime,
-      stamp.ctime,
-      stamp.birthtime,
-      attrs,
+      fileName
+      content
+      options.("readonly") is true
+      stamp.atime
+      stamp.mtime
+      stamp.ctime
+      stamp.birthtime
+      attrs
     )
     parent.push(node)
     sortNodes(parent)
@@ -240,14 +240,14 @@ fun createFolder(path, optionsArg) = if
     let
       stamp = timestamps()
       node = new mut FolderNode(
-        folderName,
-        mut [],
-        options.("readonly") is true,
-        stamp.atime,
-        stamp.mtime,
-        stamp.ctime,
-        stamp.birthtime,
-        objectOrEmpty(options.("attrs")),
+        folderName
+        mut []
+        options.("readonly") is true
+        stamp.atime
+        stamp.mtime
+        stamp.ctime
+        stamp.birthtime
+        objectOrEmpty(options.("attrs"))
       )
     parent.push(node)
     sortNodes(parent)

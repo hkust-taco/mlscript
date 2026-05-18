@@ -28,15 +28,15 @@ fun standardAttrs() =
 fun createStandardFile(path, content) =
   console.log("Loading file: \"" + path + "\"")
   fs.createFile(path, content,
-    force: true,
-    attrs: standardAttrs(),
+    force: true
+    attrs: standardAttrs()
   )
 
 fun loadStandardLibraryBody(compiler) =
   fs.createFolder("/std", force: true, attrs: folderAttrs())
   fs.createFile("/std/Prelude.mls", compiler.std.prelude,
-    force: true,
-    attrs: standardAttrs(),
+    force: true
+    attrs: standardAttrs()
   )
   compiler.std.files.forEach of (entry, ...) =>
     createStandardFile(entry.at(0), entry.at(1))
@@ -46,10 +46,10 @@ fun loadStandardLibrary(compiler) =
   js.try_catch(
     () =>
       loadStandardLibraryBody(compiler)
-      console.groupEnd(),
+      console.groupEnd()
     error =>
       console.groupEnd()
-      throw error,
+      throw error
   )
 
 let defaultMainSource = "import \"./std/Predef.mls\"\n\n" +

@@ -201,8 +201,8 @@ class ToolbarPanel extends HTMLElement with
   fun showTooltip(statusContainer, statusTooltip) =
     set statusTooltip.style.display = "block"
     computePosition(statusContainer, statusTooltip,
-      placement: "bottom",
-      middleware: [shift(padding: 5), offset(4)],
+      placement: "bottom"
+      middleware: [shift(padding: 5), offset(4)]
     ).then of position =>
       set
         statusTooltip.style.top = position.y + "px"

@@ -65,5 +65,5 @@ fun editorOptions(container, initialContent, filePath, extension, isReadonly) =
 
 fun createEditor(container, initialContent, filePath, extension, isReadonly) =
   Reflect.construct of EditorView, [
-    editorOptions(container, initialContent, filePath, extension, isReadonly),
+    editorOptions(container, initialContent, filePath, extension, isReadonly)
   ]

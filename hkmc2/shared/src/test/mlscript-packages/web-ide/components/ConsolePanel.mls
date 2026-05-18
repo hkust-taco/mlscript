@@ -54,8 +54,8 @@ class ConsolePanel extends HTMLElement with
   fun stringifyArg(arg) = if typeof(arg) is
     "object" then
       js.try_catch(
-        () => JSON.stringify(arg, null, 2),
-        error => String(arg),
+        () => JSON.stringify(arg, null, 2)
+        error => String(arg)
       )
     else String(arg)
 
