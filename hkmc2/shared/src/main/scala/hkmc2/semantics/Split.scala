@@ -143,9 +143,7 @@ enum Split extends AutoLocated with ProductWithTail:
         case _: Split.Else => N // FIXME: @Luyu pls clean up this mess
         case _: Split.UseSplit => N
         case _ => loco
-  
-  var isFallback: Bool = false
-  
+
   def prettyPrint(using DebugPrinter): Str = Split.prettyPrint(this)
 end Split
 

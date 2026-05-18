@@ -20,14 +20,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     subsumedBy
 
   extension (these: Split)
-    def markAsFallback: Split =
-      these.isFallback = true
-      these
-
-    def clearFallback: Split =
-      these.isFallback = false
-      these
-
     def ++(those: => Split): Split =
       if these.isFull then
         log("tail is discarded")
@@ -135,7 +127,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         // `UseSplit`. By the definition of `++`, any tail appended to it is
         // dropped, so no fallback is needed on the positive side.
         log("FULL: positive consequent is full, no fallback needed")
-        val negativeAlternative = alternative.specialized(-, scrutinee, pattern).clearFallback
+        val negativeAlternative = alternative.specialized(-, scrutinee, pattern)
         Branch(scrutinee, pattern, normalize(specializedConsequent)) ~: normalize(negativeAlternative)
       else (specialize(alternative, +, scrutinee, pattern), specialize(alternative, -, scrutinee, pattern)) match
         case (N, N) =>
@@ -163,13 +155,13 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             Branch(scrutinee, pattern, whenTrue) ~: normalizedAlternative
         case (S(positiveAlternative), S(negativeAlternative)) =>
           log("DUP: pos≠, neg≠")
-          Branch(scrutinee, pattern, normalize(specializedConsequent ++ positiveAlternative)) ~: normalize(negativeAlternative.clearFallback)
+          Branch(scrutinee, pattern, normalize(specializedConsequent ++ positiveAlternative)) ~: normalize(negativeAlternative)
         case (S(positiveAlternative), N) =>
           log("DUP: pos≠, neg=")
-          Branch(scrutinee, pattern, normalize(specializedConsequent ++ positiveAlternative)) ~: normalize(alternative.clearFallback)
+          Branch(scrutinee, pattern, normalize(specializedConsequent ++ positiveAlternative)) ~: normalize(alternative)
         case (N, S(negativeAlternative)) =>
           log("DUP: pos=, neg≠")
-          Branch(scrutinee, pattern, normalize(specializedConsequent ++ alternative.duplicate)) ~: normalize(negativeAlternative.clearFallback)
+          Branch(scrutinee, pattern, normalize(specializedConsequent ++ alternative.duplicate)) ~: normalize(negativeAlternative)
     case Split.Let(v, _, tail) if vs has v =>
       log(s"LET: SKIP already declared scrutinee $v")
       normalizeImpl(tail)
@@ -197,7 +189,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     *   - Case 1.1.2: Branch pattern is more specific (`thatPattern <:< pattern`) → keep as-is,
     *     mark the specializing pattern as refined, and recurse into the tail so remaining
     *     branches on the same scrutinee are simplified with the known assumption.
-    *   - Case 1.1.3: Branch is a fallback → skip to tail.
     *   - Case 1.1.4: Branch is a record → simplify fields already matched by the assumption.
     *   - Case 1.1.5: Specializing pattern is more specific (`pattern <:< thatPattern`) → keep as-is
     *     (the branch always matches when the assumption holds).
@@ -238,9 +229,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
               log(s"Case 1.1.2: $pattern <:< $thatPattern")
               pattern.markAsRefined
               rec(tail).map(newTail => split.copy(tail = newTail))
-            else if split.isFallback then
-              log(s"Case 1.1.3: $pattern is unrelated with $thatPattern")
-              S(rec(tail).getOrElse(tail))
             else thatPattern match
             case thatPattern: FlatPattern.Record =>
               log(s"Case 1.1.4: $thatPattern is a record")
