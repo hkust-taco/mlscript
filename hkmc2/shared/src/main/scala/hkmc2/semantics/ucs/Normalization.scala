@@ -178,9 +178,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
   /**
     * Specialize `split` with the assumption that `scrutinee` matches `pattern`.
     *
-    * Returns `N` when the split is completely unchanged by specialization (no
-    * branch in the split tests `scrutinee`), or `S(result)` when at least one
-    * branch was modified, merged, or removed. Callers use this to detect
+    * Returns `N` when specialization made no change to the split (the result
+    * is structurally identical to the input), or `S(result)` when at least
+    * one branch was modified, merged, or removed. Callers use this to detect
     * whether a `UseSplit` body was affected by specialization — if not, the
     * `UseSplit` reference is preserved to maintain join-point sharing.
     *
