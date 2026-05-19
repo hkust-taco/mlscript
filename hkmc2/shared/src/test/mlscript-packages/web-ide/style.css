@@ -764,6 +764,251 @@ examples-panel {
   padding: 8px;
 }
 
+/* Editor Workbench */
+editor-workbench {
+  grid-column: 3;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--ide-editor-bg);
+  overflow: hidden;
+}
+
+editor-workbench .editor-workbench-shell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+editor-workbench .editor-chrome-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 34px;
+  padding: 5px 8px 5px 12px;
+  background: var(--ide-surface);
+  border-bottom: 1px solid var(--ide-border);
+}
+
+editor-workbench .editor-breadcrumbs {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: var(--ide-text-muted);
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+editor-workbench .editor-breadcrumbs i {
+  width: 0.78rem;
+  height: 0.78rem;
+  color: var(--ide-text-subtle);
+}
+
+editor-workbench .editor-breadcrumb-active {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ide-text);
+  font-family: var(--monospace);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+editor-workbench .editor-chrome-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+editor-workbench .editor-action-button,
+editor-workbench .compiled-close-button,
+editor-workbench .compiled-copy-button,
+editor-workbench .compiled-download-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-sm);
+  background: var(--ide-surface);
+  color: var(--ide-text-muted);
+  cursor: pointer;
+  font-size: 0.78rem;
+  line-height: 1;
+  min-height: 26px;
+  padding: 5px 8px;
+}
+
+editor-workbench .editor-action-button:hover,
+editor-workbench .compiled-close-button:hover,
+editor-workbench .compiled-copy-button:hover,
+editor-workbench .compiled-download-button:hover {
+  background: var(--ide-accent-soft);
+  border-color: color-mix(in srgb, var(--ide-accent) 38%, var(--ide-border));
+  color: var(--ide-accent-strong);
+}
+
+editor-workbench .editor-action-button i,
+editor-workbench .compiled-close-button i,
+editor-workbench .compiled-copy-button i,
+editor-workbench .compiled-download-button i {
+  width: 0.86rem;
+  height: 0.86rem;
+}
+
+editor-workbench .editor-split-shell {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+}
+
+editor-workbench.compiled-open .editor-split-shell {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+}
+
+editor-workbench editor-panel {
+  grid-column: auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+editor-workbench .compiled-output-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-left: 1px solid var(--ide-border);
+  background: var(--ide-surface);
+  overflow: hidden;
+}
+
+editor-workbench .compiled-output-pane[hidden] {
+  display: none;
+}
+
+editor-workbench .compiled-output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--ide-surface-subtle);
+  border-bottom: 1px solid var(--ide-border);
+}
+
+editor-workbench .compiled-output-header h2 {
+  color: var(--ide-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+editor-workbench .compiled-output-file {
+  display: block;
+  max-width: 270px;
+  overflow: hidden;
+  color: var(--ide-text-muted);
+  font-family: var(--monospace);
+  font-size: 0.68rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+editor-workbench .compiled-close-button {
+  width: 28px;
+  padding: 0;
+  flex: 0 0 auto;
+}
+
+editor-workbench .compiled-targets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ide-border);
+}
+
+editor-workbench .compiled-target-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-sm);
+  background: var(--ide-surface);
+  color: var(--ide-text-muted);
+  cursor: pointer;
+  font-size: 0.78rem;
+  line-height: 1;
+  min-height: 28px;
+  padding: 5px 7px;
+}
+
+editor-workbench .compiled-target-option:has(input:checked) {
+  background: var(--ide-accent-soft);
+  border-color: color-mix(in srgb, var(--ide-accent) 38%, var(--ide-border));
+  color: var(--ide-accent-strong);
+}
+
+editor-workbench .compiled-target-option input {
+  accent-color: var(--ide-accent);
+}
+
+editor-workbench .compiled-output-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ide-border);
+}
+
+editor-workbench .compiled-output-code {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  overflow: auto;
+  padding: 10px;
+  background: var(--ide-editor-bg);
+  color: var(--ide-text);
+  font-family: var(--monospace);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  white-space: pre;
+}
+
+editor-workbench .compiled-output-feedback {
+  border-top: 1px solid var(--ide-border);
+  background: var(--ide-accent-soft);
+  color: var(--ide-accent-strong);
+  font-size: 0.76rem;
+  line-height: 1.25;
+  padding: 7px 10px;
+}
+
+editor-workbench .compiled-output-feedback[hidden] {
+  display: none;
+}
+
+editor-workbench editor-panel .tab-bar-wrapper {
+  height: 36px;
+}
+
+editor-workbench editor-panel .tab {
+  min-width: 112px;
+  padding-top: 0.42rem;
+  padding-bottom: 0.42rem;
+}
+
 /* Editor Panel */
 editor-panel {
   grid-column: 3;

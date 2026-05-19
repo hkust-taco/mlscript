@@ -40,7 +40,7 @@ class IdeWorkbench extends HTMLElement with
           <source-control-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="source-control"></source-control-panel>
           <outline-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="outline"></outline-panel>
           <examples-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="examples"></examples-panel>
-          <editor-panel class="editor"></editor-panel>
+          <editor-workbench class="editor"></editor-workbench>
           <diagnostics-inspector class="sidebar-panel right-sidebar-panel active" data-sidebar-side="right" data-sidebar-panel="diagnostics"></diagnostics-inspector>
         </div>
         <bottom-panel class="console"></bottom-panel>

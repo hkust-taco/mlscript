@@ -1,0 +1,214 @@
+import "../common/JS.mls"
+
+open JS { Absent }
+
+class EditorWorkbench extends HTMLElement with
+  let
+    activeFilePath = null
+    splitOpen = false
+    target = "mjs"
+    feedbackText = ""
+
+  fun connectedCallback() =
+    this.render()
+    this.attachEventListeners()
+    this.updateBreadcrumbs()
+    this.updateCompiledPane()
+
+  fun render() =
+    set this.innerHTML = """
+      <div class="editor-workbench-shell">
+        <div class="editor-chrome-row">
+          <nav class="editor-breadcrumbs" aria-label="Editor breadcrumbs">
+            <span>workspace</span>
+            <i class="icon-chevron-right"></i>
+            <span class="editor-breadcrumb-active">No file</span>
+          </nav>
+          <div class="editor-chrome-actions">
+            <button class="editor-action-button open-compiled-output" type="button" title="Open generated output preview">
+              <i class="icon-columns-3"></i>
+              <span>Generated</span>
+            </button>
+          </div>
+        </div>
+        <div class="editor-split-shell">
+          <editor-panel></editor-panel>
+          <aside class="compiled-output-pane" aria-label="Compiled output preview" hidden>
+            <div class="compiled-output-header">
+              <div>
+                <h2>Generated Output</h2>
+                <span class="compiled-output-file">No file</span>
+              </div>
+              <button class="compiled-close-button" type="button" aria-label="Close generated output" title="Close generated output">
+                <i class="icon-x"></i>
+              </button>
+            </div>
+            <div class="compiled-targets" role="radiogroup" aria-label="Generated output target">
+              """ + targetOptionHtml("mjs", "mjs") + """
+              """ + targetOptionHtml("wasm", "wasm") + """
+              """ + targetOptionHtml("c", "c") + """
+            </div>
+            <div class="compiled-output-actions">
+              <button class="compiled-copy-button" type="button" title="Copy generated output">
+                <i class="icon-copy"></i>
+                <span>Copy</span>
+              </button>
+              <button class="compiled-download-button" type="button" title="Download generated output">
+                <i class="icon-download"></i>
+                <span>Download</span>
+              </button>
+            </div>
+            <pre class="compiled-output-code"></pre>
+            <div class="compiled-output-feedback" hidden></div>
+          </aside>
+        </div>
+      </div>
+    """
+
+  fun targetOptionHtml(value, label) =
+    """
+      <label class="compiled-target-option">
+        <input type="radio" name="compiled-output-target" value="""" + value + """" />
+        <span>""" + label + """</span>
+      </label>
+    """
+
+  fun setActiveFilePath(path) =
+    set activeFilePath = path
+    updateBreadcrumbs()
+    updateCompiledPane()
+
+  fun handleActiveTabChanged(detail) =
+    let path = if
+      detail is Absent then null
+      detail.path is Absent then null
+      else detail.path
+    setActiveFilePath(path)
+
+  fun activeFileLabel() = if activeFilePath is
+    null then "No file"
+    path then path
+
+  fun activeFileName() = if activeFilePath is
+    null then "untitled"
+    path then path.split("/").pop()
+
+  fun updateBreadcrumbs() =
+    if this.querySelector(".editor-breadcrumb-active") is ~null as breadcrumb do
+      set breadcrumb.textContent = activeFileLabel()
+
+  fun openCompiledOutput() =
+    set
+      splitOpen = true
+      feedbackText = ""
+    this.classList.add("compiled-open")
+    if this.querySelector(".compiled-output-pane") is ~null as pane do
+      set pane.hidden = false
+    updateCompiledPane()
+
+  fun closeCompiledOutput() =
+    set
+      splitOpen = false
+      feedbackText = ""
+    this.classList.remove("compiled-open")
+    if this.querySelector(".compiled-output-pane") is ~null as pane do
+      set pane.hidden = true
+
+  fun setTarget(nextTarget) = if nextTarget is
+    "mjs" | "wasm" | "c" then
+      set
+        target = nextTarget
+        feedbackText = ""
+      updateCompiledPane()
+    else ()
+
+  fun targetLabel(value) = if value is
+    "wasm" then "wasm"
+    "c" then "c"
+    else "mjs"
+
+  fun currentOutput() = if target is
+    "wasm" then wasmOutput()
+    "c" then cOutput()
+    else mjsOutput()
+
+  fun mjsOutput() =
+    "import { print } from \"./mlscript-std/Predef.mjs\";\n\n" +
+    "print(\"Generated preview for " + activeFileName() + "\");\n"
+
+  fun wasmOutput() =
+    "(module\n" +
+    "  (import \"env\" \"print\" (func $print (param i32)))\n" +
+    "  (func $main\n" +
+    "    ;; mock wasm output for " + activeFileName() + "\n" +
+    "  )\n" +
+    ")\n"
+
+  fun cOutput() =
+    "#include <stdio.h>\n\n" +
+    "int main(void) {\n" +
+    "  puts(\"Generated preview for " + activeFileName() + "\");\n" +
+    "  return 0;\n" +
+    "}\n"
+
+  fun updateCompiledPane() =
+    this.querySelectorAll(".compiled-target-option input").forEach of (input, ...) =>
+      set input.checked = input.value === target
+    if this.querySelector(".compiled-output-code") is ~null as output do
+      set output.textContent = currentOutput()
+    if this.querySelector(".compiled-output-file") is ~null as file do
+      set file.textContent = activeFileLabel() + " · " + targetLabel(target)
+    if this.querySelector(".compiled-output-feedback") is ~null as feedback do
+      if feedbackText === "" then
+        set feedback.hidden = true
+      else
+        set
+          feedback.hidden = false
+          feedback.textContent = feedbackText
+
+  fun copyCurrentOutput() =
+    let textArea = document.createElement("textarea")
+    set
+      textArea.value = currentOutput()
+      textArea.style.position = "fixed"
+      textArea.style.left = "-1000px"
+      textArea.style.top = "-1000px"
+    document.body.appendChild(textArea)
+    textArea.focus()
+    textArea.select()
+    let copied = document.execCommand("copy")
+    textArea.remove()
+    set feedbackText = if copied then "Copied " + targetLabel(target) else "Copy failed"
+    updateCompiledPane()
+
+  fun downloadCurrentOutput() =
+    let
+      blob = new! window.Blob([currentOutput()], mut { 'type: "text/plain" })
+      url = window.URL.createObjectURL(blob)
+      link = document.createElement("a")
+    set
+      link.href = url
+      link.download = "mlscript-output." + targetLabel(target)
+      link.style.display = "none"
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+    set feedbackText = "Downloaded " + targetLabel(target)
+    updateCompiledPane()
+
+  fun attachEventListeners() =
+    let shell = this
+    if this.querySelector(".open-compiled-output") is ~null as openButton do
+      openButton.addEventListener("click", () => shell.openCompiledOutput())
+    if this.querySelector(".compiled-close-button") is ~null as closeButton do
+      closeButton.addEventListener("click", () => shell.closeCompiledOutput())
+    if this.querySelector(".compiled-copy-button") is ~null as copyButton do
+      copyButton.addEventListener("click", () => shell.copyCurrentOutput())
+    if this.querySelector(".compiled-download-button") is ~null as downloadButton do
+      downloadButton.addEventListener("click", () => shell.downloadCurrentOutput())
+    this.querySelectorAll(".compiled-target-option input").forEach of (input, ...) =>
+      input.addEventListener("change", () => shell.setTarget(input.value))
+    document.addEventListener("active-tab-changed", event => shell.handleActiveTabChanged(event.detail))
+
+customElements.define("editor-workbench", EditorWorkbench)
