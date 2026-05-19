@@ -1,0 +1,162 @@
+import "../common/JS.mls"
+
+open JS { Absent }
+
+class IdeWorkbench extends HTMLElement with
+  let
+    leftActivePanel = "files"
+    leftPanelOpen = true
+    diagnosticsOpen = true
+
+  fun connectedCallback() =
+    this.render()
+    this.attachEventListeners()
+    this.syncLayoutState()
+
+  fun render() =
+    set this.innerHTML = """
+      <div class="app-layout">
+        <toolbar-panel class="toolbar"></toolbar-panel>
+        <div class="app-container" data-left-active-panel="files">
+          <aside class="activity-rail activity-rail-left" aria-label="Left sidebar">
+            <button class="activity-button active" data-sidebar-side="left" data-sidebar-panel="files" aria-label="Files" aria-pressed="true" title="Files">
+              <i class="icon-files"></i>
+            </button>
+          </aside>
+          <file-explorer class="sidebar-panel left-sidebar-panel active" data-sidebar-side="left" data-sidebar-panel="files"></file-explorer>
+          <editor-panel class="editor"></editor-panel>
+          <reserved-panel class="sidebar-panel right-sidebar-panel active" data-sidebar-side="right" data-sidebar-panel="diagnostics"></reserved-panel>
+        </div>
+        <console-panel class="console"></console-panel>
+        <div class="workbench-status-bar" aria-label="Workbench status">
+          <span class="status-segment workbench-state-status">Ready</span>
+          <button class="status-segment status-action diagnostics-status-toggle" type="button" aria-pressed="true" title="Toggle diagnostics inspector">
+            <i class="icon-circle-alert"></i>
+            Diagnostics
+          </button>
+          <span class="status-spacer"></span>
+          <span class="status-segment active-file-status">No file</span>
+          <span class="status-segment active-file-kind">No language</span>
+        </div>
+      </div>
+    """
+
+  fun appContainer() =
+    this.querySelector(".app-container")
+
+  fun activePanelAttribute(side) =
+    "data-" + side + "-active-panel"
+
+  fun sidebarPanelSelector(side) =
+    ".sidebar-panel[data-sidebar-side=\"" + side + "\"][data-sidebar-panel]"
+
+  fun sidebarButtonSelector(side) =
+    ".activity-button[data-sidebar-side=\"" + side + "\"]"
+
+  fun panelIsActive(panel, panelName, isOpen) =
+    if isOpen then panel.dataset.sidebarPanel === panelName else false
+
+  fun setSidebarButtons(side, panelName, isOpen) =
+    this.querySelectorAll(sidebarButtonSelector(side)).forEach of (button, ...) =>
+      let isActive = panelIsActive(button, panelName, isOpen)
+      button.classList.toggle("active", isActive)
+      button.setAttribute("aria-pressed", if isActive then "true" else "false")
+
+  fun setSidebarPanels(side, panelName, isOpen) =
+    this.querySelectorAll(sidebarPanelSelector(side)).forEach of (panel, ...) =>
+      panel.classList.toggle("active", panelIsActive(panel, panelName, isOpen))
+
+  fun setLeftPanelState(panelName, isOpen) =
+    set
+      leftActivePanel = panelName
+      leftPanelOpen = isOpen
+    if appContainer() is ~null as container do
+      container.setAttribute(activePanelAttribute("left"), panelName)
+      container.classList.toggle("left-sidebar-closed", not isOpen)
+    setSidebarPanels("left", panelName, isOpen)
+    setSidebarButtons("left", panelName, isOpen)
+
+  fun toggleLeftPanel(panelName) =
+    if
+      leftActivePanel === panelName and leftPanelOpen then setLeftPanelState(panelName, false)
+      else setLeftPanelState(panelName, true)
+
+  fun setDiagnosticsState(isOpen) =
+    set diagnosticsOpen = isOpen
+    if appContainer() is ~null as container do
+      container.classList.toggle("right-sidebar-closed", not isOpen)
+    setSidebarPanels("right", "diagnostics", isOpen)
+    if this.querySelector(".diagnostics-status-toggle") is ~null as toggle do
+      toggle.setAttribute("aria-pressed", if isOpen then "true" else "false")
+      toggle.classList.toggle("active", isOpen)
+      set toggle.title = if isOpen then "Hide diagnostics inspector" else "Show diagnostics inspector"
+
+  fun toggleDiagnostics() =
+    setDiagnosticsState(not diagnosticsOpen)
+
+  fun fileKind(path) =
+    if
+      path is Absent then "No language"
+      path.endsWith(".mls") then "MLscript"
+      path.endsWith(".mjs") then "JavaScript"
+      else "File"
+
+  fun updateText(selector, value) =
+    if this.querySelector(selector) is ~null as element do
+      set element.textContent = value
+
+  fun updateActiveFileStatus(detail) =
+    let path = if
+      detail is Absent then "No file"
+      detail.path is Absent then "No file"
+      else detail.path
+    updateText(".active-file-status", path)
+    updateText(".active-file-kind", fileKind(path))
+
+  fun updateWorkbenchStatus(status) =
+    if status is
+      "running" then updateText(".workbench-state-status", "Running")
+      "done" then updateText(".workbench-state-status", "Ready")
+      "error" then updateText(".workbench-state-status", "Error")
+      "aborted" then updateText(".workbench-state-status", "Aborted")
+      "fatal" then updateText(".workbench-state-status", "Fatal error")
+      else updateText(".workbench-state-status", "Ready")
+
+  fun updateCompilationStatus(status) =
+    if status is
+      "running" then updateText(".workbench-state-status", "Compiling")
+      else updateText(".workbench-state-status", "Ready")
+
+  fun handleSidebarToggleRequested(event) =
+    if event.detail is ~Absent as detail do
+      let
+        side = if detail.side is ~Absent then detail.side else "left"
+        panelName = if detail.panel is ~Absent then detail.panel else "files"
+      if side is
+        "right" then toggleDiagnostics()
+        else toggleLeftPanel(panelName)
+
+  fun syncLayoutState() =
+    setLeftPanelState(leftActivePanel, leftPanelOpen)
+    setDiagnosticsState(diagnosticsOpen)
+
+  fun attachActivityButtons() =
+    this.querySelectorAll(".activity-button[data-sidebar-side]").forEach of (button, ...) =>
+      button.addEventListener of "click", () =>
+        if button.dataset.sidebarSide is
+          "right" then toggleDiagnostics()
+          else toggleLeftPanel(button.dataset.sidebarPanel)
+
+  fun attachStatusActions() =
+    if this.querySelector(".diagnostics-status-toggle") is ~null as toggle do
+      toggle.addEventListener("click", () => toggleDiagnostics())
+
+  fun attachEventListeners() =
+    attachActivityButtons()
+    attachStatusActions()
+    document.addEventListener("sidebar-toggle-requested", event => handleSidebarToggleRequested(event))
+    document.addEventListener("active-tab-changed", event => updateActiveFileStatus(event.detail))
+    document.addEventListener("compilation-status-change", event => updateCompilationStatus(event.detail.status))
+    window.addEventListener("execution-status-change", event => updateWorkbenchStatus(event.detail.status))
+
+customElements.define("ide-workbench", IdeWorkbench)

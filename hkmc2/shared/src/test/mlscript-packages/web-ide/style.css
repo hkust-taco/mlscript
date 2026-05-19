@@ -23,6 +23,12 @@ body {
   --panel-header-height: 2.5rem;
 }
 
+ide-workbench {
+  display: block;
+  height: 100vh;
+  min-height: 0;
+}
+
 .app-layout {
   display: flex;
   flex-direction: column;
@@ -36,8 +42,7 @@ body {
     var(--activity-rail-width, 44px)
     var(--file-explorer-width, 250px)
     minmax(0, 1fr)
-    var(--reserved-panel-width, 300px)
-    var(--activity-rail-width, 44px);
+    var(--reserved-panel-width, 300px);
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -71,7 +76,7 @@ body {
 }
 
 .activity-rail-right {
-  grid-column: 5;
+  grid-column: 4;
   border-left: 1px solid var(--sand-6);
 }
 
@@ -165,6 +170,62 @@ body {
 
 .sidebar-placeholder-content i {
   font-size: 1.25rem;
+}
+
+.workbench-status-bar {
+  min-height: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  background: var(--sand-2);
+  border-top: 1px solid var(--sand-6);
+  color: var(--sand-11);
+  font-size: 0.75rem;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.workbench-status-bar .status-segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 20px;
+  white-space: nowrap;
+}
+
+.workbench-status-bar .status-spacer {
+  flex: 1;
+  min-width: 0;
+}
+
+.workbench-status-bar .active-file-status {
+  min-width: 0;
+  max-width: 40vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workbench-status-bar .status-action {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--sand-11);
+  cursor: pointer;
+  padding: 0 5px;
+}
+
+.workbench-status-bar .status-action:hover,
+.workbench-status-bar .status-action.active {
+  color: var(--sand-12);
+  background: var(--sand-4);
+  border-color: var(--sand-6);
+}
+
+.workbench-status-bar .status-action i {
+  width: 0.8rem;
+  height: 0.8rem;
 }
 
 /* File Explorer */
