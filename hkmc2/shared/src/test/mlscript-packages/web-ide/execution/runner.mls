@@ -21,7 +21,7 @@ fun dispatchStatusChange(status, runningTime) =
   window.dispatchEvent(event)
 
 fun consolePanel() =
-  document.querySelector("console-panel")
+  document.querySelector("bottom-panel")
 
 fun diagnosticsInspector() =
   document.querySelector("diagnostics-inspector")

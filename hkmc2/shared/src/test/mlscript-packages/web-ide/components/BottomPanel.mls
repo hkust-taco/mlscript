@@ -1,0 +1,351 @@
+import "./PanelPersistence.mls"
+import "./ResizeHandle.mls"
+import "../mockWorkbenchData.mls"
+import "../common/JS.mls"
+
+open JS { Absent }
+
+class BottomPanel extends HTMLElement with
+  let
+    messages = mut []
+    terminalLines = Array.from(mockWorkbenchData.terminalLines)
+    activeTab = "output"
+    isCollapsed = false
+    preserveLogs = false
+    problemsCleared = false
+    feedbackText = ""
+
+  fun connectedCallback() =
+    this.render()
+    this.restoreSizeFromStorage()
+
+  fun restoreSizeFromStorage() =
+    PanelPersistence.restorePanelHeight(this, "console-panel-height", 100, 600)
+
+  fun saveSizeToStorage(height) =
+    PanelPersistence.savePanelHeight("console-panel-height", height)
+
+  fun render() =
+    set this.innerHTML = """
+      <resize-handle direction="vertical" side="top" min-size="100" max-size="600"></resize-handle>
+      <div class="bottom-panel-header">
+        <div class="bottom-panel-tabs" role="tablist" aria-label="Bottom panel">
+          """ + tabButtonHtml("output", "Output", "icon-terminal-square") + """
+          """ + tabButtonHtml("problems", "Problems", "icon-circle-alert") + """
+          """ + tabButtonHtml("terminal", "Terminal", "icon-square-terminal") + """
+        </div>
+        <div class="bottom-panel-actions">
+          <label class="preserve-logs-label" title="Preserve panel content between clear actions">
+            <input type="checkbox" class="preserve-logs-checkbox"""" + checkedAttr() + """ />
+            <span>Preserve logs</span>
+          </label>
+          <button class="clear-btn" type="button" title="Clear visible panel content">
+            <i class="icon-square-x"></i>
+            <span>Clear</span>
+          </button>
+          <button class="download-btn" type="button" title="Download visible panel text">
+            <i class="icon-download"></i>
+            <span>Download</span>
+          </button>
+          <button class="collapse-btn" type="button" title="Hide bottom panel">
+            <i class="""" + collapseIcon() + """"></i>
+          </button>
+        </div>
+      </div>
+      <div class="bottom-panel-content" role="tabpanel" aria-label="""" + tabLabel(activeTab) + """">
+        """ + activeContentHtml() + """
+      </div>
+    """
+    this.classList.toggle("collapsed", isCollapsed)
+    attachEventListeners()
+
+  fun checkedAttr() =
+    if preserveLogs then " checked" else ""
+
+  fun collapseIcon() =
+    if isCollapsed then "icon-arrow-up-to-line" else "icon-arrow-down-to-line"
+
+  fun tabButtonHtml(id, label, icon) =
+    let
+      activeClass = if activeTab === id then " active" else ""
+      selected = if activeTab === id then "true" else "false"
+      tabIndex = if activeTab === id then "0" else "-1"
+    """
+      <button class="bottom-panel-tab""" + activeClass + """" type="button" role="tab" data-bottom-tab="""" + id + """" aria-selected="""" + selected + """" tabindex="""" + tabIndex + """">
+        <i class="""" + icon + """"></i>
+        <span>""" + label + """</span>
+      </button>
+    """
+
+  fun activeContentHtml() = if activeTab is
+    "problems" then problemsHtml()
+    "terminal" then terminalHtml()
+    else outputHtml()
+
+  fun outputHtml() =
+    let html = """<div class="output-content">"""
+    if messages.length is 0 then
+      set html += emptyHtml("Output is empty")
+    else
+      messages.forEach of (entry, ...) =>
+        set html += messageRowHtml(entry)
+    set html += feedbackHtml()
+    set html += """</div>"""
+    html
+
+  fun problemsHtml() =
+    let html = """<div class="problems-content">"""
+    if problemsCleared then
+      set html += emptyHtml("No problems")
+    else
+      mockWorkbenchData.bottomProblems.forEach of (problem, ...) =>
+        set html += problemRowHtml(problem)
+    set html += feedbackHtml()
+    set html += """</div>"""
+    html
+
+  fun terminalHtml() =
+    let html = """<div class="terminal-content">"""
+    if terminalLines.length is 0 then
+      set html += emptyHtml("Terminal is empty")
+    else
+      set html += """<pre class="terminal-transcript">""" + escapeHtml(terminalLines.join("\n")) + """</pre>"""
+    set html += """
+      <form class="terminal-form">
+        <span>$</span>
+        <input class="terminal-input" type="text" autocomplete="off" aria-label="Terminal command" />
+        <button type="submit" title="Run mock command">
+          <i class="icon-corner-down-left"></i>
+          <span>Run</span>
+        </button>
+      </form>
+    """
+    set html += feedbackHtml()
+    set html += """</div>"""
+    html
+
+  fun emptyHtml(label) =
+    """<div class="bottom-panel-empty">""" + label + """</div>"""
+
+  fun feedbackHtml() =
+    if feedbackText === "" then ""
+    else """<div class="bottom-panel-feedback">""" + escapeHtml(feedbackText) + """</div>"""
+
+  fun message(kind, args) =
+    mut { :kind, content: args, timestamp: new Date() }
+
+  fun log(kind, ...args) =
+    messages.push(message(kind, args))
+    if activeTab === "output" do render()
+
+  fun stringifyArg(arg) = if typeof(arg) is
+    "object" then
+      js.try_catch(
+        () => JSON.stringify(arg, null, 2)
+        error => String(arg)
+      )
+    else String(arg)
+
+  fun formattedContent(message) =
+    message.content.map(arg => stringifyArg(arg)).join(" ")
+
+  fun iconClassName(kind) = if kind is
+    "error" then "icon-x"
+    "warn" then "icon-triangle-alert"
+    "info" then "icon-info"
+    else "icon-chevron-right"
+
+  fun messageRowHtml(message) =
+    """
+      <div class="console-message console-""" + message.kind + """">
+        <span class="console-icon"><i class='""" + iconClassName(message.kind) + """'></i></span>
+        <span class="console-text">""" + escapeHtml(formattedContent(message)) + """</span>
+      </div>
+    """
+
+  fun problemRowHtml(problem) =
+    """
+      <button class="bottom-problem-row bottom-problem-""" + problem.kind + """" type="button" data-file-path="""" + escapeHtml(problem.file) + """" data-line="""" + problem.line + """">
+        <i class="""" + problemIcon(problem.kind) + """"></i>
+        <span class="bottom-problem-main">
+          <span class="bottom-problem-title">""" + escapeHtml(problem.title) + """</span>
+          <span class="bottom-problem-detail">""" + escapeHtml(problem.file) + ":" + problem.line + """ · """ + escapeHtml(problem.detail) + """</span>
+        </span>
+      </button>
+    """
+
+  fun problemIcon(kind) = if kind is
+    "error" then "icon-circle-x"
+    "warning" then "icon-triangle-alert"
+    else "icon-info"
+
+  fun clear() = if preserveLogs then
+    set feedbackText = "Preserve logs is on"
+    render()
+  else
+    if activeTab is
+      "problems" then
+        set
+          problemsCleared = true
+          feedbackText = "Problems cleared"
+      "terminal" then
+        set
+          terminalLines = mut []
+          feedbackText = "Terminal cleared"
+      else
+        set
+          messages = mut []
+          feedbackText = "Output cleared"
+    render()
+
+  fun setPreserveLogs(value) =
+    set preserveLogs = value
+    render()
+
+  fun setActiveTab(tabName) = if tabName is
+    "output" | "problems" | "terminal" then
+      set
+        activeTab = tabName
+        feedbackText = ""
+      render()
+    else ()
+
+  fun tabLabel(tabName) = if tabName is
+    "problems" then "Problems"
+    "terminal" then "Terminal"
+    else "Output"
+
+  fun visibleText() = if activeTab is
+    "problems" then problemsText()
+    "terminal" then terminalLines.join("\n")
+    else messages.map(entry => formattedContent(entry)).join("\n")
+
+  fun problemsText() =
+    if problemsCleared then ""
+    else mockWorkbenchData.bottomProblems.map(problem =>
+      problem.kind + " " + problem.file + ":" + problem.line + " " + problem.title + " " + problem.detail
+    ).join("\n")
+
+  fun downloadVisibleContent() =
+    let
+      blob = new! window.Blob([visibleText()], mut { 'type: "text/plain" })
+      url = window.URL.createObjectURL(blob)
+      link = document.createElement("a")
+    set
+      link.href = url
+      link.download = "mlscript-" + activeTab + ".txt"
+      link.style.display = "none"
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+    set feedbackText = "Downloaded " + tabLabel(activeTab)
+    render()
+
+  fun runTerminalCommand(command) =
+    let trimmed = command.trim()
+    if trimmed !== "" do
+      terminalLines.push("$ " + trimmed)
+      terminalLines.push("Command queued in the mock terminal")
+      set feedbackText = ""
+      render()
+
+  fun dispatchProblemOpen(button) =
+    let
+      filePath = button.dataset.filePath
+      line = parseInt(button.dataset.line, 10)
+      detail = mut { :filePath, :line }
+      options = mut { :detail }
+    document.dispatchEvent(new CustomEvent("open-file-at-location", options))
+
+  fun valueOrEmpty(value) = if value is
+    Absent then ""
+    present then present
+
+  fun saveCurrentSize() =
+    set
+      this.dataset.lastHeight = valueOrEmpty(this.style.height)
+      this.dataset.lastMinHeight = valueOrEmpty(this.style.minHeight)
+      this.dataset.lastMaxHeight = valueOrEmpty(this.style.maxHeight)
+      this.style.height = "40px"
+      this.style.minHeight = "40px"
+      this.style.maxHeight = "40px"
+      this.style.flexBasis = "40px"
+      this.style.flexGrow = "0"
+      this.style.flexShrink = "0"
+
+  fun restoreSavedSize() =
+    let
+      lastHeight = this.dataset.lastHeight
+      lastMinHeight = this.dataset.lastMinHeight
+      lastMaxHeight = this.dataset.lastMaxHeight
+    if lastHeight is
+      Absent then
+        resetInlineSize()
+      "" then
+        resetInlineSize()
+      "40px" then
+        resetInlineSize()
+      savedHeight then
+        set
+          this.style.height = savedHeight
+          this.style.minHeight = valueOrEmpty(lastMinHeight)
+          this.style.maxHeight = valueOrEmpty(lastMaxHeight)
+          this.style.flexBasis = savedHeight
+
+  fun resetInlineSize() =
+    set
+      this.style.height = ""
+      this.style.minHeight = ""
+      this.style.maxHeight = ""
+      this.style.flexBasis = ""
+      this.style.flexGrow = ""
+      this.style.flexShrink = ""
+
+  fun toggleCollapse() =
+    set isCollapsed = not isCollapsed
+    if
+      isCollapsed then saveCurrentSize()
+      else restoreSavedSize()
+    render()
+
+  fun shouldExpand() = if
+    isCollapsed then true
+    else this.classList.contains("collapsed")
+
+  fun expand() = if shouldExpand() do
+    set isCollapsed = false
+    restoreSavedSize()
+    render()
+
+  fun showOutput() =
+    set activeTab = "output"
+    expand()
+    if not shouldExpand() do render()
+
+  fun attachEventListeners() =
+    let panel = this
+    this.querySelectorAll(".bottom-panel-tab").forEach of (button, ...) =>
+      button.addEventListener("click", () => panel.setActiveTab(button.dataset.bottomTab))
+    if this.querySelector(".clear-btn") is ~null as clearBtn do
+      clearBtn.addEventListener("click", () => panel.clear())
+    if this.querySelector(".download-btn") is ~null as downloadBtn do
+      downloadBtn.addEventListener("click", () => panel.downloadVisibleContent())
+    if this.querySelector(".collapse-btn") is ~null as collapseBtn do
+      collapseBtn.addEventListener("click", () => panel.toggleCollapse())
+    if this.querySelector(".preserve-logs-checkbox") is ~null as preserveLogsCheckbox do
+      preserveLogsCheckbox.addEventListener("change", event => panel.setPreserveLogs(event.target.checked))
+    this.querySelectorAll(".bottom-problem-row").forEach of (button, ...) =>
+      button.addEventListener("click", () => panel.dispatchProblemOpen(button))
+    if this.querySelector(".terminal-form") is ~null as form do
+      form.addEventListener of "submit", event =>
+        event.preventDefault()
+        if form.querySelector(".terminal-input") is ~null as input do
+          panel.runTerminalCommand(input.value)
+
+  fun escapeHtml(text) =
+    let div = document.createElement("div")
+    set div.textContent = text
+    div.innerHTML
+
+customElements.define("bottom-panel", BottomPanel)

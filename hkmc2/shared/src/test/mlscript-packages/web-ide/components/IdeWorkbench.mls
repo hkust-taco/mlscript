@@ -43,7 +43,7 @@ class IdeWorkbench extends HTMLElement with
           <editor-panel class="editor"></editor-panel>
           <diagnostics-inspector class="sidebar-panel right-sidebar-panel active" data-sidebar-side="right" data-sidebar-panel="diagnostics"></diagnostics-inspector>
         </div>
-        <console-panel class="console"></console-panel>
+        <bottom-panel class="console"></bottom-panel>
         <div class="workbench-status-bar" aria-label="Workbench status">
           <span class="status-segment workbench-state-status">Ready</span>
           <button class="status-segment status-action diagnostics-status-toggle" type="button" aria-pressed="true" title="Toggle diagnostics inspector">

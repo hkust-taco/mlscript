@@ -157,8 +157,8 @@ fun compileThenExecute(filePath, mjsPath) =
     runCompiledFile(mjsPath)
 
 fun expandConsolePanel() =
-  if document.querySelector("console-panel") is
-    ~null as panel do panel.expand()
+  if document.querySelector("bottom-panel") is
+    ~null as panel do panel.showOutput()
 
 fun handleExecuteRequested(event) =
   expandConsolePanel()
