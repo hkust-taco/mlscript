@@ -263,7 +263,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         v match
         case Value.SimpleRef(l) if !inCtx(l) => freeVars.add(l)
         case Value.MemberRef(bms, _) if !inCtx(bms) && bms.asClsLike.isEmpty => freeVars.add(bms)
-        case Value.InnerRef(l) if !inCtx(l) && l.asClsLike.isEmpty => freeVars.add(l)
+        case Value.This(l) if !inCtx(l) && l.asClsLike.isEmpty => freeVars.add(l)
+        // case Value.InnerRef(l) if !inCtx(l) && l.asClsLike.isEmpty => freeVars.add(l)
         case _ => super.applyValue(v)
       
       override def applyResult(r: Result): Unit =
@@ -359,7 +360,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
       case sym: TempSymbol => Value.SimpleRef(sym)
       case sym: VarSymbol => Value.SimpleRef(sym)
       case sym: (LocalSymbol | BuiltinSymbol) => Value.SimpleRef(sym)
-      case sym: InnerSymbol => Value.InnerRef(sym)
+      case sym: InnerSymbol => Value.This(sym)
+      // case sym: InnerSymbol => Value.InnerRef(sym)
       case sym => 
         lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")
     def mkReturnCall(target: (BlockMemberSymbol, TermSymbol), args: Ls[Symbol]): Block =
@@ -500,7 +502,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             case Some(bms) =>
               lastWords("SimpleRef should not refresh into a MemberRef")
             case None => super.applyValue(v)(k)
-        case Value.InnerRef(l) =>
+        case Value.This(l) =>
           pre.res.modSymToBms.get(l) match
             case Some(bms) =>
               k(Value.MemberRef(bms, l.asMod.getOrElse(bms.defaultDisamb.get)))

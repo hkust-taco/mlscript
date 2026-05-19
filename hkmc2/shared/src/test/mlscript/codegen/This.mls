@@ -51,7 +51,7 @@ module Test with
 //│     Test1 = this
 //│   }
 //│   static {
-//│     this.a = 3;
+//│     Test.a = 3;
 //│   }
 //│   static test1(x) {
 //│     return test1(x)

@@ -803,7 +803,6 @@ sealed abstract class Result extends AutoLocated:
   def showDbg(using DebugPrinter): Str = this match
     case Value.SimpleRef(l) => l.showAsPlain
     case Value.MemberRef(l, disamb) => s"${l.showAsPlain}${s"‹${disamb.showAsPlain}›"}"
-    case Value.InnerRef(l) => l.showAsPlain
     case Value.This(sym) => s"this[${sym.showAsPlain}]"
     case Value.Lit(lit) => lit.idStr
     case Select(q, n) => s"Select(${q.showDbg}, ${n.showDbg})"
@@ -842,7 +841,6 @@ sealed abstract class Result extends AutoLocated:
     case Value.SimpleRef(l) => Vector.empty
     case Value.MemberRef(bms, disamb) => Vector.empty
     case Value.This(sym) => Vector.empty
-    case Value.InnerRef(sym) => Vector.empty
     case Value.Lit(lit) => Vector.single(lit)
   
   // TODO rm Lam from values and thus the need for this method
@@ -865,7 +863,6 @@ sealed abstract class Result extends AutoLocated:
     case Value.SimpleRef(l) => Set(l)
     case Value.MemberRef(bms, _) => Set(bms)
     case Value.This(sym) => Set.empty
-    case Value.InnerRef(sym) => Set(sym)
     case Value.Lit(lit) => Set.empty
     case DynSelect(qual, fld, arrayIdx) => qual.freeVars ++ fld.freeVars
   
@@ -890,7 +887,6 @@ sealed abstract class Result extends AutoLocated:
       case Some(d: TermDefinition) if d.companionClass.isDefined => Set.empty
       case _ => Set(l)
     case Value.This(sym) => Set.empty
-    case Value.InnerRef(sym) => Set.empty
     case Value.Lit(lit) => Set.empty
     case DynSelect(qual, fld, arrayIdx) => qual.freeVarsLLIR ++ fld.freeVarsLLIR
   
@@ -937,9 +933,6 @@ enum Value extends Path with ProductWithExtraInfo:
     */
   case MemberRef(bms: BlockMemberSymbol, disamb: DefinitionSymbol[?])
   case This(sym: InnerSymbol)
-  /** Reference to an [[InnerSymbol]] accessed by its bound variable name from outside its scope,
-    * as opposed to [[This]] which is a `findThis_!`-based "current object" reference. */
-  case InnerRef(sym: InnerSymbol)
   case Lit(lit: Literal)
 
   override def extraInfo(using DebugPrinter): Str = this match
@@ -954,7 +947,7 @@ object Value:
         case l: (LocalSymbol | BuiltinSymbol) => Value.SimpleRef(l)
         case tls: TopLevelSymbol => Value.This(tls)
         case bms: BlockMemberSymbol => Value.MemberRef(bms, disamb.getOrElse(lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")))
-        case sym: InnerSymbol => Value.InnerRef(sym)
+        case sym: InnerSymbol => Value.This(sym)
         case _: NoSymbol => lastWords("NoSymbol should not be used as a Path/Value")
         case sym => lastWords(s"$sym (of type ${sym.getClass.getSimpleName}) cannot be converted to a Path/Value")
     
@@ -968,7 +961,6 @@ object Value:
       case SimpleRef(l) => S(l -> N)
       case MemberRef(bms, disamb) => S(bms -> S(disamb))
       case This(sym: TopLevelSymbol) if sym === State.globalThisSymbol => S(sym -> N)
-      case InnerRef(sym) => S(sym -> N)
       case _ => N
 
 case class Arg(spread: Opt[SpreadKind], value: Path)
@@ -1013,7 +1005,7 @@ extension (l: Local)
     case l: (LocalSymbol | BuiltinSymbol) => Value.SimpleRef(l)
     case tls: TopLevelSymbol => Value.This(tls)
     case bms: BlockMemberSymbol => Value.MemberRef(bms, bms.defaultDisamb.getOrElse(lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")))
-    case sym: InnerSymbol => Value.InnerRef(sym)
+    case sym: InnerSymbol => Value.This(sym)
     case _: NoSymbol => lastWords("NoSymbol should not be used as a Path/Value")
     case sym => lastWords(s"$sym (of type ${sym.getClass.getSimpleName}) cannot be converted to a Path/Value")
 

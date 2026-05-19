@@ -224,7 +224,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         val funcs = methods.map(bMethodDef)
         def parentFromPath(p: Path): Ls[Local] = p match
           case Value.MemberRef(bms, disamb) => fromMemToClass(bms.orElseDisamb(S(disamb))) :: Nil
-          case Value.InnerRef(sym) => fromMemToClass(sym) :: Nil
+          case Value.This(sym) => fromMemToClass(sym) :: Nil
           case Value.SimpleRef(l) =>
             // TODO(Derppening): Check if this assertion holds
             bErrStop(msg"Expected parent to be a MemberRef")
@@ -308,11 +308,10 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
             bLam(Lambda(paramsList, Return(app, false)), S(l.nme), N)(k)
           case None =>
             k(ctx.findName(l) |> sr)
-      case Value.This(sym) => bErrStop(msg"Unsupported value: This")
-      case Value.InnerRef(sym) =>
+      case Value.This(sym) =>
         ctx.fn_ctx.get(sym) match
           case None => k(ctx.findName(sym) |> sr)
-          case Some(_) => bErrStop(msg"Unsupported value: InnerRef with function context")
+          case Some(_) => bErrStop(msg"Unsupported value: This with function context")
       case Value.Lit(lit) => k(Expr.Literal(lit))
         
   
@@ -438,7 +437,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
                 val v: Local = newTemp
                 log(s"Method Call Select: $r.$fld with ${s.symbol}")
                 Node.LetMethodCall(Ls(v), getClassOfField(s.symbol.get), s.symbol.get, r :: args, k(v |> sr))
-      case Call(s @ Select(r @ Value.InnerRef(sym), Tree.Ident(fld)), argss) if s.symbol.isDefined =>
+      case Call(s @ Select(r @ Value.This(sym), Tree.Ident(fld)), argss) if s.symbol.isDefined =>
         bPath(r):
           case r =>
             bArgs(argss.flatten):
@@ -512,7 +511,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
           Ls(Arg(N, Value.Lit(Tree.StrLit(e)))) :: Nil))
       if ident.name === "Error" =>
         Node.Panic(e)
-      case Throw(Instantiate(false, Select(Value.InnerRef(_), ident),
+      case Throw(Instantiate(false, Select(Value.This(_), ident),
           Ls(Arg(N, Value.Lit(Tree.StrLit(e)))) :: Nil))
       if ident.name === "Error" =>
         Node.Panic(e)

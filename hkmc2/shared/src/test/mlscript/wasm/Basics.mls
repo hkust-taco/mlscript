@@ -187,7 +187,8 @@ class Foo(val x) with
 //│               (local.get $this))
 //│             (struct.get $Foo $x
 //│               (ref.cast (ref $Foo)
-//│                 (local.get $this))))
+//│                 (ref.cast (ref $Foo)
+//│                   (local.get $this)))))
 //│           (nop)))
 //│       (return
 //│         (local.get $this))))
@@ -258,7 +259,8 @@ O.y
 //│               (local.get $this))
 //│             (struct.get $O $x
 //│               (ref.cast (ref $O)
-//│                 (local.get $this))))
+//│                 (ref.cast (ref $O)
+//│                   (local.get $this)))))
 //│           (nop)))
 //│       (return
 //│         (local.get $this))))
@@ -300,5 +302,5 @@ fun bar() = 42
 fun foo() = bar
 foo()()
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.300: 	fun foo() = bar
+//│ ║  l.302: 	fun foo() = bar
 //│ ╙──       	            ^^^

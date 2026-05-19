@@ -10,3 +10,150 @@
 
 
 
+
+
+:sir
+:sjs
+object Foo with
+  fun test() =
+    () => this
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Foo1;
+//│ (class Foo {
+//│   static {
+//│     new this
+//│   }
+//│   constructor() {
+//│     Foo1 = this;
+//│     Object.defineProperty(this, "class", {
+//│       value: Foo
+//│     });
+//│     globalThis.Object.freeze(this);
+//│   }
+//│   test() {
+//│     let lambda;
+//│     const this$Foo = this;
+//│     lambda = (undefined, function () {
+//│       return this$Foo
+//│     });
+//│     return lambda
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["object", "Foo"]; 
+//│ });
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let Foo⁰;
+//│ define Foo⁰ as object Foo¹ {
+//│   method test⁰ = fun test¹() {
+//│     let lambda;
+//│     define lambda as fun lambda⁰() { return Foo¹.this };
+//│     return lambda⁰
+//│   }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:sir
+:sjs
+class Barrr with
+  class Bar
+  object Foo extends Bar
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Barrr1;
+//│ (class Barrr {
+//│   static {
+//│     Barrr1 = this
+//│   }
+//│   constructor() {
+//│     const this$Barrr = this;
+//│     (class Bar {
+//│       static {
+//│         this$Barrr.Bar = this
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Bar"]; 
+//│     });
+//│     (class Foo2 extends this$Barrr.Bar {
+//│       static {
+//│         new this
+//│       }
+//│       constructor() {
+//│         super();
+//│         this$Barrr.Foo = this;
+//│         Object.defineProperty(this, "class", {
+//│           value: Foo2
+//│         });
+//│         globalThis.Object.freeze(this);
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["object", "Foo"]; 
+//│     });
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Barrr"]; 
+//│ });
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let Barrr⁰;
+//│ define Barrr⁰ as class Barrr¹ {
+//│   constructor {
+//│     define Bar⁰ as class Bar¹;
+//│     define Foo² as object extends Barrr¹.this.Bar¹ Foo³ {};
+//│     end
+//│   }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:sjs
+module A with
+  val x = 1
+  fun f = print(x)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let A1;
+//│ (class A {
+//│   static {
+//│     A1 = this
+//│   }
+//│   static {
+//│     A.x = 1;
+//│   }
+//│   static get f() {
+//│     return Predef.print(A.x);
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A"]; 
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:sjs
+module A with
+  val x = 1
+  let y = 1
+  fun f = y
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let A3;
+//│ (class A2 {
+//│   static {
+//│     A3 = this
+//│   }
+//│   static #y;
+//│   static {
+//│     A2.x = 1;
+//│     A2.#y = 1;
+//│   }
+//│   static get f() {
+//│     return A2.#y;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A"]; 
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+A.f
+//│ = 1
+
+
+
+

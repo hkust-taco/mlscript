@@ -502,7 +502,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       case Value.MemberRef(bms, _) => ctx.symbolsMap.get(bms) match
         case Some(value) => k(value.read)
         case _ => super.applyPath(p)(k)
-      case Value.InnerRef(sym) => ctx.symbolsMap.get(sym) match
+      case Value.This(sym) => ctx.symbolsMap.get(sym) match
         case Some(value) => k(value.read)
         case _ => super.applyPath(p)(k)
 

@@ -7,7 +7,7 @@ let NoFreeze1;
     NoFreeze1 = this
   }
   static {
-    this.Foo = function Foo(x) {
+    NoFreeze.Foo = function Foo(x) {
       return (new Foo.class(x));
     };
     (class Foo {

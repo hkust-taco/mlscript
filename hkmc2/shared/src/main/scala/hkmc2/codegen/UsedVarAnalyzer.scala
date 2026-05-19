@@ -106,7 +106,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
           accessed.accessed.add(l)
         case Value.MemberRef(bms, _) =>
           accessed.accessed.add(bms)
-        case Value.InnerRef(sym) =>
+        case Value.This(sym) =>
           accessed.accessed.add(sym)
         case _ => super.applyPath(p)
     accessed.toIMut
@@ -460,7 +460,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
             if hasMutator.contains(l) then reqCapture += (l)
           case Value.MemberRef(bms, _) =>
             if hasMutator.contains(bms) then reqCapture += (bms)
-          case Value.InnerRef(sym) =>
+          case Value.This(sym) =>
             if hasMutator.contains(sym) then reqCapture += (sym)
           case _ => super.applyPath(p)
         

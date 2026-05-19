@@ -66,20 +66,38 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     raise(ErrorReport(errMsg -> N :: Nil,
       source = Diagnostic.Source.Compilation))
     doc" # ${mkErr(errMsg)};"
-  
+
+  // * True only for true modules (`syntax.Mod`); objects/patterns share the
+  // * `ModuleOrObjectSymbol` type but compile as instance-based singletons.
+  private def isModuleOwner(owner: semantics.InnerSymbol): Bool = owner match
+    case mod: semantics.ModuleOrObjectSymbol => mod.tree.k is syntax.Mod
+    case _ => false
+
+  // TODO: replace getVar with specialized logic for each case
+  @deprecated("Collapse applicable arms into the call site of this function")
   def getVar(l: Local, loc: Opt[Loc])(using Raise, Scope): Document = l match
     case ts: semantics.TermSymbol =>
       ts.owner match
       case S(owner) =>
-        doc"${getVar(owner, loc)}${
-          if (ts.k is syntax.LetBind) && !owner.isInstanceOf[semantics.TopLevelSymbol]
+        val isPrivateField =
+          (ts.k is syntax.LetBind) && !owner.isInstanceOf[semantics.TopLevelSymbol]
+        val qual =
+          if isPrivateField && isModuleOwner(owner) then
+            // * Module-owned private fields are declared `static #` and must be
+            // * accessed via the owner's lexical name to stay `this`-independent
+            // * (e.g., under method extraction via `val X = Owner.method`).
+            // * Objects/patterns/classes use instance `#` fields and need `this`.
+            scope.lookup_!(owner, loc)
+          else
+            scope.findThis_!(owner)
+        doc"${qual}${
+          if isPrivateField
           then ".#" + owner.privatesScope.lookup_!(ts, loc)
           else fieldSelect(ts.id.name)
         }"
       case N => scope.lookup_!(ts, loc)
-    case ts: semantics.ModuleOrObjectSymbol if ts.asMod.isDefined => // FIXME: currently, objects have a ModuleSymbol...
-      // * Module self-references use the module name itself instead of `this`
-      scope.lookup_!(ts, loc)
+    case ts: semantics.ModuleOrObjectSymbol if ts.asMod.isDefined => 
+      lastWords("Should be `findThis_!`-ed")
     case ts: semantics.InnerSymbol =>
       scope.findThis_!(ts)
     case _ => scope.lookup_!(l, loc)
@@ -113,6 +131,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     if r.isInstanceOf[Value.Lit] then doc"(${res})" else res
   
   def result(r: Result)(using Raise, Scope): Document = r match
+    case Value.This(ts: semantics.ModuleOrObjectSymbol) if ts.asMod.isDefined => // FIXME: currently, objects have a ModuleSymbol...
+      // * Module self-references use the module name itself instead of `this`
+      scope.lookup_!(ts, r.toLoc)
     case Value.This(sym) => scope.findThis_!(sym)
     case Value.Lit(Tree.StrLit(value)) => makeStringLiteral(value)
     case Value.Lit(lit) => lit.idStr
@@ -122,8 +143,27 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Value.SimpleRef(l: BuiltinSymbol) =>
       if l.nullary then l.nme
       else errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
-    case Value.SimpleRef(l) => getVar(l, r.toLoc)
-    case Value.InnerRef(sym) => getVar(sym, r.toLoc)
+    case Value.SimpleRef(l: semantics.TermSymbol) =>
+      l.owner match
+      case S(owner) =>
+        val isPrivateField =
+          (l.k is syntax.LetBind) && !owner.isInstanceOf[semantics.TopLevelSymbol]
+        if isPrivateField then
+          // * For true-module-owned private fields (declared `static #x`), use the
+          // * owner's lexical name so the access stays `this`-independent (e.g.,
+          // * under method extraction via `val X = Owner.method`).
+          // * For class/object/pattern-owned private fields (declared `#x`, instance),
+          // * the field lives on the instance, so we must use `this`.
+          val qual =
+            if isModuleOwner(owner) then
+              scope.lookup_!(owner, r.toLoc)
+            else
+              scope.findThis_!(owner)
+          doc"${qual}.#${owner.privatesScope.lookup_!(l, r.toLoc)}"
+        else
+          doc"${scope.findThis_!(owner)}${fieldSelect(l.id.name)}"
+      case N => scope.lookup_!(l, r.toLoc)
+    case Value.SimpleRef(l) => scope.lookup_!(l, r.toLoc)
     case Call(Value.SimpleRef(l: BuiltinSymbol), (lhs :: rhs :: Nil) :: Nil) if !l.functionLike =>
       if l.binary then
         val res = doc"${operand(lhs)} ${l.nme} ${operand(rhs)}"
@@ -382,9 +422,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 doc" # $mtdPrefix#$nme;"
               val accessors = mutPubFields.flatMap: (valSym, letSym) =>
                 doc" # ${mtdPrefix}get ${escapeField(valSym.name, "")
-                  }() { return ${getVar(letSym, letSym.toLoc)}; }"
+                  }() { return ${result(Value.SimpleRef(letSym))}; }"
                 :: doc" # ${mtdPrefix}set ${escapeField(valSym.name, "")
-                  }(value) { ${getVar(letSym, letSym.toLoc)} = value; }"
+                  }(value) { ${result(Value.SimpleRef(letSym))} = value; }"
                 :: Nil
               (privDecls ::: accessors).mkDocument(doc"")
             
@@ -417,7 +457,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 val fz = doc" # $freeze(this);"
                 ownr match
                 case S(owner) =>
-                  (doc" # ${result(Value.InnerRef(owner))}.${sym.nme} = this;", fz)
+                  (doc" # ${result(Value.This(owner))}.${sym.nme} = this;", fz)
                 case N =>
                   (doc" # ${getVar(sym, sym.toLoc)} = this;", fz)
               else (doc"", doc"")
@@ -457,7 +497,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   else
                     ownr match
                     case S(owner) =>
-                      doc" # ${result(Value.InnerRef(owner))}.${sym.nme}$extraPath = $v"
+                      doc" # ${result(Value.This(owner))}.${sym.nme}$extraPath = $v"
                     case N =>
                       doc" # ${getVar(sym, sym.toLoc)}$extraPath = $v"
               }} :: (

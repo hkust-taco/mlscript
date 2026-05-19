@@ -52,7 +52,8 @@ a.A#get() + A(2).get()
 //│     (return
 //│       (struct.get $A $x
 //│         (ref.cast (ref $A)
-//│           (local.get $this)))))
+//│           (ref.cast (ref $A)
+//│             (local.get $this))))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $tmp1 (ref null any))
@@ -178,7 +179,7 @@ let d = Counter(c.Counter#get())
 :todo
 d.Counter#inc().Counter#double().Counter#get()
 //│ ╔══[COMPILATION ERROR] Cannot find variable `d` (VarSymbol) in local or global scope.
-//│ ║  l.175: 	let d = Counter(c.Counter#get())
+//│ ║  l.176: 	let d = Counter(c.Counter#get())
 //│ ╙──       	    ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Counter`
 
@@ -199,5 +200,5 @@ class A(val x) with
   fun get() = x
 A(1).get
 //│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
-//│ ║  l.200: 	A(1).get
+//│ ║  l.201: 	A(1).get
 //│ ╙──       	    ^^^^

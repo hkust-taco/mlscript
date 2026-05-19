@@ -593,7 +593,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case (sym: BlockMemberSymbol, _) =>
         k(loweringCtx(Value.MemberRef(sym, disamb.orElse(sym.defaultDisamb).get).withLocOf(ref)))
       case (sym: InnerSymbol, _) =>
-        k(loweringCtx(Value.InnerRef(sym).withLocOf(ref)))
+        k(loweringCtx(Value.This(sym).withLocOf(ref)))
       case (sym, disamb) =>
         lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")
   

@@ -175,9 +175,11 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
         case Value.MemberRef(bms, disamb) =>
           transformSymbol(disamb): sym =>
             blockCtor("ValueMemberRef", Ls(sym), "var")(k)
-        case Value.InnerRef(sym) =>
+        // TODO(Derppening): This branch duplicates with the last branch in this match expression
+        //                   How should we distinguish *true* this refs from other self refs?
+        case Value.This(sym) =>
           transformSymbol(sym): s =>
-            blockCtor("ValueInnerRef", Ls(s), "var")(k)
+            blockCtor("ValueThisRef", Ls(s), "var")(k)
         case l: Value.Lit =>
           blockCtor("ValueLit", Ls(l), "lit")(k)
         case s @ Select(p, Tree.Ident(name)) =>

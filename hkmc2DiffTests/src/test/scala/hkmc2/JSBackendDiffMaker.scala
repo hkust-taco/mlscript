@@ -289,7 +289,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
                     case sym: VarSymbol => Value.SimpleRef(sym)
                     case sym: BlockMemberSymbol => Value.MemberRef(sym, sym.defaultDisamb.get)
                     case sym: (LocalSymbol | BuiltinSymbol) => Value.SimpleRef(sym)
-                    case sym: InnerSymbol => Value.InnerRef(sym)
+                    case sym: InnerSymbol => Value.This(sym)
                 ) :: Nil) ne_:: Nil)(true, false, false),
             implct = true)
           val je = nestedScp.givenIn:

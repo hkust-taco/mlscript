@@ -35,8 +35,8 @@ object FlowAnalysis:
         resultId.getResult match
         case Value.SimpleRef(s) => s
         case Value.MemberRef(bms, _) => bms
-        case Value.InnerRef(sym) => sym
-        case e => lastWords(s"assumption failed: $e is not a SimpleRef, MemberRef, or InnerRef")
+        case Value.This(sym) => sym
+        case e => lastWords(s"assumption failed: $e is not a SimpleRef, MemberRef, or ThisRef")
       def getReferredFun(using Elaborator.State): Option[TermSymbol] =
         resultId.getResult match
         case FunRef(f) => Some(f)
@@ -99,13 +99,14 @@ object RefLike:
       yield
         cls
   
-  def unapply(p: Value.SimpleRef | Value.MemberRef | Select)(using Elaborator.State): Opt[Symbol] =
+  def unapply(p: Value.SimpleRef | Value.MemberRef | Value.This | Select)(using Elaborator.State): Opt[Symbol] =
     p match
       case Value.SimpleRef(sym) =>
         classCtorSymbol(sym) orElse S(sym)
-        classCtorSymbol(sym) orElse S(sym)
       case Value.MemberRef(bms, disamb) =>
         val sym: Symbol = disamb
+        classCtorSymbol(sym) orElse S(sym)
+      case Value.This(sym) =>
         classCtorSymbol(sym) orElse S(sym)
       case s: Select =>
         s.symbol.flatMap: selSym =>
@@ -603,7 +604,6 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     case v@Value.SimpleRef(l) => applyValueSimpleRef(v, recordAffinity = true)
     case v@Value.MemberRef(_, _) => applyValueMemberRef(v, recordAffinity = true)
     case Value.This(sym) => ()
-    case Value.InnerRef(sym) => ()
     case Value.Lit(lit) => ()
   
   override def applyFunDefn(fun: FunDefn): Unit =
@@ -1036,12 +1036,6 @@ class FlowConstraintsCollector(
             cc.constrain(processResult(qual), UnknownCons)
             cc.constrain(processResult(fld), UnknownCons)
             UnknownProd
-          case Value.This(sym) => UnknownProd
-          case Value.InnerRef(sym) =>
-            // Mirror old Value.Ref(innerSym, N) behavior via RefLike → CtorRef chain:
-            // if classCtorSymbol(sym) is Some, CtorRef would match → UnknownProd;
-            // otherwise RefLike falls through → generatedProdVars(sym).asProdStrat
-            (sym.asCls orElse sym.asObj).fold(generatedProdVars(sym).asProdStrat)(_ => UnknownProd)
           case Value.Lit(lit) => UnknownProd
   }
 end FlowConstraintsCollector

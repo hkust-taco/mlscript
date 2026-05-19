@@ -132,7 +132,7 @@ class Printer(using Raise, ShowCfg, State, SymbolPrinter, Config):
       val docStaged = if cls.isStaged then doc"staged " else doc""
       val docBody = print(privateFields, publicFields, methods, auxParams, S(preCtor), ctor, ctorSym)
       val clsType = k.str
-      val docCls = doc"${docStaged}${clsType} ${print(isym)}${ctorParams}${docBody}"
+      val docCls = doc"${docStaged}${clsType}${parentSym.fold(doc"")(doc" extends " :: print(_))} ${print(isym)}${ctorParams}${docBody}"
       val docModule = mod match
         case Some(mod) =>
           val docStaged = if mod.isStaged then doc"staged " else doc""
@@ -154,9 +154,9 @@ class Printer(using Raise, ShowCfg, State, SymbolPrinter, Config):
   def print(value: Value)(using Scope): Document = value match
     case Value.SimpleRef(l) => print(l)
     case Value.MemberRef(bms, disamb) => showSymbol(bms.nme, S(disamb))
-    case Value.InnerRef(sym) => doc"${print(sym)}.this"
+    // case Value.InnerRef(sym) => doc"${print(sym)}.this"
     case Value.This(sym) if sym === State.globalThisSymbol => showSymbol(sym.nme, S(sym.asDefnSym))
-    case Value.This(sym) => doc"this"
+    case Value.This(sym) => doc"${print(sym)}.this"
     case Value.Lit(lit) => doc"${lit.idStr}"
   
   def print(path: Path)(using Scope): Document = path match

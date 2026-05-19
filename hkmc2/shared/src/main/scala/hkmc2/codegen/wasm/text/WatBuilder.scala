@@ -1203,15 +1203,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         )
 
   def result(r: codegen.Result)(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr = r match
-    case Value.This(sym) =>
-      // TODO(Derppening): Add type tracking and refinement for locals, remove the `ref.cast`
-      ref.cast(
-        local.get(funcCtx.lookupLocal_!(sym, sym.toLoc), RefType.anyref),
-        RefType(
-          sym.asBlkMember.fold(baseObjectTypeIdx)(ctx.getType_!(_)),
-          nullable = false,
-        ),
-      )
     case Value.Lit(BoolLit(value)) =>
       ref.i31(i32.const(if value then 1 else 0))
     case Value.Lit(IntLit(value)) =>
@@ -1246,13 +1237,21 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             ctx.getFunc(bms) match
               case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncTypeUse_!(bms).typeIdx, nullable = false))
               case N => getVar(bms, r.toLoc)
-    case Value.InnerRef(sym) =>
+    case Value.This(sym) =>
       singletonInfoFor(sym) match
         case S(info) => singletonGlobalGet(info)
         case N =>
           ctx.getFunc(sym) match
             case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncTypeUse_!(sym).typeIdx, nullable = false))
-            case N => getVar(sym, r.toLoc)
+            case N => 
+              // TODO(Derppening): Add type tracking and refinement for locals, remove the `ref.cast`
+              ref.cast(
+                local.get(funcCtx.lookupLocal_!(sym, sym.toLoc), RefType.anyref),
+                RefType(
+                  sym.asBlkMember.fold(baseObjectTypeIdx)(ctx.getType_!(_)),
+                  nullable = false,
+                ),
+              )
 
     case Call(Value.SimpleRef(l: BuiltinSymbol), lhs :: rhs :: Nil) if !l.functionLike =>
       if l.binary then

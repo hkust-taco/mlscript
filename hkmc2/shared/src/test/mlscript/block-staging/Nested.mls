@@ -70,7 +70,7 @@ staged module LiftedLambda with
 //│ define lambda⁰ as staged fun lambda¹(x, y) {
 //│   return +⁰(x, y)
 //│ };
-//│ define Function$⁰ as staged class Function$¹ {
+//│ define Function$⁰ as staged class extends globalThis⁰.Function⁰ Function$¹ {
 //│   private val x⁰;
 //│   constructor(x) {
 //│     super⁰();
@@ -150,7 +150,7 @@ staged module LiftedMultParams with
 //│ define lambda$⁰ as staged fun lambda$¹(x, y) {
 //│   return +⁰(x, y)
 //│ };
-//│ define Function$² as staged class Function$³ {
+//│ define Function$² as staged class extends globalThis⁰.Function⁰ Function$³ {
 //│   private val x¹;
 //│   constructor(x) {
 //│     super⁰();

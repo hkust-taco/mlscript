@@ -207,7 +207,7 @@ class B(x) extends A with
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let A⁶, B⁰;
 //│ define A⁶ as class A⁷;
-//│ define B⁰ as class B²(x) {
+//│ define B⁰ as class extends A⁷ B²(x) {
 //│   private val x¹³;
 //│   val y¹;
 //│   constructor B¹ { super⁰(); set x¹³ = x; define y¹ as val y² = 2; end }

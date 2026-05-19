@@ -66,7 +66,7 @@ class Path extends Result with
     ValueRef(val l: Symbol)
     ValueSimpleRef(val l: Symbol)
     ValueMemberRef(val l: Symbol)
-    ValueInnerRef(val l: Symbol)
+    ValueThisRef(val l: Symbol)
     ValueLit(val lit: Literal)
 
 class Defn with 
@@ -116,7 +116,7 @@ fun showPath(p: Path): Str =
     ValueRef(l) then showSymbol(l)
     ValueSimpleRef(l) then showSymbol(l)
     ValueMemberRef(l) then showSymbol(l)
-    ValueInnerRef(l) then showSymbol(l)
+    ValueThisRef(l) then showSymbol(l)
     ValueLit(lit) then showLiteral(lit)
 
 fun showArg(arg: Arg) =

@@ -191,9 +191,9 @@ class BlockTransformer(subst: SymbolSubst):
     case Value.This(sym) =>
       val sym2 = sym.subst
       k(if (sym2 is sym) then v else Value.This(sym2).withLocOf(v))
-    case Value.InnerRef(sym) =>
-      val sym2 = sym.subst
-      k(if (sym2 is sym) then v else Value.InnerRef(sym2).withLocOf(v))
+    // case Value.InnerRef(sym) =>
+    //   val sym2 = sym.subst
+    //   k(if (sym2 is sym) then v else Value.InnerRef(sym2).withLocOf(v))
     case Value.Lit(lit) => k(v)
   
   def applyLocal(sym: Local): Local = sym.subst
