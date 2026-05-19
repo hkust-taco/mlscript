@@ -55,6 +55,8 @@ class IdeWorkbench extends HTMLElement with
           <span class="status-segment active-file-kind">No language</span>
         </div>
       </div>
+      <command-palette-dialog></command-palette-dialog>
+      <share-dialog></share-dialog>
     """
 
   fun appContainer() =

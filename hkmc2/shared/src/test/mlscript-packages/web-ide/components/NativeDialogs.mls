@@ -1,0 +1,254 @@
+import "../common/JS.mls"
+
+open JS { Absent }
+
+fun escapeHtml(text) =
+  let div = document.createElement("div")
+  set div.textContent = text
+  div.innerHTML
+
+class CommandPaletteDialog extends HTMLElement with
+  let query = ""
+
+  fun connectedCallback() =
+    this.render()
+    this.attachEventListeners()
+    renderCommands()
+
+  fun render() =
+    set this.innerHTML = """
+      <dialog class="command-palette-native">
+        <form class="command-palette-form" method="dialog">
+          <div class="dialog-header">
+            <h2>Command Palette</h2>
+            <button class="dialog-icon-button command-palette-close" type="submit" aria-label="Close command palette" title="Close">
+              <i class="icon-x"></i>
+            </button>
+          </div>
+          <input class="command-search-input" type="search" placeholder="Search commands" aria-label="Search commands" />
+          <div class="command-list" role="listbox" aria-label="Commands"></div>
+        </form>
+      </dialog>
+    """
+
+  fun command(id, title, detail, icon, disabled, disabledTitle) =
+    mut { :id, :title, :detail, :icon, :disabled, :disabledTitle }
+
+  fun commands() =
+    [
+      command("compile", "Compile current file", "Run the compiler for the active MLscript file.", "icon-binary", false, "")
+      command("execute", "Run compiled output", "Execute the active compiled program.", "icon-play", false, "")
+      command("open-generated", "Open generated output", "Open the compiled-output split view.", "icon-columns-3", false, "")
+      command("target-wasm", "Change compile target", "Open the split view and select the wasm mock target.", "icon-box", false, "")
+      command("go-symbol", "Go to symbol", "Open the Outline activity panel.", "icon-list-tree", false, "")
+      command("go-file", "Go to file", "Open the Files activity panel.", "icon-files", false, "")
+      command("search-files", "Search across files", "Open the Search activity panel.", "icon-search", false, "")
+      command("toggle-diagnostics", "Toggle diagnostics panel", "Show or hide the diagnostics inspector.", "icon-circle-alert", false, "")
+      command("toggle-output", "Toggle output panel", "Show or hide the bottom panel.", "icon-panel-bottom", false, "")
+      command("toggle-theme", "Toggle theme", "Future visual command.", "icon-sun-moon", true, "Theme switching is mocked in Phase 7.")
+    ]
+
+  fun normalizedQuery() =
+    query.trim().toLowerCase()
+
+  fun commandMatches(item, needle) = if
+    needle is "" then true
+    item.title.toLowerCase().includes(needle) then true
+    item.detail.toLowerCase().includes(needle) then true
+    else false
+
+  fun filteredCommands() =
+    let needle = normalizedQuery()
+    commands().filter(item => commandMatches(item, needle))
+
+  fun commandRowHtml(item) =
+    let
+      disabledAttr = if item.disabled then " disabled aria-disabled=\"true\"" else ""
+      titleAttr = if item.disabled then item.disabledTitle else item.detail
+      disabledClass = if item.disabled then " disabled" else ""
+    """
+      <button class="command-row""" + disabledClass + """" type="button" role="option" data-command-id="""" + item.id + """" title="""" + escapeHtml(titleAttr) + """"""" + disabledAttr + """>
+        <i class="""" + item.icon + """"></i>
+        <span class="command-row-main">
+          <span class="command-row-title">""" + escapeHtml(item.title) + """</span>
+          <span class="command-row-detail">""" + escapeHtml(item.detail) + """</span>
+        </span>
+      </button>
+    """
+
+  fun renderCommands() =
+    if this.querySelector(".command-list") is ~null as list do
+      let matching = filteredCommands()
+      if matching.length === 0 then
+        set list.innerHTML = """<div class="dialog-empty">No commands</div>"""
+      else
+        set list.innerHTML = matching.map(item => commandRowHtml(item)).join("")
+        attachCommandRows()
+
+  fun dialog() =
+    this.querySelector("dialog")
+
+  fun openPalette() =
+    set query = ""
+    renderCommands()
+    if dialog() is ~null as commandDialog do
+      if not commandDialog.open do commandDialog.showModal()
+    if this.querySelector(".command-search-input") is ~null as input do
+      set input.value = ""
+      window.setTimeout(() => input.focus(), 0)
+
+  fun closePalette() =
+    if dialog() is ~null as commandDialog do
+      if commandDialog.open do commandDialog.close()
+
+  fun getActiveFilePath() =
+    let editorPanel = document.querySelector("editor-panel")
+    if
+      editorPanel is Absent then null
+      editorPanel.activeTabId is Absent then null
+      editorPanel.openTabs is Absent then null
+      else
+        let activeTab = editorPanel.openTabs.get(editorPanel.activeTabId)
+        if activeTab is
+          Absent then null
+          ~Absent as tab then tab.path
+
+  fun fileEventDetail() =
+    mut { filePath: getActiveFilePath() }
+
+  fun fileEventOptions() =
+    mut { bubbles: true, detail: fileEventDetail() }
+
+  fun sidebarDetail(side, panel) =
+    mut { :side, :panel }
+
+  fun sidebarEventOptions(side, panel) =
+    mut { detail: sidebarDetail(side, panel) }
+
+  fun dispatchSidebar(side, panel) =
+    document.dispatchEvent(new CustomEvent("sidebar-toggle-requested", sidebarEventOptions(side, panel)))
+
+  fun editorWorkbench() =
+    document.querySelector("editor-workbench")
+
+  fun bottomPanel() =
+    document.querySelector("bottom-panel")
+
+  fun openGeneratedOutput(target) =
+    if editorWorkbench() is ~null as shell do
+      shell.openCompiledOutput()
+      shell.setTarget(target)
+
+  fun executeCommand(id) =
+    if id is
+      "compile" then document.dispatchEvent(new CustomEvent("compile-requested", fileEventOptions()))
+      "execute" then document.dispatchEvent(new CustomEvent("execute-requested", fileEventOptions()))
+      "open-generated" then openGeneratedOutput("mjs")
+      "target-wasm" then openGeneratedOutput("wasm")
+      "go-symbol" then dispatchSidebar("left", "outline")
+      "go-file" then dispatchSidebar("left", "files")
+      "search-files" then dispatchSidebar("left", "search")
+      "toggle-diagnostics" then dispatchSidebar("right", "diagnostics")
+      "toggle-output" then
+        if bottomPanel() is ~null as panel do panel.toggleCollapse()
+      else ()
+    closePalette()
+
+  fun isOpenShortcut(event) =
+    let isMac = window.navigator.platform.toUpperCase().indexOf("MAC") >= 0
+    let isCmdOrCtrl = if isMac then event.metaKey else event.ctrlKey
+    isCmdOrCtrl and isKey(event, "k", "K")
+
+  fun isKey(event, lower, upper) = if
+    event.key === lower then true
+    event.key === upper then true
+    else false
+
+  fun attachCommandRows() =
+    let palette = this
+    this.querySelectorAll(".command-row").forEach of (button, ...) =>
+      if not button.disabled do
+        button.addEventListener("click", () => palette.executeCommand(button.dataset.commandId))
+
+  fun attachEventListeners() =
+    let palette = this
+    document.addEventListener("command-palette-open-requested", () => palette.openPalette())
+    document.addEventListener of "keydown", event =>
+      if palette.isOpenShortcut(event) do
+        event.preventDefault()
+        palette.openPalette()
+    if this.querySelector(".command-search-input") is ~null as input do
+      input.addEventListener of "input", event =>
+        set query = event.target.value
+        renderCommands()
+
+class ShareDialog extends HTMLElement with
+  let
+    shareUrl = "https://mlscript.fun/ide?share=mock-session"
+    feedbackText = ""
+
+  fun connectedCallback() =
+    this.render()
+    this.attachEventListeners()
+
+  fun render() =
+    set this.innerHTML = """
+      <dialog class="share-dialog-native">
+        <form class="share-dialog-form" method="dialog">
+          <div class="dialog-header">
+            <h2>Share</h2>
+            <button class="dialog-icon-button share-close" type="submit" aria-label="Close share dialog" title="Close">
+              <i class="icon-x"></i>
+            </button>
+          </div>
+          <label class="share-url-label">
+            <span>Link</span>
+            <input class="share-url-input" type="url" readonly value="""" + shareUrl + """" aria-label="Share link" />
+          </label>
+          <div class="share-actions">
+            <button class="share-copy-button" type="button">
+              <i class="icon-copy"></i>
+              <span>Copy Link</span>
+            </button>
+          </div>
+          <div class="share-feedback" hidden></div>
+        </form>
+      </dialog>
+    """
+
+  fun dialog() =
+    this.querySelector("dialog")
+
+  fun openDialog() =
+    set feedbackText = ""
+    updateFeedback()
+    if dialog() is ~null as shareDialog do
+      if not shareDialog.open do shareDialog.showModal()
+    if this.querySelector(".share-copy-button") is ~null as copyButton do
+      window.setTimeout(() => copyButton.focus(), 0)
+
+  fun updateFeedback() =
+    if this.querySelector(".share-feedback") is ~null as feedback do
+      if feedbackText === "" then
+        set feedback.hidden = true
+      else
+        set
+          feedback.hidden = false
+          feedback.textContent = feedbackText
+
+  fun copyShareUrl() =
+    if this.querySelector(".share-url-input") is ~null as input do
+      input.focus()
+      input.select()
+      let copied = document.execCommand("copy")
+      set feedbackText = if copied then "Copied share link" else "Copy failed"
+      updateFeedback()
+
+  fun attachEventListeners() =
+    let share = this
+    document.addEventListener("share-dialog-open-requested", () => share.openDialog())
+    if this.querySelector(".share-copy-button") is ~null as copyButton do
+      copyButton.addEventListener("click", () => share.copyShareUrl())
+
+customElements.define("command-palette-dialog", CommandPaletteDialog)
+customElements.define("share-dialog", ShareDialog)

@@ -112,6 +112,12 @@ class ToolbarPanel extends HTMLElement with
         No execution is currently running.
       </div>
       <div class="actions">
+        <button id="command-palette" class="toolbar-icon-btn" type="button" aria-label="Open command palette" title="Command palette">
+          <i class="icon-command"></i>
+        </button>
+        <button id="share" class="toolbar-icon-btn" type="button" aria-label="Share workspace" title="Share">
+          <i class="icon-share-2"></i>
+        </button>
         <button id="compile" class="compile-btn">
           <i class="icon-binary"></i>
           Compile
@@ -153,6 +159,12 @@ class ToolbarPanel extends HTMLElement with
 
   fun handleTerminate() =
     this.dispatchEvent(new CustomEvent("terminate-requested", bubbleEventOptions()))
+
+  fun handleCommandPalette() =
+    document.dispatchEvent(new CustomEvent("command-palette-open-requested"))
+
+  fun handleShare() =
+    document.dispatchEvent(new CustomEvent("share-dialog-open-requested"))
 
   fun setCompilationStatus(nextStatus) =
     set isCompiling = nextStatus === "running"
@@ -212,6 +224,10 @@ class ToolbarPanel extends HTMLElement with
     set statusTooltip.style.display = "none"
 
   fun attachButtonListeners(panel) =
+    if panel.querySelector("#command-palette") is
+      ~null as commandPaletteBtn do commandPaletteBtn.addEventListener("click", () => panel.handleCommandPalette())
+    if panel.querySelector("#share") is
+      ~null as shareBtn do shareBtn.addEventListener("click", () => panel.handleShare())
     if panel.querySelector("#compile") is
       ~null as compileBtn do compileBtn.addEventListener("click", () => panel.handleCompile())
     if panel.querySelector("#execute") is
