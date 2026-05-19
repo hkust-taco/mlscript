@@ -236,6 +236,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
               val simplifiedRecord = thatPattern assuming pattern
               if simplifiedRecord.entries.isEmpty then
                 S(tail)
+              else if simplifiedRecord.entries.length == thatPattern.entries.length then
+                // `assuming` only filters, so equal length means no field was
+                // removed — the split is structurally unchanged.
+                N
               else
                 S(Split.Cons(Branch(thatScrutinee, simplifiedRecord, continuation), tail))
             case _ =>
