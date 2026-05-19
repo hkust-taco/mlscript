@@ -17,16 +17,16 @@ class DiagnosticsInspector extends HTMLElement with
     this.restoreSizeFromStorage()
 
   fun restoreSizeFromStorage() =
-    let savedWidth = localStorage.getItem("reserved-panel-width")
+    let savedWidth = localStorage.getItem("diagnostics-inspector-width")
     if savedWidth is ~Absent and savedWidth !== "" do
       let width = parseInt(savedWidth, 10)
       if width >= 150 and width <= 600 do
         if document.querySelector(".app-container") is ~null as container do
-          container.style.setProperty("--reserved-panel-width", width + "px")
+          container.style.setProperty("--ide-right-panel-width", width + "px")
         this.setAttribute("width", width)
 
   fun saveSizeToStorage(width) =
-    localStorage.setItem("reserved-panel-width", width)
+    localStorage.setItem("diagnostics-inspector-width", width)
 
   fun setDiagnostics(diagnosticsPerFile) =
     let nextData = if diagnosticsPerFile is

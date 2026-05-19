@@ -75,11 +75,8 @@ class ResizeHandle extends HTMLElement with
       target.tagName.toLowerCase() === "file-explorer" then
         container.style.setProperty("--file-explorer-width", width + "px")
         target.setAttribute("width", width)
-      target.tagName.toLowerCase() === "reserved-panel" then
-        container.style.setProperty("--reserved-panel-width", width + "px")
-        target.setAttribute("width", width)
       target.tagName.toLowerCase() === "diagnostics-inspector" then
-        container.style.setProperty("--reserved-panel-width", width + "px")
+        container.style.setProperty("--ide-right-panel-width", width + "px")
         target.setAttribute("width", width)
       else ()
 

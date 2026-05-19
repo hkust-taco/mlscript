@@ -20,10 +20,10 @@ class BottomPanel extends HTMLElement with
     this.restoreSizeFromStorage()
 
   fun restoreSizeFromStorage() =
-    PanelPersistence.restorePanelHeight(this, "console-panel-height", 100, 600)
+    PanelPersistence.restorePanelHeight(this, "bottom-panel-height", 100, 600)
 
   fun saveSizeToStorage(height) =
-    PanelPersistence.savePanelHeight("console-panel-height", height)
+    PanelPersistence.savePanelHeight("bottom-panel-height", height)
 
   fun render() =
     set this.innerHTML = """

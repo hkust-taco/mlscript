@@ -7,11 +7,18 @@ class IdeWorkbench extends HTMLElement with
     leftActivePanel = "files"
     leftPanelOpen = true
     diagnosticsOpen = true
+    viewportResizeListener = null
 
   fun connectedCallback() =
     this.render()
     this.attachEventListeners()
     this.syncLayoutState()
+    this.attachViewportListener()
+    this.applyNarrowLayout()
+
+  fun disconnectedCallback() =
+    if viewportResizeListener is ~Absent as listener do
+      window.removeEventListener("resize", listener)
 
   fun render() =
     set this.innerHTML = """
@@ -159,6 +166,19 @@ class IdeWorkbench extends HTMLElement with
   fun syncLayoutState() =
     setLeftPanelState(leftActivePanel, leftPanelOpen)
     setDiagnosticsState(diagnosticsOpen)
+
+  fun isNarrowLayout() =
+    window.matchMedia("(max-width: 760px)").matches
+
+  fun applyNarrowLayout() =
+    if isNarrowLayout() do
+      if leftPanelOpen do setLeftPanelState(leftActivePanel, false)
+      if diagnosticsOpen do setDiagnosticsState(false)
+
+  fun attachViewportListener() =
+    let workbench = this
+    set viewportResizeListener = () => workbench.applyNarrowLayout()
+    window.addEventListener("resize", viewportResizeListener)
 
   fun attachActivityButtons() =
     this.querySelectorAll(".activity-button[data-sidebar-side]").forEach of (button, ...) =>
