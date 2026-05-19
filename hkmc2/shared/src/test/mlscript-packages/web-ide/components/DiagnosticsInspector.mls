@@ -1,0 +1,433 @@
+import "../filesystem/fs.mls"
+import "../mockWorkbenchData.mls"
+import "../common/JS.mls"
+
+open JS { Absent }
+
+class DiagnosticsInspector extends HTMLElement with
+  let
+    mode = "list"
+    diagnosticsData = mockWorkbenchData.diagnostics
+    usingMock = true
+    ignoredDiagnostics = new Set()
+    explainedDiagnostics = new Set()
+
+  fun connectedCallback() =
+    this.render()
+    this.restoreSizeFromStorage()
+
+  fun restoreSizeFromStorage() =
+    let savedWidth = localStorage.getItem("reserved-panel-width")
+    if savedWidth is ~Absent and savedWidth !== "" do
+      let width = parseInt(savedWidth, 10)
+      if width >= 150 and width <= 600 do
+        if document.querySelector(".app-container") is ~null as container do
+          container.style.setProperty("--reserved-panel-width", width + "px")
+        this.setAttribute("width", width)
+
+  fun saveSizeToStorage(width) =
+    localStorage.setItem("reserved-panel-width", width)
+
+  fun setDiagnostics(diagnosticsPerFile) =
+    let nextData = if diagnosticsPerFile is
+      Absent then []
+      null then []
+      files then files
+    set
+      diagnosticsData = nextData
+      usingMock = false
+      ignoredDiagnostics = new Set()
+      explainedDiagnostics = new Set()
+    this.render()
+
+  fun setOutput(message) =
+    let text = if message is
+      Absent then "Worker error"
+      else message
+    set
+      diagnosticsData = runtimeDiagnosticData(text)
+      usingMock = false
+      ignoredDiagnostics = new Set()
+      explainedDiagnostics = new Set()
+    this.render()
+
+  fun runtimeDiagnosticData(message) =
+    [
+      mut
+        path: "/runtime"
+        diagnostics: [
+          mut
+            kind: "internal"
+            source: "runtime"
+            mainMessage: message
+            excerpt: "Worker runtime error"
+            line: 1
+            allMessages: [
+              mut
+                messageBits: [mut { text: message }]
+                location: mut { start: 0, end: 0 }
+            ]
+        ]
+    ]
+
+  fun render() =
+    let entries = diagnosticEntries(diagnosticsData)
+    set this.innerHTML = """
+      <resize-handle direction="horizontal" side="right" min-size="150" max-size="600"></resize-handle>
+      <div class="diagnostics-header">
+        <div class="diagnostics-title-row">
+          <h2>Diagnostics</h2>
+          <span class="diagnostics-source-label">""" + dataLabel() + """</span>
+        </div>
+        """ + countsHtml(entries) + """
+        <div class="diagnostics-mode-tabs" role="tablist" aria-label="Diagnostics view">
+          """ + modeButtonHtml("list", "List", "icon-list") + """
+          """ + modeButtonHtml("tree", "Tree", "icon-list-tree") + """
+          """ + modeButtonHtml("source", "Source", "icon-panel-right") + """
+        </div>
+      </div>
+      <div class="diagnostics-content">""" + contentHtml(entries) + """</div>
+    """
+    attachEventListeners()
+
+  fun dataLabel() =
+    if usingMock then "Sample" else "Compiler"
+
+  fun modeButtonHtml(value, label, icon) =
+    let
+      activeClass = if mode === value then " active" else ""
+      pressed = if mode === value then "true" else "false"
+    """
+      <button class="diagnostics-mode-button""" + activeClass + """" type="button" data-diagnostics-mode="""" + value + """" aria-pressed="""" + pressed + """">
+        <i class="""" + icon + """"></i>
+        <span>""" + label + """</span>
+      </button>
+    """
+
+  fun countsHtml(entries) =
+    """
+      <div class="diagnostics-counts" aria-label="Diagnostic counts">
+        """ + countPillHtml("error", "Errors", entries) + """
+        """ + countPillHtml("warning", "Warnings", entries) + """
+        """ + countPillHtml("internal", "Internal", entries) + """
+        """ + countPillHtml("info", "Info", entries) + """
+      </div>
+    """
+
+  fun countPillHtml(kind, label, entries) =
+    """
+      <span class="diagnostics-count diagnostics-count-""" + kind + """" data-count-kind="""" + kind + """">
+        <span>""" + label + """</span>
+        <strong>""" + countKind(entries, kind) + """</strong>
+      </span>
+    """
+
+  fun countKind(entries, kind) =
+    let count = 0
+    entries.forEach of (entry, ...) =>
+      if diagnosticKind(entry.diagnostic) === kind do set count += 1
+    count
+
+  fun contentHtml(entries) = if
+    entries.length === 0 then emptyHtml()
+    mode is "tree" then treeHtml(entries)
+    mode is "source" then sourceHtml(entries)
+    else listHtml(entries)
+
+  fun emptyHtml() =
+    """
+      <div class="diagnostics-empty">
+        <i class="icon-circle-check-big"></i>
+        <span>Everything works fine!</span>
+      </div>
+    """
+
+  fun listHtml(entries) =
+    let html = """<div class="diagnostics-list" role="list">"""
+    set html += entries.map(entry => listRowHtml(entry)).join("")
+    set html += """</div>"""
+    html
+
+  fun listRowHtml(entry) =
+    let
+      kind = diagnosticKind(entry.diagnostic)
+      location = entryLocation(entry)
+    """
+      <button class="diagnostics-row diagnostic-""" + kind + """" type="button" role="listitem" data-diagnostic-key="""" + escapeHtml(entry.key) + """">
+        <i class="diagnostics-severity-icon """ + kindIcon(kind) + """"></i>
+        <span class="diagnostics-row-main">
+          <span class="diagnostics-row-message">""" + escapeHtml(diagnosticMainMessage(entry.diagnostic)) + """</span>
+          <span class="diagnostics-row-detail">""" + escapeHtml(entry.filePath) + ":" + location.line + """ · """ + escapeHtml(capitalize(diagnosticSource(entry.diagnostic))) + """</span>
+        </span>
+        <i class="icon-locate diagnostics-row-locate"></i>
+      </button>
+    """
+
+  fun treeHtml(entries) =
+    let html = """<div class="diagnostics-tree">"""
+    set html += treeGroupHtml(entries, "error")
+    set html += treeGroupHtml(entries, "warning")
+    set html += treeGroupHtml(entries, "internal")
+    set html += treeGroupHtml(entries, "info")
+    set html += """</div>"""
+    html
+
+  fun treeGroupHtml(entries, kind) =
+    let group = entries.filter(entry => diagnosticKind(entry.diagnostic) === kind)
+    if group.length === 0 then ""
+    else
+      """
+        <details class="diagnostics-tree-group diagnostic-""" + kind + """" open>
+          <summary>
+            <i class="diagnostics-severity-icon """ + kindIcon(kind) + """"></i>
+            <span>""" + severityLabel(kind) + """</span>
+            <strong>""" + group.length + """</strong>
+          </summary>
+          <div class="diagnostics-tree-children">
+            """ + group.map(entry => treeRowHtml(entry)).join("") + """
+          </div>
+        </details>
+      """
+
+  fun treeRowHtml(entry) =
+    let location = entryLocation(entry)
+    """
+      <button class="diagnostics-tree-row" type="button" data-diagnostic-key="""" + escapeHtml(entry.key) + """">
+        <span class="diagnostics-tree-file">""" + escapeHtml(entry.filePath) + ":" + location.line + """</span>
+        <span class="diagnostics-tree-message">""" + escapeHtml(diagnosticMainMessage(entry.diagnostic)) + """</span>
+      </button>
+    """
+
+  fun sourceHtml(entries) =
+    let html = """<div class="diagnostics-source-cards">"""
+    set html += entries.map(entry => sourceCardHtml(entry)).join("")
+    set html += """</div>"""
+    html
+
+  fun sourceCardHtml(entry) =
+    let
+      kind = diagnosticKind(entry.diagnostic)
+      location = entryLocation(entry)
+      key = escapeHtml(entry.key)
+    """
+      <section class="diagnostics-source-card diagnostic-""" + kind + """" data-diagnostic-key="""" + key + """">
+        <div class="diagnostics-source-card-header">
+          <i class="diagnostics-severity-icon """ + kindIcon(kind) + """"></i>
+          <div>
+            <h3>""" + escapeHtml(diagnosticMainMessage(entry.diagnostic)) + """</h3>
+            <span>""" + escapeHtml(entry.filePath) + ":" + location.line + ":" + location.column + """ · """ + escapeHtml(capitalize(diagnosticSource(entry.diagnostic))) + """</span>
+          </div>
+        </div>
+        <div class="diagnostics-source-preview">
+          <span class="diagnostics-source-line-number">""" + location.line + """</span>
+          <pre>""" + escapeHtml(entryExcerpt(entry)) + """</pre>
+        </div>
+        """ + messageHtml(entry.diagnostic) + """
+        <div class="diagnostics-source-actions">
+          <button class="diagnostics-action diagnostics-open-location" type="button" data-diagnostic-key="""" + key + """" title="Open source location">
+            <i class="icon-locate"></i>
+            <span>Open</span>
+          </button>
+          <button class="diagnostics-action" type="button" disabled aria-disabled="true" title="Quick fix is mocked in Phase 4">
+            <i class="icon-wand-sparkles"></i>
+            <span>Quick Fix</span>
+          </button>
+          <button class="diagnostics-action diagnostics-explain-action" type="button" data-diagnostic-key="""" + key + """" title="Toggle diagnostic explanation">
+            <i class="icon-message-square-text"></i>
+            <span>Explain</span>
+          </button>
+          <button class="diagnostics-action diagnostics-ignore-action" type="button" data-diagnostic-key="""" + key + """" title="Hide this diagnostic">
+            <i class="icon-eye-off"></i>
+            <span>Ignore</span>
+          </button>
+        </div>
+        """ + explanationHtml(entry) + """
+      </section>
+    """
+
+  fun messageHtml(diagnostic) =
+    """
+      <p class="diagnostics-card-message">""" + escapeHtml(diagnosticDetailText(diagnostic)) + """</p>
+    """
+
+  fun explanationHtml(entry) =
+    if explainedDiagnostics.has(entry.key) then
+      """
+        <div class="diagnostics-action-feedback">
+          This diagnostic is attached to the source range shown above.
+        </div>
+      """
+    else ""
+
+  fun diagnosticEntries(files) =
+    let entries = mut []
+    if files is ~Absent do
+      files.forEach of (fileData, fileIndex) =>
+        if fileData.diagnostics is ~Absent as diagnostics do
+          diagnostics.forEach of (diagnostic, diagnosticIndex) =>
+            let
+              filePath = filePathOf(fileData)
+              key = diagnosticKey(filePath, fileIndex, diagnosticIndex, diagnostic)
+            if not ignoredDiagnostics.has(key) do
+              entries.push(mut
+                filePath: filePath
+                diagnostic: diagnostic
+                fileIndex: fileIndex
+                diagnosticIndex: diagnosticIndex
+                key: key
+              )
+    entries
+
+  fun filePathOf(fileData) = if fileData.path is
+    Absent then "Unknown file"
+    path then path
+
+  fun diagnosticKey(filePath, fileIndex, diagnosticIndex, diagnostic) =
+    filePath + "::" + fileIndex + ":" + diagnosticIndex + ":" + diagnosticMainMessage(diagnostic)
+
+  fun entryByKey(key) =
+    let found = null
+    diagnosticEntries(diagnosticsData).forEach of (entry, ...) =>
+      if found is null and entry.key === key do set found = entry
+    found
+
+  fun diagnosticKind(diagnostic) =
+    let kind = if diagnostic.kind is
+      Absent then "info"
+      value then value
+    if kind is
+      "error" then "error"
+      "warning" then "warning"
+      "internal" then "internal"
+      else "info"
+
+  fun diagnosticSource(diagnostic) = if diagnostic.source is
+    Absent then "compiler"
+    source then source
+
+  fun diagnosticMainMessage(diagnostic) = if diagnostic.mainMessage is
+    Absent then firstDiagnosticText(diagnostic)
+    message then message
+
+  fun firstDiagnosticText(diagnostic) = if
+    diagnostic.allMessages is Absent then "Diagnostic"
+    diagnostic.allMessages.length === 0 then "Diagnostic"
+    else messageText(diagnostic.allMessages.at(0))
+
+  fun diagnosticDetailText(diagnostic) =
+    let text = ""
+    if diagnostic.allMessages is ~Absent as messages do
+      messages.forEach of (message, ...) =>
+        let content = messageText(message)
+        if content !== "" do
+          if text === "" then set text = content
+          else set text += " " + content
+    if text === "" then diagnosticMainMessage(diagnostic) else text
+
+  fun messageText(message) =
+    let text = ""
+    if message.messageBits is ~Absent as bits do
+      bits.forEach of (bit, ...) =>
+        if bit.text is ~Absent as bitText do set text += bitText
+        if bit.code is ~Absent as bitCode do set text += bitCode
+    text
+
+  fun primaryLocation(diagnostic) =
+    let result = null
+    if diagnostic.allMessages is ~Absent as messages do
+      messages.forEach of (message, ...) =>
+        if result is null do
+          if message.location is ~Absent as location do set result = location
+    result
+
+  fun entryLocation(entry) = if entry.diagnostic.line is
+    Absent then computedLocation(entry)
+    line then lineColumn(line, 1)
+
+  fun computedLocation(entry) =
+    let location = primaryLocation(entry.diagnostic)
+    if location is
+      null then lineColumn(1, 1)
+      else getLineAndColumn(sourceText(entry.filePath), location.start)
+
+  fun lineColumn(line, column) =
+    mut { :line, :column }
+
+  fun getLineAndColumn(text, offset) =
+    let lines = text.substring(0, offset).split("\n")
+    lineColumn(lines.length, lines.at(lines.length - 1).length + 1)
+
+  fun sourceText(filePath) = if fs.read(filePath) is
+    Absent then ""
+    text then text
+
+  fun entryExcerpt(entry) = if entry.diagnostic.excerpt is
+    Absent then sourceLine(entry)
+    excerpt then excerpt
+
+  fun sourceLine(entry) =
+    let
+      location = entryLocation(entry)
+      lines = sourceText(entry.filePath).split("\n")
+    if location.line <= lines.length then lines.at(location.line - 1)
+    else diagnosticMainMessage(entry.diagnostic)
+
+  fun setMode(nextMode) = if nextMode is
+    "list" | "tree" | "source" then
+      set mode = nextMode
+      render()
+    else ()
+
+  fun dispatchOpenEntry(key) =
+    if entryByKey(key) is ~null as entry do
+      let
+        location = entryLocation(entry)
+        detail = mut { filePath: entry.filePath, line: location.line }
+        options = mut { :detail }
+      document.dispatchEvent(new CustomEvent("open-file-at-location", options))
+
+  fun toggleExplanation(key) =
+    if explainedDiagnostics.has(key) then explainedDiagnostics.delete(key)
+    else explainedDiagnostics.add(key)
+    render()
+
+  fun ignoreDiagnostic(key) =
+    ignoredDiagnostics.add(key)
+    render()
+
+  fun attachEventListeners() =
+    let panel = this
+    this.querySelectorAll(".diagnostics-mode-button").forEach of (button, ...) =>
+      button.addEventListener("click", () => panel.setMode(button.dataset.diagnosticsMode))
+    this.querySelectorAll(".diagnostics-row").forEach of (button, ...) =>
+      button.addEventListener("click", () => panel.dispatchOpenEntry(button.dataset.diagnosticKey))
+    this.querySelectorAll(".diagnostics-tree-row").forEach of (button, ...) =>
+      button.addEventListener("click", () => panel.dispatchOpenEntry(button.dataset.diagnosticKey))
+    this.querySelectorAll(".diagnostics-open-location").forEach of (button, ...) =>
+      button.addEventListener("click", () => panel.dispatchOpenEntry(button.dataset.diagnosticKey))
+    this.querySelectorAll(".diagnostics-explain-action").forEach of (button, ...) =>
+      button.addEventListener("click", () => panel.toggleExplanation(button.dataset.diagnosticKey))
+    this.querySelectorAll(".diagnostics-ignore-action").forEach of (button, ...) =>
+      button.addEventListener("click", () => panel.ignoreDiagnostic(button.dataset.diagnosticKey))
+
+  fun severityLabel(kind) = if kind is
+    "error" then "Errors"
+    "warning" then "Warnings"
+    "internal" then "Internal"
+    else "Info"
+
+  fun kindIcon(kind) = if kind is
+    "error" then "icon-circle-x"
+    "warning" then "icon-triangle-alert"
+    "internal" then "icon-bug"
+    else "icon-circle-alert"
+
+  fun capitalize(text) =
+    text.charAt(0).toUpperCase() + text.slice(1)
+
+  fun escapeHtml(text) =
+    let div = document.createElement("div")
+    set div.textContent = text
+    div.innerHTML
+
+customElements.define("diagnostics-inspector", DiagnosticsInspector)

@@ -37,6 +37,7 @@ This list tracks visible UI that is intentionally not backed by real functionali
 | Source Control panel | Phase 3 | Static changed-file list with stage/unstage movement between mock sections. | Real version-control state, staging, commit, pull, and push integration if supported by the Web IDE environment. |
 | Outline panel | Phase 3 | Static symbol list with mocked editor navigation. | Real symbol extraction from the active MLscript file. |
 | Examples panel | Phase 3 | Static examples list with mocked selection/detail behavior. | Real bundled examples/snippets that can open or load files. |
+| Diagnostics sample dataset | Phase 4 | Static sample diagnostics shown in the inspector before compiler diagnostics arrive. | Real compiler diagnostics or the empty success state after compilation. |
 | Diagnostics quick actions | Phase 4 | Quick fix, explain, and ignore are mocked state changes or disabled actions. | Real compiler/code-action integration or removal of unsupported actions. |
 | Problems tab | Phase 5 | Mocked problem list separate from current diagnostics. | Real diagnostic/problem aggregation from compiler results. |
 | Terminal tab | Phase 5 | Static terminal transcript or locally mutable mock lines. | Real terminal/REPL integration, or remove if unsupported. |

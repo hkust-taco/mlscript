@@ -60,3 +60,47 @@ val examples = [
   mut { id: "channels", title: "Channels", file: "channels.mls", description: "Mocks a concurrent process example using CSP-style names.", preview: "spawn producer(channel)" }
   mut { id: "shapes", title: "Shapes", file: "shapes.mls", description: "Explores shape metadata and field labels.", preview: "Shape.of(record)" }
 ]
+
+val diagnostics = [
+  mut
+    path: "/main.mls"
+    diagnostics: [
+      mut
+        kind: "error"
+        source: "typing"
+        mainMessage: "Sample type mismatch in the welcome program"
+        excerpt: "print of \"Welcome to MLscript Web IDE!\""
+        line: 5
+        allMessages: [
+          mut
+            messageBits: [mut { text: "The sample diagnostic points at the first printed expression." }]
+            location: mut { start: 51, end: 92 }
+        ]
+      mut
+        kind: "warning"
+        source: "compilation"
+        mainMessage: "Sample generated output is stale"
+        excerpt: "print of \"Press Ctrl-S to compile.\""
+        line: 8
+        allMessages: [
+          mut
+            messageBits: [mut { text: "The generated JavaScript would be refreshed after a real compile." }]
+            location: mut { start: 137, end: 172 }
+        ]
+    ]
+  mut
+    path: "/std/Predef.mls"
+    diagnostics: [
+      mut
+        kind: "internal"
+        source: "runtime"
+        mainMessage: "Sample standard-library note"
+        excerpt: "Predef.print"
+        line: 1
+        allMessages: [
+          mut
+            messageBits: [mut { text: "The standard library is editable during development, so notes can appear here." }]
+            location: mut { start: 0, end: 12 }
+        ]
+    ]
+]

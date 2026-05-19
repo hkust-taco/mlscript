@@ -110,11 +110,11 @@ fun markPathCompiled(path) =
 fun markAsCompiled(paths) =
   paths.forEach of (path, ...) => markPathCompiled(path)
 
-fun reservedPanel() =
-  document.querySelector("reserved-panel")
+fun diagnosticsInspector() =
+  document.querySelector("diagnostics-inspector")
 
 fun setDiagnostics(diagnosticsPerFile) =
-  if reservedPanel() is
+  if diagnosticsInspector() is
     ~null as panel do panel.setDiagnostics(diagnosticsPerFile)
 
 fun compileSuccess(targetPaths, response) =

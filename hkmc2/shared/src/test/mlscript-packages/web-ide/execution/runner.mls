@@ -23,8 +23,8 @@ fun dispatchStatusChange(status, runningTime) =
 fun consolePanel() =
   document.querySelector("console-panel")
 
-fun reservedPanel() =
-  document.querySelector("reserved-panel")
+fun diagnosticsInspector() =
+  document.querySelector("diagnostics-inspector")
 
 fun clearConsolePanel() =
   if consolePanel() is
@@ -135,7 +135,7 @@ fun handleWorkerError(execution, event) =
       panel.log("error", "Worker Error: " + message)
       appendWorkerLocation(panel, event)
       appendWorkerStack(panel, event)
-  if reservedPanel() is
+  if diagnosticsInspector() is
     ~null as panel do panel.setOutput(workerErrorMessage(event))
 
 fun handleMessageError(execution, event) =
@@ -144,7 +144,7 @@ fun handleMessageError(execution, event) =
   dispatchStatusChange("fatal", null)
   if consolePanel() is
     ~null as panel do panel.log("error", "Worker Message Error: Failed to deserialize message from worker")
-  if reservedPanel() is
+  if diagnosticsInspector() is
     ~null as panel do panel.setOutput("Worker Message Error: Failed to deserialize message from worker")
 
 fun cleanupPreviousExecution() = if latestExecution is

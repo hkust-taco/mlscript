@@ -1640,6 +1640,432 @@ reserved-panel .goto-location-btn i {
   font-size: 0.875rem;
 }
 
+/* Diagnostics Inspector */
+diagnostics-inspector {
+  display: flex;
+  flex-direction: column;
+  background: var(--ide-surface);
+  border-left: 1px solid var(--ide-border);
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+diagnostics-inspector .diagnostics-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--ide-surface-subtle);
+  border-bottom: 1px solid var(--ide-border);
+  min-height: 118px;
+}
+
+diagnostics-inspector .diagnostics-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+diagnostics-inspector h2 {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+diagnostics-inspector .diagnostics-source-label {
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-xs);
+  background: var(--ide-surface);
+  color: var(--ide-text-muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 4px 6px;
+}
+
+diagnostics-inspector .diagnostics-counts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+
+diagnostics-inspector .diagnostics-count {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-xs);
+  background: var(--ide-surface);
+  padding: 5px 6px;
+  color: var(--ide-text-muted);
+}
+
+diagnostics-inspector .diagnostics-count span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+diagnostics-inspector .diagnostics-count strong {
+  color: var(--ide-text);
+  font-size: 0.86rem;
+  line-height: 1;
+}
+
+diagnostics-inspector .diagnostics-count-error strong {
+  color: var(--ide-danger);
+}
+
+diagnostics-inspector .diagnostics-count-warning strong {
+  color: var(--ide-warning);
+}
+
+diagnostics-inspector .diagnostics-count-internal strong {
+  color: var(--ide-internal);
+}
+
+diagnostics-inspector .diagnostics-count-info strong {
+  color: var(--ide-info);
+}
+
+diagnostics-inspector .diagnostics-mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
+diagnostics-inspector .diagnostics-mode-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-sm);
+  background: var(--ide-surface);
+  color: var(--ide-text-muted);
+  cursor: pointer;
+  font-size: 0.74rem;
+  line-height: 1;
+  padding: 6px 4px;
+}
+
+diagnostics-inspector .diagnostics-mode-button:hover,
+diagnostics-inspector .diagnostics-mode-button.active {
+  background: var(--ide-accent-soft);
+  border-color: color-mix(in srgb, var(--ide-accent) 38%, var(--ide-border));
+  color: var(--ide-accent-strong);
+}
+
+diagnostics-inspector .diagnostics-mode-button i {
+  width: 0.86rem;
+  height: 0.86rem;
+}
+
+diagnostics-inspector .diagnostics-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px;
+}
+
+diagnostics-inspector .diagnostics-empty {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--ide-success);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+diagnostics-inspector .diagnostics-empty i {
+  font-size: 2.5rem;
+  opacity: 0.85;
+}
+
+diagnostics-inspector .diagnostics-list,
+diagnostics-inspector .diagnostics-source-cards,
+diagnostics-inspector .diagnostics-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+diagnostics-inspector .diagnostics-row,
+diagnostics-inspector .diagnostics-tree-row {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-sm);
+  background: var(--ide-surface);
+  color: var(--ide-text);
+  cursor: pointer;
+  padding: 8px;
+  text-align: left;
+}
+
+diagnostics-inspector .diagnostics-row:hover,
+diagnostics-inspector .diagnostics-tree-row:hover {
+  background: var(--ide-surface-subtle);
+  border-color: var(--ide-border-strong);
+}
+
+diagnostics-inspector .diagnostics-row-main,
+diagnostics-inspector .diagnostics-tree-row {
+  min-width: 0;
+}
+
+diagnostics-inspector .diagnostics-row-main {
+  display: grid;
+  gap: 3px;
+  flex: 1;
+}
+
+diagnostics-inspector .diagnostics-row-message,
+diagnostics-inspector .diagnostics-tree-message {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ide-text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+diagnostics-inspector .diagnostics-row-detail,
+diagnostics-inspector .diagnostics-tree-file {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ide-text-muted);
+  font-family: var(--monospace);
+  font-size: 0.68rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+diagnostics-inspector .diagnostics-row-locate {
+  color: var(--ide-text-subtle);
+  flex: 0 0 auto;
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+diagnostics-inspector .diagnostics-severity-icon {
+  flex: 0 0 auto;
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-top: 1px;
+}
+
+diagnostics-inspector .diagnostic-error .diagnostics-severity-icon {
+  color: var(--ide-danger);
+}
+
+diagnostics-inspector .diagnostic-warning .diagnostics-severity-icon {
+  color: var(--ide-warning);
+}
+
+diagnostics-inspector .diagnostic-internal .diagnostics-severity-icon {
+  color: var(--ide-internal);
+}
+
+diagnostics-inspector .diagnostics-tree-group {
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-sm);
+  background: var(--ide-surface);
+  overflow: hidden;
+}
+
+diagnostics-inspector .diagnostics-tree-group summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+  padding: 8px;
+  background: var(--ide-surface-subtle);
+  color: var(--ide-text);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+diagnostics-inspector .diagnostics-tree-group summary::-webkit-details-marker {
+  display: none;
+}
+
+diagnostics-inspector .diagnostics-tree-group summary strong {
+  border: 1px solid var(--ide-border);
+  border-radius: 999px;
+  background: var(--ide-surface);
+  color: var(--ide-text-muted);
+  font-size: 0.68rem;
+  line-height: 1;
+  min-width: 20px;
+  padding: 3px 6px;
+  text-align: center;
+}
+
+diagnostics-inspector .diagnostics-tree-children {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+}
+
+diagnostics-inspector .diagnostics-tree-row {
+  display: grid;
+  gap: 3px;
+  padding: 7px 8px;
+}
+
+diagnostics-inspector .diagnostics-source-card {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-sm);
+  background: var(--ide-surface);
+  padding: 9px;
+}
+
+diagnostics-inspector .diagnostics-source-card-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+
+diagnostics-inspector .diagnostics-source-card h3 {
+  overflow: hidden;
+  color: var(--ide-text);
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+diagnostics-inspector .diagnostics-source-card-header span {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ide-text-muted);
+  font-family: var(--monospace);
+  font-size: 0.68rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+diagnostics-inspector .diagnostics-source-preview {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-xs);
+  background: var(--ide-surface-subtle);
+  overflow: hidden;
+  font-family: var(--monospace);
+}
+
+diagnostics-inspector .diagnostics-source-line-number {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 6px;
+  border-right: 1px solid var(--ide-border);
+  background: var(--ide-surface-muted);
+  color: var(--ide-text-subtle);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+diagnostics-inspector .diagnostics-source-preview pre {
+  min-width: 0;
+  margin: 0;
+  overflow-x: auto;
+  padding: 6px 8px;
+  color: var(--ide-text);
+  font-family: var(--monospace);
+  font-size: 0.76rem;
+  line-height: 1.4;
+  white-space: pre;
+}
+
+diagnostics-inspector .diagnostics-card-message,
+diagnostics-inspector .diagnostics-action-feedback {
+  color: var(--ide-text-muted);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+diagnostics-inspector .diagnostics-action-feedback {
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-xs);
+  background: var(--ide-accent-soft);
+  color: var(--ide-accent-strong);
+  padding: 7px;
+}
+
+diagnostics-inspector .diagnostics-source-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+diagnostics-inspector .diagnostics-action {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-xs);
+  background: var(--ide-surface);
+  color: var(--ide-text-muted);
+  cursor: pointer;
+  font-size: 0.68rem;
+  line-height: 1;
+  padding: 6px 4px;
+}
+
+diagnostics-inspector .diagnostics-action:hover:not(:disabled) {
+  background: var(--ide-surface-subtle);
+  border-color: var(--ide-border-strong);
+  color: var(--ide-text);
+}
+
+diagnostics-inspector .diagnostics-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+diagnostics-inspector .diagnostics-action i {
+  flex: 0 0 auto;
+  width: 0.82rem;
+  height: 0.82rem;
+}
+
+diagnostics-inspector .diagnostics-action span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
@@ -2149,6 +2575,7 @@ resize-handle.active .resize-handle-indicator {
 /* Hide resize handles when panels are collapsed */
 file-explorer.collapsed resize-handle,
 reserved-panel.collapsed resize-handle,
+diagnostics-inspector.collapsed resize-handle,
 console-panel.collapsed resize-handle {
   display: none;
 }
