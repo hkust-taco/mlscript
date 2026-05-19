@@ -22,8 +22,24 @@ class IdeWorkbench extends HTMLElement with
             <button class="activity-button active" data-sidebar-side="left" data-sidebar-panel="files" aria-label="Files" aria-pressed="true" title="Files">
               <i class="icon-files"></i>
             </button>
+            <button class="activity-button" data-sidebar-side="left" data-sidebar-panel="search" aria-label="Search" aria-pressed="false" title="Search">
+              <i class="icon-search"></i>
+            </button>
+            <button class="activity-button" data-sidebar-side="left" data-sidebar-panel="source-control" aria-label="Source Control" aria-pressed="false" title="Source Control">
+              <i class="icon-git-branch"></i>
+            </button>
+            <button class="activity-button" data-sidebar-side="left" data-sidebar-panel="outline" aria-label="Outline" aria-pressed="false" title="Outline">
+              <i class="icon-list-tree"></i>
+            </button>
+            <button class="activity-button" data-sidebar-side="left" data-sidebar-panel="examples" aria-label="Examples" aria-pressed="false" title="Examples">
+              <i class="icon-book-open"></i>
+            </button>
           </aside>
           <file-explorer class="sidebar-panel left-sidebar-panel active" data-sidebar-side="left" data-sidebar-panel="files"></file-explorer>
+          <search-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="search"></search-panel>
+          <source-control-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="source-control"></source-control-panel>
+          <outline-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="outline"></outline-panel>
+          <examples-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="examples"></examples-panel>
           <editor-panel class="editor"></editor-panel>
           <reserved-panel class="sidebar-panel right-sidebar-panel active" data-sidebar-side="right" data-sidebar-panel="diagnostics"></reserved-panel>
         </div>
@@ -64,7 +80,9 @@ class IdeWorkbench extends HTMLElement with
 
   fun setSidebarPanels(side, panelName, isOpen) =
     this.querySelectorAll(sidebarPanelSelector(side)).forEach of (panel, ...) =>
-      panel.classList.toggle("active", panelIsActive(panel, panelName, isOpen))
+      let isActive = panelIsActive(panel, panelName, isOpen)
+      panel.classList.toggle("active", isActive)
+      set panel.hidden = not isActive
 
   fun setLeftPanelState(panelName, isOpen) =
     set
