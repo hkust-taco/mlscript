@@ -73,12 +73,14 @@ ide-workbench {
 }
 
 .app-container {
+  --left-sidebar-track: var(--file-explorer-width, 250px);
+  --right-sidebar-track: var(--ide-right-panel-width, 300px);
   display: grid;
   grid-template-columns:
     var(--activity-rail-width, 44px)
-    var(--file-explorer-width, 250px)
+    var(--left-sidebar-track)
     minmax(0, 1fr)
-    var(--ide-right-panel-width, 300px)
+    var(--right-sidebar-track)
     var(--activity-rail-width, 44px);
   flex: 1;
   min-height: 0;
@@ -89,11 +91,11 @@ ide-workbench {
 }
 
 .app-container.left-sidebar-closed {
-  --file-explorer-width: 0px;
+  --left-sidebar-track: 0px;
 }
 
 .app-container.right-sidebar-closed {
-  --ide-right-panel-width: 0px;
+  --right-sidebar-track: 0px;
 }
 
 .activity-rail {
