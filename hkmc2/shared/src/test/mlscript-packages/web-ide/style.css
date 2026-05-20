@@ -2658,9 +2658,11 @@ share-dialog dialog {
 }
 
 command-palette-dialog dialog {
+  --command-palette-top: clamp(48px, 16vh, 128px);
+  inset: var(--command-palette-top) 0 auto 0;
+  margin: 0 auto;
   width: min(640px, calc(100vw - 32px));
-  height: min(420px, calc(100vh - 32px));
-  max-height: min(680px, calc(100vh - 32px));
+  max-height: min(680px, calc(100vh - var(--command-palette-top) - 24px));
 }
 
 share-dialog dialog {
@@ -2676,7 +2678,7 @@ share-dialog dialog {
 }
 
 .command-palette-form {
-  height: 100%;
+  max-height: inherit;
 }
 
 .command-search-input {
