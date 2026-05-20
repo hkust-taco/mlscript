@@ -18,7 +18,7 @@ fun f() =
 //│ let f;
 //│ runtime.resetEffects();
 //│ f = function f() {
-//│   let x, scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, pc;
+//│   let tmp, tmp1, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
@@ -39,9 +39,7 @@ fun f() =
 //│           return runtime.unwind(f, 6, "Fallthrough.mls:11:19", null, null, 1, 0, 1, tmp)
 //│         }
 //│       case 6:
-//│         tmp1 = runtime.resumeValue;
-//│         tmp2 = tmp + tmp1;
-//│         x = tmp2;
+//│         runtime.resumeValue;
 //│         pc = 5;
 //│       case 5:
 //│         runtime.resumeValue = g();
@@ -51,8 +49,7 @@ fun f() =
 //│           return runtime.unwind(f, 4, "Fallthrough.mls:12:11", null, null, 1, 0, 1, tmp)
 //│         }
 //│       case 4:
-//│         tmp3 = runtime.resumeValue;
-//│         x = tmp3;
+//│         runtime.resumeValue;
 //│         runtime.resumeValue = g();
 //│         if (runtime.curEffect === null) {
 //│           pc = 3;
@@ -60,8 +57,7 @@ fun f() =
 //│           return runtime.unwind(f, 3, "Fallthrough.mls:13:11", null, null, 1, 0, 1, tmp)
 //│         }
 //│       case 3:
-//│         tmp4 = runtime.resumeValue;
-//│         x = tmp4;
+//│         runtime.resumeValue;
 //│         runtime.resumeValue = g();
 //│         if (runtime.curEffect === null) {
 //│           pc = 2;
@@ -69,8 +65,7 @@ fun f() =
 //│           return runtime.unwind(f, 2, "Fallthrough.mls:14:11", null, null, 1, 0, 1, tmp)
 //│         }
 //│       case 2:
-//│         tmp5 = runtime.resumeValue;
-//│         x = tmp5;
+//│         runtime.resumeValue;
 //│         runtime.resumeValue = g();
 //│         if (runtime.curEffect === null) {
 //│           pc = 1;
@@ -78,12 +73,10 @@ fun f() =
 //│           return runtime.unwind(f, 1, "Fallthrough.mls:15:11", null, null, 1, 0, 1, tmp)
 //│         }
 //│       case 1:
-//│         tmp6 = runtime.resumeValue;
-//│         x = tmp6;
-//│         return x;
+//│         tmp1 = runtime.resumeValue;
+//│         return tmp1;
 //│       case 0:
-//│         scrut = 0;
-//│         if (scrut === 0) {
+//│         if (0 === 0) {
 //│           runtime.resumeValue = g();
 //│           if (runtime.curEffect === null) {
 //│             pc = 7;

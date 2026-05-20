@@ -1,0 +1,476 @@
+:js
+
+open scope { locally }
+
+
+:sir
+// :dopt
+:soir
+let x = 1
+x + 2
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let x⁰; set x⁰ = 1; +⁰(x⁰, 2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let x⁰; set x⁰ = 1; 3
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+//│ x = 1
+
+// :dopt
+:soir
+x
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ x⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+
+:sir
+:soir
++1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ +⁰(1)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ 1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+:sir
+:soir
+fun main =
+  let x = 1
+  x + 2
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let main⁰; define main⁰ as fun main¹() { let x; set x = 1; return +⁰(x, 2) }; end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let main⁰; define main⁰ as fun main¹() { return 3 }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// :dopt
+:sir
+:soir
+fun main =
+  let
+    x = 1
+    y = x
+  y
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let main²; define main² as fun main³() { let x, y; set x = 1; set y = x; return y }; end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let main²; define main² as fun main³() { return 1 }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// FIXME: why is `x` treated as exported? -> Seems this parses as `let x = 1, let y = x in y`
+// :dopt
+:soir
+let
+  x = 1
+  y = x
+  in y
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let x¹; set x¹ = 1; 1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+//│ x = 1
+
+
+// :dopt
+:sir
+:soir
+let x = if maybe then 1 else 1
+print(x)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let x², scrut, tmp;
+//│ set scrut = Predef⁰.maybe⁰;
+//│ match scrut
+//│   true =>
+//│     set tmp = 1;
+//│     end
+//│   else
+//│     set tmp = 1;
+//│     end
+//│ set x² = tmp;
+//│ Predef⁰.print⁰(x²)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let x²; do Predef⁰.maybe⁰; set x² = 1; Predef⁰.print⁰(1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 1
+//│ x = 1
+
+// :dopt
+:soir
+let x = if maybe then 1 else 1
+in print(x)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let scrut;
+//│ set scrut = Predef⁰.maybe⁰;
+//│ match scrut
+//│   true =>
+//│     Predef⁰.print⁰(1)
+//│   else
+//│     Predef⁰.print⁰(1)
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 1
+
+// :dopt
+:soir
+let x = if maybe then 1 else 2
+print(x)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let x³, scrut, tmp;
+//│ set scrut = Predef⁰.maybe⁰;
+//│ match scrut
+//│   true =>
+//│     set tmp = 1;
+//│     end
+//│   else
+//│     set tmp = 2;
+//│     end
+//│ set x³ = tmp;
+//│ Predef⁰.print⁰(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 1
+//│ x = 1
+
+// :dopt
+:soir
+let x = if maybe then 1 else 2
+in print(x)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let scrut;
+//│ set scrut = Predef⁰.maybe⁰;
+//│ match scrut
+//│   true =>
+//│     Predef⁰.print⁰(1)
+//│   else
+//│     Predef⁰.print⁰(2)
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 1
+
+
+// :dopt
+:soir
+let x = if maybe
+  then
+    let y = 1
+    y
+  else
+    let z = 1
+    z
+print(x)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let x⁴; do Predef⁰.maybe⁰; set x⁴ = 1; Predef⁰.print⁰(1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 1
+//│ x = 1
+
+// :dopt
+:soir
+let x = if maybe
+  then
+    let y = 1
+    y
+  else
+    let z = 2
+    z
+print(x)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let x⁵, scrut, tmp;
+//│ set scrut = Predef⁰.maybe⁰;
+//│ match scrut
+//│   true =>
+//│     set tmp = 1;
+//│     end
+//│   else
+//│     set tmp = 2;
+//│     end
+//│ set x⁵ = tmp;
+//│ Predef⁰.print⁰(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 1
+//│ x = 1
+
+
+
+:sir
+:soir
+fun main =
+  let
+    x = 1
+    y = x
+    z = y
+  y + 2
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let main⁴;
+//│ define main⁴ as fun main⁵() { let x, y, z; set x = 1; set y = x; set z = y; return +⁰(y, 2) };
+//│ end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let main⁴; define main⁴ as fun main⁵() { return 3 }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// :dopt
+:soir
+fun main =
+  let x = 2
+  while x > 0 do
+    print(x)
+    set x -= 1
+main
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let main⁶;
+//│ define main⁶ as fun main⁷() {
+//│   let x;
+//│   set x = 2;
+//│   loop lbl:
+//│     let scrut, tmp;
+//│     set scrut = >⁰(x, 0);
+//│     match scrut
+//│       true =>
+//│         do Predef⁰.print⁰(x);
+//│         set tmp = -⁰(x, 1);
+//│         set x = tmp;
+//│         continue lbl
+//│       else
+//│         end
+//│     end
+//│   return runtime⁰.Unit⁰
+//│ };
+//│ main⁷()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 2
+//│ > 1
+
+// :exit
+// ====================================================================================================
+
+
+// :dopt
+:soir
+let {x,y}
+x = y
+y = x
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let x⁶, y⁰; set x⁶ = undefined; set y⁰ = undefined; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ x = undefined
+//│ y = undefined
+
+// :dopt
+:soir
+let {x,y,z}
+x = y
+y = z
+z = x
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let x⁷, y¹, z⁰; set x⁷ = undefined; set y¹ = undefined; set z⁰ = undefined; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ x = undefined
+//│ y = undefined
+//│ z = undefined
+
+// :dopt
+:soir
+let {x,y,z}
+x = y
+y = x
+z = y
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let x⁸, y², z¹; set x⁸ = undefined; set y² = undefined; set z¹ = undefined; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ x = undefined
+//│ y = undefined
+//│ z = undefined
+
+
+
+// :lot
+// if true then locally of (
+//   let x = 1
+//   x
+// )
+
+let x = 1
+//│ x = 1
+
+// :lot
+// :dopt
+:soir
+let res = if maybe
+  then locally(let y = x in y)
+  else ???
+// hide of hide of hide of hide of print(res)
+print(res)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let res⁰, scrut, tmp;
+//│ set scrut = Predef⁰.maybe⁰;
+//│ match scrut
+//│   true =>
+//│     set tmp = x⁹;
+//│     end
+//│   else
+//│     set tmp = Predef⁰.notImplementedError⁰;
+//│     end
+//│ set res⁰ = tmp;
+//│ Predef⁰.print⁰(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 1
+//│ res = 1
+
+// :lot
+// :dopt
+// :dl
+:sir
+:soir
+let res
+if maybe do
+    locally(let y = hide(1) in { res = y })
+  else ???
+print(res)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let res¹, scrut;
+//│ set scrut = Predef⁰.maybe⁰;
+//│ match scrut
+//│   true =>
+//│     let y;
+//│     begin
+//│       set y = Predef⁰.hide⁰(1);
+//│       set res¹ = y;
+//│       end;
+//│     Predef⁰.print⁰(res¹)
+//│   else
+//│     begin
+//│       do Predef⁰.notImplementedError⁰;
+//│       end;
+//│     Predef⁰.print⁰(res¹)
+//│ end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let res¹, scrut;
+//│ set scrut = Predef⁰.maybe⁰;
+//│ match scrut
+//│   true =>
+//│     let y;
+//│     set y = Predef⁰.hide⁰(1);
+//│     set res¹ = y;
+//│     Predef⁰.print⁰(y)
+//│   else
+//│     do Predef⁰.notImplementedError⁰;
+//│     Predef⁰.print⁰(undefined)
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 1
+//│ res = 1
+
+:ssjs
+:sir
+:soir
+let res
+if maybe do
+    locally(let y = hide(1) in { res = y })
+  else ???
+hide of print(res)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let res², scrut, tmp;
+//│ set scrut = Predef⁰.maybe⁰;
+//│ match scrut
+//│   true =>
+//│     let y;
+//│     set y = Predef⁰.hide⁰(1);
+//│     set res² = y;
+//│     end
+//│   else
+//│     do Predef⁰.notImplementedError⁰;
+//│     end
+//│ set tmp = Predef⁰.print⁰(res²);
+//│ Predef⁰.hide⁰(tmp)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let res², scrut, tmp;
+//│ set scrut = Predef⁰.maybe⁰;
+//│ match scrut
+//│   true =>
+//│     let y;
+//│     set y = Predef⁰.hide⁰(1);
+//│     set res² = y;
+//│     end
+//│   else
+//│     do Predef⁰.notImplementedError⁰;
+//│     end
+//│ set tmp = Predef⁰.print⁰(res²);
+//│ Predef⁰.hide⁰(tmp)
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let res2, scrut6, tmp3;
+//│ scrut6 = Predef.maybe;
+//│ if (scrut6 === true) {
+//│   let y3;
+//│   y3 = runtime.checkCall(Predef.hide(1));
+//│   res2 = y3;
+//│ } else {
+//│   Predef.notImplementedError;
+//│ }
+//│ tmp3 = runtime.checkCall(Predef.print(res2));
+//│ block$res22 = runtime.checkCall(Predef.hide(tmp3));
+//│ undefined
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 1
+//│ res = 1
+
+// :sir
+// :soir
+// :el
+// if maybe do 1
+//   else ???
+
+
+fun main =
+  fun test = 1
+  test
+main
+//│ = 1
+
+// :lot
+// :dopt
+:soir
+fun main =
+  fun test = x => x
+  test
+main
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let main⁸;
+//│ define main⁸ as fun main⁹() {
+//│   let test, lambda;
+//│   define lambda as fun lambda⁰(x) { return x };
+//│   return lambda⁰
+//│ };
+//│ main⁹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+:soir
+fun main =
+  let test = x => x
+  test
+main
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let main¹⁰;
+//│ define main¹⁰ as fun main¹¹() {
+//│   let test;
+//│   define test as fun test⁰(x) { return x };
+//│   return test⁰
+//│ };
+//│ main¹¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun test
+
+
+// :dopt
+:soir
+let x = 1
+in let y = x
+in y + 1
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ 2
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+

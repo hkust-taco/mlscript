@@ -99,15 +99,13 @@ let xs = FingerTreeList.mk(1, 2, 3)
 if xs is
   [a, ...ls] then [a, ls]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let ls, a, middleElements, element0$;
+//│ let middleElements, element0$;
 //│ if (runtime.Tuple.isArrayLike(xs1) && xs1.length >= 1) {
 //│   element0$ = runtime.Tuple.get(xs1, 0);
 //│   middleElements = runtime.Tuple.slice(xs1, 1, 0);
-//│   ls = middleElements;
-//│   a = element0$;
 //│   globalThis.Object.freeze([
-//│     a,
-//│     ls
+//│     element0$,
+//│     middleElements
 //│   ])
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -137,19 +135,19 @@ fun popByIndex(start, end, acc, lft) =
 //│ let popByIndex;
 //│ popByIndex = function popByIndex(start, end, acc, lft) {
 //│   loopLabel: while (true) {
-//│     let scrut, tmp34, tmp35, tmp36;
+//│     let scrut, tmp33, tmp34, tmp35;
 //│     scrut = start >= end;
 //│     if (scrut === true) {
 //│       return acc
 //│     }
-//│     tmp34 = start + 1;
-//│     tmp35 = runtime.safeCall(lft.at(start));
-//│     tmp36 = globalThis.Object.freeze([
+//│     tmp33 = start + 1;
+//│     tmp34 = runtime.safeCall(lft.at(start));
+//│     tmp35 = globalThis.Object.freeze([
 //│       ...acc,
-//│       tmp35
+//│       tmp34
 //│     ]);
-//│     start = tmp34;
-//│     acc = tmp36;
+//│     start = tmp33;
+//│     acc = tmp35;
 //│     continue loopLabel;
 //│   }
 //│ };

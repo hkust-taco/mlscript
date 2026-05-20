@@ -8,14 +8,7 @@
 private fun add(x)(y) = x + y
 add(1)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let add⁰, x⁰, y⁰, inlinedVal;
-//│ define add⁰ as fun add¹(x)(y) {
-//│   return +⁰(x, y)
-//│ };
-//│ set x⁰ = 1;
-//│ set y⁰ = 2;
-//│ set inlinedVal = +⁰(x⁰, y⁰);
-//│ inlinedVal
+//│ let add⁰; define add⁰ as fun add¹(x)(y) { return +⁰(x, y) }; 3
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
@@ -27,21 +20,13 @@ private fun mkAdder(x) =
   (y) => x + y
 mkAdder(10)(20)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let mkAdder⁰, baseCall, x¹, inlinedVal, lambda⁰;
+//│ let mkAdder⁰, lambda⁰;
 //│ define mkAdder⁰ as fun mkAdder¹(x) {
 //│   let lambda;
-//│   define lambda as fun lambda¹(y) {
-//│     return +⁰(x, y)
-//│   };
+//│   define lambda as fun lambda¹(y) { return +⁰(x, y) };
 //│   return lambda¹
 //│ };
-//│ set x¹ = 10;
-//│ define lambda⁰ as fun lambda²(y) {
-//│   return +⁰(x¹, y)
-//│ };
-//│ set inlinedVal = lambda²;
-//│ set baseCall = inlinedVal;
-//│ baseCall(20)
+//│ 30
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 30
 
@@ -62,18 +47,9 @@ f(5)
 private fun triple(x)(y)(z) = x + y + z
 triple(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let triple⁰, x², y¹, z⁰, inlinedVal, tmp;
-//│ define triple⁰ as fun triple¹(x)(y)(z) {
-//│   let tmp1;
-//│   set tmp1 = +⁰(x, y);
-//│   return +⁰(tmp1, z)
-//│ };
-//│ set x² = 1;
-//│ set y¹ = 2;
-//│ set z⁰ = 3;
-//│ set tmp = +⁰(x², y¹);
-//│ set inlinedVal = +⁰(tmp, z⁰);
-//│ inlinedVal
+//│ let triple⁰;
+//│ define triple⁰ as fun triple¹(x)(y)(z) { let tmp; set tmp = +⁰(x, y); return +⁰(tmp, z) };
+//│ 6
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 

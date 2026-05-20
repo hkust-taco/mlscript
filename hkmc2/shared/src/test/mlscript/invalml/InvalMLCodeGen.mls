@@ -33,7 +33,7 @@
 :sjs
 let x = 1 in x + 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x; x = 1; x + 1
+//│ 1 + 1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 //│ Type: Int
@@ -58,7 +58,7 @@ false
 :sjs
 (x => x) as [T] -> T -> T
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda1; lambda1 = (undefined, function (x1) { return x1 }); lambda1
+//│ let lambda1; lambda1 = (undefined, function (x) { return x }); lambda1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 //│ Type: ['T] -> ('T) ->{⊥} 'T
@@ -68,15 +68,15 @@ false
 data class Foo(x: Int)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo1;
-//│ Foo1 = function Foo(x1) {
-//│   return globalThis.Object.freeze(new Foo.class(x1));
+//│ Foo1 = function Foo(x) {
+//│   return globalThis.Object.freeze(new Foo.class(x));
 //│ };
 //│ (class Foo {
 //│   static {
 //│     Foo1.class = this
 //│   }
-//│   constructor(x1) {
-//│     this.x = x1;
+//│   constructor(x) {
+//│     this.x = x;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", ["x"]]; 
@@ -105,7 +105,7 @@ let foo = new Foo(42) in foo.Foo#x
 :sjs
 fun inc(x) = x + 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let inc; inc = function inc(x1) { return x1 + 1 };
+//│ let inc; inc = function inc(x) { return x + 1 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -130,7 +130,7 @@ if 1 == 2 then 0 else 42
 :sjs
 if 1 is Int then 1 else 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut1; scrut1 = 1; if (globalThis.Number.isInteger(scrut1)) { 1 } else { 0 }
+//│ if (globalThis.Number.isInteger(1)) { 1 } else { 0 }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 //│ Type: Int
@@ -159,18 +159,17 @@ fun pow(x) = case
   n then x * pow(x)(n-1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let pow;
-//│ pow = function pow(x1) {
+//│ pow = function pow(x) {
 //│   let lambda2;
 //│   lambda2 = (undefined, function (caseScrut) {
-//│     let n, baseCall, tmp, tmp1;
+//│     let baseCall, tmp, tmp1;
 //│     if (caseScrut === 0) {
 //│       return 1
 //│     }
-//│     n = caseScrut;
-//│     baseCall = pow(x1);
-//│     tmp = n - 1;
+//│     baseCall = pow(x);
+//│     tmp = caseScrut - 1;
 //│     tmp1 = runtime.safeCall(baseCall(tmp));
-//│     return x1 * tmp1;
+//│     return x * tmp1;
 //│   });
 //│   return lambda2
 //│ };
@@ -218,15 +217,14 @@ fun fact = case
 //│ fact = function fact() {
 //│   let lambda2;
 //│   lambda2 = (undefined, function (caseScrut) {
-//│     let n, tmp1, tmp2, tmp3;
+//│     let tmp1, tmp2, tmp3;
 //│     if (caseScrut === 0) {
 //│       return 1
 //│     }
-//│     n = caseScrut;
 //│     tmp1 = fact();
-//│     tmp2 = n - 1;
+//│     tmp2 = caseScrut - 1;
 //│     tmp3 = runtime.safeCall(tmp1(tmp2));
-//│     return n * tmp3;
+//│     return caseScrut * tmp3;
 //│   });
 //│   return lambda2
 //│ };
@@ -251,7 +249,7 @@ region x in 42
 :sjs
 region x in x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x1; x1 = new globalThis.Region(); x1
+//│ let x; x = new globalThis.Region(); x
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Region
 //│ Type: Region[?]
@@ -260,7 +258,7 @@ region x in x
 :sjs
 region x in x.ref 42
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x2; x2 = new globalThis.Region(); new globalThis.Ref(x2, 42)
+//│ let x1; x1 = new globalThis.Region(); new globalThis.Ref(x1, 42)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Ref(Region, 42)
 //│ Type: Ref[Int, ?]
@@ -269,7 +267,7 @@ region x in x.ref 42
 :sjs
 region x in let y = x.ref 42 in !(y)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x3, y; x3 = new globalThis.Region(); y = new globalThis.Ref(x3, 42); y.value
+//│ let x2, y; x2 = new globalThis.Region(); y = new globalThis.Ref(x2, 42); y.value
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 //│ Type: Int
@@ -278,7 +276,7 @@ region x in let y = x.ref 42 in !(y)
 :sjs
 region x in let y = x.ref 42 in y := 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x4, y1; x4 = new globalThis.Region(); y1 = new globalThis.Ref(x4, 42); y1.value = 0; 0
+//│ let x3, y1; x3 = new globalThis.Region(); y1 = new globalThis.Ref(x3, 42); y1.value = 0; 0
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 //│ Type: Int

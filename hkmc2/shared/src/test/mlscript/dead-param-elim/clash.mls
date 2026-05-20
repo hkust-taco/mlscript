@@ -104,7 +104,7 @@ private fun g(a, b, c, ...rest) = rest
 (if false then f else g)(1,2,3,4,5)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0, 1}
-//│ dead-param-elim > prodfun g#0 @ <root> -> eliminable: {0, 1}
+//│ dead-param-elim > prodfun g#0 @ <root> -> eliminable: {0, 1, 2}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = [4, 5]
 
@@ -115,7 +115,7 @@ private fun g(a, b, c, ...rest) = rest
 (if true then f else g)(1,2,3,4,5)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0, 1}
-//│ dead-param-elim > prodfun g#0 @ <root> -> eliminable: {0, 1}
+//│ dead-param-elim > prodfun g#0 @ <root> -> eliminable: {0, 1, 2}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = [3, 4, 5]
 

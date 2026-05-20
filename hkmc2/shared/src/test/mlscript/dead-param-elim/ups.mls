@@ -6,7 +6,6 @@
 pattern Middle = ([x] => x) | ([x, ...(Middle as m), y] => m)
 //│ elaborated pattern body: [x] => x⁰ ∨ [x, ...Middle as m, y] => m⁰
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun lambda#0 @ <root> -> eliminable: {0, 1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 
 

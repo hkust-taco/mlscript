@@ -7,11 +7,7 @@ let x = 1
 set x += 1 in print(x)
 x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x, old, tmp;
-//│ x = 1;
-//│ old = x;
-//│ try { tmp = x + 1; x = tmp; Predef.print(x); } finally { x = old; }
-//│ x
+//│ let x, old; x = 1; old = 1; try { x = 2; Predef.print(2); } finally { x = old; } old
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 2
 //│ = 1
@@ -37,15 +33,15 @@ set x += 1 in
   print("end")
 x
 //│ ╔══[COMPILATION ERROR] Backtracking assignment is not supported with effect handlers enabled
-//│ ║  l.33: 	set x += 1 in
+//│ ║  l.29: 	set x += 1 in
 //│ ║        	    ^^^^^^^^^
-//│ ║  l.34: 	  print("init")
+//│ ║  l.30: 	  print("init")
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.35: 	  print(h.test())
+//│ ║  l.31: 	  print(h.test())
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.36: 	  print(x)
+//│ ║  l.32: 	  print(x)
 //│ ║        	^^^^^^^^^^
-//│ ║  l.37: 	... (more lines omitted) ...
+//│ ║  l.33: 	... (more lines omitted) ...
 //│ ╙──      	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ x = 1

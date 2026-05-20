@@ -94,10 +94,9 @@ fun test2() =
 //│   funny = function funny() {
 //│     let lambda1;
 //│     lambda1 = (undefined, function (caseScrut) {
-//│       let n, tmp, tmp1, tmp2;
-//│       n = caseScrut;
+//│       let tmp, tmp1, tmp2;
 //│       tmp = funny();
-//│       tmp1 = n - 1;
+//│       tmp1 = caseScrut - 1;
 //│       tmp2 = runtime.safeCall(tmp(tmp1));
 //│       return tmp2 + 1
 //│     });
@@ -123,7 +122,7 @@ fun test2() =
 fun test3 =
   print("Hi")
 //│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for test3
-//│ ║  l.124: 	  print("Hi")
+//│ ║  l.123: 	  print("Hi")
 //│ ╙──       	  ^^^^^^^^^^^
 
 

@@ -54,11 +54,11 @@ fun f() =
 //│         i = 0;
 //│         j = 100;
 //│         k = 2000;
-//│         runtime.resumeValue = Predef.equals(i, 0);
+//│         runtime.resumeValue = Predef.equals(0, 0);
 //│         if (runtime.curEffect === null) {
 //│           pc = 5;
 //│         } else {
-//│           return runtime.unwind(f, 5, "Debugging.mls:17:6", f$debugInfo, null, 1, 0, 5, i, j, k, scrut, tmp1)
+//│           return runtime.unwind(f, 5, "Debugging.mls:17:6", f$debugInfo, null, 1, 0, 5, 0, 100, 2000, scrut, tmp1)
 //│         }
 //│       case 5:
 //│         scrut = runtime.resumeValue;

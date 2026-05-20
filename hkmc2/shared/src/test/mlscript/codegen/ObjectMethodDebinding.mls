@@ -5,14 +5,20 @@ object Test with
   fun bar = 1
   fun foo() = bar + 1
 
-:e
+// TODO: make this a type error
+// Using the old partial logic in Elaborator, this used to report:
+//     ╔══[COMPILATION ERROR] [debinding error] Method 'foo' cannot be accessed without being called.
+//     ║  l.9: 	let f = Test.foo
+//     ╙──     	            ^^^^
+// :e
 let f = Test.foo
-//│ ╔══[COMPILATION ERROR] [debinding error] Method 'foo' cannot be accessed without being called.
-//│ ║  l.9: 	let f = Test.foo
-//│ ╙──     	            ^^^^
 //│ f = fun foo
 
-// TODO make this a type error
+:re
+f()
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'bar')
+
+// TODO: make this a type error
 // :e
 :re
 let f = id(Test).foo

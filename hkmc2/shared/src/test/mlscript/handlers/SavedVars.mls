@@ -24,7 +24,7 @@ fun g() =
 //│ let g;
 //│ runtime.resetEffects();
 //│ g = function g() {
-//│   let a, scrut, tmp, pc;
+//│   let scrut, tmp, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
@@ -57,11 +57,10 @@ fun g() =
 //│         runtime.resumeValue;
 //│         tmp = 1;
 //│         pc = 1;
-//│         if (pc === 1) { a = tmp; return a }
+//│         if (1 === 1) { return 1 }
 //│         break;
 //│       case 1:
-//│         a = tmp;
-//│         return a;
+//│         return tmp;
 //│     }
 //│     break;
 //│   }

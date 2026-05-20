@@ -43,6 +43,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   val checkIR = NullaryCommand("checkIR")
   val showOptimizedIR = NullaryCommand("soir")
   val showOptimizedTree = NullaryCommand("olot")
+  val debugOptimizations = NullaryCommand("dopt")
+  val noOptimizations = NullaryCommand("noOpt")
   val showContext = NullaryCommand("ctx")
   val parseOnly = NullaryCommand("parseOnly")
   val funcToCls = NullaryCommand("ftc")
@@ -122,7 +124,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"$errMarker Option ':noInline' conflicts with option ':inlineThreshold'")
     Config(
       baseDir = wd,
-      sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true)),
+      sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true, checkUnreachable = true)),
       effectHandlers = Opt.when(effectHandlers.isSet)(EffectHandlers(
         debug = effectHandlers.get.contains("debug"),
         stackSafety = stackSafe.get.flatMap:
@@ -177,6 +179,7 @@ abstract class MLsDiffMaker extends DiffMaker:
             if etaExpansionFlags.contains("off") then N
             else S(EtaExpansion.withDebug(etaExpansionFlags.contains("debug"))),
       inlining = Opt.when(!noInlineOpt.isSet)(Config.Inliner(inlineThreshold.get.getOrElse(1))),
+      deadBranchRemoval = Config.default.deadBranchRemoval,
       qqEnabled = importQQ.isSet,
       funcToCls = funcToCls.isSet,
       commentGeneratedCode = debug.isSet,

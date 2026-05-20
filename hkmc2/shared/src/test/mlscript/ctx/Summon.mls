@@ -19,7 +19,7 @@ use[Num]
 //│ ║  l.17: 	use[Num]
 //│ ║        	^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.126: 	fun use[T](using instance: T) = instance
+//│ ║  l.130: 	fun use[T](using instance: T) = instance
 //│ ║         	                 ^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Num (type parameter T); Available: Int, Str
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -55,7 +55,7 @@ fun f(using Int) = use[Num]
 //│ ║  l.53: 	fun f(using Int) = use[Num]
 //│ ║        	                   ^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.126: 	fun use[T](using instance: T) = instance
+//│ ║  l.130: 	fun use[T](using instance: T) = instance
 //│ ║         	                 ^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Num (type parameter T); Available: Int, Str
 
@@ -79,7 +79,7 @@ use{[Some[Int]].value}
 //│ ║  l.74: 	use{[Some[Int]].value}
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.126: 	fun use[T](using instance: T) = instance
+//│ ║  l.130: 	fun use[T](using instance: T) = instance
 //│ ║         	                 ^^^^^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable T.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -91,7 +91,7 @@ use([Some[Int]].value)
 //│ ║  l.89: 	use([Some[Int]].value)
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.126: 	fun use[T](using instance: T) = instance
+//│ ║  l.130: 	fun use[T](using instance: T) = instance
 //│ ║         	                 ^^^^^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable T.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

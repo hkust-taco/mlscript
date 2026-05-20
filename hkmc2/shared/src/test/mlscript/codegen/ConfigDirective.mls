@@ -154,6 +154,8 @@ print(42)
 
 
 #config(deadParamElim: Some(DeadParamElim(debug: true, mono: true)), inlining: None)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
 
 private fun deadParamConfig(a) = 0
 deadParamConfig(42)
@@ -163,8 +165,6 @@ deadParamConfig(42)
 //│ = 0
 
 #config(deadParamElim: None)
-//│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > <<< dead-param-elim results <<<
 
 
 #config(deforest: Some(Deforest(mono: false)))

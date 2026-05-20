@@ -42,7 +42,7 @@ counter
 //│       (block (result (ref null any))
 //│         (global.set $counter
 //│           (local.get $tmp))
-//│         (global.get $counter))))
+//│         (local.get $tmp))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3

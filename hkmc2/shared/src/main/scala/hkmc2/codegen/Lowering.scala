@@ -16,7 +16,7 @@ import codegen.ReflectionInstrumenter
 import semantics.*, ucs.FlatPattern
 import hkmc2.{semantics => sem}
 import semantics.{Term => st}
-import semantics.Term.{Throw => _, *}
+import semantics.Term.{Throw => _, Label => _, Break => _, Continue => _, *}
 import semantics.Elaborator.{State, Ctx, ctx}
 
 import syntax.{Literal, Tree, SpreadKind}
@@ -613,6 +613,47 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       returnedTerm(res)
     case st.Throw(res) =>
       term(res)(Thrw)
+    case st.Label(label, result, body, hasNonLocalContinueDispatch) =>
+      def hasLocalContinue(term: st): Bool = term match
+        case st.Continue(`label`) => true
+        case _ => term.subTerms.iterator.exists(hasLocalContinue)
+      loweringCtx.collectScopedSym(result)
+      val bodyBlock =
+        if !hasNonLocalContinueDispatch then
+          term_nonTail(body)(r => Assign(result, r, Break(label)))
+        else
+          val bodyResult = loweringCtx.registerTempSymbol(N, "labelBodyResult")
+          val isContinue = loweringCtx.registerTempSymbol(N, "labelContinueDispatch")
+          term_nonTail(body): r =>
+            Assign(
+              bodyResult,
+              r,
+              Assign(
+                isContinue,
+                Call(
+                  State.builtinOpsMap("===").asPath,
+                  (Value.Ref(bodyResult).asArg :: Value.Ref(State.runtimeSymbol).selSN("Continue").asArg :: Nil) ne_:: Nil,
+                )(true, false, false),
+                Match(
+                  Value.Ref(isContinue),
+                  (Case.Lit(Tree.BoolLit(true)) -> Continue(label)) :: Nil,
+                  S(Assign(result, Value.Ref(bodyResult), Break(label))),
+                  End("label continue-sentinel dispatch")
+                )
+              )
+            )
+      Label(
+        label,
+        loop = hasLocalContinue(body),
+        bodyBlock,
+        k(Value.Ref(result))
+      )
+    case st.Break(label, result, value) =>
+      value match
+        case S(v) => term(v)(r => Assign(result, r, Break(label)))
+        case N => Assign(result, Value.Lit(Tree.UnitLit(false)), Break(label))
+    case st.Continue(label) =>
+      Continue(label)
     case st.Asc(lhs, rhs) =>
       term(lhs, inStmtPos = inStmtPos)(k)
     case st.Tup(fs) =>

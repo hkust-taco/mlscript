@@ -1,0 +1,35 @@
+:js
+
+
+let
+  i = 0
+  j = 0
+while i < 10 do
+  outerLbl:
+    set i += 1
+    set j = i
+    while j > 0 do
+      set j += 1
+      if j > 5 do outerLbl.break
+//│ i = 10
+//│ j = 11
+
+
+let result = 0
+if true do
+  exitLbl:
+    set result = 42
+    exitLbl.break
+result
+//│ = 42
+//│ result = 42
+
+
+let result = 24
+if false do
+  exitLbl:
+    set result = 0
+    exitLbl.break
+result
+//│ = 24
+//│ result = 24

@@ -110,8 +110,6 @@ if Bar(true) is
 //│         (local.get $this))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $scrut (ref null any))
-//│     (local $a (ref null any))
-//│     (local $b (ref null any))
 //│     (local $arg$Baz$0$ (ref null any))
 //│     (local $arg$Bar$0$ (ref null any))
 //│     (local $matchRes (ref null any))
@@ -186,28 +184,25 @@ if Bar(true) is
 //│                                 (ref.cast (ref $Bar)
 //│                                   (local.get $scrut))))
 //│                             (block (result (ref null any))
-//│                               (local.set $a
-//│                                 (local.get $arg$Bar$0$))
-//│                               (block (result (ref null any))
-//│                                 (block $match1
-//│                                   (local.set $matchRes1
-//│                                     (ref.null any))
-//│                                   (if
-//│                                     (i32.eq
-//│                                       (i31.get_s
-//│                                         (ref.cast (ref null i31)
-//│                                           (local.get $a)))
-//│                                       (i32.const 1))
-//│                                     (then
-//│                                       (block $arm
-//│                                         (local.set $matchRes1
-//│                                           (ref.i31
-//│                                             (i32.const 3)))
-//│                                         (br $match1))))
-//│                                   (local.set $matchRes1
-//│                                     (ref.i31
-//│                                       (i32.const 4))))
-//│                                 (local.get $matchRes1)))))
+//│                               (block $match1
+//│                                 (local.set $matchRes1
+//│                                   (ref.null any))
+//│                                 (if
+//│                                   (i32.eq
+//│                                     (i31.get_s
+//│                                       (ref.cast (ref null i31)
+//│                                         (local.get $arg$Bar$0$)))
+//│                                     (i32.const 1))
+//│                                   (then
+//│                                     (block $arm
+//│                                       (local.set $matchRes1
+//│                                         (ref.i31
+//│                                           (i32.const 3)))
+//│                                       (br $match1))))
+//│                                 (local.set $matchRes1
+//│                                   (ref.i31
+//│                                     (i32.const 4))))
+//│                               (local.get $matchRes1))))
 //│                         (br $match))))))
 //│               (if
 //│                 (ref.test (ref $Object)
@@ -259,10 +254,7 @@ if Bar(true) is
 //│                               (struct.get $Baz $z
 //│                                 (ref.cast (ref $Baz)
 //│                                   (local.get $scrut))))
-//│                             (block (result (ref null any))
-//│                               (local.set $b
-//│                                 (local.get $arg$Baz$0$))
-//│                               (local.get $b))))
+//│                             (local.get $arg$Baz$0$)))
 //│                         (br $match))))))
 //│               (local.set $matchRes
 //│                 (ref.i31

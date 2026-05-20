@@ -74,22 +74,22 @@ A.sum(20000)
 //│   static {
 //│     A1 = this
 //│   }
-//│   static sum_impl(n1, acc) {
+//│   static sum_impl(n, acc) {
 //│     loopLabel: while (true) {
 //│       let scrut, tmp, tmp1;
-//│       scrut = Predef.equals(n1, 0);
+//│       scrut = Predef.equals(n, 0);
 //│       if (scrut === true) {
 //│         return acc
 //│       }
-//│       tmp = n1 - 1;
-//│       tmp1 = n1 + acc;
-//│       n1 = tmp;
+//│       tmp = n - 1;
+//│       tmp1 = n + acc;
+//│       n = tmp;
 //│       acc = tmp1;
 //│       continue loopLabel;
 //│     }
 //│   } 
-//│   static sum(n1) {
-//│     return A.sum_impl(n1, 0)
+//│   static sum(n) {
+//│     return A.sum_impl(n, 0)
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 

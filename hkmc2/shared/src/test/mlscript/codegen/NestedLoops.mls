@@ -1,0 +1,51 @@
+:js
+
+
+// :dopt
+// :sir
+:soir
+let c = 0
+let x = 0
+while x < 5 do
+  let y = 0
+  while y < 5 do
+    set c += 1
+    set y += 1
+  set x += 1
+c
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let c⁰, x⁰;
+//│ set c⁰ = 0;
+//│ set x⁰ = 0;
+//│ loop lbl:
+//│   let scrut, y, tmp;
+//│   set scrut = <⁰(x⁰, 5);
+//│   match scrut
+//│     true =>
+//│       set y = 0;
+//│       loop lbl1:
+//│         let scrut1, tmp1, tmp2;
+//│         set scrut1 = <⁰(y, 5);
+//│         match scrut1
+//│           true =>
+//│             set tmp1 = +⁰(c⁰, 1);
+//│             set c⁰ = tmp1;
+//│             set tmp2 = +⁰(y, 1);
+//│             set y = tmp2;
+//│             continue lbl1
+//│           else
+//│             end
+//│         end
+//│       set tmp = +⁰(x⁰, 1);
+//│       set x⁰ = tmp;
+//│       continue lbl
+//│     else
+//│       end
+//│   end
+//│ c⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 25
+//│ c = 25
+//│ x = 5
+
+

@@ -178,9 +178,13 @@ Prefix("-", 10 +:+ 2 *:* 3) is EvaluatedTerm(-16)
 Infix("**", Literal(1), Literal(2)) is EvaluatedTerm
 //│ = false
 
+
+// * NOTE: `@compile EvaluatedTerm` seems to generate a ginormous amount of code...
+// * We should try to find ways of reducing that, perhaps by sharing and optimizing more (?)
 fun evaluate(term) = if term is
   (@compile EvaluatedTerm) as v then Some(v)
   else None
+
 
 evaluate of Literal(1)
 //│ = Some(1)

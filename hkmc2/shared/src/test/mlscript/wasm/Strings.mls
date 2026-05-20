@@ -46,8 +46,16 @@ let dup2 = "dup"
 //│         (block (result (ref null any))
 //│           (local.set $tmp
 //│             (array.new_fixed $TupleArray 2
-//│               (global.get $dup1)
-//│               (global.get $dup2)))
+//│               (call $mlx_str_from_utf16
+//│                 (ref.i31
+//│                   (i32.const 0))
+//│                 (ref.i31
+//│                   (i32.const 6)))
+//│               (call $mlx_str_from_utf16
+//│                 (ref.i31
+//│                   (i32.const 0))
+//│                 (ref.i31
+//│                   (i32.const 6)))))
 //│           (if (result (ref null any))
 //│             (ref.test (ref null $TupleArrayMut)
 //│               (local.tee $tuple

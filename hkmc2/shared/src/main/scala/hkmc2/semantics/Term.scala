@@ -339,6 +339,9 @@ enum Term extends Statement:
   case SetRef(ref: Term, value: Term)
   case Ret(result: Term)
   case Throw(result: Term)
+  case Label(label: LabelSymbol, result: TempSymbol, body: Term, hasNonLocalContinueDispatch: Bool)
+  case Break(label: LabelSymbol, result: TempSymbol, value: Opt[Term])
+  case Continue(label: LabelSymbol)
   case Try(body: Term, finallyDo: Term)
   case Annotated(annot: Annot, target: Term)
   case Handle(lhs: LocalSymbol, rhs: Term, args: List[Term],
@@ -424,8 +427,12 @@ enum Term extends Statement:
       val defsFree = defs.iterator.flatMap(d => Term.termDefFreeVars(d.td)).toSet
       val bodyFree = body.freeVars - lhs.nme
       rhsFree ++ argsFree ++ defsFree ++ bodyFree
+    case Label(_, result, body, _) =>
+      val bodyFree = body.freeVars
+      if bodyFree(result.nme) then bodyFree - result.nme else bodyFree
     case Forall(_, _, body) => body.freeVars
-    case Error | Missing | _: Lit | _: UnitVal | _: LeadingDotSel => Set.empty
+    case Error | Missing | _: Lit | _: UnitVal | _: LeadingDotSel | _: Continue => Set.empty
+    case Break(_, result, value) => value.iterator.flatMap(_.freeVars).toSet + result.nme
     case _ => subTerms.iterator.flatMap(_.freeVars).toSet
 
   def sel(id: Tree.Ident, sym: Opt[MemberSymbol])(using State, Elaborator.Ctx): Sel =
@@ -493,6 +500,9 @@ enum Term extends Statement:
       case SetRef(ref, value) => SetRef(ref.mkClone, value.mkClone)
       case Ret(result) => Ret(result.mkClone)
       case Throw(result) => Throw(result.mkClone)
+      case Label(label, result, body, hasNonLocalContinueDispatch) => Label(label, result, body.mkClone, hasNonLocalContinueDispatch)
+      case Break(label, result, value) => Break(label, result, value.map(_.mkClone))
+      case Continue(label) => Continue(label)
       case Try(body, finallyDo) => Try(body.mkClone, finallyDo.mkClone)
       case Annotated(annot, target) => Annotated(annot, target.mkClone)
       case Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
@@ -623,6 +633,9 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case Drop(ref) => "drop"
       case Deref(ref) => "dereference"
       case Throw(e) => "throw"
+      case Label(label, _, _, _) => s"label '${label.nme}'"
+      case Break(label, _, _) => s"break to label '${label.nme}'"
+      case Continue(label) => s"continue to label '${label.nme}'"
       case Annotated(annotation, target) => "annotation"
       case Ret(res) => "return"
       case Try(body, finallyDo) => "try expression"
@@ -674,6 +687,9 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Asc(term, ty) => Vector.double(term, ty)
     case Ret(res) => Vector.single(res)
     case Throw(res) => Vector.single(res)
+    case Label(_, _, body, _) => Vector.single(body)
+    case Break(_, _, value) => value.toVector
+    case Continue(_) => Vector.empty
     case Forall(_, _, body) => Vector.single(body)
     case Constrained(constraints, body) => constraints.flatMap(_.subTerms).toVector :+ body
     case WildcardTy(in, out) => in.toVector ++ out.toVector
@@ -890,6 +906,9 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Import(sym, str, file) => s"import $str from ${file}"
     case Annotated(ann, target) => s"@${ann} ${target.showDbg}"
     case Throw(res) => s"throw ${res.showDbg}"
+    case Label(label, _, body, _) => s"do ${label.nme}: ${body.showDbg}"
+    case Break(label, _, value) => s"${label.nme}.break${value.fold("")(v => s" ${v.showDbg}")}"
+    case Continue(label) => s"${label.nme}.continue"
     case Try(body, finallyDo) => s"try ${body.showDbg} finally ${finallyDo.showDbg}"
     case Ret(res) => s"return ${res.showDbg}"
     case TypeDef(sym, _, tparams, rhs, _, _) =>

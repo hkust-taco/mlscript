@@ -5,9 +5,9 @@
 :sjs
 fun f =
   if true then return 1 else return 2
-  (???)
+  ???
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f; f = function f() { let scrut; scrut = true; if (scrut === true) { return 1 } return 2; };
+//│ let f; f = function f() { if (true === true) { return 1 } return 2; };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // * Note: we now remove the call to `???` because
@@ -17,7 +17,7 @@ fun f =
 :soir
 fun f =
   if true and false then return()
-  (???)
+  ???
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let f⁰;
 //│ define f⁰ as fun f¹() {
@@ -44,12 +44,9 @@ fun f =
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f⁰;
 //│ define f⁰ as fun f¹() {
-//│   let scrut, scrut1;
-//│   set scrut = true;
-//│   match scrut
+//│   match true
 //│     true =>
-//│       set scrut1 = false;
-//│       match scrut1
+//│       match false
 //│         true =>
 //│           return runtime⁰.Unit⁰
 //│         else
@@ -62,44 +59,18 @@ fun f =
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:sir
+// * Note: removed from here as well
 :soir
 fun f =
   if true and false then return "1"
   else return "2 long long long long long long long long long long long long long long"
-  (???)
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f²;
-//│ define f² as fun f³() {
-//│   let scrut, scrut1;
-//│   block split_root$:
-//│     block split_1$:
-//│       set scrut = true;
-//│       match scrut
-//│         true =>
-//│           set scrut1 = false;
-//│           match scrut1
-//│             true =>
-//│               return "1"
-//│             else
-//│               break split_1$
-//│           end
-//│         else
-//│           break split_1$
-//│       end
-//│     return "2 long long long long long long long long long long long long long long"
-//│   return Predef⁰.notImplementedError⁰
-//│ };
-//│ end
+  ???
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f²;
 //│ define f² as fun f³() {
-//│   let scrut, scrut1;
-//│   set scrut = true;
-//│   match scrut
+//│   match true
 //│     true =>
-//│       set scrut1 = false;
-//│       match scrut1
+//│       match false
 //│         true =>
 //│           return "1"
 //│         else

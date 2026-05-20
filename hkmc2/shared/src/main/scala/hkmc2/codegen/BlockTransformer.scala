@@ -27,7 +27,7 @@ class BlockTransformer(subst: SymbolSubst):
     if l2 is l then imp else l2 -> s
   
   def applySubBlock(b: Block): Block = applyBlock(b)
-
+  
   /** Called for any sub block not in the `rest` position (when `rest` is nonempty).
     * This is not called for Label body or function body. */
   def applySubBlockNonTail(b: Block): Block = applySubBlock(b)
@@ -221,44 +221,45 @@ class BlockTransformer(subst: SymbolSubst):
         (publicFields2 is defn.publicFields) &&
         (ctor2 is defn.ctor)
       then defn else ClsLikeBody(isym2, methods2, privateFields2, publicFields2, ctor2, defn.annotations)
-    
+  
+  def applyClsLikeDefn(defn: ClsLikeDefn)(k: Defn => Block): Block =
+    val ClsLikeDefn(own, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods,
+      privateFields, publicFields, preCtor, ctor, mod, bufferable) = defn
+    val own2 = own.mapConserve(_.subst)
+    val isym2 = isym.subst
+    val sym2 = sym.subst
+    val ctorSym2 = ctorSym.mapConserve(_.subst)
+    val paramsOpt2 = paramsOpt.mapConserve(applyParamList)
+    val auxParams2 = auxParams.mapConserve(applyParamList)
+    def helper(parentPath2: Opt[Path]) =
+      val methods2 = methods.mapConserve(applyFunDefn)
+      val privateFields2 = privateFields.mapConserve(_.subst)
+      val publicFields2 = publicFields.mapConserve(applyPublicField)
+      val preCtor2 = applyFunBodyLikeBlock(preCtor)
+      val ctor2 = applyFunBodyLikeBlock(ctor)
+      val mod2 = mod.mapConserve(applyObjBody)
+      k:
+        if (own2 is own) && (isym2 is isym) && (sym2 is sym) && (ctorSym2 is ctorSym) &&
+            (paramsOpt2 is paramsOpt) &&
+            (auxParams2 is auxParams) &&
+            (parentPath2 is parentPath) &&
+            (methods2 is methods) &&
+            (privateFields2 is privateFields) &&
+            (publicFields2 is publicFields) &&
+            (preCtor2 is preCtor) && (ctor2 is ctor) &&
+            (mod2 is mod)
+          then defn else ClsLikeDefn(own2, isym2, sym2, ctorSym2, kind, paramsOpt2, 
+            auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2, bufferable)(defn.configOverride, defn.annotations)
+    parentPath match
+    case Some(pp) => applyPath(pp): pp2 =>
+      helper:
+        if pp2 is pp then parentPath else Some(pp2)
+    case None => helper(parentPath)
+  
   def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
     case defn: FunDefn => k(applyFunDefn(defn))
     case defn: ValDefn => applyValDefn(defn)(k)
-    case defn @ ClsLikeDefn(own, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods,
-        privateFields, publicFields, preCtor, ctor, mod, bufferable)
-    =>
-      val own2 = own.mapConserve(_.subst)
-      val isym2 = isym.subst
-      val sym2 = sym.subst
-      val ctorSym2 = ctorSym.mapConserve(_.subst)
-      val paramsOpt2 = paramsOpt.mapConserve(applyParamList)
-      val auxParams2 = auxParams.mapConserve(applyParamList)
-      def helper(parentPath2: Opt[Path]) =
-        val methods2 = methods.mapConserve(applyFunDefn)
-        val privateFields2 = privateFields.mapConserve(_.subst)
-        val publicFields2 = publicFields.mapConserve(applyPublicField)
-        val preCtor2 = applyFunBodyLikeBlock(preCtor)
-        val ctor2 = applyFunBodyLikeBlock(ctor)
-        val mod2 = mod.mapConserve(applyObjBody)
-        k:
-          if (own2 is own) && (isym2 is isym) && (sym2 is sym) && (ctorSym2 is ctorSym) &&
-              (paramsOpt2 is paramsOpt) &&
-              (auxParams2 is auxParams) &&
-              (parentPath2 is parentPath) &&
-              (methods2 is methods) &&
-              (privateFields2 is privateFields) &&
-              (publicFields2 is publicFields) &&
-              (preCtor2 is preCtor) && (ctor2 is ctor) &&
-              (mod2 is mod)
-            then defn else ClsLikeDefn(own2, isym2, sym2, ctorSym2, kind, paramsOpt2, 
-              auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2, bufferable)(defn.configOverride, defn.annotations)
-      parentPath match
-      case Some(pp) => applyPath(pp): pp2 =>
-        helper:
-          if pp2 is pp then parentPath else Some(pp2)
-      case None => helper(parentPath)
-      
+    case defn: ClsLikeDefn => applyClsLikeDefn(defn)(k)
   
   def applyArg(arg: Arg)(k: Arg => Block): Block =
     applyPath(arg.value): val2 =>

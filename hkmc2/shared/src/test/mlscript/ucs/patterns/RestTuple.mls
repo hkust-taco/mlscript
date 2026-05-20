@@ -8,11 +8,10 @@ fun nonsense(xs) = if xs is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let nonsense;
 //│ nonsense = function nonsense(xs) {
-//│   let ys, middleElements;
+//│   let middleElements;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 0) {
 //│     middleElements = runtime.Tuple.slice(xs, 0, 0);
-//│     ys = middleElements;
-//│     return ys
+//│     return middleElements
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
@@ -31,14 +30,12 @@ fun lead_and_last(xs) = if xs is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lead_and_last;
 //│ lead_and_last = function lead_and_last(xs) {
-//│   let x, y, lastElement1$, element0$;
+//│   let lastElement1$, element0$;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
 //│     element0$ = runtime.Tuple.get(xs, 0);
 //│     runtime.Tuple.slice(xs, 1, 1);
 //│     lastElement1$ = runtime.Tuple.get(xs, -1);
-//│     y = lastElement1$;
-//│     x = element0$;
-//│     return x + y
+//│     return element0$ + lastElement1$
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
 //│   }
@@ -66,7 +63,7 @@ fun nested_tuple_patterns(xs) = if xs is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let nested_tuple_patterns;
 //│ nested_tuple_patterns = function nested_tuple_patterns(xs) {
-//│   let x, y, w, z, lastElement1$, middleElements, element0$, element1$, element0$1, tmp6, tmp7;
+//│   let lastElement1$, middleElements, element0$, element1$, element0$1, tmp6, tmp7;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
 //│     element0$ = runtime.Tuple.get(xs, 0);
 //│     middleElements = runtime.Tuple.slice(xs, 1, 1);
@@ -74,13 +71,9 @@ fun nested_tuple_patterns(xs) = if xs is
 //│     if (runtime.Tuple.isArrayLike(middleElements) && middleElements.length === 2) {
 //│       element0$1 = runtime.Tuple.get(middleElements, 0);
 //│       element1$ = runtime.Tuple.get(middleElements, 1);
-//│       w = lastElement1$;
-//│       z = element1$;
-//│       y = element0$1;
-//│       x = element0$;
-//│       tmp6 = x + y;
-//│       tmp7 = tmp6 + z;
-//│       return tmp7 + w
+//│       tmp6 = element0$ + element0$1;
+//│       tmp7 = tmp6 + element1$;
+//│       return tmp7 + lastElement1$
 //│     }
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {

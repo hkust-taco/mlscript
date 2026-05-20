@@ -174,8 +174,9 @@ and then use one of the following commands.
 - `hkmc2AppsTests/test` for running the applications compile and diff tests.
 - `hkmc2NofibTests/test` for running the nofib compile and diff tests.
 - `hkmc2WasmTests/test` for running the wasm compile and diff tests.
-- `hkmc2MostTests/test` for running all of the above.
-- `hkmc2AllTests/test` for running all hkmc2 tests, including ScalaJS-compiled tests.
+- `hkmc2LlirTests/test` for running the llir diff tests.
+- `hkmc2MostTests/test` for running all of the above except llir.
+- `hkmc2AllTests/test` for running all default hkmc2 tests except llir, including ScalaJS-compiled tests.
 - `~hkmc2DiffTests/Test/run` for running the test watcher,
   which updates test files as you save them and recompiles the Scala sources automatically on change.
 - `test` for compiling all JVM and JS subprojects

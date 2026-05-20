@@ -30,6 +30,16 @@
 - `:wat`, `:fwat`, `:swat`: print Wasm text variants.
 - `:llir`: enable LLIR generation (with optional LLIR/C++ helpers in the same family).
 
+## Debugging Commands
+- `:dp`: Debug parsing.
+- `:de`: Debug elaboration.
+- `:dr`: Debug resolution.
+- `:dl`: Debug lowering.
+- `:dopt`: Debug optimizations.
+- `:sir`: Show intermediate representation (IR).
+- `:soir`: Show optimized IR.
+- `:sjs`: Show generated JS.
+
 ## Failure Policy
 - Unexpected diagnostics fail (error/warning kind mismatches).
 - Missing expected diagnostics fail (for `:pe`, `:e`, `:re`, `:ge`, `:w`) unless tolerated by `:todo`/`breakme` policy paths.

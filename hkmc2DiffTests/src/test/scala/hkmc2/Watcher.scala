@@ -78,7 +78,7 @@ class Watcher(dirs: Ls[File]):
         completionTime(event.path) = LocalDateTime.now()
       catch ex =>
         // System.err.println("Unexpected error in watcher: " + ex)
-        // ex.printStackTrace()
+        ex.printStackTrace()
         System.err.println("Unexpected error in watcher (" + ex.getClass() + ")")
         watcher.close()
         throw ex

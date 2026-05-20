@@ -45,12 +45,9 @@ foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let foo², baseCall, lambda¹, lambda$⁰;
 //│ define lambda$⁰ as fun lambda$¹(x, y)(z) {
-//│   let x1, y1, z1, inlinedVal, tmp;
-//│   set x1 = x;
-//│   set y1 = y;
-//│   set z1 = z;
-//│   set tmp = +⁰(x1, y1);
-//│   set inlinedVal = +⁰(tmp, z1);
+//│   let inlinedVal, tmp;
+//│   set tmp = +⁰(x, y);
+//│   set inlinedVal = +⁰(tmp, z);
 //│   return inlinedVal
 //│ };
 //│ define foo² as fun foo³(x)(y) {

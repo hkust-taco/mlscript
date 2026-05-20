@@ -60,6 +60,25 @@ object Elaborator:
       case InnerScope(inner) => S(inner)
       case _ => N
   
+  /** Label metadata threaded through elaboration. */
+  final case class LabelBinding(
+      labelSymbol: LabelSymbol,
+      resultSymbol: TempSymbol,
+      nonLocalHandlerSymbol: TempSymbol,
+      nonLocalBreakMethodMarker: TempSymbol,
+      nonLocalContinueMethodMarker: TempSymbol,
+  )
+  
+  /** Result of label lookup:
+    * - `Found`: label is in direct lexical scope
+    * - `AcrossBoundary`: label exists but crossing function/lambda/handler boundaries is required
+    * - `NotFound`: no such label
+    */
+  enum LabelLookup:
+    case Found(binding: LabelBinding)
+    case AcrossBoundary(binding: LabelBinding)
+    case NotFound
+  
   enum ReturnHandler:
     case Required(handler: TempSymbol)
     case Direct
@@ -75,17 +94,19 @@ object Elaborator:
       parent: Opt[Ctx],
       env: Map[Str, Ctx.Elem],
       mode: Mode,
+      labels: Map[LabelSymbol, LabelBinding],
   ):
     
     override def toString: Str = s"${parent.fold("")(_.toString+"/")}${outer.showDbg}"
     
     lazy val scope: SrcScope = SrcScope(outer, parent.map(_.scope))
     
-    def +(local: Str -> Symbol): Ctx = copy(outer, env = env + local.mapSecond(Ctx.RefElem(_)))
+    def +(local: Str -> Symbol): Ctx =
+      copy(env = env + local.mapSecond(Ctx.RefElem(_)))
     def ++(locals: IterableOnce[Str -> Symbol]): Ctx =
-      copy(outer, env = env ++ locals.mapValues(Ctx.RefElem(_)))
+      copy(env = env ++ locals.mapValues(Ctx.RefElem(_)))
     def elem_++(locals: IterableOnce[Str -> Ctx.Elem]): Ctx =
-      copy(outer, env = env ++ locals.iterator.filter: kv =>
+      copy(env = env ++ locals.iterator.filter: kv =>
         // * Imports should not shadow symbols defined in the same scope;
         // * but they should be allowed to shadow previous imports.
         env.get(kv._1).forall(_.isImport))
@@ -99,12 +120,59 @@ object Elaborator:
           nme -> elem
       )
     
-    def nest(outerCtx: OuterCtx): Ctx = Ctx(outerCtx, Some(this), Map.empty, mode)
+    def withLabel(
+        labelSym: LabelSymbol,
+        resultSym: TempSymbol,
+        nonLocalHandlerSym: TempSymbol,
+        nonLocalBreakMethodMarker: TempSymbol,
+        nonLocalContinueMethodMarker: TempSymbol,
+    ): Ctx =
+      copy(
+        env = env + (labelSym.nme -> Ctx.RefElem(labelSym)),
+        labels = labels + (labelSym -> LabelBinding(
+          labelSym, resultSym, nonLocalHandlerSym, nonLocalBreakMethodMarker, nonLocalContinueMethodMarker))
+      )
+    
+    def nest(outerCtx: OuterCtx): Ctx = Ctx(outerCtx, Some(this), Map.empty, mode, Map.empty)
     def nestLocal(nameHint: Str): Ctx = nest(OuterCtx.LocalScope(nameHint))
     def nestInner(inner: InnerSymbol): Ctx = nest(OuterCtx.InnerScope(inner))
     
     def get(name: Str): Opt[Ctx.Elem] =
       env.get(name).orElse(parent.flatMap(_.get(name)))
+    def lookupLabel(name: Str): LabelLookup =
+      @tailrec
+      def go(
+          current: Opt[Ctx],
+          crossedFunction: Bool,
+          crossedLambdaOrHandler: Bool,
+      ): LabelLookup = current match
+        case N => LabelLookup.NotFound
+        case S(ctx) =>
+          ctx.env.get(name) match
+            case S(elem) =>
+              elem.symbol match
+                case S(labelSym: LabelSymbol) =>
+                  ctx.labels.get(labelSym) match
+                    case S(binding) =>
+                      if crossedFunction || crossedLambdaOrHandler
+                      then LabelLookup.AcrossBoundary(binding)
+                      else LabelLookup.Found(binding)
+                    case N =>
+                      // Defensive internal consistency check. This path should be unreachable:
+                      // every label inserted into `env` via `withLabel` is inserted into
+                      // `labels` in the same step. If this fires, context construction is broken.
+                      lastWords(s"Missing label binding for symbol ${labelSym.nme} in context ${ctx.outer.showDbg}.")
+                case _ =>
+                  LabelLookup.NotFound
+            case N =>
+              val nextCrossedFunction = crossedFunction || (ctx.outer match
+                case _: OuterCtx.Function => true
+                case _ => false)
+              val nextCrossedLambdaOrHandler = crossedLambdaOrHandler || (ctx.outer match
+                case OuterCtx.LambdaOrHandlerBlock => true
+                case _ => false)
+              go(ctx.parent, nextCrossedFunction, nextCrossedLambdaOrHandler)
+      go(S(this), false, false)
     def getOuter: Opt[InnerSymbol] = outer.inner.orElse(parent.flatMap(_.getOuter))
     def getNonLocalRetHandler: Opt[TempSymbol] = outer match
       case OuterCtx.Function(sym) => S(sym)
@@ -243,7 +311,7 @@ object Elaborator:
           new Ident(nme).withLocOf(id))(symOpt, FlowSymbol.synthSel(nme), N, S(summon))
       def symbol = symOpt
     given Conversion[Symbol, Elem] = RefElem(_)
-    val empty: Ctx = Ctx(OuterCtx.LocalScope("top-level"), N, Map.empty, Mode.Full)
+    val empty: Ctx = Ctx(OuterCtx.LocalScope("top-level"), N, Map.empty, Mode.Full, Map.empty)
     
   enum Mode:
     case Full
@@ -410,19 +478,131 @@ extends Importer with ucs.SplitElaborator:
         case _ => ()
         S(Annot.Trm(trm))
   
+  private final case class EffectHandlerMethodSpec(
+      methodName: Str,
+      valueParamName: Opt[Str],
+      methodBody: Opt[VarSymbol] => Term,
+  )
+  
+  private def requireEffectMethodValue(methodName: Str, valueSym: Opt[VarSymbol]): Term =
+    valueSym match
+      case S(sym) => sym.ref(Ident("value"))
+      case N => lastWords(s"Missing value parameter for non-local effect handler method '$methodName'.")
+  
+  /** Mark a handler method as used via symbol direct references, without emitting code. */
+  private def markEffectMethodUsed(methodMarker: TempSymbol, callSiteId: Ident): Unit =
+    methodMarker.ref(callSiteId)
+    ()
+  
+  /** Use a synthesized selection so the sentinel object can be referenced without field-access sanity checks. */
+  private def nonLocalContinueSentinel(using Ctx): Term =
+    State.runtimeSymbol.ref().selNoSym("Continue", synth = true)
+  
+  /** Build an effect handler around `body` for non-local control flow. */
+  private def mkEffectHandleAbortive(
+      handlerSymbol: TempSymbol,
+      effectClassName: Str,
+      methods: Ls[EffectHandlerMethodSpec],
+      body: Term,
+  )(using State): Term =
+    val clsSym = ClassSymbol(DummyTypeDef(Cls), Ident(effectClassName))
+    val htds = methods.map: spec =>
+      val valueSym = spec.valueParamName.map(nme => VarSymbol(Ident(nme)))
+      val resumeSym = VarSymbol(Ident("resume"))
+      val mtdSym = BlockMemberSymbol(spec.methodName, Nil, true)
+      val tsym = TermSymbol(Fun, N, Ident(spec.methodName))
+      val td = TermDefinition(
+        Fun,
+        mtdSym,
+        tsym,
+        PlainParamList(valueSym.fold(Nil)(sym => Param(FldFlags.empty, sym, N, Modulefulness.none) :: Nil)) :: Nil,
+        N,
+        N,
+        S(spec.methodBody(valueSym)),
+        TermDefFlags.empty,
+        Modulefulness.none,
+        Nil,
+        N,
+      )
+      tsym.defn = S(td)
+      mtdSym.tsym = S(tsym)
+      HandlerTermDefinition(resumeSym, td)
+    Term.Handle(handlerSymbol, state.nonLocalRetHandlerTrm, Nil, clsSym, htds, body)
+  
+  /** Build a non-local effect invocation on `handlerSymbol`. */
+  private def mkNonLocalEffectInvocation(
+      handlerSymbol: TempSymbol,
+      methodName: Str,
+      callSiteId: Ident,
+      argTrees: Ls[Tree],
+      argTerms: Ls[Term],
+  )(using Ctx): Term =
+    val rs = FlowSymbol.app()
+    val mtdTree = new Ident(methodName)
+    val argTree = new Tup(argTrees)
+    Term.App(
+      Term.Sel(handlerSymbol.ref(callSiteId), mtdTree)(
+        S(state.nonLocalRet), FlowSymbol.sel(callSiteId.name), N, S(summon)),
+      Term.Tup(argTerms.map(term => PlainFld(term)))(argTree),
+    )(Tree.DummyApp, N, rs)
+  
+  private def mkNonLocalContinueInvocation(
+      binding: LabelBinding,
+      nme: Ident,
+  )(using Ctx): Term =
+    markEffectMethodUsed(binding.nonLocalContinueMethodMarker, nme)
+    mkNonLocalEffectInvocation(binding.nonLocalHandlerSymbol, "continue", nme, Nil, Nil)
+  
+  private def wrapNonLocalLabelHandlers(
+      body: Term,
+      nonLocalHandlerSym: TempSymbol,
+      nonLocalBreakMethodMarker: TempSymbol,
+      nonLocalContinueMethodMarker: TempSymbol,
+  )(using State, Ctx): Term =
+    val methods =
+      (if nonLocalBreakMethodMarker.directRefs.isEmpty then Nil else
+        EffectHandlerMethodSpec("break", S("value"), requireEffectMethodValue("break", _)) :: Nil) :::
+      (if nonLocalContinueMethodMarker.directRefs.isEmpty then Nil else
+        EffectHandlerMethodSpec("continue", N, _ => nonLocalContinueSentinel) :: Nil)
+    if methods.isEmpty then body else
+      mkEffectHandleAbortive(nonLocalHandlerSym, "NonLocalLabelEffect", methods, body)
+  
   def term(tree: Tree): Ctxl[Term] =
   trace[Term](s"Elab term ${tree.showDbg}", r => s"~> $r"):
     val unders = mutable.ArrayBuffer.empty[VarSymbol]
     given UnderCtx = new UnderCtx(S(unders))
-    val st = subterm(tree, inAppPrefix = false, inTyAppPrefix = false)
+    val st = subterm(tree)
     val params = unders.iterator.map: sym =>
         Param(FldFlags.empty, sym, N, Modulefulness.none)
       .toList
     if params.isEmpty then st
     else Term.Lam(PlainParamList(params), st)
   
-  def subterm(tree: Tree, inAppPrefix: Bool = false, inTyAppPrefix: Bool = false): Ctxl[UnderCtx ?=> Term] =
+  def subterm(tree: Tree): Ctxl[UnderCtx ?=> Term] =
   trace[Term](s"Elab subterm ${tree.showDbg}", r => s"~> $r"):
+    
+    /** Fallback to a normal selection + application when label-specific handling does not apply. */
+    def mkNonLabelSelectionApp(tree: App, sel: Sel, args: Ls[Tree]): Term =
+      val sym = FlowSymbol.app()
+      val lt = subterm(sel)
+      val rt = subterm(Tup(args))
+      Term.App(lt, rt)(tree, N, sym)
+    
+    def elaborateSelection(tree: Sel): Term =
+      val preTrm = subterm(tree.prefix)
+      val sym = resolveField(tree.name, preTrm.symbol, tree.name)
+      if sym.contains(ctx.builtins.source.line) then
+        val loc = tree.toLoc.getOrElse(???)
+        val (line, _, _) = loc.origin.fph.getLineColAt(loc.spanStart)
+        Term.Lit(IntLit(loc.origin.startLineNum + line))
+      else if sym.contains(ctx.builtins.source.name) then
+        Term.Lit(StrLit(ctx.getOuter.map(_.nme).getOrElse("")))
+      else if sym.contains(ctx.builtins.source.file) then
+        val loc = tree.toLoc.getOrElse(???)
+        Term.Lit(StrLit(loc.origin.fileName.toString))
+      else
+        Term.Sel(preTrm, tree.name)(sym, FlowSymbol.sel(tree.name.name), N, S(summon))
+    
     tree.desugared match
     case Trm(term) => term
     case unt @ Unt() => unit.withLocOf(unt)
@@ -534,7 +714,7 @@ extends Importer with ucs.SplitElaborator:
       raise(ErrorReport(msg"Name not found: $name" -> id.toLoc :: Nil))
       Term.Error
     case TyApp(lhs, targs) =>
-      Term.TyApp(subterm(lhs, inTyAppPrefix = true), targs.map {
+      Term.TyApp(subterm(lhs), targs.map {
         case Modified(Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg)), N)
         case Modified(Keywrd(Keyword.`out`), arg) => Term.WildcardTy(N, S(subterm(arg)))
         case Tup(Modified(Keywrd(Keyword.`in`), arg1) :: Modified(Keywrd(Keyword.`out`), arg2) :: Nil) =>
@@ -593,7 +773,7 @@ extends Importer with ucs.SplitElaborator:
       block(tree :: Nil, hasResult = false)._1
     case PrefixApp(kw @ Keywrd(Keyword.`not`), rhs) =>
       Term.App(State.builtinOpsMap("!").ref(new Ident("not").withLocOf(kw)), Term.Tup(
-        PlainFld(subterm(rhs, inAppPrefix = true)) :: Nil)(DummyTup))(DummyApp, N, FlowSymbol("not-app"))
+        PlainFld(subterm(rhs)) :: Nil)(DummyTup))(DummyApp, N, FlowSymbol("not-app"))
     case tree @ InfixApp(lhs, Keywrd(Keyword.`is` | Keyword.`and` | Keyword.`or`), rhs) =>
       Term.IfLike(Keyword.`if`, IfLikeForm.ReturningIf, shorthandSplit(tree))
     case InfixApp(Sel(pre, idn: Ident), Keywrd(Keyword.`#`), idp: Ident) =>
@@ -630,15 +810,57 @@ extends Importer with ucs.SplitElaborator:
         case (acc, rhs) =>
           rhs.splitOn(acc)
       subterm(tree)
+    case tree @ App(sel @ Sel(labelId @ Ident(labelName), nme @ Ident("break")), Tup(args)) =>
+      val value = args match
+        case Nil => N
+        case arg :: Nil => S(subterm(arg))
+        case _ =>
+          raise(ErrorReport(msg"'break' expects at most one argument." -> tree.toLoc :: Nil))
+          N
+      ctx.lookupLabel(labelName) match
+      case LabelLookup.Found(binding) =>
+        Term.Break(binding.labelSymbol, binding.resultSymbol, value)
+      case LabelLookup.AcrossBoundary(binding) =>
+        if config.effectHandlers.isEmpty then
+          mkNonLabelSelectionApp(tree, sel, args)
+        else
+          markEffectMethodUsed(binding.nonLocalBreakMethodMarker, nme)
+          mkNonLocalEffectInvocation(
+            binding.nonLocalHandlerSymbol,
+            "break",
+            nme,
+            args,
+            value.toList,
+          )
+      case LabelLookup.NotFound =>
+        mkNonLabelSelectionApp(tree, sel, args)
+    case tree @ App(sel @ Sel(labelId @ Ident(labelName), nme @ Ident("continue")), Tup(args)) =>
+      def checkNoArgs: Unit = if args.nonEmpty then raise:
+        ErrorReport(msg"'continue' does not take arguments." -> tree.toLoc :: Nil)
+      ctx.lookupLabel(labelName) match
+      case LabelLookup.Found(binding) =>
+        checkNoArgs
+        Term.Continue(binding.labelSymbol)
+      case LabelLookup.AcrossBoundary(binding) =>
+        checkNoArgs
+        if config.effectHandlers.isEmpty then
+          raise:
+            ErrorReport(msg"Non-local 'continue' is only supported with effect handlers enabled."
+              -> labelId.toLoc :: Nil)
+          Term.Error
+        else
+          mkNonLocalContinueInvocation(binding, nme)
+      case LabelLookup.NotFound =>
+        mkNonLabelSelectionApp(tree, sel, args)
     case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol.app()
-      val lt = subterm(lhs, inAppPrefix = true)
+      val lt = subterm(lhs)
       val rt = subterm(rhs)
       Term.App(lt, rt)(tree, N, sym)
     case tree @ OpApp(lhs, op, rhss) =>
       val sym = FlowSymbol.app()
-      val lt = subterm(lhs, inAppPrefix = true)
-      val ot = subterm(op, inAppPrefix = true)
+      val lt = subterm(lhs)
+      val ot = subterm(op)
       val rts = rhss.map(r => PlainFld(subterm(r)))
       Term.App(ot, Term.Tup(PlainFld(lt) :: rts)(DummyTup))(
         DummyApp, N, sym)
@@ -648,33 +870,37 @@ extends Importer with ucs.SplitElaborator:
       Term.SynthSel(preTrm, nme)(sym, FlowSymbol.synthSel(nme.name), N, S(summon)).withLocOf(tree)
     case Sel(Empty(), nme) =>
       Term.LeadingDotSel(nme)(S(summon)).withLocOf(tree)
-    case Sel(pre, nme) =>
-      val preTrm = subterm(pre)
-      val sym = resolveField(nme, preTrm.symbol, nme)
-      sym match
-      // * Enforcing [invariant:1]
-      case S(ms: BlockMemberSymbol)
-        // FIXME[Harry]: move the check to resolver because preTrm's symbol may not be resolved yet.
-        if
-          // * If we're selecting a parameterized class method without applying it, an error should be reported.
-          // * Note that module methods are fine to select without applying, since they don't use `this`.
-          !inAppPrefix && ms.isParameterizedMethod && !preTrm.symbol.exists(_.existsModuleful)
-        =>
-        raise:
-          ErrorReport(
-            msg"[debinding error] Method '${nme.name}' cannot be accessed without being called." -> nme.toLoc :: Nil)
-      case S(_) | N => ()
-      if sym.contains(ctx.builtins.source.line) then
-        val loc = tree.toLoc.getOrElse(???)
-        val (line, _, _) = loc.origin.fph.getLineColAt(loc.spanStart)
-        Term.Lit(IntLit(loc.origin.startLineNum + line))
-      else if sym.contains(ctx.builtins.source.name) then
-        Term.Lit(StrLit(ctx.getOuter.map(_.nme).getOrElse("")))
-      else if sym.contains(ctx.builtins.source.file) then
-        val loc = tree.toLoc.getOrElse(???)
-        Term.Lit(StrLit(loc.origin.fileName.toString))
-      else
-        Term.Sel(preTrm, nme)(sym, FlowSymbol.sel(nme.name), N, S(summon))
+    case sel @ Sel(labelId @ Ident(labelName), nme @ Ident("break")) =>
+      ctx.lookupLabel(labelName) match
+      case LabelLookup.Found(binding) =>
+        Term.Break(binding.labelSymbol, binding.resultSymbol, N)
+      case LabelLookup.AcrossBoundary(binding) =>
+        if config.effectHandlers.isEmpty then
+          raise:
+            ErrorReport(msg"Non-local 'break' is only supported with effect handlers enabled."
+              -> labelId.toLoc :: Nil)
+          Term.Error
+        else
+          markEffectMethodUsed(binding.nonLocalBreakMethodMarker, nme)
+          mkNonLocalEffectInvocation(binding.nonLocalHandlerSymbol, "break", nme, Nil, Nil)
+      case LabelLookup.NotFound =>
+        elaborateSelection(sel)
+    case sel @ Sel(labelId @ Ident(labelName), nme @ Ident("continue")) =>
+      ctx.lookupLabel(labelName) match
+      case LabelLookup.Found(binding) =>
+        Term.Continue(binding.labelSymbol)
+      case LabelLookup.AcrossBoundary(binding) =>
+        if config.effectHandlers.isEmpty then
+          raise:
+            ErrorReport(msg"Non-local 'continue' is only supported with effect handlers enabled."
+              -> labelId.toLoc :: Nil)
+          Term.Error
+        else
+          mkNonLocalContinueInvocation(binding, nme)
+      case LabelLookup.NotFound =>
+        elaborateSelection(sel)
+    case sel @ Sel(pre, nme) =>
+      elaborateSelection(sel)
     case MemberProj(ct, nme) =>
       val c = subterm(ct)
       val f = c.symbol.flatMap(_.asCls) match
@@ -716,7 +942,7 @@ extends Importer with ucs.SplitElaborator:
       val (mut, c2) = c match
         case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
         case c => (false, c)
-      val base = new Term.DynNew(subterm(c2, inAppPrefix = inAppPrefix), args.map(subterm(_))).withLocOf(tree)
+      val base = new Term.DynNew(subterm(c2), args.map(subterm(_))).withLocOf(tree)
       if mut then Term.Mut(base) else base
     // case New(c, rfto) =>
     //   assert(rfto.isEmpty)
@@ -741,8 +967,8 @@ extends Importer with ucs.SplitElaborator:
         )(N).withLocOf(tree)
         if mut then Term.Mut(inner) else inner
       case N =>
-        Term.New(State.globalThisSymbol.ref().sel(Ident("Object"), S(ctx.builtins.Object)),
-          Nil, bodo)(N).withLocOf(tree)
+        val objectRef = ctx.builtins.Object.bms.get.ref(Ident("Object"))
+        Term.New(objectRef, Nil, bodo)(N).withLocOf(tree)
       // case _ =>
       //   raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
       
@@ -779,14 +1005,8 @@ extends Importer with ucs.SplitElaborator:
             ErrorReport(msg"Non-local return statements are only supported with effect handlers enabled." -> tree.toLoc :: Nil)
           Term.Error
         else
-          val rs = FlowSymbol.app()
-          val retMtdTree = new Ident("ret")
-          val argTree = new Tup(body :: Nil)
-          val dummyIdent = new Ident("return").withLocOf(kw)
-          Term.App(
-            Term.Sel(sym.ref(dummyIdent), retMtdTree)(S(state.nonLocalRet), FlowSymbol.sel(dummyIdent.name), N, S(summon)),
-            Term.Tup(PlainFld(subterm(body)) :: Nil)(argTree)
-          )(App(Sel(dummyIdent, retMtdTree), argTree), N, rs)
+          val callSiteId = new Ident("return").withLocOf(kw)
+          mkNonLocalEffectInvocation(sym, "ret", callSiteId, body :: Nil, subterm(body) :: Nil)
       case ReturnHandler.NotInFunction =>
         raise:
           ErrorReport(msg"Return statements are not allowed outside of functions." -> tree.toLoc :: Nil)
@@ -799,6 +1019,18 @@ extends Importer with ucs.SplitElaborator:
         Term.Error
     case PrefixApp(kw @ Keywrd(Keyword.`throw`), body) =>
       Term.Throw(subterm(body)).mkLocWith(kw)
+    case PrefixApp(kw @ Keywrd(Keyword.`do`), InfixApp(labelId: Ident, Keywrd(Keyword.`:`), body)) =>
+      val labelSym = new LabelSymbol(N, labelId.name)
+      val resultSym = new TempSymbol(N, s"${labelId.name}$$result")
+      val nonLocalHandlerSym = TempSymbol(N, s"nonLocalHandler$$${labelId.name}")
+      val nonLocalBreakMethodMarker = TempSymbol(N, s"nonLocalBreakMethod$$${labelId.name}")
+      val nonLocalContinueMethodMarker = TempSymbol(N, s"nonLocalContinueMethod$$${labelId.name}")
+      val bodyTerm = ctx.withLabel(
+        labelSym, resultSym, nonLocalHandlerSym, nonLocalBreakMethodMarker, nonLocalContinueMethodMarker).givenIn:
+        subterm(body)
+      val wrappedBodyTerm = wrapNonLocalLabelHandlers(
+        bodyTerm, nonLocalHandlerSym, nonLocalBreakMethodMarker, nonLocalContinueMethodMarker)
+      Term.Label(labelSym, resultSym, wrappedBodyTerm, nonLocalContinueMethodMarker.directRefs.nonEmpty).mkLocWith(kw, labelId)
     case PrefixApp(kw @ Keywrd(Keyword.`do`), body) =>
       Blk(subterm(body) :: Nil, unit).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`drop`), body) =>
@@ -852,12 +1084,12 @@ extends Importer with ucs.SplitElaborator:
           val res = go(acc, lhs :: Nil)
           val sym = FlowSymbol.app()
           val fl = Fld(FldFlags.empty, res, N)
-          val app = Term.App(subterm(f, inAppPrefix = true), Term.Tup(
+          val app = Term.App(subterm(f), Term.Tup(
             fl :: args.map(fld))(tup))(ap, N, sym)
           go(app, trees)
         case (ap @ App(f, tup @ Tup(args))) :: trees =>
           val sym = FlowSymbol.app()
-          go(Term.App(subterm(f, inAppPrefix = true),
+          go(Term.App(subterm(f),
               Term.Tup(Fld(FldFlags.empty, acc, N) :: args.map(fld))(tup)
             )(ap, N, sym), trees)
         case Block(sts) :: trees =>
@@ -871,7 +1103,7 @@ extends Importer with ucs.SplitElaborator:
       raise(ErrorReport(msg"Illegal position for 'open' statement." -> tree.toLoc :: Nil))
       Term.Error
     case OpenIn(op, body) =>
-      subterm(Block(Open(op) :: body :: Nil), inAppPrefix)
+      subterm(Block(Open(op) :: body :: Nil))
     case DynAccess(obj, rhs) =>
       rhs match
       case Bra(bk @ (Round | Square), fld) => Term.DynSel(subterm(obj), subterm(fld), bk is Square)
@@ -1227,18 +1459,12 @@ extends Importer with ucs.SplitElaborator:
                   newCtx.nest(OuterCtx.Function(nonLocalRetHandler)).givenIn: newCtx ?=>
                     val b = term(rhs)(using newCtx)
                     if nonLocalRetHandler.directRefs.isEmpty then b else
-                      val clsSym = ClassSymbol(DummyTypeDef(Cls), Ident("‹non-local return effect›"))
-                      val valueSym = VarSymbol(Ident("value"))
-                      val resumeSym = VarSymbol(Ident("resume"))
-                      val mtdSym = BlockMemberSymbol("ret", Nil, true)
-                      val tsym = TermSymbol(Fun, N, Ident("ret"))
-                      val td = TermDefinition(
-                        Fun, mtdSym, tsym, PlainParamList(Param(FldFlags.empty, valueSym, N, Modulefulness.none) :: Nil) :: Nil,
-                        N, N, S(valueSym.ref(Ident("value"))), TermDefFlags.empty, Modulefulness.none, Nil, N)
-                      tsym.defn = S(td)
-                      mtdSym.tsym = S(tsym)
-                      val htd = HandlerTermDefinition(resumeSym, td)
-                      Term.Handle(nonLocalRetHandler, state.nonLocalRetHandlerTrm, Nil, clsSym, htd :: Nil, b)
+                      mkEffectHandleAbortive(
+                        nonLocalRetHandler,
+                        "‹non-local return effect›",
+                        EffectHandlerMethodSpec("ret", S("value"), requireEffectMethodValue("ret", _)) :: Nil,
+                        b,
+                      )
               val r = FlowSymbol(s"‹result of ${sym}›")
               
               val mfn = st match

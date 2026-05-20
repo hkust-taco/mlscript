@@ -107,6 +107,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       case S(index) => doc"[$index]"
       case N => doc"[${JSBuilder.makeStringLiteral(s)}]"
   
+  // For use as the qualifier of a field selection
+  def resultQual(r: Result)(using Raise, Scope): Document =
+    val res = result(r)
+    if r.isInstanceOf[Value.Lit] then doc"(${res})" else res
+  
   def result(r: Result)(using Raise, Scope): Document = r match
     case Value.This(sym) => scope.findThis_!(sym)
     case Value.Lit(Tree.StrLit(value)) => makeStringLiteral(value)
@@ -156,7 +161,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         case S(ds) if ds.shouldBeLifted => doc".class"
         case _ => doc""
       val name = id.name
-      doc"${result(qual)}${
+      doc"${resultQual(qual)}${
         if isValidFieldName(name)
         then doc".$name"
         else name.toIntOption match
@@ -165,7 +170,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       }${dotClass}"
     case DynSelect(qual, fld, ai) =>
       if ai
-      then doc"${result(qual)}.at(${result(fld)})"
+      then doc"${resultQual(qual)}.at(${result(fld)})"
       else doc"${result(qual)}[${result(fld)}]"
     case Instantiate(mut, cls, argss) =>
       val calls = argss.foldLeft(result(cls)): (acc, args) =>
@@ -623,6 +628,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       doc" # /* $msg */"
     case End(_) => doc""
     
+    case Unreachable(msg) if config.sanityChecks.exists(_.checkUnreachable) =>
+      doc" # throw new Error(${makeStringLiteral(s"Reached 'unreachable' code ($msg)")});"
     case Unreachable(msg) if config.commentGeneratedCode =>
       if msg.isEmpty then doc" # /* Unreachable */"
       else doc" # /* Unreachable: $msg */"

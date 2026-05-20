@@ -41,13 +41,12 @@ fun test(a) =
 //│       ])
 //│     } 
 //│     g(d) {
-//│       let e, inlinedVal;
-//│       e = d;
+//│       let inlinedVal;
 //│       inlinedVal = globalThis.Object.freeze([
 //│         a,
 //│         this.b,
 //│         d,
-//│         e
+//│         d
 //│       ]);
 //│       return inlinedVal
 //│     }
