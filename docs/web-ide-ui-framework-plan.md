@@ -2,7 +2,7 @@
 
 ## Summary
 
-Build the prototype-inspired UI framework in phases, using MLscript custom elements and native HTML primitives. Phase 1 prioritizes shell/layout architecture with mocked secondary panels, not real Search/Git/Outline/Terminal functionality. Existing editor, file explorer, compile, execute, diagnostics, and console behavior should remain working where practical.
+Build the prototype-inspired UI framework in phases, using MLscript custom elements and native HTML primitives. Phase 1 prioritizes shell/layout architecture with mocked secondary panels, not real Git/Outline/Terminal functionality. Existing editor, file explorer, compile, execute, diagnostics, and console behavior should remain working where practical.
 
 ## Key Changes
 
@@ -104,28 +104,29 @@ Establish the design system before adding more panels.
 
 Commit: `Add IDE visual foundation`
 
-### Phase 3: Left Activity Panels With Mock Data
+### Phase 3: Left Activity Panels With Framework Data
 
-Build the left-side framework using static data.
+Build the left-side framework using real Files/Search surfaces and static data for the remaining exploratory panels.
 
 - Keep Files backed by the existing `<file-explorer>`.
-- Add mock custom elements for:
+- Add custom elements for:
   - Search
   - Source Control
   - Outline
   - Examples
-- Use a small `mockWorkbenchData.mls` module for static sample entries.
+- Use a small `mockWorkbenchData.mls` module for static sample entries in Source Control, Outline, and Examples.
 - Each panel should be interactive enough to prove the shell:
   - rail button switches panels
   - active state updates
   - current panel can be hidden by clicking active rail item
   - panel content scrolls
 - Required mocked interactions:
-  - Search query filters the visible mock results and clear button empties the query.
   - Source Control stage/unstage buttons move mock files between sections.
   - Outline entries move the editor scroll position or dispatch a mocked navigation event.
   - Examples selection marks the selected example and can open a mock preview or replace mock panel detail.
-- Do not implement real search, git, symbol extraction, or examples loading yet.
+- Required real interactions:
+  - Search query filters workspace file contents and clear button empties the query.
+- Do not implement real git, symbol extraction, or examples loading yet.
 
 Commit: `Add mock left activity panels`
 
@@ -333,7 +334,7 @@ Phase 2:
 
 Phase 3:
 
-- Search input filters mock results.
+- Search input filters workspace results.
 - Search clear button clears the query.
 - Source Control mock stage/unstage changes visible sections and counts.
 - Outline entry activation changes visible editor position or dispatches a visible navigation signal.
@@ -402,6 +403,7 @@ Keep these scripts as verification helpers unless the package test infrastructur
 
 - Phase 1 target is the native shell framework, not full visual parity.
 - Right side becomes a diagnostics inspector, not a right activity rail.
-- Search, Source Control, Outline, Examples, Problems, Terminal, and compiled preview use mock data until later phases.
+- Source Control, Outline, Examples, Problems, Terminal, and compiled preview use mock data until later phases.
+- Search uses real workspace text search after its realization pass.
 - Existing editor, file explorer, compile, execute, and diagnostics should remain usable unless a phase explicitly replaces their wrapper UI.
 - No React, JSX, or frontend framework dependencies are introduced.

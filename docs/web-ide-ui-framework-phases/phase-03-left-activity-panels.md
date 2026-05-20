@@ -12,12 +12,14 @@ Parent plan: [MLscript Web IDE UI Framework Plan](../web-ide-ui-framework-plan.m
 
 ## Goal
 
-Build the left activity panel framework with mocked but functional tool surfaces. Files remains real; Search, Source Control, Outline, and Examples are UI-framework mocks that prove switching, selection, filtering, and scrolling behavior.
+Build the left activity panel framework with functional tool surfaces. Files and Search are real workspace-backed panels.
+
+Source Control, Outline, and Examples remain UI-framework mocks that prove switching, selection, filtering, and scrolling behavior.
 
 ## Deliverables
 
 - [x] Keep Files backed by the existing `<file-explorer>`.
-- [x] Add a Search panel custom element with static results.
+- [x] Add a Search panel custom element with workspace results.
 - [x] Add a Source Control panel custom element with static changed-file data.
 - [x] Add an Outline panel custom element with static symbol data.
 - [x] Add an Examples panel custom element with static examples.
@@ -29,7 +31,7 @@ Build the left activity panel framework with mocked but functional tool surfaces
 
 - [x] Left rail switches Files, Search, Source Control, Outline, and Examples.
 - [x] Clicking the active rail item hides and reopens the left panel.
-- [x] Search input filters visible mock results.
+- [x] Search input filters visible workspace results.
 - [x] Search clear button empties the query and restores results.
 - [x] Source Control stage/unstage controls move mock files between sections and update counts.
 - [x] Outline entries visibly navigate, scroll the editor, or dispatch a visible mocked navigation signal.
@@ -42,7 +44,7 @@ Build the left activity panel framework with mocked but functional tool surfaces
   - Source Control panel
   - Outline panel
   - Examples panel
-- Search panel was a Phase 3 mock and has since been realized as real workspace text search. The parent Mock Inventory no longer lists it.
+- Search panel is real workspace text search. The parent Mock Inventory does not list it.
 - Update the parent plan if any additional mock controls, badges, commands, or datasets are introduced.
 
 ## Verification
@@ -59,5 +61,6 @@ Build the left activity panel framework with mocked but functional tool surfaces
 ## Completion Notes
 
 - Commit: this phase commit.
-- Browser notes: Playwright CLI verified clean console output, rail switching across Files/Search/Source Control/Outline/Examples, active rail collapse/reopen, Search filter and clear, Source Control stage/unstage counts, Outline mock navigation feedback, Examples selection/detail updates, scrollable Search and Source Control mock content, no narrow viewport horizontal overflow, and preserved file open/compile/execute/diagnostics flow. Screenshot: `docs/web-ide-ui-framework-screenshots/phase-03/left-activity-panels-1920x1080.png`.
+- Browser notes: Playwright CLI verified clean console output, rail switching across Files/Search/Source Control/Outline/Examples, active rail collapse/reopen, Search filter and clear, scrollable Search content, no narrow viewport horizontal overflow, and preserved file open/compile/execute/diagnostics flow.
+- Additional browser notes: Source Control stage/unstage counts, Outline mock navigation feedback, Examples selection/detail updates, and scrollable Source Control mock content were verified. Screenshot: `docs/web-ide-ui-framework-screenshots/phase-03/left-activity-panels-1920x1080.png`.
 - Test output: `hkmc2PackagesTest/testOnly hkmc2.PackageTestRunner -- -z web-ide` passed 23 tests.
