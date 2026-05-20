@@ -20,7 +20,7 @@ fun numberOrDefault(value, fallback) = if
 
 fun rootFileOrDefault(path) = if
   typeof(path) is "string" and path !== "" then path
-  else "/main.mls"
+  else ""
 
 fun point(line, column, offset) =
   mut
@@ -171,10 +171,8 @@ fun firstMlsPath(files) =
   result
 
 fun mockRootFile(files, activeFile) =
-  if typeof(activeFile) is "string" and activeFile !== "" then activeFile
-  else if firstMlsPath(files) is
-    null then "/main.mls"
-    path then path
+  if typeof(activeFile) is "string" and activeFile.endsWith(".mls") then activeFile
+  else null
 
 fun fileText(files, path) = if files.(path) is
   Absent then ""
@@ -190,32 +188,34 @@ fun fileName(path) =
   path.split("/").pop()
 
 fun mockDocument(revision, files, activeFile) =
-  let
-    rootFile = mockRootFile(files, activeFile)
-    moduleLine = safeLine(files, rootFile, 1)
-    classLine = safeLine(files, rootFile, 3)
-    mainLine = safeLine(files, rootFile, 5)
-    valueLine = safeLine(files, rootFile, 6)
-    objectLine = safeLine(files, rootFile, 4)
-    helperLine = safeLine(files, rootFile, 7)
-    root = symbolNode("file", fileName(rootFile), rootFile, 1, 0, 0, [
-      symbolNode("module", "Main", rootFile, moduleLine, 0, 4, [
-        symbolNode("class", "Program", rootFile, classLine, 0, 7, [
-          symbolNode("function", "main", rootFile, mainLine, 0, 4, [
-            symbolNode("value", "message", rootFile, valueLine, 0, 7, [])
+  if mockRootFile(files, activeFile) is
+    null then emptyDocument(revision, activeFile)
+    rootFile then
+      let
+        moduleLine = safeLine(files, rootFile, 1)
+        classLine = safeLine(files, rootFile, 3)
+        mainLine = safeLine(files, rootFile, 5)
+        valueLine = safeLine(files, rootFile, 6)
+        objectLine = safeLine(files, rootFile, 4)
+        helperLine = safeLine(files, rootFile, 7)
+        root = symbolNode("file", fileName(rootFile), rootFile, 1, 0, 0, [
+          symbolNode("module", "Main", rootFile, moduleLine, 0, 4, [
+            symbolNode("class", "Program", rootFile, classLine, 0, 7, [
+              symbolNode("function", "main", rootFile, mainLine, 0, 4, [
+                symbolNode("value", "message", rootFile, valueLine, 0, 7, [])
+              ])
+            ])
+            symbolNode("object", "Console", rootFile, objectLine, 0, 7, [
+              symbolNode("function", "printLine", rootFile, helperLine, 0, 9, [])
+            ])
           ])
         ])
-        symbolNode("object", "Console", rootFile, objectLine, 0, 7, [
-          symbolNode("function", "printLine", rootFile, helperLine, 0, 9, [])
-        ])
-      ])
-    ])
-    document = mut
-      schema: "mlscript.symbol-tree"
-      version: 1
-      revision: revision
-      rootFile: rootFile
-      root: root
-      diagnostics: []
-      dependencies: []
-  normalizeDocument(document, revision)
+        document = mut
+          schema: "mlscript.symbol-tree"
+          version: 1
+          revision: revision
+          rootFile: rootFile
+          root: root
+          diagnostics: []
+          dependencies: []
+      normalizeDocument(document, revision)

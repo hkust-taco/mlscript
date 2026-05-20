@@ -129,7 +129,7 @@ fun firstMlsPath() =
 
 fun analysisTarget() =
   if shouldAnalyze(activeFile) then activeFile
-  else firstMlsPath()
+  else null
 
 fun runBackendAnalyze(MLscript, revision) =
   initializeCompiler(MLscript)

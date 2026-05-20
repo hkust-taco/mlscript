@@ -51,6 +51,7 @@ class OutlinePanel extends HTMLElement with
     status is "loading" then "Updating"
     status is "error" then "Error"
     documentData is null then "No symbols"
+    root() is null then "No symbols"
     else documentData.rootFile
 
   fun treeHtml() = if

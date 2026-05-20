@@ -21,7 +21,7 @@ fun workerOptions() =
   mut { 'type: 'module }
 
 fun createWorker() =
-  new Worker("/analysis/worker.mjs", workerOptions())
+  new Worker("/analysis/worker.mjs?v=active-file-outline", workerOptions())
 
 fun filesForAnalysis() =
   fs.getAllFiles(undefined)
