@@ -173,7 +173,7 @@ fun handleExecuteRequested(event) =
 fun handleOpenFileAtLocation(event) =
   let editorPanel = document.querySelector("editor-panel")
   if editorPanel is
-    ~null as panel do panel.openFileAtLine(event.detail.filePath, event.detail.line)
+    ~null as panel do panel.openFileAtLine(event.detail.filePath, event.detail.line, event.detail.column, event.detail.length)
 
 fun start(compiler) =
   loadStandardLibrary(compiler)

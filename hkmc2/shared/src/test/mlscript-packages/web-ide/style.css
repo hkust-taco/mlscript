@@ -589,6 +589,15 @@ examples-panel {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--ide-accent) 24%, transparent);
 }
 
+.mock-search-input::-webkit-search-decoration,
+.mock-search-input::-webkit-search-cancel-button,
+.mock-search-input::-webkit-search-results-button,
+.mock-search-input::-webkit-search-results-decoration {
+  display: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 .mock-icon-button {
   width: 28px;
   height: 28px;
@@ -753,6 +762,11 @@ examples-panel {
 
 .mock-result-row:hover {
   background: var(--ide-surface-subtle);
+}
+
+.mock-result-row[hidden],
+.mock-search-group.collapsed .mock-search-group-results {
+  display: none;
 }
 
 .mock-result-row + .mock-result-row {

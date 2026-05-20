@@ -69,17 +69,25 @@ class SearchPanel extends HTMLElement with
   fun snippetForLine(line) =
     if line.length > 160 then line.slice(0, 157) + "..." else line
 
-  fun snippetForOccurrence(line, matchIndex, needleLength) =
+  fun snippetForOccurrence(line, lowerLine, needle, matchIndex, needleLength) =
     let
-      maxLength = 160
-      contextBefore = 48
-      start = Math.max(0, matchIndex - contextBefore)
-      end = Math.min(line.length, start + maxLength)
-      prefix = if start > 0 then "..." else ""
-      suffix = if end < line.length then "..." else ""
-    prefix + line.slice(start, end) + suffix
+      contextBefore = 12
+      contextAfter = 24
+      previousIndex = lowerLine.lastIndexOf(needle, matchIndex - 1)
+      nextIndex = lowerLine.indexOf(needle, matchIndex + needleLength)
+      defaultStart = Math.max(0, matchIndex - contextBefore)
+      defaultEnd = Math.min(line.length, matchIndex + needleLength + contextAfter)
+      start = if previousIndex >= defaultStart then previousIndex + needleLength else defaultStart
+      end = if nextIndex >= 0 and nextIndex < defaultEnd then nextIndex else defaultEnd
+      prefix = if start > 0 then "…" else ""
+      suffix = if end < line.length then "…" else ""
+      text = prefix + line.slice(start, end) + suffix
+      highlightStart = prefix.length + matchIndex - start
+    mut
+      :text
+      :highlightStart
 
-  fun searchResult(path, line, excerpt, matchKind, matchStart) =
+  fun searchResult(path, line, excerpt, matchKind, matchStart, matchLength, highlightStart) =
     mut
       file: path
       line: line
@@ -87,6 +95,8 @@ class SearchPanel extends HTMLElement with
       excerpt: excerpt
       matchKind: matchKind
       matchStart: matchStart
+      matchLength: matchLength
+      highlightStart: highlightStart
 
   fun resultGroup(path) =
     mut
@@ -107,12 +117,13 @@ class SearchPanel extends HTMLElement with
         needleLength = needle.length
         matchIndex = lowerLine.indexOf(needle)
       while matchIndex >= 0 and results.length < 100 do
-        results.push(searchResult(path, index + 1, snippetForOccurrence(line, matchIndex, needleLength), "content", matchIndex))
+        let snippet = snippetForOccurrence(line, lowerLine, needle, matchIndex, needleLength)
+        results.push(searchResult(path, index + 1, snippet.text, "content", matchIndex, needleLength, snippet.highlightStart))
         set matchIndex = lowerLine.indexOf(needle, matchIndex + needleLength)
 
   fun pathMatches(path, lines, needle, results) =
     if path.toLowerCase().includes(needle) and results.length < 100 do
-      results.push(searchResult(path, 1, snippetForLine(firstNonEmptyLine(lines)), "path", 0))
+      results.push(searchResult(path, 1, snippetForLine(firstNonEmptyLine(lines)), "path", 0, 0, -1))
 
   fun collectResults(needle) =
     let
@@ -147,26 +158,20 @@ class SearchPanel extends HTMLElement with
       </div>
     """
 
-  fun highlightText(text, needle) =
-    let
-      lowerText = text.toLowerCase()
-      parts = mut []
-      cursor = 0
-      matchIndex = lowerText.indexOf(needle)
-    while matchIndex >= 0 do
-      parts.push(escapeHtml(text.slice(cursor, matchIndex)))
-      parts.push("""<mark>""" + escapeHtml(text.slice(matchIndex, matchIndex + needle.length)) + """</mark>""")
-      set cursor = matchIndex + needle.length
-      set matchIndex = lowerText.indexOf(needle, cursor)
-    parts.push(escapeHtml(text.slice(cursor)))
-    parts.join("")
+  fun highlightOccurrence(text, start, length) =
+    if start < 0 then escapeHtml(text)
+    else if length <= 0 then escapeHtml(text)
+    else
+      escapeHtml(text.slice(0, start)) +
+      """<mark>""" + escapeHtml(text.slice(start, start + length)) + """</mark>""" +
+      escapeHtml(text.slice(start + length))
 
   fun resultHtml(result, needle, isHidden) =
     let hiddenAttribute = if isHidden then """ hidden""" else ""
     """
-      <button class="mock-result-row" type="button" data-file-path="""" + escapeHtml(result.file) + """" data-line="""" + result.line + """"""" + hiddenAttribute + """>
+      <button class="mock-result-row" type="button" data-file-path="""" + escapeHtml(result.file) + """" data-line="""" + result.line + """" data-column="""" + result.matchStart + """" data-length="""" + result.matchLength + """"""" + hiddenAttribute + """>
         <span class="mock-result-line">""" + result.line + """</span>
-        <span class="mock-result-excerpt">""" + highlightText(result.excerpt, needle) + """</span>
+        <span class="mock-result-excerpt">""" + highlightOccurrence(result.excerpt, result.highlightStart, result.matchLength) + """</span>
       </button>
     """
 
@@ -226,7 +231,13 @@ class SearchPanel extends HTMLElement with
     let
       filePath = button.dataset.filePath
       line = parseInt(button.dataset.line, 10)
-      detail = mut { :filePath, :line }
+      column = parseInt(button.dataset.column, 10)
+      length = parseInt(button.dataset.length, 10)
+      detail = mut
+        filePath: filePath
+        line: line
+        column: column
+        length: length
       options = mut { :detail }
     document.dispatchEvent(new CustomEvent("open-file-at-location", options))
 

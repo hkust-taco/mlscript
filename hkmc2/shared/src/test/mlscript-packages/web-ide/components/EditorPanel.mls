@@ -277,7 +277,7 @@ class EditorPanel extends HTMLElement with
         this.switchTab(tabId)
         tabId
 
-  fun openFileAtLine(filePath, line) =
+  fun openFileAtLine(filePath, line, column, length) =
     let
       fileName = filePath.split("/").pop()
       tabId = this.openFile(filePath, fileName)
@@ -288,7 +288,10 @@ class EditorPanel extends HTMLElement with
       else
         let
           linePos = tab.editorView.state.doc.line(line)
-          selection = mut { anchor: linePos.from, head: linePos.from }
+          columnOffset = if typeof(column) is "number" and column > 0 then column else 0
+          selectionStart = Math.min(linePos.to, linePos.from + columnOffset)
+          selectionEnd = if typeof(length) is "number" and length > 0 then Math.min(linePos.to, selectionStart + length) else selectionStart
+          selection = mut { anchor: selectionStart, head: selectionEnd }
           options = mut { :selection, scrollIntoView: true }
         tab.editorView.dispatch(options)
         tab.editorView.focus()
