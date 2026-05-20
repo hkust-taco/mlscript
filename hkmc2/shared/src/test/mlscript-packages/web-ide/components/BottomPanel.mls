@@ -84,12 +84,12 @@ class BottomPanel extends HTMLElement with
 
   fun outputHtml() =
     let html = """<div class="output-content">"""
+    set html += feedbackHtml()
     if messages.length is 0 then
       set html += emptyHtml("Output is empty")
     else
       messages.forEach of (entry, ...) =>
         set html += messageRowHtml(entry)
-    set html += feedbackHtml()
     set html += """</div>"""
     html
 
@@ -193,9 +193,10 @@ class BottomPanel extends HTMLElement with
           terminalLines = mut []
           feedbackText = "Terminal cleared"
       else
+        let hadMessages = messages.length > 0
         set
           messages = mut []
-          feedbackText = "Output cleared"
+          feedbackText = if hadMessages then "Output cleared" else ""
     render()
 
   fun setPreserveLogs(value) =
