@@ -2639,7 +2639,33 @@ share-dialog dialog {
 
 command-palette-dialog dialog::backdrop,
 share-dialog dialog::backdrop {
-  background: rgba(24, 26, 22, 0.26);
+  background: rgba(24, 26, 22, 0.36);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+command-palette-dialog dialog,
+share-dialog dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--ide-border-strong);
+  border-radius: var(--ide-radius-md);
+  background: var(--ide-surface);
+  color: var(--ide-text);
+  box-shadow: 0 24px 60px rgba(24, 26, 22, 0.28);
+  overflow: hidden;
+}
+
+command-palette-dialog dialog {
+  width: min(640px, calc(100vw - 32px));
+  max-height: min(680px, calc(100vh - 32px));
+}
+
+share-dialog dialog {
+  width: min(440px, calc(100vw - 32px));
+  max-height: min(420px, calc(100vh - 32px));
 }
 
 .command-palette-form,
