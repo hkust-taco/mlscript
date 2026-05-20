@@ -89,7 +89,7 @@ modSome(Some(17), 3)
 //│   let n, scrut, arg$Some$0$, tmp1, tmp2;
 //│   return x(m, n, scrut, arg$Some$0$, tmp1, tmp2)
 //│ };
-//│ define modSome_12$x_Some⁰ as fun modSome_12$x_Some¹(fv_m, fv_n, fv_scrut, fv_arg$Some$0$, fv_tmp, fv_tmp1, Some_x1) {
+//│ define modSome_12$x_Some⁰ as fun modSome_12$x_Some¹(Some_x1)(fv_m, fv_n, fv_scrut, fv_arg$Some$0$, fv_tmp, fv_tmp1) {
 //│   set fv_arg$Some$0$ = Some_x1;
 //│   set fv_n = fv_arg$Some$0$;
 //│   set fv_scrut = >=⁰(fv_n, fv_m);
@@ -98,9 +98,7 @@ modSome(Some(17), 3)
 //│       let Some_x2;
 //│       set fv_tmp = -⁰(fv_n, fv_m);
 //│       set Some_x2 = fv_tmp;
-//│       set fv_tmp1 = (fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
-//│         return modSome_12$x_Some¹(fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, Some_x2)
-//│       };
+//│       set fv_tmp1 = modSome_12$x_Some¹(Some_x2);
 //│       return modSome_12$modSome¹(fv_tmp1, fv_m)
 //│     else
 //│       return Some⁰(fv_n)
@@ -134,9 +132,7 @@ modSome(Some(17), 3)
 //│   end
 //│ };
 //│ set Some_x = 17;
-//│ set tmp = (fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
-//│   return modSome_12$x_Some¹(fv_ctorLam_m, fv_ctorLam_n, fv_ctorLam_scrut, fv_ctorLam_arg$Some$0$, fv_ctorLam_tmp, fv_ctorLam_tmp1, Some_x)
-//│ };
+//│ set tmp = modSome_12$x_Some¹(Some_x);
 //│ modSome_12$modSome¹(tmp, 3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Some(2)

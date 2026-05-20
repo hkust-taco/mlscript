@@ -1785,7 +1785,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
                   val result = pss.foldRight(bod):
                     case (ps, block) =>
-                      Return(Lambda(ps, block), false)
+                      Return(Lambda(ps, block)(Nil), false)
                   val (bodyWat, fnCtx) = setupFunction(N, ps, result)
                   if sym.nameIsMeaningful then
                     val funcTy = ctx.addType(

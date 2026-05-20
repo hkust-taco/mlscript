@@ -25,6 +25,7 @@ enum Annot extends AutoLocated:
   case TailRec
   case TailCall
   case Config(modify: hkmc2.Config => hkmc2.Config)
+  case Affine(whichParamList: Int)
   
   def symbol: Opt[Symbol] = this match
     case Trm(trm) => trm.symbol

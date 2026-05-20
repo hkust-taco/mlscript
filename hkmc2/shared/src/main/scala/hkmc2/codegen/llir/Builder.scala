@@ -176,8 +176,8 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       bErrStop(msg"Function without arguments not supported: ${params.length.toString}")
     else
       val fstParams = params.head
-      val wrappedLambda = params.tail.foldRight(body)((params, acc) => Return(Lambda(params, acc), false))
-      bLam(Lambda(fstParams, wrappedLambda), S(sym.nme), S(sym))(k)(using ctx)
+      val wrappedLambda = params.tail.foldRight(body)((params, acc) => Return(Lambda(params, acc)(Nil), false))
+      bLam(Lambda(fstParams, wrappedLambda)(Nil), S(sym.nme), S(sym))(k)(using ctx)
 
   private def bFunDef(e: FunDefn)(using ctx: Ctx)(using Raise, Scope): Func =
     trace[Func](s"bFunDef begin: ${e.sym}", x => s"bFunDef end: ${x.show}"):
@@ -189,7 +189,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         val paramsList = params.head.params
         val ctx2 = paramsList.foldLeft(ctx)((acc, x) => acc.addName(x.sym, x.sym)).nonTopLevel
         val pl = paramsList.map(_.sym)
-        val wrappedLambda = params.tail.foldRight(body)((params, acc) => Return(Lambda(params, acc), false))
+        val wrappedLambda = params.tail.foldRight(body)((params, acc) => Return(Lambda(params, acc)(Nil), false))
         Func(
           uid.make, sym, params = pl, resultNum = 1,
           body = bBlockWithEndCont(wrappedLambda)(x => Node.Result(Ls(x)))(using ctx2)
@@ -206,7 +206,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         val paramsList = params.head.params
         val ctx2 = paramsList.foldLeft(ctx)((acc, x) => acc.addName(x.sym, x.sym)).nonTopLevel
         val pl = paramsList.map(_.sym)
-        val wrappedLambda = params.tail.foldRight(body)((params, acc) => Return(Lambda(params, acc), false))
+        val wrappedLambda = params.tail.foldRight(body)((params, acc) => Return(Lambda(params, acc)(Nil), false))
         Func(
           uid.make, sym, params = pl, resultNum = 1,
           body = bBlockWithEndCont(wrappedLambda)(x => Node.Result(Ls(x)))(using ctx2)
@@ -290,7 +290,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
               (0 until f.paramsSize).zip(tempSymbols).map((_n, sym) =>
                 Param(FldFlags.empty, sym, N, Modulefulness.none)).toList)
             val app = Call(v, tempSymbols.map(x => Arg(N, Value.Ref(x))).toList ne_:: Nil)(true, false, false)
-            bLam(Lambda(paramsList, Return(app, false)), S(l.nme), N)(k)
+            bLam(Lambda(paramsList, Return(app, false))(Nil), S(l.nme), N)(k)
           case None =>
             k(ctx.findName(l) |> sr)
       case Value.This(sym) => bErrStop(msg"Unsupported value: This")

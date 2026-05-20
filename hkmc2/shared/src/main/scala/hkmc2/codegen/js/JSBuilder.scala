@@ -315,7 +315,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           case FunDefn(own, sym, dSym, ps :: pss, bod) =>
             val result = pss.foldRight(bod):
               case (ps, block) =>
-                Return(Lambda(ps, block), false)
+                Return(Lambda(ps, block)(Nil), false)
             val displayName = if sym.nameIsMeaningful then S(dSym.name) else N
             
             // * We may need to set up the function in a nested scope in one case below, so this is marked as lazy.
@@ -355,7 +355,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 case td @ FunDefn(params = ps :: pss, body = bod) =>
                   val result = pss.foldRight(bod):
                     case (ps, block) =>
-                      Return(Lambda(ps, block), false)
+                      Return(Lambda(ps, block)(Nil), false)
                   val (params, bodyDoc) = scope.nest.givenIn:
                     setupFunction(S(td.sym.nme), ps, result, isLambda = false)
                   doc" # $mtdPrefix${td.sym.nme}($params) ${ braced(bodyDoc) }"
