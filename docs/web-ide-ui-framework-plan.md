@@ -33,7 +33,6 @@ This list tracks visible UI that is intentionally not backed by real functionali
 
 | UI surface | Phase added | Mocked behavior | Required real replacement |
 | --- | --- | --- | --- |
-| Search panel | Phase 3 | Static search results filtered client-side by the search input. | Real workspace-wide search over the browser filesystem. |
 | Source Control panel | Phase 3 | Static changed-file list with stage/unstage movement between mock sections. | Real version-control state, staging, commit, pull, and push integration if supported by the Web IDE environment. |
 | Outline panel | Phase 3 | Static symbol list with mocked editor navigation. | Real symbol extraction from the active MLscript file. |
 | Examples panel | Phase 3 | Static examples list with mocked selection/detail behavior. | Real bundled examples/snippets that can open or load files. |

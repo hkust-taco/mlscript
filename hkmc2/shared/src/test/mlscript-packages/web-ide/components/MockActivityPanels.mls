@@ -1,4 +1,5 @@
 import "../mockWorkbenchData.mls"
+import "../filesystem/fs.mls"
 import "../common/JS.mls"
 
 open JS { Absent }
@@ -17,16 +18,23 @@ fun panelHeader(title, detail) =
   """
 
 class SearchPanel extends HTMLElement with
-  let query = ""
+  let
+    query = ""
+    unsubscribe = null
 
   fun connectedCallback() =
     this.render()
     this.attachEventListeners()
+    let panel = this
+    set unsubscribe = fs.subscribe(event => panel.handleFsEvent(event), undefined)
+
+  fun disconnectedCallback() =
+    if unsubscribe is ~Absent as removeSubscription do removeSubscription()
 
   fun render() =
     set this.innerHTML = """
       <div class="mock-panel search-panel">
-        """ + panelHeader("Search", "Mock workspace results") + """
+        """ + panelHeader("Search", "Workspace text search") + """
         <div class="mock-search-row">
           <input class="mock-search-input" type="search" placeholder="Search files" aria-label="Search files" />
           <button class="mock-icon-button mock-search-clear" type="button" aria-label="Clear search" title="Clear search">
@@ -41,13 +49,59 @@ class SearchPanel extends HTMLElement with
   fun normalizedQuery() =
     query.trim().toLowerCase()
 
-  fun resultMatches(result, needle) =
+  fun fileName(path) =
+    path.split("/").pop()
+
+  fun isSearchableFile(path, content) =
     if
-      needle is "" then true
-      result.file.toLowerCase().includes(needle) then true
-      result.title.toLowerCase().includes(needle) then true
-      result.excerpt.toLowerCase().includes(needle) then true
+      typeof(content) !== "string" then false
+      path.endsWith(".mls") then true
+      path.endsWith(".mjs") then true
+      path.endsWith(".js") then true
+      path.endsWith(".json") then true
+      path.endsWith(".md") then true
+      path.endsWith(".txt") then true
+      path.endsWith(".css") then true
+      path.endsWith(".html") then true
       else false
+
+  fun snippetForLine(line) =
+    let trimmed = line.trim()
+    if trimmed.length > 160 then trimmed.slice(0, 157) + "..." else trimmed
+
+  fun searchResult(path, line, excerpt, matchKind) =
+    mut
+      file: path
+      line: line
+      title: fileName(path)
+      excerpt: excerpt
+      matchKind: matchKind
+
+  fun firstNonEmptyLine(lines) =
+    let result = ""
+    lines.forEach of (line, ...) =>
+      if result === "" and line.trim() !== "" do set result = line.trim()
+    if result === "" then "(empty file)" else result
+
+  fun contentMatches(path, lines, needle, results) =
+    lines.forEach of (line, index) =>
+      if line.toLowerCase().includes(needle) and results.length < 100 do
+        results.push(searchResult(path, index + 1, snippetForLine(line), "content"))
+
+  fun pathMatches(path, lines, needle, results) =
+    if path.toLowerCase().includes(needle) and results.length < 100 do
+      results.push(searchResult(path, 1, firstNonEmptyLine(lines), "path"))
+
+  fun collectResults(needle) =
+    let
+      files = fs.getAllFiles(undefined)
+      results = mut []
+    Object.keys(files).sort().forEach of (path, ...) =>
+      if isSearchableFile(path, files.(path)) and results.length < 100 do
+        let lines = files.(path).split("\n")
+        pathMatches(path, lines, needle, results)
+        contentMatches(path, lines, needle, results)
+    results
 
   fun resultHtml(result) =
     """
@@ -60,16 +114,19 @@ class SearchPanel extends HTMLElement with
 
   fun renderResults() =
     if this.querySelector(".mock-search-results") is ~null as results do
-      let
-        needle = normalizedQuery()
-        matching = mockWorkbenchData.searchResults.filter(result => resultMatches(result, needle))
-        count = matching.length
-      if count is 0 then
-        set results.innerHTML = """<div class="mock-empty">No mock results</div>"""
+      let needle = normalizedQuery()
+      if needle === "" then
+        set results.innerHTML = """<div class="mock-empty">Type to search the workspace</div>"""
       else
-        let html = matching.map(result => resultHtml(result)).join("")
-        set results.innerHTML = html
-        attachResultListeners()
+        let
+          matching = collectResults(needle)
+          count = matching.length
+        if count is 0 then
+          set results.innerHTML = """<div class="mock-empty">No results</div>"""
+        else
+          let html = matching.map(result => resultHtml(result)).join("")
+          set results.innerHTML = html
+          attachResultListeners()
 
   fun setQuery(nextQuery) =
     set query = nextQuery
@@ -79,6 +136,9 @@ class SearchPanel extends HTMLElement with
     set query = ""
     if this.querySelector(".mock-search-input") is ~null as input do set input.value = ""
     renderResults()
+
+  fun handleFsEvent(event) =
+    if query.trim() !== "" do renderResults()
 
   fun dispatchOpenResult(button) =
     let

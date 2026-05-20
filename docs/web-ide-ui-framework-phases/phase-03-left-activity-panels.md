@@ -39,10 +39,10 @@ Build the left activity panel framework with mocked but functional tool surfaces
 ## Mock Inventory Impact
 
 - Expected mock entries:
-  - Search panel
   - Source Control panel
   - Outline panel
   - Examples panel
+- Search panel was a Phase 3 mock and has since been realized as real workspace text search. The parent Mock Inventory no longer lists it.
 - Update the parent plan if any additional mock controls, badges, commands, or datasets are introduced.
 
 ## Verification

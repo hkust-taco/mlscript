@@ -47,7 +47,7 @@ Integrate the new UI framework with the current Web IDE runtime behavior, remove
 - Remove inventory rows for mocks that were replaced by real functionality.
 - Add inventory rows for any remaining mocked or disabled future actions.
 - Do not commit Phase 8 until the Mock Inventory matches the screen.
-- The parent plan Mock Inventory still matches the final visible mock surfaces: Search, Source Control, Outline, Examples, Diagnostics sample/quick actions, Problems, Terminal, compiled-output split view, command palette future commands, and Share remain intentionally mocked or disabled. No mock row was removed or added in this cleanup phase.
+- The parent plan Mock Inventory still matches the final visible mock surfaces: Source Control, Outline, Examples, Diagnostics sample/quick actions, Problems, Terminal, compiled-output split view, command palette future commands, and Share remain intentionally mocked or disabled. Search was realized after this phase.
 
 ## Verification
 

@@ -1,24 +1,5 @@
 module mockWorkbenchData with...
 
-val searchResults = [
-  mut { file: "/main.mls", line: 1, title: "Import Predef", excerpt: "import \"./std/Predef.mls\"" }
-  mut { file: "/main.mls", line: 3, title: "Open namespace", excerpt: "open Predef" }
-  mut { file: "/main.mls", line: 5, title: "Welcome output", excerpt: "print of \"Welcome to MLscript Web IDE!\"" }
-  mut { file: "/std/Option.mls", line: 18, title: "Option helpers", excerpt: "case Some(value) then value" }
-  mut { file: "/std/Iter.mls", line: 42, title: "Iterator mapping", excerpt: "fun map(fn) = ..." }
-  mut { file: "/std/Rendering.mls", line: 77, title: "Render document", excerpt: "renderTree(document)" }
-  mut { file: "/std/Runtime.mls", line: 96, title: "Runtime bridge", excerpt: "export default runtime" }
-  mut { file: "/std/Stack.mls", line: 12, title: "Stack constructor", excerpt: "val empty = []" }
-  mut { file: "/std/StrOps.mls", line: 31, title: "String helpers", excerpt: "trim and split helpers" }
-  mut { file: "/std/Term.mls", line: 58, title: "Term printer", excerpt: "prettyPrint(term)" }
-  mut { file: "/std/Shape.mls", line: 23, title: "Shape metadata", excerpt: "shape fields and labels" }
-  mut { file: "/std/XML.mls", line: 44, title: "XML element", excerpt: "node(name, attrs, children)" }
-  mut { file: "/std/CSP.mls", line: 65, title: "Channel process", excerpt: "spawn process with channel" }
-  mut { file: "/std/Record.mls", line: 17, title: "Record extension", excerpt: "record.with(field, value)" }
-  mut { file: "/std/ObjectBuffer.mls", line: 29, title: "Buffer append", excerpt: "buffer.append(value)" }
-  mut { file: "/std/FingerTreeList.mls", line: 91, title: "Finger tree split", excerpt: "splitTree(predicate)" }
-]
-
 val sourceChanges = [
   mut { path: "/main.mls", status: "modified", summary: "Edited welcome program" }
   mut { path: "/std/Predef.mls", status: "modified", summary: "Experiment with print helpers" }
