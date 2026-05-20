@@ -58,6 +58,11 @@ let zip = Function("""
   };
 """)()
 
+fun closeDismissibleDialogFromBackdrop(targetDialog) =
+  targetDialog.addEventListener of "click", event =>
+    if targetDialog.dataset.dismissible === "true" and event.target === targetDialog do
+      targetDialog.close()
+
 class CommandPaletteDialog extends HTMLElement with
   let query = ""
 
@@ -68,7 +73,7 @@ class CommandPaletteDialog extends HTMLElement with
 
   fun render() =
     set this.innerHTML = """
-      <dialog class="command-palette-native">
+      <dialog class="command-palette-native" data-dismissible="true">
         <form class="command-palette-form" method="dialog">
           <input class="command-search-input" type="search" placeholder="Search commands" aria-label="Search commands" />
           <div class="command-list" role="listbox" aria-label="Commands"></div>
@@ -217,6 +222,7 @@ class CommandPaletteDialog extends HTMLElement with
 
   fun attachEventListeners() =
     let palette = this
+    if dialog() is ~null as commandDialog do closeDismissibleDialogFromBackdrop(commandDialog)
     document.addEventListener("command-palette-open-requested", () => palette.openPalette())
     document.addEventListener of "keydown", event =>
       if palette.isOpenShortcut(event) do
@@ -235,7 +241,7 @@ class ShareDialog extends HTMLElement with
 
   fun render() =
     set this.innerHTML = """
-      <dialog class="share-dialog-native">
+      <dialog class="share-dialog-native" data-dismissible="true">
         <form class="share-dialog-form" method="dialog">
           <div class="share-dialog-titlebar">
             <h2>Share</h2>
@@ -365,6 +371,7 @@ class ShareDialog extends HTMLElement with
 
   fun attachEventListeners() =
     let share = this
+    if dialog() is ~null as shareDialog do closeDismissibleDialogFromBackdrop(shareDialog)
     document.addEventListener("share-dialog-open-requested", () => share.openDialog())
     if this.querySelector(".share-download-button") is ~null as downloadButton do
       downloadButton.addEventListener("click", () => share.downloadZip())
