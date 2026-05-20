@@ -1671,6 +1671,7 @@ editor-panel .empty-state.hidden {
 
 /* Problems Inspector */
 diagnostics-inspector {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   background: var(--ide-surface);
@@ -2072,6 +2073,70 @@ diagnostics-inspector .diagnostics-action span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@container (max-width: 220px) {
+  diagnostics-inspector .diagnostics-header {
+    gap: 6px;
+    min-height: auto;
+    padding: 8px;
+  }
+
+  diagnostics-inspector .diagnostics-counts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  diagnostics-inspector .diagnostics-count {
+    gap: 1px;
+    padding: 4px;
+  }
+
+  diagnostics-inspector .diagnostics-count span {
+    font-size: 0.58rem;
+  }
+
+  diagnostics-inspector .diagnostics-mode-tabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  diagnostics-inspector .diagnostics-mode-button {
+    justify-content: center;
+    padding: 5px 6px;
+  }
+
+  diagnostics-inspector .diagnostics-mode-button span {
+    display: none;
+  }
+
+  diagnostics-inspector .diagnostics-content {
+    padding: 6px;
+  }
+
+  diagnostics-inspector .diagnostics-row {
+    gap: 6px;
+    padding: 7px 6px;
+  }
+
+  diagnostics-inspector .diagnostics-row-locate {
+    display: none;
+  }
+
+  diagnostics-inspector .diagnostics-tree-group summary {
+    gap: 6px;
+    padding: 7px 6px;
+  }
+
+  diagnostics-inspector .diagnostics-tree-children {
+    padding: 5px;
+  }
+
+  diagnostics-inspector .diagnostics-source-card {
+    padding: 7px;
+  }
+
+  diagnostics-inspector .diagnostics-source-preview {
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
 }
 
 /* Scrollbar styling */
