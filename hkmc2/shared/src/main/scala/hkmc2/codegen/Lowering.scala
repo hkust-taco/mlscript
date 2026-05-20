@@ -1308,7 +1308,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case S(value) => WarningReport(value -> annot.toLoc :: Nil)
         case N => WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
     annotations.foreach: a =>
-      tl.log(s"wwww $a")
       a match
       case Annot.Untyped => ()
       case Annot.TailRec | Annot.Inline =>
