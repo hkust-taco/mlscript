@@ -1,5 +1,4 @@
-:ignore
-// ^ Ignore the silly warnings below, which are due to `untyped` not being treated as THE `untyped` builtin
+
 open annotations
 
 declare class Any

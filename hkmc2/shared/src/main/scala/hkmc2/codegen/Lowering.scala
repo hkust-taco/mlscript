@@ -1307,10 +1307,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       msg match
         case S(value) => WarningReport(value -> annot.toLoc :: Nil)
         case N => WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
-    annotations.foreach: a =>
-      a match
+    annotations.foreach:
       case Annot.Untyped => ()
-      case Annot.TailRec | Annot.Inline =>
+      case a @ (Annot.TailRec | Annot.Inline) =>
         val annot = a match
           case Annot.TailRec => "@tailrec"
           case Annot.Inline => "@inline"

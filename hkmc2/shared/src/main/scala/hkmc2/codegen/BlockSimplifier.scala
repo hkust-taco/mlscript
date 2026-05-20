@@ -905,7 +905,7 @@ class BlockSimplifier
         var map: InlinerMap = Map.empty
         val useCnt = MutMap.WithDefault(MutMap.empty[TermSymbol, Int], _ => 0)
         val usages = MutMap.WithDefault(MutMap.empty[TermSymbol, List[(Option[TermSymbol], Call)]], _ => Nil)
-        val hasNakedRef = MutMap.WithDefault(MutMap.empty[TermSymbol, Bool], _ => false)
+        val disallowElimination = MutMap.WithDefault(MutMap.empty[TermSymbol, Bool], _ => false)
         var contextList: List[FunLikeContext] = FunLikeContext(N, false) :: Nil
         
         def currentContext = contextList.head
@@ -946,7 +946,7 @@ class BlockSimplifier
           case c @ Call(TermSymbolPath(ts), argss) =>
             if currentContext.hasInlineAnnot then
               // Not eligible for inline elimination
-              hasNakedRef(ts) = true
+              disallowElimination(ts) = true
             useCnt(ts) += 1
             usages(ts) ::= (currentFunSym, c)
             argss.foreach(_.foreach(applyArg))
@@ -955,13 +955,13 @@ class BlockSimplifier
         override def applySymbol(sym: Symbol): Unit =
           sym.asTrm.foreach: ts =>
             useCnt(ts) += 1
-            hasNakedRef(ts) = true
+            disallowElimination(ts) = true
         
         def analyze(blk: Block): InlinerMap =
           applyBlock(blk)
           map.foreach: (sym, info) =>
             info.useCount = useCnt(sym)
-            info.disallowElimination = info.disallowElimination || hasNakedRef(sym)
+            info.disallowElimination = info.disallowElimination || disallowElimination(sym)
           val edges: Buffer[(TermSymbol, TermSymbol)] = Buffer.empty
           usages.foreach: (sym, calls) =>
             calls.foreach: (caller, call) =>
@@ -1071,7 +1071,10 @@ class BlockSimplifier
               S(newBdy)
             .fold(super.applyResult(r)(k)): blk =>
               val info = m(ts)
-              if !info.shouldBeInlined(blk) || insideInlineAnnotatedFunction then
+              // If both callee and caller are marked with inline, inlining will not be blocked.
+              // Remark: the case of a recursive function marked with inline will be blocked by loop breaker logic.
+              val inliningBlocked = insideInlineAnnotatedFunction && !info.defn.inline
+              if !info.shouldBeInlined(blk) || inliningBlocked then
                 super.applyResult(r)(k)
               else
                 val matchedArgs = matchAllArgs(argss, info.defn.params)

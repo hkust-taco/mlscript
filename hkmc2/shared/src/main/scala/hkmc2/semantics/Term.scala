@@ -22,7 +22,8 @@ enum Annot extends AutoLocated:
   case Untyped
   case Modifier(mod: Keyword)
   case Trm(trm: Term)
-  // This is for generation of warnings and does not affect whether a function is optimized or not.
+  // NOTE: The presence of TailRec and TailCall annotations does not affect whether a function is optimized or not;
+  // it only affects whether a warning is thrown if the function/call is not actually tail-recursive.
   case TailRec
   case TailCall
   case Inline
