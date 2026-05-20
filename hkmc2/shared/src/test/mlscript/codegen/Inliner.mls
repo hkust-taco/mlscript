@@ -197,6 +197,64 @@ f()
 //│ = true
 
 
+// Inline annotations
+open annotations
+
+// f1 does not inline into f, despite being small enough
+:sjs
+:inlineThreshold 100
+fun f1(a, b, c) = a + b + c
+@inline
+fun f(a)(b)(c) = f1(a, b, c)
+f(1)(2)(3)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f10, f11;
+//│ f11 = function f1(a, b, c3) {
+//│   let tmp8;
+//│   tmp8 = a + b;
+//│   return tmp8 + c3
+//│ };
+//│ f10 = function f(a) { return (b) => { return (c3) => { return f11(a, b, c3) } } };
+//│ 6
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 6
+
+// lifter wrapper uses inline annotation under the hood
+// currently no inlining happens because multi-call isn't recognized
+:soir
+:lift
+:inlineThreshold 100
+fun foo(x)(y) =
+  let lam = z => x + y + z
+  print(lam(4))
+  lam
+foo(1)(2)(3)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let foo⁰, lam⁰, lam$⁰, tmp, lam$here;
+//│ define lam$⁰ as fun lam$¹(x, y)(z) {
+//│   return lam¹(x, y, z)
+//│ };
+//│ define lam⁰ as fun lam¹(x, y, z) {
+//│   let tmp1;
+//│   set tmp1 = +⁰(x, y);
+//│   return +⁰(tmp1, z)
+//│ };
+//│ define foo⁰ as fun foo¹(x)(y) {
+//│   let tmp1, lam$here1;
+//│   set lam$here1 = lam$¹(x, y);
+//│   set tmp1 = lam$here1(4);
+//│   do Predef⁰.print⁰(tmp1);
+//│   return lam$here1
+//│ };
+//│ set lam$here = lam$¹(1, 2);
+//│ set tmp = lam$here(4);
+//│ do Predef⁰.print⁰(tmp);
+//│ lam$here(3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > 7
+//│ = 6
+
+
 // Methods (not implemented currently)
 // NOTE: only final (ie, non-virtual) method may be inlined, as they could be overriden
 
