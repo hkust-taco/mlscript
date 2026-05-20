@@ -2,6 +2,7 @@ import "./filesystem/fs.mls"
 import "./filesystem/persistent.mls"
 import "./execution/runner.mls"
 import "./compiler/index.mls"
+import "./analysis/index.mls" { index as analysis }
 import "./common/JS.mls"
 
 open JS { Absent }
@@ -178,6 +179,7 @@ fun handleOpenFileAtLocation(event) =
 fun start(compiler) =
   loadStandardLibrary(compiler)
   ensureDefaultMainFile()
+  analysis.start()
   
   document.addEventListener("compile-requested", handleCompileRequested)
   document.addEventListener("execute-requested", handleExecuteRequested)
