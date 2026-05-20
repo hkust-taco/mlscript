@@ -65,6 +65,7 @@ fun closeDismissibleDialogFromBackdrop(targetDialog) =
 
 class CommandPaletteDialog extends HTMLElement with
   let query = ""
+  let activeCommandId = ""
 
   fun connectedCallback() =
     this.render()
@@ -116,8 +117,10 @@ class CommandPaletteDialog extends HTMLElement with
       disabledAttr = if item.disabled then " disabled aria-disabled=\"true\"" else ""
       titleAttr = if item.disabled then item.disabledTitle else item.detail
       disabledClass = if item.disabled then " disabled" else ""
+      activeClass = if item.id === activeCommandId then " active" else ""
+      selectedAttr = if item.id === activeCommandId then "true" else "false"
     """
-      <button class="command-row""" + disabledClass + """" type="button" role="option" data-command-id="""" + item.id + """" title="""" + escapeHtml(titleAttr) + """"""" + disabledAttr + """>
+      <button class="command-row""" + disabledClass + activeClass + """" type="button" role="option" aria-selected="""" + selectedAttr + """" data-command-id="""" + item.id + """" title="""" + escapeHtml(titleAttr) + """"""" + disabledAttr + """>
         <i class="""" + item.icon + """"></i>
         <span class="command-row-main">
           <span class="command-row-title">""" + escapeHtml(item.title) + """</span>
@@ -126,9 +129,28 @@ class CommandPaletteDialog extends HTMLElement with
       </button>
     """
 
+  fun selectableCommands(items) =
+    items.filter(item => not item.disabled)
+
+  fun firstSelectableId(items) =
+    let id = ""
+    selectableCommands(items).forEach of (item, ...) =>
+      if id === "" do set id = item.id
+    id
+
+  fun activeCommandExists(items) =
+    let hasActiveCommand = false
+    selectableCommands(items).forEach of (item, ...) =>
+      if item.id === activeCommandId do set hasActiveCommand = true
+    hasActiveCommand
+
+  fun ensureActiveCommand(items) =
+    if not activeCommandExists(items) do set activeCommandId = firstSelectableId(items)
+
   fun renderCommands() =
     if this.querySelector(".command-list") is ~null as list do
       let matching = filteredCommands()
+      ensureActiveCommand(matching)
       if matching.length === 0 then
         set list.innerHTML = """<div class="dialog-empty">No commands</div>"""
       else
@@ -140,6 +162,7 @@ class CommandPaletteDialog extends HTMLElement with
 
   fun openPalette() =
     set query = ""
+    set activeCommandId = ""
     renderCommands()
     if dialog() is ~null as commandDialog do
       if not commandDialog.open do commandDialog.showModal()
@@ -214,11 +237,52 @@ class CommandPaletteDialog extends HTMLElement with
     event.key === upper then true
     else false
 
+  fun activeCommandIndex(items) =
+    let index = -1
+    items.forEach of (item, itemIndex) =>
+      if item.id === activeCommandId do set index = itemIndex
+    index
+
+  fun syncActiveCommand() =
+    this.querySelectorAll(".command-row").forEach of (button, ...) =>
+      let isActive = button.dataset.commandId === activeCommandId
+      button.classList.toggle("active", isActive)
+      button.setAttribute("aria-selected", if isActive then "true" else "false")
+      if isActive do button.scrollIntoView(mut { block: "nearest" })
+
+  fun moveActiveCommand(delta) =
+    let items = selectableCommands(filteredCommands())
+    if items.length > 0 do
+      let currentIndex = activeCommandIndex(items)
+      let nextIndex = if currentIndex < 0 then 0 else (currentIndex + delta + items.length) % items.length
+      set activeCommandId = items.at(nextIndex).id
+      syncActiveCommand()
+
+  fun executeActiveCommand() =
+    let items = filteredCommands()
+    ensureActiveCommand(items)
+    if activeCommandId !== "" do executeCommand(activeCommandId)
+
+  fun handleSearchKeydown(event) = if event.key is
+    "ArrowDown" then
+      event.preventDefault()
+      moveActiveCommand(1)
+    "ArrowUp" then
+      event.preventDefault()
+      moveActiveCommand(-1)
+    "Enter" then
+      event.preventDefault()
+      executeActiveCommand()
+    else ()
+
   fun attachCommandRows() =
     let palette = this
     this.querySelectorAll(".command-row").forEach of (button, ...) =>
       if not button.disabled do
         button.addEventListener("click", () => palette.executeCommand(button.dataset.commandId))
+        button.addEventListener of "mouseenter", () =>
+          set palette.activeCommandId = button.dataset.commandId
+          palette.syncActiveCommand()
 
   fun attachEventListeners() =
     let palette = this
@@ -229,8 +293,10 @@ class CommandPaletteDialog extends HTMLElement with
         event.preventDefault()
         palette.openPalette()
     if this.querySelector(".command-search-input") is ~null as input do
+      input.addEventListener("keydown", event => palette.handleSearchKeydown(event))
       input.addEventListener of "input", event =>
         set query = event.target.value
+        set activeCommandId = ""
         renderCommands()
 
 class ShareDialog extends HTMLElement with
