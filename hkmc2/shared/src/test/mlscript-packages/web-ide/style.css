@@ -670,10 +670,11 @@ examples-panel {
 .outline-node-leaf {
   width: 100%;
   min-height: 28px;
+  box-sizing: border-box;
   display: grid;
-  grid-template-columns: auto 16px minmax(0, 1fr) auto;
+  grid-template-columns: 8px 30px 16px minmax(0, 1fr) max-content;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   border: 1px solid transparent;
   border-radius: var(--ide-radius-sm);
   background: transparent;
@@ -701,7 +702,7 @@ examples-panel {
 
 .outline-node-leaf::before {
   content: "";
-  width: 5px;
+  width: 8px;
 }
 
 .outline-node-summary:hover,
@@ -716,7 +717,7 @@ examples-panel {
 }
 
 .outline-node-kind {
-  min-width: 28px;
+  width: 30px;
   border: 1px solid color-mix(in srgb, var(--ide-accent) 35%, var(--ide-border));
   border-radius: var(--ide-radius-sm);
   background: var(--ide-accent-soft);

@@ -82,6 +82,9 @@ class OutlinePanel extends HTMLElement with
     "module" then "mod"
     "object" then "obj"
     "class" then "cls"
+    "parameter" then "arg"
+    "mutable-value" then "mut"
+    "constructor" then "ctor"
     "value" then "val"
     else kind
 
