@@ -104,22 +104,28 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
     case _ => ()
 
 
+  private def showFunShapeId(id: TermSymbol | ResultId): Str = id match
+    case funSym: TermSymbol => funSym.nme
+    case lamId: ResultId =>
+      lamId.getResult match
+      case Lambda(_, _) => s"lambda@$lamId"
+      case r => lastWords(s"not lambda $r")
+
+  private def checkIsEtaExpanded(
+    id: TermSymbol | ResultId,
+    shape: Ls[Int]
+  ): Bool = id match
+    case funSym: TermSymbol =>
+      val prev = constraintSolver.preAnalyzer.res.funSymToFunDefn(funSym).params.size
+      val now = shape.size
+      now > prev
+    case lamId: ResultId => shape.size > 1
+
+  def hasEtaExpansionTargets: Bool =
+    funShape.exists:
+      case (id, shape) => checkIsEtaExpanded(id, shape)
+
   if tl.doTrace then
-    def showFunShapeId(id: TermSymbol | ResultId): Str = id match
-      case funSym: TermSymbol => funSym.nme
-      case lamId: ResultId =>
-        lamId.getResult match
-        case Lambda(_, _) => s"lambda@$lamId"
-        case r => lastWords(s"not lambda $r")
-    def checkIsEtaExpanded(
-      id: TermSymbol | ResultId,
-      shape: Ls[Int]
-    ): Bool = id match
-      case funSym: TermSymbol =>
-        val prev = constraintSolver.preAnalyzer.res.funSymToFunDefn(funSym).params.size
-        val now = shape.size
-        now > prev
-      case lamId: ResultId => shape.size > 1
     tl.log(">>> eta-expansion targets shapes >>>")
     for
       (id, shape) <- funShape
@@ -140,9 +146,11 @@ class EtaExpansionRewrite(val etaExpansionSolver: EtaExpansionSolver)(using Rais
   private case class EtaParamList(params: ParamList, args: Ls[Arg])
 
   def apply(): Program =
-    val newBody = Rewriter().applyBlock(pre.pgrm.main)
-    if newBody is pre.pgrm.main then pre.pgrm
-    else Program(pre.pgrm.imports, newBody)
+    if etaExpansionSolver.hasEtaExpansionTargets then
+      val newBody = Rewriter().applyBlock(pre.pgrm.main)
+      if newBody is pre.pgrm.main then pre.pgrm
+      else Program(pre.pgrm.imports, newBody)
+    else pre.pgrm
 
   class Rewriter extends BlockTransformer(SymbolSubst.Id):
     private var activeEtaArgss: Ls[Ls[Arg]] = Nil
