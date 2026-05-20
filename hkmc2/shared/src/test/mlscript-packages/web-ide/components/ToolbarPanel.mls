@@ -9,6 +9,7 @@ class ToolbarPanel extends HTMLElement with
     runningTime = null
     startTime = null
     isCompiling = false
+    hasActiveFile = false
     isStdActive = false
     isMlsActive = false
 
@@ -118,11 +119,11 @@ class ToolbarPanel extends HTMLElement with
         <button id="share" class="toolbar-icon-btn" type="button" aria-label="Share workspace" title="Share">
           <i class="icon-share-2"></i>
         </button>
-        <button id="compile" class="compile-btn">
+        <button id="compile" class="compile-btn disabled" disabled>
           <i class="icon-binary"></i>
           Compile
         </button>
-        <button id="execute" class="compile-btn">
+        <button id="execute" class="compile-btn disabled" disabled>
           <i class="icon-play"></i>
           Execute
         </button>
@@ -152,10 +153,12 @@ class ToolbarPanel extends HTMLElement with
     mut { bubbles: true }
 
   fun handleCompile() =
-    this.dispatchEvent(new CustomEvent("compile-requested", fileEventOptions()))
+    if canCompileActiveFile() do
+      this.dispatchEvent(new CustomEvent("compile-requested", fileEventOptions()))
 
   fun handleExecute() =
-    this.dispatchEvent(new CustomEvent("execute-requested", fileEventOptions()))
+    if canExecuteActiveFile() do
+      this.dispatchEvent(new CustomEvent("execute-requested", fileEventOptions()))
 
   fun handleTerminate() =
     this.dispatchEvent(new CustomEvent("terminate-requested", bubbleEventOptions()))
@@ -172,6 +175,10 @@ class ToolbarPanel extends HTMLElement with
     this.updateExecuteButton()
 
   fun setActiveFileMeta(meta) =
+    set hasActiveFile = if
+      meta is Absent then false
+      meta.path is Absent then false
+      else meta.path !== ""
     set isStdActive = if
       meta is Absent then false
       meta.isStd is Absent then false
@@ -185,6 +192,9 @@ class ToolbarPanel extends HTMLElement with
 
   fun canCompileActiveFile() =
     not isStdActive and isMlsActive
+
+  fun canExecuteActiveFile() =
+    hasActiveFile and not isStdActive
 
   fun updateCompileButton() = if this.querySelector("#compile") is
       ~null as compileBtn do
@@ -207,8 +217,8 @@ class ToolbarPanel extends HTMLElement with
 
   fun updateExecuteButton() = if this.querySelector("#execute") is
       ~null as executeBtn do
-        set executeBtn.disabled = isStdActive
-        executeBtn.classList.toggle("disabled", isStdActive)
+        set executeBtn.disabled = not canExecuteActiveFile()
+        executeBtn.classList.toggle("disabled", not canExecuteActiveFile())
 
   fun showTooltip(statusContainer, statusTooltip) =
     set statusTooltip.style.display = "block"
