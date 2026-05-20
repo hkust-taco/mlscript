@@ -73,7 +73,6 @@ class DiagnosticsInspector extends HTMLElement with
   fun render() =
     let entries = diagnosticEntries(diagnosticsData)
     set this.innerHTML = """
-      <resize-handle direction="horizontal" side="right" min-size="150" max-size="600"></resize-handle>
       <div class="diagnostics-header">
         <div class="diagnostics-title-row">
           <h2>Diagnostics</h2>

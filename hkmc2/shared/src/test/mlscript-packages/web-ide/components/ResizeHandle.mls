@@ -34,9 +34,11 @@ class ResizeHandle extends HTMLElement with
 
   fun render() =
     let dir = this.direction()
-    set
-      this.className = "resize-handle resize-handle-" + dir
-      this.innerHTML = """<div class="resize-handle-indicator"></div>"""
+    this.classList.remove("resize-handle-horizontal")
+    this.classList.remove("resize-handle-vertical")
+    this.classList.add("resize-handle")
+    this.classList.add("resize-handle-" + dir)
+    set this.innerHTML = """<div class="resize-handle-indicator"></div>"""
 
   fun attachEventListeners() =
     this.addEventListener("mousedown", event => this.startResize(event))
@@ -72,10 +74,10 @@ class ResizeHandle extends HTMLElement with
   fun setHorizontalSize(target, width) =
     let container = document.querySelector(".app-container")
     if
-      target.tagName.toLowerCase() === "file-explorer" then
+      target.classList.contains("left-sidebar-panel") then
         container.style.setProperty("--file-explorer-width", width + "px")
         target.setAttribute("width", width)
-      target.tagName.toLowerCase() === "diagnostics-inspector" then
+      target.classList.contains("right-sidebar-panel") then
         container.style.setProperty("--ide-right-panel-width", width + "px")
         target.setAttribute("width", width)
       else ()

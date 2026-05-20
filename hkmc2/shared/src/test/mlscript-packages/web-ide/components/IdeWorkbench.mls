@@ -1,4 +1,5 @@
 import "../common/JS.mls"
+import "./ResizeHandle.mls"
 
 open JS { Absent }
 
@@ -47,8 +48,10 @@ class IdeWorkbench extends HTMLElement with
           <source-control-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="source-control"></source-control-panel>
           <outline-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="outline"></outline-panel>
           <examples-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="examples"></examples-panel>
+          <resize-handle class="sidebar-resize-handle left-sidebar-resize" direction="horizontal" side="left" target=".left-sidebar-panel.active" min-size="150" max-size="600"></resize-handle>
           <editor-workbench class="editor"></editor-workbench>
           <diagnostics-inspector class="sidebar-panel right-sidebar-panel active" data-sidebar-side="right" data-sidebar-panel="diagnostics"></diagnostics-inspector>
+          <resize-handle class="sidebar-resize-handle right-sidebar-resize" direction="horizontal" side="right" target=".right-sidebar-panel.active" min-size="150" max-size="600"></resize-handle>
         </div>
         <bottom-panel class="console"></bottom-panel>
         <div class="workbench-status-bar" aria-label="Workbench status">

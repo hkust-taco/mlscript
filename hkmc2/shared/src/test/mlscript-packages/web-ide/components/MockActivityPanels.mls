@@ -21,6 +21,7 @@ class SearchPanel extends HTMLElement with
   let
     query = ""
     unsubscribe = null
+    collapsedGroups = new Set()
 
   fun connectedCallback() =
     this.render()
@@ -66,16 +67,32 @@ class SearchPanel extends HTMLElement with
       else false
 
   fun snippetForLine(line) =
-    let trimmed = line.trim()
-    if trimmed.length > 160 then trimmed.slice(0, 157) + "..." else trimmed
+    if line.length > 160 then line.slice(0, 157) + "..." else line
 
-  fun searchResult(path, line, excerpt, matchKind) =
+  fun snippetForOccurrence(line, matchIndex, needleLength) =
+    let
+      maxLength = 160
+      contextBefore = 48
+      start = Math.max(0, matchIndex - contextBefore)
+      end = Math.min(line.length, start + maxLength)
+      prefix = if start > 0 then "..." else ""
+      suffix = if end < line.length then "..." else ""
+    prefix + line.slice(start, end) + suffix
+
+  fun searchResult(path, line, excerpt, matchKind, matchStart) =
     mut
       file: path
       line: line
       title: fileName(path)
       excerpt: excerpt
       matchKind: matchKind
+      matchStart: matchStart
+
+  fun resultGroup(path) =
+    mut
+      file: path
+      title: fileName(path)
+      results: mut []
 
   fun firstNonEmptyLine(lines) =
     let result = ""
@@ -85,12 +102,17 @@ class SearchPanel extends HTMLElement with
 
   fun contentMatches(path, lines, needle, results) =
     lines.forEach of (line, index) =>
-      if line.toLowerCase().includes(needle) and results.length < 100 do
-        results.push(searchResult(path, index + 1, snippetForLine(line), "content"))
+      let
+        lowerLine = line.toLowerCase()
+        needleLength = needle.length
+        matchIndex = lowerLine.indexOf(needle)
+      while matchIndex >= 0 and results.length < 100 do
+        results.push(searchResult(path, index + 1, snippetForOccurrence(line, matchIndex, needleLength), "content", matchIndex))
+        set matchIndex = lowerLine.indexOf(needle, matchIndex + needleLength)
 
   fun pathMatches(path, lines, needle, results) =
     if path.toLowerCase().includes(needle) and results.length < 100 do
-      results.push(searchResult(path, 1, firstNonEmptyLine(lines), "path"))
+      results.push(searchResult(path, 1, snippetForLine(firstNonEmptyLine(lines)), "path", 0))
 
   fun collectResults(needle) =
     let
@@ -103,13 +125,69 @@ class SearchPanel extends HTMLElement with
         contentMatches(path, lines, needle, results)
     results
 
-  fun resultHtml(result) =
+  fun groupResults(results) =
+    let
+      groups = mut []
+      byPath = mut {}
+    results.forEach of (result, ...) =>
+      let path = result.file
+      if byPath.(path) is undefined do
+        set byPath.(path) = resultGroup(path)
+        groups.push(byPath.(path))
+      byPath.(path).results.push(result)
+    groups
+
+  fun searchSummaryHtml(results, groups) =
+    let
+      resultLabel = if results.length is 1 then "result" else "results"
+      fileLabel = if groups.length is 1 then "file" else "files"
     """
-      <button class="mock-result-row" type="button" data-file-path="""" + escapeHtml(result.file) + """" data-line="""" + result.line + """">
-        <span class="mock-result-title">""" + escapeHtml(result.title) + """</span>
-        <span class="mock-result-path">""" + escapeHtml(result.file) + ":" + result.line + """</span>
-        <span class="mock-result-excerpt">""" + escapeHtml(result.excerpt) + """</span>
+      <div class="mock-search-summary">
+        """ + results.length + " " + resultLabel + " in " + groups.length + " " + fileLabel + """
+      </div>
+    """
+
+  fun highlightText(text, needle) =
+    let
+      lowerText = text.toLowerCase()
+      parts = mut []
+      cursor = 0
+      matchIndex = lowerText.indexOf(needle)
+    while matchIndex >= 0 do
+      parts.push(escapeHtml(text.slice(cursor, matchIndex)))
+      parts.push("""<mark>""" + escapeHtml(text.slice(matchIndex, matchIndex + needle.length)) + """</mark>""")
+      set cursor = matchIndex + needle.length
+      set matchIndex = lowerText.indexOf(needle, cursor)
+    parts.push(escapeHtml(text.slice(cursor)))
+    parts.join("")
+
+  fun resultHtml(result, needle, isHidden) =
+    let hiddenAttribute = if isHidden then """ hidden""" else ""
+    """
+      <button class="mock-result-row" type="button" data-file-path="""" + escapeHtml(result.file) + """" data-line="""" + result.line + """"""" + hiddenAttribute + """>
+        <span class="mock-result-line">""" + result.line + """</span>
+        <span class="mock-result-excerpt">""" + highlightText(result.excerpt, needle) + """</span>
       </button>
+    """
+
+  fun groupHtml(group, needle) =
+    let
+      isCollapsed = collapsedGroups.has(group.file)
+      collapsedClass = if isCollapsed then " collapsed" else ""
+      expanded = if isCollapsed then "false" else "true"
+      rows = group.results.map(result => resultHtml(result, needle, isCollapsed)).join("")
+    """
+      <section class="mock-search-group""" + collapsedClass + """">
+        <button class="mock-search-group-heading" type="button" data-file-path="""" + escapeHtml(group.file) + """" aria-expanded="""" + expanded + """">
+          <i class="mock-search-group-caret icon-chevron-right"></i>
+          <span class="mock-search-group-name">""" + escapeHtml(group.title) + """</span>
+          <span class="mock-search-group-path">""" + escapeHtml(group.file) + """</span>
+          <span class="mock-search-group-count">""" + group.results.length + """</span>
+        </button>
+        <div class="mock-search-group-results">
+          """ + rows + """
+        </div>
+      </section>
     """
 
   fun renderResults() =
@@ -124,8 +202,12 @@ class SearchPanel extends HTMLElement with
         if count is 0 then
           set results.innerHTML = """<div class="mock-empty">No results</div>"""
         else
-          let html = matching.map(result => resultHtml(result)).join("")
-          set results.innerHTML = html
+          let
+            groups = groupResults(matching)
+            summary = searchSummaryHtml(matching, groups)
+            groupedResults = groups.map(group => groupHtml(group, needle)).join("")
+          set results.innerHTML = summary + groupedResults
+          attachGroupListeners()
           attachResultListeners()
 
   fun setQuery(nextQuery) =
@@ -152,6 +234,16 @@ class SearchPanel extends HTMLElement with
     let panel = this
     this.querySelectorAll(".mock-result-row").forEach of (button, ...) =>
       button.addEventListener("click", () => panel.dispatchOpenResult(button))
+
+  fun toggleGroup(path) =
+    if collapsedGroups.has(path) then collapsedGroups.delete(path)
+    else collapsedGroups.add(path)
+    renderResults()
+
+  fun attachGroupListeners() =
+    let panel = this
+    this.querySelectorAll(".mock-search-group-heading").forEach of (button, ...) =>
+      button.addEventListener("click", () => panel.toggleGroup(button.dataset.filePath))
 
   fun attachEventListeners() =
     let panel = this

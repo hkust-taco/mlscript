@@ -157,6 +157,32 @@ ide-workbench {
   grid-column: 4;
 }
 
+.sidebar-resize-handle {
+  align-self: stretch;
+  position: relative;
+  top: auto;
+  z-index: 25;
+}
+
+.left-sidebar-resize {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  transform: translateX(50%);
+}
+
+.right-sidebar-resize {
+  grid-column: 4;
+  grid-row: 1;
+  justify-self: start;
+  transform: translateX(-50%);
+}
+
+.app-container.left-sidebar-closed .left-sidebar-resize,
+.app-container.right-sidebar-closed .right-sidebar-resize {
+  display: none;
+}
+
 @media (max-width: 760px) {
   .app-container {
     grid-template-columns:
@@ -581,7 +607,6 @@ examples-panel {
   color: var(--ide-text);
 }
 
-.mock-result-row,
 .mock-outline-row,
 .mock-example-row {
   width: 100%;
@@ -596,28 +621,23 @@ examples-panel {
   padding: 7px 8px;
 }
 
-.mock-result-row:hover,
 .mock-outline-row:hover,
 .mock-example-row:hover {
   background: var(--ide-surface-subtle);
 }
 
-.mock-result-row + .mock-result-row,
 .mock-outline-row + .mock-outline-row,
 .mock-example-row + .mock-example-row,
 .mock-change-row + .mock-change-row {
   margin-top: 4px;
 }
 
-.mock-result-title,
 .mock-outline-name,
 .mock-example-title {
   font-weight: 600;
   line-height: 1.2;
 }
 
-.mock-result-path,
-.mock-result-excerpt,
 .mock-change-summary,
 .mock-example-file,
 .mock-outline-line,
@@ -625,6 +645,135 @@ examples-panel {
   color: var(--ide-text-muted);
   font-size: 0.78rem;
   line-height: 1.25;
+}
+
+.mock-search-summary {
+  position: sticky;
+  top: -8px;
+  z-index: 1;
+  margin: -8px -8px 8px;
+  border-bottom: 1px solid var(--ide-border);
+  background: var(--ide-surface);
+  color: var(--ide-text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 7px 8px;
+}
+
+.mock-search-group + .mock-search-group {
+  margin-top: 10px;
+}
+
+.mock-search-group-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: var(--ide-radius-sm);
+  background: transparent;
+  color: var(--ide-text);
+  cursor: pointer;
+  padding: 3px 2px 5px;
+  text-align: left;
+}
+
+.mock-search-group-heading:hover {
+  background: var(--ide-surface-subtle);
+}
+
+.mock-search-group-caret {
+  flex: 0 0 auto;
+  color: var(--ide-text-muted);
+  font-size: 0.75rem;
+  transition: transform 0.12s ease;
+}
+
+.mock-search-group:not(.collapsed) .mock-search-group-caret {
+  transform: rotate(90deg);
+}
+
+.mock-search-group-name {
+  flex: 0 0 auto;
+  color: var(--ide-text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.mock-search-group-path {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  color: var(--ide-text-muted);
+  font-size: 0.74rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mock-search-group-count {
+  min-width: 20px;
+  flex: 0 0 auto;
+  border: 1px solid var(--ide-border);
+  border-radius: 999px;
+  background: var(--ide-surface-subtle);
+  color: var(--ide-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.1;
+  padding: 1px 6px;
+  text-align: center;
+}
+
+.mock-result-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(28px, max-content) minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: var(--ide-radius-sm);
+  background: transparent;
+  color: var(--ide-text);
+  cursor: pointer;
+  padding: 5px 7px;
+}
+
+.mock-result-row:hover {
+  background: var(--ide-surface-subtle);
+}
+
+.mock-result-row + .mock-result-row {
+  margin-top: 2px;
+}
+
+.mock-result-line {
+  color: var(--ide-text-muted);
+  font-family: var(--monospace);
+  font-size: 0.74rem;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.mock-result-excerpt {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ide-text);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mock-result-excerpt mark {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--ide-accent) 28%, transparent);
+  color: var(--ide-text);
+  font-weight: 700;
+  padding: 0 1px;
 }
 
 .mock-result-excerpt,

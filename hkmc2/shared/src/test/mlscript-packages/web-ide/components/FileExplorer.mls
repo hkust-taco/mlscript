@@ -1,6 +1,5 @@
 import "../filesystem/fs.mls"
 import "./PanelPersistence.mls"
-import "./ResizeHandle.mls"
 import "./TreeNode.mls"
 import "../common/JS.mls"
 
@@ -58,7 +57,6 @@ class FileExplorer extends HTMLElement with
       </div>
       <div class="tree-view"></div>
       <file-tooltip class="tree-tooltip"></file-tooltip>
-      <resize-handle direction="horizontal" side="left" min-size="150" max-size="600"></resize-handle>
     """
     this.updateTree()
 
