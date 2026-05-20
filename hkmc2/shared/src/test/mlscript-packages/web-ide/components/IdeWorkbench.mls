@@ -56,10 +56,6 @@ class IdeWorkbench extends HTMLElement with
         <bottom-panel class="console"></bottom-panel>
         <div class="workbench-status-bar" aria-label="Workbench status">
           <span class="status-segment workbench-state-status">Ready</span>
-          <button class="status-segment status-action diagnostics-status-toggle" type="button" aria-pressed="true" title="Toggle diagnostics inspector">
-            <i class="icon-circle-alert"></i>
-            Diagnostics
-          </button>
           <span class="status-spacer"></span>
           <span class="status-segment active-file-status">No file</span>
           <span class="status-segment active-file-kind">No language</span>
@@ -116,10 +112,6 @@ class IdeWorkbench extends HTMLElement with
     if appContainer() is ~null as container do
       container.classList.toggle("right-sidebar-closed", not isOpen)
     setSidebarPanels("right", "diagnostics", isOpen)
-    if this.querySelector(".diagnostics-status-toggle") is ~null as toggle do
-      toggle.setAttribute("aria-pressed", if isOpen then "true" else "false")
-      toggle.classList.toggle("active", isOpen)
-      set toggle.title = if isOpen then "Hide diagnostics inspector" else "Show diagnostics inspector"
 
   fun toggleDiagnostics() =
     setDiagnosticsState(not diagnosticsOpen)
@@ -190,13 +182,8 @@ class IdeWorkbench extends HTMLElement with
           "right" then toggleDiagnostics()
           else toggleLeftPanel(button.dataset.sidebarPanel)
 
-  fun attachStatusActions() =
-    if this.querySelector(".diagnostics-status-toggle") is ~null as toggle do
-      toggle.addEventListener("click", () => toggleDiagnostics())
-
   fun attachEventListeners() =
     attachActivityButtons()
-    attachStatusActions()
     document.addEventListener("sidebar-toggle-requested", event => handleSidebarToggleRequested(event))
     document.addEventListener("active-tab-changed", event => updateActiveFileStatus(event.detail))
     document.addEventListener("compilation-status-change", event => updateCompilationStatus(event.detail.status))
