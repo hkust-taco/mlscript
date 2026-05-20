@@ -1690,17 +1690,6 @@ diagnostics-inspector h2 {
   line-height: 1.2;
 }
 
-diagnostics-inspector .diagnostics-source-label {
-  border: 1px solid var(--ide-border);
-  border-radius: var(--ide-radius-xs);
-  background: var(--ide-surface);
-  color: var(--ide-text-muted);
-  font-size: 0.68rem;
-  font-weight: 600;
-  line-height: 1;
-  padding: 4px 6px;
-}
-
 diagnostics-inspector .diagnostics-counts {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2021,25 +2010,15 @@ diagnostics-inspector .diagnostics-source-preview pre {
   white-space: pre;
 }
 
-diagnostics-inspector .diagnostics-card-message,
-diagnostics-inspector .diagnostics-action-feedback {
+diagnostics-inspector .diagnostics-card-message {
   color: var(--ide-text-muted);
   font-size: 0.76rem;
   line-height: 1.35;
 }
 
-diagnostics-inspector .diagnostics-action-feedback {
-  border: 1px solid var(--ide-border);
-  border-radius: var(--ide-radius-xs);
-  background: var(--ide-accent-soft);
-  color: var(--ide-accent-strong);
-  padding: 7px;
-}
-
 diagnostics-inspector .diagnostics-source-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 4px;
+  display: flex;
+  align-items: center;
 }
 
 diagnostics-inspector .diagnostics-action {

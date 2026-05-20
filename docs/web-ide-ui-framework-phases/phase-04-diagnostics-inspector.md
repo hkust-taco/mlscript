@@ -20,10 +20,10 @@ Replace the old reserved panel with a prototype-style diagnostics inspector that
 - [x] Preserve a `setDiagnostics(diagnosticsPerFile)` method.
 - [x] Add severity counts in the inspector header.
 - [x] Add List, Tree, and Source modes with native controls.
-- [x] Render mock diagnostics when no compiler diagnostics are available for framework verification.
+- [x] Render an empty state when no compiler diagnostics are available.
 - [x] Render real diagnostics passed through `setDiagnostics` where available.
 - [x] Add rich source-card layout for Source mode.
-- [x] Update the Mock Inventory for diagnostics quick actions and any mock diagnostic data.
+- [x] Remove diagnostics entries from the Mock Inventory after replacing them with real diagnostics and an empty state.
 
 ## Visible Functionality
 
@@ -32,15 +32,12 @@ Replace the old reserved panel with a prototype-style diagnostics inspector that
 - [x] Source mode shows cards with source excerpts and selected mode state.
 - [x] Severity counts match the visible diagnostics dataset.
 - [x] Clicking a diagnostic backed by a real file dispatches `open-file-at-location`.
-- [x] Quick fix, explain, and ignore are stateful mocks or disabled with clear titles.
 - [x] Hide diagnostics collapses the inspector and a visible control reopens it.
 
 ## Mock Inventory Impact
 
-- Expected mock entries:
-  - Diagnostics sample dataset
-  - Diagnostics quick actions
-- Added the sample dataset to the parent Mock Inventory because it is visible before the first compiler diagnostics update.
+- Diagnostics sample data and quick actions were removed from the UI and from the parent Mock Inventory.
+- The inspector now starts with an empty state and renders real compiler/runtime diagnostics when they are provided.
 
 ## Verification
 
@@ -50,11 +47,10 @@ Replace the old reserved panel with a prototype-style diagnostics inspector that
 - [x] Browser-check List, Tree, and Source mode switching.
 - [x] Browser-check severity counts against visible items.
 - [x] Browser-check diagnostic click-to-open behavior for real diagnostics.
-- [x] Browser-check quick-action controls against the functionality standard.
 - [x] Browser-check Compile still updates diagnostics.
 
 ## Completion Notes
 
 - Commit: this phase commit.
-- Browser notes: Playwright CLI verified the inspector exists, sample counts are 1 error / 1 warning / 1 internal / 0 info, Tree and Source modes switch selected state, Source mode renders three cards, Open dispatches `/main.mls:5`, Explain shows feedback, Ignore updates counts, the status-bar Diagnostics control hides and restores the inspector, and Compile swaps the inspector to compiler diagnostics with the success empty state. Screenshot: `docs/web-ide-ui-framework-screenshots/phase-04/diagnostics-inspector-1920x1080.png`.
+- Browser notes: Playwright CLI verified the inspector exists, starts with the empty state, List/Tree/Source modes switch selected state, Source mode renders real diagnostic cards after `setDiagnostics`, Open dispatches the real file location, and Compile swaps the inspector to compiler diagnostics or the empty state. Screenshot: `docs/web-ide-ui-framework-screenshots/phase-04/diagnostics-inspector-1920x1080.png`.
 - Test output: `hkmc2PackagesTest/testOnly hkmc2.PackageTestRunner -- -z web-ide` passed 24 tests.

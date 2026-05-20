@@ -36,8 +36,6 @@ This list tracks visible UI that is intentionally not backed by real functionali
 | Source Control panel | Phase 3 | Static changed-file list with stage/unstage movement between mock sections. | Real version-control state, staging, commit, pull, and push integration if supported by the Web IDE environment. |
 | Outline panel | Phase 3 | Static symbol list with mocked editor navigation. | Real symbol extraction from the active MLscript file. |
 | Examples panel | Phase 3 | Static examples list with mocked selection/detail behavior. | Real bundled examples/snippets that can open or load files. |
-| Diagnostics sample dataset | Phase 4 | Static sample diagnostics shown in the inspector before compiler diagnostics arrive. | Real compiler diagnostics or the empty success state after compilation. |
-| Diagnostics quick actions | Phase 4 | Quick fix, explain, and ignore are mocked state changes or disabled actions. | Real compiler/code-action integration or removal of unsupported actions. |
 | Problems tab | Phase 5 | Mocked problem list separate from current diagnostics. | Real diagnostic/problem aggregation from compiler results. |
 | Terminal tab | Phase 5 | Static terminal transcript or locally mutable mock lines. | Real terminal/REPL integration, or remove if unsupported. |
 | Compiled output split view | Phase 6 | Static `.mjs`/`wasm`/`c` mock output selected by target controls. | Real generated-output preview based on current compiled file and selected backend. |
@@ -139,14 +137,13 @@ Rework diagnostics into the prototype-style inspector.
   - List
   - Tree
   - Source
-- Initially support mock diagnostics for framework verification.
+- Render an empty state before compiler diagnostics are available.
 - Preserve a `setDiagnostics(diagnosticsPerFile)` method so current compiler diagnostics can still be routed later.
 - Show severity counts in the inspector header.
-- Source mode should use rich static cards with excerpt, location, and action controls that are either mocked state changes or disabled with clear titles.
+- Source mode should use cards with real diagnostic excerpts, locations, and supported actions.
 - Required interactions:
   - List, Tree, and Source mode buttons switch visible content and update selected state.
   - Diagnostic rows/cards dispatch `open-file-at-location` when clicked if they point at an existing file.
-  - Quick fix, explain, and ignore are either mocked state-changing controls or disabled with clear titles.
   - Hide diagnostics collapses the inspector and exposes a clear way to reopen it.
 
 Commit: `Add diagnostics inspector framework`
@@ -343,9 +340,8 @@ Phase 3:
 Phase 4:
 
 - Diagnostics List, Tree, and Source modes switch content and selected state.
-- Severity counts match visible mock or real diagnostics.
+- Severity counts match visible real diagnostics.
 - Diagnostic click opens the relevant file/line when backed by a real file.
-- Quick fix/explain/ignore controls are either stateful mocks or disabled.
 
 Phase 5:
 

@@ -1,5 +1,4 @@
 import "../filesystem/fs.mls"
-import "../mockWorkbenchData.mls"
 import "../common/JS.mls"
 
 open JS { Absent }
@@ -7,10 +6,7 @@ open JS { Absent }
 class DiagnosticsInspector extends HTMLElement with
   let
     mode = "list"
-    diagnosticsData = mockWorkbenchData.diagnostics
-    usingMock = true
-    ignoredDiagnostics = new Set()
-    explainedDiagnostics = new Set()
+    diagnosticsData = []
 
   fun connectedCallback() =
     this.render()
@@ -35,9 +31,6 @@ class DiagnosticsInspector extends HTMLElement with
       files then files
     set
       diagnosticsData = nextData
-      usingMock = false
-      ignoredDiagnostics = new Set()
-      explainedDiagnostics = new Set()
     this.render()
 
   fun setOutput(message) =
@@ -46,9 +39,6 @@ class DiagnosticsInspector extends HTMLElement with
       else message
     set
       diagnosticsData = runtimeDiagnosticData(text)
-      usingMock = false
-      ignoredDiagnostics = new Set()
-      explainedDiagnostics = new Set()
     this.render()
 
   fun runtimeDiagnosticData(message) =
@@ -76,7 +66,6 @@ class DiagnosticsInspector extends HTMLElement with
       <div class="diagnostics-header">
         <div class="diagnostics-title-row">
           <h2>Diagnostics</h2>
-          <span class="diagnostics-source-label">""" + dataLabel() + """</span>
         </div>
         """ + countsHtml(entries) + """
         <div class="diagnostics-mode-tabs" role="tablist" aria-label="Diagnostics view">
@@ -88,9 +77,6 @@ class DiagnosticsInspector extends HTMLElement with
       <div class="diagnostics-content">""" + contentHtml(entries) + """</div>
     """
     attachEventListeners()
-
-  fun dataLabel() =
-    if usingMock then "Sample" else "Compiler"
 
   fun modeButtonHtml(value, label, icon) =
     let
@@ -137,7 +123,7 @@ class DiagnosticsInspector extends HTMLElement with
     """
       <div class="diagnostics-empty">
         <i class="icon-circle-check-big"></i>
-        <span>Everything works fine!</span>
+        <span>No diagnostics</span>
       </div>
     """
 
@@ -227,20 +213,7 @@ class DiagnosticsInspector extends HTMLElement with
             <i class="icon-locate"></i>
             <span>Open</span>
           </button>
-          <button class="diagnostics-action" type="button" disabled aria-disabled="true" title="Quick fix is mocked in Phase 4">
-            <i class="icon-wand-sparkles"></i>
-            <span>Quick Fix</span>
-          </button>
-          <button class="diagnostics-action diagnostics-explain-action" type="button" data-diagnostic-key="""" + key + """" title="Toggle diagnostic explanation">
-            <i class="icon-message-square-text"></i>
-            <span>Explain</span>
-          </button>
-          <button class="diagnostics-action diagnostics-ignore-action" type="button" data-diagnostic-key="""" + key + """" title="Hide this diagnostic">
-            <i class="icon-eye-off"></i>
-            <span>Ignore</span>
-          </button>
         </div>
-        """ + explanationHtml(entry) + """
       </section>
     """
 
@@ -248,15 +221,6 @@ class DiagnosticsInspector extends HTMLElement with
     """
       <p class="diagnostics-card-message">""" + escapeHtml(diagnosticDetailText(diagnostic)) + """</p>
     """
-
-  fun explanationHtml(entry) =
-    if explainedDiagnostics.has(entry.key) then
-      """
-        <div class="diagnostics-action-feedback">
-          This diagnostic is attached to the source range shown above.
-        </div>
-      """
-    else ""
 
   fun diagnosticEntries(files) =
     let entries = mut []
@@ -267,14 +231,13 @@ class DiagnosticsInspector extends HTMLElement with
             let
               filePath = filePathOf(fileData)
               key = diagnosticKey(filePath, fileIndex, diagnosticIndex, diagnostic)
-            if not ignoredDiagnostics.has(key) do
-              entries.push(mut
-                filePath: filePath
-                diagnostic: diagnostic
-                fileIndex: fileIndex
-                diagnosticIndex: diagnosticIndex
-                key: key
-              )
+            entries.push(mut
+              filePath: filePath
+              diagnostic: diagnostic
+              fileIndex: fileIndex
+              diagnosticIndex: diagnosticIndex
+              key: key
+            )
     entries
 
   fun filePathOf(fileData) = if fileData.path is
@@ -385,15 +348,6 @@ class DiagnosticsInspector extends HTMLElement with
         options = mut { :detail }
       document.dispatchEvent(new CustomEvent("open-file-at-location", options))
 
-  fun toggleExplanation(key) =
-    if explainedDiagnostics.has(key) then explainedDiagnostics.delete(key)
-    else explainedDiagnostics.add(key)
-    render()
-
-  fun ignoreDiagnostic(key) =
-    ignoredDiagnostics.add(key)
-    render()
-
   fun attachEventListeners() =
     let panel = this
     this.querySelectorAll(".diagnostics-mode-button").forEach of (button, ...) =>
@@ -404,10 +358,6 @@ class DiagnosticsInspector extends HTMLElement with
       button.addEventListener("click", () => panel.dispatchOpenEntry(button.dataset.diagnosticKey))
     this.querySelectorAll(".diagnostics-open-location").forEach of (button, ...) =>
       button.addEventListener("click", () => panel.dispatchOpenEntry(button.dataset.diagnosticKey))
-    this.querySelectorAll(".diagnostics-explain-action").forEach of (button, ...) =>
-      button.addEventListener("click", () => panel.toggleExplanation(button.dataset.diagnosticKey))
-    this.querySelectorAll(".diagnostics-ignore-action").forEach of (button, ...) =>
-      button.addEventListener("click", () => panel.ignoreDiagnostic(button.dataset.diagnosticKey))
 
   fun severityLabel(kind) = if kind is
     "error" then "Errors"
