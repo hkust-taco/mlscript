@@ -42,12 +42,6 @@ val examples = [
   mut { id: "shapes", title: "Shapes", file: "shapes.mls", description: "Explores shape metadata and field labels.", preview: "Shape.of(record)" }
 ]
 
-val bottomProblems = [
-  mut { kind: "error", file: "/main.mls", line: 5, title: "Sample type mismatch", detail: "The welcome program sample includes one mock type diagnostic." }
-  mut { kind: "warning", file: "/main.mls", line: 8, title: "Generated output stale", detail: "Compile refreshes the visible compiler diagnostics." }
-  mut { kind: "info", file: "/std/Predef.mls", line: 1, title: "Standard library note", detail: "Standard-library files are editable during Web IDE development." }
-]
-
 val terminalLines = [
   "MLscript Web IDE mock terminal"
   "$ pwd"

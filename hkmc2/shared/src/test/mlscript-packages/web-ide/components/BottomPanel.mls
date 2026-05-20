@@ -12,7 +12,6 @@ class BottomPanel extends HTMLElement with
     activeTab = "output"
     isCollapsed = false
     preserveLogs = false
-    problemsCleared = false
     feedbackText = ""
 
   fun connectedCallback() =
@@ -31,8 +30,9 @@ class BottomPanel extends HTMLElement with
       <div class="bottom-panel-header">
         <div class="bottom-panel-tabs" role="tablist" aria-label="Bottom panel">
           """ + tabButtonHtml("output", "Output", "icon-scroll-text") + """
-          """ + tabButtonHtml("problems", "Problems", "icon-circle-alert") + """
+          <!--
           """ + tabButtonHtml("terminal", "Terminal", "icon-square-terminal") + """
+          -->
         </div>
         <div class="bottom-panel-actions">
           <label class="preserve-logs-label" title="Preserve panel content between clear actions">
@@ -78,7 +78,6 @@ class BottomPanel extends HTMLElement with
     """
 
   fun activeContentHtml() = if activeTab is
-    "problems" then problemsHtml()
     "terminal" then terminalHtml()
     else outputHtml()
 
@@ -90,17 +89,6 @@ class BottomPanel extends HTMLElement with
     else
       messages.forEach of (entry, ...) =>
         set html += messageRowHtml(entry)
-    set html += """</div>"""
-    html
-
-  fun problemsHtml() =
-    let html = """<div class="problems-content">"""
-    if problemsCleared then
-      set html += emptyHtml("No problems")
-    else
-      mockWorkbenchData.bottomProblems.forEach of (problem, ...) =>
-        set html += problemRowHtml(problem)
-    set html += feedbackHtml()
     set html += """</div>"""
     html
 
@@ -163,31 +151,11 @@ class BottomPanel extends HTMLElement with
       </div>
     """
 
-  fun problemRowHtml(problem) =
-    """
-      <button class="bottom-problem-row bottom-problem-""" + problem.kind + """" type="button" data-file-path="""" + escapeHtml(problem.file) + """" data-line="""" + problem.line + """">
-        <i class="""" + problemIcon(problem.kind) + """"></i>
-        <span class="bottom-problem-main">
-          <span class="bottom-problem-title">""" + escapeHtml(problem.title) + """</span>
-          <span class="bottom-problem-detail">""" + escapeHtml(problem.file) + ":" + problem.line + """ · """ + escapeHtml(problem.detail) + """</span>
-        </span>
-      </button>
-    """
-
-  fun problemIcon(kind) = if kind is
-    "error" then "icon-circle-x"
-    "warning" then "icon-triangle-alert"
-    else "icon-info"
-
   fun clear() = if preserveLogs then
     set feedbackText = "Preserve logs is on"
     render()
   else
     if activeTab is
-      "problems" then
-        set
-          problemsCleared = true
-          feedbackText = "Problems cleared"
       "terminal" then
         set
           terminalLines = mut []
@@ -204,7 +172,7 @@ class BottomPanel extends HTMLElement with
     render()
 
   fun setActiveTab(tabName) = if tabName is
-    "output" | "problems" | "terminal" then
+    "output" | "terminal" then
       set
         activeTab = tabName
         feedbackText = ""
@@ -212,20 +180,12 @@ class BottomPanel extends HTMLElement with
     else ()
 
   fun tabLabel(tabName) = if tabName is
-    "problems" then "Problems"
     "terminal" then "Terminal"
     else "Output"
 
   fun visibleText() = if activeTab is
-    "problems" then problemsText()
     "terminal" then terminalLines.join("\n")
     else messages.map(entry => formattedContent(entry)).join("\n")
-
-  fun problemsText() =
-    if problemsCleared then ""
-    else mockWorkbenchData.bottomProblems.map(problem =>
-      problem.kind + " " + problem.file + ":" + problem.line + " " + problem.title + " " + problem.detail
-    ).join("\n")
 
   fun downloadVisibleContent() =
     let
@@ -250,14 +210,6 @@ class BottomPanel extends HTMLElement with
       terminalLines.push("Command queued in the mock terminal")
       set feedbackText = ""
       render()
-
-  fun dispatchProblemOpen(button) =
-    let
-      filePath = button.dataset.filePath
-      line = parseInt(button.dataset.line, 10)
-      detail = mut { :filePath, :line }
-      options = mut { :detail }
-    document.dispatchEvent(new CustomEvent("open-file-at-location", options))
 
   fun valueOrEmpty(value) = if value is
     Absent then ""
@@ -336,8 +288,6 @@ class BottomPanel extends HTMLElement with
       collapseBtn.addEventListener("click", () => panel.toggleCollapse())
     if this.querySelector(".preserve-logs-checkbox") is ~null as preserveLogsCheckbox do
       preserveLogsCheckbox.addEventListener("change", event => panel.setPreserveLogs(event.target.checked))
-    this.querySelectorAll(".bottom-problem-row").forEach of (button, ...) =>
-      button.addEventListener("click", () => panel.dispatchProblemOpen(button))
     if this.querySelector(".terminal-form") is ~null as form do
       form.addEventListener of "submit", event =>
         event.preventDefault()

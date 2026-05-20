@@ -94,7 +94,7 @@ class CommandPaletteDialog extends HTMLElement with
       command("go-symbol", "Go to symbol", "Open the Outline activity panel.", "icon-list-tree", false, "")
       command("go-file", "Go to file", "Open the Files activity panel.", "icon-files", false, "")
       command("search-files", "Search across files", "Open the Search activity panel.", "icon-search", false, "")
-      command("toggle-diagnostics", "Toggle diagnostics panel", "Show or hide the diagnostics inspector.", "icon-circle-alert", false, "")
+      command("toggle-problems", "Toggle Problems panel", "Show or hide the Problems panel.", "icon-circle-alert", false, "")
       command("toggle-output", "Toggle output panel", "Show or hide the bottom panel.", "icon-panel-bottom", false, "")
       command("toggle-theme", "Toggle theme", "Future visual command.", "icon-sun-moon", true, "Theme switching is mocked in Phase 7.")
     ]
@@ -221,7 +221,7 @@ class CommandPaletteDialog extends HTMLElement with
       "go-symbol" then dispatchSidebar("left", "outline")
       "go-file" then dispatchSidebar("left", "files")
       "search-files" then dispatchSidebar("left", "search")
-      "toggle-diagnostics" then dispatchSidebar("right", "diagnostics")
+      "toggle-problems" then dispatchSidebar("right", "problems")
       "toggle-output" then
         if bottomPanel() is ~null as panel do panel.toggleCollapse()
       else ()

@@ -65,10 +65,10 @@ class DiagnosticsInspector extends HTMLElement with
     set this.innerHTML = """
       <div class="diagnostics-header">
         <div class="diagnostics-title-row">
-          <h2>Diagnostics</h2>
+          <h2>Problems</h2>
         </div>
         """ + countsHtml(entries) + """
-        <div class="diagnostics-mode-tabs" role="tablist" aria-label="Diagnostics view">
+        <div class="diagnostics-mode-tabs" role="tablist" aria-label="Problems view">
           """ + modeButtonHtml("list", "List", "icon-list") + """
           """ + modeButtonHtml("tree", "Tree", "icon-list-tree") + """
           """ + modeButtonHtml("source", "Source", "icon-panel-right") + """
@@ -123,7 +123,7 @@ class DiagnosticsInspector extends HTMLElement with
     """
       <div class="diagnostics-empty">
         <i class="icon-circle-check-big"></i>
-        <span>No diagnostics</span>
+        <span>No problems</span>
       </div>
     """
 

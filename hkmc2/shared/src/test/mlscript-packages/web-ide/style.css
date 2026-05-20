@@ -78,7 +78,8 @@ ide-workbench {
     var(--activity-rail-width, 44px)
     var(--file-explorer-width, 250px)
     minmax(0, 1fr)
-    var(--ide-right-panel-width, 300px);
+    var(--ide-right-panel-width, 300px)
+    var(--activity-rail-width, 44px);
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -110,6 +111,11 @@ ide-workbench {
 .activity-rail-left {
   grid-column: 1;
   border-right: 1px solid var(--ide-border);
+}
+
+.activity-rail-right {
+  grid-column: 5;
+  border-left: 1px solid var(--ide-border);
 }
 
 .activity-button {
@@ -190,7 +196,8 @@ ide-workbench {
   .app-container {
     grid-template-columns:
       var(--activity-rail-width, 44px)
-      minmax(0, 1fr);
+      minmax(0, 1fr)
+      var(--activity-rail-width, 44px);
   }
 
   editor-workbench {
@@ -214,8 +221,12 @@ ide-workbench {
   }
 
   .right-sidebar-panel {
-    right: 0;
+    right: var(--activity-rail-width, 44px);
     grid-column: auto;
+  }
+
+  .activity-rail-right {
+    grid-column: 3;
   }
 }
 
@@ -1656,7 +1667,7 @@ editor-panel .empty-state.hidden {
   display: none;
 }
 
-/* Diagnostics Inspector */
+/* Problems Inspector */
 diagnostics-inspector {
   display: flex;
   flex-direction: column;
@@ -2453,7 +2464,6 @@ bottom-panel .bottom-panel-content {
 }
 
 bottom-panel .output-content,
-bottom-panel .problems-content,
 bottom-panel .terminal-content {
   min-height: 100%;
   padding: 6px 0;
@@ -2469,8 +2479,7 @@ bottom-panel .console-message {
   line-height: 1.4;
 }
 
-bottom-panel .console-message:hover,
-bottom-panel .bottom-problem-row:hover {
+bottom-panel .console-message:hover {
   background: var(--ide-surface-subtle);
 }
 
@@ -2519,61 +2528,6 @@ bottom-panel .bottom-panel-feedback {
   color: var(--ide-accent-strong);
   padding: 7px 9px;
   font-size: 0.8rem;
-}
-
-bottom-panel .bottom-problem-row {
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: 8px;
-  border: 0;
-  border-bottom: 1px solid var(--ide-border);
-  background: transparent;
-  color: var(--ide-text);
-  cursor: pointer;
-  padding: 7px 12px;
-  text-align: left;
-}
-
-bottom-panel .bottom-problem-row i {
-  width: 0.95rem;
-  height: 0.95rem;
-  margin-top: 2px;
-}
-
-bottom-panel .bottom-problem-error i {
-  color: var(--ide-danger);
-}
-
-bottom-panel .bottom-problem-warning i {
-  color: var(--ide-warning);
-}
-
-bottom-panel .bottom-problem-info i {
-  color: var(--ide-info);
-}
-
-bottom-panel .bottom-problem-main {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-bottom-panel .bottom-problem-title {
-  color: var(--ide-text);
-  font-weight: 650;
-  line-height: 1.25;
-}
-
-bottom-panel .bottom-problem-detail {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--ide-text-muted);
-  font-size: 0.78rem;
-  line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 bottom-panel .terminal-content {
