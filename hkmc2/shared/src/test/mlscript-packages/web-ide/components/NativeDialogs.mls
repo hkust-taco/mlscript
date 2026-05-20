@@ -313,9 +313,17 @@ class ShareDialog extends HTMLElement with
             <h2>Share</h2>
           </div>
           <div class="share-actions">
-            <button class="share-download-button" type="button">
+            <button class="share-download-button share-download-all-button" type="button">
               <i class="icon-download"></i>
               <span>Download as ZIP</span>
+            </button>
+            <button class="share-download-button share-download-mls-button" type="button">
+              <i class="icon-file-code"></i>
+              <span>Download MLscript files only</span>
+            </button>
+            <button class="share-download-button share-download-js-button" type="button">
+              <i class="icon-file-json"></i>
+              <span>Download JavaScript files only</span>
             </button>
           </div>
         </form>
@@ -393,10 +401,20 @@ class ShareDialog extends HTMLElement with
       local: concatBytes([localHeader, dataBytes])
       central: centralHeader
 
-  fun workspaceZipBytes() =
+  fun allFilesFilter(path) =
+    true
+
+  fun mlsFilesFilter(path) =
+    path.endsWith(".mls")
+
+  fun javascriptFilesFilter(path) =
+    if path.endsWith(".mjs") then true
+    else path.endsWith(".js")
+
+  fun workspaceZipBytes(fileFilter) =
     let
       files = fs.getAllFiles(undefined)
-      paths = Object.keys(files).sort()
+      paths = Object.keys(files).filter(path => fileFilter(path)).sort()
       locals = mut []
       centrals = mut []
       offset = 0
@@ -420,14 +438,14 @@ class ShareDialog extends HTMLElement with
       ])
     concatBytes(locals.concat([centralDirectory, endRecord]))
 
-  fun downloadZip() =
+  fun downloadZip(fileFilter, filename) =
     let
-      blob = new! window.Blob([workspaceZipBytes()], mut { 'type: "application/zip" })
+      blob = new! window.Blob([workspaceZipBytes(fileFilter)], mut { 'type: "application/zip" })
       url = window.URL.createObjectURL(blob)
       link = document.createElement("a")
     set
       link.href = url
-      link.download = "mlscript-workspace.zip"
+      link.download = filename
       link.style.display = "none"
     document.body.appendChild(link)
     link.click()
@@ -439,8 +457,12 @@ class ShareDialog extends HTMLElement with
     let share = this
     if dialog() is ~null as shareDialog do closeDismissibleDialogFromBackdrop(shareDialog)
     document.addEventListener("share-dialog-open-requested", () => share.openDialog())
-    if this.querySelector(".share-download-button") is ~null as downloadButton do
-      downloadButton.addEventListener("click", () => share.downloadZip())
+    if this.querySelector(".share-download-all-button") is ~null as downloadButton do
+      downloadButton.addEventListener("click", () => share.downloadZip(path => share.allFilesFilter(path), "mlscript-workspace.zip"))
+    if this.querySelector(".share-download-mls-button") is ~null as downloadMlsButton do
+      downloadMlsButton.addEventListener("click", () => share.downloadZip(path => share.mlsFilesFilter(path), "mlscript-files.zip"))
+    if this.querySelector(".share-download-js-button") is ~null as downloadJsButton do
+      downloadJsButton.addEventListener("click", () => share.downloadZip(path => share.javascriptFilesFilter(path), "javascript-files.zip"))
 
 customElements.define("command-palette-dialog", CommandPaletteDialog)
 customElements.define("share-dialog", ShareDialog)

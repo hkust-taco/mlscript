@@ -2666,8 +2666,8 @@ command-palette-dialog dialog {
 }
 
 share-dialog dialog {
-  width: min(260px, calc(100vw - 32px));
-  max-height: min(160px, calc(100vh - 32px));
+  width: min(360px, calc(100vw - 32px));
+  max-height: min(260px, calc(100vh - 32px));
 }
 
 .command-palette-form,
@@ -2789,7 +2789,9 @@ share-dialog dialog {
 
 .share-actions {
   display: flex;
+  flex-direction: column;
   justify-content: center;
+  gap: 8px;
   padding: 14px;
 }
 
