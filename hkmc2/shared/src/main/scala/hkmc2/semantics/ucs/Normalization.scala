@@ -373,19 +373,18 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       if form is IfLikeForm.While then End()
       else throwMatchErrorBlock
     case Split.LetSplit(sym, tail) =>
-      // Lower the join point: the body goes into the Label's `rest`, and
-      // UseSplit generates Break(joinLabel) to reach it.
+      // Lower the join point: the body goes into the Label's `rest`, and UseSplit generates
+      // Break(joinLabel) to reach it.
       val joinLabel = new LabelSymbol(N, sym.nme)
       sym.label = S(joinLabel)
       if (cont eq Ret) || (cont eq Thrw) then
-        // Ret/Thrw produce `return`/`throw` which truly terminate control flow
-        // in JS. Using them directly preserves tail-call position.
+        // Ret/Thrw produce `return`/`throw` which truly terminate control flow in JS.
+        // Using them directly preserves tail-call position.
         val bodyBlock = lowerSplit(sym.body, cont)
         Label(joinLabel, false, lowerSplit(tail, cont), bodyBlock)
       else
-        // Other continuations (including ImplctRet, which generates `expr;`
-        // without `return`) can fall through the Label body into the rest.
-        // Wrap with an exit label and temp variable so every path stores its
+        // Other continuations (including ImplctRet, which generates `expr;` without `return`) can fall through
+        // the Label body into the rest. Wrap with an exit label and temp variable so every path stores its
         // result, breaks to exitLabel, then the original cont runs once.
         val exitLabel = new LabelSymbol(N, sym.nme + "$x")
         val tmp = new TempSymbol(N)
@@ -393,9 +392,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         val exitCont: Result => Block = r => Assign(tmp, r, Break(exitLabel))
         val bodyBlock = lowerSplit(sym.body, exitCont)
         val tailBlock = lowerSplit(tail, exitCont)
-        Label(exitLabel, false,
-          Label(joinLabel, false, tailBlock, bodyBlock),
-          cont(Value.Ref(tmp)))
+        Label(exitLabel, false, Label(joinLabel, false, tailBlock, bodyBlock), cont(Value.Ref(tmp)))
     case Split.UseSplit(sym) =>
       sym.label match
         case S(label) => Break(label)
