@@ -233,10 +233,9 @@ object EtaExpansion:
     eState: Elaborator.State,
     symbolPrinter: SymbolPrinter,
   ): Program =
-    (cfg.etaExpansion, cfg.deforest) match
-    case (N, N) => p
-    case (S(_), _) | (N, S(_)) =>
-      val eCfg = cfg.etaExpansion.getOrElse(hkmc2.Config.EtaExpansion.default)
+    cfg.etaExpansion match
+    case N => p
+    case S(eCfg) =>
       FlowAnalysis.mkTraceLogger(eCfg.config, "eta-expansion > ", tl).givenIn:
         val flowAnalysisRes = FlowAnalysis(
           p,

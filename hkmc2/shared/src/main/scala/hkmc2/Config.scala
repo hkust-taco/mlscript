@@ -70,7 +70,7 @@ object Config:
     stageCode = false,
     tailRecOpt = true,
     deforest = N,
-    etaExpansion = N,
+    etaExpansion = S(EtaExpansion.default),
     inlining = S(Inliner(1)),
     deadBranchRemoval = default.deadBranchRemoval,
     qqEnabled = false,

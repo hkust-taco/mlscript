@@ -172,7 +172,7 @@ abstract class MLsDiffMaker extends DiffMaker:
         val etaExpansionFlags =
           if etaExpansion.isUnset then Set.empty[Str]
           else parseFlags(etaExpansion.get)
-        if etaExpansion.isUnset then N
+        if etaExpansion.isUnset then S(EtaExpansion.default)
           else
             reportUnknownFlags(":etaExpansion", etaExpansionFlags, EtaExpansionKnownFlags)
             reportExclusiveFlagConflict(":etaExpansion", etaExpansionFlags, "on", "off")
@@ -462,4 +462,3 @@ abstract class MLsDiffMaker extends DiffMaker:
           doc" #{ ${trm.showTopLevel(using flowScp)} #} \nwhere #{ ${floan.showFlows(using flowScp)} #} ".mkString()
     
   
-

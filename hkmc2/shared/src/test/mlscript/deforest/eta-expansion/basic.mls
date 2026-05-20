@@ -132,3 +132,15 @@ main(3)
 //│ = 5
 
 
+:etaExpansion off
+:expect 3
+fun p(x) = X(x)
+fun c(x) = if x is
+  X(a) then a
+c(p(3))
+//│ deforest > >>> fusing >>>
+//│ deforest > X⁰(x⁶) ->
+//│ deforest > 	match: x⁷
+//│ deforest > 	fields: x⁷.a⁰
+//│ deforest > <<< fusing <<<
+//│ = 3
