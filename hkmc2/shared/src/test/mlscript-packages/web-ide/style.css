@@ -151,10 +151,12 @@ ide-workbench {
 
 .left-sidebar-panel {
   grid-column: 2;
+  grid-row: 1;
 }
 
 .right-sidebar-panel {
   grid-column: 4;
+  grid-row: 1;
 }
 
 .sidebar-resize-handle {
@@ -677,6 +679,7 @@ examples-panel {
   cursor: pointer;
   padding: 3px 2px 5px;
   text-align: left;
+  overflow: hidden;
 }
 
 .mock-search-group-heading:hover {
@@ -695,11 +698,15 @@ examples-panel {
 }
 
 .mock-search-group-name {
-  flex: 0 0 auto;
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
   color: var(--ide-text);
   font-size: 0.82rem;
   font-weight: 700;
   line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mock-search-group-path {
@@ -730,9 +737,11 @@ examples-panel {
 .mock-result-row {
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(28px, max-content) minmax(0, 1fr);
+  grid-template-columns: 30px minmax(0, 1fr);
   gap: 8px;
   align-items: baseline;
+  min-width: 0;
+  overflow: hidden;
   text-align: left;
   border: 1px solid transparent;
   border-radius: var(--ide-radius-sm);
@@ -751,6 +760,8 @@ examples-panel {
 }
 
 .mock-result-line {
+  min-width: 0;
+  overflow: hidden;
   color: var(--ide-text-muted);
   font-family: var(--monospace);
   font-size: 0.74rem;
@@ -759,7 +770,9 @@ examples-panel {
 }
 
 .mock-result-excerpt {
+  display: block;
   min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   color: var(--ide-text);
   font-size: 0.78rem;
