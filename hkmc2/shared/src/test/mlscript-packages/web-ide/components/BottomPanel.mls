@@ -30,7 +30,7 @@ class BottomPanel extends HTMLElement with
       <resize-handle direction="vertical" side="top" min-size="100" max-size="600"></resize-handle>
       <div class="bottom-panel-header">
         <div class="bottom-panel-tabs" role="tablist" aria-label="Bottom panel">
-          """ + tabButtonHtml("output", "Output", "icon-terminal-square") + """
+          """ + tabButtonHtml("output", "Output", "icon-scroll-text") + """
           """ + tabButtonHtml("problems", "Problems", "icon-circle-alert") + """
           """ + tabButtonHtml("terminal", "Terminal", "icon-square-terminal") + """
         </div>
