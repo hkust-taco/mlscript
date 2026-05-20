@@ -21,7 +21,7 @@ fun workerOptions() =
   mut { 'type: 'module }
 
 fun createWorker() =
-  new Worker("/analysis/worker.mjs?v=active-file-outline", workerOptions())
+  new Worker("/analysis/worker.mjs?v=analysis-change-queue", workerOptions())
 
 fun filesForAnalysis() =
   fs.getAllFiles(undefined)
@@ -88,12 +88,12 @@ fun flushPendingChanges() =
   if pendingChanges.length > 0 do
     let
       revision = nextRevision()
-      changes = pendingChanges
+      queuedChanges = Array.from(pendingChanges)
     set pendingChanges = mut []
     postMessage(mut
       'type: "files-changed"
       revision: revision
-      changes: changes
+      changes: queuedChanges
     )
 
 fun scheduleChangesFlush() =
