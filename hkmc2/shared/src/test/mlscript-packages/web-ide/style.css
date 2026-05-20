@@ -2664,7 +2664,7 @@ command-palette-dialog dialog {
 
 share-dialog dialog {
   width: min(260px, calc(100vw - 32px));
-  max-height: min(120px, calc(100vh - 32px));
+  max-height: min(160px, calc(100vh - 32px));
 }
 
 .command-palette-form,
@@ -2763,6 +2763,20 @@ share-dialog dialog {
   color: var(--ide-text-muted);
   padding: 16px 8px;
   text-align: center;
+}
+
+.share-dialog-titlebar {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--ide-border);
+  background: var(--ide-surface-subtle);
+}
+
+.share-dialog-titlebar h2 {
+  color: var(--ide-text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
 }
 
 .share-actions {

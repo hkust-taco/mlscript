@@ -237,6 +237,9 @@ class ShareDialog extends HTMLElement with
     set this.innerHTML = """
       <dialog class="share-dialog-native">
         <form class="share-dialog-form" method="dialog">
+          <div class="share-dialog-titlebar">
+            <h2>Share</h2>
+          </div>
           <div class="share-actions">
             <button class="share-download-button" type="button">
               <i class="icon-download"></i>
