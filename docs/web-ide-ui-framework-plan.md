@@ -40,7 +40,6 @@ This list tracks visible UI that is intentionally not backed by real functionali
 | Terminal tab | Phase 5 | Static terminal transcript or locally mutable mock lines. | Real terminal/REPL integration, or remove if unsupported. |
 | Compiled output split view | Phase 6 | Static `.mjs`/`wasm`/`c` mock output selected by target controls. | Real generated-output preview based on current compiled file and selected backend. |
 | Command palette future commands | Phase 7 | Commands without current runtime support switch mock UI state or render disabled. | Real command implementations or removal from the palette. |
-| Share dialog | Phase 7 | Mock share URL and copy behavior. | Real share/export/persisted URL behavior, or removal if sharing is out of scope. |
 
 ## Progress Trackers
 
@@ -215,7 +214,7 @@ Add modal command surfaces with native HTML.
   - Search input filters command rows.
   - Commands that map to existing behavior dispatch the real events.
   - Mock commands switch the relevant mocked UI state.
-  - Share dialog opens, closes, and has copy-link behavior using mock URL text.
+  - Share dialog opens, closes, and downloads the workspace as a ZIP.
 
 Commit: `Add native command dialogs`
 
@@ -362,9 +361,9 @@ Phase 7:
 
 - Command palette opens from button and shortcut.
 - Command search filters rows.
-- Escape and close button close the dialog.
+- Escape closes the dialog.
 - Real commands dispatch real events; mock commands change visible UI state.
-- Share dialog opens, closes, and copies mock link text or shows a visible failure.
+- Share dialog opens, closes, and downloads the workspace as a ZIP.
 
 Phase 8:
 

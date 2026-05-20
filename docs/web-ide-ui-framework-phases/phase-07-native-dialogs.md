@@ -23,7 +23,7 @@ Add native dialog-based command surfaces for command palette and sharing, using 
 - [x] Add commands for current real actions where possible.
 - [x] Add mocked or disabled future commands only when documented in the Mock Inventory.
 - [x] Add a `<share-dialog>` custom element backed by `<dialog>`.
-- [x] Add copy-link behavior for the share dialog using mock URL text unless real sharing exists.
+- [x] Add ZIP download behavior for the share dialog.
 
 ## Visible Functionality
 
@@ -35,13 +35,12 @@ Add native dialog-based command surfaces for command palette and sharing, using 
 - [x] Real commands dispatch real events.
 - [x] Mock commands visibly change UI state or are disabled with clear titles.
 - [x] Share dialog opens and closes.
-- [x] Share copy action copies mock URL text or shows a visible failure.
+- [x] Share dialog downloads the workspace as a ZIP.
 
 ## Mock Inventory Impact
 
 - Expected mock entries:
   - Command palette future commands
-  - Share dialog
 - Update the parent plan for every command that is visible but not backed by real functionality.
 
 ## Verification

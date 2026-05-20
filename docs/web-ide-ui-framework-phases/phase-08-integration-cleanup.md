@@ -47,7 +47,7 @@ Integrate the new UI framework with the current Web IDE runtime behavior, remove
 - Remove inventory rows for mocks that were replaced by real functionality.
 - Add inventory rows for any remaining mocked or disabled future actions.
 - Do not commit Phase 8 until the Mock Inventory matches the screen.
-- The parent plan Mock Inventory still matches the final visible mock surfaces: Source Control, Outline, Examples, Problems, Terminal, compiled-output split view, command palette future commands, and Share remain intentionally mocked or disabled.
+- The parent plan Mock Inventory still matches the final visible mock surfaces: Source Control, Outline, Examples, Problems, Terminal, compiled-output split view, and command palette future commands remain intentionally mocked or disabled.
 - Search was realized after this phase.
 
 ## Verification
@@ -64,6 +64,6 @@ Integrate the new UI framework with the current Web IDE runtime behavior, remove
 ## Completion Notes
 
 - Commit: this phase commit.
-- Browser notes: Playwright CLI verified custom element registration, removal of obsolete `reserved-panel`/`console-panel` DOM and CSS variable usage, file explorer open flow, real `.mls` compile, disabled Compile on `.mjs`, Execute reopening Output, left panel switching and hide/reopen, diagnostics mode switching and hide/reopen, bottom tabs, compiled-output mock split, command palette filtering, share copy feedback, file/editor scrolling, editable std files, sidebar resize handles bounded above the bottom panel, desktop no horizontal overflow, narrow viewport side-panel auto-close with a usable editor width, and 0 console errors/warnings. Screenshot captured at `docs/web-ide-ui-framework-screenshots/phase-08/integration-cleanup-1920x1080.png`.
+- Browser notes: Playwright CLI verified custom element registration, removal of obsolete `reserved-panel`/`console-panel` DOM and CSS variable usage, file explorer open flow, real `.mls` compile, disabled Compile on `.mjs`, Execute reopening Output, left panel switching and hide/reopen, diagnostics mode switching and hide/reopen, bottom tabs, compiled-output mock split, command palette filtering, share ZIP download, file/editor scrolling, editable std files, sidebar resize handles bounded above the bottom panel, desktop no horizontal overflow, narrow viewport side-panel auto-close with a usable editor width, and 0 console errors/warnings. Screenshot captured at `docs/web-ide-ui-framework-screenshots/phase-08/integration-cleanup-1920x1080.png`.
 - Focused test output: `hkmc2PackagesTest/testOnly hkmc2.PackageTestRunner -- -z web-ide` passed 25 tests.
 - Full test output: `hkmc2AllTests/test` passed 574 tests.

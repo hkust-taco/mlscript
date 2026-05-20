@@ -1,3 +1,4 @@
+import "../filesystem/fs.mls"
 import "../common/JS.mls"
 
 open JS { Absent }
@@ -6,6 +7,56 @@ fun escapeHtml(text) =
   let div = document.createElement("div")
   set div.textContent = text
   div.innerHTML
+
+let zip = Function("""
+  return {
+    encode(text) {
+      return new TextEncoder().encode(text);
+    },
+    bytes(values) {
+      return new Uint8Array(values);
+    },
+    u16(value) {
+      return new Uint8Array([value & 255, (value >>> 8) & 255]);
+    },
+    u32(value) {
+      return new Uint8Array([
+        value & 255,
+        (value >>> 8) & 255,
+        (value >>> 16) & 255,
+        (value >>> 24) & 255
+      ]);
+    },
+    concat(parts) {
+      let total = 0;
+      for (const part of parts) total += part.length;
+      const bytes = new Uint8Array(total);
+      let offset = 0;
+      for (const part of parts) {
+        bytes.set(part, offset);
+        offset += part.length;
+      }
+      return bytes;
+    },
+    crc32(bytes) {
+      if (!this.table) {
+        this.table = new Uint32Array(256);
+        for (let i = 0; i < 256; i += 1) {
+          let c = i;
+          for (let k = 0; k < 8; k += 1) {
+            c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+          }
+          this.table[i] = c >>> 0;
+        }
+      }
+      let crc = 0xffffffff;
+      for (let i = 0; i < bytes.length; i += 1) {
+        crc = this.table[(crc ^ bytes[i]) & 0xff] ^ (crc >>> 8);
+      }
+      return (crc ^ 0xffffffff) >>> 0;
+    }
+  };
+""")()
 
 class CommandPaletteDialog extends HTMLElement with
   let query = ""
@@ -19,12 +70,6 @@ class CommandPaletteDialog extends HTMLElement with
     set this.innerHTML = """
       <dialog class="command-palette-native">
         <form class="command-palette-form" method="dialog">
-          <div class="dialog-header">
-            <h2>Command Palette</h2>
-            <button class="dialog-icon-button command-palette-close" type="submit" aria-label="Close command palette" title="Close">
-              <i class="icon-x"></i>
-            </button>
-          </div>
           <input class="command-search-input" type="search" placeholder="Search commands" aria-label="Search commands" />
           <div class="command-list" role="listbox" aria-label="Commands"></div>
         </form>
@@ -183,9 +228,6 @@ class CommandPaletteDialog extends HTMLElement with
         renderCommands()
 
 class ShareDialog extends HTMLElement with
-  let
-    shareUrl = "https://mlscript.fun/ide?share=mock-session"
-    feedbackText = ""
 
   fun connectedCallback() =
     this.render()
@@ -195,23 +237,12 @@ class ShareDialog extends HTMLElement with
     set this.innerHTML = """
       <dialog class="share-dialog-native">
         <form class="share-dialog-form" method="dialog">
-          <div class="dialog-header">
-            <h2>Share</h2>
-            <button class="dialog-icon-button share-close" type="submit" aria-label="Close share dialog" title="Close">
-              <i class="icon-x"></i>
-            </button>
-          </div>
-          <label class="share-url-label">
-            <span>Link</span>
-            <input class="share-url-input" type="url" readonly value="""" + shareUrl + """" aria-label="Share link" />
-          </label>
           <div class="share-actions">
-            <button class="share-copy-button" type="button">
-              <i class="icon-copy"></i>
-              <span>Copy Link</span>
+            <button class="share-download-button" type="button">
+              <i class="icon-download"></i>
+              <span>Download as ZIP</span>
             </button>
           </div>
-          <div class="share-feedback" hidden></div>
         </form>
       </dialog>
     """
@@ -220,35 +251,120 @@ class ShareDialog extends HTMLElement with
     this.querySelector("dialog")
 
   fun openDialog() =
-    set feedbackText = ""
-    updateFeedback()
     if dialog() is ~null as shareDialog do
       if not shareDialog.open do shareDialog.showModal()
-    if this.querySelector(".share-copy-button") is ~null as copyButton do
-      window.setTimeout(() => copyButton.focus(), 0)
+    if this.querySelector(".share-download-button") is ~null as downloadButton do
+      window.setTimeout(() => downloadButton.focus(), 0)
 
-  fun updateFeedback() =
-    if this.querySelector(".share-feedback") is ~null as feedback do
-      if feedbackText === "" then
-        set feedback.hidden = true
-      else
-        set
-          feedback.hidden = false
-          feedback.textContent = feedbackText
+  fun encodeText(text) =
+    zip.encode(text)
 
-  fun copyShareUrl() =
-    if this.querySelector(".share-url-input") is ~null as input do
-      input.focus()
-      input.select()
-      let copied = document.execCommand("copy")
-      set feedbackText = if copied then "Copied share link" else "Copy failed"
-      updateFeedback()
+  fun crc32(bytes) =
+    zip.crc32(bytes)
+
+  fun bytesFromNumbers(values) =
+    zip.bytes(values)
+
+  fun u16(value) =
+    zip.u16(value)
+
+  fun u32(value) =
+    zip.u32(value)
+
+  fun concatBytes(parts) =
+    zip.concat(parts)
+
+  fun zipEntry(path, content, offset) =
+    let
+      name = path.replace(new RegExp("^/+"), "")
+      nameBytes = encodeText(name)
+      dataBytes = encodeText(content)
+      crc = crc32(dataBytes)
+      localHeader = concatBytes([
+        u32(0x04034b50)
+        u16(20)
+        u16(0)
+        u16(0)
+        u16(0)
+        u16(0)
+        u32(crc)
+        u32(dataBytes.length)
+        u32(dataBytes.length)
+        u16(nameBytes.length)
+        u16(0)
+        nameBytes
+      ])
+      centralHeader = concatBytes([
+        u32(0x02014b50)
+        u16(20)
+        u16(20)
+        u16(0)
+        u16(0)
+        u16(0)
+        u16(0)
+        u32(crc)
+        u32(dataBytes.length)
+        u32(dataBytes.length)
+        u16(nameBytes.length)
+        u16(0)
+        u16(0)
+        u16(0)
+        u16(0)
+        u32(0)
+        u32(offset)
+        nameBytes
+      ])
+    mut
+      local: concatBytes([localHeader, dataBytes])
+      central: centralHeader
+
+  fun workspaceZipBytes() =
+    let
+      files = fs.getAllFiles(undefined)
+      paths = Object.keys(files).sort()
+      locals = mut []
+      centrals = mut []
+      offset = 0
+    paths.forEach of (path, ...) =>
+      let entry = zipEntry(path, files.(path), offset)
+      locals.push(entry.local)
+      centrals.push(entry.central)
+      set offset += entry.local.length
+    let
+      centralStart = offset
+      centralDirectory = concatBytes(centrals)
+      endRecord = concatBytes([
+        u32(0x06054b50)
+        u16(0)
+        u16(0)
+        u16(paths.length)
+        u16(paths.length)
+        u32(centralDirectory.length)
+        u32(centralStart)
+        u16(0)
+      ])
+    concatBytes(locals.concat([centralDirectory, endRecord]))
+
+  fun downloadZip() =
+    let
+      blob = new! window.Blob([workspaceZipBytes()], mut { 'type: "application/zip" })
+      url = window.URL.createObjectURL(blob)
+      link = document.createElement("a")
+    set
+      link.href = url
+      link.download = "mlscript-workspace.zip"
+      link.style.display = "none"
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+    if dialog() is ~null as shareDialog do shareDialog.close()
 
   fun attachEventListeners() =
     let share = this
     document.addEventListener("share-dialog-open-requested", () => share.openDialog())
-    if this.querySelector(".share-copy-button") is ~null as copyButton do
-      copyButton.addEventListener("click", () => share.copyShareUrl())
+    if this.querySelector(".share-download-button") is ~null as downloadButton do
+      downloadButton.addEventListener("click", () => share.downloadZip())
 
 customElements.define("command-palette-dialog", CommandPaletteDialog)
 customElements.define("share-dialog", ShareDialog)

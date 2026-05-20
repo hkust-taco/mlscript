@@ -32,6 +32,7 @@
   --ide-internal: #7a5195;
   --ide-radius-xs: 3px;
   --ide-radius-sm: 6px;
+  --ide-radius-md: 8px;
   --ide-shadow-sm: 0 1px 2px rgba(24, 26, 22, 0.06);
   --ide-shadow-md: 0 8px 24px rgba(24, 26, 22, 0.12);
   --activity-rail-width: 44px;
@@ -2640,8 +2641,6 @@ share-dialog dialog {
 command-palette-dialog dialog::backdrop,
 share-dialog dialog::backdrop {
   background: rgba(24, 26, 22, 0.36);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
 }
 
 command-palette-dialog dialog,
@@ -2664,8 +2663,8 @@ command-palette-dialog dialog {
 }
 
 share-dialog dialog {
-  width: min(440px, calc(100vw - 32px));
-  max-height: min(420px, calc(100vh - 32px));
+  width: min(260px, calc(100vw - 32px));
+  max-height: min(120px, calc(100vh - 32px));
 }
 
 .command-palette-form,
@@ -2675,53 +2674,18 @@ share-dialog dialog {
   min-height: 0;
 }
 
-.dialog-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--ide-border);
-  background: var(--ide-surface-subtle);
-}
-
-.dialog-header h2 {
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.dialog-icon-button {
-  width: 30px;
-  height: 30px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--ide-border);
-  border-radius: var(--ide-radius-sm);
-  background: var(--ide-surface);
-  color: var(--ide-text-muted);
-  cursor: pointer;
-}
-
-.dialog-icon-button:hover {
-  background: var(--ide-surface-muted);
-  color: var(--ide-text);
-}
-
 .command-search-input {
-  margin: 12px 14px 8px;
+  margin: 10px 10px 6px;
   border: 1px solid var(--ide-border);
   border-radius: var(--ide-radius-sm);
   background: var(--ide-surface);
   color: var(--ide-text);
   font: inherit;
-  font-size: 0.95rem;
-  padding: 8px 10px;
+  font-size: 0.86rem;
+  padding: 7px 9px;
 }
 
-.command-search-input:focus,
-.share-url-input:focus {
+.command-search-input:focus {
   outline: none;
   border-color: var(--ide-accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--ide-accent) 22%, transparent);
@@ -2734,7 +2698,7 @@ share-dialog dialog {
   min-height: 0;
   max-height: 460px;
   overflow-y: auto;
-  padding: 0 14px 14px;
+  padding: 0 8px 8px;
 }
 
 .command-row {
@@ -2742,13 +2706,13 @@ share-dialog dialog {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   border: 1px solid transparent;
   border-radius: var(--ide-radius-sm);
   background: transparent;
   color: var(--ide-text);
   cursor: pointer;
-  padding: 9px 10px;
+  padding: 5px 7px;
   text-align: left;
 }
 
@@ -2763,22 +2727,24 @@ share-dialog dialog {
 }
 
 .command-row > i {
-  width: 1rem;
-  height: 1rem;
+  width: 0.86rem;
+  height: 0.86rem;
   color: var(--ide-text-muted);
 }
 
 .command-row-main {
   display: grid;
-  gap: 3px;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
   min-width: 0;
 }
 
 .command-row-title {
   overflow: hidden;
   color: var(--ide-text);
-  font-size: 0.92rem;
-  font-weight: 650;
+  font-size: 0.82rem;
+  font-weight: 600;
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2787,7 +2753,7 @@ share-dialog dialog {
 .command-row-detail {
   overflow: hidden;
   color: var(--ide-text-muted);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2799,34 +2765,18 @@ share-dialog dialog {
   text-align: center;
 }
 
-.share-url-label {
-  display: grid;
-  gap: 6px;
-  padding: 14px;
-  color: var(--ide-text-muted);
-  font-size: 0.82rem;
-}
-
-.share-url-input {
-  border: 1px solid var(--ide-border);
-  border-radius: var(--ide-radius-sm);
-  background: var(--ide-surface);
-  color: var(--ide-text);
-  font: inherit;
-  padding: 8px 10px;
-}
-
 .share-actions {
   display: flex;
-  justify-content: flex-end;
-  padding: 0 14px 14px;
+  justify-content: center;
+  padding: 14px;
 }
 
-.share-copy-button {
+.share-download-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
+  width: 100%;
   border: 1px solid var(--ide-border);
   border-radius: var(--ide-radius-sm);
   background: var(--ide-text);
@@ -2836,22 +2786,8 @@ share-dialog dialog {
   padding: 7px 10px;
 }
 
-.share-copy-button:hover {
+.share-download-button:hover {
   background: color-mix(in srgb, var(--ide-text) 88%, var(--ide-accent));
-}
-
-.share-feedback {
-  margin: 0 14px 14px;
-  border: 1px solid var(--ide-border);
-  border-radius: var(--ide-radius-sm);
-  background: var(--ide-accent-soft);
-  color: var(--ide-accent-strong);
-  font-size: 0.82rem;
-  padding: 8px 10px;
-}
-
-.share-feedback[hidden] {
-  display: none;
 }
 
 /* Resize Handles */
