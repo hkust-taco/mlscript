@@ -89,8 +89,8 @@ class CommandPaletteDialog extends HTMLElement with
     [
       command("compile", "Compile current file", "Run the compiler for the active MLscript file.", "icon-binary", false, "")
       command("execute", "Run compiled output", "Execute the active compiled program.", "icon-play", false, "")
-      command("open-generated", "Open generated output", "Open the compiled-output split view.", "icon-columns-3", false, "")
-      command("target-wasm", "Change compile target", "Open the split view and select the wasm mock target.", "icon-box", false, "")
+      // command("open-generated", "Open generated output", "Open the compiled-output split view.", "icon-columns-3", false, "")
+      // command("target-wasm", "Change compile target", "Open the split view and select the wasm mock target.", "icon-box", false, "")
       command("go-symbol", "Go to symbol", "Open the Outline activity panel.", "icon-list-tree", false, "")
       command("go-file", "Go to file", "Open the Files activity panel.", "icon-files", false, "")
       command("search-files", "Search across files", "Open the Search activity panel.", "icon-search", false, "")
@@ -216,8 +216,8 @@ class CommandPaletteDialog extends HTMLElement with
     if id is
       "compile" then document.dispatchEvent(new CustomEvent("compile-requested", fileEventOptions()))
       "execute" then document.dispatchEvent(new CustomEvent("execute-requested", fileEventOptions()))
-      "open-generated" then openGeneratedOutput("mjs")
-      "target-wasm" then openGeneratedOutput("wasm")
+      // "open-generated" then openGeneratedOutput("mjs")
+      // "target-wasm" then openGeneratedOutput("wasm")
       "go-symbol" then dispatchSidebar("left", "outline")
       "go-file" then dispatchSidebar("left", "files")
       "search-files" then dispatchSidebar("left", "search")

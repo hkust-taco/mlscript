@@ -24,15 +24,18 @@ class EditorWorkbench extends HTMLElement with
             <i class="icon-chevron-right"></i>
             <span class="editor-breadcrumb-active">No file</span>
           </nav>
+          <!--
           <div class="editor-chrome-actions">
             <button class="editor-action-button open-compiled-output" type="button" title="Open generated output preview">
               <i class="icon-columns-3"></i>
               <span>Generated</span>
             </button>
           </div>
+          -->
         </div>
         <div class="editor-split-shell">
           <editor-panel></editor-panel>
+          <!--
           <aside class="compiled-output-pane" aria-label="Compiled output preview" hidden>
             <div class="compiled-output-header">
               <div>
@@ -61,6 +64,7 @@ class EditorWorkbench extends HTMLElement with
             <pre class="compiled-output-code"></pre>
             <div class="compiled-output-feedback" hidden></div>
           </aside>
+          -->
         </div>
       </div>
     """
