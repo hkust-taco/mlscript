@@ -29,6 +29,7 @@ when adding, completing, hiding, or intentionally deferring UI behavior.
 - Added a Problems empty state and real diagnostics rendering.
 - Improved the Problems panel narrow-width layout.
 - Hid Source Control on the left rail, keeping source code for later.
+- Hid Examples on the left rail, keeping source code for later.
 - Hid Terminal and Generated bottom panels, keeping source code where useful for
   future work.
 - Implemented grouped global search in the left sidebar:
@@ -93,15 +94,14 @@ removed when implemented or deleted.
   currently hidden because the supported flow is compile to JavaScript and view
   or edit generated `.mjs` files directly.
 - Examples panel:
-  still needs review for whether its current content is production behavior or
-  prototype content.
+  currently hidden/commented from the left rail. Source files remain because the
+  feature may return with real curated examples later.
 - `mockWorkbenchData.mls`:
   legacy prototype data. Do not wire it into production-facing panels.
 
 ## Left For Future
 
-- Decide whether Examples should remain, be backed by real curated examples, or
-  be hidden until implemented.
+- Restore Examples only with real curated examples.
 - Restore Source Control with real repository or workspace integration.
 - Restore Terminal only when there is a real execution model and command set.
 - Add a first-class generated-output experience only if it improves on direct

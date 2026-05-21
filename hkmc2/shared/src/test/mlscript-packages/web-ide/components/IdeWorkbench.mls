@@ -41,15 +41,19 @@ class IdeWorkbench extends HTMLElement with
             <button class="activity-button" data-sidebar-side="left" data-sidebar-panel="outline" aria-label="Outline" aria-pressed="false" title="Outline">
               <i class="icon-list-tree"></i>
             </button>
+            <!--
             <button class="activity-button" data-sidebar-side="left" data-sidebar-panel="examples" aria-label="Examples" aria-pressed="false" title="Examples">
               <i class="icon-book-open"></i>
             </button>
+            -->
           </aside>
           <file-explorer class="sidebar-panel left-sidebar-panel active" data-sidebar-side="left" data-sidebar-panel="files"></file-explorer>
           <search-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="search"></search-panel>
           <source-control-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="source-control"></source-control-panel>
           <outline-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="outline"></outline-panel>
+          <!--
           <examples-panel class="sidebar-panel left-sidebar-panel" data-sidebar-side="left" data-sidebar-panel="examples"></examples-panel>
+          -->
           <resize-handle class="sidebar-resize-handle left-sidebar-resize" direction="horizontal" side="left" target=".left-sidebar-panel.active" min-size="150" max-size="600"></resize-handle>
           <editor-workbench class="editor"></editor-workbench>
           <diagnostics-inspector class="sidebar-panel right-sidebar-panel active" data-sidebar-side="right" data-sidebar-panel="problems"></diagnostics-inspector>
