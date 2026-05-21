@@ -117,6 +117,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Value.SimpleRef(l: semantics.TermSymbol) =>
       l.owner match
       case S(owner) =>
+        // TODO(Derppening): Use `isPrivate` once #492 is merged
         val isPrivateField =
           (l.k is syntax.LetBind) && !owner.isInstanceOf[semantics.TopLevelSymbol]
         if isPrivateField then
