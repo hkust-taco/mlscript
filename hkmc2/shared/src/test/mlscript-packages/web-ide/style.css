@@ -1953,7 +1953,7 @@ diagnostics-inspector .diagnostics-header {
   padding: 8px 10px;
   background: var(--ide-surface-subtle);
   border-bottom: 1px solid var(--ide-border);
-  min-height: 118px;
+  min-height: 112px;
 }
 
 diagnostics-inspector .diagnostics-title-row {
@@ -1985,14 +1985,24 @@ diagnostics-inspector .diagnostics-count {
   background: var(--ide-surface);
   padding: 5px 6px;
   color: var(--ide-text-muted);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+diagnostics-inspector .diagnostics-count:hover,
+diagnostics-inspector .diagnostics-count.active {
+  background: var(--ide-accent-soft);
+  border-color: color-mix(in srgb, var(--ide-accent) 32%, var(--ide-border));
 }
 
 diagnostics-inspector .diagnostics-count span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.62rem;
-  line-height: 1;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.1;
 }
 
 diagnostics-inspector .diagnostics-count strong {
@@ -2019,7 +2029,7 @@ diagnostics-inspector .diagnostics-count-info strong {
 
 diagnostics-inspector .diagnostics-mode-tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 4px;
 }
 
@@ -2077,37 +2087,42 @@ diagnostics-inspector .diagnostics-empty i {
 }
 
 diagnostics-inspector .diagnostics-list,
-diagnostics-inspector .diagnostics-source-cards,
-diagnostics-inspector .diagnostics-tree {
+diagnostics-inspector .diagnostics-source-cards {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-diagnostics-inspector .diagnostics-row,
-diagnostics-inspector .diagnostics-tree-row {
+diagnostics-inspector .diagnostics-row {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-sm);
+  background: var(--ide-surface);
+  color: var(--ide-text);
+  overflow: hidden;
+}
+
+diagnostics-inspector .diagnostics-row-summary {
   width: 100%;
   min-width: 0;
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  border: 1px solid var(--ide-border);
-  border-radius: var(--ide-radius-sm);
-  background: var(--ide-surface);
-  color: var(--ide-text);
+  border: 0;
+  background: transparent;
+  color: inherit;
   cursor: pointer;
   padding: 8px;
   text-align: left;
 }
 
-diagnostics-inspector .diagnostics-row:hover,
-diagnostics-inspector .diagnostics-tree-row:hover {
+diagnostics-inspector .diagnostics-row:hover {
   background: var(--ide-surface-subtle);
   border-color: var(--ide-border-strong);
 }
 
-diagnostics-inspector .diagnostics-row-main,
-diagnostics-inspector .diagnostics-tree-row {
+diagnostics-inspector .diagnostics-row-main {
   min-width: 0;
 }
 
@@ -2117,20 +2132,17 @@ diagnostics-inspector .diagnostics-row-main {
   flex: 1;
 }
 
-diagnostics-inspector .diagnostics-row-message,
-diagnostics-inspector .diagnostics-tree-message {
+diagnostics-inspector .diagnostics-row-message {
   min-width: 0;
-  overflow: hidden;
   color: var(--ide-text);
   font-size: 0.82rem;
   font-weight: 600;
-  line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.32;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
-diagnostics-inspector .diagnostics-row-detail,
-diagnostics-inspector .diagnostics-tree-file {
+diagnostics-inspector .diagnostics-row-detail {
   min-width: 0;
   overflow: hidden;
   color: var(--ide-text-muted);
@@ -2141,11 +2153,16 @@ diagnostics-inspector .diagnostics-tree-file {
   white-space: nowrap;
 }
 
-diagnostics-inspector .diagnostics-row-locate {
+diagnostics-inspector .diagnostics-row-caret {
   color: var(--ide-text-subtle);
   flex: 0 0 auto;
   width: 0.9rem;
   height: 0.9rem;
+  transition: transform 120ms ease;
+}
+
+diagnostics-inspector .diagnostics-row.expanded .diagnostics-row-caret {
+  transform: rotate(90deg);
 }
 
 diagnostics-inspector .diagnostics-severity-icon {
@@ -2167,62 +2184,11 @@ diagnostics-inspector .diagnostic-internal .diagnostics-severity-icon {
   color: var(--ide-internal);
 }
 
-diagnostics-inspector .diagnostics-tree-group {
-  border: 1px solid var(--ide-border);
-  border-radius: var(--ide-radius-sm);
-  background: var(--ide-surface);
-  overflow: hidden;
-}
-
-diagnostics-inspector .diagnostics-tree-group summary {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  list-style: none;
-  padding: 8px;
-  background: var(--ide-surface-subtle);
-  color: var(--ide-text);
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-diagnostics-inspector .diagnostics-tree-group summary::-webkit-details-marker {
-  display: none;
-}
-
-diagnostics-inspector .diagnostics-tree-group summary strong {
-  border: 1px solid var(--ide-border);
-  border-radius: 999px;
-  background: var(--ide-surface);
-  color: var(--ide-text-muted);
-  font-size: 0.68rem;
-  line-height: 1;
-  min-width: 20px;
-  padding: 3px 6px;
-  text-align: center;
-}
-
-diagnostics-inspector .diagnostics-tree-children {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 6px;
-}
-
-diagnostics-inspector .diagnostics-tree-row {
-  display: grid;
-  gap: 3px;
-  padding: 7px 8px;
-}
-
 diagnostics-inspector .diagnostics-source-card {
   display: grid;
   gap: 8px;
-  border: 1px solid var(--ide-border);
-  border-radius: var(--ide-radius-sm);
-  background: var(--ide-surface);
+  border-top: 1px solid var(--ide-border);
+  background: color-mix(in srgb, var(--ide-surface-subtle) 62%, var(--ide-surface));
   padding: 9px;
 }
 
@@ -2289,15 +2255,23 @@ diagnostics-inspector .diagnostics-source-preview pre {
   white-space: pre;
 }
 
+diagnostics-inspector .diagnostics-source-preview mark {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--ide-warning) 30%, transparent);
+  color: inherit;
+}
+
 diagnostics-inspector .diagnostics-card-message {
   color: var(--ide-text-muted);
   font-size: 0.76rem;
   line-height: 1.35;
+  white-space: pre-wrap;
 }
 
 diagnostics-inspector .diagnostics-source-actions {
   display: flex;
   align-items: center;
+  gap: 6px;
 }
 
 diagnostics-inspector .diagnostics-action {
@@ -2339,6 +2313,15 @@ diagnostics-inspector .diagnostics-action span {
   white-space: nowrap;
 }
 
+diagnostics-inspector .diagnostics-footer {
+  border-top: 1px solid var(--ide-border);
+  background: var(--ide-surface-subtle);
+  color: var(--ide-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.2;
+  padding: 6px 10px;
+}
+
 @container (max-width: 220px) {
   diagnostics-inspector .diagnostics-header {
     gap: 6px;
@@ -2360,7 +2343,7 @@ diagnostics-inspector .diagnostics-action span {
   }
 
   diagnostics-inspector .diagnostics-mode-tabs {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   diagnostics-inspector .diagnostics-mode-button {
@@ -2377,21 +2360,12 @@ diagnostics-inspector .diagnostics-action span {
   }
 
   diagnostics-inspector .diagnostics-row {
+    border-radius: var(--ide-radius-xs);
+  }
+
+  diagnostics-inspector .diagnostics-row-summary {
     gap: 6px;
     padding: 7px 6px;
-  }
-
-  diagnostics-inspector .diagnostics-row-locate {
-    display: none;
-  }
-
-  diagnostics-inspector .diagnostics-tree-group summary {
-    gap: 6px;
-    padding: 7px 6px;
-  }
-
-  diagnostics-inspector .diagnostics-tree-children {
-    padding: 5px;
   }
 
   diagnostics-inspector .diagnostics-source-card {

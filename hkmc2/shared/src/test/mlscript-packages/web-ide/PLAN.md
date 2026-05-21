@@ -29,6 +29,9 @@ when adding, completing, hiding, or intentionally deferring UI behavior.
 - Added a Problems empty state and real diagnostics rendering.
 - Changed Problems to display diagnostics for all workspace `.mls` files from
   each compile request instead of only the active file.
+- Simplified Problems to Workspace and Current file scopes, with severity
+  toggle filters, expandable problem details, Markdown copy, source highlights,
+  and footer status counts.
 - Improved the Problems panel narrow-width layout.
 - Hid Source Control on the left rail, keeping source code for later.
 - Hid Examples on the left rail, keeping source code for later.
