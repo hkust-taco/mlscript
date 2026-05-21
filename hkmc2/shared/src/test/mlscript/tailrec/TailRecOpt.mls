@@ -89,7 +89,7 @@ A.sum(20000)
 //│       acc = tmp1;
 //│       continue loopLabel;
 //│     }
-//│   } 
+//│   }
 //│   static sum(n) {
 //│     return A.sum_impl(n, 0)
 //│   }

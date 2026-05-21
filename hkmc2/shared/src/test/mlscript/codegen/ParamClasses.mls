@@ -218,24 +218,22 @@ class Foo(x, val y, z, val z, z) with
 //│     let tmp3, tmp4, tmp5, tmp6, tmp7;
 //│     this.y = y;
 //│     this.z = z1;
-//│     this.#z1 = z2;
-//│     this.#x1 = 1;
+//│     this.#z = z2;
+//│     this.#x = 1;
 //│     this.#y = this.y + 1;
-//│     tmp3 = "x = " + this.#x1;
+//│     tmp3 = "x = " + this.#x;
 //│     Predef.print(tmp3);
 //│     tmp4 = "y = " + this.#y;
 //│     Predef.print(tmp4);
 //│     tmp5 = "this.y = " + this.y;
 //│     Predef.print(tmp5);
-//│     tmp6 = "z = " + this.#z1;
+//│     tmp6 = "z = " + this.#z;
 //│     Predef.print(tmp6);
 //│     tmp7 = "this.z = " + this.z;
 //│     Predef.print(tmp7);
 //│   }
-//│   #x;
 //│   #z;
-//│   #z1;
-//│   #x1;
+//│   #x;
 //│   #y;
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", [null, "y", null, "z", null]];
@@ -258,10 +256,10 @@ Foo(10, 20, 30, 40, 50)
 class Foo(val z, val z)
 //│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'z'.
 //│ ╟── Defined at: 
-//│ ║  l.258: 	class Foo(val z, val z)
+//│ ║  l.256: 	class Foo(val z, val z)
 //│ ║         	              ^
 //│ ╟── Defined at: 
-//│ ║  l.258: 	class Foo(val z, val z)
+//│ ║  l.256: 	class Foo(val z, val z)
 //│ ╙──       	                     ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo9;

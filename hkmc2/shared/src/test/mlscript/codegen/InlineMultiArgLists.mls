@@ -36,7 +36,7 @@ private fun add2(x)(y) = x + y
 let f = add2(10)
 f(5)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let add2⁰, f⁰; define add2⁰ as fun add2¹(x)(y) { return +⁰(x, y) }; set f⁰ = add2¹(10); f⁰(5)
+//│ let add2⁰, f⁰; define add2⁰ as fun add2¹(x)(y) { return +⁰(x, y) }; set f⁰ = add2¹(10); 15
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 15
 //│ f = fun

@@ -94,7 +94,6 @@ module Test with
 //│   static {
 //│     Test4 = this
 //│   }
-//│   static #x;
 //│   static {
 //│     this.x = 1;
 //│   }
@@ -141,7 +140,7 @@ data class Cls(x) with
 //│   #x1;
 //│   get foo() {
 //│     return this.#x;
-//│   } 
+//│   }
 //│   get bar() {
 //│     return this.#x1;
 //│   }
@@ -230,7 +229,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[COMPILATION ERROR] Name not found: Runtime
-//│ ║  l.231: 	Runtime
+//│ ║  l.230: 	Runtime
 //│ ╙──       	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

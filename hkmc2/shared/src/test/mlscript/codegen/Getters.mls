@@ -81,7 +81,7 @@ module T with
 //│   }
 //│   static t() {
 //│     return 1
-//│   } 
+//│   }
 //│   static get p() {
 //│     return 2;
 //│   }

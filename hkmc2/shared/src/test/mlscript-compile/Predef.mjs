@@ -74,68 +74,68 @@ let Predef1;
   }
   static id(x) {
     return x
-  } 
+  }
   static hide(x) {
     return x
-  } 
+  }
   static get maybe() {
     return Predef.hide(true);
-  } 
+  }
   static apply(f, ...args) {
     return runtime.safeCall(f(...args))
-  } 
+  }
   static pipeInto(x, f) {
     return runtime.safeCall(f(x))
-  } 
+  }
   static pipeFrom(f, x) {
     return runtime.safeCall(f(x))
-  } 
+  }
   static pipeIntoHi(x, f) {
     return runtime.safeCall(f(x))
-  } 
+  }
   static pipeFromHi(f, x) {
     return runtime.safeCall(f(x))
-  } 
+  }
   static tap(x, f) {
     runtime.safeCall(f(x));
     return x
-  } 
+  }
   static pat(f, x) {
     runtime.safeCall(f(x));
     return x
-  } 
+  }
   static alsoDo(x, eff) {
     return x
-  } 
+  }
   static andThen(f, g) {
     return (x) => {
       let tmp;
       tmp = runtime.safeCall(f(x));
       return runtime.safeCall(g(tmp))
     }
-  } 
+  }
   static compose(f, g) {
     return (x) => {
       let tmp;
       tmp = runtime.safeCall(g(x));
       return runtime.safeCall(f(tmp))
     }
-  } 
+  }
   static passTo(receiver, f) {
     return (...args) => {
       return runtime.safeCall(f(receiver, ...args))
     }
-  } 
+  }
   static passToLo(receiver, f) {
     return (...args) => {
       return runtime.safeCall(f(receiver, ...args))
     }
-  } 
+  }
   static call(receiver, f) {
     return (...args) => {
       return runtime.safeCall(f.call(receiver, ...args))
     }
-  } 
+  }
   static equals(a, b) {
     let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, lambda, lambda1, tmp, tmp1;
     scrut = a === b;
@@ -215,41 +215,41 @@ let Predef1;
       return false;
     }
     return false;
-  } 
+  }
   static nequals(a, b) {
     let tmp;
     tmp = Predef.equals(a, b);
     return ! tmp
-  } 
+  }
   static print(...xs) {
     let callPrefix, tmp;
     callPrefix = runtime.safeCall(Predef.map(Predef.renderAsStr));
     tmp = runtime.safeCall(callPrefix(...xs));
     return runtime.safeCall(globalThis.console.log(...tmp))
-  } 
+  }
   static renderAsStr(arg) {
     if (typeof arg === 'string') {
       return arg
     }
     return runtime.safeCall(Predef.render(arg));
-  } 
+  }
   static check(...args) {
     return runtime.safeCall(Predef.js_assert(...args))
-  } 
+  }
   static notImplemented(msg) {
     let tmp;
     tmp = "Not implemented: " + msg;
     throw runtime.safeCall(globalThis.Error(tmp))
-  } 
+  }
   static get notImplementedError() {
     throw runtime.safeCall(globalThis.Error("Not implemented"));
-  } 
+  }
   static tuple(...xs) {
     return xs
-  } 
+  }
   static mkSet(...xs) {
     return globalThis.Object.freeze(new globalThis.Set(xs))
-  } 
+  }
   static foldr(f) {
     return (first, ...rest) => {
       let len, scrut, i, init;
@@ -275,7 +275,7 @@ let Predef1;
       }
       return runtime.safeCall(f(first, init));
     }
-  } 
+  }
   static mkStr(...xs) {
     let lambda, callPrefix;
     lambda = (undefined, function (acc, x) {
@@ -291,13 +291,13 @@ let Predef1;
     });
     callPrefix = runtime.safeCall(Predef.fold(lambda));
     return runtime.safeCall(callPrefix(...xs))
-  } 
+  }
   static use(instance) {
     return instance
-  } 
+  }
   static enterHandleBlock(handler, body) {
     return runtime.safeCall(Runtime.enterHandleBlock(handler, body))
-  } 
+  }
   static raiseUnhandledEffect() {
     return runtime.safeCall(Runtime.mkEffect(Runtime.FatalEffect, null))
   }

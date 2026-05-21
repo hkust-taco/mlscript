@@ -41,7 +41,7 @@ fun f(x) =
 //│   val y⁰;
 //│   val z⁰;
 //│   constructor A²(f$cap)(z) {
-//│     set f$cap⁰ = f$cap;
+//│     set A¹.this.f$cap = f$cap;
 //│     define y⁰ as val y¹ = y;
 //│     define z⁰ as val z¹ = z;
 //│     end
@@ -50,16 +50,16 @@ fun f(x) =
 //│     let tmp, tmp1;
 //│     set tmp = +⁰(A¹.this.y¹, 1);
 //│     set tmp1 = +⁰(A¹.this.z¹, 1);
-//│     return new A¹(tmp)(f$cap⁰)(tmp1)
+//│     return new A¹(tmp)(A¹.this.f$cap⁰)(tmp1)
 //│   }
 //│   method foo⁰ = fun foo¹() {
 //│     let tmp;
-//│     set tmp = +⁰(f$cap⁰.x$0⁰, 1);
-//│     set f$cap⁰.x$0 = tmp;
-//│     return f$cap⁰.x$0⁰
+//│     set tmp = +⁰(A¹.this.f$cap⁰.x$0⁰, 1);
+//│     set A¹.this.f$cap⁰.x$0 = tmp;
+//│     return A¹.this.f$cap⁰.x$0⁰
 //│   }
 //│   method getX⁰ = fun getX¹() {
-//│     return f$cap⁰.x$0⁰
+//│     return A¹.this.f$cap⁰.x$0⁰
 //│   }
 //│ };
 //│ define Capture$f⁰ as class Capture$f² {

@@ -14,12 +14,12 @@ data class A(x) with
 //│   private val A¹;
 //│   val y⁰;
 //│   constructor B¹(A) {
-//│     set A¹ = A;
+//│     set B².this.A = A;
 //│     define y⁰ as val y¹ = y;
 //│     end
 //│   }
 //│   method getB⁰ = fun getB¹() {
-//│     return +⁰(A¹.x⁰, B².this.y¹)
+//│     return +⁰(B².this.A¹.x⁰, B².this.y¹)
 //│   }
 //│ };
 //│ define A⁰ as class A³(x) {
@@ -88,4 +88,4 @@ a.f()
 a.f()
 a.bruh()
 //│ = 6
-//│ a = A { A$cap: Capture$A { x$0: 6 }, bruh: fun }
+//│ a = A { bruh: fun }

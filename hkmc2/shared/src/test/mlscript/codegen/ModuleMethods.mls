@@ -51,7 +51,7 @@ module Test with
 //│   }
 //│   static foo() {
 //│     return Predef.print(Test.#s)
-//│   } 
+//│   }
 //│   static bar() {
 //│     return Test.foo()
 //│   }

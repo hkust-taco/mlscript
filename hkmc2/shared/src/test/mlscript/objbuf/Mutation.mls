@@ -48,7 +48,7 @@ class A(x) with
 //│       buf.buf[idx2] = buf.buf.at(idx1);
 //│       return idx
 //│     }
-//│   } 
+//│   }
 //│   static f(buf, idx) {
 //│     return (y) => {
 //│       let tmp, tmp1, idx1, idx2, idx3, idx4, idx5;

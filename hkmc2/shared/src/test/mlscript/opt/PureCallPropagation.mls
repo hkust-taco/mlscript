@@ -1,0 +1,49 @@
+:js
+
+
+fun foo(x)(y)(z) =
+  print("hi")
+  x + y + z
+
+
+// The unsaturated call `foo(1)(2)` is pure, so it can be propagated
+// to later call sites and combined with their remaining arguments.
+:soir
+let f = foo(1)(2)
+print("hello")
+f(3) + f(4)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f⁰, tmp, tmp1;
+//│ set f⁰ = foo⁰(1)(2);
+//│ do Predef⁰.print⁰("hello");
+//│ set tmp = foo⁰(1)(2)(3);
+//│ set tmp1 = foo⁰(1)(2)(4);
+//│ +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > hello
+//│ > hi
+//│ > hi
+//│ = 13
+//│ f = fun
+
+
+:soir
+:inlineThreshold 10
+fun foo(x)(y)(z) = x + y + z
+let f = foo(1)(2) in
+  print("hello")
+  f(3)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let foo¹;
+//│ define foo¹ as fun foo²(x)(y)(z) {
+//│   let tmp;
+//│   set tmp = +⁰(x, y);
+//│   return +⁰(tmp, z)
+//│ };
+//│ do Predef⁰.print⁰("hello");
+//│ 6
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > hello
+//│ = 6
+
+

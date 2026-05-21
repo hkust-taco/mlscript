@@ -38,11 +38,11 @@ foo(10)
 //│ define M⁰ as class M¹ {
 //│   private val y⁰;
 //│   constructor(y) {
-//│     set y⁰ = y;
+//│     set M¹.this.y = y;
 //│     end
 //│   }
 //│   method foo¹ = fun foo²() {
-//│     set y⁰ = 2;
+//│     set M¹.this.y = 2;
 //│     return runtime⁰.Unit⁰
 //│   }
 //│ };

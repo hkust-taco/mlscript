@@ -215,7 +215,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         blockImpl(stats, res)
       case DefineVar(sym, rhs) :: stats =>
         term(rhs): r =>
-          Assign(sym, r, blockImpl(stats, res))
+          assignSymbol(sym, r, blockImpl(stats, res))
       case (_: SetConfig) :: stats =>
         // Config changes are handled at the program level; skip during block lowering
         blockImpl(stats, res)
@@ -513,6 +513,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       WarningReport(msg"Pure expression in statement position" -> loc :: Nil, extraInfo,
         source = Diagnostic.Source.Compilation)
   
+  private def privateFieldSelfSelection(sym: TermSymbol)(using LoweringCtx): Opt[Select] =
+    sym.owner.collect:
+      case owner if sym.isPrivate =>
+        Select(Value.Ref(owner, N), sym.id)(S(sym))
+
+  private def assignSymbol(sym: Local, rhs: Result, rest: Block)(using LoweringCtx): Block =
+    sym match
+    case sym: TermSymbol =>
+      privateFieldSelfSelection(sym) match
+      case S(sel) => AssignField(sel.qual, sel.name, rhs, rest)(S(sym))
+      case N => Assign(sym, rhs, rest)
+    case _ =>
+      Assign(sym, rhs, rest)
+
   def ref(ref: st.Ref, annots: List[Annot], disamb: Opt[DefinitionSymbol[?]], inStmtPos: Bool)(k: Result => Block)(using LoweringCtx): Block =
     def warnStmt = if inStmtPos then warnPureExprInStmtPos(ref.toLoc, S(ref))
     
@@ -583,6 +597,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             )(isMlsFun = true, true, annots.contains(Annot.TailCall)))
       case S(_) => ()
       case N => () // TODO panic here; can only lower refs to elab'd symbols
+    case sym: TermSymbol =>
+      privateFieldSelfSelection(sym) match
+        case S(sel) =>
+          warnStmt
+          return k(sel.withLocOf(ref))
+        case N => ()
     case _ => ()
     warnStmt
     k(loweringCtx(Value.Ref(sym, disamb).withLocOf(ref)))
@@ -836,7 +856,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       lhs match
       case Ref(sym) =>
         subTerm(rhs): r =>
-          Assign(sym, r, k(unit))
+          assignSymbol(sym, r, k(unit))
       case sel @ SynthSel(prefix, nme) =>
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>

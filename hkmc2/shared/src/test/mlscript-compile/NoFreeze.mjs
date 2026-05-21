@@ -23,7 +23,7 @@ let NoFreeze1;
   }
   static foo() {
     return (new NoFreeze.Foo.class(0))
-  } 
+  }
   static bar() {
     return runtime.safeCall(NoFreeze1["foo"]())
   }

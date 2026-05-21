@@ -112,7 +112,6 @@ class Foo(using T) with
 //│   constructor(tmp4) {
 //│     Predef.print(T1);
 //│   }
-//│   #tmp;
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", [null]];
 //│ });
@@ -122,10 +121,10 @@ class Foo(using T) with
 :sjs
 x => x.Foo#S
 //│ ╔══[COMPILATION ERROR] Class 'Foo' does not contain member 'S'.
-//│ ║  l.123: 	x => x.Foo#S
+//│ ║  l.122: 	x => x.Foo#S
 //│ ╙──       	           ^
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type T for call: 
-//│ ║  l.123: 	x => x.Foo#S
+//│ ║  l.122: 	x => x.Foo#S
 //│ ║         	      ^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.101: 	class Foo(using T) with

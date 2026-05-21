@@ -60,7 +60,7 @@ data class Outer(a, b) with
 //│   }
 //│   o1(c) {
 //│     return this.Inner(c)
-//│   } 
+//│   }
 //│   o2(c, d) {
 //│     let tmp;
 //│     tmp = this.Inner(c);

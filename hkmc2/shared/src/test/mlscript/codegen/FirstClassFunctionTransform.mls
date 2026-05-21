@@ -223,36 +223,36 @@ module Foo with
     fun bar(z) = x => x + y + z 
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Foo¹, lambda⁸, Function$⁸;
-//│ define lambda⁸ as fun lambda⁹(y, z, x) {
+//│ define lambda⁸ as fun lambda⁹(Bar, z, x) {
 //│   let tmp;
-//│   set tmp = +⁰(x, y);
+//│   set tmp = +⁰(x, Bar.y⁰);
 //│   return +⁰(tmp, z)
 //│ };
 //│ define Function$⁸ as class Function$⁹ {
-//│   private val y⁰;
+//│   private val Bar⁰;
 //│   private val z⁰;
-//│   constructor(y, z) {
+//│   constructor(Bar, z) {
 //│     super⁰();
-//│     set y⁰ = y;
-//│     set z⁰ = z;
+//│     set Function$⁹.this.Bar = Bar;
+//│     set Function$⁹.this.z = z;
 //│     end
 //│   }
 //│   method call⁸ = fun call⁹(x) {
-//│     return lambda⁹(y⁰, z⁰, x)
+//│     return lambda⁹(Function$⁹.this.Bar⁰, Function$⁹.this.z⁰, x)
 //│   }
 //│ };
 //│ define Foo¹ as class Foo²
 //│ module Foo³ {
 //│   constructor {
-//│     define Bar⁰ as class Bar²(y) {
-//│       private val y¹;
-//│       constructor Bar¹ {
-//│         set y¹ = y;
+//│     define Bar¹ as class Bar³(y) {
+//│       private val y⁰;
+//│       constructor Bar² {
+//│         set Bar³.this.y = y;
 //│         end
 //│       }
 //│       method bar² = fun bar³(z) {
 //│         let tmp;
-//│         set tmp = new Function$⁹(y¹, z);
+//│         set tmp = new Function$⁹(Bar³.this, z);
 //│         return tmp
 //│       }
 //│     };
@@ -468,11 +468,11 @@ fun foo(x)(y) = x + y
 //│   private val x²;
 //│   constructor(x) {
 //│     super⁰();
-//│     set x² = x;
+//│     set Function$¹³.this.x = x;
 //│     end
 //│   }
 //│   method call¹² = fun call¹³(y) {
-//│     return lambda$¹(x², y)
+//│     return lambda$¹(Function$¹³.this.x², y)
 //│   }
 //│ };
 //│ define foo⁵ as fun foo⁶(x) { let tmp; set tmp = new Function$¹³(x); return tmp };

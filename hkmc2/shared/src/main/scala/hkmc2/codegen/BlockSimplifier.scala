@@ -103,10 +103,17 @@ class BlockSimplifier
     * hopefully allows more expensive passes such as DataFlowAnalysis to do less work. */
   class DeadCodeElim() extends BlockTransformer(SymbolSubst.Id), Helper:
     
+    var analysisDone = false
+    
     val usedLabels = MutSet.empty[LabelSymbol]
     val definedVars = MutSet.empty[Local]
     val localVars = MutSet.empty[Local]
     val usedVars = MutSet.empty[Local]
+    val privateVars = MutSet.empty[TermSymbol]
+    val usedPrivateVars = MutSet.empty[TermSymbol]
+    lazy val unusedPrivateFieldSyms: Set[TermSymbol] =
+      assert(analysisDone)
+      privateVars.iterator.filterNot(usedPrivateVars).filterNot(symbolsToPreserve).toSet
     var tailLabels = MutSet.empty[LabelSymbol]
     
     def apply(prog: Program): Program =
@@ -115,21 +122,23 @@ class BlockSimplifier
         
         applyProgram(prog)
         
-        override def applyDefn(defn: Defn): Unit =
-          defn match
-          case cls: ClsLikeDefn =>
-            localVars ++= cls.privateFields
-            cls.companion.foreach(localVars ++= _.privateFields)
-          case _ =>
-          super.applyDefn(defn)
-        
         override def applyPath(p: Path): Unit =
           p match
+            case sel: Select =>
+              sel.symbol.foreach:
+                case ts: TermSymbol =>
+                  usedPrivateVars += ts
+                case _ =>
             case Value.Ref(loc, _) =>
               usedVars += loc
             case _ =>
           super.applyPath(p)
-        
+
+        override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
+          privateVars ++= defn.privateFields
+          defn.companion.foreach(body => privateVars ++= body.privateFields)
+          super.applyClsLikeDefn(defn)
+
         override def applyBlock(b: Block): Unit =
           b match
             case Define(defn, rst) =>
@@ -142,7 +151,8 @@ class BlockSimplifier
               definedVars += lhs
             case _ =>
           super.applyBlock(b)
-      
+
+      analysisDone = true
       applyProgram(prog)
     
     // Evaluate `thunk` with a new tail label set. This is used for evaluating any sub blocks that is not in the tail position.
@@ -221,7 +231,17 @@ class BlockSimplifier
         registerChange(s"rm ${lhs.showDbg} = ${rhs.showDbg}")
         removedLocals += lhs
         applyResult(rhs)(r => Assign.discard(r, applyBlock(rst)))
-      
+
+      // * Discard writes to private fields that are never read
+      case assign @ AssignField(lhs, _, rhs, rst) =>
+        assign.symbol match
+        case S(ts: TermSymbol) if unusedPrivateFieldSyms(ts) =>
+          registerChange(s"rm unused private field write ${ts.showDbg} = ${rhs.showDbg}")
+          applyPath(lhs): lhs2 =>
+            applyResult(rhs): rhs2 =>
+              Assign.discard(lhs2, Assign.discard(rhs2, applyBlock(rst)))
+        case _ => super.applyBlock(b)
+
       // * Remove local pure definitions that are never read (and are not preserved)
       case Define(defn, rest) =>
         if !defn.isPure
@@ -262,7 +282,31 @@ class BlockSimplifier
         End()
       
       case x => super.applyBlock(x)
-    
+
+    private def removeUnusedPrivateFields(fields: Ls[TermSymbol]): Ls[TermSymbol] =
+      fields.filterConserve: fld =>
+        val keep = !unusedPrivateFieldSyms(fld)
+        if !keep then registerChange(s"rm unused private field ${fld.showDbg}")
+        keep
+
+    override def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
+      val defn2 = super.applyObjBody(defn)
+      val privateFields2 = removeUnusedPrivateFields(defn2.privateFields)
+      if privateFields2 is defn2.privateFields
+      then defn2
+      else defn2.copy(privateFields = privateFields2)
+
+    override def applyClsLikeDefn(defn: ClsLikeDefn)(k: Defn => Block): Block =
+      super.applyClsLikeDefn(defn):
+        case cls: ClsLikeDefn =>
+          val privateFields2 = removeUnusedPrivateFields(cls.privateFields)
+          val cls2 =
+            if privateFields2 is cls.privateFields
+            then cls
+            else cls.copy(privateFields = privateFields2)(cls.configOverride, cls.annotations)
+          k(cls2)
+        case other => k(other)
+
     
     // FIXME: refactor transformers so this is not so error-prone (adding this case to `applyBlock` doesn't work)
     override def applyScopedBlock(b: Block): Block = b match
@@ -312,12 +356,6 @@ class BlockSimplifier
     //    Note that the capturing definitions won't see the assignments of the captured variable anyway
     //    because that variable will be treated as unknown, since nested definitions start from an empty environment.
     
-    val unstableRefs = MutSet.empty[Local]
-    // ^ We currently represent private fields using plain TermSymbol references,
-    //    so these have to be special-cased as 'unstable'.
-    //    TODO: represent them as fields, as they should be!
-    //    TODO: then, the symbol type in `Assign` should be tightened to `LocalVar`
-    
     
     def apply(prog: Program): Program =
       
@@ -334,15 +372,6 @@ class BlockSimplifier
           case _ =>
           super.applyDefn(defn)
         
-        // This override can go once we get rid of `unstableRefs`
-        override def applyBlock(b: Block): Unit =
-          b match
-          case Assign(_: LocalVar, _, _) =>
-          case Assign(lhs, _, _) =>
-            unstableRefs += lhs
-          case _ =>
-          super.applyBlock(b)
-
         override def applyLam(lam: Lambda): Unit =
           capturedVars ++= lam.freeVars.iterator.collect { case v: LocalVar => v }
           super.applyLam(lam)
@@ -484,8 +513,6 @@ class BlockSimplifier
             else
               val rhs2 = assignedResults(sym)
               S(r -> rhs2)
-          case r @ Value.Ref(sym, _) if unstableRefs(sym) =>
-            N
           case r @ Value.Ref(sym, _) =>
             S(r -> Unknown)
           case _ => N
@@ -772,9 +799,37 @@ class BlockSimplifier
         
       case _ => super.applyValue(v)(k)
     
+    private def assignedPureCallPrefix(loc: LocalVar): Opt[Call] =
+      def loop(asst: AssignInfo, seen: Set[LocalVar]): Opt[Call] =
+        asst match
+        case Unknown | Uninitialized => N
+        case Assigned(ass, opt) =>
+          ass.rhs match
+          case call: Call if call.isKnownUnsaturatedCall && call.isPure => S(call)
+          case _ =>
+            opt match
+            case S((Value.Ref(next: LocalVar, N), nextAsst))
+              if !capturedVars(next) && !seen(next) && (assignedResults(next) is nextAsst) =>
+              loop(nextAsst, seen + next)
+            case _ => N
+        case Merge(asst1, asst2) =>
+          (loop(asst1, seen), loop(asst2, seen)) match
+          case (S(call1), S(call2)) if call1 == call2 => S(call1)
+          case _ => N
+      loop(assignedResults(loc), Set.single(loc))
+
     override def applyResult(r: Result)(k: Result => Block): Block =
       // Some partial evaluation – TODO: move to IR smart constructors
       r match
+      case c @ Call(Value.Ref(loc: LocalVar, N), argss) if !inDryRun && !capturedVars(loc) =>
+        assignedPureCallPrefix(loc) match
+        case S(prefix) =>
+          registerChange(s"${loc.showDbg} call prefix ~> ${prefix.showDbg}")
+          val combined = Call(prefix.fun, (prefix.argss ::: argss).ne_!)(
+            prefix.isMlsFun, prefix.mayRaiseEffects || c.mayRaiseEffects, c.explicitTailCall,
+          ).withLocOf(c)
+          super.applyResult(combined)(k)
+        case N => super.applyResult(r)(k)
       case Call(Value.Ref(sym: BuiltinSymbol, N), (arg1 :: arg2 :: Nil) :: Nil)
         if sym.nme === "," && arg1.spread.isEmpty && arg2.spread.isEmpty
         =>
@@ -1114,5 +1169,3 @@ class BlockSimplifier
   
   
 end BlockSimplifier
-
-
