@@ -486,11 +486,6 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         case _ =>
         super.applyBlock(b)
       override def applyValue(v: Value)(k: Value => Block): Block = v match
-        case Value.SimpleRef(l) =>
-          pre.res.modSymToBms.get(l) match
-            case Some(bms) =>
-              lastWords("SimpleRef should not refresh into a MemberRef")
-            case None => super.applyValue(v)(k)
         case Value.This(l) =>
           pre.res.modSymToBms.get(l) match
             case Some(bms) =>
