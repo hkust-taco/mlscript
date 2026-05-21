@@ -612,8 +612,6 @@ sealed abstract class Defn:
         -- auxParams.flatMap(_.paramSyms)
   
 
-// NOTE: Setting isTailRec to false does not affect whether the function is optimized.
-// It only affects whether a warning is thrown if the function is not actually tailrec.
 final case class FunDefn(
     owner: Opt[InnerSymbol],
     sym: BlockMemberSymbol,
@@ -626,7 +624,8 @@ final case class FunDefn(
 ) extends Defn:
   val innerSym = N
   val asPath = Value.MemberRef(sym, dSym)
-  lazy val forceTailRec: Bool = annotations.contains(Annot.TailRec)
+  lazy val tailRec: Bool = annotations.contains(Annot.TailRec)
+  lazy val inline: Bool = annotations.contains(Annot.Inline)
   lazy val visibility: Visibility = annotations.collectFirst:
     case Annot.Modifier(Keyword.`private`) => Visibility.Private
     case Annot.Modifier(Keyword.`public`) => Visibility.Public

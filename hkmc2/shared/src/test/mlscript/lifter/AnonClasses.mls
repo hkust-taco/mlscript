@@ -1,0 +1,20 @@
+:lift
+:js
+
+
+fun foo() =
+  new Object with
+    fun test = 1
+
+foo().test
+//│ = 1
+
+
+fun foo() =
+  new with
+    fun test = 1
+
+foo().test
+//│ = 1
+
+

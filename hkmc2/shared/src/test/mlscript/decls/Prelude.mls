@@ -4,11 +4,6 @@ declare type Any
 declare type Anything
 declare type Nothing
 
-declare type untyped
-
-declare type tailrec
-declare type tailcall
-
 declare class Object
 declare module Object with
   fun
@@ -268,6 +263,10 @@ declare module debug with
   fun printStack
 
 declare module annotations with
+  object untyped
+  object tailrec
+  object tailcall
+  object inline
   object compile
   object buffered
   object bufferable

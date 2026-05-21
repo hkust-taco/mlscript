@@ -1,0 +1,47 @@
+:js
+
+
+:soir
+object Foo with
+  let state =1 
+  fun test1 =
+    let res = state
+    set state += 1
+    res
+  fun test2 =
+    set state = 0
+    do test1
+    state
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let Foo⁰;
+//│ define Foo⁰ as object Foo¹ {
+//│   private val state⁰;
+//│   constructor {
+//│     set state⁰ = 1;
+//│     end
+//│   }
+//│   method test1⁰ = fun test1¹ {
+//│     let res, tmp;
+//│     set res = state⁰;
+//│     set tmp = +⁰(state⁰, 1);
+//│     set state⁰ = tmp;
+//│     return res
+//│   }
+//│   method test2⁰ = fun test2¹ { set state⁰ = 0; do Foo¹.this.test1¹; return state⁰ }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect 1
+Foo.test1
+//│ = 1
+
+:expect 2
+Foo.test1
+//│ = 2
+
+:expect 1
+Foo.test2
+//│ = 1
+
+

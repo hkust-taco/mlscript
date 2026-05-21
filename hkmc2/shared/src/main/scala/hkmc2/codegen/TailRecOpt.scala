@@ -246,12 +246,12 @@ class TailRecOpt(using State, TL, Raise):
     val nonTailCalls = nonTailCallsLs.toMap
     
     if nonTailCallsLs.sizeCompare(calls) === 0 then
-      for f <- funs if f.forceTailRec do
+      for f <- funs if f.tailRec do
         raise(WarningReport(msg"This function does not directly self-recurse, but is marked @tailrec." -> f.dSym.toLoc :: Nil))
       return (N, funs)
     
     if !nonTailCalls.isEmpty then
-      for f <- funs if f.forceTailRec do
+      for f <- funs if f.tailRec do
         val reportLoc = nonTailCalls.get(f.dSym) match
           // always display a call to f, if possible
           case Some(value) => value.toLoc 
@@ -555,7 +555,7 @@ class TailRecOpt(using State, TL, Raise):
     new BlockTraverserShallow():
       for f <- c.methods do
         applyBlock(f.body)
-        if f.forceTailRec then
+        if f.tailRec then
           raise(ErrorReport(msg"Class methods may not yet be marked @tailrec." -> f.dSym.toLoc :: Nil))
       override def applyResult(r: Result): Unit = r match
         case c: Call if c.explicitTailCall =>
@@ -641,7 +641,7 @@ class TailRecOpt(using State, TL, Raise):
     val tailRecFunSyms = tailRecFuns.map(_.dSym).toSet
     new BlockTraverser:
       override def applyFunDefn(fun: FunDefn): Unit =
-        if fun.forceTailRec && !tailRecFunSyms.contains(fun.dSym) then
+        if fun.tailRec && !tailRecFunSyms.contains(fun.dSym) then
           raise(ErrorReport(
             msg"This @tailrec function was not processed by the tail-call optimizer." -> fun.dSym.toLoc :: Nil))
         super.applyFunDefn(fun)

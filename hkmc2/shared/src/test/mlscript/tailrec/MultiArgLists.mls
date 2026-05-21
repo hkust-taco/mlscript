@@ -1,4 +1,6 @@
 :js
+open annotations
+
 
 // Test: Tail-recursive function with single parameter list works correctly
 :expect 5050
