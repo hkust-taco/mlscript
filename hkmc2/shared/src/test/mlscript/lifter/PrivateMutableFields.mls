@@ -95,7 +95,7 @@ class AccessorBox with
         set value = next
         value
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ const accessorSymbol$1 = globalThis.Symbol("value");
+//│ const value$accessorSymbol = globalThis.Symbol("value");
 //│ let AccessorBox1, $anon5;
 //│ (class $anon4 extends globalThis.Object {
 //│   static {
@@ -107,11 +107,11 @@ class AccessorBox with
 //│   }
 //│   #AccessorBox;
 //│   get read() {
-//│     return this.#AccessorBox[accessorSymbol$1];
+//│     return this.#AccessorBox[value$accessorSymbol];
 //│   }
 //│   write(next) {
-//│     this.#AccessorBox[accessorSymbol$1] = next;
-//│     return this.#AccessorBox[accessorSymbol$1]
+//│     this.#AccessorBox[value$accessorSymbol] = next;
+//│     return this.#AccessorBox[value$accessorSymbol]
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "$anon"];
@@ -124,8 +124,8 @@ class AccessorBox with
 //│     this.#value = 1;
 //│   }
 //│   #value;
-//│   get [accessorSymbol$1]() { return this.#value; }
-//│   set [accessorSymbol$1](value) { this.#value = value; }
+//│   get [value$accessorSymbol]() { return this.#value; }
+//│   set [value$accessorSymbol](value) { this.#value = value; }
 //│   get accessor() {
 //│     return globalThis.Object.freeze(new $anon5(this));
 //│   }

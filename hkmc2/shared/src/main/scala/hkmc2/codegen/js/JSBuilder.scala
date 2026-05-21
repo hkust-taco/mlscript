@@ -17,6 +17,7 @@ import Scope.scope
 import hkmc2.syntax.Tree.UnitLit
 import hkmc2.semantics.Elaborator.ctx
 import hkmc2.syntax.Tree.{IntLit, StrLit}
+import scala.annotation.tailrec
 import scala.collection.mutable.LinkedHashMap
 
 
@@ -352,7 +353,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         )} = ${result(r)};${returningTerm(rst, endSemi)}"
     case assign @ AssignField(p, n, r, rst) =>
       val field = assign.symbol match
-        case S(ts: semantics.TermSymbol) => selectPrivateField(ts, assign.toLoc)
+        case S(ts: semantics.TermSymbol) => selectPrivateField(ts, n.toLoc)
         case _ => N
       doc" # ${result(p)}${field.getOrElse(fieldSelect(n.name))} = ${result(r)};${returningTerm(rst, endSemi)}"
     case AssignDynField(p, f, ai, r, rst) =>
