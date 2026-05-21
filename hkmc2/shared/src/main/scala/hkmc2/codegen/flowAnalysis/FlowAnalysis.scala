@@ -87,37 +87,18 @@ type SelField = TermSymbol | Int
 type FunId = (funSym: Symbol, whichParamList: Int) | ResultId
 type OriginId = ResultId | FunId
 
-object RefLike:
-  private def classCtorSymbol(sym: Symbol)(using Elaborator.State): Opt[ClassSymbol | ModuleOrObjectSymbol] =
-    sym.asObj orElse
-    sym.asTrm.flatMap: tSym =>
+/** Extracts the underlying symbol of a variable-like reference, for flow-tracking use. */
+object TrackedSymOf:
+  def unapply(p: Value.RefLike | Select)(using Elaborator.State): Opt[Symbol] = p match
+    case Value.SimpleRef(sym) => S(sym)
+    case Value.MemberRef(_, disamb) => S(disamb)
+    case Value.This(sym) => S(sym)
+    case s: Select => s.symbol.flatMap: selSym =>
       for
-        cls <- tSym.owner.flatMap(_.asCls)
-        clsDef <- cls.defn
-        ctorSym <- clsDef.ctorSym
-        if ctorSym is tSym
-      yield
-        cls
-  
-  def unapply(p: Value.SimpleRef | Value.MemberRef | Value.This | Select)(using Elaborator.State): Opt[Symbol] =
-    p match
-      case Value.SimpleRef(sym) =>
-        classCtorSymbol(sym) orElse S(sym)
-      case Value.MemberRef(bms, disamb) =>
-        val sym: Symbol = disamb
-        classCtorSymbol(sym) orElse S(sym)
-      case Value.This(sym) =>
-        classCtorSymbol(sym) orElse S(sym)
-      case s: Select =>
-        s.symbol.flatMap: selSym =>
-          classCtorSymbol(selSym) orElse
-          locally:
-            for
-              selTermSym <- selSym.asTrm
-              owner <- selTermSym.owner
-              _ <- owner.asMod
-            yield
-              selTermSym
+        selTermSym <- selSym.asTrm
+        owner <- selTermSym.owner
+        _ <- owner.asMod
+      yield selTermSym
 
 object TrackableFieldSelect:
   def unapply(s: Select): Opt[Path -> (field: TermSymbol, owner: ClassSymbol)] =
@@ -153,10 +134,23 @@ object TrackableSelect:
     case _ => N
 
 object CtorRef:
-  def unapply(s: Path)(using Elaborator.State): Option[ClassSymbol | ModuleOrObjectSymbol] =
-    s match
-      case RefLike(s) => s.asCls orElse s.asObj
-      case _ => None
+  /** Resolves an object reference or a class-ctor `TermSymbol` to its corresponding class/object symbol. */
+  private def classCtorSymbol(sym: Symbol)(using Elaborator.State): Opt[ClassSymbol | ModuleOrObjectSymbol] =
+    sym.asObj orElse
+    sym.asTrm.flatMap: tSym =>
+      for
+        cls <- tSym.owner.flatMap(_.asCls)
+        clsDef <- cls.defn
+        ctorSym <- clsDef.ctorSym
+        if ctorSym is tSym
+      yield cls
+
+  def unapply(p: Path)(using Elaborator.State): Opt[ClassSymbol | ModuleOrObjectSymbol] = p match
+    case Value.SimpleRef(sym) => classCtorSymbol(sym)
+    case Value.MemberRef(_, disamb) => classCtorSymbol(disamb) orElse disamb.asCls orElse disamb.asObj
+    case Value.This(sym) => classCtorSymbol(sym) orElse sym.asCls
+    case s: Select => s.symbol.flatMap(classCtorSymbol)
+    case _ => N
 
 object CtorCall:
   def unapply(r: Result)(using Elaborator.State): Option[(ClassSymbol | ModuleOrObjectSymbol | Int) -> Ls[Arg]] =
@@ -169,7 +163,7 @@ object CtorCall:
 
 object FunRef:
   def unapply(s: Path)(using Elaborator.State): Option[TermSymbol] = s match
-    case RefLike(tSym: TermSymbol) if tSym.k is syntax.Fun => Some(tSym)
+    case TrackedSymOf(tSym: TermSymbol) if tSym.k is syntax.Fun => Some(tSym)
     case _ => None
 
 type StratVarId = Uid[StratVar]
@@ -1023,12 +1017,12 @@ class FlowConstraintsCollector(
             case Some(fScheme) =>
               fScheme.instantiate(refSite.uid, f)
             case None => generatedProdVars(f).asProdStrat
-          case refLk@RefLike(sym) =>
+          case refLk@TrackedSymOf(sym) =>
             refLk match
               case Select(p, _) => cc.constrain(processResult(p), UnknownCons)
               case _ => ()
             generatedProdVars(sym).asProdStrat
-          case _: (Value.SimpleRef | Value.MemberRef) => lastWords("already handled in `RefLike` case")
+          case _: Value.Ref => lastWords("already handled in `TrackedSymOf` case")
           case Select(qual, name) =>
             cc.constrain(processResult(qual), UnknownCons)
             UnknownProd

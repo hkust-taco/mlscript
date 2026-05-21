@@ -939,7 +939,19 @@ enum Value extends Path with ProductWithExtraInfo:
     case _ => ""
 
 object Value:
-  @deprecated("Use Value.SimpleRef, Value.MemberRef, Value.This, or Value.InnerRef instead.")
+  /** A value-level reference. */
+  type RefLike = SimpleRef | MemberRef | This
+
+  /** Value-level references that are not [[`Value.This`]]. */
+  type Ref = SimpleRef | MemberRef
+
+  extension (r: RefLike)
+    def symbol: Symbol = r match
+      case SimpleRef(l) => l
+      case MemberRef(bms, _) => bms
+      case This(sym) => sym
+
+  @deprecated("Use Value.SimpleRef, Value.MemberRef, or Value.This instead.")
   object Ref:
     def apply(l: Local, disamb: Opt[DefinitionSymbol[?]]): Value = 
       l match
