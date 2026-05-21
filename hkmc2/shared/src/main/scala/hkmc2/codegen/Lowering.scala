@@ -586,8 +586,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case _ => ()
     warnStmt
     (sym, disamb) match
-      case (sym: TopLevelSymbol, _) =>
-        k(loweringCtx(Value.This(sym).withLocOf(ref)))
       case (sym: (LocalSymbol | BuiltinSymbol), _) =>
         k(loweringCtx(Value.SimpleRef(sym).withLocOf(ref)))
       case (sym: BlockMemberSymbol, _) =>
