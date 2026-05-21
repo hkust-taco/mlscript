@@ -114,13 +114,15 @@ sealed abstract class Block extends Product:
     case Scoped(syms, body) => body.definedVars ++ syms
   
   lazy val size: Int = this match
-    case _: Return | _: Throw | _: End | _: Break | _: Continue | _: Unreachable => 1
+    case Return(r: Result, _) => 1 + r.size
+    case Throw(r: Result) => 1 + r.size
+    case _: End | _: Break | _: Continue | _: Unreachable => 1
     case Begin(sub, rst) => sub.size + rst.size
-    case Assign(_, _, rst) => 1 + rst.size
-    case AssignField(_, _, _, rst) => 1 + rst.size
-    case AssignDynField(_, _, _, _, rst) => 1 + rst.size
-    case Match(_, arms, dflt, rst) =>
-      1 + arms.map(_._2.size).sum + dflt.map(_.size).getOrElse(0) + rst.size
+    case Assign(_, r, rst) => 1 + r.size + rst.size
+    case AssignField(p, _, r, rst) => 1 + p.size + r.size + rst.size
+    case AssignDynField(p, fld, _, r, rst) => 1 + p.size + fld.size + r.size + rst.size
+    case Match(p, arms, dflt, rst) =>
+      1 + p.size + arms.map(_._2.size).sum + dflt.map(_.size).getOrElse(0) + rst.size
     case Define(defn, rst) => 1 + defn.size + rst.size
     case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
     case Label(_, _, bod, rst) => 1 + bod.size + rst.size
@@ -890,6 +892,21 @@ sealed abstract class Result extends AutoLocated:
     case Value.This(sym) => Set.empty
     case Value.Lit(lit) => Set.empty
     case DynSelect(qual, fld, arrayIdx) => qual.freeVarsLLIR ++ fld.freeVarsLLIR
+
+  lazy val size: Int = extraSize
+  
+  lazy val extraSize: Int = this match
+    case Call(fun, argss) => fun.extraSize + argss.flatten.map(_.value.extraSize).sum
+    case Instantiate(mut, cls, argss) => cls.extraSize + argss.flatten.map(_.value.extraSize).sum
+    case Select(qual, name) => qual.extraSize
+    case Lambda(params, body) => body.size
+    case Tuple(mut, elems) => elems.map(_.value.extraSize).sum
+    case Record(mut, args) => args.map(arg => arg.idx.fold(0)(_.extraSize) + arg.value.extraSize).sum
+    case Value.Ref(l, disamb) => 0
+    case Value.This(sym) => 0
+    case Value.Lit(l: Tree.StrLit) => l.value.length / 4
+    case Value.Lit(lit) => 0
+    case DynSelect(qual, fld, arrayIdx) => qual.extraSize + fld.extraSize
   
 // type Local = LocalSymbol
 type Local = Symbol

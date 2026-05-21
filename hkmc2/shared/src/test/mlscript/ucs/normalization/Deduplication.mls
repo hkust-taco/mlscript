@@ -389,11 +389,11 @@ fun foo(x, y, z) = if x is
 //│             case 1:
 //│               return "001";
 //│           }
-//│           return expensive_call("hello");
+//│           break;
 //│         case 1:
 //│           return "01";
 //│       }
-//│       return expensive_call("hello");
+//│       break;
 //│     case 1:
 //│       return "1";
 //│   }
@@ -444,14 +444,10 @@ fun foo(x, y, z) =
 //│ foo4 = function foo(x1, y1, z1) {
 //│   if (x1 instanceof A1.class) {
 //│     if (y1 instanceof B1.class) {
-//│       if (z1 instanceof C1.class) {
-//│         return "Hello"
-//│       }
-//│       return "Goodbye"
+//│       if (z1 instanceof C1.class) { return "Hello" }
 //│     }
-//│     return "Goodbye";
 //│   }
-//│   return "Goodbye";
+//│   return "Goodbye"
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -467,11 +463,9 @@ fun foo(x, y, z) =
 //│       if (z1 instanceof C1.class) {
 //│         return "Hello"
 //│       }
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   }
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

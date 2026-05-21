@@ -8,7 +8,7 @@ class B extends A
 let f = case
   A then "A"
   B then "B"
-//│ f = fun f
+//│ f = fun
 
 f(new A)
 //│ = "A"
@@ -20,7 +20,7 @@ f(new B)
 let f = case
   B then "B"
   A then "A"
-//│ f = fun f
+//│ f = fun
 
 f(new A)
 //│ = "A"
