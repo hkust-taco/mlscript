@@ -263,8 +263,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         v match
         case Value.SimpleRef(l) if !inCtx(l) => freeVars.add(l)
         case Value.MemberRef(bms, _) if !inCtx(bms) && bms.asClsLike.isEmpty => freeVars.add(bms)
-        case Value.This(l) if !inCtx(l) && l.asClsLike.isEmpty => freeVars.add(l)
-        // case Value.InnerRef(l) if !inCtx(l) && l.asClsLike.isEmpty => freeVars.add(l)
+        case Value.This(l: TopLevelSymbol) if !inCtx(l) => freeVars.add(l)
         case _ => super.applyValue(v)
       
       override def applyResult(r: Result): Unit =
