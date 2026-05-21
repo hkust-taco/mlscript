@@ -1981,7 +1981,7 @@ diagnostics-inspector .diagnostics-count {
   gap: 2px;
   min-width: 0;
   border: 1px solid var(--ide-border);
-  border-radius: var(--ide-radius-xs);
+  border-radius: var(--ide-radius-sm);
   background: var(--ide-surface);
   padding: 5px 6px;
   color: var(--ide-text-muted);
@@ -1990,10 +1990,22 @@ diagnostics-inspector .diagnostics-count {
   text-align: left;
 }
 
-diagnostics-inspector .diagnostics-count:hover,
+diagnostics-inspector .diagnostics-count:hover:not(.active) {
+  background: var(--ide-surface-subtle);
+  border-color: var(--ide-border-strong);
+  color: var(--ide-text);
+}
+
 diagnostics-inspector .diagnostics-count.active {
   background: var(--ide-accent-soft);
-  border-color: color-mix(in srgb, var(--ide-accent) 32%, var(--ide-border));
+  border-color: color-mix(in srgb, var(--ide-accent) 56%, var(--ide-border));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ide-accent) 34%, transparent);
+  color: var(--ide-accent-strong);
+}
+
+diagnostics-inspector .diagnostics-count.active:hover {
+  background: color-mix(in srgb, var(--ide-accent-soft) 82%, var(--ide-surface));
+  border-color: color-mix(in srgb, var(--ide-accent) 72%, var(--ide-border));
 }
 
 diagnostics-inspector .diagnostics-count span {
@@ -2049,11 +2061,22 @@ diagnostics-inspector .diagnostics-mode-button {
   padding: 6px 4px;
 }
 
-diagnostics-inspector .diagnostics-mode-button:hover,
+diagnostics-inspector .diagnostics-mode-button:hover:not(.active) {
+  background: var(--ide-surface-subtle);
+  border-color: var(--ide-border-strong);
+  color: var(--ide-text);
+}
+
 diagnostics-inspector .diagnostics-mode-button.active {
   background: var(--ide-accent-soft);
-  border-color: color-mix(in srgb, var(--ide-accent) 38%, var(--ide-border));
+  border-color: color-mix(in srgb, var(--ide-accent) 56%, var(--ide-border));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ide-accent) 34%, transparent);
   color: var(--ide-accent-strong);
+}
+
+diagnostics-inspector .diagnostics-mode-button.active:hover {
+  background: color-mix(in srgb, var(--ide-accent-soft) 82%, var(--ide-surface));
+  border-color: color-mix(in srgb, var(--ide-accent) 72%, var(--ide-border));
 }
 
 diagnostics-inspector .diagnostics-mode-button i {
