@@ -147,3 +147,21 @@ a.write(7)
 a.read
 //│ = 7
 
+
+:expect 2
+:noInline
+class C(x) with
+  class A with
+    fun get() = x
+  fun f() =
+    fun g() = set x += 1
+    g
+  fun a = new A
+let c = new C(0)
+let f = c.f()
+f()
+f()
+c.a.get()
+//│ = 2
+//│ c = C(_)
+//│ f = fun
