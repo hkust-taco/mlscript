@@ -204,26 +204,18 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
   override def applyValue(v: Value)(k: Value => Block): Block = v match
     case Value.SimpleRef(l) =>
       mapping.get(l) match
-        case None => super.applyValue(v)(k)
-        case Some(newSym: BlockMemberSymbol) =>
-          lastWords(s"SimpleRef $l should not refresh into a MemberRef $newSym")
         case Some(newSym: (LocalSymbol | BuiltinSymbol)) =>
           k(Value.SimpleRef(newSym))
-        case Some(newSym: InnerSymbol) =>
-          lastWords(s"SimpleRef $l should not refresh into a ThisRef $newSym")
-        case Some(newSym) =>
-          lastWords(s"Unexpected symbol kind ${newSym.getClass.getSimpleName}: $newSym")
+        case _ => super.applyValue(v)(k)
     case Value.MemberRef(bms, disamb) =>
       mapping.get(bms) match
-        case None => super.applyValue(v)(k)
         case Some(newBms: BlockMemberSymbol) =>
           val newDisamb = disamb match
             case d => mapping.get(d) match
               case Some(nd: DefinitionSymbol[?]) => nd
               case _ => newBms.tsym.getOrElse(disamb)
           k(Value.MemberRef(newBms, newDisamb))
-        case Some(newSym: VarSymbol) => k(Value.SimpleRef(newSym))
-        case Some(newSym: TempSymbol) => k(Value.SimpleRef(newSym))
+        case Some(newSym: (VarSymbol | TempSymbol)) => k(Value.SimpleRef(newSym))
         case _ => super.applyValue(v)(k)
     case Value.This(sym) =>
       mapping.get(sym) match
