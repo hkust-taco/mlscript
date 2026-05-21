@@ -364,10 +364,16 @@ class BottomPanel extends HTMLElement with
 
   fun setActiveTab(tabName) = if tabName is
     "output" | "logging" | "terminal" then
-      set
-        activeTab = tabName
-        feedbackText = ""
-      render()
+      if tabName === activeTab then
+        toggleCollapse()
+      else
+        set
+          activeTab = tabName
+          feedbackText = ""
+        if isCollapsed do
+          set isCollapsed = false
+          restoreSavedSize()
+        render()
     else ()
 
   fun tabLabel(tabName) = if tabName is
