@@ -799,15 +799,22 @@ examples-panel {
 }
 
 .outline-node-kind {
-  width: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  min-width: 34px;
+  max-width: 34px;
   border: 1px solid color-mix(in srgb, var(--outline-symbol) 38%, var(--ide-border));
   border-radius: var(--ide-radius-sm);
   background: color-mix(in srgb, var(--outline-symbol) 12%, var(--ide-surface));
   color: var(--outline-symbol-strong);
   font-size: 0.68rem;
   font-weight: 700;
-  line-height: 1.1;
-  padding: 1px 4px;
+  line-height: 1;
+  min-height: 17px;
+  overflow: hidden;
+  padding: 1px 0;
   text-align: center;
 }
 

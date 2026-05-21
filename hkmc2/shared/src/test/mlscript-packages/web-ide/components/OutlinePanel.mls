@@ -83,10 +83,12 @@ class OutlinePanel extends HTMLElement with
     else "icon-dot"
 
   fun kindLabel(kind) = if kind is
-    "function" then "fn"
+    "function" then "fun"
     "module" then "mod"
     "object" then "obj"
     "class" then "cls"
+    "pattern" then "pat"
+    "type" then "typ"
     "parameter" then "arg"
     "mutable-value" then "mut"
     "constructor" then "ctor"
