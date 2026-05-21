@@ -1,0 +1,364 @@
+import "./SymbolTree.mls"
+import "../common/JS.mls"
+
+open JS { Absent }
+
+module worker with...
+
+let
+  filesStore = mut {}
+  activeFile = null
+  fileTimestamps = mut {}
+  timestamp = 0
+  compiler = null
+  MLscriptPromise = null
+  symbolRecords = mut {}
+  indexQueue = mut []
+  indexRevision = 0
+  indexing = false
+
+fun serializedError(error) =
+  mut
+    name: if error.name is Absent then "Error" else error.name
+    message: if error.message is Absent then "" + error else error.message
+    stack: if error.stack is Absent then "" else error.stack
+
+fun workerLog(level, message, ...body) =
+  self.postMessage(mut
+    'type: "internal-log"
+    level: level
+    source: "Analysis Worker"
+    message: message
+    body: body
+  )
+
+fun dynamicImport(specifier) =
+  let importModule = Function("specifier", "return import(specifier)")
+  importModule(specifier)
+
+fun compilerModule(loaded) = if loaded.'default is
+  Absent then loaded
+  defaultModule then defaultModule
+
+fun loadMLscript() = if MLscriptPromise is
+  null then
+    set MLscriptPromise = dynamicImport("../build/MLscript.mjs").then(loaded => compilerModule(loaded))
+    MLscriptPromise
+  promise then promise
+
+fun readVirtualFile(path) = if Reflect.has(filesStore, path) then filesStore.(path)
+  else throw new Error("File not found: " + path)
+
+fun writeVirtualFile(path, content) =
+  set
+    filesStore.(path) = content
+    timestamp += 1
+    fileTimestamps.(path) = timestamp
+
+fun virtualFileExists(path) =
+  Reflect.has(filesStore, path)
+
+fun lastChangedTimestamp(path) = if
+  Reflect.has(fileTimestamps, path) then fileTimestamps.(path)
+  else 0
+
+fun createVirtualFileSystem() =
+  mut
+    read: readVirtualFile
+    write: writeVirtualFile
+    'exists: virtualFileExists
+    getLastChangedTimestamp: lastChangedTimestamp
+
+fun compilerPaths(MLscript) =
+  Reflect.construct of MLscript.Paths, [
+    "/std/Prelude.mls",
+    "/std/Runtime.mjs",
+    "/std/Term.mjs",
+    "/std"
+  ]
+
+fun initializeCompiler(MLscript) = if compiler is null do
+  let
+    virtualFS = createVirtualFileSystem()
+    dummyFileSystem = Reflect.construct(MLscript.DummyFileSystem, [virtualFS])
+  set compiler = Reflect.construct(MLscript.BrowserCompiler, [dummyFileSystem, compilerPaths(MLscript)])
+
+fun readyMessage(revision, document) =
+  mut
+    'type: "analysis-ready"
+    revision: revision
+    document: document
+
+fun symbolIndexMessage(revision, snapshot) =
+  mut
+    'type: "symbol-index-updated"
+    revision: revision
+    index: snapshot
+
+fun errorMessage(revision, error) =
+  mut
+    'type: "analysis-error"
+    revision: revision
+    error: serializedError(error)
+
+fun timestampEntries(files) =
+  Object.keys(files).map(path => [path, 0])
+
+fun setFiles(files) =
+  set
+    filesStore = Object.assign(mut {}, files)
+    fileTimestamps = Object.fromEntries(timestampEntries(filesStore))
+    symbolRecords = mut {}
+
+fun applyChange(change) =
+  if change.'type is
+    "delete" then
+      Reflect.deleteProperty(filesStore, change.path)
+      Reflect.deleteProperty(fileTimestamps, change.path)
+      Reflect.deleteProperty(symbolRecords, change.path)
+    "rename" then
+      if change.newPath is ~Absent as newPath do
+        let content = filesStore.(change.path)
+        let lastChanged = lastChangedTimestamp(change.path)
+        Reflect.deleteProperty(filesStore, change.path)
+        Reflect.deleteProperty(fileTimestamps, change.path)
+        Reflect.deleteProperty(symbolRecords, change.path)
+        if content is ~Absent do
+          set
+            filesStore.(newPath) = content
+            timestamp += 1
+            fileTimestamps.(newPath) = Math.max(timestamp, lastChanged + 1)
+    else
+      if change.content is ~Absent as content do
+        set
+          filesStore.(change.path) = content
+          timestamp += 1
+          fileTimestamps.(change.path) = timestamp
+
+fun applyChanges(changes) =
+  changes.forEach of (change, ...) => applyChange(change)
+
+fun shouldAnalyze(path) =
+  typeof(path) is "string" and path.endsWith(".mls") and Reflect.has(filesStore, path)
+
+fun allMlsPaths() =
+  Object.keys(filesStore).filter(path => shouldAnalyze(path)).sort()
+
+fun firstMlsPath() =
+  let
+    result = null
+    paths = Object.keys(filesStore).sort()
+  paths.forEach of (path, ...) =>
+    if result is null and path.endsWith(".mls") do set result = path
+  result
+
+fun analysisTarget() =
+  if shouldAnalyze(activeFile) then activeFile
+  else null
+
+fun runBackendAnalyzePath(MLscript, revision, path) =
+  initializeCompiler(MLscript)
+  let document = compiler.analyze(path)
+  set document.revision = revision
+  SymbolTree.normalizeDocument(document, revision)
+
+fun runBackendAnalyze(MLscript, revision) =
+  if analysisTarget() is
+    null then SymbolTree.emptyDocument(revision, activeFile)
+    target then runBackendAnalyzePath(MLscript, revision, target)
+
+fun dependencyPaths(document) =
+  SymbolTree.arrayOrEmpty(document.dependencies).map(dep => if dep.file is Absent then "" else dep.file).filter(path => path !== "")
+
+fun saveSymbolRecord(path, document) =
+  set symbolRecords.(path) = mut
+    path: path
+    timestamp: lastChangedTimestamp(path)
+    document: document
+    localEntries: SymbolTree.localSymbolEntries(document)
+    globalEntries: SymbolTree.globalSymbolEntries(document)
+    dependencies: dependencyPaths(document)
+    error: null
+
+fun saveErrorRecord(path, error) =
+  set symbolRecords.(path) = mut
+    path: path
+    timestamp: lastChangedTimestamp(path)
+    document: null
+    localEntries: []
+    globalEntries: []
+    dependencies: []
+    error: serializedError(error)
+
+fun recordIsCurrent(path) = if
+  symbolRecords.(path) is Absent then false
+  symbolRecords.(path) is ~Absent as record then record.timestamp >= lastChangedTimestamp(path)
+  else false
+
+fun indexPath(MLscript, revision, path) =
+  if shouldAnalyze(path) do
+    let document = runBackendAnalyzePath(MLscript, revision, path)
+    saveSymbolRecord(path, document)
+
+fun currentLocalEntries() = if
+  activeFile is null then []
+  symbolRecords.(activeFile) is Absent then []
+  symbolRecords.(activeFile) is ~Absent as record then record.localEntries
+  else []
+
+fun currentGlobalEntries() =
+  let entries = mut []
+  allMlsPaths().forEach of (path, ...) =>
+    if symbolRecords.(path) is ~Absent as record do
+      record.globalEntries.forEach(entry => entries.push(entry))
+  entries
+
+fun indexedFileCount() =
+  let count = 0
+  allMlsPaths().forEach of (path, ...) =>
+    if recordIsCurrent(path) do set count += 1
+  count
+
+fun symbolIndexSnapshot(revision, status) =
+  let paths = allMlsPaths()
+  mut
+    schema: "mlscript.symbol-index"
+    version: 1
+    revision: revision
+    activeFile: activeFile
+    localEntries: currentLocalEntries()
+    globalEntries: currentGlobalEntries()
+    indexedFileCount: indexedFileCount()
+    totalFileCount: paths.length
+    status: status
+
+fun postSymbolIndex(revision, status) =
+  self.postMessage(symbolIndexMessage(revision, symbolIndexSnapshot(revision, status)))
+
+fun processNextIndex() =
+  if indexQueue.length === 0 then
+    set indexing = false
+    postSymbolIndex(indexRevision, "ready")
+  else
+    set indexing = true
+    let path = indexQueue.shift()
+    loadMLscript().then of MLscript =>
+      js.try_catch(
+        () => indexPath(MLscript, indexRevision, path),
+        error => saveErrorRecord(path, error)
+      )
+      postSymbolIndex(indexRevision, "indexing")
+      self.setTimeout(() => processNextIndex(), 0)
+
+fun enqueueIndex(paths, revision) =
+  let queued = new Set(indexQueue)
+  paths.forEach of (path, ...) =>
+    if shouldAnalyze(path) do queued.add(path)
+  set
+    indexQueue = Array.from(queued)
+    indexRevision = revision
+  postSymbolIndex(revision, if indexQueue.length > 0 then "indexing" else "ready")
+  if not indexing do processNextIndex()
+
+fun changePathSet(changes) =
+  let paths = new Set()
+  changes.forEach of (change, ...) =>
+    if typeof(change.path) is "string" and change.path.endsWith(".mls") do paths.add(change.path)
+    if change.newPath is ~Absent as newPath and newPath.endsWith(".mls") do paths.add(newPath)
+  paths
+
+fun recordDependsOnAny(record, paths) =
+  let depends = false
+  record.dependencies.forEach of (path, ...) =>
+    if paths.has(path) do set depends = true
+  depends
+
+fun pathHasUnknownDependencies(path, changedPaths) =
+  if changedPaths.has(path) then false
+  else if symbolRecords.(path) is
+    ~Absent as record then
+      if record.timestamp < lastChangedTimestamp(path) then true
+      else if record.error is null then false
+      else true
+    else true
+
+fun hasUnknownDependencies(changedPaths) =
+  let unknown = false
+  allMlsPaths().forEach of (path, ...) =>
+    if pathHasUnknownDependencies(path, changedPaths) do set unknown = true
+  unknown
+
+fun shouldReindexAll(changedPaths) =
+  if changedPaths.has("/std/Prelude.mls") then true
+  else hasUnknownDependencies(changedPaths)
+
+fun impactedPathShouldBeAdded(path, impacted) =
+  if impacted.has(path) then false
+  else if symbolRecords.(path) is
+    ~Absent as record then recordDependsOnAny(record, impacted)
+    else false
+
+fun impactedIndexPaths(changes) =
+  let changedPaths = changePathSet(changes)
+  if shouldReindexAll(changedPaths) then allMlsPaths()
+  else
+    let
+      impacted = new Set(changedPaths)
+      changed = true
+    while changed do
+      set changed = false
+      allMlsPaths().forEach of (path, ...) =>
+        if impactedPathShouldBeAdded(path, impacted) do
+          impacted.add(path)
+          set changed = true
+    Array.from(impacted).filter(path => shouldAnalyze(path))
+
+fun mockAnalysis(revision) =
+  SymbolTree.mockDocument(revision, filesStore, activeFile)
+
+fun postReady(revision, document) =
+  self.postMessage(readyMessage(revision, SymbolTree.normalizeDocument(document, revision)))
+
+fun postAnalysisFallback(revision, error) =
+  workerLog("warn", "Falling back to mock analysis", error)
+  postReady(revision, mockAnalysis(revision))
+
+fun postAnalysis(revision, pathsToIndex) =
+  loadMLscript().then(
+    MLscript =>
+      let document = runBackendAnalyze(MLscript, revision)
+      if analysisTarget() is ~null as target do saveSymbolRecord(target, document)
+      postReady(revision, document)
+      enqueueIndex(pathsToIndex, revision)
+  ).'catch(error => postAnalysisFallback(revision, error))
+
+fun handleInit(message) =
+  setFiles(message.files)
+  set activeFile = message.activeFile
+  postAnalysis(message.revision, allMlsPaths())
+
+fun handleFilesChanged(message) =
+  applyChanges(message.changes)
+  postAnalysis(message.revision, impactedIndexPaths(message.changes))
+
+fun handleSetActiveFile(message) =
+  set activeFile = message.path
+  postAnalysis(message.revision, [activeFile])
+
+fun handleAnalyzeNow(message) =
+  postAnalysis(message.revision, allMlsPaths())
+
+fun handleMessage(event) =
+  let message = event.data
+  js.try_catch(
+    () =>
+      if message.'type is
+        "init" then handleInit(message)
+        "files-changed" then handleFilesChanged(message)
+        "set-active-file" then handleSetActiveFile(message)
+        "analyze-now" then handleAnalyzeNow(message)
+        else self.postMessage(errorMessage(message.revision, Error("Unknown analysis message: " + message.'type)))
+    error => self.postMessage(errorMessage(message.revision, error))
+  )
+
+self.addEventListener("message", handleMessage)

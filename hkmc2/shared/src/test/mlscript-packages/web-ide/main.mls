@@ -20,6 +20,9 @@ fun compilerModule(loaded) = if loaded.'default is
 fun loadMLscript() =
   dynamicImport("./build/MLscript.mjs").then(loaded => compilerModule(loaded))
 
+fun loadAnalysis() =
+  dynamicImport("./analysis/index.mjs?v=symbol-index").then(loaded => compilerModule(loaded))
+
 fun folderAttrs() =
   mut { collapsed: true }
 
@@ -176,14 +179,15 @@ fun handleOpenFileAtLocation(event) =
   if editorPanel is
     ~null as panel do panel.openFileAtLine(event.detail.filePath, event.detail.line, event.detail.column, event.detail.length)
 
-fun start(compiler) =
+fun start(compiler, analysis) =
   loadStandardLibrary(compiler)
   ensureDefaultMainFile()
+  analysis.start()
   
   document.addEventListener("compile-requested", handleCompileRequested)
   document.addEventListener("execute-requested", handleExecuteRequested)
   document.addEventListener("terminate-requested", () => runner.terminate())
   document.addEventListener("open-file-at-location", handleOpenFileAtLocation)
 
-let startPromise = loadMLscript().then(compiler => start(compiler))
-startPromise.'catch(error => Logger.error("Main", "Failed to load MLscript compiler", error))
+let startPromise = loadMLscript().then(compiler => loadAnalysis().then(analysis => start(compiler, analysis)))
+startPromise.'catch(error => Logger.error("Main", "Failed to load MLscript compiler or analysis module", error))

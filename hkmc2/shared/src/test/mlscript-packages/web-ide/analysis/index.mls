@@ -1,0 +1,205 @@
+import "../filesystem/fs.mls"
+import "./SymbolTree.mls"
+import "../common/JS.mls"
+import "../common/Logger.mls"
+
+open JS { Absent }
+
+module index with...
+
+let
+  analysisWorker = null
+  unsubscribe = null
+  activeFile = null
+  currentRevision = 0
+  latestAppliedRevision = 0
+  staleIgnoredCount = 0
+  pendingChanges = mut []
+  pendingTimer = null
+  started = false
+
+fun workerOptions() =
+  mut { 'type: 'module }
+
+fun createWorker() =
+  new Worker("/analysis/worker.mjs?v=symbol-index", workerOptions())
+
+fun filesForAnalysis() =
+  fs.getAllFiles(undefined)
+
+fun nextRevision() =
+  set currentRevision += 1
+  currentRevision
+
+fun eventOptions(detail) =
+  mut { detail: detail }
+
+fun dispatchStatus(status, revision, error) =
+  document.dispatchEvent(new CustomEvent("analysis-status-changed", eventOptions(mut
+    status: status
+    revision: revision
+    error: error
+  )))
+
+fun dispatchDocument(nextDocument) =
+  set window.__mlscriptAnalysisDocument = nextDocument
+  let event = new CustomEvent("analysis-document-updated", eventOptions(mut
+    document: nextDocument
+    revision: nextDocument.revision
+  ))
+  globalThis.document.dispatchEvent(event)
+
+fun dispatchSymbolIndex(index) =
+  set window.__mlscriptSymbolIndex = index
+  globalThis.document.dispatchEvent(new CustomEvent("analysis-symbol-index-updated", eventOptions(mut
+    index: index
+    revision: index.revision
+  )))
+
+fun dispatchStaleIgnored(revision) =
+  globalThis.document.dispatchEvent(new CustomEvent("analysis-stale-result-ignored", eventOptions(mut
+    revision: revision
+    count: staleIgnoredCount
+  )))
+
+fun postMessage(message) =
+  if analysisWorker is ~Absent as worker do
+    dispatchStatus("loading", message.revision, null)
+    worker.postMessage(message)
+
+fun initMessage(revision) =
+  mut
+    'type: "init"
+    revision: revision
+    files: filesForAnalysis()
+    activeFile: activeFile
+
+fun sendInitialSnapshot() =
+  let revision = nextRevision()
+  postMessage(initMessage(revision))
+
+fun fileChangeFor(event) =
+  let change = mut
+    'type: event.'type
+    path: event.path
+  if event.newPath is ~Absent as newPath do set change.newPath = newPath
+  if event.node is ~Absent as node and node.'type is "file" do
+    if event.'type is
+      "delete" then ()
+      "rename" then
+        if event.newPath is ~Absent as newPath do set change.content = fs.read(newPath)
+      else set change.content = fs.read(event.path)
+  change
+
+fun flushPendingChanges() =
+  set pendingTimer = null
+  if pendingChanges.length > 0 do
+    let
+      revision = nextRevision()
+      queuedChanges = Array.from(pendingChanges)
+    set pendingChanges = mut []
+    postMessage(mut
+      'type: "files-changed"
+      revision: revision
+      changes: queuedChanges
+    )
+
+fun scheduleChangesFlush() =
+  if pendingTimer is
+    Absent then set pendingTimer = window.setTimeout(() => flushPendingChanges(), 120)
+    null then set pendingTimer = window.setTimeout(() => flushPendingChanges(), 120)
+    else ()
+
+fun handleFsEvent(event) =
+  pendingChanges.push(fileChangeFor(event))
+  scheduleChangesFlush()
+
+fun handleActiveFileChanged(detail) =
+  let nextPath = if
+    detail is Absent then null
+    detail.path is Absent then null
+    else detail.path
+  if activeFile !== nextPath do
+    set activeFile = nextPath
+    let revision = nextRevision()
+    postMessage(mut
+      'type: "set-active-file"
+      revision: revision
+      path: activeFile
+    )
+
+fun requestAnalyzeNow() =
+  let revision = nextRevision()
+  postMessage(mut
+    'type: "analyze-now"
+    revision: revision
+  )
+
+fun handleAnalysisReady(message) =
+  if message.revision < currentRevision then
+    set staleIgnoredCount += 1
+    dispatchStaleIgnored(message.revision)
+  else
+    let document = SymbolTree.normalizeDocument(message.document, message.revision)
+    set latestAppliedRevision = message.revision
+    dispatchDocument(document)
+    dispatchStatus("ready", message.revision, null)
+
+fun handleAnalysisError(message) =
+  if message.revision < currentRevision then
+    set staleIgnoredCount += 1
+    dispatchStaleIgnored(message.revision)
+  else
+    dispatchStatus("error", message.revision, message.error)
+
+fun handleSymbolIndexUpdated(message) =
+  if message.revision >= currentRevision do dispatchSymbolIndex(message.index)
+
+fun handleWorkerData(message) =
+  if message.'type is
+    "analysis-ready" then handleAnalysisReady(message)
+    "analysis-error" then handleAnalysisError(message)
+    "symbol-index-updated" then handleSymbolIndexUpdated(message)
+    "internal-log" then Logger.emit(message.level, message.source, message.message, message.body)
+    else Logger.warn("Analysis", "Unknown analysis worker message type", message.'type)
+
+fun handleWorkerMessage(event) =
+  handleWorkerData(event.data)
+
+fun handleWorkerError(error) =
+  Logger.error("Analysis", "Analysis worker error", error)
+  dispatchStatus("error", currentRevision, mut
+    name: "WorkerError"
+    message: if error.message is Absent then "Analysis worker error" else error.message
+    stack: ""
+  )
+
+fun installTestHooks() =
+  set window.__mlscriptAnalysis = mut
+    analyzeNow: () => requestAnalyzeNow()
+    currentRevision: () => currentRevision
+    latestAppliedRevision: () => latestAppliedRevision
+    staleIgnoredCount: () => staleIgnoredCount
+    symbolIndex: () => window.__mlscriptSymbolIndex
+    injectResponse: response => handleWorkerData(response)
+  document.addEventListener("analysis-test-inject-response", event => handleWorkerData(event.detail))
+
+fun start() =
+  if not started do
+    set
+      started = true
+      analysisWorker = createWorker()
+    analysisWorker.addEventListener("message", handleWorkerMessage)
+    analysisWorker.addEventListener("error", handleWorkerError)
+    set unsubscribe = fs.subscribe(event => handleFsEvent(event), undefined)
+    document.addEventListener("active-tab-changed", event => handleActiveFileChanged(event.detail))
+    installTestHooks()
+    sendInitialSnapshot()
+
+fun stop() =
+  if unsubscribe is ~Absent as removeSubscription do removeSubscription()
+  if analysisWorker is ~Absent as worker do worker.terminate()
+  set
+    unsubscribe = null
+    analysisWorker = null
+    started = false

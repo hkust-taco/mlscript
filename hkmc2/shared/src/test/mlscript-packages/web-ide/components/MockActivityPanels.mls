@@ -84,48 +84,6 @@ class SourceControlPanel extends HTMLElement with
     this.querySelectorAll(".mock-stage-button").forEach of (button, ...) =>
       button.addEventListener("click", () => panel.toggleStage(button.dataset.filePath))
 
-class OutlinePanel extends HTMLElement with
-  let selectedName = ""
-
-  fun connectedCallback() =
-    this.render()
-
-  fun outlineItemHtml(item) =
-    let activeClass = if selectedName === item.name then " active" else ""
-    """
-      <button class="mock-outline-row""" + activeClass + """" type="button" data-name="""" + escapeHtml(item.name) + """" data-line="""" + item.line + """">
-        <span class="mock-outline-kind">""" + escapeHtml(item.kind) + """</span>
-        <span class="mock-outline-name">""" + escapeHtml(item.name) + """</span>
-        <span class="mock-outline-line">Line """ + item.line + """</span>
-      </button>
-    """
-
-  fun render() =
-    set this.innerHTML = """
-      <div class="mock-panel outline-panel">
-        """ + panelHeader("Outline", "Mock symbols") + """
-        <div class="mock-panel-body">
-          <div class="mock-outline-list">""" + mockWorkbenchData.outlineItems.map(item => outlineItemHtml(item)).join("") + """</div>
-          <div class="mock-panel-feedback">Select a symbol to preview navigation.</div>
-        </div>
-      </div>
-    """
-    attachOutlineRows()
-
-  fun selectItem(button) =
-    set selectedName = button.dataset.name
-    if this.querySelector(".mock-panel-feedback") is ~null as feedback do
-      set feedback.textContent = "Mock navigation: " + selectedName + " at line " + button.dataset.line
-    this.querySelectorAll(".mock-outline-row").forEach of (row, ...) =>
-      row.classList.toggle("active", row.dataset.name === selectedName)
-    if document.querySelector(".cm-scroller") is ~null as scroller do
-      scroller.scrollTo(mut { top: 0, behavior: "smooth" })
-
-  fun attachOutlineRows() =
-    let panel = this
-    this.querySelectorAll(".mock-outline-row").forEach of (button, ...) =>
-      button.addEventListener("click", () => panel.selectItem(button))
-
 class ExamplesPanel extends HTMLElement with
   let selectedId = "hello"
 
@@ -179,5 +137,4 @@ class ExamplesPanel extends HTMLElement with
       button.addEventListener("click", () => panel.selectExample(button.dataset.exampleId))
 
 customElements.define("source-control-panel", SourceControlPanel)
-customElements.define("outline-panel", OutlinePanel)
 customElements.define("examples-panel", ExamplesPanel)

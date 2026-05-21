@@ -1,0 +1,280 @@
+import "../common/JS.mls"
+
+open JS { Absent }
+
+module SymbolTree with...
+
+fun arrayOrEmpty(value) = if
+  value is Absent then []
+  value is null then []
+  else value
+
+fun textOrDefault(value, fallback) = if
+  value is Absent then fallback
+  value is null then fallback
+  else "" + value
+
+fun numberOrDefault(value, fallback) = if
+  typeof(value) is "number" then value
+  else fallback
+
+fun rootFileOrDefault(path) = if
+  typeof(path) is "string" and path !== "" then path
+  else ""
+
+fun point(line, column, offset) =
+  mut
+    line: line
+    column: column
+    offset: offset
+
+fun rangeFile(rangeValue, fallbackFile) = if
+  rangeValue is Absent then fallbackFile
+  rangeValue is null then fallbackFile
+  rangeValue.file is Absent then fallbackFile
+  else rangeValue.file
+
+fun range(startLine, startColumn, endLine, endColumn) =
+  let
+    start = point(startLine, startColumn, 0)
+    finish = point(endLine, endColumn, 0)
+  mut { start: start, end: finish }
+
+fun singleLineRange(line, column, length) =
+  range(line, column, line, column + Math.max(0, length))
+
+fun startOf(rangeValue) = if
+  rangeValue is Absent then point(1, 0, 0)
+  rangeValue is null then point(1, 0, 0)
+  rangeValue.startLine is ~Absent as line then point(
+    line
+    Math.max(0, numberOrDefault(rangeValue.startColumn, 1) - 1)
+    numberOrDefault(rangeValue.start, 0)
+  )
+  rangeValue.start is Absent then point(1, 0, 0)
+  else rangeValue.start
+
+fun endOf(rangeValue, startPoint) = if
+  rangeValue is Absent then startPoint
+  rangeValue is null then startPoint
+  rangeValue.endLine is ~Absent as line then point(
+    line
+    Math.max(0, numberOrDefault(rangeValue.endColumn, startPoint.column + 1) - 1)
+    numberOrDefault(rangeValue.end, startPoint.offset)
+  )
+  rangeValue.end is Absent then startPoint
+  else rangeValue.end
+
+fun rangeOrDefault(node) = if
+  node.range is Absent then singleLineRange(1, 0, 0)
+  node.range is null then singleLineRange(1, 0, 0)
+  else node.range
+
+fun startLine(node) =
+  numberOrDefault(startOf(rangeOrDefault(node)).line, 1)
+
+fun startColumn(node) =
+  numberOrDefault(startOf(rangeOrDefault(node)).column, 0)
+
+fun legacyExpansionKey(node, fallbackFile) =
+  textOrDefault(node.file, fallbackFile) + "::" +
+    textOrDefault(node.kind, "symbol") + "::" +
+    textOrDefault(node.name, "symbol") + "::" +
+    startLine(node) + ":" + startColumn(node)
+
+fun stableExpansionKey(node, fallbackFile) =
+  if node.stableId is
+    ~Absent as stableId then stableId
+    else if node.key is
+      Absent then legacyExpansionKey(node, fallbackFile)
+      key then key
+
+fun symbolNode(kind, name, file, line, column, length, children) =
+  let nodeRange = singleLineRange(line, column, length)
+  mut
+    kind: kind
+    name: name
+    file: file
+    range: nodeRange
+    selectionRange: nodeRange
+    children: children
+
+fun normalizeNode(node, fallbackFile) =
+  let
+    normalizedRange = rangeOrDefault(node)
+    normalizedSelectionRange = if node.selectionRange is Absent then normalizedRange else node.selectionRange
+    file = textOrDefault(
+      node.file,
+      rangeFile(normalizedSelectionRange, rangeFile(normalizedRange, fallbackFile))
+    )
+    base = mut
+      kind: textOrDefault(node.kind, "symbol")
+      name: textOrDefault(node.displayName, textOrDefault(node.name, "symbol"))
+      origin: textOrDefault(node.origin, "source")
+      file: file
+      range: normalizedRange
+      selectionRange: normalizedSelectionRange
+      children: []
+  if node.stableId is ~Absent as stableId do set base.stableId = stableId
+  set base.key = stableExpansionKey(base, file)
+  set base.children = arrayOrEmpty(node.children).map(child => normalizeNode(child, file))
+  base
+
+fun normalizeDocument(document, fallbackRevision) =
+  let
+    revision = if document.revision is Absent then fallbackRevision else document.revision
+    rootFile = rootFileOrDefault(document.rootFile)
+    root = if
+      document.root is Absent then null
+      document.root is null then null
+      else normalizeNode(document.root, rootFile)
+  mut
+    schema: "mlscript.symbol-tree"
+    version: 1
+    revision: revision
+    rootFile: rootFile
+    root: root
+    diagnostics: arrayOrEmpty(document.diagnostics)
+    dependencies: arrayOrEmpty(document.dependencies)
+
+fun emptyDocument(revision, rootFile) =
+  mut
+    schema: "mlscript.symbol-tree"
+    version: 1
+    revision: revision
+    rootFile: rootFileOrDefault(rootFile)
+    root: null
+    diagnostics: []
+    dependencies: []
+
+fun rangeToNavigationDetail(node, fallbackFile) =
+  let
+    nodeRange = if node.selectionRange is Absent then rangeOrDefault(node) else node.selectionRange
+    start = startOf(nodeRange)
+    finish = endOf(nodeRange, start)
+    line = Math.max(1, numberOrDefault(start.line, 1))
+    column = Math.max(0, numberOrDefault(start.column, 0))
+    endLine = numberOrDefault(finish.line, line)
+    endColumn = numberOrDefault(finish.column, column)
+    length = if endLine === line then Math.max(0, endColumn - column) else 0
+  mut
+    filePath: textOrDefault(node.file, fallbackFile)
+    line: line
+    column: column
+    length: length
+
+fun structuralKind(kind) = if kind is
+  "module" then true
+  "class" then true
+  "object" then true
+  "pattern" then true
+  "trait" then true
+  "mixin" then true
+  "type" then true
+  "constructor" then true
+  "field" then true
+  else false
+
+fun searchTextFor(node, detail, ownerPath) =
+  [
+    textOrDefault(node.name, "")
+    textOrDefault(node.kind, "symbol")
+    textOrDefault(node.origin, "source")
+    detail.filePath
+    ownerPath.join(" ")
+  ].join(" ").toLowerCase()
+
+fun symbolIndexEntry(node, fallbackFile, ownerPath) =
+  let detail = rangeToNavigationDetail(node, fallbackFile)
+  mut
+    stableId: stableExpansionKey(node, fallbackFile)
+    name: textOrDefault(node.name, "symbol")
+    kind: textOrDefault(node.kind, "symbol")
+    origin: textOrDefault(node.origin, "source")
+    filePath: detail.filePath
+    line: detail.line
+    column: detail.column
+    length: detail.length
+    ownerPath: ownerPath
+    searchText: searchTextFor(node, detail, ownerPath)
+
+fun flattenSymbolEntries(node, fallbackFile, ownerPath, entries, includeNode) =
+  arrayOrEmpty(node.children).forEach of (child, ...) =>
+    if includeNode(child) do entries.push(symbolIndexEntry(child, fallbackFile, ownerPath))
+    flattenSymbolEntries(
+      child,
+      fallbackFile,
+      ownerPath.concat([textOrDefault(child.name, "symbol")]),
+      entries,
+      includeNode
+    )
+
+fun localSymbolEntries(document) =
+  let entries = mut []
+  if document.root is ~null as root do
+    flattenSymbolEntries(root, document.rootFile, [], entries, node => true)
+  entries
+
+fun globalSymbolEntries(document) =
+  let entries = mut []
+  if document.root is ~null as root do
+    flattenSymbolEntries(root, document.rootFile, [], entries, node => structuralKind(textOrDefault(node.kind, "symbol")))
+  entries
+
+fun firstMlsPath(files) =
+  let
+    result = null
+    paths = Object.keys(files).sort()
+  paths.forEach of (path, ...) =>
+    if result is null and path.endsWith(".mls") do set result = path
+  result
+
+fun mockRootFile(files, activeFile) =
+  if typeof(activeFile) is "string" and activeFile.endsWith(".mls") then activeFile
+  else null
+
+fun fileText(files, path) = if files.(path) is
+  Absent then ""
+  text then text
+
+fun lineCount(files, path) =
+  Math.max(1, fileText(files, path).split("\n").length)
+
+fun safeLine(files, path, preferred) =
+  Math.min(lineCount(files, path), Math.max(1, preferred))
+
+fun fileName(path) =
+  path.split("/").pop()
+
+fun mockDocument(revision, files, activeFile) =
+  if mockRootFile(files, activeFile) is
+    null then emptyDocument(revision, activeFile)
+    rootFile then
+      let
+        moduleLine = safeLine(files, rootFile, 1)
+        classLine = safeLine(files, rootFile, 3)
+        mainLine = safeLine(files, rootFile, 5)
+        valueLine = safeLine(files, rootFile, 6)
+        objectLine = safeLine(files, rootFile, 4)
+        helperLine = safeLine(files, rootFile, 7)
+        root = symbolNode("file", fileName(rootFile), rootFile, 1, 0, 0, [
+          symbolNode("module", "Main", rootFile, moduleLine, 0, 4, [
+            symbolNode("class", "Program", rootFile, classLine, 0, 7, [
+              symbolNode("function", "main", rootFile, mainLine, 0, 4, [
+                symbolNode("value", "message", rootFile, valueLine, 0, 7, [])
+              ])
+            ])
+            symbolNode("object", "Console", rootFile, objectLine, 0, 7, [
+              symbolNode("function", "printLine", rootFile, helperLine, 0, 9, [])
+            ])
+          ])
+        ])
+        document = mut
+          schema: "mlscript.symbol-tree"
+          version: 1
+          revision: revision
+          rootFile: rootFile
+          root: root
+          diagnostics: []
+          dependencies: []
+      normalizeDocument(document, revision)
