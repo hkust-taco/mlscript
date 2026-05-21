@@ -282,15 +282,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             Return(
               Call(
                 Value.SimpleRef(Elaborator.State.runtimeSymbol).selSN("printRaw"),
-                (Arg(
-                  N,
-                  sym match
-                    case sym: TempSymbol => Value.SimpleRef(sym)
-                    case sym: VarSymbol => Value.SimpleRef(sym)
-                    case sym: BlockMemberSymbol => Value.MemberRef(sym, sym.defaultDisamb.get)
-                    case sym: (LocalSymbol | BuiltinSymbol) => Value.SimpleRef(sym)
-                    case sym: InnerSymbol => Value.This(sym)
-                ) :: Nil) ne_:: Nil)(true, false, false),
+                (Arg(N, sym.asPath) :: Nil) ne_:: Nil)(true, false, false),
             implct = true)
           val je = nestedScp.givenIn:
             jsb.block(le, endSemi = false)
