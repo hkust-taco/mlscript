@@ -147,6 +147,10 @@ ide-workbench {
   box-shadow: inset 3px 0 0 var(--ide-accent);
 }
 
+.activity-rail-right .activity-button.active {
+  box-shadow: inset -3px 0 0 var(--ide-accent);
+}
+
 .activity-button i {
   width: 1rem;
   height: 1rem;
