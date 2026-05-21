@@ -321,15 +321,10 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
     
     class RefreshSymbol(existingMapping: Map[Symbol, Symbol]) extends SymbolRefresher(existingMapping):
       override def applyValue(v: Value)(k: Value => Block): Block = v match
-        case Value.SimpleRef(l) =>
-          pre.res.modSymToBms.get(l) match
-            case Some(bms) =>
-              lastWords("SimpleRef should not refresh into a MemberRef")
-            case None => super.applyValue(v)(k)
         case Value.This(l) =>
           pre.res.modSymToBms.get(l) match
             case Some(bms) =>
-              k(Value.MemberRef(bms, l.asMod.getOrElse(bms.defaultDisamb.get)))
+              k(Value.MemberRef(bms, l.asMod.get))
             case None => super.applyValue(v)(k)
         case _ => super.applyValue(v)(k)
     end RefreshSymbol

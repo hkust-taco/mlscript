@@ -579,7 +579,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         // * (non-local functions are compiled into getter methods selected on some prefix)
         if td.params.isEmpty then
           return k(Call(
-              Value.MemberRef(bs, disamb.orElse(bs.defaultDisamb).get).withLocOf(ref), Nil ne_:: Nil
+              Value.MemberRef(bs, disamb.get).withLocOf(ref), Nil ne_:: Nil
             )(isMlsFun = true, true, annots.contains(Annot.TailCall)))
       case S(_) => ()
       case N => () // TODO panic here; can only lower refs to elab'd symbols
@@ -589,7 +589,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case (sym: (LocalSymbol | BuiltinSymbol), _) =>
         k(loweringCtx(Value.SimpleRef(sym).withLocOf(ref)))
       case (sym: BlockMemberSymbol, _) =>
-        k(loweringCtx(Value.MemberRef(sym, disamb.orElse(sym.defaultDisamb).get).withLocOf(ref)))
+        k(loweringCtx(Value.MemberRef(sym, disamb.orElse(sym.principalDisamb).get).withLocOf(ref)))
       case (sym: InnerSymbol, _) =>
         k(loweringCtx(Value.This(sym).withLocOf(ref)))
       case (sym, disamb) =>
@@ -1039,13 +1039,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case sym: BlockMemberSymbol => k(Value.MemberRef(sym, disamb))
         case sym: (LocalSymbol | BuiltinSymbol) => k(Value.SimpleRef(sym))
         case sym => lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")
-    case Ref(sym) =>
-      sym match
-        case sym: TempSymbol => k(Value.SimpleRef(sym))
-        case sym: VarSymbol => k(Value.SimpleRef(sym))
-        case sym: BlockMemberSymbol => k(Value.MemberRef(sym, sym.defaultDisamb.get))
-        case sym: (LocalSymbol | BuiltinSymbol) => k(Value.SimpleRef(sym))
-        case sym => lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")
+    case Ref(sym) => k(sym.asPath)
     case SynthSel(Ref(sym: ModuleOrObjectSymbol), name) => // Local cross-stage references
       setupSymbol(sym): r1 =>
         val l1, l2 = loweringCtx.registerTempSymbol(N)

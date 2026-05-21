@@ -489,7 +489,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         case Value.This(l) =>
           pre.res.modSymToBms.get(l) match
             case Some(bms) =>
-              k(Value.MemberRef(bms, l.asMod.getOrElse(bms.defaultDisamb.get)))
+              k(Value.MemberRef(bms, l.asMod.get))
             case None => super.applyValue(v)(k)
         case _ => super.applyValue(v)(k)
     end RefreshSymbol
