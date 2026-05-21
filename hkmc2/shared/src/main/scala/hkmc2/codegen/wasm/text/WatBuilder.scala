@@ -112,6 +112,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
 
+  /** Casts an expression to `target` type if the result type does not match with `target`. */
+  private def castConserve(expr: Expr, target: RefType): Expr =
+    require(expr.resultTypes.size == 1, "expected single-result expression for cast")
+    if expr.resultType.contains(target) then expr else ref.cast(expr, target)
+
   /** Returns the default Wasm value for one struct field when eagerly constructing an object instance. */
   private def defaultStructFieldValue(field: Field)(using Ctx, Raise): Expr = field.ty match
     case refTy: RefType if refTy.nullable => ref.`null`(refTy.heapType)
@@ -1403,7 +1408,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           val fieldidx = fieldSelect(selCls, selSym)
           struct.get(
             fieldidx,
-            ref = ref.cast(qualRes, RefType(ctx.getType_!(selCls), nullable = false)),
+            ref = castConserve(qualRes, RefType(ctx.getType_!(selCls), nullable = false)),
             ty = RefType.anyref,
           )
         case N =>
@@ -1701,7 +1706,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       })",
                   )
                 val fieldidx = fieldSelect(selCls, fieldSym)
-                val objRef = ref.cast(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false))
+                val objRef = castConserve(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false))
                 struct.set(fieldidx, objRef, rhsExpr)
               case N =>
                 lastWords(
