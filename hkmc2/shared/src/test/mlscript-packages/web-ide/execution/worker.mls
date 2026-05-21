@@ -32,6 +32,18 @@ fun errorMessage(error) = if
     Absent then String(error)
     message then message
 
+fun errorName(error) = if
+  error is Absent then "Error"
+  error.name is
+    Absent then "Error"
+    name then name
+
+fun serializedError(error) =
+  mut
+    name: errorName(error)
+    message: errorMessage(error)
+    stack: errorStack(error)
+
 fun dependencyErrorPayload(error) =
   "Failed to load worker dependencies: " + errorMessage(error) + "\n" + errorStack(error)
 
@@ -148,9 +160,7 @@ fun runDone(_) =
   post("done", null)
 
 fun runError(error) =
-  let msg = if error.stack is ~Absent then String(error.stack) else String(error)
-  post("error", Object.keys(error))
-  post("error", msg)
+  post("runtime-error", serializedError(error))
 
 fun runMain(mainPath, files) =
   post("log", "Message received...")

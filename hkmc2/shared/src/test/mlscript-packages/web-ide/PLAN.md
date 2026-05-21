@@ -34,6 +34,8 @@ when adding, completing, hiding, or intentionally deferring UI behavior.
   and footer status counts.
 - Surfaced fatal compiler internal errors in the toolbar indicator, Problems
   panel, and bottom Logging tab.
+- Surfaced execution worker runtime failures in Problems and Output with the
+  source file and executed module called out.
 - Improved the Problems panel narrow-width layout.
 - Hid Source Control on the left rail, keeping source code for later.
 - Hid Examples on the left rail, keeping source code for later.

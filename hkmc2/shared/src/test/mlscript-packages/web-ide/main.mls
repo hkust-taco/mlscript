@@ -211,8 +211,8 @@ fun compiledPath(filePath) = if
   filePath.endsWith(".mls") then filePath.slice(0, filePath.length - 4) + ".mjs"
   else filePath
 
-fun runCompiledFile(mjsPath) =
-  if fs.pathExists(mjsPath) then runner.execute(mjsPath)
+fun runCompiledFile(sourcePath, mjsPath) =
+  if fs.pathExists(mjsPath) then runner.execute(mjsPath, sourcePath)
   else Logger.error("Execution", "Compiled file not found after compilation", mjsPath)
 
 fun compileThenExecute(filePath, mjsPath) =
@@ -223,7 +223,7 @@ fun compileThenExecute(filePath, mjsPath) =
     targetPaths = collected.at(1)
     compilePromise = index.compile(targetPaths, allFiles).then of _ =>
       markAsCompiled(targetPaths)
-      runCompiledFile(mjsPath)
+      runCompiledFile(filePath, mjsPath)
   compilePromise.'catch(error => handleCompileFatal(filePath, error))
 
 fun expandConsolePanel() =
@@ -237,7 +237,7 @@ fun handleExecuteRequested(event) =
     typeof(filePath) is ~"string" then Logger.error("Execution", "Invalid file path for execution", filePath)
     else
       let mjsPath = compiledPath(filePath)
-      if fs.pathExists(mjsPath) then runner.execute(mjsPath)
+      if fs.pathExists(mjsPath) then runner.execute(mjsPath, filePath)
       else compileThenExecute(filePath, mjsPath)
 
 fun handleOpenFileAtLocation(event) =
