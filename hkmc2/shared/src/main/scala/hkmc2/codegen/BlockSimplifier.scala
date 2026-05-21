@@ -111,7 +111,7 @@ class BlockSimplifier
     val usedPrivateVars = MutSet.empty[TermSymbol]
     // * This is only queried during the rewrite phase, after the initial traversal above
     // * has populated both sets, so recomputing it avoids stale cached state.
-    def unusedPrivateVars =
+    def unusedPrivateVars: Set[TermSymbol] =
       privateVars.iterator.filterNot(usedPrivateVars).filterNot(symbolsToPreserve).toSet
     var tailLabels = MutSet.empty[LabelSymbol]
     
@@ -1139,5 +1139,4 @@ class BlockSimplifier
   
   
 end BlockSimplifier
-
 
