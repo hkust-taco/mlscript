@@ -55,8 +55,11 @@ class OutlinePanel extends HTMLElement with
     root() is null then "No symbols"
     else documentData.rootFile
 
+  fun unavailableText() =
+    if errorText === "" then "Outline is not available" else errorText
+
   fun treeHtml() = if
-    status is "error" and documentData is null then """<div class="outline-empty">""" + escapeHtml(errorText) + """</div>"""
+    status is "error" then """<div class="outline-empty">""" + escapeHtml(unavailableText()) + """</div>"""
     root() is null then """<div class="outline-empty">No symbols</div>"""
     else nodeHtml(root(), 0)
 
@@ -245,6 +248,7 @@ class OutlinePanel extends HTMLElement with
       "error" then
         set
           status = "error"
+          documentData = null
           errorText = if detail.error is Absent then "Analysis error" else detail.error.message
         render()
       "ready" then

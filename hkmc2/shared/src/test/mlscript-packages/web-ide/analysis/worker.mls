@@ -313,15 +313,16 @@ fun impactedIndexPaths(changes) =
           set changed = true
     Array.from(impacted).filter(path => shouldAnalyze(path))
 
-fun mockAnalysis(revision) =
-  SymbolTree.mockDocument(revision, filesStore, activeFile)
-
 fun postReady(revision, document) =
   self.postMessage(readyMessage(revision, SymbolTree.normalizeDocument(document, revision)))
 
-fun postAnalysisFallback(revision, error) =
-  workerLog("warn", "Falling back to mock analysis", error)
-  postReady(revision, mockAnalysis(revision))
+fun postAnalysisError(revision, error) =
+  workerLog("error", "Analysis is not available", error)
+  self.postMessage(mut
+    'type: "analysis-error"
+    revision: revision
+    error: serializedError(error)
+  )
 
 fun postAnalysis(revision, pathsToIndex) =
   loadMLscript().then(
@@ -330,7 +331,7 @@ fun postAnalysis(revision, pathsToIndex) =
       if analysisTarget() is ~null as target do saveSymbolRecord(target, document)
       postReady(revision, document)
       enqueueIndex(pathsToIndex, revision)
-  ).'catch(error => postAnalysisFallback(revision, error))
+  ).'catch(error => postAnalysisError(revision, error))
 
 fun handleInit(message) =
   setFiles(message.files)
