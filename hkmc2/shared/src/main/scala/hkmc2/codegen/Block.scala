@@ -1001,10 +1001,12 @@ extension (bms: BlockMemberSymbol)
     bms.asTrm.orElse(bms.asClsOrMod).orElse(bms.asPat)
 
 extension (l: Local)
-  def asPath: Path = l match 
-    case l: (LocalSymbol | BuiltinSymbol) => Value.SimpleRef(l)
-    case bms: BlockMemberSymbol => Value.MemberRef(bms, bms.defaultDisamb.getOrElse(lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")))
-    case sym: InnerSymbol => Value.This(sym)
-    case _: NoSymbol => lastWords("NoSymbol should not be used as a Path/Value")
-    case sym => lastWords(s"$sym (of type ${sym.getClass.getSimpleName}) cannot be converted to a Path/Value")
+  @annotation.nowarn("cat=deprecation")
+  def asPath: Path = 
+    Value.Ref(l, l match 
+      case bms: BlockMemberSymbol => S(bms.defaultDisamb.getOrElse:
+        lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: cannot infer disambiguation from context")
+      )
+      case _ => N
+    )
 
