@@ -681,9 +681,9 @@ examples-panel {
   min-height: 28px;
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: 14px 30px 16px minmax(0, 1fr) max-content;
+  grid-template-columns: 14px max-content 16px minmax(0, 1fr) max-content;
   align-items: center;
-  gap: 4px;
+  column-gap: 4px;
   border: 1px solid transparent;
   border-radius: var(--ide-radius-sm);
   background: transparent;
@@ -813,9 +813,8 @@ examples-panel {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  min-width: 34px;
-  max-width: 34px;
+  justify-self: start;
+  min-width: 0;
   border: 1px solid color-mix(in srgb, var(--outline-symbol) 38%, var(--ide-border));
   border-radius: var(--ide-radius-sm);
   background: color-mix(in srgb, var(--outline-symbol) 12%, var(--ide-surface));
@@ -825,21 +824,24 @@ examples-panel {
   line-height: 1;
   min-height: 17px;
   overflow: hidden;
-  padding: 1px 0;
+  padding: 1px 2px;
   text-align: center;
 }
 
 .outline-node-icon {
   color: var(--outline-symbol);
   font-size: 0.86rem;
+  margin-left: 3px;
 }
 
 .outline-node-name {
+  font-family: var(--monospace);
+  font-size: 0.78rem;
+  letter-spacing: 0;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.84rem;
   line-height: 1.2;
 }
 

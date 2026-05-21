@@ -68,7 +68,7 @@ class OutlinePanel extends HTMLElement with
 
   fun nodeLocationLabel(node) =
     let detail = SymbolTree.rangeToNavigationDetail(node, documentData.rootFile)
-    "Line " + detail.line
+    "L" + detail.line
 
   fun hasChildren(node) =
     node.children is ~Absent and node.children.length > 0
