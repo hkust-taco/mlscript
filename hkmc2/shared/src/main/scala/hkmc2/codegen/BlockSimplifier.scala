@@ -109,10 +109,7 @@ class BlockSimplifier
     val usedVars = MutSet.empty[Local]
     val privateVars = MutSet.empty[TermSymbol]
     val usedPrivateVars = MutSet.empty[TermSymbol]
-    // * This is only queried during the rewrite phase, after the initial traversal above
-    // * has populated both sets, so recomputing it avoids stale cached state.
-    def unusedPrivateVars: Set[TermSymbol] =
-      privateVars.iterator.filterNot(usedPrivateVars).filterNot(symbolsToPreserve).toSet
+    var unusedPrivateVars: Set[TermSymbol] = Set.empty
     var tailLabels = MutSet.empty[LabelSymbol]
     
     def apply(prog: Program): Program =
@@ -150,6 +147,9 @@ class BlockSimplifier
               definedVars += lhs
             case _ =>
           super.applyBlock(b)
+
+      unusedPrivateVars =
+        privateVars.iterator.filterNot(usedPrivateVars).filterNot(symbolsToPreserve).toSet
 
       applyProgram(prog)
     
