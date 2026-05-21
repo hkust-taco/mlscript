@@ -99,15 +99,67 @@ fun isCompilationFile(path) = if
 fun filesForCompilation() =
   fs.getAllFiles((path, ...) => isCompilationFile(path))
 
-fun workspaceSourcePaths(files) =
-  Object.keys(files).filter of (path, ...) => path.endsWith(".mls")
+fun parentPath(path) =
+  let index = path.lastIndexOf("/")
+  if index <= 0 then "/"
+  else path.slice(0, index)
+
+fun normalizePath(path) =
+  let
+    parts = path.split("/")
+    stack = mut []
+  parts.forEach of (part, ...) =>
+    if
+      part is "" then ()
+      part is "." then ()
+      part is ".." then stack.pop()
+      else stack.push(part)
+  "/" + stack.join("/")
+
+fun resolveImportPath(fromPath, specifier) = if
+  specifier.startsWith(".") then normalizePath(parentPath(fromPath) + "/" + specifier)
+  specifier.startsWith("/") then normalizePath(specifier)
+  else normalizePath("/" + specifier)
+
+fun mlsImportTarget(files, fromPath, specifier) =
+  let resolved = resolveImportPath(fromPath, specifier)
+  if
+    resolved.endsWith(".mls") and Reflect.has(files, resolved) then resolved
+    not resolved.endsWith(".mjs") and Reflect.has(files, resolved + ".mls") then resolved + ".mls"
+    else null
+
+fun importSpecifiers(content) =
+  let
+    specs = mut []
+    importPattern = new RegExp("^\\s*import\\s+[\"']([^\"']+)[\"']")
+  content.split("\n").forEach of (line, ...) =>
+    if not line.trimStart().startsWith("//") do
+      if line.match(importPattern) is
+        ~null as match do specs.push(match.at(1))
+  specs
+
+fun collectImportClosure(files, targetPath) =
+  let
+    targets = new Set()
+    queue = mut []
+  if targetPath is ~Absent as path and path !== "" and path.endsWith(".mls") and Reflect.has(files, path) do
+    targets.add(path)
+    queue.push(path)
+  while queue.length > 0 do
+    let current = queue.shift()
+    importSpecifiers(files.(current)).forEach of (specifier, ...) =>
+      if mlsImportTarget(files, current, specifier) is
+        ~null as dependency do
+          if not targets.has(dependency) do
+            targets.add(dependency)
+            queue.push(dependency)
+  Array.from(targets)
 
 fun collectFilesForCompilation(targetPath) =
   let
     files = filesForCompilation()
-    targets = new Set(workspaceSourcePaths(files))
-  if targetPath is ~Absent as path and path !== "" and path.endsWith(".mls") do targets.add(path)
-  [files, Array.from(targets)]
+    targets = collectImportClosure(files, targetPath)
+  [files, targets]
 
 fun markPathCompiled(path) =
   let node = fs.stat(path)
