@@ -109,7 +109,7 @@ class BlockSimplifier
     val usedVars = MutSet.empty[Local]
     val privateVars = MutSet.empty[TermSymbol]
     val usedPrivateVars = MutSet.empty[TermSymbol]
-    var unusedPrivateVars: Set[TermSymbol] = Set.empty
+    var deadPrivateVars: Set[TermSymbol] = Set.empty
     var tailLabels = MutSet.empty[LabelSymbol]
     
     def apply(prog: Program): Program =
@@ -148,8 +148,9 @@ class BlockSimplifier
             case _ =>
           super.applyBlock(b)
 
-      unusedPrivateVars =
+      val unusedPrivateVars =
         privateVars.iterator.filterNot(usedPrivateVars).filterNot(symbolsToPreserve).toSet
+      deadPrivateVars = unusedPrivateVars
 
       applyProgram(prog)
     
@@ -233,7 +234,7 @@ class BlockSimplifier
       // * Discard writes to private fields that are never read
       case assign @ AssignField(lhs, _, rhs, rst) =>
         assign.symbol match
-        case S(ts: TermSymbol) if unusedPrivateVars(ts) =>
+        case S(ts: TermSymbol) if deadPrivateVars(ts) =>
           registerChange(s"rm unused private field write ${ts.showDbg} = ${rhs.showDbg}")
           applyPath(lhs): lhs2 =>
             applyResult(rhs): rhs2 =>
@@ -283,7 +284,7 @@ class BlockSimplifier
 
     private def removeUnusedPrivateFields(fields: Ls[TermSymbol]): Ls[TermSymbol] =
       fields.filterConserve: fld =>
-        val keep = !unusedPrivateVars(fld)
+        val keep = !deadPrivateVars(fld)
         if !keep then registerChange(s"rm unused private field ${fld.showDbg}")
         keep
 

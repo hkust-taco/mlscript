@@ -69,15 +69,15 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       source = Diagnostic.Source.Compilation))
     doc" # ${mkErr(errMsg)};"
   
-  private def getPrivateAccessorSymbol(termSymbol: semantics.TermSymbol): semantics.TempSymbol =
-    privateAccessorSymbols.getOrElseUpdate(termSymbol, semantics.TempSymbol(N, s"${termSymbol.name}$$accessorSymbol"))
+  private def getPrivateAccessorSymbol(ts: semantics.TermSymbol): semantics.TempSymbol =
+    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, s"${ts.name}$$accessorSymbol"))
 
-  private def selectPrivateField(termSymbol: semantics.TermSymbol, loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
-    termSymbol.owner.collect:
-      case owner if termSymbol.isPrivate =>
+  private def selectPrivateField(ts: semantics.TermSymbol, loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
+    ts.owner.collect:
+      case owner if ts.isPrivate =>
         if scope.inScopeOwners(owner)
-        then doc".#${owner.privatesScope.lookup_!(termSymbol, loc)}"
-        else doc"[${scope.lookup_!(getPrivateAccessorSymbol(termSymbol), loc)}]"
+        then doc".#${owner.privatesScope.lookup_!(ts, loc)}"
+        else doc"[${scope.lookup_!(getPrivateAccessorSymbol(ts), loc)}]"
 
   private def withPrivateAccessorDecls(doc: Document)(using Raise, Scope): Document =
     val accessors = (
