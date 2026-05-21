@@ -21,7 +21,7 @@ fun workerOptions() =
   mut { 'type: 'module }
 
 fun createWorker() =
-  new Worker("/analysis/worker.mjs?v=analysis-change-queue", workerOptions())
+  new Worker("/analysis/worker.mjs?v=symbol-index", workerOptions())
 
 fun filesForAnalysis() =
   fs.getAllFiles(undefined)
@@ -47,6 +47,13 @@ fun dispatchDocument(nextDocument) =
     revision: nextDocument.revision
   ))
   globalThis.document.dispatchEvent(event)
+
+fun dispatchSymbolIndex(index) =
+  set window.__mlscriptSymbolIndex = index
+  globalThis.document.dispatchEvent(new CustomEvent("analysis-symbol-index-updated", eventOptions(mut
+    index: index
+    revision: index.revision
+  )))
 
 fun dispatchStaleIgnored(revision) =
   globalThis.document.dispatchEvent(new CustomEvent("analysis-stale-result-ignored", eventOptions(mut
@@ -144,10 +151,14 @@ fun handleAnalysisError(message) =
   else
     dispatchStatus("error", message.revision, message.error)
 
+fun handleSymbolIndexUpdated(message) =
+  if message.revision >= currentRevision do dispatchSymbolIndex(message.index)
+
 fun handleWorkerData(message) =
   if message.'type is
     "analysis-ready" then handleAnalysisReady(message)
     "analysis-error" then handleAnalysisError(message)
+    "symbol-index-updated" then handleSymbolIndexUpdated(message)
     else console.warn("[Analysis Worker] Unknown message type:", message.'type)
 
 fun handleWorkerMessage(event) =
@@ -167,6 +178,7 @@ fun installTestHooks() =
     currentRevision: () => currentRevision
     latestAppliedRevision: () => latestAppliedRevision
     staleIgnoredCount: () => staleIgnoredCount
+    symbolIndex: () => window.__mlscriptSymbolIndex
     injectResponse: response => handleWorkerData(response)
   document.addEventListener("analysis-test-inject-response", event => handleWorkerData(event.detail))
 

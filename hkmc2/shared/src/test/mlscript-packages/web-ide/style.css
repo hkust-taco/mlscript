@@ -2923,12 +2923,34 @@ share-dialog dialog {
   color: var(--ide-text-muted);
 }
 
+.command-symbol-row {
+  grid-template-columns: 30px minmax(0, 1fr);
+}
+
+.command-symbol-kind {
+  width: 30px;
+  border: 1px solid color-mix(in srgb, var(--outline-symbol) 38%, var(--ide-border));
+  border-radius: var(--ide-radius-sm);
+  background: color-mix(in srgb, var(--outline-symbol) 12%, var(--ide-surface));
+  color: var(--outline-symbol-strong);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.1;
+  padding: 1px 4px;
+  text-align: center;
+}
+
 .command-row-main {
   display: grid;
   grid-template-columns: minmax(0, auto) minmax(0, 1fr);
   align-items: baseline;
   gap: 8px;
   min-width: 0;
+}
+
+.command-symbol-main {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
 }
 
 .command-row-title {
@@ -2948,6 +2970,25 @@ share-dialog dialog {
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.command-symbol-origin {
+  margin-left: 6px;
+  color: var(--ide-text-subtle);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.command-result-count {
+  color: var(--ide-text-muted);
+  font-size: 0.72rem;
+  padding: 3px 7px 5px;
+}
+
+.command-index-status {
+  color: var(--ide-text-muted);
+  font-size: 0.72rem;
+  padding: 3px 7px 5px;
 }
 
 .dialog-empty {

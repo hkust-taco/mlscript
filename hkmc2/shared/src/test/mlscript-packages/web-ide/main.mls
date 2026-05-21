@@ -20,7 +20,7 @@ fun loadMLscript() =
   dynamicImport("./build/MLscript.mjs").then(loaded => compilerModule(loaded))
 
 fun loadAnalysis() =
-  dynamicImport("./analysis/index.mjs?v=analysis-change-queue").then(loaded => compilerModule(loaded))
+  dynamicImport("./analysis/index.mjs?v=symbol-index").then(loaded => compilerModule(loaded))
 
 fun folderAttrs() =
   mut { collapsed: true }

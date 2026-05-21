@@ -66,17 +66,21 @@ fun closeDismissibleDialogFromBackdrop(targetDialog) =
 class CommandPaletteDialog extends HTMLElement with
   let query = ""
   let activeCommandId = ""
+  let activeSymbolId = ""
+  let symbolIndex = null
+  let resultLimit = 100
 
   fun connectedCallback() =
+    if window.__mlscriptSymbolIndex is ~Absent as index do set symbolIndex = index
     this.render()
     this.attachEventListeners()
-    renderCommands()
+    renderPalette()
 
   fun render() =
     set this.innerHTML = """
       <dialog class="command-palette-native" data-dismissible="true">
         <form class="command-palette-form" method="dialog">
-          <input class="command-search-input" type="search" placeholder="Search commands" aria-label="Search commands" />
+          <input class="command-search-input" type="search" placeholder="Search commands, @ symbols, # workspace symbols" aria-label="Search commands and symbols" />
           <div class="command-list" role="listbox" aria-label="Commands"></div>
         </form>
       </dialog>
@@ -91,7 +95,9 @@ class CommandPaletteDialog extends HTMLElement with
       command("execute", "Run compiled output", "Execute the active compiled program.", "icon-play", false, "")
       // command("open-generated", "Open generated output", "Open the compiled-output split view.", "icon-columns-3", false, "")
       // command("target-wasm", "Change compile target", "Open the split view and select the wasm mock target.", "icon-box", false, "")
-      command("go-symbol", "Go to symbol", "Open the Outline activity panel.", "icon-list-tree", false, "")
+      command("go-local-symbol", "Go to Symbol in File", "Search symbols in the active file.", "icon-at-sign", false, "")
+      command("go-workspace-symbol", "Go to Symbol in Workspace", "Search structural symbols across the workspace. Cmd+T / Ctrl+T.", "icon-hash", false, "")
+      command("open-outline", "Open Outline panel", "Open the Outline activity panel.", "icon-list-tree", false, "")
       command("go-file", "Go to file", "Open the Files activity panel.", "icon-files", false, "")
       command("search-files", "Search across files", "Open the Search activity panel.", "icon-search", false, "")
       command("toggle-problems", "Toggle Problems panel", "Show or hide the Problems panel.", "icon-circle-alert", false, "")
@@ -111,6 +117,11 @@ class CommandPaletteDialog extends HTMLElement with
   fun filteredCommands() =
     let needle = normalizedQuery()
     commands().filter(item => commandMatches(item, needle))
+
+  fun paletteMode() = if
+    query.startsWith("@") then "local-symbols"
+    query.startsWith("#") then "global-symbols"
+    else "commands"
 
   fun commandRowHtml(item) =
     let
@@ -151,24 +162,281 @@ class CommandPaletteDialog extends HTMLElement with
     if this.querySelector(".command-list") is ~null as list do
       let matching = filteredCommands()
       ensureActiveCommand(matching)
+      list.setAttribute("aria-label", "Commands")
       if matching.length === 0 then
         set list.innerHTML = """<div class="dialog-empty">No commands</div>"""
       else
         set list.innerHTML = matching.map(item => commandRowHtml(item)).join("")
         attachCommandRows()
 
+  fun searchInput() =
+    this.querySelector(".command-search-input")
+
+  fun indexedActiveFilePath() = if
+    symbolIndex is null then null
+    symbolIndex.activeFile is Absent then null
+    else symbolIndex.activeFile
+
+  fun activeFilePath() =
+    let activePath = getActiveFilePath()
+    if activePath is
+      null then indexedActiveFilePath()
+      else activePath
+
+  fun localIndexTargetsActiveFile() =
+    let
+      activePath = activeFilePath()
+      indexedPath = indexedActiveFilePath()
+    if activePath is
+      null then true
+      else activePath === indexedPath
+
+  fun localIndexIsStale() =
+    activeFileIsMls() and not localIndexTargetsActiveFile()
+
+  fun activeFileIsMls() =
+    if activeFilePath() is
+      null then false
+      path then typeof(path) is "string" and path.endsWith(".mls")
+
+  fun localEntries() = if
+    symbolIndex is null then []
+    symbolIndex.localEntries is Absent then []
+    not localIndexTargetsActiveFile() then []
+    else symbolIndex.localEntries
+
+  fun globalEntries() = if
+    symbolIndex is null then []
+    symbolIndex.globalEntries is Absent then []
+    else symbolIndex.globalEntries
+
+  fun symbolModeEntries() = if paletteMode() is
+    "local-symbols" then localEntries()
+    "global-symbols" then globalEntries()
+    else []
+
+  fun symbolNeedle() =
+    query.slice(1).trim().toLowerCase()
+
+  fun symbolTokens() =
+    let needle = symbolNeedle()
+    if needle === "" then []
+    else needle.split(new RegExp("\\s+")).filter(token => token !== "")
+
+  fun entryText(value, fallback) = if
+    value is Absent then fallback
+    value is null then fallback
+    else "" + value
+
+  fun numberValue(value, fallback) = if
+    typeof(value) is "number" then value
+    else fallback
+
+  fun symbolIndexStatus() = if
+    symbolIndex is null then "waiting"
+    symbolIndex.status is Absent then "ready"
+    else entryText(symbolIndex.status, "ready")
+
+  fun indexedFileCount() = if
+    symbolIndex is null then 0
+    else numberValue(symbolIndex.indexedFileCount, 0)
+
+  fun totalFileCount() = if
+    symbolIndex is null then 0
+    else numberValue(symbolIndex.totalFileCount, 0)
+
+  fun symbolIndexProgressSuffix() =
+    let
+      indexed = indexedFileCount()
+      total = totalFileCount()
+    if total > 0 then " (" + indexed + " of " + total + " files indexed)"
+    else ""
+
+  fun ownerPath(entry) = if
+    entry.ownerPath is Absent then []
+    entry.ownerPath is null then []
+    else entry.ownerPath
+
+  fun ownerText(entry) =
+    ownerPath(entry).join(" > ")
+
+  fun entrySearchText(entry) =
+    if entry.searchText is ~Absent as search then search
+    else [
+      entryText(entry.name, "")
+      entryText(entry.kind, "symbol")
+      entryText(entry.origin, "source")
+      entryText(entry.filePath, "")
+      ownerText(entry)
+    ].join(" ").toLowerCase()
+
+  fun entryMatches(entry, tokens) =
+    tokens.every(token => entrySearchText(entry).toLowerCase().includes(token))
+
+  fun symbolScore(entry, tokens) =
+    if tokens.length === 0 then 0
+    else
+      let
+        first = tokens.at(0)
+        name = entryText(entry.name, "").toLowerCase()
+      if name.startsWith(symbolNeedle()) then 0
+      else if name.startsWith(first) then 0
+      else if ownerText(entry).toLowerCase().includes(first) then 1
+      else if entryText(entry.filePath, "").toLowerCase().includes(first) then 2
+      else 3
+
+  fun compareSymbolResults(left, right) =
+    if left.score !== right.score then left.score - right.score
+    else entryText(left.entry.name, "").localeCompare(entryText(right.entry.name, ""))
+
+  fun filteredSymbolEntries() =
+    let tokens = symbolTokens()
+    symbolModeEntries()
+      .filter(entry => entryMatches(entry, tokens))
+      .map(entry => mut { entry: entry, score: symbolScore(entry, tokens) })
+      .sort((left, right) => compareSymbolResults(left, right))
+      .map(result => result.entry)
+
+  fun activeSymbolExists(entries) =
+    let found = false
+    entries.forEach of (entry, ...) =>
+      if entry.stableId === activeSymbolId do set found = true
+    found
+
+  fun ensureActiveSymbol(entries) =
+    if not activeSymbolExists(entries) do
+      set activeSymbolId = if entries.length === 0 then "" else entries.at(0).stableId
+
+  fun kindLabel(kind) = if kind is
+    "function" then "fn"
+    "module" then "mod"
+    "object" then "obj"
+    "class" then "cls"
+    "parameter" then "arg"
+    "mutable-value" then "mut"
+    "constructor" then "ctor"
+    "value" then "val"
+    "pattern" then "pat"
+    "trait" then "trt"
+    "mixin" then "mix"
+    "type" then "typ"
+    "field" then "fld"
+    else kind
+
+  fun symbolKindClass(kind) = if kind is
+    "file" then "outline-kind-file"
+    "module" then "outline-kind-module"
+    "class" then "outline-kind-class"
+    "object" then "outline-kind-object"
+    "function" then "outline-kind-function"
+    "value" then "outline-kind-value"
+    "mutable-value" then "outline-kind-mutable-value"
+    "parameter" then "outline-kind-parameter"
+    "constructor" then "outline-kind-constructor"
+    else "outline-kind-symbol"
+
+  fun originHtml(entry) =
+    let origin = entryText(entry.origin, "source")
+    if origin === "source" then ""
+    else """<span class="command-symbol-origin">""" + escapeHtml(origin) + """</span>"""
+
+  fun symbolDetail(entry) =
+    let
+      owner = ownerText(entry)
+      file = entryText(entry.filePath, "")
+      line = if entry.line is Absent then 1 else entry.line
+      location = file + ":" + line
+    if owner === "" then location
+    else owner + " - " + location
+
+  fun symbolRowHtml(entry) =
+    let
+      activeClass = if entry.stableId === activeSymbolId then " active" else ""
+      selectedAttr = if entry.stableId === activeSymbolId then "true" else "false"
+      kind = entryText(entry.kind, "symbol")
+    """
+      <button class="command-row command-symbol-row""" + activeClass + """" type="button" role="option" aria-selected="""" + selectedAttr + """" data-symbol-id="""" + escapeHtml(entry.stableId) + """" title="""" + escapeHtml(symbolDetail(entry)) + """">
+        <span class="command-symbol-kind """ + symbolKindClass(kind) + """">""" + escapeHtml(kindLabel(kind)) + """</span>
+        <span class="command-row-main command-symbol-main">
+          <span class="command-row-title">""" + escapeHtml(entryText(entry.name, "symbol")) + """</span>
+          <span class="command-row-detail">""" + escapeHtml(symbolDetail(entry)) + originHtml(entry) + """</span>
+        </span>
+      </button>
+    """
+
+  fun symbolCountHtml(total, shown) =
+    if total <= shown then ""
+    else """<div class="command-result-count">Showing """ + shown + """ of """ + total + """ symbols</div>"""
+
+  fun symbolStatusText(mode) = if
+    mode is "local-symbols" and localIndexIsStale() then "Indexing current file symbols"
+    mode is "global-symbols" and symbolIndexStatus() === "indexing" then "Indexing workspace symbols" + symbolIndexProgressSuffix()
+    else ""
+
+  fun symbolStatusHtml(mode) =
+    let text = symbolStatusText(mode)
+    if text === "" then ""
+    else """<div class="command-index-status">""" + escapeHtml(text) + """</div>"""
+
+  fun symbolEmptyText(mode) = if
+    symbolIndex is null then "Waiting for symbol index"
+    mode is "local-symbols" and not activeFileIsMls() then "Open an MLscript file to browse symbols"
+    mode is "local-symbols" and localIndexIsStale() then "Indexing current file symbols"
+    mode is "global-symbols" and symbolIndexStatus() === "indexing" then "Indexing workspace symbols" + symbolIndexProgressSuffix()
+    symbolTokens().length > 0 then "No matching symbols"
+    mode is "local-symbols" then "No symbols in current file"
+    else "No workspace symbols"
+
+  fun renderSymbols() =
+    if this.querySelector(".command-list") is ~null as list do
+      let
+        mode = paletteMode()
+        matching = filteredSymbolEntries()
+        visible = matching.slice(0, resultLimit)
+      ensureActiveSymbol(visible)
+      list.setAttribute("aria-label", if mode is "local-symbols" then "File symbols" else "Workspace symbols")
+      if matching.length === 0 then
+        set list.innerHTML = """<div class="dialog-empty">""" + escapeHtml(symbolEmptyText(mode)) + """</div>"""
+      else
+        set list.innerHTML = symbolStatusHtml(mode) + symbolCountHtml(matching.length, visible.length) + visible.map(entry => symbolRowHtml(entry)).join("")
+        attachSymbolRows()
+
+  fun renderPalette() =
+    if paletteMode() is
+      "commands" then renderCommands()
+      else renderSymbols()
+
   fun dialog() =
     this.querySelector("dialog")
 
   fun openPalette() =
-    set query = ""
-    set activeCommandId = ""
-    renderCommands()
+    set
+      query = ""
+      activeCommandId = ""
+      activeSymbolId = ""
+    renderPalette()
     if dialog() is ~null as commandDialog do
       if not commandDialog.open do commandDialog.showModal()
-    if this.querySelector(".command-search-input") is ~null as input do
+    if searchInput() is ~null as input do
       set input.value = ""
       window.setTimeout(() => input.focus(), 0)
+
+  fun openSymbolPalette(prefix) =
+    set
+      query = prefix
+      activeCommandId = ""
+      activeSymbolId = ""
+    renderPalette()
+    if dialog() is ~null as commandDialog do
+      if not commandDialog.open do commandDialog.showModal()
+    if searchInput() is ~null as input do
+      set input.value = prefix
+      window.setTimeout(
+        () =>
+          input.focus()
+          input.setSelectionRange(prefix.length, prefix.length),
+        0
+      )
 
   fun closePalette() =
     if dialog() is ~null as commandDialog do
@@ -218,19 +486,26 @@ class CommandPaletteDialog extends HTMLElement with
       "execute" then document.dispatchEvent(new CustomEvent("execute-requested", fileEventOptions()))
       // "open-generated" then openGeneratedOutput("mjs")
       // "target-wasm" then openGeneratedOutput("wasm")
-      "go-symbol" then dispatchSidebar("left", "outline")
+      "go-local-symbol" then openSymbolPalette("@")
+      "go-workspace-symbol" then openSymbolPalette("#")
+      "open-outline" then dispatchSidebar("left", "outline")
       "go-file" then dispatchSidebar("left", "files")
       "search-files" then dispatchSidebar("left", "search")
       "toggle-problems" then dispatchSidebar("right", "problems")
       "toggle-output" then
         if bottomPanel() is ~null as panel do panel.toggleCollapse()
       else ()
-    closePalette()
+    if id !== "go-local-symbol" and id !== "go-workspace-symbol" do closePalette()
 
   fun isOpenShortcut(event) =
     let isMac = window.navigator.platform.toUpperCase().indexOf("MAC") >= 0
     let isCmdOrCtrl = if isMac then event.metaKey else event.ctrlKey
     isCmdOrCtrl and isKey(event, "k", "K")
+
+  fun isWorkspaceSymbolShortcut(event) =
+    let isMac = window.navigator.platform.toUpperCase().indexOf("MAC") >= 0
+    let isCmdOrCtrl = if isMac then event.metaKey else event.ctrlKey
+    isCmdOrCtrl and isKey(event, "t", "T")
 
   fun isKey(event, lower, upper) = if
     event.key === lower then true
@@ -258,21 +533,79 @@ class CommandPaletteDialog extends HTMLElement with
       set activeCommandId = items.at(nextIndex).id
       syncActiveCommand()
 
+  fun activeSymbolIndex(items) =
+    let index = -1
+    items.forEach of (item, itemIndex) =>
+      if item.stableId === activeSymbolId do set index = itemIndex
+    index
+
+  fun syncActiveSymbol() =
+    this.querySelectorAll(".command-symbol-row").forEach of (button, ...) =>
+      let isActive = button.dataset.symbolId === activeSymbolId
+      button.classList.toggle("active", isActive)
+      button.setAttribute("aria-selected", if isActive then "true" else "false")
+      if isActive do button.scrollIntoView(mut { block: "nearest" })
+
+  fun moveActiveSymbol(delta) =
+    let items = filteredSymbolEntries().slice(0, resultLimit)
+    if items.length > 0 do
+      let currentIndex = activeSymbolIndex(items)
+      let nextIndex = if currentIndex < 0 then 0 else (currentIndex + delta + items.length) % items.length
+      set activeSymbolId = items.at(nextIndex).stableId
+      syncActiveSymbol()
+
+  fun moveActiveItem(delta) =
+    if paletteMode() is
+      "commands" then moveActiveCommand(delta)
+      else moveActiveSymbol(delta)
+
   fun executeActiveCommand() =
     let items = filteredCommands()
     ensureActiveCommand(items)
     if activeCommandId !== "" do executeCommand(activeCommandId)
 
+  fun executeSymbolEntry(entry) =
+    document.dispatchEvent(new CustomEvent("open-file-at-location", mut
+      detail: mut
+        filePath: entryText(entry.filePath, "")
+        line: if entry.line is Absent then 1 else entry.line
+        column: if entry.column is Absent then 0 else entry.column
+        length: if entry.length is Absent then 0 else entry.length
+    ))
+    closePalette()
+
+  fun activeSymbolEntry(items) =
+    let found = null
+    items.forEach of (entry, ...) =>
+      if found is null and entry.stableId === activeSymbolId do set found = entry
+    found
+
+  fun symbolEntryById(id, items) =
+    let found = null
+    items.forEach of (entry, ...) =>
+      if found is null and entry.stableId === id do set found = entry
+    found
+
+  fun executeActiveSymbol() =
+    let items = filteredSymbolEntries().slice(0, resultLimit)
+    ensureActiveSymbol(items)
+    if activeSymbolEntry(items) is ~null as entry do executeSymbolEntry(entry)
+
+  fun executeActiveItem() =
+    if paletteMode() is
+      "commands" then executeActiveCommand()
+      else executeActiveSymbol()
+
   fun handleSearchKeydown(event) = if event.key is
     "ArrowDown" then
       event.preventDefault()
-      moveActiveCommand(1)
+      moveActiveItem(1)
     "ArrowUp" then
       event.preventDefault()
-      moveActiveCommand(-1)
+      moveActiveItem(-1)
     "Enter" then
       event.preventDefault()
-      executeActiveCommand()
+      executeActiveItem()
     else ()
 
   fun attachCommandRows() =
@@ -284,20 +617,42 @@ class CommandPaletteDialog extends HTMLElement with
           set palette.activeCommandId = button.dataset.commandId
           palette.syncActiveCommand()
 
+  fun attachSymbolRows() =
+    let palette = this
+    this.querySelectorAll(".command-symbol-row").forEach of (button, ...) =>
+      button.addEventListener of "click", () =>
+        if palette.symbolEntryById(button.dataset.symbolId, palette.filteredSymbolEntries()) is ~null as entry do palette.executeSymbolEntry(entry)
+      button.addEventListener of "mouseenter", () =>
+        set palette.activeSymbolId = button.dataset.symbolId
+        palette.syncActiveSymbol()
+
+  fun handleSymbolIndexUpdated(detail) =
+    if detail is ~Absent as payload do
+      if payload.index is ~Absent as index do set symbolIndex = index
+    if paletteMode() is
+      "commands" then ()
+      else renderPalette()
+
   fun attachEventListeners() =
     let palette = this
     if dialog() is ~null as commandDialog do closeDismissibleDialogFromBackdrop(commandDialog)
     document.addEventListener("command-palette-open-requested", () => palette.openPalette())
+    document.addEventListener("analysis-symbol-index-updated", event => palette.handleSymbolIndexUpdated(event.detail))
     document.addEventListener of "keydown", event =>
       if palette.isOpenShortcut(event) do
         event.preventDefault()
         palette.openPalette()
-    if this.querySelector(".command-search-input") is ~null as input do
+      if palette.isWorkspaceSymbolShortcut(event) do
+        event.preventDefault()
+        palette.openSymbolPalette("#")
+    if searchInput() is ~null as input do
       input.addEventListener("keydown", event => palette.handleSearchKeydown(event))
       input.addEventListener of "input", event =>
         set query = event.target.value
-        set activeCommandId = ""
-        renderCommands()
+        set
+          activeCommandId = ""
+          activeSymbolId = ""
+        renderPalette()
 
 class ShareDialog extends HTMLElement with
 

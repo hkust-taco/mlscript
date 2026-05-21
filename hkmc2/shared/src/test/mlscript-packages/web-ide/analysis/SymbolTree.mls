@@ -110,6 +110,7 @@ fun normalizeNode(node, fallbackFile) =
     base = mut
       kind: textOrDefault(node.kind, "symbol")
       name: textOrDefault(node.displayName, textOrDefault(node.name, "symbol"))
+      origin: textOrDefault(node.origin, "source")
       file: file
       range: normalizedRange
       selectionRange: normalizedSelectionRange
@@ -161,6 +162,64 @@ fun rangeToNavigationDetail(node, fallbackFile) =
     line: line
     column: column
     length: length
+
+fun structuralKind(kind) = if kind is
+  "module" then true
+  "class" then true
+  "object" then true
+  "pattern" then true
+  "trait" then true
+  "mixin" then true
+  "type" then true
+  "constructor" then true
+  "field" then true
+  else false
+
+fun searchTextFor(node, detail, ownerPath) =
+  [
+    textOrDefault(node.name, "")
+    textOrDefault(node.kind, "symbol")
+    textOrDefault(node.origin, "source")
+    detail.filePath
+    ownerPath.join(" ")
+  ].join(" ").toLowerCase()
+
+fun symbolIndexEntry(node, fallbackFile, ownerPath) =
+  let detail = rangeToNavigationDetail(node, fallbackFile)
+  mut
+    stableId: stableExpansionKey(node, fallbackFile)
+    name: textOrDefault(node.name, "symbol")
+    kind: textOrDefault(node.kind, "symbol")
+    origin: textOrDefault(node.origin, "source")
+    filePath: detail.filePath
+    line: detail.line
+    column: detail.column
+    length: detail.length
+    ownerPath: ownerPath
+    searchText: searchTextFor(node, detail, ownerPath)
+
+fun flattenSymbolEntries(node, fallbackFile, ownerPath, entries, includeNode) =
+  arrayOrEmpty(node.children).forEach of (child, ...) =>
+    if includeNode(child) do entries.push(symbolIndexEntry(child, fallbackFile, ownerPath))
+    flattenSymbolEntries(
+      child,
+      fallbackFile,
+      ownerPath.concat([textOrDefault(child.name, "symbol")]),
+      entries,
+      includeNode
+    )
+
+fun localSymbolEntries(document) =
+  let entries = mut []
+  if document.root is ~null as root do
+    flattenSymbolEntries(root, document.rootFile, [], entries, node => true)
+  entries
+
+fun globalSymbolEntries(document) =
+  let entries = mut []
+  if document.root is ~null as root do
+    flattenSymbolEntries(root, document.rootFile, [], entries, node => structuralKind(textOrDefault(node.kind, "symbol")))
+  entries
 
 fun firstMlsPath(files) =
   let
