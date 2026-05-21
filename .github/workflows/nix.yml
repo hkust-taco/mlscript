@@ -54,10 +54,10 @@ jobs:
       - name: Build Web IDE deploy assets
         if: github.event_name == 'push' && github.ref == 'refs/heads/hkmc2' && steps.web_ide_changes.outputs.changed == 'true'
         run: |
-          sbt -J-Xmx4096M -J-Xss8M hkmc2JS/fastOptJS
+          sbt -J-Xmx4096M -J-Xss8M hkmc2JS/fullOptJS
           rm -rf hkmc2/shared/src/test/mlscript-packages/web-ide/build
           mkdir -p hkmc2/shared/src/test/mlscript-packages/web-ide/build
-          cp -R hkmc2/js/target/scala-*/hkmc2-fastopt/. hkmc2/shared/src/test/mlscript-packages/web-ide/build/
+          cp -R hkmc2/js/target/scala-*/hkmc2-opt/. hkmc2/shared/src/test/mlscript-packages/web-ide/build/
       - name: Deploy Web IDE to Cloudflare Workers
         if: github.event_name == 'push' && github.ref == 'refs/heads/hkmc2' && steps.web_ide_changes.outputs.changed == 'true'
         uses: cloudflare/wrangler-action@v3

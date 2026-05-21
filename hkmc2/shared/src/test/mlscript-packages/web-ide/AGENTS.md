@@ -230,10 +230,10 @@ This directory is ignored local runtime output. To refresh it for a browser
 preview, run the Scala.js build and copy the output:
 
 ```sh
-sbt --client hkmc2JS/fastLinkJS
-cp hkmc2/js/target/scala-3.8.3/hkmc2-fastopt/MLscript.mjs \
+sbt --client hkmc2JS/fullOptJS
+cp hkmc2/js/target/scala-3.8.3/hkmc2-opt/MLscript.mjs \
   hkmc2/shared/src/test/mlscript-packages/web-ide/build/MLscript.mjs
-cp hkmc2/js/target/scala-3.8.3/hkmc2-fastopt/MLscript.mjs.map \
+cp hkmc2/js/target/scala-3.8.3/hkmc2-opt/MLscript.mjs.map \
   hkmc2/shared/src/test/mlscript-packages/web-ide/build/MLscript.mjs.map
 ```
 

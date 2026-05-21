@@ -33,10 +33,10 @@ jobs:
           git diff-files -p --exit-code
       - name: Build Web IDE deploy assets
         run: |
-          sbt -J-Xmx4096M -J-Xss8M hkmc2JS/fastOptJS
+          sbt -J-Xmx4096M -J-Xss8M hkmc2JS/fullOptJS
           rm -rf hkmc2/shared/src/test/mlscript-packages/web-ide/build
           mkdir -p hkmc2/shared/src/test/mlscript-packages/web-ide/build
-          cp -R hkmc2/js/target/scala-*/hkmc2-fastopt/. hkmc2/shared/src/test/mlscript-packages/web-ide/build/
+          cp -R hkmc2/js/target/scala-*/hkmc2-opt/. hkmc2/shared/src/test/mlscript-packages/web-ide/build/
       - name: Compute preview alias
         id: preview_alias
         run: |
