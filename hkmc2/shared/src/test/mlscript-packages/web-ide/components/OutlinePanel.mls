@@ -90,6 +90,18 @@ class OutlinePanel extends HTMLElement with
     "value" then "val"
     else kind
 
+  fun nodeKindClass(kind) = if kind is
+    "file" then "outline-kind-file"
+    "module" then "outline-kind-module"
+    "class" then "outline-kind-class"
+    "object" then "outline-kind-object"
+    "function" then "outline-kind-function"
+    "value" then "outline-kind-value"
+    "mutable-value" then "outline-kind-mutable-value"
+    "parameter" then "outline-kind-parameter"
+    "constructor" then "outline-kind-constructor"
+    else "outline-kind-symbol"
+
   fun nodeMainHtml(node) =
     """
       <span class="outline-node-kind">""" + escapeHtml(kindLabel(node.kind)) + """</span>
@@ -119,11 +131,12 @@ class OutlinePanel extends HTMLElement with
     let
       key = nodeKey(node)
       selectedClass = if selectedKey === key then " selected" else ""
+      kindClass = nodeKindClass(node.kind)
       depthStyle = " style=\"--outline-depth: " + depth + "\""
     if hasChildren(node) then
       let openAttr = if isExpanded(key, depth) then " open" else ""
       """
-        <details class="outline-node""" + selectedClass + """" data-outline-key="""" + escapeHtml(key) + """"""" + depthStyle + openAttr + """>
+        <details class="outline-node """ + kindClass + selectedClass + """" data-outline-key="""" + escapeHtml(key) + """"""" + depthStyle + openAttr + """>
           <summary class="outline-node-summary" data-outline-key="""" + escapeHtml(key) + """" role="treeitem">
             """ + caretHtml(node) + """
             """ + nodeMainHtml(node) + """
@@ -135,7 +148,7 @@ class OutlinePanel extends HTMLElement with
       """
     else
       """
-        <button class="outline-node-leaf""" + selectedClass + """" type="button" data-outline-key="""" + escapeHtml(key) + """" role="treeitem"""" + depthStyle + """>
+        <button class="outline-node-leaf """ + kindClass + selectedClass + """" type="button" data-outline-key="""" + escapeHtml(key) + """" role="treeitem"""" + depthStyle + """>
           """ + spacerHtml() + """
           """ + nodeMainHtml(node) + """
         </button>

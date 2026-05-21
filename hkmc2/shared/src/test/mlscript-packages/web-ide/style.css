@@ -656,6 +656,8 @@ examples-panel {
 
 .outline-node {
   display: block;
+  --outline-symbol: var(--ide-accent);
+  --outline-symbol-strong: var(--ide-accent-strong);
 }
 
 .outline-node summary {
@@ -683,6 +685,61 @@ examples-panel {
   font: inherit;
   padding: 4px 6px 4px calc(6px + (var(--outline-depth, 0) * 14px));
   text-align: left;
+}
+
+.outline-node-leaf {
+  --outline-symbol: var(--ide-accent);
+  --outline-symbol-strong: var(--ide-accent-strong);
+}
+
+.outline-kind-file {
+  --outline-symbol: #5f6b6f;
+  --outline-symbol-strong: #435056;
+}
+
+.outline-kind-module {
+  --outline-symbol: var(--ide-accent);
+  --outline-symbol-strong: var(--ide-accent-strong);
+}
+
+.outline-kind-class {
+  --outline-symbol: var(--ide-internal);
+  --outline-symbol-strong: #5b3a70;
+}
+
+.outline-kind-object {
+  --outline-symbol: var(--ide-info);
+  --outline-symbol-strong: #0e4f80;
+}
+
+.outline-kind-function {
+  --outline-symbol: var(--ide-success);
+  --outline-symbol-strong: #235d34;
+}
+
+.outline-kind-value {
+  --outline-symbol: var(--ide-warning);
+  --outline-symbol-strong: #884000;
+}
+
+.outline-kind-mutable-value {
+  --outline-symbol: var(--ide-danger);
+  --outline-symbol-strong: #9f2529;
+}
+
+.outline-kind-parameter {
+  --outline-symbol: #60758f;
+  --outline-symbol-strong: #46566b;
+}
+
+.outline-kind-constructor {
+  --outline-symbol: #9a4d6d;
+  --outline-symbol-strong: #743852;
+}
+
+.outline-kind-symbol {
+  --outline-symbol: var(--ide-text-muted);
+  --outline-symbol-strong: var(--ide-text);
 }
 
 .outline-node-caret,
@@ -737,10 +794,10 @@ examples-panel {
 
 .outline-node-kind {
   width: 30px;
-  border: 1px solid color-mix(in srgb, var(--ide-accent) 35%, var(--ide-border));
+  border: 1px solid color-mix(in srgb, var(--outline-symbol) 38%, var(--ide-border));
   border-radius: var(--ide-radius-sm);
-  background: var(--ide-accent-soft);
-  color: var(--ide-accent-strong);
+  background: color-mix(in srgb, var(--outline-symbol) 12%, var(--ide-surface));
+  color: var(--outline-symbol-strong);
   font-size: 0.68rem;
   font-weight: 700;
   line-height: 1.1;
@@ -749,7 +806,7 @@ examples-panel {
 }
 
 .outline-node-icon {
-  color: var(--ide-text-muted);
+  color: var(--outline-symbol);
   font-size: 0.86rem;
 }
 
