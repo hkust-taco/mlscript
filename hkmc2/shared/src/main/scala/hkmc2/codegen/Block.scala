@@ -613,7 +613,7 @@ sealed abstract class Defn:
     case FunDefn(_, _, _, params, body) => 1 + body.size
     case ValDefn(_, _, rhs) => 1
     case ClsLikeDefn(_, _, _, _, _, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
-      1 + methods.map(_.size).sum + preCtor.size + ctor.size
+      1 + methods.map(_.size).sum + preCtor.size + ctor.size + stat.fold(0)(_.size)
   
 
 final case class FunDefn(
@@ -740,6 +740,7 @@ final case class ClsLikeBody(
   lazy val freeVars: Set[Local] =
     ctor.freeVars ++ methods.flatMap(_.freeVars)
   lazy val freeVarsLLIR: Set[Local] = ???
+  lazy val size = 1 + methods.map(_.size).sum + ctor.size
 
 /*
 object ClsLikeBody:
