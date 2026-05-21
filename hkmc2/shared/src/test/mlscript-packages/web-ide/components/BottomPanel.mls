@@ -64,9 +64,6 @@ class BottomPanel extends HTMLElement with
             <i class="icon-download"></i>
             <span>Download</span>
           </button>
-          <button class="collapse-btn" type="button" title="Hide bottom panel">
-            <i class="""" + collapseIcon() + """"></i>
-          </button>
         </div>
       </div>
       <div class="bottom-panel-content" role="tabpanel" aria-label="""" + tabLabel(activeTab) + """">
@@ -78,9 +75,6 @@ class BottomPanel extends HTMLElement with
 
   fun checkedAttr() =
     if preserveLogs then " checked" else ""
-
-  fun collapseIcon() =
-    if isCollapsed then "icon-arrow-up-to-line" else "icon-arrow-down-to-line"
 
   fun tabButtonHtml(id, label, icon) =
     let
@@ -488,8 +482,6 @@ class BottomPanel extends HTMLElement with
       clearBtn.addEventListener("click", () => panel.clear())
     if this.querySelector(".download-btn") is ~null as downloadBtn do
       downloadBtn.addEventListener("click", () => panel.downloadVisibleContent())
-    if this.querySelector(".collapse-btn") is ~null as collapseBtn do
-      collapseBtn.addEventListener("click", () => panel.toggleCollapse())
     if this.querySelector(".preserve-logs-checkbox") is ~null as preserveLogsCheckbox do
       preserveLogsCheckbox.addEventListener("change", event => panel.setPreserveLogs(event.target.checked))
     if this.querySelector(".terminal-form") is ~null as form do

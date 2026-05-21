@@ -2410,7 +2410,6 @@ bottom-panel .bottom-panel-tabs {
 bottom-panel .bottom-panel-tab,
 bottom-panel .clear-btn,
 bottom-panel .download-btn,
-bottom-panel .collapse-btn,
 bottom-panel .terminal-form button {
   display: inline-flex;
   align-items: center;
@@ -2430,7 +2429,6 @@ bottom-panel .terminal-form button {
 bottom-panel .bottom-panel-tab:hover,
 bottom-panel .bottom-panel-tab.active,
 bottom-panel .download-btn:hover,
-bottom-panel .collapse-btn:hover,
 bottom-panel .terminal-form button:hover {
   background: var(--ide-accent-soft);
   border-color: color-mix(in srgb, var(--ide-accent) 38%, var(--ide-border));
@@ -2444,7 +2442,6 @@ bottom-panel .bottom-panel-tab.active {
 bottom-panel .bottom-panel-tab i,
 bottom-panel .clear-btn i,
 bottom-panel .download-btn i,
-bottom-panel .collapse-btn i,
 bottom-panel .terminal-form button i {
   width: 0.9rem;
   height: 0.9rem;
