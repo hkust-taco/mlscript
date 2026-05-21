@@ -57,6 +57,12 @@ class ToolbarPanel extends HTMLElement with
     setTerminateDisplay(terminateBtn, "inline-block")
     setTooltipText(tooltip, runningTooltip())
 
+  fun setCompilingStatus(statusLight, statusText, terminateBtn, tooltip) =
+    statusLight.classList.add("status-running")
+    set statusText.textContent = "Compiling..."
+    setTerminateDisplay(terminateBtn, "none")
+    setTooltipText(tooltip, "Compilation is running.")
+
   fun setDoneStatus(statusLight, statusText, terminateBtn, tooltip) =
     statusLight.classList.add("status-done")
     set statusText.textContent = doneStatusText()
@@ -94,6 +100,7 @@ class ToolbarPanel extends HTMLElement with
         set statusLight.className = "status-light"
         if status is
           "idle" then setIdleStatus(statusLight, statusText, terminateBtn, tooltip)
+          "compiling" then setCompilingStatus(statusLight, statusText, terminateBtn, tooltip)
           "running" then setRunningStatus(statusLight, statusText, terminateBtn, tooltip)
           "done" then setDoneStatus(statusLight, statusText, terminateBtn, tooltip)
           "error" then setErrorStatus(statusLight, statusText, terminateBtn, tooltip)
@@ -170,6 +177,12 @@ class ToolbarPanel extends HTMLElement with
 
   fun setCompilationStatus(nextStatus) =
     set isCompiling = nextStatus === "running"
+    if nextStatus is
+      "running" then setStatus("compiling", Absent)
+      "fatal" then setStatus("fatal", Absent)
+      "error" then setStatus("error", Absent)
+      "done" then setStatus("done", Absent)
+      else ()
     this.updateCompileButton()
     this.updateExecuteButton()
 

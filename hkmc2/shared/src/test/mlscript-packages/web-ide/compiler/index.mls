@@ -64,11 +64,11 @@ fun resolveCallback(id, diagnostics, changes) = if callbackMap.get(id) is
 fun rejectCallback(id, name, message, stack) = if callbackMap.get(id) is
   Absent then Logger.error("Compiler", "No callback found for id", id)
   callbacks then
-    let error = new Error(message)
-    set
-      error.name = name
-      error.stack = stack
-    callbacks.reject(error)
+    callbacks.reject(mut
+      name: name
+      message: message
+      stack: stack
+    )
     callbackMap.delete(id)
 
 fun handleCompileSuccess(message) =
@@ -84,7 +84,7 @@ fun handleCompileSuccess(message) =
 
 fun handleCompileError(message) =
   Logger.error("Compiler", message.name + ": " + message.message, message.stack)
-  dispatchStatus("error")
+  dispatchStatus("fatal")
   rejectCallback(message.id, message.name, message.message, message.stack)
 
 fun handleWorkerMessage(event) =

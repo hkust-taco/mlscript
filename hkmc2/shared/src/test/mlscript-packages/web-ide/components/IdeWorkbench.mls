@@ -159,6 +159,8 @@ class IdeWorkbench extends HTMLElement with
   fun updateCompilationStatus(status) =
     if status is
       "running" then updateText(".workbench-state-status", "Compiling")
+      "fatal" then updateText(".workbench-state-status", "Fatal error")
+      "error" then updateText(".workbench-state-status", "Error")
       else updateText(".workbench-state-status", "Ready")
 
   fun handleSidebarToggleRequested(event) =

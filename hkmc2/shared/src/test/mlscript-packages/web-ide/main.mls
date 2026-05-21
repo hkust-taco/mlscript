@@ -123,6 +123,67 @@ fun setDiagnostics(diagnosticsPerFile) =
   if diagnosticsInspector() is
     ~null as panel do panel.setDiagnostics(diagnosticsPerFile)
 
+fun bottomPanel() =
+  document.querySelector("bottom-panel")
+
+fun showLoggingPanel() =
+  if bottomPanel() is
+    ~null as panel do panel.showLogging()
+
+fun compilationStatusDetail(status, error) =
+  mut { :status, :error }
+
+fun dispatchCompilationStatus(status, error) =
+  document.dispatchEvent(new CustomEvent("compilation-status-change", mut
+    detail: compilationStatusDetail(status, error)
+  ))
+
+fun errorName(error) = if error.name is
+  Absent then "CompilerError"
+  name then name
+
+fun errorMessage(error) = if error.message is
+  Absent then String(error)
+  message then message
+
+fun errorStack(error) = if error.stack is
+  Absent then ""
+  stack then stack
+
+fun fatalDiagnostic(path, error) =
+  mut
+    kind: "internal"
+    source: "compiler"
+    mainMessage: "Compiler internal error: " + errorMessage(error)
+    excerpt: errorStack(error)
+    line: 1
+    allMessages: [
+      mut
+        messageBits: [
+          mut { text: errorName(error) + ": " + errorMessage(error) }
+          mut { text: errorStack(error) }
+        ]
+        location: mut { start: 0, end: 0 }
+    ]
+
+fun compilerFatalDiagnostics(path, error) =
+  [
+    mut
+      path: if path is "" then "/compiler" else path
+      diagnostics: [fatalDiagnostic(path, error)]
+  ]
+
+fun handleCompileFatal(targetPath, error) =
+  setDiagnostics(compilerFatalDiagnostics(targetPath, error))
+  Logger.error("Compiler", "Compiler internal error",
+    mut
+      name: errorName(error)
+      message: errorMessage(error)
+      stack: errorStack(error)
+  )
+  dispatchCompilationStatus("fatal", error)
+  showLoggingPanel()
+
 fun compileSuccess(targetPaths, response) =
   markAsCompiled(targetPaths)
   setDiagnostics(response.result)
@@ -132,7 +193,9 @@ fun compileTarget(targetPath) =
     collected = collectFilesForCompilation(targetPath)
     allFiles = collected.at(0)
     targetPaths = collected.at(1)
-  index.compile(targetPaths, allFiles).then(response => compileSuccess(targetPaths, response))
+  index.compile(targetPaths, allFiles)
+    .then(response => compileSuccess(targetPaths, response))
+    .'catch(error => handleCompileFatal(targetPath, error))
 
 fun isMlsPath(path) =
   typeof(path) is "string" and path.endsWith(".mls")
@@ -158,9 +221,10 @@ fun compileThenExecute(filePath, mjsPath) =
     collected = collectFilesForCompilation(filePath)
     allFiles = collected.at(0)
     targetPaths = collected.at(1)
-  index.compile(targetPaths, allFiles).then of _ =>
-    markAsCompiled(targetPaths)
-    runCompiledFile(mjsPath)
+    compilePromise = index.compile(targetPaths, allFiles).then of _ =>
+      markAsCompiled(targetPaths)
+      runCompiledFile(mjsPath)
+  compilePromise.'catch(error => handleCompileFatal(filePath, error))
 
 fun expandConsolePanel() =
   if document.querySelector("bottom-panel") is
