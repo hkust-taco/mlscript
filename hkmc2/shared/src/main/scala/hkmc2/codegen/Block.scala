@@ -121,7 +121,7 @@ sealed abstract class Block extends Product:
     case AssignDynField(_, _, _, _, rst) => 1 + rst.size
     case Match(_, arms, dflt, rst) =>
       1 + arms.map(_._2.size).sum + dflt.map(_.size).getOrElse(0) + rst.size
-    case Define(_, rst) => 1 + rst.size
+    case Define(defn, rst) => defn.size + rst.size
     case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
     case Label(_, _, bod, rst) => 1 + bod.size + rst.size
     case Scoped(_, body) => body.size
@@ -608,6 +608,12 @@ sealed abstract class Defn:
       preCtor.freeVarsLLIR
         ++ ctor.freeVarsLLIR ++ methods.flatMap(_.freeVarsLLIR) ++ stat.iterator.flatMap(_.freeVarsLLIR)
         -- auxParams.flatMap(_.paramSyms)
+
+  lazy val size: Int = this match
+    case FunDefn(_, _, _, params, body) => 1 + body.size
+    case ValDefn(_, _, rhs) => 1
+    case ClsLikeDefn(_, _, _, _, _, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
+      1 + methods.map(_.size).sum + preCtor.size + ctor.size
   
 
 final case class FunDefn(

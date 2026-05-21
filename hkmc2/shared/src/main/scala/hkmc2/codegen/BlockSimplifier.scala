@@ -940,13 +940,14 @@ class BlockSimplifier
           isPrivate && !isMethod && useCount <= 1 && !disallowElimination && !isLoopBreaker
           // false
         
-        def shouldBeInlined(newBlk: Block): Bool =
+        def shouldBeInlined(newBlk: Block, threshold: Int): Bool =
           if isLoopBreaker then return false
           // method requires the capturing of `this`, which is not supported currently.
           if isMethod then return false
           // If the definition is marked with inline, we should inline it regardless of the size of the body.
+          // If both callee and caller are marked with inline, inlining will ignore the stricter @inline limits.
+          // Remark: the case of a recursive function marked with inline will be blocked by loop breaker logic.
           if defn.inline then return true
-          val threshold = summon[Config.Inliner].inlineThreshold
           newBlk.size <= threshold || canBeInlineEliminated
         
       type InlinerMap = Map[TermSymbol, InlinerFunInfo]
@@ -1126,10 +1127,10 @@ class BlockSimplifier
               S(newBdy)
             .fold(super.applyResult(r)(k)): blk =>
               val info = m(ts)
-              // If both callee and caller are marked with inline, inlining will not be blocked.
-              // Remark: the case of a recursive function marked with inline will be blocked by loop breaker logic.
+              val cfg = summon[Config.Inliner]
+              val threshold = if insideInlineAnnotatedFunction then cfg.altSmallThreshold else cfg.inlineThreshold
               val inliningBlocked = insideInlineAnnotatedFunction && !info.defn.inline
-              if !info.shouldBeInlined(blk) || inliningBlocked then
+              if !info.shouldBeInlined(blk, threshold) || inliningBlocked then
                 super.applyResult(r)(k)
               else
                 val matchedArgs = matchAllArgs(argss, info.defn.params)
