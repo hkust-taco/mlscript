@@ -1077,51 +1077,24 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     raise(ErrorReport(errMsgs, source = Diagnostic.Source.Compilation, extraInfo = extraInfo))
     unreachable
 
-  def getVar(l: Local, loc: Opt[Loc])(using Ctx, FunctionCtx, Raise): Expr =
-    singletonInfoFor(l) match
-      case S(info) => singletonGlobalGet(info)
-      case N => l match
-          case ts: semantics.TermSymbol =>
-            errExpr(
-              Ls(msg"WatBuilder::getVar for TermSymbol not implemented yet" -> ts.toLoc),
-              extraInfo = S(ts.toString),
-            )
-          case ts: semantics.ModuleOrObjectSymbol if ts.asMod.isDefined =>
-            errExpr(
-              Ls(
-                msg"WatBuilder::getVar for ModuleOrObjectSymbol (`ts.asMod.isDefined`) not implemented yet" -> ts.toLoc,
-              ),
-              extraInfo = S(ts.toString),
-            )
-          case ts: semantics.InnerSymbol =>
-            funcCtx.lookupLocal(ts) match
-              case S(localIdx) => local.get(localIdx, RefType.anyref)
-              case N =>
-                errExpr(
-                  Ls(
-                    msg"WatBuilder::getVar for InnerSymbol `${ts.toString}` (symbol not in top-level scope) not implemented yet" ->
-                      ts.toLoc,
-                  ),
-                  extraInfo = S(
-                    s"Locals: ${(funcCtx.params ++ funcCtx.locals).toString}\nGlobals: ${ctx.getGlobals.toString}",
-                  ),
-                )
-          case l =>
-            funcCtx.lookupLocal(l) match
-              case S(localIdx) => local.get(localIdx, RefType.anyref)
-              case N if ctx.containsGlobal(l) =>
-                global.get(ctx.getGlobal_!(l), ctx.getGlobalType_!(l).globalType.valType)
-              case _ =>
-                errExpr(
-                  Ls(
-                    msg"Cannot find variable `${l.toString}` (${l.getClass.getSimpleName}) in local or global scope." ->
-                      l.toLoc,
-                  ),
-                  extraInfo = S(
-                    s"Locals: ${(funcCtx.params ++ funcCtx.locals).toString}\nGlobals: ${ctx.getGlobals.toString}",
-                  ),
-                )
-  end getVar
+  def getVar(l: Local, loc: Opt[Loc])(using Ctx, FunctionCtx, Raise): Expr = l match
+    case ts: (semantics.TermSymbol | semantics.InnerSymbol) => 
+      lastWords(s"Symbol `$ts` (${ts.getClass.getSimpleName}) cannot be resolved as a variable")
+    case l =>
+      funcCtx.lookupLocal(l) match
+        case S(localIdx) => local.get(localIdx, RefType.anyref)
+        case N if ctx.containsGlobal(l) =>
+          global.get(ctx.getGlobal_!(l), ctx.getGlobalType_!(l).globalType.valType)
+        case _ =>
+          errExpr(
+            Ls(
+              msg"Cannot find variable `${l.toString}` (${l.getClass.getSimpleName}) in local or global scope." ->
+                l.toLoc,
+            ),
+            extraInfo = S(
+              s"Locals: ${(funcCtx.params ++ funcCtx.locals).toString}\nGlobals: ${ctx.getGlobals.toString}",
+            ),
+          )
 
   def argument(a: Arg)(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr =
     if a.spread.nonEmpty then
@@ -1221,8 +1194,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         returnTypes = Seq(Result(RefType.anyref)),
       )
     case Value.SimpleRef(l) =>
-      if (l is State.unitSymbol) then
-        RegisterUnitSingleton()
       singletonInfoFor(l) match
         case S(info) => singletonGlobalGet(info)
         case N =>
@@ -1246,17 +1217,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       singletonInfoFor(sym) match
         case S(info) => singletonGlobalGet(info)
         case N =>
-          ctx.getFunc(sym) match
-            case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncTypeUse_!(sym).typeIdx, nullable = false))
-            case N => 
-              // TODO(Derppening): Add type tracking and refinement for locals, remove the `ref.cast`
-              ref.cast(
-                local.get(funcCtx.lookupLocal_!(sym, sym.toLoc), RefType.anyref),
-                RefType(
-                  sym.asBlkMember.fold(baseObjectTypeIdx)(ctx.getType_!(_)),
-                  nullable = false,
-                ),
-              )
+          // TODO(Derppening): Remove `ref.cast` once erased-typed IR is implemented
+          ref.cast(
+            local.get(funcCtx.lookupLocal_!(sym, sym.toLoc), RefType.anyref),
+            RefType(
+              sym.asBlkMember.fold(baseObjectTypeIdx)(ctx.getType_!(_)),
+              nullable = false,
+            ),
+          )
 
     case Call(Value.SimpleRef(l: BuiltinSymbol), lhs :: rhs :: Nil) if !l.functionLike =>
       if l.binary then
