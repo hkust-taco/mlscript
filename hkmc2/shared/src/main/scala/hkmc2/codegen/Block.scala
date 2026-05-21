@@ -1003,7 +1003,6 @@ extension (bms: BlockMemberSymbol)
 extension (l: Local)
   def asPath(using State): Path = l match 
     case l: (LocalSymbol | BuiltinSymbol) => Value.SimpleRef(l)
-    case tls: TopLevelSymbol => Value.This(tls)
     case bms: BlockMemberSymbol => Value.MemberRef(bms, bms.defaultDisamb.getOrElse(lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")))
     case sym: InnerSymbol => Value.This(sym)
     case _: NoSymbol => lastWords("NoSymbol should not be used as a Path/Value")
