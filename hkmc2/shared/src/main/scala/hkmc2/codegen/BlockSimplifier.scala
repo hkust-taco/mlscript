@@ -103,13 +103,17 @@ class BlockSimplifier
     * hopefully allows more expensive passes such as DataFlowAnalysis to do less work. */
   class DeadCodeElim() extends BlockTransformer(SymbolSubst.Id), Helper:
     
+    var analysisDone = false
+    
     val usedLabels = MutSet.empty[LabelSymbol]
     val definedVars = MutSet.empty[Local]
     val localVars = MutSet.empty[Local]
     val usedVars = MutSet.empty[Local]
     val privateVars = MutSet.empty[TermSymbol]
     val usedPrivateVars = MutSet.empty[TermSymbol]
-    var unusedPrivateVars = Set.empty[TermSymbol]
+    lazy val unusedPrivateFieldSyms: Set[TermSymbol] =
+      assert(analysisDone)
+      privateVars.iterator.filterNot(usedPrivateVars).filterNot(symbolsToPreserve).toSet
     var tailLabels = MutSet.empty[LabelSymbol]
     
     def apply(prog: Program): Program =
@@ -148,9 +152,7 @@ class BlockSimplifier
             case _ =>
           super.applyBlock(b)
 
-      unusedPrivateVars =
-        privateVars.iterator.filterNot(usedPrivateVars).filterNot(symbolsToPreserve).toSet
-
+      analysisDone = true
       applyProgram(prog)
     
     // Evaluate `thunk` with a new tail label set. This is used for evaluating any sub blocks that is not in the tail position.
@@ -233,7 +235,7 @@ class BlockSimplifier
       // * Discard writes to private fields that are never read
       case assign @ AssignField(lhs, _, rhs, rst) =>
         assign.symbol match
-        case S(ts: TermSymbol) if unusedPrivateVars(ts) =>
+        case S(ts: TermSymbol) if unusedPrivateFieldSyms(ts) =>
           registerChange(s"rm unused private field write ${ts.showDbg} = ${rhs.showDbg}")
           applyPath(lhs): lhs2 =>
             applyResult(rhs): rhs2 =>
@@ -283,7 +285,7 @@ class BlockSimplifier
 
     private def removeUnusedPrivateFields(fields: Ls[TermSymbol]): Ls[TermSymbol] =
       fields.filterConserve: fld =>
-        val keep = !unusedPrivateVars(fld)
+        val keep = !unusedPrivateFieldSyms(fld)
         if !keep then registerChange(s"rm unused private field ${fld.showDbg}")
         keep
 
@@ -1139,5 +1141,3 @@ class BlockSimplifier
   
   
 end BlockSimplifier
-
-
