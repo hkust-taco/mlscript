@@ -300,7 +300,8 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
                   transformBlock(rest): (z, ctx) =>
                     blockCtor("Assign", Ls(xSym, y, z), "assign")(k(_, ctx))
         case _ =>
-          raise(ErrorReport(msg"Other Blocks not supported in staged module: ${b.getClass.toString()}" -> N :: Nil))
+          raise:
+            ErrorReport(msg"Field assignment is not supported in staged modules: ${nme.name}" -> N :: Nil)
           End()
     case Define(cls: ClsLikeDefn, rest) =>
       assert(cls.companion.isEmpty, "nested module not supported")
