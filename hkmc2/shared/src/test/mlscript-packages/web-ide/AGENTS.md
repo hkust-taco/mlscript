@@ -294,6 +294,11 @@ http://127.0.0.1:3003/index.html
 Do not start another server when the user says a preview server is already
 running.
 
+The Web IDE preview workflow deploys to Cloudflare only when both
+`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are configured in the
+repository where the workflow runs. Forks need their own Actions secrets; the
+upstream repository's secrets are not inherited by fork push workflows.
+
 If no server exists and the user has not prohibited starting one, serve the
 package root:
 
