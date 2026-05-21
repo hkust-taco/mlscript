@@ -353,20 +353,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
   // compute new program body
   val newBody =
     
-    extension (a: Symbol) def toValueRef =
-      a match
-      case bms: BlockMemberSymbol => Value.MemberRef(bms, bms.defaultDisamb.get)
-      case sym: TempSymbol => Value.SimpleRef(sym)
-      case sym: VarSymbol => Value.SimpleRef(sym)
-      case sym: (LocalSymbol | BuiltinSymbol) => Value.SimpleRef(sym)
-      case sym: InnerSymbol => Value.This(sym)
-      // case sym: InnerSymbol => Value.InnerRef(sym)
-      case sym => 
-        lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")
     def mkReturnCall(target: (BlockMemberSymbol, TermSymbol), args: Ls[Symbol]): Block =
       Return(Call(
         Value.MemberRef(target._1, target._2),
-        args.map(a => Arg(N, a.toValueRef)) ne_:: Nil
+        args.map(a => Arg(N, a.asPath)) ne_:: Nil
       )(true, false, false), false)
     
     class Rewriter(instId: InstantiationId) extends BlockTransformer(_symSubst):
@@ -464,7 +454,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
           val callWithFvs = dtorBranchFnFvs(scrut.uid.concreteId)
           applyPath(scrut): newScrut =>
             Return(
-              Call(newScrut, callWithFvs.map(s => Arg(N, s.toValueRef)) ne_:: Nil)(true, false, false),
+              Call(newScrut, callWithFvs.map(s => Arg(N, s.asPath)) ne_:: Nil)(true, false, false),
               false)
         case Break(label) =>
           val labelRestFunId = label.withInstId(instId)
