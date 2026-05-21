@@ -1,5 +1,6 @@
 import "../filesystem/fs.mls"
 import "../common/JS.mls"
+import "../common/Logger.mls"
 
 open JS { Absent }
 
@@ -350,7 +351,7 @@ class TreeNode extends HTMLElement with
       elements.folderName.textContent = current.name
       elements.childrenContainer.className = "folder-children"
       elements.childrenContainer.style.paddingLeft = "12px"
-    console.log("The attributes of " + path + ":", current.attrs)
+    Logger.debug("File Tree", "Folder attributes", path, current.attrs)
     elements.summary.appendChild(elements.folderIcon)
     elements.summary.appendChild(elements.folderName)
     elements.details.appendChild(elements.summary)

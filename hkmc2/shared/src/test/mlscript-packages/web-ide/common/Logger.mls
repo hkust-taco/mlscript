@@ -1,0 +1,42 @@
+import "./JS.mls"
+
+open JS { Absent }
+
+module Logger with...
+
+val LOG_EVENT = "web-ide-log"
+
+fun timestamp() =
+  new Date().toISOString()
+
+fun bodyArray(body) =
+  Array.from(body)
+
+fun logEntry(level, source, message, body) =
+  mut
+    level: level
+    timestamp: timestamp()
+    source: source
+    message: String(message)
+    body: bodyArray(body)
+
+fun eventOptions(entry) =
+  mut { detail: entry }
+
+fun emit(level, source, message, body) =
+  let entry = logEntry(level, source, message, body)
+  document.dispatchEvent(new CustomEvent(LOG_EVENT, eventOptions(entry)))
+  entry
+
+fun debug(source, message, ...body) =
+  emit("debug", source, message, body)
+
+fun info(source, message, ...body) =
+  emit("info", source, message, body)
+
+fun warn(source, message, ...body) =
+  emit("warn", source, message, body)
+
+fun error(source, message, ...body) =
+  emit("error", source, message, body)
+

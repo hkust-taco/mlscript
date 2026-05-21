@@ -2,21 +2,37 @@ import "./PanelPersistence.mls"
 import "./ResizeHandle.mls"
 import "../mockWorkbenchData.mls"
 import "../common/JS.mls"
+import "../common/Logger.mls"
 
 open JS { Absent }
 
 class BottomPanel extends HTMLElement with
   let
     messages = mut []
+    logEntries = mut []
     terminalLines = Array.from(mockWorkbenchData.terminalLines)
     activeTab = "output"
     isCollapsed = false
     preserveLogs = false
     feedbackText = ""
+    logEventListener = null
+    logBufferLimit = 500
 
   fun connectedCallback() =
     this.render()
     this.restoreSizeFromStorage()
+    this.attachLogEventListener()
+
+  fun disconnectedCallback() =
+    if logEventListener is ~null as listener do
+      document.removeEventListener(Logger.LOG_EVENT, listener)
+      set logEventListener = null
+
+  fun attachLogEventListener() =
+    if logEventListener is null do
+      let panel = this
+      set logEventListener = event => panel.addLogEntry(event.detail)
+      document.addEventListener(Logger.LOG_EVENT, logEventListener)
 
   fun restoreSizeFromStorage() =
     PanelPersistence.restorePanelHeight(this, "bottom-panel-height", 100, 600)
@@ -30,6 +46,7 @@ class BottomPanel extends HTMLElement with
       <div class="bottom-panel-header">
         <div class="bottom-panel-tabs" role="tablist" aria-label="Bottom panel">
           """ + tabButtonHtml("output", "Output", "icon-scroll-text") + """
+          """ + tabButtonHtml("logging", "Logging", "icon-list") + """
           <!--
           """ + tabButtonHtml("terminal", "Terminal", "icon-square-terminal") + """
           -->
@@ -78,6 +95,7 @@ class BottomPanel extends HTMLElement with
     """
 
   fun activeContentHtml() = if activeTab is
+    "logging" then loggingHtml()
     "terminal" then terminalHtml()
     else outputHtml()
 
@@ -89,6 +107,17 @@ class BottomPanel extends HTMLElement with
     else
       messages.forEach of (entry, ...) =>
         set html += messageRowHtml(entry)
+    set html += """</div>"""
+    html
+
+  fun loggingHtml() =
+    let html = """<div class="logging-content">"""
+    set html += feedbackHtml()
+    if logEntries.length is 0 then
+      set html += emptyHtml("Logging buffer is empty")
+    else
+      logEntries.forEach of (entry, ...) =>
+        set html += logEntryHtml(entry)
     set html += """</div>"""
     html
 
@@ -124,7 +153,20 @@ class BottomPanel extends HTMLElement with
 
   fun log(kind, ...args) =
     messages.push(message(kind, args))
+    addLogEntry(mut
+      level: outputLogLevel(kind)
+      timestamp: new Date().toISOString()
+      source: "Output"
+      message: formattedArgs(args)
+      body: args
+    )
     if activeTab === "output" do render()
+
+  fun outputLogLevel(kind) = if kind is
+    "error" then "error"
+    "warn" then "warn"
+    "info" then "info"
+    else "debug"
 
   fun stringifyArg(arg) = if typeof(arg) is
     "object" then
@@ -134,14 +176,94 @@ class BottomPanel extends HTMLElement with
       )
     else String(arg)
 
+  fun formattedArgs(args) =
+    args.map(arg => stringifyArg(arg)).join(" ")
+
   fun formattedContent(message) =
-    message.content.map(arg => stringifyArg(arg)).join(" ")
+    formattedArgs(message.content)
+
+  fun valueOrDefault(value, fallback) = if value is
+    Absent then fallback
+    null then fallback
+    else value
+
+  fun normalizeLevel(level) = if String(valueOrDefault(level, "info")) is
+    "error" then "error"
+    "warn" then "warn"
+    "debug" then "debug"
+    "trace" then "trace"
+    else "info"
+
+  fun normalizeBody(body) = if body is
+    Absent then []
+    null then []
+    else Array.from(body)
+
+  fun normalizeLogEntry(entry) =
+    let body = normalizeBody(entry.body)
+    mut
+      level: normalizeLevel(entry.level)
+      timestamp: String(valueOrDefault(entry.timestamp, new Date().toISOString()))
+      source: String(valueOrDefault(entry.source, "Web IDE"))
+      message: String(valueOrDefault(entry.message, formattedArgs(body)))
+      body: body
+
+  fun addLogEntry(entry) =
+    logEntries.push(normalizeLogEntry(entry))
+    while logEntries.length > logBufferLimit do logEntries.shift()
+    if activeTab === "logging" do render()
 
   fun iconClassName(kind) = if kind is
     "error" then "icon-x"
     "warn" then "icon-triangle-alert"
     "info" then "icon-info"
     else "icon-chevron-right"
+
+  fun logLevelClass(level) = if level is
+    "error" then "log-level-error"
+    "warn" then "log-level-warn"
+    "debug" then "log-level-debug"
+    "trace" then "log-level-trace"
+    else "log-level-info"
+
+  fun logIconClassName(level) = if level is
+    "error" then "icon-x"
+    "warn" then "icon-triangle-alert"
+    "debug" then "icon-bug"
+    "trace" then "icon-route"
+    else "icon-info"
+
+  fun logBodyText(entry) =
+    entry.body.map(arg => stringifyArg(arg)).join("\n")
+
+  fun logBodyHtml(entry) =
+    let text = logBodyText(entry)
+    if text === "" then ""
+    else """
+        <details class="log-entry-body">
+          <summary>Body</summary>
+          <pre>""" + escapeHtml(text) + """</pre>
+        </details>
+      """
+
+  fun logEntryText(entry) =
+    let header = "[" + entry.timestamp + "] " + entry.level.toUpperCase() + " " + entry.source + " - " + entry.message
+    let body = logBodyText(entry)
+    if body === "" then header else header + "\n" + body
+
+  fun logEntryHtml(entry) =
+    """
+      <article class="log-entry """ + logLevelClass(entry.level) + """">
+        <div class="log-entry-meta">
+          <span class="log-entry-icon"><i class='""" + logIconClassName(entry.level) + """'></i></span>
+          <span class="log-entry-level">""" + entry.level.toUpperCase() + """</span>
+          <time class="log-entry-time">""" + escapeHtml(entry.timestamp) + """</time>
+          <span class="log-entry-source">""" + escapeHtml(entry.source) + """</span>
+        </div>
+        <div class="log-entry-message">""" + escapeHtml(entry.message) + """</div>
+        """ + logBodyHtml(entry) + """
+      </article>
+    """
 
   fun messageRowHtml(message) =
     """
@@ -156,6 +278,11 @@ class BottomPanel extends HTMLElement with
     render()
   else
     if activeTab is
+      "logging" then
+        let hadEntries = logEntries.length > 0
+        set
+          logEntries = mut []
+          feedbackText = if hadEntries then "Logging buffer cleared" else ""
       "terminal" then
         set
           terminalLines = mut []
@@ -172,7 +299,7 @@ class BottomPanel extends HTMLElement with
     render()
 
   fun setActiveTab(tabName) = if tabName is
-    "output" | "terminal" then
+    "output" | "logging" | "terminal" then
       set
         activeTab = tabName
         feedbackText = ""
@@ -180,10 +307,12 @@ class BottomPanel extends HTMLElement with
     else ()
 
   fun tabLabel(tabName) = if tabName is
+    "logging" then "Logging"
     "terminal" then "Terminal"
     else "Output"
 
   fun visibleText() = if activeTab is
+    "logging" then logEntries.map(entry => logEntryText(entry)).join("\n\n")
     "terminal" then terminalLines.join("\n")
     else messages.map(entry => formattedContent(entry)).join("\n")
 
@@ -273,6 +402,11 @@ class BottomPanel extends HTMLElement with
 
   fun showOutput() =
     set activeTab = "output"
+    expand()
+    if not shouldExpand() do render()
+
+  fun showLogging() =
+    set activeTab = "logging"
     expand()
     if not shouldExpand() do render()
 

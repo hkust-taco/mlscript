@@ -3,6 +3,7 @@ import "./filesystem/persistent.mls"
 import "./execution/runner.mls"
 import "./compiler/index.mls"
 import "./common/JS.mls"
+import "./common/Logger.mls"
 
 open JS { Absent }
 
@@ -26,7 +27,7 @@ fun standardAttrs() =
   mut { std: true, compiled: true }
 
 fun createStandardFile(path, content) =
-  console.log("Loading file: \"" + path + "\"")
+  Logger.debug("Main", "Loading standard library file", path)
   fs.createFile(path, content,
     force: true
     attrs: standardAttrs()
@@ -42,13 +43,13 @@ fun loadStandardLibraryBody(compiler) =
     createStandardFile(entry.at(0), entry.at(1))
 
 fun loadStandardLibrary(compiler) =
-  console.groupCollapsed("Loading standard library files")
+  Logger.info("Main", "Loading standard library files")
   js.try_catch(
     () =>
       loadStandardLibraryBody(compiler)
-      console.groupEnd()
+      Logger.info("Main", "Loaded standard library files")
     error =>
-      console.groupEnd()
+      Logger.error("Main", "Failed to load standard library files", error)
       throw error
   )
 
@@ -135,7 +136,7 @@ fun handleCompileRequested(event) =
   let filePath = event.detail.filePath
   if
     isMlsPath(filePath) then compileTarget(filePath)
-    else console.warn("Compile skipped: active file is not an .mls file:", filePath)
+    else Logger.warn("Compiler", "Compile skipped: active file is not an .mls file", filePath)
 
 
 fun compiledPath(filePath) = if
@@ -144,10 +145,10 @@ fun compiledPath(filePath) = if
 
 fun runCompiledFile(mjsPath) =
   if fs.pathExists(mjsPath) then runner.execute(mjsPath)
-  else console.error("Compiled file not found after compilation:", mjsPath)
+  else Logger.error("Execution", "Compiled file not found after compilation", mjsPath)
 
 fun compileThenExecute(filePath, mjsPath) =
-  console.warn("Compiled file not found, compiling first:", mjsPath)
+  Logger.warn("Execution", "Compiled file not found, compiling first", mjsPath)
   let
     collected = collectFilesForCompilation(filePath)
     allFiles = collected.at(0)
@@ -164,7 +165,7 @@ fun handleExecuteRequested(event) =
   expandConsolePanel()
   let filePath = event.detail.filePath
   if
-    typeof(filePath) is ~"string" then console.error("Invalid file path for execution:", filePath)
+    typeof(filePath) is ~"string" then Logger.error("Execution", "Invalid file path for execution", filePath)
     else
       let mjsPath = compiledPath(filePath)
       if fs.pathExists(mjsPath) then runner.execute(mjsPath)
@@ -185,4 +186,4 @@ fun start(compiler) =
   document.addEventListener("open-file-at-location", handleOpenFileAtLocation)
 
 let startPromise = loadMLscript().then(compiler => start(compiler))
-startPromise.'catch(error => console.error("Failed to load MLscript compiler:", error))
+startPromise.'catch(error => Logger.error("Main", "Failed to load MLscript compiler", error))

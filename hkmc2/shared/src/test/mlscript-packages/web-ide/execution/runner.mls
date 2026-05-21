@@ -1,5 +1,6 @@
 import "../filesystem/fs.mls"
 import "../common/JS.mls"
+import "../common/Logger.mls"
 
 open JS { Absent }
 
@@ -75,7 +76,7 @@ fun makeExecution(id) =
 
 fun run(execution, id, mainPath) =
   let files = fs.getAllFiles(undefined)
-  console.log("[VM] Files:", Object.keys(files))
+  Logger.debug("Execution", "Files sent to worker", Object.keys(files))
   execution.worker.postMessage(runMessage(id, mainPath, files))
 
 fun isOutdated(id) = if latestExecution is
@@ -84,14 +85,12 @@ fun isOutdated(id) = if latestExecution is
   else false
 
 fun handleVmConsole(kind, logMethod, payload) =
-  // Dynamic selection on declared module `console` is rejected by codegen.
-  globalThis.console.(logMethod)("[Execution]", ...payload)
   if consolePanel() is
     ~null as panel do panel.log(kind, ...payload)
 
 fun handleWorkerMessage(execution, id, mainPath, event) =
   if isOutdated(id) then
-    console.error("Received message from outdated worker, terminating it.")
+    Logger.warn("Execution", "Received message from outdated worker, terminating it")
     execution.worker.terminate()
   else
     let
@@ -100,19 +99,20 @@ fun handleWorkerMessage(execution, id, mainPath, event) =
       payload = messageData.payload
     if kind is
       "ready" then
-        console.log("[VM]", "Ready to run.")
+        Logger.info("Execution", "Worker ready to run")
         set
           execution.isRunning = true
           execution.startTime = Date.now()
         dispatchStatusChange("running", null)
         run(execution, id, mainPath)
-      "log" then console.log("[VM]", payload)
+      "internal-log" then Logger.emit(payload.level, payload.source, payload.message, payload.body)
+      "log" then Logger.debug("Execution Worker", String(payload))
       "error" then
-        console.error("[VM]", payload)
+        Logger.error("Execution Worker", String(payload))
         set execution.isRunning = false
         dispatchStatusChange("error", null)
       "done" then
-        console.log("[VM]", payload)
+        Logger.info("Execution", "Execution finished", payload)
         set execution.isRunning = false
         let runningTime = if
           execution.startTime is Absent then null
@@ -124,7 +124,7 @@ fun handleWorkerMessage(execution, id, mainPath, event) =
       else ()
 
 fun handleWorkerError(execution, event) =
-  console.error("[Worker error event]", workerErrorDetails(event))
+  Logger.error("Execution Worker", "Worker error event", workerErrorDetails(event))
   set execution.isRunning = false
   dispatchStatusChange("fatal", null)
   if consolePanel() is
@@ -139,7 +139,7 @@ fun handleWorkerError(execution, event) =
     ~null as panel do panel.setOutput(workerErrorMessage(event))
 
 fun handleMessageError(execution, event) =
-  console.error("[Worker message error]", event)
+  Logger.error("Execution Worker", "Worker message error", event)
   set execution.isRunning = false
   dispatchStatusChange("fatal", null)
   if consolePanel() is
@@ -151,17 +151,17 @@ fun cleanupPreviousExecution() = if latestExecution is
   null then true
   execution and
     execution.isRunning then
-      console.log("The previous execution is still running. Stop it before starting a new one.")
+      Logger.warn("Execution", "The previous execution is still running. Stop it before starting a new one")
       false
     else
-      console.log("Clean up the previous execution.")
+      Logger.debug("Execution", "Clean up the previous execution")
       execution.worker.terminate()
       set latestExecution = null
       true
 
 fun execute(mainPath) = if cleanupPreviousExecution() do
   clearConsolePanel()
-  console.log("[VM] Starting new execution for " + mainPath)
+  Logger.info("Execution", "Starting new execution", mainPath)
   let
     id = Date.now().toString()
     execution = makeExecution(id)
@@ -172,7 +172,7 @@ fun execute(mainPath) = if cleanupPreviousExecution() do
 
 fun terminate() = if latestExecution is
   ~null as execution and execution.isRunning do
-    console.log("[VM] Terminating worker...")
+    Logger.warn("Execution", "Terminating worker")
     execution.worker.terminate()
     set execution.isRunning = false
     dispatchStatusChange("aborted", null)

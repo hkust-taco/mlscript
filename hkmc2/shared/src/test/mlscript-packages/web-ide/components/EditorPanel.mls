@@ -2,6 +2,7 @@ import "../filesystem/fs.mls"
 import "../editor/editor.mls"
 import "./FileTooltip.mls" as fileTooltipModule
 import "../common/JS.mls"
+import "../common/Logger.mls"
 
 open JS { Absent }
 
@@ -336,7 +337,7 @@ class EditorPanel extends HTMLElement with
 
   fun clearTabTooltip(reason) =
     let tooltip = this.querySelector("file-tooltip.tab-tooltip")
-    console.log("[tab-tooltip] hide", tabLogInfo(reason))
+    Logger.debug("Tab Tooltip", "Hide", tabLogInfo(reason))
     if this.tabTooltipTimeout is ~Absent as timeout do
       window.clearTimeout(timeout)
       set this.tabTooltipTimeout = null
@@ -400,7 +401,7 @@ class EditorPanel extends HTMLElement with
     info
 
   fun showTooltip(tabEl, reason, tooltip) = if tabForElement(tabEl) is ~Absent as tab do
-    console.log("[tab-tooltip] show", tabShowLog(tabEl, reason, tooltip))
+    Logger.debug("Tab Tooltip", "Show", tabShowLog(tabEl, reason, tooltip))
     tooltip.show(tabEl, tooltipInfo(tab))
 
   fun setupNameScroll(container) = if
@@ -434,7 +435,7 @@ class EditorPanel extends HTMLElement with
         panel.switchTab(tabEl.getAttribute("data-tab-id"))
     tabEl.addEventListener of "mouseenter", () =>
       set panel.tabTooltipHoverTarget = tabEl
-      console.log("[tab-tooltip] mouseenter", panel.tabHoverLog(tabEl, "mouseenter"))
+      Logger.debug("Tab Tooltip", "Mouseenter", panel.tabHoverLog(tabEl, "mouseenter"))
     tabEl.addEventListener of "mousemove", () =>
       if
         panel.tabTooltipHoverTarget !== tabEl then ()
@@ -445,7 +446,7 @@ class EditorPanel extends HTMLElement with
           if panel.tabTooltipTimeout is ~Absent as timeout do
             window.clearTimeout(timeout)
           set panel.tabTooltipPendingTarget = tabEl
-          console.log("[tab-tooltip] schedule show", panel.tabHoverLog(tabEl, "schedule"))
+          Logger.debug("Tab Tooltip", "Schedule show", panel.tabHoverLog(tabEl, "schedule"))
           let showLater = () =>
             if panel.tabTooltipHoverTarget === tabEl do
               showTooltip(tabEl, "delay-elapsed", tooltip)

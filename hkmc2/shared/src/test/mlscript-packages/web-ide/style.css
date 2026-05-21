@@ -2531,6 +2531,7 @@ bottom-panel .bottom-panel-content {
 }
 
 bottom-panel .output-content,
+bottom-panel .logging-content,
 bottom-panel .terminal-content {
   min-height: 100%;
   padding: 6px 0;
@@ -2576,6 +2577,123 @@ bottom-panel .console-warn {
 bottom-panel .console-info {
   color: var(--ide-info);
   background: color-mix(in srgb, var(--ide-info) 7%, transparent);
+}
+
+bottom-panel .logging-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+}
+
+bottom-panel .log-entry {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-sm);
+  background: var(--ide-surface);
+  padding: 7px 9px;
+}
+
+bottom-panel .log-entry:hover {
+  background: var(--ide-surface-subtle);
+  border-color: var(--ide-border-strong);
+}
+
+bottom-panel .log-entry-meta {
+  display: grid;
+  grid-template-columns: auto auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: var(--ide-text-muted);
+  font-family: var(--monospace);
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+bottom-panel .log-entry-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+}
+
+bottom-panel .log-entry-level {
+  border: 1px solid var(--ide-border);
+  border-radius: 999px;
+  background: var(--ide-surface-muted);
+  color: var(--ide-text-muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+  padding: 3px 6px;
+}
+
+bottom-panel .log-level-error .log-entry-level,
+bottom-panel .log-level-error .log-entry-icon {
+  color: var(--ide-danger);
+}
+
+bottom-panel .log-level-warn .log-entry-level,
+bottom-panel .log-level-warn .log-entry-icon {
+  color: var(--ide-warning);
+}
+
+bottom-panel .log-level-info .log-entry-level,
+bottom-panel .log-level-info .log-entry-icon {
+  color: var(--ide-info);
+}
+
+bottom-panel .log-level-debug .log-entry-level,
+bottom-panel .log-level-debug .log-entry-icon,
+bottom-panel .log-level-trace .log-entry-level,
+bottom-panel .log-level-trace .log-entry-icon {
+  color: var(--ide-text-muted);
+}
+
+bottom-panel .log-entry-time,
+bottom-panel .log-entry-source {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+bottom-panel .log-entry-message {
+  min-width: 0;
+  color: var(--ide-text);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+bottom-panel .log-entry-body {
+  min-width: 0;
+}
+
+bottom-panel .log-entry-body summary {
+  cursor: pointer;
+  color: var(--ide-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+bottom-panel .log-entry-body pre {
+  max-height: 180px;
+  margin: 5px 0 0;
+  overflow: auto;
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-xs);
+  background: var(--ide-surface-subtle);
+  color: var(--ide-text);
+  font-family: var(--monospace);
+  font-size: 0.74rem;
+  line-height: 1.4;
+  padding: 7px;
+  white-space: pre-wrap;
 }
 
 bottom-panel .bottom-panel-empty {

@@ -1,5 +1,6 @@
 import "./fs.mls"
 import "../common/JS.mls"
+import "../common/Logger.mls"
 
 open JS { Absent }
 
@@ -80,7 +81,7 @@ fun restoreTimestamps(node, fileData) =
     node.birthtime = fileData.birthtime
 
 fun restoreFile(path, fileData) =
-  console.log("Restoring file: \"" + path + "\"")
+  Logger.debug("Persistence", "Restoring file", path)
   fs.createFile(path, fileData.content,
     force: true
     readonly: fileData.readonly
@@ -94,13 +95,13 @@ fun loadPersistedFiles() =
   let
     counter = 0
     paths = getPersistedPaths()
-  console.groupCollapsed("Loading persisted files from localStorage")
+  Logger.info("Persistence", "Loading persisted files from localStorage")
   paths.forEach of (path, ...) =>
     if loadPersistedFile(path) is
       Object as fileData do
         restoreFile(path, fileData)
         set counter += 1
-  console.groupEnd()
+  Logger.info("Persistence", "Loaded persisted files", counter)
   counter
 
 fun persistChange(event) =

@@ -17,6 +17,9 @@ fun message(kind, payload) =
 fun post(kind, payload) =
   self.postMessage(message(kind, payload))
 
+fun workerLog(level, message, ...body) =
+  post("internal-log", mut { :level, source: "Execution Worker", :message, :body })
+
 fun errorStack(error) = if
   error is Absent then ""
   error.stack is
@@ -81,12 +84,12 @@ fun resolveRelative(specifier, referrer) =
 
 fun workerGlobalError(message, source, lineno, colno, error) =
   let details = mut { :message, :source, :lineno, :colno, :error }
-  console.error("[Worker global error]", details)
+  workerLog("error", "Worker global error", details)
   post("error", "Uncaught error in worker: " + message + "\n" + errorStack(error))
   true
 
 fun unhandledRejection(event) =
-  console.error("[Worker unhandled rejection]", event.reason)
+  workerLog("error", "Worker unhandled rejection", event.reason)
   post("error", "Unhandled promise rejection: " + errorStack(event.reason))
   event.preventDefault()
 
@@ -160,7 +163,7 @@ fun runMain(mainPath, files) =
 
 fun messageHandlerError(error) =
   let msg = "Error in worker message handler: " + errorStack(error)
-  console.error(msg)
+  workerLog("error", msg)
   post("error", msg)
 
 fun handleMessageData(messageData) =

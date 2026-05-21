@@ -1,5 +1,6 @@
 import "../filesystem/fs.mls"
 import "../common/JS.mls"
+import "../common/Logger.mls"
 
 open JS { Absent }
 
@@ -55,13 +56,13 @@ fun markCompiledFiles(compiledFiles) =
   mlsFiles.forEach of (path, ...) => fs.setAttr(path, "compiled", true)
 
 fun resolveCallback(id, diagnostics, changes) = if callbackMap.get(id) is
-  Absent then console.error("[Compiler] No callback found for id:", id)
+  Absent then Logger.error("Compiler", "No callback found for id", id)
   callbacks then
     callbacks.resolve(successResult(diagnostics, changes))
     callbackMap.delete(id)
 
 fun rejectCallback(id, name, message, stack) = if callbackMap.get(id) is
-  Absent then console.error("[Compiler] No callback found for id:", id)
+  Absent then Logger.error("Compiler", "No callback found for id", id)
   callbacks then
     let error = new Error(message)
     set
@@ -75,28 +76,27 @@ fun handleCompileSuccess(message) =
     result = message.result
     changes = message.changes
     diagnostics = diagnosticsFrom(result)
-  console.log("[Compiler] Result:", diagnostics)
+  Logger.info("Compiler", "Compilation finished", diagnostics)
   applyChanges(changes)
   markCompiledFiles(compiledFilesFrom(result))
   dispatchStatus("done")
   resolveCallback(message.id, diagnostics, changes)
 
 fun handleCompileError(message) =
-  console.error("[Compiler] " + message.name + ": " + message.message)
-  console.error(message.stack)
+  Logger.error("Compiler", message.name + ": " + message.message, message.stack)
   dispatchStatus("error")
   rejectCallback(message.id, message.name, message.message, message.stack)
 
 fun handleWorkerMessage(event) =
   let message = event.data
-  console.log("[Compiler Worker] Message received:", message)
+  Logger.debug("Compiler Worker", "Message received", message)
   if message.'type is
     "compile-success" then handleCompileSuccess(message)
     "compile-error" then handleCompileError(message)
-    else console.warn("[Compiler Worker] Unknown message type:", message.'type)
+    else Logger.warn("Compiler Worker", "Unknown message type", message.'type)
 
 fun handleWorkerError(error) =
-  console.error("[Compiler Worker] Worker error:", error)
+  Logger.error("Compiler Worker", "Worker error", error)
 
 compilerWorker.addEventListener("message", handleWorkerMessage)
 compilerWorker.addEventListener("error", handleWorkerError)

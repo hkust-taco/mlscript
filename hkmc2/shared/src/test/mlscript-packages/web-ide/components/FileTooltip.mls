@@ -1,5 +1,6 @@
 import "../filesystem/fs.mls"
 import "../common/JS.mls"
+import "../common/Logger.mls"
 import "https://esm.sh/@floating-ui/dom" { computePosition, shift, offset }
 
 open JS { Absent }
@@ -165,7 +166,7 @@ class FileTooltip extends HTMLElement with
         else options.placement
       content = this.tooltipContent(path, name, options.size)
     if content is ~Absent and targetEl is ~Absent do
-      console.log("[file-tooltip] request show",
+      Logger.debug("File Tooltip", "Request show",
         path: path
         name: name
         placement: placement
@@ -186,7 +187,7 @@ class FileTooltip extends HTMLElement with
             this.style.top = position.y + "px"
             this.style.left = position.x + "px"
           this.classList.add("visible")
-          console.log("[file-tooltip] shown",
+          Logger.debug("File Tooltip", "Shown",
             path: path
             placement: placement
             x: position.x
@@ -197,6 +198,6 @@ class FileTooltip extends HTMLElement with
     set showRequestId += 1
     this.classList.remove("visible")
     Reflect.deleteProperty(this.dataset, "placement")
-    console.log("[file-tooltip] hide")
+    Logger.debug("File Tooltip", "Hide")
 
 customElements.define("file-tooltip", FileTooltip)
