@@ -17,7 +17,6 @@ import Scope.scope
 import hkmc2.syntax.Tree.UnitLit
 import hkmc2.semantics.Elaborator.ctx
 import hkmc2.syntax.Tree.{IntLit, StrLit}
-import scala.annotation.tailrec
 import scala.collection.mutable.LinkedHashMap
 
 
@@ -69,38 +68,21 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       source = Diagnostic.Source.Compilation))
     doc" # ${mkErr(errMsg)};"
   
-  private def isLexicallyInside(owner: InnerSymbol)(using Scope): Bool =
-    @tailrec
-    def go(scope: Scope): Bool =
-      scope.curThis match
-      case S(S(sym)) if sym is owner => true
-      case _ =>
-        scope.parent match
-        case S(parent) => go(parent)
-        case N => false
-    go(scope)
+  private def getPrivateAccessorSymbol(ts: semantics.TermSymbol): semantics.TempSymbol =
+    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, ts.name + "$accessorSymbol"))
 
-  private def privateAccessorSymbol(ts: semantics.TermSymbol): semantics.TempSymbol =
-    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, "accessorSymbol$"))
-
-  private def privateAccessorName(ts: semantics.TermSymbol, loc: Opt[Loc])(using Raise, Scope): Document =
-    doc"${scope.lookup_!(privateAccessorSymbol(ts), loc)}"
-
-  private def privateFieldSelect(ts: semantics.TermSymbol, loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
+  private def selectPrivateField(ts: semantics.TermSymbol, loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
     ts.owner.collect:
       case owner if ts.isPrivate =>
-        if isLexicallyInside(owner)
+        if scope.inScopeOwners(owner)
         then doc".#${owner.privatesScope.lookup_!(ts, loc)}"
-        else doc"[${privateAccessorName(ts, loc)}]"
+        else doc"[${scope.lookup_!(getPrivateAccessorSymbol(ts), loc)}]"
 
-  private def privateAccessorDecls(using Raise, Scope): Document =
-    privateAccessorSymbols.iterator.toList.sortBy(_._1.uid).map: (ts, sym) =>
+  private def withPrivateAccessorDecls(doc: Document)(using Raise, Scope): Document =
+    val accessors = privateAccessorSymbols.iterator.toList.sortBy(_._1.uid).map: (ts, sym) =>
       val name = scope.allocateOrGetName(sym)
       doc"""const $name = globalThis.Symbol(${makeStringLiteral(ts.nme)});"""
     .mkDocument(doc" # ")
-
-  private def withPrivateAccessorDecls(doc: Document)(using Raise, Scope): Document =
-    val accessors = privateAccessorDecls
     if accessors.isEmpty then doc else doc :/: accessors
 
   private def collectExternalPrivateAccessors(p: Program)(using State): Unit =
@@ -116,12 +98,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     def note(sym: Opt[DefinitionSymbol[?]]): Unit =
       sym match
       case S(ts: semantics.TermSymbol) if needsAccessor(ts) =>
-        privateAccessorSymbol(ts)
+        getPrivateAccessorSymbol(ts)
       case _ =>
     def noteAssign(sym: Opt[MemberSymbol]): Unit =
       sym match
       case S(ts: semantics.TermSymbol) if needsAccessor(ts) =>
-        privateAccessorSymbol(ts)
+        getPrivateAccessorSymbol(ts)
       case _ =>
     object collector extends BlockTraverser:
       override def applyPath(p: Path): Unit = p match
@@ -245,16 +227,15 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         case S(ds) if ds.shouldBeLifted => doc".class"
         case _ => doc""
       val field = s.symbol match
-        case S(ts: semantics.TermSymbol) => privateFieldSelect(ts, s.toLoc)
+        case S(ts: semantics.TermSymbol) => selectPrivateField(ts, s.toLoc)
         case _ => N
       val name = id.name
-      val fieldDoc = field.getOrElse {
+      val fieldDoc = field.getOrElse:
         if isValidFieldName(name)
         then doc".$name"
         else name.toIntOption match
           case S(index) => doc"[$index]"
           case N => doc"[${makeStringLiteral(name)}]"
-      }
       doc"${resultQual(qual)}${fieldDoc}${dotClass}"
     case DynSelect(qual, fld, ai) =>
       if ai
@@ -371,7 +352,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         )} = ${result(r)};${returningTerm(rst, endSemi)}"
     case assign @ AssignField(p, n, r, rst) =>
       val field = assign.symbol match
-        case S(ts: semantics.TermSymbol) => privateFieldSelect(ts, N)
+        case S(ts: semantics.TermSymbol) => selectPrivateField(ts, assign.toLoc)
         case _ => N
       doc" # ${result(p)}${field.getOrElse(fieldSelect(n.name))} = ${result(r)};${returningTerm(rst, endSemi)}"
     case AssignDynField(p, f, ai, r, rst) =>
@@ -478,10 +459,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   }(value) { ${getVar(letSym, letSym.toLoc)} = value; }"
                 :: Nil
               val privateAccessors = allPrivFlds.filter(privateAccessorSymbols.contains).flatMap: fld =>
-                doc" # ${mtdPrefix}get [${privateAccessorName(fld, fld.toLoc)}]() { return ${
+                doc" # ${mtdPrefix}get [${scope.lookup_!(getPrivateAccessorSymbol(fld), fld.toLoc)}]() { return ${
                     getVar(fld, fld.toLoc)
                   }; }"
-                :: doc" # ${mtdPrefix}set [${privateAccessorName(fld, fld.toLoc)}](value) { ${
+                :: doc" # ${mtdPrefix}set [${scope.lookup_!(getPrivateAccessorSymbol(fld), fld.toLoc)}](value) { ${
                     getVar(fld, fld.toLoc)
                   } = value; }"
                 :: Nil
@@ -1055,5 +1036,4 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
         doc"$checkArgsNum${this.body(body, endSemi = false)}")
     else
       super.setupFunction(name, params, body, isLambda = isLambda)
-
 

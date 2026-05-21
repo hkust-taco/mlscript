@@ -30,6 +30,8 @@ case class Scope
   
   lazy val parent: Opt[Scope] = parentOrCfg.toOption
   lazy val cfg: Cfg = parentOrCfg.fold(identity, _.cfg)
+  lazy val inScopeOwners: Set[InnerSymbol] =
+    parent.fold(Set.empty[InnerSymbol])(_.inScopeOwners) ++ curThis.iterator.flatten
   
   private val existingNames = MutMap.empty[Str, Local]
   
@@ -208,5 +210,4 @@ object Scope:
       .mkString
   
 end Scope
-
 

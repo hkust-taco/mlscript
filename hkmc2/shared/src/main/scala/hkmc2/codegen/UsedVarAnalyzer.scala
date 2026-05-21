@@ -60,10 +60,6 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
           accessed.mutated.add(lhs)
           applyResult(rhs)
           applyBlock(rest)
-        case AssignField(lhs, _, rhs, rest) =>
-          applyPath(lhs)
-          applyResult(rhs)
-          applyBlock(rest)
         case l: Label if l.loop =>
           accessed.refdDefns.add(l.label)
         case d: Define => d.defn match

@@ -109,7 +109,8 @@ class BlockSimplifier
     val usedVars = MutSet.empty[Local]
     val privateVars = MutSet.empty[TermSymbol]
     val usedPrivateVars = MutSet.empty[TermSymbol]
-    var unusedPrivateVars = Set.empty[TermSymbol]
+    lazy val unusedPrivateVars =
+      privateVars.iterator.filterNot(usedPrivateVars).filterNot(symbolsToPreserve).toSet
     var tailLabels = MutSet.empty[LabelSymbol]
     
     def apply(prog: Program): Program =
@@ -147,9 +148,6 @@ class BlockSimplifier
               definedVars += lhs
             case _ =>
           super.applyBlock(b)
-
-      unusedPrivateVars =
-        privateVars.iterator.filterNot(usedPrivateVars).filterNot(symbolsToPreserve).toSet
 
       applyProgram(prog)
     
@@ -1139,5 +1137,4 @@ class BlockSimplifier
   
   
 end BlockSimplifier
-
 
