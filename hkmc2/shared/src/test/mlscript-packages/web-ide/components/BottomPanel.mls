@@ -17,6 +17,9 @@ class BottomPanel extends HTMLElement with
     feedbackText = ""
     logEventListener = null
     logBufferLimit = 500
+    logLevelFilter = "all"
+    logSourceFilter = "all"
+    logSortOrder = "asc"
 
   fun connectedCallback() =
     this.render()
@@ -52,6 +55,7 @@ class BottomPanel extends HTMLElement with
           -->
         </div>
         <div class="bottom-panel-actions">
+          """ + logFilterControlsHtml() + """
           <label class="preserve-logs-label" title="Preserve panel content between clear actions">
             <input type="checkbox" class="preserve-logs-checkbox"""" + checkedAttr() + """ />
             <span>Preserve logs</span>
@@ -72,9 +76,59 @@ class BottomPanel extends HTMLElement with
     """
     this.classList.toggle("collapsed", isCollapsed)
     attachEventListeners()
+    scrollLoggingToLatest()
 
   fun checkedAttr() =
     if preserveLogs then " checked" else ""
+
+  fun selectedAttr(value, selectedValue) =
+    if value === selectedValue then " selected" else ""
+
+  fun logLevelOptionHtml(value, label) =
+    """<option value="""" + value + """"""" + selectedAttr(value, logLevelFilter) + """>""" + label + """</option>"""
+
+  fun sourceOptionsHtml() =
+    let
+      sources = mut []
+      html = """<option value="all"""" + selectedAttr("all", logSourceFilter) + """>All sources</option>"""
+    logEntries.forEach of (entry, ...) =>
+      if not sources.includes(entry.source) do sources.push(entry.source)
+    if logSourceFilter !== "all" and not sources.includes(logSourceFilter) do sources.push(logSourceFilter)
+    sources.sort()
+    sources.forEach of (source, ...) =>
+      set html += """<option value="""" + escapeHtml(source) + """"""" + selectedAttr(source, logSourceFilter) + """>""" + escapeHtml(source) + """</option>"""
+    html
+
+  fun logFilterControlsHtml() =
+    if activeTab !== "logging" then ""
+    else """
+      <div class="log-filter-controls" aria-label="Logging filters">
+        <label class="log-filter-field">
+          <span>Level</span>
+          <select class="log-level-filter" aria-label="Filter logs by level">
+            """ + logLevelOptionHtml("all", "All levels") + """
+            """ + logLevelOptionHtml("error", "Error") + """
+            """ + logLevelOptionHtml("warn", "Warn") + """
+            """ + logLevelOptionHtml("info", "Info") + """
+            """ + logLevelOptionHtml("debug", "Debug") + """
+            """ + logLevelOptionHtml("trace", "Trace") + """
+          </select>
+        </label>
+        <label class="log-filter-field log-source-filter-field">
+          <span>Source</span>
+          <select class="log-source-filter" aria-label="Filter logs by source">
+            """ + sourceOptionsHtml() + """
+          </select>
+        </label>
+        <label class="log-filter-field">
+          <span>Sort</span>
+          <select class="log-sort-order" aria-label="Sort logs by time">
+            <option value="asc"""" + selectedAttr("asc", logSortOrder) + """>Oldest first</option>
+            <option value="desc"""" + selectedAttr("desc", logSortOrder) + """>Newest first</option>
+          </select>
+        </label>
+      </div>
+    """
 
   fun tabButtonHtml(id, label, icon) =
     let
@@ -106,11 +160,14 @@ class BottomPanel extends HTMLElement with
 
   fun loggingHtml() =
     let html = """<div class="logging-content">"""
+    let visibleEntries = visibleLogEntries()
     set html += feedbackHtml()
     if logEntries.length is 0 then
       set html += emptyHtml("Logging buffer is empty")
+    else if visibleEntries.length is 0 then
+      set html += emptyHtml("No log entries match the filters")
     else
-      logEntries.forEach of (entry, ...) =>
+      visibleEntries.forEach of (entry, ...) =>
         set html += logEntryHtml(entry)
     set html += """</div>"""
     html
@@ -206,6 +263,29 @@ class BottomPanel extends HTMLElement with
     logEntries.push(normalizeLogEntry(entry))
     while logEntries.length > logBufferLimit do logEntries.shift()
     if activeTab === "logging" do render()
+
+  fun logTimestampValue(entry) =
+    let date = new Date(entry.timestamp)
+    if Number.isFinite(date.getTime()) then date.getTime() else 0
+
+  fun logSourceMatches(entry) =
+    if
+      logSourceFilter === "all" then true
+      else entry.source === logSourceFilter
+
+  fun logEntryMatches(entry) =
+    if
+      logLevelFilter === "all" then logSourceMatches(entry)
+      entry.level === logLevelFilter then logSourceMatches(entry)
+      else false
+
+  fun visibleLogEntries() =
+    let entries = logEntries.filter(entry => logEntryMatches(entry))
+    entries.sort((a, b) => if
+      logSortOrder === "desc" then logTimestampValue(b) - logTimestampValue(a)
+      else logTimestampValue(a) - logTimestampValue(b)
+    )
+    entries
 
   fun iconClassName(kind) = if kind is
     "error" then "icon-x"
@@ -356,6 +436,32 @@ class BottomPanel extends HTMLElement with
     set preserveLogs = value
     render()
 
+  fun normalizeLogLevelFilter(value) = if String(value) is
+    "error" then "error"
+    "warn" then "warn"
+    "info" then "info"
+    "debug" then "debug"
+    "trace" then "trace"
+    else "all"
+
+  fun setLogLevelFilter(value) =
+    set
+      logLevelFilter = normalizeLogLevelFilter(value)
+      feedbackText = ""
+    render()
+
+  fun setLogSourceFilter(value) =
+    set
+      logSourceFilter = if String(value) === "" then "all" else String(value)
+      feedbackText = ""
+    render()
+
+  fun setLogSortOrder(value) =
+    set
+      logSortOrder = if String(value) === "desc" then "desc" else "asc"
+      feedbackText = ""
+    render()
+
   fun setActiveTab(tabName) = if tabName is
     "output" | "logging" | "terminal" then
       if tabName === activeTab then
@@ -376,7 +482,7 @@ class BottomPanel extends HTMLElement with
     else "Output"
 
   fun visibleText() = if activeTab is
-    "logging" then logEntries.map(entry => logEntryText(entry)).join("\n\n")
+    "logging" then visibleLogEntries().map(entry => logEntryText(entry)).join("\n\n")
     "terminal" then terminalLines.join("\n")
     else messages.map(entry => formattedContent(entry)).join("\n")
 
@@ -474,6 +580,14 @@ class BottomPanel extends HTMLElement with
     expand()
     if not shouldExpand() do render()
 
+  fun scrollLoggingToLatest() =
+    if activeTab === "logging" and not isCollapsed do
+      if this.querySelector(".bottom-panel-content") is ~null as content do
+        window.requestAnimationFrame(() => if
+          logSortOrder === "desc" then set content.scrollTop = 0
+          else set content.scrollTop = content.scrollHeight
+        )
+
   fun attachEventListeners() =
     let panel = this
     this.querySelectorAll(".bottom-panel-tab").forEach of (button, ...) =>
@@ -482,6 +596,12 @@ class BottomPanel extends HTMLElement with
       clearBtn.addEventListener("click", () => panel.clear())
     if this.querySelector(".download-btn") is ~null as downloadBtn do
       downloadBtn.addEventListener("click", () => panel.downloadVisibleContent())
+    if this.querySelector(".log-level-filter") is ~null as levelFilter do
+      levelFilter.addEventListener("change", event => panel.setLogLevelFilter(event.target.value))
+    if this.querySelector(".log-source-filter") is ~null as sourceFilter do
+      sourceFilter.addEventListener("change", event => panel.setLogSourceFilter(event.target.value))
+    if this.querySelector(".log-sort-order") is ~null as sortOrder do
+      sortOrder.addEventListener("change", event => panel.setLogSortOrder(event.target.value))
     if this.querySelector(".preserve-logs-checkbox") is ~null as preserveLogsCheckbox do
       preserveLogsCheckbox.addEventListener("change", event => panel.setPreserveLogs(event.target.checked))
     if this.querySelector(".terminal-form") is ~null as form do

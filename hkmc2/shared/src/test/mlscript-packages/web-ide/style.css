@@ -2405,6 +2405,7 @@ bottom-panel .bottom-panel-tabs {
   align-items: center;
   gap: 4px;
   min-width: 0;
+  flex: 0 0 auto;
 }
 
 bottom-panel .bottom-panel-tab,
@@ -2452,6 +2453,41 @@ bottom-panel .bottom-panel-actions {
   align-items: center;
   gap: 6px;
   min-width: 0;
+  justify-content: flex-end;
+  flex: 1 1 auto;
+}
+
+bottom-panel .log-filter-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+bottom-panel .log-filter-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: var(--ide-text-muted);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+bottom-panel .log-filter-field select {
+  max-width: 128px;
+  min-width: 76px;
+  height: 28px;
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-sm);
+  background: var(--ide-surface);
+  color: var(--ide-text);
+  font: inherit;
+  padding: 3px 22px 3px 7px;
+}
+
+bottom-panel .log-source-filter-field select {
+  max-width: 150px;
 }
 
 bottom-panel .preserve-logs-label {
@@ -2515,6 +2551,7 @@ bottom-panel.collapsed .bottom-panel-content {
 
 bottom-panel.collapsed .clear-btn,
 bottom-panel.collapsed .download-btn,
+bottom-panel.collapsed .log-filter-controls,
 bottom-panel.collapsed .preserve-logs-label {
   display: none;
 }
@@ -2698,6 +2735,23 @@ bottom-panel .log-entry-body pre {
 }
 
 @media (max-width: 760px) {
+  bottom-panel .bottom-panel-header {
+    align-items: flex-start;
+  }
+
+  bottom-panel .bottom-panel-actions {
+    flex-wrap: wrap;
+  }
+
+  bottom-panel .log-filter-controls {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  bottom-panel .log-filter-field span {
+    display: none;
+  }
+
   bottom-panel .log-entry-row {
     grid-template-columns: 16px 44px 68px minmax(44px, 64px) minmax(110px, 1fr);
   }
