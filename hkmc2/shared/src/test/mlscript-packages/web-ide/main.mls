@@ -99,12 +99,14 @@ fun isCompilationFile(path) = if
 fun filesForCompilation() =
   fs.getAllFiles((path, ...) => isCompilationFile(path))
 
+fun workspaceSourcePaths(files) =
+  Object.keys(files).filter of (path, ...) => path.endsWith(".mls")
+
 fun collectFilesForCompilation(targetPath) =
   let
     files = filesForCompilation()
-    compilePaths = Object.keys(files).filter of (path, ...) => shouldCompile(path)
-    targets = new Set(compilePaths)
-  if targetPath is ~Absent as path and path !== "" do targets.add(path)
+    targets = new Set(workspaceSourcePaths(files))
+  if targetPath is ~Absent as path and path !== "" and path.endsWith(".mls") do targets.add(path)
   [files, Array.from(targets)]
 
 fun markPathCompiled(path) =
