@@ -178,10 +178,10 @@ class ToolbarPanel extends HTMLElement with
   fun setCompilationStatus(nextStatus) =
     set isCompiling = nextStatus === "running"
     if nextStatus is
-      "running" then setStatus("compiling", Absent)
-      "fatal" then setStatus("fatal", Absent)
-      "error" then setStatus("error", Absent)
-      "done" then setStatus("done", Absent)
+      "running" then setStatus("compiling", null)
+      "fatal" then setStatus("fatal", null)
+      "error" then setStatus("error", null)
+      "done" then setStatus("done", null)
       else ()
     this.updateCompileButton()
     this.updateExecuteButton()
