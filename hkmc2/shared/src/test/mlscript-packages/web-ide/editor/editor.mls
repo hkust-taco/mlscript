@@ -1,4 +1,6 @@
 import "https://esm.sh/codemirror@6.0.1" { EditorView, basicSetup }
+import "https://esm.sh/@codemirror/view@^6.0.0?target=es2022" { keymap }
+import "https://esm.sh/@codemirror/commands@^6.0.0?target=es2022" { indentWithTab }
 import "https://esm.sh/@codemirror/lang-javascript@6.2.4" { javascript }
 import "https://esm.sh/@codemirror/language@6.11.3" { StreamLanguage, defaultHighlightStyle, syntaxHighlighting }
 import "https://esm.sh/@uiw/codemirror-theme-vscode" { vscodeLight as theme }
@@ -49,6 +51,7 @@ fun saveOnChange(filePath, isReadonly) =
 
 fun editorExtensions(filePath, extension, isReadonly) =
   let extensions = mut [basicSetup]
+  extensions.push(keymap.of([indentWithTab]))
   extensions.push(syntaxHighlighting(defaultHighlightStyle))
   languageExtensions(extension).forEach of (extension, ...) =>
     extensions.push(extension)
