@@ -1038,3 +1038,5 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
         doc"$checkArgsNum${this.body(body, endSemi = false)}")
     else
       super.setupFunction(name, params, body, isLambda = isLambda)
+
+
