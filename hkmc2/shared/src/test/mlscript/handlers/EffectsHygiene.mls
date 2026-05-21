@@ -38,7 +38,7 @@ fun foo(h): module M =
 //│         A2 = this
 //│       }
 //│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "A"]; 
+//│       static [definitionMetadata] = ["class", "A"];
 //│     });
 //│     return A2
 //│   }
@@ -47,7 +47,7 @@ fun foo(h): module M =
 //│       A3 = this
 //│     }
 //│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "A"]; 
+//│     static [definitionMetadata] = ["class", "A"];
 //│   });
 //│   return A3;
 //│ };

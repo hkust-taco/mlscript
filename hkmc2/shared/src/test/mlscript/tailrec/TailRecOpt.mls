@@ -87,12 +87,12 @@ A.sum(20000)
 //│       acc = tmp1;
 //│       continue loopLabel;
 //│     }
-//│   } 
+//│   }
 //│   static sum(n) {
 //│     return A.sum_impl(n, 0)
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
+//│   static [definitionMetadata] = ["class", "A"];
 //│ });
 //│ A1.sum(20000)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

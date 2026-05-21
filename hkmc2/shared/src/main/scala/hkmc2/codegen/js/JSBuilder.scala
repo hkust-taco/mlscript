@@ -18,6 +18,7 @@ import hkmc2.syntax.Tree.UnitLit
 import hkmc2.semantics.Elaborator.ctx
 import hkmc2.syntax.Tree.{IntLit, StrLit}
 import scala.annotation.tailrec
+import scala.collection.mutable.LinkedHashMap
 
 
 // TODO factor some logic for other codegen backends
@@ -46,6 +47,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   
   val freeze = if !config.noFreeze then "globalThis.Object.freeze" else ""
   lazy val freezeDefns = if freezeDefinitions && !config.noFreeze then "globalThis.Object.freeze" else ""
+  private val privateAccessorSymbols = LinkedHashMap.empty[semantics.TermSymbol, semantics.TempSymbol]
   
   // TODO use this to avoid parens when we generate recomposed expressions later
   enum Context:
@@ -67,6 +69,88 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       source = Diagnostic.Source.Compilation))
     doc" # ${mkErr(errMsg)};"
   
+  private def isLexicallyInside(owner: InnerSymbol)(using Scope): Bool =
+    @tailrec
+    def go(scope: Scope): Bool =
+      scope.curThis match
+      case S(S(sym)) if sym is owner => true
+      case _ =>
+        scope.parent match
+        case S(parent) => go(parent)
+        case N => false
+    go(scope)
+
+  private def privateAccessorSymbol(ts: semantics.TermSymbol): semantics.TempSymbol =
+    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, "accessorSymbol$"))
+
+  private def privateAccessorName(ts: semantics.TermSymbol, loc: Opt[Loc])(using Raise, Scope): Document =
+    doc"${scope.lookup_!(privateAccessorSymbol(ts), loc)}"
+
+  private def privateFieldSelect(ts: semantics.TermSymbol, loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
+    ts.owner.collect:
+      case owner if ts.isPrivate =>
+        if isLexicallyInside(owner)
+        then doc".#${owner.privatesScope.lookup_!(ts, loc)}"
+        else doc"[${privateAccessorName(ts, loc)}]"
+
+  private def privateAccessorDecls(using Raise, Scope): Document =
+    privateAccessorSymbols.iterator.toList.sortBy(_._1.uid).map: (ts, sym) =>
+      val name = scope.allocateOrGetName(sym)
+      doc"""const $name = globalThis.Symbol(${makeStringLiteral(ts.nme)});"""
+    .mkDocument(doc" # ")
+
+  private def withPrivateAccessorDecls(doc: Document)(using Raise, Scope): Document =
+    val accessors = privateAccessorDecls
+    if accessors.isEmpty then doc else doc :/: accessors
+
+  private def collectExternalPrivateAccessors(p: Program)(using State): Unit =
+    privateAccessorSymbols.clear()
+    var owners: List[InnerSymbol] = Nil
+    def withOwner(owner: InnerSymbol)(body: => Unit): Unit =
+      val oldOwners = owners
+      owners = owner :: owners
+      body
+      owners = oldOwners
+    def needsAccessor(ts: semantics.TermSymbol): Bool =
+      ts.isPrivate && ts.owner.exists(owner => !owners.exists(_ is owner))
+    def note(sym: Opt[DefinitionSymbol[?]]): Unit =
+      sym match
+      case S(ts: semantics.TermSymbol) if needsAccessor(ts) =>
+        privateAccessorSymbol(ts)
+      case _ =>
+    def noteAssign(sym: Opt[MemberSymbol]): Unit =
+      sym match
+      case S(ts: semantics.TermSymbol) if needsAccessor(ts) =>
+        privateAccessorSymbol(ts)
+      case _ =>
+    object collector extends BlockTraverser:
+      override def applyPath(p: Path): Unit = p match
+        case sel @ Select(qual, _) =>
+          applyPath(qual)
+          note(sel.symbol)
+        case _ => super.applyPath(p)
+      override def applyBlock(b: Block): Unit = b match
+        case assign @ AssignField(lhs, _, rhs, rest) =>
+          applyPath(lhs)
+          applyResult(rhs)
+          noteAssign(assign.symbol)
+          applyBlock(rest)
+        case _ => super.applyBlock(b)
+      override def applyDefn(defn: Defn): Unit = defn match
+        case cls: ClsLikeDefn =>
+          withOwner(cls.isym):
+            cls.parentPath.foreach(applyPath)
+            applyBlock(cls.preCtor)
+            applyBlock(cls.ctor)
+            cls.methods.foreach(applyDefn)
+            cls.companion.foreach(applyClsLikeBody)
+        case _ => super.applyDefn(defn)
+      def applyClsLikeBody(body: ClsLikeBody): Unit =
+        withOwner(body.isym):
+          applyBlock(body.ctor)
+          body.methods.foreach(applyDefn)
+    collector.applyBlock(p.main)
+
   def getVar(l: Local, loc: Opt[Loc])(using Raise, Scope): Document = l match
     case ts: semantics.TermSymbol =>
       ts.owner match
@@ -84,11 +168,6 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       scope.findThis_!(ts)
     case _ => scope.lookup_!(l, loc)
   
-  private def privateFieldSelect(ts: semantics.TermSymbol, loc: Opt[Loc])(using Raise): Opt[Document] =
-    ts.owner.collect:
-      case owner if ts.isPrivate =>
-        doc".#${owner.privatesScope.lookup_!(ts, loc)}"
-
   def runtimeVar(using Raise, Scope): Document = getVar(State.runtimeSymbol, N)
   
   def argument(a: Arg)(using Raise, Scope): Document =
@@ -378,7 +457,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   doc" # $mtdPrefix${td.sym.nme}($params) ${ braced(bodyDoc) }"
                 case td @ FunDefn(params = Nil, body = bod) =>
                   doc" # ${mtdPrefix}get ${td.sym.nme}() ${ braced(body(bod, endSemi = true)) }"
-              .mkDocument(" ")
+              .mkDocument(doc"")
             
             def mkPrivs(pubFlds: Ls[BlockMemberSymbol -> TermSymbol], privFlds: Ls[TermSymbol],
                   mtdPrefix: Str, isym: InnerSymbol)(using Scope): Document =
@@ -398,7 +477,15 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 :: doc" # ${mtdPrefix}set ${escapeField(valSym.name, "")
                   }(value) { ${getVar(letSym, letSym.toLoc)} = value; }"
                 :: Nil
-              (privDecls ::: accessors).mkDocument(doc"")
+              val privateAccessors = allPrivFlds.filter(privateAccessorSymbols.contains).flatMap: fld =>
+                doc" # ${mtdPrefix}get [${privateAccessorName(fld, fld.toLoc)}]() { return ${
+                    getVar(fld, fld.toLoc)
+                  }; }"
+                :: doc" # ${mtdPrefix}set [${privateAccessorName(fld, fld.toLoc)}](value) { ${
+                    getVar(fld, fld.toLoc)
+                  } = value; }"
+                :: Nil
+              (privDecls ::: accessors ::: privateAccessors).mkDocument(doc"")
             
             val modDoc = modo match
               case N => doc""
@@ -516,7 +603,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                         case S(_) | N => doc"null"
                       }.mkDocument(", ")}]"
                     else doc""
-                  }]; """
+                  }];"""
               }
             
             if isSingleton then
@@ -729,6 +816,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       :/: programBody(p, exprt, wd)
   
   def programBody(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using Raise, Scope): Document =
+    collectExternalPrivateAccessors(p)
     reserveNames(p)
     // Allocate names for imported modules.
     p.imports.foreach: i =>
@@ -740,7 +828,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         then "./" + io.Path(path).relativeTo(wd).map(_.toString).getOrElse(path)
         else path
       doc"""import ${getVar(i._1, N)} from "${relPath}";"""
-    imps.mkDocument(doc" # ")
+    withPrivateAccessorDecls(imps.mkDocument(doc" # "))
     :/: nonNestedScoped(p.main)(block(_, endSemi = false)).stripBreaks
     :: locally:
       exprt match
@@ -748,6 +836,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       case N => doc""
   
   def worksheet(p: Program)(using Raise, Scope): (Document, Document) =
+    collectExternalPrivateAccessors(p)
     reserveNames(p)
     lazy val imps = p.imports.map: i =>
       doc"""${getVar(i._1, N)} = await import("${i._2.toString}").then(m => m.default ?? m);"""
@@ -758,10 +847,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           !s.isInstanceOf[TempSymbol]
           // ^ VarSymbols and TermSymbols should be kept as their value will be acessed and printed by the worksheet
           || fvs(s))) ->
-        (imps.mkDocument(doc" # ") :/: block(body, endSemi = false).stripBreaks)
+        (withPrivateAccessorDecls(imps.mkDocument(doc" # ")) :/: block(body, endSemi = false).stripBreaks)
     case body =>
       blockPreamble(p.imports.map(_._1)) ->
-        (imps.mkDocument(doc" # ") :/: returningTerm(body, endSemi = false).stripBreaks)
+        (withPrivateAccessorDecls(imps.mkDocument(doc" # ")) :/: returningTerm(body, endSemi = false).stripBreaks)
   
   def genLetDecls(vars: Iterator[(Symbol, Str)]): Document =
     if vars.isEmpty then doc"" else

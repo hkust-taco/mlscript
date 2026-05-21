@@ -107,6 +107,9 @@ class BlockSimplifier
     val definedVars = MutSet.empty[Local]
     val localVars = MutSet.empty[Local]
     val usedVars = MutSet.empty[Local]
+    val privateVars = MutSet.empty[TermSymbol]
+    val usedPrivateVars = MutSet.empty[TermSymbol]
+    var unusedPrivateVars = Set.empty[TermSymbol]
     var tailLabels = MutSet.empty[LabelSymbol]
     
     def apply(prog: Program): Program =
@@ -117,11 +120,21 @@ class BlockSimplifier
         
         override def applyPath(p: Path): Unit =
           p match
+            case sel: Select =>
+              sel.symbol.foreach:
+                case ts: TermSymbol =>
+                  usedPrivateVars += ts
+                case _ =>
             case Value.Ref(loc, _) =>
               usedVars += loc
             case _ =>
           super.applyPath(p)
-        
+
+        override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
+          privateVars ++= defn.privateFields
+          defn.companion.foreach(body => privateVars ++= body.privateFields)
+          super.applyClsLikeDefn(defn)
+
         override def applyBlock(b: Block): Unit =
           b match
             case Define(defn, rst) =>
@@ -134,7 +147,10 @@ class BlockSimplifier
               definedVars += lhs
             case _ =>
           super.applyBlock(b)
-      
+
+      unusedPrivateVars =
+        privateVars.iterator.filterNot(usedPrivateVars).filterNot(symbolsToPreserve).toSet
+
       applyProgram(prog)
     
     // Evaluate `thunk` with a new tail label set. This is used for evaluating any sub blocks that is not in the tail position.
@@ -213,7 +229,17 @@ class BlockSimplifier
         registerChange(s"rm ${lhs.showDbg} = ${rhs.showDbg}")
         removedLocals += lhs
         applyResult(rhs)(r => Assign.discard(r, applyBlock(rst)))
-      
+
+      // * Discard writes to private fields that are never read
+      case assign @ AssignField(lhs, _, rhs, rst) =>
+        assign.symbol match
+        case S(ts: TermSymbol) if unusedPrivateVars(ts) =>
+          registerChange(s"rm unused private field write ${ts.showDbg} = ${rhs.showDbg}")
+          applyPath(lhs): lhs2 =>
+            applyResult(rhs): rhs2 =>
+              Assign.discard(lhs2, Assign.discard(rhs2, applyBlock(rst)))
+        case _ => super.applyBlock(b)
+
       // * Remove local pure definitions that are never read (and are not preserved)
       case Define(defn, rest) =>
         if !defn.isPure
@@ -254,7 +280,31 @@ class BlockSimplifier
         End()
       
       case x => super.applyBlock(x)
-    
+
+    private def removeUnusedPrivateFields(fields: Ls[TermSymbol]): Ls[TermSymbol] =
+      fields.filterConserve: fld =>
+        val keep = !unusedPrivateVars(fld)
+        if !keep then registerChange(s"rm unused private field ${fld.showDbg}")
+        keep
+
+    override def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
+      val defn2 = super.applyObjBody(defn)
+      val privateFields2 = removeUnusedPrivateFields(defn2.privateFields)
+      if privateFields2 is defn2.privateFields
+      then defn2
+      else defn2.copy(privateFields = privateFields2)
+
+    override def applyClsLikeDefn(defn: ClsLikeDefn)(k: Defn => Block): Block =
+      super.applyClsLikeDefn(defn):
+        case cls: ClsLikeDefn =>
+          val privateFields2 = removeUnusedPrivateFields(cls.privateFields)
+          val cls2 =
+            if privateFields2 is cls.privateFields
+            then cls
+            else cls.copy(privateFields = privateFields2)(cls.configOverride, cls.annotations)
+          k(cls2)
+        case other => k(other)
+
     
     // FIXME: refactor transformers so this is not so error-prone (adding this case to `applyBlock` doesn't work)
     override def applyScopedBlock(b: Block): Block = b match

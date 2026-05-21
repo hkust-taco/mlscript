@@ -19,7 +19,7 @@ module A with
 //│     return false;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
+//│   static [definitionMetadata] = ["class", "A"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

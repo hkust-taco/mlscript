@@ -121,7 +121,7 @@ result
 //│     return runtime.mkEffect(this, Handler$h$perform$here)
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Handler$h$"]; 
+//│   static [definitionMetadata] = ["class", "Handler$h$"];
 //│ });
 //│ h7 = new Handler$h$15();
 //│ handleBlock$7 = (undefined, function () {

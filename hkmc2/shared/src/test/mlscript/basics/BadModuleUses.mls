@@ -47,14 +47,14 @@ Example.foo() + 1
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful application of type M.
 //│ ║  l.46: 	Example.foo() + 1
 //│ ╙──      	^^^^^^^^^^^^^
-//│ = "class M {   static {     M1 = this   }   static mtd() {     runtime.checkArgs(\"mtd\", 0, true, arguments.length);     return 42   }   toString() { return runtime.render(this); }   static [definitionMetadata] = [\"class\", \"M\"];  }1"
+//│ = "class M {   static {     M1 = this   }   static mtd() {     runtime.checkArgs(\"mtd\", 0, true, arguments.length);     return 42   }   toString() { return runtime.render(this); }   static [definitionMetadata] = [\"class\", \"M\"]; }1"
 
 :e
 M + 1
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type M.
 //│ ║  l.53: 	M + 1
 //│ ╙──      	^
-//│ = "class M {   static {     M1 = this   }   static mtd() {     runtime.checkArgs(\"mtd\", 0, true, arguments.length);     return 42   }   toString() { return runtime.render(this); }   static [definitionMetadata] = [\"class\", \"M\"];  }1"
+//│ = "class M {   static {     M1 = this   }   static mtd() {     runtime.checkArgs(\"mtd\", 0, true, arguments.length);     return 42   }   toString() { return runtime.render(this); }   static [definitionMetadata] = [\"class\", \"M\"]; }1"
 
 :e
 M |> id

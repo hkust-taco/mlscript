@@ -39,14 +39,14 @@ class Foo(x) with
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Foo⁰, $anon⁰;
 //│ define $anon⁰ as class $anon¹ {
-//│   private val x⁰;
+//│   private val Foo¹;
 //│   private val y⁰;
 //│   private val state⁰;
-//│   constructor(x, y) {
+//│   constructor(Foo, y) {
 //│     super⁰();
-//│     set x⁰ = x;
-//│     set y⁰ = y;
-//│     set $anon¹.this.state = $anon¹.this.x⁰;
+//│     set $anon¹.this.Foo = Foo;
+//│     set $anon¹.this.y = y;
+//│     set $anon¹.this.state = $anon¹.this.Foo¹.x⁰;
 //│     end
 //│   }
 //│   method test⁰ = fun test¹ {
@@ -56,13 +56,13 @@ class Foo(x) with
 //│     return +⁰($anon¹.this.state⁰, $anon¹.this.y⁰)
 //│   }
 //│ };
-//│ define Foo⁰ as class Foo²(x) {
-//│   private val x¹;
-//│   constructor Foo¹ {
-//│     set Foo².this.x = x;
+//│ define Foo⁰ as class Foo³(x) {
+//│   private val x⁰;
+//│   constructor Foo² {
+//│     set Foo³.this.x = x;
 //│     end
 //│   }
-//│   method foo⁰ = fun foo¹(y) { return new $anon¹(Foo².this.x¹, y) }
+//│   method foo⁰ = fun foo¹(y) { return new $anon¹(Foo³.this, y) }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -84,4 +84,66 @@ o.test
 f.foo(456).test
 //│ = 580
 
+
+:sjs
+class AccessorBox with
+  let value = 1
+  fun accessor =
+    new with
+      fun read = value
+      fun write(next) =
+        set value = next
+        value
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ const accessorSymbol$1 = globalThis.Symbol("value");
+//│ let AccessorBox1, $anon5;
+//│ (class $anon4 extends globalThis.Object {
+//│   static {
+//│     $anon5 = this
+//│   }
+//│   constructor(AccessorBox2) {
+//│     super();
+//│     this.#AccessorBox = AccessorBox2;
+//│   }
+//│   #AccessorBox;
+//│   get read() {
+//│     return this.#AccessorBox[accessorSymbol$1];
+//│   }
+//│   write(next) {
+//│     this.#AccessorBox[accessorSymbol$1] = next;
+//│     return this.#AccessorBox[accessorSymbol$1]
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "$anon"];
+//│ });
+//│ (class AccessorBox {
+//│   static {
+//│     AccessorBox1 = this
+//│   }
+//│   constructor() {
+//│     this.#value = 1;
+//│   }
+//│   #value;
+//│   get [accessorSymbol$1]() { return this.#value; }
+//│   set [accessorSymbol$1](value) { this.#value = value; }
+//│   get accessor() {
+//│     return globalThis.Object.freeze(new $anon5(this));
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "AccessorBox"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+let b = new AccessorBox
+let a = b.accessor
+a.read
+//│ = 1
+//│ a = $anon
+//│ b = AccessorBox
+
+a.write(7)
+//│ = 7
+
+a.read
+//│ = 7
 

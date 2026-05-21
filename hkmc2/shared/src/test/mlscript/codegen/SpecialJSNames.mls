@@ -25,7 +25,7 @@ module M with
 //│     Object.defineProperty(this, "name", { configurable: true, enumerable: true, writable: true, value: "Student" });
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "M"]; 
+//│   static [definitionMetadata] = ["class", "M"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -44,7 +44,7 @@ class C with
 //│     this.name = "Student";
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "C"]; 
+//│   static [definitionMetadata] = ["class", "C"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

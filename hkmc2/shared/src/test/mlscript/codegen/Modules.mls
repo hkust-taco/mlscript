@@ -10,7 +10,7 @@ module None
 //│     None1 = this
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "None"]; 
+//│   static [definitionMetadata] = ["class", "None"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -68,7 +68,7 @@ module M with
 //│         M.C = this
 //│       }
 //│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "C"]; 
+//│       static [definitionMetadata] = ["class", "C"];
 //│     });
 //│     this.D = function D() {
 //│       return globalThis.Object.freeze(new D.class());
@@ -78,14 +78,14 @@ module M with
 //│         M.D.class = this
 //│       }
 //│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "D", []]; 
+//│       static [definitionMetadata] = ["class", "D", []];
 //│     });
 //│     this.x = 1;
 //│     tmp = M.x + 1;
 //│     this.y = tmp;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "M"]; 
+//│   static [definitionMetadata] = ["class", "M"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -127,7 +127,7 @@ module M with
 //│     this.m = M3;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "M"]; 
+//│   static [definitionMetadata] = ["class", "M"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -165,11 +165,11 @@ module AA with
 //│         this.y = 2;
 //│       }
 //│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "BB"]; 
+//│       static [definitionMetadata] = ["class", "BB"];
 //│     });
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "AA"]; 
+//│   static [definitionMetadata] = ["class", "AA"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

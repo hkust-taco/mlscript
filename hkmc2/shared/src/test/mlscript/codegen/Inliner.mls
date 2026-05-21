@@ -214,12 +214,12 @@ module A with
 //│   }
 //│   static f() {
 //│     return 1
-//│   } 
+//│   }
 //│   static g() {
 //│     return A1.f()
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
+//│   static [definitionMetadata] = ["class", "A"];
 //│ });
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let A⁰;
