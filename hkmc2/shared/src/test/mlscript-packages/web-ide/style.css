@@ -2582,34 +2582,41 @@ bottom-panel .console-info {
 bottom-panel .logging-content {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px 10px;
+  gap: 0;
+  padding: 4px 0;
 }
 
 bottom-panel .log-entry {
-  display: grid;
-  gap: 5px;
-  border: 1px solid var(--ide-border);
-  border-radius: var(--ide-radius-sm);
-  background: var(--ide-surface);
-  padding: 7px 9px;
+  border-bottom: 1px solid var(--ide-border);
+  background: transparent;
+  min-width: 0;
 }
 
 bottom-panel .log-entry:hover {
   background: var(--ide-surface-subtle);
-  border-color: var(--ide-border-strong);
 }
 
-bottom-panel .log-entry-meta {
+bottom-panel .log-entry-row {
   display: grid;
-  grid-template-columns: auto auto auto minmax(0, 1fr);
+  grid-template-columns: 16px 48px 76px minmax(70px, 0.8fr) minmax(140px, 1.6fr) minmax(92px, 1fr);
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   min-width: 0;
+  min-height: 25px;
+  padding: 3px 10px;
   color: var(--ide-text-muted);
   font-family: var(--monospace);
   font-size: 0.72rem;
-  line-height: 1.2;
+  line-height: 1.25;
+}
+
+bottom-panel summary.log-entry-row {
+  cursor: pointer;
+  list-style: none;
+}
+
+bottom-panel summary.log-entry-row::-webkit-details-marker {
+  display: none;
 }
 
 bottom-panel .log-entry-icon {
@@ -2625,11 +2632,12 @@ bottom-panel .log-entry-level {
   border-radius: 999px;
   background: var(--ide-surface-muted);
   color: var(--ide-text-muted);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1;
-  padding: 3px 6px;
+  justify-self: start;
+  padding: 2px 5px;
 }
 
 bottom-panel .log-level-error .log-entry-level,
@@ -2655,7 +2663,9 @@ bottom-panel .log-level-trace .log-entry-icon {
 }
 
 bottom-panel .log-entry-time,
-bottom-panel .log-entry-source {
+bottom-panel .log-entry-source,
+bottom-panel .log-entry-message,
+bottom-panel .log-entry-body-preview {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2663,27 +2673,21 @@ bottom-panel .log-entry-source {
 }
 
 bottom-panel .log-entry-message {
-  min-width: 0;
   color: var(--ide-text);
-  font-size: 0.82rem;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
+  font-size: 0.75rem;
+}
+
+bottom-panel .log-entry-body-preview {
+  color: var(--ide-text-subtle);
 }
 
 bottom-panel .log-entry-body {
   min-width: 0;
 }
 
-bottom-panel .log-entry-body summary {
-  cursor: pointer;
-  color: var(--ide-text-muted);
-  font-size: 0.72rem;
-  line-height: 1.2;
-}
-
 bottom-panel .log-entry-body pre {
   max-height: 180px;
-  margin: 5px 0 0;
+  margin: 1px 10px 6px 156px;
   overflow: auto;
   border: 1px solid var(--ide-border);
   border-radius: var(--ide-radius-xs);
@@ -2694,6 +2698,20 @@ bottom-panel .log-entry-body pre {
   line-height: 1.4;
   padding: 7px;
   white-space: pre-wrap;
+}
+
+@media (max-width: 760px) {
+  bottom-panel .log-entry-row {
+    grid-template-columns: 16px 44px 70px minmax(58px, 0.7fr) minmax(90px, 1.4fr);
+  }
+
+  bottom-panel .log-entry-body-preview {
+    display: none;
+  }
+
+  bottom-panel .log-entry-body pre {
+    margin-left: 10px;
+  }
 }
 
 bottom-panel .bottom-panel-empty {

@@ -236,34 +236,98 @@ class BottomPanel extends HTMLElement with
   fun logBodyText(entry) =
     entry.body.map(arg => stringifyArg(arg)).join("\n")
 
+  fun isWhitespaceChar(ch) = if ch is
+    " " then true
+    "\n" then true
+    "\r" then true
+    "\t" then true
+    else false
+
+  fun compactLogText(text) =
+    let
+      compact = ""
+      pendingSpace = false
+      i = 0
+    while i < text.length do
+      let ch = text.charAt(i)
+      if isWhitespaceChar(ch) then
+        if compact !== "" do set pendingSpace = true
+      else
+        if pendingSpace do
+          set compact += " "
+          set pendingSpace = false
+        set compact += ch
+      set i += 1
+    if compact.length > 96 then compact.slice(0, 95) + "…" else compact
+
+  fun logDate(timestamp) =
+    let date = new Date(timestamp)
+    if Number.isFinite(date.getTime()) then date else null
+
+  fun formatLogTime(timestamp) =
+    let date = logDate(timestamp)
+    if date is
+      null then String(timestamp)
+      else date.toLocaleTimeString(undefined,
+        hour: "2-digit"
+        minute: "2-digit"
+      )
+
+  fun formatLogDateTime(timestamp) =
+    let date = logDate(timestamp)
+    if date is
+      null then String(timestamp)
+      else date.toLocaleString(undefined,
+        year: "numeric"
+        month: "short"
+        day: "numeric"
+        hour: "2-digit"
+        minute: "2-digit"
+        second: "2-digit"
+      )
+
+  fun logEntryRowHtml(entry, bodyText, rowTag) =
+    let preview = compactLogText(bodyText)
+    let bodyPreview = if preview === "" then ""
+      else """<span class="log-entry-body-preview">""" + escapeHtml(preview) + """</span>"""
+    """
+        <""" + rowTag + """ class="log-entry-row">
+          <span class="log-entry-icon"><i class='""" + logIconClassName(entry.level) + """'></i></span>
+          <span class="log-entry-level">""" + entry.level.toUpperCase() + """</span>
+          <time class="log-entry-time" datetime="""" + escapeHtml(entry.timestamp) + """" title="""" + escapeHtml(formatLogDateTime(entry.timestamp)) + """">""" + escapeHtml(formatLogTime(entry.timestamp)) + """</time>
+          <span class="log-entry-source">""" + escapeHtml(entry.source) + """</span>
+          <span class="log-entry-message">""" + escapeHtml(entry.message) + """</span>
+          """ + bodyPreview + """
+        </""" + rowTag + """>
+      """
+
   fun logBodyHtml(entry) =
     let text = logBodyText(entry)
     if text === "" then ""
     else """
         <details class="log-entry-body">
-          <summary>Body</summary>
+          """ + logEntryRowHtml(entry, text, "summary") + """
           <pre>""" + escapeHtml(text) + """</pre>
         </details>
       """
 
   fun logEntryText(entry) =
-    let header = "[" + entry.timestamp + "] " + entry.level.toUpperCase() + " " + entry.source + " - " + entry.message
+    let header = "[" + formatLogDateTime(entry.timestamp) + "] " + entry.level.toUpperCase() + " " + entry.source + " - " + entry.message
     let body = logBodyText(entry)
     if body === "" then header else header + "\n" + body
 
   fun logEntryHtml(entry) =
-    """
-      <article class="log-entry """ + logLevelClass(entry.level) + """">
-        <div class="log-entry-meta">
-          <span class="log-entry-icon"><i class='""" + logIconClassName(entry.level) + """'></i></span>
-          <span class="log-entry-level">""" + entry.level.toUpperCase() + """</span>
-          <time class="log-entry-time">""" + escapeHtml(entry.timestamp) + """</time>
-          <span class="log-entry-source">""" + escapeHtml(entry.source) + """</span>
-        </div>
-        <div class="log-entry-message">""" + escapeHtml(entry.message) + """</div>
-        """ + logBodyHtml(entry) + """
-      </article>
-    """
+    let body = logBodyText(entry)
+    if body === "" then """
+        <article class="log-entry """ + logLevelClass(entry.level) + """">
+          """ + logEntryRowHtml(entry, body, "div") + """
+        </article>
+      """
+    else """
+        <article class="log-entry """ + logLevelClass(entry.level) + """">
+          """ + logBodyHtml(entry) + """
+        </article>
+      """
 
   fun messageRowHtml(message) =
     """
