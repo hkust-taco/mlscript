@@ -114,7 +114,7 @@ class Foo(using T) with
 //│   }
 //│   #tmp;
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", [null]]; 
+//│   static [definitionMetadata] = ["class", "Foo", [null]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

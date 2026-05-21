@@ -63,7 +63,7 @@ module Test with
 //│     ])
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Test"]; 
+//│   static [definitionMetadata] = ["class", "Test"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

@@ -1309,10 +1309,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case N => WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
     annotations.foreach:
       case Annot.Untyped => ()
-      case a @ Annot.TailRec =>
+      case a @ (Annot.TailRec | Annot.Inline) =>
+        val annot = a match
+          case Annot.TailRec => "@tailrec"
+          case Annot.Inline => "@inline"
+        
         target match
           case TermDefinition(body = S(bod), k = syntax.Fun) => ()
-          case TermDefinition(k = syntax.Fun) => warn(a, S(msg"Only functions with a body may be marked as @tailrec."))
+          case TermDefinition(k = syntax.Fun) => warn(a, S(msg"Only functions with a body may be marked as $annot."))
           case _ => warn(a)
         
       case Annot.Modifier(syntax.Keyword.`public` | syntax.Keyword.`private` | syntax.Keyword.`virtual`) => ()

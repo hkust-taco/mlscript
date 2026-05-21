@@ -15,28 +15,6 @@ in 42
 //│ emptyItemCount = 0
 
 // ——— ——— ———
-// Bug: `pattern do body` inside `is` expression is not handled.
-// The root cause is at the parser level: in `Some of [process, rest] do "hi"`,
-// the `of` keyword greedily includes `do "hi"` inside the constructor argument,
-// producing `App(Some, Tup([InfixApp(Tup([process, rest]), do, "hi")]))`.
-// In `if`/`case`/`while` splits, the parser treats `do` as a split boundary
-// at the branch level, so it correctly separates pattern from consequent. But
-// in standalone `is` expressions, the block lines are parsed as regular
-// expressions, so `do` is parsed as an infix operator inside the constructor's
-// argument. Fixing this would require the parser to switch to a split-like
-// parsing mode for `is` RHS blocks, which is a significant refactoring.
-
-class Some(val v)
-
-:fixme
-Some(1) is
-  Some of [process, rest] do "hi"
-//│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator 'do').
-//│ ║  l.33: 	  Some of [process, rest] do "hi"
-//│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^
-//│ = true
-
-// ——— ——— ———
 
 // Works
 let x = 1
@@ -49,19 +27,81 @@ let
   x = 1
 in x
 //│ ╔══[COMPILATION ERROR] Illegal position for 'in' modifier.
-//│ ║  l.50: 	in x
+//│ ║  l.28: 	in x
 //│ ╙──      	^^
 //│ = 1
 //│ x = 1
 
 // ——— ——— ———
 
+// FIXME: op-split has no split point!
 // Parses as a prefix `do` in a split instead of an infix `do` that's part of the `if` expression!
 :fixme
+:pt
 if maybe
   do 1
   else ???
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ IfLike:
+//│   kw = Keywrd of keyword 'if'
+//│   split = OpSplit:
+//│     lhs = Ident of "maybe"
+//│     ops_rhss = Ls of 
+//│       PrefixApp:
+//│         kw = Keywrd of keyword 'do'
+//│         rhs = IntLit of 1
+//│       PrefixApp:
+//│         kw = Keywrd of keyword 'else'
+//│         rhs = Ident of "???"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Not implemented
+
+// * NOTE: works!! (special-cased?)
+:pt
+if maybe
+  then 1
+  else ???
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ IfLike:
+//│   kw = Keywrd of keyword 'if'
+//│   split = Block of Ls of 
+//│     InfixApp:
+//│       lhs = Ident of "maybe"
+//│       kw = Keywrd of keyword 'then'
+//│       rhs = IntLit of 1
+//│     PrefixApp:
+//│       kw = Keywrd of keyword 'else'
+//│       rhs = Ident of "???"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+// * NOTE: works
+:pt
+if 2
+  > 1 do print("hi")
+  else ???
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ IfLike:
+//│   kw = Keywrd of keyword 'if'
+//│   split = OpSplit:
+//│     lhs = IntLit of 2
+//│     ops_rhss = Ls of 
+//│       InfixApp:
+//│         lhs = OpApp:
+//│           lhs = SplitPoint
+//│           op = Ident of ">"
+//│           rhss = Ls of 
+//│             IntLit of 1
+//│         kw = Keywrd of keyword 'do'
+//│         rhs = App:
+//│           lhs = Ident of "print"
+//│           rhs = Tup of Ls of 
+//│             StrLit of "hi"
+//│       PrefixApp:
+//│         kw = Keywrd of keyword 'else'
+//│         rhs = Ident of "???"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > hi
 
 // ——— ——— ———
 
@@ -69,8 +109,8 @@ if maybe
 :fixme // * Should be a call of two arguments, not a sequenced expression
 +(1,2)
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.70: 	+(1,2)
-//│ ╙──      	  ^
+//│ ║  l.110: 	+(1,2)
+//│ ╙──       	  ^
 //│ = 2
 
 // ——— ——— ———

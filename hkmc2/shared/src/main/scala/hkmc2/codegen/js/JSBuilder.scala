@@ -504,7 +504,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                         case S(_) | N => doc"null"
                       }.mkDocument(", ")}]"
                     else doc""
-                  }]; """
+                  }];"""
               }
             
             if isSingleton then

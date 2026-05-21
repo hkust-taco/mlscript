@@ -985,7 +985,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         else fun.annotations)
       LifterResult(newDefn, rewriter.extraDefns.toList)
     
-    // Definition with the auxiliary parameters merged into the second parameter list.
+    // Definition with the auxiliary parameters as a new first parameter list.
     private def mkAuxDefn: FunDefn =
       val newPList = PlainParamList(dupParams(auxParams))
       val (newPlists, syms, restSym) = fun.params match
@@ -1012,7 +1012,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         auxDsym,
         newPlists,
         bod
-      )(N, fun.annotations)
+      )(N, Annot.Inline :: fun.annotations)
     
     private val aux = Lazy[Defn](mkAuxDefn)
     

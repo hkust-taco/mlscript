@@ -51,7 +51,7 @@ fun test(a) =
 //│       return inlinedVal
 //│     }
 //│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Inner", ["b"]]; 
+//│     static [definitionMetadata] = ["class", "Inner", ["b"]];
 //│   });
 //│   return Inner1(42)
 //│ };
@@ -96,7 +96,7 @@ fun test(a) =
 //│       Predef.print(tmp2);
 //│     }
 //│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "C1", ["b"]]; 
+//│     static [definitionMetadata] = ["class", "C1", ["b"]];
 //│   });
 //│   C21 = function C2(b) {
 //│     return globalThis.Object.freeze(new C2.class(b));
@@ -115,7 +115,7 @@ fun test(a) =
 //│       Predef.print(tmp2);
 //│     }
 //│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "C2", ["b"]]; 
+//│     static [definitionMetadata] = ["class", "C2", ["b"]];
 //│   });
 //│   tmp = C11(1);
 //│   tmp1 = C21(2);
@@ -166,7 +166,7 @@ Foo(123)
 //│     return baz()
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["a"]]; 
+//│   static [definitionMetadata] = ["class", "Foo", ["a"]];
 //│ });
 //│ Foo1(123)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -201,7 +201,7 @@ Bar(1)
 //│     }
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Bar", ["x"]]; 
+//│   static [definitionMetadata] = ["class", "Bar", ["x"]];
 //│ });
 //│ Bar1(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

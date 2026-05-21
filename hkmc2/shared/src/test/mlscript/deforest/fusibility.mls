@@ -97,7 +97,7 @@ fun c(x) = if x is AA(_) then 0
 let p = AA(10)
 c(p) + c(p)
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > p@1
+//│ deforest > p@3
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -200,10 +200,10 @@ nest_consume(nest_pickB, nest_prod(10))
 //│ deforest > arg$AA$0$_for_nest_consume@48
 //│ deforest > arg$AA$0$_for_nest_consume@77
 //│ deforest > cap_ub_(term:nest_pickB,0)_for_nest_pickB@53
-//│ deforest > f_for_nest_consume@37
-//│ deforest > f_for_nest_consume@66
-//│ deforest > i_for_nest_consume@38
-//│ deforest > i_for_nest_consume@67
+//│ deforest > f_for_nest_consume@38
+//│ deforest > f_for_nest_consume@67
+//│ deforest > i_for_nest_consume@37
+//│ deforest > i_for_nest_consume@66
 //│ deforest > nest_pickB_for_nest_pickB@50
 //│ deforest > sel_res_for_nest_consume@49
 //│ deforest > sel_res_for_nest_consume@78

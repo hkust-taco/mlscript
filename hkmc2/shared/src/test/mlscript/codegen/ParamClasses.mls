@@ -15,7 +15,7 @@ data class Foo()
 //│     Foo1.class = this
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", []]; 
+//│   static [definitionMetadata] = ["class", "Foo", []];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -52,7 +52,7 @@ data class Foo(a)
 //│     this.a = a;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["a"]]; 
+//│   static [definitionMetadata] = ["class", "Foo", ["a"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -97,7 +97,7 @@ data class Foo(a, b)
 //│     this.b = b;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["a", "b"]]; 
+//│   static [definitionMetadata] = ["class", "Foo", ["a", "b"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -178,7 +178,7 @@ data class Inner(c) with
 //│     return this.c + d
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Inner", ["c"]]; 
+//│   static [definitionMetadata] = ["class", "Inner", ["c"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -238,7 +238,7 @@ class Foo(x, val y, z, val z, z) with
 //│   #x1;
 //│   #y;
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", [null, "y", null, "z", null]]; 
+//│   static [definitionMetadata] = ["class", "Foo", [null, "y", null, "z", null]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -273,7 +273,7 @@ class Foo(val z, val z)
 //│     Foo9.class = this
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["z", "z"]]; 
+//│   static [definitionMetadata] = ["class", "Foo", ["z", "z"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

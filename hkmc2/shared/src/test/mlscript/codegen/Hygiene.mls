@@ -28,7 +28,7 @@ object Test with
 //│     return Test1.x
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["object", "Test"]; 
+//│   static [definitionMetadata] = ["object", "Test"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -99,7 +99,7 @@ module Test with
 //│     this.x = 1;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Test"]; 
+//│   static [definitionMetadata] = ["class", "Test"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -146,7 +146,7 @@ data class Cls(x) with
 //│     return this.#x1;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Cls", ["x"]]; 
+//│   static [definitionMetadata] = ["class", "Cls", ["x"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -206,14 +206,14 @@ module Whoops with
 //│         return Whoops.f()
 //│       }
 //│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Whoops"]; 
+//│       static [definitionMetadata] = ["class", "Whoops"];
 //│     });
 //│   }
 //│   static f() {
 //│     return "Hello"
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Whoops"]; 
+//│   static [definitionMetadata] = ["class", "Whoops"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -260,11 +260,11 @@ module AA with
 //│         return BB.y;
 //│       }
 //│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "BB"]; 
+//│       static [definitionMetadata] = ["class", "BB"];
 //│     });
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "AA"]; 
+//│   static [definitionMetadata] = ["class", "AA"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

@@ -153,7 +153,7 @@ id(Cls(1, 2)).f(3, 4)(5)
 //│     }
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Cls", ["x", "y"]]; 
+//│   static [definitionMetadata] = ["class", "Cls", ["x", "y"]];
 //│ });
 //│ tmp4 = runtime.checkCall(Cls5(1, 2));
 //│ tmp5 = runtime.checkCall(Predef.id(tmp4));

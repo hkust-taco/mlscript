@@ -50,7 +50,7 @@ data class Outer(a, b) with
 //│         ])
 //│       }
 //│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Inner", ["c"]]; 
+//│       static [definitionMetadata] = ["class", "Inner", ["c"]];
 //│     });
 //│     tmp = this.Inner(this.a);
 //│     this.i = tmp;
@@ -67,7 +67,7 @@ data class Outer(a, b) with
 //│     return tmp.i1(d)
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Outer", ["a", "b"]]; 
+//│   static [definitionMetadata] = ["class", "Outer", ["a", "b"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
