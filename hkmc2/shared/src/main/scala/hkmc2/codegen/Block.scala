@@ -121,7 +121,7 @@ sealed abstract class Block extends Product:
     case AssignDynField(_, _, _, _, rst) => 1 + rst.size
     case Match(_, arms, dflt, rst) =>
       1 + arms.map(_._2.size).sum + dflt.map(_.size).getOrElse(0) + rst.size
-    case Define(defn, rst) => defn.size + rst.size
+    case Define(defn, rst) => 1 + defn.size + rst.size
     case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
     case Label(_, _, bod, rst) => 1 + bod.size + rst.size
     case Scoped(_, body) => body.size
