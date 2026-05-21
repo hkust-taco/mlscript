@@ -214,7 +214,16 @@ f(1)(2)(3)
 //│   tmp8 = a + b;
 //│   return tmp8 + c3
 //│ };
-//│ f10 = function f(a) { return (b) => { return (c3) => { return f11(a, b, c3) } } };
+//│ f10 = function f(a) {
+//│   return (b) => {
+//│     return (c3) => {
+//│       let inlinedVal1, tmp8;
+//│       tmp8 = a + b;
+//│       inlinedVal1 = tmp8 + c3;
+//│       return inlinedVal1
+//│     }
+//│   }
+//│ };
 //│ 6
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
@@ -230,14 +239,12 @@ fun foo(x)(y) =
   lam
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰, lam⁰, lam$⁰, tmp, lam$here;
+//│ let foo⁰, lam$⁰, tmp, lam$here;
 //│ define lam$⁰ as fun lam$¹(x, y)(z) {
-//│   return lam¹(x, y, z)
-//│ };
-//│ define lam⁰ as fun lam¹(x, y, z) {
-//│   let tmp1;
+//│   let inlinedVal, tmp1;
 //│   set tmp1 = +⁰(x, y);
-//│   return +⁰(tmp1, z)
+//│   set inlinedVal = +⁰(tmp1, z);
+//│   return inlinedVal
 //│ };
 //│ define foo⁰ as fun foo¹(x)(y) {
 //│   let tmp1, lam$here1;
