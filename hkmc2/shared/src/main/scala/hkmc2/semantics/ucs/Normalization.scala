@@ -377,9 +377,12 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       // Break(joinLabel) to reach it.
       val joinLabel = new LabelSymbol(N, sym.nme)
       sym.label = S(joinLabel)
-      if (cont eq Ret) || (cont eq Thrw) then
-        // Ret/Thrw produce `return`/`throw` which truly terminate control flow in JS.
-        // Using them directly preserves tail-call position.
+      val transfersControl = cont match
+        case Ret | Thrw => true
+        case _ => false
+      if transfersControl then
+        // Ret/Thrw emit `return`/`throw`, which transfer control out of the block
+        // unconditionally; passing them through preserves tail-call position.
         val bodyBlock = lowerSplit(sym.body, cont)
         Label(joinLabel, false, lowerSplit(tail, cont), bodyBlock)
       else
