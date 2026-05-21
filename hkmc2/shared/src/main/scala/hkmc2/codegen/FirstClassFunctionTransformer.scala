@@ -61,8 +61,7 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
     case _ => k(p)
 
   private def pathStartsWith(p: Path, symbol: Local): Bool = p match
-    case Value.SimpleRef(l) => l is symbol
-    case Value.MemberRef(bms, _) => bms is symbol
+    case r: Value.Ref => r.symbol is symbol
     case Select(p, _) => pathStartsWith(p, symbol)
     case DynSelect(p, _, _) => pathStartsWith(p, symbol)
     case _ => false

@@ -93,7 +93,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
             case _ if node.isLifted && !isObj(node) => accessed.refdDefns.add(node.obj.toInfo)
             case ScopedObject.ClassCtor(cls) if scopeData.getNode(cls).isLifted => accessed.refdDefns.add(node.obj.toInfo)
             case _ => p match
-              case _: (Value.SimpleRef | Value.MemberRef) => node.obj match
+              case _: Value.Ref => node.obj match
                 case c: ScopedObject.Class if c.isObj =>
                   accessed.accessed.add(c.cls.isym)
                 case r: ScopedObject.Referencable[?] if !node.isLifted =>
@@ -102,12 +102,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
                 case _ => ()
               case _ => super.applyPath(p)
 
-        case Value.SimpleRef(l) =>
-          accessed.accessed.add(l)
-        case Value.MemberRef(bms, _) =>
-          accessed.accessed.add(bms)
-        case Value.This(sym) =>
-          accessed.accessed.add(sym)
+        case r: Value.RefLike => accessed.accessed.add(r.symbol)
         case _ => super.applyPath(p)
     accessed.toIMut
     
@@ -456,12 +451,8 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
         
         override def applyPath(p: Path): Unit = p match
           case RefOfBms(_, SDSym(d), _) => handleScopeRef(d)
-          case Value.SimpleRef(l) =>
-            if hasMutator.contains(l) then reqCapture += (l)
-          case Value.MemberRef(bms, _) =>
-            if hasMutator.contains(bms) then reqCapture += (bms)
-          case Value.This(sym) =>
-            if hasMutator.contains(sym) then reqCapture += (sym)
+          case r: Value.RefLike =>
+            if hasMutator.contains(r.symbol) then reqCapture += r.symbol
           case _ => super.applyPath(p)
         
         override def applyDefn(defn: Defn): Unit = defn match

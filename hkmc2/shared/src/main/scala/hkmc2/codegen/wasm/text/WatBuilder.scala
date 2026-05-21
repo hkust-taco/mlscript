@@ -2122,7 +2122,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           if tailMode then S(mkTempLocal("matchRes"))
           else N
         val scrutLocalResult = scrut match
-          case Value.SimpleRef(_) | Value.MemberRef(_, _) | Value.This(_) | Value.Lit(_) => N
+          case _: (Value.RefLike | Value.Lit) => N
           case _ => S(mkTempLocal("scrut"))
 
         val scrutInitExpr = scrutLocalResult.map: scrutLocal =>

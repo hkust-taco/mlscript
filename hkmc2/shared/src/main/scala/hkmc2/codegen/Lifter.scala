@@ -496,13 +496,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     
     override def applyPath(p: Path)(k: Path => Block): Block = p match
       // This rewrites naked references to locals,
-      case Value.SimpleRef(l) => ctx.symbolsMap.get(l) match
-        case Some(value) => k(value.read)
-        case _ => super.applyPath(p)(k)
-      case Value.MemberRef(bms, _) => ctx.symbolsMap.get(bms) match
-        case Some(value) => k(value.read)
-        case _ => super.applyPath(p)(k)
-      case Value.This(sym) => ctx.symbolsMap.get(sym) match
+      case r: Value.RefLike => ctx.symbolsMap.get(r.symbol) match
         case Some(value) => k(value.read)
         case _ => super.applyPath(p)(k)
 
