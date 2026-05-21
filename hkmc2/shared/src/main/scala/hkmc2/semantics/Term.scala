@@ -22,8 +22,11 @@ enum Annot extends AutoLocated:
   case Untyped
   case Modifier(mod: Keyword)
   case Trm(trm: Term)
+  // NOTE: The presence of TailRec and TailCall annotations does not affect whether a function is optimized or not;
+  // it only affects whether a warning is thrown if the function/call is not actually tail-recursive.
   case TailRec
   case TailCall
+  case Inline
   case Config(modify: hkmc2.Config => hkmc2.Config)
   
   def symbol: Opt[Symbol] = this match
@@ -32,11 +35,11 @@ enum Annot extends AutoLocated:
   
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
-    case _: Modifier | Untyped | TailRec | TailCall | _: Config => Vector.empty
+    case _: Modifier | Untyped | TailRec | TailCall | Inline | _: Config => Vector.empty
   
   def children: Vector[Located] = this match
     case Trm(trm) => Vector.single(trm)
-    case _: Modifier | Untyped | TailRec | TailCall | _: Config => Vector.empty
+    case _: Modifier | Untyped | TailRec | TailCall | Inline | _: Config => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case Untyped => doc"‹untyped›"
@@ -50,6 +53,7 @@ enum Annot extends AutoLocated:
     case Trm(trm) => Trm(trm.mkClone)
     case TailRec => TailRec
     case TailCall => TailCall
+    case Inline => Inline
     case c: Config => c
 
 object Annot:

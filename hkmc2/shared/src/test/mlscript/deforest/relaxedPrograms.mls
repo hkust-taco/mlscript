@@ -131,6 +131,7 @@ c.get() + c.get()
 //│ c = C(_)
 
 
+// Private members are now visible outside the class
 :deforest
 module M with
   let _private = 3
@@ -169,3 +170,5 @@ M.MM.f()
 //│ deforest > 	fields: scrut⁸.x⁰
 //│ deforest > <<< fusing <<<
 //│ ═══[RUNTIME ERROR] ReferenceError: MM is not defined
+
+

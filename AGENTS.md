@@ -23,12 +23,25 @@ Please also read the files in `.github/skills/hkmc2-difftests`.
 
 Never use `asInstanceOf` unless absolutely necessary. If you find yourself using `asInstanceOf`, it's a sign that your code may need to be refactored to be more type-safe.
 
-Never use default arguments in core business logic. Default arguments should be reserved for user-facing APIs.
+Never use default arguments in core business logic.
+Default arguments should be reserved for user-facing APIs.
 
-Do not remove existing `end` markers.
+Keep it DRY: if you find yourself copying and pasting code,
+consider refactoring it into a reusable function or class.
+The goal of minimizing code duplication is to improve maintainability:
+the logic for handling cases that ought to be similar should be centralized.
+
+**Document your code**:
+Use comments to explain the intent behind complex logic,
+especially if it is not immediately clear from the code itself.
+When appropriate, explain the history of what led to the current implementation,
+especially if it involves non-obvious decisions/trade-offs
+or if alternative approaches were considered and rejected.
 
 
 ## Editing Style
+
+Do not remove existing `end` markers.
 
 Never strip indentation whitespace.
 
