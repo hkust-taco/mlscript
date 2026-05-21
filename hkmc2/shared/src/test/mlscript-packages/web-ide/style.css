@@ -647,6 +647,7 @@ examples-panel {
 }
 
 .outline-tree {
+  --outline-indent-step: 10px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -689,7 +690,7 @@ examples-panel {
   color: var(--ide-text);
   cursor: pointer;
   font: inherit;
-  padding: 4px 6px 4px calc(6px + (var(--outline-depth, 0) * 14px));
+  padding: 4px 6px 4px calc(var(--outline-depth, 0) * var(--outline-indent-step));
   text-align: left;
 }
 
@@ -721,6 +722,16 @@ examples-panel {
 .outline-kind-function {
   --outline-symbol: var(--ide-success);
   --outline-symbol-strong: #235d34;
+}
+
+.outline-kind-type {
+  --outline-symbol: #6f5fb7;
+  --outline-symbol-strong: #514289;
+}
+
+.outline-kind-pattern {
+  --outline-symbol: #6b7280;
+  --outline-symbol-strong: #4b5563;
 }
 
 .outline-kind-value {
@@ -842,6 +853,17 @@ examples-panel {
 .outline-node-children {
   display: grid;
   gap: 1px;
+  position: relative;
+}
+
+.outline-node-children::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  bottom: 4px;
+  left: calc(7px + (var(--outline-depth, 0) * var(--outline-indent-step)));
+  border-left: 1px solid color-mix(in srgb, var(--ide-border) 70%, transparent);
+  pointer-events: none;
 }
 
 .outline-node:not([open]) > .outline-node-children {

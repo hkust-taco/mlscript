@@ -79,6 +79,8 @@ class OutlinePanel extends HTMLElement with
     "class" then "icon-boxes"
     "object" then "icon-circle-dot"
     "function" then "icon-braces"
+    "type" then "icon-type"
+    "pattern" then "icon-regex"
     "value" then "icon-variable"
     else "icon-dot"
 
@@ -101,6 +103,8 @@ class OutlinePanel extends HTMLElement with
     "class" then "outline-kind-class"
     "object" then "outline-kind-object"
     "function" then "outline-kind-function"
+    "type" then "outline-kind-type"
+    "pattern" then "outline-kind-pattern"
     "value" then "outline-kind-value"
     "mutable-value" then "outline-kind-mutable-value"
     "parameter" then "outline-kind-parameter"
