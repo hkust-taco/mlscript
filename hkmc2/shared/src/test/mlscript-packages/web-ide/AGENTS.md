@@ -120,6 +120,41 @@ Important events:
 - `sidebar-toggle-requested`: components can ask the workbench to fold/unfold a
   side panel.
 
+## Error Surfacing Contracts
+
+User-visible errors must not disappear into logs only. When touching compile,
+execute, workers, diagnostics, toolbar status, or logs, preserve these contracts.
+
+Compile diagnostics:
+
+- ordinary compiler diagnostics are stored in the Problems sidebar through
+  `diagnostics-inspector.setDiagnostics(...)`;
+- the Problems sidebar shows workspace-wide diagnostics by default and can scope
+  to the current file;
+- non-`.mls` files must not be compiled by the Compile button.
+
+Fatal compiler failures:
+
+- compiler worker internal failures are reported by `compiler/index.mls` as
+  `compilation-status-change` with status `fatal`;
+- `main.mls` converts those failures into an `internal` Problems entry with
+  source `compiler`;
+- the center toolbar/workbench indicator must show `Fatal error`;
+- the bottom panel must switch to Logging and record the fatal payload.
+
+Execution failures:
+
+- `main.mls` executes the compiled `.mjs` path but also passes the source path to
+  `execution/runner.mls`;
+- `execution/worker.mls` should report runtime failures as structured
+  `runtime-error` messages with `name`, `message`, and `stack`;
+- `execution/runner.mls` converts runtime failures into an `error` Problems
+  entry with source `execution`;
+- that Problems entry should name both the culprit source file, for example
+  `/std/CSP.mls`, and the executed module, for example `/std/CSP.mjs`;
+- Execute should unfold Output, and execution failures should be visible there
+  immediately as well as in centralized Logging.
+
 ## MLscript Notes For New Agents
 
 MLscript here compiles to JavaScript modules, so most code uses browser globals
@@ -284,7 +319,12 @@ Browser smoke checks for most UI changes:
 - Compile is disabled when there is no active file and skips non-`.mls` files;
 - Compile on `/main.mls` updates Problems with real diagnostics or an empty
   state;
+- fatal compiler failures show `Fatal error` in the toolbar, populate Problems
+  as `Internal`, and switch the bottom panel to Logging;
 - Execute unfolds Output and shows output in order;
+- execution runtime errors, including std-file execution failures such as
+  `/std/CSP.mls`, populate Problems with the culprit source path and executed
+  module path;
 - Logs tab receives centralized log entries and auto-scrolls when appropriate;
 - Search results are grouped by file, highlight the selected occurrence, fold by
   file, and open the exact occurrence;

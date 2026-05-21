@@ -36,6 +36,9 @@ when adding, completing, hiding, or intentionally deferring UI behavior.
   panel, and bottom Logging tab.
 - Surfaced execution worker runtime failures in Problems and Output with the
   source file and executed module called out.
+- Documented the compile and execution error-surfacing contracts in
+  `AGENTS.md` so future agents preserve the toolbar, Problems, Output, and
+  Logging behavior.
 - Improved the Problems panel narrow-width layout.
 - Hid Source Control on the left rail, keeping source code for later.
 - Hid Examples on the left rail, keeping source code for later.
