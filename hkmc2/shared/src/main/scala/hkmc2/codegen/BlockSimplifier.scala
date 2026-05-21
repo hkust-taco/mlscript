@@ -109,7 +109,7 @@ class BlockSimplifier
     val usedVars = MutSet.empty[Local]
     val privateVars = MutSet.empty[TermSymbol]
     val usedPrivateVars = MutSet.empty[TermSymbol]
-    lazy val unusedPrivateVars =
+    def unusedPrivateVars =
       privateVars.iterator.filterNot(usedPrivateVars).filterNot(symbolsToPreserve).toSet
     var tailLabels = MutSet.empty[LabelSymbol]
     
@@ -1137,4 +1137,3 @@ class BlockSimplifier
   
   
 end BlockSimplifier
-

@@ -80,10 +80,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         else doc"[${scope.lookup_!(getPrivateAccessorSymbol(ts), loc)}]"
 
   private def withPrivateAccessorDecls(doc: Document)(using Raise, Scope): Document =
-    val accessors = privateAccessorSymbols.iterator.toList.sortBy(_._1.uid).map: (ts, sym) =>
-      val name = scope.allocateOrGetName(sym)
-      doc"""const $name = globalThis.Symbol(${makeStringLiteral(ts.nme)});"""
-    .mkDocument(doc" # ")
+    val accessors = (
+      privateAccessorSymbols.iterator.toList.sortBy(_._1.uid).map: (ts, sym) =>
+        val name = scope.allocateOrGetName(sym)
+        doc"""const $name = globalThis.Symbol(${makeStringLiteral(ts.nme)});"""
+    ).mkDocument(doc" # ")
     if accessors.isEmpty then doc else doc :/: accessors
 
   private def collectExternalPrivateAccessors(p: Program)(using State): Unit =
@@ -1037,4 +1038,3 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
         doc"$checkArgsNum${this.body(body, endSemi = false)}")
     else
       super.setupFunction(name, params, body, isLambda = isLambda)
-
