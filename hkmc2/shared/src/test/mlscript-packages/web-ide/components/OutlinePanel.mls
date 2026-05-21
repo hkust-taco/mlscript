@@ -14,6 +14,7 @@ class OutlinePanel extends HTMLElement with
     status = "loading"
     errorText = ""
     expandedKeys = new Set()
+    collapsedKeys = new Set()
     selectedKey = ""
 
   fun connectedCallback() =
@@ -101,10 +102,11 @@ class OutlinePanel extends HTMLElement with
     node.children.map(child => nodeHtml(child, depth + 1)).join("")
 
   fun defaultOpen(depth) =
-    expandedKeys.size === 0 and depth < 3
+    depth < 3
 
   fun isExpanded(key, depth) =
-    if expandedKeys.has(key) then true
+    if collapsedKeys.has(key) then false
+    else if expandedKeys.has(key) then true
     else defaultOpen(depth)
 
   fun nodeHtml(node, depth) =
@@ -157,8 +159,12 @@ class OutlinePanel extends HTMLElement with
 
   fun handleDetailsToggle(details) =
     let key = details.dataset.outlineKey
-    if details.open then expandedKeys.add(key)
-    else expandedKeys.delete(key)
+    if details.open then
+      expandedKeys.add(key)
+      collapsedKeys.delete(key)
+    else
+      expandedKeys.delete(key)
+      collapsedKeys.add(key)
 
   fun toggleDetails(details) =
     let key = details.dataset.outlineKey
