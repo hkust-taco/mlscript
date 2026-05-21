@@ -291,30 +291,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       doc" # ${result(r)};${returningTerm(rst, endSemi)}"
     case Assign(l, r, rst) =>
       doc" # ${
-        val loc = l.toLoc // TODO: improve location
-        l match
-          case ts: semantics.TermSymbol =>
-            ts.owner match
-            case S(owner) =>
-              val isPrivateField =
-                (ts.k is syntax.LetBind) && !owner.isInstanceOf[semantics.TopLevelSymbol]
-              val qual =
-                if isPrivateField && isModuleOwner(owner) then
-                  // * Module-owned private fields are declared `static #` and must be
-                  // * accessed via the owner's lexical name to stay `this`-independent
-                  // * (e.g., under method extraction via `val X = Owner.method`).
-                  // * Objects/patterns/classes use instance `#` fields and need `this`.
-                  scope.lookup_!(owner, loc)
-                else
-                  scope.findThis_!(owner)
-              doc"${qual}${
-                if isPrivateField
-                then ".#" + owner.privatesScope.lookup_!(ts, loc)
-                else fieldSelect(ts.id.name)
-              }"
-            case N => scope.lookup_!(ts, loc)
-          case sym: InnerSymbol => lastWords(s"Inner symbol should not be used as the target of an assignment: $sym")
-          case _ => scope.lookup_!(l, loc)
+          l match
+            case ts: TermSymbol => result(Value.SimpleRef(ts))
+            case sym: InnerSymbol => lastWords(s"Inner symbol should not be used as the target of an assignment: $sym")
+            case l => result(l.asPath.withLoc(l.toLoc)) // TODO: improve location
         } = ${result(r)};${returningTerm(rst, endSemi)}"
     case AssignField(p, n, r, rst) =>
       doc" # ${result(p)}${fieldSelect(n.name)} = ${result(r)};${returningTerm(rst, endSemi)}"
@@ -486,7 +466,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             val ctorBod = {{
                 val extraPath = if paramsOpt.isDefined then ".class" else ""
                 doc" # static " :: braced:
-                  val v = scope.findThis_!(isym)
+                  val v = result(Value.This(isym))
                   if isSingleton
                   then doc" # new $v"
                   else
