@@ -210,8 +210,7 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
         case Some(newSym: (LocalSymbol | BuiltinSymbol)) =>
           k(Value.SimpleRef(newSym))
         case Some(newSym: InnerSymbol) =>
-          lastWords("assumption broken")
-          // k(Value.This(newSym))
+          lastWords(s"SimpleRef $l should not refresh into a ThisRef $newSym")
         case Some(newSym) =>
           lastWords(s"Unexpected symbol kind ${newSym.getClass.getSimpleName}: $newSym")
     case Value.MemberRef(bms, disamb) =>
@@ -230,10 +229,6 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
       mapping.get(sym) match
         case Some(inner: InnerSymbol) => k(Value.This(inner).withLocOf(v))
         case _ => super.applyValue(v)(k)
-    // case Value.InnerRef(sym) =>
-    //   mapping.get(sym) match
-    //     case Some(inner: InnerSymbol) => k(Value.InnerRef(inner).withLocOf(v))
-    //     case _ => super.applyValue(v)(k)
     case _ => super.applyValue(v)(k)
   
   private def freshenPrivateFields(

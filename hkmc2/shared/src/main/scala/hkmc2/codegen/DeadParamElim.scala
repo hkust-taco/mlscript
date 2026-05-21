@@ -326,12 +326,11 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
             case Some(bms) =>
               lastWords("SimpleRef should not refresh into a MemberRef")
             case None => super.applyValue(v)(k)
-        case Value.This(_) => lastWords("assumption broken")
-        // case Value.InnerRef(l) =>
-        //   pre.res.modSymToBms.get(l) match
-        //     case Some(bms) =>
-        //       k(Value.MemberRef(bms, l.asMod.getOrElse(bms.defaultDisamb.get)))
-        //     case None => super.applyValue(v)(k)
+        case Value.This(l) =>
+          pre.res.modSymToBms.get(l) match
+            case Some(bms) =>
+              k(Value.MemberRef(bms, l.asMod.getOrElse(bms.defaultDisamb.get)))
+            case None => super.applyValue(v)(k)
         case _ => super.applyValue(v)(k)
     end RefreshSymbol
     

@@ -214,11 +214,6 @@ class BlockSimplifier
         registerChange(s"${loc.showDbg} is never assigned; replacing read with undefined")
         if !symbolsToPreserve(loc) then removedLocals += loc
         k(Value.Lit(syntax.Tree.UnitLit(false)))
-      case Value.This(loc) if localVars.contains(loc) && !definedVars.contains(loc) =>
-        lastWords("assumption broken")
-        // registerChange(s"${loc.showDbg} is never assigned; replacing read with undefined")
-        // if !symbolsToPreserve(loc) then removedLocals += loc
-        // k(Value.Lit(syntax.Tree.UnitLit(false)))
       case _ => super.applyValue(v)(k)
     
     override def applyBlock(b: Block): Block = b match
