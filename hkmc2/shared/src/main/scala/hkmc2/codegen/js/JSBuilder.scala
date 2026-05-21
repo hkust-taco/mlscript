@@ -138,8 +138,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Value.Lit(Tree.StrLit(value)) => makeStringLiteral(value)
     case Value.Lit(lit) => lit.idStr
     case Value.MemberRef(bms, disamb) =>
-      if disamb.shouldBeLifted then doc"${getVar(bms, bms.toLoc)}.class"
-      else getVar(bms, r.toLoc)
+      if disamb.shouldBeLifted then doc"${scope.lookup_!(bms, bms.toLoc)}.class"
+      else scope.lookup_!(bms, r.toLoc)
     case Value.SimpleRef(l: BuiltinSymbol) =>
       if l.nullary then l.nme
       else errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
