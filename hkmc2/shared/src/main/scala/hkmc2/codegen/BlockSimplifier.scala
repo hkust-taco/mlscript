@@ -1129,8 +1129,7 @@ class BlockSimplifier
               val info = m(ts)
               val cfg = summon[Config.Inliner]
               val threshold = if insideInlineAnnotatedFunction then cfg.altSmallThreshold else cfg.inlineThreshold
-              val inliningBlocked = insideInlineAnnotatedFunction && !info.defn.inline
-              if !info.shouldBeInlined(blk, threshold) || inliningBlocked then
+              if !info.shouldBeInlined(blk, threshold) then
                 super.applyResult(r)(k)
               else
                 val matchedArgs = matchAllArgs(argss, info.defn.params)
