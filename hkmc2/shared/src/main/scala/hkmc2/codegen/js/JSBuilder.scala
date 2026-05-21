@@ -72,37 +72,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   private def isModuleOwner(owner: semantics.InnerSymbol): Bool = owner match
     case mod: semantics.ModuleOrObjectSymbol => mod.tree.k is syntax.Mod
     case _ => false
-
-  // TODO: replace getVar with specialized logic for each case
-  @deprecated("Collapse applicable arms into the call site of this function")
-  def getVar(l: Local, loc: Opt[Loc])(using Raise, Scope): Document = l match
-    case ts: semantics.TermSymbol =>
-      ts.owner match
-      case S(owner) =>
-        val isPrivateField =
-          (ts.k is syntax.LetBind) && !owner.isInstanceOf[semantics.TopLevelSymbol]
-        val qual =
-          if isPrivateField && isModuleOwner(owner) then
-            // * Module-owned private fields are declared `static #` and must be
-            // * accessed via the owner's lexical name to stay `this`-independent
-            // * (e.g., under method extraction via `val X = Owner.method`).
-            // * Objects/patterns/classes use instance `#` fields and need `this`.
-            scope.lookup_!(owner, loc)
-          else
-            scope.findThis_!(owner)
-        doc"${qual}${
-          if isPrivateField
-          then ".#" + owner.privatesScope.lookup_!(ts, loc)
-          else fieldSelect(ts.id.name)
-        }"
-      case N => scope.lookup_!(ts, loc)
-    case ts: semantics.ModuleOrObjectSymbol if ts.asMod.isDefined => 
-      lastWords("Should be `findThis_!`-ed")
-    case ts: semantics.InnerSymbol =>
-      scope.findThis_!(ts)
-    case _ => scope.lookup_!(l, loc)
   
-  def runtimeVar(using Raise, Scope): Document = getVar(State.runtimeSymbol, N)
+  def runtimeVar(using Raise, Scope): Document = scope.lookup_!(State.runtimeSymbol, N)
   
   def argument(a: Arg)(using Raise, Scope): Document =
     val spd = a.spread match
@@ -319,8 +290,32 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Assign(l, r, rst) if l is State.noSymbol =>
       doc" # ${result(r)};${returningTerm(rst, endSemi)}"
     case Assign(l, r, rst) =>
-      doc" # ${getVar(l, l.toLoc // TODO: improve location
-        )} = ${result(r)};${returningTerm(rst, endSemi)}"
+      doc" # ${
+        val loc = l.toLoc // TODO: improve location
+        l match
+          case ts: semantics.TermSymbol =>
+            ts.owner match
+            case S(owner) =>
+              val isPrivateField =
+                (ts.k is syntax.LetBind) && !owner.isInstanceOf[semantics.TopLevelSymbol]
+              val qual =
+                if isPrivateField && isModuleOwner(owner) then
+                  // * Module-owned private fields are declared `static #` and must be
+                  // * accessed via the owner's lexical name to stay `this`-independent
+                  // * (e.g., under method extraction via `val X = Owner.method`).
+                  // * Objects/patterns/classes use instance `#` fields and need `this`.
+                  scope.lookup_!(owner, loc)
+                else
+                  scope.findThis_!(owner)
+              doc"${qual}${
+                if isPrivateField
+                then ".#" + owner.privatesScope.lookup_!(ts, loc)
+                else fieldSelect(ts.id.name)
+              }"
+            case N => scope.lookup_!(ts, loc)
+          case sym: InnerSymbol => lastWords(s"Inner symbol should not be used as the target of an assignment: $sym")
+          case _ => scope.lookup_!(l, loc)
+        } = ${result(r)};${returningTerm(rst, endSemi)}"
     case AssignField(p, n, r, rst) =>
       doc" # ${result(p)}${fieldSelect(n.name)} = ${result(r)};${returningTerm(rst, endSemi)}"
     case AssignDynField(p, f, ai, r, rst) =>
@@ -335,7 +330,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         // * in which case it has no owner and is just a glorified local variable rather than a field.
         tsym.owner match
         case N =>
-          doc"${getVar(sym, sym.toLoc)} = ${result(p)};${returningTerm(rst, endSemi)}"
+          doc"${scope.lookup_!(sym, sym.toLoc)} = ${result(p)};${returningTerm(rst, endSemi)}"
         case S(owner) =>
           val thisDoc = mkThis(owner)
           val nme = sym.nme
@@ -371,7 +366,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             // * If the name is a valid JavaScript identifier, use it in the generated function code.
             if sym.nameIsMeaningful && isValidIdentifier(symName)
             then
-              val varName = getVar(sym, dSym.toLoc)
+              val varName = scope.lookup_!(sym, dSym.toLoc)
               scope.reverseLookup(sym.nme) match
               // * Maybe the function's internal name was already bound in scope;
               // * in that case, we need to forward it to a different variable to avoid unintended capture.
@@ -386,7 +381,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               // * In JS, `let x = (0, function (args) {...})` makes the function anonymous;
               // * otherwise, using `let x = function (args) {...}` would name the function `x`,
               // * which is not meaningful, here.
-              doc"${getVar(sym, dSym.toLoc)} = (undefined, function ($params) ${ braced(bodyDoc) });"
+              doc"${scope.lookup_!(sym, dSym.toLoc)} = (undefined, function ($params) ${ braced(bodyDoc) });"
             
           case ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
               privFlds, pubFlds, preCtor, ctor, modo, bufferable)
@@ -459,7 +454,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 case S(owner) =>
                   (doc" # ${result(Value.This(owner))}.${sym.nme} = this;", fz)
                 case N =>
-                  (doc" # ${getVar(sym, sym.toLoc)} = this;", fz)
+                  (doc" # ${scope.lookup_!(sym, sym.toLoc)} = this;", fz)
               else (doc"", doc"")
             
             val ctorCode = scope.nest.givenIn:
@@ -491,7 +486,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             val ctorBod = {{
                 val extraPath = if paramsOpt.isDefined then ".class" else ""
                 doc" # static " :: braced:
-                  val v = getVar(isym, isym.toLoc)
+                  val v = scope.findThis_!(isym)
                   if isSingleton
                   then doc" # new $v"
                   else
@@ -499,7 +494,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                     case S(owner) =>
                       doc" # ${result(Value.This(owner))}.${sym.nme}$extraPath = $v"
                     case N =>
-                      doc" # ${getVar(sym, sym.toLoc)}$extraPath = $v"
+                      doc" # ${scope.lookup_!(sym, sym.toLoc)}$extraPath = $v"
               }} :: (
                 if ctorAux.isEmpty then doc""
                 else doc" # constructor(${initialCtorParams.unzip._2.mkDocument(", ")}) " :: braced(ctorAux)
@@ -531,12 +526,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   // * If this class has a `toString` implementation, then delegate
                   // * `prettyPrint` to `toString`.
                   if mtds.exists(_.sym.nme == "toString") then doc""" # [${
-                    getVar(State.prettyPrintSymbol, N)
+                    scope.lookup_!(State.prettyPrintSymbol, N)
                   }]() { return this.toString(); }"""
                   // * Call the `render` function in the default `toString` method.
                   else doc" # ${mtdPrefix}toString() { return $runtimeVar.render(this); }"
                 } :: {
-                  doc""" # static [${getVar(State.definitionMetadataSymbol, N)}] = [${
+                  doc""" # static [${scope.lookup_!(State.definitionMetadataSymbol, N)}] = [${
                     kind.desc.escaped}, ${sym.nme.escaped}${
                     if (kind is syntax.Cls) && paramsOpt.isDefined then
                       doc", [${ctorParams.map { (p, _) => p.decl match
@@ -585,7 +580,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               case N =>
                 fun match
                 case S(f) =>
-                  doc"${getVar(sym, sym.toLoc)} = ${f}; # $freezeDefns($clsJS);"
+                  doc"${scope.lookup_!(sym, sym.toLoc)} = ${f}; # $freezeDefns($clsJS);"
                 case N =>
                   doc"$freezeDefns(${clsJS});"
         
@@ -679,17 +674,17 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       doc" # throw ${result(res)}${mkSemi}"
     
     case Break(lbl) =>
-      doc" # break ${getVar(lbl, lbl.toLoc)}${mkSemi}"
+      doc" # break ${scope.lookup_!(lbl, lbl.toLoc)}${mkSemi}"
       
     case Continue(lbl) =>
-      doc" # continue ${getVar(lbl, lbl.toLoc)}${mkSemi}"
+      doc" # continue ${scope.lookup_!(lbl, lbl.toLoc)}${mkSemi}"
       
     case Label(lbl, loop, bod, rst) =>
       scope.allocateName(lbl)
       
       // [fixme:0] TODO check scope and allocate local variables here (see: https://github.com/hkust-taco/mlscript/pull/293#issuecomment-2792229849)
       
-      doc" # ${getVar(lbl, lbl.toLoc)}:${if loop then doc" while (true)" else ""} " :: braced {
+      doc" # ${scope.lookup_!(lbl, lbl.toLoc)}:${if loop then doc" while (true)" else ""} " :: braced {
           nonBracedScoped(bod)(bd => returningTerm(bd, endSemi = true)) :: (if loop && !bod.isAbortive then doc" # break;" else doc"")
       } :: returningTerm(rst, endSemi)
       
@@ -752,8 +747,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using Raise, Scope): Document =
     scope.allocateName(State.definitionMetadataSymbol)
     scope.allocateName(State.prettyPrintSymbol)
-    doc"""const ${getVar(State.definitionMetadataSymbol, N)} = globalThis.Symbol.for("mlscript.definitionMetadata");"""
-      :/: doc"""const ${getVar(State.prettyPrintSymbol, N)} = globalThis.Symbol.for("mlscript.prettyPrint");"""
+    doc"""const ${scope.lookup_!(State.definitionMetadataSymbol, N)} = globalThis.Symbol.for("mlscript.definitionMetadata");"""
+      :/: doc"""const ${scope.lookup_!(State.prettyPrintSymbol, N)} = globalThis.Symbol.for("mlscript.prettyPrint");"""
       :/: programBody(p, exprt, wd)
   
   def programBody(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using Raise, Scope): Document =
@@ -767,7 +762,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       val relPath = if path.startsWith("/")
         then "./" + io.Path(path).relativeTo(wd).map(_.toString).getOrElse(path)
         else path
-      doc"""import ${getVar(i._1, N)} from "${relPath}";"""
+      doc"""import ${scope.lookup_!(i._1, N)} from "${relPath}";"""
     imps.mkDocument(doc" # ")
     :/: nonNestedScoped(p.main)(block(_, endSemi = false)).stripBreaks
     :: locally:
@@ -778,7 +773,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   def worksheet(p: Program)(using Raise, Scope): (Document, Document) =
     reserveNames(p)
     lazy val imps = p.imports.map: i =>
-      doc"""${getVar(i._1, N)} = await import("${i._2.toString}").then(m => m.default ?? m);"""
+      doc"""${scope.lookup_!(i._1, N)} = await import("${i._2.toString}").then(m => m.default ?? m);"""
     p.main match
     case Scoped(syms, body) =>
       val fvs = body.freeVars
