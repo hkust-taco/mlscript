@@ -672,7 +672,7 @@ examples-panel {
   min-height: 28px;
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: 8px 30px 16px minmax(0, 1fr) max-content;
+  grid-template-columns: 14px 30px 16px minmax(0, 1fr) max-content;
   align-items: center;
   gap: 4px;
   border: 1px solid transparent;
@@ -685,7 +685,21 @@ examples-panel {
   text-align: left;
 }
 
-.outline-node-summary::before {
+.outline-node-caret,
+.outline-node-spacer {
+  width: 14px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.outline-node-caret {
+  border-radius: var(--ide-radius-xs);
+  cursor: pointer;
+}
+
+.outline-node-caret::before {
   content: "";
   width: 0;
   height: 0;
@@ -696,13 +710,18 @@ examples-panel {
   transition: transform 120ms ease;
 }
 
-.outline-node[open] > .outline-node-summary::before {
-  transform: rotate(90deg);
+.outline-node-caret:hover {
+  background: var(--ide-surface-muted);
 }
 
-.outline-node-leaf::before {
-  content: "";
-  width: 8px;
+.outline-node-caret:focus-visible {
+  outline: none;
+  background: var(--ide-accent-soft);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ide-accent) 24%, transparent);
+}
+
+.outline-node[open] > .outline-node-summary .outline-node-caret::before {
+  transform: rotate(90deg);
 }
 
 .outline-node-summary:hover,

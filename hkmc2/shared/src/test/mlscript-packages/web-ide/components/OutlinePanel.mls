@@ -98,6 +98,12 @@ class OutlinePanel extends HTMLElement with
       <span class="outline-node-location">""" + escapeHtml(nodeLocationLabel(node)) + """</span>
     """
 
+  fun caretHtml(node) =
+    """<span class="outline-node-caret" role="button" tabindex="0" aria-label="Toggle children of """ + escapeHtml(node.name) + """"></span>"""
+
+  fun spacerHtml() =
+    """<span class="outline-node-spacer"></span>"""
+
   fun childNodesHtml(node, depth) =
     node.children.map(child => nodeHtml(child, depth + 1)).join("")
 
@@ -119,6 +125,7 @@ class OutlinePanel extends HTMLElement with
       """
         <details class="outline-node""" + selectedClass + """" data-outline-key="""" + escapeHtml(key) + """"""" + depthStyle + openAttr + """>
           <summary class="outline-node-summary" data-outline-key="""" + escapeHtml(key) + """" role="treeitem">
+            """ + caretHtml(node) + """
             """ + nodeMainHtml(node) + """
           </summary>
           <div class="outline-node-children" role="group">
@@ -129,6 +136,7 @@ class OutlinePanel extends HTMLElement with
     else
       """
         <button class="outline-node-leaf""" + selectedClass + """" type="button" data-outline-key="""" + escapeHtml(key) + """" role="treeitem"""" + depthStyle + """>
+          """ + spacerHtml() + """
           """ + nodeMainHtml(node) + """
         </button>
       """
@@ -171,14 +179,32 @@ class OutlinePanel extends HTMLElement with
     if details.open then
       set details.open = false
       expandedKeys.delete(key)
+      collapsedKeys.add(key)
     else
       set details.open = true
       expandedKeys.add(key)
+      collapsedKeys.delete(key)
+
+  fun isCaretTarget(event) =
+    if event.target is
+      Absent then false
+      target then
+        if target.closest(".outline-node-caret") is
+          null then false
+          else true
 
   fun handleSummaryClick(event, summary) =
     event.preventDefault()
-    if summary.parentElement is ~Absent as details do toggleDetails(details)
-    dispatchOpenNode(summary.dataset.outlineKey, summary)
+    if isCaretTarget(event) then
+      if summary.parentElement is ~Absent as details do toggleDetails(details)
+    else dispatchOpenNode(summary.dataset.outlineKey, summary)
+
+  fun handleCaretKey(event, summary) =
+    if event.key is
+      "Enter" | " " then
+        event.preventDefault()
+        if summary.parentElement is ~Absent as details do toggleDetails(details)
+      else ()
 
   fun attachNodeListeners() =
     let panel = this
@@ -186,6 +212,8 @@ class OutlinePanel extends HTMLElement with
       details.addEventListener("toggle", event => panel.handleDetailsToggle(details))
     this.querySelectorAll(".outline-node-summary").forEach of (summary, ...) =>
       summary.addEventListener("click", event => panel.handleSummaryClick(event, summary))
+      if summary.querySelector(".outline-node-caret") is ~null as caret do
+        caret.addEventListener("keydown", event => panel.handleCaretKey(event, summary))
     this.querySelectorAll(".outline-node-leaf").forEach of (button, ...) =>
       button.addEventListener("click", event => panel.dispatchOpenNode(button.dataset.outlineKey, button))
 
