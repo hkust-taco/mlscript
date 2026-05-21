@@ -104,17 +104,16 @@ object ScopeData:
         // the lifter may try to capture those locals.
         case Top(b) => Set.empty
         case Class(cls, _) =>
-          // Public fields are not included, as they are accessed using
-          // a field selection rather than directly using the BlockMemberSymbol.
+          // Public/private fields are not included, as they are accessed using
+          // a field selection rather than directly using the symbol.
           val paramsSet: Set[Local] = cls.paramsOpt match
             case Some(value) => value.params.map(_.sym).toSet
             case None => Set.empty
           val auxSet: Set[Local] = cls.auxParams.flatMap: p =>
               p.params.map(_.sym)
             .toSet
-          paramsSet ++ auxSet ++ cls.privateFields + cls.isym
-        case Companion(clsBody, compDefn) =>
-          clsBody.privateFields.toSet + clsBody.isym
+          paramsSet ++ auxSet + cls.isym
+        case Companion(clsBody, compDefn) => Set(clsBody.isym)
         case _: ClassCtor => Set.empty
         case Func(fun, _) => fun.params.flatMap: p =>
             p.restParam.map(_.sym) ++ p.params.map(_.sym)
