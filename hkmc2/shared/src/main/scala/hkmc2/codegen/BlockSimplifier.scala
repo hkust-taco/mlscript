@@ -103,13 +103,17 @@ class BlockSimplifier
     * hopefully allows more expensive passes such as DataFlowAnalysis to do less work. */
   class DeadCodeElim() extends BlockTransformer(SymbolSubst.Id), Helper:
     
+    var analysisDone = false
+    
     val usedLabels = MutSet.empty[LabelSymbol]
     val definedVars = MutSet.empty[Local]
     val localVars = MutSet.empty[Local]
     val usedVars = MutSet.empty[Local]
     val privateVars = MutSet.empty[TermSymbol]
     val usedPrivateVars = MutSet.empty[TermSymbol]
-    var unusedPrivateFieldSyms: Set[TermSymbol] = Set.empty
+    lazy val unusedPrivateFieldSyms: Set[TermSymbol] =
+      assert(analysisDone)
+      privateVars.iterator.filterNot(usedPrivateVars).filterNot(symbolsToPreserve).toSet
     var tailLabels = MutSet.empty[LabelSymbol]
     
     def apply(prog: Program): Program =
@@ -148,10 +152,7 @@ class BlockSimplifier
             case _ =>
           super.applyBlock(b)
 
-      val unusedPrivateVars =
-        privateVars.iterator.filterNot(usedPrivateVars).filterNot(symbolsToPreserve).toSet
-      unusedPrivateFieldSyms = unusedPrivateVars
-
+      analysisDone = true
       applyProgram(prog)
     
     // Evaluate `thunk` with a new tail label set. This is used for evaluating any sub blocks that is not in the tail position.
