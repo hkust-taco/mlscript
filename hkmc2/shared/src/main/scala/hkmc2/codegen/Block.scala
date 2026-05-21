@@ -942,10 +942,9 @@ enum Value extends Path with ProductWithExtraInfo:
 object Value:
   @deprecated("Use Value.SimpleRef, Value.MemberRef, Value.This, or Value.InnerRef instead.")
   object Ref:
-    def apply(l: Local, disamb: Opt[DefinitionSymbol[?]])(using State): Value = 
+    def apply(l: Local, disamb: Opt[DefinitionSymbol[?]]): Value = 
       l match
         case l: (LocalSymbol | BuiltinSymbol) => Value.SimpleRef(l)
-        case tls: TopLevelSymbol => Value.This(tls)
         case bms: BlockMemberSymbol => Value.MemberRef(bms, disamb.getOrElse(lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")))
         case sym: InnerSymbol => Value.This(sym)
         case _: NoSymbol => lastWords("NoSymbol should not be used as a Path/Value")
@@ -953,14 +952,15 @@ object Value:
     
     // * Some helper constructors that allow omitting the disambiguation symbol.
     // * If the ref itself is a DefinitionSymbol, then disambiguating it results in itself.
-    def apply(l: DefinitionSymbol[?])(using State): Value = Ref(l, S(l))
+    def apply(l: DefinitionSymbol[?]): Value = Ref(l, S(l))
     // * If the ref is a symbol that does not refer to a definition, then there is no disambiguation.
-    def apply(l: TempSymbol | VarSymbol | BuiltinSymbol)(using State): Value = Ref(l, N)
+    def apply(l: TempSymbol | VarSymbol | BuiltinSymbol): Value = Ref(l, N)
 
     def unapply(v: Value)(using State): Opt[(Local, Opt[DefinitionSymbol[?]])] = v match
       case SimpleRef(l) => S(l -> N)
       case MemberRef(bms, disamb) => S(bms -> S(disamb))
       case This(sym: TopLevelSymbol) if sym === State.globalThisSymbol => S(sym -> N)
+      // TODO(Derppening): Can we distinguish between a normal `This` and a inner-ref `This`?
       case _ => N
 
 case class Arg(spread: Opt[SpreadKind], value: Path)
@@ -1001,7 +1001,7 @@ extension (bms: BlockMemberSymbol)
     bms.asTrm.orElse(bms.asClsOrMod).orElse(bms.asPat)
 
 extension (l: Local)
-  def asPath(using State): Path = l match 
+  def asPath: Path = l match 
     case l: (LocalSymbol | BuiltinSymbol) => Value.SimpleRef(l)
     case bms: BlockMemberSymbol => Value.MemberRef(bms, bms.defaultDisamb.getOrElse(lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")))
     case sym: InnerSymbol => Value.This(sym)
