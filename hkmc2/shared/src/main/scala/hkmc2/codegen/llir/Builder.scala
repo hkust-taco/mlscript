@@ -223,7 +223,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         given Ctx = ctx.setClass(isym)
         val funcs = methods.map(bMethodDef)
         def parentFromPath(p: Path): Ls[Local] = p match
-          case Value.MemberRef(bms, disamb) => fromMemToClass(bms.orElseDisamb(S(disamb))) :: Nil
+          case Value.MemberRef(bms, disamb) => fromMemToClass(disamb) :: Nil
           case Value.This(sym) => fromMemToClass(sym) :: Nil
           case Value.SimpleRef(l) =>
             // TODO(Derppening): Check if this assertion holds
@@ -285,7 +285,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         k(l |> sr)
       case Value.MemberRef(bms, disamb) if bms.nme.isCapitalized =>
         val v: Local = newTemp
-        Node.LetExpr(v, Expr.CtorApp(fromMemToClass(bms.orElseDisamb(S(disamb))), Ls()), k(v |> sr))
+        Node.LetExpr(v, Expr.CtorApp(fromMemToClass(disamb), Ls()), k(v |> sr))
       case Value.MemberRef(bms, _) =>
         ctx.fn_ctx.get(bms) match
           case Some(f) =>
