@@ -930,9 +930,11 @@ class BlockSimplifier
         isMethod: Bool,
         private[InlinerAnalyzer] var useCount: Int,
         private[InlinerAnalyzer] var disallowElimination: Bool,
-        private[InlinerAnalyzer] var isLoopBreaker: Bool,
+        private[InlinerAnalyzer] var _isLoopBreaker: Bool,
       ):
         def isPrivate = !symbolsToPreserve.contains(defn.sym)
+        
+        inline def isLoopBreaker = _isLoopBreaker
         
         // Whether this function can be inlined without causing any code duplication,
         // i.e. the original definition can be removed and there is only one usage.
@@ -941,7 +943,6 @@ class BlockSimplifier
           // false
         
         def shouldBeInlined(newBlk: Block, threshold: Int): Bool =
-          if isLoopBreaker then return false
           // method requires the capturing of `this`, which is not supported currently.
           if isMethod then return false
           // If the definition is marked with inline, we should inline it regardless of the size of the body.
@@ -1040,11 +1041,11 @@ class BlockSimplifier
               if sccComp.sizeIs > 1 then
                 // Prefer breaking cycles at non-inline definitions so tiny wrappers
                 // can still disappear while their workers stop recursive expansion.
-                map(pickLoopBreaker(sccComp)).isLoopBreaker = true
+                map(pickLoopBreaker(sccComp))._isLoopBreaker = true
             assignLoopBreakers()
           edges.foreach: (from, to) =>
             if from === to then
-              map(from).isLoopBreaker = true
+              map(from)._isLoopBreaker = true
           assignLoopBreakers()
           map
       
@@ -1096,22 +1097,6 @@ class BlockSimplifier
           insideInlineAnnotatedFunction = old
           res
         
-        def inlineCandidateBody(ts: TermSymbol): Opt[Block] =
-          newFunctionBody.get(ts) match
-          case S(S(blk)) => S(blk)
-          case S(N) if m(ts).defn.inline =>
-            // The optimized body is already being computed through a recursive
-            // path. For inline wrappers, using the original body still exposes
-            // the call to the real worker; loop breakers below keep genuinely
-            // recursive inline functions from expanding forever.
-            S(m(ts).defn.body)
-          case S(N) => N
-          case N =>
-            newFunctionBody(ts) = N
-            val newBdy = enterFunBlock(m(ts).defn.inline, applyBlock(m(ts).defn.body))
-            newFunctionBody(ts) = S(newBdy)
-            S(newBdy)
-
         override def applyMainBlock(main: Block): Block =
           super.applyMainBlock(main).flattened
         
@@ -1140,7 +1125,14 @@ class BlockSimplifier
         
         override def applyResult(r: Result)(k: Result => Block): Block = r match
           case c @ Call(TermSymbolPath(ts), argss) if m.contains(ts) && argss.nonEmpty =>
-            inlineCandidateBody(ts).fold(super.applyResult(r)(k)): blk =>
+            if m(ts).isLoopBreaker then return super.applyResult(r)(k)
+            newFunctionBody.get(ts)
+            .getOrElse:
+              newFunctionBody(ts) = N
+              val newBdy = enterFunBlock(m(ts).defn.inline, applyBlock(m(ts).defn.body))
+              newFunctionBody(ts) = S(newBdy)
+              S(newBdy)
+            .fold(super.applyResult(r)(k)): blk =>
               val info = m(ts)
               val cfg = summon[Config.Inliner]
               val threshold = if insideInlineAnnotatedFunction then cfg.altSmallThreshold else cfg.inlineThreshold
