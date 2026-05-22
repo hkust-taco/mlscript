@@ -156,32 +156,45 @@ private fun ping(n)(unused) = if n == 0 then 0 else pong(n - 1)(unused)
 private fun pong(n)(unused) = if n == 0 then 0 else ping(n - 1)(unused)
 ping(5)(99)
 //│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun ping$worker#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > prodfun pong$worker#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let ping⁴, pong⁴;
+//│ let ping⁴, pong⁴, pong$worker⁰, ping$worker⁰, inlinedVal;
 //│ define ping⁴ as fun ping⁵(n)(unused) {
+//│   return ping$worker¹(n)
+//│ };
+//│ define ping$worker⁰ as fun ping$worker¹(n) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
 //│     true =>
 //│       return 0
 //│     else
+//│       let inlinedVal1;
 //│       set tmp = -⁰(n, 1);
-//│       return pong⁵(tmp)(unused)
+//│       set inlinedVal1 = pong$worker¹(tmp);
+//│       return inlinedVal1
 //│   end
 //│ };
 //│ define pong⁴ as fun pong⁵(n)(unused) {
+//│   return pong$worker¹(n)
+//│ };
+//│ define pong$worker⁰ as fun pong$worker¹(n) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
 //│     true =>
 //│       return 0
 //│     else
+//│       let inlinedVal1;
 //│       set tmp = -⁰(n, 1);
-//│       return ping⁵(tmp)(unused)
+//│       set inlinedVal1 = ping$worker¹(tmp);
+//│       return inlinedVal1
 //│   end
 //│ };
-//│ ping⁵(5)(99)
+//│ set inlinedVal = ping$worker¹(5);
+//│ inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 

@@ -1,7 +1,33 @@
 :js
 
+
+
 :deforest
 :expect 5
+data class AA(x)
+class Store(n) with
+  val nn = n
+  fun get() =
+    if AA(n) is AA(x) then x + nn
+  fun foo(x) =
+    if x is
+      AA(x) then x + nn
+val store = Store(1)
+store.foo(AA(4))
+//│ deforest > >>> fusing >>>
+//│ deforest > AA⁰(Store⁰.this.n⁰) ->
+//│ deforest > 	match: scrut⁰
+//│ deforest > 	fields: scrut⁰.x⁰
+//│ deforest > <<< fusing <<<
+//│ = 5
+//│ store = Store(_)
+
+
+
+
+:deforest
+:expect 5
+:noInline
 data class AA(x)
 class Store(n) with
   fun get() =
@@ -12,9 +38,9 @@ class Store(n) with
 val store = Store(1)
 store.foo(AA(4))
 //│ deforest > >>> fusing >>>
-//│ deforest > AA⁰(Store⁰.this.n⁰) ->
-//│ deforest > 	match: scrut⁰
-//│ deforest > 	fields: scrut⁰.x⁰
+//│ deforest > AA¹(Store¹.this.n¹) ->
+//│ deforest > 	match: scrut¹
+//│ deforest > 	fields: scrut¹.x¹
 //│ deforest > <<< fusing <<<
 //│ = 5
 //│ store = Store(_)
@@ -32,12 +58,12 @@ fun classMethodSibling() =
     AA(x) then x + store.get()
 classMethodSibling()
 //│ deforest > >>> fusing >>>
-//│ deforest > AA⁰(1) ->
-//│ deforest > 	match: scrut¹
-//│ deforest > 	fields: scrut¹.x⁰
-//│ deforest > AA⁰(1) ->
-//│ deforest > 	match: scrut¹
-//│ deforest > 	fields: scrut¹.x⁰
+//│ deforest > AA¹(1) ->
+//│ deforest > 	match: scrut²
+//│ deforest > 	fields: scrut².x¹
+//│ deforest > AA¹(1) ->
+//│ deforest > 	match: scrut²
+//│ deforest > 	fields: scrut².x¹
 //│ deforest > <<< fusing <<<
 //│ = 3
 
@@ -50,9 +76,9 @@ if AA(1) is
   AA(x) then
     x + r!a
 //│ deforest > >>> fusing >>>
-//│ deforest > AA⁰(1) ->
-//│ deforest > 	match: scrut²
-//│ deforest > 	fields: scrut².x⁰
+//│ deforest > AA¹(1) ->
+//│ deforest > 	match: scrut³
+//│ deforest > 	fields: scrut³.x¹
 //│ deforest > <<< fusing <<<
 //│ = 1
 //│ r = {a: 0, value: 1}
@@ -65,9 +91,9 @@ if AA(1) is
     let xs = [0, 1]
     x + xs!1
 //│ deforest > >>> fusing >>>
-//│ deforest > AA⁰(1) ->
-//│ deforest > 	match: scrut³
-//│ deforest > 	fields: scrut³.x⁰
+//│ deforest > AA¹(1) ->
+//│ deforest > 	match: scrut⁴
+//│ deforest > 	fields: scrut⁴.x¹
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -84,12 +110,12 @@ fun nestedClass() =
     AA(x) then x
 nestedClass()
 //│ deforest > >>> fusing >>>
-//│ deforest > AA⁰(1) ->
-//│ deforest > 	match: scrut⁴
-//│ deforest > 	fields: scrut⁴.x⁰
-//│ deforest > AA⁰(1) ->
-//│ deforest > 	match: scrut⁴
-//│ deforest > 	fields: scrut⁴.x⁰
+//│ deforest > AA¹(1) ->
+//│ deforest > 	match: scrut⁵
+//│ deforest > 	fields: scrut⁵.x¹
+//│ deforest > AA¹(1) ->
+//│ deforest > 	match: scrut⁵
+//│ deforest > 	fields: scrut⁵.x¹
 //│ deforest > <<< fusing <<<
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
 
@@ -103,9 +129,9 @@ fun loopSibling() =
     if AA(1) is
       AA(x) then print(x)
 //│ deforest > >>> fusing >>>
-//│ deforest > AA⁰(1) ->
-//│ deforest > 	match: scrut⁵
-//│ deforest > 	fields: scrut⁵.x⁰
+//│ deforest > AA¹(1) ->
+//│ deforest > 	match: scrut⁶
+//│ deforest > 	fields: scrut⁶.x¹
 //│ deforest > <<< fusing <<<
 //│ /!!!\ Uncaught error: scala.NotImplementedError: unsupported `continue` instruction during rewriting (of class String)
 
@@ -123,9 +149,9 @@ class C(n) with
 let c = C(1)
 c.get() + c.get()
 //│ deforest > >>> fusing >>>
-//│ deforest > AA⁰(1) ->
-//│ deforest > 	match: scrut⁶
-//│ deforest > 	fields: scrut⁶.x⁰
+//│ deforest > AA¹(1) ->
+//│ deforest > 	match: scrut⁷
+//│ deforest > 	fields: scrut⁷.x¹
 //│ deforest > <<< fusing <<<
 //│ = 5
 //│ c = C(_)
@@ -140,12 +166,12 @@ module M with
       AA(a) then a + _private
 M.f()
 //│ deforest > >>> fusing >>>
-//│ deforest > AA⁰(1) ->
-//│ deforest > 	match: scrut⁷
-//│ deforest > 	fields: scrut⁷.x⁰
-//│ deforest > AA⁰(1) ->
-//│ deforest > 	match: scrut⁷
-//│ deforest > 	fields: scrut⁷.x⁰
+//│ deforest > AA¹(1) ->
+//│ deforest > 	match: scrut⁸
+//│ deforest > 	fields: scrut⁸.x¹
+//│ deforest > AA¹(1) ->
+//│ deforest > 	match: scrut⁸
+//│ deforest > 	fields: scrut⁸.x¹
 //│ deforest > <<< fusing <<<
 //│ = 4
 
@@ -162,12 +188,12 @@ module M with
         AA(a) then a + g()
 M.MM.f()
 //│ deforest > >>> fusing >>>
-//│ deforest > AA⁰(1) ->
-//│ deforest > 	match: scrut⁸
-//│ deforest > 	fields: scrut⁸.x⁰
-//│ deforest > AA⁰(1) ->
-//│ deforest > 	match: scrut⁸
-//│ deforest > 	fields: scrut⁸.x⁰
+//│ deforest > AA¹(1) ->
+//│ deforest > 	match: scrut⁹
+//│ deforest > 	fields: scrut⁹.x¹
+//│ deforest > AA¹(1) ->
+//│ deforest > 	match: scrut⁹
+//│ deforest > 	fields: scrut⁹.x¹
 //│ deforest > <<< fusing <<<
 //│ ═══[RUNTIME ERROR] ReferenceError: MM is not defined
 

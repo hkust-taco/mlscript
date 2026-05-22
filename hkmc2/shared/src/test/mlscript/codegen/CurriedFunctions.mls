@@ -5,8 +5,11 @@
 fun foo(x)(y) = z => x + y + z
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰, baseCall;
+//│ let foo⁰, foo$worker⁰, inlinedVal;
 //│ define foo⁰ as fun foo¹(x)(y) {
+//│   return foo$worker¹(x, y)
+//│ };
+//│ define foo$worker⁰ as fun foo$worker¹(x, y) {
 //│   let lambda;
 //│   define lambda as fun lambda⁰(z) {
 //│     let tmp;
@@ -15,8 +18,8 @@ foo(1)(2)(3)
 //│   };
 //│   return lambda⁰
 //│ };
-//│ set baseCall = foo¹(1)(2);
-//│ baseCall(3)
+//│ set inlinedVal = foo$worker¹(1, 2);
+//│ inlinedVal(3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 
@@ -43,7 +46,7 @@ foo(1)(2)(3)
 //│ set baseCall = foo³(1)(2);
 //│ baseCall(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo², baseCall, lambda$⁰;
+//│ let foo², lambda$⁰, lambda$here;
 //│ define lambda$⁰ as fun lambda$¹(x, y)(z) {
 //│   let inlinedVal, tmp;
 //│   set tmp = +⁰(x, y);
@@ -51,12 +54,12 @@ foo(1)(2)(3)
 //│   return inlinedVal
 //│ };
 //│ define foo² as fun foo³(x)(y) {
-//│   let lambda$here;
-//│   set lambda$here = lambda$¹(x, y);
-//│   return lambda$here
+//│   let lambda$here1;
+//│   set lambda$here1 = lambda$¹(x, y);
+//│   return lambda$here1
 //│ };
-//│ set baseCall = foo³(1)(2);
-//│ baseCall(3)
+//│ set lambda$here = lambda$¹(1, 2);
+//│ lambda$here(3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 

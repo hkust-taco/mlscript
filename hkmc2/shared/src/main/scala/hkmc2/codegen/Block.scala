@@ -638,6 +638,27 @@ final case class FunDefn(
     case Annot.Modifier(Keyword.`private`) => Visibility.Private
     case Annot.Modifier(Keyword.`public`) => Visibility.Public
   .getOrElse(Visibility.Public)
+  lazy val affineInfo: Ls[Int] =
+    annotations.collect:
+      case Annot.Affine(whichParamList) => whichParamList
+  
+  // `configOverride` and `annotations` live in a secondary constructor list,
+  // so case-class equality would otherwise ignore them.
+  // We currently use structural equality in JSBackendDiffMaker.scala
+  // to make sure that structurally equal blocks retain object identity.
+  override def equals(obj: Any): Bool = obj match
+    case that: FunDefn =>
+      owner == that.owner &&
+        sym == that.sym &&
+        dSym == that.dSym &&
+        params == that.params &&
+        body == that.body &&
+        configOverride == that.configOverride &&
+        annotations == that.annotations
+    case _ => false
+  override def hashCode: Int =
+    (owner, sym, dSym, params, body, configOverride, annotations).hashCode
+
 object FunDefn:
   def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
     val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
@@ -928,7 +949,9 @@ case class Call(fun: Path, argss: NELs[Ls[Arg]])(val isMlsFun: Bool, val mayRais
 
 case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]]) extends Result
 
-case class Lambda(params: ParamList, body: Block) extends Result
+case class Lambda(params: ParamList, body: Block)(val annot: Ls[Annot]) extends Result:
+  lazy val affine: Bool = annot.exists(_.isInstanceOf[Annot.Affine])
+
 
 case class Tuple(mut: Bool, elems: Ls[Arg]) extends Result
 

@@ -229,7 +229,7 @@ c(AA(2), y)
 //│ deforest > 	match: y¹
 //│ deforest > <<< fusing <<<
 //│ = 4
-//│ y = fun y
+//│ y = fun
 
 
 :expect 9

@@ -31,9 +31,12 @@ f(1)(2)
 :soir
 fun g(a)(b) = f(a)(b) + f(b)(a)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let g⁰;
+//│ let g⁰, g$worker⁰;
 //│ do runtime⁰.resetEffects﹖();
 //│ define g⁰ as fun g¹(a)(b) {
+//│   return g$worker¹(a, b)
+//│ };
+//│ define g$worker⁰ as fun g$worker¹(a, b) {
 //│   let tmp, tmp1, pc;
 //│   match runtime⁰.resumePc﹖
 //│     -1 =>

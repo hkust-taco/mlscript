@@ -236,7 +236,7 @@ fun foo(x)(y) =
   lam
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰, lam$⁰, tmp, lam$here;
+//│ let foo⁰, lam$⁰, foo$worker⁰, tmp, lam$here;
 //│ define lam$⁰ as fun lam$¹(x, y)(z) {
 //│   let inlinedVal, tmp1;
 //│   set tmp1 = +⁰(x, y);
@@ -244,6 +244,9 @@ foo(1)(2)(3)
 //│   return inlinedVal
 //│ };
 //│ define foo⁰ as fun foo¹(x)(y) {
+//│   return foo$worker¹(x, y)
+//│ };
+//│ define foo$worker⁰ as fun foo$worker¹(x, y) {
 //│   let tmp1, lam$here1;
 //│   set lam$here1 = lam$¹(x, y);
 //│   set tmp1 = lam$here1(4);

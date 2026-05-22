@@ -463,7 +463,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness))
             val freshParamList = ParamList(ps.flags, freshParams, N)
             val freshArgs = freshSyms.map(s => Arg(N, Value.SimpleRef(s)))
-            Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs), implct = false))
+            Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs), implct = false))(Nil)
         k(etaExpand(remainingParamss, acc.reverse))
     // * Resolve the class definition to get the constructor param lists.
     // * The class path typically resolves to a TermSymbol (the constructor function),
@@ -516,7 +516,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   private def privateFieldSelfSelection(sym: TermSymbol)(using LoweringCtx): Opt[Select] =
     sym.owner.collect:
       case owner if sym.isPrivate =>
-        Select(Value.Ref(owner, N), sym.id)(S(sym))
+        Select(Value.This(owner), sym.id)(S(sym))
 
   private def assignSymbol(sym: Local, rhs: Result, rest: Block)(using LoweringCtx): Block =
     sym match
@@ -563,7 +563,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
         tl.log(s"Ref builtin $sym")
         assert(paramLists.length === 1)
-        return k(Lambda(paramLists.head, bodyBlock).withLocOf(ref))
+        return k(Lambda(paramLists.head, bodyBlock)(Nil).withLocOf(ref))
       if sym.unary then
         val t1 = new Tree.Ident("arg")
         val p1 = Param(FldFlags.empty, VarSymbol(t1), N, Modulefulness.none)
@@ -578,7 +578,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
         tl.log(s"Ref builtin $sym")
         assert(paramLists.length === 1)
-        return k(Lambda(paramLists.head, bodyBlock).withLocOf(ref))
+        return k(Lambda(paramLists.head, bodyBlock)(Nil).withLocOf(ref))
     case bs: BlockMemberSymbol =>
       disamb.flatMap(_.defn) match
       case S(d) if d.hasDeclareModifier.isDefined =>
@@ -891,7 +891,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       warnStmt
       val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N)
       if k.isInstanceOf[TailOp] || bodyBlock.size <= 5
-      then k(Lambda(paramLists.head, bodyBlock))
+      then k(Lambda(paramLists.head, bodyBlock)(Nil))
       else
         val lamSym = new BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
@@ -1237,10 +1237,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     term(t, inStmtPos = inStmtPos):
       case v: Value => k(v)
       case p: Path => k(p)
-      case Lambda(params, body) =>
+      case lam @ Lambda(params, body) =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
-        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(configOverride = N, annotations = Nil)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(configOverride = N, annotations = lam.annot)
         Define(lamDef, k(lamDef.asPath))
       case r =>
         val l = loweringCtx.registerTempSymbol(N)
@@ -1265,13 +1265,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           flowAnalysis.FlowAnalysis.mkTraceLogger(dCfg.config, "deforest > ", outterTl).givenIn:
             deforest.Deforest(Program(imps.map(imp => imp.sym -> imp.str), desug)).main
     
+    val etaExpanded =
+      EtaExpansion(Program(imps.map(imp => imp.sym -> imp.str), deforested)).main
+    
     val handlerPaths = new HandlerPaths
     
     val shouldFlattenScopes = config.effectHandlers.isDefined
     
     val scopeFlattened =
-      if shouldFlattenScopes then ScopeFlattener().applyBlock(deforested)
-      else deforested
+      if shouldFlattenScopes then ScopeFlattener().applyBlock(etaExpanded)
+      else etaExpanded
     
     val lifted =
       if lift then Lifter(scopeFlattened).transform

@@ -1022,7 +1022,7 @@ class FlowConstraintsCollector(
               case Select(p, _) => cc.constrain(processResult(p), UnknownCons)
               case _ => ()
             generatedProdVars(sym).asProdStrat
-          case _: Value.Ref => lastWords("already handled in `TrackedSymOf` case")
+          case _: Value.RefLike => lastWords("already handled in `TrackedSymOf` case")
           case Select(qual, name) =>
             cc.constrain(processResult(qual), UnknownCons)
             UnknownProd

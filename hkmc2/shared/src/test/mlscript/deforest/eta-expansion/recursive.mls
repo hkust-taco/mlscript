@@ -1,0 +1,216 @@
+:js
+:deforest
+:etaExpansion debug
+
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+
+
+data class (::) Cons(h, t)
+data object Nil
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+
+
+:expect 15
+:soir
+fun enum(x) = if x < 0 then Nil else x :: enum(x - 1)
+fun sum(ls, acc) = if ls is
+  Nil then acc
+  h :: t then sum(t, h + acc)
+sum(enum(5), 0)
+//│ deforest > >>> fusing >>>
+//│ deforest > Cons⁰(x⁰, tmp⁰) ->
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h⁰
+//│ deforest > 	fields: ls⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁰
+//│ deforest > <<< fusing <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > enum_13$enum: [1, 6]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let sum⁰, enum⁰, tmp, enum_13$enum⁰, sum_15$ls_Cons⁰, sum_15$ls_Nil⁰, sum_15$ls_Cons$worker⁰, enum_13$enum$worker⁰, inlinedVal;
+//│ define enum_13$enum⁰ as fun enum_13$enum¹(x)(eta$0$0, eta$0$5) {
+//│   return enum_13$enum$worker¹(x, eta$0$0, eta$0$5)
+//│ };
+//│ define enum_13$enum$worker⁰ as fun enum_13$enum$worker¹(x, eta$0$0, eta$0$5) {
+//│   let scrut, tmp1, tmp2;
+//│   set scrut = <⁰(x, 0);
+//│   match scrut
+//│     true =>
+//│       return eta$0$0
+//│     else
+//│       let fv_tmp, inlinedVal1;
+//│       set tmp1 = -⁰(x, 1);
+//│       set tmp2 = enum_13$enum¹(tmp1);
+//│       set fv_tmp = eta$0$5;
+//│       set fv_tmp = +⁰(x, eta$0$0);
+//│       set inlinedVal1 = tmp2(fv_tmp, undefined);
+//│       return inlinedVal1
+//│   end
+//│ };
+//│ define enum⁰ as fun enum¹(x) {
+//│   let scrut, tmp1, tmp2;
+//│   set scrut = <⁰(x, 0);
+//│   match scrut
+//│     true =>
+//│       return Nil⁰
+//│     else
+//│       set tmp1 = -⁰(x, 1);
+//│       set tmp2 = enum¹(tmp1);
+//│       return Cons⁰(x, tmp2)
+//│   end
+//│ };
+//│ define sum⁰ as fun sum¹(ls, acc) {
+//│   loop loopLabel:
+//│     let arg$Cons$0$, arg$Cons$1$, tmp1;
+//│     match ls
+//│       Nil⁰ =>
+//│         return acc
+//│       Cons¹ =>
+//│         set arg$Cons$0$ = ls.h⁰;
+//│         set arg$Cons$1$ = ls.t⁰;
+//│         set tmp1 = +⁰(arg$Cons$0$, acc);
+//│         set ls = arg$Cons$1$;
+//│         set acc = tmp1;
+//│         continue loopLabel
+//│       else
+//│         throw new globalThis⁰.Error⁰("match error")
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ set tmp = enum_13$enum¹(5);
+//│ set inlinedVal = tmp(0, undefined);
+//│ inlinedVal
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 15
+
+
+:expect 3
+:soir
+fun append(xs, ys) = if xs is
+  Nil then ys
+  h :: t then h :: append(t, ys)
+fun flatten(xss) = if xss is
+  Nil then Nil
+  h :: t then append(h, flatten(t))
+fun len(ls) = if ls is
+  Nil then 0
+  h :: t then 1 + len(t)
+len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
+//│ deforest > >>> fusing >>>
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls¹
+//│ deforest > Cons⁰(h¹, tmp¹) ->
+//│ deforest > 	match: ls¹
+//│ deforest > 	fields: ls¹.h⁰
+//│ deforest > 	fields: ls¹.t⁰
+//│ deforest > <<< fusing <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > flatten_30_append_18$append: [2, 5]
+//│ eta-expansion > flatten_30$flatten: [1, 5]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let flatten⁰, len⁰, append⁰, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, flatten_30$flatten⁰, len_32$ls_Nil⁰, flatten_30_append_18$append⁰, len_32$ls_Cons⁰, len_32$ls_Cons$worker⁰, flatten_30_append_18$append$worker⁰, flatten_30$flatten$worker⁰, inlinedVal;
+//│ define flatten_30$flatten⁰ as fun flatten_30$flatten¹(xss)() {
+//│   return flatten_30$flatten$worker¹(xss)
+//│ };
+//│ define flatten_30$flatten$worker⁰ as fun flatten_30$flatten$worker¹(xss) {
+//│   let arg$Cons$0$, arg$Cons$1$, tmp7;
+//│   match xss
+//│     Nil⁰ =>
+//│       return 0
+//│     Cons¹ =>
+//│       let inlinedVal1;
+//│       set arg$Cons$0$ = xss.h⁰;
+//│       set arg$Cons$1$ = xss.t⁰;
+//│       set tmp7 = flatten_30$flatten¹(arg$Cons$1$);
+//│       set inlinedVal1 = flatten_30_append_18$append$worker¹(arg$Cons$0$, tmp7);
+//│       return inlinedVal1
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ define flatten_30_append_18$append⁰ as fun flatten_30_append_18$append¹(xs, ys)() {
+//│   return flatten_30_append_18$append$worker¹(xs, ys)
+//│ };
+//│ define flatten_30_append_18$append$worker⁰ as fun flatten_30_append_18$append$worker¹(xs, ys) {
+//│   let arg$Cons$1$, tmp7;
+//│   match xs
+//│     Nil⁰ =>
+//│       return ys()
+//│     Cons¹ =>
+//│       let inlinedVal1, inlinedVal2;
+//│       set arg$Cons$1$ = xs.t⁰;
+//│       set tmp7 = flatten_30_append_18$append¹(arg$Cons$1$, ys);
+//│       set inlinedVal2 = tmp7();
+//│       set inlinedVal1 = +⁰(1, inlinedVal2);
+//│       return inlinedVal1
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ define append⁰ as fun append¹(xs, ys) {
+//│   let arg$Cons$0$, arg$Cons$1$, tmp7;
+//│   match xs
+//│     Nil⁰ =>
+//│       return ys
+//│     Cons¹ =>
+//│       set arg$Cons$0$ = xs.h⁰;
+//│       set arg$Cons$1$ = xs.t⁰;
+//│       set tmp7 = append¹(arg$Cons$1$, ys);
+//│       return Cons⁰(arg$Cons$0$, tmp7)
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ define flatten⁰ as fun flatten¹(xss) {
+//│   let arg$Cons$0$, arg$Cons$1$, tmp7;
+//│   match xss
+//│     Nil⁰ =>
+//│       return Nil⁰
+//│     Cons¹ =>
+//│       set arg$Cons$0$ = xss.h⁰;
+//│       set arg$Cons$1$ = xss.t⁰;
+//│       set tmp7 = flatten¹(arg$Cons$1$);
+//│       return append¹(arg$Cons$0$, tmp7)
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ define len⁰ as fun len¹(ls) {
+//│   let arg$Cons$1$, tmp7;
+//│   match ls
+//│     Nil⁰ =>
+//│       return 0
+//│     Cons¹ =>
+//│       set arg$Cons$1$ = ls.t⁰;
+//│       set tmp7 = len¹(arg$Cons$1$);
+//│       return +⁰(1, tmp7)
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ set tmp = Cons⁰(2, Nil⁰);
+//│ set tmp1 = Cons⁰(1, tmp);
+//│ set tmp2 = Cons⁰(3, Nil⁰);
+//│ set tmp3 = Cons⁰(tmp2, Nil⁰);
+//│ set tmp4 = Cons⁰(tmp1, tmp3);
+//│ set tmp5 = Predef⁰.id⁰(tmp4);
+//│ set tmp6 = flatten_30$flatten¹(tmp5);
+//│ set inlinedVal = tmp6();
+//│ inlinedVal
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+// the analysis shouldn't stackoverflow
+:etaExpansion debug
+fun f(x) = f
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<

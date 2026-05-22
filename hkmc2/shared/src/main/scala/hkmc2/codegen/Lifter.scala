@@ -122,7 +122,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       */
     def privateSelfField(field: TermSymbol): LocalPath =
       field.owner match
-      case S(owner) => Field(Value.Ref(owner, N), field)
+      case S(owner) => Field(Value.This(owner), field)
       case N => lastWords(s"tried to build a private field path for ownerless symbol ${field.nme}")
 
   enum DefnRef:

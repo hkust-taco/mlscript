@@ -31,7 +31,7 @@ map(x => x + 1, c)
 //│ deforest > 	match: ls_map⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(2, Nil)
-//│ c = fun c
+//│ c = fun
 
 // :sir
 fun map(f, ls_map) = if ls_map is
