@@ -953,7 +953,7 @@ object Value:
 
   @deprecated("Use Value.SimpleRef, Value.MemberRef, or Value.This instead.")
   object Ref:
-    def apply(l: Local, disamb: Opt[DefinitionSymbol[?]]): Value = 
+    def apply(l: Local, disamb: Opt[DefinitionSymbol[?]]): Value.RefLike = 
       l match
         case l: (LocalSymbol | BuiltinSymbol) => Value.SimpleRef(l)
         case bms: BlockMemberSymbol => Value.MemberRef(bms, disamb.getOrElse(lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")))
@@ -963,9 +963,9 @@ object Value:
     
     // * Some helper constructors that allow omitting the disambiguation symbol.
     // * If the ref itself is a DefinitionSymbol, then disambiguating it results in itself.
-    def apply(l: DefinitionSymbol[?]): Value = Ref(l, S(l))
+    def apply(l: DefinitionSymbol[?]): Value.RefLike = Ref(l, S(l))
     // * If the ref is a symbol that does not refer to a definition, then there is no disambiguation.
-    def apply(l: TempSymbol | VarSymbol | BuiltinSymbol): Value = Ref(l, N)
+    def apply(l: TempSymbol | VarSymbol | BuiltinSymbol): Value.RefLike = Ref(l, N)
 
     def unapply(v: Value)(using State): Opt[(Local, Opt[DefinitionSymbol[?]])] = v match
       case SimpleRef(l) => S(l -> N)
@@ -1009,7 +1009,7 @@ def blockBuilder: Block => Block = identity
 extension (l: Local)
   // TODO(Derppening): Inline `Value.Ref.apply` into this function once that function is removed
   @annotation.nowarn("cat=deprecation")
-  def asPath: Path = 
+  def asPath: Value.RefLike = 
     Value.Ref(l, l match 
       case bms: BlockMemberSymbol => S(bms.asPrincipal.getOrElse:
         lastWords(s"Cannot resolve overloaded member symbol ${bms.nme}: no principal disambiguation found")
