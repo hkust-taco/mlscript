@@ -135,7 +135,7 @@ class BlockSimplifier
               usedVars += loc
             case _ =>
           super.applyPath(p)
-        
+
         override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
           privateVars ++= defn.privateFields
           defn.companion.foreach(body => privateVars ++= body.privateFields)

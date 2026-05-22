@@ -884,8 +884,7 @@ sealed abstract class Result extends AutoLocated:
     case Tuple(mut, elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
     case Record(mut, args) =>
       args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVarsLLIR) ++ arg.value.freeVarsLLIR).toSet
-    case Value.SimpleRef(l: BuiltinSymbol) => Set.empty
-    case Value.SimpleRef(l: TermSymbol) => Set.empty
+    case Value.SimpleRef(l: (BuiltinSymbol | TermSymbol)) => Set.empty
     case Value.SimpleRef(l: DefinitionSymbol[?]) => l.defn match
       case Some(d: ClassLikeDef) => Set.empty
       case Some(d: TermDefinition) if d.companionClass.isDefined => Set.empty

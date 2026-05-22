@@ -109,8 +109,7 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
     def showRefSite(resultId: ResultId): Str =
       resultId.getReferredFun match
         case Some(fun) => s"${fun.nme}@$resultId"
-        case None => resultId.getResult match
-          case res => s"$res@$resultId"
+        case None => s"${resultId.getResult}@$resultId"
     end showRefSite
 
     def showInstId(instId: InstantiationId): Str =
