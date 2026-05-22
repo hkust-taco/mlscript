@@ -12,7 +12,7 @@ import hkmc2.codegen.HandlerLowering.FnOrCls
 class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: StackSafetyMap)(using State, Config):
   private val STACK_DEPTH_IDENT: Tree.Ident = Tree.Ident("stackDepth")
 
-  private val runtimePath: Path = Value.SimpleRef(State.runtimeSymbol)
+  private val runtimePath: Path = State.runtimeSymbol.asSimpleRef
   private val checkDepthPath: Path = runtimePath.selN(Tree.Ident("checkDepth"))
   private val runStackSafePath: Path = runtimePath.selN(Tree.Ident("runStackSafe"))
   private val stackDepthPath: Path = runtimePath.selN(STACK_DEPTH_IDENT)
@@ -20,7 +20,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
   private def intLit(n: BigInt) = Value.Lit(Tree.IntLit(n))
   
   private def op(op: String, a: Path, b: Path) =
-    Call(Value.SimpleRef(State.builtinOpsMap(op)), (a.asArg :: b.asArg :: Nil) ne_:: Nil)(true, false, false)
+    Call(State.builtinOpsMap(op).asSimpleRef, (a.asArg :: b.asArg :: Nil) ne_:: Nil)(true, false, false)
 
   // Increases the stack depth, assigns the call to a value, then decreases the stack depth
   // then binds that value to a desired block
@@ -29,14 +29,14 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
     else
       blockBuilder
         .assign(sym, res)
-        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, Value.SimpleRef(curDepth))
+        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, curDepth.asSimpleRef)
         .rest(f(sym.asPath))
   
   def wrapStackSafe(body: Block, resSym: Local, rest: Block) =
     val bodSym = BlockMemberSymbol("‹stack safe body›", Nil, false)
     val bodFun = FunDefn.withFreshSymbol(N, bodSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil, body)(configOverride = N, annotations = Nil)
     Scoped(Set.single(bodSym),
-      Define(bodFun, Assign(resSym, Call(runStackSafePath, (intLit(depthLimit).asArg :: Value.MemberRef(bodSym, bodSym.asPrincipal.get).asArg :: Nil) ne_:: Nil)(true, true, false), rest))
+      Define(bodFun, Assign(resSym, Call(runStackSafePath, (intLit(depthLimit).asArg :: bodSym.asMemberRef(bodSym.asPrincipal.get).asArg :: Nil) ne_:: Nil)(true, true, false), rest))
     )
 
   def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Symbol, curDepth: => Symbol) =

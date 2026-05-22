@@ -368,9 +368,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
       val (bms, tSym) = target
       tSym.owner match
       case Some(owner) =>
-        Select(Value.This(owner), Tree.Ident(bms.nme))(S(tSym))
+        Select(owner.asThis, Tree.Ident(bms.nme))(S(tSym))
       case None =>
-        Value.MemberRef(bms, tSym)
+        bms.asMemberRef(tSym)
     def mkCall(target: (BlockMemberSymbol, TermSymbol), args: Ls[Symbol]): Call =
       Call(
         mkFunRef(target),
@@ -396,7 +396,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         r match
         case s@TrackableSelect(from, _, _) =>
           if branchSelSyms.isDefinedAt(s.uid.concreteId) then
-            k(Value.SimpleRef(branchSelSyms(s.uid.concreteId)))
+            k(branchSelSyms(s.uid.concreteId).asSimpleRef)
           else if solver.finalDtorSrcs.contains(s.uid.concreteId) then
             applyPath(from)(k)
           else
@@ -415,7 +415,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             val ctorInfo = solver.fusingCtorInfo(ctor.uid.concreteId)
             val idx = ctorInfo.args.unzip._1.indexOf(field)
             val fieldSyms = mkCtorFieldSyms(ctor.uid.concreteId)
-            args.zip(fieldSyms).foldRight(k(Value.SimpleRef(fieldSyms(idx)))):
+            args.zip(fieldSyms).foldRight(k(fieldSyms(idx).asSimpleRef)):
               case (Arg(N, a) -> s, rest) =>
                 applyPath(a): fusedField =>
                   Scoped(Set.single(s), Assign(s, fusedField, rest))
@@ -434,7 +434,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         p match
         case ref@FunRef(f) if newPolyFnSyms.isDefinedAt(newRefId(ref.uid, f)) =>
           val (bms, tSym) = newPolyFnSyms(newRefId(ref.uid, f))(f)
-          k(Value.MemberRef(bms, tSym))
+          k(bms.asMemberRef(tSym))
         case ctor@CtorCall(_, args) if solver.finalCtorDests.isDefinedAt(ctor.uid.concreteId) =>
           assert(args.isEmpty)
           val callBranchFun = mkCall(branchFunSyms(ctorWhichBranch(ctor.uid.concreteId)), Nil)
@@ -444,11 +444,11 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             Assign(
               lambdaSym,
               callBranchFun,
-              k(Value.SimpleRef(lambdaSym)))
+              k(lambdaSym.asSimpleRef))
           )
         case s@TrackableSelect(from, _, _) =>
           if branchSelSyms.isDefinedAt(s.uid.concreteId) then
-            k(Value.SimpleRef(branchSelSyms(s.uid.concreteId)))
+            k(branchSelSyms(s.uid.concreteId).asSimpleRef)
           else if solver.finalDtorSrcs.contains(s.uid.concreteId) then
             applyPath(from)(k)
           else
@@ -496,7 +496,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         case Value.This(l) =>
           pre.res.modSymToBms.get(l) match
             case Some(bms) =>
-              k(Value.MemberRef(bms, l.asMod.get))
+              k(bms.asMemberRef(l.asMod.get))
             case None => super.applyValue(v)(k)
         case _ => super.applyValue(v)(k)
     end RefreshSymbol

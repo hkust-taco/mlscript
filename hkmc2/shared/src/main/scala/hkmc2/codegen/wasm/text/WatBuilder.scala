@@ -970,7 +970,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     if expr.resultTypes.isEmpty && !isAbortive then
       blockInstr(
         label = N,
-        children = Seq(expr, result(Value.MemberRef(State.unitBlockMemberSymbol, State.unitSymbol))),
+        children = Seq(expr, result(State.unitBlockMemberSymbol.asMemberRef(State.unitSymbol))),
         resultTypes = Seq(Result(RefType.anyref)),
       )
     else
@@ -1730,7 +1730,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         )
 
       case Define(defn, rst) =>
-        def mkThis(sym: InnerSymbol): Expr = result(Value.This(sym))
+        def mkThis(sym: InnerSymbol): Expr = result(sym.asThis)
         defn match
           case ValDefn(tsym, sym, p) =>
             // * Currently we allow `val` outside of object/module scopes,
@@ -2140,7 +2140,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   label = N,
                   children = Seq(
                     expr,
-                    local.set(target, result(Value.MemberRef(State.unitBlockMemberSymbol, State.unitSymbol))),
+                    local.set(target, result(State.unitBlockMemberSymbol.asMemberRef(State.unitSymbol))),
                   ),
                   resultTypes = Seq.empty,
                 )

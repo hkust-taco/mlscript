@@ -764,7 +764,7 @@ class FlowConstraintsCollector(
         for (funSym, fun) <- preAnalyzer.res.rootFunDefns do
           val pScheme = funsToProdStratScheme(funSym)
           val synthesizedRefUid =
-            Value.MemberRef(preAnalyzer.res.funSymToFunDefn(funSym).sym, funSym).uid
+            preAnalyzer.res.funSymToFunDefn(funSym).sym.asMemberRef(funSym).uid
           val selfProd = pScheme.instantiate(synthesizedRefUid, funSym)
           cc.constrain(selfProd, UnknownCons)
           val selfInstId = synthesizedRefUid :: Nil

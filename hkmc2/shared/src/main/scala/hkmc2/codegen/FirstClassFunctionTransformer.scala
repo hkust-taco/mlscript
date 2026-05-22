@@ -26,10 +26,10 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
     )
     val defSym = new BlockMemberSymbol("Function$", Nil, false)
     val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), params :: Nil,
-      Return(Call(p, params.params.map(p => Value.SimpleRef(p.sym).asArg) ne_:: Nil)(true, false, false), false))(N, annotations = Nil)
+      Return(Call(p, params.params.map(p => p.sym.asSimpleRef.asArg) ne_:: Nil)(true, false, false), false))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
-      Some(Select(Value.This(State.globalThisSymbol), Tree.Ident("Function"))(Some(ctx.builtins.Function))),
-      callDef :: Nil, Nil, Nil, Return(Call(Value.SimpleRef(State.builtinOpsMap("super")), Nil ne_:: Nil)(false, false, false), true), End(), None, None)(N, annotations = Nil)
+      Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function))),
+      callDef :: Nil, Nil, Nil, Return(Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(false, false, false), true), End(), None, None)(N, annotations = Nil)
 
   private def getParamList(l: BlockMemberSymbol): Option[ParamList] = funDefns.get(l) match
     case Some(fd) => fd.params.headOption
@@ -43,16 +43,16 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
         val params = getParamList(l).getOrElse(lastWords(s"Cannot get ${l.nme}'s parameter list."))
         val clsDef = generateFCFunctionClass(ref, params)
         val tmp = new TempSymbol(None)
-        val cls = Value.MemberRef(clsDef.sym, clsDef.isym)
-        Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil), k(Value.SimpleRef(tmp)))))
+        val cls = clsDef.sym.asMemberRef(clsDef.isym)
+        Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil), k(tmp.asSimpleRef))))
       case _ => k(p)
     case sel: Select => sel.symbol match
       case Some(s: TermSymbol) if (s.k is syntax.Fun) =>
         val params = getParamList(s).getOrElse(lastWords(s"Cannot get ${s.nme}'s parameter list."))
         val clsDef = generateFCFunctionClass(sel, params)
         val tmp = new TempSymbol(None)
-        val cls = Value.MemberRef(clsDef.sym, clsDef.isym)
-        Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil), k(Value.SimpleRef(tmp)))))
+        val cls = clsDef.sym.asMemberRef(clsDef.isym)
+        Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil), k(tmp.asSimpleRef))))
       case Some(_) => k(p)
       case _ =>
         raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function." -> sel.toLoc :: Nil,
@@ -100,7 +100,7 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
             val newBody = rec(rest)
             val funSym = new BlockMemberSymbol("lambda$", Nil, false)
             val funDef = FunDefn.withFreshSymbol(None, funSym, head :: Nil, newBody)(N, annotations = Nil)
-            Scoped(Set(funSym), Define(funDef, Return(Value.MemberRef(funDef.sym, funDef.dSym), false)))
+            Scoped(Set(funSym), Define(funDef, Return(funDef.sym.asMemberRef(funDef.dSym), false)))
           case Nil => fd.body
         FunDefn.withFreshSymbol(fd.owner, fd.sym, head :: Nil, rec(tail))(fd.configOverride, fd.annotations)
   

@@ -376,7 +376,7 @@ class TailRecOpt(using State, TL, Raise):
                       // Adding this to `requiredTmps` will make sure we set the temporary variable
                       // to the current variable at the start of the rewritten call.
                       requiredTmps += (l, tmpSym)
-                      k(Value.SimpleRef(tmpSym))
+                      k(tmpSym.asSimpleRef)
                     case _ => super.applyValue(v)(k)
                   case _ => super.applyValue(v)(k)
               
@@ -433,7 +433,7 @@ class TailRecOpt(using State, TL, Raise):
                       
                       // Main args
                       def mainArgs(rest: List[Path]) = (0 until paramList.size).toList.foldRight(rest):
-                        case (n, acc) => DynSelect(Value.SimpleRef(tupleSym), Value.Lit(Tree.IntLit(n)), true) :: acc
+                        case (n, acc) => DynSelect(tupleSym.asSimpleRef, Value.Lit(Tree.IntLit(n)), true) :: acc
                       
                       // If the rest param exists, append a slice
                       val (initialBlk: (Block => Block), pathList: List[Path]) =
@@ -441,10 +441,10 @@ class TailRecOpt(using State, TL, Raise):
                           val sliceResSym = TempSymbol(N, "sliceRes")
                           // runtime.Tuple.slice(tupleSym, paramList.length, 0)
                           val sliceRes = Call(
-                            Value.SimpleRef(State.runtimeSymbol)
+                            State.runtimeSymbol.asSimpleRef
                               .sel(Tree.Ident("Tuple"), State.tupleSymbol)
                               .sel(Tree.Ident("slice"), State.tupleSliceSymbol),
-                            (Value.SimpleRef(tupleSym).asArg
+                            (tupleSym.asSimpleRef.asArg
                               :: Value.Lit(Tree.IntLit(paramList.length)).asArg
                               :: Value.Lit(Tree.IntLit(0)).asArg
                               :: Nil) ne_:: Nil
@@ -452,7 +452,7 @@ class TailRecOpt(using State, TL, Raise):
                           val blk = blockBuilder
                             .assignScoped(tupleSym, tupleRes)
                             .assignScoped(sliceResSym, sliceRes)
-                          (blk, mainArgs(Value.SimpleRef(sliceResSym) :: Nil))
+                          (blk, mainArgs(sliceResSym.asSimpleRef :: Nil))
                         else
                           (blockBuilder.assignScoped(tupleSym, tupleRes), mainArgs(Nil))
                       end val
@@ -466,7 +466,7 @@ class TailRecOpt(using State, TL, Raise):
               Scoped(
                 requiredTmps.values.toSet,
                 requiredTmps.toList.foldRight(assignments):
-                  case ((v, l), acc) => Assign(l, Value.SimpleRef(v), acc))
+                  case ((v, l), acc) => Assign(l, v.asSimpleRef, acc))
         // Not a tail call
         case _ => super.applyBlock(b)
       
@@ -474,7 +474,7 @@ class TailRecOpt(using State, TL, Raise):
         // Rewrite the result with symbols pointing to the merged function parameters and possibly the copied parameters (see `copiedParams`).
         val blk = applyBlock(symRewriter.applyBlock(b))
         val withCopied = copiedParamSyms.toArray.sortBy(_._1.uid).foldRight(blk):
-          case ((ogParam, copiedParam), accBlk) => Assign(copiedParam, Value.SimpleRef(paramSymsArr(paramsIdxes(ogParam))), accBlk)
+          case ((ogParam, copiedParam), accBlk) => Assign(copiedParam, paramSymsArr(paramsIdxes(ogParam)).asSimpleRef, accBlk)
         Scoped(copiedParamSyms.map(_._2).toSet, withCopied)
         
     val arms = funs.map: f =>
@@ -482,18 +482,18 @@ class TailRecOpt(using State, TL, Raise):
     
     val switch = 
       if arms.length === 1 then arms.head._2
-      else Match(Value.SimpleRef(curIdSym), arms, N, End())
+      else Match(curIdSym.asSimpleRef, arms, N, End())
     
     val loop = Label(loopSym, true, switch, End())
     
     val sel = owner match
-      case Some(value) => Select(Value.This(value), Tree.Ident(bms.nme))(S(dSym))
-      case None => Value.MemberRef(bms, dSym)
+      case Some(value) => Select(value.asThis, Tree.Ident(bms.nme))(S(dSym))
+      case None => bms.asMemberRef(dSym)
     
     val rewrittenFuns =
       if funs.size === 1 then Nil
       else funs.map: f =>
-        val paramArgs = getParamSyms(f).map(s => Value.SimpleRef(s).asArg)
+        val paramArgs = getParamSyms(f).map(s => s.asSimpleRef.asArg)
         val args = 
           Value.Lit(Tree.IntLit(dSymIds(f.dSym))).asArg
             :: paramArgs
@@ -526,10 +526,10 @@ class TailRecOpt(using State, TL, Raise):
           owner, loopBms, loopDSym,
           PlainParamList(params) :: Nil,
           loop)(N, annotations = Annot.Private :: Nil)
-        val paramArgs = getParamSyms(f).map(s => Value.SimpleRef(s).asArg)
+        val paramArgs = getParamSyms(f).map(s => s.asSimpleRef.asArg)
         val internalSel = owner match
-          case Some(value) => Select(Value.This(value), Tree.Ident(loopBms.nme))(S(loopDSym))
-          case None => Value.MemberRef(loopBms, loopDSym)
+          case Some(value) => Select(value.asThis, Tree.Ident(loopBms.nme))(S(loopDSym))
+          case None => loopBms.asMemberRef(loopDSym)
         val wrapperBod = Return(
           Call(internalSel, paramArgs ne_:: Nil)(true, false, false),
           false

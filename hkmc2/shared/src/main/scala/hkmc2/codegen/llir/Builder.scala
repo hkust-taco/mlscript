@@ -293,7 +293,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
             val paramsList = PlainParamList(
               (0 until f.paramsSize).zip(tempSymbols).map((_n, sym) =>
                 Param(FldFlags.empty, sym, N, Modulefulness.none)).toList)
-            val app = Call(v, tempSymbols.map(x => Arg(N, Value.SimpleRef(x))).toList ne_:: Nil)(true, false, false)
+            val app = Call(v, tempSymbols.map(x => Arg(N, x.asSimpleRef)).toList ne_:: Nil)(true, false, false)
             bLam(Lambda(paramsList, Return(app, false))(Nil), S(bms.nme), N)(k)
           case None =>
             k(ctx.findName(bms) |> sr)
@@ -304,7 +304,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
             val paramsList = PlainParamList(
               (0 until f.paramsSize).zip(tempSymbols).map((_n, sym) =>
                 Param(FldFlags.empty, sym, N, Modulefulness.none)).toList)
-            val app = Call(v, tempSymbols.map(x => Arg(N, Value.SimpleRef(x))).toList ne_:: Nil)(true, false, false)
+            val app = Call(v, tempSymbols.map(x => Arg(N, x.asSimpleRef)).toList ne_:: Nil)(true, false, false)
             bLam(Lambda(paramsList, Return(app, false))(Nil), S(l.nme), N)(k)
           case None =>
             k(ctx.findName(l) |> sr)

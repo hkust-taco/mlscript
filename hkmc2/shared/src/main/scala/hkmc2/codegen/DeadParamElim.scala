@@ -233,7 +233,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
       p match
       case ref@FunRef(f) if newPolyFnSyms.isDefinedAt(newRefId(ref.uid, f)) =>
         val (bms, tSym) = newPolyFnSyms(newRefId(ref.uid, f))(f)
-        k(Value.MemberRef(bms, tSym))
+        k(bms.asMemberRef(tSym))
       case _ => super.applyPath(p)(k)
 
     override def applyValue(v: Value)(k: Value => Block): Block = v match
@@ -323,7 +323,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
         case Value.This(l) =>
           pre.res.modSymToBms.get(l) match
             case Some(bms) =>
-              k(Value.MemberRef(bms, l.asMod.get))
+              k(bms.asMemberRef(l.asMod.get))
             case None => super.applyValue(v)(k)
         case _ => super.applyValue(v)(k)
     end RefreshSymbol

@@ -205,7 +205,7 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
     case Value.SimpleRef(l) =>
       mapping.get(l) match
         case Some(newSym: (LocalSymbol | BuiltinSymbol)) =>
-          k(Value.SimpleRef(newSym))
+          k(newSym.asSimpleRef)
         case _ => super.applyValue(v)(k)
     case Value.MemberRef(bms, disamb) =>
       mapping.get(bms) match
@@ -214,12 +214,12 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
             case d => mapping.get(d) match
               case Some(nd: DefinitionSymbol[?]) => nd
               case _ => newBms.tsym.getOrElse(disamb)
-          k(Value.MemberRef(newBms, newDisamb))
-        case Some(newSym: (VarSymbol | TempSymbol)) => k(Value.SimpleRef(newSym))
+          k(newBms.asMemberRef(newDisamb))
+        case Some(newSym: (VarSymbol | TempSymbol)) => k(newSym.asSimpleRef)
         case _ => super.applyValue(v)(k)
     case Value.This(sym) =>
       mapping.get(sym) match
-        case Some(inner: InnerSymbol) => k(Value.This(inner).withLocOf(v))
+        case Some(inner: InnerSymbol) => k(inner.asThis.withLocOf(v))
         case _ => super.applyValue(v)(k)
     case _ => super.applyValue(v)(k)
   

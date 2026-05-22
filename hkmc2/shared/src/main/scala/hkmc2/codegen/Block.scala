@@ -483,11 +483,11 @@ object HandleBlock:
 
   def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.suspend
-    Call(Value.MemberRef(bms, bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(true, true, false)
+    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(true, true, false)
 
   def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.handle_suspension
-    Call(Value.MemberRef(bms, bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(true, true, false)
+    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(true, true, false)
   
   private def create(
       lhs: LocalSymbol,
@@ -516,7 +516,7 @@ object HandleBlock:
         handler.params,
         Scoped(Set(sym, rSym), Define(
           fDef,
-          Return(suspend(Value.This(cls), Value.MemberRef(sym, fDef.dSym)), false))))(N, annotations = Nil)
+          Return(suspend(cls.asThis, sym.asMemberRef(fDef.dSym)), false))))(N, annotations = Nil)
 
     val clsDefn = ClsLikeDefn(
       N, // no owner
@@ -527,7 +527,7 @@ object HandleBlock:
       N, Nil,
       S(par), handlerMtds, Nil, Nil,
       // Apparently, the lifter is not happy with any assignment in the preCtor...
-      Return(Call(Value.SimpleRef(State.builtinOpsMap("super")), args.map(_.asArg) ne_:: Nil)(true, true, false), true),
+      Return(Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(true, true, false), true),
       End(),
       N,
       N,
@@ -536,9 +536,9 @@ object HandleBlock:
     blockBuilder
       .scopedVars(Set(clsDefn.sym, sym))
       .define(clsDefn)
-      .assign(lhs, Instantiate(mut = true, Value.MemberRef(clsDefn.sym, cls), Nil :: Nil))
+      .assign(lhs, Instantiate(mut = true, clsDefn.sym.asMemberRef(cls), Nil :: Nil))
       .define(bodyDefn)
-      .assign(res, handleSuspension(Value.SimpleRef(lhs), Value.MemberRef(bodyDefn.sym, bodyDefn.dSym)))
+      .assign(res, handleSuspension(lhs.asSimpleRef, bodyDefn.sym.asMemberRef(bodyDefn.dSym)))
       .rest(rest)
   
   def apply(
@@ -631,7 +631,7 @@ final case class FunDefn(
     val annotations: Ls[Annot],
 ) extends Defn:
   val innerSym = N
-  val asPath = Value.MemberRef(sym, dSym)
+  val asPath = sym.asMemberRef(dSym)
   lazy val tailRec: Bool = annotations.contains(Annot.TailRec)
   lazy val inline: Bool = annotations.contains(Annot.Inline)
   lazy val visibility: Visibility = annotations.collectFirst:
@@ -1006,9 +1006,11 @@ object Value:
   object Ref:
     def apply(l: Local, disamb: Opt[DefinitionSymbol[?]]): Value.RefLike = 
       l match
-        case l: (LocalSymbol | BuiltinSymbol) => Value.SimpleRef(l)
-        case bms: BlockMemberSymbol => Value.MemberRef(bms, disamb.getOrElse(lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")))
-        case sym: InnerSymbol => Value.This(sym)
+        case l: (LocalSymbol | BuiltinSymbol) => l.asSimpleRef
+        case bms: BlockMemberSymbol => bms.asMemberRef:
+          disamb.getOrElse:
+            lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")
+        case sym: InnerSymbol => sym.asThis
         case _: NoSymbol => lastWords("NoSymbol should not be used as a Path/Value")
         case sym => lastWords(s"$sym (of type ${sym.getClass.getSimpleName}) cannot be converted to a Path/Value")
     
@@ -1056,6 +1058,15 @@ extension (k: Block => Block)
   def foldLeft[A](xs: Iterable[A])(f: (Block => Block, A) => Block => Block) = xs.foldLeft(k)(f)
 
 def blockBuilder: Block => Block = identity
+
+extension (s: (LocalSymbol | BuiltinSymbol))
+  inline def asSimpleRef: Value.SimpleRef = Value.SimpleRef(s)
+
+extension (bms: BlockMemberSymbol)
+  inline def asMemberRef(disamb: DefinitionSymbol[?]): Value.MemberRef = Value.MemberRef(bms, disamb)
+
+extension (sym: InnerSymbol)
+  inline def asThis: Value.This = Value.This(sym)
 
 extension (l: Local)
   // TODO(Derppening): Inline `Value.Ref.apply` into this function once that function is removed

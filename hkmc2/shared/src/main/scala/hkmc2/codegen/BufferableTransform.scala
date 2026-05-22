@@ -38,12 +38,12 @@ class BufferableTransform()(using Ctx, State, Raise):
             def mkFieldReplacer(buf: VarSymbol, baseIdx: VarSymbol, symMap: Map[Symbol, Symbol]) =
               def getOffset(off: Int)(k: Path => Block): Block =
                 val idxSymbol = new TempSymbol(N, "idx")
-                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(Value.SimpleRef(State.builtinOpsMap("+")), (Value.SimpleRef(baseIdx).asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil) ne_:: Nil)(true, false, false),
-                  k(DynSelect(Value.SimpleRef(buf).selSN("buf"), Value.SimpleRef(idxSymbol), true))))
+                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asSimpleRef, (baseIdx.asSimpleRef.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil) ne_:: Nil)(true, false, false),
+                  k(DynSelect(buf.asSimpleRef.selSN("buf"), idxSymbol.asSimpleRef, true))))
               def assignToOffset(off: Int, r: Result, rst: Block) =
                 val idxSymbol = new TempSymbol(N, "idx")
-                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(Value.SimpleRef(State.builtinOpsMap("+")), (Value.SimpleRef(baseIdx).asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil) ne_:: Nil)(true, false, false),
-                  AssignDynField(Value.SimpleRef(buf).selSN("buf"), Value.SimpleRef(idxSymbol), true, r, applyBlock(rst))))
+                Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asSimpleRef, (baseIdx.asSimpleRef.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil) ne_:: Nil)(true, false, false),
+                  AssignDynField(buf.asSimpleRef.selSN("buf"), idxSymbol.asSimpleRef, true, r, applyBlock(rst))))
               new BlockTransformer(SymbolSubst.Id):
                 override def applyLocal(sym: Local): Local = symMap.getOrElse(sym, sym)
                 override def applyBlock(b: Block): Block = b match
@@ -79,7 +79,7 @@ class BufferableTransform()(using Ctx, State, Raise):
               val blk = mkFieldReplacer(buf, idx, symMap).applyBlock(f.body)
               FunDefn(f.owner, f.sym, TermSymbol(f.dSym.k, f.dSym.owner, f.dSym.id), PlainParamList(
                 Param(FldFlags.empty, buf, N, Modulefulness.none) :: Param(FldFlags.empty, idx, N, Modulefulness.none) :: Nil) :: newParams,
-                if isCtor then Begin(blk, Return(Value.SimpleRef(idx), false)) else blk)(configOverride = f.configOverride, annotations = f.annotations)
+                if isCtor then Begin(blk, Return(idx.asSimpleRef, false)) else blk)(configOverride = f.configOverride, annotations = f.annotations)
             val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
                 S(companionSym), 
                 BlockMemberSymbol("ctor", Nil, false), 

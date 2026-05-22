@@ -55,7 +55,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
   def assign(res: Result, symName: Str = "tmp")(k: Path => Block): Block =
     // TODO: skip assignment if res: Path?
     val sym = new TempSymbol(N, symName)
-    Scoped(Set(sym), Assign(sym, res, k(Value.SimpleRef(sym))))
+    Scoped(Set(sym), Assign(sym, res, k(sym.asSimpleRef)))
 
   def tuple(elems: Ls[ArgWrappable], symName: Str = "tmp")(k: Path => Block): Block =
     assign(Tuple(false, elems.map(asArg)), symName)(k)
@@ -66,8 +66,8 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
   // helpers for instrumenting Block
 
-  def blockMod(name: Str) = Value.SimpleRef(summon[State].blockSymbol).selSN(name)
-  def optionMod(name: Str) = Value.SimpleRef(summon[State].optionSymbol).selSN(name)
+  def blockMod(name: Str) = summon[State].blockSymbol.asSimpleRef.selSN(name)
+  def optionMod(name: Str) = summon[State].optionSymbol.asSimpleRef.selSN(name)
 
   def blockCtor(name: Str, args: Ls[ArgWrappable], symName: Str = "tmp")(k: Path => Block): Block =
     call(blockMod(name), args, true, symName)(k)
@@ -111,8 +111,8 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           return End()
 
       val path: ArgWrappable = pOpt.getOrElse(owner match
-        case S(owner) => Value.This(owner).selSN(sym.nme)
-        case N => Value.MemberRef(bsym.asBlkMember.get, sym.asClsOrMod.get))
+        case S(owner) => owner.asThis.selSN(sym.nme)
+        case N => bsym.asBlkMember.get.asMemberRef(sym.asClsOrMod.get))
       baseSym match
         case _: ClassSymbol =>
           transformParamsOpt(paramsOpt): paramsOpt =>
@@ -373,7 +373,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
   def applyFunDefnInner(f: FunDefn): (FunDefn, Block => Block) =
     val genSymName = f.sym.nme + "_instr"
     val genSym = BlockMemberSymbol(genSymName, Nil, false)
-    val sym = Value.This(f.owner.get).selSN(genSymName)
+    val sym = f.owner.get.asThis.selSN(genSymName)
 
     // turn into fundefn
     val dSym = TermSymbol(f.dSym.k, f.dSym.owner, Tree.Ident(f.sym.nme + "_instr"))
@@ -396,7 +396,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
       val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(PlainParamList(Nil)), companion.ctor)(N, Nil)
       val (stagedCtor, ctorPrint) = applyFunDefnInner(ctor)
 
-      val unit = Value.SimpleRef(State.runtimeSymbol).selSN("Unit")
+      val unit = State.runtimeSymbol.asSimpleRef.selSN("Unit")
       val debugBlock = (ctorPrint :: debugPrintCode).foldRight((Return(unit, true): Block))(_(_))
       def debugCont(rest: Block) =
         Begin(debugBlock, rest)

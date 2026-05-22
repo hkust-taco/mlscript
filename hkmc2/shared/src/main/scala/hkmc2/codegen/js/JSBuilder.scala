@@ -364,7 +364,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Assign(l, r, rst) =>
       doc" # ${
           l match
-            case ts: TermSymbol => result(Value.SimpleRef(ts))
+            case ts: TermSymbol => result(ts.asSimpleRef)
             case sym: InnerSymbol => lastWords(s"Inner symbol should not be used as the target of an assignment: $sym")
             case l => result(l.asPath.withLoc(l.toLoc)) // TODO: improve location
         } = ${result(r)};${returningTerm(rst, endSemi)}"
@@ -377,7 +377,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       doc" # ${result(p)}[${result(f)}] = ${result(r)};${returningTerm(rst, endSemi)}"
     case Define(defn, rst) =>
       def mkThis(sym: InnerSymbol): Document =
-        result(Value.This(sym))
+        result(sym.asThis)
       val resJS = defn match
       case ValDefn(tsym, sym, p) =>
         val sym = defn.sym
@@ -472,16 +472,16 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 doc" # $mtdPrefix#$nme;"
               val accessors = mutPubFields.flatMap: (valSym, letSym) =>
                 doc" # ${mtdPrefix}get ${escapeField(valSym.name, "")
-                  }() { return ${result(Value.SimpleRef(letSym))}; }"
+                  }() { return ${result(letSym.asSimpleRef)}; }"
                 :: doc" # ${mtdPrefix}set ${escapeField(valSym.name, "")
-                  }(value) { ${result(Value.SimpleRef(letSym))} = value; }"
+                  }(value) { ${result(letSym.asSimpleRef)} = value; }"
                 :: Nil
               val privateAccessors = allPrivFlds.filter(privateAccessorSymbols.contains).flatMap: fld =>
                 doc" # ${mtdPrefix}get [${scope.lookup_!(getPrivateAccessorSymbol(fld), fld.toLoc)}]() { return ${
-                    result(Value.SimpleRef(fld))
+                    result(fld.asSimpleRef)
                   }; }"
                 :: doc" # ${mtdPrefix}set [${scope.lookup_!(getPrivateAccessorSymbol(fld), fld.toLoc)}](value) { ${
-                    result(Value.SimpleRef(fld))
+                    result(fld.asSimpleRef)
                   } = value; }"
                 :: Nil
               (privDecls ::: accessors ::: privateAccessors).mkDocument(doc"")
@@ -515,7 +515,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 val fz = doc" # $freeze(this);"
                 ownr match
                 case S(owner) =>
-                  (doc" # ${result(Value.This(owner))}.${sym.nme} = this;", fz)
+                  (doc" # ${result(owner.asThis)}.${sym.nme} = this;", fz)
                 case N =>
                   (doc" # ${scope.lookup_!(sym, sym.toLoc)} = this;", fz)
               else (doc"", doc"")
@@ -549,13 +549,13 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             val ctorBod = {{
                 val extraPath = if paramsOpt.isDefined then ".class" else ""
                 doc" # static " :: braced:
-                  val v = result(Value.This(isym))
+                  val v = result(isym.asThis)
                   if isSingleton
                   then doc" # new $v"
                   else
                     ownr match
                     case S(owner) =>
-                      doc" # ${result(Value.This(owner))}.${sym.nme}$extraPath = $v"
+                      doc" # ${result(owner.asThis)}.${sym.nme}$extraPath = $v"
                     case N =>
                       doc" # ${scope.lookup_!(sym, sym.toLoc)}$extraPath = $v"
               }} :: (
