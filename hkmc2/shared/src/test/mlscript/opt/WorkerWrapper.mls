@@ -1,12 +1,11 @@
 :js
 
 
-// TODO:
-// the worker-wrapper transformation should initially turn this into
+// The worker-wrapper transformation initially turns this into
 //    fun foo(x)(y) = foo$worker(x, y)
 //    fun foo$worker(x, y) = x + y + x + y
 //    foo(1)(2)
-// which should subsequently be inlined into the more efficient
+// which is subsequently inlined into the more efficient
 //    fun foo(x)(y) = foo$worker(x, y)
 //    fun foo$worker(x, y) = x + y + x + y
 //    foo$worker(1, 2)
@@ -39,4 +38,5 @@ tiny(1)(2)
 //│ let tiny⁰; define tiny⁰ as fun tiny¹(x)(y) { return y }; 2
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
+
 
