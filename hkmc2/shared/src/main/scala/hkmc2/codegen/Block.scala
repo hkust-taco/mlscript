@@ -636,6 +636,24 @@ final case class FunDefn(
     case Annot.Modifier(Keyword.`private`) => Visibility.Private
     case Annot.Modifier(Keyword.`public`) => Visibility.Public
   .getOrElse(Visibility.Public)
+  
+  // `configOverride` and `annotations` live in a secondary constructor list,
+  // so case-class equality would otherwise ignore them.
+  // We currently use structural equality in JSBackendDiffMaker.scala
+  // to make sure that structurally equal blocks retain object identity.
+  override def equals(obj: Any): Bool = obj match
+    case that: FunDefn =>
+      owner == that.owner &&
+        sym == that.sym &&
+        dSym == that.dSym &&
+        params == that.params &&
+        body == that.body &&
+        configOverride == that.configOverride &&
+        annotations == that.annotations
+    case _ => false
+  override def hashCode: Int =
+    (owner, sym, dSym, params, body, configOverride, annotations).hashCode
+
 object FunDefn:
   def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
     val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))

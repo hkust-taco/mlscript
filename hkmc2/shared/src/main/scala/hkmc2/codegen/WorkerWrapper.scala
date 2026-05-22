@@ -98,7 +98,8 @@ class WorkerWrapper
       val body = applyFunBodyLikeBlock(fun.body)
       val rest2 = applySubBlock(rest)
       if isBelowAltInlineThreshold(body) then
-        Define(mkInlineOnly(fun, body), rest2)
+        val fun2 = mkInlineOnly(fun, body)
+        if (fun2 is fun) && (rest2 is rest) then block else Define(fun2, rest2)
       else
         mkWorkerWrapper(fun, body, rest2)
     case _ =>

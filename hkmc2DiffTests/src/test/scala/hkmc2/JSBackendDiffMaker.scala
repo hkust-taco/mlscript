@@ -163,17 +163,15 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         )
         output(Printer().worksheet(optimized)(using irPrintingScp).mkString(output.ColWidth))
       
-      var beforeSimplification = optimized
       if noOptimizations.isUnset then
         optimized = WorkerWrapper(symbolsToPreserve, dtl, print)(optimized)
         
-        beforeSimplification = optimized
         optimized = BlockSimplifier(symbolsToPreserve, dtl, print)(optimized)
         ltl.givenIn:
           optimized = DeadParamElim(optimized)
       
       // TODO: Test that transformers retain object identity when there are no changes
-      if (optimized isnt beforeSimplification) && (optimized === beforeSimplification) then
+      if (optimized isnt lowered) && (optimized === lowered) then
         output("/!\\ Warning: object identity between equal objects was not preserved by BlockSimplifier or DeadParamElim")
         def rec(lhs: Block, rhs: Block): Bool =
           (lhs is rhs) || {
