@@ -58,7 +58,7 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
         raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function." -> sel.toLoc :: Nil,
           source = Diagnostic.Source.Compilation))
         k(p)
-    case _ => k(p)  
+    case _ => k(p)
 
   private def pathStartsWith(p: Path, symbol: Local): Bool = p match
     case r: Value.Ref => r.symbol is symbol
