@@ -1,0 +1,29 @@
+:js
+
+
+// TODO:
+// the worker-wrapper transformation should initially turn this into
+//    fun foo(x)(y) = foo$worker(x, y)
+//    fun foo$worker(x, y) = x + y + x + y
+//    foo(1)(2)
+// which should subsequently be inlined into the more efficient
+//    fun foo(x)(y) = foo$worker(x, y)
+//    fun foo$worker(x, y) = x + y + x + y
+//    foo$worker(1, 2)
+:soir
+fun foo(x)(y) =
+  x + y + x + y
+foo(1)(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let foo⁰;
+//│ define foo⁰ as fun foo¹(x)(y) {
+//│   let tmp, tmp1;
+//│   set tmp = +⁰(x, y);
+//│   set tmp1 = +⁰(tmp, x);
+//│   return +⁰(tmp1, y)
+//│ };
+//│ foo¹(1)(2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 6
+
+

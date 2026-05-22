@@ -164,6 +164,10 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         output(Printer().worksheet(optimized)(using irPrintingScp).mkString(output.ColWidth))
       
       if noOptimizations.isUnset then
+        
+        // TODO:
+        // optimized = WorkerWrapper(symbolsToPreserve, dtl, print)(optimized)
+        
         optimized = BlockSimplifier(symbolsToPreserve, dtl, print)(optimized)
         ltl.givenIn:
           optimized = DeadParamElim(optimized)
