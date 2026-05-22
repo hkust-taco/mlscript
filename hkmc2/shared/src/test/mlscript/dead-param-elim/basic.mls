@@ -30,15 +30,9 @@ private fun f(a)(b) = 0
 f(1)(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
-//│ dead-param-elim > prodfun f$worker#0 @ <root> -> eliminable: {0, 1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁴, f$worker⁰;
-//│ define f⁴ as fun f⁵()(b) {
-//│   return f$worker¹()
-//│ };
-//│ define f$worker⁰ as fun f$worker¹() { return 0 };
-//│ f⁵()(2)
+//│ let f⁴; define f⁴ as fun f⁵()(b) { return 0 }; f⁵()(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -93,15 +87,9 @@ f(1, 2)
 private fun f(a)(b) = a
 f(1)(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f$worker#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹⁴, f$worker²;
-//│ define f¹⁴ as fun f¹⁵(a)(b) {
-//│   return f$worker³(a)
-//│ };
-//│ define f$worker² as fun f$worker³(a) { return a };
-//│ f¹⁵(1)(2)
+//│ let f¹⁴; define f¹⁴ as fun f¹⁵(a)(b) { return a }; f¹⁵(1)(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -110,15 +98,9 @@ private fun f(a)(b) = b
 f(1)(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
-//│ dead-param-elim > prodfun f$worker#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹⁶, f$worker⁴;
-//│ define f¹⁶ as fun f¹⁷()(b) {
-//│   return f$worker⁵(b)
-//│ };
-//│ define f$worker⁴ as fun f$worker⁵(b) { return b };
-//│ f¹⁷()(2)
+//│ let f¹⁶; define f¹⁶ as fun f¹⁷()(b) { return b }; f¹⁷()(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 

@@ -40,3 +40,22 @@ tiny(1)(2)
 //│ = 2
 
 
+// Worker-wrapper relies on inlining to erase wrappers, so it is disabled with
+// the rest of the inliner.
+:soir
+:noInline
+fun noInlineFoo(x)(y) =
+  x + y + x + y
+noInlineFoo(1)(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let noInlineFoo⁰;
+//│ define noInlineFoo⁰ as fun noInlineFoo¹(x)(y) {
+//│   let tmp, tmp1;
+//│   set tmp = +⁰(x, y);
+//│   set tmp1 = +⁰(tmp, x);
+//│   return +⁰(tmp1, y)
+//│ };
+//│ noInlineFoo¹(1)(2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 6
+

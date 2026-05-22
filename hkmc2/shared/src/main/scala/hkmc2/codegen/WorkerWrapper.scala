@@ -109,4 +109,5 @@ end WorkerWrapper
 object WorkerWrapper:
   def apply(symbolsToPreserve: Set[Local], tl: TL, printer: Program => Str)(p: Program)
       (using DebugPrinter, State, Config, Raise): Program =
-    (new WorkerWrapper(symbolsToPreserve, tl, printer)).applyProgram(p)
+    if config.inlining.isEmpty then p
+    else (new WorkerWrapper(symbolsToPreserve, tl, printer)).applyProgram(p)

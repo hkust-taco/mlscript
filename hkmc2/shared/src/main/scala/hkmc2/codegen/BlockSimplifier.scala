@@ -1027,15 +1027,20 @@ class BlockSimplifier
                   matchAllArgs(call.argss, map(sym).defn.params).isEmpty
                 caller.foreach: caller =>
                   edges.append((caller, sym))
-          
+
+          def pickLoopBreaker(sccComp: Ls[TermSymbol]): TermSymbol =
+            sccComp.minBy: sym =>
+              (if map(sym).defn.inline then 1 else 0, sym.uid)
+
           @tailrec
           def assignLoopBreakers(): Unit =
             val sccs = partitionScc(edges.filterNot((from, to) => map(to).isLoopBreaker), map.keys)
             if sccs.forall(_.sizeIs == 1) then return
             sccs.foreach: sccComp =>
               if sccComp.sizeIs > 1 then
-                // TODO: Score computation
-                map(sccComp.minBy(_.uid)).isLoopBreaker = true
+                // Prefer breaking cycles at non-inline definitions so tiny wrappers
+                // can still disappear while their workers stop recursive expansion.
+                map(pickLoopBreaker(sccComp)).isLoopBreaker = true
             assignLoopBreakers()
           edges.foreach: (from, to) =>
             if from === to then
@@ -1091,6 +1096,22 @@ class BlockSimplifier
           insideInlineAnnotatedFunction = old
           res
         
+        def inlineCandidateBody(ts: TermSymbol): Opt[Block] =
+          newFunctionBody.get(ts) match
+          case S(S(blk)) => S(blk)
+          case S(N) if m(ts).defn.inline =>
+            // The optimized body is already being computed through a recursive
+            // path. For inline wrappers, using the original body still exposes
+            // the call to the real worker; loop breakers below keep genuinely
+            // recursive inline functions from expanding forever.
+            S(m(ts).defn.body)
+          case S(N) => N
+          case N =>
+            newFunctionBody(ts) = N
+            val newBdy = enterFunBlock(m(ts).defn.inline, applyBlock(m(ts).defn.body))
+            newFunctionBody(ts) = S(newBdy)
+            S(newBdy)
+
         override def applyMainBlock(main: Block): Block =
           super.applyMainBlock(main).flattened
         
@@ -1119,13 +1140,7 @@ class BlockSimplifier
         
         override def applyResult(r: Result)(k: Result => Block): Block = r match
           case c @ Call(TermSymbolPath(ts), argss) if m.contains(ts) && argss.nonEmpty =>
-            newFunctionBody.get(ts)
-            .getOrElse:
-              newFunctionBody(ts) = N
-              val newBdy = enterFunBlock(m(ts).defn.inline, applyBlock(m(ts).defn.body))
-              newFunctionBody(ts) = S(newBdy)
-              S(newBdy)
-            .fold(super.applyResult(r)(k)): blk =>
+            inlineCandidateBody(ts).fold(super.applyResult(r)(k)): blk =>
               val info = m(ts)
               val cfg = summon[Config.Inliner]
               val threshold = if insideInlineAnnotatedFunction then cfg.altSmallThreshold else cfg.inlineThreshold
