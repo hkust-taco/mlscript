@@ -190,7 +190,7 @@ class EtaExpansionRewrite(val etaExpansionSolver: EtaExpansionSolver)(using Rais
           else res2 match
           case p: Path =>
             Return(etaCall(p).withLocOf(res2), implct)
-          case c@Call(fun, argss) =>
+          case c @ Call(fun, argss) =>
             Return(
               Call(fun, (argss ++ activeEtaArgss).ne_!)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall),
               implct)

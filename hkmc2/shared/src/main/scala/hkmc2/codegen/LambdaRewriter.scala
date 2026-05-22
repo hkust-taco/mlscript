@@ -22,7 +22,7 @@ object LambdaRewriter:
         case _ => super.applyResult(r)(k)
       
       override def applyBlock(b: Block): Block = b match
-        case Assign(lhs, lam@Lambda(params, body), rest) if !lhs.isInstanceOf[TempSymbol] =>
+        case Assign(lhs, lam @ Lambda(params, body), rest) if !lhs.isInstanceOf[TempSymbol] =>
           val newSym = BlockMemberSymbol(lhs.nme, Nil,
             nameIsMeaningful = true // TODO: lhs.nme is not always meaningful
           )

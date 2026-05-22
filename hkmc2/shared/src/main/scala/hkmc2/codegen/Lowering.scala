@@ -1227,7 +1227,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     term(t, inStmtPos = inStmtPos):
       case v: Value => k(v)
       case p: Path => k(p)
-      case lam@Lambda(params, body) =>
+      case lam @ Lambda(params, body) =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
         val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(configOverride = N, annotations = lam.annot)
