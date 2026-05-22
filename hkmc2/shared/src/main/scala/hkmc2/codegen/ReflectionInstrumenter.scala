@@ -55,7 +55,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
   def assign(res: Result, symName: Str = "tmp")(k: Path => Block): Block =
     // TODO: skip assignment if res: Path?
     val sym = new TempSymbol(N, symName)
-    Scoped(Set(sym), Assign(sym, res, k(sym.asPath)))
+    Scoped(Set(sym), Assign(sym, res, k(Value.SimpleRef(sym))))
 
   def tuple(elems: Ls[ArgWrappable], symName: Str = "tmp")(k: Path => Block): Block =
     assign(Tuple(false, elems.map(asArg)), symName)(k)
@@ -66,8 +66,8 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
   // helpers for instrumenting Block
 
-  def blockMod(name: Str) = summon[State].blockSymbol.asPath.selSN(name)
-  def optionMod(name: Str) = summon[State].optionSymbol.asPath.selSN(name)
+  def blockMod(name: Str) = Value.SimpleRef(summon[State].blockSymbol).selSN(name)
+  def optionMod(name: Str) = Value.SimpleRef(summon[State].optionSymbol).selSN(name)
 
   def blockCtor(name: Str, args: Ls[ArgWrappable], symName: Str = "tmp")(k: Path => Block): Block =
     call(blockMod(name), args, true, symName)(k)
@@ -111,7 +111,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           return End()
 
       val path: ArgWrappable = pOpt.getOrElse(owner match
-        case S(owner) => owner.asPath.selSN(sym.nme)
+        case S(owner) => Value.This(owner).selSN(sym.nme)
         case N => Value.MemberRef(bsym.asBlkMember.get, sym.asClsOrMod.get))
       baseSym match
         case _: ClassSymbol =>
@@ -218,7 +218,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           raise(ErrorReport(msg"Instantiate with multiple argument lists not supported in staged module." -> r.toLoc :: Nil))
           End()
     // desugar Runtime.Tuple.get into Select
-    case Call(fun, Ls(Arg(_, scrut), Arg(_, Value.Lit(Tree.IntLit(idx)))) :: _) if fun == State.runtimeSymbol.asPath.selSN("Tuple").selSN("get") =>
+    case Call(fun, Ls(Arg(_, scrut), Arg(_, Value.Lit(Tree.IntLit(idx)))) :: _) if fun == Value.SimpleRef(State.runtimeSymbol).selSN("Tuple").selSN("get") =>
       transformPath(Select(scrut, Tree.Ident(idx.toString()))(N))(k)
     case Call(fun, argss) =>
       val stagedFunPath = fun match
@@ -357,7 +357,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
   def applyFunDefnInner(f: FunDefn): (FunDefn, Block => Block) =
     val genSymName = f.sym.nme + "_instr"
     val genSym = BlockMemberSymbol(genSymName, Nil, false)
-    val sym = f.owner.get.asPath.selSN(genSymName)
+    val sym = Value.This(f.owner.get).selSN(genSymName)
 
     // turn into fundefn
     val dSym = TermSymbol(f.dSym.k, f.dSym.owner, Tree.Ident(f.sym.nme + "_instr"))
@@ -380,7 +380,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
       val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(PlainParamList(Nil)), companion.ctor)(N, Nil)
       val (stagedCtor, ctorPrint) = applyFunDefnInner(ctor)
 
-      val unit = State.runtimeSymbol.asPath.selSN("Unit")
+      val unit = Value.SimpleRef(State.runtimeSymbol).selSN("Unit")
       val debugBlock = (ctorPrint :: debugPrintCode).foldRight((Return(unit, true): Block))(_(_))
       def debugCont(rest: Block) =
         Begin(debugBlock, rest)

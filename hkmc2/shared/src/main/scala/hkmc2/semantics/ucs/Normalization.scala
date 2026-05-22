@@ -466,7 +466,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             if summon[LoweringCtx].mayRet then
               blk
                 .assign(isReturned, Call(Value.SimpleRef(State.builtinOpsMap("!==")),
-                  (loopResult.asPath.asArg :: loopEnd.asArg :: Nil) ne_:: Nil)(true, false, false))
+                  (Value.SimpleRef(loopResult).asArg :: loopEnd.asArg :: Nil) ne_:: Nil)(true, false, false))
                 .ifthen(Value.SimpleRef(isReturned), Case.Lit(Tree.BoolLit(true)),
                   Return(Value.SimpleRef(loopResult), false),
                   N

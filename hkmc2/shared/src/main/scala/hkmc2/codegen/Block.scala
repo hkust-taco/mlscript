@@ -481,15 +481,15 @@ object HandleBlock:
 
   def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.suspend
-    Call(Value.MemberRef(bms, bms.principalDisamb.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(true, true, false)
+    Call(Value.MemberRef(bms, bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(true, true, false)
 
   def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.handle_suspension
-    Call(Value.MemberRef(bms, bms.principalDisamb.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(true, true, false)
+    Call(Value.MemberRef(bms, bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(true, true, false)
   
   private def create(
-      lhs: Local,
-      res: Local,
+      lhs: LocalSymbol,
+      res: LocalSymbol,
       par: Path,
       args: Ls[Path],
       cls: ClassSymbol,
@@ -536,12 +536,12 @@ object HandleBlock:
       .define(clsDefn)
       .assign(lhs, Instantiate(mut = true, Value.MemberRef(clsDefn.sym, cls), Nil :: Nil))
       .define(bodyDefn)
-      .assign(res, handleSuspension(lhs.asPath, Value.MemberRef(bodyDefn.sym, bodyDefn.dSym)))
+      .assign(res, handleSuspension(Value.SimpleRef(lhs), Value.MemberRef(bodyDefn.sym, bodyDefn.dSym)))
       .rest(rest)
   
   def apply(
-      lhs: Local,
-      res: Local,
+      lhs: LocalSymbol,
+      res: LocalSymbol,
       par: Path,
       args: Ls[Path],
       cls: ClassSymbol,
@@ -1006,19 +1006,12 @@ extension (k: Block => Block)
 
 def blockBuilder: Block => Block = identity
 
-extension (bms: BlockMemberSymbol)
-  /** The principal disambiguation for a [[`BlockMemberSymbol`]] reference, or `N` if the BMS does not resolve to a 
-    * value-like symbol (i.e. [[`TermSymbol`]], [[`ModuleOrObjectSymbol`]] or [[`PatternSymbol`]]).
-    */
-  private def principalDisamb: Opt[DefinitionSymbol[?]] =
-    bms.tsym.orElse(bms.asClsOrMod).orElse(bms.asPat)
-
 extension (l: Local)
   // TODO(Derppening): Inline `Value.Ref.apply` into this function once that function is removed
   @annotation.nowarn("cat=deprecation")
   def asPath: Path = 
     Value.Ref(l, l match 
-      case bms: BlockMemberSymbol => S(bms.principalDisamb.getOrElse:
+      case bms: BlockMemberSymbol => S(bms.asPrincipal.getOrElse:
         lastWords(s"Cannot resolve overloaded member symbol ${bms.nme}: no principal disambiguation found")
       )
       case _ => N

@@ -1095,7 +1095,7 @@ class BlockSimplifier
                         acc(Scoped(Set.single(resSym), newBlk(k(Value.SimpleRef(resSym)))))
                       else
                         acc(Scoped(Set(resSym), newBlk(
-                          k(Call(resSym.asPath, extraArgss.ne_!)(c.isMlsFun, c.mayRaiseEffects, false)))))
+                          k(Call(Value.SimpleRef(resSym), extraArgss.ne_!)(c.isMlsFun, c.mayRaiseEffects, false)))))
                     case (sym, value) :: argRest =>
                       val newSym = VarSymbol(sym.id)
                       go(acc.assignScoped(newSym, value), argRest, mapping + (sym -> newSym))

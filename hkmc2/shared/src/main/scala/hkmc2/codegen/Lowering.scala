@@ -589,7 +589,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case (sym: (LocalSymbol | BuiltinSymbol), _) =>
         k(loweringCtx(Value.SimpleRef(sym).withLocOf(ref)))
       case (sym: BlockMemberSymbol, _) =>
-        k(loweringCtx(Value.MemberRef(sym, disamb.orElse(sym.principalDisamb).get).withLocOf(ref)))
+        k(loweringCtx(Value.MemberRef(sym, disamb.orElse(sym.asPrincipal).get).withLocOf(ref)))
       case (sym: InnerSymbol, _) =>
         k(loweringCtx(Value.This(sym).withLocOf(ref)))
       case (sym, disamb) =>
@@ -639,7 +639,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
               Assign(
                 isContinue,
                 Call(
-                  State.builtinOpsMap("===").asPath,
+                  Value.SimpleRef(State.builtinOpsMap("===")),
                   (Value.SimpleRef(bodyResult).asArg :: Value.SimpleRef(State.runtimeSymbol).selSN("Continue").asArg :: Nil) ne_:: Nil,
                 )(true, false, false),
                 Match(
@@ -1373,12 +1373,12 @@ trait LoweringSelSanityChecks(using Config, TL, Raise, State)
       blockBuilder
         .assign(selRes, Select(p, nme)(disamb))
         .assign(State.noSymbol, Select(p, Tree.Ident(nme.name+"$__checkNotMethod"))(N))
-          .ifthen(selRes.asPath,
+          .ifthen(Value.SimpleRef(selRes),
             Case.Lit(syntax.Tree.UnitLit(false)),
             Throw(Instantiate(mut = false, Select(Value.This(State.globalThisSymbol), Tree.Ident("Error"))(N),
               (Value.Lit(syntax.Tree.StrLit(s"Access to required field '${nme.name}' yielded 'undefined'")).asArg :: Nil) :: Nil))
           )
-          .rest(k(selRes.asPath))
+          .rest(k(Value.SimpleRef(selRes)))
 
 
 

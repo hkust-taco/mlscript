@@ -823,7 +823,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     */
   sealed trait GenericRewrittenScope[T] extends RewrittenScope[T]:
     lazy val captureSym = VarSymbol(Tree.Ident(obj.nme + "$cap"))
-    override lazy val capturePath = captureSym.asPath
+    override lazy val capturePath = Value.SimpleRef(captureSym)
     protected val liftedObjsOrdered: List[InnerSymbol] = node.liftedObjSyms.toList.sortBy(_.uid)
     protected val liftedObjsSyms: Map[InnerSymbol, VarSymbol] = liftedObjsOrdered.map: s =>
         s -> VarSymbol(Tree.Ident(s.nme + "$"))
@@ -838,7 +838,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     */
   sealed trait ClsLikeRewrittenScope[T](sym: InnerSymbol) extends RewrittenScope[T]:
     lazy val captureSym = TermSymbol(syntax.ImmutVal, S(sym), Tree.Ident(obj.nme + "$cap"))
-    override lazy val capturePath = captureSym.asPath
+    override lazy val capturePath = Value.SimpleRef(captureSym)
     protected val liftedObjsOrdered: List[InnerSymbol] = node.liftedObjSyms.toList.sortBy(_.uid)
     protected val liftedObjsSyms: Map[InnerSymbol, TermSymbol] = liftedObjsOrdered.map: s =>
         s -> TermSymbol(syntax.ImmutVal, S(sym), Tree.Ident(s.nme + "$"))
@@ -905,7 +905,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       with ClsLikeRewrittenScope[ClsLikeDefn](obj.cls.isym):
     
     private val captureSym = TermSymbol(syntax.ImmutVal, S(obj.cls.isym), Tree.Ident(obj.nme + "$cap"))
-    override lazy val capturePath: Path = captureSym.asPath
+    override lazy val capturePath: Path = Value.SimpleRef(captureSym)
     
     override def rewriteImpl: LifterResult[ClsLikeDefn] =
       val rewriterCtor = new BlockRewriter
@@ -928,7 +928,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       with ClsLikeRewrittenScope[ClsLikeBody](obj.clsBody.isym):
     
     private val captureSym = TermSymbol(syntax.ImmutVal, S(obj.clsBody.isym), Tree.Ident(obj.nme + "$cap"))
-    override lazy val capturePath: Path = captureSym.asPath
+    override lazy val capturePath: Path = Value.SimpleRef(captureSym)
       
     override def rewriteImpl: LifterResult[ClsLikeBody] =
       val rewriterCtor = new BlockRewriter
@@ -956,7 +956,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       .toMap
     
     override protected val passedSymsMap = passedSymsMap_.view.mapValues(_.asLocalPath).toMap
-    override protected val capSymsMap = capSymsMap_.view.mapValues(_.asPath).toMap
+    override protected val capSymsMap = capSymsMap_.view.mapValues(s => Value.SimpleRef(s)).toMap
     override protected val passedDefnsMap = defnSymsMap_.view.mapValues(_.asDefnRef).toMap
     
     val auxParams: List[Param] =
@@ -1002,10 +1002,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         case Nil => lastWords("tried to make an aux defn for a function with no parameter list")
       val args = restSym match
         case Some(value) =>
-          val tail = Arg(S(SpreadKind.Eager), value.asPath) :: Nil
+          val tail = Arg(S(SpreadKind.Eager), Value.SimpleRef(value)) :: Nil
           syms.foldLeft(tail):
-            case (acc, sym) => Arg(N, sym.asPath) :: acc
-        case None => syms.map(s => Arg(N, s.asPath))
+            case (acc, sym) => Arg(N, Value.SimpleRef(sym)) :: acc
+        case None => syms.map(s => Arg(N, Value.SimpleRef(s)))
       
       val call = Call(Value.MemberRef(fun.sym, fun.dSym), args ne_:: Nil)(true, true, false)
       val bod = Return(call, false)
@@ -1055,7 +1055,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       with ClsLikeRewrittenScope[ClsLikeDefn](obj.cls.isym):
     
     private val captureSym = TermSymbol(syntax.ImmutVal, S(obj.cls.isym), Tree.Ident(obj.nme + "$cap"))
-    override lazy val capturePath: Path = captureSym.asPath
+    override lazy val capturePath: Path = Value.SimpleRef(captureSym)
     
     private val passedSymsMap_ : Map[Local, (vs: VarSymbol, ts: TermSymbol)] = passedSymsOrdered.map: s =>
         s -> 
@@ -1087,7 +1087,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       ::: passedSymsOrdered.map(passedSymsMap_(_).ts)
     
     override protected val passedSymsMap = passedSymsMap_.view.mapValues(_.ts.asLocalPath).toMap
-    override protected val capSymsMap = capSymsMap_.view.mapValues(_.ts.asPath).toMap
+    override protected val capSymsMap = capSymsMap_.view.mapValues(s => Value.SimpleRef(s.ts)).toMap
     override protected val passedDefnsMap = defnSymsMap_.view.mapValues(_.ts.asDefnRef).toMap
     
     val auxParams: List[Param] =
@@ -1121,8 +1121,8 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       // Uses the symbols from pl1.
       def applyPlToPl(pl1: ParamList, pl2: ParamList): List[Arg] = (pl1.restParam, pl2.restParam) match
-        case (S(rp), S(_)) => pl1.params.foldRight(Arg(S(SpreadKind.Eager), rp.sym.asPath) :: Nil)(_.sym.asPath.asArg :: _)
-        case (N, N) => pl1.paramSyms.map(_.asPath.asArg)
+        case (S(rp), S(_)) => pl1.params.foldRight(Arg(S(SpreadKind.Eager), Value.SimpleRef(rp.sym)) :: Nil)((p, ls) => Value.SimpleRef(p.sym).asArg :: ls)
+        case (N, N) => pl1.paramSyms.map(s => Value.SimpleRef(s).asArg)
         case _ => die
       
       // If class has a main param list, the aux list comes after it
@@ -1199,15 +1199,15 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val ctorWithPassed = passedSymsOrdered.foldRight(ctorWithCap):
         case (sym, acc) =>
           val (vs, ts) = passedSymsMap_(sym)
-          Assign(ts, vs.asPath, acc)
+          Assign(ts, Value.SimpleRef(vs), acc)
       val ctorWithCaps = capturesOrdered.foldRight(ctorWithPassed):
         case (sym, acc) =>
           val (vs, ts) = capSymsMap_(sym)
-          Assign(ts, vs.asPath, acc)
+          Assign(ts, Value.SimpleRef(vs), acc)
       val ctorWithDefns = reqDefnsOrdered.foldRight(ctorWithCaps):
         case (sym, acc) =>
           val (vs, ts) = defnSymsMap_(sym)
-          Assign(ts, vs.asPath, acc)
+          Assign(ts, Value.SimpleRef(vs), acc)
       
       val newAuxList = 
         if isTrivial then cls.auxParams
