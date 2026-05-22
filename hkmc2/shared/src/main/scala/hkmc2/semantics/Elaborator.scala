@@ -231,9 +231,6 @@ object Elaborator:
       val Object = assumeBuiltinCls("Object")
       val Array = assumeBuiltinCls("Array")
       val TypedArray = assumeBuiltinCls("TypedArray")
-      val untyped = assumeBuiltinTpe("untyped")
-      val tailrec = assumeBuiltinTpe("tailrec")
-      val tailcall = assumeBuiltinTpe("tailcall")
       // println(s"Builtins: $Int, $Num, $Str, $untyped")
       class VirtualModule(val module: ModuleOrObjectSymbol):
         val bms = getBuiltin(module.nme) match
@@ -274,6 +271,10 @@ object Elaborator:
       object debug extends VirtualModule(assumeBuiltinMod("debug")):
         val printStack = assumeObject("printStack")
       object annotations extends VirtualModule(assumeBuiltinMod("annotations")):
+        val untyped = assumeObject("untyped")
+        val tailrec = assumeObject("tailrec")
+        val tailcall = assumeObject("tailcall")
+        val inline = assumeObject("inline")
         val compile = assumeObject("compile")
         val buffered = assumeObject("buffered")
         val bufferable = assumeObject("bufferable")
@@ -467,13 +468,15 @@ extends Importer with ucs.SplitElaborator:
       case trm =>
         trm.symbol match
         case S(sym) =>
-          sym.asTpe match
-          case S(ctx.builtins.untyped) =>
+          sym match
+          case ctx.builtins.annotations.untyped =>
             return S(Annot.Untyped)
-          case S(ctx.builtins.tailcall) =>
+          case ctx.builtins.annotations.tailcall =>
             return S(Annot.TailCall)
-          case S(ctx.builtins.tailrec) =>
+          case ctx.builtins.annotations.tailrec =>
             return S(Annot.TailRec)
+          case ctx.builtins.annotations.inline =>
+            return S(Annot.Inline)
           case _ => ()
         case _ => ()
         S(Annot.Trm(trm))

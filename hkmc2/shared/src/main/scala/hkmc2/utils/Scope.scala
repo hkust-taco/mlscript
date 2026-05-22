@@ -30,6 +30,10 @@ case class Scope
   
   lazy val parent: Opt[Scope] = parentOrCfg.toOption
   lazy val cfg: Cfg = parentOrCfg.fold(identity, _.cfg)
+  // * Track every owner whose `this` is currently in lexical scope so codegen can tell
+  // * whether a private field access stays inside the declaring owner or needs an accessor.
+  lazy val inScopeOwners: Set[InnerSymbol] =
+    parent.fold(Set.empty[InnerSymbol])(_.inScopeOwners) ++ curThis.iterator.flatten
   
   private val existingNames = MutMap.empty[Str, Local]
   

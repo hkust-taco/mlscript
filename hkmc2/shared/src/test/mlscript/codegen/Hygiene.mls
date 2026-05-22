@@ -28,7 +28,7 @@ object Test with
 //│     return Test1.x
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["object", "Test"]; 
+//│   static [definitionMetadata] = ["object", "Test"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -94,12 +94,11 @@ module Test with
 //│   static {
 //│     Test4 = this
 //│   }
-//│   static #x;
 //│   static {
 //│     this.x = 1;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Test"]; 
+//│   static [definitionMetadata] = ["class", "Test"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -141,12 +140,12 @@ data class Cls(x) with
 //│   #x1;
 //│   get foo() {
 //│     return this.#x;
-//│   } 
+//│   }
 //│   get bar() {
 //│     return this.#x1;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Cls", ["x"]]; 
+//│   static [definitionMetadata] = ["class", "Cls", ["x"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -206,14 +205,14 @@ module Whoops with
 //│         return Whoops.f()
 //│       }
 //│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Whoops"]; 
+//│       static [definitionMetadata] = ["class", "Whoops"];
 //│     });
 //│   }
 //│   static f() {
 //│     return "Hello"
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Whoops"]; 
+//│   static [definitionMetadata] = ["class", "Whoops"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -230,7 +229,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[COMPILATION ERROR] Name not found: Runtime
-//│ ║  l.231: 	Runtime
+//│ ║  l.230: 	Runtime
 //│ ╙──       	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -260,11 +259,11 @@ module AA with
 //│         return BB.y;
 //│       }
 //│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "BB"]; 
+//│       static [definitionMetadata] = ["class", "BB"];
 //│     });
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "AA"]; 
+//│   static [definitionMetadata] = ["class", "AA"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

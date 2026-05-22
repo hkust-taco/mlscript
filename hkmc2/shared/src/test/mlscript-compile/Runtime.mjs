@@ -53,7 +53,7 @@ let Runtime1;
         return "()"
       }
       [prettyPrint]() { return this.toString(); }
-      static [definitionMetadata] = ["object", "Unit"]; 
+      static [definitionMetadata] = ["object", "Unit"];
     });
     (class Continue {
       static {
@@ -67,7 +67,7 @@ let Runtime1;
         globalThis.Object.freeze(this);
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["object", "Continue"]; 
+      static [definitionMetadata] = ["object", "Continue"];
     });
     (class LoopEnd {
       static {
@@ -81,7 +81,7 @@ let Runtime1;
         globalThis.Object.freeze(this);
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["object", "LoopEnd"]; 
+      static [definitionMetadata] = ["object", "LoopEnd"];
     });
     this.short_and = RuntimeJS.short_and;
     this.short_or = RuntimeJS.short_or;
@@ -109,13 +109,13 @@ let Runtime1;
           return Runtime.resume(this$EffectHandle.reified.contTrace)(value)
         });
         return Runtime1.try(lambda)
-      } 
+      }
       raise() {
         Runtime.curEffect = this.reified;
         return runtime.Unit
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "EffectHandle", [null]]; 
+      static [definitionMetadata] = ["class", "EffectHandle", [null]];
     });
     this.MatchSuccess = function MatchSuccess(output, bindings) {
       return globalThis.Object.freeze(new MatchSuccess.class(output, bindings));
@@ -129,7 +129,7 @@ let Runtime1;
         this.bindings = bindings;
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "MatchSuccess", ["output", "bindings"]]; 
+      static [definitionMetadata] = ["class", "MatchSuccess", ["output", "bindings"]];
     });
     this.MatchFailure = function MatchFailure(errors) {
       return globalThis.Object.freeze(new MatchFailure.class(errors));
@@ -142,7 +142,7 @@ let Runtime1;
         this.errors = errors;
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "MatchFailure", ["errors"]]; 
+      static [definitionMetadata] = ["class", "MatchFailure", ["errors"]];
     });
     (class Tuple {
       static {
@@ -155,15 +155,15 @@ let Runtime1;
         let tmp;
         tmp = xs.length - j;
         return runtime.safeCall(xs.slice(i, tmp))
-      } 
+      }
       static lazySlice(xs, i, j) {
         let callPrefix;
         callPrefix = runtime.safeCall(LazyArray.dropLeftRight(i, j));
         return runtime.safeCall(callPrefix(xs))
-      } 
+      }
       static lazyConcat(...args) {
         return runtime.safeCall(LazyArray.__concat(...args))
-      } 
+      }
       static get(xs, i) {
         let scrut, scrut1, tmp;
         scrut = i >= xs.length;
@@ -176,12 +176,12 @@ let Runtime1;
           throw runtime.safeCall(globalThis.RangeError("Tuple.get: negative index out of bounds"))
         }
         return xs.at(i);
-      } 
+      }
       static isArrayLike(xs) {
         return runtime.safeCall(Iter.isArrayLike(xs))
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "Tuple"]; 
+      static [definitionMetadata] = ["class", "Tuple"];
     });
     (class Str {
       static {
@@ -189,7 +189,7 @@ let Runtime1;
       }
       static startsWith(string, prefix) {
         return runtime.safeCall(string.startsWith(prefix))
-      } 
+      }
       static get(string, i) {
         let scrut;
         scrut = i >= string.length;
@@ -197,15 +197,15 @@ let Runtime1;
           throw runtime.safeCall(globalThis.RangeError("Str.get: index out of bounds"))
         }
         return runtime.safeCall(string.at(i));
-      } 
+      }
       static take(string, n) {
         return runtime.safeCall(string.slice(0, n))
-      } 
+      }
       static leave(string, n) {
         return runtime.safeCall(string.slice(n))
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "Str"]; 
+      static [definitionMetadata] = ["class", "Str"];
     });
     this.render = Rendering.render;
     (class TraceLogger {
@@ -232,7 +232,7 @@ let Runtime1;
           return prev
         }
         return runtime.Unit;
-      } 
+      }
       static resetIndent(n) {
         let scrut;
         scrut = TraceLogger.enabled;
@@ -241,7 +241,7 @@ let Runtime1;
           return runtime.Unit
         }
         return runtime.Unit;
-      } 
+      }
       static log(msg) {
         let scrut, tmp, tmp1, tmp2, tmp3, tmp4;
         scrut = TraceLogger.enabled;
@@ -256,7 +256,7 @@ let Runtime1;
         return runtime.Unit;
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "TraceLogger"]; 
+      static [definitionMetadata] = ["class", "TraceLogger"];
     });
     this.curEffect = null;
     this.resumeValue = null;
@@ -275,7 +275,7 @@ let Runtime1;
         globalThis.Object.freeze(this);
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["object", "FatalEffect"]; 
+      static [definitionMetadata] = ["object", "FatalEffect"];
     });
     (class PrintStackEffect {
       static {
@@ -289,7 +289,7 @@ let Runtime1;
         globalThis.Object.freeze(this);
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["object", "PrintStackEffect"]; 
+      static [definitionMetadata] = ["object", "PrintStackEffect"];
     });
     this.FunctionContFrame = function FunctionContFrame(next, saved) {
       return globalThis.Object.freeze(new FunctionContFrame.class(next, saved));
@@ -345,7 +345,7 @@ let Runtime1;
         tmp4 = tmp3 + argListLength;
         tmp5 = runtime.safeCall(this.saved.slice(tmp2, tmp4));
         return runtime.safeCall(f.apply(this.saved.at(4), tmp5))
-      } 
+      }
       get getLocals() {
         let debugInfo, i, cur, res, i1;
         debugInfo = this.saved.at(3);
@@ -382,10 +382,10 @@ let Runtime1;
           break;
         }
         return res;
-      } 
+      }
       get getNme() {
         return this.saved.at(3).at(0);
-      } 
+      }
       get getLoc() {
         let loc;
         loc = this.saved.at(2);
@@ -395,7 +395,7 @@ let Runtime1;
         return loc;
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "FunctionContFrame", ["next", "saved"]]; 
+      static [definitionMetadata] = ["class", "FunctionContFrame", ["next", "saved"]];
     });
     this.HandlerContFrame = function HandlerContFrame(next, nextHandler, handler) {
       return globalThis.Object.freeze(new HandlerContFrame.class(next, nextHandler, handler));
@@ -410,7 +410,7 @@ let Runtime1;
         this.handler = handler;
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "HandlerContFrame", ["next", "nextHandler", "handler"]]; 
+      static [definitionMetadata] = ["class", "HandlerContFrame", ["next", "nextHandler", "handler"]];
     });
     this.ContTrace = function ContTrace(next, last, nextHandler, lastHandler, resumed) {
       return globalThis.Object.freeze(new ContTrace.class(next, last, nextHandler, lastHandler, resumed));
@@ -427,7 +427,7 @@ let Runtime1;
         this.resumed = resumed;
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "ContTrace", ["next", "last", "nextHandler", "lastHandler", "resumed"]]; 
+      static [definitionMetadata] = ["class", "ContTrace", ["next", "last", "nextHandler", "lastHandler", "resumed"]];
     });
     this.EffectSig = function EffectSig(contTrace, handler, handlerFun) {
       return globalThis.Object.freeze(new EffectSig.class(contTrace, handler, handlerFun));
@@ -442,14 +442,14 @@ let Runtime1;
         this.handlerFun = handlerFun;
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "EffectSig", ["contTrace", "handler", "handlerFun"]]; 
+      static [definitionMetadata] = ["class", "EffectSig", ["contTrace", "handler", "handlerFun"]];
     });
     (class NonLocalReturn {
       static {
         Runtime.NonLocalReturn = this
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "NonLocalReturn"]; 
+      static [definitionMetadata] = ["class", "NonLocalReturn"];
     });
     this.FnLocalsInfo = function FnLocalsInfo(fnName, locals) {
       return globalThis.Object.freeze(new FnLocalsInfo.class(fnName, locals));
@@ -463,7 +463,7 @@ let Runtime1;
         this.locals = locals;
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "FnLocalsInfo", ["fnName", "locals"]]; 
+      static [definitionMetadata] = ["class", "FnLocalsInfo", ["fnName", "locals"]];
     });
     this.LocalVarInfo = function LocalVarInfo(localName, value) {
       return globalThis.Object.freeze(new LocalVarInfo.class(localName, value));
@@ -477,7 +477,7 @@ let Runtime1;
         this.value = value;
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "LocalVarInfo", ["localName", "value"]]; 
+      static [definitionMetadata] = ["class", "LocalVarInfo", ["localName", "value"]];
     });
     this.CustomStackError = function CustomStackError(stack) {
       return globalThis.Object.freeze(new CustomStackError.class(stack));
@@ -493,7 +493,7 @@ let Runtime1;
         return this.stack
       }
       [prettyPrint]() { return this.toString(); }
-      static [definitionMetadata] = ["class", "CustomStackError", ["stack"]]; 
+      static [definitionMetadata] = ["class", "CustomStackError", ["stack"]];
     });
     this.stackLimit = 0;
     this.stackDepth = 0;
@@ -519,7 +519,7 @@ let Runtime1;
         return Runtime.mkEffect(this, lambda)
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["object", "StackDelayHandler"]; 
+      static [definitionMetadata] = ["object", "StackDelayHandler"];
     });
     this.Int31 = function Int31(v) {
       return globalThis.Object.freeze(new Int31.class(v));
@@ -537,14 +537,14 @@ let Runtime1;
         tmp = runtime.safeCall(Runtime.shl(1, 31));
         tmp1 = runtime.safeCall(Runtime.bitnot(tmp));
         return runtime.safeCall(Runtime.bitand(this.#v, tmp1))
-      } 
+      }
       sext() {
         let tmp;
         tmp = runtime.safeCall(Runtime.shl(1, 31));
         return runtime.safeCall(Runtime.bitor(this.#v, tmp))
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "Int31", [null]]; 
+      static [definitionMetadata] = ["class", "Int31", [null]];
     });
   }
   static handleEffects_handleEffect_resume(id, param0, param1) {
@@ -636,10 +636,10 @@ let Runtime1;
       }
       break;
     }
-  } 
+  }
   static get unreachable() {
     throw runtime.safeCall(globalThis.Error("unreachable"));
-  } 
+  }
   static assertFail(file, line) {
     let tmp, tmp1, tmp2, tmp3;
     tmp = "Assertion failed (" + file;
@@ -647,7 +647,7 @@ let Runtime1;
     tmp2 = tmp1 + line;
     tmp3 = tmp2 + ")";
     throw runtime.safeCall(globalThis.Error(tmp3))
-  } 
+  }
   static checkArgs(functionName, expected, isUB, got) {
     let scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14;
     tmp = got < expected;
@@ -691,19 +691,19 @@ let Runtime1;
       throw runtime.safeCall(globalThis.Error(tmp14))
     }
     return runtime.Unit;
-  } 
+  }
   static safeCall(x) {
     if (x === undefined) {
       return runtime.Unit
     }
     return x;
-  } 
+  }
   static checkCall(x) {
     if (x === undefined) {
       throw runtime.safeCall(globalThis.Error("MLscript call unexpectedly returned `undefined`, the forbidden value."))
     }
     return x;
-  } 
+  }
   static deboundMethod(mtdName, clsName) {
     let tmp, tmp1, tmp2, tmp3;
     tmp = "[debinding error] Method '" + mtdName;
@@ -711,7 +711,7 @@ let Runtime1;
     tmp2 = tmp1 + clsName;
     tmp3 = tmp2 + "' was accessed without being called.";
     throw runtime.safeCall(globalThis.Error(tmp3))
-  } 
+  }
   static try(f) {
     let res, scrut, tmp;
     res = runtime.safeCall(f());
@@ -722,7 +722,7 @@ let Runtime1;
       return Runtime.EffectHandle(tmp)
     }
     return res;
-  } 
+  }
   static printRaw(x) {
     let rcd, tmp;
     rcd = globalThis.Object.freeze({
@@ -731,15 +731,15 @@ let Runtime1;
     });
     tmp = runtime.safeCall(Runtime.render(x, rcd));
     return runtime.safeCall(globalThis.console.log(tmp))
-  } 
+  }
   static resetEffects() {
     Runtime.curEffect = null;
     Runtime.resumePc = -1;
     return runtime.Unit
-  } 
+  }
   static raisePrintStackEffect(showLocals) {
     return Runtime.mkEffect(Runtime.PrintStackEffect, showLocals)
-  } 
+  }
   static topLevelEffect(debug) {
     let tr, v, tmp, tmp1;
     tr = Runtime.curEffect;
@@ -767,7 +767,7 @@ let Runtime1;
       throw Runtime.CustomStackError(tmp1)
     }
     return v;
-  } 
+  }
   static illegalEffect(position) {
     let tmp, tmp1, tmp2, tmp3, tmp4;
     tmp = Runtime.curEffect;
@@ -777,7 +777,7 @@ let Runtime1;
     tmp3 = tmp2 + position;
     tmp4 = Runtime.showStackTrace(tmp3, tmp, false, false);
     throw Runtime.CustomStackError(tmp4)
-  } 
+  }
   static showStackTrace(header, tr, debug, showLocals) {
     let msg, curHandler, atTail, tmp;
     msg = header;
@@ -848,7 +848,7 @@ let Runtime1;
       return msg;
     }
     return header;
-  } 
+  }
   static showFunctionContChain(cont, hl, vis, reps) {
     let result, scrut, scrut1, scrut2, tmp, lambda, tmp1, tmp2, tmp3, tmp4;
     if (cont instanceof Runtime.FunctionContFrame.class) {
@@ -888,7 +888,7 @@ let Runtime1;
       return "(null)"
     }
     return "(NOT CONT)";
-  } 
+  }
   static showHandlerContChain(cont, hl, vis, reps) {
     let result, scrut, scrut1, scrut2, lambda, tmp, tmp1, tmp2, tmp3;
     if (cont instanceof Runtime.HandlerContFrame.class) {
@@ -927,21 +927,21 @@ let Runtime1;
       return "(null)"
     }
     return "(NOT HANDLER CONT)";
-  } 
+  }
   static debugCont(cont) {
     let tmp, tmp1, tmp2;
     tmp = globalThis.Object.freeze(new globalThis.Map());
     tmp1 = globalThis.Object.freeze(new globalThis.Set());
     tmp2 = Runtime.showFunctionContChain(cont, tmp, tmp1, 0);
     return runtime.safeCall(globalThis.console.log(tmp2))
-  } 
+  }
   static debugHandler(cont) {
     let tmp, tmp1, tmp2;
     tmp = globalThis.Object.freeze(new globalThis.Map());
     tmp1 = globalThis.Object.freeze(new globalThis.Set());
     tmp2 = Runtime.showHandlerContChain(cont, tmp, tmp1, 0);
     return runtime.safeCall(globalThis.console.log(tmp2))
-  } 
+  }
   static debugContTrace(contTrace) {
     let scrut, scrut1, vis, hl, cur, tmp, tmp1, tmp2, tmp3, tmp4;
     if (contTrace instanceof Runtime.ContTrace.class) {
@@ -984,7 +984,7 @@ let Runtime1;
     }
     runtime.safeCall(globalThis.console.log("Not a cont trace:"));
     return runtime.safeCall(globalThis.console.log(contTrace));
-  } 
+  }
   static debugEff(eff) {
     if (eff instanceof Runtime.EffectSig.class) {
       runtime.safeCall(globalThis.console.log("Debug EffectSig:"));
@@ -994,14 +994,14 @@ let Runtime1;
     }
     runtime.safeCall(globalThis.console.log("Not an effect:"));
     return runtime.safeCall(globalThis.console.log(eff));
-  } 
+  }
   static unwind(...saved) {
     let tmp;
     tmp = new Runtime.FunctionContFrame.class(null, saved);
     Runtime.curEffect.contTrace.last.next = tmp;
     Runtime.curEffect.contTrace.last = Runtime.curEffect.contTrace.last.next;
     return runtime.Unit
-  } 
+  }
   static mkEffect(handler, handlerFun) {
     let res, tmp;
     tmp = new Runtime.ContTrace.class(null, null, null, null, false);
@@ -1010,7 +1010,7 @@ let Runtime1;
     res.contTrace.lastHandler = res.contTrace;
     Runtime.curEffect = res;
     return runtime.Unit
-  } 
+  }
   static handleBlockImpl(cur, handler) {
     let handlerFrame;
     handlerFrame = new Runtime.HandlerContFrame.class(null, null, handler);
@@ -1018,7 +1018,7 @@ let Runtime1;
     cur.contTrace.lastHandler = handlerFrame;
     cur.contTrace.last = handlerFrame;
     return Runtime.handleEffects(cur)
-  } 
+  }
   static enterHandleBlock(handler, body) {
     let tmp, scrut;
     tmp = runtime.safeCall(body());
@@ -1027,18 +1027,18 @@ let Runtime1;
       return tmp
     }
     return Runtime.handleBlockImpl(Runtime.curEffect, handler);
-  } 
+  }
   static handleEffects(cur) {
     return Runtime.handleEffects_handleEffect_resume(0, cur, undefined)
-  } 
+  }
   static handleEffect(cur) {
     return Runtime.handleEffects_handleEffect_resume(1, cur, undefined)
-  } 
+  }
   static resume(contTrace) {
     return (value) => {
       return Runtime.handleEffects_handleEffect_resume(2, contTrace, value)
     }
-  } 
+  }
   static resumeContTrace(contTrace, value) {
     let cont, handlerCont;
     cont = contTrace.next;
@@ -1085,7 +1085,7 @@ let Runtime1;
       }
       return value;
     }
-  } 
+  }
   static checkDepth() {
     let tmp, tmp1;
     tmp = Runtime.stackDepth >= Runtime.stackLimit;
@@ -1098,7 +1098,7 @@ let Runtime1;
       return runtime.safeCall(Runtime.stackHandler.delay())
     }
     return runtime.Unit;
-  } 
+  }
   static runStackSafe(limit, f) {
     let old, old1, old2, result, scrut, tmp, tmp1, tmp2;
     old = Runtime.stackLimit;
@@ -1145,7 +1145,7 @@ let Runtime1;
       Runtime.stackLimit = old;
     }
     return tmp
-  } 
+  }
   static plus_impl(lhs, rhs) {
     if (lhs instanceof Runtime.Int31.class) {
       if (rhs instanceof Runtime.Int31.class) {
@@ -1156,6 +1156,6 @@ let Runtime1;
     return runtime.safeCall(Runtime.unreachable());
   }
   toString() { return runtime.render(this); }
-  static [definitionMetadata] = ["class", "Runtime"]; 
+  static [definitionMetadata] = ["class", "Runtime"];
 });
 let Runtime = Runtime1; export default Runtime;

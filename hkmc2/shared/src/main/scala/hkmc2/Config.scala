@@ -71,7 +71,7 @@ object Config:
     tailRecOpt = true,
     deforest = N,
     etaExpansion = S(EtaExpansion.default),
-    inlining = S(Inliner(1)),
+    inlining = S(Inliner(10)),
     deadBranchRemoval = default.deadBranchRemoval,
     qqEnabled = false,
     funcToCls = false,
@@ -178,8 +178,10 @@ object Config:
       ))
     val default: EtaExpansion = withDebug(debug = false)
   
-  case class Inliner(inlineThreshold: Int)
-
+  /** `altSmallThreshold` is the alternative threshold for inlining things into @inline functions.
+    * Normally, we avoid inlining into @inline functions as that could lead to unexpected code bloat. */
+  case class Inliner(inlineThreshold: Int, altSmallThreshold: Int = 2)
+  
   def extractConfigFromStats(prgm: semantics.Term.Blk)(using Config) =
     // Extract cumulative config modifications from SetConfig statements
     val configModify = prgm.stats.collect:
@@ -434,7 +436,7 @@ object ConfigParser:
         case N => identity
     case "inlining" =>
       parseOpt(value)(parseInt) match
-        case S(v) => _.copy(inlining = v.map(Inliner.apply))
+        case S(v) => _.copy(inlining = v.map(Inliner(_)))
         case _ => identity
     case "deadBranchRemoval" =>
       parseBool(value) match

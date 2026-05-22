@@ -18,7 +18,7 @@ data class Foo(arguments)
 //│     this.arguments = arguments1;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["arguments"]]; 
+//│   static [definitionMetadata] = ["class", "Foo", ["arguments"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -37,7 +37,7 @@ data class Foo(eval)
 //│     this.eval = eval1;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["eval"]]; 
+//│   static [definitionMetadata] = ["class", "Foo", ["eval"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -56,7 +56,7 @@ data class Foo(static)
 //│     this.static = static1;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["static"]]; 
+//│   static [definitionMetadata] = ["class", "Foo", ["static"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -75,7 +75,7 @@ data class Foo(v')
 //│     this["v'"] = v$_;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["v'"]]; 
+//│   static [definitionMetadata] = ["class", "Foo", ["v'"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

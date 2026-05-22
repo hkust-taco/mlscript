@@ -95,11 +95,11 @@ class C with
 //│         globalThis.Object.freeze(new this$C.C());
 //│       }
 //│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "C"]; 
+//│       static [definitionMetadata] = ["class", "C"];
 //│     });
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "C"]; 
+//│   static [definitionMetadata] = ["class", "C"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -130,12 +130,12 @@ class CC with
 //│         globalThis.Object.freeze(new CC21());
 //│       }
 //│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "CC2"]; 
+//│       static [definitionMetadata] = ["class", "CC2"];
 //│     });
 //│     return globalThis.Object.freeze(new CC21());
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "CC"]; 
+//│   static [definitionMetadata] = ["class", "CC"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

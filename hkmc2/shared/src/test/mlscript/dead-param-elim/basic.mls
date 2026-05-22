@@ -146,10 +146,10 @@ foo.bar(99)
 //│ define Foo⁰ as class Foo²(x) {
 //│   private val x⁰;
 //│   constructor Foo¹ {
-//│     set x⁰ = x;
+//│     set Foo².this.x = x;
 //│     end
 //│   }
-//│   method bar⁰ = fun bar¹(a) { return x⁰ }
+//│   method bar⁰ = fun bar¹(a) { return Foo².this.x⁰ }
 //│ };
 //│ set foo⁰ = Foo¹(1);
 //│ foo⁰.bar﹖(99)

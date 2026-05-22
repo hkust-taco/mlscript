@@ -1,18 +1,20 @@
 :js
+open annotations
+
 
 :e
 fun f(x) =
   @tailcall f(x)
   f(x)
 //│ ╔══[COMPILATION ERROR] This call is not in tail position.
-//│ ║  l.5: 	  @tailcall f(x)
+//│ ║  l.7: 	  @tailcall f(x)
 //│ ╙──     	            ^^^^
 
 :e
 fun f(x) = 2
 fun g(x) = @tailcall f(x)
 //│ ╔══[COMPILATION ERROR] This call is not optimized as it does not directly recurse through its parent function.
-//│ ║  l.13: 	fun g(x) = @tailcall f(x)
+//│ ║  l.15: 	fun g(x) = @tailcall f(x)
 //│ ╙──      	                     ^^^^
 
 :e
@@ -20,10 +22,10 @@ fun g(x) = @tailcall f(x)
   g(x)
 fun g(x) = f(x); f(x)
 //│ ╔══[COMPILATION ERROR] This function is not tail recursive.
-//│ ║  l.19: 	@tailrec fun f(x) =
+//│ ║  l.21: 	@tailrec fun f(x) =
 //│ ║        	             ^
 //│ ╟── It could self-recurse through this call, which is not a tail call.
-//│ ║  l.21: 	fun g(x) = f(x); f(x)
+//│ ║  l.23: 	fun g(x) = f(x); f(x)
 //│ ╙──      	           ^^^^
 
 :e
@@ -35,10 +37,10 @@ fun g(x) =
 fun h(x) =
   g(x)
 //│ ╔══[COMPILATION ERROR] This function is not tail recursive.
-//│ ║  l.30: 	@tailrec fun f(x) =
+//│ ║  l.32: 	@tailrec fun f(x) =
 //│ ║        	             ^
 //│ ╟── It could self-recurse through this call, which is not a tail call.
-//│ ║  l.33: 	  f(x)
+//│ ║  l.35: 	  f(x)
 //│ ╙──      	  ^^^^
 
 :e
@@ -50,10 +52,10 @@ fun g(x) =
 fun h(x) =
   f(x)
 //│ ╔══[COMPILATION ERROR] This function is not tail recursive.
-//│ ║  l.45: 	@tailrec fun f(x) =
+//│ ║  l.47: 	@tailrec fun f(x) =
 //│ ║        	             ^
 //│ ╟── It could self-recurse through this call, which is not a tail call.
-//│ ║  l.48: 	  h(x)
+//│ ║  l.50: 	  h(x)
 //│ ╙──      	  ^^^^
 
 :e
@@ -63,14 +65,14 @@ module A with
     @tailcall f(x - 1)
     @tailcall f(x - 1)
 //│ ╔══[COMPILATION ERROR] This call is not in tail position.
-//│ ║  l.63: 	    @tailcall f(x - 1)
+//│ ║  l.65: 	    @tailcall f(x - 1)
 //│ ╙──      	              ^^^^^^^^
 
 :w
 @tailrec
 fun f = 2
 //│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
-//│ ║  l.71: 	fun f = 2
+//│ ║  l.73: 	fun f = 2
 //│ ╙──      	    ^
 
 :w
@@ -78,7 +80,7 @@ module A with
   @tailrec
   fun f() = 2
 //│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
-//│ ║  l.79: 	  fun f() = 2
+//│ ║  l.81: 	  fun f() = 2
 //│ ╙──      	      ^
 
 :fixme // TODO: support
@@ -87,7 +89,7 @@ fun foo() = Foo.bar()
 module Foo with
   fun bar() = foo()
 //│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
-//│ ║  l.86: 	fun foo() = Foo.bar()
+//│ ║  l.88: 	fun foo() = Foo.bar()
 //│ ╙──      	    ^^^
 
 :e
@@ -96,7 +98,7 @@ fun f(x) =
   fun g() = g()
   g()
 //│ ╔══[COMPILATION ERROR] This @tailrec function was not processed by the tail-call optimizer.
-//│ ║  l.96: 	  fun g() = g()
+//│ ║  l.98: 	  fun g() = g()
 //│ ╙──      	      ^
 
 :e
@@ -105,7 +107,7 @@ fun scan(idx, acc) =
   fun go(idx, tok) = scan(idx, tok)
   go(idx, acc)
 //│ ╔══[COMPILATION ERROR] This @tailrec function was not processed by the tail-call optimizer.
-//│ ║  l.105: 	  fun go(idx, tok) = scan(idx, tok)
+//│ ║  l.107: 	  fun go(idx, tok) = scan(idx, tok)
 //│ ╙──       	      ^^
 
 :e
@@ -116,10 +118,10 @@ fun scan(idx, acc) =
   fun go(idx, tok) = scan(idx, tok)
   go(idx, acc)
 //│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
-//│ ║  l.114: 	fun scan(idx, acc) =
+//│ ║  l.116: 	fun scan(idx, acc) =
 //│ ╙──       	    ^^^^
 //│ ╔══[COMPILATION ERROR] This @tailrec function was not processed by the tail-call optimizer.
-//│ ║  l.116: 	  fun go(idx, tok) = scan(idx, tok)
+//│ ║  l.118: 	  fun go(idx, tok) = scan(idx, tok)
 //│ ╙──       	      ^^
 
 :e
@@ -127,21 +129,21 @@ fun scan(idx, acc) =
 @config(tailRecOpt: false)
 fun foo() = foo()
 //│ ╔══[COMPILATION ERROR] This @tailrec function was not processed by the tail-call optimizer.
-//│ ║  l.128: 	fun foo() = foo()
+//│ ║  l.130: 	fun foo() = foo()
 //│ ╙──       	    ^^^
 
 :e
 fun f =
   @tailcall id(2)
 //│ ╔══[COMPILATION ERROR] Only functions in this compilation unit may be marked @tailcall.
-//│ ║  l.135: 	  @tailcall id(2)
+//│ ║  l.137: 	  @tailcall id(2)
 //│ ╙──       	            ^^^^^
 
 :e
 fun f(x)(y) =
   @tailcall f(x)
 //│ ╔══[COMPILATION ERROR] Only fully applied calls may be marked @tailcall.
-//│ ║  l.142: 	  @tailcall f(x)
+//│ ║  l.144: 	  @tailcall f(x)
 //│ ╙──       	            ^^^^
 
 :e
@@ -150,8 +152,8 @@ fun f(x)() =
 fun g(x)(y) =
   @tailcall f(x)
 //│ ╔══[COMPILATION ERROR] Only fully applied calls may be marked @tailcall.
-//│ ║  l.151: 	  @tailcall f(x)
+//│ ║  l.153: 	  @tailcall f(x)
 //│ ╙──       	            ^^^^
 //│ ╔══[COMPILATION ERROR] This call is not optimized as it does not directly recurse through its parent function.
-//│ ║  l.149: 	  @tailcall g(x)(0)
+//│ ║  l.151: 	  @tailcall g(x)(0)
 //│ ╙──       	            ^^^^^^^

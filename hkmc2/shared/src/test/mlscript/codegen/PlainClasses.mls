@@ -12,7 +12,7 @@ class Foo
 //│     Foo1 = this
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo"]; 
+//│   static [definitionMetadata] = ["class", "Foo"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -68,7 +68,7 @@ print("ok")
 //│     Predef.print("hi");
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo"]; 
+//│   static [definitionMetadata] = ["class", "Foo"];
 //│ });
 //│ Predef.print("ok")
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -90,7 +90,7 @@ fun test() =
 //│       Predef.print("hi");
 //│     }
 //│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Foo"]; 
+//│     static [definitionMetadata] = ["class", "Foo"];
 //│   });
 //│   Predef.print("ok");
 //│   return Foo5
@@ -162,7 +162,7 @@ class Foo with
 //│     return this.#y + this.x
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo"]; 
+//│   static [definitionMetadata] = ["class", "Foo"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -186,16 +186,14 @@ class Foo with
 //│     this.x2 = 2;
 //│     Predef.print("hello");
 //│   }
-//│   #y1;
-//│   #y2;
 //│   z1() {
 //│     return 5
-//│   } 
+//│   }
 //│   z2() {
 //│     return 6
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo"]; 
+//│   static [definitionMetadata] = ["class", "Foo"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -215,14 +213,14 @@ class Foo with
 //│   }
 //│   foo(y) {
 //│     return this.x + y
-//│   } 
+//│   }
 //│   bar(z) {
 //│     let tmp;
 //│     tmp = this.foo(z);
 //│     return tmp + 1
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo"]; 
+//│   static [definitionMetadata] = ["class", "Foo"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -252,10 +250,10 @@ class Foo with
   val x = 2
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
-//│ ║  l.251: 	  val x = 1
+//│ ║  l.249: 	  val x = 1
 //│ ║         	  ^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.252: 	  val x = 2
+//│ ║  l.250: 	  val x = 2
 //│ ╙──       	  ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo12;
@@ -268,7 +266,7 @@ class Foo with
 //│     this.x = 2;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo"]; 
+//│   static [definitionMetadata] = ["class", "Foo"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -277,10 +275,10 @@ class Foo with
   val x = 1
   let x = 2
 //│ ╔══[COMPILATION ERROR] Name 'x' is already used
-//│ ║  l.278: 	  let x = 2
+//│ ║  l.276: 	  let x = 2
 //│ ║         	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.277: 	  val x = 1
+//│ ║  l.275: 	  val x = 1
 //│ ╙──       	  ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo14;
@@ -291,9 +289,8 @@ class Foo with
 //│   constructor() {
 //│     this.x = 1;
 //│   }
-//│   #x;
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo"]; 
+//│   static [definitionMetadata] = ["class", "Foo"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -307,7 +304,7 @@ class Foo with
 :e
 class Foo with val x = 1
 //│ ╔══[COMPILATION ERROR] Illegal body of class definition (should be a block; found term definition).
-//│ ║  l.308: 	class Foo with val x = 1
+//│ ║  l.305: 	class Foo with val x = 1
 //│ ╙──       	               ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo16;
@@ -316,7 +313,7 @@ class Foo with val x = 1
 //│     Foo16 = this
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo"]; 
+//│   static [definitionMetadata] = ["class", "Foo"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

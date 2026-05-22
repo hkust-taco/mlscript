@@ -100,7 +100,7 @@ object Cls(val x) with
 //│     return this.x;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["object", "Cls"]; 
+//│   static [definitionMetadata] = ["object", "Cls"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -157,7 +157,7 @@ class D extends id(C)
 //│     super(C1);
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "D"]; 
+//│   static [definitionMetadata] = ["class", "D"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value id(x) {
@@ -303,7 +303,7 @@ module Foo(x) with
 //│     Predef.print(Foo4.#x);
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo"]; 
+//│   static [definitionMetadata] = ["class", "Foo"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
@@ -325,7 +325,7 @@ module Foo(val x)
 //│     this.x = x;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo"]; 
+//│   static [definitionMetadata] = ["class", "Foo"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

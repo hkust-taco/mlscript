@@ -81,12 +81,12 @@ module T with
 //│   }
 //│   static t() {
 //│     return 1
-//│   } 
+//│   }
 //│   static get p() {
 //│     return 2;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "T"]; 
+//│   static [definitionMetadata] = ["class", "T"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -117,7 +117,7 @@ module M with
 //│     return 0;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "M"]; 
+//│   static [definitionMetadata] = ["class", "M"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -295,7 +295,7 @@ data class Foo(x) with
 //│     return this.x;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["x"]]; 
+//│   static [definitionMetadata] = ["class", "Foo", ["x"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

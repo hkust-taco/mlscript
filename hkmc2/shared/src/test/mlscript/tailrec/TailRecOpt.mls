@@ -1,4 +1,6 @@
 :js
+open annotations
+
 
 :expect 200010000
 fun sum_impl(n, acc) = if n == 0 then acc else sum_impl(n - 1, n + acc)
@@ -87,12 +89,12 @@ A.sum(20000)
 //│       acc = tmp1;
 //│       continue loopLabel;
 //│     }
-//│   } 
+//│   }
 //│   static sum(n) {
 //│     return A.sum_impl(n, 0)
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
+//│   static [definitionMetadata] = ["class", "A"];
 //│ });
 //│ A1.sum(20000)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -196,7 +198,7 @@ fun f(x) =
     @tailcall f(x)
   @tailcall g()
 //│ ╔══[COMPILATION ERROR] This call is not in tail position.
-//│ ║  l.195: 	    @tailcall f(x)
+//│ ║  l.197: 	    @tailcall f(x)
 //│ ╙──       	              ^^^^
 
 :lift
@@ -284,10 +286,10 @@ module A with
     @tailcall g(x - 1)
 A.f(10000)
 //│ ╔══[COMPILATION ERROR] This tail call exits the current scope and is not optimized.
-//│ ║  l.283: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
+//│ ║  l.285: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
 //│ ╙──       	                                              ^^^^
 //│ ╔══[COMPILATION ERROR] This tail call exits the current scope and is not optimized.
-//│ ║  l.284: 	    @tailcall g(x - 1)
+//│ ║  l.286: 	    @tailcall g(x - 1)
 //│ ╙──       	              ^^^^^^^^
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
@@ -314,12 +316,12 @@ class A with
   fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 (new A).f(10)
 //│ ╔══[COMPILATION ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.313: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.315: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	                                                      ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Class methods may not yet be marked @tailrec.
-//│ ║  l.313: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.315: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	               ^
 //│ ╔══[COMPILATION ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.314: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
+//│ ║  l.316: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 //│ ╙──       	                                             ^^^^^^^^
 //│ = 0

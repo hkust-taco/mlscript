@@ -113,18 +113,20 @@ sealed abstract class Block extends Product:
     case Label(lbl, _, bod, rst) => bod.definedVars ++ rst.definedVars
     case Scoped(syms, body) => body.definedVars ++ syms
   
-  lazy val size: Int = this match
-    case _: Return | _: Throw | _: End | _: Break | _: Continue | _: Unreachable => 1
+  lazy val size: Int = 1 + this.match
+    case Return(r: Result, _) => r.size
+    case Throw(r: Result) => r.size
+    case _: End | _: Break | _: Continue | _: Unreachable => 0
     case Begin(sub, rst) => sub.size + rst.size
-    case Assign(_, _, rst) => 1 + rst.size
-    case AssignField(_, _, _, rst) => 1 + rst.size
-    case AssignDynField(_, _, _, _, rst) => 1 + rst.size
-    case Match(_, arms, dflt, rst) =>
-      1 + arms.map(_._2.size).sum + dflt.map(_.size).getOrElse(0) + rst.size
-    case Define(_, rst) => 1 + rst.size
-    case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
-    case Label(_, _, bod, rst) => 1 + bod.size + rst.size
-    case Scoped(_, body) => body.size
+    case Assign(_, r, rst) => r.size + rst.size
+    case AssignField(p, _, r, rst) => p.size + r.size + rst.size
+    case AssignDynField(p, fld, _, r, rst) => p.size + fld.size + r.size + rst.size
+    case Match(p, arms, dflt, rst) =>
+      p.size + arms.iterator.map(_._2.size).sum + dflt.fold(0)(_.size) + rst.size
+    case Define(defn, rst) => defn.size + rst.size
+    case TryBlock(sub, fin, rst) => sub.size + fin.size + rst.size
+    case Label(_, _, bod, rst) => bod.size + rst.size
+    case Scoped(_, body) => body.size - 1
   
   
   // TODO: make patmat use unreach
@@ -608,10 +610,14 @@ sealed abstract class Defn:
       preCtor.freeVarsLLIR
         ++ ctor.freeVarsLLIR ++ methods.flatMap(_.freeVarsLLIR) ++ stat.iterator.flatMap(_.freeVarsLLIR)
         -- auxParams.flatMap(_.paramSyms)
+
+  lazy val size: Int = this match
+    case FunDefn(_, _, _, params, body) => 1 + body.size
+    case ValDefn(_, _, rhs) => 1
+    case ClsLikeDefn(_, _, _, _, _, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
+      1 + methods.map(_.size).sum + preCtor.size + ctor.size + stat.fold(0)(_.size)
   
 
-// NOTE: Setting isTailRec to false does not affect whether the function is optimized.
-// It only affects whether a warning is thrown if the function is not actually tailrec.
 final case class FunDefn(
     owner: Opt[InnerSymbol],
     sym: BlockMemberSymbol,
@@ -624,7 +630,8 @@ final case class FunDefn(
 ) extends Defn:
   val innerSym = N
   val asPath = Value.Ref(sym, S(dSym))
-  lazy val forceTailRec: Bool = annotations.contains(Annot.TailRec)
+  lazy val tailRec: Bool = annotations.contains(Annot.TailRec)
+  lazy val inline: Bool = annotations.contains(Annot.Inline)
   lazy val visibility: Visibility = annotations.collectFirst:
     case Annot.Modifier(Keyword.`private`) => Visibility.Private
     case Annot.Modifier(Keyword.`public`) => Visibility.Public
@@ -738,6 +745,7 @@ final case class ClsLikeBody(
   lazy val freeVars: Set[Local] =
     ctor.freeVars ++ methods.flatMap(_.freeVars)
   lazy val freeVarsLLIR: Set[Local] = ???
+  lazy val size = 1 + methods.map(_.size).sum + ctor.size
 
 /*
 object ClsLikeBody:
@@ -819,6 +827,8 @@ sealed abstract class Result extends AutoLocated:
     case _: Value => true
     case sel @ Select(q, n) =>
       q.isPure && sel.symbol.exists(_.isPure)
+    case c @ Call(fun, ass) if c.isKnownUnsaturatedCall =>
+      fun.isPure && ass.forall(_.forall(a => a.spread.isEmpty && a.value.isPure))
     case Call(Value.Ref(bs: BuiltinSymbol, _), ass) if bs.isPure =>
       ass.forall(_.forall(_.value.isPure))
     case Record(mut, args) => args.forall(_.value.isPure)
@@ -854,7 +864,7 @@ sealed abstract class Result extends AutoLocated:
   lazy val freeVars: Set[Local] = this match
     case Call(fun, argss) => fun.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
     case Instantiate(mut, cls, argss) => cls.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
-    case Select(qual, name) => qual.freeVars 
+    case Select(qual, name) => qual.freeVars
     case Lambda(params, body) => body.freeVars -- params.paramSyms
     case Tuple(mut, elems) => elems.flatMap(_.value.freeVars).toSet
     case Record(mut, args) =>
@@ -867,7 +877,7 @@ sealed abstract class Result extends AutoLocated:
   lazy val freeVarsLLIR: Set[Local] = this match
     case Call(fun, argss) => fun.freeVarsLLIR ++ argss.flatten.flatMap(_.value.freeVarsLLIR).toSet
     case Instantiate(mut, cls, argss) => cls.freeVarsLLIR ++ argss.flatten.flatMap(_.value.freeVarsLLIR).toSet
-    case Select(qual, name) => qual.freeVarsLLIR 
+    case Select(qual, name) => qual.freeVarsLLIR
     case Lambda(params, body) => body.freeVarsLLIR -- params.paramSyms
     case Tuple(mut, elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
     case Record(mut, args) =>
@@ -886,6 +896,20 @@ sealed abstract class Result extends AutoLocated:
     case Value.Lit(lit) => Set.empty
     case DynSelect(qual, fld, arrayIdx) => qual.freeVarsLLIR ++ fld.freeVarsLLIR
   
+  lazy val size: Int = this match
+    case Call(fun, argss) => fun.size + argss.iterator.flatten.map(_.value.size).sum
+    case Instantiate(mut, cls, argss) => cls.size + argss.iterator.flatten.map(_.value.size).sum
+    case Select(qual, name) => qual.size
+    case Lambda(params, body) => 1 + body.size
+    case Tuple(mut, elems) => elems.iterator.map(_.value.size).sum
+    case Record(mut, args) => args.iterator.map(arg => arg.idx.fold(0)(_.size) + arg.value.size).sum
+    case Value.Ref(l, disamb) => 0
+    case Value.This(sym) => 0
+    case Value.Lit(l: Tree.StrLit) => l.value.length / 4
+    case Value.Lit(lit) => 0
+    case DynSelect(qual, fld, arrayIdx) => qual.size + fld.size
+
+// * TODO: refine this very loose type
 // type Local = LocalSymbol
 type Local = Symbol
 
@@ -893,7 +917,12 @@ type Local = Symbol
  * regardless of whether the check for effect is inserted or not.
  * Note that the check for effect is inserted during HandlerLowering and setting this to true
  * after handler is lowered does not have any effect on the code generation. */
-case class Call(fun: Path, argss: NELs[Ls[Arg]])(val isMlsFun: Bool, val mayRaiseEffects: Bool, val explicitTailCall: Bool) extends Result
+case class Call(fun: Path, argss: NELs[Ls[Arg]])(val isMlsFun: Bool, val mayRaiseEffects: Bool, val explicitTailCall: Bool) extends Result:
+  lazy val isKnownUnsaturatedCall: Bool =
+    fun.targetSymbol match
+    case S(ts: TermSymbol) =>
+      ts.defn.exists(td => argss.lengthCompare(td.params.length) < 0)
+    case _ => false
 
 case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]]) extends Result
 

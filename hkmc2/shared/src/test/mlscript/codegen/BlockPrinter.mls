@@ -153,7 +153,7 @@ new C(123)
 //│ let C⁰;
 //│ define C⁰ as class C²(x) {
 //│   private val x⁷;
-//│   constructor C¹ { set x⁷ = x; end }
+//│   constructor C¹ { set C².this.x = x; end }
 //│ };
 //│ do C¹(123);
 //│ new C²(123)
@@ -175,11 +175,11 @@ A.x
 //│   val x⁸;
 //│   constructor {
 //│     define x⁸ as val x⁹ = 2;
-//│     set y⁰ = 3;
+//│     set A².this.y = 3;
 //│     define C³ as class C⁵(x) {
 //│       private val x¹⁰;
 //│       constructor C⁴ {
-//│         set x¹⁰ = x;
+//│         set C⁵.this.x = x;
 //│         end
 //│       }
 //│       method f⁴ = fun f⁵(x1) { return 2 }
@@ -212,7 +212,7 @@ class B(x) extends A with
 //│ define B⁰ as class B²(x) {
 //│   private val x¹³;
 //│   val y¹;
-//│   constructor B¹ { super⁰(); set x¹³ = x; define y¹ as val y² = 2; end }
+//│   constructor B¹ { super⁰(); set B².this.x = x; define y¹ as val y² = 2; end }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

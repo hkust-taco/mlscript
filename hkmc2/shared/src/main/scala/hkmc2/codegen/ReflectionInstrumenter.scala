@@ -287,6 +287,22 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
               given Context = ctx.clone() += x.asPath -> xStaged
               transformBlock(b): (z, ctx) =>
                 blockCtor("Assign", Ls(xSym, y, z), "assign")(k(_, ctx))
+    case assign @ AssignField(lhs, nme, r, rest) =>
+      // TODO: Improve. This is a kludge to allow private field initialization in modules;
+      //    Ideally, we should just properly reflect these as the private field assignments they are
+      assign.symbol match
+        case S(ts: TermSymbol) if ts.isPrivate =>
+          transformResult(r): y =>
+            transformSymbol(ts): xSym =>
+              blockCtor("ValueRef", Ls(xSym)): xStaged =>
+                (Assign(ts, xStaged, _)):
+                  given Context = ctx.clone() += Select(lhs, nme)(S(ts)) -> xStaged
+                  transformBlock(rest): (z, ctx) =>
+                    blockCtor("Assign", Ls(xSym, y, z), "assign")(k(_, ctx))
+        case _ =>
+          raise:
+            ErrorReport(msg"Field assignment is not supported in staged modules: ${nme.name}" -> N :: Nil)
+          End()
     case Define(cls: ClsLikeDefn, rest) =>
       assert(cls.companion.isEmpty, "nested module not supported")
       transformBlock(rest): p =>

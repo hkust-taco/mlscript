@@ -43,7 +43,7 @@ foo(1)(2)(3)
 //│ set baseCall = foo³(1)(2);
 //│ baseCall(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo², baseCall, lambda¹, lambda$⁰;
+//│ let foo², baseCall, lambda$⁰;
 //│ define lambda$⁰ as fun lambda$¹(x, y)(z) {
 //│   let inlinedVal, tmp;
 //│   set tmp = +⁰(x, y);

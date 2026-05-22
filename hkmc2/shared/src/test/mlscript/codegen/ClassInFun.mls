@@ -17,7 +17,7 @@ fun test(a) =
 //│       this.x = a;
 //│     }
 //│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "C"]; 
+//│     static [definitionMetadata] = ["class", "C"];
 //│   });
 //│   return globalThis.Object.freeze(new C1())
 //│ };
@@ -53,7 +53,7 @@ fun test(x) =
 //│       this.b = b;
 //│     }
 //│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Foo", ["a", "b"]]; 
+//│     static [definitionMetadata] = ["class", "Foo", ["a", "b"]];
 //│   });
 //│   tmp = x + 1;
 //│   return Foo2(x, tmp)

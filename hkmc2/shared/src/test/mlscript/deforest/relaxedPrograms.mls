@@ -15,7 +15,7 @@ class Store(n) with
 val store = Store(1)
 store.foo(AA(4))
 //│ deforest > >>> fusing >>>
-//│ deforest > AA⁰(n⁰) ->
+//│ deforest > AA⁰(Store⁰.this.n⁰) ->
 //│ deforest > 	match: scrut⁰
 //│ deforest > 	fields: scrut⁰.x⁰
 //│ deforest > <<< fusing <<<
@@ -38,7 +38,7 @@ class Store(n) with
 val store = Store(1)
 store.foo(AA(4))
 //│ deforest > >>> fusing >>>
-//│ deforest > AA¹(n¹) ->
+//│ deforest > AA¹(Store¹.this.n¹) ->
 //│ deforest > 	match: scrut¹
 //│ deforest > 	fields: scrut¹.x¹
 //│ deforest > <<< fusing <<<
@@ -136,8 +136,7 @@ fun loopSibling() =
 //│ /!!!\ Uncaught error: scala.NotImplementedError: unsupported `continue` instruction during rewriting (of class String)
 
 
-// TODO: branch body capturing mutable vars
-:fixme
+// Branch body capturing mutable vars
 :deforest
 :expect 5
 class C(n) with
@@ -154,13 +153,11 @@ c.get() + c.get()
 //│ deforest > 	match: scrut⁷
 //│ deforest > 	fields: scrut⁷.x¹
 //│ deforest > <<< fusing <<<
-//│ ═══[RUNTIME ERROR] Expected: '5', got: '4'
-//│ = 4
+//│ = 5
 //│ c = C(_)
 
 
-// TODO: private members aren't visible outside
-:fixme
+// Private members are now visible outside the class
 :deforest
 module M with
   let _private = 3
@@ -176,9 +173,7 @@ M.f()
 //│ deforest > 	match: scrut⁸
 //│ deforest > 	fields: scrut⁸.x¹
 //│ deforest > <<< fusing <<<
-//│ > let M1, f_7$scrut_AA, f_6$f, f_6$scrut_AA, inlinedVal1, scrut3;try { f_7$scrut_AA = function f_7$scrut_AA(AA_x) {   runtime.checkArgs("f_7$scrut_AA", 1, true, arguments.length);   return (fv__private) => {     return AA_x + fv__private   } }; f_6$scrut_AA = function f_6$scrut_AA(AA_x) {   runtime.checkArgs("f_6$scrut_AA", 1, true, arguments.length);   return (fv__private) => {     return AA_x + fv__private   } }; globalThis.Object.freeze(class M {   static {     M1 = this   }   static #_private;   static {     M.#_private = 3;   }   static f() {     runtime.checkArgs("f", 0, true, arguments.length);     let scrut4;     scrut4 = runtime.checkCall(f_7$scrut_AA(1));     return runtime.checkCall(scrut4(M.#_private))   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "M"];  }); scrut3 = runtime.checkCall(f_6$scrut_AA(1)); inlinedVal1 = runtime.checkCall(scrut3(M.#_private)); block$res7 = inlinedVal1; undefined; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Private field '#_private' must be declared in an enclosing class
+//│ = 4
 
 
 
@@ -201,3 +196,5 @@ M.MM.f()
 //│ deforest > 	fields: scrut⁹.x¹
 //│ deforest > <<< fusing <<<
 //│ ═══[RUNTIME ERROR] ReferenceError: MM is not defined
+
+

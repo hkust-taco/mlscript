@@ -98,27 +98,42 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
   enum LocalPath:
     case Sym(l: Local)
     case BmsRef(l: BlockMemberSymbol, d: DefinitionSymbol[?])
-    case InCapture(capturePath: Path, field: TermSymbol)
+    case Field(lhs: Path, field: TermSymbol)
     
     def read(using ctx: LifterCtxNew): Path = this match
       case Sym(l) => l.asPath
       case BmsRef(l, d) => Value.Ref(l, S(d))
-      case InCapture(path, field) => Select(path, field.id)(S(field))
+      case Field(path, field) => Select(path, field.id)(S(field))
       
     def asArg(using ctx: LifterCtxNew) = read.asArg
     
     def assign(value: Result, rest: Block)(using ctx: LifterCtxNew): Block = this match
       case Sym(l) => Assign(l, value, rest)
       case BmsRef(l, d) => lastWords("Tried to assign to a BlockMemberSymbol")
-      case InCapture(path, field) => AssignField(path, field.id, value, rest)(S(field))
+      case Field(path, field) => AssignField(path, field.id, value, rest)(S(field))
+  object LocalPath:
+    /** Use when the lifter deliberately stores a captured value, passed local,
+      * or neighbouring lifted object in a private field of the class it is
+      * currently rewriting. The map still has to be keyed by the original
+      * local symbol because the lifted body mentions that original symbol;
+      * the value says that reads and writes are now field selections on self.
+      * Source private members should already have been lowered to selections,
+      * so this is not a recovery path for arbitrary private `Value.Ref`s.
+      */
+    def privateSelfField(field: TermSymbol): LocalPath =
+      field.owner match
+      case S(owner) => Field(Value.Ref(owner, N), field)
+      case N => lastWords(s"tried to build a private field path for ownerless symbol ${field.nme}")
 
   enum DefnRef:
     case Sym(l: Local)
+    case PathRef(path: Path)
     case InScope(l: BlockMemberSymbol, d: DefinitionSymbol[?])
     case Field(isym: InnerSymbol, l: BlockMemberSymbol, d: DefinitionSymbol[?])
   
     def read(using ctx: LifterCtxNew): Path = this match
       case Sym(l) => l.asPath
+      case PathRef(path) => path
       case InScope(l, d) => Value.Ref(l, S(d))
       case Field(isym, l, d) => Select(ctx.symbolsMap(isym).read, Tree.Ident(l.nme))(S(d))
     
@@ -480,7 +495,6 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           case Some(path) => applyResult(rhs): rhs2 =>
             path.assign(rhs2, applySubBlock(rest))
           case _ => super.applyBlock(rewritten)
-        
         // rewrite object definitions, assigning to the saved symbol
         case Define(d @ ClsLikeDefn(k = syntax.Obj), rest: Block) => ctx.liftedScopes.get(d.isym) match
           case Some(l: LiftedClass) if l.obj.isObj =>
@@ -677,7 +691,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val fromCap = thisCapturedLocals
         .map: s =>
           val tSym = captureMap(s)
-          s -> LocalPath.InCapture(capturePath, tSym)
+          s -> LocalPath.Field(capturePath, tSym)
         .toMap
       // Inner symbols of nested modules and objects
       val isyms = node.children
@@ -790,7 +804,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
               val fromScope = capturesOrigin(s)
               val capSym = capSymsMap(fromScope)
               val tSym = ctx.rewrittenScopes(fromScope).captureMap(s)
-              s -> LocalPath.InCapture(capSym, tSym)
+              s -> LocalPath.Field(capSym, tSym)
         .toMap
       fromParents ++ pathsFromThisObj
     
@@ -840,7 +854,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         s -> TermSymbol(syntax.ImmutVal, S(sym), Tree.Ident(s.nme + "$"))
       .toMap
     override lazy val liftedObjsMap: Map[InnerSymbol, LocalPath] = liftedObjsSyms.map:
-      case k -> v => k -> v.asLocalPath
+      case k -> v => k -> LocalPath.privateSelfField(v)
     protected def appendCaptureField(privFields: List[TermSymbol]) =
       if hasCapture then captureSym :: privFields else privFields
     protected def rewriteMethods(node: ScopeNode, methods: List[FunDefn])(using ctx: LifterCtxNew) =
@@ -985,7 +999,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         else fun.annotations)
       LifterResult(newDefn, rewriter.extraDefns.toList)
     
-    // Definition with the auxiliary parameters merged into the second parameter list.
+    // Definition with the auxiliary parameters as a new first parameter list.
     private def mkAuxDefn: FunDefn =
       val newPList = PlainParamList(dupParams(auxParams))
       val (newPlists, syms, restSym) = fun.params match
@@ -1012,7 +1026,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         auxDsym,
         newPlists,
         bod
-      )(N, fun.annotations)
+      )(N, Annot.Inline :: fun.annotations)
     
     private val aux = Lazy[Defn](mkAuxDefn)
     
@@ -1082,9 +1096,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       ::: capturesOrdered.map(capSymsMap_(_).ts)
       ::: passedSymsOrdered.map(passedSymsMap_(_).ts)
     
-    override protected val passedSymsMap = passedSymsMap_.view.mapValues(_.ts.asLocalPath).toMap
-    override protected val capSymsMap = capSymsMap_.view.mapValues(_.ts.asPath).toMap
-    override protected val passedDefnsMap = defnSymsMap_.view.mapValues(_.ts.asDefnRef).toMap
+    override protected val passedSymsMap = passedSymsMap_.view.mapValues(x => LocalPath.privateSelfField(x.ts)).toMap
+    override protected val capSymsMap = capSymsMap_.view.mapValues(x => LocalPath.privateSelfField(x.ts).read).toMap
+    override protected val passedDefnsMap = defnSymsMap_.view.mapValues(x => DefnRef.PathRef(LocalPath.privateSelfField(x.ts).read)).toMap
     
     val auxParams: List[Param] =
       (reqDefnsOrdered.map(x => defnSymsMap_(x).vs)
@@ -1195,15 +1209,15 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val ctorWithPassed = passedSymsOrdered.foldRight(ctorWithCap):
         case (sym, acc) =>
           val (vs, ts) = passedSymsMap_(sym)
-          Assign(ts, vs.asPath, acc)
+          LocalPath.privateSelfField(ts).assign(vs.asPath, acc)
       val ctorWithCaps = capturesOrdered.foldRight(ctorWithPassed):
         case (sym, acc) =>
           val (vs, ts) = capSymsMap_(sym)
-          Assign(ts, vs.asPath, acc)
+          LocalPath.privateSelfField(ts).assign(vs.asPath, acc)
       val ctorWithDefns = reqDefnsOrdered.foldRight(ctorWithCaps):
         case (sym, acc) =>
           val (vs, ts) = defnSymsMap_(sym)
-          Assign(ts, vs.asPath, acc)
+          LocalPath.privateSelfField(ts).assign(vs.asPath, acc)
       
       val newAuxList = 
         if isTrivial then cls.auxParams

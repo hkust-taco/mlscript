@@ -69,7 +69,7 @@ data class Baz(z) extends Bar(z * 1) with
 //│     return this.bar * 2;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Baz", ["z"]]; 
+//│   static [definitionMetadata] = ["class", "Baz", ["z"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -134,7 +134,7 @@ class B extends M.A
 //│     super();
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "B"]; 
+//│   static [definitionMetadata] = ["class", "B"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
