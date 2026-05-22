@@ -185,10 +185,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Value.SimpleRef(l: semantics.TermSymbol) =>
       l.owner match
       case S(owner) =>
-        // TODO(Derppening): Use `isPrivate` once #492 is merged
-        val isPrivateField =
-          (l.k is syntax.LetBind) && !owner.isInstanceOf[semantics.TopLevelSymbol]
-        if isPrivateField then
+        if l.isPrivate then
           // * For true-module-owned private fields (declared `static #x`), use the
           // * owner's lexical name so the access stays `this`-independent (e.g.,
           // * under method extraction via `val X = Owner.method`).
