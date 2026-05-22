@@ -795,7 +795,7 @@ class BlockSimplifier
         case false =>
           vars.minByOption(_.symbol.uid) match
           case N => k(v)
-          case S(v2) =>
+          case S(v2) => 
             registerChange(s"${loc.showDbg} ~> ${v2.showDbg} (via ${vars.map(_.showDbg).mkString(", ")})")
             k(v2)
         

@@ -101,8 +101,9 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
                 case _: ScopedObject.Class | _: ScopedObject.ClassCtor | _: ScopedObject.Companion => accessed.refdDefns.add(node.obj.toInfo)
                 case _ => ()
               case _ => super.applyPath(p)
-
-        case r: Value.RefLike => accessed.accessed.add(r.symbol)
+        
+        case r: Value.RefLike =>
+          accessed.accessed.add(r.symbol)
         case _ => super.applyPath(p)
     accessed.toIMut
     

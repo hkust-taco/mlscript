@@ -326,7 +326,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     
     @tailrec
     private def unapplyImpl(
-      b: Block,
+      b: Block, 
       acc: List[(BigInt, Block)],
       scrut: Opt[Value.SimpleRef],
       curVal: Opt[BigInt]

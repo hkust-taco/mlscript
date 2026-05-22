@@ -79,7 +79,7 @@ class TailRecOpt(using State, TL, Raise):
         case Some(r: TermSymbol) => S(r)
         case _ => N
       case _ => N
-
+  
   object TailCallShape:
     def unapply(b: Block): Opt[(TermSymbol, Call)] = b match
       case Return(c @ CallToFun(r), _) => S((r, c))
