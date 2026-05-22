@@ -514,7 +514,7 @@ object HandleBlock:
         handler.params,
         Scoped(Set(sym, rSym), Define(
           fDef,
-          Return(suspend(cls.asPath, Value.MemberRef(sym, fDef.dSym)), false))))(N, annotations = Nil)
+          Return(suspend(Value.This(cls), Value.MemberRef(sym, fDef.dSym)), false))))(N, annotations = Nil)
 
     val clsDefn = ClsLikeDefn(
       N, // no owner

@@ -444,7 +444,7 @@ class TailRecOpt(using State, TL, Raise):
                             Value.SimpleRef(State.runtimeSymbol)
                               .sel(Tree.Ident("Tuple"), State.tupleSymbol)
                               .sel(Tree.Ident("slice"), State.tupleSliceSymbol),
-                            (tupleSym.asPath.asArg
+                            (Value.SimpleRef(tupleSym).asArg
                               :: Value.Lit(Tree.IntLit(paramList.length)).asArg
                               :: Value.Lit(Tree.IntLit(0)).asArg
                               :: Nil) ne_:: Nil

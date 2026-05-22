@@ -281,7 +281,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     // Closure symbols that point to an initialized closure in this scope
     var activeClosures: Set[Local] = Set.empty
     // Map from block member symbols to initialized closures
-    val closureMap: MutMap[BlockMemberSymbol, Local] = MutMap.empty
+    val closureMap: MutMap[BlockMemberSymbol, TempSymbol] = MutMap.empty
     val extraLocals: MutSet[Local] = MutSet.empty
     
     def rewrite(b: Block) =
@@ -372,9 +372,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                   case Some(value) =>
                     syms.addOne(FunSyms(l, d) -> value)
                     value
-                newSym match
-                  case newSym: TempSymbol => k(Value.SimpleRef(newSym))
-                  case _ => k(newSym.asPath)
+                k(Value.SimpleRef(newSym))
             
             // Naked reference to a parameterized class constructor (used as a first-class function).
             // Replace with a partially applied curried C$ wrapper.
@@ -391,9 +389,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                   case Some(value) =>
                     syms.addOne(FunSyms(l, d) -> value)
                     value
-                newSym match
-                  case newSym: TempSymbol => k(Value.SimpleRef(newSym))
-                  case _ => k(newSym.asPath)
+                k(Value.SimpleRef(newSym))
               case _ =>
                 resolveDefnRef(l, d, ctor) match
                 case Some(value) => k(value)
