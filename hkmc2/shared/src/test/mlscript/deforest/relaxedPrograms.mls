@@ -19,37 +19,8 @@ store.foo(AA(4))
 //│ deforest > 	match: scrut⁰
 //│ deforest > 	fields: scrut⁰.x⁰
 //│ deforest > <<< fusing <<<
-//│ FAILURE: Unexpected internal error
-//│ FAILURE LOCATION: thisError (Scope.scala:51)
-//│ FAILURE INFO: Scope:
-//│   parentOrCfg = Left of Cfg:
-//│     escapeChars = true
-//│     useSuperscripts = false
-//│     includeZero = false
-//│     defaultName = "tmp"
-//│   curThis = S of S of globalThis:globalThis⁰
-//│   bindings = HashMap(member:AA -> AA1, member:Store -> Store1, member:store -> store, class:AA -> AA, class:Store -> Store, tmp:tmp -> tmp, tmp:tmp -> tmp1, tmp:runtime -> runtime, tmp:definitionMetadata -> definitionMetadata, member:Predef -> Predef, member:$scrut_AA -> $scrut_AA, tmp:prettyPrint -> prettyPrint, tmp:Term -> Term, tmp:Block -> Block, tmp:option -> option, tmp:block$res -> block$res1, tmp:block$res -> block$res)
-//│ ═══[INTERNAL ERROR] `this` not in scope: class:Store
-//│ > let AA1, Store1, store, tmp, tmp1, $scrut_AA;try { $scrut_AA = function $scrut_AA(AA_x) {   runtime.checkArgs("$scrut_AA", 1, true, arguments.length);   return () => {     return AA_x + ‹MISSING_THIS›.nn   } }; AA1 = function AA(x) {   return globalThis.Object.freeze(new AA.class(x)); }; globalThis.Object.freeze(class AA {   static {     AA1.class = this   }   constructor(x) {     this.x = x;   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "AA", ["x"]];  }); Store1 = function Store(n) {   return globalThis.Object.freeze(new Store.class(n)); }; globalThis.Object.freeze(class Store {   static {     Store1.class = this   }   constructor(n) {     this.#n = n;     this.nn = this.#n;   }   #n;   get get$__checkNotMethod() { runtime.deboundMethod("get", "Store"); }    get foo$__checkNotMethod() { runtime.deboundMethod("foo", "Store"); }   get() {     runtime.checkArgs("get", 0, true, arguments.length);     let scrut, AA_x;     AA_x = this.#n;     scrut = runtime.checkCall($scrut_AA(AA_x));     return runtime.checkCall(scrut())   }    foo(x) {     runtime.checkArgs("foo", 1, true, arguments.length);     let arg$AA$0$;     if (x instanceof AA1.class) {       arg$AA$0$ = x.x;       return arg$AA$0$ + this.nn     }     throw globalThis.Object.freeze(new globalThis.Error("match error"));   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Store", [null]];  }); tmp = runtime.checkCall(Store1(1)); store = tmp; tmp1 = runtime.checkCall(AA1(4)); block$res1 = runtime.safeCall(store.foo(tmp1)); undefined; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:254)
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:297)
-//│ ═══[RUNTIME ERROR] Expected: '5', got: 'undefined'
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:258)
-//│ ═══[RUNTIME ERROR] ReferenceError: store is not defined
-//│     at REPL12:1:42
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:593:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:922:10)
-//│     at REPLServer.emit (node:events:518:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
+//│ = 5
+//│ store = Store(_)
 
 
 
