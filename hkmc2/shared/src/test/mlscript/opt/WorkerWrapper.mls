@@ -15,15 +15,28 @@ fun foo(x)(y) =
   x + y + x + y
 foo(1)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰;
+//│ let foo⁰, foo$worker⁰, inlinedVal;
 //│ define foo⁰ as fun foo¹(x)(y) {
+//│   return foo$worker¹(x, y)
+//│ };
+//│ define foo$worker⁰ as fun foo$worker¹(x, y) {
 //│   let tmp, tmp1;
 //│   set tmp = +⁰(x, y);
 //│   set tmp1 = +⁰(tmp, x);
 //│   return +⁰(tmp1, y)
 //│ };
-//│ foo¹(1)(2)
+//│ set inlinedVal = foo$worker¹(1, 2);
+//│ inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 
+
+// Bodies below the alternative inlining threshold should not get a worker.
+:soir
+fun tiny(x)(y) = y
+tiny(1)(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tiny⁰; define tiny⁰ as fun tiny¹(x)(y) { return y }; 2
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
 

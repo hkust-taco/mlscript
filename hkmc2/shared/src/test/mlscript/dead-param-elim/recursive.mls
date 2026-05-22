@@ -158,19 +158,27 @@ ping(5)(99)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let ping⁴, pong⁴;
+//│ let ping⁴, pong⁴, pong$worker⁰, ping$worker⁰;
 //│ define ping⁴ as fun ping⁵(n)(unused) {
+//│   return ping$worker¹(n, unused)
+//│ };
+//│ define ping$worker⁰ as fun ping$worker¹(n, unused) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
 //│     true =>
 //│       return 0
 //│     else
+//│       let inlinedVal;
 //│       set tmp = -⁰(n, 1);
-//│       return pong⁵(tmp)(unused)
+//│       set inlinedVal = pong$worker¹(tmp, unused);
+//│       return inlinedVal
 //│   end
 //│ };
 //│ define pong⁴ as fun pong⁵(n)(unused) {
+//│   return pong$worker¹(n, unused)
+//│ };
+//│ define pong$worker⁰ as fun pong$worker¹(n, unused) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
