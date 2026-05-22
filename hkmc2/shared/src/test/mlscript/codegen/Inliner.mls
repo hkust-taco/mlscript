@@ -201,23 +201,29 @@ f()
 open annotations
 
 // f1 does not inline into f, despite being small enough
+// The threshold for inlining this is separate and stricter than the usual limit
 // The call to f is inlined
 :sjs
 :inlineThreshold 100
-fun f1(a, b, c) = a + b + c
+fun f1(a, b, c) = (a + b + c + 1) * 2
 @inline fun f(a)(b)(c) = f1(a, b, c)
 f(1)(2)(3)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f10, f11;
+//│ let f10, f11, inlinedVal1;
 //│ f11 = function f1(a, b, c3) {
-//│   let tmp8;
+//│   let tmp8, tmp9, tmp10;
 //│   tmp8 = a + b;
-//│   return tmp8 + c3
+//│   tmp9 = tmp8 + c3;
+//│   tmp10 = tmp9 + 1;
+//│   return tmp10 * 2
 //│ };
-//│ f10 = function f(a) { return (b) => { return (c3) => { return f11(a, b, c3) } } };
-//│ 6
+//│ f10 = function f(a) {
+//│   return (b) => { return (c3) => { return f11(a, b, c3) } }
+//│ };
+//│ inlinedVal1 = 14;
+//│ inlinedVal1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 6
+//│ = 14
 
 // lifter wrapper uses inline annotation under the hood
 // currently no inlining happens because multi-call isn't recognized
@@ -230,14 +236,12 @@ fun foo(x)(y) =
   lam
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰, lam⁰, lam$⁰, tmp, lam$here;
+//│ let foo⁰, lam$⁰, tmp, lam$here;
 //│ define lam$⁰ as fun lam$¹(x, y)(z) {
-//│   return lam¹(x, y, z)
-//│ };
-//│ define lam⁰ as fun lam¹(x, y, z) {
-//│   let tmp1;
+//│   let inlinedVal, tmp1;
 //│   set tmp1 = +⁰(x, y);
-//│   return +⁰(tmp1, z)
+//│   set inlinedVal = +⁰(tmp1, z);
+//│   return inlinedVal
 //│ };
 //│ define foo⁰ as fun foo¹(x)(y) {
 //│   let tmp1, lam$here1;
@@ -287,12 +291,12 @@ module A with
 //│   }
 //│   static f() {
 //│     return 1
-//│   } 
+//│   }
 //│   static g() {
 //│     return A1.f()
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
+//│   static [definitionMetadata] = ["class", "A"];
 //│ });
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let A⁰;

@@ -241,7 +241,7 @@ class Test(a) with
 //│     end
 //│   }
 //│ };
-//│ define Test⁰ as class Test¹(a) { private val a⁰; method f⁰ = fun f¹() { return pong⁷(3) } };
+//│ define Test⁰ as class Test¹(a) { method f⁰ = fun f¹() { return pong⁷(3) } };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

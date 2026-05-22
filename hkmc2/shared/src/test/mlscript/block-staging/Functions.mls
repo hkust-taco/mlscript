@@ -238,7 +238,7 @@ staged module A with
   let x = C(1)
   fun f() = set x.a = 0
   fun g() = {1 : 2}
-//│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.AssignField
+//│ ═══[COMPILATION ERROR] Field assignment is not supported in staged modules: a
 //│ ╔══[COMPILATION ERROR] Other Results not supported in staged module: class hkmc2.codegen.Record
 //│ ║  l.240: 	  fun g() = {1 : 2}
 //│ ╙──       	                 ^

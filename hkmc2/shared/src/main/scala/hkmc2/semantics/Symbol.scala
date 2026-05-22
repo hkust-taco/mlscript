@@ -326,6 +326,7 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   override def prefix: Str = s"term:${owner.map(o => s"${o.nme}/").getOrElse("")}"
   override def showPrefix(using Scope, ShowCfg, Raise): Str =
     "term:" + owner.map(_.showName + "/").getOrElse("")
+  def isPrivate: Bool = (k is LetBind) && owner.exists(!_.isInstanceOf[TopLevelSymbol])
   
   def subst(using sub: SymbolSubst): TermSymbol = sub.mapTermSym(this)
 

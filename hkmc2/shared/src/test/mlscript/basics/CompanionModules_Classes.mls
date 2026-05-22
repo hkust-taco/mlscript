@@ -121,7 +121,7 @@ module Foo with
 //│     return state;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", []]; 
+//│   static [definitionMetadata] = ["class", "Foo", []];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

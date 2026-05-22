@@ -28,7 +28,7 @@ class A(val x)(val y)
 //│     }
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A", ["x"]]; 
+//│   static [definitionMetadata] = ["class", "A", ["x"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

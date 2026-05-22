@@ -68,21 +68,23 @@ if s is
 //│   throw new globalThis⁰.Error⁰("match error")
 //│ tmp
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let arg$Some$0$;
-//│ match s⁰
-//│   Some⁰ =>
-//│     set arg$Some$0$ = s⁰.value⁰;
-//│     match arg$Some$0$
-//│       1 =>
-//│         0
-//│       else
-//│         throw new globalThis⁰.Error⁰("match error")
-//│     end
-//│   None⁰ =>
-//│     1
-//│   else
-//│     throw new globalThis⁰.Error⁰("match error")
-//│ end
+//│ let arg$Some$0$, tmp;
+//│ block split_root$:
+//│   match s⁰
+//│     Some⁰ =>
+//│       set arg$Some$0$ = s⁰.value⁰;
+//│       match arg$Some$0$
+//│         1 =>
+//│           set tmp = 0;
+//│           break split_root$
+//│         else
+//│           end
+//│       end
+//│     None⁰ =>
+//│       set tmp = 1;
+//│       break split_root$
+//│   throw new globalThis⁰.Error⁰("match error")
+//│ tmp
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: match error
 
