@@ -697,7 +697,7 @@ class BlockSimplifier
         
         val rs = assignedResults(loc)
         // log(s"Ref ${loc.showDbg} ${rs} ${localVars(loc)} ${capturedVars(loc)}")
-
+        
         def analyzeAssignments(asst: AssignInfo): Unit =
           asst match
           case Unknown | Uninitialized => ()
@@ -707,10 +707,10 @@ class BlockSimplifier
           case Assigned(ass, _) =>
             // * [Future: dead assignment removal]
             // liveAssignments.put(ass, ())
-
+        
         var litValue: Bool | Value = true
         var emptyHanded = false
-
+        
         def analyzeValues(asst: AssignInfo): Set[Value.RefLike] =
           if emptyHanded && litValue === false then
             analyzeAssignments(asst)
@@ -723,7 +723,7 @@ class BlockSimplifier
             case Assigned(ass, opt) =>
               // * [Future: dead assignment removal]
               // liveAssignments.put(ass, ())
-
+              
               if litValue =/= false then
                 ass.rhs match
                 case v @ Value.Lit(lit) =>
@@ -744,14 +744,14 @@ class BlockSimplifier
             case Merge(a1, a2) =>
               // * [Future: dead assignment removal]
               // FIXME: this currently short-circuits, which will miss some live assignments...
-
+              
               val l = analyzeValues(a1)
               if l.isEmpty && litValue === false then
                 emptyHanded = true
                 analyzeAssignments(a2)
                 Set.empty
               else l & analyzeValues(a2)
-
+        
         val vars = analyzeValues(rs)
         
         // log(s"Analysis: litValue: ${litValue}, unchanged vars: ${vars}")
@@ -769,7 +769,7 @@ class BlockSimplifier
           case S(v2) =>
             registerChange(s"${loc.showDbg} ~> ${v2.showDbg} (via ${vars.map(_.showDbg).mkString(", ")})")
             k(v2)
-
+        
       case _ => super.applyValue(v)(k)
     
     override def applyResult(r: Result)(k: Result => Block): Block =

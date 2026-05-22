@@ -499,7 +499,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       case r: Value.RefLike => ctx.symbolsMap.get(r.symbol) match
         case Some(value) => k(value.read)
         case _ => super.applyPath(p)(k)
-
+      
       case _ => super.applyPath(p)(k)
   
   case class LifterResult[+T](liftedDefn: T, extraDefns: List[Lazy[Defn] | Defn])

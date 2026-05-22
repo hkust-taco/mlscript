@@ -933,7 +933,7 @@ enum Value extends Path with ProductWithExtraInfo:
   case MemberRef(bms: BlockMemberSymbol, disamb: DefinitionSymbol[?])
   case This(sym: InnerSymbol)
   case Lit(lit: Literal)
-
+  
   override def extraInfo(using DebugPrinter): Str = this match
     case MemberRef(bms, disamb) => s"disamb=${disamb.showAsPlain}"
     case _ => ""
