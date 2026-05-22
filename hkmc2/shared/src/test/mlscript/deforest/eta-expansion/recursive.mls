@@ -33,8 +33,11 @@ sum(enum(5), 0)
 //│ eta-expansion > enum_13$enum: [1, 6]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let sum⁰, enum⁰, tmp, enum_13$enum⁰, sum_15$ls_Cons⁰, sum_15$ls_Nil⁰, inlinedVal;
+//│ let sum⁰, enum⁰, tmp, enum_13$enum⁰, sum_15$ls_Cons⁰, sum_15$ls_Nil⁰, sum_15$ls_Cons$worker⁰, enum_13$enum$worker⁰, inlinedVal;
 //│ define enum_13$enum⁰ as fun enum_13$enum¹(x)(eta$0$0, eta$0$5) {
+//│   return enum_13$enum$worker¹(x, eta$0$0, eta$0$5)
+//│ };
+//│ define enum_13$enum$worker⁰ as fun enum_13$enum$worker¹(x, eta$0$0, eta$0$5) {
 //│   let scrut, tmp1, tmp2;
 //│   set scrut = <⁰(x, 0);
 //│   match scrut
@@ -112,31 +115,39 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ eta-expansion > flatten_30$flatten: [1, 5]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let flatten⁰, len⁰, append⁰, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, flatten_30$flatten⁰, len_32$ls_Nil⁰, flatten_30_append_18$append⁰, len_32$ls_Cons⁰, inlinedVal;
-//│ define flatten_30$flatten⁰ as fun flatten_30$flatten¹(xss)(eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4) {
+//│ let flatten⁰, len⁰, append⁰, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, flatten_30$flatten⁰, len_32$ls_Nil⁰, flatten_30_append_18$append⁰, len_32$ls_Cons⁰, len_32$ls_Cons$worker⁰, flatten_30_append_18$append$worker⁰, flatten_30$flatten$worker⁰, inlinedVal;
+//│ define flatten_30$flatten⁰ as fun flatten_30$flatten¹(xss)() {
+//│   return flatten_30$flatten$worker¹(xss)
+//│ };
+//│ define flatten_30$flatten$worker⁰ as fun flatten_30$flatten$worker¹(xss) {
 //│   let arg$Cons$0$, arg$Cons$1$, tmp7;
 //│   match xss
 //│     Nil⁰ =>
 //│       return 0
 //│     Cons¹ =>
+//│       let inlinedVal1;
 //│       set arg$Cons$0$ = xss.h⁰;
 //│       set arg$Cons$1$ = xss.t⁰;
 //│       set tmp7 = flatten_30$flatten¹(arg$Cons$1$);
-//│       return flatten_30_append_18$append¹(arg$Cons$0$, tmp7)(eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4)
+//│       set inlinedVal1 = flatten_30_append_18$append$worker¹(arg$Cons$0$, tmp7);
+//│       return inlinedVal1
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ define flatten_30_append_18$append⁰ as fun flatten_30_append_18$append¹(xs, ys)(eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4) {
+//│ define flatten_30_append_18$append⁰ as fun flatten_30_append_18$append¹(xs, ys)() {
+//│   return flatten_30_append_18$append$worker¹(xs, ys)
+//│ };
+//│ define flatten_30_append_18$append$worker⁰ as fun flatten_30_append_18$append$worker¹(xs, ys) {
 //│   let arg$Cons$1$, tmp7;
 //│   match xs
 //│     Nil⁰ =>
-//│       return ys(eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4)
+//│       return ys()
 //│     Cons¹ =>
 //│       let inlinedVal1, inlinedVal2;
 //│       set arg$Cons$1$ = xs.t⁰;
 //│       set tmp7 = flatten_30_append_18$append¹(arg$Cons$1$, ys);
-//│       set inlinedVal2 = tmp7(undefined, undefined, undefined, undefined, undefined);
+//│       set inlinedVal2 = tmp7();
 //│       set inlinedVal1 = +⁰(1, inlinedVal2);
 //│       return inlinedVal1
 //│     else
@@ -191,7 +202,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ set tmp4 = Cons⁰(tmp1, tmp3);
 //│ set tmp5 = Predef⁰.id⁰(tmp4);
 //│ set tmp6 = flatten_30$flatten¹(tmp5);
-//│ set inlinedVal = tmp6(undefined, undefined, undefined, undefined, undefined);
+//│ set inlinedVal = tmp6();
 //│ inlinedVal
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3

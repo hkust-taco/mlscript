@@ -930,9 +930,11 @@ class BlockSimplifier
         isMethod: Bool,
         private[InlinerAnalyzer] var useCount: Int,
         private[InlinerAnalyzer] var disallowElimination: Bool,
-        private[InlinerAnalyzer] var isLoopBreaker: Bool,
+        private[InlinerAnalyzer] var _isLoopBreaker: Bool,
       ):
         def isPrivate = !symbolsToPreserve.contains(defn.sym)
+        
+        inline def isLoopBreaker = _isLoopBreaker
         
         // Whether this function can be inlined without causing any code duplication,
         // i.e. the original definition can be removed and there is only one usage.
@@ -941,7 +943,6 @@ class BlockSimplifier
           // false
         
         def shouldBeInlined(newBlk: Block, threshold: Int): Bool =
-          if isLoopBreaker then return false
           // method requires the capturing of `this`, which is not supported currently.
           if isMethod then return false
           // If the definition is marked with inline, we should inline it regardless of the size of the body.
@@ -1027,19 +1028,24 @@ class BlockSimplifier
                   matchAllArgs(call.argss, map(sym).defn.params).isEmpty
                 caller.foreach: caller =>
                   edges.append((caller, sym))
-          
+
+          def pickLoopBreaker(sccComp: Ls[TermSymbol]): TermSymbol =
+            sccComp.minBy: sym =>
+              (if map(sym).defn.inline then 1 else 0, sym.uid)
+
           @tailrec
           def assignLoopBreakers(): Unit =
             val sccs = partitionScc(edges.filterNot((from, to) => map(to).isLoopBreaker), map.keys)
             if sccs.forall(_.sizeIs == 1) then return
             sccs.foreach: sccComp =>
               if sccComp.sizeIs > 1 then
-                // TODO: Score computation
-                map(sccComp.minBy(_.uid)).isLoopBreaker = true
+                // Prefer breaking cycles at non-inline definitions so tiny wrappers
+                // can still disappear while their workers stop recursive expansion.
+                map(pickLoopBreaker(sccComp))._isLoopBreaker = true
             assignLoopBreakers()
           edges.foreach: (from, to) =>
             if from === to then
-              map(from).isLoopBreaker = true
+              map(from)._isLoopBreaker = true
           assignLoopBreakers()
           map
       
@@ -1119,6 +1125,7 @@ class BlockSimplifier
         
         override def applyResult(r: Result)(k: Result => Block): Block = r match
           case c @ Call(TermSymbolPath(ts), argss) if m.contains(ts) && argss.nonEmpty =>
+            if m(ts).isLoopBreaker then return super.applyResult(r)(k)
             newFunctionBody.get(ts)
             .getOrElse:
               newFunctionBody(ts) = N
