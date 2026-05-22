@@ -113,20 +113,20 @@ sealed abstract class Block extends Product:
     case Label(lbl, _, bod, rst) => bod.definedVars ++ rst.definedVars
     case Scoped(syms, body) => body.definedVars ++ syms
   
-  lazy val size: Int = this match
-    case Return(r: Result, _) => 1 + r.size
-    case Throw(r: Result) => 1 + r.size
-    case _: End | _: Break | _: Continue | _: Unreachable => 1
+  lazy val size: Int = 1 + this.match
+    case Return(r: Result, _) => r.size
+    case Throw(r: Result) => r.size
+    case _: End | _: Break | _: Continue | _: Unreachable => 0
     case Begin(sub, rst) => sub.size + rst.size
-    case Assign(_, r, rst) => 1 + r.size + rst.size
-    case AssignField(p, _, r, rst) => 1 + p.size + r.size + rst.size
-    case AssignDynField(p, fld, _, r, rst) => 1 + p.size + fld.size + r.size + rst.size
+    case Assign(_, r, rst) => r.size + rst.size
+    case AssignField(p, _, r, rst) => p.size + r.size + rst.size
+    case AssignDynField(p, fld, _, r, rst) => p.size + fld.size + r.size + rst.size
     case Match(p, arms, dflt, rst) =>
-      1 + p.size + arms.map(_._2.size).sum + dflt.map(_.size).getOrElse(0) + rst.size
-    case Define(defn, rst) => 1 + defn.size + rst.size
-    case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
-    case Label(_, _, bod, rst) => 1 + bod.size + rst.size
-    case Scoped(_, body) => body.size
+      p.size + arms.iterator.map(_._2.size).sum + dflt.fold(0)(_.size) + rst.size
+    case Define(defn, rst) => defn.size + rst.size
+    case TryBlock(sub, fin, rst) => sub.size + fin.size + rst.size
+    case Label(_, _, bod, rst) => bod.size + rst.size
+    case Scoped(_, body) => body.size - 1
   
   
   // TODO: make patmat use unreach
@@ -892,22 +892,21 @@ sealed abstract class Result extends AutoLocated:
     case Value.This(sym) => Set.empty
     case Value.Lit(lit) => Set.empty
     case DynSelect(qual, fld, arrayIdx) => qual.freeVarsLLIR ++ fld.freeVarsLLIR
-
-  lazy val size: Int = extraSize
   
-  lazy val extraSize: Int = this match
-    case Call(fun, argss) => fun.extraSize + argss.flatten.map(_.value.extraSize).sum
-    case Instantiate(mut, cls, argss) => cls.extraSize + argss.flatten.map(_.value.extraSize).sum
-    case Select(qual, name) => qual.extraSize
-    case Lambda(params, body) => body.size
-    case Tuple(mut, elems) => elems.map(_.value.extraSize).sum
-    case Record(mut, args) => args.map(arg => arg.idx.fold(0)(_.extraSize) + arg.value.extraSize).sum
+  lazy val size: Int = this match
+    case Call(fun, argss) => fun.size + argss.iterator.flatten.map(_.value.size).sum
+    case Instantiate(mut, cls, argss) => cls.size + argss.iterator.flatten.map(_.value.size).sum
+    case Select(qual, name) => qual.size
+    case Lambda(params, body) => 1 + body.size
+    case Tuple(mut, elems) => elems.iterator.map(_.value.size).sum
+    case Record(mut, args) => args.iterator.map(arg => arg.idx.fold(0)(_.size) + arg.value.size).sum
     case Value.Ref(l, disamb) => 0
     case Value.This(sym) => 0
     case Value.Lit(l: Tree.StrLit) => l.value.length / 4
     case Value.Lit(lit) => 0
-    case DynSelect(qual, fld, arrayIdx) => qual.extraSize + fld.extraSize
-  
+    case DynSelect(qual, fld, arrayIdx) => qual.size + fld.size
+
+// * TODO: refine this very loose type
 // type Local = LocalSymbol
 type Local = Symbol
 
