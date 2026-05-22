@@ -589,7 +589,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case (sym: (LocalSymbol | BuiltinSymbol), _) =>
         k(loweringCtx(Value.SimpleRef(sym).withLocOf(ref)))
       case (sym: BlockMemberSymbol, _) =>
-        // k(loweringCtx(Value.MemberRef(sym, disamb.getOrElse(lastWords(s"No disamb available: $sym"))).withLocOf(ref)))
         k(loweringCtx(Value.MemberRef(sym, disamb.orElse(sym.principalDisamb).get).withLocOf(ref)))
       case (sym: InnerSymbol, _) =>
         k(loweringCtx(Value.This(sym).withLocOf(ref)))
