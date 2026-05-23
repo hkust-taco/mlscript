@@ -46,7 +46,7 @@ if
 //│ = 0
 
 
-// * The last split is `y is [b] then ...`. It was duplicated because it serves
+// * The last split is `y is [b] then ...`. It used to be duplicated because it serves
 // * as the alternative split when `x` or `z` fails. Now we bind the split to a
 // * split symbol and use it as the alternative splits of `x` and `z`.
 :ssjs
