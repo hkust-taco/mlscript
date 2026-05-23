@@ -12,8 +12,8 @@ let
 //│ z = true
 
 
-// TODO: This should *not* be automatically deduplicated.
-// * In fact, we should probably never try to deduplicate things that are already duplicated in the source.
+// * We never try to deduplicate things that are already duplicated in the source.
+// * (A previous version of the UCS was using hash-consing to do so, which was a bad idea.)
 :sjs
 if
   x then 0
