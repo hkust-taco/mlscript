@@ -1,0 +1,180 @@
+:js
+
+
+// :sir
+// :dopt
+() =>
+  let x = 1
+  while x != 0 do
+    print(x)
+  // x = 0
+//│ = fun
+
+// :dopt
+() =>
+  let x = 1
+  while x != 0 do
+    print(x)
+    x = 0
+//│ = fun
+
+
+
+fun f() =
+  let x = 1
+  while hide(false) do
+    set x = hide(2)
+    return 1
+  x
+
+
+
+fun f() =
+  let x = 1
+  if hide(false) do
+    if hide(true) then
+      set x = hide(2)
+    else 
+      set x = hide(3)
+    print(1)
+    return x
+  return x
+
+f()
+//│ = 1
+
+
+fun foo() =
+  let x = 1
+  if true then return ()
+  x
+
+
+
+
+// :dopt
+fun foo() =
+  let x = 1
+  if true do
+    set x = 2
+    return ()
+  x
+
+
+
+
+// * The post-loop state must merge the zero-iteration value with values from loop-back edges.
+:soir
+fun loopBackPost(flag) =
+  let x = 1
+  while flag do
+    set x = 2
+    set flag = false
+  x
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let loopBackPost⁰;
+//│ define loopBackPost⁰ as fun loopBackPost¹(flag) {
+//│   let x;
+//│   set x = 1;
+//│   loop lbl:
+//│     match flag
+//│       true =>
+//│         set x = 2;
+//│         set flag = false;
+//│         continue lbl
+//│       else
+//│         end
+//│     end
+//│   return x
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+print(loopBackPost(false))
+print(loopBackPost(true))
+//│ > 1
+//│ > 2
+
+
+// * The `else` branch sees assignments that reached the next iteration.
+:soir
+fun loopElseReturn(flag) =
+  let x = 1
+  while flag
+    then
+      set x = 2
+      set flag = false
+    else return x
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let loopElseReturn⁰;
+//│ define loopElseReturn⁰ as fun loopElseReturn¹(flag) {
+//│   let x;
+//│   set x = 1;
+//│   loop lbl:
+//│     match flag
+//│       true =>
+//│         set x = 2;
+//│         set flag = false;
+//│         continue lbl
+//│       else
+//│         return x
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+print(loopElseReturn(false))
+print(loopElseReturn(true))
+//│ > 1
+//│ > 2
+
+
+// * Assignments on abortive loop-body paths must not pollute the ordinary loop exit.
+:sir
+:soir
+fun loopReturnDoesNotPolluteExit(flag) =
+  let x = 1
+  while flag do
+    set x = 2
+    return x
+  x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let loopReturnDoesNotPolluteExit⁰;
+//│ define loopReturnDoesNotPolluteExit⁰ as fun loopReturnDoesNotPolluteExit¹(flag) {
+//│   let x;
+//│   set x = 1;
+//│   loop lbl:
+//│     match flag
+//│       true =>
+//│         set x = 2;
+//│         return x
+//│       else
+//│         end
+//│     end
+//│   return x
+//│ };
+//│ end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let loopReturnDoesNotPolluteExit⁰;
+//│ define loopReturnDoesNotPolluteExit⁰ as fun loopReturnDoesNotPolluteExit¹(flag) {
+//│   match flag
+//│     true =>
+//│       return 2
+//│     else
+//│       return 1
+//│   end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+print(loopReturnDoesNotPolluteExit(false))
+print(loopReturnDoesNotPolluteExit(true))
+//│ > 1
+//│ > 2
+
+
+
+
+
+

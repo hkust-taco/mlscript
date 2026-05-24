@@ -79,6 +79,7 @@ fun test_reenabled(n, acc) = if n == 0 then acc else test_reenabled(n - 1, n + a
 fun foo(n, acc) = if n == 0 then acc else foo(n - 1, n + acc)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let foo⁰;
+//│ @config(...)
 //│ define foo⁰ as fun foo¹(n, acc) {
 //│   let scrut, tmp, tmp1;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
@@ -154,6 +155,8 @@ print(42)
 
 
 #config(deadParamElim: Some(DeadParamElim(debug: true, mono: true)), inlining: None)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
 
 private fun deadParamConfig(a) = 0
 deadParamConfig(42)
@@ -163,8 +166,6 @@ deadParamConfig(42)
 //│ = 0
 
 #config(deadParamElim: None)
-//│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > <<< dead-param-elim results <<<
 
 
 #config(deforest: Some(Deforest(mono: false)))

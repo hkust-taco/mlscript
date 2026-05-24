@@ -1,15 +1,9 @@
-:ignore
-// ^ Ignore the silly warnings below, which are due to `untyped` not being treated as THE `untyped` builtin
 
+open annotations
 
 declare class Any
 declare class Nothing
 declare class Object
-
-declare class untyped
-
-declare class tailrec
-declare class tailcall
 
 declare class Unit
 declare class Bool
@@ -34,24 +28,6 @@ set
   globalThis.CodeBase = CodeBase
   globalThis.Region = Region
   globalThis.Ref = (r, v) => new mut Ref(r, v)
-//│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.32: 	@untyped
-//│ ║        	^^^^^^^^
-//│ ╟── This annotation is not supported on assignment terms.
-//│ ║  l.34: 	  globalThis.CodeBase = CodeBase
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.32: 	@untyped
-//│ ║        	^^^^^^^^
-//│ ╟── This annotation is not supported on assignment terms.
-//│ ║  l.35: 	  globalThis.Region = Region
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.32: 	@untyped
-//│ ║        	^^^^^^^^
-//│ ╟── This annotation is not supported on assignment terms.
-//│ ║  l.36: 	  globalThis.Ref = (r, v) => new mut Ref(r, v)
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 declare class Function
 
@@ -104,6 +80,10 @@ declare module debug with
   fun printStack
 
 declare module annotations with
+  object untyped
+  object tailrec
+  object tailcall
+  object inline
   object compile
   object buffered
   object bufferable
@@ -144,11 +124,5 @@ declare fun (||): (Bool, Bool) -> Bool
 
 
 fun print(x) = @untyped globalThis.console.log(x)
-//│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.146: 	fun print(x) = @untyped globalThis.console.log(x)
-//│ ║         	               ^^^^^^^^
-//│ ╟── This annotation is not supported on application terms.
-//│ ║  l.146: 	fun print(x) = @untyped globalThis.console.log(x)
-//│ ╙──       	                        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

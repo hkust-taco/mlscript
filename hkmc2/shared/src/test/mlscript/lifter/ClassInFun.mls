@@ -84,10 +84,10 @@ fun f(x) =
 //│ define C⁰ as class C¹ {
 //│   private val x⁰;
 //│   constructor(x) {
-//│     set x⁰ = x;
+//│     set C¹.this.x = x;
 //│     end
 //│   }
-//│   method y⁰ = fun y¹ { return x⁰ }
+//│   method y⁰ = fun y¹ { return C¹.this.x⁰ }
 //│ };
 //│ define f⁰ as fun f¹(x) { return new C¹(x) };
 //│ end
@@ -126,27 +126,27 @@ f().foo()
 //│   private val x¹;
 //│   private val y²;
 //│   constructor Good¹(scope0$cap, x, y) {
-//│     set scope0$cap⁰ = scope0$cap;
-//│     set x¹ = x;
-//│     set y² = y;
+//│     set Good².this.scope0$cap = scope0$cap;
+//│     set Good².this.x = x;
+//│     set Good².this.y = y;
 //│     end
 //│   }
 //│   method foo⁰ = fun foo¹() {
 //│     let tmp1, tmp2;
-//│     set scope0$cap⁰.z$0 = 100;
-//│     set tmp1 = +⁰(x¹, y²);
-//│     set tmp2 = +⁰(tmp1, scope0$cap⁰.z$0¹);
-//│     return +⁰(tmp2, scope0$cap⁰.w$1¹)
+//│     set Good².this.scope0$cap⁰.z$0 = 100;
+//│     set tmp1 = +⁰(Good².this.x¹, Good².this.y²);
+//│     set tmp2 = +⁰(tmp1, Good².this.scope0$cap⁰.z$0¹);
+//│     return +⁰(tmp2, Good².this.scope0$cap⁰.w$1¹)
 //│   }
 //│ };
 //│ define Bad⁰ as class Bad²() {
 //│   private val scope0$cap¹;
 //│   constructor Bad¹(scope0$cap) {
-//│     set scope0$cap¹ = scope0$cap;
+//│     set Bad².this.scope0$cap = scope0$cap;
 //│     end
 //│   }
 //│   method foo² = fun foo³() {
-//│     set scope0$cap¹.w$1 = 10000;
+//│     set Bad².this.scope0$cap¹.w$1 = 10000;
 //│     return runtime⁰.Unit⁰
 //│   }
 //│ };
@@ -332,12 +332,12 @@ fun main(x) =
 //│   private val x²;
 //│   val a²;
 //│   constructor C⁶(x) {
-//│     set x² = x;
+//│     set C⁷.this.x = x;
 //│     define a² as val a³ = a;
 //│     end
 //│   }
 //│   method get⁰ = fun get¹ {
-//│     return +⁰(x², C⁷.this.a³)
+//│     return +⁰(C⁷.this.x², C⁷.this.a³)
 //│   }
 //│ };
 //│ define main² as fun main³(x) {

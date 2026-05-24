@@ -233,12 +233,69 @@ enum Tree extends AutoLocated:
   
   def showDbg: Str = toString // TODO
   
-  lazy val desugared: Tree = this match
+  lazy val desugared: Tree =
     
+    object LabelClause:
+      def unapply(tree: Tree): Opt[(Ident, Tree)] = tree match
+        case InfixApp(labelId: Ident, Keywrd(Keyword.`:`), body) => S(labelId -> body)
+        case _ => N
+    
+    def rewriteImplicitSplitLabels(tree: Tree): Tree = tree match
+      case stmt @ InfixApp(lhs, kw @ Keywrd(Keyword.`do`), rhs) =>
+        def mkImplicitDoLabel(tree: Tree): Tree =
+          PrefixApp(new Keywrd(Keyword.`do`).withLocOf(kw), tree)
+        val rhs2 = rhs match
+          case LabelClause(_, _) =>
+            mkImplicitDoLabel(rhs)
+          case block @ Block(stmts) =>
+            block.withStmts(stmts.mapConserve:
+              case labelClause @ LabelClause(_, _) => mkImplicitDoLabel(labelClause)
+              case stmt => stmt
+            )
+          case _ => return stmt
+        InfixApp(lhs, kw, rhs2).withLocOf(stmt)
+      case block @ Block(stmts) =>
+        block.withStmts(stmts.mapConserve:
+          case stmt @ InfixApp(_, kw, _) => rewriteImplicitSplitLabels(stmt)
+          case stmt => stmt
+        )
+      case _ => tree
+    
+    this match
     case Ident(name) if name.startsWith("'") =>
       StrLit(name.drop(1)).withLocOf(this)
+    case IfLike(kw, split) =>
+      val split2 = rewriteImplicitSplitLabels(split)
+      if split2 is split then this else IfLike(kw, split2).withLocOf(this)
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
       InfixApp(lhs.desugared, Keywrd(Keyword.`:`), rhs.desugared)
+    case PrefixApp(kw @ Keywrd(Keyword.`do`), Block(sts))
+    if sts.nonEmpty
+    =>
+      def collectAll[A](opts: Ls[Opt[A]]): Opt[Ls[A]] =
+        if opts.forall(_.nonEmpty) then S(opts.map(_.get)) else N
+      val labelClauseOpts = sts.map:
+        case LabelClause(labelId, body) => S(labelId -> body)
+        case _ => N
+      collectAll(labelClauseOpts) match
+      case S(clauses) =>
+        // Only prefix clauses need to host an additional nested `do`; the last clause is the innermost.
+        val prefixClauseOpts = clauses.dropRight(1).map:
+          case (labelId, labelBody: Block) => S(labelId -> labelBody)
+          case _ => N
+        collectAll(prefixClauseOpts) match
+        case S(prefix) =>
+          val (lastId, lastBody) = clauses.last
+          // Build `label1: ...; label2: ...; label3: ...` into nested implicit form where
+          // each prefix label body appends `do labelNext: ...` as its final statement.
+          val nestedClause = prefix.foldRight[Tree](InfixApp(lastId, Keywrd(Keyword.`:`), lastBody)):
+            case ((labelId, labelBody), innerClause) =>
+              val nestedDo = PrefixApp(new Keywrd(Keyword.`do`).withLocOf(kw), innerClause)
+              val newLabelBody = labelBody :+ nestedDo
+              InfixApp(labelId, Keywrd(Keyword.`:`), newLabelBody)
+          PrefixApp(kw, nestedClause).withLocOf(this)
+        case N => this
+      case N => this
     case Sel(pre, nme) if nme.name.startsWith("'") =>
       DynAccess(pre.desugared, StrLit(nme.name.drop(1)).withLocOf(nme)).withLocOf(this)
     
@@ -588,5 +645,6 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
           TermSymbol(k, symbol.asClsLike, id)
       .toList
     
-  lazy val allSymbols = definedSymbols ++ clsParams.flatten.map(s => s.nme -> s).toMap
+  lazy val allSymbols = definedSymbols ++
+    clsParams.iterator.flatMap(_.iterator.map(s => s.nme -> s)).toMap
 

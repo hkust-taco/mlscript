@@ -287,7 +287,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
       val (params2, removed) = filterParamList(lam.params, deadParamElimSolver.eliminableParamsById(ConcreteId(lam.uid, instId)))
       val body2 = withEliminatedParams(removed):
         applyFunBodyLikeBlock(lam.body)
-      if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)
+      if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)(lam.annot)
     
     override def applyFunDefn(fun: FunDefn): FunDefn =
       val own2 = fun.owner.mapConserve(_.subst)

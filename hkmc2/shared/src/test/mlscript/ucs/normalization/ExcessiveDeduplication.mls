@@ -68,7 +68,7 @@ if
 //│ >      $σ
 //│ >    $σ
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let b, x1, element0$, tmp;
+//│ let element0$, tmp;
 //│ σ$x: {
 //│   if (x === true) {
 //│     if (z === true) {
@@ -78,9 +78,7 @@ if
 //│   }
 //│   if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
 //│     element0$ = runtime.checkCall(runtime.Tuple.get(y, 0));
-//│     b = element0$;
-//│     x1 = 1;
-//│     tmp = x1 + b;
+//│     tmp = 1 + element0$;
 //│   } else {
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }

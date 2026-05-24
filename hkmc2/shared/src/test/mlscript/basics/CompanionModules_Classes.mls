@@ -20,7 +20,7 @@ C()
 :sir
 let f = new C
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰, f¹; define f¹ as fun f²() { return new C⁰() }; set f⁰ = f²; end
+//│ let f⁰, f¹; @private define f¹ as fun f²() { return new C⁰() }; set f⁰ = f²; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = fun f
 
@@ -121,7 +121,7 @@ module Foo with
 //│     return state;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", []]; 
+//│   static [definitionMetadata] = ["class", "Foo", []];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

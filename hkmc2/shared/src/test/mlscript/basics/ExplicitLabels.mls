@@ -1,0 +1,149 @@
+:js
+
+
+do exit:
+  if true do exit.break(42)
+  0
+//│ = 42
+
+
+do exit: exit.break(42)
+//│ = 42
+
+do {}
+
+
+let i = 0 in do loop:
+  if i >= 3 do loop.break(i)
+  set i += 1
+  loop.continue
+//│ = 3
+
+
+let i = 0 in do outLoop:
+  do inner:
+    if i >= 4 do outLoop.break(i)
+    set i += 1
+    outLoop.continue
+//│ = 4
+
+
+:e
+missing.break(1)
+//│ ╔══[COMPILATION ERROR] Name not found: missing
+//│ ║  l.32: 	missing.break(1)
+//│ ╙──      	^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+:e
+missing.continue
+//│ ╔══[COMPILATION ERROR] Name not found: missing
+//│ ║  l.40: 	missing.continue
+//│ ╙──      	^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+:e
+() => do lbl:
+  lbl.continue(1)
+//│ ╔══[COMPILATION ERROR] 'continue' does not take arguments.
+//│ ║  l.49: 	  lbl.continue(1)
+//│ ╙──      	  ^^^^^^^^^^^^^^^
+//│ = fun
+
+
+:e
+do lbl:
+  lbl.break(1, 2)
+//│ ╔══[COMPILATION ERROR] 'break' expects at most one argument.
+//│ ║  l.58: 	  lbl.break(1, 2)
+//│ ╙──      	  ^^^^^^^^^^^^^^^
+
+
+:e
+lbl:
+  lbl.break(1)
+//│ ╔══[COMPILATION ERROR] Name not found: lbl
+//│ ║  l.66: 	  lbl.break(1)
+//│ ╙──      	  ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ lbl = undefined
+
+
+let i = 0 in let total = 0 in do exitLbl:
+  if i >= 3 do exitLbl.break(total)
+  let j = 0
+  do inner:
+    if j >= 3 do inner.break(())
+    if j == 1 do inner.break(())
+    set total += i * 10 + j
+    set j += 1
+    inner.continue
+  set i += 1
+  exitLbl.continue
+//│ = 30
+
+
+let i = 0 in let steps = 0 in do done:
+  while true do
+    set i += 1
+    let j = 0
+    while true do
+      set steps += 1
+      if j == 1 do done.break(i * 100 + steps)
+      set j += 1
+//│ = 102
+
+
+// * Labels and variables share the same namespace; inner label bindings can shadow outer variables.
+let loop = 10 in do loop:
+  if true do loop.break(())
+  loop.continue
+
+
+// * Variables can shadow labels in the same namespace.
+do lbl:
+  let lbl = 5
+  lbl
+//│ = 5
+
+
+// * If a variable shadows a label, label control-flow selection should no longer resolve as a label op.
+:re
+do lbl:
+  let lbl = 5
+  lbl.break
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'break' yielded 'undefined'
+
+
+// * Nested labels in a plain `do` block should be handled; later labels are nested in earlier ones.
+let i = 3 in do
+  label1:
+    if i <= 0 do label1.break(())
+    print("Still > 0:", i)
+    set i -= 1
+  label2:
+    label1.continue
+//│ > Still > 0: 3
+//│ > Still > 0: 2
+//│ > Still > 0: 1
+
+
+// * A plain `do` block with a single label clause should desugar to the explicit-label form.
+let x = 123 in do
+  only:
+    only.break(x)
+//│ = 123
+
+
+// * Mixed blocks should not be treated as implicit label-clause syntax.
+:e
+do
+  let x = 1
+  only:
+    only.break(x)
+//│ ╔══[COMPILATION ERROR] Name not found: only
+//│ ║  l.145: 	    only.break(x)
+//│ ╙──       	    ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

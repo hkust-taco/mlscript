@@ -24,7 +24,7 @@ fun g() =
 //│ let g;
 //│ runtime.resetEffects();
 //│ g = function g() {
-//│   let a, scrut, tmp, pc;
+//│   let scrut, tmp, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
@@ -34,7 +34,7 @@ fun g() =
 //│   main: while (true) {
 //│     switch (pc) {
 //│       case 0:
-//│         runtime.resumeValue = always_true();
+//│         runtime.resumeValue = true;
 //│         if (runtime.curEffect === null) {
 //│           pc = 3;
 //│         } else {
@@ -43,7 +43,9 @@ fun g() =
 //│       case 3:
 //│         scrut = runtime.resumeValue;
 //│         if (scrut === true) {
-//│           runtime.resumeValue = f();
+//│           let inlinedVal;
+//│           inlinedVal = runtime.Unit;
+//│           runtime.resumeValue = inlinedVal;
 //│           if (runtime.curEffect === null) {
 //│             pc = 2;
 //│             continue main
@@ -57,11 +59,10 @@ fun g() =
 //│         runtime.resumeValue;
 //│         tmp = 1;
 //│         pc = 1;
-//│         if (pc === 1) { a = tmp; return a }
+//│         if (1 === 1) { return 1 }
 //│         break;
 //│       case 1:
-//│         a = tmp;
-//│         return a;
+//│         return tmp;
 //│     }
 //│     break;
 //│   }

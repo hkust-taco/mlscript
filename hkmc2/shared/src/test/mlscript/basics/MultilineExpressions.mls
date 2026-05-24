@@ -80,12 +80,7 @@ if 1 + 2
 //│     kw = Keywrd of keyword 'then'
 //│     rhs = IntLit of 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut, tmp17;
-//│ tmp17 = 2 * 3;
-//│ scrut = 1 + tmp17;
-//│ if (scrut === true) {
-//│   0
-//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ if (7 === true) { 0 } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -118,23 +113,23 @@ if 1 + 2
   * 3 then 0
   + 4 then 1
 //│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
-//│ ║  l.119: 	  + 4 then 1
+//│ ║  l.114: 	  + 4 then 1
 //│ ║         	  ^
 //│ ╟── as it has lower precedence than the splitting operator here
-//│ ║  l.118: 	  * 3 then 0
+//│ ║  l.113: 	  * 3 then 0
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this operator split inner position
-//│ ║  l.119: 	  + 4 then 1
+//│ ║  l.114: 	  + 4 then 1
 //│ ║         	      ^^^^
 //│ ╟── Note: the operator split starts here
-//│ ║  l.118: 	  * 3 then 0
+//│ ║  l.113: 	  * 3 then 0
 //│ ╙──       	  ^
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.117: 	if 1 + 2
+//│ ║  l.112: 	if 1 + 2
 //│ ║         	       ^
-//│ ║  l.118: 	  * 3 then 0
+//│ ║  l.113: 	  * 3 then 0
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.119: 	  + 4 then 1
+//│ ║  l.114: 	  + 4 then 1
 //│ ╙──       	^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

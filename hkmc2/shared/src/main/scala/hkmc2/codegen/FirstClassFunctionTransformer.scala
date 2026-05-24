@@ -11,7 +11,9 @@ import hkmc2.Message.MessageContext
 import collection.mutable.HashMap
 
 
-class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Raise) extends BlockTransformer(new SymbolSubst):
+class FirstClassFunctionTransformer
+      (using Elaborator.State, Elaborator.Ctx, Raise, DebugPrinter)
+    extends BlockTransformer(new SymbolSubst):
   // Anonymous lambdas' parameter lists cannot be retrieved from the term symbol
   private val funDefns = HashMap.empty[BlockMemberSymbol, FunDefn] 
   class CollectFunDefns extends BlockTraverser:
@@ -35,7 +37,8 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
     case Some(fd) => fd.params.headOption
     case _ => l.tsym.flatMap(getParamList)
 
-  private def getParamList(ts: TermSymbol): Option[ParamList] = ts.defn.flatMap(_.params.headOption)
+  private def getParamList(ts: TermSymbol): Option[ParamList] =
+    ts.irFunDefn.flatMap(_.params.headOption)
 
   override def applyPath(p: Path)(k: Path => Block): Block = p match
     case ref @ Value.Ref(l: BlockMemberSymbol, disamb) => disamb match
@@ -49,7 +52,12 @@ class FirstClassFunctionTransformer(using Elaborator.State, Elaborator.Ctx, Rais
       case None => lastWords(s"${l.nme}'s disamb cannot be empty.")
     case sel: Select => sel.symbol match
       case Some(s: TermSymbol) if (s.k is syntax.Fun) =>
-        val params = getParamList(s).getOrElse(lastWords(s"Cannot get ${s.nme}'s parameter list."))
+        val params = getParamList(s).getOrElse:
+          raise:
+            ErrorReport(msg"Cannot get ${s.nme}'s parameter list."
+              -> sel.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation)
+          PlainParamList(Nil)
         val clsDef = generateFCFunctionClass(sel, params)
         val tmp = new TempSymbol(None)
         val cls = Value.Ref(clsDef.sym, Some(clsDef.isym))

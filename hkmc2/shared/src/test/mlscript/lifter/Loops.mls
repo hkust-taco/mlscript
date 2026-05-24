@@ -44,9 +44,11 @@ fun foo() =
     return () => x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let foo⁰, lambda⁰, Capture$scope0⁰, lambda$⁰;
+//│ @inline @private
 //│ define lambda$⁰ as fun lambda$¹(scope0$cap)() {
 //│   return lambda¹(scope0$cap)
 //│ };
+//│ @private
 //│ define lambda⁰ as fun lambda¹(scope0$cap) {
 //│   return scope0$cap.x$0⁰
 //│ };

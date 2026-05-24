@@ -14,6 +14,7 @@ countdown(5, 42)
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let countdown⁰;
+//│ @private
 //│ define countdown⁰ as fun countdown¹(n) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
@@ -80,6 +81,7 @@ ping(5, 99)
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let ping⁰, pong⁰;
+//│ @private
 //│ define ping⁰ as fun ping¹(n) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
@@ -91,6 +93,7 @@ ping(5, 99)
 //│       return pong¹(tmp)
 //│   end
 //│ };
+//│ @private
 //│ define pong⁰ as fun pong¹(n) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
@@ -156,10 +159,17 @@ private fun ping(n)(unused) = if n == 0 then 0 else pong(n - 1)(unused)
 private fun pong(n)(unused) = if n == 0 then 0 else ping(n - 1)(unused)
 ping(5)(99)
 //│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun ping$worker#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > prodfun pong$worker#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let ping⁴, pong⁴;
+//│ let ping⁴, pong⁴, pong$worker⁰, ping$worker⁰;
+//│ @inline @private
 //│ define ping⁴ as fun ping⁵(n)(unused) {
+//│   return ping$worker¹(n)
+//│ };
+//│ @private
+//│ define ping$worker⁰ as fun ping$worker¹(n) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
@@ -167,10 +177,15 @@ ping(5)(99)
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return pong⁵(tmp)(unused)
+//│       return pong$worker¹(tmp)
 //│   end
 //│ };
+//│ @inline @private
 //│ define pong⁴ as fun pong⁵(n)(unused) {
+//│   return pong$worker¹(n)
+//│ };
+//│ @private
+//│ define pong$worker⁰ as fun pong$worker¹(n) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
@@ -178,10 +193,10 @@ ping(5)(99)
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return ping⁵(tmp)(unused)
+//│       return ping$worker¹(tmp)
 //│   end
 //│ };
-//│ ping⁵(5)(99)
+//│ ping$worker¹(5)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -216,6 +231,7 @@ class Test(a) with
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let Test⁰, pong⁶, M⁰;
+//│ @private
 //│ define pong⁶ as fun pong⁷(n) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
@@ -241,7 +257,7 @@ class Test(a) with
 //│     end
 //│   }
 //│ };
-//│ define Test⁰ as class Test¹(a) { private val a⁰; method f⁰ = fun f¹() { return pong⁷(3) } };
+//│ define Test⁰ as class Test¹(a) { method f⁰ = fun f¹() { return pong⁷(3) } };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

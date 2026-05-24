@@ -28,7 +28,7 @@ fun res() = 1
 //│ REPL> Sending: block$res4 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: try { block$res4 = 2 + 2; undefined; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Sending: try { block$res4 = 4; undefined; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:
@@ -67,7 +67,7 @@ let x = 1, print(x), x
 //│ REPL> Sending: block$res6 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: let x;try { x = 1; runtime.checkCall(Predef.print(x)); block$res6 = x; undefined; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Sending: let x;try { x = 1; runtime.checkCall(Predef.print(1)); block$res6 = 1; undefined; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
 //│ >  undefined

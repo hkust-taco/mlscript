@@ -77,17 +77,21 @@ fun next(it) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let next;
 //│ next = function next(it) {
-//│   let i, scrut, res, tmp, tmp1;
+//│   let i, scrut, res, tmp;
 //│   i = it.i.value;
 //│   scrut = i == it.end;
 //│   if (scrut === true) {
 //│     return None1()
 //│   }
-//│   tmp = at(it.arr, i);
-//│   res = Some1(tmp);
-//│   tmp1 = i + it.step;
-//│   it.i.value = tmp1;
-//│   return res;
+//│   {
+//│     let xs, inlinedVal;
+//│     xs = it.arr;
+//│     inlinedVal = runtime.safeCall(xs.at(i));
+//│     res = Some1(inlinedVal);
+//│     tmp = i + it.step;
+//│     it.i.value = tmp;
+//│     return res;
+//│   }
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -266,7 +270,7 @@ region r in
 //│ > interviewee score: 30, salary: 1
 //│ = 80
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'results
-//│ ║  l.247: 	  let m = select(interviewees, 4, results)
+//│ ║  l.251: 	  let m = select(interviewees, 4, results)
 //│ ║         	                                  ^^^^^^^
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  'results
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  ArrayList['A1, in ⊥ out 'R1]
@@ -328,7 +332,7 @@ region r in
 //│ > candidates:
 //│ = 80
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'interviewees
-//│ ║  l.324: 	    let m = wrongSelect(interviewees, 4000, results)
+//│ ║  l.328: 	    let m = wrongSelect(interviewees, 4000, results)
 //│ ║         	                        ^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  'interviewees
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  ArrayList[in 'T out 'T1, in ⊥ out 'R1]

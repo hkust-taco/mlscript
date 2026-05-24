@@ -21,15 +21,14 @@ fun buildPalindrome = case
 //│ buildPalindrome = function buildPalindrome() {
 //│   let lambda;
 //│   lambda = (undefined, function (caseScrut) {
-//│     let n, tmp3, tmp4, tmp5;
+//│     let tmp3, tmp4, tmp5;
 //│     if (caseScrut === 0) {
 //│       return globalThis.Object.freeze([])
 //│     }
-//│     n = caseScrut;
 //│     tmp3 = buildPalindrome();
-//│     tmp4 = n - 1;
+//│     tmp4 = caseScrut - 1;
 //│     tmp5 = runtime.safeCall(tmp3(tmp4));
-//│     return globalThis.Object.freeze(runtime.Tuple.lazyConcat(n, runtime.Tuple.split, tmp5, n));
+//│     return globalThis.Object.freeze(runtime.Tuple.lazyConcat(caseScrut, runtime.Tuple.split, tmp5, caseScrut));
 //│   });
 //│   return lambda
 //│ };
@@ -52,19 +51,16 @@ fun sum2 = case
 //│ sum2 = function sum2() {
 //│   let lambda;
 //│   lambda = (undefined, function (caseScrut) {
-//│     let x, xs, y, lastElement1$3, middleElements3, element0$, tmp5, tmp6, tmp7;
+//│     let lastElement1$3, middleElements3, element0$, tmp5, tmp6, tmp7;
 //│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
 //│       return 0
 //│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 2) {
 //│       element0$ = runtime.Tuple.get(caseScrut, 0);
 //│       middleElements3 = runtime.Tuple.slice(caseScrut, 1, 1);
 //│       lastElement1$3 = runtime.Tuple.get(caseScrut, -1);
-//│       y = lastElement1$3;
-//│       xs = middleElements3;
-//│       x = element0$;
-//│       tmp5 = x + y;
+//│       tmp5 = element0$ + lastElement1$3;
 //│       tmp6 = sum2();
-//│       tmp7 = runtime.safeCall(tmp6(xs));
+//│       tmp7 = runtime.safeCall(tmp6(middleElements3));
 //│       return tmp5 + tmp7
 //│     }
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -80,13 +76,13 @@ sum2(arr)
 :e
 fun f(..xs) = xs
 //│ ╔══[COMPILATION ERROR] Lazy spread parameters not allowed.
-//│ ║  l.81: 	fun f(..xs) = xs
+//│ ║  l.77: 	fun f(..xs) = xs
 //│ ╙──      	      ^^^^
 
 :ge
 sum2(..arr)
 //│ ╔══[COMPILATION ERROR] Lazy spreads are not supported in call arguments
-//│ ║  l.87: 	sum2(..arr)
+//│ ║  l.83: 	sum2(..arr)
 //│ ╙──      	    ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 2
 

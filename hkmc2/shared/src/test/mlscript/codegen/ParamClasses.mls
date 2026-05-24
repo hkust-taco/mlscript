@@ -15,7 +15,7 @@ data class Foo()
 //│     Foo1.class = this
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", []]; 
+//│   static [definitionMetadata] = ["class", "Foo", []];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -52,7 +52,7 @@ data class Foo(a)
 //│     this.a = a;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["a"]]; 
+//│   static [definitionMetadata] = ["class", "Foo", ["a"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -77,11 +77,7 @@ Foo(1).a
 fun foo(y) = Foo(y)
 foo(27)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo, y, inlinedVal;
-//│ foo = function foo(y1) { return Foo3(y1) };
-//│ y = 27;
-//│ inlinedVal = Foo3(y);
-//│ inlinedVal
+//│ let foo; foo = function foo(y) { return Foo3(y) }; Foo3(27)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Foo(27)
 
@@ -101,7 +97,7 @@ data class Foo(a, b)
 //│     this.b = b;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["a", "b"]]; 
+//│   static [definitionMetadata] = ["class", "Foo", ["a", "b"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -182,7 +178,7 @@ data class Inner(c) with
 //│     return this.c + d
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Inner", ["c"]]; 
+//│   static [definitionMetadata] = ["class", "Inner", ["c"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -211,38 +207,36 @@ class Foo(x, val y, z, val z, z) with
   print("this.z = " + this.z)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo7;
-//│ Foo7 = function Foo(x, y1, z, z1, z2) {
-//│   return globalThis.Object.freeze(new Foo.class(x, y1, z, z1, z2));
+//│ Foo7 = function Foo(x, y, z, z1, z2) {
+//│   return globalThis.Object.freeze(new Foo.class(x, y, z, z1, z2));
 //│ };
 //│ (class Foo6 {
 //│   static {
 //│     Foo7.class = this
 //│   }
-//│   constructor(x, y1, z, z1, z2) {
+//│   constructor(x, y, z, z1, z2) {
 //│     let tmp3, tmp4, tmp5, tmp6, tmp7;
-//│     this.y = y1;
+//│     this.y = y;
 //│     this.z = z1;
-//│     this.#z1 = z2;
-//│     this.#x1 = 1;
+//│     this.#z = z2;
+//│     this.#x = 1;
 //│     this.#y = this.y + 1;
-//│     tmp3 = "x = " + this.#x1;
+//│     tmp3 = "x = " + this.#x;
 //│     Predef.print(tmp3);
 //│     tmp4 = "y = " + this.#y;
 //│     Predef.print(tmp4);
 //│     tmp5 = "this.y = " + this.y;
 //│     Predef.print(tmp5);
-//│     tmp6 = "z = " + this.#z1;
+//│     tmp6 = "z = " + this.#z;
 //│     Predef.print(tmp6);
 //│     tmp7 = "this.z = " + this.z;
 //│     Predef.print(tmp7);
 //│   }
-//│   #x;
 //│   #z;
-//│   #z1;
-//│   #x1;
+//│   #x;
 //│   #y;
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", [null, "y", null, "z", null]]; 
+//│   static [definitionMetadata] = ["class", "Foo", [null, "y", null, "z", null]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -262,10 +256,10 @@ Foo(10, 20, 30, 40, 50)
 class Foo(val z, val z)
 //│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'z'.
 //│ ╟── Defined at: 
-//│ ║  l.262: 	class Foo(val z, val z)
+//│ ║  l.256: 	class Foo(val z, val z)
 //│ ║         	              ^
 //│ ╟── Defined at: 
-//│ ║  l.262: 	class Foo(val z, val z)
+//│ ║  l.256: 	class Foo(val z, val z)
 //│ ╙──       	                     ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo9;
@@ -277,7 +271,7 @@ class Foo(val z, val z)
 //│     Foo9.class = this
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["z", "z"]]; 
+//│   static [definitionMetadata] = ["class", "Foo", ["z", "z"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

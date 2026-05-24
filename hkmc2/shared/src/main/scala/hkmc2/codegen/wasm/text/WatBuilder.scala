@@ -415,6 +415,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val virtualMethods = ArrayBuf.from(parentVirtualTable.virtualMethods)
     val virtualMethodSlots = LinkedHashMap.from(parentVirtualTable.virtualMethodSlots)
 
+    // FIXME: LP: why do we need to access elaborated Term methods, here?! We should just be able to look at the IR definitions, and if that's not enough, we should put the required info there...
     semanticMethodDefs(defn).foreach: methodDef =>
       val slotIdx = overriddenParentMethodSym(defn, methodDef).flatMap(parentVirtualTable.virtualMethodSlots.get)
       slotIdx match
@@ -1785,7 +1786,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
                   val result = pss.foldRight(bod):
                     case (ps, block) =>
-                      Return(Lambda(ps, block), false)
+                      Return(Lambda(ps, block)(Nil), false)
                   val (bodyWat, fnCtx) = setupFunction(N, ps, result)
                   if sym.nameIsMeaningful then
                     val funcTy = ctx.addType(

@@ -1,0 +1,46 @@
+:js
+
+
+class Empty
+class Node
+
+
+// :sir
+:soir
+// :dopt
+fun merge(t1, t2) =
+  if
+    t1 is Empty then t2
+    t2 is Empty then t1
+    t1 is Node then merge(t2, t1)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let merge⁰;
+//│ define merge⁰ as fun merge¹(t1, t2) {
+//│   loop loopLabel:
+//│     match t1
+//│       Empty⁰ =>
+//│         return t2
+//│       else
+//│         match t2
+//│           Empty⁰ =>
+//│             return t1
+//│           else
+//│             match t1
+//│               Node⁰ =>
+//│                 let t1_tmp;
+//│                 set t1_tmp = t1;
+//│                 set t1 = t2;
+//│                 set t2 = t1_tmp;
+//│                 continue loopLabel
+//│               else
+//│                 throw new globalThis⁰.Error⁰("match error")
+//│             end
+//│         end
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+

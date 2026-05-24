@@ -31,9 +31,13 @@ f(1)(2)
 :soir
 fun g(a)(b) = f(a)(b) + f(b)(a)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let g⁰;
+//│ let g⁰, g$worker⁰;
 //│ do runtime⁰.resetEffects﹖();
+//│ @inline
 //│ define g⁰ as fun g¹(a)(b) {
+//│   return g$worker¹(a, b)
+//│ };
+//│ define g$worker⁰ as fun g$worker¹(a, b) {
 //│   let tmp, tmp1, pc;
 //│   match runtime⁰.resumePc﹖
 //│     -1 =>
@@ -48,7 +52,9 @@ fun g(a)(b) = f(a)(b) + f(b)(a)
 //│       end
 //│   match pc
 //│     0 =>
-//│       set runtime⁰.resumeValue = f¹(a)(b);
+//│       let inlinedVal;
+//│       set inlinedVal = +⁰(a, b);
+//│       set runtime⁰.resumeValue = inlinedVal;
 //│       match runtime⁰.curEffect﹖
 //│         null =>
 //│           set pc = 2;
@@ -58,8 +64,10 @@ fun g(a)(b) = f(a)(b) + f(b)(a)
 //│       end
 //│   match pc
 //│     2 =>
+//│       let inlinedVal;
 //│       set tmp = runtime⁰.resumeValue﹖;
-//│       set runtime⁰.resumeValue = f¹(b)(a);
+//│       set inlinedVal = +⁰(b, a);
+//│       set runtime⁰.resumeValue = inlinedVal;
 //│       match runtime⁰.curEffect﹖
 //│         null =>
 //│           set pc = 1;

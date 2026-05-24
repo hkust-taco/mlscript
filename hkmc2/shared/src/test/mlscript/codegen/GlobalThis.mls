@@ -21,9 +21,7 @@ globalThis
 :re
 if false then 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut;
-//│ scrut = false;
-//│ if (scrut === true) {
+//│ if (false === true) {
 //│   0
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -40,9 +38,7 @@ foo()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo;
 //│ foo = function foo() {
-//│   let scrut1;
-//│   scrut1 = false;
-//│   if (scrut1 === true) {
+//│   if (false === true) {
 //│     return 0
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));

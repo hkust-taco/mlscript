@@ -15,7 +15,7 @@ class Foo(val x)
 //│     this.x = x;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["x"]]; 
+//│   static [definitionMetadata] = ["class", "Foo", ["x"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -35,7 +35,7 @@ class Foo(val x)
 //│     this.x = x;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["x"]]; 
+//│   static [definitionMetadata] = ["class", "Foo", ["x"]];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

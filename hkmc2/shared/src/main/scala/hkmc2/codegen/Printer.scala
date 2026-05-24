@@ -55,7 +55,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
     case Begin(sub, rest) =>
       doc"begin #{  # ${print(sub)}; #}  # ${print(rest)}"
     case TryBlock(sub, finallyDo, rest) =>
-      doc"try #{  # ${print(sub)} #  #} finally #  #{ ${print(finallyDo)}; #  #} ${print(rest)}"
+      doc"try #{  # ${print(sub)} #}  # finally #{  # ${print(finallyDo)}; #  #} ${print(rest)}"
     case Assign(_: NoSymbol, rhs, rest) =>
       doc"do ${print(rhs)}; # ${print(rest)}"
     case Assign(lhs, rhs, rest) =>
@@ -65,7 +65,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
       doc"set ${print(lhs)}${if arrayIdx then "." else "!"}${print(fld)} = ${print(rhs)}; # ${print(rest)}"
     case Define(defn, rest) =>
-      doc"define ${print(defn.sym)} as ${print(defn)}; # ${print(rest)}"
+      doc"${printFlags(defn)}define ${print(defn.sym)} as ${print(defn)}; # ${print(rest)}"
     case Scoped(syms, body) =>
       scope.nest.givenIn:
         import hkmc2.given_Ordering_Uid // Not sure why needed...
@@ -75,6 +75,18 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
     case End(_) => doc"end"
     case Unreachable(msg) => doc"unreachable /* ${msg} */"
     case _ => TODO(blk)
+  
+  def printFlags(defn: Defn)(using Scope): Document =
+    // val overrides = defn match
+    // case fun: FunDefn =>
+    //   fun.configOverride
+    // case cls: ClsLikeDefn =>
+    //   if cls.isStaged then doc"staged " else doc""
+    // case _ => doc""
+    // defn.configOverride.map: cfg =>
+    //   if cfg.staged then doc"staged " else doc""
+    if defn.annotations.isEmpty then doc""
+    else defn.annotations.map(_.show).mkDocument(doc" ") :: doc" # "
   
   def print(
       privateFields: Ls[TermSymbol],
@@ -150,7 +162,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
     if arg.spread.nonEmpty
       then doc"...${doc}"
       else doc
-
+  
   def print(value: Value)(using Scope): Document = value match
     case Value.Ref(l: InnerSymbol, N) => doc"${print(l)}.this"
     case Value.Ref(l, N) => print(l)

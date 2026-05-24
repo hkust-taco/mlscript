@@ -7,9 +7,7 @@ while false do ???
 while false then ()
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ lbl1: while (true) {
-//│   let scrut;
-//│   scrut = false;
-//│   if (scrut === true) { continue lbl1 }
+//│   if (false === true) { continue lbl1 }
 //│   break;
 //│ }
 //│ block$res2 = runtime.Unit;
@@ -23,7 +21,7 @@ while false then ()
 () =>
   while true then 0
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.24: 	  while true then 0
+//│ ║  l.22: 	  while true then 0
 //│ ╙──      	                  ^
 //│ = fun
 
@@ -194,14 +192,12 @@ fun f(ls) =
 //│ let f6;
 //│ f6 = function f(ls) {
 //│   lbl6: while (true) {
-//│     let tl, h, arg$Cons$0$, arg$Cons$1$;
+//│     let arg$Cons$0$, arg$Cons$1$;
 //│     if (ls instanceof Cons1.class) {
 //│       arg$Cons$0$ = ls.hd;
 //│       arg$Cons$1$ = ls.tl;
-//│       tl = arg$Cons$1$;
-//│       h = arg$Cons$0$;
-//│       ls = tl;
-//│       Predef.print(h);
+//│       ls = arg$Cons$1$;
+//│       Predef.print(arg$Cons$0$);
 //│       continue lbl6
 //│     }
 //│     break;
@@ -317,10 +313,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.317: 	  then 0(0)
+//│ ║  l.313: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (false literal)
-//│ ║  l.316: 	while print("Hello World"); false
+//│ ║  l.312: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 
@@ -329,12 +325,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.328: 	while { print("Hello World"), false }
+//│ ║  l.324: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.329: 	  then 0(0)
+//│ ║  l.325: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.330: 	  else 1
+//│ ║  l.326: 	  else 1
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -345,14 +341,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.343: 	    print("Hello World")
+//│ ║  l.339: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.344: 	    false
+//│ ║  l.340: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.345: 	  then 0(0)
+//│ ║  l.341: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.346: 	  else 1
+//│ ║  l.342: 	  else 1
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

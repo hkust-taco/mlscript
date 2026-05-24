@@ -55,9 +55,9 @@ y * 2
 //│ runtime.safeCall(globalThis.console.log("a"));
 //│ x = 123;
 //│ runtime.safeCall(globalThis.console.log("b"));
-//│ y = x + 1;
+//│ y = 124;
 //│ runtime.safeCall(globalThis.console.log("c"));
-//│ y * 2
+//│ 248
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > a
 //│ > b

@@ -5,9 +5,14 @@
 fun foo(x)(y) = z => x + y + z
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰, baseCall;
+//│ let foo⁰, foo$worker⁰, inlinedVal;
+//│ @inline
 //│ define foo⁰ as fun foo¹(x)(y) {
+//│   return foo$worker¹(x, y)
+//│ };
+//│ define foo$worker⁰ as fun foo$worker¹(x, y) {
 //│   let lambda;
+//│   @private
 //│   define lambda as fun lambda⁰(z) {
 //│     let tmp;
 //│     set tmp = +⁰(x, y);
@@ -15,11 +20,13 @@ foo(1)(2)(3)
 //│   };
 //│   return lambda⁰
 //│ };
-//│ set baseCall = foo¹(1)(2);
-//│ baseCall(3)
+//│ set inlinedVal = foo$worker¹(1, 2);
+//│ inlinedVal(3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 
+// * Note: the lambda$¹ function is not inlined because it is only partially applied
+// * (it is a lambda-lifted closure).
 :sir
 :soir
 :lift
@@ -27,9 +34,11 @@ fun foo(x)(y) = z => x + y + z
 foo(1)(2)(3)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let foo², baseCall, lambda¹, lambda$⁰;
+//│ @inline @private
 //│ define lambda$⁰ as fun lambda$¹(x, y)(z) {
 //│   return lambda²(x, y, z)
 //│ };
+//│ @private
 //│ define lambda¹ as fun lambda²(x, y, z) {
 //│   let tmp;
 //│   set tmp = +⁰(x, y);
@@ -43,23 +52,16 @@ foo(1)(2)(3)
 //│ set baseCall = foo³(1)(2);
 //│ baseCall(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo², baseCall, lambda¹, lambda$⁰;
+//│ let foo², lambda$⁰;
+//│ @inline @private
 //│ define lambda$⁰ as fun lambda$¹(x, y)(z) {
-//│   let x1, y1, z1, inlinedVal, tmp;
-//│   set x1 = x;
-//│   set y1 = y;
-//│   set z1 = z;
-//│   set tmp = +⁰(x1, y1);
-//│   set inlinedVal = +⁰(tmp, z1);
-//│   return inlinedVal
+//│   let tmp;
+//│   set tmp = +⁰(x, y);
+//│   return +⁰(tmp, z)
 //│ };
-//│ define foo² as fun foo³(x)(y) {
-//│   let lambda$here;
-//│   set lambda$here = lambda$¹(x, y);
-//│   return lambda$here
-//│ };
-//│ set baseCall = foo³(1)(2);
-//│ baseCall(3)
+//│ @inline
+//│ define foo² as fun foo³(x)(y) { return lambda$¹(x, y) };
+//│ 6
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 

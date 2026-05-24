@@ -48,7 +48,7 @@ object DiffTestRunner:
     
     val TimeLimit =
       if sys.env.get("CI").isDefined then Span(60, Seconds)
-      else Span(30, Seconds)
+      else Span(25, Seconds)
     
   end State
   
@@ -92,27 +92,12 @@ class DiffTestRunner
   override protected def excludedDiffDirs: Ls[os.Path] =
     TestFolders.mainExcludedDiffDirs(state.workingDir)
 
-class DiffTestRunnerBase(val state: DiffTestRunner.State)
-  extends funsuite.AnyFunSuite
-  with TimeLimitedTests
-:
+class DiffTestRunnerBase(val state: DiffTestRunner.State) extends TimeOutTests:
   import state.*
   
   private val inParallel = isInstanceOf[ParallelTestExecution]
   
   val timeLimit = TimeLimit
-  
-  override val defaultTestSignaler: Signaler = new Signaler:
-    @annotation.nowarn("msg=method stop in class Thread is deprecated") def apply(testThread: Thread): Unit =
-      println(s"!! Test at $testThread has run out out time !! stopping..." +
-        "\n\tNote: you can increase this limit by changing DiffTests.TimeLimit")
-      // * Thread.stop() is considered bad practice because normally it's better to implement proper logic
-      // * to terminate threads gracefully, avoiding leaving applications in a bad state.
-      // * But here we DGAF since all the test is doing is running a type checker and some Node REPL,
-      // * which would be a much bigger pain to make receptive to "gentle" interruption.
-      // * It would feel extremely wrong to intersperse the pure type checker algorithms
-      // * with ugly `Thread.isInterrupted` checks everywhere...
-      testThread.stop()
   
   protected def excludedDiffDirs: Ls[os.Path] =
     TestFolders.alwaysExcludedDiffDirs(state.workingDir)

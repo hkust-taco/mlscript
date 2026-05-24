@@ -81,14 +81,12 @@ fun f: TrmMod = 42
 :sjs
 fun f = TrmMod
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f5; f5 = function f() { return TrmMod1() };
+//│ let f5; f5 = function f() { return 42 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:fixme
 :expect 42
 f
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor TrmMod cannot be invoked without 'new'
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+//│ = 42
 
 :sjs
 fun f: module TrmMod = TrmMod
@@ -105,8 +103,13 @@ assertModule(TypMod).whoami
 //│ = "module"
 
 :fixme
-assertModule(TrmMod).whoami
+:noInline
+print(assertModule(TrmMod).whoami)
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor TrmMod cannot be invoked without 'new'
+
+// TODO: handle
+print(assertModule(TrmMod).whoami)
+//│ > undefined
 
 
 fun assertNonModule(m) = m
@@ -126,7 +129,7 @@ assertNonModule(TypMod).whoami
 :breakme
 :fixme
 assertNonModule(TrmMod).whoami
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor TrmMod cannot be invoked without 'new'
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'whoami' yielded 'undefined'
 
 
 type Foo[A] = Int
@@ -135,10 +138,10 @@ module Foo
 :e
 fun f(x: Foo): Foo = x
 //│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
-//│ ║  l.136: 	fun f(x: Foo): Foo = x
+//│ ║  l.139: 	fun f(x: Foo): Foo = x
 //│ ╙──       	         ^^^
 //│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
-//│ ║  l.136: 	fun f(x: Foo): Foo = x
+//│ ║  l.139: 	fun f(x: Foo): Foo = x
 //│ ╙──       	               ^^^
 
 fun f(x: Foo[Int]): Foo[Int] = x
@@ -148,10 +151,10 @@ fun f(module x: Foo): module Foo = x
 :e
 fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
-//│ ║  l.149: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.152: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
-//│ ║  l.149: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.152: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                                  ^^^^^^^^
 
 

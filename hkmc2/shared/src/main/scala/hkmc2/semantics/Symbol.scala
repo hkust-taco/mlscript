@@ -21,6 +21,9 @@ abstract class Symbol(using State) extends Located:
   
   val uid: Uid[Symbol] = State.suid.nextUid
   
+  def showDbg(using DebugPrinter): Str =
+    this.showAsPlain
+  
   def showPlainName(using scp: Scope): hkmc2.document.Document =
     import hkmc2.document.*
     scp.allocateOrGetName(this)(using throw _)
@@ -192,6 +195,7 @@ object FlowSymbol:
   
 end FlowSymbol
 
+sealed trait LocalVarSymbol extends LocalSymbol
 sealed trait LocalSymbol extends Symbol:
   def subst(using s: SymbolSubst): LocalSymbol
 sealed trait NamedSymbol extends Symbol:
@@ -219,7 +223,7 @@ abstract class BlockLocalSymbol(name: Str)(using State) extends FlowSymbol(name)
   self: LocalSymbol => // * using `with LocalSymbol` in the `extends` clause makes Scala think there's a bad override
   var decl: Opt[Declaration] = N
 
-class TempSymbol(val trm: Opt[Term], dbgNme: Str = "tmp")(using State) extends BlockLocalSymbol(dbgNme) with LocalSymbol:
+class TempSymbol(val trm: Opt[Term], dbgNme: Str = "tmp")(using State) extends BlockLocalSymbol(dbgNme) with LocalVarSymbol:
   // val nameHints: MutSet[Str] = MutSet.empty // * May be useful later?
   override def toLoc: Option[Loc] = trm.flatMap(_.toLoc)
   override def prefix: Str = "tmp:"
@@ -235,7 +239,7 @@ class InstSymbol(val origin: Symbol)(using State) extends LocalSymbol:
   def subst(using sub: SymbolSubst): InstSymbol = sub.mapInstSym(this)
 
 
-class VarSymbol(val id: Ident)(using State) extends BlockLocalSymbol(id.name) with NamedSymbol with LocalSymbol:
+class VarSymbol(val id: Ident)(using State) extends BlockLocalSymbol(id.name) with NamedSymbol with LocalVarSymbol:
   val name: Str = id.name
   override def toLoc: Opt[Loc] = id.toLoc
   // override def toString: Str = s"$name@$uid"
@@ -332,6 +336,7 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   override def prefix: Str = s"term:${owner.map(o => s"${o.nme}/").getOrElse("")}"
   override def showPrefix(using Scope, ShowCfg, Raise): Str =
     "term:" + owner.map(_.showName + "/").getOrElse("")
+  def isPrivate: Bool = (k is LetBind) && owner.exists(!_.isInstanceOf[TopLevelSymbol])
   
   def subst(using sub: SymbolSubst): TermSymbol = sub.mapTermSym(this)
 
@@ -404,6 +409,14 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends Symbol:
   var decl: Opt[Declaration] = N // NOTE: currently only assigned for class params and only used by deforestation; may want to just remove it once deforestation is improved
   def bms: Opt[BlockMemberSymbol] = defn.map(_.bsym) 
   
+  // * Although the IR is immutable,
+  // * we consider that a given symbol is *owned* by the IR Defn node that defines it.
+  var irDefn: Opt[codegen.Defn] = N
+  def irFunDefn: Opt[codegen.FunDefn] = irDefn.collectFirst:
+    case fd: codegen.FunDefn => fd
+  def irClsLikeDefn: Opt[codegen.ClsLikeDefn] = irDefn.collectFirst:
+    case cd: codegen.ClsLikeDefn => cd
+  
   /** Whether we know it's pure when selected (eg getters are not always pure). */
   def isPure: Bool =
     this match
@@ -417,8 +430,6 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends Symbol:
         case _ => false
   
   def subst(using sub: SymbolSubst): DefinitionSymbol[Defn]
-  
-  def asMemSym: MemberSymbol = this
   
 end DefinitionSymbol
 

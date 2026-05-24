@@ -13,6 +13,7 @@ while true and false do print(1) else print(2)
 while true and true and false do print(1) else print(2)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda⁰;
+//│ @private
 //│ define lambda⁰ as fun lambda¹() {
 //│   loop lbl:
 //│     let scrut, scrut1, scrut2, tmp;
@@ -66,6 +67,7 @@ while x > 0 and x ===
   4 do print("B")
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda²;
+//│ @private
 //│ define lambda² as fun lambda³(x) {
 //│   loop lbl:
 //│     let scrut, scrut1, scrut2, scrut3, scrut4;
@@ -117,6 +119,7 @@ while x > 0 and x ===
   2 and false do print("B")
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda⁴;
+//│ @private
 //│ define lambda⁴ as fun lambda⁵(x) {
 //│   loop lbl:
 //│     let scrut, scrut1, scrut2, scrut3, scrut4, scrut5, tmp;

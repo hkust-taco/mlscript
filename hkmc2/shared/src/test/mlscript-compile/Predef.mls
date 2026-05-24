@@ -16,6 +16,10 @@ module Predef with ...
 
 fun id(x) = x
 
+// * To prevent optimization in dummy test inputs
+fun hide(x) = x
+fun maybe = hide(true)
+
 
 fun (@) apply(f, ...args) = f(...args)
 

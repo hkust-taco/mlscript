@@ -32,7 +32,10 @@ a.A#x
 :sir
 A::x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda⁰; define lambda⁰ as fun lambda¹(self, ...args) { return self.x¹(...args) }; lambda¹
+//│ let lambda⁰;
+//│ @private
+//│ define lambda⁰ as fun lambda¹(self, ...args) { return self.x¹(...args) };
+//│ lambda¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -41,6 +44,7 @@ A::x
 case A(x) then x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda²;
+//│ @private
 //│ define lambda² as fun lambda³(caseScrut) {
 //│   let x, arg$A$0$;
 //│   match caseScrut
@@ -83,7 +87,10 @@ a.A#x
 :sir
 A::x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda⁴; define lambda⁴ as fun lambda⁵(self, ...args) { return self.x³(...args) }; lambda⁵
+//│ let lambda⁴;
+//│ @private
+//│ define lambda⁴ as fun lambda⁵(self, ...args) { return self.x³(...args) };
+//│ lambda⁵
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -92,6 +99,7 @@ A::x
 case A as a then a.x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda⁶;
+//│ @private
 //│ define lambda⁶ as fun lambda⁷(caseScrut) {
 //│   let a;
 //│   match caseScrut
@@ -123,9 +131,9 @@ fun foo(x, y) =
 //│   val u⁰;
 //│   val v⁰;
 //│   constructor A⁷(y) {
-//│     set y⁰ = y;
+//│     set A⁸.this.y = y;
 //│     define u⁰ as val u¹ = u;
-//│     define v⁰ as val v¹ = y⁰;
+//│     define v⁰ as val v¹ = A⁸.this.y⁰;
 //│     end
 //│   }
 //│ };

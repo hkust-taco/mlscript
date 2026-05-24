@@ -1,0 +1,146 @@
+:js
+:deforest
+:etaExpansion debug
+
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+
+data class X(a)
+data class Y(b)
+data class (::) Cons(h, t)
+data object A
+data object B
+data object O
+data object Nil
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+
+
+:expect 3
+fun p(x) = X(x)
+fun c(x) = if x is
+  X(a) then a
+c(p(3))
+//│ deforest > >>> fusing >>>
+//│ deforest > X⁰(x⁰) ->
+//│ deforest > 	match: x¹
+//│ deforest > 	fields: x¹.a⁰
+//│ deforest > <<< fusing <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > p_5$p: [1, 2]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ = 3
+
+
+:expect 1
+fun p(b) =
+  if b then A
+  else B
+fun c(x) = if x is
+  A then 1
+  B then 2
+c(p(true))
+//│ deforest > >>> fusing >>>
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x²
+//│ deforest > A⁰ ->
+//│ deforest > 	match: x²
+//│ deforest > <<< fusing <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > p_6$p: [1, 0]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ = 1
+
+
+:expect O
+fun p() = X(Y(O))
+fun f(x) = if x is
+  X(y) then y
+fun g(y) = if y is
+  Y(o) then o
+g(f(p()))
+//│ deforest > >>> fusing >>>
+//│ deforest > X⁰(tmp⁰) ->
+//│ deforest > 	match: x³
+//│ deforest > 	fields: x³.a⁰
+//│ deforest > Y⁰(O⁰) ->
+//│ deforest > 	match: y⁰
+//│ deforest > 	fields: y⁰.b⁰
+//│ deforest > <<< fusing <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > f_12$f: [1, 2]
+//│ eta-expansion > p_10$p: [0, 2, 2]
+//│ eta-expansion > f_12$x_X: [1, 2, 2]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ = O
+
+
+
+:expect 22
+fun p(b) =
+  if b then X(Y(22)) else X(Y(33))
+fun c(x) = if x is
+  X(Y(y)) then y
+c(p(true))
+//│ deforest > >>> fusing >>>
+//│ deforest > X⁰(tmp¹) ->
+//│ deforest > 	match: x⁴
+//│ deforest > 	fields: x⁴.a⁰
+//│ deforest > Y⁰(33) ->
+//│ deforest > 	match: arg$X$0$⁰
+//│ deforest > 	fields: arg$X$0$⁰.b⁰
+//│ deforest > X⁰(tmp²) ->
+//│ deforest > 	match: x⁴
+//│ deforest > 	fields: x⁴.a⁰
+//│ deforest > Y⁰(22) ->
+//│ deforest > 	match: arg$X$0$⁰
+//│ deforest > 	fields: arg$X$0$⁰.b⁰
+//│ deforest > <<< fusing <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > p_12$p: [1, 3]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ = 22
+
+
+:expect 5
+fun main(x) =
+  fun p(y) = X(Y(x + y))
+  fun c(x) = if x is
+    X(Y(y)) then y
+  c(p(2))
+main(3)
+//│ deforest > >>> fusing >>>
+//│ deforest > X⁰(tmp³) ->
+//│ deforest > 	match: x⁵
+//│ deforest > 	fields: x⁵.a⁰
+//│ deforest > Y⁰(tmp⁴) ->
+//│ deforest > 	match: arg$X$0$¹
+//│ deforest > 	fields: arg$X$0$¹.b⁰
+//│ deforest > X⁰(tmp³) ->
+//│ deforest > 	match: x⁵
+//│ deforest > 	fields: x⁵.a⁰
+//│ deforest > Y⁰(tmp⁴) ->
+//│ deforest > 	match: arg$X$0$¹
+//│ deforest > 	fields: arg$X$0$¹.b⁰
+//│ deforest > <<< fusing <<<
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > p: [1, 3]
+//│ eta-expansion > p: [1, 3]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ = 5
+
+
+:etaExpansion off
+:expect 3
+fun p(x) = X(x)
+fun c(x) = if x is
+  X(a) then a
+c(p(3))
+//│ deforest > >>> fusing >>>
+//│ deforest > X⁰(x⁶) ->
+//│ deforest > 	match: x⁷
+//│ deforest > 	fields: x⁷.a⁰
+//│ deforest > <<< fusing <<<
+//│ = 3

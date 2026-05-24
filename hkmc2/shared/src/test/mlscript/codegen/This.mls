@@ -55,7 +55,7 @@ module Test with
 //│   }
 //│   static test1(x) {
 //│     return test1(x)
-//│   } 
+//│   }
 //│   static test2(x) {
 //│     return globalThis.Object.freeze([
 //│       Test.a,
@@ -63,7 +63,7 @@ module Test with
 //│     ])
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Test"]; 
+//│   static [definitionMetadata] = ["class", "Test"];
 //│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

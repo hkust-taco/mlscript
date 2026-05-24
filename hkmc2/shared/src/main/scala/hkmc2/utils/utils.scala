@@ -151,6 +151,10 @@ extension [A](ls: Ls[A])
   def foldSingleton[B](no: Ls[A] => B)(yes: A => B): B = ls match
     case x :: Nil => yes(x)
     case Nil | _ :: _ => no(ls)
+  def filterConserve(p: A => Bool): Ls[A] =
+    var same = true
+    val res = ls.filter(a => p(a) || { same = false; false })
+    if same then ls else res
 
 extension (n: Int)
   /** Converts a number to its English word representation. */

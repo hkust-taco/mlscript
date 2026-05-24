@@ -90,26 +90,28 @@ class BlockTraverser:
     val ValDefn(tsym, sym, rhs) = defn
     tsym.owner.foreach(_.traverse); sym.traverse; applyPath(rhs)
   
+  def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
+    val ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
+      privateFields, publicFields, preCtor, ctor, mod, bufferable) = defn
+    own.foreach(_.traverse)
+    isym.traverse
+    sym.traverse
+    ctorSym.foreach(_.traverse)
+    paramsOpt.foreach(applyParamList)
+    auxParams.foreach(applyParamList)
+    parentPath.foreach(applyPath)
+    methods.foreach(applyFunDefn)
+    privateFields.foreach(_.traverse)
+    publicFields.foreach: f =>
+      f._1.traverse; f._2.traverse
+    applySubBlock(preCtor)
+    applySubBlock(ctor)
+    mod.foreach(applyCompanionModule)
+  
   def applyDefn(defn: Defn): Unit = defn match
     case defn: FunDefn => applyFunDefn(defn)
     case defn: ValDefn => applyValDefn(defn)
-    case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
-        privateFields, publicFields, preCtor, ctor, mod, bufferable)
-    =>
-      own.foreach(_.traverse)
-      isym.traverse
-      sym.traverse
-      ctorSym.foreach(_.traverse)
-      paramsOpt.foreach(applyParamList)
-      auxParams.foreach(applyParamList)
-      parentPath.foreach(applyPath)
-      methods.foreach(applyFunDefn)
-      privateFields.foreach(_.traverse)
-      publicFields.foreach: f =>
-        f._1.traverse; f._2.traverse
-      applySubBlock(preCtor)
-      applySubBlock(ctor)
-      mod.foreach(applyCompanionModule)
+    case defn: ClsLikeDefn => applyClsLikeDefn(defn)
   
   def applyCompanionModule(b: ClsLikeBody): Unit =
     b.isym.traverse
