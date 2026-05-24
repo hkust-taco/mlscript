@@ -19,6 +19,7 @@ fun foo() =
 //│     end
 //│   }
 //│ };
+//│ @inline
 //│ define bar$⁰ as fun bar$¹(scope0$cap)() {
 //│   return bar¹(scope0$cap)
 //│ };

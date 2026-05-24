@@ -63,6 +63,7 @@ fun f(used1, unused1) =
 f(1, 2)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let g⁰, f⁰, g$⁰;
+//│ @inline
 //│ define g$⁰ as fun g$¹(used1, used2)(g_arg) {
 //│   return g¹(used1, used2, g_arg)
 //│ };
@@ -273,6 +274,7 @@ g()(1)
 //│   set x = 4;
 //│   return +⁰(x, scope0$cap.y$0¹)
 //│ };
+//│ @inline
 //│ define f$⁰ as fun f$¹(scope0$cap)(x) {
 //│   return f⁷(scope0$cap, x)
 //│ };
@@ -411,6 +413,7 @@ fun f(x) =
     [g, g]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let g¹⁰, f¹⁰, g$²;
+//│ @inline
 //│ define g$² as fun g$³(y)() {
 //│   return g¹¹(y)
 //│ };
@@ -442,6 +445,7 @@ fun f(x) =
   [a, g]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let g¹², f¹², Capture$f³, g$⁴;
+//│ @inline
 //│ define g$⁴ as fun g$⁵(f$cap)() {
 //│   return g¹³(f$cap)
 //│ };

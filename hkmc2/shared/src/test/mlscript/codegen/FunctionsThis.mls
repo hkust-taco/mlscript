@@ -20,9 +20,9 @@ class Test with
 //│     Test1 = this
 //│   }
 //│   constructor() {
-//│     let tmp;
-//│     tmp = foo();
-//│     Predef.print(tmp);
+//│     let inlinedVal;
+//│     inlinedVal = x + 1;
+//│     Predef.print(inlinedVal);
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Test"];

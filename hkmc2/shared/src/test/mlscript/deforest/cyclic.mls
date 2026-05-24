@@ -85,10 +85,12 @@ modSome(Some(17), 3)
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let modSome⁰, tmp, modSome_12$modSome⁰, modSome_12$x_Some⁰, modSome_12$x_rest⁰, Some_x;
+//│ @private
 //│ define modSome_12$modSome⁰ as fun modSome_12$modSome¹(x, m) {
 //│   let n, scrut, arg$Some$0$, tmp1, tmp2;
 //│   return x(m, n, scrut, arg$Some$0$, tmp1, tmp2)
 //│ };
+//│ @affine(1) @private
 //│ define modSome_12$x_Some⁰ as fun modSome_12$x_Some¹(Some_x1)(fv_m, fv_n, fv_scrut, fv_arg$Some$0$, fv_tmp, fv_tmp1) {
 //│   set fv_arg$Some$0$ = Some_x1;
 //│   set fv_n = fv_arg$Some$0$;
@@ -104,6 +106,7 @@ modSome(Some(17), 3)
 //│       return Some⁰(fv_n)
 //│   end
 //│ };
+//│ @private
 //│ define modSome_12$x_rest⁰ as fun modSome_12$x_rest¹() {
 //│   return null
 //│ };

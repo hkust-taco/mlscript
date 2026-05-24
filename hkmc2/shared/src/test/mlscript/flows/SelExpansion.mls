@@ -219,7 +219,7 @@ new AA.BB.CC().x
 //│ where
 //│     
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp3; tmp3 = globalThis.Object.freeze(new AA1.BB.CC()); tmp3.x
+//│ let tmp1; tmp1 = globalThis.Object.freeze(new AA1.BB.CC()); tmp1.x
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -230,7 +230,7 @@ new AA.BB.CC().getX
 //│ where
 //│     
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp4; tmp4 = globalThis.Object.freeze(new AA1.BB.CC()); runtime.safeCall(AA1.BB.CC.getX(tmp4))
+//│ let tmp2; tmp2 = globalThis.Object.freeze(new AA1.BB.CC()); runtime.safeCall(AA1.BB.CC.getX(tmp2))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 

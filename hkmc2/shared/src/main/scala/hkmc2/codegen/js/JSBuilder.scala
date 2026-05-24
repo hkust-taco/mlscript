@@ -399,7 +399,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         val (thisProxy, res) = scope.nestRebindThis(
             // * Either this is an InnerSymbol or this is a Fun,
             // * and we need to rebind `this` to None to shadow it.
-            defn.innerSym.collectFirst{ case s: InnerSymbol => s }):
+            defn.defnSym.collectFirst{ case s: InnerSymbol => s }):
           defn match
             
           case FunDefn(params = Nil) =>
@@ -991,7 +991,9 @@ object JSBuilder:
     }.mkString
   
   extension (dsym: DefinitionSymbol[?])
-    def shouldBeLifted: Bool = 
+    /** In JS, when a class is overloaded with a term (either explicitly, or because it has a primary parameter list),
+      * then its class value is stored in a `.class` property of the term. */
+    def shouldBeLifted: Bool =
       val bsym = dsym.asBlkMember
       (
         (dsym.asTrm orElse bsym.flatMap(_.asTrm)).isDefined ||

@@ -9,11 +9,10 @@ object None
 :sjs
 if Some(0) is Some(x) then x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut, arg$Some$0$;
+//│ let scrut;
 //│ scrut = Some1(0);
 //│ if (scrut instanceof Some1.class) {
-//│   arg$Some$0$ = scrut.value;
-//│   arg$Some$0$
+//│   scrut.value
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
@@ -26,10 +25,8 @@ let s = Some(0)
 if s is
   Some(x) then x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let arg$Some$0$1;
 //│ if (s instanceof Some1.class) {
-//│   arg$Some$0$1 = s.value;
-//│   arg$Some$0$1
+//│   s.value
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
@@ -99,10 +96,8 @@ x => if x is Some(x) then x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda;
 //│ lambda = (undefined, function (x) {
-//│   let arg$Some$0$4;
 //│   if (x instanceof Some1.class) {
-//│     arg$Some$0$4 = x.value;
-//│     return arg$Some$0$4
+//│     return x.value
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
@@ -165,10 +160,10 @@ fun f(x) = if x is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f4;
 //│ f4 = function f(x) {
-//│   let scrut1, arg$Some$0$4;
+//│   let scrut1, arg$Some$0$1;
 //│   if (x instanceof Some1.class) {
-//│     arg$Some$0$4 = x.value;
-//│     scrut1 = arg$Some$0$4 > 0;
+//│     arg$Some$0$1 = x.value;
+//│     scrut1 = arg$Some$0$1 > 0;
 //│     if (scrut1 === true) {
 //│       return 42
 //│     }
@@ -201,10 +196,9 @@ fun f(x) = if x is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f5;
 //│ f5 = function f(x) {
-//│   let arg$Pair$0$, arg$Pair$1$, arg$Some$0$4;
+//│   let arg$Pair$0$, arg$Pair$1$;
 //│   if (x instanceof Some1.class) {
-//│     arg$Some$0$4 = x.value;
-//│     return arg$Some$0$4
+//│     return x.value
 //│   } else if (x instanceof Pair1.class) {
 //│     arg$Pair$0$ = x.fst;
 //│     arg$Pair$1$ = x.snd;
@@ -230,10 +224,10 @@ fun f(x) = print of if x is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f6;
 //│ f6 = function f(x) {
-//│   let arg$Some$0$4;
+//│   let arg$Some$0$1;
 //│   if (x instanceof Some1.class) {
-//│     arg$Some$0$4 = x.value;
-//│     if (arg$Some$0$4 === 0) {
+//│     arg$Some$0$1 = x.value;
+//│     if (arg$Some$0$1 === 0) {
 //│       return Predef.print("0")
 //│     }
 //│     return Predef.print("oops");

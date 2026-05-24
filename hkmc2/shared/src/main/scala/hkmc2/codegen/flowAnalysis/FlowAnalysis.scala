@@ -140,7 +140,7 @@ object CtorRef:
     sym.asTrm.flatMap: tSym =>
       for
         cls <- tSym.owner.flatMap(_.asCls)
-        clsDef <- cls.defn
+        clsDef <- cls.irClsLikeDefn
         ctorSym <- clsDef.ctorSym
         if ctorSym is tSym
       yield cls

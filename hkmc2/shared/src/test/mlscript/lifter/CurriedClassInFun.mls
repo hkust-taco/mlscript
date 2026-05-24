@@ -33,6 +33,7 @@ fun f(x) =
   [new A(x + 1)(x + 2), A, A(x + 1), A(x + 1)(x + 2)]
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let A⁰, f⁰, Capture$f⁰, A$⁰;
+//│ @inline
 //│ define A$⁰ as fun A$¹(f$cap)(y)(z) {
 //│   return new A¹(y)(f$cap)(z)
 //│ };

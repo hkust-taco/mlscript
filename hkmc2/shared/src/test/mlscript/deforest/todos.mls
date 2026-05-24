@@ -53,32 +53,39 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let test⁰, f⁰, p⁰, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_31$test⁰, test_31$x_dflt⁰, test_31$x_rest⁰, test_28$test⁰, test_28$x_AA⁰, test_28$x_rest⁰, test_28$arg$AA$0$_AA⁰, test_28$arg$AA$0$_rest⁰, test_28$arg$AA$0$_AA¹, test_28$arg$AA$0$_rest¹, AA_x, AA_x1, AA_x2, deforest$lam;
+//│ @private
 //│ define test_31$test⁰ as fun test_31$test¹(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
 //│   return x(tmp11, t, tmp11, tmp12, tmp13, tmp14, tmp15)
 //│ };
+//│ @private
 //│ define test_28$test⁰ as fun test_28$test¹(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;
 //│   return x(t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15, t, tmp11, tmp12, tmp13, tmp14, tmp15)
 //│ };
+//│ @affine(1) @private
 //│ define test_31$x_dflt⁰ as fun test_31$x_dflt¹()(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
 //│   set fv_tmp1 = 4;
 //│   return test_31$x_rest¹(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
 //│ };
+//│ @affine(1) @private
 //│ define test_28$x_AA⁰ as fun test_28$x_AA¹(AA_x3)(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9) {
 //│   set fv_arg$AA$0$ = AA_x3;
 //│   return fv_arg$AA$0$(fv_t1, fv_a, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9)
 //│ };
+//│ @affine(1) @private
 //│ define test_28$arg$AA$0$_AA⁰ as fun test_28$arg$AA$0$_AA²(AA_x3)(fv_t, fv_a, fv_arg$AA$0$, fv_arg$AA$0$1, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9) {
 //│   set fv_arg$AA$0$ = AA_x3;
 //│   return fv_arg$AA$0$(fv_a, fv_arg$AA$0$1, fv_tmp5, fv_t1, fv_tmp5, fv_tmp6, fv_tmp7, fv_tmp8, fv_tmp9)
 //│ };
+//│ @affine(1) @private
 //│ define test_28$arg$AA$0$_AA¹ as fun test_28$arg$AA$0$_AA³(AA_x3)(fv_a, fv_arg$AA$0$, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5) {
 //│   set fv_arg$AA$0$ = AA_x3;
 //│   set fv_a = fv_arg$AA$0$;
 //│   set fv_tmp1 = fv_a;
 //│   return test_28$arg$AA$0$_rest²(fv_t, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4, fv_tmp5)
 //│ };
+//│ @private
 //│ define test_31$x_rest⁰ as fun test_31$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
 //│   set fv_t = fv_tmp;
 //│   set fv_tmp1 = *⁰(5, 4);
@@ -87,6 +94,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   set fv_tmp4 = +⁰(fv_tmp3, 2);
 //│   return -⁰(fv_tmp4, 1)
 //│ };
+//│ @private
 //│ define test_28$x_rest⁰ as fun test_28$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
 //│   set fv_t = fv_tmp;
 //│   set fv_tmp1 = *⁰(5, 4);
@@ -95,9 +103,11 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   set fv_tmp4 = +⁰(fv_tmp3, 2);
 //│   return -⁰(fv_tmp4, 1)
 //│ };
+//│ @private
 //│ define test_28$arg$AA$0$_rest⁰ as fun test_28$arg$AA$0$_rest³(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
 //│   return test_28$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
 //│ };
+//│ @private
 //│ define test_28$arg$AA$0$_rest¹ as fun test_28$arg$AA$0$_rest²(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4) {
 //│   return test_28$arg$AA$0$_rest³(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3, fv_tmp4)
 //│ };

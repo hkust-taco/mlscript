@@ -77,7 +77,7 @@ Foo(1).a
 fun foo(y) = Foo(y)
 foo(27)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo, inlinedVal; foo = function foo(y) { return Foo3(y) }; inlinedVal = Foo3(27); inlinedVal
+//│ let foo; foo = function foo(y) { return Foo3(y) }; Foo3(27)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Foo(27)
 

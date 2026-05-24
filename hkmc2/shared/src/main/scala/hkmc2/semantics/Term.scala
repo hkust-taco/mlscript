@@ -45,7 +45,10 @@ enum Annot extends AutoLocated:
     case _: Modifier | Untyped | TailRec | TailCall | Inline | _: Config => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
-    case Untyped => doc"‹untyped›"
+    case Untyped => doc"@untyped"
+    case Inline => doc"@inline"
+    case TailRec => doc"@tailrec"
+    case Affine(n) => doc"@affine($n)"
     case Modifier(mod) => doc"@${mod.name}"
     case Trm(trm) => doc"@${trm.show}"
     case Config(_) => doc"@config(...)"

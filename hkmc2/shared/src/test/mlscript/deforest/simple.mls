@@ -570,12 +570,15 @@ f(id(A)) + f(A)
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let f⁰, tmp, tmp1, tmp2, f_7$f⁰, f_7$x_A⁰, f_7$x_rest⁰, deforest$lam;
+//│ @private
 //│ define f_7$f⁰ as fun f_7$f¹(x) {
 //│   return x()
 //│ };
+//│ @affine(1) @private
 //│ define f_7$x_A⁰ as fun f_7$x_A¹()() {
 //│   return 1
 //│ };
+//│ @private
 //│ define f_7$x_rest⁰ as fun f_7$x_rest¹() {
 //│   return null
 //│ };

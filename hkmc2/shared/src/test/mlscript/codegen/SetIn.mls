@@ -120,6 +120,7 @@ example()
 //│ define example⁰ as fun example¹() {
 //│   let x, get_x, old, tmp, tmp1, tmp2, tmp3, get_x1;
 //│   set x = 0;
+//│   @private
 //│   define get_x1 as fun get_x⁰() {
 //│     return x
 //│   };

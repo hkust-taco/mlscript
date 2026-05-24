@@ -79,6 +79,7 @@ case
   [x, ...xs] then print("non-empty", x)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda⁰;
+//│ @private
 //│ define lambda⁰ as fun lambda¹(caseScrut) {
 //│   let x, xs, middleElements, element0$;
 //│   match caseScrut

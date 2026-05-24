@@ -1,24 +1,41 @@
 :js
 
 
+fun foo(x)(y) = 42
+
+:soir
+let f = foo(1) in f(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ 42
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
 fun foo(x)(y)(z) =
   print("hi")
   x + y + z
 
+:soir
+foo(1)(2)(3)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ foo$worker⁰(1, 2, 3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > hi
+//│ = 6
 
-// The unsaturated call `foo(1)(2)` is pure, so it can be propagated
-// to later call sites and combined with their remaining arguments.
+// * The unsaturated call `foo(1)(2)` is pure, so it can be propagated
+// * to later call sites and combined with their remaining arguments.
 :soir
 let f = foo(1)(2)
 print("hello")
 f(3) + f(4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰, tmp, tmp1;
+//│ let f⁰, inlinedVal, inlinedVal1;
 //│ set f⁰ = foo⁰(1)(2);
 //│ do Predef⁰.print⁰("hello");
-//│ set tmp = foo⁰(1)(2)(3);
-//│ set tmp1 = foo⁰(1)(2)(4);
-//│ +⁰(tmp, tmp1)
+//│ set inlinedVal = foo$worker⁰(1, 2, 3);
+//│ set inlinedVal1 = foo$worker⁰(1, 2, 4);
+//│ +⁰(inlinedVal, inlinedVal1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hello
 //│ > hi
@@ -27,23 +44,97 @@ f(3) + f(4)
 //│ f = fun
 
 
+:global
+:inlineThreshold 100
+
+
 :soir
-:inlineThreshold 10
-fun foo(x)(y)(z) = x + y + z
 let f = foo(1)(2) in
   print("hello")
-  f(3)
+  f(3) + f(4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo¹;
-//│ define foo¹ as fun foo²(x)(y)(z) {
-//│   let tmp;
-//│   set tmp = +⁰(x, y);
-//│   return +⁰(tmp, z)
-//│ };
-//│ do Predef⁰.print⁰("hello");
-//│ 6
+//│ do Predef⁰.print⁰("hello"); do Predef⁰.print⁰("hi"); do Predef⁰.print⁰("hi"); 13
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hello
+//│ > hi
+//│ > hi
+//│ = 13
+
+:soir
+let f = foo(1)(2)
+print("hello")
+f(3)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f¹; set f¹ = foo⁰(1)(2); do Predef⁰.print⁰("hello"); do Predef⁰.print⁰("hi"); 6
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > hello
+//│ > hi
 //│ = 6
+//│ f = fun
+
+
+:soir
+fun foo(x)(y) =
+  print("hi")
+  z => 42
+let f = foo(1)(2)
+print("hello")
+f(3)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let foo¹, f², foo$worker¹, lambda⁰;
+//│ @inline
+//│ define foo¹ as fun foo²(x)(y) {
+//│   return foo$worker²(x, y)
+//│ };
+//│ define foo$worker¹ as fun foo$worker²(x, y) {
+//│   let lambda;
+//│   do Predef⁰.print⁰("hi");
+//│   @private
+//│   define lambda as fun lambda¹(z) {
+//│     return 42
+//│   };
+//│   return lambda¹
+//│ };
+//│ do Predef⁰.print⁰("hi");
+//│ @private
+//│ define lambda⁰ as fun lambda²(z) { return 42 };
+//│ set f² = lambda²;
+//│ do Predef⁰.print⁰("hello");
+//│ 42
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > hi
+//│ > hello
+//│ = 42
+//│ f = fun
+
+
+// * The wrapper is still inlined using the alternative inlining threshold
+:inlineThreshold 0
+:soir
+foo(1)(2)(3)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let inlinedVal; set inlinedVal = foo$worker²(1, 2); inlinedVal(3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > hi
+//│ = 42
+
+// * Note that in this example, we share the worker call result (unlike examples at the beginning of the file)
+:soir
+let f = foo(1)(2)
+print("hello")
+f(3) + f(4)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f³, tmp, tmp1, inlinedVal;
+//│ set inlinedVal = foo$worker²(1, 2);
+//│ set f³ = inlinedVal;
+//│ do Predef⁰.print⁰("hello");
+//│ set tmp = inlinedVal(3);
+//│ set tmp1 = inlinedVal(4);
+//│ +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > hi
+//│ > hello
+//│ = 84
+//│ f = fun
 
 

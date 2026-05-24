@@ -20,6 +20,7 @@ fun loop(x)(y) =
 loop(1000)(0)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let loop⁰, loop$tailrec⁰;
+//│ @private
 //│ define loop$tailrec⁰ as fun loop$tailrec¹(x, y) {
 //│   loop loopLabel:
 //│     let scrut, tmp, tmp1;
@@ -36,6 +37,7 @@ loop(1000)(0)
 //│     end
 //│   end
 //│ };
+//│ @tailrec
 //│ define loop⁰ as fun loop¹(x)(y) { return loop$tailrec¹(x, y) };
 //│ loop¹(1000)(0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -50,6 +52,7 @@ fun count(start)(stop) =
 count(0)(100)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let count⁰, count$tailrec⁰;
+//│ @private
 //│ define count$tailrec⁰ as fun count$tailrec¹(start, stop) {
 //│   loop loopLabel:
 //│     let scrut, tmp;

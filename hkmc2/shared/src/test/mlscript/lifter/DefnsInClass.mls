@@ -10,6 +10,7 @@ data class A(x) with
   fun getA() = B(2).getB()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let B⁰, A⁰;
+//│ @data
 //│ define B⁰ as class B²(y) {
 //│   private val A¹;
 //│   val y⁰;
@@ -22,6 +23,7 @@ data class A(x) with
 //│     return +⁰(B².this.A¹.x⁰, B².this.y¹)
 //│   }
 //│ };
+//│ @data
 //│ define A⁰ as class A³(x) {
 //│   val x¹;
 //│   constructor A² {

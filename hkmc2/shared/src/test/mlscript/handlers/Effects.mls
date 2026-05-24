@@ -111,8 +111,7 @@ result
 //│     if (runtime.curEffect === null) {
 //│       tmp7
 //│     } else {
-//│       tmp7 = runtime.illegalEffect("in a constructor");
-//│       tmp7
+//│       runtime.illegalEffect("in a constructor")
 //│     }
 //│   }
 //│   perform(arg) {
@@ -445,28 +444,28 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.440: 	    module A with
+//│ ║  l.439: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.436: 	    module A with
+//│ ║  l.435: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.432: 	    module A with
+//│ ║  l.431: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.428: 	    module A with
+//│ ║  l.427: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.428: 	    module A with
+//│ ║  l.427: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.432: 	    module A with
+//│ ║  l.431: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.436: 	    module A with
+//│ ║  l.435: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.440: 	    module A with
+//│ ║  l.439: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 

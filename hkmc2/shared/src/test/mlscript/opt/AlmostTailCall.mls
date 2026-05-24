@@ -1,53 +1,87 @@
 :js
+
+
+// * This can be made a tail call
+:soir
+fun foo() =
+  let x = hide(42)
+  x
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let foo⁰; define foo⁰ as fun foo¹() { return Predef⁰.hide⁰(42) }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// * The call should NOT be moved into the conditional, here, as it is impure
+:soir
+fun foo() =
+  let x = hide(42)
+  if maybe then
+    x
+  else
+    0
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let foo²;
+//│ define foo² as fun foo³() {
+//│   let x, scrut;
+//│   set x = Predef⁰.hide⁰(42);
+//│   set scrut = Predef⁰.maybe⁰;
+//│   match scrut
+//│     true =>
+//│       return x
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+fun bar(x)(y) = x + y
+
+// * This `bar(42)` call is pure (because unsaturated) and can be moved into tail position
+:soir
 :noInline
-
-// Test: Dead parameter elimination with multiple parameter lists
-:deadParamElim
-:soir
-private fun f(a)(b) = a
-f(42)(99)
+fun foo() =
+  let x = bar(42)
+  print("Hello")
+  if maybe then
+    x
+  else
+    0
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰; @private define f⁰ as fun f¹(a)(b) { return a }; f¹(42)(99)
+//│ let foo⁴;
+//│ define foo⁴ as fun foo⁵() {
+//│   let scrut;
+//│   do Predef⁰.print⁰("Hello");
+//│   set scrut = Predef⁰.maybe⁰;
+//│   match scrut
+//│     true =>
+//│       return bar⁰(42)
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 42
 
-// Test: Both params dead across two parameter lists
-:deadParamElim
+// * This can still be made a tail call because the pure statement on the way is dropped
 :soir
-private fun g(x)(y) = 0
-g(1)(2)
+fun foo() =
+  let x = hide(42)
+  let y = bar(42)
+  x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let g⁰; @private define g⁰ as fun g¹()(y) { return 0 }; g¹()(2)
+//│ let foo⁶; define foo⁶ as fun foo⁷() { return Predef⁰.hide⁰(42) }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 0
 
-// Test: Dead param in second list only
-:deadParamElim
-:soir
-private fun h(x)(y) = x
-h(5)(10)
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let h⁰; @private define h⁰ as fun h¹(x)(y) { return x }; h¹(5)(10)
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 5
 
-// Test: Dead param in first list only
-:deadParamElim
-:soir
-private fun j(x)(y) = y
-j(5)(10)
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let j⁰; @private define j⁰ as fun j¹()(y) { return y }; j¹()(10)
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 10
+fun const(x)(y) = x
 
-// Test: Three parameter lists, middle one dead
-:deadParamElim
 :soir
-private fun k(a)(b)(c) = a + c
-k(1)(2)(3)
+fun main =
+  let x
+  x = const(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let k⁰; @private define k⁰ as fun k¹(a)(b)(c) { return +⁰(a, c) }; k¹(1)(2)(3)
+//│ let main⁰; define main⁰ as fun main¹() { let x; set x = const⁰(x); return runtime⁰.Unit⁰ }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 4
+
 

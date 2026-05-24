@@ -14,7 +14,8 @@ fun foo(x)(y) =
   x + y + x + y
 foo(1)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰, foo$worker⁰, inlinedVal;
+//│ let foo⁰, foo$worker⁰;
+//│ @inline
 //│ define foo⁰ as fun foo¹(x)(y) {
 //│   return foo$worker¹(x, y)
 //│ };
@@ -24,8 +25,7 @@ foo(1)(2)
 //│   set tmp1 = +⁰(tmp, x);
 //│   return +⁰(tmp1, y)
 //│ };
-//│ set inlinedVal = foo$worker¹(1, 2);
-//│ inlinedVal
+//│ foo$worker¹(1, 2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 
@@ -35,7 +35,7 @@ foo(1)(2)
 fun tiny(x)(y) = y
 tiny(1)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tiny⁰; define tiny⁰ as fun tiny¹(x)(y) { return y }; 2
+//│ let tiny⁰; @inline define tiny⁰ as fun tiny¹(x)(y) { return y }; 2
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 

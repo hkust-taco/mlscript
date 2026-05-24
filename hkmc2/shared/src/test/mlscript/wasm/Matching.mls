@@ -110,7 +110,6 @@ if Bar(true) is
 //│         (local.get $this))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $scrut (ref null any))
-//│     (local $arg$Baz$0$ (ref null any))
 //│     (local $arg$Bar$0$ (ref null any))
 //│     (local $matchRes (ref null any))
 //│     (local $currentTypeInfo (ref null any))
@@ -249,12 +248,9 @@ if Bar(true) is
 //│                     (then
 //│                       (block $arm
 //│                         (local.set $matchRes
-//│                           (block (result (ref null any))
-//│                             (local.set $arg$Baz$0$
-//│                               (struct.get $Baz $z
-//│                                 (ref.cast (ref $Baz)
-//│                                   (local.get $scrut))))
-//│                             (local.get $arg$Baz$0$)))
+//│                           (struct.get $Baz $z
+//│                             (ref.cast (ref $Baz)
+//│                               (local.get $scrut))))
 //│                         (br $match))))))
 //│               (local.set $matchRes
 //│                 (ref.i31

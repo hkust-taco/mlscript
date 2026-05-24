@@ -20,6 +20,7 @@ fun aux(f) = f(1) + f(10)
 x => x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda⁰, Function$⁰, tmp;
+//│ @private
 //│ define lambda⁰ as fun lambda¹(x) {
 //│   return x
 //│ };
@@ -36,7 +37,7 @@ x => x
 :noInline
 x => x
 //│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
-//│ ║  l.37: 	x => x
+//│ ║  l.38: 	x => x
 //│ ╙──      	^
 //│ = class anonymous
 
@@ -96,12 +97,12 @@ let f = foo in bar(f)
 bar([foo].0)
 bar([foo, x => x].1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if 0 is a function.
-//│ ║  l.96: 	bar([foo].0)
+//│ ║  l.97: 	bar([foo].0)
 //│ ╙──      	         ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 0$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
 //│ ╔══[COMPILATION ERROR] Cannot determine if 1 is a function.
-//│ ║  l.97: 	bar([foo, x => x].1)
+//│ ║  l.98: 	bar([foo, x => x].1)
 //│ ╙──      	                 ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 1$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
@@ -118,7 +119,7 @@ bar([foo, x => x].(i))
 :ge
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.119: 	[foo, x => x].(i)(0)
+//│ ║  l.120: 	[foo, x => x].(i)(0)
 //│ ╙──       	               ^
 
 
@@ -132,10 +133,10 @@ let foo = Foo()
 foo.("f")(0)
 foo.("h")(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.132: 	foo.("f")(0)
+//│ ║  l.133: 	foo.("f")(0)
 //│ ╙──       	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.133: 	foo.("h")(1)
+//│ ║  l.134: 	foo.("h")(1)
 //│ ╙──       	^^^^^^^^
 //│ = 0
 //│ foo = Foo()
@@ -169,6 +170,7 @@ fun foo() = x => x
 foo()(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let foo³, baseCall, lambda⁶, Function$⁶;
+//│ @private
 //│ define lambda⁶ as fun lambda⁷(x) {
 //│   return x
 //│ };
@@ -223,6 +225,7 @@ module Foo with
     fun bar(z) = x => x + y + z 
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Foo¹, lambda⁸, Function$⁸;
+//│ @private
 //│ define lambda⁸ as fun lambda⁹(Bar, z, x) {
 //│   let tmp;
 //│   set tmp = +⁰(x, Bar.y⁰);
@@ -276,6 +279,7 @@ let x = 1
 y => x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda¹⁰, Function$¹⁰, tmp;
+//│ @private
 //│ define lambda¹⁰ as fun lambda¹¹(y) {
 //│   return +⁰(x¹, y)
 //│ };
@@ -374,7 +378,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.375: 	foo.f(0)
+//│ ║  l.379: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -392,7 +396,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.393: 	foo.x(0)
+//│ ║  l.397: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 
@@ -502,26 +506,37 @@ foo(1)
 
 fun foo(f) = f("abc")
 
-// FIXME: should output "abc"
+print("abc")
+//│ > abc
+
+// TODO: should be able to find this info
+:e
 foo(print)
-//│ > 
+//│ ╔══[COMPILATION ERROR] Cannot get print's parameter list.
+//│ ║  l.514: 	foo(print)
+//│ ╙──       	    ^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'call' expected 0 arguments but got 1
+
+foo(print(_))
+//│ > abc
 
 :fixme
 :sir
 :expect ["abc"]
 foo(tuple)
+//│ ╔══[COMPILATION ERROR] Cannot get tuple's parameter list.
+//│ ║  l.526: 	foo(tuple)
+//│ ╙──       	    ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Function$¹⁴, tmp;
 //│ define Function$¹⁴ as class extends globalThis⁰.Function⁰ Function$¹⁵ {
-//│   method call¹⁴ = fun call¹⁵(...xs) {
-//│     return Predef⁰.tuple⁰()
-//│   }
+//│   method call¹⁴ = fun call¹⁵() { return Predef⁰.tuple⁰() }
 //│ };
 //│ set tmp = new Function$¹⁵();
 //│ foo⁷(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Expected: '["abc"]', got: '[]'
-//│ = []
+//│ ═══[RUNTIME ERROR] Error: Function 'call' expected 0 arguments but got 1
+//│ ═══[RUNTIME ERROR] Expected: '["abc"]', got: 'undefined'
 
 
 if true is true then print("true")

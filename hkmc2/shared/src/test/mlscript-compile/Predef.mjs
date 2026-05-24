@@ -293,15 +293,14 @@ let Predef1;
   static mkStr(...xs) {
     let lambda, callPrefix;
     lambda = (undefined, function (acc, x) {
-      let tmp, tmp1;
+      let tmp;
       if (typeof x === 'string') {
         tmp = true;
       } else {
         tmp = false;
       }
       Predef.check(tmp);
-      tmp1 = acc + x;
-      return tmp1
+      return acc + x
     });
     callPrefix = runtime.safeCall(Predef.fold(lambda));
     return runtime.safeCall(callPrefix(...xs))

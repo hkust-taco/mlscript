@@ -8,10 +8,8 @@ fun nonsense(xs) = if xs is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let nonsense;
 //│ nonsense = function nonsense(xs) {
-//│   let middleElements;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 0) {
-//│     middleElements = runtime.Tuple.slice(xs, 0, 0);
-//│     return middleElements
+//│     return runtime.Tuple.slice(xs, 0, 0)
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };

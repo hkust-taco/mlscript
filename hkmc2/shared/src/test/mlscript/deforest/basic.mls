@@ -25,6 +25,7 @@ let useless = if lsit is [a, b] then 0
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lsit⁰, useless⁰, a⁰, b⁰, element1$, element0$, tmp, $lsit_tup2⁰, $lsit_rest⁰, tup2_0, tup2_1;
+//│ @affine(1) @private
 //│ define $lsit_tup2⁰ as fun $lsit_tup2¹(tup2_01, tup2_11)() {
 //│   set element0$ = tup2_01;
 //│   set element1$ = tup2_11;
@@ -33,6 +34,7 @@ let useless = if lsit is [a, b] then 0
 //│   set tmp = 0;
 //│   return $lsit_rest¹()
 //│ };
+//│ @private
 //│ define $lsit_rest⁰ as fun $lsit_rest¹() {
 //│   set useless⁰ = tmp;
 //│   return null
@@ -75,6 +77,7 @@ f(p())
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let p⁰, f⁰, tmp, p_10$p⁰, f_12$f⁰, f_12$x_X⁰, f_12$x_rest⁰, f_12$split_default$_rest⁰, f_12$split_root$_rest⁰, f_12$arg$X$0$_Y⁰, f_12$arg$X$0$_rest⁰;
+//│ @private
 //│ define p_10$p⁰ as fun p_10$p¹()(eta$0$0, eta$0$1, eta$0$2) {
 //│   let tmp1, Y_b, X_a;
 //│   set Y_b = O⁰;
@@ -82,6 +85,7 @@ f(p())
 //│   set X_a = tmp1;
 //│   return f_12$x_X¹(X_a)(eta$0$0, eta$0$1, eta$0$2)
 //│ };
+//│ @private
 //│ define f_12$f⁰ as fun f_12$f¹(x) {
 //│   let y, arg$X$0$, arg$Y$0$;
 //│   block split_root$:
@@ -90,24 +94,30 @@ f(p())
 //│     throw new globalThis⁰.Error⁰("match error")
 //│   return runtime⁰.Unit⁰
 //│ };
+//│ @affine(1) @private
 //│ define f_12$x_X⁰ as fun f_12$x_X¹(X_a)(fv_y, fv_arg$X$0$, fv_arg$Y$0$) {
 //│   set fv_arg$X$0$ = X_a;
 //│   return fv_arg$X$0$(fv_y, fv_arg$Y$0$)
 //│ };
+//│ @affine(1) @private
 //│ define f_12$arg$X$0$_Y⁰ as fun f_12$arg$X$0$_Y¹(Y_b)(fv_y, fv_arg$Y$0$) {
 //│   set fv_arg$Y$0$ = Y_b;
 //│   set fv_y = fv_arg$Y$0$;
 //│   return fv_y
 //│ };
+//│ @private
 //│ define f_12$x_rest⁰ as fun f_12$x_rest¹() {
 //│   return f_12$split_default$_rest¹()
 //│ };
+//│ @private
 //│ define f_12$split_default$_rest⁰ as fun f_12$split_default$_rest¹() {
 //│   throw new globalThis⁰.Error⁰("match error")
 //│ };
+//│ @private
 //│ define f_12$split_root$_rest⁰ as fun f_12$split_root$_rest¹() {
 //│   return runtime⁰.Unit⁰
 //│ };
+//│ @private
 //│ define f_12$arg$X$0$_rest⁰ as fun f_12$arg$X$0$_rest¹() {
 //│   return f_12$x_rest¹()
 //│ };
@@ -227,6 +237,7 @@ if [1, 2] is
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let scrut, a⁴, b², element1$, element0$, $scrut_tup2⁰, $scrut_rest⁰, tup2_0, tup2_1;
+//│ @affine(1) @private
 //│ define $scrut_tup2⁰ as fun $scrut_tup2¹(tup2_01, tup2_11)() {
 //│   set element0$ = tup2_01;
 //│   set element1$ = tup2_11;
@@ -234,6 +245,7 @@ if [1, 2] is
 //│   set a⁴ = element0$;
 //│   return +⁰(a⁴, b²)
 //│ };
+//│ @private
 //│ define $scrut_rest⁰ as fun $scrut_rest¹() {
 //│   return null
 //│ };

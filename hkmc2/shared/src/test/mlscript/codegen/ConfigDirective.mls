@@ -79,6 +79,7 @@ fun test_reenabled(n, acc) = if n == 0 then acc else test_reenabled(n - 1, n + a
 fun foo(n, acc) = if n == 0 then acc else foo(n - 1, n + acc)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let foo⁰;
+//│ @config(...)
 //│ define foo⁰ as fun foo¹(n, acc) {
 //│   let scrut, tmp, tmp1;
 //│   set scrut = Predef⁰.equals⁰(n, 0);

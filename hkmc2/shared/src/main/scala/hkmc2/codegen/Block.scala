@@ -15,6 +15,26 @@ import semantics.Term.*
 import sem.Elaborator.State
 
 
+/* Important design notes.
+
+The Middle IR (MIR) or "Block IR" or just "IR" is an implementation of a form of imperative ANF.
+
+While the IR is mostly immutable, for easier manipulation and to enable some optimizations,
+we do assume that each DefinitionSymbol coming from the source program is "owned" by at most one IR definition;
+this is implemented by making the `Define` and `ClsLikeDefn` constructors
+set the `irDefn` field of the symbol they define.
+This means that if a program fragment containing definitions is rewritten at all,
+then the rewritten version must be kept as the "currently valid" version, and the old one must no longer be reused,
+as a given symbol can never correspond to more than one IR definition.
+
+Moreover, we generally assume that in a given program, no symbol is every bound more than once
+by any binding form, such as Scoped, Label, Define. (This is currently not completely enforced, though.)
+This means that processes that duplicate binding forms within a program (eg, inlining)
+must refresh the corresponding symbols – see SymbolRefresher for this purpose.
+
+*/
+
+
 case class Program(
   imports: Ls[Local -> Str],
   main: Block,
@@ -369,7 +389,9 @@ case class AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(val
 case class AssignDynField(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, rest: Block)
   extends Block with ProductWithTail with NonBlockTail
 
-case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail with NonBlockTail
+case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail with NonBlockTail:
+  defn.defnSym.foreach: ds =>
+    ds.irDefn = S(defn)
 
 inline def whenValidatingIR(inline code: => Unit): Unit =
   () // code // * uncomment to run on-the fly IR validations
@@ -558,8 +580,9 @@ object HandleBlock:
 
 
 sealed abstract class Defn:
-  val innerSym: Opt[MemberSymbol]
+  val defnSym: Opt[DefinitionSymbol[?]]
   val sym: BlockMemberSymbol
+  val configOverride: Opt[Config]
   val annotations: Ls[Annot]
   def isStaged: Bool = annotations.exists:
     case Annot.Modifier(Keyword.`staged`) => true
@@ -630,7 +653,7 @@ final case class FunDefn(
     val configOverride: Opt[Config],
     val annotations: Ls[Annot],
 ) extends Defn:
-  val innerSym = N
+  val defnSym = S(dSym)
   val asPath = sym.asMemberRef(dSym)
   lazy val tailRec: Bool = annotations.contains(Annot.TailRec)
   lazy val inline: Bool = annotations.contains(Annot.Inline)
@@ -673,7 +696,7 @@ final case class ValDefn(
     val configOverride: Opt[Config],
     val annotations: Ls[Annot],
 ) extends Defn:
-  val innerSym = S(tsym)
+  val defnSym = S(tsym)
   val owner: Opt[InnerSymbol] = tsym.owner
 
 
@@ -745,7 +768,12 @@ final case class ClsLikeDefn(
     val annotations: Ls[Annot],
 ) extends Defn:
   require(k isnt syntax.Mod)
-  val innerSym = S(isym.asMemSym)
+  methods.foreach: m =>
+    m.dSym.irDefn = S(m)
+  companion.foreach: c =>
+    c.methods.foreach: m =>
+      m.dSym.irDefn = S(m)
+  val defnSym = S(isym)
 
 
 // * This is only supposed to be for companion module definitions (notably, not for `object`)
@@ -944,7 +972,9 @@ case class Call(fun: Path, argss: NELs[Ls[Arg]])(val isMlsFun: Bool, val mayRais
   lazy val isKnownUnsaturatedCall: Bool =
     fun.targetSymbol match
     case S(ts: TermSymbol) =>
-      ts.defn.exists(td => argss.lengthCompare(td.params.length) < 0)
+      ts.irDefn.exists:
+        case fd: FunDefn => argss.lengthCompare(fd.params.length) < 0
+        case _ => false
     case _ => false
 
 case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]]) extends Result

@@ -439,7 +439,8 @@ main
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let main⁸;
 //│ define main⁸ as fun main⁹() {
-//│   let test, lambda;
+//│   let lambda;
+//│   @private
 //│   define lambda as fun lambda⁰(x) { return x };
 //│   return lambda⁰
 //│ };
@@ -456,6 +457,7 @@ main
 //│ let main¹⁰;
 //│ define main¹⁰ as fun main¹¹() {
 //│   let test;
+//│   @private
 //│   define test as fun test⁰(x) { return x };
 //│   return test⁰
 //│ };
