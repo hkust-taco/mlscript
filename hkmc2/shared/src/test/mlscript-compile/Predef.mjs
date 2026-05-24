@@ -151,7 +151,7 @@ let Predef1;
     }
   }
   static equals(a, b) {
-    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, scrut10, scrut11, lambda, tmp, tmp1, lambda1;
+    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, lambda, tmp, tmp1, lambda1;
     scrut = a === b;
     if (scrut === true) {
       return true
@@ -186,11 +186,11 @@ let Predef1;
                 scrut4 = md !== undefined;
                 if (scrut4 === true) {
                   lambda = (undefined, function (field) {
-                    let scrut12, scrut13;
-                    scrut12 = field !== null;
-                    if (scrut12 === true) {
-                      scrut13 = Predef.equals(a[field], b[field]);
-                      if (scrut13 === true) {
+                    let scrut10, scrut11;
+                    scrut10 = field !== null;
+                    if (scrut10 === true) {
+                      scrut11 = Predef.equals(a[field], b[field]);
+                      if (scrut11 === true) {
                         return true
                       }
                       return false;
@@ -217,8 +217,7 @@ let Predef1;
             } else {
               tmp1 = false;
             }
-            scrut8 = tmp1;
-            if (scrut8 === true) {
+            if (tmp1 === true) {
               return true
             }
             return false;
@@ -230,7 +229,7 @@ let Predef1;
       return false;
     }
     return false;
-  } 
+  }
   static nequals(a, b) {
     let tmp;
     tmp = Predef.equals(a, b);
