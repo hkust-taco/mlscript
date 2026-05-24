@@ -1035,14 +1035,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       val l = loweringCtx.registerTempSymbol(N)
       Assign(l, r, setupTerm("Else", Value.Ref(l) :: Nil)(k))
     case Split.End => setupTerm("End", Nil)(k)
-    case Split.LetSplit(sym, tail) =>
-      quoteSplit(sym.body): r1 =>
-        val l1 = loweringCtx.registerTempSymbol(N)
-        blockBuilder.assign(l1, r1)
-          .chain(b => quoteSplit(tail)(r2 => Assign(loweringCtx.registerTempSymbol(N), r2, b)))
-          .rest(setupTerm("LetSplit", Value.Ref(l1) :: Nil)(k))
-    case Split.UseSplit(sym) =>
-      setupTerm("UseSplit", Nil)(k)
+    // The runtime `Term.Split` only has `Cons/Let/Else/End` constructors, so
+    // join points must be flattened before quoting. We skip `LetSplit` and
+    // inline `UseSplit` by recursing into the referenced body; each occurrence
+    // of `UseSplit(sym)` produces an independent quoted copy of `sym.body`.
+    case Split.LetSplit(_, tail) => quoteSplit(tail)(k)
+    case Split.UseSplit(sym) => quoteSplit(sym.body)(k)
 
   lazy val setupFilename: Path =
     val state = summon[State]
