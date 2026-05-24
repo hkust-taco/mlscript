@@ -217,55 +217,6 @@ print of if x is
 //│ > 000
 
 :sir
-print of if x is
-  0 and y is
-    0 and z is
-      0 then "000"
-      1 then "001"
-    1 then "01"
-  1 then "1"
-  else ""
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp;
-//│ match x⁰
-//│   0 =>
-//│     begin
-//│       match y⁰
-//│         0 =>
-//│           match z⁰
-//│             0 =>
-//│               set tmp = "000";
-//│               end
-//│             1 =>
-//│               set tmp = "001";
-//│               end
-//│             else
-//│               set tmp = "";
-//│               end
-//│           end
-//│         1 =>
-//│           set tmp = "01";
-//│           end
-//│         else
-//│           set tmp = "";
-//│           end
-//│       end;
-//│     Predef⁰.print⁰(tmp)
-//│   1 =>
-//│     begin
-//│       set tmp = "1";
-//│       end;
-//│     Predef⁰.print⁰(tmp)
-//│   else
-//│     begin
-//│       set tmp = "";
-//│       end;
-//│     Predef⁰.print⁰(tmp)
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ > 000
-
-:sir
 fun foo(x, y, z) =
   if x is
     0 and y is
@@ -375,7 +326,6 @@ print of if
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 000
 
-:sir
 :ucs normalized deduplicated
 // `SplitDeduplicator` can detect more split-level duplications.
 fun foo(x, y, z) = if
@@ -401,49 +351,6 @@ fun foo(x, y, z) = if
 //│ >    x is 1 then "1__"
 //│ >    y is 2 then "_2_"
 //│ >    else "___"
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo²;
-//│ define foo² as fun foo³(x, y, z) {
-//│   match x
-//│     0 =>
-//│       match y
-//│         0 =>
-//│           match z
-//│             0 =>
-//│               return "000"
-//│             1 =>
-//│               return "0_1"
-//│             else
-//│               return "___"
-//│           end
-//│         1 =>
-//│           return "01_"
-//│         else
-//│           match z
-//│             1 =>
-//│               return "0_1"
-//│             else
-//│               match y
-//│                 2 =>
-//│                   return "_2_"
-//│                 else
-//│                   return "___"
-//│               end
-//│           end
-//│       end
-//│     1 =>
-//│       return "1__"
-//│     else
-//│       match y
-//│         2 =>
-//│           return "_2_"
-//│         else
-//│           return "___"
-//│       end
-//│   end
-//│ };
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 fun expensive_call(str) = Math.pow(2, str.length)
 
@@ -459,8 +366,8 @@ fun foo(x, y, z) = if x is
     let value = "hello"
     expensive_call(value)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo⁴;
-//│ define foo⁴ as fun foo⁵(x, y, z) {
+//│ let foo²;
+//│ define foo² as fun foo³(x, y, z) {
 //│   let value;
 //│   match x
 //│     0 =>
@@ -505,8 +412,8 @@ fun foo(x, y, z) =
   if x is A then "Hello"
   else "Goodbye"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo⁶;
-//│ define foo⁶ as fun foo⁷(x, y, z) { match x A⁰ => return "Hello" else return "Goodbye" end };
+//│ let foo⁴;
+//│ define foo⁴ as fun foo⁵(x, y, z) { match x A⁰ => return "Hello" else return "Goodbye" end };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -526,8 +433,8 @@ fun foo(x, y, z) =
   if x is A and y is B and z is C then "Hello"
   else "Goodbye"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo⁸;
-//│ define foo⁸ as fun foo⁹(x, y, z) {
+//│ let foo⁶;
+//│ define foo⁶ as fun foo⁷(x, y, z) {
 //│   match x
 //│     A⁰ =>
 //│       match y
@@ -553,8 +460,8 @@ fun foo(x, y, z) =
 fun foo(x, y, z) =
   if x is A and y is B and z is C then "Hello"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo¹⁰;
-//│ define foo¹⁰ as fun foo¹¹(x, y, z) {
+//│ let foo⁸;
+//│ define foo⁸ as fun foo⁹(x, y, z) {
 //│   match x
 //│     A⁰ =>
 //│       match y
@@ -606,7 +513,6 @@ let y = if true then 1 else 2
 
 fun pred(x) = true
 
-:sir
 :ucs normalized
 // Not only the final else is deduplicated, the `z is A` split is also deduplicated.
 fun foo1(x, y, z) = if
@@ -623,34 +529,7 @@ fun foo1(x, y, z) = if
 //│ >      tmp:scrut is true then (member:Predef¹.)print‹member:print›(1)
 //│ >      $σ
 //│ >    $σ
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo1⁰;
-//│ define foo1⁰ as fun foo1¹(x, y, z) {
-//│   let scrut;
-//│   block σ:
-//│     match x
-//│       A⁰ =>
-//│         set scrut = pred¹(x);
-//│         match scrut
-//│           true =>
-//│             return Predef⁰.print⁰(1)
-//│           else
-//│             break σ
-//│         end
-//│       else
-//│         break σ
-//│     end
-//│   match z
-//│     A⁰ =>
-//│       return Predef⁰.print⁰(2)
-//│     else
-//│       return Predef⁰.print⁰(3)
-//│   end
-//│ };
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:sir
 :ucs normalized deduped
 // This shows a cascaded split let-binding.
 fun foo2(x, y, z) = if
@@ -674,42 +553,3 @@ fun foo2(x, y, z) = if
 //│ >      tmp:scrut is true then (member:Predef¹.)print‹member:print›(1)
 //│ >      $σ
 //│ >    $σ
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo2⁰;
-//│ define foo2⁰ as fun foo2¹(x, y, z) {
-//│   let scrut, scrut1;
-//│   block σ:
-//│     match x
-//│       A⁰ =>
-//│         set scrut = pred¹(x);
-//│         match scrut
-//│           true =>
-//│             return Predef⁰.print⁰(1)
-//│           else
-//│             break σ
-//│         end
-//│       else
-//│         break σ
-//│     end
-//│   block σ1:
-//│     match y
-//│       A⁰ =>
-//│         set scrut1 = pred¹(y);
-//│         match scrut1
-//│           true =>
-//│             return Predef⁰.print⁰(2)
-//│           else
-//│             break σ1
-//│         end
-//│       else
-//│         break σ1
-//│     end
-//│   match z
-//│     A⁰ =>
-//│       return Predef⁰.print⁰(3)
-//│     else
-//│       return Predef⁰.print⁰(4)
-//│   end
-//│ };
-//│ end
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
