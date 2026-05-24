@@ -378,11 +378,21 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         mkFunRef(target),
         args.map(a => Arg(N, a.toValueRef)) ne_:: Nil
       )(true, false, false)
-    def mkReturnCall(target: (BlockMemberSymbol, TermSymbol), args: Ls[Symbol]): Block =
-      Return(mkCall(target, args), false)
     
     class Rewriter(instId: InstantiationId) extends BlockTransformer(_symSubst):
       extension (resId: ResultId) def concreteId = ConcreteId(resId, instId)
+      private var makeReturnsExplicit = false
+      
+      private inline def withReturnImplicity[A](explicit: Bool)(body: => A): A =
+        val saved = makeReturnsExplicit
+        makeReturnsExplicit = explicit
+        val res = body
+        makeReturnsExplicit = saved
+        res
+      
+      def applyBlockExplicitRet(b: Block): Block =
+        withReturnImplicity(explicit = true):
+          applyBlock(b)
       
       private def newRefId(refId: ResultId, refSym: TermSymbol) =
         instId match
@@ -464,16 +474,32 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
           applyPath(scrut): newScrut =>
             Return(
               Call(newScrut, callWithFvs.map(s => Arg(N, s.toValueRef)) ne_:: Nil)(true, false, false),
-              false)
+              implct = !makeReturnsExplicit)
         case Break(label) =>
           val labelRestFunId = label.withInstId(instId)
           restFunSyms.get(labelRestFunId) match
           case None => super.applyBlock(b)
           case Some(labelRestFunSym) =>
             val labelRestFunFvs = restFnFvs(labelRestFunId)
-            mkReturnCall(labelRestFunSym, labelRestFunFvs)
-        case Return(res, true) => super.applyBlock(Return(res, false))
+            Return(mkCall(labelRestFunSym, labelRestFunFvs), implct = !makeReturnsExplicit)
+        case Return(res, true) if makeReturnsExplicit => super.applyBlock(Return(res, false))
         case _ => super.applyBlock(b)
+      
+      override def applyFunDefn(fun: FunDefn): FunDefn =
+        withReturnImplicity(explicit = true):
+          super.applyFunDefn(fun)
+      
+      override def applyLam(lam: Lambda): Lambda =
+        withReturnImplicity(explicit = true):
+          super.applyLam(lam)
+      
+      override def applyClsLikeDefn(defn: ClsLikeDefn)(k: Defn => Block): Block =
+        withReturnImplicity(explicit = false):
+          super.applyClsLikeDefn(defn)(k)
+      
+      override def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
+        withReturnImplicity(explicit = false):
+          super.applyObjBody(defn)
     end Rewriter
     
     class RefreshSymbol(existingMapping: Map[Symbol, Symbol]) extends SymbolRefresher(existingMapping):
@@ -509,7 +535,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         (referringFun, (bms, tSym)) <- funSymMap.toList.sortBy(_._1.uid)
       yield
         val fDefn = pre.res.funSymToFunDefn(referringFun)
-        val transformedBody = new Rewriter(instId).applyBlock(fDefn.body)
+        val transformedBody = new Rewriter(instId).applyBlockExplicitRet(fDefn.body)
         // refresh other local symbols: for funs, we can check existing scoped blocks and
         // there is no need to add scoped blocks, because function bodies now already are scoped
         val refreshParamMap = MutMap.empty[VarSymbol, VarSymbol]
@@ -534,8 +560,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         val restFunSym = restFunSyms(dtorId)
         val restFunArgs = restFnFvs(dtorId)
         val actualBody = Begin(
-          new Rewriter(instId).applyBlock(ogBody),
-          mkReturnCall(restFunSym, restFunArgs))
+          new Rewriter(instId).applyBlockExplicitRet(ogBody),
+          Return(mkCall(restFunSym, restFunArgs), false))
         val refreshedFvSymbols = dtorBranchFnFvs(branchId._1).map(s => s -> new VarSymbol(Tree.Ident(s"fv_${s.nme}")))
         val bodyWithCorrectSymbols = new RefreshSymbol(refreshedFvSymbols.toMap).applyBlock(actualBody)
         FunDefn(tSym.owner, bms, tSym,
@@ -548,7 +574,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
       for (restFunId, (bms, tsym)) <- restFunSyms yield
         val instId = restFunId.getInstId
         val (ogBody, parent) = restOriginalBodiesAndParentRest(restFunId.withoutInstId)
-        val transformedOgBody = new Rewriter(instId).applyBlock(ogBody)
+        val transformedOgBody = new Rewriter(instId).applyBlockExplicitRet(ogBody)
         val actualBody = parent match
           case Some(parentRestId) =>
             val parentRestFunId = parentRestId.withInstId(instId)
@@ -556,7 +582,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             val parentFunFvs = restFnFvs(parentRestFunId)
             Begin(
               transformedOgBody,
-              mkReturnCall(parentFunSym, parentFunFvs))
+              Return(mkCall(parentFunSym, parentFunFvs), false))
           case None =>
             Begin(transformedOgBody, Return(Value.Lit(Tree.UnitLit(true)), false))
         val refreshedFvSymbols = restFnFvs(restFunId).map(s => s -> new VarSymbol(Tree.Ident(s"fv_${s.nme}")))
@@ -567,7 +593,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
     val inplaceRewrittenFunBodies = Map.from[TermSymbol, Block]:
       for (selfInstId, funSym) <- collector.synthesizedInstIdToFunSym yield
         val fDefn = pre.res.funSymToFunDefn(funSym)
-        funSym -> new Rewriter(selfInstId).applyBlock(fDefn.body)
+        funSym -> new Rewriter(selfInstId).applyBlockExplicitRet(fDefn.body)
     
     val newTopLevelBranchFuns = newBranchFuns.filter(_.owner.isEmpty)
     val newTopLevelRestFuns = newRestFuns.filter(_.owner.isEmpty)
@@ -594,13 +620,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
                 k(cls)
             case _ =>
               k(transformed)
-      object implicitRetPass extends BlockTransformerShallow(_symSubst):
-        override def applyBlock(b: Block): Block = b match
-          case Return(res, false) => Return(res, true)
-          case _ => super.applyBlock(b)
       Scoped(
         Set.from(newPolyFuns.map(_.sym) ++ newTopLevelBranchFuns.map(_.sym) ++ newTopLevelRestFuns.map(_.sym)),
-        implicitRetPass.applyBlock(mainRewriter.applyBlock(pre.pgrm.main)))
+        mainRewriter.applyBlock(pre.pgrm.main))
     
     (newPolyFuns ++ newTopLevelBranchFuns ++ newTopLevelRestFuns).foldRight(newMainBody): (fdef, rest) =>
       Define(fdef, rest)
@@ -608,4 +630,3 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
   end newBody
   
 end DeforestRewriter
-
