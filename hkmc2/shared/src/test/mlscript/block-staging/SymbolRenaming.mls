@@ -32,12 +32,11 @@ staged module Selection with
 //│ >     Bool then true
 //│ >     else false
 
+:fixme
 staged module DupeClass with
   class C(val y)
   fun f() = C(1).y
+//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
 //│ > fun ctor_() =
 //│ >   class C(y)
-//│ > fun f() =
-//│ >   let {tmp}
-//│ >   tmp = DupeClass.C(1)
-//│ >   tmp.y
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
