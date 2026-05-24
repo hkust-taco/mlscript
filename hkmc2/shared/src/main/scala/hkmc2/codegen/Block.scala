@@ -1020,11 +1020,10 @@ object Value:
     // * If the ref is a symbol that does not refer to a definition, then there is no disambiguation.
     def apply(l: TempSymbol | VarSymbol | BuiltinSymbol): Value.RefLike = Ref(l, N)
 
-    def unapply(v: Value)(using State): Opt[(Local, Opt[DefinitionSymbol[?]])] = v match
+    def unapply(v: Value): Opt[(Local, Opt[DefinitionSymbol[?]])] = v match
       case SimpleRef(l) => S(l -> N)
       case MemberRef(bms, disamb) => S(bms -> S(disamb))
-      case This(sym: TopLevelSymbol) if sym === State.globalThisSymbol => S(sym -> N)
-      // TODO(Derppening): Can we distinguish between a normal `This` and a inner-ref `This`?
+      case This(sym) => S(sym -> N)
       case _ => N
 
 case class Arg(spread: Opt[SpreadKind], value: Path)
