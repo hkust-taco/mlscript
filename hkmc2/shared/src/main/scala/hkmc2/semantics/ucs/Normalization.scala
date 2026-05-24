@@ -64,8 +64,12 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       case rhs: FlatPattern.ClassLike => rhs.constructor.symbol.flatMap(_.asCls) match
         case S(cls: ClassSymbol) => cls.defn match
           case S(ClassDef.Parameterized(params = paramList)) =>
+            // Only `val` parameters are accessible as fields, so only those
+            // can subsume a Record entry. This keeps `assuming` consistent
+            // with `compareCasePattern`'s record and class check.
             val filteredEntries = lhs.entries.filter:
-              (fieldName1, _) => paramList.params.forall { (param:Param) => !(fieldName1 === param.sym.id)}
+              (fieldName1, _) => paramList.params.forall:
+                case param: Param => !(param.flags.isVal && fieldName1 === param.sym.id)
             FlatPattern.Record(filteredEntries)
           case S(_) | N => lhs
         case S(_) | N => lhs

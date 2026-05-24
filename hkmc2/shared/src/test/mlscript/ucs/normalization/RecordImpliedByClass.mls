@@ -1,0 +1,21 @@
+:js
+
+
+class Foo(a, b)
+
+:ucs normalized
+fun f(x) =
+  if x is Foo and x is { a: av, b: bv } then av + bv
+  else 0
+//│ Normalized:
+//│ >  ‹if|while›
+//│ >    x is Foo and
+//│ >      x is { a: tmp:field_a$, b: tmp:field_b$ } and
+//│ >        let bv = tmp:field_b$⁰
+//│ >        let av = tmp:field_a$⁰
+//│ >        else builtin:+⁰(av⁰, bv⁰)
+//│ >      else 0
+//│ >    else 0
+
+f(Foo(0, 1))
+//│ = 0
