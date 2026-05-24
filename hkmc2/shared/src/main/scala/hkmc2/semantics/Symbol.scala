@@ -140,16 +140,6 @@ abstract class Symbol(using State) extends Located:
     asPat orElse
     asMod
   
-  def orElseDisamb(disamb: Opt[DefinitionSymbol[?]]): Symbol = (this, disamb) match
-    case (bms: BlockMemberSymbol, S(disamb)) =>
-      disamb
-    case (bms: BlockMemberSymbol, N) =>
-      lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")
-    case (sym, N) =>
-      sym
-    case (sym, S(_)) =>
-      lastWords(s"Cannot disambiguate non-BlockMember symbol ${sym.nme}: disambiguation provided")
-  
   override def equals(x: Any): Bool = this is x
   override def hashCode: Int = uid.hashCode
   
