@@ -153,8 +153,6 @@ staged module OtherBlocks with
       else 0
 //│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'a'
-//│ ║  l.146: 	      let a = 1
-//│ ║         	          ^
 //│ ╟── which references the symbol introduced here
 //│ ║  l.146: 	      let a = 1
 //│ ╙──       	          ^
@@ -220,10 +218,8 @@ staged module LabelBreak with
     else 2
 //│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.Label.
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
-//│ ║  l.214: 	    let x = 1
-//│ ║         	        ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.214: 	    let x = 1
+//│ ║  l.212: 	    let x = 1
 //│ ╙──       	        ^
 //│ > fun ctor_() = ()
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
@@ -236,7 +232,7 @@ staged module A with
   fun g() = {1 : 2}
 //│ ═══[COMPILATION ERROR] Field assignment is not supported in staged modules: a
 //│ ╔══[COMPILATION ERROR] Other Results not supported in staged module: class hkmc2.codegen.Record
-//│ ║  l.236: 	  fun g() = {1 : 2}
+//│ ║  l.232: 	  fun g() = {1 : 2}
 //│ ╙──       	                 ^
 //│ > fun ctor_() =
 //│ >   x = C(1)

@@ -363,7 +363,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           l match
             case ts: TermSymbol => result(ts.asSimpleRef)
             case sym: InnerSymbol => lastWords(s"Inner symbol should not be used as the target of an assignment: $sym")
-            case l => result(l.asPath.withLoc(l.toLoc)) // TODO: improve location
+            case l => result(l.asPath.withLoc(N)) // TODO: improve location
         } = ${result(r)};${returningTerm(rst, endSemi)}"
     case assign @ AssignField(p, n, r, rst) =>
       val field = assign.symbol match
