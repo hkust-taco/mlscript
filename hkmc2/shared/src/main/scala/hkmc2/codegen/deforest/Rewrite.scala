@@ -647,3 +647,4 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
   end apply
   
 end DeforestRewriter
+
