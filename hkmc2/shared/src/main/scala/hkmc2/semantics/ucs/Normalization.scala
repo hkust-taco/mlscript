@@ -30,7 +30,12 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         case Split.Else(_) => softAssert(false); those
         case Split.End => those
         case Split.LetSplit(sym, tail) => Split.LetSplit(sym, tail ++ those)
-        case Split.UseSplit(_) => these) // UseSplit is terminal; fullness determined by referenced body
+        case Split.UseSplit(sym) =>
+          // We always append a default else branch to splits, and normalization
+          // propagates that default into inner splits, so every LetSplit body
+          // ends up full. The dropped `those` here would have been dropped anyway.
+          softAssert(sym.body.isFull, "UseSplit body should be full")
+          these)
   
   extension (lhs: FlatPattern)
     /** Checks if two patterns are the same. */

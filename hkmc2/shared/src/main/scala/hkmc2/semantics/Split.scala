@@ -148,7 +148,7 @@ enum Split extends AutoLocated with ProductWithTail:
 end Split
 
 extension (split: Split)
-  def ~~:(fallback: Split): Split =
+  def ~~:(fallback: Split)(using Raise): Split =
     if fallback == Split.End || split.isFull
     then split
     else split match
@@ -157,7 +157,12 @@ extension (split: Split)
       case Split.Else(_) => lastWords("impossible since split is not full")
       case Split.End => fallback
       case Split.LetSplit(sym, tail) => Split.LetSplit(sym, tail ~~: fallback)
-      case Split.UseSplit(_) => split // UseSplit is terminal; the referenced body determines fullness
+      case Split.UseSplit(sym) =>
+        // We always append a default else branch to splits, and normalization
+        // propagates that default into inner splits, so every LetSplit body
+        // ends up full. The dropped `fallback` here would have been dropped anyway.
+        softAssert(sym.body.isFull, "UseSplit body should be full")
+        split
 
 object Split:
   def default(term: Term): Split = Split.Else(term)
