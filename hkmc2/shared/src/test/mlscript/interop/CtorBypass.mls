@@ -23,7 +23,7 @@ let b = Object.create(A.prototype)
 :sjs
 b is A
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (b instanceof A1) { true } else { false }
+//│ if (b instanceof A1) { return true } return false;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 

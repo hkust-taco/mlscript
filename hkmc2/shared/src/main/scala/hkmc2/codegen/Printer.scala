@@ -42,7 +42,7 @@ class Printer(using Raise, ShowCfg, SymbolPrinter, Config):
         .mkDocument(sep = doc" # ")
       val docDefault = dflt.fold(doc"")(e => doc" # else #{  # ${print(e)} #} ")
       doc"match ${print(scrut)} #{  # ${docCases}$docDefault #}  # ${print(rest)}"
-    case Return(res, implct) => if implct then print(res) else doc"return ${print(res)}"
+    case Return(res) => doc"return ${print(res)}"
     case Throw(exc) => doc"throw ${print(exc)}"
     case Label(label, loop, body, rest) =>
       val l2 = scope.allocateOrGetName(label)

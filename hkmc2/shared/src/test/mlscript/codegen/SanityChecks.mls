@@ -13,7 +13,6 @@ f(2, 3)
 //│   return x + y
 //│ };
 //│ block$res1 = 5;
-//│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
 
@@ -29,7 +28,6 @@ f(2, 3)
 //│ };
 //│ f1 = f2;
 //│ block$res2 = 5;
-//│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
 //│ f = fun f
@@ -55,7 +53,6 @@ id(f2)(2)
 //│ };
 //│ baseCall = Predef.id(f21);
 //│ block$res5 = runtime.safeCall(baseCall(2));
-//│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
 
@@ -64,7 +61,7 @@ id(f2)(2)
 id(f)(2)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let baseCall1;
-//│ baseCall1 = runtime.checkCall(Predef.id(f1)); block$res6 = runtime.safeCall(baseCall1(2)); undefined
+//│ baseCall1 = runtime.checkCall(Predef.id(f1)); block$res6 = runtime.safeCall(baseCall1(2));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
@@ -86,7 +83,6 @@ id(f)(3)(4)
 //│ baseCall2 = runtime.checkCall(Predef.id(f3));
 //│ callPrefix = runtime.safeCall(baseCall2(3));
 //│ block$res7 = runtime.safeCall(callPrefix(4));
-//│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
 
@@ -159,7 +155,6 @@ id(Cls(1, 2)).f(3, 4)(5)
 //│ tmp5 = runtime.checkCall(Predef.id(tmp4));
 //│ callPrefix1 = runtime.safeCall(tmp5.f(3, 4));
 //│ block$res12 = runtime.safeCall(callPrefix1(5));
-//│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
 
@@ -201,7 +196,7 @@ if M.A(1).y is
 //│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"))
 //│ }
 //│ scrut = runtime.checkCall(Predef.equals(selRes1, 1));
-//│ if (scrut === true) { block$res17 = selRes1; undefined } else { block$res17 = 0; undefined }
+//│ if (scrut === true) { block$res17 = selRes1; } else { block$res17 = 0; }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
@@ -246,7 +241,7 @@ M.A(1).f(0)
 :ssjs
 M.g(1, 2)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ block$res24 = runtime.checkCall(M1.g(1, 2)); undefined
+//│ block$res24 = runtime.checkCall(M1.g(1, 2));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 

@@ -71,7 +71,6 @@ class WorkerWrapper
       Arg(N, Value.Ref(param.sym))
     val wrapperBody = Return(
       Call(worker.asPath, workerArgs ne_:: Nil)(isMlsFun = true, mayRaiseEffects = true, explicitTailCall = false),
-      implct = false,
     )
     val wrapper = FunDefn(
       fun.owner,

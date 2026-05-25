@@ -224,9 +224,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val resNme = nestedScp.allocateName(resSym)
       
       val loweredMapped = pgrm.copy(main = pgrm.main.mapReturn:
-        case Return(res, implct) =>
-          assert(implct)
-          Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
+        case Return(res) =>
+          Assign(resSym, res, End())
       )
       val jsb = ltl.givenIn:
         new JSBuilder
@@ -285,11 +284,12 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         valuesToPrint.foreach: (nme, sym, expect) =>
           val le =
             import codegen.*
-            Return(
+            Assign(
+              Elaborator.State.noSymbol,
               Call(
                 Value.Ref(Elaborator.State.runtimeSymbol).selSN("printRaw"),
                 (Arg(N, Value.Ref(sym, N)) :: Nil) ne_:: Nil)(true, false, false),
-            implct = true)
+              End())
           val je = nestedScp.givenIn:
             jsb.block(le, endSemi = false)
           val jsStr = je.stripBreaks.mkString(output.ColWidth)
@@ -309,4 +309,3 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             case "()" if anon =>
             case _ => output(s"${if anon then "" else s"$nme "}= $result")
       
-

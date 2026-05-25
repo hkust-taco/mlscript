@@ -169,7 +169,7 @@ c.Parent#x + (c is Parent)
 //│                           (local.get $typeInfoMatch))))
 //│                     (then
 //│                       (block $arm
-//│                         (local.set $matchRes
+//│                         (return
 //│                           (call $plus_impl
 //│                             (struct.get $Parent $x
 //│                               (ref.cast (ref $Parent)
@@ -177,7 +177,7 @@ c.Parent#x + (c is Parent)
 //│                             (ref.i31
 //│                               (i32.const 1))))
 //│                         (br $match))))))
-//│               (local.set $matchRes
+//│               (return
 //│                 (call $plus_impl
 //│                   (struct.get $Parent $x
 //│                     (ref.cast (ref $Parent)

@@ -89,7 +89,7 @@ case
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ lambda¹
+//│ return lambda¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

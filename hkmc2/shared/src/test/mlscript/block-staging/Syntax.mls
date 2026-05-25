@@ -27,7 +27,7 @@ staged module A
 //│     let tmp, tmp1;
 //│     set tmp = A².this.ctor$_instr﹖();
 //│     set tmp1 = Block⁰.printCode﹖(tmp);
-//│     runtime⁰.Unit﹖
+//│     end
 //│   }
 //│   method ctor$_instr⁰ = fun ctor$_instr¹() {
 //│     let end, tmp, tmp1, tmp2, tmp3;

@@ -54,7 +54,7 @@ sealed abstract class Block extends Product:
     case Unreachable(msg) => s"Unreachable(${msg})"
     case Break(lbl) => s"Break(${lbl.showDbg})"
     case Continue(lbl) => s"Continue(${lbl.showDbg})"
-    case Return(res, implct) => s"Return(${res.showDbg}, implct = $implct)"
+    case Return(res) => s"Return(${res.showDbg})"
     case Match(scrut, arms, dflt, rest) =>
       val armsStr = arms.map((pat, arm) => s"case ${pat.showDbg} => ${arm.showDbg}").mkString("\n")
       val dfltStr = dflt.map(d => s"default => ${d.showDbg}\n").getOrElse("")
@@ -97,7 +97,7 @@ sealed abstract class Block extends Product:
   lazy val isAbortive: Bool = this match
     case _: End => false
     case _: Throw | _: Break | _: Continue | _: Unreachable => true
-    case ret: Return => !ret.implct
+    case _: Return => true
     case Begin(sub, rst) => sub.isAbortive || rst.isAbortive
     case Assign(_, _, rst) => rst.isAbortive
     case AssignField(_, _, _, rst) => rst.isAbortive
@@ -134,7 +134,7 @@ sealed abstract class Block extends Product:
     case Scoped(syms, body) => body.definedVars ++ syms
   
   lazy val size: Int = 1 + this.match
-    case Return(r: Result, _) => r.size
+    case Return(r: Result) => r.size
     case Throw(r: Result) => r.size
     case _: End | _: Break | _: Continue | _: Unreachable => 0
     case Begin(sub, rst) => sub.size + rst.size
@@ -163,7 +163,7 @@ sealed abstract class Block extends Product:
       scrut.freeVars ++ dflt.toList.flatMap(_.freeVars) ++ rest.freeVars
       ++ arms.flatMap:
         (pat, arm) => arm.freeVars -- pat.freeVars
-    case Return(res, implct) => res.freeVars
+    case Return(res) => res.freeVars
     case Throw(exc) => exc.freeVars
     case Label(label, _, body, rest) => (body.freeVars - label) ++ rest.freeVars 
     case Break(label) => Set.single(label)
@@ -183,7 +183,7 @@ sealed abstract class Block extends Product:
       scrut.freeVarsLLIR ++ dflt.toList.flatMap(_.freeVarsLLIR) ++ rest.freeVarsLLIR
       ++ arms.flatMap:
         (pat, arm) => arm.freeVarsLLIR -- pat.freeVarsLLIR
-    case Return(res, implct) => res.freeVarsLLIR
+    case Return(res) => res.freeVarsLLIR
     case Throw(exc) => exc.freeVarsLLIR
     case Label(label, _, body, rest) => (body.freeVarsLLIR - label) ++ rest.freeVarsLLIR 
     case Break(label) => Set.empty
@@ -209,8 +209,8 @@ sealed abstract class Block extends Product:
     case Label(_, _, body, rest) => body :: rest :: Nil
     case Scoped(_, body) => body :: Nil
     
-    // TODO rm Lam from values and thus the need for these cases
-    case Return(r, _) => r.subBlocks
+    // TODO rm Lam from results and thus the need for these cases
+    case Return(r) => r.subBlocks
     case Throw(r) => r.subBlocks
     
     case _: Return | _: Throw | _: Break | _: Continue | _: End | _: Unreachable => Nil
@@ -356,11 +356,7 @@ case class Match(
   rest: Block,
 ) extends Block with ProductWithTail with NonBlockTail
 
-// * `implct`: metadata indicating whether this is a JS implicit return, without the `return` keyword.
-// * This is currenlty only used for the main blocks of modules and diff-test blocks;
-// * for all intents and purposes, one can view an implicit return as a normal return.
-// * I would remove it, but it helps print cleaner outputs for diff tests (eg, using `:sir`).
-case class Return(res: Result, implct: Bool) extends BlockTail
+case class Return(res: Result) extends BlockTail
 
 case class Throw(exc: Result) extends BlockTail
 
@@ -536,7 +532,7 @@ object HandleBlock:
         handler.params,
         Scoped(Set(sym, rSym), Define(
           fDef,
-          Return(suspend(cls.asPath, Value.Ref(sym, S(fDef.dSym))), false))))(N, annotations = Nil)
+          Return(suspend(cls.asPath, Value.Ref(sym, S(fDef.dSym)))))))(N, annotations = Nil)
 
     val clsDefn = ClsLikeDefn(
       N, // no owner
@@ -547,7 +543,7 @@ object HandleBlock:
       N, Nil,
       S(par), handlerMtds, Nil, Nil,
       // Apparently, the lifter is not happy with any assignment in the preCtor...
-      Return(Call(Value.Ref(State.builtinOpsMap("super")), args.map(_.asArg) ne_:: Nil)(true, true, false), true),
+      Assign(State.noSymbol, Call(Value.Ref(State.builtinOpsMap("super")), args.map(_.asArg) ne_:: Nil)(true, true, false), End()),
       End(),
       N,
       N,
@@ -1047,7 +1043,7 @@ extension (k: Block => Block)
   def ifthen(scrut: Path, cse: Case, trm: Block, els: Opt[Block] = N): Block => Block =
     k.chain(Match(scrut, cse -> trm :: Nil, els, _))
   def label(label: LabelSymbol, loop: Bool, body: Block) = k.chain(Label(label, loop, body, _))
-  def ret(r: Result) = k.rest(Return(r, false))
+  def ret(r: Result) = k.rest(Return(r))
   def scopedVars(s: collection.Set[Local]) = k.chain(Scoped(s, _))
   def staticif(b: Boolean, f: (Block => Block) => (Block => Block)) = if b then k.transform(f) else k
   def foldLeft[A](xs: Iterable[A])(f: (Block => Block, A) => Block => Block) = xs.foldLeft(k)(f)
@@ -1056,4 +1052,3 @@ def blockBuilder: Block => Block = identity
 
 extension (l: Local)
   def asPath: Path = Value.Ref(l, N)
-

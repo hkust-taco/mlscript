@@ -394,7 +394,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           case FunDefn(own, sym, dSym, ps :: pss, bod) =>
             val result = pss.foldRight(bod):
               case (ps, block) =>
-                Return(Lambda(ps, block)(Nil), false)
+                Return(Lambda(ps, block)(Nil))
             val displayName = if sym.nameIsMeaningful then S(dSym.name) else N
             
             // * We may need to set up the function in a nested scope in one case below, so this is marked as lazy.
@@ -434,7 +434,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 case td @ FunDefn(params = ps :: pss, body = bod) =>
                   val result = pss.foldRight(bod):
                     case (ps, block) =>
-                      Return(Lambda(ps, block)(Nil), false)
+                      Return(Lambda(ps, block)(Nil))
                   val (params, bodyDoc) = scope.nest.givenIn:
                     setupFunction(S(td.sym.nme), ps, result, isLambda = false)
                   doc" # $mtdPrefix${td.sym.nme}($params) ${ braced(bodyDoc) }"
@@ -506,7 +506,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             
             val ctorCode = scope.nest.givenIn:
               val preCtorCode = nonNestedScoped(preCtor)(bd => block(bd, true))
-              doc"$preCtorCode$singletonInit${nonNestedScoped(ctor)(bd => block(bd, endSemi = true))}${
+              val defaultSuperCall = if par.isDefined && preCtor.isEmpty then doc" # super();" else doc""
+              doc"$defaultSuperCall$preCtorCode$singletonInit${nonNestedScoped(ctor)(bd => block(bd, endSemi = true))}${
                   kind match
                   case syntax.Obj =>
                     doc" # ${defineProperty(doc"this", "class", doc"${scope.lookup_!(isym, isym.toLoc)}")};"
@@ -639,9 +640,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       
       doc" # $resJS"
       
-    case Return(Value.Lit(UnitLit(false)), false) => doc" # return${mkSemi}"
-    case Return(res, true) => doc" # ${result(res)}${mkSemi}"
-    case Return(res, false) => doc" # return ${result(res)}${mkSemi}"
+    case Return(Value.Lit(UnitLit(false))) => doc" # return${mkSemi}"
+    case Return(res) => doc" # return ${result(res)}${mkSemi}"
     
     case Match(scrut, Nil, els, rest) =>
       val e = els match

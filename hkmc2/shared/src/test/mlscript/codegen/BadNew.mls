@@ -31,7 +31,7 @@ new 2 + 2
 :re
 new! 2 + 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp1; tmp1 = globalThis.Object.freeze(new 2()); tmp1 + 2
+//│ let tmp1; tmp1 = globalThis.Object.freeze(new 2()); return tmp1 + 2
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
 

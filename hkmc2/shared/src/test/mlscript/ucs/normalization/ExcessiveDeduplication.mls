@@ -20,12 +20,10 @@ if
   y then 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (x === true) {
-//│   0
-//│ } else {
-//│   if (y === true) {
-//│     0
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   return 0
 //│ }
+//│ if (y === true) { return 0 }
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -36,12 +34,10 @@ if
   y then 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (x === true) {
-//│   0
-//│ } else {
-//│   if (y === true) {
-//│     1
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   return 0
 //│ }
+//│ if (y === true) { return 1 }
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -79,12 +75,9 @@ if
 //│   if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
 //│     element0$ = runtime.checkCall(runtime.Tuple.get(y, 0));
 //│     tmp = 1 + element0$;
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ }
 //│ block$res4 = tmp;
-//│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -111,11 +104,11 @@ if
 if false do ()
 123
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ 123
+//│ return 123
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut; set scrut = false; 123
+//│ let scrut; set scrut = false; return 123
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ 123
+//│ return 123
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 123
 
@@ -126,7 +119,7 @@ if false do ()
 if false do ()
 123
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut; set scrut = false; 123
+//│ let scrut; set scrut = false; return 123
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 123
 
@@ -139,7 +132,7 @@ object Obj with
 :sjs
 if Obj.test do ()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ Obj1.test; runtime.Unit
+//│ Obj1.test; return runtime.Unit
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
 

@@ -56,20 +56,21 @@ let dup2 = "dup"
 //│                   (i32.const 0))
 //│                 (ref.i31
 //│                   (i32.const 6)))))
-//│           (if (result (ref null any))
-//│             (ref.test (ref null $TupleArrayMut)
-//│               (local.tee $tuple
-//│                 (local.get $tmp)))
-//│             (then
-//│               (array.get $TupleArrayMut
-//│                 (ref.cast (ref $TupleArrayMut)
-//│                   (local.get $tuple))
-//│                 (i32.const 1)))
-//│             (else
-//│               (array.get $TupleArray
-//│                 (ref.cast (ref $TupleArray)
-//│                   (local.get $tuple))
-//│                 (i32.const 1))))))))
+//│           (return
+//│             (if (result (ref null any))
+//│               (ref.test (ref null $TupleArrayMut)
+//│                 (local.tee $tuple
+//│                   (local.get $tmp)))
+//│               (then
+//│                 (array.get $TupleArrayMut
+//│                   (ref.cast (ref $TupleArrayMut)
+//│                     (local.get $tuple))
+//│                   (i32.const 1)))
+//│               (else
+//│                 (array.get $TupleArray
+//│                   (ref.cast (ref $TupleArray)
+//│                     (local.get $tuple))
+//│                   (i32.const 1)))))))))
 //│   (data $dup (i32.const 0) "\64\00\75\00\70\00")
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
@@ -105,11 +106,12 @@ if true then id(1) else s2
 //│   (import "system" "mlx_str_from_utf16" (func $mlx_str_from_utf16 (type $mlx_str_from_utf16)))
 //│   (import "system" "mem" (memory $mem 1))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (call $mlx_str_from_utf16
-//│       (ref.i31
-//│         (i32.const 0))
-//│       (ref.i31
-//│         (i32.const 52))))
+//│     (return
+//│       (call $mlx_str_from_utf16
+//│         (ref.i31
+//│           (i32.const 0))
+//│         (ref.i31
+//│           (i32.const 52)))))
 //│   (data $abcdefghijklmnop (i32.const 0) "\61\00\62\00\63\00\64\00\65\00\66\00\67\00\68\00\69\00\6a\00\6b\00\6c\00\6d\00\6e\00\6f\00\70\00\71\00\72\00\73\00\74\00\75\00\76\00\77\00\78\00\79\00\7a\00")
 //│   (elem $entry declare func $entry))
 //│ Wasm result:

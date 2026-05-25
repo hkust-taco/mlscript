@@ -11,7 +11,7 @@ let z = 0
 :sir
 if x === 0 then 1 else 2
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut; set scrut = ===⁰(x⁰, 0); match scrut true => 1 else 2 end
+//│ let scrut; set scrut = ===⁰(x⁰, 0); match scrut true => return 1 else return 2 end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -42,12 +42,12 @@ print of if x === 0 then 1 else 2
 //│     begin
 //│       set tmp = 1;
 //│       end;
-//│     Predef⁰.print⁰(tmp)
+//│     return Predef⁰.print⁰(tmp)
 //│   else
 //│     begin
 //│       set tmp = 2;
 //│       end;
-//│     Predef⁰.print⁰(tmp)
+//│     return Predef⁰.print⁰(tmp)
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
@@ -68,21 +68,21 @@ if x is
 //│       0 =>
 //│         match z⁰
 //│           0 =>
-//│             "000"
+//│             return "000"
 //│           1 =>
-//│             "001"
+//│             return "001"
 //│           else
-//│             Predef⁰.id⁰("")
+//│             return Predef⁰.id⁰("")
 //│         end
 //│       1 =>
-//│         "01"
+//│         return "01"
 //│       else
-//│         Predef⁰.id⁰("")
+//│         return Predef⁰.id⁰("")
 //│     end
 //│   1 =>
-//│     "1"
+//│     return "1"
 //│   else
-//│     Predef⁰.id⁰("")
+//│     return Predef⁰.id⁰("")
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "000"
@@ -104,21 +104,21 @@ if x is
 //│       0 =>
 //│         match z⁰
 //│           0 =>
-//│             Predef⁰.id⁰("000")
+//│             return Predef⁰.id⁰("000")
 //│           1 =>
-//│             Predef⁰.id⁰("001")
+//│             return Predef⁰.id⁰("001")
 //│           else
-//│             Predef⁰.id⁰("")
+//│             return Predef⁰.id⁰("")
 //│         end
 //│       1 =>
-//│         Predef⁰.id⁰("01")
+//│         return Predef⁰.id⁰("01")
 //│       else
-//│         Predef⁰.id⁰("")
+//│         return Predef⁰.id⁰("")
 //│     end
 //│   1 =>
-//│     Predef⁰.id⁰("1")
+//│     return Predef⁰.id⁰("1")
 //│   else
-//│     Predef⁰.id⁰("")
+//│     return Predef⁰.id⁰("")
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "000"
@@ -201,17 +201,17 @@ print of if x is
 //│           set tmp = "";
 //│           end
 //│       end;
-//│     Predef⁰.print⁰(tmp)
+//│     return Predef⁰.print⁰(tmp)
 //│   1 =>
 //│     begin
 //│       set tmp = "1";
 //│       end;
-//│     Predef⁰.print⁰(tmp)
+//│     return Predef⁰.print⁰(tmp)
 //│   else
 //│     begin
 //│       set tmp = "";
 //│       end;
-//│     Predef⁰.print⁰(tmp)
+//│     return Predef⁰.print⁰(tmp)
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 000
@@ -305,12 +305,12 @@ print of if
 //│               end
 //│           end
 //│       end;
-//│     Predef⁰.print⁰(tmp)
+//│     return Predef⁰.print⁰(tmp)
 //│   1 =>
 //│     begin
 //│       set tmp = "1__";
 //│       end;
-//│     Predef⁰.print⁰(tmp)
+//│     return Predef⁰.print⁰(tmp)
 //│   else
 //│     begin
 //│       match y⁰
@@ -321,7 +321,7 @@ print of if
 //│           set tmp = "___";
 //│           end
 //│       end;
-//│     Predef⁰.print⁰(tmp)
+//│     return Predef⁰.print⁰(tmp)
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 000

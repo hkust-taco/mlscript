@@ -41,7 +41,8 @@
 //│         (ref.cast (ref null $Unit)
 //│           (call $Unit_Unit)))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (global.get $Unit$inst))
+//│     (return
+//│       (global.get $Unit$inst)))
 //│   (elem $Unit_init declare func $Unit_init)
 //│   (elem $Unit_Unit declare func $Unit_Unit)
 //│   (elem $start declare func $start)
@@ -95,8 +96,9 @@ x
 //│       (global.set $x
 //│         (ref.i31
 //│           (i32.const 1)))
-//│       (ref.i31
-//│         (i32.const 1))))
+//│       (return
+//│         (ref.i31
+//│           (i32.const 1)))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 1

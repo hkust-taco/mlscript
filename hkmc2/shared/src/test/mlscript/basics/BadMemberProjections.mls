@@ -14,8 +14,10 @@
 //│ ╙──     	^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda;
-//│ lambda = (undefined, function (self, ...args) { return runtime.safeCall(self.x(...args)) });
-//│ lambda
+//│ lambda = (undefined, function (self, ...args) {
+//│   return runtime.safeCall(self.x(...args))
+//│ });
+//│ return lambda
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -24,12 +26,12 @@
 :re
 1::x()
 //│ ╔══[COMPILATION ERROR] Integer literal is not a known class.
-//│ ║  l.25: 	1::x()
+//│ ║  l.27: 	1::x()
 //│ ║        	^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found integer literal.
-//│ ║  l.25: 	1::x()
+//│ ║  l.27: 	1::x()
 //│ ╙──      	^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let lambda1;
@@ -38,7 +40,6 @@
 //│   return runtime.safeCall(self.x(...args))
 //│ });
 //│ block$res2 = runtime.safeCall(lambda1());
-//│ undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 1 argument but got 0
 
@@ -57,24 +58,24 @@ let x = 1
 :e
 "A"::x
 //│ ╔══[COMPILATION ERROR] String literal is not a known class.
-//│ ║  l.58: 	"A"::x
+//│ ║  l.59: 	"A"::x
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found string literal.
-//│ ║  l.58: 	"A"::x
+//│ ║  l.59: 	"A"::x
 //│ ╙──      	^^^
 //│ = fun
 
 :e
 "A" ::x
 //│ ╔══[COMPILATION ERROR] String literal is not a known class.
-//│ ║  l.70: 	"A" ::x
+//│ ║  l.71: 	"A" ::x
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found string literal.
-//│ ║  l.70: 	"A" ::x
+//│ ║  l.71: 	"A" ::x
 //│ ╙──      	^^^
 //│ = fun
 

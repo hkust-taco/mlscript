@@ -40,7 +40,7 @@ x `=>
 //│ x1 = globalThis.Object.freeze(new Term.Ref(tmp5));
 //│ Predef.print(x1);
 //│ arr2 = globalThis.Object.freeze([ tmp5 ]);
-//│ globalThis.Object.freeze(new Term.Lam(arr2, x1))
+//│ return globalThis.Object.freeze(new Term.Lam(arr2, x1))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Ref(Symbol("x"))
 //│ = Lam([Symbol("x")], Ref(Symbol("x")))
@@ -87,7 +87,7 @@ f`(`0)
 //│ tmp30 = globalThis.Object.freeze(new Term.Else(tmp31));
 //│ tmp25 = globalThis.Object.freeze(new Term.Cons(tmp29, tmp30));
 //│ tmp26 = globalThis.Object.freeze(new Term.Let(tmp23, tmp24, tmp25));
-//│ globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp26))
+//│ return globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp26))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = IfLike(
 //│   If,

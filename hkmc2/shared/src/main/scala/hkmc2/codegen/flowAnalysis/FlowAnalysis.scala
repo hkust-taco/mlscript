@@ -502,7 +502,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
       for (sym, n) <- mergedBranchUsage do
         currentAffinityCount(sym) = currentAffinityCount(sym) + n
       applyBlock(rest)
-    case Return(res, implct) => applyResult(res)
+    case Return(res) => applyResult(res)
     case lbl@Label(label, loop, body, rest) =>
       ctxTracker.inLabelBody(lbl):
         applyBlock(body)
@@ -882,7 +882,7 @@ class FlowConstraintsCollector(
     def processBlock(b: Block)(using cc: ConstraintsCollector, blkRes: ConsStrat): Unit =
       val instId = cc.instId
       b match
-      case Return(res, implct) => cc.constrain(processResult(res), blkRes)
+      case Return(res) => cc.constrain(processResult(res), blkRes)
       case Throw(exc) => constrainOpaqueResult(exc)
       case Match(scrut, arms, dflt, rest) =>
         val scrutStrat = processResult(scrut)

@@ -25,7 +25,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
   // Increases the stack depth, assigns the call to a value, then decreases the stack depth
   // then binds that value to a desired block
   def extractRes(res: Result, isTailCall: Bool, f: Result => Block, sym: Symbol, curDepth: => Symbol): Block =
-    if isTailCall then Return(res, false)
+    if isTailCall then Return(res)
     else
       blockBuilder
         .assign(sym, res)
@@ -62,10 +62,10 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
         case _: FunDefn | _: ValDefn => super.applyDefn(defn)(k)
 
       override def applyBlock(b: Block): Block = b match
-        case Return(res, implct) if usesStack(res) =>
+        case Return(res) if usesStack(res) =>
           val tmp = TempSymbol(N, "res")
           super.applyResult(res): res =>
-            Scoped(Set.single(tmp), extract(res, true, Return(_, implct), tmp, curDepth))
+            Scoped(Set.single(tmp), extract(res, true, Return(_), tmp, curDepth))
         // Optimization to avoid generation of unnecessary variables
         case Assign(lhs, r, rest) =>
           if usesStack(r) then
