@@ -20,7 +20,7 @@ open Option
 :sjs
 None isDefined()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ Option.isDefined(Option.None)
+//│ return Option.isDefined(Option.None)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = false
 
@@ -40,7 +40,7 @@ Some(1)
 :sjs
 (new Some(1)) isDefined()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp3; tmp3 = globalThis.Object.freeze(new Option.Some.class(1)); Option.isDefined(tmp3)
+//│ let tmp3; tmp3 = globalThis.Object.freeze(new Option.Some.class(1)); return Option.isDefined(tmp3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 

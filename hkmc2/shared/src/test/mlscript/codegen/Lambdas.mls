@@ -8,14 +8,14 @@ x =>
   let y = x
   y
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda; lambda = (undefined, function (x) { return x }); lambda
+//│ let lambda; lambda = (undefined, function (x) { return x }); return lambda
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 
 (acc, _) => acc
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda1; lambda1 = (undefined, function (acc, _) { return acc }); lambda1
+//│ let lambda1; lambda1 = (undefined, function (acc, _) { return acc }); return lambda1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

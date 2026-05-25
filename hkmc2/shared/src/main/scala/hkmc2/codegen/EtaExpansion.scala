@@ -184,21 +184,20 @@ class EtaExpansionRewrite(val etaExpansionSolver: EtaExpansionSolver)(using Rais
       Call(base, activeEtaArgss.ne_!)(isMlsFun = true, mayRaiseEffects = true, explicitTailCall = false)
     
     override def applyBlock(b: Block): Block = b match
-      case Return(res, implct) if activeEtaArgss.nonEmpty =>
+      case Return(res) if activeEtaArgss.nonEmpty =>
         applyResult(res): res2 =>
-          if activeEtaArgss.isEmpty then Return(res2, implct)
+          if activeEtaArgss.isEmpty then Return(res2)
           else res2 match
           case p: Path =>
-            Return(etaCall(p).withLocOf(res2), implct)
+            Return(etaCall(p).withLocOf(res2))
           case c @ Call(fun, argss) =>
             Return(
-              Call(fun, (argss ++ activeEtaArgss).ne_!)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall),
-              implct)
+              Call(fun, (argss ++ activeEtaArgss).ne_!)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall))
           case _ =>
             val tmp = TempSymbol(N, "eta$res")
             Scoped(
               Set.single(tmp),
-              Assign(tmp, res2, Return(etaCall(tmp.asPath).withLocOf(res2), implct)))
+              Assign(tmp, res2, Return(etaCall(tmp.asPath).withLocOf(res2))))
       case _ => super.applyBlock(b)
     
     override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
@@ -225,7 +224,7 @@ class EtaExpansionRewrite(val etaExpansionSolver: EtaExpansionSolver)(using Rais
       val body2 = withEtaArgss(etaParams.map(_.args)):
         applyFunBodyLikeBlock(lam.body)
       val wrappedBody = etaParams.map(_.params).foldRight(body2): (params, body) =>
-        Return(Lambda(params, body)(Nil), implct = false)
+        Return(Lambda(params, body)(Nil))
       if (wrappedBody is lam.body) then lam
       else Lambda(lam.params, wrappedBody)(lam.annot).withLocOf(lam)
   end Rewriter

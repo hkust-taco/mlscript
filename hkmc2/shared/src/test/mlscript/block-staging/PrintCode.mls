@@ -7,7 +7,7 @@ import "../../mlscript-compile/Option.mls"
 open Block
 open Option
 
-printCode(FunDefn(Symbol("f"), [[Symbol("x")]], Return(ValueLit(1), false)))
+printCode(FunDefn(Symbol("f"), [[Symbol("x")]], Return(ValueLit(1))))
 //│ > fun f(x) = 1
 
 printCode(ValueLit(true))
@@ -43,7 +43,7 @@ printCode(Tuple([Arg(ValueRef(Symbol("x"))), Arg(ValueRef(Symbol("y")))]))
 //│ > [x, y]
 
 :silent
-let f = FunDefn(Symbol("f"), [[Symbol("x")]], Return(ValueLit(1), false))
+let f = FunDefn(Symbol("f"), [[Symbol("x")]], Return(ValueLit(1)))
 
 printCode(f)
 printCode(ClsLikeDefn(aSym, [f], None))
@@ -53,7 +53,7 @@ printCode(ClsLikeDefn(bSym, [], None))
 //│ >   fun f(x) = 1
 //│ > class B
 
-printCode(Scoped([Symbol("x"), Symbol("y")], Assign(Symbol("x"), ValueLit(4.2), Return(ValueRef(Symbol("x")), true))))
+printCode(Scoped([Symbol("x"), Symbol("y")], Assign(Symbol("x"), ValueLit(4.2), Return(ValueRef(Symbol("x"))))))
 //│ > let {x, y}
 //│ > x = 4.2
 //│ > x
@@ -63,17 +63,17 @@ printCode(Define(ValDefn(None, Symbol("a"), ValueLit(1)), End()))
 //│ > val x = 1
 //│ > val a = 1
 
-printCode(Match(ValueRef(Symbol("x")), [Arm(Lit(1), Return(ValueLit(2), false)), Arm(Cls(aSym, ValueRef(aSym)), Return(ValueLit(3), false))], Some(Return(ValueRef(Symbol("x")), false)), End()))
+printCode(Match(ValueRef(Symbol("x")), [Arm(Lit(1), Return(ValueLit(2))), Arm(Cls(aSym, ValueRef(aSym)), Return(ValueLit(3)))], Some(Return(ValueRef(Symbol("x")))), End()))
 //│ > if x is
 //│ >   1 then 2
 //│ >   A then 3
 //│ >   else x
 
 printCode(Scoped([Symbol("y")], Match(
-    ValueLit(1), 
-    [Arm(Lit(1), Return(ValueLit(1), false))], 
-    Some(Return(ValueLit(1), false)), 
-    Return(ValueRef(Symbol("y")), false))))
+    ValueLit(1),
+    [Arm(Lit(1), Return(ValueLit(1)))],
+    Some(Return(ValueLit(1))),
+    Return(ValueRef(Symbol("y"))))))
 //│ > let {y}
 //│ > if 1 is
 //│ >   1 then 1
@@ -81,9 +81,9 @@ printCode(Scoped([Symbol("y")], Match(
 //│ > y
 
 printCode(Scoped([Symbol("y")],  Match(
-    ValueLit(1), 
-    [Arm(Lit(1), Assign(Symbol("y"), ValueLit(1), Return(ValueRef(Symbol("y")), false)))], 
-    Some(Assign(Symbol("y"), ValueLit(2), Return(ValueRef(Symbol("y")), false))), 
+    ValueLit(1),
+    [Arm(Lit(1), Assign(Symbol("y"), ValueLit(1), Return(ValueRef(Symbol("y")))))],
+    Some(Assign(Symbol("y"), ValueLit(2), Return(ValueRef(Symbol("y"))))),
     End())))
 //│ > let {y}
 //│ > if 1 is
@@ -95,14 +95,14 @@ printCode(Scoped([Symbol("y")],  Match(
 //│ >     y
 
 printCode(Scoped([Symbol("y")], Match(
-    ValueLit(1), 
+    ValueLit(1),
     [Arm(Lit(1), Match(
         ValueLit(2),
-        [Arm(Lit(2), Assign(Symbol("y"), ValueLit(1), Return(ValueRef(Symbol("y")), false)))],
-        Some(Assign(Symbol("y"), ValueLit(2), Return(ValueRef(Symbol("y")), false))),
+        [Arm(Lit(2), Assign(Symbol("y"), ValueLit(1), Return(ValueRef(Symbol("y")))))],
+        Some(Assign(Symbol("y"), ValueLit(2), Return(ValueRef(Symbol("y"))))),
         End()
-    ))], 
-    Some(Assign(Symbol("y"), ValueLit(3), Return(ValueRef(Symbol("y")), false))), 
+    ))],
+    Some(Assign(Symbol("y"), ValueLit(3), Return(ValueRef(Symbol("y"))))),
     End())))
 //│ > let {y}
 //│ > if 1 is

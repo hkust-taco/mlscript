@@ -48,7 +48,7 @@ val Infinity = 1
 :sjs
 Infinity
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ Infinity
+//│ return Infinity
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Infinity
 
@@ -218,7 +218,7 @@ open Stack { Nil, :: }
 //│ ║  l.216: 	1 :: Nil
 //│ ╙──       	  ^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ runtime.safeCall(Stack["::"](1, Stack.Nil))
+//│ return runtime.safeCall(Stack["::"](1, Stack.Nil))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: Stack.:: is not a function
 

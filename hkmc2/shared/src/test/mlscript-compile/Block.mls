@@ -77,7 +77,7 @@ class ClsLikeBody(val isym: Symbol, val methods: Array[FunDefn], val publicField
 class Block with
   constructor
     Match(val scrut: Path, val arms: Array[Arm], val dflt: Opt[Block], val rest: Block)
-    Return(val res: Result, val implct: Bool)
+    Return(val res: Result)
     Assign(val lhs: Symbol, val rhs: Result, val rest: Block)
     Define(val defn: Defn, val rest: Block)
     Scoped(val symbols: Array[Symbol], val rest: Block)
@@ -85,7 +85,7 @@ class Block with
   
 fun concat(b1: Block, b2: Block) = if b1 is
   Match(scrut, arms, dflt, rest) then Match(scrut, arms, dflt, concat(rest, b2))
-  Return(res, implct) then b1
+  Return(res) then b1
   Assign(lhs, rhs, rest) then Assign(lhs, rhs, concat(rest, b2))
   Define(defn, rest) then Define(defn, concat(rest, b2))
   Scoped(symbols, rest) then Scoped(symbols, concat(rest, b2))
@@ -173,7 +173,7 @@ fun showBlock(b) =
         + showResult(rhs) + showRestBlock(rest)
     Define(d, rest) then
       showDefn(d) + showRestBlock(rest)
-    Return(res, _) then
+    Return(res) then
       showResult(res)
     Match(scrut, arms, dflt, rest) then
       "if " + showPath(scrut) + " is"

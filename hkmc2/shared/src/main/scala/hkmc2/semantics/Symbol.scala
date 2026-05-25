@@ -243,7 +243,7 @@ class BuiltinSymbol
   
   def subst(using sub: SymbolSubst): BuiltinSymbol = sub.mapBuiltInSym(this)
   
-  def isPure: Bool = true // * For now, all builtins are pure
+  def isPure: Bool = nme =/= "super" // * For now, all other builtins are pure
   
   // * A basic approximation of builtin operator types
   lazy val signature : semantics.flow.Producer =
@@ -503,4 +503,3 @@ class TopLevelSymbol(blockNme: Str)(using State)
   override def prefix: Str = "globalThis:"
   
   def subst(using sub: SymbolSubst): TopLevelSymbol = sub.mapTopLevelSym(this)
-

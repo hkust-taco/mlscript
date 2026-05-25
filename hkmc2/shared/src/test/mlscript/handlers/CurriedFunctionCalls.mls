@@ -19,10 +19,10 @@ f(1)(2)
 //│ set tmp = f¹(1)(2);
 //│ match runtime⁰.curEffect﹖
 //│   null =>
-//│     tmp
+//│     return tmp
 //│   else
 //│     set tmp = runtime⁰.topLevelEffect﹖(false);
-//│     tmp
+//│     return tmp
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3

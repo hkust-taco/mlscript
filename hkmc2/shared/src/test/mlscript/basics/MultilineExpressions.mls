@@ -80,7 +80,7 @@ if 1 + 2
 //│     kw = Keywrd of keyword 'then'
 //│     rhs = IntLit of 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (7 === true) { 0 } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ if (7 === true) { return 0 } throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: match error
 

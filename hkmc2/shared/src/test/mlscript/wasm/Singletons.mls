@@ -92,9 +92,10 @@ Bar.y
 //│       (nop)
 //│       (block (result (ref null any))
 //│         (nop)
-//│         (struct.get $Bar $y
-//│           (ref.cast (ref $Bar)
-//│             (global.get $Bar$inst))))))
+//│         (return
+//│           (struct.get $Bar $y
+//│             (ref.cast (ref $Bar)
+//│               (global.get $Bar$inst)))))))
 //│   (elem $Foo_init declare func $Foo_init)
 //│   (elem $Foo_ctor declare func $Foo_ctor)
 //│   (elem $Bar_init declare func $Bar_init)

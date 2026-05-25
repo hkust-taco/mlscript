@@ -20,7 +20,7 @@ f(undefined)
 //│ define f⁰ as fun f¹() { return g¹() };
 //│ @private
 //│ define g⁰ as fun g¹() { return 2 };
-//│ f¹()
+//│ return f¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
@@ -45,7 +45,7 @@ if f(42) is Box(v) then 0
 //│ set scrut = f³();
 //│ match scrut
 //│   Box¹ =>
-//│     0
+//│     return 0
 //│   else
 //│     throw new globalThis⁰.Error⁰("match error")
 //│ end
@@ -63,7 +63,7 @@ f(42)
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁴; @private define f⁴ as fun f⁵() { return 0 }; f⁵()
+//│ let f⁴; @private define f⁴ as fun f⁵() { return 0 }; return f⁵()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 

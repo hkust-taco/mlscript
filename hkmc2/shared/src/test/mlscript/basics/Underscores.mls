@@ -4,7 +4,7 @@
 :sjs
 _
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda; lambda = (undefined, function (_0) { return _0 }); lambda
+//│ let lambda; lambda = (undefined, function (_0) { return _0 }); return lambda
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -37,7 +37,7 @@ inc(2)
 :sjs
 _ + _
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda4; lambda4 = (undefined, function (_0, _1) { return _0 + _1 }); lambda4
+//│ let lambda4; lambda4 = (undefined, function (_0, _1) { return _0 + _1 }); return lambda4
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -102,7 +102,7 @@ _ is Int
 //│   if (globalThis.Number.isInteger(_0)) { return true }
 //│   return false;
 //│ });
-//│ lambda8
+//│ return lambda8
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

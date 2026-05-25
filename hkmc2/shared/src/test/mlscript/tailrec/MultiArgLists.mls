@@ -39,7 +39,7 @@ loop(1000)(0)
 //│ };
 //│ @tailrec
 //│ define loop⁰ as fun loop¹(x)(y) { return loop$tailrec¹(x, y) };
-//│ loop¹(1000)(0)
+//│ return loop¹(1000)(0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 500500
 
@@ -67,8 +67,10 @@ count(0)(100)
 //│     end
 //│   end
 //│ };
-//│ define count⁰ as fun count¹(start)(stop) { return count$tailrec¹(start, stop) };
-//│ count¹(0)(100)
+//│ define count⁰ as fun count¹(start)(stop) {
+//│   return count$tailrec¹(start, stop)
+//│ };
+//│ return count¹(0)(100)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 100
 

@@ -12,8 +12,12 @@ fun foo() =
 foo()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo;
-//│ foo = function foo() { let tmp; tmp = M1.concat("a", "b"); return M1.concat(tmp, "c") };
-//│ foo()
+//│ foo = function foo() {
+//│   let tmp;
+//│   tmp = M1.concat("a", "b");
+//│   return M1.concat(tmp, "c")
+//│ };
+//│ return foo()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "abc"
 

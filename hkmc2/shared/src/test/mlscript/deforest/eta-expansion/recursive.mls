@@ -79,7 +79,7 @@ sum(enum(5), 0)
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
 //│ };
-//│ enum_13$enum$worker¹(5, 0, undefined)
+//│ return enum_13$enum$worker¹(5, 0, undefined)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 15
 
@@ -191,7 +191,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ set tmp3 = Cons⁰(tmp2, Nil⁰);
 //│ set tmp4 = Cons⁰(tmp1, tmp3);
 //│ set tmp5 = Predef⁰.id⁰(tmp4);
-//│ flatten_30$flatten$worker¹(tmp5)
+//│ return flatten_30$flatten$worker¹(tmp5)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 

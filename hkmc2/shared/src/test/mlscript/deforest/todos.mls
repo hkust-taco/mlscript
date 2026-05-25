@@ -178,7 +178,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ set tmp9 = +⁰(tmp4, tmp8);
 //│ set deforest$lam = test_31$x_dflt¹();
 //│ set tmp10 = test_31$test¹(deforest$lam);
-//│ +⁰(tmp9, tmp10)
+//│ return +⁰(tmp9, tmp10)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 78
 //│ p = AA(AA(AA(10)))

@@ -380,24 +380,30 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             mkFunRef(target),
             args.map(a => Arg(N, a.toValueRef)) ne_:: Nil
           )(true, false, false)
+        def mkReturnCall(target: (BlockMemberSymbol, TermSymbol), args: Ls[Symbol]): Block =
+          Return(mkCall(target, args))
         
         // Rewrites the program under a specific instantiation id
         // from the polymorphic analysis
         class Rewriter(instId: InstantiationId) extends BlockTransformer(_symSubst):
           extension (resId: ResultId) def concreteId = ConcreteId(resId, instId)
-          private var makeReturnsExplicit = false
+          private var returnsFromCurrentBlock = true
           
-          private inline def withReturnImplicity[A](explicit: Bool)(body: => A): A =
-            val saved = makeReturnsExplicit
-            makeReturnsExplicit = explicit
+          private inline def withReturnValues[A](enabled: Bool)(body: => A): A =
+            val saved = returnsFromCurrentBlock
+            returnsFromCurrentBlock = enabled
             val res = body
-            makeReturnsExplicit = saved
+            returnsFromCurrentBlock = saved
             res
           
-          def applyBlockExplicitRet(b: Block): Block =
-            withReturnImplicity(explicit = true):
+          def applyBlockReturning(b: Block): Block =
+            withReturnValues(enabled = true):
               applyBlock(b)
           
+          private def tailResult(res: Result): Block =
+            if returnsFromCurrentBlock then Return(res)
+            else Assign(eState.noSymbol, res, End())
+
           private def newRefId(refId: ResultId, refSym: TermSymbol) =
             instId match
             case Nil => refId :: Nil
@@ -476,33 +482,31 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             case m@Match(scrut, _, _, _) if solver.finalDtorSrcs.isDefinedAt(scrut.uid.concreteId) =>
               val callWithFvs = dtorBranchFnFvs(scrut.uid.concreteId)
               applyPath(scrut): newScrut =>
-                Return(
-                  Call(newScrut, callWithFvs.map(s => Arg(N, s.toValueRef)) ne_:: Nil)(true, false, false),
-                  implct = !makeReturnsExplicit)
+                tailResult(
+                  Call(newScrut, callWithFvs.map(s => Arg(N, s.toValueRef)) ne_:: Nil)(true, false, false))
             case Break(label) =>
               val labelRestFunId = label.withInstId(instId)
               restFunSyms.get(labelRestFunId) match
               case None => super.applyBlock(b)
               case Some(labelRestFunSym) =>
                 val labelRestFunFvs = restFnFvs(labelRestFunId)
-                Return(mkCall(labelRestFunSym, labelRestFunFvs), implct = !makeReturnsExplicit)
-            case Return(res, true) if makeReturnsExplicit => super.applyBlock(Return(res, false))
+                tailResult(mkCall(labelRestFunSym, labelRestFunFvs))
             case _ => super.applyBlock(b)
           
           override def applyFunDefn(fun: FunDefn): FunDefn =
-            withReturnImplicity(explicit = true):
+            withReturnValues(enabled = true):
               super.applyFunDefn(fun)
           
           override def applyLam(lam: Lambda): Lambda =
-            withReturnImplicity(explicit = true):
+            withReturnValues(enabled = true):
               super.applyLam(lam)
           
           override def applyClsLikeDefn(defn: ClsLikeDefn)(k: Defn => Block): Block =
-            withReturnImplicity(explicit = false):
+            withReturnValues(enabled = false):
               super.applyClsLikeDefn(defn)(k)
           
           override def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
-            withReturnImplicity(explicit = false):
+            withReturnValues(enabled = false):
               super.applyObjBody(defn)
         end Rewriter
         
@@ -542,7 +546,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             (referringFun, (bms, tSym)) <- funSymMap.toList.sortBy(_._1.uid)
           yield
             val fDefn = pre.res.funSymToFunDefn(referringFun)
-            val transformedBody = new Rewriter(instId).applyBlockExplicitRet(fDefn.body)
+            val transformedBody = new Rewriter(instId).applyBlockReturning(fDefn.body)
             // refresh other local symbols: for funs, we can check existing scoped blocks and
             // there is no need to add scoped blocks, because function bodies now already are scoped
             val refreshParamMap = MutMap.empty[VarSymbol, VarSymbol]
@@ -568,8 +572,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             val restFunSym = restFunSyms(dtorId)
             val restFunArgs = restFnFvs(dtorId)
             val actualBody = Begin(
-              new Rewriter(instId).applyBlockExplicitRet(ogBody),
-              Return(mkCall(restFunSym, restFunArgs), false))
+              new Rewriter(instId).applyBlockReturning(ogBody),
+              mkReturnCall(restFunSym, restFunArgs))
             val refreshedFvSymbols = dtorBranchFnFvs(branchId._1).map(s => s -> new VarSymbol(Tree.Ident(s"fv_${s.nme}")))
             val bodyWithCorrectSymbols = new RefreshSymbol(refreshedFvSymbols.toMap).applyBlock(actualBody)
             FunDefn(tSym.owner, bms, tSym,
@@ -583,7 +587,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
           for (restFunId, (bms, tsym)) <- restFunSyms yield
             val instId = restFunId.getInstId
             val (ogBody, parent) = restOriginalBodiesAndParentRest(restFunId.withoutInstId)
-            val transformedOgBody = new Rewriter(instId).applyBlockExplicitRet(ogBody)
+            val transformedOgBody = new Rewriter(instId).applyBlockReturning(ogBody)
             val actualBody = parent match
               case Some(parentRestId) =>
                 val parentRestFunId = parentRestId.withInstId(instId)
@@ -591,9 +595,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
                 val parentFunFvs = restFnFvs(parentRestFunId)
                 Begin(
                   transformedOgBody,
-                  Return(mkCall(parentFunSym, parentFunFvs), false))
+                  mkReturnCall(parentFunSym, parentFunFvs))
               case None =>
-                Begin(transformedOgBody, Return(Value.Lit(Tree.UnitLit(true)), false))
+                Begin(transformedOgBody, Return(Value.Lit(Tree.UnitLit(true))))
             val refreshedFvSymbols = restFnFvs(restFunId).map(s => s -> new VarSymbol(Tree.Ident(s"fv_${s.nme}")))
             val bodyWithCorrectSymbols = new RefreshSymbol(refreshedFvSymbols.toMap).applyBlock(actualBody)
             FunDefn(tsym.owner, bms, tsym, refreshedFvSymbols.unzip._2.asParamList :: Nil, bodyWithCorrectSymbols)(N, annotations = PrivateModifier :: Nil)
@@ -604,7 +608,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         val inplaceRewrittenFunBodies = Map.from[TermSymbol, Block]:
           for (selfInstId, funSym) <- collector.synthesizedInstIdToFunSym yield
             val fDefn = pre.res.funSymToFunDefn(funSym)
-            funSym -> new Rewriter(selfInstId).applyBlockExplicitRet(fDefn.body)
+            funSym -> new Rewriter(selfInstId).applyBlockReturning(fDefn.body)
         
         // When rewriting class methods, the generated branch-body and rest functions
         // may include selections of the class fields, which means
@@ -647,4 +651,3 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
   end apply
   
 end DeforestRewriter
-

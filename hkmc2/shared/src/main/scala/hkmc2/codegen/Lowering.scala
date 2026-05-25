@@ -25,12 +25,12 @@ import hkmc2.syntax.{Fun, Keyword}
 
 abstract class TailOp extends (Result => Block)
 object Ret extends TailOp:
-  def apply(r: Result): Block = Return(r, implct = false)
+  def apply(r: Result): Block = Return(r)
 object ImplctRet extends TailOp:
   def apply(r: Result): Block =
     r match
     case Value.Lit(Tree.UnitLit(false)) => End()
-    case _ => Return(r, implct = true)
+    case _ => Return(r)
 object Thrw extends TailOp:
   def apply(r: Result): Block = Throw(r)
 
@@ -160,7 +160,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       isTailCall = false,
       args.headOption,
       N, // TODO: location?
-    )(c => Return(c, implct = true))
+    )(c => Assign(State.noSymbol, c, End()))
   
   // * Used to work around Scala's @tailrec annotation for those few calls that are not in tail position.
   final def term_nonTail(t: st, inStmtPos: Bool = false)(k: Result => Block)(using LoweringCtx): Block =
@@ -463,7 +463,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness))
             val freshParamList = ParamList(ps.flags, freshParams, N)
             val freshArgs = freshSyms.map(s => Arg(N, Value.Ref(s)))
-            Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs), implct = false))(Nil)
+            Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(Nil)
         k(etaExpand(remainingParamss, acc.reverse))
     // * Resolve the class definition to get the constructor param lists.
     // * The class path typically resolves to a TermSymbol (the constructor function),

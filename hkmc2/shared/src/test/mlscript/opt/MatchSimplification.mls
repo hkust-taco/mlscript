@@ -9,7 +9,7 @@ if true then 1 else 0
 :soir
 let x = true in if x then 1 else 0
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ match true true => 1 else 0 end
+//│ match true true => return 1 else return 0 end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -44,7 +44,7 @@ fun f(x) =
 :soir
 true is Bool
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ match true Bool⁰ => true else false end
+//│ match true Bool⁰ => return true else return false end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 

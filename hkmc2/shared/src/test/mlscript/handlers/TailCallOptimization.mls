@@ -56,6 +56,7 @@ hi(0)
 //│   return hi(0)
 //│ });
 //│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_);
-//│ if (runtime.curEffect === null) { tmp1 } else { runtime.topLevelEffect(false) }
+//│ if (runtime.curEffect === null) { return tmp1 }
+//│ return runtime.topLevelEffect(false);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0

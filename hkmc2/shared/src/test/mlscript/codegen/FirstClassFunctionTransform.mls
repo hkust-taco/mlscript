@@ -28,7 +28,7 @@ x => x
 //│   method call⁰ = fun call¹(x) { return lambda¹(x) }
 //│ };
 //│ set tmp = new Function$¹();
-//│ tmp
+//│ return tmp
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class anonymous
 
@@ -53,7 +53,7 @@ f(0, 0, true)
 :sir
 (x => x)(42)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda²; define lambda² as fun lambda³(x) { return x }; lambda³(42)
+//│ let lambda²; define lambda² as fun lambda³(x) { return x }; return lambda³(42)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -78,7 +78,7 @@ bar(foo)
 //│   method call² = fun call³(x) { return foo¹(x) }
 //│ };
 //│ set tmp = new Function$³();
-//│ bar¹(tmp)
+//│ return bar¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -156,10 +156,12 @@ Foo(1).foo(x => x - 1)
 //│   return -⁰(x, 1)
 //│ };
 //│ define Function$⁴ as class Function$⁵ {
-//│   method call⁴ = fun call⁵(x) { return lambda⁵(x) }
+//│   method call⁴ = fun call⁵(x) {
+//│     return lambda⁵(x)
+//│   }
 //│ };
 //│ set tmp1 = new Function$⁵();
-//│ tmp.foo²(tmp1)
+//│ return tmp.foo²(tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -185,7 +187,7 @@ foo()(1)
 //│   return tmp
 //│ };
 //│ set baseCall = foo⁴();
-//│ baseCall.call﹖(1)
+//│ return baseCall.call﹖(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -235,7 +237,8 @@ module Foo with
 //│   private val Bar⁰;
 //│   private val z⁰;
 //│   constructor(Bar, z) {
-//│     super⁰();
+//│     do super⁰();
+//│     end;
 //│     set Function$⁹.this.Bar = Bar;
 //│     set Function$⁹.this.z = z;
 //│     end
@@ -287,7 +290,7 @@ y => x + y
 //│   method call¹⁰ = fun call¹¹(y) { return lambda¹¹(y) }
 //│ };
 //│ set tmp = new Function$¹¹();
-//│ tmp
+//│ return tmp
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class anonymous
 
@@ -378,7 +381,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.379: 	foo.f(0)
+//│ ║  l.382: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -396,7 +399,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.397: 	foo.x(0)
+//│ ║  l.400: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 
@@ -471,7 +474,8 @@ fun foo(x)(y) = x + y
 //│ define Function$¹² as class Function$¹³ {
 //│   private val x²;
 //│   constructor(x) {
-//│     super⁰();
+//│     do super⁰();
+//│     end;
 //│     set Function$¹³.this.x = x;
 //│     end
 //│   }
@@ -513,7 +517,7 @@ print("abc")
 :e
 foo(print)
 //│ ╔══[COMPILATION ERROR] Cannot get print's parameter list.
-//│ ║  l.514: 	foo(print)
+//│ ║  l.518: 	foo(print)
 //│ ╙──       	    ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'call' expected 0 arguments but got 1
 
@@ -525,15 +529,17 @@ foo(print(_))
 :expect ["abc"]
 foo(tuple)
 //│ ╔══[COMPILATION ERROR] Cannot get tuple's parameter list.
-//│ ║  l.526: 	foo(tuple)
+//│ ║  l.530: 	foo(tuple)
 //│ ╙──       	    ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Function$¹⁴, tmp;
 //│ define Function$¹⁴ as class Function$¹⁵ {
-//│   method call¹⁴ = fun call¹⁵() { return Predef⁰.tuple⁰() }
+//│   method call¹⁴ = fun call¹⁵() {
+//│     return Predef⁰.tuple⁰()
+//│   }
 //│ };
 //│ set tmp = new Function$¹⁵();
-//│ foo⁷(tmp)
+//│ return foo⁷(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function 'call' expected 0 arguments but got 1
 //│ ═══[RUNTIME ERROR] Expected: '["abc"]', got: 'undefined'

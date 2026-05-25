@@ -166,7 +166,7 @@ Foo(123)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", ["a"]];
 //│ });
-//│ Foo1(123)
+//│ return Foo1(123)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Foo(123)
 
@@ -199,6 +199,6 @@ Bar(1)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Bar", ["x"]];
 //│ });
-//│ Bar1(1)
+//│ return Bar1(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Bar(1)
