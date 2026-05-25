@@ -13,7 +13,7 @@
 //│   tmp3 = tmp2 + 1;
 //│   return tmp3 + 1
 //│ });
-//│ runtime.safeCall(lambda(1))
+//│ return runtime.safeCall(lambda(1))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 
@@ -30,21 +30,21 @@
 //│   tmp4 = tmp3 + 1;
 //│   return tmp4 + 1
 //│ });
-//│ runtime.safeCall(lambda1(1))
+//│ return runtime.safeCall(lambda1(1))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 7
 
 :sjs
 (x => x) + 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda2; lambda2 = (undefined, function (x) { return x }); lambda2 + 1
+//│ let lambda2; lambda2 = (undefined, function (x) { return x }); return lambda2 + 1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "function (x) {   runtime.checkArgs(\"\", 1, true, arguments.length);   return x }1"
 
 :sjs
 1 + (x => x)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda3; lambda3 = (undefined, function (x) { return x }); 1 + lambda3
+//│ let lambda3; lambda3 = (undefined, function (x) { return x }); return 1 + lambda3
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "1function (x) {   runtime.checkArgs(\"\", 1, true, arguments.length);   return x }"
 

@@ -92,7 +92,7 @@ m()
 //│ let tmp, lambda⁰;
 //│ set tmp = [1, 2, 3];
 //│ define lambda⁰ as fun lambda¹(x, i, a) { return +⁰(x, 1) };
-//│ tmp.map﹖(lambda¹)
+//│ return tmp.map﹖(lambda¹)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [2, 3, 4]
 

@@ -64,7 +64,7 @@ class A with
 //│   constructor { define x² as val x³ = g¹; end }
 //│ };
 //│ set tmp = new A⁵();
-//│ tmp.x³()
+//│ return tmp.x³()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 

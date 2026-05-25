@@ -919,7 +919,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     def splitSuperTail(block: Block): Opt[Block -> Ls[Arg]] = block match
       case End(_) => N
-      case Return(Call(Value.SimpleRef(bs: BuiltinSymbol), argss), true) if bs eq State.builtinOpsMap("super") =>
+      case Assign(lhs, Call(Value.SimpleRef(bs: BuiltinSymbol), argss), _: End)
+        if (lhs is State.noSymbol) && (bs is State.superSymbol)
+      =>
         S(End("") -> argss.flatten)
       case b: NonBlockTail =>
         splitSuperTail(b.rest).map: (prefix, args) =>
@@ -1790,7 +1792,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
                   val result = pss.foldRight(bod):
                     case (ps, block) =>
-                      Return(Lambda(ps, block)(Nil), false)
+                      Return(Lambda(ps, block)(Nil))
                   val (bodyWat, fnCtx) = setupFunction(N, ps, result)
                   if sym.nameIsMeaningful then
                     val funcTy = ctx.addType(
@@ -2026,20 +2028,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             )
         end match
 
-      case Return(res, true) =>
-        val resWat = result(res)
-        resWat.resultType match
-          case S(refTy: RefType) =>
-            refTy.heapType match
-              case HeapType.Func =>
-                errExpr(Ls(msg"Returning function instances is not supported" -> res.toLoc))
-              case typeidx: TypeIdx if ctx.getTypeInfo_!(typeidx).compType.isInstanceOf[FunctionType] =>
-                errExpr(Ls(msg"Returning function instances is not supported" -> res.toLoc))
-              case _ => ()
-          case _ => ()
-
-        resWat
-      case Return(res, false) =>
+      case Return(res) =>
         val resWat = result(res)
         resWat.resultType match
           case S(refTy: RefType) =>

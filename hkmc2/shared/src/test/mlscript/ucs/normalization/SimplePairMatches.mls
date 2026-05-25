@@ -23,7 +23,7 @@ x => if x is Pair(A, B) then 1
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ });
-//│ lambda
+//│ return lambda
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

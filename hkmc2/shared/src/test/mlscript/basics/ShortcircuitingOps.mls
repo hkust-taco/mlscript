@@ -4,7 +4,7 @@
 :sjs
 1 && 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (1 === true) { 2 } else { false }
+//│ if (1 === true) { return 2 } return false;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = false
 
@@ -32,15 +32,16 @@ print(1 && loudTrue)
 //│ if (1 === true) {
 //│   let inlinedVal;
 //│   inlinedVal = loud(true);
-//│   Predef.print(inlinedVal)
-//│ } else { Predef.print(false) }
+//│   return Predef.print(inlinedVal)
+//│ }
+//│ return Predef.print(false);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > false
 
 :sjs
 1 || 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (1 === false) { 2 } else { true }
+//│ if (1 === false) { return 2 } return true;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 
@@ -77,7 +78,7 @@ fold(||)(0, false, 42, 123)
 //│   return true;
 //│ });
 //│ callPrefix = runtime.safeCall(Predef.fold(lambda));
-//│ runtime.safeCall(callPrefix(0, false, 42, 123))
+//│ return runtime.safeCall(callPrefix(0, false, 42, 123))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 

@@ -80,7 +80,7 @@ do
 //│   loopLabel: while (true) { continue loopLabel; }
 //│ });
 //│ Predef.print(lambda);
-//│ runtime.Unit
+//│ return runtime.Unit
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > fun
 //│ f = 1
@@ -104,7 +104,7 @@ fun foo(x) = foo
 :re
 foo(1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ runtime.safeCall(foo4(1))
+//│ return runtime.safeCall(foo4(1))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: foo4 is not a function
 

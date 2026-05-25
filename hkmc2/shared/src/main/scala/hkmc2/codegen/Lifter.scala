@@ -1018,7 +1018,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         case None => syms.map(s => Arg(N, s.asSimpleRef))
       
       val call = Call(fun.sym.asMemberRef(fun.dSym), args ne_:: Nil)(true, true, false)
-      val bod = Return(call, false)
+      val bod = Return(call)
       
       FunDefn(
         N,
@@ -1149,7 +1149,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       val ref = obj.cls.sym.asMemberRef(obj.cls.isym)
       val inst = Instantiate(false, ref, argsList)
-      val bod = Return(inst, false)
+      val bod = Return(inst)
       
       FunDefn(N, flattenedSym, flattenedDSym, allParamLists, bod)(N, annotations = Nil)
     

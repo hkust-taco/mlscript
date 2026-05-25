@@ -27,7 +27,7 @@ while true and true and false do print(1) else print(2)
 //│     continue lbl;
 //│   }
 //│ });
-//│ lambda1
+//│ return lambda1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -88,7 +88,7 @@ while x > 0 and x ===
 //│   }
 //│   return runtime.Unit
 //│ });
-//│ lambda2
+//│ return lambda2
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -148,7 +148,7 @@ while x > 0 and x ===
 //│   }
 //│   return runtime.Unit
 //│ });
-//│ lambda3
+//│ return lambda3
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

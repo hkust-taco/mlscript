@@ -12,7 +12,7 @@ in
   set x = hide(2)
   print(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp; set tmp = Predef⁰.hide⁰(2); Predef⁰.print⁰(tmp)
+//│ let tmp; set tmp = Predef⁰.hide⁰(2); return Predef⁰.print⁰(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 2
 
@@ -32,7 +32,7 @@ in
 //│ do Predef⁰.hide⁰(3);
 //│ set tmp1 = Predef⁰.hide⁰(4);
 //│ set tmp2 = +⁰(tmp1, 1);
-//│ Predef⁰.print⁰(tmp2)
+//│ return Predef⁰.print⁰(tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 2
 //│ > 5

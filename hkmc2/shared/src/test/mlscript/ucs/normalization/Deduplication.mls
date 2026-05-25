@@ -11,7 +11,7 @@ let z = 0
 :sjs
 if x === 0 then 1 else 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut; scrut = x === 0; if (scrut === true) { 1 } else { 2 }
+//│ let scrut; scrut = x === 0; if (scrut === true) { return 1 } return 2;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -25,7 +25,10 @@ let a = if x === 0 then 1 else 2
 :sjs
 print of if x === 0 then 1 else 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut2; scrut2 = x === 0; if (scrut2 === true) { Predef.print(1) } else { Predef.print(2) }
+//│ let scrut2;
+//│ scrut2 = x === 0;
+//│ if (scrut2 === true) { return Predef.print(1) }
+//│ return Predef.print(2);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 
@@ -45,28 +48,19 @@ if x is
 //│       case 0:
 //│         switch (z) {
 //│           case 0:
-//│             "000";
-//│             break;
+//│             return "000";
 //│           case 1:
-//│             "001";
-//│             break;
-//│           default:
-//│             "";
+//│             return "001";
 //│         }
-//│         break;
+//│         return "";
 //│       case 1:
-//│         "01";
-//│         break;
-//│       default:
-//│         "";
+//│         return "01";
 //│     }
-//│     break;
+//│     return "";
 //│   case 1:
-//│     "1";
-//│     break;
-//│   default:
-//│     "";
+//│     return "1";
 //│ }
+//│ return ""
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "000"
 
@@ -107,7 +101,7 @@ if x is
 //│   }
 //│   tmp1 = "-------------------------------------------------------------------------";
 //│ }
-//│ tmp1
+//│ return tmp1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "000-------------------------------------------------------------------------"
 
@@ -167,28 +161,19 @@ print of if x is
 //│       case 0:
 //│         switch (z) {
 //│           case 0:
-//│             Predef.print("000");
-//│             break;
+//│             return Predef.print("000");
 //│           case 1:
-//│             Predef.print("001");
-//│             break;
-//│           default:
-//│             Predef.print("");
+//│             return Predef.print("001");
 //│         }
-//│         break;
+//│         return Predef.print("");
 //│       case 1:
-//│         Predef.print("01");
-//│         break;
-//│       default:
-//│         Predef.print("");
+//│         return Predef.print("01");
 //│     }
-//│     break;
+//│     return Predef.print("");
 //│   case 1:
-//│     Predef.print("1");
-//│     break;
-//│   default:
-//│     Predef.print("");
+//│     return Predef.print("1");
 //│ }
+//│ return Predef.print("")
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 000
 
@@ -208,28 +193,19 @@ print of if x is
 //│       case 0:
 //│         switch (z) {
 //│           case 0:
-//│             Predef.print("000");
-//│             break;
+//│             return Predef.print("000");
 //│           case 1:
-//│             Predef.print("001");
-//│             break;
-//│           default:
-//│             Predef.print("");
+//│             return Predef.print("001");
 //│         }
-//│         break;
+//│         return Predef.print("");
 //│       case 1:
-//│         Predef.print("01");
-//│         break;
-//│       default:
-//│         Predef.print("");
+//│         return Predef.print("01");
 //│     }
-//│     break;
+//│     return Predef.print("");
 //│   case 1:
-//│     Predef.print("1");
-//│     break;
-//│   default:
-//│     Predef.print("");
+//│     return Predef.print("1");
 //│ }
+//│ return Predef.print("")
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 000
 
@@ -288,36 +264,26 @@ print of if
 //│       case 0:
 //│         switch (z) {
 //│           case 0:
-//│             Predef.print("000");
-//│             break;
+//│             return Predef.print("000");
 //│           case 1:
-//│             Predef.print("0_1");
-//│             break;
-//│           default:
-//│             Predef.print("___");
+//│             return Predef.print("0_1");
 //│         }
-//│         break;
+//│         return Predef.print("___");
 //│       case 1:
-//│         Predef.print("01_");
-//│         break;
-//│       default:
-//│         if (z === 1) {
-//│           Predef.print("0_1")
-//│         } else {
-//│           if (y === 2) {
-//│             Predef.print("_2_")
-//│           } else {
-//│             Predef.print("___")
-//│           }
-//│         }
+//│         return Predef.print("01_");
 //│     }
-//│     break;
+//│     if (z === 1) {
+//│       return Predef.print("0_1")
+//│     }
+//│     if (y === 2) {
+//│       return Predef.print("_2_")
+//│     }
+//│     return Predef.print("___");
 //│   case 1:
-//│     Predef.print("1__");
-//│     break;
-//│   default:
-//│     if (y === 2) { Predef.print("_2_") } else { Predef.print("___") }
+//│     return Predef.print("1__");
 //│ }
+//│ if (y === 2) { return Predef.print("_2_") }
+//│ return Predef.print("___");
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 000
 

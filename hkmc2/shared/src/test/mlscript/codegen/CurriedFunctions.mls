@@ -21,7 +21,7 @@ foo(1)(2)(3)
 //│   return lambda⁰
 //│ };
 //│ set inlinedVal = foo$worker¹(1, 2);
-//│ inlinedVal(3)
+//│ return inlinedVal(3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 
@@ -50,7 +50,7 @@ foo(1)(2)(3)
 //│   return lambda$here
 //│ };
 //│ set baseCall = foo³(1)(2);
-//│ baseCall(3)
+//│ return baseCall(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let foo², lambda$⁰;
 //│ @inline @private
@@ -61,7 +61,7 @@ foo(1)(2)(3)
 //│ };
 //│ @inline
 //│ define foo² as fun foo³(x)(y) { return lambda$¹(x, y) };
-//│ 6
+//│ return 6
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 
@@ -87,7 +87,7 @@ foo(loudly(1))(loudly(2))(loudly(3))(loudly(4))
 //│ set tmp2 = loudly⁰(3);
 //│ set callPrefix = baseCall(tmp2);
 //│ set tmp3 = loudly⁰(4);
-//│ callPrefix(tmp3)
+//│ return callPrefix(tmp3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi 1
 //│ > hi 2

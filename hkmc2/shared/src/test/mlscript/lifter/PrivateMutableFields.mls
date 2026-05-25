@@ -43,7 +43,8 @@ class Foo(x) with
 //│   private val y⁰;
 //│   private val state⁰;
 //│   constructor(Foo, y) {
-//│     super⁰();
+//│     do super⁰();
+//│     end;
 //│     set $anon¹.this.Foo = Foo;
 //│     set $anon¹.this.y = y;
 //│     set $anon¹.this.state = $anon¹.this.Foo¹.x⁰;

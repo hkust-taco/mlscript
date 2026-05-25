@@ -12,7 +12,7 @@ x => if x is 0 then 1
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
-//│ lambda
+//│ return lambda
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -34,7 +34,7 @@ x => if x is [[0]] then 1
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ });
-//│ lambda1
+//│ return lambda1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

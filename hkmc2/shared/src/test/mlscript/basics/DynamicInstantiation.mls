@@ -6,7 +6,7 @@ class C
 :sjs
 new! C
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ globalThis.Object.freeze(new C1())
+//│ return globalThis.Object.freeze(new C1())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = C
 
@@ -39,7 +39,7 @@ new! id(C)
 //│   rhs = Tup of Ls of 
 //│     Ident of "C"
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ globalThis.Object.freeze(new Predef.id(C1))
+//│ return globalThis.Object.freeze(new Predef.id(C1))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: Predef.id is not a constructor
 

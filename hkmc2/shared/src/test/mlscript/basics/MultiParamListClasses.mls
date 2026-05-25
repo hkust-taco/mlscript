@@ -16,7 +16,7 @@ Foo(1, 2)(3)
 :sir
 Foo(1, 2)(3)(4)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let baseCall; set baseCall = Foo⁰(1, 2)(3); baseCall(4)
+//│ let baseCall; set baseCall = Foo⁰(1, 2)(3); return baseCall(4)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: baseCall is not a function
 
@@ -31,7 +31,7 @@ new Foo(1, 2)(3)
 :sir
 new Foo(1, 2)(3)(4)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let baseInst; set baseInst = new Foo¹(1, 2)(3); baseInst(4)
+//│ let baseInst; set baseInst = new Foo¹(1, 2)(3); return baseInst(4)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: baseInst is not a function
 
@@ -39,14 +39,14 @@ new Foo(1, 2)(3)(4)
 :sir
 new Foo(1, 2)(3)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ new Foo¹(1, 2)(3)
+//│ return new Foo¹(1, 2)(3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Foo(1, 2)
 
 :sir
 new Foo(1, 2)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda⁰; @private define lambda⁰ as fun lambda¹(z) { return new Foo¹(1, 2)(z) }; lambda¹
+//│ let lambda⁰; @private define lambda⁰ as fun lambda¹(z) { return new Foo¹(1, 2)(z) }; return lambda¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

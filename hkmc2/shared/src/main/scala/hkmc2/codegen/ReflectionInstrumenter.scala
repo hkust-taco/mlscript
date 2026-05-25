@@ -279,9 +279,9 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
     transformBlock(b)((p, _) => k(p))
 
   def transformBlock(b: Block)(using ctx: Context)(k: (Path, Context) => Block): Block = b match
-    case Return(res, implct) =>
+    case Return(res) =>
       transformResult(res): x =>
-        blockCtor("Return", Ls(x, toValue(implct)), "return")(k(_, ctx))
+        blockCtor("Return", Ls(x), "return")(k(_, ctx))
     case Assign(x, r, b) =>
       transformResult(r): y =>
         transformSymbol(x): xSym =>
@@ -373,7 +373,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
     // turn into fundefn
     val dSym = TermSymbol(f.dSym.k, f.dSym.owner, Tree.Ident(f.sym.nme + "_instr"))
     val argSyms = f.params.flatMap(_.params).map(_.sym)
-    val newBody = Scoped(Set(argSyms*), transformFunDefn(f)(using new HashMap)(Return(_, false)))
+    val newBody = Scoped(Set(argSyms*), transformFunDefn(f)(using new HashMap)(Return(_)))
 
     // TODO: remove it. only for test
     val debug = (k: Block) => call(sym, Nil)(fnPrintCode(_)(k))
@@ -391,8 +391,8 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
       val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(PlainParamList(Nil)), companion.ctor)(N, Nil)
       val (stagedCtor, ctorPrint) = applyFunDefnInner(ctor)
 
-      val unit = State.runtimeSymbol.asSimpleRef.selSN("Unit")
-      val debugBlock = (ctorPrint :: debugPrintCode).foldRight((Return(unit, true): Block))(_(_))
+      val debugBlock = (ctorPrint :: debugPrintCode)
+        .foldRight(End(): Block)(_(_))
       def debugCont(rest: Block) =
         Begin(debugBlock, rest)
       // add generator functions for classes within the constructor

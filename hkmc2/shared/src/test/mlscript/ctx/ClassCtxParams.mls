@@ -131,7 +131,7 @@ x => x.Foo#S
 //│ ║         	                ^
 //│ ╙── Missing instance: Expected: T; Available: Int
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda; lambda = (undefined, function (x) { return x.S }); lambda
+//│ let lambda; lambda = (undefined, function (x) { return x.S }); return lambda
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

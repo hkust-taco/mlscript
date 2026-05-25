@@ -108,7 +108,7 @@ wrapper(42, 0)
 //│   set tmp1 = tmp.makeB³();
 //│   return tmp1.getVal﹖()
 //│ };
-//│ wrapper_3$wrapper¹(42)
+//│ return wrapper_3$wrapper¹(42)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 

@@ -205,10 +205,10 @@ continueFromNestedFunctionWithEffects()
 //│ set tmp = continueFromNestedFunctionWithEffects¹();
 //│ match runtime⁰.curEffect﹖
 //│   null =>
-//│     tmp
+//│     return tmp
 //│   else
 //│     set tmp = runtime⁰.topLevelEffect﹖(false);
-//│     tmp
+//│     return tmp
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
