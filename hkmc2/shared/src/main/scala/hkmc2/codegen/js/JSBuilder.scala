@@ -467,18 +467,30 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               val privDecls = allPrivFlds.map: fld =>
                 val nme = isym.privatesScope.allocateOrGetName(fld)
                 doc" # $mtdPrefix#$nme;"
+              def termSymOwnerQual(ts: TermSymbol) =
+                ts.owner match
+                case S(owner) =>
+                  if isModuleOwner(owner) then
+                    scope.lookup_!(owner, ts.toLoc)
+                  else
+                    scope.findThis_!(owner)
+                case N => lastWords(s"Expected TermSymbol $ts to have an owner") 
               val accessors = mutPubFields.flatMap: (valSym, letSym) =>
                 doc" # ${mtdPrefix}get ${escapeField(valSym.name, "")
-                  }() { return ${result(letSym.asSimpleRef)}; }"
+                  }() { return ${termSymOwnerQual(letSym) }${selectPrivateField(letSym, letSym.toLoc).get}; }"
                 :: doc" # ${mtdPrefix}set ${escapeField(valSym.name, "")
-                  }(value) { ${result(letSym.asSimpleRef)} = value; }"
+                  }(value) { ${termSymOwnerQual(letSym)}${selectPrivateField(letSym, letSym.toLoc).get} = value; }"
                 :: Nil
               val privateAccessors = allPrivFlds.filter(privateAccessorSymbols.contains).flatMap: fld =>
                 doc" # ${mtdPrefix}get [${scope.lookup_!(getPrivateAccessorSymbol(fld), fld.toLoc)}]() { return ${
-                    result(fld.asSimpleRef)
+                    termSymOwnerQual(fld)
+                  }${
+                    selectPrivateField(fld, fld.toLoc).get
                   }; }"
                 :: doc" # ${mtdPrefix}set [${scope.lookup_!(getPrivateAccessorSymbol(fld), fld.toLoc)}](value) { ${
-                    result(fld.asSimpleRef)
+                    termSymOwnerQual(fld)
+                  }${
+                    selectPrivateField(fld, fld.toLoc).get
                   } = value; }"
                 :: Nil
               (privDecls ::: accessors ::: privateAccessors).mkDocument(doc"")

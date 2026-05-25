@@ -234,9 +234,18 @@ staged module A with
 //│ ╔══[COMPILATION ERROR] Other Results not supported in staged module: class hkmc2.codegen.Record
 //│ ║  l.232: 	  fun g() = {1 : 2}
 //│ ╙──       	                 ^
-//│ > fun ctor_() =
-//│ >   x = C(1)
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Unexpected SimpleRef of TermSymbol with owner: `term:A/x` (owner: `module:A`)
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:239)
+//│ 	at: hkmc2.codegen.js.JSBuilder.result(JSBuilder.scala:187)
+//│ 	at: hkmc2.codegen.js.JSBuilder.returningTerm(JSBuilder.scala:350)
+//│ 	at: hkmc2.codegen.js.JSBuilder.returningTerm(JSBuilder.scala:353)
+//│ 	at: hkmc2.codegen.js.JSBuilder.returningTerm(JSBuilder.scala:353)
+//│ 	at: hkmc2.codegen.js.JSBuilder.returningTerm(JSBuilder.scala:353)
+//│ 	at: hkmc2.codegen.js.JSBuilder.returningTerm(JSBuilder.scala:353)
+//│ 	at: hkmc2.codegen.js.JSBuilder.returningTerm(JSBuilder.scala:353)
+//│ 	at: hkmc2.codegen.js.JSBuilder.returningTerm(JSBuilder.scala:353)
+//│ 	at: hkmc2.codegen.js.JSBuilder.returningTerm(JSBuilder.scala:353)
 
 :todo
 staged module Spread with
