@@ -300,7 +300,10 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           transformResult(r): y =>
             transformSymbol(ts): xSym =>
               blockCtor("ValueRef", Ls(xSym)): xStaged =>
-                (Assign(ts, xStaged, _)):
+                // * Reflect the binding as the private field assignment it is, so the
+                // * owned field symbol is selected on its owner rather than emitted as a
+                // * plain reference (which would otherwise reach `JSBuilder`'s owned-`SimpleRef` path).
+                ((cont: Block) => AssignField(lhs, nme, xStaged, cont)(S(ts))):
                   given Context = ctx.clone() += Select(lhs, nme)(S(ts)) -> xStaged
                   transformBlock(rest): (z, ctx) =>
                     blockCtor("Assign", Ls(xSym, y, z), "assign")(k(_, ctx))

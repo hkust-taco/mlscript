@@ -184,21 +184,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       else errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
     case Value.SimpleRef(l: semantics.TermSymbol) =>
       l.owner match
-      case S(owner) =>
-        if l.isPrivate then
-          // * For true-module-owned private fields (declared `static #x`), use the
-          // * owner's lexical name so the access stays `this`-independent (e.g.,
-          // * under method extraction via `val X = Owner.method`).
-          // * For class/object/pattern-owned private fields (declared `#x`, instance),
-          // * the field lives on the instance, so we must use `this`.
-          val qual =
-            if isModuleOwner(owner) then
-              scope.lookup_!(owner, r.toLoc)
-            else
-              scope.findThis_!(owner)
-          doc"${qual}.#${owner.privatesScope.lookup_!(l, r.toLoc)}"
-        else
-          doc"${scope.findThis_!(owner)}${fieldSelect(l.id.name)}"
+      case S(owner) => lastWords(s"Unexpected SimpleRef of TermSymbol with owner: `$l` (owner: `$owner`)")
       case N => scope.lookup_!(l, r.toLoc)
     case Value.SimpleRef(l) => scope.lookup_!(l, r.toLoc)
     case Call(Value.SimpleRef(l: BuiltinSymbol), (lhs :: rhs :: Nil) :: Nil) if !l.functionLike =>
