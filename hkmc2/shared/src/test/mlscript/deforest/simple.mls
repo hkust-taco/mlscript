@@ -915,7 +915,7 @@ f([])
 //│ @affine(1) @private
 //│ define f_9$ls_tup0⁰ as fun f_9$ls_tup0¹()(fv_y) {
 //│   let h;
-//│   define h as fun h¹(z) {
+//│   define h as fun h²(z) {
 //│     let scrut, tmp1;
 //│     set scrut = >⁰(z, 0);
 //│     match scrut
@@ -937,19 +937,19 @@ f([])
 //│   let h, y;
 //│   match ls
 //│     Array(0) =>
-//│       define h as fun h²(z) {
+//│       define h as fun h¹(z) {
 //│         let scrut, tmp1;
 //│         set scrut = >⁰(z, 0);
 //│         match scrut
 //│           true =>
 //│             set tmp1 = -⁰(z, 1);
-//│             return h²(tmp1)
+//│             return h¹(tmp1)
 //│           else
 //│             return y
 //│         end
 //│       };
 //│       set y = 4;
-//│       return h²(3)
+//│       return h¹(3)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
@@ -957,44 +957,31 @@ f([])
 //│ set tmp = f_9$ls_tup0¹();
 //│ return f_9$f¹(tmp)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f², fv_y⁰, h³;
+//│ let f², h³;
 //│ define f² as fun f³(ls) {
 //│   let h, y;
 //│   match ls
 //│     Array(0) =>
-//│       define h as fun h²(z) {
+//│       define h as fun h¹(z) {
 //│         let scrut, tmp;
 //│         set scrut = >⁰(z, 0);
 //│         match scrut
 //│           true =>
 //│             set tmp = -⁰(z, 1);
-//│             return h²(tmp)
+//│             return h¹(tmp)
 //│           else
 //│             return y
 //│         end
 //│       };
 //│       set y = 4;
-//│       return h²(3)
+//│       return h¹(3)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ set fv_y⁰ = undefined;
-//│ define h³ as fun h⁴(z) {
-//│   let scrut, tmp;
-//│   set scrut = >⁰(z, 0);
-//│   match scrut
-//│     true =>
-//│       set tmp = -⁰(z, 1);
-//│       return h⁴(tmp)
-//│     else
-//│       return fv_y⁰
-//│   end
-//│ };
-//│ set fv_y⁰ = 4;
-//│ return h⁴(3)
+//│ return h¹(3)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let f19, fv_y, h;
+//│ let f19, h;
 //│ f19 = function f(ls) {
 //│   runtime.checkArgs("f", 1, true, arguments.length);
 //│   let h1, y2;
@@ -1014,21 +1001,24 @@ f([])
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
-//│ fv_y = undefined;
-//│ h = function h(z) {
-//│   runtime.checkArgs("h", 1, true, arguments.length);
-//│   let scrut, tmp33;
-//│   scrut = z > 0;
-//│   if (scrut === true) {
-//│     tmp33 = z - 1;
-//│     return runtime.checkCall(h(tmp33))
-//│   }
-//│   return fv_y;
-//│ };
-//│ fv_y = 4;
 //│ block$res45 = runtime.checkCall(h(3));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 4
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] TypeError: h is not a function
+//│     at REPL156:1:578
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:927:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:415:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:609:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:299)
+//│ ═══[RUNTIME ERROR] Expected: '4', got: 'undefined'
 
 
 :expect 0
