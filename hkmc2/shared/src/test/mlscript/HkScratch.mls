@@ -1,6 +1,5 @@
 :js
 // :de
-// :sjs
 // :pt
 // :elt
 
@@ -8,5 +7,81 @@
 // :d
 // :todo
 
+import "../mlscript-compile/ObjectBuffer.mls"
+open ObjectBuffer
+open annotations
 
+@buffered
+class BufCls(x) with
+  fun f(y) = x + y
+
+// Direct constructor call on @buffered class
+:sjs
+BufCls(42)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ return BufCls1(42)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor BufCls cannot be invoked without 'new'
+//│     at REPL16:1:38
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:552:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:887:10)
+//│     at REPLServer.emit (node:events:509:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+
+// new expression on @buffered class
+:sjs
+new BufCls(42)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ return globalThis.Object.freeze(new BufCls1.class(42))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] TypeError: BufCls1.class is not a constructor
+//│     at REPL19:1:45
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:552:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:887:10)
+//│     at REPLServer.emit (node:events:509:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+
+// Pattern matching with @buffered class
+:sjs
+if BufCls(42) is BufCls(a) then a else 0
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: reportInaccessibleParameter (SplitCompiler.scala:353)
+//│ ╔══[COMPILATION ERROR] This pattern cannot be matched
+//│ ║  l.60: 	if BufCls(42) is BufCls(a) then a else 0
+//│ ║        	                        ^
+//│ ╟── because the corresponding parameter `x` is not publicly accessible
+//│ ║  l.15: 	class BufCls(x) with
+//│ ║        	             ^
+//│ ╟── Suggestion: use a wildcard pattern `_` in this position
+//│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ BufCls1(42); return 0
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor BufCls cannot be invoked without 'new'
+//│     at REPL22:1:25
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:552:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:887:10)
+//│     at REPLServer.emit (node:events:509:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
