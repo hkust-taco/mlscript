@@ -892,6 +892,9 @@ fun g(b) =
 
 
 // `y` should not be considered as a free var for the branch
+:sir
+:soir
+:ssjs
 :expect 4
 fun f(ls) = if ls is [] then
   let y = 4
@@ -902,6 +905,129 @@ f([])
 //│ deforest > [] ->
 //│ deforest > 	match: ls⁰
 //│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f², tmp, f_9$f⁰, f_9$ls_tup0⁰, f_9$ls_rest⁰;
+//│ @private
+//│ define f_9$f⁰ as fun f_9$f¹(ls) {
+//│   let h, y;
+//│   return ls(y)
+//│ };
+//│ @affine(1) @private
+//│ define f_9$ls_tup0⁰ as fun f_9$ls_tup0¹()(fv_y) {
+//│   let h;
+//│   define h as fun h¹(z) {
+//│     let scrut, tmp1;
+//│     set scrut = >⁰(z, 0);
+//│     match scrut
+//│       true =>
+//│         set tmp1 = -⁰(z, 1);
+//│         return h¹(tmp1)
+//│       else
+//│         return fv_y
+//│     end
+//│   };
+//│   set fv_y = 4;
+//│   return h¹(3)
+//│ };
+//│ @private
+//│ define f_9$ls_rest⁰ as fun f_9$ls_rest¹() {
+//│   return null
+//│ };
+//│ define f² as fun f³(ls) {
+//│   let h, y;
+//│   match ls
+//│     Array(0) =>
+//│       define h as fun h²(z) {
+//│         let scrut, tmp1;
+//│         set scrut = >⁰(z, 0);
+//│         match scrut
+//│           true =>
+//│             set tmp1 = -⁰(z, 1);
+//│             return h²(tmp1)
+//│           else
+//│             return y
+//│         end
+//│       };
+//│       set y = 4;
+//│       return h²(3)
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ set tmp = f_9$ls_tup0¹();
+//│ return f_9$f¹(tmp)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f², fv_y⁰, h³;
+//│ define f² as fun f³(ls) {
+//│   let h, y;
+//│   match ls
+//│     Array(0) =>
+//│       define h as fun h²(z) {
+//│         let scrut, tmp;
+//│         set scrut = >⁰(z, 0);
+//│         match scrut
+//│           true =>
+//│             set tmp = -⁰(z, 1);
+//│             return h²(tmp)
+//│           else
+//│             return y
+//│         end
+//│       };
+//│       set y = 4;
+//│       return h²(3)
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ set fv_y⁰ = undefined;
+//│ define h³ as fun h⁴(z) {
+//│   let scrut, tmp;
+//│   set scrut = >⁰(z, 0);
+//│   match scrut
+//│     true =>
+//│       set tmp = -⁰(z, 1);
+//│       return h⁴(tmp)
+//│     else
+//│       return fv_y⁰
+//│   end
+//│ };
+//│ set fv_y⁰ = 4;
+//│ return h⁴(3)
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let f19, fv_y, h;
+//│ f19 = function f(ls) {
+//│   runtime.checkArgs("f", 1, true, arguments.length);
+//│   let h1, y2;
+//│   if (runtime.Tuple.isArrayLike(ls) && ls.length === 0) {
+//│     h1 = function h(z) {
+//│       runtime.checkArgs("h", 1, true, arguments.length);
+//│       let scrut, tmp33;
+//│       scrut = z > 0;
+//│       if (scrut === true) {
+//│         tmp33 = z - 1;
+//│         return runtime.checkCall(h1(tmp33))
+//│       }
+//│       return y2;
+//│     };
+//│     y2 = 4;
+//│     return runtime.checkCall(h1(3))
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│ };
+//│ fv_y = undefined;
+//│ h = function h(z) {
+//│   runtime.checkArgs("h", 1, true, arguments.length);
+//│   let scrut, tmp33;
+//│   scrut = z > 0;
+//│   if (scrut === true) {
+//│     tmp33 = z - 1;
+//│     return runtime.checkCall(h(tmp33))
+//│   }
+//│   return fv_y;
+//│ };
+//│ fv_y = 4;
+//│ block$res45 = runtime.checkCall(h(3));
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 4
 
 
