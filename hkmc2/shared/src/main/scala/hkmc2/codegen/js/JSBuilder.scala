@@ -170,7 +170,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     if r.isInstanceOf[Value.Lit] then doc"(${res})" else res
   
   def result(r: Result)(using Raise, Scope): Document = r match
-    case Value.This(ts: semantics.ModuleOrObjectSymbol) if ts.asMod.isDefined => // FIXME: currently, objects have a ModuleSymbol...
+    case Value.This(ts: semantics.ModuleOrObjectSymbol) if ts.asMod.isDefined =>
       // * Module self-references use the module name itself instead of `this`
       scope.lookup_!(ts, r.toLoc)
     case Value.This(sym) => scope.findThis_!(sym)
@@ -314,7 +314,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       scrut: Opt[Value.SimpleRef],
       curVal: Opt[BigInt]
     ): Opt[(Value.SimpleRef, List[(BigInt, Block)], Block)] =
-      val scrutSym = scrut.map(_.l)
+      val scrutSym = scrut.map(_.sym)
       b match
       case Match(
         scrut_ @ Value.SimpleRef(scrutSym_),                // The scrutinee is a ref.
@@ -347,9 +347,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Assign(l, r, rst) =>
       doc" # ${
           l match
-            case ts: TermSymbol => result(ts.asSimpleRef)
-            case sym: InnerSymbol => lastWords(s"Inner symbol should not be used as the target of an assignment: $sym")
-            case l => result(l.asPath.withLoc(N)) // TODO: improve location
+          case sym: InnerSymbol => lastWords(s"Inner symbol should not be used as the target of an assignment: $sym")
+          case l => result(l.asPath.withLoc(N)) // TODO: improve location
         } = ${result(r)};${returningTerm(rst, endSemi)}"
     case assign @ AssignField(p, n, r, rst) =>
       val field = assign.symbol match

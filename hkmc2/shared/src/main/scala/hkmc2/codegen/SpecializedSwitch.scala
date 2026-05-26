@@ -186,10 +186,7 @@ private def findMatchChainRec(
   object TailAssign:
     def unapply(b: Block) =
       if b.isAbortive then N
-      else PostCondAnalysis.analyze(b).get(
-        scrutRef match
-          case Value.SimpleRef(l) => l
-      ) match
+      else PostCondAnalysis.analyze(b).get(scrutRef.sym) match
         case S(value) => S(value)
         case N => N
   

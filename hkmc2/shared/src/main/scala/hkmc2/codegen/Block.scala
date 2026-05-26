@@ -1003,7 +1003,7 @@ case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol
 case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool) extends Path
 
 enum Value extends Path with ProductWithExtraInfo:
-  case SimpleRef(l: LocalVarSymbol | BuiltinSymbol)
+  case SimpleRef(sym: LocalVarSymbol | BuiltinSymbol)
   /**
     * @param disamb The symbol disambiguating the definition that the reference refers to.
     */
