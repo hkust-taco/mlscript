@@ -423,17 +423,14 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           case ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
               privFlds, pubFlds, preCtor, ctor, modo, bufferable)
           =>
-            val backendParamLists = paramsOpt.toList ::: auxParams
-            val backendParamList = backendParamLists match
-              case Nil => N
-              case paramList :: Nil => S(paramList)
-              case _ => lastWords(s"JSBuilder expected flattened constructor parameter lists for class ${sym.nme}")
-            val ctorParams = backendParamList.fold(Nil)(_.paramSyms.map(p => p -> scope.allocateName(p)))
-            val metadataParamsOpt = isym.defn.flatMap(_.paramsOpt).orElse(paramsOpt)
-            val sourceParamsOpt = if bufferable.isEmpty then metadataParamsOpt else paramsOpt
-            val sourceAuxParams =
-              if bufferable.isEmpty then isym.defn.map(_.auxParams).getOrElse(auxParams)
-              else auxParams
+            // After ClassParamFlattener, all classes have paramsOpt = N and exactly one auxParams entry.
+            assert(paramsOpt.isEmpty,
+              s"JSBuilder: expected paramsOpt to be None after flattening for class ${sym.nme}")
+            assert(auxParams.sizeCompare(1) == 0,
+              s"JSBuilder: expected exactly one auxParams entry after flattening for class ${sym.nme}")
+            val backendParamList = auxParams.head
+            val ctorParams = backendParamList.paramSyms.map(p => p -> scope.allocateName(p))
+            val metadataParamsOpt = isym.defn.flatMap(_.paramsOpt)
             
             def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str)(using Scope): Document =
               mtds.map:
@@ -533,7 +530,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 }$singletonFreeze"
             
             val ctorBod = {{
-                val extraPath = if sourceParamsOpt.isDefined then ".class" else ""
+                val extraPath = if isym.shouldBeLifted then ".class" else ""
                 doc" # static " :: braced:
                   val v = result(isym.asThis)
                   if isSingleton
@@ -594,29 +591,21 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             if isSingleton then
               ownr match
               case S(owner) =>
-                assert((kind is syntax.Pat) || paramsOpt.isEmpty)
                 doc"$freezeDefns(${clsJS});"
               case N =>
                 doc"$freezeDefns(${clsJS});"
             else
-              val sourceParamsAll = sourceParamsOpt.toList ::: sourceAuxParams
-              
-              val fun = sourceParamsAll match
-                case ps_ :: pss_ if sourceParamsOpt.isDefined => outerScope.nest.givenIn:
-                  val (ps, _) = setupFunction(some(sym.nme), ps_, End(), isLambda = false)
-                  val pss = pss_.map(setupFunction(N, _, End(), isLambda = false)._1)
-                  val paramsDoc = pss.foldLeft(doc"($ps)"):
-                    case (doc, ps) => doc"${doc}(${ps})"
-                  val argsDoc = sourceParamsAll.flatMap(_.paramSyms)
+              // Use backend (flattened) params for the constructor wrapper function.
+              val fun =
+                if isym.shouldBeLifted then outerScope.nest.givenIn:
+                  val (ps, _) = setupFunction(some(sym.nme), backendParamList, End(), isLambda = false)
+                  val argsDoc = backendParamList.paramSyms
                     .map(p => scope.lookup_!(p, p.toLoc)).mkDocument(", ")
                   val inner = doc"new ${sym.nme}.class($argsDoc)"
                   val bod = braced(doc" # return $freeze($inner);")
-                  val funBod = pss.foldRight(bod):
-                    case (psDoc, doc_) => doc"($psDoc) => $doc_"
-                  val funBodRet = if pss.isEmpty then funBod else braced(doc" # return $funBod")
                   val nme = if isValidIdentifier(sym.nme) then sym.nme else ""
-                  S(doc"function $nme($ps) ${ funBodRet }")
-                case _ => N
+                  S(doc"function $nme($ps) ${ bod }")
+                else N
               
               ownr match
               case S(owner) =>

@@ -284,9 +284,9 @@ fun main() =
   [c.a, c.b, d.a, e.a]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let C², main⁰;
-//│ define C² as class C⁴(a) {
+//│ define C² as class C⁴ {
 //│   val a⁰;
-//│   constructor C³ {
+//│   constructor C³(a) {
 //│     define a⁰ as val a¹ = a;
 //│     end
 //│   }

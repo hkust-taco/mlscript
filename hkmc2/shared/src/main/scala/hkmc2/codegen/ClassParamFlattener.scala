@@ -9,6 +9,10 @@ import semantics.*
 
 /** Flattens class constructor parameter lists in the Block IR.
   *
+  * After this pass, every `ClsLikeDefn` is normalized so that
+  * `paramsOpt` is `N` and `auxParams` contains exactly one `ParamList`
+  * (which may be empty for parameterless classes).
+  *
   * Instantiations are saturated by the time this pass runs, so every
   * `Instantiate` can be rewritten without consulting the class definition.
   * Source-level constructor wrapper functions keep their original calling
@@ -26,15 +30,17 @@ class ClassParamFlattener extends BlockTransformer(SymbolSubst.Id):
     val params = init.flatMap(_.allParams) ::: last.flatMap(_.params)
     ParamList(flags, params, last.flatMap(_.restParam).headOption)
   
+  /** Normalize class params so that `paramsOpt = N` and `auxParams` has exactly one element. */
   private def flattenClsParams(cls: ClsLikeDefn): ClsLikeDefn =
     val paramss = cls.paramsOpt.toList ::: cls.auxParams
-    if paramss.lengthCompare(1) > 0 then
-      cls.copy(paramsOpt = N, auxParams = flattenParamLists(paramss) :: Nil)(
-        cls.configOverride,
-        cls.annotations,
-      )
-    else
-      cls
+    val flatAux = paramss match
+      case Nil => PlainParamList(Nil)
+      case single :: Nil => single
+      case _ => flattenParamLists(paramss)
+    cls.copy(paramsOpt = N, auxParams = flatAux :: Nil)(
+      cls.configOverride,
+      cls.annotations,
+    )
   
   private def classPathFor(fun: Path, cls: ClassSymbol): Opt[Path] = fun match
     case Value.Ref(l, _) => S(Value.Ref(l, S(cls)))

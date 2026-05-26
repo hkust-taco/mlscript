@@ -146,9 +146,9 @@ foo.bar(99)
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let Foo⁰, foo⁰;
-//│ define Foo⁰ as class Foo²(x) {
+//│ define Foo⁰ as class Foo² {
 //│   private val x⁰;
-//│   constructor Foo¹ {
+//│   constructor Foo¹(x) {
 //│     set Foo².this.x = x;
 //│     end
 //│   }

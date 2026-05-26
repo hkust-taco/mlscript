@@ -16,7 +16,7 @@ object Foo with
 //│ let Foo⁰;
 //│ define Foo⁰ as object Foo¹ {
 //│   private val state⁰;
-//│   constructor {
+//│   constructor() {
 //│     set Foo¹.this.state = 1;
 //│     end
 //│   }
@@ -111,7 +111,7 @@ module UnusedModulePrivate with
 //│ let UnusedModulePrivate⁰, UnusedObjectPrivate⁰;
 //│ define UnusedObjectPrivate⁰ as object UnusedObjectPrivate¹ {
 //│   private val used⁰;
-//│   constructor {
+//│   constructor() {
 //│     set UnusedObjectPrivate¹.this.used = Predef⁰.print⁰(1);
 //│     do Predef⁰.print⁰(2);
 //│     end

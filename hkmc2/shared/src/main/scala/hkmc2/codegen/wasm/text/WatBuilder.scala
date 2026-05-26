@@ -209,7 +209,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ctorSym = N,
       k = syntax.Obj,
       paramsOpt = N,
-      auxParams = Nil,
+      auxParams = PlainParamList(Nil) :: Nil,
       parentPath = N,
       methods = Nil,
       privateFields = Nil,
@@ -536,25 +536,27 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ))
   end predeclareClassFuncWithType
 
-  private def classCtorParamLists(defn: ClsLikeDefn): Ls[ParamList] =
-    val paramss = defn.paramsOpt.toList ::: defn.auxParams
-    if paramss.lengthCompare(1) > 0 then
-      lastWords(s"WatBuilder expected flattened constructor parameter lists for class ${defn.sym.nme}")
-    paramss
+  /** Returns the single flattened constructor parameter list.
+    * After ClassParamFlattener, all classes have paramsOpt = N and exactly one auxParams entry. */
+  private def classCtorParamList(defn: ClsLikeDefn): ParamList =
+    assert(defn.paramsOpt.isEmpty,
+      s"WatBuilder: expected paramsOpt to be None after flattening for class ${defn.sym.nme}")
+    assert(defn.auxParams.sizeCompare(1) == 0,
+      s"WatBuilder: expected exactly one auxParams entry after flattening for class ${defn.sym.nme}")
+    defn.auxParams.head
 
   /** Declares one top-level class init function. */
   private def predeclareClassInit(defn: ClsLikeDefn)(using Ctx, Raise): Unit =
+    val pl = classCtorParamList(defn)
     val initParams = (defn.isym -> SymIdx("this")) +:
-      classCtorParamLists(defn).flatMap: ps =>
-        ps.params.map: p =>
-          p.sym -> SymIdx(p.sym.nme)
+      pl.params.map: p =>
+        p.sym -> SymIdx(p.sym.nme)
     predeclareClassFunc(defn, "init", initParams, initFuncSym(defn.sym), N)
 
   /** Declares one top-level class constructor. */
   private def predeclareClassConstructor(defn: ClsLikeDefn)(using Ctx, Raise): Unit =
-    val ctorParams = classCtorParamLists(defn).flatMap: ps =>
-      ps.params.map: p =>
-        p.sym -> SymIdx(p.sym.nme)
+    val ctorParams = classCtorParamList(defn).params.map: p =>
+      p.sym -> SymIdx(p.sym.nme)
     val ctorExportName = defn.sym
       .optionIf: sym =>
         !(defn.k is syntax.Obj) && sym.nameIsMeaningful
@@ -890,7 +892,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def setupInitLocals(
       clsLikeDefn: ClsLikeDefn,
   )(using Ctx, Raise, SessionExportCtx): (Expr, FunctionCtx) =
-    genFuncBody(classCtorParamLists(clsLikeDefn), thisSym = S(clsLikeDefn.isym)):
+    genFuncBody(classCtorParamList(clsLikeDefn) :: Nil, thisSym = S(clsLikeDefn.isym)):
       val thisVar = funcCtx.lookupLocal_!(clsLikeDefn.isym, N)
       val preCtorWat = compilePreCtor(clsLikeDefn, thisVar)
       val ctorWat = block(clsLikeDefn.ctor)
@@ -1854,8 +1856,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     break(errUnimplExpr("owner.nonEmpty"))
                   if !(clsLikeDefn.k is syntax.Cls) && !isSingletonObj then
                     break(errUnimplExpr("unsupported ClsLikeDefn kind"))
-                  val ctorParamLists = classCtorParamLists(clsLikeDefn)
-                  if isSingletonObj && ctorParamLists.nonEmpty then
+                  val ctorParamList = classCtorParamList(clsLikeDefn)
+                  if isSingletonObj && ctorParamList.params.nonEmpty then
                     break(errUnimplExpr("constructor parameters for object"))
                   if isSingletonObj && clsLikeDefn.parentPath.nonEmpty then
                     break(errUnimplExpr("parentPath.nonEmpty for object"))
@@ -1886,7 +1888,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       lastWords(s"Expected struct type for ${clsLikeDefn.sym}, found ${other.toWat.mkString()}")
 
                   val initFuncRef = initFuncSym(clsLikeDefn.sym)
-                  val (ctorCode, ctorFnCtx) = genFuncBody(ctorParamLists, thisSym = N):
+                  val (ctorCode, ctorFnCtx) = genFuncBody(ctorParamList :: Nil, thisSym = N):
                     val thisVar = bindCtorThis(clsLikeDefn.isym)
                     val initCall = call(
                       funcidx = ctx.getFunc_!(initFuncRef),

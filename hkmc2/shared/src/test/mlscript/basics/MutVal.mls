@@ -35,10 +35,10 @@ O.gy
 class Foo(x, val y, mut val z)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let Foo⁰;
-//│ define Foo⁰ as class Foo²(x, y, z) {
+//│ define Foo⁰ as class Foo² {
 //│   val y⁰;
 //│   val z⁰;
-//│   constructor Foo¹ { define y⁰ as val y¹ = y; define z⁰ as val z¹ = z; end }
+//│   constructor Foo¹(x, y, z) { define y⁰ as val y¹ = y; define z⁰ as val z¹ = z; end }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -48,11 +48,11 @@ class Foo(x, val y, mut val z) with
   print(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let Foo³;
-//│ define Foo³ as class Foo⁵(x, y, z) {
+//│ define Foo³ as class Foo⁵ {
 //│   private val x⁰;
 //│   val y²;
 //│   val z²;
-//│   constructor Foo⁴ {
+//│   constructor Foo⁴(x, y, z) {
 //│     set Foo⁵.this.x = x;
 //│     define y² as val y³ = y;
 //│     define z² as val z³ = z;
