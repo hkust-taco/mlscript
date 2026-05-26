@@ -217,6 +217,26 @@ fun commitCurrent(id) =
   set state.currentId = id
   saveRegistry()
 
+fun renameProject(id, name) =
+  let trimmed = if name is Absent then "" else name.trim()
+  if trimmed is
+    "" then
+      Logger.warn("Projects", "Refused to rename project to empty name", id)
+      false
+    else
+      let project = findProjectLoop(id)
+      if project is
+        null then
+          Logger.warn("Projects", "Unknown project id for rename", id)
+          false
+        else
+          set
+            project.name = trimmed
+            project.modifiedAt = today()
+          saveRegistry()
+          Logger.info("Projects", "Renamed project", id, trimmed)
+          true
+
 fun purgeProjectStorage(id) =
   let pathsText = readText(pathsKey(id))
   if pathsText is

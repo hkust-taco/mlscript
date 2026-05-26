@@ -3411,8 +3411,41 @@ bottom-panel.collapsed resize-handle {
 
 /* ───── Project switcher pill (toolbar) ───── */
 
-toolbar-panel .project-switcher-pill {
+toolbar-panel .toolbar-leading {
   justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+toolbar-panel .toolbar-brand {
+  display: inline-flex;
+  align-items: baseline;
+  user-select: none;
+  font-size: 1.18rem;
+  line-height: 1;
+  color: var(--ide-text);
+  letter-spacing: -0.005em;
+}
+
+toolbar-panel .toolbar-brand-sans {
+  font-family: var(--sans-serif);
+  font-weight: 600;
+}
+
+toolbar-panel .toolbar-brand-italic {
+  font-family: 'Instrument Serif', 'Iowan Old Style', 'Apple Garamond', 'Baskerville', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ide-accent);
+  font-size: 1.28rem;
+  line-height: 1;
+  margin-left: 1px;
+}
+
+toolbar-panel .project-switcher-pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -3474,7 +3507,7 @@ project-switcher dialog.project-switcher-native {
   margin: auto;
   padding: 0;
   width: min(820px, calc(100vw - 32px));
-  max-height: min(620px, calc(100vh - 48px));
+  height: min(560px, calc(100vh - 48px));
   border: 1px solid var(--ide-border-strong);
   border-radius: var(--ide-radius-md);
   background: var(--ide-surface);
@@ -3516,12 +3549,23 @@ project-switcher dialog.project-switcher-native::backdrop {
 }
 
 .project-switcher-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
   border: 1px solid transparent;
   border-radius: var(--ide-radius-sm);
   background: transparent;
   color: var(--ide-text-muted);
-  padding: 4px 6px;
+  padding: 0;
+  line-height: 0;
   cursor: pointer;
+}
+
+.project-switcher-close > i {
+  display: inline-block;
+  line-height: 1;
 }
 
 .project-switcher-close:hover {
@@ -3556,6 +3600,7 @@ project-switcher dialog.project-switcher-native::backdrop {
   color: var(--ide-text);
   cursor: pointer;
   text-align: left;
+  user-select: none;
 }
 
 .project-switcher-card + .project-switcher-card {
@@ -3708,6 +3753,17 @@ project-switcher dialog.project-switcher-native::backdrop {
   background: var(--ide-surface);
   color: var(--ide-text-muted);
   border-color: var(--ide-border);
+}
+
+.project-switcher-detail-actions .project-switcher-delete {
+  background: var(--ide-danger-soft);
+  border-color: color-mix(in srgb, var(--ide-danger) 50%, var(--ide-border));
+  color: var(--ide-danger);
+}
+
+.project-switcher-detail-actions .project-switcher-delete:hover:not([disabled]) {
+  background: color-mix(in srgb, var(--ide-danger) 16%, var(--ide-surface));
+  border-color: var(--ide-danger);
 }
 
 .project-switcher-stats {
@@ -3878,18 +3934,24 @@ project-switcher dialog.project-switcher-sub::backdrop {
   cursor: pointer;
 }
 
-.project-switcher-sub-actions .project-switcher-confirm-create {
+.project-switcher-sub-actions .project-switcher-confirm-create,
+.project-switcher-sub-actions .project-switcher-confirm-rename {
   background: var(--ide-accent);
   border-color: var(--ide-accent-strong);
   color: var(--ide-surface);
 }
 
-.project-switcher-sub-actions .project-switcher-confirm-create:hover {
+.project-switcher-sub-actions .project-switcher-confirm-create:hover,
+.project-switcher-sub-actions .project-switcher-confirm-rename:hover {
   background: var(--ide-accent-strong);
 }
 
 .project-switcher-sub-actions .project-switcher-confirm-delete {
-  background: var(--ide-danger, #b03a2e);
-  border-color: color-mix(in srgb, var(--ide-danger, #b03a2e) 70%, black);
+  background: var(--ide-danger);
+  border-color: color-mix(in srgb, var(--ide-danger) 70%, black);
   color: var(--ide-surface);
+}
+
+.project-switcher-sub-actions .project-switcher-confirm-delete:hover {
+  background: color-mix(in srgb, var(--ide-danger) 88%, black);
 }

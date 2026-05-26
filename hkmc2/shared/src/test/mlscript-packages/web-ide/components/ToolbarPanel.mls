@@ -122,14 +122,24 @@ class ToolbarPanel extends HTMLElement with
     project.name is Absent then "No project"
     else project.name
 
+  fun brandHtml() =
+    """
+      <div class="toolbar-brand" aria-label="MLscript">
+        <span class="toolbar-brand-sans">ML</span><span class="toolbar-brand-italic">script</span>
+      </div>
+    """
+
   fun pillHtml() =
     let project = projects.currentProject()
     """
-      <button id="project-pill" class="project-switcher-pill" type="button" aria-label="Switch project" title="Switch project (Cmd/Ctrl+O)">
-        <span class="project-switcher-pill-glyph">""" + projectGlyph(project) + """</span>
-        <span class="project-switcher-pill-name">""" + projectLabel(project) + """</span>
-        <i class="icon-chevron-down project-switcher-pill-caret"></i>
-      </button>
+      <div class="toolbar-leading">
+        """ + brandHtml() + """
+        <button id="project-pill" class="project-switcher-pill" type="button" aria-label="Switch project" title="Switch project (Cmd/Ctrl+O)">
+          <span class="project-switcher-pill-glyph">""" + projectGlyph(project) + """</span>
+          <span class="project-switcher-pill-name">""" + projectLabel(project) + """</span>
+          <i class="icon-chevron-down project-switcher-pill-caret"></i>
+        </button>
+      </div>
     """
 
   fun updateProjectPill() =
