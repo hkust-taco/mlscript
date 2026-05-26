@@ -183,7 +183,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def isSupportedTopLevelClass(defn: ClsLikeDefn): Bool =
     defn.owner.isEmpty
       && ((defn.k is syntax.Cls) || (defn.k is syntax.Obj))
-      && defn.auxParams.isEmpty
       && (!(defn.k is syntax.Obj) || defn.parentPath.isEmpty)
       && (!(defn.k is syntax.Obj) || defn.methods.isEmpty)
       && defn.companion.isEmpty
@@ -533,7 +532,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   end predeclareClassFuncWithType
 
   private def classCtorParamLists(defn: ClsLikeDefn): Ls[ParamList] =
-    defn.paramsOpt.toList ::: defn.auxParams
+    val paramss = defn.paramsOpt.toList ::: defn.auxParams
+    if paramss.lengthCompare(1) > 0 then
+      lastWords(s"WatBuilder expected flattened constructor parameter lists for class ${defn.sym.nme}")
+    paramss
 
   /** Declares one top-level class init function. */
   private def predeclareClassInit(defn: ClsLikeDefn)(using Ctx, Raise): Unit =
@@ -1851,8 +1853,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   val ctorParamLists = classCtorParamLists(clsLikeDefn)
                   if isSingletonObj && ctorParamLists.nonEmpty then
                     break(errUnimplExpr("constructor parameters for object"))
-                  if ctorParamLists.lengthCompare(1) > 0 then
-                    break(errUnimplExpr("multiple constructor parameter lists"))
                   if isSingletonObj && clsLikeDefn.parentPath.nonEmpty then
                     break(errUnimplExpr("parentPath.nonEmpty for object"))
                   if isSingletonObj && clsLikeDefn.methods.nonEmpty then

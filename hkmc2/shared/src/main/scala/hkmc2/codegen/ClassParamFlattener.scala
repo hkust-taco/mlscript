@@ -36,6 +36,11 @@ class ClassParamFlattener extends BlockTransformer(SymbolSubst.Id):
     else
       cls
   
+  private def classPathFor(fun: Path, cls: ClassSymbol): Opt[Path] = fun match
+    case Value.Ref(l, _) => S(Value.Ref(l, S(cls)))
+    case Select(qual, name) => S(Select(qual, name)(S(cls)))
+    case _ => N
+
   private def saturatedCurriedClassCall(fun: Path, argss: NELs[Ls[Arg]]): Opt[Path] =
     fun.targetSymbol.collect:
       case sym: TermSymbol => sym
@@ -45,9 +50,10 @@ class ClassParamFlattener extends BlockTransformer(SymbolSubst.Id):
           cls.defn.collect:
             case defn =>
               defn.paramsOpt.toList ::: defn.auxParams
-          .collect:
+          .flatMap:
             case paramss if paramss.lengthCompare(1) > 0 && argss.lengthCompare(paramss.length) == 0 =>
-              Select(fun, new syntax.Tree.Ident("class"))(S(cls))
+              classPathFor(fun, cls)
+            case _ => N
 
   override def applyClsLikeDefn(defn: ClsLikeDefn)(k: Defn => Block): Block =
     super.applyClsLikeDefn(defn):

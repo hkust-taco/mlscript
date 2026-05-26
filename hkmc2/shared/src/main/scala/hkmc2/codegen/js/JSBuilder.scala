@@ -226,7 +226,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       doc"($params) => ${ braced(bodyDoc) }"
     case s @ Select(qual, id) => 
       val dotClass = s.symbol match
-        case S(ds) if ds.shouldBeLifted && id.name =/= "class" => doc".class"
+        case S(ds) if ds.shouldBeLifted => doc".class"
         case _ => doc""
       val field = s.symbol match
         case S(ts: semantics.TermSymbol) => selectPrivateField(ts, s.toLoc)
@@ -425,6 +425,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           case ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
               privFlds, pubFlds, preCtor, ctor, modo, bufferable)
           =>
+            val backendParamLists = paramsOpt.toList ::: auxParams
+            if backendParamLists.lengthCompare(1) > 0 then
+              lastWords(s"JSBuilder expected flattened constructor parameter lists for class ${sym.nme}")
             val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
             val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
             val ctorAuxParams = auxParams.map(ps => ps.params.map(p => p.sym -> scope.allocateName(p.sym)))
