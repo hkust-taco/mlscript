@@ -332,7 +332,10 @@ fun switchProject(nextId) =
         //    /main.mls so the editor has something to open.
         let restored = persistent.loadPersistedFiles()
         if restored is 0 do fs.createFile("/main.mls", defaultMainSource, force: true)
-        // 5. Notify the toolbar pill and anything else that cares.
+        // 5. Reinitialize the analysis worker so its symbol index reflects
+        //    the new file set instead of incrementally folding the reset.
+        if runtimeRef.analysis is ~null as analysis do analysis.reinitialize()
+        // 6. Notify the toolbar pill and anything else that cares.
         dispatchProjectChange()
         Logger.info("Projects", "Switched", nextId, "files:", restored)
 

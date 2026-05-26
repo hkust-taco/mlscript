@@ -203,3 +203,14 @@ fun stop() =
     unsubscribe = null
     analysisWorker = null
     started = false
+
+// Discard any queued incremental updates and resend a full init snapshot.
+// Used after a project switch so the worker's symbol index reflects the new
+// file set instead of incrementally folding "reset" + a flood of creates.
+fun reinitialize() =
+  if pendingTimer is ~Absent as timer do window.clearTimeout(timer)
+  set
+    pendingTimer = null
+    pendingChanges = mut []
+  if started then sendInitialSnapshot()
+  else ()
