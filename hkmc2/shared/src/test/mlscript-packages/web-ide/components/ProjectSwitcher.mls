@@ -268,21 +268,74 @@ class ProjectSwitcher extends HTMLElement with
           attachDetailListeners(detail, p)
           this.renderPreview(detail, p)
 
-  fun previewRowHtml(path, activePath) =
+  fun pathParts(path) =
+    path.split("/").filter of (s, ...) => s !== ""
+
+  fun buildTreeRows(paths) =
     let
-      active = path === activePath
+      rows = mut []
+      emittedFolders = new Set()
+    paths.forEach of (path, ...) =>
+      let
+        parts = pathParts(path)
+        partsCount = parts.length
+        dirCount = if partsCount > 0 then partsCount - 1 else 0
+        filename = if partsCount > 0 then parts.at(partsCount - 1) else ""
+        folderPath = ""
+        i = 0
+      while i < dirCount do
+        let segment = parts.at(i)
+        set folderPath = folderPath + "/" + segment
+        if not emittedFolders.has(folderPath) do
+          emittedFolders.add(folderPath)
+          rows.push(mut
+            'type: "folder"
+            name: segment
+            path: folderPath
+            depth: i
+          )
+        set i += 1
+      rows.push(mut
+        'type: "file"
+        name: filename
+        path: path
+        depth: dirCount
+      )
+    rows
+
+  fun fileIconFor(name) = if
+    name.endsWith(".mls") then "icon-file-code"
+    name.endsWith(".mjs") then "icon-file-json"
+    name.endsWith(".md") then "icon-file-code"
+    else "icon-file"
+
+  fun fileRowHtml(row, activePath) =
+    let
+      active = row.path === activePath
       activeClass = if active then " active" else ""
       selectedAttr = if active then "true" else "false"
-      pieces = path.split("/")
-      name = pieces.at(pieces.length - 1)
-      depth = if pieces.length <= 2 then 0 else pieces.length - 2
-      indentPx = 8 + depth * 12
+      indentPx = 8 + row.depth * 14
+      icon = fileIconFor(row.name)
     """
-      <button type="button" class="ps-preview-row""" + activeClass + """" role="option" aria-selected=""" + "\"" + selectedAttr + "\"" + """ data-path=""" + "\"" + escapeHtml(path) + "\"" + """ style="padding-left: """ + indentPx + """px">
-        <i class="icon-file-code"></i>
-        <span>""" + escapeHtml(name) + """</span>
+      <button type="button" class="ps-preview-row ps-preview-file""" + activeClass + """" role="option" aria-selected=""" + "\"" + selectedAttr + "\"" + """ data-path=""" + "\"" + escapeHtml(row.path) + "\"" + """ style="padding-left: """ + indentPx + """px">
+        <i class=""" + "\"" + icon + "\"" + """></i>
+        <span>""" + escapeHtml(row.name) + """</span>
       </button>
     """
+
+  fun folderRowHtml(row) =
+    let indentPx = 8 + row.depth * 14
+    """
+      <div class="ps-preview-row ps-preview-folder" style="padding-left: """ + indentPx + """px">
+        <i class="icon-chevron-down ps-preview-folder-chevron"></i>
+        <i class="icon-folder-open"></i>
+        <span>""" + escapeHtml(row.name) + """</span>
+      </div>
+    """
+
+  fun previewRowHtml(row, activePath) = if
+    row.'type === "folder" then folderRowHtml(row)
+    else fileRowHtml(row, activePath)
 
   // Setter routed through a method so cross-scope writes (e.g. from a click
   // lambda captured as `panel`) hit the private class field, not a fresh
@@ -315,7 +368,8 @@ class ProjectSwitcher extends HTMLElement with
       if paths.length === 0 then
         set t.innerHTML = """<div class="project-switcher-preview-empty">No files in this project.</div>"""
       else
-        set t.innerHTML = paths.map(p => previewRowHtml(p, previewPath)).join("")
+        let rows = buildTreeRows(paths)
+        set t.innerHTML = rows.map(r => previewRowHtml(r, previewPath)).join("")
         attachPreviewListeners(t, project)
     let content = previewLookup(snapshot, previewPath)
     if headEl is ~null as h do

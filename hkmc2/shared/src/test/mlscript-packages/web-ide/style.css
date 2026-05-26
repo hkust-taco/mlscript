@@ -3845,9 +3845,9 @@ project-switcher dialog.project-switcher-native::backdrop {
 }
 
 .ps-preview-row {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   text-align: left;
   background: transparent;
   border: 1px solid transparent;
@@ -3856,11 +3856,14 @@ project-switcher dialog.project-switcher-native::backdrop {
   font: inherit;
   font-size: 0.78rem;
   padding: 3px 6px;
-  cursor: pointer;
   user-select: none;
 }
 
-.ps-preview-row:hover {
+.ps-preview-file {
+  cursor: pointer;
+}
+
+.ps-preview-file:hover {
   background: var(--ide-surface);
   border-color: var(--ide-border);
 }
@@ -3873,13 +3876,28 @@ project-switcher dialog.project-switcher-native::backdrop {
 
 .ps-preview-row > i {
   color: var(--ide-text-subtle);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
+  flex: 0 0 auto;
+}
+
+.ps-preview-folder {
+  color: var(--ide-text-muted);
+  font-weight: 600;
+}
+
+.ps-preview-folder > i.icon-folder-open {
+  color: var(--ide-accent);
+}
+
+.ps-preview-folder-chevron {
+  font-size: 0.7rem !important;
 }
 
 .ps-preview-row > span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1 1 auto;
 }
 
 .project-switcher-preview-empty {
