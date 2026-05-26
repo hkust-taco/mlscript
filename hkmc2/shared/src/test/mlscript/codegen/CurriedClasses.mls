@@ -79,3 +79,60 @@ h.y
 //│ = 3
 
 
+:todo // TODO: At some point, add support for this
+:sjs
+class A(x1, x2, ...xs)(y1, ...ys) with
+  fun fields = [x1, x2, xs, y1, ys]
+//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched param list lengths List(Param(‹›,x1,None,Modulefulness(None)), Param(‹›,x2,None,Modulefulness(None))) vs List(term:A/x1, term:A/x2, term:A/xs)
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
+//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched param list lengths List(Param(‹›,y1,None,Modulefulness(None))) vs List(term:A/y1, term:A/ys)
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'ys'
+//│ ║  l.85: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║        	                                ^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.84: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ╙──      	                              ^^
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let A3;
+//│ A3 = function A(x1, x2, ...xs) {
+//│   return (y1, ...ys) => {
+//│     return globalThis.Object.freeze(new A.class(x1, x2, ...xs)(y1, ...ys));
+//│   }
+//│ };
+//│ (class A2 {
+//│   static {
+//│     A3.class = this
+//│   }
+//│   constructor(x1, x2, xs) {
+//│     return (y1) => {
+//│       this.#x1 = x1;
+//│       this.#x2 = x2;
+//│       this.#y1 = y1;
+//│       return this;
+//│     }
+//│   }
+//│   #x1;
+//│   #x2;
+//│   #y1;
+//│   get fields() {
+//│     return globalThis.Object.freeze([
+//│       this.#x1,
+//│       this.#x2,
+//│       xs,
+//│       this.#y1,
+//│       ys
+//│     ]);
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A", [null, null, null]];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:todo
+new A(1, 2, 3)(4, 5, 6).fields
+//│ ═══[RUNTIME ERROR] ReferenceError: xs is not defined
+
+
