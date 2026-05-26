@@ -125,7 +125,7 @@ staged module LiftedLambda with
 //│     set tmp6 = [tmp2];
 //│     set inst = Block⁰.Instantiate﹖(var2, tmp6);
 //│     set sym4 = Block⁰.Symbol﹖("tmp");
-//│     set tmp7 = Block⁰.ValueRef﹖(sym4);
+//│     set tmp7 = Block⁰.ValueSimpleRef﹖(sym4);
 //│     set tmp = tmp7;
 //│     set return1 = Block⁰.Return﹖(tmp7);
 //│     set assign = Block⁰.Assign﹖(sym4, inst, return1);
@@ -208,7 +208,7 @@ staged module LiftedMultParams with
 //│     set tmp6 = [tmp2];
 //│     set inst = Block⁰.Instantiate﹖(var2, tmp6);
 //│     set sym4 = Block⁰.Symbol﹖("tmp");
-//│     set tmp7 = Block⁰.ValueRef﹖(sym4);
+//│     set tmp7 = Block⁰.ValueSimpleRef﹖(sym4);
 //│     set tmp = tmp7;
 //│     set return1 = Block⁰.Return﹖(tmp7);
 //│     set assign = Block⁰.Assign﹖(sym4, inst, return1);

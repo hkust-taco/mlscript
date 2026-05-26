@@ -285,7 +285,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
     case Assign(x, r, b) =>
       transformResult(r): y =>
         transformSymbol(x): xSym =>
-          blockCtor("ValueRef", Ls(xSym)): xStaged =>
+          blockCtor("ValueSimpleRef", Ls(xSym)): xStaged =>
             (Assign(x, xStaged, _)):
               given Context = x match
                 case _: NoSymbol => ctx.clone()
@@ -299,7 +299,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
         case S(ts: TermSymbol) if ts.isPrivate =>
           transformResult(r): y =>
             transformSymbol(ts): xSym =>
-              blockCtor("ValueRef", Ls(xSym)): xStaged =>
+              blockCtor("ValueSimpleRef", Ls(xSym)): xStaged =>
                 // * Reflect the binding as the private field assignment it is, so the
                 // * owned field symbol is selected on its owner rather than emitted as a
                 // * plain reference (which would otherwise reach `JSBuilder`'s owned-`SimpleRef` path).
