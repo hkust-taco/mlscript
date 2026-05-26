@@ -246,11 +246,23 @@ fun f(x) =
 let res = f(0)
 res.a
 res.b
-//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched param list lengths List() vs List(term:A/r)
-//│ ╟── The compilation result may be incorrect.
-//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
+//│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
+//│ ║  l.242: 	  class A(...r) with
+//│ ╙──       	             ^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'r'
+//│ ║  l.243: 	    fun a = r.push_back(x)
+//│ ║         	            ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.242: 	  class A(...r) with
+//│ ╙──       	             ^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'r'
+//│ ║  l.244: 	    fun b = r
+//│ ║         	            ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.242: 	  class A(...r) with
+//│ ╙──       	             ^
 //│ ═══[RUNTIME ERROR] ReferenceError: r is not defined
-//│ res = A(_)
+//│ res = A()
 
 
 

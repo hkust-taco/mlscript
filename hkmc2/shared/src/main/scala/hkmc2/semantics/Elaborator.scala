@@ -1549,7 +1549,7 @@ extends Importer with ucs.SplitElaborator:
             given Ctx = newCtx
             params(ps, isDataClass, k is Pat)
           newCtx = newCtx2
-          // Spread parameters are not supported in class parameter lists.
+          // Spread parameters are not supported in class parameters.
           res.restParam.foreach: rp =>
             raise(ErrorReport(
               msg"Spread parameters are not supported in class parameters." -> rp.toLoc :: Nil))
