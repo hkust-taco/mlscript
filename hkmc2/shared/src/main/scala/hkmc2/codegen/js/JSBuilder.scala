@@ -538,9 +538,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 }$singletonFreeze"
             
             val ctorBod = {{
-                // We use `sourceParamsOpt.isDefined` (not `shouldBeLifted`) here because
-                // `@buffered` classes don't generate a wrapper function and need the class
-                // value stored directly (no `.class` indirection). See `shouldBeLifted` docs.
+                // See `shouldBeLifted` scaladoc for why we use `sourceParamsOpt.isDefined` here.
                 val extraPath = if sourceParamsOpt.isDefined then ".class" else ""
                 doc" # static " :: braced:
                   val v = result(isym.asThis)
