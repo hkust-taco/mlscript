@@ -216,9 +216,8 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
         case Some(newBms: BlockMemberSymbol) =>
           val newDisamb = mapping.get(disamb) match
             case Some(nd: DefinitionSymbol[?]) => nd
-            // case _ => newBms.tsym.getOrElse(lastWords(s"Expected disamb to be present for newBms: `$newBms`"))
             case Some(nd) => lastWords(s"unexpected symbol kind for disamb: ${nd}")
-            case N => disamb
+            case N => lastWords(s"unexpected lack of refreshed disamb symbol for $disamb")
           k(newBms.asMemberRef(newDisamb))
         case Some(newSym: (LocalVarSymbol | TempSymbol)) => k(newSym.asSimpleRef)
         case _ => super.applyValue(v)(k)
