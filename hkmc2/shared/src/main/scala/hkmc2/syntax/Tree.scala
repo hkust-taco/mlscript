@@ -638,9 +638,8 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
     this.paramLists.map: tup =>
       val pts = tup.fields
       val inUsing = pts.headOption.exists(_.isModified(Ins))
-      pts.flatMap(_.desugared.asParam(inUsing = inUsing).toOption).map:
-        // case ParamTree(spd = S(_)) => lastWords("spreads are not allowed in class parameters") // TODO: properly report this in Elaborator
-        case pt @ ParamTree(ident = id) =>
+      pts.flatMap(_.desugared.asParam(inUsing = inUsing).toOption).collect:
+        case pt @ ParamTree(ident = id, spd = N) =>
           val k = if pt.flags.mut then MutVal else ImmutVal
           TermSymbol(k, symbol.asClsLike, id)
       .toList

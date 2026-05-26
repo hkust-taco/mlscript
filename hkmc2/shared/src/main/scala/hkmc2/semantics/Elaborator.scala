@@ -1549,7 +1549,11 @@ extends Importer with ucs.SplitElaborator:
             given Ctx = newCtx
             params(ps, isDataClass, k is Pat)
           newCtx = newCtx2
-          res
+          // Spread parameters are not supported in class parameter lists.
+          res.restParam.foreach: rp =>
+            raise(ErrorReport(
+              msg"Spread parameters are not supported in class parameters." -> rp.toLoc :: Nil))
+          res.copy(restParam = N)
         
         def withFields(using Ctx)(fn: (Ctx) ?=> (Term.Blk, Ctx)): (Term.Blk, Ctx) =
           softAssert(pss.sizeCompare(td.clsParams) === 0,
