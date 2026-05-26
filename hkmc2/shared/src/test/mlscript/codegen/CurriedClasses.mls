@@ -12,8 +12,10 @@
 class A(val x)(val y)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A1;
-//│ A1 = function A(x, y) {
-//│   return globalThis.Object.freeze(new A.class(x, y));
+//│ A1 = function A(x) {
+//│   return (y) => {
+//│     return globalThis.Object.freeze(new A.class(x, y));
+//│   }
 //│ };
 //│ (class A {
 //│   static {
@@ -111,27 +113,29 @@ h.y
 class A(x1, x2, ...xs)(y1, ...ys) with
   fun fields = [x1, x2, xs, y1, ys]
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.111: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ║  l.113: 	class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╙──       	                   ^^
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.111: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ║  l.113: 	class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╙──       	                              ^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'xs'
-//│ ║  l.112: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║  l.114: 	  fun fields = [x1, x2, xs, y1, ys]
 //│ ║         	                        ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.111: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ║  l.113: 	class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╙──       	                   ^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'ys'
-//│ ║  l.112: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║  l.114: 	  fun fields = [x1, x2, xs, y1, ys]
 //│ ║         	                                ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.111: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ║  l.113: 	class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╙──       	                              ^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A3;
-//│ A3 = function A(x1, x2, y1) {
-//│   return globalThis.Object.freeze(new A.class(x1, x2, y1));
+//│ A3 = function A(x1, x2) {
+//│   return (y1) => {
+//│     return globalThis.Object.freeze(new A.class(x1, x2, y1));
+//│   }
 //│ };
 //│ (class A2 {
 //│   static {

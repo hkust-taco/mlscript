@@ -431,6 +431,14 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             val backendParamList = auxParams.head
             val ctorParams = backendParamList.paramSyms.map(p => p -> scope.allocateName(p))
             val metadataParamsOpt = isym.defn.flatMap(_.paramsOpt)
+            // Source params are used for constructing the curried wrapper function.
+            // For @buffered classes (bufferable = Some(false)), the wrapper is NOT generated.
+            val sourceParamsOpt = bufferable match
+              case S(false) => N // @buffered: no wrapper
+              case _ => metadataParamsOpt // @bufferable or non-bufferable: wrapper if class has params
+            val sourceAuxParams = bufferable match
+              case S(false) => Nil
+              case _ => isym.defn.map(_.auxParams).getOrElse(Nil)
             
             def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str)(using Scope): Document =
               mtds.map:
@@ -530,7 +538,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 }$singletonFreeze"
             
             val ctorBod = {{
-                val extraPath = if isym.shouldBeLifted then ".class" else ""
+                val extraPath = if sourceParamsOpt.isDefined then ".class" else ""
                 doc" # static " :: braced:
                   val v = result(isym.asThis)
                   if isSingleton
@@ -595,17 +603,24 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               case N =>
                 doc"$freezeDefns(${clsJS});"
             else
-              // Use backend (flattened) params for the constructor wrapper function.
-              val fun =
-                if isym.shouldBeLifted then outerScope.nest.givenIn:
-                  val (ps, _) = setupFunction(some(sym.nme), backendParamList, End(), isLambda = false)
-                  val argsDoc = backendParamList.paramSyms
+              // Source params are used for the wrapper to preserve the curried calling convention.
+              // All args are forwarded to the flat `new Class.class(...)` constructor.
+              val sourceParamsAll = sourceParamsOpt.toList ::: sourceAuxParams
+              
+              val fun = sourceParamsAll match
+                case ps_ :: pss_ if sourceParamsOpt.isDefined => outerScope.nest.givenIn:
+                  val (ps, _) = setupFunction(some(sym.nme), ps_, End(), isLambda = false)
+                  val pss = pss_.map(setupFunction(N, _, End(), isLambda = false)._1)
+                  val argsDoc = sourceParamsAll.flatMap(_.paramSyms)
                     .map(p => scope.lookup_!(p, p.toLoc)).mkDocument(", ")
                   val inner = doc"new ${sym.nme}.class($argsDoc)"
                   val bod = braced(doc" # return $freeze($inner);")
+                  val funBod = pss.foldRight(bod):
+                    case (psDoc, doc_) => doc"($psDoc) => $doc_"
+                  val funBodRet = if pss.isEmpty then funBod else braced(doc" # return $funBod")
                   val nme = if isValidIdentifier(sym.nme) then sym.nme else ""
-                  S(doc"function $nme($ps) ${ bod }")
-                else N
+                  S(doc"function $nme($ps) ${ funBodRet }")
+                case _ => N
               
               ownr match
               case S(owner) =>

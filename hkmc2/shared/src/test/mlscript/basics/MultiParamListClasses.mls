@@ -7,7 +7,7 @@ Foo
 //│ = fun Foo { class: class Foo }
 
 Foo(1, 2)
-//│ = Foo(1, 2)
+//│ = fun
 
 Foo(1, 2)(3)
 //│ = Foo(1, 2)

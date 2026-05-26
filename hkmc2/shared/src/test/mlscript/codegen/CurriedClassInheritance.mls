@@ -8,8 +8,10 @@ class Foo(val x)(val y)
 class Bar(val a)(val d) extends Foo(a)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Bar1;
-//│ Bar1 = function Bar(a, d) {
-//│   return globalThis.Object.freeze(new Bar.class(a, d));
+//│ Bar1 = function Bar(a) {
+//│   return (d) => {
+//│     return globalThis.Object.freeze(new Bar.class(a, d));
+//│   }
 //│ };
 //│ (class Bar extends Foo1.class {
 //│   static {
@@ -52,43 +54,17 @@ let b0 = Bar
 //│ b0 = fun Bar { class: class Bar }
 
 let b1 = b0(123)
-//│ b1 = Bar(123)
+//│ b1 = fun
 
 :re
 b1.a
-//│ = 123
-//│ FAILURE: Unexpected lack of runtime error
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
 
 let b = b1(1234)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
-//│ ═══[RUNTIME ERROR] TypeError: b1 is not a function
-//│     at REPL47:1:36
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:509:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
-//│ b = undefined
+//│ b = Bar(123)
 
 b.a
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:259)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
-//│     at REPL51:1:32
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:552:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:887:10)
-//│     at REPLServer.emit (node:events:509:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ = 123
 
 :re
 let c = b(100)
@@ -107,8 +83,8 @@ c.a
 :todo
 class Baz(a)(val d) extends Foo(a)(a + 1)
 //│ ╔══[COMPILATION ERROR] Extending a class with multiple parameter lists is not supported
-//│ ║  l.108: 	class Baz(a)(val d) extends Foo(a)(a + 1)
-//│ ╙──       	                            ^^^^^^^^^^^^^
+//│ ║  l.84: 	class Baz(a)(val d) extends Foo(a)(a + 1)
+//│ ╙──      	                            ^^^^^^^^^^^^^
 
 let b = Baz(123)(1234)
 //│ b = Baz(_)
