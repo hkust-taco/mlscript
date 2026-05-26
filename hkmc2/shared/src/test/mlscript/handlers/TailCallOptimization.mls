@@ -45,11 +45,9 @@ hi(0)
 //│       if (scrut === true) {
 //│         return 0
 //│       }
-//│       {
-//│         tmp2 = n - 1;
-//│         n = tmp2;
-//│         continue loopLabel;
-//│       }
+//│       tmp2 = n - 1;
+//│       n = tmp2;
+//│       continue loopLabel;
 //│     }
 //│     return runtime.unwind(hi, -1, "TailCallOptimization.mls:31:1", null, null, 1, 1, n, 0);
 //│   }
@@ -58,6 +56,7 @@ hi(0)
 //│   return hi(0)
 //│ });
 //│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_);
-//│ if (runtime.curEffect === null) { tmp1 } else { tmp1 = runtime.topLevelEffect(false); tmp1 }
+//│ if (runtime.curEffect === null) { return tmp1 }
+//│ return runtime.topLevelEffect(false);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0

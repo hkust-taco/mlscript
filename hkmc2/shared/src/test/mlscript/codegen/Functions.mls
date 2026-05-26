@@ -90,12 +90,12 @@ fun test2(y) = y + 1
 //│ REPL> Sending: block$res18 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: let test2, test1;try { test1 = function test1(x) {   runtime.checkArgs("test1", 1, true, arguments.length);   let inlinedVal;   inlinedVal = x + 1;   return inlinedVal }; test2 = function test2(y) {   runtime.checkArgs("test2", 1, true, arguments.length);   return y + 1 };; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Sending: let test2, test1;try { test1 = function test1(x) {   runtime.checkArgs("test1", 1, true, arguments.length);   return x + 1 }; test2 = function test2(y) {   runtime.checkArgs("test2", 1, true, arguments.length);   return y + 1 };; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:
 //│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res18)); undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res18));; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ >  undefined

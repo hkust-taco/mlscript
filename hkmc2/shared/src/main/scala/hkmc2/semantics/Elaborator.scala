@@ -400,6 +400,7 @@ object Elaborator:
     def init(using State): Ctx = Ctx.empty.copy(env = Map(
       "globalThis" -> globalThisSymbol,
     ))
+    val superSymbol = builtinOpsMap("super")
     def dbg: Bool = false
     def dbgRefNum(num: Int): Str =
       if dbg then s"#$num" else ""

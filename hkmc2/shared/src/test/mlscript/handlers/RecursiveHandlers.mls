@@ -229,13 +229,9 @@ str
 //│     Handler$h2$3 = this
 //│   }
 //│   constructor() {
-//│     let tmp10;
-//│     tmp10 = super();
-//│     if (runtime.curEffect === null) {
-//│       tmp10
-//│     } else {
-//│       tmp10 = runtime.illegalEffect("in a constructor");
-//│       tmp10
+//│     super();
+//│     if (runtime.curEffect !== null) {
+//│       runtime.illegalEffect("in a constructor");
 //│     }
 //│   }
 //│   perform(arg) {
@@ -272,13 +268,9 @@ str
 //│     Handler$h1$3 = this
 //│   }
 //│   constructor() {
-//│     let tmp10;
-//│     tmp10 = super();
-//│     if (runtime.curEffect === null) {
-//│       tmp10
-//│     } else {
-//│       tmp10 = runtime.illegalEffect("in a constructor");
-//│       tmp10
+//│     super();
+//│     if (runtime.curEffect !== null) {
+//│       runtime.illegalEffect("in a constructor");
 //│     }
 //│   }
 //│   perform(arg) {
@@ -290,7 +282,7 @@ str
 //│   static [definitionMetadata] = ["class", "Handler$h1$"];
 //│ });
 //│ handleBlock$10 = (undefined, function () {
-//│   let h22, tmp10, handleBlock$$here, pc;
+//│   let h22, handleBlock$$here, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
@@ -308,16 +300,20 @@ str
 //│         return runtime.unwind(handleBlock$10, 1, null, null, null, 1, 0, 0)
 //│       }
 //│     case 1:
-//│       tmp10 = runtime.resumeValue;
-//│       return tmp10;
+//│       return runtime.resumeValue;
 //│   }
 //│ });
 //│ str = "";
 //│ if (true === true) {
 //│   h11 = new Handler$h1$3();
 //│   runtime.enterHandleBlock(h11, handleBlock$10);
-//│   if (runtime.curEffect === null) { str } else { runtime.topLevelEffect(false); str }
-//│ } else { str }
+//│   if (runtime.curEffect === null) {
+//│     return str
+//│   }
+//│   runtime.topLevelEffect(false);
+//│   return str;
+//│ }
+//│ return str;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "BABABA"
 //│ str = "BABABA"

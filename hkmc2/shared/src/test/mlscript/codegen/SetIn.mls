@@ -17,13 +17,13 @@ x
 :sjs
 set x = 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ x1 = 0; runtime.Unit
+//│ x1 = 0; return runtime.Unit
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :sjs
 set x += 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp; tmp = x1 + 1; x1 = tmp; runtime.Unit
+//│ let tmp; tmp = x1 + 1; x1 = tmp; return runtime.Unit
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 x
@@ -35,8 +35,13 @@ set x += 1 in print(x)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let old, tmp1, tmp2, tmp3;
 //│ old = x1;
-//│ try { tmp2 = x1 + 1; x1 = tmp2; tmp3 = Predef.print(tmp2); tmp1 = tmp3; } finally { x1 = old; }
-//│ tmp1
+//│ try {
+//│   tmp2 = x1 + 1;
+//│   x1 = tmp2;
+//│   tmp3 = Predef.print(tmp2);
+//│   tmp1 = tmp3;
+//│ } finally { x1 = old; }
+//│ return tmp1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 2
 
@@ -98,7 +103,7 @@ example()
 //│   tmp5 = runtime.safeCall(get_x());
 //│   return Predef.print(tmp5)
 //│ };
-//│ example2()
+//│ return example2()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ > 1
@@ -120,6 +125,7 @@ example()
 //│ define example⁰ as fun example¹() {
 //│   let x, get_x, old, tmp, tmp1, tmp2, tmp3, get_x1;
 //│   set x = 0;
+//│   @private
 //│   define get_x1 as fun get_x⁰() {
 //│     return x
 //│   };
@@ -140,7 +146,7 @@ example()
 //│   do Predef⁰.print⁰(tmp3);
 //│   return tmp
 //│ };
-//│ example¹()
+//│ return example¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ > 0

@@ -25,10 +25,8 @@ hi(0)
 //│     if (scrut === true) {
 //│       return 0
 //│     }
-//│     {
-//│       tmp1 = n - 1;
-//│       return hi(tmp1);
-//│     }
+//│     tmp1 = n - 1;
+//│     return hi(tmp1);
 //│   }
 //│   return runtime.unwind(hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0);
 //│ };
@@ -36,7 +34,8 @@ hi(0)
 //│   return hi(0)
 //│ });
 //│ tmp = runtime.runStackSafe(6, $_stack$_safe$_body$_);
-//│ if (runtime.curEffect === null) { tmp } else { tmp = runtime.topLevelEffect(false); tmp }
+//│ if (runtime.curEffect === null) { return tmp }
+//│ return runtime.topLevelEffect(false);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -79,7 +78,7 @@ sum(10000)
 //│           if (runtime.curEffect === null) {
 //│             pc = 1;
 //│           } else {
-//│             return runtime.unwind(sum, 1, "StackSafety.mls:49:9", null, null, 1, 1, n, 0)
+//│             return runtime.unwind(sum, 1, "StackSafety.mls:48:9", null, null, 1, 1, n, 0)
 //│           }
 //│         }
 //│       case 1:
@@ -87,14 +86,15 @@ sum(10000)
 //│         return n + tmp3;
 //│     }
 //│   } else {
-//│     return runtime.unwind(sum, -1, "StackSafety.mls:46:1", null, null, 1, 1, n, 0)
+//│     return runtime.unwind(sum, -1, "StackSafety.mls:45:1", null, null, 1, 1, n, 0)
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_1 = (undefined, function () {
 //│   return sum(10000)
 //│ });
 //│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
-//│ if (runtime.curEffect === null) { tmp1 } else { tmp1 = runtime.topLevelEffect(false); tmp1 }
+//│ if (runtime.curEffect === null) { return tmp1 }
+//│ return runtime.topLevelEffect(false);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 50005000
 

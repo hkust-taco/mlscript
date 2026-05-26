@@ -49,13 +49,13 @@ hi(0)
 //│ define ‹stack safe body›⁰ as fun ‹stack safe body›¹() {
 //│   return hi¹(0)
 //│ };
-//│ set tmp = runtime⁰.runStackSafe﹖(6, ‹stack safe body›⁰);
+//│ set tmp = runtime⁰.runStackSafe﹖(6, ‹stack safe body›¹);
 //│ match runtime⁰.curEffect﹖
 //│   null =>
-//│     tmp
+//│     return tmp
 //│   else
 //│     set tmp = runtime⁰.topLevelEffect﹖(false);
-//│     tmp
+//│     return tmp
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
@@ -128,13 +128,13 @@ sum(10000)
 //│ define ‹stack safe body›² as fun ‹stack safe body›³() {
 //│   return sum¹(10000)
 //│ };
-//│ set tmp = runtime⁰.runStackSafe﹖(1000, ‹stack safe body›²);
+//│ set tmp = runtime⁰.runStackSafe﹖(1000, ‹stack safe body›³);
 //│ match runtime⁰.curEffect﹖
 //│   null =>
-//│     tmp
+//│     return tmp
 //│   else
 //│     set tmp = runtime⁰.topLevelEffect﹖(false);
-//│     tmp
+//│     return tmp
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 50005000
@@ -257,7 +257,7 @@ fun hi(n) = n
 hi(0)
 //│ /!!!\ Option ':stackSafe' requires ':effectHandlers' to be set
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let hi²; define hi² as fun hi³(n) { return n }; hi³(0)
+//│ let hi²; define hi² as fun hi³(n) { return n }; return hi³(0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 

@@ -41,7 +41,7 @@ print(Test)
 :sjs
 Test.foo()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ Test1.foo()
+//│ return Test1.foo()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Test { x: 12, class: object Test }
 //│ = 12
@@ -64,13 +64,7 @@ let f = () => x
 let x = 2
 f()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x, f, x1, f1, inlinedVal;
-//│ x = 1;
-//│ f1 = function f() { return x };
-//│ f = f1;
-//│ x1 = 2;
-//│ inlinedVal = x;
-//│ inlinedVal
+//│ let x, f, x1, f1; x = 1; f1 = function f() { return x }; f = f1; x1 = 2; return x
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 //│ f = fun f
@@ -83,10 +77,10 @@ module Test with
   val x = 1
   let x = 2
 //│ ╔══[COMPILATION ERROR] Name 'x' is already used
-//│ ║  l.84: 	  let x = 2
+//│ ║  l.78: 	  let x = 2
 //│ ║        	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.83: 	  val x = 1
+//│ ║  l.77: 	  val x = 1
 //│ ╙──      	  ^^^^^^^^^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let Test4;
@@ -95,7 +89,7 @@ module Test with
 //│     Test4 = this
 //│   }
 //│   static {
-//│     this.x = 1;
+//│     Test3.x = 1;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Test"];
@@ -193,13 +187,13 @@ module Whoops with
 //│     Whoops2 = this
 //│   }
 //│   static {
-//│     this.v = Whoops;
+//│     Whoops.v = Whoops;
 //│     (class Whoops1 {
 //│       static {
 //│         Whoops.Whoops = this
 //│       }
 //│       static {
-//│         this.w = Whoops1;
+//│         Whoops1.w = Whoops1;
 //│       }
 //│       static g() {
 //│         return Whoops.f()
@@ -229,7 +223,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[COMPILATION ERROR] Name not found: Runtime
-//│ ║  l.230: 	Runtime
+//│ ║  l.224: 	Runtime
 //│ ╙──       	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -253,7 +247,7 @@ module AA with
 //│         AA.BB = this
 //│       }
 //│       static {
-//│         this.y = 2;
+//│         BB.y = 2;
 //│       }
 //│       static get test() {
 //│         return BB.y;

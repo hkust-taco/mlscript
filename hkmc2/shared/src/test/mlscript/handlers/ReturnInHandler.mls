@@ -42,7 +42,7 @@ let l = () =>
 //│ ╔══[COMPILATION ERROR] Return statements are not allowed outside of functions.
 //│ ║  l.40: 	  return 3
 //│ ╙──      	  ^^^^^^^^
-//│ l = fun l
+//│ l = fun
 
 :re
 l()

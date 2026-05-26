@@ -79,6 +79,7 @@ continueFromNestedFunctionWithEffects()
 //│ define NonLocalLabelEffectcontinue⁰ as fun NonLocalLabelEffectcontinue¹(resume) {
 //│   return runtime⁰.Continue﹖
 //│ };
+//│ @inline
 //│ define NonLocalLabelEffectbreak$⁰ as fun NonLocalLabelEffectbreak$¹(value)(resume) {
 //│   return NonLocalLabelEffectbreak¹(value, resume)
 //│ };
@@ -128,10 +129,11 @@ continueFromNestedFunctionWithEffects()
 //│     end
 //│   end
 //│ };
+//│ @inline
 //│ define handleBlock$$⁰ as fun handleBlock$$¹(scope0$cap, nonLocalHandler$root)() {
 //│   return handleBlock$¹(scope0$cap, nonLocalHandler$root)
 //│ };
-//│ define NonLocalLabelEffect⁰ as class NonLocalLabelEffect¹ {
+//│ define NonLocalLabelEffect⁰ as class extends runtime⁰.NonLocalReturn⁰ NonLocalLabelEffect¹ {
 //│   method break⁰ = fun break¹(value) {
 //│     let suspendRes, NonLocalLabelEffectbreak$here;
 //│     set NonLocalLabelEffectbreak$here = NonLocalLabelEffectbreak$¹(value);
@@ -203,10 +205,10 @@ continueFromNestedFunctionWithEffects()
 //│ set tmp = continueFromNestedFunctionWithEffects¹();
 //│ match runtime⁰.curEffect﹖
 //│   null =>
-//│     tmp
+//│     return tmp
 //│   else
 //│     set tmp = runtime⁰.topLevelEffect﹖(false);
-//│     tmp
+//│     return tmp
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3

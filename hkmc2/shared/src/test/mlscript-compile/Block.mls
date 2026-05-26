@@ -63,7 +63,8 @@ class Path extends Result with
   constructor
     Select(val qual: Path, val name: Symbol)
     DynSelect(val qual: Path, val fld: Path, val arrayIdx: Bool) // is arrayIdx used?
-    ValueRef(val l: Symbol)
+    ValueSimpleRef(val l: Symbol)
+    ValueMemberRef(val l: Symbol)
     ValueLit(val lit: Literal)
 
 class Defn with 
@@ -77,7 +78,7 @@ class ClsLikeBody(val isym: Symbol, val methods: Array[FunDefn], val publicField
 class Block with
   constructor
     Match(val scrut: Path, val arms: Array[Arm], val dflt: Opt[Block], val rest: Block)
-    Return(val res: Result, val implct: Bool)
+    Return(val res: Result)
     Assign(val lhs: Symbol, val rhs: Result, val rest: Block)
     Define(val defn: Defn, val rest: Block)
     Scoped(val symbols: Array[Symbol], val rest: Block)
@@ -85,7 +86,7 @@ class Block with
   
 fun concat(b1: Block, b2: Block) = if b1 is
   Match(scrut, arms, dflt, rest) then Match(scrut, arms, dflt, concat(rest, b2))
-  Return(res, implct) then b1
+  Return(res) then b1
   Assign(lhs, rhs, rest) then Assign(lhs, rhs, concat(rest, b2))
   Define(defn, rest) then Define(defn, concat(rest, b2))
   Scoped(symbols, rest) then Scoped(symbols, concat(rest, b2))
@@ -105,11 +106,12 @@ fun showSymbol(s: Symbol) = s.name.replaceAll("$", "_")
 fun showPath(p: Path): Str =
   if p is
     // avoids needing to import the runtime module
-    Select(ValueRef(Symbol("runtime")), ModuleSymbol("Unit", Runtime.Unit)) then "()"
+    Select(ValueSimpleRef(Symbol("runtime")), ModuleSymbol("Unit", Runtime.Unit)) then "()"
     Select(qual, name) then showPath(qual) + "." + showSymbol(name)
     DynSelect(qual, fld, false) then showPath(qual) + ".(" + showPath(fld) + ")"
     DynSelect(qual, fld, true) then showPath(qual) + ".[" + showPath(fld) + "]"
-    ValueRef(l) then showSymbol(l)
+    ValueSimpleRef(l) then showSymbol(l)
+    ValueMemberRef(l) then showSymbol(l)
     ValueLit(lit) then showLiteral(lit)
 
 fun showArg(arg: Arg) =
@@ -124,8 +126,8 @@ fun showResult(r: Result): Str =
     Call(fun_, args) and
       // use infix to avoid parsing + and - as taking a unary argument
       args is [lhs, rhs] and fun_ is
-        ValueRef(Symbol("+")) then showArg(lhs) + " + " + showArg(rhs)
-        ValueRef(Symbol("-")) then showArg(lhs) + " - " + showArg(rhs)
+        ValueSimpleRef(Symbol("+")) then showArg(lhs) + " + " + showArg(rhs)
+        ValueSimpleRef(Symbol("-")) then showArg(lhs) + " - " + showArg(rhs)
       else showPath(fun_) + "(" + showArgs(args) + ")"
     Instantiate(cls, args) then "new " + showPath(cls) + (if args.length != 0 then "(" + showArgs(args) + ")" else "")
     Tuple(elems) then "[" + showArgs(elems) + "]"
@@ -173,7 +175,7 @@ fun showBlock(b) =
         + showResult(rhs) + showRestBlock(rest)
     Define(d, rest) then
       showDefn(d) + showRestBlock(rest)
-    Return(res, _) then
+    Return(res) then
       showResult(res)
     Match(scrut, arms, dflt, rest) then
       "if " + showPath(scrut) + " is"

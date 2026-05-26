@@ -109,9 +109,7 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
     def showRefSite(resultId: ResultId): Str =
       resultId.getReferredFun match
         case Some(fun) => s"${fun.nme}@$resultId"
-        case None => resultId.getResult match
-          case Value.Ref(sym, _) => s"${sym.nme}@$resultId"
-          case res => s"$res@$resultId"
+        case None => s"${resultId.getResult}@$resultId"
     end showRefSite
 
     def showInstId(instId: InstantiationId): Str =
@@ -235,11 +233,11 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
       p match
       case ref@FunRef(f) if newPolyFnSyms.isDefinedAt(newRefId(ref.uid, f)) =>
         val (bms, tSym) = newPolyFnSyms(newRefId(ref.uid, f))(f)
-        k(Value.Ref(bms, S(tSym)))
+        k(bms.asMemberRef(tSym))
       case _ => super.applyPath(p)(k)
 
     override def applyValue(v: Value)(k: Value => Block): Block = v match
-      case ref@Value.Ref(l: VarSymbol, _) if activeEliminatedParams(l) =>
+      case ref@Value.SimpleRef(l: VarSymbol) if activeEliminatedParams(l) =>
         k(Value.Lit(Tree.UnitLit(false)).withLocOf(ref))
       case _ => super.applyValue(v)(k)
 
@@ -287,7 +285,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
       val (params2, removed) = filterParamList(lam.params, deadParamElimSolver.eliminableParamsById(ConcreteId(lam.uid, instId)))
       val body2 = withEliminatedParams(removed):
         applyFunBodyLikeBlock(lam.body)
-      if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)
+      if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)(lam.annot)
     
     override def applyFunDefn(fun: FunDefn): FunDefn =
       val own2 = fun.owner.mapConserve(_.subst)
@@ -322,10 +320,10 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
     
     class RefreshSymbol(existingMapping: Map[Symbol, Symbol]) extends SymbolRefresher(existingMapping):
       override def applyValue(v: Value)(k: Value => Block): Block = v match
-        case Value.Ref(l, x) =>
+        case Value.This(l) =>
           pre.res.modSymToBms.get(l) match
             case Some(bms) =>
-              k(Value.Ref(bms, l.asMod))
+              k(bms.asMemberRef(l.asMod.get))
             case None => super.applyValue(v)(k)
         case _ => super.applyValue(v)(k)
     end RefreshSymbol

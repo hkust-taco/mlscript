@@ -12,7 +12,7 @@ import hkmc2.codegen.HandlerLowering.FnOrCls
 class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: StackSafetyMap)(using State, Config):
   private val STACK_DEPTH_IDENT: Tree.Ident = Tree.Ident("stackDepth")
 
-  private val runtimePath: Path = State.runtimeSymbol.asPath
+  private val runtimePath: Path = State.runtimeSymbol.asSimpleRef
   private val checkDepthPath: Path = runtimePath.selN(Tree.Ident("checkDepth"))
   private val runStackSafePath: Path = runtimePath.selN(Tree.Ident("runStackSafe"))
   private val stackDepthPath: Path = runtimePath.selN(STACK_DEPTH_IDENT)
@@ -20,33 +20,35 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
   private def intLit(n: BigInt) = Value.Lit(Tree.IntLit(n))
   
   private def op(op: String, a: Path, b: Path) =
-    Call(State.builtinOpsMap(op).asPath, (a.asArg :: b.asArg :: Nil) ne_:: Nil)(true, false, false)
+    Call(State.builtinOpsMap(op).asSimpleRef, (a.asArg :: b.asArg :: Nil) ne_:: Nil)(true, false, false)
 
   // Increases the stack depth, assigns the call to a value, then decreases the stack depth
   // then binds that value to a desired block
-  def extractRes(res: Result, isTailCall: Bool, f: Result => Block, sym: Symbol, curDepth: => Symbol): Block =
-    if isTailCall then Return(res, false)
+  // TODO: sym should be LocalVarSymbol once we tighten Assign
+  def extractRes(res: Result, isTailCall: Bool, f: Result => Block, sym: Symbol, curDepth: => LocalVarSymbol): Block =
+    if isTailCall then Return(res)
     else
       blockBuilder
         .assign(sym, res)
-        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, curDepth.asPath)
+        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, curDepth.asSimpleRef)
         .rest(f(sym.asPath))
   
   def wrapStackSafe(body: Block, resSym: Local, rest: Block) =
     val bodSym = BlockMemberSymbol("‹stack safe body›", Nil, false)
     val bodFun = FunDefn.withFreshSymbol(N, bodSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil, body)(configOverride = N, annotations = Nil)
     Scoped(Set.single(bodSym),
-      Define(bodFun, Assign(resSym, Call(runStackSafePath, (intLit(depthLimit).asArg :: bodSym.asPath.asArg :: Nil) ne_:: Nil)(true, true, false), rest))
+      Define(bodFun, Assign(resSym, Call(runStackSafePath, (intLit(depthLimit).asArg :: bodSym.asMemberRef(bodSym.asPrincipal.get).asArg :: Nil) ne_:: Nil)(true, true, false), rest))
     )
 
-  def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Symbol, curDepth: => Symbol) =
+  // TODO: sym should be LocalVarSymbol once we tighten Assign
+  def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Symbol, curDepth: => LocalVarSymbol) =
     val resSym = sym
     wrapStackSafe(Ret(res), resSym, f(resSym.asPath))
 
   // Rewrites anything that can contain a Call to increase the stack depth
-  def transform(b: Block, curDepth: => Symbol, isTopLevel: Bool = false): Block =
+  def transform(b: Block, curDepth: => LocalVarSymbol, isTopLevel: Bool = false): Block =
     def usesStack(r: Result) = r match
-      case Call(Value.Ref(_: BuiltinSymbol, _), _) => false
+      case Call(Value.SimpleRef(_: BuiltinSymbol), _) => false
       case c: Call if !c.mayRaiseEffects => false // a call can only trigger a stack delay if it can raise effects
       case _: Call | _: Instantiate => true
       case _ => false
@@ -62,15 +64,17 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
         case _: FunDefn | _: ValDefn => super.applyDefn(defn)(k)
 
       override def applyBlock(b: Block): Block = b match
-        case Return(res, implct) if usesStack(res) =>
+        case Return(res) if usesStack(res) =>
           val tmp = TempSymbol(N, "res")
           super.applyResult(res): res =>
-            Scoped(Set.single(tmp), extract(res, true, Return(_, implct), tmp, curDepth))
+            Scoped(Set.single(tmp), extract(res, true, Return(_), tmp, curDepth))
         // Optimization to avoid generation of unnecessary variables
         case Assign(lhs, r, rest) =>
           if usesStack(r) then
             super.applyResult(r): r =>
-              extract(r, false, _ => applyBlock(rest), lhs, curDepth)
+              lhs match
+                case _: NoSymbol => blockBuilder.assign(lhs, r).rest(applyBlock(rest))
+                case _ => extract(r, false, _ => applyBlock(rest), lhs, curDepth)
           else
             super.applyBlock(b)
         
@@ -94,7 +98,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
     new BlockTraverserShallow:
       applyBlock(b)
       override def applyResult(r: Result): Unit = r match
-        case Call(Value.Ref(_: BuiltinSymbol, _), _) => ()
+        case Call(Value.SimpleRef(_: BuiltinSymbol), _) => ()
         case _: Call | _: Instantiate => trivial = false
         case _ => ()
     trivial

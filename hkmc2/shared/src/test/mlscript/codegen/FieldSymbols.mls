@@ -77,6 +77,7 @@ case
 //│         tail = End
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda⁰;
+//│ @private
 //│ define lambda⁰ as fun lambda¹(caseScrut) {
 //│   let a, arg$Foo$0$;
 //│   match caseScrut
@@ -88,7 +89,7 @@ case
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ lambda¹
+//│ return lambda¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

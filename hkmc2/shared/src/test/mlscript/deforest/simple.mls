@@ -54,7 +54,7 @@ if x is
 //│ deforest > 	match: x¹
 //│ deforest > <<< fusing <<<
 //│ = 1
-//│ x = fun tmp2
+//│ x = fun
 
 :expect A
 let x = if true then AA(A) else BB(B)
@@ -70,7 +70,7 @@ if x is
 //│ deforest > 	fields: x².aa⁰
 //│ deforest > <<< fusing <<<
 //│ = A
-//│ x = fun tmp3
+//│ x = fun
 
 
 :expect 1
@@ -94,7 +94,7 @@ if x is
 //│ deforest > 	match: a⁰
 //│ deforest > <<< fusing <<<
 //│ = 1
-//│ x = fun tmp4
+//│ x = fun
 
 
 // `x.x` is successfully fused
@@ -124,7 +124,7 @@ if x is
 //│ deforest > 	match: a²
 //│ deforest > <<< fusing <<<
 //│ = 1
-//│ x = fun tmp5
+//│ x = fun
 
 
 :expect 11
@@ -175,8 +175,8 @@ if y is
 //│ deforest > 	match: x⁶
 //│ deforest > <<< fusing <<<
 //│ = 2
-//│ x = fun x9
-//│ y = fun y1
+//│ x = fun
+//│ y = fun
 
 
 :expect 3
@@ -259,8 +259,8 @@ if y is
 //│ deforest > 	match: x⁸
 //│ deforest > <<< fusing <<<
 //│ = 2
-//│ x = fun x10
-//│ y = fun y2
+//│ x = fun
+//│ y = fun
 
 
 
@@ -534,7 +534,7 @@ test(p)
 //│ deforest > 	fields: arg$AA$0$¹.c⁰
 //│ deforest > <<< fusing <<<
 //│ = 141
-//│ p = fun tmp40
+//│ p = fun
 
 
 :expect 141
@@ -556,7 +556,7 @@ test(p, id(CCC(123)))
 //│ deforest > 	fields: x²¹.aa⁰
 //│ deforest > <<< fusing <<<
 //│ = 141
-//│ p = fun tmp42
+//│ p = fun
 
 
 :sir
@@ -570,12 +570,15 @@ f(id(A)) + f(A)
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let f⁰, tmp, tmp1, tmp2, f_7$f⁰, f_7$x_A⁰, f_7$x_rest⁰, deforest$lam;
+//│ @private
 //│ define f_7$f⁰ as fun f_7$f¹(x) {
 //│   return x()
 //│ };
-//│ define f_7$x_A⁰ as fun f_7$x_A¹() {
+//│ @affine(1) @private
+//│ define f_7$x_A⁰ as fun f_7$x_A¹()() {
 //│   return 1
 //│ };
+//│ @private
 //│ define f_7$x_rest⁰ as fun f_7$x_rest¹() {
 //│   return null
 //│ };
@@ -589,9 +592,9 @@ f(id(A)) + f(A)
 //│ };
 //│ set tmp = Predef⁰.id⁰(A⁰);
 //│ set tmp1 = f¹(tmp);
-//│ set deforest$lam = () => { return f_7$x_A¹() };
+//│ set deforest$lam = f_7$x_A¹();
 //│ set tmp2 = f_7$f¹(deforest$lam);
-//│ +⁰(tmp1, tmp2)
+//│ return +⁰(tmp1, tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
@@ -1063,7 +1066,7 @@ f1(one) + f2(one) + f3(two)
 //│ deforest > <<< fusing <<<
 //│ = 10
 //│ one = AA(1)
-//│ two = fun inlinedVal82
+//│ two = fun
 
 
 :expect 4

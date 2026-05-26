@@ -20,14 +20,15 @@ fun aux(f) = f(1) + f(10)
 x => x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda⁰, Function$⁰, tmp;
+//│ @private
 //│ define lambda⁰ as fun lambda¹(x) {
 //│   return x
 //│ };
-//│ define Function$⁰ as class Function$¹ {
+//│ define Function$⁰ as class extends globalThis⁰.Function⁰ Function$¹ {
 //│   method call⁰ = fun call¹(x) { return lambda¹(x) }
 //│ };
 //│ set tmp = new Function$¹();
-//│ tmp
+//│ return tmp
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class anonymous
 
@@ -36,7 +37,7 @@ x => x
 :noInline
 x => x
 //│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
-//│ ║  l.37: 	x => x
+//│ ║  l.38: 	x => x
 //│ ╙──      	^
 //│ = class anonymous
 
@@ -52,7 +53,7 @@ f(0, 0, true)
 :sir
 (x => x)(42)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda²; define lambda² as fun lambda³(x) { return x }; lambda³(42)
+//│ let lambda²; define lambda² as fun lambda³(x) { return x }; return lambda³(42)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -73,11 +74,11 @@ bar(foo)
 //│ define bar⁰ as fun bar¹(f) {
 //│   return f.call﹖(0)
 //│ };
-//│ define Function$² as class Function$³ {
+//│ define Function$² as class extends globalThis⁰.Function⁰ Function$³ {
 //│   method call² = fun call³(x) { return foo¹(x) }
 //│ };
 //│ set tmp = new Function$³();
-//│ bar¹(tmp)
+//│ return bar¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -96,12 +97,12 @@ let f = foo in bar(f)
 bar([foo].0)
 bar([foo, x => x].1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if 0 is a function.
-//│ ║  l.96: 	bar([foo].0)
+//│ ║  l.97: 	bar([foo].0)
 //│ ╙──      	         ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 0$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
 //│ ╔══[COMPILATION ERROR] Cannot determine if 1 is a function.
-//│ ║  l.97: 	bar([foo, x => x].1)
+//│ ║  l.98: 	bar([foo, x => x].1)
 //│ ╙──      	                 ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 1$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
@@ -118,7 +119,7 @@ bar([foo, x => x].(i))
 :ge
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.119: 	[foo, x => x].(i)(0)
+//│ ║  l.120: 	[foo, x => x].(i)(0)
 //│ ╙──       	               ^
 
 
@@ -132,10 +133,10 @@ let foo = Foo()
 foo.("f")(0)
 foo.("h")(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.132: 	foo.("f")(0)
+//│ ║  l.133: 	foo.("f")(0)
 //│ ╙──       	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.133: 	foo.("h")(1)
+//│ ║  l.134: 	foo.("h")(1)
 //│ ╙──       	^^^^^^^^
 //│ = 0
 //│ foo = Foo()
@@ -154,11 +155,13 @@ Foo(1).foo(x => x - 1)
 //│ define lambda⁴ as fun lambda⁵(x) {
 //│   return -⁰(x, 1)
 //│ };
-//│ define Function$⁴ as class Function$⁵ {
-//│   method call⁴ = fun call⁵(x) { return lambda⁵(x) }
+//│ define Function$⁴ as class extends globalThis⁰.Function⁰ Function$⁵ {
+//│   method call⁴ = fun call⁵(x) {
+//│     return lambda⁵(x)
+//│   }
 //│ };
 //│ set tmp1 = new Function$⁵();
-//│ tmp.foo²(tmp1)
+//│ return tmp.foo²(tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -169,10 +172,11 @@ fun foo() = x => x
 foo()(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let foo³, baseCall, lambda⁶, Function$⁶;
+//│ @private
 //│ define lambda⁶ as fun lambda⁷(x) {
 //│   return x
 //│ };
-//│ define Function$⁶ as class Function$⁷ {
+//│ define Function$⁶ as class extends globalThis⁰.Function⁰ Function$⁷ {
 //│   method call⁶ = fun call⁷(x) {
 //│     return lambda⁷(x)
 //│   }
@@ -183,7 +187,7 @@ foo()(1)
 //│   return tmp
 //│ };
 //│ set baseCall = foo⁴();
-//│ baseCall.call﹖(1)
+//│ return baseCall.call﹖(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -223,16 +227,18 @@ module Foo with
     fun bar(z) = x => x + y + z 
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Foo¹, lambda⁸, Function$⁸;
+//│ @private
 //│ define lambda⁸ as fun lambda⁹(Bar, z, x) {
 //│   let tmp;
 //│   set tmp = +⁰(x, Bar.y⁰);
 //│   return +⁰(tmp, z)
 //│ };
-//│ define Function$⁸ as class Function$⁹ {
+//│ define Function$⁸ as class extends globalThis⁰.Function⁰ Function$⁹ {
 //│   private val Bar⁰;
 //│   private val z⁰;
 //│   constructor(Bar, z) {
-//│     super⁰();
+//│     do super⁰();
+//│     end;
 //│     set Function$⁹.this.Bar = Bar;
 //│     set Function$⁹.this.z = z;
 //│     end
@@ -276,14 +282,15 @@ let x = 1
 y => x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda¹⁰, Function$¹⁰, tmp;
+//│ @private
 //│ define lambda¹⁰ as fun lambda¹¹(y) {
 //│   return +⁰(x¹, y)
 //│ };
-//│ define Function$¹⁰ as class Function$¹¹ {
+//│ define Function$¹⁰ as class extends globalThis⁰.Function⁰ Function$¹¹ {
 //│   method call¹⁰ = fun call¹¹(y) { return lambda¹¹(y) }
 //│ };
 //│ set tmp = new Function$¹¹();
-//│ tmp
+//│ return tmp
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class anonymous
 
@@ -374,7 +381,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.375: 	foo.f(0)
+//│ ║  l.382: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -392,7 +399,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.393: 	foo.x(0)
+//│ ║  l.400: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 
@@ -464,10 +471,11 @@ fun foo(x)(y) = x + y
 //│ define lambda$⁰ as fun lambda$¹(x, y) {
 //│   return +⁰(x, y)
 //│ };
-//│ define Function$¹² as class Function$¹³ {
+//│ define Function$¹² as class extends globalThis⁰.Function⁰ Function$¹³ {
 //│   private val x²;
 //│   constructor(x) {
-//│     super⁰();
+//│     do super⁰();
+//│     end;
 //│     set Function$¹³.this.x = x;
 //│     end
 //│   }
@@ -502,26 +510,39 @@ foo(1)
 
 fun foo(f) = f("abc")
 
-// FIXME: should output "abc"
+print("abc")
+//│ > abc
+
+// TODO: should be able to find this info
+:e
 foo(print)
-//│ > 
+//│ ╔══[COMPILATION ERROR] Cannot get print's parameter list.
+//│ ║  l.518: 	foo(print)
+//│ ╙──       	    ^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'call' expected 0 arguments but got 1
+
+foo(print(_))
+//│ > abc
 
 :fixme
 :sir
 :expect ["abc"]
 foo(tuple)
+//│ ╔══[COMPILATION ERROR] Cannot get tuple's parameter list.
+//│ ║  l.530: 	foo(tuple)
+//│ ╙──       	    ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Function$¹⁴, tmp;
-//│ define Function$¹⁴ as class Function$¹⁵ {
-//│   method call¹⁴ = fun call¹⁵(...xs) {
+//│ define Function$¹⁴ as class extends globalThis⁰.Function⁰ Function$¹⁵ {
+//│   method call¹⁴ = fun call¹⁵() {
 //│     return Predef⁰.tuple⁰()
 //│   }
 //│ };
 //│ set tmp = new Function$¹⁵();
-//│ foo⁷(tmp)
+//│ return foo⁷(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Expected: '["abc"]', got: '[]'
-//│ = []
+//│ ═══[RUNTIME ERROR] Error: Function 'call' expected 0 arguments but got 1
+//│ ═══[RUNTIME ERROR] Expected: '["abc"]', got: 'undefined'
 
 
 if true is true then print("true")

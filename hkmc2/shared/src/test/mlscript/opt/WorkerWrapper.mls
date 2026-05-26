@@ -1,0 +1,61 @@
+:js
+
+
+// The worker-wrapper transformation initially turns this into
+//    fun foo(x)(y) = foo$worker(x, y)
+//    fun foo$worker(x, y) = x + y + x + y
+//    foo(1)(2)
+// which is subsequently inlined into the more efficient
+//    fun foo(x)(y) = foo$worker(x, y)
+//    fun foo$worker(x, y) = x + y + x + y
+//    foo$worker(1, 2)
+:soir
+fun foo(x)(y) =
+  x + y + x + y
+foo(1)(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let foo⁰, foo$worker⁰;
+//│ @inline
+//│ define foo⁰ as fun foo¹(x)(y) {
+//│   return foo$worker¹(x, y)
+//│ };
+//│ define foo$worker⁰ as fun foo$worker¹(x, y) {
+//│   let tmp, tmp1;
+//│   set tmp = +⁰(x, y);
+//│   set tmp1 = +⁰(tmp, x);
+//│   return +⁰(tmp1, y)
+//│ };
+//│ return foo$worker¹(1, 2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 6
+
+
+// Bodies below the alternative inlining threshold should not get a worker.
+:soir
+fun tiny(x)(y) = y
+tiny(1)(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tiny⁰; @inline define tiny⁰ as fun tiny¹(x)(y) { return y }; return 2
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+
+
+// Worker-wrapper relies on inlining to erase wrappers, so it is disabled with
+// the rest of the inliner.
+:soir
+:noInline
+fun noInlineFoo(x)(y) =
+  x + y + x + y
+noInlineFoo(1)(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let noInlineFoo⁰;
+//│ define noInlineFoo⁰ as fun noInlineFoo¹(x)(y) {
+//│   let tmp, tmp1;
+//│   set tmp = +⁰(x, y);
+//│   set tmp1 = +⁰(tmp, x);
+//│   return +⁰(tmp1, y)
+//│ };
+//│ return noInlineFoo¹(1)(2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 6
+

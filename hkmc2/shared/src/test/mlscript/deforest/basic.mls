@@ -25,7 +25,8 @@ let useless = if lsit is [a, b] then 0
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lsit⁰, useless⁰, a⁰, b⁰, element1$, element0$, tmp, $lsit_tup2⁰, $lsit_rest⁰, tup2_0, tup2_1;
-//│ define $lsit_tup2⁰ as fun $lsit_tup2¹(tup2_01, tup2_11) {
+//│ @affine(1) @private
+//│ define $lsit_tup2⁰ as fun $lsit_tup2¹(tup2_01, tup2_11)() {
 //│   set element0$ = tup2_01;
 //│   set element1$ = tup2_11;
 //│   set b⁰ = element1$;
@@ -33,17 +34,18 @@ let useless = if lsit is [a, b] then 0
 //│   set tmp = 0;
 //│   return $lsit_rest¹()
 //│ };
+//│ @private
 //│ define $lsit_rest⁰ as fun $lsit_rest¹() {
 //│   set useless⁰ = tmp;
 //│   return null
 //│ };
 //│ set tup2_0 = 2;
 //│ set tup2_1 = 1;
-//│ set lsit⁰ = () => { return $lsit_tup2¹(tup2_0, tup2_1) };
-//│ lsit⁰()
+//│ set lsit⁰ = $lsit_tup2¹(tup2_0, tup2_1);
+//│ return lsit⁰()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = null
-//│ lsit = fun lsit
+//│ lsit = fun
 //│ useless = 0
 
 :expect O
@@ -75,17 +77,15 @@ f(p())
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let p⁰, f⁰, tmp, p_10$p⁰, f_12$f⁰, f_12$x_X⁰, f_12$x_rest⁰, f_12$split_default$_rest⁰, f_12$split_root$_rest⁰, f_12$arg$X$0$_Y⁰, f_12$arg$X$0$_rest⁰;
-//│ define p_10$p⁰ as fun p_10$p¹() {
+//│ @private
+//│ define p_10$p⁰ as fun p_10$p¹()(eta$0$0, eta$0$1, eta$0$2) {
 //│   let tmp1, Y_b, X_a;
 //│   set Y_b = O⁰;
-//│   set tmp1 = (fv_ctorLam_y, fv_ctorLam_arg$Y$0$) => {
-//│     return f_12$arg$X$0$_Y¹(fv_ctorLam_y, fv_ctorLam_arg$Y$0$, Y_b)
-//│   };
+//│   set tmp1 = f_12$arg$X$0$_Y¹(Y_b);
 //│   set X_a = tmp1;
-//│   return (fv_ctorLam_y, fv_ctorLam_arg$X$0$, fv_ctorLam_arg$Y$0$) => {
-//│     return f_12$x_X¹(fv_ctorLam_y, fv_ctorLam_arg$X$0$, fv_ctorLam_arg$Y$0$, X_a)
-//│   }
+//│   return f_12$x_X¹(X_a)(eta$0$0, eta$0$1, eta$0$2)
 //│ };
+//│ @private
 //│ define f_12$f⁰ as fun f_12$f¹(x) {
 //│   let y, arg$X$0$, arg$Y$0$;
 //│   block split_root$:
@@ -94,24 +94,30 @@ f(p())
 //│     throw new globalThis⁰.Error⁰("match error")
 //│   return runtime⁰.Unit⁰
 //│ };
-//│ define f_12$x_X⁰ as fun f_12$x_X¹(fv_y, fv_arg$X$0$, fv_arg$Y$0$, X_a) {
+//│ @affine(1) @private
+//│ define f_12$x_X⁰ as fun f_12$x_X¹(X_a)(fv_y, fv_arg$X$0$, fv_arg$Y$0$) {
 //│   set fv_arg$X$0$ = X_a;
 //│   return fv_arg$X$0$(fv_y, fv_arg$Y$0$)
 //│ };
-//│ define f_12$arg$X$0$_Y⁰ as fun f_12$arg$X$0$_Y¹(fv_y, fv_arg$Y$0$, Y_b) {
+//│ @affine(1) @private
+//│ define f_12$arg$X$0$_Y⁰ as fun f_12$arg$X$0$_Y¹(Y_b)(fv_y, fv_arg$Y$0$) {
 //│   set fv_arg$Y$0$ = Y_b;
 //│   set fv_y = fv_arg$Y$0$;
 //│   return fv_y
 //│ };
+//│ @private
 //│ define f_12$x_rest⁰ as fun f_12$x_rest¹() {
 //│   return f_12$split_default$_rest¹()
 //│ };
+//│ @private
 //│ define f_12$split_default$_rest⁰ as fun f_12$split_default$_rest¹() {
 //│   throw new globalThis⁰.Error⁰("match error")
 //│ };
+//│ @private
 //│ define f_12$split_root$_rest⁰ as fun f_12$split_root$_rest¹() {
 //│   return runtime⁰.Unit⁰
 //│ };
+//│ @private
 //│ define f_12$arg$X$0$_rest⁰ as fun f_12$arg$X$0$_rest¹() {
 //│   return f_12$x_rest¹()
 //│ };
@@ -142,7 +148,7 @@ f(p())
 //│   return runtime⁰.Unit⁰
 //│ };
 //│ set tmp = p_10$p¹();
-//│ f_12$f¹(tmp)
+//│ return f_12$f¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = O
 
@@ -231,20 +237,22 @@ if [1, 2] is
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let scrut, a⁴, b², element1$, element0$, $scrut_tup2⁰, $scrut_rest⁰, tup2_0, tup2_1;
-//│ define $scrut_tup2⁰ as fun $scrut_tup2¹(tup2_01, tup2_11) {
+//│ @affine(1) @private
+//│ define $scrut_tup2⁰ as fun $scrut_tup2¹(tup2_01, tup2_11)() {
 //│   set element0$ = tup2_01;
 //│   set element1$ = tup2_11;
 //│   set b² = element1$;
 //│   set a⁴ = element0$;
 //│   return +⁰(a⁴, b²)
 //│ };
+//│ @private
 //│ define $scrut_rest⁰ as fun $scrut_rest¹() {
 //│   return null
 //│ };
 //│ set tup2_0 = 1;
 //│ set tup2_1 = 2;
-//│ set scrut = () => { return $scrut_tup2¹(tup2_0, tup2_1) };
-//│ scrut()
+//│ set scrut = $scrut_tup2¹(tup2_0, tup2_1);
+//│ return scrut()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 

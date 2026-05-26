@@ -28,8 +28,10 @@ true and test(42)
 //│ let scrut1;
 //│ if (true === true) {
 //│   scrut1 = test(42);
-//│   if (scrut1 === true) { true } else { false }
-//│ } else { false }
+//│   if (scrut1 === true) { return true }
+//│   return false;
+//│ }
+//│ return false;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 42
 //│ = false
@@ -37,7 +39,7 @@ true and test(42)
 :fixme
 true or test(42)
 //│ ╔══[COMPILATION ERROR] Logical `or` is not yet supported.
-//│ ║  l.38: 	true or test(42)
+//│ ║  l.40: 	true or test(42)
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ > 42
 //│ = false

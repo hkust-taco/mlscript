@@ -70,7 +70,7 @@ f(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰, g⁰; define f⁰ as fun f¹(a) { let g; return a }; 42
+//│ let f⁰; @private define f⁰ as fun f¹(a) { return a }; return 42
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 

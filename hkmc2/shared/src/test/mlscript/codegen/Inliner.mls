@@ -7,7 +7,7 @@
 fun f() = 0
 f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰; define f⁰ as fun f¹() { return 0 }; 0
+//│ let f⁰; define f⁰ as fun f¹() { return 0 }; return 0
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -15,7 +15,7 @@ f()
 fun f(x) = x
 f(100)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f²; define f² as fun f³(x) { return x }; 100
+//│ let f²; define f² as fun f³(x) { return x }; return 100
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 100
 
@@ -26,7 +26,12 @@ fun f() =
   done
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f⁴;
-//│ define f⁴ as fun f⁵() { let done; define done as fun done⁰(x) { return x }; return done⁰ };
+//│ define f⁴ as fun f⁵() {
+//│   let done;
+//│   @private
+//│   define done as fun done⁰(x) { return x };
+//│   return done⁰
+//│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -46,7 +51,7 @@ print(f(1, 2, ...[1]))
 //│ do Predef⁰.print⁰(6);
 //│ set tmp = [1];
 //│ set tmp1 = f⁷(1, 2, ...tmp);
-//│ Predef⁰.print⁰(tmp1)
+//│ return Predef⁰.print⁰(tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 6
 //│ > 4
@@ -61,10 +66,12 @@ let
 f(...us, v)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f⁸, us⁰, v⁰;
-//│ define f⁸ as fun f⁹(x, ...ys) { return [x, ys] };
+//│ define f⁸ as fun f⁹(x, ...ys) {
+//│   return [x, ys]
+//│ };
 //│ set us⁰ = [1, 2, 3];
 //│ set v⁰ = 4;
-//│ f⁹(...us⁰, 4)
+//│ return f⁹(...us⁰, 4)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [1, [2, 3, 4]]
 //│ us = [1, 2, 3]
@@ -88,7 +95,7 @@ f(1, ...[2], ...[3])
 //│ do f¹¹(1, ...tmp);
 //│ set tmp1 = [2];
 //│ set tmp2 = [3];
-//│ f¹¹(1, ...tmp1, ...tmp2)
+//│ return f¹¹(1, ...tmp1, ...tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ > [2]
@@ -106,7 +113,7 @@ f(1, 2)
 f(1, 2, 3)
 f(1, 2, 3, 4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹², c⁰, c¹, c², inlinedVal;
+//│ let f¹², c⁰, c¹, c²;
 //│ define f¹² as fun f¹³(a, b, ...c) {
 //│   let tmp;
 //│   set tmp = +⁰(a, b);
@@ -121,8 +128,7 @@ f(1, 2, 3, 4)
 //│ do Predef⁰.print⁰(c¹);
 //│ set c² = mut [3, 4];
 //│ do Predef⁰.print⁰(3);
-//│ set inlinedVal = Predef⁰.print⁰(c²);
-//│ inlinedVal
+//│ return Predef⁰.print⁰(c²)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 3
 //│ > []
@@ -158,7 +164,7 @@ f(1, 2, 3, ...[4])
 //│ ]);
 //│ f7(1, 2, ...tmp6);
 //│ tmp7 = globalThis.Object.freeze([ 4 ]);
-//│ f7(1, 2, 3, ...tmp7)
+//│ return f7(1, 2, 3, ...tmp7)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 3
 //│ > [3]
@@ -178,7 +184,7 @@ fun f() =
   g(true)
 f()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f8; f8 = function f() { return true }; true
+//│ let f8; f8 = function f() { return true }; return true
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 
@@ -192,7 +198,7 @@ fun f() =
   g(g(true))
 f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹⁴; define f¹⁴ as fun f¹⁵() { return true }; true
+//│ let f¹⁴; define f¹⁴ as fun f¹⁵() { return true }; return true
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 
@@ -201,23 +207,26 @@ f()
 open annotations
 
 // f1 does not inline into f, despite being small enough
+// The threshold for inlining this is separate and stricter than the usual limit
 // The call to f is inlined
 :sjs
 :inlineThreshold 100
-fun f1(a, b, c) = a + b + c
+fun f1(a, b, c) = (a + b + c + 1) * 2
 @inline fun f(a)(b)(c) = f1(a, b, c)
 f(1)(2)(3)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f10, f11;
 //│ f11 = function f1(a, b, c3) {
-//│   let tmp8;
+//│   let tmp8, tmp9, tmp10;
 //│   tmp8 = a + b;
-//│   return tmp8 + c3
+//│   tmp9 = tmp8 + c3;
+//│   tmp10 = tmp9 + 1;
+//│   return tmp10 * 2
 //│ };
 //│ f10 = function f(a) { return (b) => { return (c3) => { return f11(a, b, c3) } } };
-//│ 6
+//│ return 14
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 6
+//│ = 14
 
 // lifter wrapper uses inline annotation under the hood
 // currently no inlining happens because multi-call isn't recognized
@@ -230,26 +239,26 @@ fun foo(x)(y) =
   lam
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰, lam⁰, lam$⁰, tmp, lam$here;
+//│ let foo⁰, lam$⁰, foo$worker⁰;
+//│ @inline @private
 //│ define lam$⁰ as fun lam$¹(x, y)(z) {
-//│   return lam¹(x, y, z)
+//│   let tmp;
+//│   set tmp = +⁰(x, y);
+//│   return +⁰(tmp, z)
 //│ };
-//│ define lam⁰ as fun lam¹(x, y, z) {
-//│   let tmp1;
-//│   set tmp1 = +⁰(x, y);
-//│   return +⁰(tmp1, z)
-//│ };
+//│ @inline
 //│ define foo⁰ as fun foo¹(x)(y) {
-//│   let tmp1, lam$here1;
-//│   set lam$here1 = lam$¹(x, y);
-//│   set tmp1 = lam$here1(4);
-//│   do Predef⁰.print⁰(tmp1);
-//│   return lam$here1
+//│   return foo$worker¹(x, y)
 //│ };
-//│ set lam$here = lam$¹(1, 2);
-//│ set tmp = lam$here(4);
-//│ do Predef⁰.print⁰(tmp);
-//│ lam$here(3)
+//│ define foo$worker⁰ as fun foo$worker¹(x, y) {
+//│   let inlinedVal, tmp;
+//│   set tmp = +⁰(x, y);
+//│   set inlinedVal = +⁰(tmp, 4);
+//│   do Predef⁰.print⁰(inlinedVal);
+//│   return lam$¹(x, y)
+//│ };
+//│ do Predef⁰.print⁰(7);
+//│ return 6
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 7
 //│ = 6
@@ -259,7 +268,7 @@ foo(1)(2)(3)
 :noTailRec
 @inline fun f() = f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹⁶; define f¹⁶ as fun f¹⁷() { return f¹⁷() }; end
+//│ let f¹⁶; @inline define f¹⁶ as fun f¹⁷() { return f¹⁷() }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // inlining done inside function with inline annotation
@@ -267,7 +276,12 @@ foo(1)(2)(3)
 @inline fun f() = 1
 @inline fun g() = f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f¹⁸, g⁰; define f¹⁸ as fun f¹⁹() { return 1 }; define g⁰ as fun g¹() { return 1 }; end
+//│ let f¹⁸, g⁰;
+//│ @inline
+//│ define f¹⁸ as fun f¹⁹() { return 1 };
+//│ @inline
+//│ define g⁰ as fun g¹() { return 1 };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // Methods (not implemented currently)
@@ -320,7 +334,7 @@ f()
 //│       return runtime⁰.Unit⁰
 //│   end
 //│ };
-//│ f²³()
+//│ return f²³()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

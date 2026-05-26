@@ -165,7 +165,8 @@ fun test2() =
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let test2⁰;
 //│ define test2⁰ as fun test2¹() {
-//│   let funny, lambda;
+//│   let lambda;
+//│   @private
 //│   define lambda as fun lambda⁰(caseScrut) {
 //│     match caseScrut
 //│       0 =>

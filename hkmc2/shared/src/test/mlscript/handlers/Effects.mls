@@ -71,14 +71,14 @@ in
   h.perform("5")
 result
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let result, h7, handleBlock$7, Handler$h$perform7, Handler$h$15, Handler$h$perform$4;
+//│ let result, h7, handleBlock$7, Handler$h$perform5, Handler$h$15, Handler$h$perform$4;
 //│ runtime.resetEffects();
 //│ Handler$h$perform$4 = function Handler$h$perform$(arg) {
 //│   return (k) => {
-//│     return Handler$h$perform7(arg, k)
+//│     return Handler$h$perform5(arg, k)
 //│   }
 //│ };
-//│ Handler$h$perform7 = function Handler$h$perform(arg, k) {
+//│ Handler$h$perform5 = function Handler$h$perform(arg, k) {
 //│   let v, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -92,7 +92,7 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         return runtime.unwind(Handler$h$perform7, 1, "Effects.mls:63:13", null, null, 1, 2, arg, k, 0)
+//│         return runtime.unwind(Handler$h$perform5, 1, "Effects.mls:63:13", null, null, 1, 2, arg, k, 0)
 //│       }
 //│     case 1:
 //│       v = runtime.resumeValue;
@@ -106,13 +106,9 @@ result
 //│     Handler$h$15 = this
 //│   }
 //│   constructor() {
-//│     let tmp7;
-//│     tmp7 = super();
-//│     if (runtime.curEffect === null) {
-//│       tmp7
-//│     } else {
-//│       tmp7 = runtime.illegalEffect("in a constructor");
-//│       tmp7
+//│     super();
+//│     if (runtime.curEffect !== null) {
+//│       runtime.illegalEffect("in a constructor");
 //│     }
 //│   }
 //│   perform(arg) {
@@ -170,7 +166,9 @@ result
 //│   }
 //│ });
 //│ runtime.enterHandleBlock(h7, handleBlock$7);
-//│ if (runtime.curEffect === null) { result } else { runtime.topLevelEffect(false); result }
+//│ if (runtime.curEffect === null) { return result }
+//│ runtime.topLevelEffect(false);
+//│ return result;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "54321"
 //│ result = "54321"
@@ -445,28 +443,28 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.440: 	    module A with
+//│ ║  l.438: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.436: 	    module A with
+//│ ║  l.434: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.432: 	    module A with
+//│ ║  l.430: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.428: 	    module A with
+//│ ║  l.426: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.428: 	    module A with
+//│ ║  l.426: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.432: 	    module A with
+//│ ║  l.430: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.436: 	    module A with
+//│ ║  l.434: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.440: 	    module A with
+//│ ║  l.438: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 

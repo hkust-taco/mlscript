@@ -55,3 +55,9 @@ which are left for easier future editing by programmers.
 **Important:** When working on a PR, make sure to check the diff of the whole PR (including all commits)
 to ensure that no needless empty-line changes are included in the PR. If you find any, please remove them.
 
+
+## Manipulating IR representations
+
+When working with IR representations, please refer to the "Important design notes" in `hkmc2/shared/src/main/scala/hkmc2/codegen/Block.scala`.
+
+

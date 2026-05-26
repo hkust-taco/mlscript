@@ -67,7 +67,7 @@ f(1,2)(-3)
 //│ REPL> Sending: block$res9 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: try { block$res9 = runtime.checkCall(f(1, 2)(-3)); undefined; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Sending: try { block$res9 = runtime.checkCall(f$worker(1, 2, -3));; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
 //│ REPL> Collected:
 //│ >  CALL g(-3)
 //│ >  | CALL g(-2)
@@ -93,7 +93,7 @@ f(1,2)(-3)
 //│ REPL> Sending: runtime.TraceLogger.enabled = false
 //│ REPL> Collected:
 //│ >  false
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res9)); undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res9));; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
 //│ REPL> Collected:
 //│ >  45
 //│ >  undefined
@@ -107,12 +107,12 @@ f(1,2)(-4)
 //│ REPL> Sending: block$res10 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: try { block$res10 = runtime.checkCall(f(1, 2)(-4)); undefined; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Sending: try { block$res10 = runtime.checkCall(f$worker(1, 2, -4));; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:
 //│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res10)); undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res10));; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
 //│ REPL> Collected:
 //│ >  45
 //│ >  undefined

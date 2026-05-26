@@ -15,7 +15,11 @@ module foo with
 //│ ║  l.8: 	  val zero = foo(0)
 //│ ╙──     	^^^^^^^^^^^^^^^^^^^
 
+foo(123)
+//│ = 124
+
 :fixme
+:noInline
 foo(123)
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor foo cannot be invoked without 'new'
 

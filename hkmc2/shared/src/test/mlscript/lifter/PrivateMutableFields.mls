@@ -38,12 +38,13 @@ class Foo(x) with
         state + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Foo⁰, $anon⁰;
-//│ define $anon⁰ as class $anon¹ {
+//│ define $anon⁰ as class extends globalThis⁰.Object⁰ $anon¹ {
 //│   private val Foo¹;
 //│   private val y⁰;
 //│   private val state⁰;
 //│   constructor(Foo, y) {
-//│     super⁰();
+//│     do super⁰();
+//│     end;
 //│     set $anon¹.this.Foo = Foo;
 //│     set $anon¹.this.y = y;
 //│     set $anon¹.this.state = $anon¹.this.Foo¹.x⁰;

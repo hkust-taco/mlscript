@@ -50,11 +50,9 @@ fun f =
 //│         true =>
 //│           return runtime⁰.Unit⁰
 //│         else
-//│           throw new globalThis⁰.Error⁰("match error")
+//│           end
 //│       end
-//│     else
-//│       throw new globalThis⁰.Error⁰("match error")
-//│   end
+//│   throw new globalThis⁰.Error⁰("match error")
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -74,11 +72,9 @@ fun f =
 //│         true =>
 //│           return "1"
 //│         else
-//│           return "2 long long long long long long long long long long long long long long"
+//│           end
 //│       end
-//│     else
-//│       return "2 long long long long long long long long long long long long long long"
-//│   end
+//│   return "2 long long long long long long long long long long long long long long"
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

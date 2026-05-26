@@ -7,7 +7,7 @@ import "../../mlscript-compile/Option.mls"
 open Block
 open Option
 
-printCode(FunDefn(Symbol("f"), [[Symbol("x")]], Return(ValueLit(1), false)))
+printCode(FunDefn(Symbol("f"), [[Symbol("x")]], Return(ValueLit(1))))
 //│ > fun f(x) = 1
 
 printCode(ValueLit(true))
@@ -24,8 +24,8 @@ printCode(ValueLit("string"))
 printCode(Symbol("internal$"))
 //│ > internal_
 
-printCode(Select(ValueRef(Symbol("p")), Symbol("x")))
-printCode(DynSelect(ValueRef(Symbol("p")), ValueRef(Symbol("field")), false))
+printCode(Select(ValueSimpleRef(Symbol("p")), Symbol("x")))
+printCode(DynSelect(ValueSimpleRef(Symbol("p")), ValueSimpleRef(Symbol("field")), false))
 //│ > p.x
 //│ > p.(field)
 
@@ -35,15 +35,15 @@ class B
 let aSym = ConcreteClassSymbol("A", A, Some([Symbol("x")]), [[Symbol("y")]])
 let bSym = ConcreteClassSymbol("B", B, None, [])
 
-printCode(Call(ValueRef(Symbol("f")), [Arg(ValueLit(3))]))
-printCode(Instantiate(ValueRef(aSym), [Arg(ValueLit(0))]))
-printCode(Tuple([Arg(ValueRef(Symbol("x"))), Arg(ValueRef(Symbol("y")))]))
+printCode(Call(ValueSimpleRef(Symbol("f")), [Arg(ValueLit(3))]))
+printCode(Instantiate(ValueMemberRef(aSym), [Arg(ValueLit(0))]))
+printCode(Tuple([Arg(ValueSimpleRef(Symbol("x"))), Arg(ValueSimpleRef(Symbol("y")))]))
 //│ > f(3)
 //│ > new A(0)
 //│ > [x, y]
 
 :silent
-let f = FunDefn(Symbol("f"), [[Symbol("x")]], Return(ValueLit(1), false))
+let f = FunDefn(Symbol("f"), [[Symbol("x")]], Return(ValueLit(1)))
 
 printCode(f)
 printCode(ClsLikeDefn(aSym, [f], None))
@@ -53,7 +53,7 @@ printCode(ClsLikeDefn(bSym, [], None))
 //│ >   fun f(x) = 1
 //│ > class B
 
-printCode(Scoped([Symbol("x"), Symbol("y")], Assign(Symbol("x"), ValueLit(4.2), Return(ValueRef(Symbol("x")), true))))
+printCode(Scoped([Symbol("x"), Symbol("y")], Assign(Symbol("x"), ValueLit(4.2), Return(ValueSimpleRef(Symbol("x"))))))
 //│ > let {x, y}
 //│ > x = 4.2
 //│ > x
@@ -63,17 +63,17 @@ printCode(Define(ValDefn(None, Symbol("a"), ValueLit(1)), End()))
 //│ > val x = 1
 //│ > val a = 1
 
-printCode(Match(ValueRef(Symbol("x")), [Arm(Lit(1), Return(ValueLit(2), false)), Arm(Cls(aSym, ValueRef(aSym)), Return(ValueLit(3), false))], Some(Return(ValueRef(Symbol("x")), false)), End()))
+printCode(Match(ValueSimpleRef(Symbol("x")), [Arm(Lit(1), Return(ValueLit(2))), Arm(Cls(aSym, ValueMemberRef(aSym)), Return(ValueLit(3)))], Some(Return(ValueSimpleRef(Symbol("x")))), End()))
 //│ > if x is
 //│ >   1 then 2
 //│ >   A then 3
 //│ >   else x
 
 printCode(Scoped([Symbol("y")], Match(
-    ValueLit(1), 
-    [Arm(Lit(1), Return(ValueLit(1), false))], 
-    Some(Return(ValueLit(1), false)), 
-    Return(ValueRef(Symbol("y")), false))))
+    ValueLit(1),
+    [Arm(Lit(1), Return(ValueLit(1)))],
+    Some(Return(ValueLit(1))),
+    Return(ValueSimpleRef(Symbol("y"))))))
 //│ > let {y}
 //│ > if 1 is
 //│ >   1 then 1
@@ -81,9 +81,9 @@ printCode(Scoped([Symbol("y")], Match(
 //│ > y
 
 printCode(Scoped([Symbol("y")],  Match(
-    ValueLit(1), 
-    [Arm(Lit(1), Assign(Symbol("y"), ValueLit(1), Return(ValueRef(Symbol("y")), false)))], 
-    Some(Assign(Symbol("y"), ValueLit(2), Return(ValueRef(Symbol("y")), false))), 
+    ValueLit(1),
+    [Arm(Lit(1), Assign(Symbol("y"), ValueLit(1), Return(ValueSimpleRef(Symbol("y")))))],
+    Some(Assign(Symbol("y"), ValueLit(2), Return(ValueSimpleRef(Symbol("y"))))),
     End())))
 //│ > let {y}
 //│ > if 1 is
@@ -95,14 +95,14 @@ printCode(Scoped([Symbol("y")],  Match(
 //│ >     y
 
 printCode(Scoped([Symbol("y")], Match(
-    ValueLit(1), 
+    ValueLit(1),
     [Arm(Lit(1), Match(
         ValueLit(2),
-        [Arm(Lit(2), Assign(Symbol("y"), ValueLit(1), Return(ValueRef(Symbol("y")), false)))],
-        Some(Assign(Symbol("y"), ValueLit(2), Return(ValueRef(Symbol("y")), false))),
+        [Arm(Lit(2), Assign(Symbol("y"), ValueLit(1), Return(ValueSimpleRef(Symbol("y")))))],
+        Some(Assign(Symbol("y"), ValueLit(2), Return(ValueSimpleRef(Symbol("y"))))),
         End()
-    ))], 
-    Some(Assign(Symbol("y"), ValueLit(3), Return(ValueRef(Symbol("y")), false))), 
+    ))],
+    Some(Assign(Symbol("y"), ValueLit(3), Return(ValueSimpleRef(Symbol("y"))))),
     End())))
 //│ > let {y}
 //│ > if 1 is

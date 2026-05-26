@@ -90,7 +90,7 @@ let foo =
 //│ ╔══[COMPILATION ERROR] Expected three arguments, but found only one argument.
 //│ ║  l.83: 	    Tuple(...elements) then elements
 //│ ╙──      	    ^^^^^
-//│ foo = fun foo
+//│ foo = fun
 
 foo(Tuple(1, 2, 3))
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -34,7 +34,7 @@ fun g() =
 //│   main: while (true) {
 //│     switch (pc) {
 //│       case 0:
-//│         runtime.resumeValue = always_true();
+//│         runtime.resumeValue = true;
 //│         if (runtime.curEffect === null) {
 //│           pc = 3;
 //│         } else {
@@ -43,7 +43,9 @@ fun g() =
 //│       case 3:
 //│         scrut = runtime.resumeValue;
 //│         if (scrut === true) {
-//│           runtime.resumeValue = f();
+//│           let inlinedVal;
+//│           inlinedVal = runtime.Unit;
+//│           runtime.resumeValue = inlinedVal;
 //│           if (runtime.curEffect === null) {
 //│             pc = 2;
 //│             continue main

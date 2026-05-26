@@ -39,9 +39,9 @@ class BlockTransformer(subst: SymbolSubst):
     case Continue(lbl) =>
       val lbl2 = lbl.subst
       if lbl2 is lbl then b else Continue(lbl2)
-    case Return(res, implct) =>
+    case Return(res) =>
       applyResult(res): res2 =>
-        if res2 is res then b else Return(res2, implct)
+        if res2 is res then b else Return(res2)
     case Throw(exc) =>
       applyResult(exc): exc2 =>
         if exc2 is exc then b else Throw(exc2)
@@ -177,12 +177,19 @@ class BlockTransformer(subst: SymbolSubst):
     case v: Value => applyValue(v)(k)
   
   def applyValue(v: Value)(k: Value => Block) = v match
-    case Value.Ref(l, disamb) =>
-      val l2 = applyLocal(l)
-      k(if (l2 is l) then v else Value.Ref(l2, disamb).withLocOf(v))
+    case Value.SimpleRef(l) =>
+      val l2 = applyLocal(l) match
+        case l: (LocalVarSymbol | BuiltinSymbol) => l
+        case l2 =>
+          lastWords(s"Expected applyValue on `$l` (${l.getClass.getSimpleName}) to create a symbol of the same type, but got `$l2` (${l2.getClass.getSimpleName})")
+      k(if (l2 is l) then v else l2.asSimpleRef.withLocOf(v))
+    case Value.MemberRef(bms, disamb) =>
+      val bms2 = bms.subst
+      val disamb2 = disamb.subst
+      k(if (bms2 is bms) && (disamb2 is disamb) then v else bms2.asMemberRef(disamb2).withLocOf(v))
     case Value.This(sym) =>
       val sym2 = sym.subst
-      k(if (sym2 is sym) then v else Value.This(sym2).withLocOf(v))
+      k(if (sym2 is sym) then v else sym2.asThis.withLocOf(v))
     case Value.Lit(lit) => k(v)
   
   def applyLocal(sym: Local): Local = sym.subst
@@ -294,7 +301,7 @@ class BlockTransformer(subst: SymbolSubst):
   def applyLam(lam: Lambda): Lambda =
     val params2 = applyParamList(lam.params)
     val body2 = applyFunBodyLikeBlock(lam.body)
-    if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)
+    if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)(lam.annot)
   
   def applyListOf[A](ls: List[A], f: (A, (A => Block)) => Block)(k: List[A] => Block): Block =
     def rec(ls: List[A], k: List[A] => Block): Block = ls match

@@ -4,6 +4,7 @@ import runtime from "./Runtime.mjs";
 import RuntimeJS from "./RuntimeJS.mjs";
 import Runtime from "./Runtime.mjs";
 import Rendering from "./Rendering.mjs";
+import Term from "./Term.mjs";
 let Predef1;
 (class Predef {
   static {
@@ -61,16 +62,29 @@ let Predef1;
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "Refl"];
     });
-    this.pass1 = Rendering.pass1;
-    this.pass2 = Rendering.pass2;
-    this.pass3 = Rendering.pass3;
-    this.passing = Rendering.passing;
-    this.map = Rendering.map;
-    this.fold = Rendering.fold;
-    this.interleave = Rendering.interleave;
-    this.render = Rendering.render;
-    this.js_assert = globalThis.console["assert"];
-    this.foldl = Predef.fold;
+    Predef.pass1 = Rendering.pass1;
+    Predef.pass2 = Rendering.pass2;
+    Predef.pass3 = Rendering.pass3;
+    Predef.passing = Rendering.passing;
+    Predef.map = Rendering.map;
+    Predef.fold = Rendering.fold;
+    Predef.interleave = Rendering.interleave;
+    Predef.render = Rendering.render;
+    Predef.js_assert = globalThis.console["assert"];
+    Predef.foldl = Predef.fold;
+    (class meta {
+      static {
+        Predef.meta = this
+      }
+      static codegen(t, file) {
+        return runtime.safeCall(Term.codegen(t, file))
+      }
+      static print(t) {
+        return runtime.safeCall(Term.print(t))
+      }
+      toString() { return runtime.render(this); }
+      static [definitionMetadata] = ["class", "meta"];
+    });
   }
   static id(x) {
     return x
@@ -279,15 +293,14 @@ let Predef1;
   static mkStr(...xs) {
     let lambda, callPrefix;
     lambda = (undefined, function (acc, x) {
-      let tmp, tmp1;
+      let tmp;
       if (typeof x === 'string') {
         tmp = true;
       } else {
         tmp = false;
       }
       Predef.check(tmp);
-      tmp1 = acc + x;
-      return tmp1
+      return acc + x
     });
     callPrefix = runtime.safeCall(Predef.fold(lambda));
     return runtime.safeCall(callPrefix(...xs))

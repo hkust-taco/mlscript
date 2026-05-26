@@ -6,12 +6,7 @@ while false do ???
 :ssjs
 while false then ()
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ lbl1: while (true) {
-//│   if (false === true) { continue lbl1 }
-//│   break;
-//│ }
-//│ block$res2 = runtime.Unit;
-//│ undefined
+//│ lbl1: while (true) { if (false === true) { continue lbl1 } break; } block$res2 = runtime.Unit;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 () => while true then ()
@@ -21,7 +16,7 @@ while false then ()
 () =>
   while true then 0
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.22: 	  while true then 0
+//│ ║  l.17: 	  while true then 0
 //│ ╙──      	                  ^
 //│ = fun
 
@@ -56,11 +51,15 @@ f
 //│ let f;
 //│ f = function f() {
 //│   lbl4: while (true) {
-//│     if (x2 === true) { Predef.print("Hello World"); x2 = false; continue lbl4 }
+//│     if (x2 === true) {
+//│       Predef.print("Hello World");
+//│       x2 = false;
+//│       continue lbl4
+//│     }
 //│     return 42;
 //│   }
 //│ };
-//│ f()
+//│ return f()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Hello World
 //│ = 42
@@ -241,7 +240,7 @@ let x = 1
 :sjs
 while x is {} do()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ lbl7: while (true) { if (x3 instanceof Object) { continue lbl7 } break; } runtime.Unit
+//│ lbl7: while (true) { if (x3 instanceof Object) { continue lbl7 } break; } return runtime.Unit
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -313,10 +312,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.313: 	  then 0(0)
+//│ ║  l.312: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (false literal)
-//│ ║  l.312: 	while print("Hello World"); false
+//│ ║  l.311: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 
@@ -325,12 +324,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.324: 	while { print("Hello World"), false }
+//│ ║  l.323: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.325: 	  then 0(0)
+//│ ║  l.324: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.326: 	  else 1
+//│ ║  l.325: 	  else 1
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -341,14 +340,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.339: 	    print("Hello World")
+//│ ║  l.338: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.340: 	    false
+//│ ║  l.339: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.341: 	  then 0(0)
+//│ ║  l.340: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.342: 	  else 1
+//│ ║  l.341: 	  else 1
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

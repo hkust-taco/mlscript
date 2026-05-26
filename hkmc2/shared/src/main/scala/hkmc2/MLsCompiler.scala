@@ -131,6 +131,7 @@ class MLsCompiler
       val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
       optimized =
         val printer = (p: codegen.Program) => p.showAsTree // TODO: proper printing like in diff-tests
+        optimized = codegen.WorkerWrapper(exportedSymbol.toSet, dtl, printer)(optimized)
         codegen.BlockSimplifier(exportedSymbol.toSet, dtl, printer)(optimized)
       ltl.givenIn:
         optimized = codegen.DeadParamElim(optimized)

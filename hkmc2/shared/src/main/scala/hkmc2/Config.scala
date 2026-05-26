@@ -28,6 +28,7 @@ case class Config(
   rewriteWhileLoops: Bool,
   tailRecOpt: Bool,
   deforest: Opt[Deforest],
+  etaExpansion: Opt[EtaExpansion],
   inlining: Opt[Inliner],
   deadBranchRemoval: Bool,
   qqEnabled: Bool,
@@ -69,7 +70,8 @@ object Config:
     stageCode = false,
     tailRecOpt = true,
     deforest = N,
-    inlining = S(Inliner(1)),
+    etaExpansion = S(EtaExpansion.default),
+    inlining = S(Inliner(10)),
     deadBranchRemoval = default.deadBranchRemoval,
     qqEnabled = false,
     funcToCls = false,
@@ -161,9 +163,25 @@ object Config:
       logNonAffine = false,
       logAccumulator = false,
     ))
-  
-  case class Inliner(inlineThreshold: Int)
 
+  case class EtaExpansion(config: FlowAnalysisConfig):
+    export config.debug
+  object EtaExpansion:
+    def withDebug(debug: Bool): EtaExpansion =
+      EtaExpansion(FlowAnalysisConfig(
+        debug = debug,
+        mono = true,
+        trackNonAffine = false,
+        trackAccumulator = false,
+        logNonAffine = false,
+        logAccumulator = false,
+      ))
+    val default: EtaExpansion = withDebug(debug = false)
+  
+  /** `altSmallThreshold` is the alternative threshold for inlining things into @inline functions.
+    * Normally, we avoid inlining into @inline functions as that could lead to unexpected code bloat. */
+  case class Inliner(inlineThreshold: Int, altSmallThreshold: Int = 2)
+  
   def extractConfigFromStats(prgm: semantics.Term.Blk)(using Config) =
     // Extract cumulative config modifications from SetConfig statements
     val configModify = prgm.stats.collect:
@@ -339,6 +357,24 @@ object ConfigParser:
       Config.DeadParamElim.default.config
     ).map:
       Config.DeadParamElim.apply
+
+  private def parseEtaExpansion(tree: Tree, current: Opt[Config.EtaExpansion])(using Raise): Opt[Config.EtaExpansion] =
+    tree match
+    case App(Ident("EtaExpansion"), Tup(args)) =>
+      var debug = current.getOrElse(Config.EtaExpansion.default).debug
+      args.foreach:
+        case InfixApp(Ident("debug"), Keywrd(Keyword.`:`), value) =>
+          parseBool(value).foreach(v => debug = v)
+        case other =>
+          raise(ErrorReport(
+            msg"Unsupported EtaExpansion argument" -> other.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation))
+      S(Config.EtaExpansion.withDebug(debug))
+    case _ =>
+      raise(ErrorReport(
+        msg"Expected EtaExpansion(...)" -> tree.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
+      N
   
   /** Parse a single field override like `tailRecOpt: false`. */
   private def parseField(name: Str, value: Tree)(using Raise): Config => Config = name match
@@ -380,6 +416,11 @@ object ConfigParser:
         parseOpt(value)(v => parseDeforest(v, cfg.deforest)) match
           case S(v) => cfg.copy(deforest = v)
           case N => cfg
+    case "etaExpansion" =>
+      cfg =>
+        parseOpt(value)(v => parseEtaExpansion(v, cfg.etaExpansion)) match
+          case S(v) => cfg.copy(etaExpansion = v)
+          case N => cfg
     case "deadParamElim" =>
       cfg =>
         parseOpt(value)(v => parseDeadParamElim(v, cfg.deadParamElim)) match
@@ -395,7 +436,7 @@ object ConfigParser:
         case N => identity
     case "inlining" =>
       parseOpt(value)(parseInt) match
-        case S(v) => _.copy(inlining = v.map(Inliner.apply))
+        case S(v) => _.copy(inlining = v.map(Inliner(_)))
         case _ => identity
     case "deadBranchRemoval" =>
       parseBool(value) match

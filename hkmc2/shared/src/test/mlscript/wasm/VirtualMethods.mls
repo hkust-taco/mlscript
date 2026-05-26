@@ -115,7 +115,6 @@ callF(B())
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $callF (ref null any))
 //│     (local $tmp (ref null any))
-//│     (local $inlinedVal (ref null any))
 //│     (local $receiver (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
@@ -126,21 +125,19 @@ callF(B())
 //│           (block (result (ref null any))
 //│             (local.set $tmp
 //│               (call $B_ctor))
-//│             (block (result (ref null any))
-//│               (local.set $inlinedVal
-//│                 (block (result (ref null any))
-//│                   (local.set $receiver
-//│                     (local.get $tmp))
-//│                   (call_ref $virtual2
-//│                     (local.get $receiver)
-//│                     (ref.i31
-//│                       (i32.const 5))
-//│                     (struct.get $A_typeinfo $slot0
-//│                       (ref.cast (ref $A_typeinfo)
-//│                         (struct.get $Object $$typeinfo
-//│                           (ref.cast (ref $Object)
-//│                             (local.get $receiver))))))))
-//│               (local.get $inlinedVal)))))))
+//│             (return
+//│               (block (result (ref null any))
+//│                 (local.set $receiver
+//│                   (local.get $tmp))
+//│                 (call_ref $virtual2
+//│                   (local.get $receiver)
+//│                   (ref.i31
+//│                     (i32.const 5))
+//│                   (struct.get $A_typeinfo $slot0
+//│                     (ref.cast (ref $A_typeinfo)
+//│                       (struct.get $Object $$typeinfo
+//│                         (ref.cast (ref $Object)
+//│                           (local.get $receiver)))))))))))))
 //│   (elem $A_init declare func $A_init)
 //│   (elem $A_ctor declare func $A_ctor)
 //│   (elem $A_f declare func $A_f)

@@ -135,11 +135,11 @@ Foo::n(foo, 2)
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ ═══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda9;
-//│ lambda9 = (undefined, function (self, ...args7) {
+//│ let lambda2;
+//│ lambda2 = (undefined, function (self, ...args7) {
 //│   return runtime.safeCall(self.n(...args7))
 //│ });
-//│ runtime.safeCall(lambda9(foo, 2))
+//│ return runtime.safeCall(lambda2(foo, 2))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 125
 

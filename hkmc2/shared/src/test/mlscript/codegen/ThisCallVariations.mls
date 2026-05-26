@@ -39,7 +39,7 @@ Example .!. oops(2)
 //│   rhs = Tup of Ls of 
 //│     IntLit of 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ call(Example1, oops)(2)
+//│ return runtime.safeCall(oops.call(Example1, 2))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [2, 1]
 
@@ -105,7 +105,7 @@ Example .> oops(2)
 //│       rhs = Tup of Ls of 
 //│         IntLit of 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp10; tmp10 = runtime.safeCall(oops(2)); call1(Example1, tmp10)
+//│ let tmp7; tmp7 = runtime.safeCall(oops(2)); return call1(Example1, tmp7)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 

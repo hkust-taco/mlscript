@@ -28,9 +28,10 @@ f(1, 2).get()
 //│     return C¹.this.used⁰
 //│   }
 //│ };
+//│ @private
 //│ define f⁰ as fun f¹(used) { return new C¹(used) };
 //│ set tmp = f¹(1);
-//│ tmp.get﹖()
+//│ return tmp.get﹖()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 

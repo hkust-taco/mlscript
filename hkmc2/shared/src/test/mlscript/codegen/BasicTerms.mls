@@ -6,7 +6,7 @@
 
 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ 1
+//│ return 1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -18,22 +18,20 @@
 //│ ║  l.15: 	1
 //│ ╙──      	^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ 2
+//│ return 2
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.15: 	1
 //│ ╙──      	^
 //│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
 //│ Program:
-//│   main = Return:
-//│     res = Lit of IntLit of 2
-//│     implct = true
+//│   main = Return of Lit of IntLit of 2
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
 
 print("Hi")
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ Predef.print("Hi")
+//│ return Predef.print("Hi")
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Hi
 
@@ -41,24 +39,22 @@ print("Hi")
 print("Hi")
 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ Predef.print("Hi"); 2
+//│ Predef.print("Hi"); return 2
 //│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
 //│ Program:
 //│   main = Assign:
 //│     lhs = ‹no symbol›⁰
 //│     rhs = Call:
 //│       fun = Select{sym=term:Predef⁰/print⁰}:
-//│         qual = Ref{disamb=module:Predef⁰}:
-//│           l = member:Predef¹
-//│           disamb = S of module:Predef⁰
+//│         qual = MemberRef{disamb=module:Predef⁰}:
+//│           bms = member:Predef¹
+//│           disamb = module:Predef⁰
 //│         name = Ident of "print"
 //│       argss = Ls of 
 //│         Ls of 
 //│           Arg:
 //│             value = Lit of StrLit of "Hi"
-//│     rest = Return: \
-//│     res = Lit of IntLit of 2
-//│     implct = true
+//│     rest = Return of Lit of IntLit of 2
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Hi
 //│ = 2
@@ -67,7 +63,7 @@ print("Hi")
 :re
 2(2)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ runtime.safeCall(2(2))
+//│ return runtime.safeCall(2(2))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a function
 

@@ -47,7 +47,7 @@ f1(one) + f2(one) + f2(two)
 //│ deforest > <<< fusing <<<
 //│ = 9
 //│ one = A(1)
-//│ two = fun inlinedVal1
+//│ two = fun
 
 
 

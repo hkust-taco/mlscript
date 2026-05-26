@@ -17,7 +17,7 @@ fun f() = { console.log("ok"), 42 }
 
 fun f() = console.log("ok"), 42
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f2; f2 = function f() { return runtime.safeCall(globalThis.console.log("ok")) }; 42
+//│ let f2; f2 = function f() { return runtime.safeCall(globalThis.console.log("ok")) }; return 42
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 

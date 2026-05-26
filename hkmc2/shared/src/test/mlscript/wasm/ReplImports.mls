@@ -33,16 +33,10 @@ counter
 //│   (import "repl" "counter" (global $counter (mut (ref null any))))
 //│   (import "repl" "step" (global $step (mut (ref null any))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (local $tmp (ref null any))
-//│     (block (result (ref null any))
-//│       (local.set $tmp
-//│         (call $plus_impl
-//│           (global.get $counter)
-//│           (global.get $step)))
-//│       (block (result (ref null any))
-//│         (global.set $counter
-//│           (local.get $tmp))
-//│         (local.get $tmp))))
+//│     (return
+//│       (call $plus_impl
+//│         (global.get $counter)
+//│         (global.get $step))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3
@@ -63,7 +57,8 @@ unit
 //│   (import "repl" "Unit_typeinfo" (global $Unit_typeinfo (ref $Unit_typeinfo)))
 //│   (import "repl" "Unit$inst" (global $Unit (mut (ref null $Unit))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (global.get $Unit))
+//│     (return
+//│       (global.get $Unit)))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = {}

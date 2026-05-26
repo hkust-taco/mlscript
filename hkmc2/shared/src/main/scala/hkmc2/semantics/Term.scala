@@ -28,6 +28,9 @@ enum Annot extends AutoLocated:
   case TailCall
   case Inline
   case Config(modify: hkmc2.Config => hkmc2.Config)
+  // marks if a function or lambda is affine, i.e. called at most once.
+  // for functions with multiple parameter lists, `whichParamList` is the zero-based parameter-list index.
+  case Affine(whichParamList: Int)
   
   def symbol: Opt[Symbol] = this match
     case Trm(trm) => trm.symbol
@@ -42,7 +45,10 @@ enum Annot extends AutoLocated:
     case _: Modifier | Untyped | TailRec | TailCall | Inline | _: Config => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
-    case Untyped => doc"‹untyped›"
+    case Untyped => doc"@untyped"
+    case Inline => doc"@inline"
+    case TailRec => doc"@tailrec"
+    case Affine(n) => doc"@affine($n)"
     case Modifier(mod) => doc"@${mod.name}"
     case Trm(trm) => doc"@${trm.show}"
     case Config(_) => doc"@config(...)"
@@ -347,7 +353,7 @@ enum Term extends Statement:
   case Continue(label: LabelSymbol)
   case Try(body: Term, finallyDo: Term)
   case Annotated(annot: Annot, target: Term)
-  case Handle(lhs: LocalSymbol, rhs: Term, args: List[Term],
+  case Handle(lhs: LocalVarSymbol, rhs: Term, args: List[Term],
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
   case LeadingDotSel(nme: Tree.Ident)(
       val originalCtx: Opt[SrcScope]
