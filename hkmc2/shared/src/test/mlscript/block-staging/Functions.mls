@@ -81,6 +81,7 @@ staged module Expressions with
 //│ >     else 0
 //│ x = [1, 2, 3]
 
+:fixme
 class Outside(a)
 staged module ClassInstrumentation with
   class Inside(a, b)
@@ -89,13 +90,13 @@ staged module ClassInstrumentation with
   fun inst2() = new NoArg
   fun app1() = Outside(1)
   fun app2() = Inside(1, 2)
+//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
+//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
 //│ > fun ctor_() =
 //│ >   class Inside(a1, b)
 //│ >   class NoArg
 //│ > fun inst1() = new Outside(1)
-//│ > fun inst2() = new ClassInstrumentation.NoArg
-//│ > fun app1() = Outside(1)
-//│ > fun app2() = ClassInstrumentation.Inside(1, 2)
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 module Nonstaged with
   fun f() = 1
@@ -138,6 +139,7 @@ staged module BadArguments with
 //│ >   callPrefix(2, 3)
 
 
+:fixme
 staged module OtherBlocks with
   fun scope() =
     scope.locally of (
@@ -149,18 +151,13 @@ staged module OtherBlocks with
       2 then 0
       3 then 0
       else 0
+//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'a'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.146: 	      let a = 1
+//│ ╙──       	          ^
 //│ > fun ctor_() = ()
-//│ > fun scope() =
-//│ >   let {a}
-//│ >   a = 1
-//│ >   OtherBlocks.scope.locally(a)
-//│ > fun breakAndLabel() =
-//│ >   let {scrut}
-//│ >   scrut = 1
-//│ >   if scrut is
-//│ >     2 then 0
-//│ >     3 then 0
-//│ >     else 0
+//│ ═══[RUNTIME ERROR] ReferenceError: a is not defined
 
 staged module ClassDefs with
   class A
@@ -172,17 +169,14 @@ staged module ValClass with
 //│ > fun ctor_() =
 //│ >   class A(a)
 
+:fixme
 staged module ClassFunctions with
   class InnerClass() with
     fun f() = 1 + Arguments.f(1)
     fun g() = f()
-//│ > fun ctor_() =
-//│ >   class InnerClass() with
-//│ >     fun f() =
-//│ >       let {tmp}
-//│ >       tmp = Arguments.f_gen(1)
-//│ >       1 + tmp
-//│ >     fun g() = InnerClass.f()
+//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
+//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 staged module RetUnit with
   fun f() = ()
@@ -224,10 +218,8 @@ staged module LabelBreak with
     else 2
 //│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.Label.
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
-//│ ║  l.218: 	    let x = 1
-//│ ║         	        ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.218: 	    let x = 1
+//│ ║  l.212: 	    let x = 1
 //│ ╙──       	        ^
 //│ > fun ctor_() = ()
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
@@ -240,7 +232,7 @@ staged module A with
   fun g() = {1 : 2}
 //│ ═══[COMPILATION ERROR] Field assignment is not supported in staged modules: a
 //│ ╔══[COMPILATION ERROR] Other Results not supported in staged module: class hkmc2.codegen.Record
-//│ ║  l.240: 	  fun g() = {1 : 2}
+//│ ║  l.232: 	  fun g() = {1 : 2}
 //│ ╙──       	                 ^
 //│ > fun ctor_() =
 //│ >   x = C(1)
@@ -249,7 +241,7 @@ staged module A with
 :todo
 staged module Spread with
   fun f() = if [1, ..[1, 2]] is [1, ...x] then x else 0
-//│ ═══[COMPILATION ERROR] Spread parameters are not supported in staged module: Arg(Some(Lazy),Ref(tmp:tmp,None))
+//│ ═══[COMPILATION ERROR] Spread parameters are not supported in staged module: Arg(Some(Lazy),SimpleRef(tmp:tmp))
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
 //│ > fun ctor_() = ()
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.

@@ -89,7 +89,7 @@ module Test with
 //│     Test4 = this
 //│   }
 //│   static {
-//│     this.x = 1;
+//│     Test3.x = 1;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Test"];
@@ -187,13 +187,13 @@ module Whoops with
 //│     Whoops2 = this
 //│   }
 //│   static {
-//│     this.v = Whoops;
+//│     Whoops.v = Whoops;
 //│     (class Whoops1 {
 //│       static {
 //│         Whoops.Whoops = this
 //│       }
 //│       static {
-//│         this.w = Whoops1;
+//│         Whoops1.w = Whoops1;
 //│       }
 //│       static g() {
 //│         return Whoops.f()
@@ -247,7 +247,7 @@ module AA with
 //│         AA.BB = this
 //│       }
 //│       static {
-//│         this.y = 2;
+//│         BB.y = 2;
 //│       }
 //│       static get test() {
 //│         return BB.y;

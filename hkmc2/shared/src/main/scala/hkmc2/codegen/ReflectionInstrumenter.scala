@@ -55,7 +55,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
   def assign(res: Result, symName: Str = "tmp")(k: Path => Block): Block =
     // TODO: skip assignment if res: Path?
     val sym = new TempSymbol(N, symName)
-    Scoped(Set(sym), Assign(sym, res, k(sym.asPath)))
+    Scoped(Set(sym), Assign(sym, res, k(sym.asSimpleRef)))
 
   def tuple(elems: Ls[ArgWrappable], symName: Str = "tmp")(k: Path => Block): Block =
     assign(Tuple(false, elems.map(asArg)), symName)(k)
@@ -66,8 +66,8 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
   // helpers for instrumenting Block
 
-  def blockMod(name: Str) = summon[State].blockSymbol.asPath.selSN(name)
-  def optionMod(name: Str) = summon[State].optionSymbol.asPath.selSN(name)
+  def blockMod(name: Str) = summon[State].blockSymbol.asSimpleRef.selSN(name)
+  def optionMod(name: Str) = summon[State].optionSymbol.asSimpleRef.selSN(name)
 
   def blockCtor(name: Str, args: Ls[ArgWrappable], symName: Str = "tmp")(k: Path => Block): Block =
     call(blockMod(name), args, true, symName)(k)
@@ -111,8 +111,8 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           return End()
 
       val path: ArgWrappable = pOpt.getOrElse(owner match
-        case S(owner) => owner.asPath.selSN(sym.nme)
-        case N => bsym)
+        case S(owner) => owner.asThis.selSN(sym.nme)
+        case N => bsym.asBlkMember.get.asMemberRef(sym.asClsOrMod.get))
       baseSym match
         case _: ClassSymbol =>
           transformParamsOpt(paramsOpt): paramsOpt =>
@@ -169,9 +169,12 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
     // rulePath
     ctx.get(p).map(k).getOrElse:
       p match
-        case Value.Ref(l, disamb) =>
-          transformSymbol(disamb.getOrElse(l)): sym =>
-            blockCtor("ValueRef", Ls(sym), "var")(k)
+        case Value.SimpleRef(l) =>
+          transformSymbol(l): sym =>
+            blockCtor("ValueSimpleRef", Ls(sym), "var")(k)
+        case Value.MemberRef(bms, disamb) =>
+          transformSymbol(disamb): sym =>
+            blockCtor("ValueMemberRef", Ls(sym), "var")(k)
         case l: Value.Lit =>
           blockCtor("ValueLit", Ls(l), "lit")(k)
         case s @ Select(p, Tree.Ident(name)) =>
@@ -210,7 +213,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           raise(ErrorReport(msg"Instantiate with multiple argument lists not supported in staged module." -> r.toLoc :: Nil))
           End()
     // desugar Runtime.Tuple.get into Select
-    case Call(fun, Ls(Arg(_, scrut), Arg(_, Value.Lit(Tree.IntLit(idx)))) :: _) if fun == State.runtimeSymbol.asPath.selSN("Tuple").selSN("get") =>
+    case Call(fun, Ls(Arg(_, scrut), Arg(_, Value.Lit(Tree.IntLit(idx)))) :: _) if fun == Value.SimpleRef(State.runtimeSymbol).selSN("Tuple").selSN("get") =>
       transformPath(Select(scrut, Tree.Ident(idx.toString()))(N))(k)
     case Call(fun, argss) =>
       val stagedFunPath = fun match
@@ -282,9 +285,11 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
     case Assign(x, r, b) =>
       transformResult(r): y =>
         transformSymbol(x): xSym =>
-          blockCtor("ValueRef", Ls(xSym)): xStaged =>
+          blockCtor("ValueSimpleRef", Ls(xSym)): xStaged =>
             (Assign(x, xStaged, _)):
-              given Context = ctx.clone() += x.asPath -> xStaged
+              given Context = x match
+                case _: NoSymbol => ctx.clone()
+                case _ => ctx.clone() += x.asPath -> xStaged
               transformBlock(b): (z, ctx) =>
                 blockCtor("Assign", Ls(xSym, y, z), "assign")(k(_, ctx))
     case assign @ AssignField(lhs, nme, r, rest) =>
@@ -294,8 +299,11 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
         case S(ts: TermSymbol) if ts.isPrivate =>
           transformResult(r): y =>
             transformSymbol(ts): xSym =>
-              blockCtor("ValueRef", Ls(xSym)): xStaged =>
-                (Assign(ts, xStaged, _)):
+              blockCtor("ValueSimpleRef", Ls(xSym)): xStaged =>
+                // * Reflect the binding as the private field assignment it is, so the
+                // * owned field symbol is selected on its owner rather than emitted as a
+                // * plain reference (which would otherwise reach `JSBuilder`'s owned-`SimpleRef` path).
+                ((cont: Block) => AssignField(lhs, nme, xStaged, cont)(S(ts))):
                   given Context = ctx.clone() += Select(lhs, nme)(S(ts)) -> xStaged
                   transformBlock(rest): (z, ctx) =>
                     blockCtor("Assign", Ls(xSym, y, z), "assign")(k(_, ctx))
@@ -363,7 +371,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
   def applyFunDefnInner(f: FunDefn): (FunDefn, Block => Block) =
     val genSymName = f.sym.nme + "_instr"
     val genSym = BlockMemberSymbol(genSymName, Nil, false)
-    val sym = f.owner.get.asPath.selSN(genSymName)
+    val sym = f.owner.get.asThis.selSN(genSymName)
 
     // turn into fundefn
     val dSym = TermSymbol(f.dSym.k, f.dSym.owner, Tree.Ident(f.sym.nme + "_instr"))

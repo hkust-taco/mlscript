@@ -500,14 +500,16 @@ object Begin:
 object HandleBlock:
 
   def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx): Result =
-    Call(Value.Ref(Elaborator.ctx.builtins.runtime.suspend, N), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(true, true, false)
+    val bms = Elaborator.ctx.builtins.runtime.suspend
+    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(true, true, false)
 
   def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx): Result =
-    Call(Value.Ref(Elaborator.ctx.builtins.runtime.handle_suspension, N), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(true, true, false)
+    val bms = Elaborator.ctx.builtins.runtime.handle_suspension
+    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(true, true, false)
   
   private def create(
-      lhs: Local,
-      res: Local,
+      lhs: LocalVarSymbol,
+      res: LocalVarSymbol,
       par: Path,
       args: Ls[Path],
       cls: ClassSymbol,
@@ -532,7 +534,7 @@ object HandleBlock:
         handler.params,
         Scoped(Set(sym, rSym), Define(
           fDef,
-          Return(suspend(cls.asPath, Value.Ref(sym, S(fDef.dSym)))))))(N, annotations = Nil)
+          Return(suspend(cls.asThis, sym.asMemberRef(fDef.dSym))))))(N, annotations = Nil)
 
     val clsDefn = ClsLikeDefn(
       N, // no owner
@@ -543,7 +545,7 @@ object HandleBlock:
       N, Nil,
       S(par), handlerMtds, Nil, Nil,
       // Apparently, the lifter is not happy with any assignment in the preCtor...
-      Assign(State.noSymbol, Call(Value.Ref(State.builtinOpsMap("super")), args.map(_.asArg) ne_:: Nil)(true, true, false), End()),
+      Assign(State.noSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(true, true, false), End()),
       End(),
       N,
       N,
@@ -552,14 +554,14 @@ object HandleBlock:
     blockBuilder
       .scopedVars(Set(clsDefn.sym, sym))
       .define(clsDefn)
-      .assign(lhs, Instantiate(mut = true, Value.Ref(clsDefn.sym, S(cls)), Nil :: Nil))
+      .assign(lhs, Instantiate(mut = true, clsDefn.sym.asMemberRef(cls), Nil :: Nil))
       .define(bodyDefn)
-      .assign(res, handleSuspension(lhs.asPath, Value.Ref(bodyDefn.sym, S(bodyDefn.dSym))))
+      .assign(res, handleSuspension(lhs.asSimpleRef, bodyDefn.sym.asMemberRef(bodyDefn.dSym)))
       .rest(rest)
   
   def apply(
-      lhs: Local,
-      res: Local,
+      lhs: LocalVarSymbol,
+      res: LocalVarSymbol,
       par: Path,
       args: Ls[Path],
       cls: ClassSymbol,
@@ -648,7 +650,7 @@ final case class FunDefn(
     val annotations: Ls[Annot],
 ) extends Defn:
   val defnSym = S(dSym)
-  val asPath = Value.Ref(sym, S(dSym))
+  val asPath = sym.asMemberRef(dSym)
   lazy val tailRec: Bool = annotations.contains(Annot.TailRec)
   lazy val inline: Bool = annotations.contains(Annot.Inline)
   lazy val visibility: Visibility = annotations.collectFirst:
@@ -852,7 +854,8 @@ sealed abstract class Result extends AutoLocated:
 //   def extraInfo: Str = toLoc.toString
   
   def showDbg(using DebugPrinter): Str = this match
-    case Value.Ref(l, disamb) => s"${l.showAsPlain}${disamb.fold("")(s => s"‹${s.showAsPlain}›")}"
+    case Value.SimpleRef(l) => l.showAsPlain
+    case Value.MemberRef(l, disamb) => s"${l.showAsPlain}${s"‹${disamb.showAsPlain}›"}"
     case Value.This(sym) => s"this[${sym.showAsPlain}]"
     case Value.Lit(lit) => lit.idStr
     case Select(q, n) => s"Select(${q.showDbg}, ${n.showDbg})"
@@ -871,7 +874,7 @@ sealed abstract class Result extends AutoLocated:
       q.isPure && sel.symbol.exists(_.isPure)
     case c @ Call(fun, ass) if c.isKnownUnsaturatedCall =>
       fun.isPure && ass.forall(_.forall(a => a.spread.isEmpty && a.value.isPure))
-    case Call(Value.Ref(bs: BuiltinSymbol, _), ass) if bs.isPure =>
+    case Call(Value.SimpleRef(bs: BuiltinSymbol), ass) if bs.isPure =>
       ass.forall(_.forall(_.value.isPure))
     case Record(mut, args) => args.forall(_.value.isPure)
     case Tuple(mut, elems) => elems.forall(_.value.isPure)
@@ -890,7 +893,8 @@ sealed abstract class Result extends AutoLocated:
     case Lambda(params, body) => Vector.single(params)
     case Tuple(mut, elems) => elems.iterator.map(_.value).toVector
     case Record(mut, elems) => elems.iterator.map(_.value).toVector
-    case Value.Ref(l, disamb) => Vector.empty
+    case Value.SimpleRef(l) => Vector.empty
+    case Value.MemberRef(bms, disamb) => Vector.empty
     case Value.This(sym) => Vector.empty
     case Value.Lit(lit) => Vector.single(lit)
   
@@ -911,7 +915,8 @@ sealed abstract class Result extends AutoLocated:
     case Tuple(mut, elems) => elems.flatMap(_.value.freeVars).toSet
     case Record(mut, args) =>
       args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVars) ++ arg.value.freeVars).toSet
-    case Value.Ref(l, disamb) => Set(l)
+    case Value.SimpleRef(l) => Set(l)
+    case Value.MemberRef(bms, _) => Set(bms)
     case Value.This(sym) => Set.empty
     case Value.Lit(lit) => Set.empty
     case DynSelect(qual, fld, arrayIdx) => qual.freeVars ++ fld.freeVars
@@ -924,16 +929,17 @@ sealed abstract class Result extends AutoLocated:
     case Tuple(mut, elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
     case Record(mut, args) =>
       args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVarsLLIR) ++ arg.value.freeVarsLLIR).toSet
-    case Value.Ref(l: (BuiltinSymbol | TopLevelSymbol | ClassSymbol | TermSymbol), disamb) => Set.empty
-    case Value.Ref(l: BlockMemberSymbol, S(disamb)) => disamb.defn match
+    case Value.SimpleRef(l: (BuiltinSymbol | TermSymbol)) => Set.empty
+    case Value.SimpleRef(l: DefinitionSymbol[?]) => l.defn match
       case Some(d: ClassLikeDef) => Set.empty
       case Some(d: TermDefinition) if d.companionClass.isDefined => Set.empty
       case _ => Set(l)
-    case Value.Ref(l: DefinitionSymbol[?], N) => l.defn match
+    case Value.SimpleRef(l) => Set(l)
+    case Value.MemberRef(l: (ClassSymbol | TermSymbol), disamb) => Set.empty
+    case Value.MemberRef(l, disamb) => disamb.defn match
       case Some(d: ClassLikeDef) => Set.empty
       case Some(d: TermDefinition) if d.companionClass.isDefined => Set.empty
       case _ => Set(l)
-    case Value.Ref(l, disamb) => Set(l)
     case Value.This(sym) => Set.empty
     case Value.Lit(lit) => Set.empty
     case DynSelect(qual, fld, arrayIdx) => qual.freeVarsLLIR ++ fld.freeVarsLLIR
@@ -945,8 +951,7 @@ sealed abstract class Result extends AutoLocated:
     case Lambda(params, body) => 1 + body.size
     case Tuple(mut, elems) => elems.iterator.map(_.value.size).sum
     case Record(mut, args) => args.iterator.map(arg => arg.idx.fold(0)(_.size) + arg.value.size).sum
-    case Value.Ref(l, disamb) => 0
-    case Value.This(sym) => 0
+    case _: Value.RefLike => 0
     case Value.Lit(l: Tree.StrLit) => l.value.length / 4
     case Value.Lit(lit) => 0
     case DynSelect(qual, fld, arrayIdx) => qual.size + fld.size
@@ -985,7 +990,7 @@ sealed abstract class Path extends TrivialResult:
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
   def asArg = Arg(spread = N, this)
   def targetSymbol: Opt[DefinitionSymbol[?]] = this match
-    case ref: Value.Ref => ref.disamb
+    case ref: Value.MemberRef => S(ref.disamb)
     case sel: Select => sel.symbol
     case _ => N
 
@@ -998,25 +1003,54 @@ case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol
 case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool) extends Path
 
 enum Value extends Path with ProductWithExtraInfo:
+  case SimpleRef(sym: LocalVarSymbol | BuiltinSymbol)
   /**
-   * @param disamb The symbol disambiguating the definition that the reference refers to. This
-   * exists if and only if l is a BlockMemberSymbol.
-   */
-  case Ref(l: Local, disamb: Opt[DefinitionSymbol[?]])
-  case This(sym: InnerSymbol) // TODO rm – just use Ref
+    * @param disamb The symbol disambiguating the definition that the reference refers to.
+    */
+  case MemberRef(bms: BlockMemberSymbol, disamb: DefinitionSymbol[?])
+  case This(sym: InnerSymbol)
   case Lit(lit: Literal)
   
   override def extraInfo(using DebugPrinter): Str = this match
-    case Ref(l, disamb) => disamb.map(s => s"disamb=${s.showAsPlain}").mkString
+    case MemberRef(bms, disamb) => s"disamb=${disamb.showAsPlain}"
     case _ => ""
 
 object Value:
+  /** A value-level reference. */
+  type RefLike = SimpleRef | MemberRef | This
+
+  /** Value-level references that are not [[`Value.This`]]. */
+  type Ref = SimpleRef | MemberRef
+
+  extension (r: RefLike)
+    def symbol: Symbol = r match
+      case SimpleRef(l) => l
+      case MemberRef(bms, _) => bms
+      case This(sym) => sym
+
+  @deprecated("Use Value.SimpleRef, Value.MemberRef, or Value.This instead.")
   object Ref:
+    def apply(l: Local, disamb: Opt[DefinitionSymbol[?]]): Value.RefLike = 
+      l match
+        case l: (LocalVarSymbol | BuiltinSymbol) => l.asSimpleRef
+        case bms: BlockMemberSymbol => bms.asMemberRef:
+          disamb.getOrElse:
+            lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")
+        case sym: InnerSymbol => sym.asThis
+        case _: NoSymbol => lastWords("NoSymbol should not be used as a Path/Value")
+        case sym => lastWords(s"$sym (of type ${sym.getClass.getSimpleName}) cannot be converted to a Path/Value")
+    
     // * Some helper constructors that allow omitting the disambiguation symbol.
     // * If the ref itself is a DefinitionSymbol, then disambiguating it results in itself.
-    def apply(l: DefinitionSymbol[?]): Ref = Ref(l, S(l))
+    def apply(l: DefinitionSymbol[?]): Value.RefLike = Ref(l, S(l))
     // * If the ref is a symbol that does not refer to a definition, then there is no disambiguation.
-    def apply(l: TempSymbol | VarSymbol | BuiltinSymbol): Ref = Ref(l, N)
+    def apply(l: TempSymbol | VarSymbol | BuiltinSymbol): Value.RefLike = Ref(l, N)
+
+    def unapply(v: Value): Opt[(Local, Opt[DefinitionSymbol[?]])] = v match
+      case SimpleRef(l) => S(l -> N)
+      case MemberRef(bms, disamb) => S(bms -> S(disamb))
+      case This(sym) => S(sym -> N)
+      case _ => N
 
 case class Arg(spread: Opt[SpreadKind], value: Path)
 
@@ -1050,5 +1084,23 @@ extension (k: Block => Block)
 
 def blockBuilder: Block => Block = identity
 
+extension (s: (LocalVarSymbol | BuiltinSymbol))
+  inline def asSimpleRef: Value.SimpleRef = Value.SimpleRef(s)
+
+extension (bms: BlockMemberSymbol)
+  inline def asMemberRef(disamb: DefinitionSymbol[?]): Value.MemberRef = Value.MemberRef(bms, disamb)
+
+extension (sym: InnerSymbol)
+  inline def asThis: Value.This = Value.This(sym)
+
 extension (l: Local)
-  def asPath: Path = Value.Ref(l, N)
+  // TODO(Derppening): Inline `Value.Ref.apply` into this function once that function is removed
+  @annotation.nowarn("cat=deprecation")
+  def asPath: Value.RefLike = 
+    Value.Ref(l, l match 
+      case bms: BlockMemberSymbol => S(bms.asPrincipal.getOrElse:
+        lastWords(s"Cannot resolve overloaded member symbol ${bms.nme}: no principal disambiguation found")
+      )
+      case _ => N
+    )
+

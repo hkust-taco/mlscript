@@ -223,7 +223,11 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         given Ctx = ctx.setClass(isym)
         val funcs = methods.map(bMethodDef)
         def parentFromPath(p: Path): Ls[Local] = p match
-          case Value.Ref(l, disamb) => fromMemToClass(l.orElseDisamb(disamb)) :: Nil
+          case Value.MemberRef(bms, disamb) => fromMemToClass(disamb) :: Nil
+          case Value.This(sym) => fromMemToClass(sym) :: Nil
+          case Value.SimpleRef(l) =>
+            // TODO(Derppening): Check if this assertion holds
+            bErrStop(msg"Expected parent to be a MemberRef")
           case _ => bErrStop(msg"Unsupported parent path ${p.toString()}")
         ClassInfo(
           uid.make,
@@ -277,23 +281,37 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   private def bValue(v: Value)(k: TrivialExpr => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope) : Node =
     trace[Node](s"bValue { $v } begin", x => s"bValue end: ${x.show}"):
       v match
-      case Value.Ref(l: TermSymbol, _) if l.owner.nonEmpty =>
+      case Value.SimpleRef(l: TermSymbol) if l.owner.nonEmpty =>
         k(l |> sr)
-      case Value.Ref(sym, disamb) if sym.nme.isCapitalized =>
+      case Value.MemberRef(bms, disamb) if bms.nme.isCapitalized =>
         val v: Local = newTemp
-        Node.LetExpr(v, Expr.CtorApp(fromMemToClass(sym.orElseDisamb(disamb)), Ls()), k(v |> sr))
-      case Value.Ref(l, _) => 
+        Node.LetExpr(v, Expr.CtorApp(fromMemToClass(disamb), Ls()), k(v |> sr))
+      case Value.MemberRef(bms, _) =>
+        ctx.fn_ctx.get(bms) match
+          case Some(f) =>
+            val tempSymbols = (0 until f.paramsSize).map(x => newNamed("arg"))
+            val paramsList = PlainParamList(
+              (0 until f.paramsSize).zip(tempSymbols).map((_n, sym) =>
+                Param(FldFlags.empty, sym, N, Modulefulness.none)).toList)
+            val app = Call(v, tempSymbols.map(x => Arg(N, x.asSimpleRef)).toList ne_:: Nil)(true, false, false)
+            bLam(Lambda(paramsList, Return(app))(Nil), S(bms.nme), N)(k)
+          case None =>
+            k(ctx.findName(bms) |> sr)
+      case Value.SimpleRef(l) =>
         ctx.fn_ctx.get(l) match
           case Some(f) =>
             val tempSymbols = (0 until f.paramsSize).map(x => newNamed("arg"))
             val paramsList = PlainParamList(
               (0 until f.paramsSize).zip(tempSymbols).map((_n, sym) =>
                 Param(FldFlags.empty, sym, N, Modulefulness.none)).toList)
-            val app = Call(v, tempSymbols.map(x => Arg(N, Value.Ref(x))).toList ne_:: Nil)(true, false, false)
+            val app = Call(v, tempSymbols.map(x => Arg(N, x.asSimpleRef)).toList ne_:: Nil)(true, false, false)
             bLam(Lambda(paramsList, Return(app))(Nil), S(l.nme), N)(k)
           case None =>
             k(ctx.findName(l) |> sr)
-      case Value.This(sym) => bErrStop(msg"Unsupported value: This")
+      case Value.This(sym) =>
+        ctx.fn_ctx.get(sym) match
+          case None => k(ctx.findName(sym) |> sr)
+          case Some(_) => bErrStop(msg"Unsupported value: This with function context")
       case Value.Lit(lit) => k(Expr.Literal(lit))
         
   
@@ -325,18 +343,8 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   private def bPath(p: Path)(k: TrivialExpr => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope) : Node =
     trace[Node](s"bPath { $p } begin", x => s"bPath end: ${x.show}"):
       p match
-      case s @ Select(Value.Ref(sym, _), Tree.Ident("Unit")) if sym is ctx.builtinSym.runtimeSym.get =>
+      case s @ Select(Value.MemberRef(sym, _), Tree.Ident("Unit")) if sym is ctx.builtinSym.runtimeSym.get =>
         bPath(Value.Lit(Tree.UnitLit(false)))(k)
-      case s @ Select(Value.Ref(cls: ClassSymbol, _), name) if ctx.method_class.contains(cls) =>
-        s.symbol match
-          case None =>
-            ctx.flow_ctx.get(p) match
-              case Some(cls) =>
-                k(cls |> sr)
-              case None =>
-                bErrStop(msg"Unsupported selection by users")
-          case Some(s) =>
-            k(s |> sr)
       case s @ DynSelect(qual, fld, arrayIdx) =>
         bErrStop(msg"Unsupported dynamic selection")
       case s @ Select(qual, name) =>
@@ -371,12 +379,12 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       r match
       case Call(_, argss) if argss.sizeIs > 1 =>
         bErrStop(msg"Calls with multiple argument lists are not yet supported in LLIR")
-      case Call(Value.Ref(sym: BuiltinSymbol, _), argss) =>
+      case Call(Value.SimpleRef(sym: BuiltinSymbol), argss) =>
         bArgs(argss.flatten):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
             Node.LetExpr(v, Expr.BasicOp(sym, args), k(v |> sr))
-      case Call(Value.Ref(sym, S(disamb)), argss) if disamb.defn.exists(defn => defn match
+      case Call(Value.MemberRef(_, disamb), argss) if disamb.defn.exists(defn => defn match
         case cls: ClassLikeDef => true
         case trm: TermDefinition => trm.companionClass.isDefined
         case _ => false
@@ -385,44 +393,51 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
             Node.LetExpr(v, Expr.CtorApp(fromMemToClass(disamb), args), k(v |> sr))
-      case Call(Value.Ref(sym: DefinitionSymbol[?], _), argss) if sym.defn.exists(defn => defn match
-        case cls: ClassLikeDef => true
-        case trm: TermDefinition => trm.companionClass.isDefined
-        case _ => false
-      ) =>
-        bArgs(argss.flatten):
-          case args: Ls[TrivialExpr] =>
-            val v: Local = newTemp
-            Node.LetExpr(v, Expr.CtorApp(fromMemToClass(sym), args), k(v |> sr))
-      case Call(s @ Value.Ref(sym, _), argss) =>
+      case Call(s @ Value.MemberRef(bms, _), argss) =>
         val v: Local = newTemp
-        ctx.fn_ctx.get(sym) match
+        ctx.fn_ctx.get(bms) match
           case Some(f) =>
             bArgs(argss.flatten):
               case args: Ls[TrivialExpr] =>
-                Node.LetCall(Ls(v), sym, args, k(v |> sr))
+                Node.LetCall(Ls(v), bms, args, k(v |> sr))
           case None =>
             bPath(s):
               case f: TrivialExpr =>
                 bArgs(argss.flatten):
                   case args: Ls[TrivialExpr] =>
                     Node.LetMethodCall(Ls(v), builtinCallable, builtinApply(args.length), f :: args, k(v |> sr))
-      case Call(Select(Value.Ref(_: TopLevelSymbol, _), Tree.Ident("builtin")), argss) =>
+      case Call(Select(Value.This(_: TopLevelSymbol), Tree.Ident("builtin")), argss) =>
         bArgs(argss.flatten):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
             Node.LetCall(Ls(v), builtin, args, k(v |> sr))
-      case Call(Select(Select(Value.Ref(_: TopLevelSymbol, _), Tree.Ident("console")), Tree.Ident("log")), argss) =>
+      case Call(Select(Select(Value.This(_: TopLevelSymbol), Tree.Ident("console")), Tree.Ident("log")), argss) =>
         bArgs(argss.flatten):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
             Node.LetCall(Ls(v), builtin, Expr.Literal(Tree.StrLit("println")) :: args, k(v |> sr))
-      case Call(Select(Select(Value.Ref(_: TopLevelSymbol, _), Tree.Ident("Math")), Tree.Ident(mathPrimitive)), argss) =>
+      case Call(Select(Select(Value.This(_: TopLevelSymbol), Tree.Ident("Math")), Tree.Ident(mathPrimitive)), argss) =>
         bArgs(argss.flatten):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
             Node.LetCall(Ls(v), builtin, Expr.Literal(Tree.StrLit(mathPrimitive)) :: args, k(v |> sr))
-      case Call(s @ Select(r @ Value.Ref(sym, _), Tree.Ident(fld)), argss) if s.symbol.isDefined =>
+      case Call(s @ Select(r @ Value.SimpleRef(sym), Tree.Ident(fld)), argss) if s.symbol.isDefined =>
+        bPath(r):
+          case r =>
+            bArgs(argss.flatten):
+              case args: Ls[TrivialExpr] =>
+                val v: Local = newTemp
+                log(s"Method Call Select: $r.$fld with ${s.symbol}")
+                Node.LetMethodCall(Ls(v), getClassOfField(s.symbol.get), s.symbol.get, r :: args, k(v |> sr))
+      case Call(s @ Select(r @ Value.MemberRef(sym, _), Tree.Ident(fld)), argss) if s.symbol.isDefined =>
+        bPath(r):
+          case r =>
+            bArgs(argss.flatten):
+              case args: Ls[TrivialExpr] =>
+                val v: Local = newTemp
+                log(s"Method Call Select: $r.$fld with ${s.symbol}")
+                Node.LetMethodCall(Ls(v), getClassOfField(s.symbol.get), s.symbol.get, r :: args, k(v |> sr))
+      case Call(s @ Select(r @ Value.This(sym), Tree.Ident(fld)), argss) if s.symbol.isDefined =>
         bPath(r):
           case r =>
             bArgs(argss.flatten):
@@ -433,7 +448,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       case Call(_, _) => bErrStop(msg"Unsupported kind of Call ${r.toString()}")
       case Instantiate(
         false,
-        Value.Ref(sym, S(disamb: (ClassSymbol | ModuleOrObjectSymbol))), argss) =>
+        Value.MemberRef(sym, disamb: (ClassSymbol | ModuleOrObjectSymbol)), argss) =>
         bArgs(argss.flatten):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
@@ -488,7 +503,15 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
             summon[Ctx].def_acc += jpdef
             Node.Case(e, casesList, defaultCase)
       case Return(res) => bResult(res)(x => Node.Result(Ls(x)))
-      case Throw(Instantiate(false, Select(Value.Ref(_, _), ident),
+      case Throw(Instantiate(false, Select(Value.SimpleRef(_), ident),
+          Ls(Arg(N, Value.Lit(Tree.StrLit(e)))) :: Nil))
+      if ident.name === "Error" =>
+        Node.Panic(e)
+      case Throw(Instantiate(false, Select(Value.MemberRef(_, _), ident),
+          Ls(Arg(N, Value.Lit(Tree.StrLit(e)))) :: Nil))
+      if ident.name === "Error" =>
+        Node.Panic(e)
+      case Throw(Instantiate(false, Select(Value.This(_), ident),
           Ls(Arg(N, Value.Lit(Tree.StrLit(e)))) :: Nil))
       if ident.name === "Error" =>
         Node.Panic(e)

@@ -63,7 +63,8 @@ class Path extends Result with
   constructor
     Select(val qual: Path, val name: Symbol)
     DynSelect(val qual: Path, val fld: Path, val arrayIdx: Bool) // is arrayIdx used?
-    ValueRef(val l: Symbol)
+    ValueSimpleRef(val l: Symbol)
+    ValueMemberRef(val l: Symbol)
     ValueLit(val lit: Literal)
 
 class Defn with 
@@ -105,11 +106,12 @@ fun showSymbol(s: Symbol) = s.name.replaceAll("$", "_")
 fun showPath(p: Path): Str =
   if p is
     // avoids needing to import the runtime module
-    Select(ValueRef(Symbol("runtime")), ModuleSymbol("Unit", Runtime.Unit)) then "()"
+    Select(ValueSimpleRef(Symbol("runtime")), ModuleSymbol("Unit", Runtime.Unit)) then "()"
     Select(qual, name) then showPath(qual) + "." + showSymbol(name)
     DynSelect(qual, fld, false) then showPath(qual) + ".(" + showPath(fld) + ")"
     DynSelect(qual, fld, true) then showPath(qual) + ".[" + showPath(fld) + "]"
-    ValueRef(l) then showSymbol(l)
+    ValueSimpleRef(l) then showSymbol(l)
+    ValueMemberRef(l) then showSymbol(l)
     ValueLit(lit) then showLiteral(lit)
 
 fun showArg(arg: Arg) =
@@ -124,8 +126,8 @@ fun showResult(r: Result): Str =
     Call(fun_, args) and
       // use infix to avoid parsing + and - as taking a unary argument
       args is [lhs, rhs] and fun_ is
-        ValueRef(Symbol("+")) then showArg(lhs) + " + " + showArg(rhs)
-        ValueRef(Symbol("-")) then showArg(lhs) + " - " + showArg(rhs)
+        ValueSimpleRef(Symbol("+")) then showArg(lhs) + " + " + showArg(rhs)
+        ValueSimpleRef(Symbol("-")) then showArg(lhs) + " - " + showArg(rhs)
       else showPath(fun_) + "(" + showArgs(args) + ")"
     Instantiate(cls, args) then "new " + showPath(cls) + (if args.length != 0 then "(" + showArgs(args) + ")" else "")
     Tuple(elems) then "[" + showArgs(elems) + "]"

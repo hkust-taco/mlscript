@@ -38,7 +38,7 @@ class Foo(x) with
         state + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Foo⁰, $anon⁰;
-//│ define $anon⁰ as class $anon¹ {
+//│ define $anon⁰ as class extends globalThis⁰.Object⁰ $anon¹ {
 //│   private val Foo¹;
 //│   private val y⁰;
 //│   private val state⁰;

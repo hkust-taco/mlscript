@@ -36,7 +36,7 @@ class A(x) with
 //│     this.z = this.#x;
 //│   }
 //│   static {
-//│     this.size = 2;
+//│     A2.size = 2;
 //│   }
 //│   static ctor(buf, idx) {
 //│     return (x) => {

@@ -29,13 +29,11 @@ x + 1
 //│       lhs = x⁰
 //│       rhs = Lit of IntLit of 1
 //│       rest = Return of Call:
-//│         fun = Ref:
-//│           l = builtin:+⁰
+//│         fun = SimpleRef of builtin:+⁰
 //│         argss = Ls of 
 //│           Ls of 
 //│             Arg:
-//│               value = Ref:
-//│                 l = x⁰
+//│               value = SimpleRef of x⁰
 //│             Arg:
 //│               value = Lit of IntLit of 1
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -210,7 +208,7 @@ class B(x) extends A with
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let A⁶, B⁰;
 //│ define A⁶ as class A⁷;
-//│ define B⁰ as class B²(x) {
+//│ define B⁰ as class extends A⁷ B²(x) {
 //│   private val x¹³;
 //│   val y¹;
 //│   constructor B¹ { do super⁰(); end; set B².this.x = x; define y¹ as val y² = 2; end }

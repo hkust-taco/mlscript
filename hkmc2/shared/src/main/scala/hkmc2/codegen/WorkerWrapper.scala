@@ -68,7 +68,7 @@ class WorkerWrapper
       workerBody,
     )(fun.configOverride, withoutInline(fun.annotations))
     val workerArgs = fun.params.flatMap(_.params).map: param =>
-      Arg(N, Value.Ref(param.sym))
+      Arg(N, param.sym.asSimpleRef)
     val wrapperBody = Return(
       Call(worker.asPath, workerArgs ne_:: Nil)(isMlsFun = true, mayRaiseEffects = true, explicitTailCall = false),
     )

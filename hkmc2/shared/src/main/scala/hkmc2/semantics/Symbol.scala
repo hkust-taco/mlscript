@@ -140,16 +140,6 @@ abstract class Symbol(using State) extends Located:
     asPat orElse
     asMod
   
-  def orElseDisamb(disamb: Opt[DefinitionSymbol[?]]): Symbol = (this, disamb) match
-    case (bms: BlockMemberSymbol, S(disamb)) =>
-      disamb
-    case (bms: BlockMemberSymbol, N) =>
-      lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")
-    case (sym, N) =>
-      sym
-    case (sym, S(_)) =>
-      lastWords(s"Cannot disambiguate non-BlockMember symbol ${sym.nme}: disambiguation provided")
-  
   override def equals(x: Any): Bool = this is x
   override def hashCode: Int = uid.hashCode
   
@@ -317,7 +307,7 @@ sealed abstract class MemberSymbol(using State) extends Symbol:
 class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.Ident)(using State)
     extends MemberSymbol
     with DefinitionSymbol[TermDefinition]
-    with LocalSymbol
+    with LocalVarSymbol
     with NamedSymbol:
   def nme: Str = id.name
   def name: Str = nme

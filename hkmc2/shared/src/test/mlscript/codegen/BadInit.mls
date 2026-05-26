@@ -27,7 +27,7 @@ object Bar with
 //│         this$Bar.Baz = this
 //│       }
 //│       static {
-//│         this.a = Bar1.x;
+//│         Baz.a = Bar1.x;
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Baz"];
@@ -58,13 +58,13 @@ module Bar with
 //│     Bar3 = this
 //│   }
 //│   static {
-//│     this.x = 1;
+//│     Bar2.x = 1;
 //│     (class Baz1 {
 //│       static {
 //│         Bar2.Baz = this
 //│       }
 //│       static {
-//│         this.a = Bar3.x;
+//│         Baz1.a = Bar3.x;
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Baz"];

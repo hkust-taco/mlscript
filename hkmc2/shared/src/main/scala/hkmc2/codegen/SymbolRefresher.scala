@@ -87,6 +87,10 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
             assert(tsym.owner.isEmpty)
             new TermSymbol(tsym.k, N, tsym.id)
           newBms.tsym = S(newDsym.get)
+          // Keep the definition symbol in sync with the freshly-created member symbol.
+          // Self-recursive references use the disambiguating TermSymbol, and later passes
+          // such as inlining rely on that symbol to identify the function being called.
+          mapping(fun.dSym) = newDsym.get
           mapping(fun.sym) = newBms
           (newBms, newDsym.get)
         case _ => die
@@ -202,21 +206,24 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
     case _ => super.applyPath(p)(k)
 
   override def applyValue(v: Value)(k: Value => Block): Block = v match
-    case Value.Ref(l, x) =>
+    case Value.SimpleRef(l) =>
       mapping.get(l) match
-        case None => super.applyValue(v)(k)
+        case Some(newSym: (LocalVarSymbol | BuiltinSymbol)) =>
+          k(newSym.asSimpleRef)
+        case _ => super.applyValue(v)(k)
+    case Value.MemberRef(bms, disamb) =>
+      mapping.get(bms) match
         case Some(newBms: BlockMemberSymbol) =>
-          val newDisamb = x match
-            case Some(oldDisamb) =>
-              mapping.get(oldDisamb) match
-                case Some(nd: DefinitionSymbol[?]) => Some(nd)
-                case _ => newBms.tsym.orElse(x)
-            case None => newBms.tsym
-          k(Value.Ref(newBms, newDisamb))
-        case Some(newSym) => k(Value.Ref(newSym, N))
+          val newDisamb = mapping.get(disamb) match
+            case Some(nd: DefinitionSymbol[?]) => nd
+            case Some(nd) => lastWords(s"unexpected symbol kind for disamb: ${nd}")
+            case N => lastWords(s"unexpected lack of refreshed disamb symbol for $disamb")
+          k(newBms.asMemberRef(newDisamb))
+        case Some(newSym: (LocalVarSymbol | TempSymbol)) => k(newSym.asSimpleRef)
+        case _ => super.applyValue(v)(k)
     case Value.This(sym) =>
       mapping.get(sym) match
-        case Some(inner: InnerSymbol) => k(Value.This(inner).withLocOf(v))
+        case Some(inner: InnerSymbol) => k(inner.asThis.withLocOf(v))
         case _ => super.applyValue(v)(k)
     case _ => super.applyValue(v)(k)
   

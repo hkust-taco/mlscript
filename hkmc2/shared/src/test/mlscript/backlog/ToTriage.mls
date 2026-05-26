@@ -323,7 +323,7 @@ module Foo(val x)
 //│     Foo7 = this
 //│   }
 //│   static {
-//│     this.x = x;
+//│     Foo6.x = x;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"];

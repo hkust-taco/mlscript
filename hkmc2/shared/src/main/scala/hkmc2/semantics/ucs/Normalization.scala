@@ -289,7 +289,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             for (_, s) <- entries do LoweringCtx.loweringCtx.collectScopedSym(s)
             val objectSym = ctx.builtins.Object
             mkMatch( // checking that we have an object
-              Case.Cls(objectSym, Value.Ref(BuiltinSymbol(objectSym.nme, false, false, true, false))),
+              Case.Cls(objectSym, BuiltinSymbol(objectSym.nme, false, false, true, false).asSimpleRef),
               entries.foldRight(lowerSplit(tail, cont)):
                 case ((fieldName, fieldSymbol), blk) =>
                   mkMatch(
@@ -310,7 +310,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     * match failure in the future.
     */
   private def throwMatchErrorBlock =
-    Throw(Instantiate(mut = false, Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error"))(S(ctx.builtins.Error)),
+    Throw(Instantiate(mut = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error)),
         (Value.Lit(syntax.Tree.StrLit("match error")).asArg :: Nil) :: Nil)) // TODO add failed-match scrutinee info
   
   import syntax.Keyword.{`if`, `while`}
@@ -367,7 +367,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
       // as shouldRewriteWhile is always true when effect handler lowering is on
       lazy val loopCont = if config.shouldRewriteWhile
-        then Return(Call(Value.Ref(f, S(tSym)), Nil ne_:: Nil)(true, true, false))
+        then Return(Call(f.asMemberRef(tSym), Nil ne_:: Nil)(true, true, false))
         else Continue(loopLabel)
       val cont =
         form match
@@ -448,7 +448,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
           then mainBlock
           else Label(rootBreakLabel, false, mainBlock, End()))
       // Embed the `body` into `Label` if the term is a `while`.
-      lazy val rest = if usesResTmp then k(Value.Ref(l)) else k(lowering.unit)
+      lazy val rest = if usesResTmp then k(l.asSimpleRef) else k(lowering.unit)
       val block =
         if form === IfLikeForm.While then
           // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
@@ -459,16 +459,16 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             outerCtx.collectScopedSym(loopResult)
             outerCtx.collectScopedSym(isReturned)
             val loopEnd: Path =
-              Select(Value.Ref(State.runtimeSymbol), Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
+              Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
             val blk = blockBuilder
               .define(FunDefn(N, f, tSym, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd)))(configOverride = N, annotations = Nil))
-              .assign(loopResult, Call(Value.Ref(f, S(tSym)), Nil ne_:: Nil)(true, true, false))
+              .assign(loopResult, Call(f.asMemberRef(tSym), Nil ne_:: Nil)(true, true, false))
             if summon[LoweringCtx].mayRet then
               blk
-                .assign(isReturned, Call(Value.Ref(State.builtinOpsMap("!==")),
+                .assign(isReturned, Call(State.builtinOpsMap("!==").asSimpleRef,
                   (loopResult.asPath.asArg :: loopEnd.asArg :: Nil) ne_:: Nil)(true, false, false))
-                .ifthen(Value.Ref(isReturned), Case.Lit(Tree.BoolLit(true)),
-                  Return(Value.Ref(loopResult)),
+                .ifthen(isReturned.asSimpleRef, Case.Lit(Tree.BoolLit(true)),
+                  Return(loopResult.asSimpleRef),
                   N
                 )
                 .rest(rest)
