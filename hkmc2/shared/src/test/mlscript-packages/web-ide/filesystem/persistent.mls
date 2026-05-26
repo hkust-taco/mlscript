@@ -1,13 +1,11 @@
 import "./fs.mls"
+import "./projects.mls"
 import "../common/JS.mls"
 import "../common/Logger.mls"
 
 open JS { Absent }
 
 module persistent with...
-
-val FS_PREFIX = "mlscript-fs:"
-val FS_PATHS_KEY = "mlscript-fs-paths"
 
 fun isFile(node) = if node is
   Absent then false
@@ -20,16 +18,19 @@ fun isStandardLibraryNode(node) = if node is
   else false
 
 fun persistedKey(path) =
-  FS_PREFIX + path
+  projects.fileKey(projects.currentId(), path)
+
+fun pathsKey() =
+  projects.pathsKey(projects.currentId())
 
 fun getPersistedPaths() =
-  let storedText = localStorage.getItem(FS_PATHS_KEY)
+  let storedText = localStorage.getItem(pathsKey())
   if storedText is
     Absent then new Set()
     text then new Set(JSON.parse(text))
 
 fun savePersistedPaths(paths) =
-  localStorage.setItem(FS_PATHS_KEY, JSON.stringify(Array.from(paths)))
+  localStorage.setItem(pathsKey(), JSON.stringify(Array.from(paths)))
 
 fun loadPersistedFile(path) =
   let storedText = localStorage.getItem(persistedKey(path))

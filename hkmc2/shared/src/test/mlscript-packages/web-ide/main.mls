@@ -1,4 +1,5 @@
 import "./filesystem/fs.mls"
+import "./filesystem/projects.mls"
 import "./filesystem/persistent.mls"
 import "./execution/runner.mls"
 import "./compiler/index.mls"
@@ -298,6 +299,7 @@ fun handleOpenFileAtLocation(event) =
     ~null as panel do panel.openFileAtLine(event.detail.filePath, event.detail.line, event.detail.column, event.detail.length)
 
 fun start(compiler, analysis) =
+  projects.bootstrap()
   loadStandardLibrary(compiler)
   ensureDefaultMainFile()
   analysis.start()

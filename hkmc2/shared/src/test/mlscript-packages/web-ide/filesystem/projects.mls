@@ -1,0 +1,149 @@
+import "../common/JS.mls"
+import "../common/Logger.mls"
+
+open JS { Absent }
+
+module projects with...
+
+val PROJECTS_KEY = "mlscript.projects.v1"
+val CURRENT_KEY = "mlscript.project.current.v1"
+val SCHEMA_KEY = "mlscript.projects.schema"
+val SCHEMA_VERSION = "v1"
+val LEGACY_PATHS_KEY = "mlscript-fs-paths"
+val LEGACY_FILE_PREFIX = "mlscript-fs:"
+val FILE_PREFIX = "mlscript-fs:proj:"
+val PATHS_PREFIX = "mlscript-fs-paths:proj:"
+val DEFAULT_ID = "default"
+val DEFAULT_NAME = "Default project"
+
+val state = mut
+  registry: mut []
+  currentId: DEFAULT_ID
+
+fun fileKey(id, path) =
+  FILE_PREFIX + id + ":" + path
+
+fun pathsKey(id) =
+  PATHS_PREFIX + id
+
+fun currentId() =
+  state.currentId
+
+fun listProjects() =
+  state.registry
+
+fun currentProject() =
+  state.registry.find of (p, ...) => p.id === state.currentId
+
+fun today() =
+  new Date().toISOString().slice(0, 10)
+
+fun makeProject(id, name) =
+  mut
+    id: id
+    name: name
+    description: ""
+    color: "accent"
+    icon: ""
+    createdAt: today()
+    modifiedAt: today()
+    activeFile: "/main.mls"
+
+fun writeText(key, value) =
+  localStorage.setItem(key, value)
+
+fun readText(key) =
+  localStorage.getItem(key)
+
+fun removeText(key) =
+  localStorage.removeItem(key)
+
+fun writeJSON(key, value) =
+  writeText(key, JSON.stringify(value))
+
+fun readJSON(key) = if readText(key) is
+  Absent then null
+  text then JSON.parse(text)
+
+fun saveRegistry() =
+  writeJSON(PROJECTS_KEY, state.registry)
+  writeText(CURRENT_KEY, state.currentId)
+
+fun loadRegistry() =
+  let parsed = readJSON(PROJECTS_KEY)
+  if parsed is
+    Absent then false
+    else
+      if Array.isArray(parsed) then
+        set state.registry = parsed
+        true
+      else false
+
+fun bumpModified(id) =
+  state.registry.forEach of (p, ...) =>
+    if p.id === id do set p.modifiedAt = today()
+
+fun setActiveFile(id, path) =
+  state.registry.forEach of (p, ...) =>
+    if p.id === id do set p.activeFile = path
+
+fun migrateLegacyFile(path) =
+  let key = LEGACY_FILE_PREFIX + path
+  if readText(key) is
+    ~Absent as blob do
+      writeText(fileKey(DEFAULT_ID, path), blob)
+      removeText(key)
+
+fun migrateLegacyIfNeeded() =
+  if readText(SCHEMA_KEY) is
+    ~Absent then false
+    else
+      let legacyText = readText(LEGACY_PATHS_KEY)
+      if legacyText is
+        Absent then false
+        text then
+          Logger.info("Projects", "Migrating legacy persistence into v1 namespace", DEFAULT_ID)
+          let
+            parsed = JSON.parse(text)
+            paths = if Array.isArray(parsed) then parsed else []
+          paths.forEach of (path, ...) => migrateLegacyFile(path)
+          writeText(pathsKey(DEFAULT_ID), JSON.stringify(paths))
+          removeText(LEGACY_PATHS_KEY)
+          Logger.info("Projects", "Migrated legacy files", paths.length)
+          true
+
+fun ensureDefaultInRegistry() =
+  let hasDefault = state.registry.some of (p, ...) => p.id === DEFAULT_ID
+  if not hasDefault do
+    state.registry.unshift(makeProject(DEFAULT_ID, DEFAULT_NAME))
+
+fun setCurrentTo(id) =
+  set state.currentId = id
+
+fun fallbackToFirstProject() =
+  if state.registry.length > 0 do
+    setCurrentTo(state.registry.at(0).id)
+
+fun selectInitialCurrent() =
+  let stored = readText(CURRENT_KEY)
+  if stored is
+    Absent then fallbackToFirstProject()
+    id then
+      let known = state.registry.some of (p, ...) => p.id === id
+      if known then setCurrentTo(id)
+      else fallbackToFirstProject()
+
+fun markSchema() =
+  writeText(SCHEMA_KEY, SCHEMA_VERSION)
+
+fun bootstrap() =
+  Logger.info("Projects", "Bootstrapping project registry")
+  migrateLegacyIfNeeded()
+  loadRegistry()
+  ensureDefaultInRegistry()
+  selectInitialCurrent()
+  markSchema()
+  saveRegistry()
+  Logger.info("Projects", "Project registry ready",
+    "count:", state.registry.length,
+    "current:", state.currentId)
