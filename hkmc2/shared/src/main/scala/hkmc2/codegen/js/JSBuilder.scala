@@ -538,6 +538,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 }$singletonFreeze"
             
             val ctorBod = {{
+                // We use `sourceParamsOpt.isDefined` (not `shouldBeLifted`) here because
+                // `@buffered` classes don't generate a wrapper function and need the class
+                // value stored directly (no `.class` indirection). See `shouldBeLifted` docs.
                 val extraPath = if sourceParamsOpt.isDefined then ".class" else ""
                 doc" # static " :: braced:
                   val v = result(isym.asThis)
@@ -984,7 +987,21 @@ object JSBuilder:
   
   extension (dsym: DefinitionSymbol[?])
     /** In JS, when a class is overloaded with a term (either explicitly, or because it has a primary parameter list),
-      * then its class value is stored in a `.class` property of the term. */
+      * then its class value is stored in a `.class` property of the term.
+      * 
+      * This is used at reference sites (MemberRef, Select) to decide whether to append `.class`
+      * when accessing a class value. It returns true only for class/module/object symbols,
+      * not for term symbols — so constructor calls like `Foo(args)` which resolve to the term
+      * symbol are not affected.
+      * 
+      * Note: at the class definition site, we use `sourceParamsOpt.isDefined` instead of
+      * `shouldBeLifted` to decide whether to set `.class` on the definition. This is because
+      * `@buffered` classes have `sourceParamsOpt = N` (no wrapper function is generated),
+      * but `shouldBeLifted` would still return true (since the elaboration-time definition
+      * has params). This is acceptable because `@buffered` classes are only constructed via
+      * `buf.mkNew(Class)(args)`, which accesses the class through `SimpleRef` (not affected
+      * by `shouldBeLifted`). Direct construction (`new Class(args)` or `Class(args)`) is not
+      * a supported usage pattern for `@buffered` classes. */
     def shouldBeLifted: Bool =
       val bsym = dsym.asBlkMember
       (
