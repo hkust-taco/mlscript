@@ -1,4 +1,5 @@
 import "../common/JS.mls"
+import "../filesystem/projects.mls"
 import "https://esm.sh/@floating-ui/dom" { computePosition, shift, offset }
 
 open JS { Absent }
@@ -22,6 +23,8 @@ class ToolbarPanel extends HTMLElement with
       panel.setCompilationStatus(event.detail.status)
     document.addEventListener of "active-tab-changed", event =>
       panel.setActiveFileMeta(event.detail)
+    document.addEventListener of "current-project-changed", () =>
+      panel.updateProjectPill()
 
   fun setStatus(nextStatus, nextRunningTime) =
     set
@@ -108,9 +111,40 @@ class ToolbarPanel extends HTMLElement with
           "fatal" then setFatalStatus(statusLight, statusText, terminateBtn, tooltip)
           else ()
 
+  fun projectGlyph(project) = if
+    project is Absent then "·"
+    project.name is Absent then "·"
+    project.icon is ~Absent and project.icon !== "" then project.icon
+    else project.name.charAt(0).toUpperCase()
+
+  fun projectLabel(project) = if
+    project is Absent then "No project"
+    project.name is Absent then "No project"
+    else project.name
+
+  fun pillHtml() =
+    let project = projects.currentProject()
+    """
+      <button id="project-pill" class="project-switcher-pill" type="button" aria-label="Switch project" title="Switch project (Cmd/Ctrl+O)">
+        <span class="project-switcher-pill-glyph">""" + projectGlyph(project) + """</span>
+        <span class="project-switcher-pill-name">""" + projectLabel(project) + """</span>
+        <i class="icon-chevron-down project-switcher-pill-caret"></i>
+      </button>
+    """
+
+  fun updateProjectPill() =
+    if this.querySelector("#project-pill") is ~null as pill do
+      let project = projects.currentProject()
+      if pill.querySelector(".project-switcher-pill-glyph") is ~null as glyph do
+        set glyph.textContent = projectGlyph(project)
+      if pill.querySelector(".project-switcher-pill-name") is ~null as label do
+        set label.textContent = projectLabel(project)
+
+  fun handleProjectPillClick() =
+    document.dispatchEvent(new CustomEvent("workspace-switcher-requested"))
+
   fun render() =
-    set this.innerHTML = """
-      <div class="title">MLscript Web IDE</div>
+    set this.innerHTML = pillHtml() + """
       <div class="status-container">
         <div class="status-light status-idle"></div>
         <span class="status-text">Not running</span>
@@ -242,6 +276,8 @@ class ToolbarPanel extends HTMLElement with
     set statusTooltip.style.display = "none"
 
   fun attachButtonListeners(panel) =
+    if panel.querySelector("#project-pill") is
+      ~null as projectPillBtn do projectPillBtn.addEventListener("click", () => panel.handleProjectPillClick())
     if panel.querySelector("#command-palette") is
       ~null as commandPaletteBtn do commandPaletteBtn.addEventListener("click", () => panel.handleCommandPalette())
     if panel.querySelector("#share") is

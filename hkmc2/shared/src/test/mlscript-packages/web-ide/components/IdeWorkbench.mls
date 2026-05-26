@@ -74,6 +74,7 @@ class IdeWorkbench extends HTMLElement with
       </div>
       <command-palette-dialog></command-palette-dialog>
       <share-dialog></share-dialog>
+      <project-switcher></project-switcher>
     """
 
   fun appContainer() =

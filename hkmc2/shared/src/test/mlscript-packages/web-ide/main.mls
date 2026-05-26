@@ -298,16 +298,65 @@ fun handleOpenFileAtLocation(event) =
   if editorPanel is
     ~null as panel do panel.openFileAtLine(event.detail.filePath, event.detail.line, event.detail.column, event.detail.length)
 
+fun dispatchProjectChange() =
+  let detail = mut
+    id: projects.currentId()
+    project: projects.currentProject()
+  document.dispatchEvent(new CustomEvent("current-project-changed", mut { :detail }))
+
+let runtimeRef = mut { compiler: null, analysis: null }
+
+fun switchProject(nextId) =
+  if projects.currentId() === nextId then ()
+  else
+    let
+      current = projects.currentId()
+      target = projects.findProject(nextId)
+    if target is
+      null then Logger.warn("Projects", "Switch ignored: unknown project id", nextId)
+      else
+        Logger.info("Projects", "Switching project", current, "→", nextId)
+        // 1. Tear down the in-memory tree. Subscribers (FileExplorer,
+        //    EditorPanel) react to the `reset` event by clearing their state.
+        //    Persistence ignores it, so the outgoing project's files remain
+        //    safe in localStorage.
+        fs.resetAll()
+        setDiagnostics([])
+        // 2. Re-inject the standard library. Std files carry `attrs.std = true`
+        //    so they are skipped by persistence.
+        if runtimeRef.compiler is ~null as compiler do loadStandardLibrary(compiler)
+        // 3. Commit the new current id so subsequent persistence reads/writes
+        //    target the right namespace.
+        projects.commitCurrent(nextId)
+        // 4. Restore the new project's persisted files. If none yet, seed
+        //    /main.mls so the editor has something to open.
+        let restored = persistent.loadPersistedFiles()
+        if restored is 0 do fs.createFile("/main.mls", defaultMainSource, force: true)
+        // 5. Notify the toolbar pill and anything else that cares.
+        dispatchProjectChange()
+        Logger.info("Projects", "Switched", nextId, "files:", restored)
+
+fun handleProjectOpenRequested(event) =
+  if
+    event.detail is Absent then Logger.warn("Projects", "project-open-requested missing detail")
+    event.detail.id is Absent then Logger.warn("Projects", "project-open-requested missing id")
+    else switchProject(event.detail.id)
+
 fun start(compiler, analysis) =
+  set
+    runtimeRef.compiler = compiler
+    runtimeRef.analysis = analysis
   projects.bootstrap()
+  dispatchProjectChange()
   loadStandardLibrary(compiler)
   ensureDefaultMainFile()
   analysis.start()
-  
+
   document.addEventListener("compile-requested", handleCompileRequested)
   document.addEventListener("execute-requested", handleExecuteRequested)
   document.addEventListener("terminate-requested", () => runner.terminate())
   document.addEventListener("open-file-at-location", handleOpenFileAtLocation)
+  document.addEventListener("project-open-requested", handleProjectOpenRequested)
 
 let startPromise = loadMLscript().then(compiler => loadAnalysis().then(analysis => start(compiler, analysis)))
 startPromise.'catch(error => Logger.error("Main", "Failed to load MLscript compiler or analysis module", error))

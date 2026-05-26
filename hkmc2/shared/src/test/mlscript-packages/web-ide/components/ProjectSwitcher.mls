@@ -1,0 +1,352 @@
+import "../filesystem/projects.mls"
+import "../common/JS.mls"
+import "../common/Logger.mls"
+
+open JS { Absent }
+
+fun escapeHtml(text) =
+  let div = document.createElement("div")
+  set div.textContent = text
+  div.innerHTML
+
+fun closeOnBackdropClick(dialogEl) =
+  dialogEl.addEventListener of "click", event =>
+    if dialogEl.dataset.dismissible === "true" and event.target === dialogEl do
+      dialogEl.close()
+
+fun glyphFor(project) = if
+  project is Absent then "·"
+  project.name is Absent then "·"
+  project.icon is ~Absent and project.icon !== "" then project.icon
+  else project.name.charAt(0).toUpperCase()
+
+fun relativeTime(stamp) =
+  if stamp is
+    Absent then "—"
+    text then
+      let
+        then_ = new Date(text)
+        now = new Date()
+        diffDays = Math.floor((now.getTime() - then_.getTime()) / 86400000)
+      if
+        diffDays <= 0 then "today"
+        diffDays === 1 then "yesterday"
+        diffDays < 7 then diffDays + "d ago"
+        diffDays < 30 then Math.floor(diffDays / 7) + "w ago"
+        diffDays < 365 then Math.floor(diffDays / 30) + "mo ago"
+        else Math.floor(diffDays / 365) + "y ago"
+
+fun filesLabel(count) =
+  count + " " + (if count === 1 then "file" else "files")
+
+class ProjectSwitcher extends HTMLElement with
+  let
+    selectedId = ""
+    pendingDelete = null
+    creating = false
+    createName = ""
+
+  fun connectedCallback() =
+    this.render()
+    this.attachEventListeners()
+    set selectedId = projects.currentId()
+
+  fun render() =
+    set this.innerHTML = """
+      <dialog class="project-switcher-native" data-dismissible="true">
+        <form class="project-switcher-form" method="dialog">
+          <header class="project-switcher-head">
+            <div class="project-switcher-titles">
+              <h2>Projects</h2>
+              <p>Switch between projects or start a new one.</p>
+            </div>
+            <button type="button" class="project-switcher-close" aria-label="Close">
+              <i class="icon-x"></i>
+            </button>
+          </header>
+          <div class="project-switcher-body">
+            <aside class="project-switcher-list" role="listbox" aria-label="Projects"></aside>
+            <section class="project-switcher-detail" aria-live="polite"></section>
+          </div>
+          <footer class="project-switcher-foot">
+            <button type="button" class="project-switcher-new">
+              <i class="icon-plus"></i>
+              New project
+            </button>
+          </footer>
+        </form>
+        <dialog class="project-switcher-sub" data-sub="create">
+          <form method="dialog" class="project-switcher-sub-form">
+            <h3>New project</h3>
+            <label class="project-switcher-field">
+              <span>Name</span>
+              <input type="text" name="project-name" autocomplete="off" placeholder="e.g. Parser experiments" />
+            </label>
+            <p class="project-switcher-hint">A blank project with <code>/main.mls</code> will be created.</p>
+            <div class="project-switcher-sub-actions">
+              <button type="button" class="project-switcher-cancel">Cancel</button>
+              <button type="button" class="project-switcher-confirm-create">Create</button>
+            </div>
+          </form>
+        </dialog>
+        <dialog class="project-switcher-sub" data-sub="delete">
+          <form method="dialog" class="project-switcher-sub-form">
+            <h3>Delete this project?</h3>
+            <p class="project-switcher-hint">
+              All persisted files for this project will be removed from your browser. This cannot be undone.
+            </p>
+            <div class="project-switcher-delete-target"></div>
+            <div class="project-switcher-sub-actions">
+              <button type="button" class="project-switcher-cancel">Cancel</button>
+              <button type="button" class="project-switcher-confirm-delete">Delete project</button>
+            </div>
+          </form>
+        </dialog>
+      </dialog>
+    """
+
+  fun dialog() =
+    this.querySelector("dialog.project-switcher-native")
+
+  fun subDialog(name) =
+    this.querySelector("dialog.project-switcher-sub[data-sub=\"" + name + "\"]")
+
+  fun openDialog() =
+    set selectedId = projects.currentId()
+    set creating = false
+    set pendingDelete = null
+    this.renderList()
+    this.renderDetail()
+    if dialog() is ~null as d do
+      if not d.open do d.showModal()
+
+  fun close() =
+    if dialog() is ~null as d do
+      if d.open do d.close()
+
+  fun cardHtml(project) =
+    let
+      sel = project.id === selectedId
+      current = projects.isCurrent(project.id)
+      count = projects.fileCount(project.id)
+      classes = "project-switcher-card"
+        + (if sel then " sel" else "")
+        + (if current then " current" else "")
+      pill = if current then """<span class="project-switcher-current-pill">Open</span>""" else ""
+    """
+      <button type="button" class=""" + "\"" + classes + "\"" + """ data-project-id=""" + "\"" + escapeHtml(project.id) + "\"" + """ role="option" aria-selected=""" + "\"" + (if sel then "true" else "false") + "\"" + """>
+        <span class="project-switcher-glyph">""" + escapeHtml(glyphFor(project)) + """</span>
+        <span class="project-switcher-card-body">
+          <span class="project-switcher-card-name">""" + escapeHtml(project.name) + pill + """</span>
+          <span class="project-switcher-card-meta">""" + escapeHtml(filesLabel(count)) + " · edited " + escapeHtml(relativeTime(project.modifiedAt)) + """</span>
+        </span>
+      </button>
+    """
+
+  fun renderList() =
+    if this.querySelector(".project-switcher-list") is ~null as list do
+      let cards = projects.listProjects().map(p => cardHtml(p))
+      set list.innerHTML = cards.join("")
+      attachListListeners(list)
+
+  fun emptyDetailHtml() =
+    """<div class="project-switcher-empty"><p>No project selected.</p></div>"""
+
+  fun detailHtml(project) =
+    let
+      current = projects.isCurrent(project.id)
+      count = projects.fileCount(project.id)
+      openLabel = if current then "Currently open" else "Open project"
+      openClass = "project-switcher-open" + (if current then " is-current" else "")
+      openDisabled = if current then " disabled aria-disabled=\"true\"" else ""
+      isOnlyOne = projects.listProjects().length <= 1
+      deleteDisabled = if current then " disabled aria-disabled=\"true\"" else if isOnlyOne then " disabled aria-disabled=\"true\"" else ""
+      description = if project.description is ~Absent and project.description !== "" then project.description else "—"
+    """
+      <header class="project-switcher-detail-head">
+        <span class="project-switcher-glyph large">""" + escapeHtml(glyphFor(project)) + """</span>
+        <div class="project-switcher-detail-titles">
+          <h3>""" + escapeHtml(project.name) + """</h3>
+          <p>""" + escapeHtml(description) + """</p>
+        </div>
+        <div class="project-switcher-detail-actions">
+          <button type="button" class="project-switcher-delete" """ + deleteDisabled + """>
+            <i class="icon-trash-2"></i>
+            Delete
+          </button>
+          <button type="button" class=""" + "\"" + openClass + "\"" + openDisabled + """>
+            <i class="icon-arrow-right"></i>
+            """ + escapeHtml(openLabel) + """
+          </button>
+        </div>
+      </header>
+      <dl class="project-switcher-stats">
+        <div><dt>Files</dt><dd>""" + count + """</dd></div>
+        <div><dt>Created</dt><dd>""" + escapeHtml(project.createdAt) + """</dd></div>
+        <div><dt>Modified</dt><dd>""" + escapeHtml(relativeTime(project.modifiedAt)) + """</dd></div>
+        <div class="mono"><dt>ID</dt><dd>""" + escapeHtml(project.id) + """</dd></div>
+      </dl>
+      <div class="project-switcher-detail-note">
+        <i class="icon-info"></i>
+        <span>File preview and import / export will land in a later step.</span>
+      </div>
+    """
+
+  fun renderDetail() =
+    if this.querySelector(".project-switcher-detail") is ~null as detail do
+      let project = projects.findProject(selectedId)
+      if project is
+        Absent do set detail.innerHTML = emptyDetailHtml()
+        ~Absent as p do
+          set detail.innerHTML = detailHtml(p)
+          attachDetailListeners(detail, p)
+
+  fun selectProject(id) =
+    set selectedId = id
+    this.renderList()
+    this.renderDetail()
+
+  fun openProject(id) =
+    let project = projects.findProject(id)
+    if project is
+      Absent then ()
+      ~Absent as p then
+        if projects.isCurrent(id) do close()
+        if not projects.isCurrent(id) do
+          document.dispatchEvent(new CustomEvent("project-open-requested",
+            mut { detail: mut { :id } }))
+          close()
+
+  fun handleCreate() =
+    set creating = true
+    set createName = ""
+    let sub = subDialog("create")
+    if sub is ~null as d do
+      let input = d.querySelector("input[name=\"project-name\"]")
+      if input is ~null as field do set field.value = ""
+      if not d.open do d.showModal()
+      if input is ~null as field do
+        window.setTimeout(() => field.focus(), 0)
+
+  fun confirmCreate() =
+    let
+      sub = subDialog("create")
+      input = if sub is Absent then null else sub.querySelector("input[name=\"project-name\"]")
+      raw = if input is Absent then "" else input.value
+      name = raw.trim()
+    if name is "" then ()
+    else
+      let project = projects.createProject(name)
+      if sub is ~null as d do
+        if d.open do d.close()
+      set creating = false
+      set selectedId = project.id
+      this.renderList()
+      this.renderDetail()
+
+  fun cancelCreate() =
+    let sub = subDialog("create")
+    if sub is ~null as d do
+      if d.open do d.close()
+    set creating = false
+
+  fun requestDelete(project) =
+    set pendingDelete = project
+    let sub = subDialog("delete")
+    if sub is ~null as d do
+      let target = d.querySelector(".project-switcher-delete-target")
+      if target is ~null as box do
+        set box.innerHTML = """
+          <span class="project-switcher-glyph">""" + escapeHtml(glyphFor(project)) + """</span>
+          <div>
+            <div class="n">""" + escapeHtml(project.name) + """</div>
+            <div class="m">""" + escapeHtml(filesLabel(projects.fileCount(project.id))) + """</div>
+          </div>
+        """
+      if not d.open do d.showModal()
+
+  fun confirmDelete() =
+    if pendingDelete is
+      Absent then ()
+      ~Absent as project then
+        let didDelete = projects.deleteProject(project.id)
+        let sub = subDialog("delete")
+        if sub is ~null as d do
+          if d.open do d.close()
+        if didDelete do
+          let remaining = projects.listProjects()
+          if remaining.length > 0 do set selectedId = remaining.at(0).id
+        set pendingDelete = null
+        this.renderList()
+        this.renderDetail()
+
+  fun cancelDelete() =
+    set pendingDelete = null
+    let sub = subDialog("delete")
+    if sub is ~null as d do
+      if d.open do d.close()
+
+  fun attachListListeners(list) =
+    let panel = this
+    list.querySelectorAll("button.project-switcher-card").forEach of (button, ...) =>
+      button.addEventListener of "click", () =>
+        let id = button.dataset.projectId
+        if id is ~Absent do panel.selectProject(id)
+      button.addEventListener of "dblclick", () =>
+        let id = button.dataset.projectId
+        if id is ~Absent do panel.openProject(id)
+
+  fun attachDetailListeners(detail, project) =
+    let panel = this
+    if detail.querySelector("button.project-switcher-open") is ~null as openBtn do
+      openBtn.addEventListener("click", () => panel.openProject(project.id))
+    if detail.querySelector("button.project-switcher-delete") is ~null as deleteBtn do
+      deleteBtn.addEventListener("click", () => panel.requestDelete(project))
+
+  fun handleHostKeydown(event) =
+    if event.key === "Escape" do
+      if pendingDelete is ~Absent do cancelDelete()
+      if creating do cancelCreate()
+
+  fun matchesOKey(event) = if
+    event.key === "o" then true
+    event.key === "O" then true
+    else false
+
+  fun isOpenShortcut(event) =
+    let isMac = window.navigator.platform.toUpperCase().indexOf("MAC") >= 0
+    let isCmdOrCtrl = if isMac then event.metaKey else event.ctrlKey
+    isCmdOrCtrl and matchesOKey(event)
+
+  fun attachEventListeners() =
+    let panel = this
+    if dialog() is ~null as d do closeOnBackdropClick(d)
+    if subDialog("create") is ~null as sub do closeOnBackdropClick(sub)
+    if subDialog("delete") is ~null as sub do closeOnBackdropClick(sub)
+    document.addEventListener("workspace-switcher-requested", () => panel.openDialog())
+    document.addEventListener of "keydown", event =>
+      if panel.isOpenShortcut(event) do
+        event.preventDefault()
+        panel.openDialog()
+      if event.key === "Escape" do panel.handleHostKeydown(event)
+    if this.querySelector(".project-switcher-close") is ~null as closeBtn do
+      closeBtn.addEventListener("click", () => panel.close())
+    if this.querySelector(".project-switcher-new") is ~null as newBtn do
+      newBtn.addEventListener("click", () => panel.handleCreate())
+    if subDialog("create") is ~null as sub do
+      if sub.querySelector(".project-switcher-cancel") is ~null as cancelBtn do
+        cancelBtn.addEventListener("click", () => panel.cancelCreate())
+      if sub.querySelector(".project-switcher-confirm-create") is ~null as confirmBtn do
+        confirmBtn.addEventListener("click", () => panel.confirmCreate())
+      if sub.querySelector("input[name=\"project-name\"]") is ~null as input do
+        input.addEventListener of "keydown", event =>
+          if event.key === "Enter" do
+            event.preventDefault()
+            panel.confirmCreate()
+    if subDialog("delete") is ~null as sub do
+      if sub.querySelector(".project-switcher-cancel") is ~null as cancelBtn do
+        cancelBtn.addEventListener("click", () => panel.cancelDelete())
+      if sub.querySelector(".project-switcher-confirm-delete") is ~null as confirmBtn do
+        confirmBtn.addEventListener("click", () => panel.confirmDelete())
+
+customElements.define("project-switcher", ProjectSwitcher)

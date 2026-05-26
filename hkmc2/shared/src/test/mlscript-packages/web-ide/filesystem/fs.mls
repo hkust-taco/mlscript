@@ -353,6 +353,15 @@ fun setReadonly(path, readonlyFlag) =
       true
     else false
 
+fun resetAll() =
+  // Atomically empty the tree and notify subscribers with a single "reset"
+  // event so they can drop derived state without per-file delete fanout.
+  // `persistent.persistChange` ignores unknown event types, so this does not
+  // touch localStorage — the outgoing project's files remain persisted.
+  fileTree.splice(0, fileTree.length)
+  let event = mut { 'type: "reset", path: "", node: null }
+  notifyChange(event)
+
 fun subscribe(pathOrCallback, callback) = if
   typeof(pathOrCallback) is "function" then
     let listener = pathOrCallback

@@ -67,6 +67,10 @@ class EditorPanel extends HTMLElement with
     let paths = Array.from(this.openTabs.values()).map((tab, ...) => tab.path)
     document.dispatchEvent(new CustomEvent("open-files-changed", eventOptions(pathsDetail(paths))))
 
+  fun closeAllTabs() =
+    let panel = this
+    Array.from(this.openTabs.keys()).forEach of (tabId, ...) => panel.closeTab(tabId)
+
   fun shouldHandleFsEvent(kind) =
     kind is "write" | "delete" | "rename" | "readonly" | "attr"
 
@@ -107,9 +111,12 @@ class EditorPanel extends HTMLElement with
       "write" then updateTabContent(tab, event.path)
     else ()
 
-  fun handleFsEvent(event) = if shouldHandleFsEvent(event.'type) do
-    Array.from(this.openTabs.entries()).forEach of (entry, ...) =>
-      this.handleFsEventForTab(entry.at(0), entry.at(1), event)
+  fun handleFsEvent(event) = if
+    event.'type is "reset" then this.closeAllTabs()
+    shouldHandleFsEvent(event.'type) then
+      Array.from(this.openTabs.entries()).forEach of (entry, ...) =>
+        this.handleFsEventForTab(entry.at(0), entry.at(1), event)
+    else ()
 
   fun activeTab() = if this.activeTabId is
       Absent then null

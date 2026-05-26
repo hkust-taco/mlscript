@@ -32,8 +32,21 @@ fun currentId() =
 fun listProjects() =
   state.registry
 
+// Note: avoid Array.prototype.find — `runtime.safeCall(undefined)` rewrites a
+// miss to `runtime.Unit`, which slips past the `Absent` pattern at call sites.
+// A manual loop keeps the miss as a real `null`.
+fun findProjectLoop(id) =
+  let
+    result = null
+    i = 0
+  while i < state.registry.length do
+    let p = state.registry.at(i)
+    if result is null and p.id === id do set result = p
+    set i += 1
+  result
+
 fun currentProject() =
-  state.registry.find of (p, ...) => p.id === state.currentId
+  findProjectLoop(state.currentId)
 
 fun today() =
   new Date().toISOString().slice(0, 10)
@@ -147,3 +160,77 @@ fun bootstrap() =
   Logger.info("Projects", "Project registry ready",
     "count:", state.registry.length,
     "current:", state.currentId)
+
+// ─── Registry mutations ───────────────────────────────────────
+
+fun randomId() =
+  "proj-" + Math.random().toString(36).slice(2, 8)
+
+fun idExists(id) =
+  state.registry.some of (p, ...) => p.id === id
+
+fun generateUniqueId() =
+  let
+    candidate = randomId()
+    collisions = 0
+  while idExists(candidate) do
+    set candidate = randomId()
+    set collisions += 1
+    if collisions > 16 do throw Error("Could not allocate a unique project id")
+  candidate
+
+fun findProject(id) =
+  findProjectLoop(id)
+
+fun isCurrent(id) =
+  id === state.currentId
+
+fun createProject(name) =
+  let
+    id = generateUniqueId()
+    project = makeProject(id, name)
+  state.registry.push(project)
+  saveRegistry()
+  Logger.info("Projects", "Created project", id, name)
+  project
+
+fun deleteProject(id) = if
+  isCurrent(id) then
+    Logger.warn("Projects", "Refused to delete current project", id)
+    false
+  state.registry.length <= 1 then
+    Logger.warn("Projects", "Refused to delete the only remaining project", id)
+    false
+  else
+    let index = state.registry.findIndex of (p, ...) => p.id === id
+    if index < 0 then
+      Logger.warn("Projects", "Unknown project id for delete", id)
+      false
+    else
+      state.registry.splice(index, 1)
+      purgeProjectStorage(id)
+      saveRegistry()
+      Logger.info("Projects", "Deleted project", id)
+      true
+
+fun commitCurrent(id) =
+  set state.currentId = id
+  saveRegistry()
+
+fun purgeProjectStorage(id) =
+  let pathsText = readText(pathsKey(id))
+  if pathsText is
+    ~Absent as text do
+      let parsed = JSON.parse(text)
+      if Array.isArray(parsed) do
+        parsed.forEach of (path, ...) => removeText(fileKey(id, path))
+  removeText(pathsKey(id))
+
+fun fileCount(id) =
+  let pathsText = readText(pathsKey(id))
+  if pathsText is
+    Absent then 0
+    text then
+      let parsed = JSON.parse(text)
+      if Array.isArray(parsed) then parsed.length
+      else 0
