@@ -11,21 +11,16 @@
 class A(val x)(val y)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A1;
-//│ A1 = function A(x) {
-//│   return (y) => {
-//│     return globalThis.Object.freeze(new A.class(x)(y));
-//│   }
+//│ A1 = function A(x, y) {
+//│   return globalThis.Object.freeze(new A.class(x, y));
 //│ };
 //│ (class A {
 //│   static {
 //│     A1.class = this
 //│   }
-//│   constructor(x) {
-//│     return (y) => {
-//│       this.x = x;
-//│       this.y = y;
-//│       return this;
-//│     }
+//│   constructor(x, y) {
+//│     this.x = x;
+//│     this.y = y;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A", ["x"]];
@@ -52,31 +47,46 @@ h2.y
 h.y
 //│ = 2
 
+:sjs
+:expect 5
+new A(...[4])(...[5]).y
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, tmp2;
+//│ tmp = globalThis.Object.freeze([
+//│   4
+//│ ]);
+//│ tmp1 = globalThis.Object.freeze([
+//│   5
+//│ ]);
+//│ tmp2 = globalThis.Object.freeze(new A1.class(...tmp, ...tmp1));
+//│ return tmp2.y
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 5
+
 
 // * First-class class value; FIXME: should be forbidden
 let a = A.class
 //│ a = class A
 
-// * Dynamic instantiation
+// * Dynamic instantiation of a raw JS class is not eta-expanded.
 let w = new! a(1)
-//│ w = fun
+//│ w = A(1)
 
+:re
 let h = w(2)
 h.y
-//│ = 2
-//│ h = A(1)
+//│ ═══[RUNTIME ERROR] TypeError: w2 is not a function
+//│ h = undefined
 
-:expect 3
+:re
 let h2 = w(3)
 h2.y
-//│ = 3
-//│ h2 = A(1)
+//│ ═══[RUNTIME ERROR] TypeError: w2 is not a function
+//│ h2 = undefined
 
-:re // * Bad bad bad!
-:expect 2
+:re
 h.y
-//│ ═══[RUNTIME ERROR] Expected: '2', got: '3'
-//│ = 3
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'y')
 
 
 :todo // TODO: At some point, add support for this
@@ -89,30 +99,19 @@ class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched param list lengths List(Param(‹›,y1,None,Modulefulness(None))) vs List(term:A/y1, term:A/ys)
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'ys'
-//│ ║  l.85: 	  fun fields = [x1, x2, xs, y1, ys]
-//│ ║        	                                ^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.84: 	class A(x1, x2, ...xs)(y1, ...ys) with
-//│ ╙──      	                              ^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A3;
-//│ A3 = function A(x1, x2, ...xs) {
-//│   return (y1, ...ys) => {
-//│     return globalThis.Object.freeze(new A.class(x1, x2, ...xs)(y1, ...ys));
-//│   }
+//│ A3 = function A(x1, x2, xs, y1, ...ys) {
+//│   return globalThis.Object.freeze(new A.class(x1, x2, xs, y1, ...ys));
 //│ };
 //│ (class A2 {
 //│   static {
 //│     A3.class = this
 //│   }
-//│   constructor(x1, x2, xs) {
-//│     return (y1) => {
-//│       this.#x1 = x1;
-//│       this.#x2 = x2;
-//│       this.#y1 = y1;
-//│       return this;
-//│     }
+//│   constructor(x1, x2, xs, y1, ys) {
+//│     this.#x1 = x1;
+//│     this.#x2 = x2;
+//│     this.#y1 = y1;
 //│   }
 //│   #x1;
 //│   #x2;
@@ -134,5 +133,4 @@ class A(x1, x2, ...xs)(y1, ...ys) with
 :todo
 new A(1, 2, 3)(4, 5, 6).fields
 //│ ═══[RUNTIME ERROR] ReferenceError: xs is not defined
-
 

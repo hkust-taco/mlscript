@@ -121,11 +121,11 @@ f().foo()
 //│     end
 //│   }
 //│ };
-//│ define Good⁰ as class Good²() {
+//│ define Good⁰ as class Good²(scope0$cap, x, y) {
 //│   private val scope0$cap⁰;
 //│   private val x¹;
 //│   private val y²;
-//│   constructor Good¹(scope0$cap, x, y) {
+//│   constructor Good¹ {
 //│     set Good².this.scope0$cap = scope0$cap;
 //│     set Good².this.x = x;
 //│     set Good².this.y = y;
@@ -139,9 +139,9 @@ f().foo()
 //│     return +⁰(tmp2, Good².this.scope0$cap⁰.w$1¹)
 //│   }
 //│ };
-//│ define Bad⁰ as class Bad²() {
+//│ define Bad⁰ as class Bad²(scope0$cap) {
 //│   private val scope0$cap¹;
-//│   constructor Bad¹(scope0$cap) {
+//│   constructor Bad¹ {
 //│     set Bad².this.scope0$cap = scope0$cap;
 //│     end
 //│   }
@@ -157,9 +157,9 @@ f().foo()
 //│   set y = 10;
 //│   set scope0$cap.z$0 = 10;
 //│   set scope0$cap.w$1 = 1000;
-//│   set tmp1 = new Bad²()(scope0$cap);
+//│   set tmp1 = new Bad²(scope0$cap);
 //│   do tmp1.foo³();
-//│   return new Good²()(scope0$cap, x, y)
+//│   return new Good²(scope0$cap, x, y)
 //│ };
 //│ set tmp = f³();
 //│ return tmp.foo﹖()
@@ -328,10 +328,10 @@ fun main(x) =
   [c.a, c.b, d.a, e.a, c.get, d.get, e.get]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let C⁵, main²;
-//│ define C⁵ as class C⁷(a) {
+//│ define C⁵ as class C⁷(a, x) {
 //│   private val x²;
 //│   val a²;
-//│   constructor C⁶(x) {
+//│   constructor C⁶ {
 //│     set C⁷.this.x = x;
 //│     define a² as val a³ = a;
 //│     end
@@ -342,12 +342,12 @@ fun main(x) =
 //│ };
 //│ define main² as fun main³(x) {
 //│   let c, d, e;
-//│   set c = new mut C⁷(123)(x);
+//│   set c = new mut C⁷(123, x);
 //│   set c.a = 0;
 //│   set c.b = "hi";
-//│   set d = new C⁷(456)(x);
+//│   set d = new C⁷(456, x);
 //│   set d.a = 0;
-//│   set e = new C⁷(789)(x);
+//│   set e = new C⁷(789, x);
 //│   set e.a = 0;
 //│   return [c.a﹖, c.b﹖, d.a﹖, e.a﹖, c.get﹖, d.get﹖, e.get﹖]
 //│ };

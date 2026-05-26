@@ -428,6 +428,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
             val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
             val ctorAuxParams = auxParams.map(ps => ps.params.map(p => p.sym -> scope.allocateName(p.sym)))
+            val metadataParamsOpt = isym.defn.flatMap(_.paramsOpt).orElse(paramsOpt)
             
             def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str)(using Scope): Document =
               mtds.map:
@@ -581,8 +582,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 } :: {
                   doc""" # static [${getVar(State.definitionMetadataSymbol, N)}] = [${
                     kind.desc.escaped}, ${sym.nme.escaped}${
-                    if (kind is syntax.Cls) && paramsOpt.isDefined then
-                      doc", [${ctorParams.map { (p, _) => p.decl match
+                    if (kind is syntax.Cls) && metadataParamsOpt.isDefined then
+                      doc", [${metadataParamsOpt.toList.flatMap(_.paramSyms).map { p => p.decl match
                         case S(Param(flags = FldFlags(isVal = true))) => doc"${p.name.escaped}"
                         case S(_) | N => doc"null"
                       }.mkDocument(", ")}]"
