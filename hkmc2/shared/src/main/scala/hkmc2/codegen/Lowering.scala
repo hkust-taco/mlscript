@@ -606,7 +606,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case _ => ()
     warnStmt
     (sym, disamb) match
-      case (sym: (LocalSymbol | BuiltinSymbol), _) =>
+      case (sym: (LocalVarSymbol | BuiltinSymbol), _) =>
         k(loweringCtx(sym.asSimpleRef.withLocOf(ref)))
       case (sym: BlockMemberSymbol, _) =>
         k(loweringCtx(sym.asMemberRef(disamb.orElse(sym.asPrincipal).get).withLocOf(ref)))
@@ -1057,7 +1057,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case Resolved(Ref(sym), disamb) =>
       sym match
         case sym: BlockMemberSymbol => k(sym.asMemberRef(disamb))
-        case sym: (LocalSymbol | BuiltinSymbol) => k(sym.asSimpleRef)
+        case sym: (LocalVarSymbol | BuiltinSymbol) => k(sym.asSimpleRef)
         case sym => lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")
     case Ref(sym) => k(sym.asPath)
     case SynthSel(Ref(sym: ModuleOrObjectSymbol), name) => // Local cross-stage references

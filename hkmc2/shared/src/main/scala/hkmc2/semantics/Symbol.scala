@@ -307,7 +307,7 @@ sealed abstract class MemberSymbol(using State) extends Symbol:
 class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.Ident)(using State)
     extends MemberSymbol
     with DefinitionSymbol[TermDefinition]
-    with LocalSymbol
+    with LocalVarSymbol
     with NamedSymbol:
   def nme: Str = id.name
   def name: Str = nme

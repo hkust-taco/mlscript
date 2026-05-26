@@ -508,8 +508,8 @@ object HandleBlock:
     Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(true, true, false)
   
   private def create(
-      lhs: LocalSymbol,
-      res: LocalSymbol,
+      lhs: LocalVarSymbol,
+      res: LocalVarSymbol,
       par: Path,
       args: Ls[Path],
       cls: ClassSymbol,
@@ -560,8 +560,8 @@ object HandleBlock:
       .rest(rest)
   
   def apply(
-      lhs: LocalSymbol,
-      res: LocalSymbol,
+      lhs: LocalVarSymbol,
+      res: LocalVarSymbol,
       par: Path,
       args: Ls[Path],
       cls: ClassSymbol,
@@ -1003,7 +1003,7 @@ case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol
 case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool) extends Path
 
 enum Value extends Path with ProductWithExtraInfo:
-  case SimpleRef(l: LocalSymbol | BuiltinSymbol)
+  case SimpleRef(l: LocalVarSymbol | BuiltinSymbol)
   /**
     * @param disamb The symbol disambiguating the definition that the reference refers to.
     */
@@ -1032,7 +1032,7 @@ object Value:
   object Ref:
     def apply(l: Local, disamb: Opt[DefinitionSymbol[?]]): Value.RefLike = 
       l match
-        case l: (LocalSymbol | BuiltinSymbol) => l.asSimpleRef
+        case l: (LocalVarSymbol | BuiltinSymbol) => l.asSimpleRef
         case bms: BlockMemberSymbol => bms.asMemberRef:
           disamb.getOrElse:
             lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")
@@ -1084,7 +1084,7 @@ extension (k: Block => Block)
 
 def blockBuilder: Block => Block = identity
 
-extension (s: (LocalSymbol | BuiltinSymbol))
+extension (s: (LocalVarSymbol | BuiltinSymbol))
   inline def asSimpleRef: Value.SimpleRef = Value.SimpleRef(s)
 
 extension (bms: BlockMemberSymbol)

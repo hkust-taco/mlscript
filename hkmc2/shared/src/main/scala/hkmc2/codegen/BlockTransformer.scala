@@ -180,7 +180,7 @@ class BlockTransformer(subst: SymbolSubst):
   def applyValue(v: Value)(k: Value => Block) = v match
     case Value.SimpleRef(l) =>
       val l2 = applyLocal(l) match
-        case l: (LocalSymbol | BuiltinSymbol) => l
+        case l: (LocalVarSymbol | BuiltinSymbol) => l
         case l2 =>
           lastWords(s"Expected applyValue on `$l` (${l.getClass.getSimpleName}) to create a symbol of the same type, but got `$l2` (${l2.getClass.getSimpleName})")
       k(if (l2 is l) then v else l2.asSimpleRef.withLocOf(v))

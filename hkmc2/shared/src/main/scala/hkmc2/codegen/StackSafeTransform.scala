@@ -24,7 +24,8 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
 
   // Increases the stack depth, assigns the call to a value, then decreases the stack depth
   // then binds that value to a desired block
-  def extractRes(res: Result, isTailCall: Bool, f: Result => Block, sym: Symbol, curDepth: => LocalSymbol): Block =
+  // TODO: sym should be LocalVarSymbol once we tighten Assign
+  def extractRes(res: Result, isTailCall: Bool, f: Result => Block, sym: Symbol, curDepth: => LocalVarSymbol): Block =
     if isTailCall then Return(res)
     else
       blockBuilder
@@ -39,12 +40,13 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
       Define(bodFun, Assign(resSym, Call(runStackSafePath, (intLit(depthLimit).asArg :: bodSym.asMemberRef(bodSym.asPrincipal.get).asArg :: Nil) ne_:: Nil)(true, true, false), rest))
     )
 
-  def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Symbol, curDepth: => Symbol) =
+  // TODO: sym should be LocalVarSymbol once we tighten Assign
+  def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Symbol, curDepth: => LocalVarSymbol) =
     val resSym = sym
     wrapStackSafe(Ret(res), resSym, f(resSym.asPath))
 
   // Rewrites anything that can contain a Call to increase the stack depth
-  def transform(b: Block, curDepth: => LocalSymbol, isTopLevel: Bool = false): Block =
+  def transform(b: Block, curDepth: => LocalVarSymbol, isTopLevel: Bool = false): Block =
     def usesStack(r: Result) = r match
       case Call(Value.SimpleRef(_: BuiltinSymbol), _) => false
       case c: Call if !c.mayRaiseEffects => false // a call can only trigger a stack delay if it can raise effects

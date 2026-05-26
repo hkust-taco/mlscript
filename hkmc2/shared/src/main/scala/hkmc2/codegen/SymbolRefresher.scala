@@ -204,7 +204,7 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
   override def applyValue(v: Value)(k: Value => Block): Block = v match
     case Value.SimpleRef(l) =>
       mapping.get(l) match
-        case Some(newSym: (LocalSymbol | BuiltinSymbol)) =>
+        case Some(newSym: (LocalVarSymbol | BuiltinSymbol)) =>
           k(newSym.asSimpleRef)
         case _ => super.applyValue(v)(k)
     case Value.MemberRef(bms, disamb) =>
