@@ -121,11 +121,11 @@ f().foo()
 //│     end
 //│   }
 //│ };
-//│ define Good⁰ as class Good²(scope0$cap, x, y) {
+//│ define Good⁰ as class Good² {
 //│   private val scope0$cap⁰;
 //│   private val x¹;
 //│   private val y²;
-//│   constructor Good¹ {
+//│   constructor Good¹(scope0$cap, x, y) {
 //│     set Good².this.scope0$cap = scope0$cap;
 //│     set Good².this.x = x;
 //│     set Good².this.y = y;
@@ -139,9 +139,9 @@ f().foo()
 //│     return +⁰(tmp2, Good².this.scope0$cap⁰.w$1¹)
 //│   }
 //│ };
-//│ define Bad⁰ as class Bad²(scope0$cap) {
+//│ define Bad⁰ as class Bad² {
 //│   private val scope0$cap¹;
-//│   constructor Bad¹ {
+//│   constructor Bad¹(scope0$cap) {
 //│     set Bad².this.scope0$cap = scope0$cap;
 //│     end
 //│   }
@@ -328,10 +328,10 @@ fun main(x) =
   [c.a, c.b, d.a, e.a, c.get, d.get, e.get]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let C⁵, main²;
-//│ define C⁵ as class C⁷(a, x) {
+//│ define C⁵ as class C⁷ {
 //│   private val x²;
 //│   val a²;
-//│   constructor C⁶ {
+//│   constructor C⁶(a, x) {
 //│     set C⁷.this.x = x;
 //│     define a² as val a³ = a;
 //│     end

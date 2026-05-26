@@ -11,10 +11,10 @@ data class A(x) with
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let B⁰, A⁰;
 //│ @data
-//│ define B⁰ as class B²(y, A) {
+//│ define B⁰ as class B² {
 //│   private val A¹;
 //│   val y⁰;
-//│   constructor B¹ {
+//│   constructor B¹(y, A) {
 //│     set B².this.A = A;
 //│     define y⁰ as val y¹ = y;
 //│     end

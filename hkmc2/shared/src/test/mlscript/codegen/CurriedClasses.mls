@@ -12,8 +12,10 @@
 class A(val x)(val y)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A1;
-//│ A1 = function A(x, y) {
-//│   return globalThis.Object.freeze(new A.class(x, y));
+//│ A1 = function A(x) {
+//│   return (y) => {
+//│     return globalThis.Object.freeze(new A.class(x, y));
+//│   }
 //│ };
 //│ (class A {
 //│   static {
@@ -28,10 +30,10 @@ class A(val x)(val y)
 //│ });
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let A⁰;
-//│ define A⁰ as class A²(x, y) {
+//│ define A⁰ as class A² {
 //│   val x⁰;
 //│   val y⁰;
-//│   constructor A¹ { define x⁰ as val x¹ = x; define y⁰ as val y¹ = y; end }
+//│   constructor A¹(x, y) { define x⁰ as val x¹ = x; define y⁰ as val y¹ = y; end }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -108,16 +110,24 @@ class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched param list lengths List(Param(‹›,y1,None,Modulefulness(None))) vs List(term:A/y1, term:A/ys)
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'ys'
+//│ ║  l.106: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║         	                                ^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.105: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ╙──       	                              ^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A3;
-//│ A3 = function A(x1, x2, xs, y1, ...ys) {
-//│   return globalThis.Object.freeze(new A.class(x1, x2, xs, y1, ...ys));
+//│ A3 = function A(x1, x2, ...xs) {
+//│   return (y1, ...ys) => {
+//│     return globalThis.Object.freeze(new A.class(x1, x2, xs, y1, ys));
+//│   }
 //│ };
 //│ (class A2 {
 //│   static {
 //│     A3.class = this
 //│   }
-//│   constructor(x1, x2, xs, y1, ys) {
+//│   constructor(x1, x2, xs, y1) {
 //│     this.#x1 = x1;
 //│     this.#x2 = x2;
 //│     this.#y1 = y1;

@@ -532,17 +532,20 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ))
   end predeclareClassFuncWithType
 
+  private def classCtorParamLists(defn: ClsLikeDefn): Ls[ParamList] =
+    defn.paramsOpt.toList ::: defn.auxParams
+
   /** Declares one top-level class init function. */
   private def predeclareClassInit(defn: ClsLikeDefn)(using Ctx, Raise): Unit =
     val initParams = (defn.isym -> SymIdx("this")) +:
-      defn.paramsOpt.fold(Nil): ps =>
+      classCtorParamLists(defn).flatMap: ps =>
         ps.params.map: p =>
           p.sym -> SymIdx(p.sym.nme)
     predeclareClassFunc(defn, "init", initParams, initFuncSym(defn.sym), N)
 
   /** Declares one top-level class constructor. */
   private def predeclareClassConstructor(defn: ClsLikeDefn)(using Ctx, Raise): Unit =
-    val ctorParams = defn.paramsOpt.fold(Nil): ps =>
+    val ctorParams = classCtorParamLists(defn).flatMap: ps =>
       ps.params.map: p =>
         p.sym -> SymIdx(p.sym.nme)
     val ctorExportName = defn.sym
@@ -880,7 +883,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def setupInitLocals(
       clsLikeDefn: ClsLikeDefn,
   )(using Ctx, Raise, SessionExportCtx): (Expr, FunctionCtx) =
-    genFuncBody(clsLikeDefn.paramsOpt.toList, thisSym = S(clsLikeDefn.isym)):
+    genFuncBody(classCtorParamLists(clsLikeDefn), thisSym = S(clsLikeDefn.isym)):
       val thisVar = funcCtx.lookupLocal_!(clsLikeDefn.isym, N)
       val preCtorWat = compilePreCtor(clsLikeDefn, thisVar)
       val ctorWat = block(clsLikeDefn.ctor)
@@ -1845,10 +1848,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     break(errUnimplExpr("owner.nonEmpty"))
                   if !(clsLikeDefn.k is syntax.Cls) && !isSingletonObj then
                     break(errUnimplExpr("unsupported ClsLikeDefn kind"))
-                  if isSingletonObj && clsLikeDefn.paramsOpt.nonEmpty then
-                    break(errUnimplExpr("paramsOpt.nonEmpty for object"))
-                  if clsLikeDefn.auxParams.nonEmpty then
-                    break(errUnimplExpr("auxParams.nonEmpty"))
+                  val ctorParamLists = classCtorParamLists(clsLikeDefn)
+                  if isSingletonObj && ctorParamLists.nonEmpty then
+                    break(errUnimplExpr("constructor parameters for object"))
+                  if ctorParamLists.lengthCompare(1) > 0 then
+                    break(errUnimplExpr("multiple constructor parameter lists"))
                   if isSingletonObj && clsLikeDefn.parentPath.nonEmpty then
                     break(errUnimplExpr("parentPath.nonEmpty for object"))
                   if isSingletonObj && clsLikeDefn.methods.nonEmpty then
@@ -1856,23 +1860,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   if clsLikeDefn.companion.isDefined then
                     break(errUnimplExpr("companion.isDefined"))
 
-                  val ctorAuxParams = clsLikeDefn.auxParams.map: ps =>
-                    ps.params.map: p =>
-                      p -> errUnimplExpr("auxParams.nonEmpty")
-
                   // Use the symbolic type reference (e.g. `$Foo`) in emitted WAT for readability.
                   // Numeric indices are only needed for `$tag` values.
                   val typeref = ctx.getType_!(clsLikeDefn.sym)
                   val typeinfo = ctx.getTypeInfo_!(typeref)
 
                   val (initWat, initFnCtx) = setupInitLocals(clsLikeDefn)
-
-                  // * If there are no ctor params, pop one param list off the aux params
-                  val newCtorAuxParams = clsLikeDefn.paramsOpt match
-                    case None => ctorAuxParams match
-                        case head :: next => next
-                        case Nil => ctorAuxParams
-                    case Some(_) => ctorAuxParams
 
                   val tagValue = typeinfo.objectTag getOrElse:
                     lastWords(s"Expected class ${clsLikeDefn.sym} to have an object tag")
@@ -1889,7 +1882,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       lastWords(s"Expected struct type for ${clsLikeDefn.sym}, found ${other.toWat.mkString()}")
 
                   val initFuncRef = initFuncSym(clsLikeDefn.sym)
-                  val (ctorCode, ctorFnCtx) = genFuncBody(clsLikeDefn.paramsOpt.toList, thisSym = N):
+                  val (ctorCode, ctorFnCtx) = genFuncBody(ctorParamLists, thisSym = N):
                     val thisVar = bindCtorThis(clsLikeDefn.isym)
                     val initCall = call(
                       funcidx = ctx.getFunc_!(initFuncRef),
@@ -1906,10 +1899,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       ),
                       resultTypes = Seq(Result(RefType.anyref)),
                     )
-
-                  val ctorAux =
-                    if newCtorAuxParams.isEmpty then ctorCode
-                    else break(errUnimplExpr("newCtorAuxParams.nonEmpty"))
 
                   val predeclaredInit = ctx.getFuncInfo_!(initFuncRef)
                   ctx.addFunc(FuncInfo(
@@ -1929,9 +1918,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     wrapId = S(clsLikeDefn.sym.nme) -> N,
                     typeUse = predeclaredCtor.typeUse,
                     params = ctorFnCtx.params,
-                    resultTypes = ctorAux.resultTypes.map(ty => Result(ty.asValType_!)),
+                    resultTypes = ctorCode.resultTypes.map(ty => Result(ty.asValType_!)),
                     locals = ctorFnCtx.locals,
-                    body = ctorAux,
+                    body = ctorCode,
                     exportName = predeclaredCtor.exportName,
                   )
                   ctx.addFunc(ctorFuncInfo)

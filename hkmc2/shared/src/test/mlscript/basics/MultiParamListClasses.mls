@@ -7,7 +7,7 @@ Foo
 //│ = fun Foo { class: class Foo }
 
 Foo(1, 2)
-//│ = Foo(1, 2)
+//│ = fun
 
 Foo(1, 2)(3)
 //│ = Foo(1, 2)
@@ -16,7 +16,7 @@ Foo(1, 2)(3)
 :sir
 Foo(1, 2)(3)(4)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let baseCall; set baseCall = Foo⁰(1, 2, 3); return baseCall(4)
+//│ let baseCall; set baseCall = Foo⁰(1, 2)(3); return baseCall(4)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: baseCall is not a function
 

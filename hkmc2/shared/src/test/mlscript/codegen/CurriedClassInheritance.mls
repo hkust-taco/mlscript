@@ -8,8 +8,10 @@ class Foo(val x)(val y)
 class Bar(val a)(val d) extends Foo(a)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Bar1;
-//│ Bar1 = function Bar(a, d) {
-//│   return globalThis.Object.freeze(new Bar.class(a, d));
+//│ Bar1 = function Bar(a) {
+//│   return (d) => {
+//│     return globalThis.Object.freeze(new Bar.class(a, d));
+//│   }
 //│ };
 //│ (class Bar extends Foo1.class {
 //│   static {
@@ -52,19 +54,17 @@ let b0 = Bar
 //│ b0 = fun Bar { class: class Bar }
 
 let b1 = b0(123)
-//│ b1 = Bar(123)
+//│ b1 = fun
 
+:re
 b1.a
-//│ = 123
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
 
-:re
 let b = b1(1234)
-//│ ═══[RUNTIME ERROR] TypeError: b1 is not a function
-//│ b = undefined
+//│ b = Bar(123)
 
-:re
 b.a
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
+//│ = 123
 
 :re
 let c = b(100)
@@ -97,4 +97,3 @@ let c = b(100)
 :re
 [c.x, c.y]
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
-

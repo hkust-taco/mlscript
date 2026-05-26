@@ -11,8 +11,8 @@ import semantics.*
   *
   * Instantiations are saturated by the time this pass runs, so every
   * `Instantiate` can be rewritten without consulting the class definition.
-  * Statically resolved calls to source class constructor wrappers are flattened
-  * in the same way, so the JS wrapper can have one flat parameter list too.
+  * Source-level constructor wrapper functions keep their original calling
+  * convention, which matters for external code and module imports.
   * Argument spreads are intentionally preserved as `Arg`s while only the
   * surrounding argument-list boundary is removed.
   */
@@ -25,23 +25,14 @@ class ClassParamFlattener extends BlockTransformer(SymbolSubst.Id):
     ParamList(flags, params, last.flatMap(_.restParam).headOption)
   
   private def flattenClsParams(cls: ClsLikeDefn): ClsLikeDefn =
-    cls.paramsOpt match
-    case S(params) if cls.auxParams.nonEmpty =>
-      val paramss = params :: cls.auxParams
-      cls.copy(paramsOpt = S(flattenParamLists(paramss)), auxParams = Nil)(
+    val paramss = cls.paramsOpt.toList ::: cls.auxParams
+    if paramss.lengthCompare(1) > 0 then
+      cls.copy(paramsOpt = N, auxParams = flattenParamLists(paramss) :: Nil)(
         cls.configOverride,
         cls.annotations,
       )
-    case _ =>
+    else
       cls
-  
-  private def shouldFlattenClassCtorCall(fun: Path): Bool =
-    fun.targetSymbol.exists:
-      case sym: TermSymbol =>
-        sym.defn.exists: td =>
-          td.companionClass.exists: cls =>
-            cls.defn.exists(defn => defn.paramsOpt.isDefined && defn.auxParams.nonEmpty)
-      case _ => false
   
   override def applyClsLikeDefn(defn: ClsLikeDefn)(k: Defn => Block): Block =
     super.applyClsLikeDefn(defn):
@@ -49,15 +40,6 @@ class ClassParamFlattener extends BlockTransformer(SymbolSubst.Id):
       case defn => k(defn)
   
   override def applyResult(r: Result)(k: Result => Block): Block = r match
-    case call @ Call(fun, argss) if shouldFlattenClassCtorCall(fun) =>
-      applyPath(fun): fun2 =>
-        applyArgss(argss): argss2 =>
-          val flatArgss =
-            if argss2.lengthCompare(1) > 0 then argss2.flatten ne_:: Nil
-            else argss2
-          k:
-            if (fun2 is fun) && (flatArgss is argss) then call
-            else Call(fun2, flatArgss)(call.isMlsFun, call.mayRaiseEffects, call.explicitTailCall).withLocOf(call)
     case inst @ Instantiate(mut, cls, argss) =>
       applyPath(cls): cls2 =>
         applyArgss(argss): argss2 =>

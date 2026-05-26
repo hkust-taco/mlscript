@@ -82,13 +82,11 @@ test / inc / 123 * 0.5
 
 
 let c = Curried(1)
-//│ c = Curried(1)
+//│ c = fun
 
-:fixme
 :expect Curried(1)
 c(2)(3)
-//│ ═══[RUNTIME ERROR] TypeError: c is not a function
-//│ ═══[RUNTIME ERROR] Expected: 'Curried(1)', got: 'undefined'
+//│ = Curried(1)
 
 
 let c = new Curried(1)
@@ -97,5 +95,4 @@ let c = new Curried(1)
 :expect Curried(1)
 c(2)(3)
 //│ = Curried(1)
-
 

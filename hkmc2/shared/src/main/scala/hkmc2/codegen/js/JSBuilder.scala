@@ -429,6 +429,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
             val ctorAuxParams = auxParams.map(ps => ps.params.map(p => p.sym -> scope.allocateName(p.sym)))
             val metadataParamsOpt = isym.defn.flatMap(_.paramsOpt).orElse(paramsOpt)
+            val sourceParamsOpt = if bufferable.isEmpty then metadataParamsOpt else paramsOpt
+            val sourceAuxParams =
+              if bufferable.isEmpty then isym.defn.map(_.auxParams).getOrElse(auxParams)
+              else auxParams
             
             def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str)(using Scope): Document =
               mtds.map:
@@ -533,7 +537,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               doc" # return $funBod"
             
             val ctorBod = {{
-                val extraPath = if paramsOpt.isDefined then ".class" else ""
+                val extraPath = if sourceParamsOpt.isDefined then ".class" else ""
                 doc" # static " :: braced:
                   val v = getVar(isym, isym.toLoc)
                   if isSingleton
@@ -599,17 +603,18 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               case N =>
                 doc"$freezeDefns(${clsJS});"
             else
-              val paramsAll = paramsOpt match
-                case None => auxParams
-                case Some(value) => value :: auxParams
+              val sourceParamsAll = sourceParamsOpt match
+                case None => sourceAuxParams
+                case Some(value) => value :: sourceAuxParams
               
-              val fun = paramsAll match
-                case ps_ :: pss_ if paramsOpt.isDefined => outerScope.nest.givenIn:
+              val fun = sourceParamsAll match
+                case ps_ :: pss_ if sourceParamsOpt.isDefined => outerScope.nest.givenIn:
                   val (ps, _) = setupFunction(some(sym.nme), ps_, End(), isLambda = false)
                   val pss = pss_.map(setupFunction(N, _, End(), isLambda = false)._1)
                   val paramsDoc = pss.foldLeft(doc"($ps)"):
                     case (doc, ps) => doc"${doc}(${ps})"
-                  val inner = doc"new ${sym.nme}.class$paramsDoc"
+                  val argsDoc = sourceParamsAll.flatMap(_.paramSyms).map(p => getVar(p, p.toLoc)).mkDocument(", ")
+                  val inner = doc"new ${sym.nme}.class($argsDoc)"
                   val bod = braced(doc" # return $freeze($inner);")
                   val funBod = pss.foldRight(bod):
                     case (psDoc, doc_) => doc"($psDoc) => $doc_"
@@ -1041,4 +1046,3 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
         doc"$checkArgsNum${this.body(body, endSemi = false)}")
     else
       super.setupFunction(name, params, body, isLambda = isLambda)
-

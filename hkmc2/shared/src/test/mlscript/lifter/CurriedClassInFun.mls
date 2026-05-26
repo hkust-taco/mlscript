@@ -37,11 +37,11 @@ fun f(x) =
 //│ define A$⁰ as fun A$¹(f$cap)(y)(z) {
 //│   return new A¹(y, f$cap, z)
 //│ };
-//│ define A⁰ as class A¹(y, f$cap, z) {
+//│ define A⁰ as class A¹ {
 //│   private val f$cap⁰;
 //│   val y⁰;
 //│   val z⁰;
-//│   constructor A² {
+//│   constructor A²(y, f$cap, z) {
 //│     set A¹.this.f$cap = f$cap;
 //│     define y⁰ as val y¹ = y;
 //│     define z⁰ as val z¹ = z;
