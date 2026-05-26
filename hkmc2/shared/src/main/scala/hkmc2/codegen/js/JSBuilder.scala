@@ -426,11 +426,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               privFlds, pubFlds, preCtor, ctor, modo, bufferable)
           =>
             val backendParamLists = paramsOpt.toList ::: auxParams
-            if backendParamLists.lengthCompare(1) > 0 then
-              lastWords(s"JSBuilder expected flattened constructor parameter lists for class ${sym.nme}")
-            val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
-            val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
-            val ctorAuxParams = auxParams.map(ps => ps.params.map(p => p.sym -> scope.allocateName(p.sym)))
+            val backendParamList = backendParamLists match
+              case Nil => N
+              case paramList :: Nil => S(paramList)
+              case _ => lastWords(s"JSBuilder expected flattened constructor parameter lists for class ${sym.nme}")
+            val ctorParams = backendParamList.fold(Nil)(_.paramSyms.map(p => p -> scope.allocateName(p)))
             val metadataParamsOpt = isym.defn.flatMap(_.paramsOpt).orElse(paramsOpt)
             val sourceParamsOpt = if bufferable.isEmpty then metadataParamsOpt else paramsOpt
             val sourceAuxParams =
@@ -522,23 +522,6 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   case _ => ""
                 }$singletonFreeze"
             
-            // * If there are no ctor params, pop one param list off the aux params
-            val (newCtorAuxParams, initialCtorParams) = paramsOpt match
-              case None => ctorAuxParams match
-                case head :: next => (next, head)
-                case Nil => (ctorAuxParams, Nil)
-              case Some(_) => (ctorAuxParams, ctorParams)
-            
-            val ctorAux = if newCtorAuxParams.isEmpty then
-              ctorCode
-            else
-              val pss = newCtorAuxParams.map(_.map(_._2))
-              val newCtorCode = doc"$ctorCode # return this;"
-              val ctorBraced = doc"${ braced(newCtorCode) }"
-              val funBod = pss.foldRight(ctorBraced):
-                case (psDoc, doc) => doc"(${psDoc.mkDocument(", ")}) => $doc"
-              doc" # return $funBod"
-            
             val ctorBod = {{
                 val extraPath = if sourceParamsOpt.isDefined then ".class" else ""
                 doc" # static " :: braced:
@@ -552,8 +535,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                     case N =>
                       doc" # ${getVar(sym, sym.toLoc)}$extraPath = $v"
               }} :: (
-                if ctorAux.isEmpty then doc""
-                else doc" # constructor(${initialCtorParams.unzip._2.mkDocument(", ")}) " :: braced(ctorAux)
+                if ctorCode.isEmpty then doc""
+                else doc" # constructor(${ctorParams.unzip._2.mkDocument(", ")}) " :: braced(ctorCode)
               )
             
             val clsJS = doc"class ${scope.lookup_!(isym, isym.toLoc)}${
@@ -606,9 +589,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               case N =>
                 doc"$freezeDefns(${clsJS});"
             else
-              val sourceParamsAll = sourceParamsOpt match
-                case None => sourceAuxParams
-                case Some(value) => value :: sourceAuxParams
+              val sourceParamsAll = sourceParamsOpt.toList ::: sourceAuxParams
               
               val fun = sourceParamsAll match
                 case ps_ :: pss_ if sourceParamsOpt.isDefined => outerScope.nest.givenIn:

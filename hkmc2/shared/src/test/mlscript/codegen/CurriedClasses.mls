@@ -118,12 +118,6 @@ class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: mismatched param list lengths List(Param(‹›,y1,None,Modulefulness(None))) vs List(term:A/y1, term:A/ys)
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'ys'
-//│ ║  l.114: 	  fun fields = [x1, x2, xs, y1, ys]
-//│ ║         	                                ^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.113: 	class A(x1, x2, ...xs)(y1, ...ys) with
-//│ ╙──       	                              ^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A3;
 //│ A3 = function A(x1, x2, ...xs) {
@@ -135,7 +129,7 @@ class A(x1, x2, ...xs)(y1, ...ys) with
 //│   static {
 //│     A3.class = this
 //│   }
-//│   constructor(x1, x2, xs, y1) {
+//│   constructor(x1, x2, xs, y1, ys) {
 //│     this.#x1 = x1;
 //│     this.#x2 = x2;
 //│     this.#y1 = y1;
