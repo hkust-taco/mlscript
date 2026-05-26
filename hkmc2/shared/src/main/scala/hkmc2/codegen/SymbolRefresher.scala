@@ -87,6 +87,10 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
             assert(tsym.owner.isEmpty)
             new TermSymbol(tsym.k, N, tsym.id)
           newBms.tsym = S(newDsym.get)
+          // Keep the definition symbol in sync with the freshly-created member symbol.
+          // Self-recursive references use the disambiguating TermSymbol, and later passes
+          // such as inlining rely on that symbol to identify the function being called.
+          mapping(fun.dSym) = newDsym.get
           mapping(fun.sym) = newBms
           (newBms, newDsym.get)
         case _ => die
