@@ -115,4 +115,39 @@ fun persistChange(event) =
       "attr" | "readonly" then updateFile(event.path, event.node)
       else ()
 
+// ─── Per-project snapshot / restore (used by export & import) ───
+
+fun readPathsArray(id) =
+  let raw = localStorage.getItem(projects.pathsKey(id))
+  if raw is
+    Absent then []
+    text then
+      let parsed = JSON.parse(text)
+      if Array.isArray(parsed) then parsed else []
+
+fun savePathsArray(id, paths) =
+  localStorage.setItem(projects.pathsKey(id), JSON.stringify(paths))
+
+fun snapshotEntry(id, path) =
+  let raw = localStorage.getItem(projects.fileKey(id, path))
+  if raw is
+    Absent then null
+    text then
+      let parsed = JSON.parse(text)
+      mut { :path, payload: parsed }
+
+fun snapshotProject(id) =
+  let result = mut []
+  readPathsArray(id).forEach of (path, ...) =>
+    let entry = snapshotEntry(id, path)
+    if entry is ~null do result.push(entry)
+  result
+
+fun writeProjectFile(id, path, payload) =
+  localStorage.setItem(projects.fileKey(id, path), JSON.stringify(payload))
+  let paths = readPathsArray(id)
+  if not paths.includes(path) do
+    paths.push(path)
+    savePathsArray(id, paths)
+
 fs.subscribe(persistChange, undefined)

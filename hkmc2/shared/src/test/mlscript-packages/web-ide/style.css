@@ -3506,8 +3506,8 @@ project-switcher dialog.project-switcher-native {
   inset: 0;
   margin: auto;
   padding: 0;
-  width: min(820px, calc(100vw - 32px));
-  height: min(560px, calc(100vh - 48px));
+  width: min(1100px, calc(100vw - 48px));
+  height: min(720px, calc(100vh - 48px));
   border: 1px solid var(--ide-border-strong);
   border-radius: var(--ide-radius-md);
   background: var(--ide-surface);
@@ -3679,8 +3679,10 @@ project-switcher dialog.project-switcher-native::backdrop {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
   padding: 14px 18px 16px;
-  overflow-y: auto;
+  gap: 10px;
+  overflow: hidden;
 }
 
 .project-switcher-empty {
@@ -3693,7 +3695,7 @@ project-switcher dialog.project-switcher-native::backdrop {
 
 .project-switcher-detail-head {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: flex-start;
   gap: 12px;
 }
@@ -3711,9 +3713,11 @@ project-switcher dialog.project-switcher-native::backdrop {
 }
 
 .project-switcher-detail-actions {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   align-items: center;
+  justify-content: flex-end;
 }
 
 .project-switcher-detail-actions button {
@@ -3768,18 +3772,21 @@ project-switcher dialog.project-switcher-native::backdrop {
 
 .project-switcher-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 10px 16px;
-  margin: 16px 0 0;
-  padding: 12px 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px 18px;
+  margin: 0;
+  padding: 8px 12px;
   border: 1px solid var(--ide-border);
   border-radius: var(--ide-radius-sm);
   background: var(--ide-surface-subtle);
+  align-items: baseline;
 }
 
 .project-switcher-stats > div {
-  display: grid;
-  gap: 2px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
 }
 
 .project-switcher-stats dt {
@@ -3787,17 +3794,22 @@ project-switcher dialog.project-switcher-native::backdrop {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ide-text-subtle);
+  flex: 0 0 auto;
 }
 
 .project-switcher-stats dd {
   margin: 0;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   color: var(--ide-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .project-switcher-stats .mono dd {
   font-family: var(--monospace);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
 }
 
 .project-switcher-detail-note {
@@ -3809,6 +3821,114 @@ project-switcher dialog.project-switcher-native::backdrop {
   color: var(--ide-text-muted);
 }
 
+.project-switcher-preview {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 0;
+  flex: 1 1 auto;
+  min-height: 220px;
+  border: 1px solid var(--ide-border);
+  border-radius: var(--ide-radius-sm);
+  overflow: hidden;
+  background: var(--ide-surface);
+}
+
+.project-switcher-preview-tree {
+  display: flex;
+  flex-direction: column;
+  background: var(--ide-surface-subtle);
+  border-right: 1px solid var(--ide-border);
+  padding: 4px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.ps-preview-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--ide-radius-sm);
+  color: var(--ide-text);
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 3px 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ps-preview-row:hover {
+  background: var(--ide-surface);
+  border-color: var(--ide-border);
+}
+
+.ps-preview-row.active {
+  background: var(--ide-accent-soft);
+  border-color: color-mix(in srgb, var(--ide-accent) 38%, var(--ide-border));
+  color: var(--ide-accent-strong);
+}
+
+.ps-preview-row > i {
+  color: var(--ide-text-subtle);
+  font-size: 0.78rem;
+}
+
+.ps-preview-row > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-switcher-preview-empty {
+  padding: 14px 8px;
+  font-size: 0.78rem;
+  color: var(--ide-text-muted);
+  text-align: center;
+}
+
+.project-switcher-preview-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.project-switcher-preview-head {
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--ide-border);
+  background: var(--ide-surface-subtle);
+  font-family: var(--monospace);
+  font-size: 0.74rem;
+  color: var(--ide-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-switcher-preview-body {
+  flex: 1;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  font-family: var(--monospace);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--ide-text);
+  background: var(--ide-surface);
+  white-space: pre;
+  tab-size: 2;
+}
+
+.project-switcher-preview-body > code {
+  font-family: inherit;
+  font-size: inherit;
+  background: transparent;
+  padding: 0;
+}
+
 .project-switcher-foot {
   display: flex;
   align-items: center;
@@ -3818,7 +3938,8 @@ project-switcher dialog.project-switcher-native::backdrop {
   background: var(--ide-surface-subtle);
 }
 
-.project-switcher-new {
+.project-switcher-new,
+.project-switcher-import {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -3832,8 +3953,20 @@ project-switcher dialog.project-switcher-native::backdrop {
   cursor: pointer;
 }
 
-.project-switcher-new:hover {
+.project-switcher-new:hover,
+.project-switcher-import:hover {
   background: var(--ide-surface-subtle);
+}
+
+.project-switcher-import-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: var(--ide-radius-sm);
+  background: var(--ide-danger-soft);
+  color: var(--ide-danger);
+  font-size: 0.74rem;
 }
 
 /* Sub-dialogs (create / delete) */
@@ -3850,6 +3983,50 @@ project-switcher dialog.project-switcher-sub {
   color: var(--ide-text);
   box-shadow: 0 18px 50px rgba(24, 26, 22, 0.30);
   overflow: hidden;
+}
+
+project-switcher dialog.project-switcher-sub-wide {
+  width: min(540px, calc(100vw - 32px));
+}
+
+.project-switcher-import-hints {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  color: var(--ide-text-muted);
+  font-size: 0.78rem;
+}
+
+.project-switcher-import-hints code {
+  font-family: var(--monospace);
+  font-size: 0.74rem;
+  background: var(--ide-surface-subtle);
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
+.project-switcher-import-error {
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--ide-danger) 30%, var(--ide-border));
+  border-radius: var(--ide-radius-sm);
+  background: var(--ide-danger-soft);
+  color: var(--ide-danger);
+  font-size: 0.78rem;
+}
+
+.project-switcher-sub-actions .project-switcher-choose-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--ide-accent);
+  border-color: var(--ide-accent-strong);
+  color: var(--ide-surface);
+}
+
+.project-switcher-sub-actions .project-switcher-choose-file:hover {
+  background: var(--ide-accent-strong);
 }
 
 project-switcher dialog.project-switcher-sub::backdrop {

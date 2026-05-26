@@ -194,6 +194,24 @@ fun createProject(name) =
   Logger.info("Projects", "Created project", id, name)
   project
 
+// For Import. The incoming meta keeps its descriptive fields but is given a
+// fresh id (to avoid collisions with any existing project) and a current
+// modifiedAt. Missing fields fall back to the same defaults as makeProject.
+fun adoptProject(incoming) =
+  let
+    id = generateUniqueId()
+    fallbackName = if incoming.name is ~Absent then incoming.name else "Imported project"
+    project = makeProject(id, fallbackName)
+  if incoming.description is ~Absent do set project.description = incoming.description
+  if incoming.color is ~Absent do set project.color = incoming.color
+  if incoming.icon is ~Absent do set project.icon = incoming.icon
+  if incoming.createdAt is ~Absent do set project.createdAt = incoming.createdAt
+  if incoming.activeFile is ~Absent do set project.activeFile = incoming.activeFile
+  state.registry.push(project)
+  saveRegistry()
+  Logger.info("Projects", "Adopted imported project", id, project.name)
+  project
+
 fun deleteProject(id) = if
   isCurrent(id) then
     Logger.warn("Projects", "Refused to delete current project", id)
