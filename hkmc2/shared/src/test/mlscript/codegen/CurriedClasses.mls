@@ -7,6 +7,7 @@
 // * TODO: Compile differently and forbid the use of curried classes as first-class values.
 
 
+:sir
 :sjs
 class A(val x)(val y)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
@@ -25,6 +26,14 @@ class A(val x)(val y)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A", ["x"]];
 //│ });
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let A⁰;
+//│ define A⁰ as class A²(x, y) {
+//│   val x⁰;
+//│   val y⁰;
+//│   constructor A¹ { define x⁰ as val x¹ = x; define y⁰ as val y¹ = y; end }
+//│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
