@@ -102,7 +102,8 @@ let i = 0 in
 //│                       (local.set $matchRes
 //│                         (global.get $Unit$inst))))
 //│                   (local.get $matchRes))))))
-//│         (local.get $i))))
+//│         (return
+//│           (local.get $i)))))
 //│   (elem $Unit_init declare func $Unit_init)
 //│   (elem $Unit_Unit declare func $Unit_Unit)
 //│   (elem $start declare func $start)
@@ -230,9 +231,10 @@ tailMatchAllValue(1)
 //│     (local $tailMatchAllValue (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
-//│       (call $tailMatchAllValue
-//│         (ref.i31
-//│           (i32.const 1)))))
+//│       (return
+//│         (call $tailMatchAllValue
+//│           (ref.i31
+//│             (i32.const 1))))))
 //│   (elem $tailMatchAllValue declare func $tailMatchAllValue)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:

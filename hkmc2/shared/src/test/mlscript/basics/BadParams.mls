@@ -45,7 +45,7 @@ fun f(val x) = x
 :sjs
 (x, x) => x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda4; lambda4 = (undefined, function (x, x1) { return x1 }); lambda4
+//│ let lambda4; lambda4 = (undefined, function (x, x1) { return x1 }); return lambda4
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

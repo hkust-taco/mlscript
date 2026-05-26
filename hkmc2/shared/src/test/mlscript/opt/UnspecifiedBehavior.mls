@@ -29,7 +29,7 @@ hide of hide of hide of hide of hide of x // big expression so it's not folded i
 //│ set tmp1 = Predef⁰.hide⁰(tmp);
 //│ set tmp2 = Predef⁰.hide⁰(tmp1);
 //│ set tmp3 = Predef⁰.hide⁰(tmp2);
-//│ Predef⁰.hide⁰(tmp3)
+//│ return Predef⁰.hide⁰(tmp3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
 //│ = 2
@@ -52,10 +52,10 @@ x // folded into the `else`; no longer observe the value `2`
 //│ match scrut
 //│   true =>
 //│     set x¹ = 2;
-//│     2
+//│     return 2
 //│   else
 //│     do Predef⁰.print⁰("hi");
-//│     undefined
+//│     return undefined
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
@@ -69,7 +69,7 @@ x // folded into the `else`; no longer observe the value `2`
 let x
 print(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let x²; Predef⁰.print⁰(undefined)
+//│ let x²; return Predef⁰.print⁰(undefined)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > undefined
 //│ x = undefined

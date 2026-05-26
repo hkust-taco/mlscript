@@ -37,7 +37,7 @@ fun hi(n) = n
 hi(0)
 //│ /!!!\ Option ':stackSafe' requires ':effectHandlers' to be set
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let hi; hi = function hi(n) { return n }; 0
+//│ let hi; hi = function hi(n) { return n }; return 0
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 

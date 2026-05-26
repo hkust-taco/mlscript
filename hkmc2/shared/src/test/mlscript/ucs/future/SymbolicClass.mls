@@ -34,7 +34,7 @@ new 1 :: 2
 //│ ║        	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp; tmp = globalThis.Object.freeze(new 1()); Cons1(tmp, 2)
+//│ let tmp; tmp = globalThis.Object.freeze(new 1()); return Cons1(tmp, 2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: 1 is not a constructor
 
@@ -48,7 +48,7 @@ new (1 :: 2)
 //│ ║        	     ^^^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp1; tmp1 = Cons1(1, 2); globalThis.Object.freeze(new tmp1())
+//│ let tmp1; tmp1 = Cons1(1, 2); return globalThis.Object.freeze(new tmp1())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a constructor
 

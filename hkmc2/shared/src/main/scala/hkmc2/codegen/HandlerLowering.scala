@@ -71,7 +71,7 @@ object HandlerLowering:
         resumeInfo.argLists ++:
         (intLit(restoreList.length) ::
         restoreList.map(_.asPath))
-      ).map(_.asArg) ne_:: Nil)(true, true, false), false)
+      ).map(_.asArg) ne_:: Nil)(true, true, false))
   
   // argLists: length-encoded argument list used for resumption.
   // currentLocals: All locals to be saved and reloaded, this cannot include any variables in outer scopes
@@ -138,18 +138,18 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   object StateTransition:
     private val transitionSymbol = freshTmp("transition")
     def apply(uid: StateId) =
-      Return(PureCall(Value.Ref(transitionSymbol), List(Value.Lit(Tree.IntLit(uid)))), false)
+      Return(PureCall(Value.Ref(transitionSymbol), List(Value.Lit(Tree.IntLit(uid)))))
     def unapply(blk: Block) = blk match
-      case Return(PureCall(Value.Ref(`transitionSymbol`, _), List(Value.Lit(Tree.IntLit(uid)))), false) =>
+      case Return(PureCall(Value.Ref(`transitionSymbol`, _), List(Value.Lit(Tree.IntLit(uid))))) =>
         S(uid)
       case _ => N
 
   object Unwind:
     private val unwindSymbol = freshTmp("unwind")
     def apply(uid: StateId, loc: Value) =
-      Return(PureCall(Value.Ref(unwindSymbol), List(Value.Lit(Tree.IntLit(uid)), loc)), false)
+      Return(PureCall(Value.Ref(unwindSymbol), List(Value.Lit(Tree.IntLit(uid)), loc)))
     def unapply(blk: Block) = blk match
-      case Return(PureCall(Value.Ref(`unwindSymbol`, _), List(Value.Lit(Tree.IntLit(uid)), loc: Value)), false) =>
+      case Return(PureCall(Value.Ref(`unwindSymbol`, _), List(Value.Lit(Tree.IntLit(uid)), loc: Value))) =>
         S(uid, loc)
       case _ => N
 
@@ -227,7 +227,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       val nonTrivialBlockChecker = new BlockDataTransformer(SymbolSubst.Id):
         override def applyBlock(b: Block) = b match
           // Special handling for tail calls
-          case Return(c @ Call(fun, args), false) =>
+          case Return(c @ Call(fun, args)) =>
             containsCall = true
             b // Prevents the recursion into applyResult
           case _ => super.applyBlock(b)
@@ -302,13 +302,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           afterEnd.fold(blk)(id => StateTransition(id.force_!))
         else
           blk
-
-      // Currently, implicit returns are only used in top level and tail call of constructor
-      // The former case never enters the partitioning function, so it must be the later case here.
-      // We no longer handle the later case, hence we can ignore this case.
-      // case Return(_, true) => afterEnd match
-      //   case None => End()
-      //   case Some(id) => StateTransition(id)
 
       // identity cases
 

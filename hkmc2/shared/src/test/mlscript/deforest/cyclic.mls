@@ -136,7 +136,7 @@ modSome(Some(17), 3)
 //│ };
 //│ set Some_x = 17;
 //│ set tmp = modSome_12$x_Some¹(Some_x);
-//│ modSome_12$modSome¹(tmp, 3)
+//│ return modSome_12$modSome¹(tmp, 3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Some(2)
 

@@ -12,8 +12,9 @@ if Some(0) is Some(x) then x
 //│ let scrut;
 //│ scrut = Some1(0);
 //│ if (scrut instanceof Some1.class) {
-//│   scrut.value
-//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   return scrut.value
+//│ }
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -26,8 +27,9 @@ if s is
   Some(x) then x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (s instanceof Some1.class) {
-//│   s.value
-//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   return s.value
+//│ }
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -49,12 +51,12 @@ if s is
 //│     set arg$Some$0$ = s⁰.value⁰;
 //│     match arg$Some$0$
 //│       1 =>
-//│         0
+//│         return 0
 //│       else
 //│         throw new globalThis⁰.Error⁰("match error")
 //│     end
 //│   None⁰ =>
-//│     1
+//│     return 1
 //│   else
 //│     throw new globalThis⁰.Error⁰("match error")
 //│ end
@@ -65,12 +67,12 @@ if s is
 //│     set arg$Some$0$ = s⁰.value⁰;
 //│     match arg$Some$0$
 //│       1 =>
-//│         0
+//│         return 0
 //│       else
 //│         throw new globalThis⁰.Error⁰("match error")
 //│     end
 //│   None⁰ =>
-//│     1
+//│     return 1
 //│   else
 //│     throw new globalThis⁰.Error⁰("match error")
 //│ end
@@ -93,7 +95,7 @@ x => if x is Some(x) then x
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ });
-//│ lambda
+//│ return lambda
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

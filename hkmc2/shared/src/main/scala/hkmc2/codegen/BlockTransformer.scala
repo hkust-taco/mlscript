@@ -40,9 +40,9 @@ class BlockTransformer(subst: SymbolSubst):
     case Continue(lbl) =>
       val lbl2 = lbl.subst
       if lbl2 is lbl then b else Continue(lbl2)
-    case Return(res, implct) =>
+    case Return(res) =>
       applyResult(res): res2 =>
-        if res2 is res then b else Return(res2, implct)
+        if res2 is res then b else Return(res2)
     case Throw(exc) =>
       applyResult(exc): exc2 =>
         if exc2 is exc then b else Throw(exc2)

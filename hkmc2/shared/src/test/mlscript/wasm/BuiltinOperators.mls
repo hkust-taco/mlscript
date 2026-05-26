@@ -12,11 +12,12 @@
 //│   (type $entry (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (call $plus_impl
-//│       (ref.i31
-//│         (i32.const 1))
-//│       (ref.i31
-//│         (i32.const 2))))
+//│     (return
+//│       (call $plus_impl
+//│         (ref.i31
+//│           (i32.const 1))
+//│         (ref.i31
+//│           (i32.const 2)))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3
@@ -31,9 +32,10 @@
 //│   (type $entry (func (result (ref null any))))
 //│   (import "system" "neg_impl" (func $neg_impl (type $neg_impl)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (call $neg_impl
-//│       (ref.i31
-//│         (i32.const 2))))
+//│     (return
+//│       (call $neg_impl
+//│         (ref.i31
+//│           (i32.const 2)))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = -2
@@ -68,11 +70,12 @@ not true
 //│   (type $entry (func (result (ref null any))))
 //│   (import "system" "eq_impl" (func $eq_impl (type $eq_impl)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (call $eq_impl
-//│       (ref.i31
-//│         (i32.const 1))
-//│       (ref.i31
-//│         (i32.const 1))))
+//│     (return
+//│       (call $eq_impl
+//│         (ref.i31
+//│           (i32.const 1))
+//│         (ref.i31
+//│           (i32.const 1)))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 1

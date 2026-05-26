@@ -82,8 +82,8 @@ class TailRecOpt(using State, TL, Raise):
   
   object TailCallShape:
     def unapply(b: Block): Opt[(TermSymbol, Call)] = b match
-      case Return(c @ CallToFun(r), _) => S((r, c))
-      case Assign(a, c @ CallToFun(r), Return(Value.Ref(b, _), _)) if a === b => S((r, c))
+      case Return(c @ CallToFun(r)) => S((r, c))
+      case Assign(a, c @ CallToFun(r), Return(Value.Ref(b, _))) if a === b => S((r, c))
       case _ => N
     
   
@@ -122,7 +122,7 @@ class TailRecOpt(using State, TL, Raise):
         case None =>
           if c.explicitTailCall then
             raise(ErrorReport(msg"Only functions in this compilation unit may be marked @tailcall." -> c.toLoc :: Nil))
-      case Return(c: Call, _) =>
+      case Return(c: Call) =>
         if c.explicitTailCall then
           raise(ErrorReport(msg"Only direct calls in tail position may be marked @tailcall." -> c.toLoc :: Nil))
       case _ => super.applyBlock(b)
@@ -500,7 +500,6 @@ class TailRecOpt(using State, TL, Raise):
             ::: List.fill(maxParamLen - paramArgs.length)(Value.Lit(Tree.UnitLit(false)).asArg)
         val newBod = Return(
           Call(sel, args ne_:: Nil)(true, false, false),
-          false
         )
         FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(N, f.annotations)
     
@@ -532,7 +531,6 @@ class TailRecOpt(using State, TL, Raise):
           case None => Value.Ref(loopBms, S(loopDSym))
         val wrapperBod = Return(
           Call(internalSel, paramArgs ne_:: Nil)(true, false, false),
-          false
         )
         val wrapperDefn = FunDefn(f.owner, f.sym, f.dSym, f.params, wrapperBod)(
           f.configOverride, annotations = f.annotations)

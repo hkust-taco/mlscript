@@ -79,7 +79,7 @@ class BufferableTransform()(using Ctx, State, Raise):
               val blk = mkFieldReplacer(buf, idx, symMap).applyBlock(f.body)
               FunDefn(f.owner, f.sym, TermSymbol(f.dSym.k, f.dSym.owner, f.dSym.id), PlainParamList(
                 Param(FldFlags.empty, buf, N, Modulefulness.none) :: Param(FldFlags.empty, idx, N, Modulefulness.none) :: Nil) :: newParams,
-                if isCtor then Begin(blk, Return(idx.asPath, false)) else blk)(configOverride = f.configOverride, annotations = f.annotations)
+                if isCtor then Begin(blk, Return(idx.asPath)) else blk)(configOverride = f.configOverride, annotations = f.annotations)
             val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
                 S(companionSym), 
                 BlockMemberSymbol("ctor", Nil, false), 

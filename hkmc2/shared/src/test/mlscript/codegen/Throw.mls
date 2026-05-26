@@ -53,7 +53,7 @@ f(false)
 //│   }
 //│   throw runtime.safeCall(globalThis.Error("y"));
 //│ };
-//│ f3(false)
+//│ return f3(false)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: y
 

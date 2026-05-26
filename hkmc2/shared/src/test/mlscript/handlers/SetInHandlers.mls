@@ -7,7 +7,7 @@ let x = 1
 set x += 1 in print(x)
 x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x, old; x = 1; old = 1; try { x = 2; Predef.print(2); } finally { x = old; } old
+//│ let x, old; x = 1; old = 1; try { x = 2; Predef.print(2); } finally { x = old; } return old
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 2
 //│ = 1

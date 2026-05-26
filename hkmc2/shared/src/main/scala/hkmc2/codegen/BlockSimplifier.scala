@@ -206,8 +206,7 @@ class BlockSimplifier
           bod.analyze
             && !BrokenLabels.analyze(bod).contains(lbl) // if `bod` breaks to `lbl`, then we must consider `rst`
             || rst.analyze
-        case _: Throw | Return(_, false) | _: Unreachable | _: Continue | _: Break => true
-        case Return(_, true) => false
+        case _: Throw | _: Return | _: Unreachable | _: Continue | _: Break => true
         case _: End => false
         
     end AbortiveAnalysis
@@ -502,11 +501,11 @@ class BlockSimplifier
       
       // * Discard local variables that are assigned just to be returned
       // * Note: the reason we do this here and not in DeadCodeElim is that we need to check `capturedVars`
-      case Assign(lhs: LocalVar, rhs, Return(Value.Ref(ret, N), implct))
+      case Assign(lhs: LocalVar, rhs, Return(Value.Ref(ret, N)))
         if !inDryRun && (ret is lhs) && !capturedVars(lhs) && !symbolsToPreserve(lhs)
       =>
         registerChange(s"tail-return ${lhs.showDbg} ~> ${rhs.showDbg}")
-        applyBlock(Return(rhs, implct))
+        applyBlock(Return(rhs))
       
       case ass @ Assign(lhs: LocalVar, rhs, rst) if !capturedVars(lhs) =>
         // log(s"Propagating ${lhs} := ${rhs} (${assignedResults.get(lhs)})")
@@ -1102,7 +1101,7 @@ class BlockSimplifier
             res
           
           override def applyBlock(b: Block): Block = b match
-            case Return(res, false) if !currentlyNested =>
+            case Return(res) if !currentlyNested =>
               applyResult(res): r2 =>
                 Assign(resSym, r2, Break(lblSym))
             case _ => super.applyBlock(b)
