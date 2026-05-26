@@ -47,6 +47,14 @@ h.y
 //│ = 2
 //│ h = A(1)
 
+:sjs
+:expect 2
+A(1)(2).y
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let tmp; tmp = globalThis.Object.freeze(new A1.class(1, 2)); return tmp.y
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+
 :expect 3
 let h2 = w(3)
 h2.y
@@ -62,15 +70,15 @@ h.y
 :expect 5
 new A(...[4])(...[5]).y
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, tmp2;
-//│ tmp = globalThis.Object.freeze([
+//│ let tmp1, tmp2, tmp3;
+//│ tmp1 = globalThis.Object.freeze([
 //│   4
 //│ ]);
-//│ tmp1 = globalThis.Object.freeze([
+//│ tmp2 = globalThis.Object.freeze([
 //│   5
 //│ ]);
-//│ tmp2 = globalThis.Object.freeze(new A1.class(...tmp, ...tmp1));
-//│ return tmp2.y
+//│ tmp3 = globalThis.Object.freeze(new A1.class(...tmp1, ...tmp2));
+//│ return tmp3.y
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
 
@@ -111,10 +119,10 @@ class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'ys'
-//│ ║  l.106: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║  l.114: 	  fun fields = [x1, x2, xs, y1, ys]
 //│ ║         	                                ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.105: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ║  l.113: 	class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╙──       	                              ^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A3;
@@ -152,4 +160,3 @@ class A(x1, x2, ...xs)(y1, ...ys) with
 :todo
 new A(1, 2, 3)(4, 5, 6).fields
 //│ ═══[RUNTIME ERROR] ReferenceError: xs is not defined
-

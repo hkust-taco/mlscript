@@ -12,7 +12,9 @@ import semantics.*
   * Instantiations are saturated by the time this pass runs, so every
   * `Instantiate` can be rewritten without consulting the class definition.
   * Source-level constructor wrapper functions keep their original calling
-  * convention, which matters for external code and module imports.
+  * convention when they are used partially. Saturated calls to curried class
+  * wrappers are lowered to instantiations, matching the `new` path without
+  * paying for the curried wrapper at runtime.
   * Argument spreads are intentionally preserved as `Arg`s while only the
   * surrounding argument-list boundary is removed.
   */
@@ -34,12 +36,36 @@ class ClassParamFlattener extends BlockTransformer(SymbolSubst.Id):
     else
       cls
   
+  private def saturatedCurriedClassCall(fun: Path, argss: NELs[Ls[Arg]]): Opt[Path] =
+    fun.targetSymbol.collect:
+      case sym: TermSymbol => sym
+    .flatMap: sym =>
+      sym.defn.flatMap: td =>
+        td.companionClass.flatMap: cls =>
+          cls.defn.collect:
+            case defn =>
+              defn.paramsOpt.toList ::: defn.auxParams
+          .collect:
+            case paramss if paramss.lengthCompare(1) > 0 && argss.lengthCompare(paramss.length) == 0 =>
+              Select(fun, new syntax.Tree.Ident("class"))(S(cls))
+
   override def applyClsLikeDefn(defn: ClsLikeDefn)(k: Defn => Block): Block =
     super.applyClsLikeDefn(defn):
       case cls: ClsLikeDefn => k(flattenClsParams(cls))
       case defn => k(defn)
   
   override def applyResult(r: Result)(k: Result => Block): Block = r match
+    case call @ Call(fun, argss) =>
+      saturatedCurriedClassCall(fun, argss) match
+      case S(cls) =>
+        applyPath(cls): cls2 =>
+          applyArgss(argss): argss2 =>
+            val flatArgss =
+              if argss2.lengthCompare(1) > 0 then argss2.flatten ne_:: Nil
+              else argss2
+            k(Instantiate(false, cls2, flatArgss).withLocOf(call))
+      case N =>
+        super.applyResult(r)(k)
     case inst @ Instantiate(mut, cls, argss) =>
       applyPath(cls): cls2 =>
         applyArgss(argss): argss2 =>

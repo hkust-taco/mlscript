@@ -226,7 +226,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       doc"($params) => ${ braced(bodyDoc) }"
     case s @ Select(qual, id) => 
       val dotClass = s.symbol match
-        case S(ds) if ds.shouldBeLifted => doc".class"
+        case S(ds) if ds.shouldBeLifted && id.name =/= "class" => doc".class"
         case _ => doc""
       val field = s.symbol match
         case S(ts: semantics.TermSymbol) => selectPrivateField(ts, s.toLoc)
