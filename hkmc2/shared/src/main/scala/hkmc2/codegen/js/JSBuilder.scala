@@ -607,7 +607,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   val pss = pss_.map(setupFunction(N, _, End(), isLambda = false)._1)
                   val paramsDoc = pss.foldLeft(doc"($ps)"):
                     case (doc, ps) => doc"${doc}(${ps})"
-                  val argsDoc = sourceParamsAll.flatMap(_.paramSyms).map(p => getVar(p, p.toLoc)).mkDocument(", ")
+                  val argsDoc = sourceParamsAll.flatMap(_.paramSyms)
+                    .map(p => scope.lookup_!(p, p.toLoc)).mkDocument(", ")
                   val inner = doc"new ${sym.nme}.class($argsDoc)"
                   val bod = braced(doc" # return $freeze($inner);")
                   val funBod = pss.foldRight(bod):
