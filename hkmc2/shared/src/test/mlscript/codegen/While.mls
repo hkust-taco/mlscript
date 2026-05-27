@@ -51,15 +51,11 @@ f
 //│ let f;
 //│ f = function f() {
 //│   lbl4: while (true) {
-//│     if (x2 === true) {
-//│       Predef.print("Hello World");
-//│       x2 = false;
-//│       continue lbl4
-//│     }
+//│     if (x2 === true) { Predef.print("Hello World"); x2 = false; continue lbl4 }
 //│     return 42;
 //│   }
 //│ };
-//│ return f()
+//│ f();
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Hello World
 //│ = 42
@@ -240,7 +236,7 @@ let x = 1
 :sjs
 while x is {} do()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ lbl7: while (true) { if (x3 instanceof Object) { continue lbl7 } break; } return runtime.Unit
+//│ lbl7: while (true) { if (x3 instanceof Object) { continue lbl7 } break; }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -312,10 +308,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.312: 	  then 0(0)
+//│ ║  l.308: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (false literal)
-//│ ║  l.311: 	while print("Hello World"); false
+//│ ║  l.307: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 
@@ -324,12 +320,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.323: 	while { print("Hello World"), false }
+//│ ║  l.319: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.324: 	  then 0(0)
+//│ ║  l.320: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.325: 	  else 1
+//│ ║  l.321: 	  else 1
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -340,14 +336,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.338: 	    print("Hello World")
+//│ ║  l.334: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.339: 	    false
+//│ ║  l.335: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.340: 	  then 0(0)
+//│ ║  l.336: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.341: 	  else 1
+//│ ║  l.337: 	  else 1
 //│ ╙──       	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

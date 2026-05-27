@@ -166,9 +166,7 @@ result
 //│   }
 //│ });
 //│ runtime.enterHandleBlock(h7, handleBlock$7);
-//│ if (runtime.curEffect === null) { return result }
-//│ runtime.topLevelEffect(false);
-//│ return result;
+//│ if (runtime.curEffect !== null) { runtime.topLevelEffect(false); }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "54321"
 //│ result = "54321"
@@ -443,28 +441,28 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.438: 	    module A with
+//│ ║  l.436: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.434: 	    module A with
+//│ ║  l.432: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.430: 	    module A with
+//│ ║  l.428: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.426: 	    module A with
+//│ ║  l.424: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.426: 	    module A with
+//│ ║  l.424: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.430: 	    module A with
+//│ ║  l.428: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.434: 	    module A with
+//│ ║  l.432: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.438: 	    module A with
+//│ ║  l.436: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 

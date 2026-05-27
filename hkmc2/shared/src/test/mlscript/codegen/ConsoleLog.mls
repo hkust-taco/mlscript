@@ -15,9 +15,7 @@ console.log("a")
 console.log("b")
 123
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ runtime.safeCall(globalThis.console.log("a"));
-//│ runtime.safeCall(globalThis.console.log("b"));
-//│ return 123
+//│ runtime.safeCall(globalThis.console.log("a")); runtime.safeCall(globalThis.console.log("b"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > a
 //│ > b
@@ -26,21 +24,21 @@ console.log("b")
 let l = console.log
 l(123)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let l; l = globalThis.console.log; return runtime.safeCall(l(123))
+//│ let l; l = globalThis.console.log; runtime.safeCall(l(123));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 123
 //│ l = fun log
 
 42
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return 42
+//│ 
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
 
 console.log("a")
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return runtime.safeCall(globalThis.console.log("a"))
+//│ runtime.safeCall(globalThis.console.log("a"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > a
 
@@ -59,7 +57,6 @@ y * 2
 //│ runtime.safeCall(globalThis.console.log("b"));
 //│ y = 124;
 //│ runtime.safeCall(globalThis.console.log("c"));
-//│ return 248
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > a
 //│ > b

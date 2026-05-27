@@ -10,3 +10,21 @@
 
 
 
+:sjs
+fun errorMessage(id, error) =
+  mut
+    'type: "compile-error"
+    id: id
+    name: error.name
+    message: error.message
+    stack: error.stack
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let errorMessage;
+//│ errorMessage = function errorMessage(id, error) {
+//│   let name, message, stack;
+//│   name = error.name;
+//│   message = error.message;
+//│   stack = error.stack;
+//│   return { type: "compile-error", id: id, name: name, message: message, stack: stack }
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

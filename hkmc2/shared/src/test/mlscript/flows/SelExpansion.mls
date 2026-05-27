@@ -64,7 +64,7 @@ f.foo
 //│     f⁰  <~  Foo()
 //│     f⁰  ~>  {a: ⋅a⁰}  {a: ⋅a¹}  {foo: ⋅foo⁰}
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return runtime.safeCall(Foo1.foo(f))
+//│ runtime.safeCall(Foo1.foo(f));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 123
 
@@ -219,7 +219,7 @@ new AA.BB.CC().x
 //│ where
 //│     
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp1; tmp1 = globalThis.Object.freeze(new AA1.BB.CC()); return tmp1.x
+//│ let tmp1; tmp1 = globalThis.Object.freeze(new AA1.BB.CC());
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -230,9 +230,7 @@ new AA.BB.CC().getX
 //│ where
 //│     
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp2;
-//│ tmp2 = globalThis.Object.freeze(new AA1.BB.CC());
-//│ return runtime.safeCall(AA1.BB.CC.getX(tmp2))
+//│ let tmp2; tmp2 = globalThis.Object.freeze(new AA1.BB.CC()); runtime.safeCall(AA1.BB.CC.getX(tmp2));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -263,7 +261,7 @@ let foo =
 :re
 foo.test
 //│ ╔══[COMPILATION ERROR] Cannot access companion A from the context of this selection
-//│ ║  l.264: 	foo.test
+//│ ║  l.262: 	foo.test
 //│ ╙──       	^^^^^^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   foo¹.test‹?›
@@ -302,7 +300,7 @@ let foo =
 :re
 foo.test
 //│ ╔══[COMPILATION ERROR] Cannot access companion A from the context of this selection
-//│ ║  l.303: 	foo.test
+//│ ║  l.301: 	foo.test
 //│ ╙──       	^^^^^^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   foo².test‹?›

@@ -827,8 +827,16 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         doc"""import * as ${scope.lookup_!(i.local, N)} from "${relPath}";"""
       case ImportKind.Named(importedName) =>
         doc"""import { ${importedName} as ${scope.lookup_!(i.local, N)} } from "${relPath}";"""
+    // A module's top-level Block cannot use a JS `return` statement.
+    // Lowering's `program` tail-op (ImplctRet) wraps the final expression in
+    // `Return`, which is correct for the worksheet path (the diff-test maps
+    // Return into an assignment so the result can be displayed) but illegal
+    // when we emit a module. Convert any top-level Return here to a plain
+    // statement before handing the block to `block`.
+    val main = p.main.mapReturn:
+      case Return(res) => Assign(State.noSymbol, res, End())
     withPrivateAccessorDecls(imps.mkDocument(doc" # "))
-    :/: nonNestedScoped(p.main)(block(_, endSemi = false)).stripBreaks
+    :/: nonNestedScoped(main)(block(_, endSemi = false)).stripBreaks
     :: locally:
       exprt match
       case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"

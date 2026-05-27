@@ -19,11 +19,9 @@ if
   x then 0
   y then 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (x === true) {
-//│   return 0
+//│ if (x !== true) {
+//│   if (y !== true) { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ }
-//│ if (y === true) { return 0 }
-//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -33,11 +31,9 @@ if
   x then 0
   y then 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (x === true) {
-//│   return 0
+//│ if (x !== true) {
+//│   if (y !== true) { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ }
-//│ if (y === true) { return 1 }
-//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -121,7 +117,7 @@ if
 if false do ()
 123
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return 123
+//│ 
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let scrut;
 //│ block split_root$:
@@ -160,7 +156,7 @@ object Obj with
 :sjs
 if Obj.test do ()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ Obj1.test; return runtime.Unit
+//│ Obj1.test;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
 
