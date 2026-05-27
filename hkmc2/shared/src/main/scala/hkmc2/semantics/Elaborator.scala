@@ -771,6 +771,7 @@ extends Importer with ucs.SplitElaborator:
         val constraints = tys.flatMap(maybeConstraint)
         val body = term(rhs)
         Term.Constrained(constraints, body)
+      case _ => lastWords(s"Unexpected lambda parameter shape: $lhs")
     case InfixApp(lhs, Keywrd(Keyword.`as`), rhs) =>
       Term.Asc(subterm(lhs), subterm(rhs))
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
@@ -1738,6 +1739,7 @@ extends Importer with ucs.SplitElaborator:
                 ClassDef(owner, Cls, clsSym, sym, tsym, tps, pss, newOf(td), ObjBody(bod), annotations, comp)
               clsSym.defn = S(cd)
               cd
+        case Trt | Mxn => lastWords(s"Unexpected type definition kind here: $k")
         go(sts, Nil, defn :: acc)
       case Annotated(annotation, target) :: sts =>
         go(target :: sts, annotations ++ annot(annotation), acc)
@@ -2077,7 +2079,8 @@ extends Importer with ucs.SplitElaborator:
           raise(ErrorReport(msg"Unsupported type parameter ${t.describe}" -> t.toLoc :: Nil))
           Nil
       (vs, ctx ++ vs.map(p => p.sym.name -> p.sym))
-  
+    case _ => lastWords(s"Expected a type-parameter tuple; found ${t.describe}.")
+
   def importFrom(sts: Block): Ctxl[(Blk, Ctx)] =
     given UnderCtx = new UnderCtx(N)
     val (res, newCtx) = block(sts, hasResult = false)
@@ -2158,7 +2161,8 @@ extends Importer with ucs.SplitElaborator:
             if pol =/= S(false) && ty.isContravariant then
               changed = true
               ty.isContravariant = false
-          // case _ => ???
+          case S(decl) =>
+            lastWords(s"VarSymbol ${sym.name} has unexpected declaration: $decl")
           case N =>
             lastWords(s"VarSymbol ${sym.name} has no declaration")
       case _ => super.traverseType(pol)(trm)
@@ -2194,6 +2198,7 @@ extends Importer with ucs.SplitElaborator:
       case f: Fld =>
         traverseType(pol)(f.term)
         f.asc.foreach(traverseType(pol))
+      case _: Spd => TODO("variance traversal of spread elements")
     def traverseType(pol: Pol)(f: Param): Unit =
       f.sign.foreach(traverseType(pol))
 end Elaborator

@@ -136,6 +136,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
     case FunTy(Term.Tup(params), ret, eff) =>
       PolyFunType(params.map {
         case Fld(_, p, _) => typeAndSubstType(p, !pol)
+        case spd: Spd => lastWords(s"unexpected spread in function type parameters: $spd")
       }, typeAndSubstType(ret, pol), eff.map(e => typeAndSubstType(e, pol) match {
         case t: Type => t
         case _ => error(msg"Effect cannot be polymorphic." -> ty.toLoc :: Nil)
@@ -248,6 +249,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
         case (res, p: Fld) =>
           val (ty, ctx, eff) = typeCode(p.term)
           (ty :: res._1, res._2 | ctx, res._3 | eff)
+        case (_, spd: Spd) => TODO(s"spread arguments in quoted code: $spd")
       val resTy = freshVar(new TempSymbol(S(app), "app"))
       constrain(lhsTy, FunType(rhsTy.reverse, resTy, Bot)) // TODO: right
       (resTy, lhsCtx | rhsCtx, lhsEff | rhsEff)
@@ -377,6 +379,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
             val (altsTy, altsEff, altCases, fallback) = typeADTMatch(alts, sign)
             val allEff = scrutineeEff | (consEff | altsEff)
             (sign.getOrElse(tryMkMono(consTy, cons) | tryMkMono(altsTy, alts)), allEff, sym :: altCases, fallback)
+        case _ => lastWords(s"unexpected non-ClassLike pattern in ADT match: $pattern")
     case Split.Let(name, term, tail) =>
       val nestCtx = ctx.nest
       given InvalCtx = nestCtx
@@ -426,6 +429,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
         case _: Tree.DecLit => InvalCtx.numTy
         case _: Tree.StrLit => InvalCtx.strTy
         case _: Tree.UnitLit => InvalCtx.unitTy
+      case (_: FlatPattern.Tuple) | (_: FlatPattern.Record) => TODO(s"tuple/record patterns in invalml split typing: $pattern")
       constrain(tryMkMono(scrutineeTy, scrutinee), patTy)
       val (consTy, consEff) = typeSplit(cons, sign)(using nestCtx1)
       val (altsTy, altsEff) = typeSplit(alts, sign)(using nestCtx2)
@@ -519,6 +523,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
           case (f: Fld, t) =>
             val (ty, ef) = ascribe(f.term, t)
             resEff |= ef
+          case (spd: Spd, _) => TODO(s"spread arguments: $spd")
         (ret, resEff)
     case (FunType(params, ret, eff), lhsEff) => app((PolyFunType(params, ret, eff), lhsEff), rhs, t)
     case (ty: PolyType, eff) => app((instantiate(ty), eff), rhs, t)
@@ -527,6 +532,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
           case f: Fld =>
             val (ty, eff) = typeCheck(f.term)
             Left(ty) :: Right(eff) :: Nil
+          case spd: Spd => TODO(s"spread arguments: $spd")
         .partitionMap(x => x)
       val effVar = freshVar(new TempSymbol(S(t), "eff"))
       val retVar = freshVar(new TempSymbol(S(t), "app"))
@@ -582,6 +588,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
             case Wildcard(in: InfVar, _) => in :: Nil
             case Wildcard(_, out: InfVar) => out :: Nil
             case v: InfVar => v :: Nil
+            case other => lastWords(s"unexpected non-InfVar type argument in ADT ctor: $other")
           }, N, PolyFunType(clsDef.params.params.map {
             case Param(_, _, S(ty), _) => typeAndSubstType(ty, true)(using map.toMap)
             case p =>

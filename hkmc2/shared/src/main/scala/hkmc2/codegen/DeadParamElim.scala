@@ -228,6 +228,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
           (funToSccRepMap(lastRefedSymbol), funToSccRepMap(refSym)) match
             case (Some(a), Some(b)) if a is b => instId
             case _ => instId :+ refId
+        case _ => lastWords(s"newRefId: impossible InstantiationId shape $instId")
       end newRefId
     
       p match

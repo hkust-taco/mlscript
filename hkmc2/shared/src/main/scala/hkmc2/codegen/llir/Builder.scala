@@ -463,6 +463,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
             Node.LetExpr(v, Expr.CtorApp(builtinTuple(elems.length), args), k(v |> sr))
       case Record(mut, fields) => bErrStop(msg"Unsupported value: Rcd")
       case x: Path => bPath(x)(k)
+      case _ => lastWords(s"bResult: unexpected Result $r")
 
   private def bBlockWithEndCont(blk: Block)(k: TrivialExpr => Ctx ?=> Node)(using Ctx)(using Raise, Scope) : Node =
     bBlock(blk)(k)(End(""))
@@ -492,6 +493,8 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
               case (Case.Tup(len, inf), body) =>
                 val ctx2 = ctx.addKnownClass(scrut, builtinTuple(len))
                 (Pat.Class(builtinTuple(len)), bBlock(body)(cont)(nextCont)(using ctx2))
+              case (Case.Field(name, safe), body) =>
+                TODO(s"Field pattern not supported in LLIR: $name")
             val defaultCase = dflt.map(bBlock(_)(cont)(nextCont)(using ctx))
             val jpdef = Func(
               uid.make,

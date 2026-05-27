@@ -68,7 +68,8 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       case cls: ClassSymbol => P.Ctor(cls, Nil)(t)
       case cls: ModuleOrObjectSymbol => P.Ctor(cls, Nil)(t)
       case ts: TermSymbol => getFlowSymOrType(ts.bms.get)
-      
+      case _ => lastWords(s"Unexpected resolved symbol in producer position: $sym")
+
     case Ref(sym) =>
       sym match
       case sym: VarSymbol => P.Flow(sym)
@@ -94,6 +95,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           stmt.sym match
           case sym: FlowSymbol =>
             constrain(rhs, C.Flow(sym))
+          case _ => lastWords(s"Unexpected DefineVar symbol: ${stmt.sym}")
         case t: TermDefinition =>
           val sign_ty = t.sign.map(typeType(_)) // TODO use sign_ty
           val ps = t.params.map(typeParamList)
@@ -181,6 +183,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           case sym: ClassSymbol =>
             val args_t = args.map(typeProd(_, insideSelAppChain = insideSelAppChain))
             P.Ctor(sym, args_t)(t)
+      case S(_) => TODO("New with refinement not yet supported in flow analysis")
     
     case app @ App(lhs, rhs) =>
       checkLDS(lhs): pre_t =>
@@ -200,12 +203,14 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     
     case Tup(fields) =>
       P.Tup(fields.map:
-        case f: Fld => N -> typeProd(f.term))
+        case f: Fld => N -> typeProd(f.term)
+        case s: Spd => TODO("tuple spread in flow analysis")
+      )
     
     case Error =>
       P.Ctor(Extr(false), Nil)(t)
     
-    // case _ => P.Flow(FlowSymbol("TODO"))
+    case _ => TODO(t)
   
   /* 
   def getType(t: Term): Type =

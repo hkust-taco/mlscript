@@ -127,6 +127,7 @@ sealed trait ResolvableImpl:
       case t: Term.Sel => t.copy()(S(sym), t.resSym, t.typ, t.originalCtx)
       case t: Term.SynthSel => t.copy()(S(sym), t.resSym, t.typ, t.originalCtx)
       case t: Term.SelProj => t.copy()(S(sym), t.resSym, t.typ, t.originalCtx)
+      case _ => lastWords(s"withSym called on non-selection term: $this")
     .withLocOf(this)
     .asInstanceOf
   

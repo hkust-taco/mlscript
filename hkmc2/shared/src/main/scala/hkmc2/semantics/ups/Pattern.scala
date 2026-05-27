@@ -242,6 +242,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case pattern: Record => pattern
     case pattern: Tuple => pattern
     case pattern: Literal => pattern
+    case _: MatchedClassLike => lastWords("MatchedClassLike encountered during expansion")
   
   /** Unwrap `Rename` patterns until we reach a non-`Rename` pattern. Collect
    *  the symbols on the way. Maybe we can make `Rename` a property of each
@@ -400,6 +401,7 @@ extension (pattern: ExPat)
     case Literal(`lit`) => Wildcard
     case _: (Literal | ClassLike) => Never
     case pattern: (Record | Tuple) => pattern
+    case _: (MatchedClassLike | Synonym) => lastWords("unexpected specialized/complete node in specialize(lit)")
   
   /** Modifies the pattern under the assumption that the scrutinee matches the
    *  given class. */
@@ -421,3 +423,4 @@ extension (pattern: ExPat)
     case None => pattern.map:
       case _: (Literal | ClassLike) => Never
       case pattern: (Record | Tuple) => pattern
+      case _: (MatchedClassLike | Synonym) => lastWords("unexpected specialized/complete node in specialize(None)")
