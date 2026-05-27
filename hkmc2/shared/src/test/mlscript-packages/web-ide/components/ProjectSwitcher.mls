@@ -636,8 +636,8 @@ class ProjectSwitcher extends HTMLElement with
 
   fun sanitizeForFilename(name) =
     let raw = if name is Absent then "project" else name
-    let sanitized = raw.replace(new RegExp("[^a-z0-9]+", "gi"), "-").toLowerCase()
-    let trimmed = sanitized.replace(new RegExp("^-+|-+$", "g"), "")
+    let sanitized = raw.replace(new mut RegExp("[^a-z0-9]+", "gi"), "-").toLowerCase()
+    let trimmed = sanitized.replace(new mut RegExp("^-+|-+$", "g"), "")
     if trimmed === "" then "project" else trimmed
 
   fun handleExport(project) =
