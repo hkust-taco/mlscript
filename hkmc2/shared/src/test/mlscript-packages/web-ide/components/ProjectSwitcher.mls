@@ -3,6 +3,7 @@ import "../filesystem/persistent.mls"
 import "../filesystem/projects.mls"
 import "../common/JS.mls"
 import "../common/Logger.mls"
+import "../editor/editor.mls"
 
 open JS { Absent }
 
@@ -60,6 +61,7 @@ class ProjectSwitcher extends HTMLElement with
     previewPath = ""
     importError = ""
     collapsedFolders = new Set()
+    previewEditor = null
 
   fun connectedCallback() =
     this.render()
@@ -253,8 +255,11 @@ class ProjectSwitcher extends HTMLElement with
       <div class="project-switcher-preview">
         <div class="project-switcher-preview-tree" role="listbox" aria-label="Files"></div>
         <div class="project-switcher-preview-content">
-          <div class="project-switcher-preview-head"></div>
-          <pre class="project-switcher-preview-body"><code></code></pre>
+          <div class="project-switcher-preview-head">
+            <span class="project-switcher-preview-path"></span>
+            <span class="project-switcher-preview-mtime"></span>
+          </div>
+          <div class="project-switcher-preview-body"></div>
         </div>
       </div>
     """
@@ -384,7 +389,7 @@ class ProjectSwitcher extends HTMLElement with
     let
       treeEl = detail.querySelector(".project-switcher-preview-tree")
       headEl = detail.querySelector(".project-switcher-preview-head")
-      bodyEl = detail.querySelector(".project-switcher-preview-body > code")
+      bodyEl = detail.querySelector(".project-switcher-preview-body")
       snapshot = persistent.snapshotProject(project.id)
       userPaths = snapshot.map((entry, ...) => entry.path)
       paths = dedupedSortedPaths(userPaths)
@@ -400,28 +405,70 @@ class ProjectSwitcher extends HTMLElement with
           visibleRows = rows.filter of (row, ...) => not isHiddenByCollapse(row.path)
         set t.innerHTML = visibleRows.map(r => previewRowHtml(r, previewPath)).join("")
         attachPreviewListeners(t, project)
-    let content = previewLookup(snapshot, previewPath)
-    if headEl is ~null as h do
-      set h.textContent = if previewPath === "" then "" else previewPath
-    if bodyEl is ~null as b do
-      set b.textContent = content
+    let entry = previewEntry(snapshot, previewPath)
+    if headEl is ~null as h do renderPreviewHead(h, previewPath, entry.mtime)
+    if bodyEl is ~null as b do renderPreviewBody(b, entry.content, previewPath)
 
-  fun lookupFromFs(path) =
-    let node = fs.findNode(path)
-    if node is
-      null then ""
-      ~null as n then
-        if n.'type === "file" then
-          let c = n.content
-          if c is Absent then "" else c
-        else ""
-
-  fun previewLookup(snapshot, path) =
+  // Returns { content, mtime }. Snapshot wins (user files); otherwise we fall
+  // through to fs (used for std files, which live in the in-memory tree and
+  // are not persisted).
+  fun previewEntry(snapshot, path) =
     let result = null
-    snapshot.forEach of (entry, ...) =>
-      if result is null and entry.path === path do set result = entry.payload.content
-    if result is null then lookupFromFs(path)
-    else result
+    snapshot.forEach of (e, ...) =>
+      if result is null and e.path === path do
+        set result = mut
+          content: e.payload.content
+          mtime: e.payload.mtime
+    if result is ~null then result
+    else
+      let node = fs.findNode(path)
+      if node is
+        null then mut { content: "", mtime: null }
+        ~null as n then
+          if n.'type === "file" then
+            mut
+              content: if n.content is Absent then "" else n.content
+              mtime: n.mtime
+          else mut { content: "", mtime: null }
+
+  fun extensionOf(path) =
+    let dot = path.lastIndexOf(".")
+    if dot < 0 then "" else path.slice(dot + 1)
+
+  fun formatMtime(stamp) = if
+    stamp is Absent then ""
+    stamp is null then ""
+    else new Date(stamp).toLocaleString()
+
+  fun renderPreviewHead(headEl, path, mtime) =
+    if headEl.querySelector(".project-switcher-preview-path") is ~null as pathEl do
+      set pathEl.textContent = path
+    if headEl.querySelector(".project-switcher-preview-mtime") is ~null as mtimeEl do
+      let stamp = if path === "" then null else mtime
+      set mtimeEl.textContent = formatMtime(stamp)
+
+  // Mount or reuse a read-only CodeMirror EditorView in `bodyEl`. Rebuild only
+  // when the visible file changes; folder toggle re-renders use the same view.
+  fun renderPreviewBody(bodyEl, content, path) =
+    if path is "" then
+      if previewEditor is ~null as e do e.destroy()
+      set
+        previewEditor = null
+        bodyEl.innerHTML = ""
+        bodyEl.dataset.previewPath = ""
+    else
+      let needRebuild = if
+        previewEditor is null then true
+        not bodyEl.contains(previewEditor.dom) then true
+        bodyEl.dataset.previewPath !== path then true
+        else false
+      if needRebuild do
+        if previewEditor is ~null as e do e.destroy()
+        set
+          bodyEl.innerHTML = ""
+          bodyEl.dataset.previewPath = path
+        let extension = extensionOf(path)
+        set previewEditor = editor.createEditor(bodyEl, content, path, extension, true)
 
   fun attachPreviewListeners(treeEl, project) =
     let panel = this

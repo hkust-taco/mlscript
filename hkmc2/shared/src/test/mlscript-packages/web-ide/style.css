@@ -3921,36 +3921,49 @@ button.ps-preview-folder {
 }
 
 .project-switcher-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 4px 10px;
   border-bottom: 1px solid var(--ide-border);
   background: var(--ide-surface-subtle);
+}
+
+.project-switcher-preview-path {
   font-family: var(--monospace);
   font-size: 0.74rem;
   color: var(--ide-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.project-switcher-preview-mtime {
+  font-family: var(--monospace);
+  font-size: 0.7rem;
+  color: var(--ide-text-subtle);
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .project-switcher-preview-body {
-  flex: 1;
-  margin: 0;
-  padding: 10px 12px;
-  overflow: auto;
-  font-family: var(--monospace);
-  font-size: 0.78rem;
-  line-height: 1.5;
-  color: var(--ide-text);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
   background: var(--ide-surface);
-  white-space: pre;
-  tab-size: 2;
+  position: relative;
 }
 
-.project-switcher-preview-body > code {
-  font-family: inherit;
-  font-size: inherit;
-  background: transparent;
-  padding: 0;
+.project-switcher-preview-body .cm-editor {
+  height: 100%;
+}
+
+.project-switcher-preview-body .cm-scroller {
+  font-family: var(--monospace);
+  font-size: 0.78rem;
 }
 
 .project-switcher-foot {
