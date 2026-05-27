@@ -1139,8 +1139,11 @@ extends Importer with ucs.SplitElaborator:
     case Constructor(delc) =>
       raise(ErrorReport(msg"Unsupported constructor in this position." -> tree.toLoc :: Nil))
       Term.Error
-    // case _ =>
-    //   ???
+    case Dummy | SplitPoint() | Pun(_, _) =>
+      lastWords(s"Unexpected ${tree.describe} in subterm position: $tree")
+    case _ =>
+      raise(ErrorReport(msg"Unsupported term in this position (${tree.describe})." -> tree.toLoc :: Nil))
+      Term.Error
   
   def arg(tree: Tree)(using UnderCtx): Ctxl[Term] = tree match
     case u: Under => subterm(tree) // Note: currently `f(a, _, c)` is treated the same as `f of a, _, c`
@@ -1409,6 +1412,11 @@ extends Importer with ucs.SplitElaborator:
           case S(elem) =>
             elem.symbol match
             case S(sym: LocalSymbol) => go(sts, Nil, DefineVar(sym, r) :: acc)
+            case S(sym) =>
+              raise(ErrorReport(msg"Cannot assign to '${id.name}'." -> id.toLoc :: Nil))
+              go(sts, Nil, Term.Error :: acc)
+            case N =>
+              lastWords(s"Bound name '${id.name}' has no symbol")
           case N =>
             // TODO lookup in members? inherited/refined stuff?
             raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
@@ -1526,17 +1534,21 @@ extends Importer with ucs.SplitElaborator:
         val tps = td.typeParams match
           case S(ts) =>
             ts.tys.flatMap: targ =>
-              val (id, vce) = targ match
+              def mk(id: Ident, vce: Opt[Bool]): Ls[TyParam] =
+                val vs = VarSymbol(id)
+                val res = TyParam(FldFlags.empty, vce, vs)
+                vs.decl = S(res)
+                res :: Nil
+              targ match
                 case id: Ident =>
-                  (id, N)
+                  mk(id, N)
                 case Modified(Keywrd(Keyword.`in`), id: Ident) =>
-                  (id, S(false))
+                  mk(id, S(false))
                 case Modified(Keywrd(Keyword.`out`), id: Ident) =>
-                  (id, S(true))
-              val vs = VarSymbol(id)
-              val res = TyParam(FldFlags.empty, vce, vs)
-              vs.decl = S(res)
-              res :: Nil
+                  mk(id, S(true))
+                case _ =>
+                  raise(ErrorReport(msg"Unsupported type parameter ${targ.describe}" -> targ.toLoc :: Nil))
+                  Nil
           case N => Nil
         
         newCtx ++= tps.map(tp => tp.sym.name -> tp.sym) // TODO: correct ++?
@@ -1874,6 +1886,7 @@ extends Importer with ucs.SplitElaborator:
             case N => go(tl, p :: acc, newCtx, newFlags)
           case L(d) => raise(d); go(tl, acc, ctx, flags)
       go(ps, Nil, ctx, ParamListFlags.empty)
+    case _ => lastWords(s"Expected a parameter list (Tup); found ${t.describe}")
   
   def ident(id: Ident)(using Ctx): Ctxl[Opt[Term]] = ctx.get(id.name) match
     case S(elem) => S(elem.ref(id))

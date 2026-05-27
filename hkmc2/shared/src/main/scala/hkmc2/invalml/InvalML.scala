@@ -181,7 +181,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
     case _ =>
       ty.symbol.flatMap(_.asTpe) match
       case S(cls: (ClassSymbol | TypeAliasSymbol)) => typeAndSubstType(Term.TyApp(ty, Nil)(N), pol)
-      case N => error(msg"Invalid type" -> ty.toLoc :: Nil, S(ty)) // TODO
+      case S(_) | N => error(msg"Invalid type" -> ty.toLoc :: Nil, S(ty)) // TODO
 
   private def genPolyType(tvs: Ls[QuantVar], outer: InfVar, body: => GeneralType)(using ctx: InvalCtx, cctx: CCtx) =
     val bds = tvs.map:
@@ -314,6 +314,9 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
                 case L(N) => rec(alts, L(S(sym)))
                 case L(S(other)) if adtParent.get(other.uid).exists(p => p.uid == adtParent(sym.uid).uid) =>
                   rec(alts, L(S(sym)))
+                case L(S(_)) =>
+                  error(msg"Matching patterns from different ADTs in one match is not supported." -> split.toLoc :: Nil)
+                  false
                 case R(_) =>
                   error(msg"Mixing ADT pattern matching and general matching is not supported yet." -> split.toLoc :: Nil)
                   false
@@ -375,6 +378,8 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
             params.iterator.zip(paramList).foreach:
               case (p, Param(_, _, S(ty), _)) =>
                 nestCtx += p._1 -> typeAndSubstType(ty, true)(using map.toMap)
+              case (_, p) =>
+                error(msg"Invalid ADT parameter." -> p.toLoc :: Nil)
             val (consTy, consEff) = typeAllSplits(cons, sign)(using nestCtx)
             val (altsTy, altsEff, altCases, fallback) = typeADTMatch(alts, sign)
             val allEff = scrutineeEff | (consEff | altsEff)

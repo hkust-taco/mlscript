@@ -406,6 +406,10 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                   case N =>
                     raise(ErrorReport(
                       msg"Tuple arity mismatch: too many elements on the producer side" -> trm.toLoc :: Nil))
+                case (Nil, _ :: _) =>
+                  raise(ErrorReport(
+                    msg"Tuple arity mismatch: too few elements on the producer side" -> trm.toLoc :: Nil))
+                case ((S(_), _) :: _, _ :: _) => ??? // TODO: producer-side spread vs remaining consumers
               zip(args, ini, rst, path)
             case (sel @ P.LeadingDotSel(trm), rhs) => rhs match
               case C.Typ(Type.Ref(sym, _)) =>

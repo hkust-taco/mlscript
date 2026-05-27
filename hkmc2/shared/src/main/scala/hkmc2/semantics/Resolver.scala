@@ -941,6 +941,7 @@ class Resolver(tl: TraceLogger)
         case _: Class => bms.asCls
         case _: Selectable => bms.asModOrObj orElse bms.asTrm
         case _: (Any.type | NonModule) => bms.asPrincipal
+        case _: PatternConstructor => TODO("disambSym for PatternConstructor")
       
       t match
       case Term.New(cls, _, N) => cls.resolvedSym match
