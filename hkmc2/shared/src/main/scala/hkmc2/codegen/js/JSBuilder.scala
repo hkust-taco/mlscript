@@ -431,14 +431,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             val backendParamList = auxParams.head
             val ctorParams = backendParamList.paramSyms.map(p => p -> scope.allocateName(p))
             val metadataParamsOpt = isym.defn.flatMap(_.paramsOpt)
-            // Source params are used for constructing the curried wrapper function.
-            // For @buffered classes (bufferable = Some(false)), the wrapper is NOT generated.
-            val sourceParamsOpt = bufferable match
-              case S(false) => N // @buffered: no wrapper
-              case _ => metadataParamsOpt // @bufferable or non-bufferable: wrapper if class has params
-            val sourceAuxParams = bufferable match
-              case S(false) => Nil
-              case _ => isym.defn.map(_.auxParams).getOrElse(Nil)
+            val metadataAuxParams = isym.defn.map(_.auxParams).getOrElse(Nil)
             
             def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str)(using Scope): Document =
               mtds.map:
@@ -538,8 +531,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 }$singletonFreeze"
             
             val ctorBod = {{
-                // See `shouldBeLifted` scaladoc for why we use `sourceParamsOpt.isDefined` here.
-                val extraPath = if sourceParamsOpt.isDefined then ".class" else ""
+                val extraPath = if metadataParamsOpt.isDefined then ".class" else ""
                 doc" # static " :: braced:
                   val v = result(isym.asThis)
                   if isSingleton
@@ -606,10 +598,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             else
               // Source params are used for the wrapper to preserve the curried calling convention.
               // All args are forwarded to the flat `new Class.class(...)` constructor.
-              val sourceParamsAll = sourceParamsOpt.toList ::: sourceAuxParams
+              val sourceParamsAll = metadataParamsOpt.toList ::: metadataAuxParams
               
               val fun = sourceParamsAll match
-                case ps_ :: pss_ if sourceParamsOpt.isDefined => outerScope.nest.givenIn:
+                case ps_ :: pss_ if metadataParamsOpt.isDefined => outerScope.nest.givenIn:
                   val (ps, _) = setupFunction(some(sym.nme), ps_, End(), isLambda = false)
                   val pss = pss_.map(setupFunction(N, _, End(), isLambda = false)._1)
                   val argsDoc = sourceParamsAll.flatMap(_.paramSyms)
@@ -992,14 +984,11 @@ object JSBuilder:
       * not for term symbols — so constructor calls like `Foo(args)` which resolve to the term
       * symbol are not affected.
       * 
-      * Note: at the class definition site, we use `sourceParamsOpt.isDefined` instead of
-      * `shouldBeLifted` to decide whether to set `.class` on the definition. This is because
-      * `@buffered` classes have `sourceParamsOpt = N` (no wrapper function is generated),
-      * but `shouldBeLifted` would still return true (since the elaboration-time definition
-      * has params). This is acceptable because `@buffered` classes are only constructed via
-      * `buf.mkNew(Class)(args)`, which accesses the class through `SimpleRef` (not affected
-      * by `shouldBeLifted`). Direct construction (`new Class(args)` or `Class(args)`) is not
-      * a supported usage pattern for `@buffered` classes. */
+      * At the class definition site, we use `metadataParamsOpt.isDefined` to decide whether
+      * to set `.class` on the definition. This is consistent with this method because
+      * `@buffered` classes use `constructor(...)` syntax (no main parameter list), so
+      * `metadataParamsOpt` is `N` and `shouldBeLifted` returns `false` — both agree that
+      * no wrapper function or `.class` property is needed. */
     def shouldBeLifted: Bool =
       val bsym = dsym.asBlkMember
       (

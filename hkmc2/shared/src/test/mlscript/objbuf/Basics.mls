@@ -6,17 +6,9 @@ open annotations
 
 
 @buffered
-class A(x) with
+class A with
+  constructor(x)
   fun f(y) = x + y
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: blockImpl (Lowering.scala:323)
-//│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
-//│ ║  l.8: 	@buffered
-//│ ║       	^^^^^^^^^
-//│ ║  l.9: 	class A(x) with
-//│ ║       	^^^^^^^^^^^^^^^
-//│ ║  l.10: 	  fun f(y) = x + y
-//│ ╙──      	^^^^^^^^^^^^^^^^^^
 
 @bufferable
 class A2(x) with
@@ -24,17 +16,24 @@ class A2(x) with
 
 :ge
 @buffered
+class B0(x)
+//│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
+//│ ║  l.18: 	@buffered
+//│ ╙──      	^^^^^^^^^
+
+:ge
+@buffered
 @buffered
 class B1(x)
 //│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
-//│ ║  l.26: 	@buffered
+//│ ║  l.25: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.27: 	@buffered
+//│ ║  l.26: 	@buffered
 //│ ╙──      	^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
-//│ ║  l.26: 	@buffered
+//│ ║  l.25: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.27: 	@buffered
+//│ ║  l.26: 	@buffered
 //│ ╙──      	^^^^^^^^^
 
 :ge
@@ -42,28 +41,28 @@ class B1(x)
 @bufferable
 class B2(x)
 //│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
-//│ ║  l.41: 	@buffered
+//│ ║  l.40: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.42: 	@bufferable
+//│ ║  l.41: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
-//│ ║  l.41: 	@buffered
+//│ ║  l.40: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.42: 	@bufferable
+//│ ║  l.41: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 
 :w
 @bufferable
 module B3
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.56: 	@bufferable
+//│ ║  l.55: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 
 :w
 @bufferable
 object B3
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.63: 	@bufferable
+//│ ║  l.62: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 
 
@@ -120,19 +119,9 @@ A.f(buf, obj2)(1)
 
 
 @buffered
-class A(x) with
+class A with
+  constructor(x)
   val z = x
   fun f(y) = x + y + z
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: blockImpl (Lowering.scala:323)
-//│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
-//│ ║  l.122: 	@buffered
-//│ ║         	^^^^^^^^^
-//│ ║  l.123: 	class A(x) with
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.124: 	  val z = x
-//│ ║         	^^^^^^^^^^^
-//│ ║  l.125: 	  fun f(y) = x + y + z
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
 
 
