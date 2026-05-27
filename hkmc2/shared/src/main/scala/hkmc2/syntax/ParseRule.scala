@@ -341,10 +341,11 @@ class ParseRules(using State):
     .map { case (kw, o) => o.mkLocWith(kw) }
     ,
     keepKw(`constructor`):
-      ParseRule("constructor keyword"):
-        Blk(
+      ParseRule("constructor keyword")(
+        exprOrBlk(
           ParseRule(s"constructor block")(end(()))
-        ) { case (body, _) => Constructor(body) }
+        ) { case (body, _) => Constructor(body) }*
+      )
     .map { case (kw, c) => c.mkLocWith(kw) }
     ,
     Kw(`fun`)(termDefBody(Fun))(extendLoc),
