@@ -417,6 +417,32 @@ object Elaborator:
       sym
   transparent inline def State(using state: State): State = state
   
+  /** Check if a constructor declaration tree consists of applied round braces or tuples,
+    * e.g., `(x, y)` or `(x, y)(u, v)`. */
+  private def isConstructorParamDecl(tree: Tree): Bool = tree match
+    case Bra(Round, _) => true
+    case App(lhs, _: Tup) => isConstructorParamDecl(lhs)
+    case App(lhs, Bra(Round, _)) => isConstructorParamDecl(lhs)
+    case _ => false
+  
+  /** Extract all round-braced/tuple param list trees from a constructor declaration,
+    * returning one `Tup` per param list in declaration order.
+    * For `constructor(x, y)(u, v)`, the parser produces
+    * `App(Bra(Round, Block(x, y)), Tup(u, v))`. */
+  private def extractCtorParamLists(tree: Tree): Ls[Tree] =
+    def mkTup(inner: Tree): Tree = inner match
+      case t: Tup => t
+      case Block(stmts) => Tup(stmts)
+      case other => Tup(other :: Nil)
+    tree match
+      case Bra(Round, inner) =>
+        mkTup(inner) :: Nil
+      case App(lhs, rhs @ (_: Tup)) =>
+        extractCtorParamLists(lhs) :+ rhs
+      case App(lhs, Bra(Round, inner)) =>
+        extractCtorParamLists(lhs) :+ mkTup(inner)
+      case _ => Nil
+  
 end Elaborator
 
 
@@ -1274,8 +1300,8 @@ extends Importer with ucs.SplitElaborator:
       case Constructor(Block(ctors)) :: sts =>
         // TODO properly handle (it currently desugars to sibling classes)
         go(sts, annotations, acc)
-      case Constructor(Bra(Round, _)) :: sts =>
-        // constructor(x, y) syntax: params are extracted during class elaboration
+      case Constructor(decl) :: sts if isConstructorParamDecl(decl) =>
+        // constructor(x, y) or constructor(x, y)(u, v) syntax: params are extracted during class elaboration
         go(sts, annotations, acc)
       case Open(bod) :: sts =>
         reportUnusedAnnotations
@@ -1729,11 +1755,13 @@ extends Importer with ucs.SplitElaborator:
         case Cls =>
           val clsSym = td.symbol.asInstanceOf[ClassSymbol] // TODO: improve `asInstanceOf`
           // Extract constructor(...) param lists from the class body
+          // Handles both single param lists: constructor(x, y)
+          // and multi param lists: constructor(x, y)(u, v)
           val ctorParamTrees: Ls[Tree] = body match
-            case S(blk: Block) => blk.stmts.collect:
-              case Constructor(Bra(Round, inner)) => Tup(inner match
-                case Block(stmts) => stmts
-                case other => other :: Nil)
+            case S(blk: Block) => blk.stmts.flatMap:
+              case Constructor(decl) if isConstructorParamDecl(decl) =>
+                extractCtorParamLists(decl)
+              case _ => Nil
             case _ => Nil
           val ctorPss = ctorParamTrees.map: ps =>
             val (res, newCtx2) =
@@ -1755,7 +1783,7 @@ extends Importer with ucs.SplitElaborator:
                     Fun,
                     sym,
                     ctsym,
-                    pss,
+                    pss ::: ctorPss,
                     S(tps.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none))),
                     S(clsSym.ref()),
                     N,

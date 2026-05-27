@@ -1,0 +1,213 @@
+:js
+:sjs
+
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ import Predef from "./../../mlscript-compile/Predef.mjs"; 
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// === Basic constructor with single param list ===
+
+// Plain class with constructor(x, y) generates JS constructor with field assignments
+class Foo with
+  constructor(x, y)
+  fun getX() = x
+  fun getY() = y
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Foo1;
+//│ (class Foo {
+//│   static {
+//│     Foo1 = this
+//│   }
+//│   constructor(x, y) {
+//│     this.#x = x;
+//│     this.#y = y;
+//│   }
+//│   #x;
+//│   #y;
+//│   getX() {
+//│     return this.#x
+//│   }
+//│   getY() {
+//│     return this.#y
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+new Foo(1, 2)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ return globalThis.Object.freeze(new Foo1(1, 2))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = Foo
+
+(new Foo(10, 20)).getX()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let tmp; tmp = globalThis.Object.freeze(new Foo1(10, 20)); return tmp.getX()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 10
+
+(new Foo(10, 20)).getY()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let tmp1; tmp1 = globalThis.Object.freeze(new Foo1(10, 20)); return tmp1.getY()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 20
+
+
+// === Multiple constructor param lists ===
+
+// constructor(x, y)(u, v) flattens into single JS constructor
+class Bar with
+  constructor(x, y)(u, v)
+  fun sum() = x + y + u + v
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Bar1;
+//│ (class Bar {
+//│   static {
+//│     Bar1 = this
+//│   }
+//│   constructor(x, y, u, v) {
+//│     this.#x = x;
+//│     this.#y = y;
+//│     this.#u = u;
+//│     this.#v = v;
+//│   }
+//│   #x;
+//│   #y;
+//│   #u;
+//│   #v;
+//│   sum() {
+//│     let tmp2, tmp3;
+//│     tmp2 = this.#x + this.#y;
+//│     tmp3 = tmp2 + this.#u;
+//│     return tmp3 + this.#v
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+new Bar(1, 2)(3, 4)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ return globalThis.Object.freeze(new Bar1(1, 2, 3, 4))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = Bar
+
+(new Bar(1, 2)(3, 4)).sum()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let tmp2; tmp2 = globalThis.Object.freeze(new Bar1(1, 2, 3, 4)); return tmp2.sum()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 10
+
+
+// === Main params + constructor (aux params) ===
+
+// Foo(a, b) with { constructor(x, y)(u, v) } should have (a, b) as main
+// and [(x, y), (u, v)] as aux param lists
+class Baz(a, b) with
+  constructor(x, y)(u, v)
+  fun total() = a + b + x + y + u + v
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Baz1;
+//│ Baz1 = function Baz(a, b) {
+//│   return (x, y) => (u, v) => {
+//│     return globalThis.Object.freeze(new Baz.class(a, b, x, y, u, v));
+//│   }
+//│ };
+//│ (class Baz {
+//│   static {
+//│     Baz1.class = this
+//│   }
+//│   constructor(a, b, x, y, u, v) {
+//│     this.#a = a;
+//│     this.#b = b;
+//│     this.#x = x;
+//│     this.#y = y;
+//│     this.#u = u;
+//│     this.#v = v;
+//│   }
+//│   #a;
+//│   #b;
+//│   #x;
+//│   #y;
+//│   #u;
+//│   #v;
+//│   total() {
+//│     let tmp3, tmp4, tmp5, tmp6;
+//│     tmp3 = this.#a + this.#b;
+//│     tmp4 = tmp3 + this.#x;
+//│     tmp5 = tmp4 + this.#y;
+//│     tmp6 = tmp5 + this.#u;
+//│     return tmp6 + this.#v
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Baz", [null, null]];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// === Data class with constructor ===
+
+data class Point(label) with
+  constructor(x, y)
+  fun coords() = [x, y]
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Point1;
+//│ Point1 = function Point(label) {
+//│   return (x, y) => {
+//│     return globalThis.Object.freeze(new Point.class(label, x, y));
+//│   }
+//│ };
+//│ (class Point {
+//│   static {
+//│     Point1.class = this
+//│   }
+//│   constructor(label, x, y) {
+//│     this.label = label;
+//│     this.#x = x;
+//│     this.#y = y;
+//│   }
+//│   #x;
+//│   #y;
+//│   coords() {
+//│     return globalThis.Object.freeze([
+//│       this.#x,
+//│       this.#y
+//│     ])
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Point", ["label"]];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// === Single aux param list on class with main params ===
+
+class Qux(a) with
+  constructor(extra)
+  fun both() = a + extra
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Qux1;
+//│ Qux1 = function Qux(a) {
+//│   return (extra) => {
+//│     return globalThis.Object.freeze(new Qux.class(a, extra));
+//│   }
+//│ };
+//│ (class Qux {
+//│   static {
+//│     Qux1.class = this
+//│   }
+//│   constructor(a, extra) {
+//│     this.#a = a;
+//│     this.#extra = extra;
+//│   }
+//│   #a;
+//│   #extra;
+//│   both() {
+//│     return this.#a + this.#extra
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Qux", [null]];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
