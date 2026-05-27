@@ -1295,9 +1295,15 @@ extends Importer with ucs.SplitElaborator:
       case Constructor(Block(ctors)) :: sts =>
         // TODO properly handle (it currently desugars to sibling classes)
         go(sts, annotations, acc)
-      case Constructor(ConstructorParamDecl(_)) :: sts =>
+      case (ctorParams @ Constructor(ConstructorParamDecl(_))) :: sts =>
         // constructor(x, y) or constructor(x, y)(u, v) syntax: params are extracted during class elaboration
-        go(sts, annotations, acc)
+        ctx.getOuter match
+        case S(_: ClassSymbol) =>
+          go(sts, annotations, acc)
+        case _ =>
+          raise(ErrorReport(msg"'constructor(...)' declarations are only allowed in class bodies"
+            -> ctorParams.toLoc :: Nil))
+          go(sts, annotations, acc)
       case Open(bod) :: sts =>
         reportUnusedAnnotations
         bod match

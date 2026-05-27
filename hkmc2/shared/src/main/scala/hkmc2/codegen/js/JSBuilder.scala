@@ -432,7 +432,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             val ctorParams = backendParamList.paramSyms.map(p => p -> scope.allocateName(p))
             val sourceParamsOpt = isym.defn.flatMap(_.paramsOpt)
             
-            // * Whether the class should be "lifted" to a "class" property ofd the companion term
+            // * Whether the class should be "lifted" to a "class" property of the companion term
             // * should currently be consistent with whether the class has source parameters.
             // * This currently fails for faulty input programs (such as `object O(x)`);
             // * we should make sure such programs fail compilation before they reach this point.
