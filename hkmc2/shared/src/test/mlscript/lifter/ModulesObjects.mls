@@ -213,7 +213,7 @@ M.A().get
 //│   val x⁰;
 //│   constructor {
 //│     let scrut, tmp1;
-//│     define A⁰ as class A¹() {
+//│     define A⁰ as class A¹ {
 //│       method get⁰ = fun get¹ {
 //│         return +⁰(M⁵.this.x¹, M⁵.this.x¹)
 //│       }

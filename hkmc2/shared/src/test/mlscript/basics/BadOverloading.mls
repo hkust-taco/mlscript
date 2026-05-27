@@ -32,76 +32,95 @@ class Foo
 //│ ║  l.26: 	object Foo
 //│ ╙──      	^^^^^^^^^^
 
+:todo // TODO: silence such internal errors when a compilation error is already reported?
 :e
 fun Foo = 1
 object Foo
 //│ ╔══[COMPILATION ERROR] Illegal overloading of function 'Foo'
-//│ ║  l.36: 	fun Foo = 1
+//│ ║  l.37: 	fun Foo = 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── with object of the same name
-//│ ║  l.37: 	object Foo
+//│ ║  l.38: 	object Foo
 //│ ╙──      	^^^^^^^^^^
+//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 
+:fixme
 // * Note that this does not report an error at the moment:
 fun Foo: Int
 object Foo
+//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 
+:todo
 :e
 fun Foo = 1
 object Foo
 class Foo
 //│ ╔══[COMPILATION ERROR] Illegal overloading of function 'Foo'
-//│ ║  l.50: 	fun Foo = 1
+//│ ║  l.59: 	fun Foo = 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── with object of the same name
-//│ ║  l.51: 	object Foo
+//│ ║  l.60: 	object Foo
 //│ ╙──      	^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
-//│ ║  l.50: 	fun Foo = 1
+//│ ║  l.59: 	fun Foo = 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── with class of the same name
-//│ ║  l.52: 	class Foo
+//│ ║  l.61: 	class Foo
 //│ ╙──      	^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal overloading of class 'Foo'
-//│ ║  l.52: 	class Foo
+//│ ║  l.61: 	class Foo
 //│ ║        	^^^^^^^^^
 //│ ╟── with object of the same name
-//│ ║  l.51: 	object Foo
+//│ ║  l.60: 	object Foo
 //│ ╙──      	^^^^^^^^^^
+//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
+//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
+//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'class' of object '[object Object]'
 
 
-// TODO: support
+:todo // TODO: support
 :e
 class Foo
 fun Foo = 1
 //│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
-//│ ║  l.76: 	fun Foo = 1
+//│ ║  l.92: 	fun Foo = 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── with class of the same name
-//│ ║  l.75: 	class Foo
+//│ ║  l.91: 	class Foo
 //│ ╙──      	^^^^^^^^^
+//│ ╔══[INTERNAL ERROR] Compiler reached an unsupported state: None.isDefined =/= true
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a known compiler limitation; if it is a blocker for you, please report it to the maintainers.
 
 // TODO: support
 :e
 fun Foo = 1
 module Foo
 //│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
-//│ ║  l.86: 	fun Foo = 1
-//│ ║        	^^^^^^^^^^^
+//│ ║  l.105: 	fun Foo = 1
+//│ ║         	^^^^^^^^^^^
 //│ ╟── with module of the same name
-//│ ║  l.87: 	module Foo
-//│ ╙──      	^^^^^^^^^^
+//│ ║  l.106: 	module Foo
+//│ ╙──       	^^^^^^^^^^
 
 // TODO: support
 :e
 val Foo = 1
 module Foo
 //│ ╔══[COMPILATION ERROR] Not yet supported: overloading of value 'Foo'
-//│ ║  l.97: 	val Foo = 1
-//│ ║        	^^^^^^^^^^^
+//│ ║  l.116: 	val Foo = 1
+//│ ║         	^^^^^^^^^^^
 //│ ╟── with module of the same name
-//│ ║  l.98: 	module Foo
-//│ ╙──      	^^^^^^^^^^
+//│ ║  l.117: 	module Foo
+//│ ╙──       	^^^^^^^^^^
 //│ Foo = class Foo
 
 
@@ -109,10 +128,10 @@ module Foo
 fun (**) f1(a, b) = "[" + a + " * " + b + "]"
 fun (**) f2(a, b) = "(" + a + " + " + b + ")"
 //│ ╔══[COMPILATION ERROR] Symbolic name '**' of definition 'f1' is already used
-//│ ║  l.109: 	fun (**) f1(a, b) = "[" + a + " * " + b + "]"
+//│ ║  l.128: 	fun (**) f1(a, b) = "[" + a + " * " + b + "]"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── by sibling member 'f2'
-//│ ║  l.110: 	fun (**) f2(a, b) = "(" + a + " + " + b + ")"
+//│ ║  l.129: 	fun (**) f2(a, b) = "(" + a + " + " + b + ")"
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1 ** 2
@@ -123,10 +142,10 @@ fun (**) t() = 0
 fun (++) t() = 1
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 't'
 //│ ╟── defined here
-//│ ║  l.122: 	fun (**) t() = 0
+//│ ║  l.141: 	fun (**) t() = 0
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.123: 	fun (++) t() = 1
+//│ ║  l.142: 	fun (++) t() = 1
 //│ ╙──       	^^^^^^^^^^^^^^^^
 
 

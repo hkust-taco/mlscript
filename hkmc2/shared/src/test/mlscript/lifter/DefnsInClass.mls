@@ -24,9 +24,9 @@ data class A(x) with
 //│   }
 //│ };
 //│ @data
-//│ define A⁰ as class A³(x) {
+//│ define A⁰ as class A³ {
 //│   val x¹;
-//│   constructor A² {
+//│   constructor A²(x) {
 //│     define x¹ as val x⁰ = x;
 //│     end
 //│   }
@@ -61,7 +61,7 @@ class A with
 //│ };
 //│ define A⁴ as class A⁵ {
 //│   val x²;
-//│   constructor { define x² as val x³ = g¹; end }
+//│   constructor() { define x² as val x³ = g¹; end }
 //│ };
 //│ set tmp = new A⁵();
 //│ return tmp.x³()

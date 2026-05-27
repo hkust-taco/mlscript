@@ -6,7 +6,7 @@
 :sir
 class A(val x)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let A⁰; define A⁰ as class A²(x) { val x⁰; constructor A¹ { define x⁰ as val x¹ = x; end } }; end
+//│ let A⁰; define A⁰ as class A² { val x⁰; constructor A¹(x) { define x⁰ as val x¹ = x; end } }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let a = A(1)

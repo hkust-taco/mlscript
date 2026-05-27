@@ -50,7 +50,7 @@ f()
 //│ define f² as fun f³() {
 //│   let A;
 //│   define A as object A⁰ {
-//│     constructor { do Predef⁰.print⁰("Hello"); end }
+//│     constructor() { do Predef⁰.print⁰("Hello"); end }
 //│   };
 //│   return 42
 //│ };
