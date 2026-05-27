@@ -601,6 +601,14 @@ class BlockSimplifier
           def giveUp =
             gaveUp = true
             Set.empty[Shape]
+          def getCtorShape(path: Path): Opt[Shape] =
+            path.targetSymbol.flatMap:
+              case ccs: ClassCtorSymbol => ccs.owner
+              case sym => sym.asClsOrMod
+          def isSaturatedClassCall(sym: ClassSymbol, argss: NELs[Ls[Arg]]): Bool =
+            sym.irClsLikeDefn.exists: defn =>
+              val paramLists = defn.paramsOpt.toList ::: defn.auxParams
+              paramLists.lengthCompare(argss.length) === 0
           def getShapesA(a: AssignInfo): Set[Shape] =
           // trace[Set[Shape]](s"Getting shapes for assignment ${a}", r => s"= ${r}"):
             a match
@@ -617,26 +625,15 @@ class BlockSimplifier
                 asst.rhs match
                 case p: Path => getShapes(p)
                 case Call(path, args) =>
-                  path.targetSymbol match
-                  case S(tsym: TermSymbol) =>
-                    tsym.owner match
-                    case S(sym: ClassSymbol) =>
-                      sym.irClsLikeDefn match
-                      case S(cls: ClsLikeDefn)
-                        if cls.auxParams.isEmpty
-                        => Set.single(sym)
-                      case _ => giveUp
-                    case _ => giveUp
+                  getCtorShape(path) match
+                  case S(sym: ClassSymbol) if isSaturatedClassCall(sym, args) =>
+                    Set.single(sym)
                   case _ => giveUp
-                case Instantiate(mut, cls, args) =>
-                  cls.targetSymbol match
-                  case S(sym: ClassSymbol) =>
-                    sym.irClsLikeDefn match
-                    case S(cls: ClsLikeDefn)
-                      // if the instantiation call is saturated
-                      if cls.auxParams.isEmpty || cls.paramsOpt.isEmpty && cls.auxParams.sizeCompare(1) <= 0
-                      => Set.single(sym)
-                    case _ => giveUp
+                case Instantiate(_, cls, _) =>
+                  // * Note: Instantiate nodes are globally assumed to be saturated
+                  getCtorShape(cls) match
+                  case S(sym) =>
+                    Set.single(sym)
                   case _ => giveUp
                 case _ => giveUp
           def getShapes(p: Path): Set[Shape] =
