@@ -38,7 +38,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
 
       def prodFunIsAffine(pf: ProdFun) =
         pf.exprId match
-        case lamId: ResultId =>
+        case lamId: ResultId @unchecked =>
           lamId.getResult match
             case lamDef: Lambda => lamDef.affine
             case other => lastWords(s"expected lambda result, got $other")
@@ -99,14 +99,14 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
 
   for pf <- constraintSolver.funDests.keysIterator do
     pf.exprId match
-    case lamId: ResultId => funShape.getOrElseUpdate(lamId, etaExpansionTargetShapes(pf)(using Set.empty))
+    case lamId: ResultId @unchecked => funShape.getOrElseUpdate(lamId, etaExpansionTargetShapes(pf)(using Set.empty))
     case (funSym: TermSymbol, 0) => funShape.getOrElseUpdate(funSym, etaExpansionTargetShapes(pf)(using Set.empty))
     case _ => ()
 
 
   private def showFunShapeId(id: TermSymbol | ResultId): Str = id match
     case funSym: TermSymbol => funSym.nme
-    case lamId: ResultId =>
+    case lamId: ResultId @unchecked =>
       lamId.getResult match
       case Lambda(_, _) => s"lambda@$lamId"
       case r => lastWords(s"not lambda $r")
@@ -119,7 +119,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
       val prev = constraintSolver.preAnalyzer.res.funSymToFunDefn(funSym).params.size
       val now = shape.size
       now > prev
-    case lamId: ResultId => shape.size > 1
+    case lamId: ResultId @unchecked => shape.size > 1
 
   def hasEtaExpansionTargets: Bool =
     funShape.exists:

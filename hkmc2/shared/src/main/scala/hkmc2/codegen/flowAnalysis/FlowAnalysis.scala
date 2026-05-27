@@ -275,7 +275,7 @@ class Dtor(
 case class ConcreteId[A <: OriginId](exprId: A, instId: InstantiationId):
   def pp(using FlowAnalysis.State): Str = exprId match
     case (sym: Symbol, idx: Int) => s"${sym.nme}#$idx"
-    case r: ResultId => s"${r.getResult}"
+    case r: ResultId @unchecked => s"${r.getResult}"
 
 
 type ConcreteProducer = Ctor
@@ -833,12 +833,12 @@ class FlowConstraintsCollector(
       def paramListFunId(whichParamList: Int): FunId =
         funLamId match
           case (sym: Symbol, -1) => (sym, whichParamList)
-          case lambdaExprId: ResultId =>
+          case lambdaExprId: ResultId @unchecked =>
             assert(whichParamList == 0)
             lambdaExprId
       val capturedSyms = funLamId match
         case (sym: TermSymbol, _) => preAnalyzer.res.capturedVars(sym)
-        case lamExprId: ResultId => preAnalyzer.res.capturedVars(lamExprId)
+        case lamExprId: ResultId @unchecked => preAnalyzer.res.capturedVars(lamExprId)
         case other => lastWords(s"unexpected funLamId shape: $other")
       val res = freshVar(resName, cc.forFunGroup)
       params.foreach:

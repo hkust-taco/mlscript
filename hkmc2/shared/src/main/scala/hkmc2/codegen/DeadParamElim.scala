@@ -119,7 +119,7 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver):
     def showProdFun(prodFun: ProdFun): Str =
       def showFunId(funId: FunId): Str = funId match
         case (funSym: Symbol, whichParamList) => s"${funSym.nme}#$whichParamList"
-        case exprId: ResultId => exprId.getResult match
+        case exprId: ResultId @unchecked => exprId.getResult match
           case Lambda(_, _) => s"lambda@$exprId"
           case _ => showRefSite(exprId)
       val inst = prodFun.instantiationId.fold("")(instId => s" @ ${showInstId(instId)}")

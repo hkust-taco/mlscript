@@ -39,7 +39,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
   extension (matchOrLabelId: MatchOrLabelId) def withInstId(instId: InstantiationId): RestFunId =
     matchOrLabelId match
     case l: LabelSymbol => l -> instId
-    case scrutId: ResultId => ConcreteId(scrutId, instId)
+    case scrutId: ResultId @unchecked => ConcreteId(scrutId, instId)
   extension (vs: Ls[VarSymbol]) def asParamList: ParamList =
     ParamList(ParamListFlags.empty, vs.map(Param.simple), N)
   extension (c: CtorCls) def ctorClsName: String = c match
@@ -54,10 +54,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
   ): (Iterator[Label | Match], Block) =
     val ctx = matchOrLabelId match
       case label: LabelSymbol => pre.res.labelSymToCtxOfLabel(label)
-      case dtorId: ResultId => pre.res.matchScrutToCtxOfMatch(dtorId)
+      case dtorId: ResultId @unchecked => pre.res.matchScrutToCtxOfMatch(dtorId)
     val simpleRest = matchOrLabelId match
       case label: LabelSymbol => pre.res.labelSymToLabelBlk(label).rest
-      case dtorId: ResultId => pre.res.matchScrutToMatchBlock(dtorId).rest
+      case dtorId: ResultId @unchecked => pre.res.matchScrutToMatchBlock(dtorId).rest
     def it = ctx.iterator
       .takeWhile:
         case _: (pre.InCtx.Fn | pre.InCtx.ModCtor | pre.InCtx.Cls | pre.InCtx.ClsPreCtor | pre.InCtx.ClsCtor | pre.InCtx.TopLvl) => false
@@ -215,7 +215,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
                 case label: LabelSymbol =>
                   pre.res.labelSymToCtxOfLabel(label).collectFirst:
                     case pre.InCtx.Cls(cls) => cls.isym
-                case dtorId: ResultId =>
+                case dtorId: ResultId @unchecked =>
                   pre.res.matchScrutToCtxOfMatch(dtorId).collectFirst:
                     case pre.InCtx.Cls(cls) => cls.isym
               new BlockMemberSymbol(restFunName, Nil, true)
