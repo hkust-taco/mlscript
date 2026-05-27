@@ -1043,6 +1043,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       val l = loweringCtx.registerTempSymbol(N)
       Assign(l, r, setupTerm("Else", l.asSimpleRef :: Nil)(k))
     case Split.End => setupTerm("End", Nil)(k)
+    case Split.LetSplit(sym, tail) => setupSymbol(sym): r1 =>
+      loweringCtx.collectScopedSym(sym)
+      val l1, l2, l3 = loweringCtx.registerTempSymbol(N)
+      blockBuilder.assign(l1, r1)
+        .chain(b => Assign(sym, Value.Ref(l1), b))
+        .chain(b => quoteSplit(sym.body)(r2 => Assign(l2, r2, b)))
+        .chain(b => quoteSplit(tail)(r3 => Assign(l3, r3, b)))
+        .rest(setupTerm("LetSplit", (l1 :: l2 :: l3 :: Nil).map(s => Value.Ref(s)))(k))
+    case Split.UseSplit(sym) => setupTerm("UseSplit", Value.Ref(sym, N) :: Nil)(k)
 
   lazy val setupFilename: Path =
     val state = summon[State]

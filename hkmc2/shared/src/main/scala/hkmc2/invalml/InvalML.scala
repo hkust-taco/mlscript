@@ -392,6 +392,8 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
         val (ty, res) = typeCheck(alts)
         (ty, res, Nil, true)
     case Split.End => (Bot, Bot, Nil, false)
+    case Split.LetSplit(sym, tail) => typeADTMatch(tail, sign)
+    case Split.UseSplit(sym) => typeADTMatch(sym.body, sign)
 
   private def typeSplit
       (split: Split, sign: Opt[GeneralType])(using ctx: InvalCtx)(using CCtx, Scope)
@@ -442,6 +444,8 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
       case S(sign) => ascribe(alts, sign)
       case _ => typeCheck(alts)
     case Split.End => (Bot, Bot)
+    case Split.LetSplit(sym, tail) => typeSplit(tail, sign)
+    case Split.UseSplit(sym) => typeSplit(sym.body, sign)
 
   private def typeAllSplits
     (split: Split, sign: Opt[GeneralType])(using ctx: InvalCtx)(using CCtx, Scope)

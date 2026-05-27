@@ -29,6 +29,8 @@ class Split with
     Let(val sym: Symbol, val term: Term, val tail: Split)
     Else(val default: Term)
     End
+    LetSplit(val sym: Symbol, val body: Split, val tail: Split)
+    UseSplit(val sym: Symbol)
 
 
 module Keyword with
@@ -123,6 +125,11 @@ fun showSplit(s, ctx, isCont) =
       if isCont then show(term, ctx)
       else StrOps.concat of "else ", show(term, ctx)
     End then ""
+    LetSplit(sym, body, tail) then
+      let nest = ctx.nest
+      let freshName = nest.add(sym)
+      StrOps.concat of "let split ", freshName, " =\n", indent(showSplit(body, nest, false), "  ", true), "\n", showSplit(tail, nest, false)
+    UseSplit(sym) then StrOps.concat of "$", ctx.get(sym)
 
 
 fun show(t, ctx) =

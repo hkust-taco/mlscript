@@ -81,6 +81,34 @@ staged module Expressions with
 //│ >     else 0
 //│ x = [1, 2, 3]
 
+// * LetSplit lowers to a Label/Break pair, which the staged-module
+// * compiler (`ReflectionInstrumenter`) doesn't yet understand. With
+// * the sharing threshold forced to 1, the shared `else` below would
+// * emit exactly that — tracked here as a fixme.
+:fixme
+:patMatConsequentSharingThreshold 1
+staged module Example with
+  fun f(x, y, z) = if
+    x is 0 and y is 0 and z is 0 then 1
+    else 2
+//│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.Label.
+//│ > fun ctor_() = ()
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+// * LetSplit lowers to a Label/Break pair, which the staged-module
+// * compiler (`ReflectionInstrumenter`) doesn't yet understand. With
+// * the sharing threshold forced to 1, the shared `else` below would
+// * emit exactly that — tracked here as a fixme.
+:fixme
+:patMatConsequentSharingThreshold 1
+staged module Example with
+  fun f(x, y, z) = if
+    x is 0 and y is 0 and z is 0 then 1
+    else 2
+//│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.Label.
+//│ > fun ctor_() = ()
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
 :fixme
 class Outside(a)
 staged module ClassInstrumentation with
@@ -154,7 +182,7 @@ staged module OtherBlocks with
 //│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'a'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.146: 	      let a = 1
+//│ ║  l.174: 	      let a = 1
 //│ ╙──       	          ^
 //│ > fun ctor_() = ()
 //│ ═══[RUNTIME ERROR] ReferenceError: a is not defined
@@ -219,7 +247,7 @@ staged module LabelBreak with
 //│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.Label.
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.212: 	    let x = 1
+//│ ║  l.240: 	    let x = 1
 //│ ╙──       	        ^
 //│ > fun ctor_() = ()
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
@@ -232,7 +260,7 @@ staged module A with
   fun g() = {1 : 2}
 //│ ═══[COMPILATION ERROR] Field assignment is not supported in staged modules: a
 //│ ╔══[COMPILATION ERROR] Other Results not supported in staged module: class hkmc2.codegen.Record
-//│ ║  l.232: 	  fun g() = {1 : 2}
+//│ ║  l.260: 	  fun g() = {1 : 2}
 //│ ╙──       	                 ^
 //│ > fun ctor_() =
 //│ >   x = C(1)

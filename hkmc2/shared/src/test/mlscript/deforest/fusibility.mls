@@ -164,7 +164,7 @@ c1(p) + c2(p)
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > p@1
 //│ deforest > tmp@2
-//│ deforest > tmp@3
+//│ deforest > tmp@5
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -180,8 +180,8 @@ fun c2(p) = if p is Many(Once(v)) then v
 fun apply(f, g, p) = f(p) + g(p)
 apply(c1, c2, Many(Once(10)))
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > p_for_apply@32
-//│ deforest > p_for_apply@78
+//│ deforest > p_for_apply@33
+//│ deforest > p_for_apply@81
 //│ deforest > tmp@1
 //│ deforest > tmp@2
 //│ deforest > <<< non-affine syms <<<
@@ -200,10 +200,10 @@ nest_consume(nest_pickB, nest_prod(10))
 //│ deforest > arg$AA$0$_for_nest_consume@48
 //│ deforest > arg$AA$0$_for_nest_consume@77
 //│ deforest > cap_ub_(term:nest_pickB,0)_for_nest_pickB@53
-//│ deforest > f_for_nest_consume@37
-//│ deforest > f_for_nest_consume@66
-//│ deforest > i_for_nest_consume@38
-//│ deforest > i_for_nest_consume@67
+//│ deforest > f_for_nest_consume@38
+//│ deforest > f_for_nest_consume@67
+//│ deforest > i_for_nest_consume@37
+//│ deforest > i_for_nest_consume@66
 //│ deforest > nest_pickB_for_nest_pickB@50
 //│ deforest > sel_res_for_nest_consume@49
 //│ deforest > sel_res_for_nest_consume@78
