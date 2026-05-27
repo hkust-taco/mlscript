@@ -1,87 +1,12 @@
 :js
-:sjs
+// :de
+// :sjs
+// :pt
+// :elt
 
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ import Predef from "./../mlscript-compile/Predef.mjs"; 
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-class Foo with
-  constructor(x, y)
-  fun getX() = x
-  fun getY() = y
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo1;
-//│ (class Foo {
-//│   static {
-//│     Foo1 = this
-//│   }
-//│   constructor(x, y) {
-//│     this.#x = x;
-//│     this.#y = y;
-//│   }
-//│   #x;
-//│   #y;
-//│   getX() {
-//│     return this.#x
-//│   }
-//│   getY() {
-//│     return this.#y
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo"];
-//│ });
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+:global
+// :d
+// :todo
 
-new Foo(1, 2)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return globalThis.Object.freeze(new Foo1(1, 2))
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = Foo
-
-
-
-module Foo
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo3;
-//│ (class Foo2 {
-//│   static {
-//│     Foo3 = this
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo"];
-//│ });
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-
-:e
-fun f(x) = x is Foo
-//│ ╔══[COMPILATION ERROR] Pattern name not found: Foo.
-//│ ║  l.55: 	fun f(x) = x is Foo
-//│ ╙──      	                ^^^
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f; f = function f(x) { return true };
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-
-f(0)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return true
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = true
-
-:noModuleCheck
-f(Foo)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return true
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = true
-
-:e
-f(new Foo)
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference of type Foo.
-//│ ║  l.77: 	f(new Foo)
-//│ ║        	      ^^^
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ globalThis.Object.freeze(new Foo3()); return true
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = true
 
 

@@ -18,7 +18,7 @@ Run HKMC2 inline golden-file tests and treat file rewrites as first-class test o
 2. Edit `.mls` test blocks and test commands. Use `hkmc2/shared/src/test/mlscript/HkScratch.mls` for temporary experiments, or create a new `.mls` file for a new test case.
 3. Run direct `sbt` commands (never `cs launch sbt` for this repo).
 4. Review rewritten `//│` lines with git diff.
-5. Keep intentional rewrites, then rerun until clean.
+5. Fix code and rerun tests until output is as desired. No need to revert intermediate failures: they'll be updated in place.
 6. Revert temporary `HkScratch.mls` edits before committing.
 
 Read [execution-workflow.md](references/execution-workflow.md) for exact commands and onboarding flow.
