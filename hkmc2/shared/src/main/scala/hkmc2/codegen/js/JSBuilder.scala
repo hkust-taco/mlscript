@@ -596,15 +596,15 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               case N =>
                 doc"$freezeDefns(${clsJS});"
             else
-              // Source params are used for the wrapper to preserve the curried calling convention.
+              // Metadata params are used for the wrapper to preserve the curried calling convention.
               // All args are forwarded to the flat `new Class.class(...)` constructor.
-              val sourceParamsAll = metadataParamsOpt.toList ::: metadataAuxParams
+              val allMetadataParams = metadataParamsOpt.toList ::: metadataAuxParams
               
-              val fun = sourceParamsAll match
+              val fun = allMetadataParams match
                 case ps_ :: pss_ if metadataParamsOpt.isDefined => outerScope.nest.givenIn:
                   val (ps, _) = setupFunction(some(sym.nme), ps_, End(), isLambda = false)
                   val pss = pss_.map(setupFunction(N, _, End(), isLambda = false)._1)
-                  val argsDoc = sourceParamsAll.flatMap(_.paramSyms)
+                  val argsDoc = allMetadataParams.flatMap(_.paramSyms)
                     .map(p => scope.lookup_!(p, p.toLoc)).mkDocument(", ")
                   val inner = doc"new ${sym.nme}.class($argsDoc)"
                   val bod = braced(doc" # return $freeze($inner);")
