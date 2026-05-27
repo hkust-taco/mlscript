@@ -14,11 +14,17 @@ class Foo with
 //│   static {
 //│     Foo1 = this
 //│   }
+//│   constructor(x, y) {
+//│     this.#x = x;
+//│     this.#y = y;
+//│   }
+//│   #x;
+//│   #y;
 //│   getX() {
-//│     return x
+//│     return this.#x
 //│   }
 //│   getY() {
-//│     return y
+//│     return this.#y
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"];
