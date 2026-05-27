@@ -38,16 +38,17 @@ enum Annot extends AutoLocated:
   
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
-    case _: Modifier | Untyped | TailRec | TailCall | Inline | _: Config => Vector.empty
+    case _: Modifier | Untyped | TailRec | TailCall | Inline | _: Config | _: Affine => Vector.empty
   
   def children: Vector[Located] = this match
     case Trm(trm) => Vector.single(trm)
-    case _: Modifier | Untyped | TailRec | TailCall | Inline | _: Config => Vector.empty
+    case _: Modifier | Untyped | TailRec | TailCall | Inline | _: Config | _: Affine => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case Untyped => doc"@untyped"
     case Inline => doc"@inline"
     case TailRec => doc"@tailrec"
+    case TailCall => doc"@tailcall"
     case Affine(n) => doc"@affine($n)"
     case Modifier(mod) => doc"@${mod.name}"
     case Trm(trm) => doc"@${trm.show}"
@@ -61,6 +62,7 @@ enum Annot extends AutoLocated:
     case TailCall => TailCall
     case Inline => Inline
     case c: Config => c
+    case a: Affine => a
 
 object Annot:
   
@@ -473,6 +475,7 @@ enum Term extends Statement:
       case term @ TyApp(lhs, targs) => TyApp(lhs.mkClone, targs.map(_.mkClone))(term.typ)
       case term @ Sel(prefix, nme) => Sel(prefix.mkClone, Tree.Ident(nme.name))(term.sym, term.resSym, term.typ, term.originalCtx)
       case term @ SynthSel(prefix, nme) => SynthSel(prefix.mkClone, Tree.Ident(nme.name))(term.sym, term.resSym, term.typ, term.originalCtx)
+      case term @ LeadingDotSel(nme) => LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx)
       case DynSel(prefix, fld, arrayIdx) => DynSel(prefix.mkClone, fld.mkClone, arrayIdx)
       case term @ Tup(fields) => Tup(fields.map {
         case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))
@@ -925,6 +928,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       s"type ${sym}${tparams.mkStringOr(", ", "[", "]")} = ${rhs.fold("")(x => x.showDbg)}"
     case Missing => "missing"
     case LeadingDotSel(nme) => s"_?_.${nme.name}"
+    case SetConfig(_) => "#config(...)"
 
 final case class LetDecl(sym: LocalSymbol, annotations: Ls[Annot]) extends Statement
 

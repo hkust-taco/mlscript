@@ -59,6 +59,7 @@ class UsefulnessAnalysis(verbose: Bool = false):
     case LetMethodCall(names, cls, method, args, body) => addUse(method); args.foreach(f); names.foreach(addDef); f(body)
     case LetExpr(name, expr, body) => f(expr); addDef(name); f(body)
     case LetCall(names, defn, args, body) => args.foreach(f); names.foreach(addDef); f(body)
+    case Panic(_) =>
   
   def run(x: Func) =
     x.params.foreach(addDef)

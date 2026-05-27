@@ -598,6 +598,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         case Define(defn, rest) => applyDefn(defn); applyBlock(rest)
         case Scoped(_, body) => applyBlock(body)
         case End(msg) =>
+        case Unreachable(_) =>
       
       override def applyDefn(defn: Defn): Unit = defn match
         case f: FunDefn => applyFunDefn(f)

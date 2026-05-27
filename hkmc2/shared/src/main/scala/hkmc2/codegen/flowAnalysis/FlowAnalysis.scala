@@ -836,6 +836,7 @@ class FlowConstraintsCollector(
           case lambdaExprId: ResultId @unchecked =>
             assert(whichParamList == 0)
             lambdaExprId
+          case other => lastWords(s"unexpected funLamId shape: $other")
       val capturedSyms = funLamId match
         case (sym: TermSymbol, _) => preAnalyzer.res.capturedVars(sym)
         case lamExprId: ResultId @unchecked => preAnalyzer.res.capturedVars(lamExprId)
