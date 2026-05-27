@@ -76,7 +76,7 @@ fun f(x) =
 //│   set tmp1 = +⁰(f$cap.x$0⁰, 2);
 //│   set tmp2 = new A¹(tmp, f$cap, tmp1);
 //│   set tmp3 = +⁰(f$cap.x$0⁰, 1);
-//│   set tmp4 = new A¹(tmp3, f$cap);
+//│   set tmp4 = A$¹(f$cap)(tmp3);
 //│   set tmp5 = +⁰(f$cap.x$0⁰, 1);
 //│   set tmp6 = +⁰(f$cap.x$0⁰, 2);
 //│   set tmp7 = new A¹(tmp5, f$cap, tmp6);
@@ -87,7 +87,7 @@ fun f(x) =
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let res = f(0)
-//│ res = [A(1), fun, A(1), A(1)]
+//│ res = [A(1), fun, fun, A(1)]
 
 :expect [2, 2]
 let a = res.0
@@ -102,34 +102,25 @@ b.foo()
 res.1(10)(20).foo()
 //│ = 3
 
-:re
 let a1 = res.2(20)
-//│ ═══[RUNTIME ERROR] TypeError: res[2] is not a function
-//│ a1 = undefined
+//│ a1 = A(1)
 
-:re
 a1.foo()
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'foo')
+//│ = 4
 
-:re
-a1.z
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'z')
-
-:re
-let a2 = res.2(30)
-//│ ═══[RUNTIME ERROR] TypeError: res[2] is not a function
-//│ a2 = undefined
-
-:re
-a2.z
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'z')
-
-:fixme
 :expect 20
 a1.z
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'z')
-//│ ═══[RUNTIME ERROR] Expected: '20', got: 'undefined'
+//│ = 20
+
+let a2 = res.2(30)
+//│ a2 = A(1)
+
+a2.z
+//│ = 30
+
+:expect 20
+a1.z
+//│ = 20
 
 a.getX()
-//│ = 3
-
+//│ = 4
