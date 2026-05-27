@@ -59,6 +59,7 @@ class ProjectSwitcher extends HTMLElement with
     createName = ""
     previewPath = ""
     importError = ""
+    collapsedFolders = new Set()
 
   fun connectedCallback() =
     this.render()
@@ -303,9 +304,13 @@ class ProjectSwitcher extends HTMLElement with
       )
     rows
 
+  // Match the left-sidebar file explorer's icon choice: code-style icon for
+  // .mls / .mjs / .js sources. `icon-file-json` is not part of the loaded
+  // Lucide set, which is why .mjs rows used to render with no glyph at all.
   fun fileIconFor(name) = if
     name.endsWith(".mls") then "icon-file-code"
-    name.endsWith(".mjs") then "icon-file-json"
+    name.endsWith(".mjs") then "icon-file-code"
+    name.endsWith(".js") then "icon-file-code"
     name.endsWith(".md") then "icon-file-code"
     else "icon-file"
 
@@ -324,18 +329,40 @@ class ProjectSwitcher extends HTMLElement with
     """
 
   fun folderRowHtml(row) =
-    let indentPx = 8 + row.depth * 14
+    let
+      indentPx = 8 + row.depth * 14
+      isCollapsed = collapsedFolders.has(row.path)
+      chevronIcon = if isCollapsed then "icon-chevron-right" else "icon-chevron-down"
+      folderIcon = if isCollapsed then "icon-folder" else "icon-folder-open"
     """
-      <div class="ps-preview-row ps-preview-folder" style="padding-left: """ + indentPx + """px">
-        <i class="icon-chevron-down ps-preview-folder-chevron"></i>
-        <i class="icon-folder-open"></i>
+      <button type="button" class="ps-preview-row ps-preview-folder" data-folder-path=""" + "\"" + escapeHtml(row.path) + "\"" + """ aria-expanded=""" + "\"" + (if isCollapsed then "false" else "true") + "\"" + """ style="padding-left: """ + indentPx + """px">
+        <i class=""" + "\"" + chevronIcon + " ps-preview-folder-chevron" + "\"" + """></i>
+        <i class=""" + "\"" + folderIcon + "\"" + """></i>
         <span>""" + escapeHtml(row.name) + """</span>
-      </div>
+      </button>
     """
 
   fun previewRowHtml(row, activePath) = if
     row.'type === "folder" then folderRowHtml(row)
     else fileRowHtml(row, activePath)
+
+  // A row is hidden if any of its ancestor folders is currently collapsed.
+  fun isHiddenByCollapse(path) =
+    let
+      parts = pathParts(path)
+      limit = parts.length - 1
+      i = 0
+      result = false
+    while i < limit do
+      if result is false do
+        let ancestor = "/" + parts.slice(0, i + 1).join("/")
+        if collapsedFolders.has(ancestor) do set result = true
+      set i += 1
+    result
+
+  fun toggleFolder(path) =
+    if collapsedFolders.has(path) then collapsedFolders.delete(path)
+    else collapsedFolders.add(path)
 
   // Setter routed through a method so cross-scope writes (e.g. from a click
   // lambda captured as `panel`) hit the private class field, not a fresh
@@ -368,8 +395,10 @@ class ProjectSwitcher extends HTMLElement with
       if paths.length === 0 then
         set t.innerHTML = """<div class="project-switcher-preview-empty">No files in this project.</div>"""
       else
-        let rows = buildTreeRows(paths)
-        set t.innerHTML = rows.map(r => previewRowHtml(r, previewPath)).join("")
+        let
+          rows = buildTreeRows(paths)
+          visibleRows = rows.filter of (row, ...) => not isHiddenByCollapse(row.path)
+        set t.innerHTML = visibleRows.map(r => previewRowHtml(r, previewPath)).join("")
         attachPreviewListeners(t, project)
     let content = previewLookup(snapshot, previewPath)
     if headEl is ~null as h do
@@ -396,9 +425,14 @@ class ProjectSwitcher extends HTMLElement with
 
   fun attachPreviewListeners(treeEl, project) =
     let panel = this
-    treeEl.querySelectorAll("button.ps-preview-row").forEach of (button, ...) =>
+    treeEl.querySelectorAll("button.ps-preview-file").forEach of (button, ...) =>
       button.addEventListener of "click", () =>
         panel.setPreviewPath(button.dataset.path)
+        let detail = panel.querySelector(".project-switcher-detail")
+        if detail is ~null as d do panel.renderPreview(d, project)
+    treeEl.querySelectorAll("button.ps-preview-folder").forEach of (button, ...) =>
+      button.addEventListener of "click", () =>
+        panel.toggleFolder(button.dataset.folderPath)
         let detail = panel.querySelector(".project-switcher-detail")
         if detail is ~null as d do panel.renderPreview(d, project)
 

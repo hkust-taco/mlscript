@@ -3859,13 +3859,19 @@ project-switcher dialog.project-switcher-native::backdrop {
   user-select: none;
 }
 
-.ps-preview-file {
+.ps-preview-file,
+.ps-preview-folder {
   cursor: pointer;
 }
 
-.ps-preview-file:hover {
+.ps-preview-file:hover,
+.ps-preview-folder:hover {
   background: var(--ide-surface);
   border-color: var(--ide-border);
+}
+
+button.ps-preview-folder {
+  width: 100%;
 }
 
 .ps-preview-row.active {
