@@ -425,7 +425,6 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                   sel.trm.resolvedTargets ::= SelectionTarget.ObjectMember(memb)
                   log(s"Found immediate member ${memb}")
                   toSolve.push(Constraint(getFlowSymOrType(memb), sel.res))
-                case S(memb) => TODO(memb)
                 case N =>
                   d.moduleCompanion match
                   case S(comp) =>
