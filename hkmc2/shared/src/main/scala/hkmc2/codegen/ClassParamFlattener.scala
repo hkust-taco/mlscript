@@ -43,7 +43,7 @@ class ClassParamFlattener extends BlockTransformer(SymbolSubst.Id):
     )
   
   private def classPathFor(fun: Path, cls: ClassSymbol): Opt[Path] = fun match
-    case Value.Ref(l, _) => S(Value.Ref(l, S(cls)))
+    case Value.MemberRef(bms, _) => S(bms.asMemberRef(cls))
     case Select(qual, name) => S(Select(qual, name)(S(cls)))
     case _ => N
 
@@ -52,7 +52,7 @@ class ClassParamFlattener extends BlockTransformer(SymbolSubst.Id):
       case sym: TermSymbol => sym
     .flatMap: sym =>
       sym.defn.flatMap: td =>
-        td.companionClass.flatMap: cls =>
+        td.sym.asCls.flatMap: cls =>
           cls.defn.collect:
             case defn =>
               defn.paramsOpt.toList ::: defn.auxParams

@@ -406,3 +406,23 @@ fun f(x) =
   new A(2)
 
 
+// This used not to work due to the use of `super` on curried class parameter lists, but it now works.
+:expect "B()"
+fun test(x) =
+  class A() with
+    fun get = x
+  class B() extends A() with
+    fun bar = x
+  B()
+test(0).toString()
+//│ = "B()"
+
+// [The following comment refers to the old way of compiling such curried classes to JS:]
+// In fact, the correct way (using the current "constructor returns a lambda" hack) is this:
+// return (params) => {
+//   let ret = super(parentMainParams)(parentAuxParams);
+//   // ctor
+//   return ret;
+// }
+
+

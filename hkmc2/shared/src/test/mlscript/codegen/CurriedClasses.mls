@@ -1,12 +1,6 @@
 :js
 
 
-// * The code-gen of curried classes is currently a bit crazy and unnecessary.
-// * It was intended to make interop better, but it turned out to be a surprising semantic footgun,
-// * as partially-applied class constructors will share the same "this" object, resulting in unexpected mutations!
-// * TODO: Compile differently and forbid the use of curried classes as first-class values.
-
-
 :sir
 :sjs
 class A(val x)(val y)
@@ -113,22 +107,22 @@ h.y
 class A(x1, x2, ...xs)(y1, ...ys) with
   fun fields = [x1, x2, xs, y1, ys]
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.113: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╙──       	                   ^^
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.113: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╙──       	                              ^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'xs'
-//│ ║  l.114: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║  l.108: 	  fun fields = [x1, x2, xs, y1, ys]
 //│ ║         	                        ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.113: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╙──       	                   ^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'ys'
-//│ ║  l.114: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║  l.108: 	  fun fields = [x1, x2, xs, y1, ys]
 //│ ║         	                                ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.113: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
 //│ ╙──       	                              ^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A3;
@@ -166,3 +160,5 @@ class A(x1, x2, ...xs)(y1, ...ys) with
 :todo
 new A(1, 2, 3)(4, 5, 6).fields
 //│ ═══[RUNTIME ERROR] ReferenceError: xs is not defined
+
+
