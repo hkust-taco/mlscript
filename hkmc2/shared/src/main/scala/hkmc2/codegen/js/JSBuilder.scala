@@ -430,8 +430,14 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               s"JSBuilder: expected exactly one auxParams entry after flattening for class ${sym.nme}")
             val backendParamList = auxParams.head
             val ctorParams = backendParamList.paramSyms.map(p => p -> scope.allocateName(p))
-            val metadataParamsOpt = isym.defn.flatMap(_.paramsOpt)
-            val metadataAuxParams = isym.defn.map(_.auxParams).getOrElse(Nil)
+            val sourceParamsOpt = isym.defn.flatMap(_.paramsOpt)
+            
+            // * Whether the class should be "lifted" to a "class" property ofd the companion term
+            // * should currently be consistent with whether the class has source parameters.
+            // * This currently fails for faulty input programs (such as `object O(x)`);
+            // * we should make sure such programs fail compilation before they reach this point.
+            softTODO(sourceParamsOpt.isDefined === isym.shouldBeLifted,
+              s"$sourceParamsOpt.isDefined =/= ${isym.shouldBeLifted}")
             
             def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str)(using Scope): Document =
               mtds.map:
@@ -531,7 +537,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 }$singletonFreeze"
             
             val ctorBod = {{
-                val extraPath = if metadataParamsOpt.isDefined then ".class" else ""
+                val extraPath = if isym.shouldBeLifted then ".class" else ""
                 doc" # static " :: braced:
                   val v = result(isym.asThis)
                   if isSingleton
@@ -580,8 +586,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 } :: {
                   doc""" # static [${scope.lookup_!(State.definitionMetadataSymbol, N)}] = [${
                     kind.desc.escaped}, ${sym.nme.escaped}${
-                    if (kind is syntax.Cls) && metadataParamsOpt.isDefined then
-                      doc", [${metadataParamsOpt.toList.flatMap(_.paramSyms).map { p => p.decl match
+                    if (kind is syntax.Cls) && sourceParamsOpt.isDefined then
+                      doc", [${sourceParamsOpt.toList.flatMap(_.paramSyms).map { p => p.decl match
                         case S(Param(flags = FldFlags(isVal = true))) => doc"${p.name.escaped}"
                         case S(_) | N => doc"null"
                       }.mkDocument(", ")}]"
@@ -596,15 +602,16 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               case N =>
                 doc"$freezeDefns(${clsJS});"
             else
-              // Metadata params are used for the wrapper to preserve the curried calling convention.
+              // Source params are used for the wrapper to preserve the curried calling convention.
               // All args are forwarded to the flat `new Class.class(...)` constructor.
-              val allMetadataParams = metadataParamsOpt.toList ::: metadataAuxParams
+              val sourceAuxParams = isym.defn.map(_.auxParams).getOrElse(Nil)
+              val allSourceParams = sourceParamsOpt.toList ::: sourceAuxParams
               
-              val fun = allMetadataParams match
-                case ps_ :: pss_ if metadataParamsOpt.isDefined => outerScope.nest.givenIn:
+              val fun = allSourceParams match
+                case ps_ :: pss_ if sourceParamsOpt.isDefined => outerScope.nest.givenIn:
                   val (ps, _) = setupFunction(some(sym.nme), ps_, End(), isLambda = false)
                   val pss = pss_.map(setupFunction(N, _, End(), isLambda = false)._1)
-                  val argsDoc = allMetadataParams.flatMap(_.paramSyms)
+                  val argsDoc = allSourceParams.flatMap(_.paramSyms)
                     .map(p => scope.lookup_!(p, p.toLoc)).mkDocument(", ")
                   val inner = doc"new ${sym.nme}.class($argsDoc)"
                   val bod = braced(doc" # return $freeze($inner);")
@@ -678,8 +685,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           case Elaborator.ctx.builtins.Int => doc"globalThis.Number.isInteger($sd)"
           case Elaborator.ctx.builtins.BigInt => doc"typeof $sd === 'bigint'"
           case Elaborator.ctx.builtins.Symbol.module => doc"typeof $sd === 'symbol'"
-          case Elaborator.ctx.builtins.TypedArray => doc"globalThis.ArrayBuffer.isView($sd) && !($sd instanceof globalThis.DataView)"
+          case Elaborator.ctx.builtins.TypedArray =>
+            doc"globalThis.ArrayBuffer.isView($sd) && !($sd instanceof globalThis.DataView)"
           case _: ModuleOrObjectSymbol => doc"$sd instanceof ${result(pth)}.class"
+            // * ^ Note that modules are currently not valid patterns;
+            // *    this case is just for objects, which have their class stored in a `.class` property.
           case _ => doc"$sd instanceof ${result(pth)}"
         case Case.Tup(len, inf) => doc"$runtimeVar.Tuple.isArrayLike($sd) && $sd.length ${if inf then ">=" else "==="} ${len}"
         case Case.Field(name = n, safe = false) =>
@@ -979,16 +989,10 @@ object JSBuilder:
     /** In JS, when a class is overloaded with a term (either explicitly, or because it has a primary parameter list),
       * then its class value is stored in a `.class` property of the term.
       * 
-      * This is used at reference sites (MemberRef, Select) to decide whether to append `.class`
+      * This helper is used at reference sites (MemberRef, Select) to decide whether to append `.class`
       * when accessing a class value. It returns true only for class/module/object symbols,
       * not for term symbols — so constructor calls like `Foo(args)` which resolve to the term
-      * symbol are not affected.
-      * 
-      * At the class definition site, we use `metadataParamsOpt.isDefined` to decide whether
-      * to set `.class` on the definition. This is consistent with this method because
-      * `@buffered` classes use `constructor(...)` syntax (no main parameter list), so
-      * `metadataParamsOpt` is `N` and `shouldBeLifted` returns `false` — both agree that
-      * no wrapper function or `.class` property is needed. */
+      * symbol are not affected. */
     def shouldBeLifted: Bool =
       val bsym = dsym.asBlkMember
       (

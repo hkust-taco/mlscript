@@ -5,10 +5,40 @@ open ObjectBuffer
 open annotations
 
 
+:sjs
 @buffered
 class A with
   constructor(x)
   fun f(y) = x + y
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let A1;
+//│ (class A {
+//│   static {
+//│     A1 = this
+//│   }
+//│   static {
+//│     A.size = 1;
+//│   }
+//│   static ctor(buf, idx) {
+//│     return (x) => {
+//│       let idx1;
+//│       idx1 = idx + 0;
+//│       buf.buf[idx1] = x;
+//│       return idx
+//│     }
+//│   }
+//│   static f(buf, idx) {
+//│     return (y) => {
+//│       let idx1;
+//│       idx1 = idx + 0;
+//│       return buf.buf.at(idx1) + y
+//│     }
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
 
 @bufferable
 class A2(x) with
@@ -18,7 +48,7 @@ class A2(x) with
 @buffered
 class B0(x)
 //│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
-//│ ║  l.18: 	@buffered
+//│ ║  l.48: 	@buffered
 //│ ╙──      	^^^^^^^^^
 
 :ge
@@ -26,14 +56,14 @@ class B0(x)
 @buffered
 class B1(x)
 //│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
-//│ ║  l.25: 	@buffered
+//│ ║  l.55: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.26: 	@buffered
+//│ ║  l.56: 	@buffered
 //│ ╙──      	^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
-//│ ║  l.25: 	@buffered
+//│ ║  l.55: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.26: 	@buffered
+//│ ║  l.56: 	@buffered
 //│ ╙──      	^^^^^^^^^
 
 :ge
@@ -41,29 +71,38 @@ class B1(x)
 @bufferable
 class B2(x)
 //│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
-//│ ║  l.40: 	@buffered
+//│ ║  l.70: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.41: 	@bufferable
+//│ ║  l.71: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
-//│ ║  l.40: 	@buffered
+//│ ║  l.70: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.41: 	@bufferable
+//│ ║  l.71: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 
 :w
 @bufferable
 module B3
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.55: 	@bufferable
+//│ ║  l.85: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 
 :w
 @bufferable
 object B3
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.62: 	@bufferable
+//│ ║  l.92: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
+
+
+:breakme // TODO: disallow direct instantiation of @buffered classes
+new A
+//│ = fun
+
+:fixme // TODO: disallow direct instantiation of @buffered classes
+new A(123).f(0)
+//│ ═══[RUNTIME ERROR] TypeError: tmp.f is not a function
 
 
 let buf = new DefaultObjectBuffer(10)
