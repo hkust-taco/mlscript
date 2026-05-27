@@ -115,7 +115,7 @@ module Foo with
 //│   static {
 //│     let tmp2;
 //│     tmp2 = Foo1();
-//│     this.res = tmp2.foo;
+//│     Foo.res = tmp2.foo;
 //│   }
 //│   get foo() {
 //│     return state;

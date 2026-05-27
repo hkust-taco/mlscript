@@ -70,7 +70,7 @@ module M with
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "C"];
 //│     });
-//│     this.D = function D() {
+//│     M.D = function D() {
 //│       return globalThis.Object.freeze(new D.class());
 //│     };
 //│     (class D {
@@ -80,9 +80,9 @@ module M with
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "D", []];
 //│     });
-//│     this.x = 1;
+//│     M.x = 1;
 //│     tmp = M.x + 1;
-//│     this.y = tmp;
+//│     M.y = tmp;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"];
@@ -124,7 +124,7 @@ module M with
 //│     M3 = this
 //│   }
 //│   static {
-//│     this.m = M3;
+//│     M2.m = M3;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"];
@@ -156,13 +156,13 @@ module AA with
 //│     AA1 = this
 //│   }
 //│   static {
-//│     this.x = 1;
+//│     AA.x = 1;
 //│     (class BB {
 //│       static {
 //│         AA.BB = this
 //│       }
 //│       static {
-//│         this.y = 2;
+//│         BB.y = 2;
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "BB"];

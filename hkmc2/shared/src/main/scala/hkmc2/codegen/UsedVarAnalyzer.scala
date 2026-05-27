@@ -73,7 +73,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
         case _ => super.applyBlock(b)
       
       override def applyPath(p: Path): Unit = p match
-        case Value.Ref(_: BuiltinSymbol, _) => super.applyPath(p)
+        case Value.SimpleRef(_: BuiltinSymbol) => super.applyPath(p)
         case RefOfBms(_, SDSym(dSym), _) =>
           val node = scopeData.getNode(dSym)
           node.obj match
@@ -101,9 +101,9 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
                 case _: ScopedObject.Class | _: ScopedObject.ClassCtor | _: ScopedObject.Companion => accessed.refdDefns.add(node.obj.toInfo)
                 case _ => ()
               case _ => super.applyPath(p)
-              
-        case Value.Ref(l, _) =>
-          accessed.accessed.add(l)
+        
+        case r: Value.RefLike =>
+          accessed.accessed.add(r.symbol)
         case _ => super.applyPath(p)
     accessed.toIMut
     
@@ -438,9 +438,9 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
           case _ => super.applyResult(r)
         
         override def applyPath(p: Path): Unit = p match
-          case RefOfBms(_, SDSym(d), _) => handleScopeRef(d)          
-          case Value.Ref(l, _) =>
-            if hasMutator.contains(l) then reqCapture += (l)
+          case RefOfBms(_, SDSym(d), _) => handleScopeRef(d)
+          case r: Value.RefLike =>
+            if hasMutator.contains(r.symbol) then reqCapture += r.symbol
           case _ => super.applyPath(p)
         
         override def applyDefn(defn: Defn): Unit = defn match

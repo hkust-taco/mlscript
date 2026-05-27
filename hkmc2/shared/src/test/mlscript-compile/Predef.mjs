@@ -62,16 +62,16 @@ let Predef1;
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "Refl"];
     });
-    this.pass1 = Rendering.pass1;
-    this.pass2 = Rendering.pass2;
-    this.pass3 = Rendering.pass3;
-    this.passing = Rendering.passing;
-    this.map = Rendering.map;
-    this.fold = Rendering.fold;
-    this.interleave = Rendering.interleave;
-    this.render = Rendering.render;
-    this.js_assert = globalThis.console["assert"];
-    this.foldl = Predef.fold;
+    Predef.pass1 = Rendering.pass1;
+    Predef.pass2 = Rendering.pass2;
+    Predef.pass3 = Rendering.pass3;
+    Predef.passing = Rendering.passing;
+    Predef.map = Rendering.map;
+    Predef.fold = Rendering.fold;
+    Predef.interleave = Rendering.interleave;
+    Predef.render = Rendering.render;
+    Predef.js_assert = globalThis.console["assert"];
+    Predef.foldl = Predef.fold;
     (class meta {
       static {
         Predef.meta = this

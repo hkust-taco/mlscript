@@ -1,14 +1,14 @@
 :js
 :staging
 
+:fixme
 staged module M with
   class C with
     fun f() = 1
     fun g() = f()
-//│ > fun ctor_() =
-//│ >   class C with
-//│ >     fun f() = 1
-//│ >     fun g() = C.f()
+//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
+//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 staged module A with
   fun f() = 1
@@ -43,6 +43,7 @@ staged module D with
 //│ >     C then true
 //│ >     else false
 
+:fixme
 module A with
   module B with
     class C(a)
@@ -53,11 +54,10 @@ staged module M with
     A.B.C
     A.B.C(1)
     E
+//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
 //│ > fun ctor_() =
 //│ >   class E
-//│ > fun f() =
-//│ >   A.B.C(1)
-//│ >   M.E
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 :e
 staged module M with

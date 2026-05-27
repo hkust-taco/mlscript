@@ -74,10 +74,10 @@ module T with
 //│     T1 = this
 //│   }
 //│   static {
-//│     this.a = T.t;
-//│     this.b = T.t;
-//│     this.c = T.p;
-//│     this.d = T.p;
+//│     T.a = T.t;
+//│     T.b = T.t;
+//│     T.c = T.p;
+//│     T.d = T.p;
 //│   }
 //│   static t() {
 //│     return 1

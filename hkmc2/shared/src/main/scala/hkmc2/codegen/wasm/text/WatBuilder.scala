@@ -112,6 +112,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
 
+  /** Casts an expression to `target` type if the result type does not match with `target`. */
+  private def castConserve(expr: Expr, target: RefType): Expr =
+    require(expr.resultTypes.size == 1, "expected single-result expression for cast")
+    if expr.resultType.contains(target) then expr else ref.cast(expr, target)
+
   /** Returns the default Wasm value for one struct field when eagerly constructing an object instance. */
   private def defaultStructFieldValue(field: Field)(using Ctx, Raise): Expr = field.ty match
     case refTy: RefType if refTy.nullable => ref.`null`(refTy.heapType)
@@ -319,7 +324,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     defn.parentPath match
       case N => N
-      case S(Value.Ref(sym, _)) =>
+      case S(Value.MemberRef(sym, _)) =>
         sym.asCls.flatMap(_.asBlkMember).orElse(unsupportedParent())
       case S(sel: Select) =>
         sel.symbol.flatMap(_.asCls).flatMap(_.asBlkMember).orElse(unsupportedParent())
@@ -914,7 +919,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     def splitSuperTail(block: Block): Opt[Block -> Ls[Arg]] = block match
       case End(_) => N
-      case Assign(lhs, Call(Value.Ref(bs: BuiltinSymbol, _), argss), _: End)
+      case Assign(lhs, Call(Value.SimpleRef(bs: BuiltinSymbol), argss), _: End)
         if (lhs is State.noSymbol) && (bs is State.superSymbol)
       =>
         S(End("") -> argss.flatten)
@@ -968,7 +973,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     if expr.resultTypes.isEmpty && !isAbortive then
       blockInstr(
         label = N,
-        children = Seq(expr, result(Value.Ref(State.unitSymbol))),
+        children = Seq(expr, result(State.unitBlockMemberSymbol.asMemberRef(State.unitSymbol))),
         resultTypes = Seq(Result(RefType.anyref)),
       )
     else
@@ -1075,51 +1080,24 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     raise(ErrorReport(errMsgs, source = Diagnostic.Source.Compilation, extraInfo = extraInfo))
     unreachable
 
-  def getVar(l: Local, loc: Opt[Loc])(using Ctx, FunctionCtx, Raise): Expr =
-    singletonInfoFor(l) match
-      case S(info) => singletonGlobalGet(info)
-      case N => l match
-          case ts: semantics.TermSymbol =>
-            errExpr(
-              Ls(msg"WatBuilder::getVar for TermSymbol not implemented yet" -> ts.toLoc),
-              extraInfo = S(ts.toString),
-            )
-          case ts: semantics.ModuleOrObjectSymbol if ts.asMod.isDefined =>
-            errExpr(
-              Ls(
-                msg"WatBuilder::getVar for ModuleOrObjectSymbol (`ts.asMod.isDefined`) not implemented yet" -> ts.toLoc,
-              ),
-              extraInfo = S(ts.toString),
-            )
-          case ts: semantics.InnerSymbol =>
-            funcCtx.lookupLocal(ts) match
-              case S(localIdx) => local.get(localIdx, RefType.anyref)
-              case N =>
-                errExpr(
-                  Ls(
-                    msg"WatBuilder::getVar for InnerSymbol `${ts.toString}` (symbol not in top-level scope) not implemented yet" ->
-                      ts.toLoc,
-                  ),
-                  extraInfo = S(
-                    s"Locals: ${(funcCtx.params ++ funcCtx.locals).toString}\nGlobals: ${ctx.getGlobals.toString}",
-                  ),
-                )
-          case l =>
-            funcCtx.lookupLocal(l) match
-              case S(localIdx) => local.get(localIdx, RefType.anyref)
-              case N if ctx.containsGlobal(l) =>
-                global.get(ctx.getGlobal_!(l), ctx.getGlobalType_!(l).globalType.valType)
-              case _ =>
-                errExpr(
-                  Ls(
-                    msg"Cannot find variable `${l.toString}` (${l.getClass.getSimpleName}) in local or global scope." ->
-                      l.toLoc,
-                  ),
-                  extraInfo = S(
-                    s"Locals: ${(funcCtx.params ++ funcCtx.locals).toString}\nGlobals: ${ctx.getGlobals.toString}",
-                  ),
-                )
-  end getVar
+  def getVar(l: Local, loc: Opt[Loc])(using Ctx, FunctionCtx, Raise): Expr = l match
+    case ts: (semantics.TermSymbol | semantics.InnerSymbol) => 
+      lastWords(s"Symbol `$ts` (${ts.getClass.getSimpleName}) cannot be resolved as a variable")
+    case l =>
+      funcCtx.lookupLocal(l) match
+        case S(localIdx) => local.get(localIdx, RefType.anyref)
+        case N if ctx.containsGlobal(l) =>
+          global.get(ctx.getGlobal_!(l), ctx.getGlobalType_!(l).globalType.valType)
+        case _ =>
+          errExpr(
+            Ls(
+              msg"Cannot find variable `${l.toString}` (${l.getClass.getSimpleName}) in local or global scope." ->
+                l.toLoc,
+            ),
+            extraInfo = S(
+              s"Locals: ${(funcCtx.params ++ funcCtx.locals).toString}\nGlobals: ${ctx.getGlobals.toString}",
+            ),
+          )
 
   def argument(a: Arg)(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr =
     if a.spread.nonEmpty then
@@ -1206,15 +1184,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         )
 
   def result(r: codegen.Result)(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr = r match
-    case Value.This(sym) =>
-      // TODO(Derppening): Add type tracking and refinement for locals, remove the `ref.cast`
-      ref.cast(
-        local.get(funcCtx.lookupLocal_!(sym, sym.toLoc), RefType.anyref),
-        RefType(
-          sym.asBlkMember.fold(baseObjectTypeIdx)(ctx.getType_!(_)),
-          nullable = false,
-        ),
-      )
     case Value.Lit(BoolLit(value)) =>
       ref.i31(i32.const(if value then 1 else 0))
     case Value.Lit(IntLit(value)) =>
@@ -1227,21 +1196,40 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         operands = Seq(ref.i31(i32.const(lit.offset)), ref.i31(i32.const(lit.byteLen))),
         returnTypes = Seq(Result(RefType.anyref)),
       )
-    case Value.Ref(l, disamb) =>
-      if (l is State.unitSymbol) || disamb.contains(State.unitSymbol) then
-        RegisterUnitSingleton()
+    case Value.SimpleRef(l) =>
       singletonInfoFor(l) match
         case S(info) => singletonGlobalGet(info)
         case N =>
-          if disamb.exists(_.isInstanceOf[ClassSymbol]) then
+          ctx.getFunc(l) match
+            case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncTypeUse_!(l).typeIdx, nullable = false))
+            case N => getVar(l, r.toLoc)
+    case Value.MemberRef(bms, disamb) =>
+      if (bms is State.unitSymbol) || (disamb is State.unitSymbol) then
+        RegisterUnitSingleton()
+      singletonInfoFor(bms) match
+        case S(info) => singletonGlobalGet(info)
+        case N =>
+          if disamb.isInstanceOf[ClassSymbol] then
             errExpr:
               Ls(msg"Plain class references are not supported in Wasm; instantiate the class instead." -> r.toLoc)
           else
-            ctx.getFunc(l) match
-              case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncTypeUse_!(l).typeIdx, nullable = false))
-              case N => getVar(l, r.toLoc)
+            ctx.getFunc(bms) match
+              case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncTypeUse_!(bms).typeIdx, nullable = false))
+              case N => getVar(bms, r.toLoc)
+    case Value.This(sym) =>
+      singletonInfoFor(sym) match
+        case S(info) => singletonGlobalGet(info)
+        case N =>
+          // TODO(Derppening): Remove `ref.cast` once erased-typed IR is implemented
+          ref.cast(
+            local.get(funcCtx.lookupLocal_!(sym, sym.toLoc), RefType.anyref),
+            RefType(
+              sym.asBlkMember.fold(baseObjectTypeIdx)(ctx.getType_!(_)),
+              nullable = false,
+            ),
+          )
 
-    case Call(Value.Ref(l: BuiltinSymbol, _), lhs :: rhs :: Nil) if !l.functionLike =>
+    case Call(Value.SimpleRef(l: BuiltinSymbol), lhs :: rhs :: Nil) if !l.functionLike =>
       if l.binary then
         errExpr(
           Ls(
@@ -1288,10 +1276,27 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           )
         case N =>
           fun match
-            case Value.Ref(l, _) =>
+            case Value.SimpleRef(l) =>
               val base = fun match
-                case Value.Ref(l, _) => ctx.getFunc(l)
+                case Value.SimpleRef(l) => ctx.getFunc(l)
+                case Value.MemberRef(l, _) => ctx.getFunc(l)
                 case _ => N
+              val baseFuncIdx = base match
+                case S(idx) => idx
+                case N => return errExpr(
+                    Ls(msg"Expected static function reference in Call(...) expression" -> fun.toLoc),
+                    extraInfo = S(fun.toString),
+                  )
+              val baseTypeInfo = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(baseFuncIdx).typeIdx)
+              val wasmArgs = args.map(argument)
+
+              call(
+                funcidx = baseFuncIdx,
+                operands = wasmArgs.toSeq,
+                returnTypes = baseTypeInfo.compType.asInstanceOf[FunctionType].sigType.results,
+              )
+            case Value.MemberRef(l, _) =>
+              val base = ctx.getFunc(l)
               val baseFuncIdx = base match
                 case S(idx) => idx
                 case N => return errExpr(
@@ -1374,7 +1379,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           val fieldidx = fieldSelect(selCls, selSym)
           struct.get(
             fieldidx,
-            ref = ref.cast(qualRes, RefType(ctx.getType_!(selCls), nullable = false)),
+            ref = castConserve(qualRes, RefType(ctx.getType_!(selCls), nullable = false)),
             ty = RefType.anyref,
           )
         case N =>
@@ -1413,8 +1418,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       val as = argss.flatten
       cls match
         // TODO: Implement proper lowering for Errors with unit payloads.
-        case Select(Value.Ref(sym, _), id)
-            if (sym eq State.globalThisSymbol) && id.name == "Error" =>
+        case Select(Value.This(sym), id) if (sym eq State.globalThisSymbol) && id.name == "Error" =>
           return as.headOption match
             case S(arg) => arg.value match
                 case Value.Lit(BoolLit(value)) => ref.i31(i32.const(if value then 1 else 0))
@@ -1434,7 +1438,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         case _ => ()
       end match
       val ctorClsSymOpt = cls match
-        case ref: Value.Ref => ref.disamb
+        case ref: Value.MemberRef => S(ref.disamb)
         case sel: Select => sel.symbol
         case cls => return errExpr(
             Ls(
@@ -1475,7 +1479,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   /** Returns the intrinsic name if `path` refers to a builtin under `wasm`, or `N` otherwise.
     */
   private def wasmIntrinsicName(path: Path): Opt[Str] = path match
-    case Select(Value.Ref(sym, _), ident) if (sym eq State.wasmSymbol) && wasmIntrinsicNameSet.contains(ident.name) =>
+    case Select(Value.SimpleRef(sym), ident) if (sym eq State.wasmSymbol) && wasmIntrinsicNameSet.contains(ident.name) =>
       S(ident.name)
     case _ => N
 
@@ -1673,7 +1677,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       })",
                   )
                 val fieldidx = fieldSelect(selCls, fieldSym)
-                val objRef = ref.cast(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false))
+                val objRef = castConserve(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false))
                 struct.set(fieldidx, objRef, rhsExpr)
               case N =>
                 lastWords(
@@ -1729,7 +1733,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         )
 
       case Define(defn, rst) =>
-        def mkThis(sym: InnerSymbol): Expr = result(Value.This(sym))
+        def mkThis(sym: InnerSymbol): Expr = result(sym.asThis)
         defn match
           case ValDefn(tsym, sym, p) =>
             // * Currently we allow `val` outside of object/module scopes,
@@ -2108,7 +2112,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           if tailMode then S(mkTempLocal("matchRes"))
           else N
         val scrutLocalResult = scrut match
-          case Value.Ref(_, _) | Value.This(_) | Value.Lit(_) => N
+          case _: (Value.RefLike | Value.Lit) => N
           case _ => S(mkTempLocal("scrut"))
 
         val scrutInitExpr = scrutLocalResult.map: scrutLocal =>
@@ -2126,7 +2130,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   label = N,
                   children = Seq(
                     expr,
-                    local.set(target, result(Value.Ref(State.unitSymbol))),
+                    local.set(target, result(State.unitBlockMemberSymbol.asMemberRef(State.unitSymbol))),
                   ),
                   resultTypes = Seq.empty,
                 )

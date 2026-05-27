@@ -184,7 +184,7 @@ foo(2)
 //│ ╔══[WARNING] Objects are not yet lifted.
 //│ ║  l.174: 	  object Foo with
 //│ ╙──       	         ^^^
-//│ ═══[WARNING] Cannot yet lift definition `Bar` as it extends an expression.
+//│ ═══[WARNING] Cannot yet lift definition `Bar` as it extends an unliftable class.
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
 
 // `h` is lifted out, but then cannot access the BlockMemberSymbol M.

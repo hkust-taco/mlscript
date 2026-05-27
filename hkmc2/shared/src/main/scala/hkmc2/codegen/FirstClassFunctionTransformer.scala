@@ -28,11 +28,11 @@ class FirstClassFunctionTransformer
     )
     val defSym = new BlockMemberSymbol("Function$", Nil, false)
     val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), params :: Nil,
-      Return(Call(p, params.params.map(_.sym.asPath.asArg) ne_:: Nil)(true, false, false)))(N, annotations = Nil)
+      Return(Call(p, params.params.map(_.sym.asSimpleRef.asArg) ne_:: Nil)(true, false, false)))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
-      Some(Select(Value.Ref(State.globalThisSymbol, Some(State.globalThisSymbol)), Tree.Ident("Function"))(Some(ctx.builtins.Function))),
+      Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function))),
       callDef :: Nil, Nil, Nil, Assign.discard(
-        Call(Value.Ref(State.builtinOpsMap("super")), Nil ne_:: Nil)(false, false, false),
+        Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(false, false, false),
         End()), End(), None, None)(N, annotations = Nil)
 
   private def getParamList(l: BlockMemberSymbol): Option[ParamList] = funDefns.get(l) match
@@ -43,15 +43,14 @@ class FirstClassFunctionTransformer
     ts.irFunDefn.flatMap(_.params.headOption)
 
   override def applyPath(p: Path)(k: Path => Block): Block = p match
-    case ref @ Value.Ref(l: BlockMemberSymbol, disamb) => disamb match
-      case Some(s: TermSymbol) if s.k is syntax.Fun =>
+    case ref @ Value.MemberRef(l, disamb) => disamb match
+      case s: TermSymbol if s.k is syntax.Fun =>
         val params = getParamList(l).getOrElse(lastWords(s"Cannot get ${l.nme}'s parameter list."))
         val clsDef = generateFCFunctionClass(ref, params)
         val tmp = new TempSymbol(None)
-        val cls = Value.Ref(clsDef.sym, Some(clsDef.isym))
-        Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil), k(Value.Ref(tmp, None)))))
-      case Some(_) => k(p)
-      case None => lastWords(s"${l.nme}'s disamb cannot be empty.")
+        val cls = clsDef.sym.asMemberRef(clsDef.isym)
+        Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil), k(tmp.asSimpleRef))))
+      case _ => k(p)
     case sel: Select => sel.symbol match
       case Some(s: TermSymbol) if (s.k is syntax.Fun) =>
         val params = getParamList(s).getOrElse:
@@ -62,17 +61,17 @@ class FirstClassFunctionTransformer
           PlainParamList(Nil)
         val clsDef = generateFCFunctionClass(sel, params)
         val tmp = new TempSymbol(None)
-        val cls = Value.Ref(clsDef.sym, Some(clsDef.isym))
-        Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil), k(Value.Ref(tmp, None)))))
+        val cls = clsDef.sym.asMemberRef(clsDef.isym)
+        Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil), k(tmp.asSimpleRef))))
       case Some(_) => k(p)
       case _ =>
         raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function." -> sel.toLoc :: Nil,
           source = Diagnostic.Source.Compilation))
         k(p)
-    case _ => k(p)  
+    case _ => k(p)
 
   private def pathStartsWith(p: Path, symbol: Local): Bool = p match
-    case Value.Ref(l, _) => l is symbol
+    case r: Value.Ref => r.symbol is symbol
     case Select(p, _) => pathStartsWith(p, symbol)
     case DynSelect(p, _, _) => pathStartsWith(p, symbol)
     case _ => false
@@ -81,9 +80,10 @@ class FirstClassFunctionTransformer
     case c @ Call(fun, argss) => applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
       def call(f: Path) = Call(f, argss2.ne_!)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall)
       fun match
-        case ref @ Value.Ref(sym, _) => sym match
+        case ref @ Value.SimpleRef(sym) => sym match
           case _: VarSymbol |  _: TempSymbol => k(call(ref.selSN("call")))
           case _ => k(call(fun))
+        case ref @ Value.MemberRef(_, _) => k(call(fun))
         case sel: Select => sel.symbol match
           case Some(s: TermSymbol) =>
             if s.k is syntax.Fun then k(call(fun))
@@ -110,7 +110,7 @@ class FirstClassFunctionTransformer
             val newBody = rec(rest)
             val funSym = new BlockMemberSymbol("lambda$", Nil, false)
             val funDef = FunDefn.withFreshSymbol(None, funSym, head :: Nil, newBody)(N, annotations = Nil)
-            Scoped(Set(funSym), Define(funDef, Return(Value.Ref(funDef.sym, Some(funDef.dSym)))))
+            Scoped(Set(funSym), Define(funDef, Return(funDef.sym.asMemberRef(funDef.dSym))))
           case Nil => fd.body
         FunDefn.withFreshSymbol(fd.owner, fd.sym, head :: Nil, rec(tail))(fd.configOverride, fd.annotations)
   

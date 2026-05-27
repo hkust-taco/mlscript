@@ -24,7 +24,7 @@ x => x
 //│ define lambda⁰ as fun lambda¹(x) {
 //│   return x
 //│ };
-//│ define Function$⁰ as class Function$¹ {
+//│ define Function$⁰ as class extends globalThis⁰.Function⁰ Function$¹ {
 //│   method call⁰ = fun call¹(x) { return lambda¹(x) }
 //│ };
 //│ set tmp = new Function$¹();
@@ -74,7 +74,7 @@ bar(foo)
 //│ define bar⁰ as fun bar¹(f) {
 //│   return f.call﹖(0)
 //│ };
-//│ define Function$² as class Function$³ {
+//│ define Function$² as class extends globalThis⁰.Function⁰ Function$³ {
 //│   method call² = fun call³(x) { return foo¹(x) }
 //│ };
 //│ set tmp = new Function$³();
@@ -155,7 +155,7 @@ Foo(1).foo(x => x - 1)
 //│ define lambda⁴ as fun lambda⁵(x) {
 //│   return -⁰(x, 1)
 //│ };
-//│ define Function$⁴ as class Function$⁵ {
+//│ define Function$⁴ as class extends globalThis⁰.Function⁰ Function$⁵ {
 //│   method call⁴ = fun call⁵(x) {
 //│     return lambda⁵(x)
 //│   }
@@ -176,7 +176,7 @@ foo()(1)
 //│ define lambda⁶ as fun lambda⁷(x) {
 //│   return x
 //│ };
-//│ define Function$⁶ as class Function$⁷ {
+//│ define Function$⁶ as class extends globalThis⁰.Function⁰ Function$⁷ {
 //│   method call⁶ = fun call⁷(x) {
 //│     return lambda⁷(x)
 //│   }
@@ -233,7 +233,7 @@ module Foo with
 //│   set tmp = +⁰(x, Bar.y⁰);
 //│   return +⁰(tmp, z)
 //│ };
-//│ define Function$⁸ as class Function$⁹ {
+//│ define Function$⁸ as class extends globalThis⁰.Function⁰ Function$⁹ {
 //│   private val Bar⁰;
 //│   private val z⁰;
 //│   constructor(Bar, z) {
@@ -286,7 +286,7 @@ y => x + y
 //│ define lambda¹⁰ as fun lambda¹¹(y) {
 //│   return +⁰(x¹, y)
 //│ };
-//│ define Function$¹⁰ as class Function$¹¹ {
+//│ define Function$¹⁰ as class extends globalThis⁰.Function⁰ Function$¹¹ {
 //│   method call¹⁰ = fun call¹¹(y) { return lambda¹¹(y) }
 //│ };
 //│ set tmp = new Function$¹¹();
@@ -471,7 +471,7 @@ fun foo(x)(y) = x + y
 //│ define lambda$⁰ as fun lambda$¹(x, y) {
 //│   return +⁰(x, y)
 //│ };
-//│ define Function$¹² as class Function$¹³ {
+//│ define Function$¹² as class extends globalThis⁰.Function⁰ Function$¹³ {
 //│   private val x²;
 //│   constructor(x) {
 //│     do super⁰();
@@ -533,7 +533,7 @@ foo(tuple)
 //│ ╙──       	    ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Function$¹⁴, tmp;
-//│ define Function$¹⁴ as class Function$¹⁵ {
+//│ define Function$¹⁴ as class extends globalThis⁰.Function⁰ Function$¹⁵ {
 //│   method call¹⁴ = fun call¹⁵() {
 //│     return Predef⁰.tuple⁰()
 //│   }

@@ -129,11 +129,13 @@ class BlockSimplifier
                 case ts: TermSymbol =>
                   usedPrivateFields += ts
                 case _ =>
-            case Value.Ref(loc, _) =>
+            case Value.SimpleRef(loc) =>
+              usedVars += loc
+            case Value.MemberRef(loc, _) =>
               usedVars += loc
             case _ =>
           super.applyPath(p)
-
+        
         override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
           privateVars ++= defn.privateFields
           defn.companion.foreach(body => privateVars ++= body.privateFields)
@@ -214,7 +216,7 @@ class BlockSimplifier
     
     override def applyValue(v: Value)(k: Value => Block) = v match
       // * Replace with `undefined` those references to local variables that are never assigned
-      case Value.Ref(loc, N) if localVars.contains(loc) && !definedVars.contains(loc) =>
+      case Value.SimpleRef(loc) if localVars.contains(loc) && !definedVars.contains(loc) =>
         registerChange(s"${loc.showDbg} is never assigned; replacing read with undefined")
         // if !symbolsToPreserve(loc) then removedLocals += loc
         k(Value.Lit(syntax.Tree.UnitLit(false)))
@@ -406,7 +408,7 @@ class BlockSimplifier
     enum AssignInfo:
       case Unknown
       case Uninitialized
-      case Assigned(asst: Assign, varAsst: Opt[Value.Ref -> AssignInfo])
+      case Assigned(asst: Assign, varAsst: Opt[Value.RefLike -> AssignInfo])
       case Merge(asst1: AssignInfo, asst2: AssignInfo)
       
       override def toString: String = this match
@@ -501,7 +503,7 @@ class BlockSimplifier
       
       // * Discard local variables that are assigned just to be returned
       // * Note: the reason we do this here and not in DeadCodeElim is that we need to check `capturedVars`
-      case Assign(lhs: LocalVar, rhs, Return(Value.Ref(ret, N)))
+      case Assign(lhs: LocalVar, rhs, Return(Value.SimpleRef(ret)))
         if !inDryRun && (ret is lhs) && !capturedVars(lhs) && !symbolsToPreserve(lhs)
       =>
         registerChange(s"tail-return ${lhs.showDbg} ~> ${rhs.showDbg}")
@@ -511,12 +513,12 @@ class BlockSimplifier
         // log(s"Propagating ${lhs} := ${rhs} (${assignedResults.get(lhs)})")
         
         assignedResults += lhs -> Assigned(ass, rhs.match
-          case r @ Value.Ref(sym: LocalVar, N) =>
+          case r @ Value.SimpleRef(sym: LocalVar) =>
             if capturedVars(sym) then N
             else
               val rhs2 = assignedResults(sym)
               S(r -> rhs2)
-          case r @ Value.Ref(sym, _) =>
+          case r: Value.RefLike =>
             S(r -> Unknown)
           case _ => N
         )
@@ -607,7 +609,7 @@ class BlockSimplifier
             case Merge(a1, a2) => getShapesA(a1) | getShapesA(a2)
             case Assigned(asst, varAsst) =>
               varAsst match
-              case S(Value.Ref(r, S(sym: ModuleOrObjectSymbol)) -> _) =>
+              case S(Value.MemberRef(r, sym: ModuleOrObjectSymbol) -> _) =>
                 Set.single(sym)
               case S(_ -> ass) =>
                 getShapesA(ass)
@@ -641,11 +643,11 @@ class BlockSimplifier
             if gaveUp then Set.empty
             else
               p match
-              case Value.Ref(r: LocalVar, N) if capturedVars(r) =>
+              case Value.SimpleRef(r: LocalVar) if capturedVars(r) =>
                 giveUp
-              case Value.Ref(r: LocalVar, N) =>
+              case Value.SimpleRef(r: LocalVar) =>
                 assignedResults.get(r).fold(giveUp)(getShapesA)
-              case Value.Ref(r, S(sym: ModuleOrObjectSymbol)) =>
+              case Value.MemberRef(r, sym: ModuleOrObjectSymbol) =>
                 Set.single(sym)
               case Value.Lit(lit) => Set.single(lit)
               case _ => giveUp
@@ -725,7 +727,7 @@ class BlockSimplifier
     
     override def applyValue(v: Value)(k: Value => Block): Block =
       v match
-      case Value.Ref(loc: LocalVar, N) if !inDryRun && !capturedVars(loc) =>
+      case Value.SimpleRef(loc: LocalVar) if !inDryRun && !capturedVars(loc) =>
         
         val rs = assignedResults(loc)
         // log(s"Ref ${loc.showDbg} ${rs} ${localVars(loc)} ${capturedVars(loc)}")
@@ -743,7 +745,7 @@ class BlockSimplifier
         var litValue: Bool | Value = true
         var emptyHanded = false
         
-        def analyzeValues(asst: AssignInfo): Set[Value.Ref] =
+        def analyzeValues(asst: AssignInfo): Set[Value.RefLike] =
           if emptyHanded && litValue === false then
             analyzeAssignments(asst)
             Set.empty
@@ -766,7 +768,7 @@ class BlockSimplifier
                 case _ =>
                   litValue = false
               opt match
-              case S((r @ Value.Ref(lv: LocalVar, N)) -> rhs) =>
+              case S((r @ Value.SimpleRef(lv: LocalVar)) -> rhs) =>
                 if assignedResults(lv) is rhs
                 then Set.single(r) ++ analyzeValues(rhs)
                 else Set.empty
@@ -796,9 +798,9 @@ class BlockSimplifier
           registerChange(s"${loc.showDbg} ~> ${lit.showDbg}")
           return k(lit)
         case false =>
-          vars.minByOption(_.l.uid) match
+          vars.minByOption(_.symbol.uid) match
           case N => k(v)
-          case S(v2) => 
+          case S(v2) =>
             registerChange(s"${loc.showDbg} ~> ${v2.showDbg} (via ${vars.map(_.showDbg).mkString(", ")})")
             k(v2)
         
@@ -814,7 +816,7 @@ class BlockSimplifier
           case call: Call if call.isKnownUnsaturatedCall && call.isPure => S(call)
           case _ =>
             opt match
-            case S((Value.Ref(next: LocalVar, N), nextAsst))
+            case S((Value.SimpleRef(next: LocalVar), nextAsst))
               if !capturedVars(next) && !seen(next) && (assignedResults(next) is nextAsst) =>
               loop(nextAsst, seen + next)
             case _ => N
@@ -830,7 +832,7 @@ class BlockSimplifier
       r match
       
       // * Try to propagate pure calls
-      case Value.Ref(loc: LocalVar, N) if !inDryRun && !capturedVars(loc) =>
+      case Value.SimpleRef(loc: LocalVar) if !inDryRun && !capturedVars(loc) =>
         assignedPureCallPrefix(loc) match
         case S(call) =>
           registerChange(s"${loc.showDbg} ~> ${call.showDbg}")
@@ -839,7 +841,7 @@ class BlockSimplifier
           super.applyResult(r)(k)
       
       // * Try to combine pure calls (typically unsaturated calls) assigned to a variable into the current call
-      case c @ Call(Value.Ref(loc: LocalVar, N), argss) if !inDryRun && !capturedVars(loc) =>
+      case c @ Call(Value.SimpleRef(loc: LocalVar), argss) if !inDryRun && !capturedVars(loc) =>
         assignedPureCallPrefix(loc) match
         case S(prefix) =>
           registerChange(s"${loc.showDbg} call prefix ~> ${prefix.showDbg}")
@@ -850,13 +852,13 @@ class BlockSimplifier
         case N => super.applyResult(r)(k)
       
       // * Remove uses of the strange builtin comma operator
-      case Call(Value.Ref(sym: BuiltinSymbol, N), (arg1 :: arg2 :: Nil) :: Nil)
+      case Call(Value.SimpleRef(sym: BuiltinSymbol), (arg1 :: arg2 :: Nil) :: Nil)
         if sym.nme === "," && arg1.spread.isEmpty && arg2.spread.isEmpty
         =>
           Assign.discard(arg1.value, k(arg2.value))
       
       // * Partially evaluate calls to known builtins with literal arguments
-      case Call(Value.Ref(sym: BuiltinSymbol, N), args :: Nil) if args.forall(_.value.isInstanceOf[Value]) =>
+      case Call(Value.SimpleRef(sym: BuiltinSymbol), args :: Nil) if args.forall(_.value.isInstanceOf[Value]) =>
         val argValues = args.map(_.value.asInstanceOf[Value])
         args.foreach(a => assert(a.spread.isEmpty))
         builtinEval.lift((sym.nme, argValues)) match
@@ -906,7 +908,7 @@ class BlockSimplifier
       // Reference to a function body can occur as a.f or f, this handles both cases.
       object TermSymbolPath:
         def unapply(p: Path) = p match
-          case Value.Ref(l, S(ts: TermSymbol)) => S(ts)
+          case Value.MemberRef(_, ts: TermSymbol) => S(ts)
           case s: Select => s.symbol match
             case S(ts: TermSymbol) => S(ts)
             case _ => N
@@ -1184,10 +1186,10 @@ class BlockSimplifier
                       val copier = Copier(resSym, mapping)
                       val newBlk = copier.applyBlock(blk)
                       if extraArgss.isEmpty then
-                        acc(Scoped(Set.single(resSym), newBlk(k(Value.Ref(resSym)))))
+                        acc(Scoped(Set.single(resSym), newBlk(k(resSym.asSimpleRef))))
                       else
                         acc(Scoped(Set(resSym), newBlk(
-                          k(Call(resSym.asPath, extraArgss.ne_!)(c.isMlsFun, c.mayRaiseEffects, false)))))
+                          k(Call(resSym.asSimpleRef, extraArgss.ne_!)(c.isMlsFun, c.mayRaiseEffects, false)))))
                     case (sym, value) :: argRest =>
                       val newSym = VarSymbol(sym.id)
                       go(acc.assignScoped(newSym, value), argRest, mapping + (sym -> newSym))
