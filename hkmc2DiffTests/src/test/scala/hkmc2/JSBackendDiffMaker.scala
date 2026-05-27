@@ -154,14 +154,18 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         outputSeparator("Lowered IR Tree")
         output(optimized.showAsTree)
       
-      if showIR.isSet then
-        outputSeparator("Lowered IR")
+      if showIR.isSet || showIRLines.isSet then
         given ShowCfg = ShowCfg(
           showExpansionMappings = false,
           showFlowSymbols = true,
           debug = debug.isSet,
         )
-        output(Printer().worksheet(optimized)(using irPrintingScp).mkString(output.ColWidth))
+        val irStr = Printer().worksheet(optimized)(using irPrintingScp).mkString(output.ColWidth)
+        val sloc = irStr.count(_ == '\n') + 1
+        if showIRLines.isSet then output(s"Lines of IR: ${sloc}")
+        if showIR.isSet then
+          outputSeparator("Lowered IR")
+          output(irStr)
       
       if noOptimizations.isUnset then
         optimized = WorkerWrapper(symbolsToPreserve, dtl, print)(optimized)

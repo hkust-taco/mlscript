@@ -77,27 +77,24 @@ fun go(x) = if x is
 //│ define go⁴ as fun go⁵(x) {
 //│   loop loopLabel:
 //│     let n, arg$Cons$0$, arg$Cons$1$, tmp;
-//│     block split_root$:
-//│       block split_1$:
-//│         match x
-//│           Cons⁰ =>
-//│             set arg$Cons$0$ = x.head⁰;
-//│             set arg$Cons$1$ = x.tail⁰;
-//│             match arg$Cons$1$
-//│               Nil⁰ =>
-//│                 return "Z"
-//│               else
-//│                 set n = x;
-//│                 break split_1$
-//│             end
-//│           else
-//│             set n = x;
-//│             break split_1$
-//│         end
-//│       set tmp = [];
-//│       set x = tmp;
-//│       continue loopLabel
-//│     return runtime⁰.Unit⁰
+//│     block σ:
+//│       match x
+//│         Cons⁰ =>
+//│           set arg$Cons$0$ = x.head⁰;
+//│           set arg$Cons$1$ = x.tail⁰;
+//│           match arg$Cons$1$
+//│             Nil⁰ =>
+//│               return "Z"
+//│             else
+//│               break σ
+//│           end
+//│         else
+//│           break σ
+//│       end
+//│     set n = x;
+//│     set tmp = [];
+//│     set x = tmp;
+//│     continue loopLabel
 //│   end
 //│ };
 //│ end

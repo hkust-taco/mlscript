@@ -144,7 +144,8 @@ class Term with
     Infix(val op: Str, val left: Term, val right: Term)
     Prefix(val op: Str, val right: Term)
 
-// The following pattern generates a lot of code.
+:sirl
+// The following pattern no longer generates a lot of code.
 pattern EvaluatedTerm =
   | Literal(value) => value
   | Infix("+", EvaluatedTerm as left, EvaluatedTerm as right) => left + right
@@ -153,6 +154,7 @@ pattern EvaluatedTerm =
   | Infix("/", EvaluatedTerm as left, EvaluatedTerm as right) => left / right
   | Prefix("-", EvaluatedTerm as operand) => -operand
   | Prefix("+", EvaluatedTerm as operand) => +operand
+//│ Lines of IR: 298
 
 // Some helper functions to create `Term`s.
 fun wrapLiteral(value) = if value is Int then Literal(value) else value
@@ -182,9 +184,11 @@ Infix("**", Literal(1), Literal(2)) is EvaluatedTerm
 
 // * NOTE: `@compile EvaluatedTerm` seems to generate a ginormous amount of code...
 // * We should try to find ways of reducing that, perhaps by sharing and optimizing more (?)
+:sirl
 fun evaluate(term) = if term is
   (@compile EvaluatedTerm) as v then Some(v)
   else None
+//│ Lines of IR: 3624
 
 
 evaluate of Literal(1)

@@ -151,7 +151,7 @@ let Predef1;
     }
   }
   static equals(a, b) {
-    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, lambda, lambda1, tmp, tmp1;
+    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, lambda, tmp, tmp1, lambda1;
     scrut = a === b;
     if (scrut === true) {
       return true
@@ -160,12 +160,12 @@ let Predef1;
       if (b instanceof globalThis.Array) {
         scrut1 = a.length === b.length;
         if (scrut1 === true) {
-          lambda = (undefined, function (a1, i) {
+          lambda1 = (undefined, function (a1, i) {
             let tmp2;
             tmp2 = runtime.safeCall(b.at(i));
             return Predef.equals(a1, tmp2)
           });
-          return runtime.safeCall(a.every(lambda))
+          return runtime.safeCall(a.every(lambda1))
         }
       }
     }
@@ -185,7 +185,7 @@ let Predef1;
                 md = ac[Predef.Symbols.definitionMetadata];
                 scrut4 = md !== undefined;
                 if (scrut4 === true) {
-                  lambda1 = (undefined, function (field) {
+                  lambda = (undefined, function (field) {
                     let scrut10, scrut11;
                     scrut10 = field !== null;
                     if (scrut10 === true) {
@@ -197,7 +197,7 @@ let Predef1;
                     }
                     return false;
                   });
-                  scrut5 = runtime.safeCall(md[2].every(lambda1));
+                  scrut5 = runtime.safeCall(md[2].every(lambda));
                   if (scrut5 === true) {
                     tmp = true;
                   } else {

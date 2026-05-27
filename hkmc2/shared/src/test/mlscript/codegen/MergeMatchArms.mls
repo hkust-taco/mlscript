@@ -65,26 +65,19 @@ if a is
   B then 2
   C then 3
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp;
-//│ split_root$: {
-//│   if (a instanceof A1.class) {
-//│     if (b instanceof A1.class) {
-//│       tmp = 1;
-//│       break split_root$
-//│     } else if (b instanceof B1.class) {
-//│       tmp = 2;
-//│       break split_root$
-//│     }
-//│   } else if (a instanceof B1.class) {
-//│     tmp = 2;
-//│     break split_root$
-//│   } else if (a instanceof C1.class) {
-//│     tmp = 3;
-//│     break split_root$
+//│ if (a instanceof A1.class) {
+//│   if (b instanceof A1.class) {
+//│     return 1
+//│   } else if (b instanceof B1.class) {
+//│     return 2
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│ } else if (a instanceof B1.class) {
+//│   return 2
+//│ } else if (a instanceof C1.class) {
+//│   return 3
 //│ }
-//│ return tmp
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
@@ -107,25 +100,25 @@ let x = if a is
     print("done")
 print(x)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x, tmp1;
+//│ let x, tmp;
 //│ if (a instanceof A1.class) {
-//│   tmp1 = 1;
+//│   tmp = 1;
 //│ } else if (a instanceof B1.class) {
-//│   tmp1 = 2;
+//│   tmp = 2;
 //│ } else if (a instanceof C1.class) {
-//│   tmp1 = 3;
+//│   tmp = 3;
 //│ } else if (a instanceof D1.class) {
 //│   if (a instanceof A1.class) {} else if (a instanceof B1.class) {} else {
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
-//│   tmp1 = Predef.print("done");
+//│   tmp = Predef.print("done");
 //│ } else if (a instanceof E1.class) {
-//│   tmp1 = Predef.print("done");
+//│   tmp = Predef.print("done");
 //│ } else {
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }
-//│ x = tmp1;
-//│ return Predef.print(tmp1)
+//│ x = tmp;
+//│ return Predef.print(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ x = 1
@@ -161,13 +154,13 @@ if a is
   let tmp = printAndId(3)
   B then 2 + tmp
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp2;
+//│ let tmp1;
 //│ if (a instanceof A1.class) {
 //│   return 1
 //│ }
-//│ tmp2 = printAndId(3);
+//│ tmp1 = printAndId(3);
 //│ if (a instanceof B1.class) {
-//│   return 2 + tmp2
+//│   return 2 + tmp1
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -211,22 +204,22 @@ if a is
     print(x + 1)
     print(x + 2)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp3, tmp4, tmp5;
+//│ let tmp2, tmp3, tmp4;
 //│ if (a instanceof B1.class) {
 //│   return 1
 //│ }
 //│ if (a instanceof A1.class) {
-//│   tmp3 = 2;
+//│   tmp2 = 2;
 //│ } else if (a instanceof C1.class) {
-//│   tmp3 = 3;
+//│   tmp2 = 3;
 //│ } else {
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }
+//│ Predef.print(tmp2);
+//│ tmp3 = tmp2 + 1;
 //│ Predef.print(tmp3);
-//│ tmp4 = tmp3 + 1;
-//│ Predef.print(tmp4);
-//│ tmp5 = tmp3 + 2;
-//│ return Predef.print(tmp5);
+//│ tmp4 = tmp2 + 2;
+//│ return Predef.print(tmp4);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 2
 //│ > 3

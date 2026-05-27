@@ -40,6 +40,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showLoweredTree = NullaryCommand("lot")
   val ppLoweredTreeOld = NullaryCommand("slot", () => output("Option ':slot' is deprecated, use ':sir' instead."))
   val showIR = NullaryCommand("sir")
+  val showIRLines = NullaryCommand("sirl")
   val checkIR = NullaryCommand("checkIR")
   val showOptimizedIR = NullaryCommand("soir")
   val showOptimizedTree = NullaryCommand("olot")

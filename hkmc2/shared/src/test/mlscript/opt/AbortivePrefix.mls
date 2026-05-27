@@ -22,23 +22,19 @@ fun f =
 //│ let f⁰;
 //│ define f⁰ as fun f¹() {
 //│   let scrut, scrut1;
-//│   block split_root$:
-//│     block split_default$:
-//│       set scrut = true;
-//│       match scrut
+//│   set scrut = true;
+//│   match scrut
+//│     true =>
+//│       set scrut1 = false;
+//│       match scrut1
 //│         true =>
-//│           set scrut1 = false;
-//│           match scrut1
-//│             true =>
-//│               return runtime⁰.Unit⁰
-//│             else
-//│               break split_default$
-//│           end
+//│           return runtime⁰.Unit⁰
 //│         else
-//│           break split_default$
+//│           throw new globalThis⁰.Error⁰("match error")
 //│       end
-//│     throw new globalThis⁰.Error⁰("match error")
-//│   return Predef⁰.notImplementedError⁰
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
 //│ };
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
@@ -50,19 +46,58 @@ fun f =
 //│         true =>
 //│           return runtime⁰.Unit⁰
 //│         else
-//│           end
+//│           throw new globalThis⁰.Error⁰("match error")
 //│       end
-//│   throw new globalThis⁰.Error⁰("match error")
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-// * Note: removed from here as well
+// * The trailing `???` puts the `if` in non-tail position, so `LetSplit` lowering
+// * adds a `σ$x` exit-label around the let-split. Every consequent returns, so no
+// * consequent breaks from `σ$x`. The optimizer removes it.
+:ucs normalized
+:sir
 :soir
 fun f =
   if true and false then return "1"
   else return "2 long long long long long long long long long long long long long long"
-  ???
+  (???)
+//│ Normalized:
+//│ >  ‹if|while›
+//│ >    let tmp:scrut = true
+//│ >    let-split σ = else return "2 long long long long long long long long long long long long long long"
+//│ >    tmp:scrut is true and
+//│ >      let tmp:scrut = false
+//│ >      tmp:scrut is true then return "1"
+//│ >      $σ
+//│ >    $σ
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f²;
+//│ define f² as fun f³() {
+//│   let scrut, scrut1, tmp, tmp1;
+//│   set scrut = true;
+//│   block σ$x:
+//│     block σ:
+//│       match scrut
+//│         true =>
+//│           set scrut1 = false;
+//│           match scrut1
+//│             true =>
+//│               return "1"
+//│             else
+//│               break σ
+//│           end
+//│         else
+//│           break σ
+//│       end
+//│     return "2 long long long long long long long long long long long long long long"
+//│   set tmp1 = tmp;
+//│   return Predef⁰.notImplementedError⁰
+//│ };
+//│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f²;
 //│ define f² as fun f³() {
