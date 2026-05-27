@@ -1,0 +1,209 @@
+import "./JS.mls"
+
+open JS { Absent }
+
+// Low-level ZIP helpers implemented in raw JS. We write **stored** (method 0)
+// entries only — no compression. That keeps the writer tiny and lets the
+// reader work with a small synchronous parser. Re-zipping our output with a
+// tool that compresses (macOS Finder, etc.) will produce archives this
+// reader cannot consume; the caller surfaces a clear error in that case.
+
+let zip = Function("""
+  return {
+    encode(text) {
+      return new TextEncoder().encode(text);
+    },
+    decode(bytes) {
+      return new TextDecoder().decode(bytes);
+    },
+    bytes(values) {
+      return new Uint8Array(values);
+    },
+    u16(value) {
+      return new Uint8Array([value & 255, (value >>> 8) & 255]);
+    },
+    u32(value) {
+      return new Uint8Array([
+        value & 255,
+        (value >>> 8) & 255,
+        (value >>> 16) & 255,
+        (value >>> 24) & 255
+      ]);
+    },
+    concat(parts) {
+      let total = 0;
+      for (const part of parts) total += part.length;
+      const bytes = new Uint8Array(total);
+      let offset = 0;
+      for (const part of parts) {
+        bytes.set(part, offset);
+        offset += part.length;
+      }
+      return bytes;
+    },
+    crc32(bytes) {
+      if (!this.table) {
+        this.table = new Uint32Array(256);
+        for (let i = 0; i < 256; i += 1) {
+          let c = i;
+          for (let k = 0; k < 8; k += 1) {
+            c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+          }
+          this.table[i] = c >>> 0;
+        }
+      }
+      let crc = 0xffffffff;
+      for (let i = 0; i < bytes.length; i += 1) {
+        crc = this.table[(crc ^ bytes[i]) & 0xff] ^ (crc >>> 8);
+      }
+      return (crc ^ 0xffffffff) >>> 0;
+    },
+    fromArrayBuffer(buffer) {
+      return new Uint8Array(buffer);
+    },
+    // Walks local file headers sequentially. Returns `[{ path, content }]`.
+    // Throws if any entry uses a compression method other than 0 (stored).
+    parse(bytes) {
+      const entries = [];
+      const decoder = new TextDecoder();
+      let offset = 0;
+      const read16 = (i) => bytes[i] | (bytes[i + 1] << 8);
+      const read32 = (i) => (bytes[i] | (bytes[i + 1] << 8) | (bytes[i + 2] << 16) | (bytes[i + 3] << 24)) >>> 0;
+      while (offset + 30 <= bytes.length) {
+        const sig = read32(offset);
+        // Local file header
+        if (sig !== 0x04034b50) break;
+        const method = read16(offset + 8);
+        const compressedSize = read32(offset + 18);
+        const nameLen = read16(offset + 26);
+        const extraLen = read16(offset + 28);
+        const nameStart = offset + 30;
+        const dataStart = nameStart + nameLen + extraLen;
+        const name = decoder.decode(bytes.subarray(nameStart, nameStart + nameLen));
+        if (method !== 0) {
+          throw new Error("Unsupported ZIP compression method " + method + " for entry " + JSON.stringify(name) + ". Re-export from the IDE without compression.");
+        }
+        const content = decoder.decode(bytes.subarray(dataStart, dataStart + compressedSize));
+        entries.push({ path: name, content });
+        offset = dataStart + compressedSize;
+      }
+      return entries;
+    }
+  };
+""")()
+
+module Zip with...
+
+fun encode(text) =
+  zip.encode(text)
+
+fun decode(bytes) =
+  zip.decode(bytes)
+
+fun crc32(bytes) =
+  zip.crc32(bytes)
+
+fun u16(value) =
+  zip.u16(value)
+
+fun u32(value) =
+  zip.u32(value)
+
+fun concat(parts) =
+  zip.concat(parts)
+
+fun fromArrayBuffer(buffer) =
+  zip.fromArrayBuffer(buffer)
+
+// Build a single stored ZIP entry. Returns `{ local, central }` byte arrays
+// already prefixed with their respective headers, ready for concatenation.
+fun entryBytes(path, content, offset) =
+  let
+    name = path.replace(new mut RegExp("^/+"), "")
+    nameBytes = encode(name)
+    dataBytes = encode(content)
+    crc = crc32(dataBytes)
+    localHeader = concat([
+      u32(0x04034b50)
+      u16(20)
+      u16(0)
+      u16(0)
+      u16(0)
+      u16(0)
+      u32(crc)
+      u32(dataBytes.length)
+      u32(dataBytes.length)
+      u16(nameBytes.length)
+      u16(0)
+      nameBytes
+    ])
+    centralHeader = concat([
+      u32(0x02014b50)
+      u16(20)
+      u16(20)
+      u16(0)
+      u16(0)
+      u16(0)
+      u16(0)
+      u32(crc)
+      u32(dataBytes.length)
+      u32(dataBytes.length)
+      u16(nameBytes.length)
+      u16(0)
+      u16(0)
+      u16(0)
+      u16(0)
+      u32(0)
+      u32(offset)
+      nameBytes
+    ])
+  mut
+    local: concat([localHeader, dataBytes])
+    central: centralHeader
+
+// Build a complete ZIP archive (stored, no compression) from an array of
+// `{ path, content }` entries. Returns a `Uint8Array`.
+fun build(entries) =
+  let
+    locals = mut []
+    centrals = mut []
+    offset = 0
+  entries.forEach of (entry, ...) =>
+    let built = entryBytes(entry.path, entry.content, offset)
+    locals.push(built.local)
+    centrals.push(built.central)
+    set offset += built.local.length
+  let
+    centralStart = offset
+    centralDirectory = concat(centrals)
+    endRecord = concat([
+      u32(0x06054b50)
+      u16(0)
+      u16(0)
+      u16(entries.length)
+      u16(entries.length)
+      u32(centralDirectory.length)
+      u32(centralStart)
+      u16(0)
+    ])
+  concat(locals.concat([centralDirectory, endRecord]))
+
+// Parse a stored ZIP into `[{ path, content }]`. Throws on compressed
+// entries; callers should js.try_catch around it.
+fun parse(bytes) =
+  zip.parse(bytes)
+
+// Trigger a browser download of `bytes` (Uint8Array) under `filename`.
+fun download(bytes, filename, mimeType) =
+  let
+    blob = new! window.Blob([bytes], mut { 'type: mimeType })
+    url = window.URL.createObjectURL(blob)
+    link = document.createElement("a")
+  set
+    link.href = url
+    link.download = filename
+    link.style.display = "none"
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)

@@ -3,9 +3,16 @@ import "../filesystem/persistent.mls"
 import "../filesystem/projects.mls"
 import "../common/JS.mls"
 import "../common/Logger.mls"
+import "../common/Zip.mls"
 import "../editor/editor.mls"
 
 open JS { Absent }
+
+// Format shared with the Share dialog. Both buttons emit a ZIP archive that
+// contains `manifest.json` at the root plus the project files at their
+// original paths (with the leading "/" stripped, as is conventional for zip).
+val EXPORT_MANIFEST_PATH = "manifest.json"
+val EXPORT_SCHEMA = "mlscript-project/v2"
 
 fun escapeHtml(text) =
   let div = document.createElement("div")
@@ -114,16 +121,17 @@ class ProjectSwitcher extends HTMLElement with
           <form method="dialog" class="project-switcher-sub-form">
             <h3>Import a project</h3>
             <p class="project-switcher-hint">
-              Pick a previously-exported MLscript Web IDE project file.
+              Pick a previously-exported MLscript Web IDE archive.
               The file is read entirely in your browser — nothing is uploaded.
             </p>
             <ul class="project-switcher-import-hints">
-              <li>Format: JSON with <code>schema: "mlscript-project/v1"</code>.</li>
-              <li>Typical filename: <code>&lt;project&gt;.mls-project.json</code>.</li>
+              <li>Format: ZIP containing <code>manifest.json</code> with <code>schema: "mlscript-project/v2"</code>.</li>
+              <li>Typical filename: <code>&lt;project&gt;.zip</code> (as produced by the Export or Share buttons).</li>
+              <li>Only uncompressed (stored) ZIPs are supported — archives re-zipped by an OS tool may use deflate and will not import.</li>
               <li>Practical size limit: a few MB (your browser's localStorage quota).</li>
-              <li>The imported project will get a fresh id and appear at the bottom of the list. It will <strong>not</strong> open automatically.</li>
+              <li>The imported project gets a fresh id and appears at the bottom of the list. It does <strong>not</strong> open automatically.</li>
             </ul>
-            <input type="file" class="project-switcher-import-input" accept="application/json,.json" hidden />
+            <input type="file" class="project-switcher-import-input" accept="application/zip,.zip" hidden />
             <p class="project-switcher-import-error" hidden></p>
             <div class="project-switcher-sub-actions">
               <button type="button" class="project-switcher-cancel">Cancel</button>
@@ -640,26 +648,27 @@ class ProjectSwitcher extends HTMLElement with
     let trimmed = sanitized.replace(new mut RegExp("^-+|-+$", "g"), "")
     if trimmed === "" then "project" else trimmed
 
+  fun manifestContent(project) =
+    let payload = mut
+      schema: EXPORT_SCHEMA
+      exportedAt: new Date().toISOString()
+      project: project
+    JSON.stringify(payload, null, 2)
+
+  // The Share dialog emits the in-memory tree as raw text; the project
+  // switcher emits localStorage snapshots, where each entry is a
+  // `{ content, readonly, atime, mtime, ctime, birthtime, attrs }` payload.
+  // For the archive we only want the text content at the original path.
   fun handleExport(project) =
     let
       files = persistent.snapshotProject(project.id)
-      payload = mut
-        schema: "mlscript-project/v1"
-        exportedAt: new Date().toISOString()
-        project: project
-        files: files
-      json = JSON.stringify(payload, null, 2)
-      blob = new! window.Blob([json], mut { 'type: "application/json" })
-      url = window.URL.createObjectURL(blob)
-      link = document.createElement("a")
-    set
-      link.href = url
-      link.download = sanitizeForFilename(project.name) + ".mls-project.json"
-      link.style.display = "none"
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    window.URL.revokeObjectURL(url)
+      entries = mut [mut { path: EXPORT_MANIFEST_PATH, content: manifestContent(project) }]
+    files.forEach of (entry, ...) =>
+      entries.push(mut { path: entry.path, content: entry.payload.content })
+    let
+      bytes = Zip.build(entries)
+      filename = sanitizeForFilename(project.name) + ".zip"
+    Zip.download(bytes, filename, "application/zip")
     Logger.info("Projects", "Exported project", project.id, "files:", files.length)
 
   fun showImportError(message) =
@@ -692,33 +701,69 @@ class ProjectSwitcher extends HTMLElement with
     if sub is ~null as d do
       if d.open do d.close()
 
-  fun importPayload(parsed) =
-    let
-      schema = if parsed.schema is ~Absent then parsed.schema else ""
-      meta = if parsed.project is ~Absent then parsed.project else null
-      files = if Array.isArray(parsed.files) then parsed.files else []
-    if
-      schema !== "mlscript-project/v1" then showImportError("Not a v1 MLscript project export")
-      meta is null then showImportError("Missing project metadata")
-      else
-        let project = projects.adoptProject(meta)
-        files.forEach of (entry, ...) =>
-          if entry.path is ~Absent and entry.payload is ~Absent do
-            persistent.writeProjectFile(project.id, entry.path, entry.payload)
-        Logger.info("Projects", "Imported project", project.id, project.name, "files:", files.length)
-        set selectedId = project.id
-        set previewPath = ""
-        closeImportDialog()
-        this.renderList()
-        this.renderDetail()
+  // Restore the persisted payload shape so the imported project plays back
+  // through `restoreFile` on the next switch the same way an in-IDE-created
+  // file does. Timestamps default to "now" so the freshly-imported tree has
+  // sensible mtimes; the manifest's modifiedAt fills in the project meta.
+  fun filePayloadFor(content) =
+    let now = new Date().toISOString()
+    mut
+      content: content
+      readonly: false
+      atime: now
+      mtime: now
+      ctime: now
+      birthtime: now
+      attrs: mut {}
 
-  fun consumeImportText(text) =
+  fun isManifestEntry(entry) =
+    entry.path === EXPORT_MANIFEST_PATH
+
+  fun absolutePath(zipPath) =
+    if zipPath.startsWith("/") then zipPath else "/" + zipPath
+
+  fun importEntries(entries) =
+    let
+      manifest = null
+      fileEntries = mut []
+    entries.forEach of (entry, ...) =>
+      if isManifestEntry(entry) then
+        js.try_catch(
+          () =>
+            let parsed = JSON.parse(entry.content)
+            set manifest = parsed
+          error => showImportError("manifest.json is not valid JSON: " + error.message)
+        )
+      else fileEntries.push(entry)
+    if manifest is
+      null then showImportError("Archive is missing manifest.json")
+      else
+        let
+          schema = if manifest.schema is ~Absent then manifest.schema else ""
+          meta = if manifest.project is ~Absent then manifest.project else null
+        if
+          schema !== EXPORT_SCHEMA then showImportError("Not a v2 MLscript project export (schema: " + schema + ")")
+          meta is null then showImportError("manifest.json is missing project metadata")
+          else
+            let project = projects.adoptProject(meta)
+            fileEntries.forEach of (entry, ...) =>
+              persistent.writeProjectFile(project.id, absolutePath(entry.path), filePayloadFor(entry.content))
+            Logger.info("Projects", "Imported project", project.id, project.name, "files:", fileEntries.length)
+            set selectedId = project.id
+            set previewPath = ""
+            closeImportDialog()
+            this.renderList()
+            this.renderDetail()
+
+  fun consumeImportBuffer(buffer) =
     let panel = this
     js.try_catch(
       () =>
-        let parsed = JSON.parse(text)
-        panel.importPayload(parsed)
-      error => panel.showImportError("Could not parse JSON: " + error.message)
+        let
+          bytes = Zip.fromArrayBuffer(buffer)
+          entries = Zip.parse(bytes)
+        panel.importEntries(entries)
+      error => panel.showImportError("Could not read ZIP: " + error.message)
     )
 
   fun handleImportFile(file) =
@@ -726,9 +771,9 @@ class ProjectSwitcher extends HTMLElement with
     let
       panel = this
       reader = new! window.FileReader()
-    set reader.onload = () => panel.consumeImportText(reader.result)
+    set reader.onload = () => panel.consumeImportBuffer(reader.result)
     set reader.onerror = () => panel.showImportError("Could not read file")
-    reader.readAsText(file)
+    reader.readAsArrayBuffer(file)
 
   fun handleHostKeydown(event) =
     if event.key === "Escape" do

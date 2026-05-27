@@ -1,5 +1,7 @@
 import "../filesystem/fs.mls"
+import "../filesystem/projects.mls"
 import "../common/JS.mls"
+import "../common/Zip.mls"
 
 open JS { Absent }
 
@@ -8,55 +10,20 @@ fun escapeHtml(text) =
   set div.textContent = text
   div.innerHTML
 
-let zip = Function("""
-  return {
-    encode(text) {
-      return new TextEncoder().encode(text);
-    },
-    bytes(values) {
-      return new Uint8Array(values);
-    },
-    u16(value) {
-      return new Uint8Array([value & 255, (value >>> 8) & 255]);
-    },
-    u32(value) {
-      return new Uint8Array([
-        value & 255,
-        (value >>> 8) & 255,
-        (value >>> 16) & 255,
-        (value >>> 24) & 255
-      ]);
-    },
-    concat(parts) {
-      let total = 0;
-      for (const part of parts) total += part.length;
-      const bytes = new Uint8Array(total);
-      let offset = 0;
-      for (const part of parts) {
-        bytes.set(part, offset);
-        offset += part.length;
-      }
-      return bytes;
-    },
-    crc32(bytes) {
-      if (!this.table) {
-        this.table = new Uint32Array(256);
-        for (let i = 0; i < 256; i += 1) {
-          let c = i;
-          for (let k = 0; k < 8; k += 1) {
-            c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
-          }
-          this.table[i] = c >>> 0;
-        }
-      }
-      let crc = 0xffffffff;
-      for (let i = 0; i < bytes.length; i += 1) {
-        crc = this.table[(crc ^ bytes[i]) & 0xff] ^ (crc >>> 8);
-      }
-      return (crc ^ 0xffffffff) >>> 0;
-    }
-  };
-""")()
+// Shared with the project switcher's Export button — every archive we emit
+// carries a manifest at this path so consumers know which project produced
+// it and so re-import via the switcher can reconstruct the project metadata.
+val EXPORT_MANIFEST_PATH = "manifest.json"
+val EXPORT_SCHEMA = "mlscript-project/v2"
+
+fun manifestEntry(project) =
+  let
+    payload = mut
+      schema: EXPORT_SCHEMA
+      exportedAt: new Date().toISOString()
+      project: project
+    content = JSON.stringify(payload, null, 2)
+  mut { path: EXPORT_MANIFEST_PATH, :content }
 
 fun closeDismissibleDialogFromBackdrop(targetDialog) =
   targetDialog.addEventListener of "click", event =>
@@ -694,68 +661,6 @@ class ShareDialog extends HTMLElement with
     if this.querySelector(".share-download-button") is ~null as downloadButton do
       window.setTimeout(() => downloadButton.focus(), 0)
 
-  fun encodeText(text) =
-    zip.encode(text)
-
-  fun crc32(bytes) =
-    zip.crc32(bytes)
-
-  fun bytesFromNumbers(values) =
-    zip.bytes(values)
-
-  fun u16(value) =
-    zip.u16(value)
-
-  fun u32(value) =
-    zip.u32(value)
-
-  fun concatBytes(parts) =
-    zip.concat(parts)
-
-  fun zipEntry(path, content, offset) =
-    let
-      name = path.replace(new RegExp("^/+"), "")
-      nameBytes = encodeText(name)
-      dataBytes = encodeText(content)
-      crc = crc32(dataBytes)
-      localHeader = concatBytes([
-        u32(0x04034b50)
-        u16(20)
-        u16(0)
-        u16(0)
-        u16(0)
-        u16(0)
-        u32(crc)
-        u32(dataBytes.length)
-        u32(dataBytes.length)
-        u16(nameBytes.length)
-        u16(0)
-        nameBytes
-      ])
-      centralHeader = concatBytes([
-        u32(0x02014b50)
-        u16(20)
-        u16(20)
-        u16(0)
-        u16(0)
-        u16(0)
-        u16(0)
-        u32(crc)
-        u32(dataBytes.length)
-        u32(dataBytes.length)
-        u16(nameBytes.length)
-        u16(0)
-        u16(0)
-        u16(0)
-        u16(0)
-        u32(0)
-        u32(offset)
-        nameBytes
-      ])
-    mut
-      local: concatBytes([localHeader, dataBytes])
-      central: centralHeader
-
   fun allFilesFilter(path) =
     true
 
@@ -766,46 +671,24 @@ class ShareDialog extends HTMLElement with
     if path.endsWith(".mjs") then true
     else path.endsWith(".js")
 
-  fun workspaceZipBytes(fileFilter) =
+  fun fileEntries(fileFilter) =
     let
       files = fs.getAllFiles(undefined)
       paths = Object.keys(files).filter(path => fileFilter(path)).sort()
-      locals = mut []
-      centrals = mut []
-      offset = 0
+      entries = mut []
     paths.forEach of (path, ...) =>
-      let entry = zipEntry(path, files.(path), offset)
-      locals.push(entry.local)
-      centrals.push(entry.central)
-      set offset += entry.local.length
+      entries.push(mut { :path, content: files.(path) })
+    entries
+
+  fun workspaceZipBytes(fileFilter) =
     let
-      centralStart = offset
-      centralDirectory = concatBytes(centrals)
-      endRecord = concatBytes([
-        u32(0x06054b50)
-        u16(0)
-        u16(0)
-        u16(paths.length)
-        u16(paths.length)
-        u32(centralDirectory.length)
-        u32(centralStart)
-        u16(0)
-      ])
-    concatBytes(locals.concat([centralDirectory, endRecord]))
+      entries = mut [manifestEntry(projects.currentProject())]
+      files = fileEntries(fileFilter)
+    files.forEach of (entry, ...) => entries.push(entry)
+    Zip.build(entries)
 
   fun downloadZip(fileFilter, filename) =
-    let
-      blob = new! window.Blob([workspaceZipBytes(fileFilter)], mut { 'type: "application/zip" })
-      url = window.URL.createObjectURL(blob)
-      link = document.createElement("a")
-    set
-      link.href = url
-      link.download = filename
-      link.style.display = "none"
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    window.URL.revokeObjectURL(url)
+    Zip.download(workspaceZipBytes(fileFilter), filename, "application/zip")
     if dialog() is ~null as shareDialog do shareDialog.close()
 
   fun attachEventListeners() =
