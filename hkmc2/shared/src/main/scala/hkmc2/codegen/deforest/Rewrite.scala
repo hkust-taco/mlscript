@@ -177,10 +177,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             val branchName = whichBranch.fold("_dflt")(c => s"_${c.ctorClsName}")
             val scrutName = dest._1.getReferredSym.nme
             val branchFnNme = s"${dest.instId.mkFunName}$$$scrutName$branchName"
-            val owner = pre.res.matchScrutToCtxOfMatch(dest._1).collectFirst:
-              case pre.InCtx.Cls(cls) => cls.isym
             new BlockMemberSymbol(branchFnNme, Nil, true)
-            -> new TermSymbol(Fun, owner, Tree.Ident(branchFnNme))
+            -> new TermSymbol(Fun, N, Tree.Ident(branchFnNme))
         )
         // compute the function parameters corresponding to ctor fields of branch funs
         branchFunParamFieldSyms.getOrElseUpdate(
@@ -208,15 +206,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             restFunId,
             locally:
               val restFunName = dest.instId.mkFunName + s"$$${nme}_rest"
-              val owner = matchOrLabelId match
-                case label: LabelSymbol =>
-                  pre.res.labelSymToCtxOfLabel(label).collectFirst:
-                    case pre.InCtx.Cls(cls) => cls.isym
-                case dtorId: ResultId =>
-                  pre.res.matchScrutToCtxOfMatch(dtorId).collectFirst:
-                    case pre.InCtx.Cls(cls) => cls.isym
               new BlockMemberSymbol(restFunName, Nil, true)
-              -> new TermSymbol(Fun, owner, Tree.Ident(restFunName))
+              -> new TermSymbol(Fun, N, Tree.Ident(restFunName))
           )
           val (ps, restBeforeParent) = getParentLabelOrMatchesAndRestBefore(matchOrLabelId)
           restOriginalBodiesAndParentRest.getOrElseUpdate(
@@ -368,16 +359,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
           a match
           case bms: BlockMemberSymbol => Value.Ref(bms, bms.tsym)
           case _ => Value.Ref(a, N)
-        def mkFunRef(target: (BlockMemberSymbol, TermSymbol)): Path =
-          val (bms, tSym) = target
-          tSym.owner match
-          case Some(owner) =>
-            Select(Value.This(owner), Tree.Ident(bms.nme))(S(tSym))
-          case None =>
-            Value.Ref(bms, S(tSym))
         def mkCall(target: (BlockMemberSymbol, TermSymbol), args: Ls[Symbol]): Call =
           Call(
-            mkFunRef(target),
+            Value.Ref(target._1, S(target._2)),
             args.map(a => Arg(N, a.toValueRef)) ne_:: Nil
           )(true, false, false)
         
@@ -545,7 +529,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
               Return(mkCall(restFunSym, restFunArgs)))
             val refreshedFvSymbols = dtorBranchFnFvs(branchId._1).map(s => s -> new VarSymbol(Tree.Ident(s"fv_${s.nme}")))
             val bodyWithCorrectSymbols = new RefreshSymbol(refreshedFvSymbols.toMap).applyBlock(actualBody)
-            FunDefn(tSym.owner, bms, tSym,
+            FunDefn(N, bms, tSym,
               branchFunParamFieldSyms(branchId).asParamList :: refreshedFvSymbols.unzip._2.asParamList :: Nil,
               bodyWithCorrectSymbols
             )(N, annotations = AffineAnnotForBranchFns :: PrivateModifier :: Nil)
@@ -569,7 +553,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
                 Begin(transformedOgBody, Return(Value.Lit(Tree.UnitLit(true))))
             val refreshedFvSymbols = restFnFvs(restFunId).map(s => s -> new VarSymbol(Tree.Ident(s"fv_${s.nme}")))
             val bodyWithCorrectSymbols = new RefreshSymbol(refreshedFvSymbols.toMap).applyBlock(actualBody)
-            FunDefn(tsym.owner, bms, tsym, refreshedFvSymbols.unzip._2.asParamList :: Nil, bodyWithCorrectSymbols)(N, annotations = PrivateModifier :: Nil)
+            FunDefn(N, bms, tsym, refreshedFvSymbols.unzip._2.asParamList :: Nil, bodyWithCorrectSymbols)(N, annotations = PrivateModifier :: Nil)
         end newRestFuns
 
         // Functions are also rewritten in-place for purely internal fusions
@@ -578,16 +562,6 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
           for (selfInstId, funSym) <- collector.synthesizedInstIdToFunSym yield
             val fDefn = pre.res.funSymToFunDefn(funSym)
             funSym -> new Rewriter(selfInstId).applyBlock(fDefn.body)
-        
-        // When rewriting class methods, the generated branch-body and rest functions
-        // may include selections of the class fields, which means
-        // that they shouldn't be put in the top level
-        val newTopLevelBranchFuns = newBranchFuns.filter(_.owner.isEmpty)
-        val newTopLevelRestFuns = newRestFuns.filter(_.owner.isEmpty)
-        val newClassMethods = (newBranchFuns ++ newRestFuns)
-          .groupBy(_.owner)
-          .collect:
-            case (Some(owner), methods) => owner -> methods.toList
 
         val newMainBody =
           object mainRewriter extends Rewriter(Nil):
@@ -596,22 +570,11 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
                 case Some(rewrittenBody) =>
                   FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, rewrittenBody)(fun.configOverride, fun.annotations)
                 case None => super.applyFunDefn(fun)
-            override def applyClsLikeDefn(defn: ClsLikeDefn)(k: Defn => Block): Block =
-              super.applyClsLikeDefn(defn): transformed =>
-                transformed match
-                case cls: ClsLikeDefn =>
-                  newClassMethods.get(cls.isym) match
-                  case Some(methods) =>
-                    k(cls.copy(methods = cls.methods ++ methods)(cls.configOverride, cls.annotations))
-                  case None =>
-                    k(cls)
-                case _ =>
-                  k(transformed)
           Scoped(
-            Set.from(newPolyFuns.map(_.sym) ++ newTopLevelBranchFuns.map(_.sym) ++ newTopLevelRestFuns.map(_.sym)),
+            Set.from(newPolyFuns.map(_.sym) ++ newBranchFuns.map(_.sym) ++ newRestFuns.map(_.sym)),
             mainRewriter.applyBlock(pre.pgrm.main))
         
-        (newPolyFuns ++ newTopLevelBranchFuns ++ newTopLevelRestFuns).foldRight(newMainBody): (fdef, rest) =>
+        (newPolyFuns ++ newBranchFuns ++ newRestFuns).foldRight(newMainBody): (fdef, rest) =>
           Define(fdef, rest)
         
       end newBody
