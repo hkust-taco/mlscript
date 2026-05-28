@@ -88,14 +88,10 @@ type OriginId = ResultId | FunId
 object RefLike:
   private def classCtorSymbol(sym: Symbol)(using Elaborator.State): Opt[ClassSymbol | ModuleOrObjectSymbol] =
     sym.asObj orElse
-    sym.asTrm.flatMap: tSym =>
-      for
-        cls <- tSym.owner.flatMap(_.asCls)
-        clsDef <- cls.irClsLikeDefn
-        ctorSym <- clsDef.ctorSym
-        if ctorSym is tSym
-      yield
-        cls
+    locally:
+      sym match
+      case clsCtor: ClassCtorSymbol => clsCtor.owner
+      case _ => N
   
   def unapply(p: Value.Ref | Select)(using Elaborator.State): Opt[Symbol] =
     p match
