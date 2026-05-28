@@ -104,6 +104,15 @@ A(1).add(2)
 //│ = 3
 
 
+class CurriedPair(val x)(val y) with
+  fun sum() = x + y
+let p = CurriedPair(1)(2)
+let q = new CurriedPair(3)(4)
+p.CurriedPair#sum() + q.CurriedPair#sum()
+//│ Wasm result:
+//│ = 10
+
+
 class C(val x) with
   fun get() = double
   fun double = x + this.x
@@ -179,7 +188,7 @@ let d = Counter(c.Counter#get())
 :todo
 d.Counter#inc().Counter#double().Counter#get()
 //│ ╔══[COMPILATION ERROR] Cannot find variable `d` (VarSymbol) in local or global scope.
-//│ ║  l.176: 	let d = Counter(c.Counter#get())
+//│ ║  l.185: 	let d = Counter(c.Counter#get())
 //│ ╙──       	    ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Counter`
 
@@ -200,5 +209,5 @@ class A(val x) with
   fun get() = x
 A(1).get
 //│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
-//│ ║  l.201: 	A(1).get
+//│ ║  l.210: 	A(1).get
 //│ ╙──       	    ^^^^

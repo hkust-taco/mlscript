@@ -114,7 +114,7 @@ new Barr(40)(2) with
 //│ ╔══[COMPILATION ERROR] Extending a class with multiple parameter lists is not supported
 //│ ║  l.112: 	new Barr(40)(2) with
 //│ ╙──       	    ^^^^^^^^^^^
-//│ = fun
+//│ = $anon { x: 40, y: undefined }
 
 
 

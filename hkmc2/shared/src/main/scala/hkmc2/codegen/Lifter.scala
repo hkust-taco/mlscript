@@ -1187,15 +1187,31 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     def rewriteCall(c: Call, argss: NELs[List[Arg]])(k: Result => Block)(using ctx: LifterCtxNew): Block =
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")
       val path = cls.sym.asMemberRef(cls.isym)
+      val clsParamLists = cls.paramsOpt.toList ::: cls.auxParams
+      def callFlattenedCtor: Call =
+        flat.force
+        Call(
+          flattenedSym.asMemberRef(flattenedDSym),
+          (formatArgs :: argss).ne_!
+        )(
+          isMlsFun = true,
+          mayRaiseEffects = false,
+          explicitTailCall = c.explicitTailCall
+        ).withLoc(c.toLoc)
       if isTrivial then
         if c.argss is argss then k(c)
         else k(c.copy(argss = argss)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLocOf(c))
       else if cls.paramsOpt.isEmpty && cls.auxParams.isEmpty then
         // Paramless class: unreachable
         lastWords("Call to paramless class")
-      else
+      else if argss.lengthCompare(clsParamLists.length) === 0 then
         // Parameterized class: Same as Instantiate case
         k(Instantiate(false, path, argss.head :: formatArgs :: argss.tail).withLoc(c.toLoc))
+      else
+        // Unsaturated constructor calls must remain ordinary curried calls to
+        // the lifted wrapper; only saturated constructor applications may
+        // become Instantiate nodes after the global class-param flattening pass.
+        k(callFlattenedCtor)
     
     def rewriteImpl: LifterResult[ClsLikeDefn] =
       val rewriterCtor = new BlockRewriter

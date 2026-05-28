@@ -81,3 +81,18 @@ test / inc / 123 * 0.5
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
 
+let c = Curried(1)
+//│ c = fun
+
+:expect Curried(1)
+c(2)(3)
+//│ = Curried(1)
+
+
+let c = new Curried(1)
+//│ c = fun c
+
+:expect Curried(1)
+c(2)(3)
+//│ = Curried(1)
+

@@ -83,7 +83,7 @@ class BufferableTransform()(using Ctx, State, Raise):
             val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
                 S(companionSym), 
                 BlockMemberSymbol("ctor", Nil, false), 
-                cls.paramsOpt.toList,
+                cls.paramsOpt.toList ::: cls.auxParams,
                 Begin(cls.preCtor, cls.ctor),
               )(N, annotations = Nil), true)
             val fakeCompanion = ClsLikeBody(

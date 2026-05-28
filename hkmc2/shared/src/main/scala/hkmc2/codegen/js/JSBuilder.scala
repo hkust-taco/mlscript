@@ -423,9 +423,21 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           case ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
               privFlds, pubFlds, preCtor, ctor, modo, bufferable)
           =>
-            val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
-            val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
-            val ctorAuxParams = auxParams.map(ps => ps.params.map(p => p.sym -> scope.allocateName(p.sym)))
+            // After ClassParamFlattener, all classes have paramsOpt = N and exactly one auxParams entry.
+            assert(paramsOpt.isEmpty,
+              s"JSBuilder: expected paramsOpt to be None after flattening for class ${sym.nme}")
+            assert(auxParams.sizeCompare(1) == 0,
+              s"JSBuilder: expected exactly one auxParams entry after flattening for class ${sym.nme}")
+            val backendParamList = auxParams.head
+            val ctorParams = backendParamList.paramSyms.map(p => p -> scope.allocateName(p))
+            val sourceParamsOpt = isym.defn.flatMap(_.paramsOpt)
+            
+            // * Whether the class should be "lifted" to a "class" property of the companion term
+            // * should currently be consistent with whether the class has source parameters.
+            // * This currently fails for faulty input programs (such as `object O(x)`);
+            // * we should make sure such programs fail compilation before they reach this point.
+            softTODO(sourceParamsOpt.isDefined === isym.shouldBeLifted,
+              s"$sourceParamsOpt.isDefined =/= ${isym.shouldBeLifted}")
             
             def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str)(using Scope): Document =
               mtds.map:
@@ -524,25 +536,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   case _ => ""
                 }$singletonFreeze"
             
-            // * If there are no ctor params, pop one param list off the aux params
-            val (newCtorAuxParams, initialCtorParams) = paramsOpt match
-              case None => ctorAuxParams match
-                case head :: next => (next, head)
-                case Nil => (ctorAuxParams, Nil)
-              case Some(_) => (ctorAuxParams, ctorParams)
-            
-            val ctorAux = if newCtorAuxParams.isEmpty then
-              ctorCode
-            else
-              val pss = newCtorAuxParams.map(_.map(_._2))
-              val newCtorCode = doc"$ctorCode # return this;"
-              val ctorBraced = doc"${ braced(newCtorCode) }"
-              val funBod = pss.foldRight(ctorBraced):
-                case (psDoc, doc) => doc"(${psDoc.mkDocument(", ")}) => $doc"
-              doc" # return $funBod"
-            
             val ctorBod = {{
-                val extraPath = if paramsOpt.isDefined then ".class" else ""
+                val extraPath = if isym.shouldBeLifted then ".class" else ""
                 doc" # static " :: braced:
                   val v = result(isym.asThis)
                   if isSingleton
@@ -554,8 +549,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                     case N =>
                       doc" # ${scope.lookup_!(sym, sym.toLoc)}$extraPath = $v"
               }} :: (
-                if ctorAux.isEmpty then doc""
-                else doc" # constructor(${initialCtorParams.unzip._2.mkDocument(", ")}) " :: braced(ctorAux)
+                if ctorCode.isEmpty then doc""
+                else doc" # constructor(${ctorParams.unzip._2.mkDocument(", ")}) " :: braced(ctorCode)
               )
             
             val clsJS = doc"class ${scope.lookup_!(isym, isym.toLoc)}${
@@ -591,8 +586,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 } :: {
                   doc""" # static [${scope.lookup_!(State.definitionMetadataSymbol, N)}] = [${
                     kind.desc.escaped}, ${sym.nme.escaped}${
-                    if (kind is syntax.Cls) && paramsOpt.isDefined then
-                      doc", [${ctorParams.map { (p, _) => p.decl match
+                    if (kind is syntax.Cls) && sourceParamsOpt.isDefined then
+                      doc", [${sourceParamsOpt.toList.flatMap(_.paramSyms).map { p => p.decl match
                         case S(Param(flags = FldFlags(isVal = true))) => doc"${p.name.escaped}"
                         case S(_) | N => doc"null"
                       }.mkDocument(", ")}]"
@@ -603,22 +598,22 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             if isSingleton then
               ownr match
               case S(owner) =>
-                assert((kind is syntax.Pat) || paramsOpt.isEmpty)
                 doc"$freezeDefns(${clsJS});"
               case N =>
                 doc"$freezeDefns(${clsJS});"
             else
-              val paramsAll = paramsOpt match
-                case None => auxParams
-                case Some(value) => value :: auxParams
+              // Source params are used for the wrapper to preserve the curried calling convention.
+              // All args are forwarded to the flat `new Class.class(...)` constructor.
+              val sourceAuxParams = isym.defn.map(_.auxParams).getOrElse(Nil)
+              val allSourceParams = sourceParamsOpt.toList ::: sourceAuxParams
               
-              val fun = paramsAll match
-                case ps_ :: pss_ if paramsOpt.isDefined => outerScope.nest.givenIn:
+              val fun = allSourceParams match
+                case ps_ :: pss_ if sourceParamsOpt.isDefined => outerScope.nest.givenIn:
                   val (ps, _) = setupFunction(some(sym.nme), ps_, End(), isLambda = false)
                   val pss = pss_.map(setupFunction(N, _, End(), isLambda = false)._1)
-                  val paramsDoc = pss.foldLeft(doc"($ps)"):
-                    case (doc, ps) => doc"${doc}(${ps})"
-                  val inner = doc"new ${sym.nme}.class$paramsDoc"
+                  val argsDoc = allSourceParams.flatMap(_.paramSyms)
+                    .map(p => scope.lookup_!(p, p.toLoc)).mkDocument(", ")
+                  val inner = doc"new ${sym.nme}.class($argsDoc)"
                   val bod = braced(doc" # return $freeze($inner);")
                   val funBod = pss.foldRight(bod):
                     case (psDoc, doc_) => doc"($psDoc) => $doc_"
@@ -690,8 +685,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           case Elaborator.ctx.builtins.Int => doc"globalThis.Number.isInteger($sd)"
           case Elaborator.ctx.builtins.BigInt => doc"typeof $sd === 'bigint'"
           case Elaborator.ctx.builtins.Symbol.module => doc"typeof $sd === 'symbol'"
-          case Elaborator.ctx.builtins.TypedArray => doc"globalThis.ArrayBuffer.isView($sd) && !($sd instanceof globalThis.DataView)"
+          case Elaborator.ctx.builtins.TypedArray =>
+            doc"globalThis.ArrayBuffer.isView($sd) && !($sd instanceof globalThis.DataView)"
           case _: ModuleOrObjectSymbol => doc"$sd instanceof ${result(pth)}.class"
+            // * ^ Note that modules are currently not valid patterns;
+            // *    this case is just for objects, which have their class stored in a `.class` property.
           case _ => doc"$sd instanceof ${result(pth)}"
         case Case.Tup(len, inf) => doc"$runtimeVar.Tuple.isArrayLike($sd) && $sd.length ${if inf then ">=" else "==="} ${len}"
         case Case.Field(name = n, safe = false) =>
@@ -989,7 +987,12 @@ object JSBuilder:
   
   extension (dsym: DefinitionSymbol[?])
     /** In JS, when a class is overloaded with a term (either explicitly, or because it has a primary parameter list),
-      * then its class value is stored in a `.class` property of the term. */
+      * then its class value is stored in a `.class` property of the term.
+      * 
+      * This helper is used at reference sites (MemberRef, Select) to decide whether to append `.class`
+      * when accessing a class value. It returns true only for class/module/object symbols,
+      * not for term symbols — so constructor calls like `Foo(args)` which resolve to the term
+      * symbol are not affected. */
     def shouldBeLifted: Bool =
       val bsym = dsym.asBlkMember
       (
@@ -1050,4 +1053,3 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
         doc"$checkArgsNum${this.body(body, endSemi = false)}")
     else
       super.setupFunction(name, params, body, isLambda = isLambda)
-

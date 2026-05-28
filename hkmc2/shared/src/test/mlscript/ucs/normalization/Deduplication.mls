@@ -8,31 +8,51 @@ let z = 0
 //│ y = 0
 //│ z = 0
 
-:sjs
+:sir
 if x === 0 then 1 else 2
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut; scrut = x === 0; if (scrut === true) { return 1 } return 2;
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let scrut; set scrut = ===⁰(x⁰, 0); match scrut true => return 1 else return 2 end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
-:sjs
+:sir
 let a = if x === 0 then 1 else 2
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let a, scrut1, tmp; scrut1 = x === 0; if (scrut1 === true) { tmp = 1; } else { tmp = 2; } a = tmp;
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let a⁰, scrut, tmp;
+//│ set scrut = ===⁰(x⁰, 0);
+//│ match scrut
+//│   true =>
+//│     set tmp = 1;
+//│     end
+//│   else
+//│     set tmp = 2;
+//│     end
+//│ set a⁰ = tmp;
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ a = 1
 
-:sjs
+:sir
 print of if x === 0 then 1 else 2
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut2;
-//│ scrut2 = x === 0;
-//│ if (scrut2 === true) { return Predef.print(1) }
-//│ return Predef.print(2);
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let scrut, tmp;
+//│ set scrut = ===⁰(x⁰, 0);
+//│ match scrut
+//│   true =>
+//│     begin
+//│       set tmp = 1;
+//│       end;
+//│     return Predef⁰.print⁰(tmp)
+//│   else
+//│     begin
+//│       set tmp = 2;
+//│       end;
+//│     return Predef⁰.print⁰(tmp)
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 
-:sjs
+:sir
 if x is
   0 and y is
     0 and z is
@@ -41,31 +61,34 @@ if x is
     1 then "01"
   1 then "1"
   else ""
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ switch (x) {
-//│   case 0:
-//│     switch (y) {
-//│       case 0:
-//│         switch (z) {
-//│           case 0:
-//│             return "000";
-//│           case 1:
-//│             return "001";
-//│         }
-//│         return "";
-//│       case 1:
-//│         return "01";
-//│     }
-//│     return "";
-//│   case 1:
-//│     return "1";
-//│ }
-//│ return ""
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ match x⁰
+//│   0 =>
+//│     match y⁰
+//│       0 =>
+//│         match z⁰
+//│           0 =>
+//│             return "000"
+//│           1 =>
+//│             return "001"
+//│           else
+//│             return ""
+//│         end
+//│       1 =>
+//│         return "01"
+//│       else
+//│         return ""
+//│     end
+//│   1 =>
+//│     return "1"
+//│   else
+//│     return ""
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "000"
 
 // * Making the terms artificially big to force sharing of consequents
-:sjs
+:sir
 if x is
   0 and y is
     0 and z is
@@ -74,78 +97,77 @@ if x is
     1 then "01-------------------------------------------------------------------------"
   1 then "1-------------------------------------------------------------------------"
   else "-------------------------------------------------------------------------"
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp1;
-//│ split_root$: {
-//│   switch (x) {
-//│     case 0:
-//│       switch (y) {
-//│         case 0:
-//│           switch (z) {
-//│             case 0:
-//│               tmp1 = "000-------------------------------------------------------------------------";
-//│               break split_root$;
-//│             case 1:
-//│               tmp1 = "001-------------------------------------------------------------------------";
-//│               break split_root$;
-//│           }
-//│           break;
-//│         case 1:
-//│           tmp1 = "01-------------------------------------------------------------------------";
-//│           break split_root$;
-//│       }
-//│       break;
-//│     case 1:
-//│       tmp1 = "1-------------------------------------------------------------------------";
-//│       break split_root$;
-//│   }
-//│   tmp1 = "-------------------------------------------------------------------------";
-//│ }
-//│ return tmp1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ match x⁰
+//│   0 =>
+//│     match y⁰
+//│       0 =>
+//│         match z⁰
+//│           0 =>
+//│             return "000-------------------------------------------------------------------------"
+//│           1 =>
+//│             return "001-------------------------------------------------------------------------"
+//│           else
+//│             return "-------------------------------------------------------------------------"
+//│         end
+//│       1 =>
+//│         return "01-------------------------------------------------------------------------"
+//│       else
+//│         return "-------------------------------------------------------------------------"
+//│     end
+//│   1 =>
+//│     return "1-------------------------------------------------------------------------"
+//│   else
+//│     return "-------------------------------------------------------------------------"
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "000-------------------------------------------------------------------------"
 
-:sjs
+:sir
 let qqq = if x is
   0 and y is
     0 and z is
-      0 then "000-------------------------------------------------------------------------"
-      1 then "001-------------------------------------------------------------------------"
-    1 then "01-------------------------------------------------------------------------"
-  1 then "1-------------------------------------------------------------------------"
-  else "-------------------------------------------------------------------------"
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let qqq, tmp2;
-//│ split_root$1: {
-//│   switch (x) {
-//│     case 0:
-//│       switch (y) {
-//│         case 0:
-//│           switch (z) {
-//│             case 0:
-//│               tmp2 = "000-------------------------------------------------------------------------";
-//│               break split_root$1;
-//│             case 1:
-//│               tmp2 = "001-------------------------------------------------------------------------";
-//│               break split_root$1;
-//│           }
-//│           break;
-//│         case 1:
-//│           tmp2 = "01-------------------------------------------------------------------------";
-//│           break split_root$1;
-//│       }
-//│       break;
-//│     case 1:
-//│       tmp2 = "1-------------------------------------------------------------------------";
-//│       break split_root$1;
-//│   }
-//│   tmp2 = "-------------------------------------------------------------------------";
-//│ }
-//│ qqq = tmp2;
+      0 then "000"
+      1 then "001"
+    1 then "01"
+  1 then "1"
+  else ""
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let qqq⁰, tmp;
+//│ match x⁰
+//│   0 =>
+//│     match y⁰
+//│       0 =>
+//│         match z⁰
+//│           0 =>
+//│             set tmp = "000";
+//│             end
+//│           1 =>
+//│             set tmp = "001";
+//│             end
+//│           else
+//│             set tmp = "";
+//│             end
+//│         end
+//│       1 =>
+//│         set tmp = "01";
+//│         end
+//│       else
+//│         set tmp = "";
+//│         end
+//│     end
+//│   1 =>
+//│     set tmp = "1";
+//│     end
+//│   else
+//│     set tmp = "";
+//│     end
+//│ set qqq⁰ = tmp;
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ qqq = "000-------------------------------------------------------------------------"
+//│ qqq = "000"
 
-:sjs
+:sir
 print of if x is
   0 and y is
     0 and z is
@@ -154,62 +176,47 @@ print of if x is
     1 then "01"
   1 then "1"
   else ""
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ switch (x) {
-//│   case 0:
-//│     switch (y) {
-//│       case 0:
-//│         switch (z) {
-//│           case 0:
-//│             return Predef.print("000");
-//│           case 1:
-//│             return Predef.print("001");
-//│         }
-//│         return Predef.print("");
-//│       case 1:
-//│         return Predef.print("01");
-//│     }
-//│     return Predef.print("");
-//│   case 1:
-//│     return Predef.print("1");
-//│ }
-//│ return Predef.print("")
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ match x⁰
+//│   0 =>
+//│     begin
+//│       match y⁰
+//│         0 =>
+//│           match z⁰
+//│             0 =>
+//│               set tmp = "000";
+//│               end
+//│             1 =>
+//│               set tmp = "001";
+//│               end
+//│             else
+//│               set tmp = "";
+//│               end
+//│           end
+//│         1 =>
+//│           set tmp = "01";
+//│           end
+//│         else
+//│           set tmp = "";
+//│           end
+//│       end;
+//│     return Predef⁰.print⁰(tmp)
+//│   1 =>
+//│     begin
+//│       set tmp = "1";
+//│       end;
+//│     return Predef⁰.print⁰(tmp)
+//│   else
+//│     begin
+//│       set tmp = "";
+//│       end;
+//│     return Predef⁰.print⁰(tmp)
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 000
 
-:sjs
-print of if x is
-  0 and y is
-    0 and z is
-      0 then "000"
-      1 then "001"
-    1 then "01"
-  1 then "1"
-  else ""
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ switch (x) {
-//│   case 0:
-//│     switch (y) {
-//│       case 0:
-//│         switch (z) {
-//│           case 0:
-//│             return Predef.print("000");
-//│           case 1:
-//│             return Predef.print("001");
-//│         }
-//│         return Predef.print("");
-//│       case 1:
-//│         return Predef.print("01");
-//│     }
-//│     return Predef.print("");
-//│   case 1:
-//│     return Predef.print("1");
-//│ }
-//│ return Predef.print("")
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ > 000
-
-:sjs
+:sir
 fun foo(x, y, z) =
   if x is
     0 and y is
@@ -219,35 +226,39 @@ fun foo(x, y, z) =
       1 then "01"
     1 then "1"
     else ""
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo;
-//│ foo = function foo(x1, y1, z1) {
-//│   switch (x1) {
-//│     case 0:
-//│       switch (y1) {
-//│         case 0:
-//│           switch (z1) {
-//│             case 0:
-//│               return "000";
-//│             case 1:
-//│               return "001";
-//│           }
-//│           return "";
-//│         case 1:
-//│           return "01";
-//│       }
-//│       return "";
-//│     case 1:
-//│       return "1";
-//│   }
-//│   return ""
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let foo⁰;
+//│ define foo⁰ as fun foo¹(x, y, z) {
+//│   match x
+//│     0 =>
+//│       match y
+//│         0 =>
+//│           match z
+//│             0 =>
+//│               return "000"
+//│             1 =>
+//│               return "001"
+//│             else
+//│               return ""
+//│           end
+//│         1 =>
+//│           return "01"
+//│         else
+//│           return ""
+//│       end
+//│     1 =>
+//│       return "1"
+//│     else
+//│       return ""
+//│   end
 //│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 foo(0, 0, 0)
 //│ = "000"
 
-:sjs
+:sir
 print of if
   x is 0 and
     y is 0 and
@@ -257,37 +268,66 @@ print of if
   x is 1 then "1__"
   y is 2 then "_2_"
   else "___"
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ switch (x) {
-//│   case 0:
-//│     switch (y) {
-//│       case 0:
-//│         switch (z) {
-//│           case 0:
-//│             return Predef.print("000");
-//│           case 1:
-//│             return Predef.print("0_1");
-//│         }
-//│         return Predef.print("___");
-//│       case 1:
-//│         return Predef.print("01_");
-//│     }
-//│     if (z === 1) {
-//│       return Predef.print("0_1")
-//│     }
-//│     if (y === 2) {
-//│       return Predef.print("_2_")
-//│     }
-//│     return Predef.print("___");
-//│   case 1:
-//│     return Predef.print("1__");
-//│ }
-//│ if (y === 2) { return Predef.print("_2_") }
-//│ return Predef.print("___");
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ match x⁰
+//│   0 =>
+//│     begin
+//│       match y⁰
+//│         0 =>
+//│           match z⁰
+//│             0 =>
+//│               set tmp = "000";
+//│               end
+//│             1 =>
+//│               set tmp = "0_1";
+//│               end
+//│             else
+//│               set tmp = "___";
+//│               end
+//│           end
+//│         1 =>
+//│           set tmp = "01_";
+//│           end
+//│         else
+//│           match z⁰
+//│             1 =>
+//│               set tmp = "0_1";
+//│               end
+//│             else
+//│               match y⁰
+//│                 2 =>
+//│                   set tmp = "_2_";
+//│                   end
+//│                 else
+//│                   set tmp = "___";
+//│                   end
+//│               end
+//│           end
+//│       end;
+//│     return Predef⁰.print⁰(tmp)
+//│   1 =>
+//│     begin
+//│       set tmp = "1__";
+//│       end;
+//│     return Predef⁰.print⁰(tmp)
+//│   else
+//│     begin
+//│       match y⁰
+//│         2 =>
+//│           set tmp = "_2_";
+//│           end
+//│         else
+//│           set tmp = "___";
+//│           end
+//│       end;
+//│     return Predef⁰.print⁰(tmp)
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 000
 
-:sjs
+:ucs normalized deduplicated
+// `SplitDeduplicator` can detect more split-level duplications.
 fun foo(x, y, z) = if
   x is 0 and
     y is 0 and
@@ -297,41 +337,24 @@ fun foo(x, y, z) = if
   x is 1 then "1__"
   y is 2 then "_2_"
   else "___"
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo1;
-//│ foo1 = function foo(x1, y1, z1) {
-//│   switch (x1) {
-//│     case 0:
-//│       switch (y1) {
-//│         case 0:
-//│           switch (z1) {
-//│             case 0:
-//│               return "000";
-//│             case 1:
-//│               return "0_1";
-//│           }
-//│           return "___";
-//│         case 1:
-//│           return "01_";
-//│       }
-//│       if (z1 === 1) {
-//│         return "0_1"
-//│       }
-//│       if (y1 === 2) {
-//│         return "_2_"
-//│       }
-//│       return "___";
-//│     case 1:
-//│       return "1__";
-//│   }
-//│   if (y1 === 2) { return "_2_" }
-//│   return "___";
-//│ };
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ Normalized:
+//│ >  ‹if|while›
+//│ >    x is 0 and
+//│ >      y is 0 and
+//│ >        z is 0 then "000"
+//│ >        z is 1 then "0_1"
+//│ >        else "___"
+//│ >      y is 1 then "01_"
+//│ >      z is 1 then "0_1"
+//│ >      y is 2 then "_2_"
+//│ >      else "___"
+//│ >    x is 1 then "1__"
+//│ >    y is 2 then "_2_"
+//│ >    else "___"
 
 fun expensive_call(str) = Math.pow(2, str.length)
 
-:sjs
+:sir
 fun foo(x, y, z) = if x is
   0 and y is
     0 and z is
@@ -342,29 +365,37 @@ fun foo(x, y, z) = if x is
   else
     let value = "hello"
     expensive_call(value)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo2;
-//│ foo2 = function foo(x1, y1, z1) {
-//│   switch (x1) {
-//│     case 0:
-//│       switch (y1) {
-//│         case 0:
-//│           switch (z1) {
-//│             case 0:
-//│               return "000";
-//│             case 1:
-//│               return "001";
-//│           }
-//│           break;
-//│         case 1:
-//│           return "01";
-//│       }
-//│       break;
-//│     case 1:
-//│       return "1";
-//│   }
-//│   return expensive_call("hello")
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let foo²;
+//│ define foo² as fun foo³(x, y, z) {
+//│   let value;
+//│   match x
+//│     0 =>
+//│       match y
+//│         0 =>
+//│           match z
+//│             0 =>
+//│               return "000"
+//│             1 =>
+//│               return "001"
+//│             else
+//│               set value = "hello";
+//│               return expensive_call⁰(value)
+//│           end
+//│         1 =>
+//│           return "01"
+//│         else
+//│           set value = "hello";
+//│           return expensive_call⁰(value)
+//│       end
+//│     1 =>
+//│       return "1"
+//│     else
+//│       set value = "hello";
+//│       return expensive_call⁰(value)
+//│   end
 //│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 foo(0, 0, 0)
@@ -375,22 +406,18 @@ object A
 object B
 object C
 
-:sjs
+:sir
 // Since no branch is duplicated, there is no label or `break`.
 fun foo(x, y, z) =
-  if x is A then "Hello-------------------------------------------------------------------------"
-  else "Goodbye-------------------------------------------------------------------------"
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo3;
-//│ foo3 = function foo(x1, y1, z1) {
-//│   if (x1 instanceof A1.class) {
-//│     return "Hello-------------------------------------------------------------------------"
-//│   }
-//│   return "Goodbye-------------------------------------------------------------------------";
-//│ };
+  if x is A then "Hello"
+  else "Goodbye"
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let foo⁴;
+//│ define foo⁴ as fun foo⁵(x, y, z) { match x A⁰ => return "Hello" else return "Goodbye" end };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:sjs
+:sir
 // Before the deduplication is introduced:
 // let foo;
 // foo = function foo(x1, y, z) {
@@ -405,34 +432,54 @@ fun foo(x, y, z) =
 fun foo(x, y, z) =
   if x is A and y is B and z is C then "Hello"
   else "Goodbye"
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo4;
-//│ foo4 = function foo(x1, y1, z1) {
-//│   if (x1 instanceof A1.class) {
-//│     if (y1 instanceof B1.class) {
-//│       if (z1 instanceof C1.class) { return "Hello" }
-//│     }
-//│   }
-//│   return "Goodbye"
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let foo⁶;
+//│ define foo⁶ as fun foo⁷(x, y, z) {
+//│   match x
+//│     A⁰ =>
+//│       match y
+//│         B⁰ =>
+//│           match z
+//│             C⁰ =>
+//│               return "Hello"
+//│             else
+//│               return "Goodbye"
+//│           end
+//│         else
+//│           return "Goodbye"
+//│       end
+//│     else
+//│       return "Goodbye"
+//│   end
 //│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:sjs
+:sir
 // The default branch which throws the match error should be also deduplicated.
 fun foo(x, y, z) =
   if x is A and y is B and z is C then "Hello"
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo5;
-//│ foo5 = function foo(x1, y1, z1) {
-//│   if (x1 instanceof A1.class) {
-//│     if (y1 instanceof B1.class) {
-//│       if (z1 instanceof C1.class) {
-//│         return "Hello"
-//│       }
-//│     }
-//│   }
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let foo⁸;
+//│ define foo⁸ as fun foo⁹(x, y, z) {
+//│   match x
+//│     A⁰ =>
+//│       match y
+//│         B⁰ =>
+//│           match z
+//│             C⁰ =>
+//│               return "Hello"
+//│             else
+//│               throw new globalThis⁰.Error⁰("match error")
+//│           end
+//│         else
+//│           throw new globalThis⁰.Error⁰("match error")
+//│       end
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
 //│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect "Hello"
@@ -447,11 +494,62 @@ foo(A, A, A)
 foo(A, B, B)
 //│ ═══[RUNTIME ERROR] Error: match error
 
-:sjs
+:sir
 let y = if true then 1 else 2
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let y1, tmp3; if (true === true) { tmp3 = 1; } else { tmp3 = 2; } y1 = tmp3;
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let y¹, scrut, tmp;
+//│ set scrut = true;
+//│ match scrut
+//│   true =>
+//│     set tmp = 1;
+//│     end
+//│   else
+//│     set tmp = 2;
+//│     end
+//│ set y¹ = tmp;
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ y = 1
 
+fun pred(x) = true
 
+:ucs normalized
+// Not only the final else is deduplicated, the `z is A` split is also deduplicated.
+fun foo1(x, y, z) = if
+  x is A and pred(x) then print of 1
+  z is A then print of 2
+  else print of 3
+//│ Normalized:
+//│ >  ‹if|while›
+//│ >    let-split σ =
+//│ >      z is A then (member:Predef¹.)print‹member:print›(2)
+//│ >      else (member:Predef¹.)print‹member:print›(3)
+//│ >    x is A and
+//│ >      let tmp:scrut = member:pred⁰(x¹)
+//│ >      tmp:scrut is true then (member:Predef¹.)print‹member:print›(1)
+//│ >      $σ
+//│ >    $σ
+
+:ucs normalized deduped
+// This shows a cascaded split let-binding.
+fun foo2(x, y, z) = if
+  x is A and pred(x) then print of 1
+  y is A and pred(y) then print of 2
+  z is A then print of 3
+  else print of 4
+//│ Normalized:
+//│ >  ‹if|while›
+//│ >    let-split σ =
+//│ >      let-split σ =
+//│ >        z is A then (member:Predef¹.)print‹member:print›(3)
+//│ >        else (member:Predef¹.)print‹member:print›(4)
+//│ >      y is A and
+//│ >        let tmp:scrut = member:pred⁰(y²)
+//│ >        tmp:scrut is true then (member:Predef¹.)print‹member:print›(2)
+//│ >        $σ
+//│ >      $σ
+//│ >    x is A and
+//│ >      let tmp:scrut = member:pred⁰(x²)
+//│ >      tmp:scrut is true then (member:Predef¹.)print‹member:print›(1)
+//│ >      $σ
+//│ >    $σ

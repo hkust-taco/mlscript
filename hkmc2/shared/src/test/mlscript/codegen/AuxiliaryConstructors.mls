@@ -1,0 +1,96 @@
+:js
+
+
+// === Basic constructor with single param list ===
+
+// Plain class with constructor(x, y) generates JS constructor with field assignments
+:sjs
+class Foo with
+  constructor(x, y)
+  fun getX = x
+  fun getY = y
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Foo1;
+//│ (class Foo {
+//│   static {
+//│     Foo1 = this
+//│   }
+//│   constructor(x, y) {
+//│     this.#x = x;
+//│     this.#y = y;
+//│   }
+//│   #x;
+//│   #y;
+//│   get getX() {
+//│     return this.#x;
+//│   }
+//│   get getY() {
+//│     return this.#y;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+let f = new Foo(1, 2)
+//│ f = Foo
+
+f.getX
+//│ = 1
+
+f.getY
+//│ = 2
+
+
+// === Multiple constructor param lists ===
+
+// constructor(x, y)(u, v) flattens into single JS constructor
+class Bar with
+  constructor(x, y)(u, v)
+  fun sum() = x + y + u + v
+
+let b = new Bar(1, 2)(3, 4)
+//│ b = Bar
+
+b.sum()
+//│ = 10
+
+
+// === Main params + constructor (aux params) ===
+
+// Foo(a, b) with { constructor(x, y)(u, v) } should have (a, b) as main
+// and [(x, y), (u, v)] as aux param lists
+class Baz(a, b) with
+  constructor(x, y)(u, v)
+  fun total() = a + b + x + y + u + v
+
+Baz(1, 2)(3, 4)(5, 6).total()
+//│ = 21
+
+let mk = Baz(1, 2)(3, 4)
+//│ mk = fun
+
+mk(5, 6).total()
+//│ = 21
+
+
+// === Data class with constructor ===
+
+data class Point(label) with
+  constructor(x, y)
+  fun coords() = [x, y]
+
+Point("A")(1, 2).coords()
+//│ = [1, 2]
+
+
+// === Single aux param list on class with main params ===
+
+class Qux(a) with
+  constructor(extra)
+  fun both() = a + extra
+
+Qux(10)(123).both()
+//│ = 133
+
+

@@ -19,6 +19,27 @@ Any commit that does not include the latest changes to test outputs will fail th
 Please also read the files in `.github/skills/hkmc2-difftests`.
 
 
+## Design Philosophy
+
+You are working on an industry-strength compiler codebase.
+Although its test suite is extensive, tests alone are not enough to determine the quality of a change;
+the goal is not just to "make everything green".
+
+When making a change, you must reason about whether it is *completely correct*,
+including with respect to edge cases that may not be covered by existing tests
+or that will only become relevant later:
+you should take into account the future maintainability of the code,
+preferring principled designs over ad-hoc short-term solutions.
+
+The worst possible outcome would be to introduce changes that might lead to silent miscompilation.
+If you are not sure about whether some invariants you need do hold,
+assert them using `softAssert` or `assert` (if `softAssert` is not available).
+If you know that some invariants temporarily do not hold but will be fixed in the future, use `softTODO`.
+
+It is very much preferable to add regression tests and `:fixme`s for bugs that should be fixed later
+rather than to introduce temporary workarounds that bypass bugs just to make the tests pass.
+
+
 ## Coding Style
 
 Never use `asInstanceOf` unless absolutely necessary. If you find yourself using `asInstanceOf`, it's a sign that your code may need to be refactored to be more type-safe.

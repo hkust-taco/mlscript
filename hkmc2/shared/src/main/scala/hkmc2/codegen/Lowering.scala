@@ -291,6 +291,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
                   ObjBody(Blk(Nil, UnitVal())),
                   S(mod.sym),
                   stagedAnnots,
+                  Nil,
+                  N,
                 )
             case _ => _defn
           reportAnnotations(defn, defn.extraAnnotations)
@@ -315,6 +317,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
                 source = Diagnostic.Source.Compilation
               ))
           val bufferable = bufferableAnnots.headOption
+          // Forbid @buffered classes from having a main parameter list
+          bufferable.foreach: isBufferable =>
+            if !isBufferable && defn.paramsOpt.isDefined then
+              raise(ErrorReport(
+                msg"Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead." -> defn.toLoc :: Nil,
+                source = Diagnostic.Source.Compilation
+              ))
           val (mtds, publicFlds, privateFlds, ctor) = defn match
             case pd: PatternDef =>
               // Compile the pattern definition into `unapply` and `unapplyStringPrefix`
@@ -1044,6 +1053,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       val l = loweringCtx.registerTempSymbol(N)
       Assign(l, r, setupTerm("Else", l.asSimpleRef :: Nil)(k))
     case Split.End => setupTerm("End", Nil)(k)
+    case Split.LetSplit(sym, tail) => setupSymbol(sym): r1 =>
+      loweringCtx.collectScopedSym(sym)
+      val l1, l2, l3 = loweringCtx.registerTempSymbol(N)
+      blockBuilder.assign(l1, r1)
+        .chain(b => Assign(sym, Value.Ref(l1), b))
+        .chain(b => quoteSplit(sym.body)(r2 => Assign(l2, r2, b)))
+        .chain(b => quoteSplit(tail)(r3 => Assign(l3, r3, b)))
+        .rest(setupTerm("LetSplit", (l1 :: l2 :: l3 :: Nil).map(s => Value.Ref(s)))(k))
+    case Split.UseSplit(sym) => setupTerm("UseSplit", Value.Ref(sym, N) :: Nil)(k)
 
   lazy val setupFilename: Path =
     val state = summon[State]
@@ -1299,7 +1317,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       if config.funcToCls then Lifter(FirstClassFunctionTransformer().transform(merged)).transform
       else merged
     
-    val staged = ReflectionInstrumenter(using summon).apply(funcToCls)
+    val flatClassParams = ClassParamFlattener(funcToCls)
+
+    val staged = ReflectionInstrumenter(using summon).apply(flatClassParams)
     
     val res =
       if config.tailRecOpt then TailRecOpt().transform(staged)

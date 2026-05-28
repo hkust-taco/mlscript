@@ -6,7 +6,7 @@
 :sir
 class A(val x)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let A⁰; define A⁰ as class A²(x) { val x⁰; constructor A¹ { define x⁰ as val x¹ = x; end } }; end
+//│ let A⁰; define A⁰ as class A² { val x⁰; constructor A¹(x) { define x⁰ as val x¹ = x; end } }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let a = A(1)
@@ -64,7 +64,7 @@ case A(x) then x
 :sir
 class A()(val x)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let A³; define A³ as class A⁵() { val x²; constructor A⁴(x) { define x² as val x³ = x; end } }; end
+//│ let A³; define A³ as class A⁵ { val x²; constructor A⁴(x) { define x² as val x³ = x; end } }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let a = A()(1)
@@ -126,18 +126,18 @@ fun foo(x, y) =
   [a, a.A#u, a.A#v]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let A⁶, foo⁰;
-//│ define A⁶ as class A⁸(u) {
+//│ define A⁶ as class A⁸ {
 //│   private val y⁰;
 //│   val u⁰;
 //│   val v⁰;
-//│   constructor A⁷(y) {
+//│   constructor A⁷(u, y) {
 //│     set A⁸.this.y = y;
 //│     define u⁰ as val u¹ = u;
 //│     define v⁰ as val v¹ = A⁸.this.y⁰;
 //│     end
 //│   }
 //│ };
-//│ define foo⁰ as fun foo¹(x, y) { let a; set a = new A⁸(x)(y); return [a, a.u¹, a.v¹] };
+//│ define foo⁰ as fun foo¹(x, y) { let a; set a = new A⁸(x, y); return [a, a.u¹, a.v¹] };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

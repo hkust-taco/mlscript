@@ -11,10 +11,10 @@ data class A(x) with
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let B⁰, A⁰;
 //│ @data
-//│ define B⁰ as class B²(y) {
+//│ define B⁰ as class B² {
 //│   private val A¹;
 //│   val y⁰;
-//│   constructor B¹(A) {
+//│   constructor B¹(y, A) {
 //│     set B².this.A = A;
 //│     define y⁰ as val y¹ = y;
 //│     end
@@ -24,13 +24,13 @@ data class A(x) with
 //│   }
 //│ };
 //│ @data
-//│ define A⁰ as class A³(x) {
+//│ define A⁰ as class A³ {
 //│   val x¹;
-//│   constructor A² {
+//│   constructor A²(x) {
 //│     define x¹ as val x⁰ = x;
 //│     end
 //│   }
-//│   method getA⁰ = fun getA¹() { let tmp; set tmp = new B²(2)(A³.this); return tmp.getB¹() }
+//│   method getA⁰ = fun getA¹() { let tmp; set tmp = new B²(2, A³.this); return tmp.getB¹() }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -61,7 +61,7 @@ class A with
 //│ };
 //│ define A⁴ as class A⁵ {
 //│   val x²;
-//│   constructor { define x² as val x³ = g¹; end }
+//│   constructor() { define x² as val x³ = g¹; end }
 //│ };
 //│ set tmp = new A⁵();
 //│ return tmp.x³()

@@ -57,9 +57,9 @@ class Foo(x) with
 //│     return +⁰($anon¹.this.state⁰, $anon¹.this.y⁰)
 //│   }
 //│ };
-//│ define Foo⁰ as class Foo³(x) {
+//│ define Foo⁰ as class Foo³ {
 //│   private val x⁰;
-//│   constructor Foo² {
+//│   constructor Foo²(x) {
 //│     set Foo³.this.x = x;
 //│     end
 //│   }

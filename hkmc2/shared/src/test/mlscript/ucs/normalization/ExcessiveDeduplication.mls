@@ -12,8 +12,8 @@ let
 //│ z = true
 
 
-// TODO: This should *not* be automatically deduplicated.
-// * In fact, we should probably never try to deduplicate things that are already duplicated in the source.
+// * We never try to deduplicate things that are already duplicated in the source.
+// * (A previous version of the UCS was using hash-consing to do so, which was a bad idea.)
 :sjs
 if
   x then 0
@@ -42,8 +42,9 @@ if
 //│ = 0
 
 
-// * Currently, dedup' is implemented by hash-consing after the fact, which doesn't work when bindings are involved;
-// * it fails here:
+// * The last split is `y is [b] then ...`. It used to be duplicated because it serves
+// * as the alternative split when `x` or `z` fails. Now we bind the split to a
+// * split symbol and use it as the alternative splits of `x` and `z`.
 :ssjs
 :ucs normalized
 if
@@ -51,55 +52,36 @@ if
   y is [b] then let x = 1 in x + b
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    x is true and
-//│ >      z is true then 1
-//│ >      y is []=1 and
-//│ >        let tmp:element0$ = ((tmp:runtime⁰.)Tuple.)get‹term:get›(y⁰, 0)
-//│ >        let b = tmp:element0$⁰
-//│ >        else
-//│ >          let x
-//│ >          x = 1
-//│ >          builtin:+⁰(x⁰, b⁰)
-//│ >    y is []=1 and
+//│ >    let-split σ = y is []=1 and
 //│ >      let tmp:element0$ = ((tmp:runtime⁰.)Tuple.)get‹term:get›(y⁰, 0)
 //│ >      let b = tmp:element0$⁰
 //│ >      else
 //│ >        let x
 //│ >        x = 1
 //│ >        builtin:+⁰(x⁰, b⁰)
+//│ >    x is true and
+//│ >      z is true then 1
+//│ >      $σ
+//│ >    $σ
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let b, element0$, tmp;
-//│ split_root$: {
-//│   split_default$: {
-//│     if (x === true) {
-//│       if (z === true) {
-//│         tmp = 1;
-//│         break split_root$
-//│       }
-//│       if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
-//│         element0$ = runtime.checkCall(runtime.Tuple.get(y, 0));
-//│         b = element0$;
-//│       } else {
-//│         break split_default$
-//│       }
-//│     } else {
-//│       if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
-//│         element0$ = runtime.checkCall(runtime.Tuple.get(y, 0));
-//│         b = element0$;
-//│       } else {
-//│         break split_default$
-//│       }
+//│ let element0$, tmp;
+//│ σ$x: {
+//│   if (x === true) {
+//│     if (z === true) {
+//│       tmp = 1;
+//│       break σ$x
 //│     }
-//│     tmp = 1 + b;
-//│     break split_root$;
 //│   }
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
+//│     element0$ = runtime.checkCall(runtime.Tuple.get(y, 0));
+//│     tmp = 1 + element0$;
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ }
 //│ block$res4 = tmp;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
-// * What we want is a way of let-binding split tails (ie, join points), as in:
+// * The original draft of let-split constructs:
 // >  if
 // >    let-split $j =
 // >      y is Some(argument0$) and
@@ -114,7 +96,8 @@ if
 // >    $j
 
 
-// * Contemplate this absolutely horrendous code (before optimization):
+// * The lowered IR keeps a `set scrut = false` from `if false do ()`. The optimizer
+// * drops it:
 :sir
 :soir
 :sjs
@@ -123,18 +106,7 @@ if false do ()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ return 123
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut;
-//│ block split_root$:
-//│   block split_1$:
-//│     set scrut = false;
-//│     match scrut
-//│       true =>
-//│         break split_1$
-//│       else
-//│         break split_1$
-//│     end
-//│   end
-//│ return 123
+//│ let scrut; set scrut = false; return 123
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ return 123
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

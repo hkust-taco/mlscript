@@ -250,9 +250,9 @@ module Foo with
 //│ define Foo¹ as class Foo²
 //│ module Foo³ {
 //│   constructor {
-//│     define Bar¹ as class Bar³(y) {
+//│     define Bar¹ as class Bar³ {
 //│       private val y⁰;
-//│       constructor Bar² {
+//│       constructor Bar²(y) {
 //│         set Bar³.this.y = y;
 //│         end
 //│       }

@@ -76,7 +76,7 @@ f(p())
 //│ deforest > 	fields: arg$X$0$⁰.b¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let p⁰, f⁰, tmp, p_10$p⁰, f_12$f⁰, f_12$x_X⁰, f_12$x_rest⁰, f_12$split_default$_rest⁰, f_12$split_root$_rest⁰, f_12$arg$X$0$_Y⁰, f_12$arg$X$0$_rest⁰;
+//│ let p⁰, f⁰, tmp, p_10$p⁰, f_12$f⁰, f_12$x_X⁰, f_12$x_rest⁰, f_12$arg$X$0$_Y⁰, f_12$arg$X$0$_rest⁰;
 //│ @private
 //│ define p_10$p⁰ as fun p_10$p¹()(eta$0$0, eta$0$1, eta$0$2) {
 //│   let tmp1, Y_b, X_a;
@@ -88,11 +88,7 @@ f(p())
 //│ @private
 //│ define f_12$f⁰ as fun f_12$f¹(x) {
 //│   let y, arg$X$0$, arg$Y$0$;
-//│   block split_root$:
-//│     block split_default$:
-//│       return x(y, arg$X$0$, arg$Y$0$)
-//│     throw new globalThis⁰.Error⁰("match error")
-//│   return runtime⁰.Unit⁰
+//│   return x(y, arg$X$0$, arg$Y$0$)
 //│ };
 //│ @affine(1) @private
 //│ define f_12$x_X⁰ as fun f_12$x_X¹(X_a)(fv_y, fv_arg$X$0$, fv_arg$Y$0$) {
@@ -107,15 +103,7 @@ f(p())
 //│ };
 //│ @private
 //│ define f_12$x_rest⁰ as fun f_12$x_rest¹() {
-//│   return f_12$split_default$_rest¹()
-//│ };
-//│ @private
-//│ define f_12$split_default$_rest⁰ as fun f_12$split_default$_rest¹() {
-//│   throw new globalThis⁰.Error⁰("match error")
-//│ };
-//│ @private
-//│ define f_12$split_root$_rest⁰ as fun f_12$split_root$_rest¹() {
-//│   return runtime⁰.Unit⁰
+//│   return null
 //│ };
 //│ @private
 //│ define f_12$arg$X$0$_rest⁰ as fun f_12$arg$X$0$_rest¹() {
@@ -128,24 +116,20 @@ f(p())
 //│ };
 //│ define f⁰ as fun f¹(x) {
 //│   let y, arg$X$0$, arg$Y$0$;
-//│   block split_root$:
-//│     block split_default$:
-//│       match x
-//│         X¹ =>
-//│           set arg$X$0$ = x.a¹;
-//│           match arg$X$0$
-//│             Y¹ =>
-//│               set arg$Y$0$ = arg$X$0$.b¹;
-//│               set y = arg$Y$0$;
-//│               return y
-//│             else
-//│               break split_default$
-//│           end
+//│   match x
+//│     X¹ =>
+//│       set arg$X$0$ = x.a¹;
+//│       match arg$X$0$
+//│         Y¹ =>
+//│           set arg$Y$0$ = arg$X$0$.b¹;
+//│           set y = arg$Y$0$;
+//│           return y
 //│         else
-//│           break split_default$
+//│           throw new globalThis⁰.Error⁰("match error")
 //│       end
-//│     throw new globalThis⁰.Error⁰("match error")
-//│   return runtime⁰.Unit⁰
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
 //│ };
 //│ set tmp = p_10$p¹();
 //│ return f_12$f¹(tmp)

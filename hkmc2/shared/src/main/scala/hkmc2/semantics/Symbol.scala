@@ -199,6 +199,16 @@ class LabelSymbol(val trm: Opt[Term], name: Str = "lbl")(using State) extends Lo
   def toLoc = trm.flatMap(_.toLoc)
   override def prefix: Str = "label:"
 
+/** Symbol representing a named split (join point) introduced during normalization.
+  * The `body` field holds the shared split that this symbol references.
+  * The `label` field is set during lowering to the corresponding LabelSymbol. */
+class SplitSymbol(val body: Split, name: Str = "split")(using State) extends LocalSymbol:
+  var label: Opt[LabelSymbol] = N
+  def nme = name
+  def subst(using s: SymbolSubst): SplitSymbol = this // SplitSymbols are not substituted
+  def toLoc = body.toLoc
+  override def prefix: Str = "split:"
+
 abstract class BlockLocalSymbol(name: Str)(using State) extends FlowSymbol(name):
   self: LocalSymbol => // * using `with LocalSymbol` in the `extends` clause makes Scala think there's a bad override
   var decl: Opt[Declaration] = N

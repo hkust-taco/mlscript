@@ -110,3 +110,26 @@ id(module 1)
 //│ ╙──       	   ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+
+:e
+fun f(x) = x is M
+//│ ╔══[COMPILATION ERROR] Pattern name not found: M.
+//│ ║  l.115: 	fun f(x) = x is M
+//│ ╙──       	                ^
+
+f(0)
+//│ = true
+
+:noModuleCheck
+f(M)
+//│ = true
+
+:e
+f(new M)
+//│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference of type M.
+//│ ║  l.128: 	f(new M)
+//│ ║         	      ^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ = true
+
+
