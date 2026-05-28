@@ -229,3 +229,17 @@ f(A) + f(A)
 //│ deforest > <<< fusing <<<
 //│ = 2
 
+
+:todo
+module Test with
+  module Test2 with
+    let x = 1
+    fun foo(a) = if a is
+      AA(y) then x + y
+Test.Test2.foo(AA(2))
+//│ deforest > >>> fusing >>>
+//│ deforest > AA⁰(2) ->
+//│ deforest > 	match: a⁰
+//│ deforest > 	fields: a⁰.x¹
+//│ deforest > <<< fusing <<<
+//│ ═══[RUNTIME ERROR] ReferenceError: Test2 is not defined
