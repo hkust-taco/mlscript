@@ -35,13 +35,13 @@ fun f(x) =
 //│ let A⁰, f⁰, Capture$f⁰, A$⁰;
 //│ @inline
 //│ define A$⁰ as fun A$¹(f$cap)(y)(z) {
-//│   return new A¹(y)(f$cap)(z)
+//│   return new A¹(y, f$cap, z)
 //│ };
-//│ define A⁰ as class A¹(y) {
+//│ define A⁰ as class A¹ {
 //│   private val f$cap⁰;
 //│   val y⁰;
 //│   val z⁰;
-//│   constructor A²(f$cap)(z) {
+//│   constructor A²(y, f$cap, z) {
 //│     set A¹.this.f$cap = f$cap;
 //│     define y⁰ as val y¹ = y;
 //│     define z⁰ as val z¹ = z;
@@ -51,7 +51,7 @@ fun f(x) =
 //│     let tmp, tmp1;
 //│     set tmp = +⁰(A¹.this.y¹, 1);
 //│     set tmp1 = +⁰(A¹.this.z¹, 1);
-//│     return new A¹(tmp)(A¹.this.f$cap⁰)(tmp1)
+//│     return new A¹(tmp, A¹.this.f$cap⁰, tmp1)
 //│   }
 //│   method foo⁰ = fun foo¹() {
 //│     let tmp;
@@ -74,12 +74,12 @@ fun f(x) =
 //│   set f$cap = new mut Capture$f²(x);
 //│   set tmp = +⁰(f$cap.x$0⁰, 1);
 //│   set tmp1 = +⁰(f$cap.x$0⁰, 2);
-//│   set tmp2 = new A¹(tmp)(f$cap)(tmp1);
+//│   set tmp2 = new A¹(tmp, f$cap, tmp1);
 //│   set tmp3 = +⁰(f$cap.x$0⁰, 1);
-//│   set tmp4 = new A¹(tmp3)(f$cap);
+//│   set tmp4 = A$¹(f$cap)(tmp3);
 //│   set tmp5 = +⁰(f$cap.x$0⁰, 1);
 //│   set tmp6 = +⁰(f$cap.x$0⁰, 2);
-//│   set tmp7 = new A¹(tmp5)(f$cap)(tmp6);
+//│   set tmp7 = new A¹(tmp5, f$cap, tmp6);
 //│   set A$here = A$¹(f$cap);
 //│   return [tmp2, A$here, tmp4, tmp7]
 //│ };
@@ -118,13 +118,9 @@ let a2 = res.2(30)
 a2.z
 //│ = 30
 
-:fixme
 :expect 20
 a1.z
-//│ ═══[RUNTIME ERROR] Expected: '20', got: '30'
-//│ = 30
+//│ = 20
 
 a.getX()
 //│ = 4
-
-

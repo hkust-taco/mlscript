@@ -16,7 +16,7 @@ Foo(1, 2)(3)
 :sir
 Foo(1, 2)(3)(4)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let baseCall; set baseCall = Foo⁰(1, 2)(3); return baseCall(4)
+//│ let baseCall; set baseCall = new Foo⁰(1, 2, 3); return baseCall(4)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: baseCall is not a function
 
@@ -31,7 +31,7 @@ new Foo(1, 2)(3)
 :sir
 new Foo(1, 2)(3)(4)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let baseInst; set baseInst = new Foo¹(1, 2)(3); return baseInst(4)
+//│ let baseInst; set baseInst = new Foo⁰(1, 2, 3); return baseInst(4)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: baseInst is not a function
 
@@ -39,46 +39,23 @@ new Foo(1, 2)(3)(4)
 :sir
 new Foo(1, 2)(3)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ return new Foo¹(1, 2)(3)
+//│ return new Foo⁰(1, 2, 3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Foo(1, 2)
 
 :sir
 new Foo(1, 2)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda⁰; @private define lambda⁰ as fun lambda¹(z) { return new Foo¹(1, 2)(z) }; return lambda¹
+//│ let lambda⁰; @private define lambda⁰ as fun lambda¹(z) { return new Foo⁰(1, 2, z) }; return lambda¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 
-:todo
 data class Foo with
   constructor(x, y)
-//│ ╔══[PARSE ERROR] Expected block after constructor keyword; found parenthesis section instead
-//│ ║  l.56: 	  constructor(x, y)
-//│ ╙──      	             ^^^^^^
-//│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.56: 	  constructor(x, y)
-//│ ╙──      	              ^
-//│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.56: 	  constructor(x, y)
-//│ ╙──      	                 ^
 
-:todo
 data class Foo with
   constructor(x, y)(z)
-//│ ╔══[PARSE ERROR] Expected block after constructor keyword; found parenthesis section instead
-//│ ║  l.69: 	  constructor(x, y)(z)
-//│ ╙──      	             ^^^^^^
-//│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.69: 	  constructor(x, y)(z)
-//│ ╙──      	              ^
-//│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.69: 	  constructor(x, y)(z)
-//│ ╙──      	                 ^
-//│ ╔══[COMPILATION ERROR] Name not found: z
-//│ ║  l.69: 	  constructor(x, y)(z)
-//│ ╙──      	                    ^
 
 
 // class Foo(using z: Int)

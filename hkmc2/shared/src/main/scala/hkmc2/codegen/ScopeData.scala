@@ -9,7 +9,6 @@ import hkmc2.ScopeData.*
 import hkmc2.semantics.Elaborator.State
 
 import hkmc2.syntax.Tree
-import hkmc2.codegen.llir.FreshInt
 import java.util.IdentityHashMap
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
@@ -17,8 +16,8 @@ import scala.collection.mutable.Set as MutSet
 object ScopeData:
   opaque type ScopeUID = Int
   class FreshUID:
-    private val underlying = FreshInt()
-    def make: ScopeUID = underlying.make
+    private val underlying = new Uid.Symbol.State
+    def make: ScopeUID = underlying.nextUid.asInt
   
   class ScopeFinder(fresh: FreshUID, ignoredClasses: Set[DefinitionSymbol[?] & InnerSymbol]) extends BlockTraverserShallow:
     var objs: List[ScopedObject] = Nil
@@ -67,7 +66,7 @@ object ScopeData:
   type LiftedSym = DefinitionSymbol[?]
   
   extension (d: DefinitionSymbol[?])
-    def asBmsRef = Value.Ref(d.asBlkMember.get, S(d))
+    def asBmsRef = d.asBlkMember.get.asMemberRef(d)
   
   enum MethodKind:
     case ClsMethod

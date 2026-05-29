@@ -346,7 +346,7 @@ object Elaborator:
       val id = new Ident("NonLocalReturn")
       val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)
       val bsym = BlockMemberSymbol("ret", Nil, true)
-      val defn = ClassDef(N, syntax.Cls, sym, bsym, N, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N)
+      val defn = ClassDef(N, syntax.Cls, sym, bsym, N, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N, auxCtorParams = Nil)
       sym.defn = S(defn)
       Term.SynthSel(runtimeSymbol.ref(), id)(S(sym), FlowSymbol.synthSel(id.name), N, N)
     val nonLocalRet =
@@ -416,6 +416,27 @@ object Elaborator:
         TermDefFlags(true), Modulefulness(S(mod))(false), Nil, N))
       sym
   transparent inline def State(using state: State): State = state
+  
+  /** Extracts all parameter lists from a `constructor(...)...` declaration.
+    *
+    * Constructor declarations are parsed as applied round braces or tuples;
+    * for example, `constructor(x, y)(u, v)` becomes
+    * `App(Bra(Round, Block(x, y)), Tup(u, v))`.
+    */
+  private object ConstructorParamDecl:
+    def mkTup(inner: Tree): Tree = inner match
+      case t: Tup => t
+      case Block(stmts) => Tup(stmts)
+      case other => Tup(other :: Nil)
+
+    def unapply(tree: Tree): Opt[Ls[Tree]] = tree match
+      case Bra(Round, inner) =>
+        S(mkTup(inner) :: Nil)
+      case App(lhs, rhs @ (_: Tup)) =>
+        unapply(lhs).map(_ :+ rhs)
+      case App(lhs, Bra(Round, inner)) =>
+        unapply(lhs).map(_ :+ mkTup(inner))
+      case _ => N
   
 end Elaborator
 
@@ -664,7 +685,7 @@ extends Importer with ucs.SplitElaborator:
       derivedClsSym.defn = S(ClassDef(
         N, syntax.Cls, derivedClsSym,
         BlockMemberSymbol(derivedClsSym.name, Nil), N,
-        Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N))
+        Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N, auxCtorParams = Nil))
       
       val elabed = ctx.nestInner(derivedClsSym).givenIn:
         block(sts_, hasResult = false)._1
@@ -1274,6 +1295,15 @@ extends Importer with ucs.SplitElaborator:
       case Constructor(Block(ctors)) :: sts =>
         // TODO properly handle (it currently desugars to sibling classes)
         go(sts, annotations, acc)
+      case (ctorParams @ Constructor(ConstructorParamDecl(_))) :: sts =>
+        // constructor(x, y) or constructor(x, y)(u, v) syntax: params are extracted during class elaboration
+        ctx.getOuter match
+        case S(_: ClassSymbol) =>
+          go(sts, annotations, acc)
+        case _ =>
+          raise(ErrorReport(msg"'constructor(...)' declarations are only allowed in class bodies"
+            -> ctorParams.toLoc :: Nil))
+          go(sts, annotations, acc)
       case Open(bod) :: sts =>
         reportUnusedAnnotations
         bod match
@@ -1549,9 +1579,13 @@ extends Importer with ucs.SplitElaborator:
             given Ctx = newCtx
             params(ps, isDataClass, k is Pat)
           newCtx = newCtx2
-          res
+          // Spread parameters are not supported in class parameters.
+          res.restParam.foreach: rp =>
+            raise(ErrorReport(
+              msg"Spread parameters are not supported in class parameters." -> rp.toLoc :: Nil))
+          res.copy(restParam = N)
         
-        def withFields(using Ctx)(fn: (Ctx) ?=> (Term.Blk, Ctx)): (Term.Blk, Ctx) =
+        def withFields(extraParams: Ls[ParamList])(using Ctx)(fn: (Ctx) ?=> (Term.Blk, Ctx)): (Term.Blk, Ctx) =
           softAssert(pss.sizeCompare(td.clsParams) === 0,
             s"mismatched parameter list numbers ${pss} vs ${td.clsParams}")
           val fields: Ls[Statement] = pss.zip(td.clsParams).flatMap: (ps, cps) =>
@@ -1596,17 +1630,31 @@ extends Importer with ucs.SplitElaborator:
                 p.fldSym = S(psym)
                 decl :: defn :: Nil
           
+          // Also create fields for constructor(...) params (always use LetBind path)
+          val ctorFields: Ls[Statement] = extraParams.flatMap: ps =>
+            ps.params.flatMap: p =>
+              val owner = td.symbol match
+                case s: InnerSymbol => S(s)
+                case _: TypeAliasSymbol => die
+              val psym = TermSymbol(LetBind, owner, p.sym.id)
+              val decl = LetDecl(psym, Nil)
+              val defn = DefineVar(psym, p.sym.ref())
+              p.fldSym = S(psym)
+              decl :: defn :: Nil
+          
+          val allFields = fields ::: ctorFields
+          
           val ctxWithFields =
-            val valParams = fields.collect:
+            val valParams = allFields.collect:
               case f: TermDefinition =>
                 f.sym.nme -> f.sym
-            val params = fields.collect:
+            val params = allFields.collect:
               case (f: LetDecl) =>
                 f.sym.nme -> f.sym
             ctx.withMembers(valParams) ++ params
           
           val (blk, c) = fn(using ctxWithFields)
-          val blkWithFields: Blk = blk.copy(stats = fields ::: blk.stats)
+          val blkWithFields: Blk = blk.copy(stats = allFields ::: blk.stats)
           ObjBody.extractMembers(blkWithFields) match
             case R(_) =>
               (blkWithFields, c)
@@ -1614,7 +1662,7 @@ extends Importer with ucs.SplitElaborator:
               errs.foreach(raise)
               (blk, c)
         
-        def mkBody(using Ctx) = withFields:
+        def mkBody(extraParams: Ls[ParamList])(using Ctx) = withFields(extraParams):
           body match
           case N | S(Error()) => (new Blk(Nil, Term.Lit(UnitLit(false))), ctx)
           case S(b: Block) => block(b, hasResult = false)
@@ -1700,25 +1748,44 @@ extends Importer with ucs.SplitElaborator:
                 case N => sym.asAls
               log(s"Companion: ${comp}")
               val md =
-                val (bod, c) = mkBody
+                val (bod, c) = mkBody(Nil)
                 ModuleOrObjectDef(owner, modSym, sym,
                   tps, pss.headOption, pss.tailOr(Nil), newOf(td), k, ObjBody(bod), comp, annotations)(outerCtx.scope)
               modSym.defn = S(md)
               md
         case Cls =>
           val clsSym = td.symbol.asInstanceOf[ClassSymbol] // TODO: improve `asInstanceOf`
+          // Extract constructor(...) param lists from the class body
+          // Handles both single param lists: constructor(x, y)
+          // and multi param lists: constructor(x, y)(u, v)
+          val auxCtorParamTrees: Ls[Tree] = body match
+            case S(blk: Block) => blk.stmts.flatMap:
+              case Constructor(ConstructorParamDecl(paramTrees)) =>
+                paramTrees
+              case _ => Nil
+            case _ => Nil
+          val auxCtorPss = auxCtorParamTrees.map: ps =>
+            val (res, newCtx2) =
+              given Ctx = newCtx
+              params(ps, isDataClass, false)
+            newCtx = newCtx2
+            res.restParam.foreach: rp =>
+              raise(ErrorReport(
+                msg"Spread parameters are not supported in class parameters." -> rp.toLoc :: Nil))
+            res.copy(restParam = N)
           newCtx.givenIn:
             trace(s"Processing class definition $nme"):
               val comp = sym.asMod
               log(s"Companion: ${comp}")
-              val tsym = if pss.nonEmpty then
+              val allCtorPss = pss ::: auxCtorPss
+              val tsym = if allCtorPss.nonEmpty then
                 val ctsym = ClassCtorSymbol(Fun, S(clsSym), clsSym.id)
                 val ctdef =
                   TermDefinition(
                     Fun,
                     sym,
                     ctsym,
-                    pss,
+                    allCtorPss,
                     S(tps.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none))),
                     S(clsSym.ref()),
                     N,
@@ -1730,12 +1797,13 @@ extends Importer with ucs.SplitElaborator:
                     S(clsSym),
                   )
                 ctsym.defn = S(ctdef)
-                sym.tsym = S(ctsym)
+                if pss.nonEmpty then sym.tsym = S(ctsym)
+                // Note: do NOT set sym.tsym for constructor(...) classes; they are not callable as functions.
                 S(ctsym)
               else N
               val cd =
-                val (bod, c) = mkBody
-                ClassDef(owner, Cls, clsSym, sym, tsym, tps, pss, newOf(td), ObjBody(bod), annotations, comp)
+                val (bod, c) = mkBody(auxCtorPss)
+                ClassDef(owner, Cls, clsSym, sym, tsym, tps, pss, newOf(td), ObjBody(bod), annotations, comp, auxCtorParams = auxCtorPss)
               clsSym.defn = S(cd)
               cd
         go(sts, Nil, defn :: acc)

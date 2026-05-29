@@ -22,7 +22,7 @@ module M with
 //│     M3 = this
 //│   }
 //│   static {
-//│     Object.defineProperty(this, "name", { configurable: true, enumerable: true, writable: true, value: "Student" });
+//│     Object.defineProperty(M2, "name", { configurable: true, enumerable: true, writable: true, value: "Student" });
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"];

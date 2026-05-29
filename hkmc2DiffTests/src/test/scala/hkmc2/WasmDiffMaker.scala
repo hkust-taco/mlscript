@@ -16,7 +16,7 @@ import Message.MessageContext
 
 import scala.collection.mutable
 
-abstract class WasmDiffMaker extends LlirDiffMaker:
+abstract class WasmDiffMaker extends InvalMLDiffMaker:
 
   /** Outputs the compiled module as [[WasmGenerator]] implementation-defined text.
     */

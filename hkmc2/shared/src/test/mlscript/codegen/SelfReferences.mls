@@ -11,7 +11,7 @@ module Foo with
 //│     Foo1 = this
 //│   }
 //│   static {
-//│     this.self = Foo1;
+//│     Foo.self = Foo1;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"];

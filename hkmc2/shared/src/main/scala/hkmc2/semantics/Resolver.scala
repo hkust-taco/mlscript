@@ -1183,6 +1183,8 @@ object ModuleChecker:
         case Split.Let(_, _, tail) => go(tail)
         case Split.Else(term) => term :: Nil
         case Split.End => Nil
+        case Split.LetSplit(sym, tail) => go(sym.body) ::: go(tail)
+        case Split.UseSplit(_) => Nil
       go(s)
   
   /** Checks if a symbol is of a type parameter. */

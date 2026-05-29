@@ -162,9 +162,9 @@ fun c2(x) = if x is AA(AA(_)) then 1 else 0
 let p = AA(AA(AA(10)))
 c1(p) + c2(p)
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > p@5
-//│ deforest > tmp@1
-//│ deforest > tmp@2
+//│ deforest > p@4
+//│ deforest > tmp@3
+//│ deforest > tmp@5
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -180,8 +180,8 @@ fun c2(p) = if p is Many(Once(v)) then v
 fun apply(f, g, p) = f(p) + g(p)
 apply(c1, c2, Many(Once(10)))
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > p_for_apply@32
-//│ deforest > p_for_apply@78
+//│ deforest > p_for_apply@33
+//│ deforest > p_for_apply@81
 //│ deforest > tmp@1
 //│ deforest > tmp@2
 //│ deforest > <<< non-affine syms <<<

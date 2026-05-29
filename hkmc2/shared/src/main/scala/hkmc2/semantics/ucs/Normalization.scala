@@ -7,10 +7,9 @@ import syntax.{Literal, Tree, Keyword}, utils.*
 import Message.MessageContext
 import Elaborator.{Ctx, State, ctx}
 import codegen.Lowering
-import collection.mutable.{Map as MutMap}
 
 
-class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) extends TermSynthesizer:
+class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, Config) extends TermSynthesizer:
   import Normalization.*, Mode.*
   import tl.*
 
@@ -21,22 +20,22 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     subsumedBy
 
   extension (these: Split)
-    def markAsFallback: Split =
-      these.isFallback = true
-      these
-
-    def clearFallback: Split =
-      these.isFallback = false
-      these
-
-    def ++(those: Split): Split =
+    def ++(those: => Split): Split =
       if these.isFull then
         log("tail is discarded")
         these
       else (these match
         case Split.Cons(head, tail) => Split.Cons(head, tail ++ those)
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ those)
-        case Split.Else(_) /* impossible */ | Split.End => those)
+        case Split.Else(_) => softAssert(false); those
+        case Split.End => those
+        case Split.LetSplit(sym, tail) => Split.LetSplit(sym, tail ++ those)
+        case Split.UseSplit(sym) =>
+          // We always append a default else branch to splits, and normalization
+          // propagates that default into inner splits, so every LetSplit body
+          // ends up full. The dropped `those` here would have been dropped anyway.
+          softAssert(sym.body.isFull, "UseSplit body should be full")
+          these)
   
   extension (lhs: FlatPattern)
     /** Checks if two patterns are the same. */
@@ -70,33 +69,108 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       case rhs: FlatPattern.ClassLike => rhs.constructor.symbol.flatMap(_.asCls) match
         case S(cls: ClassSymbol) => cls.defn match
           case S(ClassDef.Parameterized(params = paramList)) =>
+            // Only `val` parameters are accessible as fields, so only those
+            // can subsume a Record entry. This keeps `assuming` consistent
+            // with `compareCasePattern`'s record and class check.
             val filteredEntries = lhs.entries.filter:
-              (fieldName1, _) => paramList.params.forall { (param:Param) => !(fieldName1 === param.sym.id)}
+              (fieldName1, _) => paramList.params.forall:
+                case param: Param => !(param.flags.isVal && fieldName1 === param.sym.id)
             FlatPattern.Record(filteredEntries)
           case S(_) | N => lhs
         case S(_) | N => lhs
       case _ => lhs
 
   inline def apply(split: Split): Split = normalize(split)(using VarSet())
-  
+
   /**
-    * Normalize core abstract syntax to MLscript syntax.
-    *
-    * @param split the split to normalize
-    * @return the normalized term
-    */ 
+    * Normalize a split by specializing branches that test the same scrutinee
+    * and introducing join points (`LetSplit`/`UseSplit`) to share duplicated
+    * alternatives. Whether a candidate join point survives is decided by
+    * inspecting the result's `freeSplitSyms`.
+    */
   private def normalize(split: Split)(using vs: VarSet): Split = trace(
     pre = s"normalize <<< ${split.prettyPrint}",
     post = (res: Split) => "normalize >>> " + res.prettyPrint,
   ):
     normalizeImpl(split)
   
-  def normalizeImpl(split: Split)(using vs: VarSet): Split = split match
+  extension (split: Split)
+    /** Check if any branch in the split tests the given scrutinee. */
+    private def referencesScrutinee(scrutinee: Term.Ref): Bool = split match
+      case Split.Cons(Branch(thatScrutinee, _, continuation), tail) =>
+        (scrutinee === thatScrutinee) || continuation.referencesScrutinee(scrutinee) || tail.referencesScrutinee(scrutinee)
+      case Split.Let(_, _, tail) => tail.referencesScrutinee(scrutinee)
+      case Split.Else(_) | Split.End => false
+      case Split.LetSplit(_, tail) => tail.referencesScrutinee(scrutinee)
+      case Split.UseSplit(_) => false
+
+    /** Check if a split is trivial (not worth creating a join point for). */
+    private def isTrivial: Bool = split match
+      case Split.End => true
+      case Split.UseSplit(_) => true
+      case _ => false
+
+    /** Specialize this split under the given assumption, falling back to the
+      * unchanged split when specialization is a no-op. */
+    private def specialized(mode: Mode, scrutinee: Term.Ref, pattern: FlatPattern)(using VarSet): Split =
+      specialize(split, mode, scrutinee, pattern).getOrElse(split)
+
+  /** Replace all `UseSplit(sym)` references in `split` with a duplicate of `body`. */
+  private def inlineUseSplit(split: Split, sym: SplitSymbol, body: Split): Split = split match
+    case Split.Cons(Branch(scrut, pat, cons), tail) =>
+      Split.Cons(Branch(scrut, pat, inlineUseSplit(cons, sym, body)), inlineUseSplit(tail, sym, body))
+    case Split.Let(v, rhs, tail) => Split.Let(v, rhs, inlineUseSplit(tail, sym, body))
+    case Split.Else(_) | Split.End => split
+    case Split.LetSplit(s, tail) => Split.LetSplit(s, inlineUseSplit(tail, sym, body))
+    case Split.UseSplit(s) => if s eq sym then body.duplicate else split
+
+  /** Workhorse of `normalize`. Returns the normalized split. Whether a
+    * candidate join point survives normalization is decided by inspecting
+    * `freeSplitSyms` of the recursive result. */
+  private def normalizeImpl(split: Split)(using vs: VarSet): Split = split match
     case Split.Cons(Branch(scrutinee, pattern, consequent), alternative) =>
       log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
-      val whenTrue = normalize(specialize(consequent ++ alternative.duplicate, +, scrutinee, pattern))
-      val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
-      Branch(scrutinee, pattern, whenTrue) ~: whenFalse
+      val specializedConsequent = consequent.specialized(+, scrutinee, pattern)
+      if specializedConsequent.isFull then
+        // The positive specialization of the consequent ends with `Else` or
+        // `UseSplit`. By the definition of `++`, any tail appended to it is
+        // dropped, so no fallback is needed on the positive side.
+        log("FULL: positive consequent is full, no fallback needed")
+        val negativeAlternative = alternative.specialized(-, scrutinee, pattern)
+        Branch(scrutinee, pattern, normalize(specializedConsequent)) ~: normalize(negativeAlternative)
+      else (specialize(alternative, +, scrutinee, pattern), specialize(alternative, -, scrutinee, pattern)) match
+        case (N, N) =>
+          // Both ± specializations leave the alternative unchanged, so the
+          // positive fallback and the negative branch normalize to the same
+          // split. Bind that split as a join point and let `freeSplitSyms`
+          // decide whether the `UseSplit` survives.
+          log("SHARE?: alternative unchanged by ± specialization")
+          val normalizedAlternative = normalize(alternative)
+          val splitSymbol = new SplitSymbol(normalizedAlternative, "σ")
+          val useSplit = Split.UseSplit(splitSymbol)
+          val whenTrue = normalize(specializedConsequent ++ useSplit)
+          if whenTrue.freeSplitSyms.contains(splitSymbol) then
+            val shouldShare = config.patMatConsequentSharingThreshold match
+              case S(threshold) => normalizedAlternative.size * 2 > threshold
+              case N => false
+            if shouldShare then
+              log(s"SHARE: let-split ${splitSymbol.nme}, body size ${normalizedAlternative.size}")
+              Split.LetSplit(splitSymbol, Branch(scrutinee, pattern, whenTrue) ~: useSplit)
+            else
+              log(s"INLINE: body size ${normalizedAlternative.size} below threshold")
+              Branch(scrutinee, pattern, inlineUseSplit(whenTrue, splitSymbol, normalizedAlternative)) ~: normalizedAlternative
+          else
+            log(s"ABSORB: positive consequent absorbed $$${splitSymbol.nme}, no sharing")
+            Branch(scrutinee, pattern, whenTrue) ~: normalizedAlternative
+        case (S(positiveAlternative), S(negativeAlternative)) =>
+          log("DUP: pos≠, neg≠")
+          Branch(scrutinee, pattern, normalize(specializedConsequent ++ positiveAlternative)) ~: normalize(negativeAlternative)
+        case (S(positiveAlternative), N) =>
+          log("DUP: pos≠, neg=")
+          Branch(scrutinee, pattern, normalize(specializedConsequent ++ positiveAlternative)) ~: normalize(alternative)
+        case (N, S(negativeAlternative)) =>
+          log("DUP: pos=, neg≠")
+          Branch(scrutinee, pattern, normalize(specializedConsequent ++ alternative.duplicate)) ~: normalize(negativeAlternative)
     case Split.Let(v, _, tail) if vs has v =>
       log(s"LET: SKIP already declared scrutinee $v")
       normalizeImpl(tail)
@@ -107,16 +181,23 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       log(s"DFLT: ${default.showDbg}")
       split
     case Split.End => Split.End
+    case Split.LetSplit(sym, tail) => Split.LetSplit(sym, normalizeImpl(tail))
+    case split @ Split.UseSplit(_) => split
   
   /**
     * Specialize `split` with the assumption that `scrutinee` matches `pattern`.
+    *
+    * Returns `N` when specialization made no change to the split (the result
+    * is structurally identical to the input), or `S(result)` when at least
+    * one branch was modified, merged, or removed. Callers use this to detect
+    * whether a `UseSplit` body was affected by specialization — if not, the
+    * `UseSplit` reference is preserved to maintain join-point sharing.
     *
     * In mode `+` (positive), keeps branches consistent with the assumption:
     *   - Case 1.1.1: Same pattern (`=:=`) → merge continuation and tail via alias bindings.
     *   - Case 1.1.2: Branch pattern is more specific (`thatPattern <:< pattern`) → keep as-is,
     *     mark the specializing pattern as refined, and recurse into the tail so remaining
     *     branches on the same scrutinee are simplified with the known assumption.
-    *   - Case 1.1.3: Branch is a fallback → skip to tail.
     *   - Case 1.1.4: Branch is a record → simplify fields already matched by the assumption.
     *   - Case 1.1.5: Specializing pattern is more specific (`pattern <:< thatPattern`) → keep as-is
     *     (the branch always matches when the assumption holds).
@@ -135,16 +216,16 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       mode: Mode,
       scrutinee: Term.Ref,
       pattern: FlatPattern
-  )(using VarSet): Split = trace(
+  )(using VarSet): Opt[Split] = trace(
     pre = s"S$mode <<< ${scrutinee.showDbg} is ${pattern.showDbg} : ${split.prettyPrint}",
-    post = (r: Split) => s"S$mode >>> ${r.prettyPrint}"
+    post = (r: Opt[Split]) => s"S$mode >>> ${r.fold("(unchanged)")(_.prettyPrint)}"
   ):
-    def rec(split: Split)(using mode: Mode, vs: VarSet): Split = split match
-      case Split.End => log("CASE Nil"); split
-      case Split.Else(_) => log("CASE Else"); split
+    def rec(split: Split)(using mode: Mode, vs: VarSet): Opt[Split] = split match
+      case Split.End => log("CASE Nil"); N
+      case Split.Else(_) => log("CASE Else"); N
       case split @ Split.Let(sym, _, tail) =>
         log(s"CASE Let ${sym}")
-        split.copy(tail = rec(tail))
+        rec(tail).map(newTail => split.copy(tail = newTail))
       case split @ Split.Cons(head @ Branch(thatScrutinee, thatPattern, continuation), tail) =>
         log(s"CASE Cons ${head.showDbg}")
         if scrutinee === thatScrutinee then mode match
@@ -152,22 +233,24 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             log(s"Case 1.1: $scrutinee === $thatScrutinee")
             if thatPattern =:= pattern then
               log(s"Case 1.1.1: $pattern =:= $thatPattern")
-              aliasBindings(pattern, thatPattern)(rec(continuation) ++ rec(tail))
+              S(aliasBindings(pattern, thatPattern)(rec(continuation).getOrElse(continuation) ++ rec(tail).getOrElse(tail)))
             else if thatPattern <:< pattern then
               log(s"Case 1.1.2: $pattern <:< $thatPattern")
-              pattern.markAsRefined; split.copy(tail = rec(tail))
-            else if split.isFallback then
-              log(s"Case 1.1.3: $pattern is unrelated with $thatPattern")
-              rec(tail)
+              pattern.markAsRefined
+              rec(tail).map(newTail => split.copy(tail = newTail))
             else thatPattern match
             case thatPattern: FlatPattern.Record =>
               log(s"Case 1.1.4: $thatPattern is a record")
               // we can use information if pattern is itself a record, or if it is a constructor with arguments
               val simplifiedRecord = thatPattern assuming pattern
               if simplifiedRecord.entries.isEmpty then
-                tail
+                S(tail)
+              else if simplifiedRecord.entries.length == thatPattern.entries.length then
+                // `assuming` only filters, so equal length means no field was
+                // removed — the split is structurally unchanged.
+                N
               else
-                Split.Cons(Branch(thatScrutinee, simplifiedRecord, continuation), tail)
+                S(Split.Cons(Branch(thatScrutinee, simplifiedRecord, continuation), tail))
             case _ =>
               if pattern <:< thatPattern then
                 // TODO: the warning will be useful when we have inheritance information
@@ -179,28 +262,46 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                 //     case _ => thatPattern.toLoc
                 //   }))
                 log(s"case 1.1.5: $pattern <:< $thatPattern")
-                split
+                N
               else
                 if areProvablyDisjoint(pattern, thatPattern) then
                   log(s"Case 1.1.6: $pattern and $thatPattern are provably disjoint")
-                  rec(tail)
+                  S(rec(tail).getOrElse(tail))
                 else
                   // When patterns are not provably disjoint, we cannot assume
                   // the scrutinee can't match both (e.g., conjunction patterns
                   // like `A & B`). Keep the branch.
                   log(s"Case 1.1.6: $pattern and $thatPattern are not provably disjoint")
-                  head.copy(continuation = rec(continuation)) ~: rec(tail)
+                  (rec(continuation), rec(tail)) match
+                    case (N, N) => N
+                    case (optCont, optTail) =>
+                      S(head.copy(continuation = optCont.getOrElse(continuation)) ~: optTail.getOrElse(tail))
           case - =>
             log(s"Case 1.2: $scrutinee === $thatScrutinee")
             if thatPattern =:= pattern || thatPattern <:< pattern then
               log(s"Case 1.2.1: $pattern =:= (or <:<) $thatPattern")
-              rec(tail)
+              S(rec(tail).getOrElse(tail))
             else
               log(s"Case 1.2.2: $pattern are unrelated to $thatPattern")
-              split.copy(tail = rec(tail))
+              rec(tail).map(newTail => split.copy(tail = newTail))
         else
           log(s"Case 2: $scrutinee =/= $thatScrutinee")
-          head.copy(continuation = rec(continuation)) ~: rec(tail)
+          (rec(continuation), rec(tail)) match
+            case (N, N) => N
+            case (optCont, optTail) =>
+              S(head.copy(continuation = optCont.getOrElse(continuation)) ~: optTail.getOrElse(tail))
+      case split @ Split.LetSplit(sym, tail) =>
+        log(s"CASE LetSplit ${sym.nme}")
+        rec(tail).map(newTail => split.copy(tail = newTail))
+      case split @ Split.UseSplit(sym) =>
+        log(s"CASE UseSplit ${sym.nme}")
+        // UseSplit references a shared body. If the body mentions the current
+        // scrutinee, inline it and specialize; otherwise keep the reference.
+        // When rec returns N (body unchanged), the UseSplit is preserved to
+        // maintain sharing via the join point.
+        if sym.body.referencesScrutinee(scrutinee) then
+          rec(sym.body)
+        else N
     end rec
     rec(split)(using mode, summon)
   
@@ -213,32 +314,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
   
   import codegen.*, lowering.{term_nonTail, subTerm_nonTail, unreachableFn}
   
-  /** Collect terms that appear in multiple `Split.Else` branches. We will share
-   *  the corresponding blocks to avoid code duplication. */
-  private def createLabelsForDuplicatedBranches(split: Split)(using config: Config): Labels =
-    val counts: MutMap[Term, (order: Int, count: Int)] = MutMap.empty
-    var fallThroughCount = 0
-    def rec(s: Split): Unit = s match
-      case Split.End => fallThroughCount += 1
-      case Split.Else(els) => counts.updateWith(els):
-        case S((n, count)) => S((n, count + 1))
-        case N => S((counts.size + 1, 1))
-      case Split.Let(_, _, tail) => rec(tail)
-      case Split.Cons(Branch(_, _, cons), tail) => rec(cons); rec(tail)
-    rec(split)
-    val consequents = config.patMatConsequentSharingThreshold match
-      case S(threshold) =>
-        counts.iterator.filter(kv =>
-          kv._2.count > 1 && kv._2.count * kv._1.size > threshold).toSeq.sortBy(_._2.order).zipWithIndex.map:
-          case ((term, _), i) => (term, LabelSymbol(S(term), s"split_${i + 1}$$"))
-        .toList
-      case N => Nil
-    val matchError = if fallThroughCount > 1 then S(LabelSymbol(N, s"split_default$$")) else N
-    Labels(consequents, matchError)
-  
   private def lowerSplit
       (split: Split, cont: Result => Block)
-      (using labels: Labels, form: IfLikeForm)
+      (using form: IfLikeForm)
       (using LoweringCtx)
       : Block = split match
     case Split.Let(sym, trm, tl) =>
@@ -289,7 +367,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             for (_, s) <- entries do LoweringCtx.loweringCtx.collectScopedSym(s)
             val objectSym = ctx.builtins.Object
             mkMatch( // checking that we have an object
-              Case.Cls(objectSym, Value.Ref(BuiltinSymbol(objectSym.nme, false, false, true, false))),
+              Case.Cls(objectSym, BuiltinSymbol(objectSym.nme, false, false, true, false).asSimpleRef),
               entries.foldRight(lowerSplit(tail, cont)):
                 case ((fieldName, fieldSymbol), blk) =>
                   mkMatch(
@@ -297,20 +375,47 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                     Assign(fieldSymbol, Select(sr, fieldName)(N), blk)
                   )
             )
-    case Split.Else(els) => labels.get(els) match
-      case S(label) => Break(label)
-      case N => term_nonTail(els, inStmtPos = form.isImperative)(cont)
+    case Split.Else(els) =>
+      term_nonTail(els, inStmtPos = form.isImperative)(cont)
     case Split.End =>
       // * See comment [comment:1] above
       if form is IfLikeForm.While then End()
-      else labels.matchError.fold(throwMatchErrorBlock)(Break(_))
+      else throwMatchErrorBlock
+    case Split.LetSplit(sym, tail) =>
+      // Lower the join point: the body goes into the Label's `rest`, and UseSplit generates
+      // Break(joinLabel) to reach it.
+      val joinLabel = new LabelSymbol(N, sym.nme)
+      sym.label = S(joinLabel)
+      val transfersControl = cont match
+        case Ret | Thrw => true
+        case _ => false
+      if transfersControl then
+        // Ret/Thrw emit `return`/`throw`, which transfer control out of the block
+        // unconditionally; passing them through preserves tail-call position.
+        val bodyBlock = lowerSplit(sym.body, cont)
+        Label(joinLabel, false, lowerSplit(tail, cont), bodyBlock)
+      else
+        // Other continuations (including ImplctRet, which generates `expr;` without `return`) can fall through
+        // the Label body into the rest. Wrap with an exit label and temp variable so every path stores its
+        // result, breaks to exitLabel, then the original cont runs once.
+        val exitLabel = new LabelSymbol(N, sym.nme + "$x")
+        val tmp = new TempSymbol(N)
+        LoweringCtx.loweringCtx.collectScopedSym(tmp)
+        val exitCont: Result => Block = r => Assign(tmp, r, Break(exitLabel))
+        val bodyBlock = lowerSplit(sym.body, exitCont)
+        val tailBlock = lowerSplit(tail, exitCont)
+        Label(exitLabel, false, Label(joinLabel, false, tailBlock, bodyBlock), cont(Value.Ref(tmp)))
+    case Split.UseSplit(sym) =>
+      sym.label match
+        case S(label) => Break(label)
+        case N => lowerSplit(sym.body, cont) // fallback: inline if no label
   
   /**
     * Make a block that throws the match error. We might add the information of
     * match failure in the future.
     */
   private def throwMatchErrorBlock =
-    Throw(Instantiate(mut = false, Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error"))(S(ctx.builtins.Error)),
+    Throw(Instantiate(mut = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error)),
         (Value.Lit(syntax.Tree.StrLit("match error")).asArg :: Nil) :: Nil)) // TODO add failed-match scrutinee info
   
   import syntax.Keyword.{`if`, `while`}
@@ -355,10 +460,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         normalize(inputSplit)(using VarSet())
       tl.scoped("ucs:normalized"):
         tl.log(s"Normalized:\n${normalized.prettyPrint}")
-      // Collect consequents that are shared in more than one branch.
-      given labels: Labels = createLabelsForDuplicatedBranches(normalized)
-      lazy val rootBreakLabel = new LabelSymbol(N, "split_root$")
-      lazy val breakRoot = if (k is Ret) || (k is Thrw) then k else (r: Result) => Assign(l, r, Break(rootBreakLabel))
       lazy val assignResult = (r: Result) =>
         form match
         case IfLikeForm.ReturningIf => if (k is Ret) || (k is Thrw) then k(r) else Assign(l, r, End())
@@ -367,7 +468,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
       // as shouldRewriteWhile is always true when effect handler lowering is on
       lazy val loopCont = if config.shouldRewriteWhile
-        then Return(Call(Value.Ref(f, S(tSym)), Nil ne_:: Nil)(true, true, false))
+        then Return(Call(f.asMemberRef(tSym), Nil ne_:: Nil)(true, true, false))
         else Continue(loopLabel)
       val cont =
         form match
@@ -379,76 +480,17 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         case IfLikeForm.ImperativeIf =>
           (r: Result) => Assign.discard(r, End())
         case IfLikeForm.ReturningIf =>
-          if labels.isEmpty then
-            if k.isInstanceOf[TailOp] then
-              // If there are no shared consequents and the continuation is a tail
-              // operation, we can call it directly.
-              k
-            else
-              // Otherwise, if the continuation is not a tail operation, we should
-              // save the result in a temporary variable and call the continuation
-              // in the end.
-              assignResult
-          else
-            // When there are shared consequents, we are forced to save the result
-            // in the temporary variable nevertheless. Note that `cont` only gets
-            // called for non-shared consequents, so we should break to the end of
-            // the entire split after the assignment.
-            breakRoot
-      // When we are not rewriting while loops to tail-recursive functions,
-      // whether we need a `Break` to exit the loop at the end of the main block
-      // depends on whether there are shared consequents,
-      // as shared consequents will be lifted out of the main block and added as separate labelled blocks
-      // to jump to, so we cannot simply fall through the end of the main block to exit the loop.
-      // Note that when there is a `default` branch and we're in a loop,
-      // the semantics of that default branch is to always `continue` the loop,
-      // so we don't need to break out of the loop at the end of the main block as well.
-      val needsBreakToExitLoop =
-        (form is IfLikeForm.While) && !config.shouldRewriteWhile && labels.consequents.nonEmpty //&& labels.default.isEmpty
-      // The main block contains the lowered split, where each shared consequent
-      // is replaced with a `Break` to the corresponding label.
+          if k.isInstanceOf[TailOp] then k
+          else assignResult
       val mainBlock =
-        val innermostBlock =
-          given IfLikeForm = form
-          if needsBreakToExitLoop
-          then Begin(lowerSplit(normalized, cont), Break(rootBreakLabel))
-          else lowerSplit(normalized, cont)
-        // Wrap the main block in a labelled block for each shared consequent. The
-        // `rest` of each `Label` is the lowered consequent plus a `Break` to the
-        // end of the entire `if` term. Otherwise, it will fall through to the outer
-        // consequent, which is the wrong semantics.
-        val innerBlock: Block = labels.consequents match
-          case Nil => innermostBlock
-          case all @ (head :: tail) =>
-            def wrap(consequents: Ls[(Term, LabelSymbol)]): Block =
-              consequents.foldRight(innermostBlock):
-                case ((term, label), innerBlock) =>
-                  Label(label, false, innerBlock,
-                    if form is IfLikeForm.While
-                    then term_nonTail(term)(r => Assign.discard(r, loopCont))
-                    else term_nonTail(term)(breakRoot))
-            // There is no need to generate `break` for the outermost split
-            // if we're not generating an additional matchError block at the end.
-            if labels.matchError.isEmpty then
-              Label(head._2, false, wrap(tail), term_nonTail(head._1)(assignResult))
-            else wrap(all)
-        if form is IfLikeForm.While
-        then if needsBreakToExitLoop
-          then Begin(innerBlock, Break(rootBreakLabel))
-          else innerBlock
-        else labels.matchError match
-          case S(label) => Label(label, false, innerBlock, throwMatchErrorBlock)
-          case N => innerBlock
-      // If there are shared consequents, we need a wrap the entire block in a
-      // `Label` so that `Break`s in the shared consequents can jump to the end.
+        given IfLikeForm = form
+        lowerSplit(normalized, cont)
       val body =
         Scoped(
           if useNestedScoped then LoweringCtx.loweringCtx.getCollectedSym else Set.empty,
-          if labels.isEmpty && !needsBreakToExitLoop
-          then mainBlock
-          else Label(rootBreakLabel, false, mainBlock, End()))
+          mainBlock)
       // Embed the `body` into `Label` if the term is a `while`.
-      lazy val rest = if usesResTmp then k(Value.Ref(l)) else k(lowering.unit)
+      lazy val rest = if usesResTmp then k(l.asSimpleRef) else k(lowering.unit)
       val block =
         if form === IfLikeForm.While then
           // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
@@ -459,16 +501,16 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             outerCtx.collectScopedSym(loopResult)
             outerCtx.collectScopedSym(isReturned)
             val loopEnd: Path =
-              Select(Value.Ref(State.runtimeSymbol), Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
+              Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
             val blk = blockBuilder
               .define(FunDefn(N, f, tSym, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd)))(configOverride = N, annotations = Nil))
-              .assign(loopResult, Call(Value.Ref(f, S(tSym)), Nil ne_:: Nil)(true, true, false))
+              .assign(loopResult, Call(f.asMemberRef(tSym), Nil ne_:: Nil)(true, true, false))
             if summon[LoweringCtx].mayRet then
               blk
-                .assign(isReturned, Call(Value.Ref(State.builtinOpsMap("!==")),
+                .assign(isReturned, Call(State.builtinOpsMap("!==").asSimpleRef,
                   (loopResult.asPath.asArg :: loopEnd.asArg :: Nil) ne_:: Nil)(true, false, false))
-                .ifthen(Value.Ref(isReturned), Case.Lit(Tree.BoolLit(true)),
-                  Return(Value.Ref(loopResult)),
+                .ifthen(isReturned.asSimpleRef, Case.Lit(Tree.BoolLit(true)),
+                  Return(loopResult.asSimpleRef),
                   N
                 )
                 .rest(rest)
@@ -476,7 +518,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
               blk.rest(rest)
           else
             Begin(Label(loopLabel, true, body, End()), rest)
-        else if labels.isEmpty && k.isInstanceOf[TailOp]
+        else if k.isInstanceOf[TailOp]
           && !form.isImperative
             // * ^ Generated imperative `if` branches do not always yield a value, so if we removed this,
             // * we would sometimes return `undefined`.
@@ -491,15 +533,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
 end Normalization
 
 object Normalization:
-  /** This contains the labels for duplicated consequents and the default
-   *  branch which throws match errors. */
-  private class Labels(val consequents: Ls[(Term, LabelSymbol)], val matchError: Opt[LabelSymbol]):
-    private val map = consequents.toMap
-    
-    inline def isEmpty: Bool = consequents.isEmpty && matchError.isEmpty
-    
-    inline def get(term: Term): Opt[LabelSymbol] = map.get(term)
-  
   /**
     * Subtyping relations used in normalization and coverage checking.
     */

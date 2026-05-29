@@ -41,3 +41,8 @@ class Child1 extends Base
 class Child2 extends Base
 
 
+// Example of curried class
+class Curried(val a)(val b)(val c) with
+  fun fields = [a, b, c]
+
+

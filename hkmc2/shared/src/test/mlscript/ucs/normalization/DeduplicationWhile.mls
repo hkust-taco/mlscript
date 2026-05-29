@@ -8,26 +8,43 @@
 while true and false do print(1) else print(2)
 //│ = fun
 
-:sjs
+:sir
 () =>
 while true and true and false do print(1) else print(2)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda1;
-//│ lambda1 = (undefined, function () {
-//│   lbl: while (true) {
-//│     if (true === true) {
-//│       if (true === true) {
-//│         if (false === true) {
-//│           Predef.print(1);
-//│           continue lbl
-//│         }
-//│       }
-//│     }
-//│     Predef.print(2);
-//│     continue lbl;
-//│   }
-//│ });
-//│ return lambda1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda⁰;
+//│ @private
+//│ define lambda⁰ as fun lambda¹() {
+//│   loop lbl:
+//│     let scrut, scrut1, scrut2, tmp;
+//│     set scrut = true;
+//│     block σ$x:
+//│       block σ:
+//│         match scrut
+//│           true =>
+//│             set scrut2 = true;
+//│             match scrut2
+//│               true =>
+//│                 set scrut1 = false;
+//│                 match scrut1
+//│                   true =>
+//│                     set tmp = Predef⁰.print⁰(1);
+//│                     break σ$x
+//│                   else
+//│                     break σ
+//│                 end
+//│               else
+//│                 break σ
+//│             end
+//│           else
+//│             break σ
+//│         end
+//│       set tmp = Predef⁰.print⁰(2);
+//│       break σ$x
+//│     continue lbl
+//│   return runtime⁰.Unit⁰
+//│ };
+//│ return lambda¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -41,114 +58,117 @@ if x > 0 and x ===
 //│ > B
 //│ x = 3
 
-:sjs
+:sir
 x =>
 while x > 0 and x ===
   1 do print("A")
   2 do print("A")
   3 do print("B")
   4 do print("B")
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda2;
-//│ lambda2 = (undefined, function (x1) {
-//│   lbl: while (true) {
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda²;
+//│ @private
+//│ define lambda² as fun lambda³(x) {
+//│   loop lbl:
 //│     let scrut, scrut1, scrut2, scrut3, scrut4;
-//│     split_root$1: {
-//│       split_1$1: {
-//│         split_2$1: {
-//│           scrut = x1 > 0;
-//│           if (scrut === true) {
-//│             scrut1 = x1 === 1;
-//│             if (scrut1 === true) {
-//│               break split_1$1
-//│             }
-//│             scrut2 = x1 === 2;
-//│             if (scrut2 === true) {
-//│               break split_1$1
-//│             }
-//│             scrut3 = x1 === 3;
-//│             if (scrut3 === true) {
-//│               break split_2$1
-//│             }
-//│             scrut4 = x1 === 4;
-//│             if (scrut4 === true) {
-//│               break split_2$1
-//│             }
-//│             break split_root$1;
-//│           }
-//│           break split_root$1;
-//│         }
-//│         Predef.print("B");
-//│         continue lbl;
-//│       }
-//│       Predef.print("A");
-//│       continue lbl;
-//│     }
-//│     break;
-//│   }
-//│   return runtime.Unit
-//│ });
-//│ return lambda2
+//│     set scrut = >⁰(x, 0);
+//│     match scrut
+//│       true =>
+//│         set scrut1 = ===⁰(x, 1);
+//│         match scrut1
+//│           true =>
+//│             do Predef⁰.print⁰("A");
+//│             continue lbl
+//│           else
+//│             set scrut2 = ===⁰(x, 2);
+//│             match scrut2
+//│               true =>
+//│                 do Predef⁰.print⁰("A");
+//│                 continue lbl
+//│               else
+//│                 set scrut3 = ===⁰(x, 3);
+//│                 match scrut3
+//│                   true =>
+//│                     do Predef⁰.print⁰("B");
+//│                     continue lbl
+//│                   else
+//│                     set scrut4 = ===⁰(x, 4);
+//│                     match scrut4
+//│                       true =>
+//│                         do Predef⁰.print⁰("B");
+//│                         continue lbl
+//│                       else
+//│                         end
+//│                     end
+//│                 end
+//│             end
+//│         end
+//│       else
+//│         end
+//│     end
+//│   return runtime⁰.Unit⁰
+//│ };
+//│ return lambda³
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
-:sjs
+:sir
 x =>
 while x > 0 and x ===
   1 and false and false do print("A")
   2 and false do print("B")
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda3;
-//│ lambda3 = (undefined, function (x1) {
-//│   lbl: while (true) {
-//│     let scrut, scrut1, scrut2;
-//│     split_root$1: {
-//│       split_1$1: {
-//│         scrut = x1 > 0;
-//│         if (scrut === true) {
-//│           scrut1 = x1 === 1;
-//│           if (scrut1 === true) {
-//│             if (false === true) {
-//│               if (false === true) {
-//│                 Predef.print("A");
-//│                 continue lbl
-//│               }
-//│               scrut2 = x1 === 2;
-//│               if (scrut2 === true) {
-//│                 if (false === true) {
-//│                   break split_1$1
-//│                 }
-//│               }
-//│               break split_root$1;
-//│             }
-//│             scrut2 = x1 === 2;
-//│             if (scrut2 === true) {
-//│               if (false === true) {
-//│                 break split_1$1
-//│               }
-//│               break split_root$1
-//│             }
-//│             break split_root$1;
-//│           }
-//│           scrut2 = x1 === 2;
-//│           if (scrut2 === true) {
-//│             if (false === true) {
-//│               break split_1$1
-//│             }
-//│             break split_root$1;
-//│           }
-//│           break split_root$1;
-//│         }
-//│         break split_root$1;
-//│       }
-//│       Predef.print("B");
-//│       continue lbl;
-//│     }
-//│     break;
-//│   }
-//│   return runtime.Unit
-//│ });
-//│ return lambda3
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda⁴;
+//│ @private
+//│ define lambda⁴ as fun lambda⁵(x) {
+//│   loop lbl:
+//│     let scrut, scrut1, scrut2, scrut3, scrut4, scrut5, tmp;
+//│     set scrut = >⁰(x, 0);
+//│     match scrut
+//│       true =>
+//│         set scrut1 = ===⁰(x, 1);
+//│         block σ$x:
+//│           block σ:
+//│             match scrut1
+//│               true =>
+//│                 set scrut3 = false;
+//│                 match scrut3
+//│                   true =>
+//│                     set scrut2 = false;
+//│                     match scrut2
+//│                       true =>
+//│                         set tmp = Predef⁰.print⁰("A");
+//│                         break σ$x
+//│                       else
+//│                         break σ
+//│                     end
+//│                   else
+//│                     break σ
+//│                 end
+//│               else
+//│                 break σ
+//│             end
+//│           set scrut4 = ===⁰(x, 2);
+//│           match scrut4
+//│             true =>
+//│               set scrut5 = false;
+//│               match scrut5
+//│                 true =>
+//│                   set tmp = Predef⁰.print⁰("B");
+//│                   break σ$x
+//│                 else
+//│                   end
+//│               end
+//│             else
+//│               end
+//│           end
+//│         continue lbl
+//│       else
+//│         end
+//│     end
+//│   return runtime⁰.Unit⁰
+//│ };
+//│ return lambda⁵
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

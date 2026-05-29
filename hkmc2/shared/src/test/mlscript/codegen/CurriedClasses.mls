@@ -1,35 +1,35 @@
 :js
 
 
-// * The code-gen of curried classes is currently a bit crazy and unnecessary.
-// * It was intended to make interop better, but it turned out to be a surprising semantic footgun,
-// * as partially-applied class constructors will share the same "this" object, resulting in unexpected mutations!
-// * TODO: Compile differently and forbid the use of curried classes as first-class values.
-
-
+:sir
 :sjs
 class A(val x)(val y)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A1;
 //│ A1 = function A(x) {
 //│   return (y) => {
-//│     return globalThis.Object.freeze(new A.class(x)(y));
+//│     return globalThis.Object.freeze(new A.class(x, y));
 //│   }
 //│ };
 //│ (class A {
 //│   static {
 //│     A1.class = this
 //│   }
-//│   constructor(x) {
-//│     return (y) => {
-//│       this.x = x;
-//│       this.y = y;
-//│       return this;
-//│     }
+//│   constructor(x, y) {
+//│     this.x = x;
+//│     this.y = y;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A", ["x"]];
 //│ });
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let A⁰;
+//│ define A⁰ as class A² {
+//│   val x⁰;
+//│   val y⁰;
+//│   constructor A¹(x, y) { define x⁰ as val x¹ = x; define y⁰ as val y¹ = y; end }
+//│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -40,6 +40,14 @@ let h = w(2)
 h.y
 //│ = 2
 //│ h = A(1)
+
+:sjs
+:expect 2
+A(1)(2).y
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let tmp; tmp = globalThis.Object.freeze(new A1.class(1, 2)); return tmp.y
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
 
 :expect 3
 let h2 = w(3)
@@ -52,30 +60,105 @@ h2.y
 h.y
 //│ = 2
 
+:sjs
+:expect 5
+new A(...[4])(...[5]).y
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let tmp1, tmp2, tmp3;
+//│ tmp1 = globalThis.Object.freeze([
+//│   4
+//│ ]);
+//│ tmp2 = globalThis.Object.freeze([
+//│   5
+//│ ]);
+//│ tmp3 = globalThis.Object.freeze(new A1.class(...tmp1, ...tmp2));
+//│ return tmp3.y
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 5
+
 
 // * First-class class value; FIXME: should be forbidden
 let a = A.class
 //│ a = class A
 
-// * Dynamic instantiation
+// * Dynamic instantiation of a raw JS class is not eta-expanded.
 let w = new! a(1)
-//│ w = fun
+//│ w = A(1)
 
+:re
 let h = w(2)
 h.y
-//│ = 2
-//│ h = A(1)
+//│ ═══[RUNTIME ERROR] TypeError: w2 is not a function
+//│ h = undefined
 
-:expect 3
+:re
 let h2 = w(3)
 h2.y
-//│ = 3
-//│ h2 = A(1)
+//│ ═══[RUNTIME ERROR] TypeError: w2 is not a function
+//│ h2 = undefined
 
-:re // * Bad bad bad!
-:expect 2
+:re
 h.y
-//│ ═══[RUNTIME ERROR] Expected: '2', got: '3'
-//│ = 3
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'y')
+
+
+:todo // TODO: At some point, add support for this
+:sjs
+class A(x1, x2, ...xs)(y1, ...ys) with
+  fun fields = [x1, x2, xs, y1, ys]
+//│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
+//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ╙──       	                   ^^
+//│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
+//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ╙──       	                              ^^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'xs'
+//│ ║  l.108: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║         	                        ^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ╙──       	                   ^^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'ys'
+//│ ║  l.108: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║         	                                ^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ╙──       	                              ^^
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let A3;
+//│ A3 = function A(x1, x2) {
+//│   return (y1) => {
+//│     return globalThis.Object.freeze(new A.class(x1, x2, y1));
+//│   }
+//│ };
+//│ (class A2 {
+//│   static {
+//│     A3.class = this
+//│   }
+//│   constructor(x1, x2, y1) {
+//│     this.#x1 = x1;
+//│     this.#x2 = x2;
+//│     this.#y1 = y1;
+//│   }
+//│   #x1;
+//│   #x2;
+//│   #y1;
+//│   get fields() {
+//│     return globalThis.Object.freeze([
+//│       this.#x1,
+//│       this.#x2,
+//│       xs,
+//│       this.#y1,
+//│       ys
+//│     ]);
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A", [null, null]];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:todo
+new A(1, 2, 3)(4, 5, 6).fields
+//│ ═══[RUNTIME ERROR] ReferenceError: xs is not defined
 
 

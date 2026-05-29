@@ -46,9 +46,9 @@ print("Hi")
 //│     lhs = ‹no symbol›⁰
 //│     rhs = Call:
 //│       fun = Select{sym=term:Predef⁰/print⁰}:
-//│         qual = Ref{disamb=module:Predef⁰}:
-//│           l = member:Predef¹
-//│           disamb = S of module:Predef⁰
+//│         qual = MemberRef{disamb=module:Predef⁰}:
+//│           bms = member:Predef¹
+//│           disamb = module:Predef⁰
 //│         name = Ident of "print"
 //│       argss = Ls of 
 //│         Ls of 

@@ -1,0 +1,85 @@
+:js
+
+
+// === Specialized split sharing — currently deferred ===
+
+// When the alternative of a branch references the same scrutinee,
+// `normalizeImpl` takes the duplication path: the alternative is duplicated
+// and `specialize` is called separately on each copy in `+` and `-` modes.
+// In cases where both specializations agree (the alternative is invariant
+// under specialization), the two duplicated copies could in principle be
+// shared via a single `LetSplit`. That detection is not yet implemented;
+// these tests document the current behavior so the follow-up can update
+// them when sharing is introduced.
+
+data class Cat()
+data class Dog()
+
+// * `Cat()` and `Dog()` are unrelated class patterns, so specialization on
+// * `x is Cat()` is a no-op on the `Dog()` branch in both modes. With a
+// * non-full consequent, the trailing `else 3` is duplicated in the output:
+// * once after the inner `y is 0` test and once at the top level.
+:ucs normalized
+fun f1(x, y) = if
+  x is Cat() and y is 0 then 1
+  x is Dog() then 2
+  else 3
+//│ Normalized:
+//│ >  ‹if|while›
+//│ >    x is Cat() and
+//│ >      y is 0 then 1
+//│ >      else 3
+//│ >    x is Dog() then 2
+//│ >    else 3
+
+// * Same shape but with an inner refining test on the `Dog()` branch — the
+// * shared `else 3` fall-through ends up emitted three times.
+:ucs normalized
+fun f2(x, y, z) = if
+  x is Cat() and y is 0 then 1
+  x is Dog() and z is 0 then 2
+  else 3
+//│ Normalized:
+//│ >  ‹if|while›
+//│ >    x is Cat() and
+//│ >      y is 0 then 1
+//│ >      else 3
+//│ >    x is Dog() and
+//│ >      z is 0 then 2
+//│ >      else 3
+//│ >    else 3
+
+
+// === Specialized split duplication — must remain ===
+
+// When the alternative refines the same scrutinee with overlapping or
+// subsuming patterns, positive and negative specialization yield *different*
+// splits, so the duplication is genuine. These tests guard against a future
+// over-eager sharing rule that would incorrectly merge them.
+
+data class S(value)
+
+// * The alternative `S(_) then "any"` is subsumed by the assumption in the
+// * `+` arm (becomes a guaranteed match) but remains a distinguishing test
+// * in the `-` arm — duplication is required.
+:ucs normalized
+fun g1(x) = if x is
+  S(0) then "zero"
+  S(_) then "any"
+//│ Normalized:
+//│ >  ‹if|while› x is S(arg$S$0$) and
+//│ >    tmp:arg$S$0$ is 0 then "zero"
+//│ >    else "any"
+
+// * Three branches on the same scrutinee with progressively coarser tests:
+// * each specialization produces a distinct simplified split.
+:ucs normalized
+fun g2(x) = if x is
+  S(0) then "zero"
+  S(1) then "one"
+  S(_) then "other"
+//│ Normalized:
+//│ >  ‹if|while› x is S(arg$S$0$) and
+//│ >    tmp:arg$S$0$ is 0 then "zero"
+//│ >    tmp:arg$S$0$ is 1 then "one"
+//│ >    else "other"

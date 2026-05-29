@@ -51,25 +51,6 @@ test(2)
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'get' yielded 'undefined'
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
-// This is due to `super` not being called with multiple parameter lists.
-:expect "B()"
-fun test(x) =
-  class A() with
-    fun get = x
-  class B() extends A() with
-    fun bar = x
-  B()
-test(0).toString()
-//│ ═══[RUNTIME ERROR] Expected: '"B()"', got: '"(x) => {       this.#x = x;       return this;     }"'
-//│ = "(x) => {       this.#x = x;       return this;     }"
-
-// In fact, the correct way (using the current "constructor returns a lambda" hack) is this:
-// return (params) => {
-//   let ret = super(parentMainParams)(parentAuxParams);
-//   // ctor
-//   return ret;
-// }
-
 /// The following are related to first-class classes, instance checks, and private fields. ///
 
 :expect 1
@@ -134,7 +115,7 @@ fun foo(x, y) =
       x + y + test
   M.foo()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.130: 	  module M with
+//│ ║  l.111: 	  module M with
 //│ ╙──       	         ^
 
 :expect 14
@@ -149,7 +130,7 @@ fun foo(x, y) =
   fun foo = M.foo()
   foo
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.145: 	  module M with
+//│ ║  l.126: 	  module M with
 //│ ╙──       	         ^
 
 :expect 12
@@ -162,7 +143,7 @@ data class A(x) with
     fun getB() = x
   fun getA() = M.getB()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.161: 	  module M with
+//│ ║  l.142: 	  module M with
 //│ ╙──       	         ^
 
 :expect 2
@@ -178,13 +159,13 @@ fun foo(x) =
   (new Bar).self2
 foo(2)
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference of type Foo.
-//│ ║  l.177: 	  class Bar extends Foo
+//│ ║  l.158: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.174: 	  object Foo with
+//│ ║  l.155: 	  object Foo with
 //│ ╙──       	         ^^^
-//│ ═══[WARNING] Cannot yet lift definition `Bar` as it extends an expression.
+//│ ═══[WARNING] Cannot yet lift definition `Bar` as it extends an unliftable class.
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
 
 // `h` is lifted out, but then cannot access the BlockMemberSymbol M.
@@ -198,19 +179,19 @@ fun f =
       h
   M.g
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.195: 	  module M with
+//│ ║  l.176: 	  module M with
 //│ ╙──       	         ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'M'
-//│ ║  l.197: 	      fun h = M.g
+//│ ║  l.178: 	      fun h = M.g
 //│ ║         	              ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.195: 	  module M with
+//│ ║  l.176: 	  module M with
 //│ ║         	         ^^^^^^
-//│ ║  l.196: 	    fun g =
+//│ ║  l.177: 	    fun g =
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.197: 	      fun h = M.g
+//│ ║  l.178: 	      fun h = M.g
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.198: 	      h
+//│ ║  l.179: 	      h
 //│ ╙──       	^^^^^^^
 
 

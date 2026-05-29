@@ -145,22 +145,18 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ };
 //│ define f⁰ as fun f¹(a) {
 //│   let arg$AA$0$;
-//│   block split_root$:
-//│     block split_default$:
-//│       match a
+//│   match a
+//│     AA¹ =>
+//│       set arg$AA$0$ = a.x¹;
+//│       match arg$AA$0$
 //│         AA¹ =>
-//│           set arg$AA$0$ = a.x¹;
-//│           match arg$AA$0$
-//│             AA¹ =>
-//│               return 0
-//│             else
-//│               break split_default$
-//│           end
+//│           return 0
 //│         else
-//│           break split_default$
+//│           throw new globalThis⁰.Error⁰("match error")
 //│       end
-//│     throw new globalThis⁰.Error⁰("match error")
-//│   return runtime⁰.Unit⁰
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
 //│ };
 //│ set tmp = AA⁰(10);
 //│ set tmp1 = AA⁰(tmp);

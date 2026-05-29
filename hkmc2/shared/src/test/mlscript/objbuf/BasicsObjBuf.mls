@@ -1,0 +1,166 @@
+:js
+
+import "../../mlscript-compile/ObjectBuffer.mls"
+open ObjectBuffer
+open annotations
+
+
+:sjs
+@buffered
+class A with
+  constructor(x)
+  fun f(y) = x + y
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let A1;
+//│ (class A {
+//│   static {
+//│     A1 = this
+//│   }
+//│   static {
+//│     A.size = 1;
+//│   }
+//│   static ctor(buf, idx) {
+//│     return (x) => {
+//│       let idx1;
+//│       idx1 = idx + 0;
+//│       buf.buf[idx1] = x;
+//│       return idx
+//│     }
+//│   }
+//│   static f(buf, idx) {
+//│     return (y) => {
+//│       let idx1;
+//│       idx1 = idx + 0;
+//│       return buf.buf.at(idx1) + y
+//│     }
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+@bufferable
+class A2(x) with
+  fun f(y) = x + y
+
+:ge
+@buffered
+class B0(x)
+//│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
+//│ ║  l.48: 	@buffered
+//│ ╙──      	^^^^^^^^^
+
+:ge
+@buffered
+@buffered
+class B1(x)
+//│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
+//│ ║  l.55: 	@buffered
+//│ ║        	^^^^^^^^^
+//│ ║  l.56: 	@buffered
+//│ ╙──      	^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
+//│ ║  l.55: 	@buffered
+//│ ║        	^^^^^^^^^
+//│ ║  l.56: 	@buffered
+//│ ╙──      	^^^^^^^^^
+
+:ge
+@buffered
+@bufferable
+class B2(x)
+//│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
+//│ ║  l.70: 	@buffered
+//│ ║        	^^^^^^^^^
+//│ ║  l.71: 	@bufferable
+//│ ╙──      	^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
+//│ ║  l.70: 	@buffered
+//│ ║        	^^^^^^^^^
+//│ ║  l.71: 	@bufferable
+//│ ╙──      	^^^^^^^^^^^
+
+:w
+@bufferable
+module B3
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.85: 	@bufferable
+//│ ╙──      	^^^^^^^^^^^
+
+:w
+@bufferable
+object B3
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.92: 	@bufferable
+//│ ╙──      	^^^^^^^^^^^
+
+
+:breakme // TODO: disallow direct instantiation of @buffered classes
+new A
+//│ = fun
+
+:fixme // TODO: disallow direct instantiation of @buffered classes
+new A(123).f(0)
+//│ ═══[RUNTIME ERROR] TypeError: tmp.f is not a function
+
+
+let buf = new DefaultObjectBuffer(10)
+//│ buf = DefaultObjectBuffer(_)
+
+let obj1 = buf.mkNew(A)(3)
+//│ obj1 = 0
+
+let obj2 = buf.mkNew(A)(5)
+//│ obj2 = 2
+
+A.f(buf, obj1)(1)
+//│ = 4
+
+A.f(buf, obj2)(1)
+//│ = 6
+
+buf.del(A, obj1)
+
+let obj3 = buf.mkNew(A)(10)
+//│ obj3 = 0
+
+// UAF
+A.f(buf, obj1)(1)
+//│ = 11
+
+A.f(buf, obj3)(1)
+//│ = 11
+
+
+@bufferable
+class Oops with
+  fun hi = print("hi")
+
+let obj1 = buf.mkNew(Oops)
+//│ obj1 = 0
+
+
+Oops.hi(buf, obj2)
+//│ > hi
+
+let obj2 = buf.mkNew(A)(3)
+//│ obj2 = 4
+
+A.f(buf, obj2)(1)
+//│ = 4
+
+buf.del(Oops, obj1)
+
+:expect 4
+A.f(buf, obj2)(1)
+//│ = 4
+
+
+@buffered
+class A with
+  constructor(x)
+  val z = x
+  fun f(y) = x + y + z
+
+

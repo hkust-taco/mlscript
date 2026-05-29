@@ -140,16 +140,6 @@ abstract class Symbol(using State) extends Located:
     asPat orElse
     asMod
   
-  def orElseDisamb(disamb: Opt[DefinitionSymbol[?]]): Symbol = (this, disamb) match
-    case (bms: BlockMemberSymbol, S(disamb)) =>
-      disamb
-    case (bms: BlockMemberSymbol, N) =>
-      lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")
-    case (sym, N) =>
-      sym
-    case (sym, S(_)) =>
-      lastWords(s"Cannot disambiguate non-BlockMember symbol ${sym.nme}: disambiguation provided")
-  
   override def equals(x: Any): Bool = this is x
   override def hashCode: Int = uid.hashCode
   
@@ -208,6 +198,16 @@ class LabelSymbol(val trm: Opt[Term], name: Str = "lbl")(using State) extends Lo
   def subst(using s: SymbolSubst): LabelSymbol = s.mapLabelSym(this)
   def toLoc = trm.flatMap(_.toLoc)
   override def prefix: Str = "label:"
+
+/** Symbol representing a named split (join point) introduced during normalization.
+  * The `body` field holds the shared split that this symbol references.
+  * The `label` field is set during lowering to the corresponding LabelSymbol. */
+class SplitSymbol(val body: Split, name: Str = "split")(using State) extends LocalSymbol:
+  var label: Opt[LabelSymbol] = N
+  def nme = name
+  def subst(using s: SymbolSubst): SplitSymbol = this // SplitSymbols are not substituted
+  def toLoc = body.toLoc
+  override def prefix: Str = "split:"
 
 abstract class BlockLocalSymbol(name: Str)(using State) extends FlowSymbol(name):
   self: LocalSymbol => // * using `with LocalSymbol` in the `extends` clause makes Scala think there's a bad override
@@ -317,7 +317,7 @@ sealed abstract class MemberSymbol(using State) extends Symbol:
 class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.Ident)(using State)
     extends MemberSymbol
     with DefinitionSymbol[TermDefinition]
-    with LocalSymbol
+    with LocalVarSymbol
     with NamedSymbol:
   def nme: Str = id.name
   def name: Str = nme

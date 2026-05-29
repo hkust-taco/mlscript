@@ -62,16 +62,16 @@ let Predef1;
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "Refl"];
     });
-    this.pass1 = Rendering.pass1;
-    this.pass2 = Rendering.pass2;
-    this.pass3 = Rendering.pass3;
-    this.passing = Rendering.passing;
-    this.map = Rendering.map;
-    this.fold = Rendering.fold;
-    this.interleave = Rendering.interleave;
-    this.render = Rendering.render;
-    this.js_assert = globalThis.console["assert"];
-    this.foldl = Predef.fold;
+    Predef.pass1 = Rendering.pass1;
+    Predef.pass2 = Rendering.pass2;
+    Predef.pass3 = Rendering.pass3;
+    Predef.passing = Rendering.passing;
+    Predef.map = Rendering.map;
+    Predef.fold = Rendering.fold;
+    Predef.interleave = Rendering.interleave;
+    Predef.render = Rendering.render;
+    Predef.js_assert = globalThis.console["assert"];
+    Predef.foldl = Predef.fold;
     (class meta {
       static {
         Predef.meta = this
@@ -151,7 +151,7 @@ let Predef1;
     }
   }
   static equals(a, b) {
-    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, lambda, lambda1, tmp, tmp1;
+    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, lambda, tmp, tmp1, lambda1;
     scrut = a === b;
     if (scrut === true) {
       return true
@@ -160,12 +160,12 @@ let Predef1;
       if (b instanceof globalThis.Array) {
         scrut1 = a.length === b.length;
         if (scrut1 === true) {
-          lambda = (undefined, function (a1, i) {
+          lambda1 = (undefined, function (a1, i) {
             let tmp2;
             tmp2 = runtime.safeCall(b.at(i));
             return Predef.equals(a1, tmp2)
           });
-          return runtime.safeCall(a.every(lambda))
+          return runtime.safeCall(a.every(lambda1))
         }
       }
     }
@@ -185,7 +185,7 @@ let Predef1;
                 md = ac[Predef.Symbols.definitionMetadata];
                 scrut4 = md !== undefined;
                 if (scrut4 === true) {
-                  lambda1 = (undefined, function (field) {
+                  lambda = (undefined, function (field) {
                     let scrut10, scrut11;
                     scrut10 = field !== null;
                     if (scrut10 === true) {
@@ -197,7 +197,7 @@ let Predef1;
                     }
                     return false;
                   });
-                  scrut5 = runtime.safeCall(md[2].every(lambda1));
+                  scrut5 = runtime.safeCall(md[2].every(lambda));
                   if (scrut5 === true) {
                     tmp = true;
                   } else {

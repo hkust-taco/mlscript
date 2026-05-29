@@ -353,7 +353,7 @@ enum Term extends Statement:
   case Continue(label: LabelSymbol)
   case Try(body: Term, finallyDo: Term)
   case Annotated(annot: Annot, target: Term)
-  case Handle(lhs: LocalSymbol, rhs: Term, args: List[Term],
+  case Handle(lhs: LocalVarSymbol, rhs: Term, args: List[Term],
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
   case LeadingDotSel(nme: Tree.Ident)(
       val originalCtx: Opt[SrcScope]
@@ -1207,14 +1207,15 @@ object ClassDef:
       body: ObjBody,
       annotations: Ls[Annot],
       comp: Opt[ClassCompanionSymbol],
+      auxCtorParams: Ls[ParamList],
   ): ClassDef =
     params match
       case ps :: pss => Parameterized(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym, S(ctorSym.getOrElse(lastWords("Parameterized classes should have a ctor symbol.")))
-        , tparams, ps, pss, ext, body, comp, annotations)
+        , tparams, ps, pss ::: auxCtorParams, ext, body, comp, annotations)
       case Nil => Plain(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym
-        , tparams, ext, body, comp, annotations)
+        , tparams, ext, body, comp, annotations, auxParams = auxCtorParams, ctorSym = ctorSym)
   
   def unapply(cls: ClassDef): Opt[(ClassSymbol, Ls[TyParam], Opt[ParamList], ObjBody)] =
     S((cls.sym, cls.tparams, cls.paramsOpt, cls.body))
@@ -1244,11 +1245,11 @@ object ClassDef:
       ext: Opt[New],
       body: ObjBody,
       companion: Opt[ClassCompanionSymbol],
-      annotations: Ls[Annot]
+      annotations: Ls[Annot],
+      auxParams: List[ParamList],
+      ctorSym: Opt[ClassCtorSymbol],
   ) extends ClassDef:
     val paramsOpt: Opt[ParamList] = N
-    val auxParams: List[ParamList] = Nil
-    val ctorSym: Opt[ClassCtorSymbol] = N
   
 end ClassDef
 

@@ -49,7 +49,7 @@ hi(0)
 //│ define ‹stack safe body›⁰ as fun ‹stack safe body›¹() {
 //│   return hi¹(0)
 //│ };
-//│ set tmp = runtime⁰.runStackSafe﹖(6, ‹stack safe body›⁰);
+//│ set tmp = runtime⁰.runStackSafe﹖(6, ‹stack safe body›¹);
 //│ match runtime⁰.curEffect﹖
 //│   null =>
 //│     return tmp
@@ -128,7 +128,7 @@ sum(10000)
 //│ define ‹stack safe body›² as fun ‹stack safe body›³() {
 //│   return sum¹(10000)
 //│ };
-//│ set tmp = runtime⁰.runStackSafe﹖(1000, ‹stack safe body›²);
+//│ set tmp = runtime⁰.runStackSafe﹖(1000, ‹stack safe body›³);
 //│ match runtime⁰.curEffect﹖
 //│   null =>
 //│     return tmp

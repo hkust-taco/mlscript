@@ -260,7 +260,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
       
       override def applyValue(v: Value): Unit =
         v match
-        case Value.Ref(l, disamb) if !inCtx(l) && l.asClsLike.isEmpty => freeVars.add(l)
+        case Value.SimpleRef(l) if !inCtx(l) => freeVars.add(l)
+        case Value.MemberRef(bms, _) if !inCtx(bms) && bms.asClsLike.isEmpty => freeVars.add(bms)
         case _ => super.applyValue(v)
       
       override def applyResult(r: Result): Unit =
@@ -355,14 +356,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
       // compute new program body
       val newBody =
         
-        extension (a: Symbol) def toValueRef =
-          a match
-          case bms: BlockMemberSymbol => Value.Ref(bms, bms.tsym)
-          case _ => Value.Ref(a, N)
         def mkCall(target: (BlockMemberSymbol, TermSymbol), args: Ls[Symbol]): Call =
           Call(
             Value.Ref(target._1, S(target._2)),
-            args.map(a => Arg(N, a.toValueRef)) ne_:: Nil
+            args.map(a => Arg(N, a.asPath)) ne_:: Nil
           )(true, false, false)
         
         // Rewrites the program under a specific instantiation id
@@ -384,7 +381,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             r match
             case s@TrackableSelect(from, _, _) =>
               if branchSelSyms.isDefinedAt(s.uid.concreteId) then
-                k(Value.Ref(branchSelSyms(s.uid.concreteId)))
+                k(branchSelSyms(s.uid.concreteId).asSimpleRef)
               else if solver.finalDtorSrcs.contains(s.uid.concreteId) then
                 applyPath(from)(k)
               else
@@ -403,7 +400,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
                 val ctorInfo = solver.fusingCtorInfo(ctor.uid.concreteId)
                 val idx = ctorInfo.args.unzip._1.indexOf(field)
                 val fieldSyms = mkCtorFieldSyms(ctor.uid.concreteId)
-                args.zip(fieldSyms).foldRight(k(Value.Ref(fieldSyms(idx)))):
+                args.zip(fieldSyms).foldRight(k(fieldSyms(idx).asSimpleRef)):
                   case (Arg(N, a) -> s, rest) =>
                     applyPath(a): fusedField =>
                       Scoped(Set.single(s), Assign(s, fusedField, rest))
@@ -422,7 +419,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             p match
             case ref@FunRef(f) if newPolyFnSyms.isDefinedAt(newRefId(ref.uid, f)) =>
               val (bms, tSym) = newPolyFnSyms(newRefId(ref.uid, f))(f)
-              k(Value.Ref(bms, S(tSym)))
+              k(bms.asMemberRef(tSym))
             case ctor@CtorCall(_, args) if solver.finalCtorDests.isDefinedAt(ctor.uid.concreteId) =>
               assert(args.isEmpty)
               val callBranchFun = mkCall(branchFunSyms(ctorWhichBranch(ctor.uid.concreteId)), Nil)
@@ -432,11 +429,11 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
                 Assign(
                   lambdaSym,
                   callBranchFun,
-                  k(Value.Ref(lambdaSym, N)))
-              )
+                  k(lambdaSym.asSimpleRef)
+              ))
             case s@TrackableSelect(from, _, _) =>
               if branchSelSyms.isDefinedAt(s.uid.concreteId) then
-                k(Value.Ref(branchSelSyms(s.uid.concreteId)))
+                k(branchSelSyms(s.uid.concreteId).asSimpleRef)
               else if solver.finalDtorSrcs.contains(s.uid.concreteId) then
                 applyPath(from)(k)
               else
@@ -451,7 +448,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
                 Return(
                   Call(
                     newScrut,
-                    callWithFvs.map(s => Arg(N, s.toValueRef)) ne_:: Nil
+                    callWithFvs.map(s => Arg(N, s.asPath)) ne_:: Nil
                   )(true, false, false))
             case Break(label) =>
               val labelRestFunId = label.withInstId(instId)
@@ -484,10 +481,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             case _ =>
             super.applyBlock(b)
           override def applyValue(v: Value)(k: Value => Block): Block = v match
-            case Value.Ref(l, x) =>
+            case Value.This(l) =>
               pre.res.modSymToBms.get(l) match
                 case Some(bms) =>
-                  k(Value.Ref(bms, l.asMod))
+                  k(bms.asMemberRef(l.asMod.get))
                 case None => super.applyValue(v)(k)
             case _ => super.applyValue(v)(k)
         end RefreshSymbol
