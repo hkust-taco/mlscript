@@ -57,7 +57,7 @@ store.foo(AA(4))
 
 :deforest
 :expect 3
-:fixme
+:fixme // requires the block above to succeed
 fun classMethodSibling() =
   if AA(1) is
     AA(x) then x + store.get()
