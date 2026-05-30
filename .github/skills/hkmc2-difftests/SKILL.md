@@ -39,7 +39,7 @@ Do not treat rewritten files as automatic failures. Treat them as candidate snap
 - `:expect <text>`: assert final rendered result equals exact text.
 - `:pe`, `:e`, `:re`, `:ge`, `:w`: expect parse/type/runtime/codegen/warning diagnostics.
 - `:fixme` or `:todo`: tolerate temporary failures under current policy.
-- `:wasm`, `:wat`, `:fwat`, `:swat`, `:llir`: enable lower-level backend outputs.
+- `:wasm`, `:wat`, `:fwat`, `:swat`: enable lower-level backend outputs.
 
 Read [commands-and-policies.md](references/commands-and-policies.md) when you need deeper behavior details or troubleshooting logic.
 

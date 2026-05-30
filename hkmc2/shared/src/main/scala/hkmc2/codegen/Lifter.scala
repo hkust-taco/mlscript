@@ -10,7 +10,6 @@ import hkmc2.Message.*
 import hkmc2.ScopeData.*
 import hkmc2.semantics.Elaborator.State
 import hkmc2.syntax.Tree
-import hkmc2.codegen.llir.FreshInt
 
 import scala.collection.mutable.LinkedHashMap
 import scala.collection.mutable.Map as MutMap
@@ -539,11 +538,11 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
 
     val cap = usedVars.reqdCaptures(s.toInfo)
 
-    val fresh = FreshInt()
+    val fresh = new Uid.Symbol.State
     
     val sortedVars: Array[(ctorSyms: (local: Local, vs: VarSymbol), param: Param, valDefn: ValDefn)] =
       cap.toArray.sortBy(_.uid).map: sym =>
-        val id = fresh.make
+        val id = fresh.nextUid.asInt
         val nme = sym.nme + "$" + id
         
         val ident = new Tree.Ident(nme)
