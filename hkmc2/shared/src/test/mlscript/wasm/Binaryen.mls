@@ -13,8 +13,8 @@ fun compileWatToWasm(wat) =
   modBuf
 fun instantiateWasm(wasm, importObj) = 
   assert WebAssembly.validate(wasm)
-  let mod = new! WebAssembly.Module(wasm)
-  let inst = new! WebAssembly.Instance(mod, importObj)
+  let mod = new WebAssembly.Module(wasm)
+  let inst = new WebAssembly.Instance(mod, importObj)
   inst
 
 
