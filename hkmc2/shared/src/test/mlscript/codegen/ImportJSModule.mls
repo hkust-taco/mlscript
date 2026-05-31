@@ -1,7 +1,6 @@
 :js
 
 import "../../js/Test.mjs"
-//│ Test = {greet: fun greet}
 
 Test
 //│ = {greet: fun greet}

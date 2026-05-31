@@ -17,7 +17,7 @@ import semantics.Elaborator.State
   * `altSmallThreshold`, so we mark the original function inline directly.
   */
 class WorkerWrapper
-    (_symbolsToPreserve: Set[Local], tl: TL, printer: Program => Str)
+    (_symbolsToPreserve: Set[BoundSymbol], tl: TL, printer: Program => Str)
     (using DebugPrinter, State, Config, Raise)
   extends BlockTransformer(SymbolSubst.Id):
   import tl.*
@@ -107,7 +107,7 @@ class WorkerWrapper
 end WorkerWrapper
 
 object WorkerWrapper:
-  def apply(symbolsToPreserve: Set[Local], tl: TL, printer: Program => Str)(p: Program)
+  def apply(symbolsToPreserve: Set[BoundSymbol], tl: TL, printer: Program => Str)(p: Program)
       (using DebugPrinter, State, Config, Raise): Program =
     if config.inlining.isEmpty then p
     else (new WorkerWrapper(symbolsToPreserve, tl, printer)).applyProgram(p)

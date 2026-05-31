@@ -925,12 +925,12 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Missing => "missing"
     case LeadingDotSel(nme) => s"_?_.${nme.name}"
 
-final case class LetDecl(sym: LocalSymbol, annotations: Ls[Annot]) extends Statement
+final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot]) extends Statement
 
 final case class RcdField(field: Term, rhs: Term) extends Statement
 final case class RcdSpread(rcd: Term) extends Statement
 
-final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
+final case class DefineVar(sym: LocalSymbol | TermSymbol, rhs: Term) extends Statement
 
 /** A global configuration change directive (`#config(...)`).
   * Records a function that modifies the current compiler configuration. */
@@ -1061,11 +1061,13 @@ case class ObjBody(blk: Term.Blk):
 end ObjBody
 
 
-/** `sym` is a `MemberSymbol` when the import is made by the user and can be referred to by name,
+/** `sym` is a `BlockMemberSymbol` or a `VarSymbol` when the import is made by the user
+  * and can be referred to by name (it's either the BMS of the imported module
+  * or the VarSymbol of the alias, in an aliased import `import "..." as alias`),
   * in which case it is a `BlockMemberSymbol` when importing files explicitly
   * and a `TermSymbol` when the import is made implicitly by the compiler (eg, importing "Predef").
   * Note that the `file` Path may not represent a real file; eg when importing "fs". */
-case class Import(sym: TempSymbol | MemberSymbol, str: Str, file: io.Path) extends Statement
+case class Import(sym: ImportSymbol, str: Str, file: io.Path) extends Statement
 
 
 sealed abstract class Declaration:

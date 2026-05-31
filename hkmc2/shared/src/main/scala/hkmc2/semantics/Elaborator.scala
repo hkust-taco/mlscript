@@ -454,7 +454,7 @@ extends Importer with ucs.SplitElaborator:
     msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N
     :: Nil
   
-  def mkLetBinding(kw: Tree.Keywrd[?], sym: LocalSymbol, rhs: Term, annotations: Ls[Annot]): Ls[Statement] =
+  def mkLetBinding(kw: Tree.Keywrd[?], sym: LocalVarSymbol | TermSymbol, rhs: Term, annotations: Ls[Annot]): Ls[Statement] =
     LetDecl(sym, annotations).mkLocWith(kw, sym) :: DefineVar(sym, rhs) :: Nil
   
   def resolveField(srcTree: Tree, base: Opt[Symbol], nme: Ident): Opt[MemberSymbol] =
@@ -678,7 +678,7 @@ extends Importer with ucs.SplitElaborator:
         ), Term.Assgn(lt, sym.ref())))
     case (hd @ Hndl(id: Ident, c, Block(sts_), S(bod))) => ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
       
-      val sym = fieldOrVarSym(HandlerBind, id)
+      val sym = VarSymbol(id)
       log(s"Processing `handle` statement $id (${sym}) ${ctx.outer}")
       
       val derivedClsSym = ClassSymbol(Tree.DummyTypeDef(syntax.Cls), Tree.Ident(s"Handler$$${id.name}$$"))
@@ -1437,7 +1437,7 @@ extends Importer with ucs.SplitElaborator:
           ctx.get(id.name) match
           case S(elem) =>
             elem.symbol match
-            case S(sym: LocalSymbol) => go(sts, Nil, DefineVar(sym, r) :: acc)
+            case S(sym: (LocalSymbol | TermSymbol)) => go(sts, Nil, DefineVar(sym, r) :: acc)
           case N =>
             // TODO lookup in members? inherited/refined stuff?
             raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
@@ -1456,11 +1456,20 @@ extends Importer with ucs.SplitElaborator:
         td.name match
           case R(id) =>
             val sym = members.getOrElse(id.name, die)
-            val owner = ctx.outer.inner
+            val owner =
+              // * Instance declarations are not meant to be exported as externally-available members,
+              // * even when declared within some class or module.
+              if (k is Ins) then N else ctx.outer.inner
+            if (k is MutVal) && owner.isEmpty then
+              raise:
+                ErrorReport:
+                  msg"Mutable 'val' definitions are only valid as members of a module, object, or class definition" -> td.toLoc
+                  :: Nil
+              return go(sts, Nil, acc)
             if owner.isDefined && !identifierPattern.matches(id.name) then
               raise:
                 ErrorReport:
-                  msg"Illegal member ${k.desc} name: '${id.name}'" -> nme.toLoc
+                  msg"Illegal ${k.desc} member name: '${id.name}'" -> nme.toLoc
                   :: illegalMemberNameTail
               return go(sts, Nil, acc)
             val isMethod = owner.exists(_.isInstanceOf[ClassSymbol])
@@ -1540,7 +1549,7 @@ extends Importer with ucs.SplitElaborator:
         if owner.isDefined && !identifierPattern.matches(nme.name) then
           raise:
             ErrorReport:
-              msg"Illegal member ${k.desc} name: '${nme.name}'" -> nme.toLoc
+              msg"Illegal ${k.desc} member name: '${nme.name}'" -> nme.toLoc
               :: illegalMemberNameTail
           return go(sts, Nil, acc)
         

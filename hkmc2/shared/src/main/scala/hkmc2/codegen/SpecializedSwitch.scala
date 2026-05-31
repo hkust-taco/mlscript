@@ -75,7 +75,7 @@ private object PostCondRes:
 // that could possibly come before this result must be discarded.
 // isAbortive: indicates whether the result was computed for an abortive block. When merging results from
 // different branches, the results for this must be discarded.
-private case class PostCondRes(isImpure: Bool, isAbortive: Bool, varsMap: Map[Local, Literal]):
+private case class PostCondRes(isImpure: Bool, isAbortive: Bool, varsMap: Map[ValueSymbol, Literal]):
   def markImpure = copy(isImpure = true)
 
 // Combines postconditions from different branches.
@@ -101,7 +101,7 @@ extension (r: PostCondRes)
     if r.isAbortive then r
     else if r2.isImpure then r2
     else PostCondRes(r.isImpure, r2.isAbortive, r.varsMap ++ r2.varsMap)
-  def +(v: Local -> Literal): PostCondRes = PostCondRes(r.isImpure, r.isAbortive, r.varsMap + v)
+  def +(v: ValueSymbol -> Literal): PostCondRes = PostCondRes(r.isImpure, r.isAbortive, r.varsMap + v)
 
 // Analyzes postconditions for a block. Namely, determines variables that are
 // definitely set to a certain literal.
@@ -115,7 +115,7 @@ extension (r: PostCondRes)
 // because they will be irrelevant in that case anyway.
 private object PostCondAnalysisImpl extends CachedAnalysis[Block, PostCondRes]:
   
-  private def res(lhs: Opt[Local], rhs: Result, rest: Block) =
+  private def res(lhs: Opt[ValueSymbol], rhs: Result, rest: Block) =
     if rhs.isPure then lhs match
       case Some(lhs) => rhs match
         case Value.Lit(lit) => PostCondRes(false, false, Map(lhs -> lit)) >=> analyze(rest)
@@ -150,7 +150,8 @@ private object PostCondAnalysisImpl extends CachedAnalysis[Block, PostCondRes]:
     case Scoped(syms, body) => analyze(body)
     case Begin(sub, rest) => analyze(sub) >=> analyze(rest)
     case TryBlock(sub, finallyDo, rest) => analyze(sub) >=> analyze(finallyDo) >=> analyze(rest)
-    case Assign(lhs, rhs, rest) => res(S(lhs), rhs, rest)
+    case Assign(_: NoSymbol, rhs, rest) => res(N, rhs, rest)
+    case Assign(lhs: ValueSymbol, rhs, rest) => res(S(lhs), rhs, rest)
     case AssignField(path, _, rhs, rest) => res(N, rhs, rest)
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => res(N, rhs, rest)
     case Define(defn, rest) => defn match
@@ -159,8 +160,8 @@ private object PostCondAnalysisImpl extends CachedAnalysis[Block, PostCondRes]:
       case f: FunDefn => analyze(rest)
     case b: BlockTail => PostCondRes.empty.copy(isAbortive = b.isAbortive)
 
-private object PostCondAnalysis extends CachedAnalysis[Block, Map[Local, Literal]]:
-  override def analyzeUncached(b: Block): Map[Symbol, Literal] = PostCondAnalysisImpl.analyze(b).varsMap
+private object PostCondAnalysis extends CachedAnalysis[Block, Map[ValueSymbol, Literal]]:
+  override def analyzeUncached(b: Block): Map[ValueSymbol, Literal] = PostCondAnalysisImpl.analyze(b).varsMap
 
 // Matches List[Case.Lit -> Block]
 private object LitCases:
@@ -286,4 +287,3 @@ object SpecializedSwitch:
       else
         S((scrut, cases.reverse, dflt, rest))
     case _ => N
-

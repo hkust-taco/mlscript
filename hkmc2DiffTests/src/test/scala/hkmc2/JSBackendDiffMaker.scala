@@ -85,15 +85,21 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     val outerRaise: Raise = summon
     val reportedMessages = mutable.Set.empty[Str]
     
-    def definedValues(includeNonTerms: Bool) =
+    val importAliases = blk.stats.collect:
+        case Import(sym = sym: VarSymbol) => sym
+      .toSet
+    
+    def definedValues(includeNonTerms: Bool): Ls[(Str, BoundSymbol, N)] =
       import Elaborator.Ctx.*
       curCtx.env.iterator.flatMap:
         case (nme, e @ (_: RefElem | SelElem(base = RefElem(_: InnerSymbol)))) =>
           e.symbol match
           case S(ts: TermSymbol) if ts.k.isInstanceOf[syntax.ValLike] => S((nme, ts, N))
           case S(ts: BlockMemberSymbol)
-            if includeNonTerms || ts.trmImplTree.exists(_.k.isInstanceOf[syntax.ValLike]) => S((nme, ts, N))
-          case S(vs: VarSymbol) => S((nme, vs, N))
+            if includeNonTerms
+            || ts.trmImplTree.exists(t => t.k.isInstanceOf[syntax.ValLike] && (t.k isnt syntax.Ins))
+          => S((nme, ts, N))
+          case S(vs: VarSymbol) if !importAliases(vs) => S((nme, vs, N))
           case _ => N
         case _ => N
       .toList
@@ -203,14 +209,16 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         outputSeparator("Optimized IR Tree")
         output(optimized.showAsTree)
       
-      processIRBlock(optimized, definedValues)
+      processIRBlock(optimized, definedValues, symbolsToPreserve)
       
       }
   end processTerm
   
-  type ComputeDefinedValues = (includeNonTerms: Bool) => Ls[(Str, Symbol, Opt[Str])]
+  type ComputeDefinedValues = (includeNonTerms: Bool) => Ls[(Str, ValueSymbol, Opt[Str])]
   
-  def processIRBlock(pgrm: Program, definedValues: ComputeDefinedValues)(using Config, Raise, Elaborator.Ctx): Unit =
+  def processIRBlock
+        (pgrm: Program, definedValues: ComputeDefinedValues, symbolsToPreserve: Set[BoundSymbol])
+        (using Config, Raise, Elaborator.Ctx): Unit =
     
     if js.isSet then
       

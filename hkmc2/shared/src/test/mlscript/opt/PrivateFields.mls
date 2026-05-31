@@ -17,18 +17,18 @@ object Foo with
 //│ define Foo⁰ as object Foo¹ {
 //│   private val state⁰;
 //│   constructor() {
-//│     set Foo¹.this.state = 1;
+//│     set Foo¹.this.state⁰ = 1;
 //│     end
 //│   }
 //│   method test1⁰ = fun test1¹ {
 //│     let res, tmp;
 //│     set res = Foo¹.this.state⁰;
 //│     set tmp = +⁰(Foo¹.this.state⁰, 1);
-//│     set Foo¹.this.state = tmp;
+//│     set Foo¹.this.state⁰ = tmp;
 //│     return res
 //│   }
 //│   method test2⁰ = fun test2¹ {
-//│     set Foo¹.this.state = 0;
+//│     set Foo¹.this.state⁰ = 0;
 //│     do Foo¹.this.test1¹;
 //│     return Foo¹.this.state⁰
 //│   }
@@ -66,18 +66,18 @@ module Bar with
 //│ module Bar² {
 //│   private val state¹;
 //│   constructor {
-//│     set Bar².this.state = 1;
+//│     set Bar².this.state¹ = 1;
 //│     end
 //│   }
 //│   method test1² = fun test1³ {
 //│     let res, tmp;
 //│     set res = Bar².this.state¹;
 //│     set tmp = +⁰(Bar².this.state¹, 1);
-//│     set Bar².this.state = tmp;
+//│     set Bar².this.state¹ = tmp;
 //│     return res
 //│   }
 //│   method test2² = fun test2³ {
-//│     set Bar².this.state = 0;
+//│     set Bar².this.state¹ = 0;
 //│     do Bar².this.test1³;
 //│     return Bar².this.state¹
 //│   }
@@ -112,7 +112,7 @@ module UnusedModulePrivate with
 //│ define UnusedObjectPrivate⁰ as object UnusedObjectPrivate¹ {
 //│   private val used⁰;
 //│   constructor() {
-//│     set UnusedObjectPrivate¹.this.used = Predef⁰.print⁰(1);
+//│     set UnusedObjectPrivate¹.this.used⁰ = Predef⁰.print⁰(1);
 //│     do Predef⁰.print⁰(2);
 //│     end
 //│   }
@@ -124,7 +124,7 @@ module UnusedModulePrivate with
 //│ module UnusedModulePrivate² {
 //│   private val used¹;
 //│   constructor {
-//│     set UnusedModulePrivate².this.used = Predef⁰.print⁰(3);
+//│     set UnusedModulePrivate².this.used¹ = Predef⁰.print⁰(3);
 //│     do Predef⁰.print⁰(4);
 //│     end
 //│   }

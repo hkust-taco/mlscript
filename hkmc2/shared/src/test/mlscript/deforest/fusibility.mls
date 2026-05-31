@@ -111,11 +111,11 @@ apply(c, AA(3))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > c_for_c@30
 //│ deforest > cap_ub_(term:c,0)_for_c@33
-//│ deforest > f_for_apply@21
-//│ deforest > f_for_apply@48
+//│ deforest > f_for_apply@22
+//│ deforest > f_for_apply@49
 //│ deforest > tmp@1
-//│ deforest > x_for_apply@22
-//│ deforest > x_for_apply@49
+//│ deforest > x_for_apply@21
+//│ deforest > x_for_apply@48
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -126,7 +126,7 @@ apply(c, AA(3))
 fun c(k, x) = if k is AA(_) then x.AA#x + x.AA#x + x.AA#x
 c(AA(0), AA(3))
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > tmp@1
+//│ deforest > tmp@2
 //│ deforest > x_for_c@18
 //│ deforest > x_for_c@33
 //│ deforest > <<< non-affine syms <<<
@@ -162,9 +162,9 @@ fun c2(x) = if x is AA(AA(_)) then 1 else 0
 let p = AA(AA(AA(10)))
 c1(p) + c2(p)
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > p@2
-//│ deforest > tmp@1
-//│ deforest > tmp@3
+//│ deforest > p@1
+//│ deforest > tmp@2
+//│ deforest > tmp@5
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<

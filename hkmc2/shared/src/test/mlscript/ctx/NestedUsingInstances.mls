@@ -1,0 +1,60 @@
+:js
+
+
+fun get(using Int) = use[Int]
+
+
+let x =
+  using Int = 1
+  get
+//│ x = 1
+
+object Ex with
+  using Int = 1
+  get
+
+:rt
+module Ex with
+  using Int = 1
+  get
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   stats = Ls of 
+//│     ModuleOrObjectDef:
+//│       sym = module:Ex⁰
+//│       bsym = member:Ex¹
+//│       kind = Mod
+//│       body = ObjBody of Blk:
+//│         stats = Ls of 
+//│           TermDefinition:
+//│             k = Ins
+//│             sym = member:instance$Ident(Int)⁰
+//│             tsym = term:instance$Ident(Int)¹
+//│             sign = S of Resolved{sym=class:Int⁰}:
+//│               t = Ref{sym=member:Int¹} of member:Int¹
+//│               sym = class:Int⁰
+//│             body = S of Lit of IntLit of 1
+//│             modulefulness = Modulefulness of N
+//│         res = App:
+//│           lhs = Resolved{sym=term:get⁰}:
+//│             t = Ref{sym=member:get¹} of member:get¹
+//│             sym = term:get⁰
+//│           rhs = Tup of Ls of 
+//│             Fld:
+//│               term = Resolved{sym=term:instance$Ident(Int)¹,typ=class:Int⁰}:
+//│                 t = Ref{sym=member:instance$Ident(Int)⁰} of member:instance$Ident(Int)⁰
+//│                 sym = term:instance$Ident(Int)¹
+//│   res = Lit of UnitLit of false
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:lift
+:effectHandlers
+fun g =
+  fun f() =
+    handle h = Object with {}
+    using Int = 42
+    get
+  f
+
+

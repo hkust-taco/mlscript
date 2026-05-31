@@ -18,7 +18,7 @@ x'
 :e
 object Foo with
   val x' = 0
-//│ ╔══[COMPILATION ERROR] Illegal member value name: 'x''
+//│ ╔══[COMPILATION ERROR] Illegal value member name: 'x''
 //│ ║  l.20: 	  val x' = 0
 //│ ║        	      ^^
 //│ ╙── Member names must start with a letter or underscore, followed by letters, digits, or underscores.
@@ -36,7 +36,7 @@ Foo.("x'")
 :e
 object Foo with
   mut val x' = 0
-//│ ╔══[COMPILATION ERROR] Illegal member mutable value name: 'x''
+//│ ╔══[COMPILATION ERROR] Illegal mutable value member name: 'x''
 //│ ║  l.38: 	  mut val x' = 0
 //│ ║        	          ^^
 //│ ╙── Member names must start with a letter or underscore, followed by letters, digits, or underscores.
@@ -58,7 +58,7 @@ Foo.("x'")
 :e
 class Foo with
   fun f' = 1
-//│ ╔══[COMPILATION ERROR] Illegal member function name: 'f''
+//│ ╔══[COMPILATION ERROR] Illegal function member name: 'f''
 //│ ║  l.60: 	  fun f' = 1
 //│ ║        	      ^^
 //│ ╙── Member names must start with a letter or underscore, followed by letters, digits, or underscores.
@@ -66,7 +66,7 @@ class Foo with
 :e
 class Foo with
   class F'
-//│ ╔══[COMPILATION ERROR] Illegal member class name: 'F''
+//│ ╔══[COMPILATION ERROR] Illegal class member name: 'F''
 //│ ║  l.68: 	  class F'
 //│ ║        	        ^^
 //│ ╙── Member names must start with a letter or underscore, followed by letters, digits, or underscores.
@@ -74,7 +74,7 @@ class Foo with
 :e
 class Foo with
   object F'
-//│ ╔══[COMPILATION ERROR] Illegal member object name: 'F''
+//│ ╔══[COMPILATION ERROR] Illegal object member name: 'F''
 //│ ║  l.76: 	  object F'
 //│ ║        	         ^^
 //│ ╙── Member names must start with a letter or underscore, followed by letters, digits, or underscores.
@@ -82,7 +82,7 @@ class Foo with
 :e
 class Foo with
   module F'
-//│ ╔══[COMPILATION ERROR] Illegal member module name: 'F''
+//│ ╔══[COMPILATION ERROR] Illegal module member name: 'F''
 //│ ║  l.84: 	  module F'
 //│ ║        	         ^^
 //│ ╙── Member names must start with a letter or underscore, followed by letters, digits, or underscores.

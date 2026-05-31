@@ -443,12 +443,12 @@ class FlowPreAnalyzer(val pgrm: Program)(using
   
   end ctxTracker
   
-  private def recordAffinityUse(s: BlockLocalSymbol | TermSymbol): Unit =
+  private def recordAffinityUse(s: LocalVarSymbol | TermSymbol): Unit =
     s match
     case _: ClassCtorSymbol => ()
     case _ => currentAffinityCount(s) += 1
   
-  private def recordRefInCaptures(l: BlockLocalSymbol | TermSymbol): Unit =
+  private def recordRefInCaptures(l: LocalVarSymbol | TermSymbol): Unit =
     (l, currentCaptureInfo) match
     case (_: ClassCtorSymbol, _) | (_, N) => ()
     case (_, S(capInfo)) =>
@@ -511,7 +511,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
       applyBlock(rest)
     case Assign(lhs, rhs, rest) =>
       lhs match
-        case l: (BlockLocalSymbol | TermSymbol) => recordRefInCaptures(l)
+        case l: (LocalVarSymbol | TermSymbol) => recordRefInCaptures(l)
         case _ => ()
       applyResult(rhs)
       applyBlock(rest)
@@ -556,12 +556,8 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     case p: Path => applyPath(p)
   
   private def applyValueSimpleRef(v: Value.SimpleRef, recordAffinity: Bool) =
-    val Value.SimpleRef(l) = v
-    l match
-    case s: TermSymbol =>
-      recordRefInCaptures(s)
-      if recordAffinity then recordAffinityUse(s)
-    case s: BlockLocalSymbol =>
+    v.sym match
+    case s: LocalVarSymbol =>
       recordRefInCaptures(s)
       if recordAffinity then recordAffinityUse(s)
     case _ => ()
@@ -909,7 +905,7 @@ class FlowConstraintsCollector(
         val rhsStrat = processResult(rhs)
         lhs.match
           case _: NoSymbol => ()
-          case _ => cc.constrain(rhsStrat, generatedProdVars(lhs).asConsStrat)
+          case lhs: (LocalVarSymbol | TermSymbol) => cc.constrain(rhsStrat, generatedProdVars(lhs).asConsStrat)
         processBlock(rest)
       case TryBlock(sub, finallyDo, rest) =>
         processBlock(sub)

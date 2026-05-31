@@ -90,7 +90,7 @@ Test.test.hi
 //│ = 42
 
 
-mut val state = 10
+let state = 10
 //│ state = 10
 
 // * The order of evaluation of modules matters;
@@ -133,7 +133,7 @@ Foo.res
 fun bar =
   using Int = 42
   Foo.foo
-mut val x = 1
+let x = 1
 print(x)
 module Foo with
   set x += 1
@@ -144,5 +144,4 @@ bar
 //│ > 2
 //│ = 42
 //│ x = 2
-
 

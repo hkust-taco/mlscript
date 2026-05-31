@@ -239,8 +239,8 @@ module Foo with
 //│   constructor(Bar, z) {
 //│     do super⁰();
 //│     end;
-//│     set Function$⁹.this.Bar = Bar;
-//│     set Function$⁹.this.z = z;
+//│     set Function$⁹.this.Bar⁰ = Bar;
+//│     set Function$⁹.this.z⁰ = z;
 //│     end
 //│   }
 //│   method call⁸ = fun call⁹(x) {
@@ -253,7 +253,7 @@ module Foo with
 //│     define Bar¹ as class Bar³ {
 //│       private val y⁰;
 //│       constructor Bar²(y) {
-//│         set Bar³.this.y = y;
+//│         set Bar³.this.y⁰ = y;
 //│         end
 //│       }
 //│       method bar² = fun bar³(z) {
@@ -476,7 +476,7 @@ fun foo(x)(y) = x + y
 //│   constructor(x) {
 //│     do super⁰();
 //│     end;
-//│     set Function$¹³.this.x = x;
+//│     set Function$¹³.this.x² = x;
 //│     end
 //│   }
 //│   method call¹² = fun call¹³(y) {

@@ -20,7 +20,7 @@ import hkmc2.{codegen => argss}
   * typically, these will be top-level symbols that are being exported from a diff-test block;
   * we don't want to eliminate these. */
 class BlockSimplifier
-    (symbolsToPreserve: Set[Local], tl: TL, printer: Program => Str)
+    (symbolsToPreserve: Set[BoundSymbol], tl: TL, printer: Program => Str)
     (using DebugPrinter, State, Config, Raise, Ctx):
   import tl.*
   
@@ -106,9 +106,9 @@ class BlockSimplifier
     var analysisDone = false
     
     val usedLabels = MutSet.empty[LabelSymbol]
-    val definedVars = MutSet.empty[Local]
-    val localVars = MutSet.empty[Local]
-    val usedVars = MutSet.empty[Local]
+    val definedVars = MutSet.empty[ScopedSymbol]
+    val localVars = MutSet.empty[ScopedSymbol]
+    val usedVars = MutSet.empty[ScopedSymbol]
     val privateVars = MutSet.empty[TermSymbol]
     val usedPrivateFields = MutSet.empty[TermSymbol]
     lazy val privateFieldsToRemove: Set[TermSymbol] =
@@ -129,7 +129,7 @@ class BlockSimplifier
                 case ts: TermSymbol =>
                   usedPrivateFields += ts
                 case _ =>
-            case Value.SimpleRef(loc) =>
+            case Value.SimpleRef(loc: LocalVarSymbol) =>
               usedVars += loc
             case Value.MemberRef(loc, _) =>
               usedVars += loc
@@ -140,7 +140,7 @@ class BlockSimplifier
           privateVars ++= defn.privateFields
           defn.companion.foreach(body => privateVars ++= body.privateFields)
           super.applyClsLikeDefn(defn)
-
+        
         override def applyBlock(b: Block): Unit =
           b match
             case Define(defn, rst) =>
@@ -149,11 +149,11 @@ class BlockSimplifier
               localVars ++= syms
             case Break(lbl) => usedLabels += lbl
             case Continue(lbl) => usedLabels += lbl
-            case Assign(lhs, rhs, rst) =>
+            case Assign(lhs: LocalVarSymbol, rhs, rst) =>
               definedVars += lhs
             case _ =>
           super.applyBlock(b)
-
+      
       analysisDone = true
       applyProgram(prog)
     
@@ -216,7 +216,7 @@ class BlockSimplifier
     
     override def applyValue(v: Value)(k: Value => Block) = v match
       // * Replace with `undefined` those references to local variables that are never assigned
-      case Value.SimpleRef(loc) if localVars.contains(loc) && !definedVars.contains(loc) =>
+      case Value.SimpleRef(loc: LocalVarSymbol) if localVars.contains(loc) && !definedVars.contains(loc) =>
         registerChange(s"${loc.showDbg} is never assigned; replacing read with undefined")
         // if !symbolsToPreserve(loc) then removedLocals += loc
         k(Value.Lit(syntax.Tree.UnitLit(false)))
@@ -224,10 +224,10 @@ class BlockSimplifier
     
     override def applyBlock(b: Block): Block = b match
       // * Discard assignments to local variables that are never read (and are not preserved)
-      case Assign(lhs, rhs, rst) if localVars(lhs) && !usedVars(lhs) && !symbolsToPreserve(lhs) =>
+      case Assign(lhs: LocalVarSymbol, rhs, rst) if localVars(lhs) && !usedVars(lhs) && !symbolsToPreserve(lhs) =>
         registerChange(s"rm ${lhs.showDbg} = ${rhs.showDbg}")
         applyResult(rhs)(r => Assign.discard(r, applyBlock(rst)))
-      
+
       // * Discard writes to private fields that are never read
       case assign @ AssignField(lhs, _, rhs, rst) =>
         assign.symbol match
@@ -240,13 +240,14 @@ class BlockSimplifier
 
       // * Remove local pure definitions that are never read (and are not preserved)
       case Define(defn, rest) =>
+        val defnSym = defn.sym
         if !defn.isPure
-        || !localVars(defn.sym)
-        || usedVars(defn.sym)
-        || symbolsToPreserve(defn.sym)
+        || !localVars(defnSym)
+        || usedVars(defnSym)
+        || symbolsToPreserve(defnSym)
         then super.applyBlock(b)
         else
-          registerChange(s"rm unused pure defn ${defn.sym.showDbg}")
+          registerChange(s"rm unused pure defn ${defnSym.showDbg}")
           applyBlock(rest)
       
       // * Simplify labelled blocks
@@ -301,7 +302,7 @@ class BlockSimplifier
             else cls.copy(privateFields = privateFields2)(cls.configOverride, cls.annotations)
           k(cls2)
         case other => k(other)
-
+    
     
     // FIXME: refactor transformers so this is not so error-prone (adding this case to `applyBlock` doesn't work)
     override def applyScopedBlock(b: Block): Block = b match
@@ -313,7 +314,7 @@ class BlockSimplifier
           // * Avoid building sets of symbols if we know that nothing needs to be removed
           val needsCleanup = syms.exists: sym =>
             !fvs.contains(sym) && !symbolsToPreserve(sym)
-          if needsCleanup then syms.filter(fvs | symbolsToPreserve)
+          if needsCleanup then syms.filter(sym => fvs.contains(sym) || symbolsToPreserve(sym))
           else syms
         if (syms2 is syms) && (body2 is body) then b
         else Scoped(syms2, body2)
@@ -522,13 +523,14 @@ class BlockSimplifier
             S(r -> Unknown)
           case _ => N
         )
+        
         super.applyBlock(b)
         
       case Assign(lhs, rhs, rst) =>
         // log(s"Not propagating ${lhs} := ${rhs}")
         
         super.applyBlock(b)
-        
+      
       case Label(label, loop, body, rest) =>
         
         // TODO: fix the rest of the compiler so this invariant actually holds
@@ -1086,7 +1088,7 @@ class BlockSimplifier
     
     object InlinerReplacer:
       
-      class Copier(resSym: Symbol, existingMapping: Map[Symbol, Symbol])(using State):
+      class Copier(resSym: LocalVarSymbol, existingMapping: Map[Symbol, Symbol])(using State):
         val lblSym = LabelSymbol(N, "inlinedLbl")
         
         object Copier extends SymbolRefresher(existingMapping):

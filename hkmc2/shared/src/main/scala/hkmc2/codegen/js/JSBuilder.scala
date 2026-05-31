@@ -182,10 +182,6 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Value.SimpleRef(l: BuiltinSymbol) =>
       if l.nullary then l.nme
       else errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
-    case Value.SimpleRef(l: semantics.TermSymbol) =>
-      l.owner match
-      case S(owner) => lastWords(s"Unexpected SimpleRef of TermSymbol with owner: `$l` (owner: `$owner`)")
-      case N => scope.lookup_!(l, r.toLoc)
     case Value.SimpleRef(l) => scope.lookup_!(l, r.toLoc)
     case Call(Value.SimpleRef(l: BuiltinSymbol), (lhs :: rhs :: Nil) :: Nil) if !l.functionLike =>
       if l.binary then
@@ -342,13 +338,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   def returningTerm(t: Block, endSemi: Bool)(using Raise, Scope): Document =
     def mkSemi = if endSemi then ";" else ""
     t match
-    case Assign(l, r, rst) if l is State.noSymbol =>
+    case Assign(l: NoSymbol, r, rst) =>
       doc" # ${result(r)};${returningTerm(rst, endSemi)}"
-    case Assign(l, r, rst) =>
+    case Assign(l: (LocalVarSymbol | TermSymbol), r, rst) =>
       doc" # ${
-          l match
-          case sym: InnerSymbol => lastWords(s"Inner symbol should not be used as the target of an assignment: $sym")
-          case l => result(l.asPath.withLoc(N)) // TODO: improve location
+          result(l.asPath.withLoc(N)) // TODO: improve location
         } = ${result(r)};${returningTerm(rst, endSemi)}"
     case assign @ AssignField(p, n, r, rst) =>
       val field = assign.symbol match
@@ -362,7 +356,6 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         result(sym.asThis)
       val resJS = defn match
       case ValDefn(tsym, sym, p) =>
-        val sym = defn.sym
         // * Currently we allow `val` outside of object/module scopes,
         // * in which case it has no owner and is just a glorified local variable rather than a field.
         tsym.owner match
@@ -407,7 +400,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               scope.reverseLookup(sym.nme) match
               // * Maybe the function's internal name was already bound in scope;
               // * in that case, we need to forward it to a different variable to avoid unintended capture.
-              case S(otherSym) if (otherSym isnt sym) && bod.freeVars.contains(otherSym) => scope.nest.givenIn:
+              case S(otherSym: FreeSymbol) if (otherSym isnt sym) && bod.freeVars.contains(otherSym) => scope.nest.givenIn:
                 val externalName = scope.allocateName(otherSym, prefix = "proxy$", shadow = true)
                 val (params, bodyDoc) = setupFunction(displayName, ps, result, isLambda = false)
                 doc"const $externalName = $symName; ${
@@ -471,7 +464,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                     scope.lookup_!(owner, ts.toLoc)
                   else
                     scope.findThis_!(owner)
-                case N => lastWords(s"Expected TermSymbol $ts to have an owner") 
+                case N => lastWords(s"Expected TermSymbol $ts to have an owner")
               val accessors = mutPubFields.flatMap: (valSym, letSym) =>
                 doc" # ${mtdPrefix}get ${escapeField(valSym.name, "")
                   }() { return ${termSymOwnerQual(letSym) }${selectPrivateField(letSym, letSym.toLoc).get}; }"
@@ -823,7 +816,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     :/: nonNestedScoped(p.main)(block(_, endSemi = false)).stripBreaks
     :: locally:
       exprt match
-      case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"
+      case S(sym) =>
+        doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"
       case N => doc""
   
   def worksheet(p: Program)(using Raise, Scope): (Document, Document) =

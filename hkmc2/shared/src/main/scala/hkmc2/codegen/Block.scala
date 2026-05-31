@@ -36,9 +36,34 @@ must refresh the corresponding symbols – see SymbolRefresher for this purpose.
 
 
 case class Program(
-  imports: Ls[Local -> Str],
+  imports: Ls[ImportSymbol -> Str],
   main: Block,
 )
+
+
+/** Symbol that can be used in a `SimpleRef`. */
+type SimpleSymbol = LocalVarSymbol | BuiltinSymbol
+
+/** Symbol that can be used as the left-hand side of an `Assign`. */
+type Assignable = LocalVarSymbol | NoSymbol
+
+/** Symbols that `Scoped` introduces as block-local bindings.
+  * This deliberately excludes things like `TermSymbol`s, which never need to be scoped.
+  */
+type ScopedSymbol = LocalVarSymbol | BlockMemberSymbol
+
+/** A "catch-all" symbol for value-like things.
+  * Slightly better than just `Symbol`, but we should still try migrating away to more specific symbol types.
+  */
+type ValueSymbol = SimpleSymbol | TermSymbol | BlockMemberSymbol | InnerSymbol
+
+/** Symbols that may be bound by MIR binding forms such as `Scoped`.
+  */
+type BoundSymbol = ScopedSymbol | TermSymbol
+
+/** Symbols that may occur in MIR free-variable sets.
+  */
+type FreeSymbol = SimpleSymbol | BlockMemberSymbol | LabelSymbol
 
 
 sealed abstract class Block extends Product:
@@ -114,11 +139,11 @@ sealed abstract class Block extends Product:
   // * Note: it seems most historical uses of `definedVars` would be better removed,
   // * now that we properly put everything in proper Scoped blocks;
   // * and `definedVars` itself should be removed.
-  lazy val definedVars: Set[Local] = this match
+  lazy val definedVars: Set[BoundSymbol] = this match
     case _: Return | _: Throw | _: Unreachable => Set.empty
     case Begin(sub, rst) => sub.definedVars ++ rst.definedVars
-    case Assign(l: TermSymbol, r, rst) => rst.definedVars
-    case Assign(l, r, rst) => rst.definedVars + l
+    case Assign(_: NoSymbol, r, rst) => rst.definedVars
+    case Assign(l: LocalVarSymbol, r, rst) => rst.definedVars + l
     case AssignField(l, n, r, rst) => rst.definedVars
     case AssignDynField(l, n, ai, r, rst) => rst.definedVars
     case Match(scrut, arms, dflt, rst) =>
@@ -158,7 +183,7 @@ sealed abstract class Block extends Product:
         case _ => super.applyBlock(b)
     .applyBlock(this)
   
-  lazy val freeVars: Set[Local] = this match
+  lazy val freeVars: Set[FreeSymbol] = this match
     case Match(scrut, arms, dflt, rest) =>
       scrut.freeVars ++ dflt.toList.flatMap(_.freeVars) ++ rest.freeVars
       ++ arms.flatMap:
@@ -170,7 +195,8 @@ sealed abstract class Block extends Product:
     case Continue(label) => Set.single(label)
     case Begin(sub, rest) => sub.freeVars ++ rest.freeVars
     case TryBlock(sub, finallyDo, rest) => sub.freeVars ++ finallyDo.freeVars ++ rest.freeVars
-    case Assign(lhs, rhs, rest) => Set.single(lhs) ++ rhs.freeVars ++ rest.freeVars
+    case Assign(_: NoSymbol, rhs, rest) => rhs.freeVars ++ rest.freeVars
+    case Assign(lhs: LocalVarSymbol, rhs, rest) => Set.single(lhs) ++ rhs.freeVars ++ rest.freeVars
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVars ++ rhs.freeVars ++ rest.freeVars
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVars ++ fld.freeVars ++ rhs.freeVars ++ rest.freeVars
     case Define(defn, rest) => defn.freeVars ++ rest.freeVars
@@ -347,7 +373,7 @@ case class Break(label: LabelSymbol) extends BlockTail
 case class Continue(label: LabelSymbol) extends BlockTail
 
 
-case class Scoped(syms: collection.Set[Local], body: Block)
+case class Scoped(syms: collection.Set[ScopedSymbol], body: Block)
 extends Block with NonBlockTail:
   val rest = body
 
@@ -356,8 +382,7 @@ case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail wit
 
 case class TryBlock(sub: Block, finallyDo: Block, rest: Block) extends Block with ProductWithTail with NonBlockTail
 
-case class Assign(lhs: Local, rhs: Result, rest: Block) extends Block with ProductWithTail with NonBlockTail
-// case class Assign(lhs: Path, rhs: Result, rest: Block) extends Block with ProductWithTail
+case class Assign(lhs: Assignable, rhs: Result, rest: Block) extends Block with ProductWithTail with NonBlockTail
 
 case class AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(val symbol: Opt[MemberSymbol])
   extends Block with ProductWithTail with NonBlockTail
@@ -380,7 +405,7 @@ object Label:
       case Scoped(syms, rest) => Scoped(syms, Label(label, loop, body, rest))
       case _ => new Label(label, loop, body, rest)
 object Scoped:
-  def apply(syms: collection.Set[Local], body: Block): Block = body match
+  def apply(syms: collection.Set[ScopedSymbol], body: Block): Block = body match
     case _: Unreachable => body
     case _ if syms.isEmpty => body
     case Scoped(syms2, body) =>
@@ -398,7 +423,7 @@ object TryBlock:
       case Scoped(syms, innerRest) => Scoped(syms, TryBlock(body, finallyDo, innerRest))
       case _ => new TryBlock(body, finallyDo, rest)
 object Assign:
-  def apply(lhs: Local, rhs: Result, rest: Block): Block = rest match
+  def apply(lhs: Assignable, rhs: Result, rest: Block): Block = rest match
     case _: Unreachable =>
       if rhs.isPure then rest else new Assign(lhs, rhs, rest)
     case Scoped(syms, body) => Scoped(syms, Assign(lhs, rhs, body))
@@ -588,12 +613,14 @@ sealed abstract class Defn:
   
   // * Note that `privateFields` abd `publicFields` can't possibly be free since they are never
   // * referred to directly (they are only accessed through selections).
-  // * At some point we'll want to make `Local` more specific than `Symbol` to express this
-  // * in the type system.
-  lazy val freeVars: Set[Local] = this match
+  lazy val freeVars: Set[FreeSymbol] = this match
     case FunDefn(own, sym, dSym, params, body) =>
       body.freeVars -- params.flatMap(_.paramSyms) ++ sym.optionIf(own.isEmpty)
-    case ValDefn(tsym, sym, rhs) => rhs.freeVars ++ sym.optionIf(tsym.owner.isEmpty)
+    case vd @ ValDefn(tsym, sym, rhs) =>
+      rhs.freeVars ++
+        // * Value definitions without an owner are similar to local variables;
+        // * they need to be declared with `let` in JS, which is why we add them here.
+        vd.sym.optionIf(tsym.owner.isEmpty)
     case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, 
         methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
       preCtor.freeVars
@@ -757,7 +784,7 @@ final case class ClsLikeBody(
     case _ => false
   def subBlocks: Ls[Block] =
     ctor :: methods.flatMap(_.subBlocks)
-  lazy val freeVars: Set[Local] =
+  lazy val freeVars: Set[FreeSymbol] =
     ctor.freeVars ++ methods.flatMap(_.freeVars)
   lazy val size = 1 + methods.map(_.size).sum + ctor.size
 
@@ -779,7 +806,7 @@ final case class Handler(
     params: Ls[ParamList],
     body: Block,
 ):
-  lazy val freeVars: Set[Local] = body.freeVars -- params.flatMap(_.paramSyms) - sym - resumeSym
+  lazy val freeVars: Set[FreeSymbol] = body.freeVars -- params.flatMap(_.paramSyms) - sym - resumeSym
 
 
 /* Represents either unreachable code (for functions that must return a result)
@@ -803,7 +830,7 @@ enum Case:
     case Tup(len, inf) => s"Tup($len, $inf)"
     case Field(name, safe) => s"Field(${name.showDbg}, $safe)"
   
-  lazy val freeVars: Set[Local] = this match
+  lazy val freeVars: Set[FreeSymbol] = this match
     case Lit(_) => Set.empty
     case Cls(_, path) => path.freeVars
     case Tup(_, _) => Set.empty
@@ -870,16 +897,16 @@ sealed abstract class Result extends AutoLocated:
     case Tuple(mut, elems) => elems.flatMap(_.value.subBlocks)
     case _ => Nil
   
-  lazy val freeVars: Set[Local] = this match
+  lazy val freeVars: Set[FreeSymbol] = this match
     case Call(fun, argss) => fun.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
     case Instantiate(mut, cls, argss) => cls.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
     case Select(qual, name) => qual.freeVars
     case Lambda(params, body) => body.freeVars -- params.paramSyms
     case Tuple(mut, elems) => elems.flatMap(_.value.freeVars).toSet
     case Record(mut, args) =>
-      args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVars) ++ arg.value.freeVars).toSet
-    case Value.SimpleRef(l) => Set(l)
-    case Value.MemberRef(bms, _) => Set(bms)
+      args.flatMap(arg => arg.idx.fold(Set.empty[FreeSymbol])(_.freeVars) ++ arg.value.freeVars).toSet
+    case Value.SimpleRef(l) => Set.single(l)
+    case Value.MemberRef(bms, disamb) => Set.single(bms)
     case Value.This(sym) => Set.empty
     case Value.Lit(lit) => Set.empty
     case DynSelect(qual, fld, arrayIdx) => qual.freeVars ++ fld.freeVars
@@ -895,10 +922,6 @@ sealed abstract class Result extends AutoLocated:
     case Value.Lit(l: Tree.StrLit) => l.value.length / 4
     case Value.Lit(lit) => 0
     case DynSelect(qual, fld, arrayIdx) => qual.size + fld.size
-
-// * TODO: refine this very loose type
-// type Local = LocalSymbol
-type Local = Symbol
 
 /* mayRaiseEffects indicates whether this call may raise effect (algebraic effect),
  * regardless of whether the check for effect is inserted or not.
@@ -943,7 +966,7 @@ case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol
 case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool) extends Path
 
 enum Value extends Path with ProductWithExtraInfo:
-  case SimpleRef(sym: LocalVarSymbol | BuiltinSymbol)
+  case SimpleRef(sym: SimpleSymbol)
   /**
     * @param disamb The symbol disambiguating the definition that the reference refers to.
     */
@@ -958,35 +981,39 @@ enum Value extends Path with ProductWithExtraInfo:
 object Value:
   /** A value-level reference. */
   type RefLike = SimpleRef | MemberRef | This
+  object RefLike:
+    def unapply(v: Value.RefLike): S[ValueSymbol] = S(v.symbol)
 
   /** Value-level references that are not [[`Value.This`]]. */
   type Ref = SimpleRef | MemberRef
 
   extension (r: RefLike)
-    def symbol: Symbol = r match
+    def symbol: ValueSymbol = r match
       case SimpleRef(l) => l
-      case MemberRef(bms, _) => bms
+      case MemberRef(bms, disamb) => bms
       case This(sym) => sym
 
   @deprecated("Use Value.SimpleRef, Value.MemberRef, or Value.This instead.")
   object Ref:
-    def apply(l: Local, disamb: Opt[DefinitionSymbol[?]]): Value.RefLike = 
+    def apply(l: ValueSymbol | NoSymbol, disamb: Opt[DefinitionSymbol[?]]): Value.RefLike =
       l match
-        case l: (LocalVarSymbol | BuiltinSymbol) => l.asSimpleRef
+        case l: SimpleSymbol => l.asSimpleRef
+        case l: TermSymbol => l.asPath
         case bms: BlockMemberSymbol => bms.asMemberRef:
           disamb.getOrElse:
             lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")
         case sym: InnerSymbol => sym.asThis
         case _: NoSymbol => lastWords("NoSymbol should not be used as a Path/Value")
-        case sym => lastWords(s"$sym (of type ${sym.getClass.getSimpleName}) cannot be converted to a Path/Value")
     
     // * Some helper constructors that allow omitting the disambiguation symbol.
     // * If the ref itself is a DefinitionSymbol, then disambiguating it results in itself.
-    def apply(l: DefinitionSymbol[?]): Value.RefLike = Ref(l, S(l))
+    def apply(l: DefinitionSymbol[?]): Value.RefLike = l match
+      case l: ValueSymbol => Ref(l, S(l))
+      case sym => lastWords(s"$sym (of type ${sym.getClass.getSimpleName}) cannot be converted to a Path/Value")
     // * If the ref is a symbol that does not refer to a definition, then there is no disambiguation.
     def apply(l: TempSymbol | VarSymbol | BuiltinSymbol): Value.RefLike = Ref(l, N)
 
-    def unapply(v: Value): Opt[(Local, Opt[DefinitionSymbol[?]])] = v match
+    def unapply(v: Value): Opt[(ValueSymbol, Opt[DefinitionSymbol[?]])] = v match
       case SimpleRef(l) => S(l -> N)
       case MemberRef(bms, disamb) => S(bms -> S(disamb))
       case This(sym) => S(sym -> N)
@@ -1007,8 +1034,8 @@ extension (k: Block => Block)
   def rest(b: Block): Block = k(b)
   def transform(f: (Block => Block) => (Block => Block)) = f(k)
   
-  def assign(l: Local, r: Result) = k.chain(Assign(l, r, _))
-  def assignScoped(l: Local, r: Result) = k.scopedVars(Set.single(l)).assign(l, r)
+  def assign(l: Assignable, r: Result) = k.chain(Assign(l, r, _))
+  def assignScoped(l: LocalVarSymbol, r: Result) = k.scopedVars(Set.single(l)).assign(l, r)
   def assignFieldN(lhs: Path, nme: Tree.Ident, rhs: Result) = k.chain(AssignField(lhs, nme, rhs, _)(N))
   def break(l: LabelSymbol): Block = k.rest(Break(l))
   def continue(l: LabelSymbol): Block = k.rest(Continue(l))
@@ -1018,13 +1045,13 @@ extension (k: Block => Block)
     k.chain(Match(scrut, cse -> trm :: Nil, els, _))
   def label(label: LabelSymbol, loop: Bool, body: Block) = k.chain(Label(label, loop, body, _))
   def ret(r: Result) = k.rest(Return(r))
-  def scopedVars(s: collection.Set[Local]) = k.chain(Scoped(s, _))
+  def scopedVars(s: collection.Set[ScopedSymbol]) = k.chain(Scoped(s, _))
   def staticif(b: Boolean, f: (Block => Block) => (Block => Block)) = if b then k.transform(f) else k
   def foldLeft[A](xs: Iterable[A])(f: (Block => Block, A) => Block => Block) = xs.foldLeft(k)(f)
 
 def blockBuilder: Block => Block = identity
 
-extension (s: (LocalVarSymbol | BuiltinSymbol))
+extension (s: SimpleSymbol)
   inline def asSimpleRef: Value.SimpleRef = Value.SimpleRef(s)
 
 extension (bms: BlockMemberSymbol)
@@ -1033,14 +1060,17 @@ extension (bms: BlockMemberSymbol)
 extension (sym: InnerSymbol)
   inline def asThis: Value.This = Value.This(sym)
 
-extension (l: Local)
+extension (l: ValueSymbol)
   // TODO(Derppening): Inline `Value.Ref.apply` into this function once that function is removed
   @annotation.nowarn("cat=deprecation")
-  def asPath: Value.RefLike = 
-    Value.Ref(l, l match 
-      case bms: BlockMemberSymbol => S(bms.asPrincipal.getOrElse:
-        lastWords(s"Cannot resolve overloaded member symbol ${bms.nme}: no principal disambiguation found")
-      )
-      case _ => N
-    )
-
+  def asPath: Value.RefLike =
+    l match
+      case tsym: TermSymbol =>
+        lastWords(s"Cannot make a direct path for non-local term symbol ${tsym.nme}")
+      case bms: BlockMemberSymbol =>
+        bms.asPrincipal.getOrElse:
+          lastWords(s"Cannot resolve overloaded member symbol ${bms.nme}: no principal disambiguation found")
+        match
+          case disamb =>
+            Value.Ref(bms, S(disamb))
+      case _ => Value.Ref(l, N)

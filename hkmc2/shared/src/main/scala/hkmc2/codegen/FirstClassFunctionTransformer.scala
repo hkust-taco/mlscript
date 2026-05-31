@@ -70,12 +70,6 @@ class FirstClassFunctionTransformer
         k(p)
     case _ => k(p)
 
-  private def pathStartsWith(p: Path, symbol: Local): Bool = p match
-    case r: Value.Ref => r.symbol is symbol
-    case Select(p, _) => pathStartsWith(p, symbol)
-    case DynSelect(p, _, _) => pathStartsWith(p, symbol)
-    case _ => false
-
   override def applyResult(r: Result)(k: Result => Block): Block = r match
     case c @ Call(fun, argss) => applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
       def call(f: Path) = Call(f, argss2.ne_!)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall)

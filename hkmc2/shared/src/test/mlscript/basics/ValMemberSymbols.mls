@@ -131,7 +131,7 @@ fun foo(x, y) =
 //│   val u⁰;
 //│   val v⁰;
 //│   constructor A⁷(u, y) {
-//│     set A⁸.this.y = y;
+//│     set A⁸.this.y⁰ = y;
 //│     define u⁰ as val u¹ = u;
 //│     define v⁰ as val v¹ = A⁸.this.y⁰;
 //│     end
