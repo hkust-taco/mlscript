@@ -385,7 +385,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
                 applyPath(from)(k)
               else
                 super.applyResult(r)(k)
-            case ctor@CtorCall(cls, args) =>
+            case ctor@CtorProducer(cls, args) =>
               def mkCtorFieldSyms(ctorDtorId: CtorDtorId): Ls[TempSymbol] =
                 val ctorInfo = solver.fusingCtorInfo(ctorDtorId)
                 val clsNme = ctorInfo.ctor.ctorClsName
@@ -419,7 +419,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
             case ref@FunRef(f) if newPolyFnSyms.isDefinedAt(newRefId(ref.uid, f)) =>
               val (bms, tSym) = newPolyFnSyms(newRefId(ref.uid, f))(f)
               k(bms.asMemberRef(tSym))
-            case ctor@CtorCall(_, args) if solver.finalCtorDests.isDefinedAt(ctor.uid.concreteId) =>
+            case ctor@CtorProducer(_, args) if solver.finalCtorDests.isDefinedAt(ctor.uid.concreteId) =>
               assert(args.isEmpty)
               val callBranchFun = mkCall(branchFunSyms(ctorWhichBranch(ctor.uid.concreteId)), Nil)
               val lambdaSym = new TempSymbol(N, "deforest$lam")

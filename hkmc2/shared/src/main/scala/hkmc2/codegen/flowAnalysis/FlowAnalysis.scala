@@ -5,6 +5,7 @@ package flowAnalysis
 import scala.jdk.CollectionConverters.MapHasAsScala
 import utils.*
 import mlscript.utils.*, shorthands.*
+import hkmc2.Message.MessageContext
 import semantics.*
 import syntax.Tree
 import scala.collection.mutable
@@ -133,29 +134,49 @@ object TrackableSelect:
       Some((qual, field, owner))
     case _ => N
 
-object CtorRef:
-  /** Resolves an object reference or a class-ctor `TermSymbol` to its corresponding class/object symbol. */
-  private def classCtorSymbol(sym: Symbol)(using Elaborator.State): Opt[ClassSymbol | ModuleOrObjectSymbol] =
-    sym.asObj orElse
-    locally:
+object ClassCtorRef:
+  /** Resolves a class-ctor `TermSymbol` to its corresponding class symbol. */
+  def unapply(p: Path)(using Elaborator.State): Opt[ClassSymbol] =
+    def classCtorSymbol(sym: Symbol)(using Elaborator.State): Opt[ClassSymbol] =
       sym match
       case clsCtor: ClassCtorSymbol => clsCtor.owner
       case _ => N
-
-  def unapply(p: Path)(using Elaborator.State): Opt[ClassSymbol | ModuleOrObjectSymbol] = p match
+    p match
     case Value.SimpleRef(sym) => classCtorSymbol(sym)
-    case Value.MemberRef(_, disamb) => classCtorSymbol(disamb) orElse disamb.asCls orElse disamb.asObj
-    case Value.This(sym) => classCtorSymbol(sym) orElse sym.asCls
+    case Value.MemberRef(_, disamb) => classCtorSymbol(disamb)
+    case Value.This(sym) => classCtorSymbol(sym)
     case s: Select => s.symbol.flatMap(classCtorSymbol)
     case _ => N
 
-object CtorCall:
-  def unapply(r: Result)(using Elaborator.State): Option[(ClassSymbol | ModuleOrObjectSymbol | Int) -> Ls[Arg]] =
+object ClassSymRef:
+  def unapply(p: Path)(using Elaborator.State): Opt[ClassSymbol] = p match
+    case Value.SimpleRef(sym) => sym.asCls
+    case Value.MemberRef(_, disamb) => disamb.asCls
+    case Value.This(sym) => sym.asCls
+    case s: Select => s.symbol.flatMap(_.asCls)
+    case _ => N
+
+object ObjectRef:
+  def unapply(p: Path)(using Elaborator.State): Opt[ModuleOrObjectSymbol] = p match
+    case Value.SimpleRef(sym) => sym.asObj
+    case Value.MemberRef(_, disamb) => disamb.asObj
+    case Value.This(sym) => sym.asObj
+    case s: Select => s.symbol.flatMap(_.asObj)
+    case _ => N
+
+object CtorProducer:
+  /** Extracts result forms that produce a concrete `Ctor` flow strategy. */
+  def unapply(r: Result)(using Elaborator.State, Raise): Opt[CtorCls -> Ls[Arg]] =
+    def rejectObjectUse(errMsg: Message): Opt[CtorCls -> Ls[Arg]] =
+      raise(ErrorReport(errMsg -> r.toLoc :: Nil))
+      N
     r match
-    case Instantiate(_, CtorRef(ctor), argss) => Some(ctor -> argss.flatten)
-    case Call(CtorRef(ctor), argss) => Some(ctor -> argss.flatten)
-    case CtorRef(ctor) if ctor.asObj.isDefined => Some(ctor -> Nil)
-    case Tuple(_, args) => Some(args.size, args)
+    case Instantiate(_, ClassSymRef(cls), argss) => S(cls -> argss.flatten)
+    case Instantiate(_, ObjectRef(_), _) => rejectObjectUse(msg"Expected a class; found object.")
+    case Call(ClassCtorRef(ctor), argss) => S(ctor -> argss.flatten)
+    case Call(ObjectRef(_), _) => rejectObjectUse(msg"Expected a class ctor; found object.")
+    case ObjectRef(ctor) => S(ctor -> Nil)
+    case Tuple(_, args) => S(args.size, args)
     case _ => None
 
 object FunRef:
@@ -954,7 +975,7 @@ class FlowConstraintsCollector(
             fromStrat,
             new FieldSel(sel.uid, instId)(field, owner, selRes.asConsStrat))
           selRes.asProdStrat
-        case c@CtorCall(ctor, args) if args.forall(_.spread.isEmpty) =>
+        case c@CtorProducer(ctor, args) if args.forall(_.spread.isEmpty) =>
           val argsStrat = args.map:
             case Arg(_, a) => processResult(a)
           ctor match
@@ -967,14 +988,14 @@ class FlowConstraintsCollector(
               new Ctor(c.uid, instId)(ctor, clsParams.zip(argsStrat))
             case _ =>
               // - the size of 0 means we don't know the cls param symbols,
-              // so we constrain args with NoCons and this CtorCall gives NoProd
+              // so we constrain args with NoCons and this CtorProducer gives NoProd
               // - if size > 1, we cannot handle multiple parameter class flow now,
-              //   constrain args with NoCons and this CtorCall gives NoProd
+              //   constrain args with NoCons and this CtorProducer gives NoProd
               for a <- argsStrat do cc.constrain(a, UnknownCons)
               UnknownProd
           case _: ModuleOrObjectSymbol => new Ctor(c.uid, instId)(ctor, Nil)
           case tupSize: Int => new Ctor(c.uid, instId)(tupSize, (0 until tupSize).zip(argsStrat).toList)
-        case c@CtorCall(_, args) =>
+        case c@CtorProducer(_, args) =>
           args.foreach(arg => cc.constrain(processResult(arg.value), UnknownCons))
           UnknownProd
         case c@Call(fun, argss) =>
@@ -995,7 +1016,7 @@ class FlowConstraintsCollector(
         case i@Instantiate(_, cls, argss) => handleCallLike(i.uid, cls, argss.flatten)
         case lam@Lambda(ps, body) =>
           mkFunProdStrat("lam_res", ps :: Nil, body, lam.uid)
-        case _: Tuple => lastWords("should be handled in CtorCall")
+        case _: Tuple => lastWords("should be handled in CtorProducer")
         case Record(_, fields) =>
           fields.foreach:
             case RcdArg(idx, value) =>
@@ -1004,7 +1025,7 @@ class FlowConstraintsCollector(
           UnknownProd
         case p: Path =>
           p match
-          case CtorRef(ctor) => UnknownProd
+          case ClassCtorRef(_) => UnknownProd
           case refSite@FunRef(f) =>
             funsToProdStratScheme.get(f) match
             case Some(fScheme) =>

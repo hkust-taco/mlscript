@@ -111,7 +111,8 @@ declare module Array with
     isArray
     prototype
 
-declare object Symbol with
+declare class Symbol
+declare module Symbol with
   // The `TermDef` needs `rhs` to be defined to be recognized as `isMLsFun`.
   // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the
   // uninitialized `runtime` in the `Rendering` module.

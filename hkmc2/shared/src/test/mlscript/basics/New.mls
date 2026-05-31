@@ -60,13 +60,17 @@ new
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.54: 	  Foo
 //│ ╙──      	  ^^^
+//│ ═══[COMPILATION ERROR] Expected a class; found object.
+//│ ═══[COMPILATION ERROR] Expected a class; found object.
+//│ ═══[COMPILATION ERROR] Expected a class; found object.
+//│ ═══[COMPILATION ERROR] Expected a class; found object.
 //│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
 
 :e
 new Foo
   ()
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (unit).
-//│ ║  l.67: 	  ()
+//│ ║  l.71: 	  ()
 //│ ╙──      	  ^^
 //│ = Foo
 

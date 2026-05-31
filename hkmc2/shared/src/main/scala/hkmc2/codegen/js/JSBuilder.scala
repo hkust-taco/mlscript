@@ -677,7 +677,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           case Elaborator.ctx.builtins.Bool => doc"typeof $sd === 'boolean'"
           case Elaborator.ctx.builtins.Int => doc"globalThis.Number.isInteger($sd)"
           case Elaborator.ctx.builtins.BigInt => doc"typeof $sd === 'bigint'"
-          case Elaborator.ctx.builtins.Symbol.module => doc"typeof $sd === 'symbol'"
+          case Elaborator.ctx.builtins.Symbol => doc"typeof $sd === 'symbol'"
           case Elaborator.ctx.builtins.TypedArray =>
             doc"globalThis.ArrayBuffer.isView($sd) && !($sd instanceof globalThis.DataView)"
           case _: ModuleOrObjectSymbol => doc"$sd instanceof ${result(pth)}.class"
