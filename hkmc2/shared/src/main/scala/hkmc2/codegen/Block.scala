@@ -1008,7 +1008,7 @@ case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol
 case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool) extends Path
 
 enum Value extends Path with ProductWithExtraInfo:
-  case SimpleRef(sym: LocalVarSymbol | BuiltinSymbol)
+  case SimpleRef(sym: LocalVarSymbol | BuiltinSymbol | SplitSymbol)
   /**
     * @param disamb The symbol disambiguating the definition that the reference refers to.
     */
@@ -1089,7 +1089,7 @@ extension (k: Block => Block)
 
 def blockBuilder: Block => Block = identity
 
-extension (s: (LocalVarSymbol | BuiltinSymbol))
+extension (s: (LocalVarSymbol | BuiltinSymbol | SplitSymbol))
   inline def asSimpleRef: Value.SimpleRef = Value.SimpleRef(s)
 
 extension (bms: BlockMemberSymbol)
