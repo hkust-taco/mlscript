@@ -1442,6 +1442,12 @@ extends Importer with ucs.SplitElaborator:
           case S(elem) =>
             elem.symbol match
             case S(sym: (LocalSymbol | TermSymbol)) => go(sts, Nil, DefineVar(sym, r) :: acc)
+            case S(sym) =>
+              raise(ErrorReport(msg"Symbol '${id.name}' is not a variable and cannot be reassigned" -> id.toLoc :: Nil))
+              go(sts, Nil, Term.Error :: acc)
+            case N =>
+              raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
+              go(sts, Nil, Term.Error :: acc)
           case N =>
             // TODO lookup in members? inherited/refined stuff?
             raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
