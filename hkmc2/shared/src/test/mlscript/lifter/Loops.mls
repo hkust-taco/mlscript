@@ -61,7 +61,7 @@ fun foo() =
 //│ define foo⁰ as fun foo¹() {
 //│   let x, scope0$cap;
 //│   set scope0$cap = new mut Capture$scope0²(x);
-//│   set scope0$cap.x$0 = 1;
+//│   set scope0$cap.x$0⁰ = 1;
 //│   loop lbl:
 //│     let scrut, tmp;
 //│     set scrut = true;
@@ -69,7 +69,7 @@ fun foo() =
 //│       true =>
 //│         let lambda$here;
 //│         set tmp = +⁰(scope0$cap.x$0⁰, 1);
-//│         set scope0$cap.x$0 = tmp;
+//│         set scope0$cap.x$0⁰ = tmp;
 //│         set lambda$here = lambda$¹(scope0$cap);
 //│         return lambda$here
 //│       else

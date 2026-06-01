@@ -15,7 +15,7 @@ data class A(x) with
 //│   private val A¹;
 //│   val y⁰;
 //│   constructor B¹(y, A) {
-//│     set B².this.A = A;
+//│     set B².this.A¹ = A;
 //│     define y⁰ as val y¹ = y;
 //│     end
 //│   }

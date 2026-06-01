@@ -23,7 +23,7 @@ class ScopeFlattener extends BlockTransformer(new SymbolSubst):
       super.applyBlock(b)
     case _ => super.applyBlock(b)
   
-  private var scopedSymForCurrentFun: Opt[mutable.Set[Symbol]] = N
+  private var scopedSymForCurrentFun: Opt[mutable.Set[ScopedSymbol]] = N
   override def applyFunBodyLikeBlock(b: Block): Block =
     val prevScopedSymForCurrentFun = scopedSymForCurrentFun
     val resBlk = b match
@@ -35,7 +35,7 @@ class ScopeFlattener extends BlockTransformer(new SymbolSubst):
         then b
         else Scoped(tmp, newBody)
       case _ =>
-        val tmp = mutable.Set.empty[Symbol]
+        val tmp = mutable.Set.empty[ScopedSymbol]
         scopedSymForCurrentFun = S(tmp)
         val newBlk = applySubBlock(b)
         Scoped(tmp, newBlk)

@@ -1,7 +1,7 @@
 :js
 
 
-mut val cached: Int = 1
+let cached = 1
 //│ cached = 1
 
 :sjs
@@ -53,7 +53,7 @@ class Foo(x, val y, mut val z) with
 //│   val y²;
 //│   val z²;
 //│   constructor Foo⁴(x, y, z) {
-//│     set Foo⁵.this.x = x;
+//│     set Foo⁵.this.x⁰ = x;
 //│     define y² as val y³ = y;
 //│     define z² as val z³ = z;
 //│     do Predef⁰.print⁰(Foo⁵.this.x⁰);
@@ -85,5 +85,3 @@ set f.x = 2
 
 f.x
 //│ = 2
-
-

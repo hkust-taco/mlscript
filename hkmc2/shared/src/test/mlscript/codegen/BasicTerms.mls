@@ -43,7 +43,7 @@ print("Hi")
 //│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
 //│ Program:
 //│   main = Assign:
-//│     lhs = ‹no symbol›⁰
+//│     lhs = ‹no symbol›
 //│     rhs = Call:
 //│       fun = Select{sym=term:Predef⁰/print⁰}:
 //│         qual = MemberRef{disamb=module:Predef⁰}:

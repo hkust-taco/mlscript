@@ -45,22 +45,22 @@ class Foo(x) with
 //│   constructor(Foo, y) {
 //│     do super⁰();
 //│     end;
-//│     set $anon¹.this.Foo = Foo;
-//│     set $anon¹.this.y = y;
-//│     set $anon¹.this.state = $anon¹.this.Foo¹.x⁰;
+//│     set $anon¹.this.Foo¹ = Foo;
+//│     set $anon¹.this.y⁰ = y;
+//│     set $anon¹.this.state⁰ = $anon¹.this.Foo¹.x⁰;
 //│     end
 //│   }
 //│   method test⁰ = fun test¹ {
 //│     let tmp;
 //│     set tmp = +⁰($anon¹.this.state⁰, 1);
-//│     set $anon¹.this.state = tmp;
+//│     set $anon¹.this.state⁰ = tmp;
 //│     return +⁰($anon¹.this.state⁰, $anon¹.this.y⁰)
 //│   }
 //│ };
 //│ define Foo⁰ as class Foo³ {
 //│   private val x⁰;
 //│   constructor Foo²(x) {
-//│     set Foo³.this.x = x;
+//│     set Foo³.this.x⁰ = x;
 //│     end
 //│   }
 //│   method foo⁰ = fun foo¹(y) { return new $anon¹(Foo³.this, y) }

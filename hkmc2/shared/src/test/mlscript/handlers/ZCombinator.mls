@@ -3,7 +3,8 @@
 :lift
 :stackSafe
 
-fun selfApp(f) = f(f)
+let selfApp(f) = f(f)
+//│ selfApp = fun selfApp
 
 fun mkrec(g) =
   selfApp of self =>

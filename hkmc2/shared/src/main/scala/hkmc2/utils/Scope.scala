@@ -10,11 +10,11 @@ import utils.*
 import hkmc2.Message.MessageContext
 import Scope.*
 import hkmc2.semantics.InnerSymbol
+import hkmc2.semantics.Symbol
 import hkmc2.semantics.VarSymbol
 import hkmc2.semantics.Elaborator
 import hkmc2.semantics.TopLevelSymbol
 import semantics.Elaborator.State
-import hkmc2.codegen.Local
 import hkmc2.codegen.js.JSBuilder
 
 
@@ -25,7 +25,7 @@ import hkmc2.codegen.js.JSBuilder
   * to an inner symbol (e.g., class or module).
   * Note: I made `Scope` a case class just so that it can benefit from `printAsTree`. */
 case class Scope
-    (val parentOrCfg: Cfg \/ Scope, val curThis: Opt[Opt[InnerSymbol]], private val bindings: MutMap[Local, Str])
+    (val parentOrCfg: Cfg \/ Scope, val curThis: Opt[Opt[InnerSymbol]], private val bindings: MutMap[Symbol, Str])
     (using State):
   
   lazy val parent: Opt[Scope] = parentOrCfg.toOption
@@ -35,7 +35,7 @@ case class Scope
   lazy val inScopeOwners: Set[InnerSymbol] =
     parent.fold(Set.empty[InnerSymbol])(_.inScopeOwners) ++ curThis.iterator.flatten
   
-  private val existingNames = MutMap.empty[Str, Local]
+  private val existingNames = MutMap.empty[Str, Symbol]
   
   private var thisProxyAccessed = false
   lazy val thisProxy =
@@ -53,11 +53,11 @@ case class Scope
   private def thisError(thisSym: InnerSymbol)(using Raise): Str =
     raise:
       InternalError(msg"`this` not in scope: ${thisSym.toString}" -> N :: Nil,
-        extraInfo = Some(this),
+        extraInfo = Some(this, thisSym),
         source = Diagnostic.Source.Compilation)
     "‹MISSING_THIS›"
   
-  def addToBindings(symbol: Local, name: String, shadow: Bool)(using Raise, Line, Name, FileName) =
+  def addToBindings(symbol: Symbol, name: String, shadow: Bool)(using Raise, Line, Name, FileName) =
     val fullName =
       if !shadow && lookup(symbol).nonEmpty
       then
@@ -69,7 +69,7 @@ case class Scope
     existingNames += fullName -> symbol
     fullName
   
-  def getBindings: Iterator[(Local, String)] =
+  def getBindings: Iterator[(Symbol, String)] =
     bindings.iterator
   
   def findThis_!(thisSym: InnerSymbol)(using Raise): Str =
@@ -116,14 +116,14 @@ case class Scope
   
   def inScope(name: Str): Bool =
     existingNames.contains(name) || parent.exists(_.inScope(name))
-  def reverseLookup(name: Str): Opt[Local] =
+  def reverseLookup(name: Str): Opt[Symbol] =
     existingNames.get(name).orElse(parent.flatMap(_.reverseLookup(name)))
   
-  def lookup(l: Local): Opt[Str] =
+  def lookup(l: Symbol): Opt[Str] =
     // curThis.filter(_ is l).map(_ => thisProxy) orElse
     bindings.get(l).orElse(parent.flatMap(_.lookup(l)))
   
-  def lookup_!(l: Local, loc: Opt[Loc])(using Raise): Str =
+  def lookup_!(l: Symbol, loc: Opt[Loc])(using Raise): Str =
     lookup(l).getOrElse:
       // * Prevent long-winded error messages which quote the entire definition.
       val extraLoc = l match
@@ -139,10 +139,10 @@ case class Scope
       l.nme
   
   // * Note: it is sound for an existing name to have been allocated with a different prefix (which is only cosmetic)
-  def allocateOrGetName(l: Local, prefix: Str = "")(using Raise): Str =
+  def allocateOrGetName(l: Symbol, prefix: Str = "")(using Raise): Str =
     lookup(l).getOrElse(allocateName(l, prefix = prefix))
   
-  def allocateName(l: Local, prefix: Str = "", shadow: Bool = false)(using Raise, Line, Name, FileName): Str =
+  def allocateName(l: Symbol, prefix: Str = "", shadow: Bool = false)(using Raise, Line, Name, FileName): Str =
     
     val c = cfg
     
@@ -212,5 +212,4 @@ object Scope:
       .mkString
   
 end Scope
-
 

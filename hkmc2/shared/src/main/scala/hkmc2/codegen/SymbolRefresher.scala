@@ -22,11 +22,11 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
     toRemoveSymbols = MutSet.empty[Symbol] :: toRemoveSymbols
     val res = b match
     case Scoped(syms, body) =>
-      val newSyms = MutSet.empty[Symbol]
+      val newSyms = MutSet.empty[ScopedSymbol]
       val oldSyms = MutSet.empty[Symbol]
       for s <- syms.toList.sortBy(_.uid) do
         assert(!mapping.isDefinedAt(s), s"already defined: $s")
-        val newS = s match
+        val new_s: ScopedSymbol = s match
           case tmpSym: TempSymbol => new TempSymbol(N, tmpSym.nme)
           case bms: BlockMemberSymbol =>
             val newBms = new BlockMemberSymbol(bms.nme, Nil, bms.nameIsMeaningful)
@@ -41,10 +41,9 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
               nt
             newBms
           case varSym: VarSymbol => new VarSymbol(varSym.id)
-          case _ => lastWords(s"unexpected symbol kind: $s")
-        mapping(s) = newS
+        mapping(s) = new_s
         oldSyms.add(s)
-        newSyms.add(newS)
+        newSyms.add(new_s)
       val r = Scoped(newSyms, applyBlock(body))
       for s <- oldSyms do mapping.remove(s)
       r
@@ -57,7 +56,13 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
     b match
     case Assign(lhs, rhs, rest) =>
       applyResult(rhs): newRhs =>
-        val newLhs = mapping.getOrElse(lhs, lhs)
+        val newLhs: Assignable = lhs match
+          case lhs: NoSymbol => lhs
+          case lhs: LocalVarSymbol =>
+            mapping.get(lhs) match
+            case Some(sym: LocalVarSymbol) => sym
+            case Some(sym) => lastWords(s"assignment local ${lhs.nme} mapped to non-variable ${sym.nme}")
+            case None => lhs
         val newRest = applyBlock(rest)
         if (newLhs is lhs) && (newRhs is rhs) && (newRest is rest) then b else Assign(newLhs, newRhs, newRest)
     case Label(label, loop, body, rest) =>
@@ -117,7 +122,11 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
       val (tsym2, sym2) = mapping.get(sym) match
         case None =>
           val newBms = new BlockMemberSymbol(sym.nme, sym.trees, sym.nameIsMeaningful)
-          val newTsym = new TermSymbol(tsym.k, tsym.owner, tsym.id)
+          val newOwner = tsym.owner.map: o =>
+            existingMapping.get(o) match
+              case Some(inner: InnerSymbol) => inner
+              case _ => o
+          val newTsym = new TermSymbol(tsym.k, newOwner, tsym.id)
           newBms.tsym = S(newTsym)
           (newTsym, newBms)
         case S(bms: BlockMemberSymbol) =>
@@ -208,7 +217,7 @@ class SymbolRefresher(existingMapping: Map[Symbol, Symbol])(using State) extends
   override def applyValue(v: Value)(k: Value => Block): Block = v match
     case Value.SimpleRef(l) =>
       mapping.get(l) match
-        case Some(newSym: (LocalVarSymbol | BuiltinSymbol)) =>
+        case Some(newSym: SimpleSymbol) =>
           k(newSym.asSimpleRef)
         case _ => super.applyValue(v)(k)
     case Value.MemberRef(bms, disamb) =>

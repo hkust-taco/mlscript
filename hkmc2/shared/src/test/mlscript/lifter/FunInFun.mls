@@ -178,7 +178,7 @@ f(1, 2, 1000)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let g⁴, h⁰, f⁴, Capture$f⁰;
 //│ define g⁴ as fun g⁵(f$cap, immutable) {
-//│   set f$cap.mutated$0 = 2;
+//│   set f$cap.mutated$0⁰ = 2;
 //│   return +⁰(immutable, f$cap.mutated$0⁰)
 //│ };
 //│ define h⁰ as fun h¹(f$cap) {
@@ -281,13 +281,13 @@ g()(1)
 //│ define f⁶ as fun f⁷(scope0$cap, x) {
 //│   let k;
 //│   set k = 4;
-//│   set scope0$cap.y$0 = 2;
+//│   set scope0$cap.y$0¹ = 2;
 //│   return x
 //│ };
 //│ define g⁶ as fun g⁷() {
 //│   let y, scope0$cap, f$here;
 //│   set scope0$cap = new mut Capture$scope0²(y);
-//│   set scope0$cap.y$0 = 0;
+//│   set scope0$cap.y$0¹ = 0;
 //│   set f$here = f$¹(scope0$cap);
 //│   return f$here
 //│ };
@@ -464,7 +464,7 @@ fun f(x) =
 //│   set g$here = g$⁵(f$cap);
 //│   set a = g$here;
 //│   set tmp = +⁰(f$cap.x$0⁰, 1);
-//│   set f$cap.x$0 = tmp;
+//│   set f$cap.x$0⁰ = tmp;
 //│   set g$here = g$⁵(f$cap);
 //│   return [a, g$here]
 //│ };

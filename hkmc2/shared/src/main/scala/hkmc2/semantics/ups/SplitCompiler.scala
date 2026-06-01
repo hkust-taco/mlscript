@@ -43,10 +43,10 @@ object SplitCompiler:
   class RefScrut(make: () => Term.Ref) extends Scrut:
     def apply(): Ref = make()
   
-  class SymbolScrut[SymbolType <: BlockLocalSymbol](val symbol: SymbolType) extends Scrut:
+  class SymbolScrut[SymbolType <: LocalVarSymbol](val symbol: SymbolType) extends Scrut:
     def apply(): Ref = symbol.ref()
   
-  extension [SymbolType <: BlockLocalSymbol](symbol: SymbolType)
+  extension [SymbolType <: LocalVarSymbol](symbol: SymbolType)
     def toScrut: SymbolScrut[SymbolType] = SymbolScrut(symbol)
   
   type BindingMap = SeqMap[VarSymbol, Scrut]
@@ -277,7 +277,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
      *         - A `MakeConsequent` function that creates the nested match split.
      */
     def folded(z: MakeConsequent)(getSubScrutinee: Int => SymbolScrut[?])
-    : (Ls[(BlockLocalSymbol, Opt[Loc])], MakeConsequent) =
+    : (Ls[(LocalVarSymbol, Opt[Loc])], MakeConsequent) =
       patterns.iterator.zipWithIndex.foldRight((Nil, z)):
         case ((subPattern, index), (accSubScrutinees, makeInnerSplit)) =>
           val subScrutinee = getSubScrutinee(index)
@@ -294,7 +294,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     
     /** Same as the other overload, but for `MakePrefixConsequent`. */
     def folded(z: MakePrefixConsequent)(getSubScrutinee: Int => SymbolScrut[?])
-    : (Ls[(BlockLocalSymbol, Opt[Loc])], MakePrefixConsequent) =
+    : (Ls[(LocalVarSymbol, Opt[Loc])], MakePrefixConsequent) =
       patterns.iterator.zipWithIndex.foldRight((Nil, z)):
         case ((subPattern, index), (accSubScrutinees, makeInnerSplit)) =>
           val subScrutinee = getSubScrutinee(index)
@@ -541,7 +541,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     * @param split the inner split to be enclosed
     */
   def buildPatternArguments(
-      patternArguments: List[(BlockLocalSymbol, SP)],
+      patternArguments: List[(LocalVarSymbol, SP)],
       split: Split
   ): Split = patternArguments.foldRight(split):
     case ((symbol, pattern), innerSplit) =>
@@ -570,7 +570,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     warnOnDiscardedExtractionOutputs(patternSymbol, extractionMatches)
     if shouldReject then RejectSplit else (makeConsequent, alternative) =>
       val (extractionArguments, makeConsequentForSubPatterns) =
-        val z = (N: Opt[Ls[(BlockLocalSymbol, Opt[Loc])]], makeConsequent)
+        val z = (N: Opt[Ls[(LocalVarSymbol, Opt[Loc])]], makeConsequent)
         extractionMatches.fold(z):
           _.folded(makeConsequent)(scrutinee.getSubScrutinee(patternSymbol)).mapFirst(S(_))
       // First, we need to prepare the objects that performs the naive matching
@@ -748,7 +748,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
           alternative)
       case Record(fields) => (makeConsequent, alternative) =>
         // This case is similar to the `Constructor` case.
-        val z = (Nil: Ls[(Ident, BlockLocalSymbol)], makeConsequent)
+        val z = (Nil: Ls[(Ident, LocalVarSymbol)], makeConsequent)
         // TODO: Deduplicate the code with the `Constructor` case.
         val (entries, makeChainedConsequent) = fields.iterator.zipWithIndex.foldRight(z):
           case (((key, pattern), index), (fields, makeInnerSplit)) =>

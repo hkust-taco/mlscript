@@ -100,7 +100,7 @@ sum(10000)
 
 
 :stackSafe
-mut val ctr = 0
+let ctr = 0
 fun dummy(x) = x
 fun foo(f) = 
   if ctr > 10000 then 0
@@ -293,4 +293,3 @@ fun handler_stack(n) =
   "ok"
 handler_stack(M)
 //│ = "ok"
-

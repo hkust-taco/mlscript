@@ -26,6 +26,7 @@ object shorthands {
   val Opt: Option.type = Option
   type S[+A] = Some[A]
   val S: Some.type = Some
+  type N = None.type
   val N: None.type = None
   def some[A]: A => Option[A] = Some(_)
   def none[A]: Option[A] = None

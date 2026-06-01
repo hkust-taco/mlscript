@@ -30,7 +30,7 @@ trait TermSynthesizer(using State):
     Term.New(cls, args, N)(N)
   protected final def rcd(fields: RcdField*): Term.Rcd = Term.Rcd(false, fields.toList)
   
-  protected final def splitLet(sym: BlockLocalSymbol, term: Term)(inner: Split): Split =
+  protected final def splitLet(sym: LocalVarSymbol, term: Term)(inner: Split): Split =
     Split.Let(sym, term, inner)
   
   protected final def param = Param(FldFlags.empty, _, N, Modulefulness.none)
@@ -43,7 +43,7 @@ trait TermSynthesizer(using State):
     sel(runtimeRef, "MatchSuccess", State.matchSuccessClsSymbol).resolved(State.matchSuccessClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchSuccess.class`. */
-  protected def matchSuccessPattern(parametersOpt: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
+  protected def matchSuccessPattern(parametersOpt: Opt[Ls[LocalVarSymbol]]): FlatPattern.ClassLike =
     val parameters = parametersOpt.map(_.map(_ -> N))
     FlatPattern.ClassLike(matchSuccessClass, State.matchSuccessClsSymbol, parameters, false)(Tree.Dummy)
 
@@ -52,7 +52,7 @@ trait TermSynthesizer(using State):
     sel(runtimeRef, "MatchFailure", State.matchFailureClsSymbol).resolved(State.matchFailureClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchFailure.class`. */
-  protected def matchFailurePattern(parametersOpt: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
+  protected def matchFailurePattern(parametersOpt: Opt[Ls[LocalVarSymbol]]): FlatPattern.ClassLike =
     val parameters = parametersOpt.map(_.map(_ -> N))
     FlatPattern.ClassLike(matchFailureClass, State.matchFailureClsSymbol, parameters, false)(Tree.Dummy)
 
@@ -118,7 +118,7 @@ trait TermSynthesizer(using State):
   /** Make a `Branch` that calls `Pattern` symbols' `unapply` functions. */
   def makeLocalPatternBranch(
       scrut: => Term.Ref,
-      localPatternSymbol: BlockLocalSymbol,
+      localPatternSymbol: LocalVarSymbol,
       inner: => Split,
   )(fallback: Split): Split =
     val call = app(localPatternSymbol.safeRef, tup(fld(scrut)), s"result of ${localPatternSymbol.nme}")
@@ -127,7 +127,7 @@ trait TermSynthesizer(using State):
   
   protected final def makeTupleBranch(
     scrut: => Term.Ref,
-    subScrutinees: Ls[BlockLocalSymbol],
+    subScrutinees: Ls[LocalVarSymbol],
     consequent: => Split,
     alternative: Split
   ): Split =
@@ -140,9 +140,9 @@ trait TermSynthesizer(using State):
   
   protected final def makeTupleBranch(
     scrut: => Term.Ref,
-    leading: Ls[BlockLocalSymbol],
-    spread: BlockLocalSymbol,
-    trailing: Ls[BlockLocalSymbol],
+    leading: Ls[LocalVarSymbol],
+    spread: LocalVarSymbol,
+    trailing: Ls[LocalVarSymbol],
     consequent: => Split,
     alternative: Split
   ): Split =

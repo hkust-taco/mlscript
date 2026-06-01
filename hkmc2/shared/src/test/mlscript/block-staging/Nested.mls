@@ -78,7 +78,7 @@ staged module LiftedLambda with
 //│   constructor(x) {
 //│     do super⁰();
 //│     end;
-//│     set Function$¹.this.x = x;
+//│     set Function$¹.this.x⁰ = x;
 //│     end
 //│   }
 //│   method call⁰ = fun call¹(y) {
@@ -161,7 +161,7 @@ staged module LiftedMultParams with
 //│   constructor(x) {
 //│     do super⁰();
 //│     end;
-//│     set Function$³.this.x = x;
+//│     set Function$³.this.x¹ = x;
 //│     end
 //│   }
 //│   method call² = fun call³(y) {

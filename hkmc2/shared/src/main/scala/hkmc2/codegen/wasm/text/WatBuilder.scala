@@ -193,7 +193,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       && defn.companion.isEmpty
 
   /** Returns singleton metadata when `sym` resolves to a registered singleton object. */
-  private def singletonInfoFor(sym: Local)(using Ctx): Opt[SingletonInfo] =
+  private def singletonInfoFor(sym: ValueSymbol)(using Ctx): Opt[SingletonInfo] =
     ctx.getSingletonInfo(sym)
 
   /** Loads the singleton object reference from its backing mutable global. */
@@ -470,7 +470,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def declareClassFuncType(
       defn: ClsLikeDefn,
       suffix: Str,
-      params: Seq[Local -> SymIdx],
+      params: Seq[ValueSymbol -> SymIdx],
   )(using Ctx, Raise): TypeIdx =
     ctx.addType(TypeInfo(
       sym = TempSymbol(N, defn.sym.nme),
@@ -508,7 +508,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def predeclareClassFunc(
       defn: ClsLikeDefn,
       suffix: Str,
-      params: Seq[Local -> SymIdx],
+      params: Seq[ValueSymbol -> SymIdx],
       sym: BlockMemberSymbol,
       exportName: Opt[Str],
   )(using Ctx, Raise): Unit =
@@ -519,7 +519,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def predeclareClassFuncWithType(
       defn: ClsLikeDefn,
       suffix: Str,
-      params: Seq[Local -> SymIdx],
+      params: Seq[ValueSymbol -> SymIdx],
       sym: BlockMemberSymbol,
       exportName: Opt[Str],
       funcTy: TypeIdx,
@@ -581,7 +581,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def collectSessionGlobalSymbols(
       b: Block,
       sessionExportCtx: SessionExportCtx,
-  ): Set[Symbol] =
+  ): Set[ValueSymbol] =
     def restOf(block: Block): Opt[Block] = block match
       case Define(_, rst) => S(rst)
       case Assign(_, _, rst) => S(rst)
@@ -592,16 +592,16 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       case Label(_, _, _, rst) => S(rst)
       case _ => N
 
-    def recur(block: Block): Set[Symbol] = block match
+    def recur(block: Block): Set[ValueSymbol] = block match
       case Scoped(_, body) =>
         recur(body)
       case Begin(sub, rst) =>
         recur(sub) ++ recur(rst)
-      case Define(ValDefn(_, sym, _), rst) if sessionExportCtx.shouldExport(sym) =>
-        recur(rst) + sym
+      case Define(defn: ValDefn, rst) if sessionExportCtx.shouldExport(defn.sym) =>
+        recur(rst) + defn.sym
       case Define(_, rst) =>
         recur(rst)
-      case Assign(sym: Symbol, _, rst) if sessionExportCtx.shouldExport(sym) =>
+      case Assign(sym: ValueSymbol, _, rst) if sessionExportCtx.shouldExport(sym) =>
         recur(rst) + sym
       case _: BlockTail =>
         Set.empty
@@ -613,7 +613,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   /** Declares a mutable exported global for a REPL-visible binding produced by the current block. */
   private def registerSessionGlobal(
-      sym: Symbol,
+      sym: ValueSymbol,
   )(using Ctx, Raise, SessionExportCtx): Unit =
     if ctx.containsGlobal(sym) then return
     val exportName = sym.nme
@@ -885,7 +885,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   /** Binds constructor self (`thisSym`) to the Wasm local name `this` in the current function context.
     */
-  private def bindCtorThis(thisSym: Local)(using Ctx, FunctionCtx, Raise): LocalIdx =
+  private def bindCtorThis(thisSym: ValueSymbol)(using Ctx, FunctionCtx, Raise): LocalIdx =
     funcCtx.addLocal(thisSym, S("this"))
 
   /** Compiles a class init body under its own Wasm-local frame with explicit `this`. */
@@ -1087,9 +1087,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     raise(ErrorReport(errMsgs, source = Diagnostic.Source.Compilation, extraInfo = extraInfo))
     unreachable
 
-  def getVar(l: Local, loc: Opt[Loc])(using Ctx, FunctionCtx, Raise): Expr = l match
-    case ts: (semantics.TermSymbol | semantics.InnerSymbol) => 
-      lastWords(s"Symbol `$ts` (${ts.getClass.getSimpleName}) cannot be resolved as a variable")
+  def getVar(l: ValueSymbol, loc: Opt[Loc])(using Ctx, FunctionCtx, Raise): Expr = l match
+    case ts: semantics.InnerSymbol =>
+      lastWords(s"ValueSymbol `$ts` (${ts.getClass.getSimpleName}) cannot be resolved as a variable")
     case l =>
       funcCtx.lookupLocal(l) match
         case S(localIdx) => local.get(localIdx, RefType.anyref)
@@ -1126,10 +1126,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case r => result(r)
 
   /** Returns the owning class symbol for a resolved field/member symbol, when available. */
-  private def fieldOwner(sym: Symbol): Opt[BlockMemberSymbol] = sym match
+  private def fieldOwner(sym: MemberSymbol): Opt[BlockMemberSymbol] = sym match
     case ts: TermSymbol => ts.owner.flatMap(_.asBlkMember)
     case ms: MemberSymbol => ms.asTrm.flatMap(_.owner.flatMap(_.asBlkMember))
-    case _ => N
 
   def fieldSelect(thisSym: BlockMemberSymbol, sym: DefinitionSymbol[?])(using Ctx, Raise): FieldIdx =
     val structInfo = ctx.getTypeInfo_!(thisSym)
@@ -1636,7 +1635,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   def returningTerm(t: Block)(using Ctx, FunctionCtx, Raise, SessionExportCtx): Expr =
     t match
-      case Assign(l, r, rst) if l is State.noSymbol =>
+      case Assign(l: NoSymbol, r, rst) =>
         val rExpr = result(r)
         val evalExpr = rExpr.resultType match
           case S(_) => drop(rExpr)
@@ -1648,7 +1647,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!)),
         )
 
-      case Assign(l, r, rst) =>
+      case Assign(l: ValueSymbol, r, rst) =>
         val lExpr = getVar(l, l.toLoc)
         val rExpr = result(r)
         val assignExpr = lExpr.mnemonicPrefix match
@@ -1747,7 +1746,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             // * in which case it has no owner and is just a glorified local variable rather than a field
             tsym.owner match
               case N =>
-                val symExpr = getVar(sym, sym.toLoc)
+                val localStorageSym = defn.sym
+                val symExpr = getVar(localStorageSym, localStorageSym.toLoc)
                 val defineExpr = symExpr.mnemonicPrefix match
                   case S("global") =>
                     global.set(symExpr.instrargs(0).asInstanceOf[GlobalIdx], result(p))
@@ -2295,7 +2295,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       exprt: Opt[BlockMemberSymbol],
       wd: io.Path,
       sessionImports: Seq[SessionBinding],
-      preservedSessionSymbols: Set[Local],
+      preservedSessionSymbols: Set[BoundSymbol],
   )(using Raise): CompiledWasmModule =
     for imprt <- p.imports do
       raise(
@@ -2439,7 +2439,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       compiledModule(entrySym.nme)
   end program
 
-  def blockPreamble(ss: Iterable[Symbol])(using Ctx, FunctionCtx, Raise): Unit =
+  def blockPreamble(ss: Iterable[ValueSymbol])(using Ctx, FunctionCtx, Raise): Unit =
     ss.toArray.sortBy(_.uid).toSeq.filter: sym =>
       !ctx.containsGlobal(sym) && ctx.getFunc(sym).isEmpty
     .foreach: sym =>

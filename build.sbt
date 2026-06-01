@@ -114,7 +114,6 @@ def hkmc2TestSubproject(dirName: String, compileRunner: Option[String], diffRunn
 lazy val hkmc2NofibTests = hkmc2TestSubproject("hkmc2NofibTests", Some("NofibCompileTestRunner"), "NofibDiffTestRunner")
 lazy val hkmc2AppsTests = hkmc2TestSubproject("hkmc2AppsTests", Some("AppsCompileTestRunner"), "AppsDiffTestRunner")
 lazy val hkmc2WasmTests = hkmc2TestSubproject("hkmc2WasmTests", Some("WasmCompileTestRunner"), "WasmDiffTestRunner")
-lazy val hkmc2LlirTests = hkmc2TestSubproject("hkmc2LlirTests", None, "LlirDiffTestRunner")
 
 lazy val hkmc2MainTests = project.in(file("hkmc2MainTests"))
   .settings(
