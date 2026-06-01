@@ -106,7 +106,10 @@ class Printer(using Raise, ShowCfg, State, SymbolPrinter, Config):
       case Some(value) => print(value) :: doc"; # "
       case None => doc""
     val docCtor = ctor match
-      case End(_) => doc""
+      case End(_) =>
+        ctorSym match
+        case S(ctorSym) => doc" # constructor ${print(ctorSym)}"
+        case N => doc""
       case _ => doc" # constructor${ctorSym.fold(doc"")(doc" " :: print(_))}${printParamLists(auxParams)} ${
         bracedbk(docPreCtor :: print(ctor))}"
     val mtds = methods.map(m => doc"method ${print(m.sym)} = " :: print(m)).mkDocument(sep = doc" # ")
@@ -116,6 +119,7 @@ class Printer(using Raise, ShowCfg, State, SymbolPrinter, Config):
     && methods.isEmpty
     && preCtor.forall(_.isEmpty)
     && ctor.isEmpty
+    && ctorSym.isEmpty
     then doc""
     else doc" " :: braced(doc"${docPrivFlds}${docPubFlds}${docCtor}${docMethods}")
   
