@@ -134,50 +134,18 @@ object TrackableSelect:
       Some((qual, field, owner))
     case _ => N
 
-object ClassCtorRef:
-  /** Resolves a class-ctor `TermSymbol` to its corresponding class symbol. */
-  def unapply(p: Path)(using Elaborator.State): Opt[ClassSymbol] =
-    def classCtorSymbol(sym: Symbol)(using Elaborator.State): Opt[ClassSymbol] =
-      sym match
-      case clsCtor: ClassCtorSymbol => clsCtor.owner
-      case _ => N
-    p match
-    case Value.SimpleRef(sym) => classCtorSymbol(sym)
-    case Value.MemberRef(_, disamb) => classCtorSymbol(disamb)
-    case Value.This(sym) => classCtorSymbol(sym)
-    case s: Select => s.symbol.flatMap(classCtorSymbol)
-    case _ => N
-
-object ClassSymRef:
-  def unapply(p: Path)(using Elaborator.State): Opt[ClassSymbol] = p match
-    case Value.SimpleRef(sym) => sym.asCls
-    case Value.MemberRef(_, disamb) => disamb.asCls
-    case Value.This(sym) => sym.asCls
-    case s: Select => s.symbol.flatMap(_.asCls)
-    case _ => N
-
-object ObjectRef:
-  def unapply(p: Path)(using Elaborator.State): Opt[ModuleOrObjectSymbol] = p match
-    case Value.SimpleRef(sym) => sym.asObj
-    case Value.MemberRef(_, disamb) => disamb.asObj
-    case Value.This(sym) => sym.asObj
-    case s: Select => s.symbol.flatMap(_.asObj)
-    case _ => N
+object MemberRefTo:
+  def unapply(p: Path) = p.targetSymbol
 
 object CtorProducer:
   /** Extracts result forms that produce a concrete `Ctor` flow strategy. */
-  def unapply(r: Result)(using Elaborator.State, Raise): Opt[CtorCls -> Ls[Arg]] =
-    def rejectObjectUse(errMsg: Message): Opt[CtorCls -> Ls[Arg]] =
-      raise(ErrorReport(errMsg -> r.toLoc :: Nil))
-      N
+  def unapply(r: Result)(using Elaborator.State): Opt[CtorCls -> Ls[Arg]] =
     r match
-    case Instantiate(_, ClassSymRef(cls), argss) => S(cls -> argss.flatten)
-    case Instantiate(_, ObjectRef(_), _) => rejectObjectUse(msg"Expected a class; found object.")
-    case Call(ClassCtorRef(ctor), argss) => S(ctor -> argss.flatten)
-    case Call(ObjectRef(_), _) => rejectObjectUse(msg"Expected a class ctor; found object.")
-    case ObjectRef(ctor) => S(ctor -> Nil)
+    case Instantiate(_, MemberRefTo(cls: ClassSymbol), argss) => S(cls -> argss.flatten)
+    case Call(MemberRefTo(cls: ClassCtorSymbol), argss) => S(cls.owner.get -> argss.flatten)
+    case MemberRefTo(ctor: ModuleOrObjectSymbol) => S(ctor -> Nil)
     case Tuple(_, args) => S(args.size, args)
-    case _ => None
+    case _ => N
 
 object FunRef:
   def unapply(s: Path)(using Elaborator.State): Option[TermSymbol] = s match
@@ -1025,7 +993,7 @@ class FlowConstraintsCollector(
           UnknownProd
         case p: Path =>
           p match
-          case ClassCtorRef(_) => UnknownProd
+          case MemberRefTo(_: ClassCtorSymbol) => UnknownProd
           case refSite@FunRef(f) =>
             funsToProdStratScheme.get(f) match
             case Some(fScheme) =>

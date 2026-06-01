@@ -42,19 +42,10 @@ new()
 //│ ║  l.40: 	new()
 //│ ║        	   ^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[COMPILATION ERROR] Expected a class; found object.
-//│ ═══[COMPILATION ERROR] Expected a class; found object.
-//│ ═══[COMPILATION ERROR] Expected a class; found object.
-//│ ═══[COMPILATION ERROR] Expected a class; found object.
 //│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
 
 :re
-:e
 new!()
-//│ ═══[COMPILATION ERROR] Expected a class; found object.
-//│ ═══[COMPILATION ERROR] Expected a class; found object.
-//│ ═══[COMPILATION ERROR] Expected a class; found object.
-//│ ═══[COMPILATION ERROR] Expected a class; found object.
 //│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
 
 :e
@@ -62,16 +53,12 @@ new!()
 new {}
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found unit value.
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[COMPILATION ERROR] Expected a class; found object.
-//│ ═══[COMPILATION ERROR] Expected a class; found object.
-//│ ═══[COMPILATION ERROR] Expected a class; found object.
-//│ ═══[COMPILATION ERROR] Expected a class; found object.
 //│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
 
 :pe
 new! {}
 //│ ╔══[PARSE ERROR] Expected expression after prefix keyword 'new!'; found end of block instead
-//│ ║  l.72: 	new! {}
+//│ ║  l.59: 	new! {}
 //│ ╙──      	     ^^
 
 
@@ -88,7 +75,7 @@ new { x = 1 }
 //│       lhs = Ident of "x"
 //│       rhs = IntLit of 1
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.83: 	new { x = 1 }
+//│ ║  l.70: 	new { x = 1 }
 //│ ╙──      	      ^
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found block.
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
@@ -98,7 +85,7 @@ new { x = 1 }
 :e
 new! { x = 1 }
 //│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: prefix operator 'new!'
-//│ ║  l.99: 	new! { x = 1 }
+//│ ║  l.86: 	new! { x = 1 }
 //│ ╙──      	^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -106,8 +93,8 @@ new! { x = 1 }
 :e
 let xs = new Oopsie
 //│ ╔══[COMPILATION ERROR] Name not found: Oopsie
-//│ ║  l.107: 	let xs = new Oopsie
-//│ ╙──       	             ^^^^^^
+//│ ║  l.94: 	let xs = new Oopsie
+//│ ╙──      	             ^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found ‹error›.
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

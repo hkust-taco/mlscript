@@ -33,8 +33,11 @@ enum Annot extends AutoLocated:
   // function values. `whichParamList` is the zero-based index of the parameter
   // list whose corresponding function value is one-shot.
   // For example, on `fun f(a)(b)`,
-  // `Affine(0)` says that `f` is one-shot;
-  // `Affine(1)` says that each function value produced by `f(a)` is one-shot.
+  // - its list of annotations containing `Affine(0)` says that `f` is one-shot;
+  // - its list of annotations containing `Affine(1)` says that
+  //   each function value produced by `f(a)` is one-shot;
+  // - its list of annotations containing both `Affine(0)` and `Affine(1)` says that
+  //   `f` is one-shot and each function value produced by `f(a)` is also one-shot.
   case Affine(whichParamList: Int)
   
   def symbol: Opt[Symbol] = this match
