@@ -121,7 +121,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
                 blockCtor("ConcreteClassSymbol", Ls(toValue(name), path, paramsOpt, auxParams), symName)(k)
         case _: ModuleOrObjectSymbol =>
           blockCtor("ModuleSymbol", Ls(toValue(name), path), symName)(k)
-    case _: NoSymbol =>
+    case NoSymbol =>
       blockCtor("NoSymbol", Nil, symName)(k)
     case sym: LocalVarSymbol =>
       val name = scope.allocateOrGetName(sym)
@@ -288,7 +288,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           blockCtor("ValueSimpleRef", Ls(xSym)): xStaged =>
             (Assign(x, xStaged, _)):
               given Context = x match
-                case _: NoSymbol => ctx.clone()
+                case NoSymbol => ctx.clone()
                 case x: ValueSymbol => ctx.clone() += x.asPath -> xStaged
               transformBlock(b): (z, ctx) =>
                 blockCtor("Assign", Ls(xSym, y, z), "assign")(k(_, ctx))

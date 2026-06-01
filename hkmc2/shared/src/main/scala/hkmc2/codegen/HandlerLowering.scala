@@ -390,7 +390,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             applyResult(rhs)
             lhs match
             case lhs: LocalVarSymbol => assignToSym(lhs)
-            case _: NoSymbol =>
+            case NoSymbol =>
             applyBlock(rest)
           case Define(defn: ValDefn, rest) =>
             applyPath(defn.rhs)
@@ -752,7 +752,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val blk = blockBuilder
       .staticif(
         !opt.doNotInstrumentTopLevelModCtor,
-        _.assign(State.noSymbol, Call(paths.resetEffects, Nil ne_:: Nil)(true, false, false))
+        _.assign(NoSymbol, Call(paths.resetEffects, Nil ne_:: Nil)(true, false, false))
       )
       .rest(transformed)
     (blk, stackSafetyMap)

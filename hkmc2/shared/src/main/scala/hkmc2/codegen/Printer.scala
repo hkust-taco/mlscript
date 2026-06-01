@@ -56,7 +56,7 @@ class Printer(using Raise, ShowCfg, State, SymbolPrinter, Config):
       doc"begin #{  # ${print(sub)}; #}  # ${print(rest)}"
     case TryBlock(sub, finallyDo, rest) =>
       doc"try #{  # ${print(sub)} #}  # finally #{  # ${print(finallyDo)}; #  #} ${print(rest)}"
-    case Assign(_: NoSymbol, rhs, rest) =>
+    case Assign(NoSymbol, rhs, rest) =>
       doc"do ${print(rhs)}; # ${print(rest)}"
     case Assign(lhs: (LocalVarSymbol | TermSymbol), rhs, rest) =>
       doc"set ${print(lhs)} = ${print(rhs)}; # ${print(rest)}"

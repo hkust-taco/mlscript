@@ -895,7 +895,7 @@ class FlowConstraintsCollector(
       case Assign(lhs, rhs, rest) =>
         val rhsStrat = processResult(rhs)
         lhs.match
-          case _: NoSymbol => ()
+          case NoSymbol => ()
           case lhs: (LocalVarSymbol | TermSymbol) => cc.constrain(rhsStrat, generatedProdVars(lhs).asConsStrat)
         processBlock(rest)
       case TryBlock(sub, finallyDo, rest) =>

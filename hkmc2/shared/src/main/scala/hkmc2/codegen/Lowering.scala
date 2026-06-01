@@ -154,7 +154,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       isTailCall = false,
       args,
       N, // TODO: location?
-    )(c => Assign(State.noSymbol, c, End()))
+    )(c => Assign(NoSymbol, c, End()))
   
   // * Used to work around Scala's @tailrec annotation for those few calls that are not in tail position.
   final def term_nonTail(t: st, inStmtPos: Bool = false)(k: Result => Block)(using LoweringCtx): Block =
@@ -1458,7 +1458,7 @@ trait LoweringSelSanityChecks(using Config, TL, Raise, State)
       // * the access should throw an error like `TypeError: Cannot read property 'f' of undefined`.
       blockBuilder
         .assign(selRes, Select(p, nme)(disamb))
-        .assign(State.noSymbol, Select(p, Tree.Ident(nme.name+"$__checkNotMethod"))(N))
+        .assign(NoSymbol, Select(p, Tree.Ident(nme.name+"$__checkNotMethod"))(N))
           .ifthen(selRes.asSimpleRef,
             Case.Lit(syntax.Tree.UnitLit(false)),
             Throw(Instantiate(mut = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(N),

@@ -156,7 +156,7 @@ private class SymbolRefresherInternal(m: MutMap[Symbol, Symbol])(using State) ex
   override def applyImportSymbol(s: ImportSymbol): ImportSymbol = m.getOrElse(s, s).asInstanceOf[ImportSymbol]
   
   override def applyAssignLhs(s: Assignable): Assignable = s match
-    case s: NoSymbol => s
+    case NoSymbol => NoSymbol
     case s: LocalVarSymbol => m.getOrElse(s, s).asInstanceOf[LocalVarSymbol]
   
 class SymbolRefresher(m: Map[Symbol, Symbol])(using State) extends SymbolRefresherInternal(MutMap.from(m))

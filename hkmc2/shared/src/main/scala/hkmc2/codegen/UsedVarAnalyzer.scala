@@ -58,7 +58,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
           accessed.refdDefns.add(scopeData.getUID(s))
         case Assign(lhs, rhs, rest) =>
           lhs match
-          case _: NoSymbol => ()
+          case NoSymbol => ()
           case lhs: ScopedOrInnerSymbol =>
             accessed.accessed.add(lhs)
             accessed.mutated.add(lhs)
@@ -334,7 +334,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
           case Assign(lhs, rhs, rest) =>
             applyResult(rhs)
             lhs match
-            case _: NoSymbol => ()
+            case NoSymbol => ()
             case lhs: ScopedOrInnerSymbol =>
               if hasReader.contains(lhs) || hasMutator.contains(lhs) then reqCapture += lhs
               if !linearValueVars.contains(lhs) then mutated += lhs

@@ -33,7 +33,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
         .rest:
           sym match
           case sym: LocalVarSymbol => f(sym.asSimpleRef)
-          case _: NoSymbol => f(Value.Lit(Tree.UnitLit(false)))
+          case NoSymbol => f(Value.Lit(Tree.UnitLit(false)))
   
   def wrapStackSafe(body: Block, resSym: Assignable, rest: Block) =
     val bodSym = BlockMemberSymbol("‹stack safe body›", Nil, false)
@@ -45,7 +45,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
   def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Assignable, curDepth: => LocalVarSymbol) =
     sym match
     case sym: LocalVarSymbol => wrapStackSafe(Ret(res), sym, f(sym.asSimpleRef))
-    case _: NoSymbol => wrapStackSafe(Ret(res), sym, f(Value.Lit(Tree.UnitLit(false))))
+    case NoSymbol => wrapStackSafe(Ret(res), sym, f(Value.Lit(Tree.UnitLit(false))))
 
   // Rewrites anything that can contain a Call to increase the stack depth
   def transform(b: Block, curDepth: => LocalVarSymbol, isTopLevel: Bool = false): Block =

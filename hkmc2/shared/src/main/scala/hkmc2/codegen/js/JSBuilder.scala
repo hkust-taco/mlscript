@@ -338,7 +338,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   def returningTerm(t: Block, endSemi: Bool)(using Raise, Scope): Document =
     def mkSemi = if endSemi then ";" else ""
     t match
-    case Assign(l: NoSymbol, r, rst) =>
+    case Assign(NoSymbol, r, rst) =>
       doc" # ${result(r)};${returningTerm(rst, endSemi)}"
     case Assign(l: (LocalVarSymbol | TermSymbol), r, rst) =>
       doc" # ${

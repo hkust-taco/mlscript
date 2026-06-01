@@ -45,7 +45,7 @@ case class Program(
 type SimpleSymbol = LocalVarSymbol | BuiltinSymbol
 
 /** Symbol that can be used as the left-hand side of an `Assign`. */
-type Assignable = LocalVarSymbol | NoSymbol
+type Assignable = LocalVarSymbol | NoSymbol.type
 
 /** Symbols that `Scoped` introduces as block-local bindings.
   * This deliberately excludes things like `TermSymbol`s, which never need to be scoped.
@@ -147,7 +147,7 @@ sealed abstract class Block extends Product:
   lazy val definedVars: Set[BoundSymbol] = this match
     case _: Return | _: Throw | _: Unreachable => Set.empty
     case Begin(sub, rst) => sub.definedVars ++ rst.definedVars
-    case Assign(_: NoSymbol, r, rst) => rst.definedVars
+    case Assign(NoSymbol, r, rst) => rst.definedVars
     case Assign(l: LocalVarSymbol, r, rst) => rst.definedVars + l
     case AssignField(l, n, r, rst) => rst.definedVars
     case AssignDynField(l, n, ai, r, rst) => rst.definedVars
@@ -200,7 +200,7 @@ sealed abstract class Block extends Product:
     case Continue(label) => Set.single(label)
     case Begin(sub, rest) => sub.freeVars ++ rest.freeVars
     case TryBlock(sub, finallyDo, rest) => sub.freeVars ++ finallyDo.freeVars ++ rest.freeVars
-    case Assign(_: NoSymbol, rhs, rest) => rhs.freeVars ++ rest.freeVars
+    case Assign(NoSymbol, rhs, rest) => rhs.freeVars ++ rest.freeVars
     case Assign(lhs: LocalVarSymbol, rhs, rest) => Set.single(lhs) ++ rhs.freeVars ++ rest.freeVars
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVars ++ rhs.freeVars ++ rest.freeVars
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVars ++ fld.freeVars ++ rhs.freeVars ++ rest.freeVars
@@ -434,14 +434,14 @@ object Assign:
     case Scoped(syms, body) => Scoped(syms, Assign(lhs, rhs, body))
     case _ =>
       lhs match
-      case _: NoSymbol =>
+      case NoSymbol =>
         if rhs.isPure then rest else new Assign(lhs, rhs, rest)
       case _ => new Assign(lhs, rhs, rest)
   def discard(res: Result, rest: Block)(using State): Block =
     res match
     case _: Value | _: Lambda => rest
     case p: Path if p.isPure => rest
-    case r => Assign(State.noSymbol, r, rest)
+    case r => Assign(NoSymbol, r, rest)
 object AssignField:
   def apply(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(symbol: Opt[MemberSymbol]): Block = rest match
     case Scoped(syms, body) => Scoped(syms, AssignField(lhs, nme, rhs, body)(symbol))
@@ -1000,7 +1000,7 @@ object Value:
 
   @deprecated("Use Value.SimpleRef, Value.MemberRef, or Value.This instead.")
   object Ref:
-    def apply(l: ValueSymbol | NoSymbol, disamb: Opt[DefinitionSymbol[?]]): Value.RefLike =
+    def apply(l: ValueSymbol | NoSymbol.type, disamb: Opt[DefinitionSymbol[?]]): Value.RefLike =
       l match
         case l: SimpleSymbol => l.asSimpleRef
         case l: TermSymbol => l.asPath
@@ -1008,7 +1008,7 @@ object Value:
           disamb.getOrElse:
             lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")
         case sym: InnerSymbol => sym.asThis
-        case _: NoSymbol => lastWords("NoSymbol should not be used as a Path/Value")
+        case NoSymbol => lastWords("NoSymbol should not be used as a Path/Value")
     
     // * Some helper constructors that allow omitting the disambiguation symbol.
     // * If the ref itself is a DefinitionSymbol, then disambiguating it results in itself.
