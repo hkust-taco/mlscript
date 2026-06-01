@@ -88,18 +88,6 @@ type SelField = TermSymbol | Int
 type FunId = (funSym: Symbol, whichParamList: Int) | ResultId
 type OriginId = ResultId | FunId
 
-/** Extracts the underlying symbol of a variable-like reference, for flow-tracking use. */
-object TrackedSymOf:
-  def unapply(p: Value.RefLike | Select)(using Elaborator.State): Opt[Symbol] = p match
-    case Value.SimpleRef(sym) => S(sym)
-    case Value.MemberRef(_, disamb) => S(disamb)
-    case Value.This(sym) => S(sym)
-    case s: Select => s.symbol.flatMap: selSym =>
-      for
-        selTermSym <- selSym.asTrm
-        owner <- selTermSym.owner
-        _ <- owner.asMod
-      yield selTermSym
 
 object TrackableFieldSelect:
   def unapply(s: Select): Opt[Path -> (field: TermSymbol, owner: ClassSymbol)] =
@@ -149,8 +137,9 @@ object CtorProducer:
 
 object FunRef:
   def unapply(s: Path)(using Elaborator.State): Option[TermSymbol] = s match
-    case TrackedSymOf(tSym: TermSymbol) if tSym.k is syntax.Fun => Some(tSym)
-    case _ => None
+    case MemberRefTo(tSym: TermSymbol)
+      if (tSym.k is syntax.Fun) && tSym.owner.forall(_.asMod.isDefined) => S(tSym)
+    case _ => N
 
 type StratVarId = Uid[StratVar]
 
@@ -993,25 +982,22 @@ class FlowConstraintsCollector(
           UnknownProd
         case p: Path =>
           p match
-          case MemberRefTo(_: ClassCtorSymbol) => UnknownProd
           case refSite@FunRef(f) =>
             funsToProdStratScheme.get(f) match
             case Some(fScheme) =>
               fScheme.instantiate(refSite.uid, f)
             case None => generatedProdVars(f).asProdStrat
-          case refLk@TrackedSymOf(sym) =>
-            refLk match
-              case Select(p, _) => cc.constrain(processResult(p), UnknownCons)
-              case _ => ()
-            generatedProdVars(sym).asProdStrat
-          case _: Value.RefLike => lastWords("already handled in `TrackedSymOf` case")
-          case Select(qual, name) =>
+          case s@Select(qual, name) =>
             cc.constrain(processResult(qual), UnknownCons)
-            UnknownProd
+            s.symbol.fold(UnknownProd): selSym =>
+              generatedProdVars(selSym).asProdStrat
           case DynSelect(qual, fld, arrayIdx) =>
             cc.constrain(processResult(qual), UnknownCons)
             cc.constrain(processResult(fld), UnknownCons)
             UnknownProd
+          case Value.MemberRef(_, disamb) => generatedProdVars(disamb).asProdStrat
+          case Value.SimpleRef(sym) => generatedProdVars(sym).asProdStrat
+          case Value.This(_) => UnknownProd
           case Value.Lit(lit) => UnknownProd
   }
 end FlowConstraintsCollector
