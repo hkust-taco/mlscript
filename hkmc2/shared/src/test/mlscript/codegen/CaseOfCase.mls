@@ -22,15 +22,10 @@ fun test(x) =
 //│     arg$Some$0$1 = x.value;
 //│     tmp = arg$Some$0$1 + 1;
 //│     tmp1 = Some1(tmp);
-//│   } else if (x instanceof None1.class) {
-//│     tmp1 = None1;
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
-//│   if (tmp1 instanceof Some1.class) {
 //│     arg$Some$0$ = tmp1.value;
 //│     return Predef.print(arg$Some$0$)
-//│   } else if (tmp1 instanceof None1.class) {
+//│   } else if (x instanceof None1.class) {
+//│     tmp1 = None1;
 //│     return Predef.print("none")
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));

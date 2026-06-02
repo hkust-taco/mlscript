@@ -117,6 +117,7 @@ fun f(x) =
 //│       case 2:
 //│         runtime.resumeValue;
 //│         pc = 1;
+//│         return runtime.Unit;
 //│       case 1:
 //│         return runtime.Unit;
 //│       case 0:

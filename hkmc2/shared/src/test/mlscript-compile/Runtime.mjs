@@ -1091,12 +1091,12 @@ let Runtime1;
     tmp = Runtime.stackDepth >= Runtime.stackLimit;
     if (tmp === true) {
       tmp1 = Runtime.stackHandler !== null;
-    } else {
-      tmp1 = false;
+      if (tmp1 === true) {
+        return runtime.safeCall(Runtime.stackHandler.delay())
+      }
+      return runtime.Unit;
     }
-    if (tmp1 === true) {
-      return runtime.safeCall(Runtime.stackHandler.delay())
-    }
+    tmp1 = false;
     return runtime.Unit;
   }
   static runStackSafe(limit, f) {

@@ -51,19 +51,12 @@ in if c is
 //│ match scrut
 //│   true =>
 //│     set tmp = C⁰(123);
-//│     end
-//│   else
-//│     set tmp = D⁰(456);
-//│     end
-//│ match tmp
-//│   C¹ =>
 //│     set arg$C$0$ = tmp.a⁰;
 //│     return Predef⁰.print⁰(arg$C$0$)
-//│   D¹ =>
+//│   else
+//│     set tmp = D⁰(456);
 //│     set arg$D$0$ = tmp.b⁰;
 //│     return Predef⁰.print⁰(arg$D$0$)
-//│   else
-//│     unreachable /* exhaustive match */
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 123

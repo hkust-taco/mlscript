@@ -17,6 +17,20 @@ Please add any important design notes, problems you encounter, decisions you mad
 
 ---
 
+Implemented in `BlockSimplifier.CaseOfCase`.
+
+Design notes:
+  * The pass runs after dead-code elimination and value propagation, before each
+    inliner round. This lets it see normalized arms from the preceding inliner
+    round instead of temporary inliner labels.
+  * Constructor knowledge currently covers literals, classes, and objects. It
+    uses semantic definitions as a fallback for imported constructors, whose
+    more precise MIR symbol information is not always available.
+  * At most one unknown producer path is retained with the original consumer
+    match. Known paths are specialized around it.
+  * Consumer branches are refreshed with `SymbolRefresher` when copied. A copy
+    is only allowed when its branch size is at most the configured inlining
+    threshold.
 
 
 

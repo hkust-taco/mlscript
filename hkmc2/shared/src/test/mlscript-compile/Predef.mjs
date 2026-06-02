@@ -151,7 +151,7 @@ let Predef1;
     }
   }
   static equals(a, b) {
-    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, lambda, tmp, tmp1, lambda1;
+    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, lambda, lambda1;
     scrut = a === b;
     if (scrut === true) {
       return true
@@ -161,9 +161,9 @@ let Predef1;
         scrut1 = a.length === b.length;
         if (scrut1 === true) {
           lambda1 = (undefined, function (a1, i) {
-            let tmp2;
-            tmp2 = runtime.safeCall(b.at(i));
-            return Predef.equals(a1, tmp2)
+            let tmp;
+            tmp = runtime.safeCall(b.at(i));
+            return Predef.equals(a1, tmp)
           });
           return runtime.safeCall(a.every(lambda1))
         }
@@ -199,26 +199,13 @@ let Predef1;
                   });
                   scrut5 = runtime.safeCall(md[2].every(lambda));
                   if (scrut5 === true) {
-                    tmp = true;
-                  } else {
-                    tmp = false;
+                    return true
                   }
-                } else {
-                  tmp = false;
+                  return false;
                 }
-                if (tmp === true) {
-                  tmp1 = true;
-                } else {
-                  tmp1 = false;
-                }
-              } else {
-                tmp1 = false;
+                return false;
               }
-            } else {
-              tmp1 = false;
-            }
-            if (tmp1 === true) {
-              return true
+              return false;
             }
             return false;
           }

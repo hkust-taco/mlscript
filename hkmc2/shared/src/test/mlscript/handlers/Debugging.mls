@@ -85,6 +85,7 @@ fun f() =
 //│       case 2:
 //│         runtime.resumeValue;
 //│         pc = 1;
+//│         return j / i;
 //│       case 1:
 //│         return j / i;
 //│     }
@@ -106,8 +107,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:106:3)
-//│ 	at lambda_test (Debugging.mls:103:3)
+//│ 	at lambda (Debugging.mls:107:3)
+//│ 	at lambda_test (Debugging.mls:104:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -159,16 +160,16 @@ let res =
 :re
 res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Test.test (Debugging.mls:145:15)
-//│ 	at Test.main (Debugging.mls:148:5)
+//│ 	at Test.test (Debugging.mls:146:15)
+//│ 	at Test.main (Debugging.mls:149:5)
 
 set res = res.resumeWith(42)
 
 :re
 res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Test.test (Debugging.mls:145:15)
-//│ 	at Test.main (Debugging.mls:148:16)
+//│ 	at Test.test (Debugging.mls:146:15)
+//│ 	at Test.main (Debugging.mls:149:16)
 
 :expect 0.33676533676533676
 res.resumeWith(666)
@@ -188,8 +189,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:182:3) with locals: j=200
+//│ > 	at f (Debugging.mls:183:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:184:3)
+//│ > 	at f (Debugging.mls:185:3)
 //│ > Stack Trace:
 //│ > 	at tail position
