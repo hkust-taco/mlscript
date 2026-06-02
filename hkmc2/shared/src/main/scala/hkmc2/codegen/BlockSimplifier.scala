@@ -746,6 +746,8 @@ class BlockSimplifier
         
         def analyzeValues(asst: AssignInfo): Set[Value.RefLike] =
           if emptyHanded && litValue === false then
+            // * [Future: dead assignment removal]
+            // This introduce a huge time complexity issue.
             // analyzeAssignments(asst)
             Set.empty
           else asst match
@@ -781,6 +783,8 @@ class BlockSimplifier
               val l = analyzeValues(a1)
               if l.isEmpty && litValue === false then
                 emptyHanded = true
+                // * [Future: dead assignment removal]
+                // This introduce a huge time complexity issue.
                 // analyzeAssignments(a2)
                 Set.empty
               else l & analyzeValues(a2)
