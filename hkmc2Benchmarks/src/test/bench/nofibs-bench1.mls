@@ -6,7 +6,7 @@
 ====================================================================================================
 
 
-import "./mlscript-compile/Benchmark.mls"
+import "../../../../hkmc2/shared/src/test/mlscript-compile/Benchmark.mls"
 open Benchmark
 
 

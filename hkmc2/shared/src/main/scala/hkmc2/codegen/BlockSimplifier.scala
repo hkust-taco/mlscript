@@ -746,7 +746,7 @@ class BlockSimplifier
         
         def analyzeValues(asst: AssignInfo): Set[Value.RefLike] =
           if emptyHanded && litValue === false then
-            analyzeAssignments(asst)
+            // analyzeAssignments(asst)
             Set.empty
           else asst match
             case Unknown =>
@@ -781,7 +781,7 @@ class BlockSimplifier
               val l = analyzeValues(a1)
               if l.isEmpty && litValue === false then
                 emptyHanded = true
-                analyzeAssignments(a2)
+                // analyzeAssignments(a2)
                 Set.empty
               else l & analyzeValues(a2)
         
