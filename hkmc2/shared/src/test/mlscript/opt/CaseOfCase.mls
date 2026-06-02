@@ -1,6 +1,8 @@
 :js
 
 
+open annotations { inline }
+
 import "../../mlscript-compile/Option.mls"
 open Option
 
@@ -187,13 +189,13 @@ class PrefixBox(val value)
 :soir
 fun prefixDependency(x) =
   let produced = if x then PrefixBox(x) else PrefixBox(false)
-  let copy = produced.value
+  let copy = produced.PrefixBox#value
   if produced is
     PrefixBox(_) then copy
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let prefixDependency⁰;
 //│ define prefixDependency⁰ as fun prefixDependency¹(x) {
-//│   let tmp, selRes;
+//│   let copy, tmp;
 //│   match x
 //│     true =>
 //│       set tmp = PrefixBox⁰(x);
@@ -201,18 +203,12 @@ fun prefixDependency(x) =
 //│     else
 //│       set tmp = PrefixBox⁰(false);
 //│       end
-//│   set selRes = tmp.value﹖;
-//│   do tmp.value$__checkNotMethod﹖;
-//│   match selRes
-//│     undefined =>
-//│       throw new globalThis⁰.Error﹖("Access to required field 'value' yielded 'undefined'")
+//│   set copy = tmp.value¹;
+//│   match tmp
+//│     PrefixBox¹ =>
+//│       return copy
 //│     else
-//│       match tmp
-//│         PrefixBox¹ =>
-//│           return selRes
-//│         else
-//│           throw new globalThis⁰.Error⁰("match error")
-//│       end
+//│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
 //│ end
@@ -228,6 +224,7 @@ prefixDependency(false)
 
 
 
+@inline
 fun partlyKnownProducer(x) = if x is
   "" then 0
   "1" then x.length
@@ -308,3 +305,87 @@ x => if multiProducer(x) is
 //│ return lambda⁵
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
+
+
+// Note: should NOT optimize because that would lead to duplicating a branch whose size is above the inlining threshold
+:soir
+x => if partlyKnownProducer(x) is
+  1 then print("O")
+  else print of
+    "Hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello"
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let lambda⁶;
+//│ @private
+//│ define lambda⁶ as fun lambda⁷(x) {
+//│   let inlinedVal, selRes;
+//│   match x
+//│     "" =>
+//│       set inlinedVal = 0;
+//│       end
+//│     "1" =>
+//│       set selRes = x.length﹖;
+//│       do x.length$__checkNotMethod﹖;
+//│       match selRes
+//│         undefined =>
+//│           throw new globalThis⁰.Error﹖("Access to required field 'length' yielded 'undefined'")
+//│         else
+//│           set inlinedVal = selRes;
+//│           end
+//│       end
+//│     "2" =>
+//│       set inlinedVal = 1;
+//│       end
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   match inlinedVal
+//│     1 =>
+//│       return Predef⁰.print⁰("O")
+//│     else
+//│       return Predef⁰.print⁰("Hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello")
+//│   end
+//│ };
+//│ return lambda⁷
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+
+// Note: should be optimized as the large branch is not duplicated in this case
+:soir
+x => if partlyKnownProducer(x) is
+  0 then print("Z")
+  1 then print("O")
+  else print of
+    "Hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello"
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let lambda⁸;
+//│ @private
+//│ define lambda⁸ as fun lambda⁹(x) {
+//│   let selRes;
+//│   match x
+//│     "" =>
+//│       return Predef⁰.print⁰("Z")
+//│     "1" =>
+//│       set selRes = x.length﹖;
+//│       do x.length$__checkNotMethod﹖;
+//│       match selRes
+//│         undefined =>
+//│           throw new globalThis⁰.Error﹖("Access to required field 'length' yielded 'undefined'")
+//│         0 =>
+//│           return Predef⁰.print⁰("Z")
+//│         1 =>
+//│           return Predef⁰.print⁰("O")
+//│         else
+//│           return Predef⁰.print⁰("Hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello")
+//│       end
+//│     "2" =>
+//│       return Predef⁰.print⁰("O")
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ return lambda⁹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+
+
