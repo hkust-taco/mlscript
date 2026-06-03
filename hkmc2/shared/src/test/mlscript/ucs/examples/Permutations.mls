@@ -36,7 +36,7 @@ fun (~>..) insertAllPositions(z, xs) =
 //│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
 //│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
 //│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
-//│     at showLists (REPL22:1:473)
+//│     at showLists (REPL22:1:478)
 //│     at Predef.pipeInto (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:141:29)
 //│     at REPL28:1:270
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
@@ -59,7 +59,7 @@ permutations(Nil) |> showLists
 //│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
 //│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
 //│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
-//│     at showLists (REPL22:1:473)
+//│     at showLists (REPL22:1:478)
 //│     at Predef.pipeInto (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:141:29)
 //│     at REPL34:1:105
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
@@ -74,7 +74,7 @@ permutations(1 :: Nil) |> showLists
 //│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
 //│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
 //│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
-//│     at showLists (REPL22:1:473)
+//│     at showLists (REPL22:1:478)
 //│     at Predef.pipeInto (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:141:29)
 //│     at REPL37:1:159
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
@@ -89,7 +89,7 @@ permutations(1 :: 2 :: Nil) |> showLists
 //│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
 //│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
 //│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
-//│     at showLists (REPL22:1:473)
+//│     at showLists (REPL22:1:478)
 //│     at Predef.pipeInto (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:141:29)
 //│     at REPL40:1:212
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
@@ -104,7 +104,7 @@ permutations(1 :: 2 :: 3 :: Nil) |> showLists
 //│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
 //│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
 //│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
-//│     at showLists (REPL22:1:473)
+//│     at showLists (REPL22:1:478)
 //│     at Predef.pipeInto (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:141:29)
 //│     at REPL43:1:276
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
@@ -129,9 +129,9 @@ permutations'(Nil) |> showLists
 //│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
 //│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
 //│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
-//│     at showLists (REPL22:1:473)
+//│     at showLists (REPL22:1:478)
 //│     at Predef.pipeInto (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:141:29)
-//│     at REPL49:1:173
+//│     at REPL49:1:110
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:600:22)
 
@@ -144,9 +144,9 @@ permutations'(1 :: Nil) |> showLists
 //│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
 //│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
 //│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
-//│     at showLists (REPL22:1:473)
+//│     at showLists (REPL22:1:478)
 //│     at Predef.pipeInto (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:141:29)
-//│     at REPL52:1:218
+//│     at REPL52:1:166
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:600:22)
 
@@ -159,11 +159,11 @@ permutations'(1 :: 2 :: Nil) |> showLists
 //│     at go (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:60:36)
 //│     at Iter.rightFolded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:716:12)
 //│     at Iter.toStack (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:818:17)
-//│     at permutations$__lambda_lambda$ (REPL46:1:1580)
-//│     at REPL46:1:2230
+//│     at lambda (REPL46:1:1321)
 //│     at Iter.foldingImpl (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:680:32)
 //│     at Iter.folded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:711:17)
-//│     at permutations$__lambda_lambda$ (REPL46:1:1002)
+//│     at permutations$_ (REPL46:1:1431)
+//│     at REPL55:1:159
 
 permutations'(1 :: 2 :: 3 :: Nil) |> showLists
 //│ FAILURE: Unexpected runtime error
@@ -174,11 +174,11 @@ permutations'(1 :: 2 :: 3 :: Nil) |> showLists
 //│     at go (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:60:36)
 //│     at Iter.rightFolded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:716:12)
 //│     at Iter.toStack (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:818:17)
-//│     at permutations$__lambda_lambda$ (REPL46:1:1580)
-//│     at REPL46:1:2230
+//│     at lambda (REPL46:1:1321)
 //│     at Iter.foldingImpl (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:680:32)
 //│     at Iter.folded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:711:17)
-//│     at permutations$__lambda_lambda$ (REPL46:1:1002)
+//│     at permutations$_ (REPL46:1:1431)
+//│     at lambda (REPL46:1:991)
 
 permutations'(1 :: 2 :: 3 :: 4 :: Nil) |> showLists
 //│ FAILURE: Unexpected runtime error
@@ -189,8 +189,8 @@ permutations'(1 :: 2 :: 3 :: 4 :: Nil) |> showLists
 //│     at go (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:60:36)
 //│     at Iter.rightFolded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:716:12)
 //│     at Iter.toStack (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:818:17)
-//│     at permutations$__lambda_lambda$ (REPL46:1:1580)
-//│     at REPL46:1:2230
+//│     at lambda (REPL46:1:1321)
 //│     at Iter.foldingImpl (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:680:32)
 //│     at Iter.folded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:711:17)
-//│     at permutations$__lambda_lambda$ (REPL46:1:1002)
+//│     at permutations$_ (REPL46:1:1431)
+//│     at lambda (REPL46:1:991)

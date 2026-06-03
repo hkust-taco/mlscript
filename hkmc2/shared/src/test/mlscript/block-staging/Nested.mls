@@ -67,11 +67,13 @@ staged module LiftedNested with
 staged module LiftedLambda with
   fun foo(x) = y => x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let LiftedLambda⁰, lambda⁰, lambda$⁰, lambda$¹, Function$⁰;
-//│ define lambda$¹ as fun lambda$²(x, y) {
-//│   return lambda¹(x, y)
+//│ let LiftedLambda⁰, lambda⁰, Function$⁰;
+//│ @staged @private
+//│ define lambda⁰ as staged fun lambda¹(x, y) {
+//│   return +⁰(x, y)
 //│ };
-//│ define Function$⁰ as class extends globalThis⁰.Function⁰ Function$¹ {
+//│ @staged
+//│ define Function$⁰ as staged class extends globalThis⁰.Function⁰ Function$¹ {
 //│   private val x⁰;
 //│   constructor(x) {
 //│     do super⁰();
@@ -80,18 +82,8 @@ staged module LiftedLambda with
 //│     end
 //│   }
 //│   method call⁰ = fun call¹(y) {
-//│     return lambda$²(Function$¹.this.x⁰, y)
+//│     return lambda¹(Function$¹.this.x⁰, y)
 //│   }
-//│ };
-//│ @inline @private
-//│ define lambda$⁰ as fun lambda$³(x) {
-//│   let tmp;
-//│   set tmp = new Function$¹(x);
-//│   return tmp
-//│ };
-//│ @staged @private
-//│ define lambda⁰ as staged fun lambda¹(x, y) {
-//│   return +⁰(x, y)
 //│ };
 //│ define LiftedLambda⁰ as class LiftedLambda¹
 //│ staged module LiftedLambda² {
@@ -113,50 +105,54 @@ staged module LiftedLambda with
 //│     return tmp3
 //│   }
 //│   method foo⁰ = fun foo¹(x) {
-//│     let lambda$here;
-//│     set lambda$here = lambda$⁴(x);
-//│     return lambda$here
+//│     let tmp;
+//│     set tmp = new Function$¹(x);
+//│     return tmp
 //│   }
 //│   method foo_instr⁰ = fun foo_instr¹() {
-//│     let x, lambda$here, sym, tmp, sym1, var1, sym2, var2, tmp1, tmp2, app, sym3, tmp3, return1, assign, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
-//│     set sym = Block⁰.Symbol﹖("lambda$here");
-//│     set tmp = [sym];
-//│     set sym1 = Block⁰.Symbol﹖("lambda$");
-//│     set var1 = Block⁰.ValueMemberRef﹖(sym1);
-//│     set sym2 = Block⁰.Symbol﹖("x");
-//│     set var2 = Block⁰.ValueSimpleRef﹖(sym2);
-//│     set tmp1 = Block⁰.Arg﹖(var2);
-//│     set tmp2 = [tmp1];
-//│     set app = Block⁰.Call﹖(var1, tmp2);
-//│     set sym3 = Block⁰.Symbol﹖("lambda$here");
-//│     set tmp3 = Block⁰.ValueSimpleRef﹖(sym3);
-//│     set lambda$here = tmp3;
-//│     set return1 = Block⁰.Return﹖(tmp3);
-//│     set assign = Block⁰.Assign﹖(sym3, app, return1);
-//│     set tmp4 = Block⁰.Scoped﹖(tmp, assign);
-//│     set tmp5 = Block⁰.Symbol﹖("x");
-//│     set tmp6 = Block⁰.Symbol﹖("foo");
-//│     set tmp7 = [tmp5];
-//│     set tmp8 = [tmp7];
-//│     set tmp9 = Block⁰.FunDefn﹖(tmp6, tmp8, tmp4, true);
-//│     return tmp9
+//│     let x, tmp, sym, tmp1, sym1, var1, tmp2, tmp3, sym2, tmp4, tmp5, sym3, var2, tmp6, inst, sym4, tmp7, return1, assign, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13;
+//│     set sym = Block⁰.Symbol﹖("tmp");
+//│     set tmp1 = [sym];
+//│     set sym1 = Block⁰.Symbol﹖("x");
+//│     set var1 = Block⁰.ValueSimpleRef﹖(sym1);
+//│     set tmp2 = Block⁰.Arg﹖(var1);
+//│     set tmp3 = option⁰.None﹖;
+//│     set sym2 = Block⁰.Symbol﹖("x1");
+//│     set tmp4 = [sym2];
+//│     set tmp5 = [tmp4];
+//│     set sym3 = Block⁰.ConcreteClassSymbol﹖("Function$", Function$¹, tmp3, tmp5);
+//│     set var2 = Block⁰.ValueMemberRef﹖(sym3);
+//│     set tmp6 = [tmp2];
+//│     set inst = Block⁰.Instantiate﹖(var2, tmp6);
+//│     set sym4 = Block⁰.Symbol﹖("tmp");
+//│     set tmp7 = Block⁰.ValueSimpleRef﹖(sym4);
+//│     set tmp = tmp7;
+//│     set return1 = Block⁰.Return﹖(tmp7);
+//│     set assign = Block⁰.Assign﹖(sym4, inst, return1);
+//│     set tmp8 = Block⁰.Scoped﹖(tmp1, assign);
+//│     set tmp9 = Block⁰.Symbol﹖("x");
+//│     set tmp10 = Block⁰.Symbol﹖("foo");
+//│     set tmp11 = [tmp9];
+//│     set tmp12 = [tmp11];
+//│     set tmp13 = Block⁰.FunDefn﹖(tmp10, tmp12, tmp8, true);
+//│     return tmp13
 //│   }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > fun ctor_() = ()
 //│ > fun foo(x) =
-//│ >   let {lambda_here}
-//│ >   lambda_here = lambda_(x)
-//│ >   lambda_here
+//│ >   let {tmp}
+//│ >   tmp = new Function_(x)
+//│ >   tmp
 
 
 staged module LiftedMultParams with
   fun foo(x)(y) = x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let LiftedMultParams⁰, lambda$⁵, Function$²;
+//│ let LiftedMultParams⁰, lambda$⁰, Function$²;
 //│ @staged
-//│ define lambda$⁵ as staged fun lambda$⁶(x, y) {
+//│ define lambda$⁰ as staged fun lambda$¹(x, y) {
 //│   return +⁰(x, y)
 //│ };
 //│ @staged
@@ -169,7 +165,7 @@ staged module LiftedMultParams with
 //│     end
 //│   }
 //│   method call² = fun call³(y) {
-//│     return lambda$⁶(Function$³.this.x¹, y)
+//│     return lambda$¹(Function$³.this.x¹, y)
 //│   }
 //│ };
 //│ define LiftedMultParams⁰ as class LiftedMultParams¹

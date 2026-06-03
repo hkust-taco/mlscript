@@ -81,18 +81,26 @@ let f = foo(1)(2)
 print("hello")
 f(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo¹, f², lambda⁰;
-//│ @private
-//│ define lambda⁰ as fun lambda¹(z) {
-//│   return 42
-//│ };
+//│ let foo¹, f², foo$worker¹, lambda⁰;
 //│ @inline
 //│ define foo¹ as fun foo²(x)(y) {
+//│   return foo$worker²(x, y)
+//│ };
+//│ define foo$worker¹ as fun foo$worker²(x, y) {
+//│   let lambda;
 //│   do Predef⁰.print⁰("hi");
+//│   @private
+//│   define lambda as fun lambda¹(z) {
+//│     return 42
+//│   };
 //│   return lambda¹
 //│ };
 //│ do Predef⁰.print⁰("hi");
-//│ set f² = lambda¹;
+//│ @private
+//│ define lambda⁰ as fun lambda²(z) {
+//│   return 42
+//│ };
+//│ set f² = lambda²;
 //│ do Predef⁰.print⁰("hello");
 //│ return 42
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -107,7 +115,7 @@ f(3)
 :soir
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ do Predef⁰.print⁰("hi"); return lambda¹(3)
+//│ let inlinedVal; set inlinedVal = foo$worker²(1, 2); return inlinedVal(3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
 //│ = 42
@@ -118,12 +126,12 @@ let f = foo(1)(2)
 print("hello")
 f(3) + f(4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f³, tmp, tmp1;
-//│ do Predef⁰.print⁰("hi");
-//│ set f³ = lambda¹;
+//│ let f³, tmp, tmp1, inlinedVal;
+//│ set inlinedVal = foo$worker²(1, 2);
+//│ set f³ = inlinedVal;
 //│ do Predef⁰.print⁰("hello");
-//│ set tmp = lambda¹(3);
-//│ set tmp1 = lambda¹(4);
+//│ set tmp = inlinedVal(3);
+//│ set tmp1 = inlinedVal(4);
 //│ return +⁰(tmp, tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi

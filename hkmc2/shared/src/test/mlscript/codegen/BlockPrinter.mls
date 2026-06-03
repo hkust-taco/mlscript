@@ -271,7 +271,7 @@ fun foo =
   class A
   new A
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let A¹⁰, foo⁰; define A¹⁰ as class A¹¹; define foo⁰ as fun foo¹() { return new A¹¹() }; end
+//│ let foo⁰; define foo⁰ as fun foo¹() { let A; define A as class A¹⁰; return new A¹⁰() }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

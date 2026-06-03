@@ -85,9 +85,6 @@ fun (<~>) alphaEquivalent(lhs, rhs) =
       equal
     else false
   go(lhs, rhs)
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyValue (Lifter.scala:281)
-//│ ═══[WARNING] Cannot yet lift class `Var'` as it is used as a first-class class.
 
 :silent
 // A few frequently used terms.
@@ -224,84 +221,42 @@ object ByValue with
 fun redex(term) = if term is ByValue.Redex as term' then term'
 
 redex of App(id_x, id_y)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'unapply')
-//│     at redex (REPL81:1:184)
-//│     at REPL84:1:96
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = Abs(Var("y"), Var("y"))
 
 :re
 redex of id_x
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'unapply')
+//│ ═══[RUNTIME ERROR] Error: match error
 
 :re
 redex of Var("a")
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'unapply')
+//│ ═══[RUNTIME ERROR] Error: match error
 
 fun step(term) =
   if term is ByValue.Context(ByValue.Redex) as [subterm, remake] then remake(subterm)
 
 :re
 step of Var("x")
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'unapply')
+//│ ═══[RUNTIME ERROR] Error: match error
 
 :re
 step of App(App(Var("a"), Var("b")), Var("c"))
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'unapply')
+//│ ═══[RUNTIME ERROR] Error: match error
 
 :re
 step of id_x
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'unapply')
+//│ ═══[RUNTIME ERROR] Error: match error
 
 :re
 step of App(App(id_x, Var("b")), Var("c"))
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'unapply')
+//│ ═══[RUNTIME ERROR] Error: match error
 
 :expect "(λb. b) λx. x"
 step(App(App(id_a, id_b), id_x)).show
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'unapply')
-//│     at step (REPL93:1:261)
-//│     at REPL108:1:165
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
-//│ ═══[RUNTIME ERROR] Expected: '"(λb. b) λx. x"', got: 'undefined'
+//│ = "(λb. b) λx. x"
 
 :expect "λy. y"
 step(App(id_x, id_y)).show
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'unapply')
-//│     at step (REPL93:1:261)
-//│     at REPL111:1:109
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
-//│ ═══[RUNTIME ERROR] Expected: '"λy. y"', got: 'undefined'
+//│ = "λy. y"
 
 fun evalByValue(term) =
   while term is
@@ -310,49 +265,13 @@ fun evalByValue(term) =
   term
 
 evalByValue(App(id_x, App(id_x, App(id_x, App(id_x, id_y))))).show
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'unapply')
-//│     at evalByValue (REPL114:1:325)
-//│     at REPL117:1:277
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = "λy. y"
 
 evalByValue(App(succ, zero)).show
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'unapply')
-//│     at evalByValue (REPL114:1:325)
-//│     at REPL120:1:109
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = "λf. λx. f ((λf. λx. x) f x)"
 
 evalByValue(App(succ, App(succ, zero))).show
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'unapply')
-//│     at evalByValue (REPL114:1:325)
-//│     at REPL123:1:165
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = "λf. λx. f ((λf. λx. f ((λf. λx. x) f x)) f x)"
 
 :fixme
 // More inconsistent origin locations to fix...
@@ -362,16 +281,16 @@ fun evalByValue'(term) =
       set term = remake(subterm)
     else term
 //│ ╔══[COMPILATION ERROR] Pattern chaining is not supported in pattern compilation.
-//│ ║  l.217: 	      App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
+//│ ║  l.214: 	      App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
 //│ ╙──       	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Pattern chaining is not supported in pattern compilation.
-//│ ║  l.220: 	      App(Context(Hole) as [lhs, remake], Term as rhs) =>
+//│ ║  l.217: 	      App(Context(Hole) as [lhs, remake], Term as rhs) =>
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.363: 	    else term
+//│ ║  l.282: 	    else term
 //│ ╙──       	         ^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.363: 	    else term
+//│ ║  l.282: 	    else term
 //│ ╙──       	         ^^^^
 
 object ByName with
@@ -419,115 +338,36 @@ print of omega.show
 
 stepByStep(ByValue, t, 10)
 //│ > Term: (λx. λa. a) (λx. x) λy. y
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'Context' yielded 'undefined'
-//│     at stepByStep (REPL137:1:844)
-//│     at REPL142:1:39
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ > Step 1: (λx. λa. a) λy. y
+//│ > Step 2: λa. a
 
 stepByStep(ByName, App(id_x, id_y), 10)
 //│ > Term: (λx. x) λy. y
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'Context' yielded 'undefined'
-//│     at stepByStep (REPL137:1:844)
-//│     at REPL145:1:96
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ > Step 1: λy. y
 
 stepByStep(ByValue, App(id_x, App(id_y, id_a)), 10)
 //│ > Term: (λx. x) (λy. y) λa. a
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'Context' yielded 'undefined'
-//│     at stepByStep (REPL137:1:844)
-//│     at REPL148:1:152
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ > Step 1: (λx. x) λa. a
+//│ > Step 2: λa. a
 
 stepByStep(ByName, App(id_x, App(id_y, id_a)), 10)
 //│ > Term: (λx. x) (λy. y) λa. a
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'Context' yielded 'undefined'
-//│     at stepByStep (REPL137:1:844)
-//│     at REPL151:1:152
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ > Step 1: (λy. y) λa. a
+//│ > Step 2: λa. a
 
 stepByStep(ByName, App(App(id_x, id_y), id_a), 10)
 //│ > Term: (λx. x) λy. y λa. a
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'Context' yielded 'undefined'
-//│     at stepByStep (REPL137:1:844)
-//│     at REPL154:1:152
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ > Step 1: (λy. y) λa. a
+//│ > Step 2: λa. a
 
 stepByStep(ByName, App(id_x, App(id_a, id_b)), 10)
 //│ > Term: (λx. x) (λa. a) λb. b
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'Context' yielded 'undefined'
-//│     at stepByStep (REPL137:1:844)
-//│     at REPL157:1:152
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ > Step 1: (λa. a) λb. b
+//│ > Step 2: λb. b
 
 stepByStep(ByName, App(Abs(Var("u"), id_a), omega), 10)
 //│ > Term: (λu. λa. a) (λx. x x) λx. x x
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'Context' yielded 'undefined'
-//│     at stepByStep (REPL137:1:844)
-//│     at REPL160:1:202
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ > Step 1: λa. a
 
 // The following term is evaluated differently in two systems.
 
@@ -538,32 +378,18 @@ print of t.show
 
 stepByStep(ByValue, t, 10)
 //│ > Term: (λu. λa. a) (λx. x x) λx. x x
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'Context' yielded 'undefined'
-//│     at stepByStep (REPL137:1:844)
-//│     at REPL165:1:39
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ > Step 1: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 2: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 3: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 4: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 5: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 6: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 7: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 8: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 9: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 10: (λu. λa. a) (λx. x x) λx. x x
+//│ > Stopped due to too many steps.
 
 stepByStep(ByName, t, 10)
 //│ > Term: (λu. λa. a) (λx. x x) λx. x x
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'Context' yielded 'undefined'
-//│     at stepByStep (REPL137:1:844)
-//│     at REPL168:1:39
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ > Step 1: λa. a

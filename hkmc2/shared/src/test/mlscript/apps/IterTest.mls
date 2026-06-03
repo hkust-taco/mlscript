@@ -277,7 +277,7 @@ open Stack { Cons, Nil }
 //│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
 //│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
 //│     at Iter.some (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:755:38)
-//│     at REPL76:1:870
+//│     at REPL76:1:703
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:600:22)
 //│     at bound (node:domain:433:15)
@@ -294,7 +294,7 @@ open Stack { Cons, Nil }
 //│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
 //│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
 //│     at Iter.every (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:775:38)
-//│     at REPL79:1:873
+//│     at REPL79:1:703
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:600:22)
 //│     at bound (node:domain:433:15)

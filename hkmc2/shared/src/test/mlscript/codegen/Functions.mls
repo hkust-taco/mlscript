@@ -68,13 +68,13 @@ let f = outerfun(100)
 f(200)
 //│ > 301
 //│ = 401
-//│ f = fun
+//│ f = fun nested
 
 // f(200)
 
 outerfun(100)
 //│ > 301
-//│ = fun
+//│ = fun nested
 
 outerfun(100)(200)
 //│ > 301

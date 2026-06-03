@@ -71,20 +71,15 @@ f2(0.42)
 :sir
 let f3 = baz
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f3⁰, f3¹, lambda⁰, lambda$⁰;
-//│ @inline @private
-//│ define lambda$⁰ as fun lambda$¹(x)(y) {
-//│   return lambda¹(x, y)
-//│ };
-//│ @private
-//│ define lambda⁰ as fun lambda¹(x, y) {
-//│   return baz⁰(x)(instance$Ident(Int)⁰)(y)(instance$Ident(Num)⁰)
-//│ };
+//│ let f3⁰, f3¹;
 //│ @private
 //│ define f3¹ as fun f3²(x) {
-//│   let lambda$here;
-//│   set lambda$here = lambda$¹(x);
-//│   return lambda$here
+//│   let lambda;
+//│   @private
+//│   define lambda as fun lambda⁰(y) {
+//│     return baz⁰(x)(instance$Ident(Int)⁰)(y)(instance$Ident(Num)⁰)
+//│   };
+//│   return lambda⁰
 //│ };
 //│ set f3⁰ = f3²;
 //│ end
@@ -119,24 +114,17 @@ module Test with
   fun test(j)(using Int) = 0
   fun main(using Int) = test
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let Test⁰, lambda², lambda$²;
-//│ @inline @private
-//│ define lambda$² as fun lambda$³(Test, tmp)(j) {
-//│   return lambda³(Test, tmp, j)
-//│ };
-//│ @private
-//│ define lambda² as fun lambda³(Test, tmp, j) {
-//│   return Test.test⁰(j)(tmp)
-//│ };
+//│ let Test⁰;
 //│ define Test⁰ as class Test¹
 //│ module Test² {
-//│   method test¹ = fun test⁰(j)(tmp) {
+//│   method test⁰ = fun test¹(j)(tmp) {
 //│     return 0
 //│   }
 //│   method main⁰ = fun main¹(tmp) {
-//│     let lambda$here;
-//│     set lambda$here = lambda$³(Test².this, tmp);
-//│     return lambda$here
+//│     let lambda;
+//│     @private
+//│     define lambda as fun lambda¹(j) { return Test².this.test¹(j)(tmp) };
+//│     return lambda¹
 //│   }
 //│ };
 //│ end

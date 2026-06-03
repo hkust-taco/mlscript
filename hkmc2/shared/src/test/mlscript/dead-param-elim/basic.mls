@@ -125,12 +125,12 @@ private fun g() =
   fun f(a) = 3
   f(4)
 //│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f²⁰, g⁰;
-//│ define f²⁰ as fun f²¹(a) { return 3 };
+//│ let g⁰;
 //│ @private
-//│ define g⁰ as fun g¹() { return f²¹(4) };
+//│ define g⁰ as fun g¹() { let f; define f as fun f²⁰() { return 3 }; return f²⁰() };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -288,6 +288,7 @@ private fun f(x) =
   g(1, 2, 3, 4)
 f(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > prodfun g#0 @ <root> -> eliminable: {0, 1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ > 2
 //│ = [3, 4]

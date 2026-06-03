@@ -11,7 +11,7 @@ module Foo with
 //│     Foo1 = this
 //│   }
 //│   static {
-//│     Foo.self = Foo;
+//│     Foo.self = Foo1;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"];
@@ -66,7 +66,7 @@ object Foo with
 //│   constructor() {
 //│     Foo11 = this;
 //│     let tmp;
-//│     tmp = Predef.id(this);
+//│     tmp = Predef.id(Foo11);
 //│     this.self = tmp;
 //│     Object.defineProperty(this, "class", {
 //│       value: Foo10

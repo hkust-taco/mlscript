@@ -47,22 +47,7 @@ fun f(x, y, b) =
 
 :expect 121
 f(0, 0, true)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: lambda$1 is not a function
-//│     at f (REPL19:1:189)
-//│     at REPL22:1:38
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
-//│ ═══[RUNTIME ERROR] Expected: '121', got: 'undefined'
+//│ = 121
 
 
 :sir
@@ -112,13 +97,13 @@ let f = foo in bar(f)
 bar([foo].0)
 bar([foo, x => x].1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if 0 is a function.
-//│ ║  l.112: 	bar([foo].0)
-//│ ╙──       	         ^^
+//│ ║  l.97: 	bar([foo].0)
+//│ ╙──      	         ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 0$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
 //│ ╔══[COMPILATION ERROR] Cannot determine if 1 is a function.
-//│ ║  l.113: 	bar([foo, x => x].1)
-//│ ╙──       	                 ^^
+//│ ║  l.98: 	bar([foo, x => x].1)
+//│ ╙──      	                 ^^
 //│ ═══[COMPILATION ERROR] Cannot determine if 1$__checkNotMethod is a function.
 //│ ═══[COMPILATION ERROR] Cannot determine if Error is a function.
 //│ = 0
@@ -134,7 +119,7 @@ bar([foo, x => x].(i))
 :ge
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.135: 	[foo, x => x].(i)(0)
+//│ ║  l.120: 	[foo, x => x].(i)(0)
 //│ ╙──       	               ^
 
 
@@ -148,10 +133,10 @@ let foo = Foo()
 foo.("f")(0)
 foo.("h")(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.148: 	foo.("f")(0)
+//│ ║  l.133: 	foo.("f")(0)
 //│ ╙──       	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.149: 	foo.("h")(1)
+//│ ║  l.134: 	foo.("h")(1)
 //│ ╙──       	^^^^^^^^
 //│ = 0
 //│ foo = Foo()
@@ -187,14 +172,14 @@ fun foo() = x => x
 foo()(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let foo³, baseCall, lambda⁶, Function$⁶;
+//│ @private
+//│ define lambda⁶ as fun lambda⁷(x) {
+//│   return x
+//│ };
 //│ define Function$⁶ as class extends globalThis⁰.Function⁰ Function$⁷ {
 //│   method call⁶ = fun call⁷(x) {
 //│     return lambda⁷(x)
 //│   }
-//│ };
-//│ @private
-//│ define lambda⁶ as fun lambda⁷(x) {
-//│   return x
 //│ };
 //│ define foo³ as fun foo⁴() {
 //│   let tmp;
@@ -222,22 +207,7 @@ class Baz(b) with
 
 :expect 42
 Baz(42).baz()(0)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: lambda$2 is not a function
-//│     at Baz.baz (REPL72:1:347)
-//│     at REPL75:1:101
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+//│ = 42
 
 
 module Foo with
@@ -248,22 +218,7 @@ module Foo with
 
 :expect 121
 Foo.f(0, 0, true)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: lambda$4 is not a function
-//│     at Foo4.f (REPL78:1:479)
-//│     at REPL81:1:44
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
-//│ ═══[RUNTIME ERROR] Expected: '121', got: 'undefined'
+//│ = 121
 
 
 :sir
@@ -271,9 +226,12 @@ module Foo with
   class Bar(y) with
     fun bar(z) = x => x + y + z 
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let Foo¹, lambda⁸, lambda$⁰, lambda$¹, Function$⁸;
-//│ define lambda$¹ as fun lambda$²(Bar, z, x) {
-//│   return lambda⁹(Bar, z, x)
+//│ let Foo¹, lambda⁸, Function$⁸;
+//│ @private
+//│ define lambda⁸ as fun lambda⁹(Bar, z, x) {
+//│   let tmp;
+//│   set tmp = +⁰(x, Bar.y⁰);
+//│   return +⁰(tmp, z)
 //│ };
 //│ define Function$⁸ as class extends globalThis⁰.Function⁰ Function$⁹ {
 //│   private val Bar⁰;
@@ -286,20 +244,8 @@ module Foo with
 //│     end
 //│   }
 //│   method call⁸ = fun call⁹(x) {
-//│     return lambda$²(Function$⁹.this.Bar⁰, Function$⁹.this.z⁰, x)
+//│     return lambda⁹(Function$⁹.this.Bar⁰, Function$⁹.this.z⁰, x)
 //│   }
-//│ };
-//│ @inline @private
-//│ define lambda$⁰ as fun lambda$³(Bar, z) {
-//│   let tmp;
-//│   set tmp = new Function$⁹(Bar, z);
-//│   return tmp
-//│ };
-//│ @private
-//│ define lambda⁸ as fun lambda⁹(Bar, z, x) {
-//│   let tmp;
-//│   set tmp = +⁰(x, Bar.y⁰);
-//│   return +⁰(tmp, z)
 //│ };
 //│ define Foo¹ as class Foo²
 //│ module Foo³ {
@@ -311,9 +257,9 @@ module Foo with
 //│         end
 //│       }
 //│       method bar² = fun bar³(z) {
-//│         let lambda$here;
-//│         set lambda$here = lambda$⁴(Bar³.this, z);
-//│         return lambda$here
+//│         let tmp;
+//│         set tmp = new Function$⁹(Bar³.this, z);
+//│         return tmp
 //│       }
 //│     };
 //│     end
@@ -325,22 +271,7 @@ module Foo with
 
 :expect 3
 Foo.Bar(1).bar(1)(1)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: lambda$5 is not a function
-//│     at Bar2.bar (REPL84:1:481)
-//│     at REPL87:1:104
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+//│ = 3
 
 
 let x = 1
@@ -450,7 +381,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.451: 	foo.f(0)
+//│ ║  l.382: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -468,7 +399,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.469: 	foo.x(0)
+//│ ║  l.400: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 
@@ -530,29 +461,14 @@ let f = x => y => x + y
 
 :expect 3
 f(1)(2)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: lambda$6 is not a function
-//│     at Function$58.call (REPL214:1:368)
-//│     at REPL218:1:55
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+//│ = 3
 
 
 :sir
 fun foo(x)(y) = x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo⁵, lambda$⁵, Function$¹²;
-//│ define lambda$⁵ as fun lambda$⁶(x, y) {
+//│ let foo⁵, lambda$⁰, Function$¹²;
+//│ define lambda$⁰ as fun lambda$¹(x, y) {
 //│   return +⁰(x, y)
 //│ };
 //│ define Function$¹² as class extends globalThis⁰.Function⁰ Function$¹³ {
@@ -564,7 +480,7 @@ fun foo(x)(y) = x + y
 //│     end
 //│   }
 //│   method call¹² = fun call¹³(y) {
-//│     return lambda$⁶(Function$¹³.this.x², y)
+//│     return lambda$¹(Function$¹³.this.x², y)
 //│   }
 //│ };
 //│ define foo⁵ as fun foo⁶(x) { let tmp; set tmp = new Function$¹³(x); return tmp };
@@ -601,7 +517,7 @@ print("abc")
 :e
 foo(print)
 //│ ╔══[COMPILATION ERROR] Cannot get print's parameter list.
-//│ ║  l.602: 	foo(print)
+//│ ║  l.518: 	foo(print)
 //│ ╙──       	    ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'call' expected 0 arguments but got 1
 
@@ -613,7 +529,7 @@ foo(print(_))
 :expect ["abc"]
 foo(tuple)
 //│ ╔══[COMPILATION ERROR] Cannot get tuple's parameter list.
-//│ ║  l.614: 	foo(tuple)
+//│ ║  l.530: 	foo(tuple)
 //│ ╙──       	    ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Function$¹⁴, tmp;

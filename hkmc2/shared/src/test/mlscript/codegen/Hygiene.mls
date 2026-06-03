@@ -24,8 +24,8 @@ object Test with
 //│     globalThis.Object.freeze(this);
 //│   }
 //│   foo() {
-//│     Predef.print(this);
-//│     return this.x
+//│     Predef.print(Test1);
+//│     return Test1.x
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["object", "Test"];
@@ -168,16 +168,6 @@ fun foo(): module M =
   else
     module A
     A
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:203)
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.169: 	    module A
-//│ ╙──       	           ^
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:203)
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.166: 	    module A
-//│ ╙──       	           ^
 
 foo()
 //│ = class A
@@ -233,7 +223,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[COMPILATION ERROR] Name not found: Runtime
-//│ ║  l.234: 	Runtime
+//│ ║  l.224: 	Runtime
 //│ ╙──       	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

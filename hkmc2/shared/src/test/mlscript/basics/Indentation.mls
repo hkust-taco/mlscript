@@ -163,17 +163,20 @@ fun test2() =
     0 then 1)
   funny
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let test2⁰, lambda⁰;
-//│ @private
-//│ define lambda⁰ as fun lambda¹(caseScrut) {
-//│   match caseScrut
-//│     0 =>
-//│       return 1
-//│     else
-//│       throw new globalThis⁰.Error⁰("match error")
-//│   end
+//│ let test2⁰;
+//│ define test2⁰ as fun test2¹() {
+//│   let lambda;
+//│   @private
+//│   define lambda as fun lambda⁰(caseScrut) {
+//│     match caseScrut
+//│       0 =>
+//│         return 1
+//│       else
+//│         throw new globalThis⁰.Error⁰("match error")
+//│     end
+//│   };
+//│   return lambda⁰
 //│ };
-//│ define test2⁰ as fun test2¹() { return lambda¹ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

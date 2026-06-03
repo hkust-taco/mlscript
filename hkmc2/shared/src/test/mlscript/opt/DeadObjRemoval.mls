@@ -8,18 +8,8 @@ fun f() =
   object A
   42
 f()
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:196)
-//│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.8: 	  object A
-//│ ╙──     	         ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f; f = function f() { return 42 }; return 42
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:196)
-//│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.8: 	  object A
-//│ ╙──     	         ^
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f⁰; define f⁰ as fun f¹() { return 42 }; return 42
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -33,11 +23,6 @@ fun f() =
     print("Hello")
   42
 f()
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:196)
-//│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.32: 	  object A with
-//│ ╙──      	         ^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f1;
 //│ f1 = function f() {
@@ -60,11 +45,6 @@ f()
 //│   return 42
 //│ };
 //│ return f1()
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:196)
-//│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.32: 	  object A with
-//│ ╙──      	         ^
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f²;
 //│ define f² as fun f³() {

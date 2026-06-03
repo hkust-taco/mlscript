@@ -2,16 +2,4 @@
 
 import "../../mlscript-compile/nofib/ansi.mls"
 ansi.main()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'goto')
-//│     at lambda5 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/ansi.mjs:122:21)
-//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/ansi.mjs:117:12
-//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/ansi.mjs:128:29
-//│     at ansi.readChar (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/ansi.mjs:180:31)
-//│     at ansi.pressAnyKey (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/ansi.mjs:199:17)
-//│     at lambda3 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/ansi.mjs:65:16)
-//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/ansi.mjs:53:12
-//│     at ansi.writeString (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/ansi.mjs:213:28)
-//│     at ansi.writes (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/ansi.mjs:219:17)
-//│     at program (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/ansi.mjs:341:17)
+//│ = "LE[5;17HESC[7mDemonstration programESC[0mE[5;48HVersion 1.0E[7;17HThis program illustrates a simple approachE[8;17Hto screen-based interactive programs usingE[9;17Hthe Hugs functional programming system.E[11;17HPlease press any key to continue ...E[15;17HPlease enter your name: E[15;41H__________________E[15;41HesttesttestE[18;31HHello esttesttest!E[23;1HI'm waiting..."

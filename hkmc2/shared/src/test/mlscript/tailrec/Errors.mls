@@ -97,14 +97,18 @@ fun f(x) =
   @tailrec
   fun g() = g()
   g()
-//│ FAILURE: Unexpected lack of compilation or type error
+//│ ╔══[COMPILATION ERROR] This @tailrec function was not processed by the tail-call optimizer.
+//│ ║  l.98: 	  fun g() = g()
+//│ ╙──      	      ^
 
 :e
 fun scan(idx, acc) =
   @tailrec
   fun go(idx, tok) = scan(idx, tok)
   go(idx, acc)
-//│ FAILURE: Unexpected lack of compilation or type error
+//│ ╔══[COMPILATION ERROR] This @tailrec function was not processed by the tail-call optimizer.
+//│ ║  l.107: 	  fun go(idx, tok) = scan(idx, tok)
+//│ ╙──       	      ^^
 
 :e
 :w
@@ -113,29 +117,33 @@ fun scan(idx, acc) =
   @tailrec
   fun go(idx, tok) = scan(idx, tok)
   go(idx, acc)
-//│ FAILURE: Unexpected lack of compilation or type error
-//│ FAILURE: Unexpected lack of warnings
+//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
+//│ ║  l.116: 	fun scan(idx, acc) =
+//│ ╙──       	    ^^^^
+//│ ╔══[COMPILATION ERROR] This @tailrec function was not processed by the tail-call optimizer.
+//│ ║  l.118: 	  fun go(idx, tok) = scan(idx, tok)
+//│ ╙──       	      ^^
 
 :e
 @tailrec
 @config(tailRecOpt: false)
 fun foo() = foo()
 //│ ╔══[COMPILATION ERROR] This @tailrec function was not processed by the tail-call optimizer.
-//│ ║  l.122: 	fun foo() = foo()
+//│ ║  l.130: 	fun foo() = foo()
 //│ ╙──       	    ^^^
 
 :e
 fun f =
   @tailcall id(2)
 //│ ╔══[COMPILATION ERROR] Only functions in this compilation unit may be marked @tailcall.
-//│ ║  l.129: 	  @tailcall id(2)
+//│ ║  l.137: 	  @tailcall id(2)
 //│ ╙──       	            ^^^^^
 
 :e
 fun f(x)(y) =
   @tailcall f(x)
 //│ ╔══[COMPILATION ERROR] Only fully applied calls may be marked @tailcall.
-//│ ║  l.136: 	  @tailcall f(x)
+//│ ║  l.144: 	  @tailcall f(x)
 //│ ╙──       	            ^^^^
 
 :e
@@ -144,8 +152,8 @@ fun f(x)() =
 fun g(x)(y) =
   @tailcall f(x)
 //│ ╔══[COMPILATION ERROR] Only fully applied calls may be marked @tailcall.
-//│ ║  l.145: 	  @tailcall f(x)
+//│ ║  l.153: 	  @tailcall f(x)
 //│ ╙──       	            ^^^^
 //│ ╔══[COMPILATION ERROR] This call is not optimized as it does not directly recurse through its parent function.
-//│ ║  l.143: 	  @tailcall g(x)(0)
+//│ ║  l.151: 	  @tailcall g(x)(0)
 //│ ╙──       	            ^^^^^^^

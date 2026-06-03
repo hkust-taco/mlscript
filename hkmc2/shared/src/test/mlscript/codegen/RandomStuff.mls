@@ -40,6 +40,17 @@ data class Foo(x) with
 //│   }
 //│   constructor(x) {
 //│     this.x = x;
+//│     const this$Foo = this;
+//│     (class Bar {
+//│       static {
+//│         this$Foo.Bar = this
+//│       }
+//│       constructor() {
+//│         this.y = this$Foo.x;
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Bar"];
+//│     });
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", ["x"]];
@@ -52,7 +63,7 @@ fun foo() =
   fun bar() = bar()
   bar()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo3; foo3 = function foo() { loopLabel: while (true) { continue loopLabel; } };
+//│ let foo3; foo3 = function foo() { let bar; bar = function bar() { return bar() }; return bar() };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -79,10 +90,10 @@ do
 let foo = 1
 fun foo(x) = foo
 //│ ╔══[COMPILATION ERROR] Name 'foo' is already used
-//│ ║  l.79: 	let foo = 1
+//│ ║  l.90: 	let foo = 1
 //│ ║        	    ^^^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.80: 	fun foo(x) = foo
+//│ ║  l.91: 	fun foo(x) = foo
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo4; foo4 = 1;

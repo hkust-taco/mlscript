@@ -146,7 +146,7 @@ class Box(val x) with
     fun inc() = Box(x + 1).get()
 Box(2).inc()
 //│ Wasm result:
-//│ = 2
+//│ = 3
 
 
 class Counter(val x) with

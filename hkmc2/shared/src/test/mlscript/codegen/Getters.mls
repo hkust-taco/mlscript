@@ -40,12 +40,17 @@ fun test() =
     42
   whoops + whoops
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let whoops, test;
-//│ whoops = function whoops() {
-//│   Predef.print("ok");
-//│   return 42
+//│ let test;
+//│ test = function test() {
+//│   let whoops, tmp, tmp1;
+//│   whoops = function whoops() {
+//│     Predef.print("ok");
+//│     return 42
+//│   };
+//│   tmp = whoops();
+//│   tmp1 = whoops();
+//│   return tmp + tmp1
 //│ };
-//│ test = function test() { let tmp, tmp1; tmp = whoops(); tmp1 = whoops(); return tmp + tmp1 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 test()
@@ -130,9 +135,8 @@ fun test() =
   fun whoops = 42
   whoops
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let whoops1, test1;
-//│ whoops1 = function whoops() { return 42 };
-//│ test1 = function test() { return whoops1() };
+//│ let test1;
+//│ test1 = function test() { let whoops; whoops = function whoops() { return 42 }; return whoops() };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -155,7 +159,7 @@ fun bar() =
   fun baz() = 42
   baz
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let baz, bar; baz = function baz() { return 42 }; bar = function bar() { return baz };
+//│ let bar; bar = function bar() { let baz; baz = function baz() { return 42 }; return baz };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -165,22 +169,25 @@ fun baz() =
   fun z = 2
   (x, y) => x + y + w + z
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let w, z, baz1, lambda;
-//│ w = function w() {
-//│   return 1
+//│ let baz;
+//│ baz = function baz() {
+//│   let w, z, lambda;
+//│   w = function w() {
+//│     return 1
+//│   };
+//│   z = function z() {
+//│     return 2
+//│   };
+//│   lambda = (undefined, function (x, y) {
+//│     let tmp, tmp1, tmp2, tmp3;
+//│     tmp = x + y;
+//│     tmp1 = w();
+//│     tmp2 = tmp + tmp1;
+//│     tmp3 = z();
+//│     return tmp2 + tmp3
+//│   });
+//│   return lambda
 //│ };
-//│ z = function z() {
-//│   return 2
-//│ };
-//│ lambda = (undefined, function (x, y) {
-//│   let tmp, tmp1, tmp2, tmp3;
-//│   tmp = x + y;
-//│   tmp1 = w();
-//│   tmp2 = tmp + tmp1;
-//│   tmp3 = z();
-//│   return tmp2 + tmp3
-//│ });
-//│ baz1 = function baz() { return lambda };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -196,20 +203,21 @@ fun a() =
     b + d
   c
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let d, b, c, a;
-//│ d = function d() {
-//│   return 2
+//│ let a;
+//│ a = function a() {
+//│   let b, c;
+//│   b = function b() {
+//│     return 1
+//│   };
+//│   c = function c() {
+//│     let d, tmp, tmp1;
+//│     d = function d() { return 2 };
+//│     tmp = b();
+//│     tmp1 = d();
+//│     return tmp + tmp1
+//│   };
+//│   return c
 //│ };
-//│ b = function b() {
-//│   return 1
-//│ };
-//│ c = function c() {
-//│   let tmp, tmp1;
-//│   tmp = b();
-//│   tmp1 = d();
-//│   return tmp + tmp1
-//│ };
-//│ a = function a() { return c };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -225,10 +233,12 @@ fun b() =
     c
   d
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let c1, d1, b1;
-//│ c1 = function c() { return 2 };
-//│ d1 = function d() { return c1() };
-//│ b1 = function b() { return d1 };
+//│ let b;
+//│ b = function b() {
+//│   let d;
+//│   d = function d() { let c; c = function c() { return 2 }; return c() };
+//│   return d
+//│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -244,20 +254,21 @@ fun c() =
     e + f
   d
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let e, d2, f, c2;
-//│ e = function e() {
-//│   return 1
+//│ let c;
+//│ c = function c() {
+//│   let d, f;
+//│   f = function f() {
+//│     return 1
+//│   };
+//│   d = function d() {
+//│     let e, tmp, tmp1;
+//│     e = function e() { return 1 };
+//│     tmp = e();
+//│     tmp1 = f();
+//│     return tmp + tmp1
+//│   };
+//│   return d()
 //│ };
-//│ f = function f() {
-//│   return 1
-//│ };
-//│ d2 = function d() {
-//│   let tmp, tmp1;
-//│   tmp = e();
-//│   tmp1 = f();
-//│   return tmp + tmp1
-//│ };
-//│ c2 = function c() { return d2() };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

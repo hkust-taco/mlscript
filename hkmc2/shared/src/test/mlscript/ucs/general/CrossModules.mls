@@ -13,18 +13,6 @@ module DerivedLib1 with
     _ then 0
 
 DerivedLib1.testFoo(new DerivedLib1.BaseLib.Foo(123))
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'BaseLib')
-//│     at lambda (REPL13:1:346)
-//│     at DerivedLib1.<anonymous> (REPL13:1:184)
-//│     at REPL16:1:131
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
+//│ = 1
 
 

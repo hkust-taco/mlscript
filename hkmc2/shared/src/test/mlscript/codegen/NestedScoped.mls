@@ -209,12 +209,13 @@ fun f(x) =
       z
     )
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f2, z2;
-//│ z2 = function z() {
-//│   return 3
-//│ };
+//│ let f2;
 //│ f2 = function f(x) {
 //│   if (x === true) {
+//│     let z2;
+//│     z2 = function z() {
+//│       return 3
+//│     };
 //│     return z2
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -244,12 +245,13 @@ fun f(x) =
   if x then
     () => 4
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f3, lambda1;
-//│ lambda1 = (undefined, function () {
-//│   return 4
-//│ });
+//│ let f3;
 //│ f3 = function f(x1) {
 //│   if (x1 === true) {
+//│     let lambda1;
+//│     lambda1 = (undefined, function () {
+//│       return 4
+//│     });
 //│     return lambda1
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));

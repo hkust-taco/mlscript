@@ -5,16 +5,23 @@
 fun foo(x)(y) = z => x + y + z
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰, lambda$⁰;
-//│ @inline @private
-//│ define lambda$⁰ as fun lambda$¹(x, y)(z) {
-//│   let tmp;
-//│   set tmp = +⁰(x, y);
-//│   return +⁰(tmp, z)
-//│ };
+//│ let foo⁰, foo$worker⁰, inlinedVal;
 //│ @inline
-//│ define foo⁰ as fun foo¹(x)(y) { return lambda$¹(x, y) };
-//│ return 6
+//│ define foo⁰ as fun foo¹(x)(y) {
+//│   return foo$worker¹(x, y)
+//│ };
+//│ define foo$worker⁰ as fun foo$worker¹(x, y) {
+//│   let lambda;
+//│   @private
+//│   define lambda as fun lambda⁰(z) {
+//│     let tmp;
+//│     set tmp = +⁰(x, y);
+//│     return +⁰(tmp, z)
+//│   };
+//│   return lambda⁰
+//│ };
+//│ set inlinedVal = foo$worker¹(1, 2);
+//│ return inlinedVal(3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 
@@ -26,34 +33,34 @@ foo(1)(2)(3)
 fun foo(x)(y) = z => x + y + z
 foo(1)(2)(3)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo², baseCall, lambda⁰, lambda$²;
+//│ let foo², baseCall, lambda¹, lambda$⁰;
 //│ @inline @private
-//│ define lambda$² as fun lambda$³(x, y)(z) {
-//│   return lambda¹(x, y, z)
+//│ define lambda$⁰ as fun lambda$¹(x, y)(z) {
+//│   return lambda²(x, y, z)
 //│ };
 //│ @private
-//│ define lambda⁰ as fun lambda¹(x, y, z) {
+//│ define lambda¹ as fun lambda²(x, y, z) {
 //│   let tmp;
 //│   set tmp = +⁰(x, y);
 //│   return +⁰(tmp, z)
 //│ };
 //│ define foo² as fun foo³(x)(y) {
 //│   let lambda$here;
-//│   set lambda$here = lambda$³(x, y);
+//│   set lambda$here = lambda$¹(x, y);
 //│   return lambda$here
 //│ };
 //│ set baseCall = foo³(1)(2);
 //│ return baseCall(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo², lambda$²;
+//│ let foo², lambda$⁰;
 //│ @inline @private
-//│ define lambda$² as fun lambda$³(x, y)(z) {
+//│ define lambda$⁰ as fun lambda$¹(x, y)(z) {
 //│   let tmp;
 //│   set tmp = +⁰(x, y);
 //│   return +⁰(tmp, z)
 //│ };
 //│ @inline
-//│ define foo² as fun foo³(x)(y) { return lambda$³(x, y) };
+//│ define foo² as fun foo³(x)(y) { return lambda$¹(x, y) };
 //│ return 6
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6

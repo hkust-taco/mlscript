@@ -61,7 +61,7 @@ parse("")
 //│     at Array.from (<anonymous>)
 //│     at toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
 //│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:179:31
-//│     at parse (REPL22:1:817)
+//│     at parse (REPL22:1:859)
 //│     at REPL26:1:38
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 
@@ -76,7 +76,7 @@ parse("x")
 //│     at Array.from (<anonymous>)
 //│     at toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
 //│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:179:31
-//│     at parse (REPL22:1:817)
+//│     at parse (REPL22:1:859)
 //│     at REPL29:1:38
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 
@@ -91,7 +91,7 @@ parse("x y")
 //│     at Array.from (<anonymous>)
 //│     at toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
 //│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:179:31
-//│     at parse (REPL22:1:817)
+//│     at parse (REPL22:1:859)
 //│     at REPL32:1:38
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 
@@ -106,7 +106,7 @@ parse("x y z")
 //│     at Array.from (<anonymous>)
 //│     at toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
 //│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:179:31
-//│     at parse (REPL22:1:817)
+//│     at parse (REPL22:1:859)
 //│     at REPL35:1:38
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 
@@ -147,7 +147,7 @@ parse("x + y")
 //│     at Array.from (<anonymous>)
 //│     at toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
 //│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:179:31
-//│     at parse (REPL22:1:817)
+//│     at parse (REPL22:1:859)
 //│     at REPL44:1:39
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 

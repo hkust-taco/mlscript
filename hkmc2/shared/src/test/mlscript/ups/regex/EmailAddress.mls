@@ -50,7 +50,7 @@ pattern DomainSuffixFragment = "." ~ Char.Letter ~ Rep1(Char.Letter)
 //│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
 //│     at Iter.foldingImpl (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:675:38)
 //│     at Iter.folded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:711:17)
-//│     at REPL46:1:698
+//│     at REPL46:1:695
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:600:22)
 //│     at bound (node:domain:433:15)
@@ -67,7 +67,7 @@ pattern DomainSuffixFragment = "." ~ Char.Letter ~ Rep1(Char.Letter)
 //│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
 //│     at Iter.foldingImpl (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:675:38)
 //│     at Iter.folded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:711:17)
-//│     at REPL49:1:693
+//│     at REPL49:1:688
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:600:22)
 //│     at bound (node:domain:433:15)
@@ -111,7 +111,7 @@ emails
 //│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
 //│     at Iter.foldingImpl (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:675:38)
 //│     at Iter.folded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:711:17)
-//│     at REPL75:1:613
+//│     at REPL75:1:608
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:600:22)
 //│     at bound (node:domain:433:15)

@@ -80,11 +80,6 @@ Test.test2(123)
 class A(x) with
   module M with
     print(x)
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:203)
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.81: 	  module M with
-//│ ╙──      	         ^
 
 A(42)
 //│ > 42

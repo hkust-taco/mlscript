@@ -55,19 +55,7 @@ let f = Test.("foo")
 //│ f = fun foo
 
 f()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'bar')
-//│     at foo (REPL38:1:416)
-//│     at REPL45:1:38
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = 2
 
 
 // * Which also works well no matter where the object is defined:
@@ -77,29 +65,12 @@ fun test() =
     fun bar = 1
     fun foo() = Test.bar + 1
   [Test]
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:196)
-//│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.76: 	  object Test with
-//│ ╙──      	         ^^^^
 
 let f = test().0.("foo")
 //│ f = fun foo
 
 f()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'bar')
-//│     at foo (REPL48:1:545)
-//│     at REPL55:1:38
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ = 2
 
 
 // * However, it would disable open recursion upon object inheritance (eg `class C extends Test with ...`).

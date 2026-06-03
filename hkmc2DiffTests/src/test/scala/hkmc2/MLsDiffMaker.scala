@@ -147,7 +147,7 @@ abstract class MLsDiffMaker extends DiffMaker:
                 S(StackSafety(stackLimit = value))
         ,
       )),
-      liftDefns = Opt.when(true)(LiftDefns()), // TODO: invert this option to make lifting the default
+      liftDefns = Opt.when(liftDefns.isSet)(LiftDefns()),
       patMatConsequentSharingThreshold = patMatConsequentSharingThreshold.get
         .orElse(Config.default.patMatConsequentSharingThreshold),
       stageCode = stageCode.isSet,
