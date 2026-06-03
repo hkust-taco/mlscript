@@ -611,9 +611,15 @@ class BlockSimplifier
             sym.irClsLikeDefn.exists: defn =>
               val paramLists = defn.paramsOpt.toList ::: defn.auxParams
               paramLists.lengthCompare(argss.length) === 0
+          val shapesMemo = IdentityHashMap[AssignInfo, Set[Shape]]()
           def getShapesA(a: AssignInfo): Set[Shape] =
           // trace[Set[Shape]](s"Getting shapes for assignment ${a}", r => s"= ${r}"):
-            a match
+            if gaveUp then return Set.empty
+            val cached = shapesMemo.get(a)
+            if cached =/= null then return cached
+            shapesMemo.put(a, Set.empty)
+
+            val res = a match
             case Unknown => giveUp
             case Uninitialized => Set.empty
             case Merge(a1, a2) => getShapesA(a1) | getShapesA(a2)
@@ -638,6 +644,8 @@ class BlockSimplifier
                     Set.single(sym)
                   case _ => giveUp
                 case _ => giveUp
+            shapesMemo.put(a, res)
+            res
           def getShapes(p: Path): Set[Shape] =
             if gaveUp then Set.empty
             else
@@ -731,69 +739,64 @@ class BlockSimplifier
         val rs = assignedResults(loc)
         // log(s"Ref ${loc.showDbg} ${rs} ${localVars(loc)} ${capturedVars(loc)}")
         
-        def analyzeAssignments(asst: AssignInfo): Unit =
-          asst match
-          case Unknown | Uninitialized => ()
-          case Merge(a1, a2) =>
-            analyzeAssignments(a1)
-            analyzeAssignments(a2)
-          case Assigned(ass, _) =>
-            // * [Future: dead assignment removal]
-            // liveAssignments.put(ass, ())
+        case class ValueAnalysis(litValue: Bool | Value, refs: Set[Value.RefLike])
         
-        var litValue: Bool | Value = true
-        var emptyHanded = false
+        // Branch joins keep old assignment histories by reference, so the `AssignInfo`
+        // graph is a DAG. Memoizing the summary avoids exponential re-walks when many
+        // conditionals repeatedly merge the same earlier histories.
+        val valueAnalysisMemo = IdentityHashMap[AssignInfo, ValueAnalysis]()
+        val conservativeValueAnalysis = ValueAnalysis(false, Set.empty)
         
-        def analyzeValues(asst: AssignInfo): Set[Value.RefLike] =
-          if emptyHanded && litValue === false then
-            // * [Future: dead assignment removal]
-            // This introduce a huge time complexity issue.
-            // analyzeAssignments(asst)
-            Set.empty
-          else asst match
-            case Unknown =>
-              litValue = false
-              Set.empty
-            case Uninitialized => Set.empty
-            case Assigned(ass, opt) =>
-              // * [Future: dead assignment removal]
-              // liveAssignments.put(ass, ())
-              
-              if litValue =/= false then
-                ass.rhs match
-                case v @ Value.Lit(lit) =>
-                  if litValue === true then
-                    litValue = v
-                  else if litValue =/= v then
-                    litValue = false
-                case _ =>
-                  litValue = false
-              opt match
+        def mergeLitValues(l: Bool | Value, r: Bool | Value): Bool | Value =
+          (l, r) match
+          case (false, _) | (_, false) => false
+          case (true, true) => true
+          case (true, v: Value) => v
+          case (v: Value, true) => v
+          case (v1: Value, v2: Value) if v1 == v2 => v1
+          case _ => false
+
+        def analyzeValues(asst: AssignInfo): ValueAnalysis =
+          val cached = valueAnalysisMemo.get(asst)
+          if cached =/= null then return cached
+          valueAnalysisMemo.put(asst, conservativeValueAnalysis)
+
+          val res = asst match
+          case Unknown =>
+            conservativeValueAnalysis
+          case Uninitialized =>
+            ValueAnalysis(true, Set.empty)
+          case Assigned(ass, opt) =>
+            val litValue = ass.rhs match
+              case v @ Value.Lit(_) => v
+              case _ => false
+            val refs = opt match
               case S((r @ Value.SimpleRef(lv: LocalVar)) -> rhs) =>
                 if assignedResults(lv) is rhs
-                then Set.single(r) ++ analyzeValues(rhs)
+                then Set.single(r) ++ analyzeValues(rhs).refs
                 else Set.empty
               case S(lv -> rhs) =>
-                Set.single(lv) ++ analyzeValues(rhs)
+                Set.single(lv) ++ analyzeValues(rhs).refs
               case N => Set.empty
-            case Merge(a1, a2) =>
-              // * [Future: dead assignment removal]
-              // FIXME: this currently short-circuits, which will miss some live assignments...
-              
-              val l = analyzeValues(a1)
-              if l.isEmpty && litValue === false then
-                emptyHanded = true
-                // * [Future: dead assignment removal]
-                // This introduce a huge time complexity issue.
-                // analyzeAssignments(a2)
-                Set.empty
-              else l & analyzeValues(a2)
+            ValueAnalysis(litValue, refs)
+          case Merge(a1, a2) =>
+            // * [Future: dead assignment removal]
+            // FIXME: this currently short-circuits, which will miss some live assignments...
+            val l = analyzeValues(a1)
+            if l.refs.isEmpty && l.litValue === false then
+              conservativeValueAnalysis
+            else
+              val r = analyzeValues(a2)
+              ValueAnalysis(mergeLitValues(l.litValue, r.litValue), l.refs & r.refs)
+
+          valueAnalysisMemo.put(asst, res)
+          res
         
-        val vars = analyzeValues(rs)
+        val analysis = analyzeValues(rs)
         
-        // log(s"Analysis: litValue: ${litValue}, unchanged vars: ${vars}")
+        // log(s"Analysis: litValue: ${analysis.litValue}, unchanged vars: ${analysis.refs}")
         
-        litValue match
+        analysis.litValue match
         case true =>
           registerChange(s"${loc.showDbg} ~> undefined")
           return k(Value.Lit(syntax.Tree.UnitLit(false)))
@@ -801,32 +804,43 @@ class BlockSimplifier
           registerChange(s"${loc.showDbg} ~> ${lit.showDbg}")
           return k(lit)
         case false =>
-          vars.minByOption(_.symbol.uid) match
+          analysis.refs.minByOption(_.symbol.uid) match
           case N => k(v)
           case S(v2) =>
-            registerChange(s"${loc.showDbg} ~> ${v2.showDbg} (via ${vars.map(_.showDbg).mkString(", ")})")
+            registerChange(s"${loc.showDbg} ~> ${v2.showDbg} (via ${analysis.refs.map(_.showDbg).mkString(", ")})")
             k(v2)
         
       case _ => super.applyValue(v)(k)
     
     
     private def assignedPureCallPrefix(loc: LocalVar): Opt[Call] =
+      val pureCallMemo = IdentityHashMap[AssignInfo, MutMap[Set[LocalVar], Opt[Call]]]()
       def loop(asst: AssignInfo, seen: Set[LocalVar]): Opt[Call] =
-        asst match
-        case Unknown | Uninitialized => N
-        case Assigned(ass, opt) =>
-          ass.rhs match
-          case call: Call if call.isKnownUnsaturatedCall && call.isPure => S(call)
-          case _ =>
-            opt match
-            case S((Value.SimpleRef(next: LocalVar), nextAsst))
-              if !capturedVars(next) && !seen(next) && (assignedResults(next) is nextAsst) =>
-              loop(nextAsst, seen + next)
-            case _ => N
-        case Merge(asst1, asst2) =>
-          (loop(asst1, seen), loop(asst2, seen)) match
-          case (S(call1), S(call2)) if call1 == call2 => S(call1)
-          case _ => N
+        var seenMemo = pureCallMemo.get(asst)
+        if seenMemo === null then
+          seenMemo = MutMap.empty
+          pureCallMemo.put(asst, seenMemo)
+        seenMemo.get(seen) match
+        case S(res) => res
+        case N =>
+          seenMemo(seen) = N
+          val res = asst match
+            case Unknown | Uninitialized => N
+            case Assigned(ass, opt) =>
+              ass.rhs match
+              case call: Call if call.isKnownUnsaturatedCall && call.isPure => S(call)
+              case _ =>
+                opt match
+                case S((Value.SimpleRef(next: LocalVar), nextAsst))
+                  if !capturedVars(next) && !seen(next) && (assignedResults(next) is nextAsst) =>
+                  loop(nextAsst, seen + next)
+                case _ => N
+            case Merge(asst1, asst2) =>
+              (loop(asst1, seen), loop(asst2, seen)) match
+              case (S(call1), S(call2)) if call1 == call2 => S(call1)
+              case _ => N
+          seenMemo(seen) = res
+          res
       loop(assignedResults(loc), Set.single(loc))
     
     
