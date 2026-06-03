@@ -17,21 +17,17 @@ fun buildPalindrome = case
   0 then []
   n then [n, ..buildPalindrome(n - 1), n]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let buildPalindrome;
-//│ buildPalindrome = function buildPalindrome() {
-//│   let lambda;
-//│   lambda = (undefined, function (caseScrut) {
-//│     let tmp3, tmp4, tmp5;
-//│     if (caseScrut === 0) {
-//│       return globalThis.Object.freeze([])
-//│     }
-//│     tmp3 = buildPalindrome();
-//│     tmp4 = caseScrut - 1;
-//│     tmp5 = runtime.safeCall(tmp3(tmp4));
-//│     return globalThis.Object.freeze(runtime.Tuple.lazyConcat(caseScrut, runtime.Tuple.split, tmp5, caseScrut));
-//│   });
-//│   return lambda
-//│ };
+//│ let buildPalindrome, lambda;
+//│ lambda = (undefined, function (caseScrut) {
+//│   let tmp3, tmp4;
+//│   if (caseScrut === 0) {
+//│     return globalThis.Object.freeze([])
+//│   }
+//│   tmp3 = caseScrut - 1;
+//│   tmp4 = runtime.safeCall(lambda(tmp3));
+//│   return globalThis.Object.freeze(runtime.Tuple.lazyConcat(caseScrut, runtime.Tuple.split, tmp4, caseScrut));
+//│ });
+//│ buildPalindrome = function buildPalindrome() { return lambda };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :silent
@@ -47,26 +43,22 @@ fun sum2 = case
   [] then 0
   [x, ..xs, y] then x + y + sum2(xs)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let sum2;
-//│ sum2 = function sum2() {
-//│   let lambda;
-//│   lambda = (undefined, function (caseScrut) {
-//│     let lastElement1$3, middleElements3, element0$, tmp5, tmp6, tmp7;
-//│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
-//│       return 0
-//│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 2) {
-//│       element0$ = runtime.Tuple.get(caseScrut, 0);
-//│       middleElements3 = runtime.Tuple.slice(caseScrut, 1, 1);
-//│       lastElement1$3 = runtime.Tuple.get(caseScrut, -1);
-//│       tmp5 = element0$ + lastElement1$3;
-//│       tmp6 = sum2();
-//│       tmp7 = runtime.safeCall(tmp6(middleElements3));
-//│       return tmp5 + tmp7
-//│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
-//│   });
-//│   return lambda
-//│ };
+//│ let sum2, lambda1;
+//│ lambda1 = (undefined, function (caseScrut) {
+//│   let lastElement1$3, middleElements3, element0$, tmp4, tmp5;
+//│   if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
+//│     return 0
+//│   } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 2) {
+//│     element0$ = runtime.Tuple.get(caseScrut, 0);
+//│     middleElements3 = runtime.Tuple.slice(caseScrut, 1, 1);
+//│     lastElement1$3 = runtime.Tuple.get(caseScrut, -1);
+//│     tmp4 = element0$ + lastElement1$3;
+//│     tmp5 = runtime.safeCall(lambda1(middleElements3));
+//│     return tmp4 + tmp5
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│ });
+//│ sum2 = function sum2() { return lambda1 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 30
@@ -76,13 +68,13 @@ sum2(arr)
 :e
 fun f(..xs) = xs
 //│ ╔══[COMPILATION ERROR] Lazy spread parameters not allowed.
-//│ ║  l.77: 	fun f(..xs) = xs
+//│ ║  l.69: 	fun f(..xs) = xs
 //│ ╙──      	      ^^^^
 
 :ge
 sum2(..arr)
 //│ ╔══[COMPILATION ERROR] Lazy spreads are not supported in call arguments
-//│ ║  l.83: 	sum2(..arr)
+//│ ║  l.75: 	sum2(..arr)
 //│ ╙──      	    ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 2
 

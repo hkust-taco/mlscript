@@ -12,6 +12,11 @@ test(Foo)
 fun foo() =
   object Foo
   Foo is Foo
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:196)
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.13: 	  object Foo
+//│ ╙──      	         ^^^
 
 foo()
 //│ = true
@@ -20,6 +25,9 @@ foo()
 fun foo() =
   class Foo
   (new Foo) is Foo
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyCase (Lifter.scala:217)
+//│ ═══[WARNING] Cannot yet lift class/module `Foo` as it is used in an instance check.
 
 foo()
 //│ = true

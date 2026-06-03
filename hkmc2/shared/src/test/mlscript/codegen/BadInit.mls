@@ -12,6 +12,11 @@ object Bar with
   val x = 1
   module Baz with
     val a = Bar.x
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:203)
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.13: 	  module Baz with
+//│ ╙──      	         ^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Bar1;
 //│ (class Bar {
@@ -27,7 +32,7 @@ object Bar with
 //│         this$Bar.Baz = this
 //│       }
 //│       static {
-//│         Baz.a = Bar1.x;
+//│         Baz.a = this$Bar.x;
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Baz"];
@@ -40,6 +45,11 @@ object Bar with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["object", "Bar"];
 //│ });
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:203)
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.13: 	  module Baz with
+//│ ╙──      	         ^^^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -64,7 +74,7 @@ module Bar with
 //│         Bar2.Baz = this
 //│       }
 //│       static {
-//│         Baz1.a = Bar3.x;
+//│         Baz1.a = Bar2.x;
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Baz"];

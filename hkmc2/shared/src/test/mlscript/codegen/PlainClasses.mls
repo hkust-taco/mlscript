@@ -79,6 +79,9 @@ fun test() =
   data class Foo with { print("hi") }
   print("ok")
   Foo
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyValue (Lifter.scala:281)
+//│ ═══[WARNING] Cannot yet lift class `Foo` as it is used as a first-class class.
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test;
 //│ test = function test() {
@@ -96,6 +99,9 @@ fun test() =
 //│   Predef.print("ok");
 //│   return Foo5
 //│ };
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyValue (Lifter.scala:281)
+//│ ═══[WARNING] Cannot yet lift class `Foo` as it is used as a first-class class.
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let t = test()
@@ -108,7 +114,7 @@ let t = test()
 :e
 new t
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference.
-//│ ║  l.109: 	new t
+//│ ║  l.115: 	new t
 //│ ║         	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
@@ -127,7 +133,7 @@ new! t
 :e
 new t()
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference.
-//│ ║  l.128: 	new t()
+//│ ║  l.134: 	new t()
 //│ ║         	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
@@ -251,10 +257,10 @@ class Foo with
   val x = 2
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
-//│ ║  l.250: 	  val x = 1
+//│ ║  l.256: 	  val x = 1
 //│ ║         	  ^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.251: 	  val x = 2
+//│ ║  l.257: 	  val x = 2
 //│ ╙──       	  ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo12;
@@ -276,10 +282,10 @@ class Foo with
   val x = 1
   let x = 2
 //│ ╔══[COMPILATION ERROR] Name 'x' is already used
-//│ ║  l.277: 	  let x = 2
+//│ ║  l.283: 	  let x = 2
 //│ ║         	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.276: 	  val x = 1
+//│ ║  l.282: 	  val x = 1
 //│ ╙──       	  ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo14;
@@ -305,7 +311,7 @@ class Foo with
 :e
 class Foo with val x = 1
 //│ ╔══[COMPILATION ERROR] Illegal body of class definition (should be a block; found term definition).
-//│ ║  l.306: 	class Foo with val x = 1
+//│ ║  l.312: 	class Foo with val x = 1
 //│ ╙──       	               ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo16;

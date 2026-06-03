@@ -27,9 +27,14 @@ fun g(x, y, z) =
       let a = 1
       (_ + a)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g;
+//│ let g, lambda$;
+//│ lambda$ = (undefined, function (a) {
+//│   return (_0) => {
+//│     return _0 + a
+//│   }
+//│ });
 //│ g = function g(x1, y, z) {
-//│   let a, tmp, tmp1;
+//│   let tmp, tmp1;
 //│   if (x1 === true) {
 //│     tmp = 0;
 //│   } else {
@@ -37,12 +42,7 @@ fun g(x, y, z) =
 //│       tmp = 0;
 //│     } else {
 //│       if (z === true) {
-//│         let lambda;
-//│         a = 1;
-//│         lambda = (undefined, function (_0) {
-//│           return _0 + a
-//│         });
-//│         tmp = lambda;
+//│         tmp = lambda$(1);
 //│       } else {
 //│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│       }
@@ -165,17 +165,19 @@ fun f(x) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f7;
 //│ f7 = function f(x1) {
-//│   let while1, tmp1, tmp2;
-//│   while1 = (undefined, function () {
-//│     if (x1 === true) {
-//│       Predef.print(x1);
-//│       return while1()
+//│   let tmp1, inlinedVal;
+//│   inlinedLbl: {
+//│     loopLabel: while (true) {
+//│       if (x1 === true) {
+//│         Predef.print(x1);
+//│         continue loopLabel
+//│       }
+//│       inlinedVal = runtime.LoopEnd;
+//│       break inlinedLbl;
 //│     }
-//│     return runtime.LoopEnd;
-//│   });
-//│   tmp1 = while1();
-//│   tmp2 = tmp1 !== runtime.LoopEnd;
-//│   if (tmp2 === true) { return tmp1 }
+//│   }
+//│   tmp1 = inlinedVal !== runtime.LoopEnd;
+//│   if (tmp1 === true) { return inlinedVal }
 //│   return runtime.Unit;
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

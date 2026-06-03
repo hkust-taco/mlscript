@@ -96,7 +96,6 @@ private fun main(f1, f2) =
 private fun main1() = main((a) => 0, (a) => a + 1)
 main1()
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun lambda#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 1
 
@@ -108,10 +107,10 @@ private fun main(f1, f2) =
 private fun main1() = main((a) => 0, (a) => a + 1)
 main1()
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun apply#0 @ main1@10.main@8.apply@2 -> eliminable: {1}
-//│ dead-param-elim > prodfun apply#0 @ main1@13.main@8.apply@2 -> eliminable: {1}
-//│ dead-param-elim > prodfun lambda#0 @ main1@10 -> eliminable: {0}
-//│ dead-param-elim > prodfun lambda#0 @ main1@13 -> eliminable: {0}
+//│ dead-param-elim > prodfun apply#0 @ main1@12.main@8.apply@3 -> eliminable: {1}
+//│ dead-param-elim > prodfun apply#0 @ main1@17.main@8.apply@3 -> eliminable: {1}
+//│ dead-param-elim > prodfun lambda#0 @ main1@12.lambda@9 -> eliminable: {0}
+//│ dead-param-elim > prodfun lambda#0 @ main1@17.lambda@9 -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 1
 
@@ -120,7 +119,6 @@ main1()
 private fun f = (a) => 0
 f(3)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun lambda#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 

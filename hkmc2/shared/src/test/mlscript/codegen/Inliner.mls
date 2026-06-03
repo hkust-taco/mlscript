@@ -25,13 +25,10 @@ fun f() =
   let done(x) = x
   done
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁴;
-//│ define f⁴ as fun f⁵() {
-//│   let done;
-//│   @private
-//│   define done as fun done⁰(x) { return x };
-//│   return done⁰
-//│ };
+//│ let f⁴, done⁰;
+//│ @private
+//│ define done⁰ as fun done¹(x) { return x };
+//│ define f⁴ as fun f⁵() { return done¹ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -303,7 +300,7 @@ module A with
 //│     return 1
 //│   }
 //│   static g() {
-//│     return A1.f()
+//│     return A.f()
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"];
@@ -311,7 +308,7 @@ module A with
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let A⁰;
 //│ define A⁰ as class A¹
-//│ module A² { method f²⁰ = fun f²¹() { return 1 } method g² = fun g³() { return A².f²¹() } };
+//│ module A² { method f²⁰ = fun f²¹() { return 1 } method g² = fun g³() { return A².this.f²¹() } };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -344,7 +341,13 @@ fun g() =
   fun f() = f()
   f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let g⁴; define g⁴ as fun g⁵() { let f; define f as fun f²⁴() { return f²⁴() }; return f²⁴() }; end
+//│ let g⁴;
+//│ define g⁴ as fun g⁵() {
+//│   loop loopLabel:
+//│     continue loopLabel
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

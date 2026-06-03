@@ -32,22 +32,94 @@ s12.tail isEmpty()
 // *** Zipping ***
 
 zip of Nil
-//│ = Nil
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Cons')
+//│     at go_lambda_lambda$ (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:14:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:53:12
+//│     at Stack.zip (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:161:29)
+//│     at REPL32:1:44
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
 
 zip of s1
-//│ = Cons([1], Cons([2], Cons([3], Nil)))
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Cons')
+//│     at go_lambda_lambda$ (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:14:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:53:12
+//│     at Stack.zip (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:161:29)
+//│     at REPL35:1:44
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
 
 zip of s1, s2
-//│ = Cons([1, "a"], Cons([2, "b"], Cons([3, "c"], Nil)))
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Cons')
+//│     at go_lambda_lambda$ (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:14:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:53:12
+//│     at Stack.zip (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:161:29)
+//│     at REPL38:1:44
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
 
 zip of s1, s3
-//│ = Cons([1, true], Cons([2, false], Cons([3], Nil)))
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Cons')
+//│     at go_lambda_lambda$ (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:14:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:53:12
+//│     at Stack.zip (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:161:29)
+//│     at REPL41:1:45
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
 
 s1 zip(s2)
-//│ = Cons([1, "a"], Cons([2, "b"], Cons([3, "c"], Nil)))
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Cons')
+//│     at go_lambda_lambda$ (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:14:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:53:12
+//│     at Stack.zip (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:161:29)
+//│     at REPL44:1:45
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
 
 print of ...
 s1 zip of s2, s3
-//│ > Cons([1, "a", true], Cons([2, "b", false], Cons([3, "c"], Nil)))
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Cons')
+//│     at go_lambda_lambda$ (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:14:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:53:12
+//│     at Stack.zip (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs:161:29)
+//│     at REPL47:1:47
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
 
 

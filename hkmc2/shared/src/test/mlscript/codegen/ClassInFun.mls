@@ -6,21 +6,20 @@ fun test(a) =
   class C with { val x = a }
   new C
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let test;
-//│ test = function test(a) {
-//│   let C1;
-//│   (class C {
-//│     static {
-//│       C1 = this
-//│     }
-//│     constructor() {
-//│       this.x = a;
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "C"];
-//│   });
-//│   return globalThis.Object.freeze(new C1())
-//│ };
+//│ let C1, test;
+//│ (class C {
+//│   static {
+//│     C1 = this
+//│   }
+//│   constructor(a) {
+//│     this.#a = a;
+//│     this.x = this.#a;
+//│   }
+//│   #a;
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C"];
+//│ });
+//│ test = function test(a) { return globalThis.Object.freeze(new C1(a)) };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 test(12)
@@ -38,26 +37,22 @@ fun test(x) =
   data class Foo(a, b)
   Foo(x, x + 1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let test2;
-//│ test2 = function test(x) {
-//│   let Foo2, tmp;
-//│   Foo2 = function Foo(a, b) {
-//│     return globalThis.Object.freeze(new Foo.class(a, b));
-//│   };
-//│   (class Foo1 {
-//│     static {
-//│       Foo2.class = this
-//│     }
-//│     constructor(a, b) {
-//│       this.a = a;
-//│       this.b = b;
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Foo", ["a", "b"]];
-//│   });
-//│   tmp = x + 1;
-//│   return Foo2(x, tmp)
+//│ let Foo3, test2;
+//│ Foo3 = function Foo(a, b) {
+//│   return globalThis.Object.freeze(new Foo.class(a, b));
 //│ };
+//│ (class Foo2 {
+//│   static {
+//│     Foo3.class = this
+//│   }
+//│   constructor(a, b) {
+//│     this.a = a;
+//│     this.b = b;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo", ["a", "b"]];
+//│ });
+//│ test2 = function test(x) { let tmp; tmp = x + 1; return Foo3(x, tmp) };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -70,7 +65,7 @@ test(123)
 :re
 test()
 //│ ╔══[COMPILATION ERROR] Expected 1 arguments, got 0
-//│ ║  l.71: 	test()
+//│ ║  l.66: 	test()
 //│ ╙──      	    ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'test' expected 1 argument but got 0
 

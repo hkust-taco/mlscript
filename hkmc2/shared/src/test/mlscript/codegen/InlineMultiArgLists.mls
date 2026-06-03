@@ -20,14 +20,13 @@ private fun mkAdder(x) =
   (y) => x + y
 mkAdder(10)(20)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let mkAdder⁰;
-//│ @private
-//│ define mkAdder⁰ as fun mkAdder¹(x) {
-//│   let lambda;
-//│   @private
-//│   define lambda as fun lambda⁰(y) { return +⁰(x, y) };
-//│   return lambda⁰
+//│ let mkAdder⁰, lambda$⁰;
+//│ @inline @private
+//│ define lambda$⁰ as fun lambda$¹(x)(y) {
+//│   return +⁰(x, y)
 //│ };
+//│ @private
+//│ define mkAdder⁰ as fun mkAdder¹(x) { return lambda$¹(x) };
 //│ return 30
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 30

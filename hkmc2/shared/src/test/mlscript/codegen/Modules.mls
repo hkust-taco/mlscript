@@ -124,7 +124,7 @@ module M with
 //│     M3 = this
 //│   }
 //│   static {
-//│     M2.m = M3;
+//│     M2.m = M2;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"];

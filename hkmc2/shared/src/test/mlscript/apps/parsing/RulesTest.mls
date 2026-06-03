@@ -6,6 +6,19 @@ import "../../../mlscript-compile/MutMap.mls"
 import "../../../mlscript-compile/apps/parsing/Keywords.mls"
 import "../../../mlscript-compile/apps/parsing/Rules.mls"
 import "../../../mlscript-compile/apps/parsing/Test.mls"
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at Iter.each (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:795:38)
+//│     at lambda2 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/apps/parsing/ParseRule.mjs:600:15)
+//│     at Choice.<anonymous> (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/apps/parsing/ParseRule.mjs:588:12)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/apps/parsing/ParseRule.mjs:777:49
+//│     at <static_initializer> (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Rules.mjs:334:51)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Rules.mjs:956:11
+//│     at ModuleJob.run (node:internal/modules/esm/module_job:377:25)
+//│     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
 
 open Keywords { opPrec, opPrecOpt }
 
@@ -78,73 +91,64 @@ print of Keywords.all |> MutMap.valuesIterator |. Iter.joined("\n")
 //│ > Keyword(`end`, 0, N/A)
 
 print of Rules.termRule.display
-//│ > <prefix rules for expressions> ::= 
-//│ >   | "let" ["rec"] <let-bindings> ["in" <term>]
-//│ >   | "fun" <term> "->" <term>
-//│ >   | "match" <term> "with" ["|"] <term> "->" <term> ["|" <simple-matching>]
-//│ >   | "function" ["|"] <term> "->" <term> ["|" <simple-matching>]
-//│ >   | "if" <term> "then" <term> ["else" <term>]
-//│ >   | "while" <term> "do" <term> "done"
-//│ >   | "for" <term> "=" <term> ("to" | "downto") <term> "do" <term> "done"
-//│ >   | "(" <term> ")"
-//│ >   | "[" <term> "]"
-//│ >   | "{" <term> "}"
-//│ >   | "begin" <term> "end"
-//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'termRule')
+//│     at REPL43:1:33
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 print of Rules.typeRule.display
-//│ > <rules for types> ::= 
-//│ >   | "(" <type> (<type-arguments-tail> ")" <ident> | ")" [<ident>])
-//│ >   | <type> ("->" <type> | "*" <type> | <type>)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'typeRule')
+//│     at REPL46:1:35
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 print of Rules.declRule.display
-//│ > <prefix rules for module items> ::= 
-//│ >   | "let" ["rec"] <let-bindings>
-//│ >   | "type" <typedefs>
-//│ >   | "exception" <constr-decls>
-//│ >   | "#" <ident> <term>
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'declRule')
+//│     at REPL49:1:35
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 Rules.syntaxKinds
   Iter.mapping of case [name, rule] then rule.display
   Iter.joined("\n")
   print()
-//│ > <let-bindings> ::= <term> "=" <term> ["and" <let-bindings>]
-//│ > <simple-matching> ::= <term> "->" <term> ["|" <simple-matching>]
-//│ > <pattern-list> ::= <term> <pattern-list>
-//│ > <multiple-matching> ::= <pattern-list> "->" <term> ["|" <multiple-matching>]
-//│ > <type-arguments-tail> ::= "," <type> [<type-arguments-tail>]
-//│ > <constr-decl> ::= <ident> ["of" <type>]
-//│ > <variants> ::= <constr-decl> ["|" <variants>]
-//│ > <typedefs> ::= <typedef-lhs> <typedef-rhs> ["and" <typedefs>]
-//│ > <typedef-rhs> ::= 
-//│ >   | "=" (<variants> | "{" <label-decls> "}")
-//│ >   | "==" <type>
-//│ > <label-decl> ::= <type> ":" <type>
-//│ > <label-decls> ::= <label-decl> [";" <label-decls>]
-//│ > <constr-decls> ::= <constr-decl> ["|" <constr-decls>]
-//│ > <typedef-lhs> ::= <type-params> <ident>
-//│ > <type-params> ::= 
-//│ >   | <typevar>
-//│ >   | "(" <typevar> <type-params-tail> ")"
-//│ > <type-params-tail> ::= "," <typevar> <type-params-tail>
-//│ > <prefix rules for expressions> ::= 
-//│ >   | "let" ["rec"] <let-bindings> ["in" <term>]
-//│ >   | "fun" <term> "->" <term>
-//│ >   | "match" <term> "with" ["|"] <term> "->" <term> ["|" <simple-matching>]
-//│ >   | "function" ["|"] <term> "->" <term> ["|" <simple-matching>]
-//│ >   | "if" <term> "then" <term> ["else" <term>]
-//│ >   | "while" <term> "do" <term> "done"
-//│ >   | "for" <term> "=" <term> ("to" | "downto") <term> "do" <term> "done"
-//│ >   | "(" <term> ")"
-//│ >   | "[" <term> "]"
-//│ >   | "{" <term> "}"
-//│ >   | "begin" <term> "end"
-//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
-//│ > <rules for types> ::= 
-//│ >   | "(" <type> (<type-arguments-tail> ")" <ident> | ")" [<ident>])
-//│ >   | <type> ("->" <type> | "*" <type> | <type>)
-//│ > <prefix rules for module items> ::= 
-//│ >   | "let" ["rec"] <let-bindings>
-//│ >   | "type" <typedefs>
-//│ >   | "exception" <constr-decls>
-//│ >   | "#" <ident> <term>
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'syntaxKinds')
+//│     at REPL52:1:720
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)

@@ -30,30 +30,147 @@ let a = mk(1, 2, 3, 4, 5, 6, 7, 8, 9, 10) dropLeftRight(2, 3)() dropLeftRight(1,
 
 :expect 4
 a.at(0)
-//│ = 4
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at View.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:201:47)
+//│     at REPL28:1:40
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: '4', got: 'undefined'
 :expect 4
 a.at(-3)
-//│ = 4
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at View.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:201:47)
+//│     at REPL31:1:40
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: '4', got: 'undefined'
 :expect 5
 a.at(1)
-//│ = 5
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at View.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:201:47)
+//│     at REPL34:1:41
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: '5', got: 'undefined'
 :expect 5
 a.at(-2)
-//│ = 5
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at View.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:201:47)
+//│     at REPL37:1:41
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: '5', got: 'undefined'
 :expect 6
 a.at(2)
-//│ = 6
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at View.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:201:47)
+//│     at REPL40:1:41
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: '6', got: 'undefined'
 :expect 6
 a.at(-1)
-//│ = 6
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at View.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:201:47)
+//│     at REPL43:1:41
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: '6', got: 'undefined'
 
 :expect [4, 5, 6]
 a
-//│ = [4, 5, 6]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at lambda (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:26:46)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:19:12)
+//│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
+//│     at View.toString (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:212:16)
+//│     at [mlscript.prettyPrint] (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:216:33)
+//│     at renderArray_renderSet_renderClassInstance_renderObject_renderMap_renderValue_lambda_lambda_lambda_lambda_lambda_lambda$_lambda$_lambda$_lambda$_lambda$ (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs:230:94)
+//│     at renderValue (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs:1088:10)
 
 :expect [4, 5, 6]
 [...a]
-//│ = [4, 5, 6]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at lambda (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:26:46)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:19:12)
+//│     at REPL49:1:51
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: '[4, 5, 6]', got: 'undefined'
 
 :re
 a.at(-4)
@@ -74,15 +191,60 @@ let ys = concat([1, 2, 3], [4, 5, 6], [7, 8, 9, 10])
 
 :expect true
 equals([...xs], [...ys])
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at lambda (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:26:46)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:19:12)
+//│     at REPL62:1:62
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 :expect true
 equals(xs, ys)
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at View.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:201:47)
+//│     at Tuple.get (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:244:19)
+//│     at LazyFingerTree.equals (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:435:35)
+//│     at REPL65:1:54
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 :expect true
 equals(xs.materialize(), ys.materialize())
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at Tuple.get (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:244:19)
+//│     at LazyFingerTree.equals (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:435:35)
+//│     at REPL68:1:159
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 
 // Mixing Views and Splices
@@ -92,7 +254,22 @@ let ys1 = concat(mk(0), [1, 2, 3, 4], [5, 6, 7], [8, 9])
 
 :expect [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 [...ys1]
-//│ = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Single.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at View.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:201:47)
+//│     at get reify (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:275:44)
+//│     at Splice.materialize (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:347:33)
+//│     at Splice.iterator (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:249:16)
+//│     at REPL73:1:51
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: '[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]', got: 'undefined'
 
 :expect 10
 ys1.length
@@ -100,17 +277,47 @@ ys1.length
 
 :silent
 let ys2 = LazyFingerTree.dropLeftRight(2, 2)(ys1)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Single.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at View.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:201:47)
+//│     at get reify (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:275:44)
+//│     at Splice.materialize (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:347:33)
+//│     at sliceHelper (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:114:33)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:428:14
+//│     at REPL79:1:73
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
 
 :expect [2, 3, 4, 5, 6, 7]
 ys2
-//│ = [2, 3, 4, 5, 6, 7]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: '[2, 3, 4, 5, 6, 7]', got: 'undefined'
 
 :silent
 let ys2 = LazyFingerTree.dropLeftRight(0, 2)(ys2)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:418:23
+//│     at REPL84:1:75
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
 
 :expect [2, 3, 4, 5]
 ys2
-//│ = [2, 3, 4, 5]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: '[2, 3, 4, 5]', got: 'undefined'
 
 
 // concat and __concat should do similar things
@@ -127,15 +334,60 @@ w1.length == w2.length
 
 :expect true
 equals([...w1], [...w2])
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at View.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:201:47)
+//│     at get reify (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:275:44)
+//│     at Splice.materialize (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:347:33)
+//│     at Splice.iterator (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:249:16)
+//│     at REPL96:1:64
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 :expect true
 equals(w1, w2)
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at View.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:201:47)
+//│     at get reify (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:275:44)
+//│     at Splice.materialize (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:347:33)
+//│     at Splice.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:354:16)
+//│     at Tuple.get (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:244:19)
+//│     at LazyFingerTree.equals (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:435:35)
+//│     at REPL99:1:54
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 :expect true
 equals(w1.materialize(), w2.materialize())
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at View.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:201:47)
+//│     at get reify (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:275:44)
+//│     at Splice.materialize (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:347:33)
+//│     at REPL102:1:52
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 
 // object concat and slice
@@ -145,14 +397,53 @@ let o1 = mk(1, 2, 3, 4, 5).slice(1, 4)
 
 :expect [2, 3, 4]
 o1
-//│ = [2, 3, 4]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at lambda (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:26:46)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:19:12)
+//│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
+//│     at View.toString (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:212:16)
+//│     at [mlscript.prettyPrint] (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:216:33)
+//│     at renderArray_renderSet_renderClassInstance_renderObject_renderMap_renderValue_lambda_lambda_lambda_lambda_lambda_lambda$_lambda$_lambda$_lambda$_lambda$ (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs:230:94)
+//│     at renderValue (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs:1088:10)
 
 :expect [2, 3, 4]
 [...o1]
-//│ = [2, 3, 4]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at lambda (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:26:46)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:19:12)
+//│     at REPL110:1:51
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: '[2, 3, 4]', got: 'undefined'
 
 let o2 = o1.concat([5, 6, 7])
-//│ o2 = [2, 3, 4, 5, 6, 7]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at View.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:201:47)
+//│     at get reify (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:275:44)
+//│     at Splice.materialize (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:347:33)
+//│     at Splice.toString (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:381:16)
+//│     at [mlscript.prettyPrint] (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:386:33)
+//│     at renderArray_renderSet_renderClassInstance_renderObject_renderMap_renderValue_lambda_lambda_lambda_lambda_lambda_lambda$_lambda$_lambda$_lambda$_lambda$ (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs:230:94)
+//│     at renderValue (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs:1088:10)
 
 :silent
 let o3 = concat([1, 2, 3, 4])
@@ -165,15 +456,60 @@ let o5 = o4.slice(1, 7)
 
 :expect true
 equals(o2, o5)
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at View.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:201:47)
+//│     at get reify (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:275:44)
+//│     at Splice.materialize (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:347:33)
+//│     at Splice.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:354:16)
+//│     at Tuple.get (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:244:19)
+//│     at LazyFingerTree.equals (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:435:35)
+//│     at REPL125:1:54
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 :expect true
 equals([...o2], [...o5])
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at View.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:201:47)
+//│     at get reify (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:275:44)
+//│     at Splice.materialize (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:347:33)
+//│     at Splice.iterator (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:249:16)
+//│     at REPL128:1:64
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 :expect true
 equals(o2.materialize(), o5)
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at View.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:201:47)
+//│     at get reify (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:275:44)
+//│     at Splice.materialize (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:347:33)
+//│     at REPL131:1:45
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 // slice indices
 
@@ -182,14 +518,38 @@ let v = mk(1,2,3,4,5,6,7,8,9,10)
 let s = concat([1,2,3], [4,5,6], [7,8,9,10])
 //│ r = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 //│ s = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-//│ v = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at lambda (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:26:46)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:19:12)
+//│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
+//│     at View.toString (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:212:16)
+//│     at [mlscript.prettyPrint] (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:216:33)
+//│     at renderArray_renderSet_renderClassInstance_renderObject_renderMap_renderValue_lambda_lambda_lambda_lambda_lambda_lambda$_lambda$_lambda$_lambda$_lambda$ (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs:230:94)
+//│     at renderValue (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs:1088:10)
 
 :expect [4, 5]
 // both positive
 r.slice(3, 5)
 //│ = [4, 5]
 v.slice(3, 5)
-//│ = [4, 5]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at lambda (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:26:46)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:19:12)
+//│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
+//│     at View.toString (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:212:16)
+//│     at [mlscript.prettyPrint] (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:216:33)
+//│     at renderArray_renderSet_renderClassInstance_renderObject_renderMap_renderValue_lambda_lambda_lambda_lambda_lambda_lambda$_lambda$_lambda$_lambda$_lambda$ (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs:230:94)
+//│     at renderValue (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs:1088:10)
 s.slice(3, 5)
 //│ = [4, 5]
 dropLeftRight(3, 5)(r)
@@ -198,21 +558,57 @@ dropLeftRight(3, 5)(r)
 r.slice(-7, -5)
 //│ = [4, 5]
 v.slice(-7, -5)
-//│ = [4, 5]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at lambda (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:26:46)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:19:12)
+//│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
+//│     at View.toString (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:212:16)
+//│     at [mlscript.prettyPrint] (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:216:33)
+//│     at renderArray_renderSet_renderClassInstance_renderObject_renderMap_renderValue_lambda_lambda_lambda_lambda_lambda_lambda$_lambda$_lambda$_lambda$_lambda$ (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs:230:94)
+//│     at renderValue (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs:1088:10)
 s.slice(-7, -5)
 //│ = [4, 5]
 // beg positive, fin negative
 r.slice(3, -5)
 //│ = [4, 5]
 v.slice(3, -5)
-//│ = [4, 5]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at lambda (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:26:46)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:19:12)
+//│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
+//│     at View.toString (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:212:16)
+//│     at [mlscript.prettyPrint] (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:216:33)
+//│     at renderArray_renderSet_renderClassInstance_renderObject_renderMap_renderValue_lambda_lambda_lambda_lambda_lambda_lambda$_lambda$_lambda$_lambda$_lambda$ (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs:230:94)
+//│     at renderValue (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs:1088:10)
 s.slice(3, -5)
 //│ = [4, 5]
 // beg negative, fin positive
 r.slice(-7, 5)
 //│ = [4, 5]
 v.slice(-7, 5)
-//│ = [4, 5]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+//│     at lambda4 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:18:40)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:9:12
+//│     at Deep.at (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mjs:694:29)
+//│     at lambda (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:26:46)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:19:12)
+//│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
+//│     at View.toString (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:212:16)
+//│     at [mlscript.prettyPrint] (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mjs:216:33)
+//│     at renderArray_renderSet_renderClassInstance_renderObject_renderMap_renderValue_lambda_lambda_lambda_lambda_lambda_lambda$_lambda$_lambda$_lambda$_lambda$ (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs:230:94)
+//│     at renderValue (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs:1088:10)
 s.slice(-7, 5)
 //│ = [4, 5]
 

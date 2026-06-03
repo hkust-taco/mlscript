@@ -227,18 +227,18 @@ _ - _ of 1, 2
 :sjs
 1 \ (_ - 2)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda32;
-//│ lambda32 = (undefined, function (_0) { return _0 - 2 });
-//│ return Predef.passTo(1, lambda32)
+//│ let lambda33;
+//│ lambda33 = (undefined, function (_0) { return _0 - 2 });
+//│ return Predef.passTo(1, lambda33)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 :sjs
 1 \ (_ - 2)()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda33;
-//│ lambda33 = (undefined, function (_0) { return _0 - 2 });
-//│ return Predef.passTo(1, lambda33)()
+//│ let lambda34;
+//│ lambda34 = (undefined, function (_0) { return _0 - 2 });
+//│ return Predef.passTo(1, lambda34)()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = -1
 

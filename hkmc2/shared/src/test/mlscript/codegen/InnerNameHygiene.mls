@@ -38,15 +38,12 @@ fun g() =
   fun ff1(x) = ff(x)
   ff1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let ff1, g1;
-//│ ff1 = function ff(x) {
-//│   return x
+//│ let ff1, ff2, g1;
+//│ ff1 = function ff1(x) {
+//│   return ff2(x)
 //│ };
-//│ g1 = function g() {
-//│   let ff11;
-//│   const proxy$ff = ff1; ff11 = function ff1(x) { return proxy$ff(x) };
-//│   return ff11
-//│ };
+//│ ff2 = function ff(x) { return x };
+//│ g1 = function g() { return ff1 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 42
@@ -60,15 +57,15 @@ fun g() =
   fun h1(x) = h(x) + h1(x)
   h1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let g2, h;
-//│ h = function h(x) {
-//│   return x
+//│ let h1, g2, h;
+//│ h1 = function h1(x) {
+//│   let tmp, tmp1;
+//│   tmp = h(x);
+//│   tmp1 = h1(x);
+//│   return tmp + tmp1
 //│ };
-//│ g2 = function g() {
-//│   let h1;
-//│   h1 = function h1(x) { let tmp, tmp1; tmp = h(x); tmp1 = h1(x); return tmp + tmp1 };
-//│   return h1
-//│ };
+//│ h = function h(x) { return x };
+//│ g2 = function g() { return h1 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -80,23 +77,20 @@ class C with
   class C with
     new C
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let C2;
+//│ let C2, C3;
 //│ (class C {
 //│   static {
 //│     C2 = this
 //│   }
 //│   constructor() {
-//│     const this$C = this;
-//│     (class C1 {
-//│       static {
-//│         this$C.C = this
-//│       }
-//│       constructor() {
-//│         globalThis.Object.freeze(new this$C.C());
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "C"];
-//│     });
+//│     globalThis.Object.freeze(new C2());
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C"];
+//│ });
+//│ (class C1 {
+//│   static {
+//│     C3 = this
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "C"];
@@ -112,7 +106,17 @@ class CC with
     new CC2
   new CC
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let CC1;
+//│ let CC21, CC1;
+//│ (class CC2 {
+//│   static {
+//│     CC21 = this
+//│   }
+//│   constructor() {
+//│     globalThis.Object.freeze(new CC21());
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "CC2"];
+//│ });
 //│ (class CC {
 //│   static {
 //│     CC1 = this
@@ -121,17 +125,6 @@ class CC with
 //│     globalThis.Object.freeze(new CC1());
 //│   }
 //│   get foo() {
-//│     let CC21;
-//│     (class CC2 {
-//│       static {
-//│         CC21 = this
-//│       }
-//│       constructor() {
-//│         globalThis.Object.freeze(new CC21());
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "CC2"];
-//│     });
 //│     return globalThis.Object.freeze(new CC21());
 //│   }
 //│   toString() { return runtime.render(this); }

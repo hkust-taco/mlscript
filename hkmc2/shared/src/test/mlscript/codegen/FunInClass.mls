@@ -19,40 +19,41 @@ fun test(a) =
       h(d)
   Inner(42)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let test1;
-//│ test1 = function test(a) {
-//│   let Inner1;
-//│   Inner1 = function Inner(b) {
-//│     return globalThis.Object.freeze(new Inner.class(b));
-//│   };
-//│   (class Inner {
-//│     static {
-//│       Inner1.class = this
-//│     }
-//│     constructor(b) {
-//│       this.b = b;
-//│       Predef.print(a);
-//│     }
-//│     f(c) {
-//│       return globalThis.Object.freeze([
-//│         a,
-//│         this.b,
-//│         c
-//│       ])
-//│     }
-//│     g(d) {
-//│       return globalThis.Object.freeze([
-//│         a,
-//│         this.b,
-//│         d,
-//│         d
-//│       ])
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Inner", ["b"]];
-//│   });
-//│   return Inner1(42)
+//│ let Inner1, test1;
+//│ Inner1 = function Inner(b) {
+//│   return globalThis.Object.freeze(new Inner.class(b));
 //│ };
+//│ (class Inner {
+//│   static {
+//│     Inner1.class = this
+//│   }
+//│   constructor(b, a) {
+//│     this.#a = a;
+//│     this.b = b;
+//│     Predef.print(this.#a);
+//│   }
+//│   #a;
+//│   f(c) {
+//│     return globalThis.Object.freeze([
+//│       this.#a,
+//│       this.b,
+//│       c
+//│     ])
+//│   }
+//│   g(d) {
+//│     let a1;
+//│     a1 = this.#a;
+//│     return globalThis.Object.freeze([
+//│       a1,
+//│       this.b,
+//│       d,
+//│       d
+//│     ])
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Inner", ["b"]];
+//│ });
+//│ test1 = function test(a) { return globalThis.Object.freeze(new Inner1.class(42, a)) };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let i = test(100)
@@ -74,49 +75,53 @@ fun test(a) =
     print of [a, b]
   [C1(1), C2(2)]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let test2;
+//│ let C12, C21, test2;
+//│ C12 = function C1(b) {
+//│   return globalThis.Object.freeze(new C1.class(b));
+//│ };
+//│ (class C11 {
+//│   static {
+//│     C12.class = this
+//│   }
+//│   constructor(b, a) {
+//│     let tmp;
+//│     this.#a = a;
+//│     this.b = b;
+//│     tmp = globalThis.Object.freeze([
+//│       this.#a,
+//│       this.b
+//│     ]);
+//│     Predef.print(tmp);
+//│   }
+//│   #a;
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C1", ["b"]];
+//│ });
+//│ C21 = function C2(b) {
+//│   return globalThis.Object.freeze(new C2.class(b));
+//│ };
+//│ (class C2 {
+//│   static {
+//│     C21.class = this
+//│   }
+//│   constructor(b, a) {
+//│     let tmp;
+//│     this.#a = a;
+//│     this.b = b;
+//│     tmp = globalThis.Object.freeze([
+//│       this.#a,
+//│       this.b
+//│     ]);
+//│     Predef.print(tmp);
+//│   }
+//│   #a;
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C2", ["b"]];
+//│ });
 //│ test2 = function test(a) {
-//│   let C11, C21, tmp, tmp1;
-//│   C11 = function C1(b) {
-//│     return globalThis.Object.freeze(new C1.class(b));
-//│   };
-//│   (class C1 {
-//│     static {
-//│       C11.class = this
-//│     }
-//│     constructor(b) {
-//│       let tmp2;
-//│       this.b = b;
-//│       tmp2 = globalThis.Object.freeze([
-//│         a,
-//│         this.b
-//│       ]);
-//│       Predef.print(tmp2);
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "C1", ["b"]];
-//│   });
-//│   C21 = function C2(b) {
-//│     return globalThis.Object.freeze(new C2.class(b));
-//│   };
-//│   (class C2 {
-//│     static {
-//│       C21.class = this
-//│     }
-//│     constructor(b) {
-//│       let tmp2;
-//│       this.b = b;
-//│       tmp2 = globalThis.Object.freeze([
-//│         a,
-//│         this.b
-//│       ]);
-//│       Predef.print(tmp2);
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "C2", ["b"]];
-//│   });
-//│   tmp = C11(1);
-//│   tmp1 = C21(2);
+//│   let tmp, tmp1;
+//│   tmp = globalThis.Object.freeze(new C12.class(1, a));
+//│   tmp1 = globalThis.Object.freeze(new C21.class(2, a));
 //│   return globalThis.Object.freeze([ tmp, tmp1 ])
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -139,7 +144,13 @@ data class Foo(a) with
   foo()
 Foo(123)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo1;
+//│ let bar, baz, Foo1;
+//│ bar = function bar(Foo2) {
+//│   return Foo2.a
+//│ };
+//│ baz = function baz(Foo2) {
+//│   return Foo2.a
+//│ };
 //│ Foo1 = function Foo(a) {
 //│   return globalThis.Object.freeze(new Foo.class(a));
 //│ };
@@ -152,16 +163,8 @@ Foo(123)
 //│     this.foo();
 //│   }
 //│   foo() {
-//│     let bar, baz;
-//│     const this$Foo = this;
-//│     bar = function bar() {
-//│       return this$Foo.a
-//│     };
-//│     baz = function baz() {
-//│       return this$Foo.a
-//│     };
-//│     bar();
-//│     return baz()
+//│     bar(this);
+//│     return baz(this)
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", ["a"]];

@@ -42,7 +42,19 @@ xs.map((x, ..._) => x * 2)
 fun map(xs, f) = xs.map((x, ...bs) => f(x))
 
 xs \map(x => x * 2) \print()
-//│ > [4, 2, 0]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+//│     at lambda4 (REPL49:1:335)
+//│     at REPL49:1:177
+//│     at Array.map (<anonymous>)
+//│     at map (REPL49:1:528)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:179:31
+//│     at REPL52:1:179
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
 
 // * Note: the RHS of `\` is a self-contained block, thus implicitly parenthesized.
 :sjs
@@ -51,14 +63,14 @@ xs \map(x => x * 2) \print()
 xs \
   map(x => x * 2)
 //│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.52: 	  map(x => x * 2)
+//│ ║  l.64: 	  map(x => x * 2)
 //│ ╙──      	     ^^^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda5, tmp1;
-//│ lambda5 = (undefined, function (x) {
+//│ let lambda6, tmp1;
+//│ lambda6 = (undefined, function (x) {
 //│   return x * 2
 //│ });
-//│ tmp1 = map(lambda5);
+//│ tmp1 = map(lambda6);
 //│ return Predef.passTo(xs1, tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
@@ -68,7 +80,7 @@ xs \
 xs\
   map(x => x * 2)
 //│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.69: 	  map(x => x * 2)
+//│ ║  l.81: 	  map(x => x * 2)
 //│ ╙──      	     ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
@@ -85,19 +97,52 @@ xs
 //│   rhs = Tup of Ls of 
 //│     Ident of "f"
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ > [2, 1, 0] 2
-//│ > [2, 1, 0] 1
-//│ > [2, 1, 0] 0
-//│ = [(), (), ()]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+//│     at lambda4 (REPL49:1:335)
+//│     at REPL49:1:177
+//│     at Array.map (<anonymous>)
+//│     at map (REPL49:1:528)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:179:31
+//│     at REPL61:1:62
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
 
 xs
   \map(x => x * 2)
-//│ = [4, 2, 0]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+//│     at lambda4 (REPL49:1:335)
+//│     at REPL49:1:177
+//│     at Array.map (<anonymous>)
+//│     at map (REPL49:1:528)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:179:31
+//│     at REPL64:1:182
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
 
 xs
   \map(x => x * 2)
   \print()
-//│ > [4, 2, 0]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+//│     at lambda4 (REPL49:1:335)
+//│     at REPL49:1:177
+//│     at Array.map (<anonymous>)
+//│     at map (REPL49:1:528)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:179:31
+//│     at REPL67:1:181
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
 
 fun f = print(0)
 

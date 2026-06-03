@@ -9,6 +9,11 @@ object A with
   val y = 2
   print(A, "|", B)
   print(x, y)
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:196)
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.6: 	  object B with
+//│ ╙──     	         ^
 //│ > A { x: 1, B: B {} } | B {}
 //│ > 1 undefined
 //│ > A { x: 1, B: B, y: 2 } | B
@@ -25,7 +30,7 @@ module A with
     A
   val y = 2
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.25: 	    A
+//│ ║  l.30: 	    A
 //│ ╙──      	    ^
 //│ > 1 undefined
 

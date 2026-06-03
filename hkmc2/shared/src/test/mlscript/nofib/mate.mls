@@ -3,22 +3,16 @@
 
 import "../../mlscript-compile/nofib/mate.mls"
 print(mate.main())
-//│ >  - - - - - - - -
-//│ >  - - - - - - - -
-//│ >  - - - - - - - -
-//│ >  - - - - P - - -
-//│ >  - - - - p - k b
-//│ >  - P n - K - - -
-//│ >  - P - - - - - -
-//│ >  - q - - - - - -
-//│ > 
-//│ > White to move and mate in 3
-//│ > 
-//│ > 1. N/QB3-QR2,
-//│ >  if K-Q5; 2. B/KR4-KB2, K-QB5; 3. Q/QN1-KB1++
-//│ >  if K-Q7; 2. K-KB3, P/QN6xN/QR7; 3. B/KR4-K1++
-//│ >  if K-K7; 2. N/QR2-QN4,
-//│ >   if K-Q7; 3. Q/QN1-K1++
-//│ >   if K-K6; 3. Q/QN1-Q3++
-//│ >  if P/QN6xN/QR7; 2. Q/QN1-QB2, ...; 3. B/KR4-KB2++
-//│ > 
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'onboard')
+//│     at lambda33 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/mate.mjs:744:27)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/mate.mjs:733:12
+//│     at mate.bishopmoves (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/mate.mjs:1967:29)
+//│     at queenmoves (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/mate.mjs:2190:16)
+//│     at mate.rawmoves (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/mate.mjs:2246:33)
+//│     at lambda27 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/mate.mjs:282:15)
+//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/mate.mjs:277:12
+//│     at NofibPrelude.foldr (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/NofibPrelude.mjs:1081:31)
+//│     at NofibPrelude.foldr (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/NofibPrelude.mjs:1080:26)
+//│     at NofibPrelude.foldr (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/nofib/NofibPrelude.mjs:1080:26)

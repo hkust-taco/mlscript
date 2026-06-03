@@ -47,23 +47,23 @@ fun foo(x) = x is Cross
 // Keep the IR output to prevent regressions.
 fun isCompiledCross(x) = x is @compile Cross
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let isCompiledCross⁰;
+//│ let isCompiledCross⁰, lambda⁰;
+//│ define lambda⁰ as fun lambda¹(input) {
+//│   let p_0$, p_0$1, tmp, tmp1;
+//│   match input
+//│     "X" =>
+//│       set tmp = true;
+//│       set p_0$ = tmp;
+//│       return p_0$
+//│     else
+//│       set tmp1 = false;
+//│       set p_0$1 = tmp1;
+//│       return p_0$1
+//│   end
+//│ };
 //│ define isCompiledCross⁰ as fun isCompiledCross¹(x) {
-//│   let matcher__Cross$, matchSuccess, lambda;
-//│   define lambda as fun lambda⁰(input) {
-//│     let p_0$, p_0$1, tmp, tmp1;
-//│     match input
-//│       "X" =>
-//│         set tmp = true;
-//│         set p_0$ = tmp;
-//│         return p_0$
-//│       else
-//│         set tmp1 = false;
-//│         set p_0$1 = tmp1;
-//│         return p_0$1
-//│     end
-//│   };
-//│   set matcher__Cross$ = lambda⁰;
+//│   let matcher__Cross$, matchSuccess;
+//│   set matcher__Cross$ = lambda¹;
 //│   set matchSuccess = matcher__Cross$(x);
 //│   match matchSuccess
 //│     true =>

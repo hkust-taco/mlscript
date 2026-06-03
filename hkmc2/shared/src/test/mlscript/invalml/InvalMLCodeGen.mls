@@ -159,21 +159,36 @@ fun pow(x) = case
   0 then 1
   n then x * pow(x)(n-1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let pow;
-//│ pow = function pow(x) {
-//│   let lambda2;
-//│   lambda2 = (undefined, function (caseScrut) {
-//│     let baseCall, tmp, tmp1;
-//│     if (caseScrut === 0) {
-//│       return 1
+//│ let pow, lambda$, pow_lambda_lambda$;
+//│ pow_lambda_lambda$ = function pow_lambda_lambda$(id, param0, param1) {
+//│   loopLabel: while (true) {
+//│     switch (id) {
+//│       case 0:
+//│         return lambda$(param0);
+//│       case 1:
+//│         {
+//│           let baseCall, tmp, tmp1;
+//│           if (param1 === 0) {
+//│             return 1
+//│           }
+//│           baseCall = pow(param0);
+//│           tmp = param1 - 1;
+//│           tmp1 = runtime.safeCall(baseCall(tmp));
+//│           return param0 * tmp1;
+//│         }
+//│       case 2:
+//│         id = 1;
+//│         continue loopLabel;
 //│     }
-//│     baseCall = pow(x);
-//│     tmp = caseScrut - 1;
-//│     tmp1 = runtime.safeCall(baseCall(tmp));
-//│     return x * tmp1;
-//│   });
-//│   return lambda2
+//│     break;
+//│   }
 //│ };
+//│ lambda$ = (undefined, function (x) {
+//│   return (caseScrut) => {
+//│     return pow_lambda_lambda$(2, x, caseScrut)
+//│   }
+//│ });
+//│ pow = function pow(x) { return pow_lambda_lambda$(0, x, undefined) };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -182,20 +197,17 @@ fun nott = case
   true then false
   false then true
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let nott;
-//│ nott = function nott() {
-//│   let lambda2;
-//│   lambda2 = (undefined, function (caseScrut) {
-//│     switch (caseScrut) {
-//│       case true:
-//│         return false;
-//│       case false:
-//│         return true;
-//│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error.class("match error"))
-//│   });
-//│   return lambda2
-//│ };
+//│ let nott, lambda2;
+//│ lambda2 = (undefined, function (caseScrut) {
+//│   switch (caseScrut) {
+//│     case true:
+//│       return false;
+//│     case false:
+//│       return true;
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error.class("match error"))
+//│ });
+//│ nott = function nott() { return lambda2 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -203,7 +215,7 @@ fun nott = case
 :sjs
 nott of false
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp; tmp = nott(); return runtime.safeCall(tmp(false))
+//│ return runtime.safeCall(lambda2(false))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 //│ Type: Bool
@@ -214,21 +226,17 @@ fun fact = case
   0 then 1
   n then n * fact(n - 1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let fact;
-//│ fact = function fact() {
-//│   let lambda2;
-//│   lambda2 = (undefined, function (caseScrut) {
-//│     let tmp1, tmp2, tmp3;
-//│     if (caseScrut === 0) {
-//│       return 1
-//│     }
-//│     tmp1 = fact();
-//│     tmp2 = caseScrut - 1;
-//│     tmp3 = runtime.safeCall(tmp1(tmp2));
-//│     return caseScrut * tmp3;
-//│   });
-//│   return lambda2
-//│ };
+//│ let fact, lambda3;
+//│ lambda3 = (undefined, function (caseScrut) {
+//│   let tmp, tmp1;
+//│   if (caseScrut === 0) {
+//│     return 1
+//│   }
+//│   tmp = caseScrut - 1;
+//│   tmp1 = runtime.safeCall(lambda3(tmp));
+//│   return caseScrut * tmp1;
+//│ });
+//│ fact = function fact() { return lambda3 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

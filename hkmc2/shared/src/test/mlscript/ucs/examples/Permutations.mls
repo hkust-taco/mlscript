@@ -28,12 +28,19 @@ fun (~>..) insertAllPositions(z, xs) =
   go(Nil, Nil, xs)
 
 0 ~>.. (1 :: 2 :: 3 :: Nil) |> showLists
-//│ > [
-//│ >   [0, 1, 2, 3],
-//│ >   [1, 0, 2, 3],
-//│ >   [1, 2, 0, 3],
-//│ >   [1, 2, 3, 0]
-//│ > ]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
+//│     at showLists (REPL22:1:473)
+//│     at Predef.pipeInto (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:141:29)
+//│     at REPL28:1:270
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
 
 fun permutations(xs) =
   if xs is
@@ -44,30 +51,64 @@ fun permutations(xs) =
       Iter.folded of Nil, (acc, ys) => acc ::: (x ~>.. ys)
 
 permutations(Nil) |> showLists
-//│ > [
-//│ > 
-//│ > ]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:339:24)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
+//│     at showLists (REPL22:1:473)
+//│     at Predef.pipeInto (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:141:29)
+//│     at REPL34:1:105
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
 
 permutations(1 :: Nil) |> showLists
-//│ > [
-//│ >   [1]
-//│ > ]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
+//│     at showLists (REPL22:1:473)
+//│     at Predef.pipeInto (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:141:29)
+//│     at REPL37:1:159
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
 
 permutations(1 :: 2 :: Nil) |> showLists
-//│ > [
-//│ >   [1, 2],
-//│ >   [2, 1]
-//│ > ]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
+//│     at showLists (REPL22:1:473)
+//│     at Predef.pipeInto (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:141:29)
+//│     at REPL40:1:212
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
 
 permutations(1 :: 2 :: 3 :: Nil) |> showLists
-//│ > [
-//│ >   [1, 2, 3],
-//│ >   [2, 1, 3],
-//│ >   [2, 3, 1],
-//│ >   [1, 3, 2],
-//│ >   [3, 1, 2],
-//│ >   [3, 2, 1]
-//│ > ]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
+//│     at showLists (REPL22:1:473)
+//│     at Predef.pipeInto (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:141:29)
+//│     at REPL43:1:276
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
 
 fun permutations'(xs) = if xs is
   Nil then Nil
@@ -80,55 +121,76 @@ fun permutations'(xs) = if xs is
       Iter.toStack()
 
 permutations'(Nil) |> showLists
-//│ > [
-//│ > 
-//│ > ]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:339:24)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
+//│     at showLists (REPL22:1:473)
+//│     at Predef.pipeInto (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:141:29)
+//│     at REPL49:1:173
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
 
 permutations'(1 :: Nil) |> showLists
-//│ > [
-//│ >   [1]
-//│ > ]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
+//│     at showLists (REPL22:1:473)
+//│     at Predef.pipeInto (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:141:29)
+//│     at REPL52:1:218
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
 
 permutations'(1 :: 2 :: Nil) |> showLists
-//│ > [
-//│ >   [1, 2],
-//│ >   [2, 1]
-//│ > ]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at go (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:60:36)
+//│     at Iter.rightFolded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:716:12)
+//│     at Iter.toStack (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:818:17)
+//│     at permutations$__lambda_lambda$ (REPL46:1:1580)
+//│     at REPL46:1:2230
+//│     at Iter.foldingImpl (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:680:32)
+//│     at Iter.folded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:711:17)
+//│     at permutations$__lambda_lambda$ (REPL46:1:1002)
 
 permutations'(1 :: 2 :: 3 :: Nil) |> showLists
-//│ > [
-//│ >   [1, 2, 3],
-//│ >   [1, 3, 2],
-//│ >   [2, 1, 3],
-//│ >   [2, 3, 1],
-//│ >   [3, 1, 2],
-//│ >   [3, 2, 1]
-//│ > ]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at go (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:60:36)
+//│     at Iter.rightFolded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:716:12)
+//│     at Iter.toStack (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:818:17)
+//│     at permutations$__lambda_lambda$ (REPL46:1:1580)
+//│     at REPL46:1:2230
+//│     at Iter.foldingImpl (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:680:32)
+//│     at Iter.folded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:711:17)
+//│     at permutations$__lambda_lambda$ (REPL46:1:1002)
 
 permutations'(1 :: 2 :: 3 :: 4 :: Nil) |> showLists
-//│ > [
-//│ >   [1, 2, 3, 4],
-//│ >   [1, 2, 4, 3],
-//│ >   [1, 3, 2, 4],
-//│ >   [1, 3, 4, 2],
-//│ >   [1, 4, 2, 3],
-//│ >   [1, 4, 3, 2],
-//│ >   [2, 1, 3, 4],
-//│ >   [2, 1, 4, 3],
-//│ >   [2, 3, 1, 4],
-//│ >   [2, 3, 4, 1],
-//│ >   [2, 4, 1, 3],
-//│ >   [2, 4, 3, 1],
-//│ >   [3, 1, 2, 4],
-//│ >   [3, 1, 4, 2],
-//│ >   [3, 2, 1, 4],
-//│ >   [3, 2, 4, 1],
-//│ >   [3, 4, 1, 2],
-//│ >   [3, 4, 2, 1],
-//│ >   [4, 1, 2, 3],
-//│ >   [4, 1, 3, 2],
-//│ >   [4, 2, 1, 3],
-//│ >   [4, 2, 3, 1],
-//│ >   [4, 3, 1, 2],
-//│ >   [4, 3, 2, 1]
-//│ > ]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
+//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
+//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
+//│     at go (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:60:36)
+//│     at Iter.rightFolded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:716:12)
+//│     at Iter.toStack (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:818:17)
+//│     at permutations$__lambda_lambda$ (REPL46:1:1580)
+//│     at REPL46:1:2230
+//│     at Iter.foldingImpl (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:680:32)
+//│     at Iter.folded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:711:17)
+//│     at permutations$__lambda_lambda$ (REPL46:1:1002)

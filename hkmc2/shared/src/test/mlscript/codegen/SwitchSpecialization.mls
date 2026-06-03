@@ -272,17 +272,28 @@ fun f(x, y) =
     return "x = 1"
   return "x != 1"
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f5;
+//│ let f5, Capture$f1;
+//│ (class Capture$f {
+//│   static {
+//│     Capture$f1 = this
+//│   }
+//│   constructor(x$0) {
+//│     this.x$0 = x$0;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Capture$f"];
+//│ });
 //│ f5 = function f(x, y) {
-//│   let scrut;
-//│   if (x === 0) {
-//│     x = 1;
+//│   let scrut, f$cap;
+//│   f$cap = new Capture$f1(x);
+//│   if (f$cap.x$0 === 0) {
+//│     f$cap.x$0 = 1;
 //│     scrut = Predef.equals(y, 0);
 //│     if (scrut === true) {
-//│       x = 1000;
-//│     } else { x = 1; }
+//│       f$cap.x$0 = 1000;
+//│     } else { f$cap.x$0 = 1; }
 //│   }
-//│   if (x === 1) { return "x = 1" }
+//│   if (f$cap.x$0 === 1) { return "x = 1" }
 //│   return "x != 1";
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -310,21 +321,30 @@ fun f(x, y) =
     return "x = 1"
   return "x != 1"
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f6;
-//│ f6 = function f(x, y) {
-//│   let scrut;
-//│   switch (x) {
-//│     case 0:
-//│       x = 1;
-//│       scrut = Predef.equals(y, 0);
-//│       if (scrut === true) {
-//│         x = 1000;
-//│         x = 1;
-//│       } else { x = 1; }
-//│     case 1:
-//│       return "x = 1";
+//│ let f6, Capture$f3;
+//│ (class Capture$f2 {
+//│   static {
+//│     Capture$f3 = this
 //│   }
-//│   return "x != 1"
+//│   constructor(x$0) {
+//│     this.x$0 = x$0;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Capture$f"];
+//│ });
+//│ f6 = function f(x, y) {
+//│   let scrut, f$cap;
+//│   f$cap = new Capture$f3(x);
+//│   if (f$cap.x$0 === 0) {
+//│     f$cap.x$0 = 1;
+//│     scrut = Predef.equals(y, 0);
+//│     if (scrut === true) {
+//│       f$cap.x$0 = 1000;
+//│       f$cap.x$0 = 1;
+//│     } else { f$cap.x$0 = 1; }
+//│   }
+//│   if (f$cap.x$0 === 1) { return "x = 1" }
+//│   return "x != 1";
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

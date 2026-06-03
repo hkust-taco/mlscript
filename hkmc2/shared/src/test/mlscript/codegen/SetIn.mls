@@ -78,28 +78,41 @@ fun example() =
   print(get_x())
 example()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let example2;
+//│ let example2, Capture$scope03, get_x$;
+//│ (class Capture$scope02 {
+//│   static {
+//│     Capture$scope03 = this
+//│   }
+//│   constructor(x$0) {
+//│     this.x$0 = x$0;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Capture$scope0"];
+//│ });
+//│ get_x$ = function get_x$(scope0$cap) {
+//│   return () => {
+//│     return scope0$cap.x$0
+//│   }
+//│ };
 //│ example2 = function example() {
-//│   let x2, get_x, old1, tmp4, tmp5, get_x1;
-//│   x2 = 0;
-//│   get_x1 = function get_x() {
-//│     return x2
-//│   };
-//│   get_x = get_x1;
-//│   old1 = x2;
+//│   let get_x, old1, tmp4, tmp5, scope0$cap;
+//│   scope0$cap = new Capture$scope03(undefined);
+//│   scope0$cap.x$0 = 0;
+//│   get_x = get_x$(scope0$cap);
+//│   old1 = scope0$cap.x$0;
 //│   try {
 //│     {
 //│       let inlinedVal;
-//│       tmp4 = x2 + 1;
-//│       x2 = tmp4;
-//│       Predef.print(x2);
-//│       inlinedVal = x2;
+//│       tmp4 = scope0$cap.x$0 + 1;
+//│       scope0$cap.x$0 = tmp4;
+//│       Predef.print(scope0$cap.x$0);
+//│       inlinedVal = scope0$cap.x$0;
 //│       Predef.print(inlinedVal);
 //│     }
 //│   } finally {
-//│     x2 = old1;
+//│     scope0$cap.x$0 = old1;
 //│   }
-//│   Predef.print(x2);
+//│   Predef.print(scope0$cap.x$0);
 //│   tmp5 = runtime.safeCall(get_x());
 //│   return Predef.print(tmp5)
 //│ };
@@ -121,27 +134,34 @@ fun example() =
   y
 example()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let example⁰;
+//│ let example⁰, Capture$scope0⁰, get_x$⁰;
+//│ define Capture$scope0⁰ as class Capture$scope0² {
+//│   constructor Capture$scope0¹(x$0) {
+//│     define x$0⁰ as val x$0¹ = x$0;
+//│     end
+//│   }
+//│ };
+//│ @inline @private
+//│ define get_x$⁰ as fun get_x$¹(scope0$cap)() {
+//│   return scope0$cap.x$0¹
+//│ };
 //│ define example⁰ as fun example¹() {
-//│   let x, get_x, old, tmp, tmp1, tmp2, tmp3, get_x1;
-//│   set x = 0;
-//│   @private
-//│   define get_x1 as fun get_x⁰() {
-//│     return x
-//│   };
-//│   set get_x = get_x⁰;
-//│   set old = x;
+//│   let get_x, old, tmp, tmp1, tmp2, tmp3, scope0$cap;
+//│   set scope0$cap = new mut Capture$scope0²(undefined);
+//│   set scope0$cap.x$0¹ = 0;
+//│   set get_x = get_x$¹(scope0$cap);
+//│   set old = scope0$cap.x$0¹;
 //│   try
-//│     set tmp1 = +⁰(x, 1);
-//│     set x = tmp1;
-//│     do Predef⁰.print⁰(x);
-//│     set tmp2 = x;
+//│     set tmp1 = +⁰(scope0$cap.x$0¹, 1);
+//│     set scope0$cap.x$0¹ = tmp1;
+//│     do Predef⁰.print⁰(scope0$cap.x$0¹);
+//│     set tmp2 = scope0$cap.x$0¹;
 //│     set tmp = tmp2;
 //│     end
 //│   finally
-//│     set x = old;
+//│     set scope0$cap.x$0¹ = old;
 //│     end;
-//│     do Predef⁰.print⁰(x);
+//│     do Predef⁰.print⁰(scope0$cap.x$0¹);
 //│   set tmp3 = get_x();
 //│   do Predef⁰.print⁰(tmp3);
 //│   return tmp
