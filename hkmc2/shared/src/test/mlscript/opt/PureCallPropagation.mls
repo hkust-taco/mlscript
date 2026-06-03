@@ -140,3 +140,46 @@ f(3) + f(4)
 //│ f = fun
 
 
+// * Do not propagate an unsaturated call prefix if it mentions a local
+// * that has gone out of scope by the later call site.
+:soir
+fun scopedPrefixFoo(x)(y) = x + y
+() =>
+  let f
+  if maybe is
+    false then 0
+    true then
+      scope.locally of (
+        let x = hide(0)
+        f = scopedPrefixFoo(x)
+      )
+  print of
+    "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello"
+  f(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let scopedPrefixFoo⁰, lambda³;
+//│ @inline
+//│ define scopedPrefixFoo⁰ as fun scopedPrefixFoo¹(x)(y) {
+//│   return +⁰(x, y)
+//│ };
+//│ @private
+//│ define lambda³ as fun lambda⁴() {
+//│   let f, scrut;
+//│   set scrut = Predef⁰.maybe⁰;
+//│   match scrut
+//│     false =>
+//│       end
+//│     true =>
+//│       let x;
+//│       set x = Predef⁰.hide⁰(0);
+//│       set f = scopedPrefixFoo¹(x);
+//│       end
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   do Predef⁰.print⁰("Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello");
+//│   return f(2)
+//│ };
+//│ return lambda⁴
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+

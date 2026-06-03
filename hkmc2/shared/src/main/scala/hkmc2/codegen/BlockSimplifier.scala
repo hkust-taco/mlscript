@@ -442,13 +442,17 @@ class BlockSimplifier
     enum AssignInfo:
       case Unknown
       case Uninitialized
-      case Assigned(asst: Assign, varAsst: Opt[Value.RefLike -> AssignInfo])
+      case Assigned(
+        asst: Assign,
+        varAsst: Opt[Value.RefLike -> AssignInfo],
+        rhsRequirements: List[LocalVar -> AssignInfo],
+      )
       case Merge(asst1: AssignInfo, asst2: AssignInfo)
 
       override def toString: String = this match
         case Unknown => "?"
         case Uninitialized => "∅"
-        case Assigned(asst, varAsst) => s"${asst.rhs}${varAsst.fold("")("‹"+_+"›")}"
+        case Assigned(asst, varAsst, _) => s"${asst.rhs}${varAsst.fold("")("‹"+_+"›")}"
         case Merge(a1, a2) => s"{${a1.toString} | ${a2.toString}}"
 
       def merge(that: AssignInfo): AssignInfo =
@@ -472,7 +476,7 @@ class BlockSimplifier
           ValueAnalysis.conservative
         case Uninitialized =>
           ValueAnalysis(true, Nil)
-        case Assigned(ass, opt) =>
+        case Assigned(ass, opt, _) =>
           val litValue = ass.rhs match
             case v @ Value.Lit(_) => v
             case _ => false
@@ -496,10 +500,10 @@ class BlockSimplifier
 
       lazy val pureCallPrefix: Opt[TrackedPureCall] = this match
         case Unknown | Uninitialized => N
-        case Assigned(ass, opt) =>
+        case Assigned(ass, opt, rhsRequirements) =>
           ass.rhs match
           case call: Call if call.isKnownUnsaturatedCall && call.isPure =>
-            S(TrackedPureCall(call, Nil))
+            S(TrackedPureCall(call, rhsRequirements))
           case _ =>
             opt match
             case S((Value.SimpleRef(next: LocalVar), nextAsst)) =>
@@ -594,16 +598,16 @@ class BlockSimplifier
       case ass @ Assign(lhs: LocalVar, rhs, rst) if !capturedVars(lhs) =>
         // log(s"Propagating ${lhs} := ${rhs} (${assignedResults.get(lhs)})")
         
-        assignedResults += lhs -> Assigned(ass, rhs.match
+        val varAsst = rhs.match
           case r @ Value.SimpleRef(sym: LocalVar) =>
             if capturedVars(sym) then N
-            else
-              val rhs2 = assignedResults(sym)
-              S(r -> rhs2)
-          case r: Value.RefLike =>
-            S(r -> Unknown)
+            else S(r -> assignedResults(sym))
+          case r: Value.RefLike => S(r -> Unknown)
           case _ => N
-        )
+        val rhsRequirements = rhs.freeVars.iterator.collect:
+          case sym: LocalVar if !capturedVars(sym) =>
+            sym -> assignedResults(sym)
+        assignedResults += lhs -> Assigned(ass, varAsst, rhsRequirements.toList)
         
         super.applyBlock(b)
         
@@ -697,7 +701,7 @@ class BlockSimplifier
             else a match
             case Unknown => giveUp
             case Uninitialized => Set.empty
-            case Assigned(asst, varAsst) =>
+            case Assigned(asst, varAsst, _) =>
               varAsst match
               case S(Value.MemberRef(r, sym: ModuleOrObjectSymbol) -> _) =>
                 Set.single(sym)
