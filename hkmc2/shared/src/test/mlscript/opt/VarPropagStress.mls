@@ -1,0 +1,37 @@
+:js
+
+
+// FIXME: Exponential blow up? The time this takes roughly doubles with each additional line (try it with `watcher`)
+let x = 0
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+if maybe do set x += 1
+// if maybe do set x += 1
+// if maybe do set x += 1
+// if maybe do set x += 1
+// if maybe do set x += 1
+// if maybe do set x += 1
+x
+//│ = 22
+//│ x = 22
+
+

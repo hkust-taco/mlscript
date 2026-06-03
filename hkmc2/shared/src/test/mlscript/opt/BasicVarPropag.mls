@@ -476,32 +476,3 @@ in y + 1
 //│ = 2
 
 
-// TODO: exponential blow up?
-// NOTE: This completely blows up when the lines are duplicated even further.
-let x = 0
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-if maybe do set x += 1
-x
-//│ = 23
-//│ x = 23
