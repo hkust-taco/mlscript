@@ -39,18 +39,6 @@ lscomp1(zip(enumFromTo(1, 3), enumFromTo(2, 4)))
 //│ deforest > 	fields: ys_zip⁰.t⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ys_zip⁰
-//│ deforest > Cons⁰(tmp¹, tmp²) ->
-//│ deforest > 	match: ls2⁰
-//│ deforest > 	fields: ls2⁰.h⁰
-//│ deforest > 	fields: ls2⁰.t⁰
-//│ deforest > Pair⁰(x⁰, y⁰) ->
-//│ deforest > 	match: arg$Cons$0$⁰
-//│ deforest > 	fields: arg$Cons$0$⁰.a¹
-//│ deforest > 	fields: arg$Cons$0$⁰.b⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls2⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls2⁰
 //│ deforest > Cons⁰(a⁰, tmp⁰) ->
 //│ deforest > 	match: xs_zip⁰
 //│ deforest > 	fields: xs_zip⁰.h⁰
@@ -105,15 +93,29 @@ fun f1(a1) = if a1 is
   else Nil
 concatMap(f1, Pair(5, 10) :: Nil)
 //│ deforest > >>> fusing >>>
+//│ deforest > Cons⁰(tmp³, tmp⁴) ->
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h⁰
+//│ deforest > 	fields: ls⁰.t⁰
+//│ deforest > Cons⁰(tmp⁵, tmp⁶) ->
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h⁰
+//│ deforest > 	fields: ls⁰.t⁰
+//│ deforest > Cons⁰(tmp⁷, Nil⁰) ->
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h⁰
+//│ deforest > 	fields: ls⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: xs⁰
-//│ deforest > Cons⁰(tmp³, Nil⁰) ->
+//│ deforest > Cons⁰(tmp⁸, Nil⁰) ->
 //│ deforest > 	match: xs⁰
 //│ deforest > 	fields: xs⁰.h⁰
 //│ deforest > 	fields: xs⁰.t⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: xs⁰
-//│ deforest > Cons⁰(tmp⁴, tmp⁵) ->
+//│ deforest > Cons⁰(tmp³, tmp⁴) ->
 //│ deforest > 	match: ls⁰
 //│ deforest > 	fields: ls⁰.h⁰
 //│ deforest > 	fields: ls⁰.t⁰
@@ -121,7 +123,7 @@ concatMap(f1, Pair(5, 10) :: Nil)
 //│ deforest > 	match: a2⁰
 //│ deforest > 	fields: a2⁰.a¹
 //│ deforest > 	fields: a2⁰.b⁰
-//│ deforest > Cons⁰(tmp⁶, tmp⁷) ->
+//│ deforest > Cons⁰(tmp⁵, tmp⁶) ->
 //│ deforest > 	match: ls⁰
 //│ deforest > 	fields: ls⁰.h⁰
 //│ deforest > 	fields: ls⁰.t⁰
@@ -129,41 +131,7 @@ concatMap(f1, Pair(5, 10) :: Nil)
 //│ deforest > 	match: a2⁰
 //│ deforest > 	fields: a2⁰.a¹
 //│ deforest > 	fields: a2⁰.b⁰
-//│ deforest > Cons⁰(tmp⁸, Nil⁰) ->
-//│ deforest > 	match: ls⁰
-//│ deforest > 	fields: ls⁰.h⁰
-//│ deforest > 	fields: ls⁰.t⁰
-//│ deforest > Pair⁰(a², b¹) ->
-//│ deforest > 	match: a2⁰
-//│ deforest > 	fields: a2⁰.a¹
-//│ deforest > 	fields: a2⁰.b⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: xs⁰
-//│ deforest > Cons⁰(tmp³, Nil⁰) ->
-//│ deforest > 	match: xs⁰
-//│ deforest > 	fields: xs⁰.h⁰
-//│ deforest > 	fields: xs⁰.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: xs⁰
-//│ deforest > Cons⁰(tmp⁴, tmp⁵) ->
-//│ deforest > 	match: ls⁰
-//│ deforest > 	fields: ls⁰.h⁰
-//│ deforest > 	fields: ls⁰.t⁰
-//│ deforest > Pair⁰(1, 3) ->
-//│ deforest > 	match: a2⁰
-//│ deforest > 	fields: a2⁰.a¹
-//│ deforest > 	fields: a2⁰.b⁰
-//│ deforest > Cons⁰(tmp⁶, tmp⁷) ->
-//│ deforest > 	match: ls⁰
-//│ deforest > 	fields: ls⁰.h⁰
-//│ deforest > 	fields: ls⁰.t⁰
-//│ deforest > Pair⁰(2, 3) ->
-//│ deforest > 	match: a2⁰
-//│ deforest > 	fields: a2⁰.a¹
-//│ deforest > 	fields: a2⁰.b⁰
-//│ deforest > Cons⁰(tmp⁸, Nil⁰) ->
+//│ deforest > Cons⁰(tmp⁷, Nil⁰) ->
 //│ deforest > 	match: ls⁰
 //│ deforest > 	fields: ls⁰.h⁰
 //│ deforest > 	fields: ls⁰.t⁰
@@ -260,20 +228,6 @@ fun h() =
   lscomp1(1 :: 2 :: 3 :: Nil)
 h()
 //│ deforest > >>> fusing >>>
-//│ deforest > Cons⁰(1, tmp¹⁴) ->
-//│ deforest > 	match: ls²
-//│ deforest > 	fields: ls².h⁰
-//│ deforest > 	fields: ls².t⁰
-//│ deforest > Cons⁰(2, tmp¹⁵) ->
-//│ deforest > 	match: ls²
-//│ deforest > 	fields: ls².h⁰
-//│ deforest > 	fields: ls².t⁰
-//│ deforest > Cons⁰(3, Nil⁰) ->
-//│ deforest > 	match: ls²
-//│ deforest > 	fields: ls².h⁰
-//│ deforest > 	fields: ls².t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls²
 //│ deforest > Cons⁰(1, tmp¹⁴) ->
 //│ deforest > 	match: ls²
 //│ deforest > 	fields: ls².h⁰

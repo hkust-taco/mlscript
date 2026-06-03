@@ -227,12 +227,11 @@ private fun pong(n, unused) = if n == 0 then 0 else M.ping(n - 1, unused)
 class Test(a) with
   fun f() = pong(3, 123)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun pong#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let Test⁰, pong⁶, M⁰;
 //│ @private
-//│ define pong⁶ as fun pong⁷(n) {
+//│ define pong⁶ as fun pong⁷(n, unused) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
@@ -240,7 +239,7 @@ class Test(a) with
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return M¹.ping⁶(tmp, undefined)
+//│       return M¹.ping⁶(tmp, unused)
 //│   end
 //│ };
 //│ define M⁰ as class M²
@@ -253,11 +252,11 @@ class Test(a) with
 //│         return 0
 //│       else
 //│         set tmp = -⁰(n, 1);
-//│         return pong⁷(tmp)
+//│         return pong⁷(tmp, unused)
 //│     end
 //│   }
 //│ };
-//│ define Test⁰ as class Test² { constructor Test¹ method f⁰ = fun f¹() { return pong⁷(3) } };
+//│ define Test⁰ as class Test² { constructor Test¹ method f⁰ = fun f¹() { return pong⁷(3, 123) } };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

@@ -118,15 +118,8 @@ main(3)
 //│ deforest > Y⁰(tmp⁴) ->
 //│ deforest > 	match: arg$X$0$¹
 //│ deforest > 	fields: arg$X$0$¹.b⁰
-//│ deforest > X⁰(tmp³) ->
-//│ deforest > 	match: x⁵
-//│ deforest > 	fields: x⁵.a⁰
-//│ deforest > Y⁰(tmp⁴) ->
-//│ deforest > 	match: arg$X$0$¹
-//│ deforest > 	fields: arg$X$0$¹.b⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > p: [1, 3]
 //│ eta-expansion > p: [1, 3]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ = 5

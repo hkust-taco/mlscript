@@ -37,6 +37,17 @@ M.main()
 //│ = 42
 
 
+:lift
+:expect 42
+module M with
+  private fun f(a) = a
+  private fun withF() = x => f(x)
+M.withF()(42)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 42
+
+
 
 
 module M with
