@@ -669,7 +669,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   final def term(t: st, inStmtPos: Bool = false)(k: Result => Block)(using LoweringCtx): Block =
     tl.log(s"Lowering.term ${t.showDbg.truncate(100, "[...]")}${
       if inStmtPos then " (in stmt)" else ""}${
-      t.resolvedSym.fold("")(" ? symbol " + _)}")
+      t.resolvedSym.fold("")(" – symbol " + _)}")
     
     def warnStmt = if inStmtPos then warnPureExprInStmtPos(t.toLoc, S(t))
     
@@ -799,7 +799,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case st.TyApp(f, ts) => term(f)(k) // * Type arguments are erased
     case st.App(f, arg) =>
       
-      // Collect chains of App nodes: `f(a)(b)(c)` ? (f, [a, b, c])
+      // Collect chains of App nodes: `f(a)(b)(c)` → (f, [a, b, c])
       // This allows lowering curried calls as a single `Call` with multiple arg lists.
       @tailrec
       def collectAppChain(expr: st, args: Ls[Term]): (st, Ls[Term]) =
