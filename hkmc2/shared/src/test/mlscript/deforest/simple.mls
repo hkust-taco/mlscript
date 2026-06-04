@@ -875,6 +875,16 @@ fun g(b) =
 //│ deforest > 	match: scrut¹
 //│ deforest > AA⁰(0) ->
 //│ deforest > 	match: scrut¹
+//│ deforest > D⁰ ->
+//│ deforest > 	match: scrut⁰
+//│ deforest > BB⁰(0) ->
+//│ deforest > 	match: scrut⁰
+//│ deforest > C⁰ ->
+//│ deforest > 	match: scrut¹
+//│ deforest > AA⁰(1) ->
+//│ deforest > 	match: scrut¹
+//│ deforest > AA⁰(0) ->
+//│ deforest > 	match: scrut¹
 //│ deforest > <<< fusing <<<
 //│ = [D, AA(1)]
 

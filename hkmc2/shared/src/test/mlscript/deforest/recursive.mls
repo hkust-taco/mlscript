@@ -799,8 +799,68 @@ fun f() =
   [g1(), g2(), g3(), g4(), h(B)]
 f
 //│ deforest > >>> fusing >>>
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁵
 //│ deforest > <<< fusing <<<
-//│ = fun f
+//│ = fun f_17$f
 
 
 :deforest
@@ -813,8 +873,24 @@ fun f() =
   [g1(), g2()]
 f
 //│ deforest > >>> fusing >>>
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁶
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁶
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁶
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁶
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁶
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁶
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁶
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁶
 //│ deforest > <<< fusing <<<
-//│ = fun f
+//│ = fun f_9$f
 
 
 
@@ -828,5 +904,25 @@ fun f() =
   [() => h(B), () => h(B), () => h(B), () => h(B), h(B)]
 f
 //│ deforest > >>> fusing >>>
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
 //│ deforest > <<< fusing <<<
-//│ = fun f
+//│ = fun f_13$f

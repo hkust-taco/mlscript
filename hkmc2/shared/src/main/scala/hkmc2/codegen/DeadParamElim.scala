@@ -231,7 +231,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
       end newRefId
     
       p match
-      case ref@FunRef(f) if newPolyFnSyms.isDefinedAt(newRefId(ref.uid, f)) =>
+      case ref@FunRef(f, _) if newPolyFnSyms.isDefinedAt(newRefId(ref.uid, f)) =>
         val (bms, tSym) = newPolyFnSyms(newRefId(ref.uid, f))(f)
         k(bms.asMemberRef(tSym))
       case _ => super.applyPath(p)(k)

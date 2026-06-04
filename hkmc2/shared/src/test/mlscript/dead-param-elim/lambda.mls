@@ -111,6 +111,7 @@ main1()
 //│ dead-param-elim > prodfun apply#0 @ main1@10.main@8.apply@2 -> eliminable: {1}
 //│ dead-param-elim > prodfun apply#0 @ main1@13.main@8.apply@2 -> eliminable: {1}
 //│ dead-param-elim > prodfun lambda#0 @ main1@10 -> eliminable: {0}
+//│ dead-param-elim > prodfun lambda#0 @ main1@13 -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 1
 
