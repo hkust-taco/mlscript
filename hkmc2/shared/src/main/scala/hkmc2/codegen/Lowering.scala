@@ -386,7 +386,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     .fold(Nil: Ls[ParamList]): clsDef =>
       clsDef.paramsOpt.toList ::: clsDef.auxParams
   
-  // * Lowers the `super(...)` call we get from the `extends C(...)` syntax
+  // * Lowers the `super(...)(...)` call we get from the `extends C(...)(...)` syntax
   def lowerSuperCtorCall(parentClsPth: Path, fr: Path, isMlsFun: Bool, isTailCall: Bool, args: List[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
     val ctorParamLists = getCtorParamLists(parentClsPth)
     args match
@@ -404,14 +404,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         case (remainingParamss2, Nil) =>
           if !remainingParamss2.isEmpty then
             raise(ErrorReport(
-              msg"Extending a partially applied class is not yet supported" -> loc :: Nil,
+              msg"Extending a partially applied class is not supported" -> loc :: Nil,
               source = Diagnostic.Source.Compilation))
           k(Call(fr, acc.reverse.ne_!)(isMlsFun, true, isTailCall).withLoc(loc))
       zipArgs(ctorParamLists, args, Nil)
     case Nil =>
       if !ctorParamLists.isEmpty then
         raise(ErrorReport(
-          msg"Extending a partially applied class is not yet supported" -> loc :: Nil,
+          msg"Extending a partially applied class is not supported" -> loc :: Nil,
           source = Diagnostic.Source.Compilation))
       // * No arguments to a super ctor means a nullary call, e.g., `extends C` means `extends C()`
       k(Call(fr, Nil ne_:: Nil)(isMlsFun, true, isTailCall).withLoc(loc))

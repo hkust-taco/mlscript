@@ -3,10 +3,10 @@
 
 class Foo(val x)(val y)
 
-:todo
+:e
 :sjs
 class Bar(val a)(val d) extends Foo(a)
-//│ ═══[COMPILATION ERROR] Extending a partially applied class is not yet supported
+//│ ═══[COMPILATION ERROR] Extending a partially applied class is not supported
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Bar1;
 //│ Bar1 = function Bar(a) {

@@ -69,7 +69,7 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
       case defn => k(defn)
   
   override def applyResult(r: Result)(k: Result => Block): Block = r match
-    case c @ Call(r @ Value.RefLike(sym), argss) if sym === State.superSymbol =>
+    case c @ Call(r @ Value.RefLike(State.superSymbol), argss) =>
       applyArgss(argss): argss2 =>
         val flatArgss =
           if argss2.lengthCompare(1) > 0 then argss2.flatten ne_:: Nil

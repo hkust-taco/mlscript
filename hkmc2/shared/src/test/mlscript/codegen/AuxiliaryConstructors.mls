@@ -114,7 +114,7 @@ class B extends A(1)(2)(3)
 
 :e
 class B extends A(0)
-//│ ═══[COMPILATION ERROR] Extending a partially applied class is not yet supported
+//│ ═══[COMPILATION ERROR] Extending a partially applied class is not supported
 
 new B
 //│ = B { x: 0 }
@@ -128,7 +128,7 @@ class D extends C(0)
 :e
 new A(1)(2) with
   fun a = 0
-//│ ═══[COMPILATION ERROR] Extending a partially applied class is not yet supported
+//│ ═══[COMPILATION ERROR] Extending a partially applied class is not supported
 //│ = $anon { x: 1 }
 
 :e
