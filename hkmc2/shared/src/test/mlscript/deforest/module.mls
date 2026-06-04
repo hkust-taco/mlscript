@@ -187,3 +187,39 @@ module M with
 //│ deforest > 	match: scrut²
 //│ deforest > <<< fusing <<<
 //│ = [D, A]
+
+
+
+
+module O with
+  module I with
+    val x = 3
+    fun g() = 23
+    data class C(x)
+
+:deforest
+:noInline
+private fun f(module I: O.I) = I.C(3)
+private fun g(x, module I: O.I) = if x is
+  I.C(y) then y + 2
+g(f(O.I), O.I)
+//│ deforest > >>> fusing >>>
+//│ deforest > I⁰.C¹(3) ->
+//│ deforest > 	match: x¹
+//│ deforest > 	fields: x¹.x²
+//│ deforest > <<< fusing <<<
+//│ = 5
+
+
+:deforest
+:noInline
+private fun f(module O: O) = O.I.C(3)
+private fun g(x, module O: O) = if x is
+  O.I.C(y) then y + 2
+g(f(O), O)
+//│ deforest > >>> fusing >>>
+//│ deforest > O⁰.I¹.C¹(3) ->
+//│ deforest > 	match: x³
+//│ deforest > 	fields: x³.x²
+//│ deforest > <<< fusing <<<
+//│ = 5

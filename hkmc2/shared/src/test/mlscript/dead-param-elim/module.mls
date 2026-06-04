@@ -81,6 +81,7 @@ module O with
   module I with
     val x = 3
     fun g() = 23
+    data class C(x)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 
@@ -132,3 +133,22 @@ f(O.I) + g(O.I)
 //│ return +⁰(tmp, tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 26
+
+
+:noInline
+private fun f(module I: O.I) = I.C(3)
+private fun g(x, module I: O.I) = if x is
+  I.C(y) then y + 2
+g(f(O.I), O.I)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 5
+
+:noInline
+private fun f(module O: O) = O.I.C(3)
+private fun g(x, module O: O) = if x is
+  O.I.C(y) then y + 2
+g(f(O), O)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 5

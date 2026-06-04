@@ -874,6 +874,8 @@ class FlowConstraintsCollector(
       case Match(scrut, arms, dflt, rest) =>
         val scrutStrat = processResult(scrut)
         cc.constrain(scrutStrat, new Dtor(scrut.uid, instId))
+        for case (Case.Cls(cls, path), _) <- arms do
+          cc.constrain(processResult(path), UnknownCons)
         (arms.map(_._2) ++ dflt).foreach(processBlock)
         processBlock(rest)
       case Label(l, loop, body, rest) =>
