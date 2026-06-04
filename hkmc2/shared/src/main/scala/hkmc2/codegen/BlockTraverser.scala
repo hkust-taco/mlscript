@@ -20,9 +20,13 @@ class BlockTraverser:
     prog.imports.foreach(applyImport)
     applyBlock(prog.main)
   
-  def applyImport(imp: Local -> Str): Unit =
-    applyLocal(imp._1)
+  def applyImport(imp: ImportSymbol -> Str): Unit =
+    applySymbol(imp._1)
   
+  
+  def applyMaybeSymbol(sym: MaybeSymbol): Unit = sym match
+    case _: NoSymbol => ()
+    case sym: Symbol => applySymbol(sym)
   
   def applySymbol(sym: Symbol): Unit = ()
   
@@ -30,8 +34,8 @@ class BlockTraverser:
   
   def applyBlock(b: Block): Unit = b match
     case _: End | _: Unreachable => ()
-    case Break(lbl) => applyLocal(lbl)
-    case Continue(lbl) => applyLocal(lbl)
+    case Break(lbl) => applySymbol(lbl)
+    case Continue(lbl) => applySymbol(lbl)
     case Return(res) => applyResult(res)
     case Throw(exc) => applyResult(exc)
     case Match(scrut, arms, dflt, rst) =>
@@ -40,10 +44,10 @@ class BlockTraverser:
         applyCase(arm._1); applySubBlock(arm._2)
       dflt.foreach(applySubBlock)
       applySubBlock(rst)
-    case Label(lbl, loop, bod, rst) => applyLocal(lbl); applySubBlock(bod); applySubBlock(rst)
+    case Label(lbl, loop, bod, rst) => applySymbol(lbl); applySubBlock(bod); applySubBlock(rst)
     case Begin(sub, rst) => applySubBlock(sub); applySubBlock(rst)
     case TryBlock(sub, fin, rst) => applySubBlock(sub); applySubBlock(fin); applySubBlock(rst)
-    case Assign(l, r, rst) => applyLocal(l); applyResult(r); applySubBlock(rst)
+    case Assign(l, r, rst) => applyMaybeSymbol(l); applyResult(r); applySubBlock(rst)
     case b @ AssignField(l, n, r, rst) =>
       applyPath(l); applyResult(r); applySubBlock(rst); b.symbol.foreach(_.traverse)
     case Define(defn, rst) => applyDefn(defn); applySubBlock(rst)
@@ -77,8 +81,6 @@ class BlockTraverser:
       disamb.traverse
     case Value.This(sym) => sym.traverse
     case Value.Lit(lit) => ()
-  
-  def applyLocal(sym: Local): Unit = sym.traverse
   
   def applyFunDefn(fun: FunDefn): Unit =
     fun.owner.foreach(_.traverse)

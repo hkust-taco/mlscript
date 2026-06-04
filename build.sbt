@@ -114,7 +114,6 @@ def hkmc2TestSubproject(dirName: String, compileRunner: Option[String], diffRunn
 lazy val hkmc2NofibTests = hkmc2TestSubproject("hkmc2NofibTests", Some("NofibCompileTestRunner"), "NofibDiffTestRunner")
 lazy val hkmc2AppsTests = hkmc2TestSubproject("hkmc2AppsTests", Some("AppsCompileTestRunner"), "AppsDiffTestRunner")
 lazy val hkmc2WasmTests = hkmc2TestSubproject("hkmc2WasmTests", Some("WasmCompileTestRunner"), "WasmDiffTestRunner")
-lazy val hkmc2LlirTests = hkmc2TestSubproject("hkmc2LlirTests", None, "LlirDiffTestRunner")
 
 lazy val hkmc2MainTests = project.in(file("hkmc2MainTests"))
   .settings(
@@ -147,6 +146,25 @@ lazy val hkmc2AllTests = project.in(file("hkmc2AllTests"))
         .dependsOn(hkmc2Benchmarks / Test / compile)
     ).value
   )
+
+
+// Watcher
+addCommandAlias("watch", "~hkmc2DiffTests/Test/run")
+// Diff-tests
+addCommandAlias("dtest", "hkmc2DiffTests/testOnly hkmc2.DiffTestRunner -- -z")
+addCommandAlias("ndtest", "hkmc2NofibTests/testOnly hkmc2.NofibDiffTestRunner -- -z")
+addCommandAlias("adtest", "hkmc2AppsTests/testOnly hkmc2.AppsDiffTestRunner -- -z")
+addCommandAlias("wdtest", "hkmc2WasmTests/testOnly hkmc2.WasmDiffTestRunner -- -z")
+// Compilation tests
+addCommandAlias("ctest", "hkmc2JVM/testOnly hkmc2.CompileTestRunner -- -z")
+addCommandAlias("cntest", "hkmc2NofibTests/testOnly hkmc2.NofibCompileTestRunner -- -z")
+addCommandAlias("catest", "hkmc2AppsTests/testOnly hkmc2.AppsCompileTestRunner -- -z")
+addCommandAlias("cwtest", "hkmc2WasmTests/testOnly hkmc2.WasmCompileTestRunner -- -z")
+// Aggregate tests (for validation)
+addCommandAlias("qtest", "hkmc2MainTests/test") // a quick check running only the main compilation and diff- tests
+addCommandAlias("mtest", "hkmc2MostTests/test") //  ignores JS compilation + diff- tests; usually sufficient
+addCommandAlias("atest", "hkmc2AllTests/test")  // includes JS compilation + diff- tests; checked by CI
+
 
 lazy val core = crossProject(JSPlatform, JVMPlatform).in(file("core"))
   .settings(

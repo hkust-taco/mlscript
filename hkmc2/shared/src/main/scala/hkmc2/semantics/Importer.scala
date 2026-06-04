@@ -30,7 +30,7 @@ class Importer:
     val nme = file.baseName
     val id = alias.getOrElse(new syntax.Tree.Ident(nme)) // TODO loc
     
-    lazy val sym = TermSymbol(LetBind, N, id)
+    lazy val sym = VarSymbol(id)
     
     if path.startsWith(".") || path.startsWith("/") then // leave alone imports like "fs"
       log(s"importing $file")
@@ -58,10 +58,8 @@ class Importer:
           artifact.tree.definedSymbols.find(_._1 === nme) match
           case Some(nme -> imsym) => imsym
           case None => lastWords(s"File $file does not define a symbol named $nme")
-        val sym = alias.fold(importedSym): alias =>
-          val res = BlockMemberSymbol(alias.name, importedSym.trees, importedSym.nameIsMeaningful)
-          res.tsym = importedSym.tsym
-          res
+        val sym: VarSymbol | BlockMemberSymbol = alias.fold(importedSym): alias =>
+          VarSymbol(alias)
         
         val jsFile = file.up / io.RelPath(file.baseName + ".mjs")
         Import(sym, jsFile.toString, jsFile)

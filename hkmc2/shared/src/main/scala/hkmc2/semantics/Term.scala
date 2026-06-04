@@ -28,8 +28,16 @@ enum Annot extends AutoLocated:
   case TailCall
   case Inline
   case Config(modify: hkmc2.Config => hkmc2.Config)
-  // marks if a function or lambda is affine, i.e. called at most once.
-  // for functions with multiple parameter lists, `whichParamList` is the zero-based parameter-list index.
+  // Marks if a function or lambda is one-shot, i.e. called at most once.
+  // Functions with multiple parameter lists are considered here as a chain of
+  // function values. `whichParamList` is the zero-based index of the parameter
+  // list whose corresponding function value is one-shot.
+  // For example, on `fun f(a)(b)`,
+  // - its list of annotations containing `Affine(0)` says that `f` is one-shot;
+  // - its list of annotations containing `Affine(1)` says that
+  //   each function value produced by `f(a)` is one-shot;
+  // - its list of annotations containing both `Affine(0)` and `Affine(1)` says that
+  //   `f` is one-shot and each function value produced by `f(a)` is also one-shot.
   case Affine(whichParamList: Int)
   
   def symbol: Opt[Symbol] = this match
@@ -925,12 +933,12 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Missing => "missing"
     case LeadingDotSel(nme) => s"_?_.${nme.name}"
 
-final case class LetDecl(sym: LocalSymbol, annotations: Ls[Annot]) extends Statement
+final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot]) extends Statement
 
 final case class RcdField(field: Term, rhs: Term) extends Statement
 final case class RcdSpread(rcd: Term) extends Statement
 
-final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
+final case class DefineVar(sym: LocalSymbol | TermSymbol, rhs: Term) extends Statement
 
 /** A global configuration change directive (`#config(...)`).
   * Records a function that modifies the current compiler configuration. */
@@ -1061,11 +1069,13 @@ case class ObjBody(blk: Term.Blk):
 end ObjBody
 
 
-/** `sym` is a `MemberSymbol` when the import is made by the user and can be referred to by name,
+/** `sym` is a `BlockMemberSymbol` or a `VarSymbol` when the import is made by the user
+  * and can be referred to by name (it's either the BMS of the imported module
+  * or the VarSymbol of the alias, in an aliased import `import "..." as alias`),
   * in which case it is a `BlockMemberSymbol` when importing files explicitly
   * and a `TermSymbol` when the import is made implicitly by the compiler (eg, importing "Predef").
   * Note that the `file` Path may not represent a real file; eg when importing "fs". */
-case class Import(sym: TempSymbol | MemberSymbol, str: Str, file: io.Path) extends Statement
+case class Import(sym: ImportSymbol, str: Str, file: io.Path) extends Statement
 
 
 sealed abstract class Declaration:

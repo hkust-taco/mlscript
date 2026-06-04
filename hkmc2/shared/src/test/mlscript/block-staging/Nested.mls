@@ -17,11 +17,11 @@ staged module LiftedNested with
     fun g() = 1
     g()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let g⁰, LiftedNested⁰, symbolMap, tmp, tmp1, tmp2;
+//│ let g⁰, LiftedNested⁰, symbolMap⁰, tmp, tmp1, tmp2;
 //│ set tmp = new globalThis⁰.Map﹖();
 //│ set tmp1 = new globalThis⁰.Map﹖();
 //│ set tmp2 = new Block⁰.SymbolMap﹖(tmp, tmp1);
-//│ set symbolMap = tmp2;
+//│ set symbolMap⁰ = tmp2;
 //│ @staged
 //│ define g⁰ as staged fun g¹() {
 //│   return 1
@@ -37,7 +37,7 @@ staged module LiftedNested with
 //│       set tmp9 = [tmp8];
 //│       set tmp10 = new globalThis⁰.Map﹖(tmp9);
 //│       set sym = Block⁰.ModuleSymbol﹖("LiftedNested", LiftedNested².this);
-//│       set tmp11 = symbolMap.checkMap﹖("moduleMap", LiftedNested².this, sym);
+//│       set tmp11 = symbolMap⁰.checkMap﹖("moduleMap", LiftedNested².this, sym);
 //│       set tmp12 = new SpecializeHelpers⁰.FunCache﹖(tmp11, tmp10);
 //│       define cache$LiftedNested⁰ as val cache$LiftedNested¹ = tmp12;
 //│       set tmp3 = ["f", LiftedNested².this.f_gen﹖];
@@ -48,7 +48,7 @@ staged module LiftedNested with
 //│     set tmp13 = LiftedNested².this.cache$LiftedNested﹖.toString﹖();
 //│     set tmp14 = globalThis⁰.console﹖.log﹖(tmp13);
 //│     set tmp15 = globalThis⁰.console﹖.log﹖(LiftedNested².this.generatorMap$LiftedNested﹖);
-//│     set tmp16 = globalThis⁰.console﹖.log﹖(symbolMap);
+//│     set tmp16 = globalThis⁰.console﹖.log﹖(symbolMap⁰);
 //│     end
 //│   }
 //│   method ctor$_instr⁰ = fun ctor$_instr¹() {

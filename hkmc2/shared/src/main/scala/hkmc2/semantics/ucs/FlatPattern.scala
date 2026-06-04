@@ -29,13 +29,13 @@ enum FlatPattern extends AutoLocated:
   case ClassLike(
       val constructor: Term,
       val symbol: ClassSymbol | ModuleOrObjectSymbol,
-      val arguments: Opt[Ls[(BlockLocalSymbol, Opt[Loc])]],
+      val arguments: Opt[Ls[(LocalVarSymbol, Opt[Loc])]],
       var refined: Bool
   )(val tree: Tree)
   
   case Tuple(size: Int, inf: Bool)
   
-  case Record(entries: List[(Ident -> BlockLocalSymbol)])
+  case Record(entries: List[(Ident -> LocalVarSymbol)])
   
   def mkClone(using State): FlatPattern = this match
     case Lit(literal) => Lit(literal)

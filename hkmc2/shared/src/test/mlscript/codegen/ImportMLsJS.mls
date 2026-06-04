@@ -2,19 +2,13 @@
 
 
 import "../../mlscript-compile/Option.mjs"
-//│ Option = class Option {
-//│   Some: fun Some { class: class Some },
-//│   None: None,
-//│   Both: fun Both { class: class Both },
-//│   unsafe: class unsafe
-//│ }
 
 
 :e
 Option.isDefined(new Option.Some(1))
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found selection.
-//│ ║  l.14: 	Option.isDefined(new Option.Some(1))
-//│ ║        	                     ^^^^^^^^^^^
+//│ ║  l.8: 	Option.isDefined(new Option.Some(1))
+//│ ║       	                     ^^^^^^^^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ = true
 

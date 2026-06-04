@@ -21,7 +21,7 @@ f(1, 2).get()
 //│ define C⁰ as class C¹ {
 //│   private val used⁰;
 //│   constructor(used) {
-//│     set C¹.this.used = used;
+//│     set C¹.this.used⁰ = used;
 //│     end
 //│   }
 //│   method get⁰ = fun get¹() {

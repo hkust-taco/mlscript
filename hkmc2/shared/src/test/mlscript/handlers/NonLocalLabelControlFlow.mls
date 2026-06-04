@@ -95,7 +95,7 @@ continueFromNestedFunctionWithEffects()
 //│     else
 //│       let saveOffset;
 //│       set pc = runtime⁰.resumePc﹖;
-//│       set runtime⁰.resumePc = -1;
+//│       set runtime⁰.resumePc﹖ = -1;
 //│       end
 //│   loop main:
 //│     match pc
@@ -106,13 +106,13 @@ continueFromNestedFunctionWithEffects()
 //│     match pc
 //│       1 =>
 //│         set tmp1 = +⁰(scope0$cap.i$0¹, 1);
-//│         set scope0$cap.i$0 = tmp1;
+//│         set scope0$cap.i$0¹ = tmp1;
 //│         return nonLocalHandler$root.continue﹖()
 //│       0 =>
 //│         set scrut = >=⁰(scope0$cap.i$0¹, 3);
 //│         match scrut
 //│           true =>
-//│             set runtime⁰.resumeValue = nonLocalHandler$root.break﹖(scope0$cap.i$0¹);
+//│             set runtime⁰.resumeValue﹖ = nonLocalHandler$root.break﹖(scope0$cap.i$0¹);
 //│             match runtime⁰.curEffect﹖
 //│               null =>
 //│                 set pc = 2;
@@ -158,13 +158,13 @@ continueFromNestedFunctionWithEffects()
 //│       set pc = runtime⁰.resumePc﹖;
 //│       set saveOffset = runtime⁰.resumeIdx﹖;
 //│       set scope0$cap = runtime⁰.resumeArr﹖.saveOffset;
-//│       set runtime⁰.resumePc = -1;
+//│       set runtime⁰.resumePc﹖ = -1;
 //│       end
 //│   loop main:
 //│     match pc
 //│       0 =>
 //│         set scope0$cap = new mut Capture$scope0²(i);
-//│         set scope0$cap.i$0 = 0;
+//│         set scope0$cap.i$0¹ = 0;
 //│         set pc = 1;
 //│         end
 //│     match pc
@@ -172,7 +172,7 @@ continueFromNestedFunctionWithEffects()
 //│         block brk1:
 //│           set nonLocalHandler$root = new mut NonLocalLabelEffect¹();
 //│           set handleBlock$$here = handleBlock$$¹(scope0$cap, nonLocalHandler$root);
-//│           set runtime⁰.resumeValue = runtime⁰.enterHandleBlock﹖(nonLocalHandler$root, handleBlock$$here);
+//│           set runtime⁰.resumeValue﹖ = runtime⁰.enterHandleBlock﹖(nonLocalHandler$root, handleBlock$$here);
 //│           match runtime⁰.curEffect﹖
 //│             null =>
 //│               break brk1

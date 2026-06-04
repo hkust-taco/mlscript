@@ -48,13 +48,13 @@ fun g(a)(b) = f(a)(b) + f(b)(a)
 //│       set pc = runtime⁰.resumePc﹖;
 //│       set saveOffset = runtime⁰.resumeIdx﹖;
 //│       set tmp = runtime⁰.resumeArr﹖.saveOffset;
-//│       set runtime⁰.resumePc = -1;
+//│       set runtime⁰.resumePc﹖ = -1;
 //│       end
 //│   match pc
 //│     0 =>
 //│       let inlinedVal;
 //│       set inlinedVal = +⁰(a, b);
-//│       set runtime⁰.resumeValue = inlinedVal;
+//│       set runtime⁰.resumeValue﹖ = inlinedVal;
 //│       match runtime⁰.curEffect﹖
 //│         null =>
 //│           set pc = 2;
@@ -67,7 +67,7 @@ fun g(a)(b) = f(a)(b) + f(b)(a)
 //│       let inlinedVal;
 //│       set tmp = runtime⁰.resumeValue﹖;
 //│       set inlinedVal = +⁰(b, a);
-//│       set runtime⁰.resumeValue = inlinedVal;
+//│       set runtime⁰.resumeValue﹖ = inlinedVal;
 //│       match runtime⁰.curEffect﹖
 //│         null =>
 //│           set pc = 1;

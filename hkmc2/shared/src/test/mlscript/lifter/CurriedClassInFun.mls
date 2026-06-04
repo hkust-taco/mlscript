@@ -42,7 +42,7 @@ fun f(x) =
 //│   val y⁰;
 //│   val z⁰;
 //│   constructor A²(y, f$cap, z) {
-//│     set A¹.this.f$cap = f$cap;
+//│     set A¹.this.f$cap⁰ = f$cap;
 //│     define y⁰ as val y¹ = y;
 //│     define z⁰ as val z¹ = z;
 //│     end
@@ -56,7 +56,7 @@ fun f(x) =
 //│   method foo⁰ = fun foo¹() {
 //│     let tmp;
 //│     set tmp = +⁰(A¹.this.f$cap⁰.x$0⁰, 1);
-//│     set A¹.this.f$cap⁰.x$0 = tmp;
+//│     set A¹.this.f$cap⁰.x$0⁰ = tmp;
 //│     return A¹.this.f$cap⁰.x$0⁰
 //│   }
 //│   method getX⁰ = fun getX¹() {

@@ -104,16 +104,16 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
   
   val labelMap: MutMap[Pat, Label] = MutMap()
   
-  val multiMatchers: MutMap[Set[Label], BlockLocalSymbol] = MutMap.empty
+  val multiMatchers: MutMap[Set[Label], LocalVarSymbol] = MutMap.empty
   
   /** The built multi-matcher functions. */
-  val implementations: MutMap[BlockLocalSymbol, (ParamList, Term)] = MutMap.empty
+  val implementations: MutMap[LocalVarSymbol, (ParamList, Term)] = MutMap.empty
   
-  val buildQueue: Queue[(BlockLocalSymbol, Set[Pat])] = Queue.empty
+  val buildQueue: Queue[(LocalVarSymbol, Set[Pat])] = Queue.empty
   
   /** Build a matcher function that matches a single pattern. This function
    *  should be applied to the pattern that is considered as the entry point.*/
-  def buildMatcher(pattern: Pat, resultMode: ResultMode): (BlockLocalSymbol, Ls[Implementation]) = scoped("ucs:compiler"):
+  def buildMatcher(pattern: Pat, resultMode: ResultMode): (LocalVarSymbol, Ls[Implementation]) = scoped("ucs:compiler"):
     given ResultMode = resultMode
     val entryPointSymbol = buildMultiMatcher(Set(pattern))
     while buildQueue.nonEmpty do
@@ -126,7 +126,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
   /** Build a multi-matcher function and returns the local symbol that we can
    *  use to call it. The built function definition is stored in the map
    *  `implementations`. */
-  def buildMultiMatcher(patterns: Set[Pat])(using ResultMode): BlockLocalSymbol =
+  def buildMultiMatcher(patterns: Set[Pat])(using ResultMode): LocalVarSymbol =
     // Get or create the label for each pattern. Multi-matchers are identified
     // by the set of labels (orders are not important).
     val labels = patterns.map(_.label)
@@ -167,7 +167,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
   
   def multiMatcherBranch(
       patterns: Set[(Label, SpPat)],
-      scrutinee: BlockLocalSymbol
+      scrutinee: LocalVarSymbol
   )(using ResultMode): Blk = trace(
     pre = s"multiMatcherBranch: scrutinee = ${scrutinee} | patterns = ${
       patterns.iterator.map: (label, pattern) =>
@@ -230,11 +230,11 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
   import Pattern.*
   
   /** Represent things that can be used as expressions in consequents. */
-  type Usable = BlockLocalSymbol | Term
+  type Usable = LocalVarSymbol | Term
   
   extension (usable: Usable)
     def use: Term = usable match
-      case symbol: BlockLocalSymbol => symbol.safeRef
+      case symbol: LocalVarSymbol => symbol.safeRef
       case term: Term => term
   
   /** The bindings can be a `Term` or a `TempSymbol`. */
@@ -269,7 +269,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
   
   private def completePattern(
       pattern: SpPat,
-      scrutinee: BlockLocalSymbol,
+      scrutinee: LocalVarSymbol,
       subScrutinees: Map[Ident | Int, MatcherResult],
       aliases: Ls[VarSymbol]
   )(using ResultMode): MakeSplit = trace(pre = s"completePattern: ${pattern.showDbg}"):
@@ -551,7 +551,7 @@ object Compiler:
     case Full, MatchOnly
   
   /** A multi-matcher implementation. */
-  type Implementation = (BlockLocalSymbol, ParamList, Term)
+  type Implementation = (LocalVarSymbol, ParamList, Term)
   
   /** Perform a reverse lookup for a term that references a symbol in the
     *  current context. */

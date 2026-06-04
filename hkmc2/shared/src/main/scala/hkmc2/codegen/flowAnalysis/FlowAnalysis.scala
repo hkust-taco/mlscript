@@ -5,6 +5,7 @@ package flowAnalysis
 import scala.jdk.CollectionConverters.MapHasAsScala
 import utils.*
 import mlscript.utils.*, shorthands.*
+import hkmc2.Message.MessageContext
 import semantics.*
 import syntax.Tree
 import scala.collection.mutable
@@ -87,18 +88,6 @@ type SelField = TermSymbol | Int
 type FunId = (funSym: Symbol, whichParamList: Int) | ResultId
 type OriginId = ResultId | FunId
 
-/** Extracts the underlying symbol of a variable-like reference, for flow-tracking use. */
-object TrackedSymOf:
-  def unapply(p: Value.RefLike | Select)(using Elaborator.State): Opt[Symbol] = p match
-    case Value.SimpleRef(sym) => S(sym)
-    case Value.MemberRef(_, disamb) => S(disamb)
-    case Value.This(sym) => S(sym)
-    case s: Select => s.symbol.flatMap: selSym =>
-      for
-        selTermSym <- selSym.asTrm
-        owner <- selTermSym.owner
-        _ <- owner.asMod
-      yield selTermSym
 
 object TrackableFieldSelect:
   def unapply(s: Select): Opt[Path -> (field: TermSymbol, owner: ClassSymbol)] =
@@ -133,38 +122,24 @@ object TrackableSelect:
       Some((qual, field, owner))
     case _ => N
 
-object CtorRef:
-  /** Resolves an object reference or a class-ctor `TermSymbol` to its corresponding class/object symbol. */
-  private def classCtorSymbol(sym: Symbol)(using Elaborator.State): Opt[ClassSymbol | ModuleOrObjectSymbol] =
-    sym.asObj orElse
-    sym.asTrm.flatMap: tSym =>
-      for
-        cls <- tSym.owner.flatMap(_.asCls)
-        clsDef <- cls.irClsLikeDefn
-        ctorSym <- clsDef.ctorSym
-        if ctorSym is tSym
-      yield cls
+object MemberRefTo:
+  def unapply(p: Path) = p.targetSymbol
 
-  def unapply(p: Path)(using Elaborator.State): Opt[ClassSymbol | ModuleOrObjectSymbol] = p match
-    case Value.SimpleRef(sym) => classCtorSymbol(sym)
-    case Value.MemberRef(_, disamb) => classCtorSymbol(disamb) orElse disamb.asCls orElse disamb.asObj
-    case Value.This(sym) => classCtorSymbol(sym) orElse sym.asCls
-    case s: Select => s.symbol.flatMap(classCtorSymbol)
-    case _ => N
-
-object CtorCall:
-  def unapply(r: Result)(using Elaborator.State): Option[(ClassSymbol | ModuleOrObjectSymbol | Int) -> Ls[Arg]] =
+object CtorProducer:
+  /** Extracts result forms that produce a concrete `Ctor` flow strategy. */
+  def unapply(r: Result)(using Elaborator.State): Opt[CtorCls -> Ls[Arg]] =
     r match
-    case Instantiate(_, CtorRef(ctor), argss) => Some(ctor -> argss.flatten)
-    case Call(CtorRef(ctor), argss) => Some(ctor -> argss.flatten)
-    case CtorRef(ctor) if ctor.asObj.isDefined => Some(ctor -> Nil)
-    case Tuple(_, args) => Some(args.size, args)
-    case _ => None
+    case Instantiate(_, MemberRefTo(cls: ClassSymbol), argss) => S(cls -> argss.flatten)
+    case Call(MemberRefTo(cls: ClassCtorSymbol), argss) => S(cls.owner.get -> argss.flatten)
+    case MemberRefTo(ctor: ModuleOrObjectSymbol) => S(ctor -> Nil)
+    case Tuple(_, args) => S(args.size, args)
+    case _ => N
 
 object FunRef:
   def unapply(s: Path)(using Elaborator.State): Option[TermSymbol] = s match
-    case TrackedSymOf(tSym: TermSymbol) if tSym.k is syntax.Fun => Some(tSym)
-    case _ => None
+    case MemberRefTo(tSym: TermSymbol)
+      if (tSym.k is syntax.Fun) && tSym.owner.forall(_.asMod.isDefined) => S(tSym)
+    case _ => N
 
 type StratVarId = Uid[StratVar]
 
@@ -446,12 +421,12 @@ class FlowPreAnalyzer(val pgrm: Program)(using
   
   end ctxTracker
   
-  private def recordAffinityUse(s: BlockLocalSymbol | TermSymbol): Unit =
+  private def recordAffinityUse(s: LocalVarSymbol | TermSymbol): Unit =
     s match
     case _: ClassCtorSymbol => ()
     case _ => currentAffinityCount(s) += 1
   
-  private def recordRefInCaptures(l: BlockLocalSymbol | TermSymbol): Unit =
+  private def recordRefInCaptures(l: LocalVarSymbol | TermSymbol): Unit =
     (l, currentCaptureInfo) match
     case (_: ClassCtorSymbol, _) | (_, N) => ()
     case (_, S(capInfo)) =>
@@ -514,7 +489,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
       applyBlock(rest)
     case Assign(lhs, rhs, rest) =>
       lhs match
-        case l: (BlockLocalSymbol | TermSymbol) => recordRefInCaptures(l)
+        case l: (LocalVarSymbol | TermSymbol) => recordRefInCaptures(l)
         case _ => ()
       applyResult(rhs)
       applyBlock(rest)
@@ -559,12 +534,8 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     case p: Path => applyPath(p)
   
   private def applyValueSimpleRef(v: Value.SimpleRef, recordAffinity: Bool) =
-    val Value.SimpleRef(l) = v
-    l match
-    case s: TermSymbol =>
-      recordRefInCaptures(s)
-      if recordAffinity then recordAffinityUse(s)
-    case s: BlockLocalSymbol =>
+    v.sym match
+    case s: LocalVarSymbol =>
       recordRefInCaptures(s)
       if recordAffinity then recordAffinityUse(s)
     case _ => ()
@@ -912,7 +883,7 @@ class FlowConstraintsCollector(
         val rhsStrat = processResult(rhs)
         lhs.match
           case _: NoSymbol => ()
-          case _ => cc.constrain(rhsStrat, generatedProdVars(lhs).asConsStrat)
+          case lhs: (LocalVarSymbol | TermSymbol) => cc.constrain(rhsStrat, generatedProdVars(lhs).asConsStrat)
         processBlock(rest)
       case TryBlock(sub, finallyDo, rest) =>
         processBlock(sub)
@@ -961,7 +932,7 @@ class FlowConstraintsCollector(
             fromStrat,
             new FieldSel(sel.uid, instId)(field, owner, selRes.asConsStrat))
           selRes.asProdStrat
-        case c@CtorCall(ctor, args) if args.forall(_.spread.isEmpty) =>
+        case c@CtorProducer(ctor, args) if args.forall(_.spread.isEmpty) =>
           val argsStrat = args.map:
             case Arg(_, a) => processResult(a)
           ctor match
@@ -974,14 +945,14 @@ class FlowConstraintsCollector(
               new Ctor(c.uid, instId)(ctor, clsParams.zip(argsStrat))
             case _ =>
               // - the size of 0 means we don't know the cls param symbols,
-              // so we constrain args with NoCons and this CtorCall gives NoProd
+              // so we constrain args with NoCons and this CtorProducer gives NoProd
               // - if size > 1, we cannot handle multiple parameter class flow now,
-              //   constrain args with NoCons and this CtorCall gives NoProd
+              //   constrain args with NoCons and this CtorProducer gives NoProd
               for a <- argsStrat do cc.constrain(a, UnknownCons)
               UnknownProd
           case _: ModuleOrObjectSymbol => new Ctor(c.uid, instId)(ctor, Nil)
           case tupSize: Int => new Ctor(c.uid, instId)(tupSize, (0 until tupSize).zip(argsStrat).toList)
-        case c@CtorCall(_, args) =>
+        case c@CtorProducer(_, args) =>
           args.foreach(arg => cc.constrain(processResult(arg.value), UnknownCons))
           UnknownProd
         case c@Call(fun, argss) =>
@@ -1002,7 +973,7 @@ class FlowConstraintsCollector(
         case i@Instantiate(_, cls, argss) => handleCallLike(i.uid, cls, argss.flatten)
         case lam@Lambda(ps, body) =>
           mkFunProdStrat("lam_res", ps :: Nil, body, lam.uid)
-        case _: Tuple => lastWords("should be handled in CtorCall")
+        case _: Tuple => lastWords("should be handled in CtorProducer")
         case Record(_, fields) =>
           fields.foreach:
             case RcdArg(idx, value) =>
@@ -1011,25 +982,22 @@ class FlowConstraintsCollector(
           UnknownProd
         case p: Path =>
           p match
-          case CtorRef(ctor) => UnknownProd
           case refSite@FunRef(f) =>
             funsToProdStratScheme.get(f) match
             case Some(fScheme) =>
               fScheme.instantiate(refSite.uid, f)
             case None => generatedProdVars(f).asProdStrat
-          case refLk@TrackedSymOf(sym) =>
-            refLk match
-              case Select(p, _) => cc.constrain(processResult(p), UnknownCons)
-              case _ => ()
-            generatedProdVars(sym).asProdStrat
-          case _: Value.RefLike => lastWords("already handled in `TrackedSymOf` case")
-          case Select(qual, name) =>
+          case s@Select(qual, name) =>
             cc.constrain(processResult(qual), UnknownCons)
-            UnknownProd
+            s.symbol.fold(UnknownProd): selSym =>
+              generatedProdVars(selSym).asProdStrat
           case DynSelect(qual, fld, arrayIdx) =>
             cc.constrain(processResult(qual), UnknownCons)
             cc.constrain(processResult(fld), UnknownCons)
             UnknownProd
+          case Value.MemberRef(_, disamb) => generatedProdVars(disamb).asProdStrat
+          case Value.SimpleRef(sym) => generatedProdVars(sym).asProdStrat
+          case Value.This(_) => UnknownProd
           case Value.Lit(lit) => UnknownProd
   }
 end FlowConstraintsCollector

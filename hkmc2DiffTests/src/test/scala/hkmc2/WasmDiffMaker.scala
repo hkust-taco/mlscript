@@ -4,7 +4,6 @@ import mlscript.utils.*, shorthands.*
 
 import codegen.*
 import codegen.js.JSBuilder
-import codegen.Local
 import codegen.wasm.*
 import document.*
 import semantics.*
@@ -16,7 +15,7 @@ import Message.MessageContext
 
 import scala.collection.mutable
 
-abstract class WasmDiffMaker extends LlirDiffMaker:
+abstract class WasmDiffMaker extends InvalMLDiffMaker:
 
   /** Outputs the compiled module as [[WasmGenerator]] implementation-defined text.
     */
@@ -32,7 +31,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
     utils.Scope.empty(utils.Scope.Cfg.default)
   private val wasmReplImportsNme = s"${wasmSuppNme}ReplImports"
   private val wasmReplImportsRef = s"globalThis.$wasmReplImportsNme"
-  private val sessionImportsBySymbol = mutable.Map.empty[Local, mutable.LinkedHashMap[Str, SessionBinding]]
+  private val sessionImportsBySymbol = mutable.Map.empty[Symbol, mutable.LinkedHashMap[Str, SessionBinding]]
   private var wasmSessionInitialized = false
   private var wasmSessionMemPages = 0
 
@@ -55,24 +54,12 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
   override def processIRBlock(
       pgrm: Program,
       definedValues: ComputeDefinedValues,
+      symbolsToPreserve: Set[BoundSymbol],
   )(using Config, Raise, Elaborator.Ctx): Unit =
-
-    super.processIRBlock(pgrm, definedValues)
-
+    
+    super.processIRBlock(pgrm, definedValues, symbolsToPreserve)
+    
     val outerRaise: Raise = summon
-    def computeDefinedValues(includeNonTerms: Bool) =
-      import Elaborator.Ctx.*
-      curCtx.env.iterator.flatMap:
-        case (nme, e @ (_: RefElem | SelElem(base = RefElem(_: InnerSymbol)))) =>
-          e.symbol match
-            case S(ts: TermSymbol) if ts.k.isInstanceOf[syntax.ValLike] => S((nme, ts, N))
-            case S(ts: BlockMemberSymbol)
-                if includeNonTerms || ts.trmImplTree.exists(_.k.isInstanceOf[syntax.ValLike]) => S((nme, ts, N))
-            case S(vs: VarSymbol) => S((nme, vs, N))
-            case _ => N
-        case _ => N
-      .toList
-    val symbolsToPreserve = computeDefinedValues(includeNonTerms = true).iterator.map(_._2).toSet
 
     if wasm.isSet then
 
@@ -86,7 +73,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
           errored = true
           outerRaise(d)
         case d => outerRaise(d)
-      val sessionImportSymbols = mutable.LinkedHashSet.from(pgrm.main.freeVars)
+      val sessionImportSymbols = mutable.LinkedHashSet.from[Symbol](pgrm.main.freeVars)
       new BlockTraverser:
         override def applyPath(p: Path): Unit = p match
           case sel: Select =>

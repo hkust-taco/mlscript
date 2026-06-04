@@ -20,7 +20,7 @@ object Branch:
 
 enum Split extends AutoLocated with ProductWithTail:
   case Cons(head: Branch, tail: Split)
-  case Let(sym: BlockLocalSymbol, term: Term, tail: Split)
+  case Let(sym: LocalVarSymbol, term: Term, tail: Split)
   case Else(default: Term)
   case End
   /** Declares a named split (join point). The symbol's `body` holds the shared

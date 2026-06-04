@@ -149,7 +149,7 @@ foo.bar(99)
 //│ define Foo⁰ as class Foo² {
 //│   private val x⁰;
 //│   constructor Foo¹(x) {
-//│     set Foo².this.x = x;
+//│     set Foo².this.x⁰ = x;
 //│     end
 //│   }
 //│   method bar⁰ = fun bar¹(a) { return Foo².this.x⁰ }

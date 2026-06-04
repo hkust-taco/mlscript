@@ -422,14 +422,15 @@ class Resolver(tl: TraceLogger)
     defn match
     
     // Case: instance definition. Add the instance to the context.
-    case defn @ TermDefinition(k = Ins, sym = sym, flags = TermDefFlags(isMethod), sign = sign) =>
+    case defn @ TermDefinition(k = Ins, sym = sym, tsym = tsym, flags = TermDefFlags(isMethod), sign = sign) =>
+      softAssert(defn.owner.isEmpty)
       log(s"Resolving instance definition ${defn.showDbg}")
       traverseTermDef(defn)
       sign match
         case N =>
           // By the syntax of instance defintiion, the type signature should be present.
           lastWords(s"No type signature for instance definition ${defn.showDbg} at ${defn.toLoc}")
-        case S(sign) => 
+        case S(sign) =>
           ictx + (resolveSign(sign, expect = Any), sym)
     
     // Case: Fun/Val definition. 
@@ -958,7 +959,7 @@ class Resolver(tl: TraceLogger)
             disambBms match
             case S(disambBms) => disambBms.defn
             case N => bms.asPrincipal.flatMap(_.defn)
-          case S(bls: BlockLocalSymbol) => bls.decl
+          case S(bls: LocalVarSymbol) => bls.decl
           case S(ds: DefinitionSymbol[?]) => ds.defn
           case _ => N
         log(s"Declaration: ${decl}")
@@ -1210,7 +1211,7 @@ object ModuleChecker:
     
     def checkSym(sym: Symbol): Bool = sym match
       case sym: BuiltinSymbol => false
-      case sym: BlockLocalSymbol => sym.decl.exists(checkDecl)
+      case sym: LocalVarSymbol => sym.decl.exists(checkDecl)
       case sym: MemberSymbol => prefer match
         case Expect.Module(_) => sym.existsModuleful
         case _ => !sym.existsNonModuleful
@@ -1228,4 +1229,3 @@ object ModuleChecker:
   def isStaticClass(t: Term): Bool = t.resolvedSym.exists(_.asCls.isDefined)
 
 end ModuleChecker
-

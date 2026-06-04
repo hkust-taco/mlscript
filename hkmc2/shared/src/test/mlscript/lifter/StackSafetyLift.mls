@@ -28,7 +28,7 @@ hi(0)
 //│ do runtime⁰.resetEffects﹖();
 //│ define hi⁰ as fun hi¹(n) {
 //│   let stackDelayRes;
-//│   set runtime⁰.stackDepth = +⁰(runtime⁰.stackDepth﹖, 1);
+//│   set runtime⁰.stackDepth﹖ = +⁰(runtime⁰.stackDepth﹖, 1);
 //│   set stackDelayRes = runtime⁰.checkDepth﹖();
 //│   match runtime⁰.curEffect﹖
 //│     null =>
@@ -74,7 +74,7 @@ sum(10000)
 //│ do runtime⁰.resetEffects﹖();
 //│ define sum⁰ as fun sum¹(n) {
 //│   let curDepth, stackDelayRes;
-//│   set runtime⁰.stackDepth = +⁰(runtime⁰.stackDepth﹖, 1);
+//│   set runtime⁰.stackDepth﹖ = +⁰(runtime⁰.stackDepth﹖, 1);
 //│   set curDepth = runtime⁰.stackDepth﹖;
 //│   set stackDelayRes = runtime⁰.checkDepth﹖();
 //│   match runtime⁰.curEffect﹖
@@ -87,7 +87,7 @@ sum(10000)
 //│         else
 //│           let saveOffset;
 //│           set pc = runtime⁰.resumePc﹖;
-//│           set runtime⁰.resumePc = -1;
+//│           set runtime⁰.resumePc﹖ = -1;
 //│           end
 //│       loop main:
 //│         match pc
@@ -101,8 +101,8 @@ sum(10000)
 //│                   let res;
 //│                   set tmp1 = -⁰(n, 1);
 //│                   set res = sum¹(tmp1);
-//│                   set runtime⁰.stackDepth = curDepth;
-//│                   set runtime⁰.resumeValue = res;
+//│                   set runtime⁰.stackDepth﹖ = curDepth;
+//│                   set runtime⁰.resumeValue﹖ = res;
 //│                   match runtime⁰.curEffect﹖
 //│                     null =>
 //│                       break brk0
@@ -150,7 +150,7 @@ sum(10000)
 
 :effectHandlers
 :stackSafe 6
-mut val ctr = 0
+let ctr = 0
 fun dummy(x) = x
 fun foo(f) = 
   if ctr > 10000 then 0
@@ -277,4 +277,3 @@ fun sum(n) =
 fun bad() = sum(10000) + sum(10000)
 bad()
 //│ = 100010000
-
