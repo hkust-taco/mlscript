@@ -995,13 +995,6 @@ class FlowConstraintsCollector(
           case refSite@FunRef(f, selectedFrom) =>
             for qual <- selectedFrom do
               cc.constrain(processResult(qual), UnknownCons)
-            // refSite match
-            // case Select(qual, _) =>
-            //   // A selected function value still needs its receiver path at
-            //   // runtime. This matters after lifting, where the receiver may be
-            //   // an auxiliary parameter threaded into a lifted lambda.
-            //   cc.constrain(processResult(qual), UnknownCons)
-            // case _ => ()
             funsToProdStratScheme.get(f) match
             case Some(fScheme) =>
               fScheme.instantiate(refSite.uid, f)
@@ -1122,10 +1115,6 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         handle(p.res, c.res)
       case (p: ProdFun, UnknownCons) =>
         funDests(p) += UnknownCons
-        // // An opaque consumer may retain and call the function value later.
-        // // Preserve any variables captured by the closure; otherwise DPE can
-        // // drop an enclosing parameter that is only used by a returned lambda.
-        // handle(p.capturedVarUpperbound, UnknownCons)
         for a <- p.params do handle(UnknownProd, a)
         p.restParam.foreach(r => handle(UnknownProd, r))
         handle(p.res, UnknownCons)
