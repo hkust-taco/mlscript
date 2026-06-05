@@ -246,7 +246,7 @@ if A is
 //│ deforest > <<< fusing <<<
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
-
+:lift
 :deforest
 fun h() =
   fun lscomp1(ls) = if ls is
