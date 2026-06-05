@@ -18,8 +18,8 @@ object FlowAnalysis:
     val AccumulatorSym = "flow-analysis/accumulator"
 
   class State:
-    val resultToResultId = new java.util.IdentityHashMap[Result, Uid[Result]].asScala
-    val resultIdToResult = mutable.Map.empty[Uid[Result], Result]
+    val resultToResultId = new java.util.IdentityHashMap[Result, ResultId].asScala
+    val resultIdToResult = mutable.Map.empty[ResultId, Result]
     val stratVarIdToState = mutable.Map.empty[StratVarId, StratVarState]
     object ResultUidState extends Uid.Result.State
   
@@ -46,7 +46,7 @@ object FlowAnalysis:
     extension (r: Result)
       def uid = resultToResultId.get(r) match
         case None =>
-          val id = ResultUidState.nextUid
+          val id = ResultId(ResultUidState.nextUid)
           resultIdToResult(id) = r
           resultToResultId(r) = id
           id
@@ -81,11 +81,13 @@ object FlowAnalysis:
 end FlowAnalysis
 
 
-type ResultId = Uid[Result]
+class ResultId(val uid: Uid[Result]):
+  override def toString: String = uid.toString
+
 type InstantiationId = Ls[ResultId]
 type CtorCls = ClassLikeSymbol | Int
 type SelField = TermSymbol | Int
-type FunId = (funSym: Symbol, whichParamList: Int) | ResultId
+type FunId = (funSym: TermSymbol, whichParamList: Int) | ResultId
 type OriginId = ResultId | FunId
 
 
@@ -255,7 +257,7 @@ class Dtor(
 
 case class ConcreteId[A <: OriginId](exprId: A, instId: InstantiationId):
   def pp(using FlowAnalysis.State): Str = exprId match
-    case (sym: Symbol, idx: Int) => s"${sym.nme}#$idx"
+    case (sym: TermSymbol, idx: Int) => s"${sym.nme}#$idx"
     case r: ResultId => s"${r.getResult}"
 
 
@@ -809,10 +811,11 @@ class FlowConstraintsCollector(
     )(using cc: ConstraintsCollector): ProdStrat =
       def paramListFunId(whichParamList: Int): FunId =
         funLamId match
-          case (sym: Symbol, -1) => (sym, whichParamList)
+          case (sym: TermSymbol, -1) => (sym, whichParamList)
           case lambdaExprId: ResultId =>
             assert(whichParamList == 0)
             lambdaExprId
+          case other => lastWords(s"unexpected funLamId shape: $other")
       val capturedSyms = funLamId match
         case (sym: TermSymbol, _) => preAnalyzer.res.capturedVars(sym)
         case lamExprId: ResultId => preAnalyzer.res.capturedVars(lamExprId)
@@ -981,7 +984,6 @@ class FlowConstraintsCollector(
               rest.foreach: nextArgs =>
                 nextArgs.foreach(a => cc.constrain(processResult(a.value), UnknownCons))
               UnknownProd
-            case Nil => handleCallLike(c.uid, fun, Nil)
         case i@Instantiate(_, cls, argss) => handleCallLike(i.uid, cls, argss.flatten)
         case lam@Lambda(ps, body) =>
           mkFunProdStrat("lam_res", ps :: Nil, body, lam.uid)

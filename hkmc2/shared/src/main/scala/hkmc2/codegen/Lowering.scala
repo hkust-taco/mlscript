@@ -1012,6 +1012,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       setupSelection(prefix, proj, N)(k)
     case Resolved(sp @ SelProj(prefix, _, proj), sym) =>
       setupSelection(prefix, proj, S(sym))(k)
+    case Resolved(inner, sym) => TODO(s"lowering for Resolved($inner)")
     case Region(reg, body) =>
       loweringCtx.collectScopedSym(reg)
       Assign(reg, Instantiate(mut = true, Select(State.globalThisSymbol.asThis, Tree.Ident("Region"))(N), Nil :: Nil),
@@ -1041,7 +1042,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         msg"Cannot compile ${t.describe} term that was not elaborated (maybe elaboration was one in 'lightweight' mode?)" ->
           t.toLoc :: Nil,
         source = Diagnostic.Source.Compilation)
-    case _: CompType | _: Neg | _: Term.FunTy | _: Term.Forall | _: Term.WildcardTy | _: Term.Unquoted | _: LeadingDotSel
+    case _: CompType | _: Neg | _: Term.FunTy | _: Term.Forall | _: Term.WildcardTy | _: Term.Unquoted | _: LeadingDotSel | _: Term.Constrained | _: Term.Annotated
     => fail:
       ErrorReport(
         msg"Unexpected term form in expression position (${t.describe})" ->
@@ -1089,8 +1090,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         .chain(b => quote(term)(r2 => Assign(l2, r2, b)))
         .chain(b => quoteSplit(tail, splitTmps)(r3 => Assign(l3, r3, b)))
         .rest(setupTerm("Let", (l1 :: l2 :: l3 :: Nil).map(s => s.asSimpleRef))(k))
-    case Split.Let(sym, _, _) =>
-      lastWords(s"tried to quote split let with non-variable symbol ${sym.nme}")
     case Split.Else(default) => quote(default): r =>
       val l = loweringCtx.registerTempSymbol(N)
       Assign(l, r, setupTerm("Else", l.asSimpleRef :: Nil)(k))
@@ -1101,11 +1100,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       setupSymbol(tmp): r1 =>
         val l1, l2, l3 = loweringCtx.registerTempSymbol(N)
         blockBuilder.assign(l1, r1)
-          .chain(b => Assign(tmp, Value.Ref(l1), b))
+          .chain(b => Assign(tmp, l1.asSimpleRef, b))
           .chain(b => quoteSplit(sym.body, splitTmps2)(r2 => Assign(l2, r2, b)))
           .chain(b => quoteSplit(tail, splitTmps2)(r3 => Assign(l3, r3, b)))
-          .rest(setupTerm("LetSplit", (l1 :: l2 :: l3 :: Nil).map(s => Value.Ref(s)))(k))
-    case Split.UseSplit(sym) => setupTerm("UseSplit", Value.SimpleRef(splitTmps(sym)) :: Nil)(k)
+          .rest(setupTerm("LetSplit", (l1 :: l2 :: l3 :: Nil).map(s => s.asSimpleRef))(k))
+    case Split.UseSplit(sym) => setupTerm("UseSplit", splitTmps(sym).asSimpleRef :: Nil)(k)
 
   lazy val setupFilename: Path =
     val state = summon[State]

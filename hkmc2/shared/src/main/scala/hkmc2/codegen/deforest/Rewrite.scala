@@ -122,7 +122,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
       finalDest match
       case FinalDestSel(dtors, field) =>
         // create poly fun syms
-        val instIds = (dtors + ctor).toList.sortBy(_.exprId).map(_.instId)
+        val instIds = (dtors + ctor).toList.sortBy(_.exprId.uid).map(_.instId)
         for
           ctorInstId <- instIds
           case path@(pathTo :+ refedFun) <- ctorInstId.inits
@@ -142,7 +142,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         
         // create branch sel syms
         val fieldSym = MutMap.empty[SelField, VarSymbol]
-        for sel <- sels.toList.sortBy(_._1) do
+        for sel <- sels.toList.sortBy(_._1.uid) do
           branchSelSyms.getOrElseUpdate(
             sel,
             locally:
@@ -357,7 +357,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         
         def mkCall(target: (BlockMemberSymbol, TermSymbol), args: Ls[ValueSymbol]): Call =
           Call(
-            Value.Ref(target._1, S(target._2)),
+            Value.MemberRef(target._1, target._2),
             args.map(a => Arg(N, a.asPath)) ne_:: Nil
           )(true, false, false)
         
