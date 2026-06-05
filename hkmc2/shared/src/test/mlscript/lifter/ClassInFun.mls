@@ -425,4 +425,203 @@ test(0).toString()
 //   return ret;
 // }
 
+:sjs
+fun f(x, y, z) =
+  data class C(a) with
+    fun getX = x
+    fun getY = y
+    fun setY = set y += 1
+  class D extends C(y)
+  [new C(0), new D]
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let C13, D1, f13, Capture$f3;
+//│ C13 = function C(a) {
+//│   return globalThis.Object.freeze(new C.class(a));
+//│ };
+//│ (class C12 {
+//│   static {
+//│     C13.class = this
+//│   }
+//│   constructor(a, f$cap, x1) {
+//│     this.#f$cap = f$cap;
+//│     this.#x = x1;
+//│     this.a = a;
+//│   }
+//│   #f$cap;
+//│   #x;
+//│   get getX() {
+//│     return this.#x;
+//│   }
+//│   get getY() {
+//│     return this.#f$cap.y$0;
+//│   }
+//│   get setY() {
+//│     let tmp12;
+//│     tmp12 = this.#f$cap.y$0 + 1;
+//│     this.#f$cap.y$0 = tmp12;
+//│     return runtime.Unit;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C", ["a"]];
+//│ });
+//│ (class D extends C13.class {
+//│   static {
+//│     D1 = this
+//│   }
+//│   constructor(f$cap, x1) {
+//│     super(f$cap.y$0, f$cap, x1);
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "D"];
+//│ });
+//│ (class Capture$f2 {
+//│   static {
+//│     Capture$f3 = this
+//│   }
+//│   constructor(y$0) {
+//│     this.y$0 = y$0;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Capture$f"];
+//│ });
+//│ f13 = function f(x1, y, z) {
+//│   let tmp12, tmp13, f$cap;
+//│   f$cap = new Capture$f3(y);
+//│   tmp12 = globalThis.Object.freeze(new C13.class(0, f$cap, x1));
+//│   tmp13 = globalThis.Object.freeze(new D1(f$cap, x1));
+//│   return globalThis.Object.freeze([ tmp12, tmp13 ])
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+:expect [2, (), 3, 2]
+let res = f(1, 2, 3)
+let c = res.0
+let d = res.1
+[c.getY, c.setY, c.getY, d.a]
+//│ = [2, (), 3, 2]
+//│ c = C(0)
+//│ d = D { a: 2 }
+//│ res = [C(0), D { a: 2 }]
+
+:expect 0
+class A(val x)
+class B(y) extends A(y)
+(new B(0)).x
+//│ = 0
+
+:expect [1, 2]
+class A(val x)(val y)
+class B extends A(1)(2)
+[(new B).x, (new B).y]
+//│ = [1, 2]
+
+:w
+:sjs
+fun f(x, y, z) =
+  data class C(a) with
+    fun getX = x
+    fun getY = y
+    fun setY = set y += 1
+  class D extends C(y)
+  let x = D // force D unlifted
+  [new C(0), new D]
+//│ ═══[WARNING] Cannot yet lift class `D` as it is used as a first-class class.
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let C15, f14, Capture$f5;
+//│ C15 = function C(a) {
+//│   return globalThis.Object.freeze(new C.class(a));
+//│ };
+//│ (class C14 {
+//│   static {
+//│     C15.class = this
+//│   }
+//│   constructor(a, f$cap, x1) {
+//│     this.#f$cap = f$cap;
+//│     this.#x = x1;
+//│     this.a = a;
+//│   }
+//│   #f$cap;
+//│   #x;
+//│   get getX() {
+//│     return this.#x;
+//│   }
+//│   get getY() {
+//│     return this.#f$cap.y$0;
+//│   }
+//│   get setY() {
+//│     let tmp15;
+//│     tmp15 = this.#f$cap.y$0 + 1;
+//│     this.#f$cap.y$0 = tmp15;
+//│     return runtime.Unit;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C", ["a"]];
+//│ });
+//│ (class Capture$f4 {
+//│   static {
+//│     Capture$f5 = this
+//│   }
+//│   constructor(y$0) {
+//│     this.y$0 = y$0;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Capture$f"];
+//│ });
+//│ f14 = function f(x1, y, z) {
+//│   let D3, tmp15, tmp16, f$cap;
+//│   f$cap = new Capture$f5(y);
+//│   (class D2 extends C15.class {
+//│     static {
+//│       D3 = this
+//│     }
+//│     constructor() {
+//│       super(f$cap.y$0, f$cap, x1);
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "D"];
+//│   });
+//│   tmp15 = globalThis.Object.freeze(new C15.class(0, f$cap, x1));
+//│   tmp16 = globalThis.Object.freeze(new D3());
+//│   return globalThis.Object.freeze([ tmp15, tmp16 ])
+//│ };
+//│ ═══[WARNING] Cannot yet lift class `D` as it is used as a first-class class.
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [2, (), 3, 2]
+let res = f(1, 2, 3)
+let c = res.0
+let d = res.1
+[c.getY, c.setY, c.getY, d.a]
+//│ = [2, (), 3, 2]
+//│ c = C(0)
+//│ d = D { a: 2 }
+//│ res = [C(0), D { a: 2 }]
+
+:w
+fun f(x, y, z) =
+  data class C(a) with
+    fun getX = x
+    fun getY = y
+    fun setY = set y += 1
+  class D extends C(y)
+  if x is C do print("a") // force C unlifted
+  [new C(0), new D]
+//│ ═══[WARNING] Cannot yet lift class/module `C` as it is used in an instance check.
+//│ ═══[WARNING] Cannot yet lift definition `D` as it extends an unliftable class.
+
+:expect [2, (), 3, 2]
+let res = f(1, 2, 3)
+let c = res.0
+let d = res.1
+[c.getY, c.setY, c.getY, d.a]
+//│ = [2, (), 3, 2]
+//│ c = C(0)
+//│ d = D { a: 2 }
+//│ res = [C(0), D { a: 2 }]
+
+
+:expect 3
+class Box(val x) with
+    fun get() = x
+    fun inc() = Box(x + 1).get()
+Box(2).inc()

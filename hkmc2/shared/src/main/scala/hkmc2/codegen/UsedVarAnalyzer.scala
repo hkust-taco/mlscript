@@ -110,6 +110,10 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
           accessed.accessed.add(sym)
         case _ => super.applyPath(p)
     accessed.toIMut
+  
+  def getParentCls(c: ClsLikeDefn) = c.parentPath.flatMap:
+    case RefOfBms(_, SDSym(parentCls), _) => S(parentCls)
+    case _ => N
     
   /**
     * Finds the variables belonging to a parent scope which this scoped object could possibly 
@@ -131,7 +135,8 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
         // When the class symbol is referenced once, that symbol may be used in
         // arbitrary ways, which includes calling any of this class's methods.
         val res = blkAccessesShallow(c.preCtor) ++ blkAccessesShallow(c.ctor)
-        res.copy(refdDefns = res.refdDefns ++ c.methods.map(_.dSym))
+        val parentClsSym = getParentCls(c)
+        res.copy(refdDefns = res.refdDefns ++ c.methods.map(_.dSym) ++ parentClsSym.toSet)
       case ScopedObject.ClassCtor(cls) =>
         // Recall that we interpret the ctor as just another function in the same scope
         // as the corresponding class, and initializes the class.
@@ -257,14 +262,14 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
       case ((acc1, acc2), (new1, new2)) => (combineInfos(acc1, new1), combineInfos(acc2, new2))
 
   private def reqdCaptureLocals(s: ScopeNode): Map[ScopedInfo, Set[ScopedOrInnerSymbol]] =
-    val blk = s.obj match
+    val (blk, parentCls) = s.obj match
       case ScopedObject.Top(b) => lastWords("reqdCaptureLocals called on top block")
       case ScopedObject.ClassCtor(cls) => return Map.empty + (s.obj.toInfo -> Set.empty)
-      case ScopedObject.Class(cls, _) => Begin(cls.preCtor, cls.ctor)
-      case ScopedObject.Companion(comp, _) => comp.ctor
-      case ScopedObject.Func(fun, _) => fun.body
-      case ScopedObject.ScopedBlock(uid, block) => block
-      case ScopedObject.Loop(sym, block) => block
+      case ScopedObject.Class(cls, _) => (Begin(cls.preCtor, cls.ctor), getParentCls(cls))
+      case ScopedObject.Companion(comp, _) => (comp.ctor, N)
+      case ScopedObject.Func(fun, _) => (fun.body, N)
+      case ScopedObject.ScopedBlock(uid, block) => (block, N)
+      case ScopedObject.Loop(sym, block) => (block, N)
 
     val (nodes, nexts) = s.partitionTree2:
       case obj: (ScopedObject.ScopedBlock | ScopedObject.Loop) => false
@@ -272,7 +277,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
     
     val locals = nodes.flatMap(_.obj.definedLocals).toSet
     
-    val cap = reqdCaptureLocalsBlk(blk, nexts.toList, s.obj.definedLocals, locals)
+    val cap = reqdCaptureLocalsBlk(blk, parentCls, nexts.toList, s.obj.definedLocals, locals)
     
     val cur: Map[ScopedInfo, Set[ScopedOrInnerSymbol]] = nodes.map: n =>
         n.obj.toInfo -> cap.intersect(n.obj.definedLocals.map(s => s: ScopedOrInnerSymbol))
@@ -282,7 +287,13 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
       case (mp, acc) => mp ++ reqdCaptureLocals(acc)
 
   // readers-mutators analysis
-  private def reqdCaptureLocalsBlk(b: Block, nextNodes: List[ScopeNode], startingVars: Set[ScopedOrInnerSymbol], thisVars: Set[ScopedOrInnerSymbol]): Set[ScopedOrInnerSymbol] =
+  private def reqdCaptureLocalsBlk(
+    b: Block,
+    superClass: Opt[DefinitionSymbol[?]],
+    nextNodes: List[ScopeNode],
+    startingVars: Set[ScopedOrInnerSymbol],
+    thisVars: Set[ScopedOrInnerSymbol]
+  ): Set[ScopedOrInnerSymbol] =
     val scopeInfos: Map[ScopedInfo, ScopeNode] = nextNodes.map(node => node.obj.toInfo -> node).toMap
 
     case class CaptureInfo(reqCapture: Set[ScopedOrInnerSymbol], hasReader: Set[ScopedOrInnerSymbol], hasMutator: Set[ScopedOrInnerSymbol], mutated: Set[ScopedOrInnerSymbol])
@@ -428,6 +439,10 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
 
         override def applyResult(r: Result): Unit = 
           r match
+          case Call(Value.RefLike(sym), argss) if sym === State.superSymbol =>
+            argss.foreach(_.foreach(super.applyArg(_)))
+            superClass.foreach: d =>
+              handleCalledScope(d)
           case Call(RefOfBms(_, SDSym(d), _), argss) =>
             argss.foreach(_.foreach(super.applyArg(_)))
             val numArgLists = scopeData.getNode(d).obj match
