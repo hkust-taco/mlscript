@@ -1,5 +1,6 @@
 :js
 :deadParamElim debug
+:noInline
 
 
 :expect 0
@@ -153,23 +154,18 @@ pong(5, 0)
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 
+// [INLINING PR FIXME]: regression? no worker/wrapper anymore -> should have an option to only disable inlining of big functions and keep worker/wrapper!
 :soir
 :noTailRec
 private fun ping(n)(unused) = if n == 0 then 0 else pong(n - 1)(unused)
 private fun pong(n)(unused) = if n == 0 then 0 else ping(n - 1)(unused)
 ping(5)(99)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun ping$worker#0 @ <root> -> eliminable: {1}
-//│ dead-param-elim > prodfun pong$worker#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let ping⁴, pong⁴, pong$worker⁰, ping$worker⁰;
-//│ @inline @private
+//│ let ping⁴, pong⁴;
+//│ @private
 //│ define ping⁴ as fun ping⁵(n)(unused) {
-//│   return ping$worker¹(n)
-//│ };
-//│ @private
-//│ define ping$worker⁰ as fun ping$worker¹(n) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
@@ -177,15 +173,11 @@ ping(5)(99)
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return pong$worker¹(tmp)
+//│       return pong⁵(tmp)(unused)
 //│   end
 //│ };
-//│ @inline @private
+//│ @private
 //│ define pong⁴ as fun pong⁵(n)(unused) {
-//│   return pong$worker¹(n)
-//│ };
-//│ @private
-//│ define pong$worker⁰ as fun pong$worker¹(n) {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
@@ -193,10 +185,10 @@ ping(5)(99)
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return ping$worker¹(tmp)
+//│       return ping⁵(tmp)(unused)
 //│   end
 //│ };
-//│ return ping$worker¹(5)
+//│ return ping⁵(5)(99)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 

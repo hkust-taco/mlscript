@@ -44,7 +44,10 @@ foo()
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
-//│ return foo()
+//│ if (false === true) {
+//│   return 0
+//│ }
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')

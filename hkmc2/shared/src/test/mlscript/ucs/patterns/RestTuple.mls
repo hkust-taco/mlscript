@@ -61,17 +61,17 @@ fun nested_tuple_patterns(xs) = if xs is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let nested_tuple_patterns;
 //│ nested_tuple_patterns = function nested_tuple_patterns(xs) {
-//│   let lastElement1$, middleElements, element0$, element1$, element0$1, tmp6, tmp7;
+//│   let lastElement1$4, middleElements, element0$4, element1$, element0$5, tmp6, tmp7;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
-//│     element0$ = runtime.Tuple.get(xs, 0);
+//│     element0$4 = runtime.Tuple.get(xs, 0);
 //│     middleElements = runtime.Tuple.slice(xs, 1, 1);
-//│     lastElement1$ = runtime.Tuple.get(xs, -1);
+//│     lastElement1$4 = runtime.Tuple.get(xs, -1);
 //│     if (runtime.Tuple.isArrayLike(middleElements) && middleElements.length === 2) {
-//│       element0$1 = runtime.Tuple.get(middleElements, 0);
+//│       element0$5 = runtime.Tuple.get(middleElements, 0);
 //│       element1$ = runtime.Tuple.get(middleElements, 1);
-//│       tmp6 = element0$ + element0$1;
+//│       tmp6 = element0$4 + element0$5;
 //│       tmp7 = tmp6 + element1$;
-//│       return tmp7 + lastElement1$
+//│       return tmp7 + lastElement1$4
 //│     }
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {

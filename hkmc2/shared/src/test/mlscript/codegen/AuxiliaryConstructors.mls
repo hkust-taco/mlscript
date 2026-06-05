@@ -64,6 +64,7 @@ class Baz(a, b) with
   constructor(x, y)(u, v)
   fun total() = a + b + x + y + u + v
 
+:expect 21
 Baz(1, 2)(3, 4)(5, 6).total()
 //│ = 21
 
@@ -90,7 +91,51 @@ class Qux(a) with
   constructor(extra)
   fun both() = a + extra
 
+:expect 133
 Qux(10)(123).both()
 //│ = 133
 
+// === Extending classes with multiple parameter lists ===
 
+class A(val x)(val y)
+class B extends A(1)(2)
+
+:expect B { x: 1, y: 2 }
+new B
+//│ = B { x: 1, y: 2 }
+
+class A(val x) with
+  constructor(y)(z) 
+  fun bruh = x + y + z
+
+class B extends A(1)(2)(3)
+
+:expect 6
+(new B).bruh
+//│ = 6
+
+:e
+class B extends A(0)
+//│ ═══[COMPILATION ERROR] Extending a partially applied class is not supported
+
+new B
+//│ = B { x: 0 }
+
+class C
+
+:e
+class D extends C(0)
+//│ ═══[COMPILATION ERROR] Too many parameter lists for parent class
+
+:e
+new A(1)(2) with
+  fun a = 0
+//│ ═══[COMPILATION ERROR] Extending a partially applied class is not supported
+//│ = $anon { x: 1 }
+
+:e
+new A(1)(2)(3)(4) with
+  fun a = 0
+//? = $anon { x: 1 }
+//│ ═══[COMPILATION ERROR] Too many parameter lists for parent class
+//│ = $anon { x: 1 }

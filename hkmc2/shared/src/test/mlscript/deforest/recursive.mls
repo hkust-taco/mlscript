@@ -860,7 +860,7 @@ f
 //│ deforest > B⁰ ->
 //│ deforest > 	match: x⁵
 //│ deforest > <<< fusing <<<
-//│ = fun f_17$f
+//│ = fun f_18$f
 
 
 :deforest
@@ -890,7 +890,7 @@ f
 //│ deforest > B⁰ ->
 //│ deforest > 	match: x⁶
 //│ deforest > <<< fusing <<<
-//│ = fun f_9$f
+//│ = fun f_10$f
 
 
 
@@ -925,4 +925,4 @@ f
 //│ deforest > B⁰ ->
 //│ deforest > 	match: x⁷
 //│ deforest > <<< fusing <<<
-//│ = fun f_13$f
+//│ = fun f_14$f

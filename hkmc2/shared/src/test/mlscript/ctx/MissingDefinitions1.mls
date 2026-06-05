@@ -29,13 +29,13 @@ fun g(x) = f(x)
 :ge
 :re
 g(0)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g'
-//│ ║  l.31: 	g(0)
-//│ ║        	^
-//│ ╟── which references the symbol introduced here
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'f'
 //│ ║  l.26: 	fun g(x) = f(x)
-//│ ╙──      	^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] ReferenceError: g is not defined
+//│ ║        	           ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.3: 	fun f: Any -> Any
+//│ ╙──     	^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: f is not defined
 
 :js
 :ge

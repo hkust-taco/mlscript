@@ -25,6 +25,8 @@ The webpage at https://hkust-taco.github.io/mlscript/ still demonstrates the old
 An online demo of hkmc2 (already somewhat outdated) can be found at https://mlscript.fun/.
 
 
+
+
 # MLscript Compiler Version 1
 
 This legacy version of the compiler provided basic JavaScript code-gen along with advanced type checking for object-oriented and functional programming with records, generic classes, mix-in traits, first-class unions and intersections, instance matching, and ML-style principal type inference.
@@ -119,7 +121,6 @@ and immediately see the results in your browser by refreshing the page with `F5`
 
 
 
-
 # MLscript Compiler Version 2 (hkmc2)
 
 
@@ -168,6 +169,8 @@ i.e., do not restart SBT every time,
 but launch it in shell mode (with command `sbt`)
 and then use one of the following commands.
 
+#### Main SBT test commands (use these for validating changes before pushing)
+
 - `hkmc2JVM/test` for running only the main compilation tests, in `hkmc2/shared/src/test/mlscript-compile`.
 - `hkmc2DiffTests/test` for running only the main diff-tests, in `hkmc2/shared/src/test/mlscript`.
 - `hkmc2MainTests/test` for running the above two.
@@ -182,20 +185,43 @@ and then use one of the following commands.
   and running every single test in the repository,
   including obsolete ones.
 
-Another useful SBT incantation is `; hkmc2MostTests/test; ~hkmc2DiffTests/Test/run`.
-This command runs all hkmc2 tests once and then starts the test watcher.
+Individual tests can be run with `-z`.
+For example, `~mlscriptJVM/testOnly mlscript.DiffTests -- -z parser` will watch for file changes and continuously run all parser tests (those that have "parser" in their name).
+
+#### Useful SBT commands aliases (use these for more pleasant development)
+
+The most useful command alias for development is `watch` for continuously running the test watcher, which:
+
+- watches for any file-save event in compilation and diff- tests, updating them accordingly
+- recompiles the Scala sources automatically on change
+
+The command aliases below let you either specify no arguments,
+in which case all corresponding tests are run,
+or specify a string to filter the tests to run.
+
+- `ctest` aka "main compilation tests" for running specific tests in `hkmc2/shared/src/test/mlscript-compile`
+- `dtest` aka "main diff-tests" for running only the main diff-tests in `hkmc2/shared/src/test/mlscript`
+- You can find other similar command aliases in `build.sbt`.
+
+The command aliases below are shorthand for running aggregated tests; they take no arguments.
+
+- `qtest` aka "quick tests" for `ctest` and `dtest` together.
+- `mtest` aka "main tests" for runnign most tests, excluding JS compilation + diff- tests (usually sufficient)
+- `atest` aka "all tests" for running all tests, including JS compilation + diff- tests
+
+Example usages:
+
+- `dtest opt/` for running the optimization diff-tests in `mlscript/opt/`.
+- `catest pars` to run all application compilation tests with "pars" in their name, such as `mlscript-compile/apps/parsing/Lexer.mls`.
+
+Another useful SBT incantation is `; qtest; watch`.
+This command runs all quick tests tests once and then starts the test watcher.
 This is a useful command to use periodically while making changes to the compiler,
 to check that you haven't broken anything.
 
 Note that when saved, the special file `ChangedTests.cmd` will trigger the test watcher to run
 all tests that currently have unstaged changes in git.
 This is useful when you have a working subset of tests that you want to run periodically.
-
-### Running tests individually
-
-Individual tests can be run with `-z`.
-For example, `~mlscriptJVM/testOnly mlscript.DiffTests -- -z parser` will watch for file changes and continuously run all parser tests (those that have "parser" in their name).
-
 
 
 

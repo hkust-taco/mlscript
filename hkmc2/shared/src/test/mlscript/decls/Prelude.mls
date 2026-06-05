@@ -111,7 +111,8 @@ declare module Array with
     isArray
     prototype
 
-declare object Symbol with
+declare class Symbol
+declare module Symbol with
   // The `TermDef` needs `rhs` to be defined to be recognized as `isMLsFun`.
   // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the
   // uninitialized `runtime` in the `Rendering` module.
@@ -211,9 +212,10 @@ declare val Infinity
 declare class Promise
 declare val Promise
 declare object WebAssembly with
-  declare object Instance
+  declare class Instance
   declare class Memory
-  declare object Module with
+  declare class Module
+  declare module Module with
     fun
       exports
       imports

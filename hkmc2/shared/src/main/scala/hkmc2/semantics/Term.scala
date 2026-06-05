@@ -28,8 +28,16 @@ enum Annot extends AutoLocated:
   case TailCall
   case Inline
   case Config(modify: hkmc2.Config => hkmc2.Config)
-  // marks if a function or lambda is affine, i.e. called at most once.
-  // for functions with multiple parameter lists, `whichParamList` is the zero-based parameter-list index.
+  // Marks if a function or lambda is one-shot, i.e. called at most once.
+  // Functions with multiple parameter lists are considered here as a chain of
+  // function values. `whichParamList` is the zero-based index of the parameter
+  // list whose corresponding function value is one-shot.
+  // For example, on `fun f(a)(b)`,
+  // - its list of annotations containing `Affine(0)` says that `f` is one-shot;
+  // - its list of annotations containing `Affine(1)` says that
+  //   each function value produced by `f(a)` is one-shot;
+  // - its list of annotations containing both `Affine(0)` and `Affine(1)` says that
+  //   `f` is one-shot and each function value produced by `f(a)` is also one-shot.
   case Affine(whichParamList: Int)
   
   def symbol: Opt[Symbol] = this match

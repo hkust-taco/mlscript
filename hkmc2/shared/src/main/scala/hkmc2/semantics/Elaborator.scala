@@ -231,6 +231,7 @@ object Elaborator:
       val Object = assumeBuiltinCls("Object")
       val Array = assumeBuiltinCls("Array")
       val TypedArray = assumeBuiltinCls("TypedArray")
+      val Symbol = assumeBuiltinCls("Symbol")
       // println(s"Builtins: $Int, $Num, $Str, $untyped")
       class VirtualModule(val module: ModuleOrObjectSymbol):
         val bms = getBuiltin(module.nme) match
@@ -240,7 +241,7 @@ object Elaborator:
           module.tree.definedSymbols.get(nme).getOrElse:
             throw new NoSuchElementException(
               s"builtin module symbol source.$nme")
-      object Symbol extends VirtualModule(assumeBuiltinObj("Symbol")):
+      object SymbolModule extends VirtualModule(assumeBuiltinMod("Symbol")):
         val `for` = assumeObject("for")
         val iterator = assumeObject("iterator")
       object source extends VirtualModule(assumeBuiltinMod("source")):
