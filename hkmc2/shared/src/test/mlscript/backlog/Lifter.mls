@@ -39,17 +39,6 @@ fun hello() =
   new Test2
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
 
-// This is due to subclasses not calling `super` with the required locals. The analysis to
-// determine which locals are required is not in place yet.
-:expect 2
-fun test(x) =
-  class A with
-    fun get = x
-  class B() extends A
-  B().get
-test(2)
-//│ = 2
-
 /// The following are related to first-class classes, instance checks, and private fields. ///
 
 :expect 1
