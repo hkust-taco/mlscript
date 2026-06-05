@@ -1,3 +1,5 @@
+#config(liftDefns: Some(LiftDefns))
+
 import "./Predef.mls"
 import "./Option.mls"
 import "./Stack.mls"

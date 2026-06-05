@@ -10,7 +10,6 @@ fun f(used, unused) =
   new C
 f(1, 2).get()
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ f@1 -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 1
 
@@ -23,7 +22,6 @@ fun foo(y) =
   (new M).bar()
 foo(10)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun foo#0 @ foo@3 -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 
 
@@ -38,7 +36,6 @@ fun g(x, dead) =
   p.first()
 g(10, 99)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun g#0 @ g@3 -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 10
 
@@ -52,7 +49,6 @@ fun h(base, unused) =
   new Adder
 h(10, 0).add(3)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun h#0 @ h@2 -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 13
 
@@ -122,6 +118,5 @@ fun multi(a, b, dead) =
   (new Calc).prod()
 multi(5, 6, 999)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun multi#0 @ multi@4 -> eliminable: {2}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 30

@@ -154,13 +154,12 @@ if a is
   let tmp = printAndId(3)
   B then 2 + tmp
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp1;
 //│ if (a instanceof A1.class) {
 //│   return 1
 //│ }
-//│ tmp1 = printAndId(3);
+//│ Predef.print(3);
 //│ if (a instanceof B1.class) {
-//│   return 2 + tmp1
+//│   return 5
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -204,22 +203,22 @@ if a is
     print(x + 1)
     print(x + 2)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp2, tmp3, tmp4;
+//│ let tmp1, tmp2, tmp3;
 //│ if (a instanceof B1.class) {
 //│   return 1
 //│ }
 //│ if (a instanceof A1.class) {
-//│   tmp2 = 2;
+//│   tmp1 = 2;
 //│ } else if (a instanceof C1.class) {
-//│   tmp2 = 3;
+//│   tmp1 = 3;
 //│ } else {
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }
+//│ Predef.print(tmp1);
+//│ tmp2 = tmp1 + 1;
 //│ Predef.print(tmp2);
-//│ tmp3 = tmp2 + 1;
-//│ Predef.print(tmp3);
-//│ tmp4 = tmp2 + 2;
-//│ return Predef.print(tmp4);
+//│ tmp3 = tmp1 + 2;
+//│ return Predef.print(tmp3);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 2
 //│ > 3

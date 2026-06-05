@@ -179,7 +179,8 @@ abstract class MLsDiffMaker extends DiffMaker:
             reportExclusiveFlagConflict(":etaExpansion", etaExpansionFlags, "on", "off")
             if etaExpansionFlags.contains("off") then N
             else S(EtaExpansion.withDebug(etaExpansionFlags.contains("debug"))),
-      inlining = Opt.when(!noInlineOpt.isSet)(Config.Inliner(inlineThreshold.get.getOrElse(1))),
+      inlining = Opt.when(!noInlineOpt.isSet)(Config.Inliner(inlineThreshold =
+        inlineThreshold.get.getOrElse(Config.default.inlineThreshold))),
       deadBranchRemoval = Config.default.deadBranchRemoval,
       qqEnabled = importQQ.isSet,
       funcToCls = funcToCls.isSet,

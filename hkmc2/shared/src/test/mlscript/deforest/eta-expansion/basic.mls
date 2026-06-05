@@ -49,7 +49,7 @@ c(p(true))
 //│ deforest > 	match: x²
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > p_5$p: [1, 0]
+//│ eta-expansion > p_7$p: [1, 0]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ = 1
 

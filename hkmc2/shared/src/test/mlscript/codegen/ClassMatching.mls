@@ -153,16 +153,16 @@ fun f(x) = if x is
   else print("oops")
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f4;
-//│ f4 = function f(x) {
+//│ f4 = function f(x2) {
 //│   let scrut1, arg$Some$0$1;
-//│   if (x instanceof Some1.class) {
-//│     arg$Some$0$1 = x.value;
+//│   if (x2 instanceof Some1.class) {
+//│     arg$Some$0$1 = x2.value;
 //│     scrut1 = arg$Some$0$1 > 0;
 //│     if (scrut1 === true) {
 //│       return 42
 //│     }
 //│     return Predef.print("oops");
-//│   } else if (x instanceof None1.class) { return "ok" }
+//│   } else if (x2 instanceof None1.class) { return "ok" }
 //│   return Predef.print("oops");
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -189,13 +189,13 @@ fun f(x) = if x is
   Pair(a, b) then a + b
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f5;
-//│ f5 = function f(x) {
+//│ f5 = function f(x2) {
 //│   let arg$Pair$0$, arg$Pair$1$;
-//│   if (x instanceof Some1.class) {
-//│     return x.value
-//│   } else if (x instanceof Pair1.class) {
-//│     arg$Pair$0$ = x.fst;
-//│     arg$Pair$1$ = x.snd;
+//│   if (x2 instanceof Some1.class) {
+//│     return x2.value
+//│   } else if (x2 instanceof Pair1.class) {
+//│     arg$Pair$0$ = x2.fst;
+//│     arg$Pair$1$ = x2.snd;
 //│     return arg$Pair$0$ + arg$Pair$1$
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -217,15 +217,17 @@ fun f(x) = print of if x is
   else "oops"
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f6;
-//│ f6 = function f(x) {
+//│ f6 = function f(x2) {
 //│   let arg$Some$0$1;
-//│   if (x instanceof Some1.class) {
-//│     arg$Some$0$1 = x.value;
+//│   if (x2 instanceof Some1.class) {
+//│     arg$Some$0$1 = x2.value;
 //│     if (arg$Some$0$1 === 0) {
 //│       return Predef.print("0")
 //│     }
 //│     return Predef.print("oops");
-//│   } else if (x instanceof None1.class) { return Predef.print("ok") }
+//│   } else if (x2 instanceof None1.class) {
+//│     return Predef.print("ok")
+//│   }
 //│   return Predef.print("oops");
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
