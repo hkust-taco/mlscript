@@ -677,6 +677,10 @@ extends Importer with ucs.SplitElaborator:
             Term.Assgn(lt, subterm(rhs)) :: Nil,
             subterm(bod),
         ), Term.Assgn(lt, sym.ref())))
+    case LetLike(Keywrd(Keyword.`set`), _, N, S(_)) =>
+      raise:
+        ErrorReport(msg"Expected a right-hand side for this assignment" -> tree.toLoc :: Nil)
+      Term.Error
     case (hd @ Hndl(id: Ident, c, Block(sts_), S(bod))) => ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
       
       val sym = VarSymbol(id)
@@ -793,6 +797,7 @@ extends Importer with ucs.SplitElaborator:
         val constraints = tys.flatMap(maybeConstraint)
         val body = term(rhs)
         Term.Constrained(constraints, body)
+      case _ => lastWords(s"Unexpected lambda parameter shape: $lhs")
     case InfixApp(lhs, Keywrd(Keyword.`as`), rhs) =>
       Term.Asc(subterm(lhs), subterm(rhs))
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
@@ -1160,8 +1165,11 @@ extends Importer with ucs.SplitElaborator:
     case Constructor(delc) =>
       raise(ErrorReport(msg"Unsupported constructor in this position." -> tree.toLoc :: Nil))
       Term.Error
-    // case _ =>
-    //   ???
+    case Dummy | _: SplitPoint | _: LexicalNew | _: Region | _: Effectful =>
+      lastWords(s"Unexpected ${tree.describe} in subterm position: $tree")
+    case Dummy | _: SplitPoint | _: Pun | _: LetLike | _: TyTup | _: Directive =>
+      raise(ErrorReport(msg"Unsupported term in this position (${tree.describe})." -> tree.toLoc :: Nil))
+      Term.Error
   
   def arg(tree: Tree)(using UnderCtx): Ctxl[Term] = tree match
     case u: Under => subterm(tree) // Note: currently `f(a, _, c)` is treated the same as `f of a, _, c`
@@ -1439,6 +1447,12 @@ extends Importer with ucs.SplitElaborator:
           case S(elem) =>
             elem.symbol match
             case S(sym: (LocalSymbol | TermSymbol)) => go(sts, Nil, DefineVar(sym, r) :: acc)
+            case S(sym) =>
+              raise(ErrorReport(msg"Symbol '${id.name}' is not a variable and cannot be reassigned" -> id.toLoc :: Nil))
+              go(sts, Nil, Term.Error :: acc)
+            case N =>
+              raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
+              go(sts, Nil, Term.Error :: acc)
           case N =>
             // TODO lookup in members? inherited/refined stuff?
             raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
@@ -1535,7 +1549,7 @@ extends Importer with ucs.SplitElaborator:
       case (td @ TypeDef(k, head, rhs)) :: sts =>
         val owner = ctx.outer.inner
         
-        assert((k is Als) || (k is Cls) || (k is Mod) || (k is Obj) || (k is Pat), k)
+        softTODO((k is Als) || (k is Cls) || (k is Mod) || (k is Obj) || (k is Pat), k.desc + " not yet supported")
         val body = td.withPart
         
         td.symbName match
@@ -1565,17 +1579,21 @@ extends Importer with ucs.SplitElaborator:
         val tps = td.typeParams match
           case S(ts) =>
             ts.tys.flatMap: targ =>
-              val (id, vce) = targ match
+              def mk(id: Ident, vce: Opt[Bool]): Ls[TyParam] =
+                val vs = VarSymbol(id)
+                val res = TyParam(FldFlags.empty, vce, vs)
+                vs.decl = S(res)
+                res :: Nil
+              targ match
                 case id: Ident =>
-                  (id, N)
+                  mk(id, N)
                 case Modified(Keywrd(Keyword.`in`), id: Ident) =>
-                  (id, S(false))
+                  mk(id, S(false))
                 case Modified(Keywrd(Keyword.`out`), id: Ident) =>
-                  (id, S(true))
-              val vs = VarSymbol(id)
-              val res = TyParam(FldFlags.empty, vce, vs)
-              vs.decl = S(res)
-              res :: Nil
+                  mk(id, S(true))
+                case _ =>
+                  raise(ErrorReport(msg"Unsupported type parameter ${targ.describe}" -> targ.toLoc :: Nil))
+                  Nil
           case N => Nil
         
         newCtx ++= tps.map(tp => tp.sym.name -> tp.sym) // TODO: correct ++?
@@ -1816,6 +1834,7 @@ extends Importer with ucs.SplitElaborator:
                 ClassDef(owner, Cls, clsSym, sym, tsym, tps, pss, newOf(td), ObjBody(bod), annotations, comp, auxCtorParams = auxCtorPss)
               clsSym.defn = S(cd)
               cd
+        case Trt | Mxn => lastWords(s"Unexpected type definition kind here: $k")
         go(sts, Nil, defn :: acc)
       case Annotated(annotation, target) :: sts =>
         go(target :: sts, annotations ++ annot(annotation), acc)
@@ -1908,7 +1927,7 @@ extends Importer with ucs.SplitElaborator:
       case "<:<" => SubDir.Sub
       case ">:>" => SubDir.Sup
     SubConstraint(l, r, dir)
- 
+  
   /** Elaborate a subtyping constraint that may be malformed. */
   def maybeConstraint(t: Tree): Ctxl[Option[SubConstraint]] =
     t match
@@ -1950,6 +1969,11 @@ extends Importer with ucs.SplitElaborator:
             case N => go(tl, p :: acc, newCtx, newFlags)
           case L(d) => raise(d); go(tl, acc, ctx, flags)
       go(ps, Nil, ctx, ParamListFlags.empty)
+    case _ =>
+      raise:
+        ErrorReport:
+          msg"Expected a parameter list (a tuple of parameters), but found ${t.describe}" -> t.toLoc :: Nil
+      (ParamList(ParamListFlags.empty, Nil, N).withLocOf(t), ctx)
   
   def ident(id: Ident)(using Ctx): Ctxl[Opt[Term]] = ctx.get(id.name) match
     case S(elem) => S(elem.ref(id))
@@ -2155,7 +2179,12 @@ extends Importer with ucs.SplitElaborator:
           raise(ErrorReport(msg"Unsupported type parameter ${t.describe}" -> t.toLoc :: Nil))
           Nil
       (vs, ctx ++ vs.map(p => p.sym.name -> p.sym))
-  
+    case _ =>
+      raise:
+        ErrorReport:
+          msg"Expected a type parameter list (a tuple of identifiers), but found ${t.describe}" -> t.toLoc :: Nil
+      (Nil, ctx)
+
   def importFrom(sts: Block): Ctxl[(Blk, Ctx)] =
     given UnderCtx = new UnderCtx(N)
     val (res, newCtx) = block(sts, hasResult = false)
@@ -2236,7 +2265,8 @@ extends Importer with ucs.SplitElaborator:
             if pol =/= S(false) && ty.isContravariant then
               changed = true
               ty.isContravariant = false
-          // case _ => ???
+          case S(decl) =>
+            lastWords(s"VarSymbol ${sym.name} has unexpected declaration: $decl")
           case N =>
             lastWords(s"VarSymbol ${sym.name} has no declaration")
       case _ => super.traverseType(pol)(trm)
@@ -2272,6 +2302,7 @@ extends Importer with ucs.SplitElaborator:
       case f: Fld =>
         traverseType(pol)(f.term)
         f.asc.foreach(traverseType(pol))
+      case _: Spd => TODO("variance traversal of spread elements")
     def traverseType(pol: Pol)(f: Param): Unit =
       f.sign.foreach(traverseType(pol))
 end Elaborator

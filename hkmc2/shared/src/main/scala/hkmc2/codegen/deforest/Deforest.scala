@@ -120,7 +120,7 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val
     dest match
     case FinalDestMatch(dtor, sels) =>
       tl.log(s"\tmatch: ${pp(dtor)}")
-      for s <- sels.toSeq.sortBy(_.exprId) do tl.log(s"\tfields: ${pp(s)}")
+      for s <- sels.toSeq.sortBy(_.exprId.uid) do tl.log(s"\tfields: ${pp(s)}")
     case FinalDestSel(dtors, field) =>
       tl.log(s"\tselect: ${pp(field)}")
   tl.log("<<< fusing <<<")

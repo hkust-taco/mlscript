@@ -74,7 +74,6 @@ class Printer(using Raise, ShowCfg, State, SymbolPrinter, Config):
     case End(msg) if msg.nonEmpty && config.commentGeneratedCode => doc"end /* ${msg} */"
     case End(_) => doc"end"
     case Unreachable(msg) => doc"unreachable /* ${msg} */"
-    case _ => TODO(blk)
   
   def printFlags(defn: Defn)(using Scope): Document =
     // val overrides = defn match

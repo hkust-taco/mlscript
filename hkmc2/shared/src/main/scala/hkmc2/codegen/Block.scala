@@ -118,6 +118,11 @@ sealed abstract class Block extends Product:
     case Define(defn, rest) =>
       s"""|Define(${defn.showDbg})
           |${rest.showDbg}""".stripMargin
+    case Throw(exc) => s"Throw(${exc.showDbg})"
+    case Scoped(syms, body) =>
+      s"""|Scoped(${syms.toList.map(_.showDbg).sorted.mkString(", ")}) {
+          |${body.showDbg}
+          |}""".stripMargin
   
   lazy val isAbortive: Bool = this match
     case _: End => false

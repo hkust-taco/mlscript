@@ -405,7 +405,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         val exitCont: Result => Block = r => Assign(tmp, r, Break(exitLabel))
         val bodyBlock = lowerSplit(sym.body, exitCont)
         val tailBlock = lowerSplit(tail, exitCont)
-        Label(exitLabel, false, Label(joinLabel, false, tailBlock, bodyBlock), cont(Value.SimpleRef(tmp)))
+        Label(exitLabel, false, Label(joinLabel, false, tailBlock, bodyBlock), cont(tmp.asSimpleRef))
     case Split.UseSplit(sym) =>
       sym.label match
         case S(label) => Break(label)

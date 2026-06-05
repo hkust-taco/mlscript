@@ -15,26 +15,29 @@
 //│ ╔══[COMPILATION ERROR] Name not found: a
 //│ ║  l.5: 	[a, b] => [b, a]
 //│ ╙──     	              ^
-//│ /!!!\ Uncaught error: scala.MatchError: Constrained(List(),Tup(List(Fld(‹›,Error,None), Fld(‹›,Error,None)))) (of class hkmc2.semantics.Term$Constrained)
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (constrained type)
+//│ ║  l.5: 	[a, b] => [b, a]
+//│ ╙──     	          ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found tuple
-//│ ║  l.20: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ║  l.23: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──      	           ^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found tuple
-//│ ║  l.20: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ║  l.23: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──      	                   ^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: a
-//│ ║  l.20: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ║  l.23: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──      	                             ^
 //│ ╔══[COMPILATION ERROR] Name not found: c
-//│ ║  l.20: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ║  l.23: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──      	                                  ^
 //│ ╔══[COMPILATION ERROR] Name not found: b
-//│ ║  l.20: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ║  l.23: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──      	                                        ^
 //│ ╔══[COMPILATION ERROR] Name not found: d
-//│ ║  l.20: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ║  l.23: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──      	                                             ^
 
 
