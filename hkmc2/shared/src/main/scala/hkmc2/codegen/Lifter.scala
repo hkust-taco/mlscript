@@ -340,14 +340,15 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val walker = new BlockDataTransformer(SymbolSubst.Id):
         // only scan within the block. don't traverse
         
+        // Resolve references to unlifted objects
         def resolveDefnRef(l: BlockMemberSymbol, d: DefinitionSymbol[?], r: RewrittenScope[?]) =
           ctx.defnsMap.get(d) match
-          case Some(defnRef) => S(defnRef.read)
+          case Some(defnRef) => S(defnRef.read) // Found reference to unlifted definition
           case None => r.obj match
             case c: ScopedObject.Class if c.isObj =>
-              ctx.symbolsMap.get(c.cls.isym).map(_.read)
+              ctx.symbolsMap.get(c.cls.isym).map(_.read) // Reference to an unlifted object
             case c: ScopedObject.Companion =>
-              ctx.symbolsMap.get(c.clsBody.isym).map(_.read)
+              ctx.symbolsMap.get(c.clsBody.isym).map(_.read) // Reference to an unlifted module
             case _ => N
 
         override def applyResult(r: Result)(k: Result => Block): Block =
@@ -357,22 +358,23 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
               sc.rewriteSuperCall(c, newArgs)(k)
             case N => super.applyResult(c)(k)
           
-          // if possible, directly rewrite the call using the efficient version
           case c @ Call(RefOfBms(l, S(d), _), argss) =>
             ctx.rewrittenScopes.get(d) match
-              case N => super.applyResult(r)(k) // external call, or have not yet traversed that function
+              case N => super.applyResult(r)(k) // External call, or have not yet traversed that function
               case S(r) =>
                 applyArgss(argss): newArgss =>
                   def join2: Block =
+                    // Resolve reference to unlifted object
                     resolveDefnRef(l, d, r) match
                       case Some(value) => k(c.copy(fun = value, argss = newArgss.ne_!)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLoc(c.toLoc))
                       case None => super.applyPath(c.fun): fun2 =>
+                        // Nothing to rewrite
                         if (fun2 is c.fun) && (argss is newArgss) then k(c)
                         else k(c.copy(fun = fun2, argss = newArgss.ne_!)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLoc(c.toLoc))
                   r match
-                    // function call
+                    // Call to lifted function: Rewrite using the efficient version
                     case f: LiftedFunc => k(f.rewriteCall(c, newArgss))
-                    // ctor call (without using `new`)
+                    // Call to lifted class (without using `new`)
                     case ctor: RewrittenClassCtor => ctor.getRewrittenCls match
                       case cls: LiftedClass =>
                         cls.rewriteCall(c, newArgss)(k)
@@ -757,6 +759,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     protected val defnPathsFromThisObj: Map[DefinitionSymbol[?], DefnRef] =
       node.children.filter:
         case s @ ScopeNode(obj = r: ScopedObject.Class) if r.isObj => false
+        case s @ ScopeNode(obj = r: ScopedObject.Func) if r.isMethod.isDefined => false
         case _ => true
       .collect:
         case s @ ScopeNode(obj = r: ScopedObject.Referencable[?]) if !s.isLifted => 

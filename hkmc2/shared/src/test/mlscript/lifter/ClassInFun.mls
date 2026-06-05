@@ -625,3 +625,4 @@ class Box(val x) with
     fun get() = x
     fun inc() = Box(x + 1).get()
 Box(2).inc()
+//│ = 3
