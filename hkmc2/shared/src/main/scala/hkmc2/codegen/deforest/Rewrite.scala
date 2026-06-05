@@ -36,7 +36,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
   extension (matchOrLabelId: MatchOrLabelId) def withInstId(instId: InstantiationId): RestFunId =
     matchOrLabelId match
     case l: LabelSymbol => l -> instId
-    case scrutId: ResultId @unchecked => ConcreteId(scrutId, instId)
+    case scrutId: ResultId => ConcreteId(scrutId, instId)
   extension (vs: Ls[VarSymbol]) def asParamList: ParamList =
     ParamList(ParamListFlags.empty, vs.map(Param.simple), N)
   extension (c: CtorCls) def ctorClsName: String = c match
@@ -51,10 +51,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
   ): (Iterator[Label | Match], Block) =
     val ctx = matchOrLabelId match
       case label: LabelSymbol => pre.res.labelSymToCtxOfLabel(label)
-      case dtorId: ResultId @unchecked => pre.res.matchScrutToCtxOfMatch(dtorId)
+      case dtorId: ResultId => pre.res.matchScrutToCtxOfMatch(dtorId)
     val simpleRest = matchOrLabelId match
       case label: LabelSymbol => pre.res.labelSymToLabelBlk(label).rest
-      case dtorId: ResultId @unchecked => pre.res.matchScrutToMatchBlock(dtorId).rest
+      case dtorId: ResultId => pre.res.matchScrutToMatchBlock(dtorId).rest
     def it = ctx.iterator
       .takeWhile:
         case _: (pre.InCtx.Fn | pre.InCtx.ModCtor | pre.InCtx.Cls | pre.InCtx.ClsPreCtor | pre.InCtx.ClsCtor | pre.InCtx.TopLvl) => false
@@ -122,7 +122,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
       finalDest match
       case FinalDestSel(dtors, field) =>
         // create poly fun syms
-        val instIds = (dtors + ctor).toList.sortBy(_.exprId).map(_.instId)
+        val instIds = (dtors + ctor).toList.sortBy(_.exprId.uid).map(_.instId)
         for
           ctorInstId <- instIds
           case path@(pathTo :+ refedFun) <- ctorInstId.inits
@@ -142,7 +142,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
         
         // create branch sel syms
         val fieldSym = MutMap.empty[SelField, VarSymbol]
-        for sel <- sels.toList.sortBy(_._1) do
+        for sel <- sels.toList.sortBy(_._1.uid) do
           branchSelSyms.getOrElseUpdate(
             sel,
             locally:
