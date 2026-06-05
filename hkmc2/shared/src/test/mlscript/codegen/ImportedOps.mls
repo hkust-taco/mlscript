@@ -11,13 +11,14 @@ fun foo() =
   "a" ~ "b" ~ "c"
 foo()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo;
+//│ let foo, tmp;
 //│ foo = function foo() {
-//│   let tmp;
-//│   tmp = M1.concat("a", "b");
-//│   return M1.concat(tmp, "c")
+//│   let tmp1;
+//│   tmp1 = M1.concat("a", "b");
+//│   return M1.concat(tmp1, "c")
 //│ };
-//│ return foo()
+//│ tmp = M1.concat("a", "b");
+//│ return M1.concat(tmp, "c")
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "abc"
 

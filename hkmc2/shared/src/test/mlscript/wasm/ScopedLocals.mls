@@ -71,12 +71,27 @@ chain(1)
 //│             (local.get $b))))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $chain (ref null any))
+//│     (local $a (ref null any))
+//│     (local $b (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
-//│       (return
-//│         (call $chain
-//│           (ref.i31
-//│             (i32.const 1))))))
+//│       (block (result (ref null any))
+//│         (local.set $a
+//│           (call $plus_impl
+//│             (ref.i31
+//│               (i32.const 1))
+//│             (ref.i31
+//│               (i32.const 1))))
+//│         (block (result (ref null any))
+//│           (local.set $b
+//│             (call $plus_impl
+//│               (local.get $a)
+//│               (ref.i31
+//│                 (i32.const 1))))
+//│           (return
+//│             (call $plus_impl
+//│               (local.get $a)
+//│               (local.get $b)))))))
 //│   (elem $chain declare func $chain)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:

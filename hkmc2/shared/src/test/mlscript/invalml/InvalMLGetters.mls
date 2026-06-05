@@ -90,19 +90,79 @@ fun test2() =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test22;
 //│ test22 = function test2() {
-//│   let funny;
+//│   let funny, lambda1;
 //│   funny = function funny() {
-//│     let lambda1;
-//│     lambda1 = (undefined, function (caseScrut) {
+//│     let lambda2;
+//│     lambda2 = (undefined, function (caseScrut) {
 //│       let tmp, tmp1, tmp2;
 //│       tmp = funny();
 //│       tmp1 = caseScrut - 1;
 //│       tmp2 = runtime.safeCall(tmp(tmp1));
 //│       return tmp2 + 1
 //│     });
-//│     return lambda1
+//│     return lambda2
 //│   };
-//│   return funny()
+//│   lambda1 = (undefined, function (caseScrut) {
+//│     let tmp, inlinedVal, tmp1, inlinedVal1, tmp2, inlinedVal2, tmp3, inlinedVal3, tmp4, tmp5, caseScrut1, inlinedVal4;
+//│     tmp = caseScrut - 1;
+//│     tmp1 = tmp - 1;
+//│     tmp2 = tmp1 - 1;
+//│     tmp3 = tmp2 - 1;
+//│     tmp4 = tmp3 - 1;
+//│     caseScrut1 = tmp4;
+//│     inlinedLbl: {
+//│       let tmp6, tmp7, caseScrut2, inlinedVal5;
+//│       tmp6 = tmp4 - 1;
+//│       caseScrut2 = tmp6;
+//│       inlinedLbl1: {
+//│         let tmp8, tmp9, inlinedVal6, lambda2;
+//│         lambda2 = (undefined, function (caseScrut3) {
+//│           let tmp10, tmp11, tmp12, inlinedVal7;
+//│           inlinedLbl2: {
+//│             let lambda3;
+//│             lambda3 = (undefined, function (caseScrut4) {
+//│               let tmp13, tmp14, tmp15, inlinedVal8;
+//│               inlinedLbl3: {
+//│                 let lambda4;
+//│                 lambda4 = (undefined, function (caseScrut5) {
+//│                   let tmp16, tmp17, tmp18;
+//│                   tmp16 = funny();
+//│                   tmp17 = caseScrut5 - 1;
+//│                   tmp18 = runtime.safeCall(tmp16(tmp17));
+//│                   return tmp18 + 1
+//│                 });
+//│                 inlinedVal8 = lambda4;
+//│                 break inlinedLbl3;
+//│               }
+//│               tmp13 = inlinedVal8;
+//│               tmp14 = caseScrut4 - 1;
+//│               tmp15 = runtime.safeCall(tmp13(tmp14));
+//│               return tmp15 + 1
+//│             });
+//│             inlinedVal7 = lambda3;
+//│           }
+//│           tmp10 = inlinedVal7;
+//│           tmp11 = caseScrut3 - 1;
+//│           tmp12 = runtime.safeCall(inlinedVal7(tmp11));
+//│           return tmp12 + 1
+//│         });
+//│         inlinedVal6 = lambda2;
+//│         tmp8 = caseScrut2 - 1;
+//│         tmp9 = runtime.safeCall(lambda2(tmp8));
+//│         inlinedVal5 = tmp9 + 1;
+//│         break inlinedLbl1;
+//│       }
+//│       tmp7 = inlinedVal5;
+//│       inlinedVal4 = tmp7 + 1;
+//│     }
+//│     tmp5 = inlinedVal4;
+//│     inlinedVal3 = inlinedVal4 + 1;
+//│     inlinedVal2 = inlinedVal3 + 1;
+//│     inlinedVal1 = inlinedVal2 + 1;
+//│     inlinedVal = inlinedVal1 + 1;
+//│     return inlinedVal + 1
+//│   });
+//│   return lambda1
 //│ };
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.84: 	    case 0 then 0
@@ -122,7 +182,7 @@ fun test2() =
 fun test3 =
   print("Hi")
 //│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for test3
-//│ ║  l.123: 	  print("Hi")
+//│ ║  l.183: 	  print("Hi")
 //│ ╙──       	  ^^^^^^^^^^^
 
 

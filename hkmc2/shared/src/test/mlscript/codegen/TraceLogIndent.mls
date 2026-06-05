@@ -67,7 +67,7 @@ f(1,2)(-3)
 //│ REPL> Sending: block$res9 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: try { block$res9 = runtime.checkCall(f$worker(1, 2, -3));; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Sending: let tmp2;try { tmp2 = runtime.checkCall(g(-3)); block$res9 = 3 + tmp2;; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
 //│ REPL> Collected:
 //│ >  CALL g(-3)
 //│ >  | CALL g(-2)
@@ -107,7 +107,7 @@ f(1,2)(-4)
 //│ REPL> Sending: block$res10 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: try { block$res10 = runtime.checkCall(f$worker(1, 2, -4));; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Sending: let tmp3;try { tmp3 = runtime.checkCall(g(-4)); block$res10 = 3 + tmp3;; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:
