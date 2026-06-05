@@ -78,7 +78,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
       
       override def applyPath(p: Path): Unit = p match
         case Value.SimpleRef(_: BuiltinSymbol) => super.applyPath(p)
-        case RefOfBms(_, SDSym(dSym), _) =>
+        case RefOfDefn(SDSym(dSym), _) =>
           val node = scopeData.getNode(dSym)
           node.obj match
             // Here, we add an edge to a definition, even if it is the result of a field selection, if it is:
@@ -112,7 +112,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
     accessed.toIMut
   
   def getParentCls(c: ClsLikeDefn) = c.parentPath.flatMap:
-    case RefOfBms(_, SDSym(parentCls), _) => S(parentCls)
+    case RefOfDefn(SDSym(parentCls), _) => S(parentCls)
     case _ => N
     
   /**
@@ -443,7 +443,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
             argss.foreach(_.foreach(super.applyArg(_)))
             superClass.foreach: d =>
               handleCalledScope(d)
-          case Call(RefOfBms(_, SDSym(d), _), argss) =>
+          case Call(RefOfDefn(SDSym(d), _), argss) =>
             argss.foreach(_.foreach(super.applyArg(_)))
             val numArgLists = scopeData.getNode(d).obj match
               case ScopedObject.Func(fun, _) => fun.params.size.min(1)
@@ -455,13 +455,13 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
             if numArgLists != argss.size then handleScopeRef(d)
              // Fully applied, we can treat it as a call
             else handleCalledScope(d)
-          case Instantiate(mut, RefOfBms(_, SDSym(d), _), argss) =>
+          case Instantiate(mut, RefOfDefn(SDSym(d), _), argss) =>
             argss.foreach(_.foreach(super.applyArg(_)))
             handleCalledScope(d)
           case _ => super.applyResult(r)
         
         override def applyPath(p: Path): Unit = p match
-          case RefOfBms(_, SDSym(d), _) => handleScopeRef(d)
+          case RefOfDefn(SDSym(d), _) => handleScopeRef(d)
           case Value.RefLike(sym: ScopedOrInnerSymbol) =>
             if hasMutator.contains(sym) then reqCapture += sym
           case _ => super.applyPath(p)

@@ -12,41 +12,105 @@ data class A(x) with
 //│ let B⁰, A⁰;
 //│ @data
 //│ define B⁰ as class B² {
-//│   private val A¹;
+//│   private val x$⁰;
 //│   val y⁰;
-//│   constructor B¹(y, A) {
-//│     set B².this.A¹ = A;
+//│   constructor B¹(y, x$) {
+//│     set B².this.x$⁰ = x$;
 //│     define y⁰ as val y¹ = y;
 //│     end
 //│   }
 //│   method getB⁰ = fun getB¹() {
-//│     return +⁰(B².this.A¹.x⁰, B².this.y¹)
+//│     return +⁰(A¹.this.x⁰, B².this.y¹)
 //│   }
 //│ };
 //│ @data
-//│ define A⁰ as class A³ {
+//│ define A⁰ as class A¹ {
 //│   val x¹;
 //│   constructor A²(x) {
 //│     define x¹ as val x⁰ = x;
 //│     end
 //│   }
-//│   method getA⁰ = fun getA¹() { let tmp; set tmp = new B²(2, A³.this); return tmp.getB¹() }
+//│   method getA⁰ = fun getA¹() { let tmp; set tmp = new B²(2, A¹.this.x⁰); return tmp.getB¹() }
 //│ };
 //│ end
+//│ FAILURE: Unexpected internal error
+//│ FAILURE LOCATION: thisError (Scope.scala:55)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(tmp:block$res -> block$res, member:B -> B1, member:A -> A1, class:A -> A, tmp:runtime -> runtime, tmp:definitionMetadata -> definitionMetadata, member:Predef -> Predef, tmp:prettyPrint -> prettyPrint, tmp:block$res -> block$res1, tmp:Term -> Term, tmp:Block -> Block, tmp:option -> option, class:B -> B)
+//│   _2 = class:A¹
+//│ ═══[INTERNAL ERROR] `this` not in scope: class:A
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > let B1, A1;try { B1 = function B(y) {   return globalThis.Object.freeze(new B.class(y)); }; globalThis.Object.freeze(class B {   static {     B1.class = this   }   constructor(y, x$) {     this.y = y;   }   get getB$__checkNotMethod() { runtime.deboundMethod("getB", "B"); }   getB() {     runtime.checkArgs("getB", 0, true, arguments.length);     return ‹MISSING_THIS›.x + this.y   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "B", ["y"]]; }); A1 = function A(x) {   return globalThis.Object.freeze(new A.class(x)); }; globalThis.Object.freeze(class A {   static {     A1.class = this   }   constructor(x) {     this.x = x;   }   get getA$__checkNotMethod() { runtime.deboundMethod("getA", "A"); }   getA() {     runtime.checkArgs("getA", 0, true, arguments.length);     let tmp;     tmp = globalThis.Object.freeze(new B1.class(2, this.x));     return runtime.checkCall(tmp.getB())   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "A", ["x"]]; });; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:267)
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
 
 :expect 3
 A(1).getA()
-//│ = 3
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] ReferenceError: A1 is not defined
+//│     at REPL13:1:29
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at defaultEval (node:repl:610:24)
+//│     at REPLEvalInContext (node:repl:693:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:692:19)
+//│     at REPLServer.onLine (node:repl:830:12)
+//│     at REPLServer.emit (node:events:509:20)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
 
 data class A1(x) with
   data class B(y) with
     fun getB() = x + y
   fun getA() = (new B(2)).getB()
+//│ FAILURE: Unexpected internal error
+//│ FAILURE LOCATION: thisError (Scope.scala:55)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(class:B -> B2, tmp:block$res -> block$res, member:B -> B1, member:A -> A1, class:A -> A, tmp:runtime -> runtime, tmp:definitionMetadata -> definitionMetadata, member:Predef -> Predef, tmp:prettyPrint -> prettyPrint, tmp:block$res -> block$res1, tmp:Term -> Term, tmp:Block -> Block, tmp:option -> option, class:B -> B, tmp:tmp -> tmp, tmp:block$res -> block$res2, member:B -> B3, member:A1 -> A12, class:A1 -> A11, tmp:block$res -> block$res3)
+//│   _2 = class:A1⁰
+//│ ═══[INTERNAL ERROR] `this` not in scope: class:A1
+//│ > let B3, A12;try { B3 = function B(y) {   return globalThis.Object.freeze(new B.class(y)); }; globalThis.Object.freeze(class B2 {   static {     B3.class = this   }   constructor(y, x$) {     this.y = y;   }   get getB$__checkNotMethod() { runtime.deboundMethod("getB", "B"); }   getB() {     runtime.checkArgs("getB", 0, true, arguments.length);     return ‹MISSING_THIS›.x + this.y   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "B", ["y"]]; }); A12 = function A1(x) {   return globalThis.Object.freeze(new A1.class(x)); }; globalThis.Object.freeze(class A11 {   static {     A12.class = this   }   constructor(x) {     this.x = x;   }   get getA$__checkNotMethod() { runtime.deboundMethod("getA", "A1"); }   getA() {     runtime.checkArgs("getA", 0, true, arguments.length);     let tmp1;     tmp1 = globalThis.Object.freeze(new B3.class(2, this.x));     return runtime.checkCall(tmp1.getB())   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "A1", ["x"]]; });; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:267)
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
 
 :expect 3
 (new A1(1)).getA()
-//│ = 3
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] ReferenceError: A12 is not defined
+//│     at REPL19:1:52
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at defaultEval (node:repl:610:24)
+//│     at REPLEvalInContext (node:repl:693:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:692:19)
+//│     at REPLServer.onLine (node:repl:830:12)
+//│     at REPLServer.emit (node:events:509:20)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
 
 :sir
 class A with
@@ -55,15 +119,15 @@ class A with
     g
 (new A).x()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let g⁰, A⁴, tmp;
+//│ let g⁰, A³, tmp;
 //│ define g⁰ as fun g¹() {
 //│   return 2
 //│ };
-//│ define A⁴ as class A⁵ {
+//│ define A³ as class A⁴ {
 //│   val x²;
 //│   constructor() { define x² as val x³ = g¹; end }
 //│ };
-//│ set tmp = new A⁵();
+//│ set tmp = new A⁴();
 //│ return tmp.x³()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2

@@ -164,7 +164,22 @@ module M with
     fun g() = x
     g
 M.f()()
-//│ = 2
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] ReferenceError: M9 is not defined
+//│     at g (REPL59:1:102)
+//│     at REPL59:1:467
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at defaultEval (node:repl:610:24)
+//│     at REPLEvalInContext (node:repl:693:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:692:19)
+//│     at REPLServer.onLine (node:repl:830:12)
+//│     at REPLServer.emit (node:events:509:20)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
 :expect 2
 object M with
@@ -173,7 +188,22 @@ object M with
     fun get = x
   val hi = A()
 M.hi.get
-//│ = 2
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] TypeError: this.A is not a function
+//│     at new M11 (REPL62:1:187)
+//│     at <static_initializer> (REPL62:1:76)
+//│     at REPL62:1:377
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at defaultEval (node:repl:610:24)
+//│     at REPLEvalInContext (node:repl:693:9)
+//│     at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)
+//│     at REPLServer.REPLEval [as eval] (node:repl:692:19)
+//│     at REPLServer.onLine (node:repl:830:12)
+//│     at REPLServer.emit (node:events:509:20)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
 :expect 2
 object M with
@@ -182,7 +212,26 @@ object M with
     fun g() = x
     g
 M.f()()
-//│ = 2
+//│ FAILURE: Unexpected internal error
+//│ FAILURE LOCATION: thisError (Scope.scala:55)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(tmp:block$res -> block$res10, member:g -> g, tmp:block$res -> block$res1, member:M -> M10, module:M -> M9, member:foo -> foo4, tmp:block$res -> block$res2, member:M -> M2, object:M -> M3, member:foo -> foo1, tmp:runtime -> runtime, tmp:definitionMetadata -> definitionMetadata, member:Predef -> Predef, class:M -> M1, tmp:prettyPrint -> prettyPrint, tmp:Term -> Term, tmp:Block -> Block, tmp:option -> option, class:M -> M9, tmp:baseCall -> baseCall, tmp:block$res -> block$res16, tmp:block$res -> block$res11, tmp:tmp -> tmp, member:M -> M12, tmp:block$res -> block$res3, x -> x, object:M -> M11, y -> y, member:C -> C1, member:foo -> foo2, member:M -> M5, object:M -> M4, class:C -> C, tmp:block$res -> block$res12, member:A -> A1, class:Capture$foo -> Capture$foo, class:A -> A, tmp:selRes -> selRes6, member:Capture$foo -> Capture$foo1, object:M -> M6, tmp:block$res -> block$res17, tmp:block$res -> block$res4, member:M -> M14, cc -> cc, object:M -> M13, c0 -> c0, c1 -> c1, tmp:selRes -> selRes, tmp:selRes -> selRes1, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp1, tmp:tmp -> tmp2, foo$cap -> foo$cap, tmp:block$res -> block$res5, tmp:baseCall -> baseCall1, tmp:block$res -> block$res13, tmp:selRes -> selRes2, member:g$ -> g$, tmp:block$res -> block$res6, tmp:tmp -> tmp3, tmp:block$res -> block$res14, tmp:selRes -> selRes3, tmp:block$res -> block$res7, member:foo -> foo3, member:M -> M8, tmp:block$res -> block$res18, module:M -> M7, object:O -> O, tmp:block$res -> block$res, class:A -> A2, member:foo -> foo, object:M -> M, tmp:block$res -> block$res8, o -> o, class:M -> M7, member:O -> O2, object:O -> O1, tmp:selRes -> selRes5, tmp:block$res -> block$res9, tmp:block$res -> block$res15, tmp:selRes -> selRes4)
+//│   _2 = object:M³
+//│ ═══[INTERNAL ERROR] `this` not in scope: object:M
+//│ > let M14, baseCall1, g$;try { g$ = function g$(x$) {   runtime.checkArgs("g$", 1, true, arguments.length);   return () => {     return ‹MISSING_THIS›.x   } }; globalThis.Object.freeze(class M13 {   static {     new this   }   constructor() {     M14 = this;     this.x = 2;     Object.defineProperty(this, "class", {       value: M13     });     globalThis.Object.freeze(this);   }   get f$__checkNotMethod() { runtime.deboundMethod("f", "M"); }   f() {     runtime.checkArgs("f", 0, true, arguments.length);     return runtime.checkCall(g$(this.x))   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["object", "M"]; }); baseCall1 = runtime.checkCall(M14.f()); block$res18 = runtime.safeCall(baseCall1());; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:267)
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
 // unlifted objects
 :lift
@@ -196,7 +245,7 @@ fun f =
   foo
 f.a
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.192: 	  object A with
+//│ ║  l.241: 	  object A with
 //│ ╙──       	         ^
 //│ = 2
 
@@ -207,19 +256,19 @@ module M with
   val x = if A() is A then 2 else 3
 M.A().get
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let M³, tmp;
-//│ define M³ as class M⁴
-//│ module M⁵ {
+//│ let M⁴, tmp;
+//│ define M⁴ as class M⁵
+//│ module M⁶ {
 //│   val x⁰;
 //│   constructor {
 //│     let scrut, tmp1;
 //│     define A⁰ as class A² {
 //│       constructor A¹
 //│       method get⁰ = fun get¹ {
-//│         return +⁰(M⁵.this.x¹, M⁵.this.x¹)
+//│         return +⁰(M⁶.this.x¹, M⁶.this.x¹)
 //│       }
 //│     };
-//│     set scrut = M⁵.this.A¹();
+//│     set scrut = M⁶.this.A¹();
 //│     match scrut
 //│       A² =>
 //│         set tmp1 = 2;
@@ -231,7 +280,7 @@ M.A().get
 //│     end
 //│   }
 //│ };
-//│ set tmp = M⁵.A¹();
+//│ set tmp = M⁶.A¹();
 //│ return tmp.get¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 4
@@ -259,7 +308,23 @@ module M with
     fun newB = B()
   0 is A
 M.A(2).newB.newA_B(3).newB.get
-//│ = 3
+//│ FAILURE: Unexpected internal error
+//│ FAILURE LOCATION: thisError (Scope.scala:55)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│       defaultName = "tmp"
+//│     curThis = S of S of globalThis:globalThis⁰
+//│     bindings = HashMap(member:g -> g, tmp:block$res -> block$res1, member:M -> M10, class:M -> M19, module:M -> M9, tmp:block$res -> block$res2, tmp:tmp -> tmp6, tmp:tmp -> tmp7, tmp:selRes -> selRes9, member:M -> M2, tmp:selRes -> selRes10, member:foo -> foo1, tmp:runtime -> runtime, tmp:definitionMetadata -> definitionMetadata, class:M -> M1, tmp:prettyPrint -> prettyPrint, tmp:Term -> Term, tmp:Block -> Block, tmp:option -> option, class:M -> M9, tmp:baseCall -> baseCall, tmp:block$res -> block$res22, tmp:block$res -> block$res16, tmp:tmp -> tmp, member:M -> M12, tmp:block$res -> block$res3, object:M -> M11, member:C -> C1, member:foo -> foo2, class:C -> C, class:Capture$foo -> Capture$foo, tmp:selRes -> selRes6, member:Capture$foo -> Capture$foo1, tmp:block$res -> block$res17, tmp:block$res -> block$res4, member:M -> M14, cc -> cc, object:M -> M13, c0 -> c0, c1 -> c1, tmp:selRes -> selRes, tmp:selRes -> selRes1, tmp:inlinedVal -> inlinedVal, tmp:tmp -> tmp1, tmp:tmp -> tmp2, foo$cap -> foo$cap, tmp:block$res -> block$res5, tmp:baseCall -> baseCall1, tmp:selRes -> selRes2, member:g$ -> g$, tmp:block$res -> block$res6, tmp:selRes -> selRes3, tmp:block$res -> block$res7, member:foo -> foo3, tmp:block$res -> block$res18, object:O -> O, member:f -> f, object:A -> A3, tmp:block$res -> block$res8, o -> o, member:O -> O2, tmp:selRes -> selRes7, object:O -> O1, tmp:block$res -> block$res9, tmp:selRes -> selRes4, tmp:block$res -> block$res10, member:foo -> foo4, member:A -> A5, object:A -> A4, object:M -> M3, tmp:block$res -> block$res19, member:Predef -> Predef, member:M -> M16, module:M -> M15, class:A -> A6, tmp:block$res -> block$res11, x -> x, y -> y, class:M -> M15, member:M -> M5, object:M -> M4, tmp:tmp -> tmp4, tmp:block$res -> block$res12, tmp:block$res -> block$res20, member:A -> A1, class:A -> A, member:M -> M18, module:M -> M17, object:M -> M6, class:A -> A7, class:B -> B, class:M -> M17, tmp:tmp -> tmp5, tmp:selRes -> selRes8, tmp:block$res -> block$res21, tmp:block$res -> block$res13, member:B -> B2, tmp:tmp -> tmp3, member:M -> M20, tmp:block$res -> block$res14, module:M -> M19, class:A -> A8, member:M -> M8, module:M -> M7, class:B -> B1, tmp:block$res -> block$res, class:A -> A2, member:foo -> foo, object:M -> M, class:M -> M7, tmp:selRes -> selRes5, tmp:block$res -> block$res15)
+//│   _2 = class:A³
+//│ ═══[INTERNAL ERROR] `this` not in scope: class:A
+//│ > let B2, M20, tmp6, tmp7, selRes9, selRes10;try { B2 = function B() {   return globalThis.Object.freeze(new B.class()); }; globalThis.Object.freeze(class B1 {   static {     B2.class = this   }   constructor(x$, M21) {     this.#M = M21;   }   #M;   get newA_B$__checkNotMethod() { runtime.deboundMethod("newA_B", "B"); }   get get() {     return ‹MISSING_THIS›.x;   }   newA_B(y1) {     runtime.checkArgs("newA_B", 1, true, arguments.length);     return runtime.checkCall(this.#M.A(y1))   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "B", []]; }); globalThis.Object.freeze(class M19 {   static {     M20 = this   }   static {     M19.A = function A(x1) {       return globalThis.Object.freeze(new A.class(x1));     };     globalThis.Object.freeze(class A8 {       static {         M19.A.class = this       }       constructor(x1) {         this.x = x1;       }       get newA() {         return runtime.checkCall(M19.A(42));       }       get newB() {         return globalThis.Object.freeze(new B2.class(this.x, M19));       }       toString() { return runtime.render(this); }       static [definitionMetadata] = ["class", "A", ["x"]];     });   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "M"]; }); tmp6 = runtime.checkCall(M20.A(2)); tmp7 = runtime.safeCall(tmp6.newB.newA_B(3)); selRes9 = tmp7.newB; tmp7.newB$__checkNotMethod; if (selRes9 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'newB' yielded 'undefined'")) } selRes10 = selRes9.get; selRes9.get$__checkNotMethod; if (selRes10 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'get' yielded 'undefined'")) } block$res22 = selRes10;; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:267)
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
 
 module M with
   class A
@@ -275,7 +340,7 @@ fun foo(x) =
     val baz = x
   [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.273: 	  object O with
+//│ ║  l.338: 	  object O with
 //│ ╙──       	         ^
 
 foo(123)
@@ -324,13 +389,13 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.321: 	  object A with
+//│ ║  l.386: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.322: 	    object B with
+//│ ║  l.387: 	    object B with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.323: 	      object C
+//│ ║  l.388: 	      object C
 //│ ╙──       	             ^
 //│ = C
 
@@ -343,10 +408,10 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.340: 	  module A with
+//│ ║  l.405: 	  module A with
 //│ ╙──       	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.342: 	      object C
+//│ ║  l.407: 	      object C
 //│ ╙──       	             ^
 //│ = C
 
@@ -359,7 +424,7 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.356: 	  module A with
+//│ ║  l.421: 	  module A with
 //│ ╙──       	         ^
 //│ = C
 
