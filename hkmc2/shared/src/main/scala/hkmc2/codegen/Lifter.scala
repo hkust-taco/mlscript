@@ -158,8 +158,6 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     
     def asArg(using ctx: LifterCtxNew) = read.asArg
   
-  case class FunSyms[T <: DefinitionSymbol[?]](d: T)
-  
   type ClsLikeSym = DefinitionSymbol[? <: ClassDef | ModuleOrObjectDef]
   type ClsSym = DefinitionSymbol[? <: ClassLikeDef]
   type ModuleOrObjSym = DefinitionSymbol[? <: ModuleOrObjectDef]
@@ -330,7 +328,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     // always rewritten using `this.defnName` (when accessed internally) or `object.defnName`.
     def rewriteBms(b: Block) =
       // BMS's that need to be created
-      val syms: LinkedHashMap[FunSyms[?], LocalVarSymbol] = LinkedHashMap.empty
+      val syms: LinkedHashMap[DefinitionSymbol[?], LocalVarSymbol] = LinkedHashMap.empty
       val extraLocals: MutSet[ScopedSymbol] = MutSet.empty
 
       val walker = new BlockDataTransformer(SymbolSubst.Id):
@@ -399,7 +397,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                   case None =>
                     val newSym = TempSymbol(N, d.nme + "$here")
                     extraLocals.add(newSym)
-                    syms.addOne(FunSyms(d) -> newSym) // add to `syms`: this closure will be initialized in `applyBlock`
+                    syms.addOne(d -> newSym) // add to `syms`: this closure will be initialized in `applyBlock`
                     closureMap.addOne(d -> newSym) // add to `closureMap`: `newSym` refers to the closure and can be used later
                     newSym
 
@@ -407,7 +405,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                   case Some(value) if activeClosures.contains(value) => value
                   // symbol exists, needs initialization
                   case Some(value) =>
-                    syms.addOne(FunSyms(d) -> value)
+                    syms.addOne(d -> value)
                     value
                 k(newSym.asSimpleRef)
             
@@ -419,12 +417,12 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                   case None =>
                     val newSym = TempSymbol(N, d.nme + "$here")
                     extraLocals.add(newSym)
-                    syms.addOne(FunSyms(d) -> newSym)
+                    syms.addOne(d -> newSym)
                     closureMap.addOne(d -> newSym)
                     newSym
                   case Some(value) if activeClosures.contains(value) => value
                   case Some(value) =>
-                    syms.addOne(FunSyms(d) -> value)
+                    syms.addOne(d -> value)
                     value
                 k(newSym.asSimpleRef)
               case _ =>
@@ -467,11 +465,11 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       extraLocals.addAll(extras)
       val pre = syms.foldLeft(blockBuilder):
         case (blk, (funSym, local)) =>
-          ctx.liftedScopes.get(funSym.d) match
+          ctx.liftedScopes.get(funSym) match
             case Some(l: LiftedFunc) => blk.assign(local, l.rewriteRef)
             case _ =>
               // ClassCtor reference: look up the rewritten class ctor to get the LiftedClass
-              ctx.rewrittenScopes(funSym.d) match
+              ctx.rewrittenScopes(funSym) match
                 case ctor: RewrittenClassCtor => ctor.getRewrittenCls match
                   case cls: LiftedClass => blk.assign(local, cls.rewriteCtorRef)
                   case _ => die
