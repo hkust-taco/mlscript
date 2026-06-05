@@ -173,9 +173,16 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     containsError: Bool
   )
 
+  // TODO: move this somewhere else
+  val knownSymbolsExcludedFromEffect = Set[DefinitionSymbol[?]](State.tupleGetSymbol, State.tupleSliceSymbol)
+
   object EffectfulResult:
     def unapply(r: Result) = r match
-      case c: Call if c.mayRaiseEffects => S(r)
+      case c: Call if c.mayRaiseEffects =>
+        if c.fun.targetSymbol.exists(knownSymbolsExcludedFromEffect.contains(_)) then
+          N
+        else
+          S(r)
       case _: Instantiate if opt.checkInstantiateEffect => S(r)
       case _ => N
   

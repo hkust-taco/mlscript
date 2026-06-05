@@ -250,6 +250,15 @@ f(Pair(1, 2))
 //│ = 1
 
 
+// TODO: This regression test should have used runtime.Tuple.get but it's not resolved currently.
+// The usage of runtime.Tuple.get(c, 1) will cause all enclosing match to be searched, but
+// not all scrutinee shapes of match are correctly handled.
+:lift
+:effectHandlers
+:stackSafe 100
+fun f() = case [...x, y, z] then x
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
 
 
 private fun f(a) = g(a)

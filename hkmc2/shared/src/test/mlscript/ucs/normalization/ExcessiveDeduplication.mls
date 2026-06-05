@@ -53,7 +53,7 @@ if
 //│ Normalized:
 //│ >  ‹if|while›
 //│ >    let-split σ = y is []=1 and
-//│ >      let tmp:element0$ = ((tmp:runtime⁰.)Tuple.)get‹term:get›(y⁰, 0)
+//│ >      let tmp:element0$ = ((tmp:runtime⁰.)Tuple‹module:Tuple›.)get‹term:get›(y⁰, 0)
 //│ >      let b = tmp:element0$⁰
 //│ >      else
 //│ >        let x

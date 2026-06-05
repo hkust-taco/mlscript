@@ -164,11 +164,11 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ deforest > >>> fusing >>>
 //│ deforest > [tx⁰, ty⁰] ->
 //│ deforest > 	match: xsys⁰
-//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(xsys⁰, 0)
-//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(xsys⁰, 1)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(xsys⁰, 0)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(xsys⁰, 1)
 //│ deforest > [tmp¹, tmp²] ->
 //│ deforest > 	match: xsys⁰
-//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(xsys⁰, 0)
-//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(xsys⁰, 1)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(xsys⁰, 0)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(xsys⁰, 1)
 //│ deforest > <<< fusing <<<
 //│ = Nil
