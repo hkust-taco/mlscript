@@ -94,6 +94,8 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
             case ScopedObject.Func(isMethod = N) =>
               accessed.refdDefns.add(node.obj.toInfo)
               super.applyPath(p)
+            case ScopedObject.ValDef(_) =>
+              accessed.refdDefns.add(node.obj.toInfo)
             case _ if node.isLifted && !isObj(node) => accessed.refdDefns.add(node.obj.toInfo)
             case ScopedObject.ClassCtor(cls) if scopeData.getNode(cls).isLifted => accessed.refdDefns.add(node.obj.toInfo)
             case _ => p match
@@ -148,6 +150,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
         val res = blkAccessesShallow(c.ctor)
         res.copy(refdDefns = res.refdDefns ++ c.methods.map(_.dSym))
       case ScopedObject.Loop(_, b) => blkAccessesShallow(b)
+      case ScopedObject.ValDef(v) => AccessInfo.empty
     // Variables introduced by this scoped object do not belong to a parent scope, so
     // we remove them
     accessed.withoutLocals(obj.definedLocals)
@@ -264,15 +267,15 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
   private def reqdCaptureLocals(s: ScopeNode): Map[ScopedInfo, Set[ScopedOrInnerSymbol]] =
     val (blk, parentCls) = s.obj match
       case ScopedObject.Top(b) => lastWords("reqdCaptureLocals called on top block")
-      case ScopedObject.ClassCtor(cls) => return Map.empty + (s.obj.toInfo -> Set.empty)
       case ScopedObject.Class(cls, _) => (Begin(cls.preCtor, cls.ctor), getParentCls(cls))
       case ScopedObject.Companion(comp, _) => (comp.ctor, N)
       case ScopedObject.Func(fun, _) => (fun.body, N)
       case ScopedObject.ScopedBlock(uid, block) => (block, N)
       case ScopedObject.Loop(sym, block) => (block, N)
+      case ScopedObject.ValDef(_) | ScopedObject.ClassCtor(_) => return Map.empty + (s.obj.toInfo -> Set.empty)
 
     val (nodes, nexts) = s.partitionTree2:
-      case obj: (ScopedObject.ScopedBlock | ScopedObject.Loop) => false
+      case obj: (ScopedObject.ScopedBlock | ScopedObject.Loop | ScopedObject.ValDef) => false
       case _ => true
     
     val locals = nodes.flatMap(_.obj.definedLocals).toSet
@@ -338,6 +341,9 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
             applySubBlock(rest)
           case Define(c @ ClsLikeDefn(k = syntax.Obj), rest) =>
             handleCalledScope(c.isym)
+            applySubBlock(rest)
+          case Define(v: ValDefn, rest) =>
+            applyPath(v.rhs)
             applySubBlock(rest)
           case Match(scrut, arms, dflt, rest) =>
             applyPath(scrut)

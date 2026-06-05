@@ -710,17 +710,11 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val fromThisObj = node.localsWithoutBms
         .map: s =>
           s -> s.asLocalPath
-      */ // -- The new definition now needs a hack to work, which we should remove: --
+      */
       val fromThisObj: Map[ScopedOrInnerSymbol, LocalPath] = node.localsWithoutBms
         .flatMap: s =>
           s match
-            case s: BlockMemberSymbol =>
-              // * This use of `s.asPrincipal` is incorrect – we can't just assume this is the correct disambiguation!
-              // softTODO(false, s"disambiguation symbol for ${s.nme} picked arbitrarily") // * uncomment to see where this happens; commented by default because too noisy
-              S(s -> LocalPath.BmsRef(s, s.asPrincipal.getOrElse:
-                lastWords(s"Cannot resolve overloaded member symbol ${s.nme}: no principal disambiguation found")
-              ))
-              // N  // * can't simply do this, as it makes `Debugging.mls` and `Token.mls` fail to compile
+            case s: BlockMemberSymbol => N
             case s: LocalPathSymbol => S(s -> s.asLocalPath)
             case s: InnerSymbol => S(s -> LocalPath.ThisPath(s))
         .toMap
@@ -947,6 +941,12 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     override protected def rewriteImpl: LifterResult[Unit] = LifterResult((), Nil) // dummy
     
     def getRewrittenCls = ctx.rewrittenScopes(obj.cls.isym)
+  
+  class RewrittenValDef(override val obj: ScopedObject.ValDef)(using ctx: LifterCtxNew) extends RewrittenScope[ValDefn](obj):
+    override lazy val capturePath: Path = lastWords("tried to create a capture class for a val defn")
+    override lazy val liftedObjsMap: Map[InnerSymbol, LocalPath] = lastWords("tried to create obj syms for a val defn")
+
+    override protected def rewriteImpl: LifterResult[ValDefn] = die // dummy
   
   class RewrittenClass(override val obj: ScopedObject.Class)(using ctx: LifterCtxNew)
       extends RewrittenScope[ClsLikeDefn](obj)
@@ -1349,6 +1349,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     case o: ScopedObject.Loop => RewrittenLoop(o)
     case o: ScopedObject.ScopedBlock =>
       RewrittenScopedBlock(o)
+    case o: ScopedObject.ValDef => RewrittenValDef(o)
   
   // Note: we must write this as a definition here to have tighter types
   private def rewriteScope[T <: Defn](l: LiftedScope[T])(using ctx: LifterCtxNew) =
