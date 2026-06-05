@@ -118,8 +118,8 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
    *  not defined at a node, the node is left unchanged.
    *  @param f The partial function to apply to each node.
    */
-  def map[L <: Kind.Complete](f: NonCompositional[K] => Pattern[L]): Pattern[L] = this match
-    case p: NonCompositional[K] @unchecked => f(p)
+  def map[L <: Kind.Complete](f: NonCompositional[? <: K] => Pattern[L]): Pattern[L] = this match
+    case p: NonCompositional[? <: K] => f(p)
     case And(patterns) => And[L](patterns.map(_.map(f)))
     case Or(patterns) => Or[L](patterns.map(_.map(f)))
     case Not(pattern) => Not[L](pattern.map(f))
@@ -135,7 +135,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     * a list is merged (for ``And`` and ``Or`` nodes)
     */
   def reduce[A](merge: List[A] => A)(f: PartialFunction[Pattern[K], A]): A = this match
-    case p: NonCompositional[K] @unchecked =>
+    case p: NonCompositional[? <: K] =>
       if f.isDefinedAt(p) then f(p) else merge(Nil)
     case And(patterns) => merge(patterns.map(_.reduce(merge)(f)))
     case Or(patterns) => merge(patterns.map(_.reduce(merge)(f)))
