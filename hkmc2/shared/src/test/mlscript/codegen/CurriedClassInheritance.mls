@@ -3,9 +3,10 @@
 
 class Foo(val x)(val y)
 
-
+:e
 :sjs
 class Bar(val a)(val d) extends Foo(a)
+//│ ═══[COMPILATION ERROR] Extending a partially applied class is not supported
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Bar1;
 //│ Bar1 = function Bar(a) {
@@ -80,11 +81,7 @@ c.a
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
 
 
-:todo
 class Baz(a)(val d) extends Foo(a)(a + 1)
-//│ ╔══[COMPILATION ERROR] Extending a class with multiple parameter lists is not supported
-//│ ║  l.84: 	class Baz(a)(val d) extends Foo(a)(a + 1)
-//│ ╙──      	                            ^^^^^^^^^^^^^
 
 let b = Baz(123)(1234)
 //│ b = Baz(_)

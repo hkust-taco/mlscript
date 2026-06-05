@@ -146,18 +146,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   
   def returnedTerm(t: st)(using LoweringCtx): Block = term(t)(Ret)(using LoweringCtx.nestFunc)
   
-  def parentConstructor(cls: Term, args: Ls[Term])(using LoweringCtx) = 
-    if args.length > 1 then 
-      raise:
-        ErrorReport(
-          msg"Extending a class with multiple parameter lists is not supported" -> Loc(cls :: args) :: Nil,
-          source = Diagnostic.Source.Compilation
-        )
+  def parentConstructor(parentClsPath: Path, cls: Term, args: Ls[Term])(using LoweringCtx) =
     lowerSuperCtorCall(
+      parentClsPath,
       State.builtinOpsMap("super").asSimpleRef,
       isMlsFun = true,
       isTailCall = false,
-      args.headOption,
+      args,
       N, // TODO: location?
     )(c => Assign(State.noSymbol, c, End()))
   
@@ -371,7 +366,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             val cfgOverride = defn.extraAnnotations.collectFirst:
               case Annot.Config(modify) => modify(config)
             subTerm(ext.cls): clsp =>
-              val pctor = inScopedBlock(parentConstructor(ext.cls, ext.args))
+              val pctor = inScopedBlock(parentConstructor(clsp, ext.cls, ext.args))
               Define(
                 ClsLikeDefn(
                   defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, S(clsp),
@@ -384,12 +379,40 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     
     blockImpl(imps ::: funs ::: rest, res)
   
-  // * Lowers the `super(...)` call we get from the `extends C(...)` syntax
-  def lowerSuperCtorCall(fr: Path, isMlsFun: Bool, isTailCall: Bool, arg: Opt[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
-    arg match
-    case S(arg) =>
-      lowerArgs(arg)(as => k(Call(fr, as ne_:: Nil)(isMlsFun, true, isTailCall).withLoc(loc)))
-    case N =>
+  def getCtorParamLists(cls: Path): Ls[ParamList] =
+    cls.targetSymbol.flatMap: sym =>
+      sym.asClsOrMod.flatMap(_.defn) orElse
+      sym.asTrm.flatMap(_.owner).flatMap(_.asDefnSym.defn)
+    .fold(Nil: Ls[ParamList]): clsDef =>
+      clsDef.paramsOpt.toList ::: clsDef.auxParams
+  
+  // * Lowers the `super(...)(...)` call we get from the `extends C(...)(...)` syntax
+  def lowerSuperCtorCall(parentClsPth: Path, fr: Path, isMlsFun: Bool, isTailCall: Bool, args: List[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+    val ctorParamLists = getCtorParamLists(parentClsPth)
+    args match
+    case _ :: _ =>
+      def zipArgs(remainingParamss: Ls[ParamList], args: Ls[Term], acc: Ls[Ls[Arg]]): Block = (remainingParamss, args) match
+        case (_ :: remainingParamss2, arg :: remainingArgs) => lowerArgs(arg): as =>
+          zipArgs(remainingParamss2, remainingArgs, as ne_:: acc)
+        case (Nil, arg :: remainingArgs) =>
+          if remainingArgs.isEmpty then
+            raise(ErrorReport(
+              msg"Too many parameter lists for parent class" -> loc :: Nil,
+              source = Diagnostic.Source.Compilation))
+          lowerArgs(arg): as =>
+            zipArgs(Nil, remainingArgs, as ne_:: acc)
+        case (remainingParamss2, Nil) =>
+          if !remainingParamss2.isEmpty then
+            raise(ErrorReport(
+              msg"Extending a partially applied class is not supported" -> loc :: Nil,
+              source = Diagnostic.Source.Compilation))
+          k(Call(fr, acc.reverse.ne_!)(isMlsFun, true, isTailCall).withLoc(loc))
+      zipArgs(ctorParamLists, args, Nil)
+    case Nil =>
+      if !ctorParamLists.isEmpty then
+        raise(ErrorReport(
+          msg"Extending a partially applied class is not supported" -> loc :: Nil,
+          source = Diagnostic.Source.Compilation))
       // * No arguments to a super ctor means a nullary call, e.g., `extends C` means `extends C()`
       k(Call(fr, Nil ne_:: Nil)(isMlsFun, true, isTailCall).withLoc(loc))
   
@@ -473,12 +496,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     // * so we also look up the owner InnerSymbol via TermDefinition#owner.
     // * Note: apparently, this can also be accessed through TermDefinition#companionClass
     // * (what Copilot initially used), which is weird.
-    val ctorParamLists: Ls[ParamList] =
-      cls.targetSymbol.flatMap: sym =>
-        sym.asClsOrMod.flatMap(_.defn) orElse
-        sym.asTrm.flatMap(_.owner).flatMap(_.asDefnSym.defn)
-      .fold(Nil: Ls[ParamList]): clsDef =>
-        clsDef.paramsOpt.toList ::: clsDef.auxParams
+    val ctorParamLists = getCtorParamLists(cls)
     if ctorParamLists.isEmpty then
       // * Need to specially handle no-param classes
       args match
@@ -973,7 +991,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           val sym = new BlockMemberSymbol(isym.name, Nil)
           loweringCtx.collectScopedSym(sym)
           val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
-          val pctor = parentConstructor(cls, as)
+          val pctor = parentConstructor(sr, cls, as)
           val clsDef = ClsLikeDefn(N, isym, sym, N, syntax.Cls, N, Nil, S(sr),
             mtds, privateFlds, publicFlds, pctor, ctor, N, N)(N, Nil)
           val inner = new New(sym.ref().resolved(isym), Nil, N)(N)
