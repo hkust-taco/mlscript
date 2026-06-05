@@ -316,18 +316,18 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val ret = applyBlock(b)
       Scoped(extraLocals, ret)
     
-    // Replaces references to BlockMemberSymbols as needed with fresh variables, and
+    // Replaces references to definitions as needed with fresh variables, and
     // returns the mapping from the symbol to the required variable. When possible,
     // it also directly rewrites Results (Calls and Instantiates).
     // Since first-class classes can't be lifted, this is where class
     // instantiations are rewritten.
     //
-    // Does *not* rewrite references to non-lifted BMS symbols.
+    // Does *not* rewrite references to non-lifted definition symbols.
     //
     // References to methods and unlifted classes nested inside classes/modules are
     // always rewritten using `this.defnName` (when accessed internally) or `object.defnName`.
-    def rewriteBms(b: Block) =
-      // BMS's that need to be created
+    def rewriteDefnRefs(b: Block) =
+      // Defn refs that need to be rewritten, and variables that need to be created
       val syms: LinkedHashMap[DefinitionSymbol[?], LocalVarSymbol] = LinkedHashMap.empty
       val extraLocals: MutSet[ScopedSymbol] = MutSet.empty
 
@@ -347,7 +347,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
 
         override def applyResult(r: Result)(k: Result => Block): Block =
           r match
-          case c @ Call(Value.RefLike(sym), argss) if sym === State.superSymbol => superClass match
+          case c @ Call(Value.RefLike(State.superSymbol), argss) => superClass match
             case S(sc) => applyArgss(argss): newArgs =>
               sc.rewriteSuperCall(c, newArgs)(k)
             case N => super.applyResult(c)(k)
@@ -450,7 +450,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           
           case _ => super.applyPath(p)(k)
       (walker.applyBlock(b), syms.toList, extraLocals)
-    end rewriteBms
+    end rewriteDefnRefs
     
     def applySubBlockAndReset(b: Block): Block =
       val curActive = activeClosures
@@ -461,7 +461,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     override def applyBlock(b: Block): Block =
       // extract references to definitions in the block which now may
       // need to be enriched with aux parameters
-      val (rewritten, syms, extras) = rewriteBms(b)
+      val (rewritten, syms, extras) = rewriteDefnRefs(b)
       extraLocals.addAll(extras)
       val pre = syms.foldLeft(blockBuilder):
         case (blk, (funSym, local)) =>
@@ -704,11 +704,6 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       // Remove child BlockMemberSymbols; we will use their definition symbols instead
       
       // Locals introduced by this object
-      /* // -- This is the old definition: --
-      val fromThisObj = node.localsWithoutBms
-        .map: s =>
-          s -> s.asLocalPath
-      */
       val fromThisObj: Map[ScopedOrInnerSymbol, LocalPath] = node.localsWithoutBms
         .flatMap: s =>
           s match
@@ -742,8 +737,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       if thisCapturedLocals.isEmpty then Map.empty
       else Map(obj.toInfo -> capturePath)
     
-    // BMS refs from ignored defns (including child defns of modules)
-    // Note that we map the DefinitionSymbol to the disambiguated BMS.
+    // Defn refs from ignored defns (including child defns of modules)
     protected val defnPathsFromThisObj: Map[DefinitionSymbol[?], DefnRef] =
       node.children.filter:
         case s @ ScopeNode(obj = r: ScopedObject.Class) if r.isObj => false
@@ -792,7 +786,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     final val reqCaptures: Set[ScopedInfo] = captures.map(_._2)
     /**
       * Neighbouring objects that this definition may lose access to
-      * once lifted, referenced by their *definition symbol* (not BMS).
+      * once lifted, referenced by their *definition symbol*.
       */
     final val reqDefns = node.reqCaptureObjs
       .map(_.sym)
