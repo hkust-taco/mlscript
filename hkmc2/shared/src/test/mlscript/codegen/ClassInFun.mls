@@ -40,23 +40,23 @@ fun test(x) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test2;
 //│ test2 = function test(x) {
-//│   let Foo2, tmp;
-//│   Foo2 = function Foo(a, b) {
-//│     return globalThis.Object.freeze(new Foo.class(a, b));
+//│   let Foo4, tmp;
+//│   Foo4 = function Foo(a1, b) {
+//│     return globalThis.Object.freeze(new Foo.class(a1, b));
 //│   };
-//│   (class Foo1 {
+//│   (class Foo3 {
 //│     static {
-//│       Foo2.class = this
+//│       Foo4.class = this
 //│     }
-//│     constructor(a, b) {
-//│       this.a = a;
+//│     constructor(a1, b) {
+//│       this.a = a1;
 //│       this.b = b;
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Foo", ["a", "b"]];
 //│   });
 //│   tmp = x + 1;
-//│   return Foo2(x, tmp)
+//│   return Foo4(x, tmp)
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

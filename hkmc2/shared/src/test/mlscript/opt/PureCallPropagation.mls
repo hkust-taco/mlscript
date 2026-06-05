@@ -18,7 +18,7 @@ fun foo(x)(y)(z) =
 :soir
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ return foo$worker⁰(1, 2, 3)
+//│ do Predef⁰.print⁰("hi"); return 6
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
 //│ = 6
@@ -30,12 +30,12 @@ let f = foo(1)(2)
 print("hello")
 f(3) + f(4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰, inlinedVal, inlinedVal1;
+//│ let f⁰;
 //│ set f⁰ = foo⁰(1)(2);
 //│ do Predef⁰.print⁰("hello");
-//│ set inlinedVal = foo$worker⁰(1, 2, 3);
-//│ set inlinedVal1 = foo$worker⁰(1, 2, 4);
-//│ return +⁰(inlinedVal, inlinedVal1)
+//│ do Predef⁰.print⁰("hi");
+//│ do Predef⁰.print⁰("hi");
+//│ return 13
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hello
 //│ > hi
@@ -81,12 +81,12 @@ let f = foo(1)(2)
 print("hello")
 f(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo¹, f², foo$worker¹, lambda⁰;
+//│ let foo¹, f², foo$worker⁰, lambda⁰;
 //│ @inline
 //│ define foo¹ as fun foo²(x)(y) {
-//│   return foo$worker²(x, y)
+//│   return foo$worker¹(x, y)
 //│ };
-//│ define foo$worker¹ as fun foo$worker²(x, y) {
+//│ define foo$worker⁰ as fun foo$worker¹(x, y) {
 //│   let lambda;
 //│   do Predef⁰.print⁰("hi");
 //│   @private
@@ -115,7 +115,7 @@ f(3)
 :soir
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let inlinedVal; set inlinedVal = foo$worker²(1, 2); return inlinedVal(3)
+//│ let inlinedVal; set inlinedVal = foo$worker¹(1, 2); return inlinedVal(3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
 //│ = 42
@@ -127,7 +127,7 @@ print("hello")
 f(3) + f(4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f³, tmp, tmp1, inlinedVal;
-//│ set inlinedVal = foo$worker²(1, 2);
+//│ set inlinedVal = foo$worker¹(1, 2);
 //│ set f³ = inlinedVal;
 //│ do Predef⁰.print⁰("hello");
 //│ set tmp = inlinedVal(3);

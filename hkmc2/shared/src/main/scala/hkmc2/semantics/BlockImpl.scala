@@ -33,6 +33,7 @@ trait BlockImpl(using Elaborator.State):
         lazy val (headId, headPs) = td.baseHead match
           case id: Ident => (id, Nil)
           case App(id: Ident, TyTup(ps)) => (id, ps)
+          case _ => TODO(s"unexpected ADT head shape: ${td.baseHead}")
         // Temporarily use `data` annotation to distinguish the following ctors:
         // - Ctor(...)
         // - Ctor[...](...) extends ADT[...]

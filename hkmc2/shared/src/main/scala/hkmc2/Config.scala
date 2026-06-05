@@ -71,7 +71,7 @@ object Config:
     tailRecOpt = true,
     deforest = N,
     etaExpansion = S(EtaExpansion.default),
-    inlining = S(Inliner(10)),
+    inlining = S(Inliner(default.inlineThreshold)),
     deadBranchRemoval = default.deadBranchRemoval,
     qqEnabled = false,
     funcToCls = false,
@@ -83,6 +83,7 @@ object Config:
   object default:
     val patMatConsequentSharingThreshold = S(15)
     val deadBranchRemoval = false // TODO
+    val inlineThreshold = 10
   
   case class SanityChecks(light: Bool, checkUnreachable: Bool)
   

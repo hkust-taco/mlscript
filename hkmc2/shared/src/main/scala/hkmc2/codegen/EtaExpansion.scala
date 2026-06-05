@@ -45,6 +45,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver):
         case (fSym: TermSymbol, whichPl: Int) =>
           val fnDefn = constraintSolver.collector.preAnalyzer.res.funSymToFunDefn(fSym)
           fnDefn.affineInfo.contains(whichPl)
+        case (sym, _) => lastWords(s"prodFunIsAffine: expected TermSymbol funId, got $sym")
       end prodFunIsAffine
       
       res match
