@@ -750,7 +750,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val ctx = HandlerCtx.TopLevel
     val transformed = translateBlock(preTransformed, ctx, Set.empty)
     val blk = blockBuilder
-      .assign(State.noSymbol, Call(paths.resetEffects, Nil ne_:: Nil)(true, false, false))
+      .staticif(
+        !opt.doNotInstrumentTopLevelModCtor,
+        _.assign(State.noSymbol, Call(paths.resetEffects, Nil ne_:: Nil)(true, false, false))
+      )
       .rest(transformed)
     (blk, stackSafetyMap)
     
