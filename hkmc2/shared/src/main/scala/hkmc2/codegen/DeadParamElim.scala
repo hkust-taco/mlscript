@@ -355,7 +355,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
         val filteredParams = filterFunParams(fDefn.dSym, fDefn.params, instId)
         val transformedBody = new Rewriter(instId).rewriteFunBody(fDefn.dSym, fDefn.params, fDefn.body)
         val (refreshedParams, refreshParamMap) = makeRefreshedParams(filteredParams)
-        val bodyWithCorrectSymbols = new RefreshSymbol(refreshParamMap).applyBlock(transformedBody)
+        val bodyWithCorrectSymbols = new RefreshSymbol(refreshParamMap).apply(transformedBody)
         FunDefn(
           N, bms, tSym, refreshedParams,
           bodyWithCorrectSymbols)(fDefn.configOverride, fDefn.annotations)
