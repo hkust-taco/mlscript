@@ -89,8 +89,8 @@ fun foo(x, y) =
       x + y + test
   M.foo()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.110: 	  module M with
-//│ ╙──       	         ^
+//│ ║  l.85: 	  module M with
+//│ ╙──      	         ^
 
 :expect 14
 foo(10, 0)
@@ -104,7 +104,7 @@ fun foo(x, y) =
   fun foo = M.foo()
   foo
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.125: 	  module M with
+//│ ║  l.100: 	  module M with
 //│ ╙──       	         ^
 
 :expect 12
@@ -117,7 +117,7 @@ data class A(x) with
     fun getB() = x
   fun getA() = M.getB()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.141: 	  module M with
+//│ ║  l.116: 	  module M with
 //│ ╙──       	         ^
 
 :expect 2
@@ -133,11 +133,11 @@ fun foo(x) =
   (new Bar).self2
 foo(2)
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference of type Foo.
-//│ ║  l.157: 	  class Bar extends Foo
+//│ ║  l.132: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.154: 	  object Foo with
+//│ ║  l.129: 	  object Foo with
 //│ ╙──       	         ^^^
 //│ ═══[WARNING] Cannot yet lift definition `Bar` as it extends an unliftable class.
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
@@ -153,19 +153,19 @@ fun f =
       h
   M.g
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.175: 	  module M with
+//│ ║  l.150: 	  module M with
 //│ ╙──       	         ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'M'
-//│ ║  l.177: 	      fun h = M.g
+//│ ║  l.152: 	      fun h = M.g
 //│ ║         	              ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.175: 	  module M with
+//│ ║  l.150: 	  module M with
 //│ ║         	         ^^^^^^
-//│ ║  l.176: 	    fun g =
+//│ ║  l.151: 	    fun g =
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.177: 	      fun h = M.g
+//│ ║  l.152: 	      fun h = M.g
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.178: 	      h
+//│ ║  l.153: 	      h
 //│ ╙──       	^^^^^^^
 
 
