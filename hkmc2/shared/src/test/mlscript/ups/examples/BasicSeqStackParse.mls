@@ -51,64 +51,56 @@ fun parse(input) =
 
 
 parse("")
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:226:24)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:210:36)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at Array.from (<anonymous>)
-//│     at toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
-//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:179:31
-//│     at parse (REPL22:1:859)
-//│     at REPL26:1:38
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│ > not Ident []
+//│ > not Ident?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ = {Error: []}
 
 parse("x")
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:228:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:210:36)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at Array.from (<anonymous>)
-//│     at toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
-//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:179:31
-//│     at parse (REPL22:1:859)
-//│     at REPL29:1:38
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│ > not Ident []
+//│ > not Ident?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ > not Ident [Id("x")]
+//│ > not Ident?? false
+//│ > Str? Id("x") false
+//│ > Str?? false
+//│ = {Success: Id("x")}
 
 parse("x y")
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:228:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:210:36)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at Array.from (<anonymous>)
-//│     at toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
-//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:179:31
-//│     at parse (REPL22:1:859)
-//│     at REPL32:1:38
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│ > not Ident []
+//│ > not Ident?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ > not Ident [Id("x")]
+//│ > not Ident?? false
+//│ > Str? Id("x") false
+//│ > Str?? false
+//│ > not Ident [Id("x"), Id("y")]
+//│ > not Ident?? false
+//│ > Str? Id("y") false
+//│ > Str?? false
+//│ = {Error: [Id("x"), Id("y")]}
 
 parse("x y z")
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:228:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:210:36)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at Array.from (<anonymous>)
-//│     at toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
-//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:179:31
-//│     at parse (REPL22:1:859)
-//│     at REPL35:1:38
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│ > not Ident []
+//│ > not Ident?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ > not Ident [Id("x")]
+//│ > not Ident?? false
+//│ > Str? Id("x") false
+//│ > Str?? false
+//│ > not Ident [Id("x"), Id("y")]
+//│ > not Ident?? false
+//│ > Str? Id("y") false
+//│ > Str?? false
+//│ > not Ident [Id("x"), Id("y"), Id("z")]
+//│ > not Ident?? false
+//│ > Str? Id("z") false
+//│ > Str?? false
+//│ = {Error: [Id("x"), Id("y"), Id("z")]}
 
 go([], ["x", "y", "z"])
 //│ > not Ident []
@@ -137,18 +129,22 @@ go([Id("x"), Id("y"), "z"], [])
 //│ = {Error: [Id("x"), Id("y"), Id("z")]}
 
 parse("x + y")
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:228:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:210:36)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at Array.from (<anonymous>)
-//│     at toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
-//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:179:31
-//│     at parse (REPL22:1:859)
-//│     at REPL44:1:39
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│ > not Ident []
+//│ > not Ident?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ > not Ident [Id("x")]
+//│ > not Ident?? false
+//│ > Str? Id("x") false
+//│ > Str?? false
+//│ > not Ident [Id("x"), +]
+//│ > not Ident?? false
+//│ > Str? + true
+//│ > Str?? true
+//│ > not Ident [Op(Id("y"), "+", Id("x"))]
+//│ > not Ident?? false
+//│ > Str? Op(Id("y"), "+", Id("x")) false
+//│ > Str?? false
+//│ = {Success: Op(Id("y"), "+", Id("x"))}
 
 

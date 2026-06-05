@@ -175,50 +175,30 @@ let display = t("group", x: 20, y: 20) of
 //│ display = fun
 
 display(x: 11, y: 22, i: 2)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
-//│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
-//│     at showProps (REPL102:1:1020)
-//│     at lambda3 (REPL108:1:2243)
-//│     at REPL115:1:112
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│ >     group x: 31, y: 42 with
+//│ >       circle x: 61, y: 72, r: 42
+//│ >       rect x: 71, y: 82, width: 80, height: 90
+//│ >       ellipse x: 81, y: 92, rx: 40, ry: 60
 
 let display = t("group", x: 0, y: 0) of
   t("circle", x: 10, y: 10, r: 42)
 //│ display = fun
 
 display(x: 88, y: 99, i: 0)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
-//│     at Iter.joined (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:721:38)
-//│     at showProps (REPL102:1:1020)
-//│     at lambda3 (REPL108:1:2243)
-//│     at REPL122:1:112
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│ > group x: 88, y: 99 with
+//│ >   circle x: 98, y: 109, r: 42
 
 :todo
 t("group")
 //│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.212: 	t("group")
+//│ ║  l.192: 	t("group")
 //│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
 :todo
 t("group")
 //│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.219: 	t("group")
+//│ ║  l.199: 	t("group")
 //│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
