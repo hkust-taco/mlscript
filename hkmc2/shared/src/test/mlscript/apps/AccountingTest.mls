@@ -4,28 +4,15 @@ import "../../mlscript-compile/apps/Accounting.mls"
 
 
 val acc = new Accounting
-//│ acc = Accounting { warnings: [], lines: [] }
+//│ acc = Accounting { warnings: [], mkProject: fun Project { class: class Project }, lines: [] }
 
-val proj = acc.Project("P1")
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: acc.Project is not a function
-//│     at REPL17:1:50
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
-//│ proj = undefined
+val proj = acc.mkProject("P1")
+//│ proj = Project("P1")
 
 val l1 = acc.mkLine("L1", proj, 200_000, true)
 val l2 = acc.mkLine("L2", proj, 1_000_000, true)
-//│ l1 = Line("L1", undefined, 200000, true)
-//│ l2 = Line("L2", undefined, 1000000, true)
+//│ l1 = Line("L1", Project("P1"), 200000, true)
+//│ l2 = Line("L2", Project("P1"), 1000000, true)
 
 
 :...

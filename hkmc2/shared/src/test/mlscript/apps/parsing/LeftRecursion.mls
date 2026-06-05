@@ -6,19 +6,6 @@ import "../../../mlscript-compile/Iter.mls"
 import "../../../mlscript-compile/apps/parsing/Test.mls"
 import "../../../mlscript-compile/apps/parsing/Rules.mls"
 import "../../../mlscript-compile/apps/parsing/Keywords.mls"
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
-//│     at Iter.each (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:795:38)
-//│     at lambda2 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/apps/parsing/ParseRule.mjs:600:15)
-//│     at Choice.<anonymous> (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/apps/parsing/ParseRule.mjs:588:12)
-//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/apps/parsing/ParseRule.mjs:777:49
-//│     at <static_initializer> (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Rules.mjs:334:51)
-//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Rules.mjs:956:11
-//│     at ModuleJob.run (node:internal/modules/esm/module_job:377:25)
-//│     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
 
 open Test { example }
 
@@ -27,51 +14,17 @@ example of """
 #newKeyword ("base", None, None)
 #newKeyword ("incr", None, None)
 """
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'example')
-//│     at REPL19:1:43
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ > 
 
 print of Keywords.extended |> MutMap.valuesIterator |. Iter.joined("\n")
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'extended')
-//│     at REPL22:1:70
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ > Keyword(`count`, 5, 5)
+//│ > Keyword(`base`, N/A, N/A)
+//│ > Keyword(`incr`, N/A, N/A)
 
 example of """
 #newCategory "counting"
 """
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'example')
-//│     at REPL25:1:43
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ > 
 
 // <counting> ::= <counting> "incr" | "base"
 example of """
@@ -79,76 +32,31 @@ example of """
 #extendCategory "counting", [ keyword("base") ], zero
 #extendCategory "term", [ keyword("count"), "counting" ], result
 """
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'example')
-//│     at REPL28:1:43
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ > 
 
 Rules.getRuleByKind("counting").display print()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'getRuleByKind')
-//│     at REPL31:1:55
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ > <counting> ::= 
+//│ >   | <counting> "incr"
+//│ >   | "base"
 
 example of """count base"""
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'example')
-//│     at REPL34:1:43
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ > «result zero»
 
 example of """count base incr incr"""
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'example')
-//│     at REPL37:1:44
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ > «result (succ (succ zero))»
 
 Rules.getRuleByKind("term").display print()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'getRuleByKind')
-//│     at REPL40:1:56
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ > <prefix rules for expressions> ::= 
+//│ >   | "let" ["rec"] <let-bindings> ["in" <term>]
+//│ >   | "fun" <term> "->" <term>
+//│ >   | "match" <term> "with" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "function" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "if" <term> "then" <term> ["else" <term>]
+//│ >   | "while" <term> "do" <term> "done"
+//│ >   | "for" <term> "=" <term> ("to" | "downto") <term> "do" <term> "done"
+//│ >   | "(" <term> ")"
+//│ >   | "[" <term> "]"
+//│ >   | "{" <term> "}"
+//│ >   | "begin" <term> "end"
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
+//│ >   | "count" <counting>

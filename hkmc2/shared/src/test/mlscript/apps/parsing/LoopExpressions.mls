@@ -1,19 +1,6 @@
 :js
 
 import "../../../mlscript-compile/apps/parsing/Test.mls"
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
-//│     at Iter.each (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:795:38)
-//│     at lambda2 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/apps/parsing/ParseRule.mjs:600:15)
-//│     at Choice.<anonymous> (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/apps/parsing/ParseRule.mjs:588:12)
-//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/apps/parsing/ParseRule.mjs:777:49
-//│     at <static_initializer> (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Rules.mjs:334:51)
-//│     at file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/apps/parsing/Rules.mjs:956:11
-//│     at ModuleJob.run (node:internal/modules/esm/module_job:377:25)
-//│     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
 
 open Test { example }
 
@@ -26,19 +13,34 @@ while x < 10 do
   x <- x + 1
 done
 """
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'example')
-//│     at REPL16:1:43
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 3, 3)
+//│ >       lhs = Ident of "x"
+//│ >       rhs = Literal#Integer of "0"
+//│ >   body = Some of While:
+//│ >     condition = App:
+//│ >       callee = Ident of "<"
+//│ >       argument = Stack of 
+//│ >         Ident of "x"
+//│ >         Literal#Integer of "10"
+//│ >     body = Sequence of Stack of 
+//│ >       App:
+//│ >         callee = Ident of "print_int"
+//│ >         argument = Ident of "x"
+//│ >       App:
+//│ >         callee = Ident of "print_newline"
+//│ >         argument = Tuple of Nil
+//│ >       Infix:
+//│ >         op = Keyword(`<-`, 9, 9)
+//│ >         lhs = Ident of "x"
+//│ >         rhs = App:
+//│ >           callee = Ident of "+"
+//│ >           argument = Stack of 
+//│ >             Ident of "x"
+//│ >             Literal#Integer of "1"
+//│ > «let x = 0 in while x < 10 do print_int x; print_newline (); x <- x + 1 done»
 
 example of """
 :tree
@@ -46,16 +48,11 @@ for i = 0 to 10 do
   print i
 done
 """
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'example')
-//│     at REPL19:1:43
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ > For:
+//│ >   head = Ident of "i"
+//│ >   start = Literal#Integer of "0"
+//│ >   end = Literal#Integer of "10"
+//│ >   body = App:
+//│ >     callee = Ident of "print"
+//│ >     argument = Ident of "i"
+//│ > «for i = 0 to 10 do print i done»

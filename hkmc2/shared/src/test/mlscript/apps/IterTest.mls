@@ -11,140 +11,44 @@ open Stack { Cons, Nil }
   filtering of x => x % 2 is 0
   mapping of x => x * 2
   toArray()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:228:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
-//│     at Array.from (<anonymous>)
-//│     at Iter.toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
-//│     at REPL16:1:564
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
+//│ = [4, 8, 12, 16, 20]
 
 ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   filtering of x => x % 2 is 0
   folded of "[", (x, y) => if x is "[" then x + y else x + ", " + y) + "]"
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:228:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at Iter.foldingImpl (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:675:38)
-//│     at Iter.folded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:711:17)
-//│     at REPL19:1:587
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
+//│ = "[2, 4, 6, 8, 10]"
 
 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   filtering of x => x % 2 is 1
   rightFolded of Nil, Cons
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:228:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at go (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:60:36)
-//│     at Iter.rightFolded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:716:12)
-//│     at REPL22:1:392
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
+//│ = Cons(1, Cons(3, Cons(5, Cons(7, Cons(9, Nil)))))
 
 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   filtering of x => x % 2 is 0
   reduced of (x, y) => x + y
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:228:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at Iter.reduced (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:701:38)
-//│     at REPL25:1:512
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
+//│ = 30
 
 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   filtering of x => x % 2 is 0
   folded of 1, *
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:228:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at Iter.foldingImpl (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:675:38)
-//│     at Iter.folded (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:711:17)
-//│     at REPL28:1:529
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
+//│ = 3840
 
 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   leaving(2)
   taking(5)
   toArray()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:228:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:210:36)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at Array.from (<anonymous>)
-//│     at Iter.toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
-//│     at REPL31:1:257
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
+//│ = [3, 4, 5, 6, 7]
 
 ["foo", "bar", "baz"]
   zippingWithIndex()
   toArray()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
-//│     at Array.from (<anonymous>)
-//│     at Iter.toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
-//│     at REPL34:1:182
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
+//│ = [["foo", 0], ["bar", 1], ["baz", 2]]
 
 ["foo", "bar", "baz"]
   zippingWithIndex()
   mapping of case [x, y] then [y, x]
   toArray()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
-//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
-//│     at Array.from (<anonymous>)
-//│     at Iter.toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
-//│     at REPL37:1:746
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
+//│ = [[0, "foo"], [1, "bar"], [2, "baz"]]
 
 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] joined(" <> ")
 //│ = "1 <> 2 <> 3 <> 4 <> 5 <> 6 <> 7 <> 8 <> 9 <> 10"
@@ -158,19 +62,7 @@ open Stack { Cons, Nil }
   mapping of str => Array.from(str).reverse()
   flattening()
   toArray()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
-//│     at lambda2 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:312:59)
-//│     at Iterable.<anonymous> (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:305:12)
-//│     at Iterable.iterator (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:541:41)
-//│     at Array.from (<anonymous>)
-//│     at Iter.toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
-//│     at REPL46:1:484
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
+//│ = ["o", "o", "f", "r", "a", "b", "z", "a", "b"]
 
 ["", "", "", "", ""]
   flattening()
@@ -187,57 +79,21 @@ open Stack { Cons, Nil }
   appended of [2, 4, 6, 8, 10]
   mapping of x => x / 2
   toArray()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
-//│     at lambda6 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:90:57)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:85:12)
-//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
-//│     at Array.from (<anonymous>)
-//│     at Iter.toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
-//│     at REPL55:1:619
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│ = [1, 3, 5, 7, 9, 1, 2, 3, 4, 5]
 
 [7, 8, 9, 10]
   filtering of x => x % 2 is 0
   mapping of x => x * 2
   appended of []
   toArray()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda12 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:228:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:205:12)
-//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:336:36)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
-//│     at lambda6 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:90:57)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:85:12)
-//│     at Array.from (<anonymous>)
-//│     at Iter.toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
-//│     at REPL58:1:663
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│ = [16, 20]
 
 [["foo", 1]]
   MutMap.toMap()
   mapping of case [k, v] then [k + "!", v * 2]
   appended of MutMap.toMap([["bar", 2]])
   toArray()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
-//│     at lambda6 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:90:57)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:85:12)
-//│     at Array.from (<anonymous>)
-//│     at Iter.toArray (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:810:46)
-//│     at REPL61:1:1074
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
+//│ = [["foo!", 2], ["bar", 2]]
 
 [1, 2, 3, 4, 5, 6]
   Iter.some of x => x % 3 == 0
@@ -254,50 +110,21 @@ open Stack { Cons, Nil }
 [1, 2, 3, 4, 5, 6]
   Iter.mapping of x => x * 2
   Iter.every of x => x % 2 == 0
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
-//│     at Iter.every (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:775:38)
-//│     at REPL73:1:492
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
+//│ = true
 
 [1, 2, -3, 4, 5, 6]
   Iter.mapping of x => () => print(x + " was accessed"); x
   Iter.some of get => get() < 0
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
-//│     at Iter.some (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:755:38)
-//│     at REPL76:1:703
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
+//│ > 1 was accessed
+//│ > 2 was accessed
+//│ > -3 was accessed
+//│ = true
 
 [1, 2, 3, -4, 5, 6]
   Iter.mapping of x => () => print(x + " was accessed"); x
   Iter.every of get => get() > 0
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Result')
-//│     at lambda11 (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:342:22)
-//│     at Iterator.next (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:331:12)
-//│     at Iter.every (file:///Users/attempt0/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Iter.mjs:775:38)
-//│     at REPL79:1:703
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:600:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:935:10)
-//│     at REPLServer.emit (node:events:508:28)
+//│ > 1 was accessed
+//│ > 2 was accessed
+//│ > 3 was accessed
+//│ > -4 was accessed
+//│ = false
