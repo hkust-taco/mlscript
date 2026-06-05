@@ -425,7 +425,7 @@ test(0).toString()
 //   return ret;
 // }
 
-:sjs
+:sir
 fun f(x, y, z) =
   data class C(a) with
     fun getX = x
@@ -433,64 +433,57 @@ fun f(x, y, z) =
     fun setY = set y += 1
   class D extends C(y)
   [new C(0), new D]
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let C13, D1, f13, Capture$f3;
-//│ C13 = function C(a) {
-//│   return globalThis.Object.freeze(new C.class(a));
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let C⁸, D⁰, f⁴, Capture$f⁰;
+//│ @data
+//│ define C⁸ as class C¹⁰ {
+//│   private val f$cap⁰;
+//│   private val x³;
+//│   val a⁴;
+//│   constructor C⁹(a, f$cap, x) {
+//│     set C¹⁰.this.f$cap⁰ = f$cap;
+//│     set C¹⁰.this.x³ = x;
+//│     define a⁴ as val a⁵ = a;
+//│     end
+//│   }
+//│   method getX⁰ = fun getX¹ {
+//│     return C¹⁰.this.x³
+//│   }
+//│   method getY⁰ = fun getY¹ {
+//│     return C¹⁰.this.f$cap⁰.y$0⁰
+//│   }
+//│   method setY⁰ = fun setY¹ {
+//│     let tmp;
+//│     set tmp = +⁰(C¹⁰.this.f$cap⁰.y$0⁰, 1);
+//│     set C¹⁰.this.f$cap⁰.y$0⁰ = tmp;
+//│     return runtime⁰.Unit⁰
+//│   }
 //│ };
-//│ (class C12 {
-//│   static {
-//│     C13.class = this
+//│ define D⁰ as class extends C¹⁰ D¹ {
+//│   private val f$cap¹;
+//│   private val x⁴;
+//│   constructor(f$cap, x) {
+//│     do super⁰(f$cap².y$0⁰, f$cap², x⁵);
+//│     end;
+//│     set D¹.this.f$cap¹ = f$cap;
+//│     set D¹.this.x⁴ = x;
+//│     end
 //│   }
-//│   constructor(a, f$cap, x1) {
-//│     this.#f$cap = f$cap;
-//│     this.#x = x1;
-//│     this.a = a;
-//│   }
-//│   #f$cap;
-//│   #x;
-//│   get getX() {
-//│     return this.#x;
-//│   }
-//│   get getY() {
-//│     return this.#f$cap.y$0;
-//│   }
-//│   get setY() {
-//│     let tmp12;
-//│     tmp12 = this.#f$cap.y$0 + 1;
-//│     this.#f$cap.y$0 = tmp12;
-//│     return runtime.Unit;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "C", ["a"]];
-//│ });
-//│ (class D extends C13.class {
-//│   static {
-//│     D1 = this
-//│   }
-//│   constructor(f$cap, x1) {
-//│     super(f$cap.y$0, f$cap, x1);
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "D"];
-//│ });
-//│ (class Capture$f2 {
-//│   static {
-//│     Capture$f3 = this
-//│   }
-//│   constructor(y$0) {
-//│     this.y$0 = y$0;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Capture$f"];
-//│ });
-//│ f13 = function f(x1, y, z) {
-//│   let tmp12, tmp13, f$cap;
-//│   f$cap = new Capture$f3(y);
-//│   tmp12 = globalThis.Object.freeze(new C13.class(0, f$cap, x1));
-//│   tmp13 = globalThis.Object.freeze(new D1(f$cap, x1));
-//│   return globalThis.Object.freeze([ tmp12, tmp13 ])
 //│ };
+//│ define Capture$f⁰ as class Capture$f² {
+//│   constructor Capture$f¹(y$0) {
+//│     define y$0¹ as val y$0⁰ = y$0;
+//│     end
+//│   }
+//│ };
+//│ define f⁴ as fun f⁵(x, y, z) {
+//│   let tmp, tmp1, f$cap;
+//│   set f$cap = new mut Capture$f²(y);
+//│   set tmp = new C¹⁰(0, f$cap, x);
+//│   set tmp1 = new D¹(f$cap, x);
+//│   return [tmp, tmp1]
+//│ };
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect [2, (), 3, 2]
@@ -527,44 +520,44 @@ fun f(x, y, z) =
   [new C(0), new D]
 //│ ═══[WARNING] Cannot yet lift class `D` as it is used as a first-class class.
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let C⁸, f⁴, Capture$f⁰;
+//│ let C¹¹, f⁶, Capture$f³;
 //│ @data
-//│ define C⁸ as class C¹⁰ {
-//│   private val f$cap⁰;
-//│   private val x³;
-//│   val a⁴;
-//│   constructor C⁹(a, f$cap, x) {
-//│     set C¹⁰.this.f$cap⁰ = f$cap;
-//│     set C¹⁰.this.x³ = x;
-//│     define a⁴ as val a⁵ = a;
+//│ define C¹¹ as class C¹³ {
+//│   private val f$cap³;
+//│   private val x⁶;
+//│   val a⁶;
+//│   constructor C¹²(a, f$cap, x) {
+//│     set C¹³.this.f$cap³ = f$cap;
+//│     set C¹³.this.x⁶ = x;
+//│     define a⁶ as val a⁷ = a;
 //│     end
 //│   }
-//│   method getX⁰ = fun getX¹ {
-//│     return C¹⁰.this.x³
+//│   method getX² = fun getX³ {
+//│     return C¹³.this.x⁶
 //│   }
-//│   method getY⁰ = fun getY¹ {
-//│     return C¹⁰.this.f$cap⁰.y$0⁰
+//│   method getY² = fun getY³ {
+//│     return C¹³.this.f$cap³.y$0²
 //│   }
-//│   method setY⁰ = fun setY¹ {
+//│   method setY² = fun setY³ {
 //│     let tmp;
-//│     set tmp = +⁰(C¹⁰.this.f$cap⁰.y$0⁰, 1);
-//│     set C¹⁰.this.f$cap⁰.y$0⁰ = tmp;
+//│     set tmp = +⁰(C¹³.this.f$cap³.y$0², 1);
+//│     set C¹³.this.f$cap³.y$0² = tmp;
 //│     return runtime⁰.Unit⁰
 //│   }
 //│ };
-//│ define Capture$f⁰ as class Capture$f² {
-//│   constructor Capture$f¹(y$0) {
-//│     define y$0¹ as val y$0⁰ = y$0;
+//│ define Capture$f³ as class Capture$f⁵ {
+//│   constructor Capture$f⁴(y$0) {
+//│     define y$0³ as val y$0² = y$0;
 //│     end
 //│   }
 //│ };
-//│ define f⁴ as fun f⁵(x, y, z) {
+//│ define f⁶ as fun f⁷(x, y, z) {
 //│   let D, x1, tmp, tmp1, f$cap;
-//│   set f$cap = new mut Capture$f²(y);
-//│   define D as class extends C¹⁰ D⁰ {};
-//│   set x1 = D⁰;
-//│   set tmp = new C¹⁰(0, f$cap, x);
-//│   set tmp1 = new D⁰();
+//│   set f$cap = new mut Capture$f⁵(y);
+//│   define D as class extends C¹³ D² {};
+//│   set x1 = D²;
+//│   set tmp = new C¹³(0, f$cap, x);
+//│   set tmp1 = new D²();
 //│   return [tmp, tmp1]
 //│ };
 //│ end
