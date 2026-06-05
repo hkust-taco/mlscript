@@ -677,6 +677,10 @@ extends Importer with ucs.SplitElaborator:
             Term.Assgn(lt, subterm(rhs)) :: Nil,
             subterm(bod),
         ), Term.Assgn(lt, sym.ref())))
+    case LetLike(Keywrd(Keyword.`set`), _, N, S(_)) =>
+      raise:
+        ErrorReport(msg"Expected a right-hand side for this assignment" -> tree.toLoc :: Nil)
+      Term.Error
     case (hd @ Hndl(id: Ident, c, Block(sts_), S(bod))) => ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
       
       val sym = VarSymbol(id)
@@ -1161,9 +1165,9 @@ extends Importer with ucs.SplitElaborator:
     case Constructor(delc) =>
       raise(ErrorReport(msg"Unsupported constructor in this position." -> tree.toLoc :: Nil))
       Term.Error
-    case Dummy | SplitPoint() | Pun(_, _) =>
+    case Dummy | _: SplitPoint | _: LexicalNew | _: Region | _: Effectful =>
       lastWords(s"Unexpected ${tree.describe} in subterm position: $tree")
-    case _ =>
+    case Dummy | _: SplitPoint | _: Pun | _: LetLike | _: TyTup | _: Directive =>
       raise(ErrorReport(msg"Unsupported term in this position (${tree.describe})." -> tree.toLoc :: Nil))
       Term.Error
   
@@ -1545,7 +1549,7 @@ extends Importer with ucs.SplitElaborator:
       case (td @ TypeDef(k, head, rhs)) :: sts =>
         val owner = ctx.outer.inner
         
-        assert((k is Als) || (k is Cls) || (k is Mod) || (k is Obj) || (k is Pat), k)
+        softTODO((k is Als) || (k is Cls) || (k is Mod) || (k is Obj) || (k is Pat), k.desc + " not yet supported")
         val body = td.withPart
         
         td.symbName match
@@ -1923,7 +1927,7 @@ extends Importer with ucs.SplitElaborator:
       case "<:<" => SubDir.Sub
       case ">:>" => SubDir.Sup
     SubConstraint(l, r, dir)
- 
+  
   /** Elaborate a subtyping constraint that may be malformed. */
   def maybeConstraint(t: Tree): Ctxl[Option[SubConstraint]] =
     t match
@@ -1965,7 +1969,11 @@ extends Importer with ucs.SplitElaborator:
             case N => go(tl, p :: acc, newCtx, newFlags)
           case L(d) => raise(d); go(tl, acc, ctx, flags)
       go(ps, Nil, ctx, ParamListFlags.empty)
-    case _ => lastWords(s"Expected a parameter list (Tup); found ${t.describe}")
+    case _ =>
+      raise:
+        ErrorReport:
+          msg"Expected a parameter list (a tuple of parameters), but found ${t.describe}" -> t.toLoc :: Nil
+      (ParamList(ParamListFlags.empty, Nil, N).withLocOf(t), ctx)
   
   def ident(id: Ident)(using Ctx): Ctxl[Opt[Term]] = ctx.get(id.name) match
     case S(elem) => S(elem.ref(id))
@@ -2171,7 +2179,11 @@ extends Importer with ucs.SplitElaborator:
           raise(ErrorReport(msg"Unsupported type parameter ${t.describe}" -> t.toLoc :: Nil))
           Nil
       (vs, ctx ++ vs.map(p => p.sym.name -> p.sym))
-    case _ => lastWords(s"Expected a type-parameter tuple; found ${t.describe}.")
+    case _ =>
+      raise:
+        ErrorReport:
+          msg"Expected a type parameter list (a tuple of identifiers), but found ${t.describe}" -> t.toLoc :: Nil
+      (Nil, ctx)
 
   def importFrom(sts: Block): Ctxl[(Blk, Ctx)] =
     given UnderCtx = new UnderCtx(N)

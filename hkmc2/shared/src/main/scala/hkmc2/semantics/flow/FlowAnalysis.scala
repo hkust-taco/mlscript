@@ -69,7 +69,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       case cls: ModuleOrObjectSymbol => P.Ctor(cls, Nil)(t)
       case ts: TermSymbol => getFlowSymOrType(ts.bms.get)
       case _ => lastWords(s"Unexpected resolved symbol in producer position: $sym")
-
+    
     case Ref(sym) =>
       sym match
       case sym: VarSymbol => P.Flow(sym)
@@ -210,6 +210,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     case Error =>
       P.Ctor(Extr(false), Nil)(t)
     
+    // case _ => P.Flow(FlowSymbol("TODO"))
     case _ => TODO(t)
   
   /* 

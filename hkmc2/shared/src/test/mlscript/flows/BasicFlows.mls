@@ -108,7 +108,7 @@ f(1, 2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
-:fixme
+:todo
 f(...a)
 //│ /!!!\ Uncaught error: scala.NotImplementedError: tuple spread in flow analysis (of class String)
 

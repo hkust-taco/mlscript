@@ -87,7 +87,7 @@ class ResultId(val uid: Uid[Result]):
 type InstantiationId = Ls[ResultId]
 type CtorCls = ClassLikeSymbol | Int
 type SelField = TermSymbol | Int
-type FunId = (funSym: Symbol, whichParamList: Int) | ResultId
+type FunId = (funSym: TermSymbol, whichParamList: Int) | ResultId
 type OriginId = ResultId | FunId
 
 
@@ -257,7 +257,7 @@ class Dtor(
 
 case class ConcreteId[A <: OriginId](exprId: A, instId: InstantiationId):
   def pp(using FlowAnalysis.State): Str = exprId match
-    case (sym: Symbol, idx: Int) => s"${sym.nme}#$idx"
+    case (sym: TermSymbol, idx: Int) => s"${sym.nme}#$idx"
     case r: ResultId => s"${r.getResult}"
 
 
@@ -811,7 +811,7 @@ class FlowConstraintsCollector(
     )(using cc: ConstraintsCollector): ProdStrat =
       def paramListFunId(whichParamList: Int): FunId =
         funLamId match
-          case (sym: Symbol, -1) => (sym, whichParamList)
+          case (sym: TermSymbol, -1) => (sym, whichParamList)
           case lambdaExprId: ResultId =>
             assert(whichParamList == 0)
             lambdaExprId
