@@ -455,6 +455,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
               case ScopedObject.Func(fun, _) => fun.params.size.min(1)
               case ScopedObject.Class(c, false) => c.paramsOpt.map(_.params.size).getOrElse(0).min(1)
               case ScopedObject.ClassCtor(c) => c.paramsOpt.map(_.params.size).getOrElse(0).min(1)
+              case _: ScopedObject.ValDef => return
               case _ => die
             
             // Partial call; the resulting object requiring access to the scope may linger

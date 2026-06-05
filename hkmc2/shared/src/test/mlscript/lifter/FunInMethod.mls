@@ -9,23 +9,4 @@ data class A(a) with
       a + b + c
     g
 A(1).f(1)(3)
-//│ FAILURE: Unexpected internal error
-//│ FAILURE LOCATION: thisError (Scope.scala:55)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Scope:
-//│     parentOrCfg = Left of Cfg:
-//│       escapeChars = true
-//│       useSuperscripts = false
-//│       includeZero = false
-//│       defaultName = "tmp"
-//│     curThis = S of S of globalThis:globalThis⁰
-//│     bindings = HashMap(tmp:tmp -> tmp, tmp:baseCall -> baseCall, class:Capture$f -> Capture$f, tmp:block$res -> block$res, member:g -> g, member:Capture$f -> Capture$f1, member:A -> A1, class:A -> A, tmp:runtime -> runtime, tmp:definitionMetadata -> definitionMetadata, member:Predef -> Predef, member:g$ -> g$, tmp:prettyPrint -> prettyPrint, tmp:Term -> Term, tmp:Block -> Block, tmp:option -> option, tmp:block$res -> block$res1)
-//│   _2 = class:A⁰
-//│ ═══[INTERNAL ERROR] `this` not in scope: class:A
-//│ > let g, A1, tmp, baseCall, Capture$f1, g$;try { g$ = function g$(a$, f$cap) {   runtime.checkArgs("g$", 2, true, arguments.length);   return (c) => {     return runtime.checkCall(g(a$, f$cap, c))   } }; g = function g(a$, f$cap, c) {   runtime.checkArgs("g", 3, true, arguments.length);   let tmp1;   f$cap.b$0 = 2;   tmp1 = ‹MISSING_THIS›.a + f$cap.b$0;   return tmp1 + c }; globalThis.Object.freeze(class Capture$f {   static {     Capture$f1 = this   }   constructor(b$0) {     this.b$0 = b$0;   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Capture$f"]; }); A1 = function A(a) {   return globalThis.Object.freeze(new A.class(a)); }; globalThis.Object.freeze(class A {   static {     A1.class = this   }   constructor(a) {     this.a = a;   }   get f$__checkNotMethod() { runtime.deboundMethod("f", "A"); }   f(b) {     runtime.checkArgs("f", 1, true, arguments.length);     let f$cap;     f$cap = new Capture$f1(b);     return runtime.checkCall(g$(this.a, f$cap))   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "A", ["a"]]; }); tmp = runtime.checkCall(A1(1)); baseCall = runtime.checkCall(tmp.f(1)); block$res1 = runtime.safeCall(baseCall(3));; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:267)
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:311)
-//│ ═══[RUNTIME ERROR] Expected: '6', got: 'undefined'
+//│ = 6

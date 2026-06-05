@@ -170,18 +170,8 @@ val foo =
     else n + f(n-1)
   f(10000)
 foo
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:239)
-//│ 	at: mlscript.utils.package$.die(package.scala:238)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$3.applyResult(UsedVarAnalyzer.scala:458)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$3.applyBlock(UsedVarAnalyzer.scala:335)
-//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:33)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$3.applyBlock(UsedVarAnalyzer.scala:360)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$3.<init>(UsedVarAnalyzer.scala:326)
-//│ 	at: hkmc2.UsedVarAnalyzer.go$2(UsedVarAnalyzer.scala:325)
-//│ 	at: hkmc2.UsedVarAnalyzer.hkmc2$UsedVarAnalyzer$$_$rec$1(UsedVarAnalyzer.scala:323)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$3.$anonfun$17(UsedVarAnalyzer.scala:353)
+//│ = 50005000
+//│ foo = 50005000
 
 :re
 fun foo() =

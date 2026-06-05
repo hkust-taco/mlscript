@@ -42,7 +42,8 @@ object ScopeData:
             case None => ()
           c.companion.map: comp =>
             objs ::= ScopedObject.Companion(comp, c)
-      case v: ValDefn => objs ::= ScopedObject.ValDef(v)
+      case v: ValDefn if !v.owner.isDefined => objs ::= ScopedObject.ValDef(v)
+      case _ => super.applyDefn(defn)
   type ScopedInfo = DefinitionSymbol[?] | LabelSymbol | ScopeUID | Unit
 
   given Ordering[ScopedInfo] with
