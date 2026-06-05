@@ -41,20 +41,6 @@ fun hello() =
 
 /// The following are related to first-class classes, instance checks, and private fields. ///
 
-:expect 1
-fun f(used1, unused1) =
-  fun g(g_arg) =
-    let used3 = 2
-    fun h = used3
-    used1 + h
-  let unused2 = 2
-  class Test(a) with
-    fun get() = used1
-  let foo = Test
-  foo(unused1)
-f(1, 2).get()
-//│ = 1
-
 
 :todo
 :w
