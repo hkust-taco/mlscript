@@ -285,12 +285,18 @@ str
 //│   let h22, handleBlock$$here, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
+//│     h22 = new Handler$h2$3();
+//│     handleBlock$$here = handleBlock$$2(h22);
+//│     runtime.resumeValue = runtime.enterHandleBlock(h22, handleBlock$$here);
+//│     if (runtime.curEffect === null) {
+//│       pc = 1;
+//│     } else {
+//│       return runtime.unwind(handleBlock$10, 1, null, null, null, 1, 0, 0)
+//│     }
 //│   } else {
 //│     pc = runtime.resumePc;
 //│     runtime.resumePc = -1;
-//│   }
-//│   switch (pc) {
-//│     case 0:
+//│     if (pc === 0) {
 //│       h22 = new Handler$h2$3();
 //│       handleBlock$$here = handleBlock$$2(h22);
 //│       runtime.resumeValue = runtime.enterHandleBlock(h22, handleBlock$$here);
@@ -299,8 +305,10 @@ str
 //│       } else {
 //│         return runtime.unwind(handleBlock$10, 1, null, null, null, 1, 0, 0)
 //│       }
-//│     case 1:
-//│       return runtime.resumeValue;
+//│     }
+//│   }
+//│   if (pc === 1) {
+//│     return runtime.resumeValue
 //│   }
 //│ });
 //│ str = "";
