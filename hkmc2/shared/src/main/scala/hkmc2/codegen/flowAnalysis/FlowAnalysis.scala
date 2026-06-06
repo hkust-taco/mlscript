@@ -119,7 +119,7 @@ object TrackableSelect:
     given fState: FlowAnalysis.State = pre.fState
     s match
     case sel@PossibleTrackableTupleSelect((ref@Value.SimpleRef(scrut)) -> ith) =>
-      pre.res.getEnclosingMatchesForSel(sel.uid).find(_._1.getReferredSymOpt === S(scrut)).flatMap:
+      pre.res.getEnclosingMatchesForSel(sel.uid).find(_._1.getReferredSymOpt.contains(scrut)).flatMap:
         case (_, Some(tupSize: Int)) => S(ref, ith, tupSize)
         case _ => N
     case TrackableFieldSelect(qual, field -> owner) =>
