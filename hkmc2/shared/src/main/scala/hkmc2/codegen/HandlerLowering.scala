@@ -86,10 +86,10 @@ object HandlerLowering:
   )
 
   object EffectfulResult:
-    def unapply(r: Result)(using Config) = r match
-      case c: Call if c.mayRaiseEffects => S(r)
-      case _: Instantiate if config.checkInstantiateEffect => S(r)
-      case _ => N
+    def unapply(r: Result)(using Config): Bool = r match
+      case c: Call if c.mayRaiseEffects => true
+      case _: Instantiate if config.checkInstantiateEffect => true
+      case _ => false
   
   type StateId = BigInt
 
@@ -230,7 +230,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             b // Prevents the recursion into applyResult
           case _ => super.applyBlock(b)
         override def applyResult(r: Result)(k: Result => Block) = r match
-          case EffectfulResult(r) =>
+          case r @ EffectfulResult() =>
             containsCall = true
             doNewEffectPartition(r, k(paths.resumeValue))
           case _ => super.applyResult(r)(k)
@@ -732,12 +732,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         .rest(rst)
     val topLevelTransform = new BlockTransformerShallow(SymbolSubst.Id):
       override def applyBlock(b: Block) = b match
-        case Assign(lhs, EffectfulResult(r), rest) =>
+        case Assign(lhs, r @ EffectfulResult(), rest) =>
           // Optimization to reuse lhs instead of fresh local
           effectCheck(lhs, r, applyBlock(rest))
         case _ => super.applyBlock(b)
       override def applyResult(r: Result)(k: Result => Block) = r match
-        case EffectfulResult(r) =>
+        case r @ EffectfulResult() =>
           // Fallback case, this may lead to unnecessary assignments if it is assign-like
           val l = freshTmp()
           Scoped(Set(l), effectCheck(l, r, k(l.asSimpleRef)))

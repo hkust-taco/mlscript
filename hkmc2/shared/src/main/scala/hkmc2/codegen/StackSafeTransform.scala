@@ -61,12 +61,12 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
         case _: FunDefn | _: ValDefn => super.applyDefn(defn)(k)
 
       override def applyBlock(b: Block): Block = b match
-        case Return(HandlerLowering.EffectfulResult(res)) =>
+        case Return(res @ HandlerLowering.EffectfulResult()) =>
           val tmp = TempSymbol(N, "res")
           super.applyResult(res): res =>
             Scoped(Set.single(tmp), extract(res, true, Return(_), tmp, curDepth))
         // Optimization to avoid generation of unnecessary variables
-        case Assign(lhs, HandlerLowering.EffectfulResult(r), rest) =>
+        case Assign(lhs, r @ HandlerLowering.EffectfulResult(), rest) =>
           super.applyResult(r): r =>
             extract(r, false, _ => applyBlock(rest), lhs, curDepth)
         case _ => super.applyBlock(b)
@@ -75,7 +75,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
       
       override def applyResult(r: Result)(k: Result => Block): Block =
         r match
-        case HandlerLowering.EffectfulResult(r) =>
+        case r @ HandlerLowering.EffectfulResult() =>
           val tmp = TempSymbol(N, "res")
           Scoped(Set.single(tmp), extract(r, false, k, tmp, curDepth))
         case _ => super.applyResult(r)(k)
