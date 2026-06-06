@@ -985,10 +985,8 @@ class BlockSimplifier
     def getCtorShape(path: Path): Opt[ClassLikeSymbol] =
       path.targetSymbol.flatMap:
         case ccs: ClassCtorSymbol => ccs.owner
-        // Imported constructor functions currently lose the more precise
-        // `ClassCtorSymbol` subtype, but retain their companion class.
-        case ts: TermSymbol => ts.defn.flatMap(_.companionClass)
-        case sym => sym.asClsOrMod
+        case sym: ClassLikeSymbol => S(sym)
+        case _ => N
     
     def isSaturatedClassCall(sym: ClassSymbol, argss: NELs[Ls[Arg]]): Bool =
       sym.irClsLikeDefn
