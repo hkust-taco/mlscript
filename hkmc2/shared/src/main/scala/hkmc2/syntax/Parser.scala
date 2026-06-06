@@ -3,7 +3,7 @@ package syntax
 
 import scala.util.boundary
 import sourcecode.{Name, Line}
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.Message._
 import BracketKind._
 

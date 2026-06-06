@@ -1,6 +1,6 @@
-package mlscript.utils
+package hkmc2.utils
 
-import shorthands._
+import shorthands.*
 
 abstract class Box[+A] {
   def force: Opt[A]

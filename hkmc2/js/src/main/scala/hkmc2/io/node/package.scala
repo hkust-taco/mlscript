@@ -4,7 +4,7 @@ package io
 import scala.scalajs.js
 import scala.scalajs.js.annotation._
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 
 /**
   * The package object contains facades for Node.js modules. So, it can be used

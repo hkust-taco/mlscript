@@ -5,7 +5,7 @@ package invalml
 import scala.collection.mutable.{HashSet, HashMap, ListBuffer}
 import scala.annotation.tailrec
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import Message.MessageContext

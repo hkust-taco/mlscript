@@ -1,6 +1,6 @@
 package hkmc2.io
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 import collection.mutable.Map as MutMap
 import scala.scalajs.js, js.annotation.JSExport, js.JSConverters.*
 import scala.scalajs.js.annotation.JSExportTopLevel

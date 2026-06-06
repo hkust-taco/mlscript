@@ -1,7 +1,7 @@
 package hkmc2
 package io
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 
 private[io] class JavaFileSystem extends FileSystem:
   def read(path: Path): String = os.read(unwrap(path))

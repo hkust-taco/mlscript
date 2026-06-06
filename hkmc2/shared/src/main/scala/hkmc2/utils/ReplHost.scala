@@ -2,7 +2,7 @@ package hkmc2
 
 import java.io.{BufferedWriter, BufferedReader, InputStreamReader, OutputStreamWriter}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 /**

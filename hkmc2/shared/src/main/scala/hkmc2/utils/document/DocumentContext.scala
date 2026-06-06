@@ -5,7 +5,7 @@ import collection.immutable.ArraySeq
 import collection.immutable.ArraySeq.unsafeWrapArray
 import util.matching.Regex
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import Document._

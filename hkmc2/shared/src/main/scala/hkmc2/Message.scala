@@ -1,7 +1,7 @@
 package hkmc2
 
 import scala.language.implicitConversions
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 
 final case class Message(bits: Ls[Message.Bit]):
   def show: Str =

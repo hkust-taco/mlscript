@@ -2,7 +2,7 @@ package hkmc2.codegen
 
 import scala.collection.mutable.{Map => MutMap}
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 
 import hkmc2._
 import hkmc2.Message.MessageContext

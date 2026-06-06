@@ -4,7 +4,7 @@ package codegen
 import scala.annotation.tailrec
 import scala.collection.mutable.{Map as MutMap, Set as MutSet}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.codegen.flowAnalysis.*

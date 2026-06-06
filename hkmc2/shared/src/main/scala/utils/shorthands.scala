@@ -1,9 +1,9 @@
-package mlscript.utils
+package hkmc2.utils
 
 import scala.annotation.showAsInfix
-import scala.util.chaining._
+import scala.util.chaining.*
 
-object shorthands {
+object shorthands:
   
   /** We have Int instead of Integer; why not Bool instead of Boolean? */
   type Bool = Boolean
@@ -51,12 +51,9 @@ object shorthands {
   
   @showAsInfix
   type -> [+A,+B] = (A,B)
-  object -> {
+  object -> :
     def unapply[A, B](ab: (A, B)): Some[(A, B)] = Some(ab)
-  }
-  implicit class Tuple2Helper[A,B](private val self: (A,B)) extends AnyVal {
+  implicit class Tuple2Helper[A,B](private val self: (A,B)) extends AnyVal:
     @inline def mapFirst[C](f: A => C): (C,B) = (self._1 pipe f, self._2)
     @inline def mapSecond[C](f: B => C): (A,C) = (self._1, self._2 pipe f)
-  }
   
-}

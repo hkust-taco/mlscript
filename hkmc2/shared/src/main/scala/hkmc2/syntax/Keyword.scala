@@ -2,7 +2,7 @@ package hkmc2
 package syntax
 
 import collection.mutable
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 
 class Keyword(

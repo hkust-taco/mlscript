@@ -4,7 +4,7 @@ package flowAnalysis
 
 import scala.jdk.CollectionConverters.MapHasAsScala
 import utils.*
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.Message.MessageContext
 import semantics.*
 import syntax.Tree

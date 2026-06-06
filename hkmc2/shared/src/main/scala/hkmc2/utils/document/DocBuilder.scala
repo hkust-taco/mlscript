@@ -1,7 +1,7 @@
 package hkmc2
 package document
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import scala.collection._

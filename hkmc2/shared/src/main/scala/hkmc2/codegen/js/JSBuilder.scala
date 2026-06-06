@@ -2,7 +2,7 @@ package hkmc2
 package codegen
 package js
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 import document.*
 import document.Document.{braced, bracketed}

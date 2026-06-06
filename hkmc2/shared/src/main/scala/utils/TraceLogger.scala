@@ -1,7 +1,7 @@
 package hkmc2
 package utils
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 
 type TL = TraceLogger

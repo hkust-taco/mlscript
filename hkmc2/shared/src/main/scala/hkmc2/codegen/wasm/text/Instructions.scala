@@ -1,7 +1,7 @@
 package hkmc2
 package codegen.wasm.text
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 import document.*
 

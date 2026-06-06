@@ -1,6 +1,6 @@
 package hkmc2
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 import hkmc2.semantics.*
 import hkmc2.invalml.*

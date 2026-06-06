@@ -1,4 +1,4 @@
-package mlscript.utils
+package hkmc2.utils
 
 import scala.annotation.tailrec
 import scala.collection.immutable.SortedMap

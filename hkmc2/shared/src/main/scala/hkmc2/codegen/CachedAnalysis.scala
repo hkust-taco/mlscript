@@ -3,7 +3,7 @@ package codegen
 
 import scala.collection.mutable.{Map => MutMap, Set => MutSet}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 

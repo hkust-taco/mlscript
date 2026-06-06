@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 import sourcecode.Line
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import hkmc2.Message.MessageContext

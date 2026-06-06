@@ -1,4 +1,4 @@
-package mlscript
+package hkmc2
 
 import utils.shorthands._
 import scala.collection.mutable

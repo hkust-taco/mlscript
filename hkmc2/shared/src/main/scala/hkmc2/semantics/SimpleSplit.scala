@@ -1,7 +1,7 @@
 package hkmc2
 package semantics
 
-import mlscript.utils.*, shorthands.*, syntax.*, Tree.{BoolLit, Keywrd}
+import hkmc2.utils.*, shorthands.*, syntax.*, Tree.{BoolLit, Keywrd}
 import Keyword.{`do`, `else`, `then`}, utils.TL, Elaborator.{Ctx, State}
 
 /**
