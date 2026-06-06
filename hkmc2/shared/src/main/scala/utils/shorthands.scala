@@ -8,10 +8,6 @@ object shorthands {
   /** We have Int instead of Integer; why not Bool instead of Boolean? */
   type Bool = Boolean
   
-  /** Dotty syntax for intersection types */
-  @showAsInfix
-  type & [+A,+B] = A with B
-  
   type Ls[+A] = List[A]
   val Ls: List.type = List
   

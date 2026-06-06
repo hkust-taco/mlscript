@@ -377,7 +377,8 @@ abstract class DiffMaker:
         processBlock(origin)
         
       catch
-        case oh_noes: ThreadDeath => throw oh_noes
+        case oh_noes: ThreadDeath @annotation.nowarn // ThreadDeath is deprecated
+          => throw oh_noes
         case err: Throwable =>
           if !tolerateErrors then
             failures += allLines.size - lines.size + 1

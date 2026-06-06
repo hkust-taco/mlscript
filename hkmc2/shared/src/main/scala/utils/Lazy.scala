@@ -26,7 +26,7 @@ abstract class Lazy[A] extends Box[A] {
   def isEmpty: Bool = _value.isEmpty
   private var _isComputing = false
   private var _value: Opt[A] = N
-  def force = if (_isComputing) N else S(force_!)
+  def force = if _isComputing then N else S(force_!)
   def force_! = {
     assert(!_isComputing)
     _value.getOrElse(_compute)

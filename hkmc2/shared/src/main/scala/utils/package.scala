@@ -14,12 +14,12 @@ package object utils {
   implicit final class AnyOps[A](self: A) {
     def ===(other: A): Bool = self == other
     def =/=(other: A): Bool = self != other
-    def is(other: A): Bool = self.asInstanceOf[AnyRef] eq other.asInstanceOf[AnyRef]
-    def isnt(other: AnyRef): Bool = !(self.asInstanceOf[AnyRef] eq other)
+    infix def is(other: A): Bool = self.asInstanceOf[AnyRef] eq other.asInstanceOf[AnyRef]
+    infix def isnt(other: AnyRef): Bool = !(self.asInstanceOf[AnyRef] eq other)
     /** An alternative to === when in ScalaTest, which shadows our === */
     def =:=(other: A): Bool = self == other
-    def in(xs: A => Bool): Bool = xs(self)
-    def in(xs: Seq[_ >: A]): Bool = xs.exists(_ === self)
+    infix def in(xs: A => Bool): Bool = xs(self)
+    infix def in(xs: Seq[? >: A]): Bool = xs.exists(_ === self)
   }
 
   implicit class IntOps(private val self: Int) extends AnyVal {
@@ -44,7 +44,7 @@ package object utils {
     import collection.mutable
     def splitSane(sep: Char): mutable.ArrayBuffer[Str] = {
       val buf = mutable.ArrayBuffer(new StringBuilder)
-      self.foreach { c => if (c === sep) buf += new StringBuilder else buf.last append c; () }
+      self.foreach { c => if c === sep then buf += new StringBuilder else buf.last append c; () }
       buf.map(_.toString)
     }
     def mapLines(f: String => String): String = splitSane('\n') map f mkString "\n"
@@ -56,17 +56,17 @@ package object utils {
     }
     def truncate(maxChars: Int, replace: String): String = {
       val newStr = self.take(maxChars)
-      if (newStr.length < self.length) newStr + replace
+      if newStr.length < self.length then newStr + replace
       else newStr
     }
     def isCapitalized: Bool = self.nonEmpty && self.head.isUpper
     def isUncapitalized: Bool = self.nonEmpty && self.head.isLower
     def decapitalize: String =
-      if (self.length === 0 || !self.charAt(0).isUpper) self
+      if self.length === 0 || !self.charAt(0).isUpper then self
       else self.updated(0, self.charAt(0).toLower)
     def pluralize(quantity: Int, inclusive: Boolean = false, es: Boolean = false): String =
-      (if (inclusive) quantity.toString + " " else "") +
-        (if (quantity > 1 || quantity === 0) self + (if (es) "es" else "s") else self)
+      (if inclusive then quantity.toString + " " else "") +
+        (if quantity > 1 || quantity === 0 then self + (if es then "es" else "s") else self)
     @SuppressWarnings(Array("org.wartremover.warts.Equals"))
     def ===(other: String): Bool = self.equals(other)
   }
@@ -76,7 +76,7 @@ package object utils {
       sep: String = "", start: String = "", end: String = "", els: String = ""
     ): String = {
       val ite = self.iterator
-      if (ite.nonEmpty) ite.mkString(start, sep, end) else els
+      if ite.nonEmpty then ite.mkString(start, sep, end) else els
     }
     def lnIndent(pre: String = "\t"): Str =
       self.iterator.map("\n" + _.toString.indent(pre)).mkString
@@ -154,8 +154,8 @@ package object utils {
     @inline def matches(pf: PartialFunction[A, Bool]): Bool =
       pf.lift(self).contains(true)
     
-    @inline def optionIf(cond: A => Bool): Option[A] = if (cond(self)) Some(self) else None
-    @inline def optionUnless(cond: A => Bool): Option[A] = if (!cond(self)) Some(self) else None
+    @inline def optionIf(cond: A => Bool): Option[A] = if cond(self) then Some(self) else None
+    @inline def optionUnless(cond: A => Bool): Option[A] = if !cond(self) then Some(self) else None
     
     /** 
      * A helper to write left-associative applications, mainly used to get rid of paren hell
@@ -171,18 +171,18 @@ package object utils {
   
   implicit final class LazyGenHelper[A](self: => A) {
     
-    @inline def optionIf(cond: Bool): Option[A] = if (cond) Some(self) else None
+    @inline def optionIf(cond: Bool): Option[A] = if cond then Some(self) else None
     
-    @inline def optionUnless(cond: Bool): Option[A] = if (!cond) Some(self) else None
+    @inline def optionUnless(cond: Bool): Option[A] = if !cond then Some(self) else None
     
   }
   
   implicit final class ListHelpers[A](ls: Ls[A]) {
     def filterOutConsecutive(f: (A, A) => Bool = _ === _): Ls[A] =
-      ls.foldRight[List[A]](Nil) { case (x, xs) => if (xs.isEmpty || !f(xs.head, x)) x :: xs else xs }
-    def tailOption: Opt[Ls[A]] = if (ls.isEmpty) N else S(ls.tail)
-    def headOr(els: => A): A = if (ls.isEmpty) els else ls.head
-    def tailOr(els: => Ls[A]): Ls[A] = if (ls.isEmpty) els else ls.tail
+      ls.foldRight[List[A]](Nil) { case (x, xs) => if xs.isEmpty || !f(xs.head, x) then x :: xs else xs }
+    def tailOption: Opt[Ls[A]] = if ls.isEmpty then N else S(ls.tail)
+    def headOr(els: => A): A = if ls.isEmpty then els else ls.head
+    def tailOr(els: => Ls[A]): Ls[A] = if ls.isEmpty then els else ls.tail
     def mapHead(f: A => A): Ls[A] = ls match {
       case h :: t => f(h) :: t
       case Nil => Nil
@@ -195,13 +195,13 @@ package object utils {
   
   implicit class MutSetHelpers[A](self: mutable.Set[A]) {
     def setAndIfUnset(x: A)(thunk: => Unit): Unit = {
-      if (!self.contains(x)) {
+      if !self.contains(x) then {
         self += x
         thunk
       }
     }
     def setAnd[R](x: A)(ifSet: => R)(ifUnset: => R): R = {
-      if (self.contains(x)) ifSet else {
+      if self.contains(x) then ifSet else {
         self += x
         ifUnset
       }
@@ -234,7 +234,7 @@ package object utils {
   
   def TODO(msg: Any): Nothing = throw new NotImplementedError(
     msg.toString + s" (of class ${msg.getClass().getSimpleName()})")
-  def TODO(msg: Any, cond: Bool): Unit = if (cond) TODO(msg)
+  def TODO(msg: Any, cond: Bool): Unit = if cond then TODO(msg)
   def die: Nothing = lastWords("Program reached an unexpected state.")
   def lastWords(msg: String): Nothing = throw new Exception(s"Internal Error: $msg")
   def wat(msg: String, obj: Any): Nothing = lastWords(s"$msg ($obj)")
@@ -253,7 +253,7 @@ package object utils {
   def closeOver[A](xs: Set[A])(f: A => Set[A]): Set[A] =
     closeOverCached(Set.empty, xs)(f)
   def closeOverCached[A](done: Set[A], todo: Set[A])(f: A => Set[A]): Set[A] =
-    if (todo.isEmpty) done else {
+    if todo.isEmpty then done else {
       val newDone = done ++ todo
       closeOverCached(newDone, todo.flatMap(f) -- newDone)(f)
     }

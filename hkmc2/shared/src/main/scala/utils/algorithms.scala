@@ -18,8 +18,8 @@ object algorithms {
     @tailrec
     def sort(toPreds: SortedMap[A, Set[A]], done: Iterable[A]): Iterable[A] = {
       val (noPreds, hasPreds) = toPreds.partition { _._2.isEmpty }
-      if (noPreds.isEmpty) {
-        if (hasPreds.isEmpty) done else throw new CyclicGraphError(hasPreds.toString)
+      if noPreds.isEmpty then {
+        if hasPreds.isEmpty then done else throw new CyclicGraphError(hasPreds.toString)
       } else {
         val found = noPreds.map { _._1 }
         sort(SortedMap.from(hasPreds.view.mapValues(_ -- found)), done ++ found)
@@ -52,8 +52,8 @@ object algorithms {
     // pre-process: assign each node an id
     val nodesUniq = {
       val seen = collection.mutable.LinkedHashSet.empty[A]
-      for ((a, b) <- edges) { seen.add(a); seen.add(b) }
-      for (n <- nodes) seen.add(n)
+      for (a, b) <- edges do { seen.add(a); seen.add(b) }
+      for n <- nodes do seen.add(n)
       seen.toList
     }
     val nodesN = nodesUniq.zipWithIndex.map { case (node, idx) => SccNode(node, idx) }
@@ -82,20 +82,20 @@ object algorithms {
       node.visited = true
       stack = node :: stack
       i += 1
-      for (n <- neighbours(node.id)) {
-        if (!n.visited) {
+      for n <- neighbours(node.id) do {
+        if !n.visited then {
           dfs(n, depth + 1)
           node.lowlink = n.lowlink.min(node.lowlink)
-        } else if (!n.onStack) {
+        } else if !n.onStack then {
           node.lowlink = n.num.min(node.lowlink)
         } 
       }
-      if (node.lowlink == node.num) {
+      if node.lowlink == node.num then {
         var scc: List[A] = List.empty
         var cur = stack.head
         stack = stack.tail
         cur.onStack = true
-        while (cur.id != node.id) {
+        while cur.id != node.id do {
           scc = cur.node :: scc
           cur = stack.head
           stack = stack.tail
@@ -106,8 +106,8 @@ object algorithms {
       }
     }
 
-    for (n <- nodesN) {
-      if (!n.visited) dfs(n)
+    for n <- nodesN do {
+      if !n.visited then dfs(n)
     }
     sccs
   }
@@ -141,10 +141,10 @@ object algorithms {
     val sccs = partitionScc(edges, nodes)
     val withIdx = sccs.zipWithIndex.map(_.swap).toMap
     val lookup = (
-      for {
+      for
         (id, scc) <- withIdx
         node <- scc
-      } yield node -> id
+      yield node -> id
     ).toMap
 
     val notInSccEdges = edges.map {
