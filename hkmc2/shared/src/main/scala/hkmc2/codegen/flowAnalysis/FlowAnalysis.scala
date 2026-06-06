@@ -111,7 +111,7 @@ object PossibleTrackableTupleSelect:
     case Call(
       p,
       (Arg(N, ref@Value.SimpleRef(scrut)) :: Arg(N, Value.Lit(Tree.IntLit(n))) :: Nil) :: Nil
-    ) if p.targetSymbol === S(eState.tupleGetSymbol) => S(ref -> n.toInt)
+    ) if p.targetSymbol.contains(eState.tupleGetSymbol) => S(ref -> n.toInt)
     case _ => N
 
 object TrackableSelect:
