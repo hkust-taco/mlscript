@@ -20,7 +20,7 @@ C()
 :sir
 let f = new C
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰; @private define f⁰ as fun f¹() { return new C⁰() }; set f² = f¹; end
+//│ let f; @private define f as fun f⁰() { return new C⁰() }; set f¹ = f⁰; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = fun f
 

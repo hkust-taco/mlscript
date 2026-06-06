@@ -433,18 +433,18 @@ fun main =
   test
 main
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let lambda⁰;
+//│ let lambda;
 //│ define main⁸ as fun main⁹() {
-//│   let lambda;
+//│   let lambda1;
 //│   @private
-//│   define lambda as fun lambda¹(x) {
+//│   define lambda1 as fun lambda⁰(x) {
 //│     return x
 //│   };
-//│   return lambda¹
+//│   return lambda⁰
 //│ };
 //│ @private
-//│ define lambda⁰ as fun lambda²(x) { return x };
-//│ return lambda²
+//│ define lambda as fun lambda¹(x) { return x };
+//│ return lambda¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -454,18 +454,18 @@ fun main =
   test
 main
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let test⁰;
+//│ let test;
 //│ define main¹⁰ as fun main¹¹() {
-//│   let test;
+//│   let test1;
 //│   @private
-//│   define test as fun test¹(x) {
+//│   define test1 as fun test⁰(x) {
 //│     return x
 //│   };
-//│   return test¹
+//│   return test⁰
 //│ };
 //│ @private
-//│ define test⁰ as fun test²(x) { return x };
-//│ return test²
+//│ define test as fun test¹(x) { return x };
+//│ return test¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun test
 

@@ -75,9 +75,9 @@ case
   []         then print("empty")
   [x, ...xs] then print("non-empty", x)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda⁰;
+//│ let lambda;
 //│ @private
-//│ define lambda⁰ as fun lambda¹(caseScrut) {
+//│ define lambda as fun lambda⁰(caseScrut) {
 //│   let x, xs, middleElements, element0$;
 //│   match caseScrut
 //│     Array(0) =>
@@ -92,7 +92,7 @@ case
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ return lambda¹
+//│ return lambda⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
@@ -124,9 +124,9 @@ let x = 1
 let x = if x == 0 then 1 else 0
 let x = x + 1
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let x⁴, x⁵, scrut, tmp;
-//│ set x⁴ = 1;
-//│ set scrut = Predef⁰.equals⁰(x⁴, 0);
+//│ let x, x1, scrut, tmp;
+//│ set x = 1;
+//│ set scrut = Predef⁰.equals⁰(x, 0);
 //│ match scrut
 //│   true =>
 //│     set tmp = 1;
@@ -134,8 +134,8 @@ let x = x + 1
 //│   else
 //│     set tmp = 0;
 //│     end
-//│ set x⁵ = tmp;
-//│ set x⁶ = +⁰(x⁵, 1);
+//│ set x1 = tmp;
+//│ set x⁴ = +⁰(x1, 1);
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ x = 1
@@ -146,8 +146,8 @@ C(123)
 new C(123)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define C⁰ as class C² {
-//│   private val x⁷;
-//│   constructor C¹(x) { set C².this.x⁷ = x; end }
+//│   private val x⁵;
+//│   constructor C¹(x) { set C².this.x⁵ = x; end }
 //│ };
 //│ do C¹(123);
 //│ return new C²(123)
@@ -165,14 +165,14 @@ A.x
 //│ define A⁰ as class A¹
 //│ module A² {
 //│   private val y⁰;
-//│   val x⁸;
+//│   val x⁶;
 //│   constructor {
-//│     define x⁸ as val x⁹ = 2;
+//│     define x⁶ as val x⁷ = 2;
 //│     set A².this.y⁰ = 3;
 //│     define C³ as class C⁵ {
-//│       private val x¹⁰;
+//│       private val x⁸;
 //│       constructor C⁴(x) {
-//│         set C⁵.this.x¹⁰ = x;
+//│         set C⁵.this.x⁸ = x;
 //│         end
 //│       }
 //│       method f⁴ = fun f⁵(x1) {
@@ -183,7 +183,7 @@ A.x
 //│   }
 //│   method g⁰ = fun g¹(x) { return 3 }
 //│ };
-//│ return A².x⁹
+//│ return A².x⁷
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
@@ -192,8 +192,8 @@ module A with
 A.x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define A³ as class A⁴
-//│ module A⁵ { val x¹¹; constructor { define x¹¹ as val x¹² = 3; end } };
-//│ return A⁵.x¹²
+//│ module A⁵ { val x⁹; constructor { define x⁹ as val x¹⁰ = 3; end } };
+//│ return A⁵.x¹⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
@@ -203,9 +203,9 @@ class B(x) extends A with
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define A⁶ as class A⁷;
 //│ define B⁰ as class extends A⁷ B² {
-//│   private val x¹³;
+//│   private val x¹¹;
 //│   val y¹;
-//│   constructor B¹(x) { do super⁰(); end; set B².this.x¹³ = x; define y¹ as val y² = 2; end }
+//│   constructor B¹(x) { do super⁰(); end; set B².this.x¹¹ = x; define y¹ as val y² = 2; end }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -238,9 +238,9 @@ let x = [1, 2, 3]
 x.0
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let selRes;
-//│ set x¹⁴ = [1, 2, 3];
-//│ set selRes = x¹⁴.0﹖;
-//│ do x¹⁴.0$__checkNotMethod﹖;
+//│ set x¹² = [1, 2, 3];
+//│ set selRes = x¹².0﹖;
+//│ do x¹².0$__checkNotMethod﹖;
 //│ match selRes
 //│   undefined =>
 //│     throw new globalThis⁰.Error﹖("Access to required field '0' yielded 'undefined'")
@@ -254,7 +254,7 @@ x.0
 let y = { x: 2 }
 y!x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let x¹⁵; set x¹⁵ = 2; set y³ = { "x": x¹⁵ }; return y³!"x"
+//│ let x; set x = 2; set y³ = { "x": x }; return y³!"x"
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 //│ y = {x: 2}

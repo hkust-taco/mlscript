@@ -111,22 +111,22 @@ f(1, 2)
 f(1, 2, 3)
 f(1, 2, 3, 4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let c⁰, c¹, c²;
-//│ define f¹² as fun f¹³(a, b, ...c) {
+//│ let c, c1, c2;
+//│ define f¹² as fun f¹³(a, b, ...c3) {
 //│   let tmp;
 //│   set tmp = +⁰(a, b);
 //│   do Predef⁰.print⁰(tmp);
-//│   return Predef⁰.print⁰(c)
+//│   return Predef⁰.print⁰(c3)
 //│ };
-//│ set c⁰ = mut [];
+//│ set c = mut [];
 //│ do Predef⁰.print⁰(3);
-//│ do Predef⁰.print⁰(c⁰);
-//│ set c¹ = mut [3];
+//│ do Predef⁰.print⁰(c);
+//│ set c1 = mut [3];
 //│ do Predef⁰.print⁰(3);
-//│ do Predef⁰.print⁰(c¹);
-//│ set c² = mut [3, 4];
+//│ do Predef⁰.print⁰(c1);
+//│ set c2 = mut [3, 4];
 //│ do Predef⁰.print⁰(3);
-//│ return Predef⁰.print⁰(c²)
+//│ return Predef⁰.print⁰(c2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 3
 //│ > []
@@ -237,23 +237,23 @@ fun foo(x)(y) =
   lam
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let lam$⁰, foo$worker⁰;
+//│ let lam$, foo$worker;
 //│ @inline @private
-//│ define lam$⁰ as fun lam$¹(x, y)(z) {
+//│ define lam$ as fun lam$⁰(x, y)(z) {
 //│   let tmp;
 //│   set tmp = +⁰(x, y);
 //│   return +⁰(tmp, z)
 //│ };
 //│ @inline
 //│ define foo⁰ as fun foo¹(x)(y) {
-//│   return foo$worker¹(x, y)
+//│   return foo$worker⁰(x, y)
 //│ };
-//│ define foo$worker⁰ as fun foo$worker¹(x, y) {
+//│ define foo$worker as fun foo$worker⁰(x, y) {
 //│   let inlinedVal, tmp;
 //│   set tmp = +⁰(x, y);
 //│   set inlinedVal = +⁰(tmp, 4);
 //│   do Predef⁰.print⁰(inlinedVal);
-//│   return lam$¹(x, y)
+//│   return lam$⁰(x, y)
 //│ };
 //│ do Predef⁰.print⁰(7);
 //│ return 6
@@ -346,17 +346,17 @@ fun g() =
   Foo()
 makeFoo()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let Foo⁰;
+//│ let Foo;
 //│ @inline
 //│ define makeFoo⁰ as fun makeFoo¹() {
-//│   let Foo;
-//│   define Foo as class Foo² {
-//│     constructor Foo¹
+//│   let Foo1;
+//│   define Foo1 as class Foo¹ {
+//│     constructor Foo⁰
 //│   };
-//│   return Foo¹()
+//│   return Foo⁰()
 //│ };
-//│ define Foo⁰ as class Foo⁴ { constructor Foo³ };
-//│ return Foo³()
+//│ define Foo as class Foo³ { constructor Foo² };
+//│ return Foo²()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Foo()
 
@@ -373,22 +373,22 @@ scope.locally of (
   test()
 )
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let A³, B⁰, lambda⁰;
-//│ define A³ as class A⁴
-//│ module A⁵ {
+//│ let A, B, lambda;
+//│ define A as class A³
+//│ module A⁴ {
 //│   method foo² = fun foo³ {
-//│     return B¹.bar⁰()
+//│     return B⁰.bar⁰()
 //│   }
 //│ };
-//│ define B⁰ as class B²
-//│ module B¹ {
+//│ define B as class B¹
+//│ module B⁰ {
 //│   method bar¹ = fun bar⁰() {
-//│     return A⁵.foo³
+//│     return A⁴.foo³
 //│   }
 //│ };
 //│ @private
-//│ define lambda⁰ as fun lambda¹() { return A⁵.foo³ };
-//│ return lambda¹
+//│ define lambda as fun lambda⁰() { return A⁴.foo³ };
+//│ return lambda⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 

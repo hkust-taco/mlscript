@@ -179,10 +179,10 @@ result
 :effectHandlers
 fun f() = case [...x, y, z] then x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let lambda⁰;
+//│ let lambda;
 //│ do runtime⁰.resetEffects﹖();
 //│ @private
-//│ define lambda⁰ as fun lambda¹(caseScrut) {
+//│ define lambda as fun lambda⁰(caseScrut) {
 //│   let middleElements;
 //│   match caseScrut
 //│     Array(2+) =>
@@ -194,7 +194,7 @@ fun f() = case [...x, y, z] then x
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ define f⁰ as fun f¹() { return lambda¹ };
+//│ define f⁰ as fun f¹() { return lambda⁰ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

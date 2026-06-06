@@ -14,12 +14,12 @@ fun foo(x)(y) =
   x + y + x + y
 foo(1)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo$worker⁰;
+//│ let foo$worker;
 //│ @inline
 //│ define foo⁰ as fun foo¹(x)(y) {
-//│   return foo$worker¹(x, y)
+//│   return foo$worker⁰(x, y)
 //│ };
-//│ define foo$worker⁰ as fun foo$worker¹(x, y) {
+//│ define foo$worker as fun foo$worker⁰(x, y) {
 //│   let tmp, tmp1;
 //│   set tmp = +⁰(x, y);
 //│   set tmp1 = +⁰(tmp, x);

@@ -254,10 +254,10 @@ f(Pair(1, 2))
 :stackSafe 100
 fun f() = case [...x, y, z] then x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda⁰;
+//│ let lambda;
 //│ do runtime⁰.resetEffects﹖();
 //│ @private
-//│ define lambda⁰ as fun lambda¹(caseScrut) {
+//│ define lambda as fun lambda⁰(caseScrut) {
 //│   let stackDelayRes;
 //│   set runtime⁰.stackDepth﹖ = +⁰(runtime⁰.stackDepth﹖, 1);
 //│   set stackDelayRes = runtime⁰.checkDepth﹖();
@@ -277,10 +277,10 @@ fun f() = case [...x, y, z] then x
 //│           throw new globalThis⁰.Error⁰("match error")
 //│       end
 //│     else
-//│       return runtime⁰.unwind﹖(lambda¹, -1, null, null, null, 1, 1, caseScrut, 0)
+//│       return runtime⁰.unwind﹖(lambda⁰, -1, null, null, null, 1, 1, caseScrut, 0)
 //│   end
 //│ };
-//│ define f²¹ as fun f²²() { return lambda¹ };
+//│ define f²¹ as fun f²²() { return lambda⁰ };
 //│ end
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
