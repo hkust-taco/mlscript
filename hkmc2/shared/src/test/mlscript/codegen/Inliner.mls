@@ -370,3 +370,48 @@ makeFoo()
 //│ = Foo()
 
 
+// * Notice that the symbols are wired correctly
+:soir
+scope.locally of (
+  @inline private fun test() =
+    module A with
+      fun foo = B.bar()
+    module B with
+      fun bar() = A.foo
+    () => A.foo
+  test()
+)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let A³, B⁰, lambda⁰;
+//│ define A³ as class A⁴
+//│ module A⁵ {
+//│   method foo² = fun foo³ {
+//│     return B¹.bar⁰()
+//│   }
+//│ };
+//│ define B⁰ as class B²
+//│ module B¹ {
+//│   method bar¹ = fun bar⁰() {
+//│     return A⁵.foo³
+//│   }
+//│ };
+//│ @private
+//│ define lambda⁰ as fun lambda¹() { return A⁵.foo³ };
+//│ return lambda¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+
+:expect [124, fun]
+@inline fun test() =
+  module A with
+    fun foo = B.bar(123)
+  module B with
+    fun bar(x) = [x + 1, () => A.foo]
+  () => A.foo
+let x = test()()
+x.1()
+//│ = [124, fun]
+//│ x = [124, fun]
+
+

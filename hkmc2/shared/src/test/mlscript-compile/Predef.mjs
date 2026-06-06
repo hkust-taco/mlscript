@@ -5,7 +5,46 @@ import RuntimeJS from "./RuntimeJS.mjs";
 import Runtime from "./Runtime.mjs";
 import Rendering from "./Rendering.mjs";
 import Term from "./Term.mjs";
-let Predef1;
+let Predef1, lambda, lambda1, lambda$, lambda$1, lambda$2;
+lambda$2 = (undefined, function (Predef2) {
+  return (acc, x) => {
+    return lambda1(Predef2, acc, x)
+  }
+});
+lambda1 = (undefined, function (Predef2, acc, x) {
+  let tmp;
+  if (typeof x === 'string') {
+    tmp = true;
+  } else {
+    tmp = false;
+  }
+  Predef2.check(tmp);
+  return acc + x
+});
+lambda$1 = (undefined, function (Predef2, b) {
+  return (a, i) => {
+    let tmp;
+    tmp = runtime.safeCall(b.at(i));
+    return Predef2.equals(a, tmp)
+  }
+});
+lambda$ = (undefined, function (Predef2, a, b) {
+  return (field) => {
+    return lambda(Predef2, a, b, field)
+  }
+});
+lambda = (undefined, function (Predef2, a, b, field) {
+  let scrut, scrut1;
+  scrut = field !== null;
+  if (scrut === true) {
+    scrut1 = Predef2.equals(a[field], b[field]);
+    if (scrut1 === true) {
+      return true
+    }
+    return false;
+  }
+  return false;
+});
 (class Predef {
   static {
     Predef1 = this
@@ -151,7 +190,7 @@ let Predef1;
     }
   }
   static equals(a, b) {
-    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, lambda, tmp, tmp1, lambda1;
+    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, tmp, tmp1, lambda$here, lambda$here1;
     scrut = a === b;
     if (scrut === true) {
       return true
@@ -160,12 +199,8 @@ let Predef1;
       if (b instanceof globalThis.Array) {
         scrut1 = a.length === b.length;
         if (scrut1 === true) {
-          lambda1 = (undefined, function (a1, i) {
-            let tmp2;
-            tmp2 = runtime.safeCall(b.at(i));
-            return Predef.equals(a1, tmp2)
-          });
-          return runtime.safeCall(a.every(lambda1))
+          lambda$here = lambda$1(Predef, b);
+          return runtime.safeCall(a.every(lambda$here))
         }
       }
     }
@@ -185,19 +220,8 @@ let Predef1;
                 md = ac[Predef.Symbols.definitionMetadata];
                 scrut4 = md !== undefined;
                 if (scrut4 === true) {
-                  lambda = (undefined, function (field) {
-                    let scrut10, scrut11;
-                    scrut10 = field !== null;
-                    if (scrut10 === true) {
-                      scrut11 = Predef.equals(a[field], b[field]);
-                      if (scrut11 === true) {
-                        return true
-                      }
-                      return false;
-                    }
-                    return false;
-                  });
-                  scrut5 = runtime.safeCall(md[2].every(lambda));
+                  lambda$here1 = lambda$(Predef, a, b);
+                  scrut5 = runtime.safeCall(md[2].every(lambda$here1));
                   if (scrut5 === true) {
                     tmp = true;
                   } else {
@@ -291,18 +315,9 @@ let Predef1;
     }
   }
   static mkStr(...xs) {
-    let lambda, callPrefix;
-    lambda = (undefined, function (acc, x) {
-      let tmp;
-      if (typeof x === 'string') {
-        tmp = true;
-      } else {
-        tmp = false;
-      }
-      Predef.check(tmp);
-      return acc + x
-    });
-    callPrefix = runtime.safeCall(Predef.fold(lambda));
+    let callPrefix, lambda$here;
+    lambda$here = lambda$2(Predef);
+    callPrefix = runtime.safeCall(Predef.fold(lambda$here));
     return runtime.safeCall(callPrefix(...xs))
   }
   static use(instance) {

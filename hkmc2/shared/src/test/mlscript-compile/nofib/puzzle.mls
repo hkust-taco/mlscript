@@ -2,6 +2,8 @@ import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
 
+open annotations { tailrec }
+
 module puzzle with ...
 
 
@@ -130,7 +132,7 @@ fun writeSolutions(solutions, count, s) = if solutions is
 fun minSolutions(history) = if history is
   Nil then Nil
   history :: next then
-    // @tailrec // TODO
+    @tailrec
     fun minAcc(minSoFar, mins, ls) = if ls is
       Nil then mins
       history :: next then
