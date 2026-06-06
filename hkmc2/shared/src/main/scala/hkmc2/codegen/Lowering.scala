@@ -6,7 +6,7 @@ import scala.annotation.tailrec
 import os.{Path as AbsPath, RelPath}
 import sourcecode.Line
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.Message.MessageContext
@@ -270,9 +270,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
               mod.classCompanion match
               case S(comp) => comp.defn.getOrElse(wat("Module companion without definition", mod.companion))
               case N =>
-                val stagedAnnots = mod.annotations.collect { 
+                val stagedAnnots = mod.annotations.collect: 
                   case Annot.Modifier(Keyword.`staged`) => Annot.Modifier(Keyword.`staged`) 
-                }
                 ClassDef.Plain(mod.owner, syntax.Cls, new ClassSymbol(Tree.DummyTypeDef(syntax.Cls), mod.sym.id),
                   mod.bsym,
                   Nil,

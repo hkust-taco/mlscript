@@ -5,12 +5,12 @@ import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer}
 import scala.annotation.tailrec
 import sourcecode.{Line, FileName}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import semantics.*
 import semantics.Elaborator.{State, Ctx, ctx}
-import mlscript.utils.algorithms.partitionScc
+import hkmc2.utils.algorithms.partitionScc
 import hkmc2.syntax.Literal
 import hkmc2.{codegen => argss}
 

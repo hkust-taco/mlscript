@@ -4,7 +4,7 @@ package semantics
 import scala.collection.mutable
 import scala.collection.mutable.{Set => MutSet}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import syntax.*
 import hkmc2.utils.*
 

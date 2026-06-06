@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 package ucs
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import syntax.{Keyword, Tree}, Tree.*
 import Keyword.{`and`, `do`, `else`, `if`, `case`, `while`, `is`, `let`, `or`, `then`}
 import Elaborator.{Ctx, Ctxl, UnderCtx, ctx}, SimpleSplit.*

@@ -3,7 +3,7 @@ package syntax
 
 import sourcecode.{Name, Line}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.Message._
 
 import BracketKind._
@@ -174,9 +174,8 @@ class ParseRules(using State):
           case (lhs, (rhs, body)) => (lhs, rhs, body)
         }
       )
-    ).map {
+    ).map:
       case (kw, (lhs, rhs, body)) => LetLike(kw, lhs, rhs, body)
-    }
   
   def ifLike(kw: Keyword.IfLike): Alt[Tree] =
     Kw(kw)(
@@ -222,9 +221,8 @@ class ParseRules(using State):
             end(N),
           )
         ) { (lhs, rhs) => TypeDef(kind, lhs, rhs) }
-    .map {
+    .map:
       case (kw, t) => t.mkLocWith(kw)
-    }
   
   val prefixRules: ParseRule[Tree] = ParseRule("start of expression", omitAltsStr = true)(
     letLike(`let`),

@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 package ucs
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import syntax.Tree, Tree.*, Elaborator.{Ctx, State, ctx}
 
 /** This trait includes some helpers for synthesizing `Term`s which look like 

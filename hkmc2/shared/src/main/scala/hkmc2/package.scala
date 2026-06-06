@@ -2,7 +2,7 @@ package hkmc2
 
 import sourcecode.{Line, FileName}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 import hkmc2.Message.MessageContext
 

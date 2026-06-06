@@ -2,7 +2,7 @@ package hkmc2
 
 import scala.util.chaining.scalaUtilChainingOps
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 given utils.TraceLogger => DebugPrinter =
   summon[utils.TraceLogger].debugPrinter

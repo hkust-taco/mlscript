@@ -6,7 +6,7 @@ import scala.collection.mutable
 import scala.annotation.tailrec
 import scala.language.implicitConversions
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.TraceLogger
 
 import syntax.*

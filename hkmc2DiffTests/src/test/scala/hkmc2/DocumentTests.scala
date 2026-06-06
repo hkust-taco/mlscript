@@ -4,7 +4,7 @@ import org.scalatest.{funsuite, ParallelTestExecution}
 import org.scalatest.time.*
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import document.*
 import document.Document.*
 import sourcecode.{Line, File}

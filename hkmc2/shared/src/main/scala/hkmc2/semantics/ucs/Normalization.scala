@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 package ucs
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import syntax.{Literal, Tree, Keyword}, utils.*
 import Message.MessageContext
 import Elaborator.{Ctx, State, ctx}

@@ -1,6 +1,6 @@
 package hkmc2
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 import io.PlatformPath.given
 
 

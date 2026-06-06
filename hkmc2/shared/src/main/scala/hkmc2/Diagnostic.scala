@@ -3,7 +3,7 @@ package hkmc2
 import scala.util.chaining._
 import sourcecode.{Name, Line, FileName}
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 import hkmc2.io
 
 import Diagnostic._

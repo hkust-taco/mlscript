@@ -4,7 +4,7 @@ package utils
 import scala.collection.mutable.{Map => MutMap, Set => MutSet}
 import sourcecode.{Name, Line, FileName}
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.Message.MessageContext

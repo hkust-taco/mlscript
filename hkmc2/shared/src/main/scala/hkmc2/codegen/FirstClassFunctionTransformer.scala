@@ -1,7 +1,7 @@
 package hkmc2
 package codegen
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 import semantics.*
 import syntax.Tree

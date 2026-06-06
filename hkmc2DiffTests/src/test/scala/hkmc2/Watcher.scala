@@ -3,7 +3,7 @@ package hkmc2
 import scala.collection.mutable
 import scala.jdk.CollectionConverters.*
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 import better.files.*
 import _root_.io.methvin

@@ -1,7 +1,7 @@
 package hkmc2
 package semantics
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import collection.immutable.HashMap, collection.mutable.Buffer
 import syntax.{Keyword, SpreadKind, Tree}, Tree.{Ident, StrLit}
 import Elaborator.State, Message.MessageContext, ucs.error
