@@ -12,7 +12,7 @@ import scala.language.implicitConversions
  * To use `doc` string interpolation, you have to import `document._`.
  *
  */
-package object document {
+package object document:
   import Document._
 
   implicit def toDocumentContext(ctx: StringContext): DocumentContext = new DocumentContext(ctx)
@@ -31,13 +31,10 @@ package object document {
   //    (ls map lift).mkDocument()
   //  }
 
-  implicit class LiftableSeqOps[A: Liftable](docs: Seq[A]) {
-    def mkDocument(pre: Document, sep: Document, post: Document): Document = docs filter (_ != empty) match {
+  implicit class LiftableSeqOps[A: Liftable](docs: Seq[A]):
+    def mkDocument(pre: Document, sep: Document, post: Document): Document = docs filter (_ != empty) match
       case d +: ds => pre :: ((d: Document) +: ds.map(sep :: _)).foldLeft(empty)(_ :: _) :: post
       case _       => pre :: post
-    }
     def mkDocument(sep: Document = empty): Document = mkDocument(empty, sep, empty)
-  }
 
-}
 

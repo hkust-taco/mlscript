@@ -3,7 +3,7 @@ package hkmc2
 import utils.shorthands._
 import scala.collection.mutable
 
-package object utils {
+package object utils:
 
   import scala.collection.mutable
   import scala.collection.immutable.{SortedSet, SortedMap}
@@ -11,7 +11,7 @@ package object utils {
   @SuppressWarnings(Array(
     "org.wartremover.warts.Equals",
     "org.wartremover.warts.AsInstanceOf"))
-  implicit final class AnyOps[A](self: A) {
+  implicit final class AnyOps[A](self: A):
     def ===(other: A): Bool = self == other
     def =/=(other: A): Bool = self != other
     infix def is(other: A): Bool = self.asInstanceOf[AnyRef] eq other.asInstanceOf[AnyRef]
@@ -20,12 +20,11 @@ package object utils {
     def =:=(other: A): Bool = self == other
     infix def in(xs: A => Bool): Bool = xs(self)
     infix def in(xs: Seq[? >: A]): Bool = xs.exists(_ === self)
-  }
 
-  implicit class IntOps(private val self: Int) extends AnyVal {
-    def toOrdinalWord: String = {
+  implicit class IntOps(private val self: Int) extends AnyVal:
+    def toOrdinalWord: String =
       require(self >= 0)
-      self + 1 match {
+      self + 1 match
         case 1 => "first"
         case 2 => "second"
         case 3 => "third"
@@ -36,29 +35,23 @@ package object utils {
           case 3 => "rd"
           case _ => "th"
         })
-      }
-    }
-  }
   
-  implicit class StringOps(private val self: String) extends AnyVal {
+  implicit class StringOps(private val self: String) extends AnyVal:
     import collection.mutable
-    def splitSane(sep: Char): mutable.ArrayBuffer[Str] = {
+    def splitSane(sep: Char): mutable.ArrayBuffer[Str] =
       val buf = mutable.ArrayBuffer(new StringBuilder)
       self.foreach { c => if c === sep then buf += new StringBuilder else buf.last append c; () }
       buf.map(_.toString)
-    }
     def mapLines(f: String => String): String = splitSane('\n') map f mkString "\n"
     def indent(pre: String): String = mapLines(pre + _)
     def indent: String = indent("\t")
-    def indentNewLines(pre: String = "\t"): String = splitSane('\n').toList match {
+    def indentNewLines(pre: String = "\t"): String = splitSane('\n').toList match
       case head :: (rest @ _ :: _)  => head + "\n" + rest.map(pre + _).mkString("\n")
       case _ => self
-    }
-    def truncate(maxChars: Int, replace: String): String = {
+    def truncate(maxChars: Int, replace: String): String =
       val newStr = self.take(maxChars)
       if newStr.length < self.length then newStr + replace
       else newStr
-    }
     def isCapitalized: Bool = self.nonEmpty && self.head.isUpper
     def isUncapitalized: Bool = self.nonEmpty && self.head.isLower
     def decapitalize: String =
@@ -69,25 +62,21 @@ package object utils {
         (if quantity > 1 || quantity === 0 then self + (if es then "es" else "s") else self)
     @SuppressWarnings(Array("org.wartremover.warts.Equals"))
     def ===(other: String): Bool = self.equals(other)
-  }
   
-  implicit class IterableOps[A](private val self: IterableOnce[A]) extends AnyVal {
+  implicit class IterableOps[A](private val self: IterableOnce[A]) extends AnyVal:
     def mkStringOr(
       sep: String = "", start: String = "", end: String = "", els: String = ""
-    ): String = {
+    ): String =
       val ite = self.iterator
       if ite.nonEmpty then ite.mkString(start, sep, end) else els
-    }
     def lnIndent(pre: String = "\t"): Str =
       self.iterator.map("\n" + _.toString.indent(pre)).mkString
     def collectLast[B](f: Paf[A, B]): Opt[B] = self.iterator.collect(f).foldLeft[Opt[B]](N)((_, a) => S(a))
     def toSortedSet(implicit ord: Ordering[A]): SortedSet[A] =
       SortedSet.from(self)
-  }
-  implicit class OptIterableOps[A](private val self: IterableOnce[Opt[A]]) extends AnyVal {
+  implicit class OptIterableOps[A](private val self: IterableOnce[Opt[A]]) extends AnyVal:
     def firstSome: Opt[A] = self.iterator.collectFirst { case Some(v) => v }
-  }
-  implicit class PairIterableOps[A, B](private val self: IterableOnce[A -> B]) extends AnyVal {
+  implicit class PairIterableOps[A, B](private val self: IterableOnce[A -> B]) extends AnyVal:
     def mapKeys[C](f: A => C): List[C -> B] = mapKeysIter(f).toList
     def mapValues[C](f: B => C): List[A -> C] = mapValuesIter(f).toList
     def mapKeysIter[C](f: A => C): Iterator[C -> B] = self.iterator.map(p => f(p._1) -> p._2)
@@ -96,26 +85,21 @@ package object utils {
     def values: Iterator[B] = self.iterator.map(_._2)
     def toSortedMap(implicit ord: Ordering[A]): SortedMap[A, B] =
       SortedMap.from(self)
-  }
   
-  implicit class MapOps[A, B](private val self: Map[A, B]) extends AnyVal {
-    def +++(that: Map[A, B]): Map[A, B] = {
+  implicit class MapOps[A, B](private val self: Map[A, B]) extends AnyVal:
+    def +++(that: Map[A, B]): Map[A, B] =
       require(!self.keysIterator.exists(that.keySet), (self.keySet, that.keySet))
       self ++ that
-    }
-    def +++(that: Iterable[A -> B]): Map[A, B] = {
+    def +++(that: Iterable[A -> B]): Map[A, B] =
       val thatKeySet = that.iterator.map(_._1).toSet
       require(!self.keysIterator.exists(thatKeySet), (self.keySet, thatKeySet))
       self ++ that
-    }
-  }
   
-  def mergeOptionsFlat[A](lhs: Option[A], rhs: Option[A])(f: (A, A) => Opt[A]): Option[A] = (lhs, rhs) match {
+  def mergeOptionsFlat[A](lhs: Option[A], rhs: Option[A])(f: (A, A) => Opt[A]): Option[A] = (lhs, rhs) match
     case (Some(l), Some(r)) => f(l, r)
     case (lhs @ Some(_), _) => lhs
     case (_, rhs @ Some(_)) => rhs
     case (None, None) => None
-  }
   def mergeOptions[A](lhs: Option[A], rhs: Option[A])(f: (A, A) => A): Option[A] =
     mergeOptionsFlat(lhs, rhs)(f(_, _) |> some)
   
@@ -127,12 +111,11 @@ package object utils {
     SortedMap.from(mergeMap(lhs, rhs)(f))
   
   
-  implicit final class PafHelper[A,B](private val self: Paf[A,B]) extends AnyVal {
+  implicit final class PafHelper[A,B](private val self: Paf[A,B]) extends AnyVal:
     // def appOrElse[C](arg: A)(els: A => )
     def appOrElse[A1 <: A, B1 >: B](x: A1)(default: A1 => B1): B1 =
       self.applyOrElse(x, default)
-  }
-  implicit final class GenHelper[A](private val self: A) extends AnyVal {
+  implicit final class GenHelper[A](private val self: A) extends AnyVal:
     
     @inline def into [B] (rhs: A => B): B = rhs(self)
     
@@ -167,70 +150,54 @@ package object utils {
     
     def withTypeOf[T >: A](x: T): T = self: T
     
-  }
   
-  implicit final class LazyGenHelper[A](self: => A) {
+  implicit final class LazyGenHelper[A](self: => A):
     
     @inline def optionIf(cond: Bool): Option[A] = if cond then Some(self) else None
     
     @inline def optionUnless(cond: Bool): Option[A] = if !cond then Some(self) else None
     
-  }
   
-  implicit final class ListHelpers[A](ls: Ls[A]) {
+  implicit final class ListHelpers[A](ls: Ls[A]):
     def filterOutConsecutive(f: (A, A) => Bool = _ === _): Ls[A] =
       ls.foldRight[List[A]](Nil) { case (x, xs) => if xs.isEmpty || !f(xs.head, x) then x :: xs else xs }
     def tailOption: Opt[Ls[A]] = if ls.isEmpty then N else S(ls.tail)
     def headOr(els: => A): A = if ls.isEmpty then els else ls.head
     def tailOr(els: => Ls[A]): Ls[A] = if ls.isEmpty then els else ls.tail
-    def mapHead(f: A => A): Ls[A] = ls match {
+    def mapHead(f: A => A): Ls[A] = ls match
       case h :: t => f(h) :: t
       case Nil => Nil
-    }
-  }
   
-  implicit final class OptionHelpers[A](opt: Opt[A]) {
+  implicit final class OptionHelpers[A](opt: Opt[A]):
     def dlof[B](f: A => B)(b: => B): B = opt.fold(b)(f)
-  }
   
-  implicit class MutSetHelpers[A](self: mutable.Set[A]) {
-    def setAndIfUnset(x: A)(thunk: => Unit): Unit = {
-      if !self.contains(x) then {
+  implicit class MutSetHelpers[A](self: mutable.Set[A]):
+    def setAndIfUnset(x: A)(thunk: => Unit): Unit =
+      if !self.contains(x) then
         self += x
         thunk
-      }
-    }
-    def setAnd[R](x: A)(ifSet: => R)(ifUnset: => R): R = {
-      if self.contains(x) then ifSet else {
+    def setAnd[R](x: A)(ifSet: => R)(ifUnset: => R): R =
+      if self.contains(x) then ifSet else
         self += x
         ifUnset
-      }
-    }
-  }
   
   // * The goal of these is to avoid the use of varargs, which I've found to be a source of
   // * overhead in the past, due to the allocation of intermediate arrays.
   // * Remains to be seen if using these is always (or ever?) necessarily a win.
-  implicit class MutSetObjectHelpers(self: mutable.Set.type) {
+  implicit class MutSetObjectHelpers(self: mutable.Set.type):
     def single[A](a: A): mutable.Set[A] = mutable.Set.empty[A] += a
-  }
-  implicit class SetObjectHelpers(self: Set.type) {
+  implicit class SetObjectHelpers(self: Set.type):
     def single[A](a: A): Set[A] = (Set.newBuilder[A] += a).result()
-  }
-  implicit class SortedSetObjectHelpers(self: SortedSet.type) {
+  implicit class SortedSetObjectHelpers(self: SortedSet.type):
     def single[A: Ordering](a: A): SortedSet[A] = (SortedSet.newBuilder[A] += a).result()
-  }
-  implicit class MapObjectHelpers(self: Map.type) {
+  implicit class MapObjectHelpers(self: Map.type):
     def single[A, B](ab: A -> B): Map[A, B] = (Map.newBuilder[A, B] += ab).result()
-  }
-  implicit class SortedMapObjectHelpers(self: SortedMap.type) {
+  implicit class SortedMapObjectHelpers(self: SortedMap.type):
     def single[A: Ordering, B](ab: A -> B): SortedMap[A, B] = (SortedMap.newBuilder[A, B] += ab).result()
-  }
-  implicit class VectorObjectHelpers(self: Vector.type) {
+  implicit class VectorObjectHelpers(self: Vector.type):
     def single[A](a: A): Vector[A] = a +: Vector.empty
     def double[A](a: A, b: A): Vector[A] = a +: b +: Vector.empty
     def triple[A](a: A, b: A, c: A): Vector[A] = a +: b +: c +: Vector.empty
-  }
   
   def TODO(msg: Any): Nothing = throw new NotImplementedError(
     msg.toString + s" (of class ${msg.getClass().getSimpleName()})")
@@ -253,14 +220,11 @@ package object utils {
   def closeOver[A](xs: Set[A])(f: A => Set[A]): Set[A] =
     closeOverCached(Set.empty, xs)(f)
   def closeOverCached[A](done: Set[A], todo: Set[A])(f: A => Set[A]): Set[A] =
-    if todo.isEmpty then done else {
+    if todo.isEmpty then done else
       val newDone = done ++ todo
       closeOverCached(newDone, todo.flatMap(f) -- newDone)(f)
-    }
   
   
-  object EmptyColl {
+  object EmptyColl:
     def unapply(it: Iterable[Any]): Bool = it.isEmpty
-  }
   
-}

@@ -51,7 +51,7 @@ object shorthands:
   
   @showAsInfix
   type -> [+A,+B] = (A,B)
-  object -> :
+  object `->`:
     def unapply[A, B](ab: (A, B)): Some[(A, B)] = Some(ab)
   implicit class Tuple2Helper[A,B](private val self: (A,B)) extends AnyVal:
     @inline def mapFirst[C](f: A => C): (C,B) = (self._1 pipe f, self._2)

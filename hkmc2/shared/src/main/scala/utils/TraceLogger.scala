@@ -14,13 +14,12 @@ abstract class TraceLogger(using val debugPrinter: DebugPrinter):
   protected val noPostTrace: Any => Str = _ => ""
   
   protected var indent = 0
-  def trace[T](pre: => Str, post: T => Str = noPostTrace)(thunk: => T): T = {
+  def trace[T](pre: => Str, post: T => Str = noPostTrace)(thunk: => T): T =
     log(pre)
     enter()
     val res = try thunk finally exit()
     if post isnt noPostTrace then log(post(res))
     res
-  }
   inline def traceNot[T](pre: => Str, post: T => Str = noPostTrace)(thunk: => T): T =
     thunk
   
