@@ -20,8 +20,8 @@ let useless = if lsit is [a, b] then 0
 //│ deforest > >>> fusing >>>
 //│ deforest > [2, 1] ->
 //│ deforest > 	match: lsit⁰
-//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(lsit⁰, 0)
-//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(lsit⁰, 1)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(lsit⁰, 0)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(lsit⁰, 1)
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lsit⁰, useless⁰, a⁰, b⁰, element1$, element0$, tmp, $lsit_tup2⁰, $lsit_rest⁰, tup2_0, tup2_1;
@@ -216,8 +216,8 @@ if [1, 2] is
 //│ deforest > >>> fusing >>>
 //│ deforest > [1, 2] ->
 //│ deforest > 	match: scrut⁰
-//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(scrut⁰, 0)
-//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(scrut⁰, 1)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut⁰, 0)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut⁰, 1)
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let scrut, a⁴, b², element1$, element0$, $scrut_tup2⁰, $scrut_rest⁰, tup2_0, tup2_1;
@@ -248,8 +248,8 @@ f([1,2])
 //│ deforest > >>> fusing >>>
 //│ deforest > [1, 2] ->
 //│ deforest > 	match: x⁶
-//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(x⁶, 0)
-//│ deforest > 	fields: runtime⁰.Tuple﹖.get⁰(x⁶, 1)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(x⁶, 0)
+//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(x⁶, 1)
 //│ deforest > <<< fusing <<<
 //│ = 3
 

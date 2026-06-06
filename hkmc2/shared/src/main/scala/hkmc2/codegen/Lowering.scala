@@ -419,28 +419,28 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     * trying to group as many as possible into a single one
     * when they correspond to parameter lists of the same callee. */
   def lowerMultiCall(fr: Path, isMlsFun: Bool, isTailCall: Bool, args: Ls[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
-    def zipArgs(remainingParamss: Ls[ParamList], remainingArgss: Ls[Term], acc: Ls[Ls[Arg]]): Block =
+    def zipArgs(remainingParamss: Ls[ParamList], remainingArgss: Ls[Term], acc: Ls[Ls[Arg]], mayRaiseEffects: Bool): Block =
       (remainingParamss, remainingArgss) match
       case (ps :: remainingParams, args :: remainingArgs) =>
-        lowerArgs(args)(as => zipArgs(remainingParams, remainingArgs, as :: acc))
+        lowerArgs(args)(as => zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects))
       case (Nil, Nil) =>
-        k(Call(fr, acc.reverse.ne_!)(isMlsFun, true, isTailCall).withLoc(loc))
+        k(Call(fr, acc.reverse.ne_!)(isMlsFun, mayRaiseEffects, isTailCall).withLoc(loc))
       case (Nil, args :: remainingArgss) =>
         acc.reverse match
         case Nil => lowerRemainingCalls(fr, args, remainingArgss, isTailCall, loc)(k)
         case acc: NELs[Ls[Arg]] =>
           val tmp = loweringCtx.registerTempSymbol(N, "baseCall")
-          val call = Call(fr, acc)(isMlsFun, true, isTailCall).withLoc(loc)
+          val call = Call(fr, acc)(isMlsFun, mayRaiseEffects, isTailCall).withLoc(loc)
           Assign(tmp, call, lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, isTailCall, loc)(k))
       case (_ :: _, Nil) =>
-        k(Call(fr, acc.reverse.ne_!)(isMlsFun, true, isTailCall).withLoc(loc))
+        k(Call(fr, acc.reverse.ne_!)(isMlsFun, mayRaiseEffects, isTailCall).withLoc(loc))
     fr.targetSymbol match
     case S(fs: TermSymbol) =>
       fs.defn match
       case S(td: TermDefinition) =>
-        zipArgs(td.params, args, Nil)
-      case _ => zipArgs(Nil, args, Nil)
-    case _ => zipArgs(Nil, args, Nil)
+        zipArgs(td.params, args, Nil, fs.mayRaiseEffects)
+      case _ => zipArgs(Nil, args, Nil, fs.mayRaiseEffects)
+    case _ => zipArgs(Nil, args, Nil, true)
   
   def lowerRemainingCalls(base: Path, args: Term, remainingArgss: Ls[Term], isTailCall: Bool, loc: Opt[Loc])
         (k: Result => Block)(using LoweringCtx): Block =
@@ -1410,14 +1410,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         val annot = a match
           case Annot.TailRec => "@tailrec"
           case Annot.Inline => "@inline"
-        
         target match
           case TermDefinition(body = S(bod), k = syntax.Fun) => ()
           case TermDefinition(k = syntax.Fun) => warn(a, S(msg"Only functions with a body may be marked as $annot."))
           case _ => warn(a)
-        
       case Annot.Modifier(syntax.Keyword.`public` | syntax.Keyword.`private` | syntax.Keyword.`virtual`) => ()
       case Annot.Modifier(syntax.Keyword("staged")) => ()
+      case Annot.MayNotRaiseEffects => ()
       case _: Annot.Config => () // Config annotations are handled during FunDefn creation
       case annot => warn(annot)
 

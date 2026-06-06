@@ -33,11 +33,13 @@ object FlowAnalysis:
     extension (resultId: ResultId)
       def getResult = resultIdToResult(resultId)
       def getReferredSym: Symbol =
+        resultId.getReferredSymOpt.getOrElse(lastWords(s"assumption failed: ${resultId.getResult} is not a SimpleRef, MemberRef, or ThisRef"))
+      def getReferredSymOpt: Opt[Symbol] =
         resultId.getResult match
-        case Value.SimpleRef(s) => s
-        case Value.MemberRef(bms, _) => bms
-        case Value.This(sym) => sym
-        case e => lastWords(s"assumption failed: $e is not a SimpleRef, MemberRef, or ThisRef")
+        case Value.SimpleRef(s) => S(s)
+        case Value.MemberRef(bms, _) => S(bms)
+        case Value.This(sym) => S(sym)
+        case e => N
       def getReferredFun(using Elaborator.State): Option[TermSymbol] =
         resultId.getResult match
         case FunRef(f, _) => Some(f)
@@ -107,9 +109,9 @@ object PossibleTrackableTupleSelect:
   def unapply(s: Result)(using eState: Elaborator.State): Opt[Value.SimpleRef -> Int] =
     s match
     case Call(
-      Select(Select(Value.SimpleRef(runtimeSym), Tree.Ident("Tuple")), Tree.Ident("get")),
+      p,
       (Arg(N, ref@Value.SimpleRef(scrut)) :: Arg(N, Value.Lit(Tree.IntLit(n))) :: Nil) :: Nil
-    ) if runtimeSym is eState.runtimeSymbol => S(ref -> n.toInt)
+    ) if p.targetSymbol.contains(eState.tupleGetSymbol) => S(ref -> n.toInt)
     case _ => N
 
 object TrackableSelect:
@@ -117,7 +119,7 @@ object TrackableSelect:
     given fState: FlowAnalysis.State = pre.fState
     s match
     case sel@PossibleTrackableTupleSelect((ref@Value.SimpleRef(scrut)) -> ith) =>
-      pre.res.getEnclosingMatchesForSel(sel.uid).find(_._1.getReferredSym is scrut).flatMap:
+      pre.res.getEnclosingMatchesForSel(sel.uid).find(_._1.getReferredSymOpt.contains(scrut)).flatMap:
         case (_, Some(tupSize: Int)) => S(ref, ith, tupSize)
         case _ => N
     case TrackableFieldSelect(qual, field -> owner) =>

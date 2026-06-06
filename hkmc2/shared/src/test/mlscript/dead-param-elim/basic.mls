@@ -250,6 +250,75 @@ f(Pair(1, 2))
 //│ = 1
 
 
+// The usage of runtime.Tuple.get(c, 1) will cause all enclosing match to be searched, but
+// not all scrutinee shapes of match are correctly handled.
+:lift
+:sir
+:effectHandlers
+:stackSafe 100
+fun f() = case [...x, y, z] then x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f²¹, lambda⁰;
+//│ do runtime⁰.resetEffects﹖();
+//│ @private
+//│ define lambda⁰ as fun lambda¹(caseScrut) {
+//│   let stackDelayRes;
+//│   set runtime⁰.stackDepth﹖ = +⁰(runtime⁰.stackDepth﹖, 1);
+//│   set stackDelayRes = runtime⁰.checkDepth﹖();
+//│   match runtime⁰.curEffect﹖
+//│     null =>
+//│       let x, y, z, lastElement1$, lastElement2$, middleElements;
+//│       match caseScrut
+//│         Array(2+) =>
+//│           set middleElements = runtime⁰.Tuple⁰.slice⁰(caseScrut, 0, 2);
+//│           set lastElement2$ = runtime⁰.Tuple⁰.get⁰(caseScrut, -2);
+//│           set lastElement1$ = runtime⁰.Tuple⁰.get⁰(caseScrut, -1);
+//│           set y = lastElement1$;
+//│           set z = lastElement2$;
+//│           set x = middleElements;
+//│           return x
+//│         else
+//│           throw new globalThis⁰.Error⁰("match error")
+//│       end
+//│     else
+//│       return runtime⁰.unwind﹖(lambda¹, -1, null, null, null, 1, 1, caseScrut, 0)
+//│   end
+//│ };
+//│ define f²¹ as fun f²²() { return lambda¹ };
+//│ end
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// FIXME: Currently, Runtime⁰.Tuple¹.get¹ below resolves differently from runtime⁰.Tuple⁰.get⁰ above
+//  This is because the latter is currently created in Elaborator's `createFunSymbolInMod` shim.
+:lift
+:sir
+:effectHandlers
+:stackSafe 100
+import "../../mlscript-compile/Runtime.mls"
+fun f(c) = Runtime.Tuple.get(c, 1) + 1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ import Runtime;
+//│ let f²³;
+//│ do runtime⁰.resetEffects﹖();
+//│ define f²³ as fun f²⁴(c) {
+//│   let stackDelayRes;
+//│   set runtime⁰.stackDepth﹖ = +⁰(runtime⁰.stackDepth﹖, 1);
+//│   set stackDelayRes = runtime⁰.checkDepth﹖();
+//│   match runtime⁰.curEffect﹖
+//│     null =>
+//│       let tmp;
+//│       set tmp = Runtime⁰.Tuple¹.get¹(c, 1);
+//│       return +⁰(tmp, 1)
+//│     else
+//│       return runtime⁰.unwind﹖(f²⁴, -1, "basic.mls:300:1", null, null, 1, 1, c, 0)
+//│   end
+//│ };
+//│ end
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 private fun f(a) = g(a)

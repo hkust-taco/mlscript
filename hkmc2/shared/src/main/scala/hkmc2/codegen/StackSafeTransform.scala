@@ -49,11 +49,6 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
 
   // Rewrites anything that can contain a Call to increase the stack depth
   def transform(b: Block, curDepth: => LocalVarSymbol, isTopLevel: Bool = false): Block =
-    def usesStack(r: Result) = r match
-      case Call(Value.SimpleRef(_: BuiltinSymbol), _) => false
-      case c: Call if !c.mayRaiseEffects => false // a call can only trigger a stack delay if it can raise effects
-      case _: Call | _: Instantiate => true
-      case _ => false
 
     val extract = if isTopLevel then extractResTopLevel else extractRes
     
@@ -66,28 +61,24 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
         case _: FunDefn | _: ValDefn => super.applyDefn(defn)(k)
 
       override def applyBlock(b: Block): Block = b match
-        case Return(res) if usesStack(res) =>
+        case Return(res @ HandlerLowering.EffectfulResult()) =>
           val tmp = TempSymbol(N, "res")
           super.applyResult(res): res =>
             Scoped(Set.single(tmp), extract(res, true, Return(_), tmp, curDepth))
         // Optimization to avoid generation of unnecessary variables
-        case Assign(lhs, r, rest) =>
-          if usesStack(r) then
-            super.applyResult(r): r =>
-              extract(r, false, _ => applyBlock(rest), lhs, curDepth)
-          else
-            super.applyBlock(b)
-        
+        case Assign(lhs, r @ HandlerLowering.EffectfulResult(), rest) =>
+          super.applyResult(r): r =>
+            extract(r, false, _ => applyBlock(rest), lhs, curDepth)
         case _ => super.applyBlock(b)
         
       override def applyHandler(hdr: Handler): Handler = lastWords("HandleBlock in stack safe transformation")
       
       override def applyResult(r: Result)(k: Result => Block): Block =
-        if usesStack(r) then
+        r match
+        case r @ HandlerLowering.EffectfulResult() =>
           val tmp = TempSymbol(N, "res")
           Scoped(Set.single(tmp), extract(r, false, k, tmp, curDepth))
-        else
-          super.applyResult(r)(k)
+        case _ => super.applyResult(r)(k)
       
       override def applyLam(lam: Lambda): Lambda = lastWords("Lambda in stack safe transformation")
   

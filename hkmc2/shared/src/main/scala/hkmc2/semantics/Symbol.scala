@@ -349,6 +349,8 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   def isPrivate: Bool = (k is LetBind) && owner.exists(!_.isInstanceOf[TopLevelSymbol])
   
   def subst(using sub: SymbolSubst): TermSymbol = sub.mapTermSym(this)
+  def mayRaiseEffects(using Config) =
+    defn.forall(_.mayRaiseEffects)
 
 object TermSymbol:
   def fromFunBms(b: BlockMemberSymbol, owner: Opt[InnerSymbol])(using State) =
@@ -361,6 +363,8 @@ class ClassCtorSymbol(
   id: Tree.Ident
 )(using State) extends TermSymbol(k, owner, id):
   override def subst(using sub: SymbolSubst): ClassCtorSymbol = sub.mapClassCtorSym(this)
+  override def mayRaiseEffects(using Config) =
+    super.mayRaiseEffects || config.checkInstantiateEffect
 
 
 sealed trait CtorSymbol extends Symbol:
