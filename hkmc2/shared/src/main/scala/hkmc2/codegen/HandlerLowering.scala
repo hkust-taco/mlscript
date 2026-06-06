@@ -84,6 +84,12 @@ object HandlerLowering:
     debugNme: Str,
     debugInfoPath: Path,
   )
+
+  object EffectfulResult:
+    def unapply(r: Result)(using Config) = r match
+      case c: Call if c.mayRaiseEffects => S(r)
+      case _: Instantiate if config.checkInstantiateEffect => S(r)
+      case _ => N
   
   type StateId = BigInt
 
@@ -112,7 +118,7 @@ class HandlerPaths(using Elaborator.State):
 
 type StackSafetyMap = collection.Map[FnOrCls, (Int, Block)]
 
-class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise, Elaborator.State, Elaborator.Ctx):
+class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
   
   private def freshTmp(dbgNme: Str = "tmp") = new TempSymbol(N, dbgNme)
   private def freshLabel(nme: Str) = new LabelSymbol(N, nme)
@@ -172,19 +178,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     containsCall: Bool,
     containsError: Bool
   )
-
-  // TODO: move this somewhere else
-  val knownSymbolsExcludedFromEffect = Set[DefinitionSymbol[?]](State.tupleGetSymbol, State.tupleSliceSymbol)
-
-  object EffectfulResult:
-    def unapply(r: Result) = r match
-      case c: Call if c.mayRaiseEffects =>
-        if c.fun.targetSymbol.exists(knownSymbolsExcludedFromEffect.contains(_)) then
-          N
-        else
-          S(r)
-      case _: Instantiate if opt.checkInstantiateEffect => S(r)
-      case _ => N
   
   private def partitionBlock(blk: Block): PartitionedBlock =
     val result = mutable.HashMap.empty[StateId, BlockPartition]
