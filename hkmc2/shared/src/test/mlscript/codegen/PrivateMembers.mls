@@ -1,0 +1,44 @@
+:js
+
+
+class Foo with
+  private val x = 1
+  private fun y() = x + 1
+  fun z = y() + 1
+
+let f = new Foo
+//│ f = Foo
+
+:re
+f.x
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+
+:re
+f.y()
+//│ ═══[RUNTIME ERROR] TypeError: f.y is not a function
+
+:expect 3
+f.z
+//│ = 3
+
+
+object PrivateObject with
+  private val x = 40
+  private fun inc() = x + 2
+  fun read = inc()
+PrivateObject.read
+//│ = 42
+
+:ge
+PrivateObject.x
+//│ > try { block$res7 = PrivateObject1.#x;; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                  ^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Private field '#x' must be declared in an enclosing class
+
+:ge
+PrivateObject.inc()
+//│ > try { block$res8 = runtime.checkCall(PrivateObject1.#inc());; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                    ^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Private field '#inc' must be declared in an enclosing class
+
+

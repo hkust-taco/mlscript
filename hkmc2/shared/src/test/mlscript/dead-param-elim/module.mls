@@ -5,6 +5,7 @@
 
 
 
+:ge
 module M with
   private fun f(a) = 0
   private fun g(b) = b
@@ -13,10 +14,12 @@ M.g(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ = 2
+//│ > let M1;try { globalThis.Object.freeze(class M {   static {     M1 = this   }   static #f() {     runtime.checkArgs("f", 0, true, arguments.length);     return 0   }   static #g(b) {     runtime.checkArgs("g", 1, true, arguments.length);     return b   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "M"]; }); runtime.checkCall(M1.#f()); block$res1 = runtime.checkCall(M1.#g(2));; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                                                                                                                                                                                                                                                                                                                                     ^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Private field '#f' must be declared in an enclosing class
 
 
-:expect 3
+:ge
 module M with
   val x = 3
   private fun f(a) = x
@@ -25,32 +28,39 @@ M.main()
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ = 3
+//│ > let M3;try { globalThis.Object.freeze(class M2 {   static {     M3 = this   }   static {     M2.x = 3;   }   static #f() {     runtime.checkArgs("f", 0, true, arguments.length);     return M2.x   }   static #main() {     runtime.checkArgs("main", 0, true, arguments.length);     return runtime.checkCall(M3.#f())   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "M"]; }); block$res2 = runtime.checkCall(M3.#main());; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Private field '#main' must be declared in an enclosing class
 
 
-:expect 42
+:ge
 module M with
   private fun f(a) = a
   private fun main() = M.f(42)
 M.main()
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ = 42
+//│ > let M5;try { globalThis.Object.freeze(class M4 {   static {     M5 = this   }   static #f(a) {     runtime.checkArgs("f", 1, true, arguments.length);     return a   }   static #main() {     runtime.checkArgs("main", 0, true, arguments.length);     return runtime.checkCall(M5.#f(42))   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "M"]; }); block$res3 = runtime.checkCall(M5.#main());; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                                                                                                                                                                                                                                                                                                                                                                                    ^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Private field '#main' must be declared in an enclosing class
 
 
 :lift
-:expect 42
+:ge
 module M with
   private fun f(a) = a
   private fun withF() = x => f(x)
 M.withF()(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ = 42
+//│ > let M7, baseCall, lambda, lambda$;try { lambda$ = (undefined, function (M8) {   runtime.checkArgs("", 1, true, arguments.length);   return (x) => {     return runtime.checkCall(lambda(M8, x))   } }); lambda = (undefined, function (M8, x) {   runtime.checkArgs("", 2, true, arguments.length);   return runtime.checkCall(M8.#f(x)) }); globalThis.Object.freeze(class M6 {   static {     M7 = this   }   static #f(a) {     runtime.checkArgs("f", 1, true, arguments.length);     return a   }   static #withF() {     runtime.checkArgs("withF", 0, true, arguments.length);     return runtime.checkCall(lambda$(M6))   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "M"]; }); baseCall = runtime.checkCall(M7.#withF()); block$res4 = runtime.safeCall(baseCall(42));; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                                                                                                                                                                                                                                                                                  ^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Private field '#f' must be declared in an enclosing class
 
 
 
 
+:ge
 module M with
   private fun f(a) = a
   private fun g(b) = 0
@@ -59,11 +69,13 @@ module M with
 M.main()
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ = 0
+//│ > let M9;try { globalThis.Object.freeze(class M8 {   static {     M9 = this   }   static #f(a) {     runtime.checkArgs("f", 1, true, arguments.length);     return a   }   static #g(b) {     runtime.checkArgs("g", 1, true, arguments.length);     return 0   }   static #pick(x) {     runtime.checkArgs("pick", 1, true, arguments.length);     return (y) => {       if (false === true) {         return x       }       return y;     }   }   static #main() {     runtime.checkArgs("main", 0, true, arguments.length);     let baseCall1;     baseCall1 = runtime.checkCall(M9.#pick(M9.#f)(M9.#g));     return runtime.safeCall(baseCall1(5))   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "M"]; }); block$res5 = runtime.checkCall(M9.#main());; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Private field '#main' must be declared in an enclosing class
 
 
 
-:expect 125
+:ge
 module M with
   data class Foo(x) with
     private fun m() = this.x + 1
@@ -72,8 +84,9 @@ let foo = M.Foo(123)
 foo M.Foo::n(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
-//│ = 125
-//│ foo = Foo(123)
+//│ > let M11, foo, lambda1;try { globalThis.Object.freeze(class M10 {   static {     M11 = this   }   static {     M10.Foo = function Foo(x) {       return globalThis.Object.freeze(new Foo.class(x));     };     globalThis.Object.freeze(class Foo {       static {         M10.Foo.class = this       }       constructor(x) {         this.x = x;       }       get #m$__checkNotMethod() { runtime.deboundMethod("m", "Foo"); }        get #n$__checkNotMethod() { runtime.deboundMethod("n", "Foo"); }       #m() {         runtime.checkArgs("m", 0, true, arguments.length);         return this.x + 1       }       #n(y) {         runtime.checkArgs("n", 1, true, arguments.length);         return this.x + y       }       toString() { return runtime.render(this); }       static [definitionMetadata] = ["class", "Foo", ["x"]];     });   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "M"]; }); foo = runtime.checkCall(M11.Foo(123)); lambda1 = (undefined, function (self, ...args) {   runtime.checkArgs("", 1, false, arguments.length);   return runtime.checkCall(self.#n(...args)) }); block$res6 = runtime.safeCall(lambda1(foo, 2));; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Private field '#n' must be declared in an enclosing class
+//│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
 
 
 

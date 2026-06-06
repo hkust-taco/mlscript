@@ -1226,11 +1226,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           val cfgOverride = td.extraAnnotations.collectFirst:
             case Annot.Config(modify) => modify(config)
           FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(cfgOverride, td.annotations)
-    val publicFlds = clsBody.publicFlds.map(f => f.sym -> f.tsym)
+    val publicFlds = clsBody.publicFlds.collect:
+      case f if !f.tsym.isPrivate =>
+        f.sym -> f.tsym
     val privateFlds = clsBody.nonMethods.collect:
       case decl @ LetDecl(sym: TermSymbol, annotations) =>
         reportAnnotations(decl, annotations)
         sym
+      case td: TermDefinition if td.tsym.isPrivate =>
+        td.tsym
     val ctor =
       inScopedBlock:
         term_nonTail(Blk(clsBody.nonMethods, clsBody.blk.res), inStmtPos = true)(Assign.discard(_, End()))
