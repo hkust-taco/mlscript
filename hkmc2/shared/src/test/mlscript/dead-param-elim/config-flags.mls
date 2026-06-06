@@ -11,7 +11,7 @@
 private fun noFlag(a) = 0
 noFlag(42)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let noFlag⁰; @private define noFlag⁰ as fun noFlag¹() { return 0 }; return noFlag¹()
+//│ @private define noFlag⁰ as fun noFlag¹() { return 0 }; return noFlag¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -39,7 +39,7 @@ debugMono(42)
 //│ dead-param-elim > prodfun debugMono#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let debugMono⁰; @private define debugMono⁰ as fun debugMono¹() { return 0 }; return debugMono¹()
+//│ @private define debugMono⁰ as fun debugMono¹() { return 0 }; return debugMono¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -56,7 +56,7 @@ conflictTest(42)
 private fun dpeOff(a) = 0
 dpeOff(42)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let dpeOff⁰; @private define dpeOff⁰ as fun dpeOff¹(a) { return 0 }; return dpeOff¹(42)
+//│ @private define dpeOff⁰ as fun dpeOff¹(a) { return 0 }; return dpeOff¹(42)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 

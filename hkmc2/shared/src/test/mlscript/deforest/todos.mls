@@ -52,7 +52,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > 	fields: arg$AA$0$¹.x¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let test⁰, f⁰, p⁰, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_29$test⁰, test_29$x_dflt⁰, test_29$x_rest⁰, test_26$test⁰, test_26$x_AA⁰, test_26$x_rest⁰, test_26$arg$AA$0$_AA⁰, test_26$arg$AA$0$_rest⁰, test_26$arg$AA$0$_AA¹, test_26$arg$AA$0$_rest¹, AA_x, AA_x1, AA_x2, deforest$lam;
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test_29$test⁰, test_29$x_dflt⁰, test_29$x_rest⁰, test_26$test⁰, test_26$x_AA⁰, test_26$x_rest⁰, test_26$arg$AA$0$_AA⁰, test_26$arg$AA$0$_rest⁰, test_26$arg$AA$0$_AA¹, test_26$arg$AA$0$_rest¹, AA_x, AA_x1, AA_x2, deforest$lam;
 //│ @private
 //│ define test_29$test⁰ as fun test_29$test¹(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14, tmp15;

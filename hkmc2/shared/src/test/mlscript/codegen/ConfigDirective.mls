@@ -5,7 +5,6 @@
 :sir
 fun test_before(n, acc) = if n == 0 then acc else test_before(n - 1, n + acc)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let test_before⁰;
 //│ define test_before⁰ as fun test_before¹(n, acc) {
 //│   loop loopLabel:
 //│     let scrut, tmp, tmp1;
@@ -31,7 +30,6 @@ fun test_before(n, acc) = if n == 0 then acc else test_before(n - 1, n + acc)
 :sir
 fun test_after(n, acc) = if n == 0 then acc else test_after(n - 1, n + acc)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let test_after⁰;
 //│ define test_after⁰ as fun test_after¹(n, acc) {
 //│   let scrut, tmp, tmp1;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
@@ -53,7 +51,6 @@ fun test_after(n, acc) = if n == 0 then acc else test_after(n - 1, n + acc)
 :sir
 fun test_reenabled(n, acc) = if n == 0 then acc else test_reenabled(n - 1, n + acc)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let test_reenabled⁰;
 //│ define test_reenabled⁰ as fun test_reenabled¹(n, acc) {
 //│   loop loopLabel:
 //│     let scrut, tmp, tmp1;
@@ -78,7 +75,6 @@ fun test_reenabled(n, acc) = if n == 0 then acc else test_reenabled(n - 1, n + a
 @config(tailRecOpt: false)
 fun foo(n, acc) = if n == 0 then acc else foo(n - 1, n + acc)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo⁰;
 //│ @config(...)
 //│ define foo⁰ as fun foo¹(n, acc) {
 //│   let scrut, tmp, tmp1;
@@ -99,7 +95,6 @@ fun foo(n, acc) = if n == 0 then acc else foo(n - 1, n + acc)
 :sir
 fun bar(n, acc) = if n == 0 then acc else bar(n - 1, n + acc)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let bar⁰;
 //│ define bar⁰ as fun bar¹(n, acc) {
 //│   loop loopLabel:
 //│     let scrut, tmp, tmp1;
@@ -126,7 +121,7 @@ fun bar(n, acc) = if n == 0 then acc else bar(n - 1, n + acc)
 :sir
 fun foo(x) = { x.call(), print(42) }
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo²; define foo² as fun foo³(x) { do x.call﹖(); return Predef⁰.print⁰(42) }; end
+//│ define foo² as fun foo³(x) { do x.call﹖(); return Predef⁰.print⁰(42) }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

@@ -15,8 +15,8 @@ data class (::) Cons(h, t)
 //│ deforest > <<< fusing <<<
 
 :sir
-let lsit = [2, 1]
-let useless = if lsit is [a, b] then 0
+let lsit = [2, 1] in
+  let useless = if lsit is [a, b] then 0
 //│ deforest > >>> fusing >>>
 //│ deforest > [2, 1] ->
 //│ deforest > 	match: lsit⁰
@@ -37,16 +37,13 @@ let useless = if lsit is [a, b] then 0
 //│ @private
 //│ define $lsit_rest⁰ as fun $lsit_rest¹() {
 //│   set useless⁰ = tmp;
-//│   return null
+//│   return runtime⁰.Unit⁰
 //│ };
 //│ set tup2_0 = 2;
 //│ set tup2_1 = 1;
 //│ set lsit⁰ = $lsit_tup2¹(tup2_0, tup2_1);
 //│ return lsit⁰()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = null
-//│ lsit = fun
-//│ useless = 0
 
 :expect O
 fun p() = X(O)
@@ -76,7 +73,7 @@ f(p())
 //│ deforest > 	fields: arg$X$0$⁰.b¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let p⁰, f⁰, tmp, p_8$p⁰, f_10$f⁰, f_10$x_X⁰, f_10$x_rest⁰, f_10$arg$X$0$_Y⁰, f_10$arg$X$0$_rest⁰;
+//│ let tmp, p_8$p⁰, f_10$f⁰, f_10$x_X⁰, f_10$x_rest⁰, f_10$arg$X$0$_Y⁰, f_10$arg$X$0$_rest⁰;
 //│ @private
 //│ define p_8$p⁰ as fun p_8$p¹()(eta$0$0, eta$0$1, eta$0$2) {
 //│   let tmp1, Y_b, X_a;
@@ -362,8 +359,14 @@ f()
 //│ deforest > 	match: scrut³
 //│ deforest > <<< fusing <<<
 //│ = 1
-//│ f = fun f
-//│ x = 1
+//│ f = undefined
+//│ x = undefined
+
+:fixme
+f()
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ ═══[RUNTIME ERROR] TypeError: f10 is not a function
 
 
 :expect B(0)

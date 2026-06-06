@@ -4,11 +4,11 @@
 :staging
 
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ import Predef; end
+//│ import "..." as Predef; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 staged fun direct() = 1
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let direct⁰; @staged define direct⁰ as staged fun direct¹() { return 1 }; end
+//│ @staged define direct⁰ as staged fun direct¹() { return 1 }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -17,7 +17,7 @@ staged module LiftedNested with
     fun g() = 1
     g()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let g⁰, LiftedNested⁰;
+//│ let g⁰;
 //│ @staged
 //│ define g⁰ as staged fun g¹() {
 //│   return 1
@@ -67,7 +67,7 @@ staged module LiftedNested with
 staged module LiftedLambda with
   fun foo(x) = y => x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let LiftedLambda⁰, lambda⁰, Function$⁰;
+//│ let lambda⁰, Function$⁰;
 //│ @staged @private
 //│ define lambda⁰ as staged fun lambda¹(x, y) {
 //│   return +⁰(x, y)
@@ -150,7 +150,7 @@ staged module LiftedLambda with
 staged module LiftedMultParams with
   fun foo(x)(y) = x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let LiftedMultParams⁰, lambda$⁰, Function$²;
+//│ let lambda$⁰, Function$²;
 //│ @staged
 //│ define lambda$⁰ as staged fun lambda$¹(x, y) {
 //│   return +⁰(x, y)

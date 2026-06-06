@@ -19,7 +19,7 @@ data class Foo()
 //│   static [definitionMetadata] = ["class", "Foo", []];
 //│ });
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let Foo⁰; @data define Foo⁰ as class Foo² { constructor Foo¹ }; end
+//│ @data define Foo⁰ as class Foo² { constructor Foo¹ }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // * Notice that `Foo¹` correctly refers to the ClassCtorSymbol of `Foo` shown above

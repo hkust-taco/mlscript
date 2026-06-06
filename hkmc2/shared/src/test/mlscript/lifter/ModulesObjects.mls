@@ -34,19 +34,19 @@ fun foo(y) =
   (new M).foo()
 foo(10)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let M⁰, foo⁰;
+//│ let M⁰;
 //│ define M⁰ as class M¹ {
 //│   private val y⁰;
 //│   constructor(y) {
 //│     set M¹.this.y⁰ = y;
 //│     end
 //│   }
-//│   method foo¹ = fun foo²() {
+//│   method foo⁰ = fun foo¹() {
 //│     set M¹.this.y⁰ = 2;
 //│     return runtime⁰.Unit⁰
 //│   }
 //│ };
-//│ define foo⁰ as fun foo³(y) { let tmp; set tmp = new M¹(y); return tmp.foo²() };
+//│ define foo² as fun foo³(y) { let tmp; set tmp = new M¹(y); return tmp.foo¹() };
 //│ return foo³(10)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -112,7 +112,7 @@ fun foo(x, y) =
 //│ ║  l.105: 	  object M with
 //│ ╙──       	         ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo3⁰, foo⁴;
+//│ let foo3⁰;
 //│ define foo3⁰ as fun foo3¹(M) {
 //│   return M.foo2⁰()
 //│ };
@@ -207,7 +207,7 @@ module M with
   val x = if A() is A then 2 else 3
 M.A().get
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let M³, tmp;
+//│ let tmp;
 //│ define M³ as class M⁴
 //│ module M⁵ {
 //│   val x⁰;

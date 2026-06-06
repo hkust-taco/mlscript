@@ -219,8 +219,8 @@ fun c(x, y) = if x is
     let t = if y is
       A then 2
     t + x.AA#x
-let y = A
-c(AA(2), y)
+let y = A in
+  c(AA(2), y)
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: x¹¹
@@ -229,7 +229,6 @@ c(AA(2), y)
 //│ deforest > 	match: y¹
 //│ deforest > <<< fusing <<<
 //│ = 4
-//│ y = fun
 
 
 :expect 9
@@ -239,8 +238,8 @@ fun c(x, y) = if x is
       A then 2 + x.AA#x
     t + x.AA#x
 fun c2(y) = if y is A then 3
-let y = A
-c(AA(2), y) + c2(y)
+let y = A in
+  c(AA(2), y) + c2(y)
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: x¹²
@@ -248,7 +247,6 @@ c(AA(2), y) + c2(y)
 //│ deforest > 	fields: x¹².x¹
 //│ deforest > <<< fusing <<<
 //│ = 9
-//│ y = A
 
 
 // need to include computations of `rest` from more than one levels of parent matches

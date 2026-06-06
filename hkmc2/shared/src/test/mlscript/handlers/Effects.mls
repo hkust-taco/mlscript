@@ -179,7 +179,7 @@ result
 :effectHandlers
 fun f() = case [...x, y, z] then x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f⁰, lambda⁰;
+//│ let lambda⁰;
 //│ do runtime⁰.resetEffects﹖();
 //│ @private
 //│ define lambda⁰ as fun lambda¹(caseScrut) {

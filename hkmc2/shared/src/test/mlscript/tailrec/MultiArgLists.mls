@@ -19,7 +19,7 @@ fun loop(x)(y) =
   else loop(x - 1)(y + x)
 loop(1000)(0)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let loop⁰, loop$tailrec⁰;
+//│ let loop$tailrec⁰;
 //│ @private
 //│ define loop$tailrec⁰ as fun loop$tailrec¹(x, y) {
 //│   loop loopLabel:
@@ -51,7 +51,7 @@ fun count(start)(stop) =
   else count(start + 1)(stop)
 count(0)(100)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let count⁰, count$tailrec⁰;
+//│ let count$tailrec⁰;
 //│ @private
 //│ define count$tailrec⁰ as fun count$tailrec¹(start, stop) {
 //│   loop loopLabel:
@@ -79,7 +79,7 @@ count(0)(100)
 fun even(n)(dummy) = if n == 0 then [true, dummy] else odd(n - 1)(dummy + 1)
 fun odd(n)(dummy) = if n == 0 then [false, dummy] else even(n - 1)(dummy + 1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let even⁰, odd⁰, even_odd⁰;
+//│ let even_odd⁰;
 //│ define even_odd⁰ as fun even_odd¹(id, param0, param1) {
 //│   loop loopLabel:
 //│     match id
@@ -142,7 +142,7 @@ fun f(n)(a, b, c, d, ...e)(m) =
 fun g(n)(m) =
   @tailcall f(n - 1)(...[1, 2], 3, ...[3, 4], ...[5, n], 7, n)(m)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let f⁰, g⁰, f_g⁰;
+//│ let f_g⁰;
 //│ define f_g⁰ as fun f_g¹(id, param0, param1, param2, param3, param4, param5, param6) {
 //│   loop loopLabel:
 //│     match id

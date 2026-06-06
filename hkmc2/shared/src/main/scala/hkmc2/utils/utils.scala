@@ -91,7 +91,7 @@ class DebugPrinter:
         s"Loc at :$sl:$sc-$el:$ec"
       case codegen.Scoped(syms, body) =>
         val symsStr = "{" + syms.toArray.sortBy(_.uid).map(_.showAsPlain).mkString(", ") + "}"
-        s"Scoped(syms = $symsStr): \n" + s"body = ${printProduct(false, body)}".indent("  ")
+        s"Scoped(syms = $symsStr):\n" + s"body = ${printProduct(false, body)}".indent("  ")
       
       case t: Product => printProduct(inTailPos, t)
       case v => printPlain(v)

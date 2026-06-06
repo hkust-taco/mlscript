@@ -80,7 +80,7 @@ fun f(x) =
     fun y = x
   new C
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let C⁰, f⁰;
+//│ let C⁰;
 //│ define C⁰ as class C¹ {
 //│   private val x⁰;
 //│   constructor(x) {
@@ -113,7 +113,7 @@ fun f() =
   Good()
 f().foo()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let Bad⁰, Good⁰, f², tmp, Capture$scope0⁰;
+//│ let Bad⁰, Good⁰, tmp, Capture$scope0⁰;
 //│ define Capture$scope0⁰ as class Capture$scope0² {
 //│   constructor Capture$scope0¹(z$0, w$1) {
 //│     define w$1⁰ as val w$1¹ = w$1;
@@ -283,7 +283,7 @@ fun main() =
   set e.a = 0
   [c.a, c.b, d.a, e.a]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let C², main⁰;
+//│ let C²;
 //│ define C² as class C⁴ {
 //│   val a⁰;
 //│   constructor C³(a) {
@@ -339,7 +339,7 @@ fun main(x) =
   set e.a = 0
   [c.a, c.b, d.a, e.a, c.get, d.get, e.get]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let C⁵, main²;
+//│ let C⁵;
 //│ define C⁵ as class C⁷ {
 //│   private val x²;
 //│   val a²;
@@ -434,7 +434,7 @@ fun f(x, y, z) =
   class D extends C(y)
   [new C(0), new D]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let C⁸, D⁰, f⁴, Capture$f⁰;
+//│ let C⁸, D⁰, Capture$f⁰;
 //│ @data
 //│ define C⁸ as class C¹⁰ {
 //│   private val f$cap⁰;
@@ -520,7 +520,7 @@ fun f(x, y, z) =
   [new C(0), new D]
 //│ ═══[WARNING] Cannot yet lift class `D` as it is used as a first-class class.
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let C¹¹, f⁶, Capture$f³;
+//│ let C¹¹, Capture$f³;
 //│ @data
 //│ define C¹¹ as class C¹³ {
 //│   private val f$cap³;

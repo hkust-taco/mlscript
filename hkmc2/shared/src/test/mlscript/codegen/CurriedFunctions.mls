@@ -5,7 +5,7 @@
 fun foo(x)(y) = z => x + y + z
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰, foo$worker⁰;
+//│ let foo$worker⁰;
 //│ @inline
 //│ define foo⁰ as fun foo¹(x)(y) {
 //│   return foo$worker¹(x, y)
@@ -32,7 +32,7 @@ foo(1)(2)(3)
 fun foo(x)(y) = z => x + y + z
 foo(1)(2)(3)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo², baseCall, lambda¹, lambda$⁰;
+//│ let baseCall, lambda¹, lambda$⁰;
 //│ @inline @private
 //│ define lambda$⁰ as fun lambda$¹(x, y)(z) {
 //│   return lambda²(x, y, z)
@@ -51,7 +51,7 @@ foo(1)(2)(3)
 //│ set baseCall = foo³(1)(2);
 //│ return baseCall(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo², lambda$⁰;
+//│ let lambda$⁰;
 //│ @inline @private
 //│ define lambda$⁰ as fun lambda$¹(x, y)(z) {
 //│   let tmp;

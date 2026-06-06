@@ -18,7 +18,7 @@ if x === 0 then 1 else 2
 :sir
 let a = if x === 0 then 1 else 2
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let a⁰, scrut, tmp;
+//│ let scrut, tmp;
 //│ set scrut = ===⁰(x⁰, 0);
 //│ match scrut
 //│   true =>
@@ -133,7 +133,7 @@ let qqq = if x is
   1 then "1"
   else ""
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let qqq⁰, tmp;
+//│ let tmp;
 //│ match x⁰
 //│   0 =>
 //│     match y⁰
@@ -227,7 +227,6 @@ fun foo(x, y, z) =
     1 then "1"
     else ""
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo⁰;
 //│ define foo⁰ as fun foo¹(x, y, z) {
 //│   match x
 //│     0 =>
@@ -366,7 +365,6 @@ fun foo(x, y, z) = if x is
     let value = "hello"
     expensive_call(value)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo²;
 //│ define foo² as fun foo³(x, y, z) {
 //│   let value;
 //│   match x
@@ -412,9 +410,7 @@ fun foo(x, y, z) =
   if x is A then "Hello"
   else "Goodbye"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo⁴;
-//│ define foo⁴ as fun foo⁵(x, y, z) { match x A⁰ => return "Hello" else return "Goodbye" end };
-//│ end
+//│ define foo⁴ as fun foo⁵(x, y, z) { match x A⁰ => return "Hello" else return "Goodbye" end }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :sir
@@ -433,7 +429,6 @@ fun foo(x, y, z) =
   if x is A and y is B and z is C then "Hello"
   else "Goodbye"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo⁶;
 //│ define foo⁶ as fun foo⁷(x, y, z) {
 //│   match x
 //│     A⁰ =>
@@ -460,7 +455,6 @@ fun foo(x, y, z) =
 fun foo(x, y, z) =
   if x is A and y is B and z is C then "Hello"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo⁸;
 //│ define foo⁸ as fun foo⁹(x, y, z) {
 //│   match x
 //│     A⁰ =>
@@ -497,7 +491,7 @@ foo(A, B, B)
 :sir
 let y = if true then 1 else 2
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let y¹, scrut, tmp;
+//│ let scrut, tmp;
 //│ set scrut = true;
 //│ match scrut
 //│   true =>

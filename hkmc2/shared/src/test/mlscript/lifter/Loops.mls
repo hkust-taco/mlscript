@@ -43,7 +43,7 @@ fun foo() =
     set x += 1
     return () => x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let foo⁰, lambda⁰, Capture$scope0⁰, lambda$⁰;
+//│ let lambda⁰, Capture$scope0⁰, lambda$⁰;
 //│ @inline @private
 //│ define lambda$⁰ as fun lambda$¹(scope0$cap)() {
 //│   return lambda¹(scope0$cap)

@@ -163,7 +163,6 @@ fun test2() =
     0 then 1)
   funny
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let test2⁰;
 //│ define test2⁰ as fun test2¹() {
 //│   let lambda;
 //│   @private

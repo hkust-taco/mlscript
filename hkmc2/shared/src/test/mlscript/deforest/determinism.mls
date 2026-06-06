@@ -75,7 +75,7 @@ c2 of A(A(A(A(A(A(1))))))
 //│ deforest > 	fields: arg$A$0$⁴.a²
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let c2⁰, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, c2_19$c2⁰, c2_19$x_A⁰, c2_19$x_rest⁰, c2_19$arg$A$0$_A⁰, c2_19$arg$A$0$_rest⁰, c2_19$arg$A$0$_A¹, c2_19$arg$A$0$_rest¹, c2_19$arg$A$0$_A², c2_19$arg$A$0$_rest², c2_19$arg$A$0$_A³, c2_19$arg$A$0$_rest³, c2_19$arg$A$0$_A⁴, c2_19$arg$A$0$_rest⁴, A_a, A_a1, A_a2, A_a3, A_a4, A_a5;
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, c2_19$c2⁰, c2_19$x_A⁰, c2_19$x_rest⁰, c2_19$arg$A$0$_A⁰, c2_19$arg$A$0$_rest⁰, c2_19$arg$A$0$_A¹, c2_19$arg$A$0$_rest¹, c2_19$arg$A$0$_A², c2_19$arg$A$0$_rest², c2_19$arg$A$0$_A³, c2_19$arg$A$0$_rest³, c2_19$arg$A$0$_A⁴, c2_19$arg$A$0$_rest⁴, A_a, A_a1, A_a2, A_a3, A_a4, A_a5;
 //│ @private
 //│ define c2_19$c2⁰ as fun c2_19$c2¹(x) {
 //│   let a, arg$A$0$, arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5;

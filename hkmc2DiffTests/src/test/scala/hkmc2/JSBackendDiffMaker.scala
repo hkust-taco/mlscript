@@ -129,7 +129,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         codegen.Lowering()
       val jsb = ltl.givenIn:
         new JSBuilder
-      var lowered = low.program(blk)
+      var lowered = low.program(blk, symbolsToPreserve = Set.empty)
       if noOptimizations.isUnset then
         lowered = BlockSimplifier(symbolsToPreserve, dtl, print)(lowered)
         ltl.givenIn:
@@ -153,7 +153,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           with codegen.LoweringSelSanityChecks
           with codegen.LoweringTraceLog(traceJS.isSet)
       
-      var lowered = low.program(blk)
+      var lowered = low.program(blk, symbolsToPreserve = symbolsToPreserve)
+      
       var optimized = lowered
       
       if showLoweredTree.isSet then
@@ -227,14 +228,18 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val nestedScp = baseScp
       // val nestedScp = codegen.js.Scope(S(baseScp), curCtx.outer, collection.mutable.Map.empty) // * not needed
       
+      val importedSymbols: Set[ScopedSymbol] = pgrm.imports.iterator.map(_._1).toSet
+      val exportedScoped = symbolsToPreserve.collect:
+        case sym: ScopedSymbol if !importedSymbols.contains(sym) => sym
+      
       val resSym = new TempSymbol(N, "block$res")
       
       val resNme = nestedScp.allocateName(resSym)
       
-      val loweredMapped = pgrm.copy(main = pgrm.main.mapReturn:
+      val loweredMapped = pgrm.copy(main = Scoped(exportedScoped, pgrm.main.mapReturn:
         case Return(res) =>
           Assign(resSym, res, End())
-      )
+      ))
       val jsb = ltl.givenIn:
         new JSBuilder
           with JSBuilderArgNumSanityChecks

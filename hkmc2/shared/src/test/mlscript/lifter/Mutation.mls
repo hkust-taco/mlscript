@@ -12,7 +12,7 @@ fun foo() =
   xs.push(bar)
   set x = 2
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let bar⁰, foo⁰, Capture$scope0⁰, bar$⁰;
+//│ let bar⁰, Capture$scope0⁰, bar$⁰;
 //│ define Capture$scope0⁰ as class Capture$scope0² {
 //│   constructor Capture$scope0¹(x$0) {
 //│     define x$0⁰ as val x$0¹ = x$0;
@@ -96,7 +96,7 @@ fun foo() =
     x
   bar
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let bar², foo²;
+//│ let bar²;
 //│ define bar² as fun bar³() { let x; return x };
 //│ define foo² as fun foo³() { return bar³ };
 //│ end

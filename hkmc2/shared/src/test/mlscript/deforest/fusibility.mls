@@ -94,15 +94,14 @@ affine_branched(AA(0), AA(1), (y) => if y is AA(x) then x + 2)
 
 
 fun c(x) = if x is AA(_) then 0
-let p = AA(10)
-c(p) + c(p)
+let p = AA(10) in
+  c(p) + c(p)
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > p@3
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = 0
-//│ p = AA(10)
 
 
 fun c(p) = if p is AA(v) then v
@@ -159,8 +158,8 @@ c(AA(1))
 // non-affinity propagates through nested ctors
 fun c1(x) = if x is AA(AA(AA(v))) then v else 0
 fun c2(x) = if x is AA(AA(_)) then 1 else 0
-let p = AA(AA(AA(10)))
-c1(p) + c2(p)
+let p = AA(AA(AA(10))) in
+  c1(p) + c2(p)
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > p@2
 //│ deforest > tmp@1
@@ -169,7 +168,6 @@ c1(p) + c2(p)
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = 11
-//│ p = AA(AA(AA(10)))
 
 
 

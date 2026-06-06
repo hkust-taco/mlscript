@@ -38,7 +38,7 @@ let last = peek
 set peek = 1
 last
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let peek⁰, last⁰; set peek⁰ = Predef⁰.hide⁰(4); set last⁰ = peek⁰; set peek⁰ = 1; return last⁰
+//│ set peek⁰ = Predef⁰.hide⁰(4); set last⁰ = peek⁰; set peek⁰ = 1; return last⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 4
 //│ last = 4

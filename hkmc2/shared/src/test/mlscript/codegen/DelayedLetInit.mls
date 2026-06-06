@@ -113,7 +113,7 @@ else foo = 1
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo1;
 //│ if (true === true) {
-//│   block$res14 = undefined;
+//│   block$res14 = foo1;
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ foo = undefined

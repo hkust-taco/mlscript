@@ -11,7 +11,6 @@ data class Pair[A, B](first: A, second: B)
 :sir
 pattern SumPair = Pair(a, b) => a + b
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let SumPair⁰;
 //│ define SumPair⁰ as pattern SumPair¹ {
 //│   method unapply⁰ = fun unapply¹(input) {
 //│     let transform, arg$Pair$0$, arg$Pair$1$, transformResult, lambda;
@@ -154,7 +153,7 @@ pattern EvaluatedTerm =
   | Infix("/", EvaluatedTerm as left, EvaluatedTerm as right) => left / right
   | Prefix("-", EvaluatedTerm as operand) => -operand
   | Prefix("+", EvaluatedTerm as operand) => +operand
-//│ Lines of IR: 298
+//│ Lines of IR: 297
 
 // Some helper functions to create `Term`s.
 fun wrapLiteral(value) = if value is Int then Literal(value) else value
@@ -188,7 +187,7 @@ Infix("**", Literal(1), Literal(2)) is EvaluatedTerm
 fun evaluate(term) = if term is
   (@compile EvaluatedTerm) as v then Some(v)
   else None
-//│ Lines of IR: 3624
+//│ Lines of IR: 3623
 
 
 evaluate of Literal(1)

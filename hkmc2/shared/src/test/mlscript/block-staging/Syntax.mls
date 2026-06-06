@@ -20,7 +20,6 @@ staged fun f() = 0
 :staging
 staged module A
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let A⁰;
 //│ define A⁰ as class A¹
 //│ staged module A² {
 //│   constructor {
