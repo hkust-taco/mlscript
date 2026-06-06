@@ -29,16 +29,29 @@ object PrivateObject with
 PrivateObject.read
 //│ = 42
 
-:ge
+:lift
+:expect 42
+object LiftedPrivateObject with
+  private fun inc(x) = x + 1
+  fun mkInc = x => inc(x)
+LiftedPrivateObject.mkInc(41)
+//│ = 42
+
+:e
 PrivateObject.x
-//│ > try { block$res7 = PrivateObject1.#x;; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                  ^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Private field '#x' must be declared in an enclosing class
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'x' outside its declaring owner
+//│ ║  l.41: 	PrivateObject.x
+//│ ║        	             ^^
+//│ ╟── private member declared here
+//│ ║  l.26: 	  private val x = 40
+//│ ╙──      	              ^
 
-:ge
+:e
 PrivateObject.inc()
-//│ > try { block$res8 = runtime.checkCall(PrivateObject1.#inc());; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                    ^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Private field '#inc' must be declared in an enclosing class
-
-
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'inc' outside its declaring owner
+//│ ║  l.50: 	PrivateObject.inc()
+//│ ║        	             ^^^^
+//│ ╟── private member declared here
+//│ ║  l.27: 	  private fun inc() = x + 2
+//│ ╙──      	              ^^^
+//│ ═══[RUNTIME ERROR] TypeError: PrivateObject1[inc$accessorSymbol1] is not a function

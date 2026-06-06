@@ -84,9 +84,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         val privateName = owner.privatesScope.allocateOrGetName(ts)
         if scope.inScopeOwners(owner)
         then doc".#$privateName"
-        else if ts.mayUsePrivateAccessor
-        then doc"[${scope.lookup_!(getPrivateAccessorSymbol(ts), loc)}]"
-        else doc".#$privateName"
+        else doc"[${scope.lookup_!(getPrivateAccessorSymbol(ts), loc)}]"
 
   private def withPrivateAccessorDecls(doc: Document)(using Raise, Scope): Document =
     val accessors = (
@@ -105,7 +103,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       body
       owners = oldOwners
     def needsAccessor(ts: semantics.TermSymbol): Bool =
-      ts.isPrivate && ts.mayUsePrivateAccessor && ts.owner.exists(owner => !owners.exists(_ is owner))
+      ts.isPrivate && ts.owner.exists(owner => !owners.exists(_ is owner))
     def note(sym: Opt[DefinitionSymbol[?]]): Unit =
       sym match
       case S(ts: semantics.TermSymbol) if needsAccessor(ts) =>
@@ -455,6 +453,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               .mkDocument(doc"")
             
             def mkPrivs(pubFlds: Ls[BlockMemberSymbol -> TermSymbol], privFlds: Ls[TermSymbol],
+                  methods: Ls[FunDefn],
                   mtdPrefix: Str, isym: InnerSymbol)(using Scope): Document =
               // * Note: the non-mut-val parts of `pubFlds` are not used because in JS, fields are not declared
               val mutPubFields =
@@ -492,14 +491,22 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                     selectPrivateField(fld, fld.toLoc).get
                   } = value; }"
                 :: Nil
-              (privDecls ::: accessors ::: privateAccessors).mkDocument(doc"")
+              val privateMethodAccessors = methods.filter(td =>
+                td.dSym.isPrivate && privateAccessorSymbols.contains(td.dSym)
+              ).flatMap: td =>
+                doc" # ${mtdPrefix}get [${scope.lookup_!(getPrivateAccessorSymbol(td.dSym), td.dSym.toLoc)}]() { return ${
+                    termSymOwnerQual(td.dSym)
+                  }${
+                    selectPrivateField(td.dSym, td.dSym.toLoc).get
+                  }; }" :: Nil
+              (privDecls ::: accessors ::: privateAccessors ::: privateMethodAccessors).mkDocument(doc"")
             
             val modDoc = modo match
               case N => doc""
               case S(mod) =>
                 val (thisProxy, res) = outerScope.nestRebindThis(S(mod.isym)):
                   val mtdPrefix = "static "
-                  val privs = mkPrivs(mod.publicFields, mod.privateFields, mtdPrefix, mod.isym)
+                  val privs = mkPrivs(mod.publicFields, mod.privateFields, mod.methods, mtdPrefix, mod.isym)
                   val ctorCode = if mod.ctor.isEmpty then doc"" else doc" # static " :: braced:
                     body(mod.ctor, endSemi = true)
                   privs :: ctorCode :: {
@@ -513,7 +520,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             
             val mtdPrefix = ""
             
-            val privs = mkPrivs(pubFlds, privFlds, mtdPrefix, isym)
+            val privs = mkPrivs(pubFlds, privFlds, mtds, mtdPrefix, isym)
             
             val isSingleton = (kind is syntax.Obj) || (kind is syntax.Pat)
             

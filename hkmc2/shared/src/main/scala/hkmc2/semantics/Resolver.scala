@@ -828,6 +828,23 @@ class Resolver(tl: TraceLogger)
    * This also expands the LHS `Foo` of a selection to `Foo.class` if
    * the selection is selecting a static member from a lifted module.
    */
+  private def sourceScopeContainsOwner(ctx: Opt[SrcScope], owner: InnerSymbol): Bool = ctx match
+    case S(scope) =>
+      scope.outer.inner.exists(_ is owner) || sourceScopeContainsOwner(scope.parent, owner)
+    case N => false
+
+  private def checkPrivateAccess(sel: AnySel, sym: DefinitionSymbol[?]): Unit = sym match
+    case ts: TermSymbol if ts.isExplicitlyPrivate =>
+      ts.owner.foreach: owner =>
+        if !sel.isErroneous && !sourceScopeContainsOwner(sel.originalCtx, owner) then
+          sel.isErroneous = true
+          raise:
+            ErrorReport(
+              msg"Cannot access private member '${ts.nme}' outside its declaring owner" -> sel.nme.toLoc ::
+              (ts.toLoc.map(loc => msg"private member declared here" -> S(loc)).toList),
+              source = Diagnostic.Source.Compilation)
+    case _ => ()
+
   def resolveSymbol(t: Resolvable, prefer: Expect, sign: Bool)(using ictx: ICtx): Unit =
   trace[Unit](
     s"Resolving symbol for term: ${t} (prefer = ${prefer})", 
@@ -873,6 +890,7 @@ class Resolver(tl: TraceLogger)
               log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
               disambSym(prefer, sign)(bms) match
                 case S(ds) =>
+                  checkPrivateAccess(t, ds)
                   t.expand(S(t.withSym(bms).resolved(ds)))
                 case N =>
                   log(s"Unable to disambiguate ${bms}")
@@ -900,6 +918,7 @@ class Resolver(tl: TraceLogger)
                 log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
                 disambSym(prefer, sign)(bms) match
                   case S(ds) =>
+                    checkPrivateAccess(t, ds)
                     t.expand(S(t.withSym(bms).resolved(ds)))
                   case N =>
                     log(s"Unable to disambiguate ${bms}")
