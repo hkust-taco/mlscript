@@ -1,7 +1,7 @@
 package hkmc2
 package codegen
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import semantics.*
@@ -117,7 +117,20 @@ class BlockTransformer(subst: SymbolSubst):
   def applyScopedBlock(b: Block): Block = b match
     case Scoped(s, bd) =>
       val nb = applySubBlock(bd)
-      if nb is bd then b else Scoped(s, nb)
+
+      // Set does not have .mapConserve
+      var hasDiff = false
+      val ns = s.map[ScopedSymbol]:
+        case s: LocalVarSymbol =>
+          val ns = s.subst
+          if ns isnt s then hasDiff = true
+          ns
+        case s: BlockMemberSymbol =>
+          val ns = s.subst
+          if ns isnt s then hasDiff = true
+          ns
+        
+      if (nb is bd) && !hasDiff then b else Scoped(ns, nb)
     case _ => applySubBlock(b)
   
   

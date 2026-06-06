@@ -29,12 +29,7 @@ false && loudTrue
 :sjs
 print(1 && loudTrue)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (1 === true) {
-//│   let inlinedVal;
-//│   inlinedVal = loud(true);
-//│   return Predef.print(inlinedVal)
-//│ }
-//│ return Predef.print(false);
+//│ if (1 === true) { Predef.print(true); return Predef.print(true) } return Predef.print(false);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > false
 

@@ -2,7 +2,7 @@ package hkmc2.codegen
 
 import scala.collection.mutable.{Map => MutMap}
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 
 import hkmc2._
 import hkmc2.Message.MessageContext
@@ -74,7 +74,6 @@ class Printer(using Raise, ShowCfg, State, SymbolPrinter, Config):
     case End(msg) if msg.nonEmpty && config.commentGeneratedCode => doc"end /* ${msg} */"
     case End(_) => doc"end"
     case Unreachable(msg) => doc"unreachable /* ${msg} */"
-    case _ => TODO(blk)
   
   def printFlags(defn: Defn)(using Scope): Document =
     // val overrides = defn match

@@ -1,7 +1,7 @@
 package hkmc2
 package document
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 
@@ -163,10 +163,9 @@ object Document {
 
 private case object DocNil extends Document
 private case class DocBreak(force: Boolean) extends Document
-private case class DocText(txt: String) extends Document {
+private case class DocText(txt: String) extends Document:
   if txt contains '\n' then
     System.err.println(s"Warning: DocText should not contain \\n characters; use DocBreak instead:\n\t$txt")
-}
 private case class DocGroup(doc: Document) extends Document
 private case class DocNest(indent: Int, doc: Document) extends Document
 private case class DocCons(hd: Document, tl: Document) extends Document

@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 package ucs
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import syntax.{Literal, Tree, Keyword}, utils.*
 import Message.MessageContext
 import Elaborator.{Ctx, State, ctx}
@@ -405,7 +405,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         val exitCont: Result => Block = r => Assign(tmp, r, Break(exitLabel))
         val bodyBlock = lowerSplit(sym.body, exitCont)
         val tailBlock = lowerSplit(tail, exitCont)
-        Label(exitLabel, false, Label(joinLabel, false, tailBlock, bodyBlock), cont(Value.SimpleRef(tmp)))
+        Label(exitLabel, false, Label(joinLabel, false, tailBlock, bodyBlock), cont(tmp.asSimpleRef))
     case Split.UseSplit(sym) =>
       sym.label match
         case S(label) => Break(label)

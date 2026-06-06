@@ -69,9 +69,11 @@ Never strip indentation whitespace.
 Empty lines in this project are usually significant.
 They help to visually identify blocks and groups of blocks of code
 (multiple empty lines separates groups of blocks hierarchically).
-You should _never_ remove pre-existing empty lines as part of your changes;
-this includes empty lines at the very end of files,
-which are left for easier future editing by programmers.
+You should never remove pre-existing empty lines as part of your changes
+unless they are at the very end of the file:
+while we often leave some there for easier future editing by programmers,
+it seems AI agent toolings like `apply_patch` reliably removes them anyway, which is okay
+(note: this is discussed at https://github.com/openai/codex/issues/21121#issuecomment-4608911199).
 
 **Important:** When working on a PR, make sure to check the diff of the whole PR (including all commits)
 to ensure that no needless empty-line changes are included in the PR. If you find any, please remove them.

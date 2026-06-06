@@ -3,7 +3,7 @@ package hkmc2
 import org.scalatest.{funsuite, ParallelTestExecution}
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 
 
 abstract class TimeOutTests

@@ -1,6 +1,6 @@
 package hkmc2
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.codegen.*
@@ -42,7 +42,7 @@ object ScopeData:
             case None => ()
           c.companion.map: comp =>
             objs ::= ScopedObject.Companion(comp, c)
-        
+      case v: ValDefn if !v.owner.isDefined => objs ::= ScopedObject.ValDef(v)
       case _ => super.applyDefn(defn)
   type ScopedInfo = DefinitionSymbol[?] | LabelSymbol | ScopeUID | Unit
 
@@ -87,6 +87,7 @@ object ScopeData:
         case Func(fun, _) => fun.dSym
         case ScopedBlock(uid, block) => uid
         case Loop(sym, _) => sym
+        case ValDef(v) => v.tsym
       
       // note: not unique
       lazy val nme = this match
@@ -97,6 +98,7 @@ object ScopeData:
         case Func(fun, isMethod) => fun.dSym.nme
         case Loop(sym, block) => "loop$" + sym.uid.toString()
         case ScopedBlock(uid, block) => "scope" + uid
+        case ValDef(v) => v.tsym.nme
       
       // Locals defined by a scoped object.
       lazy val definedLocals: Set[ScopedOrInnerSymbol] = this match
@@ -120,6 +122,7 @@ object ScopeData:
           .toSet
         case ScopedBlock(_, block) => block.syms.toSet
         case _: Loop => Set.empty
+        case ValDef(_) => Set.empty
     
       def contents: T = this match
         case Top(b) => b
@@ -129,6 +132,7 @@ object ScopeData:
         case Func(fun, _) => fun
         case ScopedBlock(_, block) => block
         case Loop(_, blk) => blk
+        case ValDef(v) => v
     
     // Scoped nodes which may be referenced using a symbol.
     sealed abstract class Referencable[T] extends TScopedObject[T]:
@@ -137,16 +141,19 @@ object ScopeData:
         case Companion(clsBody, compDefn) => clsBody.isym
         case Func(fun, isMethod) => fun.dSym
         case ClassCtor(cls) => cls.ctorSym.get
+        case ValDef(v) => v.tsym
       def bsym: BlockMemberSymbol = this match
         case Class(cls, _) => cls.sym
         case Companion(clsBody, compDefn) => compDefn.sym
         case Func(fun, isMethod) => fun.sym
         case ClassCtor(cls) => cls.sym
+        case ValDef(v) => v.sym
       def owner: Opt[InnerSymbol] = this match
         case Class(cls, _) => cls.owner
         case Companion(clsBody, compDefn) => compDefn.owner
         case ClassCtor(cls) => cls.owner
         case Func(fun, isMethod) => fun.owner
+        case ValDef(v) => v.owner
       
     
     // Scoped nodes which could possibly be lifted to the top level.
@@ -170,6 +177,7 @@ object ScopeData:
     // a scoped block.
     case class Loop(sym: LabelSymbol, body: Block) extends ScopedObject[Block]
     case class ScopedBlock(uid: ScopeUID, block: Scoped) extends ScopedObject[Block]
+    case class ValDef(defn: ValDefn) extends Referencable[ValDefn]
   
   extension (traverser: BlockTraverser)
     def applyScopedObject(obj: ScopedObject) = 
@@ -200,6 +208,7 @@ object ScopeData:
       case ScopedObject.ScopedBlock(uid, block) => traverser.applyBlock(block)
       case ScopedObject.ClassCtor(c) => ()
       case ScopedObject.Loop(_, b) => traverser.applyBlock(b)
+      case ScopedObject.ValDef(v) => traverser.applyDefn(v)
     
   // A simple tree data structure representing the nesting relation of definitions and scopes.
   class NestedScopeTree(val root: TScopeNode[Block]):
@@ -311,7 +320,7 @@ object ScopeData:
             case _ if inModOrTopLevel => false
             case ScopedObject.Func(isMethod = S(_)) => false
             case c: ScopedObject.Class if c.isObj => false
-            case _: ScopedObject.Loop | _: ScopedObject.ClassCtor | _: ScopedObject.ScopedBlock | _: ScopedObject.Companion => false
+            case _: ScopedObject.Loop | _: ScopedObject.ClassCtor | _: ScopedObject.ScopedBlock | _: ScopedObject.Companion | _: ScopedObject.ValDef => false
             case _ => true
         impl
       
@@ -423,6 +432,7 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
         finder.applyBlock(block.body)
       case ScopedObject.ClassCtor(c) => ()
       case ScopedObject.Loop(_, b) => finder.applyBlock(b)
+      case ScopedObject.ValDef(_) => ()
     val mtdObjs = obj match
       case ScopedObject.Class(cls, _) =>
         val k = if cls.k is syntax.Obj then MethodKind.ObjMethod else MethodKind.ClsMethod

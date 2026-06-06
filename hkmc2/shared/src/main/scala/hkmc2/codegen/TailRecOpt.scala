@@ -2,7 +2,7 @@ package hkmc2
 
 import scala.collection.mutable
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.codegen.*

@@ -1,6 +1,6 @@
 package hkmc2
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 import hkmc2.syntax.Tree
 import hkmc2.syntax.Keyword
 

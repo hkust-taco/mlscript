@@ -5,7 +5,7 @@
 fun foo(x)(y) = z => x + y + z
 foo(1)(2)(3)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let foo⁰, foo$worker⁰, inlinedVal;
+//│ let foo⁰, foo$worker⁰;
 //│ @inline
 //│ define foo⁰ as fun foo¹(x)(y) {
 //│   return foo$worker¹(x, y)
@@ -20,8 +20,7 @@ foo(1)(2)(3)
 //│   };
 //│   return lambda⁰
 //│ };
-//│ set inlinedVal = foo$worker¹(1, 2);
-//│ return inlinedVal(3)
+//│ return 6
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 6
 

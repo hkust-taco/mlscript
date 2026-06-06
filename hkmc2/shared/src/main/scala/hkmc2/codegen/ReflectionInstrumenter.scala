@@ -7,7 +7,7 @@ import hkmc2.Message.MessageContext
 import scala.collection.mutable.HashMap
 import scala.util.chaining.*
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 import semantics.*
 import semantics.Elaborator.{State, Ctx, ctx}

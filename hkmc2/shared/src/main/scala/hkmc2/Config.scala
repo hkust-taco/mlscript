@@ -1,6 +1,6 @@
 package hkmc2
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import Config.*
@@ -63,7 +63,7 @@ object Config:
     sanityChecks = N, // TODO make the default S
     // sanityChecks = S(SanityChecks(light = true)),
     effectHandlers = N,
-    liftDefns = N,
+    liftDefns = S(LiftDefns()),
     patMatConsequentSharingThreshold = default.patMatConsequentSharingThreshold, // minimum: 1
     target = CompilationTarget.JS,
     rewriteWhileLoops = false,
@@ -71,7 +71,7 @@ object Config:
     tailRecOpt = true,
     deforest = N,
     etaExpansion = S(EtaExpansion.default),
-    inlining = S(Inliner(10)),
+    inlining = S(Inliner(default.inlineThreshold)),
     deadBranchRemoval = default.deadBranchRemoval,
     qqEnabled = false,
     funcToCls = false,
@@ -83,6 +83,7 @@ object Config:
   object default:
     val patMatConsequentSharingThreshold = S(15)
     val deadBranchRemoval = false // TODO
+    val inlineThreshold = 10
   
   case class SanityChecks(light: Bool, checkUnreachable: Bool)
   
@@ -410,7 +411,7 @@ object ConfigParser:
     case "liftDefns" =>
       parseOpt(value)(_ => S(Config.LiftDefns())) match
         case S(v) => _.copy(liftDefns = v)
-        case N => identity
+        case N => _.copy(liftDefns = N)
     case "deforest" =>
       cfg =>
         parseOpt(value)(v => parseDeforest(v, cfg.deforest)) match

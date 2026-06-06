@@ -5,7 +5,7 @@ package node
 import scala.scalajs.js
 import scala.scalajs.js.annotation._
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 
 /**
  * JavaScript implementation of [[FileSystem]] using Node.js fs module.

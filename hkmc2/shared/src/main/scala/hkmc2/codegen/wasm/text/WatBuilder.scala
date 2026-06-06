@@ -3,7 +3,7 @@ package codegen
 package wasm
 package text
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import document.*
@@ -926,8 +926,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     def splitSuperTail(block: Block): Opt[Block -> Ls[Arg]] = block match
       case End(_) => N
-      case Assign(lhs, Call(Value.SimpleRef(bs: BuiltinSymbol), argss), _: End)
-        if (lhs is State.noSymbol) && (bs is State.superSymbol)
+      case Assign(_: NoSymbol, Call(Value.SimpleRef(State.superSymbol), argss), _: End)
       =>
         S(End("") -> argss.flatten)
       case b: NonBlockTail =>

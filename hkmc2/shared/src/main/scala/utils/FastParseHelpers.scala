@@ -2,7 +2,7 @@ package hkmc2
 
 import scala.collection.mutable.ArrayBuffer
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 
 class FastParseHelpers(val blockStr: Str, val lines: collection.IndexedSeq[Str]):
   def this(lines: IndexedSeq[Str]) = this(lines.mkString("\n"), lines)

@@ -553,3 +553,26 @@ fun f =
   A(h)
 f.foo
 //│ = 2
+
+// Val defns
+
+:expect 0
+:noOpt
+:lift
+fun f =
+  val y = 0
+  fun g =
+    val z = y
+    z
+  g
+f
+//│ = 0
+
+:expect 0
+:noOpt
+:lift
+fun f =
+  val y = () => 0
+  y()
+f
+//│ = 0

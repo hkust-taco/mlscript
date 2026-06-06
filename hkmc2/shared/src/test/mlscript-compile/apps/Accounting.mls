@@ -14,6 +14,9 @@ declare class Bool
 declare val String
 
 
+data class Project(val num: Str)
+
+
 data class Accounting with ...
 
 
@@ -22,7 +25,7 @@ fun display(amt): Str = (amt / 1000).toFixed(1)
 val warnings = mut []
 
 
-data class Project(val num: Str)
+val mkProject = Project
 
 
 data class Line(val name: Str, val proj: Project, val starting_balance: Num, val isMatchable: Bool) with

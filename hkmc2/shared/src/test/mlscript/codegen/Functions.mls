@@ -90,7 +90,7 @@ fun test2(y) = y + 1
 //│ REPL> Sending: block$res18 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: let test2, test1;try { test1 = function test1(x) {   runtime.checkArgs("test1", 1, true, arguments.length);   return x + 1 }; test2 = function test2(y) {   runtime.checkArgs("test2", 1, true, arguments.length);   return y + 1 };; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Sending: let test2, test1;try { test1 = function test1(x2) {   runtime.checkArgs("test1", 1, true, arguments.length);   return x2 + 1 }; test2 = function test2(y2) {   runtime.checkArgs("test2", 1, true, arguments.length);   return y2 + 1 };; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:

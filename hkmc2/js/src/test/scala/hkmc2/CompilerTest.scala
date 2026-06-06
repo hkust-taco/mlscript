@@ -2,7 +2,7 @@ package hkmc2
 
 import org.scalatest.funsuite.AnyFunSuite
 import io.{InMemoryFileSystem, Path, node}
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 import scala.scalajs.js
 import scala.scalajs.js.annotation._
 import scala.scalajs.js.Dynamic.global

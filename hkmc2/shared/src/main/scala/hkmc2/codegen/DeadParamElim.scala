@@ -2,7 +2,7 @@ package hkmc2
 package codegen
 
 import utils.*
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import semantics.*
 import syntax.Tree
 import hkmc2.codegen.flowAnalysis.*
@@ -228,10 +228,11 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
           (funToSccRepMap(lastRefedSymbol), funToSccRepMap(refSym)) match
             case (Some(a), Some(b)) if a is b => instId
             case _ => instId :+ refId
+        case _ => lastWords(s"newRefId: impossible InstantiationId shape $instId")
       end newRefId
     
       p match
-      case ref@FunRef(f) if newPolyFnSyms.isDefinedAt(newRefId(ref.uid, f)) =>
+      case ref@FunRef(f, _) if newPolyFnSyms.isDefinedAt(newRefId(ref.uid, f)) =>
         val (bms, tSym) = newPolyFnSyms(newRefId(ref.uid, f))(f)
         k(bms.asMemberRef(tSym))
       case _ => super.applyPath(p)(k)
@@ -355,7 +356,7 @@ class Rewrite(val deadParamElimSolver: DeadParamElimSolver)(using Raise):
         val filteredParams = filterFunParams(fDefn.dSym, fDefn.params, instId)
         val transformedBody = new Rewriter(instId).rewriteFunBody(fDefn.dSym, fDefn.params, fDefn.body)
         val (refreshedParams, refreshParamMap) = makeRefreshedParams(filteredParams)
-        val bodyWithCorrectSymbols = new RefreshSymbol(refreshParamMap).applyBlock(transformedBody)
+        val bodyWithCorrectSymbols = new RefreshSymbol(refreshParamMap).apply(transformedBody)
         FunDefn(
           N, bms, tSym, refreshedParams,
           bodyWithCorrectSymbols)(fDefn.configOverride, fDefn.annotations)

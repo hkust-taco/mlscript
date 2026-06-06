@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 package ups
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import Elaborator.{Ctx, State, ctx}
 import Message.MessageContext, ucs.{error, warn}
 import semantics.Pattern as SP, Pattern.*
@@ -116,6 +116,8 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
           val patternArguments = arguments.getOrElse(Nil).map(instantiate(_))
           val instantiation = Instantiation(symbol, patternArguments)(pattern.toLoc)
           Synonym(schedule(instantiation))
+        case N => lastWords(s"Expected target symbol to be a Class-like Symbol, got ${symbol.getClass.getSimpleName}")
+      case N => lastWords(s"Missing symbol for constructor pattern `${target.showAsTree}`")
     case SP.Composition(true, left, right) => instantiate(left) or instantiate(right)
     case SP.Composition(false, left, right) => instantiate(left) and instantiate(right)
     case SP.Negation(pattern) => Not(instantiate(pattern))
@@ -169,3 +171,4 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
             acc
           case N => true
       instantiate(pattern)
+    case _: SP.Guarded => TODO("instantiate for Guarded")

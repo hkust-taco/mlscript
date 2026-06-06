@@ -3,7 +3,7 @@ package codegen
 package wasm
 package text
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import document.*

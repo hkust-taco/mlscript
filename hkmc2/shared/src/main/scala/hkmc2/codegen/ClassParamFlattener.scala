@@ -1,10 +1,12 @@
 package hkmc2
 package codegen
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import semantics.*
+
+import hkmc2.semantics.Elaborator.State
 
 
 /** Flattens class constructor parameter lists in the Block IR.
@@ -22,7 +24,7 @@ import semantics.*
   * Argument spreads are intentionally preserved as `Arg`s while only the
   * surrounding argument-list boundary is removed.
   */
-class ClassParamFlattener extends BlockTransformer(SymbolSubst.Id):
+class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
   
   private def flattenParamLists(paramss: Ls[ParamList]): ParamList =
     val flags = paramss.headOption.fold(ParamListFlags.empty)(_.flags)
@@ -67,6 +69,14 @@ class ClassParamFlattener extends BlockTransformer(SymbolSubst.Id):
       case defn => k(defn)
   
   override def applyResult(r: Result)(k: Result => Block): Block = r match
+    case c @ Call(r @ Value.RefLike(State.superSymbol), argss) =>
+      applyArgss(argss): argss2 =>
+        val flatArgss =
+          if argss2.lengthCompare(1) > 0 then argss2.flatten ne_:: Nil
+          else argss2
+        k:
+          if flatArgss is argss then c
+          else Call(r, flatArgss)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLocOf(c)
     case call @ Call(fun, argss) =>
       saturatedCurriedClassCall(fun, argss) match
       case S(cls) =>
@@ -93,8 +103,8 @@ class ClassParamFlattener extends BlockTransformer(SymbolSubst.Id):
 end ClassParamFlattener
 
 object ClassParamFlattener:
-  def apply(program: Program): Program =
+  def apply(program: Program)(using State): Program =
     new ClassParamFlattener().applyProgram(program)
   
-  def apply(block: Block): Block =
+  def apply(block: Block)(using State): Block =
     new ClassParamFlattener().applyBlock(block)

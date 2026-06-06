@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 import sourcecode.Line
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import hkmc2.Message.MessageContext
@@ -226,6 +226,7 @@ enum Tree extends AutoLocated:
     case SplitPoint() => "split point"
     case OpSplit(lhs, ops_rhss) => "operator split"
     case OpenIn(opened, body) => "open-in"
+    case Assert(_, _, _, _) => "assertion"
     
   def deparenthesized: Tree = this match
     case Bra(BracketKind.Round, inner) => inner.deparenthesized

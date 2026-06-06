@@ -14,25 +14,33 @@ pattern Rep0[A] = "" | A ~ Rep0[A]
 // Hypothetical syntax: put pattern parameters in the type parameter list but
 // prefixed with `pattern`.
 pattern Rep0[pattern A] = "" | A ~ Rep0[A]
-//│ /!!!\ Uncaught error: scala.MatchError: TypeDef(Pat,Ident(A),None) (of class hkmc2.syntax.Tree$TypeDef)
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter type definition
+//│ ║  l.16: 	pattern Rep0[pattern A] = "" | A ~ Rep0[A]
+//│ ╙──      	             ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Pattern name not found: A.
+//│ ║  l.16: 	pattern Rep0[pattern A] = "" | A ~ Rep0[A]
+//│ ╙──      	                               ^
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern (application).
+//│ ║  l.16: 	pattern Rep0[pattern A] = "" | A ~ Rep0[A]
+//│ ╙──      	                                   ^^^^^^^
 
 :e
 // Hypothetical syntax: separate parameter list for the extraction.
 pattern Rep0(pattern A, B, C)(head) =
   "" | (A as head) ~ Rep0[A]
 //│ ╔══[COMPILATION ERROR] Multiple parameter lists are not supported for this definition.
-//│ ║  l.21: 	pattern Rep0(pattern A, B, C)(head) =
+//│ ║  l.29: 	pattern Rep0(pattern A, B, C)(head) =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.22: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.30: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (application).
-//│ ║  l.22: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.30: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	                     ^^^^^^^
 //│ ╔══[COMPILATION ERROR] Found an inconsistent variable in disjunction patterns.
-//│ ║  l.22: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.30: 	  "" | (A as head) ~ Rep0[A]
 //│ ║        	             ^^^^
 //│ ╟── The variable is missing from this sub-pattern.
-//│ ║  l.22: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.30: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	  ^^
 
 pattern Identifier = ("a" ..= "z") ~ (Identifier | "")
@@ -46,7 +54,7 @@ pattern Email(name, domain) =
 pattern GreaterThan(value) = case
   n and n > value then n
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (case).
-//│ ║  l.47: 	  n and n > value then n
+//│ ║  l.55: 	  n and n > value then n
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^
 
 :e
@@ -59,11 +67,11 @@ fun foo(x) = if x is
     Unit then ....
     Arrow(...) then ....
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (infix operator 'as').
-//│ ║  l.58: 	  view as
+//│ ║  l.66: 	  view as
 //│ ║        	  ^^^^^^^
-//│ ║  l.59: 	    Unit then ....
+//│ ║  l.67: 	    Unit then ....
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.60: 	    Arrow(...) then ....
+//│ ║  l.68: 	    Arrow(...) then ....
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -81,10 +89,10 @@ pattern Star(pattern T) = "" | Many(T)
 pattern Email(name, domains) =
   Rep(Char | ".") as name ~ "@" ~ Rep(Rep(Char) ~ ) as domain
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.78: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+//│ ║  l.86: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	                      ^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (juxtaposition).
-//│ ║  l.78: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+//│ ║  l.86: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	               ^^^^^^
 
 :pe
@@ -92,11 +100,11 @@ pattern Email(name, domains) =
 // Hypothetical syntax: use `to` instead of ugly `..=`
 pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.93: 	pattern Digits = "0" to "9" ~ (Digits | "")
-//│ ╙──      	                        ^^^
+//│ ║  l.101: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ╙──       	                        ^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (juxtaposition).
-//│ ║  l.93: 	pattern Digits = "0" to "9" ~ (Digits | "")
-//│ ╙──      	                 ^^^^^^
+//│ ║  l.101: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ╙──       	                 ^^^^^^
 
 pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 
@@ -130,11 +138,11 @@ x => if x as
   0 then false
   1 then true
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (infix operator 'as')
-//│ ║  l.129: 	x => if x as
+//│ ║  l.137: 	x => if x as
 //│ ║         	        ^^^^
-//│ ║  l.130: 	  0 then false
+//│ ║  l.138: 	  0 then false
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.131: 	  1 then true
+//│ ║  l.139: 	  1 then true
 //│ ╙──       	^^^^^^^^^^^^^
 //│ = fun
 
@@ -145,11 +153,11 @@ fun test(x) = if x is
     true  then "T"
     false then "F"
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (infix operator 'as').
-//│ ║  l.144: 	  Test as
+//│ ║  l.152: 	  Test as
 //│ ║         	  ^^^^^^^
-//│ ║  l.145: 	    true  then "T"
+//│ ║  l.153: 	    true  then "T"
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.146: 	    false then "F"
+//│ ║  l.154: 	    false then "F"
 //│ ╙──       	^^^^^^^^^^^^^^^^^^
 
 
@@ -157,7 +165,7 @@ fun test(x) = if x is
 pattern Test = (0 => false) | (1 => true)
 if 0 is ((Test as r) where (r is x)) then print(x)
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.158: 	if 0 is ((Test as r) where (r is x)) then print(x)
+//│ ║  l.166: 	if 0 is ((Test as r) where (r is x)) then print(x)
 //│ ╙──       	                                                ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -166,14 +174,14 @@ if 0 is ((Test as r) where (r is x)) then print(x)
 pattern Test = 0 | 1
 class Id(name: Test)
 //│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference.
-//│ ║  l.167: 	class Id(name: Test)
+//│ ║  l.175: 	class Id(name: Test)
 //│ ╙──       	               ^^^^
 //│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference.
-//│ ║  l.167: 	class Id(name: Test)
+//│ ║  l.175: 	class Id(name: Test)
 //│ ║         	               ^^^^
 //│ ╙── Non-module parameter must have a non-module type.
 //│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference.
-//│ ║  l.167: 	class Id(name: Test)
+//│ ║  l.175: 	class Id(name: Test)
 //│ ╙──       	               ^^^^
 
 
@@ -185,13 +193,13 @@ pattern StatementBased =
   1 => "one"
   _ => "many"
 //│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.184: 	  0 => "zero"
+//│ ║  l.192: 	  0 => "zero"
 //│ ╙──       	  ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.185: 	  1 => "one"
+//│ ║  l.193: 	  1 => "one"
 //│ ╙──       	  ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unexpected record property pattern.
-//│ ║  l.186: 	  _ => "many"
+//│ ║  l.194: 	  _ => "many"
 //│ ╙──       	  ^^^^^^^^^^^
 
 
@@ -202,16 +210,19 @@ pattern StatementBased =
 :fixme // TODO: support lambdas with patterns defined this way?
 | 0 => 1
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
-//│ ║  l.203: 	| 0 => 1
+//│ ║  l.211: 	| 0 => 1
 //│ ╙──       	  ^
 //│ = fun
 
 :fixme // TODO
 | [x] => 1
 //│ ╔══[COMPILATION ERROR] Illegal constraint syntax.
-//│ ║  l.210: 	| [x] => 1
+//│ ║  l.218: 	| [x] => 1
 //│ ╙──       	   ^
-//│ /!!!\ Uncaught error: scala.MatchError: Constrained(List(),Lit(IntLit(1))) (of class hkmc2.semantics.Term$Constrained)
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (constrained type)
+//│ ║  l.218: 	| [x] => 1
+//│ ╙──       	         ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 | (x, y) => 1
 //│ = fun
@@ -219,7 +230,7 @@ pattern StatementBased =
 :fixme // TODO
 | (x, 0) => 1
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
-//│ ║  l.220: 	| (x, 0) => 1
+//│ ║  l.231: 	| (x, 0) => 1
 //│ ╙──       	      ^
 //│ = fun
 

@@ -4,7 +4,7 @@ package flow
 
 import scala.collection.mutable
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 import utils.TraceLogger
 import Message.MessageContext
 import semantics.*, semantics.Term.*, semantics.AnySelTerm
@@ -68,7 +68,8 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       case cls: ClassSymbol => P.Ctor(cls, Nil)(t)
       case cls: ModuleOrObjectSymbol => P.Ctor(cls, Nil)(t)
       case ts: TermSymbol => getFlowSymOrType(ts.bms.get)
-      
+      case _ => lastWords(s"Unexpected resolved symbol in producer position: $sym")
+    
     case Ref(sym) =>
       sym match
       case sym: VarSymbol => P.Flow(sym)
@@ -94,6 +95,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           stmt.sym match
           case sym: FlowSymbol =>
             constrain(rhs, C.Flow(sym))
+          case _ => lastWords(s"Unexpected DefineVar symbol: ${stmt.sym}")
         case t: TermDefinition =>
           val sign_ty = t.sign.map(typeType(_)) // TODO use sign_ty
           val ps = t.params.map(typeParamList)
@@ -181,6 +183,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           case sym: ClassSymbol =>
             val args_t = args.map(typeProd(_, insideSelAppChain = insideSelAppChain))
             P.Ctor(sym, args_t)(t)
+      case S(_) => TODO("New with refinement not yet supported in flow analysis")
     
     case app @ App(lhs, rhs) =>
       checkLDS(lhs): pre_t =>
@@ -200,12 +203,15 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     
     case Tup(fields) =>
       P.Tup(fields.map:
-        case f: Fld => N -> typeProd(f.term))
+        case f: Fld => N -> typeProd(f.term)
+        case s: Spd => TODO("tuple spread in flow analysis")
+      )
     
     case Error =>
       P.Ctor(Extr(false), Nil)(t)
     
     // case _ => P.Flow(FlowSymbol("TODO"))
+    case _ => TODO(t)
   
   /* 
   def getType(t: Term): Type =
@@ -401,6 +407,10 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                   case N =>
                     raise(ErrorReport(
                       msg"Tuple arity mismatch: too many elements on the producer side" -> trm.toLoc :: Nil))
+                case (Nil, _ :: _) =>
+                  raise(ErrorReport(
+                    msg"Tuple arity mismatch: too few elements on the producer side" -> trm.toLoc :: Nil))
+                case ((S(_), _) :: _, _ :: _) => ??? // TODO: producer-side spread vs remaining consumers
               zip(args, ini, rst, path)
             case (sel @ P.LeadingDotSel(trm), rhs) => rhs match
               case C.Typ(Type.Ref(sym, _)) =>
@@ -425,7 +435,6 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                   sel.trm.resolvedTargets ::= SelectionTarget.ObjectMember(memb)
                   log(s"Found immediate member ${memb}")
                   toSolve.push(Constraint(getFlowSymOrType(memb), sel.res))
-                case S(memb) => TODO(memb)
                 case N =>
                   d.moduleCompanion match
                   case S(comp) =>
@@ -440,9 +449,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                         patho match
                         case S(path) =>
                           sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
-                          val newlhs = memb match
-                            case memb: BlockMemberSymbol => getFlowSymOrType(memb)
-                            case _ => TODO(memb)
+                          val newlhs = getFlowSymOrType(memb)
                           toSolve.push(Constraint(newlhs, C.Fun(P.Tup((N, lhs) :: Nil), sel.res)))
                         case N => raise:
                           sel.trm.isErroneous = true

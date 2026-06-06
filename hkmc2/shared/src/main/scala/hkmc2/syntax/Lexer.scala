@@ -2,8 +2,7 @@ package hkmc2
 package syntax
 
 import scala.annotation.tailrec
-import mlscript._
-import utils._, shorthands._
+import hkmc2.utils._, shorthands._
 
 import Message.MessageContext
 import Diagnostic.Source.{Lexing, Parsing}

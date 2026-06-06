@@ -2,7 +2,7 @@ package hkmc2
 
 import collection.mutable
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 
 /**

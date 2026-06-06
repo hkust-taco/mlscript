@@ -3,7 +3,7 @@ package semantics
 package ups
 
 
-import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*, shorthands.*
 
 import syntax.{Keyword, LetBind, Tree}, Tree.{BoolLit, DecLit, Ident, IntLit, StrLit, UnitLit}
 import Term.{Blk, Rcd, Ref, SynthIf, SynthSel}

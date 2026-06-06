@@ -425,4 +425,180 @@ test(0).toString()
 //   return ret;
 // }
 
+:sir
+fun f(x, y, z) =
+  data class C(a) with
+    fun getX = x
+    fun getY = y
+    fun setY = set y += 1
+  class D extends C(y)
+  [new C(0), new D]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let C⁸, D⁰, f⁴, Capture$f⁰;
+//│ @data
+//│ define C⁸ as class C¹⁰ {
+//│   private val f$cap⁰;
+//│   private val x³;
+//│   val a⁴;
+//│   constructor C⁹(a, f$cap, x) {
+//│     set C¹⁰.this.f$cap⁰ = f$cap;
+//│     set C¹⁰.this.x³ = x;
+//│     define a⁴ as val a⁵ = a;
+//│     end
+//│   }
+//│   method getX⁰ = fun getX¹ {
+//│     return C¹⁰.this.x³
+//│   }
+//│   method getY⁰ = fun getY¹ {
+//│     return C¹⁰.this.f$cap⁰.y$0⁰
+//│   }
+//│   method setY⁰ = fun setY¹ {
+//│     let tmp;
+//│     set tmp = +⁰(C¹⁰.this.f$cap⁰.y$0⁰, 1);
+//│     set C¹⁰.this.f$cap⁰.y$0⁰ = tmp;
+//│     return runtime⁰.Unit⁰
+//│   }
+//│ };
+//│ define D⁰ as class extends C¹⁰ D¹ {
+//│   private val f$cap¹;
+//│   private val x⁴;
+//│   constructor(f$cap, x) {
+//│     do super⁰(f$cap².y$0⁰, f$cap², x⁵);
+//│     end;
+//│     set D¹.this.f$cap¹ = f$cap;
+//│     set D¹.this.x⁴ = x;
+//│     end
+//│   }
+//│ };
+//│ define Capture$f⁰ as class Capture$f² {
+//│   constructor Capture$f¹(y$0) {
+//│     define y$0¹ as val y$0⁰ = y$0;
+//│     end
+//│   }
+//│ };
+//│ define f⁴ as fun f⁵(x, y, z) {
+//│   let tmp, tmp1, f$cap;
+//│   set f$cap = new mut Capture$f²(y);
+//│   set tmp = new C¹⁰(0, f$cap, x);
+//│   set tmp1 = new D¹(f$cap, x);
+//│   return [tmp, tmp1]
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+:expect [2, (), 3, 2]
+let res = f(1, 2, 3)
+let c = res.0
+let d = res.1
+[c.getY, c.setY, c.getY, d.a]
+//│ = [2, (), 3, 2]
+//│ c = C(0)
+//│ d = D { a: 2 }
+//│ res = [C(0), D { a: 2 }]
+
+:expect 0
+class A(val x)
+class B(y) extends A(y)
+(new B(0)).x
+//│ = 0
+
+:expect [1, 2]
+class A(val x)(val y)
+class B extends A(1)(2)
+[(new B).x, (new B).y]
+//│ = [1, 2]
+
+:w
+:sir
+fun f(x, y, z) =
+  data class C(a) with
+    fun getX = x
+    fun getY = y
+    fun setY = set y += 1
+  class D extends C(y)
+  let x = D // force D unlifted
+  [new C(0), new D]
+//│ ═══[WARNING] Cannot yet lift class `D` as it is used as a first-class class.
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let C¹¹, f⁶, Capture$f³;
+//│ @data
+//│ define C¹¹ as class C¹³ {
+//│   private val f$cap³;
+//│   private val x⁶;
+//│   val a⁶;
+//│   constructor C¹²(a, f$cap, x) {
+//│     set C¹³.this.f$cap³ = f$cap;
+//│     set C¹³.this.x⁶ = x;
+//│     define a⁶ as val a⁷ = a;
+//│     end
+//│   }
+//│   method getX² = fun getX³ {
+//│     return C¹³.this.x⁶
+//│   }
+//│   method getY² = fun getY³ {
+//│     return C¹³.this.f$cap³.y$0²
+//│   }
+//│   method setY² = fun setY³ {
+//│     let tmp;
+//│     set tmp = +⁰(C¹³.this.f$cap³.y$0², 1);
+//│     set C¹³.this.f$cap³.y$0² = tmp;
+//│     return runtime⁰.Unit⁰
+//│   }
+//│ };
+//│ define Capture$f³ as class Capture$f⁵ {
+//│   constructor Capture$f⁴(y$0) {
+//│     define y$0³ as val y$0² = y$0;
+//│     end
+//│   }
+//│ };
+//│ define f⁶ as fun f⁷(x, y, z) {
+//│   let D, x1, tmp, tmp1, f$cap;
+//│   set f$cap = new mut Capture$f⁵(y);
+//│   define D as class extends C¹³ D² {};
+//│   set x1 = D²;
+//│   set tmp = new C¹³(0, f$cap, x);
+//│   set tmp1 = new D²();
+//│   return [tmp, tmp1]
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [2, (), 3, 2]
+let res = f(1, 2, 3)
+let c = res.0
+let d = res.1
+[c.getY, c.setY, c.getY, d.a]
+//│ = [2, (), 3, 2]
+//│ c = C(0)
+//│ d = D { a: 2 }
+//│ res = [C(0), D { a: 2 }]
+
+:w
+fun f(x, y, z) =
+  data class C(a) with
+    fun getX = x
+    fun getY = y
+    fun setY = set y += 1
+  class D extends C(y)
+  if x is C do print("a") // force C unlifted
+  [new C(0), new D]
+//│ ═══[WARNING] Cannot yet lift class/module `C` as it is used in an instance check.
+//│ ═══[WARNING] Cannot yet lift definition `D` as it extends an unliftable class.
+
+:expect [2, (), 3, 2]
+let res = f(1, 2, 3)
+let c = res.0
+let d = res.1
+[c.getY, c.setY, c.getY, d.a]
+//│ = [2, (), 3, 2]
+//│ c = C(0)
+//│ d = D { a: 2 }
+//│ res = [C(0), D { a: 2 }]
+
+
+:expect 3
+class Box(val x) with
+    fun get() = x
+    fun inc() = Box(x + 1).get()
+Box(2).inc()
+//│ = 3

@@ -30,12 +30,12 @@ sum(enum(5), 0)
 //│ deforest > 	match: ls⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > enum_12$enum: [1, 6]
+//│ eta-expansion > enum_13$enum: [1, 6]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let sum⁰, enum⁰, enum_12$enum$worker⁰;
+//│ let sum⁰, enum⁰, enum_13$enum$worker⁰;
 //│ @private
-//│ define enum_12$enum$worker⁰ as fun enum_12$enum$worker¹(x, eta$0$0, eta$0$5) {
+//│ define enum_13$enum$worker⁰ as fun enum_13$enum$worker¹(x, eta$0$0, eta$0$5) {
 //│   let scrut, tmp;
 //│   set scrut = <⁰(x, 0);
 //│   match scrut
@@ -46,7 +46,7 @@ sum(enum(5), 0)
 //│       set tmp = -⁰(x, 1);
 //│       set fv_tmp = eta$0$5;
 //│       set fv_tmp = +⁰(x, eta$0$0);
-//│       return enum_12$enum$worker¹(tmp, fv_tmp, undefined)
+//│       return enum_13$enum$worker¹(tmp, fv_tmp, undefined)
 //│   end
 //│ };
 //│ define enum⁰ as fun enum¹(x) {
@@ -79,7 +79,7 @@ sum(enum(5), 0)
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
 //│ };
-//│ return enum_12$enum$worker¹(5, 0, undefined)
+//│ return enum_13$enum$worker¹(5, 0, undefined)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 15
 
@@ -105,17 +105,17 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ deforest > 	fields: ls¹.t⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > flatten_27_append_16$append: [2, 5]
-//│ eta-expansion > flatten_27$flatten: [1, 5]
+//│ eta-expansion > flatten_31_append_19$append: [2, 5]
+//│ eta-expansion > flatten_31$flatten: [1, 5]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let flatten⁰, len⁰, append⁰, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, flatten_27$flatten⁰, flatten_27_append_16$append$worker⁰, flatten_27$flatten$worker⁰;
+//│ let flatten⁰, len⁰, append⁰, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, flatten_31$flatten⁰, flatten_31_append_19$append$worker⁰, flatten_31$flatten$worker⁰;
 //│ @inline @private
-//│ define flatten_27$flatten⁰ as fun flatten_27$flatten¹(xss)() {
-//│   return flatten_27$flatten$worker¹(xss)
+//│ define flatten_31$flatten⁰ as fun flatten_31$flatten¹(xss)() {
+//│   return flatten_31$flatten$worker¹(xss)
 //│ };
 //│ @private
-//│ define flatten_27$flatten$worker⁰ as fun flatten_27$flatten$worker¹(xss) {
+//│ define flatten_31$flatten$worker⁰ as fun flatten_31$flatten$worker¹(xss) {
 //│   let arg$Cons$0$, arg$Cons$1$, tmp6;
 //│   match xss
 //│     Nil⁰ =>
@@ -123,14 +123,14 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│     Cons¹ =>
 //│       set arg$Cons$0$ = xss.h⁰;
 //│       set arg$Cons$1$ = xss.t⁰;
-//│       set tmp6 = flatten_27$flatten¹(arg$Cons$1$);
-//│       return flatten_27_append_16$append$worker¹(arg$Cons$0$, tmp6)
+//│       set tmp6 = flatten_31$flatten¹(arg$Cons$1$);
+//│       return flatten_31_append_19$append$worker¹(arg$Cons$0$, tmp6)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
 //│ @private
-//│ define flatten_27_append_16$append$worker⁰ as fun flatten_27_append_16$append$worker¹(xs, ys) {
+//│ define flatten_31_append_19$append$worker⁰ as fun flatten_31_append_19$append$worker¹(xs, ys) {
 //│   let arg$Cons$1$;
 //│   match xs
 //│     Nil⁰ =>
@@ -138,7 +138,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│     Cons¹ =>
 //│       let inlinedVal;
 //│       set arg$Cons$1$ = xs.t⁰;
-//│       set inlinedVal = flatten_27_append_16$append$worker¹(arg$Cons$1$, ys);
+//│       set inlinedVal = flatten_31_append_19$append$worker¹(arg$Cons$1$, ys);
 //│       return +⁰(1, inlinedVal)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
@@ -191,7 +191,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ set tmp3 = Cons⁰(tmp2, Nil⁰);
 //│ set tmp4 = Cons⁰(tmp1, tmp3);
 //│ set tmp5 = Predef⁰.id⁰(tmp4);
-//│ return flatten_27$flatten$worker¹(tmp5)
+//│ return flatten_31$flatten$worker¹(tmp5)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 

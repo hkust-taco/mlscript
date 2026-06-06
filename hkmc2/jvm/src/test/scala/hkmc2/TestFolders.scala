@@ -1,6 +1,6 @@
 package hkmc2
 
-import mlscript.utils._, shorthands._
+import hkmc2.utils.*, shorthands.*
 
 
 /** Centralized definitions of which test directories belong to which SBT project.
