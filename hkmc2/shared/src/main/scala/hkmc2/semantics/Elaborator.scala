@@ -279,6 +279,7 @@ object Elaborator:
         val compile = assumeObject("compile")
         val buffered = assumeObject("buffered")
         val bufferable = assumeObject("bufferable")
+        val mayNotRaiseEffects = assumeObject("mayNotRaiseEffects")
       object scope extends VirtualModule(assumeBuiltinMod("scope")):
         val locally = assumeObject("locally")
       object runtime extends VirtualModule(assumeBuiltinMod("runtime")):
@@ -510,6 +511,8 @@ extends Importer with ucs.SplitElaborator:
             return S(Annot.TailRec)
           case ctx.builtins.annotations.inline =>
             return S(Annot.Inline)
+          case ctx.builtins.annotations.mayNotRaiseEffects =>
+            return S(Annot.MayNotRaiseEffects)
           case _ => ()
         case _ => ()
         S(Annot.Trm(trm))

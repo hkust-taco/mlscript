@@ -1411,14 +1411,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         val annot = a match
           case Annot.TailRec => "@tailrec"
           case Annot.Inline => "@inline"
-        
         target match
           case TermDefinition(body = S(bod), k = syntax.Fun) => ()
           case TermDefinition(k = syntax.Fun) => warn(a, S(msg"Only functions with a body may be marked as $annot."))
           case _ => warn(a)
-        
       case Annot.Modifier(syntax.Keyword.`public` | syntax.Keyword.`private` | syntax.Keyword.`virtual`) => ()
       case Annot.Modifier(syntax.Keyword("staged")) => ()
+      case Annot.MayNotRaiseEffects => ()
       case _: Annot.Config => () // Config annotations are handled during FunDefn creation
       case annot => warn(annot)
 

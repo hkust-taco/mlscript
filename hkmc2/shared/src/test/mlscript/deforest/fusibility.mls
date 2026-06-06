@@ -97,7 +97,7 @@ fun c(x) = if x is AA(_) then 0
 let p = AA(10)
 c(p) + c(p)
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > p@1
+//│ deforest > p@3
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -126,7 +126,7 @@ apply(c, AA(3))
 fun c(k, x) = if k is AA(_) then x.AA#x + x.AA#x + x.AA#x
 c(AA(0), AA(3))
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > tmp@2
+//│ deforest > tmp@1
 //│ deforest > x_for_c@17
 //│ deforest > x_for_c@31
 //│ deforest > <<< non-affine syms <<<

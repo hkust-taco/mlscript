@@ -3,6 +3,8 @@ import "./Rendering.mls"
 import "./LazyArray.mjs"
 import "./Iter.mjs"
 
+open annotations { mayNotRaiseEffects }
+
 
 module Runtime with ...
 
@@ -80,31 +82,42 @@ data class MatchFailure(errors)
 
 // For pattern matching on tuples
 module Tuple with
+  
+  @mayNotRaiseEffects
   fun slice(xs, i, j) = xs.slice(i, xs.length - j)
-
+  
+  @mayNotRaiseEffects
   fun lazySlice(xs, i, j) = LazyArray.dropLeftRight(i, j)(xs)
+  @mayNotRaiseEffects
   fun lazyConcat(...args) = LazyArray.__concat(...args)
-
+  
+  @mayNotRaiseEffects
   fun get(xs, i) =
     if i >= xs.length do
       throw RangeError("Tuple.get: index out of bounds")
     if i < -xs.length do
       throw RangeError("Tuple.get: negative index out of bounds")
     xs.[i]
-
+  
+  @mayNotRaiseEffects
   fun isArrayLike(xs) = Iter.isArrayLike(xs)
   val split = LazyArray.__split
 
 module Str with
+  
+  @mayNotRaiseEffects
   fun startsWith(string, prefix) = string.startsWith(prefix)
-
+  
+  @mayNotRaiseEffects
   fun get(string, i) =
     if i >= string.length then
       throw RangeError("Str.get: index out of bounds")
     else string.at(i)
   
+  @mayNotRaiseEffects
   fun take(string, n) = string.slice(0, n)
-
+  
+  @mayNotRaiseEffects
   fun leave(string, n) = string.slice(n)
 
 // Re-export rendering functions
