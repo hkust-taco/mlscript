@@ -45,7 +45,7 @@ case class Program(
 type SimpleSymbol = LocalVarSymbol | BuiltinSymbol
 
 /** Symbol that can be used as the left-hand side of an `Assign`. */
-type Assignable = LocalVarSymbol | NoSymbol.type
+type Assignable = LocalVarSymbol | NoSymbol
 
 /** Symbols that `Scoped` introduces as block-local bindings.
   * This deliberately excludes things like `TermSymbol`s, which never need to be scoped.
