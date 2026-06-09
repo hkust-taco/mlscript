@@ -12,7 +12,10 @@ fun start(x, f) =
 // if `z` and `g` are defined in a nested scoped block
 // and `g` is floated out to the top level, `z` in `g` gets unbound.
 // so currently nested `if`s do not get nested `Scoped` blocks
-:sir
+// * Note: ^ seems this is an outdated comment on an old test case
+// * Note: The whole thing used to optimize away the inner match, as it was empty,
+// *  but now the stupid `return runtime⁰.Unit⁰` continuation is moved into the `else` branch
+// *  so the match is no longer removbed. (Room for improvement.)
 :soir
 :sjs
 fun f(x) =
@@ -30,28 +33,6 @@ fun f(x) =
 //│   }
 //│   return runtime.Unit;
 //│ };
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let g;
-//│ do runtime⁰.resetEffects﹖();
-//│ define g as fun g⁰(z) {
-//│   return z
-//│ };
-//│ define f⁰ as fun f¹(x) {
-//│   let z;
-//│   match x
-//│     true =>
-//│       match x
-//│         true =>
-//│           set z = 3;
-//│           return runtime⁰.Unit⁰
-//│         else
-//│           return runtime⁰.Unit⁰
-//│       end
-//│     else
-//│       return runtime⁰.Unit⁰
-//│   end
-//│ };
-//│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ do runtime⁰.resetEffects﹖();
 //│ define f⁰ as fun f¹(x) {
@@ -140,6 +121,7 @@ fun start(x, f) =
 
 
 // NOTE: `z` should be in the function top level when `:effectHandlers` to be properly captured by the floated-out `g`.
+// * Note: it seems `g` is inlined now
 :sjs
 fun f(x) =
   if x do
@@ -165,7 +147,7 @@ fun f(x) =
 //│         if (runtime.curEffect === null) {
 //│           pc = 2;
 //│         } else {
-//│           return runtime.unwind(f4, 2, "ScopedBlocksAndHandlers.mls:149:7", null, null, 1, 1, x, 0)
+//│           return runtime.unwind(f4, 2, "ScopedBlocksAndHandlers.mls:131:7", null, null, 1, 1, x, 0)
 //│         }
 //│       } else {
 //│         return runtime.Unit

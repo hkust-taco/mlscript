@@ -504,9 +504,10 @@ object Begin:
         Scoped(symsSub ++ symsRest, Begin(bodySub, bodyRest))
       case (Scoped(symsSub, bodySub), rest) => Scoped(symsSub, Begin(bodySub, rest))
       case (Match(scrut, arms, dflt, rst), rest) => Match(scrut, arms, dflt, Begin(rst, rest))
-      case (Label(lbl, loop, body, rst), rest) => Label(lbl, loop, body, Begin(rst, rest)) // FIXME: makes Rendering.mls fail to compile
+      case (Label(lbl, loop, body, rst), rest) => Label(lbl, loop, body, Begin(rst, rest))
       case (TryBlock(sub, fin, rst), rest) => TryBlock(sub, fin, Begin(rst, rest))
       // case (_, Scoped(symsRest, bodyRest)) => Scoped(symsRest, Begin(sub, bodyRest))
+      // * ^ Not a good idea: we won't want to commute Scoped past things like Match in the future
       case _ => new Begin(sub, rest)
 
 
