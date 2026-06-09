@@ -405,7 +405,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             raise(ErrorReport(
               msg"Extending a partially applied class is not supported" -> loc :: Nil,
               source = Diagnostic.Source.Compilation))
-          k(Call(fr, acc.reverse.ne_!)(isMlsFun, true, isTailCall).withLoc(loc))
+          k(Call(fr, acc.reverse.ne_!)(
+            CallMetadata(isMlsFun, true, isTailCall)).withLoc(loc))
       zipArgs(ctorParamLists, args, Nil)
     case Nil =>
       if !ctorParamLists.isEmpty then
@@ -413,7 +414,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           msg"Extending a partially applied class is not supported" -> loc :: Nil,
           source = Diagnostic.Source.Compilation))
       // * No arguments to a super ctor means a nullary call, e.g., `extends C` means `extends C()`
-      k(Call(fr, Nil ne_:: Nil)(isMlsFun, true, isTailCall).withLoc(loc))
+      k(Call(fr, Nil ne_:: Nil)(
+        CallMetadata(isMlsFun, true, isTailCall)).withLoc(loc))
   
   /** Lower a call with multiple argument lists into `Call` nodes,
     * trying to group as many as possible into a single one
@@ -424,16 +426,19 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case (ps :: remainingParams, args :: remainingArgs) =>
         lowerArgs(args)(as => zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects))
       case (Nil, Nil) =>
-        k(Call(fr, acc.reverse.ne_!)(isMlsFun, mayRaiseEffects, isTailCall).withLoc(loc))
+        k(Call(fr, acc.reverse.ne_!)(
+          CallMetadata(isMlsFun, mayRaiseEffects, isTailCall)).withLoc(loc))
       case (Nil, args :: remainingArgss) =>
         acc.reverse match
         case Nil => lowerRemainingCalls(fr, args, remainingArgss, isTailCall, loc)(k)
         case acc: NELs[Ls[Arg]] =>
           val tmp = loweringCtx.registerTempSymbol(N, "baseCall")
-          val call = Call(fr, acc)(isMlsFun, mayRaiseEffects, isTailCall).withLoc(loc)
+          val call = Call(fr, acc)(
+            CallMetadata(isMlsFun, mayRaiseEffects, isTailCall)).withLoc(loc)
           Assign(tmp, call, lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, isTailCall, loc)(k))
       case (_ :: _, Nil) =>
-        k(Call(fr, acc.reverse.ne_!)(isMlsFun, mayRaiseEffects, isTailCall).withLoc(loc))
+        k(Call(fr, acc.reverse.ne_!)(
+          CallMetadata(isMlsFun, mayRaiseEffects, isTailCall)).withLoc(loc))
     fr.targetSymbol match
     case S(fs: TermSymbol) =>
       fs.defn match
@@ -445,7 +450,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   def lowerRemainingCalls(base: Path, args: Term, remainingArgss: Ls[Term], isTailCall: Bool, loc: Opt[Loc])
         (k: Result => Block)(using LoweringCtx): Block =
     lowerArgs(args): as =>
-      val call = Call(base, as ne_:: Nil)(isMlsFun = false, true, isTailCall).withLoc(loc)
+      val call = Call(base, as ne_:: Nil)(
+        CallMetadata(false, true, isTailCall)).withLoc(loc)
       remainingArgss match
       case Nil => k(call)
       case args :: remainingArgss =>
@@ -461,7 +467,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   def lowerMultiInstantiate(mut: Bool, cls: Path, args: Ls[Term])(k: Result => Block)(using LoweringCtx): Block =
     // Nullary instantiations are represented with one empty argument list, matching existing `Instantiate` usage.
     def buildInstantiate(argss: Ls[Ls[Arg]]): Instantiate =
-      Instantiate(mut, cls, if argss.isEmpty then Nil :: Nil else argss)
+      Instantiate(mut, cls, if argss.isEmpty then Nil :: Nil else argss)(InstantiateMetadata.empty)
     // * Zip constructor param lists with argument lists, accumulating lowered args.
     // * Consumes one argument list per constructor param list; when all ctor params are
     // * consumed but extra args remain, falls back to `Call` nodes on the result.
@@ -637,7 +643,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         if td.params.isEmpty then
           return k(Call(
               bs.asMemberRef(disamb.get).withLocOf(ref), Nil ne_:: Nil
-            )(isMlsFun = true, true, annots.contains(Annot.TailCall)))
+            )(CallMetadata(
+              true,
+              true,
+              annots.contains(Annot.TailCall))))
       case S(td: TermDefinition) =>
         td.tsym.owner match
         case S(owner) =>
@@ -710,7 +719,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
                 Call(
                   State.builtinOpsMap("===").asSimpleRef,
                   (bodyResult.asSimpleRef.asArg :: State.runtimeSymbol.asSimpleRef.selSN("Continue").asArg :: Nil) ne_:: Nil,
-                )(true, false, false),
+                )(CallMetadata.defaultMlsFun),
                 Match(
                   isContinue.asSimpleRef,
                   (Case.Lit(Tree.BoolLit(true)) -> Continue(label)) :: Nil,
@@ -760,7 +769,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         subTerm(arg): ar =>
           val target = wasmIntrinsicPath(sym, unary = true)
             .getOrElse(sym.asSimpleRef.withLocOf(ref))
-          k(Call(target, (Arg(N, ar) :: Nil) ne_:: Nil)(true, false, false))
+          k(Call(target, (Arg(N, ar) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun))
       case st.Tup(Fld(FldFlags.benign(), arg1, N) :: Fld(FldFlags.benign(), arg2, N) :: Nil) =>
         if !sym.binary then raise:
           ErrorReport(
@@ -790,7 +799,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             subTerm_nonTail(arg2): ar2 =>
               val target = wasmIntrinsicPath(sym, unary = false)
                 .getOrElse(sym.asSimpleRef.withLocOf(ref))
-              k(Call(target, (Arg(N, ar1) :: Arg(N, ar2) :: Nil) ne_:: Nil)(true, false, false))
+              k(Call(target, (Arg(N, ar1) :: Arg(N, ar2) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun))
       case _ => fail:
         ErrorReport(
           msg"Unexpected arguments for builtin symbol '${sym.nme}'" -> arg.toLoc :: Nil, S(arg),
@@ -1014,11 +1023,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case Resolved(inner, sym) => TODO(s"lowering for Resolved($inner)")
     case Region(reg, body) =>
       loweringCtx.collectScopedSym(reg)
-      Assign(reg, Instantiate(mut = true, Select(State.globalThisSymbol.asThis, Tree.Ident("Region"))(N), Nil :: Nil),
+      Assign(reg, Instantiate(mut = true, Select(State.globalThisSymbol.asThis, Tree.Ident("Region"))(N), Nil :: Nil)(InstantiateMetadata.empty),
         term_nonTail(body)(k))
     case RegRef(reg, value) =>
       plainArgs(reg :: value :: Nil): args =>
-        k(Instantiate(mut = true, Select(State.globalThisSymbol.asThis, Tree.Ident("Ref"))(N), args :: Nil))
+        k(Instantiate(mut = true, Select(State.globalThisSymbol.asThis, Tree.Ident("Ref"))(N), args :: Nil)(InstantiateMetadata.empty))
     case Drop(ref) =>
       subTerm(ref): _ =>
         k(unit)
@@ -1053,14 +1062,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     //   subTerm(t)(k)
   
   def setupTerm(name: Str, args: Ls[Path])(k: Result => Block)(using LoweringCtx): Block =
-    k(Instantiate(mut = false, State.termSymbol.asSimpleRef.selSN(name), args.map(_.asArg) :: Nil))
+    k(Instantiate(mut = false, State.termSymbol.asSimpleRef.selSN(name), args.map(_.asArg) :: Nil)(InstantiateMetadata.empty))
 
   def setupQuotedKeyword(kw: Str): Path =
     State.termSymbol.asSimpleRef.selSN("Keyword").selSN(kw)
 
   def setupSymbol(symbol: ValueSymbol)(k: Result => Block)(using LoweringCtx): Block =
     k(Instantiate(mut = false, State.termSymbol.asSimpleRef.selSN("Symbol"),
-      (Value.Lit(Tree.StrLit(symbol.nme)).asArg :: Nil) :: Nil))
+      (Value.Lit(Tree.StrLit(symbol.nme)).asArg :: Nil) :: Nil)(InstantiateMetadata.empty))
 
   def quotePattern(p: FlatPattern)(k: Result => Block)(using LoweringCtx): Block = p match
     case FlatPattern.Lit(lit) => setupTerm("LitPattern", Value.Lit(lit) :: Nil)(k)
@@ -1464,7 +1473,7 @@ trait LoweringSelSanityChecks(using Config, TL, Raise, State)
           .ifthen(selRes.asSimpleRef,
             Case.Lit(syntax.Tree.UnitLit(false)),
             Throw(Instantiate(mut = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(N),
-              (Value.Lit(syntax.Tree.StrLit(s"Access to required field '${nme.name}' yielded 'undefined'")).asArg :: Nil) :: Nil))
+              (Value.Lit(syntax.Tree.StrLit(s"Access to required field '${nme.name}' yielded 'undefined'")).asArg :: Nil) :: Nil)(InstantiateMetadata.empty))
           )
           .rest(k(selRes.asSimpleRef))
 
@@ -1482,7 +1491,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
       case ((sym, res), acc) => Assign(sym, res, acc)
   
   private def pureCall(fn: Path, args: Ls[Arg]): Result =
-    Call(fn, args ne_:: Nil)(true, false, false)
+    Call(fn, args ne_:: Nil)(CallMetadata.defaultMlsFun)
   
   extension (k: Block => Block)
     def |>: (b: Block): Block = k(b)

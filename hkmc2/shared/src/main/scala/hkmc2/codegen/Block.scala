@@ -511,11 +511,13 @@ object HandleBlock:
 
   def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.suspend
-    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(true, true, false)
+    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(
+      CallMetadata(true, true, false))
 
   def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.handle_suspension
-    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(true, true, false)
+    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(
+      CallMetadata(true, true, false))
   
   private def create(
       lhs: LocalVarSymbol,
@@ -555,7 +557,8 @@ object HandleBlock:
       N, Nil,
       S(par), handlerMtds, Nil, Nil,
       // Apparently, the lifter is not happy with any assignment in the preCtor...
-      Assign(State.noSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(true, true, false), End()),
+      Assign(State.noSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(
+        CallMetadata(true, true, false)), End()),
       End(),
       N,
       N,
@@ -564,7 +567,7 @@ object HandleBlock:
     blockBuilder
       .scopedVars(Set(clsDefn.sym, sym))
       .define(clsDefn)
-      .assign(lhs, Instantiate(mut = true, clsDefn.sym.asMemberRef(cls), Nil :: Nil))
+      .assign(lhs, Instantiate(mut = true, clsDefn.sym.asMemberRef(cls), Nil :: Nil)(InstantiateMetadata.empty))
       .define(bodyDefn)
       .assign(res, handleSuspension(lhs.asSimpleRef, bodyDefn.sym.asMemberRef(bodyDefn.dSym)))
       .rest(rest)
@@ -928,11 +931,24 @@ sealed abstract class Result extends AutoLocated:
     case Value.Lit(lit) => 0
     case DynSelect(qual, fld, arrayIdx) => qual.size + fld.size
 
-/* mayRaiseEffects indicates whether this call may raise effect (algebraic effect),
+case class CallMetadata(
+  isMlsFun: Bool,
+  /* mayRaiseEffects indicates whether this call may raise effect (algebraic effect),
  * regardless of whether the check for effect is inserted or not.
  * Note that the check for effect is inserted during HandlerLowering and setting this to true
  * after handler is lowered does not have any effect on the code generation. */
-case class Call(fun: Path, argss: NELs[Ls[Arg]])(val isMlsFun: Bool, val mayRaiseEffects: Bool, val explicitTailCall: Bool) extends Result:
+  mayRaiseEffects: Bool,
+  explicitTailCall: Bool,
+)
+
+object CallMetadata:
+  def defaultMlsFun: CallMetadata =
+    CallMetadata(true, false, false)
+  def defaultFun: CallMetadata =
+    CallMetadata(false, false, false)
+
+
+case class Call(fun: Path, argss: NELs[Ls[Arg]])(val metadata: CallMetadata) extends Result:
   lazy val isKnownUnsaturatedCall: Bool =
     fun.targetSymbol match
     case S(ts: TermSymbol) =>
@@ -943,10 +959,10 @@ case class Call(fun: Path, argss: NELs[Ls[Arg]])(val isMlsFun: Bool, val mayRais
 
 object Call:
   
-  def raw(fun: Path, argss: NELs[Ls[Arg]])(isMlsFun: Bool, mayRaiseEffects: Bool, explicitTailCall: Bool): Call =
-    new Call(fun, argss)(isMlsFun, mayRaiseEffects, explicitTailCall)
+  def raw(fun: Path, argss: NELs[Ls[Arg]])(metadata: CallMetadata): Call =
+    new Call(fun, argss)(metadata)
   
-  def apply(fun: Path, argss: NELs[Ls[Arg]])(isMlsFun: Bool, mayRaiseEffects: Bool, explicitTailCall: Bool): Result =
+  def apply(fun: Path, argss: NELs[Ls[Arg]])(metadata: CallMetadata): Result =
     fun match
     case Value.SimpleRef(sym: BuiltinSymbol) =>
       argss match
@@ -956,7 +972,7 @@ object Call:
         evalBuiltin(sym, arg1)(return _)
       case _ =>
     case _ =>
-    raw(fun, argss)(isMlsFun, mayRaiseEffects, explicitTailCall)
+    raw(fun, argss)(metadata)
   
   private def literalArgValues(args: Ls[Arg]): Opt[Ls[Value]] =
     args.foldRight[Opt[Ls[Value]]](S(Nil)):
@@ -992,7 +1008,12 @@ object Call:
 end Call
 
 
-case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]]) extends Result
+case class InstantiateMetadata()
+
+object InstantiateMetadata:
+  def empty: InstantiateMetadata = InstantiateMetadata()
+
+case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: InstantiateMetadata) extends Result
 
 case class Lambda(params: ParamList, body: Block)(val annot: Ls[Annot]) extends Result:
   lazy val affine: Bool = annot.exists(_.isInstanceOf[Annot.Affine])

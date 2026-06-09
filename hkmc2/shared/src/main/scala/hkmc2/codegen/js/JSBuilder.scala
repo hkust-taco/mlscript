@@ -207,7 +207,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       val calls = argss.foldLeft(base): (acc, args) =>
         val argsDoc = args.map(argument).mkDocument(", ")
         doc"${acc}(${argsDoc})"
-      if c.isMlsFun
+      if c.metadata.isMlsFun
       then if checkMLsCalls
         then doc"$runtimeVar.checkCall(${calls})"
         else doc"${calls}"

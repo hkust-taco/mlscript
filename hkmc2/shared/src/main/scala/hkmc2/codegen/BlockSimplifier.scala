@@ -925,7 +925,11 @@ class BlockSimplifier
         case S(prefix) =>
           registerChange(s"${loc.showDbg} call prefix ~> ${prefix.showDbg}")
           val combined = Call(prefix.fun, (prefix.argss ::: argss).ne_!)(
-            prefix.isMlsFun, prefix.mayRaiseEffects || c.mayRaiseEffects, c.explicitTailCall,
+            CallMetadata(
+              prefix.metadata.isMlsFun,
+              prefix.metadata.mayRaiseEffects || c.metadata.mayRaiseEffects,
+              c.metadata.explicitTailCall,
+            ),
           ).withLocOf(c)
           super.applyResult(combined)(k)
         case N => super.applyResult(r)(k)
@@ -1240,7 +1244,8 @@ class BlockSimplifier
                         acc(Scoped(Set.single(resSym), newBlk(k(resSym.asSimpleRef))))
                       else
                         acc(Scoped(Set(resSym), newBlk(
-                          k(Call(resSym.asSimpleRef, extraArgss.ne_!)(c.isMlsFun, c.mayRaiseEffects, false)))))
+                          k(Call(resSym.asSimpleRef, extraArgss.ne_!)(
+                            c.metadata.copy(explicitTailCall = false))))))
                     case (sym, value) :: argRest =>
                       val newSym = VarSymbol(sym.id)
                       go(acc.assignScoped(newSym, value), argRest, mapping + (sym -> newSym))
