@@ -931,7 +931,6 @@ sealed abstract class Result extends AutoLocated:
     case Value.Lit(lit) => 0
     case DynSelect(qual, fld, arrayIdx) => qual.size + fld.size
 
-// In metadata annotations, `S(i)` targets the ith parameter and `N` targets the whole invocation.
 case class CallMetadata(
   isMlsFun: Bool,
   /* mayRaiseEffects indicates whether this call may raise effect (algebraic effect),
@@ -940,7 +939,7 @@ case class CallMetadata(
  * after handler is lowered does not have any effect on the code generation. */
   mayRaiseEffects: Bool,
   explicitTailCall: Bool,
-  annotations: Ls[(Annot, Opt[Int])],
+  annotations: Ls[Annot],
 )
 
 object CallMetadata:
@@ -1011,7 +1010,7 @@ end Call
 
 
 case class InstantiateMetadata(
-  annotations: Ls[(Annot, Opt[Int])],
+  annotations: Ls[Annot],
 )
 
 object InstantiateMetadata:
