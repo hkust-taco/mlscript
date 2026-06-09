@@ -407,7 +407,7 @@ object Label:
     case _: Unreachable => body
     case _ =>
       rest match
-      case Scoped(syms, rest) => Scoped(syms, Label(label, loop, body, rest))
+      // case Scoped(syms, rest) if !loop => Scoped(syms, Label(label, loop, body, rest))
       case _ => new Label(label, loop, body, rest)
 object Scoped:
   def apply(syms: collection.Set[ScopedSymbol], body: Block): Block = body match
