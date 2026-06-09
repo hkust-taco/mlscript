@@ -66,6 +66,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
           applyBlock(rest)
         case l: Label if l.loop =>
           accessed.refdDefns.add(l.label)
+          applySubBlock(l.rest)
         case d: Define => d.defn match
           case v: ValDefn =>
             applyDefn(v)
