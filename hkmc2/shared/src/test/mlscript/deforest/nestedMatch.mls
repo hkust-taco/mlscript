@@ -501,11 +501,23 @@ fun f(x, y, z, k) =
         AA then m + k
 f(AA(3), 3, true, 10) + f(AA(5), 4, false, 20)
 //│ deforest > >>> fusing >>>
+//│ deforest > BB⁰(tmp¹⁰) ->
+//│ deforest > 	match: tmp¹¹
+//│ deforest > 	fields: tmp¹¹.x²
+//│ deforest > BB⁰(tmp¹²) ->
+//│ deforest > 	match: tmp¹¹
+//│ deforest > 	fields: tmp¹¹.x²
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: scrut³
 //│ deforest > 	fields: scrut³.x¹
 //│ deforest > AA⁰(3) ->
 //│ deforest > 	match: scrut⁴
+//│ deforest > BB⁰(tmp¹⁰) ->
+//│ deforest > 	match: tmp¹¹
+//│ deforest > 	fields: tmp¹¹.x²
+//│ deforest > BB⁰(tmp¹²) ->
+//│ deforest > 	match: tmp¹¹
+//│ deforest > 	fields: tmp¹¹.x²
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: scrut³
 //│ deforest > 	fields: scrut³.x¹
@@ -513,6 +525,12 @@ f(AA(3), 3, true, 10) + f(AA(5), 4, false, 20)
 //│ deforest > 	match: scrut⁴
 //│ deforest > AA⁰(5) ->
 //│ deforest > 	match: x²⁰
+//│ deforest > BB⁰(tmp¹⁰) ->
+//│ deforest > 	match: tmp¹¹
+//│ deforest > 	fields: tmp¹¹.x²
+//│ deforest > BB⁰(tmp¹²) ->
+//│ deforest > 	match: tmp¹¹
+//│ deforest > 	fields: tmp¹¹.x²
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: scrut³
 //│ deforest > 	fields: scrut³.x¹
@@ -581,11 +599,11 @@ fun sum(ls) = if ls is
   h :: t then h + sum(t)
 sum(prodDouble(4))
 //│ deforest > >>> fusing >>>
-//│ deforest > Cons⁰(n⁰, tmp¹⁰) ->
+//│ deforest > Cons⁰(n⁰, tmp¹³) ->
 //│ deforest > 	match: ls⁰
 //│ deforest > 	fields: ls⁰.h⁰
 //│ deforest > 	fields: ls⁰.t⁰
-//│ deforest > Cons⁰(n⁰, tmp¹¹) ->
+//│ deforest > Cons⁰(n⁰, tmp¹⁴) ->
 //│ deforest > 	match: ls⁰
 //│ deforest > 	fields: ls⁰.h⁰
 //│ deforest > 	fields: ls⁰.t⁰

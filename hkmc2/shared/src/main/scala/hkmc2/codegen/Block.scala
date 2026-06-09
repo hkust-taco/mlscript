@@ -502,8 +502,11 @@ object Begin:
             !symsSub.exists(symsRest.contains),
             "overlapping symbols when trying to merge Scoped blocks")
         Scoped(symsSub ++ symsRest, Begin(bodySub, bodyRest))
-      case (Scoped(symsSub, bodySub), _) => Scoped(symsSub, Begin(bodySub, rest))
-      case (_, Scoped(symsRest, bodyRest)) => Scoped(symsRest, Begin(sub, bodyRest))
+      case (Scoped(symsSub, bodySub), rest) => Scoped(symsSub, Begin(bodySub, rest))
+      case (Match(scrut, arms, dflt, rst), rest) => Match(scrut, arms, dflt, Begin(rst, rest))
+      // case (Label(lbl, loop, body, rst), rest) => Label(lbl, loop, body, Begin(rst, rest)) // FIXME: makes Rendering.mls fail to compile
+      case (TryBlock(sub, fin, rst), rest) => TryBlock(sub, fin, Begin(rst, rest))
+      // case (_, Scoped(symsRest, bodyRest)) => Scoped(symsRest, Begin(sub, bodyRest))
       case _ => new Begin(sub, rest)
 
 
