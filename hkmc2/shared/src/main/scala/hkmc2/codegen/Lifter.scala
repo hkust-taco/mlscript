@@ -615,11 +615,11 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           case b: Block => b
           case _ => die
       case l: Label if l.loop =>
-        val node = data.getNode(l.label)
         val blk = applyRewrittenScope(ctx.rewrittenScopes(l.label)) match
           case b: Block => b
           case _ => die
-        l.copy(body = blk)
+        val rst2 = applySubBlock(l.rest)
+        if (blk is l.body) && (rst2 is l.rest) then l else l.copy(body = blk, rest = rst2)
       case Define(defn, rest) =>
         val dsym = defn match
           case f: FunDefn => f.dSym
