@@ -145,17 +145,13 @@ fun f(x) =
 //│       if (x === true) {
 //│         runtime.resumeValue = 3;
 //│         if (runtime.curEffect === null) {
-//│           pc = 2;
+//│           pc = 1;
 //│         } else {
-//│           return runtime.unwind(f4, 2, "ScopedBlocksAndHandlers.mls:131:7", null, null, 1, 1, x, 0)
+//│           return runtime.unwind(f4, 1, "ScopedBlocksAndHandlers.mls:131:7", null, null, 1, 1, x, 0)
 //│         }
-//│       } else {
-//│         return runtime.Unit
-//│       }
-//│     case 2:
-//│       runtime.resumeValue;
-//│       pc = 1;
+//│       } else { return runtime.Unit }
 //│     case 1:
+//│       runtime.resumeValue;
 //│       return runtime.Unit;
 //│   }
 //│ };

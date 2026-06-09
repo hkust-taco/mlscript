@@ -331,15 +331,11 @@ print(res)
 //│ match scrut
 //│   true =>
 //│     let y;
-//│     begin
-//│       set y = Predef⁰.hide⁰(1);
-//│       set res¹ = y;
-//│       end;
+//│     set y = Predef⁰.hide⁰(1);
+//│     set res¹ = y;
 //│     return Predef⁰.print⁰(res¹)
 //│   else
-//│     begin
-//│       do Predef⁰.notImplementedError⁰;
-//│       end;
+//│     do Predef⁰.notImplementedError⁰;
 //│     return Predef⁰.print⁰(res¹)
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
