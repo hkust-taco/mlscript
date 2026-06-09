@@ -71,7 +71,7 @@ class WorkerWrapper
       Arg(N, param.sym.asSimpleRef)
     val wrapperBody = Return(
       Call(worker.asPath, workerArgs ne_:: Nil)(
-        CallMetadata(true, true, false)),
+        CallMetadata(true, true, false, Nil)),
     )
     val wrapper = FunDefn(
       fun.owner,

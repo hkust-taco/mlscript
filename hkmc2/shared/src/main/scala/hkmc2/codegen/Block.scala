@@ -512,12 +512,12 @@ object HandleBlock:
   def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.suspend
     Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(
-      CallMetadata(true, true, false))
+      CallMetadata(true, true, false, Nil))
 
   def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.handle_suspension
     Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(
-      CallMetadata(true, true, false))
+      CallMetadata(true, true, false, Nil))
   
   private def create(
       lhs: LocalVarSymbol,
@@ -558,7 +558,7 @@ object HandleBlock:
       S(par), handlerMtds, Nil, Nil,
       // Apparently, the lifter is not happy with any assignment in the preCtor...
       Assign(State.noSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(
-        CallMetadata(true, true, false)), End()),
+        CallMetadata(true, true, false, Nil)), End()),
       End(),
       N,
       N,
@@ -931,6 +931,7 @@ sealed abstract class Result extends AutoLocated:
     case Value.Lit(lit) => 0
     case DynSelect(qual, fld, arrayIdx) => qual.size + fld.size
 
+// In metadata annotations, `S(i)` targets the ith parameter and `N` targets the whole invocation.
 case class CallMetadata(
   isMlsFun: Bool,
   /* mayRaiseEffects indicates whether this call may raise effect (algebraic effect),
@@ -939,13 +940,14 @@ case class CallMetadata(
  * after handler is lowered does not have any effect on the code generation. */
   mayRaiseEffects: Bool,
   explicitTailCall: Bool,
+  annotations: Ls[(Annot, Opt[Int])],
 )
 
 object CallMetadata:
   def defaultMlsFun: CallMetadata =
-    CallMetadata(true, false, false)
+    CallMetadata(true, false, false, Nil)
   def defaultFun: CallMetadata =
-    CallMetadata(false, false, false)
+    CallMetadata(false, false, false, Nil)
 
 
 case class Call(fun: Path, argss: NELs[Ls[Arg]])(val metadata: CallMetadata) extends Result:
@@ -1008,10 +1010,12 @@ object Call:
 end Call
 
 
-case class InstantiateMetadata()
+case class InstantiateMetadata(
+  annotations: Ls[(Annot, Opt[Int])],
+)
 
 object InstantiateMetadata:
-  def empty: InstantiateMetadata = InstantiateMetadata()
+  def empty: InstantiateMetadata = InstantiateMetadata(Nil)
 
 case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: InstantiateMetadata) extends Result
 

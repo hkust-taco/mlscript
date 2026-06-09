@@ -929,6 +929,7 @@ class BlockSimplifier
               prefix.metadata.isMlsFun,
               prefix.metadata.mayRaiseEffects || c.metadata.mayRaiseEffects,
               c.metadata.explicitTailCall,
+              prefix.metadata.annotations ++ c.metadata.annotations,
             ),
           ).withLocOf(c)
           super.applyResult(combined)(k)

@@ -85,7 +85,9 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
             val flatArgss =
               if argss2.lengthCompare(1) > 0 then argss2.flatten ne_:: Nil
               else argss2
-            k(Instantiate(false, cls2, flatArgss)(InstantiateMetadata.empty).withLocOf(call))
+            k(Instantiate(false, cls2, flatArgss)(
+              InstantiateMetadata(call.metadata.annotations),
+            ).withLocOf(call))
       case N =>
         super.applyResult(r)(k)
     case inst @ Instantiate(mut, cls, argss) =>
