@@ -1,0 +1,314 @@
+:js
+
+// Fixed-point patterns are patterns that pipe their own output back into
+// themselves through a chain, e.g. `pattern Steps = Step as Steps | _`.
+// Since `as` binds looser than `|`, this reads `Step as (Steps | _)`: one
+// step must succeed, and then stepping is iterated until it fails.
+//
+// Like the rest of efficient pattern compilation, the iterative matcher
+// machine (see `ups.FixedPointCompiler`) is opted into with the `@compile`
+// pattern annotation — either on the definition's right-hand side, so that
+// the generated `unapply` embeds the machine, or at an individual match
+// site. The machine does not restart the redex search from the root of the
+// scrutinee after each rewriting step.
+
+open annotations { compile }
+
+
+// ————— A flat fixed point: peeling nested wrappers —————
+
+class Wrap(val value) with
+  print("Wrapping " + render(value))
+
+Wrap(100)
+//│ > Wrapping 100
+//│ = Wrap(100)
+
+pattern Peel = ((Wrap(x) => x) as Peel | _)
+
+let tripleWrap = Wrap(Wrap(Wrap(42)))
+//│ > Wrapping 42
+//│ > Wrapping Wrap(42)
+//│ > Wrapping Wrap(Wrap(42))
+//│ tripleWrap = Wrap(Wrap(Wrap(42)))
+
+:expect 42
+if tripleWrap is Peel(x) then x else -1
+//│ = 42
+
+:expect 42
+if tripleWrap is @compile Peel(x) then x else -1
+//│ = 42
+
+// Zero steps mean the first step of the chain failed, so the match fails.
+:expect -1
+if 42 is Peel(x) then x else -1
+//│ = -1
+
+
+// ————— A full evaluation-context fixed point —————
+
+// Construction prints make every object allocation visible, so unnecessary
+// reconstruction of term nodes would show up as extra `new ...` lines.
+data class Lit(val value: Int) with
+  print("new Lit(" + render(value) + ")")
+data class Var(val name: Str) with
+  print("new Var(" + render(name) + ")")
+data class Add(val lhs, val rhs) with
+  print("new Add(" + render(lhs) + ", " + render(rhs) + ")")
+data class Mul(val lhs, val rhs) with
+  print("new Mul(" + render(lhs) + ", " + render(rhs) + ")")
+
+pattern Value = Lit
+
+pattern Ctx(pattern Hole) =
+  | Hole
+  | Add(Ctx(Hole), _)
+  | Add(Value, Ctx(Hole))
+  | Mul(Ctx(Hole), _)
+  | Mul(Value, Ctx(Hole))
+
+pattern Redex =
+  | Add(Lit(a), Lit(b)) => (let c = a + b in print("reduce " + a + " + " + b + " = " + c); Lit(c))
+  | Mul(Lit(a), Lit(b)) => (let c = a * b in print("reduce " + a + " * " + b + " = " + c); Lit(c))
+
+pattern Step = Ctx(Redex)
+
+pattern Eval = (Step as Eval | _)
+
+let term1 = Add(Mul(Lit(2), Lit(3)), Add(Lit(3), Lit(5)))
+//│ > new Lit(2)
+//│ > new Lit(3)
+//│ > new Mul(Lit(2), Lit(3))
+//│ > new Lit(3)
+//│ > new Lit(5)
+//│ > new Add(Lit(3), Lit(5))
+//│ > new Add(Mul(Lit(2), Lit(3)), Add(Lit(3), Lit(5)))
+//│ term1 = Add(Mul(Lit(2), Lit(3)), Add(Lit(3), Lit(5)))
+
+:expect 14
+if term1 is Eval(r) and r is Lit(n) then n else -1
+//│ > reduce 2 * 3 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Add(Lit(3), Lit(5)))
+//│ > reduce 3 + 5 = 8
+//│ > new Lit(8)
+//│ > new Add(Lit(6), Lit(8))
+//│ > reduce 6 + 8 = 14
+//│ > new Lit(14)
+//│ = 14
+
+:expect 14
+if term1 is @compile Eval(r) and r is Lit(n) then n else -1
+//│ > reduce 2 * 3 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Add(Lit(3), Lit(5)))
+//│ > reduce 3 + 5 = 8
+//│ > new Lit(8)
+//│ > new Add(Lit(6), Lit(8))
+//│ > reduce 6 + 8 = 14
+//│ > new Lit(14)
+//│ = 14
+
+let term2 = Mul(Add(Lit(1), Lit(2)), Add(Lit(3), Lit(4)))
+//│ > new Lit(1)
+//│ > new Lit(2)
+//│ > new Add(Lit(1), Lit(2))
+//│ > new Lit(3)
+//│ > new Lit(4)
+//│ > new Add(Lit(3), Lit(4))
+//│ > new Mul(Add(Lit(1), Lit(2)), Add(Lit(3), Lit(4)))
+//│ term2 = Mul(Add(Lit(1), Lit(2)), Add(Lit(3), Lit(4)))
+
+:expect 21
+if term2 is Eval(r) and r is Lit(n) then n else -1
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Mul(Lit(3), Add(Lit(3), Lit(4)))
+//│ > reduce 3 + 4 = 7
+//│ > new Lit(7)
+//│ > new Mul(Lit(3), Lit(7))
+//│ > reduce 3 * 7 = 21
+//│ > new Lit(21)
+//│ = 21
+
+:expect 21
+if term2 is @compile Eval(r) and r is Lit(n) then n else -1
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Mul(Lit(3), Add(Lit(3), Lit(4)))
+//│ > reduce 3 + 4 = 7
+//│ > new Lit(7)
+//│ > new Mul(Lit(3), Lit(7))
+//│ > reduce 3 * 7 = 21
+//│ > new Lit(21)
+//│ = 21
+
+let term3 = Add(Add(Add(Add(Lit(1), Lit(2)), Lit(3)), Lit(4)), Lit(5))
+//│ > new Lit(1)
+//│ > new Lit(2)
+//│ > new Add(Lit(1), Lit(2))
+//│ > new Lit(3)
+//│ > new Add(Add(Lit(1), Lit(2)), Lit(3))
+//│ > new Lit(4)
+//│ > new Add(Add(Add(Lit(1), Lit(2)), Lit(3)), Lit(4))
+//│ > new Lit(5)
+//│ > new Add(Add(Add(Add(Lit(1), Lit(2)), Lit(3)), Lit(4)), Lit(5))
+//│ term3 = Add(Add(Add(Add(Lit(1), Lit(2)), Lit(3)), Lit(4)), Lit(5))
+
+:expect 15
+if term3 is Eval(r) and r is Lit(n) then n else "<no result>"
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Lit(3))
+//│ > new Add(Add(Lit(3), Lit(3)), Lit(4))
+//│ > new Add(Add(Add(Lit(3), Lit(3)), Lit(4)), Lit(5))
+//│ > reduce 3 + 3 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Lit(4))
+//│ > new Add(Add(Lit(6), Lit(4)), Lit(5))
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ > new Add(Lit(10), Lit(5))
+//│ > reduce 10 + 5 = 15
+//│ > new Lit(15)
+//│ = 15
+
+:expect 15
+if term3 is @compile Eval(r) and r is Lit(n) then n else "<no result>"
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Lit(3))
+//│ > reduce 3 + 3 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Lit(4))
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ > new Add(Lit(10), Lit(5))
+//│ > reduce 10 + 5 = 15
+//│ > new Lit(15)
+//│ = 15
+
+// A value cannot take a single step, so the match fails.
+let term4 = Lit(7)
+//│ > new Lit(7)
+//│ term4 = Lit(7)
+
+:expect -1
+if term4 is Eval(r) and r is Lit(n) then n else -1
+//│ = -1
+
+:expect -1
+if term4 is @compile Eval(r) and r is Lit(n) then n else -1
+//│ = -1
+
+// A stuck term is reduced as far as the strategy allows: the left operand
+// becomes a value, then nothing else can fire.
+let term5 = Add(Add(Lit(1), Lit(2)), Var("x"))
+//│ > new Lit(1)
+//│ > new Lit(2)
+//│ > new Add(Lit(1), Lit(2))
+//│ > new Var("x")
+//│ > new Add(Add(Lit(1), Lit(2)), Var("x"))
+//│ term5 = Add(Add(Lit(1), Lit(2)), Var("x"))
+
+:expect 3
+if term5 is Eval(r) and r is Add(Lit(n), Var(_)) then n else -1
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Var("x"))
+//│ = 3
+
+:expect 3
+if term5 is @compile Eval(r) and r is Add(Lit(n), Var(_)) then n else -1
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Var("x"))
+//│ > new Add(Lit(3), Var("x"))
+//│ = 3
+
+// The strategy is left-to-right: the right operand must not be reduced when
+// the left one is not a value. This term cannot take even one step, so the
+// match fails.
+let term6 = Add(Var("x"), Add(Lit(1), Lit(2)))
+//│ > new Var("x")
+//│ > new Lit(1)
+//│ > new Lit(2)
+//│ > new Add(Lit(1), Lit(2))
+//│ > new Add(Var("x"), Add(Lit(1), Lit(2)))
+//│ term6 = Add(Var("x"), Add(Lit(1), Lit(2)))
+
+:expect "no step"
+if term6 is Eval(r) then "stepped" else "no step"
+//│ = "no step"
+
+:expect "no step"
+if term6 is @compile Eval(r) then "stepped" else "no step"
+//│ > new Add(Var("x"), Add(Lit(1), Lit(2)))
+//│ = "no step"
+
+
+// ————— A body-annotated fixed-point definition —————
+
+// Annotating the definition's right-hand side embeds the machine in the
+// generated `unapply`, so plain use sites get the machine without a
+// use-site annotation: on `term3`, the trace matches the use-site
+// `@compile Eval` trace above, not the naive one.
+pattern EvalFast = @compile (Step as EvalFast | _)
+
+:expect 15
+if term3 is EvalFast(r) and r is Lit(n) then n else -1
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Lit(3))
+//│ > reduce 3 + 3 = 6
+//│ > new Lit(6)
+//│ > new Add(Lit(6), Lit(4))
+//│ > reduce 6 + 4 = 10
+//│ > new Lit(10)
+//│ > new Add(Lit(10), Lit(5))
+//│ > reduce 10 + 5 = 15
+//│ > new Lit(15)
+//│ = 15
+
+:expect "no step"
+if term6 is EvalFast(r) then "stepped" else "no step"
+//│ > new Add(Var("x"), Add(Lit(1), Lit(2)))
+//│ = "no step"
+
+
+// ————— A single-constructor context —————
+
+// A context grammar over a single head constructor exercises the machine's
+// frame phases: descend into the left operand first, then move sideways
+// into the right one once the left has come back inert.
+pattern AddCtx(pattern Hole) =
+  | Hole
+  | Add(AddCtx(Hole), _)
+  | Add(Value, AddCtx(Hole))
+
+pattern AddRedex = Add(Lit(a), Lit(b)) => (let c = a + b in print("reduce " + a + " + " + b + " = " + c); Lit(c))
+
+pattern EvalAdds = @compile (AddCtx(AddRedex) as EvalAdds | _)
+
+let term7 = Add(Add(Lit(1), Lit(2)), Add(Lit(3), Lit(4)))
+//│ > new Lit(1)
+//│ > new Lit(2)
+//│ > new Add(Lit(1), Lit(2))
+//│ > new Lit(3)
+//│ > new Lit(4)
+//│ > new Add(Lit(3), Lit(4))
+//│ > new Add(Add(Lit(1), Lit(2)), Add(Lit(3), Lit(4)))
+//│ term7 = Add(Add(Lit(1), Lit(2)), Add(Lit(3), Lit(4)))
+
+:expect 10
+if term7 is EvalAdds(r) and r is Lit(n) then n else -1
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Add(Lit(3), Lit(4)))
+//│ > reduce 3 + 4 = 7
+//│ > new Lit(7)
+//│ > new Add(Lit(3), Lit(7))
+//│ > reduce 3 + 7 = 10
+//│ > new Lit(10)
+//│ = 10

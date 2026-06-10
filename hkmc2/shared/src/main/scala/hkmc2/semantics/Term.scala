@@ -343,6 +343,12 @@ enum Term extends Statement:
    *  split are correctly resolved. In the future, we might look for a way to
    *  remove `SynthIf` by generating IR `Match` blocks directly. */
   case SynthIf(split: Split)
+  /** `while` loops synthesized by the pattern compiler, subject to the same
+   *  restrictions as `SynthIf`. The split's branch consequents are evaluated
+   *  for their effects and the loop is re-entered; the loop exits when no
+   *  branch matches. Used by `ups.FixedPointCompiler` to drive the generated
+   *  matcher machine. */
+  case SynthWhile(split: Split)
   case Lam(params: ParamList, body: Term)
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[QuantVar], outer: Opt[VarSymbol], body: Term)
@@ -446,6 +452,7 @@ enum Term extends Statement:
       Term.blkFreeVars(stats, res.freeVars)
     case IfLike(_, _, split) => split.freeVars
     case SynthIf(split) => split.freeVars
+    case SynthWhile(split) => split.freeVars
     case Region(name, body) =>
       body.freeVars - name.nme
     case Handle(lhs, rhs, args, _, defs, body) =>
@@ -503,6 +510,7 @@ enum Term extends Statement:
       })(term.tree)
       case IfLike(kw, form, split) => IfLike(kw, form, split.mkClone)
       case SynthIf(split) => SynthIf(split.mkClone)
+      case SynthWhile(split) => SynthWhile(split.mkClone)
       case Lam(params, body) => Lam(params, body.mkClone)
       case FunTy(lhs, rhs, eff) => FunTy(lhs.mkClone, rhs.mkClone, eff.map(_.mkClone))
       case Forall(tvs, outer, body) => Forall(tvs, outer, body.mkClone)
@@ -641,6 +649,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case IfLike(_, IfLikeForm.ImperativeIf, body) => "`if` statement"
       case IfLike(_, IfLikeForm.While, body) => "`while` statement"
       case SynthIf(split) => "synthetic `if` expression"
+      case SynthWhile(split) => "synthetic `while` expression"
       case Lam(params, body) => "function literal"
       case FunTy(lhs, rhs, eff) => "function type"
       case Forall(tvs, outer, body) => "universal quantification"
@@ -704,6 +713,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case CtxTup(fields) => fields.flatMap(_.subTerms).toVector
     case IfLike(_, _, split) => split.subTerms
     case SynthIf(split) => split.subTerms
+    case SynthWhile(split) => split.subTerms
     case Lam(params, body) => params.allParams.iterator.flatMap(_.sign).toVector :+ body
     case Blk(stats, res) => stats.flatMap(_.subTerms).toVector :+ res
     case Rcd(mut, stats) => stats.flatMap(_.subTerms).toVector
@@ -761,6 +771,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case t: App => treeOrSubterms(t.tree)
     case IfLike(_, _, split) => Vector.single(split)
     case SynthIf(split) => Vector.single(split)
+    case SynthWhile(split) => Vector.single(split)
     case SynthSel(pre, nme) => Vector.double(pre, nme)
     case Sel(pre, nme) => Vector.double(pre, nme)
     case SelProj(prefix, cls, proj) => Vector.triple(prefix, cls, proj)
@@ -887,6 +898,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case DynSel(pre, fld, _) => s"${pre.showDbg}[${fld.showDbg}]"
     case IfLike(kw, _, split) => s"${kw.name} { ${split.showDbg} }"
     case SynthIf(split) => s"if { ${split.showDbg} }"
+    case SynthWhile(split) => s"while { ${split.showDbg} }"
     case Lam(params, body) => s"λ${params.showDbg}. ${body.showDbg}"
     case Blk(stats, res) =>
       (stats.map(_.showDbg + "; ") :+ (res match { case Lit(Tree.UnitLit(false)) => "" case x => x.showDbg + " " }))
