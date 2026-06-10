@@ -47,7 +47,9 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     assertUpdate(s, new TopLevelSymbol(s.nme))
 
   private def refreshClassCtorSymbol(s: ClassCtorSymbol) =
-    assertUpdate(s, new ClassCtorSymbol(s.k, S(mapping.getOrElse(s.owner.value, s.owner.value).asInstanceOf[ClassSymbol]), s.id))
+    assertUpdate(s, new ClassCtorSymbol(s.k,
+      s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]),
+      mapping.getOrElse(s.associatedCls, s.associatedCls).asInstanceOf[ClassSymbol]))
 
   private def refreshParamList(pl: ParamList) =
     for

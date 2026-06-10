@@ -377,16 +377,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     
     blockImpl(imps ::: funs ::: rest, res)
   
-  def getCtorParamLists(cls: Path): Ls[ParamList] =
-    cls.targetSymbol.flatMap: sym =>
-      sym.asClsOrMod.flatMap(_.defn) orElse
-      sym.asTrm.flatMap(_.owner).flatMap(_.asDefnSym.defn)
-    .fold(Nil: Ls[ParamList]): clsDef =>
-      clsDef.paramsOpt.toList ::: clsDef.auxParams
+  def getClassParamLists(cls: Path): Ls[ParamList] =
+    cls.targetSymbol match
+    case S(clsSym: ClassSymbol) =>
+      clsSym.defn.map(clsDef => clsDef.paramsOpt.toList ::: clsDef.auxParams).getOrElse(Nil)
+    case _ => Nil
   
   // * Lowers the `super(...)(...)` call we get from the `extends C(...)(...)` syntax
   def lowerSuperCtorCall(parentClsPth: Path, fr: Path, isMlsFun: Bool, args: List[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
-    val ctorParamLists = getCtorParamLists(parentClsPth)
+    val ctorParamLists = getClassParamLists(parentClsPth)
     args match
     case _ :: _ =>
       def zipArgs(remainingParamss: Ls[ParamList], args: Ls[Term], acc: Ls[Ls[Arg]]): Block = (remainingParamss, args) match
@@ -494,7 +493,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     // * so we also look up the owner InnerSymbol via TermDefinition#owner.
     // * Note: apparently, this can also be accessed through TermDefinition#companionClass
     // * (what Copilot initially used), which is weird.
-    val ctorParamLists = getCtorParamLists(cls)
+    val ctorParamLists = getClassParamLists(cls)
     if ctorParamLists.isEmpty then
       // * Need to specially handle no-param classes
       args match
@@ -563,6 +562,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
     case sym =>
       lastWords(s"tried to define non-variable symbol ${sym.showDbg}")
   
+  private def isImplicitNullaryCall(defnSym: DefinitionSymbol[?]): Bool =
+    defnSym.defn.exists:
+      case td: TermDefinition => (td.k is syntax.Fun) && td.params.isEmpty
+      case _ => false
+  
   def ref(ref: st.Ref, annots: List[Annot], disamb: Opt[DefinitionSymbol[?]], inStmtPos: Bool)(k: Result => Block)(using LoweringCtx): Block =
     def warnStmt = if inStmtPos then warnPureExprInStmtPos(ref.toLoc, S(ref))
     
@@ -629,17 +633,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         // * Note: the alternative below, which might seem more appealing,
         // * works but does not instrument the selection to check for `undefined`!
         // return k(Value.Ref(State.globalThisSymbol).sel(ref.tree, bs).withLocOf(ref))
-      case S(td: TermDefinition) if td.k is syntax.Fun =>
+      case S(td: TermDefinition) if isImplicitNullaryCall(td.tsym) =>
         // * Functions defined in local scopes with no parameter lists are getters
         // * and are lowered to functions with an empty parameter list
         // * (non-local functions are compiled into getter methods selected on some prefix)
-        if td.params.isEmpty then
+        if isImplicitNullaryCall(td.tsym) then
           return k(Call(
               bs.asMemberRef(disamb.get).withLocOf(ref), Nil ne_:: Nil
-            )(CallMetadata(true, true, annots)))
+            )(CallMetadata(isMlsFun = true, mayRaiseEffects = true, annots)))
       case S(td: TermDefinition) =>
         td.tsym.owner match
         case S(owner) =>
+          // * With the current Elaborator semantics, selections are already inserted for most things;
+          // * the current case can only happen if `td` is a let binding defined in some object owner.
+          softAssert(td.k is syntax.LetBind, s"Expected a let binding, got a ${td.k.str} ($td)")
           return k(Select(owner.asThis, td.tsym.id)(S(td.tsym)).withLocOf(ref))
         case N => ()
       case S(_) => ()
@@ -1420,7 +1427,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case Annot.MayNotRaiseEffects => ()
       case _: Annot.Config => () // Config annotations are handled during FunDefn creation
       case annot => warn(annot)
-
+  
   def reportAnnotations(receiver: Term, annotations: Ls[Annot]): Unit =
     def warn(annot: Annot, msg: Opt[Message] = N) =
       val message = msg match
@@ -1430,11 +1437,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         WarningReport(
           msg"This annotation has no effect." -> annot.toLoc ::
           message -> receiver.toLoc :: Nil)
-
-    def isImplicitNullaryCall(defnSym: DefinitionSymbol[?]): Bool =
-      defnSym.defn.exists:
-        case td: TermDefinition => (td.k is syntax.Fun) && td.params.isEmpty
-        case _ => false
     
     annotations.foreach:
       case Annot.Untyped => ()

@@ -1,23 +1,8 @@
 :js
 
-:global
-:sjs
-
 
 :sir
 data class Foo()
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo1;
-//│ Foo1 = function Foo() {
-//│   return globalThis.Object.freeze(new Foo.class());
-//│ };
-//│ (class Foo {
-//│   static {
-//│     Foo1.class = this
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", []];
-//│ });
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ @data define Foo⁰ as class Foo² { constructor Foo¹ }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -25,141 +10,91 @@ data class Foo()
 // * Notice that `Foo¹` correctly refers to the ClassCtorSymbol of `Foo` shown above
 :sir
 Foo
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return Foo1
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ return Foo¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun Foo { class: class Foo }
 
 Foo()
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return Foo1()
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Foo()
 
 Foo.class
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return Foo1.class
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = class Foo
 
 
-data class Foo(a)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo3;
-//│ Foo3 = function Foo(a) {
-//│   return globalThis.Object.freeze(new Foo.class(a));
+:sir
+object Foo with
+  class C()
+  print(C)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Foo³ as object Foo⁴ {
+//│   constructor() {
+//│     define C⁰ as class C² { constructor C¹ };
+//│     do Predef⁰.print⁰(Foo⁴.this.C¹);
+//│     end
+//│   }
 //│ };
-//│ (class Foo2 {
-//│   static {
-//│     Foo3.class = this
-//│   }
-//│   constructor(a) {
-//│     this.a = a;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["a"]];
-//│ });
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > fun C { class: class C }
+
+// * The owner of the C¹ constructor function is correctly identified as Foo
+:lot
+Foo.C
+//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ Program:
+//│   main = Return of Select{sym=term:Foo⁴/C¹}:
+//│     qual = MemberRef{disamb=object:Foo⁴}:
+//│       bms = member:Foo³
+//│       disamb = object:Foo⁴
+//│     name = Ident of "C"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun C { class: class C }
+
+
+data class Foo(a)
 
 Foo
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return Foo3
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun Foo { class: class Foo }
 
 Foo(1)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return Foo3(1)
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Foo(1)
 
 Foo(1).a
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp; tmp = Foo3(1); return tmp.a
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 fun foo(y) = Foo(y)
 foo(27)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo; foo = function foo(y) { return Foo3(y) }; return Foo3(27)
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Foo(27)
 
 
 data class Foo(a, b)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo5;
-//│ Foo5 = function Foo(a, b) {
-//│   return globalThis.Object.freeze(new Foo.class(a, b));
-//│ };
-//│ (class Foo4 {
-//│   static {
-//│     Foo5.class = this
-//│   }
-//│   constructor(a, b) {
-//│     this.a = a;
-//│     this.b = b;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["a", "b"]];
-//│ });
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let foo = Foo
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo1; foo1 = Foo5;
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ foo = fun Foo { class: class Foo }
 
 let f = foo(1, 2)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f; f = runtime.safeCall(foo1(1, 2));
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = Foo(1, 2)
 
 let f = new! foo(1, 2)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f1; f1 = globalThis.Object.freeze(new foo1(1, 2));
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = Foo(1, 2)
 
 f.a
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return f1.a
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 f.b
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return f1.b
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
 let f = Foo(1, 2)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f2; f2 = Foo5(1, 2);
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = Foo(1, 2)
 
 f.a
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return f2.a
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
 f.b
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return f2.b
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
 Foo(print(1), print(2))
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp1, tmp2; tmp1 = Predef.print(1); tmp2 = Predef.print(2); return Foo5(tmp1, tmp2)
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ > 2
 //│ = Foo((), ())
@@ -168,42 +103,17 @@ Foo(print(1), print(2))
 data class Inner(c) with
   fun i1(d) = c + d
   print(c)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Inner1;
-//│ Inner1 = function Inner(c) {
-//│   return globalThis.Object.freeze(new Inner.class(c));
-//│ };
-//│ (class Inner {
-//│   static {
-//│     Inner1.class = this
-//│   }
-//│   constructor(c) {
-//│     this.c = c;
-//│     Predef.print(this.c);
-//│   }
-//│   i1(d) {
-//│     return this.c + d
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Inner", ["c"]];
-//│ });
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 let i = new Inner(100)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let i; i = globalThis.Object.freeze(new Inner1.class(100));
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 100
 //│ i = Inner(100)
 
 i.i1(20)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return runtime.safeCall(i.i1(20))
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 120
 
 
 // * This is strange, but does not need to be an error
+:sjs
 class Foo(x, val y, z, val z, z) with
   let x = 1
   let y += 1
@@ -213,13 +123,13 @@ class Foo(x, val y, z, val z, z) with
   print("z = " + z)
   print("this.z = " + this.z)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo7;
-//│ Foo7 = function Foo(x, y, z, z1, z2) {
+//│ let Foo9;
+//│ Foo9 = function Foo(x, y, z, z1, z2) {
 //│   return globalThis.Object.freeze(new Foo.class(x, y, z, z1, z2));
 //│ };
-//│ (class Foo6 {
+//│ (class Foo8 {
 //│   static {
-//│     Foo7.class = this
+//│     Foo9.class = this
 //│   }
 //│   constructor(x, y, z, z1, z2) {
 //│     let tmp3, tmp4, tmp5, tmp6, tmp7;
@@ -248,9 +158,6 @@ class Foo(x, val y, z, val z, z) with
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 Foo(10, 20, 30, 40, 50)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return Foo7(10, 20, 30, 40, 50)
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > x = 1
 //│ > y = 21
 //│ > this.y = 20
@@ -263,29 +170,13 @@ Foo(10, 20, 30, 40, 50)
 class Foo(val z, val z)
 //│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'z'.
 //│ ╟── Defined at: 
-//│ ║  l.263: 	class Foo(val z, val z)
+//│ ║  l.170: 	class Foo(val z, val z)
 //│ ║         	              ^
 //│ ╟── Defined at: 
-//│ ║  l.263: 	class Foo(val z, val z)
+//│ ║  l.170: 	class Foo(val z, val z)
 //│ ╙──       	                     ^
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo9;
-//│ Foo9 = function Foo(z, z1) {
-//│   return globalThis.Object.freeze(new Foo.class(z, z1));
-//│ };
-//│ (class Foo8 {
-//│   static {
-//│     Foo9.class = this
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", ["z", "z"]];
-//│ });
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 Foo(1, 2)
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return Foo9(1, 2)
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Foo(undefined, undefined)
 
 

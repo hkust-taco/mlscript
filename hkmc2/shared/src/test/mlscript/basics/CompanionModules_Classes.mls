@@ -10,9 +10,9 @@ C()
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   res = App{typ=class:C⁰}:
-//│     lhs = Resolved{sym=term:C⁰/C¹}:
+//│     lhs = Resolved{sym=term:C¹}:
 //│       t = Ref{sym=member:C²} of member:C²
-//│       sym = term:C⁰/C¹
+//│       sym = term:C¹
 //│     rhs = Tup of Nil
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = C()

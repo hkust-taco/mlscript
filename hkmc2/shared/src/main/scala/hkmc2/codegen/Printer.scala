@@ -150,7 +150,7 @@ class Printer(using Raise, ShowCfg, State, SymbolPrinter, Config):
       val docStaged = if cls.isStaged then doc"staged " else doc""
       val docBody = print(privateFields, publicFields, methods, auxParams, S(preCtor), ctor, ctorSym)
       val clsType = k.str
-      val docCls = doc"${docStaged}${clsType}${parentSym.fold(doc"")(doc" extends " :: print(_))} ${print(isym)}${ctorParams}${docBody}"
+      val docCls = doc"${docStaged}${clsType} ${print(isym)}${parentSym.fold(doc"")(doc" extends " :: print(_))}${ctorParams}${docBody}"
       val docModule = mod match
         case Some(mod) =>
           val docStaged = if mod.isStaged then doc"staged " else doc""

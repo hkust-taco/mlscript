@@ -752,7 +752,7 @@ class BlockSimplifier
             Set.empty[Shape]
           def getCtorShape(path: Path): Opt[Shape] =
             path.targetSymbol.flatMap:
-              case ccs: ClassCtorSymbol => ccs.owner
+              case ccs: ClassCtorSymbol => S(ccs.associatedCls)
               case sym => sym.asClsOrMod
           def isSaturatedClassCall(sym: ClassSymbol, argss: NELs[Ls[Arg]]): Bool =
             sym.irClsLikeDefn.exists: defn =>
