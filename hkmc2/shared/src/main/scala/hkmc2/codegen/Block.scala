@@ -512,12 +512,12 @@ object HandleBlock:
   def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.suspend
     Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(
-      CallMetadata(true, true, false, Nil))
+      CallMetadata(true, true, Nil))
 
   def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.handle_suspension
     Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(
-      CallMetadata(true, true, false, Nil))
+      CallMetadata(true, true, Nil))
   
   private def create(
       lhs: LocalVarSymbol,
@@ -558,7 +558,7 @@ object HandleBlock:
       S(par), handlerMtds, Nil, Nil,
       // Apparently, the lifter is not happy with any assignment in the preCtor...
       Assign(State.noSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(
-        CallMetadata(true, true, false, Nil)), End()),
+        CallMetadata(true, true, Nil)), End()),
       End(),
       N,
       N,
@@ -938,15 +938,13 @@ case class CallMetadata(
  * Note that the check for effect is inserted during HandlerLowering and setting this to true
  * after handler is lowered does not have any effect on the code generation. */
   mayRaiseEffects: Bool,
-  explicitTailCall: Bool,
   annotations: Ls[Annot],
-)
+):
+  lazy val explicitTailCall: Bool = annotations.contains(Annot.TailCall)
 
 object CallMetadata:
-  def defaultMlsFun: CallMetadata =
-    CallMetadata(true, false, false, Nil)
-  def defaultFun: CallMetadata =
-    CallMetadata(false, false, false, Nil)
+  val defaultMlsFun = CallMetadata(true, false, Nil)
+  val defaultFun = CallMetadata(false, false, Nil)
 
 
 case class Call(fun: Path, argss: NELs[Ls[Arg]])(val metadata: CallMetadata) extends Result:

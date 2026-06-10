@@ -151,7 +151,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       parentClsPath,
       State.builtinOpsMap("super").asSimpleRef,
       isMlsFun = true,
-      isTailCall = false,
       args,
       N, // TODO: location?
     )(c => Assign(NoSymbol, c, End()))
@@ -386,7 +385,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       clsDef.paramsOpt.toList ::: clsDef.auxParams
   
   // * Lowers the `super(...)(...)` call we get from the `extends C(...)(...)` syntax
-  def lowerSuperCtorCall(parentClsPth: Path, fr: Path, isMlsFun: Bool, isTailCall: Bool, args: List[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+  def lowerSuperCtorCall(parentClsPth: Path, fr: Path, isMlsFun: Bool, args: List[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
     val ctorParamLists = getCtorParamLists(parentClsPth)
     args match
     case _ :: _ =>
@@ -406,7 +405,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
               msg"Extending a partially applied class is not supported" -> loc :: Nil,
               source = Diagnostic.Source.Compilation))
           k(Call(fr, acc.reverse.ne_!)(
-            CallMetadata(isMlsFun, true, isTailCall, Nil)).withLoc(loc))
+            CallMetadata(isMlsFun, true, Nil)).withLoc(loc))
       zipArgs(ctorParamLists, args, Nil)
     case Nil =>
       if !ctorParamLists.isEmpty then
@@ -415,31 +414,30 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           source = Diagnostic.Source.Compilation))
       // * No arguments to a super ctor means a nullary call, e.g., `extends C` means `extends C()`
       k(Call(fr, Nil ne_:: Nil)(
-        CallMetadata(isMlsFun, true, isTailCall, Nil)).withLoc(loc))
+        CallMetadata(isMlsFun, true, Nil)).withLoc(loc))
   
   /** Lower a call with multiple argument lists into `Call` nodes,
     * trying to group as many as possible into a single one
     * when they correspond to parameter lists of the same callee. */
   def lowerMultiCall(fr: Path, isMlsFun: Bool, annotations: Ls[Annot], args: Ls[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
-    val isTailCall = annotations.contains(Annot.TailCall)
     def zipArgs(remainingParamss: Ls[ParamList], remainingArgss: Ls[Term], acc: Ls[Ls[Arg]], mayRaiseEffects: Bool): Block =
       (remainingParamss, remainingArgss) match
       case (ps :: remainingParams, args :: remainingArgs) =>
         lowerArgs(args)(as => zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects))
       case (Nil, Nil) =>
         k(Call(fr, acc.reverse.ne_!)(
-          CallMetadata(isMlsFun, mayRaiseEffects, isTailCall, annotations)).withLoc(loc))
+          CallMetadata(isMlsFun, mayRaiseEffects, annotations)).withLoc(loc))
       case (Nil, args :: remainingArgss) =>
         acc.reverse match
         case Nil => lowerRemainingCalls(fr, args, remainingArgss, annotations, loc)(k)
         case acc: NELs[Ls[Arg]] =>
           val tmp = loweringCtx.registerTempSymbol(N, "baseCall")
           val call = Call(fr, acc)(
-            CallMetadata(isMlsFun, mayRaiseEffects, false, Nil)).withLoc(loc)
+            CallMetadata(isMlsFun, mayRaiseEffects, Nil)).withLoc(loc)
           Assign(tmp, call, lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, annotations, loc)(k))
       case (_ :: _, Nil) =>
         k(Call(fr, acc.reverse.ne_!)(
-          CallMetadata(isMlsFun, mayRaiseEffects, isTailCall, annotations)).withLoc(loc))
+          CallMetadata(isMlsFun, mayRaiseEffects, annotations)).withLoc(loc))
     fr.targetSymbol match
     case S(fs: TermSymbol) =>
       fs.defn match
@@ -451,12 +449,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   def lowerRemainingCalls(base: Path, args: Term, remainingArgss: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])
         (k: Result => Block)(using LoweringCtx): Block =
     lowerArgs(args): as =>
-      val isFinalCall = remainingArgss.isEmpty
       val call = Call(base, as ne_:: Nil)(
         CallMetadata(
           false,
           true,
-          annotations.contains(Annot.TailCall),
           annotations,
         )).withLoc(loc)
       remainingArgss match
@@ -653,7 +649,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             )(CallMetadata(
               true,
               true,
-              annots.contains(Annot.TailCall),
               annots)))
       case S(td: TermDefinition) =>
         td.tsym.owner match

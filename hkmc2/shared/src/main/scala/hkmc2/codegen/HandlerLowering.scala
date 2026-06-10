@@ -69,7 +69,7 @@ object HandlerLowering:
         resumeInfo.argLists ++:
         (intLit(restoreList.length) ::
         restoreList.map(_.asPath))
-      ).map(_.asArg) ne_:: Nil)(CallMetadata(true, true, false, Nil)))
+      ).map(_.asArg) ne_:: Nil)(CallMetadata(true, true, Nil)))
   
   // argLists: length-encoded argument list used for resumption.
   // currentLocals: All locals to be saved and reloaded, this cannot include any variables in outer scopes
@@ -555,9 +555,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val preTransform = new BlockTransformer(SymbolSubst.Id):
       override def applyResult(r: Result)(k: Result => Block): Block = r match
         case Call(Value.MemberRef(sym, _), args) if sym is Elaborator.ctx.builtins.runtime.suspend =>
-          k(Call(paths.mkEffectPath, args)(CallMetadata(true, true, false, Nil)))
+          k(Call(paths.mkEffectPath, args)(CallMetadata(true, true, Nil)))
         case Call(Value.MemberRef(sym, _), args) if sym is Elaborator.ctx.builtins.runtime.handle_suspension =>
-          k(Call(paths.enterHandleBlockPath, args)(CallMetadata(true, true, false, Nil)))
+          k(Call(paths.enterHandleBlockPath, args)(CallMetadata(true, true, Nil)))
         case _ => super.applyResult(r)(k)
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case fun: FunDefn =>
@@ -598,7 +598,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         case _ => super.applyDefn(defn)(k)
     val b = preTransform.applyBlock(blk)
     if h.inCtor then
-      return translateIllegalEffectCtx(b, Call.raw(paths.illegalEffectPath, (Value.Lit(Tree.StrLit("in a constructor")).asArg :: Nil) ne_:: Nil)(CallMetadata(true, true, false, Nil)))
+      return translateIllegalEffectCtx(b, Call.raw(paths.illegalEffectPath, (Value.Lit(Tree.StrLit("in a constructor")).asArg :: Nil) ne_:: Nil)(CallMetadata(true, true, Nil)))
     if h.inTopLevel then
       return translateIllegalEffectCtx(b, Call.raw(paths.topLevelEffectPath, (Value.Lit(Tree.BoolLit(opt.debug)).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun))
     val ctx = h.asInstanceOf[HandlerCtx.FunctionLike].ctx

@@ -928,7 +928,6 @@ class BlockSimplifier
             CallMetadata(
               prefix.metadata.isMlsFun,
               prefix.metadata.mayRaiseEffects || c.metadata.mayRaiseEffects,
-              c.metadata.explicitTailCall,
               prefix.metadata.annotations ++ c.metadata.annotations,
             ),
           ).withLocOf(c)
@@ -1246,7 +1245,9 @@ class BlockSimplifier
                       else
                         acc(Scoped(Set(resSym), newBlk(
                           k(Call(resSym.asSimpleRef, extraArgss.ne_!)(
-                            c.metadata.copy(explicitTailCall = false))))))
+                            c.metadata.copy(
+                              annotations = c.metadata.annotations.filterNot(_ == Annot.TailCall),
+                            ))))))
                     case (sym, value) :: argRest =>
                       val newSym = VarSymbol(sym.id)
                       go(acc.assignScoped(newSym, value), argRest, mapping + (sym -> newSym))

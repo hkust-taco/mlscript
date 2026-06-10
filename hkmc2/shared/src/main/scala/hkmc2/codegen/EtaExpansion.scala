@@ -183,7 +183,7 @@ class EtaExpansionRewrite(val etaExpansionSolver: EtaExpansionSolver)(using Rais
     
     private def etaCall(base: Path): Result =
       Call(base, activeEtaArgss.ne_!)(
-        CallMetadata(true, true, false, Nil))
+        CallMetadata(true, true, Nil))
     
     override def applyBlock(b: Block): Block = b match
       case Return(res) if activeEtaArgss.nonEmpty =>
