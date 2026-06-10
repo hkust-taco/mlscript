@@ -39,14 +39,10 @@ print of if x === 0 then 1 else 2
 //│ set scrut = ===⁰(x⁰, 0);
 //│ match scrut
 //│   true =>
-//│     begin
-//│       set tmp = 1;
-//│       end;
+//│     set tmp = 1;
 //│     return Predef⁰.print⁰(tmp)
 //│   else
-//│     begin
-//│       set tmp = 2;
-//│       end;
+//│     set tmp = 2;
 //│     return Predef⁰.print⁰(tmp)
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -180,37 +176,31 @@ print of if x is
 //│ let tmp;
 //│ match x⁰
 //│   0 =>
-//│     begin
-//│       match y⁰
-//│         0 =>
-//│           match z⁰
-//│             0 =>
-//│               set tmp = "000";
-//│               end
-//│             1 =>
-//│               set tmp = "001";
-//│               end
-//│             else
-//│               set tmp = "";
-//│               end
-//│           end
-//│         1 =>
-//│           set tmp = "01";
-//│           end
-//│         else
-//│           set tmp = "";
-//│           end
-//│       end;
-//│     return Predef⁰.print⁰(tmp)
+//│     match y⁰
+//│       0 =>
+//│         match z⁰
+//│           0 =>
+//│             set tmp = "000";
+//│             return Predef⁰.print⁰(tmp)
+//│           1 =>
+//│             set tmp = "001";
+//│             return Predef⁰.print⁰(tmp)
+//│           else
+//│             set tmp = "";
+//│             return Predef⁰.print⁰(tmp)
+//│         end
+//│       1 =>
+//│         set tmp = "01";
+//│         return Predef⁰.print⁰(tmp)
+//│       else
+//│         set tmp = "";
+//│         return Predef⁰.print⁰(tmp)
+//│     end
 //│   1 =>
-//│     begin
-//│       set tmp = "1";
-//│       end;
+//│     set tmp = "1";
 //│     return Predef⁰.print⁰(tmp)
 //│   else
-//│     begin
-//│       set tmp = "";
-//│       end;
+//│     set tmp = "";
 //│     return Predef⁰.print⁰(tmp)
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -271,56 +261,50 @@ print of if
 //│ let tmp;
 //│ match x⁰
 //│   0 =>
-//│     begin
-//│       match y⁰
-//│         0 =>
-//│           match z⁰
-//│             0 =>
-//│               set tmp = "000";
-//│               end
-//│             1 =>
-//│               set tmp = "0_1";
-//│               end
-//│             else
-//│               set tmp = "___";
-//│               end
-//│           end
-//│         1 =>
-//│           set tmp = "01_";
-//│           end
-//│         else
-//│           match z⁰
-//│             1 =>
-//│               set tmp = "0_1";
-//│               end
-//│             else
-//│               match y⁰
-//│                 2 =>
-//│                   set tmp = "_2_";
-//│                   end
-//│                 else
-//│                   set tmp = "___";
-//│                   end
-//│               end
-//│           end
-//│       end;
-//│     return Predef⁰.print⁰(tmp)
+//│     match y⁰
+//│       0 =>
+//│         match z⁰
+//│           0 =>
+//│             set tmp = "000";
+//│             return Predef⁰.print⁰(tmp)
+//│           1 =>
+//│             set tmp = "0_1";
+//│             return Predef⁰.print⁰(tmp)
+//│           else
+//│             set tmp = "___";
+//│             return Predef⁰.print⁰(tmp)
+//│         end
+//│       1 =>
+//│         set tmp = "01_";
+//│         return Predef⁰.print⁰(tmp)
+//│       else
+//│         match z⁰
+//│           1 =>
+//│             set tmp = "0_1";
+//│             return Predef⁰.print⁰(tmp)
+//│           else
+//│             match y⁰
+//│               2 =>
+//│                 set tmp = "_2_";
+//│                 return Predef⁰.print⁰(tmp)
+//│               else
+//│                 set tmp = "___";
+//│                 return Predef⁰.print⁰(tmp)
+//│             end
+//│         end
+//│     end
 //│   1 =>
-//│     begin
-//│       set tmp = "1__";
-//│       end;
+//│     set tmp = "1__";
 //│     return Predef⁰.print⁰(tmp)
 //│   else
-//│     begin
-//│       match y⁰
-//│         2 =>
-//│           set tmp = "_2_";
-//│           end
-//│         else
-//│           set tmp = "___";
-//│           end
-//│       end;
-//│     return Predef⁰.print⁰(tmp)
+//│     match y⁰
+//│       2 =>
+//│         set tmp = "_2_";
+//│         return Predef⁰.print⁰(tmp)
+//│       else
+//│         set tmp = "___";
+//│         return Predef⁰.print⁰(tmp)
+//│     end
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 000

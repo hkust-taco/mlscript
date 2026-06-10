@@ -495,16 +495,27 @@ object Begin:
     if sub.isEmpty then rest
     else if rest.isEmpty then sub
     else if sub.isAbortive then sub
-    else (sub, rest) match
-      case (Scoped(symsSub, bodySub), Scoped(symsRest, bodyRest)) =>
-        whenValidatingIR:
-          assert(
-            !symsSub.exists(symsRest.contains),
-            "overlapping symbols when trying to merge Scoped blocks")
-        Scoped(symsSub ++ symsRest, Begin(bodySub, bodyRest))
-      case (Scoped(symsSub, bodySub), _) => Scoped(symsSub, Begin(bodySub, rest))
-      case (_, Scoped(symsRest, bodyRest)) => Scoped(symsRest, Begin(sub, bodyRest))
+    else sub match
+      case Scoped(symsSub, bodySub) =>
+        rest match
+        case Scoped(symsRest, bodyRest) =>
+          whenValidatingIR:
+            assert(
+              !symsSub.exists(symsRest.contains),
+              "overlapping symbols when trying to merge Scoped blocks")
+          Scoped(symsSub ++ symsRest, Begin(bodySub, bodyRest))
+        case _ => Scoped(symsSub, Begin(bodySub, rest))
+      case Match(scrut, arms, dflt, rst) => Match(scrut, arms, dflt, Begin(rst, rest))
+      case Label(lbl, loop, body, rst) => Label(lbl, loop, body, Begin(rst, rest))
+      case TryBlock(sub, fin, rst) => TryBlock(sub, fin, Begin(rst, rest))
+      case Assign(lhs, rhs, rst) => Assign(lhs, rhs, Begin(rst, rest))
+      case Define(defn, rst) => Define(defn, Begin(rst, rest))
+      case _: End => rest
+      case Begin(sub, rst) => Begin(sub, Begin(rst, rest))
       case _ => new Begin(sub, rest)
+      // * Note: we used to match on (sub, rest) with:
+      // case (_, Scoped(symsRest, bodyRest)) => Scoped(symsRest, Begin(sub, bodyRest))
+      // * ^ Not a good idea: we won't want to commute Scoped past things like Match in the future
 
 
 object HandleBlock:

@@ -32,12 +32,12 @@ let lsit = [2, 1] in
 //│   set b = element1$;
 //│   set a = element0$;
 //│   set tmp = 0;
-//│   return $lsit_rest⁰()
+//│   set useless = tmp;
+//│   return runtime⁰.Unit⁰
 //│ };
 //│ @private
 //│ define $lsit_rest as fun $lsit_rest⁰() {
-//│   set useless = tmp;
-//│   return runtime⁰.Unit⁰
+//│   return null
 //│ };
 //│ set tup2_0 = 2;
 //│ set tup2_1 = 1;
