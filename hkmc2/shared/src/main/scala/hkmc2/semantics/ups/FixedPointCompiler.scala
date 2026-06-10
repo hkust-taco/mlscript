@@ -128,15 +128,23 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       target.resolvedSym.flatMap(_.asPat).flatMap: patternSymbol =>
         patternSymbol.defn match
           case S(defn) if defn.patternParams.isEmpty && defn.extractionParams.isEmpty =>
-            recognizeBody(stripAnnotations(defn.pattern), patternSymbol).flatMap: (stepPattern, middles, catchAll, requireProgress) =>
-              val outputPattern = arguments match
-                case N | S(Nil) => S(N)
-                case S(sole :: Nil) => S(S(sole))
-                // Several arguments are not understood by fixed-point
-                // patterns; let the regular path report the mismatch.
-                case S(_) => N
-              outputPattern.flatMap: outputPattern =>
-                scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress)).map((_, outputPattern))
+            val outputPattern = arguments match
+              case N | S(Nil) => S(N)
+              case S(sole :: Nil) => S(S(sole))
+              // Several arguments are not understood by fixed-point
+              // patterns; let the regular path report the mismatch.
+              case S(_) => N
+            outputPattern.flatMap: outputPattern =>
+              val machine = recognizeBody(stripAnnotations(defn.pattern), patternSymbol) match
+                case S((stepPattern, middles, catchAll, requireProgress)) =>
+                  scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress))
+                case N =>
+                  // The definition may instead be a link of an indirect
+                  // recursion cycle.
+                  recognizeCycle(patternSymbol).flatMap: links =>
+                    scoped("ucs:fixpoint"):
+                      compileAlternatingMachine(links.map((_, step, middles, catchAll) => (step, middles, catchAll)))
+              machine.map((_, outputPattern))
           case _ => N
     case body: (SP.Chain | SP.Composition) =>
       // The body-annotated form. The body must belong to the very definition
@@ -152,7 +160,21 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         case S(patternSymbol) if isOwnBody(patternSymbol) =>
           recognizeBody(body, patternSymbol).flatMap: (stepPattern, middles, catchAll, requireProgress) =>
             scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress)).map((_, N))
-        case _ => N
+        case S(tailSymbol) =>
+          // The body may be a link of an indirect recursion cycle; its tail
+          // then refers to the next link rather than the definition itself.
+          // Locate the definition the body belongs to in the cycle and
+          // rotate its link to the front.
+          recognizeCycle(tailSymbol).flatMap: links =>
+            links.indexWhere((symbol, _, _, _) =>
+              symbol.defn.exists(defn => stripAnnotations(defn.pattern) eq body)) match
+              case -1 => N
+              case index =>
+                val rotated = links.drop(index) ::: links.take(index)
+                scoped("ucs:fixpoint"):
+                  compileAlternatingMachine(rotated.map((_, step, middles, catchAll) => (step, middles, catchAll)))
+                .map((_, N))
+        case N => N
     case _ => N
 
   /** Remove `Annotated` wrappers (such as the `@compile` marking itself). */
@@ -164,6 +186,18 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
   private def disjuncts(pattern: SP): Ls[SP] = pattern match
     case SP.Composition(true, left, right) => disjuncts(left) ::: disjuncts(right)
     case _ => pattern :: Nil
+
+  /** Classify the alternatives following the recursive ones into the middle
+    * alternatives and the optional trailing wildcard. */
+  private def classifyRest(rest: Ls[SP]): Opt[(Ls[SP], Bool)] =
+    if rest.isEmpty then N
+    else
+      val catchAll = rest.last.isInstanceOf[SP.Wildcard]
+      val middles = if catchAll then rest.init else rest
+      // Reject non-trailing wildcards (they make later alternatives
+      // unreachable) and chains (recursive alternatives must be leading).
+      if middles.exists(p => p.isInstanceOf[SP.Wildcard] || p.isInstanceOf[SP.Chain]) then N
+      else S((middles, catchAll))
 
   /** If the pattern is fixed-point shaped — `P as (S | ...)` or
     * `(P1 as S) | ...` — return the pattern symbol `S` refers to. */
@@ -197,15 +231,6 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     * naive translation. */
   private def recognizeBody(pattern: SP, self: PatternSymbol): Opt[(SP, Ls[SP], Bool, Bool)] =
     def isSelf(target: Term): Bool = target.resolvedSym.flatMap(_.asPat).exists(_ is self)
-    def classifyRest(rest: Ls[SP]): Opt[(Ls[SP], Bool)] =
-      if rest.isEmpty then N
-      else
-        val catchAll = rest.last.isInstanceOf[SP.Wildcard]
-        val middles = if catchAll then rest.init else rest
-        // Reject non-trailing wildcards (they make later alternatives
-        // unreachable) and chains (recursive alternatives must be leading).
-        if middles.exists(p => p.isInstanceOf[SP.Wildcard] || p.isInstanceOf[SP.Chain]) then N
-        else S((middles, catchAll))
     pattern match
       case SP.Chain(stepPattern, tail) => disjuncts(tail) match
         case SP.Constructor(target, N) :: rest if isSelf(target) =>
@@ -220,6 +245,39 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         else classifyRest(rest).map: (middles, catchAll) =>
           (steps.reduceLeft(SP.Composition(true, _, _)), middles, catchAll, false)
       case _ => N
+
+  /** Recognize an indirect recursion cycle of chain-shaped definitions
+    * starting from `start`: each body is `step as (Next | rest)` where
+    * `Next` refers to the following definition, and the last one refers back
+    * to `start`. The semantics is strict alternation: the steps fire in
+    * cycle order, the first one is required, and whenever the next step
+    * fails, the alternatives of the last fired link process the current
+    * term. Returns the links in cycle order, beginning with `start`'s own. */
+  private def recognizeCycle(start: PatternSymbol)
+      : Opt[Ls[(PatternSymbol, SP, Ls[SP], Bool)]] =
+    @tailrec def walk(
+        current: PatternSymbol,
+        acc: Ls[(PatternSymbol, SP, Ls[SP], Bool)]
+    ): Opt[Ls[(PatternSymbol, SP, Ls[SP], Bool)]] =
+      val linkOpt = current.defn match
+        case S(defn) if defn.patternParams.isEmpty && defn.extractionParams.isEmpty =>
+          stripAnnotations(defn.pattern) match
+            case SP.Chain(stepPattern, tail) => disjuncts(tail) match
+              case SP.Constructor(target, N) :: rest =>
+                target.resolvedSym.flatMap(_.asPat).flatMap: next =>
+                  classifyRest(rest).map: (middles, catchAll) =>
+                    (next, (current, stepPattern, middles, catchAll))
+              case _ => N
+            case _ => N
+        case _ => N
+      linkOpt match
+        case S((next, link)) =>
+          if next is start then S((link :: acc).reverse)
+          else if (next is current) || acc.exists(_._1 is next) then N
+          else walk(next, link :: acc)
+        case N => N
+    // Cycles of length one are the direct shape, handled by `recognizeBody`.
+    walk(start, Nil).filter(_.sizeIs > 1)
 
   /** Does `pattern` mention the given instantiation anywhere? Used to locate
     * the recursive occurrences of the context pattern (the "holes"). */
@@ -334,6 +392,99 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         .toList
         S((redexAlternatives, classes))
 
+  private def setStmt(symbol: LocalVarSymbol, value: Term): Statement =
+    Term.Assgn(symbol.safeRef, value)
+
+  /** A leaf of a loop split: execute the state updates; the `while` form
+    * then re-enters the loop from the top. */
+  private def perform(stmts: Statement*): Split =
+    Split.Else(Term.Blk(stmts.toList, Term.Lit(UnitLit(false))))
+
+  private def intPattern(value: Int): FlatPattern = FlatPattern.Lit(IntLit(BigInt(value)))
+
+  private def callMatcher(matcher: LocalVarSymbol, argument: Term, label: Str): Term =
+    app(matcher.safeRef, tup(fld(argument)), label)
+
+  /** Compile an indirect recursion cycle. Each link contributes its step
+    * pattern and its trailing alternatives, turned into a post pattern as in
+    * `compileMachine`. */
+  private def compileAlternatingMachine(links: Ls[(SP, Ls[SP], Bool)]): Opt[Machine] =
+    val instantiator = new Instantiator
+    var context = new Context(Map.empty)
+    def instantiate(pattern: SP): Pat =
+      val (instantiated, newerContext) = instantiator(pattern)
+      context = newerContext
+      instantiated
+    val compiled = links.map: (step, middles, catchAll) =>
+      val stepPattern = instantiate(step)
+      val middlePatterns = middles.map(instantiate)
+      val post =
+        if catchAll then
+          if middlePatterns.isEmpty then N else S(Or(middlePatterns :+ Wildcard))
+        else S(Or(middlePatterns))
+      (stepPattern, post, catchAll)
+    given Context = context
+    S(assembleAlternating(compiled))
+
+  /** Assemble the flat alternation loop for an indirect recursion cycle: in
+    * phase `i`, step `i` is applied to the current term; on success the
+    * machine moves to the next phase in the cycle, and on failure it exits
+    * and the last fired link's alternatives process the final term. No step
+    * ever firing means the first chain failed, so the match fails. */
+  private def assembleAlternating(links: Ls[(Pat, Opt[Pat], Bool)])(using Context): Machine =
+    // Like in `assemble`, every matcher gets its own compiler instance
+    // because the matcher memoization is instance-bound.
+    val matchers = links.map: (step, post, _) =>
+      val stepCompiler = new Compiler
+      val (stepMatcher, stepImpls) = stepCompiler.buildMatcher(step, ResultMode.Full)
+      val postMatcherOpt = post.map: postPattern =>
+        val postCompiler = new Compiler
+        postCompiler.buildMatcher(postPattern, ResultMode.Full)
+      (stepMatcher, stepImpls, postMatcherOpt)
+
+    val inputSymbol = VarSymbol(Ident("input"))
+    val phaseSymbol = TempSymbol(N, "phase")
+    val focusSymbol = TempSymbol(N, "focus")
+    val firedSymbol = TempSymbol(N, "lastFired")
+    val size = links.size
+
+    val loop = matchers.iterator.zipWithIndex.foldRight(Split.End: Split):
+      case (((stepMatcher, _, _), index), rest) =>
+        val resultSym = TempSymbol(N, s"step$index$$Result")
+        val outputSym = TempSymbol(N, "stepOutput")
+        val bindingsSym = TempSymbol(N, "stepBindings")
+        Branch(phaseSymbol.safeRef, intPattern(index),
+          Split.Let(resultSym, callMatcher(stepMatcher, focusSymbol.safeRef, "step result"),
+            Branch(resultSym.safeRef, matchSuccessPattern(S(outputSym :: bindingsSym :: Nil)),
+              perform(
+                setStmt(focusSymbol, outputSym.safeRef),
+                setStmt(firedSymbol, int(index)),
+                setStmt(phaseSymbol, int((index + 1) % size)))
+            // No phase matches `size`, which makes the `while` form exit.
+            ) ~: perform(setStmt(phaseSymbol, int(size))))
+        ) ~: rest
+
+    val result = Term.SynthIf(
+      matchers.iterator.zipWithIndex.foldRight(Split.Else(makeMatchFailure()): Split):
+        case (((_, _, postMatcherOpt), index), rest) =>
+          val success = postMatcherOpt match
+            case S((postMatcher, _)) =>
+              callMatcher(postMatcher, focusSymbol.safeRef, "post-processed result")
+            case N => makeMatchSuccess(focusSymbol.safeRef)
+          Branch(firedSymbol.safeRef, intPattern(index), Split.Else(success)) ~: rest)
+
+    val prelude =
+      matchers.flatMap((_, stepImpls, postMatcherOpt) =>
+        stepImpls ::: postMatcherOpt.fold(Nil)(_._2)
+      ).flatMap: (symbol, params, body) =>
+        LetDecl(symbol, Nil) :: DefineVar(symbol, Term.Lam(params, body)) :: Nil
+      ::: List(
+        LetDecl(phaseSymbol, Nil), DefineVar(phaseSymbol, int(0)),
+        LetDecl(focusSymbol, Nil), DefineVar(focusSymbol, inputSymbol.safeRef),
+        LetDecl(firedSymbol, Nil), DefineVar(firedSymbol, int(-1)))
+
+    Machine(paramList(param(inputSymbol)), prelude, loop, result, links.exists(!_._3))
+
   /** Assemble the machine: matcher functions for the redex and the side
     * conditions (reusing the non-backtracking `ups.Compiler`), the state
     * variables, and the `find`/`up` transition split executed in a loop. */
@@ -375,19 +526,11 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     // a match failure.
     val progressedSymbol = TempSymbol(N, "progressed")
 
-    def setStmt(symbol: LocalVarSymbol, value: Term): Statement = Term.Assgn(symbol.safeRef, value)
-    // A leaf of the loop split: execute the state updates; the `while` form
-    // then re-enters the loop from the top.
-    def perform(stmts: Statement*): Split =
-      Split.Else(Term.Blk(stmts.toList, Term.Lit(UnitLit(false))))
     def bool(value: Bool): Term = Term.Lit(BoolLit(value))
-    def intPattern(value: Int): FlatPattern = FlatPattern.Lit(IntLit(BigInt(value)))
     def constructorTerm(cls: ClassInfo): Term =
       Compiler.reference(cls.symbol, N).getOrElse(Term.Error)
     def classPattern(cls: ClassInfo, children: Ls[TempSymbol]): FlatPattern =
       FlatPattern.ClassLike(constructorTerm(cls), cls.symbol, S(children.map(_ -> N)), false)(Tree.Dummy)
-    def callMatcher(matcher: LocalVarSymbol, argument: Term, label: Str): Term =
-      app(matcher.safeRef, tup(fld(argument)), label)
 
     // ---- Context frames ----
     // A frame is a record reifying a one-hole context layer: the constructor
