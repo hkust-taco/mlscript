@@ -1,0 +1,146 @@
+:js
+
+// A fixed-point pattern need not end in a catch-all wildcard:
+//
+//   pattern P = Q as P | a
+//
+// reads `Q as (P | a)`. The machine normalizes the scrutinee and matches
+// `a` against the final normal form. When `a` fails there, the naive
+// backtracking semantics applies: the latest intermediate result matching
+// `a` is returned instead, and the whole match fails when there is none.
+// The compiled matcher implements this by retrying the failed machine run
+// with the naive translation, so allocations on that path appear twice.
+
+open annotations { compile }
+
+data class Box(val value) with
+  print("new Box(" + render(value) + ")")
+data class Tag(val value) with
+  print("new Tag(" + render(value) + ")")
+
+pattern UnBox = Box(x) => x
+
+// Peel boxes; the result must be a tag.
+pattern PeelToTag = UnBox as PeelToTag | Tag(_)
+
+// The fast path: the normal form matches the alternative directly.
+let boxedTag = Box(Box(Tag(5)))
+//│ > new Tag(5)
+//│ > new Box(Tag(5))
+//│ > new Box(Box(Tag(5)))
+//│ boxedTag = Box(Box(Tag(5)))
+
+:expect Tag(5)
+if boxedTag is PeelToTag(r) then r else "<no match>"
+//│ = Tag(5)
+
+:expect Tag(5)
+if boxedTag is @compile PeelToTag(r) then r else "<no match>"
+//│ = Tag(5)
+
+// Neither the normal form `7` nor any intermediate is a tag: no match.
+let boxedNum = Box(Box(7))
+//│ > new Box(7)
+//│ > new Box(Box(7))
+//│ boxedNum = Box(Box(7))
+
+:expect "no match"
+if boxedNum is PeelToTag(r) then "matched" else "no match"
+//│ = "no match"
+
+:expect "no match"
+if boxedNum is @compile PeelToTag(r) then "matched" else "no match"
+//│ = "no match"
+
+// The alternative is part of the chain's tail, so it cannot rescue a failed
+// first step, even though `Tag(5)` matches it.
+:expect "no match"
+if Tag(5) is PeelToTag(r) then "matched" else "no match"
+//│ > new Tag(5)
+//│ = "no match"
+
+:expect "no match"
+if Tag(5) is @compile PeelToTag(r) then "matched" else "no match"
+//│ > new Tag(5)
+//│ = "no match"
+
+// Peel boxes; the result must still be a box. A normal form can never be a
+// box (`UnBox` would have stepped it), so a successful match always
+// backtracks to the latest intermediate result that is one.
+pattern PeelToBox = UnBox as PeelToBox | Box(_)
+
+:expect Box(7)
+if boxedNum is PeelToBox(r) then r else "<no match>"
+//│ = Box(7)
+
+:expect Box(7)
+if boxedNum is @compile PeelToBox(r) then r else "<no match>"
+//│ = Box(7)
+
+
+// ————— With an evaluation-context step pattern —————
+
+data class Lit(val value) with
+  print("new Lit(" + render(value) + ")")
+data class Add(val lhs, val rhs) with
+  print("new Add(" + render(lhs) + ", " + render(rhs) + ")")
+
+pattern Value = Lit
+
+pattern Ctx(pattern Hole) =
+  | Hole
+  | Add(Ctx(Hole), _)
+  | Add(Value, Ctx(Hole))
+
+pattern Redex = Add(Lit(a), Lit(b)) => Lit(a + b)
+
+// Evaluation must reach a value; getting stuck is a match failure.
+pattern EvalValue = Ctx(Redex) as EvalValue | Value
+
+let sum = Add(Add(Lit(1), Lit(2)), Lit(3))
+//│ > new Lit(1)
+//│ > new Lit(2)
+//│ > new Add(Lit(1), Lit(2))
+//│ > new Lit(3)
+//│ > new Add(Add(Lit(1), Lit(2)), Lit(3))
+//│ sum = Add(Add(Lit(1), Lit(2)), Lit(3))
+
+:expect 6
+if sum is EvalValue(r) and r is Lit(n) then n else -1
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Lit(3))
+//│ > new Lit(6)
+//│ = 6
+
+:expect 6
+if sum is @compile EvalValue(r) and r is Lit(n) then n else -1
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Lit(3))
+//│ > new Lit(6)
+//│ = 6
+
+// The stuck term reduces to `Add(Lit(3), Tag(9))`, which is not a value,
+// and neither is any intermediate result: the match fails. The failed
+// machine run is retried naively, so its allocations show up twice.
+let stuck = Add(Add(Lit(1), Lit(2)), Tag(9))
+//│ > new Lit(1)
+//│ > new Lit(2)
+//│ > new Add(Lit(1), Lit(2))
+//│ > new Tag(9)
+//│ > new Add(Add(Lit(1), Lit(2)), Tag(9))
+//│ stuck = Add(Add(Lit(1), Lit(2)), Tag(9))
+
+:expect "no match"
+if stuck is EvalValue(r) then "matched" else "no match"
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Tag(9))
+//│ = "no match"
+
+:expect "no match"
+if stuck is @compile EvalValue(r) then "matched" else "no match"
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Tag(9))
+//│ > new Add(Lit(3), Tag(9))
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Tag(9))
+//│ = "no match"

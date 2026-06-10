@@ -1131,18 +1131,24 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     // (see `FixedPointCompiler`).
     FixedPointCompiler().compile(pattern) match
       case S((machine, outputPattern)) =>
-        makeFixedPointMatchSplit(scrutinee, machine, outputPattern, outputNeeded)
+        makeFixedPointMatchSplit(scrutinee, machine, outputPattern, outputNeeded,
+          if machine.naiveFallback then S(pattern) else N)
       case N => compilePatternImpl(scrutinee, pattern, outputNeeded)
 
   /** Embed a compiled fixed-point machine at a match site: bind the machine
     * as a local function, call it on the scrutinee, and destructure the
     * resulting `MatchSuccess`. The optional `outputPattern` comes from the
-    * output-matching shorthand `x is P(Q) === x is P as Q`. */
+    * output-matching shorthand `x is P(Q) === x is P as Q`. When
+    * `fallbackPattern` is given (non-catch-all definitions), a failed machine
+    * run is retried with the naive backtracking translation of the original
+    * pattern, which implements the deepest-first try order on intermediate
+    * results that the machine does not keep around. */
   private def makeFixedPointMatchSplit(
       scrutinee: Scrut,
       machine: FixedPointCompiler.Machine,
       outputPattern: Opt[SP],
-      outputNeeded: Bool
+      outputNeeded: Bool,
+      fallbackPattern: Opt[SP]
   ): MakeSplit = (makeConsequent, alternative) =>
     val matcherSymbol = TempSymbol(N, "fixedPointMatcher")
     val matcherBody = Term.Blk(
@@ -1156,11 +1162,15 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
           case N => makeConsequent(outputSymbol, SeqMap.empty)
           case S(subPattern) =>
             makeMatchSplit(outputSymbol, subPattern, outputNeeded)(makeConsequent, Split.End)
+        val onFailure = fallbackPattern match
+          case S(original) =>
+            makeMatchSplit(scrutinee, original, outputNeeded)(makeConsequent, alternative)
+          case N => alternative
         Branch(
           resultSymbol.safeRef,
           matchSuccessPattern(S(outputSymbol.symbol :: bindingsSymbol :: Nil)),
           consequent
-        ) ~: alternative)
+        ) ~: onFailure)
 
   private def compilePatternImpl(scrutinee: Scrut, pattern: SP, outputNeeded: Bool): MakeSplit =
   (makeConsequent, alternative) => scoped("ucs:ups:compilation"):
