@@ -404,8 +404,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
             raise(ErrorReport(
               msg"Extending a partially applied class is not supported" -> loc :: Nil,
               source = Diagnostic.Source.Compilation))
-          k(Call(fr, acc.reverse.ne_!)(
-            CallMetadata(isMlsFun, true, Nil)).withLoc(loc))
+          k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, true, Nil)).withLoc(loc))
       zipArgs(ctorParamLists, args, Nil)
     case Nil =>
       if !ctorParamLists.isEmpty then
@@ -413,8 +412,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
           msg"Extending a partially applied class is not supported" -> loc :: Nil,
           source = Diagnostic.Source.Compilation))
       // * No arguments to a super ctor means a nullary call, e.g., `extends C` means `extends C()`
-      k(Call(fr, Nil ne_:: Nil)(
-        CallMetadata(isMlsFun, true, Nil)).withLoc(loc))
+      k(Call(fr, Nil ne_:: Nil)(CallMetadata(isMlsFun, true, Nil)).withLoc(loc))
   
   /** Lower a call with multiple argument lists into `Call` nodes,
     * trying to group as many as possible into a single one
@@ -425,19 +423,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
       case (ps :: remainingParams, args :: remainingArgs) =>
         lowerArgs(args)(as => zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects))
       case (Nil, Nil) =>
-        k(Call(fr, acc.reverse.ne_!)(
-          CallMetadata(isMlsFun, mayRaiseEffects, annotations)).withLoc(loc))
+        k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, annotations)).withLoc(loc))
       case (Nil, args :: remainingArgss) =>
         acc.reverse match
         case Nil => lowerRemainingCalls(fr, args, remainingArgss, annotations, loc)(k)
         case acc: NELs[Ls[Arg]] =>
           val tmp = loweringCtx.registerTempSymbol(N, "baseCall")
-          val call = Call(fr, acc)(
-            CallMetadata(isMlsFun, mayRaiseEffects, Nil)).withLoc(loc)
+          val call = Call(fr, acc)(CallMetadata(isMlsFun, mayRaiseEffects, Nil)).withLoc(loc)
           Assign(tmp, call, lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, annotations, loc)(k))
       case (_ :: _, Nil) =>
-        k(Call(fr, acc.reverse.ne_!)(
-          CallMetadata(isMlsFun, mayRaiseEffects, annotations)).withLoc(loc))
+        k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, annotations)).withLoc(loc))
     fr.targetSymbol match
     case S(fs: TermSymbol) =>
       fs.defn match
@@ -449,12 +444,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
   def lowerRemainingCalls(base: Path, args: Term, remainingArgss: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])
         (k: Result => Block)(using LoweringCtx): Block =
     lowerArgs(args): as =>
-      val call = Call(base, as ne_:: Nil)(
-        CallMetadata(
-          false,
-          true,
-          annotations,
-        )).withLoc(loc)
+      val call = Call(base, as ne_:: Nil)(CallMetadata(false, true, annotations)).withLoc(loc)
       remainingArgss match
       case Nil => k(call)
       case args :: remainingArgss =>
@@ -646,10 +636,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter):
         if td.params.isEmpty then
           return k(Call(
               bs.asMemberRef(disamb.get).withLocOf(ref), Nil ne_:: Nil
-            )(CallMetadata(
-              true,
-              true,
-              annots)))
+            )(CallMetadata(true, true, annots)))
       case S(td: TermDefinition) =>
         td.tsym.owner match
         case S(owner) =>

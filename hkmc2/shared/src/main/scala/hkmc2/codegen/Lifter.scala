@@ -1239,9 +1239,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         lastWords("Call to paramless class")
       else if argss.lengthCompare(clsParamLists.length) === 0 then
         // Parameterized class: Same as Instantiate case
-        k(Instantiate(false, path, argss.head :: formatArgs :: argss.tail)(
-          InstantiateMetadata(c.metadata.annotations),
-        ).withLoc(c.toLoc))
+        k(Instantiate(false, path, argss.head :: formatArgs :: argss.tail)(InstantiateMetadata(c.metadata.annotations)).withLoc(c.toLoc))
       else
         // Unsaturated constructor calls must remain ordinary curried calls to
         // the lifted wrapper; only saturated constructor applications may

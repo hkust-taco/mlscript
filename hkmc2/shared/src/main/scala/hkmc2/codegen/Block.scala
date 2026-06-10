@@ -557,8 +557,7 @@ object HandleBlock:
       N, Nil,
       S(par), handlerMtds, Nil, Nil,
       // Apparently, the lifter is not happy with any assignment in the preCtor...
-      Assign(State.noSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(
-        CallMetadata.mlsFunWithEffect), End()),
+      Assign(State.noSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(CallMetadata.mlsFunWithEffect), End()),
       End(),
       N,
       N,
@@ -931,12 +930,12 @@ sealed abstract class Result extends AutoLocated:
     case Value.Lit(lit) => 0
     case DynSelect(qual, fld, arrayIdx) => qual.size + fld.size
 
+/* mayRaiseEffects indicates whether this call may raise effect (algebraic effect),
+ * regardless of whether the check for effect is inserted or not.
+ * Note that the check for effect is inserted during HandlerLowering and setting this to true
+ * after handler is lowered does not have any effect on the code generation. */
 case class CallMetadata(
   isMlsFun: Bool,
-  /* mayRaiseEffects indicates whether this call may raise effect (algebraic effect),
-   * regardless of whether the check for effect is inserted or not.
-   * Note that the check for effect is inserted during HandlerLowering and setting this to true
-   * after handler is lowered does not have any effect on the code generation. */
   mayRaiseEffects: Bool,
   annotations: Ls[Annot],
 ):
