@@ -84,8 +84,11 @@ class Printer(using Raise, ShowCfg, State, SymbolPrinter, Config):
     // case _ => doc""
     // defn.configOverride.map: cfg =>
     //   if cfg.staged then doc"staged " else doc""
-    if defn.annotations.isEmpty then doc""
-    else defn.annotations.map(_.show).mkDocument(doc" ") :: doc" # "
+    printAnnotations(defn.annotations, doc" # ")
+
+  def printAnnotations(annotations: Ls[Annot], trailing: Document)(using Scope): Document =
+    if annotations.isEmpty then doc""
+    else annotations.map(_.show).mkDocument(doc" ") :: trailing
   
   def print(
       privateFields: Ls[TermSymbol],
@@ -185,12 +188,12 @@ class Printer(using Raise, ShowCfg, State, SymbolPrinter, Config):
   def print(result: Result)(using Scope): Document =
     (if !showPurity || result.isPure then "" else "!") ::
     result.match
-    case Call(fun, argss) =>
+    case call @ Call(fun, argss) =>
       val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
-      doc"${print(fun)}${chainedArgs}"
-    case Instantiate(mut, cls, argss) =>
+      doc"${printAnnotations(call.metadata.annotations, doc" ")}${print(fun)}${chainedArgs}"
+    case inst @ Instantiate(mut, cls, argss) =>
       val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
-      doc"new ${if mut then "mut " else ""}${print(cls)}${chainedArgs}"
+      doc"${printAnnotations(inst.metadata.annotations, doc" ")}new ${if mut then "mut " else ""}${print(cls)}${chainedArgs}"
     case Lambda(params, body) =>
       scope.nest.givenIn:
         val allParams =
