@@ -511,13 +511,11 @@ object HandleBlock:
 
   def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.suspend
-    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(
-      CallMetadata.mlsFunWithEffect)
+    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect)
 
   def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.handle_suspension
-    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(
-      CallMetadata.mlsFunWithEffect)
+    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect)
   
   private def create(
       lhs: LocalVarSymbol,
