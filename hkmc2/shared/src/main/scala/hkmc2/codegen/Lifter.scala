@@ -1052,7 +1052,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
             case (acc, sym) => Arg(N, sym.asSimpleRef) :: acc
         case None => syms.map(s => Arg(N, s.asSimpleRef))
       
-      val call = Call(fun.sym.asMemberRef(fun.dSym), args ne_:: Nil)(CallMetadata(true, true, Nil))
+      val call = Call(fun.sym.asMemberRef(fun.dSym), args ne_:: Nil)(CallMetadata.mlsFunWithEffect)
       val bod = Return(call)
       
       FunDefn(
@@ -1219,7 +1219,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         k(Call(superCall.fun, (formatArgs ::: argss.head) ne_:: argss.tail)(CallMetadata.defaultMlsFun).withLoc(superCall.toLoc))
       else
         // Parameterized class: use Instantiate with original args + lifter args inserted after the first list
-        k(Call(superCall.fun, argss.head ne_:: formatArgs ne_:: argss.tail)(CallMetadata(true, true, Nil)).withLoc(superCall.toLoc))
+        k(Call(superCall.fun, argss.head ne_:: formatArgs ne_:: argss.tail)(CallMetadata.mlsFunWithEffect).withLoc(superCall.toLoc))
     
     def rewriteCall(c: Call, argss: NELs[List[Arg]])(k: Result => Block)(using ctx: LifterCtxNew): Block =
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")
