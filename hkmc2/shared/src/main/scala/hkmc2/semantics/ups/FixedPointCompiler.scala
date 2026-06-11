@@ -542,12 +542,14 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     val focusSymbol = TempSymbol(N, "focus")
     val stackSymbol = TempSymbol(N, "stack")
     val resultSymbol = TempSymbol(N, "finalResult")
-    // Whether at least one contraction has fired. The chain `P as (S | _)`
-    // requires the first step to succeed, so a run with zero contractions is
-    // a match failure.
+    // Whether at least one contraction has fired. Only `requireProgress`
+    // machines track it: the chain `P as (S | _)` requires the first step to
+    // succeed, so a run with zero contractions is a match failure.
     val progressedSymbol = TempSymbol(N, "progressed")
 
     def bool(value: Bool): Term = Term.Lit(BoolLit(value))
+    def markProgress: Ls[Statement] =
+      if requireProgress then setStmt(progressedSymbol, bool(true)) :: Nil else Nil
     def constructorTerm(cls: ClassInfo): Term =
       Compiler.reference(cls.symbol, N).getOrElse(Term.Error)
     def classPattern(cls: ClassInfo, children: Ls[TempSymbol]): FlatPattern =
@@ -607,9 +609,8 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       matchRedex(focusSymbol.safeRef,
         // A contraction: refocus on the contractum and keep searching. This
         // is the step that avoids restarting from the root.
-        contractum => perform(
-          setStmt(focusSymbol, contractum.safeRef),
-          setStmt(progressedSymbol, bool(true))),
+        contractum => perform((
+          setStmt(focusSymbol, contractum.safeRef) :: markProgress)*),
         classChain)
 
     // ---- `up` mode: the focus is inert; re-examine the topmost frame ----
@@ -640,11 +641,10 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       Split.Let(rebuiltSymbol,
         `new`(constructorTerm(cls), tup(List.tabulate(cls.paramCount)(child)) :: Nil, s"rebuilt ${cls.symbol.nme}"),
         matchRedex(rebuiltSymbol.safeRef,
-          contractum => perform(
-            setStmt(stackSymbol, tailSym.safeRef),
-            setStmt(focusSymbol, contractum.safeRef),
-            setStmt(modeSymbol, int(ModeFind)),
-            setStmt(progressedSymbol, bool(true))),
+          contractum => perform((
+            setStmt(stackSymbol, tailSym.safeRef) ::
+            setStmt(focusSymbol, contractum.safeRef) ::
+            setStmt(modeSymbol, int(ModeFind)) :: markProgress)*),
           altChain()))
     def upClass(cls: ClassInfo): Split =
       val children = List.tabulate(cls.paramCount)(index => TempSymbol(N, s"frameChild$index"))
@@ -693,8 +693,10 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         LetDecl(modeSymbol, Nil), DefineVar(modeSymbol, int(ModeFind)),
         LetDecl(focusSymbol, Nil), DefineVar(focusSymbol, inputSymbol.safeRef),
         LetDecl(stackSymbol, Nil), DefineVar(stackSymbol, `null`),
-        LetDecl(resultSymbol, Nil), DefineVar(resultSymbol, `null`),
-        LetDecl(progressedSymbol, Nil), DefineVar(progressedSymbol, bool(false)))
+        LetDecl(resultSymbol, Nil), DefineVar(resultSymbol, `null`))
+      ::: (if requireProgress then
+        LetDecl(progressedSymbol, Nil) :: DefineVar(progressedSymbol, bool(false)) :: Nil
+      else Nil)
 
     // Succeed with the normal form, post-processed by the middle
     // alternatives when present. In the chain shape, the first step is
