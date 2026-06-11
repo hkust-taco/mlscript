@@ -159,9 +159,8 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
                   // The definition may instead be a link of an indirect
                   // recursion cycle.
                   recognizeCycle(patternSymbol).flatMap: links =>
-                    scoped("ucs:fixpoint"):
-                      compileAlternatingMachine(links.map((_, step, middles, catchAll) => (step, middles, catchAll)))
-                    .map((_, if links.forall(_._4) then N else S(pattern)))
+                    scoped("ucs:fixpoint")(compileAlternatingMachine(links))
+                      .map((_, if links.forall(_._4) then N else S(pattern)))
               machine match
                 case S((machine, fallback)) => S(Outcome.Compiled(machine, outputPattern, fallback))
                 case N => unsupported(recognized.isDefined, shape.isDefined, pattern.toLoc)
@@ -196,9 +195,8 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
               case -1 => N
               case index =>
                 val rotated = links.drop(index) ::: links.take(index)
-                scoped("ucs:fixpoint"):
-                  compileAlternatingMachine(rotated.map((_, step, middles, catchAll) => (step, middles, catchAll)))
-                .map((_, if links.forall(_._4) then N else S(body)))
+                scoped("ucs:fixpoint")(compileAlternatingMachine(rotated))
+                  .map((_, if links.forall(_._4) then N else S(body)))
           machine match
             case S((machine, fallback)) => S(Outcome.Compiled(machine, N, fallback))
             case N => unsupported(false, true, body.toLoc)
@@ -320,24 +318,27 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     case Extract(pattern, _, _) => mentions(pattern, target)
     case Literal(_) => false
 
-  private def compileMachine(stepPattern: SP, middles: Ls[SP], catchAll: Bool, requireProgress: Bool): Opt[Machine] =
-    // Instantiate the step pattern, monomorphizing higher-order patterns such
-    // as `Ctx(Redex)` into first-order synonyms. The middle alternatives are
-    // instantiated with the same instantiator so that the last returned
-    // context covers all of them.
+  /** Instantiate the pattern groups with a shared `Instantiator`,
+    * monomorphizing higher-order patterns such as `Ctx(Redex)` into
+    * first-order synonyms. Each instantiation returns a context built from
+    * the instantiator's cumulative progress, so the context of the last one
+    * — which is returned — covers them all. */
+  private def instantiateGroups(groups: Ls[Ls[SP]]): (Ls[Ls[Pat]], Context) =
     val instantiator = new Instantiator
-    val (entry, context0) = instantiator(stepPattern)
-    var context = context0
-    val middlePatterns = middles.map: middle =>
-      val (middlePattern, newerContext) = instantiator(middle)
-      context = newerContext
-      middlePattern
-    // The post pattern processes the final normal form; the definition's
-    // trailing wildcard, when present, makes it total.
-    val post =
-      if catchAll then
-        if middlePatterns.isEmpty then N else S(Or(middlePatterns :+ Wildcard))
-      else S(Or(middlePatterns))
+    val results = groups.map(_.map(instantiator(_)))
+    (results.map(_.map(_._1)), results.flatten.last._2)
+
+  /** The post pattern processes the final normal form; the definition's
+    * trailing wildcard, when present, makes it total. */
+  private def postPattern(middles: Ls[Pat], catchAll: Bool): Opt[Pat] =
+    if catchAll then
+      if middles.isEmpty then N else S(Or(middles :+ Wildcard))
+    else S(Or(middles))
+
+  private def compileMachine(stepPattern: SP, middles: Ls[SP], catchAll: Bool, requireProgress: Bool): Opt[Machine] =
+    val (instantiated, context) = instantiateGroups((stepPattern :: middles) :: Nil)
+    val entry = instantiated.head.head
+    val post = postPattern(instantiated.head.tail, catchAll)
     given Context = context
     // Walk through synonym definitions until we find a self-recursive one:
     // that instantiation is the evaluation context.
@@ -439,21 +440,10 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
   /** Compile an indirect recursion cycle. Each link contributes its step
     * pattern and its trailing alternatives, turned into a post pattern as in
     * `compileMachine`. */
-  private def compileAlternatingMachine(links: Ls[(SP, Ls[SP], Bool)]): Opt[Machine] =
-    val instantiator = new Instantiator
-    var context = new Context(Map.empty)
-    def instantiate(pattern: SP): Pat =
-      val (instantiated, newerContext) = instantiator(pattern)
-      context = newerContext
-      instantiated
-    val compiled = links.map: (step, middles, catchAll) =>
-      val stepPattern = instantiate(step)
-      val middlePatterns = middles.map(instantiate)
-      val post =
-        if catchAll then
-          if middlePatterns.isEmpty then N else S(Or(middlePatterns :+ Wildcard))
-        else S(Or(middlePatterns))
-      (stepPattern, post, catchAll)
+  private def compileAlternatingMachine(links: Ls[(PatternSymbol, SP, Ls[SP], Bool)]): Opt[Machine] =
+    val (instantiated, context) = instantiateGroups(links.map((_, step, middles, _) => step :: middles))
+    val compiled = instantiated.zip(links).map: (patterns, link) =>
+      (patterns.head, postPattern(patterns.tail, link._4))
     given Context = context
     S(assembleAlternating(compiled))
 
@@ -462,10 +452,10 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     * machine moves to the next phase in the cycle, and on failure it exits
     * and the last fired link's alternatives process the final term. No step
     * ever firing means the first chain failed, so the match fails. */
-  private def assembleAlternating(links: Ls[(Pat, Opt[Pat], Bool)])(using Context): Machine =
+  private def assembleAlternating(links: Ls[(Pat, Opt[Pat])])(using Context): Machine =
     // Like in `assemble`, every matcher gets its own compiler instance
     // because the matcher memoization is instance-bound.
-    val matchers = links.map: (step, post, _) =>
+    val matchers = links.map: (step, post) =>
       val stepCompiler = new Compiler
       val (stepMatcher, stepImpls) = stepCompiler.buildMatcher(step, ResultMode.Full)
       val postMatcherOpt = post.map: postPattern =>
