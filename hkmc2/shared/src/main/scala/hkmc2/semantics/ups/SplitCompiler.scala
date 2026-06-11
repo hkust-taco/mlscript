@@ -1132,6 +1132,12 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     // compilation does not support fall back to the naive translation.
     FixedPointCompiler().compile(pattern) match
       case S(FixedPointCompiler.Outcome.Compiled(machine, outputPattern, fallback)) =>
+        // A body-annotated definition is fully machine-compiled, so mirror
+        // the eager diagnostics of `compilePatternImpl` here. At a match
+        // site, the shorthand sub-pattern is matched naively and warns on
+        // its own, and the definition itself has no extraction parameters.
+        if pattern.isInstanceOf[SP.Chain] || pattern.isInstanceOf[SP.Composition] then
+          warnOnDiscardedExtractionOutputs(pattern)
         makeFixedPointMatchSplit(scrutinee, machine, outputPattern, outputNeeded, fallback)
       case S(FixedPointCompiler.Outcome.Unsupported) =>
         makeMatchSplit(scrutinee, pattern, outputNeeded)
