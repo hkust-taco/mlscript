@@ -142,15 +142,13 @@ if pipeline is @compile Steps(result) then result else "<no result>"
 //│ = 1 :: 2 :: Nil
 
 // An already-normal list contains no stage nodes and cannot take a single
-// step, so the match fails. Note that the machine still re-plugs the `Cons`
-// frames it descended through, even though nothing below them changed.
+// step, so the match fails. Plugging preserves identity: popping out of the
+// `Cons` frames the machine descended through allocates nothing, because
+// nothing below them changed.
 :expect "no step"
 if items is Steps(result) then "stepped" else "no step"
 //│ = "no step"
 
 :expect "no step"
 if items is @compile Steps(result) then "stepped" else "no step"
-//│ > new: -1 :: Nil
-//│ > new: 1 :: -1 :: Nil
-//│ > new: 0 :: 1 :: -1 :: Nil
 //│ = "no step"

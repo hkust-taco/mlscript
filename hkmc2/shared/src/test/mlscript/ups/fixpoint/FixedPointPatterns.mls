@@ -224,7 +224,6 @@ if term5 is @compile Eval(r) and r is Add(Lit(n), Var(_)) then n else -1
 //│ > reduce 1 + 2 = 3
 //│ > new Lit(3)
 //│ > new Add(Lit(3), Var("x"))
-//│ > new Add(Lit(3), Var("x"))
 //│ = 3
 
 // The strategy is left-to-right: the right operand must not be reduced when
@@ -244,7 +243,6 @@ if term6 is Eval(r) then "stepped" else "no step"
 
 :expect "no step"
 if term6 is @compile Eval(r) then "stepped" else "no step"
-//│ > new Add(Var("x"), Add(Lit(1), Lit(2)))
 //│ = "no step"
 
 
@@ -273,7 +271,6 @@ if term3 is EvalFast(r) and r is Lit(n) then n else -1
 
 :expect "no step"
 if term6 is EvalFast(r) then "stepped" else "no step"
-//│ > new Add(Var("x"), Add(Lit(1), Lit(2)))
 //│ = "no step"
 
 

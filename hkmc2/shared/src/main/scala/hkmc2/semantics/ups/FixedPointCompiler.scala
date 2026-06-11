@@ -439,6 +439,9 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
   private def callMatcher(matcher: LocalVarSymbol, argument: Term, label: Str): Term =
     app(matcher.safeRef, tup(fld(argument)), label)
 
+  private def refEq(left: Term, right: Term): Term =
+    app(State.builtinOpsMap("===").ref(Ident("===")), tup(fld(left), fld(right)), "reference equality")
+
   /** Compile an indirect recursion cycle. Each link contributes its step
     * pattern and its trailing alternatives, turned into a post pattern as in
     * `compileMachine`. */
@@ -560,14 +563,17 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     // A frame is a record reifying a one-hole context layer: the constructor
     // (as an integer tag), the current children, one inertness flag per child
     // position (true when that subtree is known to be strategy-normal), the
-    // hole position we descended into, and the rest of the stack.
+    // node the frame decomposes (so plugging an unchanged child back can
+    // reuse it instead of allocating), the hole position we descended into,
+    // and the rest of the stack.
     def childField(index: Int) = s"c$index"
     def inertField(index: Int) = s"i$index"
-    def mkFrame(cls: ClassInfo, hole: Int, child: Int => Term, inert: Int => Term, tail: Term): Term =
+    def mkFrame(cls: ClassInfo, hole: Int, child: Int => Term, inert: Int => Term, node: Term, tail: Term): Term =
       Term.Rcd(false,
         RcdField(str("tag"), int(cls.index)) ::
         List.tabulate(cls.paramCount)(index => RcdField(str(childField(index)), child(index))) :::
         List.tabulate(cls.paramCount)(index => RcdField(str(inertField(index)), inert(index))) :::
+        RcdField(str("n"), node) ::
         RcdField(str("h"), int(hole)) ::
         RcdField(str("t"), tail) :: Nil)
 
@@ -598,7 +604,8 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         () =>
           val push = perform(
             setStmt(stackSymbol, mkFrame(cls, alt.holeIndex,
-              index => children(index).safeRef, _ => bool(false), stackSymbol.safeRef)),
+              index => children(index).safeRef, _ => bool(false),
+              focusSymbol.safeRef, stackSymbol.safeRef)),
             setStmt(focusSymbol, children(alt.holeIndex).safeRef))
           sideChecks(alt.sides, index => children(index).safeRef, push, rest)
       chain()
@@ -619,7 +626,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     // on a naive restart) and which descent alternatives become enabled.
     // Positions marked inert are skipped — their subtrees were exhausted by
     // earlier descents and cannot have changed since.
-    def upHole(cls: ClassInfo, hole: Int, children: Ls[TempSymbol], inerts: Ls[TempSymbol], tailSym: TempSymbol): Split =
+    def upHole(cls: ClassInfo, hole: Int, children: Ls[TempSymbol], inerts: Ls[TempSymbol], nodeSym: TempSymbol, tailSym: TempSymbol): Split =
       def child(index: Int): Term =
         if index == hole then focusSymbol.safeRef else children(index).safeRef
       def inert(index: Int): Term =
@@ -633,33 +640,43 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         if alt.holeIndex == hole then rest
         else () =>
           val move = perform(
-            setStmt(stackSymbol, mkFrame(cls, alt.holeIndex, child, inert, tailSym.safeRef)),
+            setStmt(stackSymbol, mkFrame(cls, alt.holeIndex, child, inert,
+              rebuiltSymbol.safeRef, tailSym.safeRef)),
             setStmt(focusSymbol, child(alt.holeIndex)),
             setStmt(modeSymbol, int(ModeFind)))
           Branch(inerts(alt.holeIndex).safeRef, FlatPattern.Lit(BoolLit(false)),
             sideChecks(alt.sides, child, move, rest)) ~: rest()
-      Split.Let(rebuiltSymbol,
-        `new`(constructorTerm(cls), tup(List.tabulate(cls.paramCount)(child)) :: Nil, s"rebuilt ${cls.symbol.nme}"),
-        matchRedex(rebuiltSymbol.safeRef,
-          contractum => perform((
-            setStmt(stackSymbol, tailSym.safeRef) ::
-            setStmt(focusSymbol, contractum.safeRef) ::
-            setStmt(modeSymbol, int(ModeFind)) :: markProgress)*),
-          altChain()))
+      // Plugging preserves identity: when no contraction happened below the
+      // frame, the focus is still the very child we descended into, and the
+      // frame's node can be reused instead of allocating a rebuilt copy.
+      val unchangedSymbol = TempSymbol(N, "unchanged")
+      Split.Let(unchangedSymbol, refEq(focusSymbol.safeRef, children(hole).safeRef),
+        Split.Let(rebuiltSymbol,
+          Term.SynthIf(
+            Branch(unchangedSymbol.safeRef, Split.Else(nodeSym.safeRef)) ~:
+            Split.Else(`new`(constructorTerm(cls), tup(List.tabulate(cls.paramCount)(child)) :: Nil, s"rebuilt ${cls.symbol.nme}"))),
+          matchRedex(rebuiltSymbol.safeRef,
+            contractum => perform((
+              setStmt(stackSymbol, tailSym.safeRef) ::
+              setStmt(focusSymbol, contractum.safeRef) ::
+              setStmt(modeSymbol, int(ModeFind)) :: markProgress)*),
+            altChain())))
     def upClass(cls: ClassInfo): Split =
       val children = List.tabulate(cls.paramCount)(index => TempSymbol(N, s"frameChild$index"))
       val inerts = List.tabulate(cls.paramCount)(index => TempSymbol(N, s"frameInert$index"))
+      val nodeSym = TempSymbol(N, "frameNode")
       val tailSym = TempSymbol(N, "frameTail")
       val core = cls.alts.map(_.holeIndex).distinct match
-        case only :: Nil => upHole(cls, only, children, inerts, tailSym)
+        case only :: Nil => upHole(cls, only, children, inerts, nodeSym, tailSym)
         case multiple =>
           val holeSymbol = TempSymbol(N, "frameHole")
           Split.Let(holeSymbol, sel(stackSymbol.safeRef, "h"),
-            multiple.init.foldRight(upHole(cls, multiple.last, children, inerts, tailSym)): (hole, rest) =>
+            multiple.init.foldRight(upHole(cls, multiple.last, children, inerts, nodeSym, tailSym)): (hole, rest) =>
               Branch(holeSymbol.safeRef, intPattern(hole),
-                upHole(cls, hole, children, inerts, tailSym)) ~: rest)
+                upHole(cls, hole, children, inerts, nodeSym, tailSym)) ~: rest)
       val withTail = Split.Let(tailSym, sel(stackSymbol.safeRef, "t"), core)
-      val withInerts = inerts.iterator.zipWithIndex.foldRight(withTail):
+      val withNode = Split.Let(nodeSym, sel(stackSymbol.safeRef, "n"), withTail)
+      val withInerts = inerts.iterator.zipWithIndex.foldRight(withNode):
         case ((symbol, index), rest) =>
           Split.Let(symbol, sel(stackSymbol.safeRef, inertField(index)), rest)
       children.iterator.zipWithIndex.foldRight(withInerts):

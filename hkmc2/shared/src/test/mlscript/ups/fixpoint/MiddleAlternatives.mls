@@ -127,5 +127,4 @@ if stuck is EvalToInt(r) and r is Add(Lit(n), Tag(_)) then n else -1
 if stuck is @compile EvalToInt(r) and r is Add(Lit(n), Tag(_)) then n else -1
 //│ > new Lit(3)
 //│ > new Add(Lit(3), Tag(9))
-//│ > new Add(Lit(3), Tag(9))
 //│ = 3

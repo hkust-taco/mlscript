@@ -140,7 +140,6 @@ if stuck is EvalValue(r) then "matched" else "no match"
 if stuck is @compile EvalValue(r) then "matched" else "no match"
 //│ > new Lit(3)
 //│ > new Add(Lit(3), Tag(9))
-//│ > new Add(Lit(3), Tag(9))
 //│ > new Lit(3)
 //│ > new Add(Lit(3), Tag(9))
 //│ = "no match"
