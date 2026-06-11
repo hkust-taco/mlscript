@@ -1,9 +1,5 @@
 :js
 
-import "../../mlscript-compile/Option.mls"
-
-open Option
-
 #config(liftDefns: Some(LiftDefns), effectHandlers: EffectHandlers(doNotInstrumentTopLevelModCtor: true, stackSafety: 100))
 
 fun maybeEffects(x) =
@@ -63,7 +59,7 @@ module A with
 //│                 set pc = 2;
 //│                 end
 //│               else
-//│                 return runtime⁰.unwind﹖(Lazy².this.get¹, 2, "TopLevelModule.mls:18:33", null, Lazy².this, 1, 0, 0)
+//│                 return runtime⁰.unwind﹖(Lazy².this.get¹, 2, "TopLevelModule.mls:14:33", null, Lazy².this, 1, 0, 0)
 //│             end
 //│         match pc
 //│           2 =>
@@ -74,7 +70,7 @@ module A with
 //│                 set pc = 1;
 //│                 end
 //│               else
-//│                 return runtime⁰.unwind﹖(Lazy².this.get¹, 1, "TopLevelModule.mls:18:20", null, Lazy².this, 1, 0, 0)
+//│                 return runtime⁰.unwind﹖(Lazy².this.get¹, 1, "TopLevelModule.mls:14:20", null, Lazy².this, 1, 0, 0)
 //│             end
 //│         match pc
 //│           1 =>
