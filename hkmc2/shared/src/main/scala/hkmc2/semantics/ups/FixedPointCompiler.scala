@@ -146,24 +146,31 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
               // patterns; let the regular path report the mismatch.
               case S(_) => N
             outputPattern.flatMap: outputPattern =>
-              val shape = recognizeShape(stripAnnotations(defn.pattern))
-              val recognized = shape.filter(_._1 is patternSymbol).flatMap:
-                (_, stepPattern, rest, requireProgress) =>
-                  classifyRest(rest).map((middles, catchAll) =>
-                    (stepPattern, middles, catchAll, requireProgress))
-              val machine = recognized match
-                case S((stepPattern, middles, catchAll, requireProgress)) =>
-                  scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress))
-                    .map((_, if catchAll then N else S(pattern)))
+              def compiled(machine: Machine, needsFallback: Bool): Opt[Outcome] =
+                S(Outcome.Compiled(machine, outputPattern, if needsFallback then S(pattern) else N))
+              patternSymbol.fixedPointMachine match
+                case S((machine, needsFallback)) => compiled(machine, needsFallback)
                 case N =>
-                  // The definition may instead be a link of an indirect
-                  // recursion cycle.
-                  recognizeCycle(patternSymbol).flatMap: links =>
-                    scoped("ucs:fixpoint")(compileAlternatingMachine(links))
-                      .map((_, if links.forall(_._4) then N else S(pattern)))
-              machine match
-                case S((machine, fallback)) => S(Outcome.Compiled(machine, outputPattern, fallback))
-                case N => unsupported(recognized.isDefined, shape.isDefined, pattern.toLoc)
+                  val shape = recognizeShape(stripAnnotations(defn.pattern))
+                  val recognized = shape.filter(_._1 is patternSymbol).flatMap:
+                    (_, stepPattern, rest, requireProgress) =>
+                      classifyRest(rest).map((middles, catchAll) =>
+                        (stepPattern, middles, catchAll, requireProgress))
+                  val machine = recognized match
+                    case S((stepPattern, middles, catchAll, requireProgress)) =>
+                      scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress))
+                        .map((_, !catchAll))
+                    case N =>
+                      // The definition may instead be a link of an indirect
+                      // recursion cycle.
+                      recognizeCycle(patternSymbol).flatMap: links =>
+                        scoped("ucs:fixpoint")(compileAlternatingMachine(links))
+                          .map((_, links.exists(!_._4)))
+                  machine match
+                    case S((machine, needsFallback)) =>
+                      patternSymbol.fixedPointMachine = S((machine, needsFallback))
+                      compiled(machine, needsFallback)
+                    case N => unsupported(recognized.isDefined, shape.isDefined, pattern.toLoc)
           case _ => N
     case body: (SP.Chain | SP.Composition) =>
       // The body-annotated form. The body must belong to the very definition
@@ -180,9 +187,11 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
           val recognized = classifyRest(rest)
           val machine = recognized.flatMap: (middles, catchAll) =>
             scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress))
-              .map((_, if catchAll then N else S(body)))
+              .map((_, !catchAll))
           machine match
-            case S((machine, fallback)) => S(Outcome.Compiled(machine, N, fallback))
+            case S((machine, needsFallback)) =>
+              patternSymbol.fixedPointMachine = S((machine, needsFallback))
+              S(Outcome.Compiled(machine, N, if needsFallback then S(body) else N))
             case N => unsupported(recognized.isDefined, true, body.toLoc)
         case S((tailSymbol, _, _, _)) =>
           // The body may be a link of an indirect recursion cycle; its tail
@@ -195,10 +204,12 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
               case -1 => N
               case index =>
                 val rotated = links.drop(index) ::: links.take(index)
-                scoped("ucs:fixpoint")(compileAlternatingMachine(rotated))
-                  .map((_, if links.forall(_._4) then N else S(body)))
+                scoped("ucs:fixpoint")(compileAlternatingMachine(rotated)).map: machine =>
+                  (rotated.head._1, machine, links.exists(!_._4))
           machine match
-            case S((machine, fallback)) => S(Outcome.Compiled(machine, N, fallback))
+            case S((owner, machine, needsFallback)) =>
+              owner.fixedPointMachine = S((machine, needsFallback))
+              S(Outcome.Compiled(machine, N, if needsFallback then S(body) else N))
             case N => unsupported(false, true, body.toLoc)
         case N => N
     case _ => N
