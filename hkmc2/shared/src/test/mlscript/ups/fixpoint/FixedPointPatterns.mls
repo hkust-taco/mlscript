@@ -312,3 +312,40 @@ if term7 is EvalAdds(r) and r is Lit(n) then n else -1
 //│ > reduce 3 + 7 = 10
 //│ > new Lit(10)
 //│ = 10
+
+
+// ————— Annotated alternatives —————
+
+// Annotations on individual alternatives (only `@compile` is supported, a
+// no-op inside an already-compiled pattern) do not defeat the shape
+// recognition: both patterns below still compile to machines, with no
+// fallback warning.
+pattern EvalAnnotated = AddCtx(AddRedex) as EvalAnnotated | (@compile _)
+
+:expect 10
+if term7 is @compile EvalAnnotated(r) and r is Lit(n) then n else -1
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Add(Lit(3), Lit(4)))
+//│ > reduce 3 + 4 = 7
+//│ > new Lit(7)
+//│ > new Add(Lit(3), Lit(7))
+//│ > reduce 3 + 7 = 10
+//│ > new Lit(10)
+//│ = 10
+
+// The annotation may also wrap an individual alternative of a
+// body-annotated definition.
+pattern EvalAnnotatedStep = @compile ((@compile (AddCtx(AddRedex) as EvalAnnotatedStep)) | _)
+
+:expect 10
+if term7 is EvalAnnotatedStep(r) and r is Lit(n) then n else -1
+//│ > reduce 1 + 2 = 3
+//│ > new Lit(3)
+//│ > new Add(Lit(3), Add(Lit(3), Lit(4)))
+//│ > reduce 3 + 4 = 7
+//│ > new Lit(7)
+//│ > new Add(Lit(3), Lit(7))
+//│ > reduce 3 + 7 = 10
+//│ > new Lit(10)
+//│ = 10

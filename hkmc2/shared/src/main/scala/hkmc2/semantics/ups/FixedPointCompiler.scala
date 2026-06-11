@@ -220,10 +220,12 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     case SP.Annotated(pattern, _) => stripAnnotations(pattern)
     case _ => pattern
 
-  /** Flatten nested disjunctions into the list of their alternatives. */
-  private def disjuncts(pattern: SP): Ls[SP] = pattern match
+  /** Flatten nested disjunctions into the list of their alternatives,
+    * stripping `Annotated` wrappers so an annotation on an alternative does
+    * not defeat the shape checks. */
+  private def disjuncts(pattern: SP): Ls[SP] = stripAnnotations(pattern) match
     case SP.Composition(true, left, right) => disjuncts(left) ::: disjuncts(right)
-    case _ => pattern :: Nil
+    case stripped => stripped :: Nil
 
   /** Classify the alternatives following the recursive ones into the middle
     * alternatives and the optional trailing wildcard. */
