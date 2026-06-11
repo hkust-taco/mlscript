@@ -1131,9 +1131,8 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     // (see `FixedPointCompiler`). Fixed-point-shaped patterns the machine
     // compilation does not support fall back to the naive translation.
     FixedPointCompiler().compile(pattern) match
-      case S(FixedPointCompiler.Outcome.Compiled(machine, outputPattern)) =>
-        makeFixedPointMatchSplit(scrutinee, machine, outputPattern, outputNeeded,
-          if machine.naiveFallback then S(pattern) else N)
+      case S(FixedPointCompiler.Outcome.Compiled(machine, outputPattern, fallback)) =>
+        makeFixedPointMatchSplit(scrutinee, machine, outputPattern, outputNeeded, fallback)
       case S(FixedPointCompiler.Outcome.Unsupported) =>
         makeMatchSplit(scrutinee, pattern, outputNeeded)
       case N => compilePatternImpl(scrutinee, pattern, outputNeeded)

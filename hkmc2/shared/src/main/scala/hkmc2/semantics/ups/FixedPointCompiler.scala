@@ -28,17 +28,18 @@ object FixedPointCompiler:
 
   /** The compiled fixed-point matcher. The `unapply` body is assembled by
     * `Lowering` as: evaluate `prelude`, run `loop` as a `while` form (the loop
-    * exits when no branch of the split matches), then return `result`. When
-    * `naiveFallback` is set (non-catch-all definitions), a failed machine run
-    * must be retried with the naive backtracking translation, which
-    * implements the deepest-first try order on intermediate results. */
-  final case class Machine(params: ParamList, prelude: Ls[Statement], loop: Split, result: Term, naiveFallback: Bool)
+    * exits when no branch of the split matches), then return `result`. */
+  final case class Machine(params: ParamList, prelude: Ls[Statement], loop: Split, result: Term)
 
   /** The outcome of `compile` on a fixed-point-shaped pattern. */
   enum Outcome:
     /** The compiled machine, paired with the output sub-pattern of the
-      * match-site shorthand (`x is @compile S(q)`). */
-    case Compiled(machine: Machine, outputPattern: Opt[SP])
+      * match-site shorthand (`x is @compile S(q)`). For non-catch-all
+      * definitions, `fallback` holds the pattern with which a failed machine
+      * run must be retried — the naive backtracking translation implements
+      * the deepest-first try order on intermediate results that the machine
+      * does not keep around. */
+    case Compiled(machine: Machine, outputPattern: Opt[SP], fallback: Opt[SP])
     /** The pattern is fixed-point shaped but not supported by the machine
       * compilation; a warning has been reported and the caller should use the
       * naive backtracking translation. */
@@ -150,14 +151,16 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
               val machine = recognized match
                 case S((stepPattern, middles, catchAll, requireProgress)) =>
                   scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress))
+                    .map((_, if catchAll then N else S(pattern)))
                 case N =>
                   // The definition may instead be a link of an indirect
                   // recursion cycle.
                   recognizeCycle(patternSymbol).flatMap: links =>
                     scoped("ucs:fixpoint"):
                       compileAlternatingMachine(links.map((_, step, middles, catchAll) => (step, middles, catchAll)))
+                    .map((_, if links.forall(_._4) then N else S(pattern)))
               machine match
-                case S(machine) => S(Outcome.Compiled(machine, outputPattern))
+                case S((machine, fallback)) => S(Outcome.Compiled(machine, outputPattern, fallback))
                 case N => unsupported(recognized.isDefined, body, pattern.toLoc)
           case _ => N
     case body: (SP.Chain | SP.Composition) =>
@@ -175,8 +178,9 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
           val recognized = recognizeBody(body, patternSymbol)
           val machine = recognized.flatMap: (stepPattern, middles, catchAll, requireProgress) =>
             scoped("ucs:fixpoint")(compileMachine(stepPattern, middles, catchAll, requireProgress))
+              .map((_, if catchAll then N else S(body)))
           machine match
-            case S(machine) => S(Outcome.Compiled(machine, N))
+            case S((machine, fallback)) => S(Outcome.Compiled(machine, N, fallback))
             case N => unsupported(recognized.isDefined, body, body.toLoc)
         case S(tailSymbol) =>
           // The body may be a link of an indirect recursion cycle; its tail
@@ -191,8 +195,9 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
                 val rotated = links.drop(index) ::: links.take(index)
                 scoped("ucs:fixpoint"):
                   compileAlternatingMachine(rotated.map((_, step, middles, catchAll) => (step, middles, catchAll)))
+                .map((_, if links.forall(_._4) then N else S(body)))
           machine match
-            case S(machine) => S(Outcome.Compiled(machine, N))
+            case S((machine, fallback)) => S(Outcome.Compiled(machine, N, fallback))
             case N => unsupported(false, body, body.toLoc)
         case N => N
     case _ => N
@@ -360,7 +365,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         // point degenerates to a flat contraction loop: keep applying the
         // step pattern to its own output until it fails.
         log(s"No recursive context; compiling a flat contraction loop.")
-        S(assemble(entry, Nil, post, !catchAll, requireProgress))
+        S(assemble(entry, Nil, post, requireProgress))
       case S((ctxInst, body)) =>
         log(s"Recursive context: ${ctxInst.showDbg}")
         val alternatives = body match
@@ -370,7 +375,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
           val redexPattern = redexAlternatives match
             case single :: Nil => single
             case multiple => Or(multiple)
-          assemble(redexPattern, classes, post, !catchAll, requireProgress)
+          assemble(redexPattern, classes, post, requireProgress)
 
   /** Split the context's alternatives into the leading redex alternatives and
     * the trailing descent alternatives, validating the restrictions of the
@@ -521,12 +526,12 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         LetDecl(focusSymbol, Nil), DefineVar(focusSymbol, inputSymbol.safeRef),
         LetDecl(firedSymbol, Nil), DefineVar(firedSymbol, int(-1)))
 
-    Machine(paramList(param(inputSymbol)), prelude, loop, result, links.exists(!_._3))
+    Machine(paramList(param(inputSymbol)), prelude, loop, result)
 
   /** Assemble the machine: matcher functions for the redex and the side
     * conditions (reusing the non-backtracking `ups.Compiler`), the state
     * variables, and the `find`/`up` transition split executed in a loop. */
-  private def assemble(redexPattern: Pat, classes: Ls[ClassInfo], post: Opt[Pat], naiveFallback: Bool, requireProgress: Bool)(using Context): Machine =
+  private def assemble(redexPattern: Pat, classes: Ls[ClassInfo], post: Opt[Pat], requireProgress: Bool)(using Context): Machine =
     // The redex matcher runs in `Full` mode: on success it returns
     // `MatchSuccess(contractum, bindings)` where the output is the rewritten
     // subterm. Side conditions only need Booleans (`MatchOnly`). The two
@@ -728,4 +733,4 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         Split.Else(makeMatchFailure())
       else Split.Else(success))
 
-    Machine(paramList(param(inputSymbol)), prelude, loop, result, naiveFallback)
+    Machine(paramList(param(inputSymbol)), prelude, loop, result)
