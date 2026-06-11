@@ -1159,7 +1159,6 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     Split.Let(matcherSymbol, Term.Lam(machine.params, matcherBody),
       tempLet("fixedPointResult", callTerm): resultSymbol =>
         val outputSymbol = TempSymbol(N, "output").toScrut
-        val bindingsSymbol = TempSymbol(N, "bindings")
         val consequent = outputPattern match
           case N => makeConsequent(outputSymbol, SeqMap.empty)
           case S(subPattern) =>
@@ -1170,7 +1169,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
           case N => alternative
         Branch(
           resultSymbol.safeRef,
-          matchSuccessPattern(S(outputSymbol.symbol :: bindingsSymbol :: Nil)),
+          matchSuccessPattern(S(outputSymbol.symbol :: Nil)),
           consequent
         ) ~: onFailure)
 

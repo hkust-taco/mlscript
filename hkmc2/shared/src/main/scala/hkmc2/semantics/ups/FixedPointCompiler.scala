@@ -473,10 +473,9 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       case (((stepMatcher, _, _), index), rest) =>
         val resultSym = TempSymbol(N, s"step$index$$Result")
         val outputSym = TempSymbol(N, "stepOutput")
-        val bindingsSym = TempSymbol(N, "stepBindings")
         Branch(phaseSymbol.safeRef, intPattern(index),
           Split.Let(resultSym, callMatcher(stepMatcher, focusSymbol.safeRef, "step result"),
-            Branch(resultSym.safeRef, matchSuccessPattern(S(outputSym :: bindingsSym :: Nil)),
+            Branch(resultSym.safeRef, matchSuccessPattern(S(outputSym :: Nil)),
               perform(
                 setStmt(focusSymbol, outputSym.safeRef),
                 setStmt(firedSymbol, int(index)),
@@ -585,9 +584,8 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     def matchRedex(scrutinee: Term, onSuccess: TempSymbol => Split, onFailure: Split): Split =
       val resultSym = TempSymbol(N, "redexResult")
       val outputSym = TempSymbol(N, "contractum")
-      val bindingsSym = TempSymbol(N, "contractumBindings")
       Split.Let(resultSym, callMatcher(redexMatcher, scrutinee, "redex match"),
-        Branch(resultSym.safeRef, matchSuccessPattern(S(outputSym :: bindingsSym :: Nil)),
+        Branch(resultSym.safeRef, matchSuccessPattern(S(outputSym :: Nil)),
           onSuccess(outputSym)) ~: onFailure)
 
     // ---- `find` mode: search the focus downwards for a redex ----
