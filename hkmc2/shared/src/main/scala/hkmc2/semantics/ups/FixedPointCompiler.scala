@@ -442,6 +442,16 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
   private def refEq(left: Term, right: Term): Term =
     app(State.builtinOpsMap("===").ref(Ident("===")), tup(fld(left), fld(right)), "reference equality")
 
+  /** Run `make` with a thunk producing the `rest` split. When the thunk is
+    * invoked more than once, `rest` is bound as a join point and every
+    * invocation yields only a `UseSplit` reference, so the generated split
+    * tree stays linear in the number of alternatives. */
+  private def join(rest: Split, uses: Int)(make: (() => Split) => Split): Split =
+    if uses > 1 then
+      val symbol = new SplitSymbol(rest, "alt")
+      Split.LetSplit(symbol, make(() => Split.UseSplit(symbol)))
+    else make(() => rest)
+
   /** Compile an indirect recursion cycle. Each link contributes its step
     * pattern and its trailing alternatives, turned into a post pattern as in
     * `compileMachine`. */
@@ -578,8 +588,8 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
         RcdField(str("t"), tail) :: Nil)
 
     /** Chain the side-condition tests of one alternative. `failure` is
-      * re-invoked at every failure point so the generated split tree never
-      * shares nodes (sharing would confuse later passes). */
+      * invoked at every failure point; callers bind it as a join point (see
+      * `join`) when that would otherwise duplicate the remaining chain. */
     def sideChecks(sides: Ls[(Int, Pat)], child: Int => Term, success: Split, failure: () => Split): Split =
       sides match
         case Nil => success
@@ -600,15 +610,14 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
     // The focus is exhausted: switch to `up` mode to re-examine the parent.
     def goUp(): Split = perform(setStmt(modeSymbol, int(ModeUp)))
     def findDescend(cls: ClassInfo, children: Ls[TempSymbol]): Split =
-      val chain = cls.alts.foldRight(() => goUp()): (alt, rest) =>
-        () =>
-          val push = perform(
-            setStmt(stackSymbol, mkFrame(cls, alt.holeIndex,
-              index => children(index).safeRef, _ => bool(false),
-              focusSymbol.safeRef, stackSymbol.safeRef)),
-            setStmt(focusSymbol, children(alt.holeIndex).safeRef))
-          sideChecks(alt.sides, index => children(index).safeRef, push, rest)
-      chain()
+      cls.alts.foldRight(goUp()): (alt, rest) =>
+        val push = perform(
+          setStmt(stackSymbol, mkFrame(cls, alt.holeIndex,
+            index => children(index).safeRef, _ => bool(false),
+            focusSymbol.safeRef, stackSymbol.safeRef)),
+          setStmt(focusSymbol, children(alt.holeIndex).safeRef))
+        join(rest, alt.sides.length): failure =>
+          sideChecks(alt.sides, index => children(index).safeRef, push, failure)
     val findSplit =
       val classChain = classes.foldRight(goUp()): (cls, rest) =>
         val children = List.tabulate(cls.paramCount)(index => TempSymbol(N, s"scrut$index"))
@@ -632,20 +641,21 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
       def inert(index: Int): Term =
         if index == hole then bool(true) else inerts(index).safeRef
       val rebuiltSymbol = TempSymbol(N, "rebuilt")
-      val pop = () => perform(
+      val pop = perform(
         setStmt(stackSymbol, tailSym.safeRef),
         setStmt(focusSymbol, rebuiltSymbol.safeRef))
       val altChain = cls.alts.foldRight(pop): (alt, rest) =>
         // The position we just returned from is inert by construction.
         if alt.holeIndex == hole then rest
-        else () =>
+        else
           val move = perform(
             setStmt(stackSymbol, mkFrame(cls, alt.holeIndex, child, inert,
               rebuiltSymbol.safeRef, tailSym.safeRef)),
             setStmt(focusSymbol, child(alt.holeIndex)),
             setStmt(modeSymbol, int(ModeFind)))
-          Branch(inerts(alt.holeIndex).safeRef, FlatPattern.Lit(BoolLit(false)),
-            sideChecks(alt.sides, child, move, rest)) ~: rest()
+          join(rest, alt.sides.length + 1): failure =>
+            Branch(inerts(alt.holeIndex).safeRef, FlatPattern.Lit(BoolLit(false)),
+              sideChecks(alt.sides, child, move, failure)) ~: failure()
       // Plugging preserves identity: when no contraction happened below the
       // frame, the focus is still the very child we descended into, and the
       // frame's node can be reused instead of allocating a rebuilt copy.
@@ -660,7 +670,7 @@ class FixedPointCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynt
               setStmt(stackSymbol, tailSym.safeRef) ::
               setStmt(focusSymbol, contractum.safeRef) ::
               setStmt(modeSymbol, int(ModeFind)) :: markProgress)*),
-            altChain())))
+            altChain)))
     def upClass(cls: ClassInfo): Split =
       val children = List.tabulate(cls.paramCount)(index => TempSymbol(N, s"frameChild$index"))
       val inerts = List.tabulate(cls.paramCount)(index => TempSymbol(N, s"frameInert$index"))
