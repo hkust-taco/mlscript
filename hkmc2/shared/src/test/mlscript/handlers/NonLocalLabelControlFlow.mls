@@ -133,7 +133,7 @@ continueFromNestedFunctionWithEffects()
 //│ define handleBlock$$ as fun handleBlock$$⁰(scope0$cap, nonLocalHandler$root)() {
 //│   return handleBlock$⁰(scope0$cap, nonLocalHandler$root)
 //│ };
-//│ define NonLocalLabelEffect as class extends runtime⁰.NonLocalReturn⁰ NonLocalLabelEffect⁰ {
+//│ define NonLocalLabelEffect as class NonLocalLabelEffect⁰ extends runtime⁰.NonLocalReturn⁰ {
 //│   method break⁰ = fun break¹(value) {
 //│     let suspendRes, NonLocalLabelEffectbreak$here;
 //│     set NonLocalLabelEffectbreak$here = NonLocalLabelEffectbreak$⁰(value);

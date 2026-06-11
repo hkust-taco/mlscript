@@ -70,7 +70,7 @@ class WorkerWrapper
     val workerArgs = fun.params.flatMap(_.params).map: param =>
       Arg(N, param.sym.asSimpleRef)
     val wrapperBody = Return(
-      Call(worker.asPath, workerArgs ne_:: Nil)(isMlsFun = true, mayRaiseEffects = true, explicitTailCall = false),
+      Call(worker.asPath, workerArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect),
     )
     val wrapper = FunDefn(
       fun.owner,

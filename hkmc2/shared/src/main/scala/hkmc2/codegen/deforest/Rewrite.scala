@@ -359,7 +359,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
           Call(
             Value.MemberRef(target._1, target._2),
             args.map(a => Arg(N, a.asPath)) ne_:: Nil
-          )(true, false, false)
+          )(CallMetadata.defaultMlsFun)
         
         // Rewrites the program under a specific instantiation id
         // from the polymorphic analysis
@@ -448,7 +448,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver)(using Raise):
                   Call(
                     newScrut,
                     callWithFvs.map(s => Arg(N, s.asPath)) ne_:: Nil
-                  )(true, false, false))
+                  )(CallMetadata.defaultMlsFun))
             case Break(label) =>
               val labelRestFunId = label.withInstId(instId)
               restFunSyms.get(labelRestFunId) match

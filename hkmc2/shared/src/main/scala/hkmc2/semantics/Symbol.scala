@@ -356,11 +356,14 @@ object TermSymbol:
     TermSymbol(syntax.Fun, owner, Tree.Ident(b.nme))
 
 
+/** Represents the companion constructor function of parameterized classes,
+  * which is the one that is accessed on plain `C` references for a definition like `class C(...)`.
+  * Note that the owner of this function is NOT the class; it is the same as the class's own owner. */
 class ClassCtorSymbol(
   override val k: syntax.Fun.type,
-  override val owner: S[ClassSymbol],
-  id: Tree.Ident
-)(using State) extends TermSymbol(k, owner, id):
+  override val owner: Opt[InnerSymbol],
+  val associatedCls: ClassSymbol,
+)(using State) extends TermSymbol(k, owner, associatedCls.id):
   override def subst(using sub: SymbolSubst): ClassCtorSymbol = sub.mapClassCtorSym(this)
   override def mayRaiseEffects(using Config) =
     super.mayRaiseEffects || config.checkInstantiateEffect

@@ -752,7 +752,7 @@ class BlockSimplifier
             Set.empty[Shape]
           def getCtorShape(path: Path): Opt[Shape] =
             path.targetSymbol.flatMap:
-              case ccs: ClassCtorSymbol => ccs.owner
+              case ccs: ClassCtorSymbol => S(ccs.associatedCls)
               case sym => sym.asClsOrMod
           def isSaturatedClassCall(sym: ClassSymbol, argss: NELs[Ls[Arg]]): Bool =
             sym.irClsLikeDefn.exists: defn =>
@@ -925,7 +925,11 @@ class BlockSimplifier
         case S(prefix) =>
           registerChange(s"${loc.showDbg} call prefix ~> ${prefix.showDbg}")
           val combined = Call(prefix.fun, (prefix.argss ::: argss).ne_!)(
-            prefix.isMlsFun, prefix.mayRaiseEffects || c.mayRaiseEffects, c.explicitTailCall,
+            CallMetadata(
+              prefix.metadata.isMlsFun,
+              prefix.metadata.mayRaiseEffects || c.metadata.mayRaiseEffects,
+              prefix.metadata.annotations ++ c.metadata.annotations,
+            ),
           ).withLocOf(c)
           super.applyResult(combined)(k)
         case N => super.applyResult(r)(k)
@@ -1240,7 +1244,10 @@ class BlockSimplifier
                         acc(Scoped(Set.single(resSym), newBlk(k(resSym.asSimpleRef))))
                       else
                         acc(Scoped(Set(resSym), newBlk(
-                          k(Call(resSym.asSimpleRef, extraArgss.ne_!)(c.isMlsFun, c.mayRaiseEffects, false)))))
+                          k(Call(resSym.asSimpleRef, extraArgss.ne_!)(
+                            c.metadata.copy(
+                              annotations = c.metadata.annotations.filterNot(_ == Annot.TailCall),
+                            ))))))
                     case (sym, value) :: argRest =>
                       val newSym = VarSymbol(sym.id)
                       go(acc.assignScoped(newSym, value), argRest, mapping + (sym -> newSym))

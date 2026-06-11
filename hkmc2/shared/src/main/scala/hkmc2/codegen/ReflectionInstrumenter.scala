@@ -62,7 +62,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
   // isMlsFun is probably always true?
   def call(fun: Path, args: Ls[ArgWrappable], isMlsFun: Bool = true, symName: Str = "tmp")(k: Path => Block): Block =
-    assign(Call(fun, args.map(asArg) ne_:: Nil)(isMlsFun, false, false), symName)(k)
+    assign(Call(fun, args.map(asArg) ne_:: Nil)(CallMetadata(isMlsFun, false, Nil)), symName)(k)
 
   // helpers for instrumenting Block
 
