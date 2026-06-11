@@ -1,0 +1,94 @@
+:js
+
+import "../../mlscript-compile/Option.mls"
+
+open Option
+
+#config(liftDefns: Some(LiftDefns), effectHandlers: EffectHandlers(doNotInstrumentTopLevelModCtor: true, stackSafety: 100))
+
+fun maybeEffects(x) =
+  if maybe do return x
+  maybeEffects(x)
+
+// Inner class should be instrumented but module constructor code should not be instrumented
+:soir
+module A with
+  data class Lazy[out A](init: () -> A) with
+    fun get() =
+      maybeEffects(maybeEffects(init()))
+    maybeEffects(maybeEffects(1))
+  maybeEffects(maybeEffects(1))
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define A⁰ as class A¹
+//│ module A² {
+//│   constructor {
+//│     let tmp;
+//│     @data
+//│     define Lazy⁰ as class Lazy² {
+//│       val init⁰;
+//│       constructor Lazy¹(init) {
+//│         let tmp1;
+//│         define init⁰ as val init¹ = init;
+//│         set tmp1 = maybeEffects⁰(1);
+//│         match runtime⁰.curEffect﹖
+//│           null =>
+//│             end
+//│           else
+//│             set tmp1 = runtime⁰.illegalEffect﹖("in a constructor");
+//│             end
+//│         do maybeEffects⁰(tmp1);
+//│         match runtime⁰.curEffect﹖
+//│           null =>
+//│             end
+//│           else
+//│             do runtime⁰.illegalEffect﹖("in a constructor");
+//│             end
+//│         end
+//│       }
+//│       method get⁰ = fun get¹() {
+//│         let tmp1, tmp2, pc;
+//│         match runtime⁰.resumePc﹖
+//│           -1 =>
+//│             set pc = 0;
+//│             end
+//│           else
+//│             set pc = runtime⁰.resumePc﹖;
+//│             set runtime⁰.resumePc﹖ = -1;
+//│             end
+//│         match pc
+//│           0 =>
+//│             set runtime⁰.resumeValue﹖ = Lazy².this.init¹();
+//│             match runtime⁰.curEffect﹖
+//│               null =>
+//│                 set pc = 2;
+//│                 end
+//│               else
+//│                 return runtime⁰.unwind﹖(Lazy².this.get¹, 2, "TopLevelModule.mls:18:33", null, Lazy².this, 1, 0, 0)
+//│             end
+//│         match pc
+//│           2 =>
+//│             set tmp1 = runtime⁰.resumeValue﹖;
+//│             set runtime⁰.resumeValue﹖ = maybeEffects⁰(tmp1);
+//│             match runtime⁰.curEffect﹖
+//│               null =>
+//│                 set pc = 1;
+//│                 end
+//│               else
+//│                 return runtime⁰.unwind﹖(Lazy².this.get¹, 1, "TopLevelModule.mls:18:20", null, Lazy².this, 1, 0, 0)
+//│             end
+//│         match pc
+//│           1 =>
+//│             set tmp2 = runtime⁰.resumeValue﹖;
+//│             return maybeEffects⁰(tmp2)
+//│           else
+//│             end
+//│         end
+//│       }
+//│     };
+//│     set tmp = maybeEffects⁰(1);
+//│     do maybeEffects⁰(tmp);
+//│     end
+//│   }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

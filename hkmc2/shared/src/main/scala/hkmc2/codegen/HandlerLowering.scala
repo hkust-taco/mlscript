@@ -585,8 +585,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             // TODO: Companion's ctor is more well behaved so it is possible to handle it
             // However, JSBuilder inserts extra statements between preCtor and ctor and it's not possible to replicate the exact behavior
             // without many special handling.
-            val newCtor = if opt.doNotInstrumentTopLevelModCtor && !h.innerDefIsTrulyNested then bod.ctor else
-              translateCtorLike(bod.ctor, bod.isym.asThis, true)
+            val newCtor = translateCtorLike(bod.ctor, bod.isym.asThis, true)
             tl.log(s"companion name: ${bod.isym.nme}")
             ClsLikeBody(bod.isym, newMtds, bod.privateFields, bod.publicFields, newCtor, bod.annotations)
           val c2 = ClsLikeDefn(owner, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, newMtds, privateFields, publicFields,
@@ -721,6 +720,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     translateBlock(b, if isModCtor then HandlerCtx.ModCtor(h.innerDefIsTrulyNested) else HandlerCtx.Ctor, Set.empty)
 
   private def translateIllegalEffectCtx(b: Block, onEffect: Call)(using HandlerCtx): Block =
+    if opt.doNotInstrumentTopLevelModCtor && !summon[HandlerCtx].innerDefIsTrulyNested then return b
     def effectCheck(l: Assignable, r: Result, rst: Block): Block =
       blockBuilder
         .assign(l, r)
